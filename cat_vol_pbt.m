@@ -73,7 +73,7 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
   %  works much better but it lead to much higher thickness results (eg. in 
   %  the Insula).
   
-  newspeedmapF = 1; 
+  newspeedmapF = 0; 
 
 
   if opt.verb, fprintf('\n'); end

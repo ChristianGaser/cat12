@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1292 | dahnke | 2018-03-19 10:26:37
+r1293 | dahnke | 2018-03-19 15:47:12
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_vol_pbt.m
+
+Changed:    Updated post-SPM segmentation correction after 
+            skull-stripping to reduce problems in data with 
+            thin skulls (children). 
+------------------------------------------------------------------------
+r1292 | dahnke | 2018-03-19 10:27:06 +0100 (Mo, 19 Mär 2018) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +24,7 @@ Changed:    Updated "cat_vol_sanlm" filter and its GUI to avoid over
             filtering of low intensity areas. 
 New:        Added GUI for "cat_io_ctype" that convert the data type 
             of images (eg. float > uint8) to save disk space.
+
 
 
 

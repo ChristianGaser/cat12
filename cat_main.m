@@ -400,10 +400,18 @@ if ~isfield(res,'spmpp')
     P(:,:,:,1)       = max(P(:,:,:,1),255*Ygmc);
     P(:,:,:,2)       = max(P(:,:,:,2),255*Ywmc);
     Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
-    clear Ygmc Ywmc Yg Ydiv;
+    clear Ygmc Ywmc; 
 
-    % head to GM
-    Ygm = uint8(cat_vol_morph(Ywm>0.5,'d',2) & Ywm<0.9 & (Ysrc>cat_stat_nanmean(T3th(2:3))) & Yp0<2/3);
+    %% head to GM ... importanten for children
+    [Ywmr,Ybr,resT2] = cat_vol_resize({Ywm,Yb},'reduceV',vx_vol,2,32); 
+    Ygm = cat_vol_morph(Ywmr>0.5,'d',3) & (cat_vol_morph(~Ybr,'d',3) | cat_vol_morph(Ybr,'d',1)); clear Ybr Ywmr;  % close to the head
+    Ygm = cat_vol_resize(single(Ygm),'dereduceV',resT2)>0.5;
+    Ygm = Ygm & Yp0<2/3 & Yb & Yg<cat_stat_nanmean(Yg(P(:,:,:,1)>64)) & Ydiv<cat_stat_nanmean(Ydiv(P(:,:,:,1)>64)); % add GM with low SPM prob ... 
+    Ygm = Ygm & (Ysrc>cat_stat_nansum(T3th(1:2).*[0.5 0.5])) & (Ysrc<cat_stat_nansum(T3th(2:3).*[0.2 0.8])); % but good intensity
+    Ygm(smooth3(Ygm)<0.5)=0; 
+    clear Yg Ydiv;
+    %%
+    Ygm = uint8(Ygm); 
     P(:,:,:,5) = P(:,:,:,5) .* (1-Ygm);
     P(:,:,:,3) = P(:,:,:,3) .* (1-Ygm);
     P(:,:,:,2) = P(:,:,:,2) .* (1-Ygm);
@@ -871,8 +879,8 @@ if ~isfield(res,'spmpp')
   % finally use brainmask before cleanup that was derived from SPM12 segmentations and additionally include
   % areas where GM from Amap > GM from SPM12. This will result in a brainmask where GM areas
   % hopefully are all included and not cut 
-  if job.extopts.gcutstr >= 0.5 & ~job.inv_weighting
-    Yb0(indx,indy,indz) = Yb0(indx,indy,indz) | ((prob(:,:,:,1) > 0) & ~Ycls{1}(indx,indy,indz));
+  if job.extopts.gcutstr >= 0.5 && ~job.inv_weighting
+    Yb0(indx,indy,indz) = Yb0(indx,indy,indz) | ((prob(:,:,:,1) > 0) & Yb(indx,indy,indz)); % & ~Ycls{1}(indx,indy,indz));
     for i=1:3
       prob(:,:,:,i) = prob(:,:,:,i).*uint8(Yb0(indx,indy,indz));
     end
