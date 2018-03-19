@@ -367,7 +367,7 @@ function cat_run_job(job,tpm,subj)
                   if ix==1 
                     Vn   = spm_vol(Pmn); Vn = rmfield(Vn,'private'); Yn = spm_read_vols(Vn);
                     bias(ix) = (1/cat_stat_nanstd(Yn(:)./Yi(:))) * 4; 
-                    fprintf('bias=%5.0f mm ',bias(ix)); 
+                    %fprintf('bias=%5.0f mm ',bias(ix)); 
                     bias(ix) = max(30,min(120,round(bias(ix) / 15) * 15));
                     if ~debug, clear Yn; end
                   %elseif ix>1 && isinf(job.opts.biasstr)

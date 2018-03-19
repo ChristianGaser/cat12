@@ -484,7 +484,8 @@ showslice.val  = {data_vol,scale,orient,slice};
 showslice.prog = @cat_stat_showslice_all;
 showslice.help = {'This function displays a selected slice for all images and indicates the respective filenames which is useful to check image quality for a large number of files in a circumscribed region (slice).'};
 
-%------------------------------------------------------------------------
+
+%% ------------------------------------------------------------------------
 
 data.help = {
 'Select images for filtering'};
@@ -495,44 +496,279 @@ rician.name    = 'Rician noise';
 rician.labels  = {'Yes' 'No'};
 rician.values  = {1 0};
 rician.val     = {0};
-rician.help    = {'MRIs can have Gaussian or Rician distributed noise with uniform or nonuniform variance across the image. If SNR is high enough (>3) noise can be well approximated by Gaussian noise in the foreground. However, for SENSE reconstruction or DTI data a Rician distribution is expected.'
-''
-'Please note that the Rician noise estimation is sensitive for large signals in the neighbourhood and can lead to artefacts (e.g. cortex can be affected by very high values in the scalp or in blood vessels.'
-''
+rician.help    = {
+  'MRIs can have Gaussian or Rician distributed noise with uniform or nonuniform variance across the image. If SNR is high enough (>3) noise can be well approximated by Gaussian noise in the foreground. However, for SENSE reconstruction or DTI data a Rician distribution is expected.'
+  ''
+  'Please note that the Rician noise estimation is sensitive for large signals in the neighbourhood and can lead to artefacts (e.g. cortex can be affected by very high values in the scalp or in blood vessels.'
+  ''
+};
+
+% also this limit is a serparate function it is import for the noise filter
+% and therefore inlcuded here
+intlim         = cfg_entry;
+intlim.tag     = 'intlim';
+intlim.name    = 'Global intensity limitation';
+intlim.strtype = 'r';
+intlim.num     = [1 1];
+intlim.val     = {99.99};
+intlim.help    = {
+  'General intensity limitation to remove strong outlier by using the 99.99%% of original values histogram before noise correction. '
+  ''
+};
+
+% remove artifacts
+outlier         = cfg_entry;
+outlier.tag     = 'outlier';
+outlier.name    = 'Strengh of outlier correction';
+outlier.strtype = 'r';
+outlier.num     = [1 1];
+outlier.val     = {1};
+outlier.help    = {
+  'Remove strong outlier (salt and pepper noise) with more than n times of the average local correction strength.'
+  'Larger values will result in stronger corrections, whereas lower values result in less corrections.'
+  'Changes will be more visible in high quality areas/images.' 
+};
+
+% also this is a serparate function it is import for the results
+spm_type         = cfg_menu; %
+spm_type.tag     = 'spm_type';
+spm_type.name    = 'Data precession of the output image';
+if expert>1 
+  % developer! there should be no greate difference between uint# and int# due to the rescaling 
+  spm_type.labels  = {'native','uint8','int8','uint16','int16','single'};
+  spm_type.values  = {0 2 256 512 4 16};
+else
+  spm_type.labels  = {'native','uint8 (8 bit, 256 values)','uint16 (16 bit = 65536 values)','single (32 bit)'};
+  spm_type.values  = {0 2 512 16};
+end
+spm_type.val     = {16};
+spm_type.help    = {
+  'SPM data type of the output image. Single precession is recommended but also uint16 support good results. '
+  'Internal scaling support a relative high accuracy for the limited number of bits, special values such as NAN and INF (eg. in the background) will be lost! NAN is converted to 0, -INF to the minimum and INF to the maximum value. '
+  ''
 };
 
 prefix         = cfg_entry;
 prefix.tag     = 'prefix';
-prefix.name    = 'Filename Prefix';
+prefix.name    = 'Filename prefix';
 prefix.strtype = 's';
-prefix.num     = [1 Inf];
+prefix.num     = [0 Inf];
 prefix.val     = {'sanlm_'};
-prefix.help    = {'Specify the string to be prepended to the filenames of the smoothed image file(s). Default prefix is ''samlm_''.'};
+prefix.help    = {
+  'Specify the string to be prepended to the filenames of the smoothed image file(s). Default prefix is ''samlm_''.' 
+  ''
+};
 
+postfix         = cfg_entry;
+postfix.tag     = 'postfix';
+postfix.name    = 'Filename postfix';
+postfix.strtype = 's';
+postfix.num     = [0 Inf];
+postfix.val     = {''};
+postfix.help    = {
+  'Specify the string to be suspended to the filenames of the smoothed image file(s). Default postfix is ''''. '
+  ['Use ''PARA'' to add input parameters, e.g. "sanlm_*_NC#.##_RN#_RD#_RIA#.##_RNI#_OL#.##.nii" with ' ...
+   'NC=NCstr, RN=rician noise, RD=resolution dependency, RIA=relative intensity adaption, RNI=replace NAN and INF, and OL=outlier correction.']
+  ''
+};
+
+% 
 NCstr         = cfg_entry;
 NCstr.tag     = 'NCstr';
 NCstr.name    = 'Strength of Noise Corrections';
 NCstr.strtype = 'r';
 NCstr.num     = [1 1];
-NCstr.def     = @(val)cat_get_defaults('extopts.NCstr', val{:});
+if cat_get_defaults('extopts.NCstr')>0
+  NCstr.def     = @(val)min(1,max(0,cat_get_defaults('extopts.NCstr', val{:})));
+else
+  NCstr.def     = @(val)min(1,max(0,-cat_get_defaults('extopts.NCstr', val{:})));
+end
 NCstr.help    = {
   'Strength of the SANLM noise correction. The default "-inf" uses an adaptive noise correction and was successfully tested on a variety of scans. Use smaller values (>0) for less denoising  and higher values (<=1) for stronger denoising. The value 0 will turn off any noise correction.'
 ''
 };
 
+replaceNANandINF         = cfg_menu;
+replaceNANandINF.tag     = 'replaceNANandINF';
+replaceNANandINF.name    = 'Replace NAN and INF';
+replaceNANandINF.labels  = {'Yes' 'No'};
+replaceNANandINF.values  = {1 0};
+replaceNANandINF.val     = {1};
+replaceNANandINF.help    = {
+  'Replace NAN by 0, -INF by the minimum and INF by the maximum of the image.'
+  ''
+  };
+
+% relative value vs. on/off
+if expert
+  relativeFilterStengthLimit         = cfg_entry;
+  relativeFilterStengthLimit.tag     = 'relativeFilterStengthLimit';
+  relativeFilterStengthLimit.name    = 'Factor of relative filter strength limit';
+  relativeFilterStengthLimit.strtype = 'r';
+  relativeFilterStengthLimit.num     = [1 1];
+  relativeFilterStengthLimit.val     = {1};
+  relativeFilterStengthLimit.help    = {
+    'Limit the relative noise correction in relation to to avoid over-filtering of low intensities areas.' 
+    'Low values will lead to less filtering in low intensity ares, whereas high values will be closer to the original filter. INF deactivates the filter. '
+    ''
+  };
+else
+  relativeFilterStengthLimit         = cfg_menu;
+  relativeFilterStengthLimit.tag     = 'relativeFilterStengthLimit';
+  relativeFilterStengthLimit.name    = 'Use relative filter strength';
+  relativeFilterStengthLimit.labels  = {'Yes' 'No'};
+  relativeFilterStengthLimit.values  = {1 0};
+  relativeFilterStengthLimit.val     = {1};
+  relativeFilterStengthLimit.help    = {
+    'Limit the relative noise correction in relation to to avoid over-filtering of low intensities areas.'
+    ''
+    };
+end
+
+relativeIntensityAdaption         = cfg_entry;
+relativeIntensityAdaption.tag     = 'relativeIntensityAdaption';
+relativeIntensityAdaption.name    = 'Strength of relative intensity adaption';
+relativeIntensityAdaption.strtype = 'r';
+relativeIntensityAdaption.num     = [1 1];
+relativeIntensityAdaption.val     = {1};
+relativeIntensityAdaption.help    = {
+  'Strength of relative intensity adaption, with 0 for no adaption and 1 for full adaption.'
+ ['The SANLM filter is often very successful in the background and removed nearly all noise. However, routines such as the' ...
+  'SPM Unified Segmentation expect Gaussian distribution in all regions and is troubled by regions with to low variance. ' ...
+  'Hence, an relative limitation of SANLM correction is added here that based on the bias reduced image intensity. ']
+  ''
+};
+% very special parameter ...
+if expert
+  relativeIntensityAdaptionTH         = cfg_entry;
+  relativeIntensityAdaptionTH.tag     = 'relativeIntensityAdaptionTH';
+  relativeIntensityAdaptionTH.name    = 'Strength of smoothing of the relative filter strength limit';
+  relativeIntensityAdaptionTH.strtype = 'r';
+  relativeIntensityAdaptionTH.num     = [1 1];
+  relativeIntensityAdaptionTH.val     = {2};
+  relativeIntensityAdaptionTH.help    = {
+    'Smoothing of the relative filter strength limitation.'
+    ''
+  };
+
+  resolutionDependency         = cfg_menu;
+  resolutionDependency.tag     = 'resolutionDependency';
+  resolutionDependency.name    = 'Resolution depended filtering';
+  resolutionDependency.labels  = {'Yes' 'No'};
+  resolutionDependency.values  = {1 0};
+  resolutionDependency.val     = {0};
+  resolutionDependency.help    = {
+    'Resolution dependending filtering with reduced filter strength in data with low spatial resolution defined by the "Range of resolution dependency". '
+    'Use only for anatomical data.'
+    ''
+    };
+  
+  resolutionDependencyRange         = cfg_entry;
+  resolutionDependencyRange.tag     = 'resolutionDependencyRange';
+  resolutionDependencyRange.name    = 'Range of resolution dependency';
+  resolutionDependencyRange.strtype = 'r';
+  resolutionDependencyRange.num     = [1 2];
+  resolutionDependencyRange.val     = {[1 2.5]};
+  resolutionDependencyRange.help    = {
+    'Definition of the spatial resolution for "full filtering" (first value) and "no filtering" (second value). '
+    ''
+  };
+
+  verb         = cfg_menu;
+  verb.tag     = 'verb';
+  verb.name    = 'Verbose output';
+  verb.labels  = {'No' 'Yes'};
+  verb.values  = {0 1};
+  verb.val     = {1};
+  verb.help    = {
+    'Be verbose.'
+    ''
+    };
+end
+
+nlm_default        = cfg_branch;
+nlm_default.tag    = 'default';
+nlm_default.name   = 'Default filter';
+nlm_default.val    = {NCstr};
+nlm_default.help   = {
+    '' 
+}; 
+
+nlm_optimized        = cfg_branch;
+nlm_optimized.tag    = 'optimized';
+nlm_optimized.name   = 'Optimized filter';
+if expert>1
+  nlm_optimized.val  = {NCstr outlier relativeIntensityAdaption relativeIntensityAdaptionTH relativeFilterStengthLimit resolutionDependency resolutionDependencyRange};
+else
+  nlm_optimized.val  = {NCstr outlier relativeIntensityAdaption};
+end
+nlm_optimized.help   = {
+    '' 
+}; 
+
+nlmfilter        = cfg_choice;
+nlmfilter.tag    = 'nlmfilter';
+nlmfilter.name   = 'Filter type';
+nlmfilter.values = {nlm_default nlm_optimized};
+if cat_get_defaults('extopts.NCstr')>0
+  nlmfilter.val    = {nlm_default}; 
+else
+  nlmfilter.val    = {nlm_optimized}; 
+end  
+nlmfilter.help   = {
+    '' 
+}; 
+
 sanlm        = cfg_exbranch;
 sanlm.tag    = 'sanlm';
 sanlm.name   = 'Spatially adaptive non-local means denoising filter';
-sanlm.val    = {data prefix NCstr rician};
+if expert>1 % developer
+  sanlm.val    = {data spm_type prefix postfix intlim rician replaceNANandINF nlmfilter};
+elseif expert
+  sanlm.val    = {data spm_type prefix postfix rician replaceNANandINF nlmfilter};
+else
+  sanlm.val    = {data spm_type prefix nlmfilter};
+end
 sanlm.prog   = @cat_vol_sanlm;
 sanlm.vfiles = @vfiles_sanlm;
 sanlm.help   = {
 'This function applies an spatial adaptive non-local means denoising filter to the data. This filter will remove noise while preserving edges. The filter strength is automatically estimated based on the standard deviation of the noise. '
 ''
-'This filter is internally used in the segmentation procedure anyway. Thus, it is not neccessary (and not recommended) to apply the filter before segmentation.'
+'This filter is internally used in the segmentation procedure anyway. Thus, it is not necessary (and not recommended) to apply the filter before segmentation.'
 ''
 };
+%------------------------------------------------------------------------
+data.help          = {'Select images for data type convertation';''};
+intlim.tag         = 'range';
+prefix.val         = {'PARA'};
+prefix.help        = {
+  'Specify the string to be prepended to the filenames of the converted image file(s). Default prefix is ''PARA'' that is replaced by the choosen datatype.'
+  ''
+};
+postfix.help        = {
+  'Specify the string to be prepended to the filenames of the converted image file(s). Default prefix is ''''.'
+  'Use ''PARA'' to add the datatype to the filename.'
+  ''
+};
+spm_type.labels(1) = []; % remove native case
+spm_type.values(1) = []; % remove native case
+spm_type.tag       = 'ctype';
 
+spmtype         = cfg_exbranch;
+spmtype.tag     = 'spmtype';
+spmtype.name    = 'Image data type converter'; 
+if expert
+  spmtype.val     = {data spm_type prefix postfix intlim};
+else
+  spmtype.val     = {data spm_type prefix intlim};
+end
+spmtype.prog    = @cat_io_volctype;
+spmtype.vfiles  = @vfiles_volctype;
+spmtype.help    = {
+  'Convert the image data type to reduce disk-space.'
+  'Uses 99.99% of the main intensie histogram to avoid problems due to outliers. Although the internal scaling support a relative high accuracy for the limited number of bits, special values such as NAN and INF will get lost!'
+  ''
+};
 %------------------------------------------------------------------------
 roi_xml = cfg_files;
 roi_xml.name = 'XML files';
@@ -965,7 +1201,7 @@ if expert
 
   
   % ---
-  
+  % batch mode - output is not defined!
   urqio         = cfg_exbranch;
   urqio.tag     = 'urqio';
   urqio.name    = 'Ultra-High Resolution Quantitative Image Optimization';
@@ -987,7 +1223,7 @@ nonlin_coreg  = cat_conf_nonlin_coreg;
 tools = cfg_choice;
 tools.name   = 'Tools';
 tools.tag    = 'tools';
-tools.values = {showslice,check_cov,check_SPM,calcvol,calcroi,iqr,T2x,F2x,T2x_surf,F2x_surf,sanlm,realign,long,nonlin_coreg,defs,defs2}; %,qa
+tools.values = {showslice,check_cov,check_SPM,calcvol,calcroi,iqr,T2x,F2x,T2x_surf,F2x_surf,sanlm,spmtype,realign,long,nonlin_coreg,defs,defs2}; %,qa
 if expert 
   tools.values = [tools.values,{urqio}]; 
 end
@@ -1090,11 +1326,13 @@ end
 return;
 %_______________________________________________________________________
 function vf = vfiles_sanlm(job)
-s  = cellstr(char(job.data)); vf = s; 
-for i=1:numel(s),
-    [pth,nam,ext,num] = spm_fileparts(s{i});
-    vf{i} = fullfile(pth,[job.prefix,nam,ext,num]);
-end;
+job.returnOnlyFilename = 1; 
+vf = cat_vol_sanlm(job); 
+return;
+%_______________________________________________________________________
+function vf = vfiles_volctype(job)
+job.returnOnlyFilename = 1; 
+vf = cat_io_volctype(job); 
 return;
 %_______________________________________________________________________
 function vf = vfiles_qa(job)
