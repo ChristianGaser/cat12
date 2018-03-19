@@ -72,7 +72,7 @@ function varargout = cat_stat_histth(src,percent,opt)
   
   
   % histogram
-  [hsrc,hval] = hist(src(:),opt.hbins);
+  [hsrc,hval] = hist(src(~isinf(src(:)) & ~isnan(src(:))),opt.hbins);
   hp          = cumsum(hsrc)./sum(hsrc); 
 
   
