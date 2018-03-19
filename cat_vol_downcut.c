@@ -68,9 +68,9 @@ float max2(float a, float b) { if (a>b) return a; else return b; }
 
 /* MAINFUNCTION */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-  if (nrhs<1)                                                      mexErrMsgTxt("ERROR:cat_vol_downcut: not enought input elements\n");
-  if (nrhs>5)                                                      mexErrMsgTxt("ERROR:cat_vol_downcut: to many input elements.\n");
-  if (nlhs>2)                                                      mexErrMsgTxt("ERROR:cat_vol_downcut: to many output elements.\n");
+  if (nrhs<1)                                                      mexErrMsgTxt("ERROR:cat_vol_downcut: not enough input elements\n");
+  if (nrhs>5)                                                      mexErrMsgTxt("ERROR:cat_vol_downcut: too many input elements.\n");
+  if (nlhs>2)                                                      mexErrMsgTxt("ERROR:cat_vol_downcut: too many output elements.\n");
   if (mxIsSingle(prhs[0])==0)                                      mexErrMsgTxt("ERROR:cat_vol_downcut: first  input must be an 3d single matrix\n");
   if (mxIsSingle(prhs[1])==0)                                      mexErrMsgTxt("ERROR:cat_vol_downcut: second input must be an 3d single matrix\n");
   if (mxIsDouble(prhs[2])==0 || mxGetNumberOfElements(prhs[2])!=1) mexErrMsgTxt("ERROR:cat_vol_downcut: third input must one double value\n");

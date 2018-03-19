@@ -402,7 +402,7 @@ if ~isfield(res,'spmpp')
     Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
     clear Ygmc Ywmc; 
 
-    %% head to GM ... importanten for children
+    %% head to GM ... important for children
     [Ywmr,Ybr,resT2] = cat_vol_resize({Ywm,Yb},'reduceV',vx_vol,2,32); 
     Ygm = cat_vol_morph(Ywmr>0.5,'d',3) & (cat_vol_morph(~Ybr,'d',3) | cat_vol_morph(Ybr,'d',1)); clear Ybr Ywmr;  % close to the head
     Ygm = cat_vol_resize(single(Ygm),'dereduceV',resT2)>0.5;

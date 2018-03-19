@@ -48,7 +48,7 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
   if 0
     % RD 201803: 
     % Remove blood vessels & meninges
-    % This block is to aggressive and remove gyral peaks (thickness overestimation).
+    % This block is too aggressive and removes gyral peaks (thickness overestimation).
     % However, some correction is required ...
     Ymx = cat_vol_morph(Ymf>2.5,'l');  Ymf(Ymf>2.5 & ~Ymx)=2;   clear Ymx
     Ymx = cat_vol_morph(Ymf>2.2,'lo'); Ymf(Ymf>2.2 & ~Ymx)=2.1; clear Ymx
@@ -70,7 +70,7 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
   %  RD 201803:
   %  The speed map weighting "max(0.5,min(1,Ymf/2))" is not strong enough to  
   %  support asymmetric structures. The map "max(eps,min(1,((Ymf-1)/1.1).^4))"  
-  %  works much better but it lead to much higher thickness results (eg. in 
+  %  works much better but it leads to much higher thickness results (eg. in 
   %  the Insula).
   
   newspeedmapF = 0; 
@@ -154,12 +154,12 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
 
   %% PBT thickness mapping 
   %  PBT is the default thickness estimation, but PBT2x is the optimized
-  %  version that use both sulci and gyri refinements, because not only 
-  %  thin sulci can blurred. PBT2x is furthermore the method that is
+  %  version that usex both sulci and gyri refinements, because not only 
+  %  thin sulci can be blurred. PBT2x is also the method that is
   %  described in the paper.
-  %  PBTv is new version that used the volume rather than the distance. 
+  %  PBTv is new version that uses the volume rather than the distance. 
   %  Although this works in principle, this is biased by interpolation 
-  %  artifacts and in-optimal WMD mapping.  
+  %  artifacts and not-optimal WMD mapping.  
   iter = 1/mean(opt.resV);
   if strcmp(opt.method,'pbtv')  
     Ywmdo = Ywmd+0; 

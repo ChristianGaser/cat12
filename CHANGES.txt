@@ -1,5 +1,24 @@
 ------------------------------------------------------------------------
-r1293 | dahnke | 2018-03-19 15:47:12
+r1294 | gaser | 2018-03-19 21:33:21
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_main.m
+M       cat_vbdist.c
+M       cat_vol_downcut.c
+M       cat_vol_eidist.c
+M       cat_vol_eikonal3.c
+M       cat_vol_gradient3.c
+M       cat_vol_laplace3.c
+M       cat_vol_laplace3R.c
+M       cat_vol_pbt.m
+M       cat_vol_sanlm.m
+M       cat_vol_simgrow.c
+
+Changed: Corrected uncountable number of typos.
+------------------------------------------------------------------------
+r1293 | dahnke | 2018-03-19 15:48:24 +0100 (Mo, 19 Mär 2018) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +28,7 @@ M       cat_vol_pbt.m
 Changed:    Updated post-SPM segmentation correction after 
             skull-stripping to reduce problems in data with 
             thin skulls (children). 
+
 ------------------------------------------------------------------------
 r1292 | dahnke | 2018-03-19 10:27:06 +0100 (Mo, 19 Mär 2018) | 17 lines
 

@@ -35,9 +35,9 @@ float abs2(float n) {	if (n<0) return -n; else return n; }
 /* main function */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-  if (nrhs<2)                                       mexErrMsgTxt("ERROR:laplace3R: not enought input elements\n");
-  if (nrhs>4)                                       mexErrMsgTxt("ERROR:laplace3R: to many input elements\n");
-  if (nlhs>1)                                       mexErrMsgTxt("ERROR:laplace3R: to many output elements\n");
+  if (nrhs<2)                                       mexErrMsgTxt("ERROR:laplace3R: not enough input elements\n");
+  if (nrhs>4)                                       mexErrMsgTxt("ERROR:laplace3R: too many input elements\n");
+  if (nlhs>1)                                       mexErrMsgTxt("ERROR:laplace3R: too many output elements\n");
   if (mxIsSingle(prhs[0])==0)                       mexErrMsgTxt("ERROR:laplace3R: 1st input must be an 3d single matrix\n");
   if (mxIsLogical(prhs[1])==0)                      mexErrMsgTxt("ERROR:laplace3R: 2nd input must be an 3d logical matrix\n");
   if (nrhs==3 && mxIsDouble(prhs[2])==0)            mexErrMsgTxt("ERROR:laplace3R: 3rd input must be an double matrix\n");

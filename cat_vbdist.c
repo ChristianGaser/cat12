@@ -53,8 +53,8 @@ void ind2sub(int i, int *x, int *y, int *z, int sxy, int sy) {
 
 /* main function */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-  if (nrhs<1)                                       mexErrMsgTxt("ERROR:cat_vbdist: not enought input elements\n");
-  if (nlhs>3)                                       mexErrMsgTxt("ERROR:cat_vbdist: to many output elements.\n");
+  if (nrhs<1)                                       mexErrMsgTxt("ERROR:cat_vbdist: not enough input elements\n");
+  if (nlhs>3)                                       mexErrMsgTxt("ERROR:cat_vbdist: too many output elements.\n");
   if (mxIsSingle(prhs[0])==0)                       mexErrMsgTxt("ERROR:cat_vbdist: first  input must be an 3d single matrix\n");
   if (nrhs==2 && mxIsLogical(prhs[1])==0)           mexErrMsgTxt("ERROR:cat_vbdist: second input must be an 3d logical matrix\n");
   if (nrhs==3 && mxIsDouble(prhs[2])==0)            mexErrMsgTxt("ERROR:cat_vbdist: third input must be an double matrix\n");
