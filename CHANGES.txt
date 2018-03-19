@@ -1,5 +1,24 @@
 ------------------------------------------------------------------------
-r1291 | dahnke | 2018-03-15 13:34:15
+r1292 | dahnke | 2018-03-19 10:26:37
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_io_volctype.m
+M       cat_run_job.m
+M       cat_stat_histth.m
+M       cat_vol_sanlm.m
+
+Changed:    Updated "cat_vol_sanlm" filter and its GUI to avoid over 
+            filtering of low intensity areas. 
+New:        Added GUI for "cat_io_ctype" that convert the data type 
+            of images (eg. float > uint8) to save disk space.
+
+
+
+
+------------------------------------------------------------------------
+r1291 | dahnke | 2018-03-15 13:34:45 +0100 (Do, 15 Mär 2018) | 23 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -20,6 +39,7 @@ Changed:    Updated pbtv-case in "cat_vol_pbt" and added comments.
 Changed:    Added smoothing step in "cat_vol_pbtv.m".
 
  
+
 
 
 

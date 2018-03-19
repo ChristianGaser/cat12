@@ -1,4 +1,4 @@
-function cat_io_volctype(varargin)
+function varargout = cat_io_volctype(varargin)
 % ______________________________________________________________________
 % Convert datatype of images, to have more space on your harddisk. 
 % In example most tissue classifcations can saved as uint8 or uint16 
@@ -19,9 +19,10 @@ function cat_io_volctype(varargin)
   else
       job = varargin{1};
   end
-  def.prefix    = ''; 
-  def.force     = 1; 
-  def.overwrite = 1;
+  def.force               = 1; 
+  def.verb                = 1;
+  def.postfix             = '';
+  def.returnOnlyFilename  = 0; 
   job = cat_io_checkinopt(job,def); 
 
   if ~isfield(job,'data') || isempty(job.data)
@@ -75,8 +76,20 @@ function cat_io_volctype(varargin)
   end
   
 % choose prefix
-  job.prefix = spm_input('Filename prefix (empty=overwrite!)','+1','s',job.prefix,1);
-  %job.overwrite = spm_input('Overwrite?','+1','y/n','',job.overwrite);
+  if ~isfield(job,'prefix') 
+    job.prefix = spm_input('Filename prefix (empty=overwrite!)','+1','s',[spm_type(ctype) '_'],1);
+  end
+  if strcmp(job.prefix,'PARA')
+    job.prefix = [spm_type(ctype) '_']; 
+  end
+  if ~strcmp(job.prefix,'PARA') && strcmp(job.postfix,'PARA')
+    job.prefix = ['_' spm_type(ctype)]; 
+  end
+  for si=1:numel(job.data)
+    [pp,ff,ee,dd]    = spm_fileparts(job.data{si});
+    varargout{1}{si} = fullfile(pp,[job.prefix ff job.postfix ee dd]);
+  end
+  if job.returnOnlyFilename, return; end
   
  
   
@@ -84,16 +97,10 @@ function cat_io_volctype(varargin)
   for si=1:numel(job.data)
     V = spm_vol(strrep(job.data{si},',1',''));
     Y = spm_read_vols(V); 
- 
-    
-    [pp,ff,ee,dd] = spm_fileparts(V(1).fname);
-      
 
-    if range==0
-      clim = [min(Y(:)) max(Y(:))]; 
-    elseif range>0 && range<100
-      clim = cat_vol_iscaling(Y(:),[50-range/2 50+range/2]);         
-    end
+    [pp,ff,ee] = spm_fileparts(V(1).fname);
+      
+    [Yt,clim] = cat_stat_histth(Y,job.range); clear Yt;  %#ok<ASGLU>
     
     if round(cvals)~=cvals && ccvals~=0
       switch ctype
@@ -117,17 +124,20 @@ function cat_io_volctype(varargin)
     end
     V(1).dt(1) = ctype;
 
-    if isempty(job.prefix) && (job.overwrite==0 || job.overwrite=='n')
-      prefix = [spm_type(ctype) '_'];
-    else
-      prefix = job.prefix; 
+    % replace NAN and INF in case of integer
+    switch V(1).dt(1) 
+      case {2,4,256,512}
+        Y(isnan(Y)) = 0;
+        Y(isinf(Y) & Y<0) = min(Y(:));
+        Y(isinf(Y) & Y>0) = max(Y(:));
     end
      
-    if exist(V(1).fname,'file'), delete(V(1).fname); end
     if ndims(Y)==4
       %%
+      if exist(V(1).fname,'file'), delete(V(1).fname); end % delete required in case of smaller file size! 
       N              = nifti;
       N.dat          = file_array(fullfile(pp,[prefix ff ee]),min([inf inf inf 3],size(Y)),[ctype spm_platform('bigend')],0,job.cvals,0);
+      N.descrip      = [V(1).descrip ' > ' spm_type(ctype)]; 
       N.mat          = V(1).mat;
       N.mat0         = V(1).private.mat0;
       N.descrip      = V(1).descrip;
@@ -135,10 +145,10 @@ function cat_io_volctype(varargin)
       %Y(:,:,:,3) = Y(:,:,:,3) + Y(:,:,:,4);
       N.dat(:,:,:,:) = Y(:,:,:,:);
     else
-      %%
-      if isempty(job.prefix) && exist(fullfile(pp,[ff,ee]),'file'), delete(fullfile(pp,[ff,ee])); end
-      V(1).fname    = fullfile(pp,[prefix ff ee]);
+      V(1).fname    = fullfile(pp,[job.prefix ff job.postfix ee]);
+      V(1).descrip  = [V(1).descrip ' > ' spm_type(ctype)]; 
       V = rmfield(V,'private');
+      if exist(V(1).fname,'file'), delete(V(1).fname); end % delete required in case of smaller file size!
       spm_write_vol(V,Y);
     end
     spm_progress_bar('Set',si);
