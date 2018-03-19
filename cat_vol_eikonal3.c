@@ -39,9 +39,9 @@ float abs2(float n) { if (n<0) return -n; else return n; }
 
 /* main function */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-  if (nrhs<1)                                       mexErrMsgTxt("ERROR:eikonal3: not enought input elements\n");
-  if (nrhs>2)                                       mexErrMsgTxt("ERROR:eikonal3: to many input elements.\n");
-  if (nlhs>2)                                       mexErrMsgTxt("ERROR:eikonal3: to many output elements.\n");
+  if (nrhs<1)                                       mexErrMsgTxt("ERROR:eikonal3: not enough input elements\n");
+  if (nrhs>2)                                       mexErrMsgTxt("ERROR:eikonal3: too many input elements.\n");
+  if (nlhs>2)                                       mexErrMsgTxt("ERROR:eikonal3: too many output elements.\n");
   if (mxIsSingle(prhs[0])==0)                       mexErrMsgTxt("ERROR:eikonal3: first  input must be an 3d single matrix\n");
   if (nrhs==2 && mxIsDouble(prhs[1])==0)            mexErrMsgTxt("ERROR:eikonal3: fourth  input must be an double matrix\n");
   if (nrhs==2 && mxGetNumberOfElements(prhs[1])!=3) mexErrMsgTxt("ERROR:eikonal3: fourth input must have 3 Elements");

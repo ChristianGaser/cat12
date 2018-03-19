@@ -223,8 +223,8 @@ for i = 1:numel(job.data)
             % Even low noise correction in structural images with low resolution
             % can remove important anatomical details. Hence, filter strength is 
             % here linear adapted by the average voxel resolution.
-            % For volumeDependencyRange = [1 2.5]  images with 1 mm or better are full filted, 
-            % whereas images with 2.5 mm or lower resolution were not filtered
+            % For volumeDependencyRange = [1 2.5]  images with 1 mm or better are fully filtered, 
+            % whereas images with 2.5 mm or lower resolution are not filtered
             if job.resolutionDependency
               NCs = NCs .* max( 0 , min( 1 , 1 - ...
                 ( mean(vx_vol) - job.resolutionDependencyRange(2) ) / ...
@@ -236,13 +236,13 @@ for i = 1:numel(job.data)
             %  The SANLM filter is often very successfull in the background
             %  and removed nearly all noise. However, routines such as the
             %  SPM Unified Segmentation expect Gaussian distribution in all
-            %  regions and is troubled by regions with to low variance. 
-            %  Hence, an relative limitation of SANLM correction is added 
-            %  here that based on the bias reduced image intensity. 
+            %  regions and is troubled by regions with too low variance. 
+            %  Hence, a relative limitation of SANLM correction is added 
+            %  here that is based on the bias reduced image intensity. 
             %
             %  NCi defines the normalized intensity to esimate the relative change rate.
             %  The log10 function is used to reduce bias effects.
-            %  A small resolution dependend (anatomical) blurring is used to avoid artifacts
+            %  A small resolution dependent (anatomical) blurring is used to avoid artifacts
             %  but large values would be counterprodutive (job.relativeIntensityAdaption). 
             %  The average change rate in signal region is estimated (mNCs) and used as limit
             %  for corrections (job.relativeFilterStengthLimit), where higher values allow 
@@ -314,7 +314,7 @@ for i = 1:numel(job.data)
         spm_progress_bar('Set',i);
         
         
-        %% if not single should be used, the image has to be converted ... 
+        %% if single should be not used, the image has to be converted ... 
         if job.spm_type~=16
           ctype.data   = Vo(i).fname; 
           

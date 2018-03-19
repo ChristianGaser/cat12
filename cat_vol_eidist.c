@@ -173,9 +173,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   /* 
    * Check input 
    */
-  if (nrhs<2) mexErrMsgTxt("ERROR:cat_vol_eidist: not enought input elements\n");
-  if (nrhs>7) mexErrMsgTxt("ERROR:cat_vol_eidist: to many input elements.\n");
-  if (nlhs>3) mexErrMsgTxt("ERROR:cat_vol_eidist: to many output elements.\n");
+  if (nrhs<2) mexErrMsgTxt("ERROR:cat_vol_eidist: not enough input elements\n");
+  if (nrhs>7) mexErrMsgTxt("ERROR:cat_vol_eidist: too many input elements.\n");
+  if (nlhs>3) mexErrMsgTxt("ERROR:cat_vol_eidist: too many output elements.\n");
   if (mxIsSingle(prhs[0])==0)
     mexErrMsgTxt("ERROR:cat_vol_eidist: first  input must be an 3d single matrix\n");
   if (mxIsSingle(prhs[1])==0)

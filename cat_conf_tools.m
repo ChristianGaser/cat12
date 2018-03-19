@@ -503,8 +503,8 @@ rician.help    = {
   ''
 };
 
-% also this limit is a serparate function it is import for the noise filter
-% and therefore inlcuded here
+% also this limit is a separate function that is used for the noise filter
+% and therefore included here
 intlim         = cfg_entry;
 intlim.tag     = 'intlim';
 intlim.name    = 'Global intensity limitation';
@@ -512,29 +512,29 @@ intlim.strtype = 'r';
 intlim.num     = [1 1];
 intlim.val     = {99.99};
 intlim.help    = {
-  'General intensity limitation to remove strong outlier by using the 99.99%% of original values histogram before noise correction. '
+  'General intensity limitation to remove strong outliers by using 99.99%% of the original histogram values  before noise correction. '
   ''
 };
 
 % remove artifacts
 outlier         = cfg_entry;
 outlier.tag     = 'outlier';
-outlier.name    = 'Strengh of outlier correction';
+outlier.name    = 'Strength of outlier correction';
 outlier.strtype = 'r';
 outlier.num     = [1 1];
 outlier.val     = {1};
 outlier.help    = {
-  'Remove strong outlier (salt and pepper noise) with more than n times of the average local correction strength.'
+  'Remove strong outliers (salt and pepper noise) with more than n times of the average local correction strength.'
   'Larger values will result in stronger corrections, whereas lower values result in less corrections.'
   'Changes will be more visible in high quality areas/images.' 
 };
 
-% also this is a serparate function it is import for the results
+% also this is a separate function that is used for the results
 spm_type         = cfg_menu; %
 spm_type.tag     = 'spm_type';
-spm_type.name    = 'Data precession of the output image';
+spm_type.name    = 'Data type of the output image';
 if expert>1 
-  % developer! there should be no greate difference between uint# and int# due to the rescaling 
+  % developer! there should be no great difference between uint# and int# due to rescaling 
   spm_type.labels  = {'native','uint8','int8','uint16','int16','single'};
   spm_type.values  = {0 2 256 512 4 16};
 else
@@ -543,8 +543,8 @@ else
 end
 spm_type.val     = {16};
 spm_type.help    = {
-  'SPM data type of the output image. Single precession is recommended but also uint16 support good results. '
-  'Internal scaling support a relative high accuracy for the limited number of bits, special values such as NAN and INF (eg. in the background) will be lost! NAN is converted to 0, -INF to the minimum and INF to the maximum value. '
+  'SPM data type of the output image. Single precision is recommended, but  uint16 also provides good results. '
+  'Internal scaling supports a relative high accuracy for the limited number of bits, special values such as NAN and INF (eg. in the background) will be lost! NAN is converted to 0, -INF to the minimum and INF to the maximum value. '
   ''
 };
 
@@ -555,7 +555,7 @@ prefix.strtype = 's';
 prefix.num     = [0 Inf];
 prefix.val     = {'sanlm_'};
 prefix.help    = {
-  'Specify the string to be prepended to the filenames of the smoothed image file(s). Default prefix is ''samlm_''.' 
+  'Specify the string to be prepended to the filenames of the filtered image file(s). Default prefix is ''samlm_''.' 
   ''
 };
 
@@ -566,7 +566,7 @@ postfix.strtype = 's';
 postfix.num     = [0 Inf];
 postfix.val     = {''};
 postfix.help    = {
-  'Specify the string to be suspended to the filenames of the smoothed image file(s). Default postfix is ''''. '
+  'Specify the string to be appended to the filenames of the filtered image file(s). Default postfix is ''''. '
   ['Use ''PARA'' to add input parameters, e.g. "sanlm_*_NC#.##_RN#_RD#_RIA#.##_RNI#_OL#.##.nii" with ' ...
    'NC=NCstr, RN=rician noise, RD=resolution dependency, RIA=relative intensity adaption, RNI=replace NAN and INF, and OL=outlier correction.']
   ''
@@ -608,8 +608,8 @@ if expert
   relativeFilterStengthLimit.num     = [1 1];
   relativeFilterStengthLimit.val     = {1};
   relativeFilterStengthLimit.help    = {
-    'Limit the relative noise correction in relation to to avoid over-filtering of low intensities areas.' 
-    'Low values will lead to less filtering in low intensity ares, whereas high values will be closer to the original filter. INF deactivates the filter. '
+    'Limit the relative noise correction to avoid over-filtering of low intensity areas.' 
+    'Low values will lead to less filtering in low intensity araes, whereas high values will be closer to the original filter. INF deactivates the filter. '
     ''
   };
 else
@@ -620,7 +620,7 @@ else
   relativeFilterStengthLimit.values  = {1 0};
   relativeFilterStengthLimit.val     = {1};
   relativeFilterStengthLimit.help    = {
-    'Limit the relative noise correction in relation to to avoid over-filtering of low intensities areas.'
+    'Limit the relative noise correction to avoid over-filtering of low intensities areas.'
     ''
     };
 end
@@ -634,8 +634,8 @@ relativeIntensityAdaption.val     = {1};
 relativeIntensityAdaption.help    = {
   'Strength of relative intensity adaption, with 0 for no adaption and 1 for full adaption.'
  ['The SANLM filter is often very successful in the background and removed nearly all noise. However, routines such as the' ...
-  'SPM Unified Segmentation expect Gaussian distribution in all regions and is troubled by regions with to low variance. ' ...
-  'Hence, an relative limitation of SANLM correction is added here that based on the bias reduced image intensity. ']
+  'SPM Unified Segmentation expect Gaussian distribution in all regions and is troubled by regions with too low variance. ' ...
+  'Hence, a relative limitation of SANLM correction is added here that is based on the bias reduced image intensity. ']
   ''
 };
 % very special parameter ...
@@ -738,7 +738,7 @@ sanlm.help   = {
 ''
 };
 %------------------------------------------------------------------------
-data.help          = {'Select images for data type convertation';''};
+data.help          = {'Select images for data type conversion';''};
 intlim.tag         = 'range';
 prefix.val         = {'PARA'};
 prefix.help        = {
@@ -766,7 +766,7 @@ spmtype.prog    = @cat_io_volctype;
 spmtype.vfiles  = @vfiles_volctype;
 spmtype.help    = {
   'Convert the image data type to reduce disk-space.'
-  'Uses 99.99% of the main intensie histogram to avoid problems due to outliers. Although the internal scaling support a relative high accuracy for the limited number of bits, special values such as NAN and INF will get lost!'
+  'Uses 99.99% of the main intensity histogram to avoid problems due to outliers. Although the internal scaling supports a relative high accuracy for the limited number of bits, special values such as NAN and INF will be lost!'
   ''
 };
 %------------------------------------------------------------------------
