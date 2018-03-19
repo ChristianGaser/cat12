@@ -33,10 +33,10 @@ void ind2sub(int i,int *x,int *y, int *z, int sxy, int sy) {
 /* main function */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-  if (nrhs<1)                  mexErrMsgTxt("ERROR:cat_vol_gradient3: not enought input elements\n");
-  if (nrhs>2)                  mexErrMsgTxt("ERROR:cat_vol_gradient3: to many input elements\n");
+  if (nrhs<1)                  mexErrMsgTxt("ERROR:cat_vol_gradient3: not enough input elements\n");
+  if (nrhs>2)                  mexErrMsgTxt("ERROR:cat_vol_gradient3: too many input elements\n");
   if (nlhs<3)                  mexErrMsgTxt("ERROR:cat_vol_gradient3: to less output elements\n");
-  if (nlhs>3)                  mexErrMsgTxt("ERROR:cat_vol_gradient3: to many output elements\n");
+  if (nlhs>3)                  mexErrMsgTxt("ERROR:cat_vol_gradient3: too many output elements\n");
   if (mxIsSingle(prhs[0])==0)  mexErrMsgTxt("ERROR:cat_vol_gradient3: input must be an 3d single matrix\n");
  
   
