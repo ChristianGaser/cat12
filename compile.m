@@ -157,8 +157,10 @@ function varargout = compile(comp,test,verb)
         end
 
         % check for errors and warnings
-        nce{nci}(ncj) = numel(strfind(rc{nci}{ncj},'error'));   
-        ncw{nci}(ncj) = numel(strfind(rc{nci}{ncj},'warning')); 
+        ncw{nci}(ncj) = numel(strfind(lower(rc{nci}{ncj}),'warning')); 
+        % space is necessary because otherwise strings such as "errorDocCallback" are
+        % also indicated as error
+        nce{nci}(ncj) = numel(strfind(rc{nci}{ncj},'error '))+numel(strfind(rc{nci}{ncj},'errors '));    
 
         % correct for conclusion 
         nce{nci}(ncj) = nce{nci}(ncj) - 2*(nce{nci}(ncj)>0); 

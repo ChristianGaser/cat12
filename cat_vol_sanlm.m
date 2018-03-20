@@ -130,6 +130,7 @@ if job.returnOnlyFilename
         [pth,nm,xt,vr]  = spm_fileparts(deblank(job.data{i})); 
         varargout{1}{i} = fullfile(pth,[job.prefix nm job.postfix xt vr]);
     end
+    return
 end
    
 
@@ -147,7 +148,7 @@ color = @(m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
 for i = 1:numel(job.data)
     [pth,nm,xt,vr] = spm_fileparts(deblank(V(i).fname)); %#ok<ASGLU>
 
-    stime = clock; 
+    stime = clock;
     vx_vol  = sqrt(sum(V(i).mat(1:3,1:3).^2));
 
     src = single(spm_read_vols(V(i)));
@@ -189,7 +190,7 @@ for i = 1:numel(job.data)
     
    
     for NCstri = 1:numel(NCstr)
-        stime3 = clock; 
+        stime3 = clock;
 
         srco   = single(spm_read_vols(V(i)));
         
@@ -342,7 +343,7 @@ for i = 1:numel(job.data)
                 cat_io_cprintf( [0 0 0] , ', '); % restore default color!
             end
             
-            % this is a long string but it load the original and the filted
+            % this is a long string but it loads the original and the filtered
             % image for comparison
             fprintf('%5.0fs, Output %s\n',etime(clock,stime),...
               spm_file(Vo(i).fname,'link',sprintf(...

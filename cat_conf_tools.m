@@ -538,7 +538,7 @@ if expert>1
   spm_type.labels  = {'native','uint8','int8','uint16','int16','single'};
   spm_type.values  = {0 2 256 512 4 16};
 else
-  spm_type.labels  = {'native','uint8 (8 bit, 256 values)','uint16 (16 bit = 65536 values)','single (32 bit)'};
+  spm_type.labels  = {'native','uint8','uint16','single (32 bit)'};
   spm_type.values  = {0 2 512 16};
 end
 spm_type.val     = {16};
@@ -575,7 +575,7 @@ postfix.help    = {
 % 
 NCstr         = cfg_entry;
 NCstr.tag     = 'NCstr';
-NCstr.name    = 'Strength of Noise Corrections';
+NCstr.name    = 'Strength of noise corrections';
 NCstr.strtype = 'r';
 NCstr.num     = [1 1];
 if cat_get_defaults('extopts.NCstr')>0

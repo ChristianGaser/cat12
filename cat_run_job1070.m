@@ -159,7 +159,7 @@ function cat_run_job1070(job,tpm,subj)
           job.channel(n).vols0{subj} = job.channel(n).vols{subj};
         end
 
-        % allways create the n*.nii image because of the real masking of the
+        % always create the n*.nii image because of the real masking of the
         % T1 data for spm_preproc8 that include rewriting the image!
         for n=1:numel(job.channel) 
           [pp,ff,ee] = spm_fileparts(job.channel(n).vols{subj}); 
@@ -175,6 +175,19 @@ function cat_run_job1070(job,tpm,subj)
             clear Y; 
           end
           job.channel(n).vols{subj} = nfname;
+
+          % denoising
+          if job.extopts.NCstr~=0 
+            if job.extopts.NCstr==2 || job.extopts.NCstr==3
+              stime = cat_io_cmd(sprintf('ISARNLM denoising (NCstr=%d)',job.extopts.NCstr));
+              cat_vol_isarnlm(struct('data',nfname,'verb',1,'prefix','')); 
+            else 
+              stime = cat_io_cmd(sprintf('SANLM denoising (NCstr=%0.2f)',job.extopts.NCstr));
+              cat_vol_sanlm(struct('data',nfname,'verb',0,'prefix','')); 
+            end
+            V = spm_vol(job.channel(n).vols{subj});
+            fprintf('%5.0fs\n',etime(clock,stime));   
+          end
 
           %% skull-stripping detection
           %  ------------------------------------------------------------
@@ -603,7 +616,7 @@ function cat_run_job1070(job,tpm,subj)
 
           % for non-skull-stripped brains use masked brains to get better estimates
           % esp. for brains with thinner skull
-          if ~skullstripped 
+          if ~skullstripped
             % use dilated mask for spm_preproc8 because sometimes inital SPM segmentation
             % does not cover the whole brain for brains with thinner skull
             [Ym, Ycls] = cat_spm_preproc_write8(res,zeros(k,4),zeros(1,2),[0 0],1,1);

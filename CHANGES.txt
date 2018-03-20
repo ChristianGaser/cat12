@@ -1,5 +1,109 @@
 ------------------------------------------------------------------------
-r1294 | gaser | 2018-03-19 21:33:21
+r1295 | gaser | 2018-03-20 15:44:02
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_amap.mexa64
+D       cat_amap.mexglx
+D       cat_amap.mexw32
+M       cat_amap.mexw64
+M       cat_conf_nonlin_coreg.m
+M       cat_conf_tools.m
+M       cat_main.m
+M       cat_ornlm.mexa64
+D       cat_ornlm.mexglx
+D       cat_ornlm.mexw32
+M       cat_ornlm.mexw64
+M       cat_plot_boxplot.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+M       cat_sanlm.mexa64
+D       cat_sanlm.mexglx
+D       cat_sanlm.mexw32
+M       cat_sanlm.mexw64
+M       cat_stat_analyze_ROIs.m
+M       cat_system.m
+M       cat_vbdist.mexa64
+D       cat_vbdist.mexglx
+M       cat_vbdist.mexmaci64
+D       cat_vbdist.mexw32
+M       cat_vbdist.mexw64
+M       cat_vol_downcut.mexa64
+D       cat_vol_downcut.mexglx
+M       cat_vol_downcut.mexmaci64
+D       cat_vol_downcut.mexw32
+M       cat_vol_downcut.mexw64
+M       cat_vol_eidist.mexa64
+D       cat_vol_eidist.mexglx
+M       cat_vol_eidist.mexmaci64
+D       cat_vol_eidist.mexw32
+M       cat_vol_eidist.mexw64
+D       cat_vol_eikonal3.mexglx
+D       cat_vol_eikonal3.mexw32
+M       cat_vol_genus0.mexa64
+D       cat_vol_genus0.mexglx
+D       cat_vol_genus0.mexw32
+M       cat_vol_genus0.mexw64
+M       cat_vol_gradient3.mexa64
+D       cat_vol_gradient3.mexglx
+M       cat_vol_gradient3.mexmaci64
+D       cat_vol_gradient3.mexw32
+M       cat_vol_gradient3.mexw64
+M       cat_vol_interp3f.mexa64
+D       cat_vol_interp3f.mexglx
+D       cat_vol_interp3f.mexw32
+M       cat_vol_interp3f.mexw64
+M       cat_vol_laplace3.mexa64
+D       cat_vol_laplace3.mexglx
+M       cat_vol_laplace3.mexmaci64
+D       cat_vol_laplace3.mexw32
+M       cat_vol_laplace3.mexw64
+M       cat_vol_laplace3R.mexa64
+D       cat_vol_laplace3R.mexglx
+M       cat_vol_laplace3R.mexmaci64
+D       cat_vol_laplace3R.mexw32
+M       cat_vol_laplace3R.mexw64
+M       cat_vol_localstat.mexa64
+D       cat_vol_localstat.mexglx
+D       cat_vol_localstat.mexw32
+M       cat_vol_localstat.mexw64
+M       cat_vol_median3.mexa64
+D       cat_vol_median3.mexglx
+D       cat_vol_median3.mexw32
+M       cat_vol_median3.mexw64
+M       cat_vol_median3c.mexa64
+D       cat_vol_median3c.mexglx
+D       cat_vol_median3c.mexw32
+M       cat_vol_median3c.mexw64
+M       cat_vol_pbtp.mexa64
+D       cat_vol_pbtp.mexglx
+D       cat_vol_pbtp.mexw32
+M       cat_vol_pbtp.mexw64
+M       cat_vol_sanlm.m
+M       cat_vol_simgrow.mexa64
+D       cat_vol_simgrow.mexglx
+M       cat_vol_simgrow.mexmaci64
+D       cat_vol_simgrow.mexw32
+M       cat_vol_simgrow.mexw64
+M       compile.m
+M       html/cat.html
+M       html/cat_versions.html
+
+(1) Changed: Updated version information to CAT12.3
+(2) Changed: Added SANLM filter again as very first step because the noise
+    estimation and de-noising works best for non-interpolated data.
+(3) Fixed: Compilation tool was sometimes indicating non-existing errors.
+(4) Fixed: cat_vol_sanlm was called 2 times because of missing "return".
+(5) Fixed: CAT!2 could not be called from directories with spaces under 
+    unix (thanks to Marco Hermesdorf for pointing to this error).
+(6) Fixed: ROI analysis was not working for Cobra atlas.
+(7) Changed: Changed text interpreter in cat_plot_boxplot.m
+------------------------------------------------------------------------
+r1294 | gaser | 2018-03-19 21:33:44 +0100 (Mo, 19 Mär 2018) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -17,6 +121,7 @@ M       cat_vol_sanlm.m
 M       cat_vol_simgrow.c
 
 Changed: Corrected uncountable number of typos.
+
 ------------------------------------------------------------------------
 r1293 | dahnke | 2018-03-19 15:48:24 +0100 (Mo, 19 Mär 2018) | 9 lines
 

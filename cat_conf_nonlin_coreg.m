@@ -32,7 +32,7 @@ source.preview = @(f) spm_image('Display',char(f));
 % Other Images
 %--------------------------------------------------------------------------
 other = cfg_files;
-other.name = 'Other images to write';
+other.name = 'Images to write';
 other.tag  = 'other';
 other.filter = 'image';
 other.num  = [1 Inf];

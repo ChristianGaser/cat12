@@ -560,38 +560,94 @@ if ~isfield(res,'spmpp')
 
   if job.extopts.NCstr~=0  
 
-    if job.extopts.NCstr==2 || job.extopts.NCstr==3
-      cat_io_cmd(sprintf('ISARNLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
-      if job.extopts.verb>1, fprintf('\n'); end
-      if job.extopts.NCstr==2, NCstr=-inf; else NCstr=1; end 
-      Ym = cat_vol_isarnlm(Ym,res.image,job.extopts.verb>1,NCstr); 
+    % use a boundary box (BB) of the brain to speed up denoising
+    useBB = 1; %job.extopts.output.bias.native; 
+
+    if useBB
+      [Yms,Ybr,BB] = cat_vol_resize({Ym,Yb},'reduceBrain',vx_vol,round(2/cat_stat_nanmean(vx_vol)),Yb); Ybr = Ybr>0.5; 
+
+
+      % apply NLM filter
+      if job.extopts.NCstr==2 || job.extopts.NCstr==3
+        cat_io_cmd(sprintf('ISARNLM noise correction (NCstr=%d)',job.extopts.NCstr));
+        if job.extopts.verb>1, fprintf('\n'); end
+        if job.extopts.NCstr==2, NCstr=-inf; else NCstr=1; end 
+        Yms = cat_vol_isarnlm(Yms,res.image,job.extopts.verb>1,NCstr); 
+
+        Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
+          Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
+          Yms .* Ybr;
+      else
+        %%
+        Ymo = Yms + 0;
+        if isinf(job.extopts.NCstr) 
+          stime = cat_io_cmd(sprintf('SANLM noise correction'));
+        else
+          stime = cat_io_cmd(sprintf('SANLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
+        end
+
+        % filter
+        cat_sanlm(Yms,3,1,0);
+
+        % merging
+        if isinf(job.extopts.NCstr) || sign(job.extopts.NCstr)==-1
+          job.extopts.NCstr = min(1,max(0,cat_stat_nanmean(abs(Yms(Ybr(:)) - Ymo(Ybr(:)))) * 15 * min(1,max(0,abs(job.extopts.NCstr))) )); 
+          NC     = min(2,abs(Yms - Ymo) ./ max(eps,Yms) * 15 * 2 * min(1,max(0,abs(job.extopts.NCstr)))); 
+          NCs    = NC + 0; spm_smooth(NCs,NCs,2); NCs = NCs .* cat_stat_nanmean(NCs(Ybr(:))) / cat_stat_nanmean(NC(Ybr(:))); clear NC;
+          NCs  = max(0,min(1,NCs)); 
+        end
+        fprintf('%5.0fs\n',etime(clock,stime));  
+
+        % mix original and noise corrected image and go back to original resolution
+        if exist('NCs','var');
+          Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
+            Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
+            (1-NCs) .* Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* Ybr + ...
+            NCs .* Yms .* Ybr;
+        else
+          Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
+            Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
+            (1-job.extopts.NCstr) .* Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* Ybr + ...
+            job.extopts.NCstr .* Yms .* Ybr;
+        end    
+        clear NCs; 
+
+      end
+      clear Yms Ybr BB;
     else
-      Ymo = Ym + 0;
-
-      if isinf(job.extopts.NCstr) 
-        stime = cat_io_cmd(sprintf('SANLM noise correction'));
+      if job.extopts.NCstr==2 || job.extopts.NCstr==3
+        cat_io_cmd(sprintf('ISARNLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
+        if job.extopts.verb>1, fprintf('\n'); end
+        if job.extopts.NCstr==2, NCstr=-inf; else NCstr=1; end 
+        Ym = cat_vol_isarnlm(Ym,res.image,job.extopts.verb>1,NCstr); 
       else
-        stime = cat_io_cmd(sprintf('SANLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
+        Ymo = Ym + 0;
+
+        if isinf(job.extopts.NCstr) 
+          stime = cat_io_cmd(sprintf('SANLM noise correction'));
+        else
+          stime = cat_io_cmd(sprintf('SANLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
+        end
+
+        % filter
+        cat_sanlm(Ym,3,1,0);
+
+        % merging
+        if isinf(job.extopts.NCstr) || sign(job.extopts.NCstr)==-1
+          NCstr2 = min(1,max(0,cat_stat_nanmean(abs(Ym(Ybr(:)) - Ymo(Ybr(:)))) * 15 * min(1,max(0,abs(job.extopts.NCstr))) )); 
+          NC     = min(2,abs(Ym - Ymo) ./ max(eps,Ym) * 15 * 2 * min(1,max(0,abs(NCstr2)))); 
+          NCs    = NC + 0; spm_smooth(NCs,NCs,2); NCs = NCs .* cat_stat_nanmean(NCs(Ybr(:))) / cat_stat_nanmean(NC(Ybr(:)));
+          NCs  = max(0,min(1,NCs));
+        end
+        fprintf('%5.0fs\n',etime(clock,stime));  
+
+        % mix original and noise corrected image and go back to original resolution
+        if exist('NCs','var');
+          Ym = (1-NCs) .* Ymo  +  NCs .* Ym ;
+        else
+          Ym = (1-NCstr2) .* Ymo + NCstr2 .* Ym;
+        end    
       end
-
-      % filter
-      cat_sanlm(Ym,3,1,0);
-
-      % merging
-      if isinf(job.extopts.NCstr) || sign(job.extopts.NCstr)==-1
-        job.extopts.NCstr = min(1,max(0,cat_stat_nanmean(abs(Ym(Yb(:)) - Ymo(Yb(:)))) * 15 * min(1,max(0,abs(job.extopts.NCstr))) )); 
-        NC     = min(2,abs(Ym - Ymo) ./ max(eps,Ym) * 15 * 2 * min(1,max(0,abs(job.extopts.NCstr)))); 
-        NCs    = NC + 0; spm_smooth(NCs,NCs,2); NCs = NCs .* cat_stat_nanmean(NCs(Yb(:))) / cat_stat_nanmean(NC(Yb(:)));
-        NCs  = max(0,min(1,NCs));
-      end
-      fprintf('%5.0fs\n',etime(clock,stime));  
-
-      % mix original and noise corrected image and go back to original resolution
-      if exist('NCs','var');
-        Ym = (1-NCs) .* Ymo  +  NCs .* Ym ;
-      else
-        Ym = (1-job.extopts.NCstr) .* Ymo + job.extopts.NCstr .* Ym;
-      end    
     end
 
     if job.inv_weighting

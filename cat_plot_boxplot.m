@@ -11,7 +11,7 @@ function [out,s] = cat_plot_boxplot(data,opt)
 %                  = 1;             % sort groups (ascending)
 %                  = 2;             % sort groups (descending)[inactive]
 %                  = [index];       % or by a index matrix
-%  opt.names       = {};            % cell of group names
+%  opt.names       = [];            % array of group names
 %  opt.fill        = 1;             % filling of boxes
 %  opt.groupnum    = 1;             % add number of elements
 % [opt.groupmin    = 5;]            % minimum number of non-nan-elements
@@ -596,6 +596,7 @@ for i=1:qn
       ylim(gca,opt.ylim);
     end
   end
+  set(gca,'TickLabelInterpreter','none');
 
   if ~isempty(opt.fontsize)
     set(gca,'FontSize',opt.fontsize);
