@@ -30,6 +30,17 @@
       <p>
         </br>Preprocessing should remain unaffected until the next minor version number. A new processing of your data is not necessary if the minor version number of CAT12 remains unchanged.
       </p>
+      <h2>Changes in version CAT12.3 (1295)</h2>      
+      <p>
+        <ul>
+          <li>Changes in preprocessing pipeline (which affects your results compared to CAT12.2)</li>
+          <ul>
+            <li>Skull-stripping is slightly changed. For brains with very thin skull (e.g. children) the skull-stripping approach was still too aggressive.</li>
+            <li>Spatial adaptive non-local mean (SANLM) filter is again called as very first step because noise estimation and de-noising works best for original (non-interpolated) data.</li>
+            <li>These changes will mainly affect children data or data with strong anisotropic voxel-sizes where internally interpolation was applied to obtain more isotropic voxels.</li>
+          </ul>
+        </ul>
+      </p>
       <h2>Changes in version CAT12.2 (1290)</h2>      
       <p>
         <ul>

@@ -14,7 +14,13 @@ if nargin == 0
   error('Argument is missing');
 end
 
-CATDir      = fullfile(spm('dir'),'toolbox','cat12','CAT');
+CATDir = fullfile(spm('dir'),'toolbox','cat12','CAT');
+
+% replace spaces in directory name
+if ~ispc
+  CATDir      = strrep(CATDir,' ','\ ');
+end
+
 if ispc
   CATDir = [CATDir '.w32'];
 elseif ismac
