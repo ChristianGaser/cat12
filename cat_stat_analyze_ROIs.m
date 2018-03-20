@@ -240,7 +240,7 @@ for i = order
   end
   
   % select volume atlas only for the 1st hemisphere
-  if ~mesh_detected & i==1
+  if ~mesh_detected & i==order(1)
     V = spm_vol(fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm',[atlas '.nii']));
     data0 = round(spm_data_read(V));
 

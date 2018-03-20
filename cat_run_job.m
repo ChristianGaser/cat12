@@ -530,6 +530,23 @@ function cat_run_job(job,tpm,subj)
               %if spmp0, return; else if ~debug, clear spmp0; end; end
             end
             
+            
+            
+            %% noise correction
+            %  ------------------------------------------------------------
+            if job.extopts.NCstr~=0
+              if job.extopts.NCstr==2 || job.extopts.NCstr==3
+                if job.extopts.NCstr==2, NCstr=-inf; else NCstr=1; end 
+                stime = cat_io_cmd(sprintf('ISARNLM denoising (NCstr=%0.2f)',NCstr));
+                if job.extopts.verb>1, fprintf('\n'); end
+                cat_vol_isarnlm(struct('data',nfname,'verb',(job.extopts.verb>1)*2,'prefix','','NCstr',NCstr)); 
+                if job.extopts.verb>1, cat_io_cmd(' ','',''); end
+              else
+                stime = cat_io_cmd(sprintf('SANLM denoising (NCstr=%0.2f)',job.extopts.NCstr));
+                cat_vol_sanlm(struct('data',nfname,'verb',0,'prefix','','NCstr',job.extopts.NCstr)); 
+              end
+              fprintf('%5.0fs\n',etime(clock,stime));   
+            end
         end
 
 
@@ -1111,7 +1128,7 @@ end
           end
           
           
-          if any( (vx_vol ~= vx_voli) ) || ~strcmp(job.extopts.species,'human')
+          if job.extopts.NCstr || any( (vx_vol ~= vx_voli) ) || ~strcmp(job.extopts.species,'human')
             [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});
             delete(fullfile(pp,[ff,ee]));
             error('CAT:cat_run_job:spm_preproc8','Error in spm_preproc8. Check image and orientation. \n');

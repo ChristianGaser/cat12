@@ -2,8 +2,8 @@
 #
 # $Id$
 
-OLDVERSION="CAT12.1"
-NEWVERSION="CAT12.2"
+OLDVERSION="CAT12.2"
+NEWVERSION="CAT12.3"
 REVISION=`svn info |grep Revision|sed -e 's/Revision: //g'`
 DATE=`svn info |grep 'Last Changed Date: '|sed -e 's/Last Changed Date: //g'|cut -f1 -d' '`
 
@@ -37,7 +37,7 @@ install2:
 
 help:
 	-@echo Available commands:
-	-@echo install zip scp scp_manual update cp_binaries
+	-@echo install zip scp scp_manual update cp_binaries archive
 
 update:
 	-@svn update
@@ -80,3 +80,11 @@ cp_binaries:
 	-@for i in CAT.glnx86/CAT*; do cp ~/work/c/CAT/build-x86_64-pc-linux/Progs/`basename $${i}` CAT.glnx86/ ; done
 	-@for i in CAT.w32/CAT*; do cp ~/work/c/CAT/build-i586-mingw32/Progs/`basename $${i}` CAT.w32/ ; done
 	-@for i in CAT.maci64/CAT*; do cp ~/work/c/CAT/build-native/Progs/`basename $${i}` CAT.maci64/ ; done
+
+archive:
+	-@echo available archives to install
+	-@ls cat12_r*zip
+	-@test ! -d cat12 || rm -rf cat12
+	-@test ! -d ${TARGET} || rm -rf ${TARGET}
+	-@read -p "Type release number (3 or 4 digits), followed by [ENTER]:" ver; unzip cat12_r$${ver}.zip; cp -R cat12 ${TARGET}
+	
