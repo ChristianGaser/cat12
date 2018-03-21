@@ -662,13 +662,16 @@ function cat_run_job1070(job,tpm,subj)
           max( min( clsint(3) ,  max(Tgw)+abs(diff(Tgw))) , min(Tgw)-abs(diff(Tgw)) ) ... % csf with limit for T2!
           clsint(1) ... gm
           clsint(2) ... wm 
+          clsint(4) ... skull
+          clsint(5) ... head tissue
+          clsint(6) ... background
         ];
         
         res.Tth = Tth; 
         cat_err_res.res = res;   
         
         % inactive preprocessing of inverse images (PD/T2) 
-        if job.extopts.INV==0 && any(diff(Tth)<=0)
+        if job.extopts.INV==0 && any(diff(Tth(1:3))<=0)
           error('CAT:cat_main:BadImageProperties', ...
           ['CAT12 is designed to work only on highres T1 images.\n' ...
            'T2/PD preprocessing can be forced on your own risk by setting \n' ...

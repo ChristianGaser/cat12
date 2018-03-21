@@ -1,4 +1,4 @@
-function [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init(Ysrco,vx_vol,verb)
+function [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init1070(Ysrco,vx_vol,verb)
 %  _____________________________________________________________________
 %  The rough bias correction is a subfunction of cat_run_rob.
 % 
@@ -25,11 +25,8 @@ function [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init(Ysrco,vx_vol,verb)
   [Ysrc,resT3] = cat_vol_resize(Ysrco,'reduceV',vx_vol,min(1.2,cat_stat_nanmean(vx_vol)*2),msize,'meanm'); 
 
   % correction for negative backgrounds (MT weighting)
-  WMth = roundx(single(cat_stat_nanmedian(Ysrc(Ysrc(:)>cat_stat_nanmean( ...
-          Ysrc(Ysrc(:)>cat_stat_nanmean(Ysrc(:))))))),rf); 
-  BGth = max( min(Ysrc(:))*0.7 + 0.3*WMth ,...
-    cat_stat_nanmean(Ysrc(Ysrc(:)<cat_stat_nanmean(Ysrc(:))))); BGth = roundx(BGth,rf); 
-
+  [Ym,BGth] = cat_stat_histth(Ysrc,99.99); BGth(2) = []; clear Ym;  
+  
   Ysrc = Ysrc - BGth; Ysrco = Ysrco - BGth; BGth2 = BGth; 
   Yg   = cat_vol_grad(Ysrc,resT3.vx_volr) ./ max(eps,Ysrc); 
   

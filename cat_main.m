@@ -1506,7 +1506,7 @@ if job.output.surface
   if 1
     %% using the Ymi map
     Ymix = Ymi .* (Yp0>0.5); 
-    if 1; pbtmethod = 'pbt2x'; else pbtmethod = 'pbtv'; end
+    smeth = 1; if smeth==1, pbtmethod = 'pbt2x'; elseif smeth==3, pbtmethod = 'pbt3'; else pbtmethod = 'pbtv'; end
     if ~debug, clear Yp0; end 
     
     [Yth1,S,Psurf] = cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,...

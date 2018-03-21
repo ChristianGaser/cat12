@@ -41,6 +41,7 @@ function varargout = cat_stat_histth(src,percent,opt)
 
 
   %% check input
+  if nargin==0, help cat_stat_histth; return; end
   if ~exist('src','var') || isempty(src); 
     varargout{1} = src;
     varargout{2} = nan(1,2); 
