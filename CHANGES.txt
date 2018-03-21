@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1295 | gaser | 2018-03-20 15:44:02
+r1296 | dahnke | 2018-03-21 12:01:41
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_run_job1070.m
+M       cat_run_job_APP_init1070.m
+M       cat_stat_histth.m
+M       cat_surf_createCS.m
+
+(1) Fixed:   Corrected background scaling in cat_run_job_APP_init1070    
+             that caused problems in MT data.  
+
+------------------------------------------------------------------------
+r1295 | gaser | 2018-03-20 15:44:44 +0100 (Di, 20 Mär 2018) | 102 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -102,6 +116,7 @@ M       html/cat_versions.html
     unix (thanks to Marco Hermesdorf for pointing to this error).
 (6) Fixed: ROI analysis was not working for Cobra atlas.
 (7) Changed: Changed text interpreter in cat_plot_boxplot.m
+
 ------------------------------------------------------------------------
 r1294 | gaser | 2018-03-19 21:33:44 +0100 (Mo, 19 Mär 2018) | 17 lines
 
