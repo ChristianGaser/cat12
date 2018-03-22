@@ -6,7 +6,8 @@ function Ydiv = cat_vol_div(Ym,vx_vol)
 % ----------------------------------------------------------------------
   if ~exist('vx_vol','var'), vx_vol = repmat(1.5,1,3); end % no reduction
   Ym = single(Ym); 
-  [D,I] = cat_vbdist(single(~isnan(Ym))); Ym = Ym(I); % replace nan
+  Ynan = isnan(Ym); 
+  [D,I] = cat_vbdist(single(~Ynan),cat_vol_morph(~Ynan,'d',2)); Ym(D<2) = Ym(I(D<2)); % replace nan
   clear D I
   [Ymr,resT2] = cat_vol_resize(Ym,'reduceV',vx_vol,min(1.5,vx_vol*3),32); % don't forget small animals...
   clear Ym
@@ -18,4 +19,5 @@ function Ydiv = cat_vol_div(Ym,vx_vol)
   [junk,junk,rz] = cat_vol_gradient3(gz./vx_vol(3)); clear gz junk
   Ydivr = single(px) + single(qy) + single(rz); clear px qy rz
   Ydiv  = cat_vol_resize(smooth3(Ydivr),'dereduceV',resT2); 
+  Ydiv(Ynan) = 0;  % restore nan?
 return

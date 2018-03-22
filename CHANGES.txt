@@ -1,5 +1,25 @@
 ------------------------------------------------------------------------
-r1296 | dahnke | 2018-03-21 12:01:41
+r1297 | dahnke | 2018-03-22 16:22:40
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_vol_div.m
+M       cat_vol_grad.m
+M       cat_vol_sanlm.m
+
+(1) Changed: Modified NAN handling in cat_vol_div and cat_vol_grad. 
+             The replacement by the cat_vol_vbdist function create
+             edges in the NAN regions. Now, only the neighborhood 
+             is replaced for the gradient/divergence estimation and 
+             the NAN region is set to zero.   
+(2) New:     Added option in the cat_vol_sanlm filter to garantie a 
+             minimal amount of noise in the images to avoid problems
+             by segmentation routines that expect a little variation
+             in the data.
+(3) Fixed:   Corrected bugs in NAN and INF replacement in cat_vol_sanlm.
+------------------------------------------------------------------------
+r1296 | dahnke | 2018-03-21 12:03:15 +0100 (Mi, 21 Mär 2018) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +31,7 @@ M       cat_surf_createCS.m
 
 (1) Fixed:   Corrected background scaling in cat_run_job_APP_init1070    
              that caused problems in MT data.  
+
 
 ------------------------------------------------------------------------
 r1295 | gaser | 2018-03-20 15:44:44 +0100 (Di, 20 Mär 2018) | 102 lines

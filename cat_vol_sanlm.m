@@ -22,6 +22,10 @@ function varargout = cat_vol_sanlm(varargin)
 %   .replaceNANandINF .. replace NAN by 0, -INF by minimum and INF by maximum
 %   .rician           .. noise distribution
 %   .intlim           .. intensity limitation 
+%   .addnoise         .. add noise to noiseless regions
+%     Add a minimal amount of noise in regions without noise to avoid
+%     problems of image segmentation routines. The value defines the 
+%     strength of the noise by the percentage of the mean signal intensity. 
 %   .NCstr            .. strength of noise correction (default = -inf) 
 %     A value of 1 used the full correction by the SANLM filter. Values 
 %     between 0 and 1 mix the original and the filtered images, whereas
@@ -79,6 +83,7 @@ def.relativeIntensityAdaption   = 1;         % use intensity to limit relative c
 def.relativeIntensityAdaptionTH = 1;         % larger values for continous filter strength
 def.relativeFilterStengthLimit  = 1;         % limit the noise correction by the relative changes to avoid overfiltering in low intensity regions
 def.outlier                     = 1;         % threshold to define outlier voxel to filtem them with full strength
+def.addnoise                    = 1;         % option to add a minimal amount of noise in regions without noise
 def.returnOnlyFilename          = 0;         % just to get the resulting filenames for SPM batch mode
 job = cat_io_checkinopt(job,def);
 
@@ -104,24 +109,25 @@ job.relativeIntensityAdaption   = max(0,min(9.99,job.relativeIntensityAdaption))
 job.relativeIntensityAdaptionTH = max(0,min(9.99,job.relativeIntensityAdaptionTH));
 job.relativeFilterStengthLimit  = max(0,min(9.99,job.relativeFilterStengthLimit));
 job.outlier                     = max(0,min(9.99,job.outlier));
+job.addnoise                    = max(0,min(9.99,job.addnoise));
 
 % create automatic filenames by the parameter
 if strcmp(job.prefix,'PARA')
     if job.NCstr>=0 && job.NCstr<=1
         job.prefix = sprintf('%s_NC%0.2f',job.prefix,job.NCstr); 
     else
-        job.prefix = sprintf('%s_NC%-0.2f_RN%d_RD%d_RIA%0.2f_RNI%d_OL%0.2f',...
+        job.prefix = sprintf('%s_NC%-0.2f_RN%d_RD%d_RIA%0.2f_RNI%d_OL%0.2f_PN%0.1f',...
             job.prefix, job.NCstr , job.rician , job.resolutionDependency ,  ...
-            job.relativeIntensityAdaption ,job.replaceNANandINF , job.outlier ); 
+            job.relativeIntensityAdaption ,job.replaceNANandINF , job.outlier , job.addnoise ); 
     end
 end
 if ~strcmp(job.prefix,'PARA') && strcmp(job.postfix,'PARA')
     if job.NCstr>=0 && job.NCstr<=1
         job.postfix = sprintf('_NC%0.2f',job.NCstr); 
     else
-        job.postfix = sprintf('_NC%-0.2f_RN%d_RD%d_RIA%0.2f_RNI%d_OL%0.2f',...
+        job.postfix = sprintf('_NC%-0.2f_RN%d_RD%d_RIA%0.2f_RNI%d_OL%0.2f_PN%0.1f',...
             job.NCstr , job.rician , job.resolutionDependency , job.relativeIntensityAdaption , ...
-            job.replaceNANandINF , job.outlier ); 
+            job.replaceNANandINF , job.outlier , job.addnoise ); 
     end
 end
 % just to get the resulting filenames for SPM batch mode
@@ -274,19 +280,20 @@ for i = 1:numel(job.data)
                 if ~debug, clear NCi; end
                 if ~debug, clear NCso; end
             end  
-
-            if debug, srco2 = srco.*(1-NCs) + src.*NCs; end
+            
+            
+            if debug, srcr = srco.*(1-NCs) + src.*NCs; end
             % ds('d2','',vx_vol,src/th,srco/th,srco2/th, NCs,160)
 
             %% mix original and noise corrected image
-            srco = srco.*(1-NCs) + src.*NCs; 
+            srcr = srco.*(1-NCs) + src.*NCs; 
             NCstr(NCstri) = -cat_stat_nanmean(NCs(:)); 
             if ~debug, clear NCs; end
 
             
         elseif NCstr(NCstri)==1
         % no adaption (original filter)
-            srco   = src; 
+            srcr   = src; 
         
         elseif NCstr(NCstri)>0
         % (adaptive) global denoising
@@ -295,23 +302,40 @@ for i = 1:numel(job.data)
             NCstr(NCstri) = min(1,max(0,NCstr(NCstri)));
             
             % mix original and noise corrected image
-            srco   = srco*(1-NCstr(NCstri)) + src*NCstr(NCstri); 
+            srcr   = srco*(1-NCstr(NCstri)) + src*NCstr(NCstri); 
             
         else
         % no denoising ... nothing to do
-            
+            srcr = src; 
         end
 
-  
+        %% add noise
+        if job.addnoise
+          % Small adaption for inhomogeneity to avoid to much noise in
+          % regions with low signal intensity.
+          sth  = cat_vol_smooth3X(log10(2 + 8*src/th),4/mean(vx_vol)) * th; 
+          
+          % Correction only regions with less noise and with (src~=0) to 
+          % avoid adding of noise in skull-stripped data. This may lead to
+          % problems with the skull-stripping detection in cat_run_job!
+          srcr = srcr + max( 0 , min(1 , cat_vol_smooth3X( ...
+                 ( job.addnoise.*sth/100 ) - abs(srco - src) , 4/mean(vx_vol) ) ./ ( job.addnoise.*sth/100 ) )) .* ...
+                 ... ( src~=0 ) .* ... save skull-stripping / defacing regions
+                 (randn(size(src)) * job.addnoise.*sth/100);  
+          if ~debug, clear sth; end
+        end
+        if ~debug, clear src srco; end
+        
+        
         %% restore NAN and INF
-        if exist('nanmsk','var'), src(nanmsk) = nan; end
-        if exist('infmsk','var'), src(infmsk==-1) = -inf; src(infmsk==1) = inf; end
+        if exist('nanmsk','var'), srcr(nanmsk) = nan; end
+        if exist('infmsk','var'), srcr(infmsk==-1) = -inf; srcr(infmsk==1) = inf; end
         
         % use only float precision
         Vo(i).fname   = fullfile(pth,[job.prefix nm job.postfix '.nii' vr]);
         Vo(i).descrip = sprintf('%s SANLM filtered (NCstr=%-4.2f > %0.2f)',V(i).descrip,job.NCstr(NCstri),abs(NCstr(NCstri)));
         Vo(i).dt(1)   = 16; % default - changes later if required 
-        spm_write_vol(Vo(i), srco);
+        spm_write_vol(Vo(i), srcr);
         spm_progress_bar('Set',i);
         
         
