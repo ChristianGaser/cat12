@@ -340,8 +340,8 @@ if ~isfield(res,'spmpp')
   clear Ysrcb Yp0; 
 
   % save brainmask using SPM12 segmentations for later use
-  Ym0  = single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255;
-  Yb0   = (Ym0 > min(0.5,max(0.25, job.extopts.gcutstr))); clear Ym0
+  Ym0 = single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255;
+  Yb0 = (Ym0 > min(0.5,max(0.25, job.extopts.gcutstr))); clear Ym0
   Yb0 = cat_vol_morph(cat_vol_morph(Yb0,'lo'),'c');
 
   %%

@@ -591,12 +591,12 @@ NCstr.help    = {
  
 addnoise         = cfg_entry;
 addnoise.tag     = 'addnoise';
-addnoise.name    = 'Strength of additional noise in noise free regions';
+addnoise.name    = 'Strength of additional noise in noise-free regions';
 addnoise.strtype = 'r';
 addnoise.val     = {0.5}; 
 addnoise.num     = [1 1];
 addnoise.help    = {
- ['Add a minimal amount of noise in regions without noise to avoid  image segmentation problems. ' ...
+ ['Add minimal amount of noise in regions without any noise to avoid  image segmentation problems. ' ...
   ... 'The noise is only added to values unequal zero to avoid adding of noise in skull-stripped regions. ' ...
   'This parameter defines the strength of additional noise as percentage of the average signal intensity. ']
   ''

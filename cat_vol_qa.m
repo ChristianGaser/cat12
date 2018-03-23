@@ -797,7 +797,7 @@ function varargout = cat_vol_qa(action,varargin)
       clear Yos0 Yos1 Yos2 YM0 YM1 YM2;
         
       % CSF variance of large ventricle
-      % for typical T2 images we have to much signal in the CSF and can't use it for noise estimation!
+      % for typical T2 images we have too much signal in the CSF and can't use it for noise estimation!
       wcth = 200; 
       if CSFth<GMth && NCwc>wcth
         [Yos2,YM2] = cat_vol_resize({Ycn,Ycn>0},'reduceV',vx_vol,3,16,'meanm');

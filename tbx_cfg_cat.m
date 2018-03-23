@@ -83,21 +83,21 @@ data_spm.preview  = @(f) spm_check_registration(char(f));
   surface.name   = 'Surface and thickness estimation';
   surface.def    = @(val)cat_get_defaults('output.surface', val{:});
   surface.help   = {
-    'Use projection-based thickness (PBT) (Dahnke et al. 2012) to estimate cortical thickness and to create the central cortical surface for left and right hemisphere. Surface reconstruction includes topology correction (Yotter et al. 2011), spherical inflation (Yotter et al.) and spherical registration.'
+    'Use projection-based thickness (PBT) (Dahnke et al. 2012) to estimate cortical thickness and to create the central cortical surface for left and right hemisphere. Surface reconstruction includes topology correction (Yotter et al. 2011), spherical inflation (Yotter et al.) and spherical registration. Additionally you can also estimate surface parameters such as gyrification, cortical complexity or sulcal depth that can be subsequently analyzed at each vertex of the surface. '
     ''
     'Please note, that surface reconstruction additionally requires about 20-60 min of computation time.'
+    ''
+    'You can also estimate thickness for ROI analysis only. This takes much less time, but does not allow to use the advantages of surface-based registration and smoothing and the extraction of additional surface parameters. Here, the analysis is restricted to cortical thickness in atlas-defined ROIs only.'
     ''
   };
 
 if expert < 2
-  %surface.labels = {'No','Yes'};
-  %surface.values = {0 1};
-  surface.labels = {'No','Yes','Thickness only (for ROI analysis)'};
+  surface.labels = {'No','Full surface and thickness estimation','Thickness estimation (for ROI analysis only)'};
   surface.values = {0 1 9};
 else
   surface.labels = {'No','lh + rh','lh + rh + cerebellum',...
     'lh + rh (fast, no registration)','lh + rh + cerebellum (fast, no registration)', ...
-    'lh + rh (fast registration)','lh + rh + cerebellum (fast registration)','Thickness only', 'Full'};
+    'lh + rh (fast registration)','lh + rh + cerebellum (fast registration)','Thickness estimation (for ROI analysis only)', 'Full'};
   surface.values = {0 1 2 5 6 7 8 9 12};
   surface.help   = [surface.help; {
     'Cerebellar reconstruction is still in development and is strongly limited due to the high frequency of folding and image properties! '
@@ -137,7 +137,7 @@ if expert==0
     '    https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details'
     ''
     '(3) LPBA40 (56 GM ROIs of 40 subjects, 2008):'
-    '    The LONI Probabilistic Brain Atlas (LPBA40) is a series of maps of brain anatomic regions. These maps were produced from a set of whole-head MRI of 40 human volunteers. Each MRI was manually delineated to identify a set of 56 structures in the brain, most of which are within the cortex. These delineations were then transformed into a common atlas space to produce a set of coregistered anatomical labels. The original MRI data were also transformed into the atlas space. '
+    '    The LONI Probabilistic Brain Atlas (LPBA40) is a series of maps of brain anatomic regions. These maps were estimated from a set of whole-head MRI of 40 human volunteers. Each MRI was manually delineated to identify a set of 56 structures in the brain, most of which are within the cortex. These delineations were then transformed into a common atlas space to obtain a set of coregistered anatomical labels. The original MRI data were also transformed into the atlas space. '
     '    Shattuck et al. 2008. Construction of a 3D Probabilistic Atlas of Human Cortical Structures, NeuroImage 39 (3): 1064-1070. DOI:	10.1016/j.neuroimage.2007.09.031'
     ''
     ...'(4) IBSR (32 CSF/GM ROIs of 18 subjects, 2004):'
@@ -244,7 +244,7 @@ else
     '    https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details'
     ''
     '(3) LPBA40 (56 GM ROIs of 40 subjects, 2008):'
-    '    The LONI Probabilistic Brain Atlas (LPBA40) is a series of maps of brain anatomic regions. These maps were produced from a set of whole-head MRI of 40 human volunteers. Each MRI was manually delineated to identify a set of 56 structures in the brain, most of which are within the cortex. These delineations were then transformed into a common atlas space to produce a set of coregistered anatomical labels. The original MRI data were also transformed into the atlas space. '
+    '    The LONI Probabilistic Brain Atlas (LPBA40) is a series of maps of brain anatomic regions. These maps were estimated from a set of whole-head MRI of 40 human volunteers. Each MRI was manually delineated to identify a set of 56 structures in the brain, most of which are within the cortex. These delineations were then transformed into a common atlas space to obtian a set of coregistered anatomical labels. The original MRI data were also transformed into the atlas space. '
     '    Shattuck et al. 2008. Construction of a 3D Probabilistic Atlas of Human Cortical Structures, NeuroImage 39 (3): 1064-1070. DOI:	10.1016/j.neuroimage.2007.09.031'
     ''
     '(4) COBRA (1 GM/WM ROI in amgdala, 2 combined GM/WM ROIs in hippocampus and 13 GM/WM ROIs in cerebellum of 5 subjects):'
@@ -278,7 +278,7 @@ native.name   = 'Native space';
 native.labels = {'No','Yes'};
 native.values = {0 1};
 native.help   = {
-  'The native space option allows you to produce a tissue class image (p*) that is in alignment with the original/* (see Figure \ref{seg1})*/. It can also be used for ''''importing'''' into a form that can be used with the DARTEL toolbox (rp*).'
+  'The native space option allows you to save a tissue class image (p*) that is in alignment with the original image.'
 ''
 };
 
@@ -388,7 +388,7 @@ dartel.def    = @(val)cat_get_defaults('output.GM.dartel', val{:});
 grey          = cfg_branch;
 grey.tag      = 'GM';
 grey.name     = 'Grey matter';
-grey.help     = {'Options to produce grey matter images.'
+grey.help     = {'Options to save grey matter images.'
 ''
 };
 grey_spm      = grey;
@@ -407,7 +407,7 @@ dartel.def    = @(val)cat_get_defaults('output.WM.dartel', val{:});
 white         = cfg_branch;
 white.tag     = 'WM';
 white.name    = 'White matter';
-white.help    = {'Options to produce white matter images.'
+white.help    = {'Options to save white matter images.'
 ''
 };
 white_spm     = white;
@@ -427,7 +427,7 @@ dartel.def    = @(val)cat_get_defaults('output.CSF.dartel', val{:});
 csf           = cfg_branch;
 csf.tag       = 'CSF';
 csf.name      = 'Cerebro-Spinal Fluid (CSF)';
-csf.help      = {'Options to produce CSF images.'
+csf.help      = {'Options to save CSF images.'
 ''
 };
 csf_spm       = csf;
@@ -443,7 +443,7 @@ tpmc          = cfg_branch;
 tpmc.tag      = 'TPMC';
 tpmc.name     = 'Tissue Probability Map Classes';
 tpmc.val      = {native warped modulated dartel};
-tpmc.help     = {'Option to produce the SPM tissue class 4 to 6: p#*.img, wp#*.img and m[0]wp#*.img.'
+tpmc.help     = {'Option to save the SPM tissue class 4 to 6: p#*.img, wp#*.img and m[0]wp#*.img.'
 ''
 };
 
@@ -456,7 +456,8 @@ wmh           = cfg_branch;
 wmh.tag       = 'WMH';
 wmh.name      = 'White matter hyperintensities (WMH)';
 wmh.val       = {native warped modulated dartel};
-wmh.help      = {'Options to produce WMH images, if WMHC==3: p7*.img, wp7*.img and m[0]wp7*.img.'
+wmh.help      = {'WARNING: Please note that the detection of WM hyperintensies is still under development and does not have the same accuracy as approaches that additionally consider FLAIR images (e.g. Lesion Segmentation Toolbox)!'
+'Options to save WMH images, if WMHC==3: p7*.img, wp7*.img and m[0]wp7*.img.'
 ''
 };
 
@@ -485,7 +486,7 @@ gmt.tag     = 'ct';
 gmt.name    = 'Cortical Thickness';
 gmt.val     = {native warped dartel};
 gmt.help    = {
-  'Options to produce cortical thickess maps.'
+  'Options to save cortical thickess maps.'
   ''
 };
 
@@ -512,12 +513,12 @@ output.name = 'Writing options';
 if expert==2
   output.val  = {surface ROI grey white csf gmt wmh tpmc atlas label bias las jacobian warps}; 
 elseif expert==1
-  output.val  = {surface ROI grey white csf gmt wmh label bias las jacobian warps};
+  output.val  = {surface ROI grey white csf gmt label bias las jacobian warps};
 else
   output.val  = {surface ROI grey white bias jacobian warps};
 end
 output.help = {
-'There are a number of options about what data you would like the routine to produce. The routine can be used for producing images of tissue classes, as well as bias corrected images. The native space option will produce a tissue class image (p*) that is in alignment with the original image. You can also produce spatially normalised versions - both with (m[0]wp*) and without (wp*) modulation. In the cat toolbox, the voxel size of the spatially normalised versions is 1.5 x 1.5 x 1.5mm as default. The produced images of the tissue classes can directly be used for doing voxel-based morphometry (both un-modulated and modulated). All you need to do is smooth them and do the stats (which means no more questions on the mailing list about how to do "optimized VBM").'
+'There are a number of options about what kind of data you like save. The routine can be used for saving images of tissue classes, as well as bias corrected images. The native space option will save a tissue class image (p*) that is in alignment with the original image. You can also save spatially normalised versions - both with (m[0]wp*) and without (wp*) modulation. In the cat toolbox, the voxel size of the spatially normalised versions is 1.5 x 1.5 x 1.5mm as default. The saved images of the tissue classes can directly be used for doing voxel-based morphometry (both un-modulated and modulated). All you need to do is smooth them and do the stats (which means no more questions on the mailing list about how to do "optimized VBM").'
 ''
 'Modulation is to compensate for the effect of spatial normalisation. When warping a series of images to match a template, it is inevitable that volumetric differences will be introduced into the warped images. For example, if one subject''s temporal lobe has half the volume of that of the template, then its volume will be doubled during spatial normalisation. This will also result in a doubling of the voxels labeled grey matter. In order to remove this confound, the spatially normalised grey matter (or other tissue class) is adjusted by multiplying by its relative volume before and after warping. If warping results in a region doubling its volume, then the correction will halve the intensity of the tissue label. This whole procedure has the effect of preserving the total amount of grey matter signal in the normalised partitions.'
 ''

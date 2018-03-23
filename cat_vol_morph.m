@@ -2,10 +2,10 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
 % ______________________________________________________________________
 % Morphological operations for a volume vol based on a 26-neighborhood 
 % (erode, dilate, open, close) or a distance transformation (disterode,
-% distdilate, distopen, distclose). Furthermore, 3 labeling operation
+% distdilate, distopen, distclose). Furthermore, 3 labeling operations
 % (lab, labopen, labclose) that mask the largest cluster (after an 
 % distopen/disterode) are available. The voxel dimensions vx_vol are 
-% only available for distancebased transformations, where n depend on 
+% only available for distance-based transformations, where n depends on 
 % the distance. 
 %
 % out = cat_vol_morph(in,action[,n,vx_vol])
@@ -13,13 +13,13 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
 % in     = input volume that will be thresholded at 0.5
 % action = {'d'|'e'|'c'|'o'|'dd'|'de'|'dc'|'do'|'l'|'lo'|'lc'}
 % n      = 1x1 double (default=1), will be rounded for standard 
-%          morphological operations, but not for distancebased operations.
+%          morphological operations, but not for distance-based operations.
 % vx_vol = 1x1 or 1x3 double (default=1)
 % out    = volume with the same class like the input volume
 %
 % Actions:
 %   Morphological operations with 26-neighborhood (cube):
-%    - d??| dilate 
+%    - d  | dilate 
 %    - e  | erode  
 %    - c  | close  
 %    - o  | open   
@@ -46,9 +46,6 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
 % ______________________________________________________________________
 %
 % ToDo:
-% Large n can increase computation times strongly. Oftenly, the where 
-% used only for a low quality correction i.e. to create a smoothe
-% complex hull of an object. 
 % For a future release the cat_vol_resize function and further actions
 % will allow a faster processing for images, where not the highest
 % quality is necessary. 
@@ -134,7 +131,7 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
       end
     
     %===================================================================
-    % You have to use the original resolution, because fine structure 
+    % You have to use the original resolution, because fine structures 
     % are bad represented for lower resolutions and lead to unaccurate 
     % results.
     case {'distdilate' 'dd'}
