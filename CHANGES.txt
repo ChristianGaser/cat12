@@ -1,5 +1,27 @@
 ------------------------------------------------------------------------
-r1298 | dahnke | 2018-03-23 12:07:23
+r1299 | gaser | 2018-03-23 14:39:01
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_extopts.m
+M       cat_conf_tools.m
+M       cat_defaults.m
+M       cat_main.m
+M       cat_main_LAS.m
+M       cat_main_cleanup.m
+M       cat_main_gintnorm.m
+M       cat_vol_morph.m
+M       cat_vol_partvol.m
+M       cat_vol_qa.m
+M       cat_vol_sanlm.m
+M       html/cat.html
+M       spm_cat12.m
+M       tbx_cfg_cat.m
+
+Changed: Updated help text.
+------------------------------------------------------------------------
+r1298 | dahnke | 2018-03-23 12:07:51 +0100 (Fr, 23 Mär 2018) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14,6 +36,7 @@ M       tbx_cfg_cat.m
 (2) New:    Added cortical thickness ROI estimation for standard
             users. Limit thickness atlas estimation to the GM and
             renamed the main atlas field to ct. 
+
 ------------------------------------------------------------------------
 r1297 | dahnke | 2018-03-22 16:23:05 +0100 (Do, 22 Mär 2018) | 18 lines
 
