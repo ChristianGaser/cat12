@@ -426,23 +426,25 @@ end
 %------------------------------------------------------------------------
 gcutstr           = cfg_menu;
 gcutstr.tag       = 'gcutstr';
-gcutstr.name      = 'Strength of Skull-Stripping';
+gcutstr.name      = 'Method and Strength of Skull-Stripping';
 gcutstr.def       = @(val)cat_get_defaults('extopts.gcutstr', val{:});
 gcutstr.help      = {
-  'Strength of skull-stripping before AMAP segmentation, with "ultralight" for a more liberal and wider brain masks and "heavy" for a more aggressive skull-stripping. If parts of the brain were missing in the brain mask then decrease the strength. If the brain mask of your images contains parts of the head, then increase the strength. '
+  'Method of skull-stripping before AMAP segmentation. The SPM approach works quite stable for the majority of data. However, in some rare cases parts of GM (i.e. in frontal lobe) might be cut. If this happens the GCUT approach is a good alternative. '
   ''
 };
 if ~expert
-  gcutstr.labels  = {'SPM cleanup','light','medium','strong'};
-  gcutstr.values  = {0 0.25 0.50 0.75};
+  gcutstr.labels  = {'SPM approach','GCUT approach'};
+  gcutstr.values  = {0 0.50};
 else
-  gcutstr.labels  = {'SPM cleanup (0)','ultralight (eps)','light (0.25)','medium (0.50)','strong (0.75)','heavy (1.00)'};
+  gcutstr.labels  = {'SPM approach (0)','ultralight (eps)','light (0.25)','medium (0.50)','strong (0.75)','heavy (1.00)'};
   gcutstr.values  = {0 eps 0.25 0.50 0.75 1.00};
   gcutstr.help    = [gcutstr.help;{
-    'The strength changes multiple internal parameters: '
+    'Strength of skull-stripping before AMAP segmentation, with "ultralight" for a more liberal and wider brain masks and "heavy" for a more aggressive skull-stripping. If parts of the brain are missing in the brain mask then decrease the strength. If the brain mask of your images still contains parts of the head, then increase the strength. '
+    ''
+    'The strength parameter changes multiple internal parameters: '
     ' 1) Intensity thresholds to deal with blood-vessels and meninges '
     ' 2) Distance and growing parameters for the graph-cut/region-growing '
-    ' 3) Closing parameters that fill the sulci'
+    ' 3) Closing parameters that fill the sulci '
     ' 4) Smoothing parameters that allow sharper or wider results '
     ''
   }];
@@ -534,18 +536,14 @@ wmhc.labels = { ...
 wmhc.values = {0 1 2 3};
 wmhc.def    = @(val)cat_get_defaults('extopts.WMHC', val{:});
 wmhc.help   = {
-  'In aging or diseases WM intensity be strongly reduces in T1 or increased in T2/PD images. These so called WM hyperintensies (WMHs) can lead to preprocessing errors. Large GM areas next to the ventricle can cause normalization problems. Therefore, a temporary correction for the normalization is meaningfull, if WMHs were expected. As far as these changes are an important marker, CAT allows different ways to handel WMHs. '
+  'WARNING: Please note that the detection of WM hyperintensies is still under development and does not have the same accuracy as approaches that additionally consider FLAIR images (e.g. Lesion Segmentation Toolbox)! '
+  'In aging or (neurodegenerative) diseases WM intensity can be reduced locally in T1 or increased in T2/PD images. These so-called WM hyperintensies (WMHs) can lead to preprocessing errors. Large GM areas next to the ventricle can cause normalization problems. Therefore, a temporary correction for normalization is useful if WMHs are expected. CAT allows different ways to handle WMHs: '
   ''
   ' 0) No Correction. '
-  '     - Take care of large WMHs that might cause normalization problems. '
-  '     - Consider that GM in unexpected regions represent WMCs.  '
-  ' 1) Temporary correction for spatial normalization. '
-  '     - Consider that GM in unexpected regions represent WMCs.  '
-  ' 2) Correction of WM segmentations (like SPM). ' 
+  ' 1) Temporary (internal) correction for spatial normalization. '
+  ' 2) Correction to WM segmentations. ' 
   ' 3) Correction as separate class. '
   ''
-  'See also ...'
-''
 };
 
 WMHCstr         = cfg_menu;
@@ -674,7 +672,7 @@ if ~spm
   if expert>0 % experimental expert options
     extopts.val   = {segmentation,registration,vox,surface,admin}; 
   else
-    extopts.val   = {app,LASstr,gcutstr,cleanupstr,registration,vox}; 
+    extopts.val   = {app,LASstr,gcutstr,registration,vox}; 
   end
 else
   % SPM based surface processing and thickness estimation

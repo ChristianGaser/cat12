@@ -23,7 +23,7 @@ function varargout = cat_vol_sanlm(varargin)
 %   .rician           .. noise distribution
 %   .intlim           .. intensity limitation 
 %   .addnoise         .. add noise to noiseless regions
-%     Add a minimal amount of noise in regions without noise to avoid
+%     Add minimal amount of noise in regions without any noise to avoid
 %     problems of image segmentation routines. The value defines the 
 %     strength of the noise by the percentage of the mean signal intensity. 
 %   .NCstr            .. strength of noise correction (default = -inf) 
@@ -311,11 +311,11 @@ for i = 1:numel(job.data)
 
         %% add noise
         if job.addnoise
-          % Small adaption for inhomogeneity to avoid to much noise in
+          % Small adaption for inhomogeneity to avoid too much noise in
           % regions with low signal intensity.
           sth  = cat_vol_smooth3X(log10(2 + 8*src/th),4/mean(vx_vol)) * th; 
           
-          % Correction only regions with less noise and with (src~=0) to 
+          % Correction only of regions with less noise and with (src~=0) to 
           % avoid adding of noise in skull-stripped data. This may lead to
           % problems with the skull-stripping detection in cat_run_job!
           srcr = srcr + max( 0 , min(1 , cat_vol_smooth3X( ...

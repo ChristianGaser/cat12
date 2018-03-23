@@ -46,6 +46,7 @@ cat.opts.samp      = 3;                       % Sampling distance - alternative:
 cat.output.surface     = 0;     % surface and thickness creation:   0 - no (default), 1 - lh+rh, 2 - lh+rh+cerebellum, 
                                 %   3 - lh, 4 - rh, 5 - lh+rh (fast, no registration, only for quick quality check and not for analysis),
                                 %   6 - lh+rh+cerebellum (fast, no registration, only for quick quality check and not for analysis)
+                                %   9 - thickness only (for ROI analysis)
                                 %   +10 to estimate WM and CSF width/depth/thickness
 
 % save ROI values
@@ -111,7 +112,7 @@ cat.output.warps        = [0 0];
 % [inf - automatic correction] 
 
 % skull-stripping options
-cat.extopts.gcutstr      = 0.5;  % Strength of skull-stripping:               0 to 1; default 0.5
+cat.extopts.gcutstr      = 0;    % Strength of skull-stripping:               0 to 1; default 0
 cat.extopts.cleanupstr   = 0.5;  % Strength of the cleanup process:           0 to 1; default 0.5
 
 % segmentation options

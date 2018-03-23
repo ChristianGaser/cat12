@@ -57,7 +57,7 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
   stime = cat_io_cmd('  Level 1 cleanup (brain masking)','g5','',extopts.verb,stime); %dispc=dispc+1;
   Yrw = Yp0>0 & Yroi & Ymb>1.1+Ybd/20 & ~NS(Yl1b,LAB.CB);             % basic region with cerebellum
   Yrw = Yrw | smooth3(Yrw)>0.4-0.3*cleanupstr;                        % dilate region
-  Ygw = cat_vol_morph(Yp0>=1.9 & ~Yrw,'lo',0); % even one is to much in adrophic brains :/ 
+  Ygw = cat_vol_morph(Yp0>=1.9 & ~Yrw,'lo',0); % even one is too much in adrophic brains :/ 
   Yrw = Yrw | (Yp0>1 & Yroi & ~Ygw);                                  % further dilation
   Yrw = Yrw & ~Yvt & ~cat_vol_morph(Ygw,'d',1); 
   Yrw(smooth3(Yrw)<0.5+0.2*cleanupstr)=0; 

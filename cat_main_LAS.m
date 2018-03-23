@@ -171,7 +171,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   
   %% helping segments
   stime = cat_io_cmd(sprintf('  Prepare segments (LASmod = %0.2f)',LASmod),'g5','',verb,stime); dispc=dispc+1;
-  % Ybb = don't trust SPM to much by using Yp0 because it may miss some areas! Shood be better now with MRF.
+  % Ybb = don't trust SPM too much by using Yp0 because it may miss some areas! Shood be better now with MRF.
   Ybb = cat_vol_morph((Yb & Ym>1.5/3 & Ydiv<0.05) | Yp0>1.5,'lo',vxv);
   % Ysw = save WM and blood vessels mpas
   % Ybv = possible blood vessels
