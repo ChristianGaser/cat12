@@ -60,10 +60,11 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
 
   opt           = cat_io_updateStruct(def,opt);
   opt.fast      = any(~cellfun('isempty',strfind(opt.surf,'fst'))) + any(~cellfun('isempty',strfind(opt.surf,'sfst')));
+  opt.vol       = any(~cellfun('isempty',strfind(opt.surf,'v')));
   if opt.fast==2, opt.reduceCS = 40000; end
   opt.interpV   = max(0.1,min([opt.interpV,1.5]));
   opt.interpVold = opt.interpV; 
-  opt.surf      = cat_io_strrep(opt.surf,{'sfst','fst'},'');
+  opt.surf      = cat_io_strrep(opt.surf,{'sfst','fst','v'},'');
   
   if opt.fast
     opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k'); 
@@ -285,6 +286,12 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     Yth1  = max(Yth1,Yth1t);                                            % save on main image
     clear Yth1t;
     %fprintf('%5.0fs\n',etime(clock,stime)); 
+    
+    if opt.vol
+      S = struct(); Psurf = '';
+      fprintf('%5.0fs\n',etime(clock,stime)); 
+      continue
+    end
     
     %% PBT estimation of the gyrus and sulcus width 
     if opt.WMT > 1 

@@ -1469,7 +1469,9 @@ fprintf('%5.0fs\n',etime(clock,stime));
 %% ---------------------------------------------------------------------
 %  surface creation and thickness estimation
 %  ---------------------------------------------------------------------
-if job.output.surface
+if (job.output.surface || any( [job.output.GMT.native job.output.ct.warped job.output.ct.dartel] )) && ...
+   ~(job.output.surface==9 && job.output.ROI==0 && ~any( [job.output.GMT.native job.output.ct.warped job.output.ct.dartel] )) 
+    % ... not required, if only thickness but no output
   stime = cat_io_cmd('Surface and thickness estimation');; 
   
   % specify WM/CSF width/depth/thickness estimation
@@ -1494,6 +1496,10 @@ if job.output.surface
     % fast surface reconstruction with simple spherical mapping     
     case 7, surf = {'lhsfst','rhsfst'};                    
     case 8, surf = {'lhsfst','rhsfst','lcsfst','rcsfst'}; 
+    case 9, surf = {'lhv','rhv'}; %,'lcv','rcv'}; 
+  end
+  if ~job.output.surface && any( [job.output.ct.native job.output.ct.warped job.output.ct.dartel] )
+    surf = {'lhv','rhv'}; %,'lcv','rcv'}; 
   end
   if job.output.surface>4 % fast 
     job.extopts.pbtres = max(0.8,min([((min(vx_vol)^3)/2)^(1/3) 1.0]));
@@ -1518,10 +1524,20 @@ if job.output.surface
       struct('interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
       'verb',job.extopts.verb,'WMT',WMT));
   end
-
+  if isempty(S) && isempty(Psurf)
+    clear S Psurf; 
+  end
+  
+  % thickness map
+  if isfield(job.output,'ct')
+    cat_io_writenii(VT0,Yth1,mrifolder,'ct','cortical thickness map','uint16',...
+      [0,0.0001],job.output.ct,trans,single(Ycls{1})/255,0.01);
+  end
+  
   cat_io_cmd('Surface and thickness estimation');  
   fprintf('%5.0fs\n',etime(clock,stime));
   if ~debug; clear YMF; end
+  if ~debug && ~job.output.ROI && job.output.surface, clear Yth1; end
 else
   if ~debug; clear Ymi; end
 end
@@ -1630,10 +1646,10 @@ if job.output.ROI
     csv   = cat_vol_ROIestimate(wYp0,wYa,wYcls,ai,'V',[],tissue,FA);  % volume
 
     % thickness
-    if exist('Yth1','var'),
+    if exist('Yth1','var') 
     % for thickness we need special corrections to avoid values 
     % in poor ROIs that contribute to GM
-      csv    = cat_vol_ROIestimate(wYp0,wYa,wYth1.*wYmim,ai,'T',csv,tissue,job.extopts.atlas);
+      csv    = cat_vol_ROIestimate(wYp0,wYa,wYth1.*wYmim,ai,'T',csv,{'gm'},job.extopts.atlas);
       csvth1 = cat_vol_ROIestimate(wYp0,wYa,wYcls{2}.*wYmim,ai,'V',[] ,{''},job.extopts.atlas);
       corth1 = [csv{2:end,end}]; 
       try, corth1(corth1<mean(vx_vol)/2 | [csvth1{2:end,end}]<0.5)=nan; end
@@ -1652,7 +1668,7 @@ if job.output.ROI
   cat_io_cmd(' ','g5','',job.extopts.verb,stime2);
   cat_io_cmd('','n','',1,stime);
 end
-clear wYp0 wYcls wYv trans
+if ~debug, clear wYp0 wYcls wYv trans; end
 
 
 %  estimate volumes and TIV
@@ -1695,9 +1711,16 @@ if job.output.surface && exist('S','var')
   cat_io_xml(fullfile(pth,reportfolder,['cat_' nam '.xml']),struct(...
     ... 'subjectratings',qam.subjectmeasures, ... not ready
     'subjectmeasures',qa.subjectmeasures,'ppe',res.ppe),'write+'); % here we have to use the write+!
+elseif exist('Yth1','var')
+  qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(Yth1(Yth1(:)>1)) cat_stat_nanstd(Yth1(Yth1(:)>1))];
+  
+  qam = cat_stat_marks('eval',job.cati,qa,'cat12');
 
+  cat_io_xml(fullfile(pth,reportfolder,['cat_' nam '.xml']),struct(...
+    ... 'subjectratings',qam.subjectmeasures, ... not ready
+    'subjectmeasures',qa.subjectmeasures,'ppe',res.ppe),'write+'); % here we have to use the write+!
 end  
-clear Yo Yp0 qas;
+clear Yo Yp0 qas Yth1;
 fprintf('%5.0fs\n',etime(clock,stime));
 
 
@@ -2315,6 +2338,7 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA)
   name = genvarname(strrep(strrep(name,'-','_'),' ','_'));
   
   
+  
   %% volume case
   Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));   
   % other maps with masks
@@ -2336,7 +2360,7 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA)
       case 'c'
         return
       otherwise % 
-        csv{1,end+1} = [name tissue{ti}];  %#ok<AGROW>
+        csv{1,end+1} = strrep([name tissue{ti}],'Tgm','ct');  %#ok<AGROW>
         switch lower(tissue{ti})
           case 'csf',   Ymm=Yp0toC(Yp0,1); 
           case 'gm',    Ymm=Yp0toC(Yp0,2); 

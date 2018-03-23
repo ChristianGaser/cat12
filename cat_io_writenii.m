@@ -226,7 +226,18 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     
     % final masking after transformation
     if exist('YM','var')
-      [wTM,w] = spm_diffeo('push',YM,transform.warped.yx,transform.warped.odim(1:3));
+      if interpol
+        if all(Y*1000 == round(Y*1000)) % label maps
+          YMI = interp3(YM,interpol,'nearest'); %yI = repmat(single(YI),1,1,1,3); 
+        else
+          YMI = interp3(YM,interpol,'linear'); %yI = repmat(single(YI),1,1,1,3); 
+        end
+        %for i=1:3, yI(:,:,:,i) = interp3(transform.warped.yx(:,:,:,i),1,'linear'); end
+      else
+        YMI = YM;
+        %yI = transform.warped.y; 
+      end
+      [wTM,w] = spm_diffeo('push',YMI,transform.warped.yx,transform.warped.odim(1:3));
       wTM = wTM./(w+0.001); 
       wTM = round(wTM*100)/100; 
       wT  = wT .* (smooth3(wTM)>YMth);

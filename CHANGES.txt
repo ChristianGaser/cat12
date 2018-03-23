@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1297 | dahnke | 2018-03-22 16:22:40
+r1298 | dahnke | 2018-03-23 12:07:23
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_writenii.m
+M       cat_main.m
+M       cat_surf_createCS.m
+M       tbx_cfg_cat.m
+
+(1) New:    Added cortical thickness map export to expert GUI 
+            that runs the volumetric part of cat_surf_create_CS
+            and create *ct*.nii files. 
+(2) New:    Added cortical thickness ROI estimation for standard
+            users. Limit thickness atlas estimation to the GM and
+            renamed the main atlas field to ct. 
+------------------------------------------------------------------------
+r1297 | dahnke | 2018-03-22 16:23:05 +0100 (Do, 22 Mär 2018) | 18 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -18,6 +34,7 @@ M       cat_vol_sanlm.m
              by segmentation routines that expect a little variation
              in the data.
 (3) Fixed:   Corrected bugs in NAN and INF replacement in cat_vol_sanlm.
+
 ------------------------------------------------------------------------
 r1296 | dahnke | 2018-03-21 12:03:15 +0100 (Mi, 21 Mär 2018) | 12 lines
 
