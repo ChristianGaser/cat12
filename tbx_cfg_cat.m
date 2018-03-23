@@ -90,13 +90,15 @@ data_spm.preview  = @(f) spm_check_registration(char(f));
   };
 
 if expert < 2
-  surface.labels = {'No','Yes'};
-  surface.values = {0 1};
+  %surface.labels = {'No','Yes'};
+  %surface.values = {0 1};
+  surface.labels = {'No','Yes','Thickness only (for ROI analysis)'};
+  surface.values = {0 1 9};
 else
   surface.labels = {'No','lh + rh','lh + rh + cerebellum',...
     'lh + rh (fast, no registration)','lh + rh + cerebellum (fast, no registration)', ...
-    'lh + rh (fast registration)','lh + rh + cerebellum (fast registration)','Full'};
-  surface.values = {0 1 2 5 6 7 8 12};
+    'lh + rh (fast registration)','lh + rh + cerebellum (fast registration)','Thickness only', 'Full'};
+  surface.values = {0 1 2 5 6 7 8 9 12};
   surface.help   = [surface.help; {
     'Cerebellar reconstruction is still in development and is strongly limited due to the high frequency of folding and image properties! '
     ''
@@ -471,6 +473,21 @@ atlas.help    = {
 ''
 };
 
+% cortical thickness maps
+%native.def    = @(val)cat_get_defaults('output.GMT.native', val{:});
+%warped.def    = @(val)cat_get_defaults('output.GMT.warped', val{:});
+%dartel.def    = @(val)cat_get_defaults('output.GMT.dartel', val{:});
+native.val  = {0};
+warped.val  = {0};
+dartel.val  = {0};
+gmt         = cfg_branch;
+gmt.tag     = 'ct';
+gmt.name    = 'Cortical Thickness';
+gmt.val     = {native warped dartel};
+gmt.help    = {
+  'Options to produce cortical thickess maps.'
+  ''
+};
 
 warps = cfg_menu;
 warps.tag    = 'warps';
@@ -493,9 +510,9 @@ output      = cfg_branch;
 output.tag  = 'output';
 output.name = 'Writing options';
 if expert==2
-  output.val  = {surface ROI grey white csf wmh tpmc atlas label bias las jacobian warps}; 
+  output.val  = {surface ROI grey white csf gmt wmh tpmc atlas label bias las jacobian warps}; 
 elseif expert==1
-  output.val  = {surface ROI grey white csf wmh label bias las jacobian warps};
+  output.val  = {surface ROI grey white csf gmt wmh label bias las jacobian warps};
 else
   output.val  = {surface ROI grey white bias jacobian warps};
 end
