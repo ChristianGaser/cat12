@@ -17,6 +17,13 @@ if nargin == 0
   end
   
 else
+
+  if ~isfield(SPM,'xY')
+    error(sprintf('SPM.mat was not correctly saved. Please check that you have set the following flag in spm_defaults:\ndefaults.mat.format = ''-v7.3'''));
+  end
+  
+  defaults.mat.format     = '-v7.3'; % options: '-mat', '-v6', '-v7.0', '-v7.3'
+
   % check for 32k meshes
   if SPM.xY.VY(1).dim(1) == 32492 || SPM.xY.VY(1).dim(1) == 64984
     fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k');

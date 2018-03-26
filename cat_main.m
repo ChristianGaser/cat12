@@ -868,7 +868,7 @@ if ~isfield(res,'spmpp')
 
   % Yb source image because Amap needs a skull stripped image
   % set Yp0b and source inside outside Yb to 0
-  Yp0b = Yp0(indx,indy,indz); %clear Yp0
+  Yp0b = Yp0(indx,indy,indz);
   Ymib = Ymib(indx,indy,indz); 
 
 
@@ -1258,7 +1258,7 @@ if job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting;
   Yp0 = Yp0 + single(Ywmh)/255; 
 end
 
-cat_io_writenii(VT0,Yp0,mrifolder,'p0','Yp0b map','uint8',[0,4/255],job.output.label,trans);
+cat_io_writenii(VT0,Yp0,mrifolder,'p0','label map','uint8',[0,4/255],job.output.label,trans);
 clear Yp0; 
 
 % partitioning
@@ -1469,8 +1469,8 @@ fprintf('%5.0fs\n',etime(clock,stime));
 %% ---------------------------------------------------------------------
 %  surface creation and thickness estimation
 %  ---------------------------------------------------------------------
-if (job.output.surface || any( [job.output.GMT.native job.output.ct.warped job.output.ct.dartel] )) && ...
-   ~(job.output.surface==9 && job.output.ROI==0 && ~any( [job.output.GMT.native job.output.ct.warped job.output.ct.dartel] )) 
+if (job.output.surface || any( [job.output.ct.native job.output.ct.warped job.output.ct.dartel] )) && ...
+   ~(job.output.surface==9 && job.output.ROI==0 && ~any( [job.output.ct.native job.output.ct.warped job.output.ct.dartel] )) 
     % ... not required, if only thickness but no output
   stime = cat_io_cmd('Surface and thickness estimation');; 
   
@@ -1481,9 +1481,11 @@ if (job.output.surface || any( [job.output.GMT.native job.output.ct.warped job.o
   else
     WMT = 0; 
   end
+  
   if job.extopts.experimental || job.extopts.expertgui==2
     WMT = 1; 
   end
+  
   % specify surface
   switch job.output.surface
     case 1, surf = {'lh','rh'};
@@ -1498,9 +1500,11 @@ if (job.output.surface || any( [job.output.GMT.native job.output.ct.warped job.o
     case 8, surf = {'lhsfst','rhsfst','lcsfst','rcsfst'}; 
     case 9, surf = {'lhv','rhv'}; %,'lcv','rcv'}; 
   end
+  
   if ~job.output.surface && any( [job.output.ct.native job.output.ct.warped job.output.ct.dartel] )
     surf = {'lhv','rhv'}; %,'lcv','rcv'}; 
   end
+  
   if job.output.surface>4 % fast 
     job.extopts.pbtres = max(0.8,min([((min(vx_vol)^3)/2)^(1/3) 1.0]));
   end
@@ -1513,7 +1517,6 @@ if (job.output.surface || any( [job.output.GMT.native job.output.ct.warped job.o
     %% using the Ymi map
     Ymix = Ymi .* (Yp0>0.5); 
     smeth = 1; if smeth==1, pbtmethod = 'pbt2x'; elseif smeth==3, pbtmethod = 'pbt3'; else pbtmethod = 'pbtv'; end
-    if ~debug, clear Yp0; end 
     
     [Yth1,S,Psurf] = cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,...
       struct('pbtmethod',pbtmethod,'interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
@@ -1524,6 +1527,7 @@ if (job.output.surface || any( [job.output.GMT.native job.output.ct.warped job.o
       struct('interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
       'verb',job.extopts.verb,'WMT',WMT));
   end
+  
   if isempty(S) && isempty(Psurf)
     clear S Psurf; 
   end
@@ -1531,9 +1535,11 @@ if (job.output.surface || any( [job.output.GMT.native job.output.ct.warped job.o
   % thickness map
   if isfield(job.output,'ct')
     cat_io_writenii(VT0,Yth1,mrifolder,'ct','cortical thickness map','uint16',...
-      [0,0.0001],job.output.ct,trans,single(Ycls{1})/255,0.01);
+      [0,0.0001],job.output.ct,trans,single(Ycls{1})/255,0.1);
   end
   
+  if ~debug, clear Yp0; end 
+
   cat_io_cmd('Surface and thickness estimation');  
   fprintf('%5.0fs\n',etime(clock,stime));
   if ~debug; clear YMF; end
@@ -1541,8 +1547,6 @@ if (job.output.surface || any( [job.output.GMT.native job.output.ct.warped job.o
 else
   if ~debug; clear Ymi; end
 end
-
-
 
 
 %% ---------------------------------------------------------------------
