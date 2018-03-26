@@ -475,9 +475,9 @@ atlas.help    = {
 };
 
 % cortical thickness maps
-%native.def    = @(val)cat_get_defaults('output.GMT.native', val{:});
-%warped.def    = @(val)cat_get_defaults('output.GMT.warped', val{:});
-%dartel.def    = @(val)cat_get_defaults('output.GMT.dartel', val{:});
+native.def    = @(val)cat_get_defaults('output.ct.native', val{:});
+warped.def    = @(val)cat_get_defaults('output.ct.warped', val{:});
+dartel.def    = @(val)cat_get_defaults('output.ct.dartel', val{:});
 native.val  = {0};
 warped.val  = {0};
 dartel.val  = {0};
@@ -486,7 +486,7 @@ gmt.tag     = 'ct';
 gmt.name    = 'Cortical Thickness';
 gmt.val     = {native warped dartel};
 gmt.help    = {
-  'Options to save cortical thickess maps.'
+  'Options to save cortical thickess maps (experimental).'
   ''
 };
 
@@ -513,7 +513,7 @@ output.name = 'Writing options';
 if expert==2
   output.val  = {surface ROI grey white csf gmt wmh tpmc atlas label bias las jacobian warps}; 
 elseif expert==1
-  output.val  = {surface ROI grey white csf gmt label bias las jacobian warps};
+  output.val  = {surface ROI grey white csf label bias las jacobian warps};
 else
   output.val  = {surface ROI grey white bias jacobian warps};
 end

@@ -1,5 +1,31 @@
 ------------------------------------------------------------------------
-r1299 | gaser | 2018-03-23 14:39:01
+r1300 | gaser | 2018-03-26 16:19:57
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       cat_batch_cat.m
+M       cat_conf_long.m
+M       cat_defaults.m
+M       cat_main.m
+M       cat_stat_spm.m
+M       html/cat_versions.html
+M       tbx_cfg_cat.m
+
+(1) Changed: Updated version information to CAT12.3
+(2) Fixed: Corrected flag for cortical thickness files and moved option
+    to save these maps to developer mode.
+(3) Changed: Added error message to cat_stat_spm if SPM.mat was probably not
+    correctly saved because of missing "-v7.3" flag in spm_defaults.m.
+(4) Changed: Increased threshold for writing thickness maps to 0.1, which is
+    still not optimal because too much of thickness is defined in areas
+    with low GM probability.
+(5) Changed: Enabled cobra atlas for ROI analysis by default.
+(6) Changed: Updated longitudinal batch to consider last changes in CAT12.3.
+
+------------------------------------------------------------------------
+r1299 | gaser | 2018-03-23 14:39:14 +0100 (Fr, 23 Mär 2018) | 20 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -20,6 +46,7 @@ M       spm_cat12.m
 M       tbx_cfg_cat.m
 
 Changed: Updated help text.
+
 ------------------------------------------------------------------------
 r1298 | dahnke | 2018-03-23 12:07:51 +0100 (Fr, 23 Mär 2018) | 14 lines
 
