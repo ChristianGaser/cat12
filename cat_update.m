@@ -10,7 +10,7 @@ function varargout = cat_update(update)
 % msg    - string describing outcome, that would otherwise be displayed.
 % update - allow installation of update
 % 
-% This function will connect itself to the SBM server, compare the
+% This function will connect to the SBM server, compare the
 % version number of the updates with the one of the CAT12 installation 
 % currently in the MATLAB path and will display the result.
 %_______________________________________________________________________
@@ -76,6 +76,7 @@ if update
     overwrite = spm_input('Update',1,'yes|no',[1 0],1);
     d0 = spm('Dir');
     d = fullfile(spm('Dir'),'toolbox'); 
+    
     if overwrite
       try
         % list mex-files and delete these files to prevent that old
@@ -142,6 +143,7 @@ if update
                 fprintf('\n%s\n',le.message);
         end
       end
+      
       [warnmsg, msgid] = lastwarn;
       switch msgid
         case ''
@@ -152,5 +154,6 @@ if update
         otherwise
             fprintf('          Update failed: %s.\n',warnmsg);
       end
+      
     end
 end

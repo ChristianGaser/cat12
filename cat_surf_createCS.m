@@ -104,6 +104,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
   %min(1,max(0,3-2*mean(vx_vol,2))) min(1,max(0,1-mean(vx_vol,2))/2) 0.5*min(1,max(0,1.5-mean(vx_vol,2)))] % filter test 
   mf  = min(1,max(0,3-2*mean(vx_vol,2))); 
   Ym  = mf * Yms  +  (1-mf) * Ym;
+  clear Yms;
    
   % filling
   Ymf  = max(Ym,min(0.95,YMF)); 
@@ -197,7 +198,9 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     % surface filenames
     Praw       = fullfile(pp,surffolder,sprintf('%s.central.nofix.%s.gii',opt.surf{si},ff));    % raw
     Psphere0   = fullfile(pp,surffolder,sprintf('%s.sphere.nofix.%s.gii',opt.surf{si},ff));     % sphere.nofix
-    Pcentral   = fullfile(pp,surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff));          % fiducial
+    Pcentral   = fullfile(pp,surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff));          % central
+    Ppial      = fullfile(pp,surffolder,sprintf('%s.pial.%s.gii',opt.surf{si},ff));             % pial (GM/CSF)
+    Pwhite     = fullfile(pp,surffolder,sprintf('%s.white.%s.gii',opt.surf{si},ff));            % white (WM/GM)
     Pthick     = fullfile(pp,surffolder,sprintf('%s.thickness.%s',opt.surf{si},ff));            % thickness / GM depth
     Pgwo       = fullfile(pp,surffolder,sprintf('%s.depthWMo.%s',opt.surf{si},ff));             % gyrus width / GWM depth / gyral span
     Pgw        = fullfile(pp,surffolder,sprintf('%s.depthGWM.%s',opt.surf{si},ff));             % gyrus width / GWM depth / gyral span
@@ -355,6 +358,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
       %fprintf('%5.0fs\n',etime(clock,stime));
       clear Ymr;
     end
+    
     if ~debug, clear Ymfs; else Yppio=Yppi; end
     fprintf('%5.0fs\n',etime(clock,stime));
     
@@ -418,6 +422,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
       Yppi  = Yppi + opt.add_parahipp/opt.scale_cortex*mask_parahipp_smoothed;
     end
     Yppi(ind0) = 0;
+    clear ind0;
 
     % optionally apply closing inside mask for parahippocampal gyrus to get rid of the holes that lead to large cuts in gyri
     % after topology correction
@@ -718,8 +723,8 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
                      'flat -0.15 0.15 .5 .1 5 0 "%g" "%g" n 0 0 0 25 0.01 0.0'], ...
                      Vpp1.fname,Pcentral,Pcentral,th,th);
     else
-      cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
-                     'flat -0.15 0.15 .5 .1 5 0 "%g" "%g" n 0 0 0 50 0.01 0.0'], ...
+      cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .2 ' ...
+                     'avg -0.05 0.05 .1 .1 5 0 "%g" "%g" n 0 0 0 50 0.01 0.0'], ...
                      Vpp1.fname,Pcentral,Pcentral,th,th);
     end
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
@@ -732,10 +737,32 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
    
     % final correction of central surface in highly folded areas with high mean curvature
-    stime = cat_io_cmd('  Final correction of central surface in highly folded areas','g5','',opt.verb,stime);
-    cmd = sprintf(['CAT_Central2Pial -equivolume -weight 0.2 "%s" "%s" "%s" 0'], ...
-                     Pcentral,Pthick,Pcentral);
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+    if ~opt.fast
+      stime = cat_io_cmd('  Correction of central surface in highly folded areas','g5','',opt.verb,stime);
+      cmd = sprintf(['CAT_Central2Pial -equivolume -weight 0.2 "%s" "%s" "%s" 0'], ...
+                       Pcentral,Pthick,Pcentral);
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+  
+      % estimation of pial surfaces
+      stime = cat_io_cmd('  Estimation of pial surface','g5','',opt.verb,stime);
+      cmd = sprintf(['CAT_Central2Pial -check_intersect "%s" "%s" "%s" 0.5'], ...
+                       Pcentral,Pthick,Ppial);
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+  
+      % estimation of white matter surfaces
+      stime = cat_io_cmd('  Estimation of white matter surface','g5','',opt.verb,stime);
+      cmd = sprintf(['CAT_Central2Pial -check_intersect "%s" "%s" "%s" -0.5'], ...
+                       Pcentral,Pthick,Pwhite);
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+  
+      % correction of cortical thickness and central surface
+      cmd = sprintf(['CAT_AverageSurfaces -avg "%s" "%s" "%s"'], ...
+                       Pcentral,Pwhite,Ppial);
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+      cmd = sprintf(['CAT_Hausdorff -exact "%s" "%s" "%s"'], ...
+                       Pwhite,Ppial,Pthick);
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+    end
 
     %% spherical surface mapping 2 of corrected surface
     stime = cat_io_cmd('  Spherical mapping with areal smoothing','g5','',opt.verb,stime); 

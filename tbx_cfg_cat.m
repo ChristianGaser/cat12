@@ -81,6 +81,8 @@ data_spm.preview  = @(f) spm_check_registration(char(f));
   surface        = cfg_menu;
   surface.tag    = 'surface';
   surface.name   = 'Surface and thickness estimation';
+  surface.labels = {'No','Yes'};
+  surface.values = {0 1};
   surface.def    = @(val)cat_get_defaults('output.surface', val{:});
   surface.help   = {
     'Use projection-based thickness (PBT) (Dahnke et al. 2012) to estimate cortical thickness and to create the central cortical surface for left and right hemisphere. Surface reconstruction includes topology correction (Yotter et al. 2011), spherical inflation (Yotter et al.) and spherical registration. Additionally you can also estimate surface parameters such as gyrification, cortical complexity or sulcal depth that can be subsequently analyzed at each vertex of the surface. '
@@ -91,10 +93,7 @@ data_spm.preview  = @(f) spm_check_registration(char(f));
     ''
   };
 
-if expert < 2
-  surface.labels = {'No','Full surface and thickness estimation','Thickness estimation (for ROI analysis only)'};
-  surface.values = {0 1 9};
-else
+if expert == 2
   surface.labels = {'No','lh + rh','lh + rh + cerebellum',...
     'lh + rh (fast, no registration)','lh + rh + cerebellum (fast, no registration)', ...
     'lh + rh (fast registration)','lh + rh + cerebellum (fast registration)','Thickness estimation (for ROI analysis only)', 'Full'};
