@@ -1,5 +1,34 @@
 ------------------------------------------------------------------------
-r1300 | gaser | 2018-03-26 16:19:57
+r1301 | gaser | 2018-04-09 16:05:11
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+A       cat_install_tfce.m
+M       cat_stat_analyze_ROIs.m
+M       cat_surf_createCS.m
+M       cat_surf_display.m
+M       cat_update.m
+M       html/cat.html
+M       html/cat_starting.html
+M       html/cat_versions.html
+M       tbx_cfg_cat.m
+
+(1) Changed: Disabled volume-based thickness estimation option.
+(2) Fixed: Display of surfaces without color (texture) information was not 
+    working in cat_surf_display.m.
+(3) Changed: Added estimation of pial and white matter surface and use these
+    surfaces to correct cortical thickness.    
+(4) Changed: Added internal option to save beta images in 
+    cat_stat_analyze_ROIs.m
+(5) Changed: Updated online help and CAT12 manual.
+(6) Added: Function for installing TFCE toolbox was added and will be called
+    from quick start guide if TFCE is not yet installed.
+------------------------------------------------------------------------
+r1300 | gaser | 2018-03-26 16:20:21 +0200 (Mo, 26 Mär 2018) | 24 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -23,6 +52,7 @@ M       tbx_cfg_cat.m
     with low GM probability.
 (5) Changed: Enabled cobra atlas for ROI analysis by default.
 (6) Changed: Updated longitudinal batch to consider last changes in CAT12.3.
+
 
 ------------------------------------------------------------------------
 r1299 | gaser | 2018-03-23 14:39:14 +0100 (Fr, 23 Mär 2018) | 20 lines

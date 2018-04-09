@@ -10,6 +10,12 @@ if nargin < 1
 end
 load(spmmat);
 
+% write beta images
+write_beta = 0;
+
+% compare correlation coefficients between samples
+compare_two_samples = 0;
+
 cwd = fileparts(spmmat);
 
 %-Check that model has been estimated
@@ -28,12 +34,14 @@ end
 [Ic,xCon] = spm_conman(SPM,'T&F',1,'Select contrast',' ',1);
 
 % check whether two groups are compared with each other
-c = xCon(Ic).c;
-c_sort_unique = sort(unique(c(find(c~=0))));
-compare_two_samples = 0;
-if numel(c_sort_unique) == 2
-  if all(c_sort_unique==[-1 1]')
-    compare_two_samples = 1;
+con = xCon(Ic).c;
+ind_con = find(con~=0);
+c_sort_unique = sort(unique(con(ind_con)));
+if compare_two_samples
+  if numel(c_sort_unique) == 2
+    if all(c_sort_unique==[-1 1]')
+      compare_two_samples = 1;
+    end
   end
 end
 
@@ -164,8 +172,7 @@ Y = ROIvalues;
 X = SPM.xX.X;
 
 % compare correlation coefficients after Fisher z-transformation
-if 0
-%if compare_two_samples
+if compare_two_samples
   % get two samples according to contrast -1 1
   Y1 = Y(find(X(:,find(c==-1))),:);
   Y2 = Y(find(X(:,find(c== 1))),:);
@@ -203,7 +210,7 @@ end
 n_structures = size(Y,2);
 
 % estimate GLM and get p-value
-p = estimate_GLM(Y,X,SPM,Ic);
+[p, Beta] = estimate_GLM(Y,X,SPM,Ic);
 
 % divide p-values and names into left and right hemisphere data
 P{1}  = p(1:2:n_structures);
@@ -212,6 +219,8 @@ N{1}  = ROInames(1:2:n_structures);
 N{2}  = ROInames(2:2:n_structures);
 ID{1} = ROIids(1:2:n_structures);
 ID{2} = ROIids(2:2:n_structures);
+B{1}  = Beta(:,1:2:n_structures);
+B{2}  = Beta(:,2:2:n_structures);
 
 % select order according to label names to have left hemipshere always first
 if strcmp(N{1}{1}(:,1),'l') % left hemisphere?
@@ -228,6 +237,7 @@ corr_short = {'','FDR'};
 n_corr = numel(corr);
 data = cell(size(corr));
 Pcorr = cell(size(corr));
+dataBeta = cell(length(ind_con));
 
 % go through left and right hemisphere with left first
 for i = order
@@ -244,6 +254,12 @@ for i = order
     V = spm_vol(fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm',[atlas '.nii']));
     data0 = round(spm_data_read(V));
 
+    if write_beta
+      for k=1:length(ind_con)
+        dataBeta{k} = zeros(size(data0));
+      end
+    end
+    
     % create empty output data
     for c=1:n_corr
       data{c} = zeros(size(data0));
@@ -257,6 +273,12 @@ for i = order
     [vertices, rdata0, colortable, rcsv0] = cat_io_FreeSurfer('read_annotation',atlas_name);
     data0 = round(rdata0);
 
+    if write_beta
+      for k=1:length(ind_con)
+        dataBeta{k} = zeros(size(data0));
+      end
+    end
+    
     % create empty output data
     for c=1:n_corr
       data{c} = zeros(size(data0));
@@ -288,6 +310,15 @@ for i = order
   end
   
   output_name = [num2str(100*alpha) '_' str_con '_' atlas '_' measure];
+  atlas_name   = [atlas '_' measure];
+  
+  if write_beta
+    for k=1:length(ind_con)
+      for j=1:length(P{i})
+        dataBeta{k}(data0 == ID{i}(j)) = B{i}(ind_con(k),j);
+      end
+    end
+  end
   
   % display and save thresholded sorted p-values for each correction
   for c = 1:n_corr
@@ -308,6 +339,14 @@ for i = order
       filename = [hemi '.logP' corr_short{c} output_name '.gii'];
       save(gifti(struct('cdata',data{c})),filename);
       fprintf('\nLabel file with thresholded logP values (%s) saved as %s.',corr{c},filename);
+
+      if write_beta
+        for k=1:length(ind_con)
+          filename = sprintf('%s.beta%d_%s.gii',hemi,ind_con(k),atlas_name);
+          save(gifti(struct('cdata',dataBeta{k})),filename);
+          fprintf('\Beta image saved as %s.',filename);
+        end
+      end
     end
 
   end
@@ -350,6 +389,16 @@ if ~mesh_detected
       fprintf('\nLabel file with thresholded logP values (%s) was saved as %s.',corr{c},V.fname);
     end
   end
+
+  if write_beta
+    for k=1:length(ind_con)
+      V.fname = sprintf('beta%d_%s.nii',ind_con(k),atlas_name);
+      V.dt(1) = 16;
+      spm_write_vol(V,dataBeta{k});
+      fprintf('\nBeta image was saved as %s.',V.fname);
+    end
+  end
+
   fprintf('\n');
   
   % display ROI results for label image
@@ -394,7 +443,7 @@ if mesh_detected
 end
 
 %_______________________________________________________________________
-function p = estimate_GLM(Y,X,SPM,Ic);
+function [p, Beta] = estimate_GLM(Y,X,SPM,Ic);
 % estimate GLM and return p-value for F- or T-test
 %
 % FORMAT p = estimate_GLM(Y,X,SPM,Ic);

@@ -37,14 +37,9 @@
           <ul>
             <li>Skull-stripping is again slightly changed and the SPM approach is now used as default. The SPM approach works quite stable for the majority of data. However, in some rare cases parts of GM (i.e. in frontal lobe) might be cut. If this happens the GCUT approach is a good alternative.</li>
             <li>Spatial adaptive non-local mean (SANLM) filter is again called as very first step because noise estimation and de-noising works best for original (non-interpolated) data.</li>
+            <li>Cortical thickness estimation is now corrected using pial and white matter surface. These two surfaces are created initially using central surface and cortical thickness and the position is corrected in regions with self-intersections.</li>
           </ul>
         </ul>
-        <ul>
-          <li>Important new features</li>
-          <ul>
-            <li>Added option to use cortical thickness in (3D) ROI analysis without running the whole surface and thickness estimation.</li>
-          </ul>
-        </ul> 
       </p>
       <h2>Changes in version CAT12.2 (1290)</h2>      
       <p>

@@ -241,14 +241,7 @@ if get(hObject,'Value') == 2
         % call TFCE toolbox 
         spm_TFCE;
     else % install TFCE toolbox
-        d0 = spm('Dir');
-        d = fullfile(spm('Dir'),'toolbox'); 
-        s = unzip('http://www.neuro.uni-jena.de/tfce/tfce_latest.zip', d);
-        addpath(d0);
-        rehash
-        rehash toolboxcache;
-        toolbox_path_cache
-        eval(['spm fmri;clear cat_version;spm_cat12']);
+        cat_install_tfce(1);
     end
 end
 
