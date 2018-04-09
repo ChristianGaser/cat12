@@ -161,7 +161,11 @@ function varargout = cat_surf_display(varargin)
         end
       else
         if job.expert<2
-          h = cat_surf_render('disp',Pmesh,'Pcdata',Pdata);
+          try
+            h = cat_surf_render('disp',Pmesh,'Pcdata',Pdata);
+          catch
+            h = cat_surf_render('disp',Pdata);
+          end
         else
           h = cat_surf_render2('disp',Pmesh,'Pcdata',Pdata);
         end
