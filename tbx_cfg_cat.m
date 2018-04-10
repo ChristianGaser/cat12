@@ -467,7 +467,11 @@ dartel.def    = @(val)cat_get_defaults('output.atlas.dartel', val{:});
 atlas         = cfg_branch;
 atlas.tag     = 'atlas';
 atlas.name    = 'Atlas label maps';
-atlas.val     = {native warped dartel};
+if expert>1
+    atlas.val     = {native warped dartel};
+else
+    atlas.val     = {native dartel};
+end    
 atlas.help    = {
   'WARNING: The functions that create this maps are still under development! This is the option to save an atlas map with major structures (a1*). Odd numbers code the left, even numbers the right hemisphere. Furthermore, AAL and Broadman atlas maps were created based on maps from MRIcron that where adapted to the other VBM maps. Other maps are used from the IBASPM toolbox.  http://www.thomaskoenig.ch/Lester/ibaspm.htmAnatomy toolbox:Alexander Hammers brain atlas from the Euripides project:   www.brain-development.org  Hammers A, Allom R, Koepp MJ, Free SL, Myers R, Lemieux L, Mitchell   TN, Brooks DJ, Duncan JS. Three-dimensional maximum probability atlas   of the human brain, with particular reference to the temporal lobe.   Hum Brain Mapp 2003, 19: 224-247.'
 ''
@@ -512,7 +516,7 @@ output.name = 'Writing options';
 if expert==2
   output.val  = {surface ROI grey white csf gmt wmh tpmc atlas label bias las jacobian warps}; 
 elseif expert==1
-  output.val  = {surface ROI grey white csf label bias las jacobian warps};
+  output.val  = {surface ROI grey white csf atlas label bias las jacobian warps};
 else
   output.val  = {surface ROI grey white bias jacobian warps};
 end

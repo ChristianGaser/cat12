@@ -378,10 +378,11 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     %% Write Ypp for final deformation
     %  Write Yppi file with 1 mm resolution for the final deformation, 
     %  because CAT_DeformSurf achieved better results using that resolution
+% inoptimal for low resoulution data !
     Yppt = cat_vol_resize(Yppi,'deinterp',resI);                        % back to original resolution
     Yppt = cat_vol_resize(Yppt,'dereduceBrain',BB);                     % adding of background
     Vpp  = cat_io_writenii(V,Yppt,'','pp','percentage position map','uint8',[0,1/255],[1 0 0 0]);
-    clear Yppt;
+    if ~debug, clear Yppt; end
 
     Vpp1 = Vpp; 
     Vpp1.fname    = fullfile(pp,mrifolder,['pp1' ff '.nii']);
@@ -434,7 +435,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     txt = evalc('[tmp,CS.faces,CS.vertices] = cat_vol_genus0(Yppi,th_initial);');
     if opt.verb>2, fprintf(txt); end
     
-    clear tmp Yppi;
+    if ~debug, clear tmp Yppi; end
 
     % correction for the boundary box used within the surface creation process 
     CS.vertices = CS.vertices .* repmat(abs(opt.interpV ./ vmatBBV([8,7,9])),size(CS.vertices,1),1);
@@ -454,6 +455,13 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
       end
     end
     
+    
+    if 0
+      %% Delaunay-base IterSection COrection
+      tic
+      [CSn,GMTn,Yth1n] = cat_surf_createCS_disco(Yppt,CS,isocolors2(Yth1,CS.vertices),...
+        struct('dim',Vpp.dim,'mat',vmat*Vpp.mat));  toc
+    end
     %% transform coordinates 
     if opt.fast==1
       %%
@@ -490,7 +498,11 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
       CS = gifti(Pcentral);
       if V.mat(13)>0, CS.faces = [CS.faces(:,1) CS.faces(:,3) CS.faces(:,2)]; end
       CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
-      facevertexcdata = isocolors2(Yth1,CS.vertices); 
+      if exist('GMTn','var')
+        facevertexcdata = GMTn; 
+      else
+        facevertexcdata = isocolors2(Yth1,CS.vertices); 
+      end
       cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
       
       % map WM and CSF width data (corrected by thickness)

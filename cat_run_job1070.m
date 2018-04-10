@@ -523,10 +523,10 @@ function cat_run_job1070(job,tpm,subj)
                          min(single(Ysrc(~Ybg(:))))]); 
 
             % add and write bias corrected (skull-stripped) image
-            if app.bias<=1 % app.bias=1 is just a simple bias correction for affreg and will cause errors in the BWP cerebellum, if used further! 
-                Ymc = single(max(bth,min(4^sign(th)*th,Ysrc))); % just limit the image intensities
+            if app.bias<=1 % app.bias=1 is just a simple bias correction for affreg and maybe cause errors in the BWP cerebellum, if used further! 
+                Ymc = Ysrc; 
             else
-                Ymc = single(max(bth,min(4^sign(th)*th,Ym * abs(diff([bth,th])) + bth))); % use the bias corrected image
+                Ymc = Ym * abs(diff([bth,th])) + bth; % use the bias corrected image
             end
 
             % set variable and write image
@@ -557,32 +557,6 @@ function cat_run_job1070(job,tpm,subj)
         end
         cat_err_res.obj = obj; 
 
-        %% guarantee SPM image requirements of gaussian distributed data
-        %  Add noise to regions with low intensity changes that are mosty 
-        %  caused by skull-stripping, defacing, or simulated data and can
-        %  lead to problems in SPM tissue peak estimation. 
-        if 0 % R11++
-          Ysrc  = single(spm_read_vols(obj.image));
-          Yg    = cat_vol_grad(Ysrc,vx_vol);
-          Ygnth = cat_stat_nanmean( min(0.3,Yg(:)./max(eps,Ysrc(:))) );
-          gno   = Ysrc( ( Yg(:)./max(eps,Ysrc(:)) )<Ygnth/2 & Ysrc(:)>cat_stat_nanmean(Ysrc(:)) ); 
-          Tthn  = mean( Ysrc( ( Yg(:)./max(eps,Ysrc(:)) )<Ygnth/2 & ...
-                    Ysrc(:)>(cat_stat_nanmean(gno) - 1*cat_stat_nanstd(gno)) & ...
-                    Ysrc(:)<(cat_stat_nanmean(gno) + 4*cat_stat_nanstd(gno))) ); 
-          Ysrcn = max( min(Ysrc(:)) , Ysrc + ( randn(size(Ysrc))*Tthn*0.005 + (rand(size(Ysrc))-0.5)*Tthn*0.01 ) .*  ...
-            cat_vol_smooth3X( Ysrc/Tthn<0.01 | Yg/Tthn<0.01 | Yg./max(eps,Ysrc)<0.01 , 4 ));
-
-          [h,i] = hist(Ysrcn(:),1000); maxth = cumsum(h);
-          idl = find(maxth/max(maxth)>0.02,1,'first'); 
-          idh = find(maxth/max(maxth)>0.98,1,'first'); 
-          iil = i(idl) - diff([idl idh])*0.5; 
-          iih = i(idh) + diff([idl idh])*0.5; 
-          Ysrcn = max( iil , min( iih , Ysrcn )); 
-
-          spm_write_vol(spm_vol(obj.image.fname),Ysrcn); 
-          obj.image.dat = Ysrcn;
-          clear Ysrc Yg Ysrcn;
-        end
        
         %%
         if skullstripped 
@@ -688,6 +662,7 @@ function cat_run_job1070(job,tpm,subj)
       res.tpm       = obj.tpm;
       res.tpm(1).fname = fname;
     end
+    spm_progress_bar('Clear');
             
     %% call main processing
     res.stime  = stime;
