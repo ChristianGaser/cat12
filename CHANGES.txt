@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1302 | dahnke | 2018-04-10 12:34:30
+r1303 | dahnke | 2018-04-10 12:43:52
+
+Changed paths:
+M       CHANGES.txt
+MM      cat_install_tfce.m
+M       tbx_cfg_cat.m
+
+(1) Fixed:    Corrected bug in tbx_cfg_cat.
+------------------------------------------------------------------------
+r1302 | dahnke | 2018-04-10 12:34:57 +0200 (Di, 10 Apr 2018) | 27 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -27,6 +36,7 @@ M       tbx_cfg_cat.m
               of some preprocessing steps in cat_main and cat_main_LAS. 
 (8) New:      Added atlas export field in expert GUI.
               
+
 ------------------------------------------------------------------------
 r1301 | gaser | 2018-04-09 16:05:37 +0200 (Mo, 09 Apr 2018) | 27 lines
 
