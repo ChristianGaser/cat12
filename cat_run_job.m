@@ -898,8 +898,9 @@ function cat_run_job(job,tpm,subj)
           %  we have to rewrite the image, because SPM reads it again 
           if job.extopts.APP>3 %&& (app.aff>0 || app.bias>0 || app.msk>0)
               % add and write bias corrected (, skull-stripped) image
-              Ymc2 = single(max(bth,min( max( WMth + max(3*diff([bth,WMth])) , ...
-                WMth / max(1/2 - 3/8*Tth.inverse,Tth.Tmax) ) ,Ymc * WMth))); % use the bias corrected image
+              %Ymc2 = single(max(bth,min( max( WMth + max(3*diff([bth,WMth])) , ...
+              %  WMth / max(1/2 - 3/8*Tth.inverse,Tth.Tmax) ) ,Ymc * WMth))); % use the bias corrected image
+              Ymc2 = Ymc * WMth; % use the bias corrected image without limitation 
               if ~debug, clear Ymc; end
 
               % hard masking
@@ -937,42 +938,7 @@ function cat_run_job(job,tpm,subj)
               obj.lkp = [obj.lkp ones(1,job.tissue(k).ngaus)*k];
             end
           end
-          %% guarantee SPM image requirements of gaussian distributed data
-          %  Add noise to regions with low intensity changes that are mosty 
-          %  caused by skull-stripping, defacing, or simulated data and can
-          %  lead to problems in SPM tissue peak estimation. 
-          if 1
-            %%
-
-            Ysrc  = single(spm_read_vols(obj.image));
-
-            Yg    = cat_vol_grad(Ysrc,vx_vol);
-            Ygnth = cat_stat_nanmean( min(0.3,Yg(:)./max(eps,Ysrc(:))) );
-            gno   = Ysrc( ( Yg(:)./max(eps,Ysrc(:)) )<Ygnth/2 & Ysrc(:)>cat_stat_nanmean(Ysrc(:)) ); 
-            Tthn  = mean( Ysrc( ( Yg(:)./max(eps,Ysrc(:)) )<Ygnth/2 & ...
-                      Ysrc(:)>(cat_stat_nanmean(gno) - 1*cat_stat_nanstd(gno)) & ...
-                      Ysrc(:)<(cat_stat_nanmean(gno) + 4*cat_stat_nanstd(gno))) ); 
-            Ysrcn = max( min(Ysrc(:)) , Ysrc + ( randn(size(Ysrc))*Tthn*0.005 + (rand(size(Ysrc))-0.5)*Tthn*0.01 ) .*  ...
-              cat_vol_smooth3X( Ysrc/Tthn<0.01 | Yg/Tthn<0.01 | Yg./max(eps,Ysrc)<0.01 , 4 ));
-
-            [h,i] = hist(Ysrcn(Ysrc~=0 & ~isnan(Ysrc)),1000); maxth = cumsum(h);
-            idl = find(maxth/max(maxth)>0.02,1,'first'); 
-            idh = find(maxth/max(maxth)>0.98,1,'first'); 
-            iil = i(idl) - diff([idl idh])*0.5; 
-            iih = i(idh) + diff([idl idh])*0.5; 
-            Ysrcn = max( iil , min( iih , Ysrcn )); 
-
-            % should be used above .. however SPM don't like it ... 
-            if ~strcmp(job.extopts.species,'human') && exist('Yb','var')
-              %Ysrcn = Ysrcn .* cat_vol_morph(Yb,'d',3); 
-              %ppe.affreg.skullstripped = 1;
-            end
-
-
-            %%
-            spm_write_vol(obj.image,Ysrcn); 
-            if ~debug, clear Ysrc Yg Ysrcn; end
-          end
+          
 
 
         
@@ -1176,7 +1142,7 @@ end
         
         
     end
-    
+    spm_progress_bar('Clear');
     
     %% call main processing
     res.stime  = stime;

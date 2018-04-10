@@ -79,6 +79,21 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
   if ~exist(fullfile(pp,folder),'dir'), mkdir(fullfile(pp,folder)); end
   
   
+  % deal with label maps 
+  switch class(Y)
+    case {'single','double'}
+      labelmap = 0;
+    case {'uint8','uint16'}
+      if all(range == [0 1]); 
+        labelmap = 1; 
+        Y = single(Y); 
+      else
+        labelmap = 0;
+      end
+    otherwise
+      labelmap = 0;
+  end
+  
   % write native file
   % ____________________________________________________________________
   if write(1)==1
@@ -140,6 +155,10 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
         Yn(YMR)     = Ynr(YMR); clear YMR Ynr;
         delete(Vn.fname); % remove it, otherwise it will have the wrong filesize (correct readable, but still to big)
         Vn = spm_write_vol(Vn,double(Yn));
+      elseif labelmap
+        [Vn,Yn] = cat_vol_imcalc(Vn,Vo,'i1',struct('interp',0,'verb',0));
+        delete(Vn.fname); % remove it, otherwise it will have the wrong filesize (correct readable, but still to big)
+        Vn = spm_write_vol(Vn,double(Yn));
       else
         [Vn,Yn] = cat_vol_imcalc(Vn,Vo,'i1',struct('interp',6,'verb',0));
         delete(Vn.fname); % remove it, otherwise it will have the wrong filesize (correct readable, but still to big)
@@ -159,20 +178,6 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     [D,I] = cat_vbdist(single(Y)); Y(:)=Y(I(:)); clear D I; 
   end
   
-  % deal with label maps 
-  switch class(Y)
-    case {'single','double'}
-      labelmap = 0;
-    case {'uint8','uint16'}
-      if all(range == [0 1]); 
-        labelmap = 1; 
-        Y = single(Y); 
-      else
-        labelmap = 0;
-      end
-    otherwise
-      labelmap = 0;
-  end
   
   %% warped
   % ____________________________________________________________________

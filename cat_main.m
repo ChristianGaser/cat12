@@ -17,7 +17,7 @@ dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfi
 
 % this limits ultra high resolution data, i.e. images below ~0.4 mm are reduced to ~0.7mm! 
 % used in cat_main_partvol, cat_main_gcut, cat_main_LAS
-def.extopts.uhrlim = 0.7; 
+def.extopts.uhrlim = 0.7 * 2; % default 0.7*2 that reduce images below 0.7 mm
 job.extopts = cat_io_checkinopt(job.extopts,def.extopts);
 clear def; 
 
@@ -1392,9 +1392,52 @@ if job.output.jacobian.warped
   N.dat(:,:,:) = dt;
 end
 
-% deformations y - dartel > subject
+
+job.output.atlas.native =1;
+job.output.atlas.warped =1;
+job.output.atlas.dartel =3;
+%%
+if job.output.ROI || any(cell2mat(struct2cell(job.output.atlas)'))
+  % get atlases
+  FAF = job.extopts.atlas; 
+  FA  = {}; fai = 1;
+  AN  = fieldnames(job.output.atlases);
+  for ai = 1:numel(AN)
+    fafi = find(cellfun('isempty',strfind(FAF(:,1),[AN{ai} '.']))==0);
+    if ~isempty(fafi) && job.output.atlases.(AN{ai}), FA(fai,:) = FAF(fafi,:); fai = fai+1; end
+  end
+  
+  % get atlas resolution 
+  % we sort the atlases and to reduce data resampling
+  VA = spm_vol(char(FA(1:end,1))); 
+  for ai=1:numel(VA), VAvx_vol(ai,:) = sqrt(sum(VA(ai).mat(1:3,1:3).^2)); end   %#ok<AGROW>
+  [VAs,VAi] = sortrows(VAvx_vol); 
+  FA = FA(VAi,:); VA = VA(VAi,:); VAvx_vol = VAvx_vol(VAi,:); %clear VA; 
+end
+
+%% write output
+if any(cell2mat(struct2cell(job.output.atlas)'))
+  for ai=1:size(FA,1)
+    [px,atlas] = fileparts(FA{ai,1}); 
+    
+    %% map atlas in native space
+    Vlai = spm_vol(FA{ai,1});
+    Yy   = double(trans.warped.y);
+    Ylai = cat_vol_ctype(spm_sample_vol(Vlai,Yy(:,:,:,1),Yy(:,:,:,2),Yy(:,:,:,3),0));
+    Ylai = reshape(Ylai(:),trans.native.Vi.dim); 
+    clear Yy
+
+    % write map (mri as tissue subforder and mri_atals as ROI subfolder)
+    if isempty(mrifolder), amrifolder = ''; else amrifolder = 'mri_atlas'; end
+    cat_io_writenii(VT0,Ylai,amrifolder,[atlas '_'],[atlas ' original'],...
+      'uint8',[0,1],job.output.atlas,trans);
+    if ~debug, clear Vlai Ylai; end
+  end
+end
+
+%% deformations y - dartel > subject
 if job.output.warps(1)
-    Yy        = spm_diffeo('invdef',trans.warped.yx,trans.warped.odim,eye(4),trans.warped.M0);
+    Yy        = spm_diffeo('invdef',trans.warped.y,trans.warped.odim,eye(4),trans.warped.M0);
     N         = nifti;
     N.dat     = file_array(fullfile(pth,mrifolder,['y_', nam, '.nii']),[trans.warped.odim(1:3),1,3],'float32',0,1,0);
     N.mat     = trans.warped.M1;
@@ -1406,8 +1449,8 @@ end
 
 if ~debug, clear Yy; end
 
-% deformation iy - subject > dartel
-if job.output.warps(2)
+%% deformation iy - subject > dartel
+if job.output.warps(2) 
   % transformation from voxel to mm space
   yn = numel(trans.warped.yx); 
   p  = ones([4,yn/3],'single'); 
@@ -1453,14 +1496,15 @@ if job.output.warps(2)
   % f2 = spm_diffeo('resize', f1, dim)
   % write new output
   Ndef      = nifti;
-  Ndef.dat  = file_array(fullfile(pth,mrifolder,['iy_', nam, '.nii']),[res.image(1).dim(1:3),1,3],...
+  Ndef.dat  = file_array(fullfile(pth,mrifolder,['iy_', nam, '.nii']),[res.image0(1).dim(1:3),1,3],...
               [spm_type('float32') spm_platform('bigend')],0,1,0);
-  Ndef.mat  = res.image(1).mat;
-  Ndef.mat0 = res.image(1).mat;
+  Ndef.mat  = res.image0(1).mat;
+  Ndef.mat0 = res.image0(1).mat;
   Ndef.descrip = 'Inverse Deformation';
   create(Ndef);
   Ndef.dat(:,:,:,:,:) = Yy2;
-  clear Yy2;
+
+  %clear Yy2;
 end
 fprintf('%5.0fs\n',etime(clock,stime));
 
@@ -1505,7 +1549,7 @@ if (job.output.surface || any( [job.output.ct.native job.output.ct.warped job.ou
     surf = {'lhv','rhv'}; %,'lcv','rcv'}; 
   end
   
-  if job.output.surface>4 % fast 
+  if job.output.surface>4 && job.output.surface~=9 % fast but not volume
     job.extopts.pbtres = max(0.8,min([((min(vx_vol)^3)/2)^(1/3) 1.0]));
   end
   
@@ -1528,7 +1572,7 @@ if (job.output.surface || any( [job.output.ct.native job.output.ct.warped job.ou
       'verb',job.extopts.verb,'WMT',WMT));
   end
   
-  if isempty(S) && isempty(Psurf)
+  if exist('S','var') && numel(fieldnames(S))==0 && isempty(Psurf)
     clear S Psurf; 
   end
   
@@ -1560,28 +1604,13 @@ end
 %  that indivdiual anatomical refinients are possible, but the this has
 %  to be done and evalutated for each atlas. 
 %  ---------------------------------------------------------------------
-if job.output.ROI
+if job.output.ROI  
   stime = cat_io_cmd('ROI estimation');   
   if job.extopts.verb, fprintf('\n'); end; 
-  
-  % get atlases
-  FAF = job.extopts.atlas; 
-  FA  = {}; fai = 1;
-  AN  = fieldnames(job.output.atlases);
-  for ai = 1:numel(AN)
-    fafi = find(cellfun('isempty',strfind(FAF(:,1),[AN{ai} '.']))==0);
-    if ~isempty(fafi) && job.output.atlases.(AN{ai}), FA(fai,:) = FAF(fafi,:); fai = fai+1; end
-  end
-  
-  % get atlas resolution 
-  % we sort the atlases and to reduce data resampling
-  VA = spm_vol(char(FA(1:end,1))); 
-  for ai=1:numel(VA), VAvx_vol(ai,:) = sqrt(sum(VA(ai).mat(1:3,1:3).^2)); end   %#ok<AGROW>
-  [VAs,VAi] = sortrows(VAvx_vol); 
-  FA = FA(VAi,:); VA = VA(VAi,:); VAvx_vol = VAvx_vol(VAi,:); %clear VA; 
-  
+
   %%
   for ai=1:size(FA,1)
+    %%
     if ai==1 || any(VAvx_vol(ai,:)~=VAvx_vol(ai-1,:))
       % resampe data in atlas resolution for the first time or if the atlas resolution change 
       
@@ -1601,28 +1630,29 @@ if job.output.ROI
       wYcls    = cat_vol_ROInorm(Ycls,transw,1,1,job.extopts.atlas);
 
       if exist('Ywmh','var')
-        wYcls{7} = cat_vol_ctype(cat_vol_ROInorm(single(Ywmh),transw,1,0,job.extopts.atlas));
+        wYcls(7) = cat_vol_ctype(cat_vol_ROInorm({single(Ywmh)},transw,1,1,job.extopts.atlas));
       end
-      for ci=1:numel(wYcls); wYcls{ci} = wYcls{ci} * prod(vx_vol); end      % volume
+% INCORRECT ?     
+%for ci=1:numel(wYcls)
+%  if ~isempty(wYcls{ci})
+%    wYcls{ci} = wYcls{ci} * prod(vx_vol); 
+%  end      % volume
+%end
+
       %wYm      = cat_vol_ROInorm(Ym,transw,1,0,job.extopts.atlas);         % intensity
-      Yp0toC   = @(Yp0,c) 1-min(1,abs(Yp0-c));
+      
       if exist('Yth1','var')
         % ROI based thickness of all GM voxels per ROI
-        Yth1x  = Yth1; Yth1x(Yp0toC(Yp0,2)<0.5)=nan;
-        Ymim   = single(smooth3(Yp0>1.5 & Yp0<2.5 & (Yl1==1 | Yl1==2))>0.5);
-        wYmim  = cat_vol_ROInorm(Ymim,transw,1,0,job.extopts.atlas)>0.5;
-        wYth1  = cat_vol_ROInorm(Yth1x,transw,1,0,job.extopts.atlas);
-        clear Ymim; 
+        Yth1x = Yth1; Yth1x(Yp0toC(Yp0,2)<0.5) = nan;
+        wYth1 = cat_vol_ROInorm(Yth1x,transw,1,0,job.extopts.atlas);
+        wYth1(wYth1==0) = nan; 
+        clear Yth1x; 
       end
     end
-    
-   %% clear YMF
- 
-    tissue = FA{ai,3};
-    [px,atlas] = fileparts(FA{ai,1}); 
-
+  
     % ds('l2','',1.5,wYm,round(wYp0),wYm,single(wYa)/50 .* (wYp0<2.5),70)
 
+    [px,atlas] = fileparts(FA{ai,1}); 
     stime2 = cat_io_cmd(sprintf('  ROI estimation of ''%s'' atlas',atlas),'g5','', job.extopts.verb-1,stime2);
 
     % map atlas to actual template space 
@@ -1632,32 +1662,37 @@ if job.output.ROI
     wYa   = cat_vol_ROInorm([],transa,ai,0,FA);
 
     % write output
-    if any(cell2mat(struct2cell(job.output.atlas)'))
-      % map atlas in native space
+    if 0 %any(cell2mat(struct2cell(job.output.atlas)'))
+      %% map atlas in native space
       Vlai = spm_vol(FA{ai,1});
-      Ylai = cat_vol_ctype(spm_sample_vol(Vlai,double(trans.warped.yx(:,:,:,1)),...
-        double(trans.warped.yx(:,:,:,2)),double(trans.warped.yx(:,:,:,3)),0));
-      Ylai = reshape(Ylai,size(Yp0)); 
-
+      Yy   = double(trans.warped.y);
+      Ylai = cat_vol_ctype(spm_sample_vol(Vlai,Yy(:,:,:,1),Yy(:,:,:,2),Yy(:,:,:,3),0));
+      Ylai = reshape(Ylai,trans.native.Vo.dim); 
+      clear Yy
+      
       % write map (mri as tissue subforder and mri_atals as ROI subfolder)
       if isempty(mrifolder), amrifolder = ''; else amrifolder = 'mri_atlas'; end
       cat_io_writenii(VT0,Ylai,amrifolder,[atlas '_'],[atlas ' original'],...
         'uint8',[0,1],job.output.atlas,trans);
-      clear Vlai Ylai;
+      if ~debug, clear Vlai Ylai; end
     end
 
-    % extract ROI data
-    csv   = cat_vol_ROIestimate(wYp0,wYa,wYcls,ai,'V',[],tissue,FA);  % volume
+    %% extract ROI data
+    csv   = cat_vol_ROIestimate(wYp0,wYa,wYcls,ai,'V',[],FA{ai,3},FA);  % volume
 
     % thickness
     if exist('Yth1','var') 
-    % for thickness we need special corrections to avoid values 
-    % in poor ROIs that contribute to GM
-      csv    = cat_vol_ROIestimate(wYp0,wYa,wYth1.*wYmim,ai,'T',csv,{'gm'},job.extopts.atlas);
-      csvth1 = cat_vol_ROIestimate(wYp0,wYa,wYcls{2}.*wYmim,ai,'V',[] ,{''},job.extopts.atlas);
-      corth1 = [csv{2:end,end}]; 
-      try, corth1(corth1<mean(vx_vol)/2 | [csvth1{2:end,end}]<0.5)=nan; end
-      csv(2:end,end) = num2cell(corth1);
+    % For thickness we want to avoid values in noncortical regions such as 
+    % the ventricles or regions with relative low GM volume or high CSF volume. 
+      csv  = cat_vol_ROIestimate(wYp0,wYa,wYth1,ai,'T',csv,{'gm'},job.extopts.atlas); %.*wYmim
+      % correct for ventricular regions that use the 'Ven' keyword.
+      ven  = find(cellfun('isempty',strfind( csv(:,2) , 'Ven'))==0);
+      csv(ven,end) = {nan}; 
+      % correct for regions with relative low GM (<10%) or high CSF volume (>50%). 
+      csvf = cat_vol_ROIestimate(wYp0,wYa,wYcls,ai,'V',[],{'csf','gm','wm'},FA);
+      vola = [nan,nan,nan;cell2mat(csvf(2:end,3:end))]; 
+      volr = vola ./ repmat(sum(vola,2),1,3); 
+      csv(volr(:,2)<0.1 | volr(:,2)>0.5,end) = {nan}; 
     end
 
     % xml-export one file for all (this is a structure)
@@ -2206,7 +2241,7 @@ if job.extopts.print
       if job.output.ROI
         fprintf('Labels are saved in %s%s%s\n',pth,filesep,'label');
       end
-      if job.output.surface
+      if job.output.surface && exist('S','var')
         fprintf('Surface measurements are saved in %s%s%s\n',pth,filesep,'surf');
       end
     end
@@ -2225,7 +2260,7 @@ if job.extopts.print
         'catlog',txt2),'write+'); % here we have to use the write+!
     end    
     
-
+    spm_progress_bar('Clear');
     clear C c Ymi Ymf Ym
 
 end
@@ -2270,8 +2305,15 @@ function wYv = cat_vol_ROInorm(Yv,warped,ai,mod,FA)
     % map image to atlas space
     for yi=1:numel(warped.ress), warped.y(:,:,:,yi) = warped.y(:,:,:,yi) * warped.ress(yi); end
     if mod==0
-      [wYv,w] = spm_diffeo('push',Yv,warped.y,warped.odim(1:3)); spm_field('boundary',1);
-      wYv = spm_field(w,wYv,[sqrt(sum(warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]);
+      old = 0;
+      if old % this did not work for the thickness map?  
+        [wYv,w] = spm_diffeo('push',Yv,warped.y,warped.odim(1:3)); spm_field('boundary',1);
+        wYv = spm_field(w,wYv,[sqrt(sum(warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]);
+      else      
+        [wYv,w]  = spm_diffeo('push',Yv,warped.y,warped.odim(1:3));
+        % divide by jacdet to get unmodulated data
+        wYv = wYv./(w+0.001); 
+      end
     elseif mod==1 && iscell(Yv) % tissue case
       nicemapping = 1;
       if nicemapping
@@ -2286,8 +2328,8 @@ function wYv = cat_vol_ROInorm(Yv,warped,ai,mod,FA)
         w(:,:,[1 end]) = NaN; w(:,[1 end],:) = NaN; w([1 end],:,:) = NaN;
       end
       
-      wYv = cell(1,3);
-      for i=1:3
+      wYv = cell(1,numel(Yv));
+      for i=1:numel(Yv)
         if nicemapping 
           [wYv{i},w2] = spm_diffeo('push',single(Yv{i})/255,warped.y,warped.odim(1:3)); 
           % divide by jacdet to get unmodulated data

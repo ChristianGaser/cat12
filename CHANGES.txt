@@ -1,5 +1,34 @@
 ------------------------------------------------------------------------
-r1301 | gaser | 2018-04-09 16:05:11
+r1302 | dahnke | 2018-04-10 12:34:30
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_writenii.m
+M       cat_main.m
+M       cat_main_LAS.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+M       cat_surf_createCS.m
+M       cat_vol_morph.m
+M       cat_vol_resize.m
+A       internal/old
+M       tbx_cfg_cat.m
+
+(1) Changed:  Added optimizations in cat_vol_morph to improve 
+              processing speed.
+(2) Changed:  Removed old code in cat_run_joband cat_run_job1070 and
+              removed the lower intensity limitation that may troubles  
+              the CSF/background segmentation.
+(3) Fixed:    Corrected data mapping error in cat_vol_ROInorm.
+(4) Fixed:    Corrected output error of iY*.nii in cat_main.
+(5) Fixed:    Corrected output error of atlas maps in cat_main.
+(6) Fixed:    Corrected small bug in cat_vol_resize.
+(7) Fixed:    Corrected problems with the main resolution limit  
+              of some preprocessing steps in cat_main and cat_main_LAS. 
+(8) New:      Added atlas export field in expert GUI.
+              
+------------------------------------------------------------------------
+r1301 | gaser | 2018-04-09 16:05:37 +0200 (Mo, 09 Apr 2018) | 27 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -27,6 +56,7 @@ M       tbx_cfg_cat.m
 (5) Changed: Updated online help and CAT12 manual.
 (6) Added: Function for installing TFCE toolbox was added and will be called
     from quick start guide if TFCE is not yet installed.
+
 ------------------------------------------------------------------------
 r1300 | gaser | 2018-03-26 16:20:21 +0200 (Mo, 26 Mär 2018) | 24 lines
 
