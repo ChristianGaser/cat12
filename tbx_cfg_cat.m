@@ -751,25 +751,25 @@ end
 
 % atlas
 if isfield(opts,'atlas')
-  if opts.atlas.native,
+  if isfield(opts.atlas,'native') && opts.atlas.native,
       cdep(end+1)          = cfg_dep;
       cdep(end).sname      = 'Native Atlas Image';
       cdep(end).src_output = substruct('()',{1}, '.','atlas','()',{':'});
       cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end;
-  if opts.atlas.warped,
+  if isfield(opts.atlas,'warped') && opts.atlas.warped,
       cdep(end+1)          = cfg_dep;
       cdep(end).sname      = 'Warped Atlas Image';
       cdep(end).src_output = substruct('()',{1}, '.','watlas','()',{':'});
       cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end;
-  if opts.atlas.dartel==1,
+  if isfield(opts.atlas,'dartel') && opts.atlas.dartel==1,
       cdep(end+1)          = cfg_dep;
       cdep(end).sname      = 'Rigidly Registered Atlas Image';
       cdep(end).src_output = substruct('()',{1}, '.','ratlas','()',{':'});
       cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end;
-  if opts.atlas.dartel==2,
+  if isfield(opts.atlas,'dartel') && opts.atlas.dartel==2,
       cdep(end+1)          = cfg_dep;
       cdep(end).sname      = 'Affine Registered Atlas Image';
       cdep(end).src_output = substruct('()',{1}, '.','aatlas','()',{':'});

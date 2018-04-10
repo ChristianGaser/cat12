@@ -4,7 +4,7 @@ function varargout = cat_install_tfce(install)
 % the TFCE toolbox
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: cat_install_tfce.m 1219 2017-11-19 23:28:59Z gaser $
+% $Id$
 
 if nargin == 0
   install = spm_input('Install TFCE toolbox',1,'yes|no',[1 0],1);
