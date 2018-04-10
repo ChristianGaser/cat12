@@ -113,8 +113,16 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
     for ci=1:6
       Ycls{ci} = cat_vol_resize( Ycls{ci}, 'reduceV' , vx_vol , extopts.uhrlim , 64 ); 
     end
+    Yy2 = ones([size(Ysrc),4],'single'); 
+    for ci=1:3
+      Yy2(:,:,:,ci) = cat_vol_resize( Yy(:,:,:,ci) , 'reduceV' , vx_vol , extopts.uhrlim , 64 );
+    end
+    Yy  = Yy2; clear Yy2; 
     Ym  = cat_vol_resize( Ym          , 'reduceV' , vx_vol , extopts.uhrlim , 64 ); 
     Yb0 = cat_vol_resize( single(Yb0) , 'reduceV' , vx_vol , extopts.uhrlim , 64 )>0.5; 
+    
+    vxv     = 1/ mean(resT0.vx_vol);
+    dsize   = size(Ysrc);
   end
   
   
@@ -325,7 +333,10 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   end
             
   % correction for negative values 
-  srcmin = min(Ysrc(:)); Ysrc = Ysrc - srcmin; T3th = T3th - srcmin; Tthc = Tth; Tthc.T3th = Tth.T3th - srcmin;
+  [Ysrcx,thx] = cat_stat_histth(Ysrc,99); clear Ysrcx; 
+  srcmin = thx(1); %min(Ysrc(:)); 
+  Ysrc = Ysrc - srcmin; T3th = T3th - srcmin; Tthc = Tth; Tthc.T3th = Tth.T3th - srcmin;
+  if exist('Ysrco2','var'),Ysrco2 = Ysrco2 - srcmin; end
   
 %% --------------------------------------------------------------------- 
 %  Now, we can estimate the local peaks 
