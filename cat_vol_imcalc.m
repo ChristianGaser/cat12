@@ -236,6 +236,18 @@ end
 if nargout <= 1
   varargout{1} = spm_write_vol(Vo,Y); 
 elseif nargout == 2
+  if isfield(Vo,'dat');
+    switch Vo.dt(1)
+      case 2,   Vo.dat = uint8(Y); 
+      case 4,   Vo.dat = int16(Y); 
+      case 8,   Vo.dat = int32(Y); 
+      case 16,  Vo.dat = single(Y); 
+      case 64,  Vo.dat = double(Y); 
+      case 256, Vo.dat = int8(Y); 
+      case 512, Vo.dat = uint16(Y); 
+      case 768, Vo.dat = uint32(Y); 
+    end
+  end
   varargout{1} = Vo; 
   varargout{2} = Y; 
 end
