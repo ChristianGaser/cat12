@@ -745,13 +745,18 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
           end
           itime = cat_io_cmd(sprintf('  Prepare output'),'','',job.extopts.verb,stime);
 
+          %Yy        = spm_diffeo('invdef',trans.warped.y, trans.warped.odim, eye(4),trans.warped.M0);
           if rigidShooting
             yi  = spm_diffeo('invdef',y,idim,inv(M1r\res.Affine*M0),eye(4));          % output yi in anatomical resolution 
             yih = spm_diffeo('invdef',y,odim,inv(M1r\res.Affine*M1),eye(4)); yih=yih * regres/newres;  % yi with output resolution
             yid = spm_diffeo('invdef',yih,odim,eye(4),res.Affine); if ~debug, clear yih; end             % for dt
-          else
+          elseif 0==1
             yi  = spm_diffeo('invdef',y,idim,inv(M1r\R*M0),eye(4));          % output yi in anatomical resolution 
             yih = spm_diffeo('invdef',y,odim,inv(M1r\R*M1),eye(4)); yih=yih * regres/newres;  % yi with output resolution
+            yid = spm_diffeo('invdef',yih,odim,eye(4),R); if ~debug, clear yih; end             % for dt
+          else
+            yi  = spm_diffeo('invdef',y,idim,inv(M1r\R*M0),eye(4));          % output yi in anatomical resolution 
+            yih = spm_diffeo('invdef',y,idim,inv(M1r\R*M1),eye(4)); yih=yih * regres/newres;  % yi with output resolution
             yid = spm_diffeo('invdef',yih,odim,eye(4),R); if ~debug, clear yih; end             % for dt
           end
           dt2 = spm_diffeo('def2det',yid); if ~debug, clear yid; end  
