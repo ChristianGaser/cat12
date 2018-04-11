@@ -1393,9 +1393,6 @@ if job.output.jacobian.warped
 end
 
 
-job.output.atlas.native =1;
-job.output.atlas.warped =1;
-job.output.atlas.dartel =3;
 %%
 if job.output.ROI || any(cell2mat(struct2cell(job.output.atlas)'))
   % get atlases
@@ -1415,18 +1412,52 @@ if job.output.ROI || any(cell2mat(struct2cell(job.output.atlas)'))
   FA = FA(VAi,:); VA = VA(VAi,:); VAvx_vol = VAvx_vol(VAi,:); %clear VA; 
 end
 
-%% write output
+%% write atlas output
 if any(cell2mat(struct2cell(job.output.atlas)'))
   for ai=1:size(FA,1)
     [px,atlas] = fileparts(FA{ai,1}); 
     
-    %% map atlas in native space
+    % map atlas in native space
     Vlai = spm_vol(FA{ai,1});
-    Yy   = double(trans.warped.y);
-    Ylai = cat_vol_ctype(spm_sample_vol(Vlai,Yy(:,:,:,1),Yy(:,:,:,2),Yy(:,:,:,3),0));
-    Ylai = reshape(Ylai(:),trans.native.Vi.dim); 
-    clear Yy
-
+    if any( Vlai.dim ~= trans.warped.odim )
+      % In case of atlas maps that are not in the template space (eg. cobra),
+      % we have to bring the atlas to the template space. In case of a high 
+      % resolution atlas maps, we have to use an interpolated version of the
+      % template space (fc variable). 
+      [pp,ff,ee,dd] = spm_fileparts(job.extopts.templates{1}); 
+      Vdef          = spm_vol(fullfile(pp,[ff ee ',1']));
+      Vdef.dt(1)    = spm_type('uint16');
+      Vdef          = rmfield(Vdef,'private');
+      Vdef.dat      = zeros(size(Vdef.dim),'uint16');
+      Vdef.pinfo(3) = 0; 
+      Vdef.fname    = fullfile(pth,mrifolder,['iya_' atlas '.nii']);
+      % fc variable for internal interpolation 
+      fc            = round( mean( sqrt(sum(Vdef.mat(1:3,1:3).^2)) ./ vx_vol ) + 1); 
+      Vdef.dim      = (Vdef.dim - 1) * fc + 1; 
+      Vdef.mat      = spm_matrix( spm_imatrix( Vdef.mat ) ./ [1 1 1 1 1 1 fc fc fc 1 1 1] ); 
+      
+      Vlai          = spm_vol(FA{ai,1});
+      Vlai.dat      = uint16(spm_read_vols(Vlai)); 
+      Vlai.pinfo(3) = 0;
+      Vlai.dt(1)    = spm_type('uint16');
+      Vlai          = rmfield(Vlai,'private');  
+      
+      % interpolation
+      [Vlai,Ylai]   = cat_vol_imcalc(Vlai,Vdef,'i1',struct('interp',0));
+      Vlai.pinfo    = [1;0;0];
+      
+      % warping
+      Yy   = double(trans.warped.y);
+      Ylai = cat_vol_ctype(spm_sample_vol(Vlai,Yy(:,:,:,1)*fc,Yy(:,:,:,2)*fc,Yy(:,:,:,3)*fc,0));
+      Ylai = reshape(Ylai(:),trans.native.Vi.dim); 
+      clear Yy
+    else
+      Yy   = double(trans.warped.y);
+      Ylai = cat_vol_ctype(spm_sample_vol(Vlai,Yy(:,:,:,1),Yy(:,:,:,2),Yy(:,:,:,3),0));
+      Ylai = reshape(Ylai(:),trans.native.Vi.dim); 
+      clear Yy
+    end
+    
     % write map (mri as tissue subforder and mri_atals as ROI subfolder)
     if isempty(mrifolder), amrifolder = ''; else amrifolder = 'mri_atlas'; end
     cat_io_writenii(VT0,Ylai,amrifolder,[atlas '_'],[atlas ' original'],...

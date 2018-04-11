@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1303 | dahnke | 2018-04-10 12:43:52
+r1304 | dahnke | 2018-04-11 10:11:13
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_main_registration.m
+M       cat_vol_imcalc.m
+
+(1) Fixed:    Corrected atlas mapping in cat_main. 
+(2) Fixed:    Corrected bug in the estimation of the 
+              Jacobian determinant in cat_main_registration.
+(3) Fixed:    Corrected data type of the output in cat_vol_imcalc.
+
+------------------------------------------------------------------------
+r1303 | dahnke | 2018-04-10 12:43:59 +0200 (Di, 10 Apr 2018) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +21,7 @@ MM      cat_install_tfce.m
 M       tbx_cfg_cat.m
 
 (1) Fixed:    Corrected bug in tbx_cfg_cat.
+
 ------------------------------------------------------------------------
 r1302 | dahnke | 2018-04-10 12:34:57 +0200 (Di, 10 Apr 2018) | 27 lines
 
