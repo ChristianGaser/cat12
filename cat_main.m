@@ -1371,11 +1371,10 @@ end
 if job.output.jacobian.warped
   %%
   if do_dartel==2 % shooting
-    %[y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.jc.odim(1:3) 1 3]),[1 0], 6);
     dt = trans.jc.dt2; 
     dx = 10; % smaller values are more accurate, but large look better; 
     [D,I] = cat_vbdist(single(~(isnan(dt) | dt<0 | dt>100) )); D=min(1,D/min(dx,max(D(:)))); 
-    dt = dt(I); dt = dt .* (1-D) + D; dt(isnan(dt))=1; 
+    dt = dt(I); dt = dt .* ((1-D) + D); dt(isnan(dt))=1; 
     %dt = 1/max(eps,dt); 
     clear y0 D I
   else %dartel
@@ -1420,44 +1419,29 @@ if any(cell2mat(struct2cell(job.output.atlas)'))
     % map atlas in native space
     Vlai = spm_vol(FA{ai,1});
     if any( Vlai.dim ~= trans.warped.odim )
-      % In case of atlas maps that are not in the template space (eg. cobra),
-      % we have to bring the atlas to the template space. In case of a high 
-      % resolution atlas maps, we have to use an interpolated version of the
-      % template space (fc variable). 
-      [pp,ff,ee,dd] = spm_fileparts(job.extopts.templates{1}); 
-      Vdef          = spm_vol(fullfile(pp,[ff ee ',1']));
-      Vdef.dt(1)    = spm_type('uint16');
-      Vdef          = rmfield(Vdef,'private');
-      Vdef.dat      = zeros(size(Vdef.dim),'uint16');
-      Vdef.pinfo(3) = 0; 
-      Vdef.fname    = fullfile(pth,mrifolder,['iya_' atlas '.nii']);
-      % fc variable for internal interpolation 
-      fc            = round( mean( sqrt(sum(Vdef.mat(1:3,1:3).^2)) ./ vx_vol ) + 1); 
-      Vdef.dim      = (Vdef.dim - 1) * fc + 1; 
-      Vdef.mat      = spm_matrix( spm_imatrix( Vdef.mat ) ./ [1 1 1 1 1 1 fc fc fc 1 1 1] ); 
-      
-      Vlai          = spm_vol(FA{ai,1});
-      Vlai.dat      = uint16(spm_read_vols(Vlai)); 
-      Vlai.pinfo(3) = 0;
-      Vlai.dt(1)    = spm_type('uint16');
-      Vlai          = rmfield(Vlai,'private');  
-      
       % interpolation
-      [Vlai,Ylai]   = cat_vol_imcalc(Vlai,Vdef,'i1',struct('interp',0));
-      Vlai.pinfo    = [1;0;0];
-      
-      % warping
-      Yy   = double(trans.warped.y);
-      Ylai = cat_vol_ctype(spm_sample_vol(Vlai,Yy(:,:,:,1)*fc,Yy(:,:,:,2)*fc,Yy(:,:,:,3)*fc,0));
-      Ylai = reshape(Ylai(:),trans.native.Vi.dim); 
-      clear Yy
+      Vlai = spm_vol(FA{ai,1});
+      yn = numel(trans.warped.y); 
+      p  = ones([4,yn/3],'single'); 
+      p(1,:) = trans.warped.y(1:yn/3);
+      p(2,:) = trans.warped.y(yn/3+1:yn/3*2);
+      p(3,:) = trans.warped.y(yn/3*2+1:yn);
+      amat   = Vlai.mat \ trans.warped.M1; 
+      p      = amat(1:3,:) * p;
+
+      Yy = zeros([res.image(1).dim(1:3),3],'single'); 
+      Yy(1:yn/3)        = p(1,:);
+      Yy(yn/3+1:yn/3*2) = p(2,:);
+      Yy(yn/3*2+1:yn)   = p(3,:);
+
+      Yy = double(Yy); 
     else
-      Yy   = double(trans.warped.y);
-      Ylai = cat_vol_ctype(spm_sample_vol(Vlai,Yy(:,:,:,1),Yy(:,:,:,2),Yy(:,:,:,3),0));
-      Ylai = reshape(Ylai(:),trans.native.Vi.dim); 
-      clear Yy
+      Yy = double(trans.warped.y);
     end
-    
+    Ylai = cat_vol_ctype(spm_sample_vol(Vlai,Yy(:,:,:,1),Yy(:,:,:,2),Yy(:,:,:,3),0));
+    Ylai = reshape(Ylai(:),trans.native.Vi.dim); 
+    if ~debug, clear Yy; end
+
     % write map (mri as tissue subforder and mri_atals as ROI subfolder)
     if isempty(mrifolder), amrifolder = ''; else amrifolder = 'mri_atlas'; end
     cat_io_writenii(VT0,Ylai,amrifolder,[atlas '_'],[atlas ' original'],...
@@ -1465,6 +1449,7 @@ if any(cell2mat(struct2cell(job.output.atlas)'))
     if ~debug, clear Vlai Ylai; end
   end
 end
+
 
 %% deformations y - dartel > subject
 if job.output.warps(1)
@@ -1476,46 +1461,31 @@ if job.output.warps(1)
     N.descrip = 'Deformation';
     create(N);
     N.dat(:,:,:,:,:) = reshape(Yy,[trans.warped.odim,1,3]);
+    if ~debug, clear Yy; end
 end
 
-if ~debug, clear Yy; end
-
-%% deformation iy - subject > dartel
+%% deformation iy - normalized > subject 
 if job.output.warps(2) 
-  % transformation from voxel to mm space
-  yn = numel(trans.warped.yx); 
-  p  = ones([4,yn/3],'single'); 
-  p(1,:) = trans.warped.yx(1:yn/3);
-  p(2,:) = trans.warped.yx(yn/3+1:yn/3*2);
-  p(3,:) = trans.warped.yx(yn/3*2+1:yn);
-  p      = M1(1:3,:) * p;
-  
   if any(trans.native.Vo.dim~=trans.native.Vi.dim)
-    %% update cat_stat_nanmedian for interpolated images
-    Vdef = res.image0(1);
-    Vdef.dt(1) = spm_type('float32');
-    Vdef = rmfield(Vdef,'private');
-    Vdef.dat = zeros(size(Vdef.dim),'single');
-    Vdef.pinfo(3) = 0; 
-    Vdef.fname = fullfile(pth,mrifolder,['iy2_r', nam, '.nii']);
-    Yy2 = zeros([trans.native.Vo.dim(1:3) 1 3],'double');
-    Vyy = VT; Vyy.pinfo(3)=0; Vyy.dt=[16 0]; Vyy = rmfield(Vyy,'private');  
-    Yy1 = zeros([res.image(1).dim(1:3),3],'single'); 
-    Yy1(1:yn/3)        = p(1,:);
-    Yy1(yn/3+1:yn/3*2) = p(2,:);
-    Yy1(yn/3*2+1:yn)   = p(3,:);
-    for i=1:3
-      Vyy.dat=Yy1(:,:,:,i); 
-      [Vt,Yy2(:,:,:,:,i)] = cat_vol_imcalc(Vyy,Vdef,'i1',struct('interp',6));
+    %%
+    vx_voli  = sqrt(sum(trans.native.Vi.mat(1:3,1:3).^2));  
+    vx_volo  = sqrt(sum(trans.native.Vo.mat(1:3,1:3).^2));
+    eyev = eye(4); eyev([1 6 11]) = eyev([1 6 11]) .* vx_volo./vx_voli; 
+    Yy2  = zeros([trans.native.Vo.dim 1 3],'single');                        
+    for k1=1:3
+      for i=1:trans.native.Vo.dim(3),
+        Yy2(:,:,i,:,k1) = trans.warped.M1(k1,4) + trans.warped.M1(k1,k1) * ...
+          single(spm_slice_vol(trans.warped.y(:,:,:,k1),eyev*spm_matrix([0 0 i]), ...
+          trans.native.Vo.dim(1:2),[1,NaN])); % adapt for res
+      end
     end
-    clear Vt Vdef Vyy
   else 
     yn = numel(trans.warped.y); 
     p  = ones([4,yn/3],'single'); 
     p(1,:) = trans.warped.y(1:yn/3);
     p(2,:) = trans.warped.y(yn/3+1:yn/3*2);
     p(3,:) = trans.warped.y(yn/3*2+1:yn);
-    p      = M1(1:3,:) * p;
+    p      = trans.warped.M1(1:3,:) * p;
 
     Yy2 = zeros([res.image(1).dim(1:3),1,3],'single'); 
     Yy2(1:yn/3)        = p(1,:);
@@ -1535,7 +1505,7 @@ if job.output.warps(2)
   create(Ndef);
   Ndef.dat(:,:,:,:,:) = Yy2;
 
-  %clear Yy2;
+  if ~debug, clear Yy2; end
 end
 fprintf('%5.0fs\n',etime(clock,stime));
 
@@ -2340,6 +2310,27 @@ function wYv = cat_vol_ROInorm(Yv,warped,ai,mod,FA)
       if old % this did not work for the thickness map?  
         [wYv,w] = spm_diffeo('push',Yv,warped.y,warped.odim(1:3)); spm_field('boundary',1);
         wYv = spm_field(w,wYv,[sqrt(sum(warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]);
+      elseif 0==2 %wVv.mat(1) ~= warped.M1(1)
+        %%
+        [pp,ff,ee,dd] = spm_fileparts(job.extopts.templates{1}); 
+        Vdef          = spm_vol(fullfile(pp,[ff ee ',1']));
+        Vlai          = spm_vol(FA{ai,1});
+        
+        vx_vol_Vdef   = sqrt(sum(Vdef.mat(1:3,1:3).^2));
+        vx_vol_Vlai   = sqrt(sum(Vlai.mat(1:3,1:3).^2));
+        
+        eyev = eye(4); eyev(1:end-1) = eyev(1:end-1) *vx_vol_Vlai(1)./vx_vol_Vdef(1);
+        Yy   = zeros([Vlai.dim 3],'single');                        
+        for k1=1:3
+          for i=1:Vlai.dim(3),
+            Yy(:,:,i,k1) = single(spm_slice_vol(trans.warped.y(:,:,:,k1),eyev*spm_matrix([0 0 i]),Vlai.dim(1:2),[1,NaN])) / eyev(1); % adapt for res
+          end
+        end
+        Yyi = double(spm_diffeo('invdef',Yy,trans.native.Vi.dim,eye(4),trans.warped.M0)); if ~debug, clear Yy; end
+        
+        Ylai = cat_vol_ctype(spm_sample_vol(Vlai,Yy(:,:,:,1),Yy(:,:,:,2),Yy(:,:,:,3),0));
+        Ylai = reshape(Ylai(:),trans.native.Vi.dim); 
+       
       else      
         [wYv,w]  = spm_diffeo('push',Yv,warped.y,warped.odim(1:3));
         % divide by jacdet to get unmodulated data

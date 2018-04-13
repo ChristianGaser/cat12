@@ -288,7 +288,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
       idim = VT.dim(1:3);                                                     % (interpolated) input image resolution
       %idim = res.image(1).dim(1:3);                                          % input image resolution
       odim = floor(res.tpm2{1}(1).dim * tmpres/newres/2)*2+1;                     % output image size
-      rdim = floor(res.tpm2{1}(1).dim * tmpres/newres/2)*2+1;                     % registration image size
+      rdim = floor(res.tpm2{1}(1).dim * tmpres/regres/2)*2+1;                     % registration image size
       if job.extopts.regstr(regstri)==0, rdim = odim; end % Dartel only!
 
 
@@ -745,21 +745,26 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
           end
           itime = cat_io_cmd(sprintf('  Prepare output'),'','',job.extopts.verb,stime);
 
-          %Yy        = spm_diffeo('invdef',trans.warped.y, trans.warped.odim, eye(4),trans.warped.M0);
-          if rigidShooting
-            yi  = spm_diffeo('invdef',y,idim,inv(M1r\res.Affine*M0),eye(4));          % output yi in anatomical resolution 
-            yih = spm_diffeo('invdef',y,odim,inv(M1r\res.Affine*M1),eye(4)); yih=yih * regres/newres;  % yi with output resolution
-            yid = spm_diffeo('invdef',yih,odim,eye(4),res.Affine); if ~debug, clear yih; end             % for dt
-          elseif 0==1
-            yi  = spm_diffeo('invdef',y,idim,inv(M1r\R*M0),eye(4));          % output yi in anatomical resolution 
-            yih = spm_diffeo('invdef',y,odim,inv(M1r\R*M1),eye(4)); yih=yih * regres/newres;  % yi with output resolution
-            yid = spm_diffeo('invdef',yih,odim,eye(4),R); if ~debug, clear yih; end             % for dt
+          %% update for output resolution 
+          if any(odim ~= rdim)
+            eyev = eye(4); eyev(1:end-1) = eyev(1:end-1) * M1t(1)./M1r(1);
+            yid  = zeros([odim 3],'single');                        
+            for k1=1:3
+              for i=1:odim(3),
+                yid(:,:,i,k1) = single(spm_slice_vol(y(:,:,:,k1),eyev*spm_matrix([0 0 i]),odim(1:2),[1,NaN])) / eyev(1); % adapt for res
+              end
+            end
           else
-            yi  = spm_diffeo('invdef',y,idim,inv(M1r\R*M0),eye(4));          % output yi in anatomical resolution 
-            yih = spm_diffeo('invdef',y,idim,inv(M1r\R*M1),eye(4)); yih=yih * regres/newres;  % yi with output resolution
-            yid = spm_diffeo('invdef',yih,odim,eye(4),R); if ~debug, clear yih; end             % for dt
+            yid = y; 
+          end
+         
+          if rigidShooting
+            yi  = spm_diffeo('invdef',y,idim,inv(M1t\res.Affine*M0),eye(4));  % output yi in anatomical resolution 
+          else 
+            yi  = spm_diffeo('invdef',yid,idim,inv(M1t\R*M0),eye(4));           % output yi in anatomical resolution 
           end
           dt2 = spm_diffeo('def2det',yid); if ~debug, clear yid; end  
+          
 
           % interpolation for improved output ... need update 2012/12
           if 1
@@ -771,9 +776,9 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
               if interpol
                 for i=1:3, yx(:,:,:,i) = single(interp3(yi(:,:,:,i),interpol,'cubic')); end % linear
               end
-              yx=yx * regres/newres;
+              yx=yx; % * regres/newres;
             else
-              yx=yi * regres/newres;
+              yx=yi; % * regres/newres;
             end
           else
             % size update y - deformation field
@@ -947,7 +952,8 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
             if debug, dt2o=dt2; end %#ok<NASGU>
             dx = 10; % smaller values are more accurate, but large look better; 
             [D,I] = cat_vbdist(single(~(isnan(dt2) | dt2<0 | dt2>100) )); D=min(1,D/min(dx,max(D(:)))); 
-            dt2 = dt2(I); dt2 = dt2 .* (1-D) + D; dt2(isnan(dt2))=1; 
+            dt2 = dt2(I); dt2 = dt2 .* ((1-D) + D); 
+            dt2(isnan(dt2))=1; 
           else %dartel
             [y0, dt2] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
             clear y0
@@ -983,36 +989,22 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
          
           %% deformation iy - subject > dartel
           if job.output.warps(2)
-            % transformation from voxel to mm space
-            yn = numel(trans.warped.yx); 
-            p  = ones([4,yn/3],'single'); 
-            p(1,:) = trans.warped.yx(1:yn/3);
-            p(2,:) = trans.warped.yx(yn/3+1:yn/3*2);
-            p(3,:) = trans.warped.yx(yn/3*2+1:yn);
-            p      = M1(1:3,:) * p;
-
             if any(trans.native.Vo.dim~=trans.native.Vi.dim)
-              %% update cat_stat_nanmedian for interpolated images
-              Vdef = res.image0(1);
-              Vdef.dt(1) = spm_type('float32');
-              Vdef = rmfield(Vdef,'private');
-              Vdef.dat = zeros(size(Vdef.dim),'single');
-              Vdef.pinfo(3) = 0; 
-              Vdef.fname = fullfile(pth,mrifolder,testfolder,['iy2_r', nam, '.nii']);
-              Yy2 = zeros([trans.native.Vo.dim(1:3) 1 3],'double');
-              Vyy = VT; Vyy.pinfo(3)=0; Vyy.dt=[16 0]; Vyy = rmfield(Vyy,'private');  
-              Yy1 = zeros([res.image(1).dim(1:3),3],'single'); 
-              Yy1(1:yn/3)        = p(1,:);
-              Yy1(yn/3+1:yn/3*2) = p(2,:);
-              Yy1(yn/3*2+1:yn)   = p(3,:);
-              for i=1:3
-                Vyy.dat=Yy1(:,:,:,i); 
-                [Vt,Yy2(:,:,:,:,i)] = cat_vol_imcalc(Vyy,Vdef,'i1',struct('interp',6));
+              %%
+              vx_voli  = sqrt(sum(trans.native.Vi.mat(1:3,1:3).^2));  
+              vx_volo  = sqrt(sum(trans.native.Vo.mat(1:3,1:3).^2));
+              eyev = eye(4); eyev([1 6 11]) = eyev([1 6 11]) .* vx_volo./vx_voli; 
+              Yy2  = zeros([trans.native.Vo.dim 1 3],'single');                        
+              for k1=1:3
+                for i=1:trans.native.Vo.dim(3),
+                  Yy2(:,:,i,:,k1) = trans.warped.M1(k1,4) + trans.warped.M1(k1,k1) * ...
+                    single(spm_slice_vol(trans.warped.y(:,:,:,k1),eyev*spm_matrix([0 0 i]), ...
+                    trans.native.Vo.dim(1:2),[1,NaN])); % adapt for res
+                end
               end
-              clear Vt Vdef Vyy
             else 
-              yn = numel(trans.warped.y); 
-              p  = ones([4,yn/3],'single'); 
+              yn     = numel(trans.warped.y); 
+              p      = ones([4,yn/3],'single'); 
               p(1,:) = trans.warped.y(1:yn/3);
               p(2,:) = trans.warped.y(yn/3+1:yn/3*2);
               p(3,:) = trans.warped.y(yn/3*2+1:yn);
@@ -1026,12 +1018,12 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
             clear p; 
 
             % f2 = spm_diffeo('resize', f1, dim)
-            %% write new output
+            % write new output
             Ndef      = nifti;
-            Ndef.dat  = file_array(fullfile(pth,mrifolder,testfolder,['iy_', nam, '.nii']),[res.image(1).dim(1:3),1,3],...
+            Ndef.dat  = file_array(fullfile(pth,mrifolder,testfolder,['iy_', nam, '.nii']),[trans.native.Vo.dim,1,3],...
                         [spm_type('float32') spm_platform('bigend')],0,1,0);
-            Ndef.mat  = res.image(1).mat;
-            Ndef.mat0 = res.image(1).mat;
+            Ndef.mat  = res.image0(1).mat;
+            Ndef.mat0 = res.image0(1).mat;
             Ndef.descrip = 'Inverse Deformation';
             create(Ndef);
             Ndef.dat(:,:,:,:,:) = Yy2;

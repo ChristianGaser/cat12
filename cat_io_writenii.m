@@ -99,7 +99,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
   if write(1)==1
     filename = io_handle_pre(V.fname,pre,'',folder);
     if exist('transform','var') && isfield(transform,'native')
-      if any(size(Y)~=transform.native.Vo.dim)
+      if any(size(Y(:,:,:,1,1))~=transform.native.Vo.dim)
         nV = transform.native.Vi;
       else
         nV = transform.native.Vo;
@@ -138,7 +138,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
 
     Vn = spm_vol(filename); 
     % reduce to original native space if it was interpolated
-    if exist('transform','var') && isfield(transform,'native') && any(size(Y)~=transform.native.Vo.dim)
+    if exist('transform','var') && isfield(transform,'native') && any(size(Y(:,:,:,1,1))~=transform.native.Vo.dim)
       [pp,ff] = spm_fileparts(filename); 
       Vo = transform.native.Vo; 
       Vo.fname = filename; 

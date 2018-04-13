@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1304 | dahnke | 2018-04-11 10:11:13
+r1305 | dahnke | 2018-04-13 21:00:58
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_writenii.m
+M       cat_main.m
+M       cat_main_registration.m
+
+(1) Fixed:    Correct output of iy_*.nii and dt*.nii of Shooting. 
+
+------------------------------------------------------------------------
+r1304 | dahnke | 2018-04-11 10:11:38 +0200 (Mi, 11 Apr 2018) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +22,7 @@ M       cat_vol_imcalc.m
 (2) Fixed:    Corrected bug in the estimation of the 
               Jacobian determinant in cat_main_registration.
 (3) Fixed:    Corrected data type of the output in cat_vol_imcalc.
+
 
 ------------------------------------------------------------------------
 r1303 | dahnke | 2018-04-10 12:43:59 +0200 (Di, 10 Apr 2018) | 7 lines
