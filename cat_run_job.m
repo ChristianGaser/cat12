@@ -356,9 +356,9 @@ function cat_run_job(job,tpm,subj)
                   end
                   warning on; 
 
-                  Pmn    = fullfile(pp,mrifolder,['mn' ff ee]); 
-                  Pmn_ri = fullfile(pp,mrifolder,['mn' ff '_r' num2str(ix) ee]);
-                  Pmn_r0 = fullfile(pp,mrifolder,['mn' ff '_r0' ee]);
+                  Pmn    = fullfile(pp,mrifolder,['mn' ff '.nii']); 
+                  Pmn_ri = fullfile(pp,mrifolder,['mn' ff '_r' num2str(ix) '.nii']);
+                  Pmn_r0 = fullfile(pp,mrifolder,['mn' ff '_r0.nii']);
                   
                   % estimate bias strength based on the applied corrections
                   % of the initial correction .. 
@@ -381,9 +381,9 @@ function cat_run_job(job,tpm,subj)
                   
                   % backup for mixing
                   if (ix==2 && numel(sampx)>2) || (ix==1 && numel(sampx)<=2) || bias(1) > preproc.channel.biasfwhm 
-                    copyfile(fullfile(pp,mrifolder,['mn' ff ee]),Pmn_r0); 
+                    copyfile(fullfile(pp,mrifolder,['mn' ff '.nii']),Pmn_r0); 
                   end
-                  copyfile(fullfile(pp,mrifolder,['mn' ff ee]),nfname);
+                  copyfile(fullfile(pp,mrifolder,['mn' ff '.nii']),nfname);
                   
                   % write segmentation 
                   if spmp0>1 && exist('vout','var') && isfield(vout,'Ycls') 
@@ -469,18 +469,18 @@ function cat_run_job(job,tpm,subj)
                     
                     % backup the bias corrected image
                     if spmp0>0 
-                      copyfile(nfname,fullfile(pp,mrifolder,['mn' ff '_r' num2str(ix)+1 ee])); 
+                      copyfile(nfname,fullfile(pp,mrifolder,['mn' ff '_r' num2str(ix)+1 '.nii'])); 
                     end
                     if exist(Pmn_r0,'file'), delete(Pmn_r0); end
                     break
                   else
-                    movefile(fullfile(pp,mrifolder,['mn' ff ee]),nfname); 
+                    movefile(fullfile(pp,mrifolder,['mn' ff '.nii']),nfname); 
                   end
                 try
                 catch
                   fprintf('\b\b\b\b\b\b\b\b\b(failed) ');   
-                  if exist(fullfile(pp,mrifolder,['mn' ff ee]),'file')
-                    delete(fullfile(pp,mrifolder,['mn' ff ee]));
+                  if exist(fullfile(pp,mrifolder,['mn' ff '.nii']),'file')
+                    delete(fullfile(pp,mrifolder,['mn' ff '.nii']));
                   end
                 end
                 if 0
@@ -494,7 +494,7 @@ function cat_run_job(job,tpm,subj)
                 end
               end
               if debug, cat_io_cmd('','g5','',job.extopts.verb-1,stime); end
-              Pmn = fullfile(pp,mrifolder,['mn' ff ee]); 
+              Pmn = fullfile(pp,mrifolder,['mn' ff '.nii']); 
               if exist(Pmn,'file'), delete(Pmn); end
               
               %% try APPs preprocessing
@@ -519,7 +519,7 @@ function cat_run_job(job,tpm,subj)
                   spm_write_vol(spm_vol(nfname),Ym);  
                   if ~debug, clear vout Ym0 YM2 Ym; end  
                   if spmp0
-                    copyfile(nfname,fullfile(pp,mrifolder,['mn' ff '_r' num2str(ix)+2 ee])); 
+                    copyfile(nfname,fullfile(pp,mrifolder,['mn' ff '_r' num2str(ix)+2 '.nii'])); 
                   end
                 catch
                   fprintf('failed\n');

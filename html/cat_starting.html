@@ -74,7 +74,8 @@
       <h4>Errors during preprocessing</h4>
       <p>Please use the <a class="function" href="matlab:cat_io_senderrormail;">Report Error</a> function if any errors during preprocessing occurred. You first have to select the "err" directory, which is located in the folder of the failed record and finally the specified zip-file should be attached manually in the mail.</p>
       <h4><sup>1</sup>Note to filter sizes for Gaussian smoothing</h4>
-      <p>Due to the high accuracy of the spatial registration approaches used in CAT12 you can also try to use smaller filter sizes of only a few millimeter. However, for very small filter sizes or even no filtering you have to apply a non-parametric permutation test such as the <a class="function" href="matlab:if exist(fullfile(spm('dir'),'toolbox','TFCE')),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">TFCE-statistics</a>.</p>
+      <p>Due to the high accuracy of the spatial registration approaches used in CAT12 you can also try to use smaller filter sizes of only a few millimeter. However, for very small filter sizes or even no filtering you have to apply a non-parametric permutation test such as the <a class="function" href="matlab:if exist(fullfile(spm('dir'),'toolbox','TFCE')),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">TFCE-statistics</a>. </br>
+      Please also note that for the analysis of cortical folding measures such as gyrification or cortical complexity the filter sizes have to be larger (i.e. in the range of 15-25mm). This is due to the underlying nature of this measure that reflects contributions from both sulci as well as gyri. Therefore, the filter size should exceed the distance between a gyral crown and a sulcal fundus.</p>
     </div>  
   
     <div id="content"><a href="cat_starting.html">< Quick start guide</a></div>  

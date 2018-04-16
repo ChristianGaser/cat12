@@ -46,8 +46,8 @@ cat.opts.samp      = 3;                       % Sampling distance - alternative:
 cat.output.surface     = 0;     % surface and thickness creation:   0 - no (default), 1 - lh+rh, 2 - lh+rh+cerebellum, 
                                 %   3 - lh, 4 - rh, 5 - lh+rh (fast, no registration, only for quick quality check and not for analysis),
                                 %   6 - lh+rh+cerebellum (fast, no registration, only for quick quality check and not for analysis)
-                                %   9 - thickness only (for ROI analysis)
-                                %   +10 to estimate WM and CSF width/depth/thickness
+                                %   9 - thickness only (for ROI analysis, experimental!)
+                                %   +10 to estimate WM and CSF width/depth/thickness (experimental!)
 
 % save ROI values
 cat.output.ROI         = 1;     % write xml-file with ROI data (0 - no, 1 - yes (default))
@@ -221,10 +221,10 @@ cat.extopts.print        = 2;     % display and print out pdf-file of results: 0
 %  tissue      = {['csf','gm','wm','brain','none']}  - tissue classes for volume estimation
 %  use         = [ 0 | 1 ]                           - default setting to use this atlas 
 cat.extopts.atlas       = { ... 
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')             0      {'csf','gm','wm'}   1; ... % atlas based on 20 subjects
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii')  0      {'csf','gm'}        1; ... % atlas based on 35 subjects
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')              0      {'gm'}              1; ... % atlas based on 40 subjects
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cobra.nii')               0      {'gm','wm'}         1; ... % hippocampus-amygdala-cerebellum, 5 subjects, 0.6 mm voxel size 
+  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')             0      {'csf','gm','wm'}   0; ... % atlas based on 20 subjects
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')                1      {'csf','gm'}        0; ... % less regions, 18 subjects, low T1 image quality
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')                 1      {'gm'}              0; ... % many regions, but only labeled on one subject 
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii')                1      {'gm','wm'}         0; ... % only one subject, but with WM regions
