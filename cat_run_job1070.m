@@ -523,7 +523,7 @@ function cat_run_job1070(job,tpm,subj)
                          min(single(Ysrc(~Ybg(:))))]); 
 
             % add and write bias corrected (skull-stripped) image
-            if app.bias<=1 % app.bias=1 is just a simple bias correction for affreg and maybe cause errors in the BWP cerebellum, if used further! 
+            if app.bias<=1 % app.bias=1 is just a simple bias correction for affreg and maybe causes errors in the BWP cerebellum if used further! 
                 Ymc = Ysrc; 
             else
                 Ymc = Ym * abs(diff([bth,th])) + bth; % use the bias corrected image

@@ -48,6 +48,12 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
   def.reduceCS  = 1 * max( max(100000,reduceCS/2) , ... % minimum number
                            min( reduceCS*4 , ...        % maximum number
                            reduceCS .* 1/(mean(vx_vol0).^2)));  
+                           
+  % reducepatch has some issues with self intersections and should only be used for lower resoluted data
+  if mean(vx_vol0) < 1.3
+    def.reduceCS = 0;
+  end
+  
   def.vdist     = max(1,mean(vx_vol0)); % distance between vertices ... at least 1 mm ?
   def.LAB       = cat_get_defaults('extopts.LAB');  
   def.SPM       = 0; 
@@ -57,6 +63,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
   def.opt.pbtmethod   = 'pbt2x';
   def.WMT       = 0; % WM/CSF width/depth/thickness
   def.sharpenCB = 0; % in development
+  def.correct_thickness = 0; % correct cortical thickness by using pial and white matter surface (in development!)
 
   opt           = cat_io_updateStruct(def,opt);
   opt.fast      = any(~cellfun('isempty',strfind(opt.surf,'fst'))) + any(~cellfun('isempty',strfind(opt.surf,'sfst')));
@@ -215,7 +222,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     Pfsavgsph  = fullfile(opt.fsavgDir, sprintf('%s.sphere.freesurfer.gii',opt.surf{si}));      % fsaverage sphere    
     
     surffile = {'Praw','Psphere0','Pcentral','Pthick','Pgw','Pgww','Psw',...
-      'Pdefects0','Pdefects','Psphere','Pspherereg','Pfsavg','Pfsavgsph'};
+      'Pdefects0','Pdefects','Psphere','Pspherereg','Pfsavg','Pfsavgsph','Pwhite','Ppial'};
     for sfi=1:numel(surffile)
       eval(sprintf('Psurf(si).%s = %s;',surffile{sfi},surffile{sfi})); 
     end
@@ -378,11 +385,9 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     %% Write Ypp for final deformation
     %  Write Yppi file with 1 mm resolution for the final deformation, 
     %  because CAT_DeformSurf achieved better results using that resolution
-% inoptimal for low resoulution data !
     Yppt = cat_vol_resize(Yppi,'deinterp',resI);                        % back to original resolution
     Yppt = cat_vol_resize(Yppt,'dereduceBrain',BB);                     % adding of background
     Vpp  = cat_io_writenii(V,Yppt,'','pp','percentage position map','uint8',[0,1/255],[1 0 0 0]);
-    if ~debug, clear Yppt; end
 
     Vpp1 = Vpp; 
     Vpp1.fname    = fullfile(pp,mrifolder,['pp1' ff '.nii']);
@@ -413,8 +418,8 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
       spm_smooth(double(mask_parahipp),mask_parahipp_smoothed,[8 8 8]);
     end 
 
-    % parameters for scaling of Yppi
-    th_initial      = 0.5;
+    % parameter for isosurface of Yppi
+    th_initial = 0.5;
 
     ind0 = find(Yppi<=0);
     Yppi = opt.scale_cortex*Yppi;
@@ -432,15 +437,22 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
       Yppi(mask_parahipp) = tmp(mask_parahipp);
     end
 
-    txt = evalc('[tmp,CS.faces,CS.vertices] = cat_vol_genus0(Yppi,th_initial);');
-    if opt.verb>2, fprintf(txt); end
-    
-    if ~debug, clear tmp Yppi; end
+    if opt.reduceCS>0
+      txt = evalc('[tmp,CS.faces,CS.vertices] = cat_vol_genus0(Yppi,th_initial);');
 
-    % correction for the boundary box used within the surface creation process 
-    CS.vertices = CS.vertices .* repmat(abs(opt.interpV ./ vmatBBV([8,7,9])),size(CS.vertices,1),1);
-    CS.vertices = CS.vertices +  repmat( BB.BB([3,1,5]) - 1,size(CS.vertices,1),1);
-  
+      % correction for the boundary box used within the surface creation process 
+      CS.vertices = CS.vertices .* repmat(abs(opt.interpV ./ vmatBBV([8,7,9])),size(CS.vertices,1),1);
+      CS.vertices = CS.vertices +  repmat( BB.BB([3,1,5]) - 1,size(CS.vertices,1),1);
+    else
+      % if no mesh reduction is selected use lower-scaled Yppt with original voxel size
+      Yppt = cat_vol_resize(Yppi,'deinterp',resI);                        % back to original resolution
+      Yppt = cat_vol_resize(Yppt,'dereduceBrain',BB);                     % adding of background
+      txt = evalc('[tmp,CS.faces,CS.vertices] = cat_vol_genus0(Yppt,th_initial);');
+    end
+    
+    if opt.verb>2, fprintf(txt); end
+    if ~debug, clear tmp Yppi Yppt; end
+
     if opt.verb>2   
       fprintf('%s %4.0fs\n',repmat(' ',1,66),etime(clock,stime)); 
     end
@@ -456,12 +468,6 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     end
     
     
-    if 0
-      %% Delaunay-base IterSection COrection
-      tic
-      [CSn,GMTn,Yth1n] = cat_surf_createCS_disco(Yppt,CS,isocolors2(Yth1,CS.vertices),...
-        struct('dim',Vpp.dim,'mat',vmat*Vpp.mat));  toc
-    end
     %% transform coordinates 
     if opt.fast==1
       %%
@@ -536,111 +542,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
       
       % distance between linked surfaces 
       Tlink = @(S1,S2) sum( [ sum( abs( S1.vertices(:,1:2) - S2.vertices(:,1:2) ).^2 , 2 ).^0.5  abs(S1.vertices(:,3) - S2.vertices(:,3)) ].^2 , 2 ).^0.5;
-        
-      
-      % create inner and outer surfaces
-      if 0
-        fprintf('Opt\n');
-        Ypp = spm_read_vols(Vpp); Yg = cat_vol_grad(Ymf/3);
-        %% optimize by inner surface
-        cat_io_FreeSurfer('write_surf_data',Pthick, ...
-          max( cat_stat_histth(facevertexcdata,95), facevertexcdata +  ...
-          1.25 .* (facevertexcdata>0.5) .* max(0,median(facevertexcdata) - facevertexcdata))); % should be 1.5
-        Pinner = cat_surf_fun('inner',Pcentral);
-        mode = 1; 
-        if mode == 1
-          Ygb = Yg./(Ymf/3) .* smooth3(Ymf .* cat_vol_morph(Ymf>1.5,'e',2));
-          Ygb = cat_vol_smooth3X(max(Ygb,cos(min(1,max(0,(3-Ymf))/2)*pi)),0.5);
-          Vpi = Vpp1; Vpi.fname = strrep(Vpi.fname,'pp','gi');  
-          Vpi = cat_io_writenii(Vpi,Ygb,'','','percentage position map','uint8',[0,1/255],[1 0 0 0]);
-          th  = 0.95;
-        elseif mode == 2
-          Ygb = Yg./(Ymf/3) .* smooth3(Ymf .* cat_vol_morph(Ymf>1.5,'e',2));
-          Vpi = Vpp1; Vpi.fname = strrep(Vpi.fname,'pp','gi');  
-          Vpi = cat_io_writenii(Vpi,Ygb,'','','percentage position map','uint8',[0,1/255],[1 0 0 0]);
-          th  = 0.3;
-        else
-          Vpi = Vpp1; th = 0.9;
-        end
-        cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" ' ... "vol" "activity_file?|none" nx ny nz "inputmesh" "outputmesh"
-                     'none  0  1  -1  .1 ' ...               "originalposition|none"   maxdist  n_modls  up_to_n_points  model_weight
-                     'avg  -0.1  0.1 ' ...                   "model_file...|avg|none"  mincurv  maxcurv 
-                     '.2  .1  2  0 ' ...                     fract_step  max_step  max_search_istance  degrees_continuity  
-                     '"%g"  "%g"  n ' ...                    min_isovalue  max_isovalue  +/-/n 
-                     '0  0  0 ' ...                          gradient_threshold  angle  tolerance  
-                     '50  0.01  0.0'], ...                  max_iterations movement_threshold  stop_treshold  
-                      Vpi.fname,Pinner,Pinner,th,th);
-       % [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
-        
-        
-        %% optimize by outer surface
-        IS     = gifti(Pinner);
-        CS2    = gifti(Pcentral);
-        TISCS2 = Tlink(IS,CS2);
-        %
-        mox=0;
-        if mox==1,
-          cat_io_FreeSurfer('write_surf_data',Pthick,...
-            max( -0.2 * cat_stat_histth(TISCS2,95), 0.0 * facevertexcdata -  ...
-            (1.5 .* (facevertexcdata>0.5) .* max(0,facevertexcdata - median(facevertexcdata)) + ....
-             1.5 .* (TISCS2>0.5)          .* max(0,TISCS2          - median(TISCS2)))  ....
-            + 0.3 .* cat_stat_histth(TISCS2,95) ...
-            )); % should be 1.5
-        elseif mox==2
-          cat_io_FreeSurfer('write_surf_data',Pthick,...
-            -max( 0.5 * cat_stat_histth(facevertexcdata,95), 0.8 * facevertexcdata +  ...
-            1.25 .* (facevertexcdata>0.5) .* max(0,facevertexcdata - median(facevertexcdata)))); % should be 1.5
-        elseif mox==3
-          cat_io_FreeSurfer('write_surf_data',Pthick,...
-            max( cat_stat_histth(facevertexcdata,95), facevertexcdata -  ...
-            0.25 .* (facevertexcdata>0.5) .* max(0,facevertexcdata - median(facevertexcdata)))); % should be 1.5
-        else
-          cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata); % should be 1.5
-        end
-        Pouter = cat_surf_fun('outer',Pcentral);   
-        %
-        mode = 3; 
-        if mode==1
-          Ygb = Yg./(Ymf/3) .* cat_vol_morph(Ymf<2.5,'e',1);
-          Ygb = min(1,max(Ygb,cos(Ypp*pi))); 
-          Ygb = cat_vol_smooth3X(max(Ygb,cos(min(1,max(0,(Ymf-1.5))/2)*pi)),0.5);
-          Vpo = Vpp1; Vpo.fname = strrep(Vpo.fname,'pp','go');    
-          Vpo = cat_io_writenii(Vpo,Ygb,'','','percentage position map','uint8',[0,1/255],[1 0 0 0]);
-          th  = 0.9;
-        elseif mode==2
-          Ygb = Yg./(Ymf/3) .* cat_vol_morph(Ymf<2.5,'e',1);
-          Vpo = Vpp1; Vpo.fname = strrep(Vpo.fname,'pp','go'); 
-          Vpo = cat_io_writenii(Vpo,Ygb,'','','percentage position map','uint8',[0,1/255],[1 0 0 0]);
-          th  = 0.5;
-        else
-          Ygb = Yg./(Ymf/3) .* cat_vol_morph(Ymf<2.5,'e',1);
-          Ygb = min(1,max(Ygb,1-Ypp)); 
-          Vpo = Vpp1; Vpo.fname = strrep(Vpo.fname,'pp','go'); 
-          Vpo = cat_io_writenii(Vpo,Ygb,'','','percentage position map','uint8',[0,1/255],[1 0 0 0]);
-          th  = 0.95;
-        end
-
-        cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" ' ... "vol" "activity_file?|none" nx ny nz "inputmesh" "outputmesh"
-                     'none  0  1  -1  .1 ' ...               "originalposition|none"   maxdist  n_modls  up_to_n_points  model_weight
-                     'avg  -0.1  0.1 ' ...                   "model_file...|avg|none"  mincurv  maxcurv 
-                     '.2  .1  3  0 ' ...                     fract_step  max_step  max_search_istance  degrees_continuity  
-                     '"%g"  "%g"  n ' ...                    min_isovalue  max_isovalue  +/-/n 
-                     '0  0  0 ' ...                          gradient_threshold  angle  tolerance  
-                     '50  0.01  0.0'], ...                  max_iterations movement_threshold  stop_treshold  
-                      Vpo.fname,Pouter,Pouter,th,th);
-        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
-
-        %% estimate new thickness as T_link
-        IS = gifti(Pinner);
-        OS = gifti(Pouter);
-        CS = IS; CS.vertices = IS.vertices/2 + OS.vertices/2; 
-        cat_io_FreeSurfer('write_surf_data',Pthick,Tlink(IS,OS));
-        save(gifti(CS),cat_io_strrep(Pcentral,'.central.','.centralc.'));
-      else
-        Pinner = cat_surf_fun('inner',Pcentral);
-        Pouter = cat_surf_fun('outer',Pcentral);
-      end
-      
+              
       % save datastructure
       S.(opt.surf{si}).vertices = CS.vertices;
       S.(opt.surf{si}).faces    = CS.faces;
@@ -664,7 +566,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     
     %%
     CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
-    save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Praw);
+    save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Praw,'Base64Binary');
     
     if opt.reduceCS>0 
       % after reducepatch many triangles have very large area which causes isses for resampling
@@ -714,11 +616,11 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     if opt.fast
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
                      'avg -0.1 0.1 .2 .1 5 0 "%g" "%g" n 0 0 0 50 0.02 0.0'], ...
-                     Vpp1.fname,Pcentral,Pcentral,th,th);
+                     Vpp.fname,Pcentral,Pcentral,th,th);
     else
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
                      'avg -0.1 0.1 .2 .1 5 0 "%g" "%g" n 0 0 0 150 0.01 0.0'], ...
-                     Vpp1.fname,Pcentral,Pcentral,th,th);
+                     Vpp.fname,Pcentral,Pcentral,th,th);
     end
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
 
@@ -733,11 +635,11 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     if opt.fast
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
                      'flat -0.15 0.15 .5 .1 5 0 "%g" "%g" n 0 0 0 25 0.01 0.0'], ...
-                     Vpp1.fname,Pcentral,Pcentral,th,th);
+                     Vpp.fname,Pcentral,Pcentral,th,th);
     else
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .2 ' ...
                      'avg -0.05 0.05 .1 .1 5 0 "%g" "%g" n 0 0 0 50 0.01 0.0'], ...
-                     Vpp1.fname,Pcentral,Pcentral,th,th);
+                     Vpp.fname,Pcentral,Pcentral,th,th);
     end
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
 
@@ -747,14 +649,17 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
     facevertexcdata = isocolors2(Yth1,CS.vertices); 
     cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
-   
+
     % final correction of central surface in highly folded areas with high mean curvature
     if ~opt.fast
       stime = cat_io_cmd('  Correction of central surface in highly folded areas','g5','',opt.verb,stime);
-      cmd = sprintf(['CAT_Central2Pial -equivolume -weight 0.2 "%s" "%s" "%s" 0'], ...
+      cmd = sprintf(['CAT_Central2Pial -equivolume -weight 0.3 "%s" "%s" "%s" 0'], ...
                        Pcentral,Pthick,Pcentral);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+    end
   
+    % final correction of cortical thickness using pial and WM surface
+    if opt.correct_thickness & ~opt.fast
       % estimation of pial surfaces
       stime = cat_io_cmd('  Estimation of pial surface','g5','',opt.verb,stime);
       cmd = sprintf(['CAT_Central2Pial -check_intersect "%s" "%s" "%s" 0.5'], ...

@@ -1,5 +1,28 @@
 ------------------------------------------------------------------------
-r1305 | dahnke | 2018-04-13 21:00:58
+r1306 | gaser | 2018-04-16 17:33:32
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       cat_defaults.m
+M       cat_main.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+M       cat_surf_createCS.m
+M       html/cat_starting.html
+M       tbx_cfg_cat.m
+
+(1) Changed: Extended ROI options in GUI to select single atlases.
+(2) Fixed: Issues with img extension in cat_run_job.m.
+(3) Changed: For images with reasonable spatial resolution (mean<1.3mm)
+    the reducepatch function will be skipped and the surface with original
+    (voxel) resolution will be used in cat_surf_createCS. Furthermore, the
+    higher-resoluted Yppi image will be used for deforming surfaces and the
+    weighting for correcting the central surface in highly folded areas with 
+    high mean curvature is increased to 0.3.
+------------------------------------------------------------------------
+r1305 | dahnke | 2018-04-13 21:01:25 +0200 (Fr, 13 Apr 2018) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +31,7 @@ M       cat_main.m
 M       cat_main_registration.m
 
 (1) Fixed:    Correct output of iy_*.nii and dt*.nii of Shooting. 
+
 
 ------------------------------------------------------------------------
 r1304 | dahnke | 2018-04-11 10:11:38 +0200 (Mi, 11 Apr 2018) | 12 lines
