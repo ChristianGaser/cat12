@@ -1404,7 +1404,7 @@ if job.output.ROI || any(cell2mat(struct2cell(job.output.atlas)'))
   end
   
   % get atlas resolution 
-  % we sort the atlases and to reduce data resampling
+  % we sort the atlases to reduce data resampling
   VA = spm_vol(char(FA(1:end,1))); 
   for ai=1:numel(VA), VAvx_vol(ai,:) = sqrt(sum(VA(ai).mat(1:3,1:3).^2)); end   %#ok<AGROW>
   [VAs,VAi] = sortrows(VAvx_vol); 
