@@ -94,6 +94,12 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
   % output
   trans = struct();
   reg   = struct();
+  def.nits      = 64; 
+  def.opt.ll1th = 0.001;                 % smaller better/slower
+  def.opt.ll3th = 0.002; 
+  def.fast      = 0;      % no report, no output
+  if ~isfield(job.extopts,'reg'), job.extopts.reg = struct(); end
+  dreg = cat_io_checkinopt(job.extopts.reg,def); 
   
   
   % error in parallel processing - can't find shooting files (2016/12)
@@ -118,7 +124,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
   % this is the main loop for different parameter
   for regstri = numel(job.extopts.regstr):-1:1;
     for voxi = numel(job.extopts.vox):-1:1; 
-      if numel(job.extopts.regstr) || numel(job.extopts.vox), fprintf('\n\n'); end 
+      if (numel(job.extopts.regstr) || numel(job.extopts.vox)) && job.extopts.verb, fprintf('\n\n'); end 
       
       
       %% set dartel/shooting templates
@@ -134,13 +140,13 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
       lowres                     = 2.5;                   % lowest resolution .. best between 2 and 3 mm 
       tpmres                     = abs(tpmM(1));          % TPM resolution 
       tempres                    = abs(tmpM(1));          % template resolution 
-      reg(regstri).opt.nits      = 64;                    % registration interation (shooting default = 24)
+      reg(regstri).opt.nits      = dreg.nits;             % registration interation (shooting default = 24)
       reg(regstri).opt.vxreg     = tpmres;                % regularisation parameter that original depend on the template resolution
       reg(regstri).opt.rres      = tempres;               % final registration resolution 
       reg(regstri).opt.stepsize  = (lowres - reg(regstri).opt.rres)/4;  % stepsize of reduction 
       reg(regstri).opt.resfac    = (lowres : -reg(regstri).opt.stepsize : reg(regstri).opt.rres) / reg(regstri).opt.rres; % reduction factor 
-      reg(regstri).opt.ll1th     = 0.001;                 % smaller better/slower
-      reg(regstri).opt.ll3th     = 0.002;                 % smaller better/slower 
+      reg(regstri).opt.ll1th     = dreg.opt.ll1th;                 % smaller better/slower
+      reg(regstri).opt.ll3th     = dreg.opt.ll3th;                 % smaller better/slower 
       reg(regstri).opt.regstr    = job.extopts.regstr;   
 
     
@@ -190,7 +196,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
         % to 0.5:0.5:2.5 mm.
         % default = 12 | 22, expert = 11:13 | 21:23
         % -----------------------------------------------------------------
-          case {11,12,13,14,15} 
+          case {11,12,13,14,15,16,17} 
             % independent of the TR and therefore can include interpolation
             reg(regstri).opt.rres     = 1.0 + 0.5 * (job.extopts.regstr(regstri) - 11); 
             reg(regstri).opt.stepsize = 0.5; 
@@ -520,19 +526,20 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
           end
        
           % if saffine, Mrregs{1} = M0\inv(res.Affine)*M1rr*vx2rr/vx3rr; end       
-          if reg(regstri).opt.stepsize>10^-3 || regres~=tmpres
-            if job.extopts.regstr(regstri)>0 && job.extopts.regstr(regstri)<=1
-              stime   = cat_io_cmd(sprintf('Optimized Shooting registration with %0.2f:%0.2f:%0.2f mm (regstr=%0.2f)',...
-                tempres2(1),diff(tempres2(1:2)),tempres2(end),job.extopts.regstr(regstri))); 
+          if job.extopts.verb
+            if reg(regstri).opt.stepsize>10^-3 || regres~=tmpres
+              if job.extopts.regstr(regstri)>0 && job.extopts.regstr(regstri)<=1
+                stime   = cat_io_cmd(sprintf('Optimized Shooting registration with %0.2f:%0.2f:%0.2f mm (regstr=%0.2f)',...
+                  tempres2(1),diff(tempres2(1:2)),tempres2(end),job.extopts.regstr(regstri))); 
+              else
+                stime   = cat_io_cmd(sprintf('Optimized Shooting registration with %0.2f:%0.2f:%0.2f mm',...
+                  tempres2(1),diff(tempres2(1:2)),tempres2(end))); 
+              end
             else
-              stime   = cat_io_cmd(sprintf('Optimized Shooting registration with %0.2f:%0.2f:%0.2f mm',...
-                tempres2(1),diff(tempres2(1:2)),tempres2(end))); 
+              stime   = cat_io_cmd(sprintf('Default Shooting registration with %0.2f mm',reg(regstri).opt.rres)); 
             end
-          else
-            stime   = cat_io_cmd(sprintf('Default Shooting registration with %0.2f mm',reg(regstri).opt.rres)); 
-          end
-          fprintf('\n  Template: "%s"\n',job.extopts.templates{1})
-      
+            fprintf('\n  Template: "%s"\n',job.extopts.templates{1})
+          end    
 
           % shooting parameter
           sd = spm_shoot_defaults;           % load shooting defaults
@@ -667,17 +674,21 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
             int_args = [sd.eul_its(it), sd.cyc_its]; 
 
             % Gauss-Newton iteration to re-estimate deformations for this subject
-            if reg(regstri).opt.stepsize<=10^-3
-              cat_io_cprintf(sprintf('g%d',5+2*(it==1 || (tmpl_no(it)~=tmpl_no(it-1)))),sprintf('% 5d |',it));
-            else
-              cat_io_cprintf(sprintf('g%d',5+2*(it==1 || (tmpl_no(it)~=tmpl_no(it-1)))),sprintf('% 5d | %0.2f |',it,tempres2(ti)));
+            if job.extopts.verb
+              if reg(regstri).opt.stepsize<=10^-3
+                cat_io_cprintf(sprintf('g%d',5+2*(it==1 || (tmpl_no(it)~=tmpl_no(it-1)))),sprintf('% 5d |',it));
+              else
+                cat_io_cprintf(sprintf('g%d',5+2*(it==1 || (tmpl_no(it)~=tmpl_no(it-1)))),sprintf('% 5d | %0.2f |',it,tempres2(ti)));
+              end
             end
- 
+            
             llo=ll; 
             if 1 %ti<0
               [txt,u,ll(1),ll(2),ll(3)] = evalc('spm_shoot_update(g,f,u,y,dt,prm,sd.bs_args,sd.scale)'); 
-              cat_io_cprintf(sprintf('g%d',5+2*(it==1 || (tmpl_no(it)~=tmpl_no(it-1)))),sprintf('%7.4f%8.4f%8.4f%8.4f\n', ...
-                ll(1)/numel(u), ll(2)/numel(u), (ll(1)+ll(2))/numel(u), ll(3)));
+              if job.extopts.verb
+                cat_io_cprintf(sprintf('g%d',5+2*(it==1 || (tmpl_no(it)~=tmpl_no(it-1)))),sprintf('%7.4f%8.4f%8.4f%8.4f\n', ...
+                  ll(1)/numel(u), ll(2)/numel(u), (ll(1)+ll(2))/numel(u), ll(3)));
+              end
               [y,J] = spm_shoot3d(u,prm,int_args); 
               dt    = spm_diffeo('det',J); clear J
             else
@@ -736,15 +747,18 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
 
 
           %% preparte output
-          if job.extopts.regstr(regstri)==0
-            cat_io_cmd(sprintf('Dartel registration with %0.2f mm takes',tempres(1)));
-          elseif reg(regstri).opt.stepsize>10^-3  
-            cat_io_cmd(sprintf('Shooting registration with %0.2f:%0.2f:%0.2f mm takes',tempres2(1),diff(tempres2(1:2)),tempres2(end))); 
-          else
-            cat_io_cmd(sprintf('Shooting registration with %0.2f mm takes',tempres2(1))); 
+          if job.extopts.verb
+            if job.extopts.regstr(regstri)==0
+              cat_io_cmd(sprintf('Dartel registration with %0.2f mm takes',tempres(1)));
+            elseif reg(regstri).opt.stepsize>10^-3  
+              cat_io_cmd(sprintf('Shooting registration with %0.2f:%0.2f:%0.2f mm takes',tempres2(1),diff(tempres2(1:2)),tempres2(end))); 
+            else
+              cat_io_cmd(sprintf('Shooting registration with %0.2f mm takes',tempres2(1))); 
+            end
+            itime = cat_io_cmd(sprintf('  Prepare output'),'','',job.extopts.verb,stime);
           end
-          itime = cat_io_cmd(sprintf('  Prepare output'),'','',job.extopts.verb,stime);
-
+          
+          
           %% update for output resolution 
           if any(odim ~= rdim)
             eyev = eye(4); eyev(1:end-1) = eyev(1:end-1) * M1t(1)./M1r(1);
@@ -767,32 +781,35 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
           
 
           % interpolation for improved output ... need update 2012/12
-          if 1
-            vx_vols  = sqrt(sum(M0(1:3,1:3).^2));  
-            vx_volt  = sqrt(sum(M1(1:3,1:3).^2));  
-            interpol = any(vx_vols>vx_volt) + any(vx_vols/2>vx_volt);
-            if interpol
-              yx = zeros(min([inf inf inf 3],size(yi)*2^interpol - 2^interpol + 1),'single');
-              if interpol
-                for i=1:3, yx(:,:,:,i) = single(interp3(yi(:,:,:,i),interpol,'cubic')); end % linear
-              end
-              yx=yx; % * regres/newres;
-            else
-              yx=yi; % * regres/newres;
-            end
+          if dreg.fast
+            yx=yi; 
           else
-            % size update y - deformation field
-            yx = zeros([odims 3],'single'); 
-            My = eye(4); My(1:12) = My(1:12) * regres/newres;  Mys{ri}    = eye(4);
-            Mys{ri}(1:12)    = Mys{ri}(1:12) * reg(regstri).opt.resfac(ri)/reg(regstri).opt.resfac(ri-1);
-            for k1=1:3
-              for i=1:odims(ti,3),
-                yx(:,:,i,k1) = single(spm_slice_vol(yo(:,:,:,k1),My*spm_matrix([0 0 i]),odims(ti,1:2),[1,NaN])) * regres/newres; % adapt for res
+            if 1
+              vx_vols  = sqrt(sum(M0(1:3,1:3).^2));  
+              vx_volt  = sqrt(sum(M1(1:3,1:3).^2));  
+              interpol = any(vx_vols>vx_volt) + any(vx_vols/2>vx_volt);
+              if interpol
+                yx = zeros(min([inf inf inf 3],size(yi)*2^interpol - 2^interpol + 1),'single');
+                if interpol
+                  for i=1:3, yx(:,:,:,i) = single(interp3(yi(:,:,:,i),interpol,'cubic')); end % linear
+                end
+                yx=yx; % * regres/newres;
+              else
+                yx=yi; % * regres/newres;
               end
-              yx(~isfinite(yx) | yx<0)=eps; drawnow
+            else
+              % size update y - deformation field
+              yx = zeros([odims 3],'single'); 
+              My = eye(4); My(1:12) = My(1:12) * regres/newres;  Mys{ri}    = eye(4);
+              Mys{ri}(1:12)    = Mys{ri}(1:12) * reg(regstri).opt.resfac(ri)/reg(regstri).opt.resfac(ri-1);
+              for k1=1:3
+                for i=1:odims(ti,3),
+                  yx(:,:,i,k1) = single(spm_slice_vol(yo(:,:,:,k1),My*spm_matrix([0 0 i]),odims(ti,1:2),[1,NaN])) * regres/newres; % adapt for res
+                end
+                yx(~isfinite(yx) | yx<0)=eps; drawnow
+              end
             end
           end
-
           if rigidShooting
             trans.warped = struct('y',yi,'yx',yx,'odim',odim,'M0',M0,'M1',M1,'M2',M1\R*M0,'dartel',2);
           else
@@ -800,13 +817,15 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
           end
           if job.output.jacobian.warped, trans.jc = struct('u',u,'odim',odim,'dt2',dt2); end % u ist nicht auf vox angepasst!
 
-          cat_io_cmd('','','',job.extopts.verb,itime); 
-          cat_io_cmd(' ','',''); cat_io_cmd('','','',job.extopts.verb,stime); 
+          if job.extopts.verb
+            cat_io_cmd('','','',job.extopts.verb,itime); 
+            cat_io_cmd(' ','',''); cat_io_cmd('','','',job.extopts.verb,stime); 
+          end
         end
 
 
         % Report
-        if job.extopts.verb>1
+        if job.extopts.verb>1  && ~dreg.fast
 
           %% preparte output directory
           if job.extopts.subfolders, mrifolder = 'mri'; else mrifolder = ''; end
@@ -919,7 +938,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
         end
           
           
-        if export
+        if export && ~dreg.fast
           % write output
           stime = cat_io_cmd(sprintf('Write Output with %0.2f mm',job.extopts.vox(voxi)));
 

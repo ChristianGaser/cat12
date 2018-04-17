@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1306 | gaser | 2018-04-16 17:33:32
+r1307 | dahnke | 2018-04-17 13:26:52
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_main.m
+M       cat_main_registration.m
+M       cat_vol_morph.m
+
+(1) Changed:    Updated cat_vol_morph with further differentiation  
+                between the classical chessboard and euclidean metrics. 
+(2) New:        Added new Shooting-based skull-stripping for experts.
+(3) Changed:    Updated verbose behavior of cat_main_registration. 
+
+------------------------------------------------------------------------
+r1306 | gaser | 2018-04-16 17:33:58 +0200 (Mo, 16 Apr 2018) | 21 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -21,6 +36,7 @@ M       tbx_cfg_cat.m
     higher-resoluted Yppi image will be used for deforming surfaces and the
     weighting for correcting the central surface in highly folded areas with 
     high mean curvature is increased to 0.3.
+
 ------------------------------------------------------------------------
 r1305 | dahnke | 2018-04-13 21:01:25 +0200 (Fr, 13 Apr 2018) | 9 lines
 
