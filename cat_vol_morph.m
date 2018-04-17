@@ -4,25 +4,43 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
 % (erode, dilate, open, close) or a distance transformation (disterode,
 % distdilate, distopen, distclose). Furthermore, 3 labeling operations
 % (lab, labopen, labclose) that mask the largest cluster (after an 
-% distopen/disterode) are available. The voxel dimensions vx_vol are 
-% only available for distance-based transformations, where n depends on 
-% the distance. 
+% distopen/disterode) are available. 
 %
-% out = cat_vol_morph(in,action[,n,vx_vol])
+% The chessboard operations are larger than the euclidean based 
+% versions and a factor of 1.41 is required to obtain similar results.
+% Therefore the chessboard operations are a little bit faster, especially
+% for small n, where the convolution matrix for distance operations has 
+% to be larger. 
 %
-% in     = input volume that will be thresholded at 0.5
-% action = {'d'|'e'|'c'|'o'|'dd'|'de'|'dc'|'do'|'l'|'lo'|'lc'}
-% n      = 1x1 double (default=1), will be rounded for standard 
-%          morphological operations, but not for distance-based operations.
-% vx_vol = 1x1 or 1x3 double (default=1)
-% out    = volume with the same class like the input volume
+%  out = cat_vol_morph(in,action[,n,vx_vol])
+%
+%  in     = input volume that will be thresholded at 0.5
+%  action = {'d'|'e'|'c'|'o'|'l'|'lo'|'lc' ... 
+%            'cd'|'ce'|'cc'|'co'|'clo'|'clc' ...
+%            'dd'|'de'|'dc'|'do'|'dlo'|'dlc' ...
+%            }
+%  n      = 1x1 double (default=1), will be rounded for standard 
+%           morphological operations, but not for distance-based 
+%           operations.
+%         = 1x2 for 'l' operation to extract the largend n(1) cluster 
+%           with at last n(2) absolute (>1) or relative (<1) voxels
+%  vx_vol = 1x1 or 1x3 double (default=1)
+%  out    = volume with the same class like the input volume
 %
 % Actions:
-%   Morphological operations with 26-neighborhood (cube):
-%    - d  | dilate 
-%    - e  | erode  
+%   Morphological operations with 26-neighborhood 
+%   (cube/chessboard distance):
+%    - c  | dilate 
+%    - c  | erode  
 %    - c  | close  
-%    - o  | open   
+%    - c  | open   
+%
+%   Morphological operations with 26-neighborhood 
+%   (cube/chessboard distance):
+%    - cd  | cdilate 
+%    - ce  | cerode  
+%    - cc  | cclose  
+%    - co  | copen   
 %
 %   Morphological operations with distance opereration (sphere):
 %    - dd | distdilate
@@ -44,21 +62,12 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
 % University Jena 
 % $Id$
 
-% ______________________________________________________________________
-%
-% ToDo:
-% For a future release the cat_vol_resize function and further actions
-% will allow a faster processing for images, where not the highest
-% quality is necessary. 
-% For fast estimation the prefix 'f' should be added to the action.
-% ______________________________________________________________________
-
 
   if nargin < 4, vx_vol = 1; end
   if nargin < 3, n      = 1; end
   if nargin < 2, action = ''; end
-  if nargin < 1, error('MATLAB:cat_vol_morph:NoAction','No volume given.\n'); end
-
+  if nargin < 1, help cat_vol_morph; return; end
+  
   classVol = class(vol); 
   
   if iscell(vol) || ndims(vol)~=3 || isempty(vol)
@@ -73,7 +82,7 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
       'Wrong vx_vol size. It has to be a 1x3 matrix.\n'); 
   end
   
-  no=n; n=double(n); nn=n; n(1)=round(n(1)); 
+  nn=n; n=double(n); n(1)=round(n(1)); 
   switch lower(action)
     case {'l' 'lc' 'lo' 'labclose' 'labopen'}
       % not return in this case
@@ -81,40 +90,63 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
       if n==0, return; end 
   end
   
+  
+  % distance metric type - see text below
+  dtype = 'c'; % use 'd' or 'c'
+  
   switch lower(action)
-    case {'dilate' 'd'}
+  % Block of short actions that call specific functions
+  % ===================================================================
+  % The chessboard operations are larger than the euclidean based 
+  % versions and a factor of 1.41 is required to obtain similar results.
+  % Therefore the chessboard operations are a little bit faster, especially
+  % for small distances where we have to add one voxel to the convolution  
+  % matrix. 
+  %
+  %   nn = nn * 1.41;   
+  %
+    
+    case {'dilate','d'}
+      vol = cat_vol_morph(vol,[dtype 'dilate'],nn,vx_vol);
+    case {'erode','e'}
+      vol = cat_vol_morph(vol,[dtype 'erode'],nn,vx_vol);
+    case {'open','o'}
+      vol = cat_vol_morph(vol,[dtype 'open'],nn,vx_vol);
+    case {'close','c'}
+      vol = cat_vol_morph(vol,[dtype 'close'],nn,vx_vol);
+    case {'labclose','lc'}
+      vol = cat_vol_morph(vol,['lab' dtype 'close'],nn,vx_vol);
+    case {'labopen','lo'}
+      vol = cat_vol_morph(vol,['lab' dtype 'open'],nn,vx_vol);
+
+    
+      
+  % chessboard distance operations (like a box)
+  %===================================================================
+    case {'cdilate' 'cd'}
       % remove the background volume that is outside the dilation region
       [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,n+1,vol>0); 
       
       % use of single input for convn is faster and less memory demanding
-      if 1
-        % this is the old operation with chessboard distance metric
-        vol = convn(single(vol),ones(2*round(nn/vx_vol(1))+1,...
-          2*round(nn/vx_vol(2))+1,2*round(nn/vx_vol(1))+1),'same') > 0; 
-      else    
-        % this is the new approach that supports euclidean distance metric
-        % and also include the voxel resolution
-        d = zeros(2*n+1,2*n+1,2*n+1,'single'); d(n+1,n+1,n+1)=1;
-        d = max(0,cat_vbdist(d,true(size(d)),vx_vol) - 0.5); 
-        d = max(0,nn - d); 
-        vol = min(1,convn(single(vol),d,'same')) >= 0.5; % PVE map without >0.5  
-      end
-      
+      vol = convn(single(vol),ones(2*round(nn/vx_vol(1))+1,...
+        2*round(nn/vx_vol(2))+1,2*round(nn/vx_vol(3))+1),'same') > 0; 
+
       % add background
       vol = cat_vol_resize(vol,'dereduceBrain',BB);  
-    case {'erode' 'e'}
-      vol = ~cat_vol_morph(~vol,'dilate',n,vx_vol); 
+      
+    case {'cerode' 'ce'}
+      vol = ~cat_vol_morph(~vol,'cdilate',n,vx_vol); 
 
-    case {'close' 'c'}
-      test=2; % hard switch for tests...
+    case {'cclose' 'cc'}
+      test=2; % hard switch for tests 
       if test==1
         % we need to enlarge the image to avoid closing by the region that 
         % is not in the image
         sz = size(vol);
         vol2 = zeros(sz(1)+(2*n),sz(2)+(2*n),sz(3)+(2*n),'uint8');
         vol2(n+1:sz(1)+n,n+1:sz(2)+n,n+1:sz(3)+n) = uint8(vol);
-        vol2=cat_vol_morph(vol2,'dilate',n,vx_vol); 
-        vol2=cat_vol_morph(vol2,'erode' ,n,vx_vol); 
+        vol2=cat_vol_morph(vol2,'cdilate',n,vx_vol); 
+        vol2=cat_vol_morph(vol2,'cerode' ,n,vx_vol); 
         vol = vol2(n+1:sz(1)+n,n+1:sz(2)+n,n+1:sz(3)+n)>0;
       elseif test==2
         % remove the background volume that is outside the dilation region
@@ -126,35 +158,36 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
         sz = size(vol);
         vol2 = zeros(sz(1)+(2*n),sz(2)+(2*n),sz(3)+(2*n),'uint8');
         vol2(n+1:sz(1)+n,n+1:sz(2)+n,n+1:sz(3)+n) = uint8(vol);
-        vol2=cat_vol_morph(vol2,'dilate',n,vx_vol); 
-        vol2=cat_vol_morph(vol2,'erode' ,n,vx_vol); 
+        vol2=cat_vol_morph(vol2,'cdilate',n,vx_vol); 
+        vol2=cat_vol_morph(vol2,'cerode' ,n,vx_vol); 
         vol = vol2(n+1:sz(1)+n,n+1:sz(2)+n,n+1:sz(3)+n)>0;
         
         % add background
         vol = cat_vol_resize(vol,'dereduceBrain',BB);  
       else
-        vol =cat_vol_morph(vol,'dilate',n,vx_vol); 
-        vol =cat_vol_morph(vol,'erode' ,n,vx_vol); 
+        vol =cat_vol_morph(vol,'cdilate',n,vx_vol); 
+        vol =cat_vol_morph(vol,'cerode' ,n,vx_vol); 
       end
-    case {'open' 'o'}
-      vol=~cat_vol_morph(~vol,'close' ,n,vx_vol); 
+      
+    case {'copen' 'co'}
+      vol=~cat_vol_morph(~vol,'cclose' ,n,vx_vol); 
 
-    case {'labclose' 'lc'}
+    case {'labcclose' 'lcc'}
       % removing of background within the object
-      vol = cat_vol_morph(vol,'close',n,vx_vol); 
+      vol = cat_vol_morph(vol,'cclose',n,vx_vol); 
       vol = ~cat_vol_morph(~vol,'lab',n,vx_vol);
 
-    case {'labopen' 'lo'}
-      vol = cat_vol_morph(vol,'open',n,vx_vol); 
+    case {'labcopen' 'lco'}
+      vol = cat_vol_morph(vol,'copen',n,vx_vol); 
       vol = cat_vol_morph(vol,'lab',n,vx_vol); 
 
-    case {'labbgclose' 'bc'}
+    case {'labclosebg' 'lbc'}
       % removing of other objects
-      vol = cat_vol_morph(~vol,'close',n,vx_vol); 
+      vol = cat_vol_morph(~vol,'cclose',n,vx_vol); 
       vol = ~cat_vol_morph(vol,'lab',n,vx_vol); % removing of background within the object
 
-    case {'labopenbg' 'bo'}
-      vol = cat_vol_morph(~vol,'open',n,vx_vol); 
+    case {'labopenbg' 'lbo'}
+      vol = cat_vol_morph(~vol,'copen',n,vx_vol); 
       vol = ~cat_vol_morph(vol,'lab',n,vx_vol); % removing of other objects
 
     %===================================================================
@@ -180,7 +213,9 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
         end
       end
     
-    %===================================================================
+      
+    % euclidean distance operations (like a sphere)  
+    % ===================================================================
     % You have to use the original resolution, because fine structures 
     % are bad represented for lower resolutions and lead to unaccurate 
     % results.
@@ -189,45 +224,58 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
       
       if n>5 %|| (sum(vol(:)>0)/numel(vol))>0.8
         % faster for large distances and smaller objects 
-        vol = cat_vbdist(single(vol),true(size(vol)),vx_vol)<=no;
+        vol = cat_vbdist(single(vol),true(size(vol)),vx_vol)<=nn;
       else
         % faster for small distances 
         % this is the new approach that supports euclidean distance metric
         % and also include the voxel resolution
         d = zeros(2*n+1,2*n+1,2*n+1,'single'); d(n+1,n+1,n+1)=1;
-        d = max(0,cat_vbdist(d,true(size(d)),vx_vol) - 0.5); 
+        d = max(0,cat_vbdist(d,true(size(d)),vx_vol) - 0.5); d(1)=d(end);
         d = max(0,nn - d); 
         vol = min(1,convn(single(vol),d,'same')) >= 0.5; % PVE map without >0.5  
       end
       
       % add background
-      vol = cat_vol_resize(vol,'dereduceBrain',BB);  
+      vol = cat_vol_resize(vol,'dereduceBrain',BB);
+      
     case {'disterode' 'de'}
-      vol = ~cat_vol_morph(~vol,'distdilate',n,vx_vol); 
+      vol = ~cat_vol_morph(~vol,'distdilate',nn,vx_vol); 
 
     case {'distclose' 'dc'}
       [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,n+1,vol>0); 
-      
+     
       sz   = size(vol);
       vol2 = zeros(sz(1)+(2*n),sz(2)+(2*n),sz(3)+(2*n),'single');
       vol2(n+1:sz(1)+n,n+1:sz(2)+n,n+1:sz(3)+n) = single(vol);
-      vol2 = cat_vbdist(vol2,true(size(vol2)),vx_vol)<no;
-      vol2 = cat_vbdist(single(~vol2),true(size(vol2)),vx_vol)<no;
-      vol  = vol | ~vol2(n+1:sz(1)+n,n+1:sz(2)+n,n+1:sz(3)+n);
+      if n>5
+        
+        nn = nn*1.41; n=round(nn);  
+         
+        vol2 = cat_vbdist(vol2,true(size(vol2)),vx_vol)<nn; 
+        vol2 = cat_vbdist(single(~vol2),vol2>0,vx_vol)>=nn;
+      else
+        vol2 = cat_vol_morph(vol2,'distdilate',nn,vx_vol); 
+        vol2 = cat_vol_morph(vol2,'disterode' ,nn,vx_vol);       
+      end
+      vol  = vol | vol2(n+1:sz(1)+n,n+1:sz(2)+n,n+1:sz(3)+n);
 
       % add background
       vol = cat_vol_resize(vol,'dereduceBrain',BB);  
+      
     case {'distopen' 'do'}
-      vol = ~cat_vol_morph(~vol,'distclose',n,vx_vol); 
+      vol = ~cat_vol_morph(~vol,'distclose',nn,vx_vol); 
       
     case {'labdistclose' 'ldc'}
-      vol = cat_vol_morph(vol,'distclose',n,vx_vol); 
-      vol = ~cat_vol_morph(~vol,'lab',n,vx_vol); % removing of background within the object
+      vol = cat_vol_morph(vol,'distclose',nn,vx_vol); 
+      vol = ~cat_vol_morph(~vol,'lab',nn,vx_vol); % removing of background within the object
 
     case {'labdistopen' 'ldo'}
-      vol = cat_vol_morph(vol,'distopen',n,vx_vol); 
-      vol = cat_vol_morph(vol,'lab',n,vx_vol); % removing of other objects
+      vol = cat_vol_morph(vol,'distopen',nn,vx_vol); 
+      vol = cat_vol_morph(vol,'lab',nn,vx_vol); % removing of other objects
 
+      
+      
+      
 
     %===================================================================
     case {'selftest' 'st'}

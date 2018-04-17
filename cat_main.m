@@ -660,11 +660,102 @@ if ~isfield(res,'spmpp')
   
   
   
-  if 0
-    % prepared for improved partitioning - RD20170320
-    job2=job; job2.extopts.regstr=eps; res2=res; res2.do_dartel=2; 
-    [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls,Yy,tpm.M);
-    Yy = trans.warped.y; clear trans job2 res2; 
+  if job.extopts.gcutstr==2
+    %% prepared for improved partitioning - RD20170320, RD20180416
+    %  Update the initial SPM normalization by a fast version of Shooting 
+    %  to improve the skull-stripping, the partitioning and LAS.
+    %  We need stong deformations in the ventricle for the partitioning 
+    %  but low deformation for the skull-stripping. Moreover, it has to 
+    %  be realy fast > low resolution (3 mm) and less iterations. 
+    %  The mapping has to be done for the TPM resolution, but we have to 
+    %  use the Shooting template for mapping rather then the TPM because
+    %  of the cat12 atlas map.
+    stime = cat_io_cmd(sprintf('Fast Shooting registration'),'','',job.extopts.verb); 
+    job2 = job; 
+    job2.extopts.regstr   = 17;     % low resolution 
+    job2.extopts.reg.nits = 16;     % less iterations
+    job2.extopts.verb     = debug;  % do not display process (people would may get confused) 
+    job2.extopts.vox      = abs(res.tpm.V(1).mat(1));  % TPM resolution to replace old Yy  
+    job2.extopts.shootingtpms(3:end) = [];             % remove high templates, we only need low frequency corrections
+    res2 = res; 
+    res2.do_dartel        = 2;      % use shooting
+    [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M); 
+    Yy2 = trans.warped.y;
+    if ~debug, clear trans job2 res2; end
+    
+    % Shooting did not include areas outside of the boundary box
+    % >> add to cat_main_registration?
+    Ybd = true(size(Ym)); Ybd(3:end-2,3:end-2,3:end-2) = 0; Ybd(~isnan(Yy2(:,:,:,1))) = 0; Yy2(isnan(Yy2))=0; 
+    for k1=1:3
+      Yy2(:,:,:,k1) = Yy(:,:,:,k1) .* Ybd + Yy2(:,:,:,k1) .* (1-Ybd);
+      Yy2(:,:,:,k1) = cat_vol_approx(Yy2(:,:,:,k1),'nn',vx_vol,3); 
+    end
+    if ~debug, Yy = Yy2; end 
+    
+    
+    %% Update brain mask
+    stime = cat_io_cmd(sprintf('SPM+ Skull-Stripping'),'','',job.extopts.verb,stime); 
+    
+    % preparte mapping in case of shooting templates with other resolutions
+    Vb2    = spm_vol(job.extopts.shootingtpms{2}); 
+    amat   = Vb2(2).mat \ M1; 
+    if any(amat~=eye(4)); 
+      yn     = numel(Yy2); 
+      p      = ones([4,yn/3],'single'); 
+      p(1,:) = Yy2(1:yn/3);
+      p(2,:) = Yy2(yn/3+1:yn/3*2);
+      p(3,:) = Yy2(yn/3*2+1:yn);
+      p      = amat * p;
+
+      Yy2 = zeros(size(Yy2),'single'); 
+      Yy2(1:yn/3)        = p(1,:); 
+      Yy2(yn/3+1:yn/3*2) = p(2,:); 
+      Yy2(yn/3*2+1:yn)   = p(3,:);
+      clear p; 
+    end
+    
+    % load template tissue maps 
+    Yg  = spm_sample_vol(Vb2(1),double(Yy2(:,:,:,1)),double(Yy2(:,:,:,2)),double(Yy2(:,:,:,3)),5);
+    Yw  = spm_sample_vol(Vb2(2),double(Yy2(:,:,:,1)),double(Yy2(:,:,:,2)),double(Yy2(:,:,:,3)),5);
+    if ~debug, clear Yy2; end
+    Yg  = reshape(Yg,size(Ym));
+    Yw  = reshape(Yw,size(Ym));
+    
+    if debug, Ybo2 = Yb; Yclso=Ycls; end
+    
+    %% update brainmask 
+    Yp0 = (single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255)/3;
+    ith = 0.2; % lower values will result in wider mask
+    Yb  = ( cat_vol_smooth3X(Yg + Yw,2/mean(vx_vol)) .* ... smooth brain template mask
+            (Yp0toC(Ym*3,2) + Yp0toC(Ym*3,3) - Yp0toC(Ym*3,4)/2 - Yp0toC(Ym*3,1)/max(2,noise*10)) )>ith & ... individual intensities
+            Ym>0.5*(Yg+Yw) & (Ym<0.8 | Ym<2*(Yg+Yw)) &  ... major boundaries
+            Ym>0.3 & Ym<1.2 & cat_vol_smooth3X(Yp0,2/mean(vx_vol))>0.05/3; % GM and WM
+    Yb = Yb & ~(Ym>1 & cat_vol_smooth3X(Yp0)<1.1/3);                % try to avoid previously removed head tissue
+    Yb = Yb | Ycls{2}>128 | (Ycls{1}>64 & Yp0toC(Ym*3,max(1.5,min(2.2,2-noise*2)))>0);    % add save WM and GM
+    Yb = ~cat_vol_morph( ~Yb, 'l', [2,0.5]);                        % close voxel wholes (missed high intensity WM voxels)
+    Yb = cat_vol_morph( Yb, 'l', [2,0.5]);                          % remove small voxel (head tissue)
+    Yb = Yb | (Ycls{1}/255>0.2 & cat_vol_morph( Yb, 'ldc', max(0.5,min(2,noise*10)))); 
+    Yb = cat_vol_morph( Yb, 'lo', 1);                               % remove larger parts of head tissue
+    Yb = Yb | smooth3( (Ycls{3} + Ycls{1})/255>0.4 & Ym>0.3/3 & Ym<1.5/3)>0.6;  % add CSF
+    Yb = cat_vol_morph( cat_vol_morph( Yb, 'ldo', 2 , vx_vol), 'ldc', 3, vx_vol); % remove large wholes and head tissue
+    % very small dilation to get PVE voxel (better to include menignes than to miss GM)
+    Yb = Yb | (cat_vol_morph(Yb,'dd',min(2,1 + noise*10)) & Ym<3/3 & Ym>0.9/3);
+    Yb = Yb | (cat_vol_morph(Yb,'dd',min(2,1 + noise*10)) & Ym<2/3 & Ym>0.7/3);
+    Yb = smooth3(Yb)>0.5; % make it nice
+    if ~debug, clear Yg Yw; end
+    
+    %% update segmentation (add GM)
+    Ygd = Yb .* min(1,Yp0toC(Ym*3,2)*1.2) - single(Ycls{1})/255;
+    Ygd(smooth3(Ygd)<0.2 | Yp0>2/3) = 0; 
+    Ycls{1} = Ycls{1} + cat_vol_ctype(Ygd * 255); 
+    Ycls{3} = Ycls{3} - cat_vol_ctype(Ygd * 255); 
+    if ~debug, clear Yp0 Ygd; end
+    Yclss = zeros(size(Ym),'uint8'); 
+    for ci=1:numel(Ycls), Yclss = Yclss + Ycls{ci}; end
+    for ci=1:numel(Ycls), Yclss = cat_vol_ctype(single(Ycls{ci}) ./ single(Yclss) * 255); end
+    if ~debug, clear Yclss; end
+    
+    fprintf('%5.0fs\n',etime(clock,stime));  
   end
   
   
@@ -802,7 +893,7 @@ if ~isfield(res,'spmpp')
   %  Futhermore, both parts prepare the initial segmentation map for the 
   %  AMAP function.
   %  -------------------------------------------------------------------
-  if job.extopts.gcutstr>0
+  if job.extopts.gcutstr>0 && job.extopts.gcutstr~=2
     %  -----------------------------------------------------------------
     %  gcut+: skull-stripping using graph-cut
     %  -----------------------------------------------------------------
@@ -1402,10 +1493,17 @@ if job.output.ROI || any(cell2mat(struct2cell(job.output.atlas)'))
     fafi = find(cellfun('isempty',strfind(FAF(:,1),[AN{ai} '.']))==0);
     if ~isempty(fafi) && job.output.atlases.(AN{ai}), FA(fai,:) = FAF(fafi,:); fai = fai+1; end
   end
-  
+end
+if isempty(FA) && any(cell2mat(struct2cell(job.output.atlas)'))
+  % deaktive output
+  FN = job.output.atlas; 
+  for ai = 1:numel(AN)
+    job.output.atlas.(FN{ai}) = 0; 
+  end
+else
   % get atlas resolution 
   % we sort the atlases to reduce data resampling
-  VA = spm_vol(char(FA(1:end,1))); 
+  VA = spm_vol(char(FA(:,1))); 
   for ai=1:numel(VA), VAvx_vol(ai,:) = sqrt(sum(VA(ai).mat(1:3,1:3).^2)); end   %#ok<AGROW>
   [VAs,VAi] = sortrows(VAvx_vol); 
   FA = FA(VAi,:); VA = VA(VAi,:); VAvx_vol = VAvx_vol(VAi,:); %clear VA; 
@@ -1627,11 +1725,11 @@ if job.output.ROI
       transw.odim = VA(ai).dim;                       % adaption for atlas image size
       transw.ress = job.extopts.vox(1)./VAvx_vol(ai,:);  % adaption for atlas sampling resolution 
       
-      wYp0     = cat_vol_ROInorm(Yp0,transw,1,0,job.extopts.atlas);
-      wYcls    = cat_vol_ROInorm(Ycls,transw,1,1,job.extopts.atlas);
+      wYp0     = cat_vol_ROInorm(Yp0,transw,1,0,FA);
+      wYcls    = cat_vol_ROInorm(Ycls,transw,1,1,FA);
 
       if exist('Ywmh','var')
-        wYcls(7) = cat_vol_ctype(cat_vol_ROInorm({single(Ywmh)},transw,1,1,job.extopts.atlas));
+        wYcls(7) = cat_vol_ctype(cat_vol_ROInorm({single(Ywmh)},transw,1,1,FA));
       end
 % INCORRECT ?     
 %for ci=1:numel(wYcls)
@@ -1645,7 +1743,7 @@ if job.output.ROI
       if exist('Yth1','var')
         % ROI based thickness of all GM voxels per ROI
         Yth1x = Yth1; Yth1x(Yp0toC(Yp0,2)<0.5) = nan;
-        wYth1 = cat_vol_ROInorm(Yth1x,transw,1,0,job.extopts.atlas);
+        wYth1 = cat_vol_ROInorm(Yth1x,transw,1,0,FA);
         wYth1(wYth1==0) = nan; 
         clear Yth1x; 
       end
@@ -1662,21 +1760,6 @@ if job.output.ROI
     transa.odim = transw.odim;
     wYa   = cat_vol_ROInorm([],transa,ai,0,FA);
 
-    % write output
-    if 0 %any(cell2mat(struct2cell(job.output.atlas)'))
-      %% map atlas in native space
-      Vlai = spm_vol(FA{ai,1});
-      Yy   = double(trans.warped.y);
-      Ylai = cat_vol_ctype(spm_sample_vol(Vlai,Yy(:,:,:,1),Yy(:,:,:,2),Yy(:,:,:,3),0));
-      Ylai = reshape(Ylai,trans.native.Vo.dim); 
-      clear Yy
-      
-      % write map (mri as tissue subforder and mri_atals as ROI subfolder)
-      if isempty(mrifolder), amrifolder = ''; else amrifolder = 'mri_atlas'; end
-      cat_io_writenii(VT0,Ylai,amrifolder,[atlas '_'],[atlas ' original'],...
-        'uint8',[0,1],job.output.atlas,trans);
-      if ~debug, clear Vlai Ylai; end
-    end
 
     %% extract ROI data
     csv   = cat_vol_ROIestimate(wYp0,wYa,wYcls,ai,'V',[],FA{ai,3},FA);  % volume
@@ -2297,7 +2380,7 @@ function wYv = cat_vol_ROInorm(Yv,warped,ai,mod,FA)
     end
      
     % resample atlas, if the atlas resolution differs from the actual template resolution
-    if wVv.mat(1) ~= warped.M1(1)
+    if 0  %wVv.mat(1) ~= warped.M1(1)
       wVv2 = wVv; wVv2.mat = warped.M1; wVv2.dim = warped.odim; 
       [t,wYv] = cat_vol_imcalc(wVv,wVv2,'i1',struct('interp',0,'verb',0));
     end
@@ -2307,29 +2390,34 @@ function wYv = cat_vol_ROInorm(Yv,warped,ai,mod,FA)
     for yi=1:numel(warped.ress), warped.y(:,:,:,yi) = warped.y(:,:,:,yi) * warped.ress(yi); end
     if mod==0
       old = 0;
+      
+      Vlai = spm_vol(FA{ai,1});
+      vx_vol_Vlai   = sqrt(sum(Vlai.mat(1:3,1:3).^2));
+      vx_vol_Vdef   = sqrt(sum(warped.M1(1:3,1:3).^2));
+      
       if old % this did not work for the thickness map?  
         [wYv,w] = spm_diffeo('push',Yv,warped.y,warped.odim(1:3)); spm_field('boundary',1);
         wYv = spm_field(w,wYv,[sqrt(sum(warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]);
-      elseif 0==2 %wVv.mat(1) ~= warped.M1(1)
-        %%
-        [pp,ff,ee,dd] = spm_fileparts(job.extopts.templates{1}); 
-        Vdef          = spm_vol(fullfile(pp,[ff ee ',1']));
-        Vlai          = spm_vol(FA{ai,1});
-        
-        vx_vol_Vdef   = sqrt(sum(Vdef.mat(1:3,1:3).^2));
-        vx_vol_Vlai   = sqrt(sum(Vlai.mat(1:3,1:3).^2));
-        
-        eyev = eye(4); eyev(1:end-1) = eyev(1:end-1) *vx_vol_Vlai(1)./vx_vol_Vdef(1);
-        Yy   = zeros([Vlai.dim 3],'single');                        
+      elseif any( vx_vol_Vdef > vx_vol_Vlai*2)
+        %% increase resolution
+        fc   = ceil(vx_vol_Vdef / vx_vol_Vlai);
+        ddim = (size(warped.y)-1)*fc+1; ddim(4)=[]; 
+        eyev = eye(4); eyev(1:end-1) = eyev(1:end-1) * 1/fc;
+        Yy   = zeros([ddim 3],'single');                        
         for k1=1:3
-          for i=1:Vlai.dim(3),
-            Yy(:,:,i,k1) = single(spm_slice_vol(trans.warped.y(:,:,:,k1),eyev*spm_matrix([0 0 i]),Vlai.dim(1:2),[1,NaN])) / eyev(1); % adapt for res
+          for i=1:ddim(3),
+            Yy(:,:,i,k1) = single(spm_slice_vol(warped.y(:,:,:,k1),eyev*spm_matrix([0 0 i]),ddim(1:2),[1,NaN])); % adapt for res
           end
         end
-        Yyi = double(spm_diffeo('invdef',Yy,trans.native.Vi.dim,eye(4),trans.warped.M0)); if ~debug, clear Yy; end
+        Yvi  = zeros(ddim,'single'); 
+        for i=1:ddim(3),
+          Yvi(:,:,i) = single(spm_slice_vol(Yv(:,:,:),eyev*spm_matrix([0 0 i]),ddim(1:2),[1,NaN])); % adapt for res
+        end
         
-        Ylai = cat_vol_ctype(spm_sample_vol(Vlai,Yy(:,:,:,1),Yy(:,:,:,2),Yy(:,:,:,3),0));
-        Ylai = reshape(Ylai(:),trans.native.Vi.dim); 
+        [wYv,w]  = spm_diffeo('push',Yvi,Yy,warped.odim(1:3));
+        % divide by jacdet to get unmodulated data
+        wYv = wYv./(w+0.001); 
+        
        
       else      
         [wYv,w]  = spm_diffeo('push',Yv,warped.y,warped.odim(1:3));

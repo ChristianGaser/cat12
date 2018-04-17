@@ -433,11 +433,11 @@ gcutstr.help      = {
   ''
 };
 if ~expert
-  gcutstr.labels  = {'SPM approach','GCUT approach'};
+  gcutstr.labels  = {'SPM approach' 'GCUT approach'};
   gcutstr.values  = {0 0.50};
 else
-  gcutstr.labels  = {'SPM approach (0)','ultralight (eps)','light (0.25)','medium (0.50)','strong (0.75)','heavy (1.00)'};
-  gcutstr.values  = {0 eps 0.25 0.50 0.75 1.00};
+  gcutstr.labels  = {'SPM approach (0)','SPM+ approach (2)','SPM+ and GCUT medium (3)','ultralight (eps)','light (0.25)','medium (0.50)','strong (0.75)','heavy (1.00)'};
+  gcutstr.values  = {0 2 3 eps 0.25 0.50 0.75 1.00};
   gcutstr.help    = [gcutstr.help;{
     'Strength of skull-stripping before AMAP segmentation, with "ultralight" for a more liberal and wider brain masks and "heavy" for a more aggressive skull-stripping. If parts of the brain are missing in the brain mask then decrease the strength. If the brain mask of your images still contains parts of the head, then increase the strength. '
     ''
