@@ -117,7 +117,7 @@ cat.output.warps        = [0 0];
 % [inf - automatic correction] 
 
 % skull-stripping options
-cat.extopts.gcutstr      = 0;    % Strength of skull-stripping:               0 to 1; default 0
+cat.extopts.gcutstr      = 0;    % Strength of skull-stripping:               0 to 1; default 0 (SPM approach)
 cat.extopts.cleanupstr   = 0.5;  % Strength of the cleanup process:           0 to 1; default 0.5
 
 % segmentation options
