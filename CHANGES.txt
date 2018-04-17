@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1307 | dahnke | 2018-04-17 13:26:52
+r1308 | gaser | 2018-04-17 16:47:34
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_defaults.m
+M       cat_main.m
+M       html/cat.html
+
+Fixed: FA variable was not always available in cat_main.m
+------------------------------------------------------------------------
+r1307 | dahnke | 2018-04-17 13:27:20 +0200 (Di, 17 Apr 2018) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +23,7 @@ M       cat_vol_morph.m
                 between the classical chessboard and euclidean metrics. 
 (2) New:        Added new Shooting-based skull-stripping for experts.
 (3) Changed:    Updated verbose behavior of cat_main_registration. 
+
 
 ------------------------------------------------------------------------
 r1306 | gaser | 2018-04-16 17:33:58 +0200 (Mo, 16 Apr 2018) | 21 lines

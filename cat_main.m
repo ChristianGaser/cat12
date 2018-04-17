@@ -665,8 +665,8 @@ if ~isfield(res,'spmpp')
     %  Update the initial SPM normalization by a fast version of Shooting 
     %  to improve the skull-stripping, the partitioning and LAS.
     %  We need stong deformations in the ventricle for the partitioning 
-    %  but low deformation for the skull-stripping. Moreover, it has to 
-    %  be realy fast > low resolution (3 mm) and less iterations. 
+    %  but low deformations for the skull-stripping. Moreover, it has to 
+    %  be really fast > low resolution (3 mm) and less iterations. 
     %  The mapping has to be done for the TPM resolution, but we have to 
     %  use the Shooting template for mapping rather then the TPM because
     %  of the cat12 atlas map.
@@ -1494,19 +1494,22 @@ if job.output.ROI || any(cell2mat(struct2cell(job.output.atlas)'))
     if ~isempty(fafi) && job.output.atlases.(AN{ai}), FA(fai,:) = FAF(fafi,:); fai = fai+1; end
   end
 end
-if isempty(FA) && any(cell2mat(struct2cell(job.output.atlas)'))
-  % deaktive output
-  FN = job.output.atlas; 
-  for ai = 1:numel(AN)
-    job.output.atlas.(FN{ai}) = 0; 
+
+if exist('FA','var') && any(cell2mat(struct2cell(job.output.atlas)'))
+  if isempty(FA)
+    % deactivate output
+    FN = job.output.atlas; 
+    for ai = 1:numel(AN)
+      job.output.atlas.(FN{ai}) = 0; 
+    end
+  else
+    % get atlas resolution 
+    % we sort the atlases to reduce data resampling
+    VA = spm_vol(char(FA(:,1))); 
+    for ai=1:numel(VA), VAvx_vol(ai,:) = sqrt(sum(VA(ai).mat(1:3,1:3).^2)); end   %#ok<AGROW>
+    [VAs,VAi] = sortrows(VAvx_vol); 
+    FA = FA(VAi,:); VA = VA(VAi,:); VAvx_vol = VAvx_vol(VAi,:); %clear VA; 
   end
-else
-  % get atlas resolution 
-  % we sort the atlases to reduce data resampling
-  VA = spm_vol(char(FA(:,1))); 
-  for ai=1:numel(VA), VAvx_vol(ai,:) = sqrt(sum(VA(ai).mat(1:3,1:3).^2)); end   %#ok<AGROW>
-  [VAs,VAi] = sortrows(VAvx_vol); 
-  FA = FA(VAi,:); VA = VA(VAi,:); VAvx_vol = VAvx_vol(VAi,:); %clear VA; 
 end
 
 %% write atlas output
