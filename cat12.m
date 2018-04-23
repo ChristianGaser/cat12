@@ -1,3 +1,4 @@
+
 function varargout = cat12(varargin)
 % ______________________________________________________________________
 % CAT12 Toolbox wrapper to start CAT with different user modes or 

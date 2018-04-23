@@ -72,7 +72,11 @@ function varargout=ds(type,viewtype,DAR,varargin)
     figure(fh); 
   else
     mp   = get(0,'MonitorPositions');
-    fpos = min(mp(end,3:4),[1600 900]);
+    if strfind(type,'sm')
+      fpos = min(mp(end,3:4),[800 900]);
+    else
+      fpos = min(mp(end,3:4),[1600 900]);
+    end
     fpos = [(mp(end,3:4) - fpos)/2 fpos];
     figure('tag',fhn,'name',fhn,'Position',fpos,'color',[0.5 0.5 0.5],'PaperPositionMode','auto');
   end
@@ -129,7 +133,12 @@ function varargout=ds(type,viewtype,DAR,varargin)
         subplot('Position',[0.5 0.5 0.5 0.5]); imagesc(varargin{3}(:,:,s)); axis equal off; daspect(DAR); caxis 'auto';
         subplot('Position',[0 0 0.5 0.5]);     imagesc(varargin{2}(:,:,s)); axis equal off; daspect(DAR); caxis 'auto';
         subplot('Position',[0.5 0.0 0.5 0.5]); imagesc(varargin{4}(:,:,s)); axis equal off; daspect(DAR); caxis 'auto';
-      case {'d2','default2'}
+     case {'d2sm'}
+        %set(fh,'WindowStyle','docked','Visible','on');
+        subplot('Position',[0 0.5 1 0.5]); imagesc(varargin{1}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); zoom(myzoom);
+        subplot('Position',[0 0.0 1 0.5]); imagesc(varargin{2}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); zoom(myzoom);
+        cm=BCGWH; ss=2/(size(cm,1)+2); [X,Y] = meshgrid(1:ss:size(cm,1)+1,1:3); cm=interp2(1:size(cm,1),1:3,cm',X,Y)'; colormap(cm);
+     case {'d2','default2'}
         %set(fh,'WindowStyle','docked','Visible','on');
         subplot('Position',[0 0.5 0.5 0.5]);   imagesc(varargin{1}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); zoom(myzoom);
         subplot('Position',[0.5 0.5 0.5 0.5]); imagesc(varargin{3}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); zoom(myzoom);

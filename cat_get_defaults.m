@@ -43,7 +43,11 @@ subs = struct('type','.','subs',tags{1}');
 
 if nargin == 1
     % default output
-    varargout{1} = subsref(cat, subs);
+    try
+      varargout{1} = subsref(cat, subs);
+    catch
+      varargout{1} = []; 
+    end
     return;
 elseif nargin == 2
     switch varargin{1}
@@ -54,11 +58,11 @@ elseif nargin == 2
                 mainfield = [mainfield '.' tags{1}{ti}]; %#ok<AGROW>
             end
             subfield  = tags{1}{end};  
-            fprintf('Remove field "%s" in "cat.%s"!\n',subfield,mainfield);
+            %fprintf('Remove field "%s" in "cat.%s"!\n',subfield,mainfield);
             eval(sprintf('cat.%s = rmfield(cat.%s,subfield);',mainfield,mainfield));
         case 'rmentry'
           % removes the complete entry of the given defstr
-            fprintf('Remove entry "%s" "cat"!\n',tags{1}{1});
+            %fprintf('Remove entry "%s" "cat"!\n',tags{1}{1});
             cat = rmfield(cat,defstr); 
         otherwise
           % add an new entry
