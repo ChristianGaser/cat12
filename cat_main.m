@@ -1491,11 +1491,11 @@ if job.output.ROI || any(cell2mat(struct2cell(job.output.atlas)'))
   AN  = fieldnames(job.output.atlases);
   for ai = 1:numel(AN)
     fafi = find(cellfun('isempty',strfind(FAF(:,1),[AN{ai} '.']))==0);
-    if ~isempty(fafi) && job.output.atlases.(AN{ai}), FA(fai,:) = FAF(fafi,:); fai = fai+1; end
+    if ~isempty(fafi) && job.output.atlases.(AN{ai}), FA(fai,:) = FAF(fafi,:); fai = fai+1; end %#ok<AGROW>
   end
 end
 
-if exist('FA','var') && any(cell2mat(struct2cell(job.output.atlas)'))
+if exist('FA','var') 
   if isempty(FA)
     % deactivate output
     FN = job.output.atlas; 
@@ -1511,7 +1511,6 @@ if exist('FA','var') && any(cell2mat(struct2cell(job.output.atlas)'))
     FA = FA(VAi,:); VA = VA(VAi,:); VAvx_vol = VAvx_vol(VAi,:); %clear VA; 
   end
 end
-
 %% write atlas output
 if any(cell2mat(struct2cell(job.output.atlas)'))
   for ai=1:size(FA,1)
@@ -1662,11 +1661,28 @@ if (job.output.surface || any( [job.output.ct.native job.output.ct.warped job.ou
   if 1
     %% using the Ymi map
     Ymix = Ymi .* (Yp0>0.5); 
-    smeth = 1; if smeth==1, pbtmethod = 'pbt2x'; elseif smeth==3, pbtmethod = 'pbt3'; else pbtmethod = 'pbtv'; end
-    
-    [Yth1,S,Psurf] = cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,...
-      struct('pbtmethod',pbtmethod,'interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
-      'verb',job.extopts.verb,'WMT',WMT)); 
+    if job.extopts.pbtres==99 
+    % development block
+      smeth = [3 1]; 
+      sres  = [1 0.5];
+      for smi = 1:numel(smeth)
+        for sresi = 1:numel(sres)
+          if smeth(smi)==1, pbtmethod = 'pbt2xf'; elseif smeth(smi)==3, pbtmethod = 'pbt3'; end
+          
+          cat_io_cprintf('blue',sprintf('\nPBT Test99 - surf_%s_%0.2f\n',pbtmethod,sres(sresi)));
+          surf = {'lhfst','lcfst'}; %,'rhfst','rcfst'};  
+          
+          [Yth1,S,Psurf] = cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,...
+          struct('pbtmethod',pbtmethod,'interpV',sres(sresi),'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
+          'verb',job.extopts.verb,'WMT',WMT)); 
+        end
+      end
+    else
+      pbtmethod = 'pbt2x';
+      [Yth1,S,Psurf] = cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,...
+        struct('pbtmethod',pbtmethod,'interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
+        'verb',job.extopts.verb,'WMT',WMT)); 
+    end
   else
     %% using the segmentation
     [Yth1,S,Psurf] = cat_surf_createCS(VT,VT0,Yp0/3,Yl1,YMF,...
@@ -1710,7 +1726,6 @@ if job.output.ROI
   stime = cat_io_cmd('ROI estimation');   
   if job.extopts.verb, fprintf('\n'); end; 
 
-  %%
   for ai=1:size(FA,1)
     %%
     if ai==1 || any(VAvx_vol(ai,:)~=VAvx_vol(ai-1,:))
@@ -1720,9 +1735,9 @@ if job.output.ROI
 
       % map data to actual template space
       if ai==1
-        stime2  = cat_io_cmd('  Data mapping to normalized space','g5','', job.extopts.verb-1); 
+        stime2  = cat_io_cmd('  Data mapping to normalized atlas space','g5','', job.extopts.verb-1); 
       else
-        stime2  = cat_io_cmd('  Data mapping to normalized space','g5','', job.extopts.verb-1,stime2); 
+        stime2  = cat_io_cmd('  Data mapping to normalized atlas space','g5','', job.extopts.verb-1,stime2); 
       end  
       transw      = trans.warped;                     % dartel/shooting deformation data 
       transw.odim = VA(ai).dim;                       % adaption for atlas image size
@@ -1734,12 +1749,19 @@ if job.output.ROI
       if exist('Ywmh','var')
         wYcls(7) = cat_vol_ctype(cat_vol_ROInorm({single(Ywmh)},transw,1,1,FA));
       end
-% INCORRECT ?     
-%for ci=1:numel(wYcls)
-%  if ~isempty(wYcls{ci})
-%    wYcls{ci} = wYcls{ci} * prod(vx_vol); 
-%  end      % volume
-%end
+      
+      % correction for voxel size of the orignal image
+      for ci=1:numel(wYcls)
+        if ~isempty(wYcls{ci})
+          wYcls{ci} = wYcls{ci} * prod(vx_vol); 
+        end      
+      end
+      if debug
+        %% check voxel size of an atlas map that labels the whole brain
+        fprintf('%8s %8s %8s\n','GM','WM','CSF') 
+        fprintf('%8.2f %8.2f %8.2f\n', [cat_stat_nansum(wYcls{1}(:)),cat_stat_nansum(wYcls{2}(:)),cat_stat_nansum(wYcls{3}(:))]  / 1000); 
+        fprintf('%8.2f %8.2f %8.2f\n', [cat_stat_nansum(Ycls{1}(:)),cat_stat_nansum(Ycls{2}(:)),cat_stat_nansum(Ycls{3}(:))] * prod(vx_vol) / 1000 / 255); 
+      end
 
       %wYm      = cat_vol_ROInorm(Ym,transw,1,0,job.extopts.atlas);         % intensity
       
@@ -1804,7 +1826,7 @@ qa.subjectmeasures.vol_abs_CGW = [prod(vx_vol)/1000/255 .* sum(Ycls{3}(:)), ... 
                     qa.subjectmeasures.WMH_abs]; 
 qa.subjectmeasures.vol_TIV     =  sum(qa.subjectmeasures.vol_abs_CGW); 
 qa.subjectmeasures.vol_rel_CGW =  qa.subjectmeasures.vol_abs_CGW ./ qa.subjectmeasures.vol_TIV;
-clear Ycls
+if ~debug, clear Ycls; end
 
 %% ---------------------------------------------------------------------
 %  XML-report and Quality Assurance

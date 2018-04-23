@@ -122,7 +122,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     'posside','' ...
   );
 
-  if isempty(P), varargout{1}=sinfo; return; end
+  if isempty(P{1}), varargout{1}=sinfo; return; end
   
   for i=1:numel(P)
     [pp,ff,ee] = spm_fileparts(P{i});

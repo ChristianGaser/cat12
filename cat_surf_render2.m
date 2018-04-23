@@ -275,9 +275,14 @@ switch lower(action)
         H.sinfo = sinfo; 
       else
         labelmap = jet; 
-        S = varargin{1}; S=gifti(S);
+        S.vertices = [varargin{1}.vertices(:,2) varargin{1}.vertices(:,1) varargin{1}.vertices(:,3)]; 
+        S.faces    = varargin{1}.faces; 
+        if isfield(varargin{1},'facevertexcdata'), S.cdata = varargin{1}.facevertexcdata; end
+        S = gifti(S);
         S = export(S,'patch'); 
+        warning off;
         curv = spm_mesh_curvature(S); %$ > 0;
+        warning on; 
         
         labelnam = cell(0); %labelmapclim = zeros(1,2); labeloid = zeros(0); labelid = zeros(0); nid=1;
         P = struct('vertices',S.vertices, 'faces',double(S.faces));
@@ -336,7 +341,7 @@ switch lower(action)
         material(H.figure,'dull');
 
         % default lighting
-        if 0 && ismac, H.catLighting = 'inner'; else H.catLighting = 'cam'; end
+        if 1 && ismac, H.catLighting = 'inner'; else H.catLighting = 'cam'; end
 
         H.light(1) = camlight; set(H.light(1),'Parent',H.axis); 
         switch H.catLighting

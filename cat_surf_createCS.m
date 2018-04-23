@@ -44,11 +44,10 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
   if ~exist('opt','var'), opt=struct(); end
   def.verb      = 2; 
   def.surf      = {'lh','rh'}; % {'lh','rh','lc','rc'}
-  reduceCS      = 100000; % default for 1 mm data
+  reduceCS      = 100000; % default for 1 mm data ... should be 300000!
   def.reduceCS  = 1 * max( max(100000,reduceCS/2) , ... % minimum number
                            min( reduceCS*4 , ...        % maximum number
-                           reduceCS .* 1/(mean(vx_vol0).^2)));  
-                           
+                           reduceCS .* 1/(mean(vx_vol0).^2))); 
   % reducepatch has some issues with self intersections and should only be used for lower resoluted data
   if mean(vx_vol0) < 1.3
     def.reduceCS = 0;
@@ -85,9 +84,17 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
   [pp,ff]   = spm_fileparts(V.fname);
 
   if cat_get_defaults('extopts.subfolders')
-    surffolder = 'surf';
+    if strcmp(opt.pbtmethod,'pbt3')
+      surffolder = sprintf('surf_%s_%0.2f',opt.pbtmethod,opt.interpV);
+    elseif strcmp(opt.pbtmethod,'pbt2xf')
+      opt.pbtmethod = 'pbt2x';
+      surffolder = sprintf('surf_%s_%0.2f',opt.pbtmethod,opt.interpV);
+    else
+      surffolder = 'surf';
+    end
     mrifolder = 'mri';
     pp = spm_str_manip(pp,'h'); % remove 'mri' in pathname that already exists
+    if ~exist(fullfile(pp,surffolder),'dir'), mkdir(fullfile(pp,surffolder)); end
   else
     surffolder = '';
     mrifolder = '';
@@ -283,7 +290,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
 
     %% pbt calculation
     if strcmp(opt.pbtmethod,'pbt3')
-      [Yth1i,Yppi] = cat_vol_pbt2(Ymfs,struct('method',opt.pbtmethod,'resV',opt.interpV,'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1])); % avoid underestimated thickness in gyri
+      [Yth1i,Yppi] = cat_vol_pbt3(Ymfs,struct('method',opt.pbtmethod,'cb',iscerebellum,'resV',opt.interpV,'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1])); % avoid underestimated thickness in gyri
     else
       [Yth1i,Yppi] = cat_vol_pbt(Ymfs,struct('method',opt.pbtmethod,'resV',opt.interpV,'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1])); % avoid underestimated thickness in gyri
     end  
@@ -496,7 +503,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
                      '.2  .1  2  0 ' ...                     fract_step  max_step  max_search_istance  degrees_continuity  
                      '"%g"  "%g"  n ' ...                    min_isovalue  max_isovalue  +/-/n 
                      '0  0  0 ' ...                          gradient_threshold  angle  tolerance  
-                     '150  0.01  0.0'], ...                  max_iterations movement_threshold  stop_threshold  
+                     '10  0.03  0.0'], ...                  max_iterations movement_threshold  stop_threshold  
                       Vpp1.fname,Pcentral,Pcentral,th,th);
       [ST, RS] = cat_system(cmds); cat_check_system_output(ST,RS,opt.verb-2);
     

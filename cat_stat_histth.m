@@ -73,20 +73,20 @@ function varargout = cat_stat_histth(src,percent,opt)
   
   
   % histogram
-  [hsrc,hval] = hist(src(~isinf(src(:)) & ~isnan(src(:))),opt.hbins);
+  [hsrc,hval] = hist(src(~isinf(src(:)) & ~isnan(src(:)) & src(:)<3.4027e+38),opt.hbins);
   hp          = cumsum(hsrc)./sum(hsrc); 
 
   
   % lower limit
   if opt.verb, srco=src; end
   if min(src(:))~=0
-    ths(1) = hval(find(hp>tol,1,'first')); 
+    ths(1) = hval(max([1,find(hp>tol,1,'first')])); 
     src(src<ths(1)) = ths(1); 
   else
     ths(1) = 0; 
   end
   % upper limit
-  ths(2) = hval(find(hp<(1-tol),1,'last')); 
+  ths(2) = hval( min( [numel(hval) , find(hp<(1-tol),1,'last') ])); 
   src(src>ths(2)) = ths(2); 
   
   %% display
