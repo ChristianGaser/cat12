@@ -84,10 +84,12 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
   
   nn=n; n=double(n); n(1)=round(n(1)); 
   switch lower(action)
-    case {'l' 'lc' 'lo' 'labclose' 'labopen'}
+    case {'l' 'lcc' 'lco' 'labcclose' 'labcopen' ...
+              'lc' 'lo' 'labclose' 'labopen' ...
+              'ldc' 'ldo' 'labdistclose' 'labdistopen'}
       % not return in this case
     otherwise
-      if n==0, return; end 
+      if n<=0, return; end 
   end
   
   

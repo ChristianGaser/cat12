@@ -33,7 +33,12 @@ catdir = fullfile(spm('dir'),'toolbox','cat12');
 catdef = fullfile(catdir,'cat_defaults.m');
 if nargin==0 && (isempty(deffile) || strcmp(deffile,catdef))
   deffile = catdef; 
-  restartspm = 0;
+  if ~strcmp(cat_get_defaults('extopts.species'),'human') || ...
+      cat_get_defaults('extopts.expertgui')>0
+    restartspm = 1;
+  else
+    restartspm = 0;
+  end
 elseif nargin==1 
   deffile = varargin{1}; 
   restartspm = 1;
@@ -177,17 +182,31 @@ end
 
 % initialize SPM 
 eval('global defaults;'); 
+% this is required to initialize the atlas variable for default users
 if restartspm 
   clear defaults; 
   spm_jobman('initcfg');
 end
 clear cat;
 
+% initialize atlas variable 
+expert   = cat_get_defaults('extopts.expertgui'); 
+exatlas  = cat_get_defaults('extopts.atlas'); 
+for ai = 1:size(exatlas,1)
+  if exatlas{ai,2}<=expert && exist(exatlas{ai,1},'file')
+    [pp,ff,ee]  = spm_fileparts(exatlas{ai,1}); 
+
+    % if output.atlases.ff does not exist then set it by the default file value
+    if isempty(cat_get_defaults(['output.atlases.' ff]))
+      cat_get_defaults(['output.atlases.' ff], exatlas{ai,4})
+    end
+  end
+end
+
 % temporary, because of JAVA errors in cat_io_cprintf ... 20160307
 if cat_get_defaults('extopts.expertgui')<2
   cprintferror=1;
 end
-
 
 spm('FnBanner',mfilename,cat_version);
 [Finter,Fgraph] = spm('FnUIsetup','CAT12.3');
@@ -228,5 +247,6 @@ cat_io_cprintf([0.0 0.0 0.5],' CAT default file:\n\t%s\n\n',deffile);
 
 % call GUI
 cat12('fig'); 
-  
+
+
 

@@ -285,7 +285,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   }
   /* smoothing */
   float nlc, nuc, rpd;  
-  for (int dic=0;dic<2;dic++) {
+  for (int dic=0;dic<4;dic++) {
     for (int di=0;di<2;di++) {
       if (di==0) ip = 1; else ip = -1;
       for (int i=di*(nL-1);i>=0 && i<nL;i=i+ip) {

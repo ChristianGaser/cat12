@@ -222,8 +222,8 @@ cat.extopts.print        = 2;     % display and print out pdf-file of results: 0
 %  use         = [ 0 | 1 ]                           - default setting to use this atlas 
 cat.extopts.atlas       = { ... 
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii')  0      {'csf','gm'}        1; ... % atlas based on 35 subjects
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')              0      {'gm'}              1; ... % atlas based on 40 subjects
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cobra.nii')               0      {'gm','wm'}         1; ... % hippocampus-amygdala-cerebellum, 5 subjects, 0.6 mm voxel size 
+  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')              0      {'gm'}              0; ... % atlas based on 40 subjects
+  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cobra.nii')               0      {'gm','wm'}         0; ... % hippocampus-amygdala-cerebellum, 5 subjects, 0.6 mm voxel size 
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')             0      {'csf','gm','wm'}   0; ... % atlas based on 20 subjects
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')                1      {'csf','gm'}        0; ... % less regions, 18 subjects, low T1 image quality
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')                 1      {'gm'}              0; ... % many regions, but only labeled on one subject 
