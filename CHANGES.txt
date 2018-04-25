@@ -1,5 +1,26 @@
 ------------------------------------------------------------------------
-r1309 | dahnke | 2018-04-23 16:18:57
+r1310 | dahnke | 2018-04-25 15:55:05
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_volctype.m
+M       cat_main.m
+M       cat_run_job1070.m
+M       cat_surf_vol2surf.m
+M       cat_vol_div.m
+M       cat_vol_grad.m
+M       cat_vol_pbt3.m
+M       templates_animals/chimpanzee_TPM.nii
+
+(1) Changed:      Set harder brain mask for surface reconstruction
+                  in cat_main!
+(2) Changed:      Updated help and default settings in cat_surf_vol2surf.
+(3) Changed:      Updated help and add further parameter in cat_vol_div.
+(4) Fixed:        Corrected bugs in cat_io_volctype (4D data).
+(5) Fixed:        Corrected bugs in cat_run_job1070 (primate processing).
+
+------------------------------------------------------------------------
+r1309 | dahnke | 2018-04-23 16:19:28 +0200 (Mo, 23 Apr 2018) | 31 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -30,6 +51,7 @@ M       tbx_cfg_cat.m
                 first internal tests and added test code in cat_main and 
                 cat_surf_createCS.
 (6) Changed:    Increased number of smoothing iterations in cat_vol_pbtv.cpp.
+
 
 ------------------------------------------------------------------------
 r1308 | gaser | 2018-04-17 16:47:58 +0200 (Di, 17 Apr 2018) | 9 lines

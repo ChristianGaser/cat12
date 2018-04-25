@@ -8,19 +8,23 @@ function out = cat_surf_vol2surf(varargin)
 % job.verb              .. verbose (default: 1)
 % job.gifti             .. output gifti (default: 0)
 % job.interp            .. interpolation type (default 'linear')
+%                          ['cubic'|'nearest_neighbour'|'cubic']
 % job.mapping           .. mapping type 
 %  .abs_mapping         .. absolute mapping distance
-%     .start            .. start point of the vector in mm
+%     .startpoint       .. start point of the vector in mm
 %     .steps            .. number of grid steps
-%     .end              .. end point of the vector in mm
+%     .endpoint         .. end point of the vector in mm
+%     .surface          .. ['Central'|'WM'|'Pial']
 %  .rel_mapping         .. relative mapping distance
-%     .start            .. start point of the vector
+%     .startpoint       .. start point of the vector
 %     .steps            .. number of grid steps
-%     .end              .. end point of the vector
+%     .endpoint         .. end point of the vector
+%     .class            .. 'GM'  % ['GM'|'WM'|'CSF']
 %  .rel_equivol_mapping .. relative mapping distance (equi-volume approach)
-%     .start            .. start point of the vector
+%     .startpoint       .. start point of the vector
 %     .steps            .. number of grid steps
-%     .end              .. end point of the vector
+%     .endpoint         .. end point of the vector
+%     .class            .. 'GM'  % ['GM'|'WM'|'CSF']
 % job.datafieldname     .. new fieldname
 % 
 % ______________________________________________________________________
@@ -35,14 +39,23 @@ function out = cat_surf_vol2surf(varargin)
     help cat_surf_vol2surf; return
   end  
   
-  def.verb  = 1; 
-  def.gifti = 0; 
-  def.debug = 0; 
-  def.mesh32k   = 0; 
-  def.interp{1} = 'linear'; 
-  def.sample{1} = 'maxabs'; 
+  def.verb       = 1; 
+  def.gifti      = 0; 
+  def.debug      = 0; 
+  def.mesh32k    = 0; 
+  def.merge_hemi = 0; 
+  def.interp{1}  = 'linear'; 
+  def.sample{1}  = 'maxabs'; 
   def.datafieldname = 'intensity';
+  if isfield(job.mapping,'abs_mapping')
+    def.mapping.abs_mapping = struct('startpoint',0,'steps',1,'endpoint',1,'surface','Central');
+  elseif isfield(job,'rel_mapping')
+    def.mapping.rel_mapping = struct('startpoint',0,'steps',1,'endpoint',1,'surface','GM');
+  elseif isfield(job,'rel_equivol_mapping')
+    def.mapping.rel_equivol_mapping = struct('startpoint',0,'steps',1,'endpoint',1,'surface','GM');
+  end
   job = cat_io_checkinopt(job,def);
+  
 
   % if no data_mesh_lh is given for normalized space use default
   % Dartel template surface
@@ -55,6 +68,8 @@ function out = cat_surf_vol2surf(varargin)
       str_resamp = '.resampled';
     end
     job.data_mesh_lh = {fullfile(fsavgDir, 'lh.central.Template_T1_IXI555_MNI152_GS.gii')};
+  else
+    fsavgDir = fileparts( job.data_mesh_lh{1} ); 
   end
   
   n_vol  = numel(job.data_vol);
@@ -168,7 +183,8 @@ function out = cat_surf_vol2surf(varargin)
     fprintf(' %g', job.mapping.(mapping).startpoint + (i-1)*(job.mapping.(mapping).endpoint-job.mapping.(mapping).startpoint)/(job.mapping.(mapping).steps-1));
   end
   fprintf('.\n\n');
-  
+  if isempty(job.datafieldname), dsep = ''; else dsep = '_'; end
+
   if template
   % normalized volume to Template surface
     
@@ -186,18 +202,19 @@ function out = cat_surf_vol2surf(varargin)
       % replace dots in volume name with "_"
       ffv(strfind(ffv,'.')) = '_';
       
+     
       for si=1:numel(side)
-
+      
         if job.merge_hemi
           P.data(vi,si) = cat_surf_rename(job.(sside{si})(vi),'side','mesh',...
-            'preside','','pp',ppv,'dataname',[job.datafieldname '_' ffv],'name',job.(sside{si})(vi).name);
+            'preside','','pp',ppv,'dataname',[job.datafieldname dsep ffv],'name',job.(sside{si})(vi).name);
   
           % temporary name for merged hemispheres to prevent that previous single hemi-data are deleted
           Pout(si) = cat_surf_rename(job.(sside{si})(vi),...
-            'preside','','pp',ppv,'dataname',[job.datafieldname '_tmp' ffv],'name',job.(sside{si})(vi).name);
+            'preside','','pp',ppv,'dataname',[job.datafieldname dsep 'tmp' ffv],'name',job.(sside{si})(vi).name);
         else
           P.data(vi,si) = cat_surf_rename(job.(sside{si})(vi),...
-            'preside','','pp',ppv,'dataname',[job.datafieldname '_' ffv],'name',job.(sside{si})(vi).name);
+            'preside','','pp',ppv,'dataname',[job.datafieldname dsep ffv],'name',job.(sside{si})(vi).name);
           Pout(si) = P.data(vi,si);
         end
 
@@ -275,7 +292,7 @@ function out = cat_surf_vol2surf(varargin)
         % also add volume name to differentiate between multiple volumes
         P.data(vi,si) = cat_surf_rename(job.(sside{si})(vi).Pmesh,...
             'preside','','pp',spm_fileparts(job.(sside{si})(vi).fname),...
-            'dataname',[job.datafieldname '_' ffv]);
+            'dataname',[job.datafieldname dsep ffv]);
 
         P.data(vi,si) = strrep(P.data(vi,si),'.gii',''); % remove .gii extension
                 

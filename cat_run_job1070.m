@@ -500,6 +500,8 @@ function cat_run_job1070(job,tpm,subj)
               if ~any(any(isnan(Affine1(1:3,:)))) && affscale>0.5 && affscale<3, Affine = Affine1; end
             end
             clear VG1 VF1
+        else
+          [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init1070(single(obj.image.private.dat(:,:,:)),vx_vol,job.extopts.verb);
         end
 
         %% APP for spm_maff8
