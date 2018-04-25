@@ -42,7 +42,7 @@ function varargout = cat_io_volctype(varargin)
     end  
   else
     V = spm_vol(strrep(job.data{1},',1',''));
-    switch V.dt(1)
+    switch V(1).dt(1)
       case {2,512}, dtype = 1; % uint8
       case {4,256}, dtype = 3; % int8
       otherwise,    dtype = 2; % uint16
@@ -100,7 +100,7 @@ function varargout = cat_io_volctype(varargin)
 
     [pp,ff,ee] = spm_fileparts(V(1).fname);
       
-    [Yt,clim] = cat_stat_histth(Y,job.range); clear Yt;  %#ok<ASGLU>
+    [Yt,clim] = cat_stat_histth(Y,range); clear Yt;  %#ok<ASGLU>
     
     if round(cvals)~=cvals && ccvals~=0
       switch ctype
@@ -134,9 +134,10 @@ function varargout = cat_io_volctype(varargin)
      
     if ndims(Y)==4
       %%
+      V(1).fname    = fullfile(pp,[job.prefix ff job.postfix ee]);
       if exist(V(1).fname,'file'), delete(V(1).fname); end % delete required in case of smaller file size! 
       N              = nifti;
-      N.dat          = file_array(fullfile(pp,[prefix ff ee]),min([inf inf inf 3],size(Y)),[ctype spm_platform('bigend')],0,job.cvals,0);
+      N.dat          = file_array(fullfile(pp,[job.prefix ff ee]),min([inf inf inf size(Y,4)],size(Y)),[ctype spm_platform('bigend')],0,job.cvals,0);
       N.descrip      = [V(1).descrip ' > ' spm_type(ctype)]; 
       N.mat          = V(1).mat;
       N.mat0         = V(1).private.mat0;

@@ -57,7 +57,7 @@ function [Ygmt,Ypp,Ywmd] = cat_vol_pbt3(Ymf,opt)
   if ~exist('opt','var'), opt=struct(); end
 
   def.resV        = 1;
-  def.enlarge     = 1; % use larger boundary better projection (correct thickness)
+  def.enlarge     = 2; % use larger boundary better projection (correct thickness)
   def.debug       = cat_get_defaults('extopts.verb')>2;
   def.verb        = cat_get_defaults('extopts.verb')-1;
   def.cb          = 0; 
@@ -75,10 +75,13 @@ function [Ygmt,Ypp,Ywmd] = cat_vol_pbt3(Ymf,opt)
   % This was already done in cat_surf_createCS and further smoothing may 
   % remove important anatomical information. 
   Ycis = Ymf; 
+  Ycis = cat_vol_median3(Ycis,Ycis>1.5 & Ycis<2.5,true(size(Ycis)),0.05);
 
-  % estimate diverence map for sharpening
-  Ydiv = cat_vol_div(cat_vol_smooth3X(Ycis,0.5/opt.resV));
-  
+  %% estimate diverence map for sharpening
+  Ydiv = cat_vol_div( Ycis , opt.resV , 1 ); dth = [-0.5 0.8];
+  Ydiv(Ydiv<dth(1)) = min(0,2*dth(1) - Ydiv(Ydiv<dth(1)));
+  Ydiv(Ydiv>dth(2)) = max(0,2*dth(2) - Ydiv(Ydiv>dth(2)));
+  %%
   if opt.cb
     %% Sharpening based on bias correction and the divergence map:
     if debug, tic; Ycis = Ymf;  end
@@ -92,6 +95,10 @@ function [Ygmt,Ypp,Ywmd] = cat_vol_pbt3(Ymf,opt)
     if ~debug, clear Ymw; end
     % sharpening % high frequency)
     Ycis = Ycis .* ( -Ydiv ./ max(0.5,abs( min(3,max(1,Ycis))/1.5-0.75)) /2 + 1 ).^2; 
+    Ycis = max(1,min(3,Ycis));
+  else
+    % sharpening % high frequency)
+    Ycis = Ycis .* ( -Ydiv ./ max(0.5,abs( min(3,max(1,Ycis))/1.5-0.75)) /8 + 1 ).^2; 
     Ycis = max(1,min(3,Ycis));
   end
 
@@ -173,6 +180,8 @@ function [Ygmt,Ypp,Ywmd] = cat_vol_pbt3(Ymf,opt)
   if debug, tic; end
   Yppv = Yv1 ./ max(eps,Yv1 + Yv2); Yppv(Ywm>0)=1; Yppv(Ycm>0)=0; 
   Yppd = (Ygt1 - Ywd) ./ max(eps,Ygt1); Yppd(Ywm>0)=1; Yppd(Ycm>0)=0; 
+  Yppv = cat_vol_median3(Yppv,Yppv>0.1 & Yppv<0.9,true(size(Yppv)),0.1); 
+  Yppd = cat_vol_median3(Yppd,Yppd>0.1 & Yppd<0.9,true(size(Yppd)),0.1); 
   Ypp  = Yppv*0.5 + 0.5*Yppd; if ~debug, clear Yppv Yppd Ywd; end
   Ypp(cat_vol_morph(Ypp>=0.5,'ldo',max(0.5,(1.5 - opt.cb)/(2*opt.resV)))==0 & Ypp>=0.5) = 0.49;
   Ypp(Ypp<0.5 & ~cat_vol_morph(Ypp<0.5,'l')) = 0.51;
@@ -183,7 +192,7 @@ function [Ygmt,Ypp,Ywmd] = cat_vol_pbt3(Ymf,opt)
   elseif 0
     %% just display - use sd to rotate the surface
     [D,I] = cat_vbdist(single(Ygt1>0),cat_vol_morph(Ypp<0.5,'d') & cat_vol_morph(Ypp>0.5,'d')); Ygt1 = Ygt1(I); clear D I; 
-    sd = 0; cat_surf_render2('Disp',isosurface(shiftdim(Ypp,sd),0.3,shiftdim(cat_stat_histth(Ygt1,0.99),sd)));
+    sd = 0; cat_surf_render2('Disp',isosurface(shiftdim(YM),0.5,shiftdim(cat_stat_histth(Ymf,0.99),sd)));
   end
   if debug, toc; end
   
@@ -197,7 +206,7 @@ function [Ygmt,Ypp,Ywmd] = cat_vol_pbt3(Ymf,opt)
   stime = cat_io_cmd('    GM distance estimation: ','g5','',opt.verb,stime);if debug, tic; end
   
   % CIS boundary and area of distance estimation:
-  YM = min(1,max(0,(Ypp-0.5)*10 + 0.5));         % create a PVE bounary for the CIS
+  YM = min(1,max(0,((cat_vol_smooth3X(Ypp,0.3/opt.resV) .* Ymf) - mean(Ymf(Ypp(:)>0.2 & Ypp(:)<0.8).*Ypp(Ypp(:)>0.2 & Ypp(:)<0.8)))/2 + 0.5));         % create a PVE bounary for the CIS
   YM(cat_vol_morph(YM<0.5,'e',0.5/opt.resV)) = 0;                          % remove lower PVE voxel 
   YM(cat_vol_morph(YM>0.5,'e',0.5/opt.resV)) = 1;                          % remove upper PVE voxel
   YM(~cat_vol_morph(YM<0.99,'l',0.5/opt.resV)) = 1;                        % remove small wholes
@@ -245,13 +254,14 @@ function [Ygmt,Ypp,Ywmd] = cat_vol_pbt3(Ymf,opt)
   %% CSF and WM distance
   stime = cat_io_cmd('    CSF and WM distance estimation: ','g5','',opt.verb,stime); if debug, tic; end
   F     = smooth3(max(eps,max(eps,min(1,(3-Ymf)).^2)));                    % speed map for eikonal distance
-  YM3   = max( max(0,min(1,(2-Ymf))) , smooth3(isnan(YM)) ); YM3(YM3==0 & YnGM) = nan;
+  Ycid2 = Ycid; Ycid2(isnan(Ycid))=0; Ycid2 = max(0,min(4,Ycid2 +1 - cat_stat_nanmean(Ycid2(Ycid2(:)>0 & Ymf(:)>1.3 & Ymf(:)<1.6)))); 
+  YM3   = max( max(0,min(1,max(2-Ymf,Ycid2/4))) , smooth3(isnan(YM)) ); YM3(YM3==0 & YnGM) = nan;
   Ycsfd = cat_vol_eidist(YM3,F,[1 1 1],1,1,0,opt.debug); 
   if opt.enlarge
     % correc distance values behind the boundary
     YM3    = max(YM3,max(0,min(1,3-Ymf))); 
     YM3(cat_vol_morph(YM3>0.1,'e')) = 1; YM3(cat_vol_morph(YM3<0.9,'e')) = 0; 
-    YM3(isnan(YMI)) = nan;
+    YM3(YM3==0 & YnGM) = nan;
     Ycsfdc = cat_vol_eidist(YM3,F,[1 1 1],1,1,0,opt.debug); 
     Ycsfd  = Ycsfd - Ycsfdc; clear Ycsfdc;                          
   end
@@ -261,7 +271,7 @@ function [Ygmt,Ypp,Ywmd] = cat_vol_pbt3(Ymf,opt)
   Ywmd  = cat_vol_eidist(YM3,F,[1 1 1],1,1,0,opt.debug); 
   if opt.enlarge
     % correct distance values behind the boundary
-    YM3   = max(YM3,max(0,min(1,Ymf-1))); YM3(isnan(YM)) = nan;
+    YM3   = max(YM3,max(0,min(1,Ymf-1))); YM3(YM3==0 & YnGM) = nan;
     Ywmdc = cat_vol_eidist(YM3,F,[1 1 1],1,1,0,opt.debug); 
     Ywmd  = Ywmd - Ywmdc; clear Ywmdc;                             
   end
@@ -270,15 +280,16 @@ function [Ygmt,Ypp,Ywmd] = cat_vol_pbt3(Ymf,opt)
   
   %% projection-based thickness estimation 
   stime = cat_io_cmd('    Thickness projection: ','g5','',opt.verb,stime); if debug, tic; end
-  Ycidx = Ycid+1000; Ycidx(isnan(Ycidx))=0; Ycidx = cat_vol_localstat(Ycidx,Ycidx>0,1,1); Ycidx(Ycidx>0)=Ycidx(Ycidx>0)-1000;
-  Ygmt1 = cat_vol_pbtv( 4 - Ymf , -Ycidx , Ywmd  ); 
-  Ycidx = Ycid+1000; Ycidx(isnan(Ycidx))=0; Ycidx = cat_vol_localstat(Ycidx,Ycidx>0,1,1); Ycidx(Ycidx>0)=Ycidx(Ycidx>0)-1000; 
-  Ygmt2 = cat_vol_pbtv(     Ymf ,  Ycidx , Ycsfd );
+ % Ycidx = Ycid+1000; Ycidx(isnan(Ycidx))=0; Ycidx = cat_vol_localstat(Ycidx,Ycidx>0,1,1); Ycidx(Ycidx>0)=Ycidx(Ycidx>0)-1000;
+  Ygmt1 = cat_vol_pbtv( 4 - Ymf , -Ycid , Ywmd  ); 
+ % Ycidx = Ycid+1000; Ycidx(isnan(Ycidx))=0; Ycidx = cat_vol_localstat(Ycidx,Ycidx>0,1,1); Ycidx(Ycidx>0)=Ycidx(Ycidx>0)-1000; 
+  Ygmt2 = cat_vol_pbtv(     Ymf ,  Ycid , Ycsfd );
   Ygmt1(Ygmt1<0 | Ygmt2<0) = 0; Ygmt2(Ygmt1<0 | Ygmt2<0) = 0; % remove enlarged areas
   Ygmt  = (Ygmt2 + Ygmt1); Ygmt(YnGM)=0; 
   
-  % Create percentage position map Ypp
+  %% Create percentage position map Ypp
   Ypp = max(0, min(1 , (Ygmt - Ygmt1 - Ycid.*(Ygmt>0)) ./ max(eps,Ygmt) ));  Ypp(Ymf>=2.5 & Ywmd<0.5) = 1; 
+  Ypp = cat_vol_median3(Ypp,Ymf>1.1 & Ymf<2.9 & Ypp>0.1,true(size(Ypp)),0.1);
   Ypp = cat_vol_median3(Ypp,Ymf>1.1 & Ymf<2.9 & Ypp>0.1,true(size(Ypp)),0.1);
   Ypp(Ypp>0.5 & ~cat_vol_morph(Ypp>0.5,'ldo',0.5/opt.resV)) = 0.49;
   Ypp(Ypp<0.5 & ~cat_vol_morph(Ypp<0.5,'l',0.25/opt.resV)) = 0.51;
@@ -294,7 +305,7 @@ function [Ygmt,Ypp,Ywmd] = cat_vol_pbt3(Ymf,opt)
   if 0
     %% just display - use sd to rotate the surface
     [D,I] = cat_vbdist(single(Ygmt>0),cat_vol_morph(Ypp<0.5,'d') & cat_vol_morph(Ypp>0.5,'d')); Ygmt = Ygmt(I); clear D I; 
-    sd = 2; cat_surf_render2('Disp',isosurface(shiftdim(Ypp,sd),0.5,shiftdim(Ygmt,sd)));
+    sd = 1; cat_surf_render2('Disp',isosurface(shiftdim(Ypp,sd),0.5,shiftdim(Ygmt,sd)));
   end
   
   
