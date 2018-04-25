@@ -1660,17 +1660,18 @@ if (job.output.surface || any( [job.output.ct.native job.output.ct.warped job.ou
   % surface creation and thickness estimation
   if 1
     %% using the Ymi map
-    Ymix = Ymi .* (Yp0>0.5); 
+    Ymix = Ymi .* cat_vol_morph(Yp0>1,'d'); %(Yp0>0.5); 
     if job.extopts.pbtres==99 
     % development block
       smeth = [3 1]; 
       sres  = [1 0.5];
       for smi = 1:numel(smeth)
         for sresi = 1:numel(sres)
+          %%
           if smeth(smi)==1, pbtmethod = 'pbt2xf'; elseif smeth(smi)==3, pbtmethod = 'pbt3'; end
           
           cat_io_cprintf('blue',sprintf('\nPBT Test99 - surf_%s_%0.2f\n',pbtmethod,sres(sresi)));
-          surf = {'lhfst','lcfst'}; %,'rhfst','rcfst'};  
+          surf = {'lhfst'}; %,'lcfst','rhfst','rcfst'};  
           
           [Yth1,S,Psurf] = cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,...
           struct('pbtmethod',pbtmethod,'interpV',sres(sresi),'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
