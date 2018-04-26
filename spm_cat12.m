@@ -110,6 +110,7 @@ switch lower(deffile)
     mycat.opts.biasreg         = 0.001;                                  % less regularisation 
     mycat.opts.biasfwhm        = 50;                                     % stronger fields 
     mycat.opts.samp            = 2;                                      % smaller resampling
+    mycat.opts.affreg          = '';                                     % no affine regularisation
     % use species specific templates, higher resolution, stronger corrections and less affine registration (by SPM) 
     mycat.extopts.species      = species;  
     mycat.extopts.brainscale   = 200; % non-human brain volume in cm3 (from literature) or scaling in mm (check your data)

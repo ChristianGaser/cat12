@@ -49,7 +49,7 @@ function [Ygmt,Ypp,Ywmd] = cat_vol_pbt3(Ymf,opt)
 %   Department of Neurology
 %   University Jena
 % ______________________________________________________________________
-% $Id: cat_vol_pbt.m 1291 2018-03-15 12:34:45Z dahnke $ 
+% $Id$ 
 
   dbs = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
 
