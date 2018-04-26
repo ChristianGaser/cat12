@@ -123,12 +123,12 @@ switch lower(action)
         renderer = get(H.figure,'Renderer');
         set(H.figure,'Renderer','OpenGL');
         
-      if ~isstruct(varargin{1})
+      if ~isstruct(varargin{1}) && ~isa(varargin{1},'gifti')
         % surface info
         if nargin>=3
-          sinfo = cat_surf_info(varargin{3}); % sp?ter eins
+          sinfo = cat_surf_info(varargin{3}); 
         elseif nargin>=1
-          sinfo = cat_surf_info(varargin{1}); % sp?ter eins
+          sinfo = cat_surf_info(varargin{1}); 
         else
           sinfo = cat_surf_info(M);
         end
@@ -275,7 +275,11 @@ switch lower(action)
         H.sinfo = sinfo; 
       else
         labelmap = jet; 
-        S.vertices = [varargin{1}.vertices(:,2) varargin{1}.vertices(:,1) varargin{1}.vertices(:,3)]; 
+        if 0 %flip
+          S.vertices = [varargin{1}.vertices(:,2) varargin{1}.vertices(:,1) varargin{1}.vertices(:,3)]; 
+        else
+          S.vertices = varargin{1}.vertices;
+        end
         S.faces    = varargin{1}.faces; 
         if isfield(varargin{1},'facevertexcdata'), S.cdata = varargin{1}.facevertexcdata; end
         S = gifti(S);
@@ -554,11 +558,11 @@ switch lower(action)
           
           vafiles = vatlas(:,1); safiles = satlas(:,1); 
           for ai = 1:size(vatlas,1)
-            vafiles{ai} = fullfile(spm('Dir'),'toolbox',cat12,['atlases_surfaces' str32k],...
+            vafiles{ai} = fullfile(spm('Dir'),'toolbox','cat12',['atlases_surfaces' str32k],...
               sprintf('%s.%s.Template_T1_IXI555_MNI152_GS',sinfo1.side,vatlas{ai,2}));
           end
           for ai = 1:size(satlas,1)
-            safiles{ai} = fullfile(spm('Dir'),'toolbox',cat12,['atlases_surfaces' str32k],...
+            safiles{ai} = fullfile(spm('Dir'),'toolbox','cat12',['atlases_surfaces' str32k],...
               sprintf('%s.%s.freesurfer.annot',sinfo1.side,satlas{ai,2}));
           end
           ntextures = size(H.textures,1);
@@ -963,7 +967,10 @@ switch lower(action)
         if expert  
           c = uimenu(cmenu, 'Label','Print resolution','Separator', 'on');
           printres = [75 150 300 600];
-          onoff = {'off','on'};  myres = printres==cat_get_defaults('print.dpi'); 
+          onoff = {'off','on'};  
+          myprintres = cat_get_defaults('print.dpi'); 
+          if isempty(myprintres), myprintres = 150; end
+          myres = printres==myprintres; 
           for ri = 1:numel(printres)
             uimenu(c, 'Label',sprintf('%0.0f',printres(ri)), 'Checked',onoff{myres(ri)+1},...
               'Callback', {@myPrintResolution, H, printres(ri)});

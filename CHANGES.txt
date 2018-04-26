@@ -1,5 +1,39 @@
 ------------------------------------------------------------------------
-r1310 | dahnke | 2018-04-25 15:55:05
+r1311 | dahnke | 2018-04-26 10:15:18
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_surf_info.m
+M       cat_surf_render2.m
+M       cat_surf_vol2surf.m
+M       cat_vol_pbt.m
+MM      cat_vol_pbt3.m
+M       spm_cat12.m
+M       templates_animals/chimpanzee_TPM.nii
+A       templates_animals/chimpanzee_atlas_davi.nii
+A       templates_animals/chimpanzee_cat.nii
+A       templates_animals_surfaces
+A       templates_animals_surfaces/lc.central.Template_chimpanzee_T1_GS.gii
+A       templates_animals_surfaces/lc.thickness.Template_chimpanzee_T1_GS
+A       templates_animals_surfaces/lh.central.Template_chimpanzee_T1_GS.gii
+A       templates_animals_surfaces/lh.thickness.Template_chimpanzee_T1_GS
+A       templates_animals_surfaces/mesh.central.Template_chimpanzee_T1_GS.gii
+A       templates_animals_surfaces/rc.central.Template_chimpanzee_T1_GS.gii
+A       templates_animals_surfaces/rc.thickness.Template_chimpanzee_T1_GS
+A       templates_animals_surfaces/rh.central.Template_chimpanzee_T1_GS.gii
+A       templates_animals_surfaces/rh.thickness.Template_chimpanzee_T1_GS
+
+(1) Fixed:      Corrected bugs in cat_surf_render2 & cat_surf_info.
+(2) New:        Added chimpanzee surface Shooting templates.
+(3) Changed:    Updated help of cat_surf_vol2surf and added 
+                cerebellum mapping (default=0).
+(4) Fixed:      Prevent output of gyrus-/sulcus-width in the 
+                cat_report if they  were not processed (NaN).
+(5) Fixed:      Temporary replaced chimpanzee TPM with greater apes
+                TPM due to an data type error of the chimpanzee TPM.
+------------------------------------------------------------------------
+r1310 | dahnke | 2018-04-25 15:55:32 +0200 (Mi, 25 Apr 2018) | 19 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -18,6 +52,7 @@ M       templates_animals/chimpanzee_TPM.nii
 (3) Changed:      Updated help and add further parameter in cat_vol_div.
 (4) Fixed:        Corrected bugs in cat_io_volctype (4D data).
 (5) Fixed:        Corrected bugs in cat_run_job1070 (primate processing).
+
 
 ------------------------------------------------------------------------
 r1309 | dahnke | 2018-04-23 16:19:28 +0200 (Mo, 23 Apr 2018) | 31 lines

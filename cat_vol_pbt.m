@@ -43,7 +43,7 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
   opt           = cat_io_checkinopt(opt,def);
   opt.resV      = mean(opt.resV);
   
-  minfdist = 0; 
+  minfdist = 2; 
   
   if 0
     % RD 201803: 
@@ -115,7 +115,7 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
     YM  = Ywmd>minfdist & Ymf< 2.0; YwmdM = Ywmd; YwmdM = cat_vol_median3(YwmdM,YM,YM); Ywmd(YM) = YwmdM(YM); clear YwmdM YM;
   end
   
-  minfdist = 1; 
+  minfdist = 2; 
   %  CSF distance
   %  Similar to the WM distance, but keep in mind that this map is
   %  incorrect in blurred sulci that is handled by PBT
