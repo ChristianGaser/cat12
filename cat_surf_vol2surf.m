@@ -26,19 +26,60 @@ function out = cat_surf_vol2surf(varargin)
 %     .endpoint         .. end point of the vector
 %     .class            .. 'GM'  % ['GM'|'WM'|'CSF']
 % job.datafieldname     .. new fieldname
-% 
+% job.cerebellum        .. also map cerebellum (default: 0)
+% def.mesh32k           .. use 32k meshs (default: 0)
+% job.merge_hemi        .. merge hemishperes (default: 0)
+% job.sample            .. sampling function (default: 'maxabs')
+%                          ['avg','weighted_avg','range','sum',...
+%                           'min','max','maxabs','exp','multi']
+%   'avg':              Use average for mapping along normals.
+%   'weighted_avg':     Use weighted average with gaussian kernel for 
+%                       mapping along normals. The kernel is so defined 
+%                       that values at the boundary are weighted with 50% 
+%                       while the center is weighted with 100%.
+%   'range':            Count number of values in range for mapping along
+%                       normals. If any value is out of range values will 
+%                       be counted only until this point.
+%                       Default value: 3.40282e+38
+%   'maxabs':           Use absolute maximum value for mapping along 
+%                       normals (Default). Optionally a 2nd volume can be 
+%                       defined to output its value at the maximum value 
+%                       of the 1st volume.
+% 	'max':              Use maximum value for mapping along normals. 
+%                       Optionally a 2nd volume can be defined to output 
+%                       its value at the maximum value of the 1st volume.
+% 	'min':              Use minimum value for mapping along normals. 
+%                       Optionally a 2nd volume can be defined to output 
+%                       its value at the minimum value of the 1st volume.
+%   'exp':              Use exponential average of values for mapping 
+%                       along normals. The argument defines the distance 
+%                       in mm where values are decayed to 50%   
+%                       (recommended value is 10mm).
+%                       Default value:  [ 3.40282e+38 0 2.12263e-314 ...
+%                                         9.88131e-323 4.94066e-324 ]
+%   'sum':              Use sum of values for mapping along normals.
+%   'multi':            Map data for each grid step separately and save 
+%                       file with indicated grid value. Please note that
+%                       this option is intended for high-resolution  
+%                       (f)MRI data only.
 % ______________________________________________________________________
-% Robert Dahnke
+% Robert Dahnke, Christian Gaser
 % $Id$
  
   spm_clf('Interactive'); 
  
-  if nargin == 1
+  if nargin == 0
+    help cat_surf_vol2surf; 
+    [ST, RS] = cat_system('CAT_3dVol2Surf -help');
+    out = {};
+    return    
+  elseif nargin == 1
     job = varargin{1};
   else 
     help cat_surf_vol2surf; return
   end  
   
+  def.cerebellum = 0; 
   def.verb       = 1; 
   def.gifti      = 0; 
   def.debug      = 0; 
@@ -126,6 +167,9 @@ function out = cat_surf_vol2surf(varargin)
   %%
   side  = {'data_mesh_lh','data_mesh_rh'};
   sside = {'sinfo_lh','sinfo_rh'};
+  
+  job.sinfo_lh = cat_surf_info(job.data_mesh_lh);
+  template = job.sinfo_lh(1).template;
 
   if ~isfield(job,'data_mesh_rh')
     job.data_mesh_rh = cat_surf_rename(job.data_mesh_lh,'side','rh');
@@ -136,12 +180,35 @@ function out = cat_surf_vol2surf(varargin)
       end
     end
   end
-
-  job.sinfo_lh = cat_surf_info(job.data_mesh_lh);
-  if numel(side) > 1
-    job.sinfo_rh = cat_surf_info(job.data_mesh_rh);
+  if job.cerebellum 
+    if job.merge_hemi
+      error('cat_surf_vol2surf:cbmesh_notprepared','Combination of job.cerebellum & job.merge_hemi is not prepared.')
+    else
+      side  = [side  {'data_mesh_lc','data_mesh_rc'}];
+      sside = [sside {'sinfo_lc','sinfo_rc'}];
+      if ~isfield(job,'data_mesh_lc')
+        job.data_mesh_lc = cat_surf_rename(job.data_mesh_lh,'side','lc');
+        for i=1:numel(job.data_mesh_lc)
+          % check whether we have rather merged hemispheres
+          if ~exist(job.data_mesh_lc{i},'file')
+            side = setdiff(side,'data_mesh_lc');
+          end
+        end
+      end
+      if ~isfield(job,'data_mesh_rc')
+        job.data_mesh_rc = cat_surf_rename(job.data_mesh_lh,'side','rc');
+        for i=1:numel(job.data_mesh_rc)
+          % check whether we have rather merged hemispheres
+          if ~exist(job.data_mesh_rc{i},'file')
+            side = setdiff(side,'data_mesh_rc');
+          end
+        end
+      end
+    end
   end
-  template = job.sinfo_lh(1).template;
+  if isfield(job,'data_mesh_rh'), job.sinfo_rh = cat_surf_info(job.data_mesh_rh); end
+  if isfield(job,'data_mesh_lc'), job.sinfo_lc = cat_surf_info(job.data_mesh_lc); end
+  if isfield(job,'data_mesh_rc'), job.sinfo_rc = cat_surf_info(job.data_mesh_rc); end
   
   %% Mapping command 
   % --------------------------------------------------------------------
@@ -249,9 +316,9 @@ function out = cat_surf_vol2surf(varargin)
       if job.merge_hemi
     
         % combine left and right
-        M0 = gifti(Pout(1:2));
-        delete(Pout{1}); delete(Pout{2})
-        M.cdata = [M0(1).cdata; M0(2).cdata];
+        M0 = gifti(Pout(:));
+        for si=1:numel(Pout), delete(Pout{si}); end
+        M.cdata = [];  for si=1:numel(Pout), M.cdata = [M.cdata; M0(si).cdata]; end
         
         M.private.metadata = struct('name','SurfaceID','value',P.data(vi,1));
         save(gifti(M), char(P.data(vi,1)), 'Base64Binary');
@@ -344,7 +411,7 @@ function out = cat_surf_vol2surf(varargin)
         end
         
         % don't print it for multi-value sampling
-        if job.verb &  ~strcmp(job.sample{1},'multi')
+        if job.verb &&  ~strcmp(job.sample{1},'multi')
           fprintf('Display %s\n',spm_file(P.data{vi,si},'link','cat_surf_display(''%s'')'));
         end
       
@@ -366,6 +433,10 @@ function out = cat_surf_vol2surf(varargin)
   else
     out.lh = P.data(:,1);
     out.rh = P.data(:,2);
+    if job.cerebellum
+      out.lc = P.data(:,3);
+      out.rc = P.data(:,4);
+    end
   end
 
   spm_progress_bar('Clear');
