@@ -124,21 +124,10 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
   Yp0A = reshape(Yp0A,size(Ym)); 
   
   % WMH atlas
-  PwmhA = strrep(PA{1},'cat.nii','Template_T1_IXI555_MNI152_GS-label.nii');
+  PwmhA = strrep(PA{1},'cat.nii','cat_wmh.nii');
   if exist(PwmhA,'file') && ~strcmp(PwmhA,PA{1}) 
     VwmhA = spm_vol(PwmhA);
-    yn = numel(Yy); 
-    p  = ones([4,yn/3],'single'); 
-    p(1,:) = Yy(1:yn/3);
-    p(2,:) = Yy(yn/3+1:yn/3*2);
-    p(3,:) = Yy(yn/3*2+1:yn);
-    p      = VwmhA.mat\VA.mat * p;
-    Yy2 = zeros([size(Yb) 3],'single'); 
-    Yy2(1:yn/3)        = p(1,:);
-    Yy2(yn/3+1:yn/3*2) = p(2,:);
-    Yy2(yn/3*2+1:yn)   = p(3,:);
-    clear p;
-    YwmhA = cat_vol_ctype(spm_sample_vol(VwmhA,double(Yy2(:,:,:,1)),double(Yy2(:,:,:,2)),double(Yy2(:,:,:,3)),0));
+    YwmhA = cat_vol_ctype(spm_sample_vol(VwmhA,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
     YwmhA = reshape(YwmhA,size(Ym));
   else
     YwmhA = max(0,min(1,Yp0A-2)); 
