@@ -660,39 +660,40 @@ if ~isfield(res,'spmpp')
   
   
   
-  if job.extopts.gcutstr==2
-    %% prepared for improved partitioning - RD20170320, RD20180416
-    %  Update the initial SPM normalization by a fast version of Shooting 
-    %  to improve the skull-stripping, the partitioning and LAS.
-    %  We need stong deformations in the ventricle for the partitioning 
-    %  but low deformations for the skull-stripping. Moreover, it has to 
-    %  be really fast > low resolution (3 mm) and less iterations. 
-    %  The mapping has to be done for the TPM resolution, but we have to 
-    %  use the Shooting template for mapping rather then the TPM because
-    %  of the cat12 atlas map.
-    stime = cat_io_cmd(sprintf('Fast Shooting registration'),'','',job.extopts.verb); 
-    job2 = job; 
-    job2.extopts.regstr   = 17;     % low resolution 
-    job2.extopts.reg.nits = 16;     % less iterations
-    job2.extopts.verb     = debug;  % do not display process (people would may get confused) 
-    job2.extopts.vox      = abs(res.tpm.V(1).mat(1));  % TPM resolution to replace old Yy  
-    job2.extopts.shootingtpms(3:end) = [];             % remove high templates, we only need low frequency corrections
-    res2 = res; 
-    res2.do_dartel        = 2;      % use shooting
-    [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M); 
-    Yy2 = trans.warped.y;
-    if ~debug, clear trans job2 res2; end
+
+  %% prepared for improved partitioning - RD20170320, RD20180416
+  %  Update the initial SPM normalization by a fast version of Shooting 
+  %  to improve the skull-stripping, the partitioning and LAS.
+  %  We need stong deformations in the ventricle for the partitioning 
+  %  but low deformations for the skull-stripping. Moreover, it has to 
+  %  be really fast > low resolution (3 mm) and less iterations. 
+  %  The mapping has to be done for the TPM resolution, but we have to 
+  %  use the Shooting template for mapping rather then the TPM because
+  %  of the cat12 atlas map.
+  stime = cat_io_cmd(sprintf('Fast Shooting registration'),'','',job.extopts.verb); 
+  job2 = job; 
+  job2.extopts.regstr   = 15;     % low resolution 
+  job2.extopts.reg.nits = 16;     % less iterations
+  job2.extopts.verb     = debug;  % do not display process (people would may get confused) 
+  job2.extopts.vox      = abs(res.tpm.V(1).mat(1));  % TPM resolution to replace old Yy  
+  job2.extopts.shootingtpms(3:end) = [];             % remove high templates, we only need low frequency corrections
+  res2 = res; 
+  res2.do_dartel        = 2;      % use shooting
+  [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M); 
+  Yy2 = trans.warped.y;
+  if ~debug, clear trans job2 res2; end
+
+  % Shooting did not include areas outside of the boundary box
+  % >> add to cat_main_registration?
+  Ybd = true(size(Ym)); Ybd(3:end-2,3:end-2,3:end-2) = 0; Ybd(~isnan(Yy2(:,:,:,1))) = 0; Yy2(isnan(Yy2))=0; 
+  for k1=1:3
+    Yy2(:,:,:,k1) = Yy(:,:,:,k1) .* Ybd + Yy2(:,:,:,k1) .* (1-Ybd);
+    Yy2(:,:,:,k1) = cat_vol_approx(Yy2(:,:,:,k1),'nn',vx_vol,3); 
+  end
+  if ~debug, Yy = Yy2; end 
     
-    % Shooting did not include areas outside of the boundary box
-    % >> add to cat_main_registration?
-    Ybd = true(size(Ym)); Ybd(3:end-2,3:end-2,3:end-2) = 0; Ybd(~isnan(Yy2(:,:,:,1))) = 0; Yy2(isnan(Yy2))=0; 
-    for k1=1:3
-      Yy2(:,:,:,k1) = Yy(:,:,:,k1) .* Ybd + Yy2(:,:,:,k1) .* (1-Ybd);
-      Yy2(:,:,:,k1) = cat_vol_approx(Yy2(:,:,:,k1),'nn',vx_vol,3); 
-    end
-    if ~debug, Yy = Yy2; end 
-    
-    
+  %%
+  if job.extopts.gcutstr==2 
     %% Update brain mask
     stime = cat_io_cmd(sprintf('SPM+ Skull-Stripping'),'','',job.extopts.verb,stime); 
     
@@ -943,7 +944,7 @@ if ~isfield(res,'spmpp')
           Yp0(:,:,i) = Yp0(:,:,i) + cat_vol_ctype((maxind == k1) .* (maxi~=0) * k1ind(k1) .* Yb(:,:,i)); 
         end
     end
-    %clear maxi maxind Kb k1 cls2;
+    if ~debug, clear maxi maxind Kb k1 cls2; end
   else
     % more direct method ... a little bit more WM, less CSF
     % Yp0 = uint8(max(Yb,min(3,round(Ymi*3)))); Yp0(~Yb) = 0;
