@@ -1,5 +1,26 @@
 ------------------------------------------------------------------------
-r1312 | dahnke | 2018-04-30 14:29:44
+r1313 | dahnke | 2018-04-30 18:44:12
+
+Changed paths:
+M       CHANGES.txt
+M       cat_vol_partvol.m
+A       templates_1.50mm/cat_wmh.nii
+ M      templates_animals/chimpanzee_atlas_davi.nii
+ M      templates_animals/chimpanzee_cat.nii
+ M      templates_animals_surfaces/lc.central.Template_chimpanzee_T1_GS.gii
+ M      templates_animals_surfaces/lc.thickness.Template_chimpanzee_T1_GS
+ M      templates_animals_surfaces/lh.central.Template_chimpanzee_T1_GS.gii
+ M      templates_animals_surfaces/lh.thickness.Template_chimpanzee_T1_GS
+ M      templates_animals_surfaces/mesh.central.Template_chimpanzee_T1_GS.gii
+ M      templates_animals_surfaces/rc.central.Template_chimpanzee_T1_GS.gii
+ M      templates_animals_surfaces/rc.thickness.Template_chimpanzee_T1_GS
+ M      templates_animals_surfaces/rh.central.Template_chimpanzee_T1_GS.gii
+ M      templates_animals_surfaces/rh.thickness.Template_chimpanzee_T1_GS
+
+
+
+------------------------------------------------------------------------
+r1312 | dahnke | 2018-04-30 14:34:52 +0200 (Mo, 30 Apr 2018) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +33,7 @@ M       ds.m
 (1) Fixed:      Corrected small bug in cat_vol_morph.
 (2) Changed:    Set Shooting-based skull-stripping as default (gcut==2). 
 (3) Changed:    Modified WMH correction in cat_vol_part and cleaned code.
+
 
 ------------------------------------------------------------------------
 r1311 | dahnke | 2018-04-26 10:16:03 +0200 (Do, 26 Apr 2018) | 32 lines
