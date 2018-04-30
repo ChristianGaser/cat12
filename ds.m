@@ -145,6 +145,12 @@ function varargout=ds(type,viewtype,DAR,varargin)
         subplot('Position',[0 0 0.5 0.5]);     imagesc(varargin{2}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); zoom(myzoom); 
         subplot('Position',[0.5 0.0 0.5 0.5]); imagesc(varargin{4}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); zoom(myzoom); 
         cm=BCGWH; ss=2/(size(cm,1)+2); [X,Y] = meshgrid(1:ss:size(cm,1)+1,1:3); cm=interp2(1:size(cm,1),1:3,cm',X,Y)'; colormap(cm);
+      case {'l2sm'}
+        [X,Y] = meshgrid(0.125:0.125:LAB,1:3);
+        %set(fh,'WindowStyle','docked','Visible','on');
+        subplot('Position',[0 0.5 1 0.5]); image(ind2rgb( uint16(7+8*(min(1,varargin{1}(:,:,s))*3 + 4*varargin{2}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR); zoom(myzoom);
+        subplot('Position',[0 0.0 1 0.5]); image(ind2rgb( uint16(7+8*(min(1,varargin{1}(:,:,s))*3 + 4*varargin{3}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR); zoom(myzoom);
+        cm=BCGWH; ss=2/(size(cm,1)+2); [X,Y] = meshgrid(1:ss:size(cm,1)+1,1:3); cm=interp2(1:size(cm,1),1:3,cm',X,Y)'; colormap(cm);
       case {'l2','label2'}
         [X,Y] = meshgrid(0.125:0.125:LAB,1:3);
         %set(fh,'WindowStyle','docked','Visible','on');

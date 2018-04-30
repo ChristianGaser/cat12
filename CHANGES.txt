@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1311 | dahnke | 2018-04-26 10:15:18
+r1312 | dahnke | 2018-04-30 14:29:44
+
+Changed paths:
+M       CHANGES.txt
+M       cat_defaults.m
+M       cat_main.m
+M       cat_vol_morph.m
+M       cat_vol_partvol.m
+M       ds.m
+
+(1) Fixed:      Corrected small bug in cat_vol_morph.
+(2) Changed:    Set Shooting-based skull-stripping as default (gcut==2). 
+(3) Changed:    Modified WMH correction in cat_vol_part and cleaned code.
+
+------------------------------------------------------------------------
+r1311 | dahnke | 2018-04-26 10:16:03 +0200 (Do, 26 Apr 2018) | 32 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -32,6 +47,7 @@ A       templates_animals_surfaces/rh.thickness.Template_chimpanzee_T1_GS
                 cat_report if they  were not processed (NaN).
 (5) Fixed:      Temporary replaced chimpanzee TPM with greater apes
                 TPM due to an data type error of the chimpanzee TPM.
+
 ------------------------------------------------------------------------
 r1310 | dahnke | 2018-04-25 15:55:32 +0200 (Mi, 25 Apr 2018) | 19 lines
 
