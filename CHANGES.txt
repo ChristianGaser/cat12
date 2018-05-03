@@ -1,5 +1,22 @@
 ------------------------------------------------------------------------
-r1314 | gaser | 2018-05-03 09:07:30
+r1314 | dahnke | 2018-05-03 11:33:58
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_main_gcut.m
+M       cat_vol_morph.m
+M       cat_vol_partvol.m
+M       templates_1.50mm/cat_wmh.nii
+
+Changed:        Updated WMH segmentation for new atlas maps. 
+Changed:        Updated cat_wmh atlas. 
+New:            Added MICCAI2017 WMH atlas. 
+Fixed:          Corrected bug in cat_main_gcut. 
+
+
+------------------------------------------------------------------------
+r1314 | gaser | 2018-05-03 09:07:58 +0200 (Do, 03 Mai 2018) | 22 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -22,6 +39,7 @@ M       templates_1.50mm/cobra.txt
     cat12/templates_1.50mm/cobra.txt for more information.
 (2) Changed: Updated online help and CAT12 manual.
 (3) Changed: Added option for internal interpolation to default GUI.
+
 ------------------------------------------------------------------------
 r1313 | dahnke | 2018-04-30 18:44:18 +0200 (Mo, 30 Apr 2018) | 19 lines
 

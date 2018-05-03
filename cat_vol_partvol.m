@@ -123,18 +123,27 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
          single(spm_sample_vol(Vtpm(3),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),1))*1;
   Yp0A = reshape(Yp0A,size(Ym)); 
   
-  % WMH atlas
-  PwmhA = strrep(PA{1},'cat.nii','cat_wmh.nii');
+  %% WMH atlas
+  watlas = 1; 
+  switch watlas
+    case 1, PwmhA = strrep(PA{1},'cat.nii','cat_wmh_soft.nii');
+    case 2, PwmhA = strrep(PA{1},'cat.nii','cat_wmh.nii');
+    case 3, PwmhA = strrep(PA{1},'cat.nii','cat_wmh_miccai2017.nii');
+  end
   if exist(PwmhA,'file') && ~strcmp(PwmhA,PA{1}) 
     VwmhA = spm_vol(PwmhA);
-    YwmhA = cat_vol_ctype(spm_sample_vol(VwmhA,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
+    YwmhA = spm_sample_vol(VwmhA,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0);
     YwmhA = reshape(YwmhA,size(Ym));
   else
     YwmhA = max(0,min(1,Yp0A-2)); 
   end
+  switch watlas
+    case 2, YwmhA = min(1,max(0,YwmhA - 0.1) * 0.8);
+    case 3, YwmhA = min(1,max(0,cat_vol_smooth3X(YwmhA,1) - 0.01) * 10); 
+  end
   clear Yy2; 
 
- 
+  %%
   if ~debug; clear Yy; end
   
   Yp0  = (single(Ycls{1})*2/255 + single(Ycls{2})*3/255 + single(Ycls{3})/255) .* Yb; 
@@ -296,14 +305,15 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
 
     % control variables 
     % only if there is a lot of CSF and not too much noise
-    WMHCf   = 1.5;                                                                % manual factor for main adaption
-    csfvol  = max(0.1,min(1.9, (vols  - 0.05) * 8  ));                            % relative CSF volume weighting
-    noisel  = max(0.1,min(1.9, (noise - 0.05) * 10 ));                            % normalized noise weighting
-    WMHCstr = max(0.1,min(1.9, extopts.WMHCstr .* csfvol/noisel * WMHCf));        % normalized WMHCstr 
-    wmhvols = max([0.01 10],min([0.1,200], [0.1 100] - [0.08 100] .* WMHCstr));     % WMH volume thresholds
-    mth     = max([1.2 2.2],min([1.8 2.8],[1.3 2.5] + [-0.2 0.2] .* WMHCstr));    % tissue thresholds
-    ath     = max(2.0,min(2.8,2.8 - 0.8 * WMHCstr));                              % tissue probability threshold
-    vtd     = max(2,min(10,8*WMHCstr));                                           % ventricle distance threshold
+    csfvol  = max(eps,min(1.5, (vols  - 0.05) * 10 ));                     % relative CSF volume weighting
+    WMHCstr = max(eps,min(1.0, extopts.WMHCstr .* csfvol ));               % normalized WMHCstr 
+    wmhvols = max([0.01 50],min([0.1,100], ...
+                  [0.1 200] - [0.08 100] .* (1 - WMHCstr)));               % WMH volume thresholds
+    mth     = max([1.1 + min(0.3 , noise) , 2.6 ] , ...
+              min([1.4                    , max(2.7 , 2.8 - noise)], ...
+                  [1.4 2.7] + [-0.2 0.2] .* WMHCstr));                     % tissue thresholds
+    ath     = max(2.0,min(2.8,2.85 - 0.1 * WMHCstr));                      % tissue probability threshold
+    vtd     = max(4,min(12,6 + 4 * WMHCstr));                              % ventricle distance threshold
 
     stime   = cat_io_cmd(sprintf('  WMH detection (WMHCstr=%0.02f > WMHCstr''=%0.02f)',...
               extopts.WMHCstr,WMHCstr),'g5','',verb,stime); dispc=dispc+1;
@@ -311,17 +321,17 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
     YBG2 = cat_vol_morph(Ya1==LAB.BG,'d',1); 
 
     % set pre WMHs
-    Ywmh = smooth3( cat_vol_morph(Yvt,'d',vtd,vx_vol) & ~YBG2 & Yp0A>ath & ...
-                    YA==LAB.CT & YwmhA>(1 - WMHCstr/2) & Ym>mth(1) & Ym<mth(2) )>0.5 ; 
-    Ywmh(Yp0A>2.9 & Ym<2.5 & ~Yvt & ~YBG2 &  YA==LAB.CT) = 1;
+    Ywmh = smooth3( cat_vol_morph(Yvt,'dd',vtd,vx_vol) & ~YBG2 & Yp0A>ath & ...
+                    YA==LAB.CT & YwmhA>(0.8 - WMHCstr*0.8) & Ym>mth(1) & Ym<mth(2) )>0.5 ;
+    Ywmh(cat_vol_morph(Yvt,'dd',vtd*2,vx_vol) & Yp0A>ath & YwmhA>(0.8 - WMHCstr*0.8) & Ym>mth(1) & Ym<mth(2) & ~Yvt & ~YBG2 &  YA==LAB.CT) = 1;
     % rwmhvol = sum(Ywmh(:)==1) ./ sum(Yp0(:)>2.5 & Ym(:)>2.5); % ... not yet ... 
-    Ywmh = cat_vol_morph(Ywmh,'l',[50 wmhvols(1)])>0;
-    Ywmh = cat_vol_morph(Ywmh,'l',[50 wmhvols(2)])>0;
+    Ywmh = cat_vol_morph(Ywmh,'l',[inf wmhvols(1)/2])>0;
+    Ywmh = cat_vol_morph(Ywmh,'l',[inf wmhvols(2)/2])>0;
     % set no-go area
     Ywmh = single(Ywmh); 
-    Ywmh((Ywmh==0 & Ym>2.5) | YBG2 | YA==LAB.BG | Ya1==LAB.TH | YA==LAB.TH) = -inf;
+    Ywmh((Ywmh==0 & Ym>2.5) | YBG2 | YA==LAB.BG | Ya1==LAB.TH | YA==LAB.TH | YA==LAB.PH) = nan;
     % set non-WMH
-    Ywmh(cat_vol_morph(Ya1==LAB.HC,'d',3) & Ywmh==0) = 2; 
+    Ywmh(cat_vol_morph(Ya1==LAB.HC,'dd',5) & Ywmh==0) = 2; 
     Ywmh( cat_vol_morph( ( (Yvt2>1.99 & Yvt2<2.05) | (Ywmh==0 & Ym<1.5) ) & ...
          ~cat_vol_morph(Yvt,'dd',10) , 'l',[20 100])>0 ) = 2;
     Ywmh(Ya1==LAB.VT) = 2; 
@@ -330,12 +340,16 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
     Ywmh(Ywmh==2 & smooth3(Ywmh==2)<0.1 + WMHCstr/2) = 0;
     Ywmh(Ywmh==1 & smooth3(Ywmh==1)<0.1 + WMHCstr/2) = 0;
 
-    %% region-growing
-    Ywmh = cat_vol_downcut(Ywmh, (3-Ym)/3, WMHCstr/2, vx_vol); 
-    
+    % region-growing / bottleneck
+    %Ywmh = cat_vol_downcut(Ywmh, 1+(3-Ym)/3, WMHCstr/2, vx_vol); 
+    Ywmh(Ywmh==0) = 1.5; 
+    Ywmh = cat_vol_laplace3R(Ywmh, Ywmh==1.5, 0.001); if debug, Ywmh2 = Ywmh; end
+    %
+    Ywmh = ...YwmhA>=(1 - WMHCstr) & 
+      Yp0A>2 & ~Yvt & Ym>mth(1) & Ym<mth(2) & (Ywmh <= 1.5);
     % remove small WMHs
-    Ywmh = cat_vol_morph(Ywmh==1, 'l', [50 wmhvols(1)])>0;
-    Ywmh = cat_vol_morph(Ywmh   , 'l', [50 wmhvols(2)])>0;
+    Ywmh = cat_vol_morph(Ywmh==1, 'l', [inf wmhvols(1)])>0;
+    Ywmh = cat_vol_morph(Ywmh   , 'l', [inf wmhvols(2)])>0;
 
     %% apply to atlas
     Ya1(Ywmh) = LAB.HI;
