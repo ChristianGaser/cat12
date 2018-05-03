@@ -177,9 +177,9 @@ ROI        = cfg_choice;
 ROI.tag    = 'ROImenu';
 ROI.name   = 'ROI analysis';
 if cat_get_defaults('output.ROI')>0
-ROI.val  = {atlases};
+  ROI.val  = {atlases};
 else
-ROI.val  = {noROI};
+  ROI.val  = {noROI};
 end
 ROI.values = {noROI atlases};
 ROI.help   = {

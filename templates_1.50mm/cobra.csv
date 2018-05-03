@@ -1,7 +1,8 @@
 ROIid;ROIabbr;ROIname;ROIbase
 0;BG;Background;Background
-1;rHCA1_2_3_Strat;Right Hippocampus CA1/CA2/Ca3/Subiculum/Stratum;
-4;rHCA4;Right Hippocampus CA4/Dentate Gyrus;
+1;lStriatum;Left Striatum;
+2;lGloPal;Left Globus Pallidus; 
+3;lTha;Left Thalamus 
 11;lAntCerebLI_II;Left Anterior Cerebellar Lobule I-II;
 12;lAntCerebLIII;Left Anterior Cerebellar Lobule III;
 13;lAntCerebLIV;Left Anterior Cerebellar Lobule IV;
@@ -16,8 +17,18 @@ ROIid;ROIabbr;ROIname;ROIbase
 22;lInfPostCerebLX;Left Inferior Posterior Cerebellar Lobule X;
 23;lAntCerebWM;Left Cerebellar White Matter;
 26;lAmy;Left Amygdala;
-101;lHCA1_2_3_Strat;Left Hippocampus CA1/CA2/Ca3/Subiculum/Stratum;
-104;lHCA4;Left Hippocampus CA4/Dentate Gyrus;
+31;lHCA1;Left Hippocampus CA1;
+32;lSub;Left Subiculum
+33;lFor;Left Fornix
+34;lCA4;Left CA4/Dentate Gyrus
+35;lCA2_3;Left CA2/CA3
+36;lStratum,Left Stratum Radiatum/Lacunosum/Moleculare
+37;lFimbra;Left Fimbria
+38;lMamBody;Left Mammillary body
+39;lAlveus;Left Alveus
+101;rStriatum;Right Striatum;
+102;rGloPal;Right Globus Pallidus; 
+103;rTha;Right Thalamus 
 111;rAntCerebLI_II;Right Anterior Cerebellar Lobule I-II;
 112;rAntCerebLIII;Right Anterior Cerebellar Lobule III;
 113;rAntCerebLIV;Right Anterior Cerebellar Lobule IV;
@@ -32,3 +43,12 @@ ROIid;ROIabbr;ROIname;ROIbase
 122;rInfPostCerebLX;Right Inferior Posterior Cerebellar Lobule X;
 123;rAntCerebWM;Right Cerebellar White Matter;
 126;rAmy;Right Amygdala;
+131;rHCA1;Right Hippocampus CA1;
+132;rSub;Right Subiculum
+133;rFor;Right Fornix
+134;rCA4;Right CA4/Dentate Gyrus
+135;rCA2_3;Right CA2/CA3
+136;rStratum,Right Stratum Radiatum/Lacunosum/Moleculare
+137;rFimbra;Right Fimbria
+138;rMamBody;Right Mammillary body
+139;rAlveus;Right Alveus
