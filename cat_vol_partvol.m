@@ -1,4 +1,4 @@
-function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,noise)
+function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,noise,job)
 % ______________________________________________________________________
 % Use a segment map Ycls, the global intensity normalized T1 map Ym and 
 % the atlas label map YA to create a individual label map Ya1. 
@@ -124,7 +124,7 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
   Yp0A = reshape(Yp0A,size(Ym)); 
   
   %% WMH atlas
-  watlas = 1; 
+  watlas = 3; 
   switch watlas
     case 1, PwmhA = strrep(PA{1},'cat.nii','cat_wmh_soft.nii');
     case 2, PwmhA = strrep(PA{1},'cat.nii','cat_wmh.nii');
@@ -143,6 +143,23 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
   end
   clear Yy2; 
 
+  if exist('job','var') && isfield(job,'data_wmh') && ~isempty(job.data_wmh)
+    stime = cat_io_cmd('  FLAIR corregistration','g5','',verb,stime); dispc=dispc+1;
+    
+    % coreg
+    Vflair = spm_vol(job.data_wmh{job.subj}); 
+    Vm     = spm_vol(job.data{job.subj}); 
+    evalc('R = spm_coreg(Vm,Vflair,struct(''graphics'',0));'); 
+    R      = spm_matrix(R);  %#ok<NODEF>
+    
+    %% load
+    for i=1:Vm.dim(3)
+      Yflair(:,:,i) = single( spm_slice_vol(Vflair, R \ Vflair.mat \ Vm.mat  * spm_matrix([0 0 i]) ,Vm.dim(1:2),[1,NaN])); 
+    end    
+
+    
+  end
+  
   %%
   if ~debug; clear Yy; end
   
@@ -151,18 +168,24 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
   % work on average resolution
   Ym0 = Ym; 
   % remove background
-  [Ym,BB] = cat_vol_resize(Ym    ,'reduceBrain',vx_vol,2,Yb);
-  YA      = cat_vol_resize(YA    ,'reduceBrain',vx_vol,2,Yb);
-  Yp0     = cat_vol_resize(Yp0   ,'reduceBrain',vx_vol,2,Yb);
-  Yp0A    = cat_vol_resize(Yp0A  ,'reduceBrain',vx_vol,2,Yb);
-  YwmhA   = cat_vol_resize(YwmhA ,'reduceBrain',vx_vol,2,Yb);
-  Yb      = cat_vol_resize(Yb    ,'reduceBrain',vx_vol,2,Yb);
+  [Ym,BB]  = cat_vol_resize(Ym      ,'reduceBrain',vx_vol,2,Yb);
+  YA       = cat_vol_resize(YA      ,'reduceBrain',vx_vol,2,Yb);
+  Yp0      = cat_vol_resize(Yp0     ,'reduceBrain',vx_vol,2,Yb);
+  Yp0A     = cat_vol_resize(Yp0A    ,'reduceBrain',vx_vol,2,Yb);
+  YwmhA    = cat_vol_resize(YwmhA   ,'reduceBrain',vx_vol,2,Yb);
+  if exist('Yflair','var')
+    Yflair = cat_vol_resize(Yflair  ,'reduceBrain',vx_vol,2,Yb);
+  end
+  Yb       = cat_vol_resize(Yb      ,'reduceBrain',vx_vol,2,Yb);
   % use lower resolution 
   [Ym,resTr] = cat_vol_resize(Ym    ,'reduceV',vx_vol,vx_res,64);
   YA         = cat_vol_resize(YA    ,'reduceV',vx_vol,vx_res,64,'nearest'); 
   Yp0        = cat_vol_resize(Yp0   ,'reduceV',vx_vol,vx_res,64);
   Yp0A       = cat_vol_resize(Yp0A  ,'reduceV',vx_vol,vx_res,64);
   YwmhA      = cat_vol_resize(YwmhA ,'reduceV',vx_vol,vx_res,64); 
+  if exist('Yflair','var')
+    Yflair   = cat_vol_resize(Yflair,'reduceV',vx_vol,vx_res,64); 
+  end    
   Yb         = cat_vol_resize(Yb    ,'reduceV',vx_vol,vx_res,64);
   vx_vol     = resTr.vx_volr; 
   
@@ -311,35 +334,69 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
                   [0.1 200] - [0.08 100] .* (1 - WMHCstr)));               % WMH volume thresholds
     mth     = max([1.1 + min(0.3 , noise) , 2.6 ] , ...
               min([1.4                    , max(2.7 , 2.8 - noise)], ...
-                  [1.4 2.7] + [-0.2 0.2] .* WMHCstr));                     % tissue thresholds
+                  [1.4 2.8] + [-0.2 0.2] .* WMHCstr));                     % tissue thresholds
     ath     = max(2.0,min(2.8,2.85 - 0.1 * WMHCstr));                      % tissue probability threshold
-    vtd     = max(4,min(12,6 + 4 * WMHCstr));                              % ventricle distance threshold
+    vtd     = max(4,min(12,4 + 4 * WMHCstr));                              % ventricle distance threshold
 
     stime   = cat_io_cmd(sprintf('  WMH detection (WMHCstr=%0.02f > WMHCstr''=%0.02f)',...
               extopts.WMHCstr,WMHCstr),'g5','',verb,stime); dispc=dispc+1;
 
     YBG2 = cat_vol_morph(Ya1==LAB.BG,'d',1); 
 
+    Ywmhp = min(2,single(1.5 - 0.5*(Yp0<1.5) +  0.5*(Yp0>2.5) + (Ya1==LAB.BG | Ya1==LAB.TH | Ya1==LAB.VT)));
+    Ywmhp = cat_vol_laplace3R(Ywmhp, Ywmhp==1.5, 0.01); 
+    
     % set pre WMHs
     Ywmh = smooth3( cat_vol_morph(Yvt,'dd',vtd,vx_vol) & ~YBG2 & Yp0A>ath & ...
-                    YA==LAB.CT & YwmhA>(0.8 - WMHCstr*0.8) & Ym>mth(1) & Ym<mth(2) )>0.5 ;
-    Ywmh(cat_vol_morph(Yvt,'dd',vtd*2,vx_vol) & Yp0A>ath & YwmhA>(0.8 - WMHCstr*0.8) & Ym>mth(1) & Ym<mth(2) & ~Yvt & ~YBG2 &  YA==LAB.CT) = 1;
+                    Ya1==LAB.CT & YwmhA>(0.8 - WMHCstr*0.8) & Ym>mth(1) & Ym<mth(2) )>0.5 ;
+    Ywmh(cat_vol_morph(Yvt,'dd',vtd*1.5,vx_vol) & Ywmhp>1.8 & Yp0A>ath & YwmhA>(0.8 - WMHCstr*0.8) & Ym>mth(1) & Ym<mth(2) & ~Yvt & ~YBG2 &  YA==LAB.CT) = 1;
+    Ywmh(Ywmhp>1.9 & Ym<min(2.9,mth(2)+0.1) & Ym>2 & cat_vol_morph(Yp0>2.5,'e')) = 1;
     % rwmhvol = sum(Ywmh(:)==1) ./ sum(Yp0(:)>2.5 & Ym(:)>2.5); % ... not yet ... 
     Ywmh = cat_vol_morph(Ywmh,'l',[inf wmhvols(1)/2])>0;
     Ywmh = cat_vol_morph(Ywmh,'l',[inf wmhvols(2)/2])>0;
     % set no-go area
     Ywmh = single(Ywmh); 
-    Ywmh((Ywmh==0 & Ym>2.5) | YBG2 | YA==LAB.BG | Ya1==LAB.TH | YA==LAB.TH | YA==LAB.PH) = nan;
+    Ywmh((Ywmh==0 & Ym>2.5) | YBG2 | Ya1==LAB.BG | Ya1==LAB.TH | Ya1==LAB.TH | Ya1==LAB.PH) = nan;
     % set non-WMH
     Ywmh(cat_vol_morph(Ya1==LAB.HC,'dd',5) & Ywmh==0) = 2; 
     Ywmh( cat_vol_morph( ( (Yvt2>1.99 & Yvt2<2.05) | (Ywmh==0 & Ym<1.5) ) & ...
          ~cat_vol_morph(Yvt,'dd',10) , 'l',[20 100])>0 ) = 2;
-    Ywmh(Ya1==LAB.VT) = 2; 
-
+    Ywmh(cat_vol_morph(Ya1==LAB.VT,'e',2)) = 2; 
+    Ywmh(Ywmhp<1.5 & ~cat_vol_morph(Yvt,'dd',vtd*1.5,vx_vol) & Yp0<1.6 & Ym<1.6) = 2; 
+    
     % remove small dots
     Ywmh(Ywmh==2 & smooth3(Ywmh==2)<0.1 + WMHCstr/2) = 0;
     Ywmh(Ywmh==1 & smooth3(Ywmh==1)<0.1 + WMHCstr/2) = 0;
+    
+    %%
+    if exist('Yflair','var')
+      Yp0toC  = @(Yp0,c) 1-min(1,abs(Yp0-c));
+      
+      % FLAIR tissue thresholds
+      T3thf = [cat_stat_nanmean( Yflair( Yp0toC(Yp0,1)>0.5 )), ...
+               cat_stat_nanmean( Yflair( Yp0toC(Yp0,2)>0.5 )), ...
+               cat_stat_nanmean( Yflair( Yp0toC(Yp0,3)>0.5 ))]; 
+      Tstd   = cat_stat_nanstd( Yflair(Yflair(:)>T3thf(1) & Yflair(:)<max(T3thf(2:3))) ); 
+      
+      % FLAIR bias corrections
+      Yi     = Yflair > cat_stat_nanmean(T3thf(2:3)) - Tstd*2 & ...
+               Yflair < cat_stat_nanmean(T3thf(2:3)) + Tstd*2 & ...
+               (Yflair/T3thf(3)./(Ym/3))<2 & Yp0>1.5; 
+      Yi     = Yflair .* Yi;        
+      for i=1:2, Yi = cat_vol_localstat(Yi,Yi>0,1,1); end
+      Yi     = cat_vol_approx(Yi,'nh',vx_vol,4);
+      Yt = cat_vol_smooth3X(YS==0,6)<0.9 & cat_vol_smooth3X(YS==1,6)<0.9 & Yp0>0;
 
+      % create FLAIR mask
+      Yflairl = Yflair./Yi > 1.3-(0.1*WMHCstr) & Ym>0.5 & Ym<2.8 & Yp0A>2.3 & YwmhA>eps & ~Yt & ...
+                cat_vol_morph(Ya1~=LAB.TH & Ya1~=LAB.BG & Ya1~=LAB.HC,'d',1);
+      if ~debug, clear Yt Yi; end
+      Yflairl = cat_vol_morph(Yflairl,'l',[inf (4 - WMHCstr)^3])>0;
+      
+      % add FLAIR mask
+      Ywmh(Yflairl & Ywmh<2) = 1; 
+    end
+    
     % region-growing / bottleneck
     %Ywmh = cat_vol_downcut(Ywmh, 1+(3-Ym)/3, WMHCstr/2, vx_vol); 
     Ywmh(Ywmh==0) = 1.5; 

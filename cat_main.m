@@ -836,7 +836,7 @@ if ~isfield(res,'spmpp')
   %  ---------------------------------------------------------------------
   NS = @(Ys,s) Ys==s | Ys==s+1; 
   stime = cat_io_cmd('ROI segmentation (partitioning)');
-  [Yl1,Ycls,YBG,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise);
+  [Yl1,Ycls,YBG,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job);
   if exist('Yclsi','var'), Ycls = Yclsi; clear Yclsi; end % new Ycls from LAS
   fprintf('%5.0fs\n',etime(clock,stime));
 

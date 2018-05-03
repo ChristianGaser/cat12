@@ -213,9 +213,9 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
           end
           for ni=2:min(lim,min(numel(num),nn(1)))
             if nn(2)>0 && nn(2)<1 && num(ni)/snum>nn(2) % relative
-              vol(ROI==numi(ni)) = numi(ni);	
+              vol(ROI==numi(ni)) = ni; %numi(ni);	
             elseif (nn(2)<0 || nn(2)>1) && num(ni)>abs(nn(2)) % absolute
-              vol(ROI==numi(ni)) = numi(ni);	
+              vol(ROI==numi(ni)) = ni; %numi(ni);	
             end
           end
         end

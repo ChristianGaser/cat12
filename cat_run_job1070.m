@@ -670,6 +670,7 @@ function cat_run_job1070(job,tpm,subj)
     res.stime  = stime;
     res.catlog = catlog; 
     res.image0 = spm_vol(job.channel(1).vols0{subj}); 
+    job.subj = subj; 
     cat_main(res,obj.tpm,job);
     
     % delete denoised/interpolated image
