@@ -90,8 +90,8 @@
           <h4 id="AMAP">AMAP Segmentation</h4>
           <p>
             The segmentation approach is based on an Adaptive Maximum A Posterior (AMAP) technique without the need for a priori information on the tissue probabilities. 
-            This means that the Tissue Probability Maps (TPM) are not constantly used in the sense of the classical Unified Segmentation approach  <a href="matlab:web('http://dx.doi.org/10.1016/j.neuroimage.2005.02.018','-browser');">(Ashburner et al. 2005)</a>, but only for spatial normalization, initial skull-stripping, and as initial segmentation estimate. The following AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modelled as slowly varying spatial functions  <a href="matlab:web('http://dx.doi.org/10.1109/42.563663','-browser');">(Rajapakse et al. 1997)</a>.  
-            This accounts not only for intensity inhomogeneities, but also to other local intensity variations.
+            This means that the Tissue Probability Maps (TPM) are not constantly used in the sense of the classical Unified Segmentation approach  <a href="matlab:web('http://dx.doi.org/10.1016/j.neuroimage.2005.02.018','-browser');">(Ashburner et al. 2005)</a>, but only for spatial normalization, initial skull-stripping, and as initial segmentation estimate. The subsequent AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modelled as slowly varying spatial functions  <a href="matlab:web('http://dx.doi.org/10.1109/42.563663','-browser');">(Rajapakse et al. 1997)</a>.  
+            This accounts not only for intensity inhomogeneities, but also for other local intensity variations.
           </p>
         </li>
         

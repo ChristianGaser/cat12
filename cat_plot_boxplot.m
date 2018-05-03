@@ -31,7 +31,7 @@ function [out,s] = cat_plot_boxplot(data,opt)
 %  opt.median      = 2;             % show median: 0 - no; 1 - line; 2 - with different fill colors 
 %  opt.edgecolor   = 'none';        % edge color of box 
 %  opt.trans       = 0.25;          % transparency of the box
-%  opt.sat         = 0.50;          % satuation of the box
+%  opt.sat         = 0.50;          % saturation of the box
 %
 % The box plot is a graphical display that simultaneously describes several 
 % important features of a data set, such as center, spread, departure from 
