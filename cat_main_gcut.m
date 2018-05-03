@@ -49,7 +49,7 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   
   def.uhrlim = 0.7; 
   opt = cat_io_checkinopt(opt,def); 
-  
+  opt.gcutstr = min(1,opt.gcutstr); 
   
   % general resolution limitation 
   if nargout>1, Yl1o = Yl1; end

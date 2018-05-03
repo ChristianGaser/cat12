@@ -201,21 +201,23 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
         [num,numi] = sort(num,'descend');
         vol        = ROI==numi(1);	
         
-        if exist('n','var') && n(1)>1
+        if exist('n','var') && nn(1)>1
           vol = single(vol); classVol = 'single'; 
           
-          if numel(n)==1, n(2)=0; end
-          for ni=2:min(numel(num),n(1))
-            if n(2)<1
-              if (n(2)<0 && num(ni)>(-n(2))) || ... % absolute vs. 
-                 (n(2)>0 && num(ni)/num(1)>(n(2)))  % relative
-                vol(ROI==numi(ni)) = numi(ni);	
-              end
-            elseif n(2)>1 && num(ni)>(n(2)) % absolute
-               vol(ROI==numi(ni)) = numi(ni);	
+          if numel(nn)==1, nn(2)=0; end
+          snum = sum(num); 
+          if nn(2)>0 && nn(2)<1
+            lim = find(num/snum>nn(2),1,'last'); 
+          else
+            lim = find(abs(num)>nn(2),1,'last'); 
+          end
+          for ni=2:min(lim,min(numel(num),nn(1)))
+            if nn(2)>0 && nn(2)<1 && num(ni)/snum>nn(2) % relative
+              vol(ROI==numi(ni)) = numi(ni);	
+            elseif (nn(2)<0 || nn(2)>1) && num(ni)>abs(nn(2)) % absolute
+              vol(ROI==numi(ni)) = numi(ni);	
             end
           end
-          
         end
       end
     
