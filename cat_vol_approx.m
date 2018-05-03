@@ -35,6 +35,7 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
 %
 % $Id$
 
+  if nargin==0, help cat_vol_approx; return; end
   if ~exist('res','var'); res=4; end
   if ~exist('vx_vol','var'); vx_vol=ones(1,3); end
   if ~exist('method','var'); method='nn'; end

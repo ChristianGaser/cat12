@@ -61,6 +61,17 @@ data.help     = {
   'Select highres raw data (e.g. T1 images) for segmentation. This assumes that there is one scan for each subject. Note that multi-spectral (when there are two or more registered images of different contrasts) processing is not implemented for this method.'};
 data.preview  = @(f) spm_check_registration(char(f));
 
+data_wmh          = cfg_files;
+data_wmh.tag      = 'data_wmh';
+data_wmh.name     = 'Additional FLAIR Volumes';
+data_wmh.filter   = 'image';
+data_wmh.ufilter  = '.*';
+data_wmh.num      = [0 Inf];
+data_wmh.help     = {
+  'Select highres FLAIR data for segmentation. This assumes that there is one scan for each T1 scan.'
+  'WARNING: WMH segmentation (with/without FLAIR) is in development!'};
+data_wmh.preview  = @(f) spm_check_registration(char(f));
+
 data_spm          = cfg_files;
 data_spm.tag      = 'data';
 data_spm.name     = 'Segmentations in native space';
@@ -528,7 +539,11 @@ estwrite.tag    = 'estwrite';
 estwrite.name   = 'CAT12: Segmentation';
 % use multithreading only if availabe
 if feature('numcores') > 1
-  estwrite.val    = {data nproc opts extopts output};
+  if expert>1
+    estwrite.val    = {data data_wmh nproc opts extopts output};
+  else
+    estwrite.val    = {data nproc opts extopts output}; 
+  end
 else
   estwrite.val    = {data opts extopts output};
 end
