@@ -1512,6 +1512,7 @@ if exist('FA','var')
     FA = FA(VAi,:); VA = VA(VAi,:); VAvx_vol = VAvx_vol(VAi,:); %clear VA; 
   end
 end
+
 %% write atlas output
 if any(cell2mat(struct2cell(job.output.atlas)'))
   for ai=1:size(FA,1)

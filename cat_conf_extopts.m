@@ -341,7 +341,7 @@ resbest.help   = {
 resfixed        = cfg_entry;
 resfixed.tag    = 'fixed';
 resfixed.name   = 'Fixed resolution';
-resfixed.def    = @(val)cat_get_defaults('extopts.resval', val{:});
+resfixed.val    = {[1.0 0.1]};
 resfixed.num    = [1 2];
 resfixed.help   = {
     'This options prefers an isotropic voxel size that is controlled by the first parameters.  '
@@ -366,7 +366,11 @@ switch cat_get_defaults('extopts.restype')
   case 'best',   restype.val = {resbest};
   case 'fixed',  restype.val = {resfixed};
 end
-restype.values = {resnative resbest resfixed};
+if ~expert
+  restype.values = {resbest resfixed};
+else
+  restype.values = {resnative resbest resfixed};
+end
 restype.help   = {
     'There are 3 major ways to control the internal spatial resolution ''native'', ''best'', and ''fixed''. In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). The minimum spatial resolution is 0.5mm. '
     ''
@@ -672,7 +676,7 @@ if ~spm
   if expert>0 % experimental expert options
     extopts.val   = {segmentation,registration,vox,surface,admin}; 
   else
-    extopts.val   = {app,LASstr,gcutstr,registration,vox}; 
+    extopts.val   = {app,LASstr,gcutstr,registration,vox,restype}; 
   end
 else
   % SPM based surface processing and thickness estimation

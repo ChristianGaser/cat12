@@ -1,7 +1,7 @@
 Cobra atlas:
 --------------------------------------------------------------------------------
 
-The Cobra atlas is build from 3 atlases that are provided by the Computational Brain Anatomy Laboratory at the Douglas Institute (CoBra Lab). The 3 atlases are based on high-resolution (0.3mm isotropic voxel size) images of the amygdala, hippocampus and the cerebellum. Some of the hippocampus subfields were merged because of their small size (CA1/CA2/CA3/stratum radiatum/subiculum/stratum lacunosum/stratum moleculare). Please note that the original labels were changed in order to allow a combined atlas.
+The Cobra atlas is build from 4 atlases that are provided by the Computational Brain Anatomy Laboratory at the Douglas Institute (CoBra Lab). The 4 atlases are based on high-resolution (0.3mm isotropic voxel size) images of the amygdala, hippocampus, subcortical structures and the cerebellum. Please note that the original labels were changed in order to allow a combined atlas.
 
 High-resolution in vivo atlases of the amygdala
 =================================================
@@ -29,28 +29,48 @@ Labels
 Label: 26  - left amygdala
 Label: 126 - right amygdala
 
-Whole Hippocampus Atlas
-=======================
+Extra-Hippocampal White Matter Atlas + Hippocampal Subfields
+=====================================================================
 
-These atlases, and the manual segmentation protocol used to produce them are described in: 
+These images, atlases, the corresponding manual segmentation protocol, as well as 
+their validation for use in the MAGeT Brain automatic segmentation pipeline are 
+fully described in:
 
-    Winterburn JL, Pruessner JC, Chavez S, et al. A novel in vivo atlas of
-    human hippocampal subfields using high-resolution 3 T magnetic resonance
-    imaging.  Neuroimage. 2013;74:254-65.
+    Amaral, R.S.C., Park, M.T.M., Devenyi, G.A., Pruessner, J.C., Pipitone, J., 
+    Winterburn, J., Chavez, S., Schira, M., Lobaugh, N., Voineskos, A.N., 
+    Chakravarty, M.M, and Alzheimer's Disease Neuroimaging Initiative (2016). 
+    Manual segmentation of the fornix, fimbria, and alveus on high-resolution 
+    3T MRI: Application via fully-automated mapping of the human memory circuit 
+    white and grey matter in healthy and pathological aging. NeuroImage. 
+    (doi:10.1016/j.neuroimage.2016.10.027)
 
 To obtain the subject T1 and T2 images for these labels, or for more
 information, please visit: 
 
-  http://cobralab.ca/atlases/hippocampus-subfields
+http://cobralab.ca/atlases/Hippocampus-whitematter/
 
 
 Labels 
 ------
 
-Label: 1   - right CA1/CA2/CA3/stratum radiatum/subiculum/stratum lacunosum/stratum moleculare
-Label: 4   - right CA4/dentate gyrus
-Label: 101 - left CA1/CA2/CA3/stratum radiatum/subiculum/stratum lacunosum/stratum moleculare
-Label: 104 - left CA4/dentate gyrus
+Label: 31  - left CA1
+Label: 32  - left subiculum
+Label: 33  - left fornix
+Label: 34  - left CA4/dentate gyrus
+Label: 35  - left CA2/CA3
+Label: 36  - left stratum radiatum/stratum lacunosum/stratum moleculare
+Label: 37  - left fimbria
+Label: 38  - left mammillary body
+Label: 39  - left alveus
+Label: 131 - right CA1
+Label: 132 - right subiculum
+Label: 133 - right fornix
+Label: 134 - right CA4/dentate gyrus
+Label: 135 - right CA2/CA3
+Label: 136 - right stratum radiatum/stratum lacunosum/stratum moleculare
+Label: 137 - right fimbria
+Label: 138 - right mammillary body
+Label: 139 - right alveus
 
 High-resolution in vivo atlases of the cerebellum
 =================================================
@@ -97,6 +117,24 @@ Label: 120 - right VIIIB
 Label: 121 - right IX
 Label: 122 - right X
 Label: 123 - right CM
+
+Subcortical Atlases of the striatum, globus pallidus and thalamus
+===================================================================
+
+When using these atlases, please cite:
+
+    Tullo,S., Devenyi, G.A., Patel, R., Park, M.T.M., Collins, D.L. & 
+    Chakravarty, M.M. (In submission). Warping an atlas derived from 
+    serial histology to 5 high-resolution MRIs. Scientific Data.
+
+Labels
+------
+	1   - left striatum 
+	2   - left globus pallidus 
+	3   - left thalamus 
+	101 - right striatum 
+	102 - right globus pallidus 
+	103 - right thalamus
 
 --------------------------------------------------------------------------------
 $Id$
