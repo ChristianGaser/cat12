@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1314 | dahnke | 2018-05-03 11:33:58
+r1316 | dahnke | 2018-05-03 18:31:41
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+M       cat_vol_approx.m
+M       cat_vol_morph.m
+M       cat_vol_partvol.m
+M       tbx_cfg_cat.m
+ M      templates_1.50mm/cat_wmh.nii
+A       templates_1.50mm/cat_wmh_miccai2017.nii
+
+New:        Added additional developer-GUI entry for FLAIR input
+            images for WMH segmentation.
+            
+------------------------------------------------------------------------
+r1315 | dahnke | 2018-05-03 11:34:57 +0200 (Do, 03 Mai 2018) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +31,7 @@ Changed:        Updated WMH segmentation for new atlas maps.
 Changed:        Updated cat_wmh atlas. 
 New:            Added MICCAI2017 WMH atlas. 
 Fixed:          Corrected bug in cat_main_gcut. 
+
 
 
 ------------------------------------------------------------------------
