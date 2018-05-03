@@ -286,7 +286,7 @@ if ~isfield(res,'spmpp')
     Yb   = smooth3(Yb)>0.5; 
     Yg   = cat_vol_resize(Yg   ,'dereduceBrain',BB);
     Ydiv = cat_vol_resize(Ydiv ,'dereduceBrain',BB);
-  elseif job.extopts.gcutstr==0
+  elseif job.extopts.gcutstr==0 || job.extopts.gcutstr==2 || job.extopts.gcutstr==3
     % brain mask
     Ym  = single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255;
     Yb   = (Ym > 0.5);
@@ -693,7 +693,7 @@ if ~isfield(res,'spmpp')
   if ~debug, Yy = Yy2; end 
     
   %%
-  if job.extopts.gcutstr==2 
+  if job.extopts.gcutstr==2 || job.extopts.gcutstr==3
     %% Update brain mask
     stime = cat_io_cmd(sprintf('SPM+ Skull-Stripping'),'','',job.extopts.verb,stime); 
     
@@ -755,10 +755,8 @@ if ~isfield(res,'spmpp')
     for ci=1:numel(Ycls), Yclss = Yclss + Ycls{ci}; end
     for ci=1:numel(Ycls), Yclss = cat_vol_ctype(single(Ycls{ci}) ./ single(Yclss) * 255); end
     if ~debug, clear Yclss; end
-    
-    fprintf('%5.0fs\n',etime(clock,stime));  
   end
-  
+  fprintf('%5.0fs\n',etime(clock,stime));   
   
   
 
@@ -1108,11 +1106,11 @@ if ~isfield(res,'spmpp')
     Ywmh = Ywmh .* (1-Ymi)*3.1; clear Yp0; 
     % only the peaks WMHs
     Ywmh2 = nan(size(Ywmh),'single'); Ywmh2(Ywmh>0)=0; 
-    Ywmh2(smooth3(Ywmh>0.5 & Ymi>0.5 & ~cat_vol_morph(NS(Yl1,LAB.VT),'d',2))>0.5)=1; 
+    Ywmh2(smooth3(Ywmh>0.5 & Ymi>0.5 & ~cat_vol_morph(NS(Yl1,LAB.VT),'dd',1.4) & Ymi>1.25/3)>0.5)=1; 
     Ywmh2 = cat_vol_downcut(Ywmh2,Ywmh,-0.01);
     Ywmh2(smooth3(Ywmh2)<0.5)=0;
     %
-    Ywmh = single(max(0,min(1,Ywmh.*Ywmh2 - smooth3(cat_vol_morph(NS(Yl1,LAB.VT),'d',2) & Ymi<0.66) ))*255);
+    Ywmh = single(max(0,min(1,Ywmh.*Ywmh2 - smooth3(cat_vol_morph(NS(Yl1,LAB.VT),'dd',1.4) & Ymi<0.5) ))*255);
 
     %% WMH as separate class 
     Yclso = Ycls;
