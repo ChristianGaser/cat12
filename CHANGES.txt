@@ -1,5 +1,29 @@
 ------------------------------------------------------------------------
-r1316 | dahnke | 2018-05-03 18:31:41
+r1317 | gaser | 2018-05-09 12:32:20
+
+Changed paths:
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       cat_install_atlases.m
+M       cat_main.m
+M       cat_roi_fun.m
+M       cat_stat_analyze_ROIs.m
+M       cat_vol_atlas.m
+M       html/cat.html
+D       templates_1.50mm/labels_dartel_aal.xml
+D       templates_1.50mm/labels_dartel_cobra.xml
+D       templates_1.50mm/labels_dartel_hammers.xml
+D       templates_1.50mm/labels_dartel_ibsr.xml
+D       templates_1.50mm/labels_dartel_lpba40.xml
+D       templates_1.50mm/labels_dartel_mori.xml
+D       templates_1.50mm/labels_dartel_neuromorphometrics.xml
+
+(1) Removed: Removed old ROI-xml files that are now converted from csv
+    using cat_install_atlases.m
+(2) Changed: Implemented conversion from CSV to xml in cat_install_atlases.m
+------------------------------------------------------------------------
+r1316 | dahnke | 2018-05-03 18:32:07 +0200 (Do, 03 Mai 2018) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -16,6 +40,7 @@ A       templates_1.50mm/cat_wmh_miccai2017.nii
 New:        Added additional developer-GUI entry for FLAIR input
             images for WMH segmentation.
             
+
 ------------------------------------------------------------------------
 r1315 | dahnke | 2018-05-03 11:34:57 +0200 (Do, 03 Mai 2018) | 15 lines
 

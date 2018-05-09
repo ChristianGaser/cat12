@@ -6,6 +6,7 @@ function varargout = cat_roi_fun(action,varargin)
 %
 %
 %  Actions:
+%   * exportSample  - estimate mean values inside ROI
 %   * xmlroi2csvtab - convert XML ROI structure to CSV table structure
 %   * csvtab2xmlroi - convert CSV table structure to XML ROI structure
 % 
