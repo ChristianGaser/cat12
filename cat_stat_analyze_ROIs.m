@@ -140,17 +140,10 @@ end
 % xml-reading is here using old style to be compatible to old xml-files and functions
 xml = convert(xmltree(deblank(roi_names{1})));
 
-if isfield(xml,'ROI')
-  % get selected atlas and measure
-  [sel_atlas, measure, atlas] = get_atlas_measure_old(xml, mesh_detected);
-  % get names IDs and values of selected atlas and measure inside ROIs
-  [ROInames ROIids ROIvalues] = get_ROI_measure_old(roi_names, sel_atlas, measure);
-else
-  % get selected atlas and measure
-  [sel_atlas, sel_measure, atlas, measure] = get_atlas_measure(xml);
-  % get names IDs and values of selected atlas and measure inside ROIs
-  [ROInames ROIids ROIvalues] = get_ROI_measure(roi_names, sel_atlas, sel_measure);
-end
+% get selected atlas and measure
+[sel_atlas, sel_measure, atlas, measure] = get_atlas_measure(xml);
+% get names IDs and values of selected atlas and measure inside ROIs
+[ROInames ROIids ROIvalues] = get_ROI_measure(roi_names, sel_atlas, sel_measure);
 
 % get name of contrast
 str_con = deblank(xCon(Ic).name);
@@ -212,64 +205,69 @@ n_structures = size(Y,2);
 % estimate GLM and get p-value
 [p, Beta] = estimate_GLM(Y,X,SPM,Ic);
 
-% divide p-values and names into left and right hemisphere data
-P{1}  = p(1:2:n_structures);
-P{2}  = p(2:2:n_structures);
-N{1}  = ROInames(1:2:n_structures);
-N{2}  = ROInames(2:2:n_structures);
-ID{1} = ROIids(1:2:n_structures);
-ID{2} = ROIids(2:2:n_structures);
-B{1}  = Beta(:,1:2:n_structures);
-B{2}  = Beta(:,2:2:n_structures);
+% use "1" for left, "2" for right hemisphere and "3" for structures in both hemispheres
+hemi_code = zeros(n_structures,1);
 
-% select order according to label names to have left hemipshere always first
-if strcmp(N{1}{1}(:,1),'l') % left hemisphere?
-  order = [1 2];
-else
-  order = [2 1];
+for i=1:n_structures
+  switch ROInames{i}(:,1)
+    case 'l',  hemi_code(i) = 1;
+    case 'r',  hemi_code(i) = 2;
+    case 'b',  hemi_code(i) = 3;
+    otherwise, hemi_code(i) = 4;
+  end
+end
+
+if length(unique(hemi_code)) == 1
+  if unique(hemi_code) == 4
+    warning('ROI names should begin with "l", "r", or "b" to indicate the hemisphere.');
+  end
+end
+
+hemi_str = {'lh','rh','both','unknown'};
+
+n_hemis = max(hemi_code);
+
+% divide p-values and names into left and right hemisphere data
+ind_all = [];
+for i=1:n_hemis
+  hemi_ind{i} = find(hemi_code == i);
+  ind_all = [ind_all; hemi_ind{i}];
 end
 
 % prepare corrections for multiple comparisons
-% corr = {'uncorrected','FDR corrected','Holm-Bonferroni corrected'};
-% corr_short = {'','FDR','Holm'};
-corr = {'uncorrected','FDR corrected'};
+corr = {'uncorrected','FDR corrected for whole brain'};
 corr_short = {'','FDR'};
 n_corr = numel(corr);
 data = cell(size(corr));
 Pcorr = cell(size(corr));
 dataBeta = cell(length(ind_con));
 
-% go through left and right hemisphere with left first
-for i = order
+% uncorrected p-values
+Pcorr{1} = p;
 
-  % left hemisphere?
-  if strcmp(N{i}{1}(:,1),'l')
-    hemi = 'lh';
-  else
-    hemi = 'rh';
+% apply FDR correction
+Pcorr{2} = spm_P_FDR(p);
+
+atlas_loaded = 0;
+
+% go through left and right hemisphere and structures in both hemispheres
+for i = sort(unique(hemi_code))'
+
+  N_sel  = ROInames(hemi_ind{i});
+  ID_sel = ROIids(hemi_ind{i});
+  B_sel  = Beta(:,hemi_ind{i});
+
+  for c = 1:n_corr
+    Pcorr_sel{c} = Pcorr{c}(hemi_ind{i});
   end
   
-  % select volume atlas only for the 1st hemisphere
-  if ~mesh_detected & i==order(1)
-    V = spm_vol(fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm',[atlas '.nii']));
-    data0 = round(spm_data_read(V));
-
-    if write_beta
-      for k=1:length(ind_con)
-        dataBeta{k} = zeros(size(data0));
-      end
-    end
-    
-    % create empty output data
-    for c=1:n_corr
-      data{c} = zeros(size(data0));
-    end
-  end
+  % sort p-values for FDR and sorted output
+  [Psort, indP] = sort(p(hemi_ind{i}));
 
   % select surface atlas for each hemisphere
   if mesh_detected
     atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',...
-        [hemi '.' atlas '.freesurfer.annot']);
+        [hemi_str{i} '.' atlas '.freesurfer.annot']);
     [vertices, rdata0, colortable, rcsv0] = cat_io_FreeSurfer('read_annotation',atlas_name);
     data0 = round(rdata0);
 
@@ -283,66 +281,61 @@ for i = order
     for c=1:n_corr
       data{c} = zeros(size(data0));
     end
-  end
+  else
+    % load volume atlas only once
+    if ~atlas_loaded
+      V = spm_vol(fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm',[atlas '.nii']));
+      data0 = round(spm_data_read(V));
+      atlas_loaded = 1;
   
-  % sort p-values for FDR and sorted output
-  [Psort, indP] = sort(P{i});
-
-  % uncorrected p-values
-  Pcorr{1} = P{i};
-  
-  % apply FDR correction
-  Pcorr{2} = spm_P_FDR(P{i});
-
-  % apply Holm-Bonferroni correction: correct lowest P by n, second lowest by n-1...
-  if n_corr > 2
-      n = length(Psort);
-    Pcorr{3} = ones(size(P{i}));
-    for k=1:n
-      Pval = P{i}(indP(k))*(n+1-k);
-      if Pval<alpha
-        Pcorr{3}(indP(k)) = Pval;
-      else
-        % stop here if corrected p-value exceeds alpha
-        break
+      if write_beta
+        for k=1:length(ind_con)
+          dataBeta{k} = zeros(size(data0));
+        end
+      end
+      
+      % create empty output data
+      for c=1:n_corr
+        data{c} = zeros(size(data0));
       end
     end
   end
-  
+    
   output_name = [num2str(100*alpha) '_' str_con '_' atlas '_' measure];
   atlas_name   = [atlas '_' measure];
   
   if write_beta
     for k=1:length(ind_con)
-      for j=1:length(P{i})
-        dataBeta{k}(data0 == ID{i}(j)) = B{i}(ind_con(k),j);
+      for j=1:length(ID_sel)
+      tmp=B_sel(ind_con(k),j);
+        dataBeta{k}(data0 == ID_sel(j)) = B_sel(ind_con(k),j);
       end
     end
   end
   
   % display and save thresholded sorted p-values for each correction
   for c = 1:n_corr
-    ind = find(Pcorr{c}(indP)<alpha);
+    ind = find(Pcorr_sel{c}(indP)<alpha);
     ind_corr{c} = ind;
     if ~isempty(ind)
-      fprintf('\n%s (P<%g, %s):\n',hemi,alpha,corr{c});
+      fprintf('\n%s (P<%g, %s):\n',hemi_str{i},alpha,corr{c});
       fprintf('P-value\t\t%s\n',atlas);
       for j=1:length(ind)
-        data{c}(data0 == ID{i}(indP(ind(j)))) = -log10(Pcorr{c}(indP(ind(j))));
-        fprintf('%9g\t%s\n',Pcorr{c}(indP(ind(j))),N{i}{indP(ind(j))});
+        data{c}(data0 == ID_sel(indP(ind(j)))) = -log10(Pcorr_sel{c}(indP(ind(j))));
+        fprintf('%9g\t%s\n',Pcorr_sel{c}(indP(ind(j))),N_sel{indP(ind(j))});
       end
     end
     
     % write label surface with thresholded p-values
     if mesh_detected
       % save P-alues as float32
-      filename = [hemi '.logP' corr_short{c} output_name '.gii'];
+      filename = [hemi_str{i} '.logP' corr_short{c} output_name '.gii'];
       save(gifti(struct('cdata',data{c})),filename);
       fprintf('\nLabel file with thresholded logP values (%s) saved as %s.',corr{c},filename);
 
       if write_beta
         for k=1:length(ind_con)
-          filename = sprintf('%s.beta%d_%s.gii',hemi,ind_con(k),atlas_name);
+          filename = sprintf('%s.beta%d_%s.gii',hemi_str{i},ind_con(k),atlas_name);
           save(gifti(struct('cdata',dataBeta{k})),filename);
           fprintf('\Beta image saved as %s.',filename);
         end
@@ -405,7 +398,7 @@ if ~mesh_detected
   if show_results
     % display image as overlay
     OV.reference_image = fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152_GS.nii');
-    OV.reference_range = [0.2 1.0];                         % intensity range for reference image
+    OV.reference_range = [0.2 1.0];                        % intensity range for reference image
     OV.opacity = Inf;                                      % transparence value for overlay (<1)
     OV.cmap    = jet;                                      % colormap for overlay
     OV.range   = [-log10(alpha) round(max(data{show_results}(:)))];
@@ -477,14 +470,14 @@ if strcmp(SPM.xCon(Ic).STAT,'F')
 
   yhat = X*Beta;
   F = zeros(n,1);
+
   for i=1:n_structures
     F(i) = (yhat(:,i)'*M*yhat(:,i))*(n-p)/((Y(:,i)'*R*Y(:,i))*p1);
   end
-  F(find(isnan(F))) = 0;
 
+  F(find(isnan(F))) = 0;
   p = 1-spm_Fcdf(F,df);
 else
-
   df   = SPM.xX.erdf;
   pKX = pinv(X);
   trRV = n - rank(X);
@@ -499,7 +492,6 @@ else
   ResSD = sqrt(ResMS.*(c'*Bcov*c));
   t = con./(eps+ResSD);
   t(find(isnan(t))) = 0;
-
   p = 1-spm_Tcdf(t,df);
 end
 
@@ -547,78 +539,6 @@ measure = useful_measures{sel_measure};
 measure = deblank(measure);
 
 %_______________________________________________________________________
-function [sel_atlas, measure, atlas] = get_atlas_measure_old(xml, mesh_detected)
-% get selected atlas and measure of older xml-files (<r1023)
-%
-% FORMAT [sel_atlas, measure] = get_atlas_measure_old(xml);
-% xml    - xml structure
-%
-% sel_atlas    - index of selected atlas
-% measure      - name of selected measure
-% atlas        - name of selected atlas
-
-xml = xml.ROI;
-
-atlases = fieldnames(xml);
-n_atlases = numel(atlases);
-
-% select one atlas
-sel_atlas = spm_input('Select atlas','+1','m',atlases);
-atlas = atlases{sel_atlas};
-
-% measure names to search for
-measure_names = char('Vgm','Vwm','Vcsf','mean_thickness','mean_fractaldimension','mean_amc','mean_gyrification','mean_sqrtsulc');
-n_measure_names = size(measure_names,1);
-
-% get header of selected atlas
-if iscell(xml.(atlas))
-  xml.(atlas) = cell2struct(xml.(atlas));
-end
-
-measures = fieldnames(xml.(atlas));
-
-if ~isfield(xml.(atlas),'tr')
-  n_measures = numel(measures);
-  if ~isfield(xml.(atlas).(measures{1}),'tr')
-    error('Missing mandatory tr-field in XML file.');
-  end
-else n_measures = 1; end
-
-% field name for measure can be "tr" for surfaces
-if strcmp(measures,'tr')
-  hdr = xml.(atlas).tr{1}.td;
-
-  found_measure_names = [];
-  ind_measure_names = [];
-  for k=1:numel(hdr)
-    for l=1:n_measure_names
-      if strcmp(hdr{k},deblank(measure_names(l,:)))
-        found_measure_names = char(found_measure_names,hdr{k});
-        ind_measure_names = [ind_measure_names k];
-      end
-    end
-  end
-  % remove 1st empty entry
-  found_measure_names = found_measure_names(2:end,:);
-else
-  found_measure_names = measures;
-end
-
-% select a measure
-if size(found_measure_names,1) > 1
-  sel_measure = spm_input('Select measure','+1','m',found_measure_names);
-else
-  sel_measure = 1;
-end
-measure = found_measure_names(sel_measure,:);
-
-% for surfaces add prepending "mean_" to field name
-if mesh_detected, measure = ['mean_' measure{1}]; end
-
-% remove spaces
-measure = deblank(measure);
-
-%_______________________________________________________________________
 function [ROInames ROIids ROIvalues] = get_ROI_measure(roi_names, sel_atlas, sel_measure)
 % get names, IDs and values inside ROI for a selected atlas
 %
@@ -628,7 +548,7 @@ function [ROInames ROIids ROIvalues] = get_ROI_measure(roi_names, sel_atlas, sel
 % sel_measure  - index of selected measure
 %
 % ROInames     - array 2*rx1 of ROI names (r - # of ROIs)
-% ROIids       - array 2*rx1 of ROI IDs for left and right hemipshere
+% ROIids       - array 2*rx1 of ROI IDs for left and right hemisphere
 % ROIvalues    - cell nxr of values inside ROI (n - # of data)
 
 n_data = length(roi_names);
@@ -665,86 +585,6 @@ for i=1:n_data
   
   ROIvalues(i,:) = xml.(atlases{sel_atlas}).data.(measures{sel_measure});
 
-  spm_progress_bar('Set',i);  
-end
-spm_progress_bar('Clear');
-
-%_______________________________________________________________________
-function [ROInames ROIids ROIvalues] = get_ROI_measure_old(roi_names, sel_atlas, measure_name)
-% get names, IDs and values inside ROI for a selected atlas (old xml-files)
-%
-% FORMAT [ROInames ROIids ROIvalues] = get_ROI_measure(roi_names, sel_atlas, measure_name);
-% roi_names    - cell of ROI xml files
-% sel_atlas    - index of selected atlas
-% measure_name - name of selected measure
-%
-% ROInames     - array 2*rx1 of ROI names (r - # of ROIs)
-% ROIids       - array 2*rx1 of ROI IDs for left and right hemipshere
-% ROIvalues    - cell nxr of values inside ROI (n - # of data)
-
-n_data = length(roi_names);
-
-spm_progress_bar('Init',n_data,'Load xml-files','subjects completed')
-for i=1:n_data        
-
-  xml = convert(xmltree(deblank(roi_names{i})));
-
-  if ~isfield(xml,'ROI')
-    error('XML file contains no ROI information.');
-  end
-
-  % remove leading catROI*_ part from name
-  [path2, ID] = fileparts(roi_names{i});
-  ind = strfind(ID,'_');
-  ID = ID(ind(1)+1:end);
-
-  atlases = fieldnames(xml.ROI);
-  
-  for j=sel_atlas
-    measures = fieldnames(xml.ROI.(atlases{j}));
-    if ~isfield(xml.ROI.(atlases{j}),'tr')
-      n_measures = numel(measures);
-      if ~isfield(xml.ROI.(atlases{j}).(measures{1}),'tr')
-        error('Missing mandatory tr-field in XML file.');
-      end
-    else n_measures = 1; end
-    
-    for m=1:n_measures
-      
-      try
-        tr = xml.ROI.(atlases{j}).(measures{m}).tr;
-      catch
-        tr = xml.ROI.(atlases{j}).tr;
-      end
-      
-      n_ROIs = numel(tr) - 1; % ignore header
-      hdr = tr{1}.td;
-    
-      for k=1:numel(hdr)
-
-        % check for field with ROI names
-        if strcmp(hdr{k},'ROIappr') || strcmp(hdr{k},'ROIabbr') || strcmp(hdr{k},'lROIname') || strcmp(hdr{k},'rROIname')
-          name_index = k;
-        end
-
-        if strcmp(hdr{k},'ROIid')
-          ROIid_tmp = k;
-        end
-
-        % look for pre-defined ROI measures
-        if strcmp(hdr{k},measure_name)
-        
-          for r=1:n_ROIs
-            ROInames{r}    = char(tr{r+1}.td(name_index));
-            ROIids(r,1)    = str2num(char(tr{r+1}.td(ROIid_tmp)));
-            ROIvalues(i,r) = str2num(char(tr{r+1}.td(k)));
-          end
-          
-        end
-                
-      end
-    end
-  end
   spm_progress_bar('Set',i);  
 end
 spm_progress_bar('Clear');

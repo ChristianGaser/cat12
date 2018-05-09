@@ -1660,7 +1660,7 @@ if (job.output.surface || any( [job.output.ct.native job.output.ct.warped job.ou
   % surface creation and thickness estimation
   if 1
     %% using the Ymi map
-    Ymix = Ymi .* cat_vol_morph(Yp0>1,'d'); %(Yp0>0.5); 
+    Ymix = Ymi .* cat_vol_morph(Yp0>0.5,'d'); 
     if job.extopts.pbtres==99 
     % development block
       smeth = [3 1]; 

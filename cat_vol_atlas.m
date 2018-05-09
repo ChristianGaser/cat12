@@ -82,7 +82,7 @@ function cat_vol_atlas(atlas,refinei)
   if mode, modm='m'; else modm=''; end %#ok<UNRCH>
   
   
-  % refinment of expert label (smoothing)
+  % refinement of expert label (smoothing)
   if strcmpi(atlas,'anatomy')
   % for the anatomy toolbox we got a different input...
   % --------------------------------------------------------------------
@@ -282,6 +282,7 @@ function cat_vol_atlas(atlas,refinei)
     end
   end
 end
+
 function [P,PA,Pcsv,Ps,Ptxt,resdir,refine,Pxml] = mydata(atlas)
 % ----------------------------------------------------------------------
 % This fucntion contains the paths to our atlas maps and the csv files.
@@ -534,6 +535,7 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine,Pxml] = mydata(atlas)
   
   % combination of different atlas maps ...
 end
+
 function call_cat(P)
 % ----------------------------------------------------------------------
 % This function call CAT segmentation to estimate the normalization
@@ -583,6 +585,7 @@ function call_cat(P)
   end
   warning on;
 end
+
 function calldefs(Py,PA,interp,modulate)
 % ----------------------------------------------------------------------
 % This function calls the CAT mapping routine to transfer the subject ROI
@@ -601,6 +604,7 @@ function calldefs(Py,PA,interp,modulate)
   end
   warning on; 
 end
+
 function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel)
 % ----------------------------------------------------------------------
 % create the final probability ROI map as a 4D dataset, the simplyfied 
@@ -914,6 +918,7 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel)
   end  
   
 end
+
 function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel)
 % ----------------------------------------------------------------------
 % create the final probability ROI map as a 4D dataset, the simplyfied 
@@ -1110,6 +1115,7 @@ function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel)
     copyfile(Ptxt{1},fullfile(resdir,[atlas '.txt']));
   end
 end
+
 function csv=translateROI(csv,atlas,nlabel)
 %% ---------------------------------------------------------------------
 %  Translate the string by some key words definied in dict.
@@ -1303,6 +1309,7 @@ function csv=translateROI(csv,atlas,nlabel)
   
   
 end
+
 function dict=ROIdict()
   dict.sides = { 
     'l'              {'Left' '_L'} {'_Lo','_La','_Li'}
@@ -1653,6 +1660,7 @@ function dict=ROIdict()
     'CSF'           {'CSF'} {};
   };
 end
+
 function create_cat_atlas(A,C,LAB)
 %%
 % ToDo:
@@ -1816,6 +1824,7 @@ function create_cat_atlas(A,C,LAB)
   end
   
 end
+
 function create_spm_atlas_xml(fname,csv,csvx,opt)
 % create an spm12 compatible xml version of the csv data
   if ~exist('opt','var'), opt = struct(); end
@@ -1826,7 +1835,7 @@ function create_spm_atlas_xml(fname,csv,csvx,opt)
   def.desc   = '';
   def.url    = '';
   def.lic    = 'CC BY-NC';
-  def.cor    = 'MNI'; 
+  def.cor    = 'MNI DARTEL'; 
   def.type   = 'Label';
   def.images = [ff '.nii'];
   
@@ -1881,7 +1890,8 @@ function create_spm_atlas_xml(fname,csv,csvx,opt)
   fprintf(fid,[xml.header,xml.data,xml.footer]);
   fclose(fid);
 end
-% newer maltab functions
+
+% newer matlab functions
 %--------------------------------------------------------------------------
 function [c, matches] = strsplit(str, aDelim, varargin)
 %STRSPLIT  Split string at delimiter
@@ -2005,6 +2015,7 @@ end
 [c, matches] = regexp(str, aDelim, 'split', 'match');
 
 end
+
 function tf = verifyScalarLogical(tf, funcName, parameterName)
 
 if isscalar(tf) && isnumeric(tf) && any(tf == [0, 1])
@@ -2098,9 +2109,11 @@ end
 joinedStr  = [joinedCell{:}];
 
 end
+
 function y=isString(x)
   y = ischar(x);
 end
+
 function y=isCellString(x)
   y = 0; 
   if iscell(x)
@@ -2112,6 +2125,7 @@ function y=isCellString(x)
   end
   y = 1; 
 end
+
 function escapedStr = strescape(str)
 %STRESCAPE  Escape control character sequences in a string.
 %   STRESCAPE(STR) converts the escape sequences in a string to the values
