@@ -1,5 +1,36 @@
 ------------------------------------------------------------------------
-r1318 | gaser | 2018-05-14 12:39:32
+r1319 | dahnke | 2018-05-23 14:09:55
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_main_registration.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+M       cat_tst_calc_kappa.m
+M       cat_vol_grad.m
+M       cat_vol_morph.m
+M       cat_vol_partvol.m
+
+Fixed:      Corrected small bug in cat_run_registration. 
+Fixed:      Added missed variable in cat_run_job and cat_run_job1070.
+Fixed:      Corrected bug in fast Shooting registration (cat_main:678).
+Changed:    Further option in cat_vol_grad. 
+Changed:    Small modifications in cat_tst_calc_kappa.
+Changed:    Small modifications in cat_vol_morph.
+Changed*:   Large modifications of the WMH detection in cat_part_vol.
+            Tested for MICCAI2017 WMH data with/without FLAIR input:
+                CAT     (T1)     DSC 0.5824±0.1705  gtt1 
+                CAT     (T1+FL)  DSC 0.5235±0.2013  gtt1 
+                LST-LGA (T1+FL)  DSC 0.6186±0.1539  gtt1
+                LST-LPA (FL)     DSC 0.6172±0.2003  gto
+            with gtt1 as T1-optimized ground truth with intensity limit
+            and gto as original FLAIR-based ground truth. 
+            
+            
+
+------------------------------------------------------------------------
+r1318 | gaser | 2018-05-14 12:39:58 +0200 (Mo, 14 Mai 2018) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +41,7 @@ M       html/cat.html
 
 Fixed: Removed error in cat_run_job caused by undefined variable (thanks to 
 Larry Lai for pointing to this error).
+
 ------------------------------------------------------------------------
 r1317 | gaser | 2018-05-09 12:32:45 +0200 (Mi, 09 Mai 2018) | 22 lines
 

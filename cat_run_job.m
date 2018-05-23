@@ -364,7 +364,7 @@ function cat_run_job(job,tpm,subj)
                   % of the initial correction .. 
                   % in case of updates, local biasfield strenght is maybe
                   % better (only useful if strong changes are allowed)
-                  if ix==1 
+                  if ix==1 && exist('Yi','var')
                     Vn   = spm_vol(Pmn); Vn = rmfield(Vn,'private'); Yn = spm_read_vols(Vn);
                     bias(ix) = (1/cat_stat_nanstd(Yn(:)./Yi(:))) * 4; 
                     %fprintf('bias=%5.0f mm ',bias(ix)); 
@@ -1145,6 +1145,7 @@ end
     spm_progress_bar('Clear');
     
     %% call main processing
+    res.tpm    = tpm.V;
     res.stime  = stime;
     res.catlog = catlog; 
     res.image0 = spm_vol(job.channel(1).vols0{subj}); 
