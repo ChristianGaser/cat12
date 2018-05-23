@@ -825,7 +825,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
 
 
         % Report
-        if job.extopts.verb>1  && ~dreg.fast
+        if (job.extopts.verb>1  && ~dreg.fast) || export
 
           %% preparte output directory
           if job.extopts.subfolders, mrifolder = 'mri'; else mrifolder = ''; end

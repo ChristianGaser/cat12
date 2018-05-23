@@ -667,6 +667,7 @@ function cat_run_job1070(job,tpm,subj)
     spm_progress_bar('Clear');
             
     %% call main processing
+    res.tpm    = tpm.V;
     res.stime  = stime;
     res.catlog = catlog; 
     res.image0 = spm_vol(job.channel(1).vols0{subj}); 

@@ -257,10 +257,10 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
       vol2(n+1:sz(1)+n,n+1:sz(2)+n,n+1:sz(3)+n) = single(vol);
       if n>5
         
-        nn = nn*1.41; n=round(nn);  
+        %nn = nn*1.41; n=round(nn);  
          
-        vol2 = cat_vbdist(vol2,true(size(vol2)),vx_vol)<nn; 
-        vol2 = cat_vbdist(single(~vol2),vol2>0,vx_vol)>=nn;
+        vol2 = cat_vbdist(vol2,true(size(vol2)),vx_vol)>nn; 
+        vol2 = cat_vbdist(single(vol2>0),vol2==0,vx_vol)>=nn;
       else
         vol2 = cat_vol_morph(vol2,'distdilate',nn,vx_vol); 
         vol2 = cat_vol_morph(vol2,'disterode' ,nn,vx_vol);       

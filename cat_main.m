@@ -675,7 +675,7 @@ if ~isfield(res,'spmpp')
   job2.extopts.regstr   = 15;     % low resolution 
   job2.extopts.reg.nits = 16;     % less iterations
   job2.extopts.verb     = debug;  % do not display process (people would may get confused) 
-  job2.extopts.vox      = abs(res.tpm.V(1).mat(1));  % TPM resolution to replace old Yy  
+  job2.extopts.vox      = abs(res.tpm(1).mat(1));  % TPM resolution to replace old Yy  
   job2.extopts.shootingtpms(3:end) = [];             % remove high templates, we only need low frequency corrections
   res2 = res; 
   res2.do_dartel        = 2;      % use shooting
@@ -1074,7 +1074,7 @@ if ~isfield(res,'spmpp')
   vxv  = 1/max(vx_vol);
 
   Yp0 = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
-  Ywmhrel = NS(Yl1,23);
+  if exist('Ywmh','var'), Ywmhrel = Ywmh; else Ywmhrel = NS(Yl1,23); end
   qa.subjectmeasures.WMH_abs    = sum(Ywmhrel(:));                                            % absolute WMH volume without PVE
   qa.subjectmeasures.WMH_rel    = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(0.5/3*255));   % relative WMH volume to TIV without PVE
   qa.subjectmeasures.WMH_WM_rel = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(2.5/3*255));   % relative WMH volume to WM without PVE
@@ -1085,7 +1085,7 @@ if ~isfield(res,'spmpp')
   Yp0b = Yp0b(indx,indy,indz); 
 
 
-  % correction for normalization [and final segmentation]
+  %% correction for normalization [and final segmentation]
   if job.extopts.WMHC && job.extopts.WMHCstr>0 && ~job.inv_weighting; 
 
     if job.extopts.WMHC==1
@@ -1100,18 +1100,26 @@ if ~isfield(res,'spmpp')
     %  ... code ...
 
     % prepare correction map
-    Ywmh = cat_vol_morph(NS(Yl1,LAB.HI),'d'); 
-    Yp0  = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
-    Ywmh = Ywmh | (cat_vol_morph(Ycls{2}>64 | Yp0>2.25,'e') & cat_vol_morph(Yl1==1 | Yl1==2,'e',2) & Ymi<2.9 & Ymi>2.2); 
-    Ywmh = Ywmh .* (1-Ymi)*3.1; clear Yp0; 
-    % only the peaks WMHs
-    Ywmh2 = nan(size(Ywmh),'single'); Ywmh2(Ywmh>0)=0; 
-    Ywmh2(smooth3(Ywmh>0.5 & Ymi>0.5 & ~cat_vol_morph(NS(Yl1,LAB.VT),'dd',1.4) & Ymi>1.25/3)>0.5)=1; 
-    Ywmh2 = cat_vol_downcut(Ywmh2,Ywmh,-0.01);
-    Ywmh2(smooth3(Ywmh2)<0.5)=0;
-    %
-    Ywmh = single(max(0,min(1,Ywmh.*Ywmh2 - smooth3(cat_vol_morph(NS(Yl1,LAB.VT),'dd',1.4) & Ymi<0.5) ))*255);
-
+      if ~exist('Ywmh','var') 
+        Ywmh = NS(Yl1,LAB.HI); %cat_vol_morph(NS(Yl1,LAB.HI),'dd',1); 
+        Ywmh = min( 1, max( 0, Ywmh .* Yp0toC(Ymi*3,2) )); 
+        Ywmh = single(max(0,min(1,Ywmh*255))); 
+      else
+        Ywmh = single(Ywmh); 
+      end
+     %{
+        %Ywmh = single( NS(Yl1,LAB.HI) * 255 ); 
+        %Yp0  = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
+        %Ywmh = Ywmh | (cat_vol_morph(Ycls{2}>64 | Yp0>2.25,'e') & cat_vol_morph(Yl1==1 | Yl1==2,'e',2) & Ymi<2.9 & Ymi>2.2); 
+        % only the peaks WMHs
+        Ywmh2 = nan(size(Ywmh),'single'); Ywmh2(Ywmh>0)=0; 
+        Ywmh2(smooth3(Ywmh>0.5 & Ymi>0.5 & ~cat_vol_morph(NS(Yl1,LAB.VT),'dd',1.4) & Ymi>1.25/3)>0.5)=1; 
+        Ywmh2 = cat_vol_downcut(Ywmh2,Ywmh,-0.01);
+        Ywmh2(smooth3(Ywmh2)<0.5)=0;
+        %
+      Ywmh = single(max(0,min(1,Ywmh.*Ywmh2 - smooth3(cat_vol_morph(NS(Yl1,LAB.VT),'dd',1.4) & Ymi<0.5) ))*255);
+    %}
+   
     %% WMH as separate class 
     Yclso = Ycls;
     Yclssum = max(eps,single(Ycls{1})+single(Ycls{2})+single(Ycls{3}));
@@ -1119,7 +1127,7 @@ if ~isfield(res,'spmpp')
     Ycls{2} = cat_vol_ctype(single(Ycls{2}) - Ywmh .* (single(Ycls{2})./Yclssum));
     Ycls{3} = cat_vol_ctype(single(Ycls{3}) - Ywmh .* (single(Ycls{3})./Yclssum));
     Ywmh    = cat_vol_ctype(Yclssum - single(Ycls{1}) - single(Ycls{2}) - single(Ycls{3}));
-    clear Yclssum Ywmh2;  
+    %clear Yclssum Ywmh2;  
 
     %% if the segmentation should be corrected later...
     if job.extopts.WMHC>1
