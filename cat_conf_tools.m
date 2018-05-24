@@ -1013,10 +1013,18 @@ bparam.strtype = 'e';
 bparam.num      = [1 1];
 bparam.val      = {1e6};
 
+use_brainmask        = cfg_menu;
+use_brainmask.name   = 'Brainmask';
+use_brainmask.tag    = 'use_brainmask';
+use_brainmask.labels = {'Yes','No'};
+use_brainmask.values = {1,0};
+use_brainmask.val    = {1};
+use_brainmask.help   = {'Use brainmask at last level to obtain better registration by considering brain regions only.'};
+
 realign         = cfg_exbranch;
 realign.tag     = 'series';
 realign.name    = 'Longitudinal Rigid Registration';
-realign.val     = {data bparam};
+realign.val     = {data bparam use_brainmask};
 realign.help    = {'Longitudinal registration of series of anatomical MRI scans for a single subject.  It is based on inverse-consistent alignment among each of the subject''s scans, and incorporates a bias field correction.  Prior to running the registration, the scans should already be in very rough alignment, although because the model incorporates a rigid-body transform, this need not be extremely precise.  Note that there are a bunch of hyper-parameters to be specified.  If you are unsure what values to take, then the defaults should be a reasonable guess of what works.  Note that changes to these hyper-parameters will impact the results obtained.'
 ''
 'The alignment assumes that all scans have similar resolutions and dimensions, and were collected on the same (or very similar) MR scanner using the same pulse sequence.  If these assumption are not correct, then the approach will not work as well.'

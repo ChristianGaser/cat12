@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1319 | dahnke | 2018-05-23 14:09:55
+r1320 | gaser | 2018-05-24 12:08:09
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       cat_long_main.m
+M       cat_vol_groupwise_ls.m
+M       cat_vol_series_align.m
+M       html/cat.html
+
+Changed: Added option to use final brainmask in longitudinal rigid registration.
+
+------------------------------------------------------------------------
+r1319 | dahnke | 2018-05-23 14:11:55 +0200 (Mi, 23 Mai 2018) | 29 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -28,6 +43,7 @@ Changed*:   Large modifications of the WMH detection in cat_part_vol.
             and gto as original FLAIR-based ground truth. 
             
             
+
 
 ------------------------------------------------------------------------
 r1318 | gaser | 2018-05-14 12:39:58 +0200 (Mo, 14 Mai 2018) | 10 lines
