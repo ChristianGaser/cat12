@@ -1,4 +1,4 @@
-function out = cat_vol_groupwise_ls(Nii, output, prec, b_settings, ord)
+function out = cat_vol_groupwise_ls(Nii, output, prec, b_settings, ord, use_brainmask)
 % Groupwise registration via least squares
 % FORMAT out = spm_groupwise_ls(Nii, output, prec, b_settings, ord)
 % Nii    - a nifti object for two or more image volumes.
@@ -10,6 +10,7 @@ function out = cat_vol_groupwise_ls(Nii, output, prec, b_settings, ord)
 % prec       - reciprocal of noise variance on images.
 % b_settings - regularisation settings for nonuniformity field.
 % ord        - degree of B-spline interpolation used for sampling images.
+% use_brainmask - use initial brainmask to obtain better registration
 %
 %_______________________________________________________________________
 % Copyright (C) 2012 Wellcome Trust Centre for Neuroimaging
@@ -19,10 +20,6 @@ function out = cat_vol_groupwise_ls(Nii, output, prec, b_settings, ord)
 % spm_groupwise_ls.m 6008 2014-05-22 12:08:01Z john
 %
 % $Id cat_vol_groupwise_ls.m $
-
-% Use brainmask to obtain better registration
-%-----------------------------------------------------------------------
-use_brainmask = 1;
 
 % Get handles to NIfTI data
 %-----------------------------------------------------------------------
@@ -39,6 +36,7 @@ end
 if nargin<3, prec       = NaN; end
 if nargin<4, b_settings = [0 0 1e6]; end
 if nargin<5, ord        = [3 3 3 0 0 0]; end
+if nargin<6, use_brainmask = 1; end
 
 % If settings are not subject-specific, then generate
 %-----------------------------------------------------------------------

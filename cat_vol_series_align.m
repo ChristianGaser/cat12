@@ -19,16 +19,27 @@ for i=1:N,
     noise(i,1) = spm_noise_estimate(job.data{i});
     fprintf('Estimated noise sd for "%s" = %g\n', job.data{i}, noise(i,1));
 end
-prec   = noise.^(-2);
-
-bparam    = [0 0 job.bparam];
 
 Nii    = nifti(strvcat(job.data));
 
 % always write realigned images and average to disk
 output = [{'wimg'}, {'wavg'}];
 
-dat    = cat_vol_groupwise_ls(Nii, output, prec, bparam);
+prec   = noise.^(-2);
+bparam = [0 0 job.bparam];
+ord    = [3 3 3 0 0 0];
+
+if ~isfield(job,'use_brainmask')
+  use_brainmask = 1;
+else
+  use_brainmask = job.use_brainmask;
+end
+
+if use_brainmask
+  fprintf('Use initial brainmask\n');
+end
+
+dat    = cat_vol_groupwise_ls(Nii, output, prec, bparam, ord, use_brainmask);
 out.avg{1} = dat.avg;
 out.rimg   = dat.rimg;
 

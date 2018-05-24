@@ -523,7 +523,7 @@ function stools = cat_conf_stools(expert)
   merge_hemi.val     = {1};
   merge_hemi.help    = {
     'Meshes for left and right hemisphere can be merged to one single mesh. This simplifies the analysis because only one analysis has to be made for both hemispheres.'
-    'Hoever, this also means that data size is double for one single analysis which might be too memory demanding for studies with several hundreds or even more files. If your model cannot be estimated due to memory issues you should not merge the resampled data.'
+    'However, this also means that data size is double for one single analysis which might be too memory demanding for studies with several hundreds or even more files. If your model cannot be estimated due to memory issues you should not merge the resampled data.'
   };
 
   mesh32k         = cfg_menu;
