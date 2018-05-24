@@ -35,6 +35,7 @@ matlabbatch{3}.spm.tools.cat.estwrite.output.GM.dartel = dartel;
 matlabbatch{3}.spm.tools.cat.estwrite.output.WM.dartel = dartel;
 
 matlabbatch{1}.spm.tools.cat.tools.series.bparam = 1000000;
+matlabbatch{1}.spm.tools.cat.tools.series.use_brainmask = 1;
 matlabbatch{2}.spm.tools.cat.estwrite.data(1) = cfg_dep('Longitudinal Rigid Registration: Midpoint Average', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','avg', '()',{':'}));
 matlabbatch{2}.spm.tools.cat.estwrite.nproc = 0;
 matlabbatch{2}.spm.tools.cat.estwrite.output.ROI = 0;
