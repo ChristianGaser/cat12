@@ -1,5 +1,32 @@
 ------------------------------------------------------------------------
-r1321 | gaser | 2018-05-24 23:28:05
+r1322 | dahnke | 2018-05-26 18:39:12
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Contents_info.txt
+M       cat_conf_extopts.m
+M       cat_conf_tools.m
+M       cat_main.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+M       cat_surf_createCS.m
+D       cat_vol_isarnlm.m
+M       cat_vol_partvol.m
+M       cat_vol_sanlm.m
+M       development/cat_surf_createCS.m
+M       html/cat_tools_VBM.html
+M       internal/cat_tst_prepareManualSegmentation.m
+M       internal/cat_vol_nlmus.m
+
+Changed:    Added resolution reduced filtering to SANLM filter.
+Changed:    Removed ISARNLM filter and replaced previous calls  
+            by the new SANLM filter. 
+Changed:    Updated SANLM calls in cat_run_job* and cat_main. 
+Changed:    Updated NLM GUI and documentation.             
+
+------------------------------------------------------------------------
+r1321 | gaser | 2018-05-24 23:28:30 +0200 (Do, 24 Mai 2018) | 8 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -7,6 +34,7 @@ M       CAT12-Manual.pdf
 M       CHANGES.txt
 
 Fixed: Some of the shown design matrices in the CAT12 manual were not correct.
+
 
 ------------------------------------------------------------------------
 r1320 | gaser | 2018-05-24 12:08:34 +0200 (Do, 24 Mai 2018) | 13 lines

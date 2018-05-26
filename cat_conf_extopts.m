@@ -458,35 +458,27 @@ end
 %------------------------------------------------------------------------
 % Noise correction (expert)
 %------------------------------------------------------------------------
-% expert 
-sanlm        = cfg_menu;
-sanlm.tag    = 'sanlm';
-sanlm.name   = 'Use SANLM de-noising filter';
-sanlm.labels = {'No denoising','SANLM denoising','ISARNLM denoising'};
-sanlm.values = {0 1 2};
-sanlm.def    = @(val)cat_get_defaults('extopts.sanlm', val{:});
-sanlm.help   = {
-    'This function applies an spatial adaptive non local means (SANLM) or the iterative spatial resolution adaptive non local means (ISARNLM) denoising filter to the data. Use of the ISARNLM filter is only required and recommended for data with high spatial resolution with parallel image artifacts or strong noise. Both filters will remove noise while preserving edges. Further modification of the strength of the noise correction is possible by the NCstr parameter. '
-    'The following options are available: '
-    '  * No noise correction '
-    '  * SANLM '
-    '  * ISARNLM ' 
-};
 
 % expert only
 NCstr        = cfg_menu;
 NCstr.tag    = 'NCstr';
 NCstr.name   = 'Strength of Noise Corrections';
-NCstr.labels = {'none (0)','light (-inf)','full (1)','ISARNLM light (2)','ISARNLM full (3)'};
-NCstr.values = {0 -inf 1 2 3};
+if expert
+  NCstr.help    = {
+    'Strength of the spatial adaptive (sub-resolution) non local means (SANLM) noise correction. Please note that the filter strength is automatically estimated. Change this parameter only for specific conditions. Typical values are: none (0), classic (1), light (2), medium (3|-inf), and strong (4). The "classic" option use the ordinal SANLM filter without further adaptions. The "light" option applies half of the filter strength of the adaptive "medium" cases, whereas the "strong" option uses the full filter strength, force sub-resolution filtering and applies an additional iteration. Sub-resolution filtering is only used in case of high image resolution below 0.8 mm or in case of the "strong" option. '
+    ''
+  };
+  NCstr.labels = {'none (0)','classic (1)','light (2)','medium (3|-inf)','strong (4)'};
+  NCstr.values = {0 1 2 -inf 4};
+else
+  NCstr.labels = {'none','light','medium','strong'};
+  NCstr.values = {0 2 -inf 4};
+  NCstr.help   = {
+    'Strength of the (sub-resolution) spatial adaptive  non local means (SANLM) noise correction. Please note that the filter strength is automatically estimated. Change this parameter only for specific conditions. The "light" option applies only half of the filter strength of the adaptive "medium" cases and no sub-resolution filtering. The "medium" case use the full adaptive filter strength and sub-resolution filtering in case of high image resolution below 0.8 mm. The "strong" option uses the full filter strength without adaption, forces the sub-resolution filtering and applies an additional iteration. All cases used an anatomical depending filter strength adaption, i.e. full (adaptive) filter strength for 1 mm data and no filtering for 2.5 mm data. '
+    ''
+  };
+end
 NCstr.def    = @(val)cat_get_defaults('extopts.NCstr', val{:});
-NCstr.help   = {
-  'Strength of the SANLM noise correction. The default "light" uses an adaptive version of the "full" SANLM filter. '
-  'The iterative spatial resolution adaptive non local means (ISARNLM) denoising filter can help to reduce noise in average, smoothed, resliced, or interpolated images or data with high spatial resolution. '
-  ''
-  'Please note that the filter strength is automatically estimated using the default settings and our tests showed no case where less corrections improved the image segmentation! Change this parameter only for specific conditions. '
-  ''
-};
 
 
 %------------------------------------------------------------------------
@@ -676,7 +668,7 @@ if ~spm
   if expert>0 % experimental expert options
     extopts.val   = {segmentation,registration,vox,surface,admin}; 
   else
-    extopts.val   = {app,LASstr,gcutstr,registration,vox,restype}; 
+    extopts.val   = {app,LASstr,gcutstr,registration,vox,restype}; % NCstr?
   end
 else
   % SPM based surface processing and thickness estimation

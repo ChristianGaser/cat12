@@ -559,103 +559,26 @@ if ~isfield(res,'spmpp')
   % Finally, a stronger NLM-filter is better than a strong MRF filter!
 
   if job.extopts.NCstr~=0  
-
-    % use a boundary box (BB) of the brain to speed up denoising
-    useBB = 1; %job.extopts.output.bias.native; 
-
-    if useBB
-      [Yms,Ybr,BB] = cat_vol_resize({Ym,Yb},'reduceBrain',vx_vol,round(2/cat_stat_nanmean(vx_vol)),Yb); Ybr = Ybr>0.5; 
-
-
-      % apply NLM filter
-      if job.extopts.NCstr==2 || job.extopts.NCstr==3
-        cat_io_cmd(sprintf('ISARNLM noise correction (NCstr=%d)',job.extopts.NCstr));
-        if job.extopts.verb>1, fprintf('\n'); end
-        if job.extopts.NCstr==2, NCstr=-inf; else NCstr=1; end 
-        Yms = cat_vol_isarnlm(Yms,res.image,job.extopts.verb>1,NCstr); 
-
-        Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
-          Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
-          Yms .* Ybr;
-      else
-        %%
-        Ymo = Yms + 0;
-        if isinf(job.extopts.NCstr) 
-          stime = cat_io_cmd(sprintf('SANLM noise correction'));
-        else
-          stime = cat_io_cmd(sprintf('SANLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
-        end
-
-        % filter
-        cat_sanlm(Yms,3,1,0);
-
-        % merging
-        if isinf(job.extopts.NCstr) || sign(job.extopts.NCstr)==-1
-          job.extopts.NCstr = min(1,max(0,cat_stat_nanmean(abs(Yms(Ybr(:)) - Ymo(Ybr(:)))) * 15 * min(1,max(0,abs(job.extopts.NCstr))) )); 
-          NC     = min(2,abs(Yms - Ymo) ./ max(eps,Yms) * 15 * 2 * min(1,max(0,abs(job.extopts.NCstr)))); 
-          NCs    = NC + 0; spm_smooth(NCs,NCs,2); NCs = NCs .* cat_stat_nanmean(NCs(Ybr(:))) / cat_stat_nanmean(NC(Ybr(:))); clear NC;
-          NCs  = max(0,min(1,NCs)); 
-        end
-        fprintf('%5.0fs\n',etime(clock,stime));  
-
-        % mix original and noise corrected image and go back to original resolution
-        if exist('NCs','var');
-          Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
-            Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
-            (1-NCs) .* Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* Ybr + ...
-            NCs .* Yms .* Ybr;
-        else
-          Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
-            Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
-            (1-job.extopts.NCstr) .* Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* Ybr + ...
-            job.extopts.NCstr .* Yms .* Ybr;
-        end    
-        clear NCs; 
-
-      end
-      clear Yms Ybr BB;
-    else
-      if job.extopts.NCstr==2 || job.extopts.NCstr==3
-        cat_io_cmd(sprintf('ISARNLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
-        if job.extopts.verb>1, fprintf('\n'); end
-        if job.extopts.NCstr==2, NCstr=-inf; else NCstr=1; end 
-        Ym = cat_vol_isarnlm(Ym,res.image,job.extopts.verb>1,NCstr); 
-      else
-        Ymo = Ym + 0;
-
-        if isinf(job.extopts.NCstr) 
-          stime = cat_io_cmd(sprintf('SANLM noise correction'));
-        else
-          stime = cat_io_cmd(sprintf('SANLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
-        end
-
-        % filter
-        cat_sanlm(Ym,3,1,0);
-
-        % merging
-        if isinf(job.extopts.NCstr) || sign(job.extopts.NCstr)==-1
-          NCstr2 = min(1,max(0,cat_stat_nanmean(abs(Ym(Ybr(:)) - Ymo(Ybr(:)))) * 15 * min(1,max(0,abs(job.extopts.NCstr))) )); 
-          NC     = min(2,abs(Ym - Ymo) ./ max(eps,Ym) * 15 * 2 * min(1,max(0,abs(NCstr2)))); 
-          NCs    = NC + 0; spm_smooth(NCs,NCs,2); NCs = NCs .* cat_stat_nanmean(NCs(Ybr(:))) / cat_stat_nanmean(NC(Ybr(:)));
-          NCs  = max(0,min(1,NCs));
-        end
-        fprintf('%5.0fs\n',etime(clock,stime));  
-
-        % mix original and noise corrected image and go back to original resolution
-        if exist('NCs','var');
-          Ym = (1-NCs) .* Ymo  +  NCs .* Ym ;
-        else
-          Ym = (1-NCstr2) .* Ymo + NCstr2 .* Ym;
-        end    
-      end
-    end
-
+    NCstr.labels = {'none','full','light','medium','strong','heavy'};
+    NCstr.values = {0 1 2 -inf 4 5}; 
+    stime = cat_io_cmd(sprintf('SANLM denoising after intensity normalization (%s)',...
+      NCstr.labels{find(cell2mat(NCstr.values)==job.extopts.NCstr,1,'first')}));
+    
+    % filter only within the brain mask for speed up
+    [Yms,Ybr,BB] = cat_vol_resize({Ym,Yb},'reduceBrain',vx_vol,round(2/cat_stat_nanmean(vx_vol)),Yb); Ybr = Ybr>0.5; 
+    Yms = cat_vol_sanlm(struct('data',res.image0.fname,'verb',0,'NCstr',job.extopts.NCstr),res.image,1,Yms); 
+    Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms .* Ybr + ...
+      Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr);
+    clear Yms Ybr BB;
+    
     if job.inv_weighting
       Ysrc = Ym;
     else
       Ysrc = cat_main_gintnormi(Ym,Tth);
     end
-
+    
+    fprintf('%5.0fs\n',etime(clock,stime));
+    
   end
   
   
@@ -774,30 +697,16 @@ if ~isfield(res,'spmpp')
       [Ymi,Ym] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
     end
 
-    %Ymioc = Ymi+0; 
     if job.extopts.NCstr>0 
       %% noise correction of the local normalized image Ymi, whereas only small changes are expected in Ym by the WM bias correction
+      stime = cat_io_cmd(sprintf('  SANLM denoising after LAS (%s)',...
+        NCstr.labels{find(cell2mat(NCstr.values)==job.extopts.NCstr,1,'first')}),'g5');
+      
       [Ymis,Ymior,BB]  = cat_vol_resize({Ymi,Ymo},'reduceBrain',vx_vol,round(2/mean(vx_vol)),Yb);
+      Ymis = cat_vol_sanlm(struct('data',res.image0.fname,'verb',0,'NCstr',job.extopts.NCstr),res.image,1,Ymis);
+      
       Yc = abs(Ymis - Ymior); Yc = Yc * 6 * min(2,max(0,abs(job.extopts.NCstr))); 
       spm_smooth(Yc,Yc,2./vx_vol); Yc = max(0,min(1,Yc)); clear Ymior; 
-
-      if job.extopts.NCstr==2 || job.extopts.NCstr==3
-        if job.extopts.verb
-          cat_io_cmd(sprintf('  ISARNLM noise correction for LAS'),'g5');
-        end
-        if job.extopts.verb>1, fprintf('\n'); end
-        if job.extopts.NCstr==2, NCstr=-inf; else NCstr=1; end 
-        Ymis = cat_vol_isarnlm(Ymis,res.image,(job.extopts.verb>1)*2,NCstr);
-      else
-        if job.extopts.verb>1
-          stime2 = cat_io_cmd(sprintf('  SANLM noise correction for LAS'),'g5'); 
-        end
-        cat_sanlm(Ymis,3,1,0);
-        if job.extopts.verb>1
-          cat_io_cmd(' ','','',job.extopts.verb,stime2); 
-        end 
-        fprintf('%5.0fs\n',etime(clock,stime));
-      end
       % mix original and noise corrected image and go back to original resolution
       Ybr = Yb(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6));
       Ymi(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
@@ -809,6 +718,7 @@ if ~isfield(res,'spmpp')
       Ymis = cat_vol_median3(Ymi,Ymi>0 & Ymi<0.4,Ymi<0.4); Ymi = Ymi.*max(0.1,Ymi>0.4) + Ymis.*min(0.9,Ymi<=0.4);
       Ymis = cat_vol_median3(Ym,Ym>0 & Ym<0.4,Ym<0.4); Ym = Ym.*max(0.1,Ym>0.4) + Ymis.*min(0.9,Ym<=0.4);
       
+      fprintf('%5.0fs\n',etime(clock,stime));
       clear Ymis;
     end
     %clear Ymioc; 
@@ -1964,20 +1874,15 @@ if job.extopts.print
           str(end).value = sprintf('MRF(%0.2f)',job.extopts.mrf); 
         end  
       end
-    elseif job.extopts.NCstr==2 
-      str(end).value = 'ISARNLM(light)'; 
-    elseif job.extopts.NCstr==3
-      str(end).value = 'ISARNLM(full)'; 
-    elseif job.extopts.NCstr==1
-      str(end).value = 'SANLM(full)';
     else
-      str(end).value = 'SANLM(light)';
+      str(end).value = sprintf('SANLM(%s)',NCstr.labels{find(cell2mat(NCstr.values)==job.extopts.NCstr,1,'first')});
     end
+    
     if job.extopts.NCstr~=0 && job.extopts.mrf
       if job.extopts.expertgui==0
-        str(end).value = ' + MRF'; 
+        str(end).value = '+MRF'; 
       else
-        str(end).value = sprintf(' + MRF(%0.2f)',job.extopts.mrf); 
+        str(end).value = sprintf('+MRF(%0.2f)',job.extopts.mrf); 
       end 
     end
 
