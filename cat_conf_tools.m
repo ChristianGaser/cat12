@@ -488,7 +488,7 @@ showslice.help = {'This function displays a selected slice for all images and in
 %% ------------------------------------------------------------------------
 
 data.help = {
-'Select images for filtering'};
+  'Select images for filtering.'};
 
 rician         = cfg_menu;
 rician.tag     = 'rician';
@@ -497,9 +497,7 @@ rician.labels  = {'Yes' 'No'};
 rician.values  = {1 0};
 rician.val     = {0};
 rician.help    = {
-  'MRIs can have Gaussian or Rician distributed noise with uniform or nonuniform variance across the image. If SNR is high enough (>3) noise can be well approximated by Gaussian noise in the foreground. However, for SENSE reconstruction or DTI data a Rician distribution is expected.'
-  ''
-  'Please note that the Rician noise estimation is sensitive for large signals in the neighbourhood and can lead to artefacts (e.g. cortex can be affected by very high values in the scalp or in blood vessels.'
+  'MRIs can have Gaussian or Rician distributed noise with uniform or nonuniform variance across the image. If SNR is high enough (>3) noise can be well approximated by Gaussian noise in the foreground. However, for SENSE reconstruction or DTI data a Rician distribution is expected. Please note that the Rician noise estimation is sensitive for large signals in the neighbourhood and can lead to artefacts, e.g. cortex can be affected by very high values in the scalp or in blood vessels.'
   ''
 };
 
@@ -524,15 +522,13 @@ outlier.strtype = 'r';
 outlier.num     = [1 1];
 outlier.val     = {1};
 outlier.help    = {
-  'Remove strong outliers (salt and pepper noise) with more than n times of the average local correction strength.'
-  'Larger values will result in stronger corrections, whereas lower values result in less corrections.'
-  'Changes will be more visible in high quality areas/images.' 
+  'Remove strong outliers (salt and pepper noise) with more than n times of the average local correction strength. Larger values will result in stronger corrections, whereas lower values result in less corrections. Changes will be more visible in high quality areas/images.' 
 };
 
 % also this is a separate function that is used for the results
 spm_type         = cfg_menu; %
 spm_type.tag     = 'spm_type';
-spm_type.name    = 'Data type of the output image';
+spm_type.name    = 'Data type of the output images.';
 if expert>1 
   % developer! there should be no great difference between uint# and int# due to rescaling 
   spm_type.labels  = {'native','uint8','int8','uint16','int16','single'};
@@ -543,8 +539,7 @@ else
 end
 spm_type.val     = {16};
 spm_type.help    = {
-  'SPM data type of the output image. Single precision is recommended, but  uint16 also provides good results. '
-  'Internal scaling supports a relative high accuracy for the limited number of bits, special values such as NAN and INF (eg. in the background) will be lost! NAN is converted to 0, -INF to the minimum and INF to the maximum value. '
+  'SPM data type of the output image. Single precision is recommended, but  uint16 also provides good results. Internal scaling supports a relative high accuracy for the limited number of bits, special values such as NAN and INF (e.g. in the background) will be lost and NAN is converted to 0, -INF to the minimum, and INF to the maximum value. '
   ''
 };
 
@@ -555,7 +550,7 @@ prefix.strtype = 's';
 prefix.num     = [0 Inf];
 prefix.val     = {'sanlm_'};
 prefix.help    = {
-  'Specify the string to be prepended to the filenames of the filtered image file(s). Default prefix is ''samlm_''.' 
+  'Specify the string to be prepended to the filenames of the filtered image file(s). Default prefix is "samlm_". Use the keyword "PARA" to add the strength of filtering, e.g. "sanlm_PARA" result in "sanlm_NC#_*.nii".'
   ''
 };
 
@@ -566,27 +561,45 @@ postfix.strtype = 's';
 postfix.num     = [0 Inf];
 postfix.val     = {''};
 postfix.help    = {
-  'Specify the string to be appended to the filenames of the filtered image file(s). Default postfix is ''''. '
-  ['Use ''PARA'' to add input parameters, e.g. "sanlm_*_NC#.##_RN#_RD#_RIA#.##_RNI#_OL#.##.nii" with ' ...
-   'NC=NCstr, RN=rician noise, RD=resolution dependency, RIA=relative intensity adaption, RNI=replace NAN and INF, and OL=outlier correction.']
+  'Specify the string to be appended to the filenames of the filtered image file(s). Default postfix is ''''.  Use "PARA" to add input parameters, e.g. "sanlm_*_NC#.##_RN#_RD#_RIA#.##_SR#_FSR#_RNI#_OL#.##_iterm#_iter#.nii" with NC=NCstr, RN=Rician noise, RD=resolution dependency, RIA=relative intensity adaption, SR=sub-resolutions, FSR=force sub-resolution, RNI=replace NAN and INF, and OL=outlier correction.'
   ''
 };
 
 % 
-NCstr         = cfg_entry;
-NCstr.tag     = 'NCstr';
-NCstr.name    = 'Strength of noise corrections';
-NCstr.strtype = 'r';
-NCstr.num     = [1 1];
-if cat_get_defaults('extopts.NCstr')>0
-  NCstr.def     = @(val)min(1,max(0,cat_get_defaults('extopts.NCstr', val{:})));
-else
-  NCstr.def     = @(val)min(1,max(0,-cat_get_defaults('extopts.NCstr', val{:})));
+if expert 
+  % developer with matrix values
+  NCstr         = cfg_entry;
+  NCstr.tag     = 'NCstr';
+  NCstr.name    = 'Strength of noise corrections';
+  NCstr.strtype = 'r';
+  NCstr.num     = [1 1]; %inf]; % this case did not work with yet
+  NCstr.def     = @(val) cat_get_defaults('extopts.NCstr', val{:});
+  NCstr.help    = {
+   ['Strength of the spatial adaptive (sub-resolution) non-local means (SANLM) noise correction. Please note that the filter strength is automatically estimated. Change this parameter only for specific conditions. ' ...
+    'Typical values are: none (0), classic (1), light (2), medium (3|-inf), strong (4), heavy (5). The "classic" option use the ordinal SANLM filter without further adaptions. The "light" option uses the half filter strength of "medium" cases. The "strong" option use 8-times of the "medium" filter strength. Sub-resolution filtering is only used in case of high image resolution below 0.8 mm or in case of the "heavy" option. ' ...
+    'For the global modified scheme use smaller values (>0) for less denoising, higher values (<=1) for stronger denoising, and "inf" for an automatic estimated threshold. Negative values control the local adaptive scheme, with the default "-inf"|"-1", that successfully tested on a variety of scans. Use higher values (>-1,<0) for less filtering and lower values "<-1" for stronger filtering. The value 0 will turn off any noise correction.']
+    ''
+  };
 end
-NCstr.help    = {
-  'Strength of the SANLM noise correction. The default "-inf" uses an adaptive noise correction and was successfully tested on a variety of scans. Use smaller values (>0) for less denoising  and higher values (<=1) for stronger denoising. The value 0 will turn off any noise correction.'
-''
+
+% noise correction level
+NCstrm        = cfg_menu;
+NCstrm.tag    = 'NCstr';
+NCstrm.name   = 'Strength of Noise Corrections';
+NCstrm.def    = @(val) cat_get_defaults('extopts.NCstr', val{:});
+NCstrm.help   = {
+  ['Strength of the (sub-resolution) spatial adaptive  non local means (SANLM) noise correction. Please note that the filter strength is automatically estimated. Change this parameter only for specific conditions. ' ...
+   'The "light" option applies half of the filter strength of the adaptive "medium" cases, whereas the "strong" option uses the full filter strength, force sub-resolution filtering and applies an additional iteration. Sub-resolution filtering is only used in case of high image resolution below 0.8 mm or in case of the "strong" option.']
+   ''
 };
+NCstrm.values = {2 -inf 4};
+if expert
+  NCstrm.labels = {'light (2)','medium (3|-inf)','strong (4)'};
+else
+  NCstrm.labels = {'light','medium','strong'};
+end
+
+
 
  
 addnoise         = cfg_entry;
@@ -596,9 +609,7 @@ addnoise.strtype = 'r';
 addnoise.val     = {0.5}; 
 addnoise.num     = [1 1];
 addnoise.help    = {
- ['Add minimal amount of noise in regions without any noise to avoid  image segmentation problems. ' ...
-  ... 'The noise is only added to values unequal zero to avoid adding of noise in skull-stripped regions. ' ...
-  'This parameter defines the strength of additional noise as percentage of the average signal intensity. ']
+  'Add minimal amount of noise in regions without any noise to avoid image segmentation problems. This parameter defines the strength of additional noise as percentage of the average signal intensity. '
   ''
 };
 
@@ -622,8 +633,7 @@ if expert
   relativeFilterStengthLimit.num     = [1 1];
   relativeFilterStengthLimit.val     = {1};
   relativeFilterStengthLimit.help    = {
-    'Limit the relative noise correction to avoid over-filtering of low intensity areas.' 
-    'Low values will lead to less filtering in low intensity araes, whereas high values will be closer to the original filter. INF deactivates the filter. '
+    'Limit the relative noise correction to avoid over-filtering of low intensity areas. Low values will lead to less filtering in low intensity areas, whereas high values will be closer to the original filter. INF deactivates the filter. '
     ''
   };
 else
@@ -646,14 +656,33 @@ relativeIntensityAdaption.strtype = 'r';
 relativeIntensityAdaption.num     = [1 1];
 relativeIntensityAdaption.val     = {1};
 relativeIntensityAdaption.help    = {
-  'Strength of relative intensity adaption, with 0 for no adaption and 1 for full adaption.'
- ['The SANLM filter is often very successful in the background and removed nearly all noise. However, routines such as the' ...
-  'SPM Unified Segmentation expect Gaussian distribution in all regions and is troubled by regions with too low variance. ' ...
-  'Hence, a relative limitation of SANLM correction is added here that is based on the bias reduced image intensity. ']
+  'Strength of relative intensity adaption, with 0 for no adaption and 1 for full adaption. The SANLM filter is often very successful in the background and removed nearly all noise. However, routines such as the SPM Unified Segmentation expect Gaussian distribution in all regions and is troubled by regions with too low variance. Hence, a relative limitation of SANLM correction is added here that is based on the bias reduced image intensity. '
   ''
 };
 % very special parameter ...
 if expert
+  iter         = cfg_entry;
+  iter.tag     = 'iter';
+  iter.name    = 'Number of additional sub-resolution iterations';
+  iter.strtype = 'r';
+  iter.num     = [1 1];
+  iter.val     = {0};
+  iter.help    = {
+    'Choose number of additional iterations that can further reduce sub-resolution noise but also anatomical information, e.g. larger blood vessel or small gyri/sulci.'
+    ''
+  };
+
+  iterm         = cfg_entry;
+  iterm.tag     = 'iterm';
+  iterm.name    = 'Number of additional iterations';
+  iterm.strtype = 'r';
+  iterm.num     = [1 1];
+  iterm.val     = {0};
+  iterm.help    = {
+    'Choose number of additional iterations that can further reduce noise but also anatomical information, e.g. smaller blood-vessels.'
+    ''
+  };
+
   relativeIntensityAdaptionTH         = cfg_entry;
   relativeIntensityAdaptionTH.tag     = 'relativeIntensityAdaptionTH';
   relativeIntensityAdaptionTH.name    = 'Strength of smoothing of the relative filter strength limit';
@@ -672,8 +701,7 @@ if expert
   resolutionDependency.values  = {1 0};
   resolutionDependency.val     = {0};
   resolutionDependency.help    = {
-    'Resolution dependending filtering with reduced filter strength in data with low spatial resolution defined by the "Range of resolution dependency". '
-    'Use only for anatomical data.'
+    'Resolution depending filtering with reduced filter strength in data with low spatial resolution defined by the "Range of resolution dependency".'
     ''
     };
   
@@ -684,10 +712,21 @@ if expert
   resolutionDependencyRange.num     = [1 2];
   resolutionDependencyRange.val     = {[1 2.5]};
   resolutionDependencyRange.help    = {
-    'Definition of the spatial resolution for "full filtering" (first value) and "no filtering" (second value). '
+    'Definition of the spatial resolution for "full filtering" (first value) and "no filtering" (second value), with [1 2.5] for typical structural data of humans. '
     ''
   };
 
+  resolutionReduction         = cfg_menu;
+  resolutionReduction.tag     = 'red';
+  resolutionReduction.name    = 'Low resolution filtering';
+  resolutionReduction.labels  = {'Yes (allways)' 'Yes (only highres <0.8 mm)' 'No'};
+  resolutionReduction.values  = {11 1 0};
+  resolutionReduction.val     = {0};
+  resolutionReduction.help    = {
+    'Some MR images were interpolated or use a limited frequency spectrum to support higher spatial resolution with acceptable scan-times (e.g., 0.5x0.5x1.5 mm on a 1.5 Tesla scanner). However, this can result in "low-frequency" noise that can not be handled by the standard NLM-filter. Hence, an additional filtering step is used on a reduces resolution. As far as filtering of low resolution data will also remove anatomical informations the filter use by default maximal one reduction with a resolution limit of 1.6 mm. I.e. a 0.5x0.5x1.5 mm image is reduced to 1.0x1.0x1.5 mm, whereas a 0.8x0.8x0.4 mm images is reduced to 0.8x0.8x0.8 mm and a 1x1x1 mm dataset is not reduced at all. '
+    ''
+    };
+  
   verb         = cfg_menu;
   verb.tag     = 'verb';
   verb.name    = 'Verbose output';
@@ -703,34 +742,46 @@ end
 nlm_default        = cfg_branch;
 nlm_default.tag    = 'default';
 nlm_default.name   = 'Default filter';
-nlm_default.val    = {NCstr};
+nlm_default.val    = {};
 nlm_default.help   = {
-    '' 
+    'Classical SANLM filter without adaptions.' 
 }; 
 
 nlm_optimized        = cfg_branch;
 nlm_optimized.tag    = 'optimized';
 nlm_optimized.name   = 'Optimized filter';
-if expert>1
-  nlm_optimized.val  = {NCstr outlier relativeIntensityAdaption relativeIntensityAdaptionTH relativeFilterStengthLimit resolutionDependency resolutionDependencyRange};
-else
-  nlm_optimized.val  = {NCstr outlier relativeIntensityAdaption};
-end
+nlm_optimized.val    = {NCstrm};
 nlm_optimized.help   = {
-    '' 
+    'Optimized SANLM filter with optimized parameters for simple GUI cases.' 
 }; 
+
+if expert
+  nlm_expert        = cfg_branch;
+  nlm_expert.tag    = 'expert';
+  nlm_expert.name   = 'Optimized filter (expert options)';
+  nlm_expert.val  = {NCstr iter iterm outlier relativeIntensityAdaption relativeIntensityAdaptionTH relativeFilterStengthLimit resolutionDependency resolutionDependencyRange resolutionReduction};
+  nlm_expert.help   = {
+      'Optimized SANLM filter with all parameters.' 
+  }; 
+end
 
 nlmfilter        = cfg_choice;
 nlmfilter.tag    = 'nlmfilter';
 nlmfilter.name   = 'Filter type';
-nlmfilter.values = {nlm_default nlm_optimized};
-if cat_get_defaults('extopts.NCstr')>0
+if expert
+  nlmfilter.values = {nlm_default nlm_optimized nlm_expert};
+else
+  nlmfilter.values = {nlm_default nlm_optimized};
+end
+if cat_get_defaults('extopts.NCstr')>0 && cat_get_defaults('extopts.NCstr')<=1
   nlmfilter.val    = {nlm_default}; 
+elseif expert
+  nlmfilter.val    = {nlm_expert}; 
 else
   nlmfilter.val    = {nlm_optimized}; 
 end  
 nlmfilter.help   = {
-    '' 
+    'Choose type of filtering and further filter options.' 
 }; 
 
 sanlm        = cfg_exbranch;
@@ -746,7 +797,7 @@ end
 sanlm.prog   = @cat_vol_sanlm;
 sanlm.vfiles = @vfiles_sanlm;
 sanlm.help   = {
-'This function applies an spatial adaptive non-local means denoising filter to the data. This filter will remove noise while preserving edges. The filter strength is automatically estimated based on the standard deviation of the noise. '
+'This function applies an spatial adaptive (sub-resolution) non-local means denoising filter to the data. This filter will remove noise while preserving edges. The filter strength is automatically estimated based on the standard deviation of the noise. '
 ''
 'This filter is internally used in the segmentation procedure anyway. Thus, it is not necessary (and not recommended) to apply the filter before segmentation.'
 ''
@@ -756,12 +807,11 @@ data.help          = {'Select images for data type conversion';''};
 intlim.tag         = 'range';
 prefix.val         = {'PARA'};
 prefix.help        = {
-  'Specify the string to be prepended to the filenames of the converted image file(s). Default prefix is ''PARA'' that is replaced by the choosen datatype.'
+  'Specify the string to be prepended to the filenames of the converted image file(s). Default prefix is "PARA" that is replaced by the chosen datatype.'
   ''
 };
 postfix.help        = {
-  'Specify the string to be prepended to the filenames of the converted image file(s). Default prefix is ''''.'
-  'Use ''PARA'' to add the datatype to the filename.'
+  'Specify the string to be prepended to the filenames of the converted image file(s). Default prefix is ''''. Use "PARA" to add the datatype to the filename.'
   ''
 };
 spm_type.labels(1) = []; % remove native case

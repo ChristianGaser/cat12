@@ -275,13 +275,13 @@ function cat_tst_prepareManualSegmentation
     
   
     % ISARNLM noise correction and creation of output image
-    if job.isarnlm, fprintf('ISAR1 .. ',ff); Ysrc = cat_vol_isarnlm(Ysrc,Vm,0,inf); end
+    if job.isarnlm, fprintf('ISAR1 .. ',ff); Ysrc = cat_vol_sanlm(struct(),Vm,1,Ysrc); end
     Vm2 = Vm; Vm2.fname = fullfile(rpp,sprintf('m%s.nii',ff));
     spm_write_vol(Vm2,Ysrc); 
 
     
     % ISARNLM noise correction and creation of output image
-    if job.isarnlm, fprintf('ISAR2 .. ',ff); Ym = cat_vol_isarnlm(Ym,Vm,0,inf); end
+    if job.isarnlm, fprintf('ISAR2 .. ',ff); Ym = cat_vol_sanlm(struct(),Vm,1,Ym); end
     Vm2 = Vm; Vm2.fname = fullfile(rpp,sprintf('n%s.nii',ff(2:end)));
     spm_write_vol(Vm2,Ym); 
 
