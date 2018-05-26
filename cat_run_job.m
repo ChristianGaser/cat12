@@ -532,19 +532,13 @@ function cat_run_job(job,tpm,subj)
             
             
             
-            %% noise correction
-            %  ------------------------------------------------------------
+            %% denoising
             if job.extopts.NCstr~=0
-              if job.extopts.NCstr==2 || job.extopts.NCstr==3
-                if job.extopts.NCstr==2, NCstr=-inf; else NCstr=1; end 
-                stime = cat_io_cmd(sprintf('ISARNLM denoising (NCstr=%0.2f)',NCstr));
-                if job.extopts.verb>1, fprintf('\n'); end
-                cat_vol_isarnlm(struct('data',nfname,'verb',(job.extopts.verb>1)*2,'prefix','','NCstr',NCstr)); 
-                if job.extopts.verb>1, cat_io_cmd(' ','',''); end
-              else
-                stime = cat_io_cmd(sprintf('SANLM denoising (NCstr=%0.2f)',job.extopts.NCstr));
-                cat_vol_sanlm(struct('data',nfname,'verb',0,'prefix','','NCstr',job.extopts.NCstr)); 
-              end
+              NCstr.labels = {'none','full','light','medium','strong','heavy'};
+              NCstr.values = {0 1 2 -inf 4 5}; 
+              stime = cat_io_cmd(sprintf('SANLM denoising (%s)',...
+                NCstr.labels{find(cell2mat(NCstr.values)==job.extopts.NCstr,1,'first')}));
+              cat_vol_sanlm(struct('data',nfname,'verb',0,'prefix','','NCstr',job.extopts.NCstr)); 
               fprintf('%5.0fs\n',etime(clock,stime));   
             end
         end

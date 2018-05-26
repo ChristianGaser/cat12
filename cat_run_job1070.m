@@ -176,16 +176,13 @@ function cat_run_job1070(job,tpm,subj)
           end
           job.channel(n).vols{subj} = nfname;
 
-          % denoising
-          if job.extopts.NCstr~=0 
-            if job.extopts.NCstr==2 || job.extopts.NCstr==3
-              stime = cat_io_cmd(sprintf('ISARNLM denoising (NCstr=%d)',job.extopts.NCstr));
-              cat_vol_isarnlm(struct('data',nfname,'verb',1,'prefix','')); 
-            else 
-              stime = cat_io_cmd(sprintf('SANLM denoising (NCstr=%0.2f)',job.extopts.NCstr));
-              cat_vol_sanlm(struct('data',nfname,'verb',0,'prefix','')); 
-            end
-            V = spm_vol(job.channel(n).vols{subj});
+          %% denoising
+          if job.extopts.NCstr~=0
+            NCstr.labels = {'none','full','light','medium','strong','heavy'};
+            NCstr.values = {0 1 2 -inf 4 5}; 
+            stime = cat_io_cmd(sprintf('SANLM denoising (%s)',...
+              NCstr.labels{find(cell2mat(NCstr.values)==job.extopts.NCstr,1,'first')}));
+            cat_vol_sanlm(struct('data',nfname,'verb',0,'prefix','','NCstr',job.extopts.NCstr)); 
             fprintf('%5.0fs\n',etime(clock,stime));   
           end
 

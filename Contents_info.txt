@@ -109,7 +109,6 @@
 %   cat_vol_findfiles.m
 %   cat_vol_groupwise_ls.m
 %   cat_vol_imcalc.m
-%   cat_vol_isarnlm.m
 %   cat_vol_iscale.m
 %   cat_vol_morph.m                  - morphological operations to 3D data
 %   cat_vol_nanmean3.m

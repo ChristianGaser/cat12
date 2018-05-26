@@ -387,10 +387,10 @@ function [Ya1,Ycls,YBG,YMF,Ywmhr,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol
                ~cat_vol_morph(Yvt2>1.6 & Yvt2<3 & Ym<1.8 ,'dd',3,vx_vol))>0.5,'do',4-3*WMHCstr,vx_vol); % age adaption
              %%
     Ycortex1(cat_vol_morph(YwmhL,'dd',3) & Ycortex1==2) = 0; Ycortex1(YwmhL) = 1; 
-    Ycortex2 = cat_vol_laplace3R(Ycortex1,Ycortex1==1.5,0.01);
+    Ycortex2 = cat_vol_laplace3R(Ycortex1,Ycortex1==1.5,0.005);
     Ycortex1( smooth3(Ycortex1==1.5 & Ycortex2>1.5 & Yp0<=2 & Ym<2.1)>0.6) = 2; 
     Ycortex1(isnan(Ycortex1) & Ym>2.8) = 1; 
-    Ycortex2 = cat_vol_laplace3R(Ycortex1,Ycortex1==1.5,0.005);
+    Ycortex2 = cat_vol_laplace3R(Ycortex1,Ycortex1==1.5,0.002);
     Ycortex  = cat_vol_morph( (Ycortex2>1.5 & Ycortex2<3) | Ya1==LAB.HC,'dd',2) & Yp0<2.8;
     if ~debug, clear Ycortex1 Ycortex2; end
     Yinsula  = cat_vol_morph( Ycortex,'dd',2,vx_vol) & Yp0<2.8 & ...
@@ -515,11 +515,11 @@ function [Ya1,Ycls,YBG,YMF,Ywmhr,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol
     
     %% bottleneck region growing [Manjon:1995]
     Ywmh(Ywmh==0) = 1.5; Ywmh(Ym>2.2 & Ywmh==1.5) = nan;  % harder mask with low T1 threshold
-    Ywmh2 = cat_vol_laplace3R(Ywmh, Ywmh==1.5, 0.002);    % bottleneck
+    Ywmh2 = cat_vol_laplace3R(Ywmh, Ywmh==1.5, 0.001);    % bottleneck
     Ywmh(Ywmh==1.5 & Ywmh2>1.7 & Ywmh<3)       = 2;       % add cortex
     Ywmh(Ywmh==1.5 & (Ywmh2<1.2 | Ywmh2==1.5)) = 1;       % add WMHs
     Ywmh(isnan(Ywmh) & Ym<2.5 & Ym>1.5)        = 1.5;     % soft mask with higher T1 threshold
-    Ywmh2 = cat_vol_laplace3R(Ywmh, Ywmh==1.5, 0.002);    % bottleneck
+    Ywmh2 = cat_vol_laplace3R(Ywmh, Ywmh==1.5, 0.001);    % bottleneck
     
     % final mask and remove small WMHs
     Ywmh = ~Yvt & Ymi>mth(1) & Ymi<mth(2) & (Ywmh2 < 1.3 | Ywmh2 == 1.5) & ~(Ybgth & Ym>1.8);

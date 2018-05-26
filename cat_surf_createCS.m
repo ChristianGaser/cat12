@@ -112,7 +112,6 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
   % noise reduction for higher resolutions (>=1 mm full correction, 1.5 mm as lower limit)
   % (added 20160920 ~R1010 due to servere sulcus reconstruction problems with 1.5 Tesla data)
   Yms = Ym + 0; cat_sanlm(Yms,3,1);
-  %Yms = cat_vol_isarnlm(Ym,V,opt.verb>1,1); % isarnlm version?
   %noise = std(Yms(Yms(:)>0) - Ym(Yms(:)>0)); % more selective filtering?
   %vx_vol = [0.5;0.75;1;1.25;1.5;2]; [vx_vol
   %min(1,max(0,3-2*mean(vx_vol,2))) min(1,max(0,1-mean(vx_vol,2))/2) 0.5*min(1,max(0,1.5-mean(vx_vol,2)))] % filter test 
