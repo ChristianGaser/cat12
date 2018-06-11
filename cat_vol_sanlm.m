@@ -69,12 +69,12 @@ function varargout = cat_vol_sanlm(varargin)
 % (eg. 0.5x0.5x1.5 mm on a 1.5 Tesla scanner). However, this can result in
 % "low-frequency" noise that can not be handled by the standard NLM filter.
 % Hence, an additional filtering step is used on a reduces resolution that
-% use a internal call of this routine with direct image in- an output.
+% uses an internal call of this routine with direct image in- an output.
 % 
 %   src = cat_vol_sanlm(job,V,i,src)
 %
 % As far as filtering of low resolution data will also remove anatomical
-% informations the filter use by default maximal one reduction with a  
+% information the filter uses by default maximal one reduction with a  
 % resolution limit of 1.6 mm. I.e. a 0.5x0.5x1.5 mm image is reduced 
 % to 1.0x1.0x1.5 mm, whereas a 0.8x0.8x0.4 mm images is reduced to 
 % 0.8x0.8x0.8 mm and a 1x1x1 mm dataset is not reduced at all. 
