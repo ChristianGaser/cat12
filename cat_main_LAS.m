@@ -524,6 +524,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
     Ymg = (Ysrc + srcmin)./max(eps,(Ylab{2} + srcmin)); 
     Ymg = Ymg * Tth.T3th(Tth.T3thx==3)/(Tth.T3thx(Tth.T3thx==3)/3);
   end
+  clear Ylab Ysrc
   Ymg = cat_main_gintnorm(Ymg,Tth); 
   
   %%
@@ -541,7 +542,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
     Yml(YM & Yml<0.5)=Ymls(YM & Yml<0.5); 
     clear Ymls YM
   end
-  
+  clear res
   
   %% class correction and second logical class map Ycls2
   if exist('resT0','var')

@@ -678,10 +678,12 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
                        Pcentral,Pthick,Pwhite);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
   
-      % correction of cortical thickness and central surface
-      cmd = sprintf(['CAT_AverageSurfaces -avg "%s" "%s" "%s"'], ...
-                       Pcentral,Pwhite,Ppial);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+      % correction of central surface (does not yet work very well)
+%      cmd = sprintf(['CAT_AverageSurfaces -avg "%s" "%s" "%s"'], ...
+%                       Pcentral,Pwhite,Ppial);
+%      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+
+      % correction of cortical thickness
       cmd = sprintf(['CAT_Hausdorff -exact "%s" "%s" "%s"'], ...
                        Pwhite,Ppial,Pthick);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
