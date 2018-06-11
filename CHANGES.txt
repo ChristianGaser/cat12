@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1322 | dahnke | 2018-05-26 18:39:12
+r1323 | gaser | 2018-06-11 15:11:09
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_long.m
+M       cat_main_LAS.m
+M       cat_surf_createCS.m
+M       cat_vol_sanlm.m
+M       html/cat.html
+
+(1) Changed: Optimized memory management in cat_main_LAS.
+(2) Changed: Removed option for thickness estimation (for ROI analysis only)
+    from longitudinal pipeline.
+------------------------------------------------------------------------
+r1322 | dahnke | 2018-05-26 18:39:41 +0200 (Sa, 26 Mai 2018) | 25 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -24,6 +39,7 @@ Changed:    Removed ISARNLM filter and replaced previous calls
             by the new SANLM filter. 
 Changed:    Updated SANLM calls in cat_run_job* and cat_main. 
 Changed:    Updated NLM GUI and documentation.             
+
 
 ------------------------------------------------------------------------
 r1321 | gaser | 2018-05-24 23:28:30 +0200 (Do, 24 Mai 2018) | 8 lines
