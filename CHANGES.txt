@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1323 | gaser | 2018-06-11 15:11:09
+r1324 | gaser | 2018-06-14 17:06:58
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       html/cat_methods_FN.html
+
+Changed: Updated CAT12 manual and online help.
+------------------------------------------------------------------------
+r1323 | gaser | 2018-06-11 15:11:34 +0200 (Mo, 11 Jun 2018) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +23,7 @@ M       html/cat.html
 (1) Changed: Optimized memory management in cat_main_LAS.
 (2) Changed: Removed option for thickness estimation (for ROI analysis only)
     from longitudinal pipeline.
+
 ------------------------------------------------------------------------
 r1322 | dahnke | 2018-05-26 18:39:41 +0200 (Sa, 26 Mai 2018) | 25 lines
 
