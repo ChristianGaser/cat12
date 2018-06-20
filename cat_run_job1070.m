@@ -112,6 +112,9 @@ function cat_run_job1070(job,tpm,subj)
         nfname  = fullfile(pp,mrifolder,['n' ff '.nii']); 
         copyfile(ofname,nfname); 
 
+        Ysrc0    = single(spm_read_vols(obj.image)); 
+        Ylesion  = single(isnan(Ysrc0) | isinf(Ysrc0) | Ysrc0==0); clear Ysrc0;
+        
         res = load(fullfile(pp,[ff(3:end) '_seg8.mat']));
         job.channel(1).vols{subj}  = [nfname ex];
         job.channel(1).vols0{subj} = [ofname ex];
@@ -501,6 +504,32 @@ function cat_run_job1070(job,tpm,subj)
           [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init1070(single(obj.image.private.dat(:,:,:)),vx_vol,job.extopts.verb);
         end
 
+        
+        
+        %% Lesion masking as zero values of the orignal image (2018-06):
+        %  We do not use NaN and -INF because (i) most images are only (u)int16
+        %  and do not allow such values, (ii) NaN can be part of the background
+        %  of resliced images, and (iii) multiple option are not required here. 
+        %  Zero values can also occure by bad data scaling or processing in the 
+        %  background but also other (large) CSF regions and we have to remove  
+        %  these regions later. 
+        %  We further discussed to use a separate mask images but to deside
+        %  to keep this as simple as possible using no further options!
+        obj.image0 = spm_vol(job.channel(1).vols0{subj});
+        Ysrc0      = spm_read_vols(obj.image0); 
+        Ylesion    = single(Ysrc0==0); clear Ysrc0; 
+        if any( obj.image0.dim ~= obj.image.dim )
+          mat      = obj.image0.mat \ obj.image.mat;
+          Ylesion  = smooth3(Ylesion); 
+          Ylesionr = zeros(obj.image.dim,'single'); 
+          for i=1:obj.image.dim(3),
+            Ylesionr(:,:,i) = single(spm_slice_vol(Ylesion,mat*spm_matrix([0 0 i]),obj.image.dim(1:2),[1,NaN]));
+          end
+          Ylesion = cat_vol_ctype(Ylesionr*255); clear Ylesionr;
+        end
+        
+        
+        
         %% APP for spm_maff8
         %  optimize intensity range
         %  we have to rewrite the image, because SPM reads it again 
@@ -508,6 +537,7 @@ function cat_run_job1070(job,tpm,subj)
             % WM threshold
             Ysrc = single(obj.image.private.dat(:,:,:)); 
             Ysrc(isnan(Ysrc) | isinf(Ysrc)) = min(Ysrc(:));
+
 
             if exist('Yb','var')
                 Yb = cat_vol_morph(cat_vol_morph(Yb,'d',1),'lc',1);
@@ -557,7 +587,8 @@ function cat_run_job1070(job,tpm,subj)
         cat_err_res.obj = obj; 
 
        
-        %%
+      
+
         if skullstripped 
           %% update number of SPM gaussian classes 
           Ybg = 1 - spm_read_vols(obj.tpm.V(1)) - spm_read_vols(obj.tpm.V(2)) - spm_read_vols(obj.tpm.V(3));
@@ -589,7 +620,7 @@ function cat_run_job1070(job,tpm,subj)
 
           % for non-skull-stripped brains use masked brains to get better estimates
           % esp. for brains with thinner skull
-          if ~skullstripped
+          if 0 %~skullstripped
             % use dilated mask for spm_preproc8 because sometimes inital SPM segmentation
             % does not cover the whole brain for brains with thinner skull
             [Ym, Ycls] = cat_spm_preproc_write8(res,zeros(k,4),zeros(1,2),[0 0],1,1);
@@ -604,7 +635,7 @@ function cat_run_job1070(job,tpm,subj)
             res.fwhm      = obj.fwhm;
             res.msk       = res.image(1); 
             res.msk.pinfo = repmat([255;0],1,size(Yb,3));
-            res.msk.dat(:,:,:) = Yb; 
+            res.msk.dat(:,:,:) = ~Yb; % mask unused voxels!
             res = spm_preproc8(res);
   
             % final estimate without mask using parameters from previous run
@@ -668,6 +699,7 @@ function cat_run_job1070(job,tpm,subj)
     res.stime  = stime;
     res.catlog = catlog; 
     res.image0 = spm_vol(job.channel(1).vols0{subj}); 
+    if exist('Ylesion','var'), res.Ylesion = Ylesion; else res.Ylesion = zeros(size(res.image.dim)); end; clear Ylesion;
     job.subj = subj; 
     cat_main(res,obj.tpm,job);
     
