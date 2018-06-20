@@ -1,4 +1,4 @@
-function [Ya1,Ycls,YBG,YMF,Ywmhr,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,noise,job)
+function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,noise,job,Ylesionmsk)
 % ______________________________________________________________________
 % Use a segment map Ycls, the global intensity normalized T1 map Ym and 
 % the atlas label map YA to create a individual label map Ya1. 
@@ -161,6 +161,7 @@ function [Ya1,Ycls,YBG,YMF,Ywmhr,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol
       Vflair.dat   = cat_vol_sanlm(struct('verb',0),Vflair,1,spm_read_vols(Vflair));
       Vflair.pinfo = repmat([1;0],1,size(Vflair.dat,3));
       Vflair.dt(1) = 16;
+      Yflair = zeros(Vm.dim,'single');
       for i=1:Vm.dim(3)
         Yflair(:,:,i) = single( spm_slice_vol(Vflair, R \ Vflair.mat \ Vm.mat  * spm_matrix([0 0 i]) ,Vm.dim(1:2),[1,NaN])); 
       end    
@@ -239,14 +240,16 @@ function [Ya1,Ycls,YBG,YMF,Ywmhr,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol
   Ya1((Yp0>2.0 & Ym>2.0) & YA==LAB.CB)=LAB.CB;                             % cerebellum
   Ya1((Yp0>2.0 & Ym>2.0) & YA==LAB.BS)=LAB.BS;                             % brainstem
   Ya1((Yp0>2.0 & Ym>2.0) & YA==LAB.ON)=LAB.ON;                             % optical nerv
+  Ya1((Yp0<1.8 & Ym<1.8) & YA==LAB.BV)=LAB.BV;                             % low-int VB
+  Ya1((Yp0>2.8 & Ym>3.2) & YA==LAB.BV)=LAB.BV;                             % high-int VB
   Ya1((Yp0>2.0 & Ym>2.0) & YA==LAB.MB)=LAB.MB;                             % midbrain
   clear Ybg Ybgd; 
-  %% region-growing
+  % region-growing
   Ya1(Ya1==0 & Yp0<1.9)=nan; 
   Ya1 = cat_vol_downcut(Ya1,Ym,4*noise); Ya1(isinf(Ya1))=0; 
   Ya1 = cat_vol_median3c(Ya1,Yb);                                          % smoothing
   Ya1((Yp0>1.75 & Ym>1.75 & Yp0<2.5 & Ym<2.5) & Ya1==LAB.MB)=0;            % midbrain correction
-  
+  Ya1(Ya1==LAB.CT & ~cat_vol_morph(Ya1==LAB.CT,'do',1.4)) = 0; 
   
   
   %% Mapping of ventricles:
@@ -266,9 +269,9 @@ function [Ya1,Ycls,YBG,YMF,Ywmhr,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol
   Ynv = smooth3(Ynv)>0.8;
   Yvt = single(smooth3(Yp0<1.5 & (YA==LAB.VT) & Yg<0.25 & ~Ynv)>0.7); 
   Yvt(Yvt==0 & Ynv)=2; Yvt(Yvt==0 & Ym>1.8)=nan; Yvt(Yvt==0)=1.5;
-  % bottleneck
+  %% bottleneck
   Yvt2 = cat_vol_laplace3R(Yvt,Yvt==1.5,0.01); % first growing for large regions
-  Yvt(cat_vol_morph(Yvt2<1.5,'o',2) & ~isnan(Yvt) & Yp0<1.5) = 1; 
+  Yvt(cat_vol_morph(Yvt2<1.4,'o',2) & ~isnan(Yvt) & Yp0<1.5) = 1; 
   Yvt(cat_vol_morph(Yvt2>1.8,'o',2) & ~isnan(Yvt) & Yp0<1.5) = 2; 
   Yvt2 = cat_vol_laplace3R(Yvt,Yvt==1.5,0.002);
   % remove small objects
@@ -277,6 +280,7 @@ function [Ya1,Ycls,YBG,YMF,Ywmhr,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol
   Yvt = cat_vol_morph(Yvt    , 'l', [10 50]);
   warning('on','MATLAB:cat_vol_morph:NoObject');
   Yvt = smooth3((Yvt | (YA==LAB.VT & Ym<1.7)) & Yp0<1.5 & Ym<1.5)>0.5; 
+  %%
   Ya1(Yvt) = LAB.VT; 
   if ~debug, clear Yvts1; end
 
@@ -308,7 +312,11 @@ function [Ya1,Ycls,YBG,YMF,Ywmhr,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol
       cat_vol_morph((Ya1==0 | Ya1==LAB.CT | Ya1==LAB.BV | Ym>1.5) & Ya1~=LAB.VT & Yp0<2.5,'e',1,vx_vol) & ... avoid subcortical regions
       ~Ywm;  clear Ywm 
     Ybb = cat_vol_morph(Yp0>0.5,'lc',1,vx_vol); 
-    Ybv = (Ybv & Ybb) | smooth3(Yp0<0.5 & Ybb)>0.4; clear Ybb; 
+    %%
+    Ycenter  = cat_vol_smooth3X(YS==0,2)<0.95 & cat_vol_smooth3X(YS==1,2)<0.95 & Yp0>0;
+    Yb2 = smooth3( Ydiv<0.1 & Ym>1.5 & (Ym-Yp0)>0.5 & (Ycenter | cat_vol_morph(~Yb,'dd',3)) & Ya1==0 )>0.5;
+    %%
+    Ybv = ((Ybv | Yb2) & Ybb) | smooth3(Yp0<0.5 & Ybb)>0.4; clear Ybb; 
     %% smoothing
     Ybvs = smooth3(Ybv);
     Ybv(Ybvs>0.3 & Ym>2.5 & Yp0<2.5)=1; Ybv(Ybvs>0.3 & Ym>3.5 & Yp0<2.9)=1;
@@ -375,14 +383,14 @@ function [Ya1,Ycls,YBG,YMF,Ywmhr,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol
     %               normal subcortical structures
     % YwmhL:        extrem large WMs (important to use age-based threshold!)
     % Yinsula:      insula and claustrum 
-    Ybgth    = cat_vol_morph( YA==LAB.BG | Ya1==LAB.BG | Ya1==LAB.TH | YA==LAB.PH ,...
+    Ybgth    = cat_vol_morph( YA==LAB.BG | Ya1==LAB.BS | Ya1==LAB.TH | YA==LAB.PH | YA==LAB.CB ,...
                 'dd',1.5 + max(0,2-WMHCstr*4),vx_vol);
     Ybgth    = cat_vol_morph( Ybgth | Ya1==LAB.VT ,'dc',10,vx_vol); 
     Ycenter  = cat_vol_smooth3X(YS==0,8)<0.95 & cat_vol_smooth3X(YS==1,8)<0.95 & Yp0>0;
    
     Ycortex1 = single(1.5 + 0.5*(Yvt2>1.5 & Yvt2<3 & Yp0<=2 & Ym<2.1) - 0.5*Yvt); Ycortex1(Ym>2.1) = nan; 
     %%
-    YwmhL    = cat_vol_morph( smooth3((Yp0A+YwmhA)>1.9 & Ym>1.7 & Ym<2.2 & ~Ybgth & ~Ycenter & ...
+    YwmhL    = cat_vol_morph( smooth3((Yp0A + YwmhA)>1.9 & Ym>1.7 & Ym<2.2 & ~Ybgth & ~Ycenter & ...
                cat_vol_morph( YwmhA>0 ,'dd',8) & YA==LAB.CT & ... % use Ywmh atlas
                ~cat_vol_morph(Yvt2>1.6 & Yvt2<3 & Ym<1.8 ,'dd',3,vx_vol))>0.5,'do',4-3*WMHCstr,vx_vol); % age adaption
              %%
@@ -550,10 +558,20 @@ function [Ya1,Ycls,YBG,YMF,Ywmhr,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol
   %  this requires further handling in the registration routine as bad
   %  areas (replaced by NaNs?)
   %
-  %  Ylesion = cat_vol_morph( smooth3(Yp0A>1.8 & Ym>1.1 & Ym<1.9)>0.5 , 'do', 3);
-  %  
-  
-  
+  if extopts.WMHC>3
+    Ylesion = single( Yp0A./(Ym+2)>1.3 & Yp0>0.5 & Yp0<2 & Ya1~=LAB.VT & Ya1~=LAB.HI & Ym<1.5 ); % , 'do', 3);
+    Ylesion = single(cat_vol_morph(Ylesion,'l',[inf 50])>0); 
+    Ylesion(smooth3(Yp0A>2.9 & Ym<2)>0.7) = 1; 
+    if exist('Ylesionmsk','var'), Ylesion(Ylesionmsk) = 1; end % add manual lesions
+    Ylesion(Ym>2 | (Ya1==LAB.VT & Yp0A<2.9) | Ya1==LAB.HI | Yp0==0) = nan;
+    [Ylesion,Ydx] = cat_vol_simgrow(Ylesion,max(1,Ym),1); Ylesion(Ydx>0.1)=0; 
+    % different volume boundaries depending on the position of the lesion
+    Ylesion = cat_vol_morph(cat_vol_morph(Ylesion,'do',2) & Yp0A<2.5,'l',[inf 200])>0 | ... % maybe just atrophy
+              cat_vol_morph(cat_vol_morph(Ylesion,'do',1) & Yp0A>2.5,'l',[inf 100])>0 | ...
+              cat_vol_morph(Ylesion & Yp0A>2.9,'l',[inf 10])>0;
+    %%
+    Ya1(Ylesion>0) = LAB.LE;
+  end
   
   
   %% Closing of gaps between diffent structures:
@@ -581,7 +599,11 @@ function [Ya1,Ycls,YBG,YMF,Ywmhr,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol
   
   
   %% complete map
+  Ya1(Ya1==0 & Yp0<1.5)=nan; 
+  Ya1 = cat_vol_downcut(Ya1,Ym,2*noise); Ya1(isinf(Ya1))=0; 
+  Ybv = Ya1==LAB.BV; Ya1(Ya1==LAB.BV)=0; 
   [tmp0,tmp1,Ya1] = cat_vbdist(Ya1,Yb); clear tmp0 tmp1;
+  Ya1(Ybv) = LAB.BV; 
   
   % consider gyrus parahippocampalis
   Ya1(YA==LAB.PH) = LAB.PH;
@@ -624,22 +646,43 @@ function [Ya1,Ycls,YBG,YMF,Ywmhr,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol
   Ycortex = cat_vol_resize(Ycortex,'dereduceBrain',BB); 
   Ym    = Ym0; clear Ym0;
 
-  Ywmhr = cat_vol_ctype(Ywmhr * 255); 
-  
   % final side alignment
   Ya1(Ya1>0)=Ya1(Ya1>0)+(Ys(Ya1>0)-1);
  
   
-  % class correction
-  % YBG is smoothed a little bit and (B) reset all values that are related
-  % with GM/WM intensity (Ym<2.9/3) (A)
-  Yclssum = single(Ycls{1})+single(Ycls{2})+single(Ycls{3});
+  %% correction of tissue classes 
+  
+  % add WMH class
+  Ywmhrd  = cat_vol_morph(Ywmhr,'dd');
+  Yclssum = (single(Ycls{1}) + single(Ycls{3})) .* (Ywmhrd);
+  Ycls{7} = cat_vol_ctype(Yclssum); 
+  Ycls{1} = cat_vol_ctype(single(Ycls{1}) .* (~Ywmhrd)); 
+  Ycls{3} = cat_vol_ctype(single(Ycls{3}) .* (~Ywmhrd)); 
+  clear Ywmhrd
+  
+  % set possible blood vessels to class 4
+  NS = @(Ys,s) Ys==s | Ys==s+1;
+  Ybv     = NS(Ya1,LAB.BV); 
+  Yclssum = (single(Ycls{1}) + single(Ycls{2})) .* (Ybv);
+  Ycls{5} = cat_vol_ctype(single(Ycls{5}) + Yclssum); 
+  Ycls{1} = cat_vol_ctype(single(Ycls{1}) .* (~Ybv)); 
+  Ycls{2} = cat_vol_ctype(single(Ycls{2}) .* (~Ybv)); 
+  clear Ybv; 
+    
+  % YBG is smoothed a little bit and (B) reset all values that are related with GM/WM intensity (Ym<2.9/3) (A)
+  Yclssum = single(Ycls{1}) + single(Ycls{2}) + single(Ycls{3});
   YBGs    = min( max(0,min(255, 255 - cat_vol_smooth3X(Ya1==1 & Ycls{2}>round(2.9/3),0.8) .* single(Ycls{2}) )), ... (A)
                  max(0,min(255, 255 * cat_vol_smooth3X(YBG .* (Ym<=2.9/3 & Ym>2/3) ,0.5) )) ); % (B)
   Ycls{1} = cat_vol_ctype(single(Ycls{1}) + YBGs .* (single(Ycls{2})./max(eps,Yclssum)));
   Ycls{2} = cat_vol_ctype(single(Ycls{2}) - YBGs .* (single(Ycls{2})./max(eps,Yclssum)));
   clear YBGs Yclssum; 
  
+  % assure that the sum of all tissues is 255 
+  Yclss = zeros(size(Ym),'uint8'); 
+  for ci=1:numel(Ycls), Yclss = Yclss + Ycls{ci}; end
+  for ci=1:numel(Ycls), Yclss = cat_vol_ctype(single(Ycls{ci}) ./ single(Yclss) * 255); end
+  
+  
   if debug
     cat_io_cmd(' ','','',verb,stime); 
   else

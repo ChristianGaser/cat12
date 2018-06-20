@@ -154,6 +154,12 @@ if ~isfield(res,'spmpp')
 
   %    ds('l2','',vx_vol,Ysrc./WMth,Yp0>0.3,Ysrc./WMth,Yp0,80)
   Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;;
+  if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
+    res.Ylesion = cat_vol_ctype( single(res.Ylesion) .* (Yp0>0.2) ); 
+    for k=1:numel(Ycls), Yl = P(:,:,:,k); Yl(res.Ylesion>0.5) = 0; P(:,:,:,k) = Yl; end  
+    Yl = P(:,:,:,3); Yl(res.Ylesion>0.5) = 255; P(:,:,:,3) = Yl; clear Yl; 
+    Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
+  end
   if sum(Yp0(:)>0.3)<100 
     % this error often depends on a failed affine registration, where SPM
     % have to find the brain in the head or background
@@ -187,6 +193,22 @@ if ~isfield(res,'spmpp')
          'Possibly the affine registration failed. Pleace check image orientation.\n'])); 
     end
   end
+
+  
+
+  %% estimat background to imrove lesion mask ... nicht erforderlich?
+  if 0 %  isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
+    [Ysrcr,resT2] = cat_vol_resize(Ysrc,'reduceV',vx_vol,4,32);
+    Yhdr = cat_vol_morph(Ysrcr>mean(T3th(1:2)),'ldc',4); clear Ysrcr; 
+    Yhd  = cat_vol_resize(cat_vol_smooth3X(Yhdr,2),'dereduceV',resT2)>0.5; clear Yhdr; 
+    Yhd  = Yhd | Ysrc>mean(T3th(1:2));  
+    Yhd  = cat_vol_morph(Yhd,'dc',2); 
+    res.Ylesion = cat_vol_ctype( single(res.Ylesion) .* Yhd);
+    clear Yhd;
+    %for k=1:numel(Ycls), Ycls{k} = cat_vol_ctype(single(Ycls{k}) .* (255 - res.Ylesion)); end; 
+    %P(:,:,:,8) = res.Ylesion; 
+  end
+  
   
   %%
   Yp0(smooth3(cat_vol_morph(Yp0>0.3,'lo'))<0.5)=0; % not 1/6 because some ADNI scans have large "CSF" areas in the background 
@@ -223,7 +245,7 @@ if ~isfield(res,'spmpp')
 
   if skullstripped % skull-stripped
     Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
-    Yb   = Yp0>0.5/3; 
+    Yb   = Yp0>=0.5/3; 
     Ybb  = cat_vol_ctype(Yb)*255; 
 
     P(:,:,:,6) = P(:,:,:,4); 
@@ -594,7 +616,15 @@ if ~isfield(res,'spmpp')
   %  use the Shooting template for mapping rather then the TPM because
   %  of the cat12 atlas map.
   stime = cat_io_cmd(sprintf('Fast Shooting registration'),'','',job.extopts.verb); 
-  job2 = job; 
+  if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
+    %for k=1:numel(Ycls), Ycls{k} = cat_vol_ctype(single(Ycls{k}) .* (255 - single(res.Ylesion))); end; 
+    %Ycls{8}  = cat_vol_ctype(res.Ylesion); 
+    Ylesions = cat_vol_smooth3X(single(res.Ylesion)/255,4); %clear Ylesion; 
+  else
+    Ylesions = zeros(size(Ym),'single'); 
+  end
+  
+  job2 = job;
   job2.extopts.regstr   = 15;     % low resolution 
   job2.extopts.reg.nits = 16;     % less iterations
   job2.extopts.verb     = debug;  % do not display process (people would may get confused) 
@@ -602,7 +632,7 @@ if ~isfield(res,'spmpp')
   job2.extopts.shootingtpms(3:end) = [];             % remove high templates, we only need low frequency corrections
   res2 = res; 
   res2.do_dartel        = 2;      % use shooting
-  [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M); 
+  [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M,Ylesions); clear Ylesions;
   Yy2 = trans.warped.y;
   if ~debug, clear trans job2 res2; end
 
@@ -675,8 +705,8 @@ if ~isfield(res,'spmpp')
     Ycls{3} = Ycls{3} - cat_vol_ctype(Ygd * 255); 
     if ~debug, clear Yp0 Ygd; end
     Yclss = zeros(size(Ym),'uint8'); 
-    for ci=1:numel(Ycls), Yclss = Yclss + Ycls{ci}; end
-    for ci=1:numel(Ycls), Yclss = cat_vol_ctype(single(Ycls{ci}) ./ single(Yclss) * 255); end
+    for ci=1:numel(Ycls), if ~isempty(Ycls{ci}), Yclss = Yclss + Ycls{ci}; end; end
+    for ci=1:numel(Ycls), if ~isempty(Ycls{ci}), Yclss = cat_vol_ctype(single(Ycls{ci}) ./ single(Yclss) * 255); end; end
     if ~debug, clear Yclss; end
   end
   fprintf('%5.0fs\n',etime(clock,stime));   
@@ -691,10 +721,10 @@ if ~isfield(res,'spmpp')
       extoptsLAS2 = job.extopts;
       extoptsLAS2.LASstr = extoptsLAS2.LASstr-1; 
       stime = cat_io_cmd(sprintf('Local adaptive segmentation 2 (LASstr=%0.2f)',extoptsLAS2.LASstr));
-      [Ymi,Ym,Yclsi] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extoptsLAS2); % use Yclsi after cat_vol_partvol
+      [Ymi,Ym,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extoptsLAS2); % use Yclsi after cat_vol_partvol
     else
       stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
-      [Ymi,Ym] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
+      [Ymi,Ym,Ycls] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
     end
 
     if job.extopts.NCstr>0 
@@ -718,11 +748,9 @@ if ~isfield(res,'spmpp')
       Ymis = cat_vol_median3(Ymi,Ymi>0 & Ymi<0.4,Ymi<0.4); Ymi = Ymi.*max(0.1,Ymi>0.4) + Ymis.*min(0.9,Ymi<=0.4);
       Ymis = cat_vol_median3(Ym,Ym>0 & Ym<0.4,Ym<0.4); Ym = Ym.*max(0.1,Ym>0.4) + Ymis.*min(0.9,Ym<=0.4);
       
-      fprintf('%5.0fs\n',etime(clock,stime));
       clear Ymis;
-    end
-    %clear Ymioc; 
-    
+    end    
+    fprintf('%5.0fs\n',etime(clock,stime));
   else
     Ymi = Ym; 
   end
@@ -744,10 +772,8 @@ if ~isfield(res,'spmpp')
   %  But for bias correction the ROIs are important too, to avoid over
   %  corrections in special regions like the cerbellum and subcortex. 
   %  ---------------------------------------------------------------------
-  NS = @(Ys,s) Ys==s | Ys==s+1; 
   stime = cat_io_cmd('ROI segmentation (partitioning)');
-  [Yl1,Ycls,YBG,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job);
-  if exist('Yclsi','var'), Ycls = Yclsi; clear Yclsi; end % new Ycls from LAS
+  [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job);
   fprintf('%5.0fs\n',etime(clock,stime));
 
   if ~debug; clear YBG Ycr; end
@@ -762,6 +788,7 @@ if ~isfield(res,'spmpp')
   %  has to be done before bias correction.
   %  Of course we only want to do this for highres T1 data!
   %  ---------------------------------------------------------------------
+  NS = @(Ys,s) Ys==s | Ys==s+1; 
   if job.extopts.BVCstr && ~job.inv_weighting && all(vx_vol<2); 
     stime = cat_io_cmd(sprintf('Blood vessel correction (BVCstr=%0.2f)',job.extopts.BVCstr));
 
@@ -847,7 +874,7 @@ if ~isfield(res,'spmpp')
         for k1 = 1:Kb2, cls2(:,:,k1) = Ycls{k1}(:,:,i); end
         % find maximum for reordered segmentations
         [maxi,maxind] = max(cls2(:,:,[3,1,2,4:Kb2]),[],3);
-        k1ind = [1 2 3 1 0 0]; 
+        k1ind = [1 2 3 1 0 0 1 0]; 
         for k1 = 1:Kb2
           Yp0(:,:,i) = Yp0(:,:,i) + cat_vol_ctype((maxind == k1) .* (maxi~=0) * k1ind(k1) .* Yb(:,:,i)); 
         end
@@ -981,119 +1008,70 @@ if ~isfield(res,'spmpp')
   %  and maybe add further refinements in the partitioning function.
   %  -------------------------------------------------------------------
   LAB  = job.extopts.LAB;
-  vxv  = 1/max(vx_vol);
-
   Yp0 = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
-  if exist('Ywmh','var'), Ywmhrel = Ywmh; else Ywmhrel = NS(Yl1,23); end
+  Ywmhrel = single(Ycls{1})/255 .* NS(Yl1,23); 
   qa.subjectmeasures.WMH_abs    = sum(Ywmhrel(:));                                            % absolute WMH volume without PVE
   qa.subjectmeasures.WMH_rel    = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(0.5/3*255));   % relative WMH volume to TIV without PVE
   qa.subjectmeasures.WMH_WM_rel = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(2.5/3*255));   % relative WMH volume to WM without PVE
   qa.subjectmeasures.WMH_abs    = prod(vx_vol)/1000 * qa.subjectmeasures.WMH_abs;             % absolute WMH volume without PVE in cm^3
   clear Ywmhrel Yp0
 
-  Yp0b = cat_vol_ctype(single(Ycls{1})*2/3 + single(Ycls{2}) + single(Ycls{3})*1/3,'uint8');
-  Yp0b = Yp0b(indx,indy,indz); 
+  
 
 
   %% correction for normalization [and final segmentation]
   if job.extopts.WMHC && job.extopts.WMHCstr>0 && ~job.inv_weighting; 
 
     if job.extopts.WMHC==1
-      stime = cat_io_cmd(sprintf('Internal WMH correction for spatial normalization (WMHCstr=%0.2f)',job.extopts.WMHCstr));
+      cat_io_cmd(sprintf('Internal WMH correction for spatial normalization (WMHCstr=%0.2f)',job.extopts.WMHCstr));
     elseif job.extopts.WMHC>1
-      stime = cat_io_cmd(sprintf('Permanent WMH correction (WMHCstr=%0.2f)',job.extopts.WMHCstr));
+      cat_io_cmd(sprintf('Permanent WMH correction (WMHCstr=%0.2f)',job.extopts.WMHCstr));
     end
+    fprintf('\n'); 
 
-    % setting of further WMHC that can now be detected by the further
-    % evalution of the segmentation. 
-    % estimation of WMHC is important for LAS (do I use it?)
-    %  ... code ...
-
+    
     % prepare correction map
-      if ~exist('Ywmh','var') 
-        Ywmh = NS(Yl1,LAB.HI); %cat_vol_morph(NS(Yl1,LAB.HI),'dd',1); 
-        Ywmh = min( 1, max( 0, Ywmh .* Yp0toC(Ymi*3,2) )); 
-        Ywmh = single(max(0,min(1,Ywmh*255))); 
-      else
-        Ywmh = single(Ywmh); 
-      end
-     %{
-        %Ywmh = single( NS(Yl1,LAB.HI) * 255 ); 
-        %Yp0  = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
-        %Ywmh = Ywmh | (cat_vol_morph(Ycls{2}>64 | Yp0>2.25,'e') & cat_vol_morph(Yl1==1 | Yl1==2,'e',2) & Ymi<2.9 & Ymi>2.2); 
-        % only the peaks WMHs
-        Ywmh2 = nan(size(Ywmh),'single'); Ywmh2(Ywmh>0)=0; 
-        Ywmh2(smooth3(Ywmh>0.5 & Ymi>0.5 & ~cat_vol_morph(NS(Yl1,LAB.VT),'dd',1.4) & Ymi>1.25/3)>0.5)=1; 
-        Ywmh2 = cat_vol_downcut(Ywmh2,Ywmh,-0.01);
-        Ywmh2(smooth3(Ywmh2)<0.5)=0;
-        %
-      Ywmh = single(max(0,min(1,Ywmh.*Ywmh2 - smooth3(cat_vol_morph(NS(Yl1,LAB.VT),'dd',1.4) & Ymi<0.5) ))*255);
-    %}
+    Ynwmh = NS(Yl1,LAB.TH) | NS(Yl1,LAB.BG) | NS(Yl1,LAB.HC) | NS(Yl1,LAB.CB) | NS(Yl1,LAB.BS);
+    Ynwmh = cat_vol_morph(cat_vol_morph( Ynwmh, 'dd', 8 , vx_vol),'dc',12 , vx_vol) & ...
+            ~cat_vol_morph( NS(Yl1,LAB.VT), 'dd', 4 , vx_vol); 
+    Ywmh  = cat_vol_morph( Ycls{7}>0, 'dd', 1.5); 
+    Ywmh  = Ycls{7}>0 | (~Ynwmh & (Ycls{2}==255 | ...
+            cat_vol_morph( cat_vol_morph(Ycls{2}>128 | Ywmh,'ldc',1) ,'de' , 1.5)));
+    Ywmh  = Ywmh .* cat_vol_smooth3X(Ywmh,0.5); % smooth inside
+
+    Yls   = (cat_vol_morph( NS(Yl1,LAB.LE) , 'dd') & Ym<1.25/3 ) | smooth3(Ywmh & Ym<1.25/3)>0.5;
+   % Ywmh  = Ywmh & ~Yls; 
    
-    %% WMH as separate class 
-    Yclso = Ycls;
-    Yclssum = max(eps,single(Ycls{1})+single(Ycls{2})+single(Ycls{3}));
-    Ycls{1} = cat_vol_ctype(single(Ycls{1}) - Ywmh .* (single(Ycls{1})./Yclssum));
-    Ycls{2} = cat_vol_ctype(single(Ycls{2}) - Ywmh .* (single(Ycls{2})./Yclssum));
-    Ycls{3} = cat_vol_ctype(single(Ycls{3}) - Ywmh .* (single(Ycls{3})./Yclssum));
-    Ywmh    = cat_vol_ctype(Yclssum - single(Ycls{1}) - single(Ycls{2}) - single(Ycls{3}));
-    %clear Yclssum Ywmh2;  
-
-    %% if the segmentation should be corrected later...
-    if job.extopts.WMHC>1
-      Yclso = Ycls;
-    end
-
-    % upate of the actual segmentation only for Dartel
-    Ycls{2} = cat_vol_ctype(single(Ycls{2}) + single(Ywmh));
-
-    if job.extopts.WMHC>1
-      % update of Yp0b for WM/CSF PVE ROI
-
-      Yp0  = single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255;
-      Yp0  = Yp0(indx,indy,indz);
-      Yl1b = Yl1(indx,indy,indz);
-      Ymib = Ymi(indx,indy,indz);
-
-      Ybs  = NS(Yl1b,LAB.BS) & Ymib>2/3; clear Ymib; 
-      YpveVB = cat_vol_morph(NS(Yl1b,LAB.VT) | Ybs,'d',2);                % ventricle and brainstem
-      YpveCC = cat_vol_morph(Yl1b==1,'d',3*vxv) & cat_vol_morph(Yl1b==2,'d',3*vxv) & ...
-               cat_vol_morph(NS(Yl1b,LAB.VT),'d',2);                      % corpus callosum
-      Ynpve  = smooth3(NS(Yl1b,LAB.BG) | NS(Yl1b,LAB.TH))>0.3;            % no subcortical structure 
-      Yroi = (YpveVB | YpveCC) & ~Ynpve & ...
-             cat_vol_morph(Yp0==3,'d',2) & cat_vol_morph(Yp0==1,'d',2) & ...
-             Yp0<3 & Yp0>1 & ...
-             smooth3((Yp0<3 & Yp0>1) & ~cat_vol_morph(Yp0<3 & Yp0>1,'o',1))>0.1;
-      clear YpveVB YpveCC Ybs Ynpve ;         
-      Yncm = (3-Yp0)/2.*Yroi; 
-
-      Ycls{1}(indx,indy,indz) = min(Ycls{1}(indx,indy,indz),uint8(~Yroi*255));
-      Ycls{2}(indx,indy,indz) = cat_vol_ctype(single(Ycls{2}(indx,indy,indz)).*~Yroi + (Yroi - Yncm)*255,'uint8');
-      Ycls{3}(indx,indy,indz) = cat_vol_ctype(single(Ycls{3}(indx,indy,indz)).*~Yroi + Yncm*255,'uint8');
-      clear Yp0 Yroi;
-
-      Yp0b = cat_vol_ctype(single(Ycls{1})*2/3 + single(Ycls{2}) + single(Ycls{3})*1/3,'uint8');
-      Yp0b = Yp0b(indx,indy,indz); 
-    else
-      if qa.subjectmeasures.WMH_rel>3 || qa.subjectmeasures.WMH_WM_rel>5 % #% of the TIV or the WM are affected
-        cat_warnings = cat_io_addwarning(cat_warnings,...
-          'MATLAB:SPM:CAT:cat_main:uncorrectedWMH',...
-          sprintf('Uncorrected WM lesions (%2.2f%%%%%%%% of the WM)!',qa.subjectmeasures.WMH_WM_rel),1);
-        fprintf('\n'); cat_io_cmd(' ','','',1);
-      end
-    end
-    fprintf('%5.0fs\n',etime(clock,stime));
+    %% transfer tissue from GM and CSF to WMH
+    Ycls{8} = cat_vol_ctype( Yls  .* single(Ycls{1})  +  Yls  .* single(Ycls{3})); 
+    Ycls{7} = cat_vol_ctype( Ywmh .* single(Ycls{1})  +  Ywmh .* single(Ycls{3})); 
+    Ycls{1} = cat_vol_ctype( single(Ycls{1}) .* (1-Ywmh-Yls) ); 
+    Ycls{3} = cat_vol_ctype( single(Ycls{3}) .* (1-Ywmh-Yls) ); 
+    if ~debug, clear Ynwmh Ywmh; end
+    
+    % different types of WMH correction as GM, WM or extra class
+    % different types of lesion correction as CSF or extra class
+    if job.extopts.WMHC<2
+      Yp0b = cat_vol_ctype(single(Ycls{1})*2/5 + single(Ycls{2})*3/5 + single(Ycls{3})*1/5 + single(Ycls{7})*2/5 + single(Ycls{8})*1/5,'uint8');
+    elseif job.extopts.WMHC==2
+      Yp0b = cat_vol_ctype(single(Ycls{1})*2/5 + single(Ycls{2})*3/5 + single(Ycls{3})*1/5 + single(Ycls{7})*3/5 + single(Ycls{8})*1/5,'uint8');
+    elseif job.extopts.WMHC>=3
+      Yp0b = cat_vol_ctype(single(Ycls{1})*2/5 + single(Ycls{2})*3/5 + single(Ycls{3})*1/5 + single(Ycls{7})*4/5 + single(Ycls{8})*1.5/5,'uint8');
+    end 
+    
   else
+    Yp0b = cat_vol_ctype(single(Ycls{1})*2/5 + single(Ycls{2})*3/5 + single(Ycls{3})*1/5,'uint8');
+  
     if qa.subjectmeasures.WMH_rel>3 || qa.subjectmeasures.WMH_WM_rel>5 % #% of the TIV or the WM are affected
       cat_warnings = cat_io_addwarning(cat_warnings,...
         'MATLAB:SPM:CAT:cat_main:uncorrectedWMH',...
         sprintf('Uncorrected WM lesions greater (%2.2f%%%%%%%% of the WM)!\\n',qa.subjectmeasures.WMH_rel));
     end
   end
+  Yp0b = Yp0b(indx,indy,indz); 
   clear Yclsb;
 
   if job.extopts.verb>2
-    Yp0  = single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255; %#ok<NASGU>
     tpmci=tpmci+1; tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'preDartel'));
     save(tmpmat,'Yp0','Ycls','Ymi','T3th','vx_vol','Yl1');
     clear Yp0;
@@ -1103,9 +1081,9 @@ if ~isfield(res,'spmpp')
   % clear last 3 tissue classes to save memory
   % please do not try to write out these segmentations because class 4-6 are form SPM12
   % and class 1-3 from CAT12 and these are completely different segmentation approaches
-  if all(cell2mat(struct2cell(job.output.TPMC)')==0)
-    for i=6:-1:4, Ycls(i)=[]; end   
-  end
+  %if all(cell2mat(struct2cell(job.output.TPMC)')==0)
+  %  for i=6:-1:4, Ycls(i)=[]; end   
+  %end
 
   %% ---------------------------------------------------------------------
   %  Affine registration:
@@ -1183,7 +1161,7 @@ else
   Ycls{3} = uint8(spm_read_vols(spm_vol(fullfile(pp,['c3' ff ee])))*255); 
 
   % create (resized) label map and brainmask
-  Yp0  = single(Ycls{3})/3 + single(Ycls{1})/3*2 + single(Ycls{2})/3*3;
+  Yp0  = single(Ycls{3})/5 + single(Ycls{1})/5*2 + single(Ycls{2})/5*3;
   Yb   = Yp0>0.5;
   
   % load original images and get tissue thresholds
@@ -1228,22 +1206,84 @@ end
 %% ---------------------------------------------------------------------
 %  Spatial Registration with Dartel or Shooting
 %  ---------------------------------------------------------------------
-  [trans,res.ppe.reg] = cat_main_registration(job,res,Ycls,Yy,tpm.M);; 
+  Yclsd = Ycls(1:2); % use only GM and WM for deformation
+  if job.extopts.WMHC>0 && numel(Ycls)>6
+    Yclsd{2} = Ycls{2} + Ycls{7}; % set WMHs as WM in some cases
+  end
+  
+  if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
+    % lesion detection in the oringal space with the origal data
+    LSstr   = 0.5; 
+    Yvt     = cat_vol_morph( NS(Yl1,job.extopts.LAB.VT),'do',4,vx_vol);      % open to get lesions close to the ventricle
+    Yvt     = cat_vol_morph( Yvt ,'dd',4,vx_vol);                            % add some voxels for smoothness
+    res.Ylesion = cat_vol_ctype( single(res.Ylesion) .* (1 - (Yvt & Ym>0.9 & Ym<1.1) ));
+    if ~debug, clear Yvt Ybgvt Ybgn;  end      
+    % add lesion of automatic lesion estimation? - in development
+    if job.extopts.WMHC>3
+      res.Ylesion = cat_vol_ctype( single(res.Ylesion) + ...
+        255* smooth3( Ym<1.5/3 & cat_vol_morph(NS(Yl1,job.extopts.LAB.LE),'dd',4*(1-LSstr))) ); 
+    end
+    Ylesions = cat_vol_smooth3X(single(res.Ylesion)/255,4); % final smoothing to have soft boundaries
+  else
+    Ylesions = zeros(size(Ym),'single'); 
+  end
+  
+  %% call Dartel/Shooting registration 
+  [trans,res.ppe.reg] = cat_main_registration(job,res,Yclsd,Yy,tpm.M,Ylesions);
+  clear Yclsd;
+  
+  
+  %% update WMHs?
+  if numel(Ycls)>6
+    %% load tempale 
+    VwmA = spm_vol([job.extopts.templates{end},',2']);  
+    %VgmA = spm_vol([job.extopts.templates{end},',1']);  
+    if any( VwmA.dim ~= trans.warped.odim )
+      % interpolation
+      yn = numel(trans.warped.y); 
+      p  = ones([4,yn/3],'single'); 
+      p(1,:) = trans.warped.y(1:yn/3);
+      p(2,:) = trans.warped.y(yn/3+1:yn/3*2);
+      p(3,:) = trans.warped.y(yn/3*2+1:yn);
+      amat   = VwmA.mat \ trans.warped.M1; 
+      p      = amat(1:3,:) * p;
 
+      Yy = zeros([res.image(1).dim(1:3),3],'single'); 
+      Yy(1:yn/3)        = p(1,:);
+      Yy(yn/3+1:yn/3*2) = p(2,:);
+      Yy(yn/3*2+1:yn)   = p(3,:);
 
+      Yy = double(Yy); 
+    else
+      Yy = double(trans.warped.y);
+    end
+    YwmA = single( spm_sample_vol( VwmA ,Yy(:,:,:,1),Yy(:,:,:,2),Yy(:,:,:,3),1)); YwmA = reshape(YwmA,size(Ym)); 
+    %YgmA = single( spm_sample_vol( VgmA ,Yy(:,:,:,1),Yy(:,:,:,2),Yy(:,:,:,3),1)); YgmA = reshape(YgmA,size(Ym)); 
+    %% 
+    Yclst   = cat_vol_ctype( single(Ycls{7}) .* YwmA ); 
+    Ycls{2} = Ycls{2} + (Ycls{7} - Yclst);
+    Ycls{7} = Yclst;
+    
+    %Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*5/255; 
+    %Yclst = cat_vol_morph( cat_vol_morph( (YwmA + YgmA)>0.9 & Ym<1.25/3,'do',1) , 'dd', 4) & Ym<1.25/3; 
+  end
+  
 %%  --------------------------------------------------------------------
 %  write results
 %  ---------------------------------------------------------------------
 
-% reset WMHC
-if (job.extopts.WMHC==1 || job.extopts.WMHC==3) && job.extopts.WMHCstr>0 && ~job.inv_weighting && exist('Yclso','var')
-  Ycls = Yclso; 
+if job.extopts.WMHC<2
+  Ycls{1} = Ycls{1} + Ycls{7}; % WMH as GM
+elseif job.extopts.WMHC==2
+  Ycls{2} = Ycls{2} + Ycls{7}; % WMH as WM 
+elseif job.extopts.WMHC>=3
+  Ycls{2} = Ycls{2} + Ycls{7}; % WMH as own class
 end
-clear Yclso;
+  
 
 
 stime = cat_io_cmd('Write result maps');
-Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*5/255; 
 
 % bias, noise and global corrected without masking for subject space and with masking for other spaces 
 cat_io_writenii(VT0,Ym,mrifolder,'m', ...Dartel
@@ -1261,12 +1301,8 @@ cat_io_writenii(VT0,Ymi.*(Yp0>0.1),mrifolder,'mi', ...
   'bias and noise corrected, local intensity normalized (masked due to normalization)','uint16',[0,0.0001], ...
   min([0 1 0],[job.output.las.native job.output.las.warped job.output.las.dartel]),trans);
   
-% Yp0b maps
-if job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting; 
-  Yp0 = Yp0 + single(Ywmh)/255; 
-end
-
-cat_io_writenii(VT0,Yp0,mrifolder,'p0','label map','uint8',[0,4/255],job.output.label,trans);
+% Yp0
+cat_io_writenii(VT0,Yp0,mrifolder,'p0','label map','uint8',[0,5/255],job.output.label,trans);
 clear Yp0; 
 
 % partitioning
@@ -1287,13 +1323,34 @@ for clsi=1:3
 end
 
 % write WMH class maps
-if job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting;
-  cat_io_writenii(VT0,single(Ywmh)/255,mrifolder,'p7','WMH tissue map','uint8',[0,1/255],...
-    min([1 1 0 2],[job.output.WMH.native job.output.WMH.warped ...
+if job.extopts.WMHC>=3 && job.extopts.WMHCstr>0 && ~job.inv_weighting;
+  cat_io_writenii(VT0,single(Ycls{7})/255,mrifolder,'p7','WMH tissue map','uint8',[0,1/255],...
+    min([1 1 0 3],[job.output.WMH.native job.output.WMH.warped ...
     job.output.WMH.mod job.output.WMH.dartel]),trans); % 1 0 0 0
-  cat_io_writenii(VT0,single(Ywmh)/255,mrifolder,'p7','WMH tissue map','uint16',[0,1/255],...
+  cat_io_writenii(VT0,single(Ycls{7})/255,mrifolder,'p7','WMH tissue map','uint16',[0,1/255],...
     min([0 0 3 0],[job.output.WMH.native job.output.WMH.warped ...
     job.output.WMH.mod job.output.WMH.dartel]),trans); % 0 1 2 2
+  
+  % export lesions
+  if job.extopts.WMHC>3 && numel(Ycls)>7
+    cat_io_writenii(VT0,single(Ycls{8}),mrifolder,'p8','WMH tissue map','uint8',[0,1/255],...
+      min([1 1 0 3],[job.output.WMH.native job.output.WMH.warped ...
+      job.output.WMH.mod job.output.WMH.dartel]),trans); % 1 0 0 0
+    cat_io_writenii(VT0,single(Ycls{8}),mrifolder,'p8','WMH tissue map','uint16',[0,1/255],...
+      min([0 0 3 0],[job.output.WMH.native job.output.WMH.warped ...
+      job.output.WMH.mod job.output.WMH.dartel]),trans); % 1 0 0 0
+  end
+elseif any([job.output.WMH.native job.output.WMH.warped ...
+    job.output.WMH.mod job.output.WMH.dartel])
+  % should write, but can not ...
+  if job.extopts.WMHC<3
+    cat_warnings = cat_io_addwarning(cat_warnings,'CAT:cat_main_WMHC:output','Cannot write WMH images because no seperate class is used (set WMHC>=3).');
+  elseif job.extopts.WMHCstr==0
+    cat_warnings = cat_io_addwarning(cat_warnings,'CAT:cat_main_WMHC:output','Cannot write WMH images because WMHCstr is 0.');
+  elseif job.inv_weighting
+    cat_warnings = cat_io_addwarning(cat_warnings,'CAT:cat_main_WMHC:output','Cannot write WMH images because inverse contrast was detected.');
+  end
+  % 
 end 
 
 
@@ -1304,13 +1361,13 @@ end
 % tissue class, with good visible differences in the sulci.
 job.output.intsegments = job.extopts.experimental;
 if job.output.intsegments
-  if (any(tc(:)) || job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting); 
+  if (any(tc(:)) || job.extopts.WMHC>=3 && job.extopts.WMHCstr>0 && ~job.inv_weighting); 
 
     % intensity scaled tissue maps
     Yclsi = cell(1,3);
     for clsi=1:3
       clsid = [2 3 1];
-      Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+      Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*5/255; 
       Yclsi{clsi} = Yp0toC(max(1/3,min(1,Ymi)) * 3 .* (Yp0>0),clsid(clsi));
       switch clsi
         case 1
@@ -1344,7 +1401,7 @@ if job.output.intsegments
     clear Yclsi; 
     
     % write WMH class maps
-    if job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting;
+    if job.extopts.WMHC>=3 && job.extopts.WMHCstr>0 && ~job.inv_weighting;
       cat_io_writenii(VT0,(single(Ywmhp) + single(Ywmh))/255,mrifolder,...
         'pi7','WMH tissue map','uint8',[0,1/255],...
         min([1 1 0 2],[job.output.WMH.native job.output.WMH.warped ...
@@ -1573,7 +1630,7 @@ if (job.output.surface || any( [job.output.ct.native job.output.ct.warped job.ou
   end
   
   % brain masking and correction of blood vessels 
-  Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+  Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*5/255; 
   
   % surface creation and thickness estimation
   if 1
@@ -1650,7 +1707,7 @@ if job.output.ROI
     if ai==1 || any(VAvx_vol(ai,:)~=VAvx_vol(ai-1,:))
       % resampe data in atlas resolution for the first time or if the atlas resolution change 
       
-      Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+      Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*5/255; 
 
       % map data to actual template space
       if ai==1
@@ -1751,7 +1808,7 @@ if ~debug, clear Ycls; end
 %  XML-report and Quality Assurance
 %  ---------------------------------------------------------------------
 stime = cat_io_cmd('Quality check'); job.stime = stime; 
-Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; %qa2=qa;
+Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; Yp0(Yp0>3.1) = nan;  %qa2=qa;
 qa    = cat_vol_qa('cat12',Yp0,fname0,Ym,res,cat_warnings,job.extopts.species, ...
           struct('write_csv',0,'write_xml',1,'method','cat12','job',job,'qa',qa));
 
@@ -1895,11 +1952,11 @@ if job.extopts.print
       str(end).value = sprintf('%s(%0.2f) / %s(%0.2f) / %s(%0.2f)',defstrm(job.extopts.LASstr),job.extopts.LASstr,...
         defstrm(job.extopts.gcutstr),job.extopts.gcutstr,defstrm(job.extopts.cleanupstr),job.extopts.cleanupstr); 
     end
-    if job.extopts.expertgui 
+    if job.extopts.expertgui
       restype = char(fieldnames(job.extopts.restypes));
-      str = [str struct('name', 'WMHC / WMHCstr / BVCstr / restype:','value',...
-             sprintf('%d / %0.2f / %0.2f / %s',...
-            job.extopts.WMHC,job.extopts.WMHCstr,job.extopts.BVCstr,restype))];
+      str = [str struct('name', 'WMHC / restype:','value',...
+             sprintf('%d / %s',...
+            job.extopts.WMHC,restype))];
       if ~strcmp('native',restype)
         str(end).value = [str(end).value sprintf('(%0.2f %0.2f)',job.extopts.restypes.(restype))];
       end; 
@@ -1947,7 +2004,7 @@ if job.extopts.print
       str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%5.1f %5.1f %5.1f %%', ...
               qa.subjectmeasures.vol_rel_CGW(1:3)*100))];
       Ywmhrel = NS(Yl1,23);
-      Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; 
+      Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
       WMH_rel    = 100*sum(Ywmhrel(:)) / sum(Yp0(:)>0.5); 
       WMH_WM_rel = 100*sum(Ywmhrel(:)) / sum(Yp0(:)>2.5); 
       if WMH_rel>3 || WMH_WM_rel>5
@@ -2110,7 +2167,7 @@ if job.extopts.print
     try %#ok<TRYNC>
       Yo  = single(VT.private.dat(:,:,:)); 
     end
-    Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+    Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
     if exist('Yo','var')
       if job.inv_weighting
         WMth = min([...

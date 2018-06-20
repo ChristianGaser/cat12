@@ -440,8 +440,8 @@ if ~expert
   gcutstr.labels  = {'SPM approach' 'GCUT approach'};
   gcutstr.values  = {0 0.50};
 else
-  gcutstr.labels  = {'SPM approach (0)','SPM+ approach (2)','SPM+ and GCUT medium (3)','ultralight (eps)','light (0.25)','medium (0.50)','strong (0.75)','heavy (1.00)'};
-  gcutstr.values  = {0 2 3 eps 0.25 0.50 0.75 1.00};
+  gcutstr.labels  = {'SPM approach (0)','GCUT medium (0.50)','SPM+ approach (2)','SPM+ and GCUT medium (3)'};
+  gcutstr.values  = {0 0.50 2 3};
   gcutstr.help    = [gcutstr.help;{
     'Strength of skull-stripping before AMAP segmentation, with "ultralight" for a more liberal and wider brain masks and "heavy" for a more aggressive skull-stripping. If parts of the brain are missing in the brain mask then decrease the strength. If the brain mask of your images still contains parts of the head, then increase the strength. '
     ''
@@ -523,13 +523,6 @@ LASstr.help    = {
 wmhc        = cfg_menu;
 wmhc.tag    = 'WMHC';
 wmhc.name   = 'WM Hyperintensity Correction (WMHC)';
-wmhc.labels = { ...
-  'no correction (0)' ...
-  'only for normalization (1)' ... 
-  'set WMH as WM (2)' ...
-  'set WMH as own class (3)' ...
-};
-wmhc.values = {0 1 2 3};
 wmhc.def    = @(val)cat_get_defaults('extopts.WMHC', val{:});
 wmhc.help   = {
   'WARNING: Please note that the detection of WM hyperintensies is still under development and does not have the same accuracy as approaches that additionally consider FLAIR images (e.g. Lesion Segmentation Toolbox)! '
@@ -541,6 +534,42 @@ wmhc.help   = {
   ' 3) Correction as separate class. '
   ''
 };
+if expert>1
+  wmhc.labels = { ...
+    'no correction (WMHs = GM (0)' ...
+    'only for normalization (1)' ... 
+    'set WMH as WM (2)' ...
+    'set WMH as own class (3)' ...
+    'set WMH and manual lesions as own class (4)' ...
+    'set WMH and lesions as own class (5)' ...
+  };
+  wmhc.values = {0 1 2 3 4 5};
+  wmhc.help = [wmhc.help; {
+    ' 4) Correction as separate class for WMHs and manual defined lesions'
+    '    (zero input values within brainmask).'
+    ' 5) Correction as separate class for WMHs and manual and automatic detected lesions (in development).'
+    }];
+elseif expert==1
+  wmhc.labels = { ...
+    'no correction (0)' ...
+    'only for normalization (1)' ... 
+    'set WMH as WM (2)' ...
+    'set WMH as own class (3)' ...
+    'set WMH and manual lesions as own class (4)' ...
+  };
+  wmhc.values = {0 1 2 3 4};
+  wmhc.help = [wmhc.help; {
+    ' 4) Correction as separate class for WMHs and lesions.'
+    }];
+else
+  wmhc.labels = { ...
+    'no correction' ...
+    'only for normalization' ... 
+    'set WMH as WM' ...
+    'set WMH as own class' ...
+  };
+  wmhc.values = {0 1 2 3};
+end
 
 WMHCstr         = cfg_menu;
 WMHCstr.tag     = 'WMHCstr';
@@ -631,8 +660,8 @@ segmentation      = cfg_branch;
 segmentation.tag  = 'segmentation';
 segmentation.name = 'Segmentation Options';
 if expert==1
-  segmentation.val  = {app,NCstr,LASstr,gcutstr,cleanupstr,WMHCstr,wmhc,restype};
-else
+  segmentation.val  = {app,NCstr,LASstr,gcutstr,cleanupstr,wmhc,restype};
+elseif expert==2
   segmentation.val  = {app,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,mrf,restype};
 end
 segmentation.help = {'CAT12 parameter to control the tissue classification.';''};

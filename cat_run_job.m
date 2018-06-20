@@ -115,7 +115,10 @@ function cat_run_job(job,tpm,subj)
         ofname  = fullfile(pp,[ff(3:end) ee]); 
         nfname  = fullfile(pp,mrifolder,['n' ff '.nii']); 
         copyfile(ofname,nfname); 
-
+        
+        Ysrc0    = single(spm_read_vols(obj.image)); 
+        Ylesion  = single(isnan(Ysrc0) | isinf(Ysrc0) | Ysrc0==0); clear Ysrc0;
+        
         res = load(fullfile(pp,[ff(3:end) '_seg8.mat']));
         job.channel(1).vols{subj}  = [nfname ex];
         job.channel(1).vols0{subj} = [ofname ex];
@@ -597,8 +600,7 @@ function cat_run_job(job,tpm,subj)
           end
           clear Vi Vn;
         end
-
-
+        
         %  prepare SPM preprocessing structure 
         images = job.channel(1).vols{subj};
         for n=2:numel(job.channel)
@@ -620,7 +622,28 @@ function cat_run_job(job,tpm,subj)
         spm_check_orientations(obj.image);
 
 
-
+        %% Lesion masking as zero values of the orignal image (2018-06):
+        %  We do not use NaN and -INF because (i) most images are only (u)int16
+        %  and do not allow such values, (ii) NaN can be part of the background
+        %  of resliced images, and (iii) multiple option are not required here. 
+        %  Zero values can also occure by bad data scaling or processing in the 
+        %  background but also other (large) CSF regions and we have to remove  
+        %  these regions later. 
+        %  We further discussed to use a separate mask images but to deside
+        %  to keep this as simple as possible using no further options!
+        obj.image0 = spm_vol(job.channel(1).vols0{subj});
+        Ysrc0      = spm_read_vols(obj.image0); 
+        Ylesion    = single(Ysrc0==0); clear Ysrc0; 
+        if any( obj.image0.dim ~= obj.image.dim )
+          mat      = obj.image0.mat \ obj.image.mat;
+          Ylesion  = smooth3(Ylesion); 
+          Ylesionr = zeros(obj.image.dim,'single'); 
+          for i=1:obj.image.dim(3),
+            Ylesionr(:,:,i) = single(spm_slice_vol(Ylesion,mat*spm_matrix([0 0 i]),obj.image.dim(1:2),[1,NaN]));
+          end
+          Ylesion = cat_vol_ctype(Ylesionr*255); clear Ylesionr;
+        end
+        
       
         if 1 || ~exist('Affine','var')
           %% Initial affine registration.
@@ -1143,6 +1166,7 @@ end
     res.stime  = stime;
     res.catlog = catlog; 
     res.image0 = spm_vol(job.channel(1).vols0{subj}); 
+    if exist('Ylesion','var'), res.Ylesion = Ylesion; else res.Ylesion = zeros(size(res.image.dim)); end
     job.subj   = subj;
     cat_main(res,obj.tpm,job);
     
