@@ -834,6 +834,46 @@ spmtype.help    = {
   ''
 };
 %------------------------------------------------------------------------
+data.name       = 'Select images';
+% lesion mask
+mask = data; 
+mask.tag        = 'mask';
+mask.name       = 'Select lesion mask images';
+mask.help       = {'Select (additional) lesion mask images that describe the regions that were set to zero.';''};
+mask.num        = [0 Inf];
+% brain mask
+bmask = data; 
+bmask.tag       = 'bmask';
+bmask.name      = 'Select brain mask images';
+bmask.help      = {'Select (additional) brain mask images that describe the regions that were NOT set to zero.';''};
+bmask.num       = [0 Inf];
+bmask.val       = {{''}}; 
+% recalc
+recalc          = cfg_menu;
+recalc.tag      = 'recalc';
+recalc.name     = 'reprocess';
+recalc.help     = {'If the output images already exist that use them rather than the input for additional masking.'};
+recalc.labels   = {'Yes' 'No'};
+recalc.values   = {1 0};
+recalc.val      = {1};
+%
+prefix.val      = {'msk_'};
+prefix.help     = {
+  'Specify the string to be prepended to the filenames of the masked image file(s).'
+  ''
+};
+maskimg         = cfg_exbranch;
+maskimg.tag     = 'maskimg';
+maskimg.name    = 'Manual image (lesion) masking'; 
+maskimg.val     = {data mask bmask prefix};
+maskimg.prog    = @cat_vol_maskimage;
+maskimg.vfiles  = @vfiles_maskimg;
+maskimg.help    = {
+  'Mask images to avoid segmenation and registration errors in brain lesion. The number of mask images has to be equal to the number of the original images. Voxel inside the lesion masks and outside the brainmask will set to zero. '
+  'If you have multiple lesion masks than add them with the oringal images, eg. "images = {sub01.nii; sub02.nii; sub01.nii}" and "mask = {sub01_lesion1.nii; sub02_lesion1.nii; sub01_lesion2.nii}". Alternatively you can choose only one oringal file and a various number of mask files.'
+  ''
+};
+%------------------------------------------------------------------------
 roi_xml = cfg_files;
 roi_xml.name = 'XML files';
 roi_xml.tag  = 'roi_xml';
@@ -1295,7 +1335,7 @@ nonlin_coreg  = cat_conf_nonlin_coreg;
 tools = cfg_choice;
 tools.name   = 'Tools';
 tools.tag    = 'tools';
-tools.values = {showslice,check_cov,check_SPM,calcvol,calcroi,iqr,T2x,F2x,T2x_surf,F2x_surf,sanlm,spmtype,realign,long,nonlin_coreg,defs,defs2}; %,qa
+tools.values = {showslice,check_cov,check_SPM,calcvol,calcroi,iqr,T2x,F2x,T2x_surf,F2x_surf,sanlm,maskimg,spmtype,realign,long,nonlin_coreg,defs,defs2}; %,qa
 if expert 
   tools.values = [tools.values,{urqio}]; 
 end
@@ -1400,6 +1440,11 @@ return;
 function vf = vfiles_sanlm(job)
 job.returnOnlyFilename = 1; 
 vf = cat_vol_sanlm(job); 
+return;
+%_______________________________________________________________________
+function vf = vfiles_maskimg(job)
+job.returnOnlyFilename = 1; 
+vf = cat_vol_maskimage(job); 
 return;
 %_______________________________________________________________________
 function vf = vfiles_volctype(job)

@@ -127,9 +127,9 @@ cat.extopts.BVCstr       = 0.5;  % Strength of the Blood Vessel Correction:   0 
 cat.extopts.regstr       = 0;    % Strength of Shooting registration:         0 - Dartel, eps (fast), 0.5 (default) to 1 (accurate) optimized Shooting, 4 - default Shooting; default 0
 cat.extopts.WMHC         = 0;    % Correction of WM hyperintensities:         0 - no correction, 1 - only for Dartel
                                  %                                            2 - also correct segmentation (to WM), 3 - handle as separate class; default 1
-cat.extopts.WMHCstr      = 0;  % Strength of WM hyperintensity correction:  0 to 5; default 0.5
+cat.extopts.WMHCstr      = 0.5;  % Strength of WM hyperintensity correction:  0 to 5; default 0.5
 cat.extopts.mrf          = 1;    % MRF weighting:                             0 to 1; <1 - weighting, 1 - auto; default 1
-cat.extopts.INV          = 1;   %  Invert PD/T2 images for preprocessing:     0 - no processing, 1 - try intensity inversion, 2 - synthesize T1 image; default 1
+cat.extopts.INV          = 1;    %  Invert PD/T2 images for preprocessing:     0 - no processing, 1 - try intensity inversion, 2 - synthesize T1 image; default 1
 
 % resolution options
 cat.extopts.restype      = 'best';        % resolution handling: 'native','fixed','best'
@@ -266,4 +266,5 @@ cat.extopts.LAB.HC = 19; % Hippocampus
 cat.extopts.LAB.HD = 21; % Head
 cat.extopts.LAB.HI = 23; % WM hyperintensities
 cat.extopts.LAB.PH = 25; % Gyrus parahippocampalis
+cat.extopts.LAB.LE = 27; % lesions
  

@@ -410,9 +410,9 @@ switch lower(action)
         %-Add context menu
         %------------------------------------------------------------------
         if ~isfield(O,'parent')
-          try
+          %try
             cat_surf_render2('ContextMenu',H);
-          end
+          %end
         end
         
         % set default view
@@ -757,11 +757,16 @@ switch lower(action)
           labeldir = sinfo1(1).pp;
         end
         % find nii-files
-        H.niftis = [ ...
-          cat_vol_findfiles(labeldir,sprintf('m%s.nii',sinfo1(1).name)); 
-          cat_vol_findfiles(labeldir,sprintf('mi%s.nii',sinfo1(1).name)); 
-          cat_vol_findfiles(labeldir,sprintf('p*%s.nii',sinfo1(1).name)); 
-          ]; 
+        if exist(labeldir,'dir')
+          H.niftis = [ ...
+            cat_vol_findfiles(labeldir,sprintf('m%s.nii',sinfo1(1).name)); 
+            cat_vol_findfiles(labeldir,sprintf('mi%s.nii',sinfo1(1).name)); 
+            cat_vol_findfiles(labeldir,sprintf('p*%s.nii',sinfo1(1).name)); 
+            ]; 
+        else
+          H.niftis = []; 
+        end
+          
         if sinfo1.resampled
           H.niftis = [H.niftis; cat_vol_findfiles(labeldir,sprintf('*%s.nii',sinfo1(1).name))];
         end

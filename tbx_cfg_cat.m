@@ -509,7 +509,7 @@ output.name = 'Writing options';
 if expert==2
   output.val  = {surface ROI grey white csf gmt wmh tpmc atlas label bias las jacobian warps}; 
 elseif expert==1
-  output.val  = {surface ROI grey white csf atlas label bias las jacobian warps};
+  output.val  = {surface ROI grey white csf wmh atlas label bias las jacobian warps};
 else
   output.val  = {surface ROI grey white bias jacobian warps};
 end
