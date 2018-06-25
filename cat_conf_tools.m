@@ -870,7 +870,7 @@ maskimg.prog    = @cat_vol_maskimage;
 maskimg.vfiles  = @vfiles_maskimg;
 maskimg.help    = {
   'Mask images to avoid segmenation and registration errors in brain lesion. The number of mask images has to be equal to the number of the original images. Voxel inside the lesion masks and outside the brainmask will set to zero. '
-  'If you have multiple lesion masks than add them with the oringal images, eg. "images = {sub01.nii; sub02.nii; sub01.nii}" and "mask = {sub01_lesion1.nii; sub02_lesion1.nii; sub01_lesion2.nii}". Alternatively you can choose only one oringal file and a various number of mask files.'
+  'If you have multiple lesion masks than add them with the original images, eg. "images = {sub01.nii; sub02.nii; sub01.nii}" and "mask = {sub01_lesion1.nii; sub02_lesion1.nii; sub01_lesion2.nii}". Alternatively you can choose only one original file and a various number of mask files.'
   ''
 };
 %------------------------------------------------------------------------

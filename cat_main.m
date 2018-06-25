@@ -196,7 +196,7 @@ if ~isfield(res,'spmpp')
 
   
 
-  %% estimat background to imrove lesion mask ... nicht erforderlich?
+  %% estimate background to improve lesion mask ... nicht erforderlich?
   if 0 %  isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
     [Ysrcr,resT2] = cat_vol_resize(Ysrc,'reduceV',vx_vol,4,32);
     Yhdr = cat_vol_morph(Ysrcr>mean(T3th(1:2)),'ldc',4); clear Ysrcr; 
