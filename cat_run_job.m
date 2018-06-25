@@ -625,12 +625,12 @@ function cat_run_job(job,tpm,subj)
         %% Lesion masking as zero values of the orignal image (2018-06):
         %  We do not use NaN and -INF because (i) most images are only (u)int16
         %  and do not allow such values, (ii) NaN can be part of the background
-        %  of resliced images, and (iii) multiple option are not required here. 
-        %  Zero values can also occure by bad data scaling or processing in the 
-        %  background but also other (large) CSF regions and we have to remove  
+        %  of resliced images, and (iii) multiple options are not required here. 
+        %  Zero values can also occure by poor data scaling or processing in the 
+        %  background but also by other (large) CSF regions and we have to remove  
         %  these regions later. 
-        %  We further discussed to use a separate mask images but to deside
-        %  to keep this as simple as possible using no further options!
+        %  We further discussed to use a separate mask images but finally desided
+        %  to keep this as simple as possible using no additional options!
         obj.image0 = spm_vol(job.channel(1).vols0{subj});
         Ysrc0      = spm_read_vols(obj.image0); 
         Ylesion    = single(Ysrc0==0); clear Ysrc0; 
