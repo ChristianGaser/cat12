@@ -53,7 +53,13 @@ function [Ym,Yb,WMth,Affine] = cat_long_APP(PF,PG,PB,opt)
 
   % initial APP
   Ysrc = single(VF.private.dat(:,:,:)); 
-  [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init(Ysrc,opt.vx_vol,struct('verb',opt.verb-1));
+
+  if cat_get_defaults('extopts.APP') == 1070
+    [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init1070(Ysrc,opt.vx_vol,opt.verb-1);
+  else
+    [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init(Ysrc,opt.vx_vol,struct('verb',opt.verb-1,...
+          'APPstr',cat_get_defaults('opts.biasstr')));
+  end
   
   % write data to VF
   VF.dt         = [spm_type('UINT8') spm_platform('bigend')];

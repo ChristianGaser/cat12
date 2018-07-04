@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1326 | gaser | 2018-06-25 17:03:59
+r1327 | gaser | 2018-07-05 00:14:05
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_APP.m
+
+Fixed: APP selection was not considered in longitudinal pipeline.
+------------------------------------------------------------------------
+r1326 | gaser | 2018-06-25 17:04:24 +0200 (Mo, 25 Jun 2018) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -16,6 +24,7 @@ M       html/cat.html
 (1) Fixed: Atlas installation was incorrect (Thanks to Ramesh Babu for 
     pointing to that bug).
 (2) Changed: Corrected typos.
+
 ------------------------------------------------------------------------
 r1325 | dahnke | 2018-06-20 19:57:53 +0200 (Mi, 20 Jun 2018) | 48 lines
 
