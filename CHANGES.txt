@@ -1,11 +1,20 @@
 ------------------------------------------------------------------------
-r1327 | gaser | 2018-07-05 00:14:05
+r1328 | gaser | 2018-07-05 20:15:15
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+
+Fixed: Disabled manual lesion masking because of missing cat_vol_maskimage.m
+------------------------------------------------------------------------
+r1327 | gaser | 2018-07-05 00:14:33 +0200 (Do, 05 Jul 2018) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_long_APP.m
 
 Fixed: APP selection was not considered in longitudinal pipeline.
+
 ------------------------------------------------------------------------
 r1326 | gaser | 2018-06-25 17:04:24 +0200 (Mo, 25 Jun 2018) | 16 lines
 
