@@ -85,7 +85,9 @@ if do_dartel
     numel(job.extopts.regstr)>1 || ...
     numel(job.extopts.vox)>1;
   if ~need_dartel
-    do_dartel = 0;
+    fprintf('Dartel or Shooting registration is currently always necessary because of new developmental code in cat_main_registration. This will be solved in newer releases.\n');
+    do_dartel = 1;
+%    do_dartel = 0;
   end
 end
 if do_dartel<2, job.extopts.templates = job.extopts.darteltpms; else job.extopts.templates = job.extopts.shootingtpms; end % for LAS
