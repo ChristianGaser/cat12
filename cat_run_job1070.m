@@ -518,6 +518,8 @@ function cat_run_job1070(job,tpm,subj)
         obj.image0 = spm_vol(job.channel(1).vols0{subj});
         Ysrc0      = spm_read_vols(obj.image0); 
         Ylesion    = single(Ysrc0==0); clear Ysrc0; 
+        if exist('Ybg','var'), Ylesion(Ybg)=0; end % denoising in background
+        Ylesion(smooth3(Ylesion)<0.5)=0; % general denoising 
         if any( obj.image0.dim ~= obj.image.dim )
           mat      = obj.image0.mat \ obj.image.mat;
           Ylesion  = smooth3(Ylesion); 
@@ -525,7 +527,7 @@ function cat_run_job1070(job,tpm,subj)
           for i=1:obj.image.dim(3),
             Ylesionr(:,:,i) = single(spm_slice_vol(Ylesion,mat*spm_matrix([0 0 i]),obj.image.dim(1:2),[1,NaN]));
           end
-          Ylesion = cat_vol_ctype(Ylesionr*255); clear Ylesionr;
+          Ylesion = Ylesionr>0.5; clear Ylesionr;
         end
         
         
@@ -560,6 +562,7 @@ function cat_run_job1070(job,tpm,subj)
 
             % set variable and write image
             obj.image.dat(:,:,:)         = Ymc;  
+            obj.image.pinfo              = repmat([255;0],1,size(Ymc,3));
             obj.image.private.dat(:,:,:) = Ymc; 
 
             obj.image.dt    = [spm_type('FLOAT32') spm_platform('bigend')];
@@ -573,8 +576,8 @@ function cat_run_job1070(job,tpm,subj)
         if strcmp('human',job.extopts.species) 
             spm_plot_convergence('Init','Fine affine registration','Mean squared difference','Iteration');
             warning off 
-            Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg); 
-            Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,       obj.tpm,Affine2,job.opts.affreg);
+            Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg,20); 
+            Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,       obj.tpm,Affine2,job.opts.affreg,20);
             warning on  
             if ~any(any(isnan(Affine3(1:3,:)))), Affine = Affine3; end
         end
@@ -601,7 +604,7 @@ function cat_run_job1070(job,tpm,subj)
           obj.tpm.bg2(4)   = obj.tpm.bg1(6);
           obj.tpm.bg1(5:6) = [];
           obj.tpm.bg2(5:6) = [];
-
+            
           job.opts.ngaus = 3*ones(4,1); % this is more safe
           obj.lkp        = [];
           for k=1:numel(job.opts.ngaus)
@@ -616,17 +619,19 @@ function cat_run_job1070(job,tpm,subj)
         warning off 
         try 
           % inital estimate
+          stime = cat_io_cmd('SPM preprocessing 1 (estimate):','','',job.extopts.verb-1,stime);
           res = spm_preproc8(obj);
 
           % for non-skull-stripped brains use masked brains to get better estimates
           % esp. for brains with thinner skull
           if 0 %~skullstripped
+            stime = cat_io_cmd('SPM preprocessing 1 (estimate skull-stripped):','','',job.extopts.verb-1,stime);
             % use dilated mask for spm_preproc8 because sometimes inital SPM segmentation
             % does not cover the whole brain for brains with thinner skull
             [Ym, Ycls] = cat_spm_preproc_write8(res,zeros(k,4),zeros(1,2),[0 0],1,1);
             Ym  = single(Ycls{1})/255 + single(Ycls{2})/255 + single(Ycls{3})/255;
-            Yb   = (Ym > 0.5);
-            Yb = cat_vol_morph(cat_vol_morph(Yb,'lo'),'d',5/mean(vx_vol));
+            Yb  = (Ym > 0.5);
+            Yb  = cat_vol_morph(cat_vol_morph(Yb,'lo'),'d',5/mean(vx_vol));
             res.biasreg   = obj.biasreg;
             res.biasfwhm  = obj.biasfwhm;
             res.reg       = obj.reg;
@@ -639,6 +644,7 @@ function cat_run_job1070(job,tpm,subj)
             res = spm_preproc8(res);
   
             % final estimate without mask using parameters from previous run
+            stime = cat_io_cmd('SPM preprocessing 1 (estimate skull-stripped):','','',job.extopts.verb-1,stime);
             res.biasreg   = obj.biasreg;
             res.biasfwhm  = obj.biasfwhm;
             res.reg       = obj.reg;
@@ -699,7 +705,7 @@ function cat_run_job1070(job,tpm,subj)
     res.stime  = stime;
     res.catlog = catlog; 
     res.image0 = spm_vol(job.channel(1).vols0{subj}); 
-    if exist('Ylesion','var'), res.Ylesion = Ylesion; else res.Ylesion = zeros(size(res.image.dim)); end; clear Ylesion;
+    if exist('Ylesion','var'), res.Ylesion = Ylesion; else res.Ylesion = false(size(res.image.dim)); end; clear Ylesion;
     job.subj = subj; 
     cat_main(res,obj.tpm,job);
     
