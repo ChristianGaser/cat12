@@ -866,7 +866,7 @@ maskimg         = cfg_exbranch;
 maskimg.tag     = 'maskimg';
 maskimg.name    = 'Manual image (lesion) masking'; 
 maskimg.val     = {data mask bmask prefix};
-%maskimg.prog    = @cat_vol_maskimage;
+maskimg.prog    = @cat_vol_maskimage;
 maskimg.vfiles  = @vfiles_maskimg;
 maskimg.help    = {
   'Mask images to avoid segmentation and registration errors in brain lesion. The number of mask images has to be equal to the number of the original images. Voxel inside the lesion masks and outside the brainmask will set to zero. '
@@ -1335,8 +1335,7 @@ nonlin_coreg  = cat_conf_nonlin_coreg;
 tools = cfg_choice;
 tools.name   = 'Tools';
 tools.tag    = 'tools';
-%tools.values = {showslice,check_cov,check_SPM,calcvol,calcroi,iqr,T2x,F2x,T2x_surf,F2x_surf,sanlm,maskimg,spmtype,realign,long,nonlin_coreg,defs,defs2}; %,qa
-tools.values = {showslice,check_cov,check_SPM,calcvol,calcroi,iqr,T2x,F2x,T2x_surf,F2x_surf,sanlm,spmtype,realign,long,nonlin_coreg,defs,defs2}; %,qa
+tools.values = {showslice,check_cov,check_SPM,calcvol,calcroi,iqr,T2x,F2x,T2x_surf,F2x_surf,sanlm,maskimg,spmtype,realign,long,nonlin_coreg,defs,defs2}; %,qa
 if expert 
   tools.values = [tools.values,{urqio}]; 
 end

@@ -1,4 +1,4 @@
-function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,noise,job,Ylesionmsk)
+function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,noise,job,Ylesionmsk,Ydt,Ydti)
 % ______________________________________________________________________
 % Use a segment map Ycls, the global intensity normalized T1 map Ym and 
 % the atlas label map YA to create a individual label map Ya1. 
@@ -109,6 +109,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
   vx_res  = max( extopts.uhrlim , max( [ max(vx_vol) min(vx_vol) ] )); 
   noise   = double(noise);
 
+  
   %% map atlas to RAW space
   if verb, fprintf('\n'); end
   stime = cat_io_cmd('  Atlas -> subject space','g5','',verb); dispc=1;
@@ -117,13 +118,15 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
   YA = cat_vol_ctype(spm_sample_vol(VA,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
   YA = reshape(YA,size(Ym));
   
-   % template map
+  
+  % template map
   Yp0A = single(spm_sample_vol(Vtpm(1),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),1))*2 + ...
          single(spm_sample_vol(Vtpm(2),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),1))*3 + ...
          single(spm_sample_vol(Vtpm(3),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),1))*1;
   Yp0A = reshape(Yp0A,size(Ym)); 
   
-  %% WMH atlas
+  
+  % WMH atlas
   watlas = 3; 
   switch watlas
     case 1, PwmhA = strrep(PA{1},'cat.nii','cat_wmh_soft.nii');
@@ -141,9 +144,22 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
     case 2, YwmhA = min(1,max(0,YwmhA - 0.1) * 0.8);
     case 3, YwmhA = min(1,max(0,cat_vol_smooth3X(YwmhA,1) - 0.01) * 10); 
   end
-  clear Yy2; 
 
   
+  % Stroke lesion atlas
+  PslA = strrep(PA{1},'cat.nii','cat_strokelesions_ATLAS303.nii');
+  if exist(PslA,'file') && ~strcmp(PslA,PA{1}) 
+    VslA = spm_vol(PslA);
+    YslA = spm_sample_vol(VslA,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0);
+    YslA = reshape(YslA,size(Ym));
+    YslA = YslA./max(YslA(:)); 
+  else
+    YslA = max(0,min(1,Yp0A-2)); 
+  end
+  clear Yy; 
+  
+
+  % use addition FLAIR images
   if exist('job','var') && isfield(job,'data_wmh') && ~isempty(job.data_wmh) && numel(job.data_wmh)>=job.subj
     %%
     [pp,ff,ee] = spm_fileparts(job.data_wmh{job.subj}); 
@@ -168,7 +184,8 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
     end
   end
   
-  %%
+  
+  %% resize data
   if ~debug; clear Yy; end
   
   Yp0  = (single(Ycls{1})*2/255 + single(Ycls{2})*3/255 + single(Ycls{3})/255) .* Yb; 
@@ -179,20 +196,40 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
   [Ym,BB]  = cat_vol_resize(Ym      ,'reduceBrain',vx_vol,2,Yb);
   YA       = cat_vol_resize(YA      ,'reduceBrain',vx_vol,2,Yb);
   Yp0      = cat_vol_resize(Yp0     ,'reduceBrain',vx_vol,2,Yb);
+  if exist('Ydt','var')
+    Ydt    = cat_vol_resize(Ydt     ,'reduceBrain',vx_vol,2,Yb);
+  end
+  if exist('Ydti','var')
+    Ydti   = cat_vol_resize(Ydti    ,'reduceBrain',vx_vol,2,Yb);
+  end
   Yp0A     = cat_vol_resize(Yp0A    ,'reduceBrain',vx_vol,2,Yb);
+  YslA     = cat_vol_resize(YslA    ,'reduceBrain',vx_vol,2,Yb);
   YwmhA    = cat_vol_resize(YwmhA   ,'reduceBrain',vx_vol,2,Yb);
   if exist('Yflair','var')
     Yflair = cat_vol_resize(Yflair  ,'reduceBrain',vx_vol,2,Yb);
+  end
+  if exist('Ylesionmsk','var')
+    Ylesionmsk = cat_vol_resize(Ylesionmsk  ,'reduceBrain',vx_vol,2,Yb);
   end
   Yb       = cat_vol_resize(Yb      ,'reduceBrain',vx_vol,2,Yb);
   % use lower resolution 
   [Ym,resTr] = cat_vol_resize(Ym    ,'reduceV',vx_vol,vx_res,64);
   YA         = cat_vol_resize(YA    ,'reduceV',vx_vol,vx_res,64,'nearest'); 
   Yp0        = cat_vol_resize(Yp0   ,'reduceV',vx_vol,vx_res,64);
+  if exist('Ydt','var')
+    Ydt      = cat_vol_resize(Ydt   ,'reduceV',vx_vol,vx_res,64);
+  end
+  if exist('Ydti','var')
+    Ydti     = cat_vol_resize(Ydti  ,'reduceV',vx_vol,vx_res,64);
+  end
   Yp0A       = cat_vol_resize(Yp0A  ,'reduceV',vx_vol,vx_res,64);
+  YslA       = cat_vol_resize(YslA  ,'reduceV',vx_vol,vx_res,64);
   YwmhA      = cat_vol_resize(YwmhA ,'reduceV',vx_vol,vx_res,64); 
   if exist('Yflair','var')
     Yflair   = cat_vol_resize(Yflair,'reduceV',vx_vol,vx_res,64); 
+  end    
+  if exist('Ylesionmsk','var')
+    Ylesionmsk   = cat_vol_resize(Ylesionmsk,'reduceV',vx_vol,vx_res,64); 
   end    
   Yb         = cat_vol_resize(Yb    ,'reduceV',vx_vol,vx_res,64);
   vx_vol     = resTr.vx_volr; 
@@ -269,6 +306,26 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
   Ynv = smooth3(Ynv)>0.8;
   Yvt = single(smooth3(Yp0<1.5 & (YA==LAB.VT) & Yg<0.25 & ~Ynv)>0.7); 
   Yvt(Yvt==0 & Ynv)=2; Yvt(Yvt==0 & Ym>1.8)=nan; Yvt(Yvt==0)=1.5;
+  
+  %% subcortical stroke lesions
+  if exist('Ylesionmsk','var'), Yvt(Ylesionmsk>0.5) = nan; end
+  Yvt( cat_vol_morph(YslA>0.6 & Ym<2 & Ydiv./Ym>0 & Yp0A>2.5   , 'do', 1 ) ) = 2; % WM
+  Yvt( cat_vol_morph(YslA>0.2 & Ym<2 & Ydiv./Ym>0 & YA==LAB.BG , 'do', 1 ) ) = 2; % BG lesions
+  if exist('Ydt','var') && exist('Ydti','var')
+    % by deformation
+    Ystsl = (( cat_vol_smooth3X( 1-single(cat_vol_morph(YA==LAB.VT,'dd',10,vx_vol)) ,4 ) .* ...
+               cat_vol_smooth3X( single((Ydt - Ydti)>0.7),4) )>0.1 & Ym>0.5 & Ym<2.5 ); 
+%%            
+    Ystsl = Ystsl | ...
+            ((cat_vol_smooth3X(1-single(cat_vol_morph(YA==LAB.VT,'dd',5,vx_vol)),4) .* ...
+              cat_vol_smooth3X(single((Ydt - Ydti)>0.7),4))>0.05 & Ym>1.5 & Ym<2.8 & ...
+              ~cat_vol_morph(YA==LAB.BG | YA==LAB.TH,'d',2));
+    Ystsl = Ystsl | ...
+            (cat_vol_smooth3X(single((1/Ydt - 1/Ydti)>0.7),4)>0.4 & Ym>1.5); 
+    Ystsl =cat_vol_morph(Ystsl,'dc',4,vx_vol); 
+    Yvt(  cat_vol_morph(Ystsl,'e',2)) = 2; 
+  end
+       
   %% bottleneck
   Yvt2 = cat_vol_laplace3R(Yvt,Yvt==1.5,0.01); % first growing for large regions
   Yvt(cat_vol_morph(Yvt2<1.4,'o',2) & ~isnan(Yvt) & Yp0<1.5) = 1; 
@@ -277,7 +334,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
   % remove small objects
   warning('off','MATLAB:cat_vol_morph:NoObject');
   Yvt = cat_vol_morph(Yvt2<1.5, 'l', [10 0.1]);
-  Yvt = cat_vol_morph(Yvt    , 'l', [10 50]);
+  Yvt = cat_vol_morph(Yvt     , 'l', [10 50]);
   warning('on','MATLAB:cat_vol_morph:NoObject');
   Yvt = smooth3((Yvt | (YA==LAB.VT & Ym<1.7)) & Yp0<1.5 & Ym<1.5)>0.5; 
   %%
@@ -550,28 +607,89 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
     Ywmhr   = false(size(Ym)); 
     Ycortex = false(size(Ym)); 
   end
-  if ~debug, clear Ywmh Yvt Ynwmh Yvt2; end
+  if ~debug, clear Ywmh Ynwmh Yvt2; end
 
 
   
-  %% lesion detection 
-  %  this requires further handling in the registration routine as bad
-  %  areas (replaced by NaNs?)
-  %
-  if extopts.WMHC>3
-    Ylesion = single( Yp0A./(Ym+2)>1.3 & Yp0>0.5 & Yp0<2 & Ya1~=LAB.VT & Ya1~=LAB.HI & Ym<1.5 ); % , 'do', 3);
-    Ylesion = single(cat_vol_morph(Ylesion,'l',[inf 50])>0); 
+  %% stroke lesion detection
+
+  % 1. Detection of manually masked regions (zeros within brainmask)
+  if exist('Ylesionmsk','var')
+    stime = cat_io_cmd('  Manual stroke lesion detection','g5','',verb,stime); dispc=dispc+1;
+    Ylesion = Ylesionmsk>0.5; % add manual lesions
+  end
+  
+  % 2. Automatic stroke lesion detection
+  %    * use prior maps to identify reginos that should be tissue but
+  %      are in stroke areas and have CSF intensity 
+  %    * use distance properies to differentiate between normal brain 
+  %      atrophy and stroke lesions as local CSF areas that differ stongly
+  %      from the average values
+  if extopts.WMHC>4
+    stime = cat_io_cmd('  Stroke lesion detection','g5','',verb,stime); dispc=dispc+1;
+    
+    %% large CSF regions without lesion prior
+    Ysd       = cat_vbdist(single(cat_vol_morph(~Yb | Yp0>2 | cat_vol_morph(Ya1>0,'ldc',1),'do',3,vx_vol))); 
+    mdYsd     = max(3.0,median(Ysd(Ysd(:)>0))); 
+    sdYsd     = max(1.5,std(Ysd(Ysd(:)>0))); 
+    Yclesion  = smooth3(Ysd>(mdYsd + 3*sdYsd) & Yp0<1.5 & Yp0A>1.25 & Ydiv>-0.1 & (YslA>0 | Yp0A>1.25))>0.5;
+    % large CSF regions with lesion prior
+    Ysd2      = Ysd .* YslA .* Yp0A/3; 
+    mdYsd2    = max(3.0,median(Ysd2(Ysd2(:)>0))); 
+    sdYsd2    = max(1.5,std(Ysd2(Ysd2(:)>0))); 
+    Yclesion( smooth3(Ysd>(mdYsd + 3*sdYsd) & Yp0<1.5 & Yp0A>1.25 & Ydiv>-0.1 & (YslA>0 | Yp0A>1.25))>0.5 ) = 1;
+    if ~debug, clear Ysd; end 
+    Yclesion  = cat_vol_morph(cat_vol_morph(Yclesion | ~(Yb & Yp0A>0),'dc',4,vx_vol) & Ym<2 & Yp0>0.5,'do',2); 
+    Yclesion  = cat_vol_morph(Yclesion,'l',[inf 400],vx_vol)>0; 
+    
+    % further lesions
+    Ywlesion  = smooth3(abs(Yp0-Ym)/3 .* (1-max(0,abs(3-Yp0A))) .* YslA * 10 )>0.3 & Ym<2.2 & Yp0>1 & Ya1~=LAB.HI; % WM-GM leson
+    Ywlesion( smooth3(Yp0A/3 .* YslA .* (3-Ym) .* (Ya1~=LAB.HI))>0.5 ) = 1; % WM lesions
+    %
+    Ywlesion( cat_vol_morph(YslA>0.6 & Yp0<2.0 & Ydiv./Ym>0 & YslA>0.2 & Yp0A>2.5 , 'do', 1 ) ) = 1; % WM
+    Ywlesion( cat_vol_morph(YslA>0.2 & Yp0<1.6 & Ydiv./Ym>0 & YslA>0.2 & (YA==LAB.BG | YA==LAB.TH) , 'do', 1 ) ) = 1; % BG lesions
+    % closing and opening
+    Ywlesion  = cat_vol_morph(cat_vol_morph(Ywlesion | ~(Yb & Yp0A>0),'dc',4,vx_vol) & Ym<2 & Yp0>0.5,'do',1); 
+    Ywlesion  = cat_vol_morph(Ywlesion,'l',[inf 200],vx_vol)>0; 
+    
+    %%
+    Ystsl     = Ystsl & Ym<2.8 & Ya1~=LAB.VT;
+    Yilesion  = single(Yclesion | Ywlesion | Ystsl); Yilesion(Yilesion==0  & ( Yp0<0.5 | Yp0>2.1 | Ydiv<-0.1 | Ya1==LAB.VT ) ) = -inf;
+    [Yilesion,Ydd]  = cat_vol_downcut(Yilesion,3-Ym,-0.0001); Yilesion(Ydd>200) = 0;  
+    Yilesion  = cat_vol_morph(Yilesion,'dc',1,vx_vol); 
+    Yilesion  = cat_vol_morph(Yilesion,'do',4,vx_vol)>0 | Ywlesion| Yclesion; 
+    Yilesion  = cat_vol_morph(Yilesion,'l',[inf 200],vx_vol)>0; 
+    Ynlesion  = smooth3(~Yilesion & Ysd2<(mdYsd2 + 2*sdYsd2) & Ym<2.0 & Yp0A<1.9 & Ydiv>0)>0.5;
+    if ~debug, clear Ysd2; end 
+    
+    % region-growing  
+    Ysl = single(Yilesion) + 2*single(Ynlesion | Yp0<0.5 | Yvt | ~Yb); if ~debug, clear Yilesion Ynlesion; end
+    Ysl(Yp0>2.8)=nan; Ysl(Ysl==0) = 1.5; % harder mask with low T1 threshold
+    Ysl2 = cat_vol_laplace3R(Ysl, Ysl==1.5, 0.05);  % bottleneck
+    Ysl(Ysl2<1.45 & ~isnan(Ysl))=1; Ysl(Ysl2>1.55 & ~isnan(Ysl))=2; 
+    Ysl2 = cat_vol_laplace3R(Ysl, Ysl==1.5, 0.01); if ~debug, clear Ysl; end    % bottleneck
+    Ylesion  = cat_vol_morph(Ysl2<1.45 & Ysl2>0 & Ym<2.8 & Ya1~=LAB.HI,'do',1,vx_vol); if ~debug, clear Ysl2; end
+    %%
+    
+    %%
+    %Ylesion = single( Yp0A./(Ym+2)>1.3 & Yp0>0.5 & Yp0<2 & Ya1~=LAB.VT & Ya1~=LAB.HI & Ym<1.5 ); % , 'do', 3);
+    %Ylesion = single(cat_vol_morph(Ylesion,'l',[inf 50])>0); 
+    %{
+    Ylesion( cat_vol_morph(YslA>0.6 & Ym<2 & Ydiv./Ym>0 & Yp0A>2.5   , 'do', 1 ) ) = 2; % WM
+    Ylesion( cat_vol_morph(YslA>0.2 & Ym<2 & Ydiv./Ym>0 & YA==LAB.BG , 'do', 1 ) ) = 2; % BG lesions
     Ylesion(smooth3(Yp0A>2.9 & Ym<2)>0.7) = 1; 
-    if exist('Ylesionmsk','var'), Ylesion(Ylesionmsk) = 1; end % add manual lesions
+    
     Ylesion(Ym>2 | (Ya1==LAB.VT & Yp0A<2.9) | Ya1==LAB.HI | Yp0==0) = nan;
     [Ylesion,Ydx] = cat_vol_simgrow(Ylesion,max(1,Ym),1); Ylesion(Ydx>0.1)=0; 
     % different volume boundaries depending on the position of the lesion
     Ylesion = cat_vol_morph(cat_vol_morph(Ylesion,'do',2) & Yp0A<2.5,'l',[inf 200])>0 | ... % maybe just atrophy
               cat_vol_morph(cat_vol_morph(Ylesion,'do',1) & Yp0A>2.5,'l',[inf 100])>0 | ...
               cat_vol_morph(Ylesion & Yp0A>2.9,'l',[inf 10])>0;
-    %%
-    Ya1(Ylesion>0) = LAB.LE;
+    %}
+    % add manual leisons
+    if exist('Ylesionmsk','var'), Ylesion(Ylesionmsk>0.5) = 1; end             
   end
+  Ya1(Ylesion>0) = LAB.LE;
   
   
   %% Closing of gaps between diffent structures:

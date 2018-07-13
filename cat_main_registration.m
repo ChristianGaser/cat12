@@ -403,9 +403,11 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
           end
           ls = zeros(rdim(1:3),'single');
           
-          Ylesion = single(Ylesion); 
-          for i=1:rdim(3),
-            ls(:,:,i) = single(spm_slice_vol(single(Ylesion),Mar*spm_matrix([0 0 i]),rdim(1:2),[1,NaN]));
+          if exist('Ylesion','var')
+            Ylesion = single(Ylesion); 
+            for i=1:rdim(3),
+              ls(:,:,i) = single(spm_slice_vol(single(Ylesion),Mar*spm_matrix([0 0 i]),rdim(1:2),[1,NaN]));
+            end
           end
           
           %% iterative processing

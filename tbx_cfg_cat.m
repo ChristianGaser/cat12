@@ -71,6 +71,7 @@ data_wmh.help     = {
   'Select highres FLAIR data for segmentation. This assumes that there is one scan for each T1 scan.'
   'WARNING: WMH segmentation (with/without FLAIR) is in development!'};
 data_wmh.preview  = @(f) spm_check_registration(char(f));
+data_wmh.val      = {{''}};
 
 data_spm          = cfg_files;
 data_spm.tag      = 'data';
