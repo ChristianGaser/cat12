@@ -634,6 +634,8 @@ function cat_run_job(job,tpm,subj)
         obj.image0 = spm_vol(job.channel(1).vols0{subj});
         Ysrc0      = spm_read_vols(obj.image0); 
         Ylesion    = single(Ysrc0==0); clear Ysrc0; 
+        if exist('Ybg','var'), Ylesion(Ybg)=0; end % denoising in background
+        Ylesion(smooth3(Ylesion)<0.5)=0; % general denoising 
         if any( obj.image0.dim ~= obj.image.dim )
           mat      = obj.image0.mat \ obj.image.mat;
           Ylesion  = smooth3(Ylesion); 
@@ -641,7 +643,7 @@ function cat_run_job(job,tpm,subj)
           for i=1:obj.image.dim(3),
             Ylesionr(:,:,i) = single(spm_slice_vol(Ylesion,mat*spm_matrix([0 0 i]),obj.image.dim(1:2),[1,NaN]));
           end
-          Ylesion = cat_vol_ctype(Ylesionr*255); clear Ylesionr;
+          Ylesion = Ylesionr>0.5; clear Ylesionr;
         end
         
       
@@ -1166,7 +1168,7 @@ end
     res.stime  = stime;
     res.catlog = catlog; 
     res.image0 = spm_vol(job.channel(1).vols0{subj}); 
-    if exist('Ylesion','var'), res.Ylesion = Ylesion; else res.Ylesion = zeros(size(res.image.dim)); end
+    if exist('Ylesion','var'), res.Ylesion = Ylesion; else res.Ylesion = false(size(res.image.dim)); end
     job.subj   = subj;
     cat_main(res,obj.tpm,job);
     

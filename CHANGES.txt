@@ -1,5 +1,36 @@
 ------------------------------------------------------------------------
-r1329 | gaser | 2018-07-05 21:11:25
+r1330 | dahnke | 2018-07-13 09:36:40
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_main.m
+M       cat_main_registration.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+A       cat_vol_maskimage.m
+M       cat_vol_partvol.m
+M       tbx_cfg_cat.m
+
+1) Fixed:       Corrected small bugs in tbx_cfg_cat and cat_conf_tools.
+2) New:         Added function cat_vol_maskimage for lesion masking to 
+                avoid deformation in these areas. 
+3) New:         Added detection of manual defined lesions (zero values)
+                in cat_run_job(1070) in case of active lesion handling. 
+                Removed similar steps in cat_main and differentiate 
+                between registration with(out) manual lesion data.
+                Added handling for output of lesion maps. 
+4) Fixed:       Deactivated additional calls of spm_preproc8 with masked
+                regions that sometimes strongly increased processing time
+                (thanks to Gabriel Ziegler for pointing out that issue). 
+5) Changed:     Updated automatic stroke lesion detection in 
+                cat_vol_partvol by detecting large untypical CSF areas
+                (and strongly (asymmetric) deformed regions), followed by
+                a region-growing. The detection of asymmetric regions is 
+                defined in cat_main but is inactive because it works only 
+                in single cases yet. 
+------------------------------------------------------------------------
+r1329 | gaser | 2018-07-05 21:11:46 +0200 (Do, 05 Jul 2018) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +39,7 @@ M       cat_main.m
 Changed: Dartel or Shooting registration is currently always necessary because
 of new developmental code in cat_main_registration. This will be solved in 
 newer releases.
+
 ------------------------------------------------------------------------
 r1328 | gaser | 2018-07-05 20:15:55 +0200 (Do, 05 Jul 2018) | 6 lines
 
