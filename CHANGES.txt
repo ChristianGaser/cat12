@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1330 | dahnke | 2018-07-13 09:36:40
+r1331 | gaser | 2018-07-17 10:16:22
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       cat_defaults.m
+M       cat_main.m
+
+(1) Changed: WMH handling is now again set to correction for Dartel/Shooting 
+    registration.
+(2) Changed: Corrected typos.
+------------------------------------------------------------------------
+r1330 | dahnke | 2018-07-13 09:38:04 +0200 (Fr, 13 Jul 2018) | 29 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -29,6 +42,7 @@ M       tbx_cfg_cat.m
                 a region-growing. The detection of asymmetric regions is 
                 defined in cat_main but is inactive because it works only 
                 in single cases yet. 
+
 ------------------------------------------------------------------------
 r1329 | gaser | 2018-07-05 21:11:46 +0200 (Do, 05 Jul 2018) | 8 lines
 

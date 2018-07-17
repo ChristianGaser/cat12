@@ -125,7 +125,7 @@ cat.extopts.NCstr        =-Inf;  % Strength of the noise correction:          0 
 cat.extopts.LASstr       = 0.5;  % Strength of the local adaption:            0 to 1; default 0.5
 cat.extopts.BVCstr       = 0.5;  % Strength of the Blood Vessel Correction:   0 to 1; default 0.5
 cat.extopts.regstr       = 0;    % Strength of Shooting registration:         0 - Dartel, eps (fast), 0.5 (default) to 1 (accurate) optimized Shooting, 4 - default Shooting; default 0
-cat.extopts.WMHC         = 0;    % Correction of WM hyperintensities:         0 - no correction, 1 - only for Dartel
+cat.extopts.WMHC         = 1;    % Correction of WM hyperintensities:         0 - no correction, 1 - only for Dartel/Shooting
                                  %                                            2 - also correct segmentation (to WM), 3 - handle as separate class; default 1
 cat.extopts.WMHCstr      = 0.5;  % Strength of WM hyperintensity correction:  0 to 1; default 0.5
 cat.extopts.mrf          = 1;    % MRF weighting:                             0 to 1; <1 - weighting, 1 - auto; default 1
