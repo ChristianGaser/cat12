@@ -632,7 +632,7 @@ if ~isfield(res,'spmpp')
   end
   if ~debug, Yy = Yy2; end 
  
-  %% preparte mapping in case of shooting templates with other resolutions
+  %% prepare mapping in case of shooting templates with other resolutions
   Vb2    = spm_vol(job.extopts.shootingtpms{2}); 
   amat   = Vb2(2).mat \ M1; 
   if any(any(amat~=eye(4))); 
@@ -654,7 +654,7 @@ if ~isfield(res,'spmpp')
   % I mapped the normalized determinant to individual space because I was not 
   % able to create the determinant from the inverse deformation field.
   % Furthermore this idea works only in single cases yet and is therefore not activated yet. 
-  % I will remove this block and related variables in October 2018 if it still not working.
+  % I will remove this block and related variables in October 2018 if it's still not working.
   if 0
     Vdtw = Vb2(1); Vdtw.dt(1) = 16; Vdtw.pinfo(1) = 1; Vdtw.pinfo(3) = 0; Vdtw.dat = Ydtw;
     Vdtw.mat = trans.warped.M1; Vdtw.dim = size(Ydtw); 
@@ -1268,7 +1268,7 @@ end
   %% update WMHs?
   if numel(Ycls)>6
     if isfield(trans,'warped')
-      %% load tempale 
+      %% load template 
       VwmA = spm_vol([job.extopts.templates{end},',2']);  
       %VgmA = spm_vol([job.extopts.templates{end},',1']);  
       if any( VwmA.dim ~= trans.warped.odim )
@@ -1293,7 +1293,7 @@ end
       YwmA = single( spm_sample_vol( VwmA ,Yy(:,:,:,1),Yy(:,:,:,2),Yy(:,:,:,3),1)); YwmA = reshape(YwmA,size(Ym)); 
       %YgmA = single( spm_sample_vol( VgmA ,Yy(:,:,:,1),Yy(:,:,:,2),Yy(:,:,:,3),1)); YgmA = reshape(YgmA,size(Ym)); 
     else
-      %% load tempale 
+      %% load template 
       VwmA = spm_vol([job.extopts.templates{end},',2']);  
       %VgmA = spm_vol([job.extopts.templates{end},',1']);  
       if any( VwmA.dim ~= size(Yy) )
