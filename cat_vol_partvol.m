@@ -50,20 +50,23 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
 % ______________________________________________________________________
 %
 % Development comments:
+%   ToDo:
+%   - WMHs werden bei geringer Aufl?sung ?berschaetzt
+%   - mehr Kommentare bei WMHC und SLC
 %
 %   Was ist neu im Vergleich zu anderen?
-%   - Zuweisung durch Dartel mit hoher Genauigkeit m??glich 
+%   - Zuweisung durch Dartel mit hoher Genauigkeit moeglich 
 %   - Erweiterung von SPM/VBM durch MainROIs (Seiten, Lappen, ...)
-%   - Verbesserung der SPM/VBM durch bessere Enfernung von unerw??nschtem
-%     Gewebe (ON, Blutgef????e ...)
-%   - Blutgef????e k??nnnen als erweitere Masken f??r fMRI genutzt werden um
-%     Seiteneffekte besser ausblenden zu k??nnen.
-%  [- Beliebige Atlanten k??nnen genutzt werden.]
+%   - Verbesserung der SPM/VBM durch bessere Enfernung von unerwuenschtem
+%     Gewebe (ON, Blutgefaesse ...)
+%   - Blutgefaesse koennnen als erweitere Masken fuer fMRI genutzt werden 
+%     um Seiteneffekte besser ausblenden zu koennen.
+%  [- Beliebige Atlanten koennen genutzt werden.]
 %
 %  Todo:
 %   - Besserer Atlas
-%   - BV vs. HD - gl??tten in dilated HD region
-%   - F??llen von CSF l??cken bei LAB~=BV und Ym<1.2 und LAB==NV?
+%   - BV vs. HD - glaetten in dilated HD region
+%   - Fuellen von CSF Luecken bei LAB~=BV und Ym<1.2 und LAB==NV?
 %
 % ______________________________________________________________________
 
@@ -324,6 +327,8 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
             (cat_vol_smooth3X(single((1/Ydt - 1/Ydti)>0.7),4)>0.4 & Ym>1.5); 
     Ystsl =cat_vol_morph(Ystsl,'dc',4,vx_vol); 
     Yvt(  cat_vol_morph(Ystsl,'e',2)) = 2; 
+  else 
+    Ystsl = false(size(Ynv)); 
   end
        
   %% bottleneck
@@ -410,7 +415,8 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
               sum(round(Yp0e(:))>0.5)); clear Yp0e; 
     noisew  = cat_vol_localstat(smooth3(Ymi)*2,cat_vol_morph(Yp0>2.5,'e') & Ya1==LAB.CT & ~(YwmhA>0.5 & Ymi<2.7),3,4);
     noisew  = cat_stat_nanmean(noisew(noisew(:)>0)); 
-    noisec  = cat_vol_localstat(smooth3(Ymi)*2,cat_vol_morph((cat_vol_morph(Yp0>0.5,'e') & cat_vol_morph(Yp0<2.5,'e')) | cat_vol_morph(Ya1==LAB.VT,'e'),'o'),3,4);
+    noisec  = cat_vol_localstat(smooth3(Ymi)*2,cat_vol_morph((cat_vol_morph(Yp0>0.5,'e') & ....
+              cat_vol_morph(Yp0<2.5,'e')) | cat_vol_morph(Ya1==LAB.VT,'e'),'o'),3,4);
     noisec  = cat_stat_nanmean(noisec(noisec(:)>0));
     if sum(noisec(:)>0)>100, noisew = min(noisew,cat_stat_nanmean(noisec(noisec(:)>0))); end
     
@@ -625,7 +631,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
   %    * use distance properies to differentiate between normal brain 
   %      atrophy and stroke lesions as local CSF areas that differ stongly
   %      from the average values
-  if extopts.WMHC>4
+  if extopts.SLC
     stime = cat_io_cmd('  Stroke lesion detection','g5','',verb,stime); dispc=dispc+1;
     
     %% large CSF regions without lesion prior

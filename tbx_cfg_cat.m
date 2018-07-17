@@ -351,7 +351,7 @@ label.tag   = 'label';
 label.name  = 'PVE label image';
 label.val   = {native warped dartel};
 label.help  = {
-'This is the option to save a labeled version of your segmentations. Labels are saved as Partial Volume Estimation (PVE) values with different mix classes for GM-WM (2.5) and GM-CSF (0.5). BG=0, CSF=1, GM=2, WM=3, WMH=4 (if WMHC=3)'
+'This is the option to save a labeled version of your segmentations. Labels are saved as Partial Volume Estimation (PVE) values with different mix classes for GM-WM (2.5) and GM-CSF (0.5). BG=0, CSF=1, GM=2, WM=3, WMH=4 (if WMHC=3), SL=1.5 (if SLC)'
 ''
 };
 
@@ -447,10 +447,24 @@ modulated.def = @(val)cat_get_defaults('output.WMH.mod',    val{:});
 dartel.def    = @(val)cat_get_defaults('output.WMH.dartel', val{:});
 wmh           = cfg_branch;
 wmh.tag       = 'WMH';
-wmh.name      = 'White matter hyperintensities (WMH)';
+wmh.name      = 'White matter hyperintensities (WMHs)';
 wmh.val       = {native warped modulated dartel};
-wmh.help      = {'WARNING: Please note that the detection of WM hyperintensies is still under development and does not have the same accuracy as approaches that additionally consider FLAIR images (e.g. Lesion Segmentation Toolbox)!'
+wmh.help      = {'WARNING: Please note that the detection of WM hyperintensies (WMHs) is still under development and does not have the same accuracy as approaches that additionally consider FLAIR images (e.g. Lesion Segmentation Toolbox)!'
 'Options to save WMH images, if WMHC==3: p7*.img, wp7*.img and m[0]wp7*.img.'
+''
+};
+
+% stroke lesions
+native.def    = @(val)cat_get_defaults('output.SL.native', val{:});
+warped.def    = @(val)cat_get_defaults('output.SL.warped', val{:});
+modulated.def = @(val)cat_get_defaults('output.SL.mod',    val{:});
+dartel.def    = @(val)cat_get_defaults('output.SL.dartel', val{:});
+sl           = cfg_branch;
+sl.tag       = 'SL';
+sl.name      = 'Stroke lesions (SLs) - in development';
+sl.val       = {native warped modulated dartel};
+sl.help      = {'WARNING: Please note that the handling of stroke lesions (SLs) is still under development! '
+'To save SL images, SLC has to be active and (SLs has to be labeled): p8*.img, wp8*.img and m[0]wp8*.img.'
 ''
 };
 
@@ -508,9 +522,9 @@ output      = cfg_branch;
 output.tag  = 'output';
 output.name = 'Writing options';
 if expert==2
-  output.val  = {surface ROI grey white csf gmt wmh tpmc atlas label bias las jacobian warps}; 
+  output.val  = {surface ROI grey white csf gmt wmh sl tpmc atlas label bias las jacobian warps}; 
 elseif expert==1
-  output.val  = {surface ROI grey white csf wmh atlas label bias las jacobian warps};
+  output.val  = {surface ROI grey white csf wmh sl atlas label bias las jacobian warps};
 else
   output.val  = {surface ROI grey white bias jacobian warps};
 end
@@ -745,6 +759,52 @@ if isfield(opts,'label')
     cdep(end).src_output = substruct('()',{1}, '.','alabel','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end;
+end
+
+maps = {
+  'wmh' 'WM Hyperintensity Image'; 
+  'sl'  'Stroke Lesion Image'; 
+  'gmt' 'GM Thickess Image'; 
+  };
+for mi=1:size(maps,1)
+  if isfield(opts,maps{mi,1})
+    if isfield(opts.atlas,'native') && opts.atlas.native,
+        cdep(end+1)          = cfg_dep;
+        cdep(end).sname      = ['Native' maps{mi,2}];
+        cdep(end).src_output = substruct('()',{1}, '.',maps{mi,1},'()',{':'});
+        cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    end;
+    if isfield(opts.atlas,'warped') && opts.atlas.warped,
+        cdep(end+1)          = cfg_dep;
+        cdep(end).sname      = ['Warped' maps{mi,2}];
+        cdep(end).src_output = substruct('()',{1}, '.',['w' maps{mi,1}],'()',{':'});
+        cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    end;
+    if isfield(opts.atlas,'mod') && (opts.atlas.mod==1 || opts.atlas.mod==3),
+        cdep(end+1)          = cfg_dep;
+        cdep(end).sname      = ['Affine + Nonlinear Modulated ' maps{mi,2}];
+        cdep(end).src_output = substruct('()',{1}, '.',['wm' maps{mi,1}],'()',{':'});
+        cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    end;
+    if isfield(opts.atlas,'mod') && (opts.atlas.mod==2 || opts.atlas.mod==3),
+        cdep(end+1)          = cfg_dep;
+        cdep(end).sname      = ['Nonlinear Modulated Only' maps{mi,2}];
+        cdep(end).src_output = substruct('()',{1}, '.',['wm0' maps{mi,1}],'()',{':'});
+        cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    end;
+    if isfield(opts.atlas,'dartel') && (opts.atlas.dartel==1 || opts.atlas.dartel==3),
+        cdep(end+1)          = cfg_dep;
+        cdep(end).sname      = ['Rigidly Registered' maps{mi,2}];
+        cdep(end).src_output = substruct('()',{1}, '.',['r' maps{mi,1}],'()',{':'});
+        cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    end;
+    if isfield(opts.atlas,'dartel') && (opts.atlas.dartel==2 || opts.atlas.dartel==3),
+        cdep(end+1)          = cfg_dep;
+        cdep(end).sname      = ['Affine Registered' maps{mi,2}];
+        cdep(end).src_output = substruct('()',{1}, '.',['a' maps{mi,1}],'()',{':'});
+        cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    end;
+  end
 end
 
 % atlas
