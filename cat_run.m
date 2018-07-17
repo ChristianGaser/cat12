@@ -317,6 +317,12 @@ function job = update_job(job)
     end
   end
 
+  if job.extopts.WMHC<3 && any(cell2mat(struct2cell(job.output.WMH)))
+    error('cat_run:bad_WMHC_parameter','Cannot ouput WMH maps if WMHC<3!') 
+  end
+  if job.extopts.SLC<1 && any(cell2mat(struct2cell(job.output.SL)))
+    error('cat_run:bad_SLC_parameter','Cannot ouput stroke lesion maps if SLC is inactive!') 
+  end
 
   
   % deselect ROI output and print warning if ROI output is true and dartel template was changed

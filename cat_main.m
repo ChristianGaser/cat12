@@ -603,119 +603,123 @@ if ~isfield(res,'spmpp')
   %  The mapping has to be done for the TPM resolution, but we have to 
   %  use the Shooting template for mapping rather then the TPM because
   %  of the cat12 atlas map.
-  stime = cat_io_cmd(sprintf('Fast Shooting registration'),'','',job.extopts.verb); 
-  
-  job2 = job;
-  job2.extopts.regstr   = 15;     % low resolution 
-  job2.extopts.reg.nits = 16;     % less iterations
-  job2.extopts.verb     = debug;  % do not display process (people would may get confused) 
-  job2.extopts.vox      = abs(res.tpm(1).mat(1));  % TPM resolution to replace old Yy  
-  job2.extopts.shootingtpms(3:end) = [];             % remove high templates, we only need low frequency corrections
-  res2 = res; 
-  res2.do_dartel        = 2;      % use shooting
-  if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
-    [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M,res.Ylesion); 
-  else
-    [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M); 
-  end
-  %%
-  Yy2  = trans.warped.y;
-  %Ydtw = trans.jc.dt2; 
-  if ~debug, clear trans job2 res2; end
+  if job.extopts.WMHC || job.extopts.SLC || job.extopts.gcutstr==2 || job.extopts.gcutstr==3
+    stime = cat_io_cmd(sprintf('Fast Shooting registration'),'','',job.extopts.verb); 
 
-  % Shooting did not include areas outside of the boundary box
-  % >> add to cat_main_registration?
-  Ybd = true(size(Ym)); Ybd(3:end-2,3:end-2,3:end-2) = 0; Ybd(~isnan(Yy2(:,:,:,1))) = 0; Yy2(isnan(Yy2))=0; 
-  for k1=1:3
-    Yy2(:,:,:,k1) = Yy(:,:,:,k1) .* Ybd + Yy2(:,:,:,k1) .* (1-Ybd);
-    Yy2(:,:,:,k1) = cat_vol_approx(Yy2(:,:,:,k1),'nn',vx_vol,3); 
-  end
-  if ~debug, Yy = Yy2; end 
- 
-  %% prepare mapping in case of shooting templates with other resolutions
-  Vb2    = spm_vol(job.extopts.shootingtpms{2}); 
-  amat   = Vb2(2).mat \ M1; 
-  if any(any(amat~=eye(4))); 
-    yn     = numel(Yy2); 
-    p      = ones([4,yn/3],'single'); 
-    p(1,:) = Yy2(1:yn/3);
-    p(2,:) = Yy2(yn/3+1:yn/3*2);
-    p(3,:) = Yy2(yn/3*2+1:yn);
-    p      = amat * p;
-
-    Yy2 = zeros(size(Yy2),'single'); 
-    Yy2(1:yn/3)        = p(1,:); 
-    Yy2(yn/3+1:yn/3*2) = p(2,:); 
-    Yy2(yn/3*2+1:yn)   = p(3,:);
-    clear p; 
-  end
-  
-  %% Used (flipped) Jacobian determinant to detect lesions as strongly deformed regions. 
-  % I mapped the normalized determinant to individual space because I was not 
-  % able to create the determinant from the inverse deformation field.
-  % Furthermore this idea works only in single cases yet and is therefore not activated yet. 
-  % I will remove this block and related variables in October 2018 if it's still not working.
-  if 0
-    Vdtw = Vb2(1); Vdtw.dt(1) = 16; Vdtw.pinfo(1) = 1; Vdtw.pinfo(3) = 0; Vdtw.dat = Ydtw;
-    Vdtw.mat = trans.warped.M1; Vdtw.dim = size(Ydtw); 
-    if isfield(Vdtw,'private'), Vdtw = rmfield(Vdtw,'private'); end
-    Ydt  = spm_sample_vol(Vdtw,double(Yy2(:,:,:,1)),double(Yy2(:,:,:,2)),double(Yy2(:,:,:,3)),5);
-    Ydt  = reshape(Ydt,size(Ym)); 
+    job2 = job;
+    job2.extopts.regstr   = 15;     % low resolution 
+    job2.extopts.reg.nits = 16;     % less iterations
+    job2.extopts.verb     = debug;  % do not display process (people would may get confused) 
+    job2.extopts.vox      = abs(res.tpm(1).mat(1));  % TPM resolution to replace old Yy  
+    job2.extopts.shootingtpms(3:end) = [];             % remove high templates, we only need low frequency corrections
+    res2 = res; 
+    res2.do_dartel        = 2;      % use shooting
+    if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
+      [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M,res.Ylesion); 
+    else
+      [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M); 
+    end
     %%
-    mati = spm_imatrix(Vdtw.mat); mati([1,7]) = -mati([1,7]); Vdtw.mat = spm_matrix(mati); 
-    Vdtw.dat = flipud(Ydtw); 
-    Ydti = spm_sample_vol(Vdtw,double(Yy2(:,:,:,1)),double(Yy2(:,:,:,2)),double(Yy2(:,:,:,3)),5);
-    Ydti = reshape(Ydti,size(Ym)); 
+    Yy2  = trans.warped.y;
+    %Ydtw = trans.jc.dt2; 
+    if ~debug, clear trans job2 res2; end
+
+
+
+    % Shooting did not include areas outside of the boundary box
+    % >> add to cat_main_registration?
+    Ybd = true(size(Ym)); Ybd(3:end-2,3:end-2,3:end-2) = 0; Ybd(~isnan(Yy2(:,:,:,1))) = 0; Yy2(isnan(Yy2))=0; 
+    for k1=1:3
+      Yy2(:,:,:,k1) = Yy(:,:,:,k1) .* Ybd + Yy2(:,:,:,k1) .* (1-Ybd);
+      Yy2(:,:,:,k1) = cat_vol_approx(Yy2(:,:,:,k1),'nn',vx_vol,3); 
+    end
+    if ~debug, Yy = Yy2; end 
+
+    %% preparte mapping in case of shooting templates with other resolutions
+    Vb2    = spm_vol(job.extopts.shootingtpms{2}); 
+    amat   = Vb2(2).mat \ M1; 
+    if any(any(amat~=eye(4))); 
+      yn     = numel(Yy2); 
+      p      = ones([4,yn/3],'single'); 
+      p(1,:) = Yy2(1:yn/3);
+      p(2,:) = Yy2(yn/3+1:yn/3*2);
+      p(3,:) = Yy2(yn/3*2+1:yn);
+      p      = amat * p;
+
+      Yy2 = zeros(size(Yy2),'single'); 
+      Yy2(1:yn/3)        = p(1,:); 
+      Yy2(yn/3+1:yn/3*2) = p(2,:); 
+      Yy2(yn/3*2+1:yn)   = p(3,:);
+      clear p; 
+    end
+
+    %% Used (flipped) Jacobian determinant to detect lesions as strongly deformed regions. 
+    % I mapped the normalized determinant to individual space because I was not 
+    % able to create the determinant from the inverse deformation field.
+    % Furthermore this idea works only in single cases yet and is therefore not activated yet. 
+    % I will remove this block and related variables in October 2018 if it still not working.
+    if 0
+      Vdtw = Vb2(1); Vdtw.dt(1) = 16; Vdtw.pinfo(1) = 1; Vdtw.pinfo(3) = 0; Vdtw.dat = Ydtw;
+      Vdtw.mat = trans.warped.M1; Vdtw.dim = size(Ydtw); 
+      if isfield(Vdtw,'private'), Vdtw = rmfield(Vdtw,'private'); end
+      Ydt  = spm_sample_vol(Vdtw,double(Yy2(:,:,:,1)),double(Yy2(:,:,:,2)),double(Yy2(:,:,:,3)),5);
+      Ydt  = reshape(Ydt,size(Ym)); 
+      %%
+      mati = spm_imatrix(Vdtw.mat); mati([1,7]) = -mati([1,7]); Vdtw.mat = spm_matrix(mati); 
+      Vdtw.dat = flipud(Ydtw); 
+      Ydti = spm_sample_vol(Vdtw,double(Yy2(:,:,:,1)),double(Yy2(:,:,:,2)),double(Yy2(:,:,:,3)),5);
+      Ydti = reshape(Ydti,size(Ym)); 
+    end
+    
+    %%
+    clear Ydtw; 
+    if job.extopts.gcutstr==2 || job.extopts.gcutstr==3
+    %% Update brain mask
+    stime = cat_io_cmd(sprintf('SPM+ Skull-Stripping'),'','',job.extopts.verb,stime); 
+
+      % load template tissue maps 
+      Yg  = spm_sample_vol(Vb2(1),double(Yy2(:,:,:,1)),double(Yy2(:,:,:,2)),double(Yy2(:,:,:,3)),5);
+      Yw  = spm_sample_vol(Vb2(2),double(Yy2(:,:,:,1)),double(Yy2(:,:,:,2)),double(Yy2(:,:,:,3)),5);
+      if ~debug, clear Yy2; end
+      Yg  = reshape(Yg,size(Ym));
+      Yw  = reshape(Yw,size(Ym));
+
+      if debug, Ybo2 = Yb; Yclso=Ycls; end
+
+      %% update brainmask 
+      Yp0 = (single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255)/3;
+      ith = 0.2; % lower values will result in wider mask
+      Yb  = ( cat_vol_smooth3X(Yg + Yw,2/mean(vx_vol)) .* ... smooth brain template mask
+              (Yp0toC(Ym*3,2) + Yp0toC(Ym*3,3) - Yp0toC(Ym*3,4)/2 - Yp0toC(Ym*3,1)/max(2,noise*10)) )>ith & ... individual intensities
+              Ym>0.5*(Yg+Yw) & (Ym<0.8 | Ym<2*(Yg+Yw)) &  ... major boundaries
+              Ym>0.3 & Ym<1.2 & cat_vol_smooth3X(Yp0,2/mean(vx_vol))>0.05/3; % GM and WM
+      Yb = Yb & ~(Ym>1 & cat_vol_smooth3X(Yp0)<1.1/3);                % try to avoid previously removed head tissue
+      Yb = Yb | Ycls{2}>128 | (Ycls{1}>64 & Yp0toC(Ym*3,max(1.5,min(2.2,2-noise*2)))>0);    % add save WM and GM
+      Yb = ~cat_vol_morph( ~Yb, 'l', [2,0.5]);                        % close voxel wholes (missed high intensity WM voxels)
+      Yb = cat_vol_morph( Yb, 'l', [2,0.5]);                          % remove small voxel (head tissue)
+      Yb = Yb | (Ycls{1}/255>0.2 & cat_vol_morph( Yb, 'ldc', max(0.5,min(2,noise*10)))); 
+      Yb = cat_vol_morph( Yb, 'lo', 1);                               % remove larger parts of head tissue
+      Yb = Yb | smooth3( (Ycls{3} + Ycls{1})/255>0.4 & Ym>0.3/3 & Ym<1.5/3)>0.6;  % add CSF
+      Yb = cat_vol_morph( cat_vol_morph( Yb, 'ldo', 2 , vx_vol), 'ldc', 3, vx_vol); % remove large wholes and head tissue
+      % very small dilation to get PVE voxel (better to include menignes than to miss GM)
+      Yb = Yb | (cat_vol_morph(Yb,'dd',min(2,1 + noise*10)) & Ym<3/3 & Ym>0.9/3);
+      Yb = Yb | (cat_vol_morph(Yb,'dd',min(2,1 + noise*10)) & Ym<2/3 & Ym>0.7/3);
+      Yb = smooth3(Yb)>0.5; % make it nice
+      if ~debug, clear Yg Yw; end
+
+      %% update segmentation (add GM)
+      Ygd = Yb .* min(1,Yp0toC(Ym*3,2)*1.2) - single(Ycls{1})/255;
+      Ygd(smooth3(Ygd)<0.2 | Yp0>2/3) = 0; 
+      Ycls{1} = Ycls{1} + cat_vol_ctype(Ygd * 255); 
+      Ycls{3} = Ycls{3} - cat_vol_ctype(Ygd * 255); 
+      if ~debug, clear Yp0 Ygd; end
+      Yclss = zeros(size(Ym),'uint8'); 
+      for ci=1:numel(Ycls), if ~isempty(Ycls{ci}), Yclss = Yclss + Ycls{ci}; end; end
+      for ci=1:numel(Ycls), if ~isempty(Ycls{ci}), Yclss = cat_vol_ctype(single(Ycls{ci}) ./ single(Yclss) * 255); end; end
+      if ~debug, clear Yclss; end
+    end
+    fprintf('%5.0fs\n',etime(clock,stime));   
   end
-  %%
-  clear Ydtw; 
-  if job.extopts.gcutstr==2 || job.extopts.gcutstr==3
-  %% Update brain mask
-  stime = cat_io_cmd(sprintf('SPM+ Skull-Stripping'),'','',job.extopts.verb,stime); 
-  
-    % load template tissue maps 
-    Yg  = spm_sample_vol(Vb2(1),double(Yy2(:,:,:,1)),double(Yy2(:,:,:,2)),double(Yy2(:,:,:,3)),5);
-    Yw  = spm_sample_vol(Vb2(2),double(Yy2(:,:,:,1)),double(Yy2(:,:,:,2)),double(Yy2(:,:,:,3)),5);
-    if ~debug, clear Yy2; end
-    Yg  = reshape(Yg,size(Ym));
-    Yw  = reshape(Yw,size(Ym));
-    
-    if debug, Ybo2 = Yb; Yclso=Ycls; end
-    
-    %% update brainmask 
-    Yp0 = (single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255)/3;
-    ith = 0.2; % lower values will result in wider mask
-    Yb  = ( cat_vol_smooth3X(Yg + Yw,2/mean(vx_vol)) .* ... smooth brain template mask
-            (Yp0toC(Ym*3,2) + Yp0toC(Ym*3,3) - Yp0toC(Ym*3,4)/2 - Yp0toC(Ym*3,1)/max(2,noise*10)) )>ith & ... individual intensities
-            Ym>0.5*(Yg+Yw) & (Ym<0.8 | Ym<2*(Yg+Yw)) &  ... major boundaries
-            Ym>0.3 & Ym<1.2 & cat_vol_smooth3X(Yp0,2/mean(vx_vol))>0.05/3; % GM and WM
-    Yb = Yb & ~(Ym>1 & cat_vol_smooth3X(Yp0)<1.1/3);                % try to avoid previously removed head tissue
-    Yb = Yb | Ycls{2}>128 | (Ycls{1}>64 & Yp0toC(Ym*3,max(1.5,min(2.2,2-noise*2)))>0);    % add save WM and GM
-    Yb = ~cat_vol_morph( ~Yb, 'l', [2,0.5]);                        % close voxel wholes (missed high intensity WM voxels)
-    Yb = cat_vol_morph( Yb, 'l', [2,0.5]);                          % remove small voxel (head tissue)
-    Yb = Yb | (Ycls{1}/255>0.2 & cat_vol_morph( Yb, 'ldc', max(0.5,min(2,noise*10)))); 
-    Yb = cat_vol_morph( Yb, 'lo', 1);                               % remove larger parts of head tissue
-    Yb = Yb | smooth3( (Ycls{3} + Ycls{1})/255>0.4 & Ym>0.3/3 & Ym<1.5/3)>0.6;  % add CSF
-    Yb = cat_vol_morph( cat_vol_morph( Yb, 'ldo', 2 , vx_vol), 'ldc', 3, vx_vol); % remove large wholes and head tissue
-    % very small dilation to get PVE voxel (better to include menignes than to miss GM)
-    Yb = Yb | (cat_vol_morph(Yb,'dd',min(2,1 + noise*10)) & Ym<3/3 & Ym>0.9/3);
-    Yb = Yb | (cat_vol_morph(Yb,'dd',min(2,1 + noise*10)) & Ym<2/3 & Ym>0.7/3);
-    Yb = smooth3(Yb)>0.5; % make it nice
-    if ~debug, clear Yg Yw; end
-    
-    %% update segmentation (add GM)
-    Ygd = Yb .* min(1,Yp0toC(Ym*3,2)*1.2) - single(Ycls{1})/255;
-    Ygd(smooth3(Ygd)<0.2 | Yp0>2/3) = 0; 
-    Ycls{1} = Ycls{1} + cat_vol_ctype(Ygd * 255); 
-    Ycls{3} = Ycls{3} - cat_vol_ctype(Ygd * 255); 
-    if ~debug, clear Yp0 Ygd; end
-    Yclss = zeros(size(Ym),'uint8'); 
-    for ci=1:numel(Ycls), if ~isempty(Ycls{ci}), Yclss = Yclss + Ycls{ci}; end; end
-    for ci=1:numel(Ycls), if ~isempty(Ycls{ci}), Yclss = cat_vol_ctype(single(Ycls{ci}) ./ single(Yclss) * 255); end; end
-    if ~debug, clear Yclss; end
-  end
-  fprintf('%5.0fs\n',etime(clock,stime));   
-  
   
 
 
@@ -731,8 +735,9 @@ if ~isfield(res,'spmpp')
       stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
       [Ymi,Ym,Ycls] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
     end
+    fprintf('%5.0fs\n',etime(clock,stime));
 
-    if job.extopts.NCstr>0 
+    if job.extopts.NCstr~=0 
       %% noise correction of the local normalized image Ymi, whereas only small changes are expected in Ym by the WM bias correction
       stime = cat_io_cmd(sprintf('  SANLM denoising after LAS (%s)',...
         NCstr.labels{find(cell2mat(NCstr.values)==job.extopts.NCstr,1,'first')}),'g5');
@@ -755,6 +760,8 @@ if ~isfield(res,'spmpp')
       
       clear Ymis;
     end    
+    
+    cat_io_cmd(' ','','',job.extopts.verb,stime); 
     fprintf('%5.0fs\n',etime(clock,stime));
   else
     Ymi = Ym; 
@@ -778,13 +785,29 @@ if ~isfield(res,'spmpp')
   %  corrections in special regions like the cerbellum and subcortex. 
   %  ---------------------------------------------------------------------
   stime = cat_io_cmd('ROI segmentation (partitioning)');
-  if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
-    [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,res.Ylesion); %,Ydt,Ydti);
+  if job.extopts.SLC
+    if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
+      [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,res.Ylesion); %,Ydt,Ydti);
+      fprintf('%5.0fs\n',etime(clock,stime));
+    else 
+      [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
+      fprintf('%5.0fs\n',etime(clock,stime));
+      if isfield(res,'Ylesion') && sum(res.Ylesion(:)==0) && job.extopts.SLC==1
+        cat_warnings = cat_io_addwarning(cat_warnings,...
+          'CAT:cat_main_SLC_noExpDef','SLC is set for manual lesions corection but no lesions were found!'); 
+        fprintf('\n');
+      end
+    end
   else
     [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
+    fprintf('%5.0fs\n',etime(clock,stime));
+    if job.extopts.expertgui && isfield(res,'Ylesion') && sum(res.Ylesion(:))>1000 
+      cat_warnings = cat_io_addwarning(cat_warnings,...
+          'CAT:cat_main_SLC_noExpDef',sprintf(['SLC is deactivated but there are %0.2f cm' ...
+          char(179) ' of zero voxel!'],prod(vx_vol) .* sum(res.Ylesion(:)) / 1000 )); 
+      fprintf('\n');
+    end
   end
-  fprintf('%5.0fs\n',etime(clock,stime));
-
   if ~debug; clear YBG Ycr Ydt; end
 
 
@@ -1029,15 +1052,22 @@ if ~isfield(res,'spmpp')
 
 
   %% correction for normalization [and final segmentation]
-  if job.extopts.WMHC && job.extopts.WMHCstr>0 && ~job.inv_weighting; 
-
+  if ( (job.extopts.WMHC && job.extopts.WMHCstr>0) || job.extopts.SLC) && ~job.inv_weighting
+    % display something
+    %{
     if job.extopts.WMHC==1
-      cat_io_cmd(sprintf('Internal WMH correction for spatial normalization (WMHCstr=%0.2f)',job.extopts.WMHCstr));
+      cat_io_cmd(sprintf('Internal WMH correction for spatial normalization')); % (WMHCstr=%0.2f)',job.extopts.WMHCstr));
     elseif job.extopts.WMHC>1
-      cat_io_cmd(sprintf('Permanent WMH correction (WMHCstr=%0.2f)',job.extopts.WMHCstr));
+      cat_io_cmd(sprintf('Permanent WMH correction')); % (WMHCstr=%0.2f)',job.extopts.WMHCstr));
     end
     fprintf('\n'); 
-
+    if job.extopts.SLC==1
+      cat_io_cmd('Internal stroke lession correction for spatial normalization'); 
+    elseif job.extopts.SLC>1
+      cat_io_cmd('Permanent stroke lession correction');
+    end
+    fprintf('\n'); 
+    %}
     
     % prepare correction map
     Ynwmh = NS(Yl1,LAB.TH) | NS(Yl1,LAB.BG) | NS(Yl1,LAB.HC) | NS(Yl1,LAB.CB) | NS(Yl1,LAB.BS);
@@ -1048,15 +1078,14 @@ if ~isfield(res,'spmpp')
             cat_vol_morph( cat_vol_morph(Ycls{2}>128 | Ywmh,'ldc',1) ,'de' , 1.5)));
     Ywmh  = Ywmh .* cat_vol_smooth3X(Ywmh,0.5); % smooth inside
 
-   % Ywmh  = Ywmh & ~Yls; 
    
     %% transfer tissue from GM and CSF to WMH
-    if job.extopts.WMHC>=4
+    if job.extopts.SLC>0
       % WMHs and lesions
-      if job.extopts.WMHC==4
+      if job.extopts.SLC==1
         Yls     = res.Ylesion; 
         Ycls{8} = cat_vol_ctype( Yls*255 ); 
-      elseif job.extopts.WMHC==5
+      elseif job.extopts.SLC==2
         Yls     = NS(Yl1,LAB.LE)>0.5 | res.Ylesion; 
         Ycls{8} = cat_vol_ctype( Yls  .* single(Ycls{1})  +  Yls  .* single(Ycls{3})  + 255*single(res.Ylesion) ); 
       end
@@ -1071,22 +1100,31 @@ if ~isfield(res,'spmpp')
     end
     if ~debug, clear Ynwmh Ywmh Yls; end
     
+    
     % different types of WMH correction as GM, WM or extra class
     % different types of lesion correction as CSF or extra class
-    if numel(Ycls)>7
+    if numel(Ycls)>7 && job.extopts.SLC==1
       if job.extopts.WMHC<2
         Yp0b = cat_vol_ctype(single(Ycls{1})*2/5 + single(Ycls{2})*3/5 + single(Ycls{3})*1/5 + single(Ycls{7})*2/5 + single(Ycls{8})*1/5,'uint8');
-      elseif job.extopts.WMHC==2
+      elseif job.extopts.WMHC==2 
         Yp0b = cat_vol_ctype(single(Ycls{1})*2/5 + single(Ycls{2})*3/5 + single(Ycls{3})*1/5 + single(Ycls{7})*3/5 + single(Ycls{8})*1/5,'uint8');
-      elseif job.extopts.WMHC>=3
+      elseif job.extopts.WMHC==3
+        Yp0b = cat_vol_ctype(single(Ycls{1})*2/5 + single(Ycls{2})*3/5 + single(Ycls{3})*1/5 + single(Ycls{7})*4/5 + single(Ycls{8})*1/5,'uint8');
+      end 
+    elseif numel(Ycls)>7 && job.extopts.SLC==2
+      if job.extopts.WMHC<2
+        Yp0b = cat_vol_ctype(single(Ycls{1})*2/5 + single(Ycls{2})*3/5 + single(Ycls{3})*1/5 + single(Ycls{7})*2/5 + single(Ycls{8})*1.5/5,'uint8');
+      elseif job.extopts.WMHC==2 
+        Yp0b = cat_vol_ctype(single(Ycls{1})*2/5 + single(Ycls{2})*3/5 + single(Ycls{3})*1/5 + single(Ycls{7})*3/5 + single(Ycls{8})*1.5/5,'uint8');
+      elseif job.extopts.WMHC==3
         Yp0b = cat_vol_ctype(single(Ycls{1})*2/5 + single(Ycls{2})*3/5 + single(Ycls{3})*1/5 + single(Ycls{7})*4/5 + single(Ycls{8})*1.5/5,'uint8');
       end 
-    else
-      if job.extopts.WMHC<2
+    else % no stroke lession handling
+      if job.extopts.WMHC<2 
         Yp0b = cat_vol_ctype(single(Ycls{1})*2/5 + single(Ycls{2})*3/5 + single(Ycls{3})*1/5 + single(Ycls{7})*2/5,'uint8');
       elseif job.extopts.WMHC==2
         Yp0b = cat_vol_ctype(single(Ycls{1})*2/5 + single(Ycls{2})*3/5 + single(Ycls{3})*1/5 + single(Ycls{7})*3/5,'uint8');
-      elseif job.extopts.WMHC>=3
+      elseif job.extopts.WMHC==3
         Yp0b = cat_vol_ctype(single(Ycls{1})*2/5 + single(Ycls{2})*3/5 + single(Ycls{3})*1/5 + single(Ycls{7})*4/5,'uint8');
       end 
     end
@@ -1243,7 +1281,7 @@ end
     Yclsd{2} = Ycls{2} + Ycls{7}; % set WMHs as WM in some cases
   end
   
-  if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
+  if job.extopts.SLC && isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
     % lesion detection in the oringal space with the origal data
     LSstr   = 0.5; 
     Yvt     = cat_vol_morph( NS(Yl1,job.extopts.LAB.VT),'do',4,vx_vol);      % open to get lesions close to the ventricle
@@ -1390,15 +1428,7 @@ if job.extopts.WMHC>=3 && job.extopts.WMHCstr>0 && ~job.inv_weighting;
     min([0 0 3 0],[job.output.WMH.native job.output.WMH.warped ...
     job.output.WMH.mod job.output.WMH.dartel]),trans); % 0 1 2 2
   
-  % export lesions
-  if job.extopts.WMHC>3 && numel(Ycls)>7
-    cat_io_writenii(VT0,single(Ycls{8}),mrifolder,'p8','WMH tissue map','uint8',[0,1/255],...
-      min([1 1 0 3],[job.output.WMH.native job.output.WMH.warped ...
-      job.output.WMH.mod job.output.WMH.dartel]),trans); % 1 0 0 0
-    cat_io_writenii(VT0,single(Ycls{8}),mrifolder,'p8','WMH tissue map','uint16',[0,1/255],...
-      min([0 0 3 0],[job.output.WMH.native job.output.WMH.warped ...
-      job.output.WMH.mod job.output.WMH.dartel]),trans); % 1 0 0 0
-  end
+  
 elseif any([job.output.WMH.native job.output.WMH.warped ...
     job.output.WMH.mod job.output.WMH.dartel])
   % should write, but can not ...
@@ -1411,7 +1441,15 @@ elseif any([job.output.WMH.native job.output.WMH.warped ...
   end
   % 
 end 
-
+% export lesions
+if job.extopts.SLC>0 && numel(Ycls)>7
+  cat_io_writenii(VT0,single(Ycls{8}),mrifolder,'p8','stroke lesion map','uint8',[0,1/255],...
+    min([1 1 0 3],[job.output.SL.native job.output.SL.warped ...
+    job.output.SL.mod job.output.SL.dartel]),trans); % 1 0 0 0
+  cat_io_writenii(VT0,single(Ycls{8}),mrifolder,'p8','stroke lesion map','uint16',[0,1/255],...
+    min([0 0 3 0],[job.output.WMH.native job.output.SL.warped ...
+    job.output.SL.mod job.output.SL.dartel]),trans); % 1 0 0 0
+end
 
 % developer - intensity scaled tissue classe maps
 % ----------------------------------------------------------------------
@@ -1420,7 +1458,7 @@ end
 % tissue class, with good visible differences in the sulci.
 job.output.intsegments = job.extopts.experimental;
 if job.output.intsegments
-  if (any(tc(:)) || job.extopts.WMHC>=3 && job.extopts.WMHCstr>0 && ~job.inv_weighting); 
+  if (any(tc(:)) || job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting); 
 
     % intensity scaled tissue maps
     Yclsi = cell(1,3);
@@ -1854,11 +1892,13 @@ end
 if ~debug, clear wYp0 wYcls wYv trans; end
 
 
-%  estimate volumes and TIV
-qa.subjectmeasures.vol_abs_CGW = [prod(vx_vol)/1000/255 .* sum(Ycls{3}(:)), ... CSF
-                    prod(vx_vol)/1000/255 .* sum(Ycls{1}(:)), ... GM 
-                    prod(vx_vol)/1000/255 .* sum(Ycls{2}(:)), ... WM
-                    qa.subjectmeasures.WMH_abs]; 
+%%  estimate volumes and TIV
+qa.subjectmeasures.vol_abs_CGW = [
+  prod(vx_vol)/1000/255 .* sum(Ycls{3}(:)), ... CSF
+  prod(vx_vol)/1000/255 .* sum(Ycls{1}(:)), ... GM 
+  prod(vx_vol)/1000/255 .* sum(Ycls{2}(:)) 0 0]; %, ... WM
+if numel(Ycls)>6, qa.subjectmeasures.vol_abs_CGW(4) = prod(vx_vol)/1000/255 .* sum(Ycls{7}(:)); end % WMHs qa.subjectmeasures.WMH_abs
+if numel(Ycls)>7, qa.subjectmeasures.vol_abs_CGW(5) = prod(vx_vol)/1000/255 .* sum(Ycls{8}(:)); end % SL
 qa.subjectmeasures.vol_TIV     =  sum(qa.subjectmeasures.vol_abs_CGW); 
 qa.subjectmeasures.vol_rel_CGW =  qa.subjectmeasures.vol_abs_CGW ./ qa.subjectmeasures.vol_TIV;
 if ~debug, clear Ycls; end
@@ -2011,16 +2051,18 @@ if job.extopts.print
       str(end).value = sprintf('%s(%0.2f) / %s(%0.2f) / %s(%0.2f)',defstrm(job.extopts.LASstr),job.extopts.LASstr,...
         defstrm(job.extopts.gcutstr),job.extopts.gcutstr,defstrm(job.extopts.cleanupstr),job.extopts.cleanupstr); 
     end
+    restype = char(fieldnames(job.extopts.restypes));
     if job.extopts.expertgui
-      restype = char(fieldnames(job.extopts.restypes));
-      str = [str struct('name', 'WMHC / restype:','value',...
-             sprintf('%d / %s',...
-            job.extopts.WMHC,restype))];
-      if ~strcmp('native',restype)
-        str(end).value = [str(end).value sprintf('(%0.2f %0.2f)',job.extopts.restypes.(restype))];
-      end; 
+      str = [str struct('name', 'WMHC / SLC / restype:','value',...
+             sprintf('%d / %d / %s',...
+            job.extopts.WMHC,job.extopts.SLC,restype))];
+    else
+      str = [str struct('name', 'restype:','value',sprintf('%s',restype))];
     end
-
+    if ~strcmp('native',restype)
+      str(end).value = [str(end).value sprintf('(%0.2f %0.2f)',job.extopts.restypes.(restype))];
+    end; 
+    
     % line 8: surfae parameter
     if job.output.surface
       str = [str struct('name', 'Voxel resolution (original > internal > PBT; vox):',...
@@ -2050,31 +2092,38 @@ if job.extopts.print
     % Subject Measures
     % --------------------------------------------------------------------
     % Volume measures
-    if job.extopts.WMHC>1
-      str3 = struct('name', '\bfVolumes:','value',sprintf('%5s %5s %5s %5s%s','CSF','GM','WM','WMH')); 
-      str3 = [str3 struct('name', ' Absolute volume:','value',sprintf(['%5.0f %5.0f %5.0f %5.0f cm' char(179)], ...
-              qa.subjectmeasures.vol_abs_CGW(1:4)))];
-      str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%5.1f %5.1f %5.1f %5.1f %%', ...
-              qa.subjectmeasures.vol_rel_CGW(1:4)*100))];
-    else
-      str3 = struct('name', '\bfVolumes:','value',sprintf('%5s %5s %5s %5s%s','CSF','GM','WM')); 
-      str3 = [str3 struct('name', ' Absolute volume:','value',sprintf(['%5.0f %5.0f %5.0f cm' char(179)], ...
-              qa.subjectmeasures.vol_abs_CGW(1:3)))];
-      str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%5.1f %5.1f %5.1f %%', ...
-              qa.subjectmeasures.vol_rel_CGW(1:3)*100))];
-      Ywmhrel = NS(Yl1,23);
-      Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
-      WMH_rel    = 100*sum(Ywmhrel(:)) / sum(Yp0(:)>0.5); 
-      WMH_WM_rel = 100*sum(Ywmhrel(:)) / sum(Yp0(:)>2.5); 
-      if WMH_rel>3 || WMH_WM_rel>5
-        str3(end).value = [str3(end).value sprintf('\\bf\\color[rgb]{0.8 0 0} WMHs!')];   
-        %str3(end).value = [str3(end).value sprintf('\\bf\\color[rgb]{0.8 0 0}~%0.0f%%WMHs!',WMH_WM_rel)];    
-      end
-      clear Yp0;
+    
+    % header
+    str3 = struct('name', '\bfVolumes:','value',sprintf('%5s %5s %5s ','CSF','GM','WM')); 
+    if job.extopts.WMHC>1, str3(end).value = [str3(end).value sprintf('%5s ','WMH')]; end
+    if job.extopts.SLC>0,  str3(end).value = [str3(end).value sprintf('%5s ','SL')];  end
+
+    % absolute volumes
+    str3 = [str3 struct('name', ' Absolute volume:','value',sprintf('%5.0f %5.0f %5.0f ', ...
+            qa.subjectmeasures.vol_abs_CGW(1:3)))];
+    if job.extopts.WMHC>1,  str3(end).value = [str3(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_abs_CGW(4))]; end; 
+    if job.extopts.SLC>0,   str3(end).value = [str3(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_abs_CGW(5))]; end;
+    str3(end).value = [str3(end).value 'cm' char(179)];
+
+    % relative volumes
+    str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%5.1f %5.1f %5.1f ', ...
+            qa.subjectmeasures.vol_rel_CGW(1:3)*100))];
+    if job.extopts.WMHC>1,  str3(end).value = [str3(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_rel_CGW(4)*100)]; end; 
+    if job.extopts.SLC>0,   str3(end).value = [str3(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_rel_CGW(5)*100)]; end;
+    str3(end).value = [str3(end).value '%'];
+
+    Ywmhrel = NS(Yl1,23);
+    Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
+    WMH_rel    = 100*sum(Ywmhrel(:)) / sum(Yp0(:)>0.5); 
+    WMH_WM_rel = 100*sum(Ywmhrel(:)) / sum(Yp0(:)>2.5); 
+    if WMH_rel>3 || WMH_WM_rel>5
+      str3(end).value = [str3(end).value sprintf('\\bf\\color[rgb]{0.8 0 0} WMHs!')];  
     end
-    %
+    clear Yp0;
+
     str3 = [str3 struct('name', ' TIV:','value', sprintf(['%0.0f cm' char(179)],qa.subjectmeasures.vol_TIV))];  
 
+    
     % Surface measures - Thickness, (Curvature, Depth, ...)
     if isfield(qa.subjectmeasures,'dist_thickness') && ~isempty(qa.subjectmeasures.dist_thickness)
       str3 = [str3 struct('name', '\bfThickness:','value',sprintf('%5.2f%s%5.2f mm', ...
@@ -2090,11 +2139,9 @@ if job.extopts.print
     end
 
     % Preprocessing Time
-    if job.extopts.experimental || job.extopts.expertgui>0 || 1
-      str2 = [str2 struct('name','\bfProcessing time:','value',sprintf('%02.0f:%02.0f min', ...
+    str2 = [str2 struct('name','\bfProcessing time:','value',sprintf('%02.0f:%02.0f min', ...
       floor(round(etime(clock,res.stime))/60),mod(round(etime(clock,res.stime)),60)))]; 
-    end
-
+  
     % Warnings
     if numel(cat_warnings)>0 && job.extopts.expertgui>0
       str2 = [str2 struct('name', '','value','')]; 
@@ -2195,7 +2242,7 @@ if job.extopts.print
     %htext(5,1,1) = text(0.01,0.45-(0.055*(i+2)),str4(1).name,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
     for i=1:size(str3,2)  % subject-measurements
       htext(3,i,1) = text(0.51,0.40-(0.055*i), str3(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-      htext(3,i,2) = text(0.80,0.40-(0.055*i), str3(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+      htext(3,i,2) = text(0.70,0.40-(0.055*i), str3(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
     end
 
 

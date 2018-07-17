@@ -430,10 +430,10 @@ end
 %------------------------------------------------------------------------
 gcutstr           = cfg_menu;
 gcutstr.tag       = 'gcutstr';
-gcutstr.name      = 'Method and Strength of Skull-Stripping';
+gcutstr.name      = 'Skull-Stripping';
 gcutstr.def       = @(val)cat_get_defaults('extopts.gcutstr', val{:});
 gcutstr.help      = {
-  'Method of skull-stripping before AMAP segmentation. The SPM approach works quite stable for the majority of data. However, in some rare cases parts of GM (i.e. in frontal lobe) might be cut. If this happens the GCUT approach is a good alternative. '
+  'Method of skull-stripping before AMAP segmentation. The SPM approach works quite stable for the majority of data. However, in some rare cases parts of GM (i.e. in frontal lobe) might be cut. If this happens the GCUT approach is a good alternative. GCUT is a graph-cut/region-growing approach starting from the WM area.'
   ''
 };
 if ~expert
@@ -442,16 +442,6 @@ if ~expert
 else
   gcutstr.labels  = {'SPM approach (0)','GCUT medium (0.50)','SPM+ approach (2)','SPM+ and GCUT medium (3)'};
   gcutstr.values  = {0 0.50 2 3};
-  gcutstr.help    = [gcutstr.help;{
-    'Strength of skull-stripping before AMAP segmentation, with "ultralight" for a more liberal and wider brain masks and "heavy" for a more aggressive skull-stripping. If parts of the brain are missing in the brain mask then decrease the strength. If the brain mask of your images still contains parts of the head, then increase the strength. '
-    ''
-    'The strength parameter changes multiple internal parameters: '
-    ' 1) Intensity thresholds to deal with blood-vessels and meninges '
-    ' 2) Distance and growing parameters for the graph-cut/region-growing '
-    ' 3) Closing parameters that fill the sulci '
-    ' 4) Smoothing parameters that allow sharper or wider results '
-    ''
-  }];
 end
 
 
@@ -512,7 +502,7 @@ else
 end
 LASstr.def     = @(val)cat_get_defaults('extopts.LASstr', val{:});
 LASstr.help    = {
-  'Strength of the modification by the Local Adaptive Segmentation (LAS).'
+  'In addition WM-inhomogeneities, GM intensity can vary for different regions such as the motor cortex, the basal ganglia, or the occipital lobe. These changes have an anatomical background (e.g. iron content, myelinization), but are dependent on the MR-protocol and often lead to GM-underestimations at higher intensities and CSF-overestimations at lower intensities. Therefore, a local intensity transformation of all tissue classes is used to reduce these effects in the image by the local adaptive segmentation (LAS) before the final AMAP segmentation.'
   ''
 };
 
@@ -522,55 +512,38 @@ LASstr.help    = {
 %------------------------------------------------------------------------
 wmhc        = cfg_menu;
 wmhc.tag    = 'WMHC';
-wmhc.name   = 'WM Hyperintensity Correction (WMHC)';
+wmhc.name   = 'WM Hyperintensity Correction (WMHCs) - in development';
 wmhc.def    = @(val)cat_get_defaults('extopts.WMHC', val{:});
 wmhc.help   = {
   'WARNING: Please note that the detection of WM hyperintensies is still under development and does not have the same accuracy as approaches that additionally consider FLAIR images (e.g. Lesion Segmentation Toolbox)! '
   'In aging or (neurodegenerative) diseases WM intensity can be reduced locally in T1 or increased in T2/PD images. These so-called WM hyperintensies (WMHs) can lead to preprocessing errors. Large GM areas next to the ventricle can cause normalization problems. Therefore, a temporary correction for normalization is useful if WMHs are expected. CAT allows different ways to handle WMHs: '
   ''
-  ' 0) No Correction. '
-  ' 1) Temporary (internal) correction for spatial normalization. '
-  ' 2) Correction to WM segmentations. ' 
-  ' 3) Correction as separate class. '
+  ' 0) No Correction (handled as GM). '
+  ' 1) Temporary (internal) correction as WM for spatial normalization. '
+  ' 2) Permanent correction to WM. ' 
+  ' 3) Handling as separate class. '
   ''
 };
+wmhc.values = {0 1 2 3};
 if expert>1
   wmhc.labels = { ...
-    'no correction (WMHs = GM (0)' ...
-    'only for normalization (1)' ... 
-    'set WMH as WM (2)' ...
-    'set WMH as own class (3)' ...
-    'set WMH and manual lesions as own class (4)' ...
-    'set WMH and lesions as own class (5)' ...
-  };
-  wmhc.values = {0 1 2 3 4 5};
-  wmhc.help = [wmhc.help; {
-    ' 4) Correction as separate class for WMHs and manual defined lesions'
-    '    (zero input values within brainmask).'
-    ' 5) Correction as separate class for WMHs and manual and automatic detected lesions (in development).'
-    }];
-elseif expert==1
-  wmhc.labels = { ...
     'no correction (0)' ...
-    'only for normalization (1)' ... 
+    'set WMH as WM only for normalization (1)' ... 
     'set WMH as WM (2)' ...
     'set WMH as own class (3)' ...
-    'set WMH and manual lesions as own class (4)' ...
   };
-  wmhc.values = {0 1 2 3 4};
-  wmhc.help = [wmhc.help; {
-    ' 4) Correction as separate class for WMHs and lesions.'
-    }];
 else
   wmhc.labels = { ...
-    'no correction' ...
-    'only for normalization' ... 
+    'no WMH correction' ...
+    'set WMH as WM only for normalization' ... 
     'set WMH as WM' ...
     'set WMH as own class' ...
   };
-  wmhc.values = {0 1 2 3};
 end
 
+% deactivated 20180714 because the WMHC in cat_vol_partvol did not support 
+% user modification yet
+%{
 WMHCstr         = cfg_menu;
 WMHCstr.tag     = 'WMHCstr';
 WMHCstr.name    = 'Strength of WMH Correction';
@@ -581,6 +554,43 @@ WMHCstr.help    = {
   'Strength of the modification of the WM Hyperintensity Correction (WMHC).'
   ''
 };
+%}
+
+%------------------------------------------------------------------------
+% stroke lesion handling (expert)
+%------------------------------------------------------------------------
+slc        = cfg_menu;
+slc.tag    = 'SLC';
+slc.name   = 'Stroke Lesion Correction (SLC) - in development';
+slc.def    = @(val)cat_get_defaults('extopts.SLC', val{:});
+slc.help   = {
+  'WARNING: Please note that the handling of stroke lesion is still under development. '
+  'Without further correction, stroke lesions will be handled by their most probable tissue class, i.e. typically as CSF or GM. Because the spatial registration tries to normalize these regions, the normalization of large regions lead to storng inproper deformations. '
+  'To avoid bad deformations, we created a work around by manually defined lesion maps. The ... tool can be used to set the tissue intensity to zeros to avoid normalization of stroke lesions. '
+  ''
+  ' 0) No Correction. '
+  ' 1) Correction of manually defined regions that were set to zeros. '
+};
+if expert>1
+  slc.values = {0 1 2};
+  slc.labels = { ...
+    'no SL handling (0)' ...
+    'manual SL handling (1)' ... 
+    'manual & automatic handling (2)' ...
+  };
+  slc.help   = [slc.help;{
+    ' 2) Correction automatic detected regions. ' 
+    ''}];
+else
+  slc.values = {0 1};
+  slc.labels = { ...
+    'no SL handling' ...
+    'manual SL handling' ... 
+  };
+  slc.help   = [slc.help;{
+    ''}];
+end
+
 
 %------------------------------------------------------------------------
 
@@ -589,7 +599,7 @@ app        = cfg_menu;
 app.tag    = 'APP';
 app.name   = 'Affine Preprocessing (APP)';
 app.help   = { ...
-    'Affine registration and SPM preprocessing can fail in some subjects with deviating anatomy (e.g. other species/neonates) or in images with strong signal inhomogeneities, or untypical intensities (e.g. synthetic images). An initial bias correction can help to reduce such problems. ' 
+    'Affine registration and SPM preprocessing can fail in some subjects with deviating anatomy (e.g. other species/neonates) or in images with strong signal inhomogeneities, or untypical intensities (e.g. synthetic images). An initial bias correction can help to reduce such problems (see details below). Recommended are the "rough" and "full" option.' 
     ''
     ' none   - no additional bias correction.' 
     ' rough  - rough APP bias correction (r1070)' 
@@ -605,16 +615,33 @@ if expert==2
   app.labels = {'none','light','full','rough','rough (new)','fine (new)'};
   app.values = {0 1 2 1070 3 4};
   app.help   = [app.help;{ 
-    ' none      - no additional bias correction.' 
-    ' light     -  iterative SPM bias correction on different resolutions' 
-    ' full      - iterative SPM bias correction on different resolutions and high resolution bias correction' 
-    ' APP       - rough APP bias correction (R1070)' 
-    ' rough APP - rough APP bias correction' 
-    ' fine  APP - rough and fine APP bias correction'    
+    ' none       - no additional bias correction.' 
+    ' light      - iterative SPM bias correction on different resolutions' 
+    ' full       - iterative SPM bias correction on different resolutions and high resolution bias correction' 
+    ' rough       - rough APP bias correction (R1070)' 
+    ' rough (new) - rough APP bias correction - in development' 
+    ' fine  (new) - rough (new) and fine APP bias correction - in development'    
     ''
   }];
 end  
 app.def    = @(val)cat_get_defaults('extopts.APP', val{:});
+app.help   = [app.help; { ...
+    'rough: Fast correction (~60s) that identify large homogen object areas to estimate the inhomogeneity. A maximum-filter is used to reduce the partial volume effect in T1 data. Moreover, gradient and divergence maps were used to avoid side effects by high intensity tissues (e.g. blood vessels or head tissue). '
+    'light: This approach focus on an iterative application of the standard SPM preprocessing with different bias-corrections option from low (samp=6 mm, biasfwhm=120 mm) to high frequency corrections  (samp=4.5 mm, biasfwhm=45 mm). However, the iterative call requires a lot of additional processing time (~500s) and is normally not required in data with low inhomogeneity. '
+    'full: In addition to the "light" approach a final maximum-based filter (similar to the ''rough'' method that need about additional 60s) is used to remove reminding local inhomogeneities. '
+    ''
+}];
+if expert==2
+    app.help   = [app.help; { ...
+    'rough (new): New version of the ''rough'' approach with improved handling of T2/PD data that is still in development. '
+    'fine  (new): Addition fine processing after the ''rough'' processing that incorporate the different brain and head tissues but is also still in development.'
+    ''
+    }];
+end
+app.help   = [app.help; { ...
+    'In conclusion, we recommend to use the "rough" option or alternatively the "full" option or in case of further problems the "light", "rough (new)" or "fine (new)" options.'
+    ''
+    }];
 
 
 %------------------------------------------------------------------------
@@ -660,9 +687,9 @@ segmentation      = cfg_branch;
 segmentation.tag  = 'segmentation';
 segmentation.name = 'Segmentation Options';
 if expert==1
-  segmentation.val  = {app,NCstr,LASstr,gcutstr,cleanupstr,wmhc,restype};
+  segmentation.val  = {app,NCstr,LASstr,gcutstr,cleanupstr,wmhc,slc,restype};
 elseif expert==2
-  segmentation.val  = {app,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,mrf,restype};
+  segmentation.val  = {app,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,wmhc,slc,mrf,restype}; % WMHCstr,
 end
 segmentation.help = {'CAT12 parameter to control the tissue classification.';''};
 

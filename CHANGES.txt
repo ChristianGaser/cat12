@@ -1,5 +1,34 @@
 ------------------------------------------------------------------------
-r1331 | gaser | 2018-07-17 10:16:22
+r1332 | dahnke | 2018-07-17 16:44:17
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       cat_main.m
+M       cat_main_LAS.m
+M       cat_run.m
+M       cat_run_job1070.m
+M       cat_vol_partvol.m
+M       html/cat_methods_VBM.html
+M       html/cat_methods_VBM_APP.html
+M       tbx_cfg_cat.m
+A       templates_1.50mm/cat_strokelesions_ATLAS303.nii
+
+1) Changed:   Created a separate field to handle stroke lesion
+              correction (SLC) and writing of stroke lesion maps
+              in the expert GUI and the defaults-file with:
+                  0 - no
+                  1 - manual
+2) New:       Added error message in cat_run if output of stroke 
+              lesion or WMH maps is active but WMHC or SLC is 
+              turned off. Added warning in case of manual SLC
+              but not manual defined areas were found in the 
+              input image. 
+3) Changed:   Updated APP and skull-stripping GUI and HTML help.   
+                
+------------------------------------------------------------------------
+r1331 | gaser | 2018-07-17 10:16:48 +0200 (Di, 17 Jul 2018) | 11 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -11,6 +40,7 @@ M       cat_main.m
 (1) Changed: WMH handling is now again set to correction for Dartel/Shooting 
     registration.
 (2) Changed: Corrected typos.
+
 ------------------------------------------------------------------------
 r1330 | dahnke | 2018-07-13 09:38:04 +0200 (Fr, 13 Jul 2018) | 29 lines
 
