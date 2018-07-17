@@ -79,7 +79,7 @@
           <h4 id="LAS">Local Adaptive Segmentation (LAS)</h4>
           <p>
             In addition WM-inhomogeneities, GM intensity can vary for different regions such as the motor cortex, the basal ganglia, or the occipital lobe. 
-            These changes have an anatomical background (e.g. iron content, myelenization), but are dependend on the MR-protocol and often lead to GM-underestimations at higher intensities and CSF-overestimations at lower intensities. 
+            These changes have an anatomical background (e.g. iron content, myelinization), but are dependent on the MR-protocol and often lead to GM-underestimations at higher intensities and CSF-overestimations at lower intensities. 
             Therefore, a local intensity transformation of all tissue classes is used to reduce these effects in the image before the final AMAP segmentation. 
             The strength of the changes is controlled by the <em>"Strength of Local Adaptive Segmentation"</em> parameter (<em>cat.extopts.LASstr</em> in cat_defaults), with 0 for no LAS, small values (0.01-0.5) for small adjustments, 0.5 for medium adjustments (default), and higher values (0.5-1) for strong adjustments. 
           </p>
@@ -90,7 +90,7 @@
           <h4 id="AMAP">AMAP Segmentation</h4>
           <p>
             The segmentation approach is based on an Adaptive Maximum A Posterior (AMAP) technique without the need for a priori information on the tissue probabilities. 
-            This means that the Tissue Probability Maps (TPM) are not constantly used in the sense of the classical Unified Segmentation approach  <a href="matlab:web('http://dx.doi.org/10.1016/j.neuroimage.2005.02.018','-browser');">(Ashburner et al. 2005)</a>, but only for spatial normalization, initial skull-stripping, and as initial segmentation estimate. The subsequent AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modelled as slowly varying spatial functions  <a href="matlab:web('http://dx.doi.org/10.1109/42.563663','-browser');">(Rajapakse et al. 1997)</a>.  
+            This means that the Tissue Probability Maps (TPM) are not constantly used in the sense of the classical Unified Segmentation approach  <a href="matlab:web('http://dx.doi.org/10.1016/j.neuroimage.2005.02.018','-browser');">(Ashburner et al. 2005)</a>, but only for spatial normalization, initial skull-stripping, and as initial segmentation estimate. The subsequent AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modeled as slowly varying spatial functions  <a href="matlab:web('http://dx.doi.org/10.1109/42.563663','-browser');">(Rajapakse et al. 1997)</a>.  
             This accounts not only for intensity inhomogeneities, but also for other local intensity variations.
           </p>
         </li>

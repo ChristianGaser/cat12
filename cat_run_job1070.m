@@ -572,7 +572,7 @@ function cat_run_job1070(job,tpm,subj)
 
         %  Fine Affine Registration with 3 mm sampling distance
         %  This does not work for non human data (or very small brains)
-        stime = cat_io_cmd('SPM preprocessing 1 (estimate):','','',1,stime);
+        stime = cat_io_cmd('SPM preprocessing 1 (estimate 1):','','',1,stime);
         if strcmp('human',job.extopts.species) 
             spm_plot_convergence('Init','Fine affine registration','Mean squared difference','Iteration');
             warning off 
@@ -619,7 +619,7 @@ function cat_run_job1070(job,tpm,subj)
         warning off 
         try 
           % inital estimate
-          stime = cat_io_cmd('SPM preprocessing 1 (estimate):','','',job.extopts.verb-1,stime);
+          stime = cat_io_cmd('SPM preprocessing 1 (estimate 2):','','',job.extopts.verb-1,stime);
           res = spm_preproc8(obj);
 
           % for non-skull-stripped brains use masked brains to get better estimates
