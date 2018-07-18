@@ -1,18 +1,20 @@
-function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
+function [Yth1,S,Psurf,EC] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
 % ______________________________________________________________________
 % Surface creation and thickness estimation.
 %
-% [Yth1,S]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
+% [Yth1,S,Psurf,EC]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
 %
-% Yth1 = thickness map
-% S    = structure with surfaces, like the left hemishere, that contains
+% Yth1  = thickness map
+% S     = structure with surfaces, like the left hemishere, that contains
 %        vertices, faces, GM thickness (th1), and the transformation to
 %        map to nifti space (vmat) and back (vmati).
-% V    = spm_vol-structure 
-% Ym   = the (local) intensity, noise, and bias corrected T1 image
-% Ya   = the atlas map with the ROIs for left and right hemispheres
+% Psurf = name of surface files
+% EC    = Euler characteristics
+% V     = spm_vol-structure 
+% Ym    = the (local) intensity, noise, and bias corrected T1 image
+% Ya    = the atlas map with the ROIs for left and right hemispheres
 %        (this is generated with cat_vol_partvol)
-% YMF  = a logical map with the area that has to be filled
+% YMF   = a logical map with the area that has to be filled
 %        (this is generated with cat_vol_partvol)
 %   
 % opt.surf       = {'lh','rh'[,'lc','lh']} - side
@@ -232,6 +234,8 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     for sfi=1:numel(surffile)
       eval(sprintf('Psurf(si).%s = %s;',surffile{sfi},surffile{sfi})); 
     end
+    
+    EC = 0;
     
     % reduce for object area
     switch opt.surf{si}
@@ -601,6 +605,11 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
     end
    
+    % estimate Euler characteristics: EC = #vertices + #faces - #edges
+    EC0 = size(CS.vertices,1)+size(CS.faces,1)-size(spm_mesh_edges(CS),1);
+    EC = EC + abs(EC0);
+    fprintf('\n  Euler characteristics: %d\n',EC0);
+    
     %% topology correction and surface refinement 
     stime = cat_io_cmd('  Topology correction and surface refinement:','g5','',opt.verb,stime); 
     if opt.verb>2, fprintf('\n'); end
@@ -766,6 +775,9 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     delete(Vpp1.fname);
     clear CS
   end  
+  
+  % calculate mean EC for all surfaces
+  EC = round(EC/numel(opt.surf));
   
   if opt.verb
     for si=1:numel(Psurf)

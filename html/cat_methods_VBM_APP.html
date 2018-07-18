@@ -22,21 +22,21 @@
     </div>
       
     <div id="content">
-      <h2>Affine PreProcessing (APP) (in development):</h2>
+      <h2>Affine PreProcessing (APP):</h2>
 
       <p>
-        APP was originally developed to process animal data with the standard CAT pipeline that required additional  preprocessing.  It includes a rough initial inhomogeneity correction in order to improve the affine registration and to allow an initial skull-stripping. However, APP shows to be also useful for human data, where the affine registration runs into problems in case of strong inhomogeneities or untypical protocols (e.g. synthetic images).
+        APP was originally developed to process animal data with the standard CAT pipeline that required additional preprocessing. It includes a rough initial inhomogeneity correction in order to improve the affine registration and to allow an initial skull-stripping. However, it turned out that APP is also useful for human data, where the affine registration leads to problems in case of strong inhomogeneities or untypical protocols (e.g. synthetic images).
       </p><p> 
       <ul>
-        <li><b>rough:</b> Fast correction (~60s) that identify large homogen object areas to estimate the inhomogeneity. A maximum-filter is used to reduce the partial volume effect in T1 data. Moreover, gradient and divergence maps were used to avoid side effects by high intensity tissues (e.g. blood vessels or head tissue). 
+        <li><b>rough:</b> Fast correction (~60s) that identifies large homogeneous areas to estimate the intensity inhomogeneity. A maximum-filter is used to reduce the partial volume effect in T1 data. Moreover, gradient and divergence maps were used to avoid side effects by high intensity tissues (e.g. blood vessels or head tissue). 
         </li>
-        <li><b>light:</b> This approach focus on an iterative application of the standard SPM preprocessing with different bias-corrections option from low (samp=6 mm, biasfwhm=120 mm) to high frequency corrections  (samp=4.5 mm, biasfwhm=45 mm). However, the iterative call requires a lot of additional processing time (~500s) and is normally not required in data with low inhomogeneity. 
+        <li><b>light:</b> This approach focuses on an iterative application of the standard SPM preprocessing with different bias-correction options from low (samp=6 mm, biasfwhm=120 mm) to high frequency corrections  (samp=4.5 mm, biasfwhm=45 mm). However, the iterative calls require a lot of additional processing time (~500s) and is normally not required in data with low intensity inhomogeneity. 
         </li>
-        <li><b>full</b>: In addition to the "light" approach a final maximum-based filter (similar to the ''rough'' method that need about additional 60s) is used to remove reminding local inhomogeneities. 
+        <li><b>full</b>: In addition to the "light" approach a final maximum-based filter (similar to the ''rough'' method that needs about additional 60s) is used to remove remaining local inhomogeneities. 
         </li>
         <li><b>rough (new) [expert - in development]:</b> New version of the ''rough'' approach with improved handling of T2/PD data that is still in development. 
         </li>
-        <li><b>fine  (new) [expert - in development]:</b> Addition fine processing after the ''rough'' processing that incorporate the different brain and head tissues but is also still in development.
+        <li><b>fine  (new) [expert - in development]:</b> Addition fine processing after the ''rough'' processing that incorporates the different brain and head tissues but is also still in development.
         </li>
     </ul>
     </p><p>

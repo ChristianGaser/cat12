@@ -502,7 +502,7 @@ else
 end
 LASstr.def     = @(val)cat_get_defaults('extopts.LASstr', val{:});
 LASstr.help    = {
-  'In addition WM-inhomogeneities, GM intensity can vary for different regions such as the motor cortex, the basal ganglia, or the occipital lobe. These changes have an anatomical background (e.g. iron content, myelinization), but are dependent on the MR-protocol and often lead to GM-underestimations at higher intensities and CSF-overestimations at lower intensities. Therefore, a local intensity transformation of all tissue classes is used to reduce these effects in the image by the local adaptive segmentation (LAS) before the final AMAP segmentation.'
+  'Additionally to WM-inhomogeneities, GM intensity can vary across different regions such as the motor cortex, the basal ganglia, or the occipital lobe. These changes have an anatomical background (e.g. iron content, myelinization), but are dependent on the MR-protocol and often lead to underestimation of GM at higher intensities and overestimation of CSF at lower intensities. Therefore, a local intensity transformation of all tissue classes is used to reduce these effects in the image. This local adaptive segmentation (LAS) is applied before the final AMAP segmentation.'
   ''
 };
 
@@ -566,7 +566,7 @@ slc.def    = @(val)cat_get_defaults('extopts.SLC', val{:});
 slc.help   = {
   'WARNING: Please note that the handling of stroke lesion is still under development. '
   'Without further correction, stroke lesions will be handled by their most probable tissue class, i.e. typically as CSF or GM. Because the spatial registration tries to normalize these regions, the normalization of large regions lead to storng inproper deformations. '
-  'To avoid bad deformations, we created a work around by manually defined lesion maps. The ... tool can be used to set the tissue intensity to zeros to avoid normalization of stroke lesions. '
+  'To avoid poor deformations, we created a work-around by manually defined lesion maps. The ... tool can be used to set the tissue intensity to zeros to avoid normalization of stroke lesions. '
   ''
   ' 0) No Correction. '
   ' 1) Correction of manually defined regions that were set to zeros. '
@@ -626,15 +626,15 @@ if expert==2
 end  
 app.def    = @(val)cat_get_defaults('extopts.APP', val{:});
 app.help   = [app.help; { ...
-    'rough: Fast correction (~60s) that identify large homogen object areas to estimate the inhomogeneity. A maximum-filter is used to reduce the partial volume effect in T1 data. Moreover, gradient and divergence maps were used to avoid side effects by high intensity tissues (e.g. blood vessels or head tissue). '
-    'light: This approach focus on an iterative application of the standard SPM preprocessing with different bias-corrections option from low (samp=6 mm, biasfwhm=120 mm) to high frequency corrections  (samp=4.5 mm, biasfwhm=45 mm). However, the iterative call requires a lot of additional processing time (~500s) and is normally not required in data with low inhomogeneity. '
-    'full: In addition to the "light" approach a final maximum-based filter (similar to the ''rough'' method that need about additional 60s) is used to remove reminding local inhomogeneities. '
+    'rough: Fast correction (~60s) that identifies large homogeneous areas to estimate the intensity inhomogeneity. A maximum-filter is used to reduce the partial volume effect in T1 data. Moreover, gradient and divergence maps were used to avoid side effects by high intensity tissues (e.g. blood vessels or head tissue). '
+    'light: This approach focuses on an iterative application of the standard SPM preprocessing with different bias-correction options from low (samp=6 mm, biasfwhm=120 mm) to high frequency corrections  (samp=4.5 mm, biasfwhm=45 mm). However, the iterative calls require a lot of additional processing time (~500s) and is normally not required in data with low intensity inhomogeneity. '
+    'full: In addition to the "light" approach a final maximum-based filter (similar to the ''rough'' method that needs about additional 60s) is used to remove remaining local inhomogeneities. '
     ''
 }];
 if expert==2
     app.help   = [app.help; { ...
     'rough (new): New version of the ''rough'' approach with improved handling of T2/PD data that is still in development. '
-    'fine  (new): Addition fine processing after the ''rough'' processing that incorporate the different brain and head tissues but is also still in development.'
+    'fine  (new): Additional fine processing after the ''rough'' processing that incorporates the different brain and head tissues but is also still in development.'
     ''
     }];
 end

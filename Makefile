@@ -2,8 +2,8 @@
 #
 # $Id$
 
-OLDVERSION="CAT12.2"
-NEWVERSION="CAT12.3"
+OLDVERSION="CAT12.3"
+NEWVERSION="CAT12.4"
 REVISION=`svn info |grep Revision|sed -e 's/Revision: //g'`
 DATE=`svn info |grep 'Last Changed Date: '|sed -e 's/Last Changed Date: //g'|cut -f1 -d' '`
 
