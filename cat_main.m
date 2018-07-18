@@ -1062,9 +1062,9 @@ if ~isfield(res,'spmpp')
     end
     fprintf('\n'); 
     if job.extopts.SLC==1
-      cat_io_cmd('Internal stroke lession correction for spatial normalization'); 
+      cat_io_cmd('Internal stroke lesion correction for spatial normalization'); 
     elseif job.extopts.SLC>1
-      cat_io_cmd('Permanent stroke lession correction');
+      cat_io_cmd('Permanent stroke lesion correction');
     end
     fprintf('\n'); 
     %}
@@ -1119,7 +1119,7 @@ if ~isfield(res,'spmpp')
       elseif job.extopts.WMHC==3
         Yp0b = cat_vol_ctype(single(Ycls{1})*2/5 + single(Ycls{2})*3/5 + single(Ycls{3})*1/5 + single(Ycls{7})*4/5 + single(Ycls{8})*1.5/5,'uint8');
       end 
-    else % no stroke lession handling
+    else % no stroke lesion handling
       if job.extopts.WMHC<2 
         Yp0b = cat_vol_ctype(single(Ycls{1})*2/5 + single(Ycls{2})*3/5 + single(Ycls{3})*1/5 + single(Ycls{7})*2/5,'uint8');
       elseif job.extopts.WMHC==2
@@ -1745,23 +1745,26 @@ if (job.output.surface || any( [job.output.ct.native job.output.ct.warped job.ou
           cat_io_cprintf('blue',sprintf('\nPBT Test99 - surf_%s_%0.2f\n',pbtmethod,sres(sresi)));
           surf = {'lhfst'}; %,'lcfst','rhfst','rcfst'};  
           
-          [Yth1,S,Psurf] = cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,...
+          [Yth1,S,Psurf,EC] = cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,...
           struct('pbtmethod',pbtmethod,'interpV',sres(sresi),'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
           'verb',job.extopts.verb,'WMT',WMT)); 
         end
       end
     else
       pbtmethod = 'pbt2x';
-      [Yth1,S,Psurf] = cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,...
+      [Yth1,S,Psurf,EC] = cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,...
         struct('pbtmethod',pbtmethod,'interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
         'verb',job.extopts.verb,'WMT',WMT)); 
     end
   else
     %% using the segmentation
-    [Yth1,S,Psurf] = cat_surf_createCS(VT,VT0,Yp0/3,Yl1,YMF,...
+    [Yth1,S,Psurf,EC] = cat_surf_createCS(VT,VT0,Yp0/3,Yl1,YMF,...
       struct('interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
       'verb',job.extopts.verb,'WMT',WMT));
   end
+  
+  % save Euler characteristics (absolute value)
+  qa.subjectmeasures.absEC = EC;
   
   if exist('S','var') && numel(fieldnames(S))==0 && isempty(Psurf)
     clear S Psurf; 
