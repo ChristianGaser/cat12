@@ -835,24 +835,25 @@ spmtype.help    = {
 };
 %------------------------------------------------------------------------
 data.name       = 'Select images';
+data.help       = {'Select images for lesion or brain masking';''};
 % lesion mask
 mask = data; 
 mask.tag        = 'mask';
 mask.name       = 'Select lesion mask images';
-mask.help       = {'Select (additional) lesion mask images that describe the regions that were set to zero.';''};
+mask.help       = {'Select (additional) lesion mask images that describe the regions that should be set to zero.';''};
 mask.num        = [0 Inf];
 % brain mask
 bmask = data; 
 bmask.tag       = 'bmask';
 bmask.name      = 'Select brain mask images';
-bmask.help      = {'Select (additional) brain mask images that describe the regions that were NOT set to zero.';''};
+bmask.help      = {'Select (additional) brain mask images that describe the regions that should be remain in the image.';''};
 bmask.num       = [0 Inf];
 bmask.val       = {{''}}; 
 % recalc
 recalc          = cfg_menu;
 recalc.tag      = 'recalc';
 recalc.name     = 'reprocess';
-recalc.help     = {'If the output images already exist that use them rather than the input for additional masking.'};
+recalc.help     = {'If an output image already exist that use it rather than the orinal input image for additional masking.'};
 recalc.labels   = {'Yes' 'No'};
 recalc.values   = {1 0};
 recalc.val      = {1};
@@ -865,12 +866,12 @@ prefix.help     = {
 maskimg         = cfg_exbranch;
 maskimg.tag     = 'maskimg';
 maskimg.name    = 'Manual image (lesion) masking'; 
-maskimg.val     = {data mask bmask prefix};
+maskimg.val     = {data mask bmask recalc prefix};
 maskimg.prog    = @cat_vol_maskimage;
 maskimg.vfiles  = @vfiles_maskimg;
 maskimg.help    = {
-  'Mask images to avoid segmentation and registration errors in brain lesion. The number of mask images has to be equal to the number of the original images. Voxel inside the lesion masks and outside the brainmask will set to zero. '
-  'If you have multiple lesion masks than add them with the original images, eg. "images = {sub01.nii; sub02.nii; sub01.nii}" and "mask = {sub01_lesion1.nii; sub02_lesion1.nii; sub01_lesion2.nii}". Alternatively you can choose only one original file and a various number of mask files.'
+  'Mask images to avoid segmentation and registration errors in brain lesion. The number of mask images has to be equal to the number of the original images. Voxels inside the lesion mask(s) and outside the brainmask(s) will be set to zero. '
+  'If you have multiple lesion masks than add them with the original images, eg. "images = {sub01.nii; sub02.nii; sub01.nii}" and "mask = {sub01_lesion1.nii; sub02_lesion1.nii; sub01_lesion2.nii}". Alternatively, you can choose only one original image and a various number of mask files.'
   ''
 };
 %------------------------------------------------------------------------
