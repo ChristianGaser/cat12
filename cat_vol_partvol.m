@@ -398,7 +398,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
   % ####################################################################
   % ds('l2','',vx_vol,Ym,Ywmh,Ym/3,Ym/3,90)
   % ####################################################################
-  % ToDo: Seperate detection of ventricular lession and subventriculars 
+  % ToDo: Separate detection of ventricular lesion and subventriculars 
   % ####################################################################
   if extopts.WMHC>0 && extopts.WMHCstr>0
     % T1 bias correction

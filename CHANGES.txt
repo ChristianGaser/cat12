@@ -1,5 +1,24 @@
 ------------------------------------------------------------------------
-r1332 | dahnke | 2018-07-17 16:44:17
+r1333 | gaser | 2018-07-18 11:12:38
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_conf_extopts.m
+M       cat_main.m
+M       cat_surf_createCS.m
+ M      cat_vol_maskimage.m
+M       cat_vol_partvol.m
+M       html/cat.html
+M       html/cat_methods_VBM_APP.html
+M       spm_cat12.m
+
+(1) Changed: Set version numbering to CAT 12.4.
+(2) Changed: Corrected typos.
+(3) Changed: Added absolute Euler number for quality assurance.
+------------------------------------------------------------------------
+r1332 | dahnke | 2018-07-17 16:44:14 +0200 (Di, 17 Jul 2018) | 27 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -27,6 +46,7 @@ A       templates_1.50mm/cat_strokelesions_ATLAS303.nii
               input image. 
 3) Changed:   Updated APP and skull-stripping GUI and HTML help.   
                 
+
 ------------------------------------------------------------------------
 r1331 | gaser | 2018-07-17 10:16:48 +0200 (Di, 17 Jul 2018) | 11 lines
 
