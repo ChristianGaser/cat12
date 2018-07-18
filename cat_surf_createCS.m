@@ -208,6 +208,9 @@ function [Yth1,S,Psurf,EC] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
   
   [D,I] = cat_vbdist(single(Ya>0)); Ya = Ya(I); % for sides
   
+  % use sum of EC's for all surfaces, thus set EC initially to 0
+  EC = 0;
+
   for si=1:numel(opt.surf)
    
     % surface filenames
@@ -234,9 +237,7 @@ function [Yth1,S,Psurf,EC] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     for sfi=1:numel(surffile)
       eval(sprintf('Psurf(si).%s = %s;',surffile{sfi},surffile{sfi})); 
     end
-    
-    EC = 0;
-    
+        
     % reduce for object area
     switch opt.surf{si}
       case {'lh'},  Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.BV) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB)) .* (mod(Ya,2)==1); Yside = mod(Ya,2)==1; 
