@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1334 | gaser | 2018-07-18 16:25:36
+r1335 | dahnke | 2018-07-18 19:11:39
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_main.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+
+1) Fixed:    Corrected error if no registration was required.
+2) Fixed:    Corrected error in SLC in case of internal interpolation.  
+3) Fixed:    Corrected errors in CAT12 SPM Segmentation pipeline.
+ 
+------------------------------------------------------------------------
+r1334 | gaser | 2018-07-18 16:26:02 +0200 (Mi, 18 Jul 2018) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +24,7 @@ M       cat_vol_qa.m
 
 Changed: Added Euler number to "Image and Processing Quality" output in 
 pdf-report.
+
 ------------------------------------------------------------------------
 r1333 | gaser | 2018-07-18 11:13:15 +0200 (Mi, 18 Jul 2018) | 17 lines
 

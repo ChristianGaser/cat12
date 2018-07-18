@@ -85,9 +85,9 @@ if do_dartel
     numel(job.extopts.regstr)>1 || ...
     numel(job.extopts.vox)>1;
   if ~need_dartel
-    fprintf('Dartel or Shooting registration is currently always necessary because of new developmental code in cat_main_registration. This will be solved in newer releases.\n');
-    do_dartel = 1;
-%    do_dartel = 0;
+%    fprintf('Dartel or Shooting registration is currently always necessary because of new developmental code in cat_main_registration. This will be solved in newer releases.\n');
+%    do_dartel = 1;
+    do_dartel = 0;
   end
 end
 if do_dartel<2, job.extopts.templates = job.extopts.darteltpms; else job.extopts.templates = job.extopts.shootingtpms; end % for LAS
@@ -1209,6 +1209,11 @@ else
 %  We simply use the SPM segmentation as it is without further modelling of
 %  a PVE or other refinements. 
 %  ------------------------------------------------------------------------
+  job.extopts.WMHC = 0;
+  job.extopts.SLC  = 0;
+  
+  NCstr.labels = {'none','full','light','medium','strong','heavy'};
+  NCstr.values = {0 1 2 -inf 4 5}; 
   
   % here we need the c1 filename
   VT0 = res.imagec(1);
@@ -1301,7 +1306,14 @@ end
   %% call Dartel/Shooting registration 
   [trans,res.ppe.reg] = cat_main_registration(job,res,Yclsd,Yy,tpm.M,Ylesions);
   clear Yclsd Ylesions;
-  
+  if ~do_dartel
+    if job.extopts.regstr == 0
+      fprintf('Dartel registration is not required.\n');
+    else
+      fprintf('Shooting registration is not required.\n');
+    end
+  end
+ 
   
   %% update WMHs?
   if numel(Ycls)>6
@@ -1334,7 +1346,7 @@ end
       %% load template 
       VwmA = spm_vol([job.extopts.templates{end},',2']);  
       %VgmA = spm_vol([job.extopts.templates{end},',1']);  
-      if any( VwmA.dim ~= size(Yy) )
+      if any( VwmA.dim ~= size(Yy(:,:,:,1)) )
         % interpolation
         yn = numel(trans.atlas.Yy); 
         p  = ones([4,yn/3],'single'); 
@@ -1369,7 +1381,7 @@ end
 %  write results
 %  ---------------------------------------------------------------------
 
-if job.extopts.WMHC<2
+if job.extopts.WMHC<2 && numel(Ycls)>6
   Ycls{1} = Ycls{1} + Ycls{7}; % WMH as GM
 elseif job.extopts.WMHC==2
   Ycls{2} = Ycls{2} + Ycls{7}; % WMH as WM 
