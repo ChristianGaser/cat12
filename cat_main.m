@@ -1764,7 +1764,7 @@ if (job.output.surface || any( [job.output.ct.native job.output.ct.warped job.ou
   end
   
   % save Euler characteristics (absolute value)
-  qa.subjectmeasures.absEC = EC;
+  qa.subjectmeasures.EC_abs = EC;
   
   if exist('S','var') && numel(fieldnames(S))==0 && isempty(Psurf)
     clear S Psurf; 
@@ -1972,7 +1972,7 @@ if job.extopts.print
 
     % 1 line: Matlab, SPM12, CAT12 version number and GUI and experimental mode 
     str = [str struct('name', 'Version: Matlab / SPM12 / CAT12:','value',...
-      sprintf('%s / %s / %s',qa.software.version_matlab,qa.software.version_spm,qa.software.version_cat))];
+      sprintf('%s / %s / %s (%s)',qa.software.version_matlab,qa.software.version_spm,qa.software.version_cat,qa.software.revision_cat))];
     if     job.extopts.expertgui==1, str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}e']; 
     elseif job.extopts.expertgui==2, str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}d'];
     end  
@@ -2087,10 +2087,13 @@ if job.extopts.print
     str2 = [str2 struct('name',' Noise:','value',marks2str(qa.qualityratings.NCR,...
       sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.NCR),mark2grad(qa.qualityratings.NCR))))];
     str2 = [str2 struct('name',' Bias:','value',marks2str(qa.qualityratings.ICR,...
-      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.ICR),mark2grad(qa.qualityratings.ICR))))]; % not important and more confussing 
+      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.ICR),mark2grad(qa.qualityratings.ICR))))]; % not important and more confusing 
     str2 = [str2 struct('name','\bf Weighted average (IQR):','value',marks2str(qa.qualityratings.IQR,...
       sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR))))];
+    if isfield(qa.subjectmeasures,'EC_abs') && ~isempty(qa.subjectmeasures.EC_abs)
+    str2 = [str2 struct('name',' Surface Euler number:','value',sprintf('%d', qa.subjectmeasures.EC_abs))]; 
 
+    end
 
     % Subject Measures
     % --------------------------------------------------------------------

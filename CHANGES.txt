@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1333 | gaser | 2018-07-18 11:12:38
+r1334 | gaser | 2018-07-18 16:25:36
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_surf_createCS.m
+M       cat_vol_qa.m
+ M      templates_1.50mm/cat_strokelesions_ATLAS303.nii
+
+Changed: Added Euler number to "Image and Processing Quality" output in 
+pdf-report.
+------------------------------------------------------------------------
+r1333 | gaser | 2018-07-18 11:13:15 +0200 (Mi, 18 Jul 2018) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -17,6 +29,7 @@ M       spm_cat12.m
 (1) Changed: Set version numbering to CAT 12.4.
 (2) Changed: Corrected typos.
 (3) Changed: Added absolute Euler number for quality assurance.
+
 ------------------------------------------------------------------------
 r1332 | dahnke | 2018-07-17 16:44:14 +0200 (Di, 17 Jul 2018) | 27 lines
 
