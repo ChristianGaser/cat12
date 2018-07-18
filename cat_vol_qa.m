@@ -71,8 +71,9 @@ function varargout = cat_vol_qa(action,varargin)
 
 %#ok<*ASGLU>
 
-  % get current release number
-  [n, rev_cat] = cat_version;
+  % get current release number and version
+  [ver_cat, rev_cat] = cat_version;
+  ver_cat = ver_cat(4:end); % remove leading CAT
 
   % init output
   QAS = struct(); 
@@ -508,7 +509,8 @@ function varargout = cat_vol_qa(action,varargin)
         end
       end
       clear A
-      QAS.software.version_cat  = rev_cat;
+      QAS.software.version_cat  = ver_cat;
+      QAS.software.revision_cat = rev_cat;
       QAS.software.function     = which('cat_vol_qa');
       QAS.software.markdefs     = which('cat_stat_marks');
       QAS.software.qamethod     = action; 
@@ -567,7 +569,8 @@ function varargout = cat_vol_qa(action,varargin)
         end
       end
       clear A
-      QAS.software.version_cat  = rev_cat;
+      QAS.software.version_cat  = ver_cat;
+      QAS.software.revision_cat = rev_cat;
       QAS.software.function     = which('cat_vol_qa');
       QAS.software.markdefs     = which('cat_stat_marks');
       QAS.software.qamethod     = action; 
