@@ -85,8 +85,6 @@ if do_dartel
     numel(job.extopts.regstr)>1 || ...
     numel(job.extopts.vox)>1;
   if ~need_dartel
-%    fprintf('Dartel or Shooting registration is currently always necessary because of new developmental code in cat_main_registration. This will be solved in newer releases.\n');
-%    do_dartel = 1;
     do_dartel = 0;
   end
 end
@@ -1757,26 +1755,27 @@ if (job.output.surface || any( [job.output.ct.native job.output.ct.warped job.ou
           cat_io_cprintf('blue',sprintf('\nPBT Test99 - surf_%s_%0.2f\n',pbtmethod,sres(sresi)));
           surf = {'lhfst'}; %,'lcfst','rhfst','rcfst'};  
           
-          [Yth1,S,Psurf,EC] = cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,...
+          [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,...
           struct('pbtmethod',pbtmethod,'interpV',sres(sresi),'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
           'verb',job.extopts.verb,'WMT',WMT)); 
         end
       end
     else
       pbtmethod = 'pbt2x';
-      [Yth1,S,Psurf,EC] = cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,...
+      [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,...
         struct('pbtmethod',pbtmethod,'interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
         'verb',job.extopts.verb,'WMT',WMT)); 
     end
   else
     %% using the segmentation
-    [Yth1,S,Psurf,EC] = cat_surf_createCS(VT,VT0,Yp0/3,Yl1,YMF,...
+    [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(VT,VT0,Yp0/3,Yl1,YMF,...
       struct('interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
       'verb',job.extopts.verb,'WMT',WMT));
   end
   
   % save Euler characteristics (absolute value)
   qa.subjectmeasures.EC_abs = EC;
+  qa.subjectmeasures.defect_size = defect_size;
   
   if exist('S','var') && numel(fieldnames(S))==0 && isempty(Psurf)
     clear S Psurf; 
@@ -2103,8 +2102,10 @@ if job.extopts.print
     str2 = [str2 struct('name','\bf Weighted average (IQR):','value',marks2str(qa.qualityratings.IQR,...
       sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR))))];
     if isfield(qa.subjectmeasures,'EC_abs') && ~isempty(qa.subjectmeasures.EC_abs)
-    str2 = [str2 struct('name',' Surface Euler number:','value',sprintf('%d', qa.subjectmeasures.EC_abs))]; 
-
+      str2 = [str2 struct('name',' Surface Euler number:','value',sprintf('%d', qa.subjectmeasures.EC_abs))]; 
+    end
+    if isfield(qa.subjectmeasures,'defect_size') && ~isempty(qa.subjectmeasures.defect_size)
+      str2 = [str2 struct('name',' Size of topology defects:','value',sprintf('%d', qa.subjectmeasures.defect_size))]; 
     end
 
     % Subject Measures
