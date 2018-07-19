@@ -12,6 +12,8 @@ function varargout = cat_io_volctype(varargin)
 % ______________________________________________________________________
 % $Id$
 
+  SVNid = '$Rev$';
+    
 %% choose images
   
   if nargin == 0 
@@ -66,6 +68,11 @@ function varargout = cat_io_volctype(varargin)
     else
       cvals = 0;
     end
+  else
+    if isfield(job,'range')
+      range = job.range; 
+    end
+    cvals = 0;
   end
   
   % stepsize
@@ -94,6 +101,11 @@ function varargout = cat_io_volctype(varargin)
  
   
   %% convert
+  if isfield(job,'process_index') && job.process_index && job.verb
+    spm('FnBanner',mfilename,SVNid); 
+  end
+  spm_clf('Interactive'); 
+  spm_progress_bar('Init',numel(job.data),'SANLM-Filtering','Volumes Complete');
   for si=1:numel(job.data)
     V = spm_vol(strrep(job.data{si},',1',''));
     Y = spm_read_vols(V); 

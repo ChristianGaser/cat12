@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1336 | gaser | 2018-07-19 16:29:15
+r1337 | dahnke | 2018-07-19 19:33:02
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_io_volctype.m
+A       cat_vol_headtrimming.m
+M       cat_vol_sanlm.m
+
+1) New:     Added batch to optimize images by removing surrounding
+            empty voxels with air.
+------------------------------------------------------------------------
+r1336 | gaser | 2018-07-19 16:29:40 +0200 (Do, 19 Jul 2018) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +22,7 @@ M       cat_surf_createCS.m
 (1) Changed: Added size of topology defects to "Image and Processing Quality" 
     output in pdf-report and xml-file.
 (2) Changed: Removed unncessary code for reduceCS in cat_surf_createCS.m 
+
 ------------------------------------------------------------------------
 r1335 | dahnke | 2018-07-18 19:11:28 +0200 (Mi, 18 Jul 2018) | 12 lines
 

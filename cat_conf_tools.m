@@ -445,7 +445,7 @@ outdir.filter  = 'dir';
 outdir.ufilter = '.*';
 outdir.num     = [0 1];
 outdir.help    = {'Select a directory where files are written.'};
-
+outdir.val     = {{''}};
 
 data         = cfg_files; 
 data.tag     = 'data';
@@ -830,6 +830,76 @@ spmtype.prog    = @cat_io_volctype;
 spmtype.vfiles  = @vfiles_volctype;
 spmtype.help    = {
   'Convert the image data type to reduce disk-space.'
+  'Uses 99.99% of the main intensity histogram to avoid problems due to outliers. Although the internal scaling supports a relative high accuracy for the limited number of bits, special values such as NAN and INF will be lost!'
+  ''
+};
+%------------------------------------------------------------------------
+
+% ---------------------------------------------------------------------
+% images Images
+% ---------------------------------------------------------------------
+images1         = cfg_files;
+images1.tag     = 'images';
+images1.name    = 'Images';
+images1.help    = {'Select one datatype for trimming (e.g. all T1 images).' ''};
+images1.filter  = 'image';
+images1.ufilter = '.*';
+images1.num     = [1 Inf];
+
+images          = cfg_repeat;
+images.tag      = 'images';
+images.name     = 'Images';
+images.help     = {'Select the image sets to be trimed together. For example, the first set may be a bunch of T1 images, and the second set may be a set of corregistraded PD images of the same subjects with the same image dimension.' ''};
+images.values   = {images1};
+images.val      = {images1};
+images.num      = [1 Inf];
+
+pth             = cfg_entry;
+pth.tag         = 'pth';
+pth.name        = 'Percentual trimming threshold';
+pth.strtype     = 'r';
+pth.num         = [1 1];
+pth.val         = {0.1};
+pth.help        = {'Percentual treshold for trimming. Lower values will result in wider mask, ie. more air, whereas higher values with remove more air but maybe also bias tissue with low intensity.' ''};
+
+avg             = cfg_entry;
+avg.tag         = 'avg';
+avg.name        = 'Average images';
+avg.strtype     = 'r';
+avg.num         = [1 1];
+avg.val         = {0};
+avg.help        = {'By default only the first image is used for masking. However sometimes it is helpful to use the averge of all images (avg=1) or the first n images (avg>1) of the given set.' ''};
+
+open             = cfg_entry;
+open.tag         = 'open';
+open.name        = 'Size of morphological opening of the mask';
+open.strtype     = 'r';
+open.num         = [1 1];
+open.val         = {2};
+open.help        = {'The morphological opening of the mask allows to avoid problems due to noise in the background. However, to large opening will also remove the skull or parts of the brain.' ''};
+
+addvox          = cfg_entry;
+addvox.tag      = 'addvox';
+addvox.name     = 'Add voxels around mask';
+addvox.strtype  = 'w';
+addvox.num      = [1 1];
+addvox.val      = {5};
+addvox.help     = {'Add # voxels around the original mask to avoid to hard masking.' ''};
+
+prefix.val           = {'trimmed_'};
+
+headtrimming         = cfg_exbranch;
+headtrimming.tag     = 'datatrimming';
+headtrimming.name    = 'Image data trimming'; 
+if expert
+  headtrimming.val   = {images prefix postfix pth avg open addvox spm_type intlim};
+else
+  headtrimming.val   = {images pth spm_type};
+end
+headtrimming.prog    = @cat_vol_headtrimming;
+headtrimming.vfiles  = @vfiles_headtrimming;
+headtrimming.help    = {
+  'Remove air around the head and convert the image data type to save disk-space but also to reduce memory-space and load/save times. Corresponding images have to have the sampe image dimentions. '
   'Uses 99.99% of the main intensity histogram to avoid problems due to outliers. Although the internal scaling supports a relative high accuracy for the limited number of bits, special values such as NAN and INF will be lost!'
   ''
 };
@@ -1336,7 +1406,7 @@ nonlin_coreg  = cat_conf_nonlin_coreg;
 tools = cfg_choice;
 tools.name   = 'Tools';
 tools.tag    = 'tools';
-tools.values = {showslice,check_cov,check_SPM,calcvol,calcroi,iqr,T2x,F2x,T2x_surf,F2x_surf,sanlm,maskimg,spmtype,realign,long,nonlin_coreg,defs,defs2}; %,qa
+tools.values = {showslice,check_cov,check_SPM,calcvol,calcroi,iqr,T2x,F2x,T2x_surf,F2x_surf,sanlm,maskimg,spmtype,headtrimming,realign,long,nonlin_coreg,defs,defs2}; %,qa
 if expert 
   tools.values = [tools.values,{urqio}]; 
 end
@@ -1446,6 +1516,11 @@ return;
 function vf = vfiles_maskimg(job)
 job.returnOnlyFilename = 1; 
 vf = cat_vol_maskimage(job); 
+return;
+%_______________________________________________________________________
+function vf = vfiles_headtrimming(job)
+job.returnOnlyFilename = 1; 
+vf = cat_vol_headtrimming(job); 
 return;
 %_______________________________________________________________________
 function vf = vfiles_volctype(job)
