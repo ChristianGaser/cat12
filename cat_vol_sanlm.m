@@ -141,6 +141,8 @@ function varargout = cat_vol_sanlm(varargin)
 
 end
 function varargout = cat_vol_sanlm_file(job)
+    SVNid = '$Rev$';
+    
     if ~isfield(job,'data') || isempty(job.data)
      job.data = cellstr(spm_select([1 Inf],'image','select images to filter'));
     else
