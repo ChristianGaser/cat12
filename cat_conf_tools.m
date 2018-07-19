@@ -846,14 +846,14 @@ mask.num        = [0 Inf];
 bmask = data; 
 bmask.tag       = 'bmask';
 bmask.name      = 'Select brain mask images';
-bmask.help      = {'Select (additional) brain mask images that describe the regions that should be remain in the image.';''};
+bmask.help      = {'Select (additional) brain mask images that describe the regions that should remain in the image.';''};
 bmask.num       = [0 Inf];
 bmask.val       = {{''}}; 
 % recalc
 recalc          = cfg_menu;
 recalc.tag      = 'recalc';
 recalc.name     = 'reprocess';
-recalc.help     = {'If an output image already exist that use it rather than the orinal input image for additional masking.'};
+recalc.help     = {'If an output image already exist then use this image rather than the orinal input image for additional masking.'};
 recalc.labels   = {'Yes' 'No'};
 recalc.values   = {1 0};
 recalc.val      = {1};

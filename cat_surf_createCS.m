@@ -1,4 +1,4 @@
-function [Yth1,S,Psurf,EC] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
+function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
 % ______________________________________________________________________
 % Surface creation and thickness estimation.
 %
@@ -10,6 +10,7 @@ function [Yth1,S,Psurf,EC] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
 %        map to nifti space (vmat) and back (vmati).
 % Psurf = name of surface files
 % EC    = Euler characteristics
+% defect_size = size of topology defects
 % V     = spm_vol-structure 
 % Ym    = the (local) intensity, noise, and bias corrected T1 image
 % Ya    = the atlas map with the ROIs for left and right hemispheres
@@ -45,15 +46,10 @@ function [Yth1,S,Psurf,EC] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
   vx_vol0 = sqrt(sum(V0.mat(1:3,1:3).^2));  % final surface resolution based on original image resolution
   if ~exist('opt','var'), opt=struct(); end
   def.verb      = 2; 
-  def.surf      = {'lh','rh'}; % {'lh','rh','lc','rc'}
-  reduceCS      = 100000; % default for 1 mm data ... should be 300000!
-  def.reduceCS  = 1 * max( max(100000,reduceCS/2) , ... % minimum number
-                           min( reduceCS*4 , ...        % maximum number
-                           reduceCS .* 1/(mean(vx_vol0).^2))); 
-  % reducepatch has some issues with self intersections and should only be used for lower resoluted data
-  if mean(vx_vol0) < 1.3
-    def.reduceCS = 0;
-  end
+  def.surf      = {'lh','rh'};
+  
+  % reducepatch has some issues with self intersections and should only be used for "fast" option
+  def.reduceCS = 0;
   
   def.vdist     = max(1,mean(vx_vol0)); % distance between vertices ... at least 1 mm ?
   def.LAB       = cat_get_defaults('extopts.LAB');  
@@ -208,8 +204,9 @@ function [Yth1,S,Psurf,EC] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
   
   [D,I] = cat_vbdist(single(Ya>0)); Ya = Ya(I); % for sides
   
-  % use sum of EC's for all surfaces, thus set EC initially to 0
+  % use sum of EC's and defect sizes for all surfaces, thus set values initially to 0
   EC = 0;
+  defect_size = 0;
 
   for si=1:numel(opt.surf)
    
@@ -598,6 +595,14 @@ function [Yth1,S,Psurf,EC] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     cmd = sprintf('CAT_Surf2Sphere "%s" "%s" 5',Praw,Psphere0);
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
 
+    % estimate size of topology defects (in relation to number of vertices and mean brain with 100000 vertices)
+    cmd = sprintf('CAT_MarkDefects "%s" "%s" "%s"',Praw,Psphere0,Pdefects0); 
+    [ST, RS] = cat_system(cmd);
+    defect_sizes = cat_io_FreeSurfer('read_surf_data',Pdefects0);
+    defect_size0 = round(100000*sum(defect_sizes > 0)/length(defect_sizes));
+    defect_size = defect_size + defect_size0;
+    delete(Pdefects0);  
+
     % mark defects and save as gifti 
     if opt.verb > 2 
       cmd = sprintf('CAT_MarkDefects -binary "%s" "%s" "%s"',Praw,Psphere0,Pdefects0); 
@@ -609,7 +614,6 @@ function [Yth1,S,Psurf,EC] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     % estimate Euler characteristics: EC = #vertices + #faces - #edges
     EC0 = size(CS.vertices,1)+size(CS.faces,1)-size(spm_mesh_edges(CS),1);
     EC = EC + abs(EC0);
-    fprintf('\n  Euler characteristics: %d\n',EC0);
     
     %% topology correction and surface refinement 
     stime = cat_io_cmd('  Topology correction and surface refinement:','g5','',opt.verb,stime); 
@@ -749,7 +753,9 @@ function [Yth1,S,Psurf,EC] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
       cat_io_FreeSurfer('write_surf_data',Psw,facevertexcdata3);
     end
     fprintf('%5.0fs\n',etime(clock,stime)); 
-    
+    fprintf(' Surface Euler number: %d\n',EC0);
+    fprintf(' Overall size of topology defects: %d\n',defect_size0);
+
     % visualize a side
     % csp=patch(CS); view(3), camlight, lighting phong, axis equal off; set(csp,'facecolor','interp','edgecolor','none')
 
