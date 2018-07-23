@@ -67,7 +67,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
 
   def.uhrlim = 0.7; 
   extopts = cat_io_checkinopt(extopts,def); 
-
+  extopts.uhrlim = 0.2;  % the reduction to 1 mm was not realy good for the Ycls map
   
   
   % set this variable to 1 for simpler debuging without reduceBrain
@@ -121,7 +121,8 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
     Ym  = cat_vol_resize( Ym          , 'reduceV' , vx_vol , extopts.uhrlim , 64 ); 
     Yb0 = cat_vol_resize( single(Yb0) , 'reduceV' , vx_vol , extopts.uhrlim , 64 )>0.5; 
     
-    vxv     = 1/ mean(resT0.vx_vol);
+    vx_vol  = resT0.vx_volr; 
+    vxv     = 1/ mean(resT0.vx_volr);
     dsize   = size(Ysrc);
   end
   
@@ -500,7 +501,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
     Ycls = Yclso2; clear Yclso2; 
     Ysrc = Ysrco2; clear Ysrco2; 
     for i=[1 2 3 6], Ylab{i}  = cat_vol_resize (Ylab{i} , 'dereduceV' , resT0 ); end
-    for i=1:6, Ycls{i}  = cat_vol_resize( Ycls{i} , 'dereduceV' , resT0 ); end
+   % for i=1:6, Ycls{i}  = cat_vol_resize( Ycls{i} , 'dereduceV' , resT0 ); end
     Yb = cat_vol_resize( single(Yb) , 'dereduceV' , resT0 )>0.5;
   end
   
@@ -554,7 +555,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   Ynwm = Ynwm | (smooth3(Ywm)>0.6 & Yml/3>5/6); Ynwm(smooth3(Ynwm)<0.5)=0;
   Yngm = Ygm & ~Ywm & Yml/3<0.95; Yngm(smooth3(Yngm)<0.5)=0;
   Yncm = ~Ygm & ~Ywm & ((Yml/3)>1/6 | Ycls{3}>128) & (Yml/3)<0.5 & Yb;
-  clear Ywm Ygm; 
+  if ~debug, clear Ywm Ygm; else Yclso = Ycls; end
   Ycls{2} = cat_vol_ctype(single(Ycls{2}) + (Ynwm & ~Yngm & Yp0>=1.5)*256 - (Yngm & ~Ynwm & Yp0>=2)*256,'uint8');
   Ycls{1} = cat_vol_ctype(single(Ycls{1}) - (Ynwm & ~Yngm & Yp0>=1.5)*256 + (Yngm & ~Ynwm & Yp0>=2)*256,'uint8');
   %Ycls{3} = cat_vol_ctype(single(Ycls{3}) - ((Ynwm | Yngm) & Yp0>=2)*256,'uint8');
@@ -562,7 +563,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   Ycls{1} = cat_vol_ctype(single(Ycls{1}) - (Yb & Yml<1.1 & ~Ynwm & ~Yngm)*256,'uint8');
   Ycls{2} = cat_vol_ctype(single(Ycls{2}) - (Yb & Yml<1.1 & ~Ynwm & ~Yngm)*256,'uint8');
   Ycls2 = {Yngm,Ynwm,Yncm};
-  clear Yngm Ynwm Yncm Yb;
+  if ~debug, clear Yngm Ynwm Yncm Yb; end
   
   %%
   Yml = Yml/3;

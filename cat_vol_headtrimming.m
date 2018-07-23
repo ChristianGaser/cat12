@@ -32,17 +32,18 @@ function varargout = cat_vol_headtrimming(job)
 
   SVNid = '$Rev: 1304 $';
   
-  def.images = {{}}; 
-  def.resdir = '';
-  def.pefix  = 'trimmed_';
-  def.addvox = 2; 
-  def.pth    = 0.1;
-  def.avg    = 1; 
-  def.verb   = 1; 
-  def.open   = 2; 
-  def.ctype  = 'uint16';
-  def.range  = 99.99;
-  def.range1 = 98;
+  def.images  = {{}}; 
+  def.resdir  = '';
+  def.prefix  = 'trimmed_';
+  def.postfix = '';
+  def.addvox  = 2; 
+  def.pth     = 0.4;
+  def.avg     = 1; 
+  def.verb    = 1; 
+  def.open    = 2; 
+  def.ctype   = 'uint16';
+  def.range   = 99.99;
+  def.range1  = 90;
   def.returnOnlyFilename  = 0;
   def.process_index = 1;
   job = cat_io_checkinopt(job,def);
@@ -72,7 +73,7 @@ function varargout = cat_vol_headtrimming(job)
   spm_clf('Interactive'); 
   spm_progress_bar('Init',numel(job.images{1}),'SANLM-Filtering','Volumes Complete');
   for di = 1:numel(job.images{1})
-    if job.verb, fprintf('%59s: ',spm_str_manip(job.images{1}{di},'ra59')); end
+    if job.verb, fprintf('%58s: ',spm_str_manip(job.images{1}{di},'ra57')); end
     
     %% estimate trimming parameter
     for si = 1:numel(job.images), V(si) = spm_vol(job.images{si}{di}); end
@@ -82,13 +83,13 @@ function varargout = cat_vol_headtrimming(job)
     end
     Y = Y ./ max(1,min(numel(V,job.avg)));
     vx_vol  = sqrt(sum(V(1).mat(1:3,1:3).^2)); 
-    [Y,hth] = cat_stat_histth(Y,job.range1,0); 
+    [Y,hth] = cat_stat_histth(smooth3(Y),job.range1,0); 
     Y = (Y - hth(1)) ./ abs(diff(hth));
     
     % masking
     Yb = zeros(size(Y),'single'); Yb(2:end-1,2:end-1,2:end-1) = Y(2:end-1,2:end-1,2:end-1);
     Yb = smooth3(Yb)>job.pth; 
-    Yb = cat_vol_morph(Yb,'do',job.open); 
+    Yb = cat_vol_morph(Yb,'do',job.open,vx_vol); 
     Yb = cat_vol_morph(Yb,'l',[10 0.1]); 
     [Yt,redB] = cat_vol_resize(Y,'reduceBrain',vx_vol,job.addvox,Yb); clear Yt; 
     
@@ -99,9 +100,14 @@ function varargout = cat_vol_headtrimming(job)
     Vo = V; 
     for dxi = 1:numel(V)
       % optimize tissue intensity range
-      job2 = struct('data',job.images{dxi}{di},'verb',0,'ctype',job.ctype,...
-                    'range',job.range,'prefix',job.prefix,'postfix',job.postfix);
-      P = cat_io_volctype(job2);
+      if job.ctype
+        job2 = struct('data',job.images{dxi}{di},'verb',0,'ctype',job.ctype,...
+                      'range',job.range,'prefix',job.prefix,'postfix',job.postfix);
+        P = cat_io_volctype(job2);
+      else
+        filecopy(job.images{dxi}{di},evarargout{1}{di}{si});
+        P = varargout{1}{di}{si};
+      end
       spm_progress_bar('Set',di + dxi/numel(V));
     
       Vo(dxi) = spm_vol(P{1}); 
@@ -113,7 +119,7 @@ function varargout = cat_vol_headtrimming(job)
       spm_write_vol(Vo(dxi),Yo);
     end
     %%
-    if job.verb, fprintf('save %5.2f%%\n',100 - 100*((prod(redB.sizeTr) ./ prod(redB.sizeT)))); end
+    if job.verb, fprintf('saved %5.2f%%\n',100 - 100*((prod(redB.sizeTr) ./ prod(redB.sizeT)))); end
     spm_progress_bar('Set',di);
   end
   spm_progress_bar('Clear');

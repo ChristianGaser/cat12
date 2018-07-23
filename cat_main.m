@@ -93,6 +93,36 @@ res.do_dartel = do_dartel;
 
 
 stime = cat_io_cmd('SPM preprocessing 2 (write)');
+if ~isfield(res,'spmpp')
+  if job.extopts.verb>1, fprintf('\n'); end
+  stime2 = cat_io_cmd('  Write Segmentation','g5','',job.extopts.verb-1);
+end
+[Ysrc,Ycls,Yy] = cat_spm_preproc_write8(res,zeros(max(res.lkp),4),zeros(1,2),[0 0],0,0);
+if isfield(res,'redspmres')
+  % Update Ycls: cleanup on original data
+  Yb = Ycls{1} + Ycls{2} + Ycls{3}; 
+  for i=1:3, [Pc(:,:,:,i),BB] = cat_vol_resize(Ycls{i},'reduceBrain',repmat(job.extopts.redspmres,1,3),2,Yb); end %#ok<AGROW>
+    Pc = clean_gwc(Pc,1);
+  for i=1:3, Ycls{i} = cat_vol_resize(Pc(:,:,:,i),'dereduceBrain',BB); end; clear Pc Yb; 
+  for ci=1:numel(Ycls)
+    Ycls{ci} = cat_vol_ctype(cat_vol_resize(Ycls{ci},'deinterp',res.redspmres,'linear'));
+  end
+  
+  % Update Yy:
+  Yy2 = zeros([res.redspmres.sizeO 3],'single');
+  for ci=1:size(Yy,4)
+    Yy2(:,:,:,ci) = cat_vol_ctype(cat_vol_resize(Yy(:,:,:,ci),'deinterp',res.redspmres,'linear'));
+  end
+  Yy   = Yy2; clear Yy2; 
+  
+  % Update Ysrc:
+  Ysrc = cat_vol_resize(Ysrc,'deinterp',res.redspmres,'cubic');
+  Ybf  = res.image1.dat ./ Ysrc; 
+  Ybf  = cat_vol_approx(Ybf .* (Ysrc~=0 & Ybf>0.25 & Ybf<1.5),'nn',1,8);
+  Ysrc = res.image1.dat ./ Ybf; clear Ybf; 
+  res.image = res.image1; 
+  res  = rmfield(res,'image1');
+end
 
 % remove noise/interpolation prefix
 VT  = res.image(1);  % denoised/interpolated n*.nii
@@ -100,50 +130,61 @@ VT0 = res.image0(1); % original
 fname0 = VT0.fname;
 [pth,nam] = spm_fileparts(VT0.fname); 
 
+% voxel size parameter
+vx_vol  = sqrt(sum(VT.mat(1:3,1:3).^2));    % voxel size of the processed image
+vx_volr = sqrt(sum(VT0.mat(1:3,1:3).^2));   % voxel size of the original image 
+vx_volp = prod(vx_vol)/1000;
+voli    = @(v) (v ./ (pi * 4./3)).^(1/3);   % volume > radius
+  
 % delete old xml file 
 oldxml = fullfile(pth,reportfolder,['cat_' nam '.xml']);  
 if exist(oldxml,'file'), delete(oldxml); end
 clear oldxml
 
 d = VT.dim(1:3);
-[Ysrc,Ycls,Yy] = cat_spm_preproc_write8(res,zeros(max(res.lkp),4),zeros(1,2),[0 0],0,0);
 P = zeros([size(Ycls{1}) numel(Ycls)],'uint8');
 for i=1:numel(Ycls), P(:,:,:,i) = Ycls{i}; end
+clear Ycls;
 
-if numel(prod(d))>(2^9)^3, stime2 = cat_io_cmd('  Update Segmentation','g5','',job.extopts.verb-1,stime2); end
 if ~isfield(res,'spmpp')
+  stime2 = cat_io_cmd('  Update Segmentation','g5','',job.extopts.verb-1,stime2); 
   % cleanup with brain mask - required for ngaus [1 1 2 4 3 2] and R1/MP2Rage like data 
-  YbA = zeros(d,'single');
-  for z=1:d(3),
-    YbA(:,:,z) = single(spm_sample_vol(tpm.V(1),double(Yy(:,:,z,1)),double(Yy(:,:,z,2)),double(Yy(:,:,z,3)),1));
-    YbA(:,:,z) = YbA(:,:,z) + single(spm_sample_vol(tpm.V(2),double(Yy(:,:,z,1)),double(Yy(:,:,z,2)),double(Yy(:,:,z,3)),1));
-    YbA(:,:,z) = YbA(:,:,z) + single(spm_sample_vol(tpm.V(3),double(Yy(:,:,z,1)),double(Yy(:,:,z,2)),double(Yy(:,:,z,3)),1));
-  end
-  YbA = cat_vol_smooth3X(cat_vol_smooth3X(YbA,2)>0.1,2)>0.5; % dilate + smooth 
   
-  for i=1:3, P(:,:,:,i) = P(:,:,:,i).*uint8(YbA); end
+  % tpm brain mask
+  YbA = false(d);
+  Vb = tpm.V(1); Vb.pinfo(3) = 0; Vb.dat = single(exp(tpm.dat{1}) + exp(tpm.dat{2}) + exp(tpm.dat{3}));
+  for z=1:d(3)
+    YbA(:,:,z) = spm_sample_vol(Vb,double(Yy(:,:,z,1)),double(Yy(:,:,z,2)),double(Yy(:,:,z,3)),1)>0.1;
+  end
+  % transfer tissue outside the brain mask to head  ... 
+  % RD 201807: I am not sure if this is a good idea. Please test this with children! 
+  for i=1:3
+    P(:,:,:,4) = P(:,:,:,4) + P(:,:,:,i) .* uint8(~YbA); 
+    P(:,:,:,i) = P(:,:,:,i) .* uint8(YbA); 
+  end
   clear YbA;
-
-  sP = (sum(single(P),4)+eps)/255;
-  for k1=1:size(P,4)
-    P(:,:,:,k1) = cat_vol_ctype(round(single(P(:,:,:,k1))./sP));
-  end
-
-  vx_vol  = sqrt(sum(VT.mat(1:3,1:3).^2));    % voxel size of the processed image
-  vx_volr = sqrt(sum(VT0.mat(1:3,1:3).^2));   % voxel size of the original image 
-  vx_volp = prod(vx_vol)/1000;
-  voli    = @(v) (v ./ (pi * 4./3)).^(1/3);   % volume > radius
-
+  
   % cleanup for high resolution data
-  if max(vx_vol)<1.5 && mean(vx_vol)<1.3
-    P = clean_gwc(P,1);
+  % Alghough the old cleanup is very slow for high resolution data, the   
+  % reduction of image resolution removes spatial segmenation information. 
+  if job.extopts.redspmres==0 % already done in case of redspmres
+    if max(vx_vol)<1.5 && mean(vx_vol)<1.3
+      for i=1:3, [Pc1(:,:,:,i),RR] = cat_vol_resize(P(:,:,:,i),'reduceV',vx_vol,job.extopts.uhrlim,32); end %#ok<AGROW>
+      for i=1:3, [Pc2(:,:,:,i),BB] = cat_vol_resize(Pc1(:,:,:,i),'reduceBrain',vx_vol,2,sum(Pc1,4)); end %#ok<AGROW>
+      Pc2 = clean_gwc(Pc2,1);
+      for i=1:3, Pc1(:,:,:,i) = cat_vol_resize(Pc2(:,:,:,i),'dereduceBrain',BB); end
+      for i=1:3, P(:,:,:,i)   = cat_vol_resize(Pc1(:,:,:,i),'dereduceV',RR); end 
+      clear Pc1 Pc2;
+    end
   end
-
-  %% create a new brainmask
+  
+  % garantee probability 
+  sP = (sum(single(P),4)+eps)/255;
+  for k1=1:size(P,4), P(:,:,:,k1) = cat_vol_ctype(single(P(:,:,:,k1))./sP); end
+  clear sP;
 
   % median in case of WMHs!
-  WMth = double(max( clsint(2),...
-          cat_stat_nanmedian(cat_stat_nanmedian(cat_stat_nanmedian(Ysrc(P(:,:,:,2)>192)))))); 
+  WMth = double(max( clsint(2) , cat_stat_nanmedian(Ysrc(P(:,:,:,2)>192)) )); 
   if clsint(3)>clsint(2) % invers
     CMth = clsint(3); 
   else
@@ -156,7 +197,7 @@ if ~isfield(res,'spmpp')
   Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;;
   if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
     res.Ylesion = cat_vol_ctype( single(res.Ylesion) .* (Yp0>0.2) ); 
-    for k=1:numel(Ycls), Yl = P(:,:,:,k); Yl(res.Ylesion>0.5) = 0; P(:,:,:,k) = Yl; end  
+    for k=1:size(P,4), Yl = P(:,:,:,k); Yl(res.Ylesion>0.5) = 0; P(:,:,:,k) = Yl; end  
     Yl = P(:,:,:,3); Yl(res.Ylesion>0.5) = 255; P(:,:,:,3) = Yl; clear Yl; 
     Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
   end
@@ -188,9 +229,8 @@ if ~isfield(res,'spmpp')
           'BG','CSF','GM','WM', ...
           [ clsvol([4 3 1 2])/cat_stat_nansum(clsvol)*100, clsvol([4 3 1 2])/cat_stat_nansum(clsvol(1:3))*100, BGth,T3th]));  %#ok<SPERR>
     else
-        error('CAT:cat_main:SPMpreprocessing:emptySegmentation', ...
-         sprintf(['Empty Segmentation: \n ' ...
-         'Possibly the affine registration failed. Pleace check image orientation.\n'])); 
+        error('CAT:cat_main:SPMpreprocessing:emptySegmentation', ['Empty Segmentation: ' ...
+           'Possibly the affine registration failed. Pleace check image orientation.\n']); 
     end
   end
 
@@ -226,7 +266,7 @@ if ~isfield(res,'spmpp')
   end
   
   %%
-  if numel(prod(d))>(2^9)^3, stime2 = cat_io_cmd('  Update Skull-Stripping','g5','',job.extopts.verb-1,stime2); end
+ stime2 = cat_io_cmd('  Update Skull-Stripping','g5','',job.extopts.verb-1,stime2); 
   skullstripped = max(res.lkp) == 4; 
 
   if skullstripped % skull-stripped
@@ -280,7 +320,6 @@ if ~isfield(res,'spmpp')
     clear M; 
     
     for k1=1:3, Ycls{k1} = P(:,:,:,k1); end 
-
     Yb = cat_main_gcut(Ym,Yp0>0.1,Ycls,Yl1,false(size(Ym)),vx_vol,...
       struct('gcutstr',0.1,'verb',0,'LAB',job.extopts.LAB,'LASstr',0,'red',1)); 
     clear Ycls; 
@@ -353,7 +392,7 @@ if ~isfield(res,'spmpp')
   Yb0 = cat_vol_morph(cat_vol_morph(Yb0,'lo'),'c');
 
   %%
-  if numel(prod(d))>(2^9)^3, stime2 = cat_io_cmd('  Update probability maps','g5','',job.extopts.verb-1,stime2); end
+  stime2 = cat_io_cmd('  Update probability maps','g5','',job.extopts.verb-1,stime2);
   if ~(job.extopts.INV && any(sign(diff(T3th))==-1))
     %% Update probability maps
     % background vs. head - important for noisy backgrounds such as in MT weighting
@@ -480,7 +519,7 @@ if ~isfield(res,'spmpp')
   end
 
   clear Ybf
-  if numel(prod(d))>(2^9)^3, stime2 = cat_io_cmd(' ','g5','',job.extopts.verb-1,stime2); end
+  stime2 = cat_io_cmd(' ','g5','',job.extopts.verb-1,stime2); 
   fprintf('%5.0fs\n',etime(clock,stime));
 
 

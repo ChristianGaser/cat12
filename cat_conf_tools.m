@@ -822,9 +822,9 @@ spmtype         = cfg_exbranch;
 spmtype.tag     = 'spmtype';
 spmtype.name    = 'Image data type converter'; 
 if expert
-  spmtype.val     = {data spm_type prefix postfix intlim};
+  spmtype.val   = {data spm_type prefix postfix intlim};
 else
-  spmtype.val     = {data spm_type prefix intlim};
+  spmtype.val   = {data spm_type prefix intlim};
 end
 spmtype.prog    = @cat_io_volctype;
 spmtype.vfiles  = @vfiles_volctype;
@@ -859,7 +859,7 @@ pth.tag         = 'pth';
 pth.name        = 'Percentual trimming threshold';
 pth.strtype     = 'r';
 pth.num         = [1 1];
-pth.val         = {0.1};
+pth.val         = {0.4};
 pth.help        = {'Percentual treshold for trimming. Lower values will result in wider mask, ie. more air, whereas higher values with remove more air but maybe also bias tissue with low intensity.' ''};
 
 avg             = cfg_entry;
@@ -873,7 +873,7 @@ avg.help        = {'By default only the first image is used for masking. However
 open             = cfg_entry;
 open.tag         = 'open';
 open.name        = 'Size of morphological opening of the mask';
-open.strtype     = 'r';
+open.strtype     = 'n';
 open.num         = [1 1];
 open.val         = {2};
 open.help        = {'The morphological opening of the mask allows to avoid problems due to noise in the background. However, to large opening will also remove the skull or parts of the brain.' ''};
@@ -883,16 +883,40 @@ addvox.tag      = 'addvox';
 addvox.name     = 'Add voxels around mask';
 addvox.strtype  = 'w';
 addvox.num      = [1 1];
-addvox.val      = {5};
+addvox.val      = {2};
 addvox.help     = {'Add # voxels around the original mask to avoid to hard masking.' ''};
 
-prefix.val           = {'trimmed_'};
+prefix.val      = {'trimmed_'};
+
+intlim1         = intlim;
+intlim1.tag     = 'intlim1';
+intlim1.name    = 'Global intensity limitation for masking';
+intlim1.val     = {90};
+intlim1.help    = {'General intensity limitation to remove strong outliers by using 90%% of the original histogram values. ' ''};
+
+% also this is a separate function that is used for the results
+spm_type         = cfg_menu; %
+spm_type.tag     = 'spm_type';
+spm_type.name    = 'Data type of the output images.';
+if expert>1 
+  % developer! there should be no great difference between uint# and int# due to rescaling 
+  spm_type.labels  = {'native','uint8','int8','uint16','int16','single'};
+  spm_type.values  = {0 2 256 512 4 16};
+else
+  spm_type.labels  = {'native','uint8','uint16','single (32 bit)'};
+  spm_type.values  = {0 2 512 16};
+end
+spm_type.val     = {0};
+spm_type.help    = {
+  'SPM data type of the output image. Single precision is recommended, but uint16 also provides good results. Internal scaling supports a relative high accuracy for the limited number of bits, special values such as NAN and INF (e.g. in the background) will be lost and NAN is converted to 0, -INF to the minimum, and INF to the maximum value. '
+  ''
+};
 
 headtrimming         = cfg_exbranch;
 headtrimming.tag     = 'datatrimming';
 headtrimming.name    = 'Image data trimming'; 
 if expert
-  headtrimming.val   = {images prefix postfix pth avg open addvox spm_type intlim};
+  headtrimming.val   = {images prefix postfix intlim1 pth avg open addvox spm_type intlim};
 else
   headtrimming.val   = {images pth spm_type};
 end

@@ -878,7 +878,7 @@ function cat_run_job(job,tpm,subj)
 
             % zero background is required for images with high intensity background
             Ymc = Ym; if ~zeroBG, Ymc(Ybg) = 0; end
-            if ~debug, clear Ym; end
+          %  if ~debug, clear Ym; end
 
             VF.dat(:,:,:) = cat_vol_ctype(Ymc * max(1/2,Tth.Tmax) * 255); 
 
@@ -920,7 +920,7 @@ function cat_run_job(job,tpm,subj)
               %Ymc2 = single(max(bth,min( max( WMth + max(3*diff([bth,WMth])) , ...
               %  WMth / max(1/2 - 3/8*Tth.inverse,Tth.Tmax) ) ,Ymc * WMth))); % use the bias corrected image
               Ymc2 = Ymc * WMth; % use the bias corrected image without limitation 
-              if ~debug, clear Ymc; end
+            %  if ~debug, clear Ymc; end
 
               % hard masking
               %if ~zeroBG, Ymc2 = Ymc2 .* (~Ybg); end % 20161229 - simple to do this than to change all things in cat_main
@@ -1091,8 +1091,23 @@ end
         %  ds('l2','a',0.5,Ym,Ybg,Ym,Ym,140);
         %  ds('l2','a',0.5,Ysrc/WMth,Yb,Ysrc/WMth,Yb,140);
         warning off 
-        try 
-          res = spm_preproc8(obj);
+        %try 
+          if exist('Ymc','var')
+            obj.image.dat(:,:,:) = Ymc; clear Ymc;
+          elseif exist('Ym','var')
+            obj.image.dat(:,:,:) = Ym; clear Ym;
+          end
+          if job.extopts.redspmres==0 || mean(vx_vol)>job.extopts.redspmres*0.9
+            res = spm_preproc8(obj);
+          else
+            image1 = obj.image; 
+            [obj.image,redspmres]  = cat_vol_resize(obj.image,'interpv',1);
+            res = spm_preproc8(obj);
+            res.redspmres = redspmres; 
+            res.image1 = image1; 
+            clear image1 reduce; 
+          end
+        try  
         catch
           % only in default mode
           if job.extopts.expertgui==0 
@@ -1101,11 +1116,12 @@ end
             if job.extopts.APP<1
               cat_io_cprintf('err','\n  Failed, try APP=1! \n'); 
               job2.extopts.APP = 1; 
+              cat_run_job(job2,tpm,subj); 
             elseif job.extopts.APP<4
-              cat_io_cprintf('err','\n  Failed, try APP=4! \n'); 
-              job2.extopts.APP = 4; 
+              cat_io_cprintf('err','\n  Failed, try APP=1070! \n'); 
+              job2.extopts.APP = 1070; 
+              cat_run_job(job2,tpm,subj); 
             end
-            cat_run_job(job2,tpm,subj); 
             return
           end
           if ppe.affreg.skullstripped  
