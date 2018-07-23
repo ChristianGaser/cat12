@@ -365,6 +365,30 @@ function varargout=cat_vol_resize(T,operation,varargin)
         end
       end
     
+    case 'interpv'
+      %
+      if numel(varargin)>1, method = varargin{2}; else method = 'cubic'; end
+      if isfield(T,'dat')
+        Y = T.dat; T = rmfield(T,'dat'); 
+      else
+        Y = spm_read_vols(T); 
+      end
+      if isfield(varargin{1},'private'), varargin{1} = rmfiled(varargin{1},'private'); end
+      [Y,varargout{2}] = cat_vol_resize(Y,'interp',T,varargin{1},method);
+      varargout{1}     = varargout{2}.hdrN;
+      varargout{1}.dat = Y;
+      
+
+    case 'deinterpv'
+      if numel(varargin)>1, method = varargin{2}; else method = 'cubic'; end
+      varargout{1}     = varargin{1}.hdrO; 
+      if isfield(T,'dat')
+        Y = T.dat; clear T;
+      else
+        Y = spm_read_vols(T); 
+      end
+      varargout{1}.dat = cat_vol_resize(Y,'deinterp',varargin{1},method);
+      
     case 'interp'
       if numel(varargin)>0, hdr = varargin{1}; end
       if numel(varargin)>1, res = varargin{2}; end
@@ -396,6 +420,7 @@ function varargout=cat_vol_resize(T,operation,varargin)
           clear Dx Dy Dz;
 
           hdr.dim=size(T);
+          if isfield(hdr,'pinfo'), hdr.pinfo = repmat([1;0],1,size(T,3)); end
           %hdr.mat([1,2,3,5,6,7,9,10,11]) = hdr.mat([1,2,3,5,6,7,9,10,11]) .* res(1);
         else
           d = single(res./resV);

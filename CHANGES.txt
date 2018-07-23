@@ -1,5 +1,31 @@
 ------------------------------------------------------------------------
-r1337 | dahnke | 2018-07-19 19:33:02
+r1338 | dahnke | 2018-07-23 14:49:49
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_opts.m
+M       cat_conf_tools.m
+M       cat_defaults.m
+M       cat_main.m
+M       cat_main_LAS.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+M       cat_tst_qa_cleaner.m
+M       cat_vol_headtrimming.m
+M       cat_vol_partvol.m
+M       cat_vol_resize.m
+
+1) Fixed:   Corrected bugs in cat_vol_trimmer.
+2) Update:  Added resolution limitation for SPM preprocessing
+            for more stable and faster processing that is 
+            controlled by the extopts.redspmres parameter. 
+            This further include small changes in cat_main,
+            cat_run_job(1070) and cat_vol_resize.
+3) Fixed:   Corrected bugs in cat_vol_LAS. 
+ 
+
+------------------------------------------------------------------------
+r1337 | dahnke | 2018-07-19 19:34:21 +0200 (Do, 19 Jul 2018) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +36,7 @@ M       cat_vol_sanlm.m
 
 1) New:     Added batch to optimize images by removing surrounding
             empty voxels with air.
+
 ------------------------------------------------------------------------
 r1336 | gaser | 2018-07-19 16:29:40 +0200 (Do, 19 Jul 2018) | 10 lines
 

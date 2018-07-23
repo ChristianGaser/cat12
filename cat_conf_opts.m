@@ -262,6 +262,14 @@ samp.help   = {
   ''
 };
 
+redspmres         = cfg_entry;
+redspmres.tag     = 'redspmres';
+redspmres.name    = 'SPM preprocessing output resolution limit';
+redspmres.strtype = 'r';
+redspmres.num     = [1 1];
+redspmres.def     = @(val)cat_get_defaults('extopts.redspmres', val{:});
+redspmres.help    = {'Limit SPM preprocessing resolution to improve robustness and performance. Use 0 to process data in the full internal resolution.' ''};
+
 
 %------------------------------------------------------------------------
 opts      = cfg_branch;
@@ -272,7 +280,7 @@ opts.help = {
     ''
   };
 if expert>1
-  opts.val  = {tpm,affreg,bias,ngaus,warpreg,samp};
+  opts.val  = {tpm,affreg,bias,ngaus,warpreg,samp,redspmres};
   opts.help = [opts.help; {
     'Increasing the initial sampling resolution to 1.5 or 1.0 mm may help in some cases of strong inhomogeneity but in general it only increases processing time.'
     ''
@@ -280,7 +288,7 @@ if expert>1
     ''
   }];
 elseif expert==1
-  opts.val  = {tpm,affreg,biasstr,samp};
+  opts.val  = {tpm,affreg,biasstr,samp,redspmres};
   opts.help = [opts.help; {
     'Increasing the initial sampling resolution to 1.5 or 1.0 mm ma help in some cases of strong inhomogeneity but in general it only increases processing time.'
     ''
