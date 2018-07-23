@@ -802,9 +802,9 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
   clear YBGs Yclssum; 
  
   % assure that the sum of all tissues is 255 
-  Yclss = zeros(size(Ym),'uint8'); 
-  for ci=1:numel(Ycls), Yclss = Yclss + Ycls{ci}; end
-  for ci=1:numel(Ycls), Yclss = cat_vol_ctype(single(Ycls{ci}) ./ single(Yclss) * 255); end
+  Yclss = zeros(size(Ym),'single'); 
+  for ci=1:numel(Ycls), Yclss = Yclss + single(Ycls{ci}); end
+  for ci=1:numel(Ycls), Ycls{ci} = cat_vol_ctype(single(Ycls{ci}) ./ Yclss * 255); end
   
   
   if debug

@@ -620,8 +620,18 @@ function cat_run_job1070(job,tpm,subj)
         try 
           % inital estimate
           stime = cat_io_cmd('SPM preprocessing 1 (estimate 2):','','',job.extopts.verb-1,stime);
-          res = spm_preproc8(obj);
-
+   
+          if job.extopts.redspmres==0 || mean(vx_vol)>job.extopts.redspmres*0.9
+            res = spm_preproc8(obj);
+          else
+            image1 = obj.image; 
+            [obj.image,redspmres]  = cat_vol_resize(obj.image,'interpv',1);
+            res = spm_preproc8(obj);
+            res.redspmres = redspmres; 
+            res.image1 = image1; 
+            clear image1 reduce; 
+          end
+            
           % for non-skull-stripped brains use masked brains to get better estimates
           % esp. for brains with thinner skull
           if 0 %~skullstripped

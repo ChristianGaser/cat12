@@ -513,4 +513,17 @@ function varargout = cat_tst_qa_cleaner(data,opt)
   if nargout>=4, varargout{4} = markths;  end
   if nargout>=5, varargout{5} = markths2; end
   if nargout>=6, varargout{6} = siteth; end
+  
+  if 0
+    %%
+    b = uicontrol('Parent',f,'Style','slider','Position',[81,54,419,23],...
+                'value',zeta, 'min',0, 'max',1);
+    bgcolor = f.Color;
+    bl1 = uicontrol('Parent',f,'Style','text','Position',[50,54,23,23],...
+                    'String','0','BackgroundColor',bgcolor);
+    bl2 = uicontrol('Parent',f,'Style','text','Position',[500,54,23,23],...
+                    'String','1','BackgroundColor',bgcolor);
+    bl3 = uicontrol('Parent',f,'Style','text','Position',[240,25,100,23],...
+                    'String','Damping Ratio','BackgroundColor',bgcolor);
+  end
 end
