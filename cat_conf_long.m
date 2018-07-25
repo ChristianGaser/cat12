@@ -9,9 +9,6 @@ try
 catch %#ok<CTCH>
   expert = 0; 
 end
-if isempty(expert) 
-  expert = 0;
-end  
 
 mov = cfg_files;
 mov.name = 'Longitudinal data for this subject';
@@ -53,9 +50,6 @@ surface.help   = {
     'Please note, that surface reconstruction additionally requires about 20-60 min of computation time.'
     ''
 };
-%surface.labels = {'No','Full surface and thickness estimation','Thickness estimation (for ROI analysis only)'};
-%surface.values = {0 1 9};
-%    'You can also estimate thickness for ROI analysis only. This takes much less time, but does not allow to use the advantages of surface-based registration and smoothing and the extraction of additional surface parameters. Here, the analysis is restricted to cortical thickness in atlas-defined ROIs only.'
 
 %------------------------------------------------------------------------
 modulate        = cfg_menu;
@@ -105,6 +99,18 @@ dartel.help   = {
 };
 
 %------------------------------------------------------------------------
+delete_temp        = cfg_menu;
+delete_temp.tag    = 'delete_temp';
+delete_temp.name   = 'Delete temporary files';
+delete_temp.labels = {'No','Yes'};
+delete_temp.values = {0 1};
+delete_temp.val    = {1};
+delete_temp.help = {
+'Temporary files such as the native segmentations or deformation fields are usually removed after preprocessing. However, if you like to keep these files you can use this option.'
+''
+};
+
+%------------------------------------------------------------------------
 output      = cfg_branch;
 output.tag  = 'output';
 output.name = 'Writing options';
@@ -115,14 +121,18 @@ output.help = {
 };
 
 %------------------------------------------------------------------------
-extopts = cat_conf_extopts;
-opts    = cat_conf_opts;
+extopts = cat_conf_extopts(expert);
+opts    = cat_conf_opts(expert);
 %------------------------------------------------------------------------
 
 long = cfg_exbranch;
 long.name = 'Segment longitudinal data';
 long.tag  = 'long';
-long.val  = {esubjs,opts,extopts,output,modulate,warps,dartel};
+if expert
+  long.val  = {esubjs,opts,extopts,output,modulate,warps,dartel,delete_temp};
+else
+  long.val  = {esubjs,opts,extopts,output,modulate,warps,dartel};
+end
 long.prog = @cat_long_multi_run;
 long.vout = @vout_long;
 long.help = {
