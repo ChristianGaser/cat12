@@ -88,9 +88,14 @@ if ~isempty(xml_files)
     error('XML-files must have the same number as sample size');
   end
   
-  QM = ones(n_subjects,3);
-  QM_names = char('Noise','Bias','Weighted overall image quality');
-
+  if mesh_detected
+    QM = ones(n_subjects,5);
+    QM_names = char('Noise','Bias','Weighted overall image quality','Euler number','Size of topology defects');
+  else
+    QM = ones(n_subjects,3);
+    QM_names = char('Noise','Bias','Weighted overall image quality');
+  end
+  
   spm_progress_bar('Init',n_subjects,'Load xml-files','subjects completed')
   for i=1:n_subjects
     % get basename for xml- and data files
@@ -106,14 +111,32 @@ if ~isempty(xml_files)
     end
     
     xml = cat_io_xml(deblank(xml_files(i,:)));
-    try
-      QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR];
-    catch % also try to use old version
-      QM(i,:) = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
+    if mesh_detected
+      if isfield(xml.qualityratings,'NCR')
+      % check for newer available surface measures
+        if isfield(xml.subjectmeasures,'EC_abs')
+          QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR xml.subjectmeasures.EC_abs xml.subjectmeasures.defect_size];
+        else
+          QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR NaN NaN];
+        end
+      else % also try to use old version
+        QM(i,:) = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
+      end
+    else
+      if isfield(xml.qualityratings,'NCR')
+        QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR];
+      else % also try to use old version
+        QM(i,:) = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
+      end
     end
     spm_progress_bar('Set',i);  
   end
   spm_progress_bar('Clear');
+  
+  % remove last two columns if EC_abs and defect_size are not defined
+  if all(isnan(QM(:,4))) & all(isnan(QM(:,5)))
+    QM = QM(:,1:3);
+  end
   
 end
 
@@ -402,11 +425,23 @@ if isxml
   MD = diag(MD);
   
   str  = { 'Boxplot...','Mean correlation',QM_names,'Mahalanobis distance'};
-  tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation  ', 1},...
-           {@show_mean_boxplot, QM(:,1), QM_names(1,:), -1},...
-           {@show_mean_boxplot, QM(:,2), QM_names(2,:), -1},...
-           {@show_mean_boxplot, QM(:,3), QM_names(3,:), -1},...
-           {@show_mean_boxplot, MD, 'Mahalanobis distance  ', -1} };
+  
+  if size(QM,2) == 5
+    tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation  ', 1},...
+             {@show_mean_boxplot, QM(:,1), QM_names(1,:), -1},...
+             {@show_mean_boxplot, QM(:,2), QM_names(2,:), -1},...
+             {@show_mean_boxplot, QM(:,3), QM_names(3,:), -1},...
+             {@show_mean_boxplot, QM(:,4), QM_names(4,:), -1},...
+             {@show_mean_boxplot, QM(:,5), QM_names(5,:), -1},...
+             {@show_mean_boxplot, MD, 'Mahalanobis distance  ', -1} };
+  else
+    tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation  ', 1},...
+             {@show_mean_boxplot, QM(:,1), QM_names(1,:), -1},...
+             {@show_mean_boxplot, QM(:,2), QM_names(2,:), -1},...
+             {@show_mean_boxplot, QM(:,3), QM_names(3,:), -1},...
+             {@show_mean_boxplot, MD, 'Mahalanobis distance  ', -1} };
+  end
+
 else
   str  = { 'Boxplot...','Mean correlation'};
   tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation  ', 1} };

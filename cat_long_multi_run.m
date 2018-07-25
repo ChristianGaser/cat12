@@ -4,17 +4,22 @@ function out = cat_long_multi_run(job)
 % Christian Gaser
 % $Id$
 
-global opts extopts output modulate dartel warps
+global opts extopts output modulate dartel warps delete_temp
 
 warning off;
 
 % use some options from GUI or default file
-opts     = job.opts;
-extopts  = job.extopts;
-output   = job.output;
-modulate = job.modulate;
-dartel   = job.dartel;
-warps    = job.warps;
+opts        = job.opts;
+extopts     = job.extopts;
+output      = job.output;
+modulate    = job.modulate;
+dartel      = job.dartel;
+warps       = job.warps;
+if isfield(job,'delete_temp')  
+  delete_temp = job.delete_temp;
+else
+  delete_temp = 1;
+end
 
 jobs = repmat({'cat_long_main.m'}, 1, numel(job.subj));
 inputs = cell(1, numel(job.subj));
