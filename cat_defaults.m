@@ -133,8 +133,8 @@ cat.extopts.BVCstr       = 0.5;  % Strength of the Blood Vessel Correction:   0 
 cat.extopts.regstr       = 0;    % Strength of Shooting registration:         0 - Dartel, eps (fast), 0.5 (default) to 1 (accurate) optimized Shooting, 4 - default Shooting; default 0
 cat.extopts.WMHC         = 1;    % Correction of WM hyperintensities:         0 - no correction, 1 - only for Dartel/Shooting
                                  %                                            2 - also correct segmentation (to WM), 3 - handle as separate class; default 1
-cat.extopts.WMHCstr      = 0.5;  % Strength of WM hyperintensity correction:  0 to 1; default 0.5; currently inactive!
-cat.extopts.SLC          = 0;    % Correction of WM hyperintensities:         0 - no correction, 1 - handling of manual lesion that have to be set to zero!
+cat.extopts.WMHCstr      = 0.5;  % Strength of WM hyperintensity correction:  0 to 1; default 0.5
+cat.extopts.SLC          = 0;    % Stroke lesion correction (SLC):            0 - no correction, 1 - handling of manual lesion that have to be set to zero!
                                  %                                            2 - automatic lesion detection (in development)
 cat.extopts.mrf          = 1;    % MRF weighting:                             0 to 1; <1 - weighting, 1 - auto; default 1
 cat.extopts.INV          = 1;    %  Invert PD/T2 images for preprocessing:    0 - no processing, 1 - try intensity inversion, 2 - synthesize T1 image; default 1

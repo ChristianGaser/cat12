@@ -28,9 +28,9 @@ function varargout = cat_vol_headtrimming(job)
 % Structural Brain Mapping Group
 % University Jena
 % ______________________________________________________________________
-% $Id: cat_io_volctype.m 1310 2018-04-25 13:55:32Z dahnke $
+% $Id$
 
-  SVNid = '$Rev: 1304 $';
+  SVNid = '$Rev$';
   
   def.images  = {{}}; 
   def.resdir  = '';

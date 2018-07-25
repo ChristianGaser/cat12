@@ -481,8 +481,8 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
       %%
       CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
       if V.mat(13)>0, CS.faces = [CS.faces(:,1) CS.faces(:,3) CS.faces(:,2)]; end
-      save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Pcentral);
-      
+      save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Pcentral);    
+
       % remove some unconnected meshes
       cmd = sprintf('CAT_SeparatePolygon "%s" "%s" -1',Pcentral,Pcentral); % CAT_SeparatePolygon works here
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
@@ -783,8 +783,9 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     clear CS
   end  
   
-  % calculate mean EC for all surfaces
+  % calculate mean EC and defect size for all surfaces
   EC = round(EC/numel(opt.surf));
+  defect_size = round(defect_size/numel(opt.surf));
   
   if opt.verb
     for si=1:numel(Psurf)

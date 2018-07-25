@@ -849,7 +849,7 @@ images1.num     = [1 Inf];
 images          = cfg_repeat;
 images.tag      = 'images';
 images.name     = 'Images';
-images.help     = {'Select the image sets to be trimed together. For example, the first set may be a bunch of T1 images, and the second set may be a set of corregistraded PD images of the same subjects with the same image dimension.' ''};
+images.help     = {'Select the image sets to be trimmed together. For example, the first set may be a bunch of T1 images, and the second set may be a set of coregistered PD images of the same subjects with the same image dimension.' ''};
 images.values   = {images1};
 images.val      = {images1};
 images.num      = [1 Inf];
@@ -868,7 +868,7 @@ avg.name        = 'Average images';
 avg.strtype     = 'r';
 avg.num         = [1 1];
 avg.val         = {0};
-avg.help        = {'By default only the first image is used for masking. However sometimes it is helpful to use the averge of all images (avg=1) or the first n images (avg>1) of the given set.' ''};
+avg.help        = {'By default, only the first image is used for masking. However sometimes it is helpful to use the average of all images (avg=1) or the first n images (avg>1) of the given set.' ''};
 
 open             = cfg_entry;
 open.tag         = 'open';
@@ -876,7 +876,7 @@ open.name        = 'Size of morphological opening of the mask';
 open.strtype     = 'n';
 open.num         = [1 1];
 open.val         = {2};
-open.help        = {'The morphological opening of the mask allows to avoid problems due to noise in the background. However, to large opening will also remove the skull or parts of the brain.' ''};
+open.help        = {'The morphological opening of the mask allows to avoid problems due to noise in the background. However, too large opening will also remove the skull or parts of the brain.' ''};
 
 addvox          = cfg_entry;
 addvox.tag      = 'addvox';
@@ -923,7 +923,7 @@ end
 headtrimming.prog    = @cat_vol_headtrimming;
 headtrimming.vfiles  = @vfiles_headtrimming;
 headtrimming.help    = {
-  'Remove air around the head and convert the image data type to save disk-space but also to reduce memory-space and load/save times. Corresponding images have to have the sampe image dimentions. '
+  'Remove air around the head and convert the image data type to save disk-space but also to reduce memory-space and load/save times. Corresponding images have to have the same image dimenions. '
   'Uses 99.99% of the main intensity histogram to avoid problems due to outliers. Although the internal scaling supports a relative high accuracy for the limited number of bits, special values such as NAN and INF will be lost!'
   ''
 };
