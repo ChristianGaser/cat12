@@ -31,6 +31,7 @@ cat.opts.samp      = 3;                       % Sampling distance - alternative:
                                               %   Initial SPM segmentation resolution, whereas the AMAP runs on the full or speciefied resolution
                                               %   described by cat.extopts.restype and cat.extopts.resval. Higher resolution did not improve the
                                               %   results in most results (but increase caluculation time were.  
+cat.opts.redspmres = 0.0;                     % limit image resolution for internal SPM preprocessing output in mm (default: 1.0)
 
                                               
 % Writing options
@@ -191,7 +192,6 @@ fixed:
 cat.extopts.species      = 'human';  
 % Affine PreProcessing (APP) with rough bias correction and brain extraction for special anatomies (nonhuman/neonates) 
 cat.extopts.APP          = 1070;  % 0 - none; 1070 - default; [1 - light; 2 - full; 3 - strong; 4 - heavy, 5 - animal (no affreg)]
-cat.extopts.redspmres    = 1.0;   % limit image resolution for internal SPM preprocessing output in mm (default: 1.0)
 cat.extopts.vox          = 1.5;   % voxel size for normalized data (EXPERIMENTAL:  inf - use Tempate values)
 cat.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_1_IXI555_MNI152.nii')};     % Indicate first Dartel template (Template_1)
 cat.extopts.shootingtpm  = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_0_IXI555_MNI152_GS.nii')};  % Indicate first Shooting template (Template 0) - not working
