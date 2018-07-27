@@ -1,11 +1,30 @@
 ------------------------------------------------------------------------
-r1340 | gaser | 2018-07-25 15:43:00
+r1341 | dahnke | 2018-07-27 15:12:31
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_opts.m
+M       cat_defaults.m
+M       cat_main.m
+M       cat_plot_boxplot.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+M       cat_vol_qa.m
+
+1) Fixed:   Corrected mark2rps function to consider NaNs.
+2) Fixed:   Corrected extopts.redspmres to opts.redspmres.
+
+
+------------------------------------------------------------------------
+r1340 | gaser | 2018-07-25 15:43:27 +0200 (Mi, 25 Jul 2018) | 6 lines
 
 Changed paths:
 M       CAT12-Manual.pdf
 M       CHANGES.txt
 
 Changed: Updated CAT12 manual.
+
 ------------------------------------------------------------------------
 r1339 | gaser | 2018-07-25 15:35:02 +0200 (Mi, 25 Jul 2018) | 20 lines
 

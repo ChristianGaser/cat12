@@ -621,15 +621,14 @@ function cat_run_job1070(job,tpm,subj)
           % inital estimate
           stime = cat_io_cmd('SPM preprocessing 1 (estimate 2):','','',job.extopts.verb-1,stime);
    
-          if job.extopts.redspmres==0 || mean(vx_vol)>job.extopts.redspmres*0.9
+          if job.opts.redspmres==0 
             res = spm_preproc8(obj);
           else
             image1 = obj.image; 
             [obj.image,redspmres]  = cat_vol_resize(obj.image,'interpv',1);
             res = spm_preproc8(obj);
-            res.redspmres = redspmres; 
             res.image1 = image1; 
-            clear image1 reduce; 
+            clear reduce; 
           end
             
           % for non-skull-stripped brains use masked brains to get better estimates
@@ -650,7 +649,7 @@ function cat_run_job1070(job,tpm,subj)
             res.fwhm      = obj.fwhm;
             res.msk       = res.image(1); 
             res.msk.pinfo = repmat([255;0],1,size(Yb,3));
-            res.msk.dat(:,:,:) = ~Yb; % mask unused voxels!
+            res.msk.dat(:,:,:) = Yb; % mask unused voxels!
             res = spm_preproc8(res);
   
             % final estimate without mask using parameters from previous run
@@ -716,6 +715,7 @@ function cat_run_job1070(job,tpm,subj)
     res.catlog = catlog; 
     res.image0 = spm_vol(job.channel(1).vols0{subj}); 
     if exist('Ylesion','var'), res.Ylesion = Ylesion; else res.Ylesion = false(size(res.image.dim)); end; clear Ylesion;
+    if exist('redspmres','var'); res.redspmres = redspmres; res.image1 = image1; end
     job.subj = subj; 
     cat_main(res,obj.tpm,job);
     
