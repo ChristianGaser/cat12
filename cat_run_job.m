@@ -1091,23 +1091,21 @@ end
         %  ds('l2','a',0.5,Ym,Ybg,Ym,Ym,140);
         %  ds('l2','a',0.5,Ysrc/WMth,Yb,Ysrc/WMth,Yb,140);
         warning off 
-        %try 
+        try 
           if exist('Ymc','var')
             obj.image.dat(:,:,:) = Ymc; clear Ymc;
           elseif exist('Ym','var')
             obj.image.dat(:,:,:) = Ym; clear Ym;
           end
-          if job.extopts.redspmres==0 || mean(vx_vol)>job.extopts.redspmres*0.9
+          if job.opts.redspmres==0 
             res = spm_preproc8(obj);
           else
             image1 = obj.image; 
             [obj.image,redspmres]  = cat_vol_resize(obj.image,'interpv',1);
             res = spm_preproc8(obj);
-            res.redspmres = redspmres; 
             res.image1 = image1; 
-            clear image1 reduce; 
+            clear reduce; 
           end
-        try  
         catch
           % only in default mode
           if job.extopts.expertgui==0 
@@ -1185,6 +1183,7 @@ end
     res.catlog = catlog; 
     res.image0 = spm_vol(job.channel(1).vols0{subj}); 
     if exist('Ylesion','var'), res.Ylesion = Ylesion; else res.Ylesion = false(size(res.image.dim)); end
+    if exist('redspmres','var'); res.redspmres = redspmres; res.image1 = image1; end
     job.subj   = subj;
     cat_main(res,obj.tpm,job);
     

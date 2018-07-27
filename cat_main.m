@@ -101,7 +101,7 @@ end
 if isfield(res,'redspmres')
   % Update Ycls: cleanup on original data
   Yb = Ycls{1} + Ycls{2} + Ycls{3}; 
-  for i=1:3, [Pc(:,:,:,i),BB] = cat_vol_resize(Ycls{i},'reduceBrain',repmat(job.extopts.redspmres,1,3),2,Yb); end %#ok<AGROW>
+  for i=1:3, [Pc(:,:,:,i),BB] = cat_vol_resize(Ycls{i},'reduceBrain',repmat(job.opts.redspmres,1,3),2,Yb); end %#ok<AGROW>
     Pc = clean_gwc(Pc,1);
   for i=1:3, Ycls{i} = cat_vol_resize(Pc(:,:,:,i),'dereduceBrain',BB); end; clear Pc Yb; 
   for ci=1:numel(Ycls)
@@ -156,6 +156,8 @@ if ~isfield(res,'spmpp')
   for z=1:d(3)
     YbA(:,:,z) = spm_sample_vol(Vb,double(Yy(:,:,z,1)),double(Yy(:,:,z,2)),double(Yy(:,:,z,3)),1)>0.1;
   end
+  % add some distance around brainmask (important for bias!)
+  YbA = YbA | cat_vol_morph(YbA & sum(P(:,:,:,1:2),4)>4 ,'dd',2.4,vx_vol);
   % transfer tissue outside the brain mask to head  ... 
   % RD 201807: I am not sure if this is a good idea. Please test this with children! 
   for i=1:3
@@ -167,9 +169,9 @@ if ~isfield(res,'spmpp')
   % cleanup for high resolution data
   % Alghough the old cleanup is very slow for high resolution data, the   
   % reduction of image resolution removes spatial segmenation information. 
-  if job.extopts.redspmres==0 % already done in case of redspmres
+  if job.opts.redspmres==0 % already done in case of redspmres
     if max(vx_vol)<1.5 && mean(vx_vol)<1.3
-      for i=1:3, [Pc1(:,:,:,i),RR] = cat_vol_resize(P(:,:,:,i),'reduceV',vx_vol,job.extopts.uhrlim,32); end %#ok<AGROW>
+      for i=1:3, [Pc1(:,:,:,i),RR] = cat_vol_resize(P(:,:,:,i)  ,'reduceV',vx_vol,job.extopts.uhrlim,32); end %#ok<AGROW>
       for i=1:3, [Pc2(:,:,:,i),BB] = cat_vol_resize(Pc1(:,:,:,i),'reduceBrain',vx_vol,2,sum(Pc1,4)); end %#ok<AGROW>
       Pc2 = clean_gwc(Pc2,1);
       for i=1:3, Pc1(:,:,:,i) = cat_vol_resize(Pc2(:,:,:,i),'dereduceBrain',BB); end
@@ -2011,7 +2013,7 @@ if job.extopts.print
 
     %mark2str2 = @(mark,s,val) sprintf(sprintf('\\\\bf\\\\color[rgb]{%%0.2f %%0.2f %%0.2f}%s',s),color(QMC,mark),val);
     marks2str = @(mark,str) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%s',color(QMC,mark),str);
-    mark2rps    = @(mark) min(100,max(0,105 - mark*10));
+    mark2rps    = @(mark) min(100,max(0,105 - mark*10)) + isnan(mark).*mark;
     grades      = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
     mark2grad   = @(mark) grades{min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3)))};
 

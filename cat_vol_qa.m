@@ -321,7 +321,7 @@ function varargout = cat_vol_qa(action,varargin)
     
       
       QAS = struct(); QAR = struct(); 
-      QAR.mark2rps = @(mark) min(100,max(0,105 - mark*10));
+      QAR.mark2rps = @(mark) min(100,max(0,105 - mark*10)) + isnan(mark).*mark;
       
       for fi=1:numel(Pp0)
         try

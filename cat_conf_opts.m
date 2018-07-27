@@ -267,7 +267,7 @@ redspmres.tag     = 'redspmres';
 redspmres.name    = 'SPM preprocessing output resolution limit';
 redspmres.strtype = 'r';
 redspmres.num     = [1 1];
-redspmres.def     = @(val)cat_get_defaults('extopts.redspmres', val{:});
+redspmres.def     = @(val)cat_get_defaults('opts.redspmres', val{:});
 redspmres.help    = {'Limit SPM preprocessing resolution to improve robustness and performance. Use 0 to process data in the full internal resolution.' ''};
 
 

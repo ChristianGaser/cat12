@@ -134,6 +134,7 @@ def.symbolcolor = 'r';
 def.groupnum    = 0;
 def.groupmin    = 5;
 def.ylim        = [];
+def.xlim        = [];
 def.ygrid       = 0;  
 def.boxwidth    = 0.8;  
 def.box         = 1;
@@ -587,13 +588,19 @@ for i=1:qn
   linecolor = [0.8 0.8 0.8];
   if ~opt.vertical
     set(gca,'YTick',1:numel(opt.names),'YTickLabel',opt.names,'TickLength',[0 0],'ylim',[0.5 numel(opt.names)+0.5]);
-    if ~isempty(opt.ylim)
+    if ~isempty(opt.ylim) && diff(opt.ylim)~=0
       xlim(gca,opt.ylim);
+    end
+    if ~isempty(opt.xlim) && diff(opt.xlim)~=0
+      ylim(gca,opt.xlim);
     end
   else
     set(gca,'XTick',1:numel(opt.names),'XTickLabel',opt.names,'TickLength',[0 0],'xlim',[0.5 numel(opt.names)+0.5]);
-    if ~isempty(opt.ylim)
+    if ~isempty(opt.ylim) && diff(opt.ylim)~=0
       ylim(gca,opt.ylim);
+    end
+    if ~isempty(opt.xlim) && diff(opt.xlim)~=0
+      xlim(gca,opt.xlim);
     end
   end
   set(gca,'TickLabelInterpreter','none');
@@ -622,9 +629,9 @@ for i=1:qn
     if ytick(1)<=opt.ylim(1)+eps,   ytick(1)=[];   end
     if ytick(end)>=opt.ylim(2)-eps, ytick(end)=[]; end
     if opt.vertical
-      h1=plot(repmat([0;numel(opt.names)+1],1,numel(ytick)),[ytick;ytick],'Color',linecolor);
+      h1=plot(repmat(xlim',1,numel(ytick)),[ytick;ytick],'Color',linecolor);
     else
-      h1=plot([ytick;ytick],repmat([0;numel(opt.names)+1],1,numel(ytick)),'Color',linecolor);
+      h1=plot([ytick;ytick],repmat(ylim',1,numel(ytick)),'Color',linecolor);
     end
     uistack(h1,'bottom')
 
