@@ -107,7 +107,7 @@ if ~isempty(xml_files)
     
     % check for filenames
     if isempty(strfind(data_name,xml_name))
-      warning('Please check file names because of deviating subject names\n: %s vs. %s\n',V(i).fname,xml_files(i,:));
+      fprintf('Please check file names because of deviating subject names:\n%s vs. %s\n',V(i).fname,xml_files(i,:));
     end
     
     xml = cat_io_xml(deblank(xml_files(i,:)));
@@ -134,7 +134,7 @@ if ~isempty(xml_files)
   spm_progress_bar('Clear');
   
   % remove last two columns if EC_abs and defect_size are not defined
-  if all(isnan(QM(:,4))) & all(isnan(QM(:,5)))
+  if mesh_detected & all(isnan(QM(:,4))) & all(isnan(QM(:,5)))
     QM = QM(:,1:3);
   end
   
