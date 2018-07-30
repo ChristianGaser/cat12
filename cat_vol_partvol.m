@@ -312,8 +312,8 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
   
   %% subcortical stroke lesions
   if exist('Ylesionmsk','var'), Yvt(Ylesionmsk>0.5) = nan; end
-  Yvt( cat_vol_morph(YslA>0.6 & Ym<2 & Ydiv./Ym>0 & Yp0A>2.5   , 'do', 1 ) ) = 2; % WM
-  Yvt( cat_vol_morph(YslA>0.2 & Ym<2 & Ydiv./Ym>0 & YA==LAB.BG , 'do', 1 ) ) = 2; % BG lesions
+  Yvt( cat_vol_morph(YslA>0.6 & Ym<2 & Ydiv./(Ym+eps)>0 & Yp0A>2.5   , 'do', 1 ) ) = 2; % WM
+  Yvt( cat_vol_morph(YslA>0.2 & Ym<2 & Ydiv./(Ym+eps)>0 & YA==LAB.BG , 'do', 1 ) ) = 2; % BG lesions
   if exist('Ydt','var') && exist('Ydti','var')
     % by deformation
     Ystsl = (( cat_vol_smooth3X( 1-single(cat_vol_morph(YA==LAB.VT,'dd',10,vx_vol)) ,4 ) .* ...
@@ -324,7 +324,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
               cat_vol_smooth3X(single((Ydt - Ydti)>0.7),4))>0.05 & Ym>1.5 & Ym<2.8 & ...
               ~cat_vol_morph(YA==LAB.BG | YA==LAB.TH,'d',2));
     Ystsl = Ystsl | ...
-            (cat_vol_smooth3X(single((1/Ydt - 1/Ydti)>0.7),4)>0.4 & Ym>1.5); 
+            (cat_vol_smooth3X(single((1/(Ydt+eps) - 1/(Ydti+eps))>0.7),4)>0.4 & Ym>1.5); 
     Ystsl =cat_vol_morph(Ystsl,'dc',4,vx_vol); 
     Yvt(  cat_vol_morph(Ystsl,'e',2)) = 2; 
   else 
@@ -543,7 +543,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
       Yi     = cat_vol_approx(Yi,'nn',vx_vol,8);
       
       %%
-      Yflairn = Yflair./Yi; 
+      Yflairn = Yflair./(Yi+eps); 
       T3thf = [cat_stat_nanmean( Yflairn( Yp0toC(Yp0,1)>0.8 )), ...
                cat_stat_nanmean( Yflairn( Yp0toC(Yp0,2)>0.9 & Yflairn>1.1 )), ...
                cat_stat_nanmean( Yflairn( Yp0toC(Yp0,3)>0.9 & Yflairn<1.1 & Ym>2.8 ))]; 
@@ -567,7 +567,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
 %%                
       %Yflairl = Yflairl | (Yflair./Yi + Ymi/3)>max(2.3,3*(1-YwmhA)) & Ymi<2.9;      % add some regions
       Yflairl = cat_vol_morph(Yflairl,'l',[inf (4 - extopts.WMHCstr)^3])>0;
-      Yflairr = smooth3(Yflairl) .* min( 1, 2 * max(0, Yflair./Yi - ...
+      Yflairr = smooth3(Yflairl) .* min( 1, 2 * max(0, Yflair./(Yi+eps) - ...
         ( (T3thf(2)/T3thf(3) + Tstd/T3thf(3)*1.5 - (Tstd/T3thf(3)*extopts.WMHCstr)) ) )); 
       if ~debug, clear Yi Yflair; end
       
@@ -652,8 +652,8 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
     Ywlesion  = smooth3(abs(Yp0-Ym)/3 .* (1-max(0,abs(3-Yp0A))) .* YslA * 10 )>0.3 & Ym<2.2 & Yp0>1 & Ya1~=LAB.HI; % WM-GM leson
     Ywlesion( smooth3(Yp0A/3 .* YslA .* (3-Ym) .* (Ya1~=LAB.HI))>0.5 ) = 1; % WM lesions
     %
-    Ywlesion( cat_vol_morph(YslA>0.6 & Yp0<2.0 & Ydiv./Ym>0 & YslA>0.2 & Yp0A>2.5 , 'do', 1 ) ) = 1; % WM
-    Ywlesion( cat_vol_morph(YslA>0.2 & Yp0<1.6 & Ydiv./Ym>0 & YslA>0.2 & (YA==LAB.BG | YA==LAB.TH) , 'do', 1 ) ) = 1; % BG lesions
+    Ywlesion( cat_vol_morph(YslA>0.6 & Yp0<2.0 & Ydiv./(Ym+eps)>0 & YslA>0.2 & Yp0A>2.5 , 'do', 1 ) ) = 1; % WM
+    Ywlesion( cat_vol_morph(YslA>0.2 & Yp0<1.6 & Ydiv./(Ym+eps)>0 & YslA>0.2 & (YA==LAB.BG | YA==LAB.TH) , 'do', 1 ) ) = 1; % BG lesions
     % closing and opening
     Ywlesion  = cat_vol_morph(cat_vol_morph(Ywlesion | ~(Yb & Yp0A>0),'dc',4,vx_vol) & Ym<2 & Yp0>0.5,'do',1); 
     Ywlesion  = cat_vol_morph(Ywlesion,'l',[inf 200],vx_vol)>0; 

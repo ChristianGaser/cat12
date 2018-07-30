@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1341 | dahnke | 2018-07-27 15:12:31
+r1342 | gaser | 2018-07-30 10:08:47
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_main.m
+M       cat_main_gintnorm.m
+M       cat_stat_check_cov.m
+M       cat_vol_partvol.m
+M       html/cat.html
+
+(1) Fixed: Division by zero issues in cat_vol_partvol.m
+(2) Fixed: check for additional quality measures crashed for volumes in
+    cat_stat_check_cov.m
+(3) Fixed: Out of range issue in cat_main_gintnorm.m and cat_main.m.
+------------------------------------------------------------------------
+r1341 | dahnke | 2018-07-27 15:14:51 +0200 (Fr, 27 Jul 2018) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14,6 +30,7 @@ M       cat_vol_qa.m
 
 1) Fixed:   Corrected mark2rps function to consider NaNs.
 2) Fixed:   Corrected extopts.redspmres to opts.redspmres.
+
 
 
 ------------------------------------------------------------------------
