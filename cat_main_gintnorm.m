@@ -440,7 +440,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     % check SPM segmentation
     if exist('cat_warnings','var')
       Ymx = single(Ycls{1})/255*2/3 + single(Ycls{2})/255+ single(Ycls{3})/255*1/3;  
-      Ygw = Yb & ((Ycls{1}+Ycls{2})>128);
+      Ygw = Yb & ((single(Ycls{1})+single(Ycls{2}))>128);
       Ymp0diff = sqrt(cat_stat_nanmean(Ym(Ygw(:)) - Ymx(Ygw(:)))^2); 
       if Ymp0diff>0.10 && debug
         cat_warnings = cat_io_addwarning(cat_warnings,...

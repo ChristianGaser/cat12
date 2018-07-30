@@ -1322,11 +1322,11 @@ end
 %  ---------------------------------------------------------------------
   Yclsd = Ycls(1:2); % use only GM and WM for deformation
   if job.extopts.WMHC>0 && numel(Ycls)>6
-    Yclsd{2} = Ycls{2} + Ycls{7}; % set WMHs as WM in some cases
+    Yclsd{2} = cat_vol_ctype(max(255,single(Ycls{2}) + single(Ycls{7}))); % set WMHs as WM in some cases
   end
   
   if job.extopts.SLC && isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
-    % lesion detection in the oringal space with the origal data
+    % lesion detection in the original space with the original data
     LSstr   = 0.5; 
     Yvt     = cat_vol_morph( NS(Yl1,job.extopts.LAB.VT),'do',4,vx_vol);      % open to get lesions close to the ventricle
     Yvt     = cat_vol_morph( Yvt ,'dd',4,vx_vol);                            % add some voxels for smoothness
