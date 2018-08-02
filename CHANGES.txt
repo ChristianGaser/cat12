@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1345 | gaser | 2018-08-02 11:37:07
+r1346 | dahnke | 2018-08-02 11:42:33
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_main.m
+
+(1) Fixed:  Corrected colorbar in other figure printing bug in cat_main.
+------------------------------------------------------------------------
+r1345 | gaser | 2018-08-02 11:37:11 +0200 (Do, 02 Aug 2018) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +21,7 @@ M       html/cat.html
 (1) Changed: Added Eulcer number and size of topology defects to 
     cat_stat_check_cov2.m
 (2) Fixed: Typos
+
 ------------------------------------------------------------------------
 r1344 | dahnke | 2018-08-02 11:13:13 +0200 (Do, 02 Aug 2018) | 6 lines
 
