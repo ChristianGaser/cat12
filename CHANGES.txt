@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1346 | dahnke | 2018-08-02 11:42:33
+r1347 | dahnke | 2018-08-02 12:59:51
+
+Changed paths:
+M       CHANGES.txt
+M       cat_run_job1070.m
+M       cat_stat_check_cov2.m
+
+(1) Fixed:  Problematic skull-stripping part 2. 
+------------------------------------------------------------------------
+r1346 | dahnke | 2018-08-02 11:42:11 +0200 (Do, 02 Aug 2018) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +16,7 @@ M       cat12.m
 M       cat_main.m
 
 (1) Fixed:  Corrected colorbar in other figure printing bug in cat_main.
+
 ------------------------------------------------------------------------
 r1345 | gaser | 2018-08-02 11:37:11 +0200 (Do, 02 Aug 2018) | 12 lines
 
