@@ -276,19 +276,21 @@ else
       if isfield(xml.qualityratings,'NCR')
       % check for newer available surface measures
         if isfield(xml.subjectmeasures,'EC_abs')
-          QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR xml.subjectmeasures.EC_abs xml.subjectmeasures.defect_size];
+          QM(i,:)   = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR xml.subjectmeasures.EC_abs xml.subjectmeasures.defect_size];
+          site(i,1) = xml.qualityratings.res_RMS;
         else
-          QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR NaN NaN];
+          QM(i,:)   = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR NaN NaN];
+          site(i,1) = xml.QAM.res_RMS;
         end
       else % also try to use old version
         QM(i,:) = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
-        site(i,1) = xml.QAM.res_RMS;
       end
     else
       if isfield(xml.qualityratings,'NCR')
-        QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR];
+        QM(i,:)   = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR];
+        site(i,1) = xml.qualityratings.res_RMS;
       else % also try to use old version
-        QM(i,:) = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
+        QM(i,:)   = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
         site(i,1) = xml.QAM.res_RMS;
       end
     end
@@ -297,7 +299,7 @@ else
   spm_progress_bar('Clear');
  
   % remove last two columns if EC_abs and defect_size are not defined
-  if mesh_detected & all(isnan(QM(:,4))) & all(isnan(QM(:,5)))
+  if mesh_detected && all(isnan(QM(:,4))) && all(isnan(QM(:,5)))
     QM = QM(:,1:3);
   end
     
@@ -1132,9 +1134,22 @@ function checkvol(obj, event_obj)
   spm_figure('Clear',H.graphics);
   
   if isscatter
-    spm_check_registration(org_files{pos.x});
+    ppos = [0.02 0.01 0.96 0.98];
+    hh   = spm_orthviews('Image',spm_vol(org_files{pos.x}),ppos(1,:)); 
+    spm_orthviews('Caption',hh,...
+      spm_str_manip(org_files{pos.x},'k40'),...
+      'FontSize',fontsize,'FontWeight','Bold');
   else
-    spm_check_registration(char(org_files([pos.x,pos.y])));
+    %spm_check_registration(char(org_files([pos.x,pos.y])));
+    ppos = [0.02 0.01 0.96 0.48;0.02 0.01 0.96 0.48];
+    hh1  = spm_orthviews('Image',spm_vol(org_files{pos.x}),ppos(1,:)); 
+    hh2  = spm_orthviews('Image',spm_vol(org_files{pos.y}),ppos(2,:)); 
+    spm_orthviews('Caption',hh1,...
+      spm_str_manip(org_files{pos.x},'k40'),...
+      'FontSize',fontsize,'FontWeight','Bold');
+    spm_orthviews('Caption',hh2,...
+      spm_str_manip(org_files{pos.y},'k40'),...
+      'FontSize',fontsize,'FontWeight','Bold');
   end
   spm_orthviews('MaxBB')
 return
