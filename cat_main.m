@@ -2339,7 +2339,7 @@ if job.extopts.print
     end
 
 
-    %% Yo - original image in original space
+    % Yo - original image in original space
     % using of SPM peak values didn't work in some cases (5-10%), so we have to load the image and estimate the WM intensity 
     try %#ok<TRYNC>
       Yo  = single(VT.private.dat(:,:,:)); 
@@ -2367,7 +2367,7 @@ if job.extopts.print
       hho = spm_orthviews('Image',VT0x,pos(1,:)); 
       spm_orthviews('Caption',hho,{T1txt},'FontSize',fontsize,'FontWeight','Bold');
       spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
-      cc{1} = axes('Position',[pos(1,1) + 0.30 0.38 0.02 0.15],'Parent',fg); image((60:-1:1)');
+      cc{1} = axes('Position',[pos(1,1) + 0.30 0.37 0.02 0.15],'Parent',fg); image(cc{1},(60:-1:1)');
 
       if job.inv_weighting
         set(cc{1},'YTick',ytick,'YTickLabel',fliplr(yticklabeli),'XTickLabel','','XTick',[],'TickLength',[0 0],...
@@ -2393,7 +2393,7 @@ if job.extopts.print
       hhm = spm_orthviews('Image',Vm,pos(2,:));
       spm_orthviews('Caption',hhm,{'m*.nii (Int. Norm.)'},'FontSize',fontsize,'FontWeight','Bold');
       spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
-      cc{2} = axes('Position',[pos(2,1) + 0.30 0.38 0.02 0.15],'Parent',fg); image((60:-1:1)');
+      cc{2} = axes('Position',[pos(2,1) + 0.30 0.37 0.02 0.15],'Parent',fg); image(cc{2},(60:-1:1)');
       set(cc{2},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
         'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
     end
@@ -2408,7 +2408,7 @@ if job.extopts.print
     hhp0 = spm_orthviews('Image',VO,pos(3,:)); if ~debug, clear Yp0; end
     spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize,'FontWeight','Bold');
     spm_orthviews('window',hhp0,[0 cmmax]); caxis([0,2]);
-    cc{3} = axes('Position',[pos(3,1) + 0.30 0.02 0.02 0.15],'Parent',fg); image((60:-1:1)');
+    cc{3} = axes('Position',[pos(3,1) + 0.30 0.02 0.02 0.15],'Parent',fg); image(cc{3},(60:-1:1)');
     set(cc{3},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
       'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
     spm_orthviews('Reposition',[0 0 0]); 
@@ -2423,7 +2423,7 @@ if job.extopts.print
             'multisurf',job.output.surface,'view','s',...
             'parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
           colormap(cmap);  set(hSD{1}.colourbar,'visible','off'); 
-          cc{3} = axes('Position',[0.63 0.02 0.3 0.01],'Parent',fg); image((121:1:120+surfcolors));
+          cc{3} = axes('Position',[0.63 0.02 0.3 0.01],'Parent',fg); image(cc{3},(121:1:120+surfcolors));
           set(cc{3},'XTick',1:(surfcolors-1)/6:surfcolors,'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
             'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize,'FontWeight','Bold');
         catch
@@ -2464,7 +2464,7 @@ if job.extopts.print
       try %#ok<TRYNC>
         cat_surf_render2('ColourMap',hSD{1}.axis,gray(128));
         cat_surf_render2('Clim',hSD{1}.axis,[0 6]);
-        axes(cc{3}); image(0:60);
+        axes(cc{3}); image(cc{3},0:60);
         set(cc{3},'XTick',max(1,0:10:60),'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
           'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize,'FontWeight','Bold');
       end
