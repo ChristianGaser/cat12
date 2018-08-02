@@ -1,11 +1,26 @@
 ------------------------------------------------------------------------
-r1344 | dahnke | 2018-08-02 11:13:14
+r1345 | gaser | 2018-08-02 11:37:07
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_tools.m
+M       cat_defaults.m
+MM      cat_stat_check_cov2.m
+M       html/cat.html
+
+(1) Changed: Added Eulcer number and size of topology defects to 
+    cat_stat_check_cov2.m
+(2) Fixed: Typos
+------------------------------------------------------------------------
+r1344 | dahnke | 2018-08-02 11:13:13 +0200 (Do, 02 Aug 2018) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_main.m
 
 (1) Fixed:  Small changes to correct and optimize other calls of clean_gwc.
+
 ------------------------------------------------------------------------
 r1343 | dahnke | 2018-08-02 10:41:03 +0200 (Do, 02 Aug 2018) | 26 lines
 
