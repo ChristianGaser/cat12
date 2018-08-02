@@ -939,15 +939,15 @@ mask.num        = [0 Inf];
 % brain mask
 bmask = data; 
 bmask.tag       = 'bmask';
-bmask.name      = 'Select brain mask images';
+bmask.name      = 'Optionally select additional brain mask images';
 bmask.help      = {'Select (additional) brain mask images that describe the regions that should remain in the image.';''};
 bmask.num       = [0 Inf];
 bmask.val       = {{''}}; 
 % recalc
 recalc          = cfg_menu;
 recalc.tag      = 'recalc';
-recalc.name     = 'reprocess';
-recalc.help     = {'If an output image already exist then use this image rather than the orinal input image for additional masking.'};
+recalc.name     = 'Reprocess';
+recalc.help     = {'If an output image already exist then use this image rather than the original input image for additional masking. This allows you to add lesions from other lesion images.'};
 recalc.labels   = {'Yes' 'No'};
 recalc.values   = {1 0};
 recalc.val      = {1};
