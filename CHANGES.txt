@@ -1,5 +1,33 @@
 ------------------------------------------------------------------------
-r1342 | gaser | 2018-07-30 10:08:47
+r1343 | dahnke | 2018-08-02 10:39:30
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+M       cat_stat_check_cov.m
+A       cat_stat_check_cov2.m
+M       cat_vol_sanlm.m
+
+(1) Fixed:  Corrected the optimized call of cleanup in SPM Preprocessing 2  
+            that strongly influence the skull-stripping of CAT.
+            Thanks to Ying-Liang Lai for pointing out that issue.
+(2) Fixed:  Corrected bug in runtime estimation that avoid counting of 
+            early processing steps in cat_run_job(1070).            
+(3) New:    Added alpha version of cat_stat_check_cov2 that is called from 
+            cat_stat_check_cov in the development user mode. Although it 
+            based on the previous version it include large changes: 
+             - automatic detection of XML and other report files
+             - group-specific symbols and legend in Mahalanobis plot 
+             - new GUI elements for navigation, data checking and 
+               removal of outliers 
+             - percentage scaling rather than school marks 
+             - good values always on the top of the boxplot
+             - many further layout changes
+             
+------------------------------------------------------------------------
+r1342 | gaser | 2018-07-30 10:09:14 +0200 (Mo, 30 Jul 2018) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14,6 +42,7 @@ M       html/cat.html
 (2) Fixed: check for additional quality measures crashed for volumes in
     cat_stat_check_cov.m
 (3) Fixed: Out of range issue in cat_main_gintnorm.m and cat_main.m.
+
 ------------------------------------------------------------------------
 r1341 | dahnke | 2018-07-27 15:14:51 +0200 (Fr, 27 Jul 2018) | 16 lines
 

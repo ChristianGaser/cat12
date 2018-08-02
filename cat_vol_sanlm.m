@@ -107,7 +107,7 @@ function varargout = cat_vol_sanlm(varargin)
     def.relativeFilterStengthLimit  = 1;         % limit the noise correction by the relative changes 
                                                  % to avoid over-filtering in low intensity regions
     def.outlier                     = 1;         % threshold to define outlier voxel to filter them with full strength
-    def.addnoise                    = 0.5;       % option to add a minimal amount of noise in regions without noise
+    def.addnoise                    = 1;         % option to add a minimal amount of noise in regions without noise
     def.returnOnlyFilename          = 0;         % just to get the resulting filenames for SPM batch mode
     def.red                         = 1;         % number of reductions (be careful using values greater 1!)
     def.fred                        = 0;         % force reduce

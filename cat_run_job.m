@@ -31,6 +31,7 @@ function cat_run_job(job,tpm,subj)
     global cat_err_res; % for CAT error report
 
     stime = clock;
+    stime0 = stime; % overall processing time
 
     
     % create subfolders if not exist
@@ -1179,7 +1180,7 @@ end
     
     %% call main processing
     res.tpm    = tpm.V;
-    res.stime  = stime;
+    res.stime  = stime0;
     res.catlog = catlog; 
     res.image0 = spm_vol(job.channel(1).vols0{subj}); 
     if exist('Ylesion','var'), res.Ylesion = Ylesion; else res.Ylesion = false(size(res.image.dim)); end
