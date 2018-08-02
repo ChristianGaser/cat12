@@ -9,6 +9,15 @@ function varargout = cat_stat_check_cov(job)
 % Christian Gaser
 % $Id$
 
+if cat_get_defaults('extopts.expertgui')>1
+  if nargout
+    varargout = cat_stat_check_cov2(job);
+  else
+    cat_stat_check_cov2(job);
+  end
+  return
+end
+
 global alphaval filename H YpY YpYsorted  data_array data_array_diff pos ind_sorted ind_sorted_display mean_cov FS X mesh_detected ...
 mn_data mx_data V Vchanged sample isxml sorted isscatter MD show_name bplot names_changed img img_alpha
 
