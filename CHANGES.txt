@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1347 | dahnke | 2018-08-02 12:59:51
+r1348 | gaser | 2018-08-02 15:01:30
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       cat_run_job1070.m
+M       html/cat_versions.html
+
+(1) Changed: Updated CAT12 manual and online help.
+(2) Fixed: Typos
+------------------------------------------------------------------------
+r1347 | dahnke | 2018-08-02 12:59:46 +0200 (Do, 02 Aug 2018) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +19,7 @@ M       cat_run_job1070.m
 M       cat_stat_check_cov2.m
 
 (1) Fixed:  Problematic skull-stripping part 2. 
+
 ------------------------------------------------------------------------
 r1346 | dahnke | 2018-08-02 11:42:11 +0200 (Do, 02 Aug 2018) | 7 lines
 

@@ -633,7 +633,7 @@ function cat_run_job1070(job,tpm,subj)
           end
             
           % for non-skull-stripped brains use masked brains to get better estimates
-          % esp. for brains with thinner skull or special defacing (LS6038_3T_T1w_MPR1_gdc)
+          % esp. for brains with thinner skull or special defacing
           if ~skullstripped
             stime = cat_io_cmd('SPM preprocessing 1 (estimate skull-stripped):','','',job.extopts.verb-1,stime);
             % use dilated mask for spm_preproc8 because sometimes inital SPM segmentation
