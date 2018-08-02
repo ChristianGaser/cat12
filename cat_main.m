@@ -101,9 +101,9 @@ end
 if isfield(res,'redspmres')
   % Update Ycls: cleanup on original data
   Yb = Ycls{1} + Ycls{2} + Ycls{3}; 
-  for i=1:6, [Pc(:,:,:,i),BB] = cat_vol_resize(Ycls{i},'reduceBrain',repmat(job.opts.redspmres,1,3),2,Yb); end %#ok<AGROW>
+  for i=1:numel(Ycls), [Pc(:,:,:,i),BB] = cat_vol_resize(Ycls{i},'reduceBrain',repmat(job.opts.redspmres,1,3),2,Yb); end %#ok<AGROW>
     Pc = clean_gwc(Pc,1);
-  for i=1:6, Ycls{i} = cat_vol_resize(Pc(:,:,:,i),'dereduceBrain',BB); end; clear Pc Yb; 
+  for i=1:numel(Ycls), Ycls{i} = cat_vol_resize(Pc(:,:,:,i),'dereduceBrain',BB); end; clear Pc Yb; 
   for ci=1:numel(Ycls)
     Ycls{ci} = cat_vol_ctype(cat_vol_resize(Ycls{ci},'deinterp',res.redspmres,'linear'));
   end
@@ -171,11 +171,11 @@ if ~isfield(res,'spmpp')
   % reduction of image resolution removes spatial segmenation information. 
   if job.opts.redspmres==0 % already done in case of redspmres
     if max(vx_vol)<1.5 && mean(vx_vol)<1.3
-      for i=1:6, [Pc1(:,:,:,i),RR] = cat_vol_resize(P(:,:,:,i)  ,'reduceV',vx_vol,job.extopts.uhrlim,32); end %#ok<AGROW>
-      for i=1:6, [Pc2(:,:,:,i),BB] = cat_vol_resize(Pc1(:,:,:,i),'reduceBrain',vx_vol,2,sum(Pc1,4)); end %#ok<AGROW>
+      for i=1:size(P,4), [Pc1(:,:,:,i),RR] = cat_vol_resize(P(:,:,:,i)  ,'reduceV',vx_vol,job.extopts.uhrlim,32); end %#ok<AGROW>
+      for i=1:size(P,4), [Pc2(:,:,:,i),BB] = cat_vol_resize(Pc1(:,:,:,i),'reduceBrain',vx_vol,2,sum(Pc1,4)); end %#ok<AGROW>
       Pc2 = clean_gwc(Pc2,1);
-      for i=1:6, Pc1(:,:,:,i) = cat_vol_resize(Pc2(:,:,:,i),'dereduceBrain',BB); end
-      for i=1:6, P(:,:,:,i)   = cat_vol_resize(Pc1(:,:,:,i),'dereduceV',RR); end 
+      for i=1:size(P,4), Pc1(:,:,:,i) = cat_vol_resize(Pc2(:,:,:,i),'dereduceBrain',BB); end
+      for i=1:size(P,4), P(:,:,:,i)   = cat_vol_resize(Pc1(:,:,:,i),'dereduceV',RR); end 
       clear Pc1 Pc2;
     end
   end
@@ -584,8 +584,12 @@ if ~isfield(res,'spmpp')
       Yb2  = cat_vol_morph(Yp0>0.5,'lc',2); 
       prob = cat(4,cat_vol_ctype(Yb2.*Yp0toC(Ym*3,2)*255),...
                    cat_vol_ctype(Yb2.*Yp0toC(Ym*3,3)*255),...
-                   cat_vol_ctype(Yb2.*Yp0toC(min(3,Ym*3),1)*255)); 
-      prob = clean_gwc(prob);
+                   cat_vol_ctype(Yb2.*Yp0toC(min(3,Ym*3),1)*255));
+      
+      for i=1:size(prob,4), [prob2(:,:,:,i),BB] = cat_vol_resize(prob(:,:,:,i),'reduceBrain',vx_vol,2,sum(prob,4)); end %#ok<AGROW>
+      prob2 = clean_gwc(prob2,1);
+      for i=1:size(prob,4), prob(:,:,:,i) = cat_vol_resize(prob2(:,:,:,i),'dereduceBrain',BB); end; clear prob2;
+      
       for ci=1:3, Ycls{ci} = prob(:,:,:,ci); end; 
       %job.extopts.mrf = 0.3; 
       clear prob;  
@@ -1050,13 +1054,20 @@ if ~isfield(res,'spmpp')
   %  -------------------------------------------------------------------
   if job.extopts.cleanupstr>0 && job.extopts.cleanupstr<=1 
     %%
-    prob = clean_gwc(prob,round(job.extopts.cleanupstr*4)); % old cleanup
+    for i=1:size(prob,4), [prob2(:,:,:,i),BB] = cat_vol_resize(prob(:,:,:,i),'reduceBrain',vx_vol,2,sum(prob,4)); end %#ok<AGROW>
+    prob2 = clean_gwc(prob2,round(job.extopts.cleanupstr*4)); % old cleanup
+    for i=1:size(prob,4), prob(:,:,:,i) = cat_vol_resize(prob2(:,:,:,i),'dereduceBrain',BB); end; clear prob2
+    
     
     [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1(indx,indy,indz),Ymo(indx,indy,indz),job.extopts,job.inv_weighting,vx_volr,indx,indy,indz);
   else
     if 0% job.extopts.cleanupstr == 2 % old cleanup for tests
       stime = cat_io_cmd('Old cleanup');
-      prob = clean_gwc(prob,1);
+      
+      for i=1:size(prob,4), [prob2(:,:,:,i),BB] = cat_vol_resize(prob(:,:,:,i),'reduceBrain',vx_vol,2,sum(prob,4)); end %#ok<AGROW>
+      prob2 = clean_gwc(prob2,round(job.extopts.cleanupstr*4)); % old cleanup
+      for i=1:size(prob,4), prob(:,:,:,i) = cat_vol_resize(prob2(:,:,:,i),'dereduceBrain',BB); end; clear prob2
+
       fprintf('%5.0fs\n',etime(clock,stime));
     end
     for i=1:3
