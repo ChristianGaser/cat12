@@ -1333,7 +1333,7 @@ end
 %  ---------------------------------------------------------------------
   Yclsd = Ycls(1:2); % use only GM and WM for deformation
   if job.extopts.WMHC>0 && numel(Ycls)>6
-    Yclsd{2} = cat_vol_ctype(max(255,single(Ycls{2}) + single(Ycls{7}))); % set WMHs as WM in some cases
+    Yclsd{2} = cat_vol_ctype(min(255,single(Ycls{2}) + single(Ycls{7}))); % set WMHs as WM in some cases
   end
   
   if job.extopts.SLC && isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
