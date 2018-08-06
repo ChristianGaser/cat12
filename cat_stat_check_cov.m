@@ -563,7 +563,13 @@ end
 %-----------------------------------------------------------------------
 function check_worst_data(obj, event_obj)
 %-----------------------------------------------------------------------
+% Old check worst function. The spm_input could be replaced by an popup 
+% window. A specification of the data range would rather than the x worst 
+% images would be useful. 
+%-----------------------------------------------------------------------
 global V ind_sorted_display mesh_detected mn_data mx_data H
+
+if isempty(spm_figure('FindWin','Interactive')), spm('createintwin'); end
 
 n = length(V);
 number = min([n 24]);

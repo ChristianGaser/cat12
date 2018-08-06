@@ -352,7 +352,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
 
       n1    = 2;    % use GM/WM for dartel                
       if numel(Ycls)>n1, Ycls(n1+1:end) = []; end
-      if exist('Ylesion','var')
+      if exist('Ylesion','var') && sum(Ylesion(:))>0
         Yclso = Ycls; 
         %Ycls{1}(Ylesion) = 128; 
         %Ycls{2}(Ylesion) = 128; 
@@ -401,10 +401,10 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
               f(:,:,i,k1) = single(spm_slice_vol(single(Ycls{k1}),Mar*spm_matrix([0 0 i]),rdim(1:2),[1,NaN])/255);
             end
           end
-          ls = zeros(rdim(1:3),'single');
           
-          if exist('Ylesion','var')
+          if exist('Ylesion','var') && sum(Ylesion(:))>0
             Ylesion = single(Ylesion); 
+            ls = zeros(rdim(1:3),'single');
             for i=1:rdim(3),
               ls(:,:,i) = single(spm_slice_vol(single(Ylesion),Mar*spm_matrix([0 0 i]),rdim(1:2),[1,NaN]));
             end
@@ -422,7 +422,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
                 g(:,:,i,k1) = single(spm_slice_vol(res.tpm2{it}(k1),Mad*spm_matrix([0 0 i]),rdim(1:2),[1,NaN]));
               end
               
-              if exist('Ylesion','var')
+              if exist('Ylesion','var') && sum(Ylesion(:))>0
                 f(:,:,:,k1) = f(:,:,:,k1) .* (1-ls) + g(:,:,:,k1) .* ls;
               end
             end
@@ -628,7 +628,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
               end
               g{n1+1} = log(max(g{n1+1},eps)); 
 
-              if exist('Ylesion','var')
+              if exist('Ylesion','var') && sum(Ylesion(:))>0
                 Yclsk1 = single(Ylesion); 
                 if reg(regstri).opt.resfac(ti)>1, spm_smooth(Yclsk1,Yclsk1,repmat((reg(regstri).opt.resfac(ti)-1) * 2,1,3)); end
                 ls = zeros(rdims(ti,1:3),'single');
@@ -653,6 +653,11 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
                 %Ycls{1} = cat_vol_ctype( single(Ycls{1}) + 50.*Ylesion ); 
                 %Ycls{2} = cat_vol_ctype( single(Ycls{1}) + 200.*Ylesion ); 
                % clear Ylesion;
+              else
+                for k1=1:numel(g)-1
+                   f{n1+1}     = f{n1+1} - f{k1}; 
+                end
+                f{n1+1}(msk) = 0.00001;
               end
               
               %% loading segmentation and creating of images vs. updating these maps
@@ -997,19 +1002,20 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
           
           % tissue ouptut
           fn = {'GM','WM','CSF'};
+          if exist('Yclso','var'), Ycls = Yclso; end
           for clsi=1:max(1,2*(export-1))
             if export>1
               %% template creation
-              cat_io_writenii(VT0,single(Yclso{clsi})/255,fullfile(mrifolder,testfolder),sprintf('p%d',clsi),...
+              cat_io_writenii(VT0,single(Ycls{clsi})/255,fullfile(mrifolder,testfolder),sprintf('p%d',clsi),...
                 sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],[0 0 0 2],trans);
             end
           end
           %%
           clsi=1; 
-          cat_io_writenii(VT0,single(Yclso{clsi})/255,fullfile(mrifolder,testfolder),sprintf('p%d',clsi),...
+          cat_io_writenii(VT0,single(Ycls{clsi})/255,fullfile(mrifolder,testfolder),sprintf('p%d',clsi),...
             sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],[0 3 0 0],trans);
           %%
-          cat_io_writenii(VT0,single(Yclso{clsi})/255,fullfile(mrifolder,testfolder),sprintf('p%d',clsi),...
+          cat_io_writenii(VT0,single(Ycls{clsi})/255,fullfile(mrifolder,testfolder),sprintf('p%d',clsi),...
             sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],[0 0 3 0],trans);
             % hier ist kein unterschied per definition ...  
             %cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
