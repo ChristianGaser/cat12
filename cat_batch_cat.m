@@ -48,23 +48,26 @@ if n == 0, error(sprintf('No file found in %s.\n',namefile)); end %#ok<SPERR>
 matlabbatch{1}.spm.tools.cat.estwrite = cat;
 matlabbatch{1}.spm.tools.cat.estwrite.data = cellstr(names);
 
+% remove extopts fields
 tmp_fields = char('NCstr','BVCstr','regstr','WMHC','WMHCstr','mrf','INV','restype','resval','species','darteltpm','shootingtpm',...
             'cat12atlas','brainmask','T1','pbtres','close_parahipp','scale_cortex','add_parahipp','colormap','verb','ignoreErrors',...
-            'expertgui','subfolders','experimental','atlas','LAB','print','cleanupstr');
+            'expertgui','subfolders','experimental','atlas','LAB','print','cleanupstr','SLC');
 for i=1:size(tmp_fields,1)
   try
     matlabbatch{1}.spm.tools.cat.estwrite.extopts = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.extopts,deblank(tmp_fields(i,:)));
   end
 end
 
-tmp_fields = char('atlas','te','pc','WMH','ROI','TPMC','label','CSF','WM','GM','las','bias','ct');
+% remove output fields
+tmp_fields = char('atlas','te','pc','WMH','ROI','TPMC','label','CSF','WM','GM','las','bias','ct','SL');
 for i=1:size(tmp_fields,1)
   try
     matlabbatch{1}.spm.tools.cat.estwrite.output = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output,deblank(tmp_fields(i,:)));
   end
 end
 
-tmp_fields = char('ngaus','warpreg','biasreg','biasfwhm','samp');
+% remove opts fields
+tmp_fields = char('ngaus','warpreg','biasreg','biasfwhm','samp','redspm');
 for i=1:size(tmp_fields,1)
   try
     matlabbatch{1}.spm.tools.cat.estwrite.opts = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.opts,deblank(tmp_fields(i,:)));
@@ -72,7 +75,7 @@ for i=1:size(tmp_fields,1)
 end
 
 tmp_fields  = char('mod','native','warped','dartel');
-tmp_map = char('GM','WM','CSF','bias','las','WMH','label','jacobian','ct');
+tmp_map = char('GM','WM','CSF','bias','las','WMH','label','jacobian','ct','SL');
 for i=1:size(tmp_map,1)
   for j=1:size(tmp_fields,1)  
     if isfield(matlabbatch{1}.spm.tools.cat.estwrite.output,(deblank(tmp_map(i,:))))

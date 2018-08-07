@@ -92,11 +92,15 @@ function mcsvtab = cat_roi_exportSample(job)
   job = cat_io_checkinopt(job,def);
   [px,job.calcroi_name,ee] = spm_fileparts(job.calcroi_name);
   if ~strcmp(ee,'.csv'), job.calcroi_name = [job.calcroi_name ee]; end
-  
+
+  if iscell(job.outdir), job.outdir = job.outdir{1}; end
+
   % create output directory 
   if ~isempty(job.outdir)
     if iscell(job.outdir), job.outdir = job.outdir{1}; end
     if ~exist(job.outdir,'dir'), mkdir(job.outdir); end
+  else
+    job.outdir = pwd;
   end
   
   % first divide data into volume and surface data because they have to be handled separately

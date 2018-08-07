@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1349 | dahnke | 2018-08-06 18:59:27
+r1350 | gaser | 2018-08-07 11:55:48
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_batch_cat.m
+M       cat_conf_tools.m
+M       cat_roi_fun.m
+M       html/cat.html
+
+(1) Fixed: In cat_roi_fun.m current directory is used if output directory 
+    field is empty.
+(2) Fixed: New fields added that have to be considered in cat_batch_cat.m.
+------------------------------------------------------------------------
+r1349 | dahnke | 2018-08-06 18:59:14 +0200 (Mo, 06 Aug 2018) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +25,7 @@ M       cat_stat_check_cov2.m
 (1) Fixed:   Corrected errors in spatial registration in cat_main and
              cat_main_registration.
 (2) Changed: Further development of cat_stat_check_cov2.
+
 
 ------------------------------------------------------------------------
 r1348 | gaser | 2018-08-02 15:01:57 +0200 (Do, 02 Aug 2018) | 10 lines

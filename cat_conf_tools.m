@@ -445,7 +445,7 @@ outdir.filter  = 'dir';
 outdir.ufilter = '.*';
 outdir.num     = [0 1];
 outdir.help    = {'Select a directory where files are written.'};
-outdir.val     = {{''}};
+outdir.val{1}  = {''};
 
 data         = cfg_files; 
 data.tag     = 'data';
