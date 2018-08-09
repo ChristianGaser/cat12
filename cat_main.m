@@ -2367,7 +2367,8 @@ if job.extopts.print
       hho = spm_orthviews('Image',VT0x,pos(1,:)); 
       spm_orthviews('Caption',hho,{T1txt},'FontSize',fontsize,'FontWeight','Bold');
       spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
-      cc{1} = axes('Position',[pos(1,1) + 0.30 0.37 0.02 0.15],'Parent',fg); image(cc{1},(60:-1:1)');
+      cc{1} = axes('Position',[pos(1,1) + 0.30 0.37 0.02 0.15],'Parent',fg);     
+      try, image(cc{1},(60:-1:1)'); end
 
       if job.inv_weighting
         set(cc{1},'YTick',ytick,'YTickLabel',fliplr(yticklabeli),'XTickLabel','','XTick',[],'TickLength',[0 0],...
@@ -2393,7 +2394,8 @@ if job.extopts.print
       hhm = spm_orthviews('Image',Vm,pos(2,:));
       spm_orthviews('Caption',hhm,{'m*.nii (Int. Norm.)'},'FontSize',fontsize,'FontWeight','Bold');
       spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
-      cc{2} = axes('Position',[pos(2,1) + 0.30 0.37 0.02 0.15],'Parent',fg); image(cc{2},(60:-1:1)');
+      cc{2} = axes('Position',[pos(2,1) + 0.30 0.37 0.02 0.15],'Parent',fg);
+      try, image(cc{2},(60:-1:1)'); end
       set(cc{2},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
         'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
     end
@@ -2408,7 +2410,8 @@ if job.extopts.print
     hhp0 = spm_orthviews('Image',VO,pos(3,:)); if ~debug, clear Yp0; end
     spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize,'FontWeight','Bold');
     spm_orthviews('window',hhp0,[0 cmmax]); caxis([0,2]);
-    cc{3} = axes('Position',[pos(3,1) + 0.30 0.02 0.02 0.15],'Parent',fg); image(cc{3},(60:-1:1)');
+    cc{3} = axes('Position',[pos(3,1) + 0.30 0.02 0.02 0.15],'Parent',fg);
+    try, image(cc{3},(60:-1:1)'); end
     set(cc{3},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
       'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
     spm_orthviews('Reposition',[0 0 0]); 
@@ -2449,7 +2452,9 @@ if job.extopts.print
     set(fg,'PaperPositionMode','auto','resize','on','PaperPosition',[0 0 1 1]);
     for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize*0.8); end; end
     for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize*0.8); end;
+    warning off
     print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
+    warning on
     for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize); end; end
     for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize); end; 
     set(fg,'PaperPositionMode',fgold.PaperPositionMode,'resize',fgold.resize,'PaperPosition',fgold.PaperPosition);

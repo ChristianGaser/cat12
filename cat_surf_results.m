@@ -44,6 +44,7 @@ H.text_mode    = 1;
 H.border_mode  = 0;
 H.is32k        = 0;
 H.str32k       = '';
+H.SPM_found    = 1;
 
 %-Action
 %--------------------------------------------------------------------------
@@ -501,8 +502,18 @@ switch lower(action)
             
             display_results_all;
             
-            % Don't allow plot functions for RGB maps
-            if H.n_surf > 1
+            H.SPM_found = 1;
+            for i = 1:2
+                SPM_name = fullfile(H.S{i}.info(1).pp, 'SPM.mat');
+                
+                % SPM.mat exist?
+                elseif ~isempty(H.S{i}.name)
+                    H.SPM_found = 0;
+                end
+            end
+
+            % Don't allow plot functions for RGB maps or if SPM.mat was not found
+            if H.n_surf > 1 & H.SPM_found
                 str = {'Data Cursor...', 'Disable data cursor', 'Atlas regions: Desikan-Killiany DK40', ...
                     'Atlas regions: Destrieux 2009', 'Atlas region: HCP Multi-Modal Parcellation', ...
                     'Enable/Disable rotate3d'};
@@ -2010,7 +2021,6 @@ switch H.cursor_mode
         set(dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', ...
             'DisplayStyle', 'datatip', 'Updatefcn', {@myDataCursorAtlas, H});
     case {4, 5}
-        fprintf('The values are available at the MATLAB command line as variable ''y''\n');
         figure(H.figure(1))
         try
             delete(findall(gca, 'Type', 'hggroup', 'HandleVisibility', 'off'));
@@ -2038,6 +2048,7 @@ switch H.cursor_mode
         if SPM_found
             set(dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', ...
                 'DisplayStyle', 'datatip', 'Updatefcn', {@myDataCursorCluster});
+            fprintf('The values are available at the MATLAB command line as variable ''y''\n');
         end
     case 6 % enable/disable rotate3d
         clearDataCursorPlot(H)

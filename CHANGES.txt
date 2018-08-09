@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1350 | gaser | 2018-08-07 11:55:48
+r1351 | gaser | 2018-08-09 14:08:37
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_batch_cat.m
+M       cat_main.m
+M       cat_surf_results.m
+A       check_pipeline.sh
+M       distribute_to_server.sh
+M       html/cat.html
+
+(1) Changed: Disable some data cursor functions in cat_surf_results.m if no 
+    SPM.mat file was found.
+(2) Fixed: Some graphical output in cat_main.m was not possible for running
+    cat from the shell command line with cat_batch_cat.sh.
+(3) Fixed: The flag redspmres was not yet considered in cat_batch_cat.m.
+------------------------------------------------------------------------
+r1350 | gaser | 2018-08-07 11:56:11 +0200 (Di, 07 Aug 2018) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +30,7 @@ M       html/cat.html
 (1) Fixed: In cat_roi_fun.m current directory is used if output directory 
     field is empty.
 (2) Fixed: New fields added that have to be considered in cat_batch_cat.m.
+
 ------------------------------------------------------------------------
 r1349 | dahnke | 2018-08-06 18:59:14 +0200 (Mo, 06 Aug 2018) | 12 lines
 
