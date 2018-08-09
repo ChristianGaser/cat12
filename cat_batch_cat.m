@@ -67,7 +67,7 @@ for i=1:size(tmp_fields,1)
 end
 
 % remove opts fields
-tmp_fields = char('ngaus','warpreg','biasreg','biasfwhm','samp','redspm');
+tmp_fields = char('ngaus','warpreg','biasreg','biasfwhm','samp','redspmres');
 for i=1:size(tmp_fields,1)
   try
     matlabbatch{1}.spm.tools.cat.estwrite.opts = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.opts,deblank(tmp_fields(i,:)));

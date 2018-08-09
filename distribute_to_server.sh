@@ -225,7 +225,7 @@ USAGE:
    -p   pattern to for search of already processed files that is prepended. 
    -u   user
 
-   Only one filename or pattern or disrectory using the -d flag is allowed. This can be either a single file or a pattern
+   Only one filename or pattern or directory using the -d flag is allowed. This can be either a single file or a pattern
    with wildcards to process multiple files or even a directory. For the latter case you also have to define a pattern that
    is used for the search for already processed files. 
 
