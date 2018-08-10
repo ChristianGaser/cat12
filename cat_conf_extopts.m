@@ -368,15 +368,40 @@ switch cat_get_defaults('extopts.restype')
   case 'fixed',  restype.val = {resfixed};
 end
 if ~expert
-  restype.values = {resbest resfixed};
+  if 1
+    restype        = cfg_menu;
+    restype.tag    = 'restypes';
+    restype.name   = 'Internal resampling for preprocessing';
+    restype.labels = {
+      'Fixed 1.0 mm'
+      'Fixed 0.8 mm'
+      'Best'
+    };
+    restype.values = {struct('fixed',[1.0 0.1]) ...
+                      struct('fixed',[0.8 0.1]) ...
+                      struct('best native', [0.5 0.1])};
+    restype.val    = {struct('fixed',[1.0 0.1])};
+    restype.help   = [regstr.help; { ...
+      'A fixed image resolution helps to improve data normalization and preprocessing time. To benefit by higher native resolutions choose the highres option "Fixed 0.8 mm". In case of even higher resolution and high signal-to-noise ratio the "Best native" option will process the data on the best native resolution. I.e. 0.4x0.7x1.0 mm will be interpolated to 0.4x0.4x0.4 mm. To avoid interpolation artifacts a tolerance range of 0.1 mm is used, i.e. a resolution of 0.95x1.01x1.08 mm will not be interpolated!  '
+      ''
+    }];
+  else
+    restype.values = {resbest resfixed};
+    restype.help   = {
+      'There are 2 major ways to control the internal spatial resolution "best" and "fixed". In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). ' % The minimum spatial resolution is 0.5mm. '
+      ''
+      'We commend to use "best" option to ensure optimal quality for preprocessing. ' 
+    }; 
+  end
 else
   restype.values = {resnative resbest resfixed};
-end
-restype.help   = {
-    'There are 3 major ways to control the internal spatial resolution ''native'', ''best'', and ''fixed''. In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). The minimum spatial resolution is 0.5mm. '
+  restype.help   = {
+    'There are 3 major ways to control the internal spatial resolution "native", "best", and "fixed". In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). ' % The minimum spatial resolution is 0.5mm. '
     ''
-    'We commend to use ''best'' option to ensure optimal quality for preprocessing. ' 
-}; 
+    'We commend to use "best" option to ensure optimal quality for preprocessing. ' 
+  }; 
+end
+
 
 
 %------------------------------------------------------------------------
