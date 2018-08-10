@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1351 | gaser | 2018-08-09 14:08:37
+r1352 | dahnke | 2018-08-10 18:12:12
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_stat_check_cov2.m
+M       kmeans3D.m
+
+(1) Fixed:      Corrected behavior in case of NaNs in kmeans3d.
+(2) Changed:    Modified default-user resolution GUI.  
+(3) Changed:    Added jpg-report output in cat_main for later 
+                use in cat_stat_check_cov2.
+(4) Changed:    Further development of cat_stat_check_cov2.
+
+------------------------------------------------------------------------
+r1351 | gaser | 2018-08-09 14:09:01 +0200 (Do, 09 Aug 2018) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -16,6 +31,7 @@ M       html/cat.html
 (2) Fixed: Some graphical output in cat_main.m was not possible for running
     cat from the shell command line with cat_batch_cat.sh.
 (3) Fixed: The flag redspmres was not yet considered in cat_batch_cat.m.
+
 ------------------------------------------------------------------------
 r1350 | gaser | 2018-08-07 11:56:11 +0200 (Di, 07 Aug 2018) | 12 lines
 

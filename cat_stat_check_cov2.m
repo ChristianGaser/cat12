@@ -35,15 +35,32 @@ function varargout = cat_stat_check_cov2(job)
   
   cat_io_cprintf('err','\nWARNING: cat_stat_check_cov2 is in an ealy development stage!\n\n')
   
+%  cscc           .. cat_stat_check_cov data structure as unique global variable
+%   .H            .. object/button handles
+%   .pos          .. position values for GUI objects/buttons    
+%   .YpY          .. covariance matrix 
+% * .mean_cov     .. mean covariance matrix 
+%   .files        .. CAT preprocessing files 
+%    .data        .. normalized input files of cat_stat_check_cov
+%                   (e.g. wmp1, thickness, curv, ...)
+%    .org         .. original files used for preprocessing
+%    .surf        .. surface files (thickness, mesh)
+%    .surfr       .. resampled files (thickness, mesh)
+%    .xml         .. XML data of CAT preprocessing
+%    .log         .. log-file of CAT preprocessing
+%    .pdf         .. pdf-file of CAT preprocessing (report figure) 
+%    .jpg         .. pdf-file of CAT preprocessing (report figure) 
+% 
+%
   global filename ... structure from spm_str_manip with grouped filenames
-         H        ... main structure with object/button handles
+         ... H        ... main structure with object/button handles
          pos      ... structure with position values for GUI objects/buttons
          YpY mean_cov         ... (sorted) covariance and mean covariance matrix
          mask1d mask2d                  ... masks for files on the trash list 
          trashlist trashhist trashhistf ... index list of subjects to remove and undo/redo list
          smask1d smask2d pmask1d pmask2d ...
          ind_sorted                     ... index lists 
-         QM                             ... Quality measures from xml_files
+         QM QM_names                    ... Quality measures from xml_files
          data_files org_files surf_files xml_files log_files pdf_files ...  different lists of filenames 
          data_array data_array_diff     ... slices of all subjects 
          img                            ... slice image(s) for GUI display
@@ -52,10 +69,11 @@ function varargout = cat_stat_check_cov2(job)
          mn_data mx_data                ... minimum/maximum value of the mesh
          V Vo                           ... volume header structures
          Vchanged names_changed         ... modified volume header for 4D-structures
-         sample                         ... sample groups of each scan
+         sample protocol protocols      ... sample groups of each scan
          dataprefix                     ... prefix of the input files
          inorm                          ... normalize slice intensity even in normalized data
-         X X2 MD MD2; 
+         n_samples  ...
+         figcolor; % X X2 MD MD2; 
           % cbar img_alpha
 
 
@@ -71,7 +89,7 @@ function varargout = cat_stat_check_cov2(job)
   ws            = spm('Winsize','Graphics');
   FS            = spm('FontSizes');
   FSi           = 8; 
-  useicons      = 0; 
+  useicons      = 1; 
   figcolor      = [0.8 0.8 0.8]; % color of the figure
 
   gpos = get(spm_figure('FindWin','Graphics'),'Position'); 
@@ -82,9 +100,10 @@ function varargout = cat_stat_check_cov2(job)
   pos = struct(...
     'fig',            [gpos(1) gpos(1) 1.4*ws(3) 1.2*ws(3)],... % figure
     'popup',          [10  10  200       100  ],... % popup in case of closing with non-empty trash list
-    ...'corr',           [-0.015 0.050 0.820 0.820],... % correlation matrix
+    ...
     'corr',           [0.045 0.050 0.700 0.820],... % correlation matrix
     'slice',          [0.780 0.060 0.190 0.450],... % image plot
+    'surfi',          [0.780 0.050 0.190 0.560],... % image plot
     'cbar',           [0.045 0.950 0.580 0.020],... % colorbar for correlation matrix
     'cbarfix',        [0.657 0.943 0.100 0.030],... % colorbar fix/auto option
     'showtrash',      [0.657 0.913 0.100 0.030],... % colorbar fix/auto option
@@ -97,8 +116,8 @@ function varargout = cat_stat_check_cov2(job)
     ...
     'sort',           [0.772 0.880 0.110 0.050],... % list to use ordered matrix or Maha-distance 
     'boxp',           [0.872 0.880 0.110 0.050],... % list to display different variables as boxplot
-    'samp',           [0.772 0.620 0.110 0.050],... % list to use ordered matrix or Maha-distance 
-    'prot',           [0.872 0.620 0.110 0.050],... % list to display different variables as boxplot
+    'samp',           [0.772 0.615 0.110 0.055],... % list to use ordered matrix or Maha-distance 
+    'prot',           [0.872 0.615 0.110 0.055],... % list to display different variables as boxplot
     ...
     'alphabox',       [0.775 -0.001 0.200 0.030],... % show filenames in boxplot 
     'sslider',        [0.780 0.030 0.193 0.040],... % slider for z-slice  
@@ -155,15 +174,16 @@ function varargout = cat_stat_check_cov2(job)
     data_files = [data_files;job.(datafield){i}];
   end
   % number of samples and scans, trash mask arrays, sample array
-  n_subjects = numel(data_files);
-  n_samples  = numel(job.(datafield));
-  mask1d     = true(n_subjects,1);           % trash list mask 1D matrix
-  mask2d     = true(n_subjects,n_subjects);  % trash list mask 2D matrix
-  smask1d    = mask1d;
-  smask2d    = mask2d;
-  pmask1d    = mask1d;
-  pmask2d    = mask2d;
-  sample     = [];
+  n_subjects  = numel(data_files);
+  n_samples   = numel(job.(datafield));
+  mask1d      = true(n_subjects,1);           % trash list mask 1D matrix
+  mask2d      = true(n_subjects,n_subjects);  % trash list mask 2D matrix
+  smask1d     = mask1d;
+  smask2d     = mask2d;
+  pmask1d     = mask1d;
+  pmask2d     = mask2d;
+  sample      = [];
+  protocol    = []; 
   for i=1:n_samples
     sample = [sample, i*ones(1,size(job.(datafield){i},1))];
   end
@@ -180,7 +200,20 @@ function varargout = cat_stat_check_cov2(job)
   xml_files  = data_files; 
   log_files  = data_files;
   surf_files = data_files;
-  dataprefix = fparts.s;
+  
+  % get real prefix
+  % - expect that all files have the same prefix
+  % - fparts.s is not enough if all file start similar, eg. mwp1ADNI_*.nii
+  [pp,ff,ee] = spm_fileparts(data_files{1});
+  [pp1,pp2]  = spm_fileparts(pp); 
+  orgfile    = cat_vol_findfiles(pp1,['*' cat_io_strrep(ff,fparts.s,'') '.nii'],struct('depth',1)); 
+  if isempty(orgfile)
+    orgfile  = cat_vol_findfiles(pp1,['*' cat_io_strrep(ff,fparts.s,'') '.img'],struct('depth',1)); 
+  end
+  [ppo,ffo,eeo] = spm_fileparts(orgfile{1});
+  dataprefix = ff(1:strfind(ff,ffo)-1);
+  
+  % find files
   for i = 1:numel(data_files)
     [pp,ff,ee] = spm_fileparts(data_files{i});
     [pp1,pp2]  = spm_fileparts(pp); 
@@ -197,10 +230,11 @@ function varargout = cat_stat_check_cov2(job)
       surfdir   = '';
     end
 
+    fname = cat_io_strrep(ff,dataprefix,'');
     % set original input files of the CAT preprocessing
-    org_files{i} = fullfile(pp1,[cat_io_strrep(ff,fparts.s,'') '.nii']); 
+    org_files{i} = fullfile(pp1,[fname '.nii']); 
     if ~exist(org_files{i},'file')
-      org_files{i} = fullfile(pp1,[cat_io_strrep(ff,fparts.s,'') '.img']);
+      org_files{i} = fullfile(pp1,[cat_io_strrep(ff,dataprefix,'') '.img']);
       if ~exist(org_files{i},'file')
         org_files{i} = ''; 
       end
@@ -209,8 +243,7 @@ function varargout = cat_stat_check_cov2(job)
     % try to find the XML file if not given
     if isempty( char(job.data_xml) ) 
       xml_files{i} = fullfile(pp1,reportdir,...
-        ['cat_' cat_io_strrep(ff,fparts.s,'') ...
-          cat_io_strrep(ee,{'.nii','.img','.gii'},'.xml')]);
+        ['cat_' fname cat_io_strrep(ee,{'.nii','.img','.gii'},'.xml')]);
       if ~exist(xml_files{i},'file')
         xml_files{i} = ''; 
       end
@@ -219,22 +252,20 @@ function varargout = cat_stat_check_cov2(job)
     end
 
     % set report pdf
-    pdf_files{i} = fullfile(pp1,reportdir,...
-      ['catreport_' cat_io_strrep(ff,fparts.s,'') '.pdf']); 
+    pdf_files{i} = fullfile(pp1,reportdir,['catreport_' fname '.pdf']); 
     if ~exist(pdf_files{i},'file')
       pdf_files{i} = ''; 
     end
 
     % log files
-    log_files{i} = fullfile(pp1,reportdir,...
-      ['catlog_' cat_io_strrep(ff,fparts.s,'') '.txt']);
+    log_files{i} = fullfile(pp1,reportdir,['catlog_' fname '.txt']);
     if ~exist(log_files{i},'file')
       log_files{i} = ''; 
     end
 
     % surface files
     surf_files{i} = fullfile(pp1,surfdir,...
-      ['lh.thickness.' cat_io_strrep(ff,fparts.s,'') ]);
+      ['lh.thickness.' fname ]);
     if ~exist(surf_files{i},'file')
       surf_files{i} = ''; 
     end
@@ -263,23 +294,18 @@ function varargout = cat_stat_check_cov2(job)
     if size(xml_files,1) ~= n_subjects
       error('XML-files must have the same number as sample size');
     end
-
-    if mesh_detected
-      QM = ones(n_subjects,5);
-      QM_names = char(...
-      'Noise rating (NCR)',...
-      'Bias Rating (ICR)',...
-      'Weighted overall image quality rating (IQR)',...
-      'Euler number',...
-      'Size of topology defects');
-    else
-      QM = ones(n_subjects,3);
-      QM_names = char(...
-      'Noise rating (NCR)',...
-      'Bias Rating (ICR)',...
-      'Weighted overall image quality rating (IQR)');
-    end
-
+   
+    QM = nan(n_subjects,4 + (cat_get_defaults('extopts.expertgui')>1) + 2*mesh_detected);
+    QM_names = {...
+      'Noise rating (NCR)';...
+      'Bias Rating (ICR)';...
+      'Resoution Rating (RES)';...
+      'Weighted overall image quality rating (IQR)';...
+      'Protocol IQR difference (IQRp)'; ...
+      'Euler number';...
+      'Size of topology defects'};
+    QM_names = QM_names(1:size(QM,2)); % remove Euler
+    
     spm_progress_bar('Init',n_subjects,'Load xml-files','subjects completed')
     for i=1:n_subjects
       % get basename for xml- and data files
@@ -290,59 +316,56 @@ function varargout = cat_stat_check_cov2(job)
       xml_name = xml_name(5:end);
 
       % check for filenames
-      if isempty(strfind(data_name,xml_name))
+      if isempty(strfind(data_name,xml_name)) && ~isempty(xml_name)
         fprintf('Please check file names because of deviating subject names:\n %s vs. %s\n',...
           V(i).fname,xml_files{i});
       end
 
       xml = cat_io_xml(deblank(xml_files{i}));
-      if mesh_detected
-        if isfield(xml.qualityratings,'NCR')
-        % check for newer available surface measures
-          if isfield(xml.subjectmeasures,'EC_abs')
-            QM(i,:)   = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR xml.subjectmeasures.EC_abs xml.subjectmeasures.defect_size];
-            site(i,1) = xml.qualityratings.res_RMS;
-          else
-            QM(i,:)   = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR NaN NaN];
-            site(i,1) = xml.QAM.res_RMS;
-          end
-        else % also try to use old version
-          QM(i,:) = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
-        end
+      if isfield(xml,'qualityratings')
+        QM(i,1:4)  = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.res_RMS xml.qualityratings.IQR];
+        RMS(i,1) = xml.qualityratings.res_RMS;
+      elseif isfield(xml,'QAM') % also try to use old version
+        QM(i,1:4)  = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.qualityratings.res_RMS xml.QAM.QM.res_RMS xml.QAM.QM.IQR];
+        RMS(i,1) = xml.QAM.res_RMS;
       else
-        if isfield(xml.qualityratings,'NCR')
-          QM(i,:)   = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR];
-          site(i,1) = xml.qualityratings.res_RMS;
-        else % also try to use old version
-          QM(i,:)   = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
-          site(i,1) = xml.QAM.res_RMS;
-        end
+        RMS(i,1) = nan; 
+      end
+      if cat_get_defaults('extopts.expertgui')>1
+        QM(i,5)  = nan;
+      end
+      if mesh_detected && isfield(xml.subjectmeasures,'EC_abs')
+        QM(i,end-1:end) = [xml.subjectmeasures.EC_abs xml.subjectmeasures.defect_size];
       end
       spm_progress_bar('Set',i);  
     end
     spm_progress_bar('Clear');
+    
+    % detect protocols by resolution
+    pacc = 2; % larger values to detect many protocols, small values to have less
+    RMS(isnan(RMS)) = 11; % avoid multiple NaN center
+    [protocols,tmp,protocol] = unique(round(RMS*10^pacc)/10^pacc); clear pid RMS
+    protocols(protocols==11) = 21; 
+    protocols = protocols/2; % average mm rather than rating
 
     % remove last two columns if EC_abs and defect_size are not defined
-    if mesh_detected && all(isnan(QM(:,4))) && all(isnan(QM(:,5)))
-      QM = QM(:,1:3);
+    if mesh_detected && all(all(isnan(QM(:,end-1:end))))
+      QM = QM(:,end-1:end);
     end
 
     % added protocol depending QA parameter
     if cat_get_defaults('extopts.expertgui')>1
-      [Pth,rth,sq,rths,rthsc,sqs] = cat_tst_qa_cleaner_intern(QM(:,3),struct('site',site,'figure',0));
-      QM_names = char([cellstr(QM_names);{'Protocol IQR difference (IQRD)'}]);
-      QM(:,4) = rth(:,3)   - QM(:,3);
-      %QM(:,5) = rthsc(:,3) - QM(:,3);
+      [Pth,rth,sq,rths,rthsc,sqs] = cat_tst_qa_cleaner_intern(QM(:,4),struct('site',{protocol},'figure',0));
+      QM_names = char([QM_names;{'Protocol IQR difference (PIQR)'}]);
+      QM(:,5) = rth(:,3) - QM(:,4);
     end
-
 
     % convert marks into rps rating
     mark2rps   = @(mark) min(100,max(0,105 - mark*10)) + isnan(mark).*mark;
     markd2rpsd = @(mark) ( mark*10) + isnan(mark).*mark;
-    QM(:,1:3)  = mark2rps(QM(:,1:3));
+    QM(:,1:4)  = mark2rps(QM(:,1:4));
     if cat_get_defaults('exptops.expertgui')>1
-      QM(:,4)    = markd2rpsd(QM(:,4));
-      %QM(:,5)    = markd2rpsd(QM(:,5));
+      QM(:,5)    = markd2rpsd(QM(:,5));
     end
   end
 
@@ -398,10 +421,6 @@ function varargout = cat_stat_check_cov2(job)
 
     %MSE = sum(Y.*Y,2);
   else
-    % voxelsize and origin
-    vx   = sqrt(sum(V(1).mat(1:3,1:3).^2));
-    Orig = V(1).mat\[0 0 0 1]';
-
     if length(V)>1 && any(any(diff(cat(1,V.dim),1,1),1))
       error('images don''t all have same dimensions')
     end
@@ -599,12 +618,26 @@ function varargout = cat_stat_check_cov2(job)
     end
   end
   
-  
-
-
   %% create figure
   %  ------------------------------------------------------------------------
+  if mesh_detected
+    create_figures(job)
+  else
+    create_figures(job,slices)
+  end
 
+ 
+return
+%-End
+%-----------------------------------------------------------------------
+function create_figures(job,slices)
+% -------------------------------------------------------------------------
+% create figure
+% -------------------------------------------------------------------------
+
+  global H X X2 S V pos isxml QM QM_names MD MD2 protocol protocols figcolor ...
+    FS FSi mesh_detected YpY mean_cov ind_sorted sample n_samples sorted
+  
   H.graphics = spm_figure('FindWin','Graphics');
   H.figure   = figure(2);
   set(H.figure,'MenuBar','none','Position',pos.fig,...
@@ -641,7 +674,7 @@ function varargout = cat_stat_check_cov2(job)
 
   % scatter plot 
   if isxml
-    H.scat = axes('Position',pos.corr,'Parent',H.figure, ...
+    H.scat(1) = axes('Position',pos.corr,'Parent',H.figure, ...
       'visible','off','Box','on','Color',[0.85 0.85 0.85]);
 
     if cat_get_defaults('extopts.expertgui')>1
@@ -672,14 +705,14 @@ function varargout = cat_stat_check_cov2(job)
   if isxml
 
     % estimate Mahalanobis distance between mean corr. and weighted overall quality
-    X  = [mean_cov, QM(:,3)]; % mean correlation and IQR
+    X  = [mean_cov, QM(:,4)]; X(isnan(X)) = 0;  % mean correlation and IQR
     S  = cov(X);
     mu = mean(X);
     MD = (X-repmat(mu,[length(X),1]))*inv(S)*(X-repmat(mu,[length(X),1]))'; 
     MD = diag(MD);
 
     if cat_get_defaults('extopts.expertgui')>1
-      X2  = [mean_cov, QM(:,4)]; 
+      X2  = [mean_cov, QM(:,5)]; X2(isnan(X2)) = 0; 
       S2  = cov(X2);
       mu2 = mean(X2);
       MD2 = (X2-repmat(mu2,[length(X2),1]))*inv(S2)*(X2-repmat(mu2,[length(X2),1]))';
@@ -687,31 +720,19 @@ function varargout = cat_stat_check_cov2(job)
     end  
 
     str  = { 'Boxplot...','Mean correlation',QM_names,'Mahalanobis distance'};
-    if size(QM,2) == 5
-      tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation  ', 1},...
-               {@show_mean_boxplot, QM(:,1), QM_names(1,:), -1},...
-               {@show_mean_boxplot, QM(:,2), QM_names(2,:), -1},...
-               {@show_mean_boxplot, QM(:,3), QM_names(3,:), -1},...
-               {@show_mean_boxplot, QM(:,4), QM_names(4,:), -1},...
-               {@show_mean_boxplot, QM(:,5), QM_names(5,:), -1},...
-               {@show_mean_boxplot, MD, 'Mahalanobis distance  ', -1} };
-    else
-      tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation  ', 1},...
-               {@show_mean_boxplot, QM(:,1), QM_names(1,:), -1},...
-               {@show_mean_boxplot, QM(:,2), QM_names(2,:), -1},...
-               {@show_mean_boxplot, QM(:,3), QM_names(3,:), -1},...
-               {@show_mean_boxplot, MD, 'Mahalanobis distance  ', -1} };
+    tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation  ', 1} }; 
+    for qmi = 1:size(QM,2)
+      tmp = [ tmp , { {@show_mean_boxplot, QM(:,qmi), QM_names(qmi,:), -1} }]; 
     end
-
-    if cat_get_defaults('extopts.expertgui')>1
-      tmp = [ tmp(1:4),...
-          {{@show_mean_boxplot, QM(:,4), QM_names(4,:), 1}},...
-          tmp(5:end),...
-          {{@show_mean_boxplot, MD2, 'Mahalanobis distance 2  ', -2}}];
-    end
+    tmp = [ tmp , { {@show_mean_boxplot, MD, 'Mahalanobis distance  ', -1} }];
   else
     str  = { 'Boxplot...','Mean correlation'};
     tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation  ', 1} };
+  end
+  if isxml && cat_get_defaults('extopts.expertgui')>1
+      str = char([cellstr(str),{'Mahalanobis distance IQRp'}]);
+      tmp = [ tmp , ...
+             {{@show_mean_boxplot, MD2, 'Mahalanobis distance (IQRp)  ',2}}];  
   end
   H.boxp = uicontrol(H.figure,...
     'Units','normalized','position',pos.boxp,'Style','PopUp','callback','spm(''PopUpCB'',gcbo)',...
@@ -724,11 +745,11 @@ function varargout = cat_stat_check_cov2(job)
              'Mean Correlation: Sorted by mean correlation','Mahalanobis distance'};
     tmp  = { {@show_matrix, YpY, 0},...
              {@show_matrix, YpY(ind_sorted,ind_sorted), 1},...
-             {@show_mahalanobis, X}};
+             {@show_mahalanobis, X, MD, 1}};
     if cat_get_defaults('extopts.expertgui')>1
       str = char([cellstr(str),{'Mahalanobis distance IQRp'}]);
       tmp = [ tmp , ...
-             {{@show_mahalanobis, X2, 2}}]; 
+             {{@show_mahalanobis, X2, MD2, 2}}]; 
     end
   else
     str  = { 'Correlation matrix...','Order by selected filename',...
@@ -743,11 +764,10 @@ function varargout = cat_stat_check_cov2(job)
 
   onoff = {'on','off'};
  
-if 1
   % choose only one sample for display
-  str  = { 'Sample..','all'};  tmp  = { {@show_sample, 0} }; 
+  str  = { 'Sample..',sprintf('full (%d)',numel(sample))};  tmp  = { {@show_sample, 0} }; 
   for i=1:n_samples, 
-    str = [str,sprintf('Sample %d',i)]; 
+    str = [str,sprintf('S%d (%d)',i,sum(sample==i))]; 
     tmp = [ tmp , {{@show_sample, i}} ]; 
   end
   H.samp = uicontrol(H.figure,...
@@ -755,16 +775,17 @@ if 1
     'callback','spm(''PopUpCB'',gcbo)','string',str,'ToolTipString','Sort matrix','FontSize',FS(FSi));
 
   % choose center 
-  n_protocols = 1; 
-  str  = { 'Protocol..','all'};  tmp  = { {@show_protocol, 0} }; 
-  for i=1:n_protocols, 
-    str = [str,sprintf('Protocol %d',i)]; 
+  %protocols   = 1:max(protocol); % only protocol ids
+  str  = { 'Protocol..',sprintf('all (%d)',numel(protocol))};  tmp  = { {@show_protocol, 0} }; 
+  for i=1:numel(protocols), 
+    %str = [str,sprintf('P%03d',protocols(i))]; % only protocol ids
+    str = [str,sprintf('P %5.2f (%d)',protocols(i),sum(protocol==i))]; 
     tmp = [ tmp , {{@show_protocol, i}} ]; 
   end
   H.prot = uicontrol(H.figure,...
-    'Units','normalized','position',pos.prot,'Style','PopUp','UserData',tmp,'enable',onoff{1 + (n_protocols==1)},...
+    'Units','normalized','position',pos.prot,'Style','PopUp','UserData',tmp,'enable',onoff{1 + (numel(protocols)==1)},...
     'callback','spm(''PopUpCB'',gcbo)','string',str,'ToolTipString','Sort matrix','FontSize',FS(FSi));
-end
+  
   
   H.alphabox = uicontrol(H.figure,...
     'Units','normalized','position',pos.alphabox,'Style','CheckBox','callback',@update_alpha,...
@@ -784,6 +805,10 @@ end
 
   % add slider only for volume data
   if ~mesh_detected
+    % voxelsize and origin
+    vx   = sqrt(sum(V(1).mat(1:3,1:3).^2));
+    Orig = V(1).mat\[0 0 0 1]';
+
     H.mm = uicontrol(H.figure,...
       'Units','normalized','position',pos.sslider,...
       ...'Min',(1 - Orig(3))*vx(3) ,'Max',(V(1).dim(3) - Orig(3))*vx(3),...
@@ -936,10 +961,33 @@ end
 
   set(H.figure,'Visible','on');  
   
+  buttonupdate
+ 
+  % redraw buttons
+  pause(0.2) % Wait for the figure construction complete.
+  warning off;  %#ok<WNOFF>
+  jFig = get(H.figure, 'JavaFrame'); % get JavaFrame. You might see some warnings.
+  warning on; %#ok<WNON>
+  jWindow = jFig.fHG2Client.getWindow; % before 2011a it could be `jFig.fFigureClient.getWindow`. Sorry I cannot test. 
+  jbh = handle(jWindow,'CallbackProperties'); % Prevent memory leak
+  set(jbh,'ComponentMovedCallback',{@(~,~)(buttonupdate)});
+  
+  % show plot
+  show_mean_boxplot(mean_cov,'Mean correlation  ',1);
+
+return
+
+function buttonupdate
+%-----------------------------------------------------------------------
+% This function print icons on buttons
+%-----------------------------------------------------------------------
+  global H
+
   % Update figure icons
   % close
   % help
   % check worst
+  
   
   % == navi buttons ==
   buttonicon(H.naviui.select    ,'DC'  ,fullfile(matlabroot,'toolbox','matlab','icons','tool_data_cursor.png'));
@@ -962,13 +1010,7 @@ end
   buttonicon(H.trashui.undo,'UNDO',fullfile(spm('dir'),'toolbox','cat12','html','icons','restore_24.png'));
   buttonicon(H.trashui.redo,'REDO',fullfile(spm('dir'),'toolbox','cat12','html','icons','Refresh_16.png'));
 
-  
-  % show plot
-  show_mean_boxplot(mean_cov,'Mean correlation  ',1);
-
 return
-%-End
-%-----------------------------------------------------------------------
 
 %-----------------------------------------------------------------------
 function buttonicon(h,str,Picon) 
@@ -1009,10 +1051,35 @@ function autotrash(obj, event_obj)
 %-----------------------------------------------------------------------
 % 
 %-----------------------------------------------------------------------
-  global H pos QM trashlist
+  global H pos QM trashlist  fc
 
-  fc = 1; 
+if 0
+  %%
+  global protocol rps2mark
   
+  %H.atfigure = figure;
+ % d = dialog('Position',pos.popup,'Name','Remove low IQR data');
+  %mark2rps   = @(mark) min(100,max(0,105 - mark*10)) + isnan(mark).*mark;
+
+  rps2mark   = @(rps)  min(10.5,max(0.5,10.5 - rps/10)) + isnan(rps).*rps;
+  
+  d = dialog('Position',pos.popup,'Name','Remove low IQR data');
+  uicontrol('Parent',d,'Style','text','Position',[20 60 160 20],...
+     'String','Set treshold (default = 0.72)');
+ 
+  H.atslider = uicontrol(d,...
+      'position',[20 20 160 20],...
+      'Min', 0.5,'Max', 2.0,'value',0.72,...
+      'Style','slider','HorizontalAlignment','center',...
+      'ToolTipString','Select slice for display',...
+      'callback','global fc QM rps2mark; fc = get(H.atslider,''value''); cat_tst_qa_cleaner( rps2mark(QM(:,3)),struct(''figure'',3,''cf'',fc));',...
+      'SliderStep',[0.01 0.05],'Visible','on');
+
+  [Pth,rth,sq,rths,rthsc,sqs] = cat_tst_qa_cleaner_intern( rps2mark(QM(:,3)) , ...
+    struct('site',{protocol},'figure',0,'fc',fc));
+end
+
+
   del  = setdiff(find(QM(:,4)<-0.04*fc)',trashlist);
   if ~isempty(del)
     if isfield(pos,'x'), oldx = pos.x; end
@@ -1029,6 +1096,8 @@ function autotrash(obj, event_obj)
     if exist('oldy','var'), pos.y = oldy; end
     
     set([H.trashui.new,H.trashui.disptrash,H.trashui.autotrash,H.trashui.ziptrash],'enable','on');
+  else
+    fprintf('Nothing to delete.\n');
   end
 return
 
@@ -1068,7 +1137,7 @@ function trash(obj, event_obj)
     mask2d(:,pos.x)  = 0;
     
     for scati=1:numel(H.scat)
-      scposx  = findobj(H.scat,'type','scatter'); 
+      scposx  = findobj(H.scat(scati),'type','scatter'); 
       scposxv = cell2mat(get(scposx,'UserData'));
       scposxi = find(scposxv==pos.x,1,'first');
 
@@ -1129,21 +1198,21 @@ function detrash(obj, event_obj)
 % Mahalanobis plot.
 %-----------------------------------------------------------------------
   global H pos trashlist trashhist mask1d mask2d isscatter
-
+ 
   if isfield(pos,'x') && any( trashlist==pos.x ) 
     if exist('obj','var')
       trashlist = setdiff(trashlist,pos.x);
       trashhist = [trashhist -pos.x];
-      
+
       set(H.trashui.trash  ,'Enable','on' );
       set(H.trashui.detrash,'Enable','off');
     end
-    
+
     % update matrix
     mask1d(pos.x)    = 1;
     mask2d(pos.x,:)  = sum(mask2d,1)>0;
     mask2d(:,pos.x)  = sum(mask2d,2)>0;
-    
+
     % update scatter
     for scati=1:numel(H.scat)
       scposx  = findobj(H.scat(scati),'type','scatter'); 
@@ -1153,7 +1222,7 @@ function detrash(obj, event_obj)
       set(scposx(scposxi),'marker',get(scposx(scposxi),'sizedatasource'),... 
         'ZDataSource','','MarkerEdgeColor','flat','MarkerFaceAlpha',1/3);
     end
-    
+
     if ~isscatter 
       update_matrix;
       if isempty(trashlist), set(H.showtrash,'Enable','off'); end
@@ -1461,17 +1530,45 @@ function closeWindows(obj, event_obj)
 return
 
 %-----------------------------------------------------------------------
+function id = mygetCursorInfo
+%-----------------------------------------------------------------------
+%-----------------------------------------------------------------------
+  global H pos isscatter
+
+  curs = H.dcm.getCursorInfo;
+  
+  if isscatter
+    sc = unique([curs(:).Target]);
+    id = get(sc,'UserData')'; 
+    if iscell(id), id = cell2mat(id); end
+  else
+    id = unique([pos.x, pos.y]);
+    %{
+    pos  = reshape([curs(:).Position],numel(curs),2);   
+    posx = unique(pos(:,1));
+    posy = unique(pos(:,2));
+  
+    if sorted
+      
+    else
+      
+    end
+    %}
+  end
+  
+return
+
+%-----------------------------------------------------------------------
 function checkpdf(obj, event_obj)
 %-----------------------------------------------------------------------
 % Open PDF report of selected subjects. 
 % This is only possible for using an extern viewer. 
 % Hence, it would be useful to save a JPG or HTML file in cat_main.
 %-----------------------------------------------------------------------
-  global pos pdf_files isscatter
-  open(pdf_files{pos.x});
-  if ~isscatter
-    open(pdf_files{pos.y});
-  end
+  global pdf_files 
+  
+  id = mygetCursorInfo;
+  for i=1:numel(id), open(pdf_files{id(i)}); end
 return
 
 %-----------------------------------------------------------------------
@@ -1485,7 +1582,7 @@ function checksurf(obj, event_obj)
   if isscatter
     cat_surf_display(struct('data',surf_files{pos.x},'multisurf',1));
   else
-    cat_surf_display(struct('data',char(surf_files([pos.x,pos.y])),'multisurf',1));
+    cat_surf_display(struct('data',char(surf_files(unique([pos.x,pos.y]))),'multisurf',1));
   end
   
   % give some feedback
@@ -1504,24 +1601,40 @@ function checkvol(obj, event_obj)
   spm_orthviews('Reset')
   gax = gca; set(gax,'Position',[0 0 1 1]); axis off;
   
-  if isscatter
-    ppos = [0.02 0.01 0.96 0.98];
-    tpos = [0.50 0.98 0.96 0.02];
+  xeqy = pos.x == pos.y; 
+  
+  multi = 1; 
+  if isscatter 
+    if multi
+      id = mygetCursorInfo';
+      
+      spm_check_registration(char(unique(org_files(id))));
+      
+      spm_orthviews('MaxBB')
+    else
+      ppos = [0.02 0.01 0.96 0.98];
+      tpos = [0.50 0.98 0.96 0.02];
+    end
   else
-    % spm_check_registration(char(org_files([pos.x,pos.y])));
-    ppos = [0.02 0.545 0.96 0.48 ; 0.02 0.010 0.96 0.48];
-    tpos = [0.50 0.980 0.96 0.02 ; 0.50 0.475 0.96 0.02];
+    if xeqy
+      ppos = [0.02 0.01 0.96 0.98];
+      tpos = [0.50 0.98 0.96 0.02];
+    else
+      ppos = [0.02 0.545 0.96 0.48 ; 0.02 0.010 0.96 0.48];
+      tpos = [0.50 0.980 0.96 0.02 ; 0.50 0.475 0.96 0.02];
+    end
   end
   
-  text(gax,tpos(1,1),tpos(1,2),spm_str_manip(org_files{pos.x},'k100'),...
-    'FontSize',FS(FSi+1),'Color',[0 0 0.8],'LineStyle','none',...
-    'HorizontalAlignment','center');
-  
-  hi1 = spm_orthviews('Image',spm_vol(org_files{pos.x}),ppos(1,:)); 
-  spm_orthviews('AddContext',hi1);
+  if ~isscatter || ~multi || xeqy
+    text(gax,tpos(1,1),tpos(1,2),spm_str_manip(org_files{pos.x},'k100'),...
+      'FontSize',FS(FSi+1),'Color',[0 0 0.8],'LineStyle','none',...
+      'HorizontalAlignment','center');
 
+    hi1 = spm_orthviews('Image',spm_vol(org_files{pos.x}),ppos(1,:)); 
+    spm_orthviews('AddContext',hi1);
+  end
   
-  if ~isscatter  
+  if ~isscatter && ~xeqy
     text(gax,tpos(1,1),tpos(2,2),spm_str_manip(org_files{pos.y},'k100'),...
       'FontSize',FS(FSi+1),'Color',[0 0 0.8],'LineStyle','none',...
       'HorizontalAlignment','center');
@@ -1541,12 +1654,14 @@ function checkxml(obj, event_obj)
 % specific informations similar to the CAT report in cat_main. 
 %-----------------------------------------------------------------------
   global H pos xml_files isscatter
+
+  % visdiff(xml_files{pos.x}, xml_files{pos.y},'text')  
   
   spm_figure('Clear',H.graphics); 
   spm_figure('Focus',H.graphics);
   axis off;
   
-  if isscatter
+  if isscatter || (pos.x == pos.y)
     textbox = [0 0 1 1];
     files   = xml_files(pos.x); 
   else
@@ -1554,22 +1669,34 @@ function checkxml(obj, event_obj)
     files   = xml_files([pos.y,pos.x]); 
   end
   
+  % avoid some long useless text passages
+  badtacks = {'software>','catlog>','atlas>','LAB>'};
+  badmode = 0; bdid = badtacks;
   for fi=1:numel(files);
     fid = fopen(files{fi});
     ph  = uipanel(H.graphics,'Units','normalized','position',textbox(fi,:), ...
-      'BorderWidth',0,'title',spm_str_manip(files{fi},'k100'),'ForegroundColor',[0 0 0.8]);
+      'BorderWidth',0,'title',[spm_str_manip(files{fi},'k100') ' (extract)'],'ForegroundColor',[0 0 0.8]);
     lbh = uicontrol(ph,'style','listbox','Units','normalized',...
       'fontname','Fixedwidth','position',[ 0 0 1 1 ],'FontSize',9);
     indic = 1;
+    indit = 1; 
     while 1
      tline = fgetl(fid);
      if ~ischar(tline), 
        break
      end
-     strings{indic}=tline; 
+     for bi = 1:numel(badtacks), bdid{bi} = strfind(tline,badtacks{bi}); end
+     if any(~cellfun('isempty',bdid))
+       badmode = ~badmode; 
+     end
+     if ~badmode
+       strings{indit}=tline; 
+       indit = indit + 1;
+     end
      indic = indic + 1;
     end
     fclose(fid);
+    
     set(lbh,'string',strings);
     set(lbh,'Value',1);
     set(lbh,'Selected','on');
@@ -1579,19 +1706,105 @@ return
 %-----------------------------------------------------------------------
 function show_sample(obj,event_obj)
 %-----------------------------------------------------------------------
-  global sample smask1d smask2d isscatter
+  global H sample pmask1d smask1d smask2d isscatter
   
+  % set entry of the GUI element
   if obj>0
+    set(H.samp,'Value',obj+2);
     smask1d(:) = sample==obj; 
   else
+    set(H.samp,'Value',1); 
     smask1d(:) = true(size(smask1d)); 
   end
   
   smask2d = (single(smask1d) * single(smask1d'))>0; 
   
-  if ~isscatter
+  groups        = unique(sample);
+  symbols       = repmat('.',1:numel(groups));  % default symbol
+  symbols(1:11) = 'o+^v<>ph*sd'; 
+  
+  % update scatter
+  if isscatter
+    if obj>0
+      for scati=1:numel(H.scat)
+        scpos  = [
+          findobj(H.scat(scati),'type','scatter','marker',symbols(obj)); 
+          findobj(H.scat(scati),'type','scatter','sizedatasource',symbols(obj))];
+        scpos  = setdiff(scpos,H.sclegend);
+        set(scpos,'Visible','on');
+        scposn = setdiff(findobj(H.scat(scati),'type','scatter'),scpos);
+        set(scposn,'Visible','off');
+      end
+    else
+      for scati=1:numel(H.scat)
+        set( setdiff( findobj(H.scat(scati),'type','scatter') , H.sclegend ),'Visible','on');
+      end
+    end
+    for linei=1:numel(H.corrline)
+      try
+        indxy = get(H.corrline(linei),'UserData');
+        if any(find(smask1d) == indxy(1)) && any(find(pmask1d) == indxy(1)) && ...
+           any(find(smask1d) == indxy(2)) && any(find(pmask1d) == indxy(2))
+          set(H.corrline(linei),'Visible','on');
+        else
+          set(H.corrline(linei),'Visible','off');
+        end
+      end
+    end
+  else
     update_matrix
   end
+  
+  H.dcm.removeAllDataCursors
+return
+
+%-----------------------------------------------------------------------
+function show_protocol(obj,event_obj)
+%-----------------------------------------------------------------------
+  global H protocol pmask1d smask1d pmask2d isscatter protocols
+  
+  % set GUI element entry
+  if obj>0
+    set(H.prot,'Value',obj+2);
+    pmask1d(:) = protocol==obj; 
+  else
+    set(H.prot,'Value',1);
+    pmask1d(:) = true(size(pmask1d)); 
+  end
+  
+  pmask2d = (single(pmask1d) * single(pmask1d'))>0; 
+  
+  % update scatter
+  if isscatter
+    if obj>0
+      for scati=1:numel(H.scat)
+        scpos  = findobj(H.scat(scati),'type','scatter','ZDataSource',num2str(obj,'%d')); 
+        scpos  = setdiff(scpos,H.sclegend);
+        set(scpos,'Visible','on');
+        scposn = setdiff(findobj(H.scat(scati),'type','scatter'),scpos);
+        set(scposn,'Visible','off');
+      end
+    else
+      for scati=1:numel(H.scat)
+        set( setdiff( findobj(H.scat(scati),'type','scatter') , H.sclegend ),'Visible','on');
+      end
+    end
+    for linei=1:numel(H.corrline)
+      try % deletet object > cleanup H?
+        indxy = get(H.corrline(linei),'UserData');
+        if any(find(pmask1d) == indxy(1)) && any(find(smask1d) == indxy(1)) && ...
+           any(find(pmask1d) == indxy(2)) && any(find(smask1d) == indxy(2))
+          set(H.corrline(linei),'Visible','on');
+        else
+          set(H.corrline(linei),'Visible','off');
+        end
+      end
+    end
+  else
+    update_matrix
+  end
+  
+  H.dcm.removeAllDataCursors
 return
 
 %-----------------------------------------------------------------------
@@ -1606,7 +1819,7 @@ function checklog(obj, event_obj)
   spm_figure('Focus',H.graphics);
   axis off;
   
-  if isscatter
+  if isscatter || (pos.x == pos.y)
     textbox = [0 0 1 1];
     files   = log_files(pos.x); 
   else
@@ -1648,7 +1861,7 @@ return
 function checkbox_showtrash(obj, event_obj)
 %-----------------------------------------------------------------------
   global oldx oldy 
-  global H pos trashlist YpY isscatter
+  global H pos isscatter %trashlist YpY
 
   showtrash = get(H.showtrash,'Value');
   
@@ -1682,14 +1895,21 @@ return
 %-----------------------------------------------------------------------
 function checkbox_cbarfix(obj, event_obj)
 %-----------------------------------------------------------------------
-  update_matrix;
+  global isscatter
+  
+  if isscatter
+    % do something
+  else
+    update_matrix;
+  end
+  
 return  
 
 %-----------------------------------------------------------------------
-function show_mahalanobis(X,scata)
+function show_mahalanobis(X,MD,scata)
 %-----------------------------------------------------------------------
-  global H FS FSi pos isscatter  MD sample trashlist YpY mesh_detected 
-
+  global H FS FSi pos isscatter sample trashlist YpY mesh_detected  protocol
+  
   if ~exist('scata','var')
     if isfield(H,'scata')
       scata = H.scata; 
@@ -1700,6 +1920,7 @@ function show_mahalanobis(X,scata)
     H.scata = scata;
   end
   axis(H.scat(H.scata));
+  %set(H.scat(H.scata),'
 
   % clear larger area and set background color to update labels and title
   if ~isscatter
@@ -1757,7 +1978,7 @@ function show_mahalanobis(X,scata)
     end
     txt{end+1} = 'trashlist';
     H.sclegend(gi+1) = scatter(H.scat(H.scata),Xt(1,1),Xt(1,2),30,[1 0 0],'x','Linewidth',2,'Visible','off');
-    if numel(indx)/size(YpY,1)<0.5
+    if numel(indx)/size(YpY,1)<0.5 && numel(indx)>0
       txt{end+1}   = 'highly corr. scans'; 
       H.sclegend(gi+2) = plot(H.scat(H.scata),[X(indx(1),1);X(indy(1),1)],[X(indx(1),2);X(indy(1),2)],'Color',[0 0 0],'Linewidth',2);
     end
@@ -1769,28 +1990,32 @@ function show_mahalanobis(X,scata)
 
     
     %%
-    S  = cov(X);
-    mu = mean(X);
-    MD = (X-repmat(mu,[length(X),1]))*inv(S)*(X-repmat(mu,[length(X),1]))';
-    MD = diag(MD);
+    %X(isnan(X)) = 0;  
+    %S  = cov(X); 
+   % mu = mean(X);
+   % MD = (X-repmat(mu,[size(X,1),1]))*inv(S)*(X-repmat(mu,[numel(X),1]))';
+   % MD = diag(MD);
    
     % because we use a splitted colormap we have to set the color values explicitely
-    MD2  = 64*MD/(round(max(MD)/6)*6);
-    C    = zeros(length(MD),3);
+    MDs  = min(63,max(0,64*MD/10)); %(round(max(MD)/6)*6);
+    C    = zeros(numel(MD),3);
     cmap = [jet(64); gray(64)];
-    for i=1:length(MD)
-      C(i,:) = cmap(round(MD2(i))+1,:);
+    for i=1:numel(MD)
+      C(i,:) = cmap(round( MDs(i) )+1,:);
     end
 
     hold(H.scat(H.scata),'on')
 
     % plot lines between similar objects
-    if numel(indx)/size(YpY,1)<0.5
+    if numel(indx)/size(YpY,1)<0.5 && numel(indx)
       for i=1:numel(indx)
-        plot(H.scat(H.scata),[X(indx(i),1);X(indy(i),1)],[X(indx(i),2);X(indy(i),2)],...
+        H.corrline(i) = plot(H.scat(H.scata),[X(indx(i),1);X(indy(i),1)],[X(indx(i),2);X(indy(i),2)],...
           '-','Color',repmat(0.9 - 0.9*((YpY_tmp(indx(i),indy(i))-0.925)/0.0725),1,3),...
           'LineWidth',2,'HitTest','off','Interruptible','off');
+        set(H.corrline(i),'UserData',[indx(i) indy(i)]);
       end
+    else
+      H.corrline = struct(); 
     end
 
     % plot data entries
@@ -1799,6 +2024,7 @@ function show_mahalanobis(X,scata)
       It = I(sample==groups(gi)); 
       Xt = X(sample==groups(gi),:); 
       Ct = C(sample==groups(gi),:);
+      Pt = protocol(sample==groups(gi),:);
       H.sc{scata} = cell(size(Xt,1),1);
       for sci=1:size(Xt,1)
         H.sc{scata}{gi}{sci} = scatter( H.scat(H.scata), ...
@@ -1807,6 +2033,7 @@ function show_mahalanobis(X,scata)
           30,...
           Ct(sci,:),...
           symbols(gi), ...
+          'ZDataSource',num2str(Pt(sci),'%d'),...
           'UserData',It(sci),...
           'Linewidth',2);
         if ~isempty( strfind('osd^v<>ph', symbols(gi) ) )
@@ -1831,7 +2058,7 @@ function show_mahalanobis(X,scata)
   % update colorbar 
   cticks = 7;
   mn     = 0; 
-  mx     = round(max(MD)/6)*6;
+  mx     = 10; %round(max(MD)/6)*6;
   ticks  = linspace(mn,mx,cticks);
   set(H.cbar,'XTick',1:63/(numel(ticks)-1):64,'XTickLabel',cellstr(num2str(ticks','%0.2f'))); %round(100*linspace(min(YpYt(:)),max(YpYt(:)),5))/100);
   %caxis(H.scat(H.scata),[mn mx])
@@ -1942,7 +2169,7 @@ function update_matrix(data, order)
   set(H.cbar,'XTick',1:63/(numel(ticks)-1):64,'XTickLabel',cellstr(num2str(ticks','%0.2f'))); %round(100*linspace(min(YpYt(:)),max(YpYt(:)),5))/100);
 
   % update axis limits
-  if 0 & ~isscatter
+  if 0 && ~isscatter
     if showtrash
       mylim = 0.5 + [0 size(YpY,1)]; 
     else
@@ -1963,7 +2190,7 @@ function show_matrix(data, order)
 %-----------------------------------------------------------------------
 %-----------------------------------------------------------------------
   global H FS FSi pos sorted isscatter %mesh_detected 
-
+ 
   set([H.corr,get(H.corr,'children')],'visible','on','HitTest','on','Interruptible','on');
   set(findobj('type','Legend'),'visible','off','HitTest','off','Interruptible','off');
   try
@@ -2019,10 +2246,17 @@ function show_matrix(data, order)
 return
 
 %-----------------------------------------------------------------------
-function show_mean_boxplot(data_boxp, name_boxp, quality_order)
+function show_mean_boxplot(data_boxp, name_boxp, quality_order, obj)
 %-----------------------------------------------------------------------
   global H pos filename FS FSi sample bp mask1d show_name
 
+  if 0
+    % set GUI element
+    mid = strfind( spm_str_manip(cellstr(get(H.boxp,'string')),'d'),cellstr(name_boxp));
+    mid = find(cellfun('isempty',mid)==0,1,'first');
+    set(H.boxp,'Value',mid);
+  end
+  
   if nargin == 0
     data_boxp     = bp.data;
     name_boxp     = bp.name;
@@ -2146,7 +2380,7 @@ return
 function update_alpha(obj, event_obj)
 %-----------------------------------------------------------------------
 %-----------------------------------------------------------------------
-  global H pos mesh_detected img img_alpha isscatter
+  global H pos img img_alpha isscatter %mesh_detected
 
   alphaval = get(H.alphabox,'Value');
 
@@ -2180,9 +2414,6 @@ function update_slices_array(obj, event_obj)
   global V Vchanged data_array data_array_diff H pos dataprefix inorm ...
     sorted ind_sorted isscatter names_changed img_alpha img
 
-  alphaval = get(H.alphabox,'Value');
-
-
   if isfield(H,'mm')
     slice_mm = get(H.mm,'Value');
   else
@@ -2208,23 +2439,24 @@ function update_slices_array(obj, event_obj)
   M  = spm_matrix([0 0 sl]);
   data_array_diff = data_array;
 
-  img = spm_slice_vol(P(round(length(V))),M,P(1).dim(1:2),[1 0]);
-  imgscale = mean(img(img ~= 0)); % scale image according to mean
-
+  %%
   for i = 1:length(V)
     img = spm_slice_vol(P(i),M,P(1).dim(1:2),[1 0]);
     img(isnan(img)) = 0;
 
     % rescue unscaled data
     data_array_diff(:,:,i) = img;
-
-    % scale image according to mean
-    if inorm==0 && ~isempty(strfind(dataprefix,'wp'))
-      data_array(:,:,i) = img/0.4;
+  
+    if inorm %&& ~isempty(strfind(dataprefix,'wp'))
+      imgscale = median(img(img ~= 0));
+      data_array(:,:,i) = img/imgscale;
     else
-      data_array(:,:,i) = img/imgscale; 
+      data_array(:,:,i) = img;
     end
   end
+  %%
+  imgscale = median(data_array(data_array ~= 0)); % scale image according to mean
+  data_array = data_array / imgscale * 0.3;
 
   % calculate individual difference to mean image
   for i=1:size(data_array_diff,3)
@@ -2232,9 +2464,9 @@ function update_slices_array(obj, event_obj)
   end
 
   % enhance contrast and scale image to 0..64
-  mn = min(data_array(:));
-  mx = max(data_array(:));
-  data_array = 64*((data_array - mn)/(mx-mn));
+  %mn = min(data_array(:));
+  %mx = max(data_array(:));
+  data_array = min(64,max(1,63 * data_array + 1));
 
   if sorted
     if isfield(pos,'x')
@@ -2290,7 +2522,17 @@ function txt = myupdatefcn(obj, event_obj)
   
   pos.pos_mouse = get(event_obj, 'Position');
   pos.tar_mouse = get(event_obj, 'Target');
-
+  
+  % Limit the number of datatips:
+  % Although it is posible or maybe use to mark multiple objects for
+  % comparision of volumes, surfaces and PDFs, the other check cases 
+  % XML and LOG-files are worse to handle. 
+  % Furthermore, it is elaboritiv to suport all trashlist operations.
+  dcmlim = 0; % + 6*isscatter; % up to 6 plot objects?
+  dcm = findall(gcf,'Type','hggroup','selected','off'); 
+  if numel(dcm)>dcmlim, delete(dcm(dcmlim+1:end)); end
+  set(findall(gcf,'Type','hggroup'),'Visible','on')
+  
   if isscatter
     pos.x = find(X(:,1) == pos.pos_mouse(1));
     if isempty(pos.x)
@@ -2305,10 +2547,14 @@ function txt = myupdatefcn(obj, event_obj)
     x = pos.x;
 
   else % covariance matrix
-
     % check for valid mouse position
     if pos.pos_mouse(1) > pos.pos_mouse(2) || pos.pos_mouse(1)>length(sample) || pos.pos_mouse(2)>length(sample)
-      txt = {''};
+      %txt = {''}; 
+      set([H.slice,H.mm,H.mm_txt,H.alphabox],'Visible','off');
+      set(get(H.slice,'children'),'Visible','off');
+      unit = struct2cell(H.checkui); set([unit{cellfun(@ishandle,unit)}],'Enable','off'); 
+      set([H.trashui.trash,H.trashui.detrash,H.trashui.trashrow,H.trashui.detrashrow],'Enable','off');
+      set(findall(gcf,'Type','hggroup'),'Visible','off')
       return
     end
 
@@ -2338,7 +2584,7 @@ function txt = myupdatefcn(obj, event_obj)
       txt = {
         sprintf('Correlation: %3.3f',YpY(x,y)),...
         sprintf('Left:  S%d:%s',sample(x),filename.m{x}),...
-        spirntf('Right: S%d:%s',sample(y),filename.m{y})};
+        sprintf('Right: S%d:%s',sample(y),filename.m{y})};
     else
       txt = {
         sprintf('Correlation:  %3.3f',YpY(x,y)), ...
@@ -2358,11 +2604,11 @@ function txt = myupdatefcn(obj, event_obj)
     set(H.checkui.log ,'Enable',onoff{ isempty(log_files{pos.x})+1  });
     set(H.checkui.pdf ,'Enable',onoff{ isempty(pdf_files{pos.x})+1  });
   else
-    set(H.checkui.vol ,'Enable',onoff{ (isempty(org_files{pos.x}) | isempty(org_files{pos.y}))  + 1 });
-    set(H.checkui.surf,'Enable',onoff{ (isempty(org_files{pos.x}) | isempty(surf_files{pos.y})) + 1 });
-    set(H.checkui.xml ,'Enable',onoff{ (isempty(xml_files{pos.x}) | isempty(xml_files{pos.y}))  + 1 });
-    set(H.checkui.log ,'Enable',onoff{ (isempty(log_files{pos.x}) | isempty(log_files{pos.y}))  + 1 });
-    set(H.checkui.pdf ,'Enable',onoff{ (isempty(pdf_files{pos.x}) | isempty(pdf_files{pos.y}))  + 1 });
+    set(H.checkui.vol ,'Enable',onoff{ (isempty(org_files{pos.x})  | isempty(org_files{pos.y}))  + 1 });
+    set(H.checkui.surf,'Enable',onoff{ (isempty(surf_files{pos.x}) | isempty(surf_files{pos.y})) + 1 });
+    set(H.checkui.xml ,'Enable',onoff{ (isempty(xml_files{pos.x})  | isempty(xml_files{pos.y}))  + 1 });
+    set(H.checkui.log ,'Enable',onoff{ (isempty(log_files{pos.x})  | isempty(log_files{pos.y}))  + 1 });
+    set(H.checkui.pdf ,'Enable',onoff{ (isempty(pdf_files{pos.x})  | isempty(pdf_files{pos.y}))  + 1 });
   end
 
   % == trash list unit ==
@@ -2400,14 +2646,22 @@ function txt = myupdatefcn(obj, event_obj)
   if mesh_detected 
     % use indexed 2D-sheet to display surface data as image
     % check surface size to use indexed 2D map
-    if (length(data_array(:,x)) == 163842)
-      ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','fsavg.index2D_256x128.txt'));
+    if (length(data_array(:,x)) == 163842) || (length(data_array(:,x)) == 32492)
+      % combined surface 
+      
+      if (length(data_array(:,x)) == 163842) 
+        ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','fsavg.index2D_256x128.txt'));
+      else
+        ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','fsavg.index2D_256x128.txt'));
+      end
+      
       if isscatter
         img = reshape(data_array(ind,x),[256,128]);
       else
         img = [reshape(data_array(ind,x),[256,128]) reshape(data_array(ind,y),[256,128])];
       end
       img = circshift(img,128);
+      
       % alpha overlay
       if isscatter
         img_alpha = reshape(data_array_diff(ind,x),[256,128]);
@@ -2415,75 +2669,74 @@ function txt = myupdatefcn(obj, event_obj)
         img_alpha = [reshape(data_array_diff(ind,x),[256,128]) reshape(data_array_diff(ind,y),[256,128])];
       end
       img_alpha = circshift(img_alpha,128);
-    elseif (length(data_array(:,x)) == 327684)
-      ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','fsavg.index2D_256x128.txt'));
-      data_array_x_lh = data_array(1:163842,x);
-      data_array_x_rh = data_array(163843:end,x);
-      if isscatter
-        img_lh = reshape(data_array_x_lh(ind),[256,128]);
-        img_rh = reshape(data_array_x_rh(ind),[256,128]);
+  
+        
+    elseif (length(data_array(:,x)) == 327684) || (length(data_array(:,x)) == 64984)
+      is32k = length(data_array(:,x)) == 64984;
+      if is32k
+        atlasdir = 'atlases_surfaces_32k';
+        tmpdir   = 'templates_surfaces_32k';
       else
-        data_array_y_lh = data_array(1:163842,y);
-        data_array_y_rh = data_array(163843:end,y);
-        img_lh = [reshape(data_array_x_lh(ind),[256,128]) reshape(data_array_y_lh(ind),[256,128])];
-        img_rh = [reshape(data_array_x_rh(ind),[256,128]) reshape(data_array_y_rh(ind),[256,128])];
+        atlasdir = 'atlases_surfaces';
+        tmpdir   = 'templates_surfaces'; 
       end
-      img = [circshift(img_lh,128); img_rh];
-      % alpha overlay
-      data_array_x_lh = data_array_diff(1:163842,x);
-      data_array_x_rh = data_array_diff(163843:end,x);
+      lrb = [size(data_array,1)/2,size(data_array,1)/2+1];
+      lab = fullfile(spm('dir'),'toolbox','cat12',atlasdir,'lh.aparc_DK40.freesurfer.annot'); 
+      ind = spm_load(fullfile(spm('dir'),'toolbox','cat12',tmpdir,'fsavg.index2D_256x128.txt'));
+      
+      %% average both atlas maps to keep it simpler
+      [vr{1},lb{1},tb{1}] = cat_io_FreeSurfer('read_annotation',lab);
+      [vr{2},lb{2},tb{2}] = cat_io_FreeSurfer('read_annotation',strrep(lab,'lh.','rh.'));
+      atlas_lh = circshift(reshape(lb{1}(ind),[256,128]),64)';
+      atlas_rh = circshift(reshape(lb{2}(ind),[256,128]),64)';
+      atlas    = cat_vol_median3(single(cat(3,atlas_lh,atlas_rh))); 
+      [gx,gy]  = gradient(atlas(:,:,1)); 
+      atlasmsk = single(((abs(gx) + abs(gy))./atlas(:,:,1))<0.05); 
+      atlasmsk(atlasmsk==0) = nan; 
+      atlasmsk = flipud(atlasmsk); 
+      
+      %% load data array entry
+      data_array_x_lh = data_array(1:lrb(2),x);
+      data_array_x_rh = data_array(lrb(2):end,x);
+      if ~isscatter
+        data_array_y_lh = data_array(1:lrb(1),y);
+        data_array_y_rh = data_array(lrb(2):end,y);
+      end
+         
+      % rotate the image (') and shift it (64) to have a posterior cutting edge 
+      img_x_lh = flipud(circshift(reshape(data_array_x_lh(ind),[256,128]),64)');
+      img_x_rh = flipud(circshift(reshape(data_array_x_rh(ind),[256,128]),64)');
+      if ~isscatter
+        img_y_lh = flipud(circshift(reshape(data_array_y_lh(ind),[256,128]),64)');
+        img_y_rh = flipud(circshift(reshape(data_array_y_rh(ind),[256,128]),64)');
+      end
       if isscatter
-        img_lh = reshape(data_array_x_lh(ind),[256,128]);
-        img_rh = reshape(data_array_x_rh(ind),[256,128]);
+        img = [img_x_lh .* atlasmsk; img_x_rh .* atlasmsk];
       else
-        data_array_y_lh = data_array_diff(1:163842,y);
-        data_array_y_rh = data_array_diff(163843:end,y);
-        img_lh = [reshape(data_array_x_lh(ind),[256,128]) reshape(data_array_y_lh(ind),[256,128])];
-        img_rh = [reshape(data_array_x_rh(ind),[256,128]) reshape(data_array_y_rh(ind),[256,128])];
+        img = [img_x_lh .* atlasmsk; img_y_lh .* atlasmsk; ...
+               img_x_rh .* atlasmsk; img_y_rh .* atlasmsk];
       end
-      img_alpha = [circshift(img_lh,128); img_rh];
-    elseif (length(data_array(:,x)) == 32492)
-      ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','fsavg.index2D_256x128.txt'));
+     
+      %% alpha overlay
+      data_array_x_lh = data_array_diff(1:lrb(2),x);
+      data_array_x_rh = data_array_diff(lrb(2):end,x);
+      if ~isscatter
+        data_array_y_lh = data_array_diff(1:lrb(1),y);
+        data_array_y_rh = data_array_diff(lrb(2):end,y);
+      end
+      img_x_lh = flipud(circshift(reshape(data_array_x_lh(ind),[256,128]),64)');
+      img_x_rh = flipud(circshift(reshape(data_array_x_rh(ind),[256,128]),64)');
+      if ~isscatter
+        img_y_lh = flipud(circshift(reshape(data_array_y_lh(ind),[256,128]),64)');
+        img_y_rh = flipud(circshift(reshape(data_array_y_rh(ind),[256,128]),64)');
+      end
       if isscatter
-        img = reshape(data_array(ind,x),[256,128]);
+        img_alpha = [img_x_lh .* atlasmsk; img_x_rh .* fliplr(atlasmsk)];
       else
-        img = [reshape(data_array(ind,x),[256,128]) reshape(data_array(ind,y),[256,128])];
+        img_alpha = [img_x_lh .* atlasmsk; img_y_lh .* fliplr(atlasmsk); ...
+                     img_x_rh .* atlasmsk; img_y_rh .* fliplr(atlasmsk)];
       end
-      img = circshift(img,128);
-      % alpha overlay
-      if isscatter
-        img_alpha = reshape(data_array_diff(ind,x),[256,128]);
-      else
-        img_alpha = [reshape(data_array_diff(ind,x),[256,128]) reshape(data_array_diff(ind,y),[256,128])];
-      end
-      img_alpha = circshift(img_alpha,128);
-    elseif (length(data_array(:,x)) == 64984)
-      ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','fsavg.index2D_256x128.txt'));
-      data_array_x_lh = data_array(1:32492,x);
-      data_array_x_rh = data_array(32493:end,x);
-      if isscatter
-        img_lh = reshape(data_array_x_lh(ind),[256,128]);
-        img_rh = reshape(data_array_x_rh(ind),[256,128]);
-      else
-        data_array_y_lh = data_array(1:32492,y);
-        data_array_y_rh = data_array(32493:end,y);
-        img_lh = [reshape(data_array_x_lh(ind),[256,128]) reshape(data_array_y_lh(ind),[256,128])];
-        img_rh = [reshape(data_array_x_rh(ind),[256,128]) reshape(data_array_y_rh(ind),[256,128])];
-      end
-      img = [circshift(img_lh,96); circshift(img_rh,96)];
-      % alpha overlay
-      data_array_x_lh = data_array_diff(1:32492,x);
-      data_array_x_rh = data_array_diff(32493:end,x);
-      if isscatter
-        img_lh = reshape(data_array_x_lh(ind),[256,128]);
-        img_rh = reshape(data_array_x_rh(ind),[256,128]);
-      else
-        data_array_y_lh = data_array_diff(1:32492,y);
-        data_array_y_rh = data_array_diff(32493:end,y);
-        img_lh = [reshape(data_array_x_lh(ind),[256,128]) reshape(data_array_y_lh(ind),[256,128])];
-        img_rh = [reshape(data_array_x_rh(ind),[256,128]) reshape(data_array_y_rh(ind),[256,128])];
-      end
-      img_alpha = [circshift(img_lh,96); circshift(img_rh,96)];
+      
     else
       if isscatter
         img = data_array(:,x)';
@@ -2497,8 +2750,9 @@ function txt = myupdatefcn(obj, event_obj)
     end
 
     % scale img to 0..64
-    mn = 0.7; %min(data_array(:));
-    mx = 1.0; %max(data_array(:));
+    sd = std(data_array(:));
+    mn = -sd*2;
+    mx = sd*2;
     img = 64*((img - mn)/(mx-mn));
   else
     % add slider for colume data
@@ -2691,7 +2945,7 @@ function varargout = cat_tst_qa_cleaner_intern(data,opt)
   %  -------------------------------------------------------------------
   if isfield(opt,'site')
     if numel(opt.site)~=numel(data),
-      error('cat_tst_qa_cleaner:numelsitedata','Numer of elements in data and opt.site have to be equal.\n');
+      error('cat_tst_qa_cleaner_intern:numelsitedata','Numer of elements in data and opt.site have to be equal.\n');
     end
     opt.site = round(opt.site*opt.siterf)/opt.siterf; 
     sites    = unique(opt.site); 
@@ -2703,7 +2957,7 @@ function varargout = cat_tst_qa_cleaner_intern(data,opt)
       opts = opt; 
       opts = rmfield(opts,'site');
       opts.figure = 0; 
-      [Sth,markth(si,:),out{1:4}] = cat_tst_qa_cleaner(data(sdatai),opts); 
+      [Sth,markth(si,:),out{1:4}] = cat_tst_qa_cleaner_intern(data(sdatai),opts); 
       markths(sdatai,:) = repmat(markth(si,:),numel(sdatai),1); 
       siteth(sdatai,:)  = out{4}; 
     end
@@ -3069,6 +3323,7 @@ function varargout = cat_tst_qa_cleaner_intern(data,opt)
   if nargout>=4, varargout{4} = markths;  end
   if nargout>=5, varargout{5} = markths2; end
   if nargout>=6, varargout{6} = siteth; end
+  if nargout>=7, varargout{7} = sites; end
   
   if 0
     %%
