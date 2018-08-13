@@ -1,11 +1,11 @@
  #! /bin/sh
 
-# $Id: check_pipeline.sh 1287 2018-03-05 15:17:42Z gaser $
+# $Id$
 
 ########################################################
 # global parameters
 ########################################################
-version='check_pipeline.sh $Id: check_pipeline.sh 764 2015-11-17 13:11:53Z gaser $'
+version='check_pipeline.sh $Id$'
 
 release=""
 spm12_dir=""
