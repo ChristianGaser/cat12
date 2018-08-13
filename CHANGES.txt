@@ -1,5 +1,22 @@
 ------------------------------------------------------------------------
-r1352 | dahnke | 2018-08-10 18:12:12
+r1353 | dahnke | 2018-08-13 10:19:50
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       html/cat_methods_SBM.html
+M       html/cat_methods_VBM.html
+M       html/cat_tools_VBM.html
+
+(1) Fixed:  Removed bug in cat_conf_extopts.
+(2) Fixed:  Corrected and updated help HTML texts.
+            Combined Skull-Stripping and Cleanup in cat_methods_vbm 
+            and removed references to variables that were not used
+            anymore. Updated surface measures text in cat_methods_SBM.
+            Added help text for head trimming tool and data type 
+            converter in cat_tools_VBM.
+------------------------------------------------------------------------
+r1352 | dahnke | 2018-08-10 18:11:27 +0200 (Fr, 10 Aug 2018) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +29,7 @@ M       kmeans3D.m
 (3) Changed:    Added jpg-report output in cat_main for later 
                 use in cat_stat_check_cov2.
 (4) Changed:    Further development of cat_stat_check_cov2.
+
 
 ------------------------------------------------------------------------
 r1351 | gaser | 2018-08-09 14:09:01 +0200 (Do, 09 Aug 2018) | 16 lines

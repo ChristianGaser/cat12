@@ -35,7 +35,9 @@
         <li><a href="#cat_vol_correct_slice_scaling">Correction of slice-artifacts</a></li>
         <li><a href="#morphops">Morphological operations</a></li>
         <li><a href="#calc_kappa">Kappa and RMS error estimation for test and ground truth images</a></li>
-      </ul>
+        <li><a href="#data_trimming">Image trimming</a></li> 
+        <li><a href="#calc_kappa">Image data type converter</a></li> 
+    </ul>
     
     
         
@@ -78,7 +80,7 @@
       <p style="text-align:center;"><img src="images/cat_vol_correct_slice_scaling_768.png" width=80% height=auto alt="Noise and its reduction" ><p>
         
         
-      <h3 id="morphops">Morphological operations</h43<>
+      <h3 id="morphops">Morphological operations</h3>
       <p>
         Morphological operations like erosion, dilation, closing and opening of a binary image are available with the <i>cat_vol_morph</i> function. 
         See <a class="function" href="matlab:help cat_vol_morph;">help cat_vol_morph</a> for further informations.
@@ -118,7 +120,7 @@
         </li>
         -->
 
-      <h3 id="calc_kappa">Kappa and RMS error estimation for test and ground truth images</h3>
+      <h3 id="calc_kappa">Kappa and RMS error estimation for test and ground truth data</h3>
       <p>
         The function <a class="function" href="matlab:cat_tst_calc_kappa;">cat_tst_calc_kappa</a> allows the estimation of Cohen's Kappa measure <a  href="#Cohen:1960">(Cohen:1960)</a> and of the RMS error for a set of images with one (e.g. brain mask) or three classes (segment image <i>Yp0</i>). 
         The first input is given by a set of test images, whereas the second input has to be one ground truth image for all or for each test image.
@@ -127,6 +129,17 @@
       <p>
       <!-- Other functions such as ... simgrow, downcut, resize, etc. are not for public use -->
     
+    
+    <h3 id="data_trimming">Image trimming</h3>
+      <p>
+        Some images contain large area of air around the head that increase memory and processing time by factor 2 to 6. Although this is not critical in most datasets, the co-registration of high resolution images can result in unfavorable large field of view. The <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.datatrimming')">head trimming tool</a> allows to remove useless air around the image and co-registered volumes. 
+      <p>
+
+
+     <h3 id="calc_kappa">Image data type converter</h3>
+      <p>
+        MR volumes often require large amounts of disk-space and the use of lower data precision can help to save space. For instance atlas maps with integer values need no double precision and you can use the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.spmtype')">data type converter</a> to optimize your data. Furthermore, even integer data types allow floating point values. For instance the tissue classification of CAT creates maps with uint8 precision and a data range between 0 and 1 with a step size of ~0.01.
+      <p>      
     
       <h3>References:</h3>
       <ul>

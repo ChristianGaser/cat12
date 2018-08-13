@@ -26,7 +26,7 @@
       - Parameter
     --> 
     <div id="content">
-      <h2>Cortical surface and thickness estimation (in development):</h2>
+      <h2>Surface-based preprocessing methods:</h2>
       <p>
         CAT12 also includes the estimation of the cortical thickness and central surface of the left and right hemispheres based on the projection-based thickness (PBT) method <a href="matlab:web('http://dbm.neuro.uni-jena.de/pdf-files/Dahnke-NI12.pdf','-browser');">(Dahnke et al. 2012)</a>. 
         Furthermore, the surface pipeline uses topology correction <a href="matlab:web('http://dbm.neuro.uni-jena.de/pdf-files/Yotter-HBM10.pdf','-browser');">(Yotter et al. 2011a)</a>, spherical mapping <a href="matlab:web('http://dbm.neuro.uni-jena.de/pdf-files/Yotter-JoN10.pdf','-browser');">(Yotter et al. 2011b)</a> and estimation of local surface complexity <a href="matlab:web('http://dbm.neuro.uni-jena.de/pdf-files/Yotter-NI11.pdf','-browser');">(Yotter et al. 2011c)</a> and local gyrification <a href="matlab:web('http://dbm.neuro.uni-jena.de/pdf-files/Luders-NI06.pdf','-browser');">(Luders et al. 2006)</a>.
@@ -59,31 +59,17 @@
           </p>
         </li>
         <li>
-          <h4>Folding Measures</h4>
+          <h4>Further Surface Measures</h4>
           <p>
-            ... 
+            Besides cortical thickness, further measures of brain folding and data mapping are available after surface reconstruction in the <i>'Extract & Map Surface Data...'</i> menu. 
+            <!-- folding -->
+            The <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.surfextract')">Extract Additional Surface Parameters</a>  batch allows the estimation of the folding measures by the absolute mean curvature <i>(Gyrification Index)</i>, the depth of sulci or the measurement of local surface complexity by the fractal dimension <a href="matlab:web('http://dbm.neuro.uni-jena.de/pdf-files/Yotter-NI11.pdf','-browser');">(Yotter et al. 2011c).</a> 
+            <!-- value mapping -->
+            Moreover, volumetric data can be mapped to the individual surface to benefit by the enhanced surface-based smoothing and registration. 
+            The mapping can by applied to volumes from the same <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.vol2surf')">native space</a>, e.g., for cortical myelination measures, or <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.cat_surf_coregvol2surf')">nonlinear co-registered volumes,</a> such as fMRI images. This mapping can also be applied for <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.vol2surftemp')">normalized volumes without individual surfaces.</a>
+            <!-- link -->
+            See <a href="cat_tools_SBM.html">surface tools</a>for further information.
           </p>
-          <ul>
-            <li>
-              <h5>Surface Complexity</h5>
-              <p>
-                ...  
-              </p>
-            </li>
-            <li>
-              <h5>Local Gyrification (Curvature)</h5>
-              <p>
-                ...
-              </p>
-    <!-- TEXT 
-            <li>
-              <h5>Local Laplacian Gyrification</h5>
-              <p>
-                ...
-              </p>
-            </li>
-    --> 
-          </ul>
         </li>
       </ol>
     </div>  
