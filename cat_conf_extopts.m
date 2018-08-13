@@ -310,12 +310,12 @@ resnative.tag    = 'native';
 resnative.name   = 'Native resolution ';
 resnative.help   = {
     'Preprocessing with native resolution.'
-    'In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). '
     ''
     'Examples:'
     '  native resolution       internal resolution '
     '   0.95 0.95 1.05     >     0.95 0.95 1.05'
-    '   0.45 0.45 1.70     >     0.45 0.45 1.50 (if voxel size for normalized images is 1.5mm)'
+    '   0.45 0.45 1.70     >     0.45 0.45 1.70'
+    '   2.00 2.00 2.00     >     2.00 2.00 2.00'
     '' 
   }; 
 
@@ -325,17 +325,15 @@ resbest.name   = 'Best native resolution';
 resbest.def    = @(val)cat_get_defaults('extopts.resval', val{:});
 resbest.num    = [1 2];
 resbest.help   = {
-    'Preprocessing with the best (minimal) voxel dimension of the native image.'
-    'The first parameters defines the lowest spatial resolution for every dimension, while the second is used to avoid tiny interpolations for almost correct resolutions.'
-    'In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). '
+    'Preprocessing with the best (minimal) voxel dimension of the native image. The first parameters defines the lowest spatial resolution for every dimension, while the second defines a tolerance range to avoid tiny interpolations for almost correct resolutions. '
     ''
     'Examples:'
     '  Parameters    native resolution       internal resolution'
-    '  [1.00 0.10]    0.95 1.05 1.25     >     0.95 1.00 1.00'
-    '  [1.00 0.10]    0.45 0.45 1.50     >     0.45 0.45 1.00'
-    '  [0.75 0.10]    0.45 0.45 1.50     >     0.45 0.45 0.75'  
-    '  [0.75 0.10]    0.45 0.45 0.80     >     0.45 0.45 0.80'  
-    '  [0.00 0.10]    0.45 0.45 1.50     >     0.45 0.45 0.45'  
+    '  [1.00 0.10]    0.95 1.05 1.25     >     0.95 1.05 1.00'
+    '  [1.00 0.10]    0.95 1.05 1.05     >     0.95 1.00 1.00'
+    '  [1.00 0.20]    0.45 0.45 1.50     >     0.45 0.45 1.00'
+    '  [0.75 0.20]    0.45 0.45 1.50     >     0.45 0.45 0.75'  
+    '  [0.75 0.00]    0.45 0.45 0.80     >     0.45 0.45 0.80'  
     ''
   }; 
 
@@ -345,9 +343,7 @@ resfixed.name   = 'Fixed resolution';
 resfixed.val    = {[1.0 0.1]};
 resfixed.num    = [1 2];
 resfixed.help   = {
-    'This options prefers an isotropic voxel size that is controlled by the first parameters.  '
-    'The second parameter is used to avoid tiny interpolations for almost correct resolutions. ' 
-    'In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). '
+    'This options sets an isotropic voxel size that is controlled by the first parameter, whereas the second parameter defines a tolerance range to avoid tiny interpolations for almost correct resolutions. The fixed resolution option can also be used to improve preprocessing stability and speed of high resolution data, for instance protocols with high in-plane resolution and high slice thickness (e.g. 0.5x0.5x1.5 mm) and atypical spatial noise pattern. ' 
     ''
     'Examples: '
     '  Parameters     native resolution       internal resolution'
@@ -356,6 +352,7 @@ resfixed.help   = {
     '  [1.00 0.02]     0.95 1.05 1.25     >     1.00 1.00 1.00'
     '  [1.00 0.10]     0.95 1.05 1.25     >     0.95 1.05 1.00'
     '  [0.75 0.10]     0.75 0.95 1.25     >     0.75 0.75 0.75'
+    ''
   }; 
 
 
@@ -368,37 +365,27 @@ switch cat_get_defaults('extopts.restype')
   case 'fixed',  restype.val = {resfixed};
 end
 if ~expert
-  if 1
-    restype        = cfg_menu;
-    restype.tag    = 'restypes';
-    restype.name   = 'Internal resampling for preprocessing';
-    restype.labels = {
-      'Fixed 1.0 mm'
-      'Fixed 0.8 mm'
-      'Best'
-    };
-    restype.values = {struct('fixed',[1.0 0.1]) ...
-                      struct('fixed',[0.8 0.1]) ...
-                      struct('best native', [0.5 0.1])};
-    restype.val    = {struct('fixed',[1.0 0.1])};
-    restype.help   = [regstr.help; { ...
-      'A fixed image resolution helps to improve data normalization and preprocessing time. To benefit by higher native resolutions choose the highres option "Fixed 0.8 mm". In case of even higher resolution and high signal-to-noise ratio the "Best native" option will process the data on the best native resolution. I.e. 0.4x0.7x1.0 mm will be interpolated to 0.4x0.4x0.4 mm. To avoid interpolation artifacts a tolerance range of 0.1 mm is used, i.e. a resolution of 0.95x1.01x1.08 mm will not be interpolated!  '
-      ''
-    }];
-  else
-    restype.values = {resbest resfixed};
-    restype.help   = {
-      'There are 2 major ways to control the internal spatial resolution "best" and "fixed". In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). ' % The minimum spatial resolution is 0.5mm. '
-      ''
-      'We commend to use "best" option to ensure optimal quality for preprocessing. ' 
-    }; 
-  end
+  restype        = cfg_menu;
+  restype.tag    = 'restypes';
+  restype.name   = 'Internal resampling for preprocessing';
+  restype.labels = {
+    'Fixed 1.0 mm'
+    'Fixed 0.8 mm'
+    'Best native'
+  };
+  restype.values = {struct('fixed',[1.0 0.1]) ...
+                    struct('fixed',[0.8 0.1]) ...
+                    struct('best', [0.5 0.1])};
+  restype.val    = {struct('fixed',[1.0 0.1])};
+  restype.help   = [regstr.help; { ...
+    'A fixed image resolution helps to improve data normalization and preprocessing time. To benefit by higher native resolutions choose the highres option "Fixed 0.8 mm". In case of even higher resolution and high signal-to-noise ratio the "Best native" option will process the data on the highest native resolution. I.e. a resolution of 0.4x0.7x1.0 mm will be interpolated to 0.4x0.4x0.4 mm. A tolerance range of 0.1 mm is used to avoid interpolation artifacts, i.e. a resolution of 0.95x1.01x1.08 mm will not be interpolated in case of the "Fixed 1.0 mm"!  '
+    ''
+  }];
 else
   restype.values = {resnative resbest resfixed};
   restype.help   = {
-    'There are 3 major ways to control the internal spatial resolution "native", "best", and "fixed". In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). ' % The minimum spatial resolution is 0.5mm. '
+    'There are 3 major ways to control the internal spatial resolution "native", "best", and "fixed". We commend to use "best" option to ensure optimal quality for preprocessing. ' 
     ''
-    'We commend to use "best" option to ensure optimal quality for preprocessing. ' 
   }; 
 end
 

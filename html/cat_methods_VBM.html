@@ -34,8 +34,7 @@
         <li><a href="#LAS">Local Adaptive Segmentation (LAS)</a></li>
         <li><a href="#AMAP">AMAP Segmentation</a></li>
         <li><a href="#PVE">Partial Volume Segmentation</a></li>
-        <li><a href="#SS">Skull-Stripping</a></li>
-        <li><a href="#Cleanup">Cleanup</a></li>
+        <li><a href="#SS">Skull-Stripping and Cleanup</a></li>
         <li><a href="#Dartel">Spatial Normalization</a></li>
       </ol>
       
@@ -60,7 +59,7 @@
             -->
             This filter removes noise while maintaining edges and is implemented as pre-processing step. 
             The second method is a classical Markov Random Field (MRF) approach, which includes spatial information from adjacent voxels in the segmentation estimation <a href="matlab:web('http://dx.doi.org/10.1109/42.563663','-browser');">(Rajapakse et al. 1997)</a> and is part of the AMAP segmentation. 
-            The strength of the filters is automatically determined by estimating the residual noise in the image or can be set manually by the <em>"Strength of Noise Correction"</em> parameter (<em>cat.extopts.NCstr</em> in cat_defaults).
+            <!--The strength of the filters is automatically determined by estimating the residual noise in the image or can be set manually by the <em>"Strength of Noise Correction"</em> parameter (<em>cat.extopts.NCstr</em> in cat_defaults).-->
           </p>
         </li>
         
@@ -81,7 +80,7 @@
             In addition WM-inhomogeneities, GM intensity can vary for different regions such as the motor cortex, the basal ganglia, or the occipital lobe. 
             These changes have an anatomical background (e.g. iron content, myelinization), but are dependent on the MR-protocol and often lead to GM-underestimations at higher intensities and CSF-overestimations at lower intensities. 
             Therefore, a local intensity transformation of all tissue classes is used to reduce these effects in the image before the final AMAP segmentation. 
-            The strength of the changes is controlled by the <em>"Strength of Local Adaptive Segmentation"</em> parameter (<em>cat.extopts.LASstr</em> in cat_defaults), with 0 for no LAS, small values (0.01-0.5) for small adjustments, 0.5 for medium adjustments (default), and higher values (0.5-1) for strong adjustments. 
+            The strength of the changes is controlled by the <i>"Strength of Local Adaptive Segmentation"</i> parameter in th expert GUI (<em>cat.extopts.LASstr</em> in cat_defaults file). <!--, with 0 for no LAS, small values (0.01-0.5) for small adjustments, 0.5 for medium adjustments (default), and higher values (0.5-1) for strong adjustments. --> 
           </p>
         </li>
         
@@ -107,33 +106,15 @@
         
                 
         <li> 
-          <h4 id="SS">Skull-Stripping</h4>
+          <h4 id="SS">Skull-Stripping and Cleanup</h4>
           <p>
-            CAT12 contains a revised graph-cut based skull-stripping, with 0 for a more liberal and wider brain masks and 1 for a more aggressive skull-stripping. 
-            The default setting is 0.5 and has been successfully tested on a variety of different images. 
-
-          </p> 
-          <p>The strength parameter affects multiple internal parameters:</p>
-          <ul>
-            <li>Intensity thresholds for the treatment of blood-vessels and meninges</li>
-            <li>Distance and growth parameters for the graph-cut/region-growing</li>
-            <li>Closing parameters that fill the sulci</li>
-            <li>Smoothing parameters that allow sharper or wider results</li>
-          </ul>
-          <p>
-            If your segmentations still contain skull and other non-brain tissue (e.g. dura) you can try to increase the strength.
-            If parts of the brain are missing in the segmentations, the strength can be decreased.
+            CAT12 contains a (revised) SPM approach and a graph-cut based skull-stripping (GCUT). 
+            <!--
+             GCUT approach can be further controlled by the <em>"Strength of Local Adaptive Segmentation"</em> parameter in the cat_defaults file, with 0 for a more liberal and wider brain masks and 1 for a more aggressive skull-stripping. The strength parameter affects multiple internal parameters, such as (i) intensity thresholds for the treatment of blood-vessels and meninges, (ii) distance and growth parameters for the graph-cut/region-growing, (iii) closing parameters that fill the sulci, and (iv) smoothing parameters that allow sharper or wider results. If your segmentations still contain skull and other non-brain tissue (e.g. dura) you can try to increase the strength. If parts of the brain are missing in the segmentations, the strength can be decreased.-->
+             Moreover, a new cleanup routine, which uses morphological, distance and smoothing operations, improves removing of remaining meninges after the final segmentation. The strength of the cleanup is controlled by the <i>"Strength of Final Clean Up"</i> parameter in the expert GUI (<i>cleanupstr</i> in cat_defaults).
           </p>
         </li>
-        
-        <li>
-          <h4 id="Cleanup">Cleanup</h4>
-          <p>
-            CAT12 includes a new cleanup routine that uses morphological, distance and smoothing operations to remove the remaining meninges after the final segmentation. 
-            The strength of the cleanup is controlled by the <em>"Strength of Final Clean Up"</em> parameter (<em>gcutstr</em> in cat_defaults), with 0 for no cleanup, low values <0.5 for light cleanup, 0.5 for medium cleanup (default), and 1 for strong cleanup.
-          </p>
-        </li>
-        
+             
         <li>
           <h4 id="Dartel">Spatial Normalization</h4> 
           <p>
