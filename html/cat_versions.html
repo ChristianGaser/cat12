@@ -30,12 +30,13 @@
       <p>
         </br>Preprocessing should remain unaffected until the next minor version number. A new processing of your data is not necessary if the minor version number of CAT12 remains unchanged.
       </p>
-      <h2>Changes in version CAT12.4 (1348)</h2>      
+      <h2>Changes in version CAT12.5 (1352)</h2>      
       <p>
         <ul>
           <li>Changes in preprocessing pipeline (which affects your results compared to CAT12.3)</li>
           <ul>
             <li>Detection of white matter hyperintensities (WMHs) is updated and again enabled by default.</li>
+            <li>The default internal interpolation setting is now "Fixed 1 mm" and offers a good trade-off between optimal quality and preprocessing time and memory demands. Standard structural data with a voxel resolution around 1 mm or even data with high in-plane resolution and large slice thickness (e.g. 0.5x0.5x1.5 mm) will benefit from this setting. If you have higher native resolutions the highres option "Fixed 0.8 mm" will sometimes offer slightly better preprocessing quality with an increase of preprocessing time and memory demands.</li>
           </ul>
         </ul>
         <ul>
@@ -44,6 +45,12 @@
             <li>CAT12 can now deal with lesions that have to be set to zero in your image using the Stroke Lesion Correction (SLC) in expert mode. These lesion areas are not used for segmentation or spatial registration, thus these preprocessing steps should be almost unaffected.</li>
           </ul>
         </ul> 
+      </p>
+      <h2>Changes in version CAT12.4 (1342)</h2>      
+      <p>
+        <ul>
+            <li>This version had some severe errors in spatial registration which affected all spatially registered data and should not be used anymore.</li>
+        </ul>
       </p>
       <h2>Changes in version CAT12.3 (1310)</h2>      
       <p>

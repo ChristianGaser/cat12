@@ -1,5 +1,7 @@
  #! /bin/sh
 
+# $Id: check_pipeline.sh 1287 2018-03-05 15:17:42Z gaser $
+
 ########################################################
 # global parameters
 ########################################################
@@ -209,7 +211,7 @@ run_pipeline ()
 {
   
   # set ROI output and surface output
-  if [ $volumes_only -eq 0 ]
+  if [ $volumes_only -eq 0 ]; then
     echo "cat.output.surface = 1;" >> ${spm12_tmp}/toolbox/cat12/cat_defaults.m
   fi
   echo "cat.output.ROI = 1;" >> ${spm12_tmp}/toolbox/cat12/cat_defaults.m
@@ -358,12 +360,14 @@ USAGE:
    -b   run check_pipeline.sh in the background
    -v   run check_pipeline.sh without surface processing
 
-   All defined files will be processed using either the current CAT12 version or the defined CAT12 release with the "-r" flag.
-   For the latter case the zip-file can be defined as local file or at as url-address. During processing temporary folder are 
-   saved in /tmp and modulated gray matter images and surfaces are calculated for each file.
-   If you run check_pipeline.sh in the background the post-processing has to be called manually using the "-b" flag.
-   During post-processing the temporary folders are renamed according to the found release number. Finally,the csv-files, the 
-   zipped check-folders, and the render views are transfered to ${scp_target}. 
+   All given files will be processed using either the current CAT12 version or the defined CAT12 release with the "-r" flag.
+   For the latter case the zip-file can be defined as local file or as url-address. During processing temporary folder are 
+   saved in /tmp and modulated gray matter images and surfaces are calculated for each file. Finally, the post-processing will 
+   be applied. During post-processing the temporary folders are renamed according to the found release number (check_rxxxx).
+   Finally, the csv-files, the zipped check-folders, and the render views are transfered to ${scp_target}.
+   If you run check_pipeline.sh in the background the post-processing has to be called manually using the "-b" flag if the
+   processing for all data is finished.
+    
 
 PURPOSE:
    check_pipeline.sh a cat12 release
@@ -385,6 +389,10 @@ EXAMPLE:
    check_pipeline.sh -p pid
    Run check_pipeline.sh in the background with 8 processes with given 5 files and use current CAT12 release and the defined SPM12 folder.
    Finally, post-processing can be called with the given pid if processing is finished.
+
+   check_pipeline.sh -p -xxxx
+   Run post-processing again for release xxxx. This command is helpful if you have to re-calculated single data set because of a previous crash.
+   Please note the "-" before the release number to indicate that this is not a pid but a release number.
 
 USED FUNCTIONS:
    CAT12 toolbox
