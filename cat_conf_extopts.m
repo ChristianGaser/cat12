@@ -330,7 +330,7 @@ resbest.help   = {
     'Examples:'
     '  Parameters    native resolution       internal resolution'
     '  [1.00 0.10]    0.95 1.05 1.25     >     0.95 1.05 1.00'
-    '  [1.00 0.10]    0.95 1.05 1.05     >     0.95 1.00 1.00'
+    '  [1.00 0.10]    0.95 1.05 1.05     >     0.95 1.05 1.05'
     '  [1.00 0.20]    0.45 0.45 1.50     >     0.45 0.45 1.00'
     '  [0.75 0.20]    0.45 0.45 1.50     >     0.45 0.45 0.75'  
     '  [0.75 0.00]    0.45 0.45 0.80     >     0.45 0.45 0.80'  
@@ -343,14 +343,13 @@ resfixed.name   = 'Fixed resolution';
 resfixed.val    = {[1.0 0.1]};
 resfixed.num    = [1 2];
 resfixed.help   = {
-    'This options sets an isotropic voxel size that is controlled by the first parameter, whereas the second parameter defines a tolerance range to avoid tiny interpolations for almost correct resolutions. The fixed resolution option can also be used to improve preprocessing stability and speed of high resolution data, for instance protocols with high in-plane resolution and high slice thickness (e.g. 0.5x0.5x1.5 mm) and atypical spatial noise pattern. ' 
+    'This option sets an isotropic voxel size that is controlled by the first parameter, whereas the second parameter defines a tolerance range to avoid tiny interpolations for almost correct resolutions. The fixed resolution option can also be used to improve preprocessing stability and speed of high resolution data, for instance protocols with high in-plane resolution and large slice thickness (e.g. 0.5x0.5x1.5 mm) and atypical spatial noise pattern. ' 
     ''
     'Examples: '
     '  Parameters     native resolution       internal resolution'
     '  [1.00 0.10]     0.45 0.45 1.70     >     1.00 1.00 1.00'
     '  [1.00 0.10]     0.95 1.05 1.25     >     0.95 1.05 1.00'
     '  [1.00 0.02]     0.95 1.05 1.25     >     1.00 1.00 1.00'
-    '  [1.00 0.10]     0.95 1.05 1.25     >     0.95 1.05 1.00'
     '  [0.75 0.10]     0.75 0.95 1.25     >     0.75 0.75 0.75'
     ''
   }; 
@@ -378,13 +377,13 @@ if ~expert
                     struct('best', [0.5 0.1])};
   restype.val    = {struct('fixed',[1.0 0.1])};
   restype.help   = [regstr.help; { ...
-    'A fixed image resolution helps to improve data normalization and preprocessing time. To benefit by higher native resolutions choose the highres option "Fixed 0.8 mm". In case of even higher resolution and high signal-to-noise ratio the "Best native" option will process the data on the highest native resolution. I.e. a resolution of 0.4x0.7x1.0 mm will be interpolated to 0.4x0.4x0.4 mm. A tolerance range of 0.1 mm is used to avoid interpolation artifacts, i.e. a resolution of 0.95x1.01x1.08 mm will not be interpolated in case of the "Fixed 1.0 mm"!  '
+    'The default fixed image resolution offers a good trade-off between optimal quality and preprocessing time and memory demands. Standard structural data with a voxel resolution around 1 mm or even data with high in-plane resolution and large slice thickness (e.g. 0.5x0.5x1.5 mm) will benefit from this setting. If you have higher native resolutions the highres option "Fixed 0.8 mm" will sometimes offer slightly better preprocessing quality with an increase of preprocessing time and memory demands. In case of even higher resolutions and high signal-to-noise ratio (e.g. for 7 T data) the "Best native" option will process the data on the highest native resolution. I.e. a resolution of 0.4x0.7x1.0 mm will be interpolated to 0.4x0.4x0.4 mm. A tolerance range of 0.1 mm is used to avoid interpolation artifacts, i.e. a resolution of 0.95x1.01x1.08 mm will not be interpolated in case of the "Fixed 1.0 mm"!  '
     ''
   }];
 else
   restype.values = {resnative resbest resfixed};
   restype.help   = {
-    'There are 3 major ways to control the internal spatial resolution "native", "best", and "fixed". We commend to use "best" option to ensure optimal quality for preprocessing. ' 
+    'The default fixed image resolution offers a good trade-off between optimal quality and preprocessing time and memory demands. Standard structural data with a voxel resolution around 1mm or even data with high in-plane resolution and large slice thickness (e.g. 0.5x0.5x1.5 mm) will benefit from this setting. If you have higher native resolutions a change of the fixed resolution to smaller values will sometimes offer slightly better preprocessing quality with a increase of preprocessing time and memory demands. In case of even higher resolutions and high signal-to-noise ratio (e.g. for 7T data) the "Best native" option will process the data on the highest native resolution. I.e. a resolution of 0.4x0.7x1.0 mm will be interpolated to 0.4x0.4x0.4 mm. A tolerance range of 0.1 mm is used to avoid interpolation artifacts, i.e. a resolution of 0.95x1.01x1.08 mm will not be interpolated in case of the "Fixed 1.0 mm"!  '
     ''
   }; 
 end

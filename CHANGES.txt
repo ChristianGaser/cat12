@@ -1,5 +1,30 @@
 ------------------------------------------------------------------------
-r1353 | dahnke | 2018-08-13 10:19:50
+r1354 | gaser | 2018-08-13 12:20:59
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       cat_surf_results.m
+M       check_pipeline.sh
+A       check_pipeline_ROIs.m
+M       html/cat.html
+M       html/cat_methods_SBM.html
+M       html/cat_tools_VBM.html
+M       html/cat_versions.html
+M       spm_cat12.m
+M       tbx_cfg_cat.m
+
+(1) Fixed: Crahs in cat_surf_results due to typo.
+(2) Changed: Updated version information to CAT12.5-rc1.
+(3) Changed: Updated online help text and CAT12 manual.
+(4) Changed: Default interpolation is now "Fixed 1 mm" in cat_defaults.
+------------------------------------------------------------------------
+r1353 | dahnke | 2018-08-13 10:19:19 +0200 (Mo, 13 Aug 2018) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +40,7 @@ M       html/cat_tools_VBM.html
             anymore. Updated surface measures text in cat_methods_SBM.
             Added help text for head trimming tool and data type 
             converter in cat_tools_VBM.
+
 ------------------------------------------------------------------------
 r1352 | dahnke | 2018-08-10 18:11:27 +0200 (Fr, 10 Aug 2018) | 13 lines
 

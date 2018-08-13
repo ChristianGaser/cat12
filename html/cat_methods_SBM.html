@@ -63,12 +63,12 @@
           <p>
             Besides cortical thickness, further measures of brain folding and data mapping are available after surface reconstruction in the <i>'Extract & Map Surface Data...'</i> menu. 
             <!-- folding -->
-            The <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.surfextract')">Extract Additional Surface Parameters</a>  batch allows the estimation of the folding measures by the absolute mean curvature <i>(Gyrification Index)</i>, the depth of sulci or the measurement of local surface complexity by the fractal dimension <a href="matlab:web('http://dbm.neuro.uni-jena.de/pdf-files/Yotter-NI11.pdf','-browser');">(Yotter et al. 2011c).</a> 
+            The <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.surfextract')">Extract Additional Surface Parameters</a>  batch allows estimation of the folding measure by the absolute mean curvature <i>(Gyrification Index)</i> <a href="matlab:web('http://dbm.neuro.uni-jena.de/pdf-files/Luders-NI06.pdf','-browser');">(Luders et al. 2006)</a>, the depth of sulci or the measurement of local surface complexity by the fractal dimension <a href="matlab:web('http://dbm.neuro.uni-jena.de/pdf-files/Yotter-NI11.pdf','-browser');">(Yotter et al. 2011c).</a> 
             <!-- value mapping -->
-            Moreover, volumetric data can be mapped to the individual surface to benefit by the enhanced surface-based smoothing and registration. 
-            The mapping can by applied to volumes from the same <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.vol2surf')">native space</a>, e.g., for cortical myelination measures, or <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.cat_surf_coregvol2surf')">nonlinear co-registered volumes,</a> such as fMRI images. This mapping can also be applied for <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.vol2surftemp')">normalized volumes without individual surfaces.</a>
+            Moreover, 3D volume data (e.g. fMRI data) can be mapped to the individual surface to benefit from enhanced surface-based smoothing and registration. 
+            The mapping can by applied to volumes from the same <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.vol2surf')">native space</a>, e.g., for cortical myelination measures, or <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.cat_surf_coregvol2surf')">nonlinear co-registered volumes,</a> such as fMRI images. This mapping can also be applied to <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.vol2surftemp')">normalized volumes</a> without individual surfaces to map results in MNI space to the template surface.
             <!-- link -->
-            See <a href="cat_tools_SBM.html">surface tools</a>for further information.
+            See <a href="cat_tools_SBM.html">surface tools</a> for further information.
           </p>
         </li>
       </ol>

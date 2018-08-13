@@ -507,7 +507,7 @@ switch lower(action)
                 SPM_name = fullfile(H.S{i}.info(1).pp, 'SPM.mat');
                 
                 % SPM.mat exist?
-                elseif ~isempty(H.S{i}.name)
+                if ~isempty(H.S{i}.name)
                     H.SPM_found = 0;
                 end
             end
