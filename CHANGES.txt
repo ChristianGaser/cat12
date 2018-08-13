@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1354 | gaser | 2018-08-13 12:20:59
+r1355 | gaser | 2018-08-13 15:53:36
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       cat12.m
+M       cat_update.m
+MM      check_pipeline.sh
+M       html/cat_versions.html
+
+(1) Changed: Added some handling for deployed (compliled) CAt12 version. 
+(2) Changed: Updated CAT12 manual and online help.
+------------------------------------------------------------------------
+r1354 | gaser | 2018-08-13 12:21:10 +0200 (Mo, 13 Aug 2018) | 23 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -23,6 +37,7 @@ M       tbx_cfg_cat.m
 (2) Changed: Updated version information to CAT12.5-rc1.
 (3) Changed: Updated online help text and CAT12 manual.
 (4) Changed: Default interpolation is now "Fixed 1 mm" in cat_defaults.
+
 ------------------------------------------------------------------------
 r1353 | dahnke | 2018-08-13 10:19:19 +0200 (Mo, 13 Aug 2018) | 15 lines
 

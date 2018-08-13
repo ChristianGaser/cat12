@@ -19,6 +19,14 @@ function varargout = cat_update(update)
 
 rev = '$Rev$';
 
+if isdeployed
+  sts= Inf;
+  msg = 'Update function is not working for compiled CAT12. Please check for a new compiled CAT12 version.';
+  if ~nargout, fprintf([blanks(9) msg '\n']);
+  else varargout = {sts, msg}; end
+  return;
+end
+
 url = 'http://www.neuro.uni-jena.de/cat12/';
 
 if ~nargin
