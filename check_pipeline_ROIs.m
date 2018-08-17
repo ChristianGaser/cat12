@@ -3,7 +3,7 @@ function check_pipeline_ROIs(P)
 % cat12 releases using check_pipeline.sh
 %
 % _________________________________________________________________________
-% $Id: check_pipeline_ROIs.m 1341 2018-07-27 13:14:51Z gaser $
+% $Id$
 
 if nargin == 0
   P = spm_select(Inf,'csv','Select csv files');
