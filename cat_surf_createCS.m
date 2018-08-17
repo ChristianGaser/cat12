@@ -495,7 +495,7 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
       %               '.2 .1 5 0 ' ...                       fract_step  max_step  max_search_istance  degrees_continuity  
       %               '"%g" "%g" n ' ...                     min_isovalue  max_isovalue  +/-/n 
       %               '0 0 0 ' ...                           gradient_threshold  angle tolerance  max_iterations
-      %               '150 0.01 0.0'], ...                   movement_threshold  stop_treshold  
+      %               '150 0.01 0.0 0'], ...                 movement_threshold  stop_treshold force_no_selfintersections
                      
       th = 0.5;
       cmds = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" ' ... "vol" "activity_file?|none" nx ny nz "inputmesh" "outputmesh"
@@ -504,7 +504,7 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
                      '.2  .1  2  0 ' ...                     fract_step  max_step  max_search_istance  degrees_continuity  
                      '"%g"  "%g"  n ' ...                    min_isovalue  max_isovalue  +/-/n 
                      '0  0  0 ' ...                          gradient_threshold  angle  tolerance  
-                     '10  0.03  0.0'], ...                  max_iterations movement_threshold  stop_threshold  
+                     '10  0.03  0.0 0'], ...                  max_iterations movement_threshold  stop_threshold force_no_selfintersections
                       Vpp1.fname,Pcentral,Pcentral,th,th);
       [ST, RS] = cat_system(cmds); cat_check_system_output(ST,RS,opt.verb-2);
     
@@ -635,12 +635,12 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     th = 0.5;
     if opt.fast
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
-                     'avg -0.1 0.1 .2 .1 5 0 "%g" "%g" n 0 0 0 50 0.02 0.0'], ...
+                     'avg -0.1 0.1 .2 .1 5 0 "%g" "%g" n 0 0 0 50 0.02 0.0 0'], ...
                      Vpp.fname,Pcentral,Pcentral,th,th);
     else
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
-                     'avg -0.1 0.1 .2 .1 5 0 "%g" "%g" n 0 0 0 150 0.01 0.0'], ...
-                     Vpp.fname,Pcentral,Pcentral,th,th);
+                     'avg -0.1 0.1 .2 .1 5 0 "%g" "%g" n 0 0 0 150 0.01 0.0 %d'], ...
+                     Vpp.fname,Pcentral,Pcentral,th,th,opt.correct_thickness);
     end
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
 
@@ -654,12 +654,12 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
 
     if opt.fast
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
-                     'flat -0.15 0.15 .5 .1 5 0 "%g" "%g" n 0 0 0 25 0.01 0.0'], ...
+                     'flat -0.15 0.15 .5 .1 5 0 "%g" "%g" n 0 0 0 25 0.01 0.0 0'], ...
                      Vpp.fname,Pcentral,Pcentral,th,th);
     else
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .2 ' ...
-                     'avg -0.05 0.05 .1 .1 5 0 "%g" "%g" n 0 0 0 50 0.01 0.0'], ...
-                     Vpp.fname,Pcentral,Pcentral,th,th);
+                     'avg -0.05 0.05 .1 .1 5 0 "%g" "%g" n 0 0 0 50 0.01 0.0 %d'], ...
+                     Vpp.fname,Pcentral,Pcentral,th,th,opt.correct_thickness);
     end
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
 
