@@ -847,7 +847,7 @@ if ~isfield(res,'spmpp')
     if job.extopts.expertgui && isfield(res,'Ylesion') && sum(res.Ylesion(:))>1000 
       cat_warnings = cat_io_addwarning(cat_warnings,...
           'CAT:cat_main_SLC_noExpDef',sprintf(['SLC is deactivated but there are %0.2f cm' ...
-          char(179) ' of zero voxel!'],prod(vx_vol) .* sum(res.Ylesion(:)) / 1000 )); 
+          char(179) ' of voxels with zero value inside the brain!'],prod(vx_vol) .* sum(res.Ylesion(:)) / 1000 )); 
       fprintf('\n');
     end
   end
@@ -1009,6 +1009,9 @@ if ~isfield(res,'spmpp')
   Ymib = double(Ymib); n_iters = 50; sub = round(32/min(vx_vol)); n_classes = 3; pve = 5; bias_fwhm = 0; init_kmeans = 0;  %#ok<NASGU>
   if job.extopts.mrf~=0, iters_icm = 50; else iters_icm = 0; end %#ok<NASGU>
 
+  % remove noisy background for kmeans
+  if init_kmeans, Ymib(Ymib<0.1) = 0; end
+  
   % do segmentation  
   amapres = evalc(['prob = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
     'job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);']);
@@ -1818,11 +1821,31 @@ if (job.output.surface || any( [job.output.ct.native job.output.ct.warped job.ou
         struct('pbtmethod',pbtmethod,'interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
         'verb',job.extopts.verb,'WMT',WMT)); 
     end
-  else
-    %% using the segmentation
-    [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(VT,VT0,Yp0/3,Yl1,YMF,...
-      struct('interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
-      'verb',job.extopts.verb,'WMT',WMT));
+  else     
+  %% using the label image
+    if job.extopts.pbtres==99 
+    % development block
+      smeth = [3 1]; 
+      sres  = [1 0.5];
+      for smi = 1:numel(smeth)
+        for sresi = 1:numel(sres)
+          %%
+          if smeth(smi)==1, pbtmethod = 'pbt2xf'; elseif smeth(smi)==3, pbtmethod = 'pbt3'; end
+          
+          cat_io_cprintf('blue',sprintf('\nPBT Test99 - surf_%s_%0.2f\n',pbtmethod,sres(sresi)));
+          surf = {'lhfst'}; %,'lcfst','rhfst','rcfst'};  
+          
+          [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(VT,VT0,Yp0/3,Yl1,YMF,...
+              struct('pbtmethod',pbtmethod,'interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
+              'verb',job.extopts.verb,'WMT',WMT)); 
+        end
+      end
+    else
+      pbtmethod = 'pbt2x';
+      [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(VT,VT0,Yp0/3,Yl1,YMF,...
+          struct('pbtmethod',pbtmethod,'interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
+          'verb',job.extopts.verb,'WMT',WMT)); 
+    end
   end
   
   % save Euler characteristics (absolute value)
