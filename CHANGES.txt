@@ -1,11 +1,33 @@
 ------------------------------------------------------------------------
-r1359 | gaser | 2018-08-17 14:09:17
+r1360 | gaser | 2018-08-29 15:49:01
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_main.m
+M       cat_surf_createCS.m
+M       cat_surf_results.m
+M       html/cat.html
+
+(1) Changed: Unused menus and options in cat_surf_results.m are now disabled 
+    instead of not visible.
+(2) Changed: Lights for rendering are changed in cat_surf_results.m
+(3) Fixed: optional use of kmeans was not working in cat_main.m.
+(4) Changed: Added some new options to extract pial and white matter surface
+    which is still very slow, but might be helpful for mapping ultra-high 
+    resolution data (still experimental).
+(5) Changed: Use inverse deformation to map fsavg mask to native surface data
+    to prevent unreliable values in subcortical areas.
+------------------------------------------------------------------------
+r1359 | gaser | 2018-08-17 14:09:22 +0200 (Fr, 17 Aug 2018) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 
 (1) Changed: Added new flag to CAT_DeformSurf command in cat_surf_createCS.m
 (2) Changed: Updated new binaries because of new flag for CAT_DeformSurf.
+
 ------------------------------------------------------------------------
 r1358 | gaser | 2018-08-17 14:06:57 +0200 (Fr, 17 Aug 2018) | 1 line
 
