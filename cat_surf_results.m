@@ -139,7 +139,7 @@ switch lower(action)
             'style', 'PopUp', 'HorizontalAlignment', 'center', ...
             'callback', 'spm(''PopUpCB'',gcbo)', ...
             'ToolTipString', 'Underlying Surface', ...
-            'Interruptible', 'on', 'Visible', 'off');
+            'Interruptible', 'on', 'Enable', 'off');
         
         str = {'Threshold...', 'No threshold', 'P<0.05', 'P<0.01', 'P<0.001'};
         tmp = {{@select_thresh, 0}, ...
@@ -154,7 +154,7 @@ switch lower(action)
             'style', 'PopUp', 'HorizontalAlignment', 'center', ...
             'callback', 'spm(''PopUpCB'',gcbo)', ...
             'ToolTipString', 'Threshold', ...
-            'Interruptible', 'on', 'Visible', 'off');
+            'Interruptible', 'on', 'Enable', 'off');
         
         str = {'Colormap...', 'jet', 'hot', 'hsv', 'cold-hot'};
         tmp = {{@select_cmap, 1}, ...
@@ -169,7 +169,7 @@ switch lower(action)
             'style', 'PopUp', 'HorizontalAlignment', 'center', ...
             'callback', 'spm(''PopUpCB'',gcbo)', ...
             'ToolTipString', 'Threshold', ...
-            'Interruptible', 'on', 'Visible', 'off');
+            'Interruptible', 'on', 'Enable', 'off');
         
         str = {'Atlas Labeling...', 'Desikan-Killiany DK40', 'Destrieux 2009', 'HCP Multi-Modal Parcellation'};
         tmp = {{@select_atlas, 1}, ...
@@ -183,7 +183,7 @@ switch lower(action)
             'style', 'PopUp', 'HorizontalAlignment', 'center', ...
             'callback', 'spm(''PopUpCB'',gcbo)', ...
             'ToolTipString', 'Atlas Labeling', ...
-            'Interruptible', 'on', 'Visible', 'off');
+            'Interruptible', 'on', 'Enable', 'off');
         
         str = {'Data Cursor...', 'Disable data cursor', 'Atlas regions: Desikan-Killiany DK40', ...
             'Atlas regions: Destrieux 2009', 'Atlas region: HCP Multi-Modal Parcellation', ...
@@ -204,7 +204,7 @@ switch lower(action)
             'style', 'PopUp', 'HorizontalAlignment', 'center', ...
             'callback', 'spm(''PopUpCB'',gcbo)', ...
             'ToolTipString', 'Data Cursor Mode', ...
-            'Interruptible', 'on', 'Visible', 'off');
+            'Interruptible', 'on', 'Enable', 'off');
         
         str = {'View...', 'Show top view', 'Show bottom view', 'Show only lateral and medial views'};
         tmp = {{@select_view, 1}, ...
@@ -218,7 +218,7 @@ switch lower(action)
             'style', 'PopUp', 'HorizontalAlignment', 'center', ...
             'callback', 'spm(''PopUpCB'',gcbo)', ...
             'ToolTipString', 'Select View', ...
-            'Interruptible', 'on', 'Visible', 'off');
+            'Interruptible', 'on', 'Enable', 'off');
         
         str = {'Texture...', 'Mean curvature', 'Sulcal depth'};
         tmp = {{@select_texture, 1}, ...
@@ -231,7 +231,7 @@ switch lower(action)
             'style', 'PopUp', 'HorizontalAlignment', 'center', ...
             'callback', 'spm(''PopUpCB'',gcbo)', ...
             'ToolTipString', 'Select Underlying Texture', ...
-            'Interruptible', 'on', 'Visible', 'off');
+            'Interruptible', 'on', 'Enable', 'off');
         
         str = {'Atlas Border Overlay...', 'No Overlay', 'Desikan-Killiany DK40', 'Destrieux 2009', ...
                'HCP Multi-Modal Parcellation'};
@@ -247,7 +247,7 @@ switch lower(action)
             'style', 'PopUp', 'HorizontalAlignment', 'center', ...
             'callback', 'spm(''PopUpCB'',gcbo)', ...
             'ToolTipString', 'Atlas Border Overlay', ...
-            'Interruptible', 'on', 'Visible', 'off');
+            'Interruptible', 'on', 'Enable', 'off');
         
         % invert results
         H.inv = uicontrol(H.figure(2), ...
@@ -256,7 +256,7 @@ switch lower(action)
             'style', 'CheckBox', 'HorizontalAlignment', 'center', ...
             'callback', {@checkbox_inv}, ...
             'ToolTipString', 'Invert results', ...
-            'Interruptible', 'on', 'Visible', 'off');
+            'Interruptible', 'on', 'Enable', 'off');
         
         % show only results for pos. contrast
         H.hide_neg = uicontrol(H.figure(2), ...
@@ -265,7 +265,7 @@ switch lower(action)
             'style', 'CheckBox', 'HorizontalAlignment', 'center', ...
             'callback', {@checkbox_hide_neg}, ...
             'ToolTipString', 'Hide neg. results', ...
-            'Interruptible', 'on', 'Visible', 'off');
+            'Interruptible', 'on', 'Enable', 'off');
         
         % white background
         H.bkg = uicontrol(H.figure(2), ...
@@ -274,7 +274,7 @@ switch lower(action)
             'style', 'CheckBox', 'HorizontalAlignment', 'center', ...
             'callback', {@checkbox_bkg}, ...
             'ToolTipString', 'White background', ...
-            'Interruptible', 'on', 'Visible', 'off');
+            'Interruptible', 'on', 'Enable', 'off');
         
         % transparent view
         H.transp = uicontrol(H.figure(2), ...
@@ -283,7 +283,7 @@ switch lower(action)
             'style', 'CheckBox', 'HorizontalAlignment', 'center', ...
             'callback', {@checkbox_transp}, ...
             'ToolTipString', 'Disable transparent overlay', ...
-            'Interruptible', 'on', 'Visible', 'off');
+            'Interruptible', 'on', 'Enable', 'off');
         
         H.info = uicontrol(H.figure(2), ...
             'string', 'Show filename', 'Units', 'normalized', ...
@@ -291,7 +291,7 @@ switch lower(action)
             'style', 'CheckBox', 'HorizontalAlignment', 'center', ...
             'callback', {@checkbox_info}, ...
             'ToolTipString', 'Show file information in image', ...
-            'Interruptible', 'on', 'Visible', 'off');
+            'Interruptible', 'on', 'Enable', 'off');
         
         H.nocbar = uicontrol(H.figure(2), ...
             'string', 'Hide colorbar', 'Units', 'normalized', ...
@@ -299,7 +299,7 @@ switch lower(action)
             'style', 'CheckBox', 'HorizontalAlignment', 'center', ...
             'callback', {@checkbox_nocbar}, ...
             'ToolTipString', 'Hide colorbar', ...
-            'Interruptible', 'on', 'Visible', 'off');
+            'Interruptible', 'on', 'Enable', 'off');
         
         H.save = uicontrol(H.figure(2), ...
             'string', 'Save', 'Units', 'normalized', ...
@@ -307,7 +307,7 @@ switch lower(action)
             'style', 'Pushbutton', 'HorizontalAlignment', 'center', ...
             'callback', {@save_image}, ...
             'ToolTipString', 'Save png image', ...
-            'Interruptible', 'on', 'Visible', 'off');
+            'Interruptible', 'on', 'Enable', 'off');
         
         if nargin >= 3
             
@@ -497,7 +497,7 @@ switch lower(action)
                     'style', 'Popup', 'HorizontalAlignment', 'center', ...
                     'callback', 'spm(''PopUpCB'',gcbo)', ...
                     'ToolTipString', 'Select results', ...
-                    'Interruptible', 'on', 'Visible', 'on');
+                    'Interruptible', 'on', 'Enable', 'on');
             end
             
             display_results_all;
@@ -529,28 +529,32 @@ switch lower(action)
                     'style', 'PopUp', 'HorizontalAlignment', 'center', ...
                     'callback', 'spm(''PopUpCB'',gcbo)', ...
                     'ToolTipString', 'Data Cursor Mode', ...
-                    'Interruptible', 'on', 'Visible', 'off');
+                    'Interruptible', 'on', 'Enable', 'off');
             end
             
-            set(H.surf, 'Visible', 'on');
-            set(H.save, 'Visible', 'on');
-            set(H.mview, 'Visible', 'on');
-            set(H.nocbar, 'Visible', 'on');
-            set(H.bkg, 'Visible', 'on');
-            set(H.transp, 'Visible', 'on');
-            set(H.info, 'Visible', 'on');
-            set(H.cursor, 'Visible', 'on');
-            set(H.text, 'Visible', 'on');
-            set(H.border, 'Visible', 'on');
+            % enable some menus only if mesh data can be assumed to be resampled
+            if (length(H.S{1}.Y) == 32492 | length(H.S{1}.Y) == 163842)
+                set(H.surf, 'Enable', 'on');
+                set(H.text, 'Enable', 'on');
+                set(H.cursor, 'Enable', 'on');
+                set(H.border, 'Enable', 'on');
+            end
+            
+            set(H.save, 'Enable', 'on');
+            set(H.mview, 'Enable', 'on');
+            set(H.nocbar, 'Enable', 'on');
+            set(H.bkg, 'Enable', 'on');
+            set(H.transp, 'Enable', 'on');
+            set(H.info, 'Enable', 'on');
             
             if min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0 & H.n_surf == 1
-                set(H.inv, 'Visible', 'on');
-                set(H.hide_neg, 'Visible', 'on');
+                set(H.inv, 'Enable', 'on');
+                set(H.hide_neg, 'Enable', 'on');
                 set(H.hide_neg, 'Value', 0);
             end
             
             if H.n_surf == 1
-                set(H.cmap, 'Visible', 'on');
+                set(H.cmap, 'Enable', 'on');
             end
             
             H.rdata{1} = [];
@@ -754,7 +758,7 @@ if min_d > -thresh & H.n_surf == 1
     set(H.slider_min, 'Value', 0);
 end
 
-set(H.atlas, 'Visible', 'on');
+set(H.atlas, 'Enable', 'on');
 
 if ~H.disable_cbar
     H = show_colorbar(H);
@@ -1084,12 +1088,12 @@ end
 
 % don't show data cursor, view functions and data plot that will not work for flatmaps
 if surf == 4
-    set(H.cursor, 'Visible', 'off');
-    set(H.mview, 'Visible', 'off');
+    set(H.cursor, 'Enable', 'off');
+    set(H.mview, 'Enable', 'off');
     clearDataCursorPlot(H);
 else
-    set(H.cursor, 'Visible', 'on');
-    set(H.mview, 'Visible', 'on');
+    set(H.cursor, 'Enable', 'on');
+    set(H.mview, 'Enable', 'on');
 end
 
 %-----------------------------------------------------------------------
@@ -1190,13 +1194,13 @@ end
 
 % only show threshold popup if log-name was found and minimal value > 0 is < 1
 if H.logP & (H.S{1}.thresh < 1)
-    set(H.thresh, 'Visible', 'on');
+    set(H.thresh, 'Enable', 'on');
 end
 
 if H.n_surf == 1
     % get sure that image is thresholded and there are at least 20% zero/NaN areas
     if (sum(d ~= 0) / numel(d) < 0.8)
-        set(H.atlas, 'Visible', 'on');
+        set(H.atlas, 'Enable', 'on');
     end
 end
 
@@ -1320,7 +1324,7 @@ if H.n_surf == 1
 else
     
     if ~isfield(H, 'cbar') || ~ishandle(H.cbar)
-        H.cbar = axes('Parent', H.figure(1), 'Position', H.pos{1}.cbar(2, :), 'Color', [0.5 0.5 0.5], 'Visible', 'off');
+        H.cbar = axes('Parent', H.figure(1), 'Position', H.pos{1}.cbar(2, :), 'Color', [0.5 0.5 0.5], 'Enable', 'off');
     end
     
     % RGB colorbar
@@ -1401,10 +1405,10 @@ H.patch(ind) = patch(P, ...
     'FaceColor', [0.6 0.6 0.6], ...
     'EdgeColor', 'none', ...
     'FaceLighting', 'gouraud', ...
-    'SpecularStrength', 0.7, ...
-    'AmbientStrength', 0.4, ...
+    'SpecularStrength', 0.1, ...
+    'AmbientStrength', 1.0, ...
     'DiffuseStrength', 0.6, ...
-    'SpecularExponent', 10, ...
+    'SpecularExponent', 15, ...
     'Clipping', 'off', ...
     'DeleteFcn', {@myDeleteFcn, H.renderer}, ...
     'Visible', 'off', ...
@@ -1435,10 +1439,10 @@ view(H.axis, vw);
 material(H.figure(1), 'dull');
 
 % default lighting
-H.light(1) = camlight; set(H.light(1), 'Parent', H.axis);
+H.light(1) = camlight('headlight'); set(H.light(1), 'Parent', H.axis);
 setappdata(H.axis, 'handles', H);
 set(H.patch(ind), 'Visible', 'on');
-camlight(H.light(1))
+camlight(H.light(1),'headlight')
 
 %==========================================================================
 function [H, C] = updateTexture(H, ind, v, col, transp)
@@ -1829,7 +1833,7 @@ if min_d > -thresh & H.n_surf == 1
     set(H.slider_min, 'Value', 0);
 end
 
-set(H.atlas, 'Visible', 'on');
+set(H.atlas, 'Enable', 'on');
 
 if ~H.disable_cbar
     H = show_colorbar(H);
@@ -1958,7 +1962,7 @@ if view ~= H.view
     end
     
     axes(Ha);
-    camlight(H.light(1))
+    camlight(H.light(1),'headlight')
     
     if isfield(H, 'dataplot')
         set(H.dataplot, 'Position', H.viewpos{6}(abs(view), :), 'Parent', H.figure(1), 'Color', H.bkg_col);
