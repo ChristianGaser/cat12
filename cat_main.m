@@ -153,9 +153,11 @@ if ~isfield(res,'spmpp')
   % tpm brain mask
   YbA = false(d);
   Vb = tpm.V(1); Vb.pinfo(3) = 0; Vb.dat = single(exp(tpm.dat{1}) + exp(tpm.dat{2}) + exp(tpm.dat{3}));
+  
   for z=1:d(3)
     YbA(:,:,z) = spm_sample_vol(Vb,double(Yy(:,:,z,1)),double(Yy(:,:,z,2)),double(Yy(:,:,z,3)),1)>0.1;
   end
+
   % add some distance around brainmask (important for bias!)
   YbA = YbA | cat_vol_morph(YbA & sum(P(:,:,:,1:2),4)>4 ,'dd',2.4,vx_vol);
   % transfer tissue outside the brain mask to head  ... 
@@ -1810,14 +1812,14 @@ if (job.output.surface || any( [job.output.ct.native job.output.ct.warped job.ou
           cat_io_cprintf('blue',sprintf('\nPBT Test99 - surf_%s_%0.2f\n',pbtmethod,sres(sresi)));
           surf = {'lhfst'}; %,'lcfst','rhfst','rcfst'};  
           
-          [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,...
+          [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(VT,VT0,Ymix,Yl1,Yp0/3,YMF,...
           struct('pbtmethod',pbtmethod,'interpV',sres(sresi),'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
           'verb',job.extopts.verb,'WMT',WMT)); 
         end
       end
     else
       pbtmethod = 'pbt2x';
-      [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,...
+      [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(VT,VT0,Ymix,Yl1,Yp0/3,YMF,...
         struct('pbtmethod',pbtmethod,'interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
         'verb',job.extopts.verb,'WMT',WMT)); 
     end
@@ -1835,14 +1837,14 @@ if (job.output.surface || any( [job.output.ct.native job.output.ct.warped job.ou
           cat_io_cprintf('blue',sprintf('\nPBT Test99 - surf_%s_%0.2f\n',pbtmethod,sres(sresi)));
           surf = {'lhfst'}; %,'lcfst','rhfst','rcfst'};  
           
-          [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(VT,VT0,Yp0/3,Yl1,YMF,...
+          [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(VT,VT0,Yp0/3,Yl1,Yp0/3,YMF,...
               struct('pbtmethod',pbtmethod,'interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
               'verb',job.extopts.verb,'WMT',WMT)); 
         end
       end
     else
       pbtmethod = 'pbt2x';
-      [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(VT,VT0,Yp0/3,Yl1,YMF,...
+      [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(VT,VT0,Yp0/3,Yl1,Yp0/3,YMF,...
           struct('pbtmethod',pbtmethod,'interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
           'verb',job.extopts.verb,'WMT',WMT)); 
     end
