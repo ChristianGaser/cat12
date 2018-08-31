@@ -1,4 +1,4 @@
-function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
+function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,opt)
 % ______________________________________________________________________
 % Surface creation and thickness estimation.
 %
@@ -16,10 +16,11 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
 % Ym    = the (local) intensity, noise, and bias corrected T1 image
 % Ya    = the atlas map with the ROIs for left and right hemispheres
 %        (this is generated with cat_vol_partvol)
+% Yp0   = label image for surface deformation
 % YMF   = a logical map with the area that has to be filled
 %        (this is generated with cat_vol_partvol)
 %   
-% opt.surf       = {'lh','rh'[,'lc','lh']} - side
+% opt.surf       = {'lh','rh'[,'lc','rc']} - side
 %    .reduceCS   = 100000 - number of faces
 %
 % Options set by cat_defaults.m
@@ -407,8 +408,18 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     Yppt = cat_vol_resize(Yppt,'dereduceBrain',BB);                     % adding of background
     Vpp  = cat_io_writenii(V,Yppt,'','pp','percentage position map','uint8',[0,1/255],[1 0 0 0]);
 
-    Vym  = cat_io_writenii(V,Ym,'','ym','scaled image','uint8',[0,1/255],[1 0 0 0]);
-
+    % save hemisphere of Yp0 label image 
+    if opt.extract_pial_white
+      % mask hemispheres and regions
+      switch opt.surf{si}
+        case {'lh'},  Yp0s = Yp0 .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB)) .* (mod(Ya,2)==1);  
+        case {'rh'},  Yp0s = Yp0 .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB)) .* (mod(Ya,2)==0);   
+        case {'lc'},  Yp0s = Yp0 .* (Ya>0) .*   NS(Ya,opt.LAB.CB).* (mod(Ya,2)==1);  
+        case {'rc'},  Yp0s = Yp0 .* (Ya>0) .*   NS(Ya,opt.LAB.CB).* (mod(Ya,2)==0); 
+      end 
+      Vyp0s  = cat_io_writenii(V,Yp0s,'','yp0s','scaled image','uint8',[0,1/255],[1 0 0 0]);
+    end
+    
     Vpp1 = Vpp; 
     Vpp1.fname    = fullfile(pp,mrifolder,['pp1' ff '.nii']);
     vmat2         = spm_imatrix(Vpp1.mat);
@@ -416,17 +427,11 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     vmat2(7:9)    = sign(vmat2(7:9)).*[1 1 1]/(1 + iscerebellum);            % use double resolution in case of cerebellum
     Vpp1.mat      = spm_matrix(vmat2);
 
-    Vym1 = Vpp1; 
-    Vym1.fname    = fullfile(pp,mrifolder,['ym1' ff '.nii']);
-
     Vpp1 = spm_create_vol(Vpp1); 
-    Vym1 = spm_create_vol(Vym1); 
     for x3 = 1:Vpp1.dim(3),
       M    = inv(spm_matrix([0 0 -x3 0 0 0 1 1 1]) * inv(Vpp1.mat) * Vpp.mat); %#ok<MINV>
       v    = spm_slice_vol(Vpp,M,Vpp1.dim(1:2),1);       
       Vpp1 = spm_write_plane(Vpp1,v,x3);
-      v    = spm_slice_vol(Vym,M,Vym1.dim(1:2),1);       
-      Vym1 = spm_write_plane(Vym1,v,x3);
     end;
     clear M v x3; 
 
@@ -584,7 +589,7 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
       if ~debug
         delete(Vpp.fname);
         delete(Vpp1.fname);
-        delete(Vym.fname);
+        delete(Vyp0s.fname);
       end
       fprintf('%5.0fs\n',etime(clock,stime)); 
       %%
@@ -708,7 +713,7 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     else
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .2 ' ...
                      'avg -0.05 0.05 .1 .1 5 0 "%g" "%g" n 0 0 0 50 0.01 0.0 %d'], ...
-                     Vpp.fname,Pcentral,Pcentral,th,th,force_no_selfintersections);
+                     Vpp.fname,Pcentral,Pcentral,th,th,force_no_selfintersections)
     end
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
 
@@ -728,16 +733,19 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
 
     % final correction of cortical thickness using pial and WM surface
     if opt.extract_pial_white & ~opt.fast
-      % estimation of pial surfaces
+      % estimation of pial surface
+      % use slightly larger value (default would be 0.5) to ensure that pial surface in sulci
+      % will be close enough and opposite sides will almost touch
       stime = cat_io_cmd('  Estimation of pial surface','g5','',opt.verb,stime);
-      cmd = sprintf(['CAT_Central2Pial -check_intersect "%s" "%s" "%s" 0.7'], ...
+      cmd = sprintf(['CAT_Central2Pial -check_intersect "%s" "%s" "%s" 0.6'], ...
                        Pcentral,Pthick,Ppial);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
   
+      % GM/CSF border is at 1.5/3
       th2 = 0.5;
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .2 ' ...
-                     'avg -0.05 0.05 .1 .1 5 0 "%g" "%g" n 0 0 0 50 0.01 0.0 %d'], ...
-                     Vym.fname,Ppial,Ppial,th2,th2,force_no_selfintersections);
+                     'avg -0.05 0.05 .1 .1 5 0 "%g" "%g" n 0 0 0 100 0.01 0.0 %d'], ...
+                     Vyp0s.fname,Ppial,Ppial,th2,th2,force_no_selfintersections);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
 
       stime = cat_io_cmd('  Correction of pial surface in highly folded areas','g5','',opt.verb,stime);
@@ -745,16 +753,17 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
                        Ppial,Pthick,Ppial);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
 
-      % estimation of white matter surfaces
+      % estimation of white matter surface
       stime = cat_io_cmd('  Estimation of white matter surface','g5','',opt.verb,stime);
       cmd = sprintf(['CAT_Central2Pial -check_intersect "%s" "%s" "%s" -0.5'], ...
                        Pcentral,Pthick,Pwhite);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
   
+      % GM/WM border is at 2.5/3
       th2 = th2 + 1/3;
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .2 ' ...
-                     'avg -0.05 0.05 .1 .1 5 0 "%g" "%g" n 0 0 0 50 0.01 0.0 %d'], ...
-                     Vym.fname,Pwhite,Pwhite,th2,th2,force_no_selfintersections);
+                     'avg -0.05 0.05 .1 .1 5 0 "%g" "%g" n 0 0 0 100 0.01 0.0 %d'], ...
+                     Vyp0s.fname,Pwhite,Pwhite,th2,th2,force_no_selfintersections);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
 
       stime = cat_io_cmd('  Correction of white matter surface in highly folded areas','g5','',opt.verb,stime);
@@ -762,15 +771,17 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
                        Pwhite,Pthick,Pwhite);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
 
-% correction of central surface (does not yet work very well)
-%      cmd = sprintf(['CAT_AverageSurfaces -avg "%s" "%s" "%s"'], ...
-%                       Pcentral,Pwhite,Ppial);
-%      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+      % update central surface as average between white and pial surface
+      cmd = sprintf(['CAT_AverageSurfaces -avg "%s" "%s" "%s"'], ...
+                       Pcentral,Pwhite,Ppial);
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
 
-      % correction of cortical thickness
-%      cmd = sprintf(['CAT_Hausdorff -exact "%s" "%s" "%s"'], ...
-%                       Pwhite,Ppial,Pthick);
-%      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+      if 0 % more testing necessary to also correct thickness
+        % correction of cortical thickness
+        cmd = sprintf(['CAT_Hausdorff  "%s" "%s" "%s"'], ...
+                       Pwhite,Ppial,Pthick);
+        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+      end
     end
 
     %% spherical surface mapping 2 of corrected surface
@@ -866,7 +877,7 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     delete(Psphere0);
     delete(Vpp.fname);
     delete(Vpp1.fname);
-    delete(Vym.fname);
+    delete(Vyp0s.fname);
     clear CS
   end  
   

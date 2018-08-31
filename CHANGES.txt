@@ -1,5 +1,25 @@
 ------------------------------------------------------------------------
-r1360 | gaser | 2018-08-29 15:49:01
+r1361 | gaser | 2018-08-31 10:44:30
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       cat_batch_cat.sh
+M       cat_batch_long.sh
+M       cat_batch_spm.sh
+M       cat_main.m
+M       cat_surf_createCS.m
+M       check_pipeline.sh
+M       distribute_to_server.sh
+
+(1) Fixed: Changed shell command scripts to "bash" because "sh" sometimes 
+    caused problems (thanks to Vincent Koppelmann for pointing to that 
+    issue).
+(2) Changed: Added Yp0 as input for cat_surf_createCS which is used to 
+    optionally refine pial and white matter surface.
+------------------------------------------------------------------------
+r1360 | gaser | 2018-08-29 15:49:24 +0200 (Mi, 29 Aug 2018) | 19 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -19,6 +39,7 @@ M       html/cat.html
     resolution data (still experimental).
 (5) Changed: Use inverse deformation to map fsavg mask to native surface data
     to prevent unreliable values in subcortical areas.
+
 ------------------------------------------------------------------------
 r1359 | gaser | 2018-08-17 14:09:22 +0200 (Fr, 17 Aug 2018) | 6 lines
 
