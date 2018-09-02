@@ -713,7 +713,7 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
     else
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .2 ' ...
                      'avg -0.05 0.05 .1 .1 5 0 "%g" "%g" n 0 0 0 50 0.01 0.0 %d'], ...
-                     Vpp.fname,Pcentral,Pcentral,th,th,force_no_selfintersections)
+                     Vpp.fname,Pcentral,Pcentral,th,th,force_no_selfintersections);
     end
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
 
@@ -877,7 +877,9 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
     delete(Psphere0);
     delete(Vpp.fname);
     delete(Vpp1.fname);
-    delete(Vyp0s.fname);
+    if opt.extract_pial_white
+      delete(Vyp0s.fname);
+    end
     clear CS
   end  
   
