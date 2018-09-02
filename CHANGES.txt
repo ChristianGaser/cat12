@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1362 | gaser | 2018-08-31 10:47:25
+r1363 | gaser | 2018-09-02 16:39:42
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_surf_createCS.m
+M       html/cat.html
+
+Fixed: Removed debugging code in cat_surf_createCS.m that caused crash 
+(thanks to Larry Lai for pointing to that issue).
+------------------------------------------------------------------------
+r1362 | gaser | 2018-08-31 10:47:29 +0200 (Fr, 31 Aug 2018) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +19,7 @@ M       html/cat.html
 M       spm_cat12.m
 
 Changed: Updated version information to CAT12.5.
+
 ------------------------------------------------------------------------
 r1361 | gaser | 2018-08-31 10:44:57 +0200 (Fr, 31 Aug 2018) | 18 lines
 
