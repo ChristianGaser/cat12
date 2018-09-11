@@ -57,9 +57,6 @@ if output_surface
   matlabbatch{1}.spm.tools.cat.tools.long.output.surface = 1;
 end
 
-% always deselect print option
-matlabbatch{1}.spm.tools.cat.tools.long.extopts.print = 0;
-
 warning off
 try
   spm_jobman('initcfg');
