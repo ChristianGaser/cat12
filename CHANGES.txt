@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1364 | gaser | 2018-09-11 10:22:37
+r1365 | gaser | 2018-09-12 14:07:39
+
+Changed paths:
+M       CHANGES.txt
+A       cat_conf_ROI.m
+M       cat_conf_long.m
+M       cat_long_main.m
+M       cat_long_multi_run.m
+M       tbx_cfg_cat.m
+
+(1) Changed: Added ROI options to longitudinal pipeline.
+(2) Changed: Moved ROI config options to a seperate file cat_conf_ROI.m
+------------------------------------------------------------------------
+r1364 | gaser | 2018-09-11 10:23:03 +0200 (Di, 11 Sep 2018) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +21,7 @@ M       cat_batch_long.m
 M       html/cat.html
 
 Changed: Removed wrong print flag in cat_batch_long.m
+
 ------------------------------------------------------------------------
 r1363 | gaser | 2018-09-02 16:40:07 +0200 (So, 02 Sep 2018) | 9 lines
 
