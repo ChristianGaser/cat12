@@ -4,7 +4,7 @@ function out = cat_long_multi_run(job)
 % Christian Gaser
 % $Id$
 
-global opts extopts output modulate dartel warps delete_temp
+global opts extopts output modulate dartel warps delete_temp ROImenu
 
 warning off;
 
@@ -15,6 +15,8 @@ output      = job.output;
 modulate    = job.modulate;
 dartel      = job.dartel;
 warps       = job.warps;
+ROImenu     = job.ROImenu;
+
 if isfield(job,'delete_temp')  
   delete_temp = job.delete_temp;
 else

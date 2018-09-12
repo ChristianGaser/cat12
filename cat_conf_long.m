@@ -123,15 +123,16 @@ output.help = {
 %------------------------------------------------------------------------
 extopts = cat_conf_extopts(expert);
 opts    = cat_conf_opts(expert);
+ROI     = cat_conf_ROI(expert);
 %------------------------------------------------------------------------
 
 long = cfg_exbranch;
 long.name = 'Segment longitudinal data';
 long.tag  = 'long';
 if expert
-  long.val  = {esubjs,opts,extopts,output,modulate,warps,dartel,delete_temp};
+  long.val  = {esubjs,opts,extopts,output,ROI,modulate,warps,dartel,delete_temp};
 else
-  long.val  = {esubjs,opts,extopts,output,modulate,warps,dartel};
+  long.val  = {esubjs,opts,extopts,output,ROI,modulate,warps,dartel};
 end
 long.prog = @cat_long_multi_run;
 long.vout = @vout_long;
