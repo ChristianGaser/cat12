@@ -187,6 +187,8 @@ else
     '  3         .. "Optimized Shooting"      .. TR/2:TR/4:TR'
     '  4         .. "Default   Shooting"      .. only TR'
     '  5         .. "Optimized vox Shooting " .. vox/2:vox/4:vox'
+    '  6         .. "Optimized Shooting - hydrocephalus (6)"'
+    '                Use many iterations! Very slow! Use k-means AMAP as initial Segmentation!'
     ''
     '  10        .. "Stronger Shooting"       .. max( 0.5 , [2.5:0.5:0.5] )'
     '  11        .. "Strong Shooting"         .. max( 1.0 , [3.0:0.5:1.0] )'
@@ -658,6 +660,39 @@ app.help   = [app.help; { ...
 
 %------------------------------------------------------------------------
 
+if expert>1
+  new_release        = cfg_menu;
+  new_release.tag    = 'new_release';
+  new_release.name   = 'New release functions';
+  new_release.help   = { ...
+      'Use new rather then standard functions. '
+    };
+  new_release.val    = {0};  
+  new_release.labels = {'No','Yes'};
+  new_release.values = {0 1};
+end
+
+%------------------------------------------------------------------------
+
+if expert>1
+  spm_kamap        = cfg_menu;
+  spm_kamap.tag    = 'spm_kamap';
+  spm_kamap.name   = 'Initial segmentation';
+  spm_kamap.help   = { ...
+      'In seldom cases the Unified Segmentation can fail in highly abnormal brains, where e.g. the cerebrospinal fluid of superlarge ventricles (hydrocephalus) were classified as white matter. However, if the affine registration is correct, the AMAP segmentation with an prior-independent k-means initialization can used to replace the SPM brain tissue classification. ' 
+      'Moreover, the default Dartel and Shooting registrations will fail and the "Optimized Shooting - superlarge ventricles" option for "Spatial registration" is required! '
+      ''
+      ' SPM Unified Segmentation - use SPM Unified Segmentation segmenation (default) ' 
+      ' k-means AMAP - k-means AMAP approach ' 
+      ''
+    };
+  spm_kamap.def    = @(val)cat_get_defaults('extopts.spm_kamap', val{:});  
+  spm_kamap.labels = {'SPM Unified Segmentation','k-means AMAP'};
+  spm_kamap.values = {0 2};
+end
+
+%------------------------------------------------------------------------
+
 scale_cortex         = cfg_entry;
 scale_cortex.tag     = 'scale_cortex';
 scale_cortex.name    = 'Modify cortical surface creation';
@@ -701,7 +736,7 @@ segmentation.name = 'Segmentation Options';
 if expert==1
   segmentation.val  = {app,NCstr,LASstr,gcutstr,cleanupstr,wmhc,slc,restype};
 elseif expert==2
-  segmentation.val  = {app,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,wmhc,slc,mrf,restype}; % WMHCstr,
+  segmentation.val  = {app,NCstr,spm_kamap,LASstr,gcutstr,cleanupstr,BVCstr,wmhc,slc,mrf,restype}; % WMHCstr,
 end
 segmentation.help = {'CAT12 parameter to control the tissue classification.';''};
 
@@ -711,8 +746,8 @@ admin.tag  = 'admin';
 admin.name = 'Administration Options';
 if expert==1
   admin.val  = {ignoreErrors verb print};
-else
-  admin.val  = {experimental lazy ignoreErrors verb print};
+elseif expert==2
+  admin.val  = {experimental new_release lazy ignoreErrors verb print};
 end
 admin.help = {'CAT12 parameter to control the behaviour of the preprocessing pipeline.';''};
 

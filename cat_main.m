@@ -142,9 +142,148 @@ if exist(oldxml,'file'), delete(oldxml); end
 clear oldxml
 
 d = VT.dim(1:3);
-P = zeros([size(Ycls{1}) numel(Ycls)],'uint8');
-for i=1:numel(Ycls), P(:,:,:,i) = Ycls{i}; end
-clear Ycls;
+
+% replace SPM brain segmentation by AMAP segmentation
+job.extopts.spm2amap = 1;
+if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap && job.extopts.new_release
+%% -------------------------------------------------------------------
+%  Initial k-means AMAP segmentation
+%  -------------------------------------------------------------------
+%  This is an alternative pipeline in case of failed SPM brain tissue
+%  classification in datasets with abnormal anatomy, i.e. superlarge 
+%  ventricle. 
+%  -------------------------------------------------------------------
+    stime2 = cat_io_cmd('  K-means AMAP bias-correction','g5','',job.extopts.verb-1,stime2);
+    
+    % simple skull-stripping
+    Yb = Ycls{1} + Ycls{2} + Ycls{3};
+    Yb = cat_vol_morph( smooth3(Yb)>64 , 'ldc', 8,vx_vol);
+    %Yb = cat_vol_morph( Yb , 'dd', 2,vx_vol);
+
+    % intensity normalization
+    Ym = Ysrc; Ym(~Yb) = nan; 
+    [Ymic,th] = cat_stat_histth(Ym,0.90); clear Ymic; 
+    Ym(isnan(Ym) | Ym>(th(2) + diff(th)*2)) = 0;
+    Ym = (Ym - th(1)) ./ diff(th); 
+
+    % bias correction for white matter (Yw) and ventricular CSF areas (Yv)
+    Yw  = Ym>0.8 & Ym<1.5; Yw(smooth3(Yw)<0.6) = 0; Yw(smooth3(Yw)<0.6) = 0; 
+    Yv  = Ym<0.5 & Yb; Yv  = cat_vol_morph(Yv,'e',4); 
+    
+    % estimate value vth to mix CSF and WM information
+    Yvw = cat_vol_smooth3X(Yv,6)>0.05 & cat_vol_morph(Yw,'e',2); 
+    Ywv = cat_vol_smooth3X(Yw,6)>0.05 & cat_vol_morph(Yv,'e',2); 
+    vth = median(Ysrc(Yvw(:))) ./ median(Ysrc(Ywv(:)));
+    if debug==0, clear Ywv Yvw; end
+    
+    % some precorrections and bias field approximation 
+    Yi  = cat_vol_localstat(Ysrc .* Yw,Yw,1,3); 
+    Yiv = cat_vol_localstat(Ysrc .* Yv,Yv,1,1); 
+    Yi  = Yi + Yiv * vth; if debug==0, clear Yiv; end
+    %Yi  = Yi ./ median(Yi(Yw(:)));
+    Yi  = cat_vol_approx(Yi,'nn',vx_vol,4); 
+    Yi  = cat_vol_smooth3X(Yi,4); 
+    
+    
+    %% bias field correction 
+    Ysrc = Ysrc ./ (Yi ./ median(Yi(Yw(:))));
+    Ymi = (Ysrc .* Yb) ./ Yi;
+    
+    % remove of high intensity structures
+    Ymi( Ymi > 1.1 * median(Ymi(Yw(:))) ) = median(Ymi(Yv(:))); 
+    Ymi = cat_vol_median3(Ymi/median(Ymi(Yw(:))),Yb,Yb,0.2)*median(Ymi(Yw(:)));
+    if debug==0, clear Ym Yi Yw Yv; end
+ 
+    
+    
+    
+    %%  similar to later AMAP call
+    %  -------------------------------------------------------------------
+
+    % correct for harder brain mask to avoid meninges in the segmentation
+    Ymib = Ymi; Ymib(~Yb) = 0; 
+    rf = 10^4; Ymib = round(Ymib*rf)/rf;
+
+    %  prepare data for segmentation
+    % more direct method ... a little bit more WM, less CSF
+    Yp0 = cat_vol_ctype(max(1,min(3,round(Ymi * 3)))); Yp0(~Yb) = 0;
+    
+
+    % use index to speed up and save memory
+    sz = size(Yb);
+    [indx, indy, indz] = ind2sub(sz,find(Yb>0));
+    indx = max((min(indx) - 1),1):min((max(indx) + 1),sz(1));
+    indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
+    indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
+
+    % Yb source image because Amap needs a skull stripped image
+    % set Yp0b and source inside outside Yb to 0
+    Yp0b = Yp0(indx,indy,indz);  %#ok<NASGU>
+    Ymib = Ymib(indx,indy,indz); 
+
+    % adaptive mrf noise 
+    if job.extopts.mrf>=1 || job.extopts.mrf<0; 
+      % estimate noise
+      [Yw,Yg] = cat_vol_resize({Ymi.*(Ycls{1}>240),Ymi.*(Ycls{2}>240)},'reduceV',vx_vol,3,32,'meanm');
+      Yn = max(cat(4,cat_vol_localstat(Yw,Yw>0,2,4),cat_vol_localstat(Yg,Yg>0,2,4)),[],4);
+      job.extopts.mrf = double(min(0.15,3*cat_stat_nanmean(Yn(Yn(:)>0)))) * 0.5; 
+      clear Yn Yg
+    end
+
+    % display something
+    stime2 = cat_io_cmd(sprintf('  Amap using k-means segmentations (MRF filter strength %0.2f)',job.extopts.mrf),'g5','',job.extopts.verb-1,stime2);
+
+    % Amap parameters  - default sub=16 caused errors with highres data!
+    % don't use bias_fwhm, because the Amap bias correction is not that efficient and also changes
+    % intensity values
+    Ymib = double(Ymib); n_iters = 50; sub = round(32/min(vx_vol)); %#ok<NASGU>
+    n_classes = 3; pve = 5; bias_fwhm = 120; init_kmeans = 1;  %#ok<NASGU>
+    if job.extopts.mrf~=0, iters_icm = 50; else iters_icm = 0; end %#ok<NASGU>
+
+    % do segmentation and rep
+    evalc(['prob = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
+      'job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);']);
+    fprintf('%5.0fs\n',etime(clock,stime));
+
+    % reorder probability maps according to spm order
+    clear Yp0b Ymib; 
+    prob = prob(:,:,:,[2 3 1]);  %#ok<NODEF>
+    
+    % cleanup
+    prob = clean_gwc(prob,3);
+    
+    % 
+    P = zeros([size(Ycls{1}) numel(Ycls)],'uint8');
+    for i=1:numel(Ycls), P(:,:,:,i) = Ycls{i}; end
+    for i=1:3
+       P(:,:,:,i) = 0; P(indx,indy,indz,i) = prob(:,:,:,i);
+    end
+    clear prob;
+    Ys = cat_vol_ctype(255 - sum(P(:,:,:,1:3),4));
+    for i=4:6
+      P(:,:,:,i) = P(:,:,:,i) .* Ys; 
+    end
+    clear Ys;
+ 
+    sP = (sum(single(P),4)+eps)/255;
+    for k1=1:size(P,4), P(:,:,:,k1) = cat_vol_ctype(single(P(:,:,:,k1))./sP); end
+  %%
+    clear vol Ymib
+    
+    for i=1:3
+      [res.mn(res.lkp==i),tmp,res.mg(res.lkp==i)] = ...
+        kmeans3D(Ysrc(P(:,:,:,i)>128),sum(res.lkp==i));
+    end
+    
+    
+    clear Ycls;
+else
+  P = zeros([size(Ycls{1}) numel(Ycls)],'uint8');
+  for i=1:numel(Ycls), P(:,:,:,i) = Ycls{i}; end
+  clear Ycls;
+end
+
+
 
 if ~isfield(res,'spmpp')
   stime2 = cat_io_cmd('  Update Segmentation','g5','',job.extopts.verb-1,stime2); 
@@ -400,8 +539,10 @@ if ~isfield(res,'spmpp')
   if ~(job.extopts.INV && any(sign(diff(T3th))==-1))
     %% Update probability maps
     % background vs. head - important for noisy backgrounds such as in MT weighting
-    if job.extopts.gcutstr==0
-      Ybg = ~Yb; 
+    if job.extopts.new_release==0 && job.extopts.gcutstr==0  
+      Ybg = ~Yb; % this is wrong and removes the all head classes later !
+    elseif job.extopts.new_release && skullstripped
+      Ybg = ~Yb;
     else
       if sum(sum(sum(P(:,:,:,6)>240 & Ysrc<cat_stat_nanmean(T3th(1:2)))))>10000
         Ybg = P(:,:,:,6); 
@@ -778,7 +919,11 @@ if ~isfield(res,'spmpp')
       [Ymi,Ym,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extoptsLAS2); % use Yclsi after cat_vol_partvol
     else
       stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
-      [Ymi,Ym,Ycls] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
+      if job.extopts.new_release
+        [Ymi,Ym,Ycls] = cat_main_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
+      else
+        [Ymi,Ym,Ycls] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
+      end
     end
     fprintf('%5.0fs\n',etime(clock,stime));
 
@@ -2468,6 +2613,7 @@ if job.extopts.print
     job.imgprint.fdpi  = @(x) ['-r' num2str(x)];
     job.imgprint.ftype = @(x) ['-d' num2str(x)];
     job.imgprint.fname     = fullfile(pth,reportfolder,['catreport_' nam '.' job.imgprint.type]); 
+    job.imgprint.fnamej    = fullfile(pth,reportfolder,['catreportj_' nam '.jpg']);
 
     fgold.PaperPositionMode = get(fg,'PaperPositionMode');
     fgold.PaperPosition     = get(fg,'PaperPosition');
@@ -2479,6 +2625,7 @@ if job.extopts.print
     for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize*0.8); end;
     warning off
     print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
+    print(fg, job.imgprint.ftype('jpeg'), job.imgprint.fdpi(job.imgprint.dpi/2), job.imgprint.fnamej); 
     warning on
     for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize); end; end
     for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize); end; 

@@ -1,5 +1,84 @@
 ------------------------------------------------------------------------
-r1365 | gaser | 2018-09-12 14:07:39
+r1366 | dahnke | 2018-09-21 12:21:09
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_defaults.m
+A       cat_io_findjobj.m
+A       cat_io_rmdir.m
+M       cat_main.m
+A       cat_main_LAS2.m
+M       cat_plot_boxplot.m
+M       cat_run.m
+M       cat_stat_check_SPM.m
+A       html/cat_tools_checkcov.html
+A       html/icons
+A       html/icons/file_cat_log.png
+A       html/icons/file_cat_report.png
+A       html/icons/file_cat_report_surf.png
+A       html/icons/file_cat_xml.png
+A       html/icons/file_delete.png
+A       html/icons/file_delete_restore.png
+A       html/icons/file_export.png
+A       html/icons/file_new.png
+A       html/icons/file_open.png
+A       html/icons/file_pdf.png
+A       html/icons/file_print.png
+A       html/icons/file_save.png
+A       html/icons/file_search.png
+A       html/icons/file_spm_view.png
+A       html/icons/file_surf.png
+A       html/icons/file_surfc.png
+A       html/icons/redo.png
+A       html/icons/refresh.png
+A       html/icons/settings.png
+A       html/icons/status_failed.png
+A       html/icons/status_forbiden.png
+A       html/icons/status_help.png
+A       html/icons/status_help2.png
+A       html/icons/status_info.png
+A       html/icons/status_passed.png
+A       html/icons/status_warning_hard.png
+A       html/icons/status_warning_soft.png
+A       html/icons/tool_data_cursor.png
+A       html/icons/tool_fit.png
+A       html/icons/tool_hand.png
+A       html/icons/tool_zoom_in.png
+A       html/icons/tool_zoom_out.png
+A       html/icons/trash_auto.png
+A       html/icons/trash_col_add.png
+A       html/icons/trash_col_rm.png
+A       html/icons/trash_row_add.png
+A       html/icons/trash_row_rm.png
+A       html/icons/trash_tip_add.png
+A       html/icons/trash_tip_rm.png
+A       html/icons/undo.png
+M       html/style.css
+M       kmeans3D.m
+
+(1) Fixed:      Corrected background segmentation bug in cat_main!
+(2) New:        Added new_release option in developer GUI that is
+                not available in the cat_defaults and therefore 
+                defined in the cat_run.                 
+(3) New:        Added new segmentation approach that replaces the 
+                brain tissue segmentation of SPM by the k-means 
+                AMAP (developer, new_release). Added variable
+                cat.extops.spm_kamap in cat_defaults. 
+(4) Changed:    Restructured cat_main_LAS and added documentation
+                (new_release). Corrected bug in background/CSF 
+                handling.
+(5) Fixed:      Corrected bug in case of no selected files in 
+                cat_stat_check_SPM.
+(6) Changed:    Corrected small bugs and added help in kmeans3D.
+(7) Changed:    Added CSS style for centered HTML help figures.
+(8) Changed:    Small changes in cat_plot_boxplot to improve 
+                output of label values. 
+(9) Changed:    JPG export of the CAT report in cat_main for 
+                cat_stat_check_cov2.
+
+------------------------------------------------------------------------
+r1365 | gaser | 2018-09-12 14:08:04 +0200 (Mi, 12 Sep 2018) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +90,7 @@ M       tbx_cfg_cat.m
 
 (1) Changed: Added ROI options to longitudinal pipeline.
 (2) Changed: Moved ROI config options to a seperate file cat_conf_ROI.m
+
 ------------------------------------------------------------------------
 r1364 | gaser | 2018-09-11 10:23:03 +0200 (Di, 11 Sep 2018) | 8 lines
 
