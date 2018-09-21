@@ -20,7 +20,9 @@ function cat_stat_check_SPM(job)
 % $Id$
 
 if nargin == 0
-    load(spm_select(1,'SPM.mat','Select SPM.mat'));
+    file = spm_select(1,'SPM.mat','Select SPM.mat'); 
+    if isempty(file), return; end % nothing to do
+    load(file);
     use_unsmoothed_data = 1;
     adjust_data         = 1;
     check_cov           = 1;

@@ -232,3 +232,16 @@ img.center {
 	margin-right: auto;
 }
 
+p.img {
+  text-align: center;
+  width: 90%;
+  font-size: 0.9em;	
+  position: relative;
+  	display: block;
+	margin-top: 20px;
+	margin-bottom: 20px;
+	margin-left: auto;
+    margin-right: auto;
+    color: #666; 
+}
+

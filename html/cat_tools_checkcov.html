@@ -1,0 +1,272 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link rel="stylesheet" type="text/css" href="spm.css" />
+    <link rel="stylesheet" type="text/css" href="../spm.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  
+  <body>
+    <div id="header" style="background: black url('images/research.jpg') right;">
+      <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
+      <p>
+          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
+          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');">Department of Neurology</a> | 
+          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');">Department of Psychiatry</a> | 
+          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
+      </p>
+      <div id="breadcrumbs">
+        <a href="cat.html">CAT</a> > <a href="cat_tools.html">Tools</a> > <a href="cat_tools_checkcov.html">Checkcov</a>
+      </div>
+    </div>
+	
+  
+    <div id="content">
+    
+    
+      <h2>Check covariance </h2>
+      <p> 
+        Before statistical analysis data should be carefully checked for problems in image and preprocessing quality and sample homogeneity to improve the statistical power. The CAT Checkcov tool estimates the covariance between each scan to identify outlier from the sample mean. The new version further includes tools to navigate trough large samples, to view preprocessing results, and routines to exclude critical datasets.  
+      </p><p>
+        The <a href="#batch">SPM batch window</a> is used to define all inputs. After initialization, first results were displayed in the <a href="#command">MATLAB command line</a> before the <a href="#checkcov">Checkcov window</a> and the <a href="#graphics">SPM graphics window</a> showed up (Fig. 1). The  <a href="#checkcov"> Checkcov window</a> includes the <i>covariance matrix</i> (left) and main toolbar (right). If quality measures are available (by default in CAT preprocessing) than the <i>Mahanalobis distance plot</i> allows superior outliers detection. It displays the color-coded Mahanalobis distance (MD), the mean correlation (MNC), and the weighed image quality rating (IQR) in one plot (see <a href="#application"> How to use</a> section).
+      </p>
+      <!-- IMAGE: SPM batch window with comments -->
+      <div>
+        <p class="img" style="width: 90%;">
+            <img src="images/cat_stat_checkcov_00_overview.png" width=100% height=auto alt="CAT Checkcov tool">
+        <br><br>
+            Fig. 1: The CAT <a href="#checkcov">Checkcov</a> tool allows to investigate the homogeneity of large data samples and the detection of outlier due to motion artifacts, preprocessing failures, or unfitting anatomical properties. 
+        </p>
+      </div>
+      <p>
+        <!-- auto -->
+        Moreover, you can apply the <i>auto exclude function</i> <img src="icons/trash_auto.png" height=14px align="top"> to get an initial selection of critical scans. Use the navigation and data view tools to investigate borderline scans to decide if you want to exclude more or less images with critical covariance or image quality. Try to include as many scans as possible to improve statistical power. Only remove scans with low image quality or motion artifacts (lower IQR values), failed preprocessing, or untypical anatomy (lower mean correlation).  
+      </p>
+
+<!-- Macht dieser Block hier sinn? -->      
+      <p>
+        <b>Covariance:</b> Low covariance can be the result of <i>failed</i> preprocessing, <i>wrong</i> preprocessing parameter, or <i>untypical anatomy</i> (Fig. 2). You should remove all scans with failed preprocessing, e.g., were the scull-stripping removed parts of the brain or include large areas of head tissue (Fig. #A), other miss-classifications of brain tissues, or incorrect normalization results. In case of anatomical reasons of low covariance by extremely large or small ventricle or white matter hyperintensities (WMHs) you have to decide if this is <i>normal</i> property of the research sample, i.e. in an aged population with focus on tissue atrophy you should not remove such images. In contrast to low covariance scans, also high covariance (>0.925) can be critical if your perform a cross-sectional study that should not include rescans of the same subject. 
+        <!-- IQR / PIQR -->
+      </p>
+      <!-- IMAGE: (A) child with missed GM, (B) WMHs in Oasis 31, (C) 4397 / ATLAS-->
+      <div>
+        <p class="img" style="width: 90%;">
+            <img src="images/cat_stat_checkcov_02_command.png" width=100% height=auto alt="different cases of deviating covariance">
+        <br><br>
+            Fig. 2: Images with strongly deviating mean covariance due to failed preprocessing (A), <i>wrong</i> preprocessing parameters, e.g., inactive WMHs correction (B), or <i>untypical anatomy</i> (C).
+        </p>
+      </div>
+      
+      <p>
+        <b>Image quality:</b> If CAT XML files are available, the <a href="cat_methods_QA.html"> quality ratings </a> of each record is extracted to estimate a protocol-normalized IQR rating PIQR. PIQR use the resolution properties of the images to classify different protocols.  For each protocol the first major peak of at least 20% of the images defines the optimal protocol quality level, e.g., 84.39 rps.  Images with 5 rps lower IQR rating normally show light (motion) artifacts, whereas image with about 10 rps lower rating often have severe (motion) artifacts and should be excluded from analysis.  Image with (motion) artifacts are known to lead to different preprocessing result, e.g. less gray matter volume, that artifact free images and can therefore bias the analysis <a href='#Reuter:2015'>(Reuter et al., 2015)</a>. 
+        If your data (e.g., children) includes many images (e.g., >30%) with low quality that has to be included for adequate sample size, you should try remove only the worst-cases and to balance your samples or for age in case of development/aging study. 
+      </p>
+      <div>
+        <p class="img" style="width: 90%;">
+            <img src="images/cat_qa_expert.png" width=100% height=auto alt="different cases of image quality">
+        <br><br>
+          Fig. 3: Motion artifacts can lead to lower (relative) GM volume that can be miss interpreted as tissue atrophy. Hence, it is important to have balanced samples.
+        </p>
+      </div>
+
+
+
+
+      <h3 id="batch">SPM batch window</h3>
+      <p>
+        Use the SPM batch window to define your samples (e.g., groups, sites) and nuisance variables (e.g., sex, age; Fig. 4). In most cases you will select normalized gray matter volumes <i>wmp0*.nii</i> or resampled (= normalized) cortical thickness maps <i>s*mm.*h.thickness</i><i>.resampled.*.gii</i>. But also other normalized volumes or surface maps can be used, such as normalized T1 volumes <i>wm*.nii</i>, fractional anisotropy or functional activation maps, or further surface measures of gyrification, fractal dimension or local intensity (myelination). In case of volumes you can define the separation of slice to reduce processing time. To use nuisance variables, copy data from text-files or tables, where each scan has to get a (sample independent) value. 
+      </p>
+      <!-- IMAGE: SPM batch window with comments -->
+      <div>
+          <p class="img" style="width: 70%;">
+            <img src="images/cat_stat_checkcov_01_batch.png" width=100% height=auto alt="data input via SPM batch window">
+          <br><br>
+             Fig. 4: The SPM batch window allows to set up different samples and nuisance variables. Here, three samples with 20, 30 and 40 files and two corresponding nuisance variables (with 90 values) were defined.
+          </p>
+        </div>
+        
+        
+        
+        
+        
+      <h3 id="command">MATLAB command line window</h3>
+      <p>
+        After initialization Checkcov try to find the original files used for preprocessing, related (resampled) surfaces and further report files (Fig. 5). Next the covariance between each input scan is estimated. 
+      <!-- IMAGE: MATLAB command window with comments -->
+      <div>
+        <p class="img" style="width: 90%;">
+            <img src="images/cat_stat_checkcov_02_command.png" width=100% height=auto alt="Checkcov output of the MATLAB command window">
+        <br><br>
+            Fig. 5: After starting the Checkcov tool the data is loaded and processed where important information are printed directly to the MATLAB command line.
+        </p>
+      </div>
+      </p>
+
+        
+        
+      <h3 id="checkcov">CAT Checkcov window </h3>
+      <p>  
+        The Checkcov main window include graphical main plot with colorbar on the top, a toolbar with different set of buttons, and a window with slices or surface flat-maps of selected scans (Fig. 6).  Images can be selected in the <i>covariance matrix</i> (default) or in the <i>Mahanalobis distance plot.</i> Critical images with (motion) artifacts, preprocessing failures, or unfitting anatomy can be exclude via a virtual list that finally allows to remove the listed scans and related files to a separate directory that supports later restoring.  
+      </p>
+      <!-- IMAGE: MATLAB command window with comments -->
+      <div>
+        <p class="img" style="width: 70%;">
+          <img src="images/cat_stat_checkcov_03_checkcov.png" width=100% height=auto alt="CAT Checkcov main window">
+        <br><br>
+          Fig. 6: The Checkcov main window with <i>covariance matrix</i>/<i>Mahanalobis distance plot</i>, toolbars and slice/surface-flat-map view. 
+        </p>
+      <p>
+        The toolbar include <!--a "close" and "help" button, two popup menus to control the data visualization of the Checkcov and a Graphic window plot, and -->
+        blocks for navigation 
+            <img src="icons/tool_fit.png" height=14px align="top">&nbsp;<img src="icons/tool_fit.png" height=14px align="top">&nbsp;<img src="icons/tool_zoom_in.png" height=14px align="top">&nbsp;<img src="icons/tool_zoom_out.png" height=14px align="top">&nbsp;<img src="icons/tool_hand.png" height=14px align="top">, 
+        views of subsets
+            SAMPLE&nbsp;PROTOCOL,
+        data checking 
+            <img src="icons/file_spm_view.png" height=14px align="top">&nbsp;<img src="icons/file_surfc.png" height=14px align="top"><img src="icons/file_cat_log.png" height=14px align="top"><img src="icons/file_cat_xml.png" height=14px align="top"><img src="icons/file_cat_report_surf.png" height=14px align="top">,
+        and data ex- and inclusion 
+            <img src="icons/file_new.png" height=14px align="top">&nbsp;<img src="icons/file_export.png" height=14px align="top">&nbsp;<img src="icons/trash_col_rm.png" height=14px align="top">&nbsp;<img src="icons/trash_col_add.png" height=14px align="top">&nbsp;<img src="icons/trash_auto.png" height=14px align="top"> 
+            <img src="icons/undo.png" height=14px align="top">&nbsp;<img src="icons/redo.png" height=14px align="top">&nbsp;<img src="icons/trash_row_rm.png" height=14px align="top">&nbsp;<img src="icons/trash_row_add.png" height=14px align="top">&nbsp;<img src="icons/file_delete.png" height=14px align="top">.
+      </p><p>  
+        The navigation block contain the typical MATLAB figure navigation elements for
+            data selection&nbsp;<img src="icons/tool_fit.png" height=14px align="top">, 
+            default zoom&nbsp;<img src="icons/tool_fit.png" height=14px align="top">, 
+            zoom in&nbsp;<img src="icons/tool_zoom_in.png" height=14px align="top">, 
+            zoom out&nbsp;<img src="icons/tool_zoom_out.png" height=14px align="top"> and 
+            moving&nbsp;<img src="icons/tool_hand.png" height=14px align="top">. 
+        The data checking block contain buttons to view the 
+            original image(s)&nbsp;<img src="icons/file_spm_view.png" height=14px align="top">, 
+            surface(s)&nbsp;<img src="icons/file_surfc.png" height=14px align="top">, 
+            LOG&nbsp;<img src="icons/file_cat_log.png" height=14px align="top">, 
+            XML&nbsp;<img src="icons/file_cat_xml.png" height=14px align="top">, and 
+            report files&nbsp;<img src="icons/file_cat_report_surf.png" height=14px align="top">&nbsp;. 
+        The data removal block (exclusion-list options) include buttons to create a 
+            new exclusion-list&nbsp;<img src="icons/file_new.png" height=14px align="top">, 
+            to view the selected files&nbsp;<img src="icons/file_export.png" height=14px align="top">, 
+            to exclude
+                <img src="icons/trash_col_rm.png" height=14px align="top">&nbsp;<img src="icons/trash_row_rm.png" height=14px align="top">&nbsp;<img src="icons/trash_tip_rm.png" height=14px align="top"> or 
+            include
+                <img src="icons/trash_col_add.png" height=14px align="top">&nbsp;<img src="icons/trash_row_add.png" height=14px align="top">&nbsp;<img src="icons/trash_tip_add.png" height=14px align="top"> 
+            selected elements, 
+            to undo&nbsp;<img src="icons/undo.png" height=14px align="top"> and 
+            redo&nbsp;<img src="icons/redo.png" height=14px align="top"> exclusion operations, 
+            an automatic data exclusion tool&nbsp;<img src="icons/trash_auto.png" height=14px align="top">, and 
+            the final data removal option&nbsp;<img src="icons/file_delete.png" height=14px align="top"> 
+            that moves selected datasets with related scans to an exclusion directory and creating a script to restore this final operation. 
+      </p><p>
+        The auto exclude button&nbsp;<img src="icons/trash_auto.png" height=14px align="top"> opens a menu that show a normalized histogram of the MNC and IQR variables and two bars to allow softer or harder limits (see <a href="#exclusion">CAT Checkcov exclusion window</a>).
+      </p>
+    
+      
+      
+      
+      <h3 id="graphics">SPM graphics window</h3>
+      <p>  
+        Checkcov use the SPM graphics window to print box and violin plots with small dots of each scan (Fig. 8). Alternatively, you can print the filenames of each scan. The window is not automatically updated while you exclude or include files and you have to use the refresh button <img src="icons/refresh.png" height=14px align="top"> . Exclude scans were plotted as red x or filename.
+      </p>
+      <!-- IMAGE: different views of the SPM graphics window -->
+      <div>
+        <p class="img" style="width: 90%;">
+          <img src="images/cat_stat_checkcov_06_auto.png" width=20% height=auto alt="different SPM graphics windows" >
+        <br><br>
+          Fig. 8: Different stats of the SPM graphics window, with violin- and box-plot (A&nbsp;&&nbsp;B), original data&nbsp;(C), LOG files&nbsp;(D), XML files&nbsp;(E), and CAT report&nbsp;(F).
+        </p>
+      </div>
+      
+      <!-- also check cat_tools_checkcov_exclusion! -->
+      <h3 id="exclusion">CAT Checkcov exclusion window</h3>
+      <p> 
+        The exclusion window allows to select scans with low mean covariance (MNC) and/or protocol-based image quality rating (PIQR) by means of their standard deviations. It shows the histogram with sliders to zoom, to modify the bin width, and finally to control the allowed standard deviation. A table conclude group informations about mean covariance, image quality, and nuisance variables. The control buttons on the right bottom corner allow to restore the default setting&nbsp;<img src="icons/trash_auto.png" height=14px align="top">, show this help&nbsp;<img src="icons/status_help.png" height=14px align="top">, and to reject&nbsp;<img src="icons/status_failed.png" height=14px align="top"> or apply&nbsp;<img src="icons/status_passed.png" height=14px align="top"> the defined selection.   
+      </p>
+      <div> 
+        <p class="img" style="width: 90%;">
+          <img src="images/cat_stat_checkcov_07_exclusion.png" width=100% height=auto alt="CAT exclusion window">
+          <br><br>
+          CAT Checkcov exclusion window to define outlier their standard deviation of their mean covariance and image quality.  
+        </p>
+      </div>
+
+ 
+ <!-- 
+    Hmm, die Seite ist schon verdammt lang hier ... es wäre vielleicht sinnvoll hier eine separate Seite zu nutzen. 
+    Ggf. primäre Unterteilung in cross-sectional und longitudinal? > sehr lang, aber vielleicht passender?
+    Hier erkläre ich nur wie man die Dinge und in was für einer Folge nutzt. Am besten anhand eines (bzw. des obigen) Beispieldatensatzes. 
+ -->
+    <h3 id="application">How to use</h3>
+      <p> 
+        We suggest to identify outlier in two or more steps, starting with removing scans with severe (motion) artifacts (low IQR) or failed preprocessing (low MNC) that can not be used in any case, and than go on by removing scans with lighter (motion) artifacts or anatomical properties that did not fit to the sample. This allows to restore steps, in case of problematic analysis with to low power and carefully include scans with light artifacts balanced manually for each sample.
+      </p>
+      
+      <p>
+        <b>First overview:</b> After the Checkcov main window shows up you can start with "check worst" button to view the worst 2 to 24 records to get a fast introduction to problematic data in the SPM graphics window or multiple surface windows. 
+        By default all records in the <i>covariance matrix</i> are sorted by sample and your file selection order. This allows you good to identify outlier in general as blue lines/rows (low covariance, i.e., MNC below 0.75), whereas rescans are often visible as single red points (high covariance, MNC above 0.925). You can use the <i>sorted covariance plot</i> of the PLOT menu to get a (sample independent) ordering with high MNC at the top and low MNC at the bottom. Use the navigation tools to zoom in or restrict the view to a specific sample. 
+        <!-- IQR -->
+        If quality assurance information are available (by default for CAT preprocessing), you can also switch to the <i>Mahanalobis distance plot</i> that support a mixed view on mean covariance (MNC) and the weighted <a href="cat_methods_QA.html">image quality rating (IQR)</a>. 
+      </p>
+      
+      <!-- auto -->
+      <p>
+        <b>Principle data analysis:</b> 
+        We recommend to start by removing the most obvious datasets, i.e., non-required rescans in cross-sectional data (high MNC), failed preprocessing (low MNC), and severe (motion) artifacts (lower PIQR, e.g. below -2 rps), or generally low image quality (lower IQR, e.g. below 60 rps). Check and modify the list and final remove the data by using the final removal button&nbsp;<img src="icons/file_delete.png" height=14px align="top">. It will move all selected files into a exclusion directory with a date-time specific subdirectory that further can include a user specific string for better identification. After removing the most problematic image, you can now go on with less critical cases that you may want to re-include later without restoring the worst cases. Try to include at most images as possible to improve the statistical power! 
+      </p>
+      
+      <!-- add cat-version and cat-parametrization as automatic nuisance variable in future -->
+      <p>
+        <img src="icons/status_warning_soft.png" height=20px align="left" HSPACE="10" VSPACE="5">
+        In case of failed preprocessing (or bad parameter) you may want to try different preprocessing options. But be aware that mixing different parametrization can lead to systematic differences in the results. In case of more than some single scans, you have to account for preprocessing parameter by using the type of parametrization as nuisance variable.
+      </p>
+      <p>
+        <img src="icons/status_info.png" height=20px align="left" HSPACE="10" VSPACE="5">
+        If you remove scans and start the batch it will ignore missing files and just print a message to the command window. 
+      </p>
+      
+      <!-- -->
+      <p>
+        <b>Single data analysis:</b> You can use the auto exclude option <img src="icons/trash_auto.png" height=14px align="top"> to create an initial selection of critical scans. 
+        Use the data view tools to investigate borderline scans to decide if you want to exclude more or less images with low covariance or image quality. Use the mouse to select records by clicking the data points. This opens a datatip that displays the filename(s) and actual information of the selected subject of the row and column in the <i>matrix plot</i> or one scan in the <i>Mahanalobis distance plot</i>. Furthermore, a slice of each scan appears on the right and specific operations were activated/inactivated in the menubar.  
+        If you click on a datapoint in the <i>Mahanalobis distance plot</i> that is on the exclusion list you can re-include the record by pushing the&nbsp;<img src="icons/trash_tip_rm.png" height=14px align="top"> button. In the <i>matrix plot</i> you have to differentiate between row and columnar records - selecting of an entry with exclude row but included column allows you to re-include the row&nbsp;<img src="icons/trash_row_add.png" height=14px align="top"> and exclude the column&nbsp;<img src="icons/trash_col_rm.png" height=14px align="top">. 
+      </p><p>
+        Sounds complex? Well just try and use the&nbsp;<img src="icons/undo.png" height=14px align="top"> and&nbsp;<img src="icons/redo.png" height=14px align="top"> buttons. As far as you did not move images with the final removal button&nbsp;<img src="icons/file_delete.png" height=14px align="top">, nothing happens with your files! And even after moving there is a script to move them back to the original position.
+      </p>
+      
+      <!-- IMAGE: Example of worst images by IQR - scatter plot + auto select options - use illustrator to mark specific definition areas and number your opertions -->
+      <div>
+        <p class="img" style="width: 50%;">
+          <img src="images/cat_stat_checkcov_06_auto.png" width=20% height=auto alt="data removal in steps" >
+        <br><br>
+          Example how to remove worse data in two steps starting with strong outliers that we will never check again, followed by light outliers that we may want to re-include later.
+        </p>
+      </div>
+      
+      <!-- longitudinal data -->
+      <p>
+        <b>Longitudinal data:</b> 
+      </p>
+           
+      <h3>References:</h3>
+      <ul>
+        <li>
+          <b id="Dahnke:2019">Dahnke et al.</b>
+          <p>
+            in preparation
+            <a href="matlab:web('','-browser')"></a>
+          </p>
+        </li>
+        <li>
+          <b id="Reuter:2015">Reuter et al. 2015</b>
+          <p>
+            Reuter M, Tisdall MD, Qureshi A, Buckner RL, van der Kouwe AJW, Fischl B. 
+            Head motion during MRI acquisition reduces gray matter volume and thickness estimates. 
+            <a href="http://doi.org/10.1016/j.neuroimage.2014.12.006">
+              NeuroImage 2015, 107, 107-115.
+            </a>
+          </p>
+        </li>
+      </ul>
+    
+    <div id="content"><a href="cat_tools.html">< Tools</a></div>  
+    <div id="footer">
+      <p>Copyright (C) Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
+    </div>
+  </body>
+</html>

@@ -620,10 +620,11 @@ for i=1:qn
       if numel(ytick)<5, ytick=interp1(ytick,1:0.5:numel(ytick)); elseif numel(ytick)>10, ytick=ytick(1:2:end); end
     end
     set(gca,xytick,ytick); 
+    acc = sprintf('%%0.%df',abs(str2double(char(regexp(num2str(min(diff(ytick)),'%e'),'[+-]..','match'))))); 
     if ~opt.vertical && opt.hflip
-      set(gca,xylab,num2str(-ytick',sprintf('%%0.%df',-str2double(char(regexp(num2str(min(diff(ytick)),'%e'),'[+-]..','match'))) ) ) ); 
+      set(gca,xylab,num2str(-ytick',acc)); 
     else
-      set(gca,xylab,num2str( ytick',sprintf('%%0.%df',-str2double(char(regexp(num2str(min(diff(ytick)),'%e'),'[+-]..','match'))) ) ) ); 
+      set(gca,xylab,num2str( ytick',acc)); 
     end
     
     if ytick(1)<=opt.ylim(1)+eps,   ytick(1)=[];   end
