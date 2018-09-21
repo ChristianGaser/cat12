@@ -192,10 +192,10 @@ function job = update_job(job)
     def.extopts.resval  = job.extopts.restypes.(def.extopts.restype);
   end
   
-  def.extopts.lazy   = 0;
-  def.opts.fwhm      = 1;
-  def.nproc          = 0; 
-  
+  def.extopts.new_release = 0;
+  def.extopts.lazy        = 0;
+  def.opts.fwhm           = 1;
+  def.nproc               = 0; 
    
   % ROI atlas maps
   if isfield(job.output,'ROImenu') % expert/developer GUI that allows control each atlas map 
