@@ -9,7 +9,7 @@ function varargout = cat_stat_check_cov(job)
 % Christian Gaser
 % $Id$
 
-if cat_get_defaults('extopts.expertgui')>1
+if 0 %cat_get_defaults('extopts.expertgui')>1
   if nargout
     varargout = cat_stat_check_cov2(job);
   else

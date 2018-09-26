@@ -92,7 +92,7 @@ function varargout = cat_vol_sanlm(varargin)
     
     % default optoins
     def.verb                        = 2;         % be verbose
-    def.prefix                      = 'sanlm2_';  % prefix
+    def.prefix                      = 'sanlm_';  % prefix
     def.postfix                     = '';        % postfix
     def.replaceNANandINF            = 1;         % replace NAN and INF
     def.spm_type                    = 16;        % file datatype (default single)
@@ -465,9 +465,10 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
           % Correction only of regions with less noise and with (src~=0) to 
           % avoid adding of noise in skull-stripped data. This may lead to
           % problems with the skull-stripping detection in cat_run_job!
+          % Also important in case of ADNI.
           src2 = src2 + max( 0 , min(1 , cat_vol_smooth3X( ...
                  ( job.addnoise.*sth/100 ) - abs(srco - src) , 4/mean(vx_vol) ) ./ ( job.addnoise.*sth/100 ) )) .* ...
-                 ... ( src~=0 ) .* ... save skull-stripping / defacing regions
+                 ( src~=0 ) .* ... save skull-stripping / defacing regions
                  (randn(size(src)) * job.addnoise.*sth/100);  
           if ~debug, clear sth; end
         end
