@@ -165,7 +165,8 @@ if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap && job.extopts.new_
     [Ymic,th] = cat_stat_histth(Ym,0.90); clear Ymic; 
     Ym(isnan(Ym) | Ym>(th(2) + diff(th)*2)) = 0;
     Ym = (Ym - th(1)) ./ diff(th); 
-
+    clear th; 
+    
     % bias correction for white matter (Yw) and ventricular CSF areas (Yv)
     Yw  = Ym>0.8 & Ym<1.5; Yw(smooth3(Yw)<0.6) = 0; Yw(smooth3(Yw)<0.6) = 0; 
     Yv  = Ym<0.5 & Yb; Yv  = cat_vol_morph(Yv,'e',4); 
@@ -1504,7 +1505,11 @@ end
   end
   
   %% call Dartel/Shooting registration 
-  [trans,res.ppe.reg] = cat_main_registration(job,res,Yclsd,Yy,tpm.M,Ylesions);
+  if job.extopts.new_release 
+    [trans,res.ppe.reg] = cat_main_registration2(job,res,Yclsd,Yy,tpm.M,Ylesions);
+  else
+    [trans,res.ppe.reg] = cat_main_registration(job,res,Yclsd,Yy,tpm.M,Ylesions);
+  end
   clear Yclsd Ylesions;
   if ~do_dartel
     if job.extopts.regstr == 0

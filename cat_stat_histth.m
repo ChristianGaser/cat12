@@ -73,7 +73,12 @@ function varargout = cat_stat_histth(src,percent,opt)
   
   
   % histogram
-  [hsrc,hval] = hist(src(~isinf(src(:)) & ~isnan(src(:)) & src(:)<3.4027e+38),opt.hbins);
+  % use adaptive number of bins to 
+  hsrc = zeros(1,opt.hbins); hbins = opt.hbins;
+  while sum(hsrc>0)<sum(hsrc==0) && hbins<intmax/10
+    [hsrc,hval] = hist(src(~isinf(src(:)) & ~isnan(src(:)) & src(:)<3.4027e+38 & src(:)>-3.4027e+38),hbins);
+    hbins = hbins*2; 
+  end
   hp          = cumsum(hsrc)./sum(hsrc); 
 
   

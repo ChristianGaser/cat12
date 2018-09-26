@@ -374,6 +374,14 @@ check_cov.help  = {
 
 %------------------------------------------------------------------------
 
+check_cov2      = check_cov; 
+check_cov2.tag  = 'check_cov2';
+check_cov2.name = 'Check sample homogeneity of 3D data Version 2';
+check_cov2.val  = {sample,gap,nuisance};
+check_cov2.prog = @cat_stat_check_cov2;
+
+%------------------------------------------------------------------------
+
 spmmat         = cfg_files;
 spmmat.tag     = 'spmmat';
 spmmat.name    = 'Select SPM.mat';
@@ -1430,7 +1438,11 @@ nonlin_coreg  = cat_conf_nonlin_coreg;
 tools = cfg_choice;
 tools.name   = 'Tools';
 tools.tag    = 'tools';
-tools.values = {showslice,check_cov,check_SPM,calcvol,calcroi,iqr,T2x,F2x,T2x_surf,F2x_surf,sanlm,maskimg,spmtype,headtrimming,realign,long,nonlin_coreg,defs,defs2}; %,qa
+tools.values = { ...
+  showslice, check_cov, check_cov2, check_SPM, ...
+  calcvol, calcroi, iqr, T2x, F2x, T2x_surf, F2x_surf, ... 
+  sanlm, maskimg, spmtype, headtrimming, realign, ...
+  long, nonlin_coreg, defs, defs2}; %,qa
 if expert 
   tools.values = [tools.values,{urqio}]; 
 end

@@ -1,5 +1,51 @@
 ------------------------------------------------------------------------
-r1366 | dahnke | 2018-09-21 12:21:09
+r1367 | dahnke | 2018-09-26 12:42:43
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       cat_defaults.m
+M       cat_main.m
+A       cat_main_registration2.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+M       cat_stat_check_cov.m
+M       cat_stat_check_cov2.m
+M       cat_stat_histth.m
+M       cat_vol_sanlm.m
+A       html/cat_tools_checkcov_exclusion.html
+A       html/images/cat_stat_checkcov_00_overview.png
+A       html/images/cat_stat_checkcov_01_batch.png
+A       html/images/cat_stat_checkcov_02_command.png
+A       html/images/cat_stat_checkcov_03_checkcov.png
+A       html/images/cat_stat_checkcov_04_boxplot01_MNC.png
+A       html/images/cat_stat_checkcov_04_boxplot02_IQR.png
+A       html/images/cat_stat_checkcov_05_check_01_original.png
+A       html/images/cat_stat_checkcov_07_exclusion.png
+
+(1) Changed:    Further development of cat_stat_check_cov that is
+                (only) available via batch tools. Corrected many 
+                bugs and added many functions, especially the data 
+                exclusion window and the data moving function. 
+                Created a first version of the HTML help page.
+(2) Changed:    Added new_version of cat_main_registration that 
+                include further settings to handle brains with 
+                very large ventricles (still in development). 
+                Moreover, spline interpolation rather linear
+                interpolation is used. Not finish!
+(3) Fixed:      Corrected small bug in k-means AMAP pipeline.  
+(4) Fixed:      Corrected problem in cat_vol_sanlm filter with 
+                adding noise to zero (skull-stripped) background.         
+(5) Fixed:      Corrected problem in cat_stat_histth with strong
+                outliers. 
+(6) New:        Added no skull-stripping option for gcutstr that 
+                overwrite the automatic skull-stripping detection
+                in cat_run_job(1070).                
+                     
+------------------------------------------------------------------------
+r1366 | dahnke | 2018-09-21 12:23:17 +0200 (Fr, 21 Sep 2018) | 77 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -76,6 +122,7 @@ M       kmeans3D.m
                 output of label values. 
 (9) Changed:    JPG export of the CAT report in cat_main for 
                 cat_stat_check_cov2.
+
 
 ------------------------------------------------------------------------
 r1365 | gaser | 2018-09-12 14:08:04 +0200 (Mi, 12 Sep 2018) | 11 lines
