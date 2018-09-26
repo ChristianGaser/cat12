@@ -201,26 +201,31 @@ function cat_run_job1070(job,tpm,subj)
           %   - only one background (not in every case?)
           %   - less variance of tissue intensity (only 3 brain classes)
           %  ------------------------------------------------------------
-          VFn   = spm_vol(nfname); 
-          YF    = spm_read_vols(VFn); 
-          Oth   = cat_stat_nanmean(YF(YF(:)~=0 & YF(:)>cat_stat_nanmean(YF(:)))); 
-          F0vol = cat_stat_nansum(YF(:)~=0) * prod(vx_vol) / 1000; 
-          F0std = cat_stat_nanstd(YF(YF(:)>0.5*Oth & YF(:)>0)/Oth); 
-          YFC = YF~=0; 
-          if sum(YFC(:)>0)<numel(YFC)*0.9 && sum(YFC(:)>0)>numel(YFC)*0.1  % if there is a meanful background
-            YFC = ~cat_vol_morph(YF~=0,'lc',1);                            % close noisy background
+          if job.extopts.gcutstr < 0
+            skullstripped = 1; 
+          else
+            VFn   = spm_vol(nfname); 
+            YF    = spm_read_vols(VFn); 
+            Oth   = cat_stat_nanmean(YF(YF(:)~=0 & YF(:)>cat_stat_nanmean(YF(:)))); 
+            F0vol = cat_stat_nansum(YF(:)~=0) * prod(vx_vol) / 1000; 
+            F0std = cat_stat_nanstd(YF(YF(:)>0.5*Oth & YF(:)>0)/Oth); 
+            YFC = YF~=0; 
+            if sum(YFC(:)>0)<numel(YFC)*0.9 && sum(YFC(:)>0)>numel(YFC)*0.1  % if there is a meanful background
+              YFC = ~cat_vol_morph(YF~=0,'lc',1);                            % close noisy background
+            end
+            [YL,numo] = spm_bwlabel(double(YF~=0),26);  clear YL;            % number of objects
+            [YL,numi] = spm_bwlabel(double(YFC==0),26); clear YL;            % number of background regions 
+            skullstrippedpara = [sum(YF(:)==0)/numel(YF) numo numi F0vol F0std]; 
+            skullstripped = ...
+              skullstrippedpara(1)>0.5 && ...                     % many zeros
+              skullstrippedpara(2)<5  && ...                      % only a few objects
+              skullstrippedpara(3)<10 && ...                      % only a few background regions 
+              F0vol<2500 && F0std<0.5;                                       % many zeros and not too big
+            skullstripped = skullstripped || ...
+              sum([skullstrippedpara(1)>0.8 F0vol<1500 F0std<0.4])>1; % or 2 extrem values
+            clear YF YFC F0vol F0std numo numi; 
           end
-          [YL,numo] = spm_bwlabel(double(YF~=0),26);  clear YL;            % number of objects
-          [YL,numi] = spm_bwlabel(double(YFC==0),26); clear YL;            % number of background regions 
-          skullstrippedpara = [sum(YF(:)==0)/numel(YF) numo numi F0vol F0std]; 
-          skullstripped = ...
-            skullstrippedpara(1)>0.5 && ...                     % many zeros
-            skullstrippedpara(2)<5  && ...                      % only a few objects
-            skullstrippedpara(3)<10 && ...                      % only a few background regions 
-            F0vol<2500 && F0std<0.5;                                       % many zeros and not too big
-          skullstripped = skullstripped || ...
-            sum([skullstrippedpara(1)>0.8 F0vol<1500 F0std<0.4])>1; % or 2 extrem values
-          clear YF YFC F0vol F0std numo numi; 
+          
 
           %% Interpolation
           %  -----------------------------------------------------------------
@@ -343,25 +348,27 @@ function cat_run_job1070(job,tpm,subj)
             VF = spm_vol(obj.image(1));
 
             % skull-stripping of the template
-            if skullstripped
-              % print a warning for all users because processing of
-              % skull-stripped data is not standard!
-              if job.extopts.APP==1 || job.extopts.APP==2
-                cat_io_cprintf('warn',[...
-                  'WARNING: Detected skull-stripped or strongly masked image. Skip APP. \n' ...
-                  '         Use skull-stripped initial affine registration template and  \n' ...
-                  '         TPM without head tissues (class 4 and 5)! \n']);
-              else
-                cat_io_cprintf('warn',[...
-                  'WARNING: Detected skull-stripped or strongly masked image. \n' ...
-                  '         Use skull-stripped initial affine registration template and \n' ...
-                  '         TPM without head tissues (class 4 and 5)! \n']);
-              end
-              if job.extopts.verb>1
-                cat_io_cprintf('warn',sprintf(...
-                 ['           %0.2f%%%% zeros, %d object(s), %d background region(s) \n' ...
-                  '           %4.0f cm%s, normalized SD of all tissues %0.2f \n'],...
-                  skullstrippedpara(1:4),char(179),skullstrippedpara(5))); 
+            if skullstripped 
+              % print a warning for all users that did not turn off skull-stripping 
+              % because processing of skull-stripped data is not standard!
+              if job.extopts.gcutstr>=0
+                if job.extopts.APP==1 || job.extopts.APP==2
+                  cat_io_cprintf('warn',[...
+                    'WARNING: Detected skull-stripped or strongly masked image. Skip APP. \n' ...
+                    '         Use skull-stripped initial affine registration template and  \n' ...
+                    '         TPM without head tissues (class 4 and 5)! \n']);
+                else
+                  cat_io_cprintf('warn',[...
+                    'WARNING: Detected skull-stripped or strongly masked image. \n' ...
+                    '         Use skull-stripped initial affine registration template and \n' ...
+                    '         TPM without head tissues (class 4 and 5)! \n']);
+                end
+                if job.extopts.verb>1
+                  cat_io_cprintf('warn',sprintf(...
+                   ['           %0.2f%%%% zeros, %d object(s), %d background region(s) \n' ...
+                    '           %4.0f cm%s, normalized SD of all tissues %0.2f \n'],...
+                    skullstrippedpara(1:4),char(179),skullstrippedpara(5))); 
+                end
               end
   
               % skull-stripping of the template
