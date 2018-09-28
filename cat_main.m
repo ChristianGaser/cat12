@@ -98,6 +98,8 @@ if ~isfield(res,'spmpp')
   stime2 = cat_io_cmd('  Write Segmentation','g5','',job.extopts.verb-1);
 end
 [Ysrc,Ycls,Yy] = cat_spm_preproc_write8(res,zeros(max(res.lkp),4),zeros(1,2),[0 0],0,0);
+
+skullstripped = max(res.lkp) == 4; 
 if isfield(res,'redspmres')
   % Update Ycls: cleanup on original data
   Yb = Ycls{1} + Ycls{2} + Ycls{3}; 
@@ -157,31 +159,42 @@ if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap && job.extopts.new_
     
     % simple skull-stripping
     Yb = Ycls{1} + Ycls{2} + Ycls{3};
+    % In case of skull-stripping with have to combine SPM segmentation and 
+    % the possible skull-stripping information 
+    if skullstripped, Yb = Yb .* uint8(Ysrc>0); end
     Yb = cat_vol_morph( smooth3(Yb)>64 , 'ldc', 8,vx_vol);
     %Yb = cat_vol_morph( Yb , 'dd', 2,vx_vol);
 
-    % intensity normalization
+    %% intensity normalization
     Ym = Ysrc; Ym(~Yb) = nan; 
-    [Ymic,th] = cat_stat_histth(Ym,0.90); clear Ymic; 
+    [Ymic,th] = cat_stat_histth(Ym,0.98); 
     Ym(isnan(Ym) | Ym>(th(2) + diff(th)*2)) = 0;
-    Ym = (Ym - th(1)) ./ diff(th); 
+    [T3th,T3sd,T3md] = kmeans3D(Ymic((Ym(:)>0)),5); clear Ymic; 
+    if T3md(end)<0.1, T3th(end)=[]; end
+    Ym = (Ym - th(1)) ./ (T3th(end) - th(1)); 
     clear th; 
     
-    % bias correction for white matter (Yw) and ventricular CSF areas (Yv)
+    %% bias correction for white matter (Yw) and ventricular CSF areas (Yv)
     Yw  = Ym>0.8 & Ym<1.5; Yw(smooth3(Yw)<0.6) = 0; Yw(smooth3(Yw)<0.6) = 0; 
     Yv  = Ym<0.5 & Yb; Yv  = cat_vol_morph(Yv,'e',4); 
     
-    % estimate value vth to mix CSF and WM information
+    %% estimate value vth to mix CSF and WM information
     Yvw = cat_vol_smooth3X(Yv,6)>0.05 & cat_vol_morph(Yw,'e',2); 
     Ywv = cat_vol_smooth3X(Yw,6)>0.05 & cat_vol_morph(Yv,'e',2); 
-    vth = median(Ysrc(Yvw(:))) ./ median(Ysrc(Ywv(:)));
+    if sum(Yvw(:))>10 && sum(Yvw(:))>10
+      vth = cat_stat_nanmedian(Ysrc(Yvw(:))) ./ cat_stat_nanmedian(Ysrc(Ywv(:)));
+    elseif  sum(Yvw(:))>0 && sum(Yvw(:))>0
+      vth = cat_stat_nanmedian(Ysrc(Yv(:))) ./ cat_stat_nanmedian(Ysrc(Yw(:)));
+    else
+      vth = 1; 
+    end
     if debug==0, clear Ywv Yvw; end
     
     % some precorrections and bias field approximation 
     Yi  = cat_vol_localstat(Ysrc .* Yw,Yw,1,3); 
     Yiv = cat_vol_localstat(Ysrc .* Yv,Yv,1,1); 
     Yi  = Yi + Yiv * vth; if debug==0, clear Yiv; end
-    %Yi  = Yi ./ median(Yi(Yw(:)));
+    % Yi  = Yi ./ median(Yi(Yw(:)));
     Yi  = cat_vol_approx(Yi,'nn',vx_vol,4); 
     Yi  = cat_vol_smooth3X(Yi,4); 
     
@@ -191,10 +204,9 @@ if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap && job.extopts.new_
     Ymi = (Ysrc .* Yb) ./ Yi;
     
     % remove of high intensity structures
-    Ymi( Ymi > 1.1 * median(Ymi(Yw(:))) ) = median(Ymi(Yv(:))); 
     Ymi = cat_vol_median3(Ymi/median(Ymi(Yw(:))),Yb,Yb,0.2)*median(Ymi(Yw(:)));
     if debug==0, clear Ym Yi Yw Yv; end
- 
+    %Ymi = Ymi + (Ymi>0) .* rand(size(Ym))*0.1; % add noise?
     
     
     
@@ -202,7 +214,7 @@ if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap && job.extopts.new_
     %  -------------------------------------------------------------------
 
     % correct for harder brain mask to avoid meninges in the segmentation
-    Ymib = Ymi; Ymib(~Yb) = 0; 
+    Ymib = min(1.5,Ymi); Ymib(~Yb) = 0; 
     rf = 10^4; Ymib = round(Ymib*rf)/rf;
 
     %  prepare data for segmentation
@@ -234,7 +246,7 @@ if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap && job.extopts.new_
     % display something
     stime2 = cat_io_cmd(sprintf('  Amap using k-means segmentations (MRF filter strength %0.2f)',job.extopts.mrf),'g5','',job.extopts.verb-1,stime2);
 
-    % Amap parameters  - default sub=16 caused errors with highres data!
+    %% Amap parameters  - default sub=16 caused errors with highres data!
     % don't use bias_fwhm, because the Amap bias correction is not that efficient and also changes
     % intensity values
     Ymib = double(Ymib); n_iters = 50; sub = round(32/min(vx_vol)); %#ok<NASGU>
@@ -244,8 +256,7 @@ if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap && job.extopts.new_
     % do segmentation and rep
     evalc(['prob = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
       'job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);']);
-    fprintf('%5.0fs\n',etime(clock,stime));
-
+    
     % reorder probability maps according to spm order
     clear Yp0b Ymib; 
     prob = prob(:,:,:,[2 3 1]);  %#ok<NODEF>
@@ -261,7 +272,7 @@ if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap && job.extopts.new_
     end
     clear prob;
     Ys = cat_vol_ctype(255 - sum(P(:,:,:,1:3),4));
-    for i=4:6
+    for i=4:size(P,4)
       P(:,:,:,i) = P(:,:,:,i) .* Ys; 
     end
     clear Ys;
@@ -273,7 +284,7 @@ if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap && job.extopts.new_
     
     for i=1:3
       [res.mn(res.lkp==i),tmp,res.mg(res.lkp==i)] = ...
-        kmeans3D(Ysrc(P(:,:,:,i)>128),sum(res.lkp==i));
+        kmeans3D(Ysrc(P(:,:,:,i)>64),sum(res.lkp==i));
     end
     
     
@@ -410,9 +421,7 @@ if ~isfield(res,'spmpp')
   end
   
   %%
- stime2 = cat_io_cmd('  Update Skull-Stripping','g5','',job.extopts.verb-1,stime2); 
-  skullstripped = max(res.lkp) == 4; 
-
+  stime2 = cat_io_cmd('  Update Skull-Stripping','g5','',job.extopts.verb-1,stime2); 
   if skullstripped % skull-stripped
     Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
     Yb   = Yp0>=0.5/3; 
@@ -540,9 +549,7 @@ if ~isfield(res,'spmpp')
   if ~(job.extopts.INV && any(sign(diff(T3th))==-1))
     %% Update probability maps
     % background vs. head - important for noisy backgrounds such as in MT weighting
-    if job.extopts.new_release==0 && job.extopts.gcutstr==0  
-      Ybg = ~Yb; % this is wrong and removes the all head classes later !
-    elseif job.extopts.new_release && skullstripped
+    if skullstripped
       Ybg = ~Yb;
     else
       if sum(sum(sum(P(:,:,:,6)>240 & Ysrc<cat_stat_nanmean(T3th(1:2)))))>10000

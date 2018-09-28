@@ -224,6 +224,21 @@ function job = update_job(job)
     end
   end
  
+  % simplyfied default user GUI input
+  if isfield(job.output,'labelnative') 
+    job.output.label.native = job.output.labelnative; 
+    job.output = rmfield(job.output,'labelnative');
+  end
+  % simplyfied default user GUI input
+  if isfield(job.output,'biaswarped') 
+    job.output.bias.warped = job.output.biaswarped; 
+    job.output = rmfield(job.output,'biaswarped');
+  end
+  % simplyfied default user GUI input
+  if isfield(job.output,'jacobianwarped') 
+    job.output.jacobian.warped = job.output.jacobianwarped; 
+    job.output = rmfield(job.output,'jacobianwarped');
+  end
   
   % ROI export 
   for ai = 1:size(job.extopts.atlas,1)

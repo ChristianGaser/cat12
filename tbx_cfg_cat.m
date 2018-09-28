@@ -154,21 +154,32 @@ dartel.help   = {
 ''
 };
 
-native.def  = @(val)cat_get_defaults('output.bias.native', val{:});
-warped.def  = @(val)cat_get_defaults('output.bias.warped', val{:});
-dartel.def  = @(val)cat_get_defaults('output.bias.dartel', val{:});
-bias        = cfg_branch;
-bias.tag    = 'bias';
-bias.name   = 'Bias, noise and global intensity corrected T1 image';
 if expert
-  bias.val    = {native warped dartel};
+  native.def  = @(val)cat_get_defaults('output.bias.native', val{:});
+  warped.def  = @(val)cat_get_defaults('output.bias.warped', val{:});
+  dartel.def  = @(val)cat_get_defaults('output.bias.dartel', val{:});
+  bias        = cfg_branch;
+  bias.tag    = 'bias';
+  bias.name   = 'Bias, noise and global intensity corrected T1 image';
+  if expert
+    bias.val    = {native warped dartel};
+  else
+    bias.val    = {warped};
+  end
+  bias.help   = {
+    'This is the option to save a bias, noise, and global intensity corrected version of the original T1 image. MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity of the image (bias). These artifacts, although not usually a problem for visual inspection, can impede automated processing of the images. The bias corrected version should have more uniform intensities within the different types of tissues and can be saved in native space and/or normalised. Noise is corrected by an adaptive non-local mean (NLM) filter (Manjon 2008, Medical Image Analysis 12).'
+  ''
+  };
 else
-  bias.val    = {warped};
+  biaswarped        = warped;
+  biaswarped.tag    = 'biaswarped';
+  biaswarped.name   = 'Bias, noise and global intensity corrected T1 image';
+  biaswarped.def    = @(val)cat_get_defaults('output.bias.warped', val{:});
+  biaswarped.help   = {
+    'This is the option to save a bias, noise, and global intensity corrected version of the original T1 image. MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity of the image (bias). These artifacts, although not usually a problem for visual inspection, can impede automated processing of the images. The bias corrected version should have more uniform intensities within the different types of tissues and can be saved in native space and/or normalised. Noise is corrected by an adaptive non-local mean (NLM) filter (Manjon 2008, Medical Image Analysis 12).'
+    ''
+  }; 
 end
-bias.help   = {
-  'This is the option to save a bias, noise, and global intensity corrected version of the original T1 image. MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity of the image (bias). These artifacts, although not usually a problem for visual inspection, can impede automated processing of the images. The bias corrected version should have more uniform intensities within the different types of tissues and can be saved in native space and/or normalised. Noise is corrected by an adaptive non-local mean (NLM) filter (Manjon 2008, Medical Image Analysis 12).'
-''
-};
 
 native.def  = @(val)cat_get_defaults('output.las.native', val{:});
 warped.def  = @(val)cat_get_defaults('output.las.warped', val{:});
@@ -185,30 +196,51 @@ las.help   = {
 
 %------------------------------------------------------------------------
 
-warped.def    = @(val)cat_get_defaults('output.jacobian.warped', val{:});
-jacobian      = cfg_branch;
-jacobian.tag  = 'jacobian';
-jacobian.name = 'Jacobian determinant';
-jacobian.val  = {warped};
-jacobian.help = {
-  'This is the option to save the Jacobian determinant, which expresses local volume changes. This image can be used in a pure deformation based morphometry (DBM) design. Please note that the affine part of the deformation field is ignored. Thus, there is no need for any additional correction for different brain sizes using ICV.'
-''
-};
-
+if 0
+  warped.def    = @(val)cat_get_defaults('output.jacobian.warped', val{:});
+  jacobian      = cfg_branch;
+  jacobian.tag  = 'jacobian';
+  jacobian.name = 'Jacobian determinant';
+  jacobian.val  = {warped};
+  jacobian.help = {
+    'This is the option to save the Jacobian determinant, which expresses local volume changes. This image can be used in a pure deformation based morphometry (DBM) design. Please note that the affine part of the deformation field is ignored. Thus, there is no need for any additional correction for different brain sizes using ICV.'
+  ''
+  };
+else
+  jacobianwarped      = warped;
+  jacobianwarped.tag  = 'jacobianwarped';
+  jacobianwarped.name = 'Jacobian determinant';
+  jacobianwarped.def  = @(val)cat_get_defaults('output.jacobian.warped', val{:});
+  jacobianwarped.help = {
+    'This is the option to save the Jacobian determinant, which expresses local volume changes. This image can be used in a pure deformation based morphometry (DBM) design. Please note that the affine part of the deformation field is ignored. Thus, there is no need for any additional correction for different brain sizes using ICV.'
+  	''
+  };
+end
 %------------------------------------------------------------------------
 
-native.def  = @(val)cat_get_defaults('output.label.native', val{:});
-warped.def  = @(val)cat_get_defaults('output.label.warped', val{:});
-dartel.def  = @(val)cat_get_defaults('output.label.dartel', val{:});
+if expert>1
+  native.def  = @(val)cat_get_defaults('output.label.native', val{:});
+  warped.def  = @(val)cat_get_defaults('output.label.warped', val{:});
+  dartel.def  = @(val)cat_get_defaults('output.label.dartel', val{:});
 
-label       = cfg_branch;
-label.tag   = 'label';
-label.name  = 'PVE label image';
-label.val   = {native warped dartel};
-label.help  = {
-'This is the option to save a labeled version of your segmentations. Labels are saved as Partial Volume Estimation (PVE) values with different mix classes for GM-WM (2.5) and GM-CSF (0.5). BG=0, CSF=1, GM=2, WM=3, WMH=4 (if WMHC=3), SL=1.5 (if SLC)'
-''
-};
+  label       = cfg_branch;
+  label.tag   = 'label';
+  label.name  = 'PVE label image';
+  label.val   = {native warped dartel};
+  label.help  = {
+  'This is the option to save a labeled version of your segmentations for fast visual comparision. Labels are saved as Partial Volume Estimation (PVE) values with different mix classes for GM-WM (2.5) and GM-CSF (1.5). BG=0, CSF=1, GM=2, WM=3, WMH=4 (if WMHC=3), SL=1.5 (if SLC)'
+  ''
+  };
+else
+  labelnative      = native;
+  labelnative.tag  = 'labelnative';
+  labelnative.name = 'PVE label image in native space';
+  labelnative.def  = @(val)cat_get_defaults('output.label.native', val{:});
+  labelnative.help = {
+  'This is the option to save a labeled version of your segmentations in native space for fast visual comparision and preprocessing quality control. Labels are saved as Partial Volume Estimation (PVE) values with different mix classes for GM-WM (2.5) and GM-CSF (1.5). BG=0, CSF=1, GM=2, WM=3, WMH=4 (if WMHC=3), SL=1.5 (if SLC)'
+  ''
+  }; 
+end
 
 %------------------------------------------------------------------------
 
@@ -386,11 +418,11 @@ output      = cfg_branch;
 output.tag  = 'output';
 output.name = 'Writing options';
 if expert==2
-  output.val  = {surface ROI grey white csf gmt wmh sl tpmc atlas label bias las jacobian warps}; 
+  output.val  = {surface ROI grey white csf gmt wmh sl tpmc atlas label bias las jacobianwarped warps}; 
 elseif expert==1
-  output.val  = {surface ROI grey white csf wmh sl atlas label bias las jacobian warps};
+  output.val  = {surface ROI grey white csf wmh sl atlas labelnative bias las jacobianwarped warps};
 else
-  output.val  = {surface ROI grey white bias jacobian warps};
+  output.val  = {surface ROI grey white labelnative biaswarped jacobianwarped warps};
 end
 output.help = {
 'There are a number of options about what kind of data you like save. The routine can be used for saving images of tissue classes, as well as bias corrected images. The native space option will save a tissue class image (p*) that is in alignment with the original image. You can also save spatially normalised versions - both with (m[0]wp*) and without (wp*) modulation. In the cat toolbox, the voxel size of the spatially normalised versions is 1.5 x 1.5 x 1.5mm as default. The saved images of the tissue classes can directly be used for doing voxel-based morphometry (both un-modulated and modulated). All you need to do is smooth them and do the stats (which means no more questions on the mailing list about how to do "optimized VBM"). Please note that many less-common options are only available in expert mode (e.g. CSF, labels, atlas maps).'
@@ -437,9 +469,9 @@ output_spm  = output;
 if expert==2
   output_spm.val  = {ROI surface grey_spm white_spm csf_spm label jacobian warps}; 
 elseif expert==1
-  output_spm.val  = {ROI surface grey_spm white_spm csf_spm jacobian warps};
+  output_spm.val  = {ROI surface grey_spm white_spm csf_spm labelnative jacobianwarped warps};
 else % also CSF output because it is requiered as input ...
-  output_spm.val  = {ROI surface grey_spm white_spm csf_spm jacobian warps};
+  output_spm.val  = {ROI surface grey_spm white_spm csf_spm labelnative jacobianwarped warps};
 end
 
 estwrite_spm        =  cfg_exbranch;
@@ -559,6 +591,13 @@ if isfield(opts,'bias')
       cdep(end).src_output = substruct('()',{1}, '.','wbiascorr','()',{':'});
       cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end;
+elseif isfield(opts,'biasnative')
+  if opts.bias.native,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Native Bias Corr. Image';
+    cdep(end).src_output = substruct('()',{1}, '.','biascorr','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end
 end
 
 % LAS bias corrected
@@ -615,6 +654,11 @@ if isfield(opts,'label')
     cdep(end).src_output = substruct('()',{1}, '.','alabel','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end;
+elseif isfield(opts,'labelnative')
+  cdep(end+1)          = cfg_dep;
+  cdep(end).sname      = 'Native Label Image';
+  cdep(end).src_output = substruct('()',{1}, '.','label','()',{':'});
+  cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 end
 
 maps = {
@@ -692,7 +736,8 @@ if isfield(opts,'atlas')
 end
 
 % jacobian
-if opts.jacobian.warped,
+if ( isfield(opts,'jacobian') && opts.jacobian.warped ) || ...
+   ( isfield(opts,'jacobianwarped') && opts.jacobianwarped )
     cdep(end+1)          = cfg_dep;
     cdep(end).sname      = 'Jacobian Determinant Image';
     cdep(end).src_output = substruct('()',{1}, '.','jacobian','()',{':'});
