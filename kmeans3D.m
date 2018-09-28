@@ -16,7 +16,7 @@ function [mu,su,nu] = kmeans3D(y,k)
 % Christian Gaser & Robert Dahnke
 % $Id$
 
-if nargin<1, help kmeans; return; end
+if nargin<1, help kmeans3D; return; end
 if nargin<2, k=1; end
 
 k = max(1,k); 

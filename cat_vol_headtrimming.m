@@ -32,7 +32,9 @@ function varargout = cat_vol_headtrimming(job)
 
   SVNid = '$Rev$';
   
-  def.images  = {{}}; 
+  def.simages = {}; 
+  def.oimages = {{}};
+  def.images  = {{}};
   def.resdir  = '';
   def.prefix  = 'trimmed_';
   def.postfix = '';
@@ -48,6 +50,14 @@ function varargout = cat_vol_headtrimming(job)
   def.process_index = 1;
   job = cat_io_checkinopt(job,def);
 
+  % combine all images sets
+  job.images = [{job.simages}; job.oimages; job.images]; 
+  for j=numel(job.images):-1:1
+    if isempty(job.images{j})
+      job.images(j) = []; 
+    end
+  end
+  
   % choose prefix
   for di=1:numel(job.images)
     for si=1:numel(job.images{di})

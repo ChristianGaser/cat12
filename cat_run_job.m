@@ -693,7 +693,7 @@ function cat_run_job(job,tpm,subj)
 
 
           % skull-stripping of the template
-          if ppe.affreg.skullstripped
+          if ppe.affreg.skullstripped || job.extopts.gcutstr<0
             % print a warning for all users because processing of
             % skull-stripped data is not standard!
             if job.extopts.gcutstr>=0
@@ -714,6 +714,10 @@ function cat_run_job(job,tpm,subj)
                   '           %4.0f cm%s, normalized SD of all tissues %0.2f \n'],...
                   skullstrippedpara(1:4),char(179),skullstrippedpara(5))); 
               end
+            elseif job.extopts.gcutstr<0 && ~skullstripped
+              cat_io_cprintf('warn',[...
+                  'WARNING: Skull-Stripping is deactivated but skull was detected. \n' ...
+                  '         Go on without skull-stripping but check your data! \n']);
             end
 
             % skull-stripping of the template

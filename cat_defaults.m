@@ -95,7 +95,7 @@ cat.output.SL.dartel  = 0;
 
 % label 
 % background=0, CSF=1, GM=2, WM=3, WMH=4 (if opt.extopts.WMHC==3), SL=1.5 (if opt.extopts.SLC>0)
-cat.output.label.native = 0; 
+cat.output.label.native = 1; 
 cat.output.label.warped = 0;
 cat.output.label.dartel = 0;
 
