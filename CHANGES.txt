@@ -1,5 +1,38 @@
 ------------------------------------------------------------------------
-r1367 | dahnke | 2018-09-26 12:42:43
+r1368 | dahnke | 2018-09-28 12:03:01
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_defaults.m
+M       cat_main.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+M       cat_stat_check_cov2.m
+M       cat_stat_histth.m
+M       cat_vol_headtrimming.m
+M       html/style.css
+M       kmeans3D.m
+M       tbx_cfg_cat.m
+
+(1) Fixed:      Corrected new problem in cat_stat_histth with 
+                strong outliers.                 
+(2) Changed:    Added warning if no skull-stripping is used 
+                (gcutstr=-1) but skull was detected.     
+(3) Fixed:      Corrected bugs in kamap pipeline in cat_main.
+(4) Fixed:      Corrected boundary bugs in style.css that makes 
+                HTML page to wide and active the horizontal scroll
+                bar. The major white 10px boundary depends on the 
+                SPM Graphics figure properties.
+(5) Changed:    Activate native label output in cat_defaults. 
+(6) Changed:    Simplified output fiels in segment GUI.
+(7) Changed:    Modified head trimming GUI.
+
+                
+                     
+------------------------------------------------------------------------
+r1367 | dahnke | 2018-09-26 12:44:47 +0200 (Mi, 26 Sep 2018) | 44 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -44,6 +77,7 @@ A       html/images/cat_stat_checkcov_07_exclusion.png
                 overwrite the automatic skull-stripping detection
                 in cat_run_job(1070).                
                      
+
 ------------------------------------------------------------------------
 r1366 | dahnke | 2018-09-21 12:23:17 +0200 (Fr, 21 Sep 2018) | 77 lines
 

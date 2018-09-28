@@ -846,21 +846,29 @@ spmtype.help    = {
 % ---------------------------------------------------------------------
 % images Images
 % ---------------------------------------------------------------------
+simages         = cfg_files;
+simages.tag     = 'simages';
+simages.name    = 'Source images';
+simages.help    = {'Select iamges for trimming (e.g. T1 images).' ''};
+simages.filter  = 'image';
+simages.ufilter = '.*';
+simages.num     = [1 Inf];
+
 images1         = cfg_files;
-images1.tag     = 'images';
-images1.name    = 'Images';
-images1.help    = {'Select one datatype for trimming (e.g. all T1 images).' ''};
+images1.tag     = 'oimages';
+images1.name    = 'Other images';
+images1.help    = {'Select other images that were trimmed similar to the source images (e.g. corregistrated PD images).' ''};
 images1.filter  = 'image';
 images1.ufilter = '.*';
 images1.num     = [1 Inf];
 
-images          = cfg_repeat;
-images.tag      = 'images';
-images.name     = 'Images';
-images.help     = {'Select the image sets to be trimmed together. For example, the first set may be a bunch of T1 images, and the second set may be a set of coregistered PD images of the same subjects with the same image dimension.' ''};
-images.values   = {images1};
-images.val      = {images1};
-images.num      = [1 Inf];
+oimages          = cfg_repeat;
+oimages.tag      = 'oimages';
+oimages.name     = 'Images';
+oimages.help     = {'Select other images that were trimmed similar to the source images. For example, the source images are a set of T1 images, whereas the second set may be a set of coregistered PD images of the same subjects with the same image dimension.' ''};
+oimages.values   = {images1};
+oimages.val      = {};
+oimages.num      = [0 Inf];
 
 pth             = cfg_entry;
 pth.tag         = 'pth';
@@ -876,7 +884,7 @@ avg.name        = 'Average images';
 avg.strtype     = 'r';
 avg.num         = [1 1];
 avg.val         = {0};
-avg.help        = {'By default, only the first image is used for masking. However sometimes it is helpful to use the average of all images (avg=1) or the first n images (avg>1) of the given set.' ''};
+avg.help        = {'By default, only the source image is used for masking. However sometimes it is helpful to use the average of all additional images (avg=1) or the first n images inclusive th source image (avg>1) of the given set.' ''};
 
 open             = cfg_entry;
 open.tag         = 'open';
@@ -900,7 +908,7 @@ intlim1         = intlim;
 intlim1.tag     = 'intlim1';
 intlim1.name    = 'Global intensity limitation for masking';
 intlim1.val     = {90};
-intlim1.help    = {'General intensity limitation to remove strong outliers by using 90%% of the original histogram values. ' ''};
+intlim1.help    = {'General intensity limitation to remove strong outliers by using 90% of the original histogram values. To high values will include background noise and do not allow trimming, whereas to low values will cut objects with low values (e.g. by image inhomogeneities). ' ''};
 
 % also this is a separate function that is used for the results
 spm_type         = cfg_menu; %
@@ -924,9 +932,9 @@ headtrimming         = cfg_exbranch;
 headtrimming.tag     = 'datatrimming';
 headtrimming.name    = 'Image data trimming'; 
 if expert
-  headtrimming.val   = {images prefix postfix intlim1 pth avg open addvox spm_type intlim};
+  headtrimming.val   = {simages oimages prefix postfix intlim1 pth avg open addvox spm_type intlim};
 else
-  headtrimming.val   = {images pth spm_type};
+  headtrimming.val   = {simages oimages pth spm_type};
 end
 headtrimming.prog    = @cat_vol_headtrimming;
 headtrimming.vfiles  = @vfiles_headtrimming;
