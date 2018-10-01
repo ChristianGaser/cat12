@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1368 | dahnke | 2018-09-28 12:03:01
+r1369 | dahnke | 2018-10-01 13:49:35
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_main.m
+
+(1) New:  Added new skull-stripping method APRG (adaptive probability
+          region-growing) that refines the probability maps of the SPM 
+          approach by region-growing techniques of the gcut approach 
+          with a final surface-based optimization strategy. 
+                
+                     
+
+------------------------------------------------------------------------
+r1368 | dahnke | 2018-09-28 12:04:52 +0200 (Fr, 28 Sep 2018) | 31 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -31,6 +46,7 @@ M       tbx_cfg_cat.m
 
                 
                      
+
 ------------------------------------------------------------------------
 r1367 | dahnke | 2018-09-26 12:44:47 +0200 (Mi, 26 Sep 2018) | 44 lines
 

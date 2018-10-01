@@ -448,14 +448,15 @@ gcutstr.name      = 'Skull-Stripping';
 gcutstr.def       = @(val)cat_get_defaults('extopts.gcutstr', val{:});
 gcutstr.help      = {
   'Method of skull-stripping before AMAP segmentation. The SPM approach works quite stable for the majority of data. However, in some rare cases parts of GM (i.e. in frontal lobe) might be cut. If this happens the GCUT approach is a good alternative. GCUT is a graph-cut/region-growing approach starting from the WM area. If you use already skull-stripped data you can turn off skull-stripping although this is automaticaly detected in most cases.'
+  'APRG (adaptive probability region-growing) is a new method that refines the probability maps of the SPM approach by region-growing techniques of the gcut approach with a final surface-based optimization stategy.  '
   ''
 };
 if ~expert
-  gcutstr.labels  = {'none (already skull-stripped)' 'SPM approach' 'GCUT approach'};
-  gcutstr.values  = {-1 0 0.50};
+  gcutstr.labels  = {'none (already skull-stripped)' 'SPM approach' 'GCUT approach' 'APRG approach'};
+  gcutstr.values  = {-1 0 0.50 4};
 else
-  gcutstr.labels  = {'none (already skull-stripped) (-1)','SPM approach (0)','GCUT medium (0.50)','SPM+ approach (2)','SPM+ and GCUT medium (3)'};
-  gcutstr.values  = {-1 0 0.50 2 3};
+  gcutstr.labels  = {'none (already skull-stripped) (-1)','SPM approach (0)','GCUT medium (0.50)','SPM+ approach (2)','SPM+ and GCUT medium (3)' 'APRG approach (4)'};
+  gcutstr.values  = {-1 0 0.50 2 3 4};
 end
 
 
