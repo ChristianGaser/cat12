@@ -680,8 +680,8 @@ if expert>1
   spm_kamap.tag    = 'spm_kamap';
   spm_kamap.name   = 'Initial segmentation';
   spm_kamap.help   = { ...
-      'In seldom cases the Unified Segmentation can fail in highly abnormal brains, where e.g. the cerebrospinal fluid of superlarge ventricles (hydrocephalus) were classified as white matter. However, if the affine registration is correct, the AMAP segmentation with an prior-independent k-means initialization can used to replace the SPM brain tissue classification. ' 
-      'Moreover, the default Dartel and Shooting registrations will fail and the "Optimized Shooting - superlarge ventricles" option for "Spatial registration" is required! '
+      'In rare cases the Unified Segmentation can fail in highly abnormal brains, where e.g. the cerebrospinal fluid of superlarge ventricles (hydrocephalus) were classified as white matter. However, if the affine registration is correct, the AMAP segmentation with an prior-independent k-means initialization can be used to replace the SPM brain tissue classification. ' 
+      'Moreover, if the default Dartel and Shooting registrations will fail then the "Optimized Shooting - superlarge ventricles" option for "Spatial registration" is required! '
       ''
       ' SPM Unified Segmentation - use SPM Unified Segmentation segmenation (default) ' 
       ' k-means AMAP - k-means AMAP approach ' 
