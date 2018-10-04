@@ -45,7 +45,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
 %   Department of Neurology
 %   University Jena
 % ______________________________________________________________________
-% $Id: cat_main_LAS.m 1338 2018-07-23 12:51:04Z dahnke $
+% $Id$
 
 
 

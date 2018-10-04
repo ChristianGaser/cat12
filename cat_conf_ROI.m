@@ -3,7 +3,7 @@ function ROI = cat_conf_ROI(expert)
 % wrapper for calling CAT ROI options
 %_______________________________________________________________________
 % Robert Dahnke and Christian Gaser
-% $Id: cat_conf_ROI.m 954 2016-06-20 10:44:20Z dahnke $
+% $Id$
 %_______________________________________________________________________
 
 

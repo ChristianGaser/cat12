@@ -87,14 +87,14 @@ function varargout = cat_surf_resamp(varargin)
     
     name0 = [ff(3:end) ex];          % remove leading hemisphere information
     name0 = strrep(name0,'.gii',''); % remove .gii extension
-    hemistr = char('lh','rh','lc','rc');
+    hemistr = {'lh','rh','lc','rc'};
     exist_hemi = [];
     
     % go through left and right and potential cerebellar hemispheres
     for j=1:length(hemistr)
     
       % add hemisphere name
-      hemi = hemistr(j,:);
+      hemi = hemistr{j};
       name = [hemi name0];
       
       Pvalue0 = fullfile(pp,name);
@@ -149,7 +149,7 @@ function varargout = cat_surf_resamp(varargin)
 
       % smooth resampled values
       % don't use mask for cerebellum
-      if strcmp(hemistr,'lc') | strcmp(hemistr,'rc')
+      if strcmp(hemi,'lc') | strcmp(hemi,'rc')
         cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue);
       else
         cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue,Pmask);

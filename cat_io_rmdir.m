@@ -9,7 +9,7 @@ function cat_io_rmdir(dirs)
 % dirs = char or cellstr of directories
 % _________________________________________________________________________
 % Robert Dahnke
-% $Id: cat_stat_check_cov2.m 1352 2018-08-10 16:11:27Z dahnke $
+% $Id$
 
   dirs    = cellstr(dirs); 
   

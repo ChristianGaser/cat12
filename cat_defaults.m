@@ -124,7 +124,7 @@ cat.output.warps        = [0 0];
 % [inf - automatic correction] 
 
 % skull-stripping options
-cat.extopts.gcutstr      = 0;    % Strength of skull-stripping:               0 - SPM approach; eps-1 gcut; 2 - Shooting approach; 3 - Shooting + gcut; -1 - no skull-stripping (allready skull-stripped); default = 0
+cat.extopts.gcutstr      = 0;    % Strength of skull-stripping:               0 - SPM approach; eps-1 gcut; 2 - Shooting approach; 3 - Shooting + gcut; -1 - no skull-stripping (already skull-stripped); default = 0
 cat.extopts.cleanupstr   = 0.5;  % Strength of the cleanup process:           0 to 1; default 0.5
 
 % segmentation options
