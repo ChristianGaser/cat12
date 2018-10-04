@@ -1,5 +1,22 @@
 ------------------------------------------------------------------------
-r1369 | dahnke | 2018-10-01 13:49:35
+r1370 | dahnke | 2018-10-04 10:30:54
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_io_colormaps.m
+M       cat_main.m
+M       cat_stat_check_cov2.m
+M       cat_vol_sanlm.m
+M       tbx_cfg_cat.m
+
+(1) Fixed:  Corrected bug in cat_stat_check_cov2.
+(2) Fixed:  Corrected bugs in cat_vol_sanlm.
+(3) Fixed:  Corrected problems of new skull-stripping in cat_main.
+(4) New:    Added color overlay for label map in cat_stat_check_cov2.
+                
+------------------------------------------------------------------------
+r1369 | dahnke | 2018-10-01 13:53:15 +0200 (Mo, 01 Okt 2018) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +29,7 @@ M       cat_main.m
           with a final surface-based optimization strategy. 
                 
                      
+
 
 ------------------------------------------------------------------------
 r1368 | dahnke | 2018-09-28 12:04:52 +0200 (Fr, 28 Sep 2018) | 31 lines

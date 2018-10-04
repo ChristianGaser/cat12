@@ -153,8 +153,8 @@ function varargout = cat_vol_sanlm_file(job)
 
     % map GUI data
     if isfield(job,'nlmfilter') 
-        if isfield(job.nlmfilter,'default')
-            job.NCstr =  abs(job.nlmfilter.default.NCstr); 
+        if isfield(job.nlmfilter,'classic') 
+            job.NCstr = 1; 
         elseif isfield(job.nlmfilter,'optimized') 
             FN = fieldnames(job.nlmfilter.optimized); 
             for fni=1:numel(FN)
@@ -398,11 +398,11 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
             %  for corrections (job.relativeFilterStengthLimit), where higher values allow 
             %  stronger filtering. 
             [NCi,range]  = cat_stat_histth(src,0.99); % lower values > more similar filtering
-            NCi  = max(eps,log10( (NCi + range(1)) / diff(range) * 7 + 3 )); % bias corr + intensity normalization 
+            NCi  = max(eps,log10( 1 + (NCi + range(1)) / diff(range) * 7 + 3 )); % bias corr + intensity normalization 
             NCi  = cat_vol_smooth3X( NCi , job.relativeIntensityAdaption / mean(vx_vol)); % smoothing
             if job.relativeIntensityAdaption>0 && ...
                job.relativeFilterStengthLimit && ~isinf(job.relativeFilterStengthLimit)
-                NCsi = NCs ./ NCi; 
+                NCsi = NCs ./ max(eps,NCi); 
                 mNCs = cat_stat_nanmean( NCsi(src(:)>th/2 & NCsi(:)>0 )) * ...
                           job.relativeFilterStengthLimit * ...
                           max(1,min(4,4 - job.relativeIntensityAdaption*2)); % lower boundary for strong adaption
@@ -517,7 +517,7 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
             % that red means failed filtering ...
             %   green > low filtering 
             %   red   > strong filtering
-            if NCstr(NCstri) || isinf(NCstr(NCstri))
+            if NCstr(NCstri)>0 || isinf(NCstr(NCstri))
                 fprintf('NCstr = '); 
                 cat_io_cprintf( color( ( ( abs(NCstr(NCstri)) ) * 6 )) , ...
                     sprintf('%- 5.2f > %4.2f', job.NCstr(NCstri) , abs(NCstr(NCstri)) ));
