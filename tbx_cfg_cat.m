@@ -218,7 +218,7 @@ else
 end
 %------------------------------------------------------------------------
 
-if expert>1
+if expert
   native.def  = @(val)cat_get_defaults('output.label.native', val{:});
   warped.def  = @(val)cat_get_defaults('output.label.warped', val{:});
   dartel.def  = @(val)cat_get_defaults('output.label.dartel', val{:});
@@ -420,7 +420,7 @@ output.name = 'Writing options';
 if expert==2
   output.val  = {surface ROI grey white csf gmt wmh sl tpmc atlas label bias las jacobianwarped warps}; 
 elseif expert==1
-  output.val  = {surface ROI grey white csf wmh sl atlas labelnative bias las jacobianwarped warps};
+  output.val  = {surface ROI grey white csf wmh sl atlas label bias las jacobianwarped warps};
 else
   output.val  = {surface ROI grey white labelnative biaswarped jacobianwarped warps};
 end
@@ -469,7 +469,7 @@ output_spm  = output;
 if expert==2
   output_spm.val  = {ROI surface grey_spm white_spm csf_spm label jacobian warps}; 
 elseif expert==1
-  output_spm.val  = {ROI surface grey_spm white_spm csf_spm labelnative jacobianwarped warps};
+  output_spm.val  = {ROI surface grey_spm white_spm csf_spm label jacobianwarped warps};
 else % also CSF output because it is requiered as input ...
   output_spm.val  = {ROI surface grey_spm white_spm csf_spm labelnative jacobianwarped warps};
 end
