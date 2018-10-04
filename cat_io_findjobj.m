@@ -145,7 +145,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
 % referenced and attributed as such. The original author maintains the right to be solely associated with this work.
 
 % Programmed and Copyright by Yair M. Altman: altmany(at)gmail.com
-% $Revision: 1.50 $  $Date: 2017/04/13 20:47:08 $
+% $Revision$  $Date$
 
     % Ensure Java AWT is enabled
     error(javachk('awt'));

@@ -1,5 +1,74 @@
 ------------------------------------------------------------------------
-r1370 | dahnke | 2018-10-04 10:30:54
+r1371 | gaser | 2018-10-04 11:21:04
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+MM      cat_conf_ROI.m
+M       cat_conf_extopts.m
+M       cat_defaults.m
+MM      cat_io_findjobj.m
+MM      cat_io_rmdir.m
+MM      cat_main_LAS2.m
+MM      cat_main_registration2.m
+M       cat_stat_analyze_ROIs.m
+M       cat_surf_resamp.m
+M       html/cat.html
+ M      html/cat_tools_checkcov.html
+ M      html/cat_tools_checkcov_exclusion.html
+ M      html/icons/file_cat_log.png
+ M      html/icons/file_cat_report.png
+ M      html/icons/file_cat_report_surf.png
+ M      html/icons/file_cat_xml.png
+ M      html/icons/file_delete.png
+ M      html/icons/file_delete_restore.png
+ M      html/icons/file_export.png
+ M      html/icons/file_new.png
+ M      html/icons/file_open.png
+ M      html/icons/file_pdf.png
+ M      html/icons/file_print.png
+ M      html/icons/file_save.png
+ M      html/icons/file_search.png
+ M      html/icons/file_spm_view.png
+ M      html/icons/file_surf.png
+ M      html/icons/file_surfc.png
+ M      html/icons/redo.png
+ M      html/icons/refresh.png
+ M      html/icons/settings.png
+ M      html/icons/status_failed.png
+ M      html/icons/status_forbiden.png
+ M      html/icons/status_help.png
+ M      html/icons/status_help2.png
+ M      html/icons/status_info.png
+ M      html/icons/status_passed.png
+ M      html/icons/status_warning_hard.png
+ M      html/icons/status_warning_soft.png
+ M      html/icons/tool_data_cursor.png
+ M      html/icons/tool_fit.png
+ M      html/icons/tool_hand.png
+ M      html/icons/tool_zoom_in.png
+ M      html/icons/tool_zoom_out.png
+ M      html/icons/trash_auto.png
+ M      html/icons/trash_col_add.png
+ M      html/icons/trash_col_rm.png
+ M      html/icons/trash_row_add.png
+ M      html/icons/trash_row_rm.png
+ M      html/icons/trash_tip_add.png
+ M      html/icons/trash_tip_rm.png
+ M      html/icons/undo.png
+ M      html/images/cat_stat_checkcov_00_overview.png
+ M      html/images/cat_stat_checkcov_01_batch.png
+ M      html/images/cat_stat_checkcov_02_command.png
+ M      html/images/cat_stat_checkcov_03_checkcov.png
+ M      html/images/cat_stat_checkcov_04_boxplot01_MNC.png
+ M      html/images/cat_stat_checkcov_04_boxplot02_IQR.png
+ M      html/images/cat_stat_checkcov_05_check_01_original.png
+ M      html/images/cat_stat_checkcov_07_exclusion.png
+
+(1) Changed: Added Holm-Bonferroni correction again to ROI analysis.
+(2) Changed: Corrected typos.
+------------------------------------------------------------------------
+r1370 | dahnke | 2018-10-04 10:38:09 +0200 (Do, 04 Okt 2018) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +84,7 @@ M       tbx_cfg_cat.m
 (3) Fixed:  Corrected problems of new skull-stripping in cat_main.
 (4) New:    Added color overlay for label map in cat_stat_check_cov2.
                 
+
 ------------------------------------------------------------------------
 r1369 | dahnke | 2018-10-01 13:53:15 +0200 (Mo, 01 Okt 2018) | 13 lines
 

@@ -223,7 +223,7 @@ if length(unique(hemi_code)) == 1
   end
 end
 
-hemi_str = {'lh','rh','both','unknown'};
+hemistr = {'lh','rh','both','unknown'};
 
 n_hemis = max(hemi_code);
 
@@ -235,8 +235,8 @@ for i=1:n_hemis
 end
 
 % prepare corrections for multiple comparisons
-corr = {'uncorrected','FDR corrected for whole brain'};
-corr_short = {'','FDR'};
+corr = {'uncorrected','FDR corrected','Holm-Bonferroni corrected'};
+corr_short = {'','FDR','Holm'};
 n_corr = numel(corr);
 data = cell(size(corr));
 Pcorr = cell(size(corr));
@@ -247,6 +247,22 @@ Pcorr{1} = p;
 
 % apply FDR correction
 Pcorr{2} = spm_P_FDR(p);
+
+% apply Holm-Bonferroni correction: correct lowest P by n, second lowest by n-1...
+if n_corr > 2
+  [Psort0, indP0] = sort(p);
+  n = length(Psort0);
+  Pcorr{3} = ones(size(p));
+  for k=1:n
+    Pval = p(indP0(k))*(n+1-k);
+    if Pval<alpha
+      Pcorr{3}(indP0(k)) = Pval;
+    else
+      % stop here if corrected p-value exceeds alpha
+      break
+    end
+  end
+end
 
 atlas_loaded = 0;
 
@@ -264,10 +280,11 @@ for i = sort(unique(hemi_code))'
   % sort p-values for FDR and sorted output
   [Psort, indP] = sort(p(hemi_ind{i}));
 
+
   % select surface atlas for each hemisphere
   if mesh_detected
     atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',...
-        [hemi_str{i} '.' atlas '.freesurfer.annot']);
+        [hemistr{i} '.' atlas '.freesurfer.annot']);
     [vertices, rdata0, colortable, rcsv0] = cat_io_FreeSurfer('read_annotation',atlas_name);
     data0 = round(rdata0);
 
@@ -318,7 +335,7 @@ for i = sort(unique(hemi_code))'
     ind = find(Pcorr_sel{c}(indP)<alpha);
     ind_corr{c} = ind;
     if ~isempty(ind)
-      fprintf('\n%s (P<%g, %s):\n',hemi_str{i},alpha,corr{c});
+      fprintf('\n%s (P<%g, %s):\n',hemistr{i},alpha,corr{c});
       fprintf('P-value\t\t%s\n',atlas);
       for j=1:length(ind)
         data{c}(data0 == ID_sel(indP(ind(j)))) = -log10(Pcorr_sel{c}(indP(ind(j))));
@@ -329,15 +346,14 @@ for i = sort(unique(hemi_code))'
     % write label surface with thresholded p-values
     if mesh_detected
       % save P-alues as float32
-      filename = [hemi_str{i} '.logP' corr_short{c} output_name '.gii'];
-      save(gifti(struct('cdata',data{c})),filename);
-      fprintf('\nLabel file with thresholded logP values (%s) saved as %s.',corr{c},filename);
+      filename1 = [hemistr{i} '.logP' corr_short{c} output_name '.gii'];
+      save(gifti(struct('cdata',data{c})),filename1);
 
       if write_beta
         for k=1:length(ind_con)
-          filename = sprintf('%s.beta%d_%s.gii',hemi_str{i},ind_con(k),atlas_name);
-          save(gifti(struct('cdata',dataBeta{k})),filename);
-          fprintf('\Beta image saved as %s.',filename);
+          filename2 = sprintf('%s.beta%d_%s.gii',hemistr{i},ind_con(k),atlas_name);
+          save(gifti(struct('cdata',dataBeta{k})),filename2);
+          fprintf('\Beta image saved as %s.',filename2);
         end
       end
     end
@@ -345,6 +361,24 @@ for i = sort(unique(hemi_code))'
   end
   fprintf('\n');
   
+end
+
+% merge hemispheres
+if mesh_detected
+
+  for c = 1:n_corr
+    % name for combined hemispheres
+    name_lh   = ['lh.logP'   corr_short{c} output_name '.gii'];
+    name_rh   = ['rh.logP'   corr_short{c} output_name '.gii'];
+    name_mesh = ['mesh.logP' corr_short{c} output_name '.gii'];
+  
+    % combine left and right 
+    M0 = gifti({name_lh, name_rh});
+    M.cdata = [M0(1).cdata; M0(2).cdata];
+    M.private.metadata = struct('name','SurfaceID','value',name_mesh);
+    save(gifti(M), name_mesh, 'Base64Binary');
+  end
+      
 end
 
 % prepare display ROI results according to found results
@@ -408,30 +442,23 @@ if ~mesh_detected
     cat_vol_slice_overlay(OV);
   end
   
-end
-
-% surface results display
-if mesh_detected
-  if ~isempty(ind_show)
-    fprintf('\nLabels for both hemispheres are saved, thus it is not necessary to also estimate labels from the SPM.mat file of the opposite hemisphere.\n');
-  else
+else % surface results display
+  if isempty(ind_show)
     fprintf('No results found.\n');
     show_results = 0;
   end
   
-  % remove both hemisphere results if no results were significant
-  for c=1:n_corr 
-    if isempty(ind_corr{c})
-      spm_unlink(['lh.logP' corr_short{c} output_name '.gii']);
-      spm_unlink(['rh.logP' corr_short{c} output_name '.gii']);
-    end
-  end
-    
   % display ROI surface results
   if show_results
     lh = ['lh.logP' corr_short{show_results} output_name '.gii'];
     rh = ['rh.logP' corr_short{show_results} output_name '.gii'];
-    cat_surf_results('Disp',lh,rh,0);
+    cat_surf_results('Disp',name_lh,name_rh);
+  end
+  
+  % delete single hemi files because we already have merged hemispheres
+  for c = 1:n_corr
+    spm_unlink(['lh.logP' corr_short{show_results} output_name '.gii']); 
+    spm_unlink(['rh.logP' corr_short{show_results} output_name '.gii']);
   end
 end
 
