@@ -498,7 +498,12 @@ function varargout = cat_stat_check_cov2(job)
          end
       end
     end
-
+    
+    cscc.files.p0{i} = fullfile(pp,['p0' fname '.nii']);
+    if ~exist(cscc.files.p0{i},'file')
+      cscc.files.p0{i} = ''; 
+    end
+    
     % try to find the cscc.data.XML file if not given
     if ~isfield(job,'data_xml') || isempty( char(job.data_xml) ) 
       cscc.files.xml{i} = fullfile(pp1,reportdir,['cat_' fname ...
@@ -623,6 +628,10 @@ function varargout = cat_stat_check_cov2(job)
       end
 
       xml = cat_io_xml(deblank(cscc.files.xml{i}));
+      if isempty(cscc.files.org{i}) 
+        cscc.files.org{i} = xml.filedata.fname;
+      end
+      
       cscc.data.catrev = xml.software.version_cat;
       if isfield(xml,'qualityratings')
         cscc.data.QM(i,1:4)  = [xml.qualityratings.NCR xml.qualityratings.ICR ...
@@ -2975,14 +2984,21 @@ function checkvol(obj, event_obj)
 % Load the original image of selected files in SPM graphics window.
 % Some further information or legend would be helpful.
 %-----------------------------------------------------------------------
-  global cscc
+  global cscc st 
   
   spm_figure('Clear',cscc.H.graphics);
   spm_figure('Focus',cscc.H.graphics);
   spm_orthviews('Reset')
-  gax = gca; set(gax,'Position',[0 0 1 1]); axis off;
-  
-  
+  [zl,rl] = spm_orthviews('ZoomMenu');
+  if numel(zl)==8
+    zl = [zl(1:end-2); 60; zl(end-1:end)]; 
+    rl = [rl(1:end-2);  1; rl(end-1:end)]; 
+  end
+  spm_orthviews('ZoomMenu',zl,rl); 
+  job.colormapc = flipud(cat_io_colormaps('BCGWHcheckcov'));
+  job.prop  = 0.2; 
+ 
+  %%
   cscc.H.multi = 1; 
   if cscc.H.isscatter 
     xeqy = 0;
@@ -2992,7 +3008,17 @@ function checkvol(obj, event_obj)
       
       spm_check_registration(char(unique(cscc.files.org(id))));
       
-      spm_orthviews('MaxBB')
+      
+      if exist(cscc.files.p0{cscc.pos.x},'file')
+        spm_orthviews('addtruecolourimage',1,cscc.files.p0{cscc.pos.x},...
+          job.colormapc,job.prop,0,5);
+      end
+      
+      vx_vol    = sqrt(sum(st.vols{1}.mat(1:3,1:3).^2));
+      Ysrc      = cat_vol_resize(st.vols{1}.private.dat,'reduceV',vx_vol,vx_vol * 2,2,'meanm');
+      [Ysrc,th] = cat_stat_histth(Ysrc,99);
+      spm_orthviews('window',1,th + [ 0.1*-diff(th) 0.3*diff(th)] );   
+      
     else
       ppos = [0.02 0.01 0.96 0.98];
       tpos = [0.50 0.98 0.96 0.02];
@@ -3008,25 +3034,44 @@ function checkvol(obj, event_obj)
       tpos = [0.50 0.980 0.96 0.02 ; 0.50 0.475 0.96 0.02];
     end
   end
-  
+     
+      
   if ~cscc.H.isscatter || ~cscc.H.multi || xeqy
+    
+    hi1 = spm_orthviews('Image',spm_vol(cscc.files.org{cscc.pos.x}),ppos(1,:)); 
+    spm_orthviews('AddContext',hi1);
+    
+    gax = axes('Visible','off','Position',[0 0 1 1]);
     text(gax,tpos(1,1),tpos(1,2),spm_str_manip(cscc.files.org{cscc.pos.x},'k100'),...
       'FontSize',cscc.display.FS(cscc.display.FSi+1),'Color',[0 0 0.8],'LineStyle','none',...
       'HorizontalAlignment','center');
-
-    hi1 = spm_orthviews('Image',spm_vol(cscc.files.org{cscc.pos.x}),ppos(1,:)); 
-    spm_orthviews('AddContext',hi1);
+    
+    if exist(cscc.files.p0{cscc.pos.x},'file')
+      spm_orthviews('addtruecolourimage',1,cscc.files.p0{cscc.pos.x},...
+        job.colormapc,job.prop,0,5);
+    end
   end
   
   if ~cscc.H.isscatter && ~xeqy
+    
+    hi2 = spm_orthviews('Image',spm_vol(cscc.files.org{cscc.pos.y}),ppos(2,:));
+    spm_orthviews('AddContext',hi2);
+  
+    gax = axes('Visible','off','Position',[0 0 1 1]);
     text(gax,tpos(1,1),tpos(2,2),spm_str_manip(cscc.files.org{cscc.pos.y},'k100'),...
       'FontSize',cscc.display.FS(cscc.display.FSi+1),'Color',[0 0 0.8],'LineStyle','none',...
       'HorizontalAlignment','center');
-    hi2 = spm_orthviews('Image',spm_vol(cscc.files.org{cscc.pos.y}),ppos(2,:)); 
-    spm_orthviews('AddContext',hi2);
-    spm_orthviews('MaxBB')
+    
+    if exist(cscc.files.p0{cscc.pos.y},'file')
+      spm_orthviews('addtruecolourimage',2,cscc.files.p0{cscc.pos.y},...
+        job.colormapc,job.prop,0,5);
+    end
+
   end
+  spm_orthviews('Reposition',[0 0 0]); 
+  spm_orthviews('Zoom',120)
   
+  spm_orthviews('redraw');  
 return
 
 %-----------------------------------------------------------------------

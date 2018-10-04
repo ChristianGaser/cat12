@@ -748,11 +748,11 @@ if expert
 end
 
 nlm_default        = cfg_branch;
-nlm_default.tag    = 'default';
-nlm_default.name   = 'Default filter';
+nlm_default.tag    = 'classic';
+nlm_default.name   = 'Classic SANLM filter';
 nlm_default.val    = {};
 nlm_default.help   = {
-    'Classical SANLM filter without adaptions.' 
+    'Classical SANLM filter without further adaptions, i.e. strong filtering on the full resolution.' 
 }; 
 
 nlm_optimized        = cfg_branch;
@@ -760,7 +760,7 @@ nlm_optimized.tag    = 'optimized';
 nlm_optimized.name   = 'Optimized filter';
 nlm_optimized.val    = {NCstrm};
 nlm_optimized.help   = {
-    'Optimized SANLM filter with optimized parameters for simple GUI cases.' 
+    'Optimized SANLM filter with adaptive predefined parameters for simplified GUI cases.' 
 }; 
 
 if expert
@@ -788,10 +788,17 @@ elseif expert
 else
   nlmfilter.val    = {nlm_optimized}; 
 end  
-nlmfilter.help   = {
-    'Choose type of filtering and further filter options.' 
-}; 
-
+if expert
+  nlmfilter.help   = {
+    'Selection between the classical SANLM filter and an optimized SANLM filter with simplyfied and complex setting.' 
+    ''
+  }; 
+else
+  nlmfilter.help   = {
+    'Selection between the classical SANLM filter and an optimized SANLM filter.' 
+    ''
+  };
+end
 sanlm        = cfg_exbranch;
 sanlm.tag    = 'sanlm';
 sanlm.name   = 'Spatially adaptive non-local means denoising filter';
