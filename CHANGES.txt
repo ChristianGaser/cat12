@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1371 | gaser | 2018-10-04 11:21:04
+r1372 | gaser | 2018-10-15 07:58:13
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_tools.m
+M       html/cat.html
+
+Changed: Default interpolation for applying deformations is now trilinear to 
+prevent negative values due to spline interpolation for segmented images.
+------------------------------------------------------------------------
+r1371 | gaser | 2018-10-04 11:21:11 +0200 (Do, 04 Okt 2018) | 67 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -67,6 +78,7 @@ M       html/cat.html
 
 (1) Changed: Added Holm-Bonferroni correction again to ROI analysis.
 (2) Changed: Corrected typos.
+
 ------------------------------------------------------------------------
 r1370 | dahnke | 2018-10-04 10:38:09 +0200 (Do, 04 Okt 2018) | 15 lines
 
