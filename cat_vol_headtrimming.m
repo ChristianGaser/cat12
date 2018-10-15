@@ -81,7 +81,7 @@ function varargout = cat_vol_headtrimming(job)
     spm('FnBanner',mfilename,SVNid); 
   end
   spm_clf('Interactive'); 
-  spm_progress_bar('Init',numel(job.images{1}),'SANLM-Filtering','Volumes Complete');
+  spm_progress_bar('Init',numel(job.images{1}),'Head-Trimming','Volumes Complete');
   for di = 1:numel(job.images{1})
     if job.verb, fprintf('%58s: ',spm_str_manip(job.images{1}{di},'ra57')); end
     

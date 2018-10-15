@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1372 | gaser | 2018-10-15 07:58:13
+r1373 | gaser | 2018-10-15 15:52:19
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_vol_headtrimming.m
+
+Changed: Updated help text.
+------------------------------------------------------------------------
+r1372 | gaser | 2018-10-15 07:58:38 +0200 (Mo, 15 Okt 2018) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +18,7 @@ M       html/cat.html
 
 Changed: Default interpolation for applying deformations is now trilinear to 
 prevent negative values due to spline interpolation for segmented images.
+
 ------------------------------------------------------------------------
 r1371 | gaser | 2018-10-04 11:21:11 +0200 (Do, 04 Okt 2018) | 67 lines
 
