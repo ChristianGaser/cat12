@@ -1163,7 +1163,7 @@ interp.labels = {'Nearest neighbour','Trilinear','2nd Degree B-spline',...
 '3rd Degree B-Spline ','4th Degree B-Spline ','5th Degree B-Spline',...
 '6th Degree B-Spline','7th Degree B-Spline'};
 interp.values = {0,1,2,3,4,5,6,7};
-interp.val    = {5};
+interp.val    = {1};
 interp.help   = {
 'The method by which the images are sampled when being written in a different space.'
 '    Nearest Neighbour:     - Fastest, but not normally recommended.'
