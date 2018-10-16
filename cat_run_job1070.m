@@ -58,7 +58,7 @@ function cat_run_job1070(job,tpm,subj)
     end
     
     % create subject-wise diagy file with the command-line output
-    [pp,ff,ee,ex] = spm_fileparts(job.data{subj}); 
+    [pp,ff,ee,ex] = spm_fileparts(job.data{subj});  %#ok<ASGLU>
     catlog = fullfile(pth,reportfolder,['catlog_' ff '.txt']);
     if exist(catlog,'file'), delete(catlog); end % write every time a new file, turn this of to have an additional log file
     diary(catlog); 
@@ -210,8 +210,8 @@ function cat_run_job1070(job,tpm,subj)
           if sum(YFC(:)>0)<numel(YFC)*0.9 && sum(YFC(:)>0)>numel(YFC)*0.1  % if there is a meanful background
             YFC = ~cat_vol_morph(YF~=0,'lc',1);                            % close noisy background
           end
-          [YL,numo] = spm_bwlabel(double(YF~=0),26);  clear YL;            % number of objects
-          [YL,numi] = spm_bwlabel(double(YFC==0),26); clear YL;            % number of background regions 
+          [YL,numo] = spm_bwlabel(double(YF~=0),26);  clear YL;            %#ok<ASGLU> % number of objects
+          [YL,numi] = spm_bwlabel(double(YFC==0),26); clear YL;            %#ok<ASGLU> % number of background regions 
           skullstrippedpara = [sum(YF(:)==0)/numel(YF) numo numi F0vol F0std]; 
           skullstripped = ...
             skullstrippedpara(1)>0.5 && ...                     % many zeros
@@ -368,7 +368,7 @@ function cat_run_job1070(job,tpm,subj)
               elseif job.extopts.gcutstr<0 && ~skullstripped
                 cat_io_cprintf('warn',[...
                     'WARNING: Skull-Stripping is deactivated but skull was detected. \n' ...
-                    '         Go on without skull-stripping but check your data! \n']);
+                    '         Go on without skull-stripping what probably will fail! \n']);
               end
   
               % skull-stripping of the template
@@ -393,8 +393,9 @@ function cat_run_job1070(job,tpm,subj)
             % ds('l2','',vx_vol,Ym, Yt + 2*Ybg,obj.image.private.dat(:,:,:)/WMth,Ym,60)
             if  app.bias ||  app.msk  
                 stime = cat_io_cmd('APP: Rough bias correction'); 
-                [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init1070(single(obj.image.private.dat(:,:,:)),vx_vol,job.extopts.verb);
-
+                [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init1070(single(obj.image.private.dat(:,:,:)),vx_vol,job.extopts.verb); %#ok<ASGLU>
+                if ~debug, clear Yt; end
+                
                 stime = cat_io_cmd('Coarse affine registration','','',1,stime); 
                 
                 % write data to VF
@@ -461,13 +462,15 @@ function cat_run_job1070(job,tpm,subj)
                 VFa = VF; 
                 if app.aff, VFa.mat = Affine * VF.mat; else Affine = eye(4); affscale = 1; end
                 if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
-                [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0)); Yb = Yb>0.5 & ~Ybg; 
+                [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0));  %#ok<ASGLU>
+                Yb = Yb>0.5 & ~Ybg; clear Vmsk; 
 
                 stime = cat_io_cmd('APP: Fine bias correction and skull-stripping','','',1,stime); 
 
                 % fine APP
                 [Ym,Yp0,Yb] = cat_run_job_APP_final(single(obj.image.private.dat(:,:,:)),...
-                    Ym,Yb,Ybg,vx_vol,job.extopts.gcutstr,job.extopts.verb);
+                    Ym,Yb,Ybg,vx_vol,job.extopts.gcutstr,job.extopts.verb); %#ok<ASGLU>
+                if ~debug, clear Yp0; end
                 stime = cat_io_cmd('Affine registration','','',1,stime); 
 
                 %% smooth data
@@ -505,11 +508,12 @@ function cat_run_job1070(job,tpm,subj)
               warning off
               [Affine1,affscale1] = spm_affreg(VG1, VF1, aflags, Affine, affscale);  
               warning on
-              if ~any(any(isnan(Affine1(1:3,:)))) && affscale>0.5 && affscale<3, Affine = Affine1; end
+              if ~any(any(isnan(Affine1(1:3,:)))) && affscale1>0.5 && affscale1<3, Affine = Affine1; end
             end
             clear VG1 VF1
         else
-          [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init1070(single(obj.image.private.dat(:,:,:)),vx_vol,job.extopts.verb);
+            [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init1070(single(obj.image.private.dat(:,:,:)),vx_vol,job.extopts.verb); %#ok<ASGLU>
+            if ~debug, clear Yt; end
         end
 
         
@@ -578,48 +582,79 @@ function cat_run_job1070(job,tpm,subj)
             clear Ysrc; 
         end
 
-        %  Fine Affine Registration with 3 mm sampling distance
-        %  This does not work for non human data (or very small brains)
+        
+
+        
+        %% Fine affine Registration with automatic selection in case of multiple TPMs. 
+        %  This may not work for non human data (or very small brains).
+        %  This part should be an external (coop?) function?
         stime = cat_io_cmd('SPM preprocessing 1 (estimate 1):','','',1,stime);
         if strcmp('human',job.extopts.species) 
+          if numel(job.opts.tpm)>1
+            %%
+            obj2 = obj; obj2.image.dat(:,:,:) = max(0.0,Ym);
+            [Affine,obj.tpm,res0] = cat_run_job_multiTPM(job,obj2,Affine,skullstripped); %#ok<ASGLU>
+          else
+            %%
             spm_plot_convergence('Init','Fine affine registration','Mean squared difference','Iteration');
             warning off 
             Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg,20); 
             Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,       obj.tpm,Affine2,job.opts.affreg,20);
             warning on  
             if ~any(any(isnan(Affine3(1:3,:)))), Affine = Affine3; end
+          end
+          if 0
+            %% visual control for development and debugging
+            VFa = VF; VFa.mat = Affine * VF.mat; %Fa.mat = res0(2).Affine * VF.mat;
+            if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
+            [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0));  
+            %[Vmsk,Yb] = cat_vol_imcalc([VFa;obj.tpm.V(1:3)],Pbt,'i2 + i3 + i4',struct('interp',3,'verb',0));  
+            %[Vmsk,Yb] = cat_vol_imcalc([VFa;obj.tpm.V(5)],Pbt,'i2',struct('interp',3,'verb',0));  
+            ds('d2sm','',1,Ym,Ym.*(Yb>0.5),100)
+          end
+          
+        
+          if skullstripped || job.extopts.gcutstr<0
+            %% update number of SPM gaussian classes 
+            Ybg = 1 - spm_read_vols(obj.tpm.V(1)) - spm_read_vols(obj.tpm.V(2)) - spm_read_vols(obj.tpm.V(3));
+            if 1
+              for k=1:3
+                obj.tpm.dat{k}     = spm_read_vols(obj.tpm.V(k));
+                obj.tpm.V(k).dt(1) = 64;
+                obj.tpm.V(k).dat   = double(obj.tpm.dat{k});
+                obj.tpm.V(k).pinfo = repmat([1;0],1,size(Ybg,3));
+              end
+            end
+            
+            obj.tpm.V(4).dat = Ybg;
+            obj.tpm.dat{4}   = Ybg; 
+            obj.tpm.V(4).pinfo = repmat([1;0],1,size(Ybg,3));
+            obj.tpm.V(4).dt(1) = 64;
+            obj.tpm.dat(5:6) = []; 
+            obj.tpm.V(5:6)   = []; 
+            obj.tpm.bg1(4)   = obj.tpm.bg1(6);
+            obj.tpm.bg2(4)   = obj.tpm.bg1(6);
+            obj.tpm.bg1(5:6) = [];
+            obj.tpm.bg2(5:6) = [];
+            obj.tpm.V = rmfield(obj.tpm.V,'private');
+            
+            job.opts.ngaus = 3*ones(4,1); % this is more safe
+            obj.lkp        = [];
+            for k=1:numel(job.opts.ngaus)
+              job.tissue(k).ngaus = job.opts.ngaus(k);
+              obj.lkp = [obj.lkp ones(1,job.tissue(k).ngaus)*k];
+            end
+          end
         end
         obj.Affine = Affine;
-
+        
+        
         % set original non-bias corrected image
         if job.extopts.APP==1
           obj.image = spm_vol(images);
         end
         cat_err_res.obj = obj; 
-
        
-      
-
-        if skullstripped 
-          %% update number of SPM gaussian classes 
-          Ybg = 1 - spm_read_vols(obj.tpm.V(1)) - spm_read_vols(obj.tpm.V(2)) - spm_read_vols(obj.tpm.V(3));
-          obj.tpm.V(4).dat = Ybg; 
-          obj.tpm.dat{4}   = Ybg; 
-          obj.tpm.V(4).pinfo = repmat([1;0],1,size(Ybg,3));
-          obj.tpm.dat(5:6) = []; 
-          obj.tpm.V(5:6)   = []; 
-          obj.tpm.bg1(4)   = obj.tpm.bg1(6);
-          obj.tpm.bg2(4)   = obj.tpm.bg1(6);
-          obj.tpm.bg1(5:6) = [];
-          obj.tpm.bg2(5:6) = [];
-            
-          job.opts.ngaus = 3*ones(4,1); % this is more safe
-          obj.lkp        = [];
-          for k=1:numel(job.opts.ngaus)
-            job.tissue(k).ngaus = job.opts.ngaus(k);
-            obj.lkp = [obj.lkp ones(1,job.tissue(k).ngaus)*k];
-          end
-        end
 
         %% SPM preprocessing 1
         %  ds('l2','a',0.5,Ym,Ybg,Ym,Ym,140);
@@ -638,14 +673,14 @@ function cat_run_job1070(job,tpm,subj)
             res.image1 = image1; 
             clear reduce; 
           end
-            
+        
           % for non-skull-stripped brains use masked brains to get better estimates
           % esp. for brains with thinner skull or special defacing
-          if ~skullstripped
+          if ~skullstripped && job.extopts.gcutstr>=0
             stime = cat_io_cmd('SPM preprocessing 1 (estimate skull-stripped):','','',job.extopts.verb-1,stime);
-            % use dilated mask for spm_preproc8 because sometimes inital SPM segmentation
+            %% use dilated mask for spm_preproc8 because sometimes inital SPM segmentation
             % does not cover the whole brain for brains with thinner skull
-            [Ym, Ycls] = cat_spm_preproc_write8(res,zeros(k,4),zeros(1,2),[0 0],1,1);
+            [Ym, Ycls] = cat_spm_preproc_write8(res,zeros(k,4),zeros(1,2),[0 0],1,1); %#ok<ASGLU>
             Ym  = single(Ycls{1})/255 + single(Ycls{2})/255 + single(Ycls{3})/255;
             Yb  = (Ym > 0.5);
             Yb  = cat_vol_morph(cat_vol_morph(Yb,'lo'),'d',5/mean(vx_vol));
@@ -657,11 +692,16 @@ function cat_run_job1070(job,tpm,subj)
             res.fwhm      = obj.fwhm;
             res.msk       = res.image(1); 
             res.msk.pinfo = repmat([255;0],1,size(Yb,3));
-            res.msk.dat(:,:,:) = Yb; % mask unused voxels!
+            res.msk.dat(:,:,:) = ~Yb; % mask unused voxels!
+            res.lkp        = [];
+            for k=1:numel(job.opts.ngaus)
+              job.tissue(k).ngaus = job.opts.ngaus(k);
+              res.lkp = [res.lkp ones(1,job.tissue(k).ngaus)*k];
+            end
             res = spm_preproc8(res);
-  
+
             % final estimate without mask using parameters from previous run
-            stime = cat_io_cmd('SPM preprocessing 1 (estimate skull-stripped):','','',job.extopts.verb-1,stime);
+            stime = cat_io_cmd('SPM preprocessing 1 (estimate full):','','',job.extopts.verb-1,stime);
             res.biasreg   = obj.biasreg;
             res.biasfwhm  = obj.biasfwhm;
             res.reg       = obj.reg;
@@ -718,7 +758,7 @@ function cat_run_job1070(job,tpm,subj)
     spm_progress_bar('Clear');
             
     %% call main processing
-    res.tpm    = tpm.V;
+    res.tpm    = obj.tpm.V;
     res.stime  = stime0;
     res.catlog = catlog; 
     res.image0 = spm_vol(job.channel(1).vols0{subj}); 

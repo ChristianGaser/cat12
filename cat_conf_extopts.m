@@ -453,10 +453,10 @@ gcutstr.help      = {
 };
 if ~expert
   gcutstr.labels  = {'none (already skull-stripped)' 'SPM approach' 'GCUT approach' 'APRG approach'};
-  gcutstr.values  = {-1 0 0.50 4};
+  gcutstr.values  = {-1 0 0.50 2};
 else
-  gcutstr.labels  = {'none (already skull-stripped) (-1)','SPM approach (0)','GCUT medium (0.50)','SPM+ approach (2)','SPM+ and GCUT medium (3)' 'APRG approach (4)'};
-  gcutstr.values  = {-1 0 0.50 2 3 4};
+  gcutstr.labels  = {'none (already skull-stripped) (-1)','SPM approach (0)','GCUT medium (0.50)','APRG approach (2)'};
+  gcutstr.values  = {-1 0 0.50 2};
 end
 
 
