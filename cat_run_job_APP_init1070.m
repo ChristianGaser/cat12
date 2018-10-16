@@ -48,7 +48,7 @@ function [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init1070(Ysrco,vx_vol,verb)
   Ybg  = cat_vol_morph(Ybg,'lc',8);
   Ybg  = cat_vol_smooth3X(Ybg,2); 
   Ybg  = cat_vol_resize(Ybg,'dereduceV',resT2)<0.5;    
-  BGth = roundx(mean(Ysrc(Ybg(:))),rf);
+  BGth = roundx(cat_stat_nanmean(Ysrc(Ybg(:))),rf);
   Ym   = (Ysrc - BGth) ./ (WMth - BGth);
   
   %% first WM inhomogeneity with low tissue boundary (may include CSF > strong filtering for IXI175)
@@ -65,27 +65,29 @@ function [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init1070(Ysrco,vx_vol,verb)
   for i=1:4, Ywi = cat_vol_localstat(Ywi,Ywi>0,2,1); end
   Ywi  = cat_vol_approx(Ywi,'nn',resT2.vx_volr,4);
   Ywi  = cat_vol_smooth3X(Ywi,bfsmoothness.*mean(vx_vol)); % highres data have may stronger inhomogeneities 
-  Ywi  = cat_vol_resize(Ywi,'dereduceV',resT2);    
-  Ybc  = Ysrc./Ywi;
-  WMt2 = roundx(cat_stat_nanmedian(Ybc(Yg(:)<0.2 & Ybc(:)>0.9)),rf); 
+  Ywi  = cat_vol_resize(Ywi,'dereduceV',resT2);  
+  Ybc  = (Ysrc - BGth) ./ Ywi;
+  WMt2 = roundx(cat_stat_nanmedian(Ybc(Yg(:)<0.2 & Ym(:)>0.9)),rf); clear Ybc;
   Ywi  = Ywi * WMt2;
+  Ym   = (Ysrc - BGth) ./ Ywi;
   
   %% background update
   stime = cat_io_cmd('  Refine background','g5','',verb,stime);
-  Ybg = ((Yg.*(Ysrc./Ywi))<cat_vol_smooth3X(Ysrc./Ywi,2)*1.2) & Ysrc./Ywi>0.2; 
+  Ybg = ((Yg.*(Ym))<cat_vol_smooth3X(Ym,2)*1.2) & Ym>0.2; 
   Ybg([1,end],:,:)=0; Ybg(:,[1,end],:)=0; Ybg(:,:,[1,end])=0; Ybg(smooth3(Ybg)<0.5)=0;
   [Ybg,resT2] = cat_vol_resize(single(Ybg),'reduceV',resT3.vx_volr,2,32,'meanm'); 
   Ybg([1,end],:,:)=0; Ybg(:,[1,end],:)=0; Ybg(:,:,[1,end])=0; Ybg = Ybg>0.5;
-  Ybg  = cat_vol_morph(Ybg,'lc',8);
+  Ybg  = cat_vol_morph(Ybg,'ldc',8);
   Ybg  = cat_vol_smooth3X(Ybg,2); 
-  Ybg  = cat_vol_resize(Ybg,'dereduceV',resT2)<0.5 & Ysrc<min(WMth*0.2,BGth*0.8+0.2*WMth);
+  Ybg  = cat_vol_resize(Ybg,'dereduceV',resT2)<0.5 & Ym<min(WMth*0.2,BGth*0.8+0.2*WMth);
   Ybg  = cat_vol_morph(Ybg,'lo');
 
   %% second WM inhomogeneity with improved Yt with higher lower threshold (avoid CSF and less filtering)
   stime = cat_io_cmd('  Final correction','g5','',verb,stime);
-  Yt   = Ysrc>max(BGth,Yms*0.3)  & Ysrc./(Ywi+eps)>0.2 & Ysrc./(Ywi+eps)<1.2 & Ysrc./(Ywi+eps)<Yms/WMth*2 & Yg<0.9 & Ydiv<0.2 & Ydiv>-0.6 & ...
-         smooth3(Ysrc./(Yms+eps).*Yg.*Ydiv<-0.1)<0.1 & ~Ybg; Yt(smooth3(Yt)<0.5)=0;
-  Yt   = Yt | (~Ybg & Ysrc>BGth/2 & Ysrc>Yms*0.5 & Ysrc<Yms*1.2 & Ydiv./(Yg+eps)<0.5 & ((Ysrc./(Ywi+eps)>0.3 & Yg>0.1 & Ydiv<0) | (~Ybg & Ysrc./(Ywi+eps)>0.6)) & Ysrc./(Ywi+eps)<1.2); 
+  Yt   = Ysrc>max(BGth,Yms*0.3)  & Ym>0.9 & Ym<1.2 & ...
+         Ym<Yms/WMth*2 & Yg<0.9 & Ydiv<0.2 & Ydiv>-0.6 & ...
+         smooth3(Ym.*Yg.*Ydiv<-0.1)<0.1 & ~Ybg; Yt(smooth3(Yt)<0.5)=0;
+  Yt   = Yt | (~Ybg & Ysrc>BGth/2 & Ysrc>Yms*0.5 & Ysrc<Yms*1.2 & Ydiv./(Yg+eps)<0.5 & ((Ym>0.3 & Yg>0.1 & Ydiv<0) | (~Ybg & Ysrc./(Ywi+eps)>0.6)) & Ysrc./(Ywi+eps)<1.2); 
   Yt(smooth3(Yt)<0.7)=0;
   Ywi  = (Ysrc .* Yt) ./ max(eps,Yt);  
   [Ywi,resT2] = cat_vol_resize(Ywi,'reduceV',resT3.vx_volr,cat_stat_nanmean(resT3.vx_volr)*2,32,'max'); 
@@ -94,34 +96,37 @@ function [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init1070(Ysrco,vx_vol,verb)
   Ywi  = cat_vol_approx(Ywi,'nn',resT2.vx_volr,4);
   Ywi  = cat_vol_smooth3X(Ywi,bfsmoothness.*mean(vx_vol)); %.*mean(vx_vol)); % highres data have may stronger inhomogeneities 
   Ywi  = cat_vol_resize(Ywi,'dereduceV',resT2);    
-  Ybc  = Ysrc./Ywi;
-  WMt2 = roundx(cat_stat_nanmedian(Ybc(Yg(:)<0.2 & Ybc(:)>0.9)),rf); 
+  Ybc  = (Ysrc - BGth) ./ Ywi;
+  WMt2 = roundx(cat_stat_nanmedian(Ybc(Yg(:)<0.2 & Ym(:)>0.9)),rf); 
   Ywi  = Ywi * WMt2;
+  Ym   = (Ysrc - BGth) ./ Ywi;
   bias = std(Ywi(:))/mean(Ywi(:)); 
   
   %% BG inhomogeneity (important for normalization of the background noise)
   %[Ybc,Ygr,resT2] = cat_vol_resize({Ysrc./Ywi,Yg},'reduceV',resT3.vx_volr,cat_stat_nanmean(resT3.vx_volr)*4,16,'meanm'); 
   %Ybc  = cat_vol_morph(Ybc<BGth/WMth*2 & Ygr<0.05,'lc',2);
   %Ybc  = cat_vol_resize(smooth3(Ybc),'dereduceV',resT2)>0.5; 
-  stime = cat_io_cmd('  Background correction','g5','',verb,stime);
-  [Ybc,resT2] = cat_vol_resize(single(Ysrc .* Ybg),'reduceV',resT3.vx_volr,max(8,min(16,cat_stat_nanmean(resT3.vx_volr)*4)),16,'min'); 
-  Ybc  = cat_vol_localstat(Ybc,Ybc>0,2,2);
-  Ybc  = cat_vol_localstat(Ybc,Ybc>0,2,1);
-  %Ybc  = cat_vol_approx(Ybc,'nn',resT2.vx_volr,4); % no aproximation to correct only in the background! 
-  Ybc  = cat_vol_smooth3X(Ybc,4);
-  Ybc  = cat_vol_resize(Ybc,'dereduceV',resT2); 
-
+  if 0
+    stime = cat_io_cmd('  Background correction','g5','',verb,stime);
+    [Ybc,resT2] = cat_vol_resize(single(Ysrc .* Ybg),'reduceV',resT3.vx_volr,max(8,min(16,cat_stat_nanmean(resT3.vx_volr)*4)),16,'min'); 
+    Ybc  = cat_vol_localstat(Ybc,Ybc>0,2,2);
+    Ybc  = cat_vol_localstat(Ybc,Ybc>0,2,1);
+    %Ybc  = cat_vol_approx(Ybc,'nn',resT2.vx_volr,4); % no aproximation to correct only in the background! 
+    Ybc  = cat_vol_smooth3X(Ybc,4);
+    Ybc  = cat_vol_resize(Ybc,'dereduceV',resT2) * WM; 
+  end
 
   %% back to original size
   stime = cat_io_cmd('  Final scaling','g5','',verb,stime);
-  [Ywi,Ybc] = cat_vol_resize({Ywi,Ybc},'dereduceV',resT3); 
+  Ywi       = cat_vol_resize(Ywi,'dereduceV',resT3); 
+  %Ybc       = cat_vol_resize(Ybc,'dereduceV',resT3); 
   Yg        = cat_vol_resize(Yg,'dereduceV',resT3); 
   [Yt,Ybg]  = cat_vol_resize({single(Yt),single(Ybg)},'dereduceV',resT3); Yt = Yt>0.5; Ybg = Ybg>0.5;
   Ysrc      = Ysrco; clear Ysrco;
 
   %% intensity normalization (Ybc is the average background noise)
   % in data with strong inhomogeneities (7T) the signal can trop below the noise level 
-  Ym   = (Ysrc - min(BGth,min(Ybc/2,Ywi/20))) ./ (Ywi - min(BGth,min(Ybc/2,Ywi/20))); 
+  Ym   = (Ysrc - BGth) ./ Ywi; %(Ywi - min(BGth,min(Ybc/2,Ywi/20))); 
   Wth  = single(cat_stat_nanmedian(Ym(Yg(:)<0.2 & Ym(:)>cat_stat_nanmean( Ym(Yg(:)<0.2 & Ym(:)>cat_stat_nanmean(Ym(:))))))); 
   [WIth,WMv] = hist(Ym(Yg(:)<0.2 & Ym(:)>Wth*0.5 & Ym(:)<Wth*1.5),0:0.01:2);
   WIth = find(cumsum(WIth)/sum(WIth)>0.8,1,'first'); WIth = roundx(WMv(WIth),rf); 

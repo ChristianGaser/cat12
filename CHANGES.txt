@@ -1,5 +1,40 @@
 ------------------------------------------------------------------------
-r1373 | gaser | 2018-10-15 15:52:19
+r1374 | dahnke | 2018-10-16 15:45:53
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_opts.m
+M       cat_conf_tools.m
+M       cat_defaults.m
+M       cat_main.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+M       cat_run_job_APP_init1070.m
+A       cat_run_job_multiTPM.m
+M       cat_stat_histth.m
+M       cat_surf_createCS.m
+M       cat_vol_headtrimming.m
+M       tbx_cfg_cat.m
+
+(1)  Changed: Prepared new skull-stripping for inverse weightings
+              (not use yet).
+(2)  Changed: Removed gcut+ skull-stripping approach (gcutstr==2,3). 
+              Set gcutstr==2 by the new skull-stripping.
+(3)  Changed: Set new skull-stripping as default.
+(4)  Changed: Use only simplified jacobianwarped GUI entry in tbx_cfg_cat.
+(5)  Fixed:   Corrected loading error of other TPMs in cat_main.
+(6)  Fixed:   Corrected small bug in cat_surf_createCS (fast pipeline).
+(7)  Fixed:   Corrected small bug in cat_stat_histth.
+(8)  Fixed:   Corrected bug in cat_run_job_APP_ini1070.   
+(9)  Fixed:   Corrected problems in cat_run_job_APP_init1070.
+(10) New:     Updated GUI entry in cat_conf_opts to select 
+              multiple TPMs in developer mode.
+(11) New:     Added function cat_run_job_multiTPM to handle 
+              multiple TPMs in developer mode.
+
+------------------------------------------------------------------------
+r1373 | gaser | 2018-10-15 15:52:44 +0200 (Mo, 15 Okt 2018) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +42,7 @@ M       cat_conf_tools.m
 M       cat_vol_headtrimming.m
 
 Changed: Updated help text.
+
 ------------------------------------------------------------------------
 r1372 | gaser | 2018-10-15 07:58:38 +0200 (Mo, 15 Okt 2018) | 9 lines
 

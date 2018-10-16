@@ -9,18 +9,18 @@ function varargout = cat_vol_headtrimming(job)
 %   varargout = cat_vol_headtrimming(job)
 %
 %   job
-%    .images .. filenames as cell of cellstr
-%    .resdir .. result directory (char, default same as input files)
-%    .pefix  .. filename prefix (char, default = 'trimmed_')
-%    .addvox .. additional voxels around the box (default = 2); 
-%    .pth    .. percentual threshold to estimate the box (0.1);
-%    .avg    .. create the box on the the averag of ..
-%                 avg = 0 .. use only first image (default)
-%                 avg = 1 .. all
-%                 avg > 1 .. use image 1 to avg
-%    .verb   .. be verbose (default = 1) 
-%    .ctype  .. 'uint16';
-%    .range  .. 99.99;
+%    .simages .. filenames as cell of cellstr
+%    .resdir  .. result directory (char, default same as input files)
+%    .pefix   .. filename prefix (char, default = 'trimmed_')
+%    .addvox  .. additional voxels around the box (default = 2); 
+%    .pth     .. percentual threshold to estimate the box (0.1);
+%    .avg     .. create the box on the the averag of ..
+%                  avg = 0 .. use only first image (default)
+%                  avg = 1 .. all
+%                  avg > 1 .. use image 1 to avg
+%    .verb    .. be verbose (default = 1) 
+%    .ctype   .. 'uint16';
+%    .range   .. 99.99;
 %
 % ______________________________________________________________________
 %

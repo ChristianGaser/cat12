@@ -196,26 +196,15 @@ las.help   = {
 
 %------------------------------------------------------------------------
 
-if 0
-  warped.def    = @(val)cat_get_defaults('output.jacobian.warped', val{:});
-  jacobian      = cfg_branch;
-  jacobian.tag  = 'jacobian';
-  jacobian.name = 'Jacobian determinant';
-  jacobian.val  = {warped};
-  jacobian.help = {
-    'This is the option to save the Jacobian determinant, which expresses local volume changes. This image can be used in a pure deformation based morphometry (DBM) design. Please note that the affine part of the deformation field is ignored. Thus, there is no need for any additional correction for different brain sizes using ICV.'
+jacobianwarped      = warped;
+jacobianwarped.tag  = 'jacobianwarped';
+jacobianwarped.name = 'Jacobian determinant';
+jacobianwarped.def  = @(val)cat_get_defaults('output.jacobian.warped', val{:});
+jacobianwarped.help = {
+  'This is the option to save the Jacobian determinant, which expresses local volume changes. This image can be used in a pure deformation based morphometry (DBM) design. Please note that the affine part of the deformation field is ignored. Thus, there is no need for any additional correction for different brain sizes using ICV.'
   ''
-  };
-else
-  jacobianwarped      = warped;
-  jacobianwarped.tag  = 'jacobianwarped';
-  jacobianwarped.name = 'Jacobian determinant';
-  jacobianwarped.def  = @(val)cat_get_defaults('output.jacobian.warped', val{:});
-  jacobianwarped.help = {
-    'This is the option to save the Jacobian determinant, which expresses local volume changes. This image can be used in a pure deformation based morphometry (DBM) design. Please note that the affine part of the deformation field is ignored. Thus, there is no need for any additional correction for different brain sizes using ICV.'
-  	''
-  };
-end
+};
+
 %------------------------------------------------------------------------
 
 if expert
@@ -467,7 +456,7 @@ estwrite.help   = {
 extopts_spm = cat_conf_extopts(expert,1);   
 output_spm  = output; 
 if expert==2
-  output_spm.val  = {ROI surface grey_spm white_spm csf_spm label jacobian warps}; 
+  output_spm.val  = {ROI surface grey_spm white_spm csf_spm label jacobianwarped warps}; 
 elseif expert==1
   output_spm.val  = {ROI surface grey_spm white_spm csf_spm label jacobianwarped warps};
 else % also CSF output because it is requiered as input ...
