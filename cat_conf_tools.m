@@ -853,6 +853,8 @@ spmtype.help    = {
 % ---------------------------------------------------------------------
 % images Images
 % ---------------------------------------------------------------------
+
+% many subjects
 simages         = cfg_files;
 simages.tag     = 'simages';
 simages.name    = 'Source images';
@@ -876,6 +878,62 @@ oimages.help     = {'Select other images that should be trimmed similar to the s
 oimages.values   = {images1};
 oimages.val      = {};
 oimages.num      = [0 Inf];
+
+manysubjects         = cfg_branch;
+manysubjects.tag     = 'manysubjects';
+manysubjects.name    = 'many subjects';
+manysubjects.val     = {simages oimages};
+%manysubjects.vfiles  = @vfiles_volctype;
+manysubjects.help    = {
+  'Create stacks of images of one class that include the SAME NUBMER of "many subjects".'
+  '  { {S1T1, S2T1,...} {S1T2, S2T2, ...} ... }'
+  'This option is usefull if your data is sorted by prefix:'
+  '  t1_sub01.nii'
+  '  t1_sub02.nii'
+  '  t2_sub01.nii'
+  '  t2_sub02.nii'
+  '  ...'
+  ''
+};
+
+% manyimages 
+subjectimages         = cfg_files;
+subjectimages.tag     = 'subjectimages';
+subjectimages.name    = 'Subject';
+subjectimages.help    = {'Select all images of one subject that are in the same space and should be trimmed together. The first image is used in general to estiamte the trimming. ' ''};
+subjectimages.filter  = 'image';
+subjectimages.ufilter = '.*';
+subjectimages.num     = [1 Inf];
+
+manyimages          = cfg_repeat;
+manyimages.tag      = 'manyimages';
+manyimages.name     = 'many images';
+manyimages.help     = {
+  'Collect images of each subject that should be trimmed together and were in the same space.' 
+  '  { {S1T1, S1T2,...} {S2T1, S2T2, ...}  {S2T1, S2T2 } ... }'
+  'This option is usefull if your data/protocols/timepoints are sorted by postfix:'
+  '  S01_T1.nii'
+  '  S01_T2.nii'
+  '  S02_T1.nii'
+  '  S02_PD.nii'
+  '  ...'
+  ''};
+manyimages.values   = {subjectimages};
+manyimages.val      = {};
+manyimages.num      = [0 Inf];
+
+%
+timages         = cfg_menu;
+timages.tag     = 'images';
+timages.name    = 'Select type of image selection'; 
+timages.values  = {manyimages }; %manysubjects
+timages.val     = {manyimages};
+timages.help    = {
+  'Use "many images" if you have a small number of subjects with a variing amount of images.'
+  'Use "many subjects" if you have a large number of subject with the same number of images.'
+  ''
+};
+
 
 pth             = cfg_entry;
 pth.tag         = 'pth';
@@ -939,9 +997,9 @@ headtrimming         = cfg_exbranch;
 headtrimming.tag     = 'datatrimming';
 headtrimming.name    = 'Image data trimming'; 
 if expert
-  headtrimming.val   = {simages oimages prefix postfix intlim1 pth avg open addvox spm_type intlim};
+  headtrimming.val   = {timages prefix postfix intlim1 pth avg open addvox spm_type intlim};
 else
-  headtrimming.val   = {simages oimages pth spm_type};
+  headtrimming.val   = {timages pth spm_type};
 end
 headtrimming.prog    = @cat_vol_headtrimming;
 headtrimming.vfiles  = @vfiles_headtrimming;

@@ -193,36 +193,32 @@ function cat_run_job(job,tpm,subj)
             %  affects SPM segmentation that expects gaussian distribution! 
             %  If a brain mask was used than we expect 
             %   - many zeros (50% for small background - 80-90% for large backgrounds)
-            %   - a brain like volume (below 2500 cm3)
-            %   - only on object (the masked regions)
-            %   - only on background (not in very case?)
-            %   - less variance of thissue intensity (only 3 brain classes)
+            %   - a smaller volume because of missing skull (below 2500 cm3)
+            %   - only one object (the masked regions)
+            %   - only one background (not in every case?)
+            %   - less variance of tissue intensity (only 3 brain classes)
             %  ------------------------------------------------------------
-            if job.extopts.gcutstr < 0
-              skullstripped = 1; 
-            else
-              VFn   = spm_vol(nfname);
-              YF    = spm_read_vols(VFn); 
-              Oth   = cat_stat_nanmean(YF(YF(:)~=0 & YF(:)>cat_stat_nanmean(YF(:)))); 
-              F0vol = cat_stat_nansum(YF(:)~=0) * prod(vx_vol) / 1000; 
-              F0std = cat_stat_nanstd(YF(YF(:)>0.5*Oth & YF(:)>0)/Oth); 
-              YFC = YF~=0; 
-              if sum(YFC(:)>0)<numel(YFC)*0.9 && sum(YFC(:)>0)>numel(YFC)*0.1  % if there is a meanful background
-                YFC = ~cat_vol_morph(YF~=0,'lc',1);                            % close noisy background
-              end
-              [YL,numo] = spm_bwlabel(double(YF~=0),26);  clear YL;            % number of objects
-              [YL,numi] = spm_bwlabel(double(YFC==0),26); clear YL;            % number of background regions 
-              ppe.affreg.skullstrippedpara = [sum(YF(:)==0)/numel(YF) numo numi F0vol F0std]; 
-              ppe.affreg.skullstripped = ...
-                ppe.affreg.skullstrippedpara(1)>0.5 && ...                     % many zeros
-                ppe.affreg.skullstrippedpara(2)<5  && ...                      % only few object
-                ppe.affreg.skullstrippedpara(3)<10 && ...                      % only few background regions 
-                F0vol<2500 && F0std<0.5;                                       % many zeros  and  not to big
-              ppe.affreg.skullstripped = ppe.affreg.skullstripped || ...
-                sum([ppe.affreg.skullstrippedpara(1)>0.8 F0vol<1500 F0std<0.4])>1; % or 2 extrem values
-              if ~debug, clear YFC F0vol F0std numo numi; end 
-             end
-            
+            VFn   = spm_vol(nfname); 
+            YF    = spm_read_vols(VFn); 
+            Oth   = cat_stat_nanmean(YF(YF(:)~=0 & YF(:)>cat_stat_nanmean(YF(:)))); 
+            F0vol = cat_stat_nansum(YF(:)~=0) * prod(vx_vol) / 1000; 
+            F0std = cat_stat_nanstd(YF(YF(:)>0.5*Oth & YF(:)>0)/Oth); 
+            YFC = YF~=0; 
+            if sum(YFC(:)>0)<numel(YFC)*0.9 && sum(YFC(:)>0)>numel(YFC)*0.1  % if there is a meanful background
+              YFC = ~cat_vol_morph(YF~=0,'lc',1);                            % close noisy background
+            end
+            [YL,numo] = spm_bwlabel(double(YF~=0),26);  clear YL;            %#ok<ASGLU> % number of objects
+            [YL,numi] = spm_bwlabel(double(YFC==0),26); clear YL;            %#ok<ASGLU> % number of background regions 
+            ppe.affreg.skullstrippedpara = [sum(YF(:)==0)/numel(YF) numo numi F0vol F0std]; 
+            ppe.affreg.skullstripped = ...
+              ppe.affreg.skullstrippedpara(1)>0.5 && ...                     % many zeros
+              ppe.affreg.skullstrippedpara(2)<5  && ...                      % only few object
+              ppe.affreg.skullstrippedpara(3)<10 && ...                      % only few background regions 
+              F0vol<2500 && F0std<0.5;                                       % many zeros  and  not to big
+            ppe.affreg.skullstripped = ppe.affreg.skullstripped || ...
+              sum([ppe.affreg.skullstrippedpara(1)>0.8 F0vol<1500 F0std<0.4])>1; % or 2 extrem values
+            if ~debug, clear YFC F0vol F0std numo numi; end 
+
             
             %% APP bias correction (APP1 and APP2)
             %  ------------------------------------------------------------
@@ -714,10 +710,10 @@ function cat_run_job(job,tpm,subj)
                   '           %4.0f cm%s, normalized SD of all tissues %0.2f \n'],...
                   skullstrippedpara(1:4),char(179),skullstrippedpara(5))); 
               end
-            elseif job.extopts.gcutstr<0 && ~skullstripped
+            elseif job.extopts.gcutstr<0 && ~ppe.affreg.skullstripped
               cat_io_cprintf('warn',[...
                   'WARNING: Skull-Stripping is deactivated but skull was detected. \n' ...
-                  '         Go on without skull-stripping but check your data! \n']);
+                  '         Go on without skull-stripping what probably will fail! \n']);
             end
 
             % skull-stripping of the template
@@ -943,108 +939,65 @@ function cat_run_job(job,tpm,subj)
         
 
         
-          %%
-          if ppe.affreg.skullstripped  
-            %% update number of SPM gaussian classes 
-            Ybg = 1 - spm_read_vols(obj.tpm.V(1)) - spm_read_vols(obj.tpm.V(2)) - spm_read_vols(obj.tpm.V(3));
-            obj.tpm.V(4).dat = Ybg; 
-            obj.tpm.dat{4}   = Ybg; 
-            obj.tpm.V(4).pinfo = repmat([1;0],1,size(Ybg,3));
-            obj.tpm.dat(5:6) = []; 
-            obj.tpm.V(5:6)   = []; 
-            obj.tpm.bg1(4)   = obj.tpm.bg1(6);
-            obj.tpm.bg2(4)   = obj.tpm.bg1(6);
-            obj.tpm.bg1(5:6) = [];
-            obj.tpm.bg2(5:6) = [];
-
-            %job.opts.ngaus = [job.opts.ngaus(1:3) 1];
-            job.opts.ngaus = 3*ones(4,1); % this is more save
-            obj.lkp        = [];
-            for k=1:numel(job.opts.ngaus)
-              job.tissue(k).ngaus = job.opts.ngaus(k);
-              obj.lkp = [obj.lkp ones(1,job.tissue(k).ngaus)*k];
-            end
-          end
-          
-
-
-        
-          %%  Fine Affine Registration with 3 mm sampling distance
-          %  This does not work for non human (or very small brains)
-          stime = cat_io_cmd('SPM preprocessing 1 (estimate):','','',1,stime); 
-          if strcmp('human',job.extopts.species) || 1
-            % sampling >6 mm seams to fail in some cases, but higher sampling (<3 mm) did not improve the result 
-            % also the variation of smoothing did not work well in all cases and lower smoothing (<=4 mm) lead to problems in some cases 
-            fwhm = [0 24 12 8]; samp = [0 6 6 6]; % entry 1 is the initial affine registration 
-            ppe.affreg.Affine2   = cell(size(fwhm));  ppe.affreg.Affine2{1}   = Affine1; 
-            ppe.affreg.affscale2 = cell(size(fwhm));  ppe.affreg.affscale2{1} = ppe.affreg.affscale1; 
-            ppe.affreg.mat2      = cell(size(fwhm));  ppe.affreg.mat2{1}      = ppe.affreg.mat1; 
-            ppe.affreg.useaff2   = zeros(size(fwhm)); ppe.affreg.useaff2(1)   = 1; 
-            ppe.affreg.stopiter  = zeros(size(fwhm));
-            ppe.affreg.affll     = inf(size(fwhm));
-            ppe.affreg.sc1{1}    = (max(ppe.affreg.mat2{1}(7:9)) / min(ppe.affreg.mat2{1}(7:9)));
-            ppe.affreg.sc2{1}    = abs(ppe.affreg.affscale2{1} - 1);
-            %
-            for fwhmi=2:numel(fwhm)
-              %%
+          %% Fine affine Registration with automatic selection in case of multiple TPMs. 
+          %  This may not work for non human data (or very small brains).
+          %  This part should be an external (coop?) function?
+          stime = cat_io_cmd('SPM preprocessing 1 (estimate 1):','','',1,stime);
+          if strcmp('human',job.extopts.species) 
+            if numel(job.opts.tpm)>1
+              [Affine,obj.tpm,res0] = cat_run_job_multiTPM(job,obj,Affine,ppe.affreg.skullstripped); %#ok<ASGLU>
+            else
               spm_plot_convergence('Init','Fine affine registration','Mean squared difference','Iteration');
-              regtime = clock;
-
-              % spm_maff8 registration
-              warning off
-              [ppe.affreg.Affine2{fwhmi}, ppe.affreg.affll(fwhmi), ppe.affreg.affh{fwhmi}] = ...
-                spm_maff8( obj.image(1) , samp(fwhmi) , fwhm(fwhmi) , obj.tpm , ppe.affreg.Affine2{fwhmi} , job.opts.affreg );
+              warning off 
+              Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg,20); 
+              Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,       obj.tpm,Affine2,job.opts.affreg,20);
               warning on  
+              if ~any(any(isnan(Affine3(1:3,:)))), Affine = Affine3; end
+            end
+            if 0
+              %% visual control for development and debugging
+              VFa = VF; VFa.mat = Affine1 * VF.mat; %VFa.mat = res2(1).Affine * VF.mat;
+              if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
+              [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0));  
+              %[Vmsk,Yb] = cat_vol_imcalc([VFa;obj.tpm.V(1:3)],Pbt,'i2 + i3 + i4',struct('interp',3,'verb',0));  
+              %[Vmsk,Yb] = cat_vol_imcalc([VFa;obj.tpm.V(1)],Pbt,'i2',struct('interp',3,'verb',0));  
+              ds('d2sm','',1,Ym,Ym.*(Yb>0.5),150)
+            end
 
-              ppe.affreg.mat2{fwhmi}       = spm_imatrix(ppe.affreg.Affine2{fwhmi}); 
-              ppe.affreg.affscale2{fwhmi}  = mean(ppe.affreg.mat2{fwhmi}(7:9)); 
 
-              % check registration and reset values to previous results
-              ppe.affreg.sc1{fwhmi} = (max(ppe.affreg.mat2{fwhmi}(7:9)) / min(ppe.affreg.mat2{fwhmi}(7:9)));
-              ppe.affreg.sc2{fwhmi} = abs(ppe.affreg.affscale2{fwhmi} - 1);
-              ppe.affreg.useaff2(fwhmi) = fwhmi<4 || ...
-                (ppe.affreg.sc1{fwhmi} < ppe.affreg.sc1{fwhmi-1}*1.05 || ...            % check scaling properties
-                 ppe.affreg.sc2{fwhmi} < ppe.affreg.sc2{fwhmi-1}*1.05) && ...            % ckeck total scaling
-                ppe.affreg.affll(fwhmi) < ppe.affreg.affll(fwhmi-1)*1.05 && ...
-                ppe.affreg.affll(fwhmi) > 0.5 && ppe.affreg.affll(fwhmi) < 1.5 && ...  % check SPM convergence criteria
-                ppe.affreg.affscale2{fwhmi}>0.5 && ppe.affreg.affscale2{fwhmi}<3;      % check principle scaling range
-              ppe.affreg.stopiter(fwhmi) = fwhmi>3 && (...
-                ppe.affreg.useaff2(fwhmi)==0 || ... 
-                ppe.affreg.sc1{fwhmi}/ppe.affreg.sc1{fwhmi-1}>1.05 || ... % stop if values get worse
-                ppe.affreg.sc1{fwhmi}/ppe.affreg.sc1{fwhmi-1}>1.05 || ...
-                ppe.affreg.affll(fwhmi)/ppe.affreg.affll(fwhmi-1)>1.05 || ... % stop for low changes
-                abs(ppe.affreg.sc1{fwhmi} - ppe.affreg.sc1{fwhmi-1})<0.01 || ...
-                abs(ppe.affreg.sc1{fwhmi} - ppe.affreg.sc1{fwhmi-1})<0.01 || ...
-                ((ppe.affreg.affll(fwhmi) - ppe.affreg.affll(fwhmi-1))<0.01 && fwhmi>2));
-
-              %% some information in case of debugging
-              if 0 || debug || job.extopts.verb > 2
-                if fwhmi==2, fprintf('\n'); end; 
-                fprintf('  sc: %5.3f >> %5.3f; sc2: %5.3f >> %5.3f; conv: %5.3f > %5.3f, time: %3.0fs - use: %d, stop: %d\n',...
-                  (max(ppe.affreg.mat2{fwhmi-1}(7:9)) / min(ppe.affreg.mat2{fwhmi-1}(7:9))), ...
-                  (max(ppe.affreg.mat2{fwhmi}(7:9))   / min(ppe.affreg.mat2{fwhmi}(7:9))), ...
-                  abs(ppe.affreg.affscale2{fwhmi-1} - 1), abs(ppe.affreg.affscale2{fwhmi} - 1), ...
-                  ppe.affreg.affll(fwhmi-1), ppe.affreg.affll(fwhmi) , etime(clock,regtime) , ...
-                  ppe.affreg.useaff2(fwhmi) ,ppe.affreg.stopiter(fwhmi) ); 
-                if ppe.affreg.stopiter(fwhmi)
-                  cat_io_cmd(' ','','',1); 
+            if ppe.affreg.skullstripped || job.extopts.gcutstr<0
+              %% update number of SPM gaussian classes 
+              Ybg = 1 - spm_read_vols(obj.tpm.V(1)) - spm_read_vols(obj.tpm.V(2)) - spm_read_vols(obj.tpm.V(3));
+              if 1
+                for k=1:3
+                  obj.tpm.dat{k}     = spm_read_vols(obj.tpm.V(k));
+                  obj.tpm.V(k).dt(1) = 64;
+                  obj.tpm.V(k).dat   = double(obj.tpm.dat{k});
+                  obj.tpm.V(k).pinfo = repmat([1;0],1,size(Ybg,3));
                 end
               end
 
-              if ppe.affreg.useaff2(fwhmi)==0
-                ppe.affreg.Affine2{fwhmi}   = ppe.affreg.Affine2{fwhmi-1};
-                ppe.affreg.mat2{fwhmi}      = ppe.affreg.mat2{fwhmi-1}; 
-                ppe.affreg.affll(fwhmi)     = ppe.affreg.affll(fwhmi-1); 
-                ppe.affreg.affscale2{fwhmi} = ppe.affreg.affscale2{fwhmi-1}; 
-              end
-               Affine = ppe.affreg.Affine2{fwhmi}; 
+              obj.tpm.V(4).dat = Ybg;
+              obj.tpm.dat{4}   = Ybg; 
+              obj.tpm.V(4).pinfo = repmat([1;0],1,size(Ybg,3));
+              obj.tpm.V(4).dt(1) = 64;
+              obj.tpm.dat(5:6) = []; 
+              obj.tpm.V(5:6)   = []; 
+              obj.tpm.bg1(4)   = obj.tpm.bg1(6);
+              obj.tpm.bg2(4)   = obj.tpm.bg1(6);
+              obj.tpm.bg1(5:6) = [];
+              obj.tpm.bg2(5:6) = [];
+              obj.tpm.V = rmfield(obj.tpm.V,'private');
 
-              %% stop iteration if the results bring no advante 
-              if ppe.affreg.stopiter(fwhmi), break; end 
+              job.opts.ngaus = 3*ones(4,1); % this is more safe
+              obj.lkp        = [];
+              for k=1:numel(job.opts.ngaus)
+                job.tissue(k).ngaus = job.opts.ngaus(k);
+                obj.lkp = [obj.lkp ones(1,job.tissue(k).ngaus)*k];
+              end
             end
           end
           obj.Affine = Affine;
-
 
           if 0
             %% just for debugging!

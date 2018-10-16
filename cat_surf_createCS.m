@@ -589,7 +589,7 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
       if ~debug
         delete(Vpp.fname);
         delete(Vpp1.fname);
-        delete(Vyp0s.fname);
+        if exist('Vyp0s','var'), delete(Vyp0s.fname); end
       end
       fprintf('%5.0fs\n',etime(clock,stime)); 
       %%
