@@ -579,6 +579,15 @@ function cat_run_job1070(job,tpm,subj)
 
             obj.image.dt    = [spm_type('FLOAT32') spm_platform('bigend')];
             obj.image.pinfo = repmat([1;0],1,size(Ysrc,3));
+
+% 1173
+if exist('Ybg','var')
+  obj.msk       = VF; 
+  obj.msk.pinfo = repmat([255;0],1,size(Ybg,3));
+  obj.msk.dt    = [spm_type('uint8') spm_platform('bigend')];
+  obj.msk.dat(:,:,:) = uint8(~Ybg); 
+  obj.msk       = spm_smoothto8bit(obj.msk,0.1); 
+end            
             clear Ysrc; 
         end
 
@@ -663,27 +672,28 @@ function cat_run_job1070(job,tpm,subj)
         try 
           % inital estimate
           stime = cat_io_cmd('SPM preprocessing 1 (estimate 2):','','',job.extopts.verb-1,stime);
-   
+          obj.tol = 10^-3; % default -4 
+            
           if job.opts.redspmres==0 
-            res = spm_preproc8(obj);
+            res = cat_spm_preproc8(obj);
           else
             image1 = obj.image; 
             [obj.image,redspmres]  = cat_vol_resize(obj.image,'interpv',1);
-            res = spm_preproc8(obj);
+            res = cat_spm_preproc8(obj);
             res.image1 = image1; 
             clear reduce; 
           end
         
           % for non-skull-stripped brains use masked brains to get better estimates
           % esp. for brains with thinner skull or special defacing
-          if ~skullstripped && job.extopts.gcutstr>=0
+          if 0 %~skullstripped && job.extopts.gcutstr>=0
             stime = cat_io_cmd('SPM preprocessing 1 (estimate skull-stripped):','','',job.extopts.verb-1,stime);
             %% use dilated mask for spm_preproc8 because sometimes inital SPM segmentation
             % does not cover the whole brain for brains with thinner skull
-            [Ym, Ycls] = cat_spm_preproc_write8(res,zeros(k,4),zeros(1,2),[0 0],1,1); %#ok<ASGLU>
-            Ym  = single(Ycls{1})/255 + single(Ycls{2})/255 + single(Ycls{3})/255;
-            Yb  = (Ym > 0.5);
-            Yb  = cat_vol_morph(cat_vol_morph(Yb,'lo'),'d',5/mean(vx_vol));
+            [Yb, Ycls] = cat_spm_preproc_write8(res,zeros(k,4),zeros(1,2),[0 0],1,1); %#ok<ASGLU>
+            Yb  = single(Ycls{1})/255 + single(Ycls{2})/255 + single(Ycls{3})/255;
+            Yb  = (Yb > 0.5);
+            Yb  = cat_vol_morph(cat_vol_morph(Yb,'lo'),'d',1/mean(vx_vol));
             res.biasreg   = obj.biasreg;
             res.biasfwhm  = obj.biasfwhm;
             res.reg       = obj.reg;
@@ -692,23 +702,23 @@ function cat_run_job1070(job,tpm,subj)
             res.fwhm      = obj.fwhm;
             res.msk       = res.image(1); 
             res.msk.pinfo = repmat([255;0],1,size(Yb,3));
-            res.msk.dat(:,:,:) = ~Yb; % mask unused voxels!
+            res.msk.dat(:,:,:) = Yb; % mask unused voxels ?! - no
             res.lkp        = [];
             for k=1:numel(job.opts.ngaus)
               job.tissue(k).ngaus = job.opts.ngaus(k);
               res.lkp = [res.lkp ones(1,job.tissue(k).ngaus)*k];
             end
-            res = spm_preproc8(res);
+            res2 = cat_spm_preproc8(obj);
 
-            % final estimate without mask using parameters from previous run
+            %% final estimate without mask using parameters from previous run
             stime = cat_io_cmd('SPM preprocessing 1 (estimate full):','','',job.extopts.verb-1,stime);
-            res.biasreg   = obj.biasreg;
-            res.biasfwhm  = obj.biasfwhm;
-            res.reg       = obj.reg;
-            res.samp      = obj.samp;
-            res.tpm       = obj.tpm;
-            res.fwhm      = obj.fwhm;
-            res = spm_preproc8(res);
+            res2.biasreg   = obj.biasreg;
+            res2.biasfwhm  = obj.biasfwhm;
+            res2.reg       = obj.reg;
+            res2.samp      = obj.samp;
+            res2.tpm       = obj.tpm;
+            res2.fwhm      = obj.fwhm;
+            res = spm_preproc8(res2);
           end
 
         catch
