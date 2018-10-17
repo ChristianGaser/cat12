@@ -19,7 +19,7 @@ function varargout = cat_vol_sanlm(varargin)
 %  job
 %   .data             .. set of images 
 %   .prefix           .. prefix for filtered images (default = 'sanlm_') 
-%   .postfix          .. postfix for filtered images (default = '')
+%   .suffix           .. suffix for filtered images (default = '')
 %                        'NCstr' will add the used parameter 
 %   .verb             .. verbose processing (default = 1)
 %   .spm_type         .. file datatype (default single = 16);
@@ -93,7 +93,7 @@ function varargout = cat_vol_sanlm(varargin)
     % default optoins
     def.verb                        = 2;         % be verbose
     def.prefix                      = 'sanlm_';  % prefix
-    def.postfix                     = '';        % postfix
+    def.suffix                      = '';        % suffix
     def.replaceNANandINF            = 1;         % replace NAN and INF
     def.spm_type                    = 16;        % file datatype (default single)
     def.NCstr                       = -Inf;      % 0 - no denoising, eps - light denoising, 
@@ -188,13 +188,13 @@ function varargout = cat_vol_sanlm_file(job)
                 nprefix, job.NCstr , job.rician , job.resolutionDependency , job.red , job.fred , job.relativeIntensityAdaption , ...
                 job.replaceNANandINF , job.outlier , job.addnoise , job.iterm , job.iter); 
         end
-    elseif ~isempty(strfind(job.postfix,'PARA'))
+    elseif ~isempty(strfind(job.suffix,'PARA'))
         if numel(job.NCstr)==1 && job.NCstr>=0 
-            job.postfix = sprintf('_NC%0.2f',job.NCstr); 
+            job.suffix = sprintf('_NC%0.2f',job.NCstr); 
         elseif isinf(job.NCstr) && sign(job.NCstr)==-1
             job.prefix = sprintf('_NC%0.2f',3); 
         else
-            job.postfix = sprintf('_NC%-0.2f_RN%d_RD%d_RIA%0.2f_RR%d_FR%d_RNI%d_OL%0.2f_PN%0.1f_iterm%d_iter%d',...
+            job.suffix = sprintf('_NC%-0.2f_RN%d_RD%d_RIA%0.2f_RR%d_FR%d_RNI%d_OL%0.2f_PN%0.1f_iterm%d_iter%d',...
                 job.NCstr , job.rician , job.resolutionDependency , job.red , job.fred , job.relativeIntensityAdaption , ...
                 job.replaceNANandINF , job.outlier , job.addnoise , job.iterm , job.iter); 
         end
@@ -203,7 +203,7 @@ function varargout = cat_vol_sanlm_file(job)
     if job.returnOnlyFilename
         for i = 1:numel(job.data)
             [pth,nm,xt,vr]  = spm_fileparts(deblank(job.data{i})); 
-            varargout{1}{i} = fullfile(pth,[job.prefix nm job.postfix xt vr]);
+            varargout{1}{i} = fullfile(pth,[job.prefix nm job.suffix xt vr]);
         end
         return
     end
@@ -486,7 +486,7 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
         end
         
         % use only float precision
-        Vo(i).fname   = fullfile(pth,[job.prefix nm job.postfix '.nii' vr]);
+        Vo(i).fname   = fullfile(pth,[job.prefix nm job.suffix '.nii' vr]);
         Vo(i).descrip = sprintf('%s SANLM filtered (NCstr=%-4.2f > %0.2f)',...
           V(i).descrip,job.NCstr(NCstri),abs(NCstr(NCstri)) + NCstrr);
         Vo(i).dt(1)   = 16; % default - changes later if required 

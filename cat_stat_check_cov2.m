@@ -2620,7 +2620,7 @@ function emptytrash(obj, event_obj)
     %  subdirectories or (ii) with many. In case of many directories, the 
     %  filesname are possible identical and the subject specific
     %  information is stored in the directory names. Names could further
-    %  include a pre and postfix with e.g. protocol information etc. 
+    %  include a pre and suffix with e.g. protocol information etc. 
     %    1) ../[pre][name][post].* 
     %    2) ../dir_1/../dir_n/t1.*
     %  
