@@ -108,6 +108,7 @@ function [Affine,tpm,res] = cat_run_job_multiTPM(job,obj,Affine,skullstripped,ms
 
     
     % mask probably masked/stripped voxels!
+    %{
     if msk
       obj.msk       = obj.image(1); 
       obj.msk.pinfo = repmat([255;0],1,size(Ybg,3));
@@ -139,7 +140,7 @@ function [Affine,tpm,res] = cat_run_job_multiTPM(job,obj,Affine,skullstripped,ms
       obj.tpm.bg2(5:6) = [];
       obj.tpm.V = rmfield(obj.tpm.V,'private');
     end
-    
+    %}
     
     % affine registration to TPM with (rought) and without smoothing (fine)
     try

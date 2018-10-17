@@ -516,7 +516,7 @@ intlim.tag     = 'intlim';
 intlim.name    = 'Global intensity limitation';
 intlim.strtype = 'r';
 intlim.num     = [1 1];
-intlim.val     = {99.99};
+intlim.val     = {100};
 intlim.help    = {
   'General intensity limitation to remove strong outliers by using 99.99%% of the original histogram values  before noise correction. '
   ''
@@ -562,14 +562,14 @@ prefix.help    = {
   ''
 };
 
-postfix         = cfg_entry;
-postfix.tag     = 'postfix';
-postfix.name    = 'Filename postfix';
-postfix.strtype = 's';
-postfix.num     = [0 Inf];
-postfix.val     = {''};
-postfix.help    = {
-  'Specify the string to be appended to the filenames of the filtered image file(s). Default postfix is ''''.  Use "PARA" to add input parameters, e.g. "sanlm_*_NC#.##_RN#_RD#_RIA#.##_SR#_FSR#_RNI#_OL#.##_iterm#_iter#.nii" with NC=NCstr, RN=Rician noise, RD=resolution dependency, RIA=relative intensity adaption, SR=sub-resolutions, FSR=force sub-resolution, RNI=replace NAN and INF, and OL=outlier correction.'
+suffix         = cfg_entry;
+suffix.tag     = 'suffix';
+suffix.name    = 'Filename suffix';
+suffix.strtype = 's';
+suffix.num     = [0 Inf];
+suffix.val     = {''};
+suffix.help    = {
+  'Specify the string to be appended to the filenames of the filtered image file(s). Default suffix is ''''.  Use "PARA" to add input parameters, e.g. "sanlm_*_NC#.##_RN#_RD#_RIA#.##_SR#_FSR#_RNI#_OL#.##_iterm#_iter#.nii" with NC=NCstr, RN=Rician noise, RD=resolution dependency, RIA=relative intensity adaption, SR=sub-resolutions, FSR=force sub-resolution, RNI=replace NAN and INF, and OL=outlier correction.'
   ''
 };
 
@@ -803,9 +803,9 @@ sanlm        = cfg_exbranch;
 sanlm.tag    = 'sanlm';
 sanlm.name   = 'Spatially adaptive non-local means denoising filter';
 if expert>1 % developer
-  sanlm.val    = {data spm_type prefix postfix intlim addnoise rician replaceNANandINF nlmfilter};
+  sanlm.val    = {data spm_type prefix suffix intlim addnoise rician replaceNANandINF nlmfilter};
 elseif expert
-  sanlm.val    = {data spm_type prefix postfix addnoise rician replaceNANandINF nlmfilter};
+  sanlm.val    = {data spm_type prefix suffix addnoise rician replaceNANandINF nlmfilter};
 else
   sanlm.val    = {data spm_type prefix nlmfilter};
 end
@@ -825,7 +825,7 @@ prefix.help        = {
   'Specify the string to be prepended to the filenames of the converted image file(s). Default prefix is "PARA" that is replaced by the chosen datatype.'
   ''
 };
-postfix.help        = {
+suffix.help        = {
   'Specify the string to be prepended to the filenames of the converted image file(s). Default prefix is ''''. Use "PARA" to add the datatype to the filename.'
   ''
 };
@@ -837,7 +837,7 @@ spmtype         = cfg_exbranch;
 spmtype.tag     = 'spmtype';
 spmtype.name    = 'Image data type converter'; 
 if expert
-  spmtype.val   = {data spm_type prefix postfix intlim};
+  spmtype.val   = {data spm_type prefix suffix intlim};
 else
   spmtype.val   = {data spm_type prefix intlim};
 end
@@ -865,34 +865,27 @@ simages.num     = [1 Inf];
 
 images1         = cfg_files;
 images1.tag     = 'oimages';
-images1.name    = 'Other images';
+images1.name    = 'Images';
 images1.help    = {'Select other images that should be trimmed similar to the source images (e.g. coregistrated images).' ''};
 images1.filter  = 'image';
 images1.ufilter = '.*';
 images1.num     = [1 Inf];
 
-oimages          = cfg_repeat;
-oimages.tag      = 'oimages';
-oimages.name     = 'Images';
-oimages.help     = {'Select other images that should be trimmed similar to the source images. For example, the source images are a set of T1 images, whereas the second set may be a set of coregistered images of the same subjects with the same image dimension.' ''};
-oimages.values   = {images1};
-oimages.val      = {};
-oimages.num      = [0 Inf];
+oimages         = cfg_repeat;
+oimages.tag     = 'oimages';
+oimages.name    = 'Other images';
+oimages.help    = {'Select other images that should be trimmed similar to the source images. For example, the source images are a set of T1 images, whereas the second set may be a set of coregistered images of the same subjects with the same image dimensions.' ''};
+oimages.values  = {images1};
+oimages.val     = {};
+oimages.num     = [0 Inf];
 
 manysubjects         = cfg_branch;
 manysubjects.tag     = 'manysubjects';
-manysubjects.name    = 'many subjects';
+manysubjects.name    = 'Many subjects';
 manysubjects.val     = {simages oimages};
-%manysubjects.vfiles  = @vfiles_volctype;
 manysubjects.help    = {
-  'Create stacks of images of one class that include the SAME NUBMER of "many subjects".'
+  'Create stacks of images of one class that include the same number of many subjects:'
   '  { {S1T1, S2T1,...} {S1T2, S2T2, ...} ... }'
-  'This option is usefull if your data is sorted by prefix:'
-  '  t1_sub01.nii'
-  '  t1_sub02.nii'
-  '  t2_sub01.nii'
-  '  t2_sub02.nii'
-  '  ...'
   ''
 };
 
@@ -900,38 +893,44 @@ manysubjects.help    = {
 subjectimages         = cfg_files;
 subjectimages.tag     = 'subjectimages';
 subjectimages.name    = 'Subject';
-subjectimages.help    = {'Select all images of one subject that are in the same space and should be trimmed together. The first image is used in general to estiamte the trimming. ' ''};
+subjectimages.help    = {
+  'Select all images of one subject that are in the same space and should be trimmed together.'
+};
+if expert
+  subjectimages.help  = [ subjectimages.help; {
+  'The first image is used to estiamte the trimming. ' 
+  ''
+  }];
+else
+  subjectimages.help  = [ subjectimages.help; {
+    'In general the first image is used to estiamte the trimming (see "Average images" option). ' 
+    ''
+  }];
+end
 subjectimages.filter  = 'image';
 subjectimages.ufilter = '.*';
 subjectimages.num     = [1 Inf];
 
 manyimages          = cfg_repeat;
 manyimages.tag      = 'manyimages';
-manyimages.name     = 'many images';
+manyimages.name     = 'Many images';
 manyimages.help     = {
   'Collect images of each subject that should be trimmed together and were in the same space.' 
   '  { {S1T1, S1T2,...} {S2T1, S2T2, ...}  {S2T1, S2T2 } ... }'
-  'This option is usefull if your data/protocols/timepoints are sorted by postfix:'
-  '  S01_T1.nii'
-  '  S01_T2.nii'
-  '  S02_T1.nii'
-  '  S02_PD.nii'
-  '  ...'
   ''};
 manyimages.values   = {subjectimages};
 manyimages.val      = {};
-manyimages.num      = [0 Inf];
+manyimages.num      = [1 Inf];
 
-%
-timages         = cfg_menu;
-timages.tag     = 'images';
+% image selection type
+timages         = cfg_choice;
+timages.tag     = 'image_selector';
 timages.name    = 'Select type of image selection'; 
-timages.values  = {manyimages }; %manysubjects
+timages.values  = {manyimages manysubjects}; 
 timages.val     = {manyimages};
 timages.help    = {
-  'Use "many images" if you have a small number of subjects with a variing amount of images.'
-  'Use "many subjects" if you have a large number of subject with the same number of images.'
-  ''
+  'Select "many images" if you have a small number of subjects with a VARYING number of images.'
+  'Select "many subjects" if you have a large number of subject with the SAME number of images.'
 };
 
 
@@ -997,12 +996,12 @@ headtrimming         = cfg_exbranch;
 headtrimming.tag     = 'datatrimming';
 headtrimming.name    = 'Image data trimming'; 
 if expert
-  headtrimming.val   = {timages prefix postfix intlim1 pth avg open addvox spm_type intlim};
+  headtrimming.val   = {timages prefix suffix intlim1 pth avg open addvox spm_type intlim};
 else
   headtrimming.val   = {timages pth spm_type};
 end
 headtrimming.prog    = @cat_vol_headtrimming;
-headtrimming.vfiles  = @vfiles_headtrimming;
+headtrimming.vout    = @vfiles_headtrimming;
 headtrimming.help    = {
   'Remove air around the head and convert the image data type to save disk-space but also to reduce memory-space and load/save times. Corresponding images have to have the same image dimenions. '
   'Uses 99.99% of the main intensity histogram to avoid problems due to outliers. Although the internal scaling supports a relative high accuracy for the limited number of bits, special values such as NAN and INF will be lost!'
@@ -1627,14 +1626,45 @@ job.returnOnlyFilename = 1;
 vf = cat_vol_maskimage(job); 
 return;
 %_______________________________________________________________________
-function vf = vfiles_headtrimming(job)
+function cdep = vfiles_headtrimming(job)
 job.returnOnlyFilename = 1; 
 vf = cat_vol_headtrimming(job); 
+cdep = cfg_dep;
+
+if isfield(vf.image_selector,'manysubjects')
+  cdep(end).sname      = 'source images';
+  cdep(end).src_output = substruct('.','image_selector','.','manysubjects','.','simages'); 
+  cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  for i=1:numel(vf.image_selector.manysubjects.oimages)
+    cdep(end+1)          = cfg_dep;%#ok<AGROW>
+    cdep(end).sname      = sprintf('other images %d',i);
+    cdep(end).src_output = substruct('.','image_selector','.','manysubjects','.','oimages','{}',{i}); 
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end
+elseif isfield(vf.image_selector,'subjectimages') 
+  for si=1:numel(vf.image_selector.subjectimages)
+    for fi=1:numel(vf.image_selector.subjectimages{si})
+      if si>1 || fi>1, cdep(end+1) = cfg_dep; end %#ok<AGROW>
+      cdep(end).sname      = sprintf('subject %d image %d',si,fi);
+      cdep(end).src_output = substruct('.','image_selector','.','subjectimages','{}',{si},'()',{fi}); 
+      cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    end
+  end
+else
+  for i=1:numel(vf.images)
+    cdep(i)            = cfg_dep;
+    cdep(i).sname      = sprintf('image %d',i);
+    cdep(i).src_output = substruct('.','images','{}',{i}); 
+    cdep(i).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end
+end
+
 return;
 %_______________________________________________________________________
 function vf = vfiles_volctype(job)
 job.returnOnlyFilename = 1; 
-vf = cat_io_volctype(job); 
+vf = cat_io_volctype(job);
+
 return;
 %_______________________________________________________________________
 function vf = vfiles_qa(job)

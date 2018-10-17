@@ -1,5 +1,24 @@
 ------------------------------------------------------------------------
-r1374 | dahnke | 2018-10-16 15:45:53
+r1375 | dahnke | 2018-10-17 18:45:46
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_io_volctype.m
+M       cat_run_job1070.m
+M       cat_run_job_multiTPM.m
+M       cat_stat_check_cov2.m
+M       cat_vol_headtrimming.m
+M       cat_vol_sanlm.m
+M       internal/cat_vol_optimizeTemplate.m
+
+(1) Fixed:     Corrected dependency function of cat_vol_headtrimming. 
+(2) Changed:   Defined many images/subject data definition in cat_vol_headtrimming.
+(3) Changed:   Preliminary modifications to stabilize the affine registration. 
+(4) Fixed:     Replaced postfix by suffix.                 
+
+------------------------------------------------------------------------
+r1374 | dahnke | 2018-10-16 15:46:09 +0200 (Di, 16 Okt 2018) | 33 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -32,6 +51,7 @@ M       tbx_cfg_cat.m
               multiple TPMs in developer mode.
 (11) New:     Added function cat_run_job_multiTPM to handle 
               multiple TPMs in developer mode.
+
 
 ------------------------------------------------------------------------
 r1373 | gaser | 2018-10-15 15:52:44 +0200 (Mo, 15 Okt 2018) | 7 lines
