@@ -30,7 +30,7 @@ function [Affine,tpm,res] = cat_run_job_multiTPM(job,obj,Affine,skullstripped,ms
 % Structural Brain Mapping Group
 % University Jena
 %
-% $Id: cat_vol_qa.m 1341 2018-07-27 13:14:51Z dahnke $
+% $Id$
 % ______________________________________________________________________
 
 %#ok<*WNOFF,*WNON>

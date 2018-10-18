@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1377 | dahnke | 2018-10-18 16:02:25
+r1378 | gaser | 2018-10-18 16:15:04
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       cat_main.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+MM      cat_run_job_multiTPM.m
+
+Fixed: Typos.
+
+------------------------------------------------------------------------
+r1377 | dahnke | 2018-10-18 16:04:15 +0200 (Do, 18 Okt 2018) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +29,7 @@ M       cat_vol_resize.m
 (2) Fixed:      Corrected bugs in cat_vol_headtrimming GUI dependencies.
 (3) Fixed:      Corrected problems due to wrong datatype in cat_vol_resize.
 (4) Changed:    Prepared reunion of cat_run_job and cat_run_job1070.
+
 
 ------------------------------------------------------------------------
 r1376 | gaser | 2018-10-18 15:14:22 +0200 (Do, 18 Okt 2018) | 24 lines

@@ -307,7 +307,7 @@ function cat_run_job1070(job,tpm,subj)
         %  APP option with subparameter
         %  Skull-stripping is helpful for correcting affine registration of neonates and other species. 
         %  Bias correction is important for the affine registration.
-        %  However, the first registation can fail and further control is required   
+        %  However, the first registration can fail and further control is required   
         % 
         %  bias = 0-5 = none, light, light threshold, light apply, fine apply (light=only for registration) 
         %  msk  = 0-4 = none, head msk, head hard, brain msk, brain hard (msk=mask only, hard=remove nonmsk)
