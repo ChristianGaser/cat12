@@ -376,7 +376,8 @@ function varargout=cat_vol_resize(T,operation,varargin)
       if isfield(varargin{1},'private'), varargin{1} = rmfiled(varargin{1},'private'); end
       [Y,varargout{2}] = cat_vol_resize(Y,'interp',T,varargin{1},method);
       varargout{1}     = varargout{2}.hdrN;
-      varargout{1}.dat = Y;
+      varargout{1}.dat = eval(sprintf('%s(Y)',cat_io_strrep(spm_type(T.dt(1)),...
+        {'float32';'float64'},{'single';'double'})));
       
 
     case 'deinterpv'

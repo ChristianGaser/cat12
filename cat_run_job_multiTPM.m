@@ -35,28 +35,52 @@ function [Affine,tpm,res] = cat_run_job_multiTPM(job,obj,Affine,skullstripped,ms
 
 %#ok<*WNOFF,*WNON>
   
-  %dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
+  dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
   
   stime0 = clock; 
 
+  
+  %obj.samp  = max(1.5,obj.samp*2); 
+  %obj.tol   = 1e-3; % faster pp (default: 1-e4;)
+  if ~exist('acc','var'), acc = 0; else acc = min(1,max(0,acc)); end
+  if ~exist('msk','var'), msk = 0; end
+  obj.samp = 4 - 2*acc;       % higher res (default: 3 mm)
+  obj.tol  = 10^(-2 - 3*acc); % faster pp (default: 1-e4;)
+  
+  
+  % mask probably masked/stripped voxels!
   if isfield(obj,'image0'), obj = rmfield(obj,'image0'); end
   obj.image = cat_vol_resize(obj.image,'interpv',1.5);
-  if isfield(obj,'msk')
-    obj.msk = cat_vol_resize(obj.msk,'interpv',1.5);
+  if msk
+    if isfield(obj,'msk')
+      obj.msk = cat_vol_resize(obj.msk,'interpv',1.5);
+    else
+      obj.msk           = obj.image(1);
+      obj.msk.dt        = [spm_type('uint8') spm_platform('bigend')];
+      obj.msk.pinfo     = repmat([255;0],1,obj.image(1).dim(3));
+      if numel(msk)==1
+        obj.msk.dat     = uint8(spm_read_vols(obj.image)==0);
+      else
+        obj.msk.dat     = uint8(msk>0);
+      end
+      if isfield(obj.msk,'private'),   obj.msk   = rmfield(obj.msk,'private'); end
+      if isfield(obj.image,'private'), obj.image = rmfield(obj.image,'private'); end
+      obj.msk           = spm_smoothto8bit(obj.msk,0.1); 
+    end
+  else
+    if isfield(obj,'msk'), obj = rmfield(obj,'msk'); end
   end
+
+  
   if skullstripped>1
     Vi = obj.image; 
     if isfield(Vi,'dat'), Vi = rmfield(Vi,'dat'); end
     [Vmsk,Yb] = cat_vol_imcalc([Vi;obj.tpm.V(1:3)],'blub', ...
       'i2 + i3 + i4',struct('interp',5,'verb',0)); clear Vmsk;  %#ok<ASGLU>
     obj.image.dat = obj.image.dat .* (Yb>0.1);
+    if ~debug, clear Yb; end
   end
-  %obj.samp  = max(1.5,obj.samp*2); 
-  %obj.tol   = 1e-3; % faster pp (default: 1-e4;)
-  if ~exist('acc','var'), acc = 0; else acc = min(1,max(0,acc)); end
-  if ~exist('msk','var'), msk = 1; end
-  obj.samp = 6 - 4*acc;       % higher res (default: 3 mm)
-  obj.tol  = 10^(-2 - 3*acc); % faster pp (default: 1-e4;)
+  
   
   
   % In case of skull-stripped images it is better to use a more simple
@@ -81,6 +105,7 @@ function [Affine,tpm,res] = cat_run_job_multiTPM(job,obj,Affine,skullstripped,ms
   
   
   % estimate affine registration to the current TPM
+  %res = struct(); 
   for i=1:numel(job.opts.tpm)
     if numel(job.opts.tpm)>1
       spm_plot_convergence('Init',...
@@ -105,32 +130,28 @@ function [Affine,tpm,res] = cat_run_job_multiTPM(job,obj,Affine,skullstripped,ms
     [pp,ff,ee] = spm_fileparts(job.opts.tpm{i}); 
     job.opts.tpm{i} = fullfile(pp,[ff,ee]);
     obj.tpm = spm_load_priors8(job.opts.tpm{i});
-
-    
-    % mask probably masked/stripped voxels!
-    %{
-    if msk
-      obj.msk       = obj.image(1); 
-      obj.msk.pinfo = repmat([255;0],1,size(Ybg,3));
-      obj.msk.dat(:,:,:) = spm_read_vols(obj.image)==0;
+    if all(numel(obj.tpm.V)~=[4 6])
+      error('cat_run_job_multiTPM:badtpm',[...
+        'The TPM has to include 4 (GM,WM,CSF,BG) or 6 (GM,WM,CSF,skull,head,BG)\n' ...
+        'tissue classes! Your TPM has %d! Is this the right file?\n' ...
+        '  %s'],numel(obj.tpm.V),job.opts.tpm{i});
     end
-    
     
     % update number of SPM gaussian classes 
     if skullstripped 
-      Ybg = 1 - spm_read_vols(obj.tpm.V(1)) - spm_read_vols(obj.tpm.V(2)) - spm_read_vols(obj.tpm.V(3));
+      Yb2 = 1 - spm_read_vols(obj.tpm.V(1)) - spm_read_vols(obj.tpm.V(2)) - spm_read_vols(obj.tpm.V(3));
       if 1
         for k=1:3
           obj.tpm.dat{k}     = spm_read_vols(obj.tpm.V(k));
           obj.tpm.V(k).dt(1) = 64;
           obj.tpm.V(k).dat   = double(obj.tpm.dat{k});
-          obj.tpm.V(k).pinfo = repmat([1;0],1,size(Ybg,3));
+          obj.tpm.V(k).pinfo = repmat([1;0],1,size(Yb2,3));
         end
       end
 
-      obj.tpm.V(4).dat = Ybg;
-      obj.tpm.dat{4}   = Ybg; 
-      obj.tpm.V(4).pinfo = repmat([1;0],1,size(Ybg,3));
+      obj.tpm.V(4).dat = Yb2;
+      obj.tpm.dat{4}   = Yb2; 
+      obj.tpm.V(4).pinfo = repmat([1;0],1,size(Yb2,3));
       obj.tpm.V(4).dt(1) = 64;
       obj.tpm.dat(5:6) = []; 
       obj.tpm.V(5:6)   = []; 
@@ -139,20 +160,20 @@ function [Affine,tpm,res] = cat_run_job_multiTPM(job,obj,Affine,skullstripped,ms
       obj.tpm.bg1(5:6) = [];
       obj.tpm.bg2(5:6) = [];
       obj.tpm.V = rmfield(obj.tpm.V,'private');
+      if ~debug, clear Yb2; end
     end
-    %}
     
     % affine registration to TPM with (rought) and without smoothing (fine)
     try
       warning off  
       mAffine{i} = spm_maff8(obj.image(1),...
-        obj.samp*2,(obj.fwhm+1)*10,obj.tpm,Affine,job.opts.affreg,80); 
+        obj.samp*2,(obj.fwhm+1)*10,obj.tpm,Affine,job.opts.affreg,160*(1+acc)); 
       mAffine{i} = spm_maff8(obj.image(1),...
-        obj.samp*2,(obj.fwhm+1)*5,obj.tpm,mAffine{i},job.opts.affreg,40); 
+        obj.samp*2,(obj.fwhm+1)*5,obj.tpm,mAffine{i},job.opts.affreg,80*(1+acc)); 
       mAffine{i} = spm_maff8(obj.image(1),...
-        obj.samp,obj.fwhm,obj.tpm,mAffine{i},job.opts.affreg,20);
+        obj.samp,obj.fwhm,obj.tpm,mAffine{i},job.opts.affreg,40*(1+acc));
       mAffine{i} = spm_maff8(obj.image(1),...
-        obj.samp/2,obj.fwhm,obj.tpm,mAffine{i},job.opts.affreg,20);
+        obj.samp/2,obj.fwhm,obj.tpm,mAffine{i},job.opts.affreg,20*(1+acc));
       warning on 
     catch
       mAffine{i} = Affine; 
@@ -164,13 +185,20 @@ function [Affine,tpm,res] = cat_run_job_multiTPM(job,obj,Affine,skullstripped,ms
     if ~any(isnan(mAffine{i}(:)))
       obj.Affine = mAffine{i};
       try
-        res(i) = cat_spm_preproc8(obj); %#ok<AGROW>
+        res(i) = cat_spm_preproc8(obj);  %#ok<*AGROW>
       catch
-        res(i).wp = nan(1,6); %#ok<AGROW>
-        %es(i).mn = 
+        res(i).wp  = nan(1,6);
+        res(i).lkp = obj.lkp;
+        res(i).mn  = nan(1,numel(obj.lkp));
+        res(i).mg  = nan(numel(obj.lkp),1);
+        res(i).vr  = nan(1,1,numel(obj.lkp));
       end
     else
-      res(i).wp = nan(1,6); %#ok<AGROW>
+      res(i).wp  = nan(1,6); 
+      res(i).lkp = obj.lkp;
+      res(i).mn  = nan(1,numel(obj.lkp));
+      res(i).mg  = nan(numel(obj.lkp),1);
+      res(i).vr  = nan(1,1,numel(obj.lkp));
     end
     
     % estimate weighting 
@@ -178,14 +206,15 @@ function [Affine,tpm,res] = cat_run_job_multiTPM(job,obj,Affine,skullstripped,ms
     % fits to the TPM. The first 3 classes should be relative similar and
     % have high values (>0.1), whereas class 4 to 6 should have low values 
     % (<0.15).
-    %weight(i) = min(1,max(0,1 - std(res(i).wp(1:2)) ./ max(eps,mean(res(i).wp(1:2)))));
-    %weight(i) = min(1,max(0,3 * (mean(res(i).wp(1:2)) - std(res(i).wp(1:2))) ));
-    weight(i) = min(1,max(0,2 * ( mean(res(i).wp(1:2)) - std(res(i).wp(1:2)) + ...
-                                  mean(res(i).wp(4:6)) - std(res(i).wp(4:6))) + ...
-                                  max(0,0.5 - 2 * sum( ...
-                                    shiftdim(res(i).vr( res(i).lkp(:) < 7 )) ./ ...
-                                    res(i).mn( res(i).lkp(:) < 7 )' .* ...
-                                    res(i).mg( res(i).lkp(:) < 7 ) ) ) ));
+% old version ...
+%     weight(i) = min(1,max(0,2 * ( mean(res(i).wp(1:2)) - std(res(i).wp(1:2)) + ...
+%                                   mean(res(i).wp(4:6)) - std(res(i).wp(4:6))) + ...
+%                                   max(0,0.5 - 2 * sum( ...
+%                                     shiftdim(res(i).vr( res(i).lkp(:) < 7 )) ./ ...
+%                                     res(i).mn( res(i).lkp(:) < 7 )' .* ...
+%                                     res(i).mg( res(i).lkp(:) < 7 ) ) ) ));
+    weight(i) = min(1,max(0,1 - sum( shiftdim(res(i).vr) ./ ...
+      res(i).mn' .* res(i).mg ./ mean(res.mn(res.lkp(2)))) ));  
 
     if numel(job.opts.tpm)>1
       fprintf('%s (fits%4.0f%%)',sprintf(repmat('\b',1,12)),weight(i)*100);
@@ -233,7 +262,7 @@ function [Affine,tpm,res] = cat_run_job_multiTPM(job,obj,Affine,skullstripped,ms
       % final affine regisration with individual TPM
       i = numel(job.opts.tpm) + 1; 
       mAffine{i} = spm_maff8(obj.image(1),...
-        obj.samp,obj.fwhm,obj.tpm,mAffine{weighti(1)},job.opts.affreg,20);
+        obj.samp,obj.fwhm,obj.tpm,mAffine{weighti(1)},job.opts.affreg,40);
       failedAffine = mean(abs(mAffine{end}(:) - mAffine{weighti(1)}(:))) < 0.2; 
       
       % Final evaluation to test the result
@@ -243,12 +272,8 @@ function [Affine,tpm,res] = cat_run_job_multiTPM(job,obj,Affine,skullstripped,ms
       end
 
       res(i) = cat_spm_preproc8(obj);
-      weight(i) = min(1,max(0,2 * ( mean(res(i).wp(1:2)) - std(res(i).wp(1:2)) + ...
-                                    mean(res(i).wp(4:6)) - std(res(i).wp(4:6))) + ...
-                                    max(0,0.5 - 2 * sum( ...
-                                      shiftdim(res(i).vr( res(i).lkp(:) < 7 )) ./ ...
-                                      res(i).mn( res(i).lkp(:) < 7 )' .* ...
-                                      res(i).mg( res(i).lkp(:) < 7 ) ) ) ));
+      weight(i) = min(1,max(0,1 - sum( shiftdim(res(i).vr) ./ ...
+        res(i).mn' .* res(i).mg ./ mean(res.mn(res.lkp(2)))) ));                              
       fprintf('%s (fits%4.0f%%)',sprintf(repmat('\b',1,12)),weight(i)*100);
         
       if max(weight(1:end-1)) > weight(i)  %failedAffine || 
@@ -258,7 +283,7 @@ function [Affine,tpm,res] = cat_run_job_multiTPM(job,obj,Affine,skullstripped,ms
          Affine  = mAffine{weighti(1)}; 
          obj.tpm = spm_load_priors8(job.opts.tpm{weighti(1)});
       else
-        cat_io_cmd(sprintf(' ',weighti(1)),'g5','',job.extopts.verb-1,stime);
+        cat_io_cmd(' ','g5','',job.extopts.verb-1,stime);
       end
     else
       obj.tpm = job.opts.tpm{weighti(1)}; 

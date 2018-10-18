@@ -212,15 +212,15 @@ function cat_run_job1070(job,tpm,subj)
           end
           [YL,numo] = spm_bwlabel(double(YF~=0),26);  clear YL;            %#ok<ASGLU> % number of objects
           [YL,numi] = spm_bwlabel(double(YFC==0),26); clear YL;            %#ok<ASGLU> % number of background regions 
-          skullstrippedpara = [sum(YF(:)==0)/numel(YF) numo numi F0vol F0std]; 
-          skullstripped = ...
-            skullstrippedpara(1)>0.5 && ...                     % many zeros
-            skullstrippedpara(2)<5  && ...                      % only a few objects
-            skullstrippedpara(3)<10 && ...                      % only a few background regions 
+          ppe.affreg.skullstrippedpara = [sum(YF(:)==0)/numel(YF) numo numi F0vol F0std]; 
+          ppe.affreg.skullstripped = ...
+            ppe.affreg.skullstrippedpara(1)>0.5 && ...                     % many zeros
+            ppe.affreg.skullstrippedpara(2)<5  && ...                      % only a few objects
+            ppe.affreg.skullstrippedpara(3)<10 && ...                      % only a few background regions 
             F0vol<2500 && F0std<0.5;                                       % many zeros and not too big
-          skullstripped = skullstripped || ...
-            sum([skullstrippedpara(1)>0.8 F0vol<1500 F0std<0.4])>1; % or 2 extrem values
-          clear YF YFC F0vol F0std numo numi; 
+          ppe.affreg.skullstripped = ppe.affreg.skullstripped || ...
+            sum([ppe.affreg.skullstrippedpara(1)>0.8 F0vol<1500 F0std<0.4])>1; % or 2 extrem values
+          if ~debug, clear YFC F0vol F0std numo numi; end 
 
 
           %% Interpolation
@@ -344,7 +344,7 @@ function cat_run_job1070(job,tpm,subj)
             VF = spm_vol(obj.image(1));
 
             % skull-stripping of the template
-            if skullstripped || job.extopts.gcutstr<0
+            if ppe.affreg.skullstripped || job.extopts.gcutstr<0
               % print a warning for all users that did not turn off skull-stripping 
               % because processing of skull-stripped data is not standard!
               if job.extopts.gcutstr>=0
@@ -363,9 +363,9 @@ function cat_run_job1070(job,tpm,subj)
                   cat_io_cprintf('warn',sprintf(...
                    ['           %0.2f%%%% zeros, %d object(s), %d background region(s) \n' ...
                     '           %4.0f cm%s, normalized SD of all tissues %0.2f \n'],...
-                    skullstrippedpara(1:4),char(179),skullstrippedpara(5))); 
+                    ppe.affreg.skullstrippedpara(1:4),char(179),ppe.affreg.skullstrippedpara(5))); 
                 end
-              elseif job.extopts.gcutstr<0 && ~skullstripped
+              elseif job.extopts.gcutstr<0 && ~ppe.affreg.skullstripped
                 cat_io_cprintf('warn',[...
                     'WARNING: Skull-Stripping is deactivated but skull was detected. \n' ...
                     '         Go on without skull-stripping what probably will fail! \n']);
@@ -585,7 +585,7 @@ if exist('Ybg','var')
   obj.msk       = VF; 
   obj.msk.pinfo = repmat([255;0],1,size(Ybg,3));
   obj.msk.dt    = [spm_type('uint8') spm_platform('bigend')];
-  obj.msk.dat(:,:,:) = uint8(~Ybg); 
+  obj.msk.dat   = uint8(~Ybg); 
   obj.msk       = spm_smoothto8bit(obj.msk,0.1); 
 end            
             clear Ysrc; 
@@ -602,13 +602,13 @@ end
           if numel(job.opts.tpm)>1
             %%
             obj2 = obj; obj2.image.dat(:,:,:) = max(0.0,Ym);
-            [Affine,obj.tpm,res0] = cat_run_job_multiTPM(job,obj2,Affine,skullstripped); %#ok<ASGLU>
+            [Affine,obj.tpm,res0] = cat_run_job_multiTPM(job,obj2,Affine,ppe.affreg.skullstripped,1); %#ok<ASGLU>
           else
             %%
             spm_plot_convergence('Init','Fine affine registration','Mean squared difference','Iteration');
             warning off 
-            Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg,20); 
-            Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,       obj.tpm,Affine2,job.opts.affreg,20);
+            Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg,80); 
+            Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,       obj.tpm,Affine2,job.opts.affreg,80);
             warning on  
             if ~any(any(isnan(Affine3(1:3,:)))), Affine = Affine3; end
           end
@@ -623,7 +623,7 @@ end
           end
           
         
-          if skullstripped || job.extopts.gcutstr<0
+          if ppe.affreg.skullstripped || job.extopts.gcutstr<0
             %% update number of SPM gaussian classes 
             Ybg = 1 - spm_read_vols(obj.tpm.V(1)) - spm_read_vols(obj.tpm.V(2)) - spm_read_vols(obj.tpm.V(3));
             if 1
@@ -672,7 +672,7 @@ end
         try 
           % inital estimate
           stime = cat_io_cmd('SPM preprocessing 1 (estimate 2):','','',job.extopts.verb-1,stime);
-          obj.tol = 10^-3; % default -4 
+          %obj.tol = 10^-4; % default -4 
             
           if job.opts.redspmres==0 
             res = cat_spm_preproc8(obj);
@@ -683,44 +683,7 @@ end
             res.image1 = image1; 
             clear reduce; 
           end
-        
-          % for non-skull-stripped brains use masked brains to get better estimates
-          % esp. for brains with thinner skull or special defacing
-          if 0 %~skullstripped && job.extopts.gcutstr>=0
-            stime = cat_io_cmd('SPM preprocessing 1 (estimate skull-stripped):','','',job.extopts.verb-1,stime);
-            %% use dilated mask for spm_preproc8 because sometimes inital SPM segmentation
-            % does not cover the whole brain for brains with thinner skull
-            [Yb, Ycls] = cat_spm_preproc_write8(res,zeros(k,4),zeros(1,2),[0 0],1,1); %#ok<ASGLU>
-            Yb  = single(Ycls{1})/255 + single(Ycls{2})/255 + single(Ycls{3})/255;
-            Yb  = (Yb > 0.5);
-            Yb  = cat_vol_morph(cat_vol_morph(Yb,'lo'),'d',1/mean(vx_vol));
-            res.biasreg   = obj.biasreg;
-            res.biasfwhm  = obj.biasfwhm;
-            res.reg       = obj.reg;
-            res.samp      = obj.samp;
-            res.tpm       = obj.tpm;
-            res.fwhm      = obj.fwhm;
-            res.msk       = res.image(1); 
-            res.msk.pinfo = repmat([255;0],1,size(Yb,3));
-            res.msk.dat(:,:,:) = Yb; % mask unused voxels ?! - no
-            res.lkp        = [];
-            for k=1:numel(job.opts.ngaus)
-              job.tissue(k).ngaus = job.opts.ngaus(k);
-              res.lkp = [res.lkp ones(1,job.tissue(k).ngaus)*k];
-            end
-            res2 = cat_spm_preproc8(obj);
-
-            %% final estimate without mask using parameters from previous run
-            stime = cat_io_cmd('SPM preprocessing 1 (estimate full):','','',job.extopts.verb-1,stime);
-            res2.biasreg   = obj.biasreg;
-            res2.biasfwhm  = obj.biasfwhm;
-            res2.reg       = obj.reg;
-            res2.samp      = obj.samp;
-            res2.tpm       = obj.tpm;
-            res2.fwhm      = obj.fwhm;
-            res = spm_preproc8(res2);
-          end
-
+         
         catch
             if any( (vx_vol ~= vx_voli) ) || ~strcmp(job.extopts.species,'human') 
                 [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});
@@ -731,7 +694,9 @@ end
         warning on 
         fprintf('%5.0fs\n',etime(clock,stime));   
 
-        %% check contrast  
+        %% check contrast (and convergence)
+        %min(1,max(0,1 - sum( shiftdim(res.vr) ./ res.mn' .* res.mg ./ mean(res.mn(res.lkp(2))) ) ));  
+          
         clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
         Tgw = [cat_stat_nanmean(res.mn(res.lkp==1)) cat_stat_nanmean(res.mn(res.lkp==2))]; 
         Tth = [
