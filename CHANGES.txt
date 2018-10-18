@@ -1,5 +1,31 @@
 ------------------------------------------------------------------------
-r1375 | dahnke | 2018-10-17 18:45:46
+r1376 | gaser | 2018-10-18 15:13:56
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_batch_cat.m
+M       cat_conf_opts.m
+M       cat_conf_tools.m
+M       cat_io_senderrormail.m
+M       cat_main.m
+M       cat_plot_boxplot.m
+M       cat_run_job.m
+M       cat_stat_analyze_ROIs.m
+M       check_pipeline.sh
+M       check_pipeline_ROIs.m
+M       html/cat.html
+
+(1) Changed: Updated pipeline check and added TIV and global tissue values.
+(2) Fixed: Corrected display of significant surface ROIs.
+(3) Changed: Commented out forced transposing of data in cat_plot_boxplot
+    that prevents correct display os some low-dimensional data.
+(4) Fixed: Typos.
+(5) Fixed: Added undefined fields spm_kamap and jacobian in cat_batch_cat.m
+(6) Changed: Added pipeline check to Makefile.
+------------------------------------------------------------------------
+r1375 | dahnke | 2018-10-17 18:46:21 +0200 (Mi, 17 Okt 2018) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -16,6 +42,7 @@ M       internal/cat_vol_optimizeTemplate.m
 (2) Changed:   Defined many images/subject data definition in cat_vol_headtrimming.
 (3) Changed:   Preliminary modifications to stabilize the affine registration. 
 (4) Fixed:     Replaced postfix by suffix.                 
+
 
 ------------------------------------------------------------------------
 r1374 | dahnke | 2018-10-16 15:46:09 +0200 (Di, 16 Okt 2018) | 33 lines
