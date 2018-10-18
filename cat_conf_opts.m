@@ -36,7 +36,7 @@ tpm.def     =  @(val)cat_get_defaults('opts.tpm', val{:});
 if expert>1
   tpm.help  = [tpm.help 
    {
-    'In case of multiple TPMs, the original image is affine registrated to each TPM and a kmeans algorithm is used to fit 3 classes. The best two images with the lowes standard deviations were combined to a new less bias TPM. The TPMs must include the same classes in MNI space!'
+    'In case of multiple TPMs, the original image is affine registrated to each TPM and a kmeans algorithm is used to fit 3 classes. The best two images with the lowest standard deviations are combined to a new less biased TPM. The TPMs must include the same classes in MNI space!'
     ''
    }]; 
   tpm.num   = [1 inf];

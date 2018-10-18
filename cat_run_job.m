@@ -821,7 +821,7 @@ function cat_run_job(job,tpm,subj)
 
                 % give another (silent) warning
                 if job.extopts.verb>1
-                  cat_io_cprintf('warn','\nInitial registration failed use center of mass as AC! \n');
+                  cat_io_cprintf('warn','\nInitial registration failed, use center of mass as AC.\n');
                   cat_io_cmd(' ','','',1);  
                 end
               end

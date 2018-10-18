@@ -450,9 +450,8 @@ else % surface results display
   
   % display ROI surface results
   if show_results
-    lh = ['lh.logP' corr_short{show_results} output_name '.gii'];
-    rh = ['rh.logP' corr_short{show_results} output_name '.gii'];
-    cat_surf_results('Disp',name_lh,name_rh);
+    name_mesh = ['mesh.logP' corr_short{show_results} output_name '.gii'];
+    cat_surf_results('Disp',name_mesh,name_mesh);
   end
   
   % delete single hemi files because we already have merged hemispheres

@@ -2,8 +2,8 @@
 #
 # $Id$
 
-OLDVERSION="CAT12.5-rc1"
-NEWVERSION="CAT12.5"
+OLDVERSION="CAT12.5"
+NEWVERSION="CAT12.6-rc1"
 REVISION=`svn info |grep Revision|sed -e 's/Revision: //g'`
 DATE=`svn info |grep 'Last Changed Date: '|sed -e 's/Last Changed Date: //g'|cut -f1 -d' '`
 
@@ -37,7 +37,7 @@ install2:
 
 help:
 	-@echo Available commands:
-	-@echo install zip scp scp_manual update cp_binaries archive
+	-@echo install zip scp scp_manual update cp_binaries archive check_pipeline
 
 update:
 	-@svn update
@@ -87,4 +87,9 @@ archive:
 	-@test ! -d cat12 || rm -rf cat12
 	-@test ! -d ${TARGET} || rm -rf ${TARGET}
 	-@read -p "Type release number (3 or 4 digits), followed by [ENTER]:" ver; unzip cat12_r$${ver}.zip; cp -R cat12 ${TARGET}
+	
+check_pipeline: update install
+	-@echo Check pipeline
+	-@ls ./check_pipeline.sh -s ~/spm/spm12 -bg 8 -f /Volumes/UltraMax/check_pipeline/check_pipeline_files.txt
+	-@echo Please finally call post-processing with the resp. pid: check_pipeline.sh -p pid
 	

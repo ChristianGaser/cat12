@@ -109,9 +109,10 @@ if nargin==0, help cat_plot_boxplot; return; end
 
 % data has to be defined as cell and shouldmbe converted if numeric
 if isnumeric(data)
-  if size(data,1) < size(data,2)
-    data = data';
-  end
+% sometimes you cannot switch between columns and rows
+%  if size(data,1) < size(data,2)
+%    data = data';
+%  end
   sz = size(data);
   tmp = data; clear data
   data = cell(sz(2),1);

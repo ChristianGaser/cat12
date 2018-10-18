@@ -26,15 +26,19 @@ for i=1:size(P,1)
   roi_names = C(1,:);
 
   roi_values = cell2mat(C(2:end,2:end));
-  median_values = median(roi_values);
-  roi_values = roi_values - median_values;
+  mean_values = mean(roi_values);
+  roi_values = roi_values - mean_values;
 
   figure
-  cat_plot_boxplot(roi_values,struct('names',rev,'violin',2,'showdata',1,'outliers',0,'ylim',[-3 3]));
+  if abs(max(roi_values(:))) < 75
+    cat_plot_boxplot(roi_values',struct('names',rev,'violin',2,'showdata',1,'outliers',0,'ylim',[-3 3]));
+  else
+    cat_plot_boxplot(roi_values',struct('names',rev,'violin',2,'showdata',1,'outliers',0));
+  end
   pos = get(gcf,'Position');
   pos(3:4) = [1000 500];
   set(gcf,'MenuBar','none','Name',name,'Position',pos)
-  title('Neuromorphometric atlas: Difference to median [ml]')
+  title('Neuromorphometric atlas: Difference to mean [ml]')
   saveas(gcf,[name '.png']);
   
 end
