@@ -324,7 +324,7 @@ if ~isfield(res,'spmpp')
   
   % cleanup for high resolution data
   % Alghough the old cleanup is very slow for high resolution data, the   
-  % reduction of image resolution removes spatial segmenation information. 
+  % reduction of image resolution removes spatial segmentation information. 
   if job.opts.redspmres==0 % already done in case of redspmres
     if max(vx_vol)<1.5 && mean(vx_vol)<1.3
       for i=1:size(P,4), [Pc1(:,:,:,i),RR] = cat_vol_resize(P(:,:,:,i)  ,'reduceV',vx_vol,job.extopts.uhrlim,32); end %#ok<AGROW>

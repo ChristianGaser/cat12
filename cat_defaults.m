@@ -128,7 +128,7 @@ cat.extopts.gcutstr      = 2;    % Strength of skull-stripping:               0 
 cat.extopts.cleanupstr   = 0.5;  % Strength of the cleanup process:           0 to 1; default 0.5
 
 % segmentation options
-cat.extopts.spm_kamap    = 0;    % Replace initial SPM by k-means AMAP segm.  0 - Unified Segmenation, 2 - k-means AMAP 
+cat.extopts.spm_kamap    = 0;    % Replace initial SPM by k-means AMAP segm.  0 - Unified Segmentation, 2 - k-means AMAP 
 cat.extopts.NCstr        =-Inf;  % Strength of the noise correction:          0 to 1; 0 - no filter, -Inf - auto, 1 - full, 2 - ISARNLM (else SANLM), default -Inf
 cat.extopts.LASstr       = 0.5;  % Strength of the local adaption:            0 to 1; default 0.5
 cat.extopts.BVCstr       = 0.5;  % Strength of the Blood Vessel Correction:   0 to 1; default 0.5
