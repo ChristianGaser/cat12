@@ -678,12 +678,12 @@ end
 if expert>1
   % FUTURE RELEASE
   %{
-  % different Affine registations
+  % different Affine registrations
   spm_affreg        = cfg_menu;
   spm_affreg.tag    = 'spm_affreg'; 
   spm_affreg.name   = 'Affine registration approach';
   spm_affreg.help   = { ...
-      'The affine registion is highly important for the whole pipeline. Failures result in low overlap to the TPM that troubles the Unified Segmenation and all following steps.'
+      'The affine registion is highly important for the whole pipeline. Failures result in low overlap to the TPM that troubles the Unified Segmentation and all following steps.'
       ''
     };
   %spm_affreg.def    = @(val)cat_get_defaults('extopts.spm_affreg', val{:}); 
@@ -711,7 +711,7 @@ if expert>1
       'In rare cases the Unified Segmentation can fail in highly abnormal brains, where e.g. the cerebrospinal fluid of superlarge ventricles (hydrocephalus) were classified as white matter. However, if the affine registration is correct, the AMAP segmentation with an prior-independent k-means initialization can be used to replace the SPM brain tissue classification. ' 
       'Moreover, if the default Dartel and Shooting registrations will fail then the "Optimized Shooting - superlarge ventricles" option for "Spatial registration" is required! '
       ''
-      ' SPM Unified Segmentation - use SPM Unified Segmentation segmenation (default) ' 
+      ' SPM Unified Segmentation - use SPM Unified Segmentation segmentation (default) ' 
       ' k-means AMAP - k-means AMAP approach ' 
       ''
     };
