@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1376 | gaser | 2018-10-18 15:13:56
+r1377 | dahnke | 2018-10-18 16:02:25
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_tools.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+M       cat_run_job_multiTPM.m
+M       cat_vol_resize.m
+
+(1) Fixed:      Corrected bugs in cat_run_multiTPM.
+                Update weighting measure.
+(2) Fixed:      Corrected bugs in cat_vol_headtrimming GUI dependencies.
+(3) Fixed:      Corrected problems due to wrong datatype in cat_vol_resize.
+(4) Changed:    Prepared reunion of cat_run_job and cat_run_job1070.
+
+------------------------------------------------------------------------
+r1376 | gaser | 2018-10-18 15:14:22 +0200 (Do, 18 Okt 2018) | 24 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -24,6 +42,7 @@ M       html/cat.html
 (4) Fixed: Typos.
 (5) Fixed: Added undefined fields spm_kamap and jacobian in cat_batch_cat.m
 (6) Changed: Added pipeline check to Makefile.
+
 ------------------------------------------------------------------------
 r1375 | dahnke | 2018-10-17 18:46:21 +0200 (Mi, 17 Okt 2018) | 17 lines
 

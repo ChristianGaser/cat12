@@ -676,6 +676,34 @@ end
 %------------------------------------------------------------------------
 
 if expert>1
+  % FUTURE RELEASE
+  %{
+  % different Affine registations
+  spm_affreg        = cfg_menu;
+  spm_affreg.tag    = 'spm_affreg'; 
+  spm_affreg.name   = 'Affine registration approach';
+  spm_affreg.help   = { ...
+      'The affine registion is highly important for the whole pipeline. Failures result in low overlap to the TPM that troubles the Unified Segmenation and all following steps.'
+      ''
+    };
+  %spm_affreg.def    = @(val)cat_get_defaults('extopts.spm_affreg', val{:}); 
+  spm_affreg.labels = {'none' 'only affreg' 'only maffreg' 'affreg + maffreg' 'affreg + maffreg supervised'};
+  spm_affreg.values = {0 1 2 3 4};
+  
+  
+  % SPM processing accuracy
+  spm_acc         = cfg_menu;
+  spm_acc.tag     = 'spm_acc';
+  spm_acc.name    = 'SPM processing accuracy';
+  spm_acc.help   = { ...
+      'Generalized parameter that to control the accuracy of different SPM functions. In most cases the standard accuracy is good enough for the initialization in CAT. However, some images with bad image properties (servere local inhomogeneity) or atypical anatomy may benefit by further iterations. '
+    };
+  %spm_acc.def    = @(val)cat_get_defaults('extopts.spm_acc', val{:}); 
+  spm_acc.labels = {'low (fast)' 'average (default)' 'high (slow)'};
+  spm_acc.values = {0 0.5 1};
+  %}
+  
+  % AMAP rather than SPM segmentation 
   spm_kamap        = cfg_menu;
   spm_kamap.tag    = 'spm_kamap';
   spm_kamap.name   = 'Initial segmentation';
