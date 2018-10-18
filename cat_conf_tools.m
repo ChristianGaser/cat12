@@ -898,12 +898,12 @@ subjectimages.help    = {
 };
 if expert
   subjectimages.help  = [ subjectimages.help; {
-  'The first image is used to estiamte the trimming. ' 
+  'The first image is used to estimate the trimming. ' 
   ''
   }];
 else
   subjectimages.help  = [ subjectimages.help; {
-    'In general the first image is used to estiamte the trimming (see "Average images" option). ' 
+    'In general the first image is used to estimate the trimming (see "Average images" option). ' 
     ''
   }];
 end
@@ -915,7 +915,7 @@ manyimages          = cfg_repeat;
 manyimages.tag      = 'manyimages';
 manyimages.name     = 'Many images';
 manyimages.help     = {
-  'Collect images of each subject that should be trimmed together and were in the same space.' 
+  'Collect images of each subject that should be trimmed together and are in the same space.' 
   '  { {S1T1, S1T2,...} {S2T1, S2T2, ...}  {S2T1, S2T2 } ... }'
   ''};
 manyimages.values   = {subjectimages};

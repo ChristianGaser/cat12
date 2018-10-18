@@ -265,12 +265,26 @@ postprocess ()
         revision_cat=`grep version_cat ${i}| cut -f2 -d">"|cut -f1 -d"<"`
       fi
       label=${calc_tmp}/label/catROI_`basename $i| sed -e 's/cat_//g'`
+      report=${calc_tmp}/report/cat_`basename $i| sed -e 's/cat_//g'`
       subj=`basename $i | sed -e 's/\.xml//g' -e 's/cat_//g'`
 
       echo Finalize $subj with revision $revision_cat
       
       # get current csv files from dbm server
       scp -q -P 2222 ${scp_target}/${subj}*csv .
+
+      # grep for vol_TIV and vol_abs_CGW and update csv file
+      # check first for keywords and print next 8 lines
+      vol_TIV=`grep -A8 "<subjectmeasures" $report |grep vol_TIV |cut -f2 -d">"|cut -f1 -d"<"`
+      vol_CGW=`grep -A8 "<subjectmeasures" $report |grep vol_abs_CGW | sed -e 's/\ /,/g'|cut -f2 -d"["|cut -f1 -d"]"`|cut -f1-4 -d','
+      if [ ! -z "$vol_TIV" ]; then
+        if [ ! -z "$vol_CGW" ]; then
+          # add entry to csv file and sort and only keep unique lines
+          echo "${revision_cat},${vol_TIV},${vol_CGW}" >> ${subj}_vol.csv
+          cat ${subj}_vol.csv |sort -r|uniq > tmp$$
+          mv tmp$$ ${subj}_vol.csv
+          fi
+      fi
 
       # grep for Vgm and update csv file
       # check first for keyword neuromorphometrics and print next 200 lines
@@ -334,7 +348,7 @@ postprocess ()
         rm check_r${revision_cat}/mri/wm*
 
         zip -q check_r${revision_cat}.zip -r check_r${revision_cat}
-        scp -q -P 2222 check_r${revision_cat}.zip
+        scp -q -P 2222 check_r${revision_cat}.zip $scp_target
       fi
       scp -q -P 2222 check_r*png $scp_target
     fi
@@ -365,7 +379,7 @@ USAGE:
    saved in /tmp and modulated gray matter images and surfaces are calculated for each file. Finally, the post-processing will 
    be applied. During post-processing the temporary folders are renamed according to the found release number (check_rxxxx).
    Finally, the csv-files, the zipped check-folders, and the render views are transfered to ${scp_target}.
-   If you run check_pipeline.sh in the background the post-processing has to be called manually using the "-b" flag if the
+   If you run check_pipeline.sh in the background the post-processing has to be called manually using the "-p" flag if the
    processing for all data is finished.
     
 
