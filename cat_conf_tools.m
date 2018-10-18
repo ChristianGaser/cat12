@@ -536,13 +536,13 @@ outlier.help    = {
 % also this is a separate function that is used for the results
 spm_type         = cfg_menu; %
 spm_type.tag     = 'spm_type';
-spm_type.name    = 'Data type of the output images.';
+spm_type.name    = 'Data type of the output images';
 if expert>1 
   % developer! there should be no great difference between uint# and int# due to rescaling 
-  spm_type.labels  = {'native','uint8','int8','uint16','int16','single'};
+  spm_type.labels  = {'same','uint8','int8','uint16','int16','single'};
   spm_type.values  = {0 2 256 512 4 16};
 else
-  spm_type.labels  = {'native','uint8','uint16','single (32 bit)'};
+  spm_type.labels  = {'same','uint8','uint16','single (32 bit)'};
   spm_type.values  = {0 2 512 16};
 end
 spm_type.val     = {16};
@@ -980,10 +980,10 @@ spm_type.tag     = 'spm_type';
 spm_type.name    = 'Data type of the output images.';
 if expert>1 
   % developer! there should be no great difference between uint# and int# due to rescaling 
-  spm_type.labels  = {'native','uint8','int8','uint16','int16','single'};
+  spm_type.labels  = {'same','uint8','int8','uint16','int16','single'};
   spm_type.values  = {0 2 256 512 4 16};
 else
-  spm_type.labels  = {'native','uint8','uint16','single (32 bit)'};
+  spm_type.labels  = {'same','uint8','uint16','single (32 bit)'};
   spm_type.values  = {0 2 512 16};
 end
 spm_type.val     = {0};
@@ -1635,11 +1635,13 @@ if isfield(vf.image_selector,'manysubjects')
   cdep(end).sname      = 'source images';
   cdep(end).src_output = substruct('.','image_selector','.','manysubjects','.','simages'); 
   cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-  for i=1:numel(vf.image_selector.manysubjects.oimages)
-    cdep(end+1)          = cfg_dep;%#ok<AGROW>
-    cdep(end).sname      = sprintf('other images %d',i);
-    cdep(end).src_output = substruct('.','image_selector','.','manysubjects','.','oimages','{}',{i}); 
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  if isfield(vf.image_selector.manysubjects,'oimages')
+    for i=1:numel(vf.image_selector.manysubjects.oimages)
+      cdep(end+1)          = cfg_dep;%#ok<AGROW>
+      cdep(end).sname      = sprintf('other images %d',i);
+      cdep(end).src_output = substruct('.','image_selector','.','manysubjects','.','oimages','{}',{i}); 
+      cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    end
   end
 elseif isfield(vf.image_selector,'subjectimages') 
   for si=1:numel(vf.image_selector.subjectimages)
