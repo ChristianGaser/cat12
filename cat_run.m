@@ -272,8 +272,12 @@ function job = update_job(job)
     job.opts.biasreg	= min(  10 , max(  0 , 10^-(job.opts.biasstr*2 + 2) ));
     job.opts.biasfwhm	= min( inf , max( 30 , 30 + 60*(1-job.opts.biasstr) ));  
   end
- 
-  
+  % SPM preprocessing accuracy
+  if ~isfield(job.opts,'tol')
+    job.opts.tol = cat_get_defaults('opts.tol');
+  end
+  job.opts.tol = min(1e-2,max(1e-6, job.opts.tol));
+    
   %% find and check the Dartel templates
   [tpp,tff,tee] = spm_fileparts(job.extopts.darteltpm{1});
   job.extopts.darteltpm{1} = fullfile(tpp,[tff,tee]); 

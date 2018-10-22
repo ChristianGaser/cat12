@@ -1644,14 +1644,37 @@ if isfield(vf.image_selector,'manysubjects')
     end
   end
 elseif isfield(vf.image_selector,'subjectimages') 
+  % image-wise
+  % - first image
+  cdep(end).sname      = sprintf('first images of all subjects');
+  cdep(end).src_output = substruct('.','image_selector','.','firstimages'); 
+  cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  % - other images
+  cdep(end+1)          = cfg_dep;
+  cdep(end).sname      = sprintf('other images of all subjects');
+  cdep(end).src_output = substruct('.','image_selector','.','otherimages'); 
+  cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  % subject-wise ... 
+  % the substruct seams to be correct, but it does not work, 
+  % probably because each cdep entry has to be unique  
+  % RD201810
+  %{
+  for si=1:numel(vf.image_selector.subjectimages)
+    cdep(end+1)          = cfg_dep;%#ok<AGROW>
+    cdep(end).sname      = sprintf('all imgages of subject %d',si);
+    cdep(end).src_output = substruct('.','image_selector','.','subjectimages','{}',{si}); 
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end
+  % single scans
   for si=1:numel(vf.image_selector.subjectimages)
     for fi=1:numel(vf.image_selector.subjectimages{si})
-      if si>1 || fi>1, cdep(end+1) = cfg_dep; end %#ok<AGROW>
+      cdep(end+1)          = cfg_dep;%#ok<AGROW>
       cdep(end).sname      = sprintf('subject %d image %d',si,fi);
       cdep(end).src_output = substruct('.','image_selector','.','subjectimages','{}',{si},'()',{fi}); 
       cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     end
   end
+  %}
 else
   for i=1:numel(vf.images)
     cdep(i)            = cfg_dep;

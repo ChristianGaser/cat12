@@ -138,6 +138,7 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
       end
       res.tpm2 = cell(1,numel(job.extopts.templates)); 
       Vtmp = spm_vol(job.extopts.templates{1}); tmpM = Vtmp(1).mat; 
+      n1 = max(min(2,numel(Vtmp)),numel(Vtmp)-1);  % use GM and WM for shooting
      
       %% registration main parameter
       lowres                     = 2.5;                   % lowest resolution .. best between 2 and 3 mm 
@@ -590,7 +591,6 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
 
           % shooting parameter
           sd = spm_shoot_defaults;          % load shooting defaults
-          n1 = 2;                            % use GM and WM for shooting
           if fast, reg(regstri).opt.nits = min(reg(regstri).opt.nits,5*fast); end  % at least 5 iterations to use each tempalte
           if  job.extopts.regstr(regstri)==6
             % need finer schedule for coarse to fine for ll3 adaptive threshold
@@ -641,7 +641,7 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
           while it<=nits || (prm2>1.1 && ll(3)>0.1 && (it<=nits*1.1 || prm2>(3+it/nits) ) )
   
             itime = clock;
-            if it==nits, cat_io_cprintf([.2 .2 1],'Stoppage time!\n'); end
+            if it==nits+1, cat_io_cprintf([.2 .2 1],'Stoppage time!\n'); end
             if it==1 || (tmpl_no(min(nits,it))~=tmpl_no(min(nits,it)-1)) 
               ti  = tmpl_no(min(nits,it)); %ittime(it) = clock;
 
@@ -855,7 +855,8 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
                 
                 
                 %% local Laplace filter for continuous field smoothness
-% war ok ... nochmal eine stufe schw?cher?           
+% war ok ... nochmal eine stufe schw?cher?   
+if job.extopts.regstr(regstri)==6
                 mxu = max(1,min(dtm,2.^( (3 - wc) ))); %mxu = (1.3).^(11 - wc); % dieser Wert war zu stark bei hohen Iterationen!
                 for i=1:3  
                   if tmpl_no(min(it,nits))<tmpl_no(end)
@@ -864,7 +865,8 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
                   u(:,:,:,i) = ( cat_vol_laplace3R(u(:,:,:,i) / mxu - min(min(min(u(:,:,:,i)))) / mxu,...
                     true(size(dt)) , 0.4) + min(min(min(u(:,:,:,i)))) / mxu ) * mxu;
                 end
-      
+end
+
                 %% update parameter
                 prm2 = min(12,max(1 , prm2 * 2 ) ); 
                 prm(4:end) = min(sd.rparam * sd.sched(1),prm(4:end) * prm2); 
@@ -913,7 +915,7 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
                 ~(it==1 || (tmpl_no(min(nits,it))~=tmpl_no(min(nits,it)-1))) && ...
                 ( (llo(3) - ll(3))<-0.01 || any(dt(:)>dtm*0.66) || any(dt(:)<1/(dtm*0.66)) ) 
                   fprintf('-');
-                if 1 && (any(dt(:)>dtm*0.9) || any(dt(:)<1/(dtm*0.9)) ) 
+                if 0 && (any(dt(:)>dtm*0.9) || any(dt(:)<1/(dtm*0.9)) ) 
                   for i=1:3  
                     spm_smooth(u(:,:,:,i),u(:,:,:,i),2*[1 1 1]); %./vxreg)
                   end
@@ -1384,7 +1386,8 @@ function lin = combine_linear_spline(lin,spl,mat,k1)
   
   % create mask that include to good non-linear interpolated values and
   % avoid the values close to the image edge.
-  mskidv = mskid(spl,abs(mat(1)/2)); % amout of interpolation * 2 (inverse becuase of reduction)
+  vx_vol = sqrt(sum(mat(1:3,1:3).^2));     
+  mskidv = mskid(spl,abs(vx_vol(1)/2)); % amout of interpolation * 2 (inverse becuase of reduction)
   msk = false(size(spl)); 
   msk(mskidv(1):mskidv(2),mskidv(3):mskidv(4),mskidv(5):mskidv(6)) = true; 
   

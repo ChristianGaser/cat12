@@ -503,7 +503,8 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
     if opt.fast==1
       %%
       CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
-      if V.mat(13)>0, CS.faces = [CS.faces(:,1) CS.faces(:,3) CS.faces(:,2)]; end
+      mati = spm_imatrix(V.mat); 
+      if mati(7)<0, CS.faces = [CS.faces(:,1) CS.faces(:,3) CS.faces(:,2)]; end
       save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Pcentral);    
 
       % remove some unconnected meshes

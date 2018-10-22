@@ -1702,7 +1702,7 @@ end
 %% ---------------------------------------------------------------------
 %  Spatial Registration with Dartel or Shooting
 %  ---------------------------------------------------------------------
-  Yclsd = Ycls(1:2); % use only GM and WM for deformation
+  Yclsd = Ycls(1:3); % use only GM and WM for deformation
   if job.extopts.WMHC>0 && numel(Ycls)>6
     Yclsd{2} = cat_vol_ctype(min(255,single(Ycls{2}) + single(Ycls{7}))); % set WMHs as WM in some cases
   end
@@ -2460,8 +2460,10 @@ if job.extopts.print
     str = [str struct('name', 'affreg:','value',sprintf('%s',job.opts.affreg))];
     % 1 line 2: APP
     APPstr = {'none','light','full','APPi','APPf','animal'}; APPstr{1071} = 'APP'; 
-    str(end).name  = [str(end).name(1:end-1) ' / APP '];  
-    str(end).value = [str(end).value sprintf(' / %s',APPstr{job.extopts.APP+1})];
+    str(end).name  = [str(end).name(1:end-1) ' / APP ']; 
+    try
+      str(end).value = [str(end).value sprintf(' / %s',APPstr{job.extopts.APP+1})];
+    end
     % 1 line 3: biasstr / biasreg+biasfwhm
     if job.opts.biasstr>0
       biasstr = {'ultralight','light','medium','strong','heavy'};

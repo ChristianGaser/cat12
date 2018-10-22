@@ -608,55 +608,59 @@ end
 
 
 %------------------------------------------------------------------------
+% Currently there are to much different stradegies and this paramter need 
+% revision. There a three basic APP functions that each include a initial 
+% rought and a following fine method. The first is the SPM appraoch that 
+% is a simple iterative call of the Unified segmentation with following 
+% maximum-based bias correction. It is relative save but slow and can be 
+% combined with the other APP routines. The second one is the classical 
+% APP approach with rough and fine processing (1070), followed by further 
+% developed version that should be more correct with monitor variables and
+% T2/PD compatibility but finally worse results. 
+%
+% So we need more test to find out which strategies will survive to support 
+% an alternative if the standard failed with a fast standard and slow but 
+% more powerfull other routines. Hence APP1070 (init) or it successor
+% should be the standard. The SPM routines are a good alternative due to 
+% their differnt concept. 
+%------------------------------------------------------------------------
 
 
 app        = cfg_menu;
 app.tag    = 'APP';
 app.name   = 'Affine Preprocessing (APP)';
+% short help text
 app.help   = { ...
     'Affine registration and SPM preprocessing can fail in some subjects with deviating anatomy (e.g. other species/neonates) or in images with strong signal inhomogeneities, or untypical intensities (e.g. synthetic images). An initial bias correction can help to reduce such problems (see details below). Recommended are the "rough" and "full" option.' 
     ''
-    ' none   - no additional bias correction.' 
-    ' rough  - rough APP bias correction (r1070)' 
+    ' none   - no additional bias correction' 
     ' light  - iterative SPM bias correction on different resolutions' 
     ' full   - iterative SPM bias correction on different resolutions and final high resolution bias correction' 
-    ''
+    ' rough  - rough APP bias correction (r1070)' 
   };
-  
-app.labels = {'none','rough','light','full'};
-app.values = {0 1070 1 2};
-
-if expert==2
-  app.labels = {'none','light','full','rough','rough (new)','fine (new)'};
-  app.values = {0 1 2 1070 3 4};
+app.def    = @(val)cat_get_defaults('extopts.APP', val{:});
+app.labels = {'none','light','full','rough'};
+app.values = {0 1 2 1070};
+if expert
+  app.labels = [app.labels, {'rough (new)'}];
+  app.values = [app.values {1144}];
   app.help   = [app.help;{ 
-    ' none       - no additional bias correction.' 
-    ' light      - iterative SPM bias correction on different resolutions' 
-    ' full       - iterative SPM bias correction on different resolutions and high resolution bias correction' 
-    ' rough       - rough APP bias correction (R1070)' 
-    ' rough (new) - rough APP bias correction - in development' 
-    ' fine  (new) - rough (new) and fine APP bias correction - in development'    
-    ''
+    ' rough (new) - rough APP bias correction (r1144) - in development' 
   }];
 end  
-app.def    = @(val)cat_get_defaults('extopts.APP', val{:});
+% long help text
 app.help   = [app.help; { ...
-    'rough: Fast correction (~60s) that identifies large homogeneous areas to estimate the intensity inhomogeneity. A maximum-filter is used to reduce the partial volume effect in T1 data. Moreover, gradient and divergence maps were used to avoid side effects by high intensity tissues (e.g. blood vessels or head tissue). '
-    'light: This approach focuses on an iterative application of the standard SPM preprocessing with different bias-correction options from low (samp=6 mm, biasfwhm=120 mm) to high frequency corrections  (samp=4.5 mm, biasfwhm=45 mm). However, the iterative calls require a lot of additional processing time (~500s) and is normally not required in data with low intensity inhomogeneity. '
-    'full: In addition to the "light" approach a final maximum-based filter (similar to the ''rough'' method that needs about additional 60s) is used to remove remaining local inhomogeneities. '
     ''
+    'light: This approach focuses on an iterative application of the standard SPM preprocessing with different bias-correction options from low (samp=6 mm, biasfwhm=120 mm) to high frequency corrections  (samp=4.5 mm, biasfwhm=45 mm). However, the iterative calls require a lot of additional processing time (~500s) and is normally not required in data with low intensity inhomogeneity. '
+    'full:  In addition to the "light" approach a final maximum-based filter (similar to the ''rough'' method that needs about additional 60s) is used to remove remaining local inhomogeneities. '
+    'rough: Fast correction (~60s) that identifies large homogeneous areas to estimate the intensity inhomogeneity. A maximum-filter is used to reduce the partial volume effect in T1 data. Moreover, gradient and divergence maps were used to avoid side effects by high intensity tissues (e.g. blood vessels or head tissue). '
 }];
-if expert==2
+if expert
     app.help   = [app.help; { ...
     'rough (new): New version of the ''rough'' approach with improved handling of T2/PD data that is still in development. '
-    'fine  (new): Additional fine processing after the ''rough'' processing that incorporates the different brain and head tissues but is also still in development.'
-    ''
-    }];
+     }];
 end
-app.help   = [app.help; { ...
-    'In conclusion, we recommend to use the "rough" option or alternatively the "full" option or in case of further problems the "light", "rough (new)" or "fine (new)" options.'
-    ''
-    }];
+app.help   = [app.help;{''}];
 
 
 %------------------------------------------------------------------------
@@ -674,34 +678,28 @@ if expert>1
 end
 
 %------------------------------------------------------------------------
-
+  
 if expert>1
-  % FUTURE RELEASE
-  %{
-  % different Affine registrations
+  % different Affine registations ... not implemented
   spm_affreg        = cfg_menu;
   spm_affreg.tag    = 'spm_affreg'; 
   spm_affreg.name   = 'Affine registration approach';
   spm_affreg.help   = { ...
-      'The affine registion is highly important for the whole pipeline. Failures result in low overlap to the TPM that troubles the Unified Segmentation and all following steps.'
+      'The affine registion is highly important for the whole pipeline. Failures result in low overlap to the TPM that troubles the Unified Segmenation and all following steps. Therefore, CAT uses different routines to obtain the best solution. However, this can fail especial in atypical subjects (very young/old) and we deside that it is maybe usefull to test the steps separately. Brain or head masks can imrove the results in some but also lead to problems in other cases.'
       ''
+      '  The affreg routine process a affine registration based the orignal input (T1) image and a similar weighted scan . '
+      '  The maffreg routine use'
     };
   %spm_affreg.def    = @(val)cat_get_defaults('extopts.spm_affreg', val{:}); 
-  spm_affreg.labels = {'none' 'only affreg' 'only maffreg' 'affreg + maffreg' 'affreg + maffreg supervised'};
-  spm_affreg.values = {0 1 2 3 4};
-  
-  
-  % SPM processing accuracy
-  spm_acc         = cfg_menu;
-  spm_acc.tag     = 'spm_acc';
-  spm_acc.name    = 'SPM processing accuracy';
-  spm_acc.help   = { ...
-      'Generalized parameter that to control the accuracy of different SPM functions. In most cases the standard accuracy is good enough for the initialization in CAT. However, some images with bad image properties (servere local inhomogeneity) or atypical anatomy may benefit by further iterations. '
+  spm_affreg.labels = {
+    'no affine registration' ... 
+    'only affreg' ...
+    'only maffreg' ...
+    'affreg + maffreg' ...
+    'affreg + maffreg supervised' ...
     };
-  %spm_acc.def    = @(val)cat_get_defaults('extopts.spm_acc', val{:}); 
-  spm_acc.labels = {'low (fast)' 'average (default)' 'high (slow)'};
-  spm_acc.values = {0 0.5 1};
-  %}
+  spm_affreg.values = {0 1 2 3 4};
+  spm_affreg.val    = 3;
   
   % AMAP rather than SPM segmentation 
   spm_kamap        = cfg_menu;
