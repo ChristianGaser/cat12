@@ -1,5 +1,44 @@
 ------------------------------------------------------------------------
-r1378 | gaser | 2018-10-18 16:15:04
+r1379 | dahnke | 2018-10-22 21:04:05
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_opts.m
+M       cat_conf_tools.m
+M       cat_defaults.m
+M       cat_main.m
+M       cat_main_registration.m
+M       cat_main_registration2.m
+M       cat_run.m
+M       cat_run_job.m
+D       cat_run_job_APP_SPM.m
+A  +    cat_run_job_APP_SPMfinal.m
+A       cat_run_job_APP_SPMinit.m
+D       cat_run_job_APP_final.m
+M       cat_run_job_multiTPM.m
+M       cat_run_newcatch.m
+A       cat_spm_preproc8.m
+M       cat_spm_preproc_run.m
+M       cat_surf_createCS.m
+M       cat_vol_headtrimming.m
+
+(1) Fixed:      Corrected bugs in cat_vol_headtrimming GUI dependencies.
+(2) Fixed:      Corrected fast surface creation face flipping in 
+                cat_surf_createCS.
+(2) Changed:    Prepared reunion of cat_run_job and cat_run_job1070.
+(3) Changed:    Extract cat_run_job_APP_SPMinit function from cat_run_job.
+(4) Changed:    Renamed cat_run_job_APP_SPM to cat_run_job_APP_SPMfinal.
+(5) Changed:    Updated cat_main_registration for templates with more than
+                2 classes. 
+(6) Changed:    Added SPM accuracy variable opts.tol in cat_defaults, 
+                cat_run and cat_spm_preproc_run.                
+(7) Changed:    Updated some variables in cat_run_job_multiTPM.
+(8) Fixed:      Updated cat_main_registration and cat_main to support 
+                templates with 3 classes. 
+
+------------------------------------------------------------------------
+r1378 | gaser | 2018-10-18 16:15:29 +0200 (Do, 18 Okt 2018) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +50,7 @@ M       cat_run_job1070.m
 MM      cat_run_job_multiTPM.m
 
 Fixed: Typos.
+
 
 ------------------------------------------------------------------------
 r1377 | dahnke | 2018-10-18 16:04:15 +0200 (Do, 18 Okt 2018) | 16 lines

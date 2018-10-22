@@ -137,6 +137,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
       end
       res.tpm2 = cell(1,numel(job.extopts.templates)); 
       Vtmp = spm_vol(job.extopts.templates{1}); tmpM = Vtmp(1).mat; 
+      n1 = max(min(2,numel(Vtmp)),numel(Vtmp)-1);  % use GM and WM for shooting
      
       %% registration main parameter
       lowres                     = 2.5;                   % lowest resolution .. best between 2 and 3 mm 
@@ -265,7 +266,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
       end
       run2 = struct(); 
       for j=1:numel(res.tpm2)
-        for i=1:2, run2(i).tpm = sprintf('%s,%d',job.extopts.templates{j},i);end
+        for i=1:n1, run2(i).tpm = sprintf('%s,%d',job.extopts.templates{j},i);end
         res.tpm2{j} = spm_vol(char(cat(1,run2(:).tpm)));
       end
 
@@ -567,7 +568,6 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
 
           % shooting parameter
           sd = spm_shoot_defaults;           % load shooting defaults
-          n1 = 2;                            % use GM and WM for shooting
           if fast, reg(regstri).opt.nits = min(reg(regstri).opt.nits,5*fast); end  % at least 5 iterations to use each tempalte
           if (job.extopts.regstr(regstri)>0 || regres~=tmpres) && job.extopts.regstr(regstri)~=4 
             % need finer schedule for coarse to fine for ll3 adaptive threshold
@@ -688,7 +688,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
                   [D,I] = cat_vbdist(single(~isnan(y(:,:,:,k1)))); % use neighbor value in case of nan
                   y(:,:,:,k1)=y(I + ((k1-1) * numel(y)/3)); clear D I; 
                 end
-                y(~isfinite(y))=y(find(~isfinite(y))+1); % use neighbor value in case of nan
+                %y(~isfinite(y))=y(find(~isfinite(y))+1); % use neighbor value in case of nan
                 if ~debug, clear yo; end
 
                 %% size update u - flow field

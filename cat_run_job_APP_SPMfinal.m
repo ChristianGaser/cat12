@@ -1,4 +1,4 @@
-function  [Ymc,Ymi] = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,fstr)
+function  [Ymc,Ymi] = cat_run_job_APP_SPMfinal(Po,vout,vx_vol,verb,fstr)
 %  _____________________________________________________________________
 %  The final bias correction is a subfunction of cat_run_job.
 %  

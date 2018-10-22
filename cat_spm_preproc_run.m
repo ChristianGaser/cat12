@@ -126,7 +126,10 @@ for iter=1:nit
             obj.msk = job.msk ;
         end
 
-        res = spm_preproc8(obj);
+        if isfield(job,'tol')
+            obj.tol = job.tol;
+        end
+        res = cat_spm_preproc8(obj);
 
         if ~isfield(job,'savemat') || job.savemat==1
             try

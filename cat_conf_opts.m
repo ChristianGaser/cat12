@@ -271,6 +271,22 @@ samp.help   = {
   ''
 };
 
+% SPM processing accuracy
+tol         = cfg_menu;
+tol.tag     = 'tol';
+tol.name    = 'SPM processing accuracy';
+tol.help   = { ...
+    'Parameter that to control the accuracy of different SPM functions. In most cases the standard accuracy is good enough for the initialization in CAT. However, some images with servere (local) inhomogeneities or atypical anatomy may benefit by further iterations. '
+  };
+%spm_acc.def    = @(val)cat_get_defaults('extopts.spm_acc', val{:}); 
+tol.labels = {'average (default)' 'high (slow)' 'ulta high (very slow)'};
+tol.values = {1e-4 1e-5 1e-6};
+if expert
+  tol.labels = [{'ultra low (superfast)' 'low (fast)'} tol.labels];
+  tol.values = [{1e-2 1e-3} tol.values];
+end
+
+
 redspmres         = cfg_entry;
 redspmres.tag     = 'redspmres';
 redspmres.name    = 'SPM preprocessing output resolution limit';
@@ -289,7 +305,7 @@ opts.help = {
     ''
   };
 if expert>1
-  opts.val  = {tpm,affreg,bias,ngaus,warpreg,samp,redspmres};
+  opts.val  = {tpm,affreg,bias,ngaus,warpreg,samp,tol,redspmres};
   opts.help = [opts.help; {
     'Increasing the initial sampling resolution to 1.5 or 1.0 mm may help in some cases of strong inhomogeneity but in general it only increases processing time.'
     ''
@@ -297,13 +313,13 @@ if expert>1
     ''
   }];
 elseif expert==1
-  opts.val  = {tpm,affreg,biasstr,samp,redspmres};
+  opts.val  = {tpm,affreg,biasstr,samp,tol};
   opts.help = [opts.help; {
     'Increasing the initial sampling resolution to 1.5 or 1.0 mm ma help in some cases of strong inhomogeneity but in general it only increases processing time.'
     ''
   }];
 else
-  opts.val  = {tpm,affreg,biasstr};
+  opts.val  = {tpm,affreg,biasstr,tol};
    
 end
 

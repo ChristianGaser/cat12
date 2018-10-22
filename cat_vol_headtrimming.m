@@ -60,6 +60,7 @@ function varargout = cat_vol_headtrimming(job)
 
   
   if isfield(job.image_selector,'manysubjects')
+    % source image
     if ischar(job.image_selector.manysubjects.simages)
       varargout{1}.image_selector.manysubjects.simages = spm_file(...
         job.image_selector.manysubjects.simages,'prefix',job.prefix,'suffix',job.suffix);
@@ -69,6 +70,7 @@ function varargout = cat_vol_headtrimming(job)
           job.image_selector.manysubjects.simages{fi},'prefix',job.prefix,'suffix',job.suffix);
       end
     end
+    % other images
     for fi=1:numel(job.image_selector.manysubjects.oimages)
       for di=1:numel(job.image_selector.manysubjects.oimages{fi})
         if ischar(job.image_selector.manysubjects.oimages{fi})
@@ -81,9 +83,21 @@ function varargout = cat_vol_headtrimming(job)
       end
     end
   elseif isfield(job.image_selector,'subjectimages')
-    for fi=1:numel(job.image_selector.subjectimages)
-      varargout{1}.image_selector.subjectimages{fi} = spm_file(...
-        job.image_selector.subjectimages{fi},'prefix',job.prefix,'suffix',job.suffix);
+    varargout{1}.image_selector.firstimages = {};
+    varargout{1}.image_selector.otherimages = {}; % collect other images
+    for si=1:numel(job.image_selector.subjectimages)
+      % standard single image output
+      varargout{1}.image_selector.subjectimages{si} = spm_file(...
+        job.image_selector.subjectimages{si},'prefix',job.prefix,'suffix',job.suffix);
+      varargout{1}.image_selector.firstimages = [
+        varargout{1}.image_selector.firstimages;
+        varargout{1}.image_selector.subjectimages{si}(1)];
+      % collect other images
+      if numel(varargout{1}.image_selector.subjectimages{si})>1
+        varargout{1}.image_selector.otherimages = [ 
+          varargout{1}.image_selector.otherimages;
+          varargout{1}.image_selector.subjectimages{si}(2:end)];
+      end
     end
   elseif isfield(job,'images')
     varargout{1}.images = spm_file(...
