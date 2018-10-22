@@ -12,19 +12,21 @@ function [Affine,tpm,res] = cat_run_job_multiTPM(job,obj,Affine,skullstripped,ms
 % small head, healty adults, and older subjects with severe brain
 % atrophy.  
 %
-%   [Affine,tpm,res] = cat_run_job_multiTPM(job,obj,Affine,skullstripped)
+%   [Affine,tpm,res] = ...
+%     cat_run_job_multiTPM(job,obj[,Affine,skullstripped,msk,acc])
 %  
 %   job           .. CAT job structure
 %   obj           .. SPM preprocessing structure 
 %   Affine        .. affine in/output matrix
 %   skullstripped .. use brain tissues only
-%   acc           .. accuracy (default=0)
+%   msk           .. mask regions in the unified segmentation 
+%   acc           .. accuracy (default=0, just for tests)
 %                    0 - faster but less exact
 %                    1 - slower but more exact
 %
-% This function is part of the CAT preprocessing namely the 
-% cat_main_job(1070) function and utilize the TPM based affine 
-% registration spm_maffreg of SPM. 
+% This function is part of the CAT preprocessing (cat_main_job) and 
+% utilize the TPM based affine registration spm_maffreg of SPM and the 
+% unified segmentation. 
 % ______________________________________________________________________
 % Robert Dahnke 
 % Structural Brain Mapping Group
@@ -38,14 +40,18 @@ function [Affine,tpm,res] = cat_run_job_multiTPM(job,obj,Affine,skullstripped,ms
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
   
   stime0 = clock; 
-
   
-  %obj.samp  = max(1.5,obj.samp*2); 
-  %obj.tol   = 1e-3; % faster pp (default: 1-e4;)
-  if ~exist('acc','var'), acc = 0; else acc = min(1,max(0,acc)); end
+  if ~exist('Affine','var'), Affine = eye(4); end
+  if ~exist('skullstripped','var'), skullstripped = 0; end
+  if ~exist('acc','var') % overwrite parameter for tests
+    obj.samp = job.opts.samp + 1;       % higher res (default: 3 mm)
+    obj.tol  = min(1e-2,job.opts.tol * 10); % faster pp (default: 1-e4;)
+  else
+    acc = min(1,max(0,acc)); 
+    obj.samp = 4 - 2*acc;       % higher res (default: 3 mm)
+    obj.tol  = 10^(-2 - 3*acc); % faster pp (default: 1-e4;)
+  end
   if ~exist('msk','var'), msk = 0; end
-  obj.samp = 4 - 2*acc;       % higher res (default: 3 mm)
-  obj.tol  = 10^(-2 - 3*acc); % faster pp (default: 1-e4;)
   
   
   % mask probably masked/stripped voxels!

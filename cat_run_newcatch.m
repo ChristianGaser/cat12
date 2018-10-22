@@ -12,7 +12,7 @@ function cat_run_newcatch(job,tpm,subj)
   [pth,nam,ext] = spm_fileparts(job.channel(1).vols{subj}); 
 
   try
-    if job.extopts.APP == 1070
+    if 0 %job.extopts.APP == 1070
       cat_run_job1070(job,tpm,subj); 
     else
       cat_run_job(job,tpm,subj); 
