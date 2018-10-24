@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1379 | dahnke | 2018-10-22 21:04:05
+r1380 | dahnke | 2018-10-24 17:15:20
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_main.m
+M       cat_main_registration.m
+M       cat_main_registration2.m
+M       cat_run_job.m
+
+(1) Fixed:      Corrected bugs cat_main_registration(2). 
+(2) Changed:    Adapted cat_main_registration(2) for number of template classes.
+                Expect one background class if number of classes is larger than 2!
+(3) Fixed:      Corrected bugs in cat_run_job and cat_main.
+
+------------------------------------------------------------------------
+r1379 | dahnke | 2018-10-22 21:05:34 +0200 (Mo, 22 Okt 2018) | 37 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -36,6 +52,7 @@ M       cat_vol_headtrimming.m
 (7) Changed:    Updated some variables in cat_run_job_multiTPM.
 (8) Fixed:      Updated cat_main_registration and cat_main to support 
                 templates with 3 classes. 
+
 
 ------------------------------------------------------------------------
 r1378 | gaser | 2018-10-18 16:15:29 +0200 (Do, 18 Okt 2018) | 12 lines

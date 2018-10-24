@@ -291,7 +291,7 @@ function cat_run_job(job,tpm,subj)
           %  why not use it for a improved maximum based correction?!
           %  ------------------------------------------------------------
           if ~strcmp(job.extopts.species,'human'), job.extopts.APP = 5; end
-          if (job.extopts.APP==1 || job.extopts.APP==2) && ~ppe.affreg.skullstripped
+          if (job.extopts.APP==1 || job.extopts.APP==2) %&& ~ppe.affreg.skullstripped
              job.subj = subj;
              [Ym,Ybg,WMth] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfname,mrifolder);
           end
@@ -390,7 +390,7 @@ function cat_run_job(job,tpm,subj)
           % large head intensities can disturb the whole process.
           % --------------------------------------------------------------
           % ds('l2','',vx_vol,Ym, Yt + 2*Ybg,obj.image.private.dat(:,:,:)/WMth,Ym,60)
-          if job.extopts.APP == 1070 || job.extopts.APP == 1044
+          if job.extopts.APP == 1070 || job.extopts.APP == 1144
             stime = cat_io_cmd('APP: Rough bias correction'); 
             if job.extopts.APP == 1070 
               [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init1070(single(obj.image.private.dat(:,:,:)),vx_vol,job.extopts.verb); %#ok<ASGLU>
@@ -400,7 +400,7 @@ function cat_run_job(job,tpm,subj)
             end
             if ~debug, clear Yt; end
 
-            stime = cat_io_cmd('Coarse affine registration','','',1,stime); 
+            stime = cat_io_cmd('Affine registration','','',1,stime); 
 
             % write data to VF
             VF.dt         = [spm_type('UINT8') spm_platform('bigend')];
@@ -463,48 +463,16 @@ function cat_run_job(job,tpm,subj)
           aflags.sep = obj.samp/2; 
           aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
           aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
-          %{
-          if job.extopts.APP==4 || job.extopts.APP==5 || job.extopts.APP==20004
-              %% apply (first affine) registration on the default brain mask
-              VFa = VF; 
-              if strcmp('human',job.extopts.species), VFa.mat = Affine * VF.mat; else Affine = eye(4); affscale = 1; end
-              if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
-              [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0));  %#ok<ASGLU>
-              Yb = Yb>0.5 & ~Ybg; clear Vmsk; 
-
-              stime = cat_io_cmd('APP: Fine bias correction and skull-stripping','','',1,stime); 
-
-              % fine APP
-              [Ym,Yp0,Yb] = cat_run_job_APP_final(single(obj.image.private.dat(:,:,:)),...
-                  Ym,Yb,Ybg,vx_vol,job.extopts.gcutstr,job.extopts.verb); %#ok<ASGLU>
-              if ~debug, clear Yp0; end
-              stime = cat_io_cmd('Affine registration','','',1,stime); 
-
-              %% smooth data
-              VF.dat(:,:,:) =  cat_vol_ctype(Ym*200); 
-              VF1 = spm_smoothto8bit(VF,aflags.sep);
-              VG1 = spm_smoothto8bit(VG,aflags.sep);
-
-              if 1 % brain masking for affine registration 
-                VB  = spm_vol(Pb);
-                Ybt = spm_read_vols(VB); 
-                VG1.dat(:,:,:) =  cat_vol_ctype(single(VG1.dat(:,:,:)) .* smooth3(Ybt));
-                VF1.dat(:,:,:) =  cat_vol_ctype(single(VF1.dat(:,:,:)) .* smooth3(Yb));
-              end   
-
-          elseif 0 % job.extopts.APP>2 ... this was worse than the standard approach!
-              % smooth data
-              stime = cat_io_cmd('Affine registration','','',1,stime); 
-              VF.dat(:,:,:) =  cat_vol_ctype(Ym*200); 
-              VF1 = spm_smoothto8bit(VF,aflags.sep);
-              VG1 = spm_smoothto8bit(VG,aflags.sep);
-          else
-          %}
-          % standard approach 
-          %    stime = cat_io_cmd('Affine registration','','',1,stime); 
-              VF1 = spm_smoothto8bit(VF,aflags.sep);
-              VG1 = spm_smoothto8bit(VG,0.5); 
-          %end
+          
+          stime = cat_io_cmd('Affine registration','','',1,stime); 
+          if job.extopts.APP>0
+            VF.dt         = [spm_type('UINT8') spm_platform('bigend')];
+            VF.pinfo      = repmat([1;0],1,size(Ym,3));
+            VF.dat(:,:,:) = cat_vol_ctype(Ym*200); 
+          end
+          VF1 = spm_smoothto8bit(VF,aflags.sep);
+          VG1 = spm_smoothto8bit(VG,aflags.sep);
+          %VG1 = spm_smoothto8bit(VG,0.5); % older, possibly better
           
           
           % fine affine registration 
@@ -562,24 +530,27 @@ function cat_run_job(job,tpm,subj)
             Ysrc = single(obj.image.private.dat(:,:,:)); 
             Ysrc(isnan(Ysrc) | isinf(Ysrc)) = min(Ysrc(:));
 
-            bth = min( [ mean(single(Ysrc( Ybg(:)))) - 2*std(single(Ysrc( Ybg(:)))) , ...
+            if job.extopts.APP==1070 || job.extopts.APP==1144 
+              % APPinit is just a simple bias correction for affreg and should
+              % not be used further although it maybe helps in some cases!
+              Ymc = Ysrc; 
+            else
+              bth = min( [ mean(single(Ysrc( Ybg(:)))) - 2*std(single(Ysrc( Ybg(:)))) , ...
                          mean(single(Ysrc(~Ybg(:)))) - 4*std(single(Ysrc(~Ybg(:)))) , ...
                          min(single(Ysrc(~Ybg(:))))]); 
-
-            % add and write bias corrected (skull-stripped) image
-            if job.extopts.APP<3 % app.bias=1 is just a simple bias correction for affreg and maybe causes errors in the BWP cerebellum if used further! 
-                Ymc = Ysrc; 
-            else
-                Ymc = Ym * abs(diff([bth,WMth])) + bth; % use the bias corrected image
+              % use bias corrected image with original intensities 
+              Ymc = Ym * abs(diff([bth,WMth])) + bth; 
+              clear bth
             end
-
+            clear Ysrc; 
+            
             % set variable and write image
             obj.image.dat(:,:,:)         = Ymc;  
             obj.image.pinfo              = repmat([255;0],1,size(Ymc,3));
             obj.image.private.dat(:,:,:) = Ymc; 
 
             obj.image.dt    = [spm_type('FLOAT32') spm_platform('bigend')];
-            obj.image.pinfo = repmat([1;0],1,size(Ysrc,3));
+            obj.image.pinfo = repmat([1;0],1,size(Ymc,3));
 
             % mask the background
             if exist('Ybg','var')
@@ -657,12 +628,6 @@ function cat_run_job(job,tpm,subj)
           end
         end
         obj.Affine = Affine;
-        
-        
-        % set original non-bias corrected image
-        if job.extopts.APP==3 % job.extopts.APP==1070???
-          obj.image = spm_vol(images);
-        end
         cat_err_res.obj = obj; 
        
 
