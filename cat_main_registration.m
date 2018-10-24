@@ -327,7 +327,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
       clear mata; 
 
       % rigid parameters
-      [M3,R]        = spm_get_closest_affine( affind(rgrid( idim ) ,M0) , affind(Yy,tpmM) , single(Ycls{1})/255); clear M3;
+      [M3,R]        = spm_get_closest_affine( affind(rgrid( idim ) ,M0) , affind(Yy,tpmM) , single(Ycls{1})/255); clear M3; %#ok<ASGLU>
       Mr            = M0\inv(R)*M1t*vx2/vx3;                                      % transformation from subject to registration space
       mat0reg       = R\M1tr*vx2/vx3;                                             
       mat0r         = R\M1t*vx2/vx3;                                              % mat0 for rigid ouput
@@ -437,7 +437,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
                 sprintf('% 5d | %6.4f | %8.0f %8.0f %8.0f %8.3f \n',it0,reg(regstri).lldf(it0,:)));
               
               if it0==1 % simplified! use values after first iteration rather than before
-                [y0, dt] = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[1 0], 6); clear y0;
+                [y0, dt] = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[1 0], 6); clear y0; %#ok<ASGLU>
                 reg(regstri).ll(1,:)    =  reg(regstri).lldf(it0,:); 
                 dtx = dt; 
                 dtx(dtx>eps & dtx<1)    = 1./dtx(dtx>eps & dtx<1); 
@@ -449,7 +449,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
               end
             end 
            
-            [y0, dt] = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[1 0], 6); clear y0; 
+            [y0, dt] = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[1 0], 6); clear y0;  %#ok<ASGLU>
             reg(regstri).ll(it+1,:)    =  reg(regstri).lldf(it0,:); 
             reg(regstri).dtc(it+1)     =  mean(abs(dt(:)-1)); 
             reg(regstri).rmsdtc(it+1)  =  mean((dt(:)-1).^2).^0.5;
@@ -539,13 +539,13 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
           for ri=1:numel(reg(regstri).opt.resfac)
             vx3rr = ones(4,8); vx3rr([5,13,21,29])=rdims(ri,1); vx3rr([10,14,26,30])=rdims(ri,2); vx3rr([19,23,27,31])=rdims(ri,3); % registration image
             vxtpm = tpmM\mm; % registration image
-            Mrregs{ri} = M0\inv(R)*M1rr*vx2rr/vx3rr; %;    
             Mads{ri} = (tmpM\mm)/vx3rr;
             if rigidShooting
+              if ri==1, mat0reg = R\M1rr * vx2rr/vxtpm; end 
+              Mrregs{ri} = M0\inv(R)*M1rr*vx2rr/vx3rr; %;    
+            else
               if ri==1, mat0reg = res.Affine\M1rr * vx2rr/vxtpm; end 
               Mrregs{ri} = M0\inv(res.Affine)*M1rr*vx2rr/vx3rr;  
-            else
-              if ri==1, mat0reg = R\M1rr * vx2rr/vxtpm; end 
             end
             if ri==1, Mys{ri} = eye(4); else Mys{ri}= eye(4); Mys{ri}(1:12) = Mys{ri}(1:12) * reg(regstri).opt.resfac(ri)/reg(regstri).opt.resfac(ri-1); end;
           end
@@ -590,7 +590,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
  %R=res.Affine;
           it = 1; reg(regstri).dtc = zeros(1,5); ll  = zeros(1,3);
           while it<=nits; 
-            itime = clock;  %#ok<NASGU>
+            itime = clock;  
 
             if it==1 || (tmpl_no(it)~=tmpl_no(it-1)) 
               ti  = tmpl_no(it); %ittime(it) = clock;
@@ -598,36 +598,37 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
               if debug && it>1, fo=f{1}; end %#ok<NASGU> % just for debugging    
 
 
-              % load rigide/affine data
-              f = {zeros(rdims(ti,1:3),'single'); zeros(rdims(ti,1:3),'single'); ones(rdims(ti,1:3),'single')};  
+              %% load rigide/affine data
+              f = cell(1,n1+1); f{n1+1} = ones(rdims(ti,1:3),'single'); 
               for k1=1:n1
                 Yclsk1 = single(Ycls{k1}); 
+                f{k1}  = zeros(rdims(ti,1:3),'single');
                 if reg(regstri).opt.resfac(ti)>1, spm_smooth(Yclsk1,Yclsk1,repmat((reg(regstri).opt.resfac(ti)-1) * 2,1,3)); end
                 for i=1:rdims(ti,3),
                   f{k1}(:,:,i) = single(spm_slice_vol(Yclsk1,Mrregs{ti}*spm_matrix([0 0 i]),rdims(ti,1:2),[1,NaN])/255); 
                 end
                 msk         = ~isfinite(f{k1});
                 f{k1}(msk)  = 0;
-              %  f{n1+1}     = f{n1+1} - f{k1}; 
+                clear msk; 
               end
-              %f{n1+1}(msk) = 0.00001;
               if debug, fx = f{1}; end %#ok<NASGU> % just for debugging
 
-              % template
-              g = {zeros(rdims(ti,1:3),'single'); zeros(rdims(ti,1:3),'single'); ones(rdims(ti,1:3),'single')};  
+              %% template
+              g = cell(1,n1+1); g{n1+1} = ones(rdims(ti,1:3),'single');
               for k1=1:n1
+                g{k1} = zeros(rdims(ti,1:3),'single');
                 tpm2k1 = res.tpm2{ti}(k1).private.dat(:,:,:,k1); 
                 if reg(regstri).opt.resfac(ti)>1, spm_smooth(tpm2k1,tpm2k1,repmat((reg(regstri).opt.resfac(ti)-1) * 2,1,3)); end
                 for i=1:rdims(ti,3),
                   g{k1}(:,:,i) = single(spm_slice_vol(tpm2k1,Mads{ti}*spm_matrix([0 0 i]),rdims(ti,1:2),[1,NaN]));
                 end
-% g{k1}(isnan(g{k1}(:))) = min(g{k1}(:)); 
+                g{k1}(isnan(g{k1}(:))) = min(g{k1}(:)); % remove boundary interpolation artefact
                 g{n1+1} = g{n1+1} - g{k1};
                 if debug && k1==1, gx = g{1}; end %#ok<NASGU> % just for debugging
-                g{k1}   = spm_bsplinc(log(g{k1}), sd.bs_args);
+                g{k1} = spm_bsplinc(log(g{k1}), sd.bs_args);
               end
               g{n1+1} = log(max(g{n1+1},eps)); 
-
+%%
               if exist('Ylesion','var') && sum(Ylesion(:))>0
                 Yclsk1 = single(Ylesion); 
                 if reg(regstri).opt.resfac(ti)>1, spm_smooth(Yclsk1,Yclsk1,repmat((reg(regstri).opt.resfac(ti)-1) * 2,1,3)); end
@@ -654,9 +655,10 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
                 %Ycls{2} = cat_vol_ctype( single(Ycls{1}) + 200.*Ylesion ); 
                % clear Ylesion;
               else
-                for k1=1:numel(g)-1
-                   f{n1+1}     = f{n1+1} - f{k1}; 
+                for k1=1:numel(f)-1
+                   f{end}     = f{end} - f{k1}; 
                 end
+                msk          = ~isfinite(f{k1});
                 f{n1+1}(msk) = 0.00001;
               end
               
@@ -685,10 +687,10 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
                   for i=1:rdims(ti,3),
                     y(:,:,i,k1) = single(spm_slice_vol(yo(:,:,:,k1),Mys{ti}*spm_matrix([0 0 i]),rdims(ti,1:2),[1,NaN])) / Mys{ti}(1); % adapt for res
                   end
-                  [D,I] = cat_vbdist(single(~isnan(y(:,:,:,k1)))); % use neighbor value in case of nan
+                  [D,I] = cat_vbdist(single(~isnan(y(:,:,:,k1)))); %#ok<ASGLU> % use neighbor value in case of nan
                   y(:,:,:,k1)=y(I + ((k1-1) * numel(y)/3)); clear D I; 
                 end
-                %y(~isfinite(y))=y(find(~isfinite(y))+1); % use neighbor value in case of nan
+                y(~isfinite(y))=y(find(~isfinite(y))+1); % use neighbor value in case of nan
                 if ~debug, clear yo; end
 
                 %% size update u - flow field
@@ -699,11 +701,11 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
                     u(:,:,i,k1) = single(spm_slice_vol(uo(:,:,:,k1),Mys{ti}*spm_matrix([0 0 i]),...
                       rdims(ti,1:2),[1,NaN])) / Mys{ti}(1); % (tempres(ti) / tempres(ti-1))^2; % adapt for res 
                   end
-                  u(~isfinite(u))=eps;
                 end
+                u(~isfinite(u))=eps;
                 if ~debug, clear uo; end
 
-                % size update dt
+                %% size update dt
                 dto = dt;
                 dt  = zeros(rdims(ti,:),'single');
                 for i=1:rdims(ti,3),
@@ -740,7 +742,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
             
             llo=ll; 
             if 1 %ti<0
-              [txt,u,ll(1),ll(2),ll(3)] = evalc('spm_shoot_update(g,f,u,y,dt,prm,sd.bs_args,sd.scale)'); 
+              [txt,u,ll(1),ll(2),ll(3)] = evalc('spm_shoot_update(g,f,u,y,dt,prm,sd.bs_args,sd.scale)');  %#ok<ASGLU>
               if job.extopts.verb
                 cat_io_cprintf(sprintf('g%d',5+2*(it==1 || (tmpl_no(it)~=tmpl_no(it-1)))),sprintf('%7.4f%8.4f%8.4f%8.4f\n', ...
                   ll(1)/numel(u), ll(2)/numel(u), (ll(1)+ll(2))/numel(u), ll(3)));
@@ -768,7 +770,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
             end
 
             % default Shooting error detection
-            if 0 %any(~isfinite(dt(:)) | dt(:)>100 | dt(:)<1/100)
+            if any(~isfinite(dt(:)) | dt(:)>100 | dt(:)<1/100)
               cat_io_cprintf('err',sprintf('Problem with Shooting (dets: %g .. %g)\n', min(dt(:)), max(dt(:)))); it=inf;
             end
 
@@ -849,7 +851,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
                 if interpol
                   for i=1:3, yx(:,:,:,i) = single(interp3(yi(:,:,:,i),interpol,'cubic')); end % linear
                 end
-                yx=yx; % * regres/newres;
+                %yx=yx; % * regres/newres;
               else
                 yx=yi; % * regres/newres;
               end
@@ -886,7 +888,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
           %% preparte output directory
           if job.extopts.subfolders, mrifolder = 'mri'; else mrifolder = ''; end
           [pth,nam] = spm_fileparts(VT0.fname); 
-          [temppp,tempff] = spm_fileparts(job.extopts.templates{1}); 
+          [temppp,tempff] = spm_fileparts(job.extopts.templates{1});  %#ok<ASGLU>
           if job.extopts.regstr(regstri)==0
             testfolder = sprintf('Dartel_%s_rr%0.1f_default',tempff,newres);
           elseif job.extopts.regstr(regstri)==4
@@ -1031,7 +1033,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
             dt2 = dt2(I); dt2 = dt2 .* ((1-D) + D); 
             dt2(isnan(dt2))=1; 
           else %dartel
-            [y0, dt2] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
+            [y0, dt2] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6); %#ok<ASGLU>
             clear y0
           end
           
