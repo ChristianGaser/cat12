@@ -680,7 +680,8 @@ end
 %------------------------------------------------------------------------
   
 if expert>1
-  % different Affine registations ... not implemented
+  % different Affine registations ... not implemented yet
+  %{
   spm_affreg        = cfg_menu;
   spm_affreg.tag    = 'spm_affreg'; 
   spm_affreg.name   = 'Affine registration approach';
@@ -700,6 +701,7 @@ if expert>1
     };
   spm_affreg.values = {0 1 2 3 4};
   spm_affreg.val    = 3;
+  %}
   
   % AMAP rather than SPM segmentation 
   spm_kamap        = cfg_menu;

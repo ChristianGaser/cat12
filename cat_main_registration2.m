@@ -288,7 +288,7 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
       end
       run2 = struct(); 
       for j=1:numel(res.tpm2)
-        for i=1:2, run2(i).tpm = sprintf('%s,%d',job.extopts.templates{j},i);end
+        for i=1:n1, run2(i).tpm = sprintf('%s,%d',job.extopts.templates{j},i);end
         res.tpm2{j} = spm_vol(char(cat(1,run2(:).tpm)));
       end
 
@@ -374,7 +374,7 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
         TAR = res.Affine;
       end
 
-      n1    = 2;    % use GM/WM for dartel                
+      %n1    = 2;    % use GM/WM for dartel                
       if numel(Ycls)>n1, Ycls(n1+1:end) = []; end
       if exist('Ylesion','var') && sum(Ylesion(:))>0
         Yclso = Ycls; 
@@ -562,13 +562,13 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
           for ri=1:numel(reg(regstri).opt.resfac)
             vx3rr = ones(4,8); vx3rr([5,13,21,29])=rdims(ri,1); vx3rr([10,14,26,30])=rdims(ri,2); vx3rr([19,23,27,31])=rdims(ri,3); % registration image
             vxtpm = tpmM\mm; % registration image
-            Mrregs{ri} = M0\inv(R)*M1rr*vx2rr/vx3rr; %;    
             Mads{ri} = (tmpM\mm)/vx3rr;
             if dreg.rigidShooting
+              if ri==1, mat0reg = R\M1rr * vx2rr/vxtpm; end 
+              Mrregs{ri} = M0\inv(R)*M1rr*vx2rr/vx3rr; %;    
+            else
               if ri==1, mat0reg = res.Affine\M1rr * vx2rr/vxtpm; end 
               Mrregs{ri} = M0\inv(res.Affine)*M1rr*vx2rr/vx3rr;  
-            else
-              if ri==1, mat0reg = R\M1rr * vx2rr/vxtpm; end 
             end
             if ri==1, Mys{ri} = eye(4); else Mys{ri}= eye(4); Mys{ri}(1:12) = Mys{ri}(1:12) * reg(regstri).opt.resfac(ri)/reg(regstri).opt.resfac(ri-1); end;
           end
@@ -649,39 +649,42 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
 
  %itu = 0;
  %itx = 0; 
-              % load rigide/affine data
+              %% load rigide/affine data
               % this has to be done by linear interpolation
               % 
-              f = {zeros(rdims(ti,1:3),'single'); zeros(rdims(ti,1:3),'single'); ones(rdims(ti,1:3),'single')};  
+              f = cell(1,n1+1); f{n1+1} = ones(rdims(ti,1:3),'single'); 
               for k1=1:n1
                 Yclsk1 = single(Ycls{k1}); 
-                fnl = zeros(rdims(ti,1:3),'single');   
+                f{k1}  = zeros(rdims(ti,1:3),'single');
+                fnl    = zeros(rdims(ti,1:3),'single');   
                 if reg(regstri).opt.resfac(ti)>1, spm_smooth(Yclsk1,Yclsk1,repmat((reg(regstri).opt.resfac(ti)-1) * 2,1,3)); end
                 for i=1:rdims(ti,3),
                   f{k1}(:,:,i) = single(spm_slice_vol(Yclsk1,Mrregs{ti}*spm_matrix([0 0 i]),rdims(ti,1:2),[1,NaN])/255);
                   fnl(:,:,i)   = single(spm_slice_vol(Yclsk1,Mrregs{ti}*spm_matrix([0 0 i]),rdims(ti,1:2),[5,NaN])/255);
                 end
-                f = combine_linear_spline(f,fnl,Mrregs{ti},k1); clear fnl;
+                f           = combine_linear_spline(f,fnl,Mrregs{ti},k1); clear fnl;
                 msk         = ~isfinite(f{k1});
                 f{k1}(msk)  = 0;
                 clear msk; 
               end
               if debug, fx = f{1}; end %#ok<NASGU> % just for debugging
 
-              % template
-              g = {zeros(rdims(ti,1:3),'single'); zeros(rdims(ti,1:3),'single'); ones(rdims(ti,1:3),'single')};  
+              %% template
+              g = cell(1,n1+1); g{n1+1} = ones(rdims(ti,1:3),'single');
               for k1=1:n1
+                g{k1} = zeros(rdims(ti,1:3),'single');
                 tpm2k1 = res.tpm2{ti}(k1).private.dat(:,:,:,k1); 
                 if reg(regstri).opt.resfac(ti)>1, spm_smooth(tpm2k1,tpm2k1,repmat((reg(regstri).opt.resfac(ti)-1) * 2,1,3)); end
                 for i=1:rdims(ti,3),
                   g{k1}(:,:,i) = single(spm_slice_vol(tpm2k1,Mads{ti}*spm_matrix([0 0 i]),rdims(ti,1:2),[1,NaN]));
                 end
+                g{k1}(isnan(g{k1}(:))) = min(g{k1}(:)); % remove boundary interpolation artefact
                 g{n1+1} = g{n1+1} - g{k1};
                 if debug && k1==1, gx = g{1}; end %#ok<NASGU> % just for debugging
-                g{k1}   = spm_bsplinc(log(g{k1}), sd.bs_args);
+                g{k1} = spm_bsplinc(log(g{k1}), sd.bs_args);
               end
               g{n1+1} = log(max(g{n1+1},eps)); 
-
+%%
               if exist('Ylesion','var') && sum(Ylesion(:))>0
                 Yclsk1 = single(Ylesion); 
                 if reg(regstri).opt.resfac(ti)>1, spm_smooth(Yclsk1,Yclsk1,repmat((reg(regstri).opt.resfac(ti)-1) * 2,1,3)); end
@@ -712,8 +715,8 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
                 %Ycls{2} = cat_vol_ctype( single(Ycls{1}) + 200.*Ylesion ); 
                % clear Ylesion;
               else
-                for k1=1:numel(g)-1
-                   f{n1+1}     = f{n1+1} - f{k1}; 
+                for k1=1:numel(f)-1
+                   f{end}     = f{end} - f{k1}; 
                 end
                 msk          = ~isfinite(f{k1});
                 f{n1+1}(msk) = 0.00001;
@@ -747,7 +750,6 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
                     ynl(:,:,i)  = single( spm_slice_vol(yo(:,:,:,k1),Mys{ti}*spm_matrix([0 0 i]),rdims(ti,1:2),[5,NaN]) ) / Mys{ti}(1); % adapt for res
                   end
                   y = combine_linear_spline(y,ynl,Mys{ti},k1); clear ynl; 
- %y(:,:,:,k1) = y(I + ((k1-1) * numel(y)/3)); clear D I; 
                 end
                 y(~isfinite(y))=y(find(~isfinite(y))+1); % use neighbor value in case of nan
                 if ~debug, clear yo; end
@@ -762,8 +764,8 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
                     unl(:,:,i)  = single(spm_slice_vol(uo(:,:,:,k1),Mys{ti}*spm_matrix([0 0 i]),rdims(ti,1:2),[5,NaN])) / Mys{ti}(1); 
                   end
                   u = combine_linear_spline(u,unl,Mys{ti},k1); clear unl; 
-                  u(~isfinite(u)) = eps;
                 end
+                u(~isfinite(u)) = eps;
                 if ~debug, clear uo; end
 
                 % size update dt
@@ -900,8 +902,9 @@ end
               end
               
               
-              % accelelerate processing              
-              if (llo(1) - ll(1))/numel(u)<0.005 && ...
+              % accelelerate processing     
+              if job.extopts.regstr(regstri)~=4  && ...
+                 (llo(1) - ll(1))/numel(u)<0.005 && ...
                  (llo(2) - ll(2))/numel(u)<0.005 && ...
                  (llo(3) - ll(3))<0.01 && ll(3)<0.2 %&& ...
                  %tmpl_no(it) < max(tmpl_no)
@@ -1397,40 +1400,54 @@ function lin = combine_linear_spline(lin,spl,mat,k1)
       if ndims(lin)==4
          % set NaN to closest value
          if repnan
-          [D,I] = cat_vbdist(single(~(isnan(lin(:,:,:,k1))))); clear D; 
+          [D,I] = cat_vbdist(single(~(isnan(lin(:,:,:,k1))))); clear D;  %#ok<ASGLU>
           lint = lin(:,:,:,k1); 
           lint = lint(I); spl = spl(I); clear I; 
           lin(:,:,:,k1) = lint; clear lint;
          end
          
         lin(:,:,:,k1)   = lin(:,:,:,k1) .* (1-msk) + spl .* msk; 
+        
+        lini = lin(:,:,:,k1); 
+        lini(~isfinite(lini))=lini(mod(find(~isfinite(lini))+1,numel(lini)));
+        lin(:,:,:,k1) = lini;  
       elseif ndims(lin)==5
         if repnan
-          [D,I] = cat_vbdist(single(~(isnan(lin(:,:,:,:,k1))))); clear D; 
+          [D,I] = cat_vbdist(single(~(isnan(lin(:,:,:,:,k1))))); clear D; %#ok<ASGLU> 
           lint = lin(:,:,:,:,k1); 
           lint = lint(I); spl = spl(I); clear I; 
           lin(:,:,:,:,k1) = lint; clear lint;
         end
         
         lin(:,:,:,:,k1) = lin(:,:,:,:,k1) .* (1-msk) + spl .* msk; 
+        
+        lini = lin(:,:,:,:,k1); 
+        lini(~isfinite(lini))=lini(mod(find(~isfinite(lini))+1,numel(lini)));
+        lin(:,:,:,:,k1) = lini;  
       end
+     
     else
       if repnan
-        [D,I] = cat_vbdist(single(~(isnan(lin{k1})))); 
+        [D,I] = cat_vbdist(single(~(isnan(lin{k1})))); %#ok<ASGLU> 
         lin{k1} = lin{k1}(I); spl = spl(I); clear D I; 
       end
       
       lin{k1}(:,:,:) = lin{k1}(:,:,:) .* (1-msk) + spl .* msk; 
+      
+      lin{k1}(~isfinite(lin{k1}))=lin{k1}(find(~isfinite(lin{k1}))+1);
     end
   else
      % set NaN to closest value
     if repnan
-      [D,I] = cat_vbdist(single(~(isnan(lin)))); 
+      [D,I] = cat_vbdist(single(~(isnan(lin))));  %#ok<ASGLU>
       lin = lin(I); spl = spl(I); clear D I; 
     end
     
     lin(:,:,:) = lin(:,:,:) .* (1-msk) + spl .* msk; 
+    
+    lin(~isfinite(lin))=lin(mod(find(~isfinite(lin))+1,numel(lin)));
   end
+  
 end
 %=======================================================================
 function x = rgrid(d)

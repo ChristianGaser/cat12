@@ -1725,7 +1725,7 @@ end
   end
   
   %% call Dartel/Shooting registration 
-  if job.extopts.new_release 
+  if 0 %job.extopts.new_release % ... there is an error
     [trans,res.ppe.reg] = cat_main_registration2(job,res,Yclsd,Yy,tpm.M,Ylesions);
   else
     [trans,res.ppe.reg] = cat_main_registration(job,res,Yclsd,Yy,tpm.M,Ylesions);
@@ -2818,6 +2818,7 @@ if job.extopts.print
     if job.extopts.print>1
       if exist('Psurf','var')
         try
+          spm_figure('Focus','Graphics'); 
           hCS = subplot('Position',[0.50 0.05 0.55 0.30],'visible','off'); 
           hSD = cat_surf_display(struct('data',Psurf(1).Pthick,'readsurf',0,'expert',2,...
             'multisurf',job.output.surface,'view','s',...
