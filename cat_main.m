@@ -91,7 +91,6 @@ end
 if do_dartel<2, job.extopts.templates = job.extopts.darteltpms; else job.extopts.templates = job.extopts.shootingtpms; end % for LAS
 res.do_dartel = do_dartel;
 
-
 stime = cat_io_cmd('SPM preprocessing 2 (write)');
 if ~isfield(res,'spmpp')
   if job.extopts.verb>1, fprintf('\n'); end
@@ -411,8 +410,8 @@ if ~isfield(res,'spmpp')
   [cat_err_res.init.Yp0,cat_err_res.init.BB] = cat_vol_resize(Yp0,'reduceBrain',vx_vol,2,Yp0>0.5); 
   cat_err_res.init.Yp0 = cat_vol_ctype(cat_err_res.init.Yp0/3*255);
 
-
-  if isfield(res,'msk')
+% ### This can not be reached because the mask field is removed by SPM! ###
+  if isfield(res,'msk') 
     Ybg = ~res.msk.dat; 
     P4  = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc<T3th(2))  .* (Ybg==0) + single(P(:,:,:,4)) .* (Ybg<1) ); % remove air in head
     P5  = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc>=T3th(2)) .* (Ybg==0) + single(P(:,:,:,5)) .* (Ybg<1) ); % remove air in head
@@ -481,9 +480,10 @@ if ~isfield(res,'spmpp')
     Ym = Ym / 3; 
     clear M; 
     
-    for k1=1:3, Ycls{k1} = P(:,:,:,k1); end 
-    Yb = cat_main_gcut(Ym,Yp0>0.1,Ycls,Yl1,false(size(Ym)),vx_vol,...
-      struct('gcutstr',0.1,'verb',0,'LAB',job.extopts.LAB,'LASstr',0,'red',1)); 
+    for k1=1:size(P,4), Ycls{k1} = P(:,:,:,k1); end 
+    Yb = (Ycls{1}+Ycls{2}+Ycls{3})>128; 
+    %Yb = cat_main_gcut(Ym,Yp0>0.1,Ycls,Yl1,false(size(Ym)),vx_vol,...
+    %  struct('gcutstr',0.1,'verb',0,'LAB',job.extopts.LAB,'LASstr',0,'red',1)); 
     clear Ycls; 
     Ybb  = cat_vol_ctype(cat_vol_smooth3X(Yb,2)*255); 
     
@@ -2459,11 +2459,11 @@ if job.extopts.print
     % 1 line 1: Affreg
     str = [str struct('name', 'affreg:','value',sprintf('%s',job.opts.affreg))];
     % 1 line 2: APP
-    APPstr = {'none','light','full','APPi','APPf','animal'}; APPstr{1071} = 'APP'; 
+
+    APPstr = {'none','light','full','','','animal'}; APPstr{1071} = 'rough'; APPstr{1145} = 'rough(new)'; 
     str(end).name  = [str(end).name(1:end-1) ' / APP ']; 
-    try
-      str(end).value = [str(end).value sprintf(' / %s',APPstr{job.extopts.APP+1})];
-    end
+    str(end).value = [str(end).value sprintf(' / %s',APPstr{job.extopts.APP+1})];
+
     % 1 line 3: biasstr / biasreg+biasfwhm
     if job.opts.biasstr>0
       biasstr = {'ultralight','light','medium','strong','heavy'};
@@ -2475,6 +2475,19 @@ if job.extopts.print
     else
       str(end).name  = [str(end).name(1:end-1) ' / biasreg / biasfwhm'];
       str(end).value = [str(end).value sprintf(' / %0.2f / %0.2f',job.opts.biasreg,job.opts.biasfwhm)]; 
+    end
+    if isfield(job.opts,'acc') && job.opts.acc>0
+      str = [str struct('name', '','value','')];
+      accstr = {'ultra low','low','std','high','ultra high'};
+      str(end).name  = [str(end).name(1:end-1) 'SPM accuracy (samp/tol) '];  
+      str(end).value = [str(end).value sprintf(' / %s',accstr{round(job.opts.acc*4)+1})];
+      if job.extopts.expertgui % add the value
+        str(end).value = [str(end).value sprintf('%0.2f (%0.2f/%0.2f)',job.opts.acc,job.opts.samp,job.opts.tol)]; 
+      end
+    else
+      str = [str struct('name', '','value','')];
+      str(end).name  = [str(end).name(1:end-1) 'SPM accuracy (samp/tol)'];
+      str(end).value = [str(end).value sprintf('%0.2f / %0.2f',job.opts.samp,job.opts.tol)]; 
     end
 
 
@@ -2508,11 +2521,14 @@ if job.extopts.print
 
     % 1 line(s): LASstr / GCUTstr / CLEANUPstr
     str(end).name  = 'LASstr / GCUTstr / CLEANUPstr:';
+    gcutstr  = {'none','SPM','GCUT','APRG'};  
     if ~job.extopts.expertgui
-      str(end).value = sprintf('%s / %s / %s',defstrm(job.extopts.LASstr),defstrm(job.extopts.gcutstr),defstrm(job.extopts.cleanupstr)); 
+      str(end).value = sprintf('%s / %s / %s',defstrm(job.extopts.LASstr),...
+        gcutstr{ceil(job.extopts.gcutstr+2)},defstrm(job.extopts.cleanupstr)); 
     else
-      str(end).value = sprintf('%s(%0.2f) / %s(%0.2f) / %s(%0.2f)',defstrm(job.extopts.LASstr),job.extopts.LASstr,...
-        defstrm(job.extopts.gcutstr),job.extopts.gcutstr,defstrm(job.extopts.cleanupstr),job.extopts.cleanupstr); 
+      str(end).value = sprintf('%s(%0.2f) / %s(%0.2f) / %s(%0.2f)',...
+        defstrm(job.extopts.LASstr),job.extopts.LASstr,defstrm(job.extopts.gcutstr),...
+        job.extopts.gcutstr,defstrm(job.extopts.cleanupstr),job.extopts.cleanupstr); 
     end
     restype = char(fieldnames(job.extopts.restypes));
     if job.extopts.expertgui
@@ -2744,10 +2760,7 @@ if job.extopts.print
     Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
     if exist('Yo','var')
       if job.inv_weighting
-        WMth = min([...
-          cat_stat_nanmedian(Yo(Yp0(:)>0.8 & Yp0(:)<1.2))*2,...
-          cat_stat_nanmedian(Yo(Yp0(:)>1.8 & Yp0(:)<2.2))*1.5,...
-          ]);
+        WMth = cat_stat_nanmedian(Yo(Yp0(:)>2.5 & Yp0(:)<3.5))/2*3;
         T1txt = '*.nii (Original PD/T2)'; 
       else
         WMth = cat_stat_nanmedian(Yo(Yp0(:)>2.8 & Yp0(:)<3.2)); clear Yo; 

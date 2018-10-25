@@ -606,7 +606,7 @@ function cat_run_job(job,tpm,subj)
                 obj.tpm.V(k).pinfo = repmat([1;0],1,size(Ybg,3));
               end
             end
-            
+
             obj.tpm.V(4).dat = Ybg;
             obj.tpm.dat{4}   = Ybg; 
             obj.tpm.V(4).pinfo = repmat([1;0],1,size(Ybg,3));
@@ -619,7 +619,9 @@ function cat_run_job(job,tpm,subj)
             obj.tpm.bg2(5:6) = [];
             obj.tpm.V = rmfield(obj.tpm.V,'private');
             
-            job.opts.ngaus = 3*ones(4,1); % this is more safe
+            % tryed 3 peaks per class, but BG detection error require manual 
+            % correction (set 0) that is simple with only one class  
+            job.opts.ngaus = [([job.tissue(1:3).ngaus])';1]; % 3*ones(4,1);1; 
             obj.lkp        = [];
             for k=1:numel(job.opts.ngaus)
               job.tissue(k).ngaus = job.opts.ngaus(k);
@@ -648,7 +650,13 @@ function cat_run_job(job,tpm,subj)
             res.image1 = image1; 
             clear reduce; 
           end
+<<<<<<< .mine
+          % unknown BG detection problems in INDI_NHa > manual setting
+          if ppe.affreg.skullstripped, res.mn(end) = 0; end 
+
+=======
          
+>>>>>>> .r1380
         catch
             if any( (vx_vol ~= vx_voli) ) || ~strcmp(job.extopts.species,'human') 
                 [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});
