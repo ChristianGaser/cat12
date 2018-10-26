@@ -650,13 +650,10 @@ function cat_run_job(job,tpm,subj)
             res.image1 = image1; 
             clear reduce; 
           end
-<<<<<<< .mine
+
           % unknown BG detection problems in INDI_NHa > manual setting
           if ppe.affreg.skullstripped, res.mn(end) = 0; end 
 
-=======
-         
->>>>>>> .r1380
         catch
             if any( (vx_vol ~= vx_voli) ) || ~strcmp(job.extopts.species,'human') 
                 [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});

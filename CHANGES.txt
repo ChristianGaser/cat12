@@ -1,5 +1,40 @@
 ------------------------------------------------------------------------
-r1381 | dahnke | 2018-10-25 17:24:07
+r1382 | dahnke | 2018-10-26 22:27:50
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_opts.m
+A       cat_run1173
+A       cat_run1173/cat_conf_ROI1173.m
+A       cat_run1173/cat_conf_extopts1173.m
+A       cat_run1173/cat_conf_long1173.m
+A       cat_run1173/cat_conf_opts1173.m
+A       cat_run1173/cat_defaults1173.m
+A       cat_run1173/cat_get_defaults1173.m
+A       cat_run1173/cat_long_main1173.m
+A       cat_run1173/cat_long_multi_run1173.m
+A       cat_run1173/cat_main1173.m
+A       cat_run1173/cat_main_LAS1173.m
+A       cat_run1173/cat_main_gcut1173.m
+A       cat_run1173/cat_main_registration1173.m
+A       cat_run1173/cat_run1173.m
+A       cat_run1173/cat_run_job10701173.m
+A       cat_run1173/cat_run_job1173.m
+A       cat_run1173/cat_run_job_APP_SPM1173.m
+A       cat_run1173/cat_run_job_APP_final.m
+A       cat_run1173/cat_run_job_APP_init10701173.m
+A       cat_run1173/cat_run_newcatch1173.m
+A       cat_run1173/cat_tst_qa1173.m
+A       cat_run1173/cat_vol_isarnlm.m
+A       cat_run1173/cat_vol_partvol1173.m
+A       cat_run1173/cat_vol_sanlm1173.m
+M       cat_run_job.m
+M       tbx_cfg_cat.m
+
+(1) New:    Added old preprocessing pipeline 1173 and related functions.      
+(2) Fixed:  Corrected small bugs in cat_conf_opts und cat_run_job.
+------------------------------------------------------------------------
+r1381 | dahnke | 2018-10-25 17:24:14 +0200 (Do, 25 Okt 2018) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +45,7 @@ A       html/icons/status_failed.old.png
 (1) Fixed:      Corrected PD/T2 skull-stripping error. 
 (2) Fixed:      Corrected background error in skull-stripped data.
 (3) Fixed:      Updated output of cat_report.
+
 ------------------------------------------------------------------------
 r1380 | dahnke | 2018-10-24 17:15:09 +0200 (Mi, 24 Okt 2018) | 14 lines
 
