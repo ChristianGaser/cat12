@@ -8,6 +8,7 @@ function cat = tbx_cfg_cat
 %#ok<*AGROW>
  
 addpath(fileparts(which(mfilename)));
+addpath(fullfile(fileparts(which(mfilename)),'cat_run1173'));
 
 %% ------------------------------------------------------------------------
 try
@@ -393,15 +394,14 @@ warps.help   = {
 };
 
 %% ------------------------------------------------------------------------
-tools      = cat_conf_tools(expert);     % volume tools
-stools     = cat_conf_stools(expert);    % surface tools
+tools       = cat_conf_tools(expert);     % volume tools
+stools      = cat_conf_stools(expert);    % surface tools
 if expert 
-  stoolsexp  = cat_conf_stoolsexp;       % surface expert tools
+  stoolsexp = cat_conf_stoolsexp;       % surface expert tools
 end
-extopts    = cat_conf_extopts(expert);   
-opts       = cat_conf_opts(expert); 
-ROI        = cat_conf_ROI(expert);       % ROI options
-
+extopts     = cat_conf_extopts(expert);   
+opts        = cat_conf_opts(expert); 
+ROI         = cat_conf_ROI(expert);       % ROI options
 %------------------------------------------------------------------------
 output      = cfg_branch;
 output.tag  = 'output';
@@ -423,9 +423,36 @@ output.help = {
 ''
 'The value of dx''/dy is a measure of how much x'' changes if y is changed by a tiny amount. The determinant of the Jacobian is the measure of relative volumes of warped and unwarped structures.  The modulation step simply involves multiplying by the relative volumes.'};
 
-
-
+%%
 %------------------------------------------------------------------------
+% R1173
+%------------------------------------------------------------------------
+warped.def    = @(val)cat_get_defaults1173('output.jacobian.warped', val{:});
+jacobian      = cfg_branch;
+jacobian.tag  = 'jacobian';
+jacobian.name = 'Jacobian determinant';
+jacobian.val  = {warped};
+jacobian.help = {
+  'This is the option to save the Jacobian determinant, which expresses local volume changes. This image can be used in a pure deformation based morphometry (DBM) design. Please note that the affine part of the deformation field is ignored. Thus, there is no need for any additional correction for different brain sizes using ICV.'
+''
+};
+
+extopts1173 = cat_conf_extopts1173(expert);   
+opts1173    = cat_conf_opts1173(expert); 
+[ROI1173,atlases1173] = cat_conf_ROI1173(expert);       % ROI options
+
+
+output1173 = output;
+if expert==2
+  output1173.val  = {surface ROI1173 atlases1173 grey white csf wmh tpmc atlas label bias las jacobian warps}; 
+elseif expert==1
+  output1173.val  = {surface ROI1173 atlases1173 grey white csf wmh label bias las jacobian warps};
+else
+  output1173.val  = {surface ROI1173 grey white jacobian warps};
+end
+
+
+%% ------------------------------------------------------------------------
 estwrite        = cfg_exbranch;
 estwrite.tag    = 'estwrite';
 estwrite.name   = 'CAT12: Segmentation';
@@ -452,6 +479,17 @@ estwrite.help   = {
 
 %------------------------------------------------------------------------
 % CAT surface processing with existing SPM segmentation 
+
+estwrite1173        = estwrite; 
+estwrite1173.name   = 'CAT12: Segmentation R1173 (2017/09)';
+estwrite1173.prog   = @cat_run1173;
+estwrite1173.help   = [estwrite1173.help;{'';'This batch calls the stable version of the main preprocessing routing R1173.';''}];
+
+if feature('numcores') > 1
+  estwrite1173.val  = {data nproc opts1173 extopts1173 output1173}; 
+else
+  estwrite1173.val  = {data opts1173 extopts1173 output1173};
+end
 
 extopts_spm = cat_conf_extopts(expert,1);   
 output_spm  = output; 
@@ -483,11 +521,11 @@ cat        = cfg_choice;
 cat.name   = 'CAT12';
 cat.tag    = 'cat';
 if expert==2
-  cat.values = {estwrite estwrite_spm tools stools stoolsexp};
+  cat.values = {estwrite estwrite1173 estwrite_spm tools stools stoolsexp};
 elseif expert==1
-  cat.values = {estwrite estwrite_spm tools stools};
+  cat.values = {estwrite estwrite1173 estwrite_spm tools stools};
 else
-  cat.values = {estwrite tools stools}; 
+  cat.values = {estwrite estwrite1173 tools stools}; 
 end
 %------------------------------------------------------------------------
 
