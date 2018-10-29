@@ -93,7 +93,9 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
     fwhmx  = 3:-1/4:1; 
     sampx  = 2:-1/(numel(fwhmx)-1):1.0; 
   elseif job.opts.biasfwhm>=45 && job.opts.biasfwhm<75      % medium (6 iterations) 
-    fwhmx  = 3:-1/2:1/2; 
+%    fwhmx  = 3:-1/2:1/2; 
+%    sampx  = 2:-1/(numel(fwhmx)-1):1.0; 
+    fwhmx  = [2,1,1/2]; 
     sampx  = 2:-1/(numel(fwhmx)-1):1.0; 
   elseif job.opts.biasfwhm>=75                              % light (3 iteration)
     fwhmx  = 2:-3/4:1/2; 
@@ -289,7 +291,7 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
   Pmn = fullfile(pp,mrifolder,['mn' ff '.nii']); 
   if exist(Pmn,'file'), delete(Pmn); end
 
-  % output variables
+  %% output variables
   BGth = mean(vout.res.mn(vout.res.lkp(:)==6) .* vout.res.mg(vout.res.lkp(:)==6)');
   WMth = mean(vout.res.mn(vout.res.lkp(:)==2) .* vout.res.mg(vout.res.lkp(:)==2)');
   Ym   = (vout.Ym - BGth) ./ (WMth - BGth); 
@@ -313,10 +315,10 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
 
     try
       if isinf(job.opts.biasstr), catbias = 1 - (bias(1)-30)/60; else catbias = job.opts.biasstr; end
-      Ym = cat_run_job_APP_SPMfinal(onfname,vout,vx_vol * (2 - strcmp(job.extopts.species,'human')),...
+      [Yo,Ym] = cat_run_job_APP_SPMfinal(onfname,vout,vx_vol * (2 - strcmp(job.extopts.species,'human')),...
         job.extopts.verb-1,catbias); 
-      spm_write_vol(spm_vol(nfname),Ym);  
-      if ~debug, clear vout Ym0 YM2; end  
+      spm_write_vol(spm_vol(nfname),Yo);  
+     if ~debug, clear vout Yo Ym0 YM2; end  
       if spmp0
         copyfile(nfname,fullfile(pp,mrifolder,['mn' ff '_r' num2str(ix)+2 '.nii'])); 
       end
