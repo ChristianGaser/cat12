@@ -86,8 +86,9 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     clear defaults cat12;
     
     % matlab command, cprintferror=1 for simple printing         
-    matlab_cmd = sprintf('"global cprintferror; cprintferror=1; addpath %s %s %s %s %s; load %s; cat_run1173(job); "',...
-      spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),spm('dir'),fullfile(spm('dir'),'toolbox','cat12','cat_run1173'), ...
+    matlab_cmd = sprintf('"global cprintferror; cprintferror=1; addpath %s %s %s %s %s %s; load %s; cat_run(job); "',...
+      spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),spm('dir'),...
+      fullfile(spm('dir'),'toolbox','cat12','cat_run1173'), ...
         fullfile(spm('dir'),'toolbox','OldNorm'),fullfile(spm('dir'),'toolbox','DARTEL'), tmp_name);
 
     % log-file for output
@@ -104,7 +105,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
              '         please do not use any spaces in folder names!\n\n']);
          job.nproc = 0; 
          job = update_job(job);
-         varargout{1} = run_job1173(job);
+         varargout{1} = run_job(job);
          return; 
       end
       % prepare system specific path for matlab
