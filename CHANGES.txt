@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1382 | dahnke | 2018-10-26 22:27:50
+r1383 | dahnke | 2018-10-29 07:08:28
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_opts.m
+M       cat_run1173/cat_run1173.m
+MM      cat_run_job_APP_SPMinit.m
+ M      html/icons/status_failed.old.png
+
+(1) Fixed:  Corrected bugs in cat_conf_opts and cat_run1173.
+
+------------------------------------------------------------------------
+r1382 | dahnke | 2018-10-26 22:28:41 +0200 (Fr, 26 Okt 2018) | 33 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -33,6 +45,7 @@ M       tbx_cfg_cat.m
 
 (1) New:    Added old preprocessing pipeline 1173 and related functions.      
 (2) Fixed:  Corrected small bugs in cat_conf_opts und cat_run_job.
+
 ------------------------------------------------------------------------
 r1381 | dahnke | 2018-10-25 17:24:14 +0200 (Do, 25 Okt 2018) | 10 lines
 
