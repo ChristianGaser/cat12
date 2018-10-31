@@ -25,6 +25,11 @@ function  [Ymc,Ymi] = cat_run_job_APP_SPMfinal(Po,vout,vx_vol,verb,fstr)
   
   Vo   = spm_vol(Po);
   Yo   = single(spm_read_vols(Vo));
+  %{
+  Ybd = ones(size(Yo)); Ybd(3:end-2,3:end-2,3:end-2) = 0; 
+  [D,I] = cat_vbdist(single(~(isnan(Yo) | (Ybd & Yo>0.3)) ),true(size(Yo))); clear D;  %#ok<ASGLU>
+  Yo = min(Yo,Yo(I)); clear I
+  %}
   Ym   = vout.Ym; 
   Ymo  = Ym; 
   Ycls = vout.Ycls; 
@@ -34,7 +39,7 @@ function  [Ymc,Ymi] = cat_run_job_APP_SPMfinal(Po,vout,vx_vol,verb,fstr)
   % general resolution limitation 
   [Ym,resTM] = cat_vol_resize(Ym,'reduceV',vx_vol,resMth,32,'meanm');
   Yo         = cat_vol_resize(Yo,'reduceV',vx_vol,resMth,32,'meanm');
-  for i=1:6, Ycls{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,resMth,32); end
+  for i=1:numel(Ycls), Ycls{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,resMth,32); end
   vx_vol = resTM.vx_volr;
 
  
@@ -89,13 +94,14 @@ function  [Ymc,Ymi] = cat_run_job_APP_SPMfinal(Po,vout,vx_vol,verb,fstr)
   if ~debug, clear Yssc; end 
   
   %% cortex close to head
-  Yct = Yb & Ycsfd>0 & Ycsfd<2.5 & Yhd<0.2 & cat_vol_smooth3X(Ycls{6}>128,16)>0.01 & Ymi>0.5 & (Yg./Ymi)<4*gth & Ycls{2}<192 & Ycls{3}<192;
+  Yct = Yb & Ycsfd>0 & Ycsfd<2.5 & Yhd<0.2 & cat_vol_smooth3X(Ycls{end}>128,16)>0.01 & Ymi>0.5 & (Yg./Ymi)<4*gth & Ycls{2}<192 & Ycls{3}<192;
   Yct(smooth3(Yct)<0.5) = 0;
-  Ycw = Yb & Ycsfd>0 & Ycsfd<4 & Yhd<0.2 & cat_vol_smooth3X(Ycls{6}>128,16)>0.01 & Ymi>0.9 & Ycls{1}<128 & Ycls{3}<128 & ~Yct & Yb;
+  Ycw = Yb & Ycsfd>0 & Ycsfd<4 & Yhd<0.2 & cat_vol_smooth3X(Ycls{end}>128,16)>0.01 & Ymi>0.9 & Ycls{1}<128 & Ycls{3}<128 & ~Yct & Yb;
   Ycw(smooth3(Ycw)<0.5) = 0;
   
   %% WM
-  Ywm = cat_vol_morph(cat_vol_morph(Ycls{2}>8 & Ycls{5}<192,'l'),'lc'); 
+  if numel(Ycls)>4, Ywm = Ycls{2}>8 & Ycls{5}<192; else Ywm = Ycls{2}>8; end
+  Ywm = cat_vol_morph(cat_vol_morph(Ywm,'l'),'lc'); 
   Ywm = Yb & (Ywm | cat_vol_morph(Ymi>.95 & Ymi<1.2 & Yp0>2 & (Yp0<1.8 | Yp0>2.2) ,'lc')) &  ...
         Ycls{1}<240 & Ycls{3}<32 & Yg<0.5 & abs(Ydiv)<0.5 & Ycsfd>2 & ~Yss & ~Yct;
   Ywm = Ywm | Ycw | (Yb & Ymi-Ydiv+((Ycsfd-3)/10)>0.9 & Ydiv<-0.05 & Ycls{1}<240 & Ycls{3}<32 & ~Yss & ~Yct); 
@@ -127,9 +133,11 @@ function  [Ymc,Ymi] = cat_run_job_APP_SPMfinal(Po,vout,vx_vol,verb,fstr)
   %% HM 
   %  there is now way to use high intensity information from the scull, but
   %  it is possbile to use the large areas of mussels 
+  Ybd = ones(size(Yo)); Ybd(3:end-2,3:end-2,3:end-2) = 0; 
   Yhm = Ybd>2 & smooth3( Yg>gth*2 | Ymi>1.2 | Ydiv<-0.1)>0.5; 
-  Yhm = Yg./Ymi<gth & ~Yb & abs(Ydiv)<0.2 & Ycls{6}<128 & Ym<T3th(3)*1.5 & (Ybd>10 | Ycls{5}>128) & Ycls{4}<128 & ...
-    Ydiv>-0.2 & Ydiv<0.2 & ~Yhm & cat_vol_smooth3X(Ycls{6}>128,4)<0.5 & Ymi>gth;
+  if numel(Ycls)>4, Yht = Ycls{5}>128; else Yht = zeros(size(Yhm)); end
+  Yhm = Yg./Ymi<gth & ~Yb & abs(Ydiv)<0.2 & Ycls{end}<128 & Ym<T3th(3)*1.5 & (Ybd>10 | Yht) & Ycls{4}<128 & ...
+    Ydiv>-0.2 & Ydiv<0.2 & ~Yhm & cat_vol_smooth3X(Ycls{end}>128,4)<0.5 & Ymi>gth & ~Ybd;
   Yhmi = cat_vol_localstat(Yhm.*Ymi,Yhm,1,2);
   Yhm(abs(((Yhm.*Ymi)./Yhmi)-Yhm)>0.5 | abs(((Yhm.*Ymi)./Yhmi)-Yhm)==0)=0;
   Yhm(smooth3(Yhm)<0.6)=0; 
@@ -138,8 +146,8 @@ function  [Ymc,Ymi] = cat_run_job_APP_SPMfinal(Po,vout,vx_vol,verb,fstr)
   %% HBG
   %  In MR protocols with high intensity background (e.g., MP2Rage and R1)
   %  we can use the intensity information for our bias field estiamtion
-  if mean(Yo(Ycls{6}(:)>192)) > T3th(2)
-    Yhbg = Ycls{6}>96 & Yo > mean(T3th(1)) & ~isnan(Yo) & ~isinf(Yo) & Ydiv>-0.1 & Yg<gth*2;
+  if mean(Yo(Ycls{end}(:)>192)) > T3th(2)
+    Yhbg = Ycls{end}>96 & Yo > mean(T3th(1)) & ~isnan(Yo) & ~isinf(Yo) & Ydiv>-0.1 & Yg<gth*2;
     Yhbg = cat_vol_morph(Yhbg,'c',2); 
     Yhm(Yhbg)=0; Ywm(Yhbg)=0; Ygm(Yhbg)=0; 
     if exist('Ycm','var'), Ycm(Yhbg)=0; end
@@ -200,16 +208,21 @@ function  [Ymc,Ymi] = cat_run_job_APP_SPMfinal(Po,vout,vx_vol,verb,fstr)
   end
   %if exist('Ya','var'); Ywi(Ya) = Yo(Ya)*(T3th(3)/T3th(2)); Ywi = cat_vol_laplace3R(Ywi,cat_vol_smooth3X(Ya,2)>0.1,0.2); end
   if debug
-    Ymc = Yo ./ Ywi; Ymc = cat_main_gintnorm(Ymc * (mean(Ym(Ywm(:)))/mean(Ymc(Ywm(:)))) ,Txth); 
+    Ymc = Yo ./ max(eps,Ywi); Ymc = cat_main_gintnorm(Ymc * (mean(Ym(Ywm(:)))/mean(Ymc(Ywm(:)))) ,Txth); 
   end
-
+  
   %%
   Ywi = cat_vol_resize(Ywi,'dereduceV',resTM); 
   Ywm = cat_vol_resize(Ywm,'dereduceV',resTM)>0.9; 
   Yo  = single(spm_read_vols(Vo));
-  Ymc = Yo ./ Ywi; Ymc = Ymc * (mean(Ymo(Ywm(:)))/mean(Ymc(Ywm(:))));
+  Ymc = Yo ./ max(eps,Ywi); Ymc = Ymc * (mean(Ymo(Ywm(:)))/mean(Ymc(Ywm(:))));
   cat_io_cmd(' ','','',verb,stime); 
 
+  % replace bad values (NANs and extremly high intensities (eg. interpolation artefacts)
+  Ybd = ones(size(Yo)); Ybd(3:end-2,3:end-2,3:end-2) = 0; 
+  [D,I] = cat_vbdist(single(~(isnan(Ymc) | (Ybd & Yo>0.3)) ),true(size(Ymc))); clear D;  %#ok<ASGLU>
+  Ymc = min(Ymc,Ymc(I)); clear I
+  
   if nargout>1
     Ymi = cat_main_gintnorm(Ymc * (mean(Ym(Ywm(:)))/mean(Ymc(Ywm(:)))) ,Txth); 
   end

@@ -1,4 +1,4 @@
-function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfname,mrifolder)
+function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfname,mrifolder,skullstripped)
 %% APP bias correction (APP1 and APP2)
 %  ------------------------------------------------------------
 %  Bias correction is essential for stable affine registration. 
@@ -45,7 +45,43 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
   %preproc.warp.fwhm           = 0;
   %preproc.warp.samp           = min(9,max(2,job.opts.samp*2));
 
-  % add noise in zero regions (skull-stripping / defacing)
+   if skullstripped 
+    %% update number of SPM gaussian classes 
+    preproc.tpm = tpm; 
+    Ybg = 1 - spm_read_vols(preproc.tpm.V(1)) - spm_read_vols(preproc.tpm.V(2)) - spm_read_vols(preproc.tpm.V(3));
+    if 1
+      for k=1:3
+        preproc.tpm.dat{k}     = spm_read_vols(preproc.tpm.V(k));
+        preproc.tpm.V(k).dt(1) = 64;
+        preproc.tpm.V(k).dat   = double(preproc.tpm.dat{k});
+        preproc.tpm.V(k).pinfo = repmat([1;0],1,size(Ybg,3));
+      end
+    end
+    preproc.tissue(5:end)  = []; 
+    preproc.tpm.V(4).dat   = Ybg;
+    preproc.tpm.dat{4}     = Ybg; 
+    preproc.tpm.V(4).pinfo = repmat([1;0],1,size(Ybg,3));
+    preproc.tpm.V(4).dt(1) = 64;
+    preproc.tpm.dat(5:6)   = []; 
+    preproc.tpm.V(5:6)     = []; 
+    preproc.tpm.bg1(4)     = preproc.tpm.bg1(6);
+    preproc.tpm.bg2(4)     = preproc.tpm.bg1(6);
+    preproc.tpm.bg1(5:6)   = [];
+    preproc.tpm.bg2(5:6)   = [];
+    preproc.tpm.V          = rmfield(preproc.tpm.V,'private');
+
+    % tryed 3 peaks per class, but BG detection error require manual 
+    % correction (set 0) that is simple with only one class  
+    job.opts.ngaus = [([job.tissue(1:3).ngaus])';1]; % 3*ones(4,1);1; 
+    preproc.lkp        = [];
+    for k=1:numel(job.opts.ngaus)
+      preproc.ngaus(k)        = job.opts.ngaus(k);
+      preproc.tissue(k).ngaus = job.opts.ngaus(k);
+      preproc.lkp             = [preproc.lkp ones(1,job.tissue(k).ngaus)*k];
+    end
+  end
+  
+  %% add noise in zero regions (skull-stripping / defacing)
   VF = spm_vol(nfname);
   YF = single(spm_read_vols(VF));
   % some average object intensity 
@@ -67,6 +103,8 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
   end
   % force floating point
   VF.dt(1) = 16; 
+  VF = rmfield(VF,'private'); 
+  if exist(VF.fname,'file'); delete(VF.fname); end
   spm_write_vol(VF,YF);  
   clear VF YF Tthn; 
             
@@ -95,7 +133,7 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
   elseif job.opts.biasfwhm>=45 && job.opts.biasfwhm<75      % medium (6 iterations) 
 %    fwhmx  = 3:-1/2:1/2; 
 %    sampx  = 2:-1/(numel(fwhmx)-1):1.0; 
-    fwhmx  = [2,1,1/2]; 
+    fwhmx  = [2,1]; %,1/2]; 
     sampx  = 2:-1/(numel(fwhmx)-1):1.0; 
   elseif job.opts.biasfwhm>=75                              % light (3 iteration)
     fwhmx  = 2:-3/4:1/2; 
@@ -104,7 +142,7 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
   
 
   spmp0    = debug;  % job.extopts.verb>1; % for debugging: 0 - remove all APP data, 1 - save Ym, 2 - save Ym and Yp0
-  optimize = 0;      % use low resolution (in mm) input image to increase speed >> limited speed advante :/
+  optimize = 0;      % use low resolution (in mm) input image to increase speed >> limited speed advantage :/
                      % deformation requires a lot of time ... maybe its enough to use it only in case of ultra highres data
   if any(vx_vol<1.5), optimize = 1.5; end            
 
@@ -115,23 +153,23 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
   if optimize>0 
     %% lower resolution to improve SPM processing time and use smoothing for denoising
     Vi        = spm_vol(nfname); 
-    Vi        = rmfield(Vi,'private'); Vn = Vi; 
+    Vi        = rmfield(Vi,'private'); Vn = Vi;
     imat      = spm_imatrix(Vi.mat); 
     Vi.dim    = round(Vi.dim .* vx_vol./repmat(optimize,1,3));
     imat(7:9) = repmat(optimize,1,3) .* sign(imat(7:9));
     Vi.mat    = spm_matrix(imat);
 
     spm_smooth(nfname,nfname,repmat(0.75,1,3)); % denoising
-    [Vi,Yi] = cat_vol_imcalc(Vn,Vi,'i1',struct('interp',1,'verb',0));
+    [Vi,Yi] = cat_vol_imcalc(Vn,Vi,'i1',struct('interp',5,'verb',0,'mask',-1));
     delete(nfname); spm_write_vol(Vi,Yi); 
     %if ~isinf(job.opts.biasstr), clear Yi; end
   end
 
   %%
-  bias=0; 
+  bias = zeros(size(sampx)); 
   for ix=1:numel(sampx)
     %% parameter update
-    preproc.warp.samp         = min(9 ,max(1 ,job.opts.samp     * sampx(ix))); 
+    preproc.warp.samp         = min(9  ,max(1 ,job.opts.samp     * sampx(ix))); 
     preproc.channel.biasfwhm  = min(180,max(30,job.opts.biasfwhm * fwhmx(ix)));
     % preproc.warp.reg          = [0 0 0 0 0];ex
 
@@ -140,17 +178,15 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
 
     %try
       % SPM bias correction
-      warning off; 
+      warning off;  %#ok<WNOFF>
       if ix==numel(sampx) || bias(1) >= preproc.channel.biasfwhm 
-        if job.extopts.APP==2 || spmp0>1, preproc.Yclsout = true(1,6); end % 
-        vout   = cat_spm_preproc_run(preproc,'run');
-        spmmat = open(fullfile(pp,mrifolder,['n' ff '_seg8.mat'])); 
-        AffineSPM = spmmat.Affine; 
+        if job.extopts.APP==2 || spmp0>1, preproc.Yclsout = true(1,max(preproc.lkp)); end % 
+        vout = cat_spm_preproc_run(preproc,'run'); res(ix) = vout.res;
       else
-        cat_spm_preproc_run(preproc,'run');
+        vout = cat_spm_preproc_run(preproc,'run'); res(ix) = vout.res;
       end
-      warning on; 
-
+      warning on;  %#ok<WNON>
+%%
       Pmn    = fullfile(pp,mrifolder,['mn' ff '.nii']); 
       Pmn_ri = fullfile(pp,mrifolder,['mn' ff '_r' num2str(ix) '.nii']);
       Pmn_r0 = fullfile(pp,mrifolder,['mn' ff '_r0.nii']);
@@ -160,13 +196,12 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
       % in case of updates, local biasfield strenght is maybe
       % better (only useful if strong changes are allowed)
       if ix==1 && exist('Yi','var')
-        Vn   = spm_vol(Pmn); Vn = rmfield(Vn,'private'); Yn = spm_read_vols(Vn);
+        Vn = spm_vol(Pmn); Vn = rmfield(Vn,'private'); 
+        Yn = spm_read_vols(Vn);
         bias(ix) = (1/cat_stat_nanstd(Yn(:)./Yi(:))) * 4; 
         %fprintf('bias=%5.0f mm ',bias(ix)); 
         bias(ix) = max(30,min(120,round(bias(ix) / 15) * 15));
         if ~debug, clear Yn; end
-      %elseif ix>1 && isinf(job.opts.biasstr)
-        % nothing to do
       else 
         bias(ix) = 0; 
       end
@@ -195,22 +230,31 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
         stime2 = cat_io_cmd('  Postprocessing','g5','',job.extopts.verb-1,stime2);
         if optimize
           % update Ym
-          Vn  = spm_vol(nfname); Vn = rmfield(Vn,'private');
+          Vn  = spm_vol(nfname);  Vn = rmfield(Vn,'private'); 
           Vo  = spm_vol(onfname); Vo = rmfield(Vo,'private'); 
-          [Vmx,vout.Ym] = cat_vol_imcalc([Vo,Vn],Vo,'i2',struct('interp',1,'verb',0));
+          [Vmx,vout.Ym] = cat_vol_imcalc([Vo,Vn],Vo,'i2',struct('interp',5,'verb',0,'mask',-1)); clear Vmx; %#ok<ASGLU>
           vout.Ym = single(vout.Ym); 
 
           %% remap Ym0
-          Vn = spm_vol(Pmn_r0); Vn = rmfield(Vn,'private');
+          Vn = spm_vol(Pmn_r0);  Vn = rmfield(Vn,'private'); 
           Vo = spm_vol(onfname); Vo = rmfield(Vo,'private'); 
-          [Vmx,Ym0] = cat_vol_imcalc([Vo,Vn],Vo,'i2',struct('interp',1,'verb',0));
+          [Vmx,Ym0] = cat_vol_imcalc([Vo,Vn],Vo,'i2',struct('interp',5,'verb',0,'mask',-1)); clear Vmx; %#ok<ASGLU>
           Ym0 = single(Ym0); 
+
+          %% replace interpolation boundary artefact
+          %{
+          Ybd     = ones(size(vout.Ym)); Ybd(3:end-2,3:end-2,3:end-2) = 0; 
+          [D,I]   = cat_vbdist(single(~(isnan(vout.Ym) | Ybd)),true(size(vout.Ym))); clear D;  %#ok<ASGLU>
+          vout.Ym = min(vout.Ym,vout.Ym(I));        
+          Ym0     = Ym0(I);        
+          clear I;
+          %}
 
           %% update Ycls
           if isfield(vout,'Ycls')
-            for i=1:6
-              Vn  = spm_vol(nfname); Vn = rmfield(Vn,'private');
-              Vo  = spm_vol(onfname); Vo = rmfield(Vo,'private'); 
+            for i=1:numel(vout.Ycls)
+              Vn  = spm_vol(nfname);  Vn = rmfield(Vn,'private');
+              Vo  = spm_vol(onfname); Vo = rmfield(Vo,'private');
               Vn.pinfo = repmat([1;0],1,size(vout.Ycls{i},3));
               Vo.pinfo = repmat([1;0],1,Vo.dim(3));
               Vn.dt    = [2 0];
@@ -218,13 +262,21 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
               Vo.dat   = zeros(Vo.dim(1:3),'uint8');
               if ~isempty(vout.Ycls{i})
                 Vn.dat   = vout.Ycls{i}; 
-                [Vmx,vout.Ycls{i}]  = cat_vol_imcalc([Vo,Vn],Vo,'i2',struct('interp',1,'verb',0));
+                [Vmx,vout.Ycls{i}]  = cat_vol_imcalc([Vo,Vn],Vo,'i2', ...
+                  struct('interp',5,'verb',0,'mask',-1)); clear Vmx; %#ok<ASGLU>
                 vout.Ycls{i} = cat_vol_ctype(vout.Ycls{i}); 
               end
             end
           end
         else
           Ym0 = spm_read_vols(spm_vol(Pmn_r0)); 
+        
+          %% replace interpolation boundary artefact
+          %{
+          Ybd   = ones(size(vout.Ym)); Ybd(3:end-2,3:end-2,3:end-2) = 0; 
+          [D,I] = cat_vbdist(single(~(isnan(Ym0) | Ybd)),true(size(Ym0))); clear D;  %#ok<ASGLU>
+          Ym0   = min(Ym0,Ym0(I)); clear I;
+          %}
         end
         if debug, stime2 = cat_io_cmd(' ','g5','',job.extopts.verb-1,stime2); end
 
@@ -244,27 +296,52 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
           Pbt = fullfile(pp,mrifolder,['brainmask_' ff '.nii']);
           VF  = spm_vol(onfname); 
           VFa = VF; %if job.extopts.APP~=5, VFa.mat = Affine * VF.mat; end
-          [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0)); 
+          [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1));  %#ok<ASGLU>
           Ybb = cat_vol_smooth3X(Yb>0.5,8/mean(vx_vol)); Ybb = Ybb./max(Ybb(:)); 
           YM2 = cat_vol_smooth3X(Ybb>0.95,8/mean(vx_vol)); YM2 = YM2./max(Ybb(:)); 
           if ~debug, clear Pb Pbt VFa Vmsk Yb Ybb; end
         end
+        
         %% combine the low (~60 mm, Ym0) and high frequency correction (~30 mm, vout.Ym) 
         Yo  = spm_read_vols(spm_vol(onfname)); 
+        
+        % final bias field correction
         Yw  = vout.Ym.*(1-YM2) + (YM2).*Ym0;
-        Yw  = Yo./Yw .* (Yo~=0 & Yw~=0); 
+        Yw  = Yo./ max(eps,Yw) .* (Yo~=0 & Yw~=0); 
         % correct undefined voxel and assure smoothness of the bias field 
         Yw  = cat_vol_approx(max(0,min(2,Yw)),'',vx_vol,2,struct('lfO',2));
-        vout.Ym = Yo ./ Yw; 
+        vout.Ym = Yo ./ max(eps,Yw);
+        
+        %% output variables
+        %  the background class is maybe incorrect, so we use the minimum 
+        %  of the most important values per class
+        BGth = min(vout.res.mn(vout.res.mg(:) >= (0.5./preproc.ngaus(vout.res.lkp(:))')));
+        WMth = mean(vout.res.mn(vout.res.lkp(:)==2) .* vout.res.mg(vout.res.lkp(:)==2)');
+        vout.Ym(isnan(vout.Ym(:))) = min(vout.Ym(:)); 
+        Ym   = (vout.Ym - BGth) ./ (WMth - BGth); 
+        Ybg  = cat_vol_morph(cat_vol_morph(Ym<0.2,'ldo',2,vx_vol),'dc',3,vx_vol);
+        
+        %  The SPM bias correction can change the overall image intensity of 
+        %  some images strongly (resulting in negative values!). Hence, we 
+        %  have to rescale the intensity based on the first segmentation.
+        BGth0   = min(res(1).mn(res(1).mg(:) >= (0.5./preproc.ngaus(res(1).lkp(:))')));
+        WMth0   = mean(res(1).mn(res(1).lkp(:)==2) .* res(1).mg(res(1).lkp(:)==2)');
+        PDT2    = res(1).mn(res(1).lkp(:)==1) < res(1).mn(res(1).lkp(:)==2); % inverse weighting > softer scalling 
+        Yoc     = max(-0.1,min(3 + 7*PDT2 , Ym .* WMth0 + BGth0)); 
+        
+Yoc(isnan(Yo)) = nan; % not sure if this is good
+        
+        %%
         if ~debug, clear Yw Yo; end
         Vm = spm_vol(onfname); Vm.fname = nfname; Vm.dt(1) = 16;  
-        spm_write_vol(Vm,vout.Ym); 
+        spm_write_vol(Vm,Yoc); 
 
         % backup the bias corrected image
         if spmp0>0 
           copyfile(nfname,fullfile(pp,mrifolder,['mn' ff '_r' num2str(ix)+1 '.nii'])); 
         end
         if exist(Pmn_r0,'file'), delete(Pmn_r0); end
+        %%
         break
       else
         movefile(fullfile(pp,mrifolder,['mn' ff '.nii']),nfname); 
@@ -291,12 +368,7 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
   Pmn = fullfile(pp,mrifolder,['mn' ff '.nii']); 
   if exist(Pmn,'file'), delete(Pmn); end
 
-  %% output variables
-  BGth = mean(vout.res.mn(vout.res.lkp(:)==6) .* vout.res.mg(vout.res.lkp(:)==6)');
-  WMth = mean(vout.res.mn(vout.res.lkp(:)==2) .* vout.res.mg(vout.res.lkp(:)==2)');
-  Ym   = (vout.Ym - BGth) ./ (WMth - BGth); 
-  Ybg  = cat_vol_morph(cat_vol_morph(Ym<0.2,'ldo',2,vx_vol),'dc',3,vx_vol);
- 
+  
   
   %% try APPs preprocessing
   %  ---------------------------------------------------------
@@ -311,7 +383,7 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
   %  bias field is very small, but I am not sure if the is useful.
   %  ----------------------------------------------------------
   if exist('vout','var') && job.extopts.APP==2 && isfield(vout,'Ycls')
-    stime2 = cat_io_cmd('  APP bias correction','g5','',job.extopts.verb-1,stime2); 
+    stime2 = cat_io_cmd('  APP bias correction','g5','',job.extopts.verb-1,stime2);  %#ok<NASGU>
 
     try
       if isinf(job.opts.biasstr), catbias = 1 - (bias(1)-30)/60; else catbias = job.opts.biasstr; end
