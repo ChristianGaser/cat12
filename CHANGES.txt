@@ -1,5 +1,26 @@
 ------------------------------------------------------------------------
-r1383 | dahnke | 2018-10-29 07:08:28
+r1384 | dahnke | 2018-10-31 20:56:07
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_main_gintnorm.m
+M       cat_run1173/cat_main1173.m
+M       cat_run_job.m
+M       cat_run_job_APP_SPMfinal.m
+M       cat_run_job_APP_SPMinit.m
+M       cat_vol_imcalc.m
+
+(1) Fixed:  Corrected bugs in cat_conf_opts, cat_run1173 and cat_main1173.
+(2) Fixed:  Corrected interpolation bug "Cannot read header extension.“ in      
+            cat_run_job_APP_SPM* and cat_run_job.
+(3) Fixed:  Corrected type convertation in cat_vol_imcalc.
+(4) Fixed:  Added skull-stripped handling in cat_run_job_APP_SPMinit and
+            cat_run_job_APPfinal and cat_main_gintnorm.
+
+
+------------------------------------------------------------------------
+r1383 | dahnke | 2018-10-29 07:07:56 +0100 (Mo, 29 Okt 2018) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +30,7 @@ MM      cat_run_job_APP_SPMinit.m
  M      html/icons/status_failed.old.png
 
 (1) Fixed:  Corrected bugs in cat_conf_opts and cat_run1173.
+
 
 ------------------------------------------------------------------------
 r1382 | dahnke | 2018-10-26 22:28:41 +0200 (Fr, 26 Okt 2018) | 33 lines

@@ -87,7 +87,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
   
   %% initial thresholds and intensity scaling
   T3th3 = [clsint(3) clsint(1) clsint(2)];
-  BGth  = min(mean(Ysrc(Ycls{6}(:)>192)),clsint(6));
+  BGth  = min(mean(Ysrc(Ycls{end}(:)>192)),clsint(end));
   
   %% -------------------------------------------------------------------
   %  intensity checks and noise contrast ratio (contrast part 1)
@@ -226,7 +226,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     %%
     BGmin = min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))); 
     T3th3(1) = min( min(clsints(3,0)) , mean(Ysrc(Ycls{3}(:)>240))); 
-    BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),median(Ysrc(Ycls{6}(:)>128))]);
+    BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),median(Ysrc(Ycls{end}(:)>128))]);
     %T3th3 = [max( min(res.mn(res.lkp==3 & res.mg'>0.3/sum(res.lkp==3)))*.05 + .95*max(res.mn(res.lkp==2 & res.mg'>0.3/sum(res.lkp==2))) , ...
     %              min(res.mn(res.lkp==3 & res.mg'>0.3/sum(res.lkp==3)))) ...
     %         max(res.mn(res.lkp==1 & res.mg'>0.1)) ...
@@ -456,33 +456,35 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     
     
     %% skull-stripping warning
-    skulltest = (median(Ysrc(Ycls{5}(:)>192 & Ysrc(:)>T3th(2))) < ... 
-       median(Ysrc(Ycls{3}(:)>192 & Ysrc(:)>0))); 
-    if exist('cat_warnings','var') &&  (isnan(skulltest) || skulltest)
-      
-      % Skull-Stripped images can of course lead to problems with to strong
-      % brain masks, but the bigger problem here is that the CSF intensity 
-      % threshold were maybe affected. 
-     
-      % If a skull-stripping was used, we will use this as initial mask 
-      % that we close and dilate a little bit. 
-      % Now, the original image can be corrected in the stripped area, 
-      % because some images have missing points (slicewise). Becuase of 
-      % the gaussian functions a hard boundary is better.
-      if Ymp0diff<0.05 && numel(Ysrc>0)/numel(Ysrc)<0.8
-        Yb    = smooth3(cat_vol_morph(cat_vol_morph(Ysrc>0,'lc',3),'d'))>0.5;
-        CSFth = min([nanmedian(Ysrc(Ycls{3}(:)>240 & Ysrc(:)>0)), ... 
-                     nanmedian(Ysrc(Ycls{3}(:)>192 & Ysrc(:)>0)), ... 
-                     nanmedian(Ysrc(Ycls{3}(:)>128 & Ysrc(:)>0)), ...
-                     cat_stat_nanmean(Ysrc(Ysrc>0))*0.5])*0.9; % 
-        Ysrc  = cat_vol_laplace3R(max(CSFth,Ysrc),Yb & Ysrc==0,0.2) .* Yb;
-         cat_warnings = cat_io_addwarning(cat_warnings,...
-           'CAT:cat_main:SkullStripped',...
-           'Skull-stripped input image detected! Try boundary cleanup.',numel(cat_warnings)==0);  
-      else
-         cat_warnings = cat_io_addwarning(cat_warnings,...
-           'CAT:cat_main:SkullStripped',...
-           'Skull-stripped input image?',numel(cat_warnings)==0); 
+    if numel(Ycls)>4
+      skulltest = (median(Ysrc(Ycls{5}(:)>192 & Ysrc(:)>T3th(2))) < ... 
+         median(Ysrc(Ycls{3}(:)>192 & Ysrc(:)>0))); 
+      if exist('cat_warnings','var') &&  (isnan(skulltest) || skulltest)
+
+        % Skull-Stripped images can of course lead to problems with to strong
+        % brain masks, but the bigger problem here is that the CSF intensity 
+        % threshold were maybe affected. 
+
+        % If a skull-stripping was used, we will use this as initial mask 
+        % that we close and dilate a little bit. 
+        % Now, the original image can be corrected in the stripped area, 
+        % because some images have missing points (slicewise). Becuase of 
+        % the gaussian functions a hard boundary is better.
+        if Ymp0diff<0.05 && numel(Ysrc>0)/numel(Ysrc)<0.8
+          Yb    = smooth3(cat_vol_morph(cat_vol_morph(Ysrc>0,'lc',3),'d'))>0.5;
+          CSFth = min([nanmedian(Ysrc(Ycls{3}(:)>240 & Ysrc(:)>0)), ... 
+                       nanmedian(Ysrc(Ycls{3}(:)>192 & Ysrc(:)>0)), ... 
+                       nanmedian(Ysrc(Ycls{3}(:)>128 & Ysrc(:)>0)), ...
+                       cat_stat_nanmean(Ysrc(Ysrc>0))*0.5])*0.9; % 
+          Ysrc  = cat_vol_laplace3R(max(CSFth,Ysrc),Yb & Ysrc==0,0.2) .* Yb;
+           cat_warnings = cat_io_addwarning(cat_warnings,...
+             'CAT:cat_main:SkullStripped',...
+             'Skull-stripped input image detected! Try boundary cleanup.',numel(cat_warnings)==0);  
+        else
+           cat_warnings = cat_io_addwarning(cat_warnings,...
+             'CAT:cat_main:SkullStripped',...
+             'Skull-stripped input image?',numel(cat_warnings)==0); 
+        end
       end
     end
     
@@ -497,7 +499,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     gth   = max(0.06,min(0.3,noise*6));
     %Ybm   = cat_vol_morph(Ycls{6}>240 & Ysrc<min(T3th),'lc'); 
     BGmin = min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))); 
-    BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),median(Ysrc(Ycls{6}(:)>128))]);
+    BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),median(Ysrc(Ycls{end}(:)>128))]);
     BMth  = max(BGmin,min(BGcon,T3th(1) - diff(T3th(1:2)))); %max(0.01,cat_stat_nanmedian(Ysrc(Ybm(:))));
     Ywm   = (Ycls{2}>128  & Yg<gth) | ((Ym-Ydiv*2)>(1-0.05*cat_stat_nanmean(vx_vol)) & Yb2); % intensity | structure (neonate contast problem)
     Ycm   = smooth3((Ycls{3}>240 | Ym<0.4) & Yg<gth*3 & Yb & ~Ywm & Ycls{1}<8 & Ysrc>BMth & Ym<0.5)>0.5; % important to avoid PVE!

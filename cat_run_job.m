@@ -261,15 +261,13 @@ function cat_run_job(job,tpm,subj)
           if any( (vx_vol ~= vx_voli) )  
             stime = cat_io_cmd(sprintf('Internal resampling (%4.2fx%4.2fx%4.2fmm > %4.2fx%4.2fx%4.2fmm)',vx_vol,vx_voli));
            
-            Vi        = rmfield(Vi,'private');
             imat      = spm_imatrix(Vi.mat); 
             Vi.dim    = round(Vi.dim .* vx_vol./vx_voli);
             imat(7:9) = vx_voli .* sign(imat(7:9));
             Vi.mat    = spm_matrix(imat);
 
             Vn = spm_vol(job.channel(n).vols{subj}); 
-            Vn = rmfield(Vn,'private'); 
-            cat_vol_imcalc(Vn,Vi,'i1',struct('interp',2,'verb',0));
+            cat_vol_imcalc(Vn,Vi,'i1',struct('interp',2,'verb',0,'mask',-1));
             vx_vol = vx_voli;
           
             fprintf('%5.0fs\n',etime(clock,stime));     
@@ -291,9 +289,10 @@ function cat_run_job(job,tpm,subj)
           %  why not use it for a improved maximum based correction?!
           %  ------------------------------------------------------------
           if ~strcmp(job.extopts.species,'human'), job.extopts.APP = 5; end
-          if (job.extopts.APP==1 || job.extopts.APP==2) %&& ~ppe.affreg.skullstripped
+          if (job.extopts.APP==1 || job.extopts.APP==2) 
              job.subj = subj;
-             [Ym,Ybg,WMth] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfname,mrifolder);
+             [Ym,Ybg,WMth] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,...
+               ofname,nfname,mrifolder,ppe.affreg.skullstripped);
           end
           
           
@@ -372,7 +371,7 @@ function cat_run_job(job,tpm,subj)
 
             % skull-stripping of the template
             VB = spm_vol(Pb);
-            [VB2,YB] = cat_vol_imcalc([VG,VB],Pbt,'i1 .* i2',struct('interp',3,'verb',0)); 
+            [VB2,YB] = cat_vol_imcalc([VG,VB],Pbt,'i1 .* i2',struct('interp',3,'verb',0,'mask',-1)); 
             VB2.dat(:,:,:) = eval(sprintf('%s(YB/max(YB(:))*255);',spm_type(VB2.dt))); 
             VB2.pinfo      = repmat([1;0],1,size(YB,3));
             VG             = cat_spm_smoothto8bit(VB2,0.5);
@@ -588,7 +587,7 @@ function cat_run_job(job,tpm,subj)
             %% visual control for development and debugging
             VFa = VF; VFa.mat = Affine * VF.mat; %Fa.mat = res0(2).Affine * VF.mat;
             if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
-            [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0));  
+            [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1));  
             %[Vmsk,Yb] = cat_vol_imcalc([VFa;obj.tpm.V(1:3)],Pbt,'i2 + i3 + i4',struct('interp',3,'verb',0));  
             %[Vmsk,Yb] = cat_vol_imcalc([VFa;obj.tpm.V(5)],Pbt,'i2',struct('interp',3,'verb',0));  
             ds('d2sm','',1,Ym,Ym.*(Yb>0.5),100)
@@ -617,7 +616,7 @@ function cat_run_job(job,tpm,subj)
             obj.tpm.bg2(4)   = obj.tpm.bg1(6);
             obj.tpm.bg1(5:6) = [];
             obj.tpm.bg2(5:6) = [];
-            obj.tpm.V = rmfield(obj.tpm.V,'private');
+            %obj.tpm.V = rmfield(obj.tpm.V,'private');
             
             % tryed 3 peaks per class, but BG detection error require manual 
             % correction (set 0) that is simple with only one class  
