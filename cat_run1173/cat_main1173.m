@@ -1047,7 +1047,7 @@ if ~isfield(res,'spmpp')
   end
   if th{1}(1)<0 || th{1}(1)>0.6 || th{2}(1)<0.5 || th{2}(1)>0.9 || th{3}(1)<0.95-th{3}(2) || th{3}(1)>1.1
     error('cat_main:amap',['AMAP estimated untypical tissue peaks that point to an \n' ...
-                           'error in the preprocessing bevor the AMAP segmentation. ']);
+                           'error in the preprocessing before the AMAP segmentation. ']);
   end
   % reorder probability maps according to spm order
   clear Yp0b Ymib; 
@@ -1649,7 +1649,8 @@ if job.output.ROI
   AN  = fieldnames(job.output.atlases);
   for ai = 1:numel(AN)
     fafi = find(cellfun('isempty',strfind(FAF(:,1),[AN{ai} '.']))==0);
-    if ~isempty(fafi) && job.output.atlases.(AN{ai}), FA(fai,:) = FAF(fafi,:); fai = fai+1; end
+    if ~isempty(fafi) && (isempty(job.output.atlases.(AN{ai})) || ...
+        job.output.atlases.(AN{ai})), FA(fai,:) = FAF(fafi,:); fai = fai+1; end
   end
   
   % get atlas resolution 
