@@ -490,6 +490,7 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
         Vo(i).descrip = sprintf('%s SANLM filtered (NCstr=%-4.2f > %0.2f)',...
           V(i).descrip,job.NCstr(NCstri),abs(NCstr(NCstri)) + NCstrr);
         Vo(i).dt(1)   = 16; % default - changes later if required 
+        if exist(Vo(i).fname,'file'); delete(Vo(i).fname); end
         spm_write_vol(Vo(i), src2);
         spm_progress_bar('Set',i);
         

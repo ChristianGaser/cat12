@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1384 | dahnke | 2018-10-31 20:56:07
+r1385 | dahnke | 2018-11-02 18:04:19
+
+Changed paths:
+M       CHANGES.txt
+M       cat_run_job_APP_SPMinit.m
+M       cat_vol_sanlm.m
+
+(1) Fixed:  Fixed "Cannot read header extension." error in cat_vol_sanlm.
+(2) Fixed:  Corrected bug in cat_run_job_SPMinit. 
+------------------------------------------------------------------------
+r1384 | dahnke | 2018-10-31 20:55:27 +0100 (Mi, 31 Okt 2018) | 19 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -17,6 +27,7 @@ M       cat_vol_imcalc.m
 (3) Fixed:  Corrected type convertation in cat_vol_imcalc.
 (4) Fixed:  Added skull-stripped handling in cat_run_job_APP_SPMinit and
             cat_run_job_APPfinal and cat_main_gintnorm.
+
 
 
 ------------------------------------------------------------------------
