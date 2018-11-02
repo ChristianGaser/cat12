@@ -45,7 +45,7 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
   %preproc.warp.fwhm           = 0;
   %preproc.warp.samp           = min(9,max(2,job.opts.samp*2));
 
-   if skullstripped 
+  if skullstripped 
     %% update number of SPM gaussian classes 
     preproc.tpm = tpm; 
     Ybg = 1 - spm_read_vols(preproc.tpm.V(1)) - spm_read_vols(preproc.tpm.V(2)) - spm_read_vols(preproc.tpm.V(3));
@@ -73,12 +73,12 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
     % tryed 3 peaks per class, but BG detection error require manual 
     % correction (set 0) that is simple with only one class  
     job.opts.ngaus = [([job.tissue(1:3).ngaus])';1]; % 3*ones(4,1);1; 
-    preproc.lkp        = [];
-    for k=1:numel(job.opts.ngaus)
-      preproc.ngaus(k)        = job.opts.ngaus(k);
-      preproc.tissue(k).ngaus = job.opts.ngaus(k);
-      preproc.lkp             = [preproc.lkp ones(1,job.tissue(k).ngaus)*k];
-    end
+  end
+  preproc.lkp        = [];
+  for k=1:numel(job.opts.ngaus)
+    preproc.ngaus(k)        = job.opts.ngaus(k);
+    preproc.tissue(k).ngaus = job.opts.ngaus(k);
+    preproc.lkp             = [preproc.lkp ones(1,job.tissue(k).ngaus)*k];
   end
   
   %% add noise in zero regions (skull-stripping / defacing)
@@ -180,10 +180,19 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
       % SPM bias correction
       warning off;  %#ok<WNOFF>
       if ix==numel(sampx) || bias(1) >= preproc.channel.biasfwhm 
+<<<<<<< .mine
+        if job.extopts.APP==2 || spmp0>1, preproc.Yclsout = true(1,max(preproc.lkp)); end  
+        vout = cat_spm_preproc_run(preproc,'run'); res(ix) = vout.res; %#ok<AGROW>
+=======
         if job.extopts.APP==2 || spmp0>1, preproc.Yclsout = true(1,max(preproc.lkp)); end % 
         vout = cat_spm_preproc_run(preproc,'run'); res(ix) = vout.res;
+>>>>>>> .r1384
       else
+<<<<<<< .mine
+        vout = cat_spm_preproc_run(preproc,'run'); res(ix) = vout.res; %#ok<AGROW>
+=======
         vout = cat_spm_preproc_run(preproc,'run'); res(ix) = vout.res;
+>>>>>>> .r1384
       end
       warning on;  %#ok<WNON>
 %%
