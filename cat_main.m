@@ -48,8 +48,6 @@ else
   labelfolder   = '';
 end
 
-M1   = tpm.M;
-
 % Sort out bounding box etc
 [bb1,vx1] = spm_get_bbox(tpm.V(1), 'old');
 bb = job.extopts.bb;
@@ -61,15 +59,7 @@ bb(2,:) = vx.*round(bb(2,:)./vx);
 res.bb = bb; 
 clear vx vx1 bb1   
 
-if isfield(res,'mg'),
-    lkp = res.lkp;
-    Kb  = max(lkp);
-else
-    Kb  = size(res.intensity(1).lik,2);
-end
-
-N = numel(res.image);
-if N > 1
+if numel(res.image) > 1
   warning('CAT12:noMultiChannel',...
     'CAT12 does not support multiple channels. Only the first channel will be used.');
 end
@@ -103,7 +93,7 @@ if isfield(res,'redspmres')
   % Update Ycls: cleanup on original data
   Yb = Ycls{1} + Ycls{2} + Ycls{3}; 
   for i=1:numel(Ycls), [Pc(:,:,:,i),BB] = cat_vol_resize(Ycls{i},'reduceBrain',repmat(job.opts.redspmres,1,3),2,Yb); end %#ok<AGROW>
-    Pc = clean_gwc(Pc,1);
+    Pc = cat_main_clean_gwc(Pc,1);
   for i=1:numel(Ycls), Ycls{i} = cat_vol_resize(Pc(:,:,:,i),'dereduceBrain',BB); end; clear Pc Yb; 
   for ci=1:numel(Ycls)
     Ycls{ci} = cat_vol_ctype(cat_vol_resize(Ycls{ci},'deinterp',res.redspmres,'linear'));
@@ -144,155 +134,20 @@ clear oldxml
 
 d = VT.dim(1:3);
 
-% replace SPM brain segmentation by AMAP segmentation
-job.extopts.spm2amap = 1;
-if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap && job.extopts.new_release
-%% -------------------------------------------------------------------
-%  Initial k-means AMAP segmentation
+%% replace SPM brain segmentation by AMAP segmentation
 %  -------------------------------------------------------------------
 %  This is an alternative pipeline in case of failed SPM brain tissue
 %  classification in datasets with abnormal anatomy, i.e. superlarge 
-%  ventricle. 
+%  ventricle. However, SPM is used for head tissue classification and
+%  bias correction. 
 %  -------------------------------------------------------------------
-    stime2 = cat_io_cmd('  K-means AMAP bias-correction','g5','',job.extopts.verb-1,stime2);
-    
-    % simple skull-stripping
-    Yb = Ycls{1} + Ycls{2} + Ycls{3};
-    % In case of skull-stripping with have to combine SPM segmentation and 
-    % the possible skull-stripping information 
-    if skullstripped, Yb = Yb .* uint8(Ysrc>0); end
-    Yb = cat_vol_morph( smooth3(Yb)>64 , 'ldc', 8,vx_vol);
-    %Yb = cat_vol_morph( Yb , 'dd', 2,vx_vol);
-
-    %% intensity normalization
-    Ym = Ysrc; Ym(~Yb) = nan; 
-    [Ymic,th] = cat_stat_histth(Ym,0.98); 
-    Ym(isnan(Ym) | Ym>(th(2) + diff(th)*2)) = 0;
-    [T3th,T3sd,T3md] = kmeans3D(Ymic((Ym(:)>0)),5); clear Ymic; 
-    if T3md(end)<0.1, T3th(end)=[]; end
-    Ym = (Ym - th(1)) ./ (T3th(end) - th(1)); 
-    clear th; 
-    
-    %% bias correction for white matter (Yw) and ventricular CSF areas (Yv)
-    Yw  = Ym>0.8 & Ym<1.5; Yw(smooth3(Yw)<0.6) = 0; Yw(smooth3(Yw)<0.6) = 0; 
-    Yv  = Ym<0.5 & Yb; Yv  = cat_vol_morph(Yv,'e',4); 
-    
-    %% estimate value vth to mix CSF and WM information
-    Yvw = cat_vol_smooth3X(Yv,6)>0.05 & cat_vol_morph(Yw,'e',2); 
-    Ywv = cat_vol_smooth3X(Yw,6)>0.05 & cat_vol_morph(Yv,'e',2); 
-    if sum(Yvw(:))>10 && sum(Yvw(:))>10
-      vth = cat_stat_nanmedian(Ysrc(Yvw(:))) ./ cat_stat_nanmedian(Ysrc(Ywv(:)));
-    elseif  sum(Yvw(:))>0 && sum(Yvw(:))>0
-      vth = cat_stat_nanmedian(Ysrc(Yv(:))) ./ cat_stat_nanmedian(Ysrc(Yw(:)));
-    else
-      vth = 1; 
-    end
-    if debug==0, clear Ywv Yvw; end
-    
-    % some precorrections and bias field approximation 
-    Yi  = cat_vol_localstat(Ysrc .* Yw,Yw,1,3); 
-    Yiv = cat_vol_localstat(Ysrc .* Yv,Yv,1,1); 
-    Yi  = Yi + Yiv * vth; if debug==0, clear Yiv; end
-    % Yi  = Yi ./ median(Yi(Yw(:)));
-    Yi  = cat_vol_approx(Yi,'nn',vx_vol,4); 
-    Yi  = cat_vol_smooth3X(Yi,4); 
-    
-    
-    %% bias field correction 
-    Ysrc = Ysrc ./ (Yi ./ median(Yi(Yw(:))));
-    Ymi = (Ysrc .* Yb) ./ Yi;
-    
-    % remove of high intensity structures
-    Ymi = cat_vol_median3(Ymi/median(Ymi(Yw(:))),Yb,Yb,0.2)*median(Ymi(Yw(:)));
-    if debug==0, clear Ym Yi Yw Yv; end
-    %Ymi = Ymi + (Ymi>0) .* rand(size(Ym))*0.1; % add noise?
-    
-    
-    
-    %%  similar to later AMAP call
-    %  -------------------------------------------------------------------
-
-    % correct for harder brain mask to avoid meninges in the segmentation
-    Ymib = min(1.5,Ymi); Ymib(~Yb) = 0; 
-    rf = 10^4; Ymib = round(Ymib*rf)/rf;
-
-    %  prepare data for segmentation
-    % more direct method ... a little bit more WM, less CSF
-    Yp0 = cat_vol_ctype(max(1,min(3,round(Ymi * 3)))); Yp0(~Yb) = 0;
-    
-
-    % use index to speed up and save memory
-    sz = size(Yb);
-    [indx, indy, indz] = ind2sub(sz,find(Yb>0));
-    indx = max((min(indx) - 1),1):min((max(indx) + 1),sz(1));
-    indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
-    indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
-
-    % Yb source image because Amap needs a skull stripped image
-    % set Yp0b and source inside outside Yb to 0
-    Yp0b = Yp0(indx,indy,indz);  %#ok<NASGU>
-    Ymib = Ymib(indx,indy,indz); 
-
-    % adaptive mrf noise 
-    if job.extopts.mrf>=1 || job.extopts.mrf<0; 
-      % estimate noise
-      [Yw,Yg] = cat_vol_resize({Ymi.*(Ycls{1}>240),Ymi.*(Ycls{2}>240)},'reduceV',vx_vol,3,32,'meanm');
-      Yn = max(cat(4,cat_vol_localstat(Yw,Yw>0,2,4),cat_vol_localstat(Yg,Yg>0,2,4)),[],4);
-      job.extopts.mrf = double(min(0.15,3*cat_stat_nanmean(Yn(Yn(:)>0)))) * 0.5; 
-      clear Yn Yg
-    end
-
-    % display something
-    stime2 = cat_io_cmd(sprintf('  Amap using k-means segmentations (MRF filter strength %0.2f)',job.extopts.mrf),'g5','',job.extopts.verb-1,stime2);
-
-    %% Amap parameters  - default sub=16 caused errors with highres data!
-    % don't use bias_fwhm, because the Amap bias correction is not that efficient and also changes
-    % intensity values
-    Ymib = double(Ymib); n_iters = 50; sub = round(32/min(vx_vol)); %#ok<NASGU>
-    n_classes = 3; pve = 5; bias_fwhm = 120; init_kmeans = 1;  %#ok<NASGU>
-    if job.extopts.mrf~=0, iters_icm = 50; else iters_icm = 0; end %#ok<NASGU>
-
-    % do segmentation and rep
-    evalc(['prob = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
-      'job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);']);
-    
-    % reorder probability maps according to spm order
-    clear Yp0b Ymib; 
-    prob = prob(:,:,:,[2 3 1]);  %#ok<NODEF>
-    
-    % cleanup
-    prob = clean_gwc(prob,3);
-    
-    % 
-    P = zeros([size(Ycls{1}) numel(Ycls)],'uint8');
-    for i=1:numel(Ycls), P(:,:,:,i) = Ycls{i}; end
-    for i=1:3
-       P(:,:,:,i) = 0; P(indx,indy,indz,i) = prob(:,:,:,i);
-    end
-    clear prob;
-    Ys = cat_vol_ctype(255 - sum(P(:,:,:,1:3),4));
-    for i=4:size(P,4)
-      P(:,:,:,i) = P(:,:,:,i) .* Ys; 
-    end
-    clear Ys;
- 
-    sP = (sum(single(P),4)+eps)/255;
-    for k1=1:size(P,4), P(:,:,:,k1) = cat_vol_ctype(single(P(:,:,:,k1))./sP); end
-  %%
-    clear vol Ymib
-    
-    for i=1:3
-      [res.mn(res.lkp==i),tmp,res.mg(res.lkp==i)] = ...
-        kmeans3D(Ysrc(P(:,:,:,i)>64),sum(res.lkp==i));
-    end
-    
-    
-    clear Ycls;
+if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap 
+  [P,res,stime2] = cat_main_amap(Ysrc,Ycls,job,res,vx_vol,stime2);
 else
   P = zeros([size(Ycls{1}) numel(Ycls)],'uint8');
   for i=1:numel(Ycls), P(:,:,:,i) = Ycls{i}; end
-  clear Ycls;
 end
+clear Ycls;
 
 
 
@@ -328,7 +183,7 @@ if ~isfield(res,'spmpp')
     if max(vx_vol)<1.5 && mean(vx_vol)<1.3
       for i=1:size(P,4), [Pc1(:,:,:,i),RR] = cat_vol_resize(P(:,:,:,i)  ,'reduceV',vx_vol,job.extopts.uhrlim,32); end %#ok<AGROW>
       for i=1:size(P,4), [Pc2(:,:,:,i),BB] = cat_vol_resize(Pc1(:,:,:,i),'reduceBrain',vx_vol,2,sum(Pc1,4)); end %#ok<AGROW>
-      Pc2 = clean_gwc(Pc2,1);
+      Pc2 = cat_main_clean_gwc(Pc2,1);
       for i=1:size(P,4), Pc1(:,:,:,i) = cat_vol_resize(Pc2(:,:,:,i),'dereduceBrain',BB); end
       for i=1:size(P,4), P(:,:,:,i)   = cat_vol_resize(Pc1(:,:,:,i),'dereduceV',RR); end 
       clear Pc1 Pc2;
@@ -894,6 +749,7 @@ if ~isfield(res,'spmpp')
   % Used spm_mrf help and tested the probability TPM map for Q without good results.         
   nmrf_its = 0; % 10 interations better to get full probability in thin GM areas 
   spm_progress_bar('init',nmrf_its,['MRF: Working on ' nam],'Iterations completed');
+  if isfield(res,'mg'), Kb = max(res.lkp); else Kb = size(res.intensity(1).lik,2); end
   G   = ones([Kb,1],'single');
   vx2 = single(sum(VT.mat(1:3,1:3).^2));
   % P = zeros([d(1:3),Kb],'uint8');
@@ -997,7 +853,7 @@ if ~isfield(res,'spmpp')
                    cat_vol_ctype(Yb2.*Yp0toC(min(3,Ym*3),1)*255));
       
       for i=1:size(prob,4), [prob2(:,:,:,i),BB] = cat_vol_resize(prob(:,:,:,i),'reduceBrain',vx_vol,2,sum(prob,4)); end %#ok<AGROW>
-      prob2 = clean_gwc(prob2,1);
+      prob2 = cat_main_clean_gwc(prob2,1);
       for i=1:size(prob,4), prob(:,:,:,i) = cat_vol_resize(prob2(:,:,:,i),'dereduceBrain',BB); end; clear prob2;
       
       for ci=1:3, Ycls{ci} = prob(:,:,:,ci); end; 
@@ -1090,7 +946,7 @@ if ~isfield(res,'spmpp')
 
     %% preparte mapping in case of shooting templates with other resolutions
     Vb2    = spm_vol(job.extopts.shootingtpms{2}); 
-    amat   = Vb2(2).mat \ M1; 
+    amat   = Vb2(2).mat \ tpm.M; 
     if any(any(amat~=eye(4))); 
       yn     = numel(Yy2); 
       p      = ones([4,yn/3],'single'); 
@@ -1425,8 +1281,8 @@ if ~isfield(res,'spmpp')
   %  -------------------------------------------------------------------
   if job.extopts.cleanupstr>0 && job.extopts.cleanupstr<=1 
     %%
-    for i=1:size(prob,4), [prob2(:,:,:,i),BB] = cat_vol_resize(prob(:,:,:,i),'reduceBrain',vx_vol,2,sum(prob,4)); end %#ok<AGROW>
-    prob2 = clean_gwc(prob2,round(job.extopts.cleanupstr*4)); % old cleanup
+    for i=1:size(prob,4), [prob2(:,:,:,i),BB] = cat_vol_resize(prob(:,:,:,i),'reduceBrain',vx_vol,2,sum(prob,4)); end 
+    prob2 = cat_main_clean_gwc(prob2,round(job.extopts.cleanupstr*4)); % old cleanup
     for i=1:size(prob,4), prob(:,:,:,i) = cat_vol_resize(prob2(:,:,:,i),'dereduceBrain',BB); end; clear prob2
     
     
@@ -1435,8 +1291,8 @@ if ~isfield(res,'spmpp')
     if 0% job.extopts.cleanupstr == 2 % old cleanup for tests
       stime = cat_io_cmd('Old cleanup');
       
-      for i=1:size(prob,4), [prob2(:,:,:,i),BB] = cat_vol_resize(prob(:,:,:,i),'reduceBrain',vx_vol,2,sum(prob,4)); end %#ok<AGROW>
-      prob2 = clean_gwc(prob2,round(job.extopts.cleanupstr*4)); % old cleanup
+      for i=1:size(prob,4), [prob2(:,:,:,i),BB] = cat_vol_resize(prob(:,:,:,i),'reduceBrain',vx_vol,2,sum(prob,4)); end 
+      prob2 = cat_main_clean_gwc(prob2,round(job.extopts.cleanupstr*4)); % old cleanup
       for i=1:size(prob,4), prob(:,:,:,i) = cat_vol_resize(prob2(:,:,:,i),'dereduceBrain',BB); end; clear prob2
 
       fprintf('%5.0fs\n',etime(clock,stime));
@@ -1778,7 +1634,7 @@ end
         p(1,:) = trans.atlas.Yy(1:yn/3);
         p(2,:) = trans.atlas.Yy(yn/3+1:yn/3*2);
         p(3,:) = trans.atlas.Yy(yn/3*2+1:yn);
-        amat   = VwmA.mat \ M1; 
+        amat   = VwmA.mat \ tpm.M; 
         p      = amat(1:3,:) * p;
 
         Yy = zeros([res.image(1).dim(1:3),3],'single'); 
@@ -2188,10 +2044,18 @@ if (job.output.surface || any( [job.output.ct.native job.output.ct.warped job.ou
         end
       end
     else
-      pbtmethod = 'pbt2x';
-      [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(VT,VT0,Ymix,Yl1,Yp0/3,YMF,...
-        struct('pbtmethod',pbtmethod,'interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
-        'verb',job.extopts.verb,'WMT',WMT)); 
+      if 0 % old
+        [Yth1,S,Psurf] = cat_surf_createCS1173(VT,Yp0/3,Yl1,YMF,...
+          struct('interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
+          'verb',job.extopts.verb,'experimental',job.extopts.experimental));
+        EC = nan;
+        defect_size = nan;
+      else
+        pbtmethod = 'pbt2x';
+        [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(VT,VT0,Ymix,Yl1,Yp0/3,YMF,...
+          struct('pbtmethod',pbtmethod,'interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
+          'verb',job.extopts.verb,'WMT',WMT)); 
+      end
     end
   else     
   %% using the label image
@@ -3124,7 +2988,7 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA)
   
 return
 %=======================================================================
-
+%{
 %=======================================================================
 function [x1,y1,z1] = defs(sol,z,MT,prm,x0,y0,z0,M)
 iMT = inv(MT);
@@ -3152,6 +3016,7 @@ end;
 return;
 %=======================================================================
 
+
 %=======================================================================
 function p = likelihoods(f,bf,mg,mn,vr)
 K  = numel(mg);
@@ -3173,90 +3038,5 @@ for k=1:K,
 end
 return;
 %==========================================================================
-
-%==========================================================================
-% function [P] = clean_gwc(P,level)
-%==========================================================================
-function [P] = clean_gwc(P,level)
-if nargin<4, level = 1; end
-
-b    = P(:,:,:,2);
-
-% Build a 3x3x3 seperable smoothing kernel
-%--------------------------------------------------------------------------
-kx=[0.75 1 0.75];
-ky=[0.75 1 0.75];
-kz=[0.75 1 0.75];
-sm=sum(kron(kron(kz,ky),kx))^(1/3);
-kx=kx/sm; ky=ky/sm; kz=kz/sm;
-
-th1 = 0.15;
-if level>1, th1 = 0.2; end
-% Erosions and conditional dilations
-%--------------------------------------------------------------------------
-niter  = 32;
-niter2 = 32;
-spm_progress_bar('Init',niter+niter2,'Extracting Brain','Iterations completed');
-for j=1:niter
-    if j>2, th=th1; else th=0.6; end  % Dilate after two its of erosion
-    for i=1:size(b,3)
-        gp       = single(P(:,:,i,1));
-        wp       = single(P(:,:,i,2));
-        bp       = single(b(:,:,i))/255;
-        bp       = (bp>th).*(wp+gp);
-        b(:,:,i) = cat_vol_ctype(round(bp));
-    end
-    spm_conv_vol(b,b,kx,ky,kz,-[1 1 1]);
-    spm_progress_bar('Set',j);
-end
-
-% Also clean up the CSF.
-if niter2 > 0,
-    c = b;
-    for j=1:niter2
-        for i=1:size(b,3)
-            gp       = single(P(:,:,i,1));
-            wp       = single(P(:,:,i,2));
-            cp       = single(P(:,:,i,3));
-            bp       = single(c(:,:,i))/255;
-            bp       = (bp>th).*(wp+gp+cp);
-            c(:,:,i) = cat_vol_ctype(round(bp));
-        end
-        spm_conv_vol(c,c,kx,ky,kz,-[1 1 1]);
-        spm_progress_bar('Set',j+niter);
-    end
-end
-
-th = 0.05;
-
-for i=1:size(b,3)
-    slices = cell(1,size(P,4));
-    for k1=1:size(P,4),
-        slices{k1} = single(P(:,:,i,k1))/255;
-    end
-    bp        = single(b(:,:,i))/255;
-    bp        = ((bp>th).*(slices{1}+slices{2}))>th;
-    slices{1} = slices{1}.*bp;
-    slices{2} = slices{2}.*bp;
-
-    if niter2>0,
-        cp        = single(c(:,:,i))/255;
-        cp        = ((cp>th).*(slices{1}+slices{2}+slices{3}))>th;
-        slices{3} = slices{3}.*cp;
-    end
-    if numel(slices)>=5
-      slices{5} = slices{5}+1e-4; % Add something to the soft tissue class
-    end
-    tot       = zeros(size(bp))+eps;
-    for k1=1:size(P,4),
-        tot   = tot + slices{k1};
-    end
-    for k1=1:size(P,4),
-        P(:,:,i,k1) = cat_vol_ctype(round(slices{k1}./tot*255));
-    end 
-end
-
-spm_progress_bar('Clear');
-return;
-%==========================================================================
+%}
 
