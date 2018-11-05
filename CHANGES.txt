@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1385 | dahnke | 2018-11-02 18:04:19
+r1386 | dahnke | 2018-11-05 16:13:18
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+A       cat_main_amap.m
+A       cat_main_clean_gwc.m
+M       cat_run1173/cat_main1173.m
+A       cat_run1173/cat_surf_createCS1173.m
+M       cat_surf_createCS.m
+M       cat_vol_morph.m
+
+(1) Changed:    Separated initial k-means AMAP segmentation from cat_main as
+                cat_main_amap and added documentation. No behavioral changes. 
+(2) Changed:    Separated clean-up function from cat_main as cat_main_clean_gwc.  
+                No behavioral changes. 
+
+------------------------------------------------------------------------
+r1385 | dahnke | 2018-11-02 18:05:12 +0100 (Fr, 02 Nov 2018) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +26,7 @@ M       cat_vol_sanlm.m
 
 (1) Fixed:  Fixed "Cannot read header extension." error in cat_vol_sanlm.
 (2) Fixed:  Corrected bug in cat_run_job_SPMinit. 
+
 ------------------------------------------------------------------------
 r1384 | dahnke | 2018-10-31 20:55:27 +0100 (Mi, 31 Okt 2018) | 19 lines
 
