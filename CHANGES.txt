@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1387 | dahnke | 2018-11-06 13:58:17
+r1388 | dahnke | 2018-11-06 16:27:56
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_main_roi.m
+A       cat_main_updateSPM.m
+A       cat_main_updateWMHs.m
+A       cat_main_write.m
+
+(1) Changed:    Moved CAT NIFTI output from cat_main to cat_main_write.
+(2) Changed:    Moved WMH correction functions from cat_main to 
+                cat_main_updateWMHs and cat_main_fillWMHs.
+
+------------------------------------------------------------------------
+r1387 | dahnke | 2018-11-06 13:59:32 +0100 (Di, 06 Nov 2018) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +28,7 @@ A       cat_main_roi.m
 (1) Changed:    Separated CAT report creation from cat_main as 
                 cat_main_reportstr, cat_main_reportfig and cat_main_reportcmd.
 (2) Changed:    Separated CAT ROI functions from cat_main as cat_main_roi. 
+
 
 
 ------------------------------------------------------------------------
