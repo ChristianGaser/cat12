@@ -1,5 +1,22 @@
 ------------------------------------------------------------------------
-r1386 | dahnke | 2018-11-05 16:13:18
+r1387 | dahnke | 2018-11-06 13:58:17
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_opts.m
+M       cat_main.m
+A       cat_main_reportcmd.m
+A       cat_main_reportfig.m
+A       cat_main_reportstr.m
+A       cat_main_roi.m
+
+(1) Changed:    Separated CAT report creation from cat_main as 
+                cat_main_reportstr, cat_main_reportfig and cat_main_reportcmd.
+(2) Changed:    Separated CAT ROI functions from cat_main as cat_main_roi. 
+
+
+------------------------------------------------------------------------
+r1386 | dahnke | 2018-11-05 16:15:06 +0100 (Mo, 05 Nov 2018) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +32,7 @@ M       cat_vol_morph.m
                 cat_main_amap and added documentation. No behavioral changes. 
 (2) Changed:    Separated clean-up function from cat_main as cat_main_clean_gwc.  
                 No behavioral changes. 
+
 
 ------------------------------------------------------------------------
 r1385 | dahnke | 2018-11-02 18:05:12 +0100 (Fr, 02 Nov 2018) | 8 lines
