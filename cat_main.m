@@ -41,11 +41,9 @@ job = cat_io_checkinopt(job,def);
 if job.extopts.subfolders
   mrifolder     = 'mri';
   reportfolder  = 'report';
-  labelfolder   = 'label';
 else
   mrifolder     = '';
   reportfolder  = '';
-  labelfolder   = '';
 end
 
 % Sort out bounding box etc
@@ -2109,8 +2107,8 @@ else
 end
 
 
-%% ---------------------------------------------------------------------
-%  ROI Partitioning 
+
+%% ROI Partitioning 
 %  ---------------------------------------------------------------------
 %  This part estimated indivudal measurements for different ROIs.
 %  The ROIs are described in the CAT normalized space and there are to 
@@ -2121,103 +2119,16 @@ end
 %  to be done and evalutated for each atlas. 
 %  ---------------------------------------------------------------------
 if job.output.ROI  
-  stime = cat_io_cmd('ROI estimation');   
-  if job.extopts.verb, fprintf('\n'); end; 
-
-  for ai=1:size(FA,1)
-    %%
-    if ai==1 || any(VAvx_vol(ai,:)~=VAvx_vol(ai-1,:))
-      % resampe data in atlas resolution for the first time or if the atlas resolution change 
-      
-      Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*5/255; 
-
-      % map data to actual template space
-      if ai==1
-        stime2  = cat_io_cmd('  Data mapping to normalized atlas space','g5','', job.extopts.verb-1); 
-      else
-        stime2  = cat_io_cmd('  Data mapping to normalized atlas space','g5','', job.extopts.verb-1,stime2); 
-      end  
-      transw      = trans.warped;                     % dartel/shooting deformation data 
-      transw.odim = VA(ai).dim;                       % adaption for atlas image size
-      transw.ress = job.extopts.vox(1)./VAvx_vol(ai,:);  % adaption for atlas sampling resolution 
-      
-      wYp0     = cat_vol_ROInorm(Yp0,transw,1,0,FA);
-      wYcls    = cat_vol_ROInorm(Ycls,transw,1,1,FA);
-
-      if exist('Ywmh','var')
-        wYcls(7) = cat_vol_ctype(cat_vol_ROInorm({single(Ywmh)},transw,1,1,FA));
-      end
-      
-      % correction for voxel size of the orignal image
-      for ci=1:numel(wYcls)
-        if ~isempty(wYcls{ci})
-          wYcls{ci} = wYcls{ci} * prod(vx_vol); 
-        end      
-      end
-      if debug
-        %% check voxel size of an atlas map that labels the whole brain
-        fprintf('%8s %8s %8s\n','GM','WM','CSF') 
-        fprintf('%8.2f %8.2f %8.2f\n', [cat_stat_nansum(wYcls{1}(:)),cat_stat_nansum(wYcls{2}(:)),cat_stat_nansum(wYcls{3}(:))]  / 1000); 
-        fprintf('%8.2f %8.2f %8.2f\n', [cat_stat_nansum(Ycls{1}(:)),cat_stat_nansum(Ycls{2}(:)),cat_stat_nansum(Ycls{3}(:))] * prod(vx_vol) / 1000 / 255); 
-      end
-
-      %wYm      = cat_vol_ROInorm(Ym,transw,1,0,job.extopts.atlas);         % intensity
-      
-      if exist('Yth1','var')
-        % ROI based thickness of all GM voxels per ROI
-        Yth1x = Yth1; Yth1x(Yp0toC(Yp0,2)<0.5) = nan;
-        wYth1 = cat_vol_ROInorm(Yth1x,transw,1,0,FA);
-        wYth1(wYth1==0) = nan; 
-        clear Yth1x; 
-      end
-    end
-  
-    % ds('l2','',1.5,wYm,round(wYp0),wYm,single(wYa)/50 .* (wYp0<2.5),70)
-
-    [px,atlas] = fileparts(FA{ai,1}); 
-    stime2 = cat_io_cmd(sprintf('  ROI estimation of ''%s'' atlas',atlas),'g5','', job.extopts.verb-1,stime2);
-
-    % map atlas to actual template space 
-    transa      = trans.warped; 
-    transa.M1   = VA(ai).mat;
-    transa.odim = transw.odim;
-    wYa   = cat_vol_ROInorm([],transa,ai,0,FA);
-
-
-    %% extract ROI data
-    csv   = cat_vol_ROIestimate(wYp0,wYa,wYcls,ai,'V',[],FA{ai,3},FA);  % volume
-
-    % thickness
-    if exist('Yth1','var') 
-    % For thickness we want to avoid values in noncortical regions such as 
-    % the ventricles or regions with relative low GM volume or high CSF volume. 
-      csv  = cat_vol_ROIestimate(wYp0,wYa,wYth1,ai,'T',csv,{'gm'},job.extopts.atlas); %.*wYmim
-      % correct for ventricular regions that use the 'Ven' keyword.
-      ven  = find(cellfun('isempty',strfind( csv(:,2) , 'Ven'))==0);
-      csv(ven,end) = {nan}; 
-      % correct for regions with relative low GM (<10%) or high CSF volume (>50%). 
-      csvf = cat_vol_ROIestimate(wYp0,wYa,wYcls,ai,'V',[],{'csf','gm','wm'},FA);
-      vola = [nan,nan,nan;cell2mat(csvf(2:end,3:end))]; 
-      volr = vola ./ repmat(sum(vola,2),1,3); 
-      csv(volr(:,2)<0.1 | volr(:,2)>0.5,end) = {nan}; 
-    end
-
-    % xml-export one file for all (this is a structure)
-    ROI.(atlas) = csv;
-    
-  end 
-  
-  % write results
-  catROI = cat_roi_fun('csvtab2xmlroi',ROI);
-  cat_io_xml(fullfile(pth,labelfolder,['catROI_' nam '.xml']),catROI,'write'); 
-
-  cat_io_cmd(' ','g5','',job.extopts.verb,stime2);
-  cat_io_cmd('','n','',1,stime);
+  cat_main_roi(job,trans,Ycls,Yp0b,FA,VA,VAvx_vol,indx,indy,indz) 
 end
 if ~debug, clear wYp0 wYcls wYv trans; end
 
 
-%%  estimate volumes and TIV
+
+%% XML-report and Quality Assurance
+%  ---------------------------------------------------------------------
+
+%  estimate volumes and TIV
 qa.subjectmeasures.vol_abs_CGW = [
   prod(vx_vol)/1000/255 .* sum(Ycls{3}(:)), ... CSF
   prod(vx_vol)/1000/255 .* sum(Ycls{1}(:)), ... GM 
@@ -2228,18 +2139,18 @@ qa.subjectmeasures.vol_TIV     =  sum(qa.subjectmeasures.vol_abs_CGW);
 qa.subjectmeasures.vol_rel_CGW =  qa.subjectmeasures.vol_abs_CGW ./ qa.subjectmeasures.vol_TIV;
 if ~debug, clear Ycls; end
 
-%% ---------------------------------------------------------------------
-%  XML-report and Quality Assurance
-%  ---------------------------------------------------------------------
 stime = cat_io_cmd('Quality check'); job.stime = stime; 
-Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; Yp0(Yp0>3.1) = nan;  %qa2=qa;
+Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; Yp0(Yp0>3.1) = nan; % no analysis in WMH regions
 qa    = cat_vol_qa('cat12',Yp0,fname0,Ym,res,cat_warnings,job.extopts.species, ...
           struct('write_csv',0,'write_xml',1,'method','cat12','job',job,'qa',qa));
+clear Yp0; 
 
 % WMH updates? ... has to be done within cat_vol_qa?!
 %qa.subjectmeasures.vol_abs_CGW(2) = qa.subjectmeasures.vol_abs_CGW(2) - qa2.subjectmeasures.WMH_abs;
 %qa.subjectmeasures.vol_abs_CGW(4) = qa2.subjectmeasures.WMH_abs;
 %qa.subjectmeasures.vol_rel_CGW    = qa.subjectmeasures.vol_abs_CGW ./ qa.subjectmeasures.vol_TIV;
+
+% surface data update
 if job.output.surface && exist('S','var')
   % metadata
   if isfield(S,'lh') && isfield(S.lh,'th1'), th=S.lh.th1; else th=[]; end;
@@ -2254,7 +2165,7 @@ if job.output.surface && exist('S','var')
     qa.subjectmeasures.dist_sulcuswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
   end
 
-  qam = cat_stat_marks('eval',job.cati,qa,'cat12');
+  %qam = cat_stat_marks('eval',job.cati,qa,'cat12');
 
   cat_io_xml(fullfile(pth,reportfolder,['cat_' nam '.xml']),struct(...
     ... 'subjectratings',qam.subjectmeasures, ... not ready
@@ -2262,781 +2173,34 @@ if job.output.surface && exist('S','var')
 elseif exist('Yth1','var')
   qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(Yth1(Yth1(:)>1)) cat_stat_nanstd(Yth1(Yth1(:)>1))];
   
-  qam = cat_stat_marks('eval',job.cati,qa,'cat12');
+  %qam = cat_stat_marks('eval',job.cati,qa,'cat12');
 
   cat_io_xml(fullfile(pth,reportfolder,['cat_' nam '.xml']),struct(...
     ... 'subjectratings',qam.subjectmeasures, ... not ready
     'subjectmeasures',qa.subjectmeasures,'ppe',res.ppe),'write+'); % here we have to use the write+!
 end  
-clear Yo Yp0 qas Yth1;
 fprintf('%5.0fs\n',etime(clock,stime));
+clear Yth1;
 
 
+
+%% CAT reports
+%  ---------------------------------------------------------------------
+%  Final report of preprocessing parameter and results in the SPM 
+%  graphics window that is exported as PDF/JPG. The parameter were
+%  combined in cat_main_reportstr to three text strings that were 
+%  printed in combination with volume (spm_orthviews) and surface 
+%  data (cat_surf_display). The processing is finished by some 
+%  lines in the command line window.
+%  ---------------------------------------------------------------------
 if job.extopts.print
-  %% display and print result if possible
-  %  ---------------------------------------------------------------------
-    QMC   = cat_io_colormaps('marks+',17);
-    color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
-
-    warning off; %#ok<WNOFF> % there is a div by 0 warning in spm_orthviews in linux
-
-
-    %mark2str2 = @(mark,s,val) sprintf(sprintf('\\\\bf\\\\color[rgb]{%%0.2f %%0.2f %%0.2f}%s',s),color(QMC,mark),val);
-    marks2str = @(mark,str) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%s',color(QMC,mark),str);
-    mark2rps    = @(mark) min(100,max(0,105 - mark*10)) + isnan(mark).*mark;
-    grades      = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
-    mark2grad   = @(mark) grades{min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3)))};
-
-
-    % CAT GUI parameter:
-    % --------------------------------------------------------------------
-    str = [];
-
-    % 1 line: Matlab, SPM12, CAT12 version number and GUI and experimental mode 
-    str = [str struct('name', 'Version: Matlab / SPM12 / CAT12:','value',...
-      sprintf('%s / %s / %s (%s)',qa.software.version_matlab,qa.software.version_spm,qa.software.version_cat,qa.software.revision_cat))];
-    if     job.extopts.expertgui==1, str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}e']; 
-    elseif job.extopts.expertgui==2, str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}d'];
-    end  
-    if job.extopts.experimental, str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}x']; end  
-
-    % 2 lines: TPM, Template, Normalization method with voxel size
-    str = [str struct('name', 'Tissue Probability Map:','value',strrep(spm_str_manip(res.tpm(1).fname,'k40d'),'_','\_'))];
-    if do_dartel
-      if job.extopts.regstr==0 % Dartel
-        str = [str struct('name', 'Dartel Registration to: ',...
-                          'value',strrep(spm_str_manip(job.extopts.darteltpm{1},'k40d'),'_','\_'))];
-      elseif job.extopts.regstr==4 % Dartel
-        str = [str struct('name', 'Shooting Registration to: ',...
-                          'value',strrep(spm_str_manip(job.extopts.shootingtpm{1},'k40d'),'_','\_'))];
-      else
-        if job.extopts.expertgui==0
-          str = [str struct('name','Optimized Shooting Registration to:',...
-                            'value',strrep(spm_str_manip(job.extopts.shootingtpm{1},'k40d'),'_','\_'))];
-        else
-          str = [str struct('name', sprintf('Optimized Shooting Registration (regstr:%s) to :',sprintf('%g ',job.extopts.regstr)),...
-                            'value',strrep(spm_str_manip(job.extopts.shootingtpm{1},'k40d'),'_','\_'))];
-        end
-      end
-    end
-    
-    % 1 line 1: Affreg
-    str = [str struct('name', 'affreg:','value',sprintf('%s',job.opts.affreg))];
-    % 1 line 2: APP
-
-    APPstr = {'none','light','full','','','animal'}; APPstr{1071} = 'rough'; APPstr{1145} = 'rough(new)'; 
-    str(end).name  = [str(end).name(1:end-1) ' / APP ']; 
-    str(end).value = [str(end).value sprintf(' / %s',APPstr{job.extopts.APP+1})];
-
-    % 1 line 3: biasstr / biasreg+biasfwhm
-    if job.opts.biasstr>0
-      biasstr = {'ultralight','light','medium','strong','heavy'};
-      str(end).name  = [str(end).name(1:end-1) ' / biasstr '];  
-      str(end).value = [str(end).value sprintf(' / %s',biasstr{round(job.opts.biasstr*4)+1})];
-      if job.extopts.expertgui % add the value
-        str(end).value = [str(end).value sprintf('(%0.2f;breg:%0.2f;bfwhm:%0.2f)',job.opts.biasstr,job.opts.biasreg,job.opts.biasfwhm)]; 
-      end
-    else
-      str(end).name  = [str(end).name(1:end-1) ' / biasreg / biasfwhm'];
-      str(end).value = [str(end).value sprintf(' / %0.2f / %0.2f',job.opts.biasreg,job.opts.biasfwhm)]; 
-    end
-    if isfield(job.opts,'acc') && job.opts.acc>0
-      str = [str struct('name', '','value','')];
-      accstr = {'ultra low','low','std','high','ultra high'};
-      str(end).name  = [str(end).name(1:end-1) 'SPM accuracy (samp/tol) '];  
-      str(end).value = [str(end).value sprintf(' / %s',accstr{round(job.opts.acc*4)+1})];
-      if job.extopts.expertgui % add the value
-        str(end).value = [str(end).value sprintf('%0.2f (%0.2f/%0.2f)',job.opts.acc,job.opts.samp,job.opts.tol)]; 
-      end
-    else
-      str = [str struct('name', '','value','')];
-      str(end).name  = [str(end).name(1:end-1) 'SPM accuracy (samp/tol)'];
-      str(end).value = [str(end).value sprintf('%0.2f / %0.2f',job.opts.samp,job.opts.tol)]; 
-    end
-
-
-    % 1 line: adaptive noise parameter ( MRFstr + SANLM + NCstr )
-    defstr  = {'none','ultralight','light','medium','strong','heavy',... sanlm vs. isarnlm
-               'ultralight+','ultralight+','light+','medium+','strong+','heavy+'};
-    defstrm = @(x) defstr{ round(max(0,min(2,x))*4) + 1 + (x>0) + (x>1)};
-    str = [str struct('name', 'Noise reduction:','value','')]; 
-    if job.extopts.NCstr==0 
-      if job.extopts.mrf==0
-        str(end).value = 'no noise correction';
-      else
-        if job.extopts.expertgui==0
-          str(end).value = 'MRF'; 
-        else
-          str(end).value = sprintf('MRF(%0.2f)',job.extopts.mrf); 
-        end  
-      end
-    else
-      str(end).value = sprintf('SANLM(%s)',NCstr.labels{find(cell2mat(NCstr.values)==job.extopts.NCstr,1,'first')});
-    end
-    
-    if job.extopts.NCstr~=0 && job.extopts.mrf
-      if job.extopts.expertgui==0
-        str(end).value = '+MRF'; 
-      else
-        str(end).value = sprintf('+MRF(%0.2f)',job.extopts.mrf); 
-      end 
-    end
-
-
-    % 1 line(s): LASstr / GCUTstr / CLEANUPstr
-    str(end).name  = 'LASstr / GCUTstr / CLEANUPstr:';
-    gcutstr  = {'none','SPM','GCUT','APRG'};  
-    if ~job.extopts.expertgui
-      str(end).value = sprintf('%s / %s / %s',defstrm(job.extopts.LASstr),...
-        gcutstr{ceil(job.extopts.gcutstr+2)},defstrm(job.extopts.cleanupstr)); 
-    else
-      str(end).value = sprintf('%s(%0.2f) / %s(%0.2f) / %s(%0.2f)',...
-        defstrm(job.extopts.LASstr),job.extopts.LASstr,defstrm(job.extopts.gcutstr),...
-        job.extopts.gcutstr,defstrm(job.extopts.cleanupstr),job.extopts.cleanupstr); 
-    end
-    restype = char(fieldnames(job.extopts.restypes));
-    if job.extopts.expertgui
-      str = [str struct('name', 'KAMAP / WMHC / SLC / restype:','value',...
-             sprintf('%d / %d / %d / %s',...
-            job.extopts.spm_kamap,job.extopts.WMHC,job.extopts.SLC,restype))];
-    else
-      str = [str struct('name', 'restype:','value',sprintf('%s',restype))];
-    end
-    if ~strcmp('native',restype)
-      str(end).value = [str(end).value sprintf('(%0.2f %0.2f)',job.extopts.restypes.(restype))];
-    end; 
-    
-    % line 8: surfae parameter
-    if job.output.surface
-      str = [str struct('name', 'Voxel resolution (original > internal > PBT; vox):',...
-             'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s > %4.2f mm%s; %4.2f mm  ', ...
-             qa.qualitymeasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179),job.extopts.pbtres,char(179),job.extopts.vox(1)))];
-    else
-      str = [str struct('name', 'Voxel resolution (original > intern; vox):',...
-             'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s; %4.2f mm', ...
-             qa.qualitymeasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179),job.extopts.vox(1)))];
-    end       
-    % str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',job.extopts.vox))]; % does not work yet 
-
-
-    % Image Quality measures:
-    % --------------------------------------------------------------------
-    str2 =       struct('name', '\bfImage and Preprocessing Quality:','value',''); 
-    str2 = [str2 struct('name',' Resolution:','value',marks2str(qa.qualityratings.res_RMS,...
-      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.res_RMS),mark2grad(qa.qualityratings.res_RMS))))];
-    str2 = [str2 struct('name',' Noise:','value',marks2str(qa.qualityratings.NCR,...
-      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.NCR),mark2grad(qa.qualityratings.NCR))))];
-    str2 = [str2 struct('name',' Bias:','value',marks2str(qa.qualityratings.ICR,...
-      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.ICR),mark2grad(qa.qualityratings.ICR))))]; % not important and more confusing 
-    str2 = [str2 struct('name','\bf Weighted average (IQR):','value',marks2str(qa.qualityratings.IQR,...
-      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR))))];
-    if isfield(qa.subjectmeasures,'EC_abs') && ~isempty(qa.subjectmeasures.EC_abs)
-      str2 = [str2 struct('name',' Surface Euler number:','value',sprintf('%d', qa.subjectmeasures.EC_abs))]; 
-    end
-    if isfield(qa.subjectmeasures,'defect_size') && ~isempty(qa.subjectmeasures.defect_size)
-      str2 = [str2 struct('name',' Size of topology defects:','value',sprintf('%d', qa.subjectmeasures.defect_size))]; 
-    end
-
-    % Subject Measures
-    % --------------------------------------------------------------------
-    % Volume measures
-    
-    % header
-    str3 = struct('name', '\bfVolumes:','value',sprintf('%5s %5s %5s ','CSF','GM','WM')); 
-    if job.extopts.WMHC>1, str3(end).value = [str3(end).value sprintf('%5s ','WMH')]; end
-    if job.extopts.SLC>0,  str3(end).value = [str3(end).value sprintf('%5s ','SL')];  end
-
-    % absolute volumes
-    str3 = [str3 struct('name', ' Absolute volume:','value',sprintf('%5.0f %5.0f %5.0f ', ...
-            qa.subjectmeasures.vol_abs_CGW(1:3)))];
-    if job.extopts.WMHC>1,  str3(end).value = [str3(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_abs_CGW(4))]; end; 
-    if job.extopts.SLC>0,   str3(end).value = [str3(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_abs_CGW(5))]; end;
-    str3(end).value = [str3(end).value 'cm' char(179)];
-
-    % relative volumes
-    str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%5.1f %5.1f %5.1f ', ...
-            qa.subjectmeasures.vol_rel_CGW(1:3)*100))];
-    if job.extopts.WMHC>1,  str3(end).value = [str3(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_rel_CGW(4)*100)]; end; 
-    if job.extopts.SLC>0,   str3(end).value = [str3(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_rel_CGW(5)*100)]; end;
-    str3(end).value = [str3(end).value '%'];
-
-    Ywmhrel = NS(Yl1,23);
-    Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
-    WMH_rel    = 100*sum(Ywmhrel(:)) / sum(Yp0(:)>0.5); 
-    WMH_WM_rel = 100*sum(Ywmhrel(:)) / sum(Yp0(:)>2.5); 
-    if WMH_rel>3 || WMH_WM_rel>5
-      str3(end).value = [str3(end).value sprintf('\\bf\\color[rgb]{0.8 0 0} WMHs!')];  
-    end
-    clear Yp0;
-
-    str3 = [str3 struct('name', ' TIV:','value', sprintf(['%0.0f cm' char(179)],qa.subjectmeasures.vol_TIV))];  
-
-    
-    % Surface measures - Thickness, (Curvature, Depth, ...)
-    if isfield(qa.subjectmeasures,'dist_thickness') && ~isempty(qa.subjectmeasures.dist_thickness)
-      str3 = [str3 struct('name', '\bfThickness:','value',sprintf('%5.2f%s%5.2f mm', ...
-             qa.subjectmeasures.dist_thickness{1}(1),177,qa.subjectmeasures.dist_thickness{1}(2)))];
-      if isfield(qa.subjectmeasures,'dist_gyruswidth') && ~isnan(qa.subjectmeasures.dist_gyruswidth{1}(1))
-        str3 = [str3 struct('name', '\bfGyruswidth:','value',sprintf('%5.2f%s%5.2f mm', ...
-               qa.subjectmeasures.dist_gyruswidth{1}(1),177,qa.subjectmeasures.dist_gyruswidth{1}(2)))];
-      end
-      if isfield(qa.subjectmeasures,'dist_sulcuswidth') && ~isnan(qa.subjectmeasures.dist_sulcuswidth{1}(1))
-        str3 = [str3 struct('name', '\bfSulcuswidth:','value',sprintf('%5.2f%s%5.2f mm', ...
-               qa.subjectmeasures.dist_sulcuswidth{1}(1),177,qa.subjectmeasures.dist_sulcuswidth{1}(2)))];
-      end
-    end
-
-    % Preprocessing Time
-    str2 = [str2 struct('name','\bfProcessing time:','value',sprintf('%02.0f:%02.0f min', ...
-      floor(round(etime(clock,res.stime))/60),mod(round(etime(clock,res.stime)),60)))]; 
-  
-    % Warnings
-    if numel(cat_warnings)>0 && job.extopts.expertgui>0
-      str2 = [str2 struct('name', '','value','')]; 
-      str2 = [str2 struct('name', '\bfWarnings:','value','')]; 
-      for wi=1:numel(cat_warnings)
-        shorter = cat_warnings(wi).identifier;
-        % remove leading MATLAB, SPM or CAT elements
-        dots    = max([min(strfind(shorter,'MATLAB')+7), ...
-                       min(strfind(shorter,'SPM')+4), ...
-                       min(strfind(shorter,'CAT')+4)]);
-        if ~isempty(dots), shorter = shorter(dots:end); end
-        % limit lenght of the string and replace critical character
-        shorter = spm_str_manip(shorter,'l40');
-        shorter = marks2str(4,shorter);
-        shorter = strrep(shorter,'_','\_');
-        str2    = [str2 struct('name',shorter,'value','')];  %#ok<AGROW>
-      end
-    end
-
-    % adding one space for correct printing of bold fonts
-    for si=1:numel(str)
-      str(si).name   = [str(si).name  '  '];  str(si).value  = [str(si).value  '  '];
-    end
-    for si=1:numel(str2)
-      str2(si).name  = [str2(si).name '  '];  str2(si).value = [str2(si).value '  '];
-    end
-    for si=1:numel(str3)
-      str3(si).name  = [str3(si).name '  '];  str3(si).value = [str3(si).value '  '];
-    end
-
-
-    %
-    fg = spm_figure('FindWin','Graphics'); 
-    set(0,'CurrentFigure',fg)
-    if isempty(fg)
-      if job.nproc, fg = spm_figure('Create','Graphics','visible','off'); else fg = spm_figure('Create','Graphics'); end;
-    else
-      if job.nproc, set(fg,'visible','off'); end
-    end
-    set(fg,'windowstyle','normal'); 
-    spm_figure('Clear','Graphics'); 
-    switch computer
-      case {'PCWIN','PCWIN64'}, fontsize = 8;
-      case {'GLNXA','GLNXA64'}, fontsize = 8;
-      case {'MACI','MACI64'},   fontsize = 9.5;
-      otherwise,                fontsize = 9.5;
-    end
-    ax=axes('Position',[0.01 0.75 0.98 0.24],'Visible','off','Parent',fg);
-
-    text(0,0.99,  ['Segmentation: ' spm_str_manip(res.image0(1).fname,'k60d') '       '],...
-      'FontSize',fontsize+1,'FontWeight','Bold','Interpreter','none','Parent',ax);
-
-    cm = job.extopts.colormap; 
-
-    % check colormap name
-    switch lower(cm)
-      case {'jet','hsv','hot','cool','spring','summer','autumn','winter',...
-          'gray','bone','copper','pink','bcgwhw','bcgwhn'}
-      otherwise
-        cat_io_cprintf(job.color.warning,'WARNING:Unknown Colormap - use default.\n'); 
-        cm = 'gray';
-    end
-
-    % SPM_orthviews seams to allow only 60 values
-    % It further requires a modified colormaps with lower values that the
-    % colorscale and small adaption for the values. 
-    surfcolors = 128; 
-    switch lower(cm)
-      case {'bcgwhw','bcgwhn'} % cat colormaps with larger range
-        ytick       = [1,5:5:60];
-        yticklabel  = {' BG',' ',' CSF',' CGM',' GM',' GWM',' WM',' ',' ',' ',' ',' ',' BV / HD '};
-        yticklabelo = {' BG',' ','    ','    ','   ','     ',' avg WM  ',' ',' ',' ',' ',' ',' BV / HD '};
-        yticklabeli = {' BG',' ','    ','    ','   ','  ','  ',' ',' ',' ',' ',' ',' BV / HD '};
-        %colormap(cat_io_colormaps(cm,60));
-        cmap = [cat_io_colormaps([cm 'ov'],60);flipud(cat_io_colormaps([cm 'ov'],60));jet(surfcolors)]; 
-        cmmax = 2;
-      case {'jet','hsv','hot','cool','spring','summer','autumn','winter','gray','bone','copper','pink'}
-        ytick       = [1 20 40 60]; 
-        yticklabel  = {' BG',' CSF',' GM',' WM'};
-        yticklabelo = {' BG','    ','   ',' WM'};
-        yticklabeli = {' BG','    ','   ','   '};
-        cmap = [eval(sprintf('%s(60)',cm));flipud(eval(sprintf('%s(60)',cm)));jet(surfcolors)]; 
-        cmmax = 1;
-    end
-    colormap(cmap);
-    spm_orthviews('Redraw');
-
-    htext = zeros(5,2,2);
-    for i=1:size(str,2)   % main parameter
-      htext(1,i,1) = text(0.01,0.98-(0.055*i), str(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-      htext(1,i,2) = text(0.51,0.98-(0.055*i), str(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-    end
-    for i=1:size(str2,2)  % qa-measurements
-      htext(2,i,1) = text(0.01,0.40-(0.055*i), str2(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-      htext(2,i,2) = text(0.25,0.40-(0.055*i), str2(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-    end
-    % qa-scala
-    %htext(5,1,1) = text(0.01,0.45-(0.055*(i+2)),str4(1).name,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-    for i=1:size(str3,2)  % subject-measurements
-      htext(3,i,1) = text(0.51,0.40-(0.055*i), str3(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-      htext(3,i,2) = text(0.70,0.40-(0.055*i), str3(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-    end
-
-
-
-    pos = [0.01 0.38 0.48 0.36; 0.51 0.38 0.48 0.36; ...
-           0.01 0.01 0.48 0.36; 0.51 0.01 0.48 0.36];
-    spm_orthviews('Reset');
-
-
-
-
-    % BB box is not optimal for all images
-    disptype = 'affine'; 
-    switch disptype
-      case 'affine'
-        dispmat = res.Affine; 
-        spm_orthviews('BB', job.extopts.bb*0.95 );
-      case 'ridid'
-        % this does not work so good... AC has a little offset ...
-        aff = spm_imatrix(res.Affine);  scale = aff(7:9); 
-        spm_orthviews('BB', job.extopts.bb ./ mean(scale));
-        dispmat = R; 
-    end
-
-
-    % Yo - original image in original space
-    % using of SPM peak values didn't work in some cases (5-10%), so we have to load the image and estimate the WM intensity 
-    try %#ok<TRYNC>
-      Yo  = single(VT.private.dat(:,:,:)); 
-    end
-    Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
-    if exist('Yo','var')
-      if job.inv_weighting
-        WMth = cat_stat_nanmedian(Yo(Yp0(:)>2.5 & Yp0(:)<3.5))/2*3;
-        T1txt = '*.nii (Original PD/T2)'; 
-      else
-        WMth = cat_stat_nanmedian(Yo(Yp0(:)>2.8 & Yp0(:)<3.2)); clear Yo; 
-        T1txt = '*.nii (Original T1)'; 
-      end
-      if ~debug, clear Yo; end
-
-      if isfield(res,'spmpp')
-        VT0x = res.image0(1); 
-      else
-        VT0x = VT0;
-      end
-      VT0x.mat = dispmat * VT0x.mat; 
-      hho = spm_orthviews('Image',VT0x,pos(1,:)); 
-      spm_orthviews('Caption',hho,{T1txt},'FontSize',fontsize,'FontWeight','Bold');
-      spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
-      cc{1} = axes('Position',[pos(1,1) + 0.30 0.37 0.02 0.15],'Parent',fg);     
-      try, image(cc{1},(60:-1:1)'); end
-
-      if job.inv_weighting
-        set(cc{1},'YTick',ytick,'YTickLabel',fliplr(yticklabeli),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-          'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
-      else  
-        set(cc{1},'YTick',ytick,'YTickLabel',fliplr(yticklabelo),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-          'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
-      end
-    else
-      cat_io_cprintf('warn','WARNING: Can''t display original file "%s"!\n',VT.fname); 
-    end
-
-
-    % Ym - normalized image in original space
-    if ~isfield(res,'spmpp') 
-      %%
-      Vm        = res.image(1); 
-      Vm.fname  = ''; 
-      Vm.dt     = [spm_type('FLOAT32') spm_platform('bigend')];
-      Vm.dat(:,:,:) = single(Ym); 
-      Vm.pinfo  = repmat([1;0],1,size(Ym,3));
-      Vm.mat    = dispmat * Vm.mat; 
-      hhm = spm_orthviews('Image',Vm,pos(2,:));
-      spm_orthviews('Caption',hhm,{'m*.nii (Int. Norm.)'},'FontSize',fontsize,'FontWeight','Bold');
-      spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
-      cc{2} = axes('Position',[pos(2,1) + 0.30 0.37 0.02 0.15],'Parent',fg);
-      try, image(cc{2},(60:-1:1)'); end
-      set(cc{2},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-        'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
-    end
-
-    % Yo - segmentation in original space
-    VO        = res.image(1); 
-    VO.fname  = ''; 
-    VO.dt     = [spm_type('FLOAT32') spm_platform('bigend')];
-    VO.dat(:,:,:) = single(Yp0/3); 
-    VO.pinfo  = repmat([1;0],1,size(Yp0,3));
-    VO.mat    = dispmat * VO.mat; 
-    hhp0 = spm_orthviews('Image',VO,pos(3,:)); if ~debug, clear Yp0; end
-    spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize,'FontWeight','Bold');
-    spm_orthviews('window',hhp0,[0 cmmax]); caxis([0,2]);
-    cc{3} = axes('Position',[pos(3,1) + 0.30 0.02 0.02 0.15],'Parent',fg);
-    try, image(cc{3},(60:-1:1)'); end
-    set(cc{3},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-      'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
-    spm_orthviews('Reposition',[0 0 0]); 
-
-
-    % surface
-    if job.extopts.print>1
-      if exist('Psurf','var')
-        try
-          spm_figure('Focus','Graphics'); 
-          hCS = subplot('Position',[0.50 0.05 0.55 0.30],'visible','off'); 
-          hSD = cat_surf_display(struct('data',Psurf(1).Pthick,'readsurf',0,'expert',2,...
-            'multisurf',job.output.surface,'view','s',...
-            'parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
-          colormap(cmap);  set(hSD{1}.colourbar,'visible','off'); 
-          cc{3} = axes('Position',[0.63 0.02 0.3 0.01],'Parent',fg); image(cc{3},(121:1:120+surfcolors));
-          set(cc{3},'XTick',1:(surfcolors-1)/6:surfcolors,'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
-            'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize,'FontWeight','Bold');
-        catch
-          cat_io_cprintf('warn','WARNING: Can''t display surface!\n',VT.fname);   
-        end
-      end
-    end
-
-
-
-    %% print subject report file as standard PDF/PNG/... file
-    job.imgprint.type  = 'pdf';
-    job.imgprint.dpi   = 600;
-    job.imgprint.fdpi  = @(x) ['-r' num2str(x)];
-    job.imgprint.ftype = @(x) ['-d' num2str(x)];
-    job.imgprint.fname     = fullfile(pth,reportfolder,['catreport_' nam '.' job.imgprint.type]); 
-    job.imgprint.fnamej    = fullfile(pth,reportfolder,['catreportj_' nam '.jpg']);
-
-    fgold.PaperPositionMode = get(fg,'PaperPositionMode');
-    fgold.PaperPosition     = get(fg,'PaperPosition');
-    fgold.resize            = get(fg,'resize');
-
-    % it is necessary to change some figure properties especialy the fontsizes 
-    set(fg,'PaperPositionMode','auto','resize','on','PaperPosition',[0 0 1 1]);
-    for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize*0.8); end; end
-    for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize*0.8); end;
-    warning off
-    print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
-    print(fg, job.imgprint.ftype('jpeg'), job.imgprint.fdpi(job.imgprint.dpi/2), job.imgprint.fnamej); 
-    warning on
-    for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize); end; end
-    for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize); end; 
-    set(fg,'PaperPositionMode',fgold.PaperPositionMode,'resize',fgold.resize,'PaperPosition',fgold.PaperPosition);
-    try
-      fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);% windows error?
-    end
-
-    %% reset colormap to the simple SPM like gray60 colormap
-    if exist('hSD','var')
-      % if there is a surface than we have to use the gray colormap also here
-      % because the colorbar change!
-      try %#ok<TRYNC>
-        cat_surf_render2('ColourMap',hSD{1}.axis,gray(128));
-        cat_surf_render2('Clim',hSD{1}.axis,[0 6]);
-        axes(cc{3}); image(cc{3},0:60);
-        set(cc{3},'XTick',max(1,0:10:60),'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
-          'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize,'FontWeight','Bold');
-      end
-    end
-
-    WMfactor = 4/3; cmap = gray(60); colormap(cmap); caxis([0,numel(cmap)]); 
-
-    % new colorscale
-    if job.inv_weighting
-      % if exist('hho' ,'var'), spm_orthviews('window',hho ,[0 T3th(3)*WMfactor]); end
-    else
-      if exist('hho' ,'var'), spm_orthviews('window',hho ,[0 T3th(3)*WMfactor]); end
-    end
-    if exist('hhm' ,'var'), spm_orthviews('window',hhm ,[0 WMfactor]); end
-    if exist('hhp0','var'), spm_orthviews('window',hhp0,[0 WMfactor]); end
-
-    warning on;  %#ok<WNON>
-
-
-    %% command window output
-    fprintf('\n%s',repmat('-',1,72));
-    fprintf(1,'\nCAT preprocessing takes %0.0f minute(s) and %0.0f second(s).\n', ...
-      floor(round(etime(clock,res.stime))/60),mod(round(etime(clock,res.stime)),60));
-    cat_io_cprintf(color(QMC,qa.qualityratings.IQR), sprintf('Image Quality Rating (IQR):  %5.2f%%%% (%s)\n',...
-      mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR)));
-
-    % print subfolders
-    if job.extopts.subfolders
-      fprintf('Segmentations are saved in %s%s%s\n',pth,filesep,'mri');
-      fprintf('Reports are saved in %s%s%s\n',pth,filesep,'report');
-      if job.output.ROI
-        fprintf('Labels are saved in %s%s%s\n',pth,filesep,'label');
-      end
-      if job.output.surface && exist('S','var')
-        fprintf('Surface measurements are saved in %s%s%s\n',pth,filesep,'surf');
-      end
-    end
-
-    fprintf('%s\n\n',repmat('-',1,72));
-    
-    % finish diary entry of "../report/cmdln_*.txt"
-    % read diagry and add the command-line output to the *.xml and *.mat file
-    diary off; 
-    try
-      fid=fopen(res.catlog);
-      txt=fread(fid,200000,'uint8=>char');
-      fclose(fid); 
-      txt2=textscan(txt,'%s','Delimiter',''); 
-      cat_io_xml(fullfile(pth,reportfolder,['cat_' nam '.xml']),struct(...
-        'catlog',txt2),'write+'); % here we have to use the write+!
-    end    
-    
-    spm_progress_bar('Clear');
-    clear C c Ymi Ymf Ym
-
+  str = cat_main_reportstr(job,res,qa,cat_warnings);
+  Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
+  if ~exist('Psurf','var'), Psurf = ''; end
+  cat_main_reportfig(Ym,Yp0,Psurf,job,res,str);
 end
-%%
+% final command line report
+cat_main_reportcmd(job,res,qa);
+
 return;
-%=======================================================================
-
-%=======================================================================
-function wYv = cat_vol_ROInorm(Yv,warped,ai,mod,FA)
-% ----------------------------------------------------------------------
-% normalized space:  
-% ----------------------------------------------------------------------
-% for normalized space no further adaptions are available, but 
-% a masking based on the tissue map can be used
-% ----------------------------------------------------------------------
- 
-  % load mask (and complete undefined parts)
-  if isempty(Yv)
-    % no input - load atlas
-   
-    if ~exist(FA{ai,1},'file')
-      error('cat:cat_main:missAtlas','Miss cat atlas-file ''%s''!',FA{ai,1});
-    end
-    % try multiple times, because of read error in parallel processing
-    for i=1:5
-      try
-        wVv = spm_vol(FA{ai,1});
-        wYv = spm_read_vols(wVv);
-        break
-      catch 
-        pause(0.5)
-      end
-    end
-     
-    % resample atlas, if the atlas resolution differs from the actual template resolution
-    if 0  %wVv.mat(1) ~= warped.M1(1)
-      wVv2 = wVv; wVv2.mat = warped.M1; wVv2.dim = warped.odim; 
-      [t,wYv] = cat_vol_imcalc(wVv,wVv2,'i1',struct('interp',0,'verb',0));
-    end
-    wYv = cat_vol_ctype(wYv,wVv(1).private.dat.dtype);
-  else
-    % map image to atlas space
-    for yi=1:numel(warped.ress), warped.y(:,:,:,yi) = warped.y(:,:,:,yi) * warped.ress(yi); end
-    if mod==0
-      old = 0;
-      
-      Vlai = spm_vol(FA{ai,1});
-      vx_vol_Vlai   = sqrt(sum(Vlai.mat(1:3,1:3).^2));
-      vx_vol_Vdef   = sqrt(sum(warped.M1(1:3,1:3).^2));
-      
-      if old % this did not work for the thickness map?  
-        [wYv,w] = spm_diffeo('push',Yv,warped.y,warped.odim(1:3)); spm_field('boundary',1);
-        wYv = spm_field(w,wYv,[sqrt(sum(warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]);
-      elseif any( vx_vol_Vdef > vx_vol_Vlai*2)
-        %% increase resolution
-        fc   = ceil(vx_vol_Vdef / vx_vol_Vlai);
-        ddim = (size(warped.y)-1)*fc+1; ddim(4)=[]; 
-        eyev = eye(4); eyev(1:end-1) = eyev(1:end-1) * 1/fc;
-        Yy   = zeros([ddim 3],'single');                        
-        for k1=1:3
-          for i=1:ddim(3),
-            Yy(:,:,i,k1) = single(spm_slice_vol(warped.y(:,:,:,k1),eyev*spm_matrix([0 0 i]),ddim(1:2),[1,NaN])); % adapt for res
-          end
-        end
-        Yvi  = zeros(ddim,'single'); 
-        for i=1:ddim(3),
-          Yvi(:,:,i) = single(spm_slice_vol(Yv(:,:,:),eyev*spm_matrix([0 0 i]),ddim(1:2),[1,NaN])); % adapt for res
-        end
-        
-        [wYv,w]  = spm_diffeo('push',Yvi,Yy,warped.odim(1:3));
-        % divide by jacdet to get unmodulated data
-        wYv = wYv./(w+0.001); 
-        
-       
-      else      
-        [wYv,w]  = spm_diffeo('push',Yv,warped.y,warped.odim(1:3));
-        % divide by jacdet to get unmodulated data
-        wYv = wYv./(w+0.001); 
-      end
-    elseif mod==1 && iscell(Yv) % tissue case
-      nicemapping = 1;
-      if nicemapping
-        % Modulation using spm_diffeo and push introduces aliasing artefacts,
-        % thus we use the def2det function of the inverted deformations to obtain the old and 
-        % in my view a more appropriate jacobian determinant 
-        % The 2nd reason to use the old modulation is compatibility with cat_vol_defs.m
-        Yy = spm_diffeo('invdef',warped.y,warped.odim,eye(4),warped.M0);
-        w  = spm_diffeo('def2det',Yy)/det(warped.M0(1:3,1:3)); clear Yy;
-        % ensure that jacobian det is positive (no clue why some times the sign is switched)
-        if mean(w(~isnan(w))) < 0, w = -w; end 
-        w(:,:,[1 end]) = NaN; w(:,[1 end],:) = NaN; w([1 end],:,:) = NaN;
-      end
-      
-      wYv = cell(1,numel(Yv));
-      for i=1:numel(Yv)
-        if nicemapping 
-          [wYv{i},w2] = spm_diffeo('push',single(Yv{i})/255,warped.y,warped.odim(1:3)); 
-          % divide by jacdet to get unmodulated data
-          wYv{i} = wYv{i}./(w2+0.001); 
-          wYv{i} = wYv{i} .* w;
-        else
-          % simple push
-          [wYv{i},w] = spm_diffeo('push',single(Yv{i})/255,warped.y,warped.odim(1:3)); 
-        end
-      end
-    else
-      error('unknown case');
-    end
-    %spm_smooth(wYv,wYv,[1 1 1]); 
-  end
-  
-  
-return
-%=======================================================================
-
-%=======================================================================
-function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA)
-% ----------------------------------------------------------------------
-% estimate values
-% ----------------------------------------------------------------------
-
-
-% load atlas-csv-file
-
-  [pp,ff] = fileparts(FA{ai,1});
-  csvf = fullfile(pp,[ff '.csv']);
-
-  if isempty(csv) 
-    if exist(csvf,'file')
-      csv = cat_io_csv(csvf,'','',struct('delimiter',';')); 
-    else
-      csv = [num2cell((1:max(Ya(:)))') ...
-        cellstr([repmat('ROI',max(Ya(:)),1) num2str((1:max(Ya(:)))','%03d')]) ...
-        cellstr([repmat('ROI',max(Ya(:)),1) num2str((1:max(Ya(:)))','%03d')])];
-    end
-    
-    % remove empty rows and prepare structure names
-    if size(csv,2)>2, csv(:,3:end)=[]; end
-    for ri=size(csv,1):-1:1
-      if isempty(csv{ri,1}) || isempty(csv{ri,2}); 
-        csv(ri,:)=[];
-      elseif csv{ri,1}==0
-        csv(ri,:)=[];
-      end       
-    end
-  end
-  name = genvarname(strrep(strrep(name,'-','_'),' ','_'));
-  
-  
-  
-  %% volume case
-  Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));   
-  % other maps with masks
-  for ti=1:numel(tissue)
-    switch name(1)
-      case 'V' % volume
-        csv{1,end+1} = [name tissue{ti}];  %#ok<AGROW>
-        for ri=2:size(csv,1)
-          switch lower(tissue{ti})
-            case 'csf',   Ymm=single(Yv{3}) .* single(Ya==csv{ri,1});
-            case 'gm',    Ymm=single(Yv{1}) .* single(Ya==csv{ri,1});
-            case 'wm',    Ymm=single(Yv{2}) .* single(Ya==csv{ri,1});
-            case 'wmh',   Ymm=single(Yv{2}) .* single(Ya==csv{ri,1}); 
-            case 'brain', Ymm=single(Yv{1} + Yv{2} + Yv{3}) .* single(Ya==csv{ri,1});
-            case '',      Ymm=single(Ya==csv{ri,1});
-          end
-          csv{ri,end} = 1/1000 * cat_stat_nansum(Ymm(:));
-        end
-      case 'c'
-        return
-      otherwise % 
-        csv{1,end+1} = strrep([name tissue{ti}],'Tgm','ct');  %#ok<AGROW>
-        switch lower(tissue{ti})
-          case 'csf',   Ymm=Yp0toC(Yp0,1); 
-          case 'gm',    Ymm=Yp0toC(Yp0,2); 
-          case 'wm',    Ymm=Yp0toC(Yp0,3); 
-          case 'wmh',   Ymm=Yp0toC(Yp0,4); 
-          case 'brain', Ymm=Yp0>0.5;
-          case '',      Ymm=true(size(Yp0));
-        end
-        for ri=2:size(csv,1)
-          csv{ri,end} = cat_stat_nanmean(Yv(Ya(:)==csv{ri,1} & Ymm(:)));
-        end
-    end
-  end
-  
-return
-%=======================================================================
-%{
-%=======================================================================
-function [x1,y1,z1] = defs(sol,z,MT,prm,x0,y0,z0,M)
-iMT = inv(MT);
-x1  = x0*iMT(1,1)+iMT(1,4);
-y1  = y0*iMT(2,2)+iMT(2,4);
-z1  = (z0(z)*iMT(3,3)+iMT(3,4))*ones(size(x1));
-x1a = x0    + spm_bsplins(sol{1},x1,y1,z1,prm);
-y1a = y0    + spm_bsplins(sol{2},x1,y1,z1,prm);
-z1a = z0(z) + spm_bsplins(sol{3},x1,y1,z1,prm);
-x1  = M(1,1)*x1a + M(1,2)*y1a + M(1,3)*z1a + M(1,4);
-y1  = M(2,1)*x1a + M(2,2)*y1a + M(2,3)*z1a + M(2,4);
-z1  = M(3,1)*x1a + M(3,2)*y1a + M(3,3)*z1a + M(3,4);
-return;
-%=======================================================================
-
-%=======================================================================
-function t = transf(B1,B2,B3,T)
-if ~isempty(T)
-    d2 = [size(T) 1];
-    t1 = reshape(reshape(T, d2(1)*d2(2),d2(3))*B3', d2(1), d2(2));
-    t  = B1*t1*B2';
-else
-    t = zeros(size(B1,1),size(B2,1),size(B3,1));
-end;
-return;
-%=======================================================================
-
-
-%=======================================================================
-function p = likelihoods(f,bf,mg,mn,vr)
-K  = numel(mg);
-N  = numel(f);
-M  = numel(f{1});
-cr = zeros(M,N);
-for n=1:N,
-    if isempty(bf),
-        cr(:,n) = double(f{n}(:));
-    else
-        cr(:,n) = double(f{n}(:).*bf{n}(:));
-    end
-end
-p  = ones(numel(f{1}),K);
-for k=1:K,
-    amp    = mg(k)/sqrt((2*pi)^N * det(vr(:,:,k)));
-    d      = bsxfun(@minus,cr,mn(:,k)')*inv(chol(vr(:,:,k))); %#ok<MINV>
-    p(:,k) = amp*exp(-0.5*sum(d.*d,2)) + eps;
-end
-return;
-%==========================================================================
-%}
 

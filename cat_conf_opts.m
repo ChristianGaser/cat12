@@ -278,7 +278,7 @@ tol.name    = 'SPM processing accuracy';
 tol.help    = { ...
     'Parameter that to control the accuracy of different SPM functions. In most cases the standard accuracy is good enough for the initialization in CAT. However, some images with servere (local) inhomogeneities or atypical anatomy may benefit by further iterations. '
   };
-tol.def    = @(val)cat_get_defaults('opts.spm_acc', val{:}); 
+tol.def    = @(val)cat_get_defaults('opts.tol', val{:}); 
 tol.labels = {'average (default)' 'high (slow)' 'ulta high (very slow)'};
 tol.values = {1e-4 1e-5 1e-6};
 if expert
