@@ -1,4 +1,4 @@
-function cat_main_roi(job,trans,Ycls,Yp0b,FA,VA,VAvx_vol,indx,indy,indz) 
+function cat_main_roi(job,trans,Ycls,Yp0) 
 % ______________________________________________________________________
 %  ROI Partitioning:
 %  This part estimated individual measurements for different ROIs.
@@ -33,13 +33,35 @@ function cat_main_roi(job,trans,Ycls,Yp0b,FA,VA,VAvx_vol,indx,indy,indz)
   stime = cat_io_cmd('ROI estimation');   
   if job.extopts.verb, fprintf('\n'); end; 
 
+  % get atlases
+  FAF = job.extopts.atlas; 
+  FA  = {}; fai = 1;
+  AN  = fieldnames(job.output.atlases);
+  for ai = 1:numel(AN)
+    fafi = find(cellfun('isempty',strfind(FAF(:,1),[AN{ai} '.']))==0);
+    if ~isempty(fafi) && job.output.atlases.(AN{ai}), FA(fai,:) = FAF(fafi,:); fai = fai+1; end %#ok<AGROW>
+  end
+
+  if isempty(FA)
+    % deactivate output
+    FN = job.output.atlas; 
+    for ai = 1:numel(AN)
+      job.output.atlas.(FN{ai}) = 0; 
+    end
+  else
+    % get atlas resolution 
+    % we sort the atlases to reduce data resampling
+    VA = spm_vol(char(FA(:,1))); 
+    for ai=1:numel(VA), VAvx_vol(ai,:) = sqrt(sum(VA(ai).mat(1:3,1:3).^2)); end  %#ok<AGROW>
+    [VAs,VAi] = sortrows(VAvx_vol);  %#ok<ASGLU>
+    FA = FA(VAi,:); VA = VA(VAi,:); VAvx_vol = VAvx_vol(VAi,:); 
+  end
+
   for ai=1:size(FA,1)
     %%
     if ai==1 || any(VAvx_vol(ai,:)~=VAvx_vol(ai-1,:))
       % resampe data in atlas resolution for the first time or if the atlas resolution change 
-
-      Yp0 = zeros( trans.native.Vi.dim ,'single'); Yp0(indx,indy,indz) = single(Yp0b)*5/255; 
-
+      
       % map data to actual template space
       if ai==1
         stime2  = cat_io_cmd('  Data mapping to normalized atlas space','g5','', job.extopts.verb-1); 
