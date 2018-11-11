@@ -1,4 +1,4 @@
-function cat_run_job10701173(job,tpm,subj)
+function cat_run_job10701173plus(job,tpm,subj)
 % run CAT 
 % ______________________________________________________________________
 %
@@ -20,7 +20,7 @@ function cat_run_job10701173(job,tpm,subj)
 %   subj .. file name
 % ______________________________________________________________________
 % Christian Gaser
-% $Id$
+% $Id: cat_run_job1070.m 1160 2017-08-07 09:15:37Z gaser $
 
 %#ok<*WNOFF,*WNON>
 
@@ -129,21 +129,21 @@ function cat_run_job10701173(job,tpm,subj)
           vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
 
           if any(vx_vol>5)  % too thin slices
-            error('CAT:cat_main1173:TooLowResolution', sprintf(...
+            error('CAT:cat_main1173plus:TooLowResolution', sprintf(...
                  ['Voxel resolution has to be better than 5 mm in any dimension \n' ...
                   'for reliable CAT preprocessing! \n' ...
                   'This image has a resolution %0.2fx%0.2fx%0.2f mm%s. '], ... 
                     vx_vol,char(179))); %#ok<SPERR>
           end
           if prod(vx_vol)>27  % too small voxel volume (smaller than 3x3x3 mm3)
-            error('CAT:cat_main1173:TooHighVoxelVolume', ...
+            error('CAT:cat_main1173plus:TooHighVoxelVolume', ...
                  ['Voxel volume has to be smaller than 10 mm%s (around 3x3x3 mm%s) to \n' ...
                   'allow a reliable CAT preprocessing! \n' ...
                   'This image has a voxel volume of %0.2f mm%s. '], ...
                   char(179),char(179),prod(vx_vol),char(179));
           end
           if max(vx_vol)/min(vx_vol)>8 % isotropy 
-            error('CAT:cat_main1173:TooStrongIsotropy', sprintf(...
+            error('CAT:cat_main1173plus:TooStrongIsotropy', sprintf(...
                  ['Voxel isotropy (max(vx_size)/min(vx_size)) has to be smaller than 8 to \n' ...
                   'allow a reliable CAT preprocessing! \n' ...
                   'This image has a resolution %0.2fx%0.2fx%0.2f mm%s and a isotropy of %0.2f. '], ...
@@ -223,7 +223,7 @@ function cat_run_job10701173(job,tpm,subj)
               vx_voli  = min(vx_vol ,best_vx ./ ((vx_vol > (best_vx + job.extopts.restypes.(restype)(2)))+eps));
               %vx_voli  = min(vx_vold,vx_voli); % guarantee Dartel resolution
             otherwise 
-              error('cat_run_job10701173:restype','Unknown resolution type ''%s''. Choose between ''fixed'',''native'', and ''best''.',restype)
+              error('cat_run_job10701173plus:restype','Unknown resolution type ''%s''. Choose between ''fixed'',''native'', and ''best''.',restype)
           end
 
 
@@ -330,7 +330,7 @@ function cat_run_job10701173(job,tpm,subj)
             % ds('l2','',vx_vol,Ym, Yt + 2*Ybg,obj.image.private.dat(:,:,:)/WMth,Ym,60)
             if  app.bias ||  app.msk %job.extopts.APP  
                 stime = cat_io_cmd('APP: Rough bias correction'); 
-                [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init10701173(single(obj.image.private.dat(:,:,:)),vx_vol,job.extopts.verb);
+                [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init1070(single(obj.image.private.dat(:,:,:)),vx_vol,job.extopts.verb);
 
 
                 % update SPM parameter - only increasing of resolution parameter 
@@ -591,7 +591,7 @@ function cat_run_job10701173(job,tpm,subj)
                 [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});
                 delete(fullfile(pp,[ff,ee]));
             end
-            error('CAT:cat_run_job10701173:spm_preproc8','Error in spm_preproc8. Check image and orientation. \n');
+            error('CAT:cat_run_job10701173plus:spm_preproc8','Error in spm_preproc8. Check image and orientation. \n');
         end
         warning on 
 
@@ -617,7 +617,7 @@ function cat_run_job10701173(job,tpm,subj)
 
         % inactive preprocessing of inverse images (PD/T2) 
         if job.extopts.INV==0 && any(diff(Tth)<=0)
-          error('CAT:cat_main1173:BadImageProperties', ...
+          error('CAT:cat_main1173plus:BadImageProperties', ...
           ['CAT12 is designed to work only on highres T1 images.\n' ...
            'T2/PD preprocessing can be forced on your own risk by setting \n' ...
            '"cat12.extopts.INV=1" in the cat default file. If this was a highres \n' ...
@@ -630,7 +630,7 @@ function cat_run_job10701173(job,tpm,subj)
     %% call main processing
     res.stime  = stime;
     res.image0 = spm_vol(job.channel(1).vols0{subj}); 
-    cat_main1173(res,obj.tpm,job);
+    cat_main1173plus(res,obj.tpm,job);
     
     % delete denoised/interpolated image
     [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});

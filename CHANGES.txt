@@ -1,5 +1,64 @@
 ------------------------------------------------------------------------
-r1388 | dahnke | 2018-11-06 16:27:56
+r1389 | dahnke | 2018-11-11 11:38:14
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+A       cat_main_APRG.m
+MM      cat_main_amap.m
+ M      cat_main_clean_gwc.m
+A       cat_main_kamap.m
+MM      cat_main_reportcmd.m
+MM      cat_main_reportfig.m
+MM      cat_main_reportstr.m
+MM      cat_main_roi.m
+MM      cat_main_updateSPM.m
+MM      cat_main_updateWMHs.m
+MM      cat_main_write.m
+MM      cat_run1173/cat_conf_ROI1173.m
+MM      cat_run1173/cat_conf_extopts1173.m
+MM      cat_run1173/cat_conf_long1173.m
+MM      cat_run1173/cat_conf_opts1173.m
+MM      cat_run1173/cat_defaults1173.m
+MM      cat_run1173/cat_get_defaults1173.m
+MM      cat_run1173/cat_long_main1173.m
+MM      cat_run1173/cat_long_multi_run1173.m
+MM      cat_run1173/cat_main1173.m
+MM      cat_run1173/cat_main_LAS1173.m
+MM      cat_run1173/cat_main_gcut1173.m
+MM      cat_run1173/cat_main_registration1173.m
+MM      cat_run1173/cat_run1173.m
+MM      cat_run1173/cat_run_job10701173.m
+MM      cat_run1173/cat_run_job1173.m
+MM      cat_run1173/cat_run_job_APP_SPM1173.m
+MM      cat_run1173/cat_run_job_APP_final.m
+MM      cat_run1173/cat_run_job_APP_init10701173.m
+MM      cat_run1173/cat_run_newcatch1173.m
+MM      cat_run1173/cat_surf_createCS1173.m
+MM      cat_run1173/cat_tst_qa1173.m
+MM      cat_run1173/cat_vol_isarnlm.m
+MM      cat_run1173/cat_vol_partvol1173.m
+MM      cat_run1173/cat_vol_sanlm1173.m
+A       cat_run1173plus
+A       cat_run1173plus/cat_conf_extopts1173plus.m
+A       cat_run1173plus/cat_conf_long1173plus.m
+A       cat_run1173plus/cat_conf_opts1173plus.m
+A       cat_run1173plus/cat_defaults1173plus.m
+A       cat_run1173plus/cat_get_defaults1173plus.m
+A       cat_run1173plus/cat_main1173plus.m
+A       cat_run1173plus/cat_run1173plus.m
+A       cat_run1173plus/cat_run_job10701173plus.m
+A       cat_run1173plus/cat_run_job1173plus.m
+A       cat_run1173plus/cat_run_newcatch1173plus.m
+MM      cat_spm_preproc8.m
+M       tbx_cfg_cat.m
+
+(1) New:        Added 1173plus segmentation. 
+(2) Changed:    Further cleanup of cat_main.
+(3) Changed:    Separated new skull-stripping.
+
+------------------------------------------------------------------------
+r1388 | dahnke | 2018-11-06 16:29:48 +0100 (Di, 06 Nov 2018) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +71,7 @@ A       cat_main_write.m
 (1) Changed:    Moved CAT NIFTI output from cat_main to cat_main_write.
 (2) Changed:    Moved WMH correction functions from cat_main to 
                 cat_main_updateWMHs and cat_main_fillWMHs.
+
 
 ------------------------------------------------------------------------
 r1387 | dahnke | 2018-11-06 13:59:32 +0100 (Di, 06 Nov 2018) | 15 lines

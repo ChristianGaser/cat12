@@ -7,7 +7,7 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
 %  a wider mask with a complete brain is important.
 %  _____________________________________________________________________
 %  Robert Dahnke
-%  $Id: cat_run_job_APP_final.m 1164 2017-08-09 11:54:50Z gaser $
+%  $Id$
 
 
   % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 

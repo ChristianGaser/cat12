@@ -71,7 +71,7 @@ function results = cat_spm_preproc8(obj)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_preproc8.m 7172 2017-09-21 16:31:30Z john $
+% $Id$
 
 wp_reg    = 1; % Bias wp towards 1
 

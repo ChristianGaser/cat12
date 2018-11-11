@@ -15,7 +15,7 @@ function cat_main_roi(job,trans,Ycls,Yp0)
 %   Department of Neurology
 %   University Jena
 % ______________________________________________________________________
-% $Id: cat_main_gcut.m 1315 2018-05-03 09:34:57Z dahnke $
+% $Id$
   
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
  
@@ -39,7 +39,8 @@ function cat_main_roi(job,trans,Ycls,Yp0)
   AN  = fieldnames(job.output.atlases);
   for ai = 1:numel(AN)
     fafi = find(cellfun('isempty',strfind(FAF(:,1),[AN{ai} '.']))==0);
-    if ~isempty(fafi) && job.output.atlases.(AN{ai}), FA(fai,:) = FAF(fafi,:); fai = fai+1; end %#ok<AGROW>
+    if ~isempty(fafi) && (isempty(job.output.atlases.(AN{ai})) || ...
+        job.output.atlases.(AN{ai})) , FA(fai,:) = FAF(fafi,:); fai = fai+1; end %#ok<AGROW>
   end
 
   if isempty(FA)
@@ -87,7 +88,7 @@ function cat_main_roi(job,trans,Ycls,Yp0)
       end
       if debug
         %% check voxel size of an atlas map that labels the whole brain
-        fprintf('%8s %8s %8s\n','GM','WM','CSF') 
+        fprintf('\n%8s %8s %8s\n','GM','WM','CSF') 
         fprintf('%8.2f %8.2f %8.2f\n', [cat_stat_nansum(wYcls{1}(:)),cat_stat_nansum(wYcls{2}(:)),cat_stat_nansum(wYcls{3}(:))]  / 1000); 
         fprintf('%8.2f %8.2f %8.2f\n', [cat_stat_nansum(Ycls{1}(:)),cat_stat_nansum(Ycls{2}(:)),cat_stat_nansum(Ycls{3}(:))] * prod(vx_vol) / 1000 / 255); 
       end

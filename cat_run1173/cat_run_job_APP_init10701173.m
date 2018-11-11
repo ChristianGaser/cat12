@@ -10,7 +10,7 @@ function [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init(Ysrco,vx_vol,verb)
 %  a typical intensity around GM.
 %  _____________________________________________________________________
 %  Robert Dahnke
-%  $Id: cat_run_job_APP_init1070.m 1147 2017-06-21 09:31:53Z gaser $
+%  $Id$
 
 
 %    ds('l2','',0.5,Yo/WMth,Yg<0.2,Yo/WMth,Ym,80)

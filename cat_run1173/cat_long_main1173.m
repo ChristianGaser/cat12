@@ -1,7 +1,7 @@
 %-----------------------------------------------------------------------
 % Job for longitudinal batch
 % Christian Gaser
-% $Id: cat_long_main.m 1114 2017-03-02 10:46:01Z gaser $
+% $Id$
 %-----------------------------------------------------------------------
 
 global opts extopts output modulate dartel warps

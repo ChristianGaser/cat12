@@ -10,7 +10,7 @@ function cat_warnings = cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans,cat_war
 %   Department of Neurology
 %   University Jena
 % ______________________________________________________________________
-% $Id: cat_main_gcut.m 1315 2018-05-03 09:34:57Z dahnke $
+% $Id$
 
 
   % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 

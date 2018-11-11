@@ -33,7 +33,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS1173(V,Ym,Ya,YMF,opt)
 % Structural Brain Mapping Group
 % University Jena
 % ______________________________________________________________________
-% $Id: cat_surf_createCS.m 1171 2017-08-31 08:41:59Z gaser $ 
+% $Id$ 
 
 %#ok<*AGROW>
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end

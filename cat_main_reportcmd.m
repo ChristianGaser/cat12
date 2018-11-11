@@ -12,7 +12,7 @@ function cat_main_reportcmd(job,res,qa)
 %   Department of Neurology
 %   University Jena
 % ______________________________________________________________________
-% $Id: cat_main_gcut.m 1315 2018-05-03 09:34:57Z dahnke $
+% $Id$
 
   VT0 = res.image0(1);
   [pth,nam] = spm_fileparts(VT0.fname); 
