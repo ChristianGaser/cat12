@@ -1,19 +1,19 @@
-function cat_run_newcatch1173(job,tpm,subj)
+function cat_run_newcatch1173plus(job,tpm,subj)
 % ______________________________________________________________________
 % This function contains the new matlab try-catch block.
 % The new try-catch block has to be in a separate file to avoid an error.
 %
 % See also cat_run_newcatch.
 % ______________________________________________________________________
-% $Revision$  $Date$
+% $Revision: 1145 $  $Date: 2017-06-20 14:18:59 +0200 (Tue, 20 Jun 2017) $
 
   global cat_err_res;
 
   try
     if job.extopts.APP == 1070
-      cat_run_job10701173(job,tpm,subj); 
+      cat_run_job10701173plus(job,tpm,subj); 
     else
-      cat_run_job1173(job,tpm,subj); 
+      cat_run_job1173plus(job,tpm,subj); 
     end
   catch caterr 
     %% add further information for special errors

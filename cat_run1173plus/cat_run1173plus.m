@@ -1,4 +1,4 @@
-function varargout = cat_run1173(job)
+function varargout = cat_run1173plus(job)
 % Segment a bunch of images
 % ______________________________________________________________________
 %
@@ -19,11 +19,11 @@ function varargout = cat_run1173(job)
 % spm_preproc8_run.m 2281 2008-10-01 12:52:50Z john $
 % ______________________________________________________________________
 % Christian Gaser
-% $Id$
+% $Id: cat_run.m 1159 2017-08-04 14:08:14Z dahnke $
 
 %#ok<*AGROW>
 
-%rev = '$Rev$';
+%rev = '$Rev: 1159 $';
 
 %  -----------------------------------------------------------------
 %  Lazy processing (expert feature)
@@ -80,7 +80,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     % temporary name for saving job information
     tmp_name = [tempname '.mat'];
     tmp_array{i} = tmp_name; 
-    def = cat_get_defaults1173; job = cat_io_checkinopt(job,def); % further job update required here to get the latest cat defaults
+    def = cat_get_defaults1173plus; job = cat_io_checkinopt(job,def); % further job update required here to get the latest cat defaults
     global defaults cat12; %#ok<NUSED,TLEV>
     save(tmp_name,'job','defaults','cat12');
     clear defaults cat12;
@@ -88,7 +88,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     % matlab command, cprintferror=1 for simple printing         
     matlab_cmd = sprintf('"global cprintferror; cprintferror=1; addpath %s %s %s %s %s %s; load %s; cat_run(job); "',...
       spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),spm('dir'),...
-      fullfile(spm('dir'),'toolbox','cat12','cat_run1173'), ...
+      fullfile(spm('dir'),'toolbox','cat12','cat_run1173plus'), ...
         fullfile(spm('dir'),'toolbox','OldNorm'),fullfile(spm('dir'),'toolbox','DARTEL'), tmp_name);
 
     % log-file for output
@@ -153,7 +153,7 @@ if isfield(job,'printPID') && job.printPID
 end
 job = update_job(job);
 
-varargout{1} = run_job1173(job);
+varargout{1} = run_job1173plus(job);
 
 return
 %_______________________________________________________________________
@@ -179,7 +179,7 @@ function job = update_job(job)
   end
   
   % get defaults
-  def = cat_get_defaults1173;
+  def = cat_get_defaults1173plus;
   
   if isfield(job.extopts,'restypes')
     def.extopts.restype = (char(fieldnames(job.extopts.restypes))); 
@@ -191,18 +191,32 @@ function job = update_job(job)
   def.nproc          = 0; 
   
   % ROI atlas maps
-  atlas   = cat_get_defaults1173('extopts.atlas'); 
-  for ai = 1:size(atlas,1)
-    if atlas{ai,2}<=cat_get_defaults('extopts.expertgui') && exist(atlas{ai,1},'file')
-      [pp,ff,ee]  = spm_fileparts(atlas{ai,1}); 
-      try
-        cat_get_defaults1173(['output.atlases.' ff]);
-      catch
-        cat_get_defaults1173(['output.atlases.' ff], atlas{ai,4})
-      end
-      def.output.atlases.(ff) = cat_get_defaults1173(['output.atlases.' ff]);
+  if isfield(job.output,'ROImenu') % expert/developer GUI that allows control each atlas map 
+    if isfield(job.output.ROImenu,'atlases')
+      % image output
+      def.output.atlases = job.output.ROImenu.atlases;
+      def.output.ROI     = any(cell2mat(struct2cell(job.output.ROImenu.atlases))); 
+    else
+      def.output.atlases = struct();
+      def.output.ROI     = 0; 
+    end
+    job = cat_io_checkinopt(job,def);
+  end
+  
+  if ~isfield(job.output,'atlases') 
+    % default GUI that only allow to switch on the settings defined in the default file 
+    if ~isfield(job.extopts,'atlas')
+      job.extopts.atlas  = def.extopts.atlas;
+    end
+    
+    job.output.atlases   = struct();
+    if job.output.ROI 
+      % if output, than use the parameter of the default file
+      job.output.atlases = cell2struct(job.extopts.atlas(:,4)',spm_str_manip(job.extopts.atlas(:,1),'tr')',2);
+      job.output.ROI     = any(cell2mat(struct2cell(job.output.atlases))); 
     end
   end
+ 
   
   job = cat_io_checkinopt(job,def);
   if ~isfield(job.extopts,'restypes')
@@ -287,7 +301,7 @@ function job = update_job(job)
   
   % deselect ROI output and print warning if ROI output is true and dartel template was changed
   [pth,nam] = spm_fileparts(job.extopts.darteltpm{1});
-  if isempty(strfind(nam,'MNI152')) && strcmp(job.extopts.species,'human') && cat_get_defaults1173('output.ROI')  %~strcmp(nam,'Template_1_IXI555_MNI152')
+  if isempty(strfind(nam,'MNI152')) && strcmp(job.extopts.species,'human') && cat_get_defaults1173plus('output.ROI')  %~strcmp(nam,'Template_1_IXI555_MNI152')
     warning('DARTEL:template:change',...
       ['Dartel template was changed: Please be aware that ROI analysis \n' ...
        'and other template-specific options cannot be used and ROI \n ' ...
@@ -308,7 +322,7 @@ function job = update_job(job)
   job.extopts.bb = bb; 
   
   job.extopts.vox( isinf(job.extopts.vox) | isnan(job.extopts.vox) ) = []; 
-  if isempty( job.extopts.vox ),  job.extopts.vox = cat_get_defaults1173('extopts.vox'); end 
+  if isempty( job.extopts.vox ),  job.extopts.vox = cat_get_defaults1173plus('extopts.vox'); end 
   job.extopts.vox = abs( job.extopts.vox );
   
   % prepare tissue priors and number of gaussians for all 6 classes
@@ -338,7 +352,7 @@ function job = update_job(job)
 return;
 
 %_______________________________________________________________________
-function vout = run_job1173(job)
+function vout = run_job1173plus(job)
   vout   = vout_job(job);
 
   % load tpm priors 
@@ -354,14 +368,14 @@ function vout = run_job1173(job)
     % __________________________________________________________________
     %if job.extopts.ignoreErrors
       if cat_io_matlabversion>20072 
-        cat_run_newcatch1173(job,tpm,subj); 
+        cat_run_newcatch1173plus(job,tpm,subj); 
       else
         % inactive because of unclear error messages
         %cat_run_oldcatch(job,tpm,subj);
         if job.extopts.APP == 1070
-          cat_run_job10701173(job,tpm,subj); 
+          cat_run_job10701173plus(job,tpm,subj); 
         else
-          cat_run_job1173(job,tpm,subj); 
+          cat_run_job1173plus(job,tpm,subj); 
         end
       end
     %else

@@ -45,7 +45,7 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
 % Robert Dahnke
 % 2013/05
 %
-% $Id: cat_vol_partvol.m 1149 2017-06-23 10:31:47Z dahnke $
+% $Id$
 
 % ______________________________________________________________________
 %

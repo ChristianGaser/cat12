@@ -66,7 +66,7 @@ function varargout = cat_tst_qa1173(action,varargin)
 % Structural Brain Mapping Group
 % University Jena
 %
-% $Id: cat_get_defaults1173.m 1144 2017-06-19 15:04:18Z dahnke $
+% $Id$
 % ______________________________________________________________________
 
 %#ok<*ASGLU>

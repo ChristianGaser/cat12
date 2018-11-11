@@ -1,8 +1,8 @@
-function extopts = cat_conf_extopts1173(expert,spm)
+function extopts = cat_conf_extopts1173plus(expert,spm)
 % Configuration file for extended CAT options
 %
 % Christian Gaser
-% $Id$
+% $Id: cat_conf_extopts.m 1164 2017-08-09 11:54:50Z gaser $
 %#ok<*AGROW>
 
 if ~exist('expert','var')
@@ -288,17 +288,15 @@ verb.help    = {
   'Verbose processing.'
 };
 
-%{
-report         = cfg_menu;
-report.tag     = 'report';
-report.name    = 'Create CAT report';
-report.labels  = {'No','Yes'};
-report.values  = {0 1};
-report.def     = @(val)cat_get_defaults1173('extopts.export', val{:});
-report.help    = {
-  'Create final CAT report that requires java.'
+print         = cfg_menu;
+print.tag     = 'print';
+print.name    = 'Create CAT report';
+print.labels  = {'No','Yes (volume only)','Yes (volume and surfaces)'};
+print.values  = {0 1 2};
+print.def     = @(val)cat_get_defaults1173('extopts.print', val{:});
+print.help    = {
+  'Create final CAT report that requires Java.'
 };
-%}
 
 
 %---------------------------------------------------------------------
@@ -431,14 +429,15 @@ gcutstr.name      = 'Strength of Skull-Stripping';
 gcutstr.def       = @(val)cat_get_defaults1173('extopts.gcutstr', val{:});
 gcutstr.help      = {
   'Strength of skull-stripping before AMAP segmentation, with "ultralight" for a more liberal and wider brain masks and "heavy" for a more aggressive skull-stripping. If parts of the brain were missing in the brain mask then decrease the strength. If the brain mask of your images contains parts of the head, then increase the strength. '
+  'APRG (adaptive probability region-growing) is a new method that refines the probability maps of the SPM approach by region-growing techniques of the gcut approach with a final surface-based optimization stategy.  '
   ''
 };
 if ~expert
-  gcutstr.labels  = {'SPM cleanup','light','medium','strong'};
-  gcutstr.values  = {0 0.25 0.50 0.75};
+  gcutstr.labels  = {'SPM cleanup','light','medium','strong','APRG approach'};
+  gcutstr.values  = {0 0.25 0.50 0.75 2};
 else
-  gcutstr.labels  = {'SPM cleanup (0)','ultralight (eps)','light (0.25)','medium (0.50)','strong (0.75)','heavy (1.00)'};
-  gcutstr.values  = {0 eps 0.25 0.50 0.75 1.00};
+  gcutstr.labels  = {'SPM cleanup (0)','ultralight (eps)','light (0.25)','medium (0.50)','strong (0.75)','heavy (1.00)','APRG approach'};
+  gcutstr.values  = {0 eps 0.25 0.50 0.75 1.00 2};
   gcutstr.help    = [gcutstr.help;{
     'The strength changes multiple internal parameters: '
     ' 1) Intensity thresholds to deal with blood-vessels and meninges '
@@ -560,19 +559,6 @@ WMHCstr.help    = {
   ''
 };
 
-%------------------------------------------------------------------------
-
-print        = cfg_menu;
-print.tag    = 'print';
-print.name   = 'Display and print results';
-print.labels = {'No','Yes'};
-print.values = {0 1};
-print.def    = @(val)cat_get_defaults1173('extopts.print', val{:});
-print.help   = {
-'The result of the segmentation can be displayed and printed to a pdf-file. This is often helpful to check whether registration and segmentation were successful. Furthermore, some additional information about the used versions and parameters are printed.'
-''
-};
-
 
 %------------------------------------------------------------------------
 
@@ -663,9 +649,9 @@ admin      = cfg_branch;
 admin.tag  = 'admin';
 admin.name = 'Administration Options';
 if expert==1
-  admin.val  = {ignoreErrors verb};
+  admin.val  = {ignoreErrors verb print};
 else
-  admin.val  = {experimental lazy ignoreErrors verb};
+  admin.val  = {experimental lazy ignoreErrors verb print};
 end
 admin.help = {'CAT12 parameter to control the behaviour of the preprocessing pipeline.';''};
 

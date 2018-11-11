@@ -9,6 +9,7 @@ function cat = tbx_cfg_cat
  
 addpath(fileparts(which(mfilename)));
 addpath(fullfile(fileparts(which(mfilename)),'cat_run1173'));
+addpath(fullfile(fileparts(which(mfilename)),'cat_run1173plus'));
 
 %% ------------------------------------------------------------------------
 try
@@ -437,18 +438,20 @@ jacobian.help = {
 ''
 };
 
-extopts1173 = cat_conf_extopts1173(expert);   
-opts1173    = cat_conf_opts1173(expert); 
-[ROI1173,atlases1173] = cat_conf_ROI1173(expert);       % ROI options
+% further segmentation versions
+extopts1173                   = cat_conf_extopts1173(expert);   
+extopts1173plus               = cat_conf_extopts1173plus(expert);   
+opts1173                      = cat_conf_opts1173(expert); 
+opts1173plus                  = cat_conf_opts1173plus(expert); 
+[ROI1173,atlases1173]         = cat_conf_ROI1173(expert);       % ROI options
 
-
-output1173 = output;
+output1173            = output;
 if expert==2
-  output1173.val  = {surface ROI1173 atlases1173 grey white csf wmh tpmc atlas label bias las jacobian warps}; 
+  output1173.val      = {surface ROI1173 atlases1173 grey white csf wmh tpmc atlas label bias las jacobian warps}; 
 elseif expert==1
-  output1173.val  = {surface ROI1173 atlases1173 grey white csf wmh label bias las jacobian warps};
+  output1173.val      = {surface ROI1173 atlases1173 grey white csf wmh label bias las jacobian warps};
 else
-  output1173.val  = {surface ROI1173 grey white jacobian warps};
+  output1173.val      = {surface ROI1173 grey white jacobian warps};
 end
 
 
@@ -483,13 +486,22 @@ estwrite.help   = {
 estwrite1173        = estwrite; 
 estwrite1173.name   = 'CAT12: Segmentation R1173 (2017/09)';
 estwrite1173.prog   = @cat_run1173;
-estwrite1173.help   = [estwrite1173.help;{'';'This batch calls the stable version of the main preprocessing routing R1173.';''}];
+estwrite1173.help   = [estwrite1173.help;{'';'This batch calls the stable version of the main preprocessing routing R1173 with only light runtime bug fixes.';''}];
+
+estwrite1173plus        = estwrite1173;
+estwrite1173plus.name   = 'CAT12: Segmentation R1173 plus (2018/12)';
+estwrite1173plus.prog   = @cat_run1173plus;
+estwrite1173plus.help   = [estwrite1173.help;{'';'This batch calls the revised version of the main preprocessing routing R1173 that include upgrades by several subfunctions (e.g. skull-stripping) from the current CAT12 version.';''}];
 
 if feature('numcores') > 1
-  estwrite1173.val  = {data nproc opts1173 extopts1173 output1173}; 
+  estwrite1173.val      = {data nproc opts1173     extopts1173     output1173}; 
+  estwrite1173plus.val  = {data nproc opts1173plus extopts1173plus output}; 
 else
-  estwrite1173.val  = {data opts1173 extopts1173 output1173};
+  estwrite1173.val      = {data opts1173     extopts1173     output1173};
+  estwrite1173plus.val  = {data opts1173plus extopts1173plus output};
 end
+
+
 
 extopts_spm = cat_conf_extopts(expert,1);   
 output_spm  = output; 
@@ -515,17 +527,26 @@ estwrite_spm.vout   = @vout;
 estwrite_spm.help   = {
 'CAT processing with thickness estimation and surface creation for SPM segmentation which is using the input of CSF, GM, and WM and also integrates Dartel normalisation (Ashburner 2007) into the toolbox by an already existing Dartel template in MNI space. This template was derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org) and provides the six Dartel iteration. Thus, for the majority of studies the creation of sample-specific Dartel templates is not necessary anymore.'};
 
+%------------------------------------------------------------------------
+seg        = cfg_choice;
+seg.name   = 'Preprocessing';
+seg.tag    = 'seg';
+if expert
+  seg.values = { estwrite estwrite1173 estwrite1173plus }; 
+else
+  seg.values = { estwrite estwrite1173 estwrite1173plus }; 
+end
 
 %------------------------------------------------------------------------
 cat        = cfg_choice;
 cat.name   = 'CAT12';
 cat.tag    = 'cat';
 if expert==2
-  cat.values = {estwrite estwrite1173 estwrite_spm tools stools stoolsexp};
+  cat.values = {seg tools stools stoolsexp};
 elseif expert==1
-  cat.values = {estwrite estwrite1173 estwrite_spm tools stools};
+  cat.values = {seg tools stools};
 else
-  cat.values = {estwrite estwrite1173 tools stools}; 
+  cat.values = {seg tools stools}; 
 end
 %------------------------------------------------------------------------
 

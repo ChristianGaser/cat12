@@ -85,7 +85,7 @@ function [trans,reg] = cat_main_registration1173(job,res,Ycls,Yy,tpmM)
 %   Department of Neurology
 %   University Jena
 % ______________________________________________________________________
-% $Id: cat_main_registration.m 1170 2017-08-30 16:59:05Z dahnke $
+% $Id$
 
   % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,'cat_main_registration'); debug = 1; break; end; end

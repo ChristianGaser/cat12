@@ -2,7 +2,7 @@ function opts = cat_conf_opts1173(expert)
 % Configuration file for CAT SPM options
 %
 % Christian Gaser
-% $Id$
+% $Id: cat_conf_opts.m 1159 2017-08-04 14:08:14Z dahnke $
 %#ok<*AGROW>
 
 if ~exist('expert','var')

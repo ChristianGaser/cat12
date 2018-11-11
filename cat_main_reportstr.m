@@ -24,7 +24,7 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
 %   Department of Neurology
 %   University Jena
 % ______________________________________________________________________
-% $Id: cat_main_gcut.m 1315 2018-05-03 09:34:57Z dahnke $
+% $Id$
 
 %#ok<*AGROW>
 

@@ -34,7 +34,7 @@ function varargout = cat_vol_isarnlm(varargin)
 % Structural Brain Mapping Group
 % University Jena
 %
-% $Id: cat_vol_isarnlm.m 1095 2016-12-19 11:13:35Z dahnke $
+% $Id$
 % ______________________________________________________________________
  
   if nargin == 0 
@@ -159,7 +159,7 @@ function [Ys,NCstr] = cat_vol_sanlmX(Y,YM,vx_vol,opt)
 % Structural Brain Mapping Group
 % University Jena
 %
-% $Id: cat_vol_isarnlm.m 1095 2016-12-19 11:13:35Z dahnke $
+% $Id$
 % ______________________________________________________________________
 
   if ~exist('opt','var'), opt = struct(); end

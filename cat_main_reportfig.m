@@ -21,7 +21,7 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str)
 %   Department of Neurology
 %   University Jena
 % ______________________________________________________________________
-% $Id: cat_main_gcut.m 1315 2018-05-03 09:34:57Z dahnke $
+% $Id$
   
   %#ok<*TRYNC>
   
@@ -270,7 +270,7 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str)
   % new colorscale
   cmap = gray(60); colormap(cmap); caxis([0,numel(cmap)]); 
 
-  WMfactor0 = mean(res.mg(res.lkp==2)) * 3/5; 
+  WMfactor0 = mean(res.mn(res.lkp==2)) * 4/3; 
   WMfactor1 = 4/3; 
   if exist('hho' ,'var'), spm_orthviews('window',hho ,[0 WMfactor0]); end
   if exist('hhm' ,'var'), spm_orthviews('window',hhm ,[0 WMfactor1]); end
