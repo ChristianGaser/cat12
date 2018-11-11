@@ -1,4 +1,4 @@
-function Ycls = cat_main1173(res,tpm,job)
+function Ycls = cat_main1173plus(res,tpm,job)
 % Write out CAT preprocessed data
 %
 % FORMAT Ycls = cat_main(res,tpm,job)
@@ -8,7 +8,7 @@ function Ycls = cat_main1173(res,tpm,job)
 %
 % ______________________________________________________________________
 % Christian Gaser
-% $Id$
+% $Id: cat_main.m 1170 2017-08-30 16:59:05Z dahnke $
 
 %#ok<*ASGLU>
 
@@ -424,6 +424,9 @@ if ~isfield(res,'spmpp')
     Yb   = smooth3(Yb)>0.5; 
     Yg   = cat_vol_resize(Yg ,'dereduceBrain',BB);
     Ydiv = cat_vol_resize(Ydiv ,'dereduceBrain',BB);
+  elseif job.extopts.gcutstr==2
+    % ### 1173plus ###
+    [Yb,Ybb,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th);
   elseif job.extopts.gcutstr==0
     % brain mask
     Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
@@ -784,7 +787,7 @@ if ~isfield(res,'spmpp')
   if 0
     % prepared for improved partitioning - RD20170320
     job2=job; job2.extopts.regstr=eps; res2=res; res2.do_dartel=2; 
-    [trans,res.ppe.reginitp] = cat_main_registration1173(job2,res2,Ycls,Yy,tpm.M);
+    [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls,Yy,tpm.M);
     Yy = trans.warped.y; clear trans job2 res2; 
   end
   
@@ -802,7 +805,7 @@ if ~isfield(res,'spmpp')
       [Ymi,Ym,Yclsi] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extoptsLAS2); % use Yclsi after cat_vol_partvol
     else
       stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
-      [Ymi,Ym] = cat_main_LAS1173(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
+      [Ymi,Ym] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
     end
 
     %Ymioc = Ymi+0; 
@@ -923,7 +926,7 @@ if ~isfield(res,'spmpp')
   %  Futhermore, both parts prepare the initial segmentation map for the 
   %  AMAP function.
   %  -------------------------------------------------------------------
-  if job.extopts.gcutstr>0
+  if job.extopts.gcutstr>0 & job.extopts.gcutstr<=1
     %  -----------------------------------------------------------------
     %  gcut+: skull-stripping using graph-cut
     %  -----------------------------------------------------------------
@@ -1644,6 +1647,11 @@ end
 %  that indivdiual anatomical refinients are possible, but the this has
 %  to be done and evalutated for each atlas. 
 %  ---------------------------------------------------------------------
+if job.output.ROI  
+  Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
+  cat_main_roi(job,trans,Ycls,Yp0); 
+end
+%{
 if job.output.ROI
   stime = cat_io_cmd('ROI estimation');   
   if job.extopts.verb, fprintf('\n'); end; 
@@ -1757,7 +1765,7 @@ if job.output.ROI
   cat_io_cmd('','n','',1,stime);
 end
 clear wYp0 wYcls wYv trans
-
+%}
 
 printCATreport = 1; % if QA and/or print failed on servers
 if printCATreport
@@ -1765,7 +1773,7 @@ if printCATreport
   %  XML-report and Quality Assurance
   %  ---------------------------------------------------------------------
   stime = cat_io_cmd('Quality check'); job.stime = stime; 
-  Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; %qa2=qa;
+  Yp0   = zeros(size(Ym),'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; %qa2=qa;
   qa    = cat_tst_qa1173('cat12',Yp0,fname0,Ym,res,cat_warnings,job.extopts.species, ...
             struct('write_csv',0,'write_xml',1,'method','cat12','job',job,'qa',qa));
 
@@ -1799,491 +1807,238 @@ if printCATreport
 
 
 
-  %% display and print result if possible
-  %  ---------------------------------------------------------------------
-    QMC   = cat_io_colormaps('marks+',17);
-    color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
+%% display and print result if possible
+%  ---------------------------------------------------------------------
+  QMC   = cat_io_colormaps('marks+',17);
+  color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
 
-    warning off; %#ok<WNOFF> % there is a div by 0 warning in spm_orthviews in linux
-
-
-    %mark2str2 = @(mark,s,val) sprintf(sprintf('\\\\bf\\\\color[rgb]{%%0.2f %%0.2f %%0.2f}%s',s),color(QMC,mark),val);
-    marks2str = @(mark,str) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%s',color(QMC,mark),str);
-    mark2rps    = @(mark) min(100,max(0,105 - mark*10));
-    grades      = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
-    mark2grad   = @(mark) grades{min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3)))};
+  warning off; %#ok<WNOFF> % there is a div by 0 warning in spm_orthviews in linux
 
 
-    % CAT GUI parameter:
-    % --------------------------------------------------------------------
-    str = [];
+  %mark2str2 = @(mark,s,val) sprintf(sprintf('\\\\bf\\\\color[rgb]{%%0.2f %%0.2f %%0.2f}%s',s),color(QMC,mark),val);
+  marks2str = @(mark,str) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%s',color(QMC,mark),str);
+  mark2rps    = @(mark) min(100,max(0,105 - mark*10));
+  grades      = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
+  mark2grad   = @(mark) grades{min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3)))};
 
-    % 1 line: Matlab, SPM12, CAT12 version number and GUI and experimental mode 
-    str = [str struct('name', 'Version: Matlab / SPM12 / CAT12:','value',...
-      sprintf('%s / %s / %s',qa.software.version_matlab,qa.software.version_spm,qa.software.version_cat))];
-    if     job.extopts.expertgui==1, str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}e']; 
-    elseif job.extopts.expertgui==2, str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}d'];
-    end  
-    if job.extopts.experimental, str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}x']; end  
 
-    % 2 lines: TPM, Template, Normalization method with voxel size
-    str = [str struct('name', 'Tissue Probability Map:','value',strrep(spm_str_manip(res.tpm(1).fname,'k40d'),'_','\_'))];
-    if do_dartel
-      if job.extopts.regstr==0 % Dartel
-        str = [str struct('name', 'Dartel Registration to: ',...
-                          'value',strrep(spm_str_manip(job.extopts.darteltpm{1},'k40d'),'_','\_'))];
-      elseif job.extopts.regstr==4 % Dartel
-        str = [str struct('name', 'Shooting Registration to: ',...
+  % CAT GUI parameter:
+  % --------------------------------------------------------------------
+  str = [];
+
+  % 1 line: Matlab, SPM12, CAT12 version number and GUI and experimental mode 
+  str = [str struct('name', 'Version: Matlab / SPM12 / CAT12:','value',...
+    sprintf('%s / %s / %s',qa.software.version_matlab,qa.software.version_spm,qa.software.version_cat))];
+  if     job.extopts.expertgui==1, str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}e']; 
+  elseif job.extopts.expertgui==2, str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}d'];
+  end  
+  if job.extopts.experimental, str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}x']; end  
+
+  % 2 lines: TPM, Template, Normalization method with voxel size
+  str = [str struct('name', 'Tissue Probability Map:','value',strrep(spm_str_manip(res.tpm(1).fname,'k40d'),'_','\_'))];
+  if do_dartel
+    if job.extopts.regstr==0 % Dartel
+      str = [str struct('name', 'Dartel Registration to: ',...
+                        'value',strrep(spm_str_manip(job.extopts.darteltpm{1},'k40d'),'_','\_'))];
+    elseif job.extopts.regstr==4 % Dartel
+      str = [str struct('name', 'Shooting Registration to: ',...
+                        'value',strrep(spm_str_manip(job.extopts.shootingtpm{1},'k40d'),'_','\_'))];
+    else
+      if job.extopts.expertgui==0
+        str = [str struct('name','Optimized Shooting Registration to:',...
                           'value',strrep(spm_str_manip(job.extopts.shootingtpm{1},'k40d'),'_','\_'))];
       else
-        if job.extopts.expertgui==0
-          str = [str struct('name','Optimized Shooting Registration to:',...
-                            'value',strrep(spm_str_manip(job.extopts.shootingtpm{1},'k40d'),'_','\_'))];
-        else
-          str = [str struct('name', sprintf('Optimized Shooting Registration (regstr:%s) to :',sprintf('%g ',job.extopts.regstr)),...
-                            'value',strrep(spm_str_manip(job.extopts.shootingtpm{1},'k40d'),'_','\_'))];
-        end
+        str = [str struct('name', sprintf('Optimized Shooting Registration (regstr:%s) to :',sprintf('%g ',job.extopts.regstr)),...
+                          'value',strrep(spm_str_manip(job.extopts.shootingtpm{1},'k40d'),'_','\_'))];
       end
     end
-    
-    % 1 line 1: Affreg
-    str = [str struct('name', 'affreg:','value',sprintf('%s',job.opts.affreg))];
-    % 1 line 2: APP
-    APPstr = {'none','light','full','APPi','APPf','animal'}; APPstr{1071} = 'APP'; 
-    str(end).name  = [str(end).name(1:end-1) ' / APP '];  
-    str(end).value = [str(end).value sprintf(' / %s',APPstr{job.extopts.APP+1})];
-    % 1 line 3: biasstr / biasreg+biasfwhm
-    if job.opts.biasstr>0
-      biasstr = {'ultralight','light','medium','strong','heavy'};
-      str(end).name  = [str(end).name(1:end-1) ' / biasstr '];  
-      str(end).value = [str(end).value sprintf(' / %s',biasstr{round(job.opts.biasstr*4)+1})];
-      if job.extopts.expertgui % add the value
-        str(end).value = [str(end).value sprintf('(%0.2f;breg:%0.2f;bfwhm:%0.2f)',job.opts.biasstr,job.opts.biasreg,job.opts.biasfwhm)]; 
-      end
-    else
-      str(end).name  = [str(end).name(1:end-1) ' / biasreg / biasfwhm'];
-      str(end).value = [str(end).value sprintf(' / %0.2f / %0.2f',job.opts.biasreg,job.opts.biasfwhm)]; 
+  end
+
+  % 1 line 1: Affreg
+  str = [str struct('name', 'affreg:','value',sprintf('%s',job.opts.affreg))];
+  % 1 line 2: APP
+  APPstr = {'none','light','full','APPi','APPf','animal'}; APPstr{1071} = 'APP'; 
+  str(end).name  = [str(end).name(1:end-1) ' / APP '];  
+  str(end).value = [str(end).value sprintf(' / %s',APPstr{job.extopts.APP+1})];
+  % 1 line 3: biasstr / biasreg+biasfwhm
+  if job.opts.biasstr>0
+    biasstr = {'ultralight','light','medium','strong','heavy'};
+    str(end).name  = [str(end).name(1:end-1) ' / biasstr '];  
+    str(end).value = [str(end).value sprintf(' / %s',biasstr{round(job.opts.biasstr*4)+1})];
+    if job.extopts.expertgui % add the value
+      str(end).value = [str(end).value sprintf('(%0.2f;breg:%0.2f;bfwhm:%0.2f)',job.opts.biasstr,job.opts.biasreg,job.opts.biasfwhm)]; 
     end
+  else
+    str(end).name  = [str(end).name(1:end-1) ' / biasreg / biasfwhm'];
+    str(end).value = [str(end).value sprintf(' / %0.2f / %0.2f',job.opts.biasreg,job.opts.biasfwhm)]; 
+  end
 
 
-    % 1 line: adaptive noise parameter ( MRFstr + SANLM + NCstr )
-    defstr  = {'none','ultralight','light','medium','strong','heavy',... sanlm vs. isarnlm
-               'ultralight+','ultralight+','light+','medium+','strong+','heavy+'};
-    defstrm = @(x) defstr{ round(max(0,min(2,x))*4) + 1 + (x>0) + (x>1)};
-    str = [str struct('name', 'Noise reduction:','value','')]; 
-    if job.extopts.NCstr==0 
-      if job.extopts.mrf==0
-        str(end).value = 'no noise correction';
-      else
-        if job.extopts.expertgui==0
-          str(end).value = 'MRF'; 
-        else
-          str(end).value = sprintf('MRF(%0.2f)',job.extopts.mrf); 
-        end  
-      end
-    elseif job.extopts.NCstr==2 
-      str(end).value = 'ISARNLM(light)'; 
-    elseif job.extopts.NCstr==3
-      str(end).value = 'ISARNLM(full)'; 
-    elseif job.extopts.NCstr==1
-      str(end).value = 'SANLM(full)';
+  % 1 line: adaptive noise parameter ( MRFstr + SANLM + NCstr )
+  defstr  = {'none','ultralight','light','medium','strong','heavy',... sanlm vs. isarnlm
+             'ultralight+','ultralight+','light+','medium+','strong+','heavy+'};
+  defstrm = @(x) defstr{ round(max(0,min(2,x))*4) + 1 + (x>0) + (x>1)};
+  str = [str struct('name', 'Noise reduction:','value','')]; 
+  if job.extopts.NCstr==0 
+    if job.extopts.mrf==0
+      str(end).value = 'no noise correction';
     else
-      str(end).value = 'SANLM(light)';
-    end
-    if job.extopts.NCstr~=0 && job.extopts.mrf
       if job.extopts.expertgui==0
-        str(end).value = ' + MRF'; 
+        str(end).value = 'MRF'; 
       else
-        str(end).value = sprintf(' + MRF(%0.2f)',job.extopts.mrf); 
-      end 
+        str(end).value = sprintf('MRF(%0.2f)',job.extopts.mrf); 
+      end  
     end
-
-
-    % 1 line(s): LASstr / GCUTstr / CLEANUPstr
-    str(end).name  = 'LASstr / GCUTstr / CLEANUPstr:';
-    if ~job.extopts.expertgui
-      str(end).value = sprintf('%s / %s / %s',defstrm(job.extopts.LASstr),defstrm(job.extopts.gcutstr),defstrm(job.extopts.cleanupstr)); 
+  elseif job.extopts.NCstr==2 
+    str(end).value = 'ISARNLM(light)'; 
+  elseif job.extopts.NCstr==3
+    str(end).value = 'ISARNLM(full)'; 
+  elseif job.extopts.NCstr==1
+    str(end).value = 'SANLM(full)';
+  else
+    str(end).value = 'SANLM(light)';
+  end
+  if job.extopts.NCstr~=0 && job.extopts.mrf
+    if job.extopts.expertgui==0
+      str(end).value = ' + MRF'; 
     else
-      str(end).value = sprintf('%s(%0.2f) / %s(%0.2f) / %s(%0.2f)',defstrm(job.extopts.LASstr),job.extopts.LASstr,...
-        defstrm(job.extopts.gcutstr),job.extopts.gcutstr,defstrm(job.extopts.cleanupstr),job.extopts.cleanupstr); 
+      str(end).value = sprintf(' + MRF(%0.2f)',job.extopts.mrf); 
+    end 
+  end
+
+
+  % 1 line(s): LASstr / GCUTstr / CLEANUPstr
+  str(end).name  = 'LASstr / GCUTstr / CLEANUPstr:';
+  gcutstr  = {'none','SPM','GCUT','APRG'};  
+  if ~job.extopts.expertgui
+    str(end).value = sprintf('%s / %s / %s',defstrm(job.extopts.LASstr),gcutstr{round(job.extopts.gcutstr+2)},defstrm(job.extopts.cleanupstr)); 
+  else
+    str(end).value = sprintf('%s(%0.2f) / %s(%0.2f) / %s(%0.2f)',defstrm(job.extopts.LASstr),job.extopts.LASstr,...
+      gcutstr{round(job.extopts.gcutstr+2)},job.extopts.gcutstr,defstrm(job.extopts.cleanupstr),job.extopts.cleanupstr); 
+  end
+  if job.extopts.expertgui 
+    restype = char(fieldnames(job.extopts.restypes));
+    str = [str struct('name', 'WMHC / WMHCstr / BVCstr / restype:','value',...
+           sprintf('%d / %0.2f / %0.2f / %s',...
+          job.extopts.WMHC,job.extopts.WMHCstr,job.extopts.BVCstr,restype))];
+    if ~strcmp('native',restype)
+      str(end).value = [str(end).value sprintf('(%0.2f %0.2f)',job.extopts.restypes.(restype))];
+    end; 
+  end
+
+  % line 8: surfae parameter
+  if job.output.surface
+    str = [str struct('name', 'Voxel resolution (original > internal > PBT; vox):',...
+           'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s > %4.2f mm%s; %4.2f mm  ', ...
+           qa.qualitymeasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179),job.extopts.pbtres,char(179),job.extopts.vox(1)))];
+  else
+    str = [str struct('name', 'Voxel resolution (original > intern; vox):',...
+           'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s; %4.2f mm', ...
+           qa.qualitymeasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179),job.extopts.vox(1)))];
+  end       
+  % str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',job.extopts.vox))]; % does not work yet 
+
+
+  % Image Quality measures:
+  % --------------------------------------------------------------------
+  str2 =       struct('name', '\bfImage and Preprocessing Quality:','value',''); 
+  str2 = [str2 struct('name',' Resolution:','value',marks2str(qa.qualityratings.res_RMS,...
+    sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.res_RMS),mark2grad(qa.qualityratings.res_RMS))))];
+  str2 = [str2 struct('name',' Noise:','value',marks2str(qa.qualityratings.NCR,...
+    sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.NCR),mark2grad(qa.qualityratings.NCR))))];
+  str2 = [str2 struct('name',' Bias:','value',marks2str(qa.qualityratings.ICR,...
+    sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.ICR),mark2grad(qa.qualityratings.ICR))))]; % not important and more confussing 
+  str2 = [str2 struct('name','\bf Weighted average (IQR):','value',marks2str(qa.qualityratings.IQR,...
+    sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR))))];
+
+
+  % Subject Measures
+  % --------------------------------------------------------------------
+  % Volume measures
+  if job.extopts.WMHC>1
+    str3 = struct('name', '\bfVolumes:','value',sprintf('%5s %5s %5s %5s%s','CSF','GM','WM','WMH')); 
+    str3 = [str3 struct('name', ' Absolute volume:','value',sprintf(['%5.0f %5.0f %5.0f %5.0f cm' char(179)], ...
+            qa.subjectmeasures.vol_abs_CGW(1:4)))];
+    str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%5.1f %5.1f %5.1f %5.1f %%', ...
+            qa.subjectmeasures.vol_rel_CGW(1:4)*100))];
+  else
+    str3 = struct('name', '\bfVolumes:','value',sprintf('%5s %5s %5s %5s%s','CSF','GM','WM')); 
+    str3 = [str3 struct('name', ' Absolute volume:','value',sprintf(['%5.0f %5.0f %5.0f cm' char(179)], ...
+            qa.subjectmeasures.vol_abs_CGW(1:3)))];
+    str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%5.1f %5.1f %5.1f %%', ...
+            qa.subjectmeasures.vol_rel_CGW(1:3)*100))];
+    Ywmhrel = NS(Yl1,23);
+    Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; 
+    WMH_rel    = 100*sum(Ywmhrel(:)) / sum(Yp0(:)>0.5); 
+    WMH_WM_rel = 100*sum(Ywmhrel(:)) / sum(Yp0(:)>2.5); 
+    if WMH_rel>3 || WMH_WM_rel>5
+      str3(end).value = [str3(end).value sprintf('\\bf\\color[rgb]{0.8 0 0} WMHs!')];   
+      %str3(end).value = [str3(end).value sprintf('\\bf\\color[rgb]{0.8 0 0}~%0.0f%%WMHs!',WMH_WM_rel)];    
     end
-    if job.extopts.expertgui 
-      restype = char(fieldnames(job.extopts.restypes));
-      str = [str struct('name', 'WMHC / WMHCstr / BVCstr / restype:','value',...
-             sprintf('%d / %0.2f / %0.2f / %s',...
-            job.extopts.WMHC,job.extopts.WMHCstr,job.extopts.BVCstr,restype))];
-      if ~strcmp('native',restype)
-        str(end).value = [str(end).value sprintf('(%0.2f %0.2f)',job.extopts.restypes.(restype))];
-      end; 
+    clear Yp0;
+  end
+  %
+  str3 = [str3 struct('name', ' TIV:','value', sprintf(['%0.0f cm' char(179)],qa.subjectmeasures.vol_TIV))];  
+
+  % Surface measures - Thickness, (Curvature, Depth, ...)
+  if isfield(qa.subjectmeasures,'dist_thickness') && ~isempty(qa.subjectmeasures.dist_thickness)
+    str3 = [str3 struct('name', '\bfThickness:','value',sprintf('%5.2f%s%5.2f mm', ...
+           qa.subjectmeasures.dist_thickness{1}(1),177,qa.subjectmeasures.dist_thickness{1}(2)))];
+    if isfield(qa.subjectmeasures,'dist_gyruswidth')
+      str3 = [str3 struct('name', '\bfGyruswidth:','value',sprintf('%5.2f%s%5.2f mm', ...
+             qa.subjectmeasures.dist_gyruswidth{1}(1),177,qa.subjectmeasures.dist_gyruswidth{1}(2)))];
     end
-
-    % line 8: surfae parameter
-    if job.output.surface
-      str = [str struct('name', 'Voxel resolution (original > internal > PBT; vox):',...
-             'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s > %4.2f mm%s; %4.2f mm  ', ...
-             qa.qualitymeasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179),job.extopts.pbtres,char(179),job.extopts.vox(1)))];
-    else
-      str = [str struct('name', 'Voxel resolution (original > intern; vox):',...
-             'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s; %4.2f mm', ...
-             qa.qualitymeasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179),job.extopts.vox(1)))];
-    end       
-    % str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',job.extopts.vox))]; % does not work yet 
-
-
-    % Image Quality measures:
-    % --------------------------------------------------------------------
-    str2 =       struct('name', '\bfImage and Preprocessing Quality:','value',''); 
-    str2 = [str2 struct('name',' Resolution:','value',marks2str(qa.qualityratings.res_RMS,...
-      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.res_RMS),mark2grad(qa.qualityratings.res_RMS))))];
-    str2 = [str2 struct('name',' Noise:','value',marks2str(qa.qualityratings.NCR,...
-      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.NCR),mark2grad(qa.qualityratings.NCR))))];
-    str2 = [str2 struct('name',' Bias:','value',marks2str(qa.qualityratings.ICR,...
-      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.ICR),mark2grad(qa.qualityratings.ICR))))]; % not important and more confussing 
-    str2 = [str2 struct('name','\bf Weighted average (IQR):','value',marks2str(qa.qualityratings.IQR,...
-      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR))))];
-
-
-    % Subject Measures
-    % --------------------------------------------------------------------
-    % Volume measures
-    if job.extopts.WMHC>1
-      str3 = struct('name', '\bfVolumes:','value',sprintf('%5s %5s %5s %5s%s','CSF','GM','WM','WMH')); 
-      str3 = [str3 struct('name', ' Absolute volume:','value',sprintf(['%5.0f %5.0f %5.0f %5.0f cm' char(179)], ...
-              qa.subjectmeasures.vol_abs_CGW(1:4)))];
-      str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%5.1f %5.1f %5.1f %5.1f %%', ...
-              qa.subjectmeasures.vol_rel_CGW(1:4)*100))];
-    else
-      str3 = struct('name', '\bfVolumes:','value',sprintf('%5s %5s %5s %5s%s','CSF','GM','WM')); 
-      str3 = [str3 struct('name', ' Absolute volume:','value',sprintf(['%5.0f %5.0f %5.0f cm' char(179)], ...
-              qa.subjectmeasures.vol_abs_CGW(1:3)))];
-      str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%5.1f %5.1f %5.1f %%', ...
-              qa.subjectmeasures.vol_rel_CGW(1:3)*100))];
-      Ywmhrel = NS(Yl1,23);
-      Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; 
-      WMH_rel    = 100*sum(Ywmhrel(:)) / sum(Yp0(:)>0.5); 
-      WMH_WM_rel = 100*sum(Ywmhrel(:)) / sum(Yp0(:)>2.5); 
-      if WMH_rel>3 || WMH_WM_rel>5
-        str3(end).value = [str3(end).value sprintf('\\bf\\color[rgb]{0.8 0 0} WMHs!')];   
-        %str3(end).value = [str3(end).value sprintf('\\bf\\color[rgb]{0.8 0 0}~%0.0f%%WMHs!',WMH_WM_rel)];    
-      end
-      clear Yp0;
+    if isfield(qa.subjectmeasures,'dist_sulcuswidth')
+      str3 = [str3 struct('name', '\bfSulcuswidth:','value',sprintf('%5.2f%s%5.2f mm', ...
+             qa.subjectmeasures.dist_sulcuswidth{1}(1),177,qa.subjectmeasures.dist_sulcuswidth{1}(2)))];
     end
-    %
-    str3 = [str3 struct('name', ' TIV:','value', sprintf(['%0.0f cm' char(179)],qa.subjectmeasures.vol_TIV))];  
+  end
 
-    % Surface measures - Thickness, (Curvature, Depth, ...)
-    if isfield(qa.subjectmeasures,'dist_thickness') && ~isempty(qa.subjectmeasures.dist_thickness)
-      str3 = [str3 struct('name', '\bfThickness:','value',sprintf('%5.2f%s%5.2f mm', ...
-             qa.subjectmeasures.dist_thickness{1}(1),177,qa.subjectmeasures.dist_thickness{1}(2)))];
-      if isfield(qa.subjectmeasures,'dist_gyruswidth')
-        str3 = [str3 struct('name', '\bfGyruswidth:','value',sprintf('%5.2f%s%5.2f mm', ...
-               qa.subjectmeasures.dist_gyruswidth{1}(1),177,qa.subjectmeasures.dist_gyruswidth{1}(2)))];
-      end
-      if isfield(qa.subjectmeasures,'dist_sulcuswidth')
-        str3 = [str3 struct('name', '\bfSulcuswidth:','value',sprintf('%5.2f%s%5.2f mm', ...
-               qa.subjectmeasures.dist_sulcuswidth{1}(1),177,qa.subjectmeasures.dist_sulcuswidth{1}(2)))];
-      end
+  % Preprocessing Time
+  if job.extopts.experimental || job.extopts.expertgui>0 || 1
+    str2 = [str2 struct('name','\bfProcessing time:','value',sprintf('%02.0f:%02.0f min', ...
+    floor(round(etime(clock,res.stime))/60),mod(round(etime(clock,res.stime)),60)))]; 
+  end
+
+  % Warnings
+  if numel(cat_warnings)>0 && job.extopts.expertgui>0
+    str2 = [str2 struct('name', '','value','')]; 
+    str2 = [str2 struct('name', '\bfWarnings:','value','')]; 
+    for wi=1:numel(cat_warnings)
+      shorter = cat_warnings(wi).identifier;
+      % remove leading MATLAB, SPM or CAT elements
+      dots    = max([min(strfind(shorter,'MATLAB')+7), ...
+                     min(strfind(shorter,'SPM')+4), ...
+                     min(strfind(shorter,'CAT')+4)]);
+      if ~isempty(dots), shorter = shorter(dots:end); end
+      % limit lenght of the string and replace critical character
+      shorter = spm_str_manip(shorter,'l40');
+      shorter = marks2str(4,shorter);
+      shorter = strrep(shorter,'_','\_');
+      str2    = [str2 struct('name',shorter,'value','')];  %#ok<AGROW>
     end
+  end
 
-    % Preprocessing Time
-    if job.extopts.experimental || job.extopts.expertgui>0 || 1
-      str2 = [str2 struct('name','\bfProcessing time:','value',sprintf('%02.0f:%02.0f min', ...
-      floor(round(etime(clock,res.stime))/60),mod(round(etime(clock,res.stime)),60)))]; 
-    end
+  % adding one space for correct printing of bold fonts
+  for si=1:numel(str)
+    str(si).name   = [str(si).name  '  '];  str(si).value  = [str(si).value  '  '];
+  end
+  for si=1:numel(str2)
+    str2(si).name  = [str2(si).name '  '];  str2(si).value = [str2(si).value '  '];
+  end
+  for si=1:numel(str3)
+    str3(si).name  = [str3(si).name '  '];  str3(si).value = [str3(si).value '  '];
+  end
 
-    % Warnings
-    if numel(cat_warnings)>0 && job.extopts.expertgui>0
-      str2 = [str2 struct('name', '','value','')]; 
-      str2 = [str2 struct('name', '\bfWarnings:','value','')]; 
-      for wi=1:numel(cat_warnings)
-        shorter = cat_warnings(wi).identifier;
-        % remove leading MATLAB, SPM or CAT elements
-        dots    = max([min(strfind(shorter,'MATLAB')+7), ...
-                       min(strfind(shorter,'SPM')+4), ...
-                       min(strfind(shorter,'CAT')+4)]);
-        if ~isempty(dots), shorter = shorter(dots:end); end
-        % limit lenght of the string and replace critical character
-        shorter = spm_str_manip(shorter,'l40');
-        shorter = marks2str(4,shorter);
-        shorter = strrep(shorter,'_','\_');
-        str2    = [str2 struct('name',shorter,'value','')];  %#ok<AGROW>
-      end
-    end
-
-    % adding one space for correct printing of bold fonts
-    for si=1:numel(str)
-      str(si).name   = [str(si).name  '  '];  str(si).value  = [str(si).value  '  '];
-    end
-    for si=1:numel(str2)
-      str2(si).name  = [str2(si).name '  '];  str2(si).value = [str2(si).value '  '];
-    end
-    for si=1:numel(str3)
-      str3(si).name  = [str3(si).name '  '];  str3(si).value = [str3(si).value '  '];
-    end
-
-
-    %
-    fg = spm_figure('FindWin','Graphics'); 
-    set(0,'CurrentFigure',fg)
-    if isempty(fg)
-      if job.nproc, fg = spm_figure('Create','Graphics','visible','off'); else fg = spm_figure('Create','Graphics'); end;
-    else
-      if job.nproc, set(fg,'visible','off'); end
-    end
-    set(fg,'windowstyle','normal'); 
-    spm_figure('Clear','Graphics'); 
-    switch computer
-      case {'PCWIN','PCWIN64'}, fontsize = 8;
-      case {'GLNXA','GLNXA64'}, fontsize = 8;
-      case {'MACI','MACI64'},   fontsize = 9.5;
-      otherwise,                fontsize = 9.5;
-    end
-    ax=axes('Position',[0.01 0.75 0.98 0.24],'Visible','off','Parent',fg);
-
-    text(0,0.99,  ['Segmentation: ' spm_str_manip(res.image0(1).fname,'k60d') '       '],...
-      'FontSize',fontsize+1,'FontWeight','Bold','Interpreter','none','Parent',ax);
-
-    cm = job.extopts.colormap; 
-
-    % check colormap name
-    switch lower(cm)
-      case {'jet','hsv','hot','cool','spring','summer','autumn','winter',...
-          'gray','bone','copper','pink','bcgwhw','bcgwhn'}
-      otherwise
-        cat_io_cprintf(job.color.warning,'WARNING:Unknown Colormap - use default.\n'); 
-        cm = 'gray';
-    end
-
-    % SPM_orthviews seams to allow only 60 values
-    % It further requires a modified colormaps with lower values that the
-    % colorscale and small adaption for the values. 
-    surfcolors = 128; 
-    switch lower(cm)
-      case {'bcgwhw','bcgwhn'} % cat colormaps with larger range
-        ytick       = [1,5:5:60];
-        yticklabel  = {' BG',' ',' CSF',' CGM',' GM',' GWM',' WM',' ',' ',' ',' ',' ',' BV / HD '};
-        yticklabelo = {' BG',' ','    ','    ','   ','     ',' avg WM  ',' ',' ',' ',' ',' ',' BV / HD '};
-        yticklabeli = {' BG',' ','    ','    ','   ','  ','  ',' ',' ',' ',' ',' ',' BV / HD '};
-        %colormap(cat_io_colormaps(cm,60));
-        cmap = [cat_io_colormaps([cm 'ov'],60);flipud(cat_io_colormaps([cm 'ov'],60));jet(surfcolors)]; 
-        cmmax = 2;
-      case {'jet','hsv','hot','cool','spring','summer','autumn','winter','gray','bone','copper','pink'}
-        ytick       = [1 20 40 60]; 
-        yticklabel  = {' BG',' CSF',' GM',' WM'};
-        yticklabelo = {' BG','    ','   ',' WM'};
-        yticklabeli = {' BG','    ','   ','   '};
-        cmap = [eval(sprintf('%s(60)',cm));flipud(eval(sprintf('%s(60)',cm)));jet(surfcolors)]; 
-        cmmax = 1;
-    end
-    colormap(cmap);
-    spm_orthviews('Redraw');
-
-    htext = zeros(5,2,2);
-    for i=1:size(str,2)   % main parameter
-      htext(1,i,1) = text(0.01,0.98-(0.055*i), str(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-      htext(1,i,2) = text(0.51,0.98-(0.055*i), str(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-    end
-    for i=1:size(str2,2)  % qa-measurements
-      htext(2,i,1) = text(0.01,0.40-(0.055*i), str2(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-      htext(2,i,2) = text(0.25,0.40-(0.055*i), str2(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-    end
-    % qa-scala
-    %htext(5,1,1) = text(0.01,0.45-(0.055*(i+2)),str4(1).name,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-    for i=1:size(str3,2)  % subject-measurements
-      htext(3,i,1) = text(0.51,0.40-(0.055*i), str3(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-      htext(3,i,2) = text(0.80,0.40-(0.055*i), str3(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-    end
-
-
-
-    pos = [0.01 0.38 0.48 0.36; 0.51 0.38 0.48 0.36; ...
-           0.01 0.01 0.48 0.36; 0.51 0.01 0.48 0.36];
-    spm_orthviews('Reset');
-
-
-
-
-    % BB box is not optimal for all images
-    disptype = 'affine'; 
-    switch disptype
-      case 'affine'
-        dispmat = res.Affine; 
-        spm_orthviews('BB', job.extopts.bb*0.95 );
-      case 'ridid'
-        % this does not work so good... AC has a little offset ...
-        aff = spm_imatrix(res.Affine);  scale = aff(7:9); 
-        spm_orthviews('BB', job.extopts.bb ./ mean(scale));
-        dispmat = R; 
-    end
-
-
-    %% Yo - original image in original space
-    % using of SPM peak values didn't work in some cases (5-10%), so we have to load the image and estimate the WM intensity 
-    try %#ok<TRYNC>
-      Yo  = single(VT.private.dat(:,:,:)); 
-    end
-    Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-    if exist('Yo','var')
-      if job.inv_weighting
-        WMth = min([...
-          cat_stat_nanmedian(Yo(Yp0(:)>0.8 & Yp0(:)<1.2))*2,...
-          cat_stat_nanmedian(Yo(Yp0(:)>1.8 & Yp0(:)<2.2))*1.5,...
-          ]);
-        T1txt = '*.nii (Original PD/T2)'; 
-      else
-        WMth = cat_stat_nanmedian(Yo(Yp0(:)>2.8 & Yp0(:)<3.2)); clear Yo; 
-        T1txt = '*.nii (Original T1)'; 
-      end
-      if ~debug, clear Yo; end
-
-      if isfield(res,'spmpp')
-        VT0x = res.image0(1); 
-      else
-        VT0x = VT0;
-      end
-      VT0x.mat = dispmat * VT0x.mat; 
-      hho = spm_orthviews('Image',VT0x,pos(1,:)); 
-      spm_orthviews('Caption',hho,{T1txt},'FontSize',fontsize,'FontWeight','Bold');
-      spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
-      cc{1} = axes('Position',[pos(1,1) + 0.30 0.38 0.02 0.15],'Parent',fg); image((60:-1:1)');
-
-      if job.inv_weighting
-        set(cc{1},'YTick',ytick,'YTickLabel',fliplr(yticklabeli),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-          'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
-      else  
-        set(cc{1},'YTick',ytick,'YTickLabel',fliplr(yticklabelo),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-          'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
-      end
-    else
-      cat_io_cprintf('warn','WARNING: Can''t display original file "%s"!\n',VT.fname); 
-    end
-
-
-    % Ym - normalized image in original space
-    if ~isfield(res,'spmpp') 
-      %%
-      Vm        = res.image(1); 
-      Vm.fname  = ''; 
-      Vm.dt     = [spm_type('FLOAT32') spm_platform('bigend')];
-      Vm.dat(:,:,:) = single(Ym); 
-      Vm.pinfo  = repmat([1;0],1,size(Ym,3));
-      Vm.mat    = dispmat * Vm.mat; 
-      hhm = spm_orthviews('Image',Vm,pos(2,:));
-      spm_orthviews('Caption',hhm,{'m*.nii (Int. Norm.)'},'FontSize',fontsize,'FontWeight','Bold');
-      spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
-      cc{2} = axes('Position',[pos(2,1) + 0.30 0.38 0.02 0.15],'Parent',fg); image((60:-1:1)');
-      set(cc{2},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-        'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
-    end
-
-    % Yo - segmentation in original space
-    VO        = res.image(1); 
-    VO.fname  = ''; 
-    VO.dt     = [spm_type('FLOAT32') spm_platform('bigend')];
-    VO.dat(:,:,:) = single(Yp0/3); 
-    VO.pinfo  = repmat([1;0],1,size(Yp0,3));
-    VO.mat    = dispmat * VO.mat; 
-    hhp0 = spm_orthviews('Image',VO,pos(3,:)); if ~debug, clear Yp0; end
-    spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize,'FontWeight','Bold');
-    spm_orthviews('window',hhp0,[0 cmmax]); caxis([0,2]);
-    cc{3} = axes('Position',[pos(3,1) + 0.30 0.02 0.02 0.15],'Parent',fg); image((60:-1:1)');
-    set(cc{3},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-      'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
-    spm_orthviews('Reposition',[0 0 0]); 
-
-
-    % surface
-    if exist('Psurf','var')
-      try
-        hCS = subplot('Position',[0.50 0.05 0.55 0.30],'visible','off'); 
-        hSD = cat_surf_display(struct('data',Psurf(1).Pthick,'readsurf',0,'expert',2,...
-          'multisurf',job.output.surface,'view','s',...
-          'parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
-        colormap(cmap);  set(hSD{1}.colourbar,'visible','off'); 
-        cc{3} = axes('Position',[0.63 0.02 0.3 0.01],'Parent',fg); image((121:1:120+surfcolors));
-        set(cc{3},'XTick',1:(surfcolors-1)/6:surfcolors,'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
-          'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize,'FontWeight','Bold');
-      catch
-        cat_io_cprintf('warn','WARNING: Can''t display surface!\n',VT.fname);   
-      end
-    end
-
-
-
-    %% print subject report file as standard PDF/PNG/... file
-    job.imgprint.type  = 'pdf';
-    job.imgprint.dpi   = 600;
-    job.imgprint.fdpi  = @(x) ['-r' num2str(x)];
-    job.imgprint.ftype = @(x) ['-d' num2str(x)];
-    job.imgprint.fname     = fullfile(pth,reportfolder,['catreport_' nam '.' job.imgprint.type]); 
-
-    fgold.PaperPositionMode = get(fg,'PaperPositionMode');
-    fgold.PaperPosition     = get(fg,'PaperPosition');
-    fgold.resize            = get(fg,'resize');
-
-    % it is necessary to change some figure properties especialy the fontsizes 
-    set(fg,'PaperPositionMode','auto','resize','on','PaperPosition',[0 0 1 1]);
-    for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize*0.8); end; end
-    for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize*0.8); end;
-    print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
-    for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize); end; end
-    for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize); end; 
-    set(fg,'PaperPositionMode',fgold.PaperPositionMode,'resize',fgold.resize,'PaperPosition',fgold.PaperPosition);
-    try
-      fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);% windows error?
-    end
-
-    %% reset colormap to the simple SPM like gray60 colormap
-    if exist('hSD','var')
-      % if there is a surface than we have to use the gray colormap also here
-      % because the colorbar change!
-      try %#ok<TRYNC>
-        cat_surf_render2('ColourMap',hSD{1}.axis,gray(128));
-        cat_surf_render2('Clim',hSD{1}.axis,[0 6]);
-        axes(cc{3}); image(0:60);
-        set(cc{3},'XTick',max(1,0:10:60),'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
-          'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize,'FontWeight','Bold');
-      end
-    end
-
-    WMfactor = 4/3; cmap = gray(60); colormap(cmap); caxis([0,numel(cmap)]); 
-
-    % new colorscale
-    if job.inv_weighting
-      % if exist('hho' ,'var'), spm_orthviews('window',hho ,[0 T3th(3)*WMfactor]); end
-    else
-      if exist('hho' ,'var'), spm_orthviews('window',hho ,[0 T3th(3)*WMfactor]); end
-    end
-    if exist('hhm' ,'var'), spm_orthviews('window',hhm ,[0 WMfactor]); end
-    if exist('hhp0','var'), spm_orthviews('window',hhp0,[0 WMfactor]); end
-
-    warning on;  %#ok<WNON>
-
-
-    %% command window output
-    fprintf('\n%s',repmat('-',1,72));
-    fprintf(1,'\nCAT preprocessing takes %0.0f minute(s) and %0.0f second(s).\n', ...
-      floor(round(etime(clock,res.stime))/60),mod(round(etime(clock,res.stime)),60));
-    cat_io_cprintf(color(QMC,qa.qualityratings.IQR), sprintf('Image Quality Rating (IQR):  %5.2f%%%% (%s)\n',...
-      mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR)));
-
-    % print subfolders
-    if job.extopts.subfolders
-      fprintf('Segmentations are saved in %s%s%s\n',pth,filesep,'mri');
-      fprintf('Reports are saved in %s%s%s\n',pth,filesep,'report');
-      if job.output.ROI
-        fprintf('Labels are saved in %s%s%s\n',pth,filesep,'label');
-      end
-      if job.output.surface
-        fprintf('Surface measurements are saved in %s%s%s\n',pth,filesep,'surf');
-      end
-    end
-
-    fprintf('%s\n\n',repmat('-',1,72));
-
-    clear C c Ymi Ymf Ym
-
+  %%
+  strs = {str,str2,str3};
+  Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
+  if ~exist('Psurf','var'), Psurf = ''; end
+  cat_main_reportfig(Ym,Yp0,Psurf,job,res,strs);
 end
+% final command line report
+cat_main_reportcmd(job,res,qa);   
+
 %%
 return;
 %=======================================================================

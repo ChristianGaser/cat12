@@ -1,4 +1,5 @@
 function Ycls = cat_main(res,tpm,job)
+% ______________________________________________________________________
 % Write out CAT preprocessed data
 %
 % FORMAT Ycls = cat_main(res,tpm,job)
@@ -8,127 +9,40 @@ function Ycls = cat_main(res,tpm,job)
 %
 % ______________________________________________________________________
 % Christian Gaser
+% ______________________________________________________________________
 % $Id$
 
 %#ok<*ASGLU>
 
 % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
-dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
+dbs = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
 
-% this limits ultra high resolution data, i.e. images below ~0.4 mm are reduced to ~0.7mm! 
-% used in cat_main_partvol, cat_main_gcut, cat_main_LAS
-def.extopts.uhrlim = 0.7 * 2; % default 0.7*2 that reduce images below 0.7 mm
-job.extopts = cat_io_checkinopt(job.extopts,def.extopts);
-clear def; 
 
+
+%% Update SPM/CAT parameter and add some basic variables
+[res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job);
 %global cat_err_res; % for CAT error report
 
-tc = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)]; 
-clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
 
-%% complete job structure
-defr.ppe = struct(); 
-res = cat_io_checkinopt(res,defr);
 
-def.cati            = 0;
-def.color.error     = [0.8 0.0 0.0];
-def.color.warning   = [0.0 0.0 1.0];
-def.color.warning   = [0.8 0.9 0.3];
-def.color.highlight = [0.2 0.2 0.8];
-job = cat_io_checkinopt(job,def);
+%% Write SPM preprocessing results
+%  -------------------------------------------------------------------
+stime  = cat_io_cmd('SPM preprocessing 2 (write)'); if job.extopts.verb>1, fprintf('\n'); end
+stime2 = cat_io_cmd('  Write Segmentation','g5','',job.extopts.verb-1);
+[Ysrc,Ycls,Yy] = cat_spm_preproc_write8(res,zeros(max(res.lkp),4),zeros(1,2),[0 0],0,0);
 
-% definition of subfolders
-if job.extopts.subfolders
-  mrifolder     = 'mri';
-  reportfolder  = 'report';
-else
-  mrifolder     = '';
-  reportfolder  = '';
-end
 
-% Sort out bounding box etc
-[bb1,vx1] = spm_get_bbox(tpm.V(1), 'old');
-bb = job.extopts.bb;
-vx = job.extopts.vox(1);
-bb(~isfinite(bb)) = bb1(~isfinite(bb));
-if ~isfinite(vx), vx = abs(prod(vx1))^(1/3); end; 
-bb(1,:) = vx.*round(bb(1,:)./vx);
-bb(2,:) = vx.*round(bb(2,:)./vx);
-res.bb = bb; 
-clear vx vx1 bb1   
 
-if numel(res.image) > 1
-  warning('CAT12:noMultiChannel',...
-    'CAT12 does not support multiple channels. Only the first channel will be used.');
-end
-
-do_dartel = 1 + (job.extopts.regstr(1)~=0);      % always use dartel (do_dartel=1) or shooting (do_dartel=2) normalization
-if do_dartel
-  need_dartel = any(job.output.warps) || ...
-    job.output.bias.warped || ...
-    job.output.label.warped || ...
-    any(any(tc(:,[4 5 6]))) || job.output.jacobian.warped || ...
-    job.output.ROI || ...
-    any([job.output.atlas.warped]) || ...
-    numel(job.extopts.regstr)>1 || ...
-    numel(job.extopts.vox)>1;
-  if ~need_dartel
-    do_dartel = 0;
-  end
-end
-if do_dartel<2, job.extopts.templates = job.extopts.darteltpms; else job.extopts.templates = job.extopts.shootingtpms; end % for LAS
-res.do_dartel = do_dartel;
-
-stime = cat_io_cmd('SPM preprocessing 2 (write)');
+%% CAT vs. SPMpp Pipeline
 if ~isfield(res,'spmpp')
-  if job.extopts.verb>1, fprintf('\n'); end
-  stime2 = cat_io_cmd('  Write Segmentation','g5','',job.extopts.verb-1);
-
-  [Ysrc,Ycls,Yy] = cat_spm_preproc_write8(res,zeros(max(res.lkp),4),zeros(1,2),[0 0],0,0);
-
+  %% Update SPM results in case of reduced SPM preprocessing resultion 
+  %  -------------------------------------------------------------------
   if isfield(res,'redspmres')
-    % Update Ycls: cleanup on original data
-    Yb = Ycls{1} + Ycls{2} + Ycls{3}; 
-    for i=1:numel(Ycls), [Pc(:,:,:,i),BB] = cat_vol_resize(Ycls{i},'reduceBrain',repmat(job.opts.redspmres,1,3),2,Yb); end %#ok<AGROW>
-      Pc = cat_main_clean_gwc(Pc,1);
-    for i=1:numel(Ycls), Ycls{i} = cat_vol_resize(Pc(:,:,:,i),'dereduceBrain',BB); end; clear Pc Yb; 
-    for ci=1:numel(Ycls)
-      Ycls{ci} = cat_vol_ctype(cat_vol_resize(Ycls{ci},'deinterp',res.redspmres,'linear'));
-    end
-
-    % Update Yy:
-    Yy2 = zeros([res.redspmres.sizeO 3],'single');
-    for ci=1:size(Yy,4)
-      Yy2(:,:,:,ci) = cat_vol_ctype(cat_vol_resize(Yy(:,:,:,ci),'deinterp',res.redspmres,'linear'));
-    end
-    Yy   = Yy2; clear Yy2; 
-
-    % Update Ysrc:
-    Ysrc = cat_vol_resize(Ysrc,'deinterp',res.redspmres,'cubic');
-    Ybf  = res.image1.dat ./ Ysrc; 
-    Ybf  = cat_vol_approx(Ybf .* (Ysrc~=0 & Ybf>0.25 & Ybf<1.5),'nn',1,8);
-    Ysrc = res.image1.dat ./ Ybf; clear Ybf; 
-    res.image = res.image1; 
-    res  = rmfield(res,'image1');
+    [Ysrc,Ycls,Yy,res] = cat_main_resspmres(Ysrc,Ycls,Yy,res);
   end
-
-  % remove noise/interpolation prefix
-  VT  = res.image(1);  % denoised/interpolated n*.nii
-  VT0 = res.image0(1); % original 
-  fname0 = VT0.fname;
-  [pth,nam] = spm_fileparts(VT0.fname); 
-
-  % voxel size parameter
-  vx_vol  = sqrt(sum(VT.mat(1:3,1:3).^2));    % voxel size of the processed image
-  vx_volr = sqrt(sum(VT0.mat(1:3,1:3).^2));   % voxel size of the original image 
-
-  % delete old xml file 
-  oldxml = fullfile(pth,reportfolder,['cat_' nam '.xml']);  
-  if exist(oldxml,'file'), delete(oldxml); end
-  clear oldxml
-
-  d = VT.dim(1:3);
-
+  
+  
+  
   %% Replace SPM brain segmentation by AMAP segmentation
   %  -------------------------------------------------------------------
   %  This is an alternative pipeline in case of failed SPM brain tissue
@@ -137,7 +51,7 @@ if ~isfield(res,'spmpp')
   %  bias correction. 
   %  -------------------------------------------------------------------
   if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap 
-    [P,res,stime2] = cat_main_amap(Ysrc,Ycls,job,res,vx_vol,stime2);
+    [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,job,res,vx_vol,stime2);
   else
     P = zeros([size(Ycls{1}) numel(Ycls)],'uint8');
     for i=1:numel(Ycls), P(:,:,:,i) = Ycls{i}; end
@@ -154,7 +68,17 @@ if ~isfield(res,'spmpp')
   %  -------------------------------------------------------------------
   [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,tpm,job,res,stime,stime2);
   
-  % check the previous processing
+  
+  
+  %% Check the previous preprocessing in debug mode ###
+  %  -------------------------------------------------------------------
+  %  If you want to see intermediate steps of the processing use the "ds"
+  %  function:
+  %    ds('l2','',vx_vol,Ym,Yb,Ym,Yp0,80)
+  %  that display 4 images (unterlay, overlay, image1, image2) for one 
+  %  slice. The images were scaled in a range of 0 to 1. The overlay 
+  %  allows up to 20 colors
+  %  -------------------------------------------------------------------
   if debug;;
     Ym   = Ysrc / T3th(3); %#ok<NASGU> % only WM scaling
     Yp0  = (single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255)/3; %#ok<NASGU> % label map
@@ -174,18 +98,10 @@ if ~isfield(res,'spmpp')
   %  and a global  and local intensity correction. The local intensity 
   %  correction refines the tissue maps to aproximate the local tissue 
   %  peaks of WM (maximum-based), GM, and CSF. 
-  %
-  %  If you want to see intermediate steps of the processing use the "ds"
-  %  function:
-  %    ds('l2','',vx_vol,Ym,Yb,Ym,Yp0,80)
-  %  that display 4 images (unterlay, overlay, image1, image2) for one 
-  %  slice. The images were scaled in a range of 0 to 1. The overlay 
-  %  allows up to 20 colors
-  %  
   %  ---------------------------------------------------------------------
   stime = cat_io_cmd('Global intensity correction');
   if any( min(vx_vol*2,1.4)./vx_vol >= 2 )
-    % guaranty average resolution
+    % guaranty average (lower) resolution with >0.7 mm
     Ysrcr = cat_vol_resize(Ysrc       ,'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm');
     Ybr   = cat_vol_resize(single(Yb) ,'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm')>0.5;
     Yclsr = cell(size(Ycls)); for i=1:6, Yclsr{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,min(vx_vol*2,1.4),32); end
@@ -197,6 +113,9 @@ if ~isfield(res,'spmpp')
   end
 
   % update in inverse case ... required for LAS
+  % 
+  % ### include this in cat_main_gintnorm? 
+  %
   if job.inv_weighting
 %    Ysrc = Ym * Tth.T3th(5); Tth.T3th = Tth.T3thx * Tth.T3th(5);
     if T3th(1)>T3th(3) && T3th(2)<T3th(3) && T3th(1)>T3th(2)
@@ -217,7 +136,7 @@ if ~isfield(res,'spmpp')
   end
   if job.extopts.verb>2
     tpmci  = 2; %tpmci + 1;
-    tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postgintnorm'));
+    tmpmat = fullfile(pth,res.reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postgintnorm'));
     save(tmpmat,'Ysrc','Ycls','Ym','Yb','T3th','vx_vol');
   end
   fprintf('%5.0fs\n',etime(clock,stime));
@@ -265,6 +184,9 @@ if ~isfield(res,'spmpp')
   %  The mapping has to be done for the TPM resolution, but we have to 
   %  use the Shooting template for mapping rather then the TPM because
   %  of the cat12 atlas map.
+  %  
+  %  #### move fast shooting to the cat_main_updateSPM function ####
+  % 
   if job.extopts.WMHC || job.extopts.SLC
     stime = cat_io_cmd(sprintf('Fast Shooting registration'),'','',job.extopts.verb); 
 
@@ -285,7 +207,9 @@ if ~isfield(res,'spmpp')
     if ~debug, clear trans job2 res2; end
 
     % Shooting did not include areas outside of the boundary box
-    % >> add to cat_main_registration?
+    %
+    % ### add to cat_main_registration?
+    %
     Ybd = true(size(Ym)); Ybd(3:end-2,3:end-2,3:end-2) = 0; Ybd(~isnan(Yy2(:,:,:,1))) = 0; Yy2(isnan(Yy2))=0; 
     for k1=1:3
       Yy2(:,:,:,k1) = Yy(:,:,:,k1) .* Ybd + Yy2(:,:,:,k1) .* (1-Ybd);
@@ -293,45 +217,6 @@ if ~isfield(res,'spmpp')
     end
     if ~debug, Yy = Yy2; end 
     clear Yy2; 
-
-    if 0
-      %% preparte mapping in case of shooting templates with other resolutions
-      Vb2    = spm_vol(job.extopts.shootingtpms{2}); 
-      amat   = Vb2(2).mat \ tpm.M; 
-      if any(any(amat~=eye(4))); 
-        yn     = numel(Yy2); 
-        p      = ones([4,yn/3],'single'); 
-        p(1,:) = Yy2(1:yn/3);
-        p(2,:) = Yy2(yn/3+1:yn/3*2);
-        p(3,:) = Yy2(yn/3*2+1:yn);
-        p      = amat * p;
-
-        Yy2 = zeros(size(Yy2),'single'); 
-        Yy2(1:yn/3)        = p(1,:); 
-        Yy2(yn/3+1:yn/3*2) = p(2,:); 
-        Yy2(yn/3*2+1:yn)   = p(3,:);
-        clear p; 
-      end
-
-      %% Used (flipped) Jacobian determinant to detect lesions as strongly deformed regions. 
-      % I mapped the normalized determinant to individual space because I was not 
-      % able to create the determinant from the inverse deformation field.
-      % Furthermore this idea works only in single cases yet and is therefore not activated yet. 
-      % I will remove this block and related variables in October 2018 if it still not working.
-   
-      Vdtw = Vb2(1); Vdtw.dt(1) = 16; Vdtw.pinfo(1) = 1; Vdtw.pinfo(3) = 0; Vdtw.dat = Ydtw;
-      Vdtw.mat = trans.warped.M1; Vdtw.dim = size(Ydtw); 
-      if isfield(Vdtw,'private'), Vdtw = rmfield(Vdtw,'private'); end
-      Ydt  = spm_sample_vol(Vdtw,double(Yy2(:,:,:,1)),double(Yy2(:,:,:,2)),double(Yy2(:,:,:,3)),5);
-      Ydt  = reshape(Ydt,size(Ym)); 
-      %%
-      mati = spm_imatrix(Vdtw.mat); mati([1,7]) = -mati([1,7]); Vdtw.mat = spm_matrix(mati); 
-      Vdtw.dat = flipud(Ydtw); 
-      Ydti = spm_sample_vol(Vdtw,double(Yy2(:,:,:,1)),double(Yy2(:,:,:,2)),double(Yy2(:,:,:,3)),5);
-      Ydti = reshape(Ydti,size(Ym)); 
-    end
-    clear Ydtw; 
-    
     if ~debug, fprintf('%5.0fs\n',etime(clock,stime)); end
   end
   
@@ -355,6 +240,9 @@ if ~isfield(res,'spmpp')
     end
     fprintf('%5.0fs\n',etime(clock,stime));
 
+    %
+    % ### indlcude this in cat_main_LAS? ###
+    %
     if job.extopts.NCstr~=0 
       % noise correction of the local normalized image Ymi, whereas only small changes are expected in Ym by the WM bias correction
       stime = cat_io_cmd(sprintf('  SANLM denoising after LAS (%s)',...
@@ -387,7 +275,7 @@ if ~isfield(res,'spmpp')
   if ~debug; clear Ysrc ; end
   
   if job.extopts.verb>2
-    tpmci=tpmci+1; tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postLAS'));
+    tpmci=tpmci+1; tmpmat = fullfile(pth,res.reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postLAS'));
     save(tmpmat,'Ysrc','Ycls','Ymi','Yb','T3th','vx_vol');
   end
   
@@ -459,18 +347,9 @@ if ~isfield(res,'spmpp')
     clear Ybv p0; 
   end
 
+  
 
-
-
-  %% ---------------------------------------------------------------------
-  %  Segmentation part
-  %  ---------------------------------------------------------------------
-  %  Now, it is time for skull-stripping (gcut,morph), AMAP tissue 
-  %  segmentation, and further tissue corrections (cleanup,LAS,finalmask).
-  %  ---------------------------------------------------------------------
-
-
-  %%  gcut+: additional skull-stripping using graph-cut
+  %% gcut+: additional skull-stripping using graph-cut
   %  -------------------------------------------------------------------
   %  For skull-stripping gcut is used in general, but a simple and very 
   %  old function is still available as backup solution.
@@ -503,154 +382,38 @@ if ~isfield(res,'spmpp')
   %  Most corrections were done before and the AMAP routine is used with 
   %  a low level of iterations and no further bias correction, because
   %  some images get tile artifacts. 
+  %
+  %    prob .. new AMAP segmenation (4D)
+  %    ind* .. index elements to asign a subvolume
   %  -------------------------------------------------------------------
-
-  % correct for harder brain mask to avoid meninges in the segmentation
-  Ymib = Ymi; Ymib(~Yb) = 0; 
-  rf = 10^4; Ymib = round(Ymib*rf)/rf;
-
-  %  prepare data for segmentation
-  if 1
-    %% classic approach, consider the WMH!
-    Kb2 = 4;
-    cls2 = zeros([d(1:2) Kb2]);
-    Yp0  = zeros(d,'uint8');
-    for i=1:d(3)
-        for k1 = 1:Kb2, cls2(:,:,k1) = Ycls{k1}(:,:,i); end
-        % find maximum for reordered segmentations
-        [maxi,maxind] = max(cls2(:,:,[3,1,2,4:Kb2]),[],3);
-        k1ind = [1 2 3 1 0 0 1 0]; 
-        for k1 = 1:Kb2
-          Yp0(:,:,i) = Yp0(:,:,i) + cat_vol_ctype((maxind == k1) .* (maxi~=0) * k1ind(k1) .* Yb(:,:,i)); 
-        end
-    end
-    if ~debug, clear maxi maxind Kb k1 cls2; end
-  else
-    % more direct method ... a little bit more WM, less CSF
-    % Yp0 = uint8(max(Yb,min(3,round(Ymi*3)))); Yp0(~Yb) = 0;
-  end  
-
-
-  % use index to speed up and save memory
-  sz = size(Yb);
-  [indx, indy, indz] = ind2sub(sz,find(Yb>0));
-  indx = max((min(indx) - 1),1):min((max(indx) + 1),sz(1));
-  indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
-  indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
-
-  % Yb source image because Amap needs a skull stripped image
-  % set Yp0b and source inside outside Yb to 0
-  Yp0b = Yp0(indx,indy,indz);
-  Ymib = Ymib(indx,indy,indz); 
-
-
-  % remove non-brain tissue with a smooth mask and set values inside the
-  % brain at least to CSF to avoid wholes for images with CSF==BG.
-  if job.extopts.LASstr>0 
-    Ywmstd = cat_vol_localstat(single(Ymib),Yp0b==3,1,4); 
-    CSFnoise(1) = cat_stat_nanmean(Ywmstd(Ywmstd(:)>0))/mean(vx_vol); 
-    Ywmstd = cat_vol_localstat(cat_vol_resize(single(Ymib),'reduceV',vx_vol,vx_vol*2,16,'meanm'),...
-      cat_vol_resize(Yp0==3,'reduceV',vx_vol,vx_vol*2,16,'meanm')>0.5,1,4); 
-    CSFnoise(2) = cat_stat_nanmean(Ywmstd(Ywmstd(:)>0))/mean(vx_vol); 
-    Ycsf = double(0.33 * Yb(indx,indy,indz)); spm_smooth(Ycsf,Ycsf,0.6*vx_vol);
-    Ycsf = Ycsf + cat_vol_smooth3X(randn(size(Ycsf)),0.5) * max(0.005,min(0.2,CSFnoise(1)/4)); % high-frequency noise
-    Ycsf = Ycsf + cat_vol_smooth3X(randn(size(Ycsf)),1.0) * max(0.005,min(0.2,CSFnoise(2)*1)); % high-frequency noise
-    Ymib = max(Ycsf*0.8 .* cat_vol_smooth3X(Ycsf>0,2),Ymib); 
-    clear Ycsf; 
-    % Yb is needed for surface reconstruction
-  %     if ~job.output.surface, clear Yb; end
-  end
-  
-  % adaptive mrf noise 
-  if job.extopts.mrf>=1 || job.extopts.mrf<0; 
-    % estimate noise
-    [Yw,Yg] = cat_vol_resize({Ymi.*(Ycls{1}>240),Ymi.*(Ycls{2}>240)},'reduceV',vx_vol,3,32,'meanm');
-    Yn = max(cat(4,cat_vol_localstat(Yw,Yw>0,2,4),cat_vol_localstat(Yg,Yg>0,2,4)),[],4);
-    job.extopts.mrf = double(min(0.15,3*cat_stat_nanmean(Yn(Yn(:)>0)))) * 0.5; 
-    clear Yn Yg
-  end
-
-  % display something
-  stime = cat_io_cmd(sprintf('Amap using initial SPM12 segmentations (MRF filter strength %0.2f)',job.extopts.mrf));       
-
-  % Amap parameters  - default sub=16 caused errors with highres data!
-  % don't use bias_fwhm, because the Amap bias correction is not that efficient and also changes
-  % intensity values
-  Ymib = double(Ymib); n_iters = 50; sub = round(32/min(vx_vol)); n_classes = 3; pve = 5; bias_fwhm = 0; init_kmeans = 0;  %#ok<NASGU>
-  if job.extopts.mrf~=0, iters_icm = 50; else iters_icm = 0; end %#ok<NASGU>
-
-  % remove noisy background for kmeans
-  if init_kmeans, Ymib(Ymib<0.1) = 0; end
-  
-  % do segmentation  
-  amapres = evalc(['prob = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
-    'job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);']);
-  fprintf('%5.0fs\n',etime(clock,stime));
-  
-  % analyse segmentation ... the input Ym is normalized an the tissue peaks should be around [1/3 2/3 3/3]
-  amapres = textscan(amapres,'%s'); amapres = amapres{1}; 
-  th{1}   = cell2mat(textscan(amapres{11},'%f*%f')); 
-  th{2}   = cell2mat(textscan(amapres{12},'%f*%f')); 
-  th{3}   = cell2mat(textscan(amapres{13},'%f*%f')); 
+  [prob,indx,indy,indz] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res);
   
   
-  if job.extopts.verb>1 
-    fprintf('    AMAP peaks: [CSF,GM,WM] = [%0.2f%s%0.2f,%0.2f%s%0.2f,%0.2f%s%0.2f]\n',...
-      th{1}(1),char(177),th{1}(2),th{2}(1),char(177),th{2}(2),th{3}(1),char(177),th{3}(2));
-  end
-  if th{1}(1)<0 || th{1}(1)>0.6 || th{2}(1)<0.5 || th{2}(1)>0.9 || th{3}(1)<0.95-th{3}(2) || th{3}(1)>1.1
-    error('cat_main:amap',['AMAP estimated untypical tissue peaks that point to an \n' ...
-                           'error in the preprocessing before the AMAP segmentation. ']);
-  end
-  % reorder probability maps according to spm order
-  clear Yp0b Ymib; 
-  prob = prob(:,:,:,[2 3 1]); 
-  clear vol Ymib
-
-  % finally use brainmask before cleanup that was derived from SPM12 segmentations and additionally include
-  % areas where GM from Amap > GM from SPM12. This will result in a brainmask where GM areas
-  % hopefully are all included and not cut 
-  if job.extopts.gcutstr>0 && ~job.inv_weighting
-    Yb0(indx,indy,indz) = Yb0(indx,indy,indz) | ((prob(:,:,:,1) > 0) & Yb(indx,indy,indz)); % & ~Ycls{1}(indx,indy,indz));
-    for i=1:3
-      prob(:,:,:,i) = prob(:,:,:,i).*uint8(Yb0(indx,indy,indz));
-    end
-  end
   
-  %% -------------------------------------------------------------------
-  %  final cleanup
+  %% Final Cleanup
+  %  -------------------------------------------------------------------
   %  There is one major parameter to control the strength of the cleanup.
   %  As far as the cleanup has a strong relation to the skull-stripping, 
   %  cleanupstr is controlled by the gcutstr. 
-  %     Yp0ox = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255; Yp0o = zeros(d,'single'); Yp0o(indx,indy,indz) = Yp0ox; 
+  %
+  %     Yp0ox = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255; 
+  %     Yp0o  = zeros(d,'single'); Yp0o(indx,indy,indz) = Yp0ox; 
   %     Yp0   = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
   %  -------------------------------------------------------------------
-  if job.extopts.cleanupstr>0 && job.extopts.cleanupstr<=1 
-    %%
+  if job.extopts.cleanupstr>0
     for i=1:size(prob,4), [prob2(:,:,:,i),BB] = cat_vol_resize(prob(:,:,:,i),'reduceBrain',vx_vol,2,sum(prob,4)); end 
     prob2 = cat_main_clean_gwc(prob2,round(job.extopts.cleanupstr*4)); % old cleanup
     for i=1:size(prob,4), prob(:,:,:,i) = cat_vol_resize(prob2(:,:,:,i),'dereduceBrain',BB); end; clear prob2
-    
-    
-    [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1(indx,indy,indz),Ymo(indx,indy,indz),job.extopts,job.inv_weighting,vx_volr,indx,indy,indz);
+    if job.extopts.cleanupstr < 2 % use cleanupstr==2 to use only the old cleanup
+      [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1(indx,indy,indz),... 
+        Ymo(indx,indy,indz),job.extopts,job.inv_weighting,vx_vol,indx,indy,indz); % new cleanup
+    end
   else
-    if 0% job.extopts.cleanupstr == 2 % old cleanup for tests
-      stime = cat_io_cmd('Old cleanup');
-      
-      for i=1:size(prob,4), [prob2(:,:,:,i),BB] = cat_vol_resize(prob(:,:,:,i),'reduceBrain',vx_vol,2,sum(prob,4)); end 
-      prob2 = cat_main_clean_gwc(prob2,round(job.extopts.cleanupstr*4)); % old cleanup
-      for i=1:size(prob,4), prob(:,:,:,i) = cat_vol_resize(prob2(:,:,:,i),'dereduceBrain',BB); end; clear prob2
-
-      fprintf('%5.0fs\n',etime(clock,stime));
-    end
-    for i=1:3
-       Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i);
-    end
+    for i=1:3, Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i); end
     Yp0b = Yb(indx,indy,indz); 
   end;
   if ~debug; clear Ymo; end
   clear prob
-
 
 
 
@@ -670,11 +433,10 @@ if ~isfield(res,'spmpp')
   qa.subjectmeasures.WMH_WM_rel = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(2.5/3*255));   % relative WMH volume to WM without PVE
   qa.subjectmeasures.WMH_abs    = prod(vx_vol)/1000 * qa.subjectmeasures.WMH_abs;             % absolute WMH volume without PVE in cm^3
   clear Ywmhrel Yp0
-
   
 
 
-  %% correction for normalization [and final segmentation]
+  % correction for normalization [and final segmentation]
   if ( (job.extopts.WMHC && job.extopts.WMHCstr>0) || job.extopts.SLC) && ~job.inv_weighting
     % display something
     %{
@@ -765,138 +527,20 @@ if ~isfield(res,'spmpp')
   clear Yclsb;
 
   if job.extopts.verb>2
-    tpmci=tpmci+1; tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'preDartel'));
+    tpmci=tpmci+1; tmpmat = fullfile(pth,res.reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'preDartel'));
     save(tmpmat,'Yp0','Ycls','Ymi','T3th','vx_vol','Yl1');
     clear Yp0;
   end
 
-
-  % clear last 3 tissue classes to save memory
-  % please do not try to write out these segmentations because class 4-6 are form SPM12
-  % and class 1-3 from CAT12 and these are completely different segmentation approaches
-  %if all(cell2mat(struct2cell(job.output.TPMC)')==0)
-  %  for i=6:-1:4, Ycls(i)=[]; end   
-  %end
-
-  %% ---------------------------------------------------------------------
-  %  Affine registration:
-  %  Use the segmentation result (p0 label image) for the final affine 
-  %  registration to a pseudo T1 image of the TPM. The dartel tempalte 
-  %  can not be used here, due to special TPM image for chrildren or other
-  %  species!
-  %  ---------------------------------------------------------------------
-  if 0
-    % parameter
-    aflags = struct('sep',job.opts.samp,'regtype',job.opts.affreg,'WG',[],'WF',[],'globnorm',0);
-
-    % VG template
-    cid = [2 3 1]; 
-    VG = tpm.V(1); VG.dat = zeros(VG.dim,'uint8'); VG.dt = [2 0]; VG.pinfo(3) = 0;
-    for ci=1:3 
-      Yt = spm_read_vols(tpm.V(ci)); 
-      VG.dat = VG.dat + cat_vol_ctype(Yt * 255 * cid(ci)/3,'uint8'); clear Yt 
-    end
-
-    % VF image
-    VF = VT; VF.fname = [tempname '.nii']; VF = rmfield(VF,'private'); VF.pinfo(3)=0;
-    VF.dat = zeros(d,'uint8'); VF.dt = [2 0]; 
-    VF.dat(indx,indy,indz) = Yp0b; 
-
-    % just brain mask - this improves affine registration but lead to worse
-    % resultes in dartel normalization .. retry later without CSF
-    % VG.dat = uint8(VG.dat>85)*255; VF.dat = uint8(VF.dat>85)*255;
-
-    % smooth source with job.opts.samp mm
-    VF = spm_smoothto8bit(VF,job.opts.samp/2); % smoothing, because of the TPM smoothness!
-
-    %% affreg registration for one tissue segment
-
-    % deactivated on 20160405 because something failed in the logitudinal process 
-    warning off;  
-    Affine = spm_affreg(VG, VF, aflags, res.Affine); 
-    warning on; 
-    rf=10^6; Affine    = fix(Affine * rf)/rf;
-  else
-    Affine = res.Affine; 
-  end
-
-  res.Affine0        = res.Affine;
-  res.Affine         = Affine;
-
-  clear VG VF cid %tpm 
-
 else
 %% SPM segmentation input  
 %  ------------------------------------------------------------------------
-%  Here, DARTEL and PBT processing is prepared. 
+%  Prepare data for registration and surface processing. 
 %  We simply use the SPM segmentation as it is without further modelling of
 %  a PVE or other refinements. 
 %  ------------------------------------------------------------------------
-  job.extopts.WMHC = 0;
-  job.extopts.SLC  = 0;
-  
-  NCstr.labels = {'none','full','light','medium','strong','heavy'};
-  NCstr.values = {0 1 2 -inf 4 5}; 
-  
-  % here we need the c1 filename
-  VT0 = res.imagec(1);
-  [pth,nam] = spm_fileparts(VT0.fname); 
-  
-  vx_vol              = sqrt(sum(VT.mat(1:3,1:3).^2));          % voxel size of the processed image
-  cat_warnings        = struct('identifier',{},'message',{});   % warning structure from cat_main_gintnorm 
-  NS                  = @(Ys,s) Ys==s | Ys==s+1;                % for side independent atlas labels
-  
-  % QA WMH values required by cat_vol_qa later
-  qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE
-  qa.subjectmeasures.WMH_rel    = nan;  % relative WMH volume to TIV without PVE
-  qa.subjectmeasures.WMH_WM_rel = nan;  % relative WMH volume to WM without PVE
-  qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE in cm^3
-  
-  % load SPM segments
-  [pp,ff,ee] = spm_fileparts(res.image0(1).fname);
-  Ycls{1} = uint8(spm_read_vols(spm_vol(fullfile(pp,['c1' ff ee])))*255); 
-  Ycls{2} = uint8(spm_read_vols(spm_vol(fullfile(pp,['c2' ff ee])))*255); 
-  Ycls{3} = uint8(spm_read_vols(spm_vol(fullfile(pp,['c3' ff ee])))*255); 
-
-  % create (resized) label map and brainmask
-  Yp0  = single(Ycls{3})/5 + single(Ycls{1})/5*2 + single(Ycls{2})/5*3;
-  Yb   = Yp0>0.5;
-  
-  % load original images and get tissue thresholds
-  Ysrc = spm_read_vols(spm_vol(fullfile(pp,[ff ee])));
-  WMth = double(max(clsint(2),...
-           cat_stat_nanmedian(cat_stat_nanmedian(cat_stat_nanmedian(Ysrc(Ycls{2}>192)))))); 
-  T3th = [ min([  clsint(1) - diff([clsint(1),WMth]) ,clsint(3)]) , clsint(2) , WMth];
-  if T3th(3)<T3th(2) % inverse weighting allowed 
-    job.inv_weighting   = 1;                                     
-  else
-    job.inv_weighting   = 0; 
-  end
-  if ~debug, clear Ysrc; end
-  
-  
-  % the intensity normalized images are here represented by the segmentation 
-  Ym   = Yp0/255;
-  Ymi  = Yp0/255; 
-  
- 
-  % low resolution Yp0b
-  sz = size(Yb);
-  [indx, indy, indz] = ind2sub(sz,find(Yb>0));
-  indx = max((min(indx) - 1),1):min((max(indx) + 1),sz(1));
-  indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
-  indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
-  Yp0b = Yp0(indx,indy,indz);
-  if ~debug, clear Yp0 Yb; end
-  
-  % load atlas map and prepare filling mask YMF
-  % compared to CAT default processing, we have here the DARTEL mapping, but no individual refinement 
-  Vl1 = spm_vol(job.extopts.cat12atlas{1});
-  Yl1 = cat_vol_ctype(spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
-  Yl1 = reshape(Yl1,size(Ym)); [D,I] = cat_vbdist(single(Yl1>0)); Yl1 = Yl1(I);   
-  YMF = NS(Yl1,job.extopts.LAB.VT) | NS(Yl1,job.extopts.LAB.BG) | NS(Yl1,job.extopts.LAB.BG); 
-  
-  fprintf('%5.0fs\n',etime(clock,stime));  
+  [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,cat_warnings] = ...
+    cat_main_SPMpp(Ysrc,Ycls,Yy,job);
 end
 
 
@@ -926,14 +570,14 @@ end
     Ylesions = zeros(size(Ym),'single'); 
   end
   
-  %% call Dartel/Shooting registration 
+  % call Dartel/Shooting registration 
   if 0 %job.extopts.new_release % ... there is an error
     [trans,res.ppe.reg] = cat_main_registration2(job,res,Yclsd,Yy,tpm.M,Ylesions);
   else
     [trans,res.ppe.reg] = cat_main_registration(job,res,Yclsd,Yy,tpm.M,Ylesions);
   end
   clear Yclsd Ylesions;
-  if ~do_dartel
+  if ~res.do_dartel
     if job.extopts.regstr == 0
       fprintf('Dartel registration is not required.\n');
     else
@@ -941,6 +585,7 @@ end
     end
   end
  
+  
   
 %% update WMHs 
 %  ---------------------------------------------------------------------
@@ -958,130 +603,47 @@ if debug, clear Yp0; end
 
 %% surface creation and thickness estimation
 %  ---------------------------------------------------------------------
-if (job.output.surface || any( [job.output.ct.native job.output.ct.warped job.output.ct.dartel] )) && ...
-   ~(job.output.surface==9 && job.output.ROI==0 && ~any( [job.output.ct.native job.output.ct.warped job.output.ct.dartel] )) 
-    % ... not required, if only thickness but no output
-  stime = cat_io_cmd('Surface and thickness estimation');; 
-  
-  % specify WM/CSF width/depth/thickness estimation
-  if job.output.surface>10
-    job.output.surface=job.output.surface-10;
-    WMT = 1; 
-  else
-    WMT = 0; 
-  end
-  
-  if job.extopts.experimental || job.extopts.expertgui==2
-    WMT = 1; 
-  end
-  
-  % specify surface
-  switch job.output.surface
-    case 1, surf = {'lh','rh'};
-    case 2, surf = {'lh','rh','lc','rc'};
-    case 3, surf = {'lh'};
-    case 4, surf = {'rh'};
-    % fast surface reconstruction without simple spherical mapping     
-    case 5, surf = {'lhfst','rhfst'};                   
-    case 6, surf = {'lhfst','rhfst','lcfst','rcfst'};    
-    % fast surface reconstruction with simple spherical mapping     
-    case 7, surf = {'lhsfst','rhsfst'};                    
-    case 8, surf = {'lhsfst','rhsfst','lcsfst','rcsfst'}; 
-    case 9, surf = {'lhv','rhv'}; %,'lcv','rcv'}; 
-  end
-  
-  if ~job.output.surface && any( [job.output.ct.native job.output.ct.warped job.output.ct.dartel] )
-    surf = {'lhv','rhv'}; %,'lcv','rcv'}; 
-  end
-  
-  if job.output.surface>4 && job.output.surface~=9 % fast but not volume
-    job.extopts.pbtres = max(0.8,min([((min(vx_vol)^3)/2)^(1/3) 1.0]));
-  end
-  
-  % brain masking and correction of blood vessels 
+if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9 && ...
+   any( [job.output.ct.native job.output.ct.warped job.output.ct.dartel job.output.ROI] ))
+ 
+  % prepare some parameter
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*5/255; 
+  [Ymix,job,surf,WMT] = cat_main_surf_preppara(Ymi,Yp0,job);
   
-  % surface creation and thickness estimation
-  if 1
-    %% using the Ymi map
-    Ymix = Ymi .* (Yp0>0.5); 
-    if job.extopts.pbtres==99 
-    % development block
-      smeth = [3 1]; 
-      sres  = [1 0.5];
-      for smi = 1:numel(smeth)
-        for sresi = 1:numel(sres)
-          %%
-          if smeth(smi)==1, pbtmethod = 'pbt2xf'; elseif smeth(smi)==3, pbtmethod = 'pbt3'; end
-          
-          cat_io_cprintf('blue',sprintf('\nPBT Test99 - surf_%s_%0.2f\n',pbtmethod,sres(sresi)));
-          surf = {'lhfst'}; %,'lcfst','rhfst','rcfst'};  
-          
-          [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(VT,VT0,Ymix,Yl1,Yp0/3,YMF,...
-          struct('pbtmethod',pbtmethod,'interpV',sres(sresi),'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
-          'verb',job.extopts.verb,'WMT',WMT)); 
-        end
-      end
-    else
-      if 0 % old
-        [Yth1,S,Psurf] = cat_surf_createCS1173(VT,Yp0/3,Yl1,YMF,...
-          struct('interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
-          'verb',job.extopts.verb,'experimental',job.extopts.experimental));
-        EC = nan;
-        defect_size = nan;
-      else
-        pbtmethod = 'pbt2x';
-        [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(VT,VT0,Ymix,Yl1,Yp0/3,YMF,...
-          struct('pbtmethod',pbtmethod,'interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
-          'verb',job.extopts.verb,'WMT',WMT)); 
+  if job.extopts.pbtres==99 
+  % development block with manual settings
+    smeth = [3 1]; 
+    sres  = [1 0.5]; % internal pbtres
+    surf = {'lhfst'}; %,'lcfst','rhfst','rcfst'};  
+    for smi = 1:numel(smeth)
+      for sresi = 1:numel(sres)
+        %% new pipelines and test
+        if smeth(smi)==1, pbtmethod = 'pbt2xf'; elseif smeth(smi)==3, pbtmethod = 'pbt3'; end
+        cat_io_cprintf('blue',sprintf('\nPBT Test99 - surf_%s_%0.2f\n',pbtmethod,sres(sresi)));
+        [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size] = ...
+          cat_surf_createCS(VT,VT0,Ymix,Yl1,Yp0/3,YMF,struct('pbtmethod',pbtmethod,...
+          'interpV',sres(sresi),'Affine',res.Affine,'surf',{surf},...
+          'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT)); 
       end
     end
-  else     
-  %% using the label image
-    if job.extopts.pbtres==99 
-    % development block
-      smeth = [3 1]; 
-      sres  = [1 0.5];
-      for smi = 1:numel(smeth)
-        for sresi = 1:numel(sres)
-          %%
-          if smeth(smi)==1, pbtmethod = 'pbt2xf'; elseif smeth(smi)==3, pbtmethod = 'pbt3'; end
-          
-          cat_io_cprintf('blue',sprintf('\nPBT Test99 - surf_%s_%0.2f\n',pbtmethod,sres(sresi)));
-          surf = {'lhfst'}; %,'lcfst','rhfst','rcfst'};  
-          
-          [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(VT,VT0,Yp0/3,Yl1,Yp0/3,YMF,...
-              struct('pbtmethod',pbtmethod,'interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
-              'verb',job.extopts.verb,'WMT',WMT)); 
-        end
-      end
-    else
-      pbtmethod = 'pbt2x';
-      [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(VT,VT0,Yp0/3,Yl1,Yp0/3,YMF,...
-          struct('pbtmethod',pbtmethod,'interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
-          'verb',job.extopts.verb,'WMT',WMT)); 
-    end
-  end
-  
-  % save Euler characteristics (absolute value)
-  qa.subjectmeasures.EC_abs = EC;
-  qa.subjectmeasures.defect_size = defect_size;
-  
-  if exist('S','var') && numel(fieldnames(S))==0 && isempty(Psurf)
-    clear S Psurf; 
+  else
+  %% default surface reconstruction
+    [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size] = ...
+      cat_surf_createCS(VT,VT0,Ymix,Yl1,Yp0/3,YMF,struct('pbtmethod','pbt2x',...
+      'interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},...
+      'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT)); 
   end
   
   % thickness map
+  if numel(fieldnames(S))==0 && isempty(Psurf), clear S Psurf; end
   if isfield(job.output,'ct')
-    cat_io_writenii(VT0,Yth1,mrifolder,'ct','cortical thickness map','uint16',...
+    cat_io_writenii(VT0,Yth1,res.mrifolder,'ct','cortical thickness map','uint16',...
       [0,0.0001],job.output.ct,trans,single(Ycls{1})/255,0.1);
   end
   
-  if ~debug, clear Yp0; end 
-
   cat_io_cmd('Surface and thickness estimation');  
   fprintf('%5.0fs\n',etime(clock,stime));
-  if ~debug; clear YMF; end
+  if ~debug; clear YMF Yp0; end
   if ~debug && ~job.output.ROI && job.output.surface, clear Yth1; end
 else
   if ~debug; clear Ymi; end
@@ -1089,7 +651,7 @@ end
 
 
 
-%% ROI Partitioning 
+%% ROI data extraction 
 %  ---------------------------------------------------------------------
 %  This part estimated indivudal measurements for different ROIs.
 %  The ROIs are described in the CAT normalized space and there are to 
@@ -1110,12 +672,12 @@ if ~debug, clear wYp0 wYcls wYv trans Yp0; end
 %% XML-report and Quality Assurance
 %  ---------------------------------------------------------------------
 
-%  estimate volumes and TIV
+%  estimate brain tissue volumes and TIV
 qa.subjectmeasures.vol_abs_CGW = [
   prod(vx_vol)/1000/255 .* sum(Ycls{3}(:)), ... CSF
   prod(vx_vol)/1000/255 .* sum(Ycls{1}(:)), ... GM 
-  prod(vx_vol)/1000/255 .* sum(Ycls{2}(:)) 0 0]; %, ... WM
-if numel(Ycls)>6, qa.subjectmeasures.vol_abs_CGW(4) = prod(vx_vol)/1000/255 .* sum(Ycls{7}(:)); end % WMHs qa.subjectmeasures.WMH_abs
+  prod(vx_vol)/1000/255 .* sum(Ycls{2}(:)) 0 0]; % ... WM WMHs SL
+if numel(Ycls)>6, qa.subjectmeasures.vol_abs_CGW(4) = prod(vx_vol)/1000/255 .* sum(Ycls{7}(:)); end % WMHs 
 if numel(Ycls)>7, qa.subjectmeasures.vol_abs_CGW(5) = prod(vx_vol)/1000/255 .* sum(Ycls{8}(:)); end % SL
 qa.subjectmeasures.vol_TIV     =  sum(qa.subjectmeasures.vol_abs_CGW); 
 qa.subjectmeasures.vol_rel_CGW =  qa.subjectmeasures.vol_abs_CGW ./ qa.subjectmeasures.vol_TIV;
@@ -1123,41 +685,32 @@ if ~debug, clear Ycls; end
 
 stime = cat_io_cmd('Quality check'); job.stime = stime; 
 Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; Yp0(Yp0>3.1) = nan; % no analysis in WMH regions
-qa    = cat_vol_qa('cat12',Yp0,fname0,Ym,res,cat_warnings,job.extopts.species, ...
+qa    = cat_vol_qa('cat12',Yp0,VT0.fname,Ym,res,cat_warnings,job.extopts.species, ...
           struct('write_csv',0,'write_xml',1,'method','cat12','job',job,'qa',qa));
 clear Yp0; 
 
-% WMH updates? ... has to be done within cat_vol_qa?!
-%qa.subjectmeasures.vol_abs_CGW(2) = qa.subjectmeasures.vol_abs_CGW(2) - qa2.subjectmeasures.WMH_abs;
-%qa.subjectmeasures.vol_abs_CGW(4) = qa2.subjectmeasures.WMH_abs;
-%qa.subjectmeasures.vol_rel_CGW    = qa.subjectmeasures.vol_abs_CGW ./ qa.subjectmeasures.vol_TIV;
-
 % surface data update
-if job.output.surface && exist('S','var')
-  % metadata
-  if isfield(S,'lh') && isfield(S.lh,'th1'), th=S.lh.th1; else th=[]; end;
-  if isfield(S,'rh') && isfield(S.rh,'th1'), th=[th; S.rh.th1]; end
-  qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
-  if job.extopts.expertgui>1
-    if isfield(S,'lh') && isfield(S.lh,'th2'), th=S.lh.th2; else th=[]; end; 
-    if isfield(S,'rh') && isfield(S.lh,'th2'), th=[th; S.rh.th2]; end
-    qa.subjectmeasures.dist_gyruswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
-    if isfield(S,'lh') && isfield(S.lh,'th3'), th=S.lh.th3; else th=[]; end; 
-    if isfield(S,'rh') && isfield(S.lh,'th3'), th=[th; S.rh.th3]; end
-    qa.subjectmeasures.dist_sulcuswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
+if job.output.surface
+  if exist('S','var')
+    if isfield(S,'lh') && isfield(S.lh,'th1'), th=S.lh.th1; else th=[]; end;
+    if isfield(S,'rh') && isfield(S.rh,'th1'), th=[th; S.rh.th1]; end
+    qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
+    if job.extopts.expertgui>1
+      if isfield(S,'lh') && isfield(S.lh,'th2'), th=S.lh.th2; else th=[]; end; 
+      if isfield(S,'rh') && isfield(S.lh,'th2'), th=[th; S.rh.th2]; end
+      qa.subjectmeasures.dist_gyruswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
+      if isfield(S,'lh') && isfield(S.lh,'th3'), th=S.lh.th3; else th=[]; end; 
+      if isfield(S,'rh') && isfield(S.lh,'th3'), th=[th; S.rh.th3]; end
+      qa.subjectmeasures.dist_sulcuswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
+    end
+  elseif exist('Yth1','var')
+    qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(Yth1(Yth1(:)>1)) cat_stat_nanstd(Yth1(Yth1(:)>1))];
+    % gyrus- and sulcus-width? 
   end
-
-  %qam = cat_stat_marks('eval',job.cati,qa,'cat12');
-
-  cat_io_xml(fullfile(pth,reportfolder,['cat_' nam '.xml']),struct(...
-    ... 'subjectratings',qam.subjectmeasures, ... not ready
-    'subjectmeasures',qa.subjectmeasures,'ppe',res.ppe),'write+'); % here we have to use the write+!
-elseif exist('Yth1','var')
-  qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(Yth1(Yth1(:)>1)) cat_stat_nanstd(Yth1(Yth1(:)>1))];
   
-  %qam = cat_stat_marks('eval',job.cati,qa,'cat12');
+  %qam = cat_stat_marks('eval',job.cati,qa,'cat12'); % ... not ready
 
-  cat_io_xml(fullfile(pth,reportfolder,['cat_' nam '.xml']),struct(...
+  cat_io_xml(fullfile(pth,res.reportfolder,['cat_' nam '.xml']),struct(...
     ... 'subjectratings',qam.subjectmeasures, ... not ready
     'subjectmeasures',qa.subjectmeasures,'ppe',res.ppe),'write+'); % here we have to use the write+!
 end  
@@ -1184,5 +737,248 @@ end
 % final command line report
 cat_main_reportcmd(job,res,qa);
 
-return;
+return
+function [Ysrc,Ycls,Yy,res] = cat_main_resspmres(Ysrc,Ycls,Yy,res)
+%% cat_main_resspmres
+%  ---------------------------------------------------------------------
+%  Interpolate to internal resolution if lower resultion was used for 
+%  SPM preprocessing
+%
+%    [Ysrc,Ycls,Yy,res] = cat_main_resspmres(Ysrc,Ycls,Yy,res)
+%
+%  ---------------------------------------------------------------------
 
+  % Update Ycls: cleanup on original data
+  Yb = Ycls{1} + Ycls{2} + Ycls{3}; 
+  for i=1:numel(Ycls)
+    [Pc(:,:,:,i),BB] = cat_vol_resize(Ycls{i},'reduceBrain',repmat(job.opts.redspmres,1,3),2,Yb); %#ok<AGROW>
+  end 
+  Pc = cat_main_clean_gwc(Pc,1);
+  for i=1:numel(Ycls), Ycls{i} = cat_vol_resize(Pc(:,:,:,i),'dereduceBrain',BB); end; clear Pc Yb; 
+  for ci=1:numel(Ycls)
+    Ycls{ci} = cat_vol_ctype(cat_vol_resize(Ycls{ci},'deinterp',res.redspmres,'linear'));
+  end
+
+  % Update Yy:
+  Yy2 = zeros([res.redspmres.sizeO 3],'single');
+  for ci=1:size(Yy,4)
+    Yy2(:,:,:,ci) = cat_vol_ctype(cat_vol_resize(Yy(:,:,:,ci),'deinterp',res.redspmres,'linear'));
+  end
+  Yy   = Yy2; clear Yy2; 
+
+  % Update Ysrc:
+  Ysrc = cat_vol_resize(Ysrc,'deinterp',res.redspmres,'cubic');
+  Ybf  = res.image1.dat ./ Ysrc; 
+  Ybf  = cat_vol_approx(Ybf .* (Ysrc~=0 & Ybf>0.25 & Ybf<1.5),'nn',1,8);
+  Ysrc = res.image1.dat ./ Ybf; clear Ybf; 
+  res.image = res.image1; 
+    res  = rmfield(res,'image1');
+return
+function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
+%% Update parameter
+%  ---------------------------------------------------------------------
+%  Update CAT/SPM parameter variable job and the SPM preprocessing 
+%  variable res
+%
+%    [res,job] = cat_main_updatepara(res,job)
+%
+%  ---------------------------------------------------------------------
+
+  % this limits ultra high resolution data, i.e. images below ~0.4 mm are reduced to ~0.7mm! 
+  % used in cat_main_partvol, cat_main_gcut, cat_main_LAS
+  def.extopts.uhrlim  = 0.7 * 2; % default 0.7*2 that reduce images below 0.7 mm
+  def.cati            = 0;
+  def.color.error     = [0.8 0.0 0.0];
+  def.color.warning   = [0.0 0.0 1.0];
+  def.color.warning   = [0.8 0.9 0.3];
+  def.color.highlight = [0.2 0.2 0.8];
+  job = cat_io_checkinopt(job,def);
+
+  clear def; 
+
+  % complete job structure
+  defr.ppe = struct(); 
+  res = cat_io_checkinopt(res,defr);
+
+
+  % definition of subfolders - add to res variable?
+  if job.extopts.subfolders
+    res.mrifolder     = 'mri';
+    res.reportfolder  = 'report';
+  else
+    res.mrifolder     = '';
+    res.reportfolder  = '';
+  end
+
+  % Sort out bounding box etc
+  [bb1,vx1] = spm_get_bbox(tpm.V(1), 'old');
+  bb = job.extopts.bb;
+  vx = job.extopts.vox(1);
+  bb(~isfinite(bb)) = bb1(~isfinite(bb));
+  if ~isfinite(vx), vx = abs(prod(vx1))^(1/3); end; 
+  bb(1,:) = vx.*round(bb(1,:)./vx);
+  bb(2,:) = vx.*round(bb(2,:)./vx);
+  res.bb = bb; 
+  clear vx vx1 bb1   
+
+
+  if numel(res.image) > 1
+    warning('CAT12:noMultiChannel',...
+      'CAT12 does not support multiple channels. Only the first channel will be used.');
+  end
+
+  % use dartel (do_dartel=1) or shooting (do_dartel=2) normalization
+  res.do_dartel = 1 + (job.extopts.regstr(1)~=0);      
+  if res.do_dartel
+    tc = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)]; 
+    need_dartel = any(job.output.warps) || ...
+      job.output.bias.warped || ...
+      job.output.label.warped || ...
+      any(any(tc(:,[4 5 6]))) || job.output.jacobian.warped || ...
+      job.output.ROI || ...
+      any([job.output.atlas.warped]) || ...
+      numel(job.extopts.regstr)>1 || ...
+      numel(job.extopts.vox)>1;
+    if ~need_dartel
+      res.do_dartel = 0;
+    end
+  end
+  
+  % Update templates for LAS
+  if res.do_dartel<2
+    job.extopts.templates = job.extopts.darteltpms; 
+  else
+    job.extopts.templates = job.extopts.shootingtpms; 
+  end 
+  
+  % remove noise/interpolation prefix
+  VT  = res.image(1);  % denoised/interpolated n*.nii
+  VT0 = res.image0(1); % original 
+  [pth,nam] = spm_fileparts(VT0.fname); 
+
+  % voxel size parameter
+  vx_vol     = sqrt(sum(VT.mat(1:3,1:3).^2));    % voxel size of the processed image
+  res.vx_vol = vx_vol; 
+  
+  % delete old xml file 
+  oldxml = fullfile(pth,res.reportfolder,['cat_' nam '.xml']);  
+  if exist(oldxml,'file'), delete(oldxml); end
+  clear oldxml
+
+  d = VT.dim(1:3);
+
+return
+function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,cat_warnings] = cat_main_SPMpp(Ysrc,Ycls,Yy,job)
+%% SPM segmentation input  
+%  ------------------------------------------------------------------------
+%  Here, DARTEL and PBT processing is prepared. 
+%  We simply use the SPM segmentation as it is, without further modelling 
+%  of the partial volume effect or other refinements. 
+%  ------------------------------------------------------------------------
+
+  job.extopts.WMHC = 0;
+  job.extopts.SLC  = 0;
+  
+  cat_warnings        = struct('identifier',{},'message',{});   % warning structure from cat_main_gintnorm 
+  NS                  = @(Ys,s) Ys==s | Ys==s+1;                % for side independent atlas labels
+  
+  % QA WMH values required by cat_vol_qa later
+  qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE
+  qa.subjectmeasures.WMH_rel    = nan;  % relative WMH volume to TIV without PVE
+  qa.subjectmeasures.WMH_WM_rel = nan;  % relative WMH volume to WM without PVE
+  qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE in cm^3
+  
+  % load SPM segments
+  %[pp,ff,ee] = spm_fileparts(res.image0(1).fname);
+  %Ycls{1} = uint8(spm_read_vols(spm_vol(fullfile(pp,['c1' ff ee])))*255); 
+  %Ycls{2} = uint8(spm_read_vols(spm_vol(fullfile(pp,['c2' ff ee])))*255); 
+  %Ycls{3} = uint8(spm_read_vols(spm_vol(fullfile(pp,['c3' ff ee])))*255); 
+
+  % create (resized) label map and brainmask
+  Yp0  = single(Ycls{3})/5 + single(Ycls{1})/5*2 + single(Ycls{2})/5*3;
+  Yb   = Yp0>0.5;
+  
+  % load original images and get tissue thresholds
+  clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
+  %Ysrc = spm_read_vols(spm_vol(fullfile(pp,[ff ee])));
+  WMth = double(max(clsint(2),...
+           cat_stat_nanmedian(cat_stat_nanmedian(cat_stat_nanmedian(Ysrc(Ycls{2}>192)))))); 
+  T3th = [ min([  clsint(1) - diff([clsint(1),WMth]) ,clsint(3)]) , clsint(2) , WMth];
+  if T3th(3)<T3th(2) % inverse weighting allowed 
+    job.inv_weighting   = 1;                                     
+  else
+    job.inv_weighting   = 0; 
+  end
+  if ~debug, clear Ysrc; end
+  
+  % the intensity normalized images are here represented by the segmentation 
+  Ym   = Yp0/255;
+  Ymi  = Yp0/255; 
+   
+  % low resolution Yp0b
+  sz = size(Yb);
+  [indx, indy, indz] = ind2sub(sz,find(Yb>0));
+  indx = max((min(indx) - 1),1):min((max(indx) + 1),sz(1));
+  indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
+  indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
+  Yp0b = Yp0(indx,indy,indz);
+  if ~debug, clear Yp0 Yb; end
+  
+  % load atlas map and prepare filling mask YMF
+  % compared to CAT default processing, we have here the DARTEL mapping, but no individual refinement 
+  Vl1 = spm_vol(job.extopts.cat12atlas{1});
+  Yl1 = cat_vol_ctype(spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
+  Yl1 = reshape(Yl1,size(Ym)); [D,I] = cat_vbdist(single(Yl1>0)); Yl1 = Yl1(I);   
+  YMF = NS(Yl1,job.extopts.LAB.VT) | NS(Yl1,job.extopts.LAB.BG) | NS(Yl1,job.extopts.LAB.BG); 
+  
+  fprintf('%5.0fs\n',etime(clock,stime));  
+return
+function [Ymix,job,surf,WMT,stime] = cat_main_surf_preppara(Ymi,Yp0,job)
+%  ------------------------------------------------------------------------
+%  Prepare some variables for the surface processing.
+%  ------------------------------------------------------------------------
+
+  stime = cat_io_cmd('Surface and thickness estimation'); 
+  
+  % specify WM/CSF width/depth/thickness estimation
+  if job.output.surface>10
+    job.output.surface = job.output.surface - 10;
+    WMT = 1; 
+  elseif job.extopts.experimental || job.extopts.expertgui==2
+    WMT = 1; 
+  else
+    WMT = 0; 
+  end
+  
+  % specify surface
+  switch job.output.surface
+    case 1, surf = {'lh','rh'};
+    case 2, surf = {'lh','rh','lc','rc'};
+    case 3, surf = {'lh'};
+    case 4, surf = {'rh'};
+    % fast surface reconstruction without simple spherical mapping     
+    case 5, surf = {'lhfst','rhfst'};                   
+    case 6, surf = {'lhfst','rhfst','lcfst','rcfst'};    
+    % fast surface reconstruction with simple spherical mapping     
+    case 7, surf = {'lhsfst','rhsfst'};                    
+    case 8, surf = {'lhsfst','rhsfst','lcsfst','rcsfst'}; 
+    % estimate only volumebased thickness
+    case 9, surf = {'lhv','rhv'}; %,'lcv','rcv'}; 
+    otherwise, surf = {};
+  end
+  if ~job.output.surface && any( [job.output.ct.native job.output.ct.warped job.output.ct.dartel] )
+    surf = {'lhv','rhv'}; 
+  end
+  
+  % lower resolution for fast surface estimation
+  if job.output.surface>4 && job.output.surface~=9 
+    job.extopts.pbtres = max(0.8,min([((min(vx_vol)^3)/2)^(1/3) 1.0]));
+  end
+  
+  % surface creation and thickness estimation (only for test >> manual setting)
+  if 1
+    Ymix = Ymi .* (Yp0>0.5); %% using the Ymi map
+  else
+    Ymix = Yp0/3; %#ok<UNRCH> % use only the segmentation map (only for tests!)
+  end
+return

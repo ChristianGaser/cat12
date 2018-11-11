@@ -1,4 +1,4 @@
-function varargout = cat_get_defaults1173(defstr, varargin)
+function varargout = cat_get_defaults1173plus(defstr, varargin)
 % Get/set the defaults values associated with an identifier
 % FORMAT defval = cat_get_defaults1173(defstr)
 % Return the defaults value associated with identifier "defstr". 
@@ -25,15 +25,15 @@ function varargout = cat_get_defaults1173(defstr, varargin)
 
 % based on Volkmar Glauches version of
 % spm_get_defaults
-% $Id$
+% $Id: cat_get_defaults.m 1309 2018-04-23 14:19:28Z dahnke $
 
-global cat1173;
-if isempty(cat1173) || ~isfield(cat1173,'version') || cat1173.version~=1173;
-  cat_defaults1173;
+global cat1173plus;
+if isempty(cat1173plus) || ~isfield(cat1173plus,'version') || cat1173plus.version~=1173;
+  cat_defaults1173plus;
 end
 
 if nargin == 0
-    varargout{1} = cat1173;
+    varargout{1} = cat1173plus;
     return
 end
 
@@ -44,7 +44,7 @@ subs = struct('type','.','subs',tags{1}');
 if nargin == 1
     % default output
     try
-      varargout{1} = subsref(cat1173, subs);
+      varargout{1} = subsref(cat1173plus, subs);
     catch
       varargout{1} = []; 
     end
@@ -57,19 +57,19 @@ elseif nargin == 2
             for ti=2:numel(tags{1})-1
                 mainfield = [mainfield '.' tags{1}{ti}]; %#ok<AGROW>
             end
-            subfield  = tags{1}{end};  
+            %subfield  = tags{1}{end};  
             %fprintf('Remove field "%s" in "cat.%s"!\n',subfield,mainfield);
             eval(sprintf('cat.%s = rmfield(cat.%s,subfield);',mainfield,mainfield));
         case 'rmentry'
           % removes the complete entry of the given defstr
             %fprintf('Remove entry "%s" "cat"!\n',tags{1}{1});
-            cat1173 = rmfield(cat1173,defstr); 
+            cat1173plus = rmfield(cat1173plus,defstr); 
         otherwise
           % add an new entry
-            cat1173 = subsasgn(cat1173, subs, varargin{1});
+            cat1173plus = subsasgn(cat1173plus, subs, varargin{1});
     end
 end
 if nargout == 1
   % output in case changes in cat
-    varargout{1} = cat1173;
+    varargout{1} = cat1173plus;
 end

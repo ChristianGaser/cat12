@@ -40,7 +40,7 @@ function varargout = cat_vol_sanlm(varargin)
 %   cat_vol_sanlm(struct('data','','NCstr',[-1:0.5:1,inf,-inf));
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: cat_vol_sanlm.m 1162 2017-08-07 16:41:21Z dahnke $
+% $Id$
 
 if nargin == 0 
     job.data = cellstr(spm_select([1 Inf],'image','select images to filter'));

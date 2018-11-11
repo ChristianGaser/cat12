@@ -3,7 +3,7 @@ function  [Ymc,Ymi] = cat_run_job_APP_SPM1173(Po,vout,vx_vol,verb,fwhm)
 %  The final bias correction is a subfunction of cat_run_job.
 %  _____________________________________________________________________
 %  Robert Dahnke
-%  $Id: cat_run_job_APP_SPM.m 1159 2017-08-04 14:08:14Z dahnke $
+%  $Id$
 
 
   % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 

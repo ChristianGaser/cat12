@@ -1,4 +1,4 @@
-function cat_run_job1173(job,tpm,subj)
+function cat_run_job1173plus(job,tpm,subj)
 % run CAT 
 % ______________________________________________________________________
 %
@@ -21,7 +21,7 @@ function cat_run_job1173(job,tpm,subj)
 %   subj .. file name
 % ______________________________________________________________________
 % Christian Gaser
-% $Id$
+% $Id: cat_run_job.m 1159 2017-08-04 14:08:14Z dahnke $
 
 %#ok<*WNOFF,*WNON>
 
@@ -128,21 +128,21 @@ function cat_run_job1173(job,tpm,subj)
           vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
 
           if any(vx_vol>5)  % too thin slices
-            error('CAT:cat_main1173:TooLowResolution', sprintf(...
+            error('CAT:cat_main1173plus:TooLowResolution', sprintf(...
                  ['Voxel resolution has to be better than 5 mm in any dimension \n' ...
                   'for reliable CAT preprocessing! \n' ...
                   'This image has a resolution %0.2fx%0.2fx%0.2f mm%s. '], ... 
                     vx_vol,char(179))); %#ok<SPERR>
           end
           if prod(vx_vol)>27  % too small voxel volume (smaller than 3x3x3 mm3)
-            error('CAT:cat_main1173:TooHighVoxelVolume', ...
+            error('CAT:cat_main1173plus:TooHighVoxelVolume', ...
                  ['Voxel volume has to be smaller than 10 mm%s (around 3x3x3 mm%s) to \n' ...
                   'allow a reliable CAT preprocessing! \n' ...
                   'This image has a voxel volume of %0.2f mm%s. '], ...
                   char(179),char(179),prod(vx_vol),char(179));
           end
           if max(vx_vol)/min(vx_vol)>8 % isotropy 
-            error('CAT:cat_main1173:TooStrongIsotropy', sprintf(...
+            error('CAT:cat_main1173plus:TooStrongIsotropy', sprintf(...
                  ['Voxel isotropy (max(vx_size)/min(vx_size)) has to be smaller than 8 to \n' ...
                   'allow a reliable CAT preprocessing! \n' ...
                   'This image has a resolution %0.2fx%0.2fx%0.2f mm%s and a isotropy of %0.2f. '], ...
@@ -473,7 +473,7 @@ function cat_run_job1173(job,tpm,subj)
                 stime2 = cat_io_cmd('  APP bias correction','g5','',job.extopts.verb-1,stime2); 
                 
                 try
-                  Ym = cat_run_job_APP_SPM1173(ofname,vout,vx_vol * (2 - strcmp(job.extopts.species,'human')),...
+                  Ym = cat_run_job_APP_SPM(ofname,vout,vx_vol * (2 - strcmp(job.extopts.species,'human')),...
                     job.extopts.verb-1,job.opts.biasstr); 
                   spm_write_vol(spm_vol(nfname),Ym);  
                   if ~debug, clear vout Ym0 YM2 Ym; end  
@@ -538,7 +538,7 @@ function cat_run_job1173(job,tpm,subj)
               best_vx  = max( min(vx_vol) ,job.extopts.restypes.(restype)(1)); 
               vx_voli  = min(vx_vol ,best_vx ./ ((vx_vol > (best_vx + job.extopts.restypes.(restype)(2)))+eps));
             otherwise 
-              error('cat_run_job1173:restype','Unknown resolution type ''%s''. Choose between ''fixed'',''native'', and ''best''.',restype)
+              error('cat_run_job1173plus:restype','Unknown resolution type ''%s''. Choose between ''fixed'',''native'', and ''best''.',restype)
           end
 
 
@@ -681,7 +681,7 @@ function cat_run_job1173(job,tpm,subj)
             Ysrc = single(spm_read_vols(spm_vol(obj.image(1).fname)));
             Ysrc(isnan(Ysrc) | isinf(Ysrc)) = min(Ysrc(:));
 
-            [Ym,Yt,Ybg,WMth,bias,Tth,ppe.APPi] = cat_run_job_APP_init1173(...
+            [Ym,Yt,Ybg,WMth,bias,Tth,ppe.APPi] = cat_run_job_APP_init(...
               Ysrc,vx_vol,struct('verb',job.extopts.verb,'APPstr',job.opts.biasstr)); 
             bth = min( [ mean(single(Ysrc( Ybg(:)))) - 2*std(single(Ysrc( Ybg(:)))) , ...
                          mean(single(Ysrc(~Ybg(:)))) - 4*std(single(Ysrc(~Ybg(:)))) , ...
@@ -1081,7 +1081,7 @@ end
               cat_io_cprintf('err','\n  Failed, try APP=4! \n'); 
               job2.extopts.APP = 4; 
             end
-            cat_run_job1173(job2,tpm,subj); 
+            cat_run_job1173plus(job2,tpm,subj); 
             return
           end
           if ppe.affreg.skullstripped  
@@ -1092,7 +1092,7 @@ end
           if job.extopts.NCstr || any( (vx_vol ~= vx_voli) ) || ~strcmp(job.extopts.species,'human')
             [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});
             delete(fullfile(pp,[ff,ee]));
-            error('CAT:cat_run_job1173:spm_preproc8','Error in spm_preproc8. Check image and orientation. \n');
+            error('CAT:cat_run_job1173plus:spm_preproc8','Error in spm_preproc8. Check image and orientation. \n');
           end
         end
         
@@ -1126,7 +1126,7 @@ end
           
         % inactive preprocessing of inverse images (PD/T2) 
         if job.extopts.INV==0 && any(diff(Tth)<=0)
-          error('CAT:cat_main1173:BadImageProperties', ...
+          error('CAT:cat_main1173plus:BadImageProperties', ...
           ['CAT12 is designed to work only on highres T1 images.\n' ...
            'T2/PD preprocessing can be forced on your own risk by setting \n' ...
            '"cat12.extopts.INV=1" in the cat default file. If this was a highres \n' ...
@@ -1140,7 +1140,7 @@ end
     %% call main processing
     res.stime  = stime;
     res.image0 = spm_vol(job.channel(1).vols0{subj}); 
-    cat_main1173(res,obj.tpm,job);
+    cat_main1173plus(res,obj.tpm,job);
     
     % delete denoised/interpolated image
     [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});

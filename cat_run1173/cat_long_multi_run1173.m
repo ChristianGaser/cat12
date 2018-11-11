@@ -2,7 +2,7 @@ function out = cat_long_multi_run(job)
 % Call cat_long_main for multiple subjects
 %
 % Christian Gaser
-% $Id: cat_long_multi_run.m 1114 2017-03-02 10:46:01Z gaser $
+% $Id$
 
 global opts extopts output modulate dartel warps
 
