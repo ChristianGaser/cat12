@@ -293,7 +293,7 @@ print.tag     = 'print';
 print.name    = 'Create CAT report';
 print.labels  = {'No','Yes (volume only)','Yes (volume and surfaces)'};
 print.values  = {0 1 2};
-print.def     = @(val)cat_get_defaults1173('extopts.print', val{:});
+print.def     = @(val)cat_get_defaults1173plus('extopts.print', val{:});
 print.help    = {
   'Create final CAT report that requires Java.'
 };

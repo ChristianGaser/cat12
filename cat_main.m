@@ -608,7 +608,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
  
   % prepare some parameter
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*5/255; 
-  [Ymix,job,surf,WMT] = cat_main_surf_preppara(Ymi,Yp0,job);
+  [Ymix,job,surf,WMT] = cat_main_surf_preppara(Ymi,Yp0,job,vx_vol);
   
   if job.extopts.pbtres==99 
   % development block with manual settings
@@ -933,7 +933,7 @@ function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,cat_warnings] = cat_main_SPMp
   
   fprintf('%5.0fs\n',etime(clock,stime));  
 return
-function [Ymix,job,surf,WMT,stime] = cat_main_surf_preppara(Ymi,Yp0,job)
+function [Ymix,job,surf,WMT,stime] = cat_main_surf_preppara(Ymi,Yp0,job,vx_vol)
 %  ------------------------------------------------------------------------
 %  Prepare some variables for the surface processing.
 %  ------------------------------------------------------------------------

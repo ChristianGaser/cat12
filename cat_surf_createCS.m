@@ -73,7 +73,7 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
   opt.interpVold = opt.interpV; 
   opt.surf      = cat_io_strrep(opt.surf,{'sfst','fst','v'},'');
   
-  if opt.new_release | opt.extract_pial_white
+  if opt.new_release || opt.extract_pial_white
     force_no_selfintersections = 1;
   else
     force_no_selfintersections = 0;
@@ -686,7 +686,7 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
     th = 0.5;
     if opt.fast
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
-                     'avg -0.1 0.1 .2 .1 5 0 "%g" "%g" n 0 0 0 50 0.02 0.0 0'], ...
+                     'avg -0.1 0.1 .2 .1 5 0 "%g" "%g" n 0 0 0 50 0.02 0.0 %d'], ...
                      Vpp.fname,Pcentral,Pcentral,th,th,0);
     else
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
@@ -709,7 +709,7 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
 
     if opt.fast
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
-                     'flat -0.15 0.15 .5 .1 5 0 "%g" "%g" n 0 0 0 25 0.01 0.0 0'], ...
+                     'flat -0.15 0.15 .5 .1 5 0 "%g" "%g" n 0 0 0 25 0.01 0.0 %d'], ...
                      Vpp.fname,Pcentral,Pcentral,th,th,0);
     else
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .2 ' ...
@@ -733,7 +733,7 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
     end
 
     % final correction of cortical thickness using pial and WM surface
-    if opt.extract_pial_white & ~opt.fast
+    if opt.extract_pial_white && ~opt.fast
       % estimation of pial surface
       % use slightly larger value (default would be 0.5) to ensure that pial surface in sulci
       % will be close enough and opposite sides will almost touch
