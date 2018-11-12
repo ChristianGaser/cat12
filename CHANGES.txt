@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1389 | dahnke | 2018-11-11 11:38:14
+r1390 | dahnke | 2018-11-12 09:44:18
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_run1173/cat_run1173.m
+M       cat_run1173plus/cat_conf_extopts1173plus.m
+M       cat_run1173plus/cat_run1173plus.m
+M       cat_surf_createCS.m
+
+(1) Fixed:      Corrected bugs in cat_main_createCS and cat_run1173plus.
+------------------------------------------------------------------------
+r1389 | dahnke | 2018-11-11 11:39:41 +0100 (So, 11 Nov 2018) | 57 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -56,6 +68,7 @@ M       tbx_cfg_cat.m
 (1) New:        Added 1173plus segmentation. 
 (2) Changed:    Further cleanup of cat_main.
 (3) Changed:    Separated new skull-stripping.
+
 
 ------------------------------------------------------------------------
 r1388 | dahnke | 2018-11-06 16:29:48 +0100 (Di, 06 Nov 2018) | 13 lines
