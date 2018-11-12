@@ -92,8 +92,10 @@ function cat_run_newcatch1173plus(job,tpm,subj)
       suberrfolder = strrep(suberrfolder,' ','_');
       if ~exist(fullfile(pth,errfolder,suberrfolder),'dir'), mkdir(fullfile(pth,errfolder,suberrfolder)); end
       catfile = fullfile(pth,reportfolder,['cat_' nam '.xml']);
+      logfile = fullfile(pth,reportfolder,['catlog_' nam '.txt']);
       repfile = fullfile(pth,reportfolder,['catreport_' nam '.pdf']);
       if exist(catfile,'file'), copyfile(catfile,fullfile(pth,errfolder,suberrfolder)); end
+      if exist(logfile,'file'), copyfile(catfile,fullfile(pth,errfolder,suberrfolder)); end
       if exist(repfile,'file'), copyfile(repfile,fullfile(pth,errfolder,suberrfolder)); end
       if ismac || isunix
         [ST, RS] = system(sprintf('ln -s -F "%s" "%s"',...
