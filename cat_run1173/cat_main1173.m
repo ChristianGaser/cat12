@@ -1819,12 +1819,13 @@ if printCATreport
     str = [];
 
     % 1 line: Matlab, SPM12, CAT12 version number and GUI and experimental mode 
-    str = [str struct('name', 'Version: Matlab / SPM12 / CAT12:','value',...
+    str = [str struct('name', 'Version: Matlab / SPM12 / CAT12 :','value',...
       sprintf('%s / %s / %s',qa.software.version_matlab,qa.software.version_spm,qa.software.version_cat))];
     if     job.extopts.expertgui==1, str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}e']; 
     elseif job.extopts.expertgui==2, str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}d'];
     end  
     if job.extopts.experimental, str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}x']; end  
+    str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1} S1173+'];
 
     % 2 lines: TPM, Template, Normalization method with voxel size
     str = [str struct('name', 'Tissue Probability Map:','value',strrep(spm_str_manip(res.tpm(1).fname,'k40d'),'_','\_'))];

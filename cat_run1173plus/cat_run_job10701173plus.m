@@ -36,7 +36,7 @@ function cat_run_job10701173plus(job,tpm,subj)
     
     % print current CAT release number and subject file
     [n,r] = cat_version;
-    str  = sprintf('CAT12 r%s: %d/%d',r,subj,numel(job.channel(1).vols));
+    str  = sprintf('CAT12 r%s S1173: %d/%d',r,subj,numel(job.channel(1).vols));
     str2 = spm_str_manip(job.channel(1).vols{subj}(1:end-2),['a' num2str(70 - length(str))]);
     cat_io_cprintf([0.2 0.2 0.8],'\n%s\n%s: %s%s\n%s\n',...
           repmat('-',1,72),str,...
@@ -176,17 +176,14 @@ function cat_run_job10701173plus(job,tpm,subj)
             job.channel(n).vols{subj} = nfname;
 
 
-            % noise correction
-            if job.extopts.NCstr>0
-              if job.extopts.sanlm==1
-                stime = cat_io_cmd(sprintf('SANLM denoising (NCstr=%0.2f)',job.extopts.NCstr));
-                cat_vol_sanlm1173(struct('data',nfname,'verb',0,'prefix','')); 
-              elseif job.extopts.sanlm==2
-                stime = cat_io_cmd(sprintf('ISARNLM denoising (NCstr=%0.2f)',job.extopts.NCstr));
-                cat_vol_isarnlm(struct('data',nfname,'verb',1,'prefix','')); 
-              end
-              V = spm_vol(job.channel(n).vols{subj});
-              fprintf('%4.0fs\n',etime(clock,stime));   
+            %% denoising
+            if job.extopts.NCstr~=0
+              NCstr.labels = {'none','full','light','medium','strong','heavy'};
+              NCstr.values = {0 1 2 -inf 4 5}; 
+              stime = cat_io_cmd(sprintf('SANLM denoising (%s)',...
+                NCstr.labels{find(cell2mat(NCstr.values)==job.extopts.NCstr,1,'first')}));
+              cat_vol_sanlm(struct('data',nfname,'verb',0,'prefix','','NCstr',job.extopts.NCstr)); 
+              fprintf('%5.0fs\n',etime(clock,stime));   
             end
         end
 

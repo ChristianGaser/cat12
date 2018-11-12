@@ -1,5 +1,27 @@
 ------------------------------------------------------------------------
-r1390 | dahnke | 2018-11-12 09:44:18
+r1391 | dahnke | 2018-11-12 22:28:19
+
+Changed paths:
+M       CHANGES.txt
+M       batches/cattest/cat12_101_MAIN_segment.m
+M       cat_defaults.m
+M       cat_main_updateSPM.m
+M       cat_run1173/cat_main1173.m
+M       cat_run1173/cat_run_job10701173.m
+M       cat_run1173/cat_run_job1173.m
+M       cat_run1173/cat_run_newcatch1173.m
+M       cat_run1173plus/cat_main1173plus.m
+M       cat_run1173plus/cat_run_job10701173plus.m
+M       cat_run1173plus/cat_run_job1173plus.m
+M       cat_run1173plus/cat_run_newcatch1173plus.m
+M       cat_run_newcatch.m
+M       cat_tst_cattest.m
+
+(1) Fixed:   Corrected many small bugs (missing variable) in cat_main_updataSPM.
+(2) Fixed:   Also copy catlog_*.txt into error directory (cat_run_newcatch*). 
+  
+------------------------------------------------------------------------
+r1390 | dahnke | 2018-11-12 09:44:38 +0100 (Mo, 12 Nov 2018) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +32,7 @@ M       cat_run1173plus/cat_run1173plus.m
 M       cat_surf_createCS.m
 
 (1) Fixed:      Corrected bugs in cat_main_createCS and cat_run1173plus.
+
 ------------------------------------------------------------------------
 r1389 | dahnke | 2018-11-11 11:39:41 +0100 (So, 11 Nov 2018) | 57 lines
 
