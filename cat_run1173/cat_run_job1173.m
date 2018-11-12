@@ -34,7 +34,7 @@ function cat_run_job1173(job,tpm,subj)
 
     % print current CAT release number and subject file
     [n,r] = cat_version;
-    str  = sprintf('CAT12 r%s: %d/%d',r,subj,numel(job.channel(1).vols));
+    str  = sprintf('CAT12 r%s S1173: %d/%d',r,subj,numel(job.channel(1).vols));
     str2 = spm_str_manip(job.channel(1).vols{subj}(1:end-2),['a' num2str(70 - length(str))]);
     cat_io_cprintf([0.2 0.2 0.8],'\n%s\n%s: %s%s\n%s\n',...
           repmat('-',1,72),str,...

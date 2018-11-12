@@ -167,13 +167,13 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
   %  ----------------------------------------------------------------------
   stime2 = cat_io_cmd('  Update Skull-Stripping','g5','',job.extopts.verb-1,stime2); 
   if size(P,4)==4 % skull-stripped
-    [Yb,Ybb,Yg,Ydiv,P] = cat_main_updateSPM_skullstriped(Ysrc,P,res);
+    [Yb,Ybb,Yg,Ydiv,P] = cat_main_updateSPM_skullstriped(Ysrc,P,res,vx_vol,T3th);
   elseif job.extopts.gcutstr==0 
-    [Yb,Ybb,Yg,Ydiv] = cat_main_updateSPM_gcut0(Ysrc,P);
+    [Yb,Ybb,Yg,Ydiv] = cat_main_updateSPM_gcut0(Ysrc,P,vx_vol,T3th);
   elseif job.extopts.gcutstr==2
     [Yb,Ybb,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th);
   else
-    [Yb,Ybb,Yg,Ydiv] = cat_main_updateSPM_gcutold(Ysrc,P);
+    [Yb,Ybb,Yg,Ydiv] = cat_main_updateSPM_gcutold(Ysrc,P,res,vx_vol,T3th);
   end
 
   
@@ -329,9 +329,9 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
 
 
 end
-function [Yb,Ybb,Yg,Ydiv,P] = cat_main_updateSPM_skullstriped(Ysrc,P,res)
+function [Yb,Ybb,Yg,Ydiv,P] = cat_main_updateSPM_skullstriped(Ysrc,P,res,vx_vol,T3th)
     Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
-    Yb   = Yp0>=0.5/3 & Ysrc>0; clear Yp0;
+    Yb   = Yp0>=0.5/3 & Ysrc>0; 
     Ybb  = cat_vol_ctype(Yb)*255; 
 
     P(:,:,:,6) = P(:,:,:,4); 
@@ -342,13 +342,13 @@ function [Yb,Ybb,Yg,Ydiv,P] = cat_main_updateSPM_skullstriped(Ysrc,P,res)
     res.mg  = [res.mg(1:end-1);1;1;1];
     res.vr(1,1,numel(res.lkp)-1:numel(res.lkp)) = 0;
      
-    [Ysrcb,BB] = cat_vol_resize(Ysrc,'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yp0>1/3);
+    [Ysrcb,BB] = cat_vol_resize(Ysrc,'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yp0>1/3); clear Yp0;
     Yg   = cat_vol_grad(Ysrcb/T3th(3),vx_vol);
     Ydiv = cat_vol_div(Ysrcb/T3th(3),vx_vol);
     Yg   = cat_vol_resize(Yg ,'dereduceBrain',BB);
     Ydiv = cat_vol_resize(Ydiv ,'dereduceBrain',BB);
 end
-function [Yb,Ybb,Yg,Ydiv] = cat_main_updateSPM_gcut0(Ysrc,P)
+function [Yb,Ybb,Yg,Ydiv] = cat_main_updateSPM_gcut0(Ysrc,P,vx_vol,T3th)
     % brain mask
     Ym   = single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255;
     Yb   = (Ym > 0.5);
@@ -361,11 +361,14 @@ function [Yb,Ybb,Yg,Ydiv] = cat_main_updateSPM_gcut0(Ysrc,P)
     Yg   = cat_vol_resize(Yg   ,'dereduceBrain',BB);
     Ydiv = cat_vol_resize(Ydiv ,'dereduceBrain',BB);
 end
-function [Yb,Ybb,Yg,Ydiv] = cat_main_updateSPM_gcutold(Ysrc,P)
+function [Yb,Ybb,Yg,Ydiv] = cat_main_updateSPM_gcutold(Ysrc,P,res,vx_vol,T3th)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % T1 only > remove in future if gcut is removed too!
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   
+    clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
+    voli   = @(v) (v ./ (pi * 4./3)).^(1/3);   % volume > radius
+    Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
+
     % old skull-stripping
     Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
     brad = voli(sum(Yp0(:)>0.5).*prod(vx_vol)/1000); 
