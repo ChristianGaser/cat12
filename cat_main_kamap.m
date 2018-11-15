@@ -22,7 +22,7 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,job,res,vx_vol,stime2)
 % Structural Brain Mapping Group
 % University Jena 
 % ______________________________________________________________________
-% $Id: cat_surf_createCS.m 1171 2017-08-31 08:41:59Z gaser $ 
+% $Id$ 
 
 
 % ______________________________________________________________________

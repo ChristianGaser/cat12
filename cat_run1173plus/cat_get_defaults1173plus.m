@@ -25,7 +25,7 @@ function varargout = cat_get_defaults1173plus(defstr, varargin)
 
 % based on Volkmar Glauches version of
 % spm_get_defaults
-% $Id: cat_get_defaults.m 1309 2018-04-23 14:19:28Z dahnke $
+% $Id$
 
 global cat1173plus;
 if isempty(cat1173plus) || ~isfield(cat1173plus,'version') || cat1173plus.version~=1173;

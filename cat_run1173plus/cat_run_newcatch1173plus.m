@@ -5,7 +5,7 @@ function cat_run_newcatch1173plus(job,tpm,subj)
 %
 % See also cat_run_newcatch.
 % ______________________________________________________________________
-% $Revision: 1145 $  $Date: 2017-06-20 14:18:59 +0200 (Tue, 20 Jun 2017) $
+% $Revision$  $Date$
 
   global cat_err_res;
 

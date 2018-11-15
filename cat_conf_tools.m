@@ -19,8 +19,8 @@ data_T2x.help    = {'Select spmT-data to transform or convert.'};
 sel        = cfg_menu;
 sel.name   = 'Convert t value to';
 sel.tag    = 'sel';
-sel.labels = {'p','-log(p)','correlation coefficient cc','effect size d','apply thresholds without conversion'};
-sel.values = {1,2,3,4,5};
+sel.labels = {'p','-log(p)','correlation coefficient cc','apply thresholds without conversion'};
+sel.values = {1,2,3,5};
 sel.val    = {2};
 sel.help   = {'Select conversion of t-value'};
 
@@ -158,15 +158,9 @@ T2x.help = {
           'The following formulas are used:'
           '--------------------------------'
           'correlation coefficient:'
-          '          sign(t)'
+          '          t'
           'r = ------------------'
-          '           df'
-          '    sqrt(------ + 1)'
-          '          t*t'
-          'effect-size'
-          '           2r'
-          'd = ----------------'
-          '    sqrt(1-sqr(r))'
+          '      sqrt(t^2 + df)'
           'p-value'
           'p = 1-spm_Tcdf'
           'log p-value'
@@ -185,7 +179,6 @@ T2x.help = {
           '   Type:      P    - p-value'
           '              logP - log p-value'
           '              R    - correlation coefficient'
-          '              D    - effect size'
           '              T    - t-value'
           '   Contrast:  name used in the contrast manager with replaced none valid'
           '              strings'
@@ -256,9 +249,9 @@ F2x.help = {
           'The following formulas are used:'
           '--------------------------------'
           'coefficient of determination R2:'
-          '          F*(n-1)'
+          '             1'
           'R2 = ------------------'
-          '        n-p + F*(n-1)'
+          '      1 + F*(p-1)/n-p)'
           'p-value:'
           'p = 1-spm_Fcdf'
           'log p-value:'
