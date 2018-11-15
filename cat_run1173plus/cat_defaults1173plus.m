@@ -7,7 +7,7 @@ function cat_defaults1173plus
 %
 % Care must be taken when modifying this file
 %_______________________________________________________________________
-% $Id: cat_defaults.m 1164 2017-08-09 11:54:50Z gaser $
+% $Id$
 
 if exist('cat','var'), clear cat; end 
 global cat1173plus

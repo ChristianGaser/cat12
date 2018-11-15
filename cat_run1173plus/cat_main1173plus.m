@@ -8,7 +8,7 @@ function Ycls = cat_main1173plus(res,tpm,job)
 %
 % ______________________________________________________________________
 % Christian Gaser
-% $Id: cat_main.m 1170 2017-08-30 16:59:05Z dahnke $
+% $Id$
 
 %#ok<*ASGLU>
 

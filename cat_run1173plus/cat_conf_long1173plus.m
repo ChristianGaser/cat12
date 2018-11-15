@@ -2,7 +2,7 @@ function long = cat_conf_long1173plus
 % Configuration file for longitudinal data
 %
 % Christian Gaser
-% $Id: cat_conf_long.m 1114 2017-03-02 10:46:01Z gaser $
+% $Id$
 
 try
   expert = cat_get_defaults('extopts.expertgui');
