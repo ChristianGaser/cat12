@@ -1,5 +1,32 @@
 ------------------------------------------------------------------------
-r1391 | dahnke | 2018-11-12 22:28:19
+r1392 | gaser | 2018-11-15 21:24:04
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CHANGES.txt
+M       cat_conf_tools.m
+MM      cat_main_APRG.m
+MM      cat_main_kamap.m
+MM      cat_run1173plus/cat_conf_extopts1173plus.m
+MM      cat_run1173plus/cat_conf_long1173plus.m
+MM      cat_run1173plus/cat_conf_opts1173plus.m
+MM      cat_run1173plus/cat_defaults1173plus.m
+MM      cat_run1173plus/cat_get_defaults1173plus.m
+MM      cat_run1173plus/cat_main1173plus.m
+MM      cat_run1173plus/cat_run1173plus.m
+MM      cat_run1173plus/cat_run_job10701173plus.m
+MM      cat_run1173plus/cat_run_job1173plus.m
+MM      cat_run1173plus/cat_run_newcatch1173plus.m
+M       cat_stat_spm2x.m
+
+(1) Fixed: Removed option to convert T-maps to Cohen's d map, because the
+    applied equation was not correct and there seem to be no general 
+    conversion possible for a GLM. Thanks to Alessandro Meani for pointing
+    to that issue.
+(2) Fixed: Updated equations for converting T-maps to correlation coefficient
+    and from F-maps to R squared.
+------------------------------------------------------------------------
+r1391 | dahnke | 2018-11-12 22:30:23 +0100 (Mo, 12 Nov 2018) | 20 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -20,6 +47,7 @@ M       cat_tst_cattest.m
 (1) Fixed:   Corrected many small bugs (missing variable) in cat_main_updataSPM.
 (2) Fixed:   Also copy catlog_*.txt into error directory (cat_run_newcatch*). 
   
+
 ------------------------------------------------------------------------
 r1390 | dahnke | 2018-11-12 09:44:38 +0100 (Mo, 12 Nov 2018) | 10 lines
 

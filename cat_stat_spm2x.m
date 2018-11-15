@@ -10,18 +10,9 @@ function varargout = cat_stat_spm2x(vargin)
 % ---------------------------------------------
 % correlation coefficient:
 %
-%          sign(t)
+%          t
 % r = ------------------
-%            df
-%     sqrt(------ + 1)
-%           t*t
-%
-% ---------------------------------------------
-% effect-size
-%
-%            2t
-% d = ----------------
-%         sqrt(df)
+%       sqrt(t^2 + df)
 %
 % ---------------------------------------------
 % p-value
@@ -40,9 +31,9 @@ function varargout = cat_stat_spm2x(vargin)
 % ---------------------------------------------
 % coefficient of determination R2
 %
-%           F*(n-1)
-% R2 = ------------------
-%        n-p + F*(n-1)
+%                  1
+% R2 = 1 - ------------------
+%           1 + F*(p-1)/n-p)
 %
 % ---------------------------------------------
 % p-value
@@ -470,7 +461,8 @@ for i=1:size(P,1)
             end
             t2x_name = 'logP_';
           case 3
-            t2x = sign(Z).*(1./((df(2)./((Z.*Z)+eps))+1)).^0.5;
+            t2x = Z./sqrt(Z.*Z + df(2));
+%            t2x = sign(Z).*(1./((df(2)./((Z.*Z)+eps))+1)).^0.5;
             t2x_name = 'R_';
           case 4
             t2x = 2*Z/sqrt(df(2));
@@ -488,7 +480,10 @@ for i=1:size(P,1)
             t2x = -log10(max(eps,1-spm_Fcdf(Z,df)));
             t2x_name = 'logP_';
           case 3
-    	  	  t2x = (df(2)-1)*Z./(df(2) - df(1)+Z*(df(2) -1));
+              % n = df(2)
+              % p = df(1)
+              t2x = 1 - 1./(1+(Z*(df(1)-1)/(df(2)-df(1))));
+%    	  	  t2x = (df(2)-1)*Z./(df(2) - df(1)+Z*(df(2) -1));
 		      t2x_name = 'R2_';
           case 4
             t2x = Z;
