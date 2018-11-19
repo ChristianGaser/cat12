@@ -485,11 +485,13 @@ estwrite.help   = {
 
 estwrite1173        = estwrite; 
 estwrite1173.name   = 'CAT12: Segmentation R1173 (2017/09)';
+estwrite1173.tag    = 'estwrite1173';
 estwrite1173.prog   = @cat_run1173;
 estwrite1173.help   = [estwrite1173.help;{'';'This batch calls the stable version of the main preprocessing routing R1173 with only light runtime bug fixes.';''}];
 
 estwrite1173plus        = estwrite1173;
 estwrite1173plus.name   = 'CAT12: Segmentation R1173 plus (2018/12)';
+estwrite1173plus.tag    = 'estwrite1173plus';
 estwrite1173plus.prog   = @cat_run1173plus;
 estwrite1173plus.help   = [estwrite1173.help;{'';'This batch calls the revised version of the main preprocessing routing R1173 that include upgrades by several subfunctions (e.g. skull-stripping) from the current CAT12 version.';''}];
 
@@ -528,6 +530,8 @@ estwrite_spm.help   = {
 'CAT processing with thickness estimation and surface creation for SPM segmentation which is using the input of CSF, GM, and WM and also integrates Dartel normalisation (Ashburner 2007) into the toolbox by an already existing Dartel template in MNI space. This template was derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org) and provides the six Dartel iteration. Thus, for the majority of studies the creation of sample-specific Dartel templates is not necessary anymore.'};
 
 %------------------------------------------------------------------------
+
+%{
 seg        = cfg_choice;
 seg.name   = 'Preprocessing';
 seg.tag    = 'seg';
@@ -536,17 +540,18 @@ if expert
 else
   seg.values = { estwrite estwrite1173 estwrite1173plus }; 
 end
+%}
 
 %------------------------------------------------------------------------
 cat        = cfg_choice;
 cat.name   = 'CAT12';
 cat.tag    = 'cat';
 if expert==2
-  cat.values = {seg tools stools stoolsexp};
+  cat.values = {estwrite estwrite1173 estwrite1173plus tools stools stoolsexp};
 elseif expert==1
-  cat.values = {seg tools stools};
+  cat.values = {estwrite estwrite1173 estwrite1173plus tools stools};
 else
-  cat.values = {seg tools stools}; 
+  cat.values = {estwrite estwrite1173 estwrite1173plus tools stools}; 
 end
 %------------------------------------------------------------------------
 

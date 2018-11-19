@@ -814,7 +814,7 @@ function cat_run_job1173plus(job,tpm,subj)
             stime = cat_io_cmd('APP: Fine bias correction and skull-stripping:','','',1,stime); 
 
             % fine APP
-            [Ym,Yp0,Yb] = cat_run_job_APP_final1173(single(obj.image.private.dat(:,:,:)+0),...
+            [Ym,Yp0,Yb] = cat_run_job_APP_final(single(obj.image.private.dat(:,:,:)+0),...
                 Ymc,Yb,Ybg,vx_vol,job.extopts.gcutstr,job.extopts.verb);
             stime = cat_io_cmd('Affine registration:','','',1,stime); 
 
