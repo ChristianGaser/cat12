@@ -22,11 +22,11 @@ if exist('files','var')
   cdatares = {};
   for fi = 1:numel(files)
     [pp,ff] = spm_fileparts(files{fi}); 
-    cdata{end+1,1} = fullfile( pp , surfdir , ['lh.thickness.'    ff ] );
-    cdata{end+1,1} = fullfile( pp , surfdir , ['lh.gyrification.' ff] );
+    cdata{end+1,1} = fullfile( pp , surfdir , ['mesh.thickness.'    ff ] );
+    cdata{end+1,1} = fullfile( pp , surfdir , ['mesh.gyrification.' ff] );
     
-    cdatares{end+1,1} = fullfile( pp , surfdir , ['s15mm.lh.thickness.resampled.'    ff '.gii'] );
-    cdatares{end+1,1} = fullfile( pp , surfdir , ['s15mm.lh.gyrification.resampled.' ff '.gii'] );
+    cdatares{end+1,1} = fullfile( pp , surfdir , ['s15mm.mesh.thickness.resampled.'    ff '.gii'] );
+    cdatares{end+1,1} = fullfile( pp , surfdir , ['s15mm.mesh.gyrification.resampled.' ff '.gii'] );
   end
 else
   cdata    = {'<UNDEFINED>'};
