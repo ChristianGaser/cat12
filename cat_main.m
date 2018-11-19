@@ -589,7 +589,7 @@ end
   
 %% update WMHs 
 %  ---------------------------------------------------------------------
-Ycls = cat_main_updateWMHs(Ym,Ycls,Yy,job,trans);
+Ycls = cat_main_updateWMHs(Ym,Ycls,Yy,tpm,job,res,trans);
   
 
 

@@ -1,4 +1,4 @@
-function Ycls = cat_main_updateWMHs(Ym,Ycls,Yy,job,trans)
+function Ycls = cat_main_updateWMHs(Ym,Ycls,Yy,tpm,job,res,trans)
 % ______________________________________________________________________
 % Handle WMHs in the segmentation.
 %  

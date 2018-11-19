@@ -246,6 +246,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
      
 
       %% set default dartel/shooting templates in debug mode 
+     % ... error for bad template numbers ... use defaults? if res.tpm2
       if 0 %debug
         % only in case of the default templates
         job.extopts.templates = templates; 

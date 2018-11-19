@@ -1,5 +1,27 @@
 ------------------------------------------------------------------------
-r1392 | gaser | 2018-11-15 21:24:04
+r1393 | dahnke | 2018-11-19 09:34:42
+
+Changed paths:
+M       CHANGES.txt
+M       batches/cattest/cat12_101_MAIN_segment.m
+A       batches/cattest/cat12_105_MAIN_segment_1173plus.m
+A       batches/cattest/cat12_106_MAIN_segment_1173.m
+M       batches/cattest/cat12_308_SBM_Surf2ROI.m
+M       cat_conf_opts.m
+M       cat_main.m
+M       cat_main_kamap.m
+M       cat_main_registration.m
+M       cat_main_updateWMHs.m
+M       cat_run1173plus/cat_conf_extopts1173plus.m
+M       cat_run1173plus/cat_run_job1173plus.m
+M       cat_tst_cattest.m
+M       tbx_cfg_cat.m
+
+(1) Fixed:   Corrected small bugs in cat_main and batch generation. 
+(2) Fixed:   Updated cat_tst_cattest and batches for current cat version.
+
+------------------------------------------------------------------------
+r1392 | gaser | 2018-11-15 21:24:07 +0100 (Do, 15 Nov 2018) | 25 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -25,6 +47,7 @@ M       cat_stat_spm2x.m
     to that issue.
 (2) Fixed: Updated equations for converting T-maps to correlation coefficient
     and from F-maps to R squared.
+
 ------------------------------------------------------------------------
 r1391 | dahnke | 2018-11-12 22:30:23 +0100 (Mo, 12 Nov 2018) | 20 lines
 
