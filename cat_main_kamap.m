@@ -43,26 +43,32 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,job,res,vx_vol,stime2)
   stime2 = cat_io_cmd('  K-means AMAP bias-correction','g5','',job.extopts.verb-1,stime2);
 
   % simple skull-stripping
+  prob = cat_main_clean_gwc(cat(4,Ycls{1},Ycls{2},Ycls{3}),1);
+  Ycls{1} = prob(:,:,:,1); Ycls{2} = prob(:,:,:,2); Ycls{3} = prob(:,:,:,3);
   Yb = Ycls{1} + Ycls{2} + Ycls{3};
+  
   
   % In case of skull-stripping with have to combine SPM segmentation and 
   % the possible skull-stripping information 
   if (max(res.lkp)==4), Yb = Yb .* uint8(Ysrc>0); end % if skullstripped
   Yb = cat_vol_morph( smooth3(Yb)>64 , 'ldc', 8,vx_vol);
-
+  Yb = cat_vol_morph( Yb , 'ldo', 8,vx_vol);
+ 
   
   %% intensity normalization
-  Ym = Ysrc; Ym(~Yb) = nan; 
+  Ym = Ysrc; Ym(~cat_vol_morph(Yb,'e',3)) = nan; 
   [Ymic,th] = cat_stat_histth(Ym,0.98); 
   Ym(isnan(Ym) | Ym>(th(2) + diff(th)*2)) = 0;
   [T3th,T3sd,T3md] = kmeans3D(Ymic((Ym(:)>0)),5); clear Ymic;  %#ok<ASGLU>
   if T3md(end)<0.1, T3th(end)=[]; end
   Ym = (Ym - th(1)) ./ (T3th(end) - th(1)); 
+  Yb(Ym>1.2) = 0;
   clear th; 
 
   
   %% bias correction for white matter (Yw) and ventricular CSF areas (Yv)
-  Yw  = Ym>0.8 & Ym<1.5; Yw(smooth3(Yw)<0.6) = 0; Yw(smooth3(Yw)<0.6) = 0; 
+  Yw  = Ym>0.9 & Ym<1.5; Yw(smooth3(Yw)<0.6) = 0; Yw(smooth3(Yw)<0.6) = 0;
+  Yg  = Ym<0.95 & Ym>0.45 & Yb; Yg(smooth3(Yg)<0.4) = 0; Yg(smooth3(Yg)<0.6) = 0;
   Yv  = Ym<0.5 & Yb; Yv  = cat_vol_morph(Yv,'e',4); 
 
   
@@ -80,14 +86,31 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,job,res,vx_vol,stime2)
 
   
   %% some precorrections and bias field approximation 
-  Yi   = cat_vol_localstat(Ysrc .* Yw,Yw,1,3); 
-  Yiv  = cat_vol_localstat(Ysrc .* Yv,Yv,1,1); 
+  Yi   = cat_vol_localstat(Ysrc .* Yw,Yw,1,3);
+  Yiv  = cat_vol_localstat(Ysrc .* Yv,Yv,1,1);
   Yi   = Yi + Yiv * vth; if debug==0, clear Yiv; end
+  Yi(Yb==0) = T3th(5);
   Yi   = cat_vol_approx(Yi,'nn',vx_vol,4); 
   Yi   = cat_vol_smooth3X(Yi,4); 
-  Ysrc = Ysrc ./ (Yi ./ median(Yi(Yw(:))));
-  Ymi  = (Ysrc .* Yb) ./ Yi;
-
+  Ysr2 = Ysrc ./ (Yi ./ median(Yi(Yw(:))));
+  Ymi  = (Ysr2 .* Yb) ./ Yi;
+  clear Ysr2; 
+  
+  
+  %%
+  %%{
+  T3thy = [T3th(1)-diff(T3th(1:2:3)) T3th(1) T3th(3) T3th(5) T3th(5)+diff(T3th(3:2:5))];
+  T3thx = [0 1 2 3 4];
+  Ymi2  = Ymi; Ymi3 = Ymi .* T3th(5); 
+  for i=2:numel(T3thy)
+    M = Ymi3>T3thy(i-1) & Ymi3<=T3thy(i);
+    Ymi2(M(:)) = T3thx(i-1) + (Ymi3(M(:)) - T3thy(i-1))/diff(T3thy(i-1:i))*diff(T3thx(i-1:i));
+  end
+  M  = Ymi3>=T3thy(end); 
+  Ymi2(M(:)) = numel(T3thy)/6 + (Ymi3(M(:)) - T3thy(i))/diff(T3thy(end-1:end))*diff(T3thx(i-1:i));    
+  Ymi = Ymi2 / 3; 
+  %%}
+  
   
   %% remove of high intensity structures
   Ymi = cat_vol_median3(Ymi/median(Ymi(Yw(:))),Yb,Yb,0.2)*median(Ymi(Yw(:)));
@@ -98,13 +121,18 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,job,res,vx_vol,stime2)
   %   -------------------------------------------------------------------
 
   % correct for harder brain mask to avoid meninges in the segmentation
-  Ymib = min(1.5,Ymi); Ymib(~Yb) = 0; 
+  Ymib = min(1.5,Ymi); Ymib(~Yb | Ymi>1.2) = 0; 
   rf = 10^4; Ymib = round(Ymib*rf)/rf;
 
   %  prepare data for segmentation
   % more direct method ... a little bit more WM, less CSF
-  Yp0 = cat_vol_ctype(max(1,min(3,round(Ymi * 3)))); Yp0(~Yb) = 0;
-
+  Yp0  = cat_vol_ctype(max(1,min(3,round(Ymi * 3)))); Yp0(~Yb | Ymi>1.2) = 0; 
+  Yp0c = cat_main_clean_gwc(uint8(255*cat(4,Yp0==2,Yp0==3,Yp0==1)),2);
+  Yp0  = uint8(single(Yp0c(:,:,:,3))/255 + 2*single(Yp0c(:,:,:,1))/255 + ...
+    3*single(Yp0c(:,:,:,2))/255); clear Yp0c;
+  %Yp0 = cat_vol_ctype(max(1,min(3,single(Yb) + (Ymi>T3th(2)/T3th(5)) + ...
+  %  (Ymi>sum(T3th(4:5).*[0.6 0.4])/T3th(5))))); Yp0(~Yb) = 0;
+  
   % use index to speed up and save memory
   sz = size(Yb);
   [indx, indy, indz] = ind2sub(sz,find(Yb>0));

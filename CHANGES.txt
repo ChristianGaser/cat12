@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1393 | dahnke | 2018-11-19 09:34:42
+r1394 | dahnke | 2018-11-20 10:19:17
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main_kamap.m
+M       cat_main_registration.m
+M       cat_surf_createCS.m
+
+(1) Changed:    Worked on problems in the kamap pipeline. 
+(2) Fixed:      Corrected bug in Shooting call due to SPM update.
+(3) Fixed:      Suppressed MATLAB:subscripting:noSubscriptsSpecified
+                warning created in GIFTI output routine (gifti/subsref:45).
+------------------------------------------------------------------------
+r1393 | dahnke | 2018-11-19 09:36:43 +0100 (Mo, 19 Nov 2018) | 20 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -19,6 +32,7 @@ M       tbx_cfg_cat.m
 
 (1) Fixed:   Corrected small bugs in cat_main and batch generation. 
 (2) Fixed:   Updated cat_tst_cattest and batches for current cat version.
+
 
 ------------------------------------------------------------------------
 r1392 | gaser | 2018-11-15 21:24:07 +0100 (Do, 15 Nov 2018) | 25 lines
