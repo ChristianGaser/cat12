@@ -534,6 +534,8 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
     
       % load surf and project thickness
       CS = gifti(Pcentral);
+      % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
+      warning off MATLAB:subscripting:noSubscriptsSpecified
       if mati(7)<0, CS.faces = [CS.faces(:,1) CS.faces(:,3) CS.faces(:,2)]; end
       CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
       if exist('GMTn','var')
@@ -577,6 +579,8 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
               
       % save datastructure
       S.(opt.surf{si}).vertices = CS.vertices;
+      % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
+      warning off MATLAB:subscripting:noSubscriptsSpecified
       S.(opt.surf{si}).faces    = CS.faces;
       S.(opt.surf{si}).vmat     = vmat;
       S.(opt.surf{si}).vmati    = vmati;
@@ -659,6 +663,8 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
     if opt.new_release
       % read final surface and map thickness data
       CS = gifti(Pcentral);
+      % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
+      warning off MATLAB:subscripting:noSubscriptsSpecified
       CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
       facevertexcdata = isocolors2(Yth1,CS.vertices); 
       cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
@@ -720,6 +726,8 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
 
     % read final surface and map thickness data
     CS = gifti(Pcentral);
+    % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
+    warning off MATLAB:subscripting:noSubscriptsSpecified
     CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
     facevertexcdata = isocolors2(Yth1,CS.vertices); 
     cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
