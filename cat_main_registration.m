@@ -433,7 +433,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
               it0 = it0 + 1;
               [u,ll] = dartel3(u,f,g,prm);
               reg(regstri).lld(it0,:)  = ll ./ [prod(rdim) prod(rdim) newres^3]; 
-              reg(regstri).lldf(it0,:) = [reg(regstri).lld(it0,1) / prod(regres),ll(1),ll(2),ll(1)+ll(2),ll(3)]; 
+              reg(regstri).lldf(it0,:) = [reg(regstri).lld(it0,1) / prod(regres),ll(1),ll(2),ll(1)+ll(2),ll(3)];
               cat_io_cprintf(sprintf('g%d',5+2*(mod(it0,its)==1)),...
                 sprintf('% 5d | %6.4f | %8.0f %8.0f %8.0f %8.3f \n',it0,reg(regstri).lldf(it0,:)));
               
@@ -589,7 +589,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
           %% The actual work
           % ---------------------------------------------------------------------
  %R=res.Affine;
-          it = 1; reg(regstri).dtc = zeros(1,5); ll  = zeros(1,3);
+          it = 1; reg(regstri).dtc = zeros(1,5); ll  = zeros(1,2);
           while it<=nits; 
             itime = clock;  
 
@@ -664,7 +664,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
               end
               
               %% loading segmentation and creating of images vs. updating these maps
-              ll  = zeros(1,3);
+              ll  = zeros(1,2);
               if it==1
                 % create shooting maps
                 y   = affind( squeeze( reshape( affind( spm_diffeo('Exp',zeros([rdims(ti,:),3],'single'),[0 1]), ...
@@ -743,10 +743,10 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
             
             llo=ll; 
             if 1 %ti<0
-              [txt,u,ll(1),ll(2),ll(3)] = evalc('spm_shoot_update(g,f,u,y,dt,prm,sd.bs_args,sd.scale)');  %#ok<ASGLU>
+              [txt,u,ll(1),ll(2)] = evalc('spm_shoot_update(g,f,u,y,dt,prm,sd.bs_args,sd.scale)');  %#ok<ASGLU>
               if job.extopts.verb
-                cat_io_cprintf(sprintf('g%d',5+2*(it==1 || (tmpl_no(it)~=tmpl_no(it-1)))),sprintf('%7.4f%8.4f%8.4f%8.4f\n', ...
-                  ll(1)/numel(u), ll(2)/numel(u), (ll(1)+ll(2))/numel(u), ll(3)));
+                cat_io_cprintf(sprintf('g%d',5+2*(it==1 || (tmpl_no(it)~=tmpl_no(it-1)))),sprintf('%7.4f%8.4f%8.4f\n', ...
+                  ll(1)/numel(u), ll(2)/numel(u), (ll(1)+ll(2))/numel(u)));
               end
               [y,J] = spm_shoot3d(u,prm,int_args); 
               dt    = spm_diffeo('det',J); clear J
@@ -778,7 +778,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
             % avoid unneccessary iteration
             if job.extopts.regstr(regstri)>0 && job.extopts.regstr(regstri)~=4 && ...
                 ( ti>1 || (ti==1 && ll(1)/numel(u)<1 && ll(1)/max(eps,llo(1))<1 && ll(1)/max(eps,llo(1))>(1-0.01) )) && ...
-                ( ll(3)<reg(regstri).opt.ll3th(ti) || ...
+                ( ...ll(3)<reg(regstri).opt.ll3th(ti) || ...
                 ( ll(1)/numel(u)<1 && ll(1)/max(eps,llo(1))<1 && ll(1)/max(eps,llo(1))>(1-reg(regstri).opt.ll1th) ))
               it = max(it+1,find([tmpl_no,nits]>tmpl_no(it),1,'first')); 
               reg(regstri).ll(ti,1:4) = [ll(1)/numel(dt) ll(2)/numel(dt) (ll(1)+ll(2))/numel(dt) ll(2)]; 
