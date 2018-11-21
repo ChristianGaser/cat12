@@ -290,7 +290,7 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
       case {'lc','rc'},  [Ymfs,Yside,BB] = cat_vol_resize({Ymfs,Yside},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
     end
     
-    imethod = 'cubic'; 
+    imethod = 'linear'; %cubic'; % cubic should be better in general - however, linear is better for small thickness 
     [Ymfs,resI]     = cat_vol_resize(max(1,Ymfs),'interp',V,opt.interpV,imethod);                  % interpolate volume
     Yside           = cat_vol_resize(Yside,'interp',V,opt.interpV,imethod)>0.5;                    % interpolate volume (small dilatation)
     
@@ -867,6 +867,8 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
 
     % create output structure
     S.(opt.surf{si}).vertices = CS.vertices;
+    % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
+    warning off MATLAB:subscripting:noSubscriptsSpecified
     S.(opt.surf{si}).faces    = CS.faces;
     S.(opt.surf{si}).vmat     = vmat;
     S.(opt.surf{si}).vmati    = vmati;

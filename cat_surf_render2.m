@@ -222,6 +222,8 @@ switch lower(action)
             elseif isfield(S,'cdata')
               labelmapclim = [min(S.cdata) max(S.cdata)];
             end
+            % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
+            warning off MATLAB:subscripting:noSubscriptsSpecified
             % flip faces in case of defect surfaces
             if strcmp(sinfo(1).texture,'defects'), S.faces = S.faces(:,[2,1,3]); end
             labelmap = jet; 
