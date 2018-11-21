@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1394 | dahnke | 2018-11-20 10:19:17
+r1395 | dahnke | 2018-11-21 16:25:20
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_main_cleanup.m
+M       cat_surf_createCS.m
+M       cat_surf_render2.m
+
+(1) Fixed:     Modified cat_main_cleanup routine to avoid local cuts into the brain.
+------------------------------------------------------------------------
+r1394 | dahnke | 2018-11-20 10:19:37 +0100 (Di, 20 Nov 2018) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +22,7 @@ M       cat_surf_createCS.m
 (2) Fixed:      Corrected bug in Shooting call due to SPM update.
 (3) Fixed:      Suppressed MATLAB:subscripting:noSubscriptsSpecified
                 warning created in GIFTI output routine (gifti/subsref:45).
+
 ------------------------------------------------------------------------
 r1393 | dahnke | 2018-11-19 09:36:43 +0100 (Mo, 19 Nov 2018) | 20 lines
 
