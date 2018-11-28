@@ -177,7 +177,7 @@ biasfwhm.help   = {
 };
 
 biasspm        = cfg_branch;
-biasspm.tag    = 'biascat';
+biasspm.tag    = 'spm';
 biasspm.name   = 'Original SPM bias correction parameter';
 biasspm.val    = {biasfwhm biasreg};
 biasspm.help   = {
@@ -274,9 +274,9 @@ samp.help   = {
 % SPM processing accuracy
 tol         = cfg_menu;
 tol.tag     = 'tol';
-tol.name    = 'SPM processing accuracy';
+tol.name    = 'SPM interation accurancy';
 tol.help    = { ...
-    'Parameter that to control the accuracy of different SPM functions. In most cases the standard accuracy is good enough for the initialization in CAT. However, some images with servere (local) inhomogeneities or atypical anatomy may benefit by further iterations. '
+    'Parameter to control the iteration stop criteria of SPM preprocessing fucntions. In most cases the standard value is good enough for the initialization in CAT. However, some images with servere (local) inhomogeneities or atypical anatomy may benefit by further iterations. '
   };
 tol.def    = @(val)cat_get_defaults('opts.tol', val{:}); 
 tol.labels = {'average (default)' 'high (slow)' 'ulta high (very slow)'};
@@ -285,6 +285,44 @@ if expert
   tol.labels = [{'ultra low (superfast)' 'low (fast)'} tol.labels];
   tol.values = [{1e-2 1e-3} tol.values];
 end
+
+% single parameter 
+accspm        = cfg_branch;
+accspm.tag    = 'spm';
+accspm.name   = 'Original SPM accurancy parameter';
+accspm.val    = {samp tol};
+accspm.help   = {
+  'Offical SPM resolution parameter "samp" and internal SPM interation parameter "tol".' 
+}; 
+
+% combined SPM processing accuracy parameter
+accstr         = cfg_menu;
+accstr.tag     = 'accstr';
+accstr.name    = 'SPM processing accuracy';
+accstr.help    = { ...
+    'Parameter to control the accuracy of SPM preprocessing functions. In most images the standard accuracy is good enough for the initialization in CAT. However, some images with servere (local) inhomogeneities or atypical anatomy may benefit by further iterations and higher resolution. '
+  };
+accstr.labels = {'average (default)' 'high (slow)' 'ulta high (very slow)'};
+accstr.values = {0.5 0.75 1.0};
+accstr.def    = @(val)cat_get_defaults('opts.accstr', val{:}); % no cat_defaults entry
+if expert
+  accstr.labels = [{'ultra low (superfast)' 'low (fast)'} accstr.labels];
+  accstr.values = [{0 0.25} accstr.values];
+end
+
+% single parameter
+acc        = cfg_choice;
+acc.tag    = 'acc';
+acc.name   = 'SPM preprocessing accurancy parameters';
+if cat_get_defaults('opts.accstr')>0
+  acc.val  = {accstr};
+else
+  acc.val  = {accspm};
+end
+acc.values = {accstr accspm};
+acc.help   = {
+  'Choose between single or combined SPM preprocessing accuracy parameters.' 
+}; 
 
 
 redspmres         = cfg_entry;
@@ -305,7 +343,7 @@ opts.help = {
     ''
   };
 if expert>1
-  opts.val  = {tpm,affreg,bias,ngaus,warpreg,samp,tol,redspmres};
+  opts.val  = {tpm,affreg,ngaus,warpreg,bias,acc,redspmres};
   opts.help = [opts.help; {
     'Increasing the initial sampling resolution to 1.5 or 1.0 mm may help in some cases of strong inhomogeneity but in general it only increases processing time.'
     ''
@@ -313,13 +351,13 @@ if expert>1
     ''
   }];
 elseif expert==1
-  opts.val  = {tpm,affreg,biasstr,samp,tol};
+  opts.val  = {tpm,affreg,biasstr,accstr};
   opts.help = [opts.help; {
     'Increasing the initial sampling resolution to 1.5 or 1.0 mm ma help in some cases of strong inhomogeneity but in general it only increases processing time.'
     ''
   }];
 else
-  opts.val  = {tpm,affreg,biasstr};
+  opts.val  = {tpm,affreg,biasstr,accstr};
    
 end
 
