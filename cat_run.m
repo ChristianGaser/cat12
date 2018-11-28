@@ -251,12 +251,12 @@ function job = update_job(job)
     job.extopts.restypes.(def.extopts.restype) = job.extopts.resval;  
   end
 
-  % handling of SPM biasoptions for specific GUI entry
+  %% handling of SPM biasoptions for specific GUI entry
   if isfield(job.opts,'bias')
-    if isfield(job.opts.bias,'biasfwhm')
+    if isfield(job.opts.bias,'spm')
       job.opts.biasstr  = 0; 
-      job.opts.biasfwhm = job.opts.bias.biasfwhm; 
-      job.opts.biasreg  = job.opts.bias.biasreg; 
+      job.opts.biasfwhm = job.opts.bias.spm.biasfwhm; 
+      job.opts.biasreg  = job.opts.bias.spm.biasreg; 
     elseif isfield(job.opts.bias,'biasstr')
       job.opts.biasstr  = job.opts.bias.biasstr; 
     end
@@ -272,12 +272,37 @@ function job = update_job(job)
     job.opts.biasreg	= min(  10 , max(  0 , 10^-(job.opts.biasstr*2 + 2) ));
     job.opts.biasfwhm	= min( inf , max( 30 , 30 + 60*(1-job.opts.biasstr) ));  
   end
+  
   % SPM preprocessing accuracy
   if ~isfield(job.opts,'tol')
     job.opts.tol = cat_get_defaults('opts.tol');
   end
   job.opts.tol = min(1e-2,max(1e-6, job.opts.tol));
-    
+  
+  %% handling of SPM accuracy options for specific GUI entry
+  %  Although lower resolution (>3 mm) are not real faster and maybe much 
+  %  worse in sense of quality, it is simpler to have a linear decline
+  %  rather than describe the other case. 
+  sampval           = [5 4 3 2 1]; % alternativelly [3 3 3 2 1] 
+  tolval            = [1e-2 1e-3 1e-4 1e-5 1e-6];
+  if isfield(job.opts,'accstr') && ~isfield(job.opts,'acc') 
+    job.opts.samp     = sampval( job.opts.accstr*4 + 1);
+    job.opts.tol      = tolval(  job.opts.accstr*4 + 1);
+  elseif isfield(job.opts,'acc') 
+    if isfield(job.opts.acc,'accstr')
+      job.opts.accstr   = job.opts.acc.accstr; 
+      job.opts.samp     = sampval( job.opts.acc.accstr*4 + 1);
+      job.opts.tol      = tolval(  job.opts.acc.accstr*4 + 1);
+    elseif isfield(job.opts.acc,'spm')
+      job.opts.accstr   = -1; 
+      job.opts.samp     = job.opts.acc.spm.samp;
+      job.opts.tol      = job.opts.acc.spm.tol;
+    end
+    job.opts = rmfield(job.opts,'acc'); 
+  end
+  clear sampval tolval;
+  
+  
   %% find and check the Dartel templates
   [tpp,tff,tee] = spm_fileparts(job.extopts.darteltpm{1});
   job.extopts.darteltpm{1} = fullfile(tpp,[tff,tee]); 
