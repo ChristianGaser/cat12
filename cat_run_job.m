@@ -593,6 +593,12 @@ function cat_run_job(job,tpm,subj)
             ds('d2sm','',1,Ym,Ym.*(Yb>0.5),100)
           end
           
+         
+          if ~ppe.affreg.skullstripped 
+            %% affreg with brainmask
+            Affine = cat_run_job_APRGs(Ym,Ybg,VF,Pb,Pbt,Affine,vx_vol,obj,job);
+            %[Affine,Yb,Ymi,Ym0] = cat_run_job_APRGs(Ym,Ybg,VF,Pb,Pbt,Affine,vx_vol,obj,job);
+          end
         
           if ppe.affreg.skullstripped || job.extopts.gcutstr<0
             %% update number of SPM gaussian classes 

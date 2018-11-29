@@ -191,10 +191,11 @@ if ~isfield(res,'spmpp')
     stime = cat_io_cmd(sprintf('Fast Shooting registration'),'','',job.extopts.verb); 
 
     job2 = job;
-    job2.extopts.regstr   = 15;     % low resolution 
-    job2.extopts.reg.nits = 16;     % less iterations
-    job2.extopts.verb     = debug;  % do not display process (people would may get confused) 
-    job2.extopts.vox      = abs(res.tpm(1).mat(1));  % TPM resolution to replace old Yy  
+    job2.extopts.regstr     = 15;     % low resolution 
+    job2.extopts.reg.nits   = 16;     % less iterations
+    job2.extopts.reg.affreg = 0;      % new affine registration
+    job2.extopts.verb       = debug;  % do not display process (people would may get confused) 
+    job2.extopts.vox        = abs(res.tpm(1).mat(1));  % TPM resolution to replace old Yy  
     job2.extopts.shootingtpms(3:end) = [];             % remove high templates, we only need low frequency corrections
     res2 = res; 
     res2.do_dartel        = 2;      % use shooting

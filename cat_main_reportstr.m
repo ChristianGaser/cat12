@@ -229,14 +229,14 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
   % Surface measures - Thickness, (Curvature, Depth, ...)
   if isfield(qa.subjectmeasures,'dist_thickness') && ~isempty(qa.subjectmeasures.dist_thickness)
     str{3} = [str{3} struct('name', '\bfThickness:','value',sprintf('%5.2f%s%5.2f mm', ...
-           qa.subjectmeasures.dist_thickness{1}(1),177,qa.subjectmeasures.dist_thickness{1}(2)))];
+           qa.subjectmeasures.dist_thickness{1}(1),char(177),qa.subjectmeasures.dist_thickness{1}(2)))];
     if isfield(qa.subjectmeasures,'dist_gyruswidth') && ~isnan(qa.subjectmeasures.dist_gyruswidth{1}(1))
       str{3} = [str{3} struct('name', '\bfGyruswidth:','value',sprintf('%5.2f%s%5.2f mm', ...
-             qa.subjectmeasures.dist_gyruswidth{1}(1),177,qa.subjectmeasures.dist_gyruswidth{1}(2)))];
+             qa.subjectmeasures.dist_gyruswidth{1}(1),char(177),qa.subjectmeasures.dist_gyruswidth{1}(2)))];
     end
     if isfield(qa.subjectmeasures,'dist_sulcuswidth') && ~isnan(qa.subjectmeasures.dist_sulcuswidth{1}(1))
       str{3} = [str{3} struct('name', '\bfSulcuswidth:','value',sprintf('%5.2f%s%5.2f mm', ...
-             qa.subjectmeasures.dist_sulcuswidth{1}(1),177,qa.subjectmeasures.dist_sulcuswidth{1}(2)))];
+             qa.subjectmeasures.dist_sulcuswidth{1}(1),char(177),qa.subjectmeasures.dist_sulcuswidth{1}(2)))];
     end
   end
 

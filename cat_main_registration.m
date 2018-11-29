@@ -97,9 +97,10 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
   trans = struct();
   reg   = struct();
   def.nits      = 64; 
-  def.opt.ll1th = 0.001;                 % smaller better/slower
+  def.opt.ll1th = 0.001;          % smaller better/slower
   def.opt.ll3th = 0.002; 
-  def.fast      = 0;      % no report, no output
+  def.fast      = 0;              % no report, no output
+  def.affreg    = 1;              % additional affine registration
   if ~isfield(job.extopts,'reg'), job.extopts.reg = struct(); end
   dreg = cat_io_checkinopt(job.extopts.reg,def); 
   
@@ -121,6 +122,23 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
     export = 0; 
   end
 
+  
+  % additional affine registration of the GM segment
+  if dreg.affreg
+    %%
+    obj.image         = res.image; 
+    obj.image.pinfo   = repmat([255;0],1,size(Ycls{1},3));
+    obj.image.dt      = [spm_type('UINT8') spm_platform('bigend')];
+    obj.image.dat     = cat_vol_ctype(single(Ycls{1})/2 + single(Ycls{2}));  
+    if isfield(obj.image,'private'), obj.image = rmfield(obj.image,'private'); end
+    obj.samp = 1.5; 
+    obj.fwhm = 1;
+    if isfield(obj,'tpm'), obj = rmfield(obj,'tpm'); end
+    obj.tpm = spm_load_priors8(res.tpm(1:2));
+    Affine  = spm_maff8(obj.image,obj.samp,obj.fwhm,obj.tpm,res.Affine,job.opts.affreg,80);
+    res.Affine = Affine;
+    spm_progress_bar('Clear');
+  end
 
   do_req = res.do_dartel; 
   % this is the main loop for different parameter
