@@ -100,7 +100,7 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
         <!--
         Further atlas options can be found in the <i>cg_cat_defauls-file</i>.
         <a class="function" href="matlab:cat_vol_display_label(struct('data',{{
-          fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); 
+          fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152_GS.nii'); 
           fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii');
           fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii');
           fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii'); 
@@ -111,7 +111,7 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
       </p>
       
       <a class="function" href="matlab:cat_vol_display_label(struct('data',{{
-          fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); 
+          fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152_GS.nii'); 
           fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii');
           fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii');
           fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii');}} ) )">Display all three volumetric atlas maps.</a> 
@@ -128,14 +128,14 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
             <!--These references should be included in all workshop and final publications.-->
           </p><p>
             Display Neuromorphometics atlas as 
-            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii')}}))">volume map</a>,<!-- on the FreeSurfer average surface (
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">left</a>,  
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">right</a>,
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',1,'usefsaverage',1))">both sides</a>   
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152_GS.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii')}}))">volume map</a>,<!-- on the FreeSurfer average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152_GS')}},'multisurf',0,'usefsaverage',1))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.neuromorphometrics.Template_T1_IXI555_MNI152_GS')}},'multisurf',0,'usefsaverage',1))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152_GS')}},'multisurf',1,'usefsaverage',1))">both sides</a>   
             ) or DARTEL average surface (
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',0))">left</a>,  
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',0))">right</a>,
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',1))">both sides</a> )-->. 
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152_GS')}},'multisurf',0))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.neuromorphometrics.Template_T1_IXI555_MNI152_GS')}},'multisurf',0))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152_GS')}},'multisurf',1))">both sides</a> )-->. 
           </p>
           <p style="text-align:center;"><img src="images/CAT_surf_atlas_neuromorphometics.png" width=90% height=auto alt="Neuromorphometics (2012)" ><p>
         </li>
@@ -152,14 +152,14 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
             These delineations were then transformed into a common atlas space to produce a set of coregistered anatomical labels. 
             The original MRI data were also transformed into the atlas space.
           </p><p>
-            Display LPBA40 atlas as <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')}}))">volume map</a>,<!-- on FreeSurfer average surface (
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">left</a>,  
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">right</a>,
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',1,'usefsaverage',1))">both sides</a> )  
+            Display LPBA40 atlas as <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152_GS.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')}}))">volume map</a>,<!-- on FreeSurfer average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152_GS')}},'multisurf',0,'usefsaverage',1))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.LPBA40.Template_T1_IXI555_MNI152_GS')}},'multisurf',0,'usefsaverage',1))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152_GS')}},'multisurf',1,'usefsaverage',1))">both sides</a> )  
             or DARTEL average surface (
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',0))">left</a>,  
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',0))">right</a>,
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',1))">both sides</a> )-->. 
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152_GS')}},'multisurf',0))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.LPBA40.Template_T1_IXI555_MNI152_GS')}},'multisurf',0))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152_GS')}},'multisurf',1))">both sides</a> )-->. 
           </p>
           <p style="text-align:center;"><img src="images/CAT_surf_atlas_lpba40.png" width=90% height=auto alt="LPBA40 (Shattuck et al. 2008)" ><p>
         </li>
@@ -173,14 +173,14 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
             This atlas, based on Alexander Hammers' brain atlas based on 20 subjects, made available for the Euripides project, Nov 2009 <a href="#Hammers2003">(Hammers et al. 2003</a>,<a href="#Gousias2008">Gousias et al. 2008)</a>. 
           </p><p>
             Display Hammers atlas as 
-            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')}}))">volume map</a>,<!-- on FreeSurfer average surface (
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.hammers.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">left</a>,  
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.hammers.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">right</a>,
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.hammers.Template_T1_IXI555_MNI152')}},'multisurf',1,'usefsaverage',1))">both sides</a>)  
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152_GS.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')}}))">volume map</a>,<!-- on FreeSurfer average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.hammers.Template_T1_IXI555_MNI152_GS')}},'multisurf',0,'usefsaverage',1))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.hammers.Template_T1_IXI555_MNI152_GS')}},'multisurf',0,'usefsaverage',1))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.hammers.Template_T1_IXI555_MNI152_GS')}},'multisurf',1,'usefsaverage',1))">both sides</a>)  
             or DARTEL average surface (
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.hammers.Template_T1_IXI555_MNI152')}},'multisurf',0))">left</a>,  
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.hammers.Template_T1_IXI555_MNI152')}},'multisurf',0))">right</a>,
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.hammers.Template_T1_IXI555_MNI152')}},'multisurf',1))">both sides</a> )-->. 
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.hammers.Template_T1_IXI555_MNI152_GS')}},'multisurf',0))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.hammers.Template_T1_IXI555_MNI152_GS')}},'multisurf',0))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.hammers.Template_T1_IXI555_MNI152_GS')}},'multisurf',1))">both sides</a> )-->. 
           </p>
           <p style="text-align:center;"><img src="images/CAT_surf_atlas_hammers.png" width=90% height=auto alt="Hammers (Hammers et al. 2003)" ><p>
         </li>
@@ -198,7 +198,7 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
           </p>
           <p>
             Display IBSR atlas as 
-            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')}}))">volume map</a>. 
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152_GS.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')}}))">volume map</a>. 
             No surface version is available because the IBSR atlas does not have any cortical regions. 
           </p>
         </li>
@@ -214,15 +214,15 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
           </p>
           <p>
             Display Mori atlas as
-            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii')}}))">volume map</a>, on the FreeSurfer average surface (
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.mori.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">left</a>,  
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.mori.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">right</a>,
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.mori.Template_T1_IXI555_MNI152')}},'multisurf',1,'usefsaverage',1))">both sides</a>
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152_GS.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii')}}))">volume map</a>, on the FreeSurfer average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.mori.Template_T1_IXI555_MNI152_GS')}},'multisurf',0,'usefsaverage',1))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.mori.Template_T1_IXI555_MNI152_GS')}},'multisurf',0,'usefsaverage',1))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.mori.Template_T1_IXI555_MNI152_GS')}},'multisurf',1,'usefsaverage',1))">both sides</a>
             )
             or on the DARTEL average surface (
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.mori.Template_T1_IXI555_MNI152')}},'multisurf',0))">left</a>,  
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.mori.Template_T1_IXI555_MNI152')}},'multisurf',0))">right</a>,
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.mori.Template_T1_IXI555_MNI152')}},'multisurf',1))">both sides</a>
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.mori.Template_T1_IXI555_MNI152_GS')}},'multisurf',0))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.mori.Template_T1_IXI555_MNI152_GS')}},'multisurf',0))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.mori.Template_T1_IXI555_MNI152_GS')}},'multisurf',1))">both sides</a>
             ). 
           </p>
           <p style="text-align:center;"><img src="images/CAT_surf_atlas_mori.png" width=90% height=auto alt="Mori (Oishi et al. 20xx)" ><p>
@@ -236,14 +236,14 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
             Combining probabilistic cytoarchitectonic maps and functional imaging data aligned on Collins brain <a href="#Collins1998">(Collins et al. 1998,</a><a href="#Tzourio2002">Tzourio-Mazoyer et al. 2002)</a>.
           </p>
           <p>            
-            Display AAL atlas as <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')}}))">volume map</a>, on the FreeSurfer average surface (
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aal.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">left</a>,  
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.aal.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">right</a>,
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aal.Template_T1_IXI555_MNI152')}},'multisurf',1,'usefsaverage',1))">both sides</a>
+            Display AAL atlas as <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152_GS.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')}}))">volume map</a>, on the FreeSurfer average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aal.Template_T1_IXI555_MNI152_GS')}},'multisurf',0,'usefsaverage',1))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.aal.Template_T1_IXI555_MNI152_GS')}},'multisurf',0,'usefsaverage',1))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aal.Template_T1_IXI555_MNI152_GS')}},'multisurf',1,'usefsaverage',1))">both sides</a>
             ), or on the DARTEL average surface (
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aal.Template_T1_IXI555_MNI152')}},'multisurf',0))">left</a>,  
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.aal.Template_T1_IXI555_MNI152')}},'multisurf',0))">right</a>,
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aal.Template_T1_IXI555_MNI152')}},'multisurf',1))">both sides</a>
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aal.Template_T1_IXI555_MNI152_GS')}},'multisurf',0))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.aal.Template_T1_IXI555_MNI152_GS')}},'multisurf',0))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aal.Template_T1_IXI555_MNI152_GS')}},'multisurf',1))">both sides</a>
             ). 
           </p>
           <p style="text-align:center;"><img src="images/CAT_surf_atlas_aal.png" width=90% height=auto alt="AAL (Tzourio-Mazoyer et al. 2002)" ><p>

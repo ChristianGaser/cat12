@@ -1,5 +1,27 @@
 ------------------------------------------------------------------------
-r1396 | dahnke | 2018-11-28 12:35:19
+r1397 | gaser | 2018-11-29 13:56:47
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_batch_cat.m
+M       cat_conf_opts.m
+M       cat_defaults.m
+M       cat_run.m
+M       cat_run1173/cat_surf_createCS1173.m
+M       html/cat.html
+M       html/cat_methods_RBM.html
+M       spm_cat12.m
+
+(1) Changed: Version information.
+(2) Fixed: Corrected wrong name of T1 template in html pages.
+(3) Fixed: Corrected call to CAT_DeformSurf to consider additional parameter.
+(4) Fixed: Typos
+(5) Fixed: Updated deletion of fields in cat_batch_cat.m
+(6) Changed: Updated Makefile according to additional cat versions.
+------------------------------------------------------------------------
+r1396 | dahnke | 2018-11-28 12:37:23 +0100 (Mi, 28 Nov 2018) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +30,7 @@ M       cat_defaults.m
 M       cat_run.m
 
 (1) New:    Added SPM accuracy parameter in GUI and cat_defaults.
+
 ------------------------------------------------------------------------
 r1395 | dahnke | 2018-11-21 16:25:23 +0100 (Mi, 21 Nov 2018) | 9 lines
 
