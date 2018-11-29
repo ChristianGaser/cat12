@@ -46,8 +46,8 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
   % transfer tissue outside the brain mask to head  ... 
   % RD 201807: I am not sure if this is a good idea. Please test this with children! 
   for i=1:3
-    P(:,:,:,4) = P(:,:,:,4) + P(:,:,:,i) .* uint8(~YbA); 
-    P(:,:,:,i) = P(:,:,:,i) .* uint8(YbA); 
+    P(:,:,:,4) = cat_vol_ctype(single(P(:,:,:,4)) + single(P(:,:,:,i)) .* single(~YbA)); 
+    P(:,:,:,i) = cat_vol_ctype(single(P(:,:,:,i)) .* single(YbA)); 
   end
   clear YbA;
   

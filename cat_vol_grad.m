@@ -1,6 +1,9 @@
 function Yg = cat_vol_grad(Ym,vx_vol,noabs)
 % ----------------------------------------------------------------------
 % gradient map for edge description
+%
+% Yg = cat_vol_grad(Ym,vx_vol,noabs)
+%
 % ----------------------------------------------------------------------
 % Robert Dahnke
 % $Id$
