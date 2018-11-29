@@ -280,9 +280,9 @@ function job = update_job(job)
   job.opts.tol = min(1e-2,max(1e-6, job.opts.tol));
   
   %% handling of SPM accuracy options for specific GUI entry
-  %  Although lower resolution (>3 mm) are not real faster and maybe much 
+  %  Although lower resolution (>3 mm) is not really faster and maybe much 
   %  worse in sense of quality, it is simpler to have a linear decline
-  %  rather than describe the other case. 
+  %  rather than describing the other case. 
   sampval           = [5 4 3 2 1]; % alternativelly [3 3 3 2 1] 
   tolval            = [1e-2 1e-3 1e-4 1e-5 1e-6];
   if isfield(job.opts,'accstr') && ~isfield(job.opts,'acc') 

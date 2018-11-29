@@ -274,12 +274,12 @@ samp.help   = {
 % SPM processing accuracy
 tol         = cfg_menu;
 tol.tag     = 'tol';
-tol.name    = 'SPM interation accurancy';
+tol.name    = 'SPM iteration accuracy';
 tol.help    = { ...
     'Parameter to control the iteration stop criteria of SPM preprocessing fucntions. In most cases the standard value is good enough for the initialization in CAT. However, some images with servere (local) inhomogeneities or atypical anatomy may benefit by further iterations. '
   };
 tol.def    = @(val)cat_get_defaults('opts.tol', val{:}); 
-tol.labels = {'average (default)' 'high (slow)' 'ulta high (very slow)'};
+tol.labels = {'average (default)' 'high (slow)' 'ultra high (very slow)'};
 tol.values = {1e-4 1e-5 1e-6};
 if expert
   tol.labels = [{'ultra low (superfast)' 'low (fast)'} tol.labels];
@@ -289,10 +289,10 @@ end
 % single parameter 
 accspm        = cfg_branch;
 accspm.tag    = 'spm';
-accspm.name   = 'Original SPM accurancy parameter';
+accspm.name   = 'Original SPM accuracy parameter';
 accspm.val    = {samp tol};
 accspm.help   = {
-  'Offical SPM resolution parameter "samp" and internal SPM interation parameter "tol".' 
+  'Offical SPM resolution parameter "samp" and internal SPM iteration parameter "tol".' 
 }; 
 
 % combined SPM processing accuracy parameter
@@ -300,7 +300,7 @@ accstr         = cfg_menu;
 accstr.tag     = 'accstr';
 accstr.name    = 'SPM processing accuracy';
 accstr.help    = { ...
-    'Parameter to control the accuracy of SPM preprocessing functions. In most images the standard accuracy is good enough for the initialization in CAT. However, some images with servere (local) inhomogeneities or atypical anatomy may benefit by further iterations and higher resolution. '
+    'Parameter to control the accuracy of SPM preprocessing functions. In most images the standard accuracy is good enough for the initialization in CAT. However, some images with servere (local) inhomogeneities or atypical anatomy may benefit by additional iterations and higher resolution. '
   };
 accstr.labels = {'average (default)' 'high (slow)' 'ulta high (very slow)'};
 accstr.values = {0.5 0.75 1.0};
@@ -313,7 +313,7 @@ end
 % single parameter
 acc        = cfg_choice;
 acc.tag    = 'acc';
-acc.name   = 'SPM preprocessing accurancy parameters';
+acc.name   = 'SPM preprocessing accuracy parameters';
 if cat_get_defaults('opts.accstr')>0
   acc.val  = {accstr};
 else
