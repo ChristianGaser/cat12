@@ -41,6 +41,7 @@ function [Affine,Yb,Ymi,Ym0] = cat_run_job_APRGs(Ysrc,Ybg,VF,Pb,Pbt,Affine,vx_vo
   vx_vol    = rV.vx_volr;
   
   %% estimate tissue thresholds for intensity normalization 
+  bgth = kmeans3D(Ysrc(Ybg)); 
   T5th = kmeans3D(Ysrc(Yb0>0.5),5); T3th = T5th(1:2:end);
   [Ysrc,th] = cat_stat_histth(Ysrc);
   Ym = (Ysrc - th(1)) ./ (T3th(3) - th(1)); 
@@ -160,7 +161,7 @@ function [Affine,Yb,Ymi,Ym0] = cat_run_job_APRGs(Ysrc,Ybg,VF,Pb,Pbt,Affine,vx_vo
   %  This is maybe a nice parameter to control the CSF masking.
   %  And even better we can use a surface to find the optimal value. :)
   cutstr    = 1.0; % 0.85; 
-  cutstrs   = linspace(0.2,0.95,4); % 0.05,0.35,0.65,0.95]; 
+  cutstrs   = linspace(0.3,0.95,4); % 0.05,0.35,0.65,0.95]; 
   cutstrval = nan(1,4); 
   if debug, cutstrsa = zeros(0,8); end
   Ysrc2 = (Ysrc>T3th(1)) .* (abs(Ysrc - T3th(1))/(T3th(2) - T3th(1))) + ...
@@ -171,8 +172,8 @@ function [Affine,Yb,Ymi,Ym0] = cat_run_job_APRGs(Ysrc,Ybg,VF,Pb,Pbt,Affine,vx_vo
       for i=1:numel(cutstrs)
         if isnan( cutstrval(i) )
           S = isosurface(Ymx,cutstrs(i),Ysrc2); 
-          cutstrval(i) = cutstrs(i)/10 + ... % litte offset to get more CSF
-            mean(S.facevertexcdata) + std(S.facevertexcdata);
+          cutstrval(i) = cutstrs(i)/10 + cat_stat_nanmean(S.facevertexcdata.^2).^0.5; %... % litte offset to get more CSF
+            %mean(S.facevertexcdata) + std(S.facevertexcdata);
         end
       end
       [tmp,cutstrid] = sort(cutstrval); clear tmp; %#ok<ASGLU>
@@ -199,24 +200,17 @@ function [Affine,Yb,Ymi,Ym0] = cat_run_job_APRGs(Ysrc,Ybg,VF,Pb,Pbt,Affine,vx_vo
   Yb  = cat_vol_resize(Yb ,'dereduceBrain',BB);
   Ym0 = cat_vol_resize(Ym0,'dereduceBrain',BB);
   
-  %%
-  T3thy = [T5th(1)-diff(T5th(1:2:3)) T5th(1) T5th(3) T5th(5) T5th(5)+diff(T5th(3:2:5))];
-  T3thx = [0 1 2 3 4];
-  Ymi2  = Ymi; Ymi3 = Ymi .* T5th(5); 
-  for i=2:numel(T3thy)
-    M = Ymi3>T3thy(i-1) & Ymi3<=T3thy(i);
-    Ymi2(M(:)) = T3thx(i-1) + (Ymi3(M(:)) - T3thy(i-1))/diff(T3thy(i-1:i))*diff(T3thx(i-1:i));
-  end
-  M  = Ymi3>=T3thy(end); 
-  Ymi2(M(:)) = numel(T3thy)/6 + (Ymi3(M(:)) - T3thy(i))/diff(T3thy(end-1:end))*diff(T3thx(i-1:i));    
-  Ymi = Ymi2 / 3; 
+  %% intensity normalization
+  Tth.T3thx = [bgth T5th(1) T5th(3) T5th(5) T5th(5)+diff(T5th(3:2:5))];
+  Tth.T3th   = 0:1/3:4/3;
+  Ymi = cat_main_gintnormi(Ymi/3,Tth);
   
   
   %% create obj
   obj2 = obj; 
   obj2.image.pinfo   = repmat([255;0],1,size(Yb,3));
   obj2.image.dt      = [spm_type('UINT8') spm_platform('bigend')];
-  obj2.image.dat     = cat_vol_ctype(Ymi*255);  
+  obj2.image.dat     = cat_vol_ctype(Ymi*255 .* Yb);  
   if isfield(obj2.image,'private'), obj2.image = rmfield(obj2.image,'private'); end
   obj2.samp = 1.5; 
   obj2.fwhm = 1;

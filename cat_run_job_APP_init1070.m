@@ -25,13 +25,14 @@ function [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init1070(Ysrco,vx_vol,verb)
   [Ysrc,resT3] = cat_vol_resize(Ysrco,'reduceV',vx_vol,min(1.2,cat_stat_nanmean(vx_vol)*2),msize,'meanm'); 
 
   % correction for negative backgrounds (MT weighting)
-  [Ym,BGth] = cat_stat_histth(Ysrc,99.99); BGth(2) = []; clear Ym;  
+  [Ym,BGth] = cat_stat_histth(Ysrc,99.99); BGth(2) = []; clear Ym;   %#ok<ASGLU>
   
   Ysrc = Ysrc - BGth; Ysrco = Ysrco - BGth; BGth2 = BGth; 
   Yg   = cat_vol_grad(Ysrc,resT3.vx_volr) ./ max(eps,Ysrc); 
   
-  WMth = roundx(single(cat_stat_nanmedian(Ysrc(Yg(:)<0.2 & Ysrc(:)>cat_stat_nanmean( ...
-           Ysrc(Yg(:)<0.2 & Ysrc(:)>cat_stat_nanmean(Ysrc(:))))))),rf); 
+  Ybg0 = cat_vol_smooth3X(Yg<0.3 & Ysrc<cat_stat_nanmean([BGth cat_stat_nanmean(Ysrc(:))]),8)>0.05;
+  Yw0  = Yg<0.3 & Ysrc>cat_stat_nanmean(  Ysrc(Yg(:)<0.3 & ~Ybg0(:))) & ~Ybg0; 
+  WMth = roundx(single(cat_stat_nanmedian(Ysrc( Yw0(:) ))),rf); clear Ybg0 Yw0;
   BGth = max( min(Ysrc(:))*0.7 + 0.3*cat_stat_nanmean(Ysrc(:)) ,...
     cat_stat_nanmean(Ysrc(Ysrc(:)<cat_stat_nanmean(Ysrc(:))))); BGth = roundx(BGth,rf); 
   Ym   = (Ysrc - BGth) ./ (WMth - BGth);
@@ -115,6 +116,12 @@ function [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init1070(Ysrco,vx_vol,verb)
     Ybc  = cat_vol_smooth3X(Ybc,4);
     Ybc  = cat_vol_resize(Ybc,'dereduceV',resT2) * WM; 
   end
+  
+  %% prepare intensity normalization by brain tissues
+  [Ymr,Ytr,resT2] = cat_vol_resize({Ym,Yt},'reduceV',resT3.vx_volr,3,32,'meanm'); 
+  Yb0r = cat_vol_morph(cat_vol_morph(Ytr>0.1,'dd',6,resT2.vx_volr),'ldc',10,resT2.vx_volr) & Ymr<1.2; 
+  T3th = kmeans3D(Ymr(Yb0r(:)),5); T3th = T3th(1:2:5);
+  clear Ymr Ytr Yb0r;
 
   %% back to original size
   stime = cat_io_cmd('  Final scaling','g5','',verb,stime);
@@ -127,7 +134,7 @@ function [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init1070(Ysrco,vx_vol,verb)
   %% intensity normalization (Ybc is the average background noise)
   % in data with strong inhomogeneities (7T) the signal can trop below the noise level 
   Ym   = (Ysrc - BGth) ./ Ywi; %(Ywi - min(BGth,min(Ybc/2,Ywi/20))); 
-  Wth  = single(cat_stat_nanmedian(Ym(Yg(:)<0.2 & Ym(:)>cat_stat_nanmean( Ym(Yg(:)<0.2 & Ym(:)>cat_stat_nanmean(Ym(:))))))); 
+  Wth  = single(cat_stat_nanmedian(Ym(Yg(:)<0.2 & Yt(:)))); 
   [WIth,WMv] = hist(Ym(Yg(:)<0.2 & Ym(:)>Wth*0.5 & Ym(:)<Wth*1.5),0:0.01:2);
   WIth = find(cumsum(WIth)/sum(WIth)>0.8,1,'first'); WIth = roundx(WMv(WIth),rf); 
   Ym   = Ym ./ WIth; 
@@ -135,6 +142,11 @@ function [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init1070(Ysrco,vx_vol,verb)
   Ysrc = Ysrc + BGth2;
   [WIth,WMv] = hist(Ysrc(Yg(:)<0.2 & Ym(:)>Wth*0.5 & Ym(:)<Wth*1.5),1000);
   WMth = find(cumsum(WIth)/sum(WIth)>0.7,1,'first'); WMth = roundx(WMv(WMth),rf); 
+  
+  %% intensity normalization
+  Tth.T3thx  = [0 T3th T3th(3)+diff(T3th(2:3))];
+  Tth.T3th   = 0:1/3:4/3;
+  Ym = cat_main_gintnormi(Ym/3,Tth);
   
   cat_io_cmd(' ','','',verb,stime); 
 end
