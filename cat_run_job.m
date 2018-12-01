@@ -596,8 +596,11 @@ function cat_run_job(job,tpm,subj)
          
           if ~ppe.affreg.skullstripped 
             %% affreg with brainmask
-            Affine = cat_run_job_APRGs(Ym,Ybg,VF,Pb,Pbt,Affine,vx_vol,obj,job);
-            %[Affine,Yb,Ymi,Ym0] = cat_run_job_APRGs(Ym,Ybg,VF,Pb,Pbt,Affine,vx_vol,obj,job);
+            if debug 
+              [Affine,Ybi,Ymi,Ym0] = cat_run_job_APRGs(Ym,Ybg,VF,Pb,Pbt,Affine,vx_vol,obj,job); %#ok<ASGLU>
+            else
+              Affine = cat_run_job_APRGs(Ym,Ybg,VF,Pb,Pbt,Affine,vx_vol,obj,job);
+            end
           end
         
           if ppe.affreg.skullstripped || job.extopts.gcutstr<0

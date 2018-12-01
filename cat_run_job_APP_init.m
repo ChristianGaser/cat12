@@ -37,17 +37,21 @@ function [Ym,Yt,Ybg,WMth,bias,Tth,pior] = cat_run_job_APP_init(Ysrco,vx_vol,opt)
   Ysrc    = Ysrco + 0; spm_smooth(Ysrc,Ysrc,nsmooth);
   [Ysrc,resT1] = cat_vol_resize(Ysrc,'reduceV',vx_vol,2,msize,'meanm'); 
 
+  % correction for negative backgrounds (MT weighting)
+  [Ym,BGth] = cat_stat_histth(Ysrc,99.99); BGth(2) = []; clear Ym;   %#ok<ASGLU>
+  
   % initial thresholds
   % correction for negative backgrounds (MT weighting)
-  Yg    = cat_vol_grad(Ysrc,resT1.vx_volr) ./ Ysrc; 
-  Ygth  = max(0.05,min(0.2,mean(Yg(Yg(:)>0))/2)); 
-  Ymsk  = Ysrc>0 & Yg>0 & Yg<Ygth; %mean(Yg(Yg(:)>0)); 
+  Yg    = cat_vol_grad(Ysrc,resT1.vx_volr) ./ Ysrc;
+  Ybg0  = cat_vol_smooth3X(Yg<0.3 & Ysrc<cat_stat_nanmean([BGth cat_stat_nanmean(Ysrc(:))]),8)>0.05;
+  Ygth  = max(0.05,min(0.3,mean(Yg(Yg(:)>0))*0.75)); 
+  Ymsk  = Ysrc>cat_stat_nanmean(  Ysrc(Yg(:)<0.3 & ~Ybg0(:))) & ~Ybg0 & Yg>0 & Yg<Ygth; %mean(Yg(Yg(:)>0)); 
   [x,y] = hist(Ysrc( Ymsk(:)  ),200); cx = cumsum(x)/sum(x);
   WMth0 = y(min([numel(cx),find(cx>0.99,1,'first')]));
   BGth0 = y(max([1        ,find(cx<0.01,1,'last' )]));
   Tth0  = WMth0*0.2 + 0.8*BGth0; 
-  [x,y] = hist(Ysrc( Ymsk(:) & Ysrc(:)<Tth0 ),200); cx = cumsum(x)/sum(x); BGth1 = y(max([1        ,find(cx<0.01,1,'last')])); 
-  [x,y] = hist(Ysrc( Ymsk(:) & Ysrc(:)>Tth0 ),200); cx = cumsum(x)/sum(x); WMth1 = y(min([numel(cx),find(cx>0.90,1,'first')])); 
+  [x,y] = hist(Ysrc( Ybg0(:) & Ysrc(:)<Tth0 ),200); cx = cumsum(x)/sum(x); BGth1 = y(max([1        ,find(cx<0.01,1,'last')])); 
+  [x,y] = hist(Ysrc( Ymsk(:) & Ysrc(:)>Tth0 ),200); cx = cumsum(x)/sum(x); WMth1 = y(min([numel(cx),find(cx>0.99,1,'first')])); 
   Ym    = (Ysrc - BGth1) ./ (WMth1 - BGth1); 
   
   % improved WM threshold
@@ -87,8 +91,9 @@ function [Ym,Yt,Ybg,WMth,bias,Tth,pior] = cat_run_job_APP_init(Ysrco,vx_vol,opt)
     WMth3 = WMth2; % * roundx(single(cat_stat_nanmedian(Ym(Yg(:)>0 & Yg(:)<Ygth & Yg(:)./max(eps,abs(Ydiv(:)))<0.5 & ~Ybg(:) & ...
      %        Ym(:)<cat_stat_nanmean(Ym(Yg(:)<0.2 & ~Ybg(:) & Ym(:)<cat_stat_nanmean(Ym(:))))))),rf); if ~debug, clear WMth2, end
   else
-    WMth3 = WMth2 * roundx(single(cat_stat_nanmedian(Ym(Yg(:)>0 & Yg(:)<Ygth & Yg(:)./max(eps,abs(Ydiv(:)))<0.5 & ~Ybg(:) & ...
-             Ym(:)>cat_stat_nanmean(Ym(Yg(:)<0.2 & ~Ybg(:) & Ym(:)>cat_stat_nanmean(Ym(:))))))),rf); if ~debug, clear WMth2, end
+    WMth3 = WMth2 * roundx(single(cat_stat_nanmedian(Ym(Yg(:)>0 & Yg(:)<Ygth & ~Ybg(:) & ...
+             Ym(:)>cat_stat_nanmean(Ym(Yg(:)<Ygth & ~Ybg(:) & Ym(:)>cat_stat_nanmean(Ym(:))))))),rf);
+     if ~debug, clear WMth2, end
   end
   
   % initial noise reduction by resolution and by amount of variance in the background (multiply by 3 for 3 tissue classes)      
@@ -252,6 +257,12 @@ function [Ym,Yt,Ybg,WMth,bias,Tth,pior] = cat_run_job_APP_init(Ysrco,vx_vol,opt)
   [WIth3,WMv] = hist(Ysrco(Yg(:)<0.2 & Ym(:)>Wth*0.5 & Ym(:)<Wth*1.5 & ~Ybg(:)),1000);
   WMth = find(cumsum(WIth3)/sum(WIth3)>0.7,1,'first'); WMth = roundx(WMv(WMth),rf); 
   
+  %% prepare intensity normalization by brain tissues
+  [Ymr,Ytr,resT2] = cat_vol_resize({Ym,Yt},'reduceV',vx_vol,2,32,'meanm'); 
+  Yb0r = cat_vol_morph(cat_vol_morph(Ytr>0.1,'dd',6,resT2.vx_volr),'ldc',10,resT2.vx_volr) & Ymr<1.2; 
+  T3th = kmeans3D(Ymr(Yb0r(:)),5); T3th = T3th(1:2:5);
+  clear Ymr Ytr Yb0r;
+
   
   %% check if correction was successful
   Ymx = Ymw; %cat_vol_morph(Ymw,'lo'); 
@@ -342,6 +353,12 @@ function [Ym,Yt,Ybg,WMth,bias,Tth,pior] = cat_run_job_APP_init(Ysrco,vx_vol,opt)
       cat_io_cprintf([0 0.5 0],sprintf('    Bias correction successful (CJVR=%0.2f). \n',Tth.biascorr)); 
     end
   end
+  
+  %% intensity normalization
+  Tth.T3thx  = [0 T3th T3th(3)+diff(T3th(2:3))];
+  Tth.T3th   = 0:1/3:4/3;
+  Ym = cat_main_gintnormi(Ym/3,Tth);
+  
   if opt.verb>1 && opt.icall, cat_io_cmd(' ','','',opt.verb); end
       
 end

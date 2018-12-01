@@ -403,7 +403,7 @@ if ~isfield(res,'spmpp')
   %  -------------------------------------------------------------------
   if job.extopts.cleanupstr>0
     for i=1:size(prob,4), [prob2(:,:,:,i),BB] = cat_vol_resize(prob(:,:,:,i),'reduceBrain',vx_vol,2,sum(prob,4)); end 
-    prob2 = cat_main_clean_gwc(prob2,job.extopts.cleanupstr*2/mean(vx_vol)); % old cleanup
+    prob2 = cat_main_clean_gwc(prob2,min(1,job.extopts.cleanupstr*2/mean(vx_vol))); % old cleanup
     for i=1:size(prob,4), prob(:,:,:,i) = cat_vol_resize(prob2(:,:,:,i),'dereduceBrain',BB); end; clear prob2
     if job.extopts.cleanupstr < 2 % use cleanupstr==2 to use only the old cleanup
       [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1(indx,indy,indz),... 
