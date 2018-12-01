@@ -236,19 +236,19 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th)
   %  This is maybe a nice parameter to control the CSF masking.
   %  And even better we can use a surface to find the optimal value. :)
   cutstr    = 1.0; % 0.85; 
-  cutstrs   = linspace(0.2,0.8,4); % 0.05,0.35,0.65,0.95]; 
+  cutstrs   = linspace(0.05,0.95,4); % 0.05,0.35,0.65,0.95]; 
   cutstrval = nan(1,4); 
   if debug, cutstrsa = zeros(0,8); end
   Ysrc2 = (Ysrc>T3th(1)) .* (abs(Ysrc - T3th(1))/(T3th(2) - T3th(1))) + ...
           (Ysrc<T3th(1)) .* (abs(Ysrc - T3th(1))/(T3th(1) - BGth)) ;
         Ysrc2 = smooth3(Ysrc2);
   if cutstr == 1 % auto
-    for l=1:3
+    for l=1:5
       for i=1:numel(cutstrs)
         if isnan( cutstrval(i) )
           S = isosurface(Ym,cutstrs(i),Ysrc2); 
-          cutstrval(i) = cutstrs(i)/20 + ... % litte offset to get more CSF
-            mean(S.facevertexcdata) + std(S.facevertexcdata);
+          cutstrval(i) = cutstrs(i)/5 + cat_stat_nanmean(S.facevertexcdata.^2).^0.5; 
+          %... % litte offset to get more CSF% + std(S.facevertexcdata);
         end
       end
       [tmp,cutstrid] = sort(cutstrval); clear tmp; %#ok<ASGLU>
@@ -262,7 +262,7 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th)
 
 
   %% normalize this map depending on the cutstr parameter 
-  Yb  = cat_vol_morph(cat_vol_morph(Ym > cutstr,'lo'),'c');
+  Yb  = cat_vol_morph(cat_vol_morph(Ym > cutstr,'lo'),'lc',2);
   Yb  = cat_vol_morph(Yb,'e') | (Ym>0.9) | (Yb & Yc>0.5);
   Yb(smooth3(Yb)<0.5)=0;
   Ybb = cat_vol_ctype( max(0,min(1,(Ym - cutstr)/(1-cutstr))) * 256); 

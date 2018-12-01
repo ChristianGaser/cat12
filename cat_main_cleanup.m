@@ -26,20 +26,20 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
   % This part removes menignes next to the skull and between large 
   % structes.
   % ------------------------------------------------------------------
-  Yvt  = cat_vol_morph(NS(Yl1b,LAB.VT) | NS(Yl1b,LAB.BG),'d',vxv*3);  % ventricle ... no cleanup here
+  Yvt  = cat_vol_morph(NS(Yl1b,LAB.VT) | NS(Yl1b,LAB.BG),'dd',vxv*3);  % ventricle ... no cleanup here
   Yp0  = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255;
-  Ybd  = cat_vbdist(single(~cat_vol_morph(Yp0>0,'lc',vxv)),true(size(Yp0)),vx_vol);
-  Ybd  = cat_vbdist(single(~cat_vol_morph(Yp0>1.5 | Ybd>8,'lc',vxv)),true(size(Yp0)),vx_vol);
-  Ycbp = cat_vol_morph(NS(Yl1b,LAB.CB),'d',cleanupdist*vxv);          % next to the cerebellum
-  Ycbn = cat_vol_morph(NS(Yl1b,LAB.CB),'e',0.2*cleanupdist*vxv);      % not to deep in the cerebellum
-  Ylhp = cat_vol_morph(Yl1b==1 & Yp0<2.1,'d',cleanupdist*vxv*2);      % GM next to the left hemisphere 
-  Yrhp = cat_vol_morph(Yl1b==2 & Yp0<2.1,'d',cleanupdist*vxv*2);      % GM next to the righ hemishpere
+  Ybd  = cat_vbdist(single(~cat_vol_morph(Yp0>0,'ldc',vxv)),true(size(Yp0)),vx_vol);
+  Ybd  = cat_vbdist(single(~cat_vol_morph(Yp0>1.5 | Ybd>8,'ldc',vxv)),true(size(Yp0)),vx_vol);
+  Ycbp = cat_vol_morph(NS(Yl1b,LAB.CB),'dd',cleanupdist*vxv);          % next to the cerebellum
+  Ycbn = NS(Yl1b,LAB.CB); %cat_vol_morph(NS(Yl1b,LAB.CB),'de',min(1,0.2*cleanupdist*vxv));      % not to deep in the cerebellum
+  Ylhp = cat_vol_morph(Yl1b==1 & Yp0<2.1,'dd',cleanupdist*vxv*2);      % GM next to the left hemisphere 
+  Yrhp = cat_vol_morph(Yl1b==2 & Yp0<2.1,'dd',cleanupdist*vxv*2);      % GM next to the righ hemishpere
   Yroi = Ybd<cleanupdist*2 | ...                                      % next to the brain mask
          (~Ycbn & Ycbp & (Ylhp | Yrhp)) | ...                         % between the cortex and the cerebellum                       
          (Ylhp & Yrhp) | ...                                          % between left and right hemisphere
          NS(Yl1b,LAB.VT) | ...                                        % in the ventricle 
          (NS(Yl1b,LAB.BS) & Ycbp);                                    % between brainstem and crebellum
-  Yrbv = Yp0>0 & Ybd<6 & cat_vol_morph( (Ylhp & Yrhp) | (~Ycbn & Ycbp & (Ylhp | Yrhp)),'d',4);
+  Yrbv = Yp0>0 & Ybd<6 & cat_vol_morph( (Ylhp & Yrhp) | (~Ycbn & Ycbp & (Ylhp | Yrhp)),'dd',4);
   Yroi = (Yroi | Yrbv) & ~NS(Yl1b,LAB.BS) & ~Ycbn; 
   % bv
 %     Ycd  = cat_vbdist(single(Yp0>2.5 & Yl1b==LAB.CB),Ylhp & Yrhp,vx_vol);

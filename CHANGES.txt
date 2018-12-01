@@ -1,5 +1,35 @@
 ------------------------------------------------------------------------
-r1398 | dahnke | 2018-11-29 18:11:11
+r1399 | dahnke | 2018-12-01 22:28:36
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_main_APRG.m
+M       cat_main_cleanup.m
+M       cat_main_gintnormi.m
+M       cat_main_reportfig.m
+M       cat_run_job.m
+M       cat_run_job_APP_init.m
+M       cat_run_job_APP_init1070.m
+M       cat_run_job_APRGs.m
+
+(1) Fixed:   	Corrected WM threshold problems in cat_run_job_APPinit*  
+		preprocessing routines with high GM-WM contrast.
+(2) New:	Added kmeans-based intensity normalization routine in APP  
+		preprocessings to reduce problems in images with ultrahigh 
+		GM-WM contrast (eg. INDI_OUL).
+(3) Fixed:   	Corrected bug in cat_run_job_APRGs (missed to mask the brain 
+		for spm_maff8).
+(4) Fixed: 	Corrected small bugs in the intensity normalization of 
+		cat_run_job_APRGs.
+(5) Documented:	Added example for general call of cat_main_gintnormi for  
+		intensity normalization. 
+(6) Fixed:	Corrected undesired SPM graphics figure popup of CAT report
+		in parallel processing.				
+(7) Changed:	Reduced cleanup in cerebral areas close to the cerebrum.
+
+------------------------------------------------------------------------
+r1398 | dahnke | 2018-11-29 18:13:22 +0100 (Do, 29 Nov 2018) | 19 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -19,6 +49,7 @@ M       cat_vol_partvol.m
               to improve the Dartel/Shooting initialization.
 (3) New:	  	Added skull-stripping affine registration routine
 							cat_run_job_APRGs in cat_run_job (alpha status!).
+
 ------------------------------------------------------------------------
 r1397 | gaser | 2018-11-29 13:57:07 +0100 (Do, 29 Nov 2018) | 20 lines
 
