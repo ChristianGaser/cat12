@@ -3,7 +3,7 @@
 % cat_tst_cat.est.
 % ---------------------------------------------------------------------
 % Robert Dahnke
-% $Id: cat12_101_MAIN_segment.m 1083 2016-11-21 14:11:02Z dahnke $
+% $Id$
 
 if ~exist('files_human','var')
   files_human1173 = {'<UNDEFINED>'};

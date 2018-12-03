@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1399 | dahnke | 2018-12-01 22:28:36
+r1400 | gaser | 2018-12-03 17:06:30
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+MM      batches/cattest/cat12_105_MAIN_segment_1173plus.m
+MM      batches/cattest/cat12_106_MAIN_segment_1173.m
+M       cat_main_APRG.m
+M       html/cat.html
+M       html/cat_starting.html
+
+(1) Changed: Updated threshold for APRG skull-stripping to include slightly
+    less CSF.
+(2) Changed: Updated order of surface TFCE in Quick Starting Guide.
+------------------------------------------------------------------------
+r1399 | dahnke | 2018-12-01 22:30:42 +0100 (Sa, 01 Dez 2018) | 28 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -27,6 +42,7 @@ M       cat_run_job_APRGs.m
 (6) Fixed:	Corrected undesired SPM graphics figure popup of CAT report
 		in parallel processing.				
 (7) Changed:	Reduced cleanup in cerebral areas close to the cerebrum.
+
 
 ------------------------------------------------------------------------
 r1398 | dahnke | 2018-11-29 18:13:22 +0100 (Do, 29 Nov 2018) | 19 lines
