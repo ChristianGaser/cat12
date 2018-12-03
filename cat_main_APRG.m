@@ -247,7 +247,7 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th)
       for i=1:numel(cutstrs)
         if isnan( cutstrval(i) )
           S = isosurface(Ym,cutstrs(i),Ysrc2); 
-          cutstrval(i) = cutstrs(i)/5 + cat_stat_nanmean(S.facevertexcdata.^2).^0.5; 
+          cutstrval(i) = cutstrs(i)/10 + cat_stat_nanmean(S.facevertexcdata.^2).^0.5; 
           %... % litte offset to get more CSF% + std(S.facevertexcdata);
         end
       end
