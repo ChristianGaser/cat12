@@ -125,9 +125,7 @@ if ~isfield(res,'spmpp')
                    cat_vol_ctype(Yb2.*Yp0toC(Ym*3,3)*255),...
                    cat_vol_ctype(Yb2.*Yp0toC(min(3,Ym*3),1)*255));
       
-      for i=1:size(prob,4), [prob2(:,:,:,i),BB] = cat_vol_resize(prob(:,:,:,i),'reduceBrain',vx_vol,2,sum(prob,4)); end %#ok<AGROW>
-      prob2 = cat_main_clean_gwc(prob2,1);
-      for i=1:size(prob,4), prob(:,:,:,i) = cat_vol_resize(prob2(:,:,:,i),'dereduceBrain',BB); end; clear prob2;
+      prob = cat_main_clean_gwc(prob,1);
       
       for ci=1:3, Ycls{ci} = prob(:,:,:,ci); end; 
       clear prob;  
@@ -216,7 +214,7 @@ if ~isfield(res,'spmpp')
       Yy2(:,:,:,k1) = Yy(:,:,:,k1) .* Ybd + Yy2(:,:,:,k1) .* (1-Ybd);
       Yy2(:,:,:,k1) = cat_vol_approx(Yy2(:,:,:,k1),'nn',vx_vol,3); 
     end
-    if ~debug, Yy = Yy2; end 
+    Yy = Yy2; 
     clear Yy2; 
     if ~debug, fprintf('%5.0fs\n',etime(clock,stime)); end
   end
@@ -233,11 +231,11 @@ if ~isfield(res,'spmpp')
       [Ymi,Ym,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extoptsLAS2); % use Yclsi after cat_vol_partvol
     else
       stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
-      if job.extopts.new_release
+      %if job.extopts.new_release
         [Ymi,Ym,Ycls] = cat_main_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
-      else
-        [Ymi,Ym,Ycls] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
-      end
+      %else
+      %  [Ymi,Ym,Ycls] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
+      %end
     end
     fprintf('%5.0fs\n',etime(clock,stime));
 
@@ -402,13 +400,12 @@ if ~isfield(res,'spmpp')
   %     Yp0   = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
   %  -------------------------------------------------------------------
   if job.extopts.cleanupstr>0
-    for i=1:size(prob,4), [prob2(:,:,:,i),BB] = cat_vol_resize(prob(:,:,:,i),'reduceBrain',vx_vol,2,sum(prob,4)); end 
-    prob2 = cat_main_clean_gwc(prob2,min(1,job.extopts.cleanupstr*2/mean(vx_vol))); % old cleanup
-    for i=1:size(prob,4), prob(:,:,:,i) = cat_vol_resize(prob2(:,:,:,i),'dereduceBrain',BB); end; clear prob2
     if job.extopts.cleanupstr < 2 % use cleanupstr==2 to use only the old cleanup
+      prob = cat_main_clean_gwc(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol))); % default cleanup
       [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1(indx,indy,indz),... 
         Ymo(indx,indy,indz),job.extopts,job.inv_weighting,vx_vol,indx,indy,indz); % new cleanup
     else
+      prob = cat_main_clean_gwc(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol)),0); % old cleanup
       for i=1:3, Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i); end
       Yp0b = Yb(indx,indy,indz); 
     end

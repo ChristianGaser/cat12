@@ -1,5 +1,26 @@
 ------------------------------------------------------------------------
-r1400 | gaser | 2018-12-03 17:06:30
+r1401 | dahnke | 2018-12-04 23:34:48
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_report.m
+M       cat_main.m
+M       cat_main_clean_gwc.m
+M       cat_main_kamap.m
+M       cat_main_reportfig.m
+M       cat_main_reportstr.m
+M       cat_main_updateSPM.m
+
+(1) Changed:   	Include brain limitation in cat_main_clean_gwc for speedup
+                and removed limitations in cat_main and cat_main_updateSPM.
+(2) New:        Added harder removal of meninges by morphological operations
+                close to the skull in cat_main_clean_gwc.
+(3) Fixed:      Corrected bugs in cat_io_report.
+(4) Changed:    Activate rewritten LAS routine in cat_main.
+(5) Changed:    Updated cat_main_kamap cleanup calls.
+
+------------------------------------------------------------------------
+r1400 | gaser | 2018-12-03 17:06:50 +0100 (Mo, 03 Dez 2018) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +34,7 @@ M       html/cat_starting.html
 (1) Changed: Updated threshold for APRG skull-stripping to include slightly
     less CSF.
 (2) Changed: Updated order of surface TFCE in Quick Starting Guide.
+
 ------------------------------------------------------------------------
 r1399 | dahnke | 2018-12-01 22:30:42 +0100 (Sa, 01 Dez 2018) | 28 lines
 

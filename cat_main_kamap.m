@@ -43,7 +43,7 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,job,res,vx_vol,stime2)
   stime2 = cat_io_cmd('  K-means AMAP bias-correction','g5','',job.extopts.verb-1,stime2);
 
   % simple skull-stripping
-  prob = cat_main_clean_gwc(cat(4,Ycls{1},Ycls{2},Ycls{3}),1);
+  prob = cat_main_clean_gwc(cat(4,Ycls{1},Ycls{2},Ycls{3}),1,0); % no new cleanup here!
   Ycls{1} = prob(:,:,:,1); Ycls{2} = prob(:,:,:,2); Ycls{3} = prob(:,:,:,3);
   Yb = Ycls{1} + Ycls{2} + Ycls{3};
   
@@ -68,7 +68,7 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,job,res,vx_vol,stime2)
   
   %% bias correction for white matter (Yw) and ventricular CSF areas (Yv)
   Yw  = Ym>0.9 & Ym<1.5; Yw(smooth3(Yw)<0.6) = 0; Yw(smooth3(Yw)<0.6) = 0;
-  Yg  = Ym<0.95 & Ym>0.45 & Yb; Yg(smooth3(Yg)<0.4) = 0; Yg(smooth3(Yg)<0.6) = 0;
+  %Yg  = Ym<0.95 & Ym>0.45 & Yb; Yg(smooth3(Yg)<0.4) = 0; Yg(smooth3(Yg)<0.6) = 0; % not used?
   Yv  = Ym<0.5 & Yb; Yv  = cat_vol_morph(Yv,'e',4); 
 
   
@@ -97,19 +97,11 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,job,res,vx_vol,stime2)
   clear Ysr2; 
   
   
-  %%
-  %%{
-  T3thy = [T3th(1)-diff(T3th(1:2:3)) T3th(1) T3th(3) T3th(5) T3th(5)+diff(T3th(3:2:5))];
-  T3thx = [0 1 2 3 4];
-  Ymi2  = Ymi; Ymi3 = Ymi .* T3th(5); 
-  for i=2:numel(T3thy)
-    M = Ymi3>T3thy(i-1) & Ymi3<=T3thy(i);
-    Ymi2(M(:)) = T3thx(i-1) + (Ymi3(M(:)) - T3thy(i-1))/diff(T3thy(i-1:i))*diff(T3thx(i-1:i));
-  end
-  M  = Ymi3>=T3thy(end); 
-  Ymi2(M(:)) = numel(T3thy)/6 + (Ymi3(M(:)) - T3thy(i))/diff(T3thy(end-1:end))*diff(T3thx(i-1:i));    
-  Ymi = Ymi2 / 3; 
-  %%}
+  %% intensity normalisation
+  [T3th,T3sd,T3md] = kmeans3D(Ymi((Ym(:)>0)),5);  %#ok<ASGLU>
+  Tth.T3thx  = [T3th(1)-diff(T3th(1:2:3)) T3th(1:2:5) T3th(5)+diff(T3th(3:2:5))];
+  Tth.T3th   = 0:1/3:4/3;
+  Ymi = cat_main_gintnormi(Ymi/3,Tth);
   
   
   %% remove of high intensity structures
@@ -123,11 +115,13 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,job,res,vx_vol,stime2)
   % correct for harder brain mask to avoid meninges in the segmentation
   Ymib = min(1.5,Ymi); Ymib(~Yb | Ymi>1.2) = 0; 
   rf = 10^4; Ymib = round(Ymib*rf)/rf;
+  Yp0toC  = @(Yp0,c) 1-min(1,abs(Yp0-c));
 
   %  prepare data for segmentation
   % more direct method ... a little bit more WM, less CSF
-  Yp0  = cat_vol_ctype(max(1,min(3,round(Ymi * 3)))); Yp0(~Yb | Ymi>1.2) = 0; 
-  Yp0c = cat_main_clean_gwc(uint8(255*cat(4,Yp0==2,Yp0==3,Yp0==1)),2);
+  Yp0  = (Ymi * 3); Yp0(~Yb | Ymi>1.2) = 0; 
+  Yp0c = cat_vol_ctype(255*cat(4,Yp0toC(Yp0,2),Yp0toC(Yp0,3),Yp0toC(Yp0,1))); 
+  Yp0c = cat_main_clean_gwc(Yp0c,1,1); % new cleanup here!
   Yp0  = uint8(single(Yp0c(:,:,:,3))/255 + 2*single(Yp0c(:,:,:,1))/255 + ...
     3*single(Yp0c(:,:,:,2))/255); clear Yp0c;
   %Yp0 = cat_vol_ctype(max(1,min(3,single(Yb) + (Ymi>T3th(2)/T3th(5)) + ...
@@ -174,11 +168,11 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,job,res,vx_vol,stime2)
  
   
   % reorder probability maps according to spm order
-  prob = prob(:,:,:,[2 3 1]);  %#ok<NODEF>
+  prob = prob(:,:,:,[2 3 1]);  
 
   
   % cleanup
-  prob = cat_main_clean_gwc(prob,1);
+  prob = cat_main_clean_gwc(prob,1,1); % and here!
 
   
   % update probability maps

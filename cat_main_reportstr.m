@@ -1,4 +1,4 @@
-function str = cat_main_reportstr(job,res,qa,cat_warnings)
+function str = cat_main_reportstr(job,res,qa,cat_warnings,err)
 % ______________________________________________________________________
 % 
 % Prepare text output for CAT report. This function may heavily change
@@ -158,7 +158,7 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
     str{1}(end).value = [str{1}(end).value sprintf('(%0.2f %0.2f)',job.extopts.restypes.(restype))];
   end; 
 
-  % line 8: surfae parameter
+  % line 8: surface parameter
   if job.output.surface
     str{1} = [str{1} struct('name', 'Voxel resolution (original > internal > PBT; vox):',...
            'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s > %4.2f mm%s; %4.2f mm  ', ...
@@ -270,4 +270,5 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
       str{ssi}(si).value  = [str{ssi}(si).value '  '];
     end
   end
+
 end

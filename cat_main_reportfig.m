@@ -40,13 +40,17 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str)
     reportfolder  = '';
   end
   
-  nprog = ( isfield(job,'printPID') && job.printPID ) || ...
-          ( isempty(findobj('type','Figure','Tag','CAT') ) && ...
+  nprog = ( isfield(job,'printPID') && job.printPID ) || ... PID field
+          ( isempty(findobj('type','Figure','Tag','CAT') ) && ... no menus
             isempty(findobj('type','Figure','Tag','Menu') ) );
   fg  = spm_figure('FindWin','Graphics'); 
   set(0,'CurrentFigure',fg)
   if isempty(fg)
-    if nprog, fg = spm_figure('Create','Graphics','visible','off'); else fg = spm_figure('Create','Graphics'); end;
+    if nprog
+      fg = spm_figure('Create','Graphics','visible','off'); 
+    else
+      fg = spm_figure('Create','Graphics','visible','on'); 
+    end;
   else
     if nprog, set(fg,'visible','off'); end
   end
