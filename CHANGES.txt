@@ -1,11 +1,20 @@
 ------------------------------------------------------------------------
-r1402 | dahnke | 2018-12-05 17:11:27
+r1403 | dahnke | 2018-12-05 20:28:52
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main_kamap.m
+
+(1) Changed:    Update kamap preprocessing.
+------------------------------------------------------------------------
+r1402 | dahnke | 2018-12-05 17:11:48 +0100 (Mi, 05 Dez 2018) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_conf_tools.m
 
 (1) Fixed:  Corrected bug in batch mode of the trimming tool.  
+
 ------------------------------------------------------------------------
 r1401 | dahnke | 2018-12-04 23:36:50 +0100 (Di, 04 Dez 2018) | 19 lines
 
