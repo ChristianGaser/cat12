@@ -61,16 +61,34 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,job,res,vx_vol,stime2)
   Ym(isnan(Ym) | Ym>(th(2) + diff(th)*2)) = 0;
   [T3th,T3sd,T3md] = kmeans3D(Ymic((Ym(:)>0)),5); clear Ymic;  %#ok<ASGLU>
   if T3md(end)<0.1, T3th(end)=[]; end
-  Ym = (Ym - th(1)) ./ (T3th(end) - th(1)); 
-  Yb(Ym>1.2) = 0;
-  clear th; 
+  Ym = (Ysrc - th(1)) ./ (T3th(end) - th(1)); 
+  Tth.T3thx  = [T3th(1)-diff(T3th(1:2:3)) T3th(1:2:5) T3th(5)+diff(T3th(3:2:5))];
+  Tth.T3th   = 0:1/3:4/3;
+  Ymi = cat_main_gintnormi(Ysrc/3,Tth);
+  
+  % update CSF regions for skull-stripping of the cleanup and update skull-stripping
+  Ycls{3}(single(Ycls{3})/255 .* abs(Ymi*3 - 1) .* cat_vol_morph(Ycls{1}==0,'e')>0.3) = 0; 
+  Yb = Ycls{1} + Ycls{2} + Ycls{3};
+  Yb = cat_vol_morph( smooth3(Yb)>64 , 'ldo', 1,vx_vol);
+  Yb = cat_vol_morph( Yb , 'ldc', 8,vx_vol);
+  Yb = cat_vol_morph( Yb , 'ldo', 8,vx_vol);
+  
+  %%
+  Ymsk = cat_vol_morph(Yb & Ymi>0.45 & Ymi<0.95,'do',1); 
+  tx = kmeans3D(Ysrc(Ymsk(:)),1); T3th(3) = mean(tx);
+  Ymsk = cat_vol_morph(Yb & Ymi>0.9 & Ymi<1.1,'do',1.5); 
+  tx = kmeans3D(Ysrc(Ymsk(:)),1); T3th(5) = mean(tx);
+  Tth.T3thx  = [T3th(1)-diff(T3th(1:2:3)) T3th(1:2:5) T3th(5)+diff(T3th(3:2:5))];
+  Ymi = cat_main_gintnormi(Ysrc/3,Tth);
+ 
+  %Yb(Ym>1.2) = 0;
+  %clear th; 
 
   
   %% bias correction for white matter (Yw) and ventricular CSF areas (Yv)
-  Yw  = Ym>0.9 & Ym<1.5; Yw(smooth3(Yw)<0.6) = 0; Yw(smooth3(Yw)<0.6) = 0;
+  Yw  = Yb & Ymi>0.9 & Ymi<1.5; Yw(smooth3(Yw)<0.6) = 0; Yw(smooth3(Yw)<0.6) = 0;
   %Yg  = Ym<0.95 & Ym>0.45 & Yb; Yg(smooth3(Yg)<0.4) = 0; Yg(smooth3(Yg)<0.6) = 0; % not used?
-  Yv  = Ym<0.5 & Yb; Yv  = cat_vol_morph(Yv,'e',4); 
-
+  Yv  = Yb & Ymi<0.4 & Yb; Yv  = cat_vol_morph(Yv,'e',2); 
   
   %% estimate value vth to mix CSF and WM information
   Yvw = cat_vol_smooth3X(Yv,6)>0.05 & cat_vol_morph(Yw,'e',2); 
@@ -93,15 +111,24 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,job,res,vx_vol,stime2)
   Yi   = cat_vol_approx(Yi,'nn',vx_vol,4); 
   Yi   = cat_vol_smooth3X(Yi,4); 
   Ysr2 = Ysrc ./ (Yi ./ median(Yi(Yw(:))));
-  Ymi  = (Ysr2 .* Yb) ./ Yi;
+  Ymi  = Ysr2 ./ Yi  .* Yb;
   clear Ysr2; 
   
   
   %% intensity normalisation
-  [T3th,T3sd,T3md] = kmeans3D(Ymi((Ym(:)>0)),5);  %#ok<ASGLU>
+  [T3th,T3sd,T3md] = kmeans3D(Ymi(Yb(:)),5);  %#ok<ASGLU>
   Tth.T3thx  = [T3th(1)-diff(T3th(1:2:3)) T3th(1:2:5) T3th(5)+diff(T3th(3:2:5))];
   Tth.T3th   = 0:1/3:4/3;
-  Ymi = cat_main_gintnormi(Ymi/3,Tth);
+  Ymi = cat_main_gintnormi(Ymi/3,Tth) .* Yb;
+  
+  Ymsk = cat_vol_morph(Yb & Ymi>0.45 & Ymi<0.95,'do',1); 
+  tx = kmeans3D(Ymi(Ymsk(:)),1); T3th(3) = mean(tx);
+  Ymsk = cat_vol_morph(Yb & Ymi>0.9 & Ymi<1.1,'do',1.5); 
+  tx = kmeans3D(Ymi(Ymsk(:)),1); T3th(5) = mean(tx);
+  
+  Tth.T3thx  = [T3th(1)-diff(T3th(1:2:3)) T3th(1:2:5) T3th(5)+diff(T3th(3:2:5))];
+  Ymi = cat_main_gintnormi(Ymi/3,Tth) .* Yb;
+  
   
   
   %% remove of high intensity structures
