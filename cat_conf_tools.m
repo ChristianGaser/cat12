@@ -1621,7 +1621,8 @@ return;
 %_______________________________________________________________________
 function cdep = vfiles_headtrimming(job)
 job.returnOnlyFilename = 1; 
-vf = cat_vol_headtrimming(job); 
+%vf = cat_vol_headtrimming(job); 
+vf = job; 
 cdep = cfg_dep;
 
 if isfield(vf.image_selector,'manysubjects')
