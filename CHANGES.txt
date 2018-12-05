@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1401 | dahnke | 2018-12-04 23:34:48
+r1402 | dahnke | 2018-12-05 17:11:27
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+
+(1) Fixed:  Corrected bug in batch mode of the trimming tool.  
+------------------------------------------------------------------------
+r1401 | dahnke | 2018-12-04 23:36:50 +0100 (Di, 04 Dez 2018) | 19 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -18,6 +26,7 @@ M       cat_main_updateSPM.m
 (3) Fixed:      Corrected bugs in cat_io_report.
 (4) Changed:    Activate rewritten LAS routine in cat_main.
 (5) Changed:    Updated cat_main_kamap cleanup calls.
+
 
 ------------------------------------------------------------------------
 r1400 | gaser | 2018-12-03 17:06:50 +0100 (Mo, 03 Dez 2018) | 13 lines
