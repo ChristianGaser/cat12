@@ -233,15 +233,19 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th)
 
   
   %% cutting parameter
-  %  This is maybe a nice parameter to control the CSF masking.
-  %  And even better we can use a surface to find the optimal value. :)
-  cutstr    = 1.0; % 0.85; 
+  %  This is a nice parameter to control the CSF masking.
+  %  The default value of 0.5 which works best for validation data.
+  %  However, by setting the value to 1 we can also use a surface to find the 
+  %  optimal value, which is currently not stable enough.
+  cutstr    = 0.5; 
   cutstrs   = linspace(0.05,0.95,4); % 0.05,0.35,0.65,0.95]; 
   cutstrval = nan(1,4); 
   if debug, cutstrsa = zeros(0,8); end
   Ysrc2 = (Ysrc>T3th(1)) .* (abs(Ysrc - T3th(1))/(T3th(2) - T3th(1))) + ...
           (Ysrc<T3th(1)) .* (abs(Ysrc - T3th(1))/(T3th(1) - BGth)) ;
-        Ysrc2 = smooth3(Ysrc2);
+  Ysrc2 = smooth3(Ysrc2);
+  
+  % automatical estimation of cutting parameter is currently not stable enough!
   if cutstr == 1 % auto
     for l=1:5
       for i=1:numel(cutstrs)
