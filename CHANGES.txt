@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1405 | gaser | 2018-12-13 22:45:18
+r1406 | gaser | 2018-12-13 23:36:23
+
+Changed paths:
+M       CHANGES.txt
+M       cat_plot_boxplot.m
+
+Fixed: Solved issues with boxplot tool and TickLabelInterpreter.
+------------------------------------------------------------------------
+r1405 | gaser | 2018-12-13 22:45:37 +0100 (Do, 13 Dez 2018) | 155 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -155,6 +163,7 @@ M       html/cat_orthogonality.html
 
 Changed: Updated information about design orthogonality in online help
 and manual.  
+
 ------------------------------------------------------------------------
 r1404 | gaser | 2018-12-13 13:58:05 +0100 (Do, 13 Dez 2018) | 23 lines
 
