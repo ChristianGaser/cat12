@@ -50,24 +50,21 @@
         approach is to use global scaling with TIV. Apply the following settings for this approach: 
         <ul>
           <li>Global calculation -> User -> Global values <- Define the TIV values here</li>
-          <li>Global normalisation -> Overall grand mean scaling -> Yes -> Grand mean scaled value -> Define here the mean TIV of your sample or (or as approximation a value of 1500 which might fit for the majority of data from adults)</li>
-          <ul>
-            <li>Approach 1 (for all models): Normalization -> Proportional</li>
-            <li>Approach 2 (for all models with more than one group): Normalization -> ANCOVA</li>
-          </ul>
+          <li>Global normalisation -> Overall grand mean scaling -> Yes -> Grand mean scaled value -> Define here the mean TIV of your sample (or as approximation a value of 1500 which might fit for the majority of data from adults)</li>
+          <li>Normalization -> Proportional</li>
         </ul>
       </p>
       <p>
-        Approach 1 is (proportionally) scaling the data according to the individual TIV values. Instead of removing variance explained by TIV all data are scaled by their TIV values. This is also similar to the approach that was used in VBM8 (''modulate for non-linear effects only''), where global scaling was internally used with an approximation of TIV (e.g. inverse of affine scaling factor). This approach can be used for all models including multiple regressions with one group.
-      </p>
-      <p>
-        Approach 2 is using TIV as nuisance parameter with separate columns for each group. The values for the nuisance parameters are here mean-centered for each group. As the mean values for TIV are corrected separately for each group, it is prevented that group differences in TIV have a negative impact on the group comparison of the image data in the GLM. Variance explained by TIV is here removed separately for each group. Please note that this approach is also equivalent to the use of TIV as nuisance parameter with interaction and mean centering with factor ''Äúgroup''Äù. The design also results in separate columns for TIV, which are mean-corrected for each group.
-      </p>
-      <p>
-        Unfortunately, a no clear advice for either of these two approaches can be given and the use of these approaches will also affect interpretation of your findings.
+        This approach is (proportionally) scaling the data according to the individual TIV values. Instead of removing variance explained by TIV all data are scaled by their TIV values. This is also similar to the approach that was used in VBM8  (''modulate for non-linear effects only''), where global scaling was internally used with an approximation of TIV (e.g. inverse of affine scaling factor).
       </p>
       <p>
         Please note that global normalization also affects the absolute masking threshold as your images are now scaled to the ''Grand mean scaled value'' of the Global Normalization option. If you have defined the mean TIV of your sample (or an approximate value of 1500) here, no change of the absolute threshold is required. Otherwise, you will have to correct the absolute threshold because your values are now globally scaled to the ''Grand mean scaled value'' of the Global Normalization option.
+      </p>
+      <p>
+        An alternative approach for all models with more than one group should not be unmentioned. This is to use TIV as nuisance parameter with interaction and mean centering with factor ''group''. That approach will result in separate columns of TIV for each group. The values for the nuisance parameters are here mean-centered for each group. As the mean values for TIV are corrected separately for each group, it is prevented that group differences in TIV have a negative impact on the group comparison of the image data in the GLM. Variance explained by TIV is here removed separately for each group without affecting the differences between the groups.
+      </p>
+      <p>
+        Unfortunately, a no clear advice for either of these two approaches can be given and the use of these approaches will also affect interpretation of your findings.
       </p>
     </div>
 
