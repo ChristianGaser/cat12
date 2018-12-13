@@ -604,7 +604,8 @@ for i=1:qn
       xlim(gca,opt.xlim);
     end
   end
-  set(gca,'TickLabelInterpreter','none');
+  
+  try, set(gca,'TickLabelInterpreter','none'); end
 
   if ~isempty(opt.fontsize)
     set(gca,'FontSize',opt.fontsize);
