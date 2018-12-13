@@ -959,6 +959,14 @@ addvox.num      = [1 1];
 addvox.val      = {2};
 addvox.help     = {'Add # voxels around the original mask to avoid to hard masking.' ''};
 
+mask        = cfg_menu;
+mask.name   = 'Final masking with source image';
+mask.tag    = 'mask';
+mask.labels = {'Yes','No'};
+mask.values = {0,1};
+mask.val    = {1};
+mask.help  = {'Use source image for trimming and final masking (e.g. for skull-stripping in longitudinal pipeline).'};
+
 prefix.val      = {'trimmed_'};
 
 intlim1         = intlim;
@@ -989,9 +997,9 @@ headtrimming         = cfg_exbranch;
 headtrimming.tag     = 'datatrimming';
 headtrimming.name    = 'Image data trimming'; 
 if expert
-  headtrimming.val   = {timages prefix suffix intlim1 pth avg open addvox spm_type intlim};
+  headtrimming.val   = {timages prefix mask suffix intlim1 pth avg open addvox spm_type intlim};
 else
-  headtrimming.val   = {timages pth spm_type};
+  headtrimming.val   = {timages prefix mask pth spm_type};
 end
 headtrimming.prog    = @cat_vol_headtrimming;
 headtrimming.vout    = @vfiles_headtrimming;

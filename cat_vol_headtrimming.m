@@ -43,8 +43,9 @@ function varargout = cat_vol_headtrimming(job)
   %def.image_selector.manysubjects.simages = {};   % GUI input data structure 2
   %def.image_selector.manysubjects.oimages = {{}}; % GUI input data structure 2
   def.images  = {{}};                 % internal data structure 
-  %def.resdir  = '';                   % other result directory
+  %def.resdir  = '';                  % other result directory
   def.prefix  = 'trimmed_';           % add prefix to filename (SPM standard)
+  def.mask    = 0;                    % final masking with source image
   def.suffix  = '';                   % add suffix to filename
   def.addvox  = 2;                    % add some voxels around the mask
   def.pth     = 0.4;                  % default threshold for masking with bg=0 and object~1 
@@ -187,6 +188,9 @@ function varargout = cat_vol_headtrimming(job)
       Y = Y + single(spm_read_vols(V(di))); 
     end
     Y = Y ./ max(1,min(numel(V,job.avg)));
+    
+    if job.mask, Ymask = Y > 0; end
+    
     vx_vol  = sqrt(sum(V(1).mat(1:3,1:3).^2)); 
     [Y,hth] = cat_stat_histth(smooth3(Y),job.range1,0); 
     Y = (Y - hth(1)) ./ abs(diff(hth));
@@ -224,6 +228,9 @@ function varargout = cat_vol_headtrimming(job)
       % create ouput
       Vo(di) = spm_vol(P{1}); 
       Yo = single(spm_read_vols(Vo(di)));
+
+      if job.mask, Yo = Yo.*Ymask; end
+
       Yo = cat_vol_resize(Yo,'reduceBrain',vx_vol,job.addvox,Yb); 
       Vo(di).mat = spm_matrix(mati);
       Vo(di).dim = redB.sizeTr;
