@@ -189,20 +189,21 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
         reg(regstri).opt.resfac      = (tempres/2 : -reg(regstri).opt.stepsize : tempres) / tempres; % reduction factor 
       elseif job.extopts.regstr(regstri)==6
         %%
-        reg(regstri).opt.nits      = 24;;                   % registration interation (shooting default = 24)
+        reg(regstri).opt.nits      = 512;;                   % registration interation (shooting default = 24)
         reg(regstri).opt.ll1th     = 0.0001;                 % smaller better/slower
         reg(regstri).opt.ll3th     = 0.0005;                 % smaller better/slower 
         %reg(regstri).opt.resfac    =  [4 3 2 1.5 1] ; 
         %reg(regstri).opt.resfac    =  [1 1 1 1 1]*1.5; 
+        reg(regstri).opt.resfac    =  [2 2 2.5/1.5 2/1.5 1]; 
         %reg(regstri).opt.resfac    =  [2 2 2 2 2]; 
-        %reg(regstri).opt.resfac    =  [3 3 3 3 3]; 
         %reg(regstri).opt.resfac    =  [4 4 4 3 2]; % n?
-        reg(regstri).opt.resfac    =  [4 4 3 2 1]; % 
+        %reg(regstri).opt.resfac    =  [4 4 3 2 1]; % 
         %reg(regstri).opt.resfac    =  [4 4 4 4 2]; % 
         %reg(regstri).opt.resfac    =  [4 4 4 4 4];
         %reg(regstri).opt.resfac    =  [5 5 5 5 5]; % not good
         %reg(regstri).opt.resfac    =  [6 6 6 6 6]; % not good
         %reg(regstri).opt.resfac    =  [3 2.5 2 1.5 1]; 
+        %reg(regstri).opt.resfac    =  [2 1.75 1.5 1.25 1]; 
         %reg(regstri).opt.stepsize  = (lowres - reg(regstri).opt.rres)/4;  % stepsize of reduction 
         reg(regstri).opt.rres      =  reg(regstri).opt.resfac(end) * tempres;
         %reg(regstri).opt.resfac    =  max(reg(regstri).opt.resfac,reg(regstri).opt.rres)  / reg(regstri).opt.rres; 
@@ -637,8 +638,8 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
  %R=res.Affine;
           spm_progress_bar('Init',nits,'Shooting progress','iterations')
     
-          prm2 = 1; it = 1; itd = 1; reg(regstri).dtc = zeros(1,5); ll  = zeros(1,3);
-          while it<=nits || (prm2>1.1 && ll(3)>0.1 && (it<=nits*1.1 || prm2>(3+it/nits) ) )
+          prm2 = 1; it = 1; itd = 1; reg(regstri).dtc = zeros(1,5); ll  = zeros(1,2);
+          while it<=nits || (prm2>1.1 && (it<=nits*1.1 || prm2>(3+it/nits) ) )
   
             itime = clock;
             if it==nits+1, cat_io_cprintf([.2 .2 1],'Stoppage time!\n'); end
@@ -822,19 +823,19 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
 
             if 1 %ti<0
               if job.extopts.regstr(regstri)==4 
-                [txt,u,ll(1),ll(2),ll(3)] = evalc('spm_shoot_update(g,f,u,y,dt,prm,sd.bs_args,sd.scale)');  %#ok<ASGLU>
+                [txt,u,ll(1),ll(2)] = evalc('spm_shoot_update(g,f,u,y,dt,prm,sd.bs_args,sd.scale)');  %#ok<ASGLU>
                 [y,J] = spm_shoot3d(u,prm,int_args); 
                 dt = spm_diffeo('det',J); clear J
               else
                 for i = 1%:max(1,round( (6 - tmpl_no(it))^2 / (1 * 5) ))
-                  [txt,u,ll(1),ll(2),ll(3)] = evalc('spm_shoot_update(g,f,u,y,dt,prm,sd.bs_args,sd.scale)');  %#ok<ASGLU>
+                  [txt,u,ll(1),ll(2)] = evalc('spm_shoot_update(g,f,u,y,dt,prm,sd.bs_args,sd.scale)');  %#ok<ASGLU>
                   [y,J] = spm_shoot3d(u,prm,int_args); 
                   dt = spm_diffeo('det',J); clear J                 
                 end
               end
               if job.extopts.verb
-                cat_io_cprintf(pcol,sprintf('%7.4f%8.4f%8.4f%8.4f', ...
-                  ll(1)/numel(u), ll(2)/numel(u), (ll(1)+ll(2))/numel(u), ll(3))); % * prod(vxreg)
+                cat_io_cprintf(pcol,sprintf('%7.4f%8.4f%8.4f', ...
+                  ll(1)/numel(u), ll(2)/numel(u), (ll(1)+ll(2))/numel(u))); % * prod(vxreg)
                 if isfield(job,'export') && job.export
                   cat_io_cprintf(pcol,...
                     sprintf(' |%6.2f%7.2f | %7.4f%8.4f%8.4f%8.4f%8.4f%8.4f', prm2, sd.sched(min(nits,it)) * prm2 , prm(4:end) ));
@@ -843,7 +844,7 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
                
               %%
               wc  = 0; maxsubiter = 5;
-              dtm = ( 20 + max(0,min(80,60 * it./nits)) ) * tempres2(ti); 
+              dtm = ( 10 + max(0,min(40,40 * it./nits)) ) * tempres2(ti); 
               while job.extopts.regstr(regstri)~=4 && wc<=maxsubiter && ... %(it + min(nits/10,20))<nits && ...
                   ( any(~isfinite(dt(:))) || any(dt(:)>dtm) || any(dt(:)<1/dtm) )
                 fprintf('.'); 
@@ -861,23 +862,23 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
 if job.extopts.regstr(regstri)==6
                 mxu = max(1,min(dtm,2.^( (3 - wc) ))); %mxu = (1.3).^(11 - wc); % dieser Wert war zu stark bei hohen Iterationen!
                 for i=1:3  
-                  if tmpl_no(min(it,nits))<tmpl_no(end)
-                    u(:,:,:,i) = cat_vol_smooth3X(u(:,:,:,i),0.5 + ti./nits);
+                  if 1%tmpl_no(min(it,nits))<tmpl_no(end)
+                    u(:,:,:,i) = cat_vol_smooth3X(u(:,:,:,i),1 - ti./nits);% 0.5 + ti./nits);
                   end
                   u(:,:,:,i) = ( cat_vol_laplace3R(u(:,:,:,i) / mxu - min(min(min(u(:,:,:,i)))) / mxu,...
-                    true(size(dt)) , 0.4) + min(min(min(u(:,:,:,i)))) / mxu ) * mxu;
+                    true(size(dt)) , 0.2) + min(min(min(u(:,:,:,i)))) / mxu ) * mxu;
                 end
 end
 
                 %% update parameter
-                prm2 = min(12,max(1 , prm2 * 2 ) ); 
+                prm2 = min(48,max(1 , prm2 * 2 ) ); 
                 prm(4:end) = min(sd.rparam * sd.sched(1),prm(4:end) * prm2); 
                
                 [y,J] = spm_shoot3d(u,prm,int_args);  %#ok<ASGLU>
                 dt = spm_diffeo('det',J); clear J     %#ok<NASGU>
                 
                 % reprocess this iteration
-                [txt,u,ll(1),ll(2),ll(3)] = evalc('spm_shoot_update(g,f,u,y,dt,prm,sd.bs_args,sd.scale)');  %#ok<ASGLU>
+                [txt,u,ll(1),ll(2)] = evalc('spm_shoot_update(g,f,u,y,dt,prm,sd.bs_args,sd.scale)');  %#ok<ASGLU>
                 [y,J] = spm_shoot3d(u,prm,int_args); 
                 dt = spm_diffeo('det',J); clear J txt
 
@@ -887,8 +888,7 @@ end
                     lll = ll; 
                   else
                     if  (lll(1) - ll(1))/numel(u)<0.01 && ...
-                        (lll(2) - ll(2))/numel(u)<0.01 && ...
-                        (lll(3) - ll(3))<0.05 && ll(3)<0.2 
+                        (lll(2) - ll(2))/numel(u)<0.01 
                       it = max(it+1,find([tmpl_no,nits]>tmpl_no(it),1,'first')); 
                       reg(regstri).ll(ti,1:4) = [ll(1)/numel(dt) ll(2)/numel(dt) (ll(1)+ll(2))/numel(dt) ll(2)]; 
                       reg(regstri).dtc(ti) = mean(abs(dt(:)-1)); 
@@ -905,8 +905,7 @@ end
               % accelelerate processing     
               if job.extopts.regstr(regstri)~=4  && ...
                  (llo(1) - ll(1))/numel(u)<0.005 && ...
-                 (llo(2) - ll(2))/numel(u)<0.005 && ...
-                 (llo(3) - ll(3))<0.01 && ll(3)<0.2 %&& ...
+                 (llo(2) - ll(2))/numel(u)<0.005 
                  %tmpl_no(it) < max(tmpl_no)
                 fprintf('+');
                 if prm2<1
@@ -916,15 +915,15 @@ end
                 end
               elseif wc==0 && ...
                 ~(it==1 || (tmpl_no(min(nits,it))~=tmpl_no(min(nits,it)-1))) && ...
-                ( (llo(3) - ll(3))<-0.01 || any(dt(:)>dtm*0.66) || any(dt(:)<1/(dtm*0.66)) ) 
+                ( any(dt(:)>dtm*0.66) || any(dt(:)<1/(dtm*0.66)) ) 
                   fprintf('-');
                 if 0 && (any(dt(:)>dtm*0.9) || any(dt(:)<1/(dtm*0.9)) ) 
                   for i=1:3  
                     spm_smooth(u(:,:,:,i),u(:,:,:,i),2*[1 1 1]); %./vxreg)
                   end
-                  prm2 = min(12,max(1 , prm2 * 1.5 ) ); 
+                  prm2 = min(120,max(1 , prm2 * 1.5 ) ); 
                 else                  
-                  prm2 = min(12,max(1 , prm2 * 1.25 ) ); 
+                  prm2 = min(120,max(1 , prm2 * 1.25 ) ); 
                 end
               end
               
@@ -1009,10 +1008,9 @@ end
 
             % avoid unneccessary iteration
             if job.extopts.regstr(regstri)>0 && job.extopts.regstr(regstri)~=4 && job.extopts.regstr(regstri)~=6 && ...
-               ll(1)<0.1 && ll(3)<0.15 && ...
-                (abs(llo(1)-ll(1))/numel(u)<0.0001 && abs(llo(2)-ll(2))/numel(u)<0.0001 && abs(llo(3)-ll(3))<0.001 && ll(3)<0.1) && ...
+               ll(1)<0.1 && ...
+                (abs(llo(1)-ll(1))/numel(u)<0.0001 && abs(llo(2)-ll(2))/numel(u)<0.0001 && ...
                 ( ti>1 || (ti==1 && ll(1)/numel(u)<1 && ll(1)/max(eps,llo(1))<1 && ll(1)/max(eps,llo(1))>(1-0.01) )) && ...
-                ( ll(3)<reg(regstri).opt.ll3th(ti) || ...
                 ( ll(1)/numel(u)<1 && ll(1)/max(eps,llo(1))<1 && ll(1)/max(eps,llo(1))>(1-reg(regstri).opt.ll1th) ))
               it = max(it+1,find([tmpl_no,nits]>tmpl_no(it),1,'first')); 
               reg(regstri).ll(ti,1:4) = [ll(1)/numel(dt) ll(2)/numel(dt) (ll(1)+ll(2))/numel(dt) ll(2)]; 
@@ -1072,9 +1070,9 @@ end
           end
          
           if dreg.rigidShooting
-            yi  = spm_diffeo('invdef',y,idim,inv(M1t\res.Affine*M0),eye(4));  % output yi in anatomical resolution 
-          else 
             yi  = spm_diffeo('invdef',yid,idim,inv(M1t\R*M0),eye(4));           % output yi in anatomical resolution 
+          else 
+            yi  = spm_diffeo('invdef',yid,idim,inv(M1t\res.Affine*M0),eye(4));  % output yi in anatomical resolution 
           end
           dt2 = spm_diffeo('def2det',yid); if ~debug, clear yid; end  
           
@@ -1389,8 +1387,12 @@ function lin = combine_linear_spline(lin,spl,mat,k1)
   
   % create mask that include to good non-linear interpolated values and
   % avoid the values close to the image edge.
-  vx_vol = sqrt(sum(mat(1:3,1:3).^2));     
-  mskidv = mskid(spl,abs(vx_vol(1)/2)); % amout of interpolation * 2 (inverse becuase of reduction)
+  vx_vol = sqrt(sum(mat(1:3,1:3).^2));    
+  try
+    mskidv = mskid(spl,abs(vx_vol(1)/2)); % amout of interpolation * 2 (inverse becuase of reduction)
+  catch
+    mskidv = [1 size(spl,1) 1 size(spl,2) 1 size(spl,3)]; 
+  end
   msk = false(size(spl)); 
   msk(mskidv(1):mskidv(2),mskidv(3):mskidv(4),mskidv(5):mskidv(6)) = true; 
   

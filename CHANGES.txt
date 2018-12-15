@@ -1,11 +1,34 @@
 ------------------------------------------------------------------------
-r1406 | gaser | 2018-12-13 23:36:23
+r1407 | dahnke | 2018-12-15 20:57:44
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_main_kamap.m
+M       cat_main_registration.m
+M       cat_main_registration2.m
+M       cat_run_job.m
+M       cat_run_job_APP_init.m
+M       cat_run_job_APP_init1070.m
+
+(1) Changed:    Updated handling of cat_main_clean_gwc in cat_main.
+                Removed uncomment code of old LAS call. 
+(2) Fixed:      Corrected bugs in cat_main_kamap. 
+(3) Fixed:      Corrected bug of affine handling in cat_main_registration(2).
+(4) New:        Added try-catch block for APP preprocessing with simple test
+                and backup routine in case of errors including visual warning.
+(5) Fixed:      Corrected problems with high intensity background (MP2RAGE) in 
+                cat_run_job_APP_init(1070).
+                
+------------------------------------------------------------------------
+r1406 | gaser | 2018-12-13 23:36:31 +0100 (Do, 13 Dez 2018) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_plot_boxplot.m
 
 Fixed: Solved issues with boxplot tool and TickLabelInterpreter.
+
 ------------------------------------------------------------------------
 r1405 | gaser | 2018-12-13 22:45:37 +0100 (Do, 13 Dez 2018) | 155 lines
 
