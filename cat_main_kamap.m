@@ -60,7 +60,7 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,job,res,vx_vol,stime2)
   [Ymic,th] = cat_stat_histth(Ym,0.98); 
   Ym(isnan(Ym) | Ym>(th(2) + diff(th)*2)) = 0;
   [T3th,T3sd,T3md] = kmeans3D(Ymic((Ym(:)>0)),5); clear Ymic;  %#ok<ASGLU>
-  if T3md(end)<0.1, T3th(end)=[]; end
+  if T3md(end)<0.08, T3th(end)=T3th(end-1); end
   Ym = (Ysrc - th(1)) ./ (T3th(end) - th(1)); 
   Tth.T3thx  = [T3th(1)-diff(T3th(1:2:3)) T3th(1:2:5) T3th(5)+diff(T3th(3:2:5))];
   Tth.T3th   = 0:1/3:4/3;
@@ -88,7 +88,7 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,job,res,vx_vol,stime2)
   %% bias correction for white matter (Yw) and ventricular CSF areas (Yv)
   Yw  = Yb & Ymi>0.9 & Ymi<1.5; Yw(smooth3(Yw)<0.6) = 0; Yw(smooth3(Yw)<0.6) = 0;
   %Yg  = Ym<0.95 & Ym>0.45 & Yb; Yg(smooth3(Yg)<0.4) = 0; Yg(smooth3(Yg)<0.6) = 0; % not used?
-  Yv  = Yb & Ymi<0.4 & Yb; Yv  = cat_vol_morph(Yv,'e',2); 
+  Yv  = Yb & Ymi<0.4 & Yb; Yv  = cat_vol_morph(Yv,'e',4); 
   
   %% estimate value vth to mix CSF and WM information
   Yvw = cat_vol_smooth3X(Yv,6)>0.05 & cat_vol_morph(Yw,'e',2); 
@@ -112,19 +112,20 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,job,res,vx_vol,stime2)
   Yi   = cat_vol_smooth3X(Yi,4); 
   Ysr2 = Ysrc ./ (Yi ./ median(Yi(Yw(:))));
   Ymi  = Ysr2 ./ Yi  .* Yb;
-  clear Ysr2; 
+  clear Ysr2 Yi; 
   
   
   %% intensity normalisation
   [T3th,T3sd,T3md] = kmeans3D(Ymi(Yb(:)),5);  %#ok<ASGLU>
   Tth.T3thx  = [T3th(1)-diff(T3th(1:2:3)) T3th(1:2:5) T3th(5)+diff(T3th(3:2:5))];
   Tth.T3th   = 0:1/3:4/3;
-  Ymi = cat_main_gintnormi(Ymi/3,Tth) .* Yb;
-  
-  Ymsk = cat_vol_morph(Yb & Ymi>0.45 & Ymi<0.95,'do',1); 
-  tx = kmeans3D(Ymi(Ymsk(:)),1); T3th(3) = mean(tx);
-  Ymsk = cat_vol_morph(Yb & Ymi>0.9 & Ymi<1.1,'do',1.5); 
-  tx = kmeans3D(Ymi(Ymsk(:)),1); T3th(5) = mean(tx);
+  Ymi2 = cat_main_gintnormi(Ymi/3,Tth) .* Yb;
+  %%
+  Ymsk = cat_vol_morph(Yb & Ymi2>0.45 & Ymi2<0.95,'do',1); 
+  tx = kmeans3D(Ymi2(Ymsk(:)),1); T3th(3) = mean(tx);
+  Ymsk = cat_vol_morph(Yb & Ymi2>0.9 & Ymi2<1.1,'do',1.5); 
+  tx = kmeans3D(Ymi2(Ymsk(:)),1); T3th(5) = mean(tx);
+  clear Ymi2;
   
   Tth.T3thx  = [T3th(1)-diff(T3th(1:2:3)) T3th(1:2:5) T3th(5)+diff(T3th(3:2:5))];
   Ymi = cat_main_gintnormi(Ymi/3,Tth) .* Yb;

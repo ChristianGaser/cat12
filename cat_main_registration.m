@@ -850,9 +850,9 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
           end
          
           if rigidShooting
-            yi  = spm_diffeo('invdef',y,idim,inv(M1t\res.Affine*M0),eye(4));  % output yi in anatomical resolution 
-          else 
             yi  = spm_diffeo('invdef',yid,idim,inv(M1t\R*M0),eye(4));           % output yi in anatomical resolution 
+          else 
+            yi  = spm_diffeo('invdef',yid,idim,inv(M1t\res.Affine*M0),eye(4));  % output yi in anatomical resolution 
           end
           dt2 = spm_diffeo('def2det',yid); if ~debug, clear yid; end  
           

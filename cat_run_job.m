@@ -391,12 +391,26 @@ function cat_run_job(job,tpm,subj)
           % ds('l2','',vx_vol,Ym, Yt + 2*Ybg,obj.image.private.dat(:,:,:)/WMth,Ym,60)
           if job.extopts.APP == 1070 || job.extopts.APP == 1144
             stime = cat_io_cmd('APP: Rough bias correction'); 
-            if job.extopts.APP == 1070 
-              [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init1070(single(obj.image.private.dat(:,:,:)),vx_vol,job.extopts.verb); %#ok<ASGLU>
-            else % new version R1144
-              [Ym,Yt,Ybg,WMth,bias,Tth,ppe.APPi] = cat_run_job_APP_init(...
-                single(obj.image.private.dat(:,:,:)),vx_vol,struct('verb',job.extopts.verb,'APPstr',job.opts.biasstr));  %#ok<ASGLU>
+            try
+              Ysrc  = single(obj.image.private.dat(:,:,:)); 
+              if job.extopts.APP == 1070 
+                [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init1070(Ysrc,vx_vol,job.extopts.verb); %#ok<ASGLU>
+              else % new version R1144
+                [Ym,Yt,Ybg,WMth,bias,Tth,ppe.APPi] = cat_run_job_APP_init(...
+                  Ysrc,vx_vol,struct('verb',job.extopts.verb,'APPstr',job.opts.biasstr));  %#ok<ASGLU>
+              end
+            catch %apperr
+              %% very simple affine preprocessing ... only simple warning
+              cat_io_cprintf('warn',sprintf('WARNING: APP failed. Use simple scaling.\n'));
+              [Ym,Yt,Ybg,WMth] = APPmini(obj,VF); %#ok<ASGLU>
             end
+            APPRMS = checkAPP(Ym,Ysrc); 
+            if APPRMS>1000 
+              error('cat_run_job:error',[... 
+                'Detect problems in APP preprocessing (APPRMS: %0.2f). ' ...
+                'Try to turn of APP preprocessing and send us the error. '],APPRMS);
+            end 
+        
             if ~debug, clear Yt; end
 
             stime = cat_io_cmd('Affine registration','','',1,stime); 
@@ -489,10 +503,12 @@ function cat_run_job(job,tpm,subj)
           clear VG1 VF1
          
         else
-          [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init1070(single(obj.image.private.dat(:,:,:)),vx_vol,job.extopts.verb); %#ok<ASGLU>
+          VF = spm_vol(obj.image(1));
+          [Ym,Yt,Ybg,WMth] = APPmini(obj,VF); %#ok<ASGLU>
+          %[Ym,Yt,Ybg,WMth] = cat_run_job_APP_init1070(single(obj.image.private.dat(:,:,:)),vx_vol,job.extopts.verb); %#ok<ASGLU>
           if ~debug, clear Yt; end
         end
-
+            
         
         
         %% Lesion masking as zero values of the orignal image (2018-06):
@@ -728,3 +744,32 @@ function cat_run_job(job,tpm,subj)
     %%
 return
 %=======================================================================
+function [Ym,Yt,WMth,Ybg] = APPmini(obj,VF)
+%% very simple affine preprocessing
+
+  Ysrc = single(obj.image.private.dat(:,:,:));  
+  VF0  = cat_spm_smoothto8bit(VF,0.1);
+  Ym   = single(VF0.dat)/200; clear VG0
+  Yt   = cat_vol_morph(Ym>cat_stat_nanmean(Ym(:)>0.5),'l',[100 1000])>0.5;
+  WMth = kmeans3D( Ysrc(Yt(:)) , 1); 
+  Ybg  = cat_vol_morph(Ym<0.2,'l',[100 1000]);
+return
+function APP_RMSE = checkAPP(Ym,Ysrc) 
+%% check Ym
+
+  % avoid division by zeros
+  Ym   = Ym   + min(Ym(:));
+  Ysrc = Ysrc + min(Ysrc(:)); 
+  
+  % normalized gradient maps
+  Ygm = cat_vol_grad(Ym)   ./ Ym;     
+  Ygs = cat_vol_grad(Ysrc) ./ Ysrc;
+
+  % correct high values
+  Ymsk = true(size(Ym) ); Ymsk(10:end-9,10:end-9,10:end-9) = 0;  
+  Ygm( Ygm>199 | Ymsk ) = 0; 
+  Ygs( Ygs>100 | Ymsk ) = 0;
+  
+  % general error
+  APP_RMSE = cat_stat_nanmean( ( Ygm(:) - Ygs(:) ).^2 )^0.5;
+return

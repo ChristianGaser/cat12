@@ -125,7 +125,7 @@ if ~isfield(res,'spmpp')
                    cat_vol_ctype(Yb2.*Yp0toC(Ym*3,3)*255),...
                    cat_vol_ctype(Yb2.*Yp0toC(min(3,Ym*3),1)*255));
       
-      prob = cat_main_clean_gwc(prob,1);
+      prob = cat_main_clean_gwc(prob,1,1);
       
       for ci=1:3, Ycls{ci} = prob(:,:,:,ci); end; 
       clear prob;  
@@ -231,11 +231,7 @@ if ~isfield(res,'spmpp')
       [Ymi,Ym,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extoptsLAS2); % use Yclsi after cat_vol_partvol
     else
       stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
-      %if job.extopts.new_release
-        [Ymi,Ym,Ycls] = cat_main_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
-      %else
-      %  [Ymi,Ym,Ycls] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
-      %end
+      [Ymi,Ym,Ycls] = cat_main_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
     end
     fprintf('%5.0fs\n',etime(clock,stime));
 
@@ -400,12 +396,18 @@ if ~isfield(res,'spmpp')
   %     Yp0   = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
   %  -------------------------------------------------------------------
   if job.extopts.cleanupstr>0
-    if job.extopts.cleanupstr < 2 % use cleanupstr==2 to use only the old cleanup
+     
+    if isfield(job.extopts,'spm_kamap')
+      prob = cat_main_clean_gwc(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol)),1); % new cleanup
+    elseif job.extopts.cleanupstr < 2 % use cleanupstr==2 to use only the old cleanup
       prob = cat_main_clean_gwc(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol))); % default cleanup
+    else
+      prob = cat_main_clean_gwc(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol)),0); % old cleanup
+    end
+    if job.extopts.cleanupstr < 2 % use cleanupstr==2 to use only the old cleanup
       [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1(indx,indy,indz),... 
         Ymo(indx,indy,indz),job.extopts,job.inv_weighting,vx_vol,indx,indy,indz); % new cleanup
     else
-      prob = cat_main_clean_gwc(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol)),0); % old cleanup
       for i=1:3, Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i); end
       Yp0b = Yb(indx,indy,indz); 
     end
