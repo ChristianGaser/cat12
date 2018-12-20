@@ -930,10 +930,15 @@ function H = select_results(sel)
 %-----------------------------------------------------------------------
 global H
 
+clearDataCursorPlot(H)
+
 H.S{1}.name = H.S1.name(sel, :);
 H.S{2}.name = H.S2.name(sel, :);
 H.S{1}.Y = H.S1.Y(:, sel);
 H.S{2}.Y = H.S2.Y(:, sel);
+
+H.S{1}.info = cat_surf_info(H.S{1}.name, 0);
+H.S{2}.info = cat_surf_info(H.S{2}.name, 0);
 
 % check whether data for left or right hemipshere are all non-zero
 ind1 = find(H.S{1}.Y(:) ~= 0);
@@ -2031,13 +2036,22 @@ switch H.cursor_mode
         end
         
         SPM_found = 1;
-        for i = 1:2
+        for i = 1:(2-H.merged)
             SPM_name = fullfile(H.S{i}.info(1).pp, 'SPM.mat');
             
             % SPM.mat exist?
             if exist(SPM_name, 'file')
                 load(SPM_name);
+
+                % if analysis was moved we have to correct header structure
+                SPM.VResMS = spm_data_hdr_read(fullfile(H.S{i}.info(1).pp,SPM.VResMS.fname));
+                Vbeta = spm_data_hdr_read(fullfile(H.S{i}.info(1).pp,SPM.Vbeta(1).fname));
+                for j=2:numel(SPM.Vbeta)
+                  Vbeta(j) = spm_data_hdr_read(fullfile(H.S{i}.info(1).pp,SPM.Vbeta(j).fname));
+                end
+                SPM.Vbeta = Vbeta;
                 H.SPM{i} = SPM;
+
                 if i == 1
                     H.Ic = spm_input('Which contrast?', 1, 'm', {SPM.xCon.name});
                     str = 'predicted or adjusted values?';
