@@ -408,7 +408,7 @@ function cat_run_job(job,tpm,subj)
             if APPRMS>1000 
               error('cat_run_job:error',[... 
                 'Detect problems in APP preprocessing (APPRMS: %0.2f). ' ...
-                'Try to turn of APP preprocessing and send us the error. '],APPRMS);
+                'Try to turn off APP preprocessing and send us the error. '],APPRMS);
             end 
         
             if ~debug, clear Yt; end
