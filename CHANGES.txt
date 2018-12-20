@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1407 | dahnke | 2018-12-15 20:57:44
+r1408 | gaser | 2018-12-20 16:04:45
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_run_job.m
+M       cat_surf_results.m
+M       html/cat.html
+
+Fixed: Data display was not working for Displaying surface results if analysis
+folder was moved.
+ 
+------------------------------------------------------------------------
+r1407 | dahnke | 2018-12-15 20:58:05 +0100 (Sa, 15 Dez 2018) | 20 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -20,6 +33,7 @@ M       cat_run_job_APP_init1070.m
 (5) Fixed:      Corrected problems with high intensity background (MP2RAGE) in 
                 cat_run_job_APP_init(1070).
                 
+
 ------------------------------------------------------------------------
 r1406 | gaser | 2018-12-13 23:36:31 +0100 (Do, 13 Dez 2018) | 6 lines
 
