@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1408 | gaser | 2018-12-20 16:04:45
+r1409 | gaser | 2018-12-21 15:41:06
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+
+Changed: Updated CAT12 manual.
+------------------------------------------------------------------------
+r1408 | gaser | 2018-12-20 16:05:05 +0100 (Do, 20 Dez 2018) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +20,7 @@ M       html/cat.html
 Fixed: Data display was not working for Displaying surface results if analysis
 folder was moved.
  
+
 ------------------------------------------------------------------------
 r1407 | dahnke | 2018-12-15 20:58:05 +0100 (Sa, 15 Dez 2018) | 20 lines
 
