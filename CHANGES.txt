@@ -1,5 +1,26 @@
 ------------------------------------------------------------------------
-r1409 | gaser | 2018-12-21 15:41:06
+r1410 | gaser | 2019-01-04 17:19:14
+
+Changed paths:
+A  +    CAT12-Manual-Word-Old.docx
+        > moved from CAT12-Manual.docx
+D       CAT12-Manual.docx
+        > moved to CAT12-Manual-Word-Old.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       cat_long_main.m
+M       cat_surf_results.m
+M       html/cat.html
+
+(1) Fixed: Masking in longitudinal batch was not correctly set.
+(2) Changed: Switched to Google Docs for manual (bye bye Microsoft!).
+(3) Fixed: Corrected many bugs in cat_surf_results.m for plotting function
+    and recognition of 32k meshes. 
+(4) Changed: Added option to plot raw data in cat_surf_results.m. 
+(5) Changed: Updated CAT12 manual.
+------------------------------------------------------------------------
+r1409 | gaser | 2018-12-21 15:41:26 +0100 (Fr, 21 Dez 2018) | 7 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -7,6 +28,7 @@ M       CAT12-Manual.pdf
 M       CHANGES.txt
 
 Changed: Updated CAT12 manual.
+
 ------------------------------------------------------------------------
 r1408 | gaser | 2018-12-20 16:05:05 +0100 (Do, 20 Dez 2018) | 11 lines
 
