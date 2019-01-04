@@ -5,7 +5,7 @@ function y = cat_surf_results(action, varargin)
 % leftSurface  - a GIfTI filename/object or patch structure
 % rightSurface - a GIfTI filename/object or patch structure
 %
-% y            - adjusted or predicted response
+% y            - adjusted, predicted or raw response
 %_______________________________________________________________________
 % Christian Gaser
 % $Id$
@@ -356,14 +356,14 @@ switch lower(action)
                     % read meshes
                     H.S{ind}.info = cat_surf_info(H.S{ind}.name, 1);
                     
-                    if ~isempty(strfind(fileparts(H.S{ind}.info(1).Pmesh), '_32k'))
+                    if H.S{ind}.info(1).nvertices == 64984
                         H.str32k = '_32k';
                         H.is32k = 1;
                     else
                         H.str32k = '';
                         H.is32k = 0;
                     end
-                    
+
                     if strcmp(H.S{ind}.info(1).side, 'mesh')
                         meshes_merged = 1;
                         if ind == 1
@@ -1600,7 +1600,7 @@ n = size(P, 1);
 
 for i = 1:n
     
-    if ~isempty(strfind(fileparts(info(i).Pmesh), '_32k'))
+    if info(i).nvertices == 64984
         H.str32k = '_32k';
         H.is32k = 1;
     else
@@ -2031,6 +2031,7 @@ switch H.cursor_mode
             'DisplayStyle', 'datatip', 'Updatefcn', {@myDataCursorAtlas, H});
     case {4, 5}
         figure(H.figure(1))
+        
         try
             delete(findall(gca, 'Type', 'hggroup', 'HandleVisibility', 'off'));
         end
@@ -2053,9 +2054,13 @@ switch H.cursor_mode
                 H.SPM{i} = SPM;
 
                 if i == 1
-                    H.Ic = spm_input('Which contrast?', 1, 'm', {SPM.xCon.name});
-                    str = 'predicted or adjusted values?';
-                    H.predicted = spm_input(str, 2, 'b', {'predicted', 'adjusted'}, [1 0]);
+                    str = 'predicted, adjusted or raw values?';
+                    H.predicted = spm_input(str, 1, 'b', {'predicted', 'adjusted', 'raw'}, [1 0 -1]);
+                    
+                    % ask for contrast for predicted or adjusted data
+                    if H.predicted >= 0
+                        H.Ic = spm_input('Which contrast?', 2, 'm', {SPM.xCon.name});
+                    end
                 end
             elseif ~isempty(H.S{i}.name)
                 SPM_found = 0;
@@ -2149,13 +2154,13 @@ if plot_mean
             end
         end
     end
-    
+        
     % go through neg. effects if no node was found
-    if ~isempty(indn) & ~isempty(found_node)
+    if ~isempty(indn) & isempty(found_node)
         
         C = find_connected_component(A, dn);
         C = C(indn);
-        node_list2 = node_list(indp);
+        node_list2 = node_list(indn);
         
         for i = 1:max(C)
             N = find(C == i);
@@ -2167,15 +2172,18 @@ if plot_mean
                 break;
             end
         end
+        cstr = 'neg. ';
+    else
+        cstr = '';
     end
     
     if isempty(found_node)
         txt = {'Cursor outside of cluster'};
     else
         if cluster_side == 1
-            txt = {sprintf('lh: Cluster %d', cluster_number)};
+            txt = {sprintf('lh: Cluster %s%d', cstr, cluster_number)};
         else
-            txt = {sprintf('rh: Cluster %d', cluster_number)};
+            txt = {sprintf('rh: Cluster %s%d', cstr, cluster_number)};
         end
     end
 else
@@ -2211,37 +2219,71 @@ end
 cla(H.dataplot)
 hold(H.dataplot, 'on')
 
-set(H.dataplot, 'XColor', 1 - H.bkg_col, 'YColor', 1 - H.bkg_col);
+set(H.dataplot, 'XColor', 1 - H.bkg_col, 'YColor', 1 - H.bkg_col, 'GridColor',[0.5 0.5 0.5],...
+      'YGrid','on','GridColorMode','auto','Visible','on');
 
-h = bar(H.dataplot, cbeta);
-set(h, 'FaceColor', H.Col(2, :))
+if H.predicted >=0
+  ystr = 'contrast estimate';
+  h = bar(H.dataplot, cbeta);
+  set(h, 'FaceColor', H.Col(2, :))
+  
+  % standard error
+  %--------------------------------------------------------------
+  CI = CI / 2;
+  for j = 1:length(cbeta)
+      line([j j], ([CI(j) -CI(j)] + cbeta(j)), 'LineWidth', 6, 'Color', H.Col(3, :), 'Parent', H.dataplot)
+  end
+  set(H.dataplot, 'XLim', [0.4 (length(cbeta) + 0.6)], 'XTicklabel', '', 'XTick', [], 'YGrid','off')
 
-% standard error
-%--------------------------------------------------------------
-CI = CI / 2;
-for j = 1:length(cbeta)
-    line([j j], ([CI(j) -CI(j)] + cbeta(j)), 'LineWidth', 6, 'Color', H.Col(3, :), 'Parent', H.dataplot)
+else
+  ystr = 'raw data';
+  h = plot(H.dataplot, y);
+  set(h, 'Color', H.Col(3, :))
+  set(H.dataplot, 'XLim', [0 (length(y))], 'XTicklabel', '', 'XTick', [])
 end
 
-Ic = H.Ic;
+xX = H.SPM{1}.xX;
+iH = xX.iH;
+
+% plot group coding for Anovas with more than 1 group and native data
+if ~isempty(iH) & numel(iH)>1 & (H.predicted < 0) & isempty(xX.iB)
+    yl = get(H.dataplot,'YLim');
+    pcol = gray(numel(iH)+2);
+    for i=1:numel(iH)
+        ind_data = find(any(xX.X(:,xX.iH(i)),2));
+        
+        % plot only if ind_data is a continuous row
+        if all(diff(ind_data)==1)
+            line([min(ind_data)-0.5 max(ind_data)+0.5], [yl(1) yl(1)], 'LineWidth', 6, 'Color', pcol(i+1,:), 'Parent', H.dataplot)
+        end
+    end
+    
+end
+
 nm = H.S{1}.info(1).ff;
 
+Ic = [];
 % end with _0???.ext?
 if length(nm) > 4
     if strcmp(nm(length(nm) - 4:length(nm) - 3), '_0')
         Ic = str2double(nm(length(nm) - 3:length(nm)));
     end
+else
+  if isfield(H,'Ic')
+      Ic = H.Ic;
+  end
 end
 
-xlabel(H.dataplot, H.SPM{round(ind / 2)}.xCon(Ic).name, 'FontSize', H.FS(12), 'Color', 1 - H.bkg_col)
+if ~isempty(Ic)
+    xlabel(H.dataplot, H.SPM{round(ind / 2)}.xCon(Ic).name, 'FontSize', H.FS(12), 'Color', 1 - H.bkg_col)
+end
 
 if plot_mean
-    ylabel(H.dataplot, sprintf('contrast estimate\ninside cluster'), 'FontSize', H.FS(12), 'Color', 1 - H.bkg_col)
+    ylabel(H.dataplot, sprintf('mean %s\ninside cluster',ystr), 'FontSize', H.FS(12), 'Color', 1 - H.bkg_col)
 else
-    ylabel(H.dataplot, 'contrast estimate', 'FontSize', H.FS(12), 'Color', 1 - H.bkg_col)
+    ylabel(H.dataplot, sprintf('%s',ystr), 'FontSize', H.FS(12), 'Color', 1 - H.bkg_col)
 end
 
-set(H.dataplot, 'XLim', [0.4 (length(cbeta) + 0.6)], 'XTicklabel', '', 'XTick', [])
 hold(H.dataplot, 'off')
 
 assignin('base', 'y', y);
@@ -2250,83 +2292,62 @@ assignin('base', 'y', y);
 function [y, cbeta, CI] = get_cluster_data(H, XYZ, ind)
 
 SPM = H.SPM{round(ind / 2)};
-Ic = H.Ic;
+
+Ic = [];
+if isfield(H,'Ic')
+    Ic = H.Ic;
+end
+
 predicted = H.predicted;
 
 % get raw data and whiten
 y = spm_data_read(SPM.xY.VY, 'xyz', XYZ);
-y = spm_filter(SPM.xX.K, SPM.xX.W * y);
-R = spm_sp('r', SPM.xX.xKXs, y);
 
-beta   = spm_data_read(SPM.Vbeta,'xyz',XYZ);
-ResMS = spm_data_read(SPM.VResMS, 'xyz', XYZ);
-
-ResMS = mean(ResMS, 2);
-Bcov = ResMS * SPM.xX.Bcov;
-
-% compute contrast of parameter estimates and 90% C.I.
+% for adjusted or predicted data use model estimations
 %------------------------------------------------------------------
-cbeta = SPM.xCon(Ic).c' * beta;
-cbeta = mean(cbeta, 2);
+if predicted >= 0
 
-CI = 1.6449; % = spm_invNcdf(1 - 0.05);
-SE = sqrt(diag(SPM.xCon(Ic).c' * Bcov * SPM.xCon(Ic).c));
-CI = CI * SE;
-
-% predicted or adjusted response
-%------------------------------------------------------------------
-if predicted
+    y = spm_filter(SPM.xX.K, SPM.xX.W * y);
+    R = spm_sp('r', SPM.xX.xKXs, y);
     
-    % fitted (predicted) data (Y = X1*beta)
-    %--------------------------------------------------------------
-    % this should be SPM.xX.xKXs.X instead of SPM.xX.X below
-    Y = SPM.xX.X * SPM.xCon(Ic).c * pinv(SPM.xCon(Ic).c) * beta;
-else
+    beta   = spm_data_read(SPM.Vbeta,'xyz',XYZ);
+    ResMS = spm_data_read(SPM.VResMS, 'xyz', XYZ);
     
-    % fitted (corrected)  data (Y = X1o*beta)
-    %--------------------------------------------------------------
-    Y = spm_FcUtil('Yc', SPM.xCon(Ic), SPM.xX.xKXs, beta);
+    ResMS = mean(ResMS, 2);
+    Bcov = ResMS * SPM.xX.Bcov;
     
-end
-
-% adjusted data
-%------------------------------------------------------------------
-y = Y + R;
-y = mean(y, 2);
-
-if 0
-    H.y{i} = H.y{i} - SPM.xX.xKXs.X * beta;
-    X0 = SPM.xX.xKXs.X(:, [SPM.xX.iB SPM.xX.iG]);
-    X0 = X0(:, any(X0));
-    %-Compute regional response in terms of first eigenvariate
-    %--------------------------------------------------------------------------
-    [m, n] = size(H.y{i});
-    if m > n
-        [v, s, v] = svd(H.y{i}' * H.y{i});
-        s = diag(s);
-        v = v(:, 1);
-        u = y * v / sqrt(s(1));
+    % compute contrast of parameter estimates and 90% C.I.
+    %------------------------------------------------------------------
+    cbeta = SPM.xCon(Ic).c' * beta;
+    cbeta = mean(cbeta, 2);
+    
+    CI = 1.6449; % = spm_invNcdf(1 - 0.05);
+    SE = sqrt(diag(SPM.xCon(Ic).c' * Bcov * SPM.xCon(Ic).c));
+    CI = CI * SE;
+    
+    % predicted or adjusted response
+    %------------------------------------------------------------------
+    if predicted == 1
+        
+        % fitted (predicted) data (Y = X1*beta)
+        %--------------------------------------------------------------
+        % this should be SPM.xX.xKXs.X instead of SPM.xX.X below
+        Y = SPM.xX.X * SPM.xCon(Ic).c * pinv(SPM.xCon(Ic).c) * beta;
     else
-        [u, s, u] = svd(H.y{i} * H.y{i}');
-        s = diag(s);
-        u = u(:, 1);
-        v = y' * u / sqrt(s(1));
+        
+        % fitted (corrected)  data (Y = X1o*beta)
+        %--------------------------------------------------------------
+        Y = spm_FcUtil('Yc', SPM.xCon(Ic), SPM.xX.xKXs, beta);
+        
     end
-    d = sign(sum(v));
-    u = u * d;
-    v = v * d;
-    Y = u * sqrt(s(1) / n);
-    
-    %-Set in structure
-    %--------------------------------------------------------------------------
-    xY.y = y;
-    xY.u = Y;
-    xY.v = v;
-    xY.s = s;
-    
-    display_VOI(xY, i);
-    
+
+    y = Y + R;
+else
+    cbeta = [];
+    CI = [];
 end
+
+y = cat_stat_nanmean(y, 2);
 
 %==========================================================================
 function txt = myDataCursorAtlas(obj, evt, H)

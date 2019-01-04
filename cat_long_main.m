@@ -57,7 +57,7 @@ matlabbatch{2}.spm.tools.cat.estwrite.output.warps = [1 0];
 matlabbatch{3}.spm.tools.cat.tools.datatrimming.image_selector.subjectimages{1}(1) = cfg_dep('CAT12: Segmentation: Native Label Image', substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','label', '()',{':'}));
 matlabbatch{3}.spm.tools.cat.tools.datatrimming.image_selector.subjectimages{1}(2) = cfg_dep('Longitudinal Rigid Registration: Realigned images', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','rimg', '()',{':'}));
 matlabbatch{3}.spm.tools.cat.tools.datatrimming.prefix = 'm';
-matlabbatch{3}.spm.tools.cat.tools.datatrimming.mask = 0;
+matlabbatch{3}.spm.tools.cat.tools.datatrimming.mask = 1;
 matlabbatch{3}.spm.tools.cat.tools.datatrimming.pth = 0.1;
 matlabbatch{3}.spm.tools.cat.tools.datatrimming.spm_type = 0;
 
