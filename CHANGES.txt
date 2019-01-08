@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1410 | gaser | 2019-01-04 17:19:14
+r1411 | gaser | 2019-01-08 10:19:40
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_createCS.m
+
+Changed: Changed initialization of some variables to prevent warnings for
+writing int32 gifti files.
+------------------------------------------------------------------------
+r1410 | gaser | 2019-01-04 17:19:35 +0100 (Fr, 04 Jan 2019) | 19 lines
 
 Changed paths:
 A  +    CAT12-Manual-Word-Old.docx
@@ -19,6 +28,7 @@ M       html/cat.html
     and recognition of 32k meshes. 
 (4) Changed: Added option to plot raw data in cat_surf_results.m. 
 (5) Changed: Updated CAT12 manual.
+
 ------------------------------------------------------------------------
 r1409 | gaser | 2018-12-21 15:41:26 +0100 (Fr, 21 Dez 2018) | 7 lines
 
