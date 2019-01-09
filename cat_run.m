@@ -324,7 +324,7 @@ function job = update_job(job)
   end
   
   job.extopts.darteltpms(cellfun('length',job.extopts.darteltpms)~=length(job.extopts.darteltpm{1}))=[]; % remove to short/long files
-  if numel(job.extopts.darteltpms)~=6 && any(job.extopts.regstr==4)
+  if numel(job.extopts.darteltpms)~=6 && any(job.extopts.regstr==0)
     %%
     files = ''; for di=1:numel(job.extopts.darteltpms), files=sprintf('%s\n  %s',files,job.extopts.darteltpms{di}); end
     error('CAT:cat_main:TemplateFileError', ...
@@ -344,7 +344,7 @@ function job = update_job(job)
   end
   job.extopts.shootingtpms = cat_vol_findfiles(tpp,[tff(1:numpos) '*' tff(numpos+2:end) tee],struct('depth',1));
   job.extopts.shootingtpms(cellfun('length',job.extopts.shootingtpms)~=length(job.extopts.shootingtpm{1}))=[]; % remove to short/long files
-  if numel(job.extopts.shootingtpms)~=5 && any(job.extopts.regstr~=4)
+  if numel(job.extopts.shootingtpms)~=5 && any(job.extopts.regstr>0)
     %%
     files = ''; for di=1:numel(job.extopts.shootingtpms), files=sprintf('%s\n  %s',files,job.extopts.shootingtpms{di}); end
     error('CAT:cat_main:TemplateFileError', ...

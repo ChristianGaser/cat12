@@ -59,7 +59,13 @@ function varargout = compile(comp,test,verb)
   d4  = zeros(10,10,10,'single'); d4(3,:,:)=0.2; d4(4:8,:,:)=1; d4(9,:,:)=1.2; 
         d4(10,:,:)=2; d4(2:7,5,:) = 0; d4(6:9,[1:2,8:10],:) = 2; d4(8,8,:) = 1;
   d5  = d4; d5(2:3,6:7,:)  = 0.5;
-  % ground truth distance map for the d1 map
+  %%
+  d6  = zeros(13,13,10,'single'); d6(3,:,:)=0.2; d6(4:13,:,:)=1; d6(14,:,:)=1.2; d6(4,6:8,:)=0.5; 
+        d6(15,:,:)=2; d6(2:5,7,:) = 0.1; d6(5:10,7,:) = 0.8; d6(10:end-4,7,:) = 0.3; 
+        d6(6:end-1,[1:4,end-3:end],:) = 2; d6(13,10,:) = 1; d6(6:12,10,:) = 1.8; d6(2:3,8:9,:)  = 0.7;
+        ds('d2','',1,d6,Ycsfdi/3*2,Ywmdi/3*2,Ygmti/2,5); colormap jet;
+  d6(2:3,6:7,:)  = 0.5;
+  %% ground truth distance map for the d1 map
   dc  = zeros(10,10,10,'single'); for si=3:8; dc(si,:,:)=si-2.5; end; dc(5,5,5) = NaN; % csf distance
   dw  = zeros(10,10,10,'single'); for si=3:8; dw(si,:,:)=8.5-si; end; dw(5,5,5) = NaN; % wm distance
   dcube10 = zeros(10,10,10,'single'); dcube10(2:end-1,2:end-1,2:end-1) = 1;
