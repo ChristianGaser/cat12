@@ -353,8 +353,8 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
   %  first a hard regions growing have to find the real WM-WM/GM region
   if BVCstr
     stime = cat_io_cmd('  Blood vessel detection','g5','',verb,stime); dispc=dispc+1;
-    Ywm = Yp0>2.5 & Ym>2.5 & Yp0<3.1 & Ym<4;                               % init WM 
-    Ywm = Ywm | (cat_vol_morph(Ywm,'d') & Ym<3.5); 
+    Ywm = Yp0>2.25 & Ym>2.25 & Yp0<3.1 & Ym<4;                               % init WM 
+    Ywm = Ywm | (cat_vol_morph(Ywm,'dd') & Ym<3.5); 
     %%
     Ywm = single(cat_vol_morph(Ywm,'lc',2,vx_vol));                        % closing WM               
     Ywm(smooth3(single(Ywm))<0.5)=0;                                       % remove small dots
@@ -369,14 +369,17 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
     Ybv=cat_vol_morph( (Ym>3.75-(0.5*BVCstr) & Yp0<2+(0.5*BVCstr)) | ... % high intensity, but not classified as WM (SPM)
       (Yms>2.5 & (Ym-Yms)>0.6) | ...                                     % regions that strongly change by smoothing
       (Ym>2.5-(0.5*BVCstr) & Ywm==0) | ...                               % high intensity, but not classified as WM (SPM)
-      (Ym>2.5-(0.5*BVCstr) & Yp0<2+(0.5*BVCstr) & Ya1==0 & YA==LAB.CT),'c',1,vx_vol) & ...
+      0 ...(Ym>2.5-(0.5*BVCstr) & Yp0<2+(0.5*BVCstr) & Ya1==0 & YA==LAB.CT),'c',1,vx_vol) & ... RD 201901 ADNI 128S0216 error
+      ,'c',1,vx_vol) & ...
       cat_vol_morph(Ya1==LAB.CT,'d',2,vx_vol) & ~cat_vol_morph(Ya1==LAB.HC,'d',2,vx_vol) & ...
       cat_vol_morph((Ya1==0 | Ya1==LAB.CT | Ya1==LAB.BV | Ym>1.5) & Ya1~=LAB.VT & Yp0<2.5,'e',1,vx_vol) & ... avoid subcortical regions
-      ~Ywm;  clear Ywm 
+      ~Ywm; if ~debug, clear Ywm; end
     Ybb = cat_vol_morph(Yp0>0.5,'lc',1,vx_vol); 
-    %%
-    Ycenter  = cat_vol_smooth3X(YS==0,2)<0.95 & cat_vol_smooth3X(YS==1,2)<0.95 & Yp0>0;
-    Yb2 = smooth3( Ydiv<0.1 & Ym>1.5 & (Ym-Yp0)>0.5 & (Ycenter | cat_vol_morph(~Yb,'dd',3)) & Ya1==0 )>0.5;
+    
+    %% RD 201901 ADNI 128S0216 error
+ %   Ycenter  = cat_vol_smooth3X(YS==0,2)<0.95 & cat_vol_smooth3X(YS==1,2)<0.95 & Yp0>0;
+    Yb2 = Ybv; %smooth3( Ydiv<0.1 & Ym>1.5 & (Ym-Yp0)>0.5 & (Ycenter | cat_vol_morph(~Yb,'dd',3)) & Ya1==0 )>0.5;
+    
     %%
     Ybv = ((Ybv | Yb2) & Ybb) | smooth3(Yp0<0.5 & Ybb)>0.4; clear Ybb; 
     %% smoothing

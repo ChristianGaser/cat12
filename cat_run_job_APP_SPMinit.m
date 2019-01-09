@@ -180,19 +180,10 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
       % SPM bias correction
       warning off;  %#ok<WNOFF>
       if ix==numel(sampx) || bias(1) >= preproc.channel.biasfwhm 
-<<<<<<< .mine
-        if job.extopts.APP==2 || spmp0>1, preproc.Yclsout = true(1,max(preproc.lkp)); end  
-        vout = cat_spm_preproc_run(preproc,'run'); res(ix) = vout.res; %#ok<AGROW>
-=======
         if job.extopts.APP==2 || spmp0>1, preproc.Yclsout = true(1,max(preproc.lkp)); end % 
         vout = cat_spm_preproc_run(preproc,'run'); res(ix) = vout.res;
->>>>>>> .r1384
       else
-<<<<<<< .mine
-        vout = cat_spm_preproc_run(preproc,'run'); res(ix) = vout.res; %#ok<AGROW>
-=======
         vout = cat_spm_preproc_run(preproc,'run'); res(ix) = vout.res;
->>>>>>> .r1384
       end
       warning on;  %#ok<WNON>
 %%

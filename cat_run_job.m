@@ -288,7 +288,7 @@ function cat_run_job(job,tpm,subj)
           %  As far as SPM finaly also gives us a nice initial segmenation 
           %  why not use it for a improved maximum based correction?!
           %  ------------------------------------------------------------
-          if ~strcmp(job.extopts.species,'human'), job.extopts.APP = 5; end
+   % 20181222       if ~strcmp(job.extopts.species,'human'), job.extopts.APP = 5; end
           if (job.extopts.APP==1 || job.extopts.APP==2) 
              job.subj = subj;
              [Ym,Ybg,WMth] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,...
@@ -405,9 +405,9 @@ function cat_run_job(job,tpm,subj)
               [Ym,Yt,Ybg,WMth] = APPmini(obj,VF); %#ok<ASGLU>
             end
             APPRMS = checkAPP(Ym,Ysrc); 
-            if APPRMS>1000 
-              error('cat_run_job:error',[... 
-                'Detect problems in APP preprocessing (APPRMS: %0.2f). ' ...
+            if APPRMS>1 
+              warning('cat_run_job:error',[... 
+                'Detect problems in APP preprocessing (APPRMS: %0.4f). ' ...
                 'Try to turn off APP preprocessing and send us the error. '],APPRMS);
             end 
         
@@ -432,6 +432,7 @@ function cat_run_job(job,tpm,subj)
             resa  = 8;
             VF1   = spm_smoothto8bit(VF,resa);
             VG1   = VG; 
+            [Ym,Yt,Ybg,WMth] = APPmini(obj,VF);
           end
 
           % prepare affine parameter 
@@ -551,8 +552,8 @@ function cat_run_job(job,tpm,subj)
               Ymc = Ysrc; 
             else
               bth = min( [ mean(single(Ysrc( Ybg(:)))) - 2*std(single(Ysrc( Ybg(:)))) , ...
-                         mean(single(Ysrc(~Ybg(:)))) - 4*std(single(Ysrc(~Ybg(:)))) , ...
-                         min(single(Ysrc(~Ybg(:))))]); 
+                           mean(single(Ysrc(~Ybg(:)))) - 4*std(single(Ysrc(~Ybg(:)))) , ...
+                           min(single(Ysrc(~Ybg(:)))) ]); 
               % use bias corrected image with original intensities 
               Ymc = Ym * abs(diff([bth,WMth])) + bth; 
               clear bth
@@ -585,7 +586,7 @@ function cat_run_job(job,tpm,subj)
         %  This may not work for non human data (or very small brains).
         %  This part should be an external (coop?) function?
         stime = cat_io_cmd('SPM preprocessing 1 (estimate 1):','','',1,stime);
-        if strcmp('human',job.extopts.species) 
+        if ~isempty(job.opts.affreg) %strcmp('human',job.extopts.species) 
           if numel(job.opts.tpm)>1
             %% merging of multiple TPMs
             obj2 = obj; obj2.image.dat(:,:,:) = max(0.0,Ym);
@@ -666,7 +667,9 @@ function cat_run_job(job,tpm,subj)
           stime = cat_io_cmd('SPM preprocessing 1 (estimate 2):','','',job.extopts.verb-1,stime);
           obj.tol = job.opts.tol;  
           if job.opts.redspmres==0 
+            warning off; % turn off "Warning: Using 'state' to set RANDN's internal state causes RAND ..."
             res = cat_spm_preproc8(obj);
+            warning on; 
           else
             image1 = obj.image; 
             [obj.image,redspmres]  = cat_vol_resize(obj.image,'interpv',1);
@@ -744,18 +747,50 @@ function cat_run_job(job,tpm,subj)
     %%
 return
 %=======================================================================
-function [Ym,Yt,WMth,Ybg] = APPmini(obj,VF)
-%% very simple affine preprocessing
+function [Ym,Yt,Ybg,WMth] = APPmini(obj,VF)
+%% very simple affine preprocessing (APP)
+%  ------------------------------------------------------------------------
+%  Creates an intensity normalized image Ym by the average higher tissue
+%  intensity WMth estimated in the mask Yt. Moreover, it estimates the
+%  background region Ybg. 
+%
+%  [Ym,Yt,Ybg,WMth] = APPmini(obj,VF)
+%  ------------------------------------------------------------------------
+%  Robert Dahnke 2019/01
 
-  Ysrc = single(obj.image.private.dat(:,:,:));  
-  VF0  = cat_spm_smoothto8bit(VF,0.1);
-  Ym   = single(VF0.dat)/200; clear VG0
-  Yt   = cat_vol_morph(Ym>cat_stat_nanmean(Ym(:)>0.5),'l',[100 1000])>0.5;
+  Ysrc = single(obj.image.private.dat(:,:,:)); 
+
+  % remove outlier and use SPM for intensity normalization to uint8 
+  % empirical division by 200 to get WM values around 1.0
+  Ysrc = cat_stat_histth(Ysrc,99.9);
+  VF0  = cat_spm_smoothto8bit(VF,0.1); 
+  Ym   = single(VF0.dat)/200; clear VG0 
+  
+  % find the larges object and estimate the averag intensity
+  % keep in mind that this will may inlcude the head (and in MP2RAGE/MT/R1
+  % images also the background), i.e. highest intensity is may head,
+  % blood vessels or WM or CSF in T1/PD
+  Yt   = cat_vol_morph(Ym>cat_stat_nanmean(Ym(Ym(:)>0.1)),'l',[100 1000])>0.5;
   WMth = kmeans3D( Ysrc(Yt(:)) , 1); 
-  Ybg  = cat_vol_morph(Ym<0.2,'l',[100 1000]);
+  
+  % rescale Ym and roughly estimate the background (not in MP2Rage/MT/R1)
+  Ym   = Ysrc ./ WMth;
+  Ybg  = cat_vol_morph(Ym<0.2,'l',[100 1000])>0;
+  
 return
 function APP_RMSE = checkAPP(Ym,Ysrc) 
 %% check Ym
+%  ------------------------------------------------------------------------
+%  Function to compare the normalized gradient maps of two input images 
+%  that should be nearly identical.
+%
+%  APP_RMSE = checkAPP(Ym,Ysrc) 
+%  ------------------------------------------------------------------------
+%  Robert Dahnke 2019/01
+
+  % remove strongest outlier
+  Ym   = cat_stat_histth(Ym,99.9);
+  Ysrc = cat_stat_histth(Ysrc,99.9);
 
   % avoid division by zeros
   Ym   = Ym   + min(Ym(:));
@@ -765,11 +800,12 @@ function APP_RMSE = checkAPP(Ym,Ysrc)
   Ygm = cat_vol_grad(Ym)   ./ Ym;     
   Ygs = cat_vol_grad(Ysrc) ./ Ysrc;
 
-  % correct high values
-  Ymsk = true(size(Ym) ); Ymsk(10:end-9,10:end-9,10:end-9) = 0;  
-  Ygm( Ygm>199 | Ymsk ) = 0; 
-  Ygs( Ygs>100 | Ymsk ) = 0;
+  % use only the central region and values in the expected tissue range
+  sYm  = round(size(Ym) / 5);
+  Ymsk = false(size(Ym) ); Ymsk(sYm(1):end-sYm(1),sYm(2):end-sYm(2),sYm(3):end-sYm(3)) = true;  
+  Ymsk = Ymsk & cat_vol_morph(Ygm<2 & Ygs<2 & Ym>0.5 & Ysrc>0.5,'e');
   
-  % general error
-  APP_RMSE = cat_stat_nanmean( ( Ygm(:) - Ygs(:) ).^2 )^0.5;
+  % general error between both images within the mask
+  APP_RMSE = cat_stat_nanmean( ( Ygm(Ymsk(:)) - Ygs(Ymsk(:)) ).^2 )^0.5;
+  
 return
