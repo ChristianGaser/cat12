@@ -189,13 +189,13 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
         reg(regstri).opt.resfac      = (tempres/2 : -reg(regstri).opt.stepsize : tempres) / tempres; % reduction factor 
       elseif job.extopts.regstr(regstri)==6
         %%
-        reg(regstri).opt.nits      = 512;;                   % registration interation (shooting default = 24)
+        reg(regstri).opt.nits      = 64;;                   % registration interation (shooting default = 24)
         reg(regstri).opt.ll1th     = 0.0001;                 % smaller better/slower
         reg(regstri).opt.ll3th     = 0.0005;                 % smaller better/slower 
         %reg(regstri).opt.resfac    =  [4 3 2 1.5 1] ; 
         %reg(regstri).opt.resfac    =  [1 1 1 1 1]*1.5; 
-        reg(regstri).opt.resfac    =  [2 2 2.5/1.5 2/1.5 1]; 
-        %reg(regstri).opt.resfac    =  [2 2 2 2 2]; 
+        %reg(regstri).opt.resfac    =  [3 2 2.5/1.5 2/1.5 1]; 
+        reg(regstri).opt.resfac    =  [2 2 2 2 2]; 
         %reg(regstri).opt.resfac    =  [4 4 4 3 2]; % n?
         %reg(regstri).opt.resfac    =  [4 4 3 2 1]; % 
         %reg(regstri).opt.resfac    =  [4 4 4 4 2]; % 
@@ -597,11 +597,11 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
             % need finer schedule for coarse to fine for ll3 adaptive threshold
             nits       = reg(regstri).opt.nits;;        % default was 24  
             lam        = 1/(nits*0.2);                  % Decay of coarse to fine schedule (default 0.5)
-            inter      = 128;                            % Scaling of parameters at first iteration
+            inter      = 24;                            % Scaling of parameters at first iteration
             sd.sched   = (inter-1) * exp(-lam * ((1:(nits+1))-1)) + 1;
 % die variante bis ...4 ist sch?n weich und kommt an die 0.07 ran ... 
 % das reicht aber wohl nicht aus um 0.06 zu erreichen!
-            sd.sched   = ((sd.sched - min(sd.sched)) / (max(sd.sched) - min(sd.sched)) * (inter - 1) + 1) ;
+            sd.sched   = ((sd.sched - min(sd.sched)) / (max(sd.sched) - min(sd.sched)) * (inter - 1) + 4) ;
             maxoil     = 8;                            % Maximum number of time steps for integration
             sd.eul_its = round((0:(nits-1))*(maxoil-0.5001)/(nits-1)+1); % Start with fewer steps
             nits       = numel(sd.sched)-1;            % Shooting iterations 
@@ -610,7 +610,7 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
 % lief mit 512 ganz gut - ca. 1/5 1.5 mmm Operationen ... vieleicht shift bissel vergr??ern          
             %sd.rparam  = [1e-2 0.01 0.2 0.05 0.2];  % Regularisation parameters for deformation
             % abs. disp., laplacian, bending engery, linear elasticity mu, le lambda [1e-4 0.001 0.2 0.05 0.2]
-            sd.rparam  = [1e-2 0.001 0.2 0.05 0.2];
+            sd.rparam  = [1e-2 0.01 0.2 0.05 0.2];
             
           elseif (job.extopts.regstr(regstri)>0 || regres~=tmpres) && job.extopts.regstr(regstri)~=4 
             % need finer schedule for coarse to fine for ll3 adaptive threshold
@@ -844,7 +844,7 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
                
               %%
               wc  = 0; maxsubiter = 5;
-              dtm = ( 10 + max(0,min(40,40 * it./nits)) ) * tempres2(ti); 
+              dtm = ( 10 + max(0,min(20,20 * it./nits)) ) * tempres2(ti); 
               while job.extopts.regstr(regstri)~=4 && wc<=maxsubiter && ... %(it + min(nits/10,20))<nits && ...
                   ( any(~isfinite(dt(:))) || any(dt(:)>dtm) || any(dt(:)<1/dtm) )
                 fprintf('.'); 
@@ -863,15 +863,15 @@ if job.extopts.regstr(regstri)==6
                 mxu = max(1,min(dtm,2.^( (3 - wc) ))); %mxu = (1.3).^(11 - wc); % dieser Wert war zu stark bei hohen Iterationen!
                 for i=1:3  
                   if 1%tmpl_no(min(it,nits))<tmpl_no(end)
-                    u(:,:,:,i) = cat_vol_smooth3X(u(:,:,:,i),1 - ti./nits);% 0.5 + ti./nits);
+                    u(:,:,:,i) = cat_vol_smooth3X(u(:,:,:,i),2 - ti./nits);% 0.5 + ti./nits);
                   end
-                  u(:,:,:,i) = ( cat_vol_laplace3R(u(:,:,:,i) / mxu - min(min(min(u(:,:,:,i)))) / mxu,...
-                    true(size(dt)) , 0.2) + min(min(min(u(:,:,:,i)))) / mxu ) * mxu;
+                 % u(:,:,:,i) = ( cat_vol_laplace3R(u(:,:,:,i) / mxu - min(min(min(u(:,:,:,i)))) / mxu,...
+                 %   true(size(dt)) , 0.1) + min(min(min(u(:,:,:,i)))) / mxu ) * mxu;
                 end
 end
 
                 %% update parameter
-                prm2 = min(48,max(1 , prm2 * 2 ) ); 
+                prm2 = min(48,max(1 , prm2 * (4 - 2*( ti./nits) ) ) ); 
                 prm(4:end) = min(sd.rparam * sd.sched(1),prm(4:end) * prm2); 
                
                 [y,J] = spm_shoot3d(u,prm,int_args);  %#ok<ASGLU>
@@ -911,7 +911,7 @@ end
                 if prm2<1
                   prm2 = prm2 / 1.01; 
                 else
-                  prm2 = prm2 / 1.5;
+                  prm2 = prm2 / 1.25;
                 end
               elseif wc==0 && ...
                 ~(it==1 || (tmpl_no(min(nits,it))~=tmpl_no(min(nits,it)-1))) && ...

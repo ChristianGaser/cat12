@@ -1,5 +1,32 @@
 ------------------------------------------------------------------------
-r1411 | gaser | 2019-01-08 10:19:40
+r1412 | dahnke | 2019-01-09 09:53:46
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_colormaps.m
+M       cat_io_report.m
+M       cat_main.m
+M       cat_main_registration2.m
+M       cat_main_reportfig.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_job_APP_SPMinit.m
+M       cat_vol_partvol.m
+M       compile.m
+
+1) Fixed:   Corrected bugs in chimpanzee pipeline. 
+2) Fixed:   Corrected bugs in template setings in cat_run_job.
+3) Fixed:   Corrected bugs in error report creation.
+4) Fixed:   Modified APP test function in cat_run_job. 
+5) Changed: Updated cat_report segmentation output.
+6) Changed: Updated cat_main_reportfig and related parts in cat_main.
+            Replaced the brain segmentation output of the p0 by a more
+7) Fixed:   Corrected blood vessel detection problems in cat_vol_partvol.
+8) New:     Added some colormaps in cat_io_colormaps and another
+            sulcus case (manual use) in compile.            
+            
+------------------------------------------------------------------------
+r1411 | gaser | 2019-01-08 10:19:59 +0100 (Di, 08 Jan 2019) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +34,7 @@ M       cat_surf_createCS.m
 
 Changed: Changed initialization of some variables to prevent warnings for
 writing int32 gifti files.
+
 ------------------------------------------------------------------------
 r1410 | gaser | 2019-01-04 17:19:35 +0100 (Fr, 04 Jan 2019) | 19 lines
 

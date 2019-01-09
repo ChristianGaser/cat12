@@ -119,6 +119,8 @@ if ~isfield(res,'spmpp')
   if job.inv_weighting
 %    Ysrc = Ym * Tth.T3th(5); Tth.T3th = Tth.T3thx * Tth.T3th(5);
     if T3th(1)>T3th(3) && T3th(2)<T3th(3) && T3th(1)>T3th(2)
+      Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
+       
       Yp0  = single(Ycls{3})/255/3 + single(Ycls{1})/255*2/3 + single(Ycls{2})/255;
       Yb2  = cat_vol_morph(Yp0>0.5,'lc',2); 
       prob = cat(4,cat_vol_ctype(Yb2.*Yp0toC(Ym*3,2)*255),...
@@ -127,7 +129,7 @@ if ~isfield(res,'spmpp')
       
       prob = cat_main_clean_gwc(prob,1,1);
       
-      for ci=1:3, Ycls{ci} = prob(:,:,:,ci); end; 
+      for ci=1:3, Ycls{ci} = prob(:,:,:,ci); end 
       clear prob;  
     end
     Ysrc = Ym; Tth.T3thx(3:5) = 1/3:1/3:1; Tth.T3th = Tth.T3thx; T3th = 1/3:1/3:1;
@@ -649,7 +651,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
   if ~debug; clear YMF Yp0; end
   if ~debug && ~job.output.ROI && job.output.surface, clear Yth1; end
 else
-  if ~debug; clear Ymi; end
+  %if ~debug; clear Ymi; end
 end
 
 
@@ -735,7 +737,7 @@ if job.extopts.print
   str = cat_main_reportstr(job,res,qa,cat_warnings);
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
   if ~exist('Psurf','var'), Psurf = ''; end
-  cat_main_reportfig(Ym,Yp0,Psurf,job,res,str);
+  cat_main_reportfig(Ymi,Yp0,Psurf,job,res,str,Yl1);
 end
 % final command line report
 cat_main_reportcmd(job,res,qa);

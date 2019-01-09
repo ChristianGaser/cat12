@@ -115,8 +115,10 @@ function cat_io_report(job,qa,subj,createerr)
        'The given filename is "%s" \n' ...
        ],templatef);
     end
+
     job.extopts.templates = cat_vol_findfiles(templatep,[templatef(1:numpos) '*' templatef(numpos+2:end) templatee],struct('depth',1)); 
-    job.extopts.templates(cellfun('length',job.extopts.templates)~=numel(template)) = []; % furhter condition maybe necessary
+    %%
+ % 201812 -error in chimps   job.extopts.templates(cellfun('length',job.extopts.templates)~=numel(template)) = []; % furhter condition maybe necessary
     [template1p,template1f] = spm_fileparts(job.extopts.templates{1}); %#ok<ASGLU>
     if do_dartel 
       if (numel(job.extopts.templates)==6 || numel(job.extopts.templates)==7)
@@ -154,9 +156,18 @@ function cat_io_report(job,qa,subj,createerr)
   % CAT GUI parameter:
   % --------------------------------------------------------------------  
     
-    if ~isfield(cat_err_res.res,'do_dartel'), cat_err_res.res.do_dartel = 1; end
-    if ~isfield(cat_err_res.res,'stime'), cat_err_res.res.stime = clock; end
-    
+    if ~isfield(cat_err_res,'res') || ~isfield(cat_err_res.res,'do_dartel')
+      if exist('do_dartel','var'), cat_err_res.res.do_dartel = do_dartel; else cat_err_res.res.do_dartel = 1; end
+    end
+    if ~isfield(cat_err_res.res,'stime'),  cat_err_res.res.stime = clock; end
+    if ~isfield(cat_err_res.res,'tpm'),    cat_err_res.res.tpm(1).fname = job.opts.tpm{1}; end
+    if ~isfield(cat_err_res.res,'Affine'), cat_err_res.res.Affine = eye(4); end
+    if ~isfield(cat_err_res.res,'lkp'),    cat_err_res.res.lkp    = nan(1,6); end
+    if ~isfield(cat_err_res.res,'mg'),     cat_err_res.res.mg     = nan(1,6); end
+    if ~isfield(cat_err_res.res,'mn'),     cat_err_res.res.mn     = nan(1,6); end
+    if ~isfield(cat_err_res.res,'Affine'), cat_err_res.res.Affine = eye(4); end
+    if ~isfield(cat_err_res,'obj') || ~isfield(cat_err_res.obj,'Affine'), cat_err_res.obj.Affine = eye(4); end
+
     qa.qualitymeasures.res_vx_vol  = sqrt(sum(VT0.mat(1:3,1:3).^2));
     qa.qualitymeasures.res_vx_voli = sqrt(sum(VT1.mat(1:3,1:3).^2));
     qa.qualityratings.res_RMS      = mean(qa.qualitymeasures.res_vx_vol.^2).^0.5;
