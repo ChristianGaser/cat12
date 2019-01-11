@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1412 | dahnke | 2019-01-09 09:53:46
+r1413 | gaser | 2019-01-11 12:17:45
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_surf_results.m
+M       html/cat.html
+
+Changed: cat_surf_results.m is now using just one window.
+------------------------------------------------------------------------
+r1412 | dahnke | 2019-01-09 09:56:17 +0100 (Mi, 09 Jan 2019) | 25 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -25,6 +35,7 @@ M       compile.m
 8) New:     Added some colormaps in cat_io_colormaps and another
             sulcus case (manual use) in compile.            
             
+
 ------------------------------------------------------------------------
 r1411 | gaser | 2019-01-08 10:19:59 +0100 (Di, 08 Jan 2019) | 7 lines
 
