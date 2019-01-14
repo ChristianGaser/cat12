@@ -578,16 +578,11 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
       Tlink = @(S1,S2) sum( [ sum( abs( S1.vertices(:,1:2) - S2.vertices(:,1:2) ).^2 , 2 ).^0.5  abs(S1.vertices(:,3) - S2.vertices(:,3)) ].^2 , 2 ).^0.5;
               
       % save datastructure
-      S.(opt.surf{si}).vertices = CS.vertices;
-      % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
-      warning off MATLAB:subscripting:noSubscriptsSpecified
-      S.(opt.surf{si}).faces    = uint32(CS.faces);
-      S.(opt.surf{si}).vmat     = vmat;
-      S.(opt.surf{si}).vmati    = vmati;
-      S.(opt.surf{si}).th1      = facevertexcdata;
+      S.(opt.surf{si}) = struct('faces',CS.faces,'vertices',CS.vertices,'vmat',vmat,...
+          'vmati',vmati,'th1',facevertexcdata);
       if opt.WMT > 1
-        S.(opt.surf{si}).th2    = nan(size(facevertexcdata));
-        S.(opt.surf{si}).th3    = nan(size(facevertexcdata));
+        setfield(S.(opt.surf{si}),'th2',nan(size(facevertexcdata)));
+        setfield(S.(opt.surf{si}),'th3',nan(size(facevertexcdata)));
       end
       clear CS; 
       
@@ -866,16 +861,11 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
     % csp=patch(CS); view(3), camlight, lighting phong, axis equal off; set(csp,'facecolor','interp','edgecolor','none')
 
     % create output structure
-    S.(opt.surf{si}).vertices = CS.vertices;
-    % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
-    warning off MATLAB:subscripting:noSubscriptsSpecified
-    S.(opt.surf{si}).faces    = uint32(CS.faces);
-    S.(opt.surf{si}).vmat     = vmat;
-    S.(opt.surf{si}).vmati    = vmati;
-    S.(opt.surf{si}).th1      = facevertexcdata;
+    S.(opt.surf{si}) = struct('faces',CS.faces,'vertices',CS.vertices,'vmat',vmat,...
+        'vmati',vmati,'th1',facevertexcdata);
     if opt.WMT > 1
-      S.(opt.surf{si}).th2    = facevertexcdata2;
-      S.(opt.surf{si}).th3    = facevertexcdata3;
+      S.(opt.surf{si}) = setfield(S.(opt.surf{si}),'th2',facevertexcdata2);
+      S.(opt.surf{si}) = setfield(S.(opt.surf{si}),'th3',facevertexcdata3);
     end
     clear Yth1i
     
