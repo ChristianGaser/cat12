@@ -1,5 +1,33 @@
 ------------------------------------------------------------------------
-r1413 | gaser | 2019-01-11 12:17:45
+r1414 | dahnke | 2019-01-14 09:13:25
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_colormaps.m
+M       cat_io_report.m
+M       cat_main.m
+M       cat_main_amap.m
+M       cat_main_reportfig.m
+M       cat_main_reportstr.m
+M       cat_main_updateSPM.m
+M       cat_run_job.m
+M       cat_run_job_APP_init1070.m
+M       cat_run_job_APRGs.m
+M       cat_run_newcatch.m
+M       cat_surf_createCS.m
+A       cat_surf_create_TPM_hull_surface.m
+M       cat_surf_render2.m
+A       templates_surfaces/bh.headbrain.TPM.gii
+
+1) Fixed:   Updated segmentation output in error report and preprocessing functions.
+2) Fixed:   Corrected problems with the background segmentation in cat_run_job_APP1070. 
+3) Fixed:   Try to optimize the affine registration by changes in cat_run_job_APRGs!
+4) Fixed:   Revert last changes in cat_surf_createCS because of errors!          
+5) New:     Added TPM brain and head surface creation script for (error) report overlay.
+6) New:     Added rigid transformation for report surface output. 
+
+------------------------------------------------------------------------
+r1413 | gaser | 2019-01-11 12:18:03 +0100 (Fr, 11 Jan 2019) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +36,7 @@ M       cat_surf_results.m
 M       html/cat.html
 
 Changed: cat_surf_results.m is now using just one window.
+
 ------------------------------------------------------------------------
 r1412 | dahnke | 2019-01-09 09:56:17 +0100 (Mi, 09 Jan 2019) | 25 lines
 

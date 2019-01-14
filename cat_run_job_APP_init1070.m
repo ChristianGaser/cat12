@@ -37,7 +37,7 @@ function [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init1070(Ysrco,vx_vol,verb)
   WMth = roundx(single(cat_stat_nanmedian(Ysrc( Yw0(:) ))),rf); clear Ybg0 Yw0;
   BGth = max( min(Ysrc(:))*0.7 + 0.3*cat_stat_nanmean(Ysrc(:)) ,...
     cat_stat_nanmean(Ysrc(Ysrc(:)<cat_stat_nanmean(Ysrc(:))))); BGth = roundx(BGth,rf); 
-  highBG = BGth>0.3; % MT / MP2RAGE
+  highBG = BGth/WMth>0.3; % MT / MP2RAGE
   if highBG 
     % In case of high intensity background we simply need the lowest 
     % intensity of the histogram without extrem outliers.
@@ -81,9 +81,12 @@ function [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init1070(Ysrco,vx_vol,verb)
   Ybg([1,end],:,:)=0; Ybg(:,[1,end],:)=0; Ybg(:,:,[1,end])=0; Ybg = Ybg>0.5;
   Ybg  = cat_vol_morph(Ybg,'lc',8);
   Ybg  = cat_vol_smooth3X(Ybg,2); 
-  Ybg  = cat_vol_resize(Ybg,'dereduceV',resT2)<0.5;    
+  Ybg  = cat_vol_resize(Ybg,'dereduceV',resT2)<0.5; 
   if ~highBG
-    BGth = roundx(cat_stat_nanmean(Ysrc(Ybg(:))),rf);
+    BGth  = roundx(cat_stat_nanmean(Ysrc(Ybg(:))),rf);
+    [Ybgr,resT2] = cat_vol_resize(smooth3(Ybg) ,'reduceV',vx_vol,2,32,'meanm'); 
+    Ybgid = cat_vbdist(single(Ybgr)); Ybgid = Ybgid./max(Ybgid(Ybgid(:)<1000));
+    Ybgid = cat_vol_resize(Ybgid,'dereduceV',resT2);
   end
   Ym   = (Ysrc - BGth) ./ (WMth - BGth);
   
@@ -200,7 +203,7 @@ function [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init1070(Ysrco,vx_vol,verb)
   T3th = kmeans3D(Ymr(Yb0r(:)),5); T3th = T3th(1:2:5);
   T3th2 = T3th; 
   if 1 % highBG
-    T3thc = kmeans3D(Ymr(Yb0r & ...
+    T3thc = kmeans3D(Ymr(Yb0r & Ymr>0.1 & ...
       cat_vol_morph(Ymr<cat_stat_nansum(T3th(1:2).*[0.8 0.2]) ,'de',1)),3); % close to minimum
     T3th2(1) = T3thc(1); T3th(1) = T3thc(1); 
     T3th2g = kmeans3D(Ymr(Yb0r(:) & ...

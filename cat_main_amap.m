@@ -142,6 +142,12 @@ function [prob,indx,indy,indz] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
       prob(:,:,:,i) = prob(:,:,:,i).*uint8(Yb0(indx,indy,indz));
     end
   end
- 
+  
+  global cat_err_res
+  
+  % update segmentation for error report
+  Yp0  = single(prob(:,:,:,3))/255/3 + single(prob(:,:,:,1))/255*2/3 + single(prob(:,:,:,2))/255;
+  [cat_err_res.init.Yp0,cat_err_res.init.BB] = cat_vol_resize(Yp0,'reduceBrain',vx_vol,2,Yp0>0.5); 
+  cat_err_res.init.Yp0 = cat_vol_ctype(cat_err_res.init.Yp0/3*255);
 
 end
