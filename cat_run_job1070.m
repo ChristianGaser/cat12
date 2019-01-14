@@ -57,10 +57,10 @@ function cat_run_job1070(job,tpm,subj)
       reportfolder = '';
     end
     
-    % create subject-wise diagy file with the command-line output
+    % create subject-wise diary file with the command-line output
     [pp,ff,ee,ex] = spm_fileparts(job.data{subj});  %#ok<ASGLU>
     catlog = fullfile(pth,reportfolder,['catlog_' ff '.txt']);
-    if exist(catlog,'file'), delete(catlog); end % write every time a new file, turn this of to have an additional log file
+    if exist(catlog,'file'), delete(catlog); end % write every time a new file, turn this off to have an additional log file
     diary(catlog); 
     
     % print current CAT release number and subject file

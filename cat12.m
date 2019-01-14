@@ -1197,7 +1197,7 @@ else
     if isscalar(gui_hFigure) && ishandle(gui_hFigure)
         % Handle the default callbacks of predefined toolbar tools in this
         % GUI, if any
-        guidemfile('restoreToolbarToolPredefinedCallback',gui_hFigure); 
+        try, guidemfile('restoreToolbarToolPredefinedCallback',gui_hFigure); end
         
         % Update handle visibility
         set(gui_hFigure,'HandleVisibility', gui_HandleVisibility);

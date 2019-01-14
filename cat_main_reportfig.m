@@ -126,17 +126,17 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 
   htext = zeros(5,2,2);
   for i=1:size(str{1},2)   % main parameter
-    htext(1,i,1) = text(0.01,0.98-(0.055*i), str{1}(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(1,i,1) = text(0.01,0.98-(0.055*i), str{1}(i).name  ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
     htext(1,i,2) = text(0.51,0.98-(0.055*i), str{1}(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   end
   for i=1:size(str{2},2)  % qa-measurements
-    htext(2,i,1) = text(0.01,0.40-(0.055*i), str{2}(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(2,i,1) = text(0.01,0.40-(0.055*i), str{2}(i).name  ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
     htext(2,i,2) = text(0.25,0.40-(0.055*i), str{2}(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   end
   % qa-scala
   %htext(5,1,1) = text(0.01,0.45-(0.055*(i+2)),str4(1).name,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   for i=1:size(str{3},2)  % subject-measurements
-    htext(3,i,1) = text(0.51,0.40-(0.055*i), str{3}(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(3,i,1) = text(0.51,0.40-(0.055*i), str{3}(i).name  ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
     htext(3,i,2) = text(0.70,0.40-(0.055*i), str{3}(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   end
 
@@ -151,6 +151,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   switch disptype
     case 'affine'
       dispmat = res.Affine; 
+      warning('OFF','MATLAB:tex')
       spm_orthviews('BB', job.extopts.bb*0.95 );
     case 'ridid'
       % this does not work so good... AC has a little offset ...
@@ -388,6 +389,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   if useoverlay>1
   % make SPM colorbar invisible (cannot delete it because SPM orthviews need it later)  
     %st.vols{3}.blobs{1}.cbar.Visible    = 'off';
+    warning('OFF','MATLAB:warn_r14_stucture_assignment');
     st.vols{3}.blobs{1}.cbar.YTick       = ytickp0/30;
     st.vols{3}.blobs{1}.cbar.XTick       = [];
     st.vols{3}.blobs{1}.cbar.YTickLabel  = yticklabelp0;
@@ -579,7 +581,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   WMfactor1 = 4/3; 
   if exist('hho' ,'var'), spm_orthviews('window',hho ,[0 WMfactor0]); end
   if exist('hhm' ,'var'), spm_orthviews('window',hhm ,[0 WMfactor1]); end
-  if exist('hhp0','var'), spm_orthviews('window',hhp0,[0 WMfactor1]); end
+  if exist('hhp0','var'), try, spm_orthviews('window',hhp0,[0 WMfactor1]); end; end
   
   
   %% change line style of TPM surf
