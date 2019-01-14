@@ -212,16 +212,11 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings,err)
   if job.extopts.SLC>0,   str{3}(end).value = [str{3}(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_rel_CGW(5)*100)]; end;
   str{3}(end).value = [str{3}(end).value '%'];
 
-  %{
-  Ywmhrel = NS(Yl1,23);
-  Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
-  WMH_rel    = 100*sum(Ywmhrel(:)) / sum(Yp0(:)>0.5); 
-  WMH_WM_rel = 100*sum(Ywmhrel(:)) / sum(Yp0(:)>2.5); 
-  if WMH_rel>3 || WMH_WM_rel>5
-    str{3}(end).value = [str{3}(end).value sprintf('\\bf\\color[rgb]{0.8 0 0} WMHs!')];  
+  % warning if many WMH were found but no correction is active 
+  if job.extopts.WMHC<2 && (qa.subjectmeasures.vol_rel_CGW(4)>0.03 || ...
+     qa.subjectmeasures.vol_rel_CGW(4)/qa.subjectmeasures.vol_rel_CGW(3)>0.05)
+    str{3}(end).value = [str{3}(end).value sprintf('\\bf\\color[rgb]{1 0 1} WMHs!')];  
   end
-  clear Yp0;
-  %}
   
   str{3} = [str{3} struct('name', ' TIV:','value', sprintf(['%0.0f cm' char(179)],qa.subjectmeasures.vol_TIV))];  
 

@@ -26,8 +26,10 @@ function cat_run_job(job,tpm,subj)
     % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
     dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
     
+    clearvars -global cat_err_res;
     global cat_err_res; % for CAT error report
-
+    cat_err_res.stime = clock; 
+    
     stime  = clock; 
     stime0 = stime; % overall processing time
 
@@ -124,6 +126,8 @@ function cat_run_job(job,tpm,subj)
         res.image0 = spm_vol([ofname ex]);
         res.imagec = spm_vol([cfname ex]);
         res.spmpp  = 1; 
+        
+        cat_err_res.obj = obj; 
     else
 
         %  -----------------------------------------------------------------
@@ -319,7 +323,7 @@ function cat_run_job(job,tpm,subj)
           end;
         end
         spm_check_orientations(obj.image);
-
+        cat_err_res.obj = obj; 
         
         %% Initial affine registration.
         %  -----------------------------------------------------------------
@@ -607,7 +611,7 @@ function cat_run_job(job,tpm,subj)
             [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1));  
             %[Vmsk,Yb] = cat_vol_imcalc([VFa;obj.tpm.V(1:3)],Pbt,'i2 + i3 + i4',struct('interp',3,'verb',0));  
             %[Vmsk,Yb] = cat_vol_imcalc([VFa;obj.tpm.V(5)],Pbt,'i2',struct('interp',3,'verb',0));  
-            ds('d2sm','',1,Ym,Ym.*(Yb>0.5),100)
+            ds('d2sm','',1,Ym,Ym.*(Yb>0.5),110)
           end
           
          
@@ -654,10 +658,14 @@ function cat_run_job(job,tpm,subj)
             end
           end
         end
+        
+        % adpation parameter for affine registration? 0.98 and 1.02?
+        %imat = spm_imatrix(Affine2); imat(7:9)=imat(7:9)*1.02; Affine2 = spm_matrix(imat); 
+        
         obj.Affine = Affine;
         cat_err_res.obj = obj; 
-       
-
+      
+        
         %% SPM preprocessing 1
         %  ds('l2','a',0.5,Ym,Ybg,Ym,Ym,140);
         %  ds('l2','a',0.5,Ysrc/WMth,Yb,Ysrc/WMth,Yb,140);
