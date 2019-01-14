@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1414 | dahnke | 2019-01-14 09:13:25
+r1415 | gaser | 2019-01-14 15:20:48
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_main_reportfig.m
+M       cat_run_job1070.m
+M       cat_surf_createCS.m
+
+Fixed: Corrected some warnings on older Matlab versions.
+------------------------------------------------------------------------
+r1414 | dahnke | 2019-01-14 09:16:00 +0100 (Mo, 14 Jan 2019) | 26 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -25,6 +36,7 @@ A       templates_surfaces/bh.headbrain.TPM.gii
 4) Fixed:   Revert last changes in cat_surf_createCS because of errors!          
 5) New:     Added TPM brain and head surface creation script for (error) report overlay.
 6) New:     Added rigid transformation for report surface output. 
+
 
 ------------------------------------------------------------------------
 r1413 | gaser | 2019-01-11 12:18:03 +0100 (Fr, 11 Jan 2019) | 8 lines
