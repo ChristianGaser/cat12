@@ -362,10 +362,12 @@ switch lower(action)
             end
         end
        
-        H.rotate3d = rotate3d(H.axis);
-        set(H.rotate3d,'Enable','on');
-        set(H.rotate3d,'ActionPostCallback',{@myPostCallback, H});
-
+        
+        if 0
+          H.rotate3d = rotate3d(H.axis);
+          set(H.rotate3d,'Enable','on');
+          set(H.rotate3d,'ActionPostCallback',{@myPostCallback, H});
+        end
 
 
         %-Store handles

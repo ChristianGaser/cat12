@@ -1,4 +1,4 @@
-function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str,Yl1)
+function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 % ______________________________________________________________________
 % 
 % Display CAT report in the SPM grafics window and save a PDF and JPG
@@ -12,6 +12,8 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str,Yl1)
 %   job     .. SPM/CAT parameter structure
 %   res     .. SPM result structure
 %   str     .. Parameter strings (see cat_main_reportstr)
+%   Yl1     .. Label map for ventricle and WMHs
+%   qa      .. WMH handling
 %
 %   See also cat_main_reportstr and cat_main_reportcmd.
 % ______________________________________________________________________
@@ -78,33 +80,47 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str,Yl1)
       cm = 'gray';
   end
 
-  % SPM_orthviews seams to allow only 60 values
-  % It further requires a modified colormaps with lower values that the
-  % colorscale and small adaption for the values. 
+  % SPM_orthviews work with 60 values. 
+  % For the surface we use a larger colormap.
   surfcolors = 128; 
   switch lower(cm)
-    case {'bcgwhw','bcgwhn'} % cat colormaps with larger range
+    case {'bcgwhw','bcgwhn'} 
+      % CAT colormap with larger range colorrange from 0 (BG) to 1 (WM) to 2 (HD).  
       ytick        = [1,5:5:60];
       yticklabel   = {' BG',' ',' CSF',' CGM',' GM',' GWM',' WM',' ',' ',' ',' ',' ',' BV / HD '};
       yticklabelo  = {' BG',' ','    ','    ','   ','     ',' avg WM  ',' ',' ',' ',' ',' ',' BV / HD '};
       yticklabeli  = {' BG',' ','    ','    ','   ','  ','  ',' ',' ',' ',' ',' ',' BV / HD '};
-      ytickp0      = [    1,   13,   17,    26,   35,   44,     53,    57,      60];
-      if job.extopts.expertgui>1
-        yticklabelp0 = {' BG',' HD',' BG',' CSF',' GM',' WM',' WMHs','Ventricle',' GM>CSF'};
-      else
-        yticklabelp0 = {' BG',' HD',' BG',' CSF',' GM',' WM',' WMHs','',' GM>CSF'};
-      end
-      %colormap(cat_io_colormaps(cm,60));
-      cmap = [cat_io_colormaps([cm 'ov'],60);flipud(cat_io_colormaps([cm 'ov'],60));jet(surfcolors)]; 
-      cmmax = 2;
+      cmap         = [cat_io_colormaps([cm 'ov'],60);flipud(cat_io_colormaps([cm 'ov'],60));jet(surfcolors)]; 
+      cmmax        = 2;
     case {'jet','hsv','hot','cool','spring','summer','autumn','winter','gray','bone','copper','pink'}
-      ytick       = [1 20 40 60]; 
-      yticklabel  = {' BG',' CSF',' GM',' WM'};
-      yticklabelo = {' BG','    ','   ',' WM'};
-      yticklabeli = {' BG','    ','   ','   '};
-      cmap = [eval(sprintf('%s(60)',cm));flipud(eval(sprintf('%s(60)',cm)));jet(surfcolors)]; 
-      cmmax = 1;
+      % default colormaps 
+      ytick        = [1 20 40 60]; 
+      yticklabel   = {' BG',' CSF',' GM',' WM'};
+      yticklabelo  = {' BG','    ','   ',' WM'};
+      yticklabeli  = {' BG','    ','   ','   '};
+      cmap         = [eval(sprintf('%s(60)',cm));flipud(eval(sprintf('%s(60)',cm)));jet(surfcolors)]; 
+      cmmax        = 1;
   end
+  
+  % For the segmentation map an overlay color map is used that is
+  % independent of the first colormap.
+  ytickp0      = [    1,   13,   18,    26,   35,   44,     52,    56,      60];
+  if job.extopts.expertgui>1
+    yticklabelp0 = {' BG',' HD',' BG',' CSF',' GM',' WM',' WMHs',' Ventricle',' GM > CSF'};
+  else
+    yticklabelp0 = {' BG',' HD',' BG',' CSF',' GM',' WM',' WMHs',' ',' GM>CSF'};
+  end
+  if job.extopts.WMHC<2 
+    if qa.subjectmeasures.vol_rel_CGW(4)>0.03 || ...
+       qa.subjectmeasures.vol_rel_CGW(4)/qa.subjectmeasures.vol_rel_CGW(3)>0.05
+      yticklabelp0{end-2} = ' \color[rgb]{1,0,1}uncorrected WMHs = GM!';
+    else
+      yticklabelp0{end-2} = ' no/small WMHs';
+    end
+  elseif job.extopts.WMHC==2 
+    yticklabelp0{end-2} = ' \color[rgb]{1,0,1}WMHs > WM';
+  end
+
   colormap(cmap);
   spm_orthviews('Redraw');
 
@@ -124,13 +140,10 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str,Yl1)
     htext(3,i,2) = text(0.70,0.40-(0.055*i), str{3}(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   end
 
-
-
+  % position values of the orthview/surface subfigures
   pos = [0.01 0.38 0.48 0.36; 0.51 0.38 0.48 0.36; ...
          0.01 0.01 0.48 0.36; 0.51 0.01 0.48 0.36];
   spm_orthviews('Reset');
-
-
 
 
   % BB box is not optimal for all images
@@ -147,8 +160,10 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str,Yl1)
   end
 
 
-  % Yo - original image in original space
-  % using of SPM peak values didn't work in some cases (5-10%), so we have to load the image and estimate the WM intensity 
+  %  Yo - original image in original space
+  %  ----------------------------------------------------------------------
+  %  Using of SPM peak values didn't work in some cases (5-10%), so we have 
+  %  to load the image and estimate the WM intensity. 
   try Yo  = single(VT0.private.dat(:,:,:)); end
   if isfield(res,'spmpp')
     VT0x = res.image0(1); 
@@ -167,9 +182,9 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str,Yl1)
       end
     end
     
-    [Yo,th] = cat_stat_histth(Yo,99.99); %Yo = (Yo - th(1)) / diff(th);
-    %VT0x.dat = Yo;
-  
+    % remove outlier to make it orthviews easier
+    Yo = cat_stat_histth(Yo,99.99); 
+   
     if job.inv_weighting
       WMth = cat_stat_nanmedian(Yo(Yp0(:)>2.5 & Yp0(:)<3.5))/2*3;
       T1txt = '*.nii (Original PD/T2)'; 
@@ -183,7 +198,7 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str,Yl1)
     hho = spm_orthviews('Image',VT0x,pos(1,:));
     spm_orthviews('Caption',hho,{T1txt},'FontSize',fontsize,'FontWeight','Bold');
     spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
-    cc{1} = axes('Position',[pos(1,1) + 0.30 0.37 0.02 0.15],'Parent',fg);     
+    cc{1} = axes('Position',[pos(1,1) + 0.23 0.37 0.02 0.15],'Parent',fg);     
     try image(cc{1},(60:-1:1)'); end
 
     if job.inv_weighting
@@ -198,7 +213,8 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str,Yl1)
   end
 
 
-  %% Ym - normalized image in original space
+  %  Ym - normalized image in original space
+  %  ----------------------------------------------------------------------
   if ~isfield(res,'spmpp') 
     %%
     Vm        = res.image(1); 
@@ -211,24 +227,23 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str,Yl1)
     hhm = spm_orthviews('Image',Vm,pos(2,:));
     spm_orthviews('Caption',hhm,{'m*.nii (Int. Norm.)'},'FontSize',fontsize,'FontWeight','Bold');
     spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
-    cc{2} = axes('Position',[pos(2,1) + 0.30 0.37 0.02 0.15],'Parent',fg);
+    cc{2} = axes('Position',[pos(2,1) + 0.23 0.37 0.02 0.15],'Parent',fg);
     try image(cc{2},(60:-1:1)'); end 
     set(cc{2},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
       'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
   end
  
-  %% Yo - segmentation in original space
-  VO        = res.image(1); 
-  VO.fname  = ''; 
-  VO.dt     = [spm_type('FLOAT32') spm_platform('bigend')];
   
-  % use different kind of overlays to visualize the segmentation: 
-  %   0 - default 
+  
+  %  Yp0 - segmentation in original space
+  %  ----------------------------------------------------------------------
+  %  Use different kind of overlays to visualize the segmentation: 
+  %   0 - old default 
   %       (only brain tissue with the standard colormap)
   %   1 - default + head 
   %       (bad handling of PVE head values)
   %
-  %   2 - color overlay for head and brain 
+  %   2 - color overlay for head and brain (DEFAULT)
   %       (good for skull stripping but worste representation of brain tissues) 
   %   3 - color overlay for head and brain (inverse head) 
   %       (good for skull stripping but worste representation of brain tissues) 
@@ -237,7 +252,15 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str,Yl1)
   %       (miss some details in CSF tissues)
   %   5 - white background + gray head + cat brain colors (inverse head) 
   %       (more similar to other backgrounds)
+  % 
+  %  Currently, no overlay and overlay 2 are the best supported options. 
+  %  Other options are only for internal test or development and can maybe
+  %  removed in future (RD 20190110).
+  
   useoverlay = 2; %(job.extopts.expertgui>1) * 2;
+  VO         = res.image(1); 
+  VO.fname   = ''; 
+  VO.dt      = [spm_type('FLOAT32') spm_platform('bigend')];
   
   % create main brackground image
   if useoverlay == 3
@@ -255,10 +278,11 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str,Yl1)
     VO.dat(:,:,:) = single(Yp0/3);
   end
   
+  
   VO.pinfo  = repmat([1;0],1,size(Yp0,3));
   VO.mat    = dispmat * VO.mat; 
   if exist('hhp0','var')
-    spm_orthviews('Delete', hhp0);
+    spm_orthviews('Delete', hhp0); %#ok<NODEF>
     clear hhp0;
   end 
   hhp0    = spm_orthviews('Image',VO,pos(3,:));
@@ -267,12 +291,10 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str,Yl1)
   LAB = job.extopts.LAB;
   NS  = @(Ys,s) Ys==s | Ys==s+1;
   if useoverlay>1
-    % brainmask overlay that only allows gray backgroud images ^^
-
     spm_orthviews('window',hhp0,[0 2]);
     V2 = VO;
     switch useoverlay
-      case 22 % red mask
+      case 22 % classic red mask
         V2.dat(:,:,:) = min(59,min(1,Yp0/3) + 60*(smooth3((abs(Yp0 - Ym*3)>0.6).*cat_vol_morph(abs(Yp0 - Ym*3)>0.8,'d',2).*(Yp0>0.5))>0.5)); 
         spm_orthviews('addtruecolourimage',hhp0,V2,...
           [0.05 0.4 1; gray(58); 0.8 0.2 0.2],0.5,3,0)
@@ -281,6 +303,8 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str,Yl1)
         % basic head/brain tissue
         if 0 % pink head 
           BCGWH = pink(15); fx = 4; 
+        elseif 0 % green head 
+          BCGWH = [0 0.1 0.05; 0.05 0.2 0.1; 0.1 0.3 0.2; 0.15 0.4 0.3; summer(11)]; fx = 3; 
         else % blue head 
           BCGWH = [0 0.05 0.1; 0.05 0.1 0.20; cat_io_colormaps('blue',13)];fx = 3;
         end
@@ -297,7 +321,8 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str,Yl1)
         V2.dat(Ychange & Ym>1.66/3) = 60/30; 
         
         % WMHs
-        if job.extopts.WMHC > 1
+        if job.extopts.WMHC > 1 || (qa.subjectmeasures.vol_rel_CGW(4)>0.03 || ...
+          qa.subjectmeasures.vol_rel_CGW(4)/qa.subjectmeasures.vol_rel_CGW(3)>0.05)
           V2.dat(NS(Yl1,LAB.HI)) = 52/30;
         end
         
@@ -315,8 +340,13 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str,Yl1)
         % colormap of WMHs
         g29 = gray(39); g29(1:7,:) = []; g29(end-3:end,:) = [];
         if job.extopts.WMHC < 2
-          wmhc9 = gray(20); wmhc9(1:10,:) = []; wmhc9(end,:) = []; 
-          wmhc9 = flipud(wmhc9); 
+          if qa.subjectmeasures.vol_rel_CGW(4)>0.03 || ...
+            qa.subjectmeasures.vol_rel_CGW(4)/qa.subjectmeasures.vol_rel_CGW(3)>0.05
+            wmhc9 = cat_io_colormaps('magenta',9);
+          else
+            wmhc9 = gray(20); wmhc9(1:10,:) = []; wmhc9(end,:) = []; 
+            wmhc9 = flipud(wmhc9);
+          end
         else
           wmhc9 = cat_io_colormaps('orange',9);
         end
@@ -349,9 +379,75 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str,Yl1)
   else
     spm_orthviews('window',hhp0,[0 cmmax]);
   end
-  %%
   
+  %% legend
+  spm_orthviews('Reposition',[0 0 0]); 
+  spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize,'FontWeight','Bold');
+  spm_orthviews('window',hhp0,[0 cmmax]); caxis([0,2]);
   global st;
+  if useoverlay>1
+  % make SPM colorbar invisible (cannot delete it because SPM orthviews need it later)  
+    %st.vols{3}.blobs{1}.cbar.Visible    = 'off';
+    st.vols{3}.blobs{1}.cbar.YTick       = ytickp0/30;
+    st.vols{3}.blobs{1}.cbar.XTick       = [];
+    st.vols{3}.blobs{1}.cbar.YTickLabel  = yticklabelp0;
+    st.vols{3}.blobs{1}.cbar.XTickLabel  = {};
+    st.vols{3}.blobs{1}.cbar.YAxisLocation = 'right';
+    st.vols{3}.blobs{1}.cbar.Position = [pos(3,1) + 0.23 0.02 0.02 0.15]; 
+    st.vols{3}.blobs{1} = rmfield(st.vols{3}.blobs{1},'cbar'); % remove handle to avoid position updates
+  else
+    cc{3} = axes('Position',[pos(3,1) + 0.23 0.02 0.02 0.15],'Parent',fg);
+    try image(cc{3},(60:-1:1)'); end
+    set(cc{3},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
+      'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
+  end
+  if ~debug, clear Yp0; end
+  %spm_orthviews('redraw');
+  
+  
+  %% TPM overlay with brain/head and head/background surfaces
+  warning('OFF','MATLAB:subscripting:noSubscriptsSpecified')
+  showTPMsurf = 1; % ... also in default mode 
+  if job.extopts.expertgui>0 - showTPMsurf
+    %Phull = {fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','bh.hull.cat.gii')};
+    Phull = {cat_surf_create_TPM_hull_surface(res.tpm)};
+    for id=1
+      spm_orthviews('AddContext',id); % need the context menu for mesh handling
+
+      spm_ov_mesh('display',id,Phull); 
+
+      % apply affine scaling for gifti objects
+      for ix=1:numel(Phull) 
+        % load mesh
+        spm_ov_mesh('display',id,Phull(ix)); 
+
+        % apply affine scaling for gifti objects
+        V = (dispmat * inv(res.Affine) * ([st.vols{id}.mesh.meshes(ix).vertices,...
+             ones(size(st.vols{id}.mesh.meshes(ix).vertices,1),1)])' )';
+        V(:,4) = [];
+        M0 = st.vols{id}.mesh.meshes(1:ix-1);
+        M1 = st.vols{id}.mesh.meshes(ix);
+        M1 = subsasgn(M1,struct('subs','vertices','type','.'),single(V));
+        st.vols{id}.mesh.meshes = [M0,M1];
+      end
+
+      %% change line style
+      hM = findobj(st.vols{id}.ax{1}.cm,'Label','Mesh');
+      UD = get(hM,'UserData');
+      UD.width = 0.75; 
+      UD.style = repmat({'b--'},1,numel(Phull));
+      set(hM,'UserData',UD);
+      spm_ov_mesh('redraw',id);
+      spm_orthviews('redraw',id);
+
+      %% TPM legend
+      ccl{1} = axes('Position',[pos(1,1:2) 0 0] + [0.33 -0.005 0.02 0.02],'Parent',fg);
+      cclp = plot(ccl{1},([0 0.4;0.6 1])',[0 0; 0 0],'b-'); text(ccl{1},1.2,0,'TPM fit');
+      set( cclp,'LineWidth',0.75); axis(ccl{1},'off')
+    end
+  end
+  
+  %%
   if job.extopts.expertgui && exist('Psurf','var') && ~isempty(Psurf)
     % prepare brainmask as mesh
     %brainmesh = gifti( isosurface(Yp0,0.5) );
@@ -373,11 +469,11 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str,Yl1)
         spm_ov_mesh('display',id,Psurf(ix).Pcentral); 
 
         % apply affine scaling for gifti objects
-        V = (dispmat * ([st.vols{id}.mesh.meshes(ix).vertices,...
-             ones(size(st.vols{id}.mesh.meshes(ix).vertices,1),1)])' )';
+        V = (dispmat * ([st.vols{id}.mesh.meshes(end).vertices,...
+             ones(size(st.vols{id}.mesh.meshes(end).vertices,1),1)])' )';
         V(:,4) = [];
-        M0 = st.vols{id}.mesh.meshes(1:ix-1);
-        M1 = st.vols{id}.mesh.meshes(ix);
+        M0 = st.vols{id}.mesh.meshes(1:end-1);
+        M1 = st.vols{id}.mesh.meshes(end);
         M1 = subsasgn(M1,struct('subs','vertices','type','.'),single(V));
         st.vols{id}.mesh.meshes = [M0,M1];
       end
@@ -385,45 +481,30 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str,Yl1)
       %% change line style
       hM = findobj(st.vols{id}.ax{1}.cm,'Label','Mesh');
       UD = get(hM,'UserData');
-      UD.width = 0.5; 
-      UD.style = repmat({'k-'},1,numel(Psurf));
+      UD.width = [repmat(0.75,1,numel(UD.width) - numel(Psurf))  repmat(0.5,1,numel(Psurf))]; 
+      UD.style = [repmat({'b--'},1,numel(UD.width) - numel(Psurf)) repmat({'k-'},1,numel(Psurf))];
       set(hM,'UserData',UD);
       spm_ov_mesh('redraw',id);
+      
+      %% TPM legend
+      ccl2{id} = axes('Position',[pos(id,1:2) 0 0] + [0.33 -0.015+0.02*(id>2) 0.02 0.02],'Parent',fg);
+      plot(ccl2{id},[0 1],[0 0],'k-'); text(ccl2{id},1.2,0,'CS'); axis(ccl2{id},'off')
     end
+    
+
     
     % remove menu
     %if ~debug, spm_orthviews('RemoveContext',id); end 
   end
   
-  if ~debug, clear Yp0; end
-  spm_orthviews('Reposition',[0 0 0]); 
-  spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize,'FontWeight','Bold');
-  spm_orthviews('window',hhp0,[0 cmmax]); caxis([0,2]);
   
-  %%
-  if useoverlay>1
-  % make SPM colorbar invisible (cannot delete it because SPM orthviews need it later)  
-    %st.vols{3}.blobs{1}.cbar.Visible    = 'off';
-    st.vols{3}.blobs{1}.cbar.YTick       = ytickp0/30;
-    st.vols{3}.blobs{1}.cbar.XTick       = [];
-    st.vols{3}.blobs{1}.cbar.YTickLabel  = yticklabelp0;
-    st.vols{3}.blobs{1}.cbar.XTickLabel  = {};
-    
-    %st.vols{3}.blobs{1}.cbar.Position = zeros(1,4);
-    st.vols{3}.blobs{1}.cbar.Position = [pos(3,1) + 0.30 0.02 0.02 0.15]; 
-  else
-    cc{3} = axes('Position',[pos(3,1) + 0.30 0.02 0.02 0.15],'Parent',fg);
-    try image(cc{3},(60:-1:1)'); end
-    set(cc{3},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-      'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
-  end
   
   
   
   
   
 %%
-
+  imat = spm_imatrix(res.Affine); Rigid = spm_matrix([imat(1:6) 1 1 1 0 0 0]); clear imat;
   % surface
   if job.extopts.print>1
     if exist('Psurf','var') && ~isempty(Psurf)
@@ -431,8 +512,14 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str,Yl1)
         spm_figure('Focus','Graphics'); 
         hCS = subplot('Position',[0.50 0.05 0.55 0.30],'visible','off'); 
         hSD = cat_surf_display(struct('data',Psurf(1).Pthick,'readsurf',0,'expert',2,...
-          'multisurf',job.output.surface,'view','s',...
+          'multisurf',job.output.surface,'view','s','menu',0,...
           'parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
+       
+        for ppi = 1:numel(hSD{1}.patch)
+          V = (Rigid * ([hSD{1}.patch(ppi).Vertices, ones(size(hSD{1}.patch(ppi).Vertices,1),1)])' )'; 
+          V(:,4) = []; hSD{1}.patch(ppi).Vertices = V;
+        end
+        
         colormap(cmap);  set(hSD{1}.colourbar,'visible','off'); 
         cc{3} = axes('Position',[0.63 0.02 0.3 0.01],'Parent',fg); image(cc{3},(121:1:120+surfcolors));
         set(cc{3},'XTick',1:(surfcolors-1)/6:surfcolors,'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
@@ -493,17 +580,20 @@ function cat_main_reportfig(Ym,Yp0,Psurf,job,res,str,Yl1)
   if exist('hho' ,'var'), spm_orthviews('window',hho ,[0 WMfactor0]); end
   if exist('hhm' ,'var'), spm_orthviews('window',hhm ,[0 WMfactor1]); end
   if exist('hhp0','var'), spm_orthviews('window',hhp0,[0 WMfactor1]); end
-  if ~useoverlay
-    st.vols{3}.blobs{1}.cbar.Visible  = 'off'; 
-    st.vols{3}.blobs{1}.cbar.Position = zeros(1,4);
-  else
-    st.vols{3}.blobs{1}.cbar.YTick       = ytickp0/30;
-    st.vols{3}.blobs{1}.cbar.XTick       = [];
-    st.vols{3}.blobs{1}.cbar.YTickLabel  = yticklabelp0;
-    st.vols{3}.blobs{1}.cbar.XTickLabel  = {};
-    st.vols{3}.blobs{1}.cbar.Position    = [pos(3,1) + 0.30 0.02 0.02 0.15];
-  end
-  %warning on;  %#ok<WNON>
   
-  %if ~debug, spm_orthviews('RemoveContext',id); end 
+  
+  %% change line style of TPM surf
+  if job.extopts.expertgui>0 - showTPMsurf
+    id = 1; 
+    hM = findobj(st.vols{id}.ax{1}.cm,'Label','Mesh');
+    UD = get(hM,'UserData');
+    UD.width = [repmat(0.75,1,numel(UD.width) - numel(Psurf))  repmat(0.5,1,numel(Psurf))]; 
+    UD.style = [repmat({'r--'},1,numel(UD.width) - numel(Psurf)) repmat({'k-'},1,numel(Psurf))];
+    set( cclp,'Color', [1 0 0]);
+    set(hM,'UserData',UD);
+    spm_ov_mesh('redraw',id);
+  end  
+  
+  warning('OFF','MATLAB:subscripting:noSubscriptsSpecified'); % jep off
+
 end

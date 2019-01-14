@@ -143,8 +143,8 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
   [cat_err_res.init.Yp0,cat_err_res.init.BB] = cat_vol_resize(Yp0,'reduceBrain',vx_vol,2,Yp0>0.5); 
   cat_err_res.init.Yp0 = cat_vol_ctype(cat_err_res.init.Yp0/3*255);
   clear Yp0; 
-  
-% ### This can not be reached because the mask field is removed by SPM! ###
+
+  % ### This can not be reached because the mask field is removed by SPM! ###
   if isfield(res,'msk') 
     Ybg = ~res.msk.dat; 
     P4  = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc<T3th(2))  .* (Ybg==0) + single(P(:,:,:,4)) .* (Ybg<1) ); % remove air in head
@@ -302,6 +302,11 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
       spm_progress_bar('set',iter);
   end
 
+  % update segmentation for error report
+  Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
+  [cat_err_res.init.Yp0,cat_err_res.init.BB] = cat_vol_resize(Yp0,'reduceBrain',vx_vol,2,Yp0>0.5); 
+  cat_err_res.init.Yp0 = cat_vol_ctype(cat_err_res.init.Yp0/3*255);
+ 
   spm_progress_bar('clear');
   for k1=1:size(P,4)
       Ycls{k1} = P(:,:,:,k1); %#ok<AGROW>
@@ -319,7 +324,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
     tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postbias'));
     save(tmpmat,'res','tpm','job','Ysrc','Ybf','Ycls');
   end
-
+ 
   clear Ybf
   stime2 = cat_io_cmd(' ','g5','',job.extopts.verb-1,stime2); 
   fprintf('%5.0fs\n',etime(clock,stime));

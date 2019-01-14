@@ -12,11 +12,7 @@ function cat_run_newcatch(job,tpm,subj)
   [pth,nam,ext] = spm_fileparts(job.channel(1).vols{subj}); 
 
   try
-    if 0 %job.extopts.APP == 1070
-      cat_run_job1070(job,tpm,subj); 
-    else
-      cat_run_job(job,tpm,subj); 
-    end
+    cat_run_job(job,tpm,subj); % the cat_run_job1070 is only called by older functions
   catch caterr 
     %% add further information for special errors
     if isempty(caterr.identifier)

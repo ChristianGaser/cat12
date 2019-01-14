@@ -17,11 +17,12 @@ function Ycls = cat_main(res,tpm,job)
 % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
 dbs = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
 
-
+% error report structure
+global cat_err_res
+  
 
 %% Update SPM/CAT parameter and add some basic variables
 [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job);
-%global cat_err_res; % for CAT error report
 
 
 
@@ -437,6 +438,8 @@ if ~isfield(res,'spmpp')
   qa.subjectmeasures.WMH_rel    = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(0.5/3*255));   % relative WMH volume to TIV without PVE
   qa.subjectmeasures.WMH_WM_rel = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(2.5/3*255));   % relative WMH volume to WM without PVE
   qa.subjectmeasures.WMH_abs    = prod(vx_vol)/1000 * qa.subjectmeasures.WMH_abs;             % absolute WMH volume without PVE in cm^3
+  [cat_err_res.init.Yp0,cat_err_res.init.BB] = cat_vol_resize(Yp0,'reduceBrain',vx_vol,2,Yp0>0.5); 
+  cat_err_res.init.Yp0 = cat_vol_ctype(cat_err_res.init.Yp0/3*255);
   clear Ywmhrel Yp0
   
 
@@ -528,6 +531,12 @@ if ~isfield(res,'spmpp')
         sprintf('Uncorrected WM lesions greater (%2.2f%%%%%%%% of the WM)!\\n',qa.subjectmeasures.WMH_rel));
     end
   end
+  
+  % update error report structure
+  [cat_err_res.init.Yp0,cat_err_res.init.BB] = cat_vol_resize(Yp0b,'reduceBrain',vx_vol,2,Yp0b>0.5); 
+  cat_err_res.init.Yp0 = cat_vol_ctype(cat_err_res.init.Yp0/3*255);
+  
+  % store smaller version
   Yp0b = Yp0b(indx,indy,indz); 
   clear Yclsb;
 
@@ -737,7 +746,7 @@ if job.extopts.print
   str = cat_main_reportstr(job,res,qa,cat_warnings);
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
   if ~exist('Psurf','var'), Psurf = ''; end
-  cat_main_reportfig(Ymi,Yp0,Psurf,job,res,str,Yl1);
+  cat_main_reportfig(Ymi,Yp0,Yl1,Psurf,job,qa,res,str);
 end
 % final command line report
 cat_main_reportcmd(job,res,qa);
