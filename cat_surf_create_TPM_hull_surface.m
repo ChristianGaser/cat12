@@ -14,7 +14,7 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm)
 % Structural Brain Mapping Group
 % University Jena
 % _________________________________________________________________________
-% $Id: cat_surf_createCS.m 1395 2018-11-21 15:25:23Z dahnke $ 
+% $Id$ 
 
 
   % check input
