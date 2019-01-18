@@ -132,11 +132,10 @@ bb.help    = {'The bounding box (in mm) of the volume which is to be written (re
 if expert==0
   regstr        = cfg_menu;
   regstr.labels = {
-    'Dartel'
-    'Default Shooting'
     'Optimized Shooting'
+    'Default Shooting'
   };
-  regstr.values = {0 4 0.5};
+  regstr.values = {0 4}; % special case 0 = 0.5 due to Dartel default seting
   regstr.help   = [regstr.help; { ...
     'For spatial registration CAT offers the use of the Dartel (Ashburner, 2008) and Shooting (Ashburner, 2011) registrations to an existing template. Furthermore, an optimized shooting approach is available that uses an adaptive threshold and lower initial resolutions to obtain a good tradeoff between accuracy and calculation time.  The CAT default templates were obtained by standard Dartel/Shooting registration of 555 IXI subjects between 20 and 80 years. '
     'The registration time is typically about 3, 10, and 5 minutes for Dartel, Shooting, and optimized Shooting for the default registration resolution. '
@@ -145,7 +144,6 @@ if expert==0
 elseif expert==1
   regstr        = cfg_menu;
   regstr.labels = {
-    'Dartel (0)'
     'Default Shooting (4)'
     'Optimized Shooting - vox (5)'
     'Optimized Shooting - fast (eps)'
@@ -155,7 +153,8 @@ elseif expert==1
     'Optimized Shooting - medium (12)'
     'Optimized Shooting - soft (13)'
   };
-  regstr.values = {0 4 5 eps 0.5 1.0 11 12 13};
+  regstr.values = {4 5 eps 0 1.0 11 12 13}; % special case 0 = 0.5 due to Dartel default seting
+  regstr.name   = 'Method';
   regstr.help = [regstr.help; { ...
     'The strength of the optimized Shooting registration depends on the stopping criteria (controlled by the "extopts.regstr" parameter) and by the final registration resolution that can be given by the template (fast,standard,fine), as fixed value (hard,medium,soft), or (iii) by the output resolution (vox).   In general the template resolution is the best choice to allow an adaptive normalization depending on the individual anatomy with some control of the calculation time. Fixed resolution allows to roughly define the degree of normalization for all images with 2.0 mm for smoother and 1.0 mm for stronger deformations.  For special cases the registration resolution can also be set by the output resolution controlled by the "extopts.vox" parameter. '
     ''
@@ -176,7 +175,8 @@ else
   regstr         = cfg_entry;
   regstr.strtype = 'r';
   regstr.num     = [1 inf];
-  regstr.help = [regstr.help; { ...
+  regstr.name   = 'Spatial registration';
+  regstr.help    = [regstr.help; { ...
     '"Default Shooting" runs the original Shooting approach for existing templates and takes about 10 minutes per subject for 1.5 mm templates and about 1 hour for 1.0 mm. '
     'The "Optimized Shooting" approach uses lower spatial resolutions in the first iterations and an adaptive stopping criteria that allows faster processing of about 6 minutes for 1.5 mm and 15 minutes for 1.0 mm. '
     ''
@@ -211,17 +211,42 @@ else
     }]; 
 end
 regstr.tag    = 'regstr';
-regstr.name   = 'Spatial registration';
-regstr.def    = @(val)cat_get_defaults('extopts.regstr', val{:});
-
+regstr.def    = @(val)cat_get_defaults('extopts.regstr',val{:});
+ 
 %---------------------------------------------------------------------
 
-registration        = cfg_branch;
-registration.tag    = 'registration';
-registration.name   = 'Spatial Registration';
+dartel        = cfg_branch;
+dartel.tag    = 'dartel';
+dartel.name   = 'Dartel Registration';
+dartel.val    = {darteltpm};
+dartel.help   = {
+  'Classical Dartel (Ashburner, 2008) registrations to a existing template. The CAT default templates were obtained by standard Dartel registration of 555 IXI subjects between 20 and 80 years. '
+  ''
+};
+ 
+shooting        = cfg_branch;
+shooting.tag    = 'shooting';
+shooting.name   = 'Shooting Registration';
+shooting.val    = {shootingtpm regstr};
+shooting.help   = {
+  'Shooting (Ashburner, 2011) registrations to a existing template. Furthermore, an optimized shooting approach is available that use adaptive threshold and lower initial resolution to improve accuracy and calculation time at once. The CAT default templates were obtained by standard Shooting registration of 555 IXI subjects between 20 and 80 years. '
+  ''
+};
+
 if expert<2
-  registration.val  = {darteltpm shootingtpm regstr};
+  registration        = cfg_choice;
+  registration.tag    = 'registration';
+  registration.name   = 'Spatial Registration';
+  registration.values = {dartel shooting};
+  if cat_get_defaults('extopts.regstr')==0
+    registration.val  = {dartel};
+  else
+    registration.val  = {shooting};
+  end
 else
+  registration      = cfg_branch;
+  registration.tag  = 'registration';
+  registration.name = 'Spatial Registration';
   registration.val  = {T1 brainmask cat12atlas darteltpm shootingtpm regstr}; 
 end
 registration.help   = {

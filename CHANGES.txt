@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1417 | dahnke | 2019-01-18 10:22:33
+r1418 | dahnke | 2019-01-18 15:09:52
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_run.m
+
+1) Changed:  Modified registration menu. 
+------------------------------------------------------------------------
+r1417 | dahnke | 2019-01-18 10:25:15 +0100 (Fr, 18 Jan 2019) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -17,6 +26,7 @@ M       html/cat.html
 1) Fixed:   Corrected small bugs in cat_main_report.
 2) New:     Added rating for topological defects and defect area to 
             create colorized output in the cat report (only experts).
+
 ------------------------------------------------------------------------
 r1416 | gaser | 2019-01-16 15:57:25 +0100 (Mi, 16 Jan 2019) | 15 lines
 
