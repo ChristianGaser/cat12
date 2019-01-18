@@ -1,5 +1,24 @@
 ------------------------------------------------------------------------
-r1416 | gaser | 2019-01-16 15:57:04
+r1417 | dahnke | 2019-01-18 10:22:33
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_long_main.m
+M       cat_main.m
+M       cat_main_reportfig.m
+M       cat_main_reportstr.m
+M       cat_stat_marks.m
+M       cat_surf_createCS.m
+M       cat_vol_groupwise_ls.m
+M       cat_vol_qa.m
+M       html/cat.html
+
+1) Fixed:   Corrected small bugs in cat_main_report.
+2) New:     Added rating for topological defects and defect area to 
+            create colorized output in the cat report (only experts).
+------------------------------------------------------------------------
+r1416 | gaser | 2019-01-16 15:57:25 +0100 (Mi, 16 Jan 2019) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +34,7 @@ M       html/cat.html
     bounding box of average T1 image.
 (2) Changed: Suppress some warning for windows systems.
 (3) Changed: Updated cat_vol_groupwise_ls.m w.r.t. last SPM12 update.
+
 ------------------------------------------------------------------------
 r1415 | gaser | 2019-01-14 15:20:53 +0100 (Mo, 14 Jan 2019) | 9 lines
 

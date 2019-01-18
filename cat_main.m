@@ -696,7 +696,10 @@ if numel(Ycls)>7, qa.subjectmeasures.vol_abs_CGW(5) = prod(vx_vol)/1000/255 .* s
 qa.subjectmeasures.vol_TIV     =  sum(qa.subjectmeasures.vol_abs_CGW); 
 qa.subjectmeasures.vol_rel_CGW =  qa.subjectmeasures.vol_abs_CGW ./ qa.subjectmeasures.vol_TIV;
 if ~debug, clear Ycls; end
-
+if job.output.surface
+  qa.qualitymeasures.SurfaceEulerNumber = qa.subjectmeasures.EC_abs;
+  qa.qualitymeasures.SurfaceDefectArea  = qa.subjectmeasures.defect_size;
+end
 stime = cat_io_cmd('Quality check'); job.stime = stime; 
 Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; Yp0(Yp0>3.1) = nan; % no analysis in WMH regions
 qa    = cat_vol_qa('cat12',Yp0,VT0.fname,Ym,res,cat_warnings,job.extopts.species, ...

@@ -218,7 +218,7 @@ function varargout = cat_vol_qa(action,varargin)
         cat_warnings = varargin{5};
         species = varargin{6};
         if isfield(varargin{7},'qa')
-          if isfield(varargin{7}.qa,'qualitymeasures'), QAR.qualitymeasures = cat_io_updateStruct(QAR,varargin{7}.qa.qualitymeasures); end
+          if isfield(varargin{7}.qa,'qualitymeasures'), QAS.qualitymeasures = cat_io_updateStruct(QAS,varargin{7}.qa.qualitymeasures); end
           if isfield(varargin{7}.qa,'subjectmeasures'), QAS.subjectmeasures = cat_io_updateStruct(QAS,varargin{7}.qa.subjectmeasures); end
         end
         % opt = varargin{end} in line 96)

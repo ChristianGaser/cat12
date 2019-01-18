@@ -592,6 +592,11 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
         if exist('Vyp0s','var'), delete(Vyp0s.fname); end
       end
       fprintf('%5.0fs\n',etime(clock,stime)); 
+      
+      % estimate Euler characteristics: EC = #vertices + #faces - #edges
+      EC0 = size(CS.vertices,1) + size(CS.faces,1) - size(spm_mesh_edges(CS),1);
+      EC  = EC + abs(EC0);
+      
       %%
       continue
     end
@@ -636,8 +641,8 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
     end
    
     % estimate Euler characteristics: EC = #vertices + #faces - #edges
-    EC0 = size(CS.vertices,1)+size(CS.faces,1)-size(spm_mesh_edges(CS),1);
-    EC = EC + abs(EC0);
+    EC0 = size(CS.vertices,1) + size(CS.faces,1) - size(spm_mesh_edges(CS),1);
+    EC  = EC + abs(EC0);
     
     %% topology correction and surface refinement 
     stime = cat_io_cmd('  Topology correction and surface refinement:','g5','',opt.verb,stime); 
@@ -885,8 +890,8 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
   end  
   
   % calculate mean EC and defect size for all surfaces
-  EC = round(EC/numel(opt.surf));
-  defect_size = round(defect_size/numel(opt.surf));
+  EC          = round(EC / numel(opt.surf));
+  defect_size = round(defect_size / numel(opt.surf));
   
   if opt.verb
     for si=1:numel(Psurf)

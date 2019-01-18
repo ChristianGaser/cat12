@@ -16,7 +16,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
 %   'eval'      .. evaluates fields of a input structure QS
 %   'help'      .. output the help informations for QS
 %
-% hier wird noch eine zusammenfassung/vereinfachung der maße gebraucht
+% hier wird noch eine zusammenfassung/vereinfachung der ma??e gebraucht
 % QM: res + noise + bias + contrast
 % QS: vol 
 % ______________________________________________________________________
@@ -90,6 +90,8 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
   %'qualitymeasures'  'MPC'                   'linear'    [  0.11   0.33]  'mean preprocessing change map - diff. betw. opt. T1 and p0'
   %'qualitymeasures'  'MJD'                   'linear'    [  0.05   0.15]  'mean jacobian determinant'
   %'qualitymeasures'  'STC'                   'linear'    [  0.05   0.15]   'difference between template and label'
+   'qualitymeasures'  'SurfaceEulerNumber'    'linear'    [     0    100]  'average number of Euler defects of created surfaces'
+   'qualitymeasures'  'SurfaceDefectArea'     'linear'    [     0   5000]  'average area of topological defects'
 % -- subject-related data from the preprocessing -----------------------
   % - volumetric measures - 
    'subjectmeasures'  'vol_TIV'               'normal'    [  1400    400]  'total intracranial volume (GM+WM+VT)'
