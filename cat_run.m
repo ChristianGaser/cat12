@@ -302,8 +302,20 @@ function job = update_job(job)
   end
   clear sampval tolval;
   
+  %% set Dartel/Shooting templates
+  if isfield(job.extopts,'dartel')
+    job.extopts.darteltpm   = job.extopts.dartel.darteltpm;
+    job.extopts.regstr      = 0; 
+  elseif isfield(job.extopts,'shooting')
+    job.extopts.shootingtpm = job.extopts.shooting.shootingtpm;
+    if job.extopts.shooting.regstr==0
+      job.extopts.regstr    = 0.5; 
+    else
+      job.extopts.regstr    = job.extopts.shooting.regstr; 
+    end
+  end
   
-  %% find and check the Dartel templates
+  % find and check the Dartel templates
   [tpp,tff,tee] = spm_fileparts(job.extopts.darteltpm{1});
   job.extopts.darteltpm{1} = fullfile(tpp,[tff,tee]); 
   numpos = min([strfind(tff,'Template_1')]) + 8;
