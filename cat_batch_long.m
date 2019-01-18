@@ -1,8 +1,9 @@
 function cat_batch_long(namefile,output_surface,cat_defaults)
 % wrapper for using batch mode (see cat_batch_long.sh)
 %
-% namefile      - array of file names
-% cat_defaults  - use this default file instead of cat_defaults.m
+% namefile       - array of file names
+% output_surface - enable surface estimation
+% cat_defaults   - use this default file instead of cat_defaults.m
 %_______________________________________________________________________
 % $Id$
 
@@ -12,7 +13,12 @@ if nargin < 1
 end
 
 if nargin < 2
-  output_surface = 1;
+  output_surface = 0;
+else
+  % string argument has to be converted 
+  if isstr(output_surface)
+    output_surface = str2num(output_surface);
+  end
 end
 
 fid = fopen(namefile,'r');
@@ -44,7 +50,6 @@ else
     end
 end
 
-
 matlabbatch{1}.spm.tools.cat.tools.long.subj.mov = cell(n,1);
 for i=1:n
   matlabbatch{1}.spm.tools.cat.tools.long.subj.mov{i} = names{i};
@@ -53,7 +58,7 @@ end
 matlabbatch{1}.spm.tools.cat.tools.long.modulate = 1;
 matlabbatch{1}.spm.tools.cat.tools.long.warps = 0;
 
-if output_surface
+if output_surface == 1
   matlabbatch{1}.spm.tools.cat.tools.long.output.surface = 1;
 end
 

@@ -43,14 +43,14 @@ parse_args ()
 
   while [ $# -gt 0 ]
   do
-	optname="`echo $1 | sed 's,=.*,,'`"
-	optarg="`echo $2 | sed 's,^[^=]*=,,'`"
-	case "$1" in
+    optname="`echo $1 | sed 's,=.*,,'`"
+    optarg="`echo $2 | sed 's,^[^=]*=,,'`"
+    case "$1" in
         --matlab* | -m*)
-			exit_if_empty "$optname" "$optarg"
-			matlab=$optarg
-			shift
-			;;
+            exit_if_empty "$optname" "$optarg"
+            matlab=$optarg
+            shift
+            ;;
         --defaults_file* | -d*)
             exit_if_empty "$optname" "$optarg"
             defaults_file=$optarg
@@ -77,18 +77,18 @@ parse_args ()
             fi
             shift
             ;;
-		-h | --help | -v | --version | -V)
-			help
-			exit 1
-			;;
-		-*)
-			echo "`basename $0`: ERROR: Unrecognized option \"$1\"" >&2
-			;;
+        -h | --help | -v | --version | -V)
+            help
+            exit 1
+            ;;
+        -*)
+            echo "`basename $0`: ERROR: Unrecognized option \"$1\"" >&2
+            ;;
         *)
             ARRAY[$count]=$1
             ((count++))
             ;;
-	esac
+    esac
     shift
   done
 
@@ -108,8 +108,8 @@ exit_if_empty ()
 
   if [ -z "$val" ]
   then
-	echo 'ERROR: No argument given with \"$desc\" command line argument!' >&2
-	exit 1
+    echo 'ERROR: No argument given with \"$desc\" command line argument!' >&2
+    exit 1
   fi
 }
 
@@ -165,7 +165,7 @@ run_batch ()
     export MATLABPATH=$spm12
 
     SIZE_OF_ARRAY="${#ARRAY[@]}"
-	
+    
     # argument empty?
     if [ ! "${defaults_file}" == "" ]; then
         # check wether absolute or relative names were given
@@ -201,20 +201,20 @@ run_batch ()
     
     echo ${ARG_LIST} >> ${TMP}
 
-	time=`date "+%Y%b%d_%H%M"`
+    time=`date "+%Y%b%d_%H%M"`
     vbmlog=${LOGDIR}/cat_${HOSTNAME}_${time}.log
-	echo Check $vbmlog for logging information
-	echo
+    echo Check $vbmlog for logging information
+    echo
 
     COMMAND="cat_batch_long('${TMP}','${output_surface}','${defaults_file}')"
-	echo Running ${ARG_LIST}
-	echo > $vbmlog
-	echo ---------------------------------- >> $vbmlog
-	date >> $vbmlog
-	echo ---------------------------------- >> $vbmlog
-	echo >> $vbmlog
-	echo $0 $ARG_LIST >> $vbmlog
-	echo >> $vbmlog
+    echo Running ${ARG_LIST}
+    echo > $vbmlog
+    echo ---------------------------------- >> $vbmlog
+    date >> $vbmlog
+    echo ---------------------------------- >> $vbmlog
+    echo >> $vbmlog
+    echo $0 $ARG_LIST >> $vbmlog
+    echo >> $vbmlog
 
     if [ -z "$fg" ]; then
       nohup ${matlab} "$nojvm" -nodisplay -nosplash -r "$COMMAND" >> $vbmlog 2>&1 &
@@ -222,7 +222,7 @@ run_batch ()
       nohup ${matlab} "$nojvm" -nodisplay -nosplash -r "$COMMAND" >> $vbmlog 2>&1
     fi
     
-	exit 0
+    exit 0
 }
 
 ########################################################
