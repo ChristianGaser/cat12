@@ -124,9 +124,10 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   colormap(cmap);
   spm_orthviews('Redraw');
 
+  warning('OFF','MATLAB:tex')
   htext = zeros(5,2,2);
   for i=1:size(str{1},2)   % main parameter
-    htext(1,i,1) = text(0.01,0.98-(0.055*i), str{1}(i).name  ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
+    htext(1,i,1) = text(0.01,0.98-(0.055*i), str{1}(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
     htext(1,i,2) = text(0.51,0.98-(0.055*i), str{1}(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   end
   for i=1:size(str{2},2)  % qa-measurements
@@ -148,6 +149,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 
   % BB box is not optimal for all images
   disptype = 'affine'; 
+  warning('OFF','MATLAB:handle_graphics:exceptions:SceneNode')
   switch disptype
     case 'affine'
       dispmat = res.Affine; 
@@ -551,6 +553,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize*0.8); end; end
   for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize*0.8); end;
  % warning off %#ok<WNOFF>
+  warning('OFF','MATLAB:hg:patch:RGBColorDataNotSupported');
   print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
   print(fg, job.imgprint.ftype('jpeg'), job.imgprint.fdpi(job.imgprint.dpi/2), job.imgprint.fnamej); 
  % warning on %#ok<WNON>
