@@ -127,7 +127,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   warning('OFF','MATLAB:tex')
   htext = zeros(5,2,2);
   for i=1:size(str{1},2)   % main parameter
-    htext(1,i,1) = text(0.01,0.98-(0.055*i), str{1}(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(1,i,1) = text(0.01,0.98-(0.055*i), str{1}(i).name  ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
     htext(1,i,2) = text(0.51,0.98-(0.055*i), str{1}(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   end
   for i=1:size(str{2},2)  % qa-measurements
