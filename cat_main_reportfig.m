@@ -124,21 +124,20 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   colormap(cmap);
   spm_orthviews('Redraw');
 
-  warning('OFF','MATLAB:tex')
   htext = zeros(5,2,2);
   for i=1:size(str{1},2)   % main parameter
-    htext(1,i,1) = text(0.01,0.98-(0.055*i), str{1}(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(1,i,1) = text(0.01,0.98-(0.055*i), str{1}(i).name  ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
     htext(1,i,2) = text(0.51,0.98-(0.055*i), str{1}(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   end
   for i=1:size(str{2},2)  % qa-measurements
-    htext(2,i,1) = text(0.01,0.40-(0.055*i), str{2}(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-    htext(2,i,2) = text(0.25,0.40-(0.055*i), str{2}(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(2,i,1) = text(0.01,0.45-(0.055*i), str{2}(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(2,i,2) = text(0.25,0.45-(0.055*i), str{2}(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   end
   % qa-scala
   %htext(5,1,1) = text(0.01,0.45-(0.055*(i+2)),str4(1).name,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   for i=1:size(str{3},2)  % subject-measurements
-    htext(3,i,1) = text(0.51,0.40-(0.055*i), str{3}(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-    htext(3,i,2) = text(0.70,0.40-(0.055*i), str{3}(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(3,i,1) = text(0.51,0.45-(0.055*i), str{3}(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(3,i,2) = text(0.70,0.45-(0.055*i), str{3}(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   end
 
   % position values of the orthview/surface subfigures
@@ -149,10 +148,10 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 
   % BB box is not optimal for all images
   disptype = 'affine'; 
-  warning('OFF','MATLAB:handle_graphics:exceptions:SceneNode')
   switch disptype
     case 'affine'
       dispmat = res.Affine; 
+      warning('OFF','MATLAB:tex')
       spm_orthviews('BB', job.extopts.bb*0.95 );
     case 'ridid'
       % this does not work so good... AC has a little offset ...
