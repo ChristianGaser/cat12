@@ -1,5 +1,25 @@
 ------------------------------------------------------------------------
-r1418 | dahnke | 2019-01-18 15:09:52
+r1419 | gaser | 2019-01-18 16:06:44
+
+Changed paths:
+M       CHANGES.txt
+M       cat_batch_long.m
+M       cat_batch_long.sh
+M       cat_long_main.m
+M       cat_long_multi_run.m
+M       cat_vol_groupwise_ls.m
+M       tbx_cfg_cat.m
+
+(1) Changed: Updated longitudinal pipeline and skipped use of trimmed images.
+(2) Changed: Hided experimental batch options for older pipelines.
+(3) Changed: Updated cat_vol_groupwise_ls.m w.r.t. last SPM12 update.
+(4) Changed: For rigid longitudinal registration is now the median instead of
+    the avg estimated and used from all time points to consider larger changes
+    between the time points.
+(5) Fixed: Removed bug in shell script for longitudinal pipeline that ignored
+    surface flag.
+------------------------------------------------------------------------
+r1418 | dahnke | 2019-01-18 15:10:04 +0100 (Fr, 18 Jan 2019) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +27,7 @@ M       cat_conf_extopts.m
 M       cat_run.m
 
 1) Changed:  Modified registration menu. 
+
 ------------------------------------------------------------------------
 r1417 | dahnke | 2019-01-18 10:25:15 +0100 (Fr, 18 Jan 2019) | 17 lines
 

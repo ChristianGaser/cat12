@@ -549,9 +549,9 @@ cat.tag    = 'cat';
 if expert==2
   cat.values = {estwrite estwrite1173 estwrite1173plus tools stools stoolsexp};
 elseif expert==1
-  cat.values = {estwrite estwrite1173 estwrite1173plus tools stools};
+  cat.values = {estwrite tools stools};
 else
-  cat.values = {estwrite estwrite1173 estwrite1173plus tools stools}; 
+  cat.values = {estwrite tools stools}; 
 end
 %------------------------------------------------------------------------
 
