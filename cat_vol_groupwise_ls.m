@@ -44,7 +44,7 @@ if size(b_settings,1)==1, b_settings = repmat(b_settings,numel(Nii),1); end
 if numel(prec)       ==1, prec       = repmat(prec,1,numel(Nii));       end
 
 % Determine noise estimates when unknown
-for i=find(~isfinite(prec))
+for i=find(~isfinite(prec)),
     prec0 = spm_noise_estimate(Nii(i));
     if isfinite(prec0)
       prec(i) = 1/prec0.^2;
@@ -66,7 +66,7 @@ spm_diffeo('boundary',0);     % Diffeomorphism  - circulant
 % Computations for figuring out how many grid levels are likely to work
 %-----------------------------------------------------------------------
 d = [0 0 0];
-for i=1:numel(Nii)
+for i=1:numel(Nii),
     dm = [size(Nii(i).dat) 1];
     d  = max(d, dm(1:3));
 end
@@ -76,15 +76,15 @@ d  = min(d);
 %-----------------------------------------------------------------------
 clear pyramid
 pyramid(max(ceil(log2(d)-log2(4)),1)) = struct('d',[1 1 1],'mat',eye(4),'img',[]);
-for i=numel(Nii):-1:1
+for i=numel(Nii):-1:1,
     pyramid(1).img(i).f   = single(Nii(i).dat(:,:,:,1,1));
     pyramid(1).img(i).mat = Nii(i).mat;
 end
 
 % Generate sucessively lower resolution versions
 %-----------------------------------------------------------------------
-for level = 2:numel(pyramid)
-    for i=numel(Nii):-1:1
+for level = 2:numel(pyramid),
+    for i=numel(Nii):-1:1,
         pyramid(level).img(i).f   = spm_diffeo('restrict',pyramid(level-1).img(i).f);
         pyramid(level).img(i).f(~isfinite(pyramid(level).img(i).f)) = 0;
         s1 = [size(pyramid(level-1).img(i).f) 1];
@@ -97,7 +97,7 @@ end
 
 % Convert all image data into B-spline coefficients (for interpolation)
 %-----------------------------------------------------------------------
-for level=1:numel(pyramid)
+for level=1:numel(pyramid),
     for i=1:numel(Nii)
         pyramid(level).img(i).f = spm_diffeo('bsplinc',pyramid(level).img(i).f,ord);
     end
@@ -112,7 +112,7 @@ end
 %-----------------------------------------------------------------------
 Mat0 = cat(3,pyramid(1).img.mat);
 dims = zeros(numel(Nii),3);
-for i=1:size(dims,1)
+for i=1:size(dims,1),
     dims(i,:) = Nii(i).dat.dim(1:3);
 end
 [pyramid(1).mat,pyramid(1).d] = compute_avg_mat(Mat0,dims);
@@ -121,7 +121,7 @@ pyramid(1).prec = prec;
 
 % Figure out template info for each sucessively lower resolution version
 %-----------------------------------------------------------------------
-for level=2:numel(pyramid)
+for level=2:numel(pyramid),
     pyramid(level).d    = ceil(pyramid(level-1).d/2);
     s                   = pyramid(level-1).d./pyramid(level).d;
     pyramid(level).mat  = pyramid(level-1).mat*[diag(s), (1-s(:))*0.5; 0 0 0 1];
@@ -145,22 +145,22 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
     sc        = pyramid(level).sc;
     prec      = pyramid(level).prec;
 
-    if level==nlevels
+    if level==nlevels,
         % If lowest resolution, initialise parameter estimates to zero
         %-----------------------------------------------------------------------
         clear param
         bias_est = zeros(numel(Nii),1);
-        for i=numel(Nii):-1:1
+        for i=numel(Nii):-1:1,
             bias_est(i) = log(mean(mean(mean(img(i).f))));
         end
         bias_est = bias_est - mean(bias_est);
-        for i=numel(Nii):-1:1
+        for i=numel(Nii):-1:1,
             param(i) = struct('R',   eye(4), 'r', zeros(6,1),...
                               'bias',[],     'eb',0,...
                               'v0',  [],     'ev',0, 'y',[], 'J',[],...
                               's2',  1,      'ss',1);
 
-            if all(isfinite(b_settings(i,:)))
+            if all(isfinite(b_settings(i,:))),
                 param(i).bias = zeros(size(img(i).f),'single')+bias_est(i);
             end
 
@@ -168,9 +168,9 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
     else
         % Initialise parameter estimates by prolongation of previous lower resolution versions.
         %-----------------------------------------------------------------------
-        for i=1:numel(Nii)
+        for i=1:numel(Nii),
 
-            if all(isfinite(b_settings(i,:)))
+            if all(isfinite(b_settings(i,:))),
                 vxi           = sqrt(sum(img(i).mat(1:3,1:3).^2));
                 spm_diffeo('boundary',1);
                 param(i).bias = spm_diffeo('resize',param(i).bias,size(img(i).f));
@@ -195,13 +195,13 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
 
     spm_plot_convergence('Clear');
     spm_plot_convergence('Init',['Optimising (level ' num2str(level) ')'],'Objective Function','Step');
-    for iter=1:(2*2^(level-1)+1) % Use more iterations at lower resolutions (its faster, so may as well)
+    for iter=1:(2*2^(level-1)+1), % Use more iterations at lower resolutions (its faster, so may as well)
 
 
         % Compute deformations from initial velocities
         %-----------------------------------------------------------------------
 
-        if true
+        if true,
             % Rigid-body
             %=======================================================================
             % Recompute template data (with gradients)
@@ -239,32 +239,31 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
             % Compute objective function (approximately)
             %-----------------------------------------------------------------------
             ll = 0;
-            for i=1:numel(param)
+            for i=1:numel(param),
                 param(i).ss = ss(i);
                 ll          = ll - 0.5*prec(i)*param(i).ss - 0.5*param(i).eb - 0.5*param(i).ev;
             end
             spm_plot_convergence('set',ll);
 
-            for i=1:numel(img)
+            for i=1:numel(img),
                 % Gauss-Newton update of logs of rigid-body matrices
                 %-----------------------------------------------------------------------
-                [R,dR]        = spm_dexpm(param(i).r,B);
-                M             = img(i).mat\R*M_avg;
-                dtM           = abs(det(M(1:3,1:3)));
-                [x1a,x2a,x3a] = ndgrid(1:d(1),1:d(2),1);
+                [R,dR]    = spm_dexpm(param(i).r,B);
+                M         = img(i).mat\R*M_avg;
+                [x1a,x2a] = ndgrid(1:d(1),1:d(2));
 
                 Hess = zeros(12);
                 gra  = zeros(12,1);
                 for m=1:d(3)
-                    dt    = ones(d(1:2),'single');
+                    dt    = ones(d(1:2),'single')*abs(det(M(1:3,1:3)));
                     y     = zeros([d(1:2) 1 3],'single');
                     [y(:,:,1),y(:,:,2),y(:,:,3)] = ndgrid(single(1:d(1)),single(1:d(2)),single(m));
                     y     = transform_warp(M,y);
 
                     f     = spm_diffeo('bsplins',img(i).f,y,ord);
 
-                    if all(isfinite(b_settings(i,:)))
-                        ebias = exp(spm_diffeo('pullc',param(i).bias,y));
+                    if all(isfinite(b_settings(i,:))),
+                        ebias = exp(spm_diffeo('samp',param(i).bias,y));
                     else
                         ebias = ones(size(f),'single');
                     end
@@ -281,26 +280,23 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
                     dt    = dt(msk);
                     x1    = x1a(msk);
                     x2    = x2a(msk);
-                    x3    = x3a(msk)*m;
                     d1    = D{1}(:,:,m);d1 = d1(msk).*ebias;
                     d2    = D{2}(:,:,m);d2 = d2(msk).*ebias;
                     d3    = D{3}(:,:,m);d3 = d3(msk).*ebias;
 
                     A     = [x1(:).*d1(:) x1(:).*d2(:) x1(:).*d3(:) ...
                              x2(:).*d1(:) x2(:).*d2(:) x2(:).*d3(:) ...
-                             x3(:).*d1(:) x3(:).*d2(:) x3(:).*d3(:) ...
+                                  m*d1(:)      m*d2(:)      m*d3(:) ...
                                     d1(:)        d2(:)        d3(:)];
 
-                    Hess  = Hess + dtM*double(A'*bsxfun(@times,A,dt));
-                    gra   = gra  + dtM*double(A'*(dt.*b));
+                    Hess  = Hess + double(A'*bsxfun(@times,A,dt));
+                    gra   = gra  + double(A'*(dt.*b));
 
                     clear dt y f ebias b msk x1 x2 d1 d2 d3 A 
                 end
 
-                % For converting from derivatives w.r.t. an affine transform
-                % to derivatives w.r.t. the rigid-body transform parameters.
                 dA = zeros(12,6);
-                for m=1:6
+                for m=1:6,
                     tmp     = (R*M_avg)\dR(:,:,m)*M_avg;
                     dA(:,m) = reshape(tmp(1:3,:),12,1);
                 end
@@ -317,14 +313,14 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
             % Note that this gives us a Karcher mean.
             %-----------------------------------------------------------------------
             r_avg = mean(cat(2,param.r),2);
-            for i=1:numel(param)
+            for i=1:numel(param),
                 param(i).r = param(i).r-r_avg;
                 param(i).R = spm_dexpm(param(i).r,B);
             end
             clear r_avg
         end
 
-        if any(all(isfinite(b_settings),2))
+        if any(all(isfinite(b_settings),2)),
             % Bias field
             %=======================================================================
             % Recompute template data
@@ -335,14 +331,14 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
             % Compute objective function (approximately)
             %-----------------------------------------------------------------------
             ll = 0;
-            for i=1:numel(param)
+            for i=1:numel(param),
                 param(i).ss = ss(i);
                 ll          = ll - 0.5*prec(i)*param(i).ss - 0.5*param(i).eb - 0.5*param(i).ev;
             end
             spm_plot_convergence('set',ll);
 
-            for i=1:numel(img)
-                if all(isfinite(b_settings(i,:)))
+            for i=1:numel(img),
+                if all(isfinite(b_settings(i,:))),
                     % Gauss-Newton update of logs of bias field.
                     % Note that 1st and second derivatives are computed in template space
                     % and subsequently pushed back to native space for re-estimation.
@@ -358,7 +354,7 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
                         y     = transform_warp(M,y);
 
                         f           = spm_diffeo('bsplins',img(i).f,y,ord);
-                        ebias       = exp(spm_diffeo('pullc',param(i).bias,y));
+                        ebias       = exp(spm_diffeo('samp',param(i).bias,y));
 
                         msk         = isfinite(f) & isfinite(ebias);
                         smu         = mu(:,:,m).*ebias;
@@ -403,14 +399,14 @@ need_wimg = false;
 if any(strcmp('avg',output)) || any(strcmp('wavg',output)),  need_avg  = true; end
 if any(strcmp('wimg',output)),                               need_wimg = true; end
 
-if need_avg
+if need_avg,
     mu = compute_mean(pyramid(1), param, ord);
 
-    if any(strcmp('wavg',output))
+    if any(strcmp('wavg',output)),
         [pth,nam]   = fileparts(Nii(1).dat.fname);
         nam         = fullfile(pth,['avg_' nam '.nii']);
         Nio         = nifti;
-        Nio.dat     = file_array(nam,size(mu),'int16',0,max(max(mu(:))/32767,-min(mu(:))/32768),0);
+        Nio.dat     = file_array(nam,size(mu),'int16-be',0,max(max(mu(:))/32767,-min(mu(:))/32768),0);
         Nio.mat     = M_avg;
         Nio.mat0    = Nio.mat;
         Nio.mat_intent  = 'Aligned';
@@ -436,8 +432,8 @@ for i=1:numel(img)
   vol(:,:,:,i) = bias_correction(mu,vol(:,:,:,i),brainmask,pyramid(1),bias_nits,bias_fwhm,bias_reg,bias_lmreg);
 end
 
-if need_wimg
-    for i=1:numel(param)
+if need_wimg,
+    for i=1:numel(param),
         img = vol(:,:,:,i);
         [pth,nam]   = fileparts(Nii(i).dat.fname);
         nam         = fullfile(pth,['r' nam '.nii']);
@@ -470,16 +466,16 @@ prec  = data.prec;
 
 vol   = zeros([d numel(img)],'single');
 
-for m=1:d(3)
+for m=1:d(3),
     F  = cell(1,numel(img));
     Dt = cell(1,numel(img));
     Bf = cell(1,numel(img));
 
     mum = zeros(d(1:2),'single');
 
-    for i=1:numel(img)
+    for i=1:numel(img),
         M = img(i).mat\param(i).R*M_avg;
-        if ~isempty(param(i).y)
+        if ~isempty(param(i).y),
             y     = transform_warp(M,param(i).y(:,:,m,:));
             Dt{i} = spm_diffeo('det',param(i).J(:,:,m,:,:))*abs(det(M(1:3,1:3)));
         else
@@ -490,7 +486,7 @@ for m=1:d(3)
         end
 
         F{i}  = spm_diffeo('bsplins',img(i).f,y,ord);
-        if ~isempty(param(i).bias)
+        if ~isempty(param(i).bias),
             Bf{i} = exp(spm_diffeo('bsplins',param(i).bias,y,[1 1 1 ord(4:end)])); % Trilinear
         else
             Bf{i} = ones(d(1:2),'single');
@@ -522,8 +518,8 @@ if nargout>=4, % Compute gradients of template
     D  = {zeros(d,'single'),zeros(d,'single'),zeros(d,'single')};
 end
 
-for m=1:d(3)
-    if nargout>=4
+for m=1:d(3),
+    if nargout>=4,
         Dm1  = {zeros(d(1:2),'single'),zeros(d(1:2),'single'),zeros(d(1:2),'single')};
         Dm2  = {zeros(d(1:2),'single'),zeros(d(1:2),'single'),zeros(d(1:2),'single')};
         Df   = cell(3,1);
@@ -537,9 +533,9 @@ for m=1:d(3)
     mum = zeros(d(1:2),'single');
     mgm = zeros(d(1:2),'single');
 
-    for i=1:numel(img)
+    for i=1:numel(img),
         M = img(i).mat\param(i).R*M_avg;
-        if ~isempty(param(i).y)
+        if ~isempty(param(i).y),
             y     = transform_warp(M,param(i).y(:,:,m,:));
             Dt{i} = spm_diffeo('det',param(i).J(:,:,m,:,:))*abs(det(M(1:3,1:3)));
         else
@@ -549,11 +545,11 @@ for m=1:d(3)
             y     = transform_warp(M,y);
         end
 
-        if nargout>=4
+        if nargout>=4,
             % Sample image and bias field, along with their gradients.  Gradients are
             % then transformed by multiplying with the transpose of the Jacobain matrices
             % of the deformation.
-            if ~isempty(param(i).J)
+            if ~isempty(param(i).J),
                 Jm = reshape(param(i).J(:,:,m,:,:),[d(1)*d(2),3,3]);
                 Jm = reshape(reshape(permute(Jm,[1 2 3]),d(1)*d(2)*3,3)*M(1:3,1:3),[d(1) d(2) 3 3]);
             else
@@ -565,7 +561,7 @@ for m=1:d(3)
             Df{2} = Jm(:,:,1,2).*d1 + Jm(:,:,2,2).*d2 + Jm(:,:,3,2).*d3;
             Df{3} = Jm(:,:,1,3).*d1 + Jm(:,:,2,3).*d2 + Jm(:,:,3,3).*d3;
 
-            if ~isempty(param(i).bias)
+            if ~isempty(param(i).bias),
                 [Bf{i},d1,d2,d3]  = spm_diffeo('bsplins',param(i).bias,y,[1 1 1 ord(4:end)]); % Trilinear
                 Bf{i} = exp(Bf{i});
                 Db{1} = Jm(:,:,1,1).*d1 + Jm(:,:,2,1).*d2 + Jm(:,:,3,1).*d3;
@@ -580,7 +576,7 @@ for m=1:d(3)
             clear d1 d2 d3
         else
             F{i}  = spm_diffeo('bsplins',img(i).f,y,ord);
-            if ~isempty(param(i).bias)
+            if ~isempty(param(i).bias),
                 Bf{i} = exp(spm_diffeo('bsplins',param(i).bias,y,[1 1 1 ord(4:end)])); % Trilinear
             else
                 Bf{i} = ones(d(1:2),'single');
@@ -611,8 +607,8 @@ for m=1:d(3)
     mgm       = mgm + eps;
     mu(:,:,m) = mum./mgm; % Weighted mean
 
-    if nargout>=2
-        if nargout>=4
+    if nargout>=2,
+        if nargout>=4,
             % Compute "gradients of template (mu)".  Note that the true gradients
             % would incorporate the gradients of the Jacobians, but we do not want
             % these to be part of the "template gradients".
@@ -623,7 +619,7 @@ for m=1:d(3)
         end
 
         % Compute matching term
-        for i=1:numel(img)
+        for i=1:numel(img),
             msk      = Msk{i};
             f        = F{i}(msk);
             ebias    = Bf{i}(msk);
@@ -682,16 +678,16 @@ for i=1:size(Matrices,3)
     R     = tmp(1:3,1:3);
     minss = Inf;
     minR  = eye(3);
-    for i1=1:6
+    for i1=1:6,
         R1 = zeros(3);
         R1(pmatrix(i1,1),1)=1;
         R1(pmatrix(i1,2),2)=1;
         R1(pmatrix(i1,3),3)=1;
-        for i2=0:7
+        for i2=0:7,
             F  = diag([bitand(i2,1)*2-1, bitand(i2,2)-1, bitand(i2,4)/2-1]);
             R2 = F*R1;
             ss = sum(sum((R/R2-eye(3)).^2));
-            if ss<minss
+            if ss<minss,
                 minss = ss;
                 minR  = R2;
             end
@@ -711,7 +707,7 @@ M_avg = spm_meanm(Matrices);
 % require them
 %-----------------------------------------------------------------------
 p = spm_imatrix(M_avg);
-if sum(p(10:12).^2)>1e-8
+if sum(p(10:12).^2)>1e-8,
 
     % Zooms computed from exp(p(7)*B2(:,:,1)+p(8)*B2(:,:,2)+p(9)*B2(:,:,3))
     %-----------------------------------------------------------------------
@@ -721,7 +717,7 @@ if sum(p(10:12).^2)>1e-8
     B2(3,3,3) = 1;
 
     p      = zeros(9,1); % Parameters
-    for it=1:10000
+    for it=1:10000,
         [R,dR] = spm_dexpm(p(1:6),B);  % Rotations + Translations
         [Z,dZ] = spm_dexpm(p(7:9),B2); % Zooms
 
@@ -744,7 +740,7 @@ end
 %-----------------------------------------------------------------------
 mn    =  Inf*ones(3,1);
 mx    = -Inf*ones(3,1);
-for i=1:size(Mat0,3)
+for i=1:size(Mat0,3),
     dm      = [dims(i,:) 1 1];
     corners = [
         1 dm(1)    1  dm(1)   1  dm(1)    1  dm(1)
@@ -822,7 +818,7 @@ try
 catch
     spm_chi2_plot('Init','Bias Correction','- Log-likelihood','Iteration');
 end
-for subit=1:nits
+for subit=1:nits,
 
     % Compute objective function and its 1st and second derivatives
     Alpha = zeros(prod(d3),prod(d3)); % Second derivatives
@@ -830,7 +826,7 @@ for subit=1:nits
     oll   = ll;
     ll    = 0.5*Tbias(:)'*Cbias*Tbias(:);
 
-    for z=1:size(volG,3)
+    for z=1:size(volG,3),
         f1o = volF(:,:,z);
         f2o = volG(:,:,z);
         f1o(~isfinite(f1o)) = 0;
@@ -885,7 +881,7 @@ for subit=1:nits
         spm_chi2_plot('Set',ll/prod(d));
     end
 
-    if subit > 1 && ll>oll
+    if subit > 1 && ll>oll,
         % Hasn't improved, so go back to previous solution
         Tbias = oTbias;
         ll    = oll;
@@ -901,7 +897,7 @@ end;
 
 dat = zeros(size(volG));
 
-for z=1:size(volG,3)
+for z=1:size(volG,3),
     tmp = volF(:,:,z);
     tmp(~isfinite(tmp)) = 0;
     dat(:,:,z) = tmp;

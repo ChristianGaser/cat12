@@ -182,11 +182,21 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings,err)
     sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.ICR),mark2grad(qa.qualityratings.ICR))))]; % not important and more confusing 
   str{2} = [str{2} struct('name','\bf Weighted average (IQR):','value',marks2str(qa.qualityratings.IQR,...
     sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR))))];
-  if isfield(qa.subjectmeasures,'EC_abs') && ~isempty(qa.subjectmeasures.EC_abs)
-    str{2} = [str{2} struct('name',' Surface Euler number:','value',sprintf('%d', qa.subjectmeasures.EC_abs))]; 
+  if isfield(qa.qualitymeasures,'SurfaceEulerNumber') && ~isempty(qa.qualitymeasures.SurfaceEulerNumber)
+    if job.extopts.expertgui
+      str{2} = [str{2} struct('name',' Surface Euler number:','value',marks2str(qa.qualityratings.SurfaceEulerNumber,...
+                sprintf('%d', qa.qualitymeasures.SurfaceEulerNumber)))]; 
+    else
+      str{2} = [str{2} struct('name',' Surface Euler number:','value',sprintf('%d', qa.qualitymeasures.SurfaceEulerNumber))]; 
+    end
   end
-  if isfield(qa.subjectmeasures,'defect_size') && ~isempty(qa.subjectmeasures.defect_size)
-    str{2} = [str{2} struct('name',' Size of topology defects:','value',sprintf('%d', qa.subjectmeasures.defect_size))]; 
+  if isfield(qa.qualitymeasures,'SurfaceDefectArea') && ~isempty(qa.qualitymeasures.SurfaceDefectArea)
+    if job.extopts.expertgui
+      str{2} = [str{2} struct('name',' Size of topology defects:','value',marks2str(qa.qualityratings.SurfaceDefectArea,...
+                sprintf('%d', qa.qualitymeasures.SurfaceDefectArea)))];
+    else
+      str{2} = [str{2} struct('name',' Size of topology defects:','value',sprintf('%d', qa.qualitymeasures.SurfaceDefectArea))];
+    end
   end
 
   % Subject Measures
