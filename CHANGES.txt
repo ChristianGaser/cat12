@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1420 | gaser | 2019-01-18 16:37:57
+r1421 | gaser | 2019-01-18 16:41:14
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main_reportfig.m
+
+Changed: Switched off some warnings in cat_main_reportfig.m for windows systems.
+------------------------------------------------------------------------
+r1420 | gaser | 2019-01-18 16:37:58 +0100 (Fr, 18 Jan 2019) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +16,7 @@ M       cat_main_reportfig.m
 M       html/cat.html
 
 Changed: Switched off some warnings in cat_main_reportfig.m for windows systems.
+
 ------------------------------------------------------------------------
 r1419 | gaser | 2019-01-18 16:06:47 +0100 (Fr, 18 Jan 2019) | 18 lines
 
