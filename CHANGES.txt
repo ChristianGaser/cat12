@@ -1,11 +1,22 @@
 ------------------------------------------------------------------------
-r1421 | gaser | 2019-01-18 16:41:14
+r1422 | gaser | 2019-01-21 23:39:00
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_vol_groupwise_ls.m
+M       cat_vol_series_align.m
+
+Chamged: Extended longitudinal rigid registration by non-linear registration.
+------------------------------------------------------------------------
+r1421 | gaser | 2019-01-18 16:41:16 +0100 (Fr, 18 Jan 2019) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_main_reportfig.m
 
 Changed: Switched off some warnings in cat_main_reportfig.m for windows systems.
+
 ------------------------------------------------------------------------
 r1420 | gaser | 2019-01-18 16:37:58 +0100 (Fr, 18 Jan 2019) | 8 lines
 
