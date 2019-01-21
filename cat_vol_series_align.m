@@ -12,22 +12,43 @@ function out = cat_vol_series_align(job)
 
 N = numel(job.data);
 
-noise = zeros(N,1);
+if isfield(job.reg,'nonlin')
+	tim = job.reg.nonlin.times(:)
+	if numel(tim) ~= N,
+			error('Incompatible numbers of times and scans.');
+	end
+	if any(abs(diff(tim)) > 50),
+			error('Time differences should be in years.');
+	end;
+	wparam0   = job.reg.nonlin.wparam;
+	
+	midtim = median(tim);
+	tim    = tim - midtim;
+	w_settings = kron(wparam0,1./(abs(tim)+1/365));
+	s_settings = round(3*abs(tim)+2);
+else
+  w_settings = [Inf Inf Inf Inf Inf];
+  s_settings = Inf;
+end
 
 for i=1:N,
     % Make an estimate of the scanner noise
     noise(i,1) = spm_noise_estimate(job.data{i});
     fprintf('Estimated noise sd for "%s" = %g\n', job.data{i}, noise(i,1));
 end
-
-Nii    = nifti(strvcat(job.data));
-
-% always write realigned images and average to disk
-output = [{'wimg'}, {'wavg'}];
-
 prec   = noise.^(-2);
-bparam = [0 0 job.bparam];
-ord    = [3 3 3 0 0 0];
+
+
+b_settings = [0 0 job.bparam];
+Nii = nifti(strvcat(job.data));
+ord = [3 3 3 0 0 0];
+
+output = {};
+if job.write_avg,  output = [output, {'wavg'}]; end
+if job.write_rimg, output = [output, {'wimg'}]; end
+if isfield(job.reg,'nonlin') & job.reg.nonlin.write_jac
+  output = [output, {'wjac'} ];
+end
 
 if ~isfield(job,'use_brainmask')
   use_brainmask = 1;
@@ -36,12 +57,10 @@ else
 end
 
 if use_brainmask
-  fprintf('Use initial brainmask\n');
+  fprintf('Use initial brainmask for final rigid registration\n');
 end
 
-dat    = cat_vol_groupwise_ls(Nii, output, prec, bparam, ord, use_brainmask);
-out.avg{1} = dat.avg;
-out.rimg   = dat.rimg;
+out    = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask);
 
 return
 
