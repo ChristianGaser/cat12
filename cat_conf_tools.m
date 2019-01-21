@@ -1267,6 +1267,13 @@ defs2.help   = {'This is a utility for applying deformation fields of many subje
 data.help = {
 'Select all images for this subject'};
 
+tim         = cfg_entry;
+tim.tag     = 'times';
+tim.name    = 'Times';
+tim.help    = {'Specify the times of the scans in years.'};
+tim.strtype = 'e';
+tim.num     = [0 Inf];
+
 bparam         = cfg_entry;
 bparam.tag     = 'bparam';
 bparam.name    = 'Bias Regularisation';
@@ -1279,21 +1286,89 @@ bparam.strtype = 'e';
 bparam.num      = [1 1];
 bparam.val      = {1e6};
 
+wparam         = cfg_entry;   
+wparam.tag     = 'wparam';
+wparam.name    = 'Warping Regularisation';
+wparam.help    = {'Registration involves simultaneously minimising two terms.  One of these is a measure of similarity between the images (mean-squared difference in the current situation), whereas the other is a measure of the roughness of the deformations.  This measure of roughness involves the sum of the following terms:',...
+'* Absolute displacements need to be penalised by a tiny amount.  The first element encodes the amount of penalty on these.  Ideally, absolute displacements should not be penalised, but it is often necessary for technical reasons.',...
+'* The `membrane energy'' of the deformation is penalised (2nd element), usually by a relatively small amount. This penalises the sum of squares of the derivatives of the velocity field (ie the sum of squares of the elements of the Jacobian tensors).',...
+'* The `bending energy'' is penalised (3rd element). This penalises the sum of squares of the 2nd derivatives of the velocity.',...
+'* Linear elasticity regularisation is also included (4th and 5th elements).  The first parameter (mu) is similar to that for linear elasticity, except it penalises the sum of squares of the Jacobian tensors after they have been made symmetric (by averaging with the transpose).  This term essentially penalises length changes, without penalising rotations.',...
+'* The final term also relates to linear elasticity, and is the weight that denotes how much to penalise changes to the divergence of the velocities (lambda).  This divergence is a measure of the rate of volumetric expansion or contraction.',...
+'Note that regularisation is specified based on what is believed to be appropriate for a year of growth.  The specified values are divided by the number of years time difference.' 
+};
+wparam.strtype = 'e';
+wparam.num     = [1 5];
+wparam.val     = {[0 0 100 25 100]};
+% Change to (eg): wparam.val     = {[0 0 100 25 12]};
+
+write_rimg         = cfg_menu;
+write_rimg.tag     = 'write_rimg';
+write_rimg.name    = 'Save rigidly registered images';
+write_rimg.help    = {'Do you want to save the rigidly registered images? The resliced images are named the same as the originals, except that they are prefixed by ''r''.'};
+write_rimg.labels = {
+                'Save'
+                'Dont save'
+                }';
+write_rimg.values = { 1 0 };
+write_rimg.val    = {1};
+
+write_avg         = cfg_menu;
+write_avg.tag     = 'write_avg';
+write_avg.name    = 'Save Mid-point average';
+write_avg.help    = {'Do you want to save the mid-point average template image? This is likely to be useful for groupwise alignment, and is prefixed by ``avg_'''' and written out in the same directory of the first time point data.'};
+write_avg.labels = {
+                'Save'
+                'Dont save'
+                }';
+write_avg.values = { 1 0 };
+write_avg.val    = {1};
+
+write_jac         = cfg_menu;
+write_jac.tag     = 'write_jac';
+write_jac.name    = 'Save Jacobians';
+write_jac.help    = {'Do you want to save a map of the Jacobian determinants?  Some consider these useful for morphometrics (although the divergences of the initial velocities may be preferable). Each map of Jacobians encodes the relative volume (at each spatial location) between the scan and the median time-point average. Values less than one indicate contraction (over time), whereas values greater than one indicate expansion.  These files are prefixed by ``j_'''' and written out in the same directory of the first time point data.'};
+write_jac.labels = {
+                'Save'
+                'Dont save'
+                }';
+write_jac.values = { 1 0 };
+write_jac.val    = {1};
+
 use_brainmask        = cfg_menu;
-use_brainmask.name   = 'Brainmask';
+use_brainmask.name   = 'Use Brainmask';
 use_brainmask.tag    = 'use_brainmask';
 use_brainmask.labels = {'Yes','No'};
 use_brainmask.values = {1,0};
 use_brainmask.val    = {1};
-use_brainmask.help   = {'Use brainmask at last level to obtain better registration by considering brain regions only.'};
+use_brainmask.help   = {'Use brainmask at last level of rigid body registration to obtain better registration by considering brain regions only.'};
+
+nonlin         = cfg_branch;
+nonlin.tag     = 'nonlin';
+nonlin.name    = 'Non-linear registration';
+nonlin.val     = {tim wparam write_jac};
+nonlin.help    = {''};
+
+rigid         = cfg_const;
+rigid.tag     = 'rigid';
+rigid.name    = 'Rigid body registration';
+rigid.val     = {1};
+rigid.help    = {'Rigid registration only'};
+
+reg        = cfg_choice;
+reg.name   = 'Registration Method';
+reg.tag    = 'reg';
+reg.values = {rigid nonlin};
+reg.val    = {rigid};
+reg.help   = {'Choose between rigid body and non-linear registration. The non-linear registration is using the methods of the Longitudinal Toolbox and is thought for data over longer periods, where the deformations can then be used to calculate local volume changes, which are then multiplied (modulated) by the segmented mean image. Rigid body registration can be used to detect more subtle effects over shorter periods of time (e.g. brain plasticity or training effects after a few weeks or even shorter times).'};
 
 realign         = cfg_exbranch;
 realign.tag     = 'series';
-realign.name    = 'Longitudinal Rigid Registration';
-realign.val     = {data bparam use_brainmask};
+realign.name    = 'Longitudinal Registration';
+realign.val     = {data bparam use_brainmask reg write_rimg write_avg};
 realign.help    = {'Longitudinal registration of series of anatomical MRI scans for a single subject.  It is based on inverse-consistent alignment among each of the subject''s scans, and incorporates a bias field correction.  Prior to running the registration, the scans should already be in very rough alignment, although because the model incorporates a rigid-body transform, this need not be extremely precise.  Note that there are a bunch of hyper-parameters to be specified.  If you are unsure what values to take, then the defaults should be a reasonable guess of what works.  Note that changes to these hyper-parameters will impact the results obtained.'
 ''
-'The alignment assumes that all scans have similar resolutions and dimensions, and were collected on the same (or very similar) MR scanner using the same pulse sequence.  If these assumption are not correct, then the approach will not work as well.'
+'The alignment assumes that all scans have similar resolutions and dimensions, and were collected on the same (or very similar) MR scanner using the same pulse sequence.  If these assumption are not correct, then the approach will not work as well.  There are a number of settings (noise estimate, regularisation etc). Default settings often work well, but it can be very helpful to try some different values, as these can have a large effect on the results.'
 ''
 'The resliced images are named the same as the originals, except that they are prefixed by ''r''.'};
 realign.prog = @cat_vol_series_align;
@@ -1713,14 +1788,28 @@ dep.tgt_spec   = cfg_findspec({{'strtype','e','strtype','r'}});
 %------------------------------------------------------------------------
 function cdep = vout_reslice(job)
 
-cdep(1)            = cfg_dep;
-cdep(1).sname      = 'Midpoint Average';
-cdep(1).src_output = substruct('.','avg','()',{':'});
-cdep(1).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-cdep(2)            = cfg_dep;
-cdep(2).sname      = 'Realigned images';
-cdep(2).src_output = substruct('.','rimg','()',{':'});
-cdep(2).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+ind  = 1;
+if job.write_avg,
+    cdep(ind)          = cfg_dep;
+    cdep(ind).sname      = 'Midpoint Average';
+    cdep(ind).src_output = substruct('.','avg','()',{':'});
+    cdep(ind).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    ind = ind + 1;
+end
+if job.write_rimg,
+    cdep(ind)          = cfg_dep;
+    cdep(ind).sname      = 'Realigned images';
+    cdep(ind).src_output = substruct('.','rimg','()',{':'});
+    cdep(ind).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    ind = ind + 1;
+end
+if isfield(job.reg,'nonlin') & job.reg.nonlin.write_jac
+    cdep(ind)          = cfg_dep;
+    cdep(ind).sname      = 'Jacobian Diff';
+    cdep(ind).src_output = substruct('.','jac','()',{':'});
+    cdep(ind).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    ind = ind + 1;
+end
 
 return
  
