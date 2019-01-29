@@ -1,4 +1,4 @@
-function long = cat_conf_long
+function [long, long2] = cat_conf_long
 % Configuration file for longitudinal data
 %
 % Christian Gaser
@@ -126,6 +126,13 @@ opts    = cat_conf_opts(expert);
 ROI     = cat_conf_ROI(expert);
 %------------------------------------------------------------------------
 
+tim         = cfg_entry;
+tim.tag     = 'times';
+tim.name    = 'Times';
+tim.help    = {'Specify the times of the scans in years.'};
+tim.strtype = 'e';
+tim.num     = [1 Inf];
+
 long = cfg_exbranch;
 long.name = 'Segment longitudinal data';
 long.tag  = 'long';
@@ -140,6 +147,17 @@ long.help = {
 'This option provides customized processing of longitudinal data. Please note that this processing pipeline was optimized for processing and detecting small changes over time as response to short-time plasticity effects (e.g. due to learning and training). This pipelines will not work properly for large longitudinal changes where large parts of the brain will change over time (e.g. atropy due to Alzheimers disease or ageing). This is due to the effect that the spatial normalization parameters are estimated using a mean image of all time points and subsequently applied to all time points. If large atrophy occurs between the time points this can lead to a shift of tissue borders and might result in areas of decreased volumes over time that are surrounded by areas of increased volumes due to this shifting issues. For data with large volume changes over time I would recommend to use the cross-sectional pipeline or the longitudinal toolbox in SPM12.'
 ''
 };
+
+long2 = cfg_exbranch;
+long2.name = 'Segment longitudinal data (TBM)';
+long2.tag  = 'long2';
+long2.val  = {tim esubjs};
+long2.prog = @cat_long2_multi_run;
+long2.help = {
+'This option provides customized processing of longitudinal data. Please note that this processing pipeline was optimized for processing and detecting small changes over time as response to short-time plasticity effects (e.g. due to learning and training). This pipelines will not work properly for large longitudinal changes where large parts of the brain will change over time (e.g. atropy due to Alzheimers disease or ageing). This is due to the effect that the spatial normalization parameters are estimated using a mean image of all time points and subsequently applied to all time points. If large atrophy occurs between the time points this can lead to a shift of tissue borders and might result in areas of decreased volumes over time that are surrounded by areas of increased volumes due to this shifting issues. For data with large volume changes over time I would recommend to use the cross-sectional pipeline or the longitudinal toolbox in SPM12.'
+''
+};
+
 
 %------------------------------------------------------------------------
 
