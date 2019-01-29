@@ -13,19 +13,24 @@ function out = cat_vol_series_align(job)
 N = numel(job.data);
 
 if isfield(job.reg,'nonlin')
-	tim = job.reg.nonlin.times(:)
-	if numel(tim) ~= N,
-			error('Incompatible numbers of times and scans.');
+	tim = job.reg.nonlin.times(:);
+	if all(isfinite(tim))
+		if numel(tim) ~= N,
+				error('Incompatible numbers of times and scans.');
+		end
+		if any(abs(diff(tim)) > 50),
+				error('Time differences should be in years.');
+		end;
+		wparam0   = job.reg.nonlin.wparam;
+		
+		midtim = median(tim);
+		tim    = tim - midtim;
+		w_settings = kron(wparam0,1./(abs(tim)+1/365));
+		s_settings = round(3*abs(tim)+2);
+	else % use default regularization if tim is set to NAN
+		w_settings = job.reg.nonlin.wparam;
+		s_settings = 6;
 	end
-	if any(abs(diff(tim)) > 50),
-			error('Time differences should be in years.');
-	end;
-	wparam0   = job.reg.nonlin.wparam;
-	
-	midtim = median(tim);
-	tim    = tim - midtim;
-	w_settings = kron(wparam0,1./(abs(tim)+1/365));
-	s_settings = round(3*abs(tim)+2);
 else
   w_settings = [Inf Inf Inf Inf Inf];
   s_settings = Inf;
@@ -38,7 +43,6 @@ for i=1:N,
 end
 prec   = noise.^(-2);
 
-
 b_settings = [0 0 job.bparam];
 Nii = nifti(strvcat(job.data));
 ord = [3 3 3 0 0 0];
@@ -46,8 +50,10 @@ ord = [3 3 3 0 0 0];
 output = {};
 if job.write_avg,  output = [output, {'wavg'}]; end
 if job.write_rimg, output = [output, {'wimg'}]; end
-if isfield(job.reg,'nonlin') & job.reg.nonlin.write_jac
-  output = [output, {'wjac'} ];
+
+if isfield(job.reg,'nonlin')
+  if job.reg.nonlin.write_jac, output = [output, {'wjac'} ]; end
+  if job.reg.nonlin.write_def, output = [output, {'wdef'} ]; end
 end
 
 if ~isfield(job,'use_brainmask')

@@ -1270,9 +1270,10 @@ data.help = {
 tim         = cfg_entry;
 tim.tag     = 'times';
 tim.name    = 'Times';
-tim.help    = {'Specify the times of the scans in years.'};
 tim.strtype = 'e';
-tim.num     = [0 Inf];
+tim.val     = {NaN};
+tim.num     = [1 Inf];
+tim.help    = {'Specify the times of the scans in years. If you leave the default NaN value the standard warping regularization will be used for all scans.'};
 
 bparam         = cfg_entry;
 bparam.tag     = 'bparam';
@@ -1335,6 +1336,17 @@ write_jac.labels = {
 write_jac.values = { 1 0 };
 write_jac.val    = {1};
 
+write_def         = cfg_menu;
+write_def.tag     = 'write_def';
+write_def.name    = 'Deformation Fields';
+write_def.help    = {'Deformation fields can be saved to disk, and used by the Deformations Utility. Deformations are saved as y_*.nii files, which contain three volumes to encode the x, y and z coordinates.  They are written in the same directory as the corresponding image.'};
+write_def.labels = {
+                'Save'
+                'Dont save'
+                }';
+write_def.values = { 1 0 };
+write_def.val    = {0};
+
 use_brainmask        = cfg_menu;
 use_brainmask.name   = 'Use Brainmask';
 use_brainmask.tag    = 'use_brainmask';
@@ -1346,7 +1358,7 @@ use_brainmask.help   = {'Use brainmask at last level of rigid body registration 
 nonlin         = cfg_branch;
 nonlin.tag     = 'nonlin';
 nonlin.name    = 'Non-linear registration';
-nonlin.val     = {tim wparam write_jac};
+nonlin.val     = {tim wparam write_jac write_def};
 nonlin.help    = {''};
 
 rigid         = cfg_const;
@@ -1579,7 +1591,7 @@ if expert
 end
 
 %------------------------------------------------------------------------
-long          = cat_conf_long;
+[long, long2]          = cat_conf_long;
 nonlin_coreg  = cat_conf_nonlin_coreg;
 %------------------------------------------------------------------------
 
@@ -1590,7 +1602,7 @@ tools.values = { ...
   showslice, check_cov, check_cov2, check_SPM, ...
   calcvol, calcroi, iqr, T2x, F2x, T2x_surf, F2x_surf, ... 
   sanlm, maskimg, spmtype, headtrimming, realign, ...
-  long, nonlin_coreg, defs, defs2}; %,qa
+  long,long2,  nonlin_coreg, defs, defs2}; %,qa
 if expert 
   tools.values = [tools.values,{urqio}]; 
 end
@@ -1790,23 +1802,36 @@ function cdep = vout_reslice(job)
 
 ind  = 1;
 if job.write_avg,
-    cdep(ind)          = cfg_dep;
+    cdep(ind)            = cfg_dep;
     cdep(ind).sname      = 'Midpoint Average';
     cdep(ind).src_output = substruct('.','avg','()',{':'});
     cdep(ind).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     ind = ind + 1;
 end
 if job.write_rimg,
-    cdep(ind)          = cfg_dep;
+    cdep(ind)            = cfg_dep;
     cdep(ind).sname      = 'Realigned images';
     cdep(ind).src_output = substruct('.','rimg','()',{':'});
     cdep(ind).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     ind = ind + 1;
 end
 if isfield(job.reg,'nonlin') & job.reg.nonlin.write_jac
-    cdep(ind)          = cfg_dep;
+    cdep(ind)            = cfg_dep;
     cdep(ind).sname      = 'Jacobian Diff';
     cdep(ind).src_output = substruct('.','jac','()',{':'});
+    cdep(ind).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    ind = ind + 1;
+end
+if isfield(job.reg,'nonlin') & job.reg.nonlin.write_def
+    cdep(ind)            = cfg_dep;
+    cdep(ind).sname      = 'Deformation (1)';
+    cdep(ind).src_output = substruct('.','def1','()',{':'});
+    cdep(ind).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    ind = ind + 1;
+
+    cdep(ind)            = cfg_dep;
+    cdep(ind).sname      = 'Deformation (2)';
+    cdep(ind).src_output = substruct('.','def2','()',{':'});
     cdep(ind).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     ind = ind + 1;
 end
