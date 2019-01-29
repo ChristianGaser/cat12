@@ -150,7 +150,7 @@ end
 nlevels = numel(pyramid);
 brainmask = [];
 
-for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
+for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
 
     % Collect data
     %-----------------------------------------------------------------------
@@ -180,7 +180,7 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
                 param(i).bias = zeros(size(img(i).f),'single')+bias_est(i);
             end
 
-            if all(isfinite(w_settings(i,:))),
+            if all(isfinite(w_settings(i,:)))
                 param(i).v0   = zeros([d 3],'single');
                 param(i).y    = identity(d);
                 param(i).J    = repmat(reshape(eye(3,'single'),[1 1 1 3 3]),[d(1:3),1,1]);
@@ -205,9 +205,9 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
                 param(i).eb   = 0;
             end
 
-            if all(isfinite(w_settings(i,:))),
+            if all(isfinite(w_settings(i,:)))
                 param(i).v0   = spm_diffeo('resize',param(i).v0,d);
-                for i1=1:3,
+                for i1=1:3
                     s = pyramid(level).d(i1)/pyramid(level+1).d(i1);
                     param(i).v0(:,:,:,i1) = param(i).v0(:,:,:,i1)*s;
                 end
@@ -233,7 +233,7 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
 
         % Compute deformations from initial velocities
         %-----------------------------------------------------------------------
-        for i=1:numel(param),
+        for i=1:numel(param)
             if all(isfinite(w_settings(i,:)))
                 [param(i).y,param(i).J] = spm_shoot3d(param(i).v0,[vx w_settings(i,:)*sc],s_settings(i,:));
             end
@@ -253,7 +253,7 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
                 PB = fullfile(spm('Dir'),'toolbox','FieldMap','brainmask.nii');
 
                 [pth,nam]   = fileparts(Nii(1).dat.fname);
-                nam         = fullfile(pth,['median_' nam '.nii']);
+                nam         = fullfile(pth,['avg_' nam '.nii']);
                 Nio         = nifti;
                 Nio.dat     = file_array(nam,size(mu),'int16-be',0,max(max(mu(:))/32767,-min(mu(:))/32768),0);
                 Nio.mat     = M_avg;
@@ -292,7 +292,7 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
                 Hess = zeros(12);
                 gra  = zeros(12,1);
                 for m=1:d(3)
-                    if all(isfinite(w_settings(i,:))),
+                    if all(isfinite(w_settings(i,:)))
                         dt    = spm_diffeo('det',param(i).J(:,:,m,:,:));
                         y     = transform_warp(M,param(i).y(:,:,m,:));
                     else
@@ -316,14 +316,16 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
                     % use different mask for rigid body registration if brainmask is defined
                     if (level == 1) && use_brainmask && ~isempty(brainmask)
                       mskr = isfinite(b) & (brainmask(:,:,m) > 0.25);
-whos brainmask mskr b
-sum(mskr(:))
-sum(sum(isfinite(b)))
                     else
                       mskr = isfinite(b);
                     end
-                    ebias = ebias(msk);
-                    b     = b(msk);
+                    if ~all(isfinite(w_settings(i,:)))
+                      ebias = ebias(mskr);
+                      b     = b(mskr);
+                    else
+                      ebias = ebias(msk);
+                      b     = b(msk);
+                    end
 
                     if ~all(isfinite(w_settings(i,:)))
                         % No need to account for the nonlinear warps when estimating
@@ -377,11 +379,18 @@ sum(sum(isfinite(b)))
                         clear idt cJ
                     end
 
-                    dt = dt(msk);
-                    d1 = d1(msk).*ebias;
-                    d2 = d2(msk).*ebias;
-                    d3 = d3(msk).*ebias;
-
+                    if ~all(isfinite(w_settings(i,:)))
+											dt = dt(mskr);
+											d1 = d1(mskr).*ebias;
+											d2 = d2(mskr).*ebias;
+											d3 = d3(mskr).*ebias;
+                    else
+											dt = dt(msk);
+											d1 = d1(msk).*ebias;
+											d2 = d2(msk).*ebias;
+											d3 = d3(msk).*ebias;
+                    end
+                    
                     % Derivatives w.r.t. an affine transform
                     A     = [x1(:).*d1(:) x1(:).*d2(:) x1(:).*d3(:) ...
                              x2(:).*d1(:) x2(:).*d2(:) x2(:).*d3(:) ...
@@ -454,7 +463,7 @@ sum(sum(isfinite(b)))
                     Hess = zeros(d,'single');
 
                     for m=1:d(3)
-                        if all(isfinite(w_settings(i,:))),
+                        if all(isfinite(w_settings(i,:)))
                             dt    = spm_diffeo('det',param(i).J(:,:,m,:,:))*abs(det(M(1:3,1:3)));
                             y     = transform_warp(M,param(i).y(:,:,m,:));
                         else
@@ -479,7 +488,7 @@ sum(sum(isfinite(b)))
 
                     % Push derivatives to native space
                     %-----------------------------------------------------------------------
-                    if all(isfinite(w_settings(i,:))),
+                    if all(isfinite(w_settings(i,:)))
                         y    = transform_warp(M,param(i).y);
                     else
                         y    = transform_warp(M,identity(d));
@@ -504,7 +513,7 @@ sum(sum(isfinite(b)))
         end
 
 
-        if any(all(isfinite(w_settings),2)),
+        if any(all(isfinite(w_settings),2))
             % Deformations
             %=======================================================================
             % Recompute template data (with gradients)
@@ -515,14 +524,14 @@ sum(sum(isfinite(b)))
             % Compute objective function (approximately)
             %-----------------------------------------------------------------------
             ll = 0;
-            for i=1:numel(param),
+            for i=1:numel(param)
                 param(i).ss = ss(i);
                 ll          = ll - 0.5*prec(i)*param(i).ss - 0.5*param(i).eb - 0.5*param(i).ev;
             end
             spm_plot_convergence('set',ll);
 
-            for i=1:numel(img), % Update velocity for each image in turn
-                if all(isfinite(w_settings(i,:))),
+            for i=1:numel(img) % Update velocity for each image in turn
+                if all(isfinite(w_settings(i,:)))
                     % Gauss-Newton update of velocity fields.
                     % These are parameterised in template space.
                     %-----------------------------------------------------------------------
@@ -535,7 +544,7 @@ sum(sum(isfinite(b)))
                         y     = transform_warp(M,param(i).y(:,:,m,:));
                         f     = spm_diffeo('bsplins',img(i).f,y,ord);
 
-                        if all(isfinite(b_settings(i,:))),
+                        if all(isfinite(b_settings(i,:)))
                             ebias = exp(spm_diffeo('samp',param(i).bias,y));
                         else
                             ebias = ones(size(f),'single');
@@ -580,14 +589,14 @@ sum(sum(isfinite(b)))
 
             % If regularisation is the same for each image (apart from scaling), then adjust velocities.
             %-----------------------------------------------------------------------
-            if sum(var(diag(sqrt(sum(w_settings.^2,2)))\w_settings,0,1)./(mean(w_settings,1).^2+eps)) < 1e-12,
+            if sum(var(diag(sqrt(sum(w_settings.^2,2)))\w_settings,0,1)./(mean(w_settings,1).^2+eps)) < 1e-12
                 wt      = sqrt(sum(w_settings.^2,2));
                 wt      = wt/sum(wt);
                 v0_mean = zeros(size(param(1).v0),'single');
-                for i=1:numel(param),
+                for i=1:numel(param)
                     v0_mean = v0_mean + wt(i)*param(i).v0;
                 end
-                for i=1:numel(param),
+                for i=1:numel(param)
                     param(i).v0 = param(i).v0 - v0_mean;
                 end
                 clear v0_mean
@@ -595,8 +604,8 @@ sum(sum(isfinite(b)))
 
             % Compute part of objective function
             %-----------------------------------------------------------------------
-            for i=1:numel(param),
-                if all(isfinite(w_settings(i,:))),
+            for i=1:numel(param)
+                if all(isfinite(w_settings(i,:)))
                     m0          = spm_diffeo('vel2mom',param(i).v0,[vx w_settings(i,:)*sc]);
                     param(i).ev = sum(sum(sum(sum(m0.*param(i).v0))));
                     clear m0
@@ -628,9 +637,9 @@ if any(strcmp('bia',output)) || any(strcmp('wbia',output)), need_bia = true; end
 if any(strcmp('wimg',output)),                              need_wimg= true; end
 
 out = struct;
-if need_avg || need_def || need_jac,
-    for i=numel(param):-1:1,
-        if all(isfinite(w_settings(i,:))),
+if need_avg || need_def || need_jac
+    for i=numel(param):-1:1
+        if all(isfinite(w_settings(i,:)))
             [param(i).y,param(i).J] = spm_shoot3d(param(i).v0,[vx w_settings(i,:)*sc],s_settings(i,:));
         end
     end
@@ -641,7 +650,7 @@ out.mat = M_avg;
 
 if any(strcmp('rigid',output))
     out.rigid = {};
-    for i=1:numel(param),
+    for i=1:numel(param)
         out.rigid{i} = param(i).R;
     end
 end
@@ -681,7 +690,7 @@ if need_avg
 
     if any(strcmp('wavg',output))
         [pth,nam]   = fileparts(Nii(1).dat.fname);
-        nam         = fullfile(pth,['median_' nam '.nii']);
+        nam         = fullfile(pth,['avg_' nam '.nii']);
         Nio         = nifti;
         Nio.dat     = file_array(nam,size(mu),'int16',0,max(max(mu(:))/32767,-min(mu(:))/32768),0);
         Nio.mat     = M_avg;
@@ -691,16 +700,16 @@ if need_avg
         Nio.descrip = sprintf('Median of %d', numel(param));
         create(Nio);
         Nio.dat(:,:,:) = mu;
-        out.avg       = nam;
+        out.avg       = {nam};
     else
         out.avg       = mu;
     end
 end
 
-if need_mom,
+if need_mom
     out.mom = {};
-    for i=1:numel(param),
-        if all(isfinite(w_settings(i,:))),
+    for i=1:numel(param)
+        if all(isfinite(w_settings(i,:)))
 
             mom = zeros(d,'single');
             M   = img(i).mat\param(i).R*M_avg;
@@ -716,7 +725,7 @@ if need_mom,
                 clear dt y f ebias b msk 
             end
 
-            if any(strcmp('wmom',output)),
+            if any(strcmp('wmom',output))
                 [pth,nam]   = fileparts(Nii(i).dat.fname);
                 nam         = fullfile(pth,['a_' nam '.nii']);
                 Nio         = nifti;
@@ -740,12 +749,12 @@ end
 
 clear mu;
 
-if need_bia,
+if need_bia
     out.bia = {};
-    for i=1:numel(param),
-        if all(isfinite(b_settings(i,:))),
+    for i=1:numel(param)
+        if all(isfinite(b_settings(i,:)))
 
-            if any(strcmp('wbia',output)),
+            if any(strcmp('wbia',output))
                 [pth,nam]   = fileparts(Nii(i).dat.fname);
                 nam         = fullfile(pth,['BiasField_' nam '.nii']);
                 Nio         = nifti;
@@ -768,16 +777,16 @@ if need_bia,
     end
 end
 
-if need_def,
+if need_def
     out.def = {};
-    for i=numel(param):-1:1,
-        if all(isfinite(w_settings(i,:))),
+    for i=numel(param):-1:1
+        if all(isfinite(w_settings(i,:)))
 
             M   = param(i).R*M_avg;
             for m=1:d(3)
                 param(i).y(:,:,m,:) = transform_warp(M,param(i).y(:,:,m,:));
             end
-            if any(strcmp('wdef',output)),
+            if any(strcmp('wdef',output))
                 [pth,nam]   = fileparts(Nii(i).dat.fname);
                 nam         = fullfile(pth,['y_' nam '.nii']);
                 Nio         = nifti;
@@ -801,12 +810,12 @@ if need_def,
     end
 end
 
-if need_jac,
+if need_jac
     out.jac = {};
-    for i=numel(param):-1:1,
-        if all(isfinite(w_settings(i,:))),
+    for i=numel(param):-1:1
+        if all(isfinite(w_settings(i,:)))
             dt = spm_diffeo('det',param(i).J);
-            if any(strcmp('wjac',output)),
+            if any(strcmp('wjac',output))
                 [pth,nam]   = fileparts(Nii(i).dat.fname);
                 nam         = fullfile(pth,['j_' nam '.nii']);
                 Nio         = nifti;
@@ -829,12 +838,12 @@ if need_jac,
     end
 end
 
-if need_div,
+if need_div
     out.div = {};
-    for i=1:numel(param),
-        if all(isfinite(w_settings(i,:))),
+    for i=1:numel(param)
+        if all(isfinite(w_settings(i,:)))
             dv = spm_diffeo('div',param(i).v0);
-            if any(strcmp('wdiv',output)),
+            if any(strcmp('wdiv',output))
                 [pth,nam]   = fileparts(Nii(i).dat.fname);
                 nam         = fullfile(pth,['dv_' nam '.nii']);
                 Nio         = nifti;
@@ -856,11 +865,11 @@ if need_div,
     end
 end
 
-if need_vel,
+if need_vel
     out.vel = {};
-    for i=1:numel(param),
-        if all(isfinite(w_settings(i,:))),
-            if any(strcmp('wvel',output)),
+    for i=1:numel(param)
+        if all(isfinite(w_settings(i,:)))
+            if any(strcmp('wvel',output))
                 [pth,nam]   = fileparts(Nii(i).dat.fname);
                 nam         = fullfile(pth,['v_' nam '.nii']);
                 Nio         = nifti;
@@ -882,7 +891,6 @@ if need_vel,
         end
     end
 end
-
 spm_plot_convergence('Clear');
 return;
 %_______________________________________________________________________
@@ -945,7 +953,7 @@ prec  = data.prec;
 mu   = zeros(d,'single');
 nvox = zeros(numel(img),1);
 ss   = zeros(numel(img),1);
-if nargout>=4, % Compute gradients of template
+if nargout>=4 % Compute gradients of template
     D  = {zeros(d,'single'),zeros(d,'single'),zeros(d,'single')};
 end
 

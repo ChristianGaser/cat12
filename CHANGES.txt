@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1422 | gaser | 2019-01-21 23:39:00
+r1423 | gaser | 2019-01-29 07:54:25
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_long.m
+M       cat_conf_tools.m
+M       cat_long_multi_run.m
+M       cat_vol_groupwise_ls.m
+M       cat_vol_series_align.m
+M       html/cat.html
+
+(1) Fixed: Use of brainmask for rigid registration is now fixed.
+(2) Changed: Added option for writing deformations in longitudinal tool.
+------------------------------------------------------------------------
+r1422 | gaser | 2019-01-21 23:39:21 +0100 (Mo, 21 Jan 2019) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +23,7 @@ M       cat_vol_groupwise_ls.m
 M       cat_vol_series_align.m
 
 Chamged: Extended longitudinal rigid registration by non-linear registration.
+
 ------------------------------------------------------------------------
 r1421 | gaser | 2019-01-18 16:41:16 +0100 (Fr, 18 Jan 2019) | 6 lines
 
