@@ -1,4 +1,4 @@
-function [long, long2] = cat_conf_long
+function long = cat_conf_long
 % Configuration file for longitudinal data
 %
 % Christian Gaser
@@ -68,18 +68,6 @@ modulate.help = {
 };
 
 %------------------------------------------------------------------------
-warps        = cfg_menu;
-warps.tag    = 'warps';
-warps.name   = 'Forward deformations (Image->Template)';
-warps.labels = {'No','Yes'};
-warps.values = {0 1};
-warps.val    = {0};
-warps.help = {
-  'Deformation fields can be saved to disk, and used by the Deformations Utility and/or applied to coregistered data from other modalities (e.g. fMRI). Deformations are saved as .nii files, which contain three volumes to encode the x, y and z coordinates.'
-''
-};
-
-%------------------------------------------------------------------------
 dartel        = cfg_menu;
 dartel.tag    = 'dartel';
 dartel.name   = 'DARTEL export of average image';
@@ -137,9 +125,9 @@ long = cfg_exbranch;
 long.name = 'Segment longitudinal data';
 long.tag  = 'long';
 if expert
-  long.val  = {esubjs,opts,extopts,output,ROI,modulate,warps,dartel,delete_temp};
+  long.val  = {esubjs,opts,extopts,output,ROI,modulate,dartel,delete_temp};
 else
-  long.val  = {esubjs,opts,extopts,output,ROI,modulate,warps,dartel};
+  long.val  = {esubjs,opts,extopts,output,ROI,modulate,dartel};
 end
 long.prog = @cat_long_multi_run;
 long.vout = @vout_long;
@@ -147,17 +135,6 @@ long.help = {
 'This option provides customized processing of longitudinal data. Please note that this processing pipeline was optimized for processing and detecting small changes over time as response to short-time plasticity effects (e.g. due to learning and training). This pipelines will not work properly for large longitudinal changes where large parts of the brain will change over time (e.g. atropy due to Alzheimers disease or ageing). This is due to the effect that the spatial normalization parameters are estimated using a mean image of all time points and subsequently applied to all time points. If large atrophy occurs between the time points this can lead to a shift of tissue borders and might result in areas of decreased volumes over time that are surrounded by areas of increased volumes due to this shifting issues. For data with large volume changes over time I would recommend to use the cross-sectional pipeline or the longitudinal toolbox in SPM12.'
 ''
 };
-
-long2 = cfg_exbranch;
-long2.name = 'Segment longitudinal data (TBM)';
-long2.tag  = 'long2';
-long2.val  = {tim esubjs};
-long2.prog = @cat_long2_multi_run;
-long2.help = {
-'This option provides customized processing of longitudinal data. Please note that this processing pipeline was optimized for processing and detecting small changes over time as response to short-time plasticity effects (e.g. due to learning and training). This pipelines will not work properly for large longitudinal changes where large parts of the brain will change over time (e.g. atropy due to Alzheimers disease or ageing). This is due to the effect that the spatial normalization parameters are estimated using a mean image of all time points and subsequently applied to all time points. If large atrophy occurs between the time points this can lead to a shift of tissue borders and might result in areas of decreased volumes over time that are surrounded by areas of increased volumes due to this shifting issues. For data with large volume changes over time I would recommend to use the cross-sectional pipeline or the longitudinal toolbox in SPM12.'
-''
-};
-
 
 %------------------------------------------------------------------------
 

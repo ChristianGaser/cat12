@@ -14,7 +14,7 @@ function varargout = cat_vol_headtrimming(job)
 %    .pefix   .. filename prefix (char, default = 'trimmed_')
 %    .addvox  .. additional voxels around the box (default = 2); 
 %    .pth     .. percentual threshold to estimate the box (0.1);
-%    .avg     .. create the box on the the averag of ..
+%    .avg     .. create the box on the average of ..
 %                  avg = 0 .. use only first image (default)
 %                  avg = 1 .. all
 %                  avg > 1 .. use image 1 to avg
@@ -54,7 +54,7 @@ function varargout = cat_vol_headtrimming(job)
   def.open    = 2;                    % open operation for masking
   def.ctype   = 0;                    % default data type (0=native)
   def.range   = 0;                    % data range for output 
-  def.range1  = 90;                   % intnal scaling for masking
+  def.range1  = 90;                   % internal scaling for masking
   def.returnOnlyFilename  = 0;        % 
   def.process_index = 1;              %
   job = cat_io_checkinopt(job,def);

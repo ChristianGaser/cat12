@@ -56,7 +56,6 @@ for i=1:n
 end
 
 matlabbatch{1}.spm.tools.cat.tools.long.modulate = 1;
-matlabbatch{1}.spm.tools.cat.tools.long.warps = 0;
 
 if output_surface == 1
   matlabbatch{1}.spm.tools.cat.tools.long.output.surface = 1;
