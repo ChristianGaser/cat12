@@ -1,6 +1,6 @@
-function out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask)
+function out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask, reduce)
 % Groupwise registration via least squares
-% FORMAT out = spm_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask)
+% FORMAT out = spm_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask, reduce)
 % Nii    - a nifti object for two or more image volumes.
 % output - a cell array of output options (as character strings).
 %          'wimg   - write realigned images to disk
@@ -22,6 +22,9 @@ function out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s
 % s_settings - number of time steps for geodesic shooting.
 % ord        - degree of B-spline interpolation used for sampling images.
 % use_brainmask - use initial brainmask to obtain better registration
+% reduce     - reduce bounding box at final resolution level because usually
+%              there is a lot of air around the head after registration of 
+%              multiple scans
 %
 %_______________________________________________________________________
 % Copyright (C) 2012 Wellcome Trust Centre for Neuroimaging
@@ -50,6 +53,7 @@ if nargin<5, b_settings = [0 0 1e6]; end
 if nargin<6, s_settings = 6; end
 if nargin<7, ord        = [3 3 3 0 0 0]; end
 if nargin<8, use_brainmask = 1; end
+if nargin<9, reduce     = 1; end
 
 % If settings are not subject-specific, then generate
 %-----------------------------------------------------------------------
@@ -247,8 +251,42 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
             [mu,ss,nvox,D] = compute_mean(pyramid(level), param, ord);
             % for i=1:numel(param), fprintf('  %12.5g %12.5g %12.5g', prec(i)*ss(i), param(i).eb, param(i).ev); end; fprintf('  0\n');
             
-            % create mask at final level to obtain masked registration
-            if (level == 1) && (iter == 1) && use_brainmask
+            if (level == 1) && (iter == 1)
+            
+              % reduce bounding box at final resolution level
+              if reduce
+                fprintf('Reduce bounding box for final resolution level.\n');
+								vx_vol  = sqrt(sum(pyramid(level).mat(1:3,1:3).^2)); 
+								
+								% intensity normalization using 99% of data (to ignore outliers)
+								[msk,hth] = cat_stat_histth(smooth3(mu),0.99,0); 
+								msk = (msk - hth(1)) ./ abs(diff(hth));
+								
+								% masking (borrowed from head-trimming)
+								msk = smooth3(msk)>0.05; 
+								msk = cat_vol_morph(msk,'do',2,vx_vol); 
+								msk = cat_vol_morph(msk,'l',[10 0.1]); 
+								[msk,redB] = cat_vol_resize(mu,'reduceBrain',vx_vol,2,msk); 
+								clear msk
+						
+						    % correct mat information and dimensions
+								mati  = spm_imatrix(pyramid(level).mat); 
+								mati(1:3) = mati(1:3) + mati(7:9).*(redB.BB(1:2:end) - 1);
+								pyramid(level).mat = spm_matrix(mati);
+								pyramid(level).d = redB.sizeTr;
+								
+								% update some size-dependent parameters
+								M_avg     = pyramid(level).mat;
+								d         = pyramid(level).d;
+	
+								% re-estimate mu using new dimensions
+								[mu,ss,nvox,D] = compute_mean(pyramid(level), param, ord);
+              end          
+
+              % create mask at final level to allow masked registration
+              if use_brainmask
+                fprintf('Use initial brainmask for final resolution level.\n');
+                
                 PG = fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii');
                 PB = fullfile(spm('Dir'),'toolbox','FieldMap','brainmask.nii');
 
@@ -265,11 +303,18 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
                 Nio.dat(:,:,:) = mu;
                 PF = nam;
 
-                [Ym, brainmask] = cat_long_APP(PF,PG,PB);
+                try
+                  [Ym, brainmask] = cat_long_APP(PF,PG,PB);
+                  brainmask(~isfinite(brainmask)) = 0;
+                catch
+                  fprintf('Creation of brainmask failed. No brainmask will be used for final registration.\n');
+                  use_brainmask = 0;
+                end
 
-                spm_plot_convergence('Clear');
-                spm_plot_convergence('Init',['Optimising (level ' num2str(level) ')'],'Objective Function','Step');
                 clear Ym
+                spm_plot_convergence('Clear');
+                spm_plot_convergence('Init',['Optimising (level ' num2str(level) ') with brainmask'],'Objective Function','Step');
+              end
             end
 
             % Compute objective function (approximately)
@@ -319,6 +364,7 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
                     else
                       mskr = isfinite(b);
                     end
+
                     if ~all(isfinite(w_settings(i,:)))
                       ebias = ebias(mskr);
                       b     = b(mskr);
@@ -418,7 +464,13 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
 
                 Hess       = dA'*Hess*dA*prec(i);
                 gra        = dA'*gra*prec(i);
-                param(i).r = param(i).r - Hess\gra;
+                
+                % only use Hessian and gra if finite
+                if all(isfinite(Hess(:))) & all(isfinite(gra(:)))
+                  param(i).r = param(i).r - Hess\gra;
+                else
+                  fprintf('Warning: Hessian matrix could not be estimated for %s\n',Nii(i).dat.fname);
+                end
 
                 clear R dR M x1a x2a dA tmp Hess gra
             end

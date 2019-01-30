@@ -4,7 +4,7 @@ function out = cat_long_multi_run(job)
 % Christian Gaser
 % $Id$
 
-global opts extopts output modulate dartel warps delete_temp ROImenu surfaces
+global opts extopts output modulate dartel delete_temp ROImenu surfaces
 
 warning off;
 
@@ -14,7 +14,6 @@ extopts     = job.extopts;
 output      = job.output;
 modulate    = job.modulate;
 dartel      = job.dartel;
-warps       = job.warps;
 ROImenu     = job.ROImenu;
 surfaces    = job.output.surface;
 
@@ -34,11 +33,9 @@ else
 end
 
 for i=1:numel(job.subj),
-    if warps
-      out.sess(i).warps = cell(1,1);
-      [pth,nam,ext,num] = spm_fileparts(job.subj(i).mov{1});
-      out.sess(i).warps{1} = fullfile(pth,mrifolder,['y_avg_', nam, ext, num]);
-    end
+		out.sess(i).warps = cell(1,1);
+		[pth,nam,ext,num] = spm_fileparts(job.subj(i).mov{1});
+		out.sess(i).warps{1} = fullfile(pth,mrifolder,['y_avg', nam, ext, num]);
 
     out.sess(i).files = cell(numel(job.subj(i).mov),1);
     m = numel(job.subj(i).mov);

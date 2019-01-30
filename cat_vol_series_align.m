@@ -36,12 +36,9 @@ else
   s_settings = Inf;
 end
 
-for i=1:N,
-    % Make an estimate of the scanner noise
-    noise(i,1) = spm_noise_estimate(job.data{i});
-    fprintf('Estimated noise sd for "%s" = %g\n', job.data{i}, noise(i,1));
-end
-prec   = noise.^(-2);
+% Don't use noise estimation for defining prec because it's too unstable for data 
+% from different scanners
+prec = ones(1,N);
 
 b_settings = [0 0 job.bparam];
 Nii = nifti(strvcat(job.data));
@@ -62,11 +59,13 @@ else
   use_brainmask = job.use_brainmask;
 end
 
-if use_brainmask
-  fprintf('Use initial brainmask for final rigid registration\n');
+if ~isfield(job,'reduce')
+  reduce = 1;
+else
+  reduce = job.reduce;
 end
 
-out    = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask);
+out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask, reduce);
 
 return
 
