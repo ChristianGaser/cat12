@@ -1,5 +1,38 @@
 ------------------------------------------------------------------------
-r1423 | gaser | 2019-01-29 07:54:25
+r1424 | gaser | 2019-01-30 16:55:39
+
+Changed paths:
+M       CHANGES.txt
+M       cat_batch_long.m
+M       cat_conf_long.m
+M       cat_conf_tools.m
+M       cat_long_main.m
+M       cat_long_multi_run.m
+D       cat_vol_average.m
+        > moved to development/cat_vol_average.m
+A       cat_vol_avg.m
+M       cat_vol_groupwise_ls.m
+M       cat_vol_headtrimming.m
+M       cat_vol_series_align.m
+A  +    development/cat_vol_average.m
+        > moved from cat_vol_average.m
+
+(1) Changed: Moved unused cat_vol_average.m to developer folder.
+(2) Changed: Added option to reduce bounding box at final resolution level in 
+    longitudinal registration.
+(3) Added: Created new tool for calculating average of up to 5D data of same
+    dimension and voxel size.
+(4) Changed: Noise estimate in longitudinal tool is not used anymore because of
+    instabilities for data from different scanners.
+(5) Fixed: Use of Hessian matrix in longitudinal registration only if finite.
+(6) Changed: Removed warp option for longitudinal pipeline because average
+    deformation field will be now always written.
+(7) Changed: Updated longitudinal pipeline w.r.t. to the actual changes. The 
+    spatial registration is now estimated from the mean deformation field of
+    all subjects instead of the deformation field of the mean image. This will 
+    be more stable for larger changes between the time points.
+------------------------------------------------------------------------
+r1423 | gaser | 2019-01-29 07:54:54 +0100 (Di, 29 Jan 2019) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +46,7 @@ M       html/cat.html
 
 (1) Fixed: Use of brainmask for rigid registration is now fixed.
 (2) Changed: Added option for writing deformations in longitudinal tool.
+
 ------------------------------------------------------------------------
 r1422 | gaser | 2019-01-21 23:39:21 +0100 (Mo, 21 Jan 2019) | 8 lines
 

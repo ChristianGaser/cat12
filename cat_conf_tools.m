@@ -1355,6 +1355,14 @@ use_brainmask.values = {1,0};
 use_brainmask.val    = {1};
 use_brainmask.help   = {'Use brainmask at last level of rigid body registration to obtain better registration by considering brain regions only.'};
 
+reduce        = cfg_menu;
+reduce.name   = 'Reduce Bounding Box';
+reduce.tag    = 'reduce';
+reduce.labels = {'Yes','No'};
+reduce.values = {1,0};
+reduce.val    = {1};
+reduce.help   = {'Reduce bounding box at final resolution level because usually there is a lot of air around the head after registration of multiple scans. This helps to save memory and time for later use of these registered images.'};
+
 nonlin         = cfg_branch;
 nonlin.tag     = 'nonlin';
 nonlin.name    = 'Non-linear registration';
@@ -1377,7 +1385,7 @@ reg.help   = {'Choose between rigid body and non-linear registration. The non-li
 realign         = cfg_exbranch;
 realign.tag     = 'series';
 realign.name    = 'Longitudinal Registration';
-realign.val     = {data bparam use_brainmask reg write_rimg write_avg};
+realign.val     = {data bparam use_brainmask reduce reg write_rimg write_avg};
 realign.help    = {'Longitudinal registration of series of anatomical MRI scans for a single subject.  It is based on inverse-consistent alignment among each of the subject''s scans, and incorporates a bias field correction.  Prior to running the registration, the scans should already be in very rough alignment, although because the model incorporates a rigid-body transform, this need not be extremely precise.  Note that there are a bunch of hyper-parameters to be specified.  If you are unsure what values to take, then the defaults should be a reasonable guess of what works.  Note that changes to these hyper-parameters will impact the results obtained.'
 ''
 'The alignment assumes that all scans have similar resolutions and dimensions, and were collected on the same (or very similar) MR scanner using the same pulse sequence.  If these assumption are not correct, then the approach will not work as well.  There are a number of settings (noise estimate, regularisation etc). Default settings often work well, but it can be very helpful to try some different values, as these can have a large effect on the results.'
@@ -1386,6 +1394,36 @@ realign.help    = {'Longitudinal registration of series of anatomical MRI scans 
 realign.prog = @cat_vol_series_align;
 realign.vout = @vout_reslice;
 
+data.name       = 'Select images';
+data.help = {
+'Select images for calculating average.'};
+
+%--------------------------------------------------------------------------
+% output Output Filename
+%--------------------------------------------------------------------------
+output         = cfg_entry;
+output.tag     = 'output';
+output.name    = 'Output Filename';
+output.help    = {'The output image is written to current working directory unless a valid full pathname is given. If a path name is given here, the output directory setting will be ignored.'
+    'If the field is left empty, i.e. set to '''', then the name of the 1st input image, preprended with ''i'', is used (change this letter in the spm_defaults if necessary).'};
+output.strtype = 's';
+output.num     = [0 Inf];
+output.val     = {'avg.nii'};
+
+outdir.help    = {'Select a directory where files are written otherwise the path of the first image will be used.'};
+
+%--------------------------------------------------------------------------
+% image average
+%--------------------------------------------------------------------------
+avg_img      = cfg_exbranch;
+avg_img.tag  = 'avg_img';
+avg_img.name = 'Image Average';
+avg_img.val  = {data output outdir};
+avg_img.help = {
+    'This function is for calculating the average of a set of images, which should be of same dimension and voxel size.'
+    }';
+avg_img.prog = @cat_vol_avg;
+avg_img.vout = @vout_avg;
 
 if expert
   %------------------------------------------------------------------------
@@ -1591,7 +1629,7 @@ if expert
 end
 
 %------------------------------------------------------------------------
-[long, long2]          = cat_conf_long;
+long          = cat_conf_long;
 nonlin_coreg  = cat_conf_nonlin_coreg;
 %------------------------------------------------------------------------
 
@@ -1602,7 +1640,7 @@ tools.values = { ...
   showslice, check_cov, check_cov2, check_SPM, ...
   calcvol, calcroi, iqr, T2x, F2x, T2x_surf, F2x_surf, ... 
   sanlm, maskimg, spmtype, headtrimming, realign, ...
-  long,long2,  nonlin_coreg, defs, defs2}; %,qa
+  long,  nonlin_coreg, defs, defs2, avg_img}; %,qa
 if expert 
   tools.values = [tools.values,{urqio}]; 
 end
@@ -1788,6 +1826,18 @@ for i=1:numel(s),
     vf{i} = fullfile(pth,[job.prefix,nam,ext,num]);
 end;
 return;
+
+%------------------------------------------------------------------------
+function dep = vout_avg(job)
+
+dep            = cfg_dep;
+if ~ischar(job.output) || strcmp(job.output, '<UNDEFINED>')
+    dep.sname  = 'Average Image';
+else
+    dep.sname  = sprintf('Average Image %s', job.output);
+end
+dep.src_output = substruct('.','files');
+dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 
 %------------------------------------------------------------------------
 function dep = vout_stat_TIV(job)
