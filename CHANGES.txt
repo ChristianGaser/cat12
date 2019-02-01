@@ -1,5 +1,27 @@
 ------------------------------------------------------------------------
-r1424 | gaser | 2019-01-30 16:55:39
+r1425 | dahnke | 2019-02-01 15:47:43
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_conf_extopts.m
+M       cat_main.m
+M       cat_main_APRG.m
+M       cat_main_reportfig.m
+M       cat_main_reportstr.m
+M       cat_run.m
+M       cat_run_job_APRGs.m
+M       cat_surf_createCS.m
+
+1) Fixed:  Corrected registration menu behavior in cat_run and cat_conf_extopts. 
+2) Fixed:  Corrected problems in APRG skull-strippings cat_run_jobAPRGs and 
+           cat_main_APRG.
+3) Fixed:  Corrected small typos in CAT report generation cat_main_reportstr. 
+4) Fixed:  Corrected small bugs in cat_surf_createCS. 
+5) Fixed:  Turned off GIFTI warning in cat12 script.
+
+------------------------------------------------------------------------
+r1424 | gaser | 2019-01-30 16:56:09 +0100 (Mi, 30 Jan 2019) | 31 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -31,6 +53,7 @@ A  +    development/cat_vol_average.m
     spatial registration is now estimated from the mean deformation field of
     all subjects instead of the deformation field of the mean image. This will 
     be more stable for larger changes between the time points.
+
 ------------------------------------------------------------------------
 r1423 | gaser | 2019-01-29 07:54:54 +0100 (Di, 29 Jan 2019) | 13 lines
 

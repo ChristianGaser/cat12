@@ -48,6 +48,12 @@ function varargout = cat12(varargin)
 
 % Last Modified by GUIDE v2.5 23-Jan-2018 22:36:22
 
+% Turn off gifti data warning in gifti/subsref (line 45)
+%   Warning: A value of class "int32" was indexed with no subscripts specified. 
+%            Currently the result of this operation is the indexed value itself, 
+%            but in a future release, it will be an error. 
+warning('off','MATLAB:subscripting:noSubscriptsSpecified');
+
 if nargin==0 
   spm_cat12;
   return;

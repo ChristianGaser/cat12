@@ -575,7 +575,7 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
       end
       
       % distance between linked surfaces 
-      Tlink = @(S1,S2) sum( [ sum( abs( S1.vertices(:,1:2) - S2.vertices(:,1:2) ).^2 , 2 ).^0.5  abs(S1.vertices(:,3) - S2.vertices(:,3)) ].^2 , 2 ).^0.5;
+      %Tlink = @(S1,S2) sum( [ sum( abs( S1.vertices(:,1:2) - S2.vertices(:,1:2) ).^2 , 2 ).^0.5  abs(S1.vertices(:,3) - S2.vertices(:,3)) ].^2 , 2 ).^0.5;
               
       % save datastructure
       S.(opt.surf{si}) = struct('faces',CS.faces,'vertices',CS.vertices,'vmat',vmat,...
@@ -584,7 +584,6 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
         setfield(S.(opt.surf{si}),'th2',nan(size(facevertexcdata)));
         setfield(S.(opt.surf{si}),'th3',nan(size(facevertexcdata)));
       end
-      clear CS; 
       
       if ~debug
         delete(Vpp.fname);
@@ -598,6 +597,7 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
       EC  = EC + abs(EC0);
       
       %%
+      clear CS
       continue
     end
     
