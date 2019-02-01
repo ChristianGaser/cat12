@@ -308,11 +308,7 @@ function job = update_job(job)
     job.extopts.regstr      = 0; 
   elseif isfield(job.extopts,'shooting')
     job.extopts.shootingtpm = job.extopts.shooting.shootingtpm;
-    if job.extopts.shooting.regstr==0
-      job.extopts.regstr    = 0.5; 
-    else
-      job.extopts.regstr    = job.extopts.shooting.regstr; 
-    end
+    job.extopts.regstr      = job.extopts.shooting.regstr; 
   end
   
   % find and check the Dartel templates

@@ -201,7 +201,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     hho = spm_orthviews('Image',VT0x,pos(1,:));
     spm_orthviews('Caption',hho,{T1txt},'FontSize',fontsize,'FontWeight','Bold');
     spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
-    cc{1} = axes('Position',[pos(1,1) + 0.23 0.37 0.02 0.15],'Parent',fg);     
+    cc{1} = axes('Position',[pos(1,1) + 0.26 0.37 0.02 0.15],'Parent',fg);     
     try image(cc{1},(60:-1:1)'); end
 
     if job.inv_weighting
@@ -230,7 +230,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     hhm = spm_orthviews('Image',Vm,pos(2,:));
     spm_orthviews('Caption',hhm,{'m*.nii (Int. Norm.)'},'FontSize',fontsize,'FontWeight','Bold');
     spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
-    cc{2} = axes('Position',[pos(2,1) + 0.23 0.37 0.02 0.15],'Parent',fg);
+    cc{2} = axes('Position',[pos(2,1) + 0.26 0.37 0.02 0.15],'Parent',fg);
     try image(cc{2},(60:-1:1)'); end 
     set(cc{2},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
       'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
@@ -397,10 +397,10 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     st.vols{3}.blobs{1}.cbar.YTickLabel  = yticklabelp0;
     st.vols{3}.blobs{1}.cbar.XTickLabel  = {};
     st.vols{3}.blobs{1}.cbar.YAxisLocation = 'right';
-    st.vols{3}.blobs{1}.cbar.Position = [pos(3,1) + 0.23 0.02 0.02 0.15]; 
+    st.vols{3}.blobs{1}.cbar.Position = [pos(3,1) + 0.26 0.02 0.02 0.15]; 
     st.vols{3}.blobs{1} = rmfield(st.vols{3}.blobs{1},'cbar'); % remove handle to avoid position updates
   else
-    cc{3} = axes('Position',[pos(3,1) + 0.23 0.02 0.02 0.15],'Parent',fg);
+    cc{3} = axes('Position',[pos(3,1) + 0.26 0.02 0.02 0.15],'Parent',fg);
     try image(cc{3},(60:-1:1)'); end
     set(cc{3},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
       'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
@@ -525,8 +525,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         end
         
         colormap(cmap);  set(hSD{1}.colourbar,'visible','off'); 
-        cc{3} = axes('Position',[0.63 0.02 0.3 0.01],'Parent',fg); image(cc{3},(121:1:120+surfcolors));
-        set(cc{3},'XTick',1:(surfcolors-1)/6:surfcolors,'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
+        cc{4} = axes('Position',[0.63 0.02 0.3 0.01],'Parent',fg); image(cc{4},(121:1:120+surfcolors));
+        set(cc{4},'XTick',1:(surfcolors-1)/6:surfcolors,'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
           'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize,'FontWeight','Bold');
       catch
         cat_io_cprintf('warn','WARNING: Can''t display surface!\n',VT.fname);   
@@ -553,7 +553,6 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize*0.8); end; end
   for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize*0.8); end;
  % warning off %#ok<WNOFF>
-  warning('OFF','MATLAB:hg:patch:RGBColorDataNotSupported');
   print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
   print(fg, job.imgprint.ftype('jpeg'), job.imgprint.fdpi(job.imgprint.dpi/2), job.imgprint.fnamej); 
  % warning on %#ok<WNON>
@@ -571,8 +570,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     try 
       cat_surf_render2('ColourMap',hSD{1}.axis,gray(128));
       cat_surf_render2('Clim',hSD{1}.axis,[0 6]);
-      axes(cc{3}); image(cc{3},0:60);
-      set(cc{3},'XTick',max(1,0:10:60),'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
+      axes(cc{4}); image(cc{4},0:60);
+      set(cc{4},'XTick',max(1,0:10:60),'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
         'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize,'FontWeight','Bold');
     end
   end
