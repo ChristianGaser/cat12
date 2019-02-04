@@ -35,7 +35,7 @@ end
 for i=1:numel(job.subj),
 		out.sess(i).warps = cell(1,1);
 		[pth,nam,ext,num] = spm_fileparts(job.subj(i).mov{1});
-		out.sess(i).warps{1} = fullfile(pth,mrifolder,['y_avg', nam, ext, num]);
+		out.sess(i).warps{1} = fullfile(pth,mrifolder,['avg_y_', nam, ext, num]);
 
     out.sess(i).files = cell(numel(job.subj(i).mov),1);
     m = numel(job.subj(i).mov);

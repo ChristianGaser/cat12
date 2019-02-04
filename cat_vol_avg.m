@@ -10,7 +10,7 @@ function out = cat_vol_avg(job)
 % out           - output name
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: cat_vol_avg.m 1289 2018-03-08 11:12:16Z gaser $
+% $Id$
 %
 
 [p,nam,ext] = spm_fileparts(job.output);
