@@ -915,7 +915,7 @@ if isdeployed
   'UserData',{ 'try,web(fullfile(spm(''dir''),''toolbox'',''cat12'',''CAT12-Manual.pdf''),''-browser'');end' 'try,web(''http://dbm.neuro.uni-jena.de/vbm'',''-browser'');end' })
 else
   set(h071,  'String',{  'Internet/Help...     '; 'Interactive Help'; 'Manual'; 'Update'; 'VBM Website' },...
-  'UserData',{  'web(fullfile(spm(''Dir''),''toolbox'',''cat12'',''html'',''cat.html''),''-browser'')' 'try,web(fullfile(spm(''dir''),''toolbox'',''cat12'',''CAT12-Manual.pdf''),''-browser'');end' 'spm(''alert'',evalc(''cat_update(1)''),''CAT Update'');' 'try,web(''http://dbm.neuro.uni-jena.de/vbm'',''-browser'');end' })
+  'UserData',{  'web(fullfile(spm(''Dir''),''toolbox'',''cat12'',''html'',''cat.html''))' 'try,web(fullfile(spm(''dir''),''toolbox'',''cat12'',''CAT12-Manual.pdf''),''-browser'');end' 'spm(''alert'',evalc(''cat_update(1)''),''CAT Update'');' 'try,web(''http://dbm.neuro.uni-jena.de/vbm'',''-browser'');end' })
 end
 
 appdata = [];
