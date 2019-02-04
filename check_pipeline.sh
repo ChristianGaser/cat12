@@ -275,8 +275,8 @@ postprocess ()
 
       # grep for vol_TIV and vol_abs_CGW and update csv file
       # check first for keywords and print next 8 lines
-      vol_TIV=`grep -A8 "<subjectmeasures" $report |grep vol_TIV |cut -f2 -d">"|cut -f1 -d"<"`
-      vol_CGW=`grep -A8 "<subjectmeasures" $report |grep vol_abs_CGW | sed -e 's/\ /,/g'|cut -f2 -d"["|cut -f1 -d"]"`|cut -f1-4 -d','
+      vol_TIV=`grep -A12 "<subjectmeasures" $report |grep vol_TIV |cut -f2 -d">"|cut -f1 -d"<"`
+      vol_CGW=`grep -A12 "<subjectmeasures" $report |grep vol_abs_CGW | sed -e 's/\ /,/g'|cut -f2 -d"["|cut -f1 -d"]"|cut -f1-4 -d','`
       if [ ! -z "$vol_TIV" ]; then
         if [ ! -z "$vol_CGW" ]; then
           # add entry to csv file and sort and only keep unique lines
