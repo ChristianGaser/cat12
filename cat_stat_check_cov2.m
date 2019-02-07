@@ -255,6 +255,7 @@ function varargout = cat_stat_check_cov2(job)
     cscc.display.WP = 10;
   end
   
+  cscc.H.allow_violin = 1;  
   
   popb = [0.038 0.035];  % size of the small buttons
   popm = 0.780;          % x-position of the control elements
@@ -279,7 +280,8 @@ function varargout = cat_stat_check_cov2(job)
     'boxplot',        [0.100 0.055 0.880 0.915],... % boxplot axis
     'refresh',        [0.100 0.003 0.055 0.032],... % refresh boxplot
     'worst',          [0.150 0.003 0.200 0.032],... % show worst (in boxplot) 
-    'fnamesbox',      [0.830 0.003 0.160 0.032],... % show filenames in boxplot 
+    'fnamesbox',      [0.830 0.001 0.160 0.032],... % show filenames in boxplot 
+    'plotbox',        [0.830 0.022 0.160 0.032],... % switch between boxplot and violin plot 
     ...
     'close',          [0.775 0.935 0.100 0.040],... % close button
     'help',           [0.875 0.935 0.100 0.040],... % help button
@@ -585,11 +587,9 @@ function varargout = cat_stat_check_cov2(job)
   spm_progress_bar('Clear');
     
 
-
-
   %% load cscc.data.XML data
   %  ----------------------------------------------------------------------
-  if isempty( cscc.files.xml )
+  if all(cellfun('isempty',cscc.files.xml))
     cscc.H.isxml        = 0;
     cscc.data.QM_names  = '';
   else
@@ -730,7 +730,7 @@ function varargout = cat_stat_check_cov2(job)
 
     cscc.data.data_array = Y';
     cscc.data.YpY = (Y*Y')/n_subjects;
-
+    
     % calculate residual mean square of mean adjusted Y
     Y = Y - repmat(mean(Y,1), [n_subjects 1]);
     cscc.data.data_array_diff = Y';
@@ -948,6 +948,7 @@ function varargout = cat_stat_check_cov2(job)
   else
     create_figures(job,slices)
   end
+  show_boxplot;
 
  
 return
@@ -976,9 +977,9 @@ function create_figures(job,slices)
   clear fcscc.pos cscc.display.WP;
 
   if cscc.H.mesh_detected 
-    set(cscc.H.figure,'Name','CAT Check Covarance: Click in image to display surfaces');
+    set(cscc.H.figure,'Name','CAT Check Covariance: Click in image to display surfaces');
   else
-    set(cscc.H.figure,'Name','CAT Check Covarance: Click in image to display slices');
+    set(cscc.H.figure,'Name','CAT Check Covariance: Click in image to display slices');
   end
 
   
@@ -1139,7 +1140,7 @@ function create_figures(job,slices)
   
   % add nuisance variable(s) 
   % maybe as separate button?
-  if isfield(job,'c'); 
+  if isfield(job,'c') & ~isempty(job.c); 
     if numel(job.c)>1
       str = [str,{'Nuisance variables:'}]; %tmp = [ tmp , {{@sprintf,''}}]; 
     else
@@ -1169,8 +1170,8 @@ function create_figures(job,slices)
   %% create popoup menu for main check_cov window
   if cscc.H.isxml
     str  = { 'Plot',...
-             'Corr. matrix by data selection', ...
-             'Corr. matrix by mean corr.', ...
+             'Corr. matrix order by selected files', ...
+             'Corr. matrix sorted by mean corr.', ...
              'Mahalanobis distance'};
     tmp  = { {@show_matrix, cscc.data.YpY, 0},...
              {@show_matrix, cscc.data.YpY(cscc.data.ind_sorted,cscc.data.ind_sorted), 1},...
@@ -1219,7 +1220,9 @@ function create_figures(job,slices)
     'ToolTipString','Select sample to display','FontSize',cscc.display.FS(cscc.display.FSi));
 
   % choose center 
-  %cscc.datagroups.protocols   = 1:max(cscc.datagroups.protocol); % only protocol ids
+  if ~isfield(cscc.datagroups,'protocols')
+    cscc.datagroups.protocols   = 1:max(cscc.datagroups.protocol); % only protocol ids
+  end 
   str  = { 'Protocol',sprintf('all (%d)',numel(cscc.datagroups.protocol))};
   tmp  = { {@show_protocol, 0} }; 
   for i=1:numel(cscc.datagroups.protocols), 
@@ -1419,11 +1422,13 @@ function create_figures(job,slices)
     'ToolTipString','Print exclusion list in command window',...
     'string','VIEW','Style','Pushbutton','Enable','off'); 
 
-  cscc.H.trashui.autotrash = uicontrol(cscc.H.figure,...
-    'Units','normalized','position',cscc.pos.autotrash,'callback',@autotrash,...
-    'string','AUTO','FontSize',cscc.display.FS(cscc.display.FSi),...
-    'ToolTipString','Automatic exclusion','ForegroundColor',[0 0.8 0],...
-    'Style','Pushbutton','Enable',onoff{(size(cscc.data.QM,2)<4) + 1}); 
+  if isfield(cscc.data,'QM')
+		cscc.H.trashui.autotrash = uicontrol(cscc.H.figure,...
+			'Units','normalized','position',cscc.pos.autotrash,'callback',@autotrash,...
+			'string','AUTO','FontSize',cscc.display.FS(cscc.display.FSi),...
+			'ToolTipString','Automatic exclusion','ForegroundColor',[0 0.8 0],...
+			'Style','Pushbutton','Enable',onoff{(size(cscc.data.QM,2)<4) + 1}); 
+  end
 
   % == second row ==
   cscc.H.trashui.undo = uicontrol(cscc.H.figure,...
@@ -1656,7 +1661,7 @@ function estimateExclusion(varargin)
   % create final exclusion list for MNC 
   datad = false(size(dataf)); 
   if ~cscc.data.islongitudinal
-    % positive outlier that fit to well to another dataset (dublicate entries / rescans)
+    % positive outlier that fit well to another dataset (dublicate entries / rescans)
     delMNCh = find((tril(cscc.data.YpY,-1) > (mdMNC + MNCath) ) & ...      % records above absolute higher threshold
                    (tril(cscc.data.YpY,-1) > (mdMNC + MNCrth * sdMNC) ) );
      
@@ -2573,7 +2578,7 @@ function emptytrash(obj, event_obj)
   newtrashfile = fullfile(cscc.trashdir,...
     ['restore_' newtrashdir '.m']);
   
-  % otherwiese we go and by creating the new specific trash directory
+  % otherwise we go and by creating the new specific trash directory
   try mkdir(fullfile(cscc.trashdir,newtrashdir)); end
   
     
@@ -2990,9 +2995,13 @@ function checkvol(obj, event_obj)
   spm_figure('Focus',cscc.H.graphics);
   spm_orthviews('Reset')
   [zl,rl] = spm_orthviews('ZoomMenu');
+  if size(zl,2) > 1
+    zl = zl';
+    rl = rl';
+  end
   if numel(zl)==8
-    zl = [zl(1:end-2); 60; zl(end-1:end)]; 
-    rl = [rl(1:end-2);  1; rl(end-1:end)]; 
+    zl = [zl(1:end-2) 60 zl(end-1:end)];
+    rl = [rl(1:end-2)  1 rl(end-1:end)];
   end
   spm_orthviews('ZoomMenu',zl,rl); 
   job.colormapc = flipud(cat_io_colormaps('BCGWHcheckcov'));
@@ -3993,11 +4002,18 @@ function checkbox_names(obj, event_obj)
 return
 
 %-----------------------------------------------------------------------
+function checkbox_plot(obj, event_obj)
+%-----------------------------------------------------------------------
+  global cscc
+  cscc.H.allow_violin = get(cscc.H.plotbox,'Value');
+  show_boxplot;
+return
+
+%-----------------------------------------------------------------------
 function show_boxplot(data_boxp, name_boxp, quality_order, obj)
 %-----------------------------------------------------------------------
   global cscc bp
 
-    
   if nargin <3
     data_boxp     = bp.data;
     name_boxp     = bp.name;
@@ -4008,6 +4024,8 @@ function show_boxplot(data_boxp, name_boxp, quality_order, obj)
     bp.order      = quality_order;
   end
 
+  if iscell(name_boxp), name_boxp = name_boxp{1}; end
+  
   spm_figure('Clear',cscc.H.graphics); 
   spm_figure('Focus',cscc.H.graphics); 
 
@@ -4056,8 +4074,6 @@ function show_boxplot(data_boxp, name_boxp, quality_order, obj)
   xcscc.pos = cell(1,cscc.datagroups.n_samples);
   data = cell(1,cscc.datagroups.n_samples);
 
-  allow_violin = 2;
-
   %% create filenames
   hold on
   for i=1:cscc.datagroups.n_samples
@@ -4070,7 +4086,7 @@ function show_boxplot(data_boxp, name_boxp, quality_order, obj)
         if ii==1, data{i} = datap{i}; end
 
         if length(ind) < 8
-          allow_violin = 0;
+          cscc.H.allow_violin = 0;
         end
 
         if cscc.datagroups.n_samples == 1
@@ -4094,8 +4110,15 @@ function show_boxplot(data_boxp, name_boxp, quality_order, obj)
     end 
   end
 
+	cscc.H.plotbox = uicontrol(cscc.H.graphics,...
+			'string','Violinplot','Units','normalized',...
+			'position',cscc.pos.plotbox,'callback',@checkbox_plot,...
+			'Style','CheckBox','HorizontalAlignment','center',...
+			'ToolTipString','Switch to Violinplot','value',cscc.H.allow_violin,...
+			'Interruptible','on','Visible','on','FontSize',cscc.display.FS(cscc.display.FSi));
+  
   %% create boxplot
-  opt = struct('groupnum',0,'ygrid',1,'box',1,'violin',allow_violin,'median',2,...
+  opt = struct('groupnum',0,'ygrid',1,'box',1,'violin',2*cscc.H.allow_violin,'median',2,...
                'groupcolor',jet(cscc.datagroups.n_samples),'names',{gnames},...
                'xlim',[-.25 cscc.datagroups.n_samples+1.25]); 
   if max(data_boxp) > min(data_boxp)
@@ -4408,12 +4431,13 @@ function txt = myupdatefcn(obj, event_obj)
       end
 
       % text info for data cursor window
-      if size(cscc.data.QM,2)>=4
+      if isfield(cscc.data,'QM') & size(cscc.data.QM,2)>=4
         QMtxtx = sprintf('; IQR=%5.2f; MD=%5.2f',cscc.data.QM(x,4),cscc.data.MD(x));
         QMtxty = sprintf('; IQR=%5.2f; MD=%5.2f',cscc.data.QM(y,4),cscc.data.MD(y));
       end
       nuisx = ''; nuisy = ''; 
-      if isfield(cscc.job,'c')
+
+      if isfield(cscc.job,'c') & ~isempty(cscc.job.c)
         for ci=1:size(cscc.job.c,2)
           if round(cscc.job.c{ci}(x)) == cscc.job.c{ci}(x)
             nuisx = sprintf('; N_%d=%d',ci,cscc.job.c{ci}(x)); 
@@ -4428,13 +4452,24 @@ function txt = myupdatefcn(obj, event_obj)
           nuisy = sprintf('Row (Bottom):  %s',nuisy(3:end)); 
         end
       end
-      txt = {
-        sprintf('Correlation:      %3.3f',cscc.data.YpY(x,y)),...
-        sprintf('Column (Top):  S%d:%s',cscc.datagroups.sample(x),cscc.files.fname.m{x}), ...
-        sprintf('Row (Bottom):  S%d:%s',cscc.datagroups.sample(y),cscc.files.fname.m{y}), ...
-        sprintf('Column (Top):  MNC=%5.3f%s%s',cscc.data.mean_cov(x),QMtxtx,nuisx),...
-        sprintf('Row (Bottom):  MNC=%5.3f%s%s',cscc.data.mean_cov(y),QMtxty,nuisy)...
-      };
+
+      if isfield(cscc.data,'QM') & size(cscc.data.QM,2)>=4
+        txt = {
+          sprintf('Correlation:      %3.3f',cscc.data.YpY(x,y)),...
+          sprintf('Column (Top):  S%d:%s',cscc.datagroups.sample(x),cscc.files.fname.m{x}), ...
+          sprintf('Row (Bottom):  S%d:%s',cscc.datagroups.sample(y),cscc.files.fname.m{y}), ...
+          sprintf('Column (Top):  MNC=%5.3f%s%s',cscc.data.mean_cov(x),QMtxtx,nuisx),...
+          sprintf('Row (Bottom):  MNC=%5.3f%s%s',cscc.data.mean_cov(y),QMtxty,nuisy)...
+        };
+      else
+        txt = {
+          sprintf('Correlation:      %3.3f',cscc.data.YpY(x,y)),...
+          sprintf('Column (Top):  S%d:%s',cscc.datagroups.sample(x),cscc.files.fname.m{x}), ...
+          sprintf('Row (Bottom):  S%d:%s',cscc.datagroups.sample(y),cscc.files.fname.m{y}), ...
+          sprintf('Column (Top):  MNC=%5.3f%s',cscc.data.mean_cov(x),nuisx),...
+          sprintf('Row (Bottom):  MNC=%5.3f%s',cscc.data.mean_cov(y),nuisy)...
+        };
+      end
       set(cscc.H.slice,'Position',cscc.pos.slice,'Visible','on');
     
     end

@@ -1,5 +1,25 @@
 ------------------------------------------------------------------------
-r1426 | gaser | 2019-02-04 12:51:35
+r1427 | gaser | 2019-02-07 14:53:19
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_extopts.m
+M       cat_conf_tools.m
+M       cat_run.m
+M       cat_stat_analyze_ROIs.m
+M       cat_stat_check_SPM.m
+M       cat_stat_check_cov2.m
+M       cat_surf_parameters.m
+M       cat_surf_results.m
+M       html/cat.html
+
+(1) Fixed: Removed some minor bugs in cat_surf_results.m, cat_surf_parameters.m,
+    cat_stat_check_SPM.m, and cat_run.m.
+(2) Fixed: Removed many bugs in cat_stat_check_cov2.m that were caused if no xml-
+    files could be found.
+------------------------------------------------------------------------
+r1426 | gaser | 2019-02-04 12:51:40 +0100 (Mo, 04 Feb 2019) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +35,7 @@ M       html/cat_versions.html
 
 (1) Changed: Updated information about version CAT12.6-rc1 in online help.
 (2) Changed: Some minor changes in check_pipeline* code.
+
 ------------------------------------------------------------------------
 r1425 | dahnke | 2019-02-01 15:50:22 +0100 (Fr, 01 Feb 2019) | 20 lines
 

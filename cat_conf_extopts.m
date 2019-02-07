@@ -760,7 +760,7 @@ scale_cortex.strtype = 'r';
 scale_cortex.num     = [1 1];
 scale_cortex.def     = @(val)cat_get_defaults('extopts.scale_cortex', val{:});
 scale_cortex.help    = {
-  'Scale intensity values for cortex to start with initial surface that is closer to GM/WM border to prevent that gyri/sulci are glued if you still have glued gyri/sulci (mainly in the occ. lobe).  You can try to decrease this value (start with 0.6).  Please note that decreasing this parameter also increases the risk of an interrupted parahippocampal gyrus.'
+  'Scale intensity values for cortex to start with initial surface that is closer to GM/WM border to prevent that gyri/sulci are glued. If you still have glued gyri/sulci (mainly in the occ. lobe) you can try to decrease this value (start with 0.6).  Please note that decreasing this parameter also increases the risk of an interrupted parahippocampal gyrus.'
   ''
 };
 
@@ -771,7 +771,7 @@ add_parahipp.strtype = 'r';
 scale_cortex.num     = [1 1];
 add_parahipp.def     = @(val)cat_get_defaults('extopts.add_parahipp', val{:});
 add_parahipp.help    = {
-  'Increase values in the parahippocampal area to prevent large cuts in the parahippocampal gyrus (initial surface in this area will be closer to GM/CSF border if the parahippocampal gyrus is still cut.  You can try to increase this value (start with 0.15).'
+  'Increase intensity values in the parahippocampal area to prevent large cuts in the parahippocampal gyrus (initial surface in this area will be closer to GM/CSF border). If the parahippocampal gyrus is still cut you can try to increase this value (start with 0.15).'
   ''
 };
 

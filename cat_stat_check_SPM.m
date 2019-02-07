@@ -113,8 +113,9 @@ if check_cov
     repeated_anova = ~isempty(xX.iB);
     
     if repeated_anova
-        n_samples = length(xX.iB);
-        [rw,cl] = find(xX.I == length(xX.iB)); % find column which codes subject factor (length(xX.iB) -> n_samples)    
+        % coding of group factor should be hopefully always 3rd column of xX.I
+        cl = 3;
+        n_samples = max(xX.I(:,cl));
     else
         if ~isempty(xX.iH)
             n_samples = length(xX.iH);
@@ -125,7 +126,7 @@ if check_cov
     end
     
     % always use last found column
-    cl = max(cl);
+    cl = max(cl)
     
     for i=1:numel(VY)
         if ~exist(char(VY(i).fname),'file')

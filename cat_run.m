@@ -34,7 +34,7 @@ function varargout = cat_run(job)
 %  is missed and if the same preprocessing options were used before.
 %  -----------------------------------------------------------------
 if isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.extopts.admin.lazy && ...
-  ~isfield(job,'process_index') && isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))  
+  ~isfield(job,'process_index') && isfield(job,'nproc') && job.nproc>0  
   jobl      = update_job(job);
   jobl.vout = vout_job(jobl);
   job.data  = remove_already_processed(jobl); 
