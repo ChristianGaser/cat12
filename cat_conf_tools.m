@@ -369,7 +369,7 @@ check_cov.help  = {
 
 check_cov2      = check_cov; 
 check_cov2.tag  = 'check_cov2';
-check_cov2.name = 'Check sample homogeneity of 3D data Version 2';
+check_cov2.name = 'Check sample homogeneity of 3D data (new exp. version)';
 check_cov2.val  = {sample,gap,nuisance};
 check_cov2.prog = @cat_stat_check_cov2;
 
