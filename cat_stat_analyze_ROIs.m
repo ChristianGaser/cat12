@@ -89,6 +89,12 @@ for i=1:numel(P)
   if i==1
     % check for catROI*-files
     files = cat_vol_findfiles(pth_label,[pattern '*']);
+    
+    if numel(files) ~= numel(P)
+        fprintf('Error: Label folder %s contains more data (n=%d) than expected (n=%d). Please only retain data from the current analysis.\n',pth_label,numel(files),numel(P));
+        return
+    end
+    
     if numel(files) == 0
       % mesh found
       if isfield(SPM.xVol,'G')

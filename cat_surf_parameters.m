@@ -36,7 +36,6 @@ function varargout = cat_surf_parameters(job)
     error('Not enough parameters.');
   end
   
-  def.process_index = 0; % spm job variable
   def.trerr       = 0; % display errors
   def.nproc       = 0; % parallel processing
   def.verb        = cat_get_defaults('extopts.verb'); 
