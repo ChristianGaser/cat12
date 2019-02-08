@@ -2995,7 +2995,7 @@ function checkvol(obj, event_obj)
   spm_figure('Focus',cscc.H.graphics);
   spm_orthviews('Reset')
   [zl,rl] = spm_orthviews('ZoomMenu');
-  if size(zl,2) > 1
+  if size(zl,1) > 1
     zl = zl';
     rl = rl';
   end
