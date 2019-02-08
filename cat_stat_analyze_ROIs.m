@@ -66,7 +66,27 @@ end
 
 % filenames of existing design
 P = SPM.xY.P;
+n = numel(P);
 
+pth = cell(n,1);
+fname = cell(n,1);
+for i=1:n
+  [pth{i},nam,ext] = fileparts(P{i});
+  fname{i} = [nam ext];
+end
+
+[tmp, pat] = spm_str_manip(fname,'C');
+
+% get prepending pattern 
+if ~mesh_detected
+	prepend = fname{1};
+	% check whether prepending pattern is not based on GM/WM
+	if isempty(strfind(prepend,'mwp')) & isempty(strfind(prepend,'m0wp'))
+		fprintf('\nWARNING: ROI analysis is only supported for VBM of GM/WM/CSF. No ROI values for DBM will be estimated.\n',prepend);
+	end
+end
+
+roi_files_found = 0;
 % get names of ROI xml files using saved filename in SPM.mat
 for i=1:numel(P)
   [pth,nam,ext] = fileparts(P{i});
@@ -81,65 +101,83 @@ for i=1:numel(P)
   
   if ~exist(pth_label,'dir')
     fprintf('Label folder %s was not found.\n',pth_label);
-    roi_names = cellstr(spm_select(numel(P) ,'xml','Select xml files',{},'',pattern));
     break
   end
-
-  % check that name of ROI fits to SPM data for 1st file
-  if i==1
-    % check for catROI*-files
-    files = cat_vol_findfiles(pth_label,[pattern '*']);
-    
-    if numel(files) ~= numel(P)
-        fprintf('Error: Label folder %s contains more data (n=%d) than expected (n=%d). Please only retain data from the current analysis.\n',pth_label,numel(files),numel(P));
-        return
-    end
-    
-    if numel(files) == 0
-      % mesh found
-      if isfield(SPM.xVol,'G')
-        fprintf('No label files found in folder %s. Please check whether you have extracted ROI-based surface values or have moved your data.\n',pth_label);
-      else
-        fprintf('No label files found in folder %s. Please check that you have not moved your data.\n',pth_label);
-      end
-      roi_names = cellstr(spm_select(numel(P) ,'xml','Select xml files',{},'',pattern));
-      break
-    end
-    [tmp, tmp_name, ext] = fileparts(files{1});
-    
-    % remove catROI[s]_ from first xml file
-    tmp_name(1:length(pattern)) = [];
-
-    % check whether first filename in SPM.mat and xml-file are from the same subject
-    ind = strfind(nam,tmp_name);
-    if isempty(ind)
-      fprintf('Label file %s does not fit to analyzed file %s. Please check that you have not moved your data.\n',tmp_name,nam);
-      roi_names = cellstr(spm_select(numel(P) ,'xml','Select xml files',{},'',pattern));
-      break
-    end
-    
-    % get prepending pattern 
-    if ~mesh_detected
-      prepend = nam(1:ind-1);
-      % check whether prepending pattern is not based on GM/WM
-      if isempty(strfind(prepend,'mwp')) & isempty(strfind(prepend,'m0wp'))
-        fprintf('\nWARNING: ROI analysis is only supported for VBM of GM/WM/CSF. No ROI values for DBM will be estimated.\n',prepend);
-      end
-    end
-
-  end
   
-  % get ROI name for all files and check whether the files are found
-  roi_names{i} = fullfile(pth_label,[pattern nam(ind:end) '.xml']);
-  if ~exist(roi_names{i},'file')
-      % mesh found
-      if isfield(SPM.xVol,'G')
-        fprintf('Label file %s not found. Please check whether you have extracted ROI-based surface values or have moved your data.\n',roi_names{i});
-      else
-        fprintf('Label file %s not found. Please check that you have not moved your data.\n',roi_names{i});
+  sname = [pattern '*' pat.m{i} '*.xml'];
+  files = cat_vol_findfiles(pth_label,sname);
+  
+  switch numel(files)
+    case 0
+      fprintf('Label file %s not found in %s. Please check whether you have extracted ROI-based surface values or have moved your data.\n',sname,pth_label);
+    case 1
+      roi_names{i} = files{1};
+      roi_files_found = roi_files_found + 1;
+    otherwise
+      % if multiple files were found select that one with the longer filename
+      ind = zeros(numel(files),1);
+      for j=1:numel(files)
+        [rpth,rnam,rext] = fileparts(files{j});
+        tmp = strfind(nam,rnam(numel(pattern)+1:end));
+        if isempty(tmp), tmp = Inf; end
+        ind(j) = tmp;
       end
-      break
+      
+      % check for longer filename (=smaller index)
+      [mi,ni] = min(ind);
+      
+      % use longer filename
+      roi_names{i} = files{ni};
+      roi_files_found = roi_files_found + 1;
   end
+  disp(roi_names{i})  
+  
+end
+
+% select files interactively of no xml files were found
+if roi_files_found ~= n
+  roi_names0 = cellstr(spm_select(n ,'xml','Select xml files in the same order of your SPM design.',{},'',pattern));
+  roi_names = roi_names0;
+  
+  roi_files_found = 0;
+	for i=1:numel(P)
+		[pth,nam,ext] = fileparts(P{i});
+				
+		sname = [pattern '*' pat.m{i} '*.xml'];
+		files = cat_vol_findfiles(fileparts(roi_names0{i}),sname);
+		
+    switch numel(files)
+    case 0
+      fprintf('Order of filenames is uncorrect. Please take casre of the same order of file selection as in your SPM design.\n');
+    case 1
+      roi_names{i} = files{1};
+      roi_files_found = roi_files_found + 1;
+    otherwise    
+      % if multiple files were found select that one with the longer filename
+      ind = zeros(numel(files),1);
+      for j=1:numel(files)
+        [rpth,rnam,rext] = fileparts(files{j});
+        tmp = strfind(nam,rnam(numel(pattern)+1:end));
+        if isempty(tmp), tmp = Inf; end
+        ind(j) = tmp;
+      end
+      
+      % check for longer filename (=smaller index)
+      [mi,ni] = min(ind);
+      
+      % use longer filename
+      roi_names{i} = files{ni};
+      roi_files_found = roi_files_found + 1;
+    end
+    
+    disp(roi_names{i})  
+	end
+	
+	if roi_files_found ~= n
+		fprintf('%d label files found with pattern %s. Please only retain data from the current analysis.\n',roi_files_found,sname);
+		return
+	end
+
 end
 
 % use 1st xml file to get the available atlases
@@ -441,11 +479,12 @@ if ~mesh_detected
     OV.reference_range = [0.2 1.0];                        % intensity range for reference image
     OV.opacity = Inf;                                      % transparence value for overlay (<1)
     OV.cmap    = jet;                                      % colormap for overlay
-    OV.range   = [-log10(alpha) round(max(data{show_results}(:)))];
+    OV.range   = [-log10(alpha) round(max(data{show_results}(isfinite(data{show_results}))))];
     OV.name = ['logP' corr_short{show_results} output_name '.nii'];
     OV.slices_str = char('-30:4:60');
     OV.transform = char('axial');
     cat_vol_slice_overlay(OV);
+    fprintf('You can again call the result file %s using Slice Overlay in CAT12 with more options to select different slices and orientations.\n',OV.name);
   end
   
 else % surface results display
