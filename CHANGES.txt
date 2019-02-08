@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1428 | gaser | 2019-02-08 14:44:26
+r1429 | gaser | 2019-02-08 15:12:29
+
+Changed paths:
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       html/cat_versions.html
+
+Changed: Updated online help and CAT12 manual.
+------------------------------------------------------------------------
+r1428 | gaser | 2019-02-08 14:44:55 +0100 (Fr, 08 Feb 2019) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +20,7 @@ M       html/cat.html
 (1) Changed: cat_stat_analyze_ROIs.m now better finds related xml-files and
     also corrects if multiple xml-files are found per data set.
 (2) Fixed: Removed minor bug in cat_stat_check_cov2.m.
+
 ------------------------------------------------------------------------
 r1427 | gaser | 2019-02-07 14:53:49 +0100 (Do, 07 Feb 2019) | 18 lines
 
