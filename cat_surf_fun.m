@@ -122,10 +122,9 @@ function cat_surf_cdatamappingtst
    Psubtmp      = strrep(Psubcentral,'central','tmp'); 
    Pavgtmp      = strrep(strrep(Psubcentral,'central','tmp.resampled'),'lh.','s15mm.lh.'); 
  
-   %Pavgcentral  = '/Users/dahnke/Neuroimaging/spm12/toolbox/cat12/templates_surfaces/lh.central.freesurfer.gii'; 
-   PavgsphereA  = '/Users/dahnke/Neuroimaging/spm12/toolbox/cat12/templates_surfaces/lh.sphere.freesurfer.gii'; 
-   PavgDKT40    = '/Users/dahnke/Neuroimaging/spm12/toolbox/cat12/atlases_surfaces/lh.aparc_DKT40JT.freesurfer.annot';
-   
+   %Pavgcentral  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii'));
+   PavgsphereA  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.sphere.freesurfer.gii')); 
+   PavgDKT40    = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_DKT40JT.freesurfer.annot'));
    
 %% Test 1 - avg2sub - ok
    Ssub = gifti(PsubsphereA);
