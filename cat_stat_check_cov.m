@@ -9,7 +9,7 @@ function varargout = cat_stat_check_cov(job)
 % Christian Gaser
 % $Id$
 
-if 0 %cat_get_defaults('extopts.expertgui')>1
+if cat_get_defaults('extopts.expertgui')>1
   if nargout
     varargout = cat_stat_check_cov2(job);
   else
@@ -19,7 +19,7 @@ if 0 %cat_get_defaults('extopts.expertgui')>1
 end
 
 global alphaval filename H YpY YpYsorted  data_array data_array_diff pos ind_sorted ind_sorted_display mean_cov FS X mesh_detected ...
-mn_data mx_data V Vchanged sample isxml sorted isscatter MD show_name bplot names_changed img img_alpha
+mn_data mx_data V Vchanged sample isxml sorted isscatter MD show_name bplot names_changed img img_alpha allow_violin
 
 % show data by fileorder
 sorted = 0;
@@ -41,6 +41,8 @@ if isfield(job,'gSF')
 else
   is_gSF = 0;
 end
+
+allow_violin = 1;
 
 % read filenames for each sample and indicate sample parameter
 if isfield(job,'data_vol')
@@ -191,18 +193,21 @@ FS = spm('FontSizes');
 
 pos = struct(...
     'fig',    [10  10  1.3*ws(3) 1.1*ws(3)],... % figure
-    'cbar',   [0.240 0.950 0.300 0.020],... % colorbar for correlation matrix
+    'cbar',   [0.045 0.950 0.700 0.020],... % colorbar for correlation matrix
     'corr',   [-0.02 0.050 0.825 0.825],... % correlation matrix
     'scat',   [0.050 0.050 0.700 0.825],... % scatter plot
     'close',  [0.775 0.925 0.200 0.050],... % close button
     'show',   [0.775 0.875 0.200 0.050],... % button to show worst cases
     'boxp',   [0.775 0.820 0.200 0.050],... % button to display boxplot
     'sort',   [0.775 0.775 0.200 0.050],... % button to enable ordered matrix
-    'chbox',  [0.775 0.750 0.200 0.050],... % show filenames?
     'text',   [0.775 0.600 0.200 0.150],... % textbox
     'aslider',[0.775 0.555 0.200 0.040],... % slider for alpha overlay
     'slice',  [0.775 0.050 0.200 0.400],... % two single images according to position of mouse pointer
-    'sslider',[0.775 0.010 0.200 0.040]);   % slider for z-slice   
+    'sslider',[0.775 0.010 0.200 0.040],... % slider for z-slice   
+...    'fnambox',[0.830 0.001 0.160 0.032],... % show filenames in boxplot 
+    'fnambox',  [0.775 0.750 0.200 0.050],... % show filenames?
+    'plotbox',[0.875 0.750 0.200 0.050]);   % switch between boxplot and violin plot 
+...    'plotbox',[0.830 0.022 0.160 0.032]);   % switch between boxplot and violin plot 
 
 if mesh_detected
   % rescue unscaled data min/max
@@ -388,18 +393,20 @@ try set(cm,'NewDataCursorOnClick',false); end
 
 % add colorbar
 H.cbar = axes('Position',pos.cbar,'Parent',H.figure);
-image((1:64));
+image(H.cbar,1:64); set(get(H.cbar,'children'),...
+    'HitTest','off','Interruptible','off');
+set(H.cbar,'Ytick','','YTickLabel',''); 
 
 isscatter = 0;
 show_matrix(YpY, sorted);
 
 % create two colormaps
-cmap = [hot(64); gray(64)];
+cmap = [jet(64); gray(64)];
 colormap(cmap)
 
 % display YTick with 5 values (limit accuracy for floating numbers)
 set(H.cbar,'YTickLabel','','XTickLabel','','XTick',linspace(1,64,5), 'XTickLabel',...
-  round(100*linspace(min(YpY(:)),max(YpY(:)),5))/100,'TickLength',[0 0]);
+  round(100*linspace(min(YpY(:)),max(YpY(YpY~=1)),5))/100,'TickLength',[0 0]);
 
 % add button for closing all windows
 H.close = uicontrol(H.figure,...
@@ -436,24 +443,24 @@ if isxml
   str  = { 'Boxplot...','Mean correlation',QM_names,'Mahalanobis distance'};
   
   if size(QM,2) == 5
-    tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation  ', 1},...
-             {@show_mean_boxplot, QM(:,1), QM_names(1,:), -1},...
-             {@show_mean_boxplot, QM(:,2), QM_names(2,:), -1},...
-             {@show_mean_boxplot, QM(:,3), QM_names(3,:), -1},...
-             {@show_mean_boxplot, QM(:,4), QM_names(4,:), -1},...
-             {@show_mean_boxplot, QM(:,5), QM_names(5,:), -1},...
-             {@show_mean_boxplot, MD, 'Mahalanobis distance  ', -1} };
+    tmp  = { {@show_boxplot, mean_cov, 'Mean correlation  ', 1},...
+             {@show_boxplot, QM(:,1), QM_names(1,:), -1},...
+             {@show_boxplot, QM(:,2), QM_names(2,:), -1},...
+             {@show_boxplot, QM(:,3), QM_names(3,:), -1},...
+             {@show_boxplot, QM(:,4), QM_names(4,:), -1},...
+             {@show_boxplot, QM(:,5), QM_names(5,:), -1},...
+             {@show_boxplot, MD, 'Mahalanobis distance  ', -1} };
   else
-    tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation  ', 1},...
-             {@show_mean_boxplot, QM(:,1), QM_names(1,:), -1},...
-             {@show_mean_boxplot, QM(:,2), QM_names(2,:), -1},...
-             {@show_mean_boxplot, QM(:,3), QM_names(3,:), -1},...
-             {@show_mean_boxplot, MD, 'Mahalanobis distance  ', -1} };
+    tmp  = { {@show_boxplot, mean_cov, 'Mean correlation  ', 1},...
+             {@show_boxplot, QM(:,1), QM_names(1,:), -1},...
+             {@show_boxplot, QM(:,2), QM_names(2,:), -1},...
+             {@show_boxplot, QM(:,3), QM_names(3,:), -1},...
+             {@show_boxplot, MD, 'Mahalanobis distance  ', -1} };
   end
 
 else
   str  = { 'Boxplot...','Mean correlation'};
-  tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation  ', 1} };
+  tmp  = { {@show_boxplot, mean_cov, 'Mean correlation  ', 1} };
 end
 
 H.boxp = uicontrol(H.figure,...
@@ -484,15 +491,6 @@ H.sort = uicontrol(H.figure,...
         'ToolTipString','Sort matrix',...
         'Interruptible','on','Visible','on',...
         'FontSize',FS(7));
-
-H.chbox = uicontrol(H.figure,...
-        'string','Show filenames in boxplot','Units','normalized',...
-        'position',pos.chbox,...
-        'Style','CheckBox','HorizontalAlignment','center',...
-        'callback',{@checkbox_names},...
-        'ToolTipString','Show filenames in boxplot',...
-        'Interruptible','on','Visible','on',...
-        'BackgroundColor',[0.8 0.8 0.8],'FontSize',FS(6));
 
 H.text = uicontrol(H.figure,...
         'Units','normalized','position',pos.text,...
@@ -535,7 +533,7 @@ if ~mesh_detected
   update_slices_array;
 end
    
-show_mean_boxplot(mean_cov,'Mean correlation  ',1);
+show_boxplot(mean_cov,'Mean correlation  ',1);
 
 % check for replicates
 for i=1:n_subjects
@@ -611,11 +609,20 @@ function checkbox_names(obj, event_obj)
 %-----------------------------------------------------------------------
 global H show_name data_boxp name_boxp quality_order
 
-  show_name = get(H.chbox,'Value');
-  show_mean_boxplot;
+  show_name = get(H.fnambox,'Value');
+  show_boxplot;
   
 return
         
+%-----------------------------------------------------------------------
+function checkbox_plot(obj, event_obj)
+%-----------------------------------------------------------------------
+  global H allow_violin
+  
+  allow_violin = get(H.plotbox,'Value');
+  show_boxplot;
+return
+
 %-----------------------------------------------------------------------
 function show_mahalanobis(X)
 %-----------------------------------------------------------------------
@@ -680,9 +687,9 @@ set(H.ax,'Color',[0.8 0.8 0.8]);
 
 H.ax = axes('Position',pos.corr,'Parent',H.figure);
 
-% scale data to 0..1
+% scale data to min..max
 mn = min(data(:));
-mx = max(data(:));
+mx = max(data(data~=1));
 data_scaled = (data - mn)/(mx - mn);
 
 % show only lower left triangle
@@ -708,9 +715,9 @@ image((1:64));
 
 % display YTick with 5 values (limit accuracy for floating numbers)
 set(H.cbar,'YTickLabel','','XTickLabel','','XTick',linspace(1,64,5), 'XTickLabel',...
-  round(100*linspace(min(YpY(:)),max(YpY(:)),5))/100,'TickLength',[0 0]);
+  round(100*linspace(min(YpY(:)),max(YpY(YpY~=1)),5))/100,'TickLength',[0 0]);
 
-cmap = [hot(64); gray(64)];
+cmap = [jet(64); gray(64)];
 colormap(cmap)
 
 isscatter = 0;
@@ -728,9 +735,9 @@ end
 return
 
 %-----------------------------------------------------------------------
-function show_mean_boxplot(data_boxp, name_boxp, quality_order)
+function show_boxplot(data_boxp, name_boxp, quality_order)
 %-----------------------------------------------------------------------
-global filename FS sample ind_sorted_display show_name bp
+global H pos filename FS sample ind_sorted_display show_name bp allow_violin
 
 if nargin == 0
   data_boxp = bp.data;
@@ -738,16 +745,14 @@ if nargin == 0
   quality_order = bp.order;
 end
 
-Fgraph = spm_figure('GetWin','Graphics');
-spm_figure('Clear',Fgraph);
-set(Fgraph,'Renderer','OpenGL');
+H.Fgraph = spm_figure('GetWin','Graphics');
+spm_figure('Clear',H.Fgraph);
+set(H.Fgraph,'Renderer','OpenGL');
 
 n_samples = max(sample);
 
 xpos = cell(1,n_samples);
 data = cell(1,n_samples);
-
-allow_violin = 2;
 
 hold on
 for i=1:n_samples
@@ -773,7 +778,23 @@ for i=1:n_samples
   end
 end
 
-opt = struct('groupnum',0,'ygrid',0,'violin',allow_violin,'median',2,'groupcolor',jet(n_samples));
+H.fnambox = uicontrol(H.figure,...
+    'string','Show filenames','Units','normalized',...
+    'position',pos.fnambox,'callback',@checkbox_names,...
+    'Style','CheckBox','HorizontalAlignment','center',...
+    'ToolTipString','Show filenames in boxplot','value',show_name,...
+    'BackgroundColor',[0.8 0.8 0.8],...
+    'Interruptible','on','Visible','on','FontSize',FS(6));
+
+H.plotbox = uicontrol(H.figure,...
+			'string','Violinplot','Units','normalized',...
+			'position',pos.plotbox,'callback',@checkbox_plot,...
+			'Style','CheckBox','HorizontalAlignment','center',...
+			'ToolTipString','Switch to Violinplot','value',allow_violin,...
+      'BackgroundColor',[0.8 0.8 0.8],...
+			'Interruptible','on','Visible','on','FontSize',FS(6));
+
+opt = struct('groupnum',0,'ygrid',0,'violin',2*allow_violin,'median',2,'groupcolor',jet(n_samples));
 ylim_add = 0.075;
 
 cat_plot_boxplot(data,opt);

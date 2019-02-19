@@ -247,7 +247,16 @@ end
 n_structures = size(Y,2);
 
 % estimate GLM and get p-value
-[p, Beta] = estimate_GLM(Y,X,SPM,Ic);
+[p, Beta, statval] = estimate_GLM(Y,X,SPM,Ic);
+
+% equivalent z-value 
+Ze = spm_invNcdf(1 - p);
+
+if strcmp(SPM.xCon(Ic).STAT,'T')
+  statstr = 'T';
+else
+  statstr = 'F';
+end
 
 % use "1" for left, "2" for right hemisphere and "3" for structures in both hemispheres
 hemi_code = zeros(n_structures,1);
@@ -316,6 +325,8 @@ for i = sort(unique(hemi_code))'
   N_sel  = ROInames(hemi_ind{i});
   ID_sel = ROIids(hemi_ind{i});
   B_sel  = Beta(:,hemi_ind{i});
+  statval_sel  = statval(hemi_ind{i});
+  Ze_sel = Ze(hemi_ind{i});
 
   for c = 1:n_corr
     Pcorr_sel{c} = Pcorr{c}(hemi_ind{i});
@@ -380,10 +391,10 @@ for i = sort(unique(hemi_code))'
     ind_corr{c} = ind;
     if ~isempty(ind)
       fprintf('\n%s (P<%g, %s):\n',hemistr{i},alpha,corr{c});
-      fprintf('P-value\t\t%s\n',atlas);
+       fprintf('%9s\t%9s\t%9s\t%s\n','P-value',[statstr '-value'],'Ze-value',atlas);
       for j=1:length(ind)
         data{c}(data0 == ID_sel(indP(ind(j)))) = -log10(Pcorr_sel{c}(indP(ind(j))));
-        fprintf('%9g\t%s\n',Pcorr_sel{c}(indP(ind(j))),N_sel{indP(ind(j))});
+        fprintf('%9g\t%9g\t%9g\t%s\n',Pcorr_sel{c}(indP(ind(j))),statval_sel(indP(ind(j))),Ze_sel(indP(ind(j))),N_sel{indP(ind(j))});
       end
     end
     
@@ -507,15 +518,17 @@ else % surface results display
 end
 
 %_______________________________________________________________________
-function [p, Beta] = estimate_GLM(Y,X,SPM,Ic);
+function [p, Beta, tval] = estimate_GLM(Y,X,SPM,Ic);
 % estimate GLM and return p-value for F- or T-test
 %
-% FORMAT p = estimate_GLM(Y,X,SPM,Ic);
-% Y   - data matrix
-% X   - design matrix
-% SPM - SPM structure
-% Ic  - selected contrast
-% p   - returned p-value
+% FORMAT [p, Beta, tval] = estimate_GLM(Y,X,SPM,Ic);
+% Y    - data matrix
+% X    - design matrix
+% SPM  - SPM structure
+% Ic   - selected contrast
+% p    - returned p-value
+% Beta - returned beta values
+% tval - returned t/F values
 
 c = SPM.xCon(Ic).c;
 n = size(Y,1);
@@ -547,6 +560,7 @@ if strcmp(SPM.xCon(Ic).STAT,'F')
   end
 
   F(find(isnan(F))) = 0;
+  tval = F;
   p = 1-spm_Fcdf(F,df);
 else
   df   = SPM.xX.erdf;
@@ -563,6 +577,7 @@ else
   ResSD = sqrt(ResMS.*(c'*Bcov*c));
   t = con./(eps+ResSD);
   t(find(isnan(t))) = 0;
+  tval = t;
   p = 1-spm_Tcdf(t,df);
 end
 

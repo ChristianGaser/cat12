@@ -1,5 +1,31 @@
 ------------------------------------------------------------------------
-r1429 | gaser | 2019-02-08 15:12:29
+r1430 | gaser | 2019-02-19 17:00:58
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_long_APP.m
+M       cat_main_reportfig.m
+M       cat_spm_preproc8.m
+M       cat_stat_analyze_ROIs.m
+M       cat_stat_check_cov.m
+M       cat_stat_check_cov2.m
+M       cat_surf_fun.m
+M       cat_vol_atlas.m
+M       html/cat.html
+M       spm_cat12.m
+
+(1) Fixed: Corrected bug in spm_cat12.m
+(2) Fixed: Replaced many local paths in several files by generic spm12 folders.
+(3) Changed: Added option to switch between violin and box plot in 
+    cat_stat_check_cov.m
+(4) Changed: Better scaling for color map in cat_stat_check_cov.m
+(5) Changed: Added printout of t/F value and Ze value for ROI analysis.
+(6) Fixed: Added try-catch to deal with some unclear errors in cat_main_reportfig.m
+(7) Changed: Inperpolation of brainmask for longitudinal pipeline is now bilinear
+    to prevent issues with some data.
+------------------------------------------------------------------------
+r1429 | gaser | 2019-02-08 15:12:41 +0100 (Fr, 08 Feb 2019) | 7 lines
 
 Changed paths:
 M       CAT12-Manual.pdf
@@ -7,6 +33,7 @@ M       CHANGES.txt
 M       html/cat_versions.html
 
 Changed: Updated online help and CAT12 manual.
+
 ------------------------------------------------------------------------
 r1428 | gaser | 2019-02-08 14:44:55 +0100 (Fr, 08 Feb 2019) | 11 lines
 

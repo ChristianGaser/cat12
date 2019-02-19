@@ -445,9 +445,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       spm_orthviews('redraw',id);
 
       %% TPM legend
-      ccl{1} = axes('Position',[pos(1,1:2) 0 0] + [0.33 -0.005 0.02 0.02],'Parent',fg);
-      cclp = plot(ccl{1},([0 0.4;0.6 1])',[0 0; 0 0],'b-'); text(ccl{1},1.2,0,'TPM fit');
-      set( cclp,'LineWidth',0.75); axis(ccl{1},'off')
+      try % some error with text in MATLAB 2015b - ccl was no double?
+        ccl{1} = axes('Position',[pos(1,1:2) 0 0] + [0.33 -0.005 0.02 0.02],'Parent',fg);
+        cclp = plot(ccl{1},([0 0.4;0.6 1])',[0 0; 0 0],'b-'); text(double(ccl{1}),1.2,0,'TPM fit');
+        set( cclp,'LineWidth',0.75); axis(ccl{1},'off')
+      end
     end
   end
   
@@ -491,8 +493,10 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       spm_ov_mesh('redraw',id);
       
       %% TPM legend
-      ccl2{id} = axes('Position',[pos(id,1:2) 0 0] + [0.33 -0.015+0.02*(id>2) 0.02 0.02],'Parent',fg);
-      plot(ccl2{id},[0 1],[0 0],'k-'); text(ccl2{id},1.2,0,'CS'); axis(ccl2{id},'off')
+      try
+        ccl2{id} = axes('Position',[pos(id,1:2) 0 0] + [0.33 -0.015+0.02*(id>2) 0.02 0.02],'Parent',fg);
+        plot(ccl2{id},[0 1],[0 0],'k-'); text(double(ccl2{id}),1.2,0,'CS'); axis(ccl2{id},'off')
+      end
     end
     
 
