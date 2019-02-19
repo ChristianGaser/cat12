@@ -831,7 +831,7 @@ for iter=1:30
         for line_search=1:12
             Twarp1 = Twarp - armijo*Update; % Backtrack if necessary
 
-            % Recompute objective funciton
+            % Recompute objective function
             llr1   = -0.5*sum(sum(sum(sum(Twarp1.*bsxfun(@times,spm_diffeo('vel2mom',bsxfun(@times,Twarp1,1./sk4),prm),1./sk4)))));
             ll1    = llr1+llrb+ll_const;
             for z=1:length(z0)

@@ -194,7 +194,7 @@ clear cat;
 expert   = cat_get_defaults('extopts.expertgui'); 
 exatlas  = cat_get_defaults('extopts.atlas'); 
 for ai = 1:size(exatlas,1)
-  if exatlas{ai,2}<=expert && exist(exatlas{ai,1},'file')
+  if exatlas{ai,2}<=expert & exist(exatlas{ai,1},'file')
     [pp,ff,ee]  = spm_fileparts(exatlas{ai,1}); 
 
     % if output.atlases.ff does not exist then set it by the default file value

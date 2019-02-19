@@ -548,7 +548,7 @@ function call_cat(P)
   matlabbatch{1}.spm.tools.cat.estwrite.data = {P};
 
   matlabbatch{1}.spm.tools.cat.estwrite.opts.tpm                = ...
-    {'/Users/dahnke/Neuroimaging/spm12/tpm/TPM.nii'};
+    {fullfile(spm('dir'),'tpm','TPM.nii')};
   matlabbatch{1}.spm.tools.cat.estwrite.opts.biasreg            = 0.0001;
   matlabbatch{1}.spm.tools.cat.estwrite.opts.biasfwhm           = 60;
   matlabbatch{1}.spm.tools.cat.estwrite.opts.affreg             = 'mni';

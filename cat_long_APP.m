@@ -94,7 +94,7 @@ function [Ym,Yb,WMth,Affine] = cat_long_APP(PF,PG,PB,opt)
   VFa = VF; VFa.mat = Affine * VF.mat; 
   if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
   [pp,ff] = spm_fileparts(PF); Pbt = fullfile(pp,['brainmask_' ff '.nii']);
-  [Vmsk,Yb]   = cat_vol_imcalc([VFa,VB],Pbt,'i2',struct('interp',3,'verb',0));
+  [Vmsk,Yb]   = cat_vol_imcalc([VFa,VB],Pbt,'i2',struct('interp',1,'verb',0));
     
   if opt.verb
     fprintf('%4.0fs\n',etime(clock,stime)); 
