@@ -1,5 +1,24 @@
 ------------------------------------------------------------------------
-r1430 | gaser | 2019-02-19 17:00:58
+r1431 | gaser | 2019-02-21 14:51:07
+
+Changed paths:
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       cat_main_reportfig.m
+M       cat_stat_check_cov2.m
+M       cat_vol_groupwise_ls.m
+M       html/cat.html
+M       html/cat_versions.html
+
+(1) Fixed: Corrected bug in cat_vol_groupwise_ls.m for longitudinal pipeline that
+    caused NaN images for some data. Now the final intra-subject bias-correction
+    don't uses a brainmask.
+(2) Fixed: Uncorrect line breaks in cat_stat_check_cov2.m for help functions.
+(3) Changed: Suppress annoying warning for longitudinal pipeline if called from
+    command line.
+------------------------------------------------------------------------
+r1430 | gaser | 2019-02-19 17:01:28 +0100 (Di, 19 Feb 2019) | 24 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -24,6 +43,7 @@ M       spm_cat12.m
 (6) Fixed: Added try-catch to deal with some unclear errors in cat_main_reportfig.m
 (7) Changed: Inperpolation of brainmask for longitudinal pipeline is now bilinear
     to prevent issues with some data.
+
 ------------------------------------------------------------------------
 r1429 | gaser | 2019-02-08 15:12:41 +0100 (Fr, 08 Feb 2019) | 7 lines
 
