@@ -556,10 +556,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   set(fg,'PaperPositionMode','auto','resize','on','PaperPosition',[0 0 1 1]);
   for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize*0.8); end; end
   for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize*0.8); end;
- % warning off %#ok<WNOFF>
+  
+  warning('off','MATLAB:hg:patch:RGBColorDataNotSupported');
   print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
   print(fg, job.imgprint.ftype('jpeg'), job.imgprint.fdpi(job.imgprint.dpi/2), job.imgprint.fnamej); 
- % warning on %#ok<WNON>
+
   for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize); end; end
   for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize); end; 
   set(fg,'PaperPositionMode',fgold.PaperPositionMode,'resize',fgold.resize,'PaperPosition',fgold.PaperPosition);

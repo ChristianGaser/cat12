@@ -716,7 +716,7 @@ bias_fwhm = 60;
 bias_reg = 1e-6;
 bias_lmreg = 1e-6;
 for i=1:numel(param)
-  vol(:,:,:,i) = bias_correction(mu,vol(:,:,:,i),brainmask,pyramid(1),bias_nits,bias_fwhm,bias_reg,bias_lmreg);
+  vol(:,:,:,i) = bias_correction(mu,vol(:,:,:,i),[],pyramid(1),bias_nits,bias_fwhm,bias_reg,bias_lmreg);
 end
 
 if need_wimg
@@ -1304,11 +1304,8 @@ volF = volF*thG/thF;
 thF = mean(volF(isfinite(volF)))/8; thF = mean(volF(volF>thF));
 
 ll = Inf;
-try
-    spm_plot_convergence('Init','Bias Correction','- Log-likelihood','Iteration');
-catch
-    spm_chi2_plot('Init','Bias Correction','- Log-likelihood','Iteration');
-end
+spm_plot_convergence('Init','Bias Correction','- Log-likelihood','Iteration');
+
 for subit=1:nits
 
     % Compute objective function and its 1st and second derivatives
