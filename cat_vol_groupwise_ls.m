@@ -714,7 +714,7 @@ vol = get_transformed_images(pyramid(1), param, ord);
 bias_nits = 8;
 bias_fwhm = 60;
 bias_reg = 1e-6;
-bias_lmreg = 1e-6;
+bias_lmreg = 1e-4;
 for i=1:numel(param)
   vol(:,:,:,i) = bias_correction(mu,vol(:,:,:,i),[],pyramid(1),bias_nits,bias_fwhm,bias_reg,bias_lmreg);
 end

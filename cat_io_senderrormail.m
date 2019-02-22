@@ -29,8 +29,8 @@ function cat_io_senderrormail(job)
 
   % initial message  
   emailSubject = sprintf('CAT %s error',rev_cat); 
-  mainBody     = sprintf('Hi Christian,\\n\\nI got a serious problem with CAT %s in SPM %s with MATLAB %4.0f%s under %s.\\n',...
-    rev_cat , rev_spm, round(cat_io_matlabversion/10) , char(97 + mod(cat_io_matlabversion,2)) , computer); 
+  mainBody     = sprintf('Hi Christian,\\n\\nI got a serious problem with CAT %s in SPM %s with MATLAB %s under %s.\\n',...
+    rev_cat , rev_spm, version('-release') , computer); 
 
   
   %% check errdirs
