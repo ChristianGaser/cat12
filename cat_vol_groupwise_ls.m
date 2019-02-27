@@ -714,7 +714,7 @@ vol = get_transformed_images(pyramid(1), param, ord);
 bias_nits = 8;
 bias_fwhm = 60;
 bias_reg = 1e-6;
-bias_lmreg = 1e-4;
+bias_lmreg = 1e-6;
 for i=1:numel(param)
   vol(:,:,:,i) = bias_correction(mu,vol(:,:,:,i),[],pyramid(1),bias_nits,bias_fwhm,bias_reg,bias_lmreg);
 end
@@ -1320,18 +1320,14 @@ for subit=1:nits
         f1o(~isfinite(f1o)) = 0;
         f2o(~isfinite(f2o)) = 0;
         if ~isempty(brainmask)
-          msk = (f1o==0) & (f2o==0) & (brainmask(:,:,z) < 0.25);
+          msk = ((f1o==0) & (f2o==0)) & (brainmask(:,:,z) < 0.25);
         else
           msk = (f1o==0) & (f2o==0);
         end
         f1o(msk) = 0;
         f2o(msk) = 0;
         ro       = transf(B1bias,B2bias,B3bias(z,:),Tbias);
-        if ~isempty(brainmask)
-          msk      = (abs(ro)>0.01) & (brainmask(:,:,z) > 0.25); 
-        else
-          msk      = abs(ro)>0.01; 
-        end
+        msk      = abs(ro)>0.01; 
 
         % Use the form based on an integral for bias that is
         % far from uniform.
@@ -1369,7 +1365,16 @@ for subit=1:nits
         spm_chi2_plot('Set',ll/prod(d));
     end
 
-    if subit > 1 && ll>oll
+    % temporarily estimate whole bias field to check for huge values
+		r3 = zeros(size(volG));
+		for z=1:size(volG,3)
+				r3(:,:,z)  = transf(B1bias,B2bias,B3bias(z,:),Tbias);
+		end;
+		
+    % additionally check if 1./exp(r3) is getting too large and regularization
+    % should be increased
+		% "-4" equals roughly to a max value of 50 for 1./exp(r3)
+    if (subit > 1 && ll>oll) || min(r3(:)) < -4
         % Hasn't improved, so go back to previous solution
         Tbias = oTbias;
         ll    = oll;
@@ -1381,6 +1386,7 @@ for subit=1:nits
         Tbias  = Tbias - (Alpha + Cbias + lmRb)\(Beta + Cbias*Tbias);
         Tbias  = reshape(Tbias,d3);
     end;
+
 end;
 
 dat = zeros(size(volG));
@@ -1390,9 +1396,9 @@ for z=1:size(volG,3)
     tmp(~isfinite(tmp)) = 0;
     dat(:,:,z) = tmp;
     r  = transf(B1bias,B2bias,B3bias(z,:),Tbias);
+    r(volG(:,:,z) == 0) = 0;
     dat(:,:,z) = dat(:,:,z)./exp(r);
 end;
 
 return;
 %_______________________________________________________________________
-
