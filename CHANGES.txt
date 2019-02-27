@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1432 | gaser | 2019-02-22 17:17:31
+r1433 | gaser | 2019-02-27 16:52:13
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_batch_cat.m
+M       cat_batch_long.m
+M       cat_defaults.m
+M       cat_vol_groupwise_ls.m
+M       html/cat.html
+
+(1) Changed: Again changed regularization for intra-subject bias correction which
+    is now increased iteratively if local bias correction get too large.
+(2) Changed: Added function for sending system information to SBM server for 
+    internal use. Also added option to diable this feature in cat_default.m.
+------------------------------------------------------------------------
+r1432 | gaser | 2019-02-22 17:18:04 +0100 (Fr, 22 Feb 2019) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +24,7 @@ M       cat_vol_groupwise_ls.m
 
 Changed: Changed regularization for intra-subject bias correction to make it
 more robust for local artefacts.
+
 
 ------------------------------------------------------------------------
 r1431 | gaser | 2019-02-21 14:51:35 +0100 (Do, 21 Feb 2019) | 17 lines
