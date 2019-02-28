@@ -14,9 +14,6 @@ if nargin < 1
 	return
 end
 
-% send system information to SBM server www.neuro.uni-jena.de
-cat_io_send_udp_to_server;
-
 [t,pid] = system('echo $$');
 fprintf('cat_batch_cat: \n  PID = %s\n\n',pid);
 

@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1433 | gaser | 2019-02-27 16:52:13
+r1434 | gaser | 2019-02-28 11:31:30
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_batch_cat.m
+M       cat_batch_long.m
+M       html/cat.html
+
+Fixed: Corrected typos in batch shell scripts. 
+------------------------------------------------------------------------
+r1433 | gaser | 2019-02-27 16:52:49 +0100 (Mi, 27 Feb 2019) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14,6 +25,7 @@ M       html/cat.html
     is now increased iteratively if local bias correction get too large.
 (2) Changed: Added function for sending system information to SBM server for 
     internal use. Also added option to diable this feature in cat_default.m.
+
 ------------------------------------------------------------------------
 r1432 | gaser | 2019-02-22 17:18:04 +0100 (Fr, 22 Feb 2019) | 9 lines
 
