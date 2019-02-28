@@ -12,9 +12,6 @@ if nargin < 1
 	exit
 end
 
-% send system information to SBM server www.neuro.uni-jena.de
-cat_io_send_udp_to_server;
-
 if nargin < 2
   output_surface = 0;
 else
