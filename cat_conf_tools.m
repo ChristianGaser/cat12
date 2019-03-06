@@ -724,7 +724,7 @@ if expert
   resolutionReduction.values  = {11 1 0};
   resolutionReduction.val     = {0};
   resolutionReduction.help    = {
-    'Some MR images were interpolated or use a limited frequency spectrum to support higher spatial resolution with acceptable scan-times (e.g., 0.5x0.5x1.5 mm on a 1.5 Tesla scanner). However, this can result in "low-frequency" noise that can not be handled by the standard NLM-filter. Hence, an additional filtering step is used on a reduces resolution. As far as filtering of low resolution data will also remove anatomical informations the filter use by default maximal one reduction with a resolution limit of 1.6 mm. I.e. a 0.5x0.5x1.5 mm image is reduced to 1.0x1.0x1.5 mm, whereas a 0.8x0.8x0.4 mm images is reduced to 0.8x0.8x0.8 mm and a 1x1x1 mm dataset is not reduced at all. '
+    'Some MR images were interpolated or use a limited frequency spectrum to support higher spatial resolution with acceptable scan-times (e.g., 0.5x0.5x1.5 mm on a 1.5 Tesla scanner). However, this can result in "low-frequency" noise that can not be handled by the standard NLM-filter. Hence, an additional filtering step is used on a reduces resolution. As far as filtering of low resolution data will also remove anatomical information the filter use by default maximal one reduction with a resolution limit of 1.6 mm. I.e. a 0.5x0.5x1.5 mm image is reduced to 1.0x1.0x1.5 mm, whereas a 0.8x0.8x0.4 mm images is reduced to 0.8x0.8x0.8 mm and a 1x1x1 mm dataset is not reduced at all. '
     ''
     };
   
@@ -1097,16 +1097,16 @@ calcroi_name.strtype = 's';
 calcroi_name.num     = [1 Inf];
 calcroi_name.val     = {'ROI'};
 calcroi_name.help    = {
-'The output file is written to the current working directory unless a valid full pathname is given. The output file will also include the name of the atlas and the measure (e.g. Vgm). The file is using tabstops to separate values in order to easily import the file into Excel or SPSS or any other software for subsequent analysis.'};
+'The volume values in mL are written to the current working directory unless a valid full pathname is given. The output file will also include the name of the atlas and the measure (e.g. Vgm). The file is using tabstops to separate values in order to easily import the file into Excel or SPSS or any other software for subsequent analysis.'};
 
 calcroi       = cfg_exbranch;
 calcroi.tag   = 'calcroi';
-calcroi.name  = 'Estimate mean values inside ROI';
+calcroi.name  = 'Estimate volumes inside ROI';
 calcroi.val   = {roi_xml,point,outdir,calcroi_name}; 
 %calcroi.val   = {roi_xml,usefolder,point,outdir,calcroi_name}; % usefolder is never used
 calcroi.prog  = @(job)cat_roi_fun('exportSample',job);
 calcroi.help  = {
-'This function reads mean values inside a ROIs from different atlases and saves values for all data in a csv-file. '
+'This function reads volume values in mL inside a ROI from different atlases and saves values for all data in a csv-file. '
 'Missed values were replaced by NaN.'
 };
 

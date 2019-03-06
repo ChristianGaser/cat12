@@ -60,7 +60,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if (nrhs==3 && mxIsDouble(prhs[2])==0)            mexErrMsgTxt("ERROR:cat_vbdist: third input must be an double matrix\n");
   if (nrhs==3 && mxGetNumberOfElements(prhs[2])!=3) mexErrMsgTxt("ERROR:cat_vbdist: third input must have 3 Elements"); 
   
-  /* main informations about input data (size, dimensions, ...) */
+  /* main information about input data (size, dimensions, ...) */
   const mwSize *sL = mxGetDimensions(prhs[0]);
   const int     dL = mxGetNumberOfDimensions(prhs[0]);
   const int     nL = mxGetNumberOfElements(prhs[0]);

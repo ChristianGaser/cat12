@@ -56,7 +56,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if (mxIsSingle(prhs[1])==0  || mxGetNumberOfDimensions(prhs[0])!=3 )   
     mexErrMsgTxt("ERROR:cat_vol_ROIval: 2nd input must be an 3d single matrix.\n");
   
-  /* main informations about input data (size, dimensions, ...) */
+  /* main information about input data (size, dimensions, ...) */
   const unsigned int n  = mxGetNumberOfElements(prhs[0]);
   const unsigned int n1 = mxGetNumberOfElements(prhs[1]);
   const mwSize *sL0 = mxGetDimensions(prhs[0]); 

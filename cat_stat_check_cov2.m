@@ -109,7 +109,7 @@ function varargout = cat_stat_check_cov2(job)
 %   tissue volume, cat_pp_version, cat_pp_para, Euler, ...) in an extra 
 %   figure or the SPM Graphics window?
 % 	> No, this is not required and elaborative, because Checkcov is a graphic
-%     tool that already combines such informations in abstract figures 
+%     tool that already combines such information in abstract figures 
 %     (covar matrix, Mahanalobis distance).
 %
 % - Show autotrash in datatip
@@ -3205,7 +3205,7 @@ function checkxml(obj, event_obj)
 % Load XML report in SPM graphics window (see also checklog).
 % This is just the first fast version of this function. 
 % Finally, I want to use the xml structure from the file to print some
-% specific informations similar to the CAT report in cat_main. 
+% specific information similar to the CAT report in cat_main. 
 %-----------------------------------------------------------------------
   global cscc
 

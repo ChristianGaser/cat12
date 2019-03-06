@@ -75,7 +75,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if (nlhs<1) mexErrMsgTxt("ERROR:cat_vol_median3: not enough output elements\n");
   if (nlhs>1) mexErrMsgTxt("ERROR:cat_vol_median3: too many output elements\n");
 
-  /* main informations about input data (size, dimensions, ...) */
+  /* main information about input data (size, dimensions, ...) */
   const mwSize *sL  = mxGetDimensions(prhs[0]);
   const int     dL  = mxGetNumberOfDimensions(prhs[0]);
   const int     nL  = (int) mxGetNumberOfElements(prhs[0]);

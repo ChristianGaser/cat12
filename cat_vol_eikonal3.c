@@ -46,7 +46,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if (nrhs==2 && mxIsDouble(prhs[1])==0)            mexErrMsgTxt("ERROR:eikonal3: fourth  input must be an double matrix\n");
   if (nrhs==2 && mxGetNumberOfElements(prhs[1])!=3) mexErrMsgTxt("ERROR:eikonal3: fourth input must have 3 Elements");
   
-  /* main informations about input data (size, dimensions, ...) */
+  /* main information about input data (size, dimensions, ...) */
   const mwSize *sL = mxGetDimensions(prhs[0]); int sSEG[] = {sL[0],sL[1],sL[2]}; 
   const int     dL = mxGetNumberOfDimensions(prhs[0]);
   const int     nL = mxGetNumberOfElements(prhs[0]);

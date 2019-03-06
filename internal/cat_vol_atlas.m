@@ -6,7 +6,7 @@ function cat_vol_atlas(atlas,refinei)
 % probability map and a 3D label map for each subject. Based on the 4D
 % a 4D probability map and a 3D label map were generated for the group. 
 % A refinement (median-filter + complete brain labeling) is possible. 
-% Each Atlas should have a txt-file with informations 
+% Each Atlas should have a txt-file with information 
 %
 % WARNING: This script only create uint8 maps!
 %

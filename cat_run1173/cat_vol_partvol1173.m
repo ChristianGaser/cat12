@@ -11,7 +11,7 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
 %     tissue class information (Yp0). 
 %     To do this it is important to use data from the T1-map (Ym) that
 %     use the same intensity scaling as the segment map Yp0, but have 
-%     more informations about partial volume regions.
+%     more information about partial volume regions.
 %  2) Set Partions:
 %     2.1) Find biggest WM part of each region.
 %     2.2) Align the nearest region class for other voxel
