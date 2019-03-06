@@ -52,7 +52,7 @@ if ~isfield(res,'spmpp')
   %  bias correction. 
   %  -------------------------------------------------------------------
   if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap 
-    [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,job,res,vx_vol,stime2);
+    [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,Yy,tpm,job,res,vx_vol,stime2);
   else
     P = zeros([size(Ycls{1}) numel(Ycls)],'uint8');
     for i=1:numel(Ycls), P(:,:,:,i) = Ycls{i}; end
@@ -189,21 +189,31 @@ if ~isfield(res,'spmpp')
   %  #### move fast shooting to the cat_main_updateSPM function ####
   % 
   if job.extopts.WMHC || job.extopts.SLC
-    stime = cat_io_cmd(sprintf('Fast Shooting registration'),'','',job.extopts.verb); 
+    stime = cat_io_cmd(sprintf('Fast registration'),'','',job.extopts.verb); 
 
+    res2 = res; 
     job2 = job;
-    job2.extopts.regstr     = 15;     % low resolution 
-    job2.extopts.reg.nits   = 16;     % less iterations
-    job2.extopts.reg.affreg = 0;      % new affine registration
     job2.extopts.verb       = debug;  % do not display process (people would may get confused) 
     job2.extopts.vox        = abs(res.tpm(1).mat(1));  % TPM resolution to replace old Yy  
-    job2.extopts.shootingtpms(3:end) = [];             % remove high templates, we only need low frequency corrections
-    res2 = res; 
-    res2.do_dartel        = 2;      % use shooting
-    if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
-      [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M,res.Ylesion); 
+    if job.extopts.regstr>0
+      job2.extopts.regstr     = 15;     % low resolution 
+      job2.extopts.reg.nits   = 16;     % less iterations
+      job2.extopts.reg.affreg = 0;      % new affine registration
+      job2.extopts.shootingtpms(3:end) = [];             % remove high templates, we only need low frequency corrections
+      res2 = res; 
+      res2.do_dartel          = 2;      % use shooting
     else
-      [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M); 
+      fprintf('\n');
+      job2.extopts.verb        = 0; 
+      job2.extopts.vox         = abs(res.tpm(1).mat(1));  % TPM resolution to replace old Yy 
+      job2.extopts.reg.iterlim = 1;      % only 1-2 inner iterations
+      job2.extopts.reg.affreg  = 0;      % new affine registration
+      res2.do_dartel           = 1;      % use dartel
+    end
+    if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
+      [trans,res.ppe.reginitp] = cat_main_registration2(job2,res2,Ycls(1:2),Yy,tpm.M,res.Ylesion); 
+    else
+      [trans,res.ppe.reginitp] = cat_main_registration2(job2,res2,Ycls(1:2),Yy,tpm.M); 
     end
     Yy2  = trans.warped.y;
     if ~debug, clear trans job2 res2; end
@@ -585,7 +595,7 @@ end
   end
   
   % call Dartel/Shooting registration 
-  if 0 %job.extopts.new_release % ... there is an error
+  if 1 %job.extopts.new_release % ... there is an error
     [trans,res.ppe.reg] = cat_main_registration2(job,res,Yclsd,Yy,tpm.M,Ylesions);
   else
     [trans,res.ppe.reg] = cat_main_registration(job,res,Yclsd,Yy,tpm.M,Ylesions);
@@ -989,7 +999,15 @@ function [Ymix,job,surf,WMT,stime] = cat_main_surf_preppara(Ymi,Yp0,job,vx_vol)
   
   % lower resolution for fast surface estimation
   if job.output.surface>4 && job.output.surface~=9 
-    job.extopts.pbtres = max(0.8,min([((min(vx_vol)^3)/2)^(1/3) 1.0]));
+    try
+      if strcmp(job.extopts.species,'human')
+        job.extopts.pbtres = max(0.8,min([((min(vx_vol)^3)/2)^(1/3) 1.0]));
+      else
+        job.extopts.pbtres = max(0.4,min([((min(vx_vol)^3)/2)^(1/3) 1.0]));
+      end
+    catch
+      job.extopts.pbtres = max(0.8,min([((min(vx_vol)^3)/2)^(1/3) 1.0]));
+    end
   end
   
   % surface creation and thickness estimation (only for test >> manual setting)

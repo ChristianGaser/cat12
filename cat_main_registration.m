@@ -101,6 +101,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
   def.opt.ll3th = 0.002; 
   def.fast      = 0;              % no report, no output
   def.affreg    = 1;              % additional affine registration
+  def.iterlim   = inf;
   if ~isfield(job.extopts,'reg'), job.extopts.reg = struct(); end
   dreg = cat_io_checkinopt(job.extopts.reg,def); 
   
@@ -113,7 +114,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
 
 
   % this is just for me to create different templates and can be removed in a final version
-  fast   = inf;                   % limit iterations per template level to test if processing work in principle 
+  fast   = dreg.iterlim;                   % limit iterations per template level to test if processing work in principle 
   if numel(job.extopts.vox)>1 || numel(job.extopts.regstr)>1 || (isfield(job,'export') && job.export)
     job.extopts.multigreg = 1;
     export = 1;  % write files in sub-directories
@@ -406,7 +407,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
           its   = 3;    % relaxation iterations (inner iteration)
           n1    = 2;    % use GM/WM for dartel
           if fast, its = min(3,max(1,min(its,fast))); end % subiteration
-
+          
           % rparam .. regularization parameters: mu, lambda, id
           % K      .. time steps
           param = struct('K',{0 0 1 2 4 6},'its',its, ...

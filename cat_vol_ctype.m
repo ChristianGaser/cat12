@@ -19,7 +19,7 @@ function Y=cat_vol_ctype(Y,type)
 % $Id$
 % ______________________________________________________________________
   
-  types = {'int8','int16','int32','int64','single',...
+   types = {'int8','int16','int32','int64','single','float32','float64'...
            'uint8','uint16','uint32','uint64','double'};
 
   if ~exist('type','var');
@@ -37,6 +37,7 @@ function Y=cat_vol_ctype(Y,type)
              '(only [u]int[8|16], single, and double).'],type);
     end
   end
+  type = cat_io_strrep(type,{'float32','float64'},'single');
 
   
   if iscell(Y)

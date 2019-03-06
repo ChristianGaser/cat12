@@ -220,7 +220,7 @@ function [Affine,tpm,res] = cat_run_job_multiTPM(job,obj,Affine,skullstripped,ms
 %                                     res(i).mn( res(i).lkp(:) < 7 )' .* ...
 %                                     res(i).mg( res(i).lkp(:) < 7 ) ) ) ));
     weight(i) = min(1,max(0,1 - sum( shiftdim(res(i).vr) ./ ...
-      res(i).mn' .* res(i).mg ./ mean(res.mn(res.lkp(2)))) ));  
+      res(i).mn' .* res(i).mg ./ mean(res(i).mn(res(i).lkp(2)))) ));  
 
     if numel(job.opts.tpm)>1
       fprintf('%s (fits%4.0f%%)',sprintf(repmat('\b',1,12)),weight(i)*100);
@@ -279,7 +279,7 @@ function [Affine,tpm,res] = cat_run_job_multiTPM(job,obj,Affine,skullstripped,ms
 
       res(i) = cat_spm_preproc8(obj);
       weight(i) = min(1,max(0,1 - sum( shiftdim(res(i).vr) ./ ...
-        res(i).mn' .* res(i).mg ./ mean(res.mn(res.lkp(2)))) ));                              
+        res(i).mn' .* res(i).mg ./ mean(res(i).mn(res(i).lkp(2)))) ));                              
       fprintf('%s (fits%4.0f%%)',sprintf(repmat('\b',1,12)),weight(i)*100);
         
       if max(weight(1:end-1)) > weight(i)  %failedAffine || 

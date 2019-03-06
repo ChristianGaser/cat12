@@ -55,6 +55,16 @@ for i=1:numel(job.subj),
     inputs{1,i} = data;
 end;
 
-spm_jobman('run',jobs,inputs{:});
 
+% split job and data into separate processes to save computation time
+if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
+  if nargout==1
+    varargout{1} = cat_parallelize(job,mfilename,'subj');
+  else
+    cat_parallelize(job,mfilename,'subj');
+  end
+  return
+else
+  spm_jobman('run',jobs,inputs{:});
+end
 warning on;
