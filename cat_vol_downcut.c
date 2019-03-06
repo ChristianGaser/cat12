@@ -79,7 +79,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if (nrhs==5 && mxIsDouble(prhs[4])==0)                           mexErrMsgTxt("ERROR:cat_vol_downcut: fifth input must be an double matrix\n");
   if (nrhs==5 && mxGetNumberOfElements(prhs[4])!=2)                mexErrMsgTxt("ERROR:cat_vol_downcut: fifht input must have 2 Elements");
     
-  /* main informations about input data (size, dimensions, ...) */
+  /* main information about input data (size, dimensions, ...) */
   const mwSize *sL = mxGetDimensions(prhs[0]); 
   const int     dL = mxGetNumberOfDimensions(prhs[0]);
   const int     nL = mxGetNumberOfElements(prhs[0]);

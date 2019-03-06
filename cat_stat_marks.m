@@ -14,7 +14,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
 %   'init'      .. create a empty data structure QS
 %   'isfield'   .. check if varargin{1} is a field in QS
 %   'eval'      .. evaluates fields of a input structure QS
-%   'help'      .. output the help informations for QS
+%   'help'      .. output the help information for QS
 %
 % hier wird noch eine zusammenfassung/vereinfachung der ma??e gebraucht
 % QM: res + noise + bias + contrast

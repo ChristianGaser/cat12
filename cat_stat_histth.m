@@ -4,7 +4,7 @@ function varargout = cat_stat_histth(src,percent,opt)
 % limits. E.g. some MRI images have some extremely high or low values 
 % that can trouble other functions that try to work on the full given 
 % input range of the data. Removing only 0.2% of the data often often
-% helps to avoid problems without removing important informations. 
+% helps to avoid problems without removing important information. 
 % 
 % The function can also print a histogram, box- or violin plot of 
 % the given data (using cat_plot_boxplot) and give some basic values.

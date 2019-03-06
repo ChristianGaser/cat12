@@ -418,7 +418,7 @@ function cimg = smoothslice(img,s,method,dim)
  elseif method==2 % spm-smoothing approach - bad boundary properies, even if I correct for the mean intensity
     sx = repmat(s,1,3); sx(dim) = 0; ofs = mean(img(:));
     cimg = double(img-ofs); spm_smooth(cimg,cimg,sx); cimg = single(cimg+ofs);
- else % christian all smoothing approach - not realy smooth
+ else % christian all smoothing approach - not really smooth
     x = [-s:s];
     x = exp(-(x).^2/(2*(s).^2));
     x = x/sum(x);

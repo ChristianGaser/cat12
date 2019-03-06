@@ -40,7 +40,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if (mxIsSingle(prhs[0])==0)  mexErrMsgTxt("ERROR:cat_vol_gradient3: input must be an 3d single matrix\n");
  
   
-  /* main informations about input data (size, dimensions, ...) */
+  /* main information about input data (size, dimensions, ...) */
   const mwSize *sL = mxGetDimensions(prhs[0]);
   const int     dL = mxGetNumberOfDimensions(prhs[0]);
   const int     nL = mxGetNumberOfElements(prhs[0]);

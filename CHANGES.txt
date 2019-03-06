@@ -1,5 +1,49 @@
 ------------------------------------------------------------------------
-r1435 | dahnke | 2019-03-06 12:21:52
+r1436 | gaser | 2019-03-06 17:45:41
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+M       cat_conf_tools.m
+M       cat_defaults.m
+M       cat_main_LAS2.m
+M       cat_run1173/cat_vol_partvol1173.m
+M       cat_stat_check_cov2.m
+M       cat_stat_histth.m
+M       cat_stat_marks.m
+M       cat_vbdist.c
+M       cat_vol_ROIval.c
+M       cat_vol_atlas.m
+M       cat_vol_correct_slice_scaling.m
+M       cat_vol_downcut.c
+M       cat_vol_eidist.c
+M       cat_vol_eikonal3.c
+M       cat_vol_genus0.c
+M       cat_vol_gradient3.c
+M       cat_vol_laplace3.c
+M       cat_vol_laplace3R.c
+M       cat_vol_localstat.c
+M       cat_vol_median3.c
+M       cat_vol_median3c.c
+M       cat_vol_partvol.m
+M       cat_vol_pbtp.cpp
+M       cat_vol_pbtv.cpp
+M       cat_vol_sanlm.m
+M       cat_vol_simgrow.c
+M       html/cat.html
+M       html/cat_FAQ.html
+M       html/cat_methods_RBM.html
+M       html/cat_tools_VBM.html
+M       html/cat_tools_checkcov.html
+M       html/cat_tools_checkcov_exclusion.html
+M       internal/cat_vol_atlas.m
+M       templates_1.50mm/cobra.nii
+
+(1) Fixed: Many typos...
+(2) Changed: Removed udp options.
+------------------------------------------------------------------------
+r1435 | dahnke | 2019-03-06 12:24:38 +0100 (Mi, 06 Mär 2019) | 60 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -58,6 +102,7 @@ M       templates_animals/chimpanzee_cat.nii
             cat_main_registration2. 
 *) Fixed:   Added final affine registration from cat_main_registration in
             cat_main_registration2.
+
 
 
 ------------------------------------------------------------------------

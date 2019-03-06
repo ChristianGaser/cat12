@@ -11,7 +11,7 @@
  *
  * opt.bd   = (single) [low,high] boundary values (default 1.5 and 2.5)
  * opt.CSFD = calculate CSFD
- * opt.PVE  = use PVE informations (0=none,1=fast,2=exact)
+ * opt.PVE  = use PVE information (0=none,1=fast,2=exact)
  *
  * TODO:
  *  - eikonal distance for subsegmentation (region growing)
@@ -98,7 +98,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if (mxIsSingle(prhs[0])==0) mexErrMsgTxt("ERROR: first  input must be an 3d single matrix\n");
  
   
-  // main informations about input data (size, dimensions, ...)
+  // main information about input data (size, dimensions, ...)
   const mwSize *sL = mxGetDimensions(prhs[0]); 
   mwSize sSEG[] = {sL[0],sL[1],sL[2]}; 
   const int     dL = mxGetNumberOfDimensions(prhs[0]);

@@ -370,7 +370,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
     % SPM GM segmentation can be affected by inhomogeneities and some GM
     % areas are miss-classified as CSF/GM (Ycls{5}) when the affine 
     % registration was not optimal. But for some regions we can trust
-    % these informations.
+    % these information.
     
     
     

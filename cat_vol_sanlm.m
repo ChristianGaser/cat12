@@ -56,7 +56,7 @@ function varargout = cat_vol_sanlm(varargin)
 %   .resolutionDependencyRange .. [full-correction no-correction]
 %     Limit the filter size depending on the general brain size, where 
 %     filtering of images with 2.5 mm voxel size and higher will remove 
-%     important anatomical informations (default = [1 2.5]).    
+%     important anatomical information (default = [1 2.5]).    
 %   .red                  .. low resolution filtering (if high-res data)
 %   .fred                 .. force resolution reduction 
 %   .iter                 .. additional iterations on the reduced resolution
