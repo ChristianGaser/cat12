@@ -44,7 +44,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if (nrhs==4 && mxIsDouble(prhs[3])==0)            mexErrMsgTxt("ERROR:laplace3R: 4th input (voxelsize) must be a double matrix\n");
   if (nrhs==4 && mxGetNumberOfElements(prhs[3])!=3) mexErrMsgTxt("ERROR:laplace3R: 4th input (voxelsize) must have 3 Elements");
   
-  /* main informations about input data (size, dimensions, ...) */
+  /* main information about input data (size, dimensions, ...) */
   const mwSize *sL = mxGetDimensions(prhs[0]);
   const int     dL = mxGetNumberOfDimensions(prhs[0]);
   const int     nL = mxGetNumberOfElements(prhs[0]);

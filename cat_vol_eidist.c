@@ -213,7 +213,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   float*L  = (float *)mxGetPr(prhs[1]);             
   
   /* 
-   * main informations about input data (size, dimensions, ...) 
+   * main information about input data (size, dimensions, ...) 
    */
   const mwSize *sL = mxGetDimensions(prhs[0]); 
   const int     dL = mxGetNumberOfDimensions(prhs[0]);
