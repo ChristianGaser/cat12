@@ -1,4 +1,4 @@
-function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,job,res,vx_vol,stime2)
+function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,Yy,tpm,job,res,vx_vol,stime2)
 % ______________________________________________________________________
 %
 % (initial) k-means AMAP segmentation
@@ -42,10 +42,54 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,job,res,vx_vol,stime2)
   
   stime2 = cat_io_cmd('  K-means AMAP bias-correction','g5','',job.extopts.verb-1,stime2);
 
-  % simple skull-stripping
+  
+  % Create brain mask based on the the TPM classes
+  % cleanup with brain mask - required for ngaus [1 1 2 4 3 2] and R1/MP2Rage like data 
+  d   = res.image(1).dim(1:3);
+  YbA = zeros(d,'single');
+  Vb  = tpm.V(1); Vb.pinfo(3) = 0; Vb.dt=16; 
+  Vb.dat = single(exp(tpm.dat{1}) + exp(tpm.dat{2}) + exp(tpm.dat{3})); 
+  for z=1:d(3)
+    YbA(:,:,z) = spm_sample_vol(Vb,double(Yy(:,:,z,1)),double(Yy(:,:,z,2)),double(Yy(:,:,z,3)),1); 
+  end
+  if round(max(YbA(:))/Vb.pinfo(1)), YbA=YbA>0.1*Vb.pinfo(1); else YbA=YbA>0.1; end
+  % add some distance around brainmask (important for bias!)
+  YbA = YbA | cat_vol_morph(YbA & (Ycls{1} + Ycls{2})>4 ,'dd',2.4,vx_vol);
+  
+  
+  
+  %% get some low intensity values (backgroudn or CSF)
+  %  don't trust SPM background value in case of large ventricles
+  [Ysrc2,th] = cat_stat_histth(Ysrc); clear Ysrc2;
+  T4th = [ th(1) ... 
+    sum(res.mn(res.lkp==3).*res.mg(res.lkp==3)') ...
+    sum(res.mn(res.lkp==1).*res.mg(res.lkp==1)') ...
+    sum(res.mn(res.lkp==2).*res.mg(res.lkp==2)') ...
+    ];
+  % add CSF that was missclassified as background
+  if  T4th(3) < T4th(4) % T1 
+    newCSF = YbA & Ysrc>sum(T4th(1:2).*[2/3 1/3]) & Ysrc<sum(T4th(2:3).*[0.5 0.5]);
+  else % T2 / PD
+    newCSF = YbA & Ysrc>sum(T4th(2:3).*[0.5 0.5]);
+  end
+  % modify tissue classes
+  if numel(Ycls)>5
+    newCSF = newCSF .* (single(Ycls{4}) + single(Ycls{5}) + single(Ycls{6})); 
+  else
+    newCSF = newCSF .* single(Ycls{4});
+  end
+  newCSF = smooth3(newCSF/255)>0.5;
+  newCSF = cat_vol_morph(newCSF,'do',1.9);
+  % transfer CSF like voxel from class 4-6 to CSF class 3
+  for ci=4:numel(Ycls), Ycls{ci} = cat_vol_ctype( single(Ycls{ci}) .* single(~newCSF)); end
+  Ycls{3} = cat_vol_ctype( single(Ycls{3}) + single(newCSF)*255 );
+  
+  
+  
+  %% simple skull-stripping
   prob = cat_main_clean_gwc(cat(4,Ycls{1},Ycls{2},Ycls{3}),1,0); % no new cleanup here!
-  Ycls{1} = prob(:,:,:,1); Ycls{2} = prob(:,:,:,2); Ycls{3} = prob(:,:,:,3);
-  Yb = Ycls{1} + Ycls{2} + Ycls{3};
+  Ycls{1} = prob(:,:,:,1); Ycls{2} = prob(:,:,:,2); Ycls{3} = prob(:,:,:,3); clear prob;
+  Yb = cat_vol_ctype( single(Ycls{1} + Ycls{2} + Ycls{3}) + 255*newCSF );
   
   
   % In case of skull-stripping with have to combine SPM segmentation and 
@@ -66,12 +110,15 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,job,res,vx_vol,stime2)
   Tth.T3th   = 0:1/3:4/3;
   Ymi = cat_main_gintnormi(Ysrc/3,Tth);
   
-  % update CSF regions for skull-stripping of the cleanup and update skull-stripping
-  Ycls{3}(single(Ycls{3})/255 .* abs(Ymi*3 - 1) .* cat_vol_morph(Ycls{1}==0,'e')>0.3) = 0; 
-  Yb = Ycls{1} + Ycls{2} + Ycls{3};
+  %% update CSF regions for skull-stripping of the cleanup and update skull-stripping
+  Yhd  = cat_vbdist(single(Yb<0.5)); Yhd = Yhd ./ max(Yhd(Yhd <100));  
+  Ycls{3}(~newCSF & single(Ycls{3})/255 .* abs(Ymi*3 - 1) .* cat_vol_morph(Ycls{1}==0,'e')>0.3 & Yhd<0.2) = 0; 
+  Yb = cat_vol_ctype( single(Ycls{1} + Ycls{2} + Ycls{3}) + 255*newCSF );
+  %%
   Yb = cat_vol_morph( smooth3(Yb)>64 , 'ldo', 1,vx_vol);
   Yb = cat_vol_morph( Yb , 'ldc', 8,vx_vol);
   Yb = cat_vol_morph( Yb , 'ldo', 8,vx_vol);
+  if ~debug, clear newCSF; end
   
   %%
   Ymsk = cat_vol_morph(Yb & Ymi>0.45 & Ymi<0.95,'do',1); 

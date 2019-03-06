@@ -34,7 +34,7 @@ function varargout = cat_run(job)
 %  is missed and if the same preprocessing options were used before.
 %  -----------------------------------------------------------------
 if isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.extopts.admin.lazy && ...
-  ~isfield(job,'process_index') && isfield(job,'nproc') && job.nproc>0  
+  ~isfield(job,'process_index') && isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))  
   jobl      = update_job(job);
   jobl.vout = vout_job(jobl);
   job.data  = remove_already_processed(jobl); 
@@ -44,11 +44,6 @@ end
 
 % split job and data into separate processes to save computation time
 if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))  
-  cat_io_cprintf('warn',...
-    ['\nWARNING: Please note that no additional modules in the batch can be run \n' ...
-     '         except CAT12 segmentation. Any dependencies will be broken for \n' ...
-     '         subsequent modules if you split the job into separate processes.\n\n']);
-    
   % rescue original subjects
   job_data = job.data;
   n_subjects = numel(job.data);
@@ -67,11 +62,15 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     job.process_index{i} = [job.process_index{i} n_subjects-i+1];
   end
 
-  tmp_array = cell(job.nproc,1); job.printPID = 1; 
+  tmp_array = cell(job.nproc,1); job.printPID = 1; job.getPID = 2; 
     
   logdate   = datestr(now,'YYYYmmdd_HHMMSS');
+  PID       = zeros(1,job.nproc);
+  catSID    = zeros(1,job.nproc);
   for i=1:job.nproc
-    fprintf('Running job %d:\n',i);
+    jobo = job; 
+    
+    fprintf('\nRunning job %d:\n',i);
     for fi=1:numel(job_data(job.process_index{i}))
       fprintf('  %s\n',spm_str_manip(char(job_data(job.process_index{i}(fi))),'a78')); 
     end
@@ -95,7 +94,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
         fullfile(spm('dir'),'toolbox','OldNorm'),fullfile(spm('dir'),'toolbox','DARTEL'), tmp_name);
 
     % log-file for output
-    log_name = ['catlog_main_' logdate '_log' sprintf('%02d',i) '.txt'];
+    log_name{i} = ['catlog_main_' logdate '_log' sprintf('%02d',i) '.txt'];
 
     % call matlab with command in the background
     if ispc
@@ -115,40 +114,314 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
       % prepare system specific path for matlab
       export_cmd = ['set PATH=' fullfile(matlabroot,'bin')];
       [status,result] = system(export_cmd);
-      system_cmd = ['start matlab -nodesktop -nosplash -r ' matlab_cmd ' -logfile ' log_name];
+      system_cmd = ['start matlab -nodesktop -nosplash -r ' matlab_cmd ' -logfile ' log_name{i}];
     else
       % -nodisplay .. nodisplay is without figure output > problem with CAT report ... was there a server problem with -nodesktop?
-      system_cmd = [fullfile(matlabroot,'bin') '/matlab -nodesktop -nosplash -r ' matlab_cmd ' -logfile ' log_name ' 2>&1 & '];
+      system_cmd = [fullfile(matlabroot,'bin') '/matlab -nodesktop -nosplash -r ' matlab_cmd ' -logfile ' log_name{i} ' 2>&1 & '];
     end
     [status,result] = system(system_cmd); 
     cat_check_system_output(status,result);
     
     
-  
-    test = 0; lim = 20; ptime = 0.5;
+    
+    %% look for existing files and extract their PID for later control  
+    %  --------------------------------------------------------------------
+    test    = 0; lim    = 200; ptime    = 0.5; % exist file?
+    testpid = 0; limpid = 400; ptimepid = 2.0; % get PID
+    ptimesid = 1 * 30;                        % update every minute? 
     while test<lim
-      if ~exist(log_name,'file')
+      if ~exist(log_name{i},'file')
         pause(ptime); 
         test = test + ptime; 
         if test>=lim
-          cat_io_cprintf('warn','"%s" not exist after %d seconds! Proceed! \n',log_name,lim)
+          cat_io_cprintf('warn',sprintf('"%s" not exist after %d seconds! Proceed! \n',log_name{i},lim));
         end
       else 
+        % get PIDs for supervising
+        % search for the log entry "CAT parallel processing with MATLAB PID: #####" 
+        if job.getPID
+          try
+            while testpid<limpid
+              pause(ptimepid); 
+              
+              testpid = testpid + ptimepid; 
+              FID     = fopen(log_name{i},'r'); 
+              txt     = textscan(FID,'%s');
+              txt     = txt{1}; 
+              PIDi    = find(cellfun('isempty',strfind(txt,'PID:'))==0,1,'first');
+              fclose(FID);
+              if ~isempty(PIDi)
+                PID(i)  = str2double(txt{PIDi+1}); 
+                testpid = inf; 
+              end
+              
+              if testpid>=limpid && ~isinf(testpid)
+                cat_io_cprintf('warn',sprintf('"%s" no PID information available after %d seconds! Proceed! \n',log_name{i},limpid));
+              end
+            end
+          catch
+            cat_io_cprintf('warn',sprintf('No PID information available! Proceed! \n'));
+          end
+        end
+        
+        % open file in editor
         test = inf; 
-        edit(log_name);
+        edit(log_name{i});
       end
     end
 
-    edit(log_name);
-    fprintf('\nCheck %s for logging information.\n',spm_file(log_name,'link','edit(''%s'')'));
-    fprintf('_______________________________________________________________\n');
+    edit(log_name{i});
+    if PID(i)>0
+      fprintf('\nCheck %s for logging information (PID: ',spm_file(log_name{i},'link','edit(''%s'')')); 
+      cat_io_cprintf([1 0 0.5],sprintf('%d',PID(i))); 
+    else
+      fprintf('\nCheck %s for logging information (',spm_file(log_name{i},'link','edit(''%s'')'));
+      cat_io_cprintf([1 0 0.5],'unknown PID'); 
+    end
+    cat_io_cprintf([0 0 0],sprintf(').\n_______________________________________________________________\n'));
 
     % starting many large jobs can cause servere MATLAB errors
     pause(1 + rand(1) + job.nproc + numel(job.data)/100);
+    jobs(i).data = job.data;
+    
+    job = jobo; 
   end
-
+  
   job = update_job(job);
   varargout{1} = vout_job(job);
+  
+  
+  
+  if job.getPID
+    if any(PID==0) 
+      cat_io_cprintf('warn',...
+        ['\nWARNING: CAT was not able to detect the PIDs of the parallel CAT processes. \n' ...
+         '         Please note that no additional modules in the batch can be run \n' ...
+         '         except CAT12 segmentation. Any dependencies will be broken for \n' ...
+         '         subsequent modules if you split the job into separate processes.\n\n']);
+    else
+      %% conclusion without filelist
+      spm_clf('Interactive'); 
+      spm_progress_bar('Init', sum( numel(job_data) ) ,'CAT-Preprocessing','Volumes Complete');      
+      
+      fprintf('\nStarted %d jobs with the following PIDs:\n',job.nproc);
+      for i=1:job.nproc
+        fprintf('%3d) %d subjects (PID: ',i,numel(jobs(i).data));
+        cat_io_cprintf([1 0 0.5],sprintf('%6d',PID(i))); 
+        cat_io_cprintf([0 0 0],sprintf('): ')); 
+        cat_io_cprintf([0 0 1],sprintf('%s\n',spm_file(log_name{i},'link','edit(''%s'')')));
+      end
+      
+      
+      
+      %% supervised pipeline processing 
+      %  ------------------------------------------------------------------
+      %  This is a "simple" while loop that check if the processes still 
+      %  exist and extract information from the log-files, which subject 
+      %  was (successfully) processed. 
+      %  Finally, a report could be generated and exportet in future that 
+      %  e.g. count errors give some suggestions 
+      %  ------------------------------------------------------------------
+      if job.getPID>1
+        cat_io_cprintf('warn',sprintf('\nKilling of this process will not kill the parallel processes!\n'));
+        fprintf('_______________________________________________________________\n');
+        fprintf('Completed volumes (see catlog files for details!):\n');
+        
+        % some variables 
+        err         = struct('aff',0,'vbm',0,'sbm',0,'else',0,'warn0',0,'warn1',0,'warn2',0); 
+        cid         = 0;
+        PIDactive   = ones(size(catSID));
+        catSIDlast  = zeros(size(catSID));
+        [catv,catr] = cat_version;
+            
+        %% loop as long as data is processed by active tasks
+        while cid <= sum( numel(job_data) ) &&  any( PIDactive )
+          pause(ptimesid); 
+          
+          %% get status of each process
+          for i=1:job.nproc
+            % get FID
+            FID = fopen(log_name{i},'r'); 
+            txt = textscan(FID,'%s','Delimiter','\n');
+            txt = txt{1}; 
+            fclose(FID);
+            
+            % search for the _previous_ start entry "CAT12.# r####: 1/14:   ./MRData/*.nii" 
+            catis   = find(cellfun('isempty',strfind(txt,sprintf('%s r%s: ',catv,catr)))==0,2,'last');
+            catie   = find(cellfun('isempty',strfind(txt,'CAT preprocessing takes'))==0,1,'last');
+            if ~isempty(catis) && ( numel(catis)>2 ||  ~isempty(catie) )
+              if catis(end)<catie(1)
+                cathd = textscan( txt{catis(end)} ,'%s%s%s','Delimiter',':');
+              else
+                cathd = textscan( txt{catis(1)} ,'%s%s%s','Delimiter',':');
+              end
+              cathd = textscan( char(cathd{2}) ,'%d','Delimiter','/');
+              catSID(i) = cathd{1}(1);
+            else 
+              catSID(i) = 0; 
+            end
+            
+            % search for the end entry "CAT preprocessing takes ... " to get processing time
+            if ~isempty(catie)
+              cathd   = textscan( txt{catie} ,'%s%s%s%d%s%s%d%s','Delimiter',' ');
+              cattime = [cathd{4}(1) cathd{7}(1)]; 
+            else 
+              cattime = [0 0];
+            end
+            
+            % search for the end entry "Image Quality Rating (IQR): ... " to get IQR 
+            cati = find(cellfun('isempty',strfind(txt,'Image Quality Rating (IQR):'))==0,1,'last');
+            if ~isempty(cati) 
+              cathd   = textscan( txt{cati} ,'%s%s%s%s%s%s%s','Delimiter',' ');
+              catiqr  = [cathd{6} cathd{7}]; 
+            else 
+              catiqr = {'unknown'};
+            end
+            
+            %% search for preprocessing errors (and differentiate them)
+            cati = find(cellfun('isempty',strfind(txt,'CAT Preprocessing error'))==0,1,'last');
+            catl = find(cellfun('isempty',strfind(txt,'-----------------------'))==0);
+            if ~isempty(cati) && numel(catis)>2 && catie>catis(1) &&  catie<catis(2)
+              caterr  = textscan( txt{cati+2} ,'%s','Delimiter','\n');
+              caterr  = char(caterr{1});
+              caterrcode = ''; 
+              for ei = 4:(catl(find(catl>cati,1,'first')+2) - cati)
+                catfct{ei-2}  = textscan( txt{cati+ei} ,'%d%s%s','Delimiter',' ');
+                if isempty(caterrcode);
+                  switch char(catfct{ei-2}{3})
+                    % most relevant functions to identify the error 
+                    case {'cat_surf_createCS','cat_main','cat_run'}
+                      caterrcode = sprintf('%s:%d',char(catfct{ei-2}{3}),double(catfct{ei-2}{1}));
+                  end
+                end
+              end
+            else
+              caterr     = '';
+              caterrcode = ''; 
+            end
+            %
+            % We need some simple error codes that helps the user (check origin)
+            % but also us (because they may only send us this line). Hence,
+            % the major position of the error (e.g. cat_run/main) is most
+            % important.
+            %
+            % - affreg VBM error > check origin 
+            % - R#:cat_run:#:Possible registration error - Check origin! 
+            % - R#:cat_main:#:VBM processing error. 
+            % - R#:cat_createCS:#:Surface creation error.
+            % -----
+            % * Handling of warnings?
+            %   * yellow light warning vs. orange severe warning  
+            %   - low IQR?             < 50%  = yellow warning?
+            %   - high topodefarea?    > 1000 = yellow warning? > 5000 = orange warning?
+            %   - template corvariance < 0.80 = yellow warning? < 0.60 = orange warning?
+            %     this required an update of cat_vol_qa
+            % -----
+
+            
+            % find out if the current task is still active
+            if ispc
+              [status,result] = system(sprintf('tasklist /v /fi "PID %d"',PID(i))); 
+            else
+              [status,result] = system(sprintf('ps %d',PID(i)));
+            end
+            if isempty( strfind( result , sprintf('%d',PID(i)) ) )
+              PIDactive(i) = 0; 
+            end
+            
+            
+            %% update status
+            %  if this tast was not printed before  ( catSIDlast(i) < catSID(i) )  and 
+            %  if one subject was successfully or with error processed ( any(cattime>0) || ~isempty(caterr) )
+            %fprintf('    %d - %d %d %d %d\n',i,catSIDlast(i), catSID(i), any(cattime>0), ~isempty(caterr) ); 
+            if ( catSIDlast(i) < catSID(i) )  &&  ( any(cattime>0) || ~isempty(caterr) )
+              cid = cid + 1; 
+              catSIDlast(i) = catSID(i);
+              
+              [pp,ff,ee] = spm_fileparts(jobs(i).data{catSID(i)}); 
+              if job.extopts.subfolders
+                catlog = fullfile(pp,'report',['catlog_' ff '.txt']); 
+              else
+                catlog = fullfile(pp,['catlog_' ff '.txt']); 
+              end
+              if exist(catlog,'file')
+                catlogt = ['<a href="matlab:edit(''' catlog ''');">' ...
+                  spm_str_manip( catlog , 'k60') ': </a>'];
+              else
+                catlogt = spm_str_manip( fullfile(pp,[ff ee]), 'k40'); 
+              end
+              
+              
+              switch caterr
+              case 'Bad SPM-Segmentation. Check image orientation!', % pink error that support user interaction  
+                err.txt   = 'VBM affreg error - Check origin!'; 
+                err.color = [0.9 0 0.9];
+                err.aff   = err.aff + 1;
+              case '', % successful processing    
+                % here it would be necessary to differentiate IQR and PQR
+                %if 1 % no warning
+                  err.txt   = ''; 
+                  err.color = [0 0 0];
+                  err.warn0 = err.warn0 + 1; 
+                %{
+                elseif 0==1 % light yellow warning
+                  err.txt   = 'Possible error - Check results!'; 
+                  err.color = [0.8 0.6 0];
+                  err.warn1 = err.warn1 + 1; 
+                elseif 0==2 % severe orange waring 
+                  err.txt   = 'Probable error - Check results!'; 
+                  err.color = [1 0.3 0];
+                  err.warn2 = err.warn2 + 1; 
+                end
+                %}
+                otherwise,   
+                  err.txt   = errtxt;
+                  err.color = [1 0 0];
+                  err.vbm   = err.vbm + 1;
+              end
+              err.txt = sprintf('R%s:%s:%s',catr,caterrcode,err.txt); 
+            
+              
+              % display
+              cat_io_cprintf(err.color,sprintf('  %d/%d (job %d: %d/%d): ',...
+                cid,sum( numel(job_data) ), i,catSID(i), numel(jobs(i).data) )); 
+              cat_io_cprintf([0 0.0 0],catlogt);
+              if isempty(caterr)
+                cat_io_cprintf(err.color,sprintf(' % 3d.%02d minutes, ',cattime'));
+                cat_io_cprintf([0 0.0 0],sprintf('IQR=%s\n',strrep(catiqr{1},'%','%%')));  
+              else
+                cat_io_cprintf(err.color,sprintf('%s\n',err.txt));  
+              end
+            end
+          end
+          spm_progress_bar('Set', cid );
+                  
+          
+        end
+      end
+    end
+    
+    %% final report
+    fprintf('_______________________________________________________________\n');
+    fprintf(['Conclusion: \n' ...
+     sprintf('  Processed successfully:% 8d volume(s)\n',err.warn0) ...
+     ... sprintf('  Processed with warning:% 8d volume(s)\n',1) ...
+     ... sprintf('  Processed with IQR warning:% 8d volume(s)\n',1) ...
+     ... sprintf('  Processed with PQR warning:% 8d volume(s)\n',1) ...
+     sprintf('  Processed with error:  % 8d volume(s)\n\n',err.aff + err.vbm + err.sbm) ...
+             'In case of warnings and errors please check the correct position\n' ...
+             'of the AC by using the SPM display function.\n' ...
+    ]);   
+    fprintf('_______________________________________________________________\n');
+    
+  else
+    cat_io_cprintf('warn',...
+      ['\nWARNING: Please note that no additional modules in the batch can be run \n' ...
+       '         except CAT12 segmentation. Any dependencies will be broken for \n' ...
+       '         subsequent modules if you split the job into separate processes.\n\n']);
+  end
+
+  spm_progress_bar('Clear');
   return
 end
 
@@ -196,6 +469,7 @@ function job = update_job(job)
   def.extopts.lazy        = 0;
   def.opts.fwhm           = 1;
   def.nproc               = 0; 
+  def.getPID              = 2; % 0 - nothing (old), 1 - get PIDs, 2 - supervise PIDs 
    
   % ROI atlas maps
   if isfield(job.output,'ROImenu') % expert/developer GUI that allows control each atlas map 
@@ -389,7 +663,7 @@ function job = update_job(job)
   
   
   % set boundary box by Template properties if box inf
-  if job.extopts.regstr(1)==4
+  if job.extopts.regstr(1)==0
     Vd       = spm_vol([job.extopts.darteltpm{1} ',1']);
   else
     Vd       = spm_vol([job.extopts.shootingtpm{1} ',1']);

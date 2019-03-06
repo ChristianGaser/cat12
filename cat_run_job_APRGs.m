@@ -42,14 +42,15 @@ function [Affine2,Yb,Ymi,Ym0] = cat_run_job_APRGs(Ysrc,Ybg,VF,Pb,Pbt,Affine,vx_v
   
   %% estimate tissue thresholds for intensity normalization 
   bgth = kmeans3D(Ysrc(Ybg)); 
-  T5th = kmeans3D(Ysrc(Yb0>0.5),5); T3th = T5th(1:2:end);
+  T5th = kmeans3D( cat_stat_histth(Ysrc(Yb0>0.5) ,0.95),5); 
+  T3th = T5th([1 3 5]); % use more agressive scaling to avoid skull-stripping 
   if 0 % WMHs?
     Txth = kmeans3D(Ysrc(Yb0>0.5 & ...
       Ysrc>nansum(T3th(1:2:3) .* [0.9 0.1]) & ...
       Ysrc<nansum(T3th(1:2:3) .* [0.1 0.9])),5); T3th(2) = mean(Txth(3:4)); 
   end
   [Ysrc,th] = cat_stat_histth(Ysrc);
-  Ym = (Ysrc - th(1)) ./ (T3th(3) - th(1)); 
+  Ym = (Ysrc - mean([th(1),T3th(1)]) ) ./ (T3th(3) - mean([th(1),T3th(1)]) ); 
   Yg = cat_vol_grad(Ym,vx_vol) ./ Ym;   
   
   %% create background if is not available (no APP)
@@ -86,7 +87,11 @@ function [Affine2,Yb,Ymi,Ym0] = cat_run_job_APRGs(Ysrc,Ybg,VF,Pb,Pbt,Affine,vx_v
 
   %% initial brain mask by region-growing
   % mask for region growing and WM-GM region growing
-  Yb2  = single(cat_vol_morph( Yb0>0.5 | (Yb0.*Ym)>0.25 & (Yb0.*Ym)<1.3,'de',5,vx_vol)); Yb=false(size(Yb0));
+  Yhd  = cat_vbdist(single(Yb0<0.5)); Yhd = Yhd ./ max(Yhd(Yhd <100));  
+  Yb2  = cat_vol_morph( Yb0>0.5 | (Yb0.*Ym)>0.25 & (Yb0.*Ym)<1.2 & Ym<1.2,'de',4,vx_vol); Yb=false(size(Yb0));
+  Yb2  = cat_vol_morph((Ym>0.5 & Ym<1.2 & Yb2) | Yhd>0.25,'ldo',4,vx_vol); % remove skull
+  Yb2  = single(cat_vol_morph(Yb2 | Yhd>0.25,'ldc',4,vx_vol)); if ~debug, clear Yhd; end
+  %% region-growing
   if T3th(1) < T3th(3) % T1 
     Yh   = (Yb2<0.5) & (Ysrc<sum(T3th(2:3).*[0.5 0.5]) | Ysrc>(T3th(3)*1.2) | Yg>BVth);
   else
@@ -102,7 +107,26 @@ function [Affine2,Yb,Ymi,Ym0] = cat_run_job_APRGs(Ysrc,Ybg,VF,Pb,Pbt,Affine,vx_v
   Yb(YD<400/mean(vx_vol)) = 1; clear YD; 
   Yb(smooth3(Yb)<0.5) = 0; 
   Yb   = cat_vol_morph(Yb,'ldo',1.9,vx_vol);
-
+  Yb   = cat_vol_morph(Yb,'ldc',1.9,vx_vol);
+  
+ %%
+  Yb = single(Yb);
+  if T3th(1) < T3th(3) % T1 
+    Yh   = (Yb<0.5) & (Ysrc<sum(T3th(1:2).*[0.1 0.9]) | Ysrc>(T3th(3)*1.2) | Yg>BVth);
+  else
+    Yh   = (Yb<0.5) & (Ysrc<mean([T3th(3),BGth]) | Ysrc>sum(T3th(2:3).*[0.5 0.5]) | Yg>BVth);
+  end
+  Yh   = cat_vol_morph(Yh,'dc',2,vx_vol); 
+  Yh   = cat_vol_morph(Yh,'de',1,vx_vol); Yb2(Yh) = nan; if ~debug, clear Yh; end
+  if T3th(1) < T3th(3) % T1 
+    [Yb2,YD] = cat_vol_downcut(Yb,Ysrc/T3th(3),0); clear Yb2; %#ok<ASGLU>
+  else
+    [Yb2,YD] = cat_vol_downcut(Yb,1 - Ysrc/T3th(3),0); clear Yb2; %#ok<ASGLU>
+  end
+  Yb(YD<400/mean(vx_vol)) = 1; clear YD; 
+  Yb(smooth3(Yb)<0.5) = 0; 
+  Yb   = cat_vol_morph(Yb,'ldo',1.9,vx_vol);
+  Yb   = cat_vol_morph(Yb,'ldc',1.9,vx_vol);
   
   %% GM-CSF region
   Yb2  = single(cat_vol_morph(Yb,'de',2.9,vx_vol)); 
@@ -123,7 +147,7 @@ function [Affine2,Yb,Ymi,Ym0] = cat_run_job_APRGs(Ysrc,Ybg,VF,Pb,Pbt,Affine,vx_v
   Yb(YD<200/mean(vx_vol)) = 1; clear YD; 
   Yb(smooth3(Yb)<0.5) = 0; Yb(smooth3(Yb)>0.5) = 1; 
   Yb   = cat_vol_morph(Yb,'ldo',1.9,vx_vol);
-  Yb   = cat_vol_morph(Yb,'lc');
+  Yb   = cat_vol_morph(Yb,'ldc',4);
 
   
   
@@ -149,7 +173,7 @@ function [Affine2,Yb,Ymi,Ym0] = cat_run_job_APRGs(Ysrc,Ybg,VF,Pb,Pbt,Affine,vx_v
     Yb(YD<400/mean(vx_vol)) = 1; clear YD; 
     Yb(smooth3(Yb)<0.5) = 0; Yb(smooth3(Yb)>0.5) = 1; 
     Yb   = cat_vol_morph(Yb,'ldo',1.9,vx_vol);
-    Yb   = cat_vol_morph(Yb,'lc');
+    Yb   = cat_vol_morph(Yb,'ldc');
   end
   
   if 0
