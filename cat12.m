@@ -142,6 +142,8 @@ switch species
   case 'monkey_oldworld', speciesdisp = ' (oldworld monkeys)'; 
   case 'monkey_newworld', speciesdisp = ' (newworld monkeys)'; 
   case 'chimpanzee',      speciesdisp = ' (chimpanzee)'; 
+  case 'baboon',          speciesdisp = ' (baboon)';
+  case 'macaque',         speciesdisp = ' (macaque)';
   case 'dog',             speciesdisp = ' (dogs)'; 
   otherwise               speciesdisp = ''; 
 end

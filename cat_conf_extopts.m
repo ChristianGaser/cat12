@@ -477,7 +477,7 @@ gcutstr.name      = 'Skull-Stripping';
 gcutstr.def       = @(val)cat_get_defaults('extopts.gcutstr', val{:});
 gcutstr.help      = {
   'Method of initial skull-stripping before AMAP segmentation. The SPM approach works quite stable for the majority of data. However, in some rare cases parts of GM (i.e. in frontal lobe) might be cut. If this happens the GCUT approach is a good alternative. GCUT is a graph-cut/region-growing approach starting from the WM area. '
-  'APRG (adaptive probability region-growing) is a new method that refines the probability maps of the SPM approach by region-growing techniques of the gcut approach with a final surface-based optimization strategy. This is currently the method with the most accurate and reliable results. '
+  'APRG (adaptive probability region-growing) is a new method that refines the probability maps of the SPM approach by region-growing techniques of the gcut approach with a final surface-based optimization stategy. This is currently the method with the most accurate and reliable results. '
   'If you use already skull-stripped data you can turn off skull-stripping although this is automaticaly detected in most cases. '
   'Please note that the choice of the skull-stripping method will also influence the estimation of TIV, because the methods mainly differ in the handling of the outer CSF around the cortical surface. '
   ''
@@ -760,7 +760,7 @@ scale_cortex.strtype = 'r';
 scale_cortex.num     = [1 1];
 scale_cortex.def     = @(val)cat_get_defaults('extopts.scale_cortex', val{:});
 scale_cortex.help    = {
-  'Scale intensity values for cortex to start with initial surface that is closer to GM/WM border to prevent that gyri/sulci are glued. If you still have glued gyri/sulci (mainly in the occ. lobe) you can try to decrease this value (start with 0.6).  Please note that decreasing this parameter also increases the risk of an interrupted parahippocampal gyrus.'
+  'Scale intensity values for cortex to start with initial surface that is closer to GM/WM border to prevent that gyri/sulci are glued if you still have glued gyri/sulci (mainly in the occ. lobe).  You can try to decrease this value (start with 0.6).  Please note that decreasing this parameter also increases the risk of an interrupted parahippocampal gyrus.'
   ''
 };
 
@@ -771,7 +771,7 @@ add_parahipp.strtype = 'r';
 scale_cortex.num     = [1 1];
 add_parahipp.def     = @(val)cat_get_defaults('extopts.add_parahipp', val{:});
 add_parahipp.help    = {
-  'Increase intensity values in the parahippocampal area to prevent large cuts in the parahippocampal gyrus (initial surface in this area will be closer to GM/CSF border). If the parahippocampal gyrus is still cut you can try to increase this value (start with 0.15).'
+  'Increase values in the parahippocampal area to prevent large cuts in the parahippocampal gyrus (initial surface in this area will be closer to GM/CSF border if the parahippocampal gyrus is still cut.  You can try to increase this value (start with 0.15).'
   ''
 };
 

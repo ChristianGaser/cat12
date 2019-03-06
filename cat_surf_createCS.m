@@ -40,6 +40,12 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
 % ______________________________________________________________________
 % $Id$ 
 
+% Turn off gifti data warning in gifti/subsref (line 45)
+%   Warning: A value of class "int32" was indexed with no subscripts specified. 
+%            Currently the result of this operation is the indexed value itself, 
+%            but in a future release, it will be an error. 
+warning('off','MATLAB:subscripting:noSubscriptsSpecified');
+
 %#ok<*AGROW>
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
  

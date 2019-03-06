@@ -227,7 +227,8 @@ function cat_run_job(job,tpm,subj)
           ppe.affreg.skullstripped = ppe.affreg.skullstripped || ...
             sum([ppe.affreg.skullstrippedpara(1)>0.8 F0vol<1500 F0std<0.4])>1; % or 2 extreme values
           if ~debug, clear YFC F0vol F0std numo numi; end 
-
+          % not automatic detection in animals
+          ppe.affreg.skullstripped = ppe.affreg.skullstripped && strcmp(job.extopts.species,'human');
           
           
           %% Interpolation
@@ -439,13 +440,13 @@ function cat_run_job(job,tpm,subj)
             [Ym,Yt,Ybg,WMth] = APPmini(obj,VF);
           end
 
-          % prepare affine parameter 
+          %% prepare affine parameter 
           aflags     = struct('sep',obj.samp,'regtype','subj','WG',[],'WF',[],'globnorm',1); 
           aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
           aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
 
           
-          if strcmp('human',job.extopts.species) 
+          if 1 %strcmp('human',job.extopts.species) 
             % affine registration
             try
               spm_plot_convergence('Init','Coarse affine registration','Mean squared difference','Iteration');
@@ -494,7 +495,7 @@ function cat_run_job(job,tpm,subj)
           
           
           % fine affine registration 
-          if strcmp('human',job.extopts.species) 
+          if 1 %strcmp('human',job.extopts.species) 
             try
               spm_plot_convergence('Init','Affine registration','Mean squared difference','Iteration');
             catch
@@ -595,14 +596,24 @@ function cat_run_job(job,tpm,subj)
             %% merging of multiple TPMs
             obj2 = obj; obj2.image.dat(:,:,:) = max(0.0,Ym);
             [Affine,obj.tpm,res0] = cat_run_job_multiTPM(job,obj2,Affine,ppe.affreg.skullstripped,1); %#ok<ASGLU>
-          else
+            Affine3 = Affine; 
+          elseif strcmp(job.extopts.species,'human')
             %% only one TPM (old approach); 
             spm_plot_convergence('Init','Fine affine registration','Mean squared difference','Iteration');
             warning off 
             Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg,80); 
+            if any(any(isnan(Affine2(1:3,:))))
+              Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*4,obj.tpm,Affine ,job.opts.affreg,80);
+              if any(any(isnan(Affine2(1:3,:)))) 
+                Affine2 = Affine; 
+              end
+            end
             Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,       obj.tpm,Affine2,job.opts.affreg,80);
             warning on  
             if ~any(any(isnan(Affine3(1:3,:)))), Affine = Affine3; end
+          else
+            Affine2 = Affine1; 
+            Affine3 = Affine1; 
           end
           if 0
             %% visual control for development and debugging
@@ -611,7 +622,7 @@ function cat_run_job(job,tpm,subj)
             [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1));  
             %[Vmsk,Yb] = cat_vol_imcalc([VFa;obj.tpm.V(1:3)],Pbt,'i2 + i3 + i4',struct('interp',3,'verb',0));  
             %[Vmsk,Yb] = cat_vol_imcalc([VFa;obj.tpm.V(5)],Pbt,'i2',struct('interp',3,'verb',0));  
-            ds('d2sm','',1,Ym,Ym.*(Yb>0.5),110)
+            ds('d2sm','',1,Ym,Ym.*(Yb>0.5),round(size(Yb,3)*0.6))
           end
           
          
@@ -620,7 +631,7 @@ function cat_run_job(job,tpm,subj)
             if debug 
               [Affine,Ybi,Ymi,Ym0] = cat_run_job_APRGs(Ym,Ybg,VF,Pb,Pbt,Affine,vx_vol,obj,job); %#ok<ASGLU>
             else
-              Affine = cat_run_job_APRGs(Ym,Ybg,VF,Pb,Pbt,Affine,vx_vol,obj,job);
+              [Affine,Ybi] = cat_run_job_APRGs(Ym,Ybg,VF,Pb,Pbt,Affine,vx_vol,obj,job);
             end
           end
         
@@ -690,11 +701,38 @@ function cat_run_job(job,tpm,subj)
           if ppe.affreg.skullstripped, res.mn(end) = 0; end 
 
         catch
-            if any( (vx_vol ~= vx_voli) ) || ~strcmp(job.extopts.species,'human') 
-                [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});
-                delete(fullfile(pp,[ff,ee]));
+          tmp = obj.image.dat; 
+          if exist('Ybi','var')
+            obj.image.dat = obj.image.dat .* (cat_vbdist(single(Ybi>0.5))<10);
+          else
+            VFa = VF; VFa.mat = Affine * VF.mat; %Fa.mat = res0(2).Affine * VF.mat;
+            if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
+            [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1));  
+            ds('d2sm','',1,Ym,Ym.*(Yb>0.5),round(size(Yb,3)*0.6))
+            obj.image.dat = obj.image.dat .* (cat_vbdist(single(Yb>0.5))<10);
+          end
+          
+          suc = 0;
+          while obj.tol<1
+            obj.tol = obj.tol * 10;
+            try
+              res = cat_spm_preproc8(obj);
+              suc = 1;
             end
+          end
+          
+          if any( (vx_vol ~= vx_voli) ) || ~strcmp(job.extopts.species,'human')
+            [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});
+            delete(fullfile(pp,[ff,ee]));
+          end
+          
+          if suc==0
             error('CAT:cat_run_job:spm_preproc8','Error in spm_preproc8. Check image and orientation. \n');
+          end
+          
+          res.image.dat = tmp;
+          obj.image.dat = tmp; 
+          clear tmp;
         end
         warning on 
         fprintf('%5.0fs\n',etime(clock,stime));   

@@ -10,6 +10,37 @@ catch %#ok<CTCH>
   expert = 0; 
 end
 
+% try to estimate number of processor cores
+try
+  numcores = feature('numcores');
+  % because of poor memory management use only half of the cores for windows
+  if ispc
+    numcores = round(numcores/2);
+  end
+  numcores = max(numcores,1);
+catch
+  numcores = 0;
+end
+
+% force running in the foreground if only one processor was found or for compiled version
+if numcores == 1 || isdeployed, numcores = 0; end
+
+%------------------------------------------------------------------------
+nproc         = cfg_entry;
+nproc.tag     = 'nproc';
+nproc.name    = 'Split job into separate processes';
+nproc.strtype = 'w';
+nproc.val     = {numcores};
+nproc.num     = [1 1];
+nproc.help    = {
+    'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be split into separate processes that run in the background. You can even close Matlab, which will not affect the processes that will run in the background without GUI. If you do not want to run processes in the background then set this value to 0.'
+    ''
+    'Keep in mind that each process needs about 1.5..2GB of RAM, which should be considered to choose the appropriate  number of processes.'
+    ''
+    'Please further note that no additional modules in the batch can be run except CAT12 segmentation. Any dependencies will be broken for subsequent modules.'
+  };
+%------------------------------------------------------------------------
+
 mov = cfg_files;
 mov.name = 'Longitudinal data for this subject';
 mov.tag  = 'mov';
@@ -125,9 +156,9 @@ long = cfg_exbranch;
 long.name = 'Segment longitudinal data';
 long.tag  = 'long';
 if expert
-  long.val  = {esubjs,opts,extopts,output,ROI,modulate,dartel,delete_temp};
+  long.val  = {esubjs,nproc,opts,extopts,output,ROI,modulate,dartel,delete_temp};
 else
-  long.val  = {esubjs,opts,extopts,output,ROI,modulate,dartel};
+  long.val  = {esubjs,nproc,opts,extopts,output,ROI,modulate,dartel};
 end
 long.prog = @cat_long_multi_run;
 long.vout = @vout_long;

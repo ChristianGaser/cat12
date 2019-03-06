@@ -100,6 +100,8 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
   def.opt.ll1th     = 0.001;    % smaller better/slower
   def.opt.ll3th     = 0.002; 
   def.fast          = 0;        % no report, no output
+  def.affreg        = 1;        % additional affine registration
+  def.iterlim       = inf;      % limit inner iterations
   def.rigidShooting = 0;        % rigid vs. affine Shooting 
   if ~isfield(job.extopts,'reg'), job.extopts.reg = struct(); end
   dreg = cat_io_checkinopt(job.extopts.reg,def); 
@@ -113,7 +115,7 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
 
 
   % this is just for me to create different templates and can be removed in a final version
-  fast   = inf;                   % limit iterations per template level to test if processing work in principle 
+  fast   = dreg.iterlim;                   % limit iterations per template level to test if processing work in principle 
   if numel(job.extopts.vox)>1 || numel(job.extopts.regstr)>1 || (isfield(job,'export') && job.export)
     job.extopts.multigreg = 1;
     export = 1;  % write files in sub-directories
@@ -122,6 +124,22 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
     export = 0; 
   end
 
+  % additional affine registration of the GM segment
+  if dreg.affreg
+    %%
+    obj.image         = res.image; 
+    obj.image.pinfo   = repmat([255;0],1,size(Ycls{1},3));
+    obj.image.dt      = [spm_type('UINT8') spm_platform('bigend')];
+    obj.image.dat     = cat_vol_ctype(single(Ycls{1})/2 + single(Ycls{2}));  
+    if isfield(obj.image,'private'), obj.image = rmfield(obj.image,'private'); end
+    obj.samp = 1.5; 
+    obj.fwhm = 1;
+    if isfield(obj,'tpm'), obj = rmfield(obj,'tpm'); end
+    obj.tpm = spm_load_priors8(res.tpm(1:2));
+    Affine  = spm_maff8(obj.image,obj.samp,obj.fwhm,obj.tpm,res.Affine,job.opts.affreg,80);
+    res.Affine = Affine;
+    spm_progress_bar('Clear');
+  end
 
   do_req = res.do_dartel; 
   % this is the main loop for different parameter

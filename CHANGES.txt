@@ -1,5 +1,67 @@
 ------------------------------------------------------------------------
-r1434 | gaser | 2019-02-28 11:31:30
+r1435 | dahnke | 2019-03-06 12:21:52
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_conf_extopts.m
+M       cat_conf_long.m
+M       cat_long_multi_run.m
+M       cat_main.m
+M       cat_main_APRG.m
+M       cat_main_kamap.m
+M       cat_main_registration.m
+M       cat_main_registration2.m
+M       cat_parallelize.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_job_APRGs.m
+M       cat_run_job_multiTPM.m
+M       cat_spm_preproc8.m
+M       cat_surf_createCS.m
+M       cat_vol_ctype.m
+M       spm_cat12.m
+A       templates_animals/baboon_T1.nii
+A       templates_animals/baboon_TPM.nii
+A       templates_animals/baboon_Template_1.nii
+A       templates_animals/baboon_Template_2.nii
+A       templates_animals/baboon_Template_3.nii
+A       templates_animals/baboon_Template_4.nii
+A       templates_animals/baboon_Template_5.nii
+A       templates_animals/baboon_Template_6.nii
+A       templates_animals/baboon_brainmask.nii
+A       templates_animals/baboon_cat.nii
+M       templates_animals/chimpanzee_T1.nii
+M       templates_animals/chimpanzee_TPM.nii
+M       templates_animals/chimpanzee_atlas_davi.nii
+M       templates_animals/chimpanzee_cat.nii
+
+*) Fixed: 	Corrected tissue intensity settings in cat_run_job_APRGs (CRITICAL!).
+*) New:     Added SPM job structure support for parallel preprocessing
+            in cat_run and cat_parallelize. 
+*) New: 	Added parallel processing for longitudinal pipeline in cat_conf_long
+            cat_long_multi_run.
+*) New: 	Updated chimpanzee templates (TPM, T1, cat-atlas, davi-atlas).
+*) New:		Added float32 and float64 definitions in cat_vol_ctype.
+*) New: 	Added baboon and macaque cases in cat12 and templates (still in development).
+*) Fixed: 	Corrections for general closing of the brainmask in cat_main_APRG. 
+*) Fixed: 	Corrections in cat_run_job to support full affine registration 
+			in primates. Added catch for spm_maffreg with less smoothing. 
+			Added additional try-catch block in case of a failed SPM  
+			preprocessing (spm_preproc8) with lower accuracy. 
+*) Fixed: 	Corrected tiny indices-errors in cat_run_job_multiTPM.
+*) Fixed:   Corrected typos in cat_conf_extopts and cat_spm_preproc8. 
+*) Fixed: 	Additional turn off of the GIFTI warning in cat_surf_createCS.
+*) Fixed:   Added more complex skull-stripping in cat_main_kamap. 
+*) Fixed:   Corrected fast registration operation in cat_main and added 
+            fast Dartel preprocessing option in cat_main_registration and 
+            cat_main_registration2. 
+*) Fixed:   Added final affine registration from cat_main_registration in
+            cat_main_registration2.
+
+
+------------------------------------------------------------------------
+r1434 | gaser | 2019-02-28 11:32:08 +0100 (Do, 28 Feb 2019) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +71,7 @@ M       cat_batch_long.m
 M       html/cat.html
 
 Fixed: Corrected typos in batch shell scripts. 
+
 ------------------------------------------------------------------------
 r1433 | gaser | 2019-02-27 16:52:49 +0100 (Mi, 27 Feb 2019) | 14 lines
 

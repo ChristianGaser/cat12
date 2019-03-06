@@ -103,7 +103,8 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th)
     Yb   = min(1,Yb + cat_vol_morph(smooth3(sum(P(:,:,:,1:3),4))>200,'ldc',1,vx_vol));
   end
   Yb   = cat_vol_morph(Yb>0.8,'ldo',1.9,vx_vol);
-
+  Yb   = cat_vol_morph(Yb,'ldc',1.9,vx_vol);
+  
   
   %% mask for region growing and WM-GM region growing
   Yb2  = single(cat_vol_morph(Yb,'de',1.9,vx_vol)); 
@@ -122,8 +123,10 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th)
   Yb(YD<400/mean(vx_vol)) = 1; clear YD; 
   Yb(smooth3(Yb)<0.5) = 0; 
   Yb   = cat_vol_morph(Yb,'ldo',1.9,vx_vol);
+  Yb   = cat_vol_morph(Yb,'ldc');
+  
 
-  % GM-CSF region
+  %% GM-CSF region
   Yb2  = single(cat_vol_morph(Yb,'de',1.9,vx_vol)); 
   if T3th(1) < T3th(3)
     Yh   = (Yb2<0.5) & (Ysrc<sum(T3th(1:2).*[0.9 0.1]) | sum(P(:,:,:,4:6),4)>250 | ...
@@ -142,7 +145,7 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th)
   Yb(YD<400/mean(vx_vol)) = 1; clear YD; 
   Yb(smooth3(Yb)<0.5) = 0; Yb(smooth3(Yb)>0.5) = 1; 
   Yb   = cat_vol_morph(Yb,'ldo',1.9,vx_vol);
-  Yb   = cat_vol_morph(Yb,'lc');
+  Yb   = cat_vol_morph(Yb,'ldc');
 
 
 
