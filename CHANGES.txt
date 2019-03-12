@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1436 | gaser | 2019-03-06 17:45:41
+r1437 | gaser | 2019-03-12 12:00:01
+
+Changed paths:
+M       CHANGES.txt
+M       html/cat_methods_QA.html
+M       html/cat_methods_RBM.html
+M       html/cat_methods_SBM.html
+M       html/cat_methods_VBM.html
+M       html/cat_methods_validation.html
+M       html/cat_tools_SBM.html
+M       html/cat_tools_VBM.html
+M       html/cat_tools_checkcov.html
+
+Fixed: Corrected http addresses in online help to https.
+------------------------------------------------------------------------
+r1436 | gaser | 2019-03-06 17:46:15 +0100 (Mi, 06 Mär 2019) | 42 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -42,6 +57,7 @@ M       templates_1.50mm/cobra.nii
 
 (1) Fixed: Many typos...
 (2) Changed: Removed udp options.
+
 ------------------------------------------------------------------------
 r1435 | dahnke | 2019-03-06 12:24:38 +0100 (Mi, 06 Mär 2019) | 60 lines
 
