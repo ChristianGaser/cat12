@@ -53,12 +53,12 @@
           <h4 id="NC">Denoising</h4>
           <p>
             We also use two noise reduction methods. The first method is a spatial-adaptive Non-Local Means (SANLM) denoising filter and is applied after the intensity normalization. 
-            <a href="matlab:web('http://dx.doi.org/10.1002/jmri.22003','-browser');">(Manjón et al. 2010)</a>.  
-            <!--After global intensity correction a 2nd SANLM filter or optionally a block-wise optimized non-local means (ORNLM) denoising filter is applied <a href="matlab:web('http://dx.doi.org/10.1109/TMI.2007.906087','-browser');">(Coupe et al. 2008)</a>.  
+            <a href="matlab:web('https://dx.doi.org/10.1002/jmri.22003','-browser');">(Manjón et al. 2010)</a>.  
+            <!--After global intensity correction a 2nd SANLM filter or optionally a block-wise optimized non-local means (ORNLM) denoising filter is applied <a href="matlab:web('https://dx.doi.org/10.1109/TMI.2007.906087','-browser');">(Coupe et al. 2008)</a>.  
             These filters remove noise while preserving edges and are implemented as preprocessing step.  
             -->
             This filter removes noise while maintaining edges and is implemented as pre-processing step. 
-            The second method is a classical Markov Random Field (MRF) approach, which includes spatial information from adjacent voxels in the segmentation estimation <a href="matlab:web('http://dx.doi.org/10.1109/42.563663','-browser');">(Rajapakse et al. 1997)</a> and is part of the AMAP segmentation. 
+            The second method is a classical Markov Random Field (MRF) approach, which includes spatial information from adjacent voxels in the segmentation estimation <a href="matlab:web('https://dx.doi.org/10.1109/42.563663','-browser');">(Rajapakse et al. 1997)</a> and is part of the AMAP segmentation. 
             <!--The strength of the filters is automatically determined by estimating the residual noise in the image or can be set manually by the <em>"Strength of Noise Correction"</em> parameter (<em>cat.extopts.NCstr</em> in cat_defaults).-->
           </p>
         </li>
@@ -89,7 +89,7 @@
           <h4 id="AMAP">AMAP Segmentation</h4>
           <p>
             The segmentation approach is based on an Adaptive Maximum A Posterior (AMAP) technique without the need for a priori information on the tissue probabilities. 
-            This means that the Tissue Probability Maps (TPM) are not constantly used in the sense of the classical Unified Segmentation approach  <a href="matlab:web('http://dx.doi.org/10.1016/j.neuroimage.2005.02.018','-browser');">(Ashburner et al. 2005)</a>, but only for spatial normalization, initial skull-stripping, and as initial segmentation estimate. The subsequent AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modeled as slowly varying spatial functions  <a href="matlab:web('http://dx.doi.org/10.1109/42.563663','-browser');">(Rajapakse et al. 1997)</a>.  
+            This means that the Tissue Probability Maps (TPM) are not constantly used in the sense of the classical Unified Segmentation approach  <a href="matlab:web('https://dx.doi.org/10.1016/j.neuroimage.2005.02.018','-browser');">(Ashburner et al. 2005)</a>, but only for spatial normalization, initial skull-stripping, and as initial segmentation estimate. The subsequent AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modeled as slowly varying spatial functions  <a href="matlab:web('https://dx.doi.org/10.1109/42.563663','-browser');">(Rajapakse et al. 1997)</a>.  
             This accounts not only for intensity inhomogeneities, but also for other local intensity variations.
           </p>
         </li>
@@ -97,7 +97,7 @@
         <li> 
           <h4 id="PVE">Partial Volume Segmentation</h4>
           <p>
-            In addition, the segmentation approach uses a Partial Volume Estimation (PVE) with a simplified mixed model of a maximum of two tissue types <a href="matlab:web('http://dx.doi.org/10.1016/j.neuroimage.2004.05.007','-browser');">(Tohka et al. 2004)</a>.  
+            In addition, the segmentation approach uses a Partial Volume Estimation (PVE) with a simplified mixed model of a maximum of two tissue types <a href="matlab:web('https://dx.doi.org/10.1016/j.neuroimage.2004.05.007','-browser');">(Tohka et al. 2004)</a>.  
             We begin with an initial segmentation into three pure classes: gray matter (GM), white matter (WM), and cerebrospinal fluid (CSF) based on the AMAP estimation described above. 
             The initial segmentation is followed by a PVE consisting of two additional mixed classes: GM-WM and GM-CSF. 
             This results in an estimate of the amount (or fraction) of each pure tissue type that is present in each voxel (since single voxels - given their size - probably contain more than one tissue type) and thus allows for more precise segmentation.
