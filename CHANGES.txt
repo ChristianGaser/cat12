@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1437 | gaser | 2019-03-12 12:00:01
+r1438 | dahnke | 2019-03-19 16:36:00
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_long.m
+A       cat_conf_output.m
+M       cat_parallelize.m
+M       cat_run.m
+
+*) Fixed: 	Corrected dependencies of the longitudinal batch.
+------------------------------------------------------------------------
+r1437 | gaser | 2019-03-12 12:00:31 +0100 (Di, 12 Mär 2019) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +24,7 @@ M       html/cat_tools_VBM.html
 M       html/cat_tools_checkcov.html
 
 Fixed: Corrected http addresses in online help to https.
+
 ------------------------------------------------------------------------
 r1436 | gaser | 2019-03-06 17:46:15 +0100 (Mi, 06 Mär 2019) | 42 lines
 
