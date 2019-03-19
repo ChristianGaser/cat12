@@ -67,6 +67,7 @@ function varargout = cat_parallelize(job,func,datafield)
     job.process_index{i} = (1:job.nproc:(n_subjects-job.nproc+1))+(i-1);
   end
 
+  
   % check if all data are covered
   for i=1:rem(n_subjects,job.nproc)
     job.process_index{i} = [job.process_index{i} n_subjects-i+1];
@@ -96,23 +97,30 @@ function varargout = cat_parallelize(job,func,datafield)
       end
       job.(datafield) = job_data(job.process_index{i});
     end
+
+    
     job.verb        = 1; 
     job.printPID    = 1; 
     % temporary name for saving job information
     tmp_name = [tempname '.mat'];
     tmp_array{i} = tmp_name; 
-    def = cat_get_defaults; job = cat_io_checkinopt(job,def); % further job update required here to get the latest cat defaults
-    global defaults cat12; %#ok<NUSED,TLEV>
-    save(tmp_name,'job','defaults','cat12');
-    clear defaults cat12;
-
+    global defaults cat;  %#ok<NUSED,TLEV>
+    spm12def = defaults;  %#ok<NASGU>
+    cat12def = cat;       %#ok<NASGU>
+    save(tmp_name,'job','spm12def','cat12def');
+    clear spm12def cat12;
+ 
     % matlab command, cprintferror=1 for simple printing        
-    matlab_cmd = sprintf('"cat_display_matlab_PID; global cprintferror; cprintferror=1; addpath %s %s; load %s; %s(job); "',...
+    matlab_cmd = sprintf(['"cat_display_matlab_PID; ' ...
+        'global cprintferror; cprintferror=1; addpath %s %s; load %s; ' ...
+        'global defaults; defaults=spm12def; clear defaults; '...
+        'global cat; cat=cat12def; clear cat;  ' ...
+        '%s(job); "'],... 
       spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),tmp_name,func);
 
     % log-file for output
     log_name{i} = ['log_' func '_' logdate '_' sprintf('%02d',i) '.txt'];
-
+    
     % call matlab with command in the background
     if ispc
       % check for spaces in filenames that will not work with windows systems and background jobs
