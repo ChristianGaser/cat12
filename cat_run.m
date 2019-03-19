@@ -505,8 +505,17 @@ function job = update_job(job)
   end
   % simplyfied default user GUI input
   if isfield(job.output,'biaswarped') 
-    job.output.bias.warped = job.output.biaswarped; 
-    job.output = rmfield(job.output,'biaswarped');
+    if job.output.biaswarped==1
+      job.output.bias.warped = job.output.biaswarped; 
+      job.output = rmfield(job.output,'biaswarped');
+    elseif job.output.biaswarped==2 
+      % longitudinale mode (write only native that is normalized later!)
+      job.output.bias.native = 1; 
+      job.output.bias.warped = 0; 
+      job.output.bias.mod    = 0; 
+      job.output.bias.dartel = 0; 
+      job.output = rmfield(job.output,'biaswarped');
+    end
   end
   % simplyfied default user GUI input
   if isfield(job.output,'jacobianwarped') 
