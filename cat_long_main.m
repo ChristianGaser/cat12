@@ -63,7 +63,7 @@ matlabbatch{2}.spm.tools.cat.estwrite.output.GM.native = 1;
 matlabbatch{2}.spm.tools.cat.estwrite.output.GM.mod = 0;
 matlabbatch{2}.spm.tools.cat.estwrite.output.WM.native = 1;
 matlabbatch{2}.spm.tools.cat.estwrite.output.WM.mod = 0;
-matlabbatch{2}.spm.tools.cat.estwrite.output.biaswarped = 0;
+matlabbatch{2}.spm.tools.cat.estwrite.output.bias.warped = 0;
 matlabbatch{2}.spm.tools.cat.estwrite.output.warps = [1 0];
 
 % averaging deformations

@@ -262,7 +262,7 @@ function [dep,out,inputs] = vout_long2(job)
             if isfield(job.output,'labelnative') && job.output.labelnative
               out.subj(i).p0{j,1}   = fullfile(pth,mrifolder,['p0r', nam, ext, num]);
             end
-            if isfield(job.output,'biaswarped') && job.output.biaswarped
+            if isfield(job.output.bias,'warped') && job.output.bias.warped
               out.subj(i).wm{j,1}   = fullfile(pth,mrifolder,['wmr', nam, ext, num]);
             end
             if job.output.surface
