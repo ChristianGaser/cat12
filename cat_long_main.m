@@ -52,7 +52,7 @@ matlabbatch{2}.spm.tools.cat.estwrite.output.GM.dartel = dartel;
 matlabbatch{2}.spm.tools.cat.estwrite.output.WM.dartel = dartel;
 
 % longitudinal rigid registration with final masking
-matlabbatch{1}.spm.tools.cat.tools.series.bparam = 1000000;
+matlabbatch{1}.spm.tools.cat.tools.series.bparam = 10000000;
 matlabbatch{1}.spm.tools.cat.tools.series.use_brainmask = 1;
 matlabbatch{1}.spm.tools.cat.tools.series.reduce = 1;
 

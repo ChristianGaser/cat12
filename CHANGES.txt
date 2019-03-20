@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1440 | gaser | 2019-03-20 10:21:55
+r1441 | gaser | 2019-03-20 16:24:02
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_main.m
+
+Changed: Increased regularization for intra-subject bias correction in longitudinal
+registration.
+------------------------------------------------------------------------
+r1440 | gaser | 2019-03-20 10:21:59 +0100 (Mi, 20 Mär 2019) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +17,7 @@ M       cat_vol_sanlm.m
 
 Fixed: Corrected bug in cat_vol_sanlm for direct call of input is not single
 format.
+
 ------------------------------------------------------------------------
 r1439 | gaser | 2019-03-20 10:09:26 +0100 (Mi, 20 Mär 2019) | 27 lines
 
