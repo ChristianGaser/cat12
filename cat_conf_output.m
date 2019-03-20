@@ -3,7 +3,7 @@ function [output,output_spm,output1173] = cat_conf_output(expert)
 %_______________________________________________________________________
 %
 % Christian Gaser
-% $Id: tbx_cfg_cat.m 1419 2019-01-18 15:06:47Z gaser $
+% $Id$
 %
 %#ok<*AGROW>
  

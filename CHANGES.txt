@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1439 | gaser | 2019-03-20 10:08:56
+r1440 | gaser | 2019-03-20 10:21:55
+
+Changed paths:
+M       CHANGES.txt
+MM      cat_conf_output.m
+M       cat_vol_sanlm.m
+
+Fixed: Corrected bug in cat_vol_sanlm for direct call of input is not single
+format.
+------------------------------------------------------------------------
+r1439 | gaser | 2019-03-20 10:09:26 +0100 (Mi, 20 Mär 2019) | 27 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -26,6 +36,7 @@ M       tbx_cfg_cat.m
     called from cat_conf_output.m.
 (2) Changed: Default bias corrected output in CAT12 is now indicated as 
     normalized image and the original structure of the variable bias is now used.
+
 
 ------------------------------------------------------------------------
 r1438 | dahnke | 2019-03-19 16:38:26 +0100 (Di, 19 Mär 2019) | 9 lines

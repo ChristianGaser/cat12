@@ -140,6 +140,8 @@ function varargout = cat_vol_sanlm(varargin)
     end
 
 end
+
+%_______________________________________________________________________
 function varargout = cat_vol_sanlm_file(job)
     SVNid = '$Rev$';
     
@@ -222,6 +224,8 @@ function varargout = cat_vol_sanlm_file(job)
     if isfield(job,'process_index') && job.verb, fprintf('Done\n'); end
     spm_progress_bar('Clear');
 end
+
+%_______________________________________________________________________
 function src2 = cat_vol_sanlm_filter(job,V,i,src)
     Vo = V;
 
@@ -239,97 +243,99 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
 
     if nargin<4
       src = single(spm_read_vols(V(i)));
-    end
-    
-  for im=1:1+job.miter;   
-    % prevent NaN and INF
-    if job.replaceNANandINF
-      src(isnan(src)) = 0;
-      src(isinf(src) & src<0) = min(src(:));
-      src(isinf(src) & src>0) = max(src(:));
     else
-      if sum(isnan(src(:))>0), nanmsk = isnan(src); end
-      if sum(isinf(src(:))>0), infmsk = int8( isinf(src) .* sign(src) ); end
+      src = single(src);
     end
-    
-    % histogram limit
-    src = cat_stat_histth(src,job.intlim); 
-    
-    % use intensity normalisation because cat_sanlm did not filter values below ~0.01 
-    th  = max( cat_stat_nanmean( src(src(:)>cat_stat_nanmean(src(src(:)>0))) ) , ...
-               abs(cat_stat_nanmean( src(src(:)<abs(cat_stat_nanmean(src(src(:)<0)))))) );
-             
-    % low resolution filtering
-    if job.red>0 && (any(vx_vol<0.8) || job.fred )
-      [srcr,resr]   = cat_vol_resize( src ,'reduceV',vx_vol,min(2.2*(job.fred+1),min(vx_vol)*2.3),32,'median');
-      
-      jobr            = job;
-      jobr.red        = job.red - 1;     
-      jobr.miter      = 0; 
-      jobr.addnoise   = 0;                        % no additional noise on lower resolution 
-      jobr.resolutionDependency      = 1;         % resolution depending filter strength
-      jobr.resolutionDependencyRange = [1 1.6];   % [full-correction no-correction]
-      jobr.outlier    = jobr.outlier*2; 
-      jobr.NCstr      = -prod(3-resr.vx_red)*2 .* ...                 
-                        min(1,1 - (mean(resr.vx_volr) - jobr.resolutionDependencyRange(1) )) / ...
-                        diff(jobr.resolutionDependencyRange); 
-
-      if 1
-        % larger var => more information
-        Ygr   = cat_vol_grad(srcr/th,resr.vx_volr,0); 
-        grsd  = std(Ygr(Ygr(:)>0)); 
-        grrel = numel(Ygr(Ygr(:)>grsd))/numel(Ygr(Ygr(:)>0)); 
-        jobr.NCstr = jobr.NCstr * grrel*10; 
-      end
-
-      srco = src;
-      if any(resr.vx_red>1) && any( resr.vx_volr < jobr.resolutionDependencyRange(2)*(job.fred+1) ) && jobr.NCstr~=0
-        % first block
-        Vr = V(i); Vmat = spm_imatrix(Vr.mat); Vmat(7:9) = Vmat(7:9).*resr.vx_red; Vr.mat = spm_matrix(Vmat);
-        srcR  = cat_vol_resize(srcr,'dereduceV',resr,'cubic');
-        for iter=1:1+job.iter
-          srcr  = cat_vol_sanlm_filter(jobr,Vr,1,srcr);
-        end
-        srcRS = cat_vol_resize(srcr,'dereduceV',resr,'cubic');
-        src   = (src - srcR) + srcRS; 
-        clear srcRS srcr srcR;
-
-        % second block
-        if 1 % the second displaced filtering helps to deduce low frequency noise a little bit more 
-          [srcr,resr] = cat_vol_resize( smooth3(src(2:end,2:end,2:end)) ,'reduceV',...
-            vx_vol,min(2.2*(job.fred+1),min(vx_vol)*2.3),32,'median');
-          srcRr = cat_vol_resize(srcr,'dereduceV',resr,'cubic');
-          srcR  = src; srcR(2:end,2:end,2:end) = srcRr; 
-          for iter=1:1+job.iter
-            srcr  = cat_vol_sanlm_filter(jobr,Vr,1,srcr);
-          end
-          srcRr = cat_vol_resize(srcr,'dereduceV',resr,'cubic');
-          srcRS = src; srcRS(2:end,2:end,2:end) = srcRr; 
-          src   = src + (src - srcR) + srcRS; 
-          clear srcRS srcr srcR;
-          src = src / 2;
-        end
-      end
-      
-      NCstrr = 15 * abs(cat_stat_nanmean(abs(src(:)/th - srco(:)/th))); 
-    else
-      NCstrr = 0; 
-    end
-    if job.verb>1 && (nargin>3 || NCstrr>0) 
-      cat_io_cprintf('g5',sprintf('R%1d) %0.2fx%0.2fx%0.2f mm:  ',job.red,vx_vol)); stime = clock; 
-    end
-    
-    
-    % the real noise filter
-    if im==1, srco = src; end
-    src = (src / th) * 100; 
-    cat_sanlm(src,3,1,job.rician);
-    src = (src / 100) * th; 
-    if job.verb>1 && (nargin>3 || NCstrr>0) && im<1+job.miter
-      if job.verb>1 && (nargin>3 || NCstrr>0), cat_io_cprintf('g5',sprintf('  %5.0fs\n',etime(clock,stime))); end
-    end
-  end
-    
+        
+		for im=1:1+job.miter;   
+			% prevent NaN and INF
+			if job.replaceNANandINF
+				src(isnan(src)) = 0;
+				src(isinf(src) & src<0) = min(src(:));
+				src(isinf(src) & src>0) = max(src(:));
+			else
+				if sum(isnan(src(:))>0), nanmsk = isnan(src); end
+				if sum(isinf(src(:))>0), infmsk = int8( isinf(src) .* sign(src) ); end
+			end
+			
+			% histogram limit
+			src = cat_stat_histth(src,job.intlim); 
+			
+			% use intensity normalisation because cat_sanlm did not filter values below ~0.01 
+			th  = max( cat_stat_nanmean( src(src(:)>cat_stat_nanmean(src(src(:)>0))) ) , ...
+								 abs(cat_stat_nanmean( src(src(:)<abs(cat_stat_nanmean(src(src(:)<0)))))) );
+							 
+			% low resolution filtering
+			if job.red>0 && (any(vx_vol<0.8) || job.fred )
+				[srcr,resr]   = cat_vol_resize( src ,'reduceV',vx_vol,min(2.2*(job.fred+1),min(vx_vol)*2.3),32,'median');
+				
+				jobr            = job;
+				jobr.red        = job.red - 1;     
+				jobr.miter      = 0; 
+				jobr.addnoise   = 0;                        % no additional noise on lower resolution 
+				jobr.resolutionDependency      = 1;         % resolution depending filter strength
+				jobr.resolutionDependencyRange = [1 1.6];   % [full-correction no-correction]
+				jobr.outlier    = jobr.outlier*2; 
+				jobr.NCstr      = -prod(3-resr.vx_red)*2 .* ...                 
+													min(1,1 - (mean(resr.vx_volr) - jobr.resolutionDependencyRange(1) )) / ...
+													diff(jobr.resolutionDependencyRange); 
+	
+				if 1
+					% larger var => more information
+					Ygr   = cat_vol_grad(srcr/th,resr.vx_volr,0); 
+					grsd  = std(Ygr(Ygr(:)>0)); 
+					grrel = numel(Ygr(Ygr(:)>grsd))/numel(Ygr(Ygr(:)>0)); 
+					jobr.NCstr = jobr.NCstr * grrel*10; 
+				end
+	
+				srco = src;
+				if any(resr.vx_red>1) && any( resr.vx_volr < jobr.resolutionDependencyRange(2)*(job.fred+1) ) && jobr.NCstr~=0
+					% first block
+					Vr = V(i); Vmat = spm_imatrix(Vr.mat); Vmat(7:9) = Vmat(7:9).*resr.vx_red; Vr.mat = spm_matrix(Vmat);
+					srcR  = cat_vol_resize(srcr,'dereduceV',resr,'cubic');
+					for iter=1:1+job.iter
+						srcr  = cat_vol_sanlm_filter(jobr,Vr,1,srcr);
+					end
+					srcRS = cat_vol_resize(srcr,'dereduceV',resr,'cubic');
+					src   = (src - srcR) + srcRS; 
+					clear srcRS srcr srcR;
+	
+					% second block
+					if 1 % the second displaced filtering helps to deduce low frequency noise a little bit more 
+						[srcr,resr] = cat_vol_resize( smooth3(src(2:end,2:end,2:end)) ,'reduceV',...
+							vx_vol,min(2.2*(job.fred+1),min(vx_vol)*2.3),32,'median');
+						srcRr = cat_vol_resize(srcr,'dereduceV',resr,'cubic');
+						srcR  = src; srcR(2:end,2:end,2:end) = srcRr; 
+						for iter=1:1+job.iter
+							srcr  = cat_vol_sanlm_filter(jobr,Vr,1,srcr);
+						end
+						srcRr = cat_vol_resize(srcr,'dereduceV',resr,'cubic');
+						srcRS = src; srcRS(2:end,2:end,2:end) = srcRr; 
+						src   = src + (src - srcR) + srcRS; 
+						clear srcRS srcr srcR;
+						src = src / 2;
+					end
+				end
+				
+				NCstrr = 15 * abs(cat_stat_nanmean(abs(src(:)/th - srco(:)/th))); 
+			else
+				NCstrr = 0; 
+			end
+			if job.verb>1 && (nargin>3 || NCstrr>0) 
+				cat_io_cprintf('g5',sprintf('R%1d) %0.2fx%0.2fx%0.2f mm:  ',job.red,vx_vol)); stime = clock; 
+			end
+			
+			
+			% the real noise filter
+			if im==1, srco = src; end
+			src = (src / th) * 100; 
+			cat_sanlm(src,3,1,job.rician);
+			src = (src / 100) * th; 
+			if job.verb>1 && (nargin>3 || NCstrr>0) && im<1+job.miter
+				if job.verb>1 && (nargin>3 || NCstrr>0), cat_io_cprintf('g5',sprintf('  %5.0fs\n',etime(clock,stime))); end
+			end
+		end
+			
     % measures changes
     NCrate = cat_stat_nanmean(abs(src(:)/th - srco(:)/th)); 
     
