@@ -1,4 +1,4 @@
-function [output,output1173] = cat_conf_output(expert)
+function [output,output_spm,output1173] = cat_conf_output(expert)
 % writing options for data
 %_______________________________________________________________________
 %
@@ -79,32 +79,21 @@ function [output,output1173] = cat_conf_output(expert)
   ''
   };
 
-  if expert
-    native.def  = @(val)cat_get_defaults('output.bias.native', val{:});
-    warped.def  = @(val)cat_get_defaults('output.bias.warped', val{:});
-    dartel.def  = @(val)cat_get_defaults('output.bias.dartel', val{:});
-    bias        = cfg_branch;
-    bias.tag    = 'bias';
-    bias.name   = 'Bias, noise and global intensity corrected T1 image';
-    if expert
-      bias.val    = {native warped dartel};
-    else
-      bias.val    = {warped};
-    end
-    bias.help   = {
-      'This is the option to save a bias, noise, and global intensity corrected version of the original T1 image. MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity of the image (bias). These artifacts, although not usually a problem for visual inspection, can impede automated processing of the images. The bias corrected version should have more uniform intensities within the different types of tissues and can be saved in native space and/or normalised. Noise is corrected by an adaptive non-local mean (NLM) filter (Manjon 2008, Medical Image Analysis 12).'
-    ''
-    };
-  else
-    biaswarped        = warped;
-    biaswarped.tag    = 'biaswarped';
-    biaswarped.name   = 'Bias, noise and global intensity corrected T1 image';
-    biaswarped.def    = @(val)cat_get_defaults('output.bias.warped', val{:});
-    biaswarped.help   = {
-      'This is the option to save a bias, noise, and global intensity corrected version of the original T1 image. MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity of the image (bias). These artifacts, although not usually a problem for visual inspection, can impede automated processing of the images. The bias corrected version should have more uniform intensities within the different types of tissues and can be saved in native space and/or normalised. Noise is corrected by an adaptive non-local mean (NLM) filter (Manjon 2008, Medical Image Analysis 12).'
-      ''
-    }; 
-  end
+	native.def  = @(val)cat_get_defaults('output.bias.native', val{:});
+	warped.def  = @(val)cat_get_defaults('output.bias.warped', val{:});
+	dartel.def  = @(val)cat_get_defaults('output.bias.dartel', val{:});
+	bias        = cfg_branch;
+	bias.tag    = 'bias';
+	bias.name   = 'Bias, noise and global intensity corrected T1 image';
+	if expert
+		bias.val    = {native warped dartel};
+	else
+		bias.val    = {warped};
+	end
+	bias.help   = {
+		'This is the option to save a bias, noise, and global intensity corrected version of the original T1 image. MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity of the image (bias). These artifacts, although not usually a problem for visual inspection, can impede automated processing of the images. The bias corrected version should have more uniform intensities within the different types of tissues and can be saved in native space and/or normalised. Noise is corrected by an adaptive non-local mean (NLM) filter (Manjon 2008, Medical Image Analysis 12).'
+	''
+	};
 
   native.def  = @(val)cat_get_defaults('output.las.native', val{:});
   warped.def  = @(val)cat_get_defaults('output.las.warped', val{:});
@@ -282,7 +271,7 @@ function [output,output1173] = cat_conf_output(expert)
       atlas.val     = {native dartel};
   end    
   atlas.help    = {
-    'WARNING: The functions that create this maps are still under development! This is the option to save an atlas map with major structures (a1*). Odd numbers code the left, even numbers the right hemisphere. Furthermore, AAL and Broadman atlas maps were created based on maps from MRIcron that where adapted to the other VBM maps. Other maps are used from the IBASPM toolbox.  http://www.thomaskoenig.ch/Lester/ibaspm.htmAnatomy toolbox:Alexander Hammers brain atlas from the Euripides project:   www.brain-development.org  Hammers A, Allom R, Koepp MJ, Free SL, Myers R, Lemieux L, Mitchell   TN, Brooks DJ, Duncan JS. Three-dimensional maximum probability atlas   of the human brain, with particular reference to the temporal lobe.   Hum Brain Mapp 2003, 19: 224-247.'
+    'WARNING: The functions that create these maps are still under development! This is the option to save an atlas map with major structures (a1*). Odd numbers code the left, even numbers the right hemisphere. Furthermore, AAL and Broadman atlas maps were created based on maps from MRIcron that where adapted to the other VBM maps. Other maps are used from the IBASPM toolbox.  http://www.thomaskoenig.ch/Lester/ibaspm.htmAnatomy toolbox:Alexander Hammers brain atlas from the Euripides project:   www.brain-development.org  Hammers A, Allom R, Koepp MJ, Free SL, Myers R, Lemieux L, Mitchell   TN, Brooks DJ, Duncan JS. Three-dimensional maximum probability atlas   of the human brain, with particular reference to the temporal lobe.   Hum Brain Mapp 2003, 19: 224-247.'
   ''
   };
 
@@ -317,8 +306,6 @@ function [output,output1173] = cat_conf_output(expert)
   ''
   };
 
-
-
   %% ------------------------------------------------------------------------
   
   ROI         = cat_conf_ROI(expert);       % ROI options
@@ -331,7 +318,7 @@ function [output,output1173] = cat_conf_output(expert)
   elseif expert==1
     output.val  = {surface ROI grey white csf wmh sl atlas label bias las jacobianwarped warps};
   else
-    output.val  = {surface ROI grey white labelnative biaswarped jacobianwarped warps};
+    output.val  = {surface ROI grey white labelnative bias jacobianwarped warps};
   end
   output.help = {
   'There are a number of options about what kind of data you like save. The routine can be used for saving images of tissue classes, as well as bias corrected images. The native space option will save a tissue class image (p*) that is in alignment with the original image. You can also save spatially normalised versions - both with (m[0]wp*) and without (wp*) modulation. In the cat toolbox, the voxel size of the spatially normalised versions is 1.5 x 1.5 x 1.5mm as default. The saved images of the tissue classes can directly be used for doing voxel-based morphometry (both un-modulated and modulated). All you need to do is smooth them and do the stats (which means no more questions on the mailing list about how to do "optimized VBM"). Please note that many less-common options are only available in expert mode (e.g. CSF, labels, atlas maps).'
@@ -357,7 +344,7 @@ function [output,output1173] = cat_conf_output(expert)
   ''
   };
 
-  % further segmentation versions
+  % additional segmentation versions
   [ROI1173,atlases1173]         = cat_conf_ROI1173(expert);       % ROI options
   
   output1173            = output;
@@ -368,6 +355,15 @@ function [output,output1173] = cat_conf_output(expert)
   else
     output1173.val      = {surface ROI1173 grey white jacobian warps};
   end
+
+	output_spm  = output; 
+	if expert==2
+		output_spm.val  = {ROI surface grey_spm white_spm csf_spm label jacobianwarped warps}; 
+	elseif expert==1
+		output_spm.val  = {ROI surface grey_spm white_spm csf_spm label jacobianwarped warps};
+	else % also CSF output because it is requiered as input ...
+		output_spm.val  = {ROI surface grey_spm white_spm csf_spm labelnative jacobianwarped warps};
+	end
 
 return
 %------------------------------------------------------------------------
