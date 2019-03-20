@@ -1,5 +1,34 @@
 ------------------------------------------------------------------------
-r1438 | dahnke | 2019-03-19 16:36:00
+r1439 | gaser | 2019-03-20 10:08:56
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_long.m
+M       cat_conf_output.m
+M       cat_long_main.m
+M       cat_parallelize.m
+M       cat_run.m
+M       html/cat.html
+M       tbx_cfg_cat.m
+ M      templates_animals/baboon_T1.nii
+ M      templates_animals/baboon_TPM.nii
+ M      templates_animals/baboon_Template_1.nii
+ M      templates_animals/baboon_Template_2.nii
+ M      templates_animals/baboon_Template_3.nii
+ M      templates_animals/baboon_Template_4.nii
+ M      templates_animals/baboon_Template_5.nii
+ M      templates_animals/baboon_Template_6.nii
+ M      templates_animals/baboon_brainmask.nii
+ M      templates_animals/baboon_cat.nii
+
+(1) Changed: Output conf options are now removed from tbx_cfg_cat.m and will be
+    called from cat_conf_output.m.
+(2) Changed: Default bias corrected output in CAT12 is now indicated as 
+    normalized image and the original structure of the variable bias is now used.
+
+------------------------------------------------------------------------
+r1438 | dahnke | 2019-03-19 16:38:26 +0100 (Di, 19 Mär 2019) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +38,7 @@ M       cat_parallelize.m
 M       cat_run.m
 
 *) Fixed: 	Corrected dependencies of the longitudinal batch.
+
 ------------------------------------------------------------------------
 r1437 | gaser | 2019-03-12 12:00:31 +0100 (Di, 12 Mär 2019) | 13 lines
 

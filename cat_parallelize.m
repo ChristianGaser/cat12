@@ -299,7 +299,7 @@ function varargout = cat_parallelize(job,func,datafield)
             
             
             %% update status
-            %  if this tast was not printed before  ( catSIDlast(i) < catSID(i) )  and 
+            %  if this task was not printed before  ( catSIDlast(i) < catSID(i) )  and 
             %  if one subject was successfully or with error processed ( any(cattime>0) || ~isempty(caterr) )
             if ( catSIDlast(i) < catSID(i) )  
               cid = cid + 1; 
@@ -307,13 +307,13 @@ function varargout = cat_parallelize(job,func,datafield)
               
               % display
               if isstruct( jobs(i).(datafield) )
-                fprintf('  %d/%d (job %d: %d/%d): %s\n',...
+                cat_io_cprintf(err.color,sprintf('  %d/%d (job %d: %d/%d): %s\n',...
                   cid,sum( numel(job_data) ), i,catSID(i), numel(jobs(i).(datafield)), ...
-                  spm_str_manip( spm_fileparts(jobs(i).(datafield)(si).(FN{1}){1}) , 'k40') ); 
+                  spm_str_manip( spm_fileparts(jobs(i).(datafield)(si).(FN{1}){1}) , 'k40') )); 
               else
-                fprintf('  %d/%d (job %d: %d/%d): %s\n',...
+                cat_io_cprintf(err.color,sprintf('  %d/%d (job %d: %d/%d): %s\n',...
                   cid,sum( numel(job_data) ), i,catSID(i), numel(jobs(i).(datafield)), ...
-                  spm_str_manip( jobs(i).(datafield){catSID(i)} , 'k40') ); 
+                  spm_str_manip( jobs(i).(datafield){catSID(i)} , 'k40') )); 
               end
             end
           end
