@@ -37,7 +37,7 @@ function Y=cat_vol_ctype(Y,type)
              '(only [u]int[8|16], single, and double).'],type);
     end
   end
-  type = cat_io_strrep(type,{'float32','float64'},'single');
+  type = cat_io_strrep(type,{'float32','float64'},{'single','dobule'});
 
   
   if iscell(Y)

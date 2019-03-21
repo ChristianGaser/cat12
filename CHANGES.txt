@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1441 | gaser | 2019-03-20 16:24:02
+r1442 | dahnke | 2019-03-21 08:48:05
+
+Changed paths:
+M       CHANGES.txt
+M       cat_parallelize.m
+M       cat_vol_ctype.m
+
+*) Fixed:   Corrected bugs in cat_parallelize and cat_vol_ctype.
+
+------------------------------------------------------------------------
+r1441 | gaser | 2019-03-20 16:24:06 +0100 (Mi, 20 Mär 2019) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +17,7 @@ M       cat_long_main.m
 
 Changed: Increased regularization for intra-subject bias correction in longitudinal
 registration.
+
 ------------------------------------------------------------------------
 r1440 | gaser | 2019-03-20 10:21:59 +0100 (Mi, 20 Mär 2019) | 8 lines
 
