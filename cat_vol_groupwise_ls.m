@@ -65,8 +65,9 @@ if numel(prec)       ==1, prec       = repmat(prec,1,numel(Nii));       end
 % Determine noise estimates when unknown
 for i=find(~isfinite(prec))
     prec0 = spm_noise_estimate(Nii(i));
+    fprintf('Estimated noise sd for "%s" = %g\n', Nii(i).dat.fname, prec0);
     if isfinite(prec0)
-      prec(i) = 1/prec0.^2;
+      prec(i) = prec0.^(-2);
     end
 end
 
@@ -153,6 +154,12 @@ end
 
 nlevels = numel(pyramid);
 brainmask = [];
+
+% check whether reduce option is enabled for non-linear registration
+if all(isfinite(w_settings(:))) & reduce
+  reduce = 0;
+  fprintf('Reducing bounding box is not supported for non-linear registration and will be disabled.\n');
+end
 
 for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
 

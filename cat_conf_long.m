@@ -93,15 +93,6 @@ opts    = cat_conf_opts(expert);
 output  = cat_conf_output(expert); 
 %------------------------------------------------------------------------
 
-%{
-tim         = cfg_entry;
-tim.tag     = 'times';
-tim.name    = 'Times';
-tim.help    = {'Specify the times of the scans in years.'};
-tim.strtype = 'e';
-tim.num     = [1 Inf];
-%}
-
 long = cfg_exbranch;
 long.name = 'Segment longitudinal data';
 long.tag  = 'long';

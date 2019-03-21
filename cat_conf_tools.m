@@ -1361,7 +1361,9 @@ reduce.tag    = 'reduce';
 reduce.labels = {'Yes','No'};
 reduce.values = {1,0};
 reduce.val    = {1};
-reduce.help   = {'Reduce bounding box at final resolution level because usually there is a lot of air around the head after registration of multiple scans. This helps to save memory and time for later use of these registered images.'};
+reduce.help   = {'Reduce bounding box at final resolution level because usually there is a lot of air around the head after registration of multiple scans. This helps to save memory and time for later use of these registered images.'
+''
+'Please note that this option can only be used for rigid registration and will be disabled for non-linear registration.'};
 
 nonlin         = cfg_branch;
 nonlin.tag     = 'nonlin';
@@ -1382,10 +1384,20 @@ reg.values = {rigid nonlin};
 reg.val    = {rigid};
 reg.help   = {'Choose between rigid body and non-linear registration. The non-linear registration is using the methods of the Longitudinal Toolbox and is thought for data over longer periods, where the deformations can then be used to calculate local volume changes, which are then multiplied (modulated) by the segmented mean image. Rigid body registration can be used to detect more subtle effects over shorter periods of time (e.g. brain plasticity or training effects after a few weeks or even shorter times).'};
 
+noise         = cfg_entry;
+noise.tag     = 'noise';
+noise.name    = 'Noise Estimate';
+noise.help    = {'.'};
+noise.strtype = 'e';
+noise.num     = [Inf Inf];
+noise.val     = {NaN};
+noise.help    = {'Specify the standard deviation of the noise in the images.  If a scalar is entered, all images will be assumed to have the same level of noise.  For any non-finite values, the algorithm will try to estimate the noise from fitting a mixture of two Rician distributions to the intensity histogram of each of the images, and assuming that the Rician with the smaller overall intensity models the intensity distribution of air in the background. This works reasonably well for simple MRI scans, but less well for derived images (such as averages) and it fails badly for scans that are skull-stripped.  The assumption used by the registration is that the residuals, after fitting the model, are i.i.d. Gaussian. The assumed standard deviation of the residuals is derived from the estimated Rician distribution of the air.'
+};
+
 realign         = cfg_exbranch;
 realign.tag     = 'series';
 realign.name    = 'Longitudinal Registration';
-realign.val     = {data bparam use_brainmask reduce reg write_rimg write_avg};
+realign.val     = {data noise bparam use_brainmask reduce reg write_rimg write_avg};
 realign.help    = {'Longitudinal registration of series of anatomical MRI scans for a single subject.  It is based on inverse-consistent alignment among each of the subject''s scans, and incorporates a bias field correction.  Prior to running the registration, the scans should already be in very rough alignment, although because the model incorporates a rigid-body transform, this need not be extremely precise.  Note that there are a bunch of hyper-parameters to be specified.  If you are unsure what values to take, then the defaults should be a reasonable guess of what works.  Note that changes to these hyper-parameters will impact the results obtained.'
 ''
 'The alignment assumes that all scans have similar resolutions and dimensions, and were collected on the same (or very similar) MR scanner using the same pulse sequence.  If these assumption are not correct, then the approach will not work as well.  There are a number of settings (noise estimate, regularisation etc). Default settings often work well, but it can be very helpful to try some different values, as these can have a large effect on the results.'
