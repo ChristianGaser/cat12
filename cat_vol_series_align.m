@@ -12,6 +12,20 @@ function out = cat_vol_series_align(job)
 
 N = numel(job.data);
 
+if numel(job.noise)==1
+    noise = repmat(job.noise,[N,1]);
+elseif numel(job.noise) ~= N
+    error('Incompatible numbers of noise estimates and scans.');
+else
+    noise = job.noise(:);
+end
+for i=find(~isfinite(noise(:)))'
+    % Make an estimate of the scanner noise
+    noise(i,1) = spm_noise_estimate(job.data{i});
+    fprintf('Estimated noise sd for "%s" = %g\n', job.data{i}, noise(i,1));
+end
+prec   = noise.^(-2);
+
 if isfield(job.reg,'nonlin')
 	tim = job.reg.nonlin.times(:);
 	if all(isfinite(tim))
@@ -35,10 +49,6 @@ else
   w_settings = [Inf Inf Inf Inf Inf];
   s_settings = Inf;
 end
-
-% Don't use noise estimation for defining prec because it's too unstable for data 
-% from different scanners
-prec = ones(1,N);
 
 b_settings = [0 0 job.bparam];
 Nii = nifti(strvcat(job.data));
