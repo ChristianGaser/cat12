@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1444 | gaser | 2019-03-22 15:30:07
+r1445 | gaser | 2019-03-22 16:11:22
+
+Changed paths:
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       html/cat_versions.html
+
+Changed: Updated version information.
+------------------------------------------------------------------------
+r1444 | gaser | 2019-03-22 15:30:35 +0100 (Fr, 22 Mär 2019) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +21,7 @@ M       cat_vol_series_align.m
     global mean value.
 (2) Changed: Corrected regularization fir intra-subject bias correction in 
     longitudinal pipeline.
+
 ------------------------------------------------------------------------
 r1443 | gaser | 2019-03-21 16:15:33 +0100 (Do, 21 Mär 2019) | 13 lines
 
