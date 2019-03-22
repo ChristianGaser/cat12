@@ -30,19 +30,20 @@
       <p>
         </br>Preprocessing should remain unaffected until the next minor version number. A new processing of your data is not necessary if the minor version number of CAT12 remains unchanged.
       </p>
-      <h2>Changes in version CAT12.6-rc1 (1426)</h2>      
+      <h2>Changes in version CAT12.6 (1445)</h2>      
       <p>
         <ul>
           <li>Changes in preprocessing pipeline (which affects your results compared to CAT12.5)</li>
           <ul>
-            <li>Two main parts of the preprocessing of CAT12 were largely updated: (1) Incorrect estimates of the initial affine registration were found to be critical for all subsequent preprocessing steps and mainly concerned skull-stripping and tissue segmentation. This was a particular problem in brains of older people or children, where the thickness of the skull differs from that of the template. The new estimate of the initial affine registration should now be more robust. In the CAT report the registered contour of the skull and the brain is now overlayed onto the image to allow for easier quality control. (2) Skull-stripping now uses a new approach APRG (adaptive probability region-growing), which should also be more robust. APRG refines the probability maps of the SPM approach by region-growing techniques of the gcut approach with a final surface-based optimization strategy. This is currently the method with the most accurate and reliable results.</li>
-            <li>The longitudinal pipeline should now be more sensitive also for detection of effects over longer time periods with VBM (ROI and SBM approaches are not affected by the length of the period). In earlier versions, the average image was used to estimate the spatial registration parameters for all time points. Sometimes this average image was not as accurate if the images of a subject were too different (e.g. due to large ventricular changes). Now, we rather use the average of spatial registration parameters of all time points, which makes the approach more robust for longer periods of time. However, the SPM12 Longitudinal Toolbox can be a good alternative for longer periods of time if you want to analyze your data voxel by voxel.</li>
+            <li>Two main parts of the preprocessing of CAT12 were largely updated: (1) Incorrect estimates of the initial affine registration were found to be critical for all subsequent preprocessing steps and mainly concerned skull-stripping and tissue segmentation. This was a particular problem in brains of older people or children, where the thickness of the skull differs from that of the template. The new estimate of the initial affine registration should now be more robust. In the CAT report the registered contour of the skull and the brain is now overlayed onto the image to allow for easier quality control. (2) Skull-stripping now uses a new adaptive probability region-growing (APRG) approach, which should also be more robust. APRG refines the probability maps of the SPM approach by region-growing techniques of the gcut approach with a final surface-based optimization strategy. This is currently the method with the most accurate and reliable results.</li>
+            <li>The longitudinal pipeline should now be more sensitive also for detection of effects over longer time periods with VBM (ROI and SBM approaches are not affected by the length of the period). In earlier versions, the average image was used to estimate the spatial registration parameters for all time points. Sometimes this average image was not as accurate if the images of a subject were too different (e.g. due to large ventricular changes). Now, we rather use the average of spatial registration parameters (i.e. deformations) of all time points, which makes the approach more robust for longer periods of time. However, the SPM12 Longitudinal Toolbox can be a good alternative for longer periods of time if you want to analyze your data voxel by voxel. Surface-based preprocessing and also the ROI estimates in CAT12 are not affected by the potentially lower sensitivity to larger changes, as the realigned images are used independently to create cortical surfaces, thickness, or ROI estimates.</li>
           </ul>
         </ul>
         <ul>
           <li>Important new features</li>
           <ul>
             <li>CAT report now additionally plots the contour of the registered skull and brain onto the image and visualizes skull-stripping. <a class="function" href="matlab:y=cat_surf_results;">Display surface results</a> is largely updated. </li>
+            <li>Parallelization options in CAT12 now enable subsequent batch jobs and are also  supported for longitudinal preprocessing.</li>
           </ul>
         </ul> 
       </p>
