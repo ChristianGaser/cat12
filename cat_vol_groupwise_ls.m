@@ -62,17 +62,26 @@ if size(s_settings,1)==1, s_settings = repmat(s_settings,numel(Nii),1); end
 if size(b_settings,1)==1, b_settings = repmat(b_settings,numel(Nii),1); end
 if numel(prec)       ==1, prec       = repmat(prec,1,numel(Nii));       end
 
+% scale all images to a global mean of 100 to ensure consistent weighting of regularisation
+for i=1:numel(Nii)
+  g = spm_global(spm_vol(Nii(i).dat.fname));
+  Nii(i).dat.scl_slope = 100/g*Nii(i).dat.scl_slope;
+end
+
 % Determine noise estimates when unknown
-for i=find(~isfinite(prec))
+for i=1:numel(Nii)
+  if ~isfinite(prec(i))
     prec0 = spm_noise_estimate(Nii(i));
     fprintf('Estimated noise sd for "%s" = %g\n', Nii(i).dat.fname, prec0);
     if isfinite(prec0)
       prec(i) = prec0.^(-2);
     end
+  end
 end
 
-% set all values to constant if NaN values were found in noise estimation
-prec(find(~isfinite(prec))) = 1;
+% set all values to constant of 1E-3 (empirically estimated) if NaN/Inf values were 
+% found in noise estimation
+prec(find(~isfinite(prec))) = 1E-3;
 
 % Basis functions for algebra of rigid-body transform
 %-----------------------------------------------------------------------

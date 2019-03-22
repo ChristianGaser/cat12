@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1443 | gaser | 2019-03-21 16:15:17
+r1444 | gaser | 2019-03-22 15:30:07
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_main.m
+M       cat_vol_groupwise_ls.m
+M       cat_vol_series_align.m
+
+(1) Fixed: Regularization for non-linear registration in longitudinal registration
+    was dependent on signal. Now the images are internally scaled to a constant
+    global mean value.
+(2) Changed: Corrected regularization fir intra-subject bias correction in 
+    longitudinal pipeline.
+------------------------------------------------------------------------
+r1443 | gaser | 2019-03-21 16:15:33 +0100 (Do, 21 Mär 2019) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +27,7 @@ M       tbx_cfg_cat.m
 
 Changed: Increased regularization for intra-subject bias correction in longitudinal
 registration.
+
 ------------------------------------------------------------------------
 r1442 | dahnke | 2019-03-21 08:48:36 +0100 (Do, 21 Mär 2019) | 8 lines
 

@@ -19,11 +19,7 @@ elseif numel(job.noise) ~= N
 else
     noise = job.noise(:);
 end
-for i=find(~isfinite(noise(:)))'
-    % Make an estimate of the scanner noise
-    noise(i,1) = spm_noise_estimate(job.data{i});
-    fprintf('Estimated noise sd for "%s" = %g\n', job.data{i}, noise(i,1));
-end
+
 prec   = noise.^(-2);
 
 if isfield(job.reg,'nonlin')
