@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1445 | gaser | 2019-03-22 16:11:22
+r1446 | dahnke | 2019-03-26 17:41:04
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+
+*) Fixed:   Corrected handling of cat_main_registration(2).
+------------------------------------------------------------------------
+r1445 | gaser | 2019-03-22 16:11:31 +0100 (Fr, 22 Mär 2019) | 7 lines
 
 Changed paths:
 M       CAT12-Manual.pdf
@@ -7,6 +15,7 @@ M       CHANGES.txt
 M       html/cat_versions.html
 
 Changed: Updated version information.
+
 ------------------------------------------------------------------------
 r1444 | gaser | 2019-03-22 15:30:35 +0100 (Fr, 22 Mär 2019) | 12 lines
 
