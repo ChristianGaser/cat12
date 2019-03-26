@@ -210,10 +210,18 @@ if ~isfield(res,'spmpp')
       job2.extopts.reg.affreg  = 0;      % new affine registration
       res2.do_dartel           = 1;      % use dartel
     end
-    if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
-      [trans,res.ppe.reginitp] = cat_main_registration2(job2,res2,Ycls(1:2),Yy,tpm.M,res.Ylesion); 
+    if job.extopts.new_release
+      if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
+        [trans,res.ppe.reginitp] = cat_main_registration2(job2,res2,Ycls(1:2),Yy,tpm.M,res.Ylesion); 
+      else
+        [trans,res.ppe.reginitp] = cat_main_registration2(job2,res2,Ycls(1:2),Yy,tpm.M); 
+      end
     else
-      [trans,res.ppe.reginitp] = cat_main_registration2(job2,res2,Ycls(1:2),Yy,tpm.M); 
+      if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
+        [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M,res.Ylesion); 
+      else
+        [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M); 
+      end
     end
     Yy2  = trans.warped.y;
     if ~debug, clear trans job2 res2; end
@@ -595,7 +603,7 @@ end
   end
   
   % call Dartel/Shooting registration 
-  if 1 %job.extopts.new_release % ... there is an error
+  if job.extopts.new_release % ... there is an error
     [trans,res.ppe.reg] = cat_main_registration2(job,res,Yclsd,Yy,tpm.M,Ylesions);
   else
     [trans,res.ppe.reg] = cat_main_registration(job,res,Yclsd,Yy,tpm.M,Ylesions);
