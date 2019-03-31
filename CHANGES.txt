@@ -1,11 +1,27 @@
 ------------------------------------------------------------------------
-r1446 | dahnke | 2019-03-26 17:41:04
+r1447 | gaser | 2019-03-31 23:03:09
+
+Changed paths:
+A       CAT12-Manual-GoogleDocs.webloc
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_stat_analyze_ROIs.m
+M       html/cat.html
+M       spm_cat12.m
+
+(1) Fixed: Corrected error in cat_stat_analyze_ROIs.m if no xml-files were found.
+(2) Added: GoogleDoc fpr CAT12 manual.
+(3) Changed: Updated version information.
+------------------------------------------------------------------------
+r1446 | dahnke | 2019-03-26 17:43:53 +0100 (Di, 26 Mär 2019) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_main.m
 
 *) Fixed:   Corrected handling of cat_main_registration(2).
+
 ------------------------------------------------------------------------
 r1445 | gaser | 2019-03-22 16:11:31 +0100 (Fr, 22 Mär 2019) | 7 lines
 
