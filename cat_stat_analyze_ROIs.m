@@ -79,11 +79,11 @@ end
 
 % get prepending pattern 
 if ~mesh_detected
-	prepend = fname{1};
-	% check whether prepending pattern is not based on GM/WM
-	if isempty(strfind(prepend,'mwp')) & isempty(strfind(prepend,'m0wp'))
-		fprintf('\nWARNING: ROI analysis is only supported for VBM of GM/WM/CSF. No ROI values for DBM will be estimated.\n',prepend);
-	end
+  prepend = fname{1};
+  % check whether prepending pattern is not based on GM/WM
+  if isempty(strfind(prepend,'mwp')) & isempty(strfind(prepend,'m0wp'))
+    fprintf('\nWARNING: ROI analysis is only supported for VBM of GM/WM/CSF. No ROI values for DBM will be estimated.\n',prepend);
+  end
 end
 
 roi_files_found = 0;
@@ -130,25 +130,28 @@ for i=1:numel(P)
       roi_names{i} = files{ni};
       roi_files_found = roi_files_found + 1;
   end
-  disp(roi_names{i})  
+  
+  if exist('roi_names','var')
+    disp(roi_names{i}) 
+  end 
   
 end
 
-% select files interactively of no xml files were found
+% select files interactively if no xml files were found
 if roi_files_found ~= n
   roi_names0 = cellstr(spm_select(n ,'xml','Select xml files in the same order of your SPM design.',{},'',pattern));
   roi_names = roi_names0;
   
   roi_files_found = 0;
-	for i=1:numel(P)
-		[pth,nam,ext] = fileparts(P{i});
-				
-		sname = [pattern '*' pat.m{i} '*.xml'];
-		files = cat_vol_findfiles(fileparts(roi_names0{i}),sname);
-		
+  for i=1:numel(P)
+    [pth,nam,ext] = fileparts(P{i});
+        
+    sname = [pattern '*' pat.m{i} '*.xml'];
+    files = cat_vol_findfiles(fileparts(roi_names0{i}),sname);
+    
     switch numel(files)
     case 0
-      fprintf('Order of filenames is uncorrect. Please take casre of the same order of file selection as in your SPM design.\n');
+      fprintf('Order of filenames is uncorrect. Please take care of the same order of file selection as in your SPM design.\n');
     case 1
       roi_names{i} = files{1};
       roi_files_found = roi_files_found + 1;
@@ -171,12 +174,12 @@ if roi_files_found ~= n
     end
     
     disp(roi_names{i})  
-	end
-	
-	if roi_files_found ~= n
-		fprintf('%d label files found with pattern %s. Please only retain data from the current analysis.\n',roi_files_found,sname);
-		return
-	end
+  end
+  
+  if roi_files_found ~= n
+    fprintf('%d label files found with pattern %s. Please only retain data from the current analysis.\n',roi_files_found,sname);
+    return
+  end
 
 end
 
