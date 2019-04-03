@@ -28,7 +28,7 @@ OV.name = char(fullfile(spm('dir'),'tpm','TPM.nii,1'),...
 
 % Number of fields in range should be the same as number of files (see above)
 % or give one field, which is valid for all.
-% Be carefule: intensities below the lower range are not shown!
+% Be careful: intensities below the lower range are not shown!
 OV.range   =[[0.5 1]; [0.5 1]];
 
 % OV.func can be used to set the image to defined values (e.g. NaN) for the given range
@@ -47,14 +47,18 @@ OV.labels.format = '%3.1f';
 OV.xy = [3 5];
 
 % save result as png/jpg/pdf
-% comment this out for interactive selection or use 'none' for not 
+% comment this out for interactive selection or use '' for not 
 % saving any file
 OV.save = 'result.png';
 
-% Comment this out if you don't wish slice labels
+% Remove comment if you don't wish slice labels
 %OV.labels = [];
 
-% Comment this out if you don't wish colorbar
+% Remove comment if you don't wish colorbar
 %OV.cbar = [];
+
+% define atlas for labeling
+% comment this out for interactive selection
+OV.atlas = 'dartel_neuromorphometrics';
 
 cat_vol_slice_overlay(OV)
