@@ -111,13 +111,23 @@ function varargout = cat_parallelize(job,func,datafield)
     clear spm12def cat12;
  
     % matlab command, cprintferror=1 for simple printing        
-    matlab_cmd = sprintf(['" ' ...
+    if nargout 
+      %%
+      matlab_cmd = sprintf(['" ' ...
+        'global cprintferror; cprintferror=1; addpath %s %s %s; load %s; ' ...
+        'global defaults; defaults=spm12def; clear defaults; '...
+        'global cat; cat=cat12def; clear cat; cat_display_matlab_PID; ' ...
+        'output = %s(job); save(''%s'',''output''); "'],... 
+        spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),fileparts(which(func)),tmp_name,func,tmp_name);
+    else
+      matlab_cmd = sprintf(['" ' ...
         'global cprintferror; cprintferror=1; addpath %s %s %s; load %s; ' ...
         'global defaults; defaults=spm12def; clear defaults; '...
         'global cat; cat=cat12def; clear cat; cat_display_matlab_PID; ' ...
         '%s(job); "'],... 
-      spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),fileparts(which(func)),tmp_name,func);
-
+        spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),fileparts(which(func)),tmp_name,func);
+    end
+    
     % log-file for output
     log_name{i} = ['log_' func '_' logdate '_' sprintf('%02d',i) '.txt'];
     
@@ -131,8 +141,8 @@ function varargout = cat_parallelize(job,func,datafield)
              '         to ''0''. In order to split your job into different processes,\n' ...
              '         please do not use any spaces in folder names!\n\n']);
          job.nproc = 0;
-         job = update_job(job);
-         varargout{1} = run_job(job);
+         %job = update_job(job);
+         %varargout{1} = run_job(job);
          return; 
       end
       % prepare system specific path for matlab
@@ -280,7 +290,20 @@ function varargout = cat_parallelize(job,func,datafield)
               findSID = find(cellfun('isempty',SID)==0,1,'last'); 
               if ~isempty(findSID), catSID(si) = findSID; end
               
-            else
+            elseif strcmp( datafield , 'data_surf' )
+              % surfaces ... here the filenames of the processed data
+              % change strongly due to side coding ...
+              for si=1:numel( jobs(i).(datafield) )
+                [pp,ff,ee] = spm_fileparts(jobs(i).(datafield){si}); 
+                
+                SID{si} = ...
+                  find(cellfun('isempty', strfind( txt , pp ))==0,1,'first') & ... 
+                  find(cellfun('isempty', strfind( txt , ff ))==0,1,'first') & ...
+                  find(cellfun('isempty', strfind( txt , ee ))==0,1,'first'); 
+              end
+              catSID(i) = find(cellfun('isempty',SID)==0,1,'last');
+
+            else % volumes
               for si=1:numel( jobs(i).(datafield) )
                 SID{si} = find(cellfun('isempty', strfind( txt , jobs(i).(datafield){si} ))==0,1,'first');
               end
@@ -312,9 +335,11 @@ function varargout = cat_parallelize(job,func,datafield)
                   cid,sum( numel(job_data) ), i,catSID(i), numel(jobs(i).(datafield)), ...
                   spm_str_manip( spm_fileparts(jobs(i).(datafield)(si).(FN{1}){1}) , 'k40') )); 
               else
-                cat_io_cprintf(err.color,sprintf('  %d/%d (job %d: %d/%d): %s\n',...
-                  cid,sum( numel(job_data) ), i,catSID(i), numel(jobs(i).(datafield)), ...
-                  spm_str_manip( jobs(i).(datafield){catSID(i)} , 'k40') )); 
+                try
+                  cat_io_cprintf(err.color,sprintf('  %d/%d (job %d: %d/%d): %s\n',...
+                    cid,sum( numel(job_data) ), i,catSID(i), numel(jobs(i).(datafield)), ...
+                    spm_str_manip( jobs(i).(datafield){catSID(i)} , 'k40') )); 
+                end
               end
             end
           end
@@ -323,6 +348,59 @@ function varargout = cat_parallelize(job,func,datafield)
           
         end
       end
+    end
+    
+    if nargout>0
+      %%
+      load(tmp_array{1});
+      varargout{1} = output; 
+      %% 
+      for oi=2:numel(tmp_array) 
+        load(tmp_array{oi});
+        FN = fieldnames(output);
+        for fni=1:numel(FN)
+          if ~isfield( varargout{1} , FN{fni} ) % no field > just add it
+            varargout{1}.(FN{fni}) = output.(FN{fni}); 
+          else % existing field > merge it
+            if ~isstruct( output.(FN{fni}) )
+              if size(varargout{1}.(FN{fni}),1) > size(varargout{1}.(FN{fni}),2)
+                varargout{1}.(FN{fni}) = [varargout{1}.(FN{fni});output.(FN{fni})]; 
+              else
+                varargout{1}.(FN{fni}) = [varargout{1}.(FN{fni}),output.(FN{fni})]; 
+              end
+              %% cleanup
+              if iscell(varargout{1}.(FN{fni}))
+                for ffni=numel( varargout{1}.(FN{fni}) ):-1:1
+                  if isempty(  varargout{1}.(FN{fni}){ffni} )
+                    varargout{1}.(FN{fni})(ffni) = []; 
+                  end
+                end
+              end
+            else
+              FN2 = fieldnames(output.(FN{fni}));
+              if ~isstruct( output.(FN{fni}).(FN2{fni}) )
+                if size(varargout{1}.(FN{fni}).(FN2{fni2}),1) > size(varargout{1}.(FN{fni}).(FN2{fni2}),2)
+                  varargout{1}.(FN{fni}).(FN2{fni2}) = [varargout{1}.(FN{fni}).(FN2{fni2});output.(FN{fni}.(FN2{fni2}))]; 
+                else
+                  varargout{1}.(FN{fni}).(FN2{fni2}) = [varargout{1}.(FN{fni}).(FN2{fni2}),output.(FN{fni}.(FN2{fni2}))]; 
+                end
+                %% cleanup
+                if iscell(varargout{1}.(FN{fni}).(FN2{fni2}))
+                  for ffni=numel( varargout{1}.(FN{fni}).(FN2{fni2}) ):-1:1
+                    if isempty(  varargout{1}.(FN{fni}).(FN2{fni2}){ffni} )
+                      varargout{1}.(FN{fni}).(FN2{fni2})(ffni) = []; 
+                    end
+                  end
+                end
+              else
+                error('Only 2 level in output structure supported.')
+              end
+            end
+          end
+        end
+      end
+      %% cleanup
+      
     end
     
     % no final report yet ...

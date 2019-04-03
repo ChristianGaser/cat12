@@ -16,11 +16,11 @@ function cat_warnings = cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans,cat_war
   % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
  
-  VT  = res.image(1);  % denoised/interpolated n*.nii
+  %VT  = res.image(1);  % denoised/interpolated n*.nii % RD 20190328
   VT0 = res.image0(1); % original 
   [pth,nam] = spm_fileparts(VT0.fname);  
 
-  d = VT.dim(1:3);
+  %d = VT.dim(1:3); % RD 20190328
 
   tc = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)]; 
 
@@ -51,8 +51,7 @@ function cat_warnings = cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans,cat_war
 
   % Yp0
   cat_io_writenii(VT0,Yp0,mrifolder,'p0','label map','uint8',[0,5/255],job.output.label,trans);
-  clear Yp0; 
-
+  
   % partitioning
   cat_io_writenii(VT0,Yl1,mrifolder,'a0','brain atlas map for major structures and sides',...
     'uint8',[0,1],job.output.atlas,trans);
@@ -115,7 +114,8 @@ function cat_warnings = cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans,cat_war
       Yclsi = cell(1,3);
       for clsi=1:3
         clsid = [2 3 1];
-        Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*5/255; 
+        %Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*5/255;  % RD 20190328
+        Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
         Yclsi{clsi} = Yp0toC(max(1/3,min(1,Ymi)) * 3 .* (Yp0>0),clsid(clsi));
         switch clsi
           case 1
@@ -161,6 +161,8 @@ function cat_warnings = cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans,cat_war
       end 
       clear Ywmhp;
     end
+  else
+    clear Yp0; 
   end
   % ----------------------------------------------------------------------
 
