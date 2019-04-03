@@ -211,6 +211,12 @@ str_con = spm_str_manip(str_con,'v');
 Y = ROIvalues;
 X = SPM.xX.X;
 
+%-Apply global scaling
+%--------------------------------------------------------------------------
+for i = 1:size(Y,1)
+	Y(i,:) = Y(i,:)*SPM.xGX.gSF(i);
+end
+
 % compare correlation coefficients after Fisher z-transformation
 if compare_two_samples
   % get two samples according to contrast -1 1
@@ -397,7 +403,7 @@ for i = sort(unique(hemi_code))'
        fprintf('%9s\t%9s\t%9s\t%s\n','P-value',[statstr '-value'],'Ze-value',atlas);
       for j=1:length(ind)
         data{c}(data0 == ID_sel(indP(ind(j)))) = -log10(Pcorr_sel{c}(indP(ind(j))));
-        fprintf('%9g\t%9g\t%9g\t%s\n',Pcorr_sel{c}(indP(ind(j))),statval_sel(indP(ind(j))),Ze_sel(indP(ind(j))),N_sel{indP(ind(j))});
+        fprintf('%9g\t%9g\t%9g\t%s\n',Pcorr_sel{c}(indP(ind(j))),statval_sel(indP(ind(j))),Ze_sel(indP(ind(j))),N_sel{indP(ind(j))}(:,2:end));
       end
     end
     
@@ -515,8 +521,10 @@ else % surface results display
   
   % delete single hemi files because we already have merged hemispheres
   for c = 1:n_corr
-    spm_unlink(['lh.logP' corr_short{show_results} output_name '.gii']); 
-    spm_unlink(['rh.logP' corr_short{show_results} output_name '.gii']);
+    if show_results
+      spm_unlink(['lh.logP' corr_short{show_results} output_name '.gii']); 
+      spm_unlink(['rh.logP' corr_short{show_results} output_name '.gii']);
+    end
   end
 end
 
