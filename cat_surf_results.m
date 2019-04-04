@@ -45,6 +45,7 @@ H.border_mode  = 0;
 H.is32k        = 0;
 H.str32k       = '';
 H.SPM_found    = 1;
+H.surf_sel     = 1;
 
 %-Action
 %--------------------------------------------------------------------------
@@ -77,8 +78,8 @@ switch lower(action)
         
         % figure 1 with result window
         H.pos{1} = struct( ...
-            'fig', [10 10 2.6 * ws(3) ws(3)], ... % figure
-            'cbar', [0.400 -0.180 0.200 0.300; 0.440 0.025 0.120 0.120]);% colorbar
+            'fig', [10 10 round(2.6*ws(3)) ws(3)], ... % figure
+            'cbar', [0.400 -0.150 0.200 0.300; 0.440 0.025 0.120 0.120]);% colorbar
         
         % figure 2 with GUI
         H.pos{2} = struct(...
@@ -745,9 +746,8 @@ if H.no_neg
 end
 
 for ind = 1:5
-    % correct lower clim to "0" if no values are exceeding threshold
     if min_d > -thresh
-        setappdata(H.patch(ind), 'clim', [true 0 clim(3)]);
+        setappdata(H.patch(ind), 'clim', [true thresh clim(3)]);
     elseif thresh == 0
         setappdata(H.patch(ind), 'clim', [true -clim(3) clim(3)]);
     end
@@ -985,7 +985,7 @@ end
 
 % correct lower clim to "0" if no values are exceeding threshold
 if mn > -H.thresh_value
-    H.clim = [true 0 H.S{1}.max];
+    H.clim = [true H.thresh_value H.S{1}.max]
 else
     H.clim = [true H.S{1}.min H.S{1}.max];
 end
@@ -1047,6 +1047,8 @@ text(0.5, 0.5, spm_str_manip(H.S{1}.name, 'k60d'), 'Parent', H.nam, 'Interpreter
 function H = select_surf(surf)
 %-----------------------------------------------------------------------
 global H
+
+H.surf_sel = surf;
 
 for ind = 1:2
     switch surf
@@ -1263,7 +1265,7 @@ if H.n_surf == 1
         H = rmfield(H, 'cbar');
     end
     
-    H.cbar = axes('Parent', H.panel(1), 'Position', H.pos{1}.cbar(1, :), 'Color', [0.5 0.5 0.5], 'Visible', 'off');
+    H.cbar = axes('Parent', H.panel(1), 'Position', H.pos{1}.cbar(1, :), 'Color', H.bkg_col, 'Visible', 'off');
     H.colourbar = colorbar('peer', H.cbar, 'Northoutside');
     
     if H.logP, title(H.cbar, 'p-value', 'Color', 1 - H.bkg_col); end
@@ -1296,7 +1298,7 @@ if H.n_surf == 1
         
         % save original XTick values
         if isempty(H.XTick), H.XTick = XTick; end
-        
+
         % if threshold is between 1.3..1.4 (p<0.05) change XTick accordingly and correct by 0.3
         if ~isempty(clip)
             if clip(3) >= 1.3 & clip(3) <= 1.4
@@ -1307,7 +1309,12 @@ if H.n_surf == 1
                     XTick = [0 1.3:XTick_step:(round(clim(3)) + 0.3)];
                 end
             else
-                if ~isempty(H.XTick), XTick = H.XTick; end
+                mn = floor(min(XTick));
+                mx = ceil(max(XTick));
+    
+                % only allow integer values
+                XTick = floor(mn:mx);
+%                if ~isempty(H.XTick), XTick = H.XTick; end
             end
         else
             % rescue original XThick values if clipping is changed
@@ -1325,15 +1332,15 @@ if H.n_surf == 1
                 XTickLabel = char(XTickLabel, '');
             end
         end
+
         set(H.colourbar, 'XTickLabel', XTickLabel(2:end, :), 'XTick', XTick);
     end % end H.logP
     
-    set(H.colourbar, 'XColor', 1 - H.bkg_col, 'YColor', 1 - H.bkg_col);
-    
+    set(H.colourbar, 'XColor', 1-H.bkg_col, 'YColor', 1-H.bkg_col, 'TickLength',0);
 else
     
     if ~isfield(H, 'cbar') || ~ishandle(H.cbar)
-        H.cbar = axes('Parent', H.panel(1), 'Position', H.pos{1}.cbar(2, :), 'Color', [0.5 0.5 0.5], 'Enable', 'off');
+        H.cbar = axes('Parent', H.panel(1), 'Position', H.pos{1}.cbar(2, :), 'Color', H.bkg_col, 'Enable', 'off');
     end
     
     % RGB colorbar
@@ -1734,7 +1741,14 @@ set(H.figure, 'InvertHardcopy', 'off', 'PaperPositionMode', 'auto');
 
 pos = getpixelposition(H.panel(1));
 hh = getframe(H.figure,pos);
+
 img = frame2im(hh);
+if H.surf_sel ~= 4
+    % crop image if it's not a flatmap
+    sz = size(img);
+    img = img(round(0.1*sz(1):sz(1)),round(0.05*sz(2):0.95*sz(2)),:);
+end
+
 col = colormap;
 imwrite(img,col,filename);
 
@@ -1814,7 +1828,7 @@ min_d = min(min(min(getappdata(H.patch(1), 'data'))), min(min(getappdata(H.patch
 
 if H.no_neg
     H.clip = [true -Inf thresh];
-    H.clim = [true 0 clim(3)];
+    H.clim = [true thresh clim(3)];
     set(H.slider_min, 'Value', 0);
 else
     H.clip = [true -thresh thresh];
