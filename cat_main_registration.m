@@ -791,7 +791,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
 
             % default Shooting error detection
             if any(~isfinite(dt(:)) | dt(:)>100 | dt(:)<1/100)
-              cat_io_cprintf('err',sprintf('Problem with Shooting (dets: %g .. %g)\n', min(dt(:)), max(dt(:)))); it=inf;
+              cat_io_cprintf('err',sprintf('Problem with Shooting (dets: %g .. %g)\n', min(dt(:)), max(dt(:)))); %it=nits;
             end
 
             % avoid unneccessary iteration

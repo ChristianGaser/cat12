@@ -290,9 +290,11 @@ if (SO.cbar == 2) & logP
     
     YTickLabel = [];
     for i = 1:length(YTick)
-        YTickLabel = char(YTickLabel, remove_zeros(sprintf('%.g', 10^(-YTick(i)))));
+        YTickLabel = char(YTickLabel, (sprintf(['%9.' num2str(YTick(i)) 'f '], 10^(-YTick(i)))));
     end
-    set(H, 'YTickLabel', YTickLabel)
+    
+    % skip first empty entry
+    set(H, 'YTickLabel', YTickLabel(2:end,:))
     
     set(get(gca, 'YLabel'), 'string', 'p-value', 'position', pos, 'FontSize', FS(14))
     
@@ -406,7 +408,6 @@ if ~isempty(xA)
 		end
 	end
 	fprintf('\n');
-
 end
 
 % save image
@@ -424,13 +425,24 @@ end
 if ~strcmp(image_ext, 'none')
     
     [pt, nm] = spm_fileparts(img);
+    if isempty(pt)
+        pt2 = '';
+    else
+        pt2 = spm_fileparts(pt);
+        if isempty(pt2)
+            pt2 = [pt '_']; 
+        else
+            pt2 = [pt2 '_']; 
+        end
+    end
+    
     
     % use shorter ext for jpeg
     if ~isfield(OV, 'save')
         if strcmp(image_ext, 'jpeg')
-            imaname = spm_input('Filename', '+1', 's', [nm '_' lower(OV.transform) '.jpg']);
+            imaname = spm_input('Filename', '+1', 's', [pt2 nm '_' lower(OV.transform) '.jpg']);
         else
-            imaname = spm_input('Filename', '+1', 's', [nm '_' lower(OV.transform) '.' image_ext]);
+            imaname = spm_input('Filename', '+1', 's', [pt2 nm '_' lower(OV.transform) '.' image_ext]);
         end
     else
         imaname = OV.save;
@@ -441,7 +453,13 @@ if ~strcmp(image_ext, 'none')
     set(H, 'Units', 'normalized')
     
     saveas(SO.figure, imaname, image_ext);
+    
+    % read image, remove white border and save it again
+    tmp = imread(imaname);
+    sz = size(tmp);
+    imwrite(tmp(4:sz(1),1:sz(2)-1,:),imaname);
     fprintf('Image %s saved.\n', imaname);
+    
     if n_slice > 0
         imaname = [lower(OV.transform) '_' replace_strings(OV.slices_str(ind, :)) '.' image_ext];
     else
@@ -477,19 +495,6 @@ end
 % remove duplicates
 xy = unique(xy, 'rows');
 return
-
-% --------------------------------------------------------------------------
-function s = remove_zeros(s)
-
-pos = length(s);
-while pos > 1
-    if strcmp(s(pos), '0')
-        s(pos) = '';
-        pos = pos - 1;
-    else break
-    end
-end
-
 
 % --------------------------------------------------------------------------
 function s = replace_strings(s)
