@@ -363,7 +363,7 @@ switch lower(action)
         end
        
         
-        if 0
+        if ~H.issubfigure
           H.rotate3d = rotate3d(H.axis);
           set(H.rotate3d,'Enable','on');
           set(H.rotate3d,'ActionPostCallback',{@myPostCallback, H});
@@ -993,10 +993,10 @@ switch lower(action)
         
              
           
-        set(H.rotate3d,'enable','off');
+        try set(H.rotate3d,'enable','off'); end
         try set(H.rotate3d,'uicontextmenu',cmenu); end
         try set(H.patch(1),'uicontextmenu',cmenu); end
-        set(H.rotate3d,'enable','on');
+        try set(H.rotate3d,'enable','on'); end
         
         dcm_obj = datacursormode(H.figure);
         set(dcm_obj, 'Enable','off', 'SnapToDataVertex','on', ...

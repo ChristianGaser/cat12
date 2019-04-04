@@ -283,8 +283,8 @@ function Psgi = cat_surf_SGI_hullmapping(sinfo,opt)
   [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
   Phullsphere  = Phull;
   
-  % spherical registration to central surface 
-  cmd = sprintf('CAT_WarpSurf -norot -type 0 -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',...
+  % spherical registration to central surface ... -type 0
+  cmd = sprintf('CAT_WarpSurf -norot -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',...
     Phull,Phullsphere,sinfo.Pmesh,sinfo.Psphere,Phullspherereg);
   [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
 

@@ -365,7 +365,7 @@ function streams = stream_correction(D,streams,P,ndim,np,th,sop,bf)
     %istreams = cellfun(@(s) find(isocolors(D,s(:,[2,1,3]))<=th,1,'last'),streams,'UniformOutput',false);
     istreams = cellfun(@(n,s,w) 1 + n - sum(sum(D(sub2ind(sR,s(:,1,:),s(:,2,:),s(:,3,:))) .* w,3)>=th,1),pstreams,n8b,w8b,'UniformOutput',false);
     % reset streams 
-    streams = cellfun(@(s,f,e) s(f:e,:),streams,istreams,nstreams,'UniformOutput',false);
+    streams = cellfun(@(s,f,e) s(f:e,:),streams,istreams,nstreams,'UniformOutput',false); clear istreams nstreams;
 %   catch %#ok<CTCH>
 %     fprintf(1,'E');
 %   end

@@ -42,7 +42,7 @@ function [S,SH] = cat_surf_GI3D(S,D,R,opt)
   R = single(R);
   
   % for correct smoother border (else WM blows to strong
-  D = D - 0.5*(single(D==1) & imdilate(D==0,ones(3,3)));
+  D = D - 0.5*(single(D==1) & cat_vol_morph(D==0,'d'));
   
   % streamline calculation 
   % _______________________________________________________________________
@@ -123,7 +123,7 @@ function S = verticemapping(S,fname)
 %   end
 %S.(va) = arrayfun(@(p,i) S.(va)(p) + S.(fa)(i),S.faces,(1:size(S.faces,1))'*ones(1,ndim));
 
-  data = data / size(S.vertices,2); % Schwerpunkt... besser Voronoi, aber wie bei ner Oberfl‰che im Raum???
+  data = data / size(S.vertices,2); % Schwerpunkt... besser Voronoi, aber wie bei ner Oberfl√§che im Raum???
   S = rmfield(S,fname);
   S.(fname) = data;
 end
