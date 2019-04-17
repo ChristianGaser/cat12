@@ -109,6 +109,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     'texture','',...    % textureclass [central|sphere|thickness|...]
     'label','',...      % labelmap
     'resampled','',...  % dataspace
+    'resampled_32k','',...
     'template','',...   % individual surface or tempalte
     'roi','',...        % roi data
     'nvertices',[],...  % number vertices
@@ -253,7 +254,8 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
    
     
     % resampled
-    sinfo(i).resampled = ~isempty(strfind(sinfo(i).posside,'.resampled'));
+    sinfo(i).resampled     = ~isempty(strfind(sinfo(i).posside,'.resampled'));
+    sinfo(i).resampled_32k = ~isempty(strfind(sinfo(i).posside,'.resampled_32k'));
     % template
     sinfo(i).template  = ~isempty(strfind(lower(sinfo(i).ff),'.template')); 
     if sinfo(i).template,  sinfo(i).resampled = 1; end
@@ -265,10 +267,11 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     % and also the dataname / texture can include points ...
     resi = [strfind(sinfo(i).posside,'template.'),... 
             strfind(sinfo(i).posside,'resampled.'),...
+            strfind(sinfo(i).posside,'resampled_32k.'),...
             strfind(sinfo(i).posside,'sphere.reg.')]; 
     if ~isempty(resi)
       sinfo(i).name = cat_io_strrep(sinfo(i).posside(max(resi):end),...
-        {'template.','resampled.','sphere.reg'},''); %sinfo(i).posside,
+        {'template.','resampled.','resampled_32k.','sphere.reg'},''); %sinfo(i).posside,
       if ~isempty(sinfo(i).name) && sinfo(i).name(1)=='.', sinfo(i).name(1)=[]; end
       sinfo(i).texture = sinfo(i).posside(1:min(resi)-2);
     else
@@ -295,7 +298,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
       fprintf('%4s\n',sinfo(i).ee);
     end
     % dataname
-    sinfo(i).dataname  = cat_io_strrep(sinfo(i).posside,{sinfo(i).name,'template.','resampled.'},''); 
+    sinfo(i).dataname  = cat_io_strrep(sinfo(i).posside,{sinfo(i).name,'template.','resampled.','resampled_32k.'},''); 
     if ~isempty(sinfo(i).dataname) && sinfo(i).dataname(end)=='.', sinfo(i).dataname(end)=[]; end
     
     % ROI
@@ -325,11 +328,11 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
         case {'defects'} % surf
           sinfo(i).Pmesh = sinfo(i).fname;
           sinfo(i).Pdata = sinfo(i).fname;
-        case {'central','inner','outer','sphere','hull'} % only mesh
+        case {'central','inner','outer','sphere','hull','core'} % only mesh
           sinfo(i).Pmesh = sinfo(i).fname;
           sinfo(i).Pdata = '';
         case {'thickness','gyrification','frac','logsulc','GWMdepth','WMdepth','CSFdepth',...
-             'depthWM','depthGWM','depthCSF','depthWMg',...
+             'depthWM','depthGWM','depthCSF','depthWMg','inwardGI','outwardGI','generalizedGI','area',...
              'gyruswidth','gyruswidthWM','sulcuswidth'} % only thickness
           sinfo(i).Pdata = sinfo(i).fname;
       end
@@ -410,6 +413,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     
     [ppm,ffm,eem]        = fileparts(sinfo(i).Pmesh);
     sinfo(i).Phull       = fullfile(ppm,strrep(strrep([ffm eem],'.central.','.hull.'),'.gii',''));
+    sinfo(i).Pcore       = fullfile(ppm,strrep(strrep([ffm eem],'.central.','.core.'),'.gii',''));
     sinfo(i).Psphere     = fullfile(ppm,strrep([ffm eem],'.central.','.sphere.'));
     sinfo(i).Pspherereg  = fullfile(ppm,strrep([ffm eem],'.central.','.sphere.reg.'));
     sinfo(i).Pdefects    = fullfile(ppm,strrep([ffm eem],'.central.','.defects.'));

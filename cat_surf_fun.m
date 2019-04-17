@@ -1,19 +1,36 @@
 function varargout = cat_surf_fun(action,S,varargin)
 % Function to collect surface functions.
 % 
-% varargout = cat_surf_fun(action,S)
+% varargout = cat_surf_fun(action,S,varargin)
 %
-%   D   = cat_surf_fun('dist',S);     % Estimate the distance between the 
-%                                       vertices of the faces of S.
+% * Distance estimation:
+%   D   = cat_surf_fun('dist',S);     % Estimates the distance between the 
+%                                       local vertices of the faces of S.
+%   D   = cat_surf_fun('vdist',S);    % Estimates the distance of each 
+%                                       voxel to the surface
+%
 %   A   = cat_surf_fun('area',S);     % estimate surface area (faces)
+%
+% * Data mapping:
 %   V   = cat_surf_fun(S,F);          % map facedata to vertices
-%   HS  = cat_surf_fun('hull',S);     % estimate (optimized) hull surface
-%   V   = cat_surf_fun('surf2vol',S,varargin{1}); % render surface in a volume
+%   C   = cat_surf_fun('cdatamapping',S1,S2,cdata[,opt]); 
+%                                     % map texture cdata from S2 to S1.
+%
+% * Surface (data) rendering:
+%   V   = cat_surf_fun('surf2vol',S,varargin{1}); 
+%                                     % render surface (data) in a volume
+%
+% * Surface modification:
+%   HS  = cat_surf_fun('hull',S);     % estimate hull surface
+%   HS  = cat_surf_fun('core',S);     % estimate core surface
+%   IS  = cat_surf_fun('inner',S,T);  % estimate inner surface
+%   OS  = cat_surf_fun('outer',S,T);  % estimate outer surface
+%
+% * Other helping functions:
 %   E   = cat_surf_fun('graph2edge',T); % get edges of a triangulation T
 %
-%  * cdata mapping:
-%    Mapping of textures from S2 to S1.
-%    C   = cat_surf_fun('cdatamapping',S1,S2,cdata[,opt]); 
+% * Test functions
+%   'cdatamappingtst'
 %
 % ______________________________________________________________________
 % Robert Dahnke 
@@ -21,6 +38,8 @@ function varargout = cat_surf_fun(action,S,varargin)
 % University Jena
 % ______________________________________________________________________
 % $Id$ 
+
+%#ok<*ASGLU>
 
   switch action
     case {'dist','distance'}
@@ -30,6 +49,9 @@ function varargout = cat_surf_fun(action,S,varargin)
     case 'hull'
       if nargout==1, varargout{1} = cat_surf_hull(S); end
       if nargout==2, [varargout{1},varargout{2}] = cat_surf_hull(S); end
+    case 'core'
+      if nargout==1, varargout{1} = cat_surf_core(S,varargin{1}); end
+      if nargout==2, [varargout{1},varargout{2}] = cat_surf_core(S,varargin{1}); end
     case {'inner','outer'}
       if numel(varargin)==1
         switch nargout % surface & texture input
@@ -44,9 +66,11 @@ function varargout = cat_surf_fun(action,S,varargin)
           case 2, [varargout{1},varargout{2}] = cat_surf_GMboundarySurface(action,S); 
         end
       end
+    case 'vdist'
+      [varargout{1},varargout{2}] = cat_surf_vdist(S,varargin);
     case 'surf2vol'
       if nargin>2
-        [varargout{1},varargout{2},varargout{3}] = cat_surf_surf2vol(S,varargin);
+        [varargout{1},varargout{2},varargout{3}] = cat_surf_surf2vol(S,varargin{1});
       else
         [varargout{1},varargout{2},varargout{3}] = cat_surf_surf2vol(S);
       end
@@ -74,7 +98,7 @@ function varargout = cat_surf_GMboundarySurface(type,varargin)
   
   if nargin==2
     %% use filenames
-    [pp,ff,ee] = spm_fileparts(varargin{1});
+    [pp,ff,ee] = spm_fileparts(varargin{1}); 
     
     if strcmp(ee,'')
       Praw = cat_io_FreeSurfer('fs2gii',varargin{1}); 
@@ -152,6 +176,7 @@ function cat_surf_cdatamappingtst
    end
    
 end
+
 % nearest connection between to surfaces
 function varargout = cat_surf_cdatamapping(S1,S2,cdata,opt) 
   if ischar(S1), S1 = gifti(S1); end
@@ -330,8 +355,8 @@ function [AV,AF] = cat_surf_area(S)
   facesp = sum(D,2) / 2;  % s = (a + b + c) / 2;
   AF = (facesp .* (facesp - D(:,1)) .* (facesp - D(:,2)) .* (facesp - D(:,3))).^0.5; % area=sqrt(s*(s-a)*(s-b)*(s-c));
   
-  % numerical (to small point diffences) and mapping problems (crossing of streamlines)
-  % -> correction because this is theoretical not possible (laplace field theory)
+  % numerical (to small point differences) and mapping problems (crossing of streamlines)
+  % -> correction because this is theoretical not possible (Laplace field theory)
   AF(AF==0) = eps; % to small values
   AF = abs(AF);    % streamline-crossing
     
@@ -343,31 +368,167 @@ function data = cat_surf_F2V(S,odata)
 
   data   = zeros(size(S.vertices,1),1);
   [v,f]  = sort(S.faces(:)); 
-  [f,fj] = ind2sub(size(S.faces),f);  %#ok<ASGLU>
+  [f,fj] = ind2sub(size(S.faces),f);  
   far = odata(f);
   for i=1:numel(S.faces), data(v(i)) = data(v(i)) + far(i); end
 
-  data = data / size(S.vertices,2); % Schwerpunkt... besser Voronoi, aber wie bei ner Oberfl?che im Raum???
+  data = data / size(S.vertices,2); % Schwerpunkt... besser Voronoi, aber wie bei ner Oberflaeche im Raum???
 end
 
 function [SH,V] = cat_surf_hull(S)
 %% hull creation
 
   % render surface points
-  V = false( round(max(S.vertices,[],1) - min(S.vertices))+10 );     
-  I = sub2ind(size(V),round(S.vertices(:,1) - min(S.vertices(:,1)) + 5),...
-                      round(S.vertices(:,2) - min(S.vertices(:,2)) + 5),...
-                      round(S.vertices(:,3) - min(S.vertices(:,3)) + 5));
-  V(I) = 1; clear I; 
+  Vi = cat_surf_fun('surf2vol',S);
   
-  % 
-  V  = cat_vol_morph(V,'lc',mean(size(V))/6); % closing 
+  % fill mesh
+  V  = cat_vol_morph(Vi,'ldc',mean(size(Vi))/6); clear Vi; % closing 
   V  = cat_vol_smooth3X(V,2);    % smoothing
   SH = isosurface(V,0.4);        % create hull 
   V  = V>0.4;
   
+  % final mesh operations
   SH.vertices = [SH.vertices(:,2) SH.vertices(:,1) SH.vertices(:,3)]; % matlab flip
   SH.vertices = SH.vertices + repmat(min(S.vertices),size(SH.vertices,1),1) - 5;
+end
+
+function [SH,V] = cat_surf_core(S,opt)
+%% core creation
+%  This is much more complicated that the hull definition. So I will need 
+%  different types of core definitions. However, I first have to find one
+%  (or multiple) anatomical definitions.
+%
+%  For estimation I can use different techniques: 
+%   * morphological operations 
+%     > very inaccurate and error-prone 
+%     > use of distance & smoothing functions 
+%   * smoothing with/without boundaries
+%   * anatomical information from volume or better surface atlas maps 
+%   * use of other measures such as 
+%     - thickness (no)
+%     - sulcal depth or outward folding GI (maybe)
+%     - curvature (not really)
+%
+%   * use of percentual scalings
+%   * use of multiple threshold levels and averaging to avoid using only 
+%     one threshold (=multiband) 
+%   * definition as fractal dimension measure?
+%
+
+  def.type = 1; 
+  def.th   = 0.15;
+  opt = cat_io_checkinopt(opt,def); 
+  
+  
+  % render surface points
+  Vi = cat_surf_fun('surf2vol',S);
+   
+  %% break gyri
+  if opt.type == 1
+    %%
+    Vd  = cat_vbdist(single(Vi<0.5));
+    
+    %%
+    Vdn = Vd ./ max(Vd(:));
+    Vdn = cat_vol_laplace3R(Vdn,Vdn>0 & Vdn<0.8 ,0.001);
+    Vdn = min(opt.th + cat_vol_morph(Vdn>opt.th,'l'),Vdn); 
+    V   = Vdn > opt.th; 
+    
+    %%
+    SH  = isosurface(Vdn,opt.th);        % create hull 
+  elseif opt.type == 2
+    SiGI = S; SiGI.cdata = opt.iGI;
+    V    = cat_surf_fun('surf2vol',SiGI,struct('pve',3));
+    V    = V ./ max(V(:));
+    SH   = isosurface(V,opt.th);        % create hull 
+  else
+    Vs = cat_vol_smooth3X(Vi,8);    % smoothing
+    V  = ~cat_vol_morph(Vs<0.5,'ldc',min(size(Vi))/(6*1.5));  % opening 
+    V  = cat_vol_smooth3X(V,6);    % smoothing
+    SH = isosurface(V .* smooth3(Vi),0.6);        % create hull 
+    V  = min(V>0.6,Vi==1);
+    V  = cat_vol_smooth3X(V,4);    % smoothing
+    V  = min(V,Vi);
+    V  = cat_vol_laplace3R(V,Vi>0 & V<0.9,0.4);
+  end   %clear Vi;
+
+  % final mesh operations
+  SH.vertices = [SH.vertices(:,2) SH.vertices(:,1) SH.vertices(:,3)]; % matlab flip
+  SH.vertices = SH.vertices + repmat(min(S.vertices),size(SH.vertices,1),1) - 5;
+end
+
+function [Yd,Yv] = cat_surf_vdist(S,V,M,opt)
+% CAT surface rendering with PVE by distance approximation.
+%
+% [Yd,Yv] = cat_surf_render(S,V,opt)
+%
+%   Yd    .. distance map
+%   Yv    .. surface to PVE map rendering
+%   S     .. surface with verices and faces
+%   V     .. given volume or SPM volume structure
+%   opt   .. option structure
+%    .res .. higher surface resolution (0-default,1-interp)
+% 
+
+% Improve speed by voxel-based pp of distance parts, if only Yv is relevant? 
+%
+
+  def.res  = 0;  
+  def.fast = 0; 
+  opt = cat_io_checkinopt(opt,def);
+
+  % improve surface resolution?
+  if opt.res
+    % ...
+    S = cat_surf_fun('interp',S);
+  end
+  
+  %% setup volume and transform vertices 
+  if ~exist('V','var')
+  % if not given create any volume
+    Y  = false( round(max(S.vertices,[],1) - min(S.vertices)) + 10 );     
+    Sv = S.vertices - repmat( min(S.vertices,[],1) - 5 , size(S.vertices,1)  , 1 );
+  elseif isstruct(V)
+    % modify coordinates by orientation matrix
+    Y  = false( V.dims );    
+    Sv = [S.vertices' ones(1,size(S.vertices,1))] .* V.mat;  
+  else
+    % simply center the surface in the given volume
+    os = round( (size(V) - (max(S.vertices,[],1) - min(S.vertices,[],1))) / 2 ); 
+    Sv = S.vertices - repmat( min(S.vertices,[],1) + os , size(S.vertices,1)  , 1 );
+  end
+
+  
+  %% estimate surface normals to have negative distances inside the surface
+  Sn = patchnormals(S); 
+  
+  %% distance estimation 
+  [VB,Svia] = unique( Sv , 'rows' );      % required for delaunay
+  VN = Sn(Svia,:);                          % clear Sn
+  VB = double(VB);                        % needed for delaunayn
+  T  = delaunayn( VB );                   % delaunayn graph for faster dsearchn processing
+  [VR(:,1),VR(:,2),VR(:,3)] = ind2sub(size(Y),1:numel(Y)); % x-y may be flipped!
+  [VID,VDD] = dsearchn(VB,T,VR); clear T; % search nearest point with its distance
+  VB = single(VB); 
+  VM = VR - VB( VID ,:);                  % vector from surface point to voxel
+  
+  %% estimate if voxel is inside S 
+  %  ... this is much to slow ... the convertation to cell should not be possible
+  %  ... and this is unused
+  %{
+  VRc   = mat2cell(VR,ones(size(VR,1),1));
+  VNc   = mat2cell(VN(VID,:),ones(size(VR,1),1));
+  VRNa  = cellfun( @(u,v) acosd( (u*v') / (sum(u'.^2)^.5 * sum(v'.^2)^.5)) ,VRc,VNc,'UniformOutput',false);
+  VSD   = cell2mat(VRNa);
+  %}
+  
+  %% estimate surface normals to use a weighted
+  VMVR = mat2cell( cat( VM,VN,ones(size(VM)) , 3 ) , ones(1,size(VM,1)) ); 
+  VMVR = cellfun(@shiftdim,VMVR); 
+  VSD  = cellfun(@det,VMVR);
+  
+  Yd = reshape(VDD,size(Y)) .* sign(90-reshape(VSD,size(Y))); 
+  Yv = min(1,max(0,Yd + 0.5)); 
 end
 
 function [V,vmat,vmati] = cat_surf_surf2vol(S,opt)
@@ -379,8 +540,10 @@ function [V,vmat,vmati] = cat_surf_surf2vol(S,opt)
 %  SH.vertices = SH.vertices + imat;
 
   if ~exist('opt','var'), opt = struct(); end
-  def.debug  = 1;
-  def.type   = 0; 
+  def.debug  = 0;
+  def.pve    = 1;     % 0 - no PVE; 1 - PVE;
+                      % 2 - fill with surface texture values without interpolation and masking (==4)    
+                      % 3 - fill with surface texture values with    interpolation and masking (==5)
   def.refine = 0.8;
   def.bdist  = 5; 
   def.res    = 1; % not yet ...
@@ -389,36 +552,116 @@ function [V,vmat,vmati] = cat_surf_surf2vol(S,opt)
   
   % save a temporary version of S and refine it
   Praw = [tempname '.gii'];
-  save(gifti(S),Praw);
+  save(gifti(struct('vertices',S.vertices,'faces',S.faces)),Praw); 
   
   cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Praw,Praw,opt.refine); 
   [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
 
-  S = gifti(Praw);
+  So = S; S = gifti(Praw);
   delete(Praw);
   
   %% render surface points
-  V    = false( round(max(S.vertices,[],1) - min(S.vertices))+10 );     
-  vmat = -[min(S.vertices(:,1)) min(S.vertices(:,2)) min(S.vertices(:,3))] + opt.bdist; 
-  I    = sub2ind(size(V),...
-        max(1,min(size(V,1),round(S.vertices(:,1) + vmat(1)))),...
-        max(1,min(size(V,2),round(S.vertices(:,2) + vmat(2)))),...
-        max(1,min(size(V,3),round(S.vertices(:,3) + vmat(3)))));
-  V(I) = 1; 
-  
-  V    = cat_vol_morph(V,'lc',1);  % closeing 
-  V(I) = 0;
-  V    = cat_vol_morph(V,'lab');
-  if opt.type==1
-    Vd = cat_vol_morph(V,'d',1); 
-    V  = single(V);
-    V(intersect(I,find(Vd>0))) = 0.5;
-    V  = cat_vol_smooth3X(V,0.6);    % smoothing
+  if opt.pve > 1
+    % get surface data or give error
+    if      isfield(So,'cdata'), cdata = So.cdata; 
+    elseif  isfield(So,'facevertexcdata'), cdata = So.facevertexcdata; 
+    else    error('cat_surf_fun:cat_surf_surf2vol:No datafield for filling'); 
+    end
+    
+    % render data 
+    V    = false( round(max(S.vertices,[],1) - min(S.vertices)) + opt.bdist*2 );     
+    vmat = -[min(S.vertices(:,1)) min(S.vertices(:,2)) min(S.vertices(:,3))] + opt.bdist; 
+    I    = sub2ind(size(V),...
+          max(1,min(size(V,1),round(S.vertices(:,1) + vmat(1)))),...
+          max(1,min(size(V,2),round(S.vertices(:,2) + vmat(2)))),...
+          max(1,min(size(V,3),round(S.vertices(:,3) + vmat(3)))));
+    V(I) = 1; 
+    V    = cat_vol_morph(V,'lc',1);  % closeing 
+    
+    % data filling
+    Vv   = zeros( round(max(S.vertices,[],1) - min(S.vertices)) + opt.bdist*2 ,'single');  % same size so S and not So   
+    I    = sub2ind(size(V),...
+          max(1,min(size(V,1),round(So.vertices(:,1) + vmat(1)))),...
+          max(1,min(size(V,2),round(So.vertices(:,2) + vmat(2)))),...
+          max(1,min(size(V,3),round(So.vertices(:,3) + vmat(3)))));
+    Vv(I) = cdata;
+    if opt.pve == 2 || opt.pve == 4
+      [D,I] = vbdist(single(V )); Vv = Vv(I); clear D; 
+      if opt.pve<4
+        [D,I] = vbdist(single(~V)); Vv = Vv(I); clear D,
+      end
+    else
+      Vv    = cat_vol_approx(Vv); 
+    end
+    
+    % final masking
+    if opt.pve > 3
+      V    = Vv .* V; 
+    else
+      V    = Vv; 
+    end 
+    clear Vv; 
+    
+  elseif opt.pve == 0
+    %%
+    V    = false( round(max(S.vertices,[],1) - min(S.vertices)) + opt.bdist*2 );     
+    vmat = -[min(S.vertices(:,1)) min(S.vertices(:,2)) min(S.vertices(:,3))] + opt.bdist; 
+    I    = sub2ind(size(V),...
+          max(1,min(size(V,1),round(S.vertices(:,1) + vmat(1)))),...
+          max(1,min(size(V,2),round(S.vertices(:,2) + vmat(2)))),...
+          max(1,min(size(V,3),round(S.vertices(:,3) + vmat(3)))));
+    V(I) = 1; 
+
+    V    = cat_vol_morph(V,'lc',1);  % closeing 
+    V(I) = 0;                        % remove points of the surface
+    V    = cat_vol_morph(V,'lab');   % final closing
+  else %if opt.pve == 1
+    %% fast PVE estimation by rendering multiple layer 
+    
+    Sn = patchnormals(S); 
+    Sn = Sn ./ repmat(sum(Sn.^2,2).^0.5,1,3); % normalize
+    
+    V    = zeros( round(max(S.vertices,[],1) - min(S.vertices)) + opt.bdist*2 ,'single');     
+    vmat = -[min(S.vertices(:,1)) min(S.vertices(:,2)) min(S.vertices(:,3))] + opt.bdist; 
+    
+    offset = -0.25:0.25:1.0;
+    for oi = 1:numel(offset)
+      I = sub2ind(size(V),...
+          max(1,min(size(V,1),round(S.vertices(:,1) + Sn(:,1)*offset(oi) + vmat(1)))),...
+          max(1,min(size(V,2),round(S.vertices(:,2) + Sn(:,2)*offset(oi) + vmat(2)))),...
+          max(1,min(size(V,3),round(S.vertices(:,3) + Sn(:,3)*offset(oi) + vmat(3)))));
+      V(I) = min(1,max( V(I) , oi./numel(offset))); 
+    end
+    V(cat_vol_morph(V==1,'lc',1) & V==0)=1;  % closeing 
   end
-  
   vmati = repmat(min(S.vertices),size(S.vertices,1),1) - 5; 
   %%
   %SH = isosurface(V,0.6);        % create hull 
   %SH.vertices = [SH.vertices(:,2) SH.vertices(:,1) SH.vertices(:,3)]; % matlab flip
   %SH.vertices = SH.vertices + repmat(min(S.vertices),size(SH.vertices,1),1) - 5;
+end
+
+function N = patchnormals(FV) 
+% Vertex normals of a triangulated mesh, area weighted, left-hand-rule 
+% N = patchnormals(FV) - struct with fields, faces Nx3 and vertices Mx3 
+% N: vertex normals as Mx3
+%
+% https://de.mathworks.com/matlabcentral/fileexchange/24330-patch-normals
+% by Dirk-Jan Kroon
+
+  %face corners index 
+  A = FV.faces(:,1); 
+  B = FV.faces(:,2); 
+  C = FV.faces(:,3);
+
+  %face normals 
+  n = cross(FV.vertices(A,:)-FV.vertices(B,:),FV.vertices(C,:)-FV.vertices(A,:)); %area weighted
+
+  %vertice normals 
+  N = zeros(size(FV.vertices)); %init vertex normals 
+  for i = 1:size(FV.faces,1) %step through faces (a vertex can be reference any number of times) 
+    N(A(i),:) = N(A(i),:) + n(i,:); %sum face normals 
+    N(B(i),:) = N(B(i),:) + n(i,:); 
+    N(C(i),:) = N(C(i),:) + n(i,:); 
+  end
 end
