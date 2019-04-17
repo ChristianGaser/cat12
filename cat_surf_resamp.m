@@ -11,6 +11,10 @@ function varargout = cat_surf_resamp(varargin)
 % Christian Gaser
 % $Id$
 
+% Todo: 
+% - resampling of inner and outer surface is not supported that are only 
+%   available in the developer mode (RD20180408)
+%    > catched by error message
 
   SVNid = '$Rev$';
 
@@ -90,6 +94,11 @@ function varargout = cat_surf_resamp(varargin)
     hemistr = {'lh','rh','lc','rc'};
     exist_hemi = [];
     
+    if ~isempty(strfind(name0,'inner')) || ~isempty(strfind(name0,'outer'))
+      cat_io_cprintf('err',sprintf('ERROR - Inner and outer surfaces can not be resampled so far!\n'));
+      continue
+    end
+    
     % go through left and right and potential cerebellar hemispheres
     for j=1:length(hemistr)
     
@@ -149,7 +158,7 @@ function varargout = cat_surf_resamp(varargin)
 
       % smooth resampled values
       % don't use mask for cerebellum
-      if strcmp(hemi,'lc') | strcmp(hemi,'rc')
+      if strcmp(hemi,'lc') || strcmp(hemi,'rc')
         cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue);
       else
         cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue,Pmask);
@@ -196,22 +205,26 @@ function varargout = cat_surf_resamp(varargin)
   
       % combine left and right and optionally cerebellar meshes
       switch numel(exist_hemi)
-      case{2,4}
-        M0 = gifti({Pfwhm_all{1}, Pfwhm_all{2}});
-        delete(Pfwhm_all{1}); delete(Pfwhm_all{2})
-        M.faces = [M0(1).faces; M0(2).faces+size(M0(1).vertices,1)];
-        M.vertices = [M0(1).vertices; M0(2).vertices];
-        M.cdata = [M0(1).cdata; M0(2).cdata];
-      case 4
-        M0 = gifti({Pfwhm_all{3}, Pfwhm_all{4}});
-        delete(Pfwhm_all{3}); delete(Pfwhm_all{4})
-        M.faces = [M.faces; M0(1).faces+2*size(M0(1).vertices,1); M0(2).faces+3*size(M0(1).vertices,1)];
-        M.vertices = [M.vertices; M0(1).vertices; M0(2).vertices];
-        M.cdata = [M.cdata; M0(1).cdata; M0(2).cdata];
-      case 1
-        disp('No data for opposite hemisphere found!');
-      case 3
-        disp('No data for opposite cerebellar hemisphere found!');
+        case {2,4}
+          M0 = gifti({Pfwhm_all{1}, Pfwhm_all{2}});
+          delete(Pfwhm_all{1}); delete(Pfwhm_all{2})
+          M.faces = [M0(1).faces; M0(2).faces+size(M0(1).vertices,1)];
+          M.vertices = [M0(1).vertices; M0(2).vertices];
+          M.cdata = [M0(1).cdata; M0(2).cdata];
+        %{
+        case 4 % THIS CASE CAN NOT BE REACHED! RD20180408
+          M0 = gifti({Pfwhm_all{3}, Pfwhm_all{4}});
+          delete(Pfwhm_all{3}); delete(Pfwhm_all{4})
+          M.faces = [M.faces; M0(1).faces+2*size(M0(1).vertices,1); M0(2).faces+3*size(M0(1).vertices,1)];
+          M.vertices = [M.vertices; M0(1).vertices; M0(2).vertices];
+          M.cdata = [M.cdata; M0(1).cdata; M0(2).cdata];
+        %}
+        case 1
+          cat_io_cprintf('err',sprintf('      - No data for opposite hemisphere found for %s!\n',fullfile(pp,Pfwhm)));
+        case 3
+          cat_io_cprintf('err',sprintf('      - No data for opposite cerebellar hemisphere found for %s!\n',fullfile(pp,Pfwhm)));
+        case 0 
+          cat_io_cprintf('err',sprintf('      - No data was found for %s!\n',fullfile(pp,Pfwhm)));
       end
       
       if numel(exist_hemi) > 1
@@ -221,8 +234,8 @@ function varargout = cat_surf_resamp(varargin)
         Psdata{i} = fullfile(pp,Pfwhm);
       end
           
-      if job.verb
-        fprintf('(%3.0f s) Display resampled %s\n',etime(clock,stime),spm_file(Psdata{i},'link','cat_surf_display(''%s'')'));
+      if job.verb && ~isempty(Psdata{i}) 
+        fprintf('%4.0fs - Display resampled %s\n',etime(clock,stime),spm_file(Psdata{i},'link','cat_surf_display(''%s'')'));
       end
     end
     
