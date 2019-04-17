@@ -350,25 +350,41 @@ function varargout = cat_parallelize(job,func,datafield)
       end
     end
     
+    
+    %% Merge output of the subprocesses to support SPM dependencies.
+    %  --------------------------------------------------------------------
+    %  The results of a function are saved as variable named "output" in 
+    %  the temporary matlab files that were also used for data input.
+    %  However, currently only the first output can be used and a structure
+    %  array is expected that have maximal two sublevels, e.g.
+    %    output.data = {file1, ...}
+    %    output.subject.data = {file1, ...}
+    %  --------------------------------------------------------------------
     if nargout>0
-      %%
+      % load the results of the first job
       load(tmp_array{1});
       varargout{1} = output; 
-      %% 
-      for oi=2:numel(tmp_array) 
-        load(tmp_array{oi});
+      
+      % add the results of the other job 
+      for oi=2:numel(tmp_array)
+        load(tmp_array{oi}); 
         FN = fieldnames(output);
+        
+        % for all fields of output 
         for fni=1:numel(FN)
-          if ~isfield( varargout{1} , FN{fni} ) % no field > just add it
+          if ~isfield( varargout{1} , FN{fni} ) 
+            % no subfield ( = new subfield ) > just add it
             varargout{1}.(FN{fni}) = output.(FN{fni}); 
-          else % existing field > merge it
+          else
+            % existing subfield > merge it
             if ~isstruct( output.(FN{fni}) )
               if size(varargout{1}.(FN{fni}),1) > size(varargout{1}.(FN{fni}),2)
                 varargout{1}.(FN{fni}) = [varargout{1}.(FN{fni});output.(FN{fni})]; 
               else
                 varargout{1}.(FN{fni}) = [varargout{1}.(FN{fni}),output.(FN{fni})]; 
               end
-              %% cleanup
+              
+              % cleanup (remove empty entries of failed processings)
               if iscell(varargout{1}.(FN{fni}))
                 for ffni=numel( varargout{1}.(FN{fni}) ):-1:1
                   if isempty(  varargout{1}.(FN{fni}){ffni} )
@@ -377,31 +393,34 @@ function varargout = cat_parallelize(job,func,datafield)
                 end
               end
             else
+              % this is similar to the first level ...
               FN2 = fieldnames(output.(FN{fni}));
-              if ~isstruct( output.(FN{fni}).(FN2{fni}) )
-                if size(varargout{1}.(FN{fni}).(FN2{fni2}),1) > size(varargout{1}.(FN{fni}).(FN2{fni2}),2)
-                  varargout{1}.(FN{fni}).(FN2{fni2}) = [varargout{1}.(FN{fni}).(FN2{fni2});output.(FN{fni}.(FN2{fni2}))]; 
-                else
-                  varargout{1}.(FN{fni}).(FN2{fni2}) = [varargout{1}.(FN{fni}).(FN2{fni2}),output.(FN{fni}.(FN2{fni2}))]; 
-                end
-                %% cleanup
-                if iscell(varargout{1}.(FN{fni}).(FN2{fni2}))
-                  for ffni=numel( varargout{1}.(FN{fni}).(FN2{fni2}) ):-1:1
-                    if isempty(  varargout{1}.(FN{fni}).(FN2{fni2}){ffni} )
-                      varargout{1}.(FN{fni}).(FN2{fni2})(ffni) = []; 
+              for fni2 = 1:numel(FN2)
+                if ~isstruct( output.(FN{fni}).(FN2{fni}) )
+                  if size(varargout{1}.(FN{fni}).(FN2{fni2}),1) > size(varargout{1}.(FN{fni}).(FN2{fni2}),2)
+                    varargout{1}.(FN{fni}).(FN2{fni2}) = [varargout{1}.(FN{fni}).(FN2{fni2});output.(FN{fni}.(FN2{fni2}))]; 
+                  else
+                    varargout{1}.(FN{fni}).(FN2{fni2}) = [varargout{1}.(FN{fni}).(FN2{fni2}),output.(FN{fni}.(FN2{fni2}))]; 
+                  end
+
+                  % cleanup (remove empty entries of failed processings)
+                  if iscell(varargout{1}.(FN{fni}).(FN2{fni2}))
+                    for ffni=numel( varargout{1}.(FN{fni}).(FN2{fni2}) ):-1:1
+                      if isempty(  varargout{1}.(FN{fni}).(FN2{fni2}){ffni} )
+                        varargout{1}.(FN{fni}).(FN2{fni2})(ffni) = []; 
+                      end
                     end
                   end
+                else
+                  error('Only 2 level in output structure supported.')
                 end
-              else
-                error('Only 2 level in output structure supported.')
               end
             end
           end
         end
       end
-      %% cleanup
-      
     end
+    
     
     % no final report yet ...
     fprintf('_______________________________________________________________\n');

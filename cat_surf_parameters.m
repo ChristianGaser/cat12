@@ -8,24 +8,24 @@ function varargout = cat_surf_parameters(job)
 %
 %   job.
 %    .data_surf .. input data
-%    .nproc   .. parallel processing (default 0)
-%    .verb    .. verbose output (default cat_get_defaults('extopts.verb'))
-%    .lazy    .. avoid reprocess of exist results (default 0)
-%    .debug   .. (default cat_get_defaults('extopts.verb')>2)
-%    measures 
-%    .IS      .. create inner surface (default 0)
-%    .OS      .. create outer surface (default 0)
-%    .GI      .. estimate absolute mean curvature (default 0)
-%    .FD      .. estimate fractal dimension (Yotter:2012; default 0)
-%    .SD      .. estimate sulcal depth (default 0)
-%    experimental measures (only cat_get_defaults('extopts.expertgui')>1)
-%    .GII     .. estimate inflating-based gyrification index (default 0)
-%    .GIA     .. estimate average-based gyrification index (default 0)
-%    .GIS     .. estimate mapping-based gyrification index (default 0)
-%    .GIL     .. estimate Laplacian-based gyrification index (default 0)
-%    .SA      .. estimate area (not implemented; default 0)
+%    .nproc     .. parallel processing (default 0)
+%    .verb      .. verbose output (default cat_get_defaults('extopts.verb'))
+%    .lazy      .. avoid reprocess of exist results (default 0)
+%    .debug     .. (default cat_get_defaults('extopts.verb')>2)
+%    = measures = 
+%    .GI        .. estimate absolute mean curvature (default 0)
+%    .FD        .. estimate fractal dimension (Yotter:2012; default 0)
+%    .SD        .. estimate sulcal depth (default 0)
+%    = experimental measures = (only cat_get_defaults('extopts.expertgui')>1)
+%    .GIL       .. estimate Laplacian-based gyrification index 
+%                  is a numeric in case of default users (default 0)
+%                  is a structure in case of expert users 
+%    .area      .. estimate area (not implemented; default 0)
+%    .surfaces  .. further cortical surfaces
+%     .IS       .. create inner surface (default 0)
+%     .OS       .. create outer surface (default 0)
 %_______________________________________________________________________
-% Christian Gaser
+% Christian Gaser & Robert Dahnke
 % $Id$
 
   SVNid = '$Rev$';
@@ -36,26 +36,29 @@ function varargout = cat_surf_parameters(job)
     error('Not enough parameters.');
   end
   
+  % default structure
   def.trerr       = 0; % display errors
   def.nproc       = 0; % parallel processing
   def.verb        = cat_get_defaults('extopts.verb'); 
-  def.lazy        = 0; % reprocess exist results
+  def.lazy        = 1; % do not reprocess exist results
   def.debug       = cat_get_defaults('extopts.verb')>2;
-  % output parameter
-  def.IS          = 0; % create inner surface 
-  def.OS          = 0; % create outer surface
+  % output parameter of validated measures 
   def.GI          = 0; % estimate absolute mean curvature
   def.FD          = 0; % estimate fractal dimension (Yotter:2012)
   def.SD          = 0; % estimate sulcal depth
   % experimental measures (cat_get_defaults('extopts.expertgui'))
-  def.GII         = 0; % estimate inflating-based gyrification index
-  def.GIA         = 0; % estimate average-based gyrification index 
-  def.GIS         = 0; % estimate mapping-based gyrification index
-  def.GIL         = 0; % estimate Laplacian-based gyrification index
-  def.SA          = 0; % estimate area (not implemented)
-   
+  % def.GIL         = 0; % defined below due to numeric/structure definion
+  % further surfaces
+  def.surfaces.IS = 0; % create inner surface 
+  def.surfaces.OS = 0; % create outer surface
+  % not implemented
+  def.area        = 0; % estimate area (not implemented)
+ 
   job = cat_io_checkinopt(job,def);
-
+  
+  % estimate Laplacian-based gyrification index (including inward, outward, and generalized GI) 
+  if ~isfield(job,'GIL'), job.GIL = 0; end
+  
   % split job and data into separate processes to save computation time
   if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     if nargout==1
@@ -73,14 +76,23 @@ function varargout = cat_surf_parameters(job)
   spm_clf('Interactive'); 
   spm_progress_bar('Init',size(P,1),'Processed surfaces','Surfaces Completed');
   
-  for i=1:size(P,1)
+  % just a counter for the progress bar
+  sides     = {'l','r'};
+  measuresn = job.GI + job.FD + job.SD + job.surfaces.IS + job.surfaces.OS + ...
+    ( ( isnumeric(job.GIL) && job.GIL ) || ( isstruct(job.GIL) && job.GIL.GIL ) ); 
+  measuresn = measuresn * numel(sides);
   
+  
+  % main loop
+  for i=1:size(P,1)
+    measuresi = 0; 
+    
     % go through left and right hemisphere
-    for j=1:2
+    for si=1:numel(sides)
     
       
       %% file names
-      if j == 1 % lh
+      if si == 1 % lh
         Pname = deblank(P(i,:));
       else % rh
         Pname = cat_surf_rename(deblank(P(i,:)),'side','rh');
@@ -91,103 +103,109 @@ function varargout = cat_surf_parameters(job)
   
       name    = [ff ex];
   
-      PGI     = fullfile(pp,strrep(ff,'central','gyrification'));         
-      PGII    = fullfile(pp,strrep(ff,'central','IGI'));         
-      PGIA    = fullfile(pp,[strrep(ff,'central','AGI'),'.gii']);       
-      PGIS    = fullfile(pp,strrep(ff,'central','SGI'));         
-      PGIL    = fullfile(pp,strrep(ff,'central','LGI'));         
+      % dependencies
+      PGI     = fullfile(pp,strrep(ff,'central','gyrification'));          % abs mean curvature        
       PFD     = fullfile(pp,strrep(ff,'central','fractaldimension'));
       PSD     = fullfile(pp,strrep(ff,'central','sqrtsulc'));
-      PSA     = fullfile(pp,strrep(ff,'central','logarea'));
-      PIS     = fullfile(pp,strrep(ff,'central','inner'));         
-      POS     = fullfile(pp,strrep(ff,'central','outer'));         
+      PSA     = fullfile(pp,strrep(ff,'central','area'));
+      % new experimental GIs
+      PiGI    = fullfile(pp,strrep(ff,'central','inwardGI'));            
+      PoGI    = fullfile(pp,strrep(ff,'central','outwardGI'));            
+      PgGI    = fullfile(pp,strrep(ff,'central','generalizedGI'));        
+      % other surfaces 
+      PIS     = fullfile(pp,strrep(ff,'central','white'));         
+      POS     = fullfile(pp,strrep(ff,'central','pial'));         
       Psphere = fullfile(pp,strrep(name,'central','sphere'));
    
       
-      if job.verb, fprintf('Extract parameters for %s\n',Pname); end
+      if job.verb, fprintf('\nExtract parameters for %s\n',Pname); end
       
       
       if job.GI 
         %% gyrification index based on absolute mean curvature
         if exist(PGI,'file') && job.lazy  
-          if job.verb>=1, fprintf('  Display already processed %s\n',spm_file(PGI,'link','cat_surf_display(''%s'')')); end
+          if job.verb>=1, fprintf('exist - Display %s\n',spm_file(PGI,'link','cat_surf_display(''%s'')')); end
         else
+          stime = clock; 
           cmd = sprintf('CAT_DumpCurv "%s" "%s" 0 0 1',Pname,PGI);
           [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug,job.trerr);
-          if nargout==1 && j==1, varargout{1}.lPGI{i} = PGI; end  
-          if nargout==1 && j==2, varargout{1}.rPGI{i} = PGI; end  
-          if job.verb>=1, fprintf('  Display %s\n',spm_file(PGI,'link','cat_surf_display(''%s'')')); end
+          if job.verb>=1, fprintf('%4.0fs - Display %s\n',etime(clock,stime),spm_file(PGI,'link','cat_surf_display(''%s'')')); end
         end
+        if nargout==1, varargout{1}.([sides{si} 'PGI']){i} = PGI; end  
+        measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
       end
       
       
+      if job.SD
+        %% sulcus depth
+        if exist(PSD,'file') && job.lazy  
+          if job.verb>=1, fprintf('exist - Display %s\n',spm_file(PSD,'link','cat_surf_display(''%s'')')); end
+        else
+          stime = clock; 
+          cmd = sprintf('CAT_SulcusDepth -sqrt "%s" "%s" "%s"',Pname,Psphere,PSD); %-sqrt
+          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug,job.trerr);
+          if job.verb>=1, fprintf('%4.0fs - Display %s\n',etime(clock,stime),spm_file(PSD,'link','cat_surf_display(''%s'')')); end
+        end
+        if nargout==1, varargout{1}.([sides{si} 'PSD']){i} = PSD; end
+        measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
+      end
+  
       
-      % expert folding measures
-      % ---------------------------------------------------------------------
-      % These approaches are still in development. 
-      % See cat_surf_gyrification for further information.
-      % ---------------------------------------------------------------------
-      if cat_get_defaults('extopts.expertgui') > 1
-        if job.GIA
-          %% gyrification index based on average surface
-          %  basic idea is to find local increase/decrease of surface area
-          %  (and compare it to thickness) or estimate the local volume etc.
-          %  > I like this idea, but it required more work ... 
-          if exist(PGIA,'file') && job.lazy  
-            if job.verb>=1, fprintf('  Display already processed %s\n',spm_file(PGIA,'link','cat_surf_display(''%s'')')); end
-          else
-            stime = clock; 
-            PGIA  = cat_surf_gyrification('average',Pname);
-            if nargout==1 && j==1, varargout{1}.lPGIA{i} = PGIA; end  
-            if nargout==1 && j==2, varargout{1}.rPGIA{i} = PGIA; end  
-            if job.verb>=1, fprintf('  %4.0fs. Display %s\n',etime(clock,stime),spm_file(PGIA,'link','cat_surf_display(''%s'')')); end
-          end
-          
+      if job.FD
+        %% fractal dimension using spherical harmonics
+        if exist(PFD,'file') && job.lazy  
+          if job.verb>=1, fprintf('exist - Display %s\n',spm_file(PFD,'link','cat_surf_display(''%s'')')); end
+        else
+          stime = clock; 
+          cmd = sprintf('CAT_FractalDimension -sphere "%s" -nosmooth "%s" "%s" "%s"',Psphere,Pname,Psphere,PFD);
+          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug,job.trerr);
+          if job.verb>=1, fprintf('%4.0fs - Display %s\n',etime(clock,stime),spm_file(PFD,'link','cat_surf_display(''%s'')')); end
         end
-  
-        if job.GII
-          %% gyrification index based on inflating
-          %  simple GI approach with different smoothing options
-          if exist(PGII,'file') && job.lazy  
-            if job.verb>=1, fprintf('  Display already processed %s\n',spm_file(PGII,'link','cat_surf_display(''%s'')')); end
-          else
-            stime = clock; 
-            PGII = cat_surf_gyrification('inflate',Pname,struct('inflate',5));
-            if nargout==1 && j==1, varargout{1}.lPGII{i} = PGII; end
-            if nargout==1 && j==2, varargout{1}.rPGII{i} = PGII; end
-            if job.verb>=1, fprintf('  %4.0fs. Display %s\n',etime(clock,stime),spm_file(PGII,'link','cat_surf_display(''%s'')')); end
-          end
-         end
-  
-         if job.GIL
-          %% gyrification index based on laplacian GI
-          %  nice model, but very close to sulcal depth
-          if exist(PGIL,'file') && job.lazy  
-            if job.verb>=1, fprintf('  Display already processed %s\n',spm_file(PGIL,'link','cat_surf_display(''%s'')')); end
-          else
-            stime = clock; 
-            PGIL = cat_surf_gyrification('laplacian',Pname,struct('verb',job.verb));
-            if nargout==1 && j==1, varargout{1}.lPGIL{i} = PGIL; end
-            if nargout==1 && j==2, varargout{1}.rGIL{i} = PGIL; end
-            if job.verb>=1, fprintf('  %4.0fs. Display %s\n',etime(clock,stime),spm_file(PGIL,'link','cat_surf_display(''%s'')')); end
+        if nargout==1, varargout{1}.([sides{si} 'PFD']){i} = PFD; end  
+        measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
+      end
+      
+      
+      %% Developer folding measures
+      %  ------------------------------------------------------------------
+      %  These approaches are still in development. 
+      %  See cat_surf_gyrification for further information.
+      %  ------------------------------------------------------------------
+      if ( isnumeric(job.GIL) && job.GIL ) || job.GIL.GIL
+        %% gyrification index based on laplacian GI
+
+        if isnumeric(job.GIL) % default user mode only support default values  
+          GILjob = struct('verb',job.verb); 
+        else
+          GILjob = job.GIL; 
+
+          % show already processed is currently not possible due to the variing parameters!
+          if job.lazy 
+            fprintf('Lazy processing of the Laplacian-based gyrification indices is not supported yet!\n'); 
           end
         end
-  
-        if job.GIS
-          %% gyrification index based on shpericial mapping with hull
-          %  similar to GII, but with stronger normalization by the spherical mapping
-          if exist(PGIS,'file') && job.lazy  
-            if job.verb>=1, fprintf('  Display already processed %s\n',spm_file(PGIS,'link','cat_surf_display(''%s'')')); end
-          else
-            stime = clock; 
-            PGIS = cat_surf_gyrification('hullmapping',Pname);
-            if nargout==1 && j==1, varargout{1}.lPGIS{i} = PGIS; end  
-            if nargout==1 && j==2, varargout{1}.rPGIS{i} = PGIS; end  
-            if job.verb>=1, fprintf('  %4.0fs. Display %s\n',etime(clock,stime),spm_file(PGIL,'link','cat_surf_display(''%s'')')); end
+
+        % process data
+        stime = clock; 
+        first = 1; 
+        type  = 'iog'; 
+        PGIL  = cat_surf_gyrification(Pname,GILjob);
+        %%
+        for pi=1:numel(PGIL)
+          if job.verb>=1 && ~isempty(PGIL{1})
+            if first 
+              fprintf('%4.0fs - Display %s\n',etime(clock,stime),spm_file(PGIL{pi},'link','cat_surf_display(''%s'')')); 
+              first = 0; 
+            else
+              fprintf('      - Display %s\n',spm_file(PGIL{pi},'link','cat_surf_display(''%s'')')); 
+            end  
+            if nargout==1,  varargout{1}.([sides{si} 'P' type(pi) 'GI']){i} = PGIL{pi}; end
           end
         end
-        
-        
+
+        measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
+      end
+
   
       %  if job.SA
       %    %% local surface area
@@ -200,71 +218,42 @@ function varargout = cat_surf_parameters(job)
       %      if nargout==1, varargout{1}.PSA{i} = PSA; end  
       %      if job.verb>=1, fprintf('  Display %s\n',spm_file(PSA,'link','cat_surf_display(''%s'')')); end
       %    end
+      %    measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
       %  end
-  
-      end
-      % ----------------------------------------------------------------------
-      
-        
-      
-      if job.SD
-        %% sulcus depth
-        if exist(PSD,'file') && job.lazy  
-          if job.verb>=1, fprintf('  Display already processed %s\n',spm_file(PSD,'link','cat_surf_display(''%s'')')); end
-        else
-          cmd = sprintf('CAT_SulcusDepth -sqrt "%s" "%s" "%s"',Pname,Psphere,PSD); %-sqrt
-          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug,job.trerr);
-          if nargout==1 && j==1, varargout{1}.lPSD{i} = PSD; end
-          if nargout==1 && j==2, varargout{1}.rPSD{i} = PSD; end
-          if job.verb>=1, fprintf('  Display %s\n',spm_file(PSD,'link','cat_surf_display(''%s'')')); end
-        end
-      end
-  
-      if job.FD
-        %% fractal dimension using spherical harmonics
-        if exist(PFD,'file') && job.lazy  
-          if job.verb>=1, fprintf('  Display already processed %s\n',spm_file(PFD,'link','cat_surf_display(''%s'')')); end
-        else
-          cmd = sprintf('CAT_FractalDimension -sphere "%s" -nosmooth "%s" "%s" "%s"',Psphere,Pname,Psphere,PFD);
-          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug,job.trerr);
-          if nargout==1 && j==1, varargout{1}.lPFD{i} = PFD; end  
-          if nargout==1 && j==2, varargout{1}.rPFD{i} = PFD; end  
-          if job.verb>=1, fprintf('  Display %s\n',spm_file(PFD,'link','cat_surf_display(''%s'')')); end
-        end
-      end
-  
       
       
       
       %% ----------------------------------------------------------------------
-      %  No measures, but I do not want another script
+      %  No measures, but I do not want another script. However, this leads
+      %  to problems in batch processing, e.g. to resample and smooth the 
+      %  results that are surfaces rather than textures (RD20190408). 
       %  ----------------------------------------------------------------------
-      if job.IS
+      if job.surfaces.IS
         if exist(PIS,'file') && job.lazy  
-          if job.verb>=1, fprintf('  Display already processed %s\n',spm_file(PIS,'link','cat_surf_display(''%s'')')); end
+          if job.verb>=1, fprintf('exist - Display %s\n',spm_file(PIS,'link','cat_surf_display(''%s'')')); end
         else
           stime = clock; 
           PIS = cat_surf_fun('inner',Pname);
-          if nargout==1 && j==1, varargout{1}.lPIS{i} = PIS; end  
-          if nargout==1 && j==2, varargout{1}.rPIS{i} = PIS; end  
-          if job.verb>=1, fprintf('  %4.0fs. Display %s\n',etime(clock,stime),spm_file(PIS,'link','cat_surf_display(''%s'')')); end
+          if job.verb>=1, fprintf('%4.0fs - Display %s\n',etime(clock,stime),spm_file(PIS,'link','cat_surf_display(''%s'')')); end
         end
+        if nargout==1, varargout{1}.([sides{si} 'PIS']){i} = PIS; end  
+        measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
       end
       
-      if job.OS
+      if job.surfaces.OS
         if exist(POS,'file') && job.lazy  
-          if job.verb>=1, fprintf('  Display already processed %s\n',spm_file(POS,'link','cat_surf_display(''%s'')')); end
+          if job.verb>=1, fprintf('exist - Display %s\n',spm_file(POS,'link','cat_surf_display(''%s'')')); end
         else
           stime = clock; 
           POS = cat_surf_fun('outer',Pname);
-          if nargout==1 && j==1, varargout{1}.lPOS{i} = POS; end  
-          if nargout==1 && j==2, varargout{1}.rPOS{i} = POS; end  
-          if job.verb>=1, fprintf('  %4.0fs. Display %s\n',etime(clock,stime),spm_file(POS,'link','cat_surf_display(''%s'')')); end
+          if job.verb>=1, fprintf('%4.0fs - Display %s\n',etime(clock,stime),spm_file(POS,'link','cat_surf_display(''%s'')')); end
         end
+        if nargout==1, varargout{1}.([sides{si} 'POS']){i} = POS; end  
+        measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
       end
         
-      spm_progress_bar('Set',i);
     end
+    spm_progress_bar('Set',i);
     
     
     if isfield(job,'process_index') && job.verb

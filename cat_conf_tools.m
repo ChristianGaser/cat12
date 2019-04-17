@@ -1877,14 +1877,14 @@ if job.write_rimg,
     cdep(ind).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     ind = ind + 1;
 end
-if isfield(job.reg,'nonlin') & job.reg.nonlin.write_jac
+if isfield(job.reg,'nonlin') && job.reg.nonlin.write_jac
     cdep(ind)            = cfg_dep;
     cdep(ind).sname      = 'Jacobian Diff';
     cdep(ind).src_output = substruct('.','jac','()',{':'});
     cdep(ind).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     ind = ind + 1;
 end
-if isfield(job.reg,'nonlin') & job.reg.nonlin.write_def
+if isfield(job.reg,'nonlin') && job.reg.nonlin.write_def
     cdep(ind)            = cfg_dep;
     cdep(ind).sname      = 'Deformation (1)';
     cdep(ind).src_output = substruct('.','def1','()',{':'});

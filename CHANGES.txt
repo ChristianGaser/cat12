@@ -1,5 +1,46 @@
 ------------------------------------------------------------------------
-r1451 | dahnke | 2019-04-04 10:48:58
+r1452 | dahnke | 2019-04-17 18:10:18
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       cat_io_updateStruct.m
+M       cat_parallelize.m
+M       cat_surf_epivolsurf.m
+M       cat_surf_fun.m
+M       cat_surf_gyrification.m
+M       cat_surf_info.m
+M       cat_surf_parameters.m
+M       cat_surf_render2.m
+M       cat_surf_resamp.m
+!       development
+!       development/Template_0_IXI555_MNI152_GS1mm.nii
+!       development/Template_1_IXI555_MNI152_GS1mm.nii
+!       development/Template_2_IXI555_MNI152_GS1mm.nii
+!       development/Template_3_IXI555_MNI152_GS1mm.nii
+!       development/Template_4_IXI555_MNI152_GS1mm.nii
+!       development/Template_4_IXI555_MNI152_GS1mm_corr.nii
+!       development/cat.nii
+!       development/cat_main_LAS.m
+!       development/cat_surf_createCS.m
+!       development/cat_vol_average.m
+
+1) Docu:      Added comments in cat_parallelize.
+2) Fixed:     Added missed for-loop in cat_parallelize. 
+3) Fixed:     Corrected small problems in cat_surf_epivolsurf.
+4) Fixed:     Corrected texture detection problems for 32k surfaces in cat_surf_render2. 
+5) Changed:   Try to improve volume to surface render function in cat_surf_fun.
+6) New:       Added expert GUI for iGI and oGI development in cat_conf_stools.
+7) New:       Updated GI functions in cat_surf_gyrification.  
+8) New:       Added GI help functions in cat_surf_fun to estimate the core.
+9) Deleted:   Removed multiple non-validated gyrification measures in cat_conf_stools,
+              cat_surf_parameters and cat_surf_gyrification.
+
+       
+
+------------------------------------------------------------------------
+r1451 | dahnke | 2019-04-04 10:49:28 +0200 (Do, 04 Apr 2019) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +51,7 @@ M       cat_surf_gyrification.m
 M       cat_surf_render2.m
 
 1) Fixed:   Corrected small bugs in cat_surf_parameter and related functions. 
+
 ------------------------------------------------------------------------
 r1450 | gaser | 2019-04-04 04:11:14 +0200 (Do, 04 Apr 2019) | 12 lines
 

@@ -12,7 +12,7 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
 %   S.IP ... inner   surface points
 %   S.CP ... central surface points
 %   S.OP ... outer   surface points
-%   S.SL ... streamlength
+%   S.SL ... length of the streamline
 %   S.L(1..nbstream-1) ??? for streamline ???
 % _________________________________________________________________________
 %
@@ -21,7 +21,7 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
 % TODO: - optimization of memory and data structure
 %       * adaption for GI-algorithm
 %       - layer calculation (7)
-%       - surface- vs. voxelbased 
+%       - surface- vs. voxel-based 
 %       - comments
 %       - parts-Estimation (memory problem at 100%)
 %       * isocolors for intensity estimation
@@ -34,10 +34,9 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
 %   Robert Dahnke (robert.dahnke@uni-jena.de)
 %   Center of Neuroimaging 
 %   Department of Psychiatry and Psychotherapy 
-%   University hostpital Jena
-%   
-%   Version: 0.2 © 2009/01 
+%   University hospital Jena
 % _________________________________________________________________________
+% $Id$ 
 
 
 
@@ -49,9 +48,9 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
   if ~isa(D,'single'), D = single(D); end                               
   
   def.side       = 'streams01'; 
-  def.verb       = 0;            % display calcualtion times      
+  def.verb       = 0;            % display calculation times      
   def.layer      = 6;            % number of sublayers
-  def.laplaceerr = 0.001;        % laplace filter stopping condition
+  def.laplaceerr = 0.001;        % Laplace filter stopping condition
   def.streamsout = 0;            % output streams variable
   def.streamcorr = 1;            % intensity correction of the streams
   def.interpol   = 0;            % ??? 
@@ -74,7 +73,7 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
   % if there are too many and not enough streampoints you have to divide the streamline ...
   if ~isfield(opt,'streamopt') || numel(opt.streamopt)~=2
     opt.streamopt(1)  = 0.1;                                               % point distance 0.05
-    opt.streamopt(2)  = 1/opt.streamopt(1)*10000;                         % max number of points in a stream 
+    opt.streamopt(2)  = 1/opt.streamopt(1)*10000;                          % max number of points in a stream 
   end
   opt.streamopt(1) = opt.streamopt(1) / opt.res;                           % need adaption for voxelresolution
   %opt.streamopt(2) = round(opt.streamopt(2) / opt.res);                   % do not need an adaption for max number of point!                    
@@ -100,7 +99,7 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
         S.SP(slice,:)=[];
       end
       S.CP    = zeros(size(S.SP),'single');                                % central surface points
-      S.SL    = zeros(size(S.SP,1),1,'single');                            % Streamlength
+      S.SL    = zeros(size(S.SP,1),1,'single');                            % streamlength
       S.L     = zeros(size(S.SP,1),size(S.SP,2),opt.layer+1,'single');     % opt.layer Layerpoints
       S.RPM   = zeros(size(S.SP,1),1,'single');                            % RPM value      
     case 'surfacebased'
@@ -132,8 +131,9 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
   
 % create potential-picture and gradients
 % _________________________________________________________________________
+  if opt.verb, fprintf(1,'L: '); end; tic
   L  = cat_vol_laplace3R(D,D==2,opt.laplaceerr);
-  L  = smooth3(L); 
+  Ls = smooth3(L);  L(D~=2) = Ls(D~=2); clear Ls;  % additional smoothing to avoid problems in the projection 
   D  = smooth3(D); 
   if opt.GI
     D(D<0)=0;        
@@ -144,7 +144,7 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
   
   %if opt.uD2, D=(1-opt.uD2)*D + opt.uD2*(D2-1.5); clear D2; end
   % depend on voxel-resolution and not on the mm resolution of D, because
-  % the skelton should be as thin as possible
+  % the skeleton should be as thin as possible
   %D=smooth3(D,'gaussian',3,0.3); 
   %clear D2; 
   
@@ -157,10 +157,10 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
   %if opt.streamcorr==0,
     gi(D<=opt.LB | D>=opt.HB)=0;
     gj(D<=opt.LB | D>=opt.HB)=0; 
-    gk(D<=opt.LB | D>=opt.HB)=0;       %   Cleared for GI calculaten used for layer and thickness!!!!
+    gk(D<=opt.LB | D>=opt.HB)=0;       %   Cleared for GI calculation used for layer and thickness!!!!
 %end
   
-  if opt.verb, fprintf(1,'L: %3.0f | SL: ',toc); end; tic
+  if opt.verb, fprintf(1,'%3.0f | SL: ',toc); end; tic
   clear minD maxD L;
   
   if opt.GI, D=CSFS; end
@@ -228,7 +228,7 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
     streamlength(streamlength==0) = eps('single');
     
     if strcmpi(opt.calctype,'voxelbased')
-      % überarbeiten !!!!!
+      % ??berarbeiten !!!!!
       streampointdist1 = cellfun(@(s) sum(diff(s).^2,2).^0.5,streams1,'UniformOutput',false);
       streamlength1    = cell2mat(cellfun(@(s) single(sum(s,1)),streampointdist1,'UniformOutput',false));
       streamlength1(cellfun('size',streams1,1)==1) = eps('single');
@@ -246,7 +246,7 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
       streamlayer = cellfun(@(s,s1e,sl) (sl-s1e-cumsum(s,1))/(sl-s1e),streampointdist,mat2cell(stream1err,repmat(1,numel(streamlength),1),1),...
                     mat2cell(streamlength,repmat(1,numel(streamlength),1),1),'UniformOutput',false);  
       S.CP(l:h,:) = cell2mat(cellfun(@(s,sl) s(max([1,find(sl<=0.5,1,'first')]),:),streams,streamlayer,'UniformOutput',false));
-       % funkt net, weil die länge null ist, der steamlayer damit auch null und damit eine leere matrix zugewiesen werden soll...     
+       % funkt net, weil die l??nge null ist, der steamlayer damit auch null und damit eine leere matrix zugewiesen werden soll...     
 
       S.L(l:h,:,opt.layer+1) = single(cell2mat(cellfun(@(s,sl) s(sl,:),streams,mat2cell(double(cellfun('size',streams,1)),...
         ones(numel(l:h),1),1),'UniformOutput',false)));                             % OS, GM/CSF boundary
@@ -293,7 +293,8 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
       varargout{1}=S;
   end
   
-  if opt.verb, fprintf(1,sprintf('%s%4.0fs',repmat('\b',1,numel(dispstrold)+13),toc)); end
+  %if opt.verb, fprintf(1,sprintf('%s%4.0fs',repmat('\b',1,numel(dispstrold)+13),toc)); end
+  if opt.verb, fprintf(1,sprintf('%s',repmat('\b',1,numel(dispstrold)+13))); end
 end
 
 % Subfunctions: 
@@ -316,9 +317,9 @@ function streams = stream_correction(D,streams,P,ndim,np,th,sop,bf)
   
   % Streamline Correction parameter
   % _______________________________________________________________________
-  % default-neigbourmatrix 
-  % calculate a wieght value for every stream-end-points based on his 4 or 8
-  % grid neigbor values based on volume (use round operations and 
+  % default-neighbor-matrix 
+  % calculate a weight value for every stream-end-points based on his 4 or 8
+  % grid neighbor values based on volume (use round operations and 
   % volume of the diagonal corner)
   % calculate a intensity-value for all stream-end-points 
   % _______________________________________________________________________
@@ -349,7 +350,7 @@ function streams = stream_correction(D,streams,P,ndim,np,th,sop,bf)
 
   % calculate the weight of a neigbor (volume of the other corner) and
   w8b = cellfun(@(s,n) reshape(repmat(s(1:n,:,:),1,2^ndim),[n,ndim,2^ndim]),streams,pstreams,'UniformOutput',false);        
-  % if the streamline ist near the boundery of the image you could be out of range if you add 1 
+  % if the streamline ist near the boundary of the image you could be out of range if you add 1 
   n8b = cellfun(@(s,n) min(floor(s(1:n,:,:)) + nb(1:n,:,:),enb(1:n,:,:)),w8b,pstreams,'UniformOutput',false);    
 
   w8b = cellfun(@(s,w) flipdim(prod(abs(s - w),2),3),n8b,w8b,'UniformOutput',false);        
@@ -380,7 +381,7 @@ function streams = stream_correction2(D,streams,P,ndim,np,th,sop,bf)
 % np    ... number of points to prove
 % th    ... theshold for D                      (default: 0.5)
 % sop   ... set one if one point have to stay   (default: 1)
-% bf    ... flip to old streamdirection         (default: 1)
+% bf    ... flip to old streamline direction    (default: 1)
 % _________________________________________________________________________
   
   if ~exist('th' ,'var'); th  = 0.5; end
@@ -389,9 +390,9 @@ function streams = stream_correction2(D,streams,P,ndim,np,th,sop,bf)
   
   % Streamline Correction parameter
   % _______________________________________________________________________
-  % default-neigbourmatrix 
-  % calculate a wieght value for every stream-end-points based on his 4 or 8
-  % grid neigbor values based on volume (use round operations and 
+  % default-neighbor-matrix 
+  % calculate a weight value for every stream-end-points based on his 4 or 8
+  % grid neighbor values based on volume (use round operations and 
   % volume of the diagonal corner)
   % calculate a intensity-value for all stream-end-points 
   % _______________________________________________________________________
@@ -436,41 +437,6 @@ function streams = stream_correction2(D,streams,P,ndim,np,th,sop,bf)
 %   end
   if bf, streams = cellfun(@flipud,streams,'UniformOutput', false); end
 end
-% function D = laplace(D,R,maxerr)
-% % _________________________________________________________________________
-%   if isa(D,'double'),   D = single(D); end
-%   if ~isa(R,'logical'), R = logical(R); end
-%   
-%   maxDDerr = 1;
-%   i = 0;
-%   
-% 	while maxDDerr>maxerr
-%     Do = D;
-%     
-%     % laplace filter step: D = fifilter(D,R,0,1,1);
-%     D1=zeros(size(D),'single'); D2=D1; D3=D1;
-%     for v=2:size(D,1)-1, D1(v,:,:) = D(v-1,:,:) + D(v+1,:,:); end
-%     for v=2:size(D,2)-1, D2(:,v,:) = D(:,v-1,:) + D(:,v+1,:); end
-%     for v=2:size(D,3)-1, D3(:,:,v) = D(:,:,v-1) + D(:,:,v+1); end
-%     D1 = D1+D2+D3; clear D2 D3; 
-%     if isempty(R), 
-%       D = D1/6; 
-%     else % long way to save memory *grummel*
-%       D1=D1/6;
-%       D1=D1.*R; 
-%       R=~R; 
-%       D=D.*R;
-%       R=~R;
-%       D=D1+D; 
-%     end
-%    
-%     D(~R) = Do(~R);     % reset Dirichlet-border-condition
-%     DD = abs(D - Do);   % error estimation
-%     maxDDerr = max(DD(:));
-%     i = i + 1;
-%   end
-%   
-% end
 function [l,h] = getrange(p,partsize,parts,max)
 % _________________________________________________________________________
   if max<=partsize

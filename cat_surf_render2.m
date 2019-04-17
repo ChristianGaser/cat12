@@ -450,14 +450,18 @@ switch lower(action)
         if ~isempty(sinfo1.fname)
           c = uimenu(cmenu, 'Label', 'Textures');
           if sinfo1.resampled
-            tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('*%s.*.resampled.%s*',sinfo1.side,sinfo1.name));
-            sfiles = {'central.','sphere.','sphere.reg.','hull.','.annot','defects.'}; 
+            if sinfo1.resampled_32k
+              tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('*%s.*.resampled_32k.%s*',sinfo1.side,sinfo1.name));
+            else
+              tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('*%s.*.resampled.%s*',sinfo1.side,sinfo1.name));
+            end
+            sfiles = {'central.','sphere.','sphere.reg.','hull.','inflate.','core.','inner.','outer.','.annot','defects.'}; 
             for i=1:numel(sfiles)
               tfiles(cellfun('isempty',strfind(tfiles,sfiles{i}))==0) = [];  
             end
           else
             tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('%s.*.%s*',sinfo1.side,sinfo1.name));
-            sfiles = {'central.','sphere.','sphere.reg.','hull.','.annot','defects.'}; 
+            sfiles = {'central.','sphere.','sphere.reg.','hull.','inflate.','core.','inner.','outer.','.annot','defects.','AGI.','SGI.'}; 
             for i=1:numel(sfiles)
               tfiles(cellfun('isempty',strfind(tfiles,sfiles{i}))==0) = [];  
             end
@@ -724,6 +728,7 @@ switch lower(action)
                 ...'Pial'      , fullfile(spm('Dir'),'toolbox','cat12','templates_surfaces',[sinfo1.side '.pial.freesurfer.gii']);  
                 ...'WM '       , fullfile(spm('Dir'),'toolbox','cat12','templates_surfaces',[sinfo1.side '.wm.freesurfer.gii']);  
                 'Hull'      , sinfo1.Phull;  
+                'Core'      , sinfo1.Pcore;  
                 'Sphere'    , sinfo1.Psphere;  
                 };
             uimenu(c, 'Label','Individual', 'Checked','on',  'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Pmesh,'file')>1)});  
@@ -731,6 +736,7 @@ switch lower(action)
            %uimenu(c, 'Label','Pial',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Ppial,'file')>1)});
            %uimenu(c, 'Label','WM',         'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Pwm,'file')>1)});
             uimenu(c, 'Label','Hull',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Phull,'file')>1)});  
+            uimenu(c, 'Label','Core',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Pcore,'file')>1)});  
             uimenu(c, 'Label','Sphere',     'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Psphere,'file')>1)});  
             H.meshs(end+1,:) = { 'Custom','';};
           end
