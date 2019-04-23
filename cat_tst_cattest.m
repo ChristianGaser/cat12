@@ -13,7 +13,7 @@ function [mainbatch,perror] = cat_tst_cattest(job)
 %    .datalevel  .. test diffenent datasets
 %                     working - {'basic'}
 %                     planned - {'human','long','group','nonhuman'}
-%    .paralevel  .. test different paramter settings
+%    .paralevel  .. test different parameter settings
 %                     1 - default, 2 - userlevel, 3 - full
 %    .userlevel  .. test specific userlevel
 %                     0 - default, 1 - expert, 2 - developer
