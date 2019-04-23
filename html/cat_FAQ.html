@@ -259,7 +259,7 @@
           <p>
             Outliers of image quality are often caused by artifacts e.g. by movements.  Increased noise is also possible for elderly subjects with WMHs, where the fibers become visible and increase local variance. <br />
             Best praxis is to remove strong outliers (e.g. > 2 standard deviations, but not necessarily), if the problems depend on the image quality and not other subject properties.  
-            If you have only a small number of images, you can also evaluate the segmentations in subject space by checking the <i>cat12*report.ps</i> or by using the <i>Display one slice for all images</i> tool.  
+            If you have only a small number of images, you can also evaluate the segmentations in subject space by checking the <i>cat12*report.ps</i> or by using the <i>Display slices</i> tool.  
             Use the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.showslice');">Check data homogeneity</a> to proof that the segmentation of these subjects were correct. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. However, this will not always mean that you have to remove these data from your sample, but should be checked more carefully.<br />
             Have a look to the <a href="cat_methods_QA.html">quality assurance methods</a> for further information. 
           </p>
@@ -270,7 +270,7 @@
             Yes, but you have to check for any preprocessing problems. Low rating depends on low resolution and/or higher noise/artifacts and is typical for very short sequences that are required e.g. for children.  
             Increased noise is also possible for elderly subjects with WMHs, where the fibers become visible and increase local variance.  
             Overall segmentation and reconstruction quality will be lower than for high quality data (Kappa < 0.9) and you have to check if the cortex was segmented correctly.<br />
-            Use the <i>Check data homogeneity</i> and/or have a look to the segmentations in subject space by checking the <i>cat12*report.ps</i> or by using the <i>Display one slice for all images</i> tool.
+            Use the <i>Check data homogeneity</i> and/or have a look to the segmentations in subject space by checking the <i>cat12*report.ps</i> or by using the <i>Display slices</i> tool.
           </p>
         </li>
         <li>

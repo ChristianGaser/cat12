@@ -41,6 +41,19 @@
       
       <h3>Detailed aspects:</h3>
       <ol>
+        
+        <li>
+          <h4 id="NC">Denoising</h4>
+          <p>
+            We also use two noise reduction methods to make data processing, and the tissue segmentation in particular, more robust against noise. The first method is a spatial-adaptive Non-Local Means (SANLM) denoising filter and and removes noise while maintaining edges 
+            <a href="matlab:web('https://dx.doi.org/10.1002/jmri.22003','-browser');">(Manjón et al. 2010)</a> and  
+            is implemented as pre-processing step. 
+            The second method is a classical Markov Random Field (MRF) approach, which includes spatial information from adjacent voxels in the segmentation estimation <a href="matlab:web('https://dx.doi.org/10.1109/42.563663','-browser');">(Rajapakse et al. 1997)</a> and is part of the AMAP segmentation. 
+            <!--The strength of the filters is automatically determined by estimating the residual noise in the image or can be set manually by the <em>"Strength of Noise Correction"</em> parameter (<em>cat.extopts.NCstr</em> in cat_defaults).-->
+          </p>
+        </li>
+        
+                
         <li>
           <h4 id="Interp">Interpolation</h4>
           <p>
@@ -48,22 +61,7 @@
             Although interpolation cannot add more details to the images, some of the functions used benefit from the higher number of voxels and the usual strip artefacts in modulated images are greatly reduced. 
           </p>       
         </li>
-        
-        <li>
-          <h4 id="NC">Denoising</h4>
-          <p>
-            We also use two noise reduction methods. The first method is a spatial-adaptive Non-Local Means (SANLM) denoising filter and is applied after the intensity normalization. 
-            <a href="matlab:web('https://dx.doi.org/10.1002/jmri.22003','-browser');">(Manjón et al. 2010)</a>.  
-            <!--After global intensity correction a 2nd SANLM filter or optionally a block-wise optimized non-local means (ORNLM) denoising filter is applied <a href="matlab:web('https://dx.doi.org/10.1109/TMI.2007.906087','-browser');">(Coupe et al. 2008)</a>.  
-            These filters remove noise while preserving edges and are implemented as preprocessing step.  
-            -->
-            This filter removes noise while maintaining edges and is implemented as pre-processing step. 
-            The second method is a classical Markov Random Field (MRF) approach, which includes spatial information from adjacent voxels in the segmentation estimation <a href="matlab:web('https://dx.doi.org/10.1109/42.563663','-browser');">(Rajapakse et al. 1997)</a> and is part of the AMAP segmentation. 
-            <!--The strength of the filters is automatically determined by estimating the residual noise in the image or can be set manually by the <em>"Strength of Noise Correction"</em> parameter (<em>cat.extopts.NCstr</em> in cat_defaults).-->
-          </p>
-        </li>
-        
-                
+
         <li>
           <h4 id="APP">Affine Preprocessing (APP)</h4>
           <p>
@@ -77,7 +75,7 @@
         <li>
           <h4 id="LAS">Local Adaptive Segmentation (LAS)</h4>
           <p>
-            In addition WM-inhomogeneities, GM intensity can vary for different regions such as the motor cortex, the basal ganglia, or the occipital lobe. 
+            GM intensity can vary for different regions such as the motor cortex, the basal ganglia, or the occipital lobe. 
             These changes have an anatomical background (e.g. iron content, myelinization), but are dependent on the MR-protocol and often lead to GM-underestimations at higher intensities and CSF-overestimations at lower intensities. 
             Therefore, a local intensity transformation of all tissue classes is used to reduce these effects in the image before the final AMAP segmentation. 
             The strength of the changes is controlled by the <i>"Strength of Local Adaptive Segmentation"</i> parameter in th expert GUI (<em>cat.extopts.LASstr</em> in cat_defaults file). <!--, with 0 for no LAS, small values (0.01-0.5) for small adjustments, 0.5 for medium adjustments (default), and higher values (0.5-1) for strong adjustments. --> 

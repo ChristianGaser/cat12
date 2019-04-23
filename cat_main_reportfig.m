@@ -422,7 +422,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         spm_ov_mesh('display',id,Phull);
       catch
         fprintf('Please update to a newer version of spm12 for using this contour overlay\n');
-        spm_update
+        try
+          spm_update
+        catch
+          fprintf('Update to the newest SPM12 version failed. Please update manually.\n');
+        end
       end
 
       % apply affine scaling for gifti objects

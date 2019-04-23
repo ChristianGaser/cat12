@@ -477,7 +477,7 @@ gcutstr.name      = 'Skull-Stripping';
 gcutstr.def       = @(val)cat_get_defaults('extopts.gcutstr', val{:});
 gcutstr.help      = {
   'Method of initial skull-stripping before AMAP segmentation. The SPM approach works quite stable for the majority of data. However, in some rare cases parts of GM (i.e. in frontal lobe) might be cut. If this happens the GCUT approach is a good alternative. GCUT is a graph-cut/region-growing approach starting from the WM area. '
-  'APRG (adaptive probability region-growing) is a new method that refines the probability maps of the SPM approach by region-growing techniques of the gcut approach with a final surface-based optimization stategy. This is currently the method with the most accurate and reliable results. '
+  'APRG (adaptive probability region-growing) is a new method that refines the probability maps of the SPM approach by region-growing techniques of the gcut approach with a final surface-based optimization strategy. This is currently the method with the most accurate and reliable results. '
   'If you use already skull-stripped data you can turn off skull-stripping although this is automaticaly detected in most cases. '
   'Please note that the choice of the skull-stripping method will also influence the estimation of TIV, because the methods mainly differ in the handling of the outer CSF around the cortical surface. '
   ''
@@ -565,7 +565,7 @@ wmhc.help   = {
   'In aging or (neurodegenerative) diseases WM intensity can be reduced locally in T1 or increased in T2/PD images. These so-called WM hyperintensies (WMHs) can lead to preprocessing errors. Large GM areas next to the ventricle can cause normalization problems. Therefore, a temporary correction for normalization is useful if WMHs are expected. CAT allows different ways to handle WMHs: '
   ''
   ' 0) No Correction (handled as GM). '
-  ' 1) Temporary (internal) correction as WM for spatial normalization. '
+  ' 1) Temporary (internal) correction as WM for spatial normalization and estimation of cortical thickness. '
   ' 2) Permanent correction to WM. ' 
   ' 3) Handling as separate class. '
   ''
@@ -574,14 +574,14 @@ wmhc.values = {0 1 2 3};
 if expert>1
   wmhc.labels = { ...
     'no correction (0)' ...
-    'set WMH as WM only for normalization (1)' ... 
+    'set WMH as WM only for normalization (1) and thickness estimation' ... 
     'set WMH as WM (2)' ...
     'set WMH as own class (3)' ...
   };
 else
   wmhc.labels = { ...
     'no WMH correction' ...
-    'set WMH as WM only for normalization' ... 
+    'set WMH as WM only for normalization and thickness estimation' ... 
     'set WMH as WM' ...
     'set WMH as own class' ...
   };
@@ -639,13 +639,13 @@ end
 
 
 %------------------------------------------------------------------------
-% Currently there are to much different stradegies and this paramter need 
-% revision. There a three basic APP functions that each include a initial 
-% rought and a following fine method. The first is the SPM appraoch that 
+% Currently there are to much different strategies and this parameter needs 
+% revision. There a three basic APP functions that each include an initial 
+% rough and a following fine method. The first is the SPM appraoch that 
 % is a simple iterative call of the Unified segmentation with following 
-% maximum-based bias correction. It is relative save but slow and can be 
+% maximum-based bias correction. It is relatively stable but slow and can be 
 % combined with the other APP routines. The second one is the classical 
-% APP approach with rough and fine processing (1070), followed by further 
+% APP approach with default and fine processing (1070), followed by further 
 % developed version that should be more correct with monitor variables and
 % T2/PD compatibility but finally worse results. 
 %
@@ -662,15 +662,15 @@ app.tag    = 'APP';
 app.name   = 'Affine Preprocessing (APP)';
 % short help text
 app.help   = { ...
-    'Affine registration and SPM preprocessing can fail in some subjects with deviating anatomy (e.g. other species/neonates) or in images with strong signal inhomogeneities, or untypical intensities (e.g. synthetic images). An initial bias correction can help to reduce such problems (see details below). Recommended are the "rough" and "full" option.' 
+    'Affine registration and SPM preprocessing can fail in some subjects with deviating anatomy (e.g. other species/neonates) or in images with strong signal inhomogeneities, or untypical intensities (e.g. synthetic images). An initial bias correction can help to reduce such problems (see details below). Recommended are the "default" and "full" option.' 
     ''
-    ' none   - no additional bias correction' 
-    ' light  - iterative SPM bias correction on different resolutions' 
-    ' full   - iterative SPM bias correction on different resolutions and final high resolution bias correction' 
-    ' rough  - rough APP bias correction (r1070)' 
+    ' none    - no additional bias correction' 
+    ' light   - iterative SPM bias correction on different resolutions' 
+    ' full    - iterative SPM bias correction on different resolutions and final high resolution bias correction' 
+    ' default - default APP bias correction (r1070)' 
   };
 app.def    = @(val)cat_get_defaults('extopts.APP', val{:});
-app.labels = {'none','light','full','rough'};
+app.labels = {'none','light','full','default'};
 app.values = {0 1 2 1070};
 if expert
   app.labels = [app.labels, {'rough (new)'}];
@@ -683,8 +683,8 @@ end
 app.help   = [app.help; { ...
     ''
     'light: This approach focuses on an iterative application of the standard SPM preprocessing with different bias-correction options from low (samp=6 mm, biasfwhm=120 mm) to high frequency corrections  (samp=4.5 mm, biasfwhm=45 mm). However, the iterative calls require a lot of additional processing time (~500s) and is normally not required in data with low intensity inhomogeneity. '
-    'full:  In addition to the "light" approach a final maximum-based filter (similar to the ''rough'' method that needs about additional 60s) is used to remove remaining local inhomogeneities. '
-    'rough: Fast correction (~60s) that identifies large homogeneous areas to estimate the intensity inhomogeneity. A maximum-filter is used to reduce the partial volume effect in T1 data. Moreover, gradient and divergence maps were used to avoid side effects by high intensity tissues (e.g. blood vessels or head tissue). '
+    'full:  In addition to the "light" approach a final maximum-based filter (similar to the ''default'' method that needs about additional 60s) is used to remove remaining local inhomogeneities. '
+    'default: Fast correction (~60s) that identifies large homogeneous areas to estimate the intensity inhomogeneity. A maximum-filter is used to reduce the partial volume effects in T1-weighted data. Moreover, gradient and divergence maps were used to avoid side effects by high intensity tissues (e.g. blood vessels or head tissue). '
 }];
 if expert
     app.help   = [app.help; { ...
