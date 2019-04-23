@@ -1,5 +1,32 @@
 ------------------------------------------------------------------------
-r1452 | dahnke | 2019-04-17 18:10:18
+r1453 | gaser | 2019-04-23 22:18:20
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_conf_extopts.m
+M       cat_main_registration.m
+M       cat_main_registration2.m
+M       cat_main_reportfig.m
+M       cat_parallelize.m
+M       cat_stat_check_SPM.m
+M       cat_stat_check_cov.m
+M       cat_surf_GI3D.m
+M       cat_surf_results.m
+M       cat_tst_cattest.m
+M       html/cat_FAQ.html
+M       html/cat_methods_VBM.html
+M       templates_1.50mm/anatomy.txt
+
+(1) Changed: Updated online help.
+(2) Changed: Updated font sizes in cat12.m, cat_surf_results.m, and
+    cat_stat_check_cov.m
+(3) Fixed: Suppress warnings in parallelization.
+(4) Fixed. Check that spm12 update was successful in cat_main_reportfig.m
+(5) Changed: Changed name of standard APP from "rough" to "default".
+(6) Changed: Shortened several menu entries.
+------------------------------------------------------------------------
+r1452 | dahnke | 2019-04-17 18:10:54 +0200 (Mi, 17 Apr 2019) | 39 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -38,6 +65,7 @@ M       cat_surf_resamp.m
               cat_surf_parameters and cat_surf_gyrification.
 
        
+
 
 ------------------------------------------------------------------------
 r1451 | dahnke | 2019-04-04 10:49:28 +0200 (Do, 04 Apr 2019) | 10 lines

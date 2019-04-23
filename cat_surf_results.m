@@ -490,7 +490,7 @@ switch lower(action)
                 cla(H.nam);
                 axis(H.nam, 'off')
                 text(0.5, 0.5, spm_str_manip(H.S{1}.name, 'k60d'), 'Parent', H.nam, 'Interpreter', 'none', ...
-                    'FontSize', H.FS(7), 'HorizontalAlignment', 'center');
+                    'FontSize', H.FS(9), 'HorizontalAlignment', 'center');
                 
                 % set # of surfaces back to "1" if we cannot use RGB overlay
                 if 1, H.n_surf = 1; end
@@ -1041,7 +1041,7 @@ end
 cla(H.nam);
 axis(H.nam, 'off')
 text(0.5, 0.5, spm_str_manip(H.S{1}.name, 'k60d'), 'Parent', H.nam, 'Interpreter', 'none', ...
-    'FontSize', H.FS(7), 'HorizontalAlignment', 'center');
+    'FontSize', H.FS(9), 'HorizontalAlignment', 'center');
 
 %-----------------------------------------------------------------------
 function H = select_surf(surf)
@@ -1336,7 +1336,11 @@ if H.n_surf == 1
         set(H.colourbar, 'XTickLabel', XTickLabel(2:end, :), 'XTick', XTick);
     end % end H.logP
     
-    set(H.colourbar, 'XColor', 1-H.bkg_col, 'YColor', 1-H.bkg_col, 'TickLength',0);
+    try
+      set(H.colourbar, 'XColor', 1-H.bkg_col, 'YColor', 1-H.bkg_col, 'TickLength',0);
+    catch
+      set(H.colourbar, 'XColor', 1-H.bkg_col, 'YColor', 1-H.bkg_col, 'TickLength',[0 0]);
+    end
 else
     
     if ~isfield(H, 'cbar') || ~ishandle(H.cbar)

@@ -68,7 +68,7 @@ function [S,SH] = cat_surf_GI3D(S,D,R,opt)
   % _______________________________________________________________________
   % Calculate the face areas of the surface and it's hull (see surfacearea)
   % and map them to the vertices (see verticemapping).
-  % The GI is the ration between the inner and outer area.
+  % The GI is the ratio between the inner and outer area.
   S = surfacearea(S,'');  S.farea  = S.area;  S = verticemapping(S,'area'); 
   S = surfacearea(S,'H'); S.Hfarea = S.Harea; S = verticemapping(S,'Harea');
   S.GI  = S.area ./ S.Harea; 

@@ -995,7 +995,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
           reg(regstri).mcbr = mean(diff(reg(regstri).relrmsdtc(1:end-1)) ./ -diff(reg(regstri).ll(1:end-1,1)')); 
           if mdisplay(5)
             % this work very well
-            fprintf('%30s','Cost Benefit Ration (CBR): ');
+            fprintf('%30s','Cost Benefit Ratio (CBR): ');
             QMC   = cat_io_colormaps('marks+',17);
             color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
             if mdisplay(5)>1

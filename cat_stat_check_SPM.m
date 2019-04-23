@@ -96,7 +96,7 @@ if check_cov
         end
     else
         if use_unsmoothed_data
-            fprintf('\nNo unsmoothed data found. Use smoothed data from design matrix.\n');
+            fprintf('\nNo unsmoothed data found. Use original data from design matrix.\n');
         end
     end
     
@@ -126,7 +126,7 @@ if check_cov
     end
     
     % always use last found column
-    cl = max(cl)
+    cl = max(cl);
     
     for i=1:numel(VY)
         if ~exist(char(VY(i).fname),'file')
@@ -312,7 +312,7 @@ if ~repeated_anova
             fprintf(' and group factors.\n');
         else fprintf('\n'); end
         fprintf('Orthogonality between nuisance parameters and parameters of interest should be carefully checked for high (absolute) values that point to co-linearity (correlation) between these variables.\n');
-        fprintf('In case of such a high co-linearity nuisance parameters should be preferably used with global scaling.\n');
+        fprintf('In case of such a high co-linearity nuisance parameters should be preferably used with global scaling (optionally with AnCova instead of proportional scaling).\n');
         fprintf('For more information please check the manual or the online help.\n\n');
     end
     
