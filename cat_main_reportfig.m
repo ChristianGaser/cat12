@@ -106,9 +106,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   % independent of the first colormap.
   ytickp0      = [    1,   13,   18,    26,   35,   44,     52,    56,      60];
   if job.extopts.expertgui>1
-    yticklabelp0 = {' BG',' HD',' BG',' CSF',' GM',' WM',' WMHs',' Ventricle',' GM > CSF'};
+    yticklabelp0 = {' BG',' HD',' BG',' CSF',' GM',' WM',' WMHs',' Ventricle',' Vessels/Dura->CSF'};
   else
-    yticklabelp0 = {' BG',' HD',' BG',' CSF',' GM',' WM',' WMHs',' ',' GM>CSF'};
+    yticklabelp0 = {' BG',' HD',' BG',' CSF',' GM',' WM',' WMHs',' ',' Vessels/Dura->CSF'};
   end
   if job.extopts.WMHC<2 
     if qa.subjectmeasures.vol_rel_CGW(4)>0.03 || ...
