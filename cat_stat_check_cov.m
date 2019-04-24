@@ -189,7 +189,7 @@ end
 
 % positions & font size
 ws = spm('Winsize','Graphics');
-FS = spm('FontSizes');
+FS = cat_get_defaults('extopts.fontsize');
 
 pos = struct(...
     'fig',    [10  10  1.3*ws(3) 1.1*ws(3)],... % figure
@@ -382,8 +382,8 @@ clf(H.figure);
 set(H.figure,...
    'MenuBar','none',...
    'Position',pos.fig,...
-...   'DefaultTextFontSize',FS(10),...
-...   'DefaultUicontrolFontSize',FS(10),...
+...   'DefaultTextFontSize',FS,...
+...   'DefaultUicontrolFontSize',FS,...
    'NumberTitle','off');
     
 if mesh_detected
@@ -498,7 +498,7 @@ H.text = uicontrol(H.figure,...
         'String','Click in image to display slices',...
         'Style','text','HorizontalAlignment','center',...
         'ToolTipString','Select slice for display',...
-        'FontSize',FS(7));
+        'FontSize',FS-2);
 
 H.alpha = uicontrol(H.figure,...
         'Units','normalized','position',pos.aslider,...
@@ -513,7 +513,7 @@ H.alpha_txt = uicontrol(H.figure,...
         'Style','text','BackgroundColor',[0.8 0.8 0.8],...
         'Position',[pos.aslider(1) pos.aslider(2)-0.005 0.2 0.02],...
         'String','Overlay Opacity of Differences to Sample Mean',...
-        'FontSize',FS(7),'Visible','off');
+        'FontSize',FS-2,'Visible','off');
 
 % add slider only for volume data
 if ~mesh_detected
@@ -529,7 +529,7 @@ if ~mesh_detected
         'Units','normalized','HorizontalAlignment','center',...
         'Style','text','BackgroundColor',[0.8 0.8 0.8],...
         'Position',[pos.sslider(1) pos.sslider(2)-0.005 0.2 0.02],...
-        'String','Slice [mm]','Visible','off','FontSize',FS(7));
+        'String','Slice [mm]','Visible','off','FontSize',FS-2);
         
   update_slices_array;
 end
@@ -652,9 +652,9 @@ for i=1:length(MD)
 end
 scatter(X(:,1),X(:,2),30,C,'o','Linewidth',2);
 
-xlabel('<----- Worst ---      Mean correlation      --- Best ------>  ','FontSize',FS(8),'FontWeight','Bold');
-ylabel('<----- Best ---      Weighted overall image quality      --- Worst ------>  ','FontSize',FS(8),'FontWeight','Bold');
-title('<--- Best -- Mahalanobis distance -- Worst ---->  ','FontSize',FS(10),'FontWeight','Bold');
+xlabel('<----- Worst ---      Mean correlation      --- Best ------>  ','FontSize',FS-1,'FontWeight','Bold');
+ylabel('<----- Best ---      Weighted overall image quality      --- Worst ------>  ','FontSize',FS-1,'FontWeight','Bold');
+title('<--- Best -- Mahalanobis distance -- Worst ---->  ','FontSize',FS+1,'FontWeight','Bold');
 
 % add colorbar
 H.cbar = axes('Position',pos.cbar,'Parent',H.figure);
@@ -702,13 +702,13 @@ set(gca,'XTickLabel','','YTickLabel','');
 axis image
 
 if sorted
-  xlabel('<----- Best ---      File Order      --- Worst ------>  ','FontSize',FS(8),'FontWeight','Bold');
-  ylabel('<----- Worst ---      File Order      --- Best ------>  ','FontSize',FS(8),'FontWeight','Bold');
-  title('Sorted Sample Correlation Matrix  ','FontSize',FS(10),'FontWeight','Bold');
+  xlabel('<----- Best ---      File Order      --- Worst ------>  ','FontSize',FS-1,'FontWeight','Bold');
+  ylabel('<----- Worst ---      File Order      --- Best ------>  ','FontSize',FS-1,'FontWeight','Bold');
+  title('Sorted Sample Correlation Matrix  ','FontSize',FS+1,'FontWeight','Bold');
 else
-  xlabel('<----- First ---      File Order      --- Last ------>  ','FontSize',FS(8),'FontWeight','Bold');
-  ylabel('<----- Last ---      File Order      --- First ------>  ','FontSize',FS(8),'FontWeight','Bold');
-  title('Sample Correlation Matrix  ','FontSize',FS(10),'FontWeight','Bold');
+  xlabel('<----- First ---      File Order      --- Last ------>  ','FontSize',FS-1,'FontWeight','Bold');
+  ylabel('<----- Last ---      File Order      --- First ------>  ','FontSize',FS-1,'FontWeight','Bold');
+  title('Sample Correlation Matrix  ','FontSize',FS+1,'FontWeight','Bold');
 end
 
 H.cbar = axes('Position',pos.cbar,'Parent',H.figure);
@@ -772,7 +772,7 @@ for i=1:n_samples
 
   for j=1:length(ind)
     if show_name
-      text(xpos{i}(j),data{i}(j),filename.m{ind(j)},'FontSize',FS(7),'HorizontalAlignment','center')
+      text(xpos{i}(j),data{i}(j),filename.m{ind(j)},'FontSize',FS-2,'HorizontalAlignment','center')
     else
       plot(xpos{i}(j),data{i}(j),'k.');
     end
@@ -785,7 +785,7 @@ H.fnambox = uicontrol(H.figure,...
     'Style','CheckBox','HorizontalAlignment','center',...
     'ToolTipString','Show filenames in boxplot','value',show_name,...
     'BackgroundColor',[0.8 0.8 0.8],...
-    'Interruptible','on','Visible','on','FontSize',FS(7));
+    'Interruptible','on','Visible','on','FontSize',FS-2);
 
 if allow_violin
   H.plotbox = uicontrol(H.figure,...
@@ -794,7 +794,7 @@ if allow_violin
     'Style','CheckBox','HorizontalAlignment','center',...
     'ToolTipString','Switch to Violinplot','value',allow_violin,...
     'BackgroundColor',[0.8 0.8 0.8],...
-    'Interruptible','on','Visible','on','FontSize',FS(7));
+    'Interruptible','on','Visible','on','FontSize',FS-2);
 end
 
 opt = struct('groupnum',0,'ygrid',0,'violin',2*allow_violin,'median',2,'groupcolor',jet(n_samples));
@@ -818,8 +818,8 @@ if n_samples > 1
 else
   title_str = sprintf('Boxplot: %s  \nCommon filename: %s*',name_boxp,spm_file(char(filename.s),'short25'));
 end
-title(title_str,'FontSize',FS(8),'FontWeight','Bold');
-xlabel('<----- First ---      File Order      --- Last ------>  ','FontSize',FS(10),...
+title(title_str,'FontSize',FS-1,'FontWeight','Bold');
+xlabel('<----- First ---      File Order      --- Last ------>  ','FontSize',FS+1,...
     'FontWeight','Bold');
 
 xpos = -0.40 - n_samples*0.1;
@@ -827,17 +827,17 @@ xpos = -0.40 - n_samples*0.1;
 if (length(data_boxp) > 2)
   if quality_order > 0
     text(xpos, ylim_min,'<----- Low rating (poor quality)  ','Color','red','Rotation',...
-        90,'HorizontalAlignment','left','FontSize',FS(9),'FontWeight','Bold')
+        90,'HorizontalAlignment','left','FontSize',FS,'FontWeight','Bold')
     text(xpos, ylim_max,'High rating (good quality) ------>  ','Color','green','Rotation',...
-        90,'HorizontalAlignment','right','FontSize',FS(9),'FontWeight','Bold')
+        90,'HorizontalAlignment','right','FontSize',FS,'FontWeight','Bold')
   else
     text(xpos, ylim_max,'Low rating (poor quality) ------>  ','Color','red','Rotation',...
-        90,'HorizontalAlignment','right','FontSize',FS(9),'FontWeight','Bold')
+        90,'HorizontalAlignment','right','FontSize',FS,'FontWeight','Bold')
     text(xpos, ylim_min,'<----- High rating (good quality)  ','Color','green','Rotation',...
-        90,'HorizontalAlignment','left','FontSize',FS(9),'FontWeight','Bold')
+        90,'HorizontalAlignment','left','FontSize',FS,'FontWeight','Bold')
   end
   text(xpos, (ylim_max+ylim_min)/2,sprintf('%s',name_boxp),'Color','black','Rotation',...
-        90,'HorizontalAlignment','center','FontSize',FS(9),'FontWeight','Bold')
+        90,'HorizontalAlignment','center','FontSize',FS,'FontWeight','Bold')
 end
 
 hold off
@@ -994,9 +994,9 @@ if isfield(pos,'x')
     txt = {sprintf('Correlation: %3.3f',YpY(x,y)),[],['Top: ',spm_file(filename.m{x},'short25')],...
       ['Bottom: ',spm_file(filename.m{y},'short25')],[],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
   end
-  set(H.text,'String',txt,'FontSize',FS(7));
+  set(H.text,'String',txt,'FontSize',FS-2);
   set(H.mm_txt,'String',[num2str(round(get(H.mm,'Value'))),' mm'],...
-      'FontSize',FS(7));
+      'FontSize',FS-2);
 end
 
 return
@@ -1023,7 +1023,7 @@ if isscatter
   % text info for textbox
   txt2 = {sprintf('%s',spm_file(filename.m{pos.x},'short25')),[],'Difference to Sample Mean (red: - green: +)'};
 
-  set(H.text,'String',txt2,'FontSize',FS(7));
+  set(H.text,'String',txt2,'FontSize',FS-2);
   axes('Position',pos.slice);
 
   x = pos.x;
@@ -1071,7 +1071,7 @@ else
       'Difference to Sample Mean (red: - green: +)'};
   end      
 
-  set(H.text,'String',txt2,'FontSize',FS(7));
+  set(H.text,'String',txt2,'FontSize',FS-2);
   axes('Position',pos.slice);
 end
   
