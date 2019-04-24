@@ -701,7 +701,7 @@ if ~debug, clear wYp0 wYcls wYv trans Yp0; end
 
 
 
-%% XML-report and Quality Assurance
+%% XML-report and Quality Control
 %  ---------------------------------------------------------------------
 
 %  estimate brain tissue volumes and TIV

@@ -455,15 +455,15 @@ data.filter  = 'image';
 data.ufilter = '.*';
 data.num     = [1 Inf];
 data.help = {
-'Select images for quality assurance.'};
+'Select images for quality control.'};
 
 qa        = cfg_exbranch;
 qa.tag    = 'qa';
-qa.name   = 'CAT quality assurance';
+qa.name   = 'CAT quality control';
 qa.val    = {data};
 qa.prog   = @cat_vol_qa;
 qa.vfiles = @vfiles_qa;
-qa.help   = {'CAT Quality Assurance of T1 images. '};
+qa.help   = {'CAT Quality Control of T1 images. '};
 
 %------------------------------------------------------------------------
 

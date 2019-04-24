@@ -51,7 +51,7 @@
             <li><a href="#MT">Preprocessing of specific contrasts (e.g. MT, T1syn, R1)</a></li>
           </ul>
           </br>
-        <li><h4><a href="#QA">Quality control / assurance</a></h4></li>
+        <li><h4><a href="#QA">Quality control</a></h4></li>
           <ul>
             <li><a href="#lowQRscans">Some of my images get a low rating - can I use them anyway?</a></li>
             <li><a href="#lowQRsample">My whole data get a low average rating - can I use it?</a></li>
@@ -252,7 +252,7 @@
      
      
      
-      <h3 id="QA">Quality control / assurance</h3>
+      <h3 id="QA">Quality control</h3>
       <ul>
         <li>
           <h4 id="lowQRscans">Some of my images get a low rating - can I use them anyway?</h4>
@@ -261,7 +261,7 @@
             Best praxis is to remove strong outliers (e.g. > 2 standard deviations, but not necessarily), if the problems depend on the image quality and not other subject properties.  
             If you have only a small number of images, you can also evaluate the segmentations in subject space by checking the <i>cat12*report.ps</i> or by using the <i>Display slices</i> tool.  
             Use the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.showslice');">Check data homogeneity</a> to proof that the segmentation of these subjects were correct. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. However, this will not always mean that you have to remove these data from your sample, but should be checked more carefully.<br />
-            Have a look to the <a href="cat_methods_QA.html">quality assurance methods</a> for further information. 
+            Have a look to the <a href="cat_methods_QA.html">quality control methods</a> for further information. 
           </p>
         </li>
         <li>
