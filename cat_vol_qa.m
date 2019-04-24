@@ -1,5 +1,5 @@
 function varargout = cat_vol_qa(action,varargin)
-% CAT Preprocessing T1 Quality Assurance
+% CAT Preprocessing T1 Quality Control
 % ______________________________________________________________________
 % 
 % Estimation of image quality measures like noise, inhomogeneity,
@@ -311,7 +311,7 @@ function varargout = cat_vol_qa(action,varargin)
       
       if opt.verb>1
         fprintf('\n%s\n\n%s\n%s\n', ...
-          sprintf('CAT Preprocessing T1 Quality Assurance (%s):',...
+          sprintf('CAT Preprocessing T1 Quality Control (%s):',...
           sprintf('Rev: %s',rev_cat)), Theader,repmat('-',size(Theader)));  
       end
 
