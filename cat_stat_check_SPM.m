@@ -224,7 +224,7 @@ bC      = kron(tmp',tmp);
 %==========================================================================
 % create figure
 ws = spm('Winsize','Graphics');
-FS = spm('FontSizes');
+FS = cat_get_defaults('extopts.fontsize');
 
 h = figure(3);
 clf(h);
@@ -235,12 +235,12 @@ set(h,'MenuBar','none','Position',[10 ws(4) 0.85*ws(3) 0.85*ws(4)],'NumberTitle'
 %-Title
 %--------------------------------------------------------------------------
 hTax = axes('Position',[0.03,0,0.94,1],...
-    'DefaultTextFontSize',FS(9),...
+    'DefaultTextFontSize',FS,...
     'XLim',[0,1],'YLim',[0,1],...
     'Visible','off');
 
 str='Statistical analysis: Design orthogonality';
-text(0.5,0.95,str,'Fontsize',FS(14),'Fontweight','Bold',...
+text(0.5,0.95,str,'Fontsize',FS+5,'Fontweight','Bold',...
     'HorizontalAlignment','center');
 
 line('Parent',hTax,...
@@ -267,7 +267,7 @@ set(hDesMtx,'TickDir','out',...
 %-Parameter names
 if ~isempty(Xnames)
     axes('Position',[.07 .8 .6 .1],'Visible','off',...
-        'DefaultTextFontSize',FS(8),'DefaultTextInterpreter','TeX',...
+        'DefaultTextFontSize',FS-1,'DefaultTextInterpreter','TeX',...
         'XLim',[0,nPar]+0.5)
     for i=PTick, text(i,.05,Xnames{i},'Rotation',90), end
 end
@@ -345,7 +345,7 @@ set(hDesOIm,...
 
 if ~isempty(Xnames)
     axes('Position',[.69 .18 0.01 .2],'Visible','off',...
-        'DefaultTextFontSize',FS(10),...
+        'DefaultTextFontSize',FS+1,...
         'DefaultTextInterpreter','TeX',...
         'YDir','reverse','YLim',[0,nPar]+0.5)
     for i=PTick
@@ -370,21 +370,21 @@ set(hAx,'Units','points');
 AxPos = get(hAx,'Position');
 set(hAx,'YLim',[0,AxPos(4)])
 
-dy = FS(9); y0 = floor(AxPos(4)) -dy; y = y0;
+dy = FS; y0 = floor(AxPos(4)) -dy; y = y0;
 
 text(0.3,y,str,...
     'HorizontalAlignment','Center',...
-    'FontWeight','Bold','FontSize',FS(11))
+    'FontWeight','Bold','FontSize',FS+2)
 y=y-2*dy;
 
 for sf = fieldnames(xs)'
     text(0.3,y,[strrep(sf{1},'_',' '),' :'],...
         'HorizontalAlignment','Right','FontWeight','Bold',...
-        'FontSize',FS(9))
+        'FontSize',FS)
     s = xs.(sf{1});
     if ~iscellstr(s), s={s}; end
     for i=1:numel(s)
-        text(0.31,y,s{i},'FontSize',FS(9))
+        text(0.31,y,s{i},'FontSize',FS)
         y=y-dy;
     end
 end
