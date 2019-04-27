@@ -455,13 +455,13 @@ switch lower(action)
             else
               tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('*%s.*.resampled.%s*',sinfo1.side,sinfo1.name));
             end
-            sfiles = {'central.','sphere.','sphere.reg.','hull.','inflate.','core.','inner.','outer.','.annot','defects.'}; 
+            sfiles = {'central.','sphere.','sphere.reg.','hull.','inflate.','core.','white','pial','inner.','outer.','.annot','defects.'}; 
             for i=1:numel(sfiles)
               tfiles(cellfun('isempty',strfind(tfiles,sfiles{i}))==0) = [];  
             end
           else
             tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('%s.*.%s*',sinfo1.side,sinfo1.name));
-            sfiles = {'central.','sphere.','sphere.reg.','hull.','inflate.','core.','inner.','outer.','.annot','defects.','AGI.','SGI.'}; 
+            sfiles = {'central.','sphere.','sphere.reg.','hull.','inflate.','core.','white','pial','inner.','outer.','.annot','defects.','AGI.','SGI.'}; 
             for i=1:numel(sfiles)
               tfiles(cellfun('isempty',strfind(tfiles,sfiles{i}))==0) = [];  
             end
@@ -476,7 +476,9 @@ switch lower(action)
           else   
             usetexture = 0; 
           end
-          uimenu(c, 'Label','none', 'Interruptible','off','Checked',checked{2-any(usetexture)}, 'Callback',{@myChangeTexture, H}); 
+          set(c,'UserData',H.textures); 
+          uimenu(c, 'Label', 'Synchronise Views', 'Visible','off','Checked','off', 'Tag','SynchroMenu', 'Callback',{@mySynchroniseTexture, H});
+          uimenu(c, 'Label','none', 'Interruptible','off','Separator','on','Checked',checked{2-any(usetexture)}, 'Callback',{@myChangeTexture, H}); 
           if strcmp(H.sinfo(1).texture,'defects'), set(c,'Enable','off');  end
           if numel(tfiles)
             uimenu(c, 'Label', H.textures{1,1},'Interruptible','off','Separator','on','Checked',checked{usetexture(1)+1},'Callback',{@myChangeTexture, H});
@@ -767,7 +769,7 @@ switch lower(action)
           labeldir = sinfo1(1).pp;
         end
         % find nii-files
-        if exist(labeldir,'dir')
+        if exist(labeldir,'dir') && exist(labeldir,'dir')
           H.niftis = [ ...
             cat_vol_findfiles(labeldir,sprintf('m%s.nii',sinfo1(1).name)); 
             cat_vol_findfiles(labeldir,sprintf('mi%s.nii',sinfo1(1).name)); 
@@ -777,7 +779,7 @@ switch lower(action)
           H.niftis = []; 
         end
           
-        if sinfo1.resampled
+        if sinfo1.resampled && exist(labeldir,'dir')
           H.niftis = [H.niftis; cat_vol_findfiles(labeldir,sprintf('*%s.nii',sinfo1(1).name))];
         end
         H.niftis = unique( H.niftis );
@@ -2161,6 +2163,22 @@ HP = findobj(obj,'Label','Synchronise Views');
 check = toggle(get(obj,'Checked')); 
 for HPi=1:numel(HP)    
   set(HP(HPi),'Checked',check);
+end
+%==========================================================================
+function mySynchroniseTexture(obj,evt,H)
+tex    = get(obj,'parent');
+curTex = setdiff( findobj( get(tex,'children'),'Checked','on'), tex);
+oT = setdiff( findobj('Label',get(curTex,'Label')) , curTex);
+P = setdiff( findobj('Tag','CATSurfRender','Type','Patch'), H.patch);
+otex = setdiff( findobj('Label','Textures'),tex);
+for i=1:numel(oT)
+   try
+        Hi = getappdata(ancestor(P(i),'axes'),'handles');
+        Hi.textures = get(otex(i),'Userdata');
+        myChangeTexture(oT(i),evt,Hi);
+   end    
+   mySynchroniseCaxis(obj,evt,Hi);
+   %mySynchroniseCaxis(oT(i),evt,Hi)
 end
 %==========================================================================
 function myDataCursor(obj,evt,H)

@@ -118,8 +118,10 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
   
 % set other variables  
   npoints       = size(S.SP,1);
-  if opt.fast   maxpartsize = 1000000000/opt.streamopt(2);
-  else          maxpartsize = 100000000/opt.streamopt(2);  %       1000000  
+  if opt.fast   
+    maxpartsize = 1000000000/opt.streamopt(2);
+  else
+    maxpartsize = 100000000/opt.streamopt(2);  %       1000000
   end
   maxpartsize   = maxpartsize / (1/opt.interpV)^3;
   opt.parts     = max(1,ceil(npoints / maxpartsize));                      % fprintf(1,'(%d)',opt.parts);
@@ -243,13 +245,13 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
     if strcmpi(opt.calctype,'surfacebased') % if 1...
       % layer calculation
       % _____________________________________________________________________    
-      streamlayer = cellfun(@(s,s1e,sl) (sl-s1e-cumsum(s,1))/(sl-s1e),streampointdist,mat2cell(stream1err,repmat(1,numel(streamlength),1),1),...
-                    mat2cell(streamlength,repmat(1,numel(streamlength),1),1),'UniformOutput',false);  
+      streamlayer = cellfun(@(s,s1e,sl) (sl-s1e-cumsum(s,1))/(sl-s1e),streampointdist,num2cell(stream1err),...
+                    num2cell(streamlength),'UniformOutput',false);  
       S.CP(l:h,:) = cell2mat(cellfun(@(s,sl) s(max([1,find(sl<=0.5,1,'first')]),:),streams,streamlayer,'UniformOutput',false));
        % funkt net, weil die l??nge null ist, der steamlayer damit auch null und damit eine leere matrix zugewiesen werden soll...     
 
-      S.L(l:h,:,opt.layer+1) = single(cell2mat(cellfun(@(s,sl) s(sl,:),streams,mat2cell(double(cellfun('size',streams,1)),...
-        ones(numel(l:h),1),1),'UniformOutput',false)));                             % OS, GM/CSF boundary
+      S.L(l:h,:,opt.layer+1) = single(cell2mat(cellfun(@(s,sl) s(sl,:),streams,num2cell(double(cellfun('size',streams,1))),...
+        'UniformOutput',false)));                             % OS, GM/CSF boundary
       S.L(l:h,:,1) = cell2mat(cellfun(@(s) s(1,:),streams,'UniformOutput',false));  % IS, GM/WM boundary
       for lay=1:opt.layer-1
         S.L(l:h,:,lay+1) = single(cell2mat(cellfun(@(s,sl) s(max([1,find(sl<=lay/opt.layer,1,'first')]),:),...
@@ -325,12 +327,6 @@ function streams = stream_correction(D,streams,P,ndim,np,th,sop,bf)
   % _______________________________________________________________________
 
   sR = size(D);                       
-%   if     ndim==2, nb = repmat(shiftdim([0 0;0 1;1 0;1 1]',-1),np,1);
-%   elseif ndim==3, nb = repmat(shiftdim([0 0 0;0 0 1;0 1 0;0 1 1;1 0 0;1 0 1;1 1 0;1 1 1]',-1),np,1);  
-%   end
-%   if     ndim==2, enb = repmat(shiftdim((ones(4,1)*size(D))',-1),np,1);
-%   elseif ndim==3, enb = repmat(shiftdim((ones(8,1)*size(D))',-1),np,1);  
-%   end
   nb = repmat(shiftdim([0 0 0;0 0 1;0 1 0;0 1 1;1 0 0;1 0 1;1 1 0;1 1 1]',-1),np,1); 
   enb = repmat(shiftdim((ones(8,1)*size(D))',-1),np,1);
   
@@ -338,105 +334,43 @@ function streams = stream_correction(D,streams,P,ndim,np,th,sop,bf)
   streams = cellfun(@flipud,streams,'UniformOutput', false);
 
   % estimate the interesting points for every stream   
-  nstreams = cellfun('size',streams,1);                                    % number of points in a streams
-  nullstreams=find(nstreams==0);
-  if ~isempty(nullstreams), for ns=nullstreams', streams{ns}=P(ns,:); nstreams(ns)=1; end; end % there have to one point in a stream !
-  pstreams = nstreams; 
+  nstreams    = cellfun('size',streams,1);                                 % number of points in a streams
+  nullstreams = find(nstreams==0);
+  if ~isempty(nullstreams)
+    for ns = nullstreams' 
+      streams{ns}  = P(ns,:); 
+      nstreams(ns) = 1;
+    end; 
+  end
+  
+  pstreams = nstreams;
   pstreams(nstreams>np) = np;                                              % if more than np-points are in a stream
   if sop, pstreams(nstreams==pstreams) = pstreams(nstreams==pstreams)-1; end % one point have to stay
   pstreams(pstreams<0) = 0;
-  pstreams = mat2cell(pstreams,ones(1,numel(pstreams)),1);        
-  nstreams = mat2cell(nstreams,ones(1,numel(nstreams)),1);       
-
+  
+  % convert into cells
+  pstreams = num2cell(pstreams);        
+  nstreams = num2cell(nstreams);       
+  
   % calculate the weight of a neigbor (volume of the other corner) and
   w8b = cellfun(@(s,n) reshape(repmat(s(1:n,:,:),1,2^ndim),[n,ndim,2^ndim]),streams,pstreams,'UniformOutput',false);        
+  
   % if the streamline ist near the boundary of the image you could be out of range if you add 1 
-  n8b = cellfun(@(s,n) min(floor(s(1:n,:,:)) + nb(1:n,:,:),enb(1:n,:,:)),w8b,pstreams,'UniformOutput',false);    
-
-  w8b = cellfun(@(s,w) flipdim(prod(abs(s - w),2),3),n8b,w8b,'UniformOutput',false);        
-
+  n8b = cellfun(@(s,n) max(1,min(floor(s(1:n,:,:)) + nb(1:n,:,:) , enb(1:n,:,:) )),w8b,pstreams,'UniformOutput',false);    
+  w8b = cellfun(@(s,w) flip(prod(abs(s - w),2),3),n8b,w8b,'UniformOutput',false);        
+  
   % multiply this with the intensity-value of D => intensity-value of a streampoint
-%  try
-%     if     ndim==2, istreams = cellfun(@(n,s,w) 1 + n - ...
-%            sum(sum(D(sub2ind(sR,s(:,1,:),s(:,2,:)))          .* w,3)>=th,1),pstreams,n8b,w8b,'UniformOutput',false);
-%     elseif ndim==3, istreams = cellfun(@(n,s,w) 1 + n - ...
-%            sum(sum(D(sub2ind(sR,s(:,1,:),s(:,2,:),s(:,3,:))) .* w,3)>=th,1),pstreams,n8b,w8b,'UniformOutput',false);
-%     end 
-    %istreams = cellfun(@(n,s,w) find(sum(D(sub2ind(sR,s(:,1,:),s(:,2,:),s(:,3,:))) .* w,3)<=th,1,'last'),pstreams,n8b,w8b,'UniformOutput',false);
-    %istreams = cellfun(@(s) find(isocolors(D,s(:,[2,1,3]))<=th,1,'last'),streams,'UniformOutput',false);
-    istreams = cellfun(@(n,s,w) 1 + n - sum(sum(D(sub2ind(sR,s(:,1,:),s(:,2,:),s(:,3,:))) .* w,3)>=th,1),pstreams,n8b,w8b,'UniformOutput',false);
-    % reset streams 
-    streams = cellfun(@(s,f,e) s(f:e,:),streams,istreams,nstreams,'UniformOutput',false); clear istreams nstreams;
-%   catch %#ok<CTCH>
-%     fprintf(1,'E');
-%   end
+  try
+    istreams = cellfun(@(n,s,w) 1 + n - sum(sum(D( sub2ind(sR,s(:,1,:),s(:,2,:),s(:,3,:)) ) .* w,3)>=th,1),pstreams,n8b,w8b,'UniformOutput',false);
+    streams = cellfun(@(s,f,e) s(f:e,:),streams,istreams,nstreams,'UniformOutput',false); % reset streams 
+  catch %#ok<CTCH>
+    fprintf(1,'E');
+  end
+  clear w8b n8b pstreams istreams nstreams; 
+  
   if bf, streams = cellfun(@flipud,streams,'UniformOutput', false); end
 end
-function streams = stream_correction2(D,streams,P,ndim,np,th,sop,bf) 
-% stream correction - cut too long streams
-% remove the last 'np' points of the streams 'streams' were D(np)>=th 
-% _________________________________________________________________________
-% D     ... Image
-% ndim  ... number of dimensions
-% np    ... number of points to prove
-% th    ... theshold for D                      (default: 0.5)
-% sop   ... set one if one point have to stay   (default: 1)
-% bf    ... flip to old streamline direction    (default: 1)
-% _________________________________________________________________________
-  
-  if ~exist('th' ,'var'); th  = 0.5; end
-  if ~exist('sop','var'), sop = 1;   end
-  if ~exist('bf' ,'var'), bf  = 1;   end
-  
-  % Streamline Correction parameter
-  % _______________________________________________________________________
-  % default-neighbor-matrix 
-  % calculate a weight value for every stream-end-points based on his 4 or 8
-  % grid neighbor values based on volume (use round operations and 
-  % volume of the diagonal corner)
-  % calculate a intensity-value for all stream-end-points 
-  % _______________________________________________________________________
 
-  sR = size(D);                       
-  
-  % 1) fipping to get the last points (depend on the stepsize) => np
-  streams = cellfun(@flipud,streams,'UniformOutput', false);
-
-  % estimate the interesting points for every stream   
-  nstreams = cellfun('size',streams,1);                                    % number of points in a streams
-  nullstreams=find(nstreams==0);
-  if ~isempty(nullstreams), for ns=nullstreams', streams{ns}=P(ns,:); nstreams(ns)=1; end; end % there have to one point in a stream !
-  pstreams = nstreams; 
-  pstreams(nstreams>np) = np;                                              % if more than np-points are in a stream
-  if sop, pstreams(nstreams==pstreams) = pstreams(nstreams==pstreams)-1; end % one point have to stay
-  pstreams(pstreams<0) = 0;
-  pstreams = mat2cell(pstreams,ones(1,numel(pstreams)),1);        
-  nstreams = mat2cell(nstreams,ones(1,numel(nstreams)),1);       
-
-  istreams = cellfun(@(s) isocolors(D,s),streams);
-  fstreams = cellfun(@(s) find(s<=th,first),streams);
-  
-  % calculate the weight of a neigbor (volume of the other corner) and
-  w8b = cellfun(@(s,n) reshape(repmat(s(1:n,:,:),1,2^ndim),[n,ndim,2^ndim]),streams,pstreams,'UniformOutput',false);        
-  % if the streamline ist near the boundery of the image you could be out of range if you add 1 
-  n8b = cellfun(@(s,n) min(floor(s(1:n,:,:)) + nb(1:n,:,:),enb(1:n,:,:)),w8b,pstreams,'UniformOutput',false);    
-
-  w8b = cellfun(@(s,w) flipdim(prod(abs(s - w),2),3),n8b,w8b,'UniformOutput',false);        
-
-  % multiply this with the intensity-value of D => intensity-value of a streampoint
-%  try
-    if     ndim==2, istreams = cellfun(@(n,s,w) 1 + n - ...
-           sum(sum(D(sub2ind(sR,s(:,1,:),s(:,2,:)))          .* w,3)>=th,1),pstreams,n8b,w8b,'UniformOutput',false);
-    elseif ndim==3, istreams = cellfun(@(n,s,w) 1 + n - ...
-           sum(sum(D(sub2ind(sR,s(:,1,:),s(:,2,:),s(:,3,:))) .* w,3)>=th,1),pstreams,n8b,w8b,'UniformOutput',false);
-    end 
-    % reset streams 
-    streams = cellfun(@(s,f,e) s(f:e,:),streams,istreams,nstreams,'UniformOutput',false);
-%   catch %#ok<CTCH>
-%     fprintf(1,'E');
-%   end
-  if bf, streams = cellfun(@flipud,streams,'UniformOutput', false); end
-end
 function [l,h] = getrange(p,partsize,parts,max)
 % _________________________________________________________________________
   if max<=partsize
