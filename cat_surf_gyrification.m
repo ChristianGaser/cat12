@@ -176,6 +176,9 @@ function Psgi = cat_surf_SGI_laplacian(sinfo,opt)
   
   % load surface and create hull
   Scs = gifti(sinfo.Pmesh);
+  
+  % translation for fast and simple processing of both sides
+  Scs.vertices = Scs.vertices - repmat( min(Scs.vertices) , size( Scs.vertices , 1) , 1) + 5; 
 
   %% inward folding GI
   %  map the central surface to the hull position

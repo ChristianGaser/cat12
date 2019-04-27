@@ -103,27 +103,13 @@ function S = verticemapping(S,fname)
 % mapping of facedata to vertices
 
   data  = zeros(size(S.vertices,1),1);
-  [v,f] = sort(S.faces(:)); [f,fj] = ind2sub(size(S.faces),f);  %#ok<NASGU>
+  [v,f] = sort(S.faces(:)); 
+  [f,fj] = ind2sub(size(S.faces),f); %#ok<ASGLU>
   far = S.(fname)(f);
-  for i=1:numel(S.faces), data(v(i)) = data(v(i)) + far(i); end
-
-%   for i=1:numel(S.faces), S.(va)(v(i)) = S.(va)(v(i)) + S.(fa)(f(i)); end
-  
-%   if ndim==2
-%     for i=1:size(S.vertices,1)
-%       p=S.faces(i,1); S.(va)(p) = S.(va)(p) + S.(fa)(i);
-%       p=S.faces(i,2); S.(va)(p) = S.(va)(p) + S.(fa)(i);
-%     end
-%   elseif ndim==3
-%     for i=1:size(S.faces,1)
-%       p=S.faces(i,1); S.(va)(p) = S.(va)(p) + S.(fa)(i);
-%       p=S.faces(i,2); S.(va)(p) = S.(va)(p) + S.(fa)(i);
-%       p=S.faces(i,3); S.(va)(p) = S.(va)(p) + S.(fa)(i);
-%     end
-%   end
-%S.(va) = arrayfun(@(p,i) S.(va)(p) + S.(fa)(i),S.faces,(1:size(S.faces,1))'*ones(1,ndim));
-
-  data = data / size(S.vertices,2); % Schwerpunkt... besser Voronoi, aber wie bei ner Oberfläche im Raum???
+  for i=1:numel(v)
+    data(v(i)) = data(v(i)) + far(i)/3; 
+  end
+  %data = data / size(S.vertices,2); % Schwerpunkt... besser Voronoi, aber wie bei ner Oberfl??che im Raum???
   S = rmfield(S,fname);
   S.(fname) = data;
 end

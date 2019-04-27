@@ -39,11 +39,19 @@ function varargout = cat_surf_calc(job)
   else
     sinfo = cat_surf_info(job.cdata{1}{1});
   end
-     
-  if ~isempty(strfind(fileparts(sinfo.Pmesh),'_32k'))
-    job.fsaverage = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','lh.central.freesurfer.gii');  
+  
+  if contains(sinfo.side,'mesh')
+    if sinfo.resampled_32k
+      job.fsaverage = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','mesh.central.freesurfer.gii');  
+    else
+      job.fsaverage = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','mesh.central.freesurfer.gii');  
+    end
   else
-    job.fsaverage = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii');  
+    if sinfo.resampled_32k
+      job.fsaverage = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','lh.central.freesurfer.gii');  
+    else
+      job.fsaverage = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii');  
+    end
   end
   
   if ~isempty(job.outdir{1}), outdir = job.outdir{1}; else outdir=sinfo.pp; end  
@@ -192,8 +200,13 @@ function surfcalc(job)
       end
       if i>1
         if any(sdata(i).dsize~=sdata(i-1).dsize)
-          error('cat_surf_calc:texturesize',...
-            'Textures ''s%d'' (%s) does not match previous texture!%s',i,job.cdata{i}); 
+          if sinfo.resampled==0
+            error('cat_surf_calc:texturesize',...
+              'Textures ''s%d'' (%s) does not match previous texture (non-resampled input)!%s',i,job.cdata{i}); 
+          else            
+            error('cat_surf_calc:texturesize',...
+              'Textures ''s%d'' (%s) does not match previous texture!%s',i,job.cdata{i}); 
+          end
         end
         if sinfo(i).datatype==3 && ...
           any(sdata(i).vsize~=sdata(i-1).vsize) || any(sdata(i).fsize~=sdata(i-1).fsize)
@@ -213,8 +226,7 @@ function surfcalc(job)
       %% evaluate mesh 
       if sinfo1.datatype==3
         if job.usefsaverage
-          [pp,ff,ee] = spm_fileparts(job.fsaverage); 
-          CS = gifti(fullfile(pp,sprintf('%s.%s%s',sinfo1.side,ff(4:end),ee))); 
+          CS = gifti(strrep(job.fsaverage,'lh.',sinfo1.side)); 
           vdata(1,range,:) = CS.vertices;  
         else
           vdata(1,range,:) = mean(V,1);

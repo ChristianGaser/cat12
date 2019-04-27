@@ -226,8 +226,12 @@ function stools = cat_conf_stools(expert)
       GIwritehull.val    = {1};
       GIwritehull.help   = {'Write hull/core surface use in the Laplacian gyrification index estimation.'};
       
-      % hull model 
-      % this is not yet implemented 
+      % hull model - This is not yet implemented! 
+      % The idea behind is that the hemisphere-based hull is artifical too
+      % and that are more natural definiton is given by the full intra-
+      % cranial volume. However, this have to include the cerebelum and 
+      % brainstem as well and needs to utilize the Yp0 map!
+      %
       %{
       GIhullmodel        = cfg_menu;
       GIhullmodel.name   = 'Hull model';
@@ -289,23 +293,23 @@ function stools = cat_conf_stools(expert)
     %% Inner and outer surfaces
     %  -----------------------------------------------------------------
     OS        = cfg_menu;
-    OS.name   = 'Outer surface (pial)';
+    OS.name   = 'Pial surface';
     OS.tag    = 'OS';
     OS.labels = {'No','Yes'};
     OS.values = {0,1};
     OS.val    = {1};
     OS.help   = {
-      'Creates the outer cortical surface (pial surface) by moving each vertices of the central surface by the half local thickness along the surface normal.'
+      'Creates the pial surface (outer cortical surface) by moving each vertices of the central surface by the half local thickness along the surface normal.'
     };
   
     IS        = cfg_menu;
-    IS.name   = 'Inner surface (white)';
+    IS.name   = 'White matter surface';
     IS.tag    = 'IS';
     IS.labels = {'No','Yes'};
     IS.values = {0,1};
     IS.val    = {1};
     IS.help   = {
-      'Creates the inner cortical surface (white matter surface) by moving each vertices of the central surface by the half local thickness along the surface normal.'
+      'Creates the white matter surface (inner cortical surface) by moving each vertices of the central surface by the half local thickness along the surface normal.'
     };
   
     % main note
@@ -345,22 +349,38 @@ function stools = cat_conf_stools(expert)
     ''
   };
 
-  % surface area ... not implemented right now (201904)
-  %{
-  area        = cfg_menu;
-  area.name   = 'Surface area';
-  area.tag    = 'area';
-  area.labels = {'No','Yes'};
-  area.values = {0,1};
-  area.val    = {1};
-  area.help   = {
-    'Extract log10-transformed local surface area using re-parameterized tetrahedral surface. The method is described in Winkler et al. NeuroImage, 61: 1428-1443, 2012.'
-    ''
-    'Log-transformation is used to render the data more normally distributed.'
-    ''
-  };
-  %}
+  % surface area ... 
+  if expert>1
+    area        = cfg_menu;
+    area.name   = 'Surface area';
+    area.tag    = 'area';
+    area.labels = {'No','Yes'}; 
+    area.values = {0,2}; 
+    area.val    = {2}; 
+    area.help   = {
+      'This method requires a sum-based mapping rather than the mean-based interpolation. The mapping utilize the Delaunay graph to transfer the area around a vertex to its closes neighbor(s). '}; 
+    %{
+    % Winklers method is not implemented right now (201904)
+    area.help   = {
+      'Extract log10-transformed local surface area using re-parameterized tetrahedral surface. The method is described in Winkler et al. NeuroImage, 61: 1428-1443, 2012.'
+      ''
+      'Log-transformation is used to render the data more normally distributed.'
+      ''
+    };
+    %}
+   
+    gmv        = cfg_menu;
+    gmv.name   = 'Surface GM volume';
+    gmv.tag   = 'gmv';
+    gmv.labels = {'No','Yes'}; 
+    gmv.values = {0,1}; 
+    gmv.val    = {1}; 
+    gmv.help   = {
+      'NOT WORKING RIGHT NOW!'
+      'This method requires a sum-based mapping rather than the mean-based interpolation. The mapping utilize the Delaunay graph to transfer the area around a vertex to its closes neighbor(s) that is also use for the area mapping. '}; 
 
+  end
+  
 
 
   %% main menu
@@ -372,7 +392,7 @@ function stools = cat_conf_stools(expert)
   surfextract.tag  = 'surfextract';
   surfextract.name = 'Extract additional surface parameters';
   if expert > 1
-    surfextract.val  = {data_surf_extract,GI,FD,SD,GIL,surfaces, nproc,lazy}; % area, 
+    surfextract.val  = {data_surf_extract,area,GI,FD,SD,GIL,surfaces, nproc,lazy}; % area, 
   else
     surfextract.val  = {data_surf_extract,GI,FD,SD,nproc};
   end
@@ -1199,7 +1219,11 @@ end
   surfresamp      = cfg_exbranch;
   surfresamp.tag  = 'surfresamp';
   surfresamp.name = 'Resample and Smooth Surface Data';
-  surfresamp.val  = {data_surf,merge_hemi,mesh32k,fwhm_surf,nproc};
+  if expert>1
+    surfresamp.val  = {data_surf,merge_hemi,mesh32k,fwhm_surf,lazy,nproc};
+  else
+    surfresamp.val  = {data_surf,merge_hemi,mesh32k,fwhm_surf,nproc};
+  end
   surfresamp.prog = @cat_surf_resamp;
   surfresamp.vout = @vout_surf_resamp;
   surfresamp.help = {
@@ -1323,7 +1347,7 @@ end
   end
 
 %==========================================================================
-function dep = vout_surf_surf2roi(job)
+function dep = vout_surf_surf2roi(job) %#ok<INUSD>
 
 dep(1)            = cfg_dep;
 dep(1).sname      = 'Extracted Surface ROIs';
@@ -1363,10 +1387,10 @@ measures = { % para-field , para-subfield , para-val , output-var, [left|right] 
   ...
   'surfaces'  'IS'    1      'white'          'white matter surface';
   'surfaces'  'OS'    1      'pial'           'pial surface';
-  ... 'GIL'   'hull'  [1 4]  'hull'           'hull surface';
-  ... 'GIL'   'hull'  [2 4]  'core'           'core surface';
+  'GIL'       'hull'  [1 4]  'hull'           'hull surface';
+  'GIL'       'core'  [2 4]  'core'           'core surface';
   ... 
-  ... 'area'  ''      1      'area'           'surface area'; 
+  'area'      ''      [1 2]  'area'           'surface area'; 
   };
 sides = {
   'l' 'Left';
@@ -1376,13 +1400,25 @@ sides = {
 for si=1:size(sides,1)
   for mi=1:size(measures,1)
     if isfield(job,measures{mi,1}) && ...
-     ( ( isnumeric( job.(measures{mi,1}) ) && any( job.(measures{mi,1})==measures{mi,3} ) ) || ... % no subfield
-       ( isfield(job.(measures{mi,1}),measures{mi,1}) && any( job.(measures{mi,1}).(measures{mi,1})==measures{mi,3} ) ) || ... % with same subfield - GI dev. mode
-       ( isfield(job.(measures{mi,1}),measures{mi,2}) && any( job.(measures{mi,1}).(measures{mi,2})==measures{mi,3} ) ) ) % with other subfield
-      if ~exist('dep','var'), dep = cfg_dep; else dep(end+1) = cfg_dep; end %#ok<AGROW>
-      dep(end).sname      = [sides{si,2} ' ' measures{mi,5}];
-      dep(end).src_output = substruct('()',{1}, '.',[sides{si,1} 'P' measures{mi,4}],'()',{':'});
-      dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+        (strcmp(measures{mi,2},'hull') || strcmp(measures{mi,2},'core')) && ...
+        isfield(job.(measures{mi,1}),'GIwritehull') && job.(measures{mi,1}).GIwritehull
+      % special case for the hull and core surface due to the write field
+      if any( job.(measures{mi,1}).(measures{mi,1}) == measures{mi,3} )
+        if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
+        dep(end).sname      = [sides{si,2} ' ' measures{mi,5}];
+        dep(end).src_output = substruct('()',{1}, '.',[sides{si,1} 'P' measures{mi,4}],'()',{':'});
+        dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+      end
+    else
+      if isfield(job,measures{mi,1}) && ...
+       ( ( isnumeric( job.(measures{mi,1}) ) && any( job.(measures{mi,1})==measures{mi,3} ) ) || ... % no subfield
+         ( isfield(job.(measures{mi,1}),measures{mi,1}) && any( job.(measures{mi,1}).(measures{mi,1})==measures{mi,3} ) ) || ... % with same subfield - GI dev. mode
+         ( isfield(job.(measures{mi,1}),measures{mi,2}) && any( job.(measures{mi,1}).(measures{mi,2})==measures{mi,3} ) ) ) % with other subfield
+        if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
+        dep(end).sname      = [sides{si,2} ' ' measures{mi,5}];
+        dep(end).src_output = substruct('()',{1}, '.',[sides{si,1} 'P' measures{mi,4}],'()',{':'});
+        dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+      end
     end
   end
 end
