@@ -26,6 +26,12 @@ function varargout = cat_surf_fun(action,S,varargin)
 %   IS  = cat_surf_fun('inner',S,T);  % estimate inner surface
 %   OS  = cat_surf_fun('outer',S,T);  % estimate outer surface
 %
+% * Surface area mapping
+%   - Estimate nearest neighbor mapping between two surfaces S1 and S2
+%      edgemap = cat_surf_surf2surf('createEdgemap',S1,S2);
+%   - Applay mapping 
+%      cdata2 = cat_surf_maparea('useEdgemap',cdata,edgemap);
+%
 % * Other helping functions:
 %   E   = cat_surf_fun('graph2edge',T); % get edges of a triangulation T
 %
@@ -41,18 +47,34 @@ function varargout = cat_surf_fun(action,S,varargin)
 
 %#ok<*ASGLU>
 
-  switch action
+  switch lower(action)
     case {'dist','distance'}
       varargout{1} = cat_surf_dist(S);
+    case 'surf2surf'
+      % create mapping between similar surfaces for area projection
+      varargout{1} = cat_surf_surf2surf(S,varargin{1});
     case 'area'
-      varargout{1} = cat_surf_area(S);
+       % area estiamtion 
+       varargout{1} = cat_surf_area(S);
+    case {'smoothcdata','smoothtexture'}
+      switch nargin
+        case 2
+          if isfield(S,'cdata'), varargout{1} = cat_surf_smoothtexture(S,S.cdata,1); end
+        case 3, varargout{1} = cat_surf_smoothtexture(S,varargin{1});
+        case 4, varargout{1} = cat_surf_smoothtexture(S,varargin{1},varargin{2});
+        case 5, varargout{1} = cat_surf_smoothtexture(S,varargin{1},varargin{2},varargin{3});
+      end
+    case 'maparea'    
+      % do the final area projection
+      if nargout==1, varargout{1} = cat_surf_maparea(S,varargin{1}); end
+      if nargout==2, [varargout{1},varargout{2}] = cat_surf_maparea(S,varargin{1}); end
     case 'hull'
       if nargout==1, varargout{1} = cat_surf_hull(S); end
       if nargout==2, [varargout{1},varargout{2}] = cat_surf_hull(S); end
     case 'core'
       if nargout==1, varargout{1} = cat_surf_core(S,varargin{1}); end
       if nargout==2, [varargout{1},varargout{2}] = cat_surf_core(S,varargin{1}); end
-    case {'inner','outer'}
+    case {'inner','outer','white','pial'}
       if numel(varargin)==1
         switch nargout % surface & texture input
           case 0, cat_surf_GMboundarySurface(action,S,varargin{1});
@@ -75,9 +97,17 @@ function varargout = cat_surf_fun(action,S,varargin)
         [varargout{1},varargout{2},varargout{3}] = cat_surf_surf2vol(S);
       end
     case 'graph2edge'
-      varargout{1} = cat_surf_edges(S); 
+      switch nargout
+        case 0, cat_surf_edges(S); 
+        case 1, varargout{1} = cat_surf_edges(S); 
+        case 2, [varargout{1},varargout{2}] = cat_surf_edges(S); 
+      end
     case 'cdatamappingtst'
       cat_surf_cdatamappingtst;
+    case 'createedgemap'
+      varargout{1} = cat_surf_surf2surf(S,varargin{1});
+    case 'useedgemap'
+      varargout{1} = cat_surf_maparea(S,varargin{1});
     case 'cdatamapping' 
       if nargin<3, varargin{3} = ''; end
       if nargin<4, varargin{4} = struct(); end
@@ -85,15 +115,130 @@ function varargout = cat_surf_fun(action,S,varargin)
         [varargout{1},varargout{2}] = cat_surf_cdatamapping(S,varargin{1},varargin{2},varargin{3});
       else
         varargout{1} = cat_surf_cdatamapping(S,varargin{1},varargin{2},varargin{3});
-      end  
+      end 
+    otherwise
+      error('Unknow action "%s"!\n',action); 
   end
     
 end
 
+%% area mapping concept
+%  ------------------------------------------------------------------------
+%  We need two functions, one that create the mapping between two very 
+%  close surfaces (cat_surf_surf2surf) and another one (cat_surf_maparea) 
+%  that finally performs the mapping. 
+%  ------------------------------------------------------------------------
+%  Robert Dahnke 2019/04
+function edgemap = cat_surf_surf2surf(S1,S2)
+%  ------------------------------------------------------------------------
+%  Create mapping by nearest neighbor.
+%  ------------------------------------------------------------------------
+%  Robert Dahnke 2019/04
+
+  % 0. Normalize input
+  S1.vertices = S1.vertices/max(S1.vertices(:));
+  S2.vertices = S2.vertices/max(S2.vertices(:)) * 0.98; % need slight difference for Delaunay! 
+  
+  % 1. Delaunay triangulation for fast search
+  D1 = delaunayn(double(S1.vertices)); 
+  D2 = delaunayn(double(S2.vertices)); 
+ 
+  % 2. find minimal relation between the vertices of S1 and S2 as nearest neighbor
+  E1(:,1) = 1:size(S1.vertices,1);
+  E2(:,2) = 1:size(S2.vertices,1);
+  E1(:,2) = dsearchn(double(S2.vertices),D2,double(S1.vertices)); 
+  E2(:,1) = dsearchn(double(S1.vertices),D1,double(S2.vertices)); 
+  E = unique([E1;E2],'rows'); 
+  
+  % 3. estimate edge length as weighting function 
+  EL = sum( ( S1.vertices(E(:,1),:) - S2.vertices(E(:,2),:) ).^2 , 2) .^ 0.5; 
+  
+  % 4. Estimate the number of all by c-function
+  %    - outgoing edges of S1 (connections from v element of S1) and
+  %    - incoming edges of S2 (connections from v element of S2) 
+  nE1 = zeros(max(E(:,1)),1,'single'); EL1 = zeros(max(E(:,1)),1,'single');
+  nE2 = zeros(max(E(:,2)),1,'single'); EL2 = zeros(max(E(:,2)),1,'single');
+  for i=1:size(E,1)
+    nE1( E(i,1) ) =  nE1( E(i,1) ) + 1;
+    EL1( E(i,1) ) =  EL1( E(i,1) ) + EL(i);
+    nE2( E(i,2) ) =  nE2( E(i,2) ) + 1; 
+    EL2( E(i,2) ) =  EL2( E(i,2) ) + EL(i);
+  end
+  
+  % 5. Create a weighting function to project data from Si2St and St2Si.
+  edgemap.edges     = E;
+  edgemap.nvertices = [size(S1.vertices,1),size(S2.vertices,1)];
+  edgemap.nforward  = 1  ./ nE1(E(:,1)); 
+  edgemap.nbackward = 1  ./ nE2(E(:,2));
+  edgemap.dforward  = EL ./ EL1(E(:,1)); 
+  edgemap.dbackward = EL ./ EL2(E(:,2)); 
+end
+function varargout = cat_surf_maparea(varargin)
+%  Apply graph-based mapping
+%  ------------------------------------------------------------------------
+%  use a c-function to process cat_surf_surf2surf mapping function 
+%
+%   cdata = cat_surf_maparea(cdatain,edgemap[,weighting])
+%  
+%   cdata     .. texture values at the output surface
+%   edgemap   .. mapping structure between two surfaces
+%   direction .. direction of cdata mapping if both surfaces have cdata 
+%                with direction: 'forward' == '', 'backward' == 'invers'
+%   weighting .. type of weighting: 
+%                 'num'  .. by number of vertices
+%                 'dist' .. by distance to the vertices (default)
+%
+%  ------------------------------------------------------------------------
+%  Robert Dahnke 2019/04
+
+  cdata     = varargin{1}; 
+  edgemap = varargin{2};
+  if nargin>2 
+    dir = varargin{3}; 
+  else
+    dir = '';
+  end
+  switch dir
+    case {'','forward'},        idir = 0; 
+    case {'invers','backward'}, idir = 1;
+    otherwise, error('Unkown mapping direction %s.\n',dir);
+  end
+
+  varargout{1} = cat_surf_edgemap(edgemap,cdata,idir);
+end
+function cdata2 = cat_surf_edgemap(edgemap,cdata,idir)
+  if idir==0
+    cdata2 = zeros(edgemap.nvertices(2),1,'single');
+    for i=1:size(edgemap.edges,1)
+      cdata2(edgemap.edges(i,2)) = cdata2(edgemap.edges(i,2)) + ...
+        cdata(edgemap.edges(i,1)) * edgemap.dforward(i);
+    end
+  else
+    cdata2 = zeros(edgemap.nvertices(1),1,'single');
+    for i=1:size(edgemap.edges,1)
+      cdata2(edgemap.edges(i,1)) =  cdata2(edgemap.edges(i,1)) + ...
+        cdata2(edgemap.edges(i,2)) * edgemap.dbackward(i);
+    end    
+  end
+end
+
+function varargout = cat_surf_GMV(IS,OS)
+  % create Delaunay triangulation 
+  
+  % remove non GM tetraeder
+  
+  % estimate tetraeder volume
+  
+  % map volume to faces
+  
+  % map faces to vertices
+
+end
+
 function varargout = cat_surf_GMboundarySurface(type,varargin)
   switch type
-    case 'inner', direction = -0.5;
-    case 'outer', direction =  0.5;
+    case {'white','inner'}, direction = -0.5;
+    case {'pial' ,'outer'}, direction =  0.5;
   end
   
   if nargin==2
@@ -124,7 +269,7 @@ function varargout = cat_surf_GMboundarySurface(type,varargin)
     Pthick = strrep(Praw,'central','thickness');
     Ptype  = strrep(Praw,'central',type);
    
-    cmd = sprintf('CAT_Central2Pial "%s" "%s" %0.2f',Praw,Pthick,Ptype,direction); 
+    cmd = sprintf('CAT_Central2Pial "%s" "%s" %0.2f',Praw,Pthick,direction); 
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,1);
     
     % load surface 
@@ -181,7 +326,7 @@ end
 function varargout = cat_surf_cdatamapping(S1,S2,cdata,opt) 
   if ischar(S1), S1 = gifti(S1); end
   if ischar(S2), S2 = gifti(S2); end
-  if ischar(cdata),
+  if ischar(cdata)
     Pcdata = cdata;
     [pp,ff,ee] = spm_fileparts(cdata); 
     switch ee
@@ -324,7 +469,7 @@ function varargout = cat_surf_cdatamapping(S1,S2,cdata,opt)
   if opt.verb, cat_io_cmd('','','',1,stime1); end
 end
 
-function E = cat_surf_edges(T)
+function [E,uE] = cat_surf_edges(T)
   if isstruct(T) && isfield(T,'faces')
     T = T.faces;
   end
@@ -333,7 +478,7 @@ function E = cat_surf_edges(T)
   for i=1:size(T,2)-1
     E = [E; T(:,[i i+1])]; %#ok<AGROW>
   end
-  E = unique(E,'rows');
+  [E,uE] = unique(E,'rows');
 end
 
 function D = cat_surf_dist(S)
@@ -369,10 +514,42 @@ function data = cat_surf_F2V(S,odata)
   data   = zeros(size(S.vertices,1),1);
   [v,f]  = sort(S.faces(:)); 
   [f,fj] = ind2sub(size(S.faces),f);  
-  far = odata(f);
-  for i=1:numel(S.faces), data(v(i)) = data(v(i)) + far(i); end
+  far    = odata(f);
+  for i=1:numel(v)
+    data(v(i)) = data(v(i)) + far(i)/3; 
+  end
 
-  data = data / size(S.vertices,2); % Schwerpunkt... besser Voronoi, aber wie bei ner Oberflaeche im Raum???
+  %  data = data ./ vcount; %size(S.vertices,2); % Schwerpunkt... besser Voronoi, aber wie bei ner Oberflaeche im Raum???
+  
+end
+
+function A = cat_surf_smoothtexture(S,A,smooth,Amax)
+%  create smooth area texture files
+%  ---------------------------------------------------------------------
+  debug = 0;
+  
+  if ~exist('smooth','var'), smooth=1; end
+
+  % temporary file names
+  Pname  = tempname; 
+  Pmesh  = [Pname 'mesh'];
+  Parea  = [Pname 'area'];
+
+  if exist('Amax','var');  A = min(A,Amax); end 
+  
+  % write surface and textures
+  cat_io_FreeSurfer('write_surf',Pmesh,S);
+  cat_io_FreeSurfer('write_surf_data',Parea,A);
+  
+  % smooth textures
+  cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',Pmesh,Parea,smooth,Parea);
+  [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,debug);
+  
+  % load smoothed textures
+  A  = cat_io_FreeSurfer('read_surf_data',Parea);
+  
+  % delete temporary file
+  delete(Parea);
 end
 
 function [SH,V] = cat_surf_hull(S)
@@ -544,7 +721,7 @@ function [V,vmat,vmati] = cat_surf_surf2vol(S,opt)
   def.pve    = 1;     % 0 - no PVE; 1 - PVE;
                       % 2 - fill with surface texture values without interpolation and masking (==4)    
                       % 3 - fill with surface texture values with    interpolation and masking (==5)
-  def.refine = 0.8;
+  def.refine = 0.6;
   def.bdist  = 5; 
   def.res    = 1; % not yet ...
   
@@ -563,9 +740,12 @@ function [V,vmat,vmati] = cat_surf_surf2vol(S,opt)
   %% render surface points
   if opt.pve > 1
     % get surface data or give error
-    if      isfield(So,'cdata'), cdata = So.cdata; 
-    elseif  isfield(So,'facevertexcdata'), cdata = So.facevertexcdata; 
-    else    error('cat_surf_fun:cat_surf_surf2vol:No datafield for filling'); 
+    if isfield(So,'cdata')
+      cdata = So.cdata; 
+    elseif  isfield(So,'facevertexcdata')
+      cdata = So.facevertexcdata; 
+    else
+      error('cat_surf_fun:cat_surf_surf2vol:No datafield for filling');
     end
     
     % render data 
@@ -632,7 +812,7 @@ function [V,vmat,vmati] = cat_surf_surf2vol(S,opt)
           max(1,min(size(V,3),round(S.vertices(:,3) + Sn(:,3)*offset(oi) + vmat(3)))));
       V(I) = min(1,max( V(I) , oi./numel(offset))); 
     end
-    V(cat_vol_morph(V==1,'lc',1) & V==0)=1;  % closeing 
+    V(cat_vol_morph(V>=0.99,'lc',1) & V==0)=1;  % closeing 
   end
   vmati = repmat(min(S.vertices),size(S.vertices,1),1) - 5; 
   %%

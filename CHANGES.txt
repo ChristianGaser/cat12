@@ -1,5 +1,31 @@
 ------------------------------------------------------------------------
-r1455 | gaser | 2019-04-24 14:53:56
+r1456 | dahnke | 2019-04-27 14:46:57
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_surf_GI3D.m
+M       cat_surf_calc.m
+M       cat_surf_epivolsurf.m
+M       cat_surf_fun.m
+M       cat_surf_gyrification.m
+M       cat_surf_info.m
+M       cat_surf_parameters.m
+M       cat_surf_render2.m
+M       cat_surf_resamp.m
+
+1) Fixed:     Corrected small bugs in cat_surf_parameter, cat_surf_fun, 
+              cat_surf_gyrification, cat_surf_info, and cat_surf_epivolsurf.
+              Removed old commented code in cat_surf_epivolsurf.
+2) Fixed:     Corrected mesh bug in cat_surf_calc.
+3) Changed:   Renamed "inner" to "white" and "outer" to "pial" surface.
+4) Changed:	  Added lazy mode in cat_surf_resamp in developer mode. 
+5) New:       Added "synchronies views" option for textures in cat_surf_render2.
+6) New:       Added area mapping schema in cat_surf_fun & cat_surf_parameters.
+
+
+------------------------------------------------------------------------
+r1455 | gaser | 2019-04-24 14:54:26 +0200 (Mi, 24 Apr 2019) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +39,7 @@ M       html/style.css
 (1) Changed: Added option for default GUI font size to cat_defaults and changed 
     the resp. GUI functions to use this option.
 (2) Changed: Also use now dynamic font size for hmtl online help.
+
 ------------------------------------------------------------------------
 r1454 | gaser | 2019-04-24 12:36:34 +0200 (Mi, 24 Apr 2019) | 19 lines
 

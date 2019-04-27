@@ -328,7 +328,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
         case {'defects'} % surf
           sinfo(i).Pmesh = sinfo(i).fname;
           sinfo(i).Pdata = sinfo(i).fname;
-        case {'central','inner','outer','sphere','hull','core'} % only mesh
+        case {'central','white','pial''inner','outer','sphere','hull','core'} % only mesh
           sinfo(i).Pmesh = sinfo(i).fname;
           sinfo(i).Pdata = '';
         case {'thickness','gyrification','frac','logsulc','GWMdepth','WMdepth','CSFdepth',...
