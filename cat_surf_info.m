@@ -220,7 +220,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
             sinfo(i).side = spm_input('Hemisphere',1,'lh|rh|mesh');
           end
         else
-          sinfo(i).side = ''; 
+          sinfo(i).side = 'mesh'; 
         end
         sidei = strfind(noname,[sinfo(i).side '.']);
       end

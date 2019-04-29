@@ -1,21 +1,54 @@
-function y = cat_surf_results(action, varargin)
-% Visualise results for both hemispheres of surface-based analysis (preferable on log P-maps)
+function varargout = cat_surf_results(action, varargin)
+% Visualise results for both hemispheres of surface-based analysis 
+% (preferable on log P-maps). 
 %
 % FORMAT y = cat_surf_results('Disp',leftSurface,rightSurface)
 % leftSurface  - a GIfTI filename/object or patch structure
 % rightSurface - a GIfTI filename/object or patch structure
 %
 % y            - adjusted, predicted or raw response
+%
+%
+% Futher actions for batch mode: 
+%  * cat_surf_results('batch',job) 
+%    See cat_conf_stools. 
+%
+%  * cat_surf_results('surface',1..4) 
+%    Select surface type.
+%
+%  * cat_surf_results('texture',0..2)
+%    Select surface underlay. 
+%    0 - none, 1 - mean curvature, 2 - sulcal depth
+%
+%  * cat_surf_results('view',1..3)
+%    Select render view.
+%    1 - topview, 2 - bottomview, 3 - sideview
+%
+%  * cat_surf_results('colormap',1..4)
+%    Select overlay colormap.
+%    1 - jet, 2 - hot, 3 - hsv, 4 - cold-hot
+%
+%  * cat_surf_results('invcolormap'[,0..1])
+%    Default (0) or inverts colormap (1). Toggles without input.
+%    
+%  * cat_surf_results('background',[,0..2])
+%    White (1) or black (0|2) background. Toggles without input.
+%
+%  * cat_surf_results('showfilename'[,0..1]); 
+%    Show (1) or not show (0) surface name in figure. Toggles without input.
+%
+%  * cat_surf_results('threshold'[,0..4]);
+%    Define statistical threshold. 
+%    0 - none, 1.3 - 0.05, 2 - 0.01, 3 - 0.001
+%
+%  * cat_surf_results('hide_neg',[,0..1]); 
+%    Hide negative results (1) or show everything (0). Toggles without input.
+%
 %_______________________________________________________________________
-% Christian Gaser
+% Christian Gaser & Robert Dahnke (batch-mode)
 % $Id$
 
-global H
-
-% remove any existing data
-if isfield(H,'S')
-    H = rmfield(H,'S');
-end
+global H y
 
 %-Input parameters
 %--------------------------------------------------------------------------
@@ -26,26 +59,6 @@ if ~ischar(action)
     action = 'Disp';
 end
 
-% set start values
-y              = [];
-H.clip         = [];
-H.clim         = [];
-H.XTick        = [];
-H.bkg_col      = [0 0 0];
-H.show_inv     = 0;
-H.no_neg       = 0;
-H.transp       = 1;
-H.col          = [.8 .8 .8; 1 .5 .5];
-H.FS           = cat_get_defaults('extopts.fontsize');
-H.n_surf       = 1;
-H.thresh_value = 0;
-H.cursor_mode  = 1;
-H.text_mode    = 1;
-H.border_mode  = 0;
-H.is32k        = 0;
-H.str32k       = '';
-H.SPM_found    = 1;
-H.surf_sel     = 1;
 
 %-Action
 %--------------------------------------------------------------------------
@@ -54,7 +67,34 @@ switch lower(action)
     %-Display
     %======================================================================
     case 'disp'
-        
+      
+        % remove any existing data
+        if isfield(H,'S')
+           H = rmfield(H,'S');
+        end
+
+        % set start values
+        y              = [];
+        H.clip         = [];
+        H.clim         = [];
+        H.XTick        = [];
+        H.bkg_col      = [0 0 0];
+        H.show_inv     = 0;
+        H.no_neg       = 0;
+        H.show_transp  = 1; 
+        H.col          = [.8 .8 .8; 1 .5 .5];
+        H.FS           = cat_get_defaults('extopts.fontsize');
+        H.n_surf       = 1;
+        H.thresh_value = 0;
+        H.cursor_mode  = 1;
+        H.text_mode    = 1;
+        H.border_mode  = 0;
+        H.is32k        = 0;
+        H.str32k       = '';
+        H.SPM_found    = 1;
+        H.surf_sel     = 1;
+
+      
         % positions
         ws = spm('Winsize', 'Graphics');
         ss = get(0, 'Screensize');
@@ -85,7 +125,7 @@ switch lower(action)
         H.pos{2} = struct(...
           'fig',   [2*ws(3)+10 10 0.6*ws(3) ws(3)],... 
           'sel',   [0.290 0.930 0.425 0.050],...
-          'nam',   [0.050 0.875 0.900 0.050],...
+          'nam',   [0.050 0.875 0.900 0.050],'hist',    [0.525 0.250 0.425 0.050],...
           'surf',  [0.050 0.800 0.425 0.050],'mview',   [0.525 0.800 0.425 0.050],... 
           'text',  [0.050 0.725 0.425 0.050],'thresh',  [0.525 0.725 0.425 0.050],... 
           'cmap',  [0.050 0.650 0.425 0.050],'atlas',   [0.525 0.650 0.425 0.050],...
@@ -93,14 +133,14 @@ switch lower(action)
           'info',  [0.050 0.500 0.425 0.050],'bkg',     [0.525 0.500 0.425 0.050],... 
           'nocbar',[0.050 0.425 0.425 0.050],'transp',  [0.525 0.425 0.425 0.050],... 
           'inv',   [0.050 0.350 0.425 0.050],'hide_neg',[0.525 0.350 0.425 0.050],...
-          'ovmin', [0.050 0.175 0.425 0.070],'ovmax',   [0.525 0.175 0.425 0.070],... 
+          'ovmin', [0.050 0.125 0.425 0.100],'ovmax',   [0.525 0.125 0.425 0.100],... 
           'save',  [0.050 0.050 0.425 0.050],'close',   [0.525 0.050 0.425 0.050]);
         
   		  H.figure = figure(22);
 	  	  clf(H.figure);
 		
 		    set(H.figure, 'MenuBar', 'none', 'Position', H.pos{1}.fig, ...
-			      'Name', 'Results', 'NumberTitle', 'off', 'Renderer', 'OpenGL');
+			      'Name', 'CAT Results', 'NumberTitle', 'off', 'Renderer', 'OpenGL');
 			    
 			  H.panel(1) = uipanel('Position',[0 0 2/2.6 1],'units','normalized','BackgroundColor',...
 			      H.bkg_col,'BorderType','none'); 
@@ -109,7 +149,23 @@ switch lower(action)
         % define S structure that contains information for lh and rh
         H.S{1}.name = ''; H.S{1}.side = 'lh';
         H.S{2}.name = ''; H.S{2}.side = 'rh';
+       
         
+        % Histrogram button
+        if cat_get_defaults('extopts.expertgui')>1
+          str = {'Distribution ...', 'Histogram', 'Boxplot', 'Violin'};
+          tmp = {{@disphist,2},{@disphist,3},{@disphist,4}};
+
+          H.hist = uicontrol(H.panel(2), ...
+              'String', str, 'Units', 'normalized', ...
+              'Position', H.pos{2}.hist, 'Userdata', tmp, ...
+              'Style', 'PopUp', 'HorizontalAlignment', 'center', ...
+              'Callback', 'spm(''PopUpCB'',gcbo)', ...
+              'FontSize',H.FS,...
+              'ToolTipString', 'Underlying Surface', ...
+              'Interruptible', 'on', 'Enable', 'on');
+        end
+            
         % closing all windows
         H.close = uicontrol(H.panel(2), ...
             'String', 'Close', 'Units', 'normalized', ...
@@ -374,7 +430,7 @@ switch lower(action)
             else
                 
                 H.logP = 1;
-                meshes_merged = 0;
+                meshes_merged = H.merged;
                 
                 for ind = 1:2
                     
@@ -389,7 +445,7 @@ switch lower(action)
                         H.is32k = 0;
                     end
 
-                    if strcmp(H.S{ind}.info(1).side, 'mesh')
+                    if ~strcmp(H.S{ind}.info(1).side, 'lh') && ~strcmp(H.S{ind}.info(1).side, 'rh')%strcmp(H.S{ind}.info(1).side, 'mesh')
                         meshes_merged = 1;
                         if ind == 1
                             H.S{ind}.info(1).side = 'lh';
@@ -539,7 +595,7 @@ switch lower(action)
             end
 
             % Don't allow plot functions for RGB maps or if SPM.mat was not found
-            if H.n_surf > 1 & H.SPM_found
+            if H.n_surf > 1 && H.SPM_found
                 str = {'Data Cursor...', 'Disable data cursor', 'Atlas regions: Desikan-Killiany DK40', ...
                     'Atlas regions: Destrieux 2009', 'Atlas region: HCP Multi-Modal Parcellation', ...
                     'Enable/Disable rotate3d'};
@@ -560,7 +616,7 @@ switch lower(action)
             end
             
             % enable some menus only if mesh data can be assumed to be resampled
-            if (length(H.S{1}.Y) == 32492 | length(H.S{1}.Y) == 163842)
+            if (length(H.S{1}.Y) == 32492 || length(H.S{1}.Y) == 163842)
                 set(H.surf, 'Enable', 'on');
                 set(H.text, 'Enable', 'on');
                 set(H.cursor, 'Enable', 'on');
@@ -611,8 +667,10 @@ switch lower(action)
             
         end
         
-        %-ColourBar
-        %======================================================================
+        if nargout, varargout{1} = y; end
+        
+    %-ColourBar
+    %======================================================================
     case {'colourbar', 'colorbar'}
         if isempty(varargin), varargin{1} = gca; end
         if length(varargin) == 1, varargin{2} = 'on'; end
@@ -620,7 +678,7 @@ switch lower(action)
         d = getappdata(H.patch(1), 'data');
         col = getappdata(H.patch(1), 'colourmap');
         if strcmpi(varargin{2}, 'off')
-            if isfield(H, 'colourbar') & ishandle(H.colourbar)
+            if isfield(H, 'colourbar') && ishandle(H.colourbar)
                 delete(H.colourbar);
                 H = rmfield(H, 'colourbar');
                 setappdata(H.axis, 'handles', H);
@@ -645,7 +703,7 @@ switch lower(action)
         % Update colorbar colors if clipping is used
         H.clip = getappdata(H.patch(1), 'clip');
         if ~isempty(H.clip)
-            if ~isnan(H.clip(2)) & ~isnan(H.clip(3))
+            if ~isnan(H.clip(2)) && ~isnan(H.clip(3))
                 ncol = length(col);
                 col_step = (clim(3) - clim(2)) / ncol;
                 cmin = max([1, ceil((H.clip(2) - clim(2)) / col_step)]);
@@ -668,25 +726,43 @@ switch lower(action)
         end
         setappdata(H.axis, 'handles', H);
         
-        %-ColourMap
-        %======================================================================
+        if nargout, varargout{1} = y; end
+        
+        
+    %-ColourMap
+    %======================================================================
     case {'colourmap', 'colormap'}
         if isempty(varargin), varargin{1} = gca; end
-        H = getHandles(varargin{1});
-        if length(varargin) == 1
-            varargout = {getappdata(H.patch(1), 'colourmap')};
-            return;
+        if isobject(varargin{1})
+            H = getHandles(varargin{1});
+            if length(varargin) == 1
+                varargout = {getappdata(H.patch(1), 'colourmap')};
+                return;
+            else
+                setappdata(H.patch(1), 'colourmap', varargin{2});
+                d = getappdata(H.patch(1), 'data');
+                H = updateTexture(H, d);
+            end
+            if nargin > 1
+                colormap(varargin{2});
+            end
         else
-            setappdata(H.patch(1), 'colourmap', varargin{2});
-            d = getappdata(H.patch(1), 'data');
-            H = updateTexture(H, d);
+          cm = varargin{1}; 
+          switch cm
+            case {1,2,3,4},  cmap = cm; 
+            case 'jet',      cmap = 1; 
+            case 'hot',      cmap = 2; 
+            case 'hsv',      cmap = 3; 
+            case 'cold-hot', cmap = 4; 
+            otherwise
+              error('Unknown colormap\n');
+          end          
+          select_cmap(cmap);
         end
-        if nargin > 1
-            colormap(varargin{2});
-        end
+      
         
-        %-CLim
-        %======================================================================
+    %-CLim
+    %======================================================================
     case 'clim'
         if isempty(varargin), varargin{1} = gca; end
         H = getHandles(varargin{1});
@@ -706,14 +782,15 @@ switch lower(action)
             
         end
         
-        if nargin > 1 & isnumeric(varargin{2}) & numel(varargin{2}) == 2
+        if nargin > 1 && isnumeric(varargin{2}) && numel(varargin{2}) == 2
             caxis(H.axis, varargin{2});
         else
             caxis(H.axis, [min(d), max(d)])
         end
         
-        %-CLip
-        %======================================================================
+        
+    %-CLip
+    %======================================================================
     case 'clip'
         if isempty(varargin), varargin{1} = gca; end
         H = getHandles(varargin{1});
@@ -737,10 +814,212 @@ switch lower(action)
                 H = updateTexture(H, ind, d);
             end
         end
-end
+    
+        
+    %- set surface 
+    %======================================================================
+    case 'surface'
+        surface = varargin{1};
+        if any(surface == 1:4)
+          select_surf(surface);
+        end
+       
+        
+    %- set texture 
+    %======================================================================
+    case 'texture'
+        texure = varargin{1};
+        if any(texure == 1:2)
+          select_texture(texure);
+        elseif texure == 0
+          cat_surf_results('transparency',0);
+        end
+  
+        
+    %- set view 
+    %======================================================================
+    case 'view'
+        view = varargin{1};
+        if any(view == [1,-1,2])
+          select_view(view);
+        end
+  
+      
+    %- set background
+    %======================================================================
+    case 'background'
+        if nargin>1
+            switch varargin{1}
+                case {1,'white'}
+                    if get(H.bkg, 'Value')==0
+                        cat_surf_results('background');
+                    end
+                case {0,2,'black'}
+                    if get(H.bkg, 'Value')==1
+                        cat_surf_results('background');
+                    end
+              otherwise
+                   error('Unknown background option'); 
+            end
+        else
+            set(H.bkg, 'Value', ~get(H.bkg, 'Value') );
+            checkbox_bkg;
+        end
+        
+        
+    %- set showfilename
+    %======================================================================
+    case 'showfilename'
+        if nargin>1
+            if varargin{1} ~= get(H.bkg, 'Value')==0  
+                cat_surf_results('showfilename');
+            end
+        else
+            set(H.info, 'Value', ~get(H.info, 'Value') );
+            checkbox_info;
+        end
+        
+        
+    %- set transparency
+    %======================================================================
+    case 'transparency'
+        if nargin>1
+            if varargin{1} ~= get(H.transp, 'Value')==0  
+                cat_surf_results('transparency');
+            end
+        else
+            set(H.transp, 'Value', ~get(H.transp, 'Value') );
+            checkbox_transp;
+        end 
+        
+        
+    %- set inverse colormap
+    %======================================================================
+    case 'invcolormap'
+        if nargin>1
+            if varargin{1} ~= get(H.inv, 'Value')==0  
+                cat_surf_results('invcolormap');
+            end
+        else
+            set(H.inv, 'Value', ~get(H.inv, 'Value') );
+            checkbox_inv;
+        end
+        
+        
+    %- set inverse colormap
+    %======================================================================
+    case 'threshold'
+        if nargin>1
+            select_thresh(varargin{1});
+        else
+            select_thresh(0);
+        end 
+        
+        
+    %- set inverse colormap
+    %======================================================================
+    case 'hide_neg'
+        if nargin>1
+            if varargin{1} ~= get(H.hide_neg, 'Value')==0  
+                cat_surf_results('hide_neg');
+            end
+        else
+            set(H.hide_neg, 'Value', ~get(H.hide_neg, 'Value') );
+            checkbox_hide_neg;
+        end
+     
+        
+    %- SPM/CAT batch mode
+    %======================================================================
+    case 'batch'
+        job = varargin{1};
+        
+        % create window
+        select_data([],[],char(job.rdata));
+        
+        % set parameter
+        FN = {'surface','texture','view','colormap','invcolormap','background','showfilename'}; 
+        for fni=1:numel(FN)
+          %%
+          if isfield(job,'render') && isfield(job.render,FN{fni})
+            cat_surf_results(FN{fni},job.render.(FN{fni})); 
+          end
+        end
+        FN = {'threshold','hide_neg'}; 
+        for fni=1:numel(FN)
+          if isfield(job,'stat') && isfield(job.stat,FN{fni})
+            cat_surf_results(FN{fni},job.stat.(FN{fni})); 
+          end
+        end
+        
+        % save result
+        if isfield(job,'fparts')
+          fparts = job.fparts; 
+          files = cat_surf_results('print',fparts);
+        else
+          files = cat_surf_results('print');
+        end
+        varargout{1}.png = files; 
+        
+        % close figure after export
+        clear -globalvar H; 
+        close(22); 
+        
+        
+    %- save image
+    %======================================================================
+    case 'print'
+        
+        if nargin>1
+          fparts = varargin{1};
+        else
+          fparts.outdir = {''};
+          fparts.prefix = '';
+          fparts.suffix = '';
+        end
+        
+        if nargin>2
+          imgs = varargin{2};
+        else
+          imgs = inf; 
+        end
+        maximg = numel(H.S1.info);
+        if isinf(imgs), imgs = 1:maximg; end 
+        imgs(imgs<0 | imgs>maximg) = []; 
+        
+        %% print images
+        for fi=1:numel(imgs)
+          if fi>1, select_results(imgs(fi)); end
+          
+          [pp,ff] = spm_fileparts( H.S1.name(imgs(fi),:) );
+          if isempty(fparts.outdir{1})
+            fparts.outdir{1} = pp; 
+          end
+          filenames{imgs(fi)} = fullfile(fparts.outdir{1},[fparts.prefix ff fparts.suffix '.png']); %#ok<AGROW>
+          
+          save_image(1,1,filenames{imgs(fi)});
+          
+          % display image
+          fprintf('  Display %s\n',...
+            spm_file(filenames{imgs(fi)},'link',[...
+              'try, delete(314); end; fh=figure(314); img = imread(''%s''); pos = get(fh,''Position'');'...
+              'pos(4) = pos(3) * size(img,1)./size(img,2);' ...
+              'set(fh,''name'',''cat_surf_result_png'', '...
+              '  ''menubar'',''none'',''toolbar'',''none'',''Position'',pos); '...
+              'image(img); set(gca,''Position'',[0 0 1 1],''visible'',''off''); '])); 
+        end
+        
+        varargout{1} = filenames; 
+        
+        
+  otherwise   
+        error('Unknown action "%s"!\n',action); 
+end 
+
+       
 
 %-----------------------------------------------------------------------
-function H = select_thresh(thresh)
+function Ho = select_thresh(thresh)
 %-----------------------------------------------------------------------
 global H
 
@@ -788,9 +1067,26 @@ set(H.atlas, 'Enable', 'on');
 if ~H.disable_cbar
     H = show_colorbar(H);
 end
+if nargout, Ho = H; end
 
 %-----------------------------------------------------------------------
-function H = select_cmap(cmap)
+function disphist(type)
+%-----------------------------------------------------------------------
+  global H; 
+  
+  i = get(H.sel,'value');
+  if isfield(H,'patch')
+    if i==0
+      d = getappdata(H.patch(1),'data');
+    elseif i<=numel(H.patch)
+      d = getappdata(H.patch(i),'data');
+    end
+    cat_stat_histth(d(d(:)~=0),1,type); 
+  end
+
+
+%-----------------------------------------------------------------------
+function Ho = select_cmap(cmap)
 %-----------------------------------------------------------------------
 global H
 
@@ -814,9 +1110,10 @@ end
 if ~H.disable_cbar
     H = show_colorbar(H);
 end
+if nargout, Ho = H; end
 
 %-----------------------------------------------------------------------
-function H = select_atlas(atlas)
+function Ho = select_atlas(atlas)
 %-----------------------------------------------------------------------
 global H
 
@@ -949,9 +1246,10 @@ for ind = [1 3]
         end
     end
 end
+if nargout, Ho = H; end
 
 %-----------------------------------------------------------------------
-function H = select_results(sel)
+function Ho = select_results(sel)
 %-----------------------------------------------------------------------
 global H
 
@@ -1004,7 +1302,7 @@ end
 
 % correct lower clim to "0" if no values are exceeding threshold
 if mn > -H.thresh_value
-    H.clim = [true H.thresh_value H.S{1}.max]
+    H.clim = [true H.thresh_value H.S{1}.max];
 else
     H.clim = [true H.S{1}.min H.S{1}.max];
 end
@@ -1061,9 +1359,10 @@ cla(H.nam);
 axis(H.nam, 'off')
 text(0.5, 0.5, spm_str_manip(H.S{1}.name, 'k60d'), 'Parent', H.nam, 'Interpreter', 'none', ...
     'FontSize', H.FS, 'HorizontalAlignment', 'center');
+if nargout, Ho = H; end
 
 %-----------------------------------------------------------------------
-function H = select_surf(surf)
+function Ho = select_surf(surf)
 %-----------------------------------------------------------------------
 global H
 
@@ -1125,6 +1424,7 @@ else
     set(H.cursor, 'Enable', 'on');
     set(H.mview, 'Enable', 'on');
 end
+if nargout, Ho = H; end
 
 %-----------------------------------------------------------------------
 function display_results_all(obj, event_obj)
@@ -1619,14 +1919,16 @@ end
 set(H.patch(ind), 'FaceVertexCData', C, 'FaceColor', FaceColor);
 
 %-----------------------------------------------------------------------
-function select_data(obj, event_obj)
+function select_data(obj, event_obj, P)
 %-----------------------------------------------------------------------
 global H
 
 H.logP = 1;
 lh = []; rh = []; lh_rh = [];
 
-P = spm_select([1 24], 'mesh', 'Select up to 24 maps for left and right hemisphere');
+if ~exist('P','var')
+  P = spm_select([1 24], 'mesh', 'Select up to 24 maps for left and right hemisphere');
+end
 info = cat_surf_info(P);
 
 n = size(P, 1);
@@ -1652,6 +1954,8 @@ for i = 1:n
     elseif strcmp(info(i).side, 'rh')
         rh = [rh i];
     elseif strcmp(info(i).side, 'mesh')
+        lh_rh = [lh_rh i];
+    else % asume mesh
         lh_rh = [lh_rh i];
     end
 end
@@ -1836,7 +2140,7 @@ if ~H.disable_cbar
 end
 
 %-----------------------------------------------------------------------
-function H = checkbox_hide_neg(obj, event_obj)
+function Ho = checkbox_hide_neg(obj, event_obj)
 %-----------------------------------------------------------------------
 global H
 
@@ -1880,6 +2184,7 @@ set(H.atlas, 'Enable', 'on');
 if ~H.disable_cbar
     H = show_colorbar(H);
 end
+if nargout, Ho = H; end
 
 %==========================================================================
 function checkbox_transp(obj, event_obj)

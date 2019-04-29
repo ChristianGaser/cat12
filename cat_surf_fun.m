@@ -74,7 +74,7 @@ function varargout = cat_surf_fun(action,S,varargin)
     case 'core'
       if nargout==1, varargout{1} = cat_surf_core(S,varargin{1}); end
       if nargout==2, [varargout{1},varargout{2}] = cat_surf_core(S,varargin{1}); end
-    case {'inner','outer','white','pial'}
+    case {'inner','outer','white','pial','innervar','outervar','whitevar','pialvar'}
       if numel(varargin)==1
         switch nargout % surface & texture input
           case 0, cat_surf_GMboundarySurface(action,S,varargin{1});
@@ -108,6 +108,8 @@ function varargout = cat_surf_fun(action,S,varargin)
       varargout{1} = cat_surf_surf2surf(S,varargin{1});
     case 'useedgemap'
       varargout{1} = cat_surf_maparea(S,varargin{1});
+    case 'gmv'
+      varargout{1} = cat_surf_gmv(S,varargin{1});
     case 'cdatamapping' 
       if nargin<3, varargin{3} = ''; end
       if nargin<4, varargin{4} = struct(); end
@@ -222,20 +224,70 @@ function cdata2 = cat_surf_edgemap(edgemap,cdata,idir)
   end
 end
 
-function varargout = cat_surf_GMV(IS,OS)
+function VV = cat_surf_gmv(IS,OS)
+%%
+  V = double([IS.vertices;OS.vertices]);
+
   % create Delaunay triangulation 
+  D  = delaunayn(V); 
   
-  % remove non GM tetraeder
+  % classify and remove non GM tetraeder
+  DS = D>size(IS.vertices,1);
+  D( sum(DS,2)==0 | sum(DS,2)==4 ,:)  = [];  
+  clear DS;
   
   % estimate tetraeder volume
+  DV = tetraedervolume(D,V);
   
-  % map volume to faces
+  %% map volume to faces
+  % Each tetraeder has 4 points where one is double (because IS.faces =
+  % OS.faces). Now it is possible to find the triangle
+  DF  = D; 
+  DF(DF>size(IS.vertices,1)) = DF(DF>size(IS.vertices,1)) - size(IS.vertices,1);
+  %DF  = unique(DF,'rows'); 
+  %%
+  [DF,DFi] = sortrows(DF);
+  [F,FI]   = sortrows(IS.faces);
+  %%
+  SDF = sum(DF,2); 
+  SF  = sum(F,2); 
+  FV  = zeros(size(IS.faces,1),1); 
+  for di = 1:size(DF,1)
+    i = find( SDF(di) == SF ); 
+    FV( FI(i) ) = FV( FI(i) ) + DV(DFi(di));
+  end
   
   % map faces to vertices
-
+  VV = cat_surf_F2V(IS,FV);
 end
+function DV = tetraedervolume(D,V)
+% estimate tetraeder volume by the Cayley-Menger determinant
 
+  % edgelength
+  r = sum( ( V(D(:,1),:) - V(D(:,2),:) ).^2 , 2).^0.5; 
+  p = sum( ( V(D(:,2),:) - V(D(:,3),:) ).^2 , 2).^0.5; 
+  q = sum( ( V(D(:,3),:) - V(D(:,1),:) ).^2 , 2).^0.5; 
+  a = sum( ( V(D(:,1),:) - V(D(:,4),:) ).^2 , 2).^0.5; 
+  b = sum( ( V(D(:,2),:) - V(D(:,4),:) ).^2 , 2).^0.5; 
+  c = sum( ( V(D(:,3),:) - V(D(:,4),:) ).^2 , 2).^0.5; 
+
+  % volume
+  DV = zeros(size(D,1),1);
+  for i=1:size(D,1)
+    DM = [ 0    r(i) q(i) a(i) 1;...
+           r(i) 0    p(i) b(i) 1;...
+           q(i) p(i) 0    c(i) 1;...
+           a(i) b(i) c(i) 0    1;...
+           1    1    1    1    0];
+    DV(i) = sqrt(det( DM .^2 ) / 288);
+  end
+end
 function varargout = cat_surf_GMboundarySurface(type,varargin)
+  if contains(type,'var')
+    varout=1; type = strrep(type,'var',''); 
+  else
+    varout=0;
+  end
   switch type
     case {'white','inner'}, direction = -0.5;
     case {'pial' ,'outer'}, direction =  0.5;
@@ -262,7 +314,15 @@ function varargout = cat_surf_GMboundarySurface(type,varargin)
     end
     
     % filename
-    varargout{1} = Ptype; 
+    if varout
+      % load surface 
+      varargout{1} = gifti(Ptype); 
+
+      % delete temp files
+      delete(Ptype);
+    else
+      varargout{1} = Ptype; 
+    end
   else
     % write temp files ...
     Praw   = 'central.';
