@@ -150,21 +150,22 @@ function varargout = cat_surf_resamp(varargin)
 
         k = strfind(name,'.');
         pname = ff(k(1)+1:k(2)-1);
-        Pcentral   = [strrep(name,pname,surfacefield) '.gii'];
-        Pspherereg = fullfile(pp,strrep(Pcentral,surfacefield,'sphere.reg'));
-        Pvalue     = fullfile(pp,strrep(Pcentral,surfacefield,[pname str_resamp]));
+        Pcentralf  = [strrep(name,pname,surfacefield) '.gii'];
+        Psphere    = fullfile(pp,strrep(Pcentralf,surfacefield,'sphere'));
+        Pspherereg = fullfile(pp,strrep(Pcentralf,surfacefield,'sphere.reg'));
+        Pvalue     = fullfile(pp,strrep(Pcentralf,surfacefield,[pname str_resamp]));
         Pvalue     = strrep(Pvalue,'.gii',''); % remove .gii extension
 
         if job.fwhm_surf > 0
-          Pfwhm    = fullfile(pp,[sprintf('s%g.',job.fwhm_surf) strrep(Pcentral,surfacefield,[pname str_resamp])]);
-          Presamp  = fullfile(pp,[sprintf('s%g.',job.fwhm_surf) strrep(Pcentral,surfacefield,[pname '.tmp.resampled'])]);
+          Pfwhm    = fullfile(pp,[sprintf('s%g.',job.fwhm_surf) strrep(Pcentralf,surfacefield,[pname str_resamp])]);
+          Presamp  = fullfile(pp,[sprintf('s%g.',job.fwhm_surf) strrep(Pcentralf,surfacefield,[pname '.tmp.resampled'])]);
         else
-          Pfwhm    = fullfile(pp,strrep(Pcentral,surfacefield,[pname str_resamp]));
-          Presamp  = fullfile(pp,strrep(Pcentral,surfacefield,[pname 'tmp.resampled']));
+          Pfwhm    = fullfile(pp,strrep(Pcentralf,surfacefield,[pname str_resamp]));
+          Presamp  = fullfile(pp,strrep(Pcentralf,surfacefield,[pname 'tmp.resampled']));
         end
 
         Pfwhm      = strrep(Pfwhm,'.gii',''); % remove .gii extension
-        Pcentral   = fullfile(pp,Pcentral);
+        Pcentral   = fullfile(pp,Pcentralf);
         Pfsavg     = fullfile(job.fsavgDir,[hemi '.sphere.freesurfer.gii']);
         Pmask      = fullfile(job.fsavgDir,[hemi '.mask']);
 
@@ -189,9 +190,10 @@ function varargout = cat_surf_resamp(varargin)
           else
             Pedgemap = cat_io_strrep(Pcentral,{'.central.';'.gii'},{'.edgemap164k.';'.mat'});
           end
-          if 0%exist(Pedgemap,'file')
+          if exist(Pedgemap,'file')
             load(Pedgemap,'edgemap'); 
           else
+            %%
             stime2  = clock;
             if job.mesh32k
               fprintf('  Estimate mapping for 32k surface');
@@ -202,7 +204,7 @@ function varargout = cat_surf_resamp(varargin)
             Sfsavg  = gifti(Pfsavg);
             edgemap = cat_surf_fun('createEdgemap',Ssreg,Sfsavg); 
             save(Pedgemap,'edgemap'); 
-            clear Ssreg Sfsavg; 
+           % clear Ssreg Sfsavg; 
             fprintf(' takes %ds\n',round(etime(clock,stime2))); 
           end
 

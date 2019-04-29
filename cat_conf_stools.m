@@ -1397,6 +1397,7 @@ measures = { % para-field , para-subfield , para-val , output-var, [left|right] 
   'GIL'       'core'  [2 4]  'core'           'core surface';
   ... 
   'area'      ''      [1 2]  'area'           'surface area'; 
+  'gmv'       ''      [1 2]  'gmv'            'surface GM volume'; 
   };
 sides = {
   'l' 'Left';

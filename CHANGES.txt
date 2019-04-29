@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1458 | dahnke | 2019-04-29 13:06:56
+r1459 | dahnke | 2019-04-29 15:03:17
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_surf_fun.m
+M       cat_surf_parameters.m
+M       cat_surf_resamp.m
+
+1) Fixed:  Corrected surface-based GM volume estimation in cat_surf_fun. 
+------------------------------------------------------------------------
+r1458 | dahnke | 2019-04-29 13:07:25 +0200 (Mo, 29 Apr 2019) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +19,7 @@ M       cat_surf_info.m
 M       cat_surf_results.m
 
 1) Fixed:  Corrected dependencies in cat_surf_results batch.
+
 ------------------------------------------------------------------------
 r1457 | dahnke | 2019-04-29 12:16:31 +0200 (Mo, 29 Apr 2019) | 13 lines
 
