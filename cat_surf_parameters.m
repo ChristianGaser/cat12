@@ -127,7 +127,6 @@ function varargout = cat_surf_parameters(job)
         %fprintf('Not yet working.');
         stime = clock; 
         if exist(Parea,'file') && job.lazy  
-          if nargout==1, varargout{1}.([sides{si} 'Parea']){i} = Parea; end  
           if job.verb, fprintf('exist - Display %s\n',spm_file(Parea,'link','cat_surf_display(''%s'')')); end
         else 
           if job.area==1
@@ -142,11 +141,11 @@ function varargout = cat_surf_parameters(job)
             cat_io_FreeSurfer('write_surf_data',Parea,area); 
             clear area Si;  
           end
-          if nargout==1, varargout{1}.([sides{si} 'Parea']){i} = Parea; end  
           if job.verb
             fprintf('%4.0fs - Display %s\n',etime(clock,stime),spm_file(Parea,'link','cat_surf_display(''%s'')')); 
           end
         end
+        if nargout==1, varargout{1}.([sides{si} 'Parea']){i} = Parea; end  
         measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
       end
       
@@ -154,7 +153,6 @@ function varargout = cat_surf_parameters(job)
         %% local volume 
         stime = clock; 
         if exist(Pgmv,'file') && job.lazy  
-          if nargout==1, varargout{1}.([sides{si} 'Pgmv']){i} = Pgmv; end  
           if job.verb, fprintf('exist - Display %s\n',spm_file(Pgmv,'link','cat_surf_display(''%s'')')); end
         else 
           Sw  = cat_surf_fun('whitevar',Pname);
@@ -165,6 +163,7 @@ function varargout = cat_surf_parameters(job)
             fprintf('%4.0fs - Display %s\n',etime(clock,stime),spm_file(Pgmv,'link','cat_surf_display(''%s'')')); 
           end
         end
+        if nargout==1, varargout{1}.([sides{si} 'Pgmv']){i} = Pgmv; end  
         measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
       end
       
