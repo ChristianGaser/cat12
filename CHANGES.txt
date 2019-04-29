@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1457 | dahnke | 2019-04-29 12:15:57
+r1458 | dahnke | 2019-04-29 13:06:56
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_surf_info.m
+M       cat_surf_results.m
+
+1) Fixed:  Corrected dependencies in cat_surf_results batch.
+------------------------------------------------------------------------
+r1457 | dahnke | 2019-04-29 12:16:31 +0200 (Mo, 29 Apr 2019) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +22,7 @@ M       cat_surf_results.m
 1) New:  Added batch mode for cat_surf_results.
 2) New:  Added GM volume estimation for surfaces in cat_surf_parameters    
          (not ready right now).
+
 
 ------------------------------------------------------------------------
 r1456 | dahnke | 2019-04-27 14:49:26 +0200 (Sa, 27 Apr 2019) | 24 lines

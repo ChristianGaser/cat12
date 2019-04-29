@@ -1457,16 +1457,24 @@ function renderresults = cat_surf_results_GUI
   texture              = cfg_menu;
   texture.name         = 'Surface underlay texture';
   texture.tag          = 'texture';
-  texture.labels       = {'none','Mean curvature', 'Sulcal depth'};
-  texture.values       = {0,1,2};
+  texture.labels       = {'Mean curvature', 'Sulcal depth'};
+  texture.values       = {1,2};
   texture.val          = {1};
-  texture.help         = {'Select a half-transparent underlaying texture to illutrate the cortical folding pattern by mean curvature or sulcal depth.' ''};
+  texture.help         = {'Select a underlaying surface texture to illutrate the cortical folding pattern by mean curvature or sulcal depth.' ''};
+  
+  transparency         = cfg_menu;
+  transparency.name    = 'Transparency';
+  transparency.tag     = 'transparency';
+  transparency.labels  = {'No', 'Yes'};
+  transparency.values  = {0,1};
+  transparency.val     = {1};
+  transparency.help    = {'Select a underlaying surface texture to illutrate the cortical folding pattern by mean curvature or sulcal depth.' ''};
   
   view                  = cfg_menu;
   view.name             = 'Render view';
   view.tag              = 'view';
-  view.labels           = {'Show top view', 'Show bottom view'}; %, 'Show only lateral and medial views'};
-  view.values           = {1,-1}; %,2};
+  view.labels           = {'Show top view', 'Show bottom view', 'Show only lateral and medial views'};
+  view.values           = {1,-1,2};
   view.val              = {1};
   view.help             = {'Select diffent types of surface views. The "top view"/"bottom view" shows later and medial view of the left and right hemisphere and the top/bottom view in middle. The view option has no effect in case of flatmaps.' ''};
   
@@ -1506,7 +1514,7 @@ function renderresults = cat_surf_results_GUI
   render                = cfg_exbranch;
   render.tag            = 'render';
   render.name           = 'Render options';
-  render.val            = {surface,texture,view,colormap,invcolormap,background,showfilename};  
+  render.val            = {surface,view,texture,transparency,colormap,invcolormap,background,showfilename};  
   render.prog           = @cat_surf_results;
   render.vout           = @vout_cat_surf_results;
   render.help           = {'Rendering options for the surface output.'};  
@@ -1532,7 +1540,7 @@ function renderresults = cat_surf_results_GUI
   stat                  = cfg_exbranch;
   stat.tag              = 'stat';
   stat.name             = 'Statistical options';
-  stat.val              = {threshold,invcolormap,hideNegRes};  
+  stat.val              = {threshold,hideNegRes};  
   stat.prog             = @cat_surf_results;
   stat.vout             = @vout_cat_surf_results;
   stat.help             = {'Further options for statistical maps.'};  
@@ -1569,7 +1577,6 @@ function renderresults = cat_surf_results_GUI
   fparts.name           = 'Filename';
   fparts.val            = {outdir,prefix,suffix};  
   fparts.prog           = @cat_surf_results;
-  fparts.vout           = @vout_cat_surf_results;
   fparts.help           = {'Define output directory and prefix and suffix.'};  
   
   
@@ -1579,7 +1586,7 @@ function renderresults = cat_surf_results_GUI
   renderresults.name    = 'Render result data';
   renderresults.val     = {rdata,render,stat,fparts};  
   renderresults.prog    = @(job) cat_surf_results('batch',job);
-  %renderresults.vout    = @vout_cat_surf_results;
+  renderresults.vout    = @(job) vout_cat_surf_results(job);
   renderresults.help    = {'CAT result render function for automatic result image export.' ''};
 
 
@@ -1605,5 +1612,5 @@ end
 function dep = vout_cat_surf_results(job)
   dep(1)            = cfg_dep;
   dep(1).sname      = 'Rendered surface data';
-  dep(1).src_output = substruct('.','png');
-  dep(1).tgt_spec   = cfg_findspec({{'filter','png','strtype','e'}});
+  dep(1).src_output = substruct('()',{1},'.','png','()',{':'});
+  dep(1).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});

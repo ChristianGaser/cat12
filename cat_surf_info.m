@@ -361,7 +361,6 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
           if ~exist(SPM.xVol.G,'file')
             [pp2,ff2,xx2] = spm_fileparts(SPM.xVol.G);
             if strfind(ff2,'.central.freesurfer')
-            disp('FS')
               if strfind(pp2,'templates_surfaces_32k')
                 SPM.xVol.G = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k',[ff2 xx2]);
               else
