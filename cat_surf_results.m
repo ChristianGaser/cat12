@@ -938,7 +938,7 @@ switch lower(action)
         select_data([],[],char(job.rdata));
         
         % set parameter
-        FN = {'surface','texture','view','colormap','invcolormap','background','showfilename'}; 
+        FN = {'surface','texture','transparency','view','colormap','invcolormap','background','showfilename'}; 
         for fni=1:numel(FN)
           %%
           if isfield(job,'render') && isfield(job.render,FN{fni})
@@ -1253,7 +1253,7 @@ function Ho = select_results(sel)
 %-----------------------------------------------------------------------
 global H
 
-clearDataCursorPlot(H)
+clearDataCursorPlot(H);
 
 H.S{1}.name = H.S1.name(sel, :);
 H.S{2}.name = H.S2.name(sel, :);
@@ -2366,9 +2366,9 @@ switch H.cursor_mode
     case 0 % disable and delete datatip
         rotate3d off;
         
-        clearDataCursorPlot(H)
+        clearDataCursorPlot(H);
     case {1, 2, 3}
-        clearDataCursorPlot(H)
+        clearDataCursorPlot(H);
         set(dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', ...
             'DisplayStyle', 'datatip', 'Updatefcn', {@myDataCursorAtlas, H});
     case {4, 5}
@@ -2415,7 +2415,7 @@ switch H.cursor_mode
             fprintf('The values are available at the MATLAB command line as variable ''y''\n');
         end
     case 6 % enable/disable rotate3d
-        clearDataCursorPlot(H)
+        clearDataCursorPlot(H);
         rotate3d;
         disp('Use mouse to rotate views.');
 end
