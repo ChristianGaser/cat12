@@ -240,25 +240,14 @@ function VV = cat_surf_gmv(IS,OS)
   DV = tetraedervolume(D,V);
   
   %% map volume to faces
-  % Each tetraeder has 4 points where one is double (because IS.faces =
-  % OS.faces). Now it is possible to find the triangle
-  DF  = D; 
-  DF(DF>size(IS.vertices,1)) = DF(DF>size(IS.vertices,1)) - size(IS.vertices,1);
-  %DF  = unique(DF,'rows'); 
-  %%
-  [DF,DFi] = sortrows(DF);
-  [F,FI]   = sortrows(IS.faces);
-  %%
-  SDF = sum(DF,2); 
-  SF  = sum(F,2); 
-  FV  = zeros(size(IS.faces,1),1); 
-  for di = 1:size(DF,1)
-    i = find( SDF(di) == SF ); 
-    FV( FI(i) ) = FV( FI(i) ) + DV(DFi(di));
+  VV = zeros(size(IS.vertices,1),1,'single'); DS = VV;
+  DF = D; DF(DF>size(IS.vertices,1)) = DF(DF>size(IS.vertices,1)) - size(IS.vertices,1);
+  for i=1:numel(DF)
+    VV(DF(i)) = VV(DF(i)) + DV( D(i) );  
+    DS(DF(i)) = DS(DF(i)) + 1; 
   end
-  
-  % map faces to vertices
-  VV = cat_surf_F2V(IS,FV);
+  VV = VV./max(1,DS); 
+ 
 end
 function DV = tetraedervolume(D,V)
 % estimate tetraeder volume by the Cayley-Menger determinant
