@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1456 | dahnke | 2019-04-27 14:46:57
+r1457 | dahnke | 2019-04-29 12:15:57
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_surf_fun.m
+M       cat_surf_info.m
+M       cat_surf_parameters.m
+M       cat_surf_results.m
+
+1) New:  Added batch mode for cat_surf_results.
+2) New:  Added GM volume estimation for surfaces in cat_surf_parameters    
+         (not ready right now).
+
+------------------------------------------------------------------------
+r1456 | dahnke | 2019-04-27 14:49:26 +0200 (Sa, 27 Apr 2019) | 24 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -22,6 +37,7 @@ M       cat_surf_resamp.m
 4) Changed:	  Added lazy mode in cat_surf_resamp in developer mode. 
 5) New:       Added "synchronies views" option for textures in cat_surf_render2.
 6) New:       Added area mapping schema in cat_surf_fun & cat_surf_parameters.
+
 
 
 ------------------------------------------------------------------------

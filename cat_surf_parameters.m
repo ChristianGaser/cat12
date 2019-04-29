@@ -109,6 +109,7 @@ function varargout = cat_surf_parameters(job)
       PFD     = fullfile(pp,strrep(ff,'central','fractaldimension'));
       PSD     = fullfile(pp,strrep(ff,'central','sqrtsulc'));
       Parea   = fullfile(pp,strrep(ff,'central','area'));
+      Pgmv    = fullfile(pp,strrep(ff,'central','gmv'));
       % new experimental GIs
       PiGI    = fullfile(pp,strrep(ff,'central','inwardGI'));            
       PoGI    = fullfile(pp,strrep(ff,'central','outwardGI'));            
@@ -122,7 +123,7 @@ function varargout = cat_surf_parameters(job)
       
       
       if job.area
-      %% local surface area
+      %% local surface area by nearest neighbor approach (see Winkler 2017)
         %fprintf('Not yet working.');
         stime = clock; 
         if exist(Parea,'file') && job.lazy  
@@ -145,7 +146,24 @@ function varargout = cat_surf_parameters(job)
           if job.verb
             fprintf('%4.0fs - Display %s\n',etime(clock,stime),spm_file(Parea,'link','cat_surf_display(''%s'')')); 
           end
-          
+        end
+        measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
+      end
+      
+      if job.gmv
+        %% local volume 
+        stime = clock; 
+        if exist(Pgmv,'file') && job.lazy  
+          if nargout==1, varargout{1}.([sides{si} 'Pgmv']){i} = Pgmv; end  
+          if job.verb, fprintf('exist - Display %s\n',spm_file(Pgmv,'link','cat_surf_display(''%s'')')); end
+        else 
+          Sw  = cat_surf_fun('whitevar',Pname);
+          Sp  = cat_surf_fun('pialvar',Pname);
+          gmv = cat_surf_fun('gmv',Sw,Sp); clear Sw Sp; 
+          cat_io_FreeSurfer('write_surf_data',Pgmv,gmv); clear gmv; 
+          if job.verb
+            fprintf('%4.0fs - Display %s\n',etime(clock,stime),spm_file(Pgmv,'link','cat_surf_display(''%s'')')); 
+          end
         end
         measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
       end

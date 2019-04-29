@@ -358,7 +358,8 @@ function stools = cat_conf_stools(expert)
     area.values = {0,2}; 
     area.val    = {2}; 
     area.help   = {
-      'This method requires a sum-based mapping rather than the mean-based interpolation. The mapping utilize the Delaunay graph to transfer the area around a vertex to its closes neighbor(s). '}; 
+      'WARNING: IN DEVELOPMENT!'
+      'This method requires a sum-based mapping rather than the mean-based interpolation. The mapping utilize the Delaunay graph to transfer the area around a vertex to its nearest neighbor(s). See Winkler et al.,  2017. '}; 
     %{
     % Winklers method is not implemented right now (201904)
     area.help   = {
@@ -376,7 +377,7 @@ function stools = cat_conf_stools(expert)
     gmv.values = {0,1}; 
     gmv.val    = {1}; 
     gmv.help   = {
-      'NOT WORKING RIGHT NOW!'
+      'WARNING: NOT WORKING RIGHT NOW!'
       'This method requires a sum-based mapping rather than the mean-based interpolation. The mapping utilize the Delaunay graph to transfer the area around a vertex to its closes neighbor(s) that is also use for the area mapping. '}; 
 
   end
@@ -392,7 +393,7 @@ function stools = cat_conf_stools(expert)
   surfextract.tag  = 'surfextract';
   surfextract.name = 'Extract additional surface parameters';
   if expert > 1
-    surfextract.val  = {data_surf_extract,area,GI,FD,SD,GIL,surfaces, nproc,lazy}; % area, 
+    surfextract.val  = {data_surf_extract, area,gmv, GI,FD,SD, GIL,surfaces, nproc, lazy}; % area, 
   else
     surfextract.val  = {data_surf_extract,GI,FD,SD,nproc};
   end
@@ -1291,6 +1292,10 @@ end
   ''};
 
 
+% import cat_surf_results GUI
+  renderresults = cat_surf_results_GUI;
+
+
 %% Toolset
 %  ---------------------------------------------------------------------
   
@@ -1309,6 +1314,7 @@ end
       surfcalc, ...
       surfcalcsub, ...
       surf2roi, ...
+      renderresults, ...
       roi2surf, ...
       ... estroi, ...
       flipsides, ...
@@ -1424,7 +1430,159 @@ for si=1:size(sides,1)
 end
 if ~exist('dep','var'), dep = cfg_dep; end
 
+
+function renderresults = cat_surf_results_GUI
+%  Batch mode for cat_surf_results function. 
+
+%  render results
+%  ---------------------------------------------------------------------
+  rdata                = cfg_files;
+  rdata.tag            = 'rdata';
+  rdata.name           = 'Template surface data files';
+  rdata.filter         = 'mesh';
+  rdata.ufilter        = '.*';
+  rdata.num            = [1 Inf];
+  rdata.help           = {'Select resampled surface data. ' ''};
   
+  
+  % == render options ==
+  surface              = cfg_menu;
+  surface.name         = 'Render surface';
+  surface.tag          = 'surface';
+  surface.labels       = {'Central','Inflated','Dartel','Flatmap'};
+  surface.values       = {1,2,3,4};
+  surface.val          = {1};
+  surface.help         = {'Select on which average surface the data should be projected. ' ''};
+
+  texture              = cfg_menu;
+  texture.name         = 'Surface underlay texture';
+  texture.tag          = 'texture';
+  texture.labels       = {'none','Mean curvature', 'Sulcal depth'};
+  texture.values       = {0,1,2};
+  texture.val          = {1};
+  texture.help         = {'Select a half-transparent underlaying texture to illutrate the cortical folding pattern by mean curvature or sulcal depth.' ''};
+  
+  view                  = cfg_menu;
+  view.name             = 'Render view';
+  view.tag              = 'view';
+  view.labels           = {'Show top view', 'Show bottom view'}; %, 'Show only lateral and medial views'};
+  view.values           = {1,-1}; %,2};
+  view.val              = {1};
+  view.help             = {'Select diffent types of surface views. The "top view"/"bottom view" shows later and medial view of the left and right hemisphere and the top/bottom view in middle. The view option has no effect in case of flatmaps.' ''};
+  
+  colormap              = cfg_menu;
+  colormap.name         = 'Colormap';
+  colormap.tag          = 'colormap';
+  colormap.labels       = {'jet', 'hot', 'hsv', 'cold-hot'};
+  colormap.values       = {1,2,3,4};
+  colormap.val          = {1};
+  colormap.help         = {'Select the colormap for data visualisation.' ''};
+  
+  background            = cfg_menu;
+  background.name       = 'Background color';
+  background.tag        = 'background';
+  background.labels     = {'White','Black'};
+  background.values     = {1,2};
+  background.val        = {1};
+  background.help       = {'Select the color of the background.' ''};
+
+  showfilename          = cfg_menu;
+  showfilename.name     = 'Show filename';
+  showfilename.tag      = 'showfilename';
+  showfilename.labels   = {'No','Yes'};
+  showfilename.values   = {0,1};
+  showfilename.val      = {1};
+  showfilename.help     = {'Print the filename at the top of the left and right hemishere.' ''};
+  
+  invcolormap           = cfg_menu;
+  invcolormap.name      = 'Inverse colormap';
+  invcolormap.tag       = 'invcolormap';
+  invcolormap.labels    = {'No','Yes'};
+  invcolormap.values    = {0,1};
+  invcolormap.val       = {0};
+  invcolormap.help      = {'Use inverse colormap.' ''};
+  
+  
+  render                = cfg_exbranch;
+  render.tag            = 'render';
+  render.name           = 'Render options';
+  render.val            = {surface,texture,view,colormap,invcolormap,background,showfilename};  
+  render.prog           = @cat_surf_results;
+  render.vout           = @vout_cat_surf_results;
+  render.help           = {'Rendering options for the surface output.'};  
+  
+  
+  % == stat ==
+  threshold             = cfg_menu;
+  threshold.name        = 'Threshold';
+  threshold.tag         = 'threshold';
+  threshold.labels      = {'No threshold', 'P<0.05', 'P<0.01', 'P<0.001'};
+  threshold.values      = {0,1.3,2,3};
+  threshold.val         = {0};
+  threshold.help        = {'Define the threshold of statistical maps.' ''};
+  
+  hideNegRes            = cfg_menu;
+  hideNegRes.name       = 'Hide negative results';
+  hideNegRes.tag        = 'hide_neg';
+  hideNegRes.labels     = {'No','Yes'};
+  hideNegRes.values     = {0,1};
+  hideNegRes.val        = {0};
+  hideNegRes.help       = {'Do not show negative results.' ''};
+  
+  stat                  = cfg_exbranch;
+  stat.tag              = 'stat';
+  stat.name             = 'Statistical options';
+  stat.val              = {threshold,invcolormap,hideNegRes};  
+  stat.prog             = @cat_surf_results;
+  stat.vout             = @vout_cat_surf_results;
+  stat.help             = {'Further options for statistical maps.'};  
+  
+  
+  % == filename ==
+  outdir                = cfg_files;
+  outdir.tag            = 'outdir';
+  outdir.name           = 'Output directory';
+  outdir.filter         = 'dir';
+  outdir.ufilter        = '.*';
+  outdir.num            = [0 1];
+  outdir.help           = {'Select a directory where files are written. Empty writes in the directory of the input files.' ''};
+  outdir.val{1}         = {''};
+
+  prefix                = cfg_entry;
+  prefix.tag            = 'prefix';
+  prefix.name           = 'Filename prefix';
+  prefix.strtype        = 's';
+  prefix.num            = [0 Inf];
+  prefix.val            = {''};
+  prefix.help           = {'Specify the string to be prepended to the filenames of the filtered image file(s). Default prefix is "".' ''};
+
+  suffix                = cfg_entry;
+  suffix.tag            = 'suffix';
+  suffix.name           = 'Filename suffix';
+  suffix.strtype        = 's';
+  suffix.num            = [0 Inf];
+  suffix.val            = {''};
+  suffix.help           = {'Specify the string to be appended to the filenames of the filtered image file(s). Default suffix is "".' ''};
+  
+  fparts                = cfg_exbranch;
+  fparts.tag            = 'fparts';
+  fparts.name           = 'Filename';
+  fparts.val            = {outdir,prefix,suffix};  
+  fparts.prog           = @cat_surf_results;
+  fparts.vout           = @vout_cat_surf_results;
+  fparts.help           = {'Define output directory and prefix and suffix.'};  
+  
+  
+  % == main ==
+  renderresults         = cfg_exbranch;
+  renderresults.tag     = 'renderresults';
+  renderresults.name    = 'Render result data';
+  renderresults.val     = {rdata,render,stat,fparts};  
+  renderresults.prog    = @(job) cat_surf_results('batch',job);
+  %renderresults.vout    = @vout_cat_surf_results;
+  renderresults.help    = {'CAT result render function for automatic result image export.' ''};
+
+
 %==========================================================================
 function dep = vout_vol2surf(job)
 
@@ -1443,3 +1601,9 @@ else
   dep(2).src_output = substruct('.','rh');
   dep(2).tgt_spec   = cfg_findspec({{'filter','mesh','strtype','e'}});
 end
+
+function dep = vout_cat_surf_results(job)
+  dep(1)            = cfg_dep;
+  dep(1).sname      = 'Rendered surface data';
+  dep(1).src_output = substruct('.','png');
+  dep(1).tgt_spec   = cfg_findspec({{'filter','png','strtype','e'}});
