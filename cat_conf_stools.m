@@ -359,7 +359,7 @@ function stools = cat_conf_stools(expert)
     area.val    = {2}; 
     area.help   = {
       'WARNING: IN DEVELOPMENT!'
-      'This method requires a sum-based mapping rather than the mean-based interpolation. The mapping utilize the Delaunay graph to transfer the area around a vertex to its nearest neighbor(s). See Winkler et al.,  2017. '}; 
+      'This method requires a sum-based mapping rather than the mean-based interpolation. The mapping utilizes the Delaunay graph to transfer the area around a vertex to its nearest neighbor(s). See Winkler et al.,  2017. '}; 
     %{
     % Winklers method is not implemented right now (201904)
     area.help   = {
@@ -1461,7 +1461,7 @@ function renderresults = cat_surf_results_GUI
   texture.labels       = {'Mean curvature', 'Sulcal depth'};
   texture.values       = {1,2};
   texture.val          = {1};
-  texture.help         = {'Select a underlaying surface texture to illutrate the cortical folding pattern by mean curvature or sulcal depth.' ''};
+  texture.help         = {'Select a underlaying surface texture to illustrate the cortical folding pattern by mean curvature or sulcal depth.' ''};
   
   transparency         = cfg_menu;
   transparency.name    = 'Transparency';
@@ -1469,7 +1469,7 @@ function renderresults = cat_surf_results_GUI
   transparency.labels  = {'No', 'Yes'};
   transparency.values  = {0,1};
   transparency.val     = {1};
-  transparency.help    = {'Select a underlaying surface texture to illutrate the cortical folding pattern by mean curvature or sulcal depth.' ''};
+  transparency.help    = {'Select a underlaying surface texture to illustrate the cortical folding pattern by mean curvature or sulcal depth.' ''};
   
   view                  = cfg_menu;
   view.name             = 'Render view';

@@ -97,9 +97,9 @@ function varargout = cat_surf_resamp(varargin)
     hemistr = {'lh','rh','lc','rc'};
     exist_hemi = [];
     
-    if contains(name0,'white') || contains(name0,'inner') || ...
-       contains(name0,'pial')  || contains(name0,'outer') || ...
-       contains(name0,'hull')  || contains(name0,'inner')
+    if strfind(name0,'white') | strfind(name0,'inner') | ...
+       strfind(name0,'pial')  | strfind(name0,'outer') | ...
+       strfind(name0,'hull')  | strfind(name0,'inner')
       cat_io_cprintf('err',sprintf('ERROR - White matter, pial, hull, or core surfaces can not be resampled so far!\n'));
       continue
     end
@@ -181,7 +181,7 @@ function varargout = cat_surf_resamp(varargin)
         Pfwhm_all{j} = Pfwhm_gii;
 
         % resample values
-        if contains(pname,{'area','gmv'}) 
+        if strfind(pname,'area') | strfind(pname,'gmv')
           % resample values using delaunay-based age map
 
           % create mapping between 

@@ -487,23 +487,24 @@ appdata.initTags = struct(...
 %-------------------------------------------------------------------
 % gui positions
 x2  = [0.07 0.53];   % x-pos two columns
-x2w = 0.39;          % width button/popupmenu for two columns
-y1t = 0.77;          % y-pos one row text
-y1b = 0.39;          % y-pos one row button
+x2w =  0.39;         % width button/popupmenu for two columns
+y1t =  0.77;         % y-pos one row text
+y1b =  0.39;         % y-pos one row button
 y2b = [0.592 0.215]; % y-pos two rows button
-y1h  = 0.45;         % height button/popupmenu for one row
-yph  = 0.28;         % height button/popupmenu for two rows
+y1h =  0.45;         % height button/popupmenu for one row
+yph =  0.28;         % height button/popupmenu for two rows
+y1h =  0.5;         % height button/popupmenu for one row
+yph =  0.3;         % height button/popupmenu for two rows
 if ispc
-  y1p = 0.39;          % y-pos one row popupmenu
+  y1p =  0.39;         % y-pos one row popupmenu
   y2p = [0.592 0.215]; % y-pos two rows popupmenu
 else
-  y1p = 0.34;          % y-pos one row popupmenu
+  y1p =  0.34;         % y-pos one row popupmenu
   y2p = [0.562 0.185]; % y-pos two rows popupmenu
 end
 %-------------------------------------------------------------------
 
-S0 = spm('WinSize','0',1);
-SM = spm('WinSize','M');
+WS = spm('WinSize','M');
 PF = spm_platform('fonts');     %-Font names (for this platform)
 
 % get default font size
@@ -530,7 +531,7 @@ h000 = figure(...
   'MenuBar','none',...
   'Name','cat12',...
   'NumberTitle','off',...
-  'Position',[S0(1) S0(2) 0 0] +  SM.*[1 1 1 1.25],...
+  'Position', WS.*[1 1 1 1.25],...
   'ResizeFcn',@(hObject,eventdata)cat12('CAT_ResizeFcn',hObject,eventdata,guidata(hObject)),...
   'CreateFcn', {@local_CreateFcn, @(hObject,eventdata)cat12('CAT_CreateFcn',hObject,eventdata,guidata(hObject)), appdata} ,...
   'UserData',[],...
