@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1460 | gaser | 2019-05-03 14:08:46
+r1461 | gaser | 2019-05-03 14:10:17
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_calc.m
+
+Fixed: Replaced use of "contains" by strfind to be compatible to older versions.
+------------------------------------------------------------------------
+r1460 | gaser | 2019-05-03 14:09:17 +0200 (Fr, 03 Mai 2019) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +23,7 @@ M       html/cat.html
 (1) Changed: Some cosmetic changes and correction of typos.
 (2) Fixed: Replaced use of "contains" by strfind to be compatible to older
     versions.
+
 ------------------------------------------------------------------------
 r1459 | dahnke | 2019-04-29 15:03:46 +0200 (Mo, 29 Apr 2019) | 9 lines
 
