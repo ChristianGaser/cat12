@@ -96,10 +96,10 @@ switch lower(action)
 
       
         % positions
-        ws = spm('Winsize', 'Graphics');
-        ss = get(0, 'Screensize');
-        if 2.6 * ws(3) > ss(3)
-            ws(3) = ws(3) / (2.6 * ws(3) / ss(3));
+        WS = spm('Winsize', 'Graphics');
+        SS = get(0, 'Screensize');
+        if 2.6 * WS(3) > SS(3)
+            WS(3) = WS(3) / (2.6 * WS(3) / SS(3));
         end
         
         % result window with 5 surface views and alternative positions without top view and  only with lateral views
@@ -118,12 +118,12 @@ switch lower(action)
         
         % figure 1 with result window
         H.pos{1} = struct( ...
-            'fig', [10 10 round(2.6*ws(3)) ws(3)], ... % figure
+            'fig', [10 10 round(2.6*WS(3)) WS(3)], ... % figure
             'cbar', [0.400 -0.150 0.200 0.300; 0.440 0.025 0.120 0.120]);% colorbar
         
         % figure 2 with GUI
         H.pos{2} = struct(...
-          'fig',   [2*ws(3)+10 10 0.6*ws(3) ws(3)],... 
+          'fig',   [2*WS(3)+10 10 0.6*WS(3) WS(3)],... 
           'sel',   [0.290 0.930 0.425 0.050],...
           'nam',   [0.050 0.875 0.900 0.050],'hist',    [0.525 0.250 0.425 0.050],...
           'surf',  [0.050 0.800 0.425 0.050],'mview',   [0.525 0.800 0.425 0.050],... 
@@ -151,7 +151,7 @@ switch lower(action)
         H.S{2}.name = ''; H.S{2}.side = 'rh';
        
         
-        % Histrogram button
+        % Histogram button
         if cat_get_defaults('extopts.expertgui')>1
           str = {'Distribution ...', 'Histogram', 'Boxplot', 'Violin'};
           tmp = {{@disphist,2},{@disphist,3},{@disphist,4}};

@@ -805,7 +805,7 @@ admin      = cfg_branch;
 admin.tag  = 'admin';
 admin.name = 'Administration Options';
 if expert==1
-  admin.val  = {ignoreErrors verb print};
+  admin.val  = {lazy ignoreErrors verb print};
 elseif expert==2
   admin.val  = {experimental new_release lazy ignoreErrors verb print};
 end
