@@ -272,7 +272,7 @@ function DV = tetraedervolume(D,V)
   end
 end
 function varargout = cat_surf_GMboundarySurface(type,varargin)
-  if contains(type,'var')
+  if strfind(type,'var')
     varout=1; type = strrep(type,'var',''); 
   else
     varout=0;

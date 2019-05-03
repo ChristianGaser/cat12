@@ -1,5 +1,22 @@
 ------------------------------------------------------------------------
-r1459 | dahnke | 2019-04-29 15:03:17
+r1460 | gaser | 2019-05-03 14:08:46
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+M       cat_conf_extopts.m
+M       cat_conf_stools.m
+M       cat_surf_fun.m
+M       cat_surf_resamp.m
+M       cat_surf_results.m
+M       html/cat.html
+
+(1) Changed: Some cosmetic changes and correction of typos.
+(2) Fixed: Replaced use of "contains" by strfind to be compatible to older
+    versions.
+------------------------------------------------------------------------
+r1459 | dahnke | 2019-04-29 15:03:46 +0200 (Mo, 29 Apr 2019) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +26,7 @@ M       cat_surf_parameters.m
 M       cat_surf_resamp.m
 
 1) Fixed:  Corrected surface-based GM volume estimation in cat_surf_fun. 
+
 ------------------------------------------------------------------------
 r1458 | dahnke | 2019-04-29 13:07:25 +0200 (Mo, 29 Apr 2019) | 8 lines
 
