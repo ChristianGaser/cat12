@@ -40,7 +40,7 @@ function varargout = cat_surf_calc(job)
     sinfo = cat_surf_info(job.cdata{1}{1});
   end
   
-  if contains(sinfo.side,'mesh')
+  if strfind(sinfo.side,'mesh')
     if sinfo.resampled_32k
       job.fsaverage = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','mesh.central.freesurfer.gii');  
     else
