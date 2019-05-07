@@ -1272,9 +1272,9 @@ switch lower(action)
         end
         
         if nargin>1 && isnumeric(varargin{2}) && numel(varargin{2})==2
-            caxis(H.axis,varargin{2});
+            caxis(H.axis,varargin{2} .* [1 1+eps]);
         else
-            caxis(H.axis,[min(d),max(d)])
+            caxis(H.axis,[min(d),max(d)] .* [1 1+eps])
             %varargin{2} = [min(d),max(d)];
         end
         

@@ -8,6 +8,9 @@ function cat_stat_analyze_ROIs(spmmat,alpha,show_results)
 if nargin < 1
   spmmat = spm_select(1,'SPM.mat','Select SPM.mat file to get design');
 end
+if isempty(spmmat)
+  return
+end
 load(spmmat);
 
 % write beta images

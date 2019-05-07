@@ -24,6 +24,7 @@ function varargout = cat_surf_calc(job)
     def.nproc           = 0; % multiple threads
     def.verb            = 0; % dispaly something
     def.lazy            = 0; % do not process anything if output exist (expert)
+    def.datahandling    = 1; % 1-subjectwise, 2-datawise
     def.usefsaverage    = 1; % 
     def.assuregifti     = 0; % write gii output
     def.dataname        = 'output'; 
@@ -80,7 +81,7 @@ function varargout = cat_surf_calc(job)
     
     
   
-  else  
+  elseif job.datahandling==1
   % multisubject  
     for si = 1:numel(job.cdata{1}) 
       if ~isempty(outdir)
@@ -135,10 +136,74 @@ function varargout = cat_surf_calc(job)
     if job.nproc==0 
       spm_progress_bar('Clear');
     end
+  else
+    %%
+    for di = 1:numel(job.cdata) 
+      if ~isempty(outdir)
+        soutdir = outdir;
+      else
+        soutdir = fileparts(job.cdata{di}{1});
+      end
+      
+      sinfo = cat_surf_info(job.cdata{di});
+      names = 'isequaln('; for si=1:numel(sinfo), names = [names '''' sinfo(si).name ''',']; end; names(end) = ')';  %#ok<AGROW>
+      if numel(sinfo)>1 && eval(names)
+        job.output{di,1} = char(cat_surf_rename(job.cdata{di}{1},...
+          'preside','','pp',outdir,'name','','dataname',job.dataname,'ee',ee));  
+
+      else
+        job.output{di,1} = char(cat_surf_rename(job.cdata{di}{1},...
+          'preside','','pp',soutdir,'name',job.dataname,'ee',ee));
+      end
+    end
+    
+    
+    % split job and data into separate processes to save computation time
+    if job.nproc>0 && (~isfield(job,'process_index'))
+      cat_parallelize(job,mfilename,'cdata');
+      return
+    elseif isfield(job,'printPID') && job.printPID 
+      cat_display_matlab_PID
+    end 
+    
+    if job.nproc==0 
+      spm_progress_bar('Init',numel(job.cdata{1}),...
+        sprintf('Texture Calculator\n%d',numel(job.cdata{1})),'Subjects Completed'); 
+    end
+
+    for di = 1:numel(job.cdata) % for subjects
+      sjob = rmfield(job,'cdata');
+      sjob.verb = 0;
+      
+      % subject data 
+      sjob.cdata  = job.cdata{di};
+      sjob.output = job.output{di};
+      try
+        surfcalc(sjob);
+        fprintf('Output %s\n',spm_file(sjob.output,'link','cat_surf_display(''%s'')'));
+      catch
+        fprintf('Output %s failed\n',sjob.output);
+      end
+        
+      if job.nproc==0 
+        spm_progress_bar('Set',di);
+      end
+    end
+    
+    if job.nproc==0 
+      spm_progress_bar('Clear');
+    end
+    
   end
   
+  
+  
   if nargout
-    varargout{1} = job.output;
+    if iscellstr(job.cdata)
+      varargout{1}.output = {job.output};
+    else % is cell of cellstrings 
+      varargout{1}.output = job.output;
+    end
   end
 end
 function surfcalc(job)

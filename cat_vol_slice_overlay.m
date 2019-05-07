@@ -9,6 +9,9 @@ global SO
 if nargin == 0
     
     imgs = spm_select(2, 'image', 'Select additional overlay image', {fullfile(spm('dir'), 'toolbox', 'cat12', 'templates_1.50mm/Template_T1_IXI555_MNI152_GS.nii')});
+    if isempty(imgs)
+      return;
+    end
     OV = pr_basic_ui(imgs, 0);
     
     % set options
@@ -569,7 +572,7 @@ if nargin < 2
 end
 
 clear global SO
-global SO
+global SO %#ok<REDEF> this is print as error
 
 spm_input('!SetNextPos', 1);
 

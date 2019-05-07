@@ -21,7 +21,15 @@ function varargout = cat_surf_resamp(varargin)
   SVNid = '$Rev$';
 
   if nargin == 1
-    P    = char(varargin{1}.data_surf);
+    if iscell(varargin{1}.data_surf)
+      P = ''; 
+      for i=1:numel(varargin{1}.data_surf)
+        P = [P; varargin{1}.data_surf{i}];  
+      end
+      P = char(P); 
+    else
+      P = char(varargin{1}.data_surf);
+    end
     job  = varargin{1}; 
   else
     spm_clf('Interactive'); 
@@ -122,7 +130,9 @@ function varargout = cat_surf_resamp(varargin)
           Pfwhm = strrep(Pcentral,surfacefield,[pname str_resamp]);
         end
         
-        Psdata{i} = fullfile(pp,Pfwhm);
+        if j==1
+          Psdata{i} = fullfile(pp,Pfwhm);
+        end
         if  job.merge_hemi
           Psname    = [Pfwhm '.gii'];
           if j==1, lPsdata{i} = Psname; end
@@ -325,10 +335,18 @@ function varargout = cat_surf_resamp(varargin)
       
   if nargout==1
     if job.merge_hemi
-      varargout{1}.Psdata = Psdata; 
+      if iscell(varargin{1}.data_surf)
+        n = cumsum(cellfun(@numel,varargin{1}.data_surf)); 
+        a = [1 n+1]; a(end) = [];  
+        for i=1:numel(varargin{1}.data_surf)
+          varargout{1}.Psdata{i} = Psdata( a(i) : n(i));
+        end
+      else
+        varargout{1}.Psdata = Psdata; 
+      end
     else
-      varargout{1}.lPsdata = lPsdata; 
-      varargout{1}.rPsdata = rPsdata; 
+      varargout{1}.lPsdata = {lPsdata}; 
+      varargout{1}.rPsdata = {rPsdata}; 
     end
   end
   

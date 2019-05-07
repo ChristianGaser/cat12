@@ -279,36 +279,53 @@ function varargout = cat_parallelize(job,func,datafield)
             fclose(FID);
             
             %% search for the _previous_ start entry "CAT12.# r####: 1/14:   ./MRData/*.nii" 
-            if isstruct( jobs(i).(datafield) )
-              %%
-              FN = fieldnames( jobs(i).(datafield) ); 
-              for si=1:numel( jobs(i).(datafield) )
-                [pp,ff,ee] = spm_fileparts(jobs(i).(datafield)(si).(FN{1}){1});
-                file = spm_str_manip(fullfile(pp,spm_file(ff,'prefix','r')),'l30');
-                SID{si} = find( cellfun('isempty', strfind( txt , file ))==0 ,1,'first');
-              end
-              findSID = find(cellfun('isempty',SID)==0,1,'last'); 
-              if ~isempty(findSID), catSID(si) = findSID; end
-              
-            elseif strcmp( datafield , 'data_surf' )
-              % surfaces ... here the filenames of the processed data
-              % change strongly due to side coding ...
-              for si=1:numel( jobs(i).(datafield) )
-                [pp,ff,ee] = spm_fileparts(jobs(i).(datafield){si}); 
-                
-                SID{si} = ...
-                  find(cellfun('isempty', strfind( txt , pp ))==0,1,'first') & ... 
-                  find(cellfun('isempty', strfind( txt , ff ))==0,1,'first') & ...
-                  find(cellfun('isempty', strfind( txt , ee ))==0,1,'first'); 
-              end
-              catSID(i) = find(cellfun('isempty',SID)==0,1,'last');
+            %  if this process failed, we have no progress information but
+            %  we the batch can still work by asking if the taskIDs exist
+            try
+              if isstruct( jobs(i).(datafield) )
+                %%
+                FN = fieldnames( jobs(i).(datafield) ); 
+                for si=1:numel( jobs(i).(datafield) )
+                  [pp,ff,ee] = spm_fileparts(jobs(i).(datafield)(si).(FN{1}){1});
+                  file = spm_str_manip(fullfile(pp,spm_file(ff,'prefix','r')),'l30');
+                  SID{si} = find( cellfun('isempty', strfind( txt , file ))==0 ,1,'first');
+                end
+                findSID = find(cellfun('isempty',SID)==0,1,'last'); 
+                if ~isempty(findSID), catSID(si) = findSID; end
 
-            else % volumes
-              for si=1:numel( jobs(i).(datafield) )
-                SID{si} = find(cellfun('isempty', strfind( txt , jobs(i).(datafield){si} ))==0,1,'first');
-              end
-              catSID(i) = find(cellfun('isempty',SID)==0,1,'last');
-            end            
+              elseif strcmp( datafield , 'data_surf' )
+                % surfaces ... here the filenames of the processed data
+                % change strongly due to side coding ...
+                for si=1:numel( jobs(i).(datafield) )
+                  if iscell( spm_fileparts(jobs(i).(datafield){si}) )
+                    for sii=1:numel( jobs(i).(datafield){si} )
+                      [pp,ff,ee] = spm_fileparts(jobs(i).(datafield){si}{sii}); 
+
+                      SID{si} = ...
+                        find(cellfun('isempty', strfind( txt , pp ))==0,1,'first') & ... 
+                        find(cellfun('isempty', strfind( txt , ff ))==0,1,'first') & ...
+                        find(cellfun('isempty', strfind( txt , ee ))==0,1,'first'); 
+                    end
+                  else
+                    [pp,ff,ee] = spm_fileparts(jobs(i).(datafield){si}); 
+
+                    SID{si} = ...
+                      find(cellfun('isempty', strfind( txt , pp ))==0,1,'first') & ... 
+                      find(cellfun('isempty', strfind( txt , ff ))==0,1,'first') & ...
+                      find(cellfun('isempty', strfind( txt , ee ))==0,1,'first'); 
+                  end
+                end
+                catSID(i) = find(cellfun('isempty',SID)==0,1,'last');
+
+              else % volumes
+                for si=1:numel( jobs(i).(datafield) )
+                  SID{si} = find(cellfun('isempty', strfind( txt , jobs(i).(datafield){si} ))==0,1,'first');
+                end
+                catSID(i) = find(cellfun('isempty',SID)==0,1,'last');
+              end            
+            catch
+              cat_io_cprintf('warn','  Progress bar did not work but still monitoring the tasks.\n'); 
+            end
             
             % find out if the current task is still active
             if ispc
@@ -363,68 +380,71 @@ function varargout = cat_parallelize(job,func,datafield)
     if nargout>0
       % load the results of the first job
       load(tmp_array{1});
-      varargout{1} = output; 
-      
-      % add the results of the other job 
-      for oi=2:numel(tmp_array)
-        load(tmp_array{oi}); 
-        FN = fieldnames(output);
-        
-        % for all fields of output 
-        for fni=1:numel(FN)
-          if ~isfield( varargout{1} , FN{fni} ) 
-            % no subfield ( = new subfield ) > just add it
-            varargout{1}.(FN{fni}) = output.(FN{fni}); 
-          else
-            % existing subfield > merge it
-            if ~isstruct( output.(FN{fni}) )
-              if size(varargout{1}.(FN{fni}),1) > size(varargout{1}.(FN{fni}),2)
-                varargout{1}.(FN{fni}) = [varargout{1}.(FN{fni});output.(FN{fni})]; 
-              else
-                varargout{1}.(FN{fni}) = [varargout{1}.(FN{fni}),output.(FN{fni})]; 
-              end
-              
-              % cleanup (remove empty entries of failed processings)
-              if iscell(varargout{1}.(FN{fni}))
-                for ffni=numel( varargout{1}.(FN{fni}) ):-1:1
-                  if isempty(  varargout{1}.(FN{fni}){ffni} )
-                    varargout{1}.(FN{fni})(ffni) = []; 
-                  end
-                end
-              end
-            else
-              % this is similar to the first level ...
-              FN2 = fieldnames(output.(FN{fni}));
-              for fni2 = 1:numel(FN2)
-                if ~isstruct( output.(FN{fni}).(FN2{fni}) )
-                  if size(varargout{1}.(FN{fni}).(FN2{fni2}),1) > size(varargout{1}.(FN{fni}).(FN2{fni2}),2)
-                    varargout{1}.(FN{fni}).(FN2{fni2}) = [varargout{1}.(FN{fni}).(FN2{fni2});output.(FN{fni}.(FN2{fni2}))]; 
-                  else
-                    varargout{1}.(FN{fni}).(FN2{fni2}) = [varargout{1}.(FN{fni}).(FN2{fni2}),output.(FN{fni}.(FN2{fni2}))]; 
-                  end
+      if exist('output','var')
+        varargout{1} = output; 
 
-                  % cleanup (remove empty entries of failed processings)
-                  if iscell(varargout{1}.(FN{fni}).(FN2{fni2}))
-                    for ffni=numel( varargout{1}.(FN{fni}).(FN2{fni2}) ):-1:1
-                      if isempty(  varargout{1}.(FN{fni}).(FN2{fni2}){ffni} )
-                        varargout{1}.(FN{fni}).(FN2{fni2})(ffni) = []; 
-                      end
+        % add the results of the other job 
+        for oi=2:numel(tmp_array)
+          load(tmp_array{oi}); 
+          FN = fieldnames(output);
+
+          % for all fields of output 
+          for fni=1:numel(FN)
+            if ~isfield( varargout{1} , FN{fni} ) 
+              % no subfield ( = new subfield ) > just add it
+              varargout{1}.(FN{fni}) = output.(FN{fni}); 
+            else
+              % existing subfield > merge it
+              if ~isstruct( output.(FN{fni}) )
+                if size(varargout{1}.(FN{fni}),1) > size(varargout{1}.(FN{fni}),2)
+                  varargout{1}.(FN{fni}) = [varargout{1}.(FN{fni});output.(FN{fni})]; 
+                else
+                  varargout{1}.(FN{fni}) = [varargout{1}.(FN{fni}),output.(FN{fni})]; 
+                end
+
+                % cleanup (remove empty entries of failed processings)
+                if iscell(varargout{1}.(FN{fni}))
+                  for ffni=numel( varargout{1}.(FN{fni}) ):-1:1
+                    if isempty(  varargout{1}.(FN{fni}){ffni} )
+                      varargout{1}.(FN{fni})(ffni) = []; 
                     end
                   end
-                else
-                  error('Only 2 level in output structure supported.')
+                end
+              else
+                % this is similar to the first level ...
+                FN2 = fieldnames(output.(FN{fni}));
+                for fni2 = 1:numel(FN2)
+                  if ~isstruct( output.(FN{fni}).(FN2{fni}) )
+                    if size(varargout{1}.(FN{fni}).(FN2{fni2}),1) > size(varargout{1}.(FN{fni}).(FN2{fni2}),2)
+                      varargout{1}.(FN{fni}).(FN2{fni2}) = [varargout{1}.(FN{fni}).(FN2{fni2});output.(FN{fni}.(FN2{fni2}))]; 
+                    else
+                      varargout{1}.(FN{fni}).(FN2{fni2}) = [varargout{1}.(FN{fni}).(FN2{fni2}),output.(FN{fni}.(FN2{fni2}))]; 
+                    end
+
+                    % cleanup (remove empty entries of failed processings)
+                    if iscell(varargout{1}.(FN{fni}).(FN2{fni2}))
+                      for ffni=numel( varargout{1}.(FN{fni}).(FN2{fni2}) ):-1:1
+                        if isempty(  varargout{1}.(FN{fni}).(FN2{fni2}){ffni} )
+                          varargout{1}.(FN{fni}).(FN2{fni2})(ffni) = []; 
+                        end
+                      end
+                    end
+                  else
+                    error('Only 2 level in output structure supported.')
+                  end
                 end
               end
             end
           end
         end
       end
+    else
+      error('Parallel processes contain no output variable that is required for ongoing preprocessing.')
     end
-    
     
     % no final report yet ...
     fprintf('_______________________________________________________________\n');
-    
+
   else
     cat_io_cprintf('warn',...
       ['\nWARNING: Please note that no additional modules in the batch can be run \n' ...
