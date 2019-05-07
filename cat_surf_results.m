@@ -93,7 +93,8 @@ switch lower(action)
         H.str32k       = '';
         H.SPM_found    = 1;
         H.surf_sel     = 1;
-
+% colorbar addon histogram & values
+% 
       
         % positions
         WS = spm('Winsize', 'Graphics');
@@ -123,9 +124,10 @@ switch lower(action)
         
         % figure 2 with GUI
         H.pos{2} = struct(...
-          'fig',   [2*WS(3)+10 10 0.6*WS(3) WS(3)],... 
-          'sel',   [0.290 0.930 0.425 0.050],...
-          'nam',   [0.050 0.875 0.900 0.050],'hist',    [0.525 0.250 0.425 0.050],...
+          'fig',    [2*ws(3)+10 10 0.6*ws(3) ws(3)],... 
+          'sel',    [0.050 0.935 0.900 0.050],...[0.290 0.930 0.425 0.050],...
+          'nam',    [0.050 0.875 0.900 0.050],...
+          'scaling',[0.050 0.260 0.425 0.050],... % developer
           'surf',  [0.050 0.800 0.425 0.050],'mview',   [0.525 0.800 0.425 0.050],... 
           'text',  [0.050 0.725 0.425 0.050],'thresh',  [0.525 0.725 0.425 0.050],... 
           'cmap',  [0.050 0.650 0.425 0.050],'atlas',   [0.525 0.650 0.425 0.050],...
@@ -151,19 +153,24 @@ switch lower(action)
         H.S{2}.name = ''; H.S{2}.side = 'rh';
        
         
-        % Histogram button
+        % Extra button
         if cat_get_defaults('extopts.expertgui')>1
-          str = {'Distribution ...', 'Histogram', 'Boxplot', 'Violin'};
-          tmp = {{@disphist,2},{@disphist,3},{@disphist,4}};
+          % Scaling (defintion from cat_conf_stools)
+          labels = {'SD2','SD4','SD8','%100','%99.99','min-max','0-max'};
+          str = [{['Datarange ' char(133)]},labels];
+          tmp = {}; 
+          for il=1:numel(labels)
+            tmp = [tmp {{ @(x)cat_surf_results('clims',x),labels{il} }}]; %#ok<AGROW>
+          end
 
-          H.hist = uicontrol(H.panel(2), ...
+          H.scaling = uicontrol(H.panel(2), ...
               'String', str, 'Units', 'normalized', ...
-              'Position', H.pos{2}.hist, 'Userdata', tmp, ...
+              'Position', H.pos{2}.scaling, 'Userdata', tmp, ...
               'Style', 'PopUp', 'HorizontalAlignment', 'center', ...
               'Callback', 'spm(''PopUpCB'',gcbo)', ...
               'FontSize',H.FS,...
-              'ToolTipString', 'Underlying Surface', ...
-              'Interruptible', 'on', 'Enable', 'on');
+              'ToolTipString', 'Data range limits', ...
+              'Interruptible', 'on', 'Enable', 'off');
         end
             
         % closing all windows
@@ -172,7 +179,7 @@ switch lower(action)
             'Position', H.pos{2}.close, ...
             'Style', 'Pushbutton', 'HorizontalAlignment', 'center', ...
             'Callback', 'close(22);', ...
-            'FontSize',H.FS,...
+            'FontSize',H.FS,'ForegroundColor','red',...
             'ToolTipString', 'Close windows', ...
             'Interruptible', 'on', 'Enable', 'on');
 
@@ -380,15 +387,32 @@ switch lower(action)
             'ToolTipString', 'Show file information in image', ...
             'Interruptible', 'on', 'Enable', 'off');
         
-        H.nocbar = uicontrol(H.panel(2), ...
-            'String', 'Hide colorbar', 'Units', 'normalized', ...
-            'BackgroundColor',H.col(1,:),...
-            'Position', H.pos{2}.nocbar, ...
-            'Style', 'CheckBox', 'HorizontalAlignment', 'center', ...
-            'Callback', {@checkbox_nocbar}, ...
-            'FontSize',H.FS,...
-            'ToolTipString', 'Hide colorbar', ...
-            'Interruptible', 'on', 'Enable', 'off');
+        if cat_get_defaults('extopts.expertgui')<2
+          H.nocbar = uicontrol(H.panel(2), ...
+              'String', 'Hide colorbar', 'Units', 'normalized', ...
+              'BackgroundColor',H.col(1,:),...
+              'Position', H.pos{2}.nocbar, ...
+              'Style', 'CheckBox', 'HorizontalAlignment', 'center', ...
+              'Callback', {@checkbox_nocbar}, ...
+              'FontSize',H.FS,...
+              'ToolTipString', 'Hide colorbar', ...
+              'Interruptible', 'on', 'Enable', 'off');
+        else
+          str = {'Colorbar...', 'none', 'default', 'histogram'};
+          tmp = {{@(x) cat_surf_results('colorbar',x), 0}, ...
+                 {@(x) cat_surf_results('colorbar',x), 1}, ...
+                 {@(x) cat_surf_results('colorbar',x), 2}};
+
+          % colormap
+          H.nocbar = uicontrol(H.panel(2), ...
+              'String', str, 'Units', 'normalized', ...
+              'Position', H.pos{2}.nocbar, 'UserData', tmp, ...
+              'Style', 'PopUp', 'HorizontalAlignment', 'center', ...
+              'Callback', 'spm(''PopUpCB'',gcbo)', ...
+              'FontSize',H.FS,...
+              'ToolTipString', 'Threshold', ...
+              'Interruptible', 'on', 'Enable', 'off');
+        end
                 
         if nargin >= 3
             
@@ -552,9 +576,10 @@ switch lower(action)
                 
                 str = cell(1, H.n_surf + 2);
                 tmp = cell(1, H.n_surf + 1);
-                str{1} = ('Select Result...');
+                str{1} = (['Select Result ' char(133)]);
+                [C,C2] = spm_str_manip( H.S1.name , 'C');
                 for s = 1:H.n_surf
-                    str{s + 1} = H.S1.name(s, :);
+                    str{s + 1} = ['..' C2.m{s} '..'];
                     tmp{s} = {@select_results, s};
                 end
                 
@@ -629,6 +654,9 @@ switch lower(action)
             set(H.bkg, 'Enable', 'on');
             set(H.transp, 'Enable', 'on');
             set(H.info, 'Enable', 'on');
+            if isfield(H,'scaling')
+              set(H.scaling, 'Enable', 'on');
+            end
             
             if min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0 & H.n_surf == 1
                 set(H.inv, 'Enable', 'on');
@@ -672,12 +700,35 @@ switch lower(action)
     %-ColourBar
     %======================================================================
     case {'colourbar', 'colorbar'}
-        if isempty(varargin), varargin{1} = gca; end
-        if length(varargin) == 1, varargin{2} = 'on'; end
-        H = getHandles(varargin{1});
+        if nargin>1
+            if varargin{1} == 2
+              cat_surf_results('hist',1); 
+            else
+              cat_surf_results('hist',0); 
+            end
+            if varargin{1} == get(H.nocbar, 'Value')  
+                cat_surf_results('colorbar');
+            end
+        else
+            set(H.nocbar, 'Value', ~get(H.nocbar, 'Value') );
+            checkbox_nocbar;
+            if ~get(H.nocbar, 'Value')
+              cat_surf_results('hist',0); 
+            end
+        end
+       %{    
+        %if isempty(varargin), varargin{1} = gca; end
+        if length(varargin) == 1, varargin{1} = 'on'; end
+        switch varargin{1}
+          case 0, varargin{1} = 'off';
+          case 1, varargin{1} = 'on'; 
+          case 2, varargin{1} = 'on'; cat_surf_results('hist'); 
+        end
+        
+        %H = getHandles(varargin{1});
         d = getappdata(H.patch(1), 'data');
         col = getappdata(H.patch(1), 'colourmap');
-        if strcmpi(varargin{2}, 'off')
+        if strcmpi(varargin{1}, 'off')
             if isfield(H, 'colourbar') && ishandle(H.colourbar)
                 delete(H.colourbar);
                 H = rmfield(H, 'colourbar');
@@ -727,6 +778,7 @@ switch lower(action)
         setappdata(H.axis, 'handles', H);
         
         if nargout, varargout{1} = y; end
+       %}
         
         
     %-ColourMap
@@ -816,6 +868,167 @@ switch lower(action)
         end
     
         
+    case 'clims'
+      if nargin>1, H.datascale    = varargin{1}; end
+      if nargin>2, H.datascaleval = varargin{2}; end
+      
+      c = getappdata(H.patch(5), 'data');
+      %%
+      if isfield(H,'datascale')
+        switch H.datascale
+          case 'default'
+            H.clim(2:3) = [max(min(c(:)),0) max(c(:))];
+          case {'minmax','min-max'}
+            H.clim(2:3) = [min(c(:)) max(c(:))];
+          case {'0max','0-max'}
+            H.clim(2:3) = [0 max(c(:))];
+          otherwise
+            switch H.datascale(1)
+              case '%'
+                if str2double(H.datascale(2:end))>0 && str2double(H.datascale(2:end))<100 
+                  H.datascaleval = str2double(H.datascale(2:end))/100;
+                end
+                [cc,cx] = cat_stat_histth(c(c(:)~=0),H.datascaleval); %#ok<ASGLU>
+                H.clim(2:3) = cx;
+              case 'M'
+                if str2double(H.datascale(4:end))>0  
+                  H.datascaleval = str2double(H.datascale(4:end));
+                end
+                mv = cat_stat_nanmean(c(:)); sv = cat_stat_nanstd(c(:)); 
+                H.clim(2:3) = [ max(min(c(:)),mv - H.datascaleval * sv) , min(max(c(:)), mv + H.datascaleval * sv)];
+              case 'S'
+                if str2double(H.datascale(3:end))>0  
+                  H.datascaleval = str2double(H.datascale(3:end));
+                end
+                mv = cat_stat_nanmean(c(:)); sv = cat_stat_nanstd(c(:)); 
+                H.clim(2:3) = [ mv - H.datascaleval * sv ,  mv + H.datascaleval * sv];
+              otherwise
+                error('unkown H.datascale %s.\n',H.datascale);
+            end
+        end
+      end
+      
+      %% update textures of each patch
+      for i=1:numel(H.patch) 
+        setappdata(H.patch(i), 'clim',H.clim);
+        H = updateTexture(H, i ); 
+      end
+      show_colorbar(H); 
+    
+      
+    %- print histogram
+    %======================================================================
+    case 'hist'
+      if nargin>1
+        if varargin{1}~=any(isempty(findobj('tag','cat_surf_results_hist'))) 
+          cat_surf_results('hist')
+        end
+      else
+      
+        if numel(H.patch)>=5 && H.patch(1).isvalid &&  H.patch(3).isvalid &&  H.patch(5).isvalid
+
+          if nargin>1, draw = varargin{1}; else, draw = ~any(isempty(findobj('tag','cat_surf_results_hist'))); end
+
+          % move elements if histogram is added or removed
+          if draw==0 || draw~=2
+            top = H.patch(5).Parent; 
+            pos = get(top,'Position'); 
+            set(top,'Position',pos + sign(any(isempty(findobj('tag','cat_surf_results_hist')))-0.5) * [0 0.13 0 0]);
+          end
+
+          if any(isnan(H.clim)), cat_surf_results('clims','default'); end
+
+          % draw/update histgram / or remove it
+          mode = 0; 
+          if any(isempty(findobj('tag','cat_surf_results_hist'))) || draw==2 
+            if draw==2
+              delete(findobj('tag','cat_surf_results_hist'));
+              if isfield(H,'hist'); H = rmfield(H,'hist'); end
+            end
+
+            % print colors (red, green/dark-green
+            color  = {[1 0 0],[0 1 0]/(1+H.bkg_col(1))};  
+            linet  = {'-','--'};
+            % possition of the right and the left text box
+            if mode
+              tpos = {[0.49 0.015 0.065 0.03],[0.565 0.015 0.065 0.03],[0.4 0.015 0.12 0.03]};
+            else
+              tpos = {[0.4 0.015 0.12 0.06],[0.445 0.015 0.065 0.06],[0.497 0.015 0.065 0.06],[0.55 0.015 0.065 0.06],[0.60 0.015 0.065 0.06]};
+            end
+            % histrogram axis 
+            H.histax = axes('Parent', H.panel(1), 'Position', [0.4 0.102 0.20 0.15],'Visible', 'off', 'tag','cat_surf_results_hist'); 
+            try
+              xlim(H.histax,H.clim(2:3).*[1 1+eps]);
+            catch
+              disp(1);
+            end
+            hold on;
+            % standard text
+            if mode 
+              H.dtxt(3).ax  = axes('Parent', H.panel(1), 'Position',tpos{3}, 'Visible', 'off','tag','cat_surf_results_text');
+              H.dtxt(3).txt = text(H.dtxt(3).ax,0,1,sprintf('%s %s %s: \n%s - %s:\n%s:', 'mean',char(177),'std','min','max','median'),'color',[0.5 0.5 0.5]);
+            else
+              H.dtxt(3).ax(1) = axes('Parent', H.panel(1), 'Position',tpos{1}, 'Visible', 'off','tag','cat_surf_results_text');
+              H.dtxt(3).ax(2) = axes('Parent', H.panel(1), 'Position',tpos{2}, 'Visible', 'off','tag','cat_surf_results_text');
+              H.dtxt(3).ax(3) = axes('Parent', H.panel(1), 'Position',tpos{3}, 'Visible', 'off','tag','cat_surf_results_text');
+              H.dtxt(3).ax(4) = axes('Parent', H.panel(1), 'Position',tpos{4}, 'Visible', 'off','tag','cat_surf_results_text');
+              H.dtxt(3).ax(5) = axes('Parent', H.panel(1), 'Position',tpos{5}, 'Visible', 'off','tag','cat_surf_results_text');
+              text(H.dtxt(3).ax(1),0,1,sprintf('side'),'color',[0.5 0.5 0.5]);
+              text(H.dtxt(3).ax(1),0,1,sprintf('\n\nleft'),'color',color{1});
+              text(H.dtxt(3).ax(1),0,1,sprintf('\n\n\n\nright'),'color',color{2});
+              text(H.dtxt(3).ax(2),0,1,'min','color',[0.5 0.5 0.5],'HorizontalAlignment','center');
+              text(H.dtxt(3).ax(3),0,1,['mean ' char(177) ' std'],'color',[0.5 0.5 0.5],'HorizontalAlignment','center');
+              text(H.dtxt(3).ax(4),0,1,'median','color',[0.5 0.5 0.5],'HorizontalAlignment','center');
+              text(H.dtxt(3).ax(5),0,1,'max','color',[0.5 0.5 0.5],'HorizontalAlignment','right');
+            end
+            for i=1:2
+              side = getappdata(H.patch( i*2 - 1 ), 'data');
+              
+              if ~all(isnan(side))
+                % histogram plot may fail due to NAN or whatever ...
+                [d,h] = hist( side(~isinf(side(:)) & ~isnan(side(:)) & side(:)<3.4027e+38 & side(:)>-3.4027e+38 & side(:)<H.clim(3) & side(:)>H.clim(2) ), ...
+                  H.clim(2) : diff(H.clim(2:3))/100 : H.clim(3) );
+                d = d./numel(side);
+                % plot histogram line and its median
+                med = cat_stat_nanmedian(side(:));
+                quantile = [h(find(cumsum(d)/sum(d)>0.25,1,'first')),h(find(cumsum(d)/sum(d)>0.75,1,'first'))]; 
+                % print histogram
+                line(H.histax,h,d,'color',color{i},'LineWidth',1);
+                % print median
+                line(H.histax,[med med],[0 d(find(h>=med,1,'first'))],'color',color{i},'linestyle',linet{i});
+                % print quantile 
+                if numel(quantile)>1
+                  fill(H.histax,[quantile(1)   quantile(2)   quantile(2)          quantile(1)],...
+                              max(d)*(0.08*[i i (i+1) (i+1)] + 0.16),color{i});
+                  %
+                  if mode
+                    H.dtxt(i).ax  = axes('Parent', H.panel(1), 'Position',tpos{i}, 'Visible', 'off','tag','cat_surf_results_text');
+                    H.dtxt(i).txt = text(H.dtxt(i).ax,0,1,sprintf('%10.3f %s %0.3f\n%10.3f - %0.3f\n',...
+                      cat_stat_nanmean(side(:)),char(177),cat_stat_nanstd(side(:)),...
+                      min(side(:)),max(side(:)),med),...
+                      'color',color{i},'HorizontalAlignment','center');
+                  else
+                    text(H.dtxt(3).ax(2),0,1,sprintf('%s%0.3f',sprintf(repmat('\n',1,i*2)),min(side(:))),'color',color{i},'HorizontalAlignment','center');
+                    text(H.dtxt(3).ax(3),0,1,sprintf('%s%0.3f%s%0.3f',sprintf(repmat('\n',1,i*2)),cat_stat_nanmean(side(:)),char(177),...
+                      cat_stat_nanstd(side(:))),'color',color{i},'HorizontalAlignment','center');
+                    text(H.dtxt(3).ax(4),0,1,sprintf('%s%0.3f',sprintf(repmat('\n',1,i*2)),cat_stat_nanmedian(side(:))),'color',color{i},'HorizontalAlignment','center');
+                    text(H.dtxt(3).ax(5),0,1,sprintf('%s%0.3f',sprintf(repmat('\n',1,i*2)),max(side(:))),'color',color{i},'HorizontalAlignment','right');
+                  end
+                end
+              end
+            end
+
+          else
+            delete(findobj('tag','cat_surf_results_text'));
+            delete(findobj('tag','cat_surf_results_hist'));
+            if isfield(H,'hist'); H = rmfield(H,'hist'); end
+          end   
+
+        end
+      end
+      
+      
+      
     %- set surface 
     %======================================================================
     case 'surface'
@@ -906,7 +1119,7 @@ switch lower(action)
         end
         
         
-    %- set inverse colormap
+    %- set threshold
     %======================================================================
     case 'threshold'
         if nargin>1
@@ -916,7 +1129,7 @@ switch lower(action)
         end 
         
         
-    %- set inverse colormap
+    %- set hide negative values
     %======================================================================
     case 'hide_neg'
         if nargin>1
@@ -935,10 +1148,10 @@ switch lower(action)
         job = varargin{1};
         
         % create window
-        select_data([],[],char(job.rdata));
+        select_data([],[],char(job.cdata));
         
         % set parameter
-        FN = {'surface','texture','transparency','view','colormap','invcolormap','background','showfilename'}; 
+        FN = {'surface','view','texture','transparency','colorbar','colormap','invcolormap','background','showfilename','clims'}; 
         for fni=1:numel(FN)
           %%
           if isfield(job,'render') && isfield(job.render,FN{fni})
@@ -1473,7 +1686,7 @@ ind1 = find(H.S{1}.Y(:) ~= 0);
 ind2 = find(H.S{2}.Y(:) ~= 0);
 
 % estimate min value > 0 and min/max values
-if ~isempty(ind1) & ~isempty(ind2)
+if ~isempty(ind1) && ~isempty(ind2)
     H.S{1}.thresh = min(H.S{1}.Y(H.S{1}.Y(:) > 0));
     tmp = min(H.S{2}.Y(H.S{2}.Y(:) > 0));
     if ~isempty(tmp)
@@ -1578,13 +1791,13 @@ function H = show_colorbar(H)
 
 % show colorbar
 if H.n_surf == 1
-    
+   
     if isfield(H, 'cbar')
-        try delete(H.cbar); end
+        delete(findobj('tag','cat_surf_results_colorbar'));
         H = rmfield(H, 'cbar');
     end
     
-    H.cbar = axes('Parent', H.panel(1), 'Position', H.pos{1}.cbar(1, :), 'Color', H.bkg_col, 'Visible', 'off');
+    H.cbar = axes('Parent', H.panel(1), 'Position', H.pos{1}.cbar(1, :), 'Color', H.bkg_col, 'Visible', 'off','tag','cat_surf_results_colorbar');
     H.colourbar = colorbar('peer', H.cbar, 'Northoutside');
     
     if H.logP, title(H.cbar, 'p-value', 'Color', 1 - H.bkg_col); end
@@ -1656,11 +1869,19 @@ if H.n_surf == 1
     end % end H.logP
     
     try
-      set(H.colourbar, 'XColor', 1-H.bkg_col, 'YColor', 1-H.bkg_col, 'TickLength',0);
+      set(H.colourbar, 'XColor', 1-H.bkg_col, 'YColor', 1-H.bkg_col, 'TickLength', 0.05);
     catch
       set(H.colourbar, 'XColor', 1-H.bkg_col, 'YColor', 1-H.bkg_col, 'TickLength',[0 0]);
     end
+    
+    %{
+    if isfield(H,'hist')
+      cat_surf_results('hist')
+      cat_surf_results('hist')
+    end
+    %}
 else
+    delete(findobj('tag','cat_surf_results_hist'));
     
     if ~isfield(H, 'cbar') || ~ishandle(H.cbar)
         H.cbar = axes('Parent', H.panel(1), 'Position', H.pos{1}.cbar(2, :), 'Color', H.bkg_col, 'Enable', 'off');
@@ -1787,10 +2008,17 @@ function [H, C] = updateTexture(H, ind, v, col, transp)
 
 %-Project data onto surface mesh
 %--------------------------------------------------------------------------
+if nargin<3
+  v = getappdata(H.patch(ind), 'data');
+end
+if nargin<5
+  transp = H.transp;
+end
 if size(v, 2) < size(v, 1)
     v = v';
 end
 v(isinf(v)) = NaN;
+
 
 %-Get colourmap
 %--------------------------------------------------------------------------
@@ -1850,7 +2078,7 @@ mi = clim(2); ma = clim(3);
 if any(v(:))
     if ~clim(1), mi = min(v(:)); ma = max(v(:)); end
     % don't allow negative values for multiple maps
-    if size(v, 1) > 1 & mi < 0
+    if size(v, 1) > 1 && mi < 0
         if ~isempty(H.clip)
             H.clip(2) = - Inf;
         else
@@ -1870,6 +2098,7 @@ end
 setappdata(H.patch(ind), 'clim', [true mi ma]);
 H.clim = [true mi ma];
 
+  
 %-Build texture by merging curvature and data
 %--------------------------------------------------------------------------
 if size(v, 1) > 1 % RGB
@@ -1882,7 +2111,7 @@ end
 
 % add curvature pattern if transparency is defined
 if nargin > 4
-    if transp & size(C, 1) == size(curv, 1)
+    if transp && size(C, 1) == size(curv, 1)
         C = (0.5 + 0.5 * curv) .* C;
     end
 end
@@ -1917,7 +2146,11 @@ if H.border_mode
 end
 
 set(H.patch(ind), 'FaceVertexCData', C, 'FaceColor', FaceColor);
-
+if isfield(H,'histax')
+  cat_surf_results('hist')
+  cat_surf_results('hist')
+end
+  
 %-----------------------------------------------------------------------
 function select_data(obj, event_obj, P)
 %-----------------------------------------------------------------------
@@ -2094,7 +2327,7 @@ for ind = 1:5
 end
 
 % update colorbar
-if H.n_surf == 1 & ~H.disable_cbar
+if H.n_surf == 1 && ~H.disable_cbar
     H = show_colorbar(H);
 end
 
@@ -2115,7 +2348,7 @@ for ind = 1:5
 end
 
 % update colorbar
-if H.n_surf == 1 & ~H.disable_cbar
+if H.n_surf == 1 && ~H.disable_cbar
     H = show_colorbar(H);
 end
 
@@ -2216,11 +2449,13 @@ else
 end
 
 set(H.Ha, 'Color', H.bkg_col);
-set(get(H.cbar, 'Title'), 'Color', 1 - H.bkg_col);
+%set(get(H.cbar, 'Title'), 'Color', 1 - H.bkg_col);
 
-if H.show_info
-    set(get(getappdata(H.patch(1), 'axis'), 'Title'), 'Color', 1 - H.bkg_col);
-    set(get(getappdata(H.patch(3), 'axis'), 'Title'), 'Color', 1 - H.bkg_col);
+title = findobj('tag','cat_surf_result_title'); 
+if ~isempty(title)
+  set( get( title ,'children'),'Color',  1 - H.bkg_col);
+  %set(get(getappdata(H.patch(1), 'axis'), 'Title'), 'Color', 1 - H.bkg_col);
+    %set(get(getappdata(H.patch(3), 'axis'), 'Title'), 'Color', 1 - H.bkg_col);
 end
 
 if H.n_surf == 1
@@ -2242,11 +2477,17 @@ global H
 H.show_info = get(H.info, 'Value');
 
 if H.show_info
-    set(get(getappdata(H.patch(1), 'axis'), 'Title'), 'String', ...
-        spm_str_manip(H.S{1}.name, 'k50d'), 'Interpreter', 'none', 'Color', 1 - H.bkg_col)
-    set(get(getappdata(H.patch(3), 'axis'), 'Title'), 'String', ...
-        spm_str_manip(H.S{2}.name, 'k50d'), 'Interpreter', 'none', 'Color', 1 - H.bkg_col)
+    delete(findobj('tag','cat_surf_result_title'));
+   %   axes('Parent', H.panel(1), 'Position',tpos{i}, 'Visible', 'off','tag','cat_surf_results_text');
+    ax = axes('Parent',H.panel(1),'Position',[0.5 0.82 0.9 0.05],'visible','off','tag','cat_surf_result_title');  
+    text(ax,0,1,spm_str_manip(H.S{1}.name, 'k150d'),'HorizontalAlignment','center','interpreter','none','Color', 1 - H.bkg_col);
+                    
+    %set(get(getappdata(H.patch(1), 'axis'), 'Title'), 'String', ...
+    %    spm_str_manip(H.S{1}.name, 'k50d'), 'Interpreter', 'none', 'Color', 1 - H.bkg_col)
+    %set(get(getappdata(H.patch(3), 'axis'), 'Title'), 'String', ...
+    %    spm_str_manip(H.S{2}.name, 'k50d'), 'Interpreter', 'none', 'Color', 1 - H.bkg_col)
 else
+    delete(findobj('tag','cat_surf_result_title'));
     set(get(getappdata(H.patch(1), 'axis'), 'Title'), 'String', '')
     set(get(getappdata(H.patch(3), 'axis'), 'Title'), 'String', '')
 end

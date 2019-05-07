@@ -19,6 +19,7 @@ function stools = cat_conf_stools(expert)
     expert = 0; % switch to de/activate further GUI options
   end
 
+  
   % parallelize
   % ____________________________________________________________________
   nproc         = cfg_entry;
@@ -28,7 +29,7 @@ function stools = cat_conf_stools(expert)
   nproc.val     = {numcores};
   nproc.num     = [1 1];
   nproc.help    = {
-    'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be split into separate processes that run in the background. You can even close Matlab, which will not affect the processes that will run in the background without GUI. If you do not want to run processes in the background then set this value to 0.'
+      'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be split into separate processes that run in the background. You can even close Matlab, which will not affect the processes that will run in the background without GUI. If you do not want to run processes in the background then set this value to 0.'
       ''
       'Please note that no additional modules in the batch can be run except CAT12 segmentation. Any dependencies will be broken for subsequent modules.'
     };
@@ -46,6 +47,264 @@ function stools = cat_conf_stools(expert)
     'Do not process data if the result exist. '
   };
 
+
+  % merge hemispheres
+  % ____________________________________________________________________
+  merge_hemi         = cfg_menu;
+  merge_hemi.tag     = 'merge_hemi';
+  merge_hemi.name    = 'Merge hemispheres';
+  merge_hemi.labels  = {
+    'No -   save resampled data for each hemisphere',...
+    'Yes -  merge hemispheres'
+  };
+  merge_hemi.values  = {0,1};
+  merge_hemi.val     = {1};
+  merge_hemi.help    = {
+    'Meshes for left and right hemisphere can be merged to one single mesh. This simplifies the analysis because only one analysis has to be made for both hemispheres.'
+    'However, this also means that data size is double for one single analysis which might be too memory demanding for studies with several hundreds or even more files. If your model cannot be estimated due to memory issues you should not merge the resampled data.'
+  };
+
+
+  % default mesh
+  % ____________________________________________________________________
+  mesh32k         = cfg_menu;
+  mesh32k.tag     = 'mesh32k';
+  mesh32k.name    = 'Resample Size';
+  mesh32k.labels  = {
+    '32k  mesh (HCP)',...
+    '164k mesh (Freesurfer)'
+  };
+  mesh32k.values  = {1,0};
+  mesh32k.val     = {1};
+  mesh32k.help    = {
+    'Resampling can be done either to a higher resolution 164k mesh that is compatible to Freesurfer data or to a lower resolution 32k mesh (average vertex spacing of ~2 mm) that is compatible to the Human Connectome Project (HCP).'
+    'The HCP mesh has the advantage of being processed and handled much faster and with less memory demands. Another advantage is that left and right hemispheres are aligned to optionally allow a direct comparison between hemispheres.'
+  };
+
+
+
+%% import GUIs
+%  ------------------------------------------------------------------------
+  [check_mesh_cov,check_mesh_cov2] = check_mesh_cov_GUI;
+  [surfresamp,surfresamp_fs]       = cat_surf_resamp_GUI(expert,nproc,merge_hemi,mesh32k,lazy);
+  [vol2surf,vol2tempsurf]          = cat_surf_vol2surf_GUI(expert,merge_hemi,mesh32k);
+  [surfcalc,surfcalcsub]           = cat_surf_calc_GUI(expert);
+  renderresults                    = cat_surf_results_GUI(expert);
+  surfextract                      = cat_surf_parameters_GUI(expert,nproc,lazy);
+  flipsides                        = cat_surf_flipsides_GUI;
+  surf2roi                         = cat_surf_surf2roi_GUI(expert,nproc);
+  roi2surf                         = cat_roi_roi2surf_GUI; 
+  
+  
+  
+%% Toolset
+%  ---------------------------------------------------------------------
+  stools = cfg_choice;
+  stools.name   = 'Surface Tools';
+  stools.tag    = 'stools';
+  if expert==2
+    stools.values = { ...
+      check_mesh_cov, ...     .cat.stat
+      check_mesh_cov2, ...    .cat.stat
+      surfextract, ...        .cat.stools
+      surfresamp, ...         .cat.stools
+      surfresamp_fs,...       .cat.stools
+      vol2surf, ...           .cat.stools
+      vol2tempsurf, ...       .cat.stools
+      surfcalc, ...           .cat.stools
+      surfcalcsub, ...        .cat.stools
+      surf2roi, ...           .cat.rtools?
+      renderresults, ...      .cat.disp/plot/write?
+      roi2surf, ...           .cat.rtools?
+      flipsides, ...          .cat.stools
+      };    
+  elseif expert==1
+    stools.values = { ...
+      check_mesh_cov, ...
+      check_mesh_cov2, ...
+      surfextract, ...
+      surfresamp, ...
+      surfresamp_fs,...
+      vol2surf, ...
+      vol2tempsurf, ...
+      surfcalc, ...
+      surfcalcsub, ...
+      surf2roi, ...
+      flipsides, ...
+      };
+  else
+    stools.values = { ...
+      check_mesh_cov, ...
+      check_mesh_cov2, ...
+      surfextract, ...
+      surfresamp, ...
+      surfresamp_fs,...
+      surf2roi, ...
+      vol2surf, ...
+      vol2tempsurf, ...
+      surfcalc, ...
+      surfcalcsub, ...
+      };
+  end
+
+%==========================================================================
+% subfunctions of batch GUIs
+%==========================================================================
+
+function surf2roi = cat_surf_surf2roi_GUI(expert,nproc)
+%% surface to ROI (in template space)
+%  ---------------------------------------------------------------------
+%  * CxN  cdata files [ thickness , curvature , ... any other file ] in template space [ resampled ]
+%  * M    atlas files [ choose files ]
+%  * average measures [ mean , std , median , max , min , mean95p ]
+% 
+%  - csv export (multiple files) > catROIs_ATLAS_SUBJECT
+%  - xml export (one file)       > catROIs_ATLAS_SUBJECT
+%  ---------------------------------------------------------------------
+%  surface ROIs have sidewise index?!
+%  ---------------------------------------------------------------------
+
+% set of cdata files
+  if expert && 0 % this is not ready now
+    cdata         = cfg_files;
+    cdata.tag     = 'cdata';
+    cdata.name    = '(Left) Surface Data Files';
+    cdata.filter  = 'any';
+    cdata.ufilter = 'lh.(?!cent|sphe|defe|hull).*';
+    cdata.num     = [1 Inf];
+    cdata.help    = {'Surface data sample. Both sides will be processed'};
+  else % only smoothed/resampled
+    cdata         = cfg_files;
+    cdata.tag     = 'cdata';
+    cdata.name    = '(Left) Surface Data Files';
+    cdata.filter  = 'any';
+    cdata.ufilter = '^lh.(?!cent|sphe|defe|hull).*';
+    cdata.num     = [1 Inf];
+    cdata.help    = {'Surface data sample. Both sides will be processed'};
+  end
+  
+  cdata_sample         = cfg_repeat;
+  cdata_sample.tag     = 'cdata_sub.';
+  cdata_sample.name    = 'Surface Data Sample';
+  cdata_sample.values  = {cdata};
+  cdata_sample.num     = [1 Inf];
+  cdata_sample.help = {[...
+    'Specify data for each sample (i.e. thickness, gyrification, ...). ' ...
+    'All samples must have the same size and same order. ' ...
+    ''
+  ]};
+
+% ROI files
+  ROIs         = cfg_files;
+  ROIs.tag     = 'rdata';
+  ROIs.name    = '(Left) ROI atlas files';
+  ROIs.filter  = 'any';
+  if expert 
+    ROIs.ufilter = 'lh.aparc.*';
+  else
+    ROIs.ufilter = 'lh.aparc_(a2009s|DK40|HCP_MMP1).*'; % not yet working for all atlases
+  end
+  ROIs.dir     = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces'); 
+  ROIs.num     = [1 Inf];
+  ROIs.help    = {'These are the ROI atlas files. Both sides will be processed.'};
+
+% ROI area
+  area         = cfg_menu;
+  area.tag     = 'area';
+  area.name    = 'Estimate ROI Area';
+  area.labels  = {'No','Yes'};
+  area.values  = {0,1};
+  area.val     = {1}; 
+  area.help    = {'Estimate area of each ROI.'};
+ 
+% ROI area
+  vernum         = cfg_menu;
+  vernum.tag     = 'vernum';
+  vernum.name    = 'Count ROI Vertices';
+  vernum.labels  = {'No','Yes'};
+  vernum.values  = {0,1};
+  vernum.val     = {1}; 
+  vernum.help    = {'Count vertices of each ROI.'};
+  
+% average mode within a ROI  
+  % mean
+  avg.mean         = cfg_menu;
+  avg.mean.tag     = 'mean';
+  avg.mean.name    = 'Mean Estimation';
+  avg.mean.labels  = {'No','Yes'};
+  avg.mean.values  = {0,1};
+  avg.mean.val     = {1}; 
+  avg.mean.help    = {'Set mean value estimation per ROI.'}; 
+  % std
+  avg.std         = cfg_menu;
+  avg.std.tag     = 'std';
+  avg.std.name    = 'STD Estimation';
+  avg.std.labels  = {'No','Yes'};
+  avg.std.values  = {0,1};
+  avg.std.val     = {1}; 
+  avg.std.help    = {'Set standard deviation estimation per ROI.'}; 
+  % min
+  avg.min         = cfg_menu;
+  avg.min.tag     = 'min';
+  avg.min.name    = 'Minimum Estimation';
+  avg.min.labels  = {'No','Yes'};
+  avg.min.values  = {0,1};
+  avg.min.val     = {0}; 
+  avg.min.help    = {'Set minimum estimation per ROI.'};   
+  % max
+  avg.max         = cfg_menu;
+  avg.max.tag     = 'max';
+  avg.max.name    = 'Maximum Estimation';
+  avg.max.labels  = {'No','Yes'};
+  avg.max.values  = {0,1};
+  avg.max.val     = {0}; 
+  avg.max.help    = {'Set maximum estimation per ROI.'};   
+  % median
+  avg.median         = cfg_menu;
+  avg.median.tag     = 'median';
+  avg.median.name    = 'Median Estimation';
+  avg.median.labels  = {'No','Yes'};
+  avg.median.values  = {0,1};
+  avg.median.val     = {0}; 
+  avg.median.help    = {'Set median estimation per ROI.'};   
+  % all functions
+  avg.main         = cfg_branch;
+  avg.main.tag     = 'avg';
+  avg.main.name    = 'ROI Average Functions';
+  avg.main.val     = {
+    avg.mean ...
+    avg.std ...
+    avg.min ...
+    avg.max ...
+    avg.median ...
+  };
+
+%% main function
+  surf2roi      = cfg_exbranch;
+  surf2roi.tag  = 'surf2roi';
+  surf2roi.name = 'Extract ROI-based surface values';
+  switch expert
+  case 2
+    surf2roi.val  = {
+      cdata_sample ...
+      ROIs ...
+      nproc ... 
+      avg.main};
+  case {0, 1}
+    surf2roi.val  = {cdata_sample};
+  end
+  surf2roi.prog = @cat_surf_surf2roi;
+  surf2roi.vout = @vout_surf_surf2roi;
+  surf2roi.help = {
+    'While ROI-based values for VBM (volume) data are automatically saved in the label folder as XML file it is necessary to additionally extract these values for surface data. This has to be done after preprocessing the data and creating cortical surfaces. '
+    ''
+    'You can extract ROI-based values for cortical thickness but also for any other surface parameter that was extracted using the "Extract Additional Surface Parameters" function.'
+    ''
+    'Please note that these values are extracted from data in native space without any smoothing. As default the mean inside a ROI is calculated and saved as XML file in the label folder.'
+  };
+
+%==========================================================================
+function [check_mesh_cov,check_mesh_cov2] = check_mesh_cov_GUI
 
 %% Surface correlation and quality check
 %-----------------------------------------------------------------------
@@ -107,303 +366,9 @@ function stools = cat_conf_stools(expert)
   check_mesh_cov2.val  = {sample_cov,nuisance};
   check_mesh_cov2.name = 'Check sample homogeneity of surfaces';
   check_mesh_cov2.prog = @cat_stat_check_cov2;
-  
-  
-%% surface measures
-%-----------------------------------------------------------------------  
-  data_surf_extract         = cfg_files;
-  data_surf_extract.tag     = 'data_surf';
-  data_surf_extract.name    = 'Central Surfaces';
-  data_surf_extract.filter  = 'gifti';
-  data_surf_extract.ufilter = '^lh.central';
-  data_surf_extract.num     = [1 Inf];
-  data_surf_extract.help    = {'Select left surfaces to extract values.'};
-  
-  % absolute mean curvature
-  GI        = cfg_menu;
-  if expert 
-    GI.name   = 'Gyrification index (absolute mean curvature)';
-  else
-    GI.name   = 'Gyrification index';
-  end
-  GI.tag    = 'GI';
-  GI.labels = {'No','Yes'};
-  GI.values = {0,1};
-  GI.val    = {1};
-  GI.help   = {
-    'Extract gyrification index (GI) based on absolute mean curvature. The method is described in Luders et al. NeuroImage, 29: 1224-1230, 2006.'
-  };
 
-
-  if expert>1
-    % ---------------------------------------------------------------------
-    % DFG project measures
-    % ---------------------------------------------------------------------
-    GIL        = cfg_menu;
-    GIL.name   = 'Laplacian gyrification indices';
-    GIL.tag    = 'GIL';
-    GIL.labels = {'No','inward','outward','generalized','all'};
-    GIL.values = {0,1,2,3,4};
-    GIL.val    = {4}; 
-    GIL.help   = {[ ...
-      'WARNING: This GI measures is still in development and not verified yet!\n\n ' ...
-      'Extraction of Laplacian-based gyrification indices as local area relation between the individual folded and the unfolded surface. ' ...
-      'The Laplacian approach supports an optimal mapping between the surfaces but the classical definition of the outer hull result in a measure that focuses on inward folding. ' ...
-      '\n\n' ...
-      'The "inward" option use only the hull surface resulting in high sulcal values (Dahnke et al. 2010, Li et al. 2014) and is a local 3D represenstation of Zilles gyrification index (Zilles et al. 1989). ' ...
-      'The "outward" option use only the core surface and result in high gyral values. However, the core definition is expected to be less robust for very strong tissue atrophy. ' ...
-      'The "generalized" option combine both models resulting in an independent folding model that is expected to require less smoothing for surface-based analysis (15 mm). ' ...
-      '\n\n' ...
-      'This research part of the DFG project DA 2167/1-1 (2019/04 - 2012/04).\n\n' ...
-    ]};
-  
-    if expert>1
-      % Developer/expert parameters? 
-      GILtype            = GIL; 
-    
-      % to small values may lead to problems in high resolution data?
-      % > compensation term in cat_surf_gyrification 
-      laplaceerr         = cfg_menu;
-      laplaceerr.name    = 'Laplacian filter accuracy';
-      laplaceerr.tag     = 'laplaceerr';
-      laplaceerr.labels  = {'0.001','0.0001','0.00001'};
-      laplaceerr.values  = {0.001,0.0001,0.00001};
-      laplaceerr.val     = {0.0001};
-      laplaceerr.help    = {'Filter accuracy of the voxel-base Laplace filter applied before streamline estimation. Smaller values are more accurate but increase processing time. \n\n'};
-
-      % check if this compensate for voxel size!
-      GIstreamopt        = cfg_menu;
-      GIstreamopt.name   = 'Streamline accuracy';
-      GIstreamopt.tag    = 'GIstreamopt';
-      GIstreamopt.labels = {'0.01','0.001','0.0001'};
-      GIstreamopt.values = {0.01,0.001,0.0001};
-      GIstreamopt.val    = {0.01};
-      GIstreamopt.help   = {'Stepsize of the Laplacian streamline estimation. Small values are more accurate but increase processing and memory demands. \n\n'};
-
-      % normalization function
-      GInorm             = cfg_menu;
-      GInorm.name        = 'Normalization function';
-      GInorm.tag         = 'GInorm';
-      GInorm.labels      = {'none','2nd root','3rd root','6th root','10th root','log2','log','log10'};
-      GInorm.values      = {1,2,3,6,10,'log2','log','log10'};
-      GInorm.val         = {'log10'};
-      GInorm.help        = {[ ...
-        'Normalization function (after area filtering) to avoid the exponential increase of the GI values and to have more gaussian-like value distribution.' ...
-        'To avoid negative values in case of logarithmic functions the values were corrected by the basis of the logarithmic function, e.g. +10 for log10. ' ...
-        'The logarithmic fucntion supports stronger compensation of high values. This is especially important for the inward and outward but not generalized GI. ' ...
-        ]};
-      
-      % Relative (brain size depending) or absolute (in mm) filtering?
-      % For animals relative should be more correct! 
-      %
-      % Comment RD20190409
-      % ---------------------------------------------------------------------
-      % Smoothing has to be done on the original surfaces to guarantee that 
-      % the local GI is equal to the global on. 
-      % We got similar problems for "resample and smooth" as for the "area"
-      % measure. 
-      % Maybe an "resample and smooth" (automatic) normalization option can 
-      % help that guarantee the right kind of handling, e.g. global mean or
-      % sum?
-      % ---------------------------------------------------------------------
-    
-      GILfs              = cfg_entry;
-      GILfs.tag          = 'GIpresmooth';
-      GILfs.name         = 'Final filter size';
-      GILfs.strtype      = 'r';
-      GILfs.val          = {0.1}; 
-      GILfs.num          = [1 1];
-      GILfs.help         = {[ ...
-        'Filter of the Laplacian based GI has to be done for the area variables of the folded and unfolded surfaces. ' ...
-        'Values between 0 and 1 describe relative smoothing depending on the brain size, whereas values larger/equal than one describes the filter size in mm.']}; 
-
-      % save temporary surfaces 
-      GIwritehull        = cfg_menu;
-      GIwritehull.name   = 'Laplacian gyrification indices hull/core surface output';
-      GIwritehull.tag    = 'GIwritehull';
-      GIwritehull.labels = {'No','Yes'};
-      GIwritehull.values = {0,1};
-      GIwritehull.val    = {1};
-      GIwritehull.help   = {'Write hull/core surface use in the Laplacian gyrification index estimation.'};
-      
-      % hull model - This is not yet implemented! 
-      % The idea behind is that the hemisphere-based hull is artifical too
-      % and that are more natural definiton is given by the full intra-
-      % cranial volume. However, this have to include the cerebelum and 
-      % brainstem as well and needs to utilize the Yp0 map!
-      %
-      %{
-      GIhullmodel        = cfg_menu;
-      GIhullmodel.name   = 'Hull model';
-      GIhullmodel.tag    = 'GIhullmodel';
-      GIhullmodel.labels = {'Hemisphere-based','Skull-based'};
-      GIhullmodel.values = {0,1};
-      GIhullmodel.val    = {0};
-      GIhullmodel.help   = {'There are two different hull definitions: (i) the classical using a semi-convex hull for each hemisphere and (ii) the full intracranial volume with both hemispheres and the cerebellum. ' ''};
-      %}
-      
-      % core model 
-      GIcoremodel        = cfg_menu;
-      GIcoremodel.name   = 'Core model';
-      GIcoremodel.tag    = 'GIcoremodel';
-      GIcoremodel.labels = {'1','2','3'};
-      GIcoremodel.values = {1,2,3};
-      GIcoremodel.val    = {1};
-      GIcoremodel.help   = {[ ...
-        'There are multiple ways to define the central core of the brain structure and it is unclear which one fits best. ' ...
-        'It should have some anatomical meaning (so the ventricles would be nice as source of cortical development) ' ...
-        'but being at once independ by aging (so ventricles are not real good). ' ...
-        'It should be defined on an individual level (to support the scaling/normalization of head size within and between species) ' ...
-        'to remove rather than increasing individual effects. ' ...
-        ] '' };
-      
-      % threshold for core estimation 
-      GIcoreth           = cfg_entry;
-      GIcoreth.name      = 'Core threshold';
-      GIcoreth.tag       = 'GIcoreth';
-      GIcoreth.strtype   = 'r';
-      GIcoreth.num       = [1 1];
-      GIcoreth.val       = {0.2};
-      GIcoreth.help      = {[ ...
-        'Lower thresholds remove less gyri whereas high thresholds remove more gyri depending on the used core model. ' ...
-        'Initial test range between 0.05 (remove only very high frequency structures) and 0.25 (remove everything that is not close to the insula). ' ...
-        ] ''};
-      
-      % add own suffix to support multiple GI estimations
-      GIsuffix         = cfg_entry;
-      GIsuffix.tag     = 'GIsuffix';
-      GIsuffix.name    = 'Suffix';
-      GIsuffix.strtype = 's';
-      GIsuffix.num     = [0 Inf];
-      GIsuffix.val     = {''};
-      GIsuffix.help    = {[ ...
-        'Specify the string to be appended to the filenames of the filtered image file(s). ' ...
-        'Default suffix is "".' ...
-        ... 'Use "PARA" to add input parameters, e.g. "_lerr%1d_sacc%1d_fs%03d_smodel%d[_coreth%02d]" with ... . '
-        ] ''};
-    
-      % main note
-      GIL      = cfg_branch;
-      GIL.name = GILtype.name;
-      GIL.tag  = GILtype.tag;
-      GIL.val  = {GILtype,GIcoremodel,GIcoreth,laplaceerr,GIstreamopt,GILfs,GInorm,GIsuffix,GIwritehull}; %GIhullmodel,
-    end
-
-  
-    %% Inner and outer surfaces
-    %  -----------------------------------------------------------------
-    OS        = cfg_menu;
-    OS.name   = 'Pial surface';
-    OS.tag    = 'OS';
-    OS.labels = {'No','Yes'};
-    OS.values = {0,1};
-    OS.val    = {1};
-    OS.help   = {
-      'Creates the pial surface (outer cortical surface) by moving each vertices of the central surface by the half local thickness along the surface normal.'
-    };
-  
-    IS        = cfg_menu;
-    IS.name   = 'White matter surface';
-    IS.tag    = 'IS';
-    IS.labels = {'No','Yes'};
-    IS.values = {0,1};
-    IS.val    = {1};
-    IS.help   = {
-      'Creates the white matter surface (inner cortical surface) by moving each vertices of the central surface by the half local thickness along the surface normal.'
-    };
-  
-    % main note
-    surfaces      = cfg_branch;
-    surfaces.name = 'Further surfaces';
-    surfaces.tag  = 'surfaces';
-    surfaces.val  = {IS,OS}; 
-    
-  end
-
-  % Rachels fractal dimension by spherical harmonics
-  FD        = cfg_menu;
-  FD.name   = 'Cortical complexity (fractal dimension)';
-  FD.tag    = 'FD';
-  FD.labels = {'No','Yes'};
-  FD.values = {0,1};
-  FD.val    = {0};
-  FD.help   = {
-    'Extract cortical complexity (fractal dimension) which is described in Yotter et al. Neuroimage, 56(3): 961-973, 2011.'
-    ''
-    'Warning: Estimation of cortical complexity is very slow!'
-    ''
-  };
-
-  % sulcal depth with a hull surface that based on surface-inflation.
-  % ADD cite! - VanEssen?
-  SD        = cfg_menu;
-  SD.name   = 'Sulcus depth';
-  SD.tag    = 'SD';
-  SD.labels = {'No','Yes'};
-  SD.values = {0,1};
-  SD.val    = {1};
-  SD.help   = {
-    'Extract sqrt-transformed sulcus depth based on the euclidean distance between the central surface and its convex hull.'
-    ''
-    'Transformation with sqrt-function is used to render the data more normally distributed.'
-    ''
-  };
-
-  % surface area ... 
-  if expert>1
-    area        = cfg_menu;
-    area.name   = 'Surface area';
-    area.tag    = 'area';
-    area.labels = {'No','Yes'}; 
-    area.values = {0,2}; 
-    area.val    = {2}; 
-    area.help   = {
-      'WARNING: IN DEVELOPMENT!'
-      'This method requires a sum-based mapping rather than the mean-based interpolation. The mapping utilizes the Delaunay graph to transfer the area around a vertex to its nearest neighbor(s). See Winkler et al.,  2017. '}; 
-    %{
-    % Winklers method is not implemented right now (201904)
-    area.help   = {
-      'Extract log10-transformed local surface area using re-parameterized tetrahedral surface. The method is described in Winkler et al. NeuroImage, 61: 1428-1443, 2012.'
-      ''
-      'Log-transformation is used to render the data more normally distributed.'
-      ''
-    };
-    %}
-   
-    gmv        = cfg_menu;
-    gmv.name   = 'Surface GM volume';
-    gmv.tag   = 'gmv';
-    gmv.labels = {'No','Yes'}; 
-    gmv.values = {0,1}; 
-    gmv.val    = {1}; 
-    gmv.help   = {
-      'WARNING: NOT WORKING RIGHT NOW!'
-      'This method requires a sum-based mapping rather than the mean-based interpolation. The mapping utilize the Delaunay graph to transfer the area around a vertex to its closes neighbor(s) that is also use for the area mapping. '}; 
-
-  end
-  
-
-
-  %% main menu
-  % 
-  % TODO:
-  % - add a branch for measures 
-  % - add a branch for options
-  surfextract      = cfg_exbranch;
-  surfextract.tag  = 'surfextract';
-  surfextract.name = 'Extract additional surface parameters';
-  if expert > 1
-    surfextract.val  = {data_surf_extract, area,gmv, GI,FD,SD, GIL,surfaces, nproc, lazy}; % area, 
-  else
-    surfextract.val  = {data_surf_extract,GI,FD,SD,nproc};
-  end
-  surfextract.prog = @cat_surf_parameters;
-  surfextract.vout = @vout_surfextract;
-  surfextract.help = {'Additional surface parameters can be extracted that can be used for statistical analysis.'};
-
-
-
-
+%==========================================================================
+function [vol2surf,vol2tempsurf] = cat_surf_vol2surf_GUI(expert,merge_hemi,mesh32k)
 %% map volumetric data
 %-----------------------------------------------------------------------  
   datafieldname         = cfg_entry;
@@ -657,40 +622,7 @@ function stools = cat_conf_stools(expert)
     '  [rh|lh].OutputName_VolumeName' 
     ''
   };
-
-
-
-%% extract volumetric data in template space
-%-----------------------------------------------------------------------  
-  merge_hemi         = cfg_menu;
-  merge_hemi.tag     = 'merge_hemi';
-  merge_hemi.name    = 'Merge hemispheres';
-  merge_hemi.labels  = {
-    'No -   save resampled data for each hemisphere',...
-    'Yes -  merge hemispheres'
-  };
-  merge_hemi.values  = {0,1};
-  merge_hemi.val     = {1};
-  merge_hemi.help    = {
-    'Meshes for left and right hemisphere can be merged to one single mesh. This simplifies the analysis because only one analysis has to be made for both hemispheres.'
-    'However, this also means that data size is double for one single analysis which might be too memory demanding for studies with several hundreds or even more files. If your model cannot be estimated due to memory issues you should not merge the resampled data.'
-  };
-
-  mesh32k         = cfg_menu;
-  mesh32k.tag     = 'mesh32k';
-  mesh32k.name    = 'Resample Size';
-  mesh32k.labels  = {
-    '32k  mesh (HCP)',...
-    '164k mesh (Freesurfer)'
-  };
-  mesh32k.values  = {1,0};
-  mesh32k.val     = {1};
-  mesh32k.help    = {
-    'Resampling can be done either to a higher resolution 164k mesh that is compatible to Freesurfer data or to a lower resolution 32k mesh (average vertex spacing of ~2 mm) that is compatible to the Human Connectome Project (HCP).'
-    'The HCP mesh has the advantage of being processed and handled much faster and with less memory demands. Another advantage is that left and right hemispheres are aligned to optionally allow a direct comparison between hemispheres.'
-  };
-
-
+ 
   data_surf_avg_lh         = cfg_files; 
   data_surf_avg_lh.tag     = 'data_mesh_lh';
   data_surf_avg_lh.name    = '(Left) Template Hemisphere';
@@ -744,270 +676,296 @@ function stools = cat_conf_stools(expert)
     ''
   };
 
-
-
-
-
-
-%% RD20180411: Add ROI menu - INACTIVE 20180415
-%  For ROI analysis I need unsmoothed but resampled surface.
-%  It is maybe useful to include it here (easy for user), although the
-%  surface2roi is needed anyway (for experts)! A direct ROI output would
-%  be helpful (more easy) for most user?
-%
-%  The reason to do it here is the GI estimation that:
-%    mean(A_folded) / mean(A_unfolded) ~= mean( A_folded / A_unfolded )
-%  to assure that the global GI definition is equal to the local one.
-%  Smoothing have to be avoided treat the filter size problem.
-%  Because the Laplace mapping without filtering leads to unusual values
-%  a further modulation of the values is maybe proper, eg. by sqrt.
-%
-%  region-based measures in subject space
+%==========================================================================
+function [surfcalc,surfcalcsub] = cat_surf_calc_GUI(expert)
+%% surface calculations 
 %  ---------------------------------------------------------------------
-%{
-if expert>1
-  ROI       = cat_conf_ROI(expert); 
-  
-  % surface files
-    ROI.sdata         = cfg_files;
-    ROI.sdata.tag     = 'sdata';
-    ROI.sdata.name    = '(Left) Surface Data Files';
-    ROI.sdata.filter  = 'gifti';
-    ROI.sdata.ufilter = 'lh.central.*';
-    ROI.sdata.num     = [1 Inf];
-    ROI.sdata.help    = {'Surface data sample. Both sides will be processed'};
-
-  % ROI files
-    ROI.atlas         = cfg_files;
-    ROI.atlas.tag     = 'rdata';
-    ROI.atlas.name    = '(Left) ROI atlas files';
-    ROI.atlas.filter  = 'any';
-    if expert
-      ROI.atlas.ufilter = 'lh.aparc.*';
-    else
-      ROI.atlas.ufilter = 'lh.aparc(_DKT40JT|_a2009s)\..*';
-    end
-    ROI.atlas.dir     = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces'); 
-    ROI.atlas.num     = [1 Inf];
-    ROI.atlas.help    = {'These are the ROI atlas files. Both sides will be processed.'};
-
-  % check fields of different measures
-    ROI.rLGI        = cfg_menu;
-    ROI.rLGI.name   = 'region-wise Laplacian-based gyrification index (rLGI)';
-    ROI.rLGI.tag    = 'rLGI';
-    ROI.rLGI.labels = {'No','Yes'};
-    ROI.rLGI.values = {0,1};
-    ROI.rLGI.val    = {1};
-    ROI.rLGI.help   = {[
-        'The region-wise Laplacian-based gyrification index describes the surface area relation' ...
-        'of a atlas region on the central surface vs. the hull surface that was generated by mapping' ...
-        'the central surface by the Laplacian approach to the position of the hull what takes around 5 minutes per subject. '
-      ]};
-    
-    ROI.area        = cfg_menu;
-    ROI.area.name   = 'surface area';
-    ROI.area.tag    = 'area';
-    ROI.area.labels = {'No','Yes'};
-    ROI.area.values = {0,1};
-    ROI.area.val    = {1};
-    ROI.area.help   = {
-        'Region-wise surface area.'
-      };
-    
-    ROI.rarea        = cfg_menu;
-    ROI.rarea.name   = 'relative surface area';
-    ROI.rarea.tag    = 'rarea';
-    ROI.rarea.labels = {'No','Yes'};
-    ROI.rarea.values = {0,1};
-    ROI.rarea.val    = {1};
-    ROI.rarea.help   = {
-        'Region-wise surface area, normalized by total area.'
-      };
-    
-    % volume ??? comparison to VBM
-    % * map all GM/WM/CSF voxel to there closest CS vertex
-    % * create inner and outer surface to used Delaunay for subregions ...
-    
-    
-  % main call
-    estroi      = cfg_exbranch;
-    estroi.tag  = 'estroi';
-    estroi.name = 'Surface-based ROI measures in subject space';
-    estroi.val  = {
-      ROI.sdata ...
-      ROI.atlas ...
-      ROI.area ...
-      ROI.rarea ...
-      }; 
-    if expert>1
-      estroi.val{end+1} = ROI.rLGI; 
-      estroi.val{end+1} = nproc; 
-      estroi.val{end+1} = lazy;
-    end
-    %estroi.prog = @cat_roi_parameters;
-    estroi.help = {
-      'Surface-based ROI measures that required estimation on the original rather than the template surface mesh, such as the area or the gyrification index.'
-    };
-end
-%}
-
-
-
-
-
-%% surface to ROI (in template space)
-%  ---------------------------------------------------------------------
-%  * CxN  cdata files [ thickness , curvature , ... any other file ] in template space [ resampled ]
-%  * M    atlas files [ choose files ]
-%  * average measures [ mean , std , median , max , min , mean95p ]
-% 
-%  - csv export (multiple files) > catROIs_ATLAS_SUBJECT
-%  - xml export (one file)       > catROIs_ATLAS_SUBJECT
-%  ---------------------------------------------------------------------
-%  surface ROIs have sidewise index?!
-%  ---------------------------------------------------------------------
-
-% set of cdata files
-  if expert && 0 % this is not ready now
-    s2r.cdata         = cfg_files;
-    s2r.cdata.tag     = 'cdata';
-    s2r.cdata.name    = '(Left) Surface Data Files';
-    s2r.cdata.filter  = 'any';
-    s2r.cdata.ufilter = 'lh.(?!cent|sphe|defe|hull).*';
-    s2r.cdata.num     = [1 Inf];
-    s2r.cdata.help    = {'Surface data sample. Both sides will be processed'};
-  else % only smoothed/resampled
-    s2r.cdata         = cfg_files;
-    s2r.cdata.tag     = 'cdata';
-    s2r.cdata.name    = '(Left) Surface Data Files';
-    s2r.cdata.filter  = 'any';
-    s2r.cdata.ufilter = '^lh.(?!cent|sphe|defe|hull).*';
-    s2r.cdata.num     = [1 Inf];
-    s2r.cdata.help    = {'Surface data sample. Both sides will be processed'};
-  end
-  
-  s2r.cdata_sample         = cfg_repeat;
-  s2r.cdata_sample.tag     = 'cdata_sub.';
-  s2r.cdata_sample.name    = 'Surface Data Sample';
-  s2r.cdata_sample.values  = {s2r.cdata};
-  s2r.cdata_sample.num     = [1 Inf];
-  s2r.cdata_sample.help = {[...
-    'Specify data for each sample (i.e. thickness, gyrification, ...). ' ...
-    'All samples must have the same size and same order. ' ...
-    ''
-  ]};
-
-% ROI files
-  s2r.ROIs         = cfg_files;
-  s2r.ROIs.tag     = 'rdata';
-  s2r.ROIs.name    = '(Left) ROI atlas files';
-  s2r.ROIs.filter  = 'any';
-  if expert 
-    s2r.ROIs.ufilter = 'lh.aparc.*';
-  else
-    s2r.ROIs.ufilter = 'lh.aparc_(a2009s|DK40|HCP_MMP1).*'; % not yet working for all atlases
-  end
-  s2r.ROIs.dir     = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces'); 
-  s2r.ROIs.num     = [1 Inf];
-  s2r.ROIs.help    = {'These are the ROI atlas files. Both sides will be processed.'};
-
-% ROI area
-  s2r.area         = cfg_menu;
-  s2r.area.tag     = 'area';
-  s2r.area.name    = 'Estimate ROI Area';
-  s2r.area.labels  = {'No','Yes'};
-  s2r.area.values  = {0,1};
-  s2r.area.val     = {1}; 
-  s2r.area.help    = {'Estimate area of each ROI.'};
+%  estimation per subject (individual and group sampling):
+%  g groups with i datafiles and i result datafile
  
-% ROI area
-  s2r.vernum         = cfg_menu;
-  s2r.vernum.tag     = 'vernum';
-  s2r.vernum.name    = 'Count ROI Vertices';
-  s2r.vernum.labels  = {'No','Yes'};
-  s2r.vernum.values  = {0,1};
-  s2r.vernum.val     = {1}; 
-  s2r.vernum.help    = {'Count vertices of each ROI.'};
+  cdata               = cfg_files;
+  cdata.tag           = 'cdata';
+  cdata.name          = 'Surface Data Files';
+  cdata.filter        = 'any';
+  cdata.ufilter       = '(lh|rh|mesh).*';
+  cdata.num           = [1 Inf];
+  cdata.help          = {'These are the surface data files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order they are specified.'};
   
-% average mode within a ROI  
-  % mean
-  s2r.avg.mean         = cfg_menu;
-  s2r.avg.mean.tag     = 'mean';
-  s2r.avg.mean.name    = 'Mean Estimation';
-  s2r.avg.mean.labels  = {'No','Yes'};
-  s2r.avg.mean.values  = {0,1};
-  s2r.avg.mean.val     = {1}; 
-  s2r.avg.mean.help    = {'Set mean value estimation per ROI.'}; 
-  % std
-  s2r.avg.std         = cfg_menu;
-  s2r.avg.std.tag     = 'std';
-  s2r.avg.std.name    = 'STD Estimation';
-  s2r.avg.std.labels  = {'No','Yes'};
-  s2r.avg.std.values  = {0,1};
-  s2r.avg.std.val     = {1}; 
-  s2r.avg.std.help    = {'Set standard deviation estimation per ROI.'}; 
-  % min
-  s2r.avg.min         = cfg_menu;
-  s2r.avg.min.tag     = 'min';
-  s2r.avg.min.name    = 'Minimum Estimation';
-  s2r.avg.min.labels  = {'No','Yes'};
-  s2r.avg.min.values  = {0,1};
-  s2r.avg.min.val     = {0}; 
-  s2r.avg.min.help    = {'Set minimum estimation per ROI.'};   
-  % max
-  s2r.avg.max         = cfg_menu;
-  s2r.avg.max.tag     = 'max';
-  s2r.avg.max.name    = 'Maximum Estimation';
-  s2r.avg.max.labels  = {'No','Yes'};
-  s2r.avg.max.values  = {0,1};
-  s2r.avg.max.val     = {0}; 
-  s2r.avg.max.help    = {'Set maximum estimation per ROI.'};   
-  % median
-  s2r.avg.median         = cfg_menu;
-  s2r.avg.median.tag     = 'median';
-  s2r.avg.median.name    = 'Median Estimation';
-  s2r.avg.median.labels  = {'No','Yes'};
-  s2r.avg.median.values  = {0,1};
-  s2r.avg.median.val     = {0}; 
-  s2r.avg.median.help    = {'Set median estimation per ROI.'};   
-  % all functions
-  s2r.avg.main         = cfg_branch;
-  s2r.avg.main.tag     = 'avg';
-  s2r.avg.main.name    = 'ROI Average Functions';
-  s2r.avg.main.val     = {
-    s2r.avg.mean ...
-    s2r.avg.std ...
-    s2r.avg.min ...
-    s2r.avg.max ...
-    s2r.avg.median ...
+  cdata_sub           = cfg_files;
+  cdata_sub.tag       = 'cdata';
+  cdata_sub.name      = 'Surface Data Files';
+  cdata_sub.filter    = 'gifti';
+  cdata_sub.ufilter   = '(lh|rh|mesh).(?!cent|sphe|defe|hull).*gii';
+  cdata_sub.num       = [1 Inf];
+  cdata_sub.help      = {'These are the surface data files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order they are specified.'};
+   
+  cdata_sample        = cfg_repeat;
+  cdata_sample.tag    = 'cdata_sub.';
+  cdata_sample.name   = 'Surface Data Sample';
+  cdata_sample.values = {cdata_sub};
+  cdata_sample.num    = [1 Inf];
+  cdata_sample.help   = {...
+    'Specify data for each sample. All samples must have the same size and same order.'};
+ 
+  outdir              = cfg_files;
+  outdir.tag          = 'outdir';
+  outdir.name         = 'Output Directory';
+  outdir.filter       = 'dir';
+  outdir.ufilter      = '.*';
+  outdir.num          = [0 1];
+  outdir.val{1}       = {''};
+  outdir.help         = {
+    'Files produced by this function will be written into this output directory.  If no directory is given, images will be written  to current working directory.  If both output filename and output directory contain a directory, then output filename takes precedence.'
+  };
+  
+  dataname            = cfg_entry;
+  dataname.tag        = 'dataname';
+  dataname.name       = 'Output Filename';
+  dataname.strtype    = 's';
+  dataname.num        = [1 Inf];
+  dataname.val        = {'output'};
+  dataname.help       = {'The output surface data file is written to current working directory unless a valid full pathname is given.  If a path name is given here, the output directory setting will be ignored.'};
+
+  datahandling         = cfg_menu;
+  datahandling.name   = 'Sample data handling';
+  datahandling.tag    = 'datahandling';
+  datahandling.labels = {'subjectwise','datawise'};
+  datahandling.values = {1,2};
+  datahandling.val    = {1};
+  datahandling.help   = {...
+    'There are two ways to hand surface calculation for many subjects: (i) subjectwise or (ii) datawise.'
+    ''
+   ['Subject-wise means that you have multiple surface measures that should ' ...
+    'be processed for multiple subjects in the same way within the native subject space. ' ...
+    'E.g., To multiply thickness with area as simple approximation of cortical ' ...
+    'volume, resulting in a new surface measure or texture for each subject. ' ...
+    'So you have to create one sample for each surface measure and select for each of them all subject. ' ...
+    'In our example, we have two samples: (i) one with thickness that include the thickness data of all subjects and ' ...
+    '(ii) another one that inlcudes the surface area data of the same subjects. ' ...
+    'It is therefore important that you select excactly the same subjects in the same order! ' ... 
+    'Hence, the name entry speciefy a the name of the the new surface measure (MEASUREENAME) in the resulting file: ']
+    '  [rh|lh].TEXTURNAME[.resampled].subjectname[.gii]' 
+    ''
+   ['Data-wise means can be used to process each sample by the imcalc operation. ' ...
+    'Hence, it require that each surface measure has the same datasize - being from one subject or being resampled.' ...
+    'This can be usefull if you want to average the data of multiple subjects (e.g., mean(S) or std(S)) or ' ...
+    'if you want to process multiple new measure of the same subject but with variing number of inputs (e.g., for multiple time points. ' ...
+    'If each sample contain different subject than the SUBJECTNAME is replaced otherwise the TEXTURENAME: ']
+    '  [rh|lh].TEXTURNAME[.resampled].SUBJECTNAME[.gii]'
+    ''
+    };
+  
+  expression         = cfg_entry;
+  expression.tag     = 'expression';
+  expression.name    = 'Expression';
+  expression.strtype = 's';
+  expression.num     = [1 Inf];
+  expression.val     = {'s1'};
+  expression.help    = {
+    'Example expressions (f):'
+    '  * Mean of six surface textures (select six texture files)'
+    '    f = ''(s1+s2+s3+s4+s5+s6)/6'''
+    '  * Make a binary mask texture at threshold of 100'
+    '    f = ''(s1>100)'''
+    '  * Make a mask from one texture and apply to another'
+    '    f = ''s2.*(s1>100)'''
+    '        - here the first texture is used to make the mask, which is applied to the second texture'
+    '  * Sum of n textures'
+    '    f = ''s1 + s2 + s3 + s4 + s5 + ...'''
+    '  * Sum of n textures (when reading data into a data-matrix - use dmtx arg)'
+    '    f = mean(S)'
+    ''
   };
 
-%% main function
-  surf2roi      = cfg_exbranch;
-  surf2roi.tag  = 'surf2roi';
-  surf2roi.name = 'Extract ROI-based surface values';
-  switch expert
-  case 2
-    surf2roi.val  = {
-      s2r.cdata_sample ...
-      s2r.ROIs ...
-      nproc ... 
-      s2r.avg.main};
-  case {0, 1}
-    surf2roi.val  = {s2r.cdata_sample};
+  dmtx         = cfg_menu;
+  dmtx.tag     = 'dmtx';
+  dmtx.name    = 'Data Matrix';
+  dmtx.labels  = {
+    'No - don''t read images into data matrix',...
+    'Yes -  read images into data matrix'
+  };
+  dmtx.values  = {0,1};
+  dmtx.val     = {0};
+  dmtx.help    = {
+    'If the dmtx flag is set, then textures are read into a data matrix S (rather than into separate variables s1, s2, s3,...). The data matrix should be referred to as S, and contains textures in rows. Computation is vertex by vertex, S is a NxK matrix, where N is the number of input textures, and K is the number of vertices per plane.'
+  };
+
+
+  % main functions
+  % ----------------------------------------------------------------------
+
+  % any image with similar properties
+  surfcalc      = cfg_exbranch;
+  surfcalc.tag  = 'surfcalc';
+  surfcalc.name = 'Surface Calculator';
+  surfcalc.val  = {
+    cdata ...
+    dataname ...
+    outdir ...
+    expression ...
+    dmtx ...
+  };
+  surfcalc.prog = @cat_surf_calc;
+  surfcalc.help = {
+    'Mathematical operations for surface data (textures).'
+    'It works similar to "spm_imcalc".  The input surface data must have the same number of entries (e.g. data of the same hemisphere of a subject or resampled data).'
+  };
+  surfcalc.vout = @(job) vout_cat_surf_calc(job);
+
+  
+  % subject- / group-w
+  surfcalcsub      = cfg_exbranch;
+  surfcalcsub.tag  = 'surfcalcsub';
+  surfcalcsub.name = 'Surface Calculator (subject-wise)';
+  if expert>1
+    surfcalcsub.val  = {
+      cdata_sample ...
+      datahandling ...
+      dataname ...
+      outdir ...
+      expression ...
+      dmtx ...
+    };
+    surfcalcsub.help = {
+      'Mathematical operations for surface data sets (textures).'
+      'In contrast to the "Surface Calculator" it allows to apply the same expression to multiple subjects. Please note that a fixed name structure is expected: [rh|lh].TEXTURENAME[.resampled].subjectname[.gii]. Here TEXTURENAME will be replaced by the output name.'
+    };
+  else
+    surfcalcsub.val  = {
+      cdata_sample ...
+      dataname ...
+      outdir ...
+      expression ...
+      dmtx ...
+    };
+    surfcalcsub.help = {
+      'Mathematical operations for surface data sets (textures).'
+      'In contrast to the "Surface Calculator" it allows to apply the same expression to multiple subjects. Please note that a fixed name structure is expected: [rh|lh].TEXTURENAME[.resampled].subjectname[.gii]. Here TEXTURENAME will be replaced by the output name.'
+    };
   end
-  surf2roi.prog = @cat_surf_surf2roi;
-  surf2roi.vout = @vout_surf_surf2roi;
-  surf2roi.help = {
-    'While ROI-based values for VBM (volume) data are automatically saved in the label folder as XML file it is necessary to additionally extract these values for surface data. This has to be done after preprocessing the data and creating cortical surfaces. '
-    ''
-    'You can extract ROI-based values for cortical thickness but also for any other surface parameter that was extracted using the "Extract Additional Surface Parameters" function.'
-    ''
-    'Please note that these values are extracted from data in native space without any smoothing. As default the mean inside a ROI is calculated and saved as XML file in the label folder.'
-  };
+  surfcalcsub.prog = @cat_surf_calc;
+  surfcalcsub.vout = @(job) vout_cat_surf_calcsub(job);
+ 
+%==========================================================================
+function flipsides = cat_surf_flipsides_GUI
+% Flipsides
+%-----------------------------------------------------------------------
+  cdata               = cfg_files;
+  cdata.tag           = 'cdata';
+  cdata.name          = 'Surface Data Files';
+  cdata.filter        = 'gifti';
+  cdata.ufilter       = '^s.*mm\.lh.*';
+  cdata.num           = [1 Inf];
+  cdata.help          = {'Texture maps that should be flipped/mirrored from right to left.' ''};
+  
+  cdata_sample        = cfg_repeat;
+  cdata_sample.tag    = 'cdata_sub.';
+  cdata_sample.name   = 'Surface Data Sample';
+  cdata_sample.values = {cdata};
+  cdata_sample.num    = [1 Inf];
+  cdata_sample.help   = {'Specify data for each sample.'};
+ 
+  flipsides           = cfg_exbranch;
+  flipsides.tag       = 'flipsides';
+  flipsides.name      = 'Flip right to left hemisphere';
+  flipsides.val       = {cdata}; % replace later by cdata_sample ... update vout ...
+  flipsides.prog      = @cat_surf_flipsides;
+  flipsides.help      = {'This function flip the right hemisphere to the left side, to allow side' ''};
+  flipsides.vout      = @(job) vout_cat_surf_flipsides(job); 
 
+%==========================================================================
+function [surfresamp,surfresamp_fs] = cat_surf_resamp_GUI(expert,nproc,merge_hemi,mesh32k,lazy)
+%% Resample and smooth surfaces 
+%  ------------------------------------------------------------------------
+
+  data_surf         = cfg_files;
+  data_surf.tag     = 'data_surf';
+  data_surf.name    = '(Left) Surfaces Data';
+  data_surf.filter  = 'any';
+  if expert > 1
+    data_surf.ufilter = '^lh.';
+  else
+    data_surf.ufilter = '^lh.(?!cent|sphe|defe|hull).*';
+  end
+  data_surf.num     = [1 Inf];
+  data_surf.help    = {'Select surfaces data files for left hemisphere for resampling to template space.'};
+
+  sample_surf            = cfg_repeat;
+  sample_surf.tag        = 'sample';
+  sample_surf.name       = 'Data';
+  sample_surf.values     = {data_surf};
+  sample_surf.num        = [1 Inf];
+  sample_surf.help       = {...
+  'Specify data for each sample. If you specify different samples the mean correlation is displayed in separate boxplots for each sample.'};
+
+  
+  fwhm_surf         = cfg_entry;
+  fwhm_surf.tag     = 'fwhm_surf';
+  fwhm_surf.name    = 'Smoothing Filter Size in FWHM';
+  fwhm_surf.strtype = 'r';
+  fwhm_surf.num     = [1 1];
+  fwhm_surf.val     = {15};
+  fwhm_surf.help    = {
+    'Select filter size for smoothing. For cortical thickness a good starting value is 15mm, while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) need a larger filter size of about 20-25mm. For no filtering use a value of 0.'};
+
+  surfresamp      = cfg_exbranch;
+  surfresamp.tag  = 'surfresamp';
+  surfresamp.name = 'Resample and Smooth Surface Data';
+  if expert>1
+    surfresamp.val  = {sample_surf,merge_hemi,mesh32k,fwhm_surf,lazy,nproc};
+  else
+    surfresamp.val  = {sample_surf,merge_hemi,mesh32k,fwhm_surf,nproc};
+  end
+  surfresamp.prog = @cat_surf_resamp;
+  surfresamp.vout = @(job) vout_surf_resamp(job);
+  surfresamp.help = {
+  'In order to analyze surface parameters all data have to be resampled into template space and the resampled data have to be finally smoothed. Resampling is done using the warped coordinates of the resp. sphere.'};
+
+
+
+
+%% Resample and smooth FreeSurfer surfaces
+%  ------------------------------------------------------------------------
+
+  data_fs         = cfg_files;
+  data_fs.tag     = 'data_fs';
+  data_fs.name    = 'Freesurfer Subject Directories';
+  data_fs.filter  = 'dir';
+  data_fs.ufilter = '.*';
+  data_fs.num     = [1 Inf];
+  data_fs.help    = {'Select subject folders of Freesurfer data to resample data (e.g. thickness).'};
+
+  measure_fs         = cfg_entry;
+  measure_fs.tag     = 'measure_fs';
+  measure_fs.name    = 'Freesurfer Measure';
+  measure_fs.strtype = 's';
+  measure_fs.num     = [1 Inf];
+  measure_fs.val     = {'thickness'};
+  measure_fs.help    = {
+    'Name of surface measure that should be resampled and smoothed.'
+    ''
+    };
+
+  outdir         = cfg_files;
+  outdir.tag     = 'outdir';
+  outdir.name    = 'Output Directory';
+  outdir.filter  = 'dir';
+  outdir.ufilter = '.*';
+  outdir.num     = [0 1];
+  outdir.help    = {'Select a directory where files are written.'};
+
+  surfresamp_fs      = cfg_exbranch;
+  surfresamp_fs.tag  = 'surfresamp_fs';
+  surfresamp_fs.name = 'Resample and Smooth Existing FreeSurfer Surface Data';
+  surfresamp_fs.val  = {data_fs,measure_fs,merge_hemi,mesh32k,fwhm_surf,outdir};
+  surfresamp_fs.prog = @cat_surf_resamp_freesurfer;
+  surfresamp_fs.help = {
+  'If you have existing Freesurfer data (e.g. thickness) this function can be used to resample these data, smooth the resampled data, and convert Freesurfer data to gifti format.'};
+
+%==========================================================================
+function roi2surf = cat_roi_roi2surf_GUI
 %% roi to surface  
-%  ---------------------------------------------------------------------
+%  ------------------------------------------------------------------------
 
 % ROI files
   r2s.ROIs         = cfg_files;
@@ -1048,7 +1006,7 @@ end
  
 % average function? - not required 
  
-%% main function
+% main function
   roi2surf      = cfg_exbranch;
   roi2surf.tag  = 'roi2surf';
   roi2surf.name = 'Map ROI data to the surface';
@@ -1062,324 +1020,517 @@ end
   roi2surf.help = {
     ''
   };
-%% surface calculations 
-%  ---------------------------------------------------------------------
-%  estimation per subject (individual and group sampling):
-%  g groups with i datafiles and i result datafile
- 
-  sc.cdata         = cfg_files;
-  sc.cdata.tag     = 'cdata';
-  sc.cdata.name    = 'Surface Data Files';
-  sc.cdata.filter  = 'any';
-  sc.cdata.ufilter = '(lh|rh|mesh).*';
-  sc.cdata.num     = [1 Inf];
-  sc.cdata.help    = {'These are the surface data files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order they are specified.'};
+
+%==========================================================================
+function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
+%% surface measures
+%  ------------------------------------------------------------------------  
   
-  sc.cdata_sub         = cfg_files;
-  sc.cdata_sub.tag     = 'cdata';
-  sc.cdata_sub.name    = 'Surface Data Files';
-  sc.cdata_sub.filter  = 'gifti';
-  sc.cdata_sub.ufilter = '(lh|rh|mesh).(?!cent|sphe|defe|hull).*gii';
-  sc.cdata_sub.num     = [1 Inf];
-  sc.cdata_sub.help    = {'These are the surface data files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order they are specified.'};
-   
-  sc.cdata_sample         = cfg_repeat;
-  sc.cdata_sample.tag     = 'cdata_sub.';
-  sc.cdata_sample.name    = 'Surface Data Sample';
-  sc.cdata_sample.values  = {sc.cdata_sub};
-  sc.cdata_sample.num     = [1 Inf];
-  sc.cdata_sample.help = {...
-    'Specify data for each sample. All samples must have the same size and same order.'};
- 
-  sc.outdir         = cfg_files;
-  sc.outdir.tag     = 'outdir';
-  sc.outdir.name    = 'Output Directory';
-  sc.outdir.filter  = 'dir';
-  sc.outdir.ufilter = '.*';
-  sc.outdir.num     = [0 1];
-  sc.outdir.val{1}  = {''};
-  sc.outdir.help    = {
-    'Files produced by this function will be written into this output directory.  If no directory is given, images will be written  to current working directory.  If both output filename and output directory contain a directory, then output filename takes precedence.'
-  };
+  data_surf_extract         = cfg_files;
+  data_surf_extract.tag     = 'data_surf';
+  data_surf_extract.name    = 'Central Surfaces';
+  data_surf_extract.filter  = 'gifti';
+  data_surf_extract.ufilter = '^lh.central';
+  data_surf_extract.num     = [1 Inf];
+  data_surf_extract.help    = {'Select left surfaces to extract values.'};
   
-  sc.surfname         = cfg_entry;
-  sc.surfname.tag     = 'dataname';
-  sc.surfname.name    = 'Output Filename';
-  sc.surfname.strtype = 's';
-  sc.surfname.num     = [1 Inf];
-  sc.surfname.val     = {'output'};
-  sc.surfname.help    = {'The output surface data file is written to current working directory unless a valid full pathname is given.  If a path name is given here, the output directory setting will be ignored.'};
- 
-  sc.dataname         = cfg_entry;
-  sc.dataname.tag     = 'dataname';
-  sc.dataname.name    = 'Texture Name';
-  sc.dataname.strtype = 's';
-  sc.dataname.num     = [1 Inf];
-  sc.dataname.val     = {'output'};
-  sc.dataname.help    = {
-    'Name of the texture as part of the filename.'
-    ''
-    '  [rh|lh].TEXTURENAME[.resampled].subjectname[.gii]' 
-  };
-
-  sc.expression         = cfg_entry;
-  sc.expression.tag     = 'expression';
-  sc.expression.name    = 'Expression';
-  sc.expression.strtype = 's';
-  sc.expression.num     = [1 Inf];
-  sc.expression.val     = {'s1'};
-  sc.expression.help    = {
-    'Example expressions (f):'
-    '  * Mean of six surface textures (select six texture files)'
-    '    f = ''(s1+s2+s3+s4+s5+s6)/6'''
-    '  * Make a binary mask texture at threshold of 100'
-    '    f = ''(s1>100)'''
-    '  * Make a mask from one texture and apply to another'
-    '    f = ''s2.*(s1>100)'''
-    '        - here the first texture is used to make the mask, which is applied to the second texture'
-    '  * Sum of n textures'
-    '    f = ''s1 + s2 + s3 + s4 + s5 + ...'''
-    '  * Sum of n textures (when reading data into a data-matrix - use dmtx arg)'
-    '    f = mean(S)'
-    ''
-  };
-
-  sc.dmtx         = cfg_menu;
-  sc.dmtx.tag     = 'dmtx';
-  sc.dmtx.name    = 'Data Matrix';
-  sc.dmtx.labels  = {
-    'No - don''t read images into data matrix',...
-    'Yes -  read images into data matrix'
-  };
-  sc.dmtx.values  = {0,1};
-  sc.dmtx.val     = {0};
-  sc.dmtx.help    = {
-    'If the dmtx flag is set, then textures are read into a data matrix S (rather than into separate variables s1, s2, s3,...). The data matrix should be referred to as S, and contains textures in rows. Computation is vertex by vertex, S is a NxK matrix, where N is the number of input textures, and K is the number of vertices per plane.'
-  };
-
-
-% ----------------------------------------------------------------------
-
-  surfcalc      = cfg_exbranch;
-  surfcalc.tag  = 'surfcalc';
-  surfcalc.name = 'Surface Calculator';
-  surfcalc.val  = {
-    sc.cdata ...
-    sc.surfname ...
-    sc.outdir ...
-    sc.expression ...
-    sc.dmtx ...
-  };
-  surfcalc.prog = @cat_surf_calc;
-  surfcalc.help = {
-    'Mathematical operations for surface data (textures).'
-    'It works similar to "spm_imcalc".  The input surface data must have the same number of entries (e.g. data of the same hemisphere of a subject or resampled data).'
-  };
-
-
-  surfcalcsub      = cfg_exbranch;
-  surfcalcsub.tag  = 'surfcalcsub';
-  surfcalcsub.name = 'Surface Calculator (subject-wise)';
-  surfcalcsub.val  = {
-    sc.cdata_sample ...
-    sc.dataname ...
-    sc.outdir ...
-    sc.expression ...
-    sc.dmtx ...
-  };
-  surfcalcsub.prog = @cat_surf_calc;
-  surfcalcsub.help = {
-    'Mathematical operations for surface data sets (textures).'
-    'In contrast to the "Surface Calculator" it allows to apply the same expression to multiple subjects. Please note that a fixed name structure is expected: [rh|lh].TEXTURENAME[.resampled].subjectname[.gii]. Here TEXTURENAME will be replaced by the output name.'
-  };
-
-
-%% Resample and smooth surfaces 
-%-----------------------------------------------------------------------
-  data_surf         = cfg_files;
-  data_surf.tag     = 'data_surf';
-  data_surf.name    = '(Left) Surfaces Data';
-  data_surf.filter  = 'any';
-  if expert > 1
-    data_surf.ufilter = '^lh.';
+  % absolute mean curvature
+  GI        = cfg_menu;
+  if expert 
+    GI.name = 'Gyrification index (absolute mean curvature)';
   else
-    data_surf.ufilter = '^lh.(?!cent|sphe|defe|hull).*';
+    GI.name = 'Gyrification index';
   end
-  data_surf.num     = [1 Inf];
-  data_surf.help    = {'Select surfaces data files for left hemisphere for resampling to template space.'};
+  GI.tag    = 'GI';
+  GI.labels = {'No','Yes'};
+  GI.values = {0,1};
+  GI.val    = {1};
+  GI.help   = {
+    'Extract gyrification index (GI) based on absolute mean curvature. The method is described in Luders et al. NeuroImage, 29: 1224-1230, 2006.'
+  };
 
-  fwhm_surf         = cfg_entry;
-  fwhm_surf.tag     = 'fwhm_surf';
-  fwhm_surf.name    = 'Smoothing Filter Size in FWHM';
-  fwhm_surf.strtype = 'r';
-  fwhm_surf.num     = [1 1];
-  fwhm_surf.val     = {15};
-  fwhm_surf.help    = {
-    'Select filter size for smoothing. For cortical thickness a good starting value is 15mm, while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) need a larger filter size of about 20-25mm. For no filtering use a value of 0.'};
 
-  surfresamp      = cfg_exbranch;
-  surfresamp.tag  = 'surfresamp';
-  surfresamp.name = 'Resample and Smooth Surface Data';
   if expert>1
-    surfresamp.val  = {data_surf,merge_hemi,mesh32k,fwhm_surf,lazy,nproc};
-  else
-    surfresamp.val  = {data_surf,merge_hemi,mesh32k,fwhm_surf,nproc};
-  end
-  surfresamp.prog = @cat_surf_resamp;
-  surfresamp.vout = @vout_surf_resamp;
-  surfresamp.help = {
-  'In order to analyze surface parameters all data have to be resampled into template space and the resampled data have to be finally smoothed. Resampling is done using the warped coordinates of the resp. sphere.'};
+    % ---------------------------------------------------------------------
+    % DFG project measures
+    % ---------------------------------------------------------------------
+    GIL        = cfg_menu;
+    GIL.name   = 'Laplacian gyrification indices';
+    GIL.tag    = 'GIL';
+    GIL.labels = {'No','inward','outward','generalized','all'};
+    GIL.values = {0,1,2,3,4};
+    GIL.val    = {4}; 
+    GIL.help   = {[ ...
+      'WARNING: This GI measures is still in development and not verified yet!\n\n ' ...
+      'Extraction of Laplacian-based gyrification indices as local area relation between the individual folded and the unfolded surface. ' ...
+      'The Laplacian approach supports an optimal mapping between the surfaces but the classical definition of the outer hull result in a measure that focuses on inward folding. ' ...
+      '\n\n' ...
+      'The "inward" option use only the hull surface resulting in high sulcal values (Dahnke et al. 2010, Li et al. 2014) and is a local 3D represenstation of Zilles gyrification index (Zilles et al. 1989). ' ...
+      'The "outward" option use only the core surface and result in high gyral values. However, the core definition is expected to be less robust for very strong tissue atrophy. ' ...
+      'The "generalized" option combine both models resulting in an independent folding model that is expected to require less smoothing for surface-based analysis (15 mm). ' ...
+      '\n\n' ...
+      'This research part of the DFG project DA 2167/1-1 (2019/04 - 2012/04).\n\n' ...
+    ]};
+  
+    if expert>1
+      % Developer/expert parameters? 
+      GILtype            = GIL; 
+    
+      % to small values may lead to problems in high resolution data?
+      % > compensation term in cat_surf_gyrification 
+      laplaceerr         = cfg_menu;
+      laplaceerr.name    = 'Laplacian filter accuracy';
+      laplaceerr.tag     = 'laplaceerr';
+      laplaceerr.labels  = {'0.001','0.0001','0.00001'};
+      laplaceerr.values  = {0.001,0.0001,0.00001};
+      laplaceerr.val     = {0.0001};
+      laplaceerr.help    = {'Filter accuracy of the voxel-base Laplace filter applied before streamline estimation. Smaller values are more accurate but increase processing time. \n\n'};
 
+      % check if this compensate for voxel size!
+      GIstreamopt        = cfg_menu;
+      GIstreamopt.name   = 'Streamline accuracy';
+      GIstreamopt.tag    = 'GIstreamopt';
+      GIstreamopt.labels = {'0.01','0.001','0.0001'};
+      GIstreamopt.values = {0.01,0.001,0.0001};
+      GIstreamopt.val    = {0.01};
+      GIstreamopt.help   = {'Stepsize of the Laplacian streamline estimation. Small values are more accurate but increase processing and memory demands. \n\n'};
 
+      % normalization function
+      GInorm             = cfg_menu;
+      GInorm.name        = 'Normalization function';
+      GInorm.tag         = 'GInorm';
+      GInorm.labels      = {'none','2nd root','3rd root','6th root','10th root','log2','log','log10'};
+      GInorm.values      = {1,2,3,6,10,'log2','log','log10'};
+      GInorm.val         = {'log10'};
+      GInorm.help        = {[ ...
+        'Normalization function (after area filtering) to avoid the exponential increase of the GI values and to have more gaussian-like value distribution.' ...
+        'To avoid negative values in case of logarithmic functions the values were corrected by the basis of the logarithmic function, e.g. +10 for log10. ' ...
+        'The logarithmic fucntion supports stronger compensation of high values. This is especially important for the inward and outward but not generalized GI. ' ...
+        ]};
+      
+      % Relative (brain size depending) or absolute (in mm) filtering?
+      % For animals relative should be more correct! 
+      %
+      % Comment RD20190409
+      % ---------------------------------------------------------------------
+      % Smoothing has to be done on the original surfaces to guarantee that 
+      % the local GI is equal to the global on. 
+      % We got similar problems for "resample and smooth" as for the "area"
+      % measure. 
+      % Maybe an "resample and smooth" (automatic) normalization option can 
+      % help that guarantee the right kind of handling, e.g. global mean or
+      % sum?
+      % ---------------------------------------------------------------------
+    
+      GILfs              = cfg_entry;
+      GILfs.tag          = 'GIpresmooth';
+      GILfs.name         = 'Final filter size';
+      GILfs.strtype      = 'r';
+      GILfs.val          = {0.1}; 
+      GILfs.num          = [1 1];
+      GILfs.help         = {[ ...
+        'Filter of the Laplacian based GI has to be done for the area variables of the folded and unfolded surfaces. ' ...
+        'Values between 0 and 1 describe relative smoothing depending on the brain size, whereas values larger/equal than one describes the filter size in mm.']}; 
 
+      % save temporary surfaces 
+      GIwritehull        = cfg_menu;
+      GIwritehull.name   = 'Laplacian gyrification indices hull/core surface output';
+      GIwritehull.tag    = 'GIwritehull';
+      GIwritehull.labels = {'No','Yes'};
+      GIwritehull.values = {0,1};
+      GIwritehull.val    = {1};
+      GIwritehull.help   = {'Write hull/core surface use in the Laplacian gyrification index estimation.'};
+      
+      % hull model - This is not yet implemented! 
+      % The idea behind is that the hemisphere-based hull is artifical too
+      % and that are more natural definiton is given by the full intra-
+      % cranial volume. However, this have to include the cerebelum and 
+      % brainstem as well and needs to utilize the Yp0 map!
+      %
+      %{
+      GIhullmodel        = cfg_menu;
+      GIhullmodel.name   = 'Hull model';
+      GIhullmodel.tag    = 'GIhullmodel';
+      GIhullmodel.labels = {'Hemisphere-based','Skull-based'};
+      GIhullmodel.values = {0,1};
+      GIhullmodel.val    = {0};
+      GIhullmodel.help   = {'There are two different hull definitions: (i) the classical using a semi-convex hull for each hemisphere and (ii) the full intracranial volume with both hemispheres and the cerebellum. ' ''};
+      %}
+      
+      % core model 
+      GIcoremodel        = cfg_menu;
+      GIcoremodel.name   = 'Core model';
+      GIcoremodel.tag    = 'GIcoremodel';
+      GIcoremodel.labels = {'1','2','3'};
+      GIcoremodel.values = {1,2,3};
+      GIcoremodel.val    = {1};
+      GIcoremodel.help   = {[ ...
+        'There are multiple ways to define the central core of the brain structure and it is unclear which one fits best. ' ...
+        'It should have some anatomical meaning (so the ventricles would be nice as source of cortical development) ' ...
+        'but being at once independ by aging (so ventricles are not real good). ' ...
+        'It should be defined on an individual level (to support the scaling/normalization of head size within and between species) ' ...
+        'to remove rather than increasing individual effects. ' ...
+        ] '' };
+      
+      % threshold for core estimation 
+      GIcoreth           = cfg_entry;
+      GIcoreth.name      = 'Core threshold';
+      GIcoreth.tag       = 'GIcoreth';
+      GIcoreth.strtype   = 'r';
+      GIcoreth.num       = [1 1];
+      GIcoreth.val       = {0.2};
+      GIcoreth.help      = {[ ...
+        'Lower thresholds remove less gyri whereas high thresholds remove more gyri depending on the used core model. ' ...
+        'Initial test range between 0.05 (remove only very high frequency structures) and 0.25 (remove everything that is not close to the insula). ' ...
+        ] ''};
+      
+      % add own suffix to support multiple GI estimations
+      GIsuffix         = cfg_entry;
+      GIsuffix.tag     = 'GIsuffix';
+      GIsuffix.name    = 'Suffix';
+      GIsuffix.strtype = 's';
+      GIsuffix.num     = [0 Inf];
+      GIsuffix.val     = {''};
+      GIsuffix.help    = {[ ...
+        'Specify the string to be appended to the filenames of the filtered image file(s). ' ...
+        'Default suffix is "".' ...
+        ... 'Use "PARA" to add input parameters, e.g. "_lerr%1d_sacc%1d_fs%03d_smodel%d[_coreth%02d]" with ... . '
+        ] ''};
+    
+      % main note
+      GIL      = cfg_branch;
+      GIL.name = GILtype.name;
+      GIL.tag  = GILtype.tag;
+      GIL.val  = {GILtype,GIcoremodel,GIcoreth,laplaceerr,GIstreamopt,GILfs,GInorm,GIsuffix,GIwritehull}; %GIhullmodel,
+    end
 
-%% Resample and smooth FreeSurfer surfaces
-%-----------------------------------------------------------------------
-  data_fs         = cfg_files;
-  data_fs.tag     = 'data_fs';
-  data_fs.name    = 'Freesurfer Subject Directories';
-  data_fs.filter  = 'dir';
-  data_fs.ufilter = '.*';
-  data_fs.num     = [1 Inf];
-  data_fs.help    = {'Select subject folders of Freesurfer data to resample data (e.g. thickness).'};
-
-  measure_fs         = cfg_entry;
-  measure_fs.tag     = 'measure_fs';
-  measure_fs.name    = 'Freesurfer Measure';
-  measure_fs.strtype = 's';
-  measure_fs.num     = [1 Inf];
-  measure_fs.val     = {'thickness'};
-  measure_fs.help    = {
-    'Name of surface measure that should be resampled and smoothed.'
-    ''
+  
+    %% Inner and outer surfaces
+    %  -----------------------------------------------------------------
+    OS        = cfg_menu;
+    OS.name   = 'Pial surface';
+    OS.tag    = 'OS';
+    OS.labels = {'No','Yes'};
+    OS.values = {0,1};
+    OS.val    = {1};
+    OS.help   = {
+      'Creates the pial surface (outer cortical surface) by moving each vertices of the central surface by the half local thickness along the surface normal.'
     };
-
-  outdir         = cfg_files;
-  outdir.tag     = 'outdir';
-  outdir.name    = 'Output Directory';
-  outdir.filter  = 'dir';
-  outdir.ufilter = '.*';
-  outdir.num     = [0 1];
-  outdir.help    = {'Select a directory where files are written.'};
-
-  surfresamp_fs      = cfg_exbranch;
-  surfresamp_fs.tag  = 'surfresamp_fs';
-  surfresamp_fs.name = 'Resample and Smooth Existing FreeSurfer Surface Data';
-  surfresamp_fs.val  = {data_fs,measure_fs,merge_hemi,mesh32k,fwhm_surf,outdir};
-  surfresamp_fs.prog = @cat_surf_resamp_freesurfer;
-  surfresamp_fs.help = {
-  'If you have existing Freesurfer data (e.g. thickness) this function can be used to resample these data, smooth the resampled data, and convert Freesurfer data to gifti format.'};
-
-%% Flipsides
-%-----------------------------------------------------------------------
-  flip.cdata         = cfg_files;
-  flip.cdata.tag     = 'cdata';
-  flip.cdata.name    = 'Surface Data Files';
-  flip.cdata.filter  = 'gifti';
-  flip.cdata.ufilter = '^s.*mm\.lh.*';
-  flip.cdata.num     = [1 Inf];
-  flip.cdata.help    = {'Texture maps that should be flipped/mirrored from right to left.'};
   
-
-  flipsides      = cfg_exbranch;
-  flipsides.tag  = 'flipsides';
-  flipsides.name = 'Flip right to left hemisphere';
-  flipsides.val  = {flip.cdata};
-  flipsides.prog = @cat_surf_flipsides;
-  flipsides.help = {
-  'This function flip the right hemisphere to the left side, to allow side'
-  ''
-  ''};
-
-
-% import cat_surf_results GUI
-  renderresults = cat_surf_results_GUI;
-
-
-%% Toolset
-%  ---------------------------------------------------------------------
+    IS        = cfg_menu;
+    IS.name   = 'White matter surface';
+    IS.tag    = 'IS';
+    IS.labels = {'No','Yes'};
+    IS.values = {0,1};
+    IS.val    = {1};
+    IS.help   = {
+      'Creates the white matter surface (inner cortical surface) by moving each vertices of the central surface by the half local thickness along the surface normal.'
+    };
   
-  stools = cfg_choice;
-  stools.name   = 'Surface Tools';
-  stools.tag    = 'stools';
-  if expert==2
-    stools.values = { ...
-      check_mesh_cov, ...
-      check_mesh_cov2, ...
-      surfextract, ...
-      surfresamp, ...
-      surfresamp_fs,...
-      vol2surf, ...
-      vol2tempsurf, ...
-      surfcalc, ...
-      surfcalcsub, ...
-      surf2roi, ...
-      renderresults, ...
-      roi2surf, ...
-      ... estroi, ...
-      flipsides, ...
-      ... roicalc, ...
-      };    
-  elseif expert==1
-    stools.values = { ...
-      check_mesh_cov, ...
-      check_mesh_cov2, ...
-      surfextract, ...
-      surfresamp, ...
-      surfresamp_fs,...
-      vol2surf, ...
-      vol2tempsurf, ...
-      surfcalc, ...
-      surfcalcsub, ...
-      surf2roi, ...
-      ... roi2surf, ...
-      ... estroi, ...
-      flipsides, ...
-      ... roicalc, ...
-      };
-  else
-    stools.values = { ...
-      check_mesh_cov, ...
-      check_mesh_cov2, ...
-      surfextract, ...
-      surfresamp, ...
-      surfresamp_fs,...
-      surf2roi, ...
-      vol2surf, ...
-      vol2tempsurf, ...
-      surfcalc, ...
-      surfcalcsub, ...
-      };
+    % main note
+    surfaces      = cfg_branch;
+    surfaces.name = 'Further surfaces';
+    surfaces.tag  = 'surfaces';
+    surfaces.val  = {IS,OS}; 
+    
   end
 
+  % Rachels fractal dimension by spherical harmonics
+  FD        = cfg_menu;
+  FD.name   = 'Cortical complexity (fractal dimension)';
+  FD.tag    = 'FD';
+  FD.labels = {'No','Yes'};
+  FD.values = {0,1};
+  FD.val    = {0};
+  FD.help   = {
+    'Extract cortical complexity (fractal dimension) which is described in Yotter et al. Neuroimage, 56(3): 961-973, 2011.'
+    ''
+    'Warning: Estimation of cortical complexity is very slow!'
+    ''
+  };
+
+  % sulcal depth with a hull surface that based on surface-inflation.
+  % ADD cite! - VanEssen?
+  SD        = cfg_menu;
+  SD.name   = 'Sulcus depth';
+  SD.tag    = 'SD';
+  SD.labels = {'No','Yes'};
+  SD.values = {0,1};
+  SD.val    = {1};
+  SD.help   = {
+    'Extract sqrt-transformed sulcus depth based on the euclidean distance between the central surface and its convex hull.'
+    ''
+    'Transformation with sqrt-function is used to render the data more normally distributed.'
+    ''
+  };
+
+  % surface area ... 
+  if expert>1
+    area        = cfg_menu;
+    area.name   = 'Surface area';
+    area.tag    = 'area';
+    area.labels = {'No','Yes'}; 
+    area.values = {0,2}; 
+    area.val    = {2}; 
+    area.help   = {
+      'WARNING: IN DEVELOPMENT!'
+      'This method requires a sum-based mapping rather than the mean-based interpolation. The mapping utilize the Delaunay graph to transfer the area around a vertex to its nearest neighbor(s). See Winkler et al.,  2017. '}; 
+    %{
+    % Winklers method is not implemented right now (201904)
+    area.help   = {
+      'Extract log10-transformed local surface area using re-parameterized tetrahedral surface. The method is described in Winkler et al. NeuroImage, 61: 1428-1443, 2012.'
+      ''
+      'Log-transformation is used to render the data more normally distributed.'
+      ''
+    };
+    %}
+   
+    gmv        = cfg_menu;
+    gmv.name   = 'Surface GM volume';
+    gmv.tag   = 'gmv';
+    gmv.labels = {'No','Yes'}; 
+    gmv.values = {0,1}; 
+    gmv.val    = {1}; 
+    gmv.help   = {
+      'WARNING: NOT WORKING RIGHT NOW!'
+      'This method requires a sum-based mapping rather than the mean-based interpolation. The mapping utilize the Delaunay graph to transfer the area around a vertex to its closes neighbor(s) that is also use for the area mapping. '}; 
+
+  end
+  
+
+
+  % main menu
+  % 
+  % TODO:
+  % - add a branch for measures?
+  % - add a branch for options?
+  surfextract      = cfg_exbranch;
+  surfextract.tag  = 'surfextract';
+  surfextract.name = 'Extract additional surface parameters';
+  if expert > 1
+    surfextract.val  = {data_surf_extract, area,gmv, GI,FD,SD, GIL,surfaces, nproc, lazy}; % area, 
+  else
+    surfextract.val  = {data_surf_extract,GI,FD,SD,nproc};
+  end
+  surfextract.prog = @cat_surf_parameters;
+  surfextract.vout = @vout_surfextract;
+  surfextract.help = {'Additional surface parameters can be extracted that can be used for statistical analysis.'};
+
 %==========================================================================
-function dep = vout_surf_surf2roi(job) %#ok<INUSD>
+function renderresults = cat_surf_results_GUI(expert)
+%% Batch mode for cat_surf_results function. 
+%  ---------------------------------------------------------------------
 
-dep(1)            = cfg_dep;
-dep(1).sname      = 'Extracted Surface ROIs';
-dep(1).src_output = substruct('()',{1}, '.','xmlname','()',{':'});
-dep(1).tgt_spec   = cfg_findspec({{'filter','xml','strtype','e'}});
+  % input data
+  cdata                = cfg_files;
+  cdata.tag            = 'cdata';
+  cdata.name           = 'Template surface data files';
+  cdata.filter         = 'any';
+  cdata.ufilter        = '.*';
+  cdata.num            = [1 Inf];
+  cdata.help           = {'Select resampled surface data. ' ''};
+  
+  
+  % == render options ==
+  surface              = cfg_menu;
+  surface.name         = 'Render surface';
+  surface.tag          = 'surface';
+  surface.labels       = {'Central','Inflated','Dartel','Flatmap'};
+  surface.values       = {1,2,3,4};
+  surface.val          = {1};
+  surface.help         = {'Select on which average surface the data should be projected. ' ''};
+
+  texture              = cfg_menu;
+  texture.name         = 'Surface underlay texture';
+  texture.tag          = 'texture';
+  texture.labels       = {'Mean curvature', 'Sulcal depth'};
+  texture.values       = {1,2};
+  texture.val          = {1};
+  texture.help         = {'Select a underlaying surface texture to illutrate the cortical folding pattern by mean curvature or sulcal depth.' ''};
+  
+  transparency         = cfg_menu;
+  transparency.name    = 'Transparency';
+  transparency.tag     = 'transparency';
+  transparency.labels  = {'No', 'Yes'};
+  transparency.values  = {0,1};
+  transparency.val     = {1};
+  transparency.help    = {'Select a underlaying surface texture to illutrate the cortical folding pattern by mean curvature or sulcal depth.' ''};
+  
+  view                  = cfg_menu;
+  view.name             = 'Render view';
+  view.tag              = 'view';
+  view.labels           = {'Show top view', 'Show bottom view', 'Show only lateral and medial views'};
+  view.values           = {1,-1,2};
+  view.val              = {1};
+  view.help             = {'Select diffent types of surface views. The "top view"/"bottom view" shows later and medial view of the left and right hemisphere and the top/bottom view in middle. The view option has no effect in case of flatmaps.' ''};
+  
+  colormap              = cfg_menu;
+  colormap.name         = 'Colormap';
+  colormap.tag          = 'colormap';
+  colormap.labels       = {'Jet', 'Hot', 'HSV', 'Cold-hot'};
+  colormap.values       = {1,2,3,4};
+  colormap.val          = {1};
+  colormap.help         = {'Select the colormap for data visualisation.' ''};
+  
+  colorbar              = cfg_menu;
+  colorbar.name         = 'Colorbar';
+  colorbar.tag          = 'colorbar';
+  if expert>1
+    colorbar.labels     = {'Off', 'On', 'On with histogram'};
+    colorbar.values     = {1,2,3};
+  else
+    colorbar.labels     = {'Off', 'On'};
+    colorbar.values     = {1,2};
+  end
+  colorbar.val          = {3};
+  colorbar.help         = {'Print colorbar (with histogram).' ''};
+ 
+  background            = cfg_menu;
+  background.name       = 'Background color';
+  background.tag        = 'background';
+  background.labels     = {'White','Black'};
+  background.values     = {1,2};
+  background.val        = {1};
+  background.help       = {'Select the color of the background.' ''};
+
+  showfilename          = cfg_menu;
+  showfilename.name     = 'Show filename';
+  showfilename.tag      = 'showfilename';
+  showfilename.labels   = {'No','Yes'};
+  showfilename.values   = {0,1};
+  showfilename.val      = {1};
+  showfilename.help     = {'Print the filename at the top of the left and right hemishere.' ''};
+  
+  invcolormap           = cfg_menu;
+  invcolormap.name      = 'Inverse colormap';
+  invcolormap.tag       = 'invcolormap';
+  invcolormap.labels    = {'No','Yes'};
+  invcolormap.values    = {0,1};
+  invcolormap.val       = {0};
+  invcolormap.help      = {'Use inverse colormap.' ''};
+ 
+  if expert>1
+    clims               = cfg_menu;
+    clims.name          = 'Data range';
+    clims.tag           = 'clims';
+    clims.labels        = {'MSD2','MSD4','MSD8','SD2','SD4','SD8','%99.5','%99','min-max','0-max'};
+    clims.values        = {'MSD2','MSD4','MSD8','SD2','SD4','SD8','%99.5','%99','min-max','0-max'};
+    clims.val           = {'MSD4'};
+    clims.help          = {'Define normalized datarange' ''};
+  end
+  
+  render                = cfg_exbranch;
+  render.tag            = 'render';
+  render.name           = 'Render options';
+  if expert>1
+    render.val          = {surface,view,texture,transparency,colormap,invcolormap,colorbar,background,clims,showfilename};  
+  else
+    render.val          = {surface,view,texture,transparency,colormap,invcolormap,colorbar,background,showfilename};  
+  end
+  render.prog           = @cat_surf_results;
+  render.help           = {'Rendering options for the surface output.'};  
+  
+  
+  % == stat ==
+  threshold             = cfg_menu;
+  threshold.name        = 'Threshold';
+  threshold.tag         = 'threshold';
+  threshold.labels      = {'No threshold', 'P<0.05', 'P<0.01', 'P<0.001'};
+  threshold.values      = {0,1.3,2,3};
+  threshold.val         = {0};
+  threshold.help        = {'Define the threshold of statistical maps.' ''};
+  
+  hideNegRes            = cfg_menu;
+  hideNegRes.name       = 'Hide negative results';
+  hideNegRes.tag        = 'hide_neg';
+  hideNegRes.labels     = {'No','Yes'};
+  hideNegRes.values     = {0,1};
+  hideNegRes.val        = {0};
+  hideNegRes.help       = {'Do not show negative results.' ''};
+  
+  stat                  = cfg_exbranch;
+  stat.tag              = 'stat';
+  stat.name             = 'Statistical options';
+  stat.val              = {threshold,hideNegRes};  
+  stat.prog             = @cat_surf_results;
+  stat.help             = {'Further options for statistical maps.'};  
+  
+  
+  % == filename ==
+  outdir                = cfg_files;
+  outdir.tag            = 'outdir';
+  outdir.name           = 'Output directory';
+  outdir.filter         = 'dir';
+  outdir.ufilter        = '.*';
+  outdir.num            = [0 1];
+  outdir.help           = {'Select a directory where files are written. Empty writes in the directory of the input files.' ''};
+  outdir.val{1}         = {''};
+
+  prefix                = cfg_entry;
+  prefix.tag            = 'prefix';
+  prefix.name           = 'Filename prefix';
+  prefix.strtype        = 's';
+  prefix.num            = [0 Inf];
+  prefix.val            = {'render_'};
+  prefix.help           = {'Specify the string to be prepended to the filenames of the filtered image file(s). Default prefix is "".' ''};
+
+  suffix                = cfg_entry;
+  suffix.tag            = 'suffix';
+  suffix.name           = 'Filename suffix';
+  suffix.strtype        = 's';
+  suffix.num            = [0 Inf];
+  suffix.val            = {''};
+  suffix.help           = {'Specify the string to be appended to the filenames of the filtered image file(s). Default suffix is "".' ''};
+  
+  fparts                = cfg_exbranch;
+  fparts.tag            = 'fparts';
+  fparts.name           = 'Filename';
+  fparts.val            = {outdir,prefix,suffix};  
+  fparts.prog           = @cat_surf_results;
+  fparts.help           = {'Define output directory and prefix and suffix.'};  
+  
+  
+  % == main ==
+  renderresults         = cfg_exbranch;
+  renderresults.tag     = 'renderresults';
+  renderresults.name    = 'Render result data';
+  renderresults.val     = {cdata,render,stat,fparts};  
+  renderresults.prog    = @(job) cat_surf_results('batch',job);
+  renderresults.vout    = @(job) vout_cat_surf_results(job);
+  renderresults.help    = {'CAT result render function for automatic result image export.' ''};
 
 %==========================================================================
-function dep = vout_surf_resamp(job)
+% dependency functions
+%==========================================================================  
+function dep = vout_vol2surf(job)
+%%
 
-if job.merge_hemi
+  if isfield(job,'merge_hemi') && job.merge_hemi
+    dep(1)            = cfg_dep;
+    dep(1).sname      = 'Mapped values';
+    dep(1).src_output = substruct('.','mesh');
+    dep(1).tgt_spec   = cfg_findspec({{'filter','mesh','strtype','e'}});
+  else
+    dep(1)            = cfg_dep;
+    dep(1).sname      = 'Left mapped values';
+    dep(1).src_output = substruct('.','lh');
+    dep(1).tgt_spec   = cfg_findspec({{'filter','mesh','strtype','e'}});
+    dep(2)            = cfg_dep;
+    dep(2).sname      = 'Right mapped values';
+    dep(2).src_output = substruct('.','rh');
+    dep(2).tgt_spec   = cfg_findspec({{'filter','mesh','strtype','e'}});
+  end
+  
+%==========================================================================
+function dep = vout_cat_surf_results(job)
+%% 
+
   dep(1)            = cfg_dep;
-  dep(1).sname      = 'Merged Resample & Smooth';
-  dep(1).src_output = substruct('()',{1}, '.','Psdata','()',{':'});
-  dep(1).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-else
-  dep(1)            = cfg_dep;
-  dep(1).sname      = 'Left Resample & Smooth';
-  dep(1).src_output = substruct('()',{1}, '.','lPsdata','()',{':'});
-  dep(1).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-  dep(2)            = cfg_dep;
-  dep(2).sname      = 'Right Resample & Smooth';
-  dep(2).src_output = substruct('()',{1}, '.','rPsdata','()',{':'});
-  dep(2).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-end
+  dep(1).sname      = 'Rendered surface data';
+  dep(1).src_output = substruct('()',{1},'.','png','()',{':'});
+  dep(1).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
 
-%==========================================================================
+%==========================================================================  
 function dep = vout_surfextract(job)
 
 measures = { % para-field , para-subfield , para-val , output-var, [left|right] dep-var-name 
@@ -1390,14 +1541,14 @@ measures = { % para-field , para-subfield , para-val , output-var, [left|right] 
   'GIL'       ''      [1 4]  'iGI'            'inward-folding Laplacian-based GI'; 
   'GIL'       ''      [2 4]  'oGI'            'outward-folding Laplacian-based GI'; 
   'GIL'       ''      [3 4]  'gGI'            'generalized Laplacian-based GI'; 
+  ... 
+  'area'      ''      [1 2]  'area'           'surface area'; 
+  'gmv'       ''      [1 2]  'gmv'            'surface GM volume'; 
   ...
   'surfaces'  'IS'    1      'white'          'white matter surface';
   'surfaces'  'OS'    1      'pial'           'pial surface';
   'GIL'       'hull'  [1 4]  'hull'           'hull surface';
   'GIL'       'core'  [2 4]  'core'           'core surface';
-  ... 
-  'area'      ''      [1 2]  'area'           'surface area'; 
-  'gmv'       ''      [1 2]  'gmv'            'surface GM volume'; 
   };
 sides = {
   'l' 'Left';
@@ -1431,187 +1582,149 @@ for si=1:size(sides,1)
 end
 if ~exist('dep','var'), dep = cfg_dep; end
 
+%==========================================================================
+function dep = vout_surf_surf2roi(job) %#ok<INUSD>
 
-function renderresults = cat_surf_results_GUI
-%  Batch mode for cat_surf_results function. 
-
-%  render results
-%  ---------------------------------------------------------------------
-  rdata                = cfg_files;
-  rdata.tag            = 'rdata';
-  rdata.name           = 'Template surface data files';
-  rdata.filter         = 'mesh';
-  rdata.ufilter        = '.*';
-  rdata.num            = [1 Inf];
-  rdata.help           = {'Select resampled surface data. ' ''};
-  
-  
-  % == render options ==
-  surface              = cfg_menu;
-  surface.name         = 'Render surface';
-  surface.tag          = 'surface';
-  surface.labels       = {'Central','Inflated','Dartel','Flatmap'};
-  surface.values       = {1,2,3,4};
-  surface.val          = {1};
-  surface.help         = {'Select on which average surface the data should be projected. ' ''};
-
-  texture              = cfg_menu;
-  texture.name         = 'Surface underlay texture';
-  texture.tag          = 'texture';
-  texture.labels       = {'Mean curvature', 'Sulcal depth'};
-  texture.values       = {1,2};
-  texture.val          = {1};
-  texture.help         = {'Select a underlaying surface texture to illustrate the cortical folding pattern by mean curvature or sulcal depth.' ''};
-  
-  transparency         = cfg_menu;
-  transparency.name    = 'Transparency';
-  transparency.tag     = 'transparency';
-  transparency.labels  = {'No', 'Yes'};
-  transparency.values  = {0,1};
-  transparency.val     = {1};
-  transparency.help    = {'Select a underlaying surface texture to illustrate the cortical folding pattern by mean curvature or sulcal depth.' ''};
-  
-  view                  = cfg_menu;
-  view.name             = 'Render view';
-  view.tag              = 'view';
-  view.labels           = {'Show top view', 'Show bottom view', 'Show only lateral and medial views'};
-  view.values           = {1,-1,2};
-  view.val              = {1};
-  view.help             = {'Select diffent types of surface views. The "top view"/"bottom view" shows later and medial view of the left and right hemisphere and the top/bottom view in middle. The view option has no effect in case of flatmaps.' ''};
-  
-  colormap              = cfg_menu;
-  colormap.name         = 'Colormap';
-  colormap.tag          = 'colormap';
-  colormap.labels       = {'jet', 'hot', 'hsv', 'cold-hot'};
-  colormap.values       = {1,2,3,4};
-  colormap.val          = {1};
-  colormap.help         = {'Select the colormap for data visualisation.' ''};
-  
-  background            = cfg_menu;
-  background.name       = 'Background color';
-  background.tag        = 'background';
-  background.labels     = {'White','Black'};
-  background.values     = {1,2};
-  background.val        = {1};
-  background.help       = {'Select the color of the background.' ''};
-
-  showfilename          = cfg_menu;
-  showfilename.name     = 'Show filename';
-  showfilename.tag      = 'showfilename';
-  showfilename.labels   = {'No','Yes'};
-  showfilename.values   = {0,1};
-  showfilename.val      = {1};
-  showfilename.help     = {'Print the filename at the top of the left and right hemishere.' ''};
-  
-  invcolormap           = cfg_menu;
-  invcolormap.name      = 'Inverse colormap';
-  invcolormap.tag       = 'invcolormap';
-  invcolormap.labels    = {'No','Yes'};
-  invcolormap.values    = {0,1};
-  invcolormap.val       = {0};
-  invcolormap.help      = {'Use inverse colormap.' ''};
-  
-  
-  render                = cfg_exbranch;
-  render.tag            = 'render';
-  render.name           = 'Render options';
-  render.val            = {surface,view,texture,transparency,colormap,invcolormap,background,showfilename};  
-  render.prog           = @cat_surf_results;
-  render.vout           = @vout_cat_surf_results;
-  render.help           = {'Rendering options for the surface output.'};  
-  
-  
-  % == stat ==
-  threshold             = cfg_menu;
-  threshold.name        = 'Threshold';
-  threshold.tag         = 'threshold';
-  threshold.labels      = {'No threshold', 'P<0.05', 'P<0.01', 'P<0.001'};
-  threshold.values      = {0,1.3,2,3};
-  threshold.val         = {0};
-  threshold.help        = {'Define the threshold of statistical maps.' ''};
-  
-  hideNegRes            = cfg_menu;
-  hideNegRes.name       = 'Hide negative results';
-  hideNegRes.tag        = 'hide_neg';
-  hideNegRes.labels     = {'No','Yes'};
-  hideNegRes.values     = {0,1};
-  hideNegRes.val        = {0};
-  hideNegRes.help       = {'Do not show negative results.' ''};
-  
-  stat                  = cfg_exbranch;
-  stat.tag              = 'stat';
-  stat.name             = 'Statistical options';
-  stat.val              = {threshold,hideNegRes};  
-  stat.prog             = @cat_surf_results;
-  stat.vout             = @vout_cat_surf_results;
-  stat.help             = {'Further options for statistical maps.'};  
-  
-  
-  % == filename ==
-  outdir                = cfg_files;
-  outdir.tag            = 'outdir';
-  outdir.name           = 'Output directory';
-  outdir.filter         = 'dir';
-  outdir.ufilter        = '.*';
-  outdir.num            = [0 1];
-  outdir.help           = {'Select a directory where files are written. Empty writes in the directory of the input files.' ''};
-  outdir.val{1}         = {''};
-
-  prefix                = cfg_entry;
-  prefix.tag            = 'prefix';
-  prefix.name           = 'Filename prefix';
-  prefix.strtype        = 's';
-  prefix.num            = [0 Inf];
-  prefix.val            = {''};
-  prefix.help           = {'Specify the string to be prepended to the filenames of the filtered image file(s). Default prefix is "".' ''};
-
-  suffix                = cfg_entry;
-  suffix.tag            = 'suffix';
-  suffix.name           = 'Filename suffix';
-  suffix.strtype        = 's';
-  suffix.num            = [0 Inf];
-  suffix.val            = {''};
-  suffix.help           = {'Specify the string to be appended to the filenames of the filtered image file(s). Default suffix is "".' ''};
-  
-  fparts                = cfg_exbranch;
-  fparts.tag            = 'fparts';
-  fparts.name           = 'Filename';
-  fparts.val            = {outdir,prefix,suffix};  
-  fparts.prog           = @cat_surf_results;
-  fparts.help           = {'Define output directory and prefix and suffix.'};  
-  
-  
-  % == main ==
-  renderresults         = cfg_exbranch;
-  renderresults.tag     = 'renderresults';
-  renderresults.name    = 'Render result data';
-  renderresults.val     = {rdata,render,stat,fparts};  
-  renderresults.prog    = @(job) cat_surf_results('batch',job);
-  renderresults.vout    = @(job) vout_cat_surf_results(job);
-  renderresults.help    = {'CAT result render function for automatic result image export.' ''};
-
+dep(1)            = cfg_dep;
+dep(1).sname      = 'Extracted Surface ROIs';
+dep(1).src_output = substruct('()',{1}, '.','xmlname','()',{':'});
+dep(1).tgt_spec   = cfg_findspec({{'filter','xml','strtype','e'}});
 
 %==========================================================================
-function dep = vout_vol2surf(job)
-
-if isfield(job,'merge_hemi') && job.merge_hemi
-  dep(1)            = cfg_dep;
-  dep(1).sname      = 'Mapped values';
-  dep(1).src_output = substruct('.','mesh');
-  dep(1).tgt_spec   = cfg_findspec({{'filter','mesh','strtype','e'}});
+function dep = vout_surf_resamp(job)
+if job.merge_hemi
+  depsfnames = 'hemispheres'; 
 else
-  dep(1)            = cfg_dep;
-  dep(1).sname      = 'Left mapped values';
-  dep(1).src_output = substruct('.','lh');
-  dep(1).tgt_spec   = cfg_findspec({{'filter','mesh','strtype','e'}});
-  dep(2)            = cfg_dep;
-  dep(2).sname      = 'Right mapped values';
-  dep(2).src_output = substruct('.','rh');
-  dep(2).tgt_spec   = cfg_findspec({{'filter','mesh','strtype','e'}});
+  depsfnames = 'hemisphere'; 
 end
 
-function dep = vout_cat_surf_results(job)
+if iscell(job.data_surf)
+  % multdata input
+  
+  for di = 1:numel(job.data_surf)
+    
+    % try to set a speicfic name of dependency objects
+    if isobject(job.data_surf{di}) 
+      ni = find(job.data_surf{di}.sname==':',1,'first');
+      if ~isempty(ni)
+        depsfnames = cat_io_strrep(job.data_surf{di}.sname(ni+1:end),{'Left'},{''}); 
+      else
+        depsfnames = cat_io_strrep(job.data_surf{di}.sname,{'Extract additional surface parameters:','Left'},{'',''});
+      end
+    end
+    
+    % create new dependency object
+    if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
+    if job.merge_hemi
+      dep(end).sname      = ['Merged' depsfnames];
+      dep(end).src_output = substruct('()',{1}, '.','Psdata','{}',{di},'()',{':'});
+      dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+    else
+      dep(end).sname      = ['Left' depsfnames];
+      dep(end).src_output = substruct('()',{1}, '.','lPsdata','()',{di},'()',{':'});
+      dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+      dep(end+1)          = cfg_dep; %#ok<AGROW>
+      dep(end).sname      = ['Right' depsfnames];
+      dep(end).src_output = substruct('()',{1}, '.','rPsdata','()',{numel(job.data_surf) + di},'()',{':'});
+      dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+    end
+  end
+  
+else
+  % single data input
+  
+  if iscell(job.data_surf) && iscell(job.data_surf{1})
+    for di = 1:numel(job.data_surf)
+      if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
+      if job.merge_hemi
+        dep(end).sname      = ['Merged' depsfnames];
+        dep(end).src_output = substruct('()',{1}, '.','Psdata','{}',{di},'()',{':'});
+        dep(end).src_output = substruct('()',{1}, '.','Psdata','.',sprintf('set%02d',di),'()',{':'});
+        dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+      else
+        dep(end).sname      = ['Left' depsfnames];
+        dep(end).src_output = substruct('()',{1}, '.','lPsdata','()',{di},'()',{':'});
+        dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+        dep(end+1)          = cfg_dep; %#ok<AGROW>
+        dep(end).sname      = ['Right' depsfnames];
+        dep(end).src_output = substruct('()',{1}, '.','rPsdata','()',{numel(job.data_surf) + di},'()',{':'});
+        dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+      end
+    end
+  end
+
+  if job.merge_hemi
+    dep(1)            = cfg_dep;
+    dep(1).sname      = ['Merged' depsfnames 's']; 
+    dep(1).src_output = substruct('()',{1}, '.','Psdata','()',{':'});
+    dep(1).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+  else
+    dep(1)            = cfg_dep;
+    dep(1).sname      = ['Left' depsfnames]; 
+    dep(1).src_output = substruct('()',{1}, '.','lPsdata','()',{':'});
+    dep(1).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+    dep(2)            = cfg_dep;
+    dep(2).sname      = ['Right' depsfnames]; 
+    dep(2).src_output = substruct('()',{1}, '.','rPsdata','()',{':'});
+    dep(2).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+  end
+end
+
+%==========================================================================  
+function dep = vout_cat_surf_calc(job)
+  % improve data description 
+  if isobject(job.cdata) 
+    % extract dependency information  
+    ni = find(job.cdata.sname==':',1,'first');
+    if ~isempty(ni)
+      ni = ni + find(job.cdata.sname(ni+1:end)~=' ',1,'first');
+      depsfnames = ['S=' job.cdata.sname(ni:end) '; ' job.expression]; 
+    end
+  else
+    % direct input
+    depsfnames = job.expression;
+  end
+
+  % create new dependency object
   dep(1)            = cfg_dep;
-  dep(1).sname      = 'Rendered surface data';
-  dep(1).src_output = substruct('()',{1},'.','png','()',{':'});
-  dep(1).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+  dep(1).sname      = depsfnames;
+  dep(1).src_output = substruct('()',{1}, '.','output','()',{':'});
+  dep(1).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+
+%==========================================================================  
+function dep = vout_cat_surf_calcsub(job)
+  depsfnames = job.expression; 
+  
+  for di = 1:numel(job.cdata)
+    
+    % extract dependency information  
+    if isobject(job.cdata{di}) 
+      ni = find(job.cdata{di}.sname==':',1,'first');
+      if ~isempty(ni)
+        ni = ni + find(job.cdata{di}.sname(ni+1:end)~=' ',1,'first');
+        depsfnames = ['S=' job.cdata{di}.sname(ni:end) '; ' job.expression]; 
+      end
+    else
+      % direct input
+      depsfnames = job.expression;
+    end
+    
+    % create new dependency object
+    if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
+    dep(end).sname      = depsfnames;
+    dep(end).src_output = substruct('()',{1}, '.','output','()',{di});
+    dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+  end
+  
+
+%==========================================================================  
+function dep = vout_cat_surf_flipsides(job)
+ 
+
+  dep(1)            = cfg_dep;
+  dep(1).sname      = 'Flipside';
+  dep(1).src_output = substruct('()',{1}, '.','files','()',{':'});
+  dep(1).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+
+%==========================================================================  
+
