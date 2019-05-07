@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1462 | dahnke | 2019-05-07 17:50:40
+r1463 | dahnke | 2019-05-07 18:01:59
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_results.m
+
+(1) Fixed:   Corrected bug in cat_surf_results.
+------------------------------------------------------------------------
+r1462 | dahnke | 2019-05-07 17:51:06 +0200 (Di, 07 Mai 2019) | 24 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -24,6 +32,7 @@ M       cat_vol_slice_overlay.m
                  and cat_stat_analyze_ROIs, cat_vol_slice_overlay.
 (6) New:         Added histogram output functions in cat_surf_results. 
                  
+
 ------------------------------------------------------------------------
 r1461 | gaser | 2019-05-03 14:10:21 +0200 (Fr, 03 Mai 2019) | 6 lines
 
