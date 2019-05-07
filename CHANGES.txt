@@ -1,11 +1,38 @@
 ------------------------------------------------------------------------
-r1461 | gaser | 2019-05-03 14:10:17
+r1462 | dahnke | 2019-05-07 17:50:40
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       cat_parallelize.m
+M       cat_stat_analyze_ROIs.m
+M       cat_surf_calc.m
+M       cat_surf_flipsides.m
+M       cat_surf_render2.m
+M       cat_surf_resamp.m
+M       cat_surf_results.m
+M       cat_vol_slice_overlay.m
+
+(1) Changed:     Reorganization of the cat_conf_stools and cat_conf_tools
+                 files by creating sub-functions for each batch. 
+(2) Changed:     Updated documentation of cat_surf_flip. 
+(3) Changed:     Switched to sample input in cat_surf_resamp. 
+(4) Changed:     Added batch outputs for cat_surf_calc(sub) and added
+                 possibility to create average data of multiple subjects.
+(5) Fixed:       Corrected tiny bugs in cat_parallelize, cat_surf_render2, 
+                 and cat_stat_analyze_ROIs, cat_vol_slice_overlay.
+(6) New:         Added histogram output functions in cat_surf_results. 
+                 
+------------------------------------------------------------------------
+r1461 | gaser | 2019-05-03 14:10:21 +0200 (Fr, 03 Mai 2019) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_surf_calc.m
 
 Fixed: Replaced use of "contains" by strfind to be compatible to older versions.
+
 ------------------------------------------------------------------------
 r1460 | gaser | 2019-05-03 14:09:17 +0200 (Fr, 03 Mai 2019) | 15 lines
 
