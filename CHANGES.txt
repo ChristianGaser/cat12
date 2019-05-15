@@ -1,11 +1,64 @@
 ------------------------------------------------------------------------
-r1463 | dahnke | 2019-05-07 18:01:59
+r1464 | dahnke | 2019-05-15 09:31:36
+
+Changed paths:
+M       CHANGES.txt
+A       cat_conf_catsimple.m
+M       cat_conf_long.m
+M       cat_conf_output.m
+M       cat_long_main.m
+M       cat_long_multi_run.m
+M       cat_run.m
+A       cat_run1445
+A       cat_run1445/cat_conf_ROI1445.m
+A       cat_run1445/cat_conf_extopts1445.m
+A       cat_run1445/cat_conf_long1445.m
+A       cat_run1445/cat_conf_opts1445.m
+A       cat_run1445/cat_defaults1445.m
+A       cat_run1445/cat_get_defaults1445.m
+A       cat_run1445/cat_long_main1445.m
+A       cat_run1445/cat_long_multi_run1445.m
+A       cat_run1445/cat_main1445.m
+A       cat_run1445/cat_main_LAS1445.m
+A       cat_run1445/cat_main_gcut1445.m
+A       cat_run1445/cat_main_registration1445.m
+A       cat_run1445/cat_run1445.m
+A       cat_run1445/cat_run_job10701445.m
+A       cat_run1445/cat_run_job1445.m
+A       cat_run1445/cat_run_job_APP_init10701445.m
+A       cat_run1445/cat_run_newcatch1445.m
+A       cat_run1445/cat_surf_createCS1445.m
+A       cat_run1445/cat_vol_partvol1445.m
+A       cat_run1445/cat_vol_sanlm1445.m
+M       cat_surf_parameters.m
+M       cat_version.m
+A       html/cat_methods_catsimple.html
+A       html/images/cat_methods_catsimple.png
+A       internal/cat_admin_create_estwrite_version.m
+M       tbx_cfg_cat.m
+
+(1) New:    Added parameter for output of tissue class 4 to 6 on the experts GUI.
+(2) New:    Added batch dependencies for catreport pdf, catreport jpg and catlog.txt
+            in tbx_cfg_cat and cat_run.
+(3) Fixed:  Small corrections in cat_run for developer parameters.         
+(4) New:    Added stable subversion of the preprocessing (1445) and the internal  
+            script cat_admin_create_estwrite_version that creates it. 
+(5) New:    Added cat_simple batch and function. 
+(6) New:    Added parameter and dependency for cat_simple batch in cat_long_main, 
+            cat_long_multi_run and cat_conf_long.   
+(7) Fixed:  Create output in cat_surf_parameters even if no measure is selected. 
+(8) New:    Added date variable to the output of cat_version.
+          
+
+------------------------------------------------------------------------
+r1463 | dahnke | 2019-05-07 18:02:24 +0200 (Di, 07 Mai 2019) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_surf_results.m
 
 (1) Fixed:   Corrected bug in cat_surf_results.
+
 ------------------------------------------------------------------------
 r1462 | dahnke | 2019-05-07 17:51:06 +0200 (Di, 07 Mai 2019) | 24 lines
 

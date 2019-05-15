@@ -1,6 +1,7 @@
-function [CATrel, CATver]  = cat_version(varargin)
+function [CATrel, CATver, CATdate]  = cat_version(varargin)
 % check for CAT revision
 %
+% FORMAT [CATrel, CATver, CATdata] = cat_version
 % FORMAT [CATrel, CATver] = cat_version
 % FORMAT CATver = cat_version % short version
 % FORMAT cat_version('[ss]fnbanner'[,str,ver]) % display banner
@@ -34,7 +35,8 @@ if isempty(CAT_VER)
         v.Version = t{2};
         v.Release = t{3}(2:end-1);
         %v.User    = 'gaser';
-        
+    end
+    try 
         %% v2 based on the CHANGES.txt
         vfile = fullfile(spm('Dir'),'toolbox','cat12','CHANGES.txt');
         if exist(vfile,'file')
@@ -93,5 +95,6 @@ switch Action
     fprintf('%s',repmat(lch,1,wid)),fprintf('\n')
 end
 
-CATrel = v.Release;
-CATver = v.Version;
+CATrel  = v.Release;
+CATver  = v.Version;
+CATdate = v.Date;

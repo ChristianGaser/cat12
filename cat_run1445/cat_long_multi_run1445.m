@@ -2,7 +2,7 @@ function out = cat_long_multi_run(job)
 % Call cat_long_main for multiple subjects
 %
 % Christian Gaser
-% $Id$
+% $Id: cat_long_multi_run.m 1435 2019-03-06 11:24:38Z dahnke $
 
 global opts extopts output modulate dartel delete_temp ROImenu surfaces
 
@@ -27,20 +27,12 @@ jobs = repmat({'cat_long_main.m'}, 1, numel(job.subj));
 inputs = cell(1, numel(job.subj));
 
 if cat_get_defaults('extopts.subfolders')
-  mrifolder    = 'mri';
-  surffolder   = 'surf';
-  labelfolder  = 'label';
-  reportfolder = 'report';
+  mrifolder = 'mri';
 else
-  mrifolder    = '';
-  surffolder   = ''; 
-  labelfolder  = '';
-  reportfolder = ''; 
+  mrifolder = '';
 end
 
-out.surf = cell(''); out.thick = cell(''); out.mwp1 = cell('');
-out.catreport = cell(''); out.catroi = cell('');
-for i=1:numel(job.subj)
+for i=1:numel(job.subj),
 		out.sess(i).warps = cell(1,1);
 		[pth,nam,ext,num] = spm_fileparts(job.subj(i).mov{1});
 		out.sess(i).warps{1} = fullfile(pth,mrifolder,['avg_y_', nam, ext, num]);
@@ -59,17 +51,9 @@ for i=1:numel(job.subj)
           out.sess(i).files{j} = fullfile(pth,mrifolder,['m0wp1r', nam, ext, num]);
         end
         data{j} = job.subj(i).mov{j};
-    
-        out.mwp1      = [out.mwp1       fullfile(pth,mrifolder   ,['mwp1r'          nam ext num])]; 
-        out.surf      = [out.surf       fullfile(pth,surffolder  ,['lh.central.r'   nam '.gii'])]; 
-        out.thick     = [out.thick      fullfile(pth,surffolder  ,['lh.thickness.r' nam])]; 
-        out.catreport = [out.catreport  fullfile(pth,reportfolder,['cat_r'          nam '.xml'])]; 
-        out.catroi    = [out.catroi     fullfile(pth,labelfolder ,['catROI_r'       nam '.xml'])]; 
-        
     end
     inputs{1,i} = data;
-    
-end
+end;
 
 
 % split job and data into separate processes to save computation time
