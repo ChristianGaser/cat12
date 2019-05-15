@@ -2,7 +2,7 @@ function varargout = cat_conf_long(varargin)
 % Configuration file for longitudinal data
 %
 % Christian Gaser
-% $Id$
+% $Id: cat_conf_long.m 1443 2019-03-21 15:15:33Z gaser $
 
 newapproach = 0; 
 
@@ -163,7 +163,7 @@ else
   ROI       = output.val{2}; 
   output.val(2:end) = [];
   long.val  = {esubjs,nproc,opts,extopts,output,ROI,modulate,dartel};
-  long.vout = @(job) vout_long(job);
+  long.vout = @vout_long;
 end
 long.prog = @cat_long_multi_run;
 
@@ -191,41 +191,6 @@ for k=1:numel(job.subj)
         dep = [dep cdep];
     end
 end;
-% add all surface/thickness files! of all timepoints and all subjects
-if job.output.surface
-    for k=1:numel(job.subj)
-        dep(end+1)          = cfg_dep;
-        dep(end).sname      = 'mwp1 Images';
-        dep(end).src_output = substruct('.','mwp1','()',{':'});
-        dep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-    end
-    for k=1:numel(job.subj)
-        dep(end+1)          = cfg_dep;
-        dep(end).sname      = 'Left Central Surfaces';
-        dep(end).src_output = substruct('.','surf','()',{':'});
-        dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-    end
-    for k=1:numel(job.subj)
-        dep(end+1)          = cfg_dep;
-        dep(end).sname      = 'Left Thickness';
-        dep(end).src_output = substruct('.','thick','()',{':'});
-        dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
-    end
-    for k=1:numel(job.subj)
-        dep(end+1)          = cfg_dep;
-        dep(end).sname      = 'CAT Report';
-        dep(end).src_output = substruct('.','catreport','()',{':'});
-        dep(end).tgt_spec   = cfg_findspec({{'filter','xml','strtype','e'}});
-    end
-    for k=1:numel(job.subj)
-        dep(end+1)          = cfg_dep;
-        dep(end).sname      = 'ROI XML File';
-        dep(end).src_output = substruct('.','catroi','()',{':'});
-        dep(end).tgt_spec   = cfg_findspec({{'filter','xml','strtype','e'}});
-    end
-end
-
-
 %------------------------------------------------------------------------
 
 %------------------------------------------------------------------------

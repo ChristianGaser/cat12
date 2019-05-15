@@ -329,4 +329,5 @@ function varargout = cat_surf_parameters(job)
   end
   spm_progress_bar('Clear');  
   
+  if nargout && ~exist('varargout','var'),  varargout{1} = struct(''); end
 end

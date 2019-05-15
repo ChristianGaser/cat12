@@ -1,19 +1,16 @@
 %-----------------------------------------------------------------------
 % Job for longitudinal batch
 % Christian Gaser
-% $Id$
+% $Id: cat_long_main.m 1444 2019-03-22 14:30:35Z gaser $
 %-----------------------------------------------------------------------
 
 global opts extopts output modulate dartel delete_temp ROImenu surfaces cat
 
 write_CSF = cat_get_defaults('output.CSF.mod') > 0;
 
-if isfield(extopts,'admin') && isfield(extopts.admin,'lazy') && extopts.admin.lazy
-  cat12('developer');
-elseif write_CSF 
-  cat12('expert');
+if write_CSF
+  cat12('expert')
 end
-
 
 warning('off','MATLAB:DELETE:FileNotFound');
 matlabbatch{1}.spm.tools.cat.tools.series.data = '<UNDEFINED>';
@@ -38,7 +35,7 @@ end
 
 % surface estimation
 if surfaces
-  matlabbatch{2}.spm.tools.cat.estwrite.output.surface = surfaces;
+  matlabbatch{2}.spm.tools.cat.estwrite.output.surface = 1;
 else
   matlabbatch{2}.spm.tools.cat.estwrite.output.surface = 0;
 end
