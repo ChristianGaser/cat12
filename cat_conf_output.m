@@ -316,7 +316,7 @@ function [output,output_spm,output1173] = cat_conf_output(expert)
   if expert==2
     output.val  = {surface ROI grey white csf gmt wmh sl tpmc atlas label bias las jacobianwarped warps}; 
   elseif expert==1
-    output.val  = {surface ROI grey white csf wmh sl atlas label bias las jacobianwarped warps};
+    output.val  = {surface ROI grey white csf wmh sl tpmc atlas label bias las jacobianwarped warps};
   else
     output.val  = {surface ROI grey white labelnative bias jacobianwarped warps};
   end
