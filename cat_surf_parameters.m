@@ -47,14 +47,15 @@ function varargout = cat_surf_parameters(job)
   def.GI          = 0; % estimate absolute mean curvature
   def.FD          = 0; % estimate fractal dimension (Yotter:2012)
   def.SD          = 0; % estimate sulcal depth
+  % implemented but under test
+  def.area        = 0; % estimate area
+  def.gmv         = 0; % cortical volume
   % experimental measures (cat_get_defaults('extopts.expertgui'))
   % def.GIL         = 0; % defined below due to numeric/structure definion
   % further surfaces
   def.surfaces.IS = 0; % create inner surface 
   def.surfaces.OS = 0; % create outer surface
-  % not implemented
-  def.area        = 0; % estimate area (not implemented)
- 
+  
   job = cat_io_checkinopt(job,def);
   
   % estimate Laplacian-based gyrification index (including inward, outward, and generalized GI) 
@@ -219,7 +220,7 @@ function varargout = cat_surf_parameters(job)
       %  These approaches are still in development. 
       %  See cat_surf_gyrification for further information.
       %  ------------------------------------------------------------------
-      if ( isnumeric(job.GIL) && job.GIL ) || job.GIL.GIL
+      if ( isnumeric(job.GIL) && job.GIL ) || ( isstruct(job.GIL) && job.GIL.GIL )
         %% gyrification index based on laplacian GI
         if isnumeric(job.GIL) % default user mode only support default values  
           GIL    = job.GIL;
