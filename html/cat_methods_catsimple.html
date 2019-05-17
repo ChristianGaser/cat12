@@ -28,15 +28,19 @@
       
       <p>CAT simple is a batch that contains a fully standardized cross-sectional/longitudinal CAT preprocessing that prepare your data for voxel- (VBM), surface- (SBM) and region-based morphometry analysis (RBM).  It classifies the GM and WM brain tissue (segmentation) and maps them to the template space (spacial registration), where it is smoothed with 4, 8, and 12 mm (see <i>MRI</i> subdirectory).  Next the central cortical surface is reconstructed and cortical measures were estimated (such as thickness, area, volume, and gyrification), registered to the template surface (spherical registration) and smoothed 6, 12, and 24 mm (see <i>surf</i> subdirectory).  For region-of-interest (ROI) analysis the volumetric Neuromorphometrics and surface-based Desikan atlas are applied (see <i>label</i> subdirectory).  
       </p><p>
+<!--
 Additional volumes (e.g., preprocessed fMRI data) can be entered and will be co-registered to the template space and average for each volume ROI.  In case of surface processing, the co-registered data is projected to the central surface and filtered or averaged per surface ROI. 
       </p><p>
+-->
 Keep in mind to use only one level of smoothing that fits to the expected effect (recommend) or otherwise to correct for multiple comparison.  If non of these filter rates fit, you can apply the 
 <a class="function" href="matlab:spm_jobman('interactive','','spm.spatial.smooth');">volumetric SPM smoothing</a> 
-on the RAW images '^mwp.*' in the <i>mri</i> directory or the 
+on the RAW images '^wmp.*' in the <i>mri</i> directory or the 
 <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfresamp');">CAT surface smoothing</a>
 for the RAW surface data '^lh.thickness', '^lh.curvature', etc. in the <i>surf</i> directory. 
       </p><p>
+<!--
 Moreover, statistical nuisance parameter such as total intracranial volume (TIV) and total surface area (TSA) were estimated (see report directory). 
+-->
       </p>
       <p style="text-align:center;"><img src="images/cat_methods_catsimple.png" width=100% height=auto alt="CAT simple preprocessing batch" ><br>Data flow of the CAT simple batch that combines multiple standardized preprocessing batches of CAT. </p>
     </div>

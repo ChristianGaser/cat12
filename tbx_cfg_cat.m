@@ -216,9 +216,9 @@ cat.tag    = 'cat';
 if expert==2
   cat.values = {estwrite estwrite_spm estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools };
 elseif expert==1
-  cat.values = {estwrite estwrite_spm catsimple catsimple_long tools stools};
+  cat.values = {estwrite estwrite_spm estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools};
 else
-  cat.values = {estwrite catsimple catsimple_long tools stools}; 
+  cat.values = {estwrite estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools}; 
 end
 %------------------------------------------------------------------------
 

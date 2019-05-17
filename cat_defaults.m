@@ -243,6 +243,27 @@ cat.extopts.atlas       = { ...
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','anatomy.nii')             1      {'gm','wm'}         0; ... % ROIs requires further work >> use Anatomy toolbox
 }; 
 
+% { name fileid GUIlevel use } - in development
+cat.extopts.satlas      = { ... 
+  'Desikan'                'aparc_a2009s'                              0   1;  
+  'HCP'                    'aparc_HCP_MMP1'                            0   1; 
+  'Destrieux'              'aparc_DK40'                                0   0;  
+  ... many Schaefer atlases ...
+  'Schaefer2018_100P_7N'   'Schaefer2018_100Parcels_7Networks_order'   1   0; 
+  'Schaefer2018_100P_17N'  'Schaefer2018_100Parcels_17Networks_order'  1   0; 
+  'Schaefer2018_200P_7N'   'Schaefer2018_200Parcels_7Networks_order'   0   0; % as default?
+  'Schaefer2018_200P_17N'  'Schaefer2018_200Parcels_17Networks_order'  0   0; % as default?
+  'Schaefer2018_400P_7N'   'Schaefer2018_400Parcels_7Networks_order'   1   0; 
+  'Schaefer2018_400P_17N'  'Schaefer2018_400Parcels_17Networks_order'  1   0; 
+  'Schaefer2018_600P_7N'   'Schaefer2018_600Parcels_7Networks_order'   1   0; 
+  'Schaefer2018_600P_17N'  'Schaefer2018_600Parcels_17Networks_order'  1   0; 
+  'Schaefer2018_800P_7N'   'Schaefer2018_800Parcels_7Networks_order'   0   0; % as default?
+  'Schaefer2018_800P_17N'  'Schaefer2018_800Parcels_17Networks_order'  0   0; % as default?
+  'Schaefer2018_1000P_7N'  'Schaefer2018_1000Parcels_7Networks_order'  1   0; 
+  'Schaefer2018_1000P_17N' 'Schaefer2018_1000Parcels_17Networks_order' 1   0; 
+}; 
+
+
 
 %=======================================================================
 % PRIVATE PARAMETER (NOT FOR GENERAL USE)

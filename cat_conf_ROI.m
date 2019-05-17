@@ -1,4 +1,4 @@
-function ROI = cat_conf_ROI(expert)
+function [ROI,sROI] = cat_conf_ROI(expert)
 %_______________________________________________________________________
 % wrapper for calling CAT ROI options
 %_______________________________________________________________________
@@ -160,3 +160,89 @@ for ali=1:numel(atlaslist)
   end
 end
  
+
+
+%% ------------------------------------------------------------------------
+% Surface Atalases
+% RD 20190416
+%------------------------------------------------------------------------
+
+nosROI        = cfg_branch;
+nosROI.tag    = 'noROI';
+nosROI.name   = 'No sROI processing';
+nosROI.help   = {'No surface ROI processing'};
+
+exatlas  = cat_get_defaults('extopts.satlas'); 
+matlas = {}; mai = 1; atlaslist = {}; 
+for ai = 1:size(exatlas,1)
+  afile = char(cat_vol_findfiles( fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces') , ['lh.' exatlas{ai,2} '*.annot'] ));
+  if exatlas{ai,3}<=expert && ~isempty(afile)
+    [pp,ff]  = spm_fileparts( afile ); 
+    name = exatlas{ai,1}; 
+
+    % if output.atlases.ff does not exist then set it by the default file value
+    if isempty(cat_get_defaults(['output.satlases.' name]))
+      cat_get_defaults(['output.atlases.' ff], exatlas{ai,4})
+    end
+    atlaslist{end+1,1} = name; 
+
+    matlas{mai}        = cfg_menu;
+    matlas{mai}.tag    = name;
+    matlas{mai}.name   = name; 
+    matlas{mai}.labels = {'No','Yes'};
+    matlas{mai}.values = {0 1};
+    matlas{mai}.def    = eval(sprintf('@(val) cat_get_defaults(''output.atlases.%s'', val{:});',ff)); 
+    
+    txtfile = fullfile(pp,[name '.txt']);
+    if exist(txtfile,'file')
+      fid = fopen(txtfile,'r');
+      txt = textscan(fid,'%s','delimiter','\n');
+      fclose(fid);
+      matlas{mai}.help   = [{ 
+        'Processing flag of this atlas map.'
+        ''
+        }
+        txt{1}];
+    else
+      matlas{mai}.help   = {
+        'Processing flag of this atlas map.'
+        ''
+        ['No atlas readme text file "' txtfile '"!']
+      };
+    end
+    mai = mai+1; 
+  else
+    name = exatlas{ai,1}; 
+    
+    if ~isempty(cat_get_defaults(['output.atlases.' name]))
+      cat_get_defaults(['output.atlases.' name],'rmfield');
+    end
+  end
+end
+
+satlases          = cfg_branch;
+satlases.tag      = 'satlases';
+satlases.name     = 'Surface atlases';
+satlases.val      = matlas;
+satlases.help     = {'Writing options of surface ROI atlas maps.'
+''
+};
+
+
+sROI        = cfg_choice;
+sROI.tag    = 'sROImenu';
+sROI.name   = 'Surface ROI analysis';
+if cat_get_defaults('output.surface')>0 && cat_get_defaults('output.ROI')>0
+  sROI.val  = {satlases};
+else
+  sROI.val  = {nosROI};
+end
+sROI.values = {nosROI satlases};
+sROI.help   = {
+'Export of ROI data of volume to a xml-files. '
+'For further information see atlas specific text files in "templates_1.50mm" CAT12 subdir. '
+''
+'For thickness estimation the projection-based thickness (PBT) [Dahnke:2012] is used that average cortical thickness for each GM voxel. '
+''
+'There are different atlas maps available: '
+}; 

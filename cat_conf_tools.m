@@ -104,8 +104,8 @@ function tools = cat_conf_tools(expert)
   headtrimming                = cat_vol_headtrimming_GUI(intlim,spm_type,prefix,suffix,expert);
   check_SPM                   = cat_stat_check_SPM_GUI; 
   showslice                   = cat_stat_showslice_all_GUI(data_vol);
-  maskimg                     = cat_vol_maskimage(data,prefix);
-  calcvol                     = cat_stat_TIV;
+  maskimg                     = cat_vol_maskimage_GUI(data,prefix);
+  calcvol                     = cat_stat_TIV_GUI;
   spmtype                     = cat_io_volctype_GUI(data,intlim,spm_type,prefix,suffix,expert);
   calcroi                     = cat_roi_fun_GUI(outdir);
   avg_img                     = cat_vol_average_GUI(data,outdir);
@@ -113,7 +113,9 @@ function tools = cat_conf_tools(expert)
   sanlm                       = cat_vol_sanlm_GUI(data,intlim,spm_type,prefix,suffix,expert);
   urqio                       = cat_vol_urqio_GUI;
   long                        = cat_conf_long;
-  iqr                         = cat_stat_IQR(data_xml);
+  long1173                    = cat_conf_long1173;
+  long1445                    = cat_conf_long1445;
+  iqr                         = cat_stat_IQR_GUI(data_xml);
   %qa                         = cat_vol_qa_GUI(data);
   
   
@@ -144,6 +146,8 @@ function tools = cat_conf_tools(expert)
     ...
     realign, ...                          cat.pre.long.?
     long, ...                             cat.pre.long.?
+    long1173, ...
+    long1445, ...
     ...
     nonlin_coreg, ...                     cat.pre.vtools.
     defs, ...                             cat.pre.vtools.
@@ -155,7 +159,7 @@ function tools = cat_conf_tools(expert)
   end
 return
 
-function iqr = cat_stat_IQR(data_xml)
+function iqr = cat_stat_IQR_GUI(data_xml)
 %  ------------------------------------------------------------------------
   iqr_name         = cfg_entry;
   iqr_name.tag     = 'iqr_name';
@@ -666,7 +670,7 @@ function headtrimming = cat_vol_headtrimming_GUI(intlim,spm_type,prefix,suffix,e
   };
 return
 
-function maskimg = cat_vol_maskimage(data,prefix)
+function maskimg = cat_vol_maskimage_GUI(data,prefix)
 %------------------------------------------------------------------------
  
   % update input variables
@@ -1418,7 +1422,7 @@ function check_SPM = cat_stat_check_SPM_GUI
   check_SPM.help              = {'Use design matrix saved in SPM.mat to check for sample homogeneity of the used data and for orthogonality of parameters.'};
 
 %_______________________________________________________________________
-function calcvol = cat_stat_TIV
+function calcvol = cat_stat_TIV_GUI
   calcvol_name         = cfg_entry;
   calcvol_name.tag     = 'calcvol_name';
   calcvol_name.name    = 'Output file';

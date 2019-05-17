@@ -83,212 +83,230 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
     'If you have a variing number of timepoints you have to use the subject mode where you have to define the files of each subject. ']
   }; 
 
+
+  if expert>1
+    % additional modalities
+    % ---------------------------------------------------------------------
+    % This is just the basic concept to support handling of further 
+    % modalities in future! The different setting may require to use 
+    % multiple mod-type fields for task-bask / resting-state fMRI and 
+    % GM- / WM-focused sMRI data to make allow the users to select the
+    % best fitting case. However a super mod that support more options
+    % is maybe also useful (at least for experts). However, do not forget
+    % that this has to be as simplest as possible!
+    % For most modalities we furst have to develop a general analyse
+    % scheme.
+    % 
+    % mod
+    %  - [rs|tb]-frmi with non-linear coreg
+    %    - name
+    %    - source
+    %    - images
+    %  - smri with coreg
+    %    - name
+    %    - masking
+    %    - images
+    %  - smri without coreg
+    %    - name
+    %    - masking
+    %    - images
+    % ---------------------------------------------------------------------
+    mname             = cfg_entry;
+    mname.tag         = 'name';
+    mname.name        = 'Name';
+    mname.strtype     = 's';
+    mname.num         = [0 20];
+    mname.val         = {'MRI'};
+    mname.help        = {
+     ['Name identifier of this modality use for volumes (e.g., "[s#]mwMRI*.nii") and ' ...
+      'surface data (e.g., "[s#mm.mesh.]MRI.*[.gii]") and ROIs (e.g. "MRI").']
+      ''
+    };
+
+    fname             = mname;
+    fname.val         = {'fMRI'};
+    fname.help        = strrep(fname.help,'MRI',fname.val{1});
+
+    sname             = mname;
+    sname.val         = {'sMRI'};
+    sname.help        = strrep(fname.help,'MRI',fname.val{1});
+
+    mdata             = data; 
+    mdata.tag         = 'data';
+    mdata.name        = 'Data';
+    mdata.help        = {'Specify the same number and order of subjects for each additional image modality'};
+
+
+    % -- masking --
+    maskth            = cfg_entry;
+    maskth.tag        = 'maskth'; 
+    maskth.name       = 'Threshold for masking';
+    maskth.strtype    = 'r';
+    maskth.num        = [1 1];
+    maskth.val        = {0.5};
+    maskth.help       = {'Percentual level for tissue masking, where 0.80 means that the value has to belong to the tissue glass in 80% of the subjects.';''}; 
+
+    none              = cfg_branch;
+    none.tag          = 'none';
+    none.name         = 'No masking';
+    none.help         = {'Use no tissue for masking of VBM data and volume ROIs.'};
+
+    gmmask            = cfg_branch;
+    gmmask.tag        = 'gm';
+    gmmask.name       = 'Masking by GM tissue';
+    gmmask.val        = {maskth};
+    gmmask.help       = {'Use GM tissue for masking of VBM data and volume ROIs.'};
+
+    wmmask            = cfg_branch;
+    wmmask.tag        = 'wm';
+    wmmask.name       = 'Masking by WM tissue';
+    wmmask.val        = {maskth};
+    wmmask.help       = {'Use WM tissue for masking of VBM data and volume ROIs.'};
+
+    masking           = cfg_choice;
+    masking.tag       = 'masking'; 
+    masking.name      = 'Volumetric group masking';
+    masking.values    = {none,gmmask,wmmask};
+    masking.val       = {none};
+    masking.help      = {'Use group masking with a specific threshold.'}; 
+
+
+    % -- spatial normalization --
+    nonlin            = cfg_menu;
+    nonlin.tag        = 'reg'; 
+    nonlin.name       = 'Regularisation of spatial normalization';
+    nonlin.labels     = {'low','high','very high'};
+    nonlin.values     = {1,10,100};
+    nonlin.val        = {1};
+    nonlin.help       = {'Apply spatial normalization to reduce non-linear warping of this modality. ';''}; 
+
+    nonlin2           = cfg_menu;
+    nonlin2.tag       = 'reg'; 
+    nonlin2.name      = 'Spatial Normalization';
+    nonlin2.labels    = {'none','very low','low','normal'};
+    nonlin2.values    = {inf,100,10,1};
+    nonlin2.val       = {1};
+    nonlin2.help      = {'Apply spatial normalization to reduce non-linear warping of this modality. ';''}; 
+
+    avg               = cfg_branch;
+    avg.tag           = 'avg';
+    avg.name          = 'Average image';
+    avg.help          = {'Use the average of the 4D input dataset for coregistration.'};
+
+    first             = cfg_branch;
+    first.tag         = 'first';
+    first.name        = 'First image';
+    first.help        = {'Use first image of the 4D input dataset for coregistration.'};
+
+    source            = cfg_files;
+    source.tag        = 'source';
+    source.name       = 'External source images';
+    source.filter     = 'image';
+    source.ufilter    = '.*';
+    source.num        = [0 Inf];
+    source.val        = {''};
+    source.preview    = @(f) spm_image('Display',char(f));
+    source.help       = {'Select images that are jiggled about to best match the reference (e.g. mean EPI, B0 images). '};
+
+    stype             = cfg_choice;
+    stype.tag         = 'stype'; 
+    stype.name        = 'Sourcetype';
+    stype.values      = {avg,first,source};
+    stype.val         = {first};
+    stype.help        = {
+     ['Select type of source image. Use "First" if the first image is suited as source and should not be used further in dataanlysis, ' ...
+      'select "External source image" to specify other image or "Average" if no special source is given and the 4D average of the input data should be used. ']}; 
+
+
+    % -- modality types --
+    mod               = cfg_branch;
+    mod.tag           = 'mod';
+    mod.name          = 'Modality with coregistration';
+    mod.val           = {mname masking nonlin2 stype mdata}; 
+    mod.help          = {'Select data files, type of masking, spatial normalization, type of source image, and name the modality.'};
+
+    moda              = cfg_branch;
+    moda.tag          = 'moda';
+    moda.name         = 'Modality without coregistration';
+    moda.val          = {mname masking mdata}; 
+    moda.help         = {'Select data files, type of masking, and name the modality.'};
+
+    % main
+    mods              = cfg_repeat;
+    mods.tag          = 'mods';
+    mods.name         = 'Additional modalities for surface projection';
+    mods.values       = {mod,moda};
+    mods.val          = {};
+    mods.num          = [0 Inf];
+    mods.help         = {
+     ['Specify the same number and order of subjects for each additional image modality ' ...
+      '(e.g., 3D sMRI or 4D fMRI data) that should be projected to the brain surface. ']
+    };
+
+
+    % additional longidudinal modalities
+    % - modality-timepoints-subjects
+    % - modality-subjects-timepoints
+    mdatalong         = datalong; 
+    mdatalong.tag     = 'data';
+    mdatalong.name    = 'Modality';
+    mdatalong.help    = {'Specify the same number and order of subjects for each additional image modality'};
+
+    longmod           = cfg_branch;
+    longmod.tag       = 'mod';
+    longmod.name      = 'Modality';
+    longmod.val       = {mname masking mdatalong}; 
+    longmod.help      = {'Select timpoint/subject files and name the modality.'};
+
+    longmod           = cfg_branch;
+    longmod.tag       = 'modc';
+    longmod.name      = 'sMRI modality without coregistration';
+
+    longmodc          = longmod;
+    longmodc.tag      = 'modc';
+    longmodc.name     = 'sMRI modality with coregistration';
+
+    longfmri          = longmod; 
+    longfmri.tag      = 'modf';
+    longmod.val       = {fname masking mdatalong}; 
+    longfmri.name     = 'fMRI modality with coregistration';
+
+
+    longmods          = cfg_repeat;
+    longmods.tag      = 'mods';
+    longmods.name     = 'Additional modalities for surface projection';
+    longmods.values   = {longfmri,longmodc,longmod};
+    longmods.num      = [0 Inf];
+    longmods.help     = {
+     ['Specify the same number and order of subjects for each additional image modality ' ...
+      '(e.g., 3D T2 images or 4D fMRI data) that should be projected to the brain surface. ' ...
+      'If no individual surfaces were created the data is normalized and a Template brain ' ...
+      'surface is used for extraction that is less accurate. ' ]
+    };
+  end
   
-  % additional modalities
-  % mod
-  %  - frmi with coreg
-  %    - name
-  %    - source
-  %    - images
-  %  - smri with coreg
-  %    - name
-  %    - masking
-  %    - images
-  %  - smri without coreg
-  %    - name
-  %    - masking
-  %    - images
-  mname             = cfg_entry;
-  mname.tag         = 'name';
-  mname.name        = 'Name';
-  mname.strtype     = 's';
-  mname.num         = [0 20];
-  mname.val         = {'MRI'};
-  mname.help        = {
-   ['Name identifier of this modality use for volumes (e.g., "[s#]mwMRI*.nii") and ' ...
-    'surface data (e.g., "[s#mm.mesh.]MRI.*[.gii]") and ROIs (e.g. "MRI").']
-    ''
-  };
-  
-  fname             = mname;
-  fname.val         = {'fMRI'};
-  fname.help        = strrep(fname.help,'MRI',fname.val{1});
- 
-  sname             = mname;
-  sname.val         = {'sMRI'};
-  sname.help        = strrep(fname.help,'MRI',fname.val{1});
-
-  mdata             = data; 
-  mdata.tag         = 'data';
-  mdata.name        = 'Data';
-  mdata.help        = {'Specify the same number and order of subjects for each additional image modality'};
-  
-    
-  % -- masking --
-  maskth            = cfg_entry;
-  maskth.tag        = 'maskth'; 
-  maskth.name       = 'Threshold for masking';
-  maskth.strtype    = 'r';
-  maskth.num        = [1 1];
-  maskth.val        = {0.5};
-  maskth.help       = {'Percentual level for tissue masking, where 0.80 means that the value has to belong to the tissue glass in 80% of the subjects.';''}; 
-
-  none              = cfg_branch;
-  none.tag          = 'none';
-  none.name         = 'No masking';
-  none.help         = {'Use no tissue for masking of VBM data and volume ROIs.'};
-
-  gmmask            = cfg_branch;
-  gmmask.tag        = 'gm';
-  gmmask.name       = 'Masking by GM tissue';
-  gmmask.val        = {maskth};
-  gmmask.help       = {'Use GM tissue for masking of VBM data and volume ROIs.'};
-
-  wmmask            = cfg_branch;
-  wmmask.tag        = 'wm';
-  wmmask.name       = 'Masking by WM tissue';
-  wmmask.val        = {maskth};
-  wmmask.help       = {'Use WM tissue for masking of VBM data and volume ROIs.'};
-
-  masking           = cfg_choice;
-  masking.tag       = 'masking'; 
-  masking.name      = 'Volumetric group masking';
-  masking.values    = {none,gmmask,wmmask};
-  masking.val       = {none};
-  masking.help      = {'Use group masking with a specific threshold.'}; 
- 
-  
-  % -- spatial normalization --
-  nonlin            = cfg_menu;
-  nonlin.tag        = 'reg'; 
-  nonlin.name       = 'Regularisation of spatial normalization';
-  nonlin.labels     = {'low','high','very high'};
-  nonlin.values     = {1,10,100};
-  nonlin.val        = {1};
-  nonlin.help       = {'Apply spatial normalization to reduce non-linear warping of this modality. ';''}; 
-
-  nonlin2           = cfg_menu;
-  nonlin2.tag       = 'reg'; 
-  nonlin2.name      = 'Spatial Normalization';
-  nonlin2.labels    = {'none','very low','low','normal'};
-  nonlin2.values    = {inf,100,10,1};
-  nonlin2.val       = {1};
-  nonlin2.help      = {'Apply spatial normalization to reduce non-linear warping of this modality. ';''}; 
-
-  avg               = cfg_branch;
-  avg.tag           = 'avg';
-  avg.name          = 'Average image';
-  avg.help          = {'Use the average of the 4D input dataset for coregistration.'};
-
-  first             = cfg_branch;
-  first.tag         = 'first';
-  first.name        = 'First image';
-  first.help        = {'Use first image of the 4D input dataset for coregistration.'};
-
-  source            = cfg_files;
-  source.tag        = 'source';
-  source.name       = 'External source images';
-  source.filter     = 'image';
-  source.ufilter    = '.*';
-  source.num        = [0 Inf];
-  source.val        = {''};
-  source.preview    = @(f) spm_image('Display',char(f));
-  source.help       = {'Select images that are jiggled about to best match the reference (e.g. mean EPI, B0 images). '};
-  
-  stype             = cfg_choice;
-  stype.tag         = 'stype'; 
-  stype.name        = 'Sourcetype';
-  stype.values      = {avg,first,source};
-  stype.val         = {first};
-  stype.help        = {
-   ['Select type of source image. Use "First" if the first image is suited as source and should not be used further in dataanlysis, ' ...
-    'select "External source image" to specify other image or "Average" if no special source is given and the 4D average of the input data should be used. ']}; 
- 
-  
-  % -- modality types --
-  mod               = cfg_branch;
-  mod.tag           = 'mod';
-  mod.name          = 'Modality with coregistration';
-  mod.val           = {mname masking nonlin2 stype mdata}; 
-  mod.help          = {'Select data files, type of masking, spatial normalization, type of source image, and name the modality.'};
-
-  moda              = cfg_branch;
-  moda.tag          = 'moda';
-  moda.name         = 'Modality without coregistration';
-  moda.val          = {mname masking mdata}; 
-  moda.help         = {'Select data files, type of masking, and name the modality.'};
-
-  % main
-  mods              = cfg_repeat;
-  mods.tag          = 'mods';
-  mods.name         = 'Additional modalities for surface projection';
-  mods.values       = {mod,moda};
-  mods.val          = {};
-  mods.num          = [0 Inf];
-  mods.help         = {
-   ['Specify the same number and order of subjects for each additional image modality ' ...
-    '(e.g., 3D sMRI or 4D fMRI data) that should be projected to the brain surface. ']
-  };
-
-  
-  % additional longidudinal modalities
-  % - modality-timepoints-subjects
-  % - modality-subjects-timepoints
-  mdatalong         = datalong; 
-  mdatalong.tag     = 'data';
-  mdatalong.name    = 'Modality';
-  mdatalong.help    = {'Specify the same number and order of subjects for each additional image modality'};
-  
-  longmod           = cfg_branch;
-  longmod.tag       = 'mod';
-  longmod.name      = 'Modality';
-  longmod.val       = {mname masking mdatalong}; 
-  longmod.help      = {'Select timpoint/subject files and name the modality.'};
-  
-  longmod           = cfg_branch;
-  longmod.tag       = 'modc';
-  longmod.name      = 'sMRI modality without coregistration';
-
-  longmodc          = longmod;
-  longmodc.tag      = 'modc';
-  longmodc.name     = 'sMRI modality with coregistration';
-
-  longfmri          = longmod; 
-  longfmri.tag      = 'modf';
-  longmod.val       = {fname masking mdatalong}; 
-  longfmri.name     = 'fMRI modality with coregistration';
-  
-  
-  longmods          = cfg_repeat;
-  longmods.tag      = 'mods';
-  longmods.name     = 'Additional modalities for surface projection';
-  longmods.values   = {longfmri,longmodc,longmod};
-  longmods.num      = [0 Inf];
-  longmods.help     = {
-   ['Specify the same number and order of subjects for each additional image modality ' ...
-    '(e.g., 3D T2 images or 4D fMRI data) that should be projected to the brain surface. ' ...
-    'If no individual surfaces were created the data is normalized and a Template brain ' ...
-    'surface is used for extraction that is less accurate. ' ]
-  };
-
 
 
 %% Parameter
 %  ------------------------------------------------------------------------
 
   % CAT preprocessing version 
-  catversion        = cfg_menu;
-  catversion.tag    = 'catversion';
-  catversion.name   = 'CAT preprocessing version';
-  catversion.labels = {'CAT12.1 (2017/09)','CAT12.6 (2019/03)'};
-  catversion.values = {'estwrite1173','estwrite1445'};
-  catversion.val    = {'estwrite1445'};
+  catversion          = cfg_menu;
+  catversion.tag      = 'catversion';
+  catversion.name     = 'CAT preprocessing version';
+  catversion.labels   = {'CAT12.1 (2017/09)','CAT12.6 (2019/03)'};
+  catversion.values   = {'estwrite1173','estwrite1445'};
+  if expert
+    catversion.labels = [catversion.labels(1) {'CAT12.3 (2018/12)'}  catversion.labels(2:end)];
+    catversion.values = [catversion.values(1) {'estwrite1173plus'}   catversion.values(2:end)];
+  end
+  catversion.val      = {'estwrite1445'};
   if expert>1
     catversion.labels = [catversion.labels {'CAT12.# (current)'}];
     catversion.values = [catversion.values {'estwrite'}];
     catversion.val    = {'estwrite'};
   end
-  catversion.help   = {[
+  catversion.help     = {[
     'To expand previously process datasets select the same version of CAT preprocessing used before. ' ...
     'Do not mix different versions!' ...
     ];''};
@@ -326,6 +344,9 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   };
 
 
+  [vROI,sROI]         = cat_conf_ROI(expert);    
+  
+  
   ignoreErrors        = cfg_menu;
   ignoreErrors.tag    = 'ignoreErrors';
   ignoreErrors.name   = 'Ignore errors';
@@ -382,15 +403,21 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   catsimple         = cfg_exbranch;
   catsimple.tag     = 'cat_simple';
   catsimple.name    = 'CAT12 Simple Preprocessing'; 
-  catsimple.val     = {data mods catversion tpm ignoreErrors surface};
+  catsimple.val     = {data catversion tpm surface};
+  if expert
+    catsimple.val   = [catsimple.val {vROI sROI ignoreErrors}];
+  end
+  if expert > 1 % further mods do not work right now!
+    catsimple.val   = [catsimple.val(1) {mods} catsimple.val(2:end)];
+  end
   if cores > 1 % use multithreading only if availabe
     catsimple.val   = [catsimple.val {nproc}];
   end
-  if expert>1
+  if expert>1 % add final debuging option
     catsimple.val   = [catsimple.val {debug}];
   end
   catsimple.prog    = @cat_simple;
-  catsimple.vout    = @vout_catsimple;
+  catsimple.vout    = @(job) vout_catsimple(job);
   catsimple.help    = { 
    ['This batch is a fully standardized cross-sectional CAT preprocessing that prepare your data ' ...
     'for voxel- (VBM), surface- (SBM) and region-based morphometry analysis (RBM). ' ...
@@ -411,7 +438,13 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   catsimplelong       = cfg_exbranch;
   catsimplelong.tag   = 'cat_simple_long';
   catsimplelong.name  = 'CAT12 Simple Longitudinal Preprocessing';
-  catsimplelong.val   = {datalong longmods catversion tpm ignoreErrors surface}; 
+  catsimplelong.val   = {datalong catversion tpm surface}; 
+  if expert
+    catsimplelong.val = [catsimplelong.val {vROI sROI ignoreErrors}];
+  end
+  if expert > 1
+    catsimplelong.val = [catsimplelong.val(1) {longmods} catsimplelong.val(2:end)];
+  end
   if feature('numcores') > 1 % use multithreading only if availabe
     catsimplelong.val = [catsimplelong.val {nproc}];
   end
@@ -451,7 +484,7 @@ function dep = vout_catsimple(job)
 
 % ### UPDATE SMOOTHING ###
   vsmooth = [4 8 12];
-  ssmooth = [10 15 20];
+  ssmooth = [6 12 24];
   
   % volume data
   for si = 1:numel(vsmooth)
@@ -484,12 +517,9 @@ function dep = vout_catsimple(job)
   
   % further images 
   % ... use job information
-  if ( isfield(job,'modality') && job.modality>1 ) && ...
-     ( isfield(job,'timepoint') && isfield(job.timepoint,'modality') && job.timepoint.modality>1 )
-   
-    
-    
-  end
+  %if ( isfield(job,'modality') && job.modality>1 ) && ...
+  %   ( isfield(job,'timepoint') && isfield(job.timepoint,'modality') && job.timepoint.modality>1 )
+  %end
   
   % ROI data
   dep(end+1)          = cfg_dep; 
