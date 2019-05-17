@@ -117,8 +117,8 @@ opts    = cat_conf_opts;
 %------------------------------------------------------------------------
 
 long = cfg_exbranch;
-long.name = 'Segment longitudinal data';
-long.tag  = 'long';
+long.name = 'CAT12.3: Segment longitudinal data R1392 (2018/12)';
+long.tag  = 'long1173plus';
 long.val  = {esubjs,opts,extopts,output,modulate,warps,dartel};
 long.prog = @cat_long_multi_run;
 long.vout = @vout_long;

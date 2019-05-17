@@ -290,9 +290,6 @@ function varargout = cat_parallelize(job,func,datafield)
                   file = spm_str_manip(fullfile(pp,spm_file(ff,'prefix','r')),'l30');
                   SID{si} = find( cellfun('isempty', strfind( txt , file ))==0 ,1,'first');
                 end
-                findSID = find(cellfun('isempty',SID)==0,1,'last'); 
-                if ~isempty(findSID), catSID(si) = findSID; end
-
               elseif strcmp( datafield , 'data_surf' )
                 % surfaces ... here the filenames of the processed data
                 % change strongly due to side coding ...
@@ -315,16 +312,19 @@ function varargout = cat_parallelize(job,func,datafield)
                       find(cellfun('isempty', strfind( txt , ee ))==0,1,'first'); 
                   end
                 end
-                catSID(i) = find(cellfun('isempty',SID)==0,1,'last');
-
               else % volumes
                 for si=1:numel( jobs(i).(datafield) )
                   SID{si} = find(cellfun('isempty', strfind( txt , jobs(i).(datafield){si} ))==0,1,'first');
                 end
-                catSID(i) = find(cellfun('isempty',SID)==0,1,'last');
-              end            
+              end
+              findSID = find(cellfun('isempty',SID)==0,1,'last'); 
+              if ~isempty(findSID), catSID(si) = findSID; end
+
             catch
-              cat_io_cprintf('warn','  Progress bar did not work but still monitoring the tasks.\n'); 
+              if ~exist('noSID','var') || noSID==0
+                noSID = 1; 
+                cat_io_cprintf('warn','  Progress bar did not work but still monitoring the tasks.\n'); 
+              end
             end
             
             % find out if the current task is still active

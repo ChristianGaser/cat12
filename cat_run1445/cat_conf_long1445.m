@@ -94,8 +94,8 @@ output  = cat_conf_output(expert);
 %------------------------------------------------------------------------
 
 long = cfg_exbranch;
-long.name = 'Segment longitudinal data';
-long.tag  = 'long';
+long.name = 'CAT12.6: Segment longitudinal data R1445 (2019/03)';
+long.tag  = 'long1445';
 if newapproach % new way - not working
   
   % remove major output fields

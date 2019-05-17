@@ -1,5 +1,35 @@
 ------------------------------------------------------------------------
-r1464 | dahnke | 2019-05-15 09:31:36
+r1465 | dahnke | 2019-05-17 11:33:25
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_ROI.m
+M       cat_conf_catsimple.m
+M       cat_conf_tools.m
+M       cat_defaults.m
+M       cat_parallelize.m
+M       cat_run1173/cat_conf_long1173.m
+M       cat_run1173plus/cat_conf_long1173plus.m
+M       cat_run1445/cat_conf_long1445.m
+M       cat_surf_parameters.m
+M       html/cat_methods_catsimple.html
+M       html/images/cat_methods_catsimple.png
+M       tbx_cfg_cat.m
+
+(1) Fixed:    Corrected bugs in cat_simple and removed additional modality 
+              option from non-developer GUIs.
+(2) New:      Added surface-based ROI processing in cat_simple batch.                
+(3) New:      Added ROI GUIs to cat_simple for experts.
+(4) New:      Added surface atlases menu in cat_conf_ROI and default surface
+              atlases to cat_defaults.       
+(5) Changed:  Renamed long1173(plus) batches.
+(6) Fixed:    Renamed functions of TIV GUI that was similar as the called 
+              function name and caused error in batch processing.
+(7) Fixed:    Corrected small bugs in cat_parallelize.                            
+               
+      
+------------------------------------------------------------------------
+r1464 | dahnke | 2019-05-15 09:34:04 +0200 (Mi, 15 Mai 2019) | 50 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -49,6 +79,7 @@ M       tbx_cfg_cat.m
 (7) Fixed:  Create output in cat_surf_parameters even if no measure is selected. 
 (8) New:    Added date variable to the output of cat_version.
           
+
 
 ------------------------------------------------------------------------
 r1463 | dahnke | 2019-05-07 18:02:24 +0200 (Di, 07 Mai 2019) | 6 lines
