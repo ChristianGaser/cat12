@@ -1,5 +1,22 @@
 ------------------------------------------------------------------------
-r1466 | gaser | 2019-05-23 10:19:39
+r1467 | dahnke | 2019-05-23 10:50:15
+
+Changed paths:
+M       CHANGES.txt
+A       cat_io_checkdepfiles.m
+M       cat_run.m
+M       cat_run1445/cat_run1445.m
+A       cat_simple.m
+M       cat_stat_IQR.m
+M       cat_stat_TIV.m
+M       cat_surf_parameters.m
+M       cat_surf_resamp.m
+
+(1) New:    Added function cat_io_checkdepfiles to remove files that do not exist.
+(2) Fixed:  Define settings to support ignore_errors function in batch mode. 
+(3) Fixed:  Added missed cat_simple function.
+------------------------------------------------------------------------
+r1466 | gaser | 2019-05-23 10:20:13 +0200 (Do, 23 Mai 2019) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -16,6 +33,7 @@ M       sanlm_float.c
     cat_vol_slice_overlay.m
 (3) Changed: Switched multi-threading in sanlm_float.c to pthread also for
     windows systems and added some code to lock/unlock processes.
+
 ------------------------------------------------------------------------
 r1465 | dahnke | 2019-05-17 11:34:01 +0200 (Fr, 17 Mai 2019) | 28 lines
 

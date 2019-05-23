@@ -439,10 +439,13 @@ end
 job = update_job(job);
 
 varargout{1} = run_job(job);
-if exist('jobo','var') % update output
+if isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.extopts.admin.lazy && ...
+  ~isfield(job,'process_index') && isfield(job,'nproc') && job.nproc>-1 && (~isfield(job,'process_index'))  
+  % set default output even it was not processed this time
   varargout{1} = jobo.vout; 
 end
-
+% remove files that do not exist
+varargout{1} = cat_io_checkdepfiles( varargout{1} );
 return
 %_______________________________________________________________________
 function job = update_job(job)
