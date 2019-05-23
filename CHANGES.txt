@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1465 | dahnke | 2019-05-17 11:33:25
+r1466 | gaser | 2019-05-23 10:19:39
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_catsimple.m
+M       cat_parallelize.m
+M       cat_sanlm.mexa64
+M       cat_sanlm.mexmaci64
+M       cat_sanlm.mexw64
+M       cat_vol_slice_overlay.m
+M       sanlm_float.c
+
+(1) Fixed: Indexing in cat_parallelize.m was wrong.
+(2) Changed: Added option to deselect atlas labeling for scripting 
+    cat_vol_slice_overlay.m
+(3) Changed: Switched multi-threading in sanlm_float.c to pthread also for
+    windows systems and added some code to lock/unlock processes.
+------------------------------------------------------------------------
+r1465 | dahnke | 2019-05-17 11:34:01 +0200 (Fr, 17 Mai 2019) | 28 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -28,6 +46,7 @@ M       tbx_cfg_cat.m
 (7) Fixed:    Corrected small bugs in cat_parallelize.                            
                
       
+
 ------------------------------------------------------------------------
 r1464 | dahnke | 2019-05-15 09:34:04 +0200 (Mi, 15 Mai 2019) | 50 lines
 

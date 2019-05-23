@@ -308,7 +308,11 @@ set(H, 'FontSize', 0.8 * get(H, 'FontSize'))
 % select atlas for labeling
 if isfield(OV, 'atlas')
     atlas_name = OV.atlas;
-    xA = spm_atlas('load',atlas_name);
+    if strcmp(lower(atlas_name),'none') | isempty(atlas_name)
+      xA = [];
+    else
+      xA = spm_atlas('load',atlas_name);
+    end
 else
 	list = spm_atlas('List','installed');
 	atlas_labels{1} = 'None';
