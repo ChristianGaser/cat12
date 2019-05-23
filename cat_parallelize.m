@@ -414,7 +414,7 @@ function varargout = cat_parallelize(job,func,datafield)
                 % this is similar to the first level ...
                 FN2 = fieldnames(output.(FN{fni}));
                 for fni2 = 1:numel(FN2)
-                  if ~isstruct( output.(FN{fni}).(FN2{fni}) )
+                  if ~isstruct( output.(FN{fni}).(FN2{fni2}) )
                     if size(varargout{1}.(FN{fni}).(FN2{fni2}),1) > size(varargout{1}.(FN{fni}).(FN2{fni2}),2)
                       varargout{1}.(FN{fni}).(FN2{fni2}) = [varargout{1}.(FN{fni}).(FN2{fni2});output.(FN{fni}.(FN2{fni2}))]; 
                     else
