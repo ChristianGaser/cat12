@@ -17,7 +17,11 @@ for i=1:length(p.data_xml)
     try
       iqr = xml.qualityratings.IQR;
     catch % also try to use old versions
-      iqr = xml.QAM.QM.rms;
+      try
+        iqr = xml.QAM.QM.rms;
+      catch % give up
+        iqr = nan; 
+      end
     end
 
     [pth,nam]     = spm_fileparts(p.data_xml{i});

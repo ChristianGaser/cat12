@@ -11,7 +11,7 @@ function varargout = cat_surf_resamp(varargin)
 % Christian Gaser
 % $Id$
 
-%#ok<*AGROW>
+%#ok<*AGROW,*STREMP>
 
 % Todo: 
 % - resampling of white matter, pial, hull and core surfaces is not 
@@ -90,6 +90,10 @@ function varargout = cat_surf_resamp(varargin)
   rPsdata = cell(size(P,1),1);
   
   for i=1:size(P,1)
+    if ~exist(P(i,:),'file')
+      cat_io_cprintf('warn',sprintf('The file "%s" does not exist!\n',deblank(P(i,:)))); 
+      continue
+    end
     
     stime = clock; 
     [pp,ff,ex]   = spm_fileparts(deblank(P(i,:)));
@@ -105,9 +109,9 @@ function varargout = cat_surf_resamp(varargin)
     hemistr = {'lh','rh','lc','rc'};
     exist_hemi = [];
     
-    if strfind(name0,'white') | strfind(name0,'inner') | ...
-       strfind(name0,'pial')  | strfind(name0,'outer') | ...
-       strfind(name0,'hull')  | strfind(name0,'inner')
+    if ~isempty(strfind(name0,'white')) || ~isempty(strfind(name0,'inner')) || ...
+       ~isempty(strfind(name0,'pial'))  || ~isempty(strfind(name0,'outer')) || ...
+       ~isempty(strfind(name0,'hull'))  || ~isempty(strfind(name0,'inner')) 
       cat_io_cprintf('err',sprintf('ERROR - White matter, pial, hull, or core surfaces can not be resampled so far!\n'));
       continue
     end
@@ -161,7 +165,7 @@ function varargout = cat_surf_resamp(varargin)
         k = strfind(name,'.');
         pname = ff(k(1)+1:k(2)-1);
         Pcentralf  = [strrep(name,pname,surfacefield) '.gii'];
-        Psphere    = fullfile(pp,strrep(Pcentralf,surfacefield,'sphere'));
+        %Psphere    = fullfile(pp,strrep(Pcentralf,surfacefield,'sphere'));
         Pspherereg = fullfile(pp,strrep(Pcentralf,surfacefield,'sphere.reg'));
         Pvalue     = fullfile(pp,strrep(Pcentralf,surfacefield,[pname str_resamp]));
         Pvalue     = strrep(Pvalue,'.gii',''); % remove .gii extension
@@ -191,7 +195,7 @@ function varargout = cat_surf_resamp(varargin)
         Pfwhm_all{j} = Pfwhm_gii;
 
         % resample values
-        if strfind(pname,'area') | strfind(pname,'gmv')
+        if ~isempty(strfind(pname,'area')) || ~isempty(strfind(pname,'gmv'))
           % resample values using delaunay-based age map
 
           % create mapping between 
@@ -276,7 +280,11 @@ function varargout = cat_surf_resamp(varargin)
       if job.merge_hemi
         % name for combined hemispheres
         k = strfind(name,'.');
-        pname = ff(k(1)+1:k(2)-1);
+        try
+          pname = ff(k(1)+1:k(2)-1);
+        catch
+          continue
+        end
         Pcentral   = strrep(['mesh' name0 '.gii'],pname,surfacefield);
 
         if job.fwhm_surf > 0
