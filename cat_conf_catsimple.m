@@ -11,7 +11,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
 % statistical files with smoohted and unsmoothed data. 
 % _________________________________________________________________________
 % Robert Dahnke
-% $Id: tbx_cfg_cat.m 1443 2019-03-21 15:15:33Z gaser $
+% $Id$
 
 
 % _________________________________________________________________________

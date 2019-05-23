@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1467 | dahnke | 2019-05-23 10:50:15
+r1468 | dahnke | 2019-05-23 10:54:20
+
+Changed paths:
+M       CHANGES.txt
+MM      cat_conf_catsimple.m
+
+(1) New:    Added function cat_io_checkdepfiles to remove files that do not exist.
+(2) Fixed:  Define settings to support ignore_errors function in batch mode. 
+(3) Fixed:  Added missed cat_simple function.
+------------------------------------------------------------------------
+r1467 | dahnke | 2019-05-23 10:52:34 +0200 (Do, 23 Mai 2019) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +25,7 @@ M       cat_surf_resamp.m
 (1) New:    Added function cat_io_checkdepfiles to remove files that do not exist.
 (2) Fixed:  Define settings to support ignore_errors function in batch mode. 
 (3) Fixed:  Added missed cat_simple function.
+
 ------------------------------------------------------------------------
 r1466 | gaser | 2019-05-23 10:20:13 +0200 (Do, 23 Mai 2019) | 16 lines
 
