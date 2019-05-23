@@ -23,8 +23,16 @@ end
 spm_progress_bar('Init',length(p.data_xml),'Load xml-files','subjects completed')
 for i=1:length(p.data_xml)
     xml = cat_io_xml(deblank(p.data_xml{i})); 
-    tmp  = xml.subjectmeasures.vol_abs_CGW; 
-    
+    try
+      tmp  = xml.subjectmeasures.vol_abs_CGW; 
+    catch % use nan
+      if p.calcvol_TIV
+        tmp = nan; 
+      else
+        tmp  = nan(1,5);
+      end
+    end
+      
     name = spm_str_manip(xml.filedata.fname,'a50');
 
     % only save TIV
