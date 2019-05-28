@@ -250,7 +250,7 @@ function cat_run_job(job,tpm,subj)
           switch restype
             case 'native'
               vx_voli  = vx_vol;
-            case 'fixed', 
+            case 'fixed' 
               vx_voli  = min(vx_vol ,job.extopts.restypes.(restype)(1) ./ ...
                          ((vx_vol > (job.extopts.restypes.(restype)(1)+job.extopts.restypes.(restype)(2)))+eps));
               vx_voli  = max(vx_voli,job.extopts.restypes.(restype)(1) .* ...
