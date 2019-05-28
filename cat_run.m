@@ -802,7 +802,7 @@ end
 
 % 
 for j=1:n
-    catlog{j} = fullfile(parts{j,1},reportfolder,['catlog_',parts{j,2},'.xml']);
+    catlog{j} = fullfile(parts{j,1},reportfolder,['catlog_',parts{j,2},'.txt']);
 end
 
 

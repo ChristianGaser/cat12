@@ -1,4 +1,4 @@
-function [S,Stype] = cat_io_checkdepfiles(S,usedummy)
+function [S,Stype,removed] = cat_io_checkdepfiles(S,usedummy)
 % _________________________________________________________________________
 % Remove non-existing files from the (SPM dependency) variable S. 
 % If there is only one file than create a dummy file to avoid batch errors.
@@ -20,17 +20,20 @@ function [S,Stype] = cat_io_checkdepfiles(S,usedummy)
     usedummy = 0;
   end
 
-  Stype = '';
+  Stype   = '';
+  removed = 0;
   
   if ischar(S)
     for i = 1:size(S,1)
       if ~exist(S(i,:),'file')
+        % Here, I remove just one element that is missing (e.g. one failed
+        % preprocessing). However, a following job (e.g. smoothing) does
+        % not count on it.
         [pp,ff,ee] = spm_fileparts(S(i,:));
-        S(i,:) = '';
-        Stype  = ee;
-        cat_io_cprintf('warn',sprintf(['The file "%s" \n' ...
-            'was not created and therefore removed from the dependency list.  This alteration the file \n' ...
-            'number and order and can cause problems in following batches that require specific input!\n'],fullfile(pp,[ff ee]))); 
+        S(i,:)  = '';
+        Stype   = ee;
+        removed = 1; 
+        cat_io_cprintf('warn',sprintf('  Remove "%s" from dependency list because it does not exist!\n',fullfile(pp,[ff ee]))); 
       end
     end
   elseif iscell(S)
@@ -38,25 +41,32 @@ function [S,Stype] = cat_io_checkdepfiles(S,usedummy)
       S{i} = cat_io_checkdepfiles( S{i} , usedummy );
     end
   elseif isstruct(S)
+    %%
     FN = fieldnames(S);
     for i = 1:numel(FN)
       SFN = S.(FN{i}); 
       for ii = 1:numel( S.(FN{i}) )
         SFNi    = SFN(ii);
-        SFNiold = SFNi; 
-        [SFNi,SFNtype] = cat_io_checkdepfiles( SFNi ,usedummy );
+        [SFNi,SFNtype,removed] = cat_io_checkdepfiles( SFNi ,usedummy );
         SFN(ii) = SFNi; 
         clear SFNi;
       end    
-      if numel(SFN)==1 && size(SFN{1},1)==0
+      if numel(SFN)==1 && size(SFN{1},1)==0 && ~isequal(SFN,S.(FN{i}))
         if usedummy
           SFN = {create_dummy_volume(SFNtype)};
         else
-          cat_io_printf('err',sprinf(['The file "%s" \n' ...
-            'was not created and therefore removed from the dependency list. However, it\n' ...
-            'was the only entry of this list and depending batch may not work correctly!\n'],SFNiold)); 
+          % Here, the full entry of a class of files becomes empty and this 
+          % of cause will trouble an following job (empty imput).
+          % I give not further file information because these were given by
+          % the upper warning!
+          cat_io_cprintf('err',sprintf(['One or multiple files do not exist and were removed from the dependency list \n' ...
+            'and following batches will may not work correctly!\n\n'])); 
           SFN = {};
         end
+      elseif removed
+        cat_io_cprintf('warn',sprintf([
+           'One or multiple files do not exist and were removed from the dependency list' \n ...
+           'and following batches those file input number and order is relevant may do not work properly!\n\n'])); 
       end
       S.(FN{i}) = SFN; 
       

@@ -1,4 +1,4 @@
-function str = cat_main_reportstr(job,res,qa,cat_warnings,err)
+function str = cat_main_reportstr(job,res,qa,cat_warnings) 
 % ______________________________________________________________________
 % 
 % Prepare text output for CAT report. This function may heavily change
@@ -156,7 +156,7 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings,err)
   end
   if ~strcmp('native',restype)
     str{1}(end).value = [str{1}(end).value sprintf('(%0.2f %0.2f)',job.extopts.restypes.(restype))];
-  end; 
+  end 
 
   % line 8: surface parameter
   if job.output.surface
@@ -211,15 +211,15 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings,err)
   % absolute volumes
   str{3} = [str{3} struct('name', ' Absolute volume:','value',sprintf('%5.0f %5.0f %5.0f ', ...
           qa.subjectmeasures.vol_abs_CGW(1:3)))];
-  if job.extopts.WMHC>1,  str{3}(end).value = [str{3}(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_abs_CGW(4))]; end; 
-  if job.extopts.SLC>0,   str{3}(end).value = [str{3}(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_abs_CGW(5))]; end;
+  if job.extopts.WMHC>1,  str{3}(end).value = [str{3}(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_abs_CGW(4))]; end 
+  if job.extopts.SLC>0,   str{3}(end).value = [str{3}(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_abs_CGW(5))]; end
   str{3}(end).value = [str{3}(end).value 'cm' char(179)];
 
   % relative volumes
   str{3} = [str{3} struct('name', ' Relative volume:','value',sprintf('%5.1f %5.1f %5.1f ', ...
           qa.subjectmeasures.vol_rel_CGW(1:3)*100))];
-  if job.extopts.WMHC>1,  str{3}(end).value = [str{3}(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_rel_CGW(4)*100)]; end; 
-  if job.extopts.SLC>0,   str{3}(end).value = [str{3}(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_rel_CGW(5)*100)]; end;
+  if job.extopts.WMHC>1,  str{3}(end).value = [str{3}(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_rel_CGW(4)*100)]; end 
+  if job.extopts.SLC>0,   str{3}(end).value = [str{3}(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_rel_CGW(5)*100)]; end
   str{3}(end).value = [str{3}(end).value '%'];
 
   % warning if many WMH were found but no correction is active 
