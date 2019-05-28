@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1468 | dahnke | 2019-05-23 10:54:20
+r1469 | dahnke | 2019-05-28 11:47:45
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_checkdepfiles.m
+M       cat_main_reportstr.m
+M       cat_run.m
+M       cat_run_job.m
+M       tbx_cfg_cat.m
+
+(1) Fixed:    Corrected tiny errors in cat_io_checkdepfiles, cat_run, and tbx_cfg_cat.
+
+------------------------------------------------------------------------
+r1468 | dahnke | 2019-05-23 10:54:45 +0200 (Do, 23 Mai 2019) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +21,7 @@ MM      cat_conf_catsimple.m
 (1) New:    Added function cat_io_checkdepfiles to remove files that do not exist.
 (2) Fixed:  Define settings to support ignore_errors function in batch mode. 
 (3) Fixed:  Added missed cat_simple function.
+
 ------------------------------------------------------------------------
 r1467 | dahnke | 2019-05-23 10:52:34 +0200 (Do, 23 Mai 2019) | 15 lines
 

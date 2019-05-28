@@ -279,7 +279,7 @@ cdep(end).tgt_spec   = cfg_findspec({{'filter','xml','strtype','e'}});
 cdep = cfg_dep;
 cdep(end).sname      = 'CAT log-file';
 cdep(end).src_output = substruct('.','catlog','()',{':'});
-cdep(end).tgt_spec   = cfg_findspec({{'filter','xml','strtype','e'}});
+cdep(end).tgt_spec   = cfg_findspec({{'filter','txt','strtype','e'}});
 
 
 % lh/rh central surface and thickness
