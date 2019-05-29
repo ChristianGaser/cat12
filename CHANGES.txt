@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1470 | gaser | 2019-05-29 13:48:44
+r1471 | gaser | 2019-05-29 16:37:03
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+MM      cat_io_checkdepfiles.m
+MM      cat_simple.m
+M       cat_update.m
+M       html/cat.html
+
+(1) Changed: Added version check to cat12.m
+(2) Changed: Position of CAT12 GUI is now located right of SPM12 Graphic window
+    and height of GUI is equal to SPM12 GUI.
+------------------------------------------------------------------------
+r1470 | gaser | 2019-05-29 13:49:16 +0200 (Mi, 29 Mai 2019) | 37 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -37,6 +52,7 @@ M       tbx_cfg_cat.m
 (1) Changed: Initial version of new CAT12 GUI.
 (2) Changed: Smalle edits of help functions.
 (3) Fixed: Expert mode in longitudinal segmentation was not recognized.
+
 ------------------------------------------------------------------------
 r1469 | dahnke | 2019-05-28 11:51:29 +0200 (Di, 28 Mai 2019) | 11 lines
 

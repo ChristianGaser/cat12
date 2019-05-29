@@ -2,7 +2,7 @@ function output = cat_simple(job)
 % Configuration file for simplyfied preprocessing jobs
 % _________________________________________________________________________
 % Robert Dahnke
-% $Id: tbx_cfg_cat.m 1443 2019-03-21 15:15:33Z gaser $
+% $Id$
 
 
   % defaults settings
