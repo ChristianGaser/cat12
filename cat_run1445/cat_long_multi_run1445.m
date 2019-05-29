@@ -2,7 +2,7 @@ function out = cat_long_multi_run(job)
 % Call cat_long_main for multiple subjects
 %
 % Christian Gaser
-% $Id: cat_long_multi_run.m 1435 2019-03-06 11:24:38Z dahnke $
+% $Id$
 
 global opts extopts output modulate dartel delete_temp ROImenu surfaces
 

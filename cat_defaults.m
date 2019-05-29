@@ -221,7 +221,8 @@ cat.extopts.expertgui    = 0;     % control of user GUI:   0 - common user modus
 cat.extopts.subfolders   = 1;     % use subfolders such as mri, surf, report, and label to organize your data
 cat.extopts.experimental = 0;     % experimental functions: 0 - default, 1 - call experimental unsave functions
 cat.extopts.print        = 2;     % display and print out pdf-file of results: 0 - off, 2 - volume only, 2 - volume and surface (default)
-cat.extopts.fontsize     = spm('FontSizes',9); % default font size for GUI; increase value for larger fonts
+cat.extopts.fontsize     = get(0,'defaultuicontrolFontSize'); % default font size for GUI; 
+%cat.extopts.fontsize     = spm('FontSizes',7); % set default font size for GUI manually; increase value for larger fonts or set it to 
 
 
 % Expert options - ROIs

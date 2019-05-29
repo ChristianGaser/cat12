@@ -45,7 +45,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
 % Robert Dahnke
 % 2013/05
 %
-% $Id: cat_vol_partvol.m 1436 2019-03-06 16:46:15Z gaser $
+% $Id$
 
 % ______________________________________________________________________
 %

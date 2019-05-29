@@ -126,7 +126,7 @@ else
   %------------------------------------------------------------------------
   modulate        = cfg_menu;
   modulate.tag    = 'modulate';
-  modulate.name   = 'Modulated GM segmentations';
+  modulate.name   = 'Modulated GM/WM segmentations';
   modulate.labels = {'No','Yes'};
   modulate.values = {0 1};
   modulate.val    = {1};
@@ -162,7 +162,11 @@ else
   
   ROI       = output.val{2}; 
   output.val(2:end) = [];
-  long.val  = {esubjs,nproc,opts,extopts,output,ROI,modulate,dartel};
+  if expert
+    long.val  = {esubjs,nproc,opts,extopts,output,ROI,modulate,dartel,delete_temp};
+  else
+    long.val  = {esubjs,nproc,opts,extopts,output,ROI,modulate,dartel};
+  end
   long.vout = @(job) vout_long(job);
 end
 long.prog = @cat_long_multi_run;

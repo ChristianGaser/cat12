@@ -62,7 +62,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
 %   Department of Neurology
 %   University Jena
 % ______________________________________________________________________
-% $Id: cat_main_LAS.m 1398 2018-11-29 17:13:22Z dahnke $
+% $Id$
 
 
   def.uhrlim = 0.7; 
