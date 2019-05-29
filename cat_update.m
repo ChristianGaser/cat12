@@ -3,9 +3,9 @@ function varargout = cat_update(update)
 %
 % FORMAT [sts, msg] = cat_update(update)
 % sts    - status code:
-%        NaN - SPM server not accessible
+%        NaN - CAT server not accessible
 %        Inf - no updates available
-%        0   - SPM installation up to date
+%        0   - CAT installation up-to-date
 %        n   - new revision <n> is available for download
 % msg    - string describing outcome, that would otherwise be displayed.
 % update - allow installation of update
@@ -74,7 +74,7 @@ if rnew > r
     if ~nargout, fprintf(msg); else varargout = {sts, msg}; end
 else
     sts = 0;
-    msg = sprintf('Your version of CAT12 is up to date.');
+    msg = sprintf('Your version of CAT12 is up-to-date.');
     if ~nargout, fprintf([blanks(9) msg '\n']);
     else varargout = {sts, msg}; end
     return
