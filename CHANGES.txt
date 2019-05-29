@@ -1,5 +1,44 @@
 ------------------------------------------------------------------------
-r1469 | dahnke | 2019-05-28 11:47:45
+r1470 | gaser | 2019-05-29 13:48:44
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_conf_long.m
+M       cat_defaults.m
+M       cat_install_tfce.m
+MM      cat_run1445/cat_conf_ROI1445.m
+MM      cat_run1445/cat_conf_extopts1445.m
+MM      cat_run1445/cat_conf_long1445.m
+MM      cat_run1445/cat_conf_opts1445.m
+MM      cat_run1445/cat_defaults1445.m
+MM      cat_run1445/cat_get_defaults1445.m
+MM      cat_run1445/cat_long_main1445.m
+MM      cat_run1445/cat_long_multi_run1445.m
+MM      cat_run1445/cat_main1445.m
+MM      cat_run1445/cat_main_LAS1445.m
+MM      cat_run1445/cat_main_gcut1445.m
+MM      cat_run1445/cat_main_registration1445.m
+MM      cat_run1445/cat_run1445.m
+MM      cat_run1445/cat_run_job10701445.m
+MM      cat_run1445/cat_run_job1445.m
+MM      cat_run1445/cat_run_job_APP_init10701445.m
+MM      cat_run1445/cat_run_newcatch1445.m
+MM      cat_run1445/cat_surf_createCS1445.m
+MM      cat_run1445/cat_vol_partvol1445.m
+MM      cat_run1445/cat_vol_sanlm1445.m
+M       cat_stat_diff.m
+ M      html/cat_methods_catsimple.html
+ M      html/images/cat_methods_catsimple.png
+A       html/images/contact_small.jpg
+MM      internal/cat_admin_create_estwrite_version.m
+M       tbx_cfg_cat.m
+
+(1) Changed: Initial version of new CAT12 GUI.
+(2) Changed: Smalle edits of help functions.
+(3) Fixed: Expert mode in longitudinal segmentation was not recognized.
+------------------------------------------------------------------------
+r1469 | dahnke | 2019-05-28 11:51:29 +0200 (Di, 28 Mai 2019) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +49,7 @@ M       cat_run_job.m
 M       tbx_cfg_cat.m
 
 (1) Fixed:    Corrected tiny errors in cat_io_checkdepfiles, cat_run, and tbx_cfg_cat.
+
 
 ------------------------------------------------------------------------
 r1468 | dahnke | 2019-05-23 10:54:45 +0200 (Do, 23 Mai 2019) | 8 lines

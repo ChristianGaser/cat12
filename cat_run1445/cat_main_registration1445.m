@@ -85,7 +85,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
 %   Department of Neurology
 %   University Jena
 % ______________________________________________________________________
-% $Id: cat_main_registration.m 1453 2019-04-23 20:18:53Z gaser $
+% $Id$
 
   if ~nargin, help cat_main_registration; end
 

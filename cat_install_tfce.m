@@ -22,7 +22,7 @@ if install
     rehash
     rehash toolboxcache;
     toolbox_path_cache
-    eval(['spm fmri;spm_cat12']);
+    eval(['spm fmri;clear cat_version;spm_cat12']);
   catch
     le = lasterror;
     switch le.identifier

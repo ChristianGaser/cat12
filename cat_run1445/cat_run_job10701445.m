@@ -19,7 +19,7 @@ function cat_run_job1070(job,tpm,subj)
 %   subj .. file name
 % ______________________________________________________________________
 % Christian Gaser
-% $Id: cat_run_job1070.m 1415 2019-01-14 14:20:53Z gaser $
+% $Id$
 
 %#ok<*WNOFF,*WNON>
 

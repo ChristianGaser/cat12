@@ -24,7 +24,7 @@ function cat_admin_create_segment_version(catdir,rev,update,fnames)
 % Do not forget to include the batch in tbx_cfg_cat.m
 % _________________________________________________________________________
 % Robert Dahnke 
-% $Id: cat_conf_stools.m 1462 2019-05-07 15:51:06Z dahnke $
+% $Id$
 % _________________________________________________________________________
 
 %#ok<*AGROW>

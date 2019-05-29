@@ -1,7 +1,7 @@
 %-----------------------------------------------------------------------
 % Job for longitudinal batch
 % Christian Gaser
-% $Id: cat_long_main.m 1444 2019-03-22 14:30:35Z gaser $
+% $Id$
 %-----------------------------------------------------------------------
 
 global opts extopts output modulate dartel delete_temp ROImenu surfaces cat

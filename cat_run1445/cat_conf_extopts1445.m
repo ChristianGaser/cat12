@@ -2,7 +2,7 @@ function extopts = cat_conf_extopts(expert,spm)
 % Configuration file for extended CAT options
 %
 % Christian Gaser
-% $Id: cat_conf_extopts.m 1460 2019-05-03 12:09:17Z gaser $
+% $Id$
 %#ok<*AGROW>
 
 if ~exist('expert','var')

@@ -38,7 +38,7 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
 % Structural Brain Mapping Group
 % University Jena
 % ______________________________________________________________________
-% $Id: cat_surf_createCS.m 1435 2019-03-06 11:24:38Z dahnke $ 
+% $Id$ 
 
 % Turn off gifti data warning in gifti/subsref (line 45)
 %   Warning: A value of class "int32" was indexed with no subscripts specified. 
