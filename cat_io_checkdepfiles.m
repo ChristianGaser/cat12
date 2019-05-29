@@ -13,7 +13,7 @@ function [S,Stype,removed] = cat_io_checkdepfiles(S,usedummy)
 %   [S,Stype] = cat_io_checkdepfiles(S,usedummy)
 % _________________________________________________________________________
 % Robert Dahnke
-% $Id: cat_surf_parameters.m 1465 2019-05-17 09:34:01Z dahnke $
+% $Id$
 
 
   if ~exist('usedummy','var')

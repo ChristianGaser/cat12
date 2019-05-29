@@ -51,7 +51,7 @@ function varargout = cat12(varargin)
 %   Warning: A value of class "int32" was indexed with no subscripts specified. 
 %            Currently the result of this operation is the indexed value itself, 
 %            but in a future release, it will be an error. 
-global sz sc WS FS catversion expert
+global sz sc FS catversion expert
 
 warning('off','MATLAB:subscripting:noSubscriptsSpecified');
 
@@ -67,11 +67,18 @@ elseif nargin==2 && ~strcmp(varargin{1},'fig')
 end
 
 expert = cat_get_defaults('extopts.expertgui');
-WS = spm('WinSize','M');
-sc = max(1,(WS(3)/400)^0.35);
-sz = sc*[391 550]; % window size
+WSM    = spm('WinSize','M');
+sc     = max(1,(WSM(4)/550));
+sz     = sc*[391 550]; % window size
 
 [catversion.rel, catversion.ver, catversion.dat] = cat_version;
+
+% check for new CAT12 version
+[sts, msg] = cat_update;
+if isfinite(sts) & sts >= 0
+  fprintf(msg);
+  fprintf('\n');
+end
 
 % get default font size
 FS = cat_get_defaults('extopts.fontsize');
@@ -145,9 +152,7 @@ handles.ha = axes('units','pixel','position',[1 sz(2)-sc*99 sz(1) sc*100]);
 I = imread(fullfile(spm('dir'),'toolbox','cat12','html','images','contact_small.jpg'));
 imagesc(I);
 axis off; 
-text(sz(1)/20,sc*25,'Computational','Color',[1 1 1],'Fontsize',FS+4,'Fontweight','bold');
-text(sz(1)/20,sc*45,'Anatomy','Color',[1 1 1],'Fontsize',FS+4,'Fontweight','bold');
-text(sz(1)/20,sc*65,'Toolbox','Color',[1 1 1],'Fontsize',FS+4,'Fontweight','bold');
+text(sz(1)/20,sc*60,'Computational Anatomy Toolbox','Color',[1 1 1],'Fontsize',FS+4,'Fontweight','bold');
 
 switch species
   case 'human',           speciesdisp = ''; 
@@ -162,8 +167,8 @@ switch species
   otherwise               speciesdisp = ''; 
 end
 switch expert
-  case 1, text(sz(1)/20,sc*80,['Expert Mode'    speciesdisp],'Color',[0.1 0.7 1.0],'Fontsize',FS+2,'Fontweight','bold'); 
-  case 2, text(sz(1)/20,sc*80,['Developer Mode' speciesdisp],'Color',[1.0 0.0 0.0],'Fontsize',FS+2,'Fontweight','bold');
+  case 1, text(sz(1)/20,sc*75,['Expert Mode'    speciesdisp],'Color',[0.1 0.7 1.0],'Fontsize',FS+2,'Fontweight','bold'); 
+  case 2, text(sz(1)/20,sc*75,['Developer Mode' speciesdisp],'Color',[1.0 0.0 0.0],'Fontsize',FS+2,'Fontweight','bold');
 end
 guidata(hObject, handles);
 
@@ -238,10 +243,9 @@ end
 
 % --- Creates and returns a handle to the GUI figure. 
 function h0 = cat12_LayoutFcn(policy)
-% policy - create a new figure or use a singleton. 'new' or 'reuse'.
 
 persistent hsingleton;
-global sz sc FS WS x2w expert catversion
+global sz sc FS x2w expert catversion
 
 appdata = [];
 appdata.GUIDEOptions = struct(...
@@ -271,14 +275,14 @@ appdata.initTags = struct(...
     'tag', 'CAT');
 
 
-PF = spm_platform('fonts');     %-Font names (for this platform)
+%PF = spm_platform('fonts');     %-Font names (for this platform)
+Fgraph = spm_figure('GetWin','Graphics');
+WSG    = get(Fgraph,'Position');
 
 % close existing cat12 window
 Tag = 'CAT';
-F = findall(allchild(0),'Flat','Tag',Tag);
-if length(F) > 0
-  close(F)
-end
+F   = findall(allchild(0),'Flat','Tag',Tag);
+if length(F) > 0, close(F); end
 
 %-------------------------------------------------------------------
 % gui positions
@@ -294,9 +298,9 @@ bo  = [to(1) -0.15*yd*sc to(3) -0.4*yd*sc]; % offset for correcting background b
 
 if ismac
 	if cat_io_matlabversion>20110
-		po  = [-3 -2 7 0]; % offset for correcting popup menus
+		po = [-3 -2 7 0]; % offset for correcting popup menus
 	else
-		po  = [-1 -3 3 0]; % offset for correcting popup menus
+		po = [-1 -3 3 0]; % offset for correcting popup menus
 	end
 else
   if isunix % Linux
@@ -312,7 +316,7 @@ end
 h0 = figure(...
   'PaperUnits','inches',...
   'Units','pixels',...
-  'Position',[WS(1) WS(2) sz(1) sz(2)],...
+  'Position',[WSG(1)+WSG(3)+5 WSG(2)+WSG(4)-sz(2)+25 sz(1) sz(2)],...
   'Visible',get(0,'defaultfigureVisible'),...
   'Color',[0.8 0.8 0.8],...
   'Colormap',gray(64),...
@@ -394,8 +398,8 @@ h03 = uicontrol(...
       'Value',1,...
       'Position',get(h03,'Position')+po,...
 		  'String',{center('Segment');...
-	  	  sprintf('%s: Segmentation actual release %s (%s)',catversion.rel,catversion.ver,catversion.dat);...
-		    'CAT12.6: Segmentation r1445 (2019/03)';...
+	  	  sprintf('%s: Segmentation actual release r%s (%s)',catversion.rel,catversion.ver,catversion.dat);...
+		    'CAT12.6: Segmentation r1445 (2019-03-27)';...
 		  },...
 		  'UserData',{...
 		    'spm_jobman(''interactive'','''',''spm.tools.cat.estwrite'');'...
@@ -429,8 +433,8 @@ h04 = uicontrol(...
       'Value',1,...
       'Position',get(h04,'Position')+po,...
 		  'String',{center('Segment Longitudinal');...
-	  	  sprintf('%s: Segment Longitudinal Data actual release %s (%s)',catversion.rel,catversion.ver,catversion.dat);...
-		    'CAT12.6: Segment Longitudinal Data r1445 (2019/03)';...
+	  	  sprintf('%s: Segment Longitudinal Data actual release r%s (%s)',catversion.rel,catversion.ver,catversion.dat);...
+		    'CAT12.6: Segment Longitudinal Data r1445 (2019-03-27)';...
 		  },...
 		  'UserData',{...
 		    'spm_jobman(''interactive'','''',''spm.tools.cat.tools.long'');'...
@@ -986,7 +990,7 @@ global FS x2w
 if ismac & cat_io_matlabversion<20110
   out = in;
 else
-  out = sprintf('%s%s',repmat(' ',1,round((1.3*x2w/FS-length(in)))),in);
+  out = sprintf('%s%s',repmat(' ',1,round((1.4*x2w/FS-length(in)))),in);
 end
 
 % --- Set application data first then calling the CreateFcn. 
