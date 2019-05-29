@@ -81,7 +81,7 @@ function varargout = cat_vol_sanlm(varargin)
 %
 %_______________________________________________________________________
 % Christian Gaser, Robert Dahnke
-% $Id: cat_vol_sanlm.m 1440 2019-03-20 09:21:59Z gaser $
+% $Id$
 
   
     
@@ -143,7 +143,7 @@ end
 
 %_______________________________________________________________________
 function varargout = cat_vol_sanlm_file(job)
-    SVNid = '$Rev: 1440 $';
+    SVNid = '$Rev$';
     
     if ~isfield(job,'data') || isempty(job.data)
      job.data = cellstr(spm_select([1 Inf],'image','select images to filter'));

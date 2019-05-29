@@ -23,7 +23,7 @@ if nargin == 0
     % select images for each subject
     don = 0;
     for i = 1:1000,
-        P = spm_select([0 Inf],'.*(img|nii|gii)',['Image(s), subj ' num2str(i)]);
+        P = spm_select([0 Inf],'.*(img|nii|gii)',['Image(s)/Surface(s), subj ' num2str(i)]);
         if size(P,1) < 2, don = 1; break; end;
         try
           V{i} = spm_data_hdr_read(P);
@@ -51,7 +51,7 @@ for i = 1:length(V);
     n = length(Vi);
     % compute global means to normalize images to same value
     if glob & ~surf
-       gm=zeros(n,1);
+       gm = zeros(n,1);
        disp('Calculating globals...');
        for j=1:n, gm(j) = spm_global(Vi(j)); end
        gm_all = mean(gm);

@@ -142,7 +142,7 @@ estwrite1173.name   = 'CAT12: Segmentation R1173 (2017/09)';
 %NEW NAME?: estwrite1173.name   = 'CAT12.1: Segmentation R1392 (2017/09)';
 estwrite1173.tag    = 'estwrite1173';
 estwrite1173.prog   = @cat_run1173;
-estwrite1173.help   = [estwrite1173.help;{'';'This batch calls the stable version of the main preprocessing routing R1173 with only light runtime bug fixes.';''}];
+estwrite1173.help   = [estwrite1173.help;{'';'This batch calls the stable version of the main preprocessing of release R1173 with only slight runtime bug fixes.';''}];
 
 % 1173+ = 1392
 estwrite1173plus        = estwrite1173;
@@ -150,14 +150,14 @@ estwrite1173plus.name   = 'CAT12: Segmentation R1173 plus (2018/12)';
 %NEW NAME?: estwrite1173plus.name   = 'CAT12.3: Segmentation R1392 (2018/12)';
 estwrite1173plus.tag    = 'estwrite1173plus';
 estwrite1173plus.prog   = @cat_run1173plus;
-estwrite1173plus.help   = [estwrite1173.help;{'';'This batch calls the revised version of the main preprocessing routing R1173 that include upgrades by several subfunctions (e.g. skull-stripping) from the current CAT12 version.';''}];
+estwrite1173plus.help   = [estwrite1173.help;{'';'This batch calls the revised version of the main preprocessing of release R1173 that include upgrades by several subfunctions (e.g. skull-stripping) from the current CAT12 version.';''}];
 
 % 1445
 estwrite1445        = estwrite; 
 estwrite1445.name   = 'CAT12.6: Segmentation R1445 (2019/03)';
 estwrite1445.tag    = 'estwrite1445';
 estwrite1445.prog   = @cat_run1445;
-estwrite1445.help   = [estwrite1445.help;{'';'This batch calls the stable version of the main preprocessing routing R1445 with only light runtime bug fixes.';''}];
+estwrite1445.help   = [estwrite1445.help;{'';'This batch calls the stable version of the main preprocessing of release 1445 with only slight runtime bug fixes.';''}];
 
 if feature('numcores') > 1
   estwrite1173.val      = {data nproc opts1173     extopts1173     output1173}; 

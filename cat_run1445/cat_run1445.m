@@ -19,11 +19,11 @@ function varargout = cat_run(job)
 % spm_preproc8_run.m 2281 2008-10-01 12:52:50Z john $
 % ______________________________________________________________________
 % Christian Gaser
-% $Id: cat_run.m 1439 2019-03-20 09:09:26Z gaser $
+% $Id$
 
 %#ok<*AGROW>
 
-%rev = '$Rev: 1439 $';
+%rev = '$Rev$';
 
 %  -----------------------------------------------------------------
 %  Lazy processing (expert feature)

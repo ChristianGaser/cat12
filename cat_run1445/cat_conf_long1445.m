@@ -2,7 +2,7 @@ function varargout = cat_conf_long(varargin)
 % Configuration file for longitudinal data
 %
 % Christian Gaser
-% $Id: cat_conf_long.m 1443 2019-03-21 15:15:33Z gaser $
+% $Id$
 
 newapproach = 0; 
 
