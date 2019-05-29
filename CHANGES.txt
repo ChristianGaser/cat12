@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1471 | gaser | 2019-05-29 16:37:03
+r1472 | gaser | 2019-05-29 22:11:01
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+
+Cosmetic changes in cat12.m
+------------------------------------------------------------------------
+r1471 | gaser | 2019-05-29 16:37:35 +0200 (Mi, 29 Mai 2019) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +21,7 @@ M       html/cat.html
 (1) Changed: Added version check to cat12.m
 (2) Changed: Position of CAT12 GUI is now located right of SPM12 Graphic window
     and height of GUI is equal to SPM12 GUI.
+
 ------------------------------------------------------------------------
 r1470 | gaser | 2019-05-29 13:49:16 +0200 (Mi, 29 Mai 2019) | 37 lines
 
