@@ -6,7 +6,14 @@
 
 global opts extopts output modulate dartel delete_temp ROImenu surfaces cat
 
+if isempty(dartel),       dartel=0; end
+if isempty(modulate),     modulate=1; end
+if isempty(surfaces),     surfaces=cat_get_defaults('output.surfaces'); end
+if isempty(delete_temp),  delete_temp=1; end
+
+
 write_CSF = cat_get_defaults('output.CSF.mod') > 0;
+
 
 if isfield(extopts,'admin') && isfield(extopts.admin,'lazy') && extopts.admin.lazy
   cat12('developer');
@@ -14,20 +21,24 @@ elseif write_CSF
   cat12('expert');
 end
 
+
 warning('off','MATLAB:DELETE:FileNotFound');
 
 
 
 % display start
-mbi = 1;
-matlabbatch{mbi}.cfg_basicio.run_ops.call_matlab.inputs{1}.images = '<UNDEFINED>';
-matlabbatch{mbi}.cfg_basicio.run_ops.call_matlab.outputs          = {};
-matlabbatch{mbi}.cfg_basicio.run_ops.call_matlab.fun              = @(x)cat_io_cprintf('blue',sprintf([...
-  '================================================================================================================================================\n' ...
-  'Start CAT12 longitudinal processing of \n  %s\b\b\b\n' ...
-  '================================================================================================================================================\n'],...
-  sprintf('%s',char( cellfun(@(s) ([s(1:end-2) newline '  '])',x,'UniformOutput',0) )) ));
-
+if ~isempty(extopts) % direct loading 
+  mbi = 1;
+  matlabbatch{mbi}.cfg_basicio.run_ops.call_matlab.inputs{1}.images = '<UNDEFINED>';
+  matlabbatch{mbi}.cfg_basicio.run_ops.call_matlab.outputs          = {};
+  matlabbatch{mbi}.cfg_basicio.run_ops.call_matlab.fun              = @(x)cat_io_cprintf('blue',sprintf([...
+    '================================================================================================================================================\n' ...
+    'Start CAT12 longitudinal processing of \n  %s\b\b\b\n' ...
+    '================================================================================================================================================\n'],...
+    sprintf('%s',char( cellfun(@(s) ([s(1:end-2) newline '  '])',x,'UniformOutput',0) )) ));
+else
+  mbi = 0;
+end
 
 
 % longitudinal rigid registration with final masking
@@ -43,18 +54,18 @@ matlabbatch{mbi}.spm.tools.cat.tools.series.data            = '<UNDEFINED>';
 mbi = mbi + 1; mb_cat = mbi;
 matlabbatch{mbi}.spm.tools.cat.estwrite.data(1)             = cfg_dep('Longitudinal Rigid Registration: Realigned images', substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','rimg', '()',{':'}));
 matlabbatch{mbi}.spm.tools.cat.estwrite.nproc               = 0;
-if exist('opts','var')
+if exist('opts','var') && ~isempty(opts)
 	matlabbatch{mbi}.spm.tools.cat.estwrite.opts              = opts;
 end
-if exist('extopts','var')
+if exist('extopts','var') && ~isempty(extopts)
 	matlabbatch{mbi}.spm.tools.cat.estwrite.extopts           = extopts;
 end
-if exist('output','var')
+if exist('output','var') && ~isempty(output)
 	matlabbatch{mbi}.spm.tools.cat.estwrite.output            = output;
 end
 % surface estimation
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.surface      = surfaces;
-if exist('ROImenu','var')
+if exist('ROImenu','var') && ~isempty(ROImenu)
   matlabbatch{mbi}.spm.tools.cat.estwrite.output.ROImenu    = ROImenu;
 end
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.GM.native    = 1;
