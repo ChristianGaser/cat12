@@ -36,6 +36,9 @@ function varargout = cat_parallelize(job,func,datafield)
 % Christian Gaser, Robert Dahnke
 % $Id$
 
+%#ok<*STRIFCND,*STREMP,*STRCL1> % MATLAB contains function 
+%#ok<*ASGLU>
+
   def.verb      = cat_get_defaults('extopts.verb'); 
   def.lazy      = 0; % reprocess exist results
   def.debug     = cat_get_defaults('extopts.verb')>2;
@@ -104,7 +107,7 @@ function varargout = cat_parallelize(job,func,datafield)
     % temporary name for saving job information
     tmp_name = [tempname '.mat'];
     tmp_array{i} = tmp_name; 
-    global defaults cat;  %#ok<NUSED,TLEV>
+    global defaults cat;  %#ok<TLEV>
     spm12def = defaults;  %#ok<NASGU>
     cat12def = cat;       %#ok<NASGU>
     save(tmp_name,'job','spm12def','cat12def');
@@ -129,12 +132,12 @@ function varargout = cat_parallelize(job,func,datafield)
     end
     
     % log-file for output
-    log_name{i} = ['log_' func '_' logdate '_' sprintf('%02d',i) '.txt'];
+    log_name{i} = ['log_' func '_' logdate '_' sprintf('%02d',i) '.txt']; %#ok<AGROW>
     
     % call matlab with command in the background
     if ispc
       % check for spaces in filenames that will not work with windows systems and background jobs
-      if strfind(spm('dir'),' ')
+      if strfind(spm('dir'),' ') 
         cat_io_cprintf('warn',...
             ['\nWARNING: No background processes possible because your SPM installation is located in \n' ...
              '         a folder that contains spaces. Please set the number of processes in the GUI \n'...
@@ -147,7 +150,7 @@ function varargout = cat_parallelize(job,func,datafield)
       end
       % prepare system specific path for matlab
       export_cmd = ['set PATH=' fullfile(matlabroot,'bin')];
-      [status,result] = system(export_cmd);
+      [status,result] = system(export_cmd); 
       system_cmd = ['start matlab -nodesktop -nosplash -r ' matlab_cmd ' -logfile ' log_name{i}];
     else
       % -nodisplay .. nodisplay is without figure output > problem with CAT report ... was there a server problem with -nodesktop?
@@ -180,7 +183,7 @@ function varargout = cat_parallelize(job,func,datafield)
               FID     = fopen(log_name{i},'r'); 
               txt     = textscan(FID,'%s');
               txt     = txt{1}; 
-              PIDi    = find(cellfun('isempty',strfind(txt,'PID:'))==0,1,'first');
+              PIDi    = find(cellfun('isempty',strfind(txt,'PID:'))==0,1,'first'); 
               fclose(FID);
               if ~isempty(PIDi)
                 PID(i)  = str2double(txt{PIDi+1}); 
@@ -214,7 +217,7 @@ function varargout = cat_parallelize(job,func,datafield)
 
     % starting many large jobs can cause servere MATLAB errors
     pause(1 + rand(1) + job.nproc + numel(job.(datafield))/100);
-    jobs(i).(datafield) = job.(datafield);
+    jobs(i).(datafield) = job.(datafield); %#ok<AGROW>
    
     job = jobo; 
   end
@@ -333,7 +336,7 @@ function varargout = cat_parallelize(job,func,datafield)
             else
               [status,result] = system(sprintf('ps %d',PID(i)));
             end
-            if isempty( strfind( result , sprintf('%d',PID(i)) ) )
+            if isempty( strfind( result , sprintf('%d',PID(i)) ) ) 
               PIDactive(i) = 0; 
             end
             
@@ -350,7 +353,7 @@ function varargout = cat_parallelize(job,func,datafield)
               if isstruct( jobs(i).(datafield) )
                 cat_io_cprintf(err.color,sprintf('  %d/%d (job %d: %d/%d): %s\n',...
                   cid,sum( numel(job_data) ), i,catSID(i), numel(jobs(i).(datafield)), ...
-                  spm_str_manip( spm_fileparts(jobs(i).(datafield)(si).(FN{1}){1}) , 'k40') )); 
+                  spm_str_manip( jobs(i).(datafield)(si).(FN{1}){1}, 'k40') )); 
               else
                 try
                   cat_io_cprintf(err.color,sprintf('  %d/%d (job %d: %d/%d): %s\n',...
@@ -360,6 +363,12 @@ function varargout = cat_parallelize(job,func,datafield)
               end
             end
           end
+          
+          %% further error handling of different functions
+          % 'Error using MATLABbatch system'
+          
+          
+          %%
           spm_progress_bar('Set', cid );
                   
           
@@ -380,66 +389,86 @@ function varargout = cat_parallelize(job,func,datafield)
     if nargout>0
       % load the results of the first job
       load(tmp_array{1});
-      if exist('output','var')
-        varargout{1} = output; 
+      
+      % add further output results of the other jobs 
+      for oi=1:numel(tmp_array)
+        clear output
+        load(tmp_array{oi}); 
 
-        % add the results of the other job 
-        for oi=2:numel(tmp_array)
-          load(tmp_array{oi}); 
-          FN = fieldnames(output);
-
-          % for all fields of output 
-          for fni=1:numel(FN)
-            if ~isfield( varargout{1} , FN{fni} ) 
-              % no subfield ( = new subfield ) > just add it
-              varargout{1}.(FN{fni}) = output.(FN{fni}); 
-            else
-              % existing subfield > merge it
-              if ~isstruct( output.(FN{fni}) )
-                if size(varargout{1}.(FN{fni}),1) > size(varargout{1}.(FN{fni}),2)
-                  varargout{1}.(FN{fni}) = [varargout{1}.(FN{fni});output.(FN{fni})]; 
-                else
-                  varargout{1}.(FN{fni}) = [varargout{1}.(FN{fni}),output.(FN{fni})]; 
-                end
-
-                % cleanup (remove empty entries of failed processings)
-                if iscell(varargout{1}.(FN{fni}))
-                  for ffni=numel( varargout{1}.(FN{fni}) ):-1:1
-                    if isempty(  varargout{1}.(FN{fni}){ffni} )
-                      varargout{1}.(FN{fni})(ffni) = []; 
-                    end
-                  end
-                end
+        if exist('output','var')
+          if ~exist('varargout','var') 
+            % here we can simply set the output
+            varargout{1} = output; 
+          else
+            % here we have to add the data to each field 
+            % (cat_struct does therefore not work)
+            FN = fieldnames(output);
+            for fni=1:numel(FN)
+              if ~isfield( varargout{1} , FN{fni} ) 
+                % no subfield ( = new subfield ) > just add it
+                varargout{1}.(FN{fni}) = output.(FN{fni}); 
               else
-                % this is similar to the first level ...
-                FN2 = fieldnames(output.(FN{fni}));
-                for fni2 = 1:numel(FN2)
-                  if ~isstruct( output.(FN{fni}).(FN2{fni2}) )
-                    if size(varargout{1}.(FN{fni}).(FN2{fni2}),1) > size(varargout{1}.(FN{fni}).(FN2{fni2}),2)
-                      varargout{1}.(FN{fni}).(FN2{fni2}) = [varargout{1}.(FN{fni}).(FN2{fni2});output.(FN{fni}.(FN2{fni2}))]; 
+                % existing subfield > merge it
+                if ~isstruct( output.(FN{fni}) ) 
+                  if isfield(varargout{1},FN{fni}) && ~isstruct( varargout{1}.(FN{fni}) )
+                    if size(varargout{1}.(FN{fni}),1) > size(varargout{1}.(FN{fni}),2) || ...
+                      size(output.(FN{fni}),1) > size(output.(FN{fni}),2) 
+                      varargout{1}.(FN{fni}) = [varargout{1}.(FN{fni}); output.(FN{fni})]; 
                     else
-                      varargout{1}.(FN{fni}).(FN2{fni2}) = [varargout{1}.(FN{fni}).(FN2{fni2}),output.(FN{fni}.(FN2{fni2}))]; 
+                      varargout{1}.(FN{fni}) = [varargout{1}.(FN{fni}), output.(FN{fni})]; 
                     end
 
                     % cleanup (remove empty entries of failed processings)
-                    if iscell(varargout{1}.(FN{fni}).(FN2{fni2}))
-                      for ffni=numel( varargout{1}.(FN{fni}).(FN2{fni2}) ):-1:1
-                        if isempty(  varargout{1}.(FN{fni}).(FN2{fni2}){ffni} )
-                          varargout{1}.(FN{fni}).(FN2{fni2})(ffni) = []; 
+                    if iscell(varargout{1}.(FN{fni}))
+                      for ffni=numel( varargout{1}.(FN{fni}) ):-1:1
+                        if isempty(  varargout{1}.(FN{fni}){ffni} )
+                          varargout{1}.(FN{fni})(ffni) = []; 
                         end
                       end
                     end
                   else
-                    error('Only 2 level in output structure supported.')
+                    varargout{1}.(FN{fni}) = output.(FN{fni}); 
+                  end
+                else
+                  % this is similar to the first level ...
+                  FN2 = fieldnames(output.(FN{fni}));
+                  for fni2 = 1:numel(FN2)
+                    if ~isstruct( output.(FN{fni}).(FN2{fni2}) )
+                      if isfield(varargout{1}.(FN{fni}),FN2{fni}) && ~isstruct( varargout{1}.(FN{fni}).(FN2{fni}) )
+                        if size(varargout{1}.(FN{fni}).(FN2{fni2}),1) > size(varargout{1}.(FN{fni}).(FN2{fni2}),2) || ...
+                           size(output.(FN{fni}).(FN2{fni2}),1) > size(output.(FN{fni}).(FN2{fni2}),2)
+                          varargout{1}.(FN{fni}).(FN2{fni2}) = [varargout{1}.(FN{fni}).(FN2{fni2}); output.(FN{fni}.(FN2{fni2}))]; 
+                        else
+                          varargout{1}.(FN{fni}).(FN2{fni2}) = [varargout{1}.(FN{fni}).(FN2{fni2}), output.(FN{fni}.(FN2{fni2}))]; 
+                        end
+
+                        % cleanup (remove empty entries of failed processings)
+                        if iscell(varargout{1}.(FN{fni}).(FN2{fni2}))
+                          for ffni=numel( varargout{1}.(FN{fni}).(FN2{fni2}) ):-1:1
+                            if isempty(  varargout{1}.(FN{fni}).(FN2{fni2}){ffni} )
+                              varargout{1}.(FN{fni}).(FN2{fni2})(ffni) = []; 
+                            end
+                          end
+                        end
+                      else
+                        varargout{1}.(FN{fni}).(FN2{fni}) = output.(FN{fni}).(FN2{fni}); 
+                      end
+                    else
+                      error('Only 2 level in output structure supported.')
+                    end
                   end
                 end
               end
             end
           end
+        else
+          % create an error message?
+          oistr = cat_io_strrep( sprintf('%dth',oi) , {'1th'; '2th'; '3th'} , {'1st','2nd','3rd'} ); 
+          cat_io_cprintf('error',sprintf(...
+            'The %s processes does not contain the output variablefor depending jobs. Check log-file for errors: \n  ', oistr));
+          fprintf([spm_file(log_name{oi},'link',sprintf('edit(%s)',log_name{oi})) '\n\n']);
         end
       end
-    else
-      error('Parallel processes contain no output variable that is required for ongoing preprocessing.')
     end
     
     % no final report yet ...
