@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1475 | gaser | 2019-05-31 17:02:51
+r1476 | gaser | 2019-05-31 22:13:46
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+
+Changed: Disabled backgroundcolor to solve issues with older Matlab versions
+for CAT12 GUI.
+------------------------------------------------------------------------
+r1475 | gaser | 2019-05-31 17:03:14 +0200 (Fr, 31 Mai 2019) | 19 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -19,6 +28,7 @@ RM      html/images/cat_hd02yellow.png
 
 (1) Changed: Updated CAT12 GUI.
 (2) Changed: P-values of "0" are corrected to eps in cat_stat_analyze_ROIs.m
+
 ------------------------------------------------------------------------
 r1474 | dahnke | 2019-05-31 16:16:12 +0200 (Fr, 31 Mai 2019) | 21 lines
 
