@@ -148,10 +148,10 @@ switch expert
 end
 
 % This creates the 'background' image
-handles.ha = axes('units','pixel','position',[1 sz(2)-sc*99 sz(1) sc*100]);
-I = imread(fullfile(spm('dir'),'toolbox','cat12','html','images','contact_small.jpg'));
-imagesc(I);
-axis off; 
+%handles.ha = axes('units','pixel','position',[1 sz(2)-sc*99 sz(1) sc*100]);
+%I = imread(fullfile(spm('dir'),'toolbox','cat12','html','images','contact_small.jpg'));
+%imagesc(I);
+%axis off; 
 text(sz(1)/20,sc*60,'Computational Anatomy Toolbox','Color',[1 1 1],'Fontsize',FS+4,'Fontweight','bold');
 
 switch species
@@ -757,7 +757,7 @@ h18 = uicontrol(...
 %-------------------------------------------------------------------
 % Data Presentation
 %-------------------------------------------------------------------
-h21 = uicontrol(...
+h20 = uicontrol(...
   'Parent',h0,...
   'Units','pixels',...
   'String','',...
@@ -973,7 +973,7 @@ h40 = uicontrol(...
   'ForegroundColor',[0.5 0.5 0.5],...
   'ListboxTop',0,...
   'HorizontalAlignment','center',...
-  'Position',[x2(1) 10 tw th]+to,...
+  'Position',[x2(1) 7 tw th]+to,...
   'String','Copyright (c) Structural Brain Mapping Group',...
   'Style','text',...
   'Tag','text080',...
@@ -982,6 +982,58 @@ h40 = uicontrol(...
   'FontName',get(0,'defaultuicontrolFontName'));
 
 hsingleton = h0;
+
+%-------------------------------------------------------------------
+% Roberts changes
+%-------------------------------------------------------------------
+% create the 'background' image
+handles.ma = axes('parent',h0,'units','pixel','position',[1 1 sz]);
+imagesc( handles.ma , imread(fullfile(spm('dir'),'toolbox','cat12','html','images','cat_bg.jpg'))); 
+axis(handles.ma,'off'); 
+ 
+% set menu box images
+set([h01,h11,h20,h30], ...
+  'Style','pushbutton','enable','inactive',...
+  'backgroundcolor',[0.9400 0.9400 0.9400],... default = replace by cdata
+  'cdata',imread(fullfile(spm('dir'),'toolbox','cat12','html','images','cat_bg.jpg'))); 
+ 
+% set menu box header image
+boxhandle = [h02,h12,h21,h31];
+boximgage = {
+  imread(fullfile(spm('dir'),'toolbox','cat12','html','images','cat_hd02blue2.png'));
+  imread(fullfile(spm('dir'),'toolbox','cat12','html','images','cat_hd02red.png'));
+  imread(fullfile(spm('dir'),'toolbox','cat12','html','images','cat_hd02green.png'));
+  imread(fullfile(spm('dir'),'toolbox','cat12','html','images','cat_hd02purple.png'));
+  };
+for i=1:numel(boxhandle)
+  set(boxhandle(i), ...
+    ...'ForegroundColor',[1 1 1],...
+    'ForegroundColor',[0.9 0.9 0.9],...
+    'FontWeight','bold',...
+    'Style','pushbutton','enable','inactive',...
+    'backgroundcolor',[0.9400 0.9400 0.9400],...default = replace by cdata
+    'cdata',boximgage{i});
+end
+ 
+% set bottom box
+h0pos   = get(h0,'Position'); 
+h40pos  = get(h40,'Position');
+I       = imread(fullfile(spm('dir'),'toolbox','cat12','html','images','cat_bg.jpg')); 
+[X2,Y2] = meshgrid(1:size(I,2)/h0pos(3):size(I,2),1:size(I,1)/h0pos(4):size(I,1)); 
+I(end+1,:,:) = I(end,:,:); I(:,end+1,:) = I(:,end,:);
+I2 = zeros([size(X2),3],'uint8'); 
+for i=1:3, I2(:,:,i) = cat_vol_ctype(interp2(double(I(:,:,i)),X2,Y2)); end
+% cutting the image
+I2( round(h0pos(4) - h40pos(2) + 1) : end ,:,:) = [];
+I2( 1 : round(h0pos(4) - h40pos(2) - h40pos(4) - 1) ,:,:) = [];
+I2(:, round(h40pos(3) + h40pos(1)) : end   ,:) = [];
+I2(:, round(1 : h40pos(1) - 1)  ,:) = [];
+set(h40,...
+  'Style','pushbutton','enable','inactive',...
+  'backgroundcolor',[0.9400 0.9400 0.9400],... default = replace by cdata
+  'cdata',I2); 
+%-------------------------------------------------------------------
+
 
 %-------------------------------------------------------------------
 function out = center(in)
