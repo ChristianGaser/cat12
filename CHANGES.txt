@@ -1,11 +1,26 @@
 ------------------------------------------------------------------------
-r1472 | gaser | 2019-05-29 22:11:01
+r1473 | dahnke | 2019-05-31 12:35:35
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_main.m
+M       cat_long_multi_run.m
+M       cat_parallelize.m
+M       cat_run.m
+
+(1) Changed:    Updated cat_run and cat_parallelize for MATLAB 2018 recommendations.
+(2) Changed:    Added subject command line output batches and 
+                restructured cat_long_main.
+                  
+------------------------------------------------------------------------
+r1472 | gaser | 2019-05-29 22:11:33 +0200 (Mi, 29 Mai 2019) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat12.m
 
 Cosmetic changes in cat12.m
+
 ------------------------------------------------------------------------
 r1471 | gaser | 2019-05-29 16:37:35 +0200 (Mi, 29 Mai 2019) | 13 lines
 

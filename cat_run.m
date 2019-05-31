@@ -21,7 +21,7 @@ function varargout = cat_run(job)
 % Christian Gaser
 % $Id$
 
-%#ok<*AGROW>
+%#ok<*AGROW,*STRIFCND,*STRCL1,*ASGLU,*STREMP>
 
 %rev = '$Rev$';
 
@@ -81,8 +81,8 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     tmp_name = [tempname '.mat'];
     tmp_array{i} = tmp_name; 
     %def = cat_get_defaults; job = cat_io_checkinopt(job,def); % further job update required here to get the latest cat defaults
-    spm12def = spm_get_defaults;    
-    cat12def = cat_get_defaults; 
+    spm12def = spm_get_defaults;  %#ok<NASGU>
+    cat12def = cat_get_defaults;  %#ok<NASGU>
     save(tmp_name,'job','spm12def','cat12def');
     clear spm12def cat12;
     
@@ -100,7 +100,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     % call matlab with command in the background
     if ispc
       % check for spaces in filenames that will not work with windows systems and background jobs
-      if strfind(spm('dir'),' ')
+      if strfind(spm('dir'),' ') 
         cat_io_cprintf('warn',...
             ['\nWARNING: No background processes possible because your SPM installation is located in \n' ...
              '         a folder that contains spaces. Please set the number of processes in the GUI \n'...
@@ -248,7 +248,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
             fclose(FID);
             
             % search for the _previous_ start entry "CAT12.# r####: 1/14:   ./MRData/*.nii" 
-            catis   = find(cellfun('isempty',strfind(txt,sprintf('%s r%s: ',catv,catr)))==0,2,'last');
+            catis   = find(cellfun('isempty',strfind(txt,sprintf('%s r%s: ',catv,catr)))==0,2,'last'); 
             catie   = find(cellfun('isempty',strfind(txt,'CAT preprocessing takes'))==0,1,'last');
             if ~isempty(catis) && ( numel(catis)>2 ||  ~isempty(catie) )
               if catis(end)<catie(1)
@@ -288,7 +288,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
               caterrcode = ''; 
               for ei = 4:(catl(find(catl>cati,1,'first')+2) - cati)
                 catfct{ei-2}  = textscan( txt{cati+ei} ,'%d%s%s','Delimiter',' ');
-                if isempty(caterrcode);
+                if isempty(caterrcode)
                   switch char(catfct{ei-2}{3})
                     % most relevant functions to identify the error 
                     case {'cat_surf_createCS','cat_main','cat_run'}
@@ -322,11 +322,11 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
             
             % find out if the current task is still active
             if ispc
-              [status,result] = system(sprintf('tasklist /v /fi "PID %d"',PID(i))); 
+              [status,result] = system(sprintf('tasklist /v /fi "PID %d"',PID(i)));  
             else
               [status,result] = system(sprintf('ps %d',PID(i)));
             end
-            if isempty( strfind( result , sprintf('%d',PID(i)) ) )
+            if isempty( strfind( result , sprintf('%d',PID(i)) ) ) 
               PIDactive(i) = 0; 
             end
             
@@ -354,16 +354,16 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
               
               
               switch caterr
-              case 'Bad SPM-Segmentation. Check image orientation!', % pink error that support user interaction  
-                err.txt   = 'VBM affreg error - Check origin!'; 
-                err.color = [0.9 0 0.9];
-                err.aff   = err.aff + 1;
-              case '', % successful processing    
-                % here it would be necessary to differentiate IQR and PQR
-                %if 1 % no warning
-                  err.txt   = ''; 
-                  err.color = [0 0 0];
-                  err.warn0 = err.warn0 + 1; 
+                case 'Bad SPM-Segmentation. Check image orientation!' % pink error that support user interaction  
+                  err.txt   = 'VBM affreg error - Check origin!'; 
+                  err.color = [0.9 0 0.9];
+                  err.aff   = err.aff + 1;
+                case '' % successful processing    
+                  % here it would be necessary to differentiate IQR and PQR
+                  %if 1 % no warning
+                    err.txt   = ''; 
+                    err.color = [0 0 0];
+                    err.warn0 = err.warn0 + 1; 
                 %{
                 elseif 0==1 % light yellow warning
                   err.txt   = 'Possible error - Check results!'; 
@@ -375,7 +375,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                   err.warn2 = err.warn2 + 1; 
                 end
                 %}
-                otherwise,   
+                otherwise   
                   err.txt   = errtxt;
                   err.color = [1 0 0];
                   err.vbm   = err.vbm + 1;
@@ -591,7 +591,7 @@ function job = update_job(job)
   % find and check the Dartel templates
   [tpp,tff,tee] = spm_fileparts(job.extopts.darteltpm{1});
   job.extopts.darteltpm{1} = fullfile(tpp,[tff,tee]); 
-  numpos = min([strfind(tff,'Template_1')]) + 8;
+  numpos = min(strfind(tff,'Template_1')) + 8;
   if isempty(numpos)
     error('CAT:cat_main:TemplateNameError', ...
     ['Could not find the string "Template_1" in Dartel template that \n'...
@@ -620,7 +620,7 @@ function job = update_job(job)
   % find and check the Shooting templates
   [tpp,tff,tee] = spm_fileparts(job.extopts.shootingtpm{1});
   job.extopts.shootingtpm{1} = fullfile(tpp,[tff,tee]); 
-  numpos = min([strfind(tff,'Template_0')]) + 8;
+  numpos = min(strfind(tff,'Template_0')) + 8;
   if isempty(numpos)
     error('CAT:cat_main:TemplateNameError', ...
     ['Could not find the string "Template_0" in Shooting template that \n'...
@@ -688,7 +688,7 @@ function job = update_job(job)
   [pth,nam,ext] = spm_fileparts(job.opts.tpm{1});
   clsn = min(6,numel(spm_vol(fullfile(pth,[nam ext])))); 
   tissue = struct();
-  for i=1:clsn;
+  for i=1:clsn
     tissue(i).ngaus = job.opts.ngaus(i);
     tissue(i).tpm = [fullfile(pth,[nam ext]) ',' num2str(i)];
   end
@@ -701,7 +701,7 @@ function job = update_job(job)
   tissue(3).native = [job.output.CSF.native (job.output.CSF.dartel==1)    (job.output.CSF.dartel==2)   ];
 
   % never write class 4-6
-  for i=4:6;
+  for i=4:6
     tissue(i).warped = [0 0 0];
     tissue(i).native = [0 0 0];
   end
@@ -770,9 +770,9 @@ lhcentral   = {};
 rhcentral   = {};
 lhthickness = {};
 rhthickness = {};
-roi         = {};
-fordef      = {};
-invdef      = {};
+%roi         = {};
+%fordef      = {};
+%invdef      = {};
 jacobian    = {};
 
 if job.extopts.subfolders
@@ -814,12 +814,6 @@ if job.output.surface
     rhcentral = cell(n,1);
     lhthickness = cell(n,1);
     rhthickness = cell(n,1);
-    if job.output.surface == 2
-        lccentral = cell(n,1);
-        rccentral = cell(n,1);
-        lcthickness = cell(n,1);
-        rcthickness = cell(n,1);
-    end
     for j=1:n
         lhcentral{j} = fullfile(parts{j,1},surffolder,['lh.central.',parts{j,2},'.gii']);
         rhcentral{j} = fullfile(parts{j,1},surffolder,['rh.central.',parts{j,2},'.gii']);
@@ -1041,16 +1035,14 @@ function [data,err] = remove_already_processed(job,verb)
   cat_io_cprintf('warn',sprintf('  Process %d subjects!\n',numel(data)));
 return
 %=======================================================================
-function [lazy,FNok] = checklazy(job,subj,verb)
+function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
   if job.extopts.subfolders
     roifolder    = 'label';
     surffolder   = 'surf';
-    mrifolder    = 'mri';
     reportfolder = 'report';
   else
     roifolder    = '';
     surffolder   = '';
-    mrifolder    = '';
     reportfolder = '';
   end
 
@@ -1099,7 +1091,7 @@ function [lazy,FNok] = checklazy(job,subj,verb)
             end
           end
         elseif ischar(job.opts.(FNopts{fni}))
-          if ~strcmp(xml.parameter.opts.(FNopts{fni}),job.opts.(FNopts{fni})); 
+          if ~strcmp(xml.parameter.opts.(FNopts{fni}),job.opts.(FNopts{fni})) 
             FNok = 5; break
           end
         end
@@ -1158,9 +1150,9 @@ function [lazy,FNok] = checklazy(job,subj,verb)
         end
       else
         % this did not work anymore due to the GUI subfields :/
-        if 0 %any(xml.parameter.extopts.(FNextopts{fni}) ~= job.extopts.(FNextopts{fni}))
-          FNok = 13; break
-        end
+        %if any(xml.parameter.extopts.(FNextopts{fni}) ~= job.extopts.(FNextopts{fni}))
+        %  FNok = 13; break
+        %end
       end
     end
     if FNok~=1 % different extopts
