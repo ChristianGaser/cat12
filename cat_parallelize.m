@@ -270,8 +270,10 @@ function varargout = cat_parallelize(job,func,datafield)
         %[catv,catr] = cat_version;
             
         %% loop as long as data is processed by active tasks
-        while ( cid <= sum( numel(job_data) ) + 1 ) &&  any( PIDactive ) % plus 1 because only staring jobs are shown!
+        activePIDs = 1; 
+        while ( cid <= sum( numel(job_data) ) + 1 ) && activePIDs % plus 1 because only staring jobs are shown!
           pause(ptimesid); 
+          if all( PIDactive==0 ), activePIDs = 0; end 
           
           %% get status of each process
           for i=1:job.nproc
@@ -288,7 +290,7 @@ function varargout = cat_parallelize(job,func,datafield)
               if isstruct( jobs(i).(datafield) )
                 %%
                 FN = fieldnames( jobs(i).(datafield) ); 
-                for si=1:numel( jobs(i).(datafield) )
+                for si=1:numel( FN )
                   [pp,ff,ee] = spm_fileparts(jobs(i).(datafield)(si).(FN{1}){1});
                   file = spm_str_manip(fullfile(pp,spm_file(ff,'prefix','r')),'l30');
                   SID{si} = find( cellfun('isempty', strfind( txt , file ))==0 ,1,'first');
@@ -345,19 +347,20 @@ function varargout = cat_parallelize(job,func,datafield)
             %  if this task was not printed before  ( catSIDlast(i) < catSID(i) )  and 
             %  if one subject was successfully or with error processed ( any(cattime>0) || ~isempty(caterr) )
             err.color = [0 0 0];
-            if ( catSIDlast(i) < catSID(i) )  
+            if ( catSIDlast(i) < catSID(i) ) 
+              %%
               cid = cid + 1; 
               catSIDlast(i) = catSID(i);
               
               % display
               if isstruct( jobs(i).(datafield) )
                 cat_io_cprintf(err.color,sprintf('  %d/%d (job %d: %d/%d): %s\n',...
-                  cid,sum( numel(job_data) ), i,catSID(i), numel(jobs(i).(datafield)), ...
+                  cid,sum( numel(job_data) ),  i,  numel(catSID), numel(jobs(i).(datafield)), ...
                   spm_str_manip( jobs(i).(datafield)(si).(FN{1}){1}, 'k40') )); 
               else
                 try
                   cat_io_cprintf(err.color,sprintf('  %d/%d (job %d: %d/%d): %s\n',...
-                    cid,sum( numel(job_data) ), i,catSID(i), numel(jobs(i).(datafield)), ...
+                    cid,sum( numel(job_data) ),  i,  catSID(i), numel(jobs(i).(datafield)), ...
                     spm_str_manip( jobs(i).(datafield){catSID(i)} , 'k40') )); 
                 end
               end
@@ -373,6 +376,7 @@ function varargout = cat_parallelize(job,func,datafield)
                   
           
         end
+        
       end
     end
     
@@ -387,7 +391,7 @@ function varargout = cat_parallelize(job,func,datafield)
     %    output.subject.data = {file1, ...}
     %  --------------------------------------------------------------------
     if nargout>0
-      % load the results of the first job
+      %% load the results of the first job
       load(tmp_array{1});
       
       % add further output results of the other jobs 
@@ -433,28 +437,30 @@ function varargout = cat_parallelize(job,func,datafield)
                   % this is similar to the first level ...
                   FN2 = fieldnames(output.(FN{fni}));
                   for fni2 = 1:numel(FN2)
-                    if ~isstruct( output.(FN{fni}).(FN2{fni2}) )
-                      if isfield(varargout{1}.(FN{fni}),FN2{fni}) && ~isstruct( varargout{1}.(FN{fni}).(FN2{fni}) )
-                        if size(varargout{1}.(FN{fni}).(FN2{fni2}),1) > size(varargout{1}.(FN{fni}).(FN2{fni2}),2) || ...
-                           size(output.(FN{fni}).(FN2{fni2}),1) > size(output.(FN{fni}).(FN2{fni2}),2)
-                          varargout{1}.(FN{fni}).(FN2{fni2}) = [varargout{1}.(FN{fni}).(FN2{fni2}); output.(FN{fni}.(FN2{fni2}))]; 
-                        else
-                          varargout{1}.(FN{fni}).(FN2{fni2}) = [varargout{1}.(FN{fni}).(FN2{fni2}), output.(FN{fni}.(FN2{fni2}))]; 
-                        end
+                    for fnj=1:numel( output.(FN{fni}) ) 
+                      if ~isstruct( output.(FN{fni})(fnj).(FN2{fni2}) )
+                        if isfield(varargout{1}.(FN{fni})(fnj),FN2{fni2}) && ~isstruct( varargout{1}.(FN{fni})(fnj).(FN2{fni2}) )
+                          if size(varargout{1}.(FN{fni})(fnj).(FN2{fni2}),1) > size(varargout{1}.(FN{fni})(fnj).(FN2{fni2}),2) || ...
+                             size(output.(FN{fni})(fnj).(FN2{fni2}),1) > size(output.(FN{fni})(fnj).(FN2{fni2}),2)
+                            varargout{1}.(FN{fni})(fnj).(FN2{fni2}) = [varargout{1}.(FN{fni})(fnj).(FN2{fni2}); output.(FN{fni})(fnj).(FN2{fni2})]; 
+                          else
+                            varargout{1}.(FN{fni})(fnj).(FN2{fni2}) = [varargout{1}.(FN{fni})(fnj).(FN2{fni2}), output.(FN{fni})(fnj).(FN2{fni2})]; 
+                          end
 
-                        % cleanup (remove empty entries of failed processings)
-                        if iscell(varargout{1}.(FN{fni}).(FN2{fni2}))
-                          for ffni=numel( varargout{1}.(FN{fni}).(FN2{fni2}) ):-1:1
-                            if isempty(  varargout{1}.(FN{fni}).(FN2{fni2}){ffni} )
-                              varargout{1}.(FN{fni}).(FN2{fni2})(ffni) = []; 
+                          % cleanup (remove empty entries of failed processings)
+                          if iscell(varargout{1}.(FN{fni})(fnj).(FN2{fni2}))
+                            for ffni=numel( varargout{1}.(FN{fni})(fnj).(FN2{fni2}) ):-1:1
+                              if isempty(  varargout{1}.(FN{fni})(fnj).(FN2{fni2}){ffni} )
+                                varargout{1}.(FN{fni})(fnj).(FN2{fni2})(ffni) = []; 
+                              end
                             end
                           end
+                        else
+                          varargout{1}.(FN{fni})(fnj).(FN2{fni}) = output.(FN{fni})(fnj).(FN2{fni}); 
                         end
                       else
-                        varargout{1}.(FN{fni}).(FN2{fni}) = output.(FN{fni}).(FN2{fni}); 
+                        error('Only 2 level in output structure supported.')
                       end
-                    else
-                      error('Only 2 level in output structure supported.')
                     end
                   end
                 end

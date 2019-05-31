@@ -1,5 +1,28 @@
 ------------------------------------------------------------------------
-r1473 | dahnke | 2019-05-31 12:35:35
+r1474 | dahnke | 2019-05-31 16:13:59
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_long_main.m
+M       cat_parallelize.m
+A       html/images/cat_bg.jpg
+A       html/images/cat_hd02.png
+A       html/images/cat_hd02blue.png
+A       html/images/cat_hd02blue2.png
+A       html/images/cat_hd02cyan.png
+A       html/images/cat_hd02green.png
+A       html/images/cat_hd02orange.png
+A       html/images/cat_hd02purple.png
+A       html/images/cat_hd02red.png
+A       html/images/cat_hd02yellow.png
+
+(1) Changed:    Added menu background images and add code to load them.
+(2) Fixed:      Corrected batch loading functionality of cat_long_main.
+(3) Fixed:      Corrections in cat_parallelize for correct DEP output 
+                that need further tests! 
+------------------------------------------------------------------------
+r1473 | dahnke | 2019-05-31 12:38:06 +0200 (Fr, 31 Mai 2019) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +35,7 @@ M       cat_run.m
 (2) Changed:    Added subject command line output batches and 
                 restructured cat_long_main.
                   
+
 ------------------------------------------------------------------------
 r1472 | gaser | 2019-05-29 22:11:33 +0200 (Mi, 29 Mai 2019) | 6 lines
 
