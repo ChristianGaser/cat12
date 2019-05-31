@@ -1,5 +1,26 @@
 ------------------------------------------------------------------------
-r1474 | dahnke | 2019-05-31 16:13:59
+r1475 | gaser | 2019-05-31 17:02:51
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_long_multi_run.m
+M       cat_stat_analyze_ROIs.m
+RM      html/images/cat_bg.jpg
+RM      html/images/cat_hd02blue.png
+RM      html/images/cat_hd02blue2.png
+RM      html/images/cat_hd02cyan.png
+RM      html/images/cat_hd02green.png
+RM      html/images/cat_hd02orange.png
+RM      html/images/cat_hd02purple.png
+RM      html/images/cat_hd02red.png
+RM      html/images/cat_hd02yellow.png
+ M      html/images/contact_small.jpg
+
+(1) Changed: Updated CAT12 GUI.
+(2) Changed: P-values of "0" are corrected to eps in cat_stat_analyze_ROIs.m
+------------------------------------------------------------------------
+r1474 | dahnke | 2019-05-31 16:16:12 +0200 (Fr, 31 Mai 2019) | 21 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -21,6 +42,7 @@ A       html/images/cat_hd02yellow.png
 (2) Fixed:      Corrected batch loading functionality of cat_long_main.
 (3) Fixed:      Corrections in cat_parallelize for correct DEP output 
                 that need further tests! 
+
 ------------------------------------------------------------------------
 r1473 | dahnke | 2019-05-31 12:38:06 +0200 (Fr, 31 Mai 2019) | 12 lines
 

@@ -261,6 +261,9 @@ n_structures = size(Y,2);
 % estimate GLM and get p-value
 [p, Beta, statval] = estimate_GLM(Y,X,SPM,Ic);
 
+% for huge effects p-value of 0 has to be corrected
+p(p==0) = eps;
+
 % equivalent z-value 
 Ze = spm_invNcdf(1 - p);
 
@@ -500,7 +503,7 @@ if ~mesh_detected
     % display image as overlay
     OV.reference_image = fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152_GS.nii');
     OV.reference_range = [0.2 1.0];                        % intensity range for reference image
-    OV.opacity = Inf;                                      % transparence value for overlay (<1)
+    OV.opacity = Inf;                                      % transparency value for overlay (<1)
     OV.cmap    = jet;                                      % colormap for overlay
     OV.range   = [-log10(alpha) round(max(data{show_results}(isfinite(data{show_results}))))];
     OV.name = ['logP' corr_short{show_results} output_name '.nii'];
