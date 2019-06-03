@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1476 | gaser | 2019-05-31 22:13:46
+r1477 | gaser | 2019-06-03 10:17:22
+
+Changed paths:
+M       CHANGES.txt
+ M      html/images/cat_bg.jpg
+ M      html/images/cat_hd02.png
+ M      html/images/cat_hd02blue.png
+ M      html/images/cat_hd02blue2.png
+ M      html/images/cat_hd02cyan.png
+ M      html/images/cat_hd02green.png
+ M      html/images/cat_hd02orange.png
+ M      html/images/cat_hd02purple.png
+ M      html/images/cat_hd02red.png
+ M      html/images/cat_hd02yellow.png
+M       templates_1.50mm/cobra.nii
+
+Fixed; Cobra atlas had rounding issues with spm_atlas function.
+------------------------------------------------------------------------
+r1476 | gaser | 2019-05-31 22:14:11 +0200 (Fr, 31 Mai 2019) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +25,7 @@ M       cat12.m
 
 Changed: Disabled backgroundcolor to solve issues with older Matlab versions
 for CAT12 GUI.
+
 ------------------------------------------------------------------------
 r1475 | gaser | 2019-05-31 17:03:14 +0200 (Fr, 31 Mai 2019) | 19 lines
 
