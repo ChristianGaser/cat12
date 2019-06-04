@@ -120,14 +120,14 @@ function varargout = cat_parallelize(job,func,datafield)
         'warning off;global cprintferror; cprintferror=1; addpath %s %s %s; load %s; ' ...
         'global defaults; defaults=spm12def; clear defaults; '...
         'global cat; cat=cat12def; clear cat; cat_display_matlab_PID; ' ...
-        'output = %s(job); save(''%s'',''output''); "'],... 
+        'output = %s(job); try, save(''%s'',''output''); end; exit"'],... 
         spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),fileparts(which(func)),tmp_name,func,tmp_name);
     else
       matlab_cmd = sprintf(['" ' ...
         'warning off;global cprintferror; cprintferror=1; addpath %s %s %s; load %s; ' ...
         'global defaults; defaults=spm12def; clear defaults; '...
         'global cat; cat=cat12def; clear cat; cat_display_matlab_PID; ' ...
-        '%s(job); "'],... 
+        '%s(job); exit"'],... 
         spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),fileparts(which(func)),tmp_name,func);
     end
     
@@ -262,44 +262,161 @@ function varargout = cat_parallelize(job,func,datafield)
         fprintf('_______________________________________________________________\n');
         fprintf('Process volumes (see catlog files for details!):\n');
         
-        % some variables 
+        % jobIDs .. variable to handle different processing parameters
+        %           [ subID , asignedproc , procID , started , finished , error , printed_started , printed_finished ]  
+        %           subID, asignedproc, procID .. identification of the subject in job and jobs(i)
+        %           started   .. count all appearance of the subject name)
+        %           finished  .. set job as finished (e.g. if the next subject name appears)
+        %           error     .. not used yet
+        %           printed   .. printed on cmd line (do not want to print every loop)
+        %
+        % A matrix gives a better overview of the status although the fieldnames of a structure are also nice 
+        %   jobIDs = struct('subID',0,'jobID',0,'jobsubID',0,'started',0,'finished',0,'error',0,'pstarted',0,'pfinished',0);
+        %
+        jobIDs      = zeros(sum( numel(job_data) ),9); 
+        for pi = 1:job.nproc
+          for spi = 1:numel(job.process_index{pi})
+            si = job.process_index{pi}(spi);
+            jobIDs(si,1) = si; 
+            jobIDs(si,2) = pi;
+            jobIDs(si,3) = spi;
+          end
+        end
+        
+        % some older variables
         %err         = struct('err',0); 
-        cid         = 0;
-        PIDactive   = ones(size(catSID));
+        catSID      = zeros(1,job.nproc);
         catSIDlast  = zeros(size(catSID));
-        %[catv,catr] = cat_version;
-            
-        %% loop as long as data is processed by active tasks
-        activePIDs = 1; 
+        
+        
+        % loop as long as data is processed by active tasks
+        PIDactive   = ones(size(catSID)); % active jobs
+        activePIDs  = 1;                  % loop variable to have an extra loop
+        cid         = 0;
         while ( cid <= sum( numel(job_data) ) + 1 ) && activePIDs % plus 1 because only staring jobs are shown!
           pause(ptimesid); 
-          if all( PIDactive==0 ), activePIDs = 0; end 
+          if all( PIDactive==0 ), activePIDs = 0; end % if all jobs are finish, we can also stop looping
+          %fprintf('--\n');
           
-          %% get status of each process
+          % get status of each process
           for i=1:job.nproc
-            % get FID
+            % get FID and read the processing output 
             FID = fopen(log_name{i},'r'); 
             txt = textscan(FID,'%s','Delimiter','\n');
             txt = txt{1}; 
             fclose(FID);
             
-            %% search for the _previous_ start entry "CAT12.# r####: 1/14:   ./MRData/*.nii" 
-            %  if this process failed, we have no progress information but
-            %  we the batch can still work by asking if the taskIDs exist
-            try
+            
+            % find out if the current task is still active
+            if ispc
+              [status,result] = system(sprintf('tasklist /v /fi "PID %d"',PID(i))); 
+            else
+              [status,result] = system(sprintf('ps %d',PID(i)));
+            end
+            if isempty( strfind( result , sprintf('%d',PID(i)) ) ) 
+              PIDactive(i) = 0; 
+            end
+            
+            
+            %% search for the start/end entries of a subject, e.g. "CAT12.# r####: 1/14:   ./MRData/*.nii" 
+            %  This is the dirty part that is expected to need adaption for 
+            %  each new routine that utilize cat_parallelize and has a new
+            %  unique job and log structure. 
+            %  If this process failed, we have no progress information but
+            %  we the batch can still work by asking if the taskIDs exist.
+            %
+            %   jobs(i) .. the i-th parallel job (0<i<=nproc)
+            %   si      .. subject counter in parallel jobs 
+            %try
+            
+              clear findSID SID;
+              
               if isstruct( jobs(i).(datafield) )
-                %%
+                % ---------------------------------------------------------
+                % if the datafield is a structure, e.g. in cat_long_main 
+                % with "jobs(i).subj.mov(1){files}" than we have to run 
+                % though a lot of levels "jobs(i).data(si).data2(fni){ci}"
+                % ---------------------------------------------------------
                 FN = fieldnames( jobs(i).(datafield) ); 
-                for si=1:numel( FN )
-                  [pp,ff,ee] = spm_fileparts(jobs(i).(datafield)(si).(FN{1}){1});
-                  file = spm_str_manip(fullfile(pp,spm_file(ff,'prefix','r')),'l30');
-                  SID{si} = find( cellfun('isempty', strfind( txt , file ))==0 ,1,'first');
+                for fni=1:numel( FN ) % multiple fields
+                  for si=1:numel( jobs(i).(datafield) ) % multiple entries 
+                    if iscell( jobs(i).(datafield)(si).(FN{fni}) )
+                      for ii=1 %:numel( jobs(i).(datafield)(si).(FN{fni}) ) % just count the first job
+                        %%
+                        [pp,ff,ee] = spm_fileparts( jobs(i).(datafield)(si).(FN{fni}){ii} );
+                        
+                        % try to find the filename in the log file
+                        SID2 = find( cellfun('isempty', strfind( txt , ff ))==0 ); 
+                        
+                        % if you found the name ...
+                        if ~isempty( SID2 )
+                          % ... then get the subject number in the original job structure 
+                          jobSID = jobIDs(jobIDs(:,2)==i & jobIDs(:,3)==si,1); 
+                          
+                          jobIDs( jobSID , 4) = numel( SID2 );  % count the number of filename output 
+                          if si>1
+                            jobSIDp = jobIDs(jobIDs(:,2)==i & jobIDs(:,3)==(si-1),1); 
+                            jobIDs( jobSIDp , 5) = 1; % if work on a new subject that mark the previous one as finished 
+                          end
+                        
+                          if strcmp(FN{fni},'mov') % long
+                            % this does not work
+                            FIN = find( cellfun('isempty', strfind( txt, 'Finished CAT12 longitudinal processing of '))); 
+                            if ~isempty( FIN ) && numel(txt)>FIN(end)
+                              SIDFIN = find( cellfun('isempty', strfind( txt( FIN(end)+1 ) , ff ))==0 ); 
+                              if ~isempty( SIDFIN )
+                                jobIDs( jobSID , 5) = 1;
+                                jobIDs( jobSID , 6) = 0;
+                              else
+                                jobIDs( jobSID , 5) = 1;
+                                jobIDs( jobSID , 6) = 1;
+                              end
+                            end
+                          end
+
+                          % if you found something and did not print it before than print that you have started this subject 
+                          if jobIDs(jobSID,4)>0 && jobIDs(jobSID,7)==0 && jobIDs(jobSID,8)==0  
+                            jobIDs(jobSID,7) = 1;
+                            cat_io_cprintf([0 0 0.5],sprintf('  started  %d/%d (pjob %d: %d/%d): %s\n',...
+                              jobSID,sum( numel(job_data) ),  i, jobIDs(jobSID,3) , numel(jobs(i).(datafield)), ...
+                              spm_str_manip( jobs(i).(datafield)(si).(FN{1}){1}, 'k40') ));
+                          end
+                          
+                          % if you started the next subject or the job is finished then print that you finished the job
+                          if ( jobIDs(jobSID,5)>0 || PIDactive(i)==0 ) && jobIDs(jobSID,8)==0
+                            jobIDs(jobSID,8) = 1;
+                            if jobIDs( jobSID , 6) == 0
+                              cat_io_cprintf( [0 0.5 0] ,sprintf('  finished %d/%d (pjob %d: %d/%d): %s\n',...
+                                jobSID,sum( numel(job_data) ),  i, jobIDs(jobSID,3) , numel(jobs(i).(datafield)), ...
+                                spm_str_manip( jobs(i).(datafield)(si).(FN{1}){1}, 'k40') ));
+                            else
+                              cat_io_cprintf( [1 0 0] ,sprintf('  failed %d/%d (pjob %d: %d/%d): %s\n',...
+                                jobSID,sum( numel(job_data) ),  i, jobIDs(jobSID,3) , numel(jobs(i).(datafield)), ...
+                                spm_str_manip( jobs(i).(datafield)(si).(FN{1}){1}, 'k40') ));
+                            end
+                            cid = cid + 1; 
+                          end
+                          
+                          % if you found something and did not print it before than print that you have started this subject 
+                          if jobIDs(jobSID,4)>0 && jobIDs(jobSID,7)==0
+                            jobIDs(jobSID,7) = 1;
+                            cat_io_cprintf([0 0 0.5],sprintf('  started  %d/%d (pjob %d: %d/%d): %s\n',...
+                              jobSID,sum( numel(job_data) ),  i, jobIDs(jobSID,3) , numel(jobs(i).(datafield)), ...
+                              spm_str_manip( jobs(i).(datafield)(si).(FN{1}){1}, 'k40') ));
+                          end
+                          
+                        end
+                      end
+                    end
+                  end
                 end
               elseif strcmp( datafield , 'data_surf' )
+                % ---------------------------------------------------------
                 % surfaces ... here the filenames of the processed data
                 % change strongly due to side coding ...
+                % ---------------------------------------------------------
                 for si=1:numel( jobs(i).(datafield) )
-                  if iscell( spm_fileparts(jobs(i).(datafield){si}) )
+                  if iscell( jobs(i).(datafield){si} )
                     for sii=1:numel( jobs(i).(datafield){si} )
                       [pp,ff,ee] = spm_fileparts(jobs(i).(datafield){si}{sii}); 
 
@@ -322,62 +439,50 @@ function varargout = cat_parallelize(job,func,datafield)
                   SID{si} = find(cellfun('isempty', strfind( txt , jobs(i).(datafield){si} ))==0,1,'first');
                 end
               end
-              findSID = find(cellfun('isempty',SID)==0,1,'last'); 
-              if ~isempty(findSID), catSID(si) = findSID; end
-
+               
+            %{
             catch
               if ~exist('noSID','var') || noSID==0
                 noSID = 1; 
                 cat_io_cprintf('warn','  Progress bar did not work but still monitoring the tasks.\n'); 
               end
             end
-            
-            % find out if the current task is still active
-            if ispc
-              [status,result] = system(sprintf('tasklist /v /fi "PID %d"',PID(i))); 
-            else
-              [status,result] = system(sprintf('ps %d',PID(i)));
-            end
-            if isempty( strfind( result , sprintf('%d',PID(i)) ) ) 
-              PIDactive(i) = 0; 
-            end
+            %}
+              
             
             
-            %% update status
+            %% update status (old version!)
             %  if this task was not printed before  ( catSIDlast(i) < catSID(i) )  and 
             %  if one subject was successfully or with error processed ( any(cattime>0) || ~isempty(caterr) )
-            err.color = [0 0 0];
-            if ( catSIDlast(i) < catSID(i) ) 
+            if ~isstruct( jobs(i).(datafield) )
               %%
-              cid = cid + 1; 
-              catSIDlast(i) = catSID(i);
+              findSID = find(cellfun('isempty',SID)==0,1,'last'); 
+              if ~isempty(findSID), catSID(si) = findSID; end
               
-              % display
-              if isstruct( jobs(i).(datafield) )
-                cat_io_cprintf(err.color,sprintf('  %d/%d (job %d: %d/%d): %s\n',...
-                  cid,sum( numel(job_data) ),  i,  numel(catSID), numel(jobs(i).(datafield)), ...
-                  spm_str_manip( jobs(i).(datafield)(si).(FN{1}){1}, 'k40') )); 
-              else
+              if numel(catSID)>1 && ( catSIDlast(i) <= catSID(i) ) 
                 try
-                  cat_io_cprintf(err.color,sprintf('  %d/%d (job %d: %d/%d): %s\n',...
-                    cid,sum( numel(job_data) ),  i,  catSID(i), numel(jobs(i).(datafield)), ...
+                  catSIDlast(i) = catSID(si);
+                  cat_io_cprintf([ 0 0 0 ],sprintf('  %d/%d (pjob %d: %d/%d): %s\n',...
+                    cid+1,sum( numel(job_data) ),  i,  catSID(i), numel(jobs(i).(datafield)), ...
                     spm_str_manip( jobs(i).(datafield){catSID(i)} , 'k40') )); 
+                  cid = cid + 1; 
                 end
               end
             end
           end
           
-          %% further error handling of different functions
+          % further error handling of different functions
           % 'Error using MATLABbatch system'
           
           
-          %%
+          %
           spm_progress_bar('Set', cid );
                   
           
         end
         
       end
+      %fprintf('done\n');
     end
     
     
@@ -471,7 +576,7 @@ function varargout = cat_parallelize(job,func,datafield)
           % create an error message?
           oistr = cat_io_strrep( sprintf('%dth',oi) , {'1th'; '2th'; '3th'} , {'1st','2nd','3rd'} ); 
           cat_io_cprintf('error',sprintf(...
-            'The %s processes does not contain the output variablefor depending jobs. Check log-file for errors: \n  ', oistr));
+            'The %s processes does not contain the output variable for depending jobs. Check log-file for errors: \n  ', oistr));
           fprintf([spm_file(log_name{oi},'link',sprintf('edit(%s)',log_name{oi})) '\n\n']);
         end
       end

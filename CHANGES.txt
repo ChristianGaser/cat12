@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1477 | gaser | 2019-06-03 10:17:22
+r1478 | dahnke | 2019-06-04 18:18:31
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_conf_stools.m
+M       cat_long_main.m
+M       cat_parallelize.m
+
+(1) Fixed:    Corrected small things in the CAT menu.
+(2) Fixed:    Corrected cat_parallelize output error.
+(3) Fixed:    Improved cat_parallelize command line output.
+  
+------------------------------------------------------------------------
+r1477 | gaser | 2019-06-03 10:18:29 +0200 (Mo, 03 Jun 2019) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -16,6 +30,7 @@ M       CHANGES.txt
 M       templates_1.50mm/cobra.nii
 
 Fixed; Cobra atlas had rounding issues with spm_atlas function.
+
 ------------------------------------------------------------------------
 r1476 | gaser | 2019-05-31 22:14:11 +0200 (Fr, 31 Mai 2019) | 7 lines
 
