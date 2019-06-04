@@ -1593,60 +1593,69 @@ dep(1).tgt_spec   = cfg_findspec({{'filter','xml','strtype','e'}});
 %==========================================================================
 function dep = vout_surf_resamp(job)
 if job.merge_hemi
-  depsfnames = 'hemispheres'; 
+  depsfnames{1} = 'hemispheres'; 
 else
-  depsfnames = 'hemisphere'; 
+  depsfnames{1} = 'hemisphere'; 
 end
 
 if iscell(job.data_surf)
-  % multdata input
+  %% multdata input
   
   for di = 1:numel(job.data_surf)
     
-    % try to set a speicfic name of dependency objects
-    if isobject(job.data_surf{di}) 
-      ni = find(job.data_surf{di}.sname==':',1,'first');
-      if ~isempty(ni)
-        depsfnames = cat_io_strrep(job.data_surf{di}.sname(ni+1:end),{'Left'},{''}); 
+    % try to set a specific name of dependency objects
+    if isobject(job.data_surf{di})
+      if length(job.data_surf{di})==1 % one type
+        ni = find(job.data_surf{di}.sname==':',1,'first');
+        if ~isempty(ni)
+          depsfnames{1} = cat_io_strrep(job.data_surf{di}.sname(ni+1:end),{'Left'},{''}); 
+        else
+          depsfnames{1} = cat_io_strrep(job.data_surf{di}.sname,{'Extract additional surface parameters: ','Left '},{'',''});
+        end
       else
-        depsfnames = cat_io_strrep(job.data_surf{di}.sname,{'Extract additional surface parameters:','Left'},{'',''});
+        depsfnames = cell(size(job.data_surf)); 
+        for ddi=1:length(job.data_surf{di})
+          depsfnames{ddi} = cat_io_strrep(job.data_surf{di}(ddi).sname,{'Extract additional surface parameters: ','Left '},{'',''});
+        end
       end
     end
     
-    % create new dependency object
-    if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
-    if job.merge_hemi
-      dep(end).sname      = ['Merged' depsfnames];
-      dep(end).src_output = substruct('()',{1}, '.','Psdata','{}',{di},'()',{':'});
-      dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-    else
-      dep(end).sname      = ['Left' depsfnames];
-      dep(end).src_output = substruct('()',{1}, '.','lPsdata','()',{di},'()',{':'});
-      dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-      dep(end+1)          = cfg_dep; %#ok<AGROW>
-      dep(end).sname      = ['Right' depsfnames];
-      dep(end).src_output = substruct('()',{1}, '.','rPsdata','()',{numel(job.data_surf) + di},'()',{':'});
-      dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+    for ddi=1:numel(depsfnames)
+      % create new dependency object
+      if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
+      if job.merge_hemi
+        dep(end).sname      = ['Merged' depsfnames{ddi}];
+        dep(end).src_output = substruct('()',{1}, '.','Psdata','{}',{di},'()',{':'});
+        dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+      else
+        dep(end).sname      = ['Left' depsfnames{ddi}];
+        dep(end).src_output = substruct('()',{1}, '.','lPsdata','()',{di},'()',{':'});
+        dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+        dep(end+1)          = cfg_dep; %#ok<AGROW>
+        dep(end).sname      = ['Right' depsfnames{ddi}];
+        dep(end).src_output = substruct('()',{1}, '.','rPsdata','()',{numel(job.data_surf) + di},'()',{':'});
+        dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+      end
     end
   end
   
 else
-  % single data input
+  % single data input ... old version
   
   if iscell(job.data_surf) && iscell(job.data_surf{1})
     for di = 1:numel(job.data_surf)
       if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
       if job.merge_hemi
-        dep(end).sname      = ['Merged' depsfnames];
+        dep(end).sname      = ['Merged' depsfnames{1}];
         dep(end).src_output = substruct('()',{1}, '.','Psdata','{}',{di},'()',{':'});
         dep(end).src_output = substruct('()',{1}, '.','Psdata','.',sprintf('set%02d',di),'()',{':'});
         dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
       else
-        dep(end).sname      = ['Left' depsfnames];
+        dep(end).sname      = ['Left' depsfnames{1}];
         dep(end).src_output = substruct('()',{1}, '.','lPsdata','()',{di},'()',{':'});
         dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
         dep(end+1)          = cfg_dep; %#ok<AGROW>
-        dep(end).sname      = ['Right' depsfnames];
+        dep(end).sname      = ['Right' depsfnames{1}];
         dep(end).src_output = substruct('()',{1}, '.','rPsdata','()',{numel(job.data_surf) + di},'()',{':'});
         dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
       end

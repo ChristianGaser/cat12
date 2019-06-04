@@ -27,7 +27,8 @@ warning('off','MATLAB:DELETE:FileNotFound');
 
 
 % display start
-if ~isempty(extopts) % direct loading 
+if 0 %~isempty(extopts) % direct loading 
+  % there is a bug somewhere
   mbi = 1;
   matlabbatch{mbi}.cfg_basicio.run_ops.call_matlab.inputs{1}.images = '<UNDEFINED>';
   matlabbatch{mbi}.cfg_basicio.run_ops.call_matlab.outputs          = {};
@@ -35,7 +36,7 @@ if ~isempty(extopts) % direct loading
     '================================================================================================================================================\n' ...
     'Start CAT12 longitudinal processing of \n  %s\b\b\b\n' ...
     '================================================================================================================================================\n'],...
-    sprintf('%s',char( cellfun(@(s) ([s(1:end-2) newline '  '])',x,'UniformOutput',0) )) ));
+    sprintf('%s',char( cellfun(@(s) ([s(1:end-2) '\n  '])',x,'UniformOutput',0) )) ));
 else
   mbi = 0;
 end
@@ -137,7 +138,7 @@ matlabbatch{mbi}.cfg_basicio.run_ops.call_matlab.fun                  = @(x)cat_
   '================================================================================================================================================\n' ...
   'Finished CAT12 longitudinal processing of \n  %s\b\b\b\n' ...
   '================================================================================================================================================\n'],...
-  sprintf('%s',char( cellfun(@(s) ([s(1:end-2) newline '  '])',x,'UniformOutput',0) )) ));
+  sprintf('%s',char( cellfun(@(s) ([s(1:end-2) '\n  '])',x,'UniformOutput',0) )) ));
 
 
 
