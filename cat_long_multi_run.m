@@ -82,6 +82,6 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
   return
 else
   % inputs is used twice because the first one is only used for command line display
-  spm_jobman('run',jobs,inputs{:},inputs{:}); 
+  spm_jobman('run',jobs,inputs{:}); 
 end
 warning on;
