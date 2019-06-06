@@ -1,11 +1,28 @@
 ------------------------------------------------------------------------
-r1479 | gaser | 2019-06-05 12:59:28
+r1480 | dahnke | 2019-06-06 12:48:00
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_long_main.m
+M       cat_long_multi_run.m
+M       cat_parallelize.m
+M       cat_simple.m
+
+(1) Fixed:    Added resolution update of menu box elements.
+(2) Fixed:    Corrected bug in cat_simple longitudinal preprocessing. 
+
+
+  
+------------------------------------------------------------------------
+r1479 | gaser | 2019-06-05 12:59:52 +0200 (Mi, 05 Jun 2019) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_plot_boxplot.m
 
 Changed: Added density plot and some predefined styles to cat_plot_boxplot.m
+
 ------------------------------------------------------------------------
 r1478 | dahnke | 2019-06-04 18:19:06 +0200 (Di, 04 Jun 2019) | 12 lines
 

@@ -27,11 +27,12 @@ warning('off','MATLAB:DELETE:FileNotFound');
 
 
 % display start
-if 0 %~isempty(extopts) % direct loading 
-  % there is a bug somewhere
+if 0 %~isempty(extopts)  
+  % The idea of simply repeat the input is not optimal.  
+  % You have to use the DEP output otherwise it will result in more problems. 
   mbi = 1;
   matlabbatch{mbi}.cfg_basicio.run_ops.call_matlab.inputs{1}.images = '<UNDEFINED>';
-  matlabbatch{mbi}.cfg_basicio.run_ops.call_matlab.outputs          = {};
+  matlabbatch{mbi}.cfg_basicio.run_ops.call_matlab.outputs          = {}; % @(x) cat_io_depin2depout;
   matlabbatch{mbi}.cfg_basicio.run_ops.call_matlab.fun              = @(x)cat_io_cprintf('blue',sprintf([...
     '================================================================================================================================================\n' ...
     'Start CAT12 longitudinal processing of \n  %s\b\b\b\n' ...

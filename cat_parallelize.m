@@ -79,7 +79,7 @@ function varargout = cat_parallelize(job,func,datafield)
   tmp_array = cell(job.nproc,1);
   logdate   = datestr(now,'YYYYmmdd_HHMMSS');
   PID       = zeros(1,job.nproc);
-  catSID    = zeros(1,job.nproc);
+  %catSID    = zeros(1,job.nproc);
   SID       = cell(1,job.nproc); 
   for i=1:job.nproc
     jobo = job; 
@@ -577,7 +577,8 @@ function varargout = cat_parallelize(job,func,datafield)
           oistr = cat_io_strrep( sprintf('%dth',oi) , {'1th'; '2th'; '3th'} , {'1st','2nd','3rd'} ); 
           cat_io_cprintf('error',sprintf(...
             'The %s processes does not contain the output variable for depending jobs. Check log-file for errors: \n  ', oistr));
-          fprintf([spm_file(log_name{oi},'link',sprintf('edit(%s)',log_name{oi})) '\n\n']);
+          %fprintf([spm_file(log_name{oi},'link',sprintf('edit(%s)',log_name{oi})) '\n\n']);
+          cat_io_cprintf([0 0 1],sprintf('%s\n\n',spm_file(log_name{i},'link','edit(''%s'')')));
         end
       end
     end
