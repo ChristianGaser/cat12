@@ -45,7 +45,10 @@ function output = cat_simple(job)
   
   %% longitidinal data handling
   %  ----------------------------------------------------------------------
-  if isfield(job,'datalong') && isfield(job.datalong,'timepoints')
+  if isfield(job,'subj') && isfield(job,'data')
+    long      = 1; 
+    pfield    = 'data'; 
+  elseif isfield(job,'datalong') && isfield(job.datalong,'timepoints')
     % translate estimate into long structure
     job.catversion = strrep(job.catversion,'estwrite','long');
     long      = 1; 
@@ -73,14 +76,12 @@ function output = cat_simple(job)
       for ti = 1:numel(job.datalong.subjects{si})
         job.subj(si).mov{ti,1} = job.datalong.subjects{si}{ti}; 
       end
-      job.data = [job.data job.datalong.subjects{si}];
+      job.data = [job.data; job.datalong.subjects{si}];
     end
   else
     long      = 0; 
     pfield    = 'data'; 
   end
-  
-  
   
   
   
@@ -118,7 +119,8 @@ function output = cat_simple(job)
   % set input files (see handling for longitidinal data above)
   if long
     matlabbatch{mbi}.spm.tools.cat.(job.catversion).subj = job.subj; 
-    [Cs,C] = spm_str_manip([job.subj(:).mov(:)],'C'); 
+    temp   = [job.subj(:).mov]; 
+    [Cs,C] = spm_str_manip(temp(:),'C'); 
     nsub   = numel(job.data); 
   else
     matlabbatch{mbi}.spm.tools.cat.(job.catversion).data = job.data;
