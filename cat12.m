@@ -90,7 +90,7 @@ FS = cat_get_defaults('extopts.fontsize');
 if isempty(FS) || FS > 14
   FS = get(0,'defaultuicontrolFontSize');
 end
-FS = min(10, FS);
+FS = min(9, FS);
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -155,7 +155,7 @@ end
 
 % This creates the 'background' image
 handles.ma = axes('units','pixel','position',[1 1 sz]);
-imagesc(handles.ma,cat_bg); 
+imagesc(cat_bg,'parent',handles.ma); 
 axis('off'); 
 text(sz(1)/20,sc*80,'Computational Anatomy Toolbox','Color',[1 1 1],'Fontsize',FS+5,'Fontweight','bold');
 
@@ -287,7 +287,7 @@ WSG    = get(Fgraph,'Position');
 % close existing cat12 window
 Tag = 'CAT';
 F   = findall(allchild(0),'Flat','Tag',Tag);
-if isempty(F), close(F); end
+if ~isempty(F), close(F); end
 
 %-------------------------------------------------------------------
 % gui positions
@@ -300,7 +300,7 @@ yo  = sc*30;          % y-offset of button field from bottom
 yd  = sc*30;          % y-distance between buttons
 to  = sc*[-10 0 20 0];% offset for correcting text fields
 bo  = [to(1) -0.15*yd*sc to(3) -0.4*yd*sc]; % offset for correcting background box
-tg  = [tw*1.5,tw*1.5];    % resolution adaption for menu pannels
+tg  = [tw*1.5,tw*1.5];    % resolution adaption for menu panels
 
 if ismac
     if cat_io_matlabversion>20110
