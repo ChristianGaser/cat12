@@ -33,7 +33,11 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm)
         clear tpm; 
       else
         % SPM-TPM structure
-        Ptpm = tpm.V(1).fname; 
+        try
+          Ptpm = tpm.V(1).fname; 
+        catch
+          Ptpm = tpm(1).fname; 
+        end
       end
     end
   end

@@ -6,7 +6,7 @@ function output = cat_simple(job)
 
 
   % defaults settings
-  def.catversion    = 'estwrite1445';
+  def.catversion    = 'estwrite';
   def.tpm           = fullfile(spm('dir'),'TPM','TPM.nii');
   def.nproc         = feature('numcores');
   def.surface       = 1; 
@@ -26,6 +26,7 @@ function output = cat_simple(job)
     end
     job = cat_io_checkinopt(job,def);
   end
+  
   % surface default ROIs
   if job.surface==0 && isfield(job,'sROImenu') && ~isfield(job.sROImenu,'noROI')
     cat_io_cprintf('err', ...
@@ -34,6 +35,7 @@ function output = cat_simple(job)
     output = {};
     return
   end
+  
   if isfield(job,'sROImenu') % expert/developer GUI that allows control each atlas map 
     if isfield(job.sROImenu,'satlases')
       % image output
@@ -43,7 +45,7 @@ function output = cat_simple(job)
   end
   
   
-  %% longitidinal data handling
+  %% longitudinal data handling
   %  ----------------------------------------------------------------------
   if isfield(job,'subj') && isfield(job,'data')
     long      = 1; 
@@ -142,14 +144,17 @@ function output = cat_simple(job)
       matlabbatch{mbi}.spm.tools.cat.(job.catversion).opts.tpm = ...
         {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','TPM_Age11.5.nii')};
   end
+  
   % setting of standard fields
   matlabbatch{mbi}.spm.tools.cat.(job.catversion).nproc          = 0;
   matlabbatch{mbi}.spm.tools.cat.(job.catversion).output.GM.mod  = 1; 
   matlabbatch{mbi}.spm.tools.cat.(job.catversion).output.WM.mod  = 1; 
   matlabbatch{mbi}.spm.tools.cat.(job.catversion).output.surface = job.surface;
+  
   if expert
     matlabbatch{mbi}.spm.tools.cat.(job.catversion).extopts.admin.ignoreErrors = job.ignoreErrors; 
   end
+  
   if isfield(job,'atlases')
     if long
       matlabbatch{mbi}.spm.tools.cat.(job.catversion).ROImenu.atlases = job.atlases; % only volume ROIs
@@ -157,6 +162,7 @@ function output = cat_simple(job)
       matlabbatch{mbi}.spm.tools.cat.(job.catversion).output.ROImenu.atlases = job.atlases; % only volume ROIs
     end
   end
+  
   % developer and new version only! 
   % for fast tests of the whole pipeline of the developer mode
   if job.debug 
@@ -269,12 +275,15 @@ function output = cat_simple(job)
     if isfield(matlabbatch{mbi}.spm.tools.cat.stools.surfextract,'GI') && matlabbatch{mbi}.spm.tools.cat.stools.surfextract.GI
       measures = [measures; {'gyrification', 'lPGI'}]; 
     end
+    
     if isfield(matlabbatch{mbi}.spm.tools.cat.stools.surfextract,'FD') && matlabbatch{mbi}.spm.tools.cat.stools.surfextract.FD
       measures = [measures; {'fractal dimension', 'lPFD'}]; 
     end
+    
     if isfield(matlabbatch{mbi}.spm.tools.cat.stools.surfextract,'SD') && matlabbatch{mbi}.spm.tools.cat.stools.surfextract.SD
       measures = [measures; {'sulcal depth', 'lPSD'}]; 
     end
+    
     if isfield(matlabbatch{mbi}.spm.tools.cat.stools.surfextract,'GIL') && ...
      ((isstruct(matlabbatch{mbi}.spm.tools.cat.stools.surfextract.GIL) && ...
        matlabbatch{mbi}.spm.tools.cat.stools.surfextract.GIL.GIL) || ...
@@ -286,9 +295,11 @@ function output = cat_simple(job)
         measures = [measures; {'outwarGI', 'lPoGI'}]; 
       end
     end
+    
     if isfield(matlabbatch{mbi}.spm.tools.cat.stools.surfextract,'area') && matlabbatch{mbi}.spm.tools.cat.stools.surfextract.area
       measures = [measures; {'surface area', 'lPara'}]; 
     end
+    
     if isfield(matlabbatch{mbi}.spm.tools.cat.stools.surfextract,'gmv') && matlabbatch{mbi}.spm.tools.cat.stools.surfextract.gmv
       measures = [measures; {'surface GM volume', 'lPGIL'}]; 
     end
@@ -400,6 +411,7 @@ function output = cat_simple(job)
     output.mwp1{fi} = spm_file(job.data,'prefix',fullfile(mrifolder,'mwp1'));
     output.mwp2{fi} = spm_file(job.data,'prefix',fullfile(mrifolder,'mwp2'));
   end
+  
   if job.surface && exist('measures','var')
     for mi = 1:size(measures,1)
       for fi = 1:numel(job.data)
@@ -415,6 +427,7 @@ function output = cat_simple(job)
       output.(sprintf('s%dmwp2',vsmooth(si))){fi} = spm_file(job.data,'prefix',fullfile(mrifolder,sprintf('s%dmwp2',vsmooth(si))));
     end
   end
+  
   if job.surface && exist('measures','var')
     for si = 1:numel(ssmooth)
       for mi = 1:size(measures,1)
@@ -430,6 +443,7 @@ function output = cat_simple(job)
   for fi = 1:numel(job.data)
     output.catroi{fi} = spm_file(job.data,'prefix',fullfile(roifolder,'catROI_'),'ext','.xml');
   end
+  
   for fi = 1:numel(job.data)
     output.catxml{fi} = spm_file(job.data,'prefix',fullfile(repfolder,'cat_'),'ext','.xml');
   end
