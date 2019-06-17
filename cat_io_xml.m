@@ -47,7 +47,7 @@ function varargout = cat_io_xml(file,varargin)
 
 
   verbose = 0;
-  if usejava('jvm')==0 || isdeployed
+  if usejava('jvm')==0
     warning('MATLAB:SPM:CAT:cat_io_xml:javaerror', ...
       'CAT-ERROR: CAT XML-im/export requires JVM! Read/Write only MAT file.\n');
     %varargout = {};
@@ -148,8 +148,8 @@ function varargout = cat_io_xml(file,varargin)
         error('MATLAB:cat_io_xml:writeErr','Can''t write MAT-file ''%s''!\n',mfile);
       end
       try
-        if usejava('jvm') && ~isdeployed
-          xml_write(file,S);
+        if usejava('jvm')
+          xml_write(file,S)
         end
       catch %#ok<*NASGU> % can write xml file??
         error('MATLAB:cat_io_xml:writeErr','Can''t write XML-file ''%s''!\n',file);
@@ -164,7 +164,7 @@ function varargout = cat_io_xml(file,varargin)
       
       if exist(mfile,'file')
         load(mfile,'S');
-      elseif exist(file,'file') && usejava('jvm') && ~isdeployed
+      elseif exist(file,'file') && usejava('jvm')
         try
           S = xml_read(file);
         catch 
@@ -202,7 +202,7 @@ function varargout = cat_io_xml(file,varargin)
         catch
           error('MATLAB:cat_io_xml:readErr','Can''t read MAT-file ''%s'' for update!\n',mfile);
         end
-      elseif exist(file,'file') && usejava('jvm') && ~isdeployed
+      elseif exist(file,'file') && usejava('jvm')
         try 
           warning off
           S = xml_read(file);
@@ -218,7 +218,7 @@ function varargout = cat_io_xml(file,varargin)
              error('MATLAB:cat_io_xml:writeErr','Can''t write MAT-file ''%s''!\n',mfile);
           end
         end
-      elseif exist(file,'file') && ~(usejava('jvm') && ~isdeployed)
+      elseif exist(file,'file') && ~(usejava('jvm'))
         S = struct(); 
       else
         error('MATLAB:cat_io_xml','"%s" does not exist!\n',file);
