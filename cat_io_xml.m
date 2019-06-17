@@ -149,7 +149,7 @@ function varargout = cat_io_xml(file,varargin)
       end
       try
         if usejava('jvm')
-          xml_write(file,S)
+          xml_write(file,S);
         end
       catch %#ok<*NASGU> % can write xml file??
         error('MATLAB:cat_io_xml:writeErr','Can''t write XML-file ''%s''!\n',file);

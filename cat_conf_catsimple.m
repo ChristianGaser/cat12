@@ -25,7 +25,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
 %   > Maybe tbx_cfg_cat?
 %
 % * Futher references?
-%   > No the link to the CAT paper is enought
+%   > No the link to the CAT paper is enough
 %   > Update cite!
 %   > simple cites by high numbers (use char):
 %     0-10:  176, 185, 178, 179, 8308-8313
@@ -80,7 +80,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   datalong.help     = {
    ['Select mode of longitudinal data selection for timepoints or subjects. ' ...
     'In case of timepoints you can create multiple timepoints where each timepoints has to contain the same number and order of subjects. ' ...
-    'If you have a variing number of timepoints you have to use the subject mode where you have to define the files of each subject. ']
+    'If you have a varying number of timepoints you have to use the subject mode where you have to define the files of each subject. ']
   }; 
 
 
@@ -244,7 +244,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
     };
 
 
-    % additional longidudinal modalities
+    % additional longitudinal modalities
     % - modality-timepoints-subjects
     % - modality-subjects-timepoints
     mdatalong         = datalong; 
@@ -289,25 +289,25 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
 
 %% Parameter
 %  ------------------------------------------------------------------------
+	[catver.rel, catver.ver, catver.dat] = cat_version;
 
   % CAT preprocessing version 
   catversion          = cfg_menu;
   catversion.tag      = 'catversion';
   catversion.name     = 'CAT preprocessing version';
-  catversion.labels   = {'CAT12.1 (2017/09)','CAT12.6 (2019/03)'};
-  catversion.values   = {'estwrite1173','estwrite1445'};
+  catversion.labels   = {'CAT12.6 (2019/03)',sprintf('%s: Segmentation r%s (%s) - actual release',catver.rel,catver.ver,datestr(catver.dat,'YYYY/mm'))};
+  catversion.values   = {'estwrite1445','estwrite'};
   if expert
-    catversion.labels = [catversion.labels(1) {'CAT12.3 (2018/12)'}  catversion.labels(2:end)];
-    catversion.values = [catversion.values(1) {'estwrite1173plus'}   catversion.values(2:end)];
+    catversion.labels = [{'CAT12.3 (2018/12)'}  catversion.labels(1:end)];
+    catversion.values = [{'estwrite1173plus'}   catversion.values(1:end)];
   end
-  catversion.val      = {'estwrite1445'};
+  catversion.val      = {'estwrite'};
   if expert>1
-    catversion.labels = [catversion.labels {'CAT12.# (current)'}];
-    catversion.values = [catversion.values {'estwrite'}];
-    catversion.val    = {'estwrite'};
+    catversion.labels = [{'CAT12.1 (2017/09)'}  catversion.labels(1:end)];
+    catversion.values = [{'estwrite1173'}   catversion.values(1:end)];
   end
   catversion.help     = {[
-    'To expand previously process datasets select the same version of CAT preprocessing used before. ' ...
+    'To expand previously processed datasets select the same version of CAT preprocessing that was used before. ' ...
     'Do not mix different versions!' ...
     ];''};
   
@@ -317,17 +317,19 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   tpm               = cfg_menu;
   tpm.tag           = 'tpm';
   tpm.name          = 'Tissue Probability Map';
-  tpm.labels        = {'Children','Adults'};
+  tpm.labels        = {'Children (mean age 11.5 years)','Adults'};
   tpm.values        = {'children','adults'};
   tpm.val           = {'adults'};
   tpm.help          = {[
     'CAT uses the tissue probability map (TPM) only for the initial SPM ' ...
-    'segmentation using a prior independent AMAP appraoch.  Although even ' ...
-    'the standard TPM of SPM give accurate and robust results in general, ' ...
-    'it is recommended to use a children specific TPM with smaller skull. '] ...
+    'segmentation which is followed by a prior independent AMAP appraoch.' ...
+    'Although even the standard TPM of SPM gives robust results in general, ' ...
+    'it is recommended to use a specific TPM for children data.' ...
+    'The children specific TPM in CAT12 is created using the TOM toolbox and 394 children' ...
+    'from the NIH MRI Study of Normal Brain Development (age 5..18 years)'. '] ...
     ''
     ... further information about the SPM TPM?
-    ... further information about the child TPM?
+    ... further information about the children TPM?
     };
 
   
@@ -410,7 +412,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   if expert > 1 % further mods do not work right now!
     catsimple.val   = [catsimple.val(1) {mods} catsimple.val(2:end)];
   end
-  if cores > 1 % use multithreading only if availabe
+  if cores > 1 & ~isdeployed % use multithreading only if available and not deployed code
     catsimple.val   = [catsimple.val {nproc}];
   end
   if expert>1 % add final debuging option
@@ -445,7 +447,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   if expert > 1
     catsimplelong.val = [catsimplelong.val(1) {longmods} catsimplelong.val(2:end)];
   end
-  if feature('numcores') > 1 % use multithreading only if availabe
+  if cores > 1 & ~isdeployed % use multithreading only if available and not deployed code
     catsimplelong.val = [catsimplelong.val {nproc}];
   end
   if expert>1
@@ -453,13 +455,14 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   end
   catsimplelong.prog  = @cat_simple;
   catsimplelong.vout  = @(job) vout_catsimple(job);
-  catsimplelong.help  = strrep(catsimple.help,'cross-sectional','longidudinal'); 
+  catsimplelong.help  = strrep(catsimple.help,'cross-sectional','longitudinal'); 
   catsimplelong.help  = [
     {[catsimplelong.help{1} ' It requires the same subjects in the same order! ']} 
     catsimplelong.help(2:end)
     ];
    
 return
+
 function dep = vout_catsimple(job)
 % _________________________________________________________________________
 % Do we need the full output here! For instance to remove files?
@@ -491,6 +494,10 @@ function dep = vout_catsimple(job)
     if ~exist('cdep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
     dep(end).sname      = sprintf('%dmm smoothed modulated GMV',vsmooth(si));
     dep(end).src_output = substruct('.',sprintf('s%dmwp1',vsmooth(si)),'()',{':'});
+    dep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    dep(end+1) = cfg_dep;
+    dep(end).sname      = sprintf('%dmm smoothed modulated WMV',vsmooth(si));
+    dep(end).src_output = substruct('.',sprintf('s%dmwp2',vsmooth(si)),'()',{':'});
     dep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end
   

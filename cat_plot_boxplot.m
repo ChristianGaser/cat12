@@ -263,7 +263,7 @@ if opt.changecolor
   end
 end
 if numel(opt.sort)>1 && numel(opt.sort) ~= nc
-  error('ERROR:cat_plot_boxplot:sort','ERROR: Too sort list.'); 
+  error('ERROR:cat_plot_boxplot:sort','ERROR: Too short list.'); 
 end
 
 groupnr = cellfun(@(x) sum(~isnan(x)),data);
