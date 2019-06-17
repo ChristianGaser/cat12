@@ -69,28 +69,31 @@ elseif nargin==2 && ~strcmp(varargin{1},'fig')
   return;
 end
 
-expert = cat_get_defaults('extopts.expertgui');
-WSM    = spm('WinSize','M');
-sc     = max(1,(WSM(4)/550));
-sz     = sc*[391 550]; % window size
-
-[catversion.rel, catversion.ver, catversion.dat] = cat_version;
-
-% check for new CAT12 version
-[sts, msg] = cat_update;
-if isfinite(sts) && sts >= 0
-  fprintf(msg);
-  fprintf('\n');
+% do some initializations if called for the first time
+if nargin <= 1
+	expert = cat_get_defaults('extopts.expertgui');
+	WSM    = spm('WinSize','M');
+	sc     = max(1,(WSM(4)/550));
+	sz     = sc*[391 550]; % window size
+	
+	[catversion.rel, catversion.ver, catversion.dat] = cat_version;
+	
+	% check for new CAT12 version
+	[sts, msg] = cat_update;
+	if isfinite(sts) && sts >= 0
+		fprintf(msg);
+		fprintf('\n');
+	end
+	
+	cat_bg = imread(fullfile(spm('dir'),'toolbox','cat12','html','images','cat_bg.jpg'));
+	
+	% get default font size
+	FS = cat_get_defaults('extopts.fontsize');
+	if isempty(FS) || FS > 14
+		FS = get(0,'defaultuicontrolFontSize');
+	end
+	FS = min(9, FS);
 end
-
-cat_bg = imread(fullfile(spm('dir'),'toolbox','cat12','html','images','cat_bg.jpg'));
-
-% get default font size
-FS = cat_get_defaults('extopts.fontsize');
-if isempty(FS) || FS > 14
-  FS = get(0,'defaultuicontrolFontSize');
-end
-FS = min(9, FS);
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
