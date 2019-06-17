@@ -1,5 +1,25 @@
 ------------------------------------------------------------------------
-r1482 | gaser | 2019-06-17 08:43:20
+r1483 | gaser | 2019-06-17 17:28:59
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_catsimple.m
+M       cat_defaults.m
+M       cat_io_xml.m
+M       cat_plot_boxplot.m
+M       cat_simple.m
+M       cat_surf_create_TPM_hull_surface.m
+M       html/cat.html
+A       templates_1.50mm/TPM_Age11.5.nii
+
+(1) Added: Children template from NIH study with 11.5 years mean age.
+(2) Changed: Updated preprocessing stream for simple preprocessing.
+(3) Changed: Chnaged CAT12 default to ignore errors.
+(4) Fixed: Overlay of hull surface for skull-stripped brains was not
+    working in cat_surf_create_TPM_hull_surface.m
+------------------------------------------------------------------------
+r1482 | gaser | 2019-06-17 08:43:52 +0200 (Mo, 17 Jun 2019) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +33,7 @@ M       tbx_cfg_cat.m
     cat12.
 (3) Fixed: Updated cat_io_xml.m to support deployed versions.
 (4) Changed: Ticklength andGui entries modified in cat_surf_results.m
+
 ------------------------------------------------------------------------
 r1481 | gaser | 2019-06-15 14:55:32 +0200 (Sa, 15 Jun 2019) | 7 lines
 
