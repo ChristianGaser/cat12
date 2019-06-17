@@ -7,7 +7,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
 % subfuction (e.g., skull-stripping, bias-corrections, registration, ...), 
 % their processing quality or their output including only "save" measures
 % such as GM volume, thickness, or curvature. 
-% The DEP output should only contain usefull sets of the most important 
+% The DEP output should only contain useful sets of the most important 
 % statistical files with smoohted and unsmoothed data. 
 % _________________________________________________________________________
 % Robert Dahnke
@@ -46,6 +46,32 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   data.num          = [1 Inf];
   data.help         = {'Select one high resolution T1 image for each subject. '};
 
+  fwhm_vol         = cfg_entry;
+  fwhm_vol.tag     = 'fwhm_vol';
+  fwhm_vol.name    = 'Smoothing Filter Size(s) for Thickness in FWHM';
+  fwhm_vol.strtype = 'r';
+  fwhm_vol.num     = [1 Inf];
+  fwhm_vol.val     = {15};
+  fwhm_vol.help    = {
+    'Select filter size(s) for smoothing. A good starting value is 8mm, For no filtering use a value of 0 and for multiple smoothing sizes define multiple values.'};
+
+  fwhm_surf1         = cfg_entry;
+  fwhm_surf1.tag     = 'fwhm_surf1';
+  fwhm_surf1.name    = 'Smoothing Filter Size(s) for Thickness in FWHM';
+  fwhm_surf1.strtype = 'r';
+  fwhm_surf1.num     = [1 Inf];
+  fwhm_surf1.val     = {15};
+  fwhm_surf1.help    = {
+    'Select filter size(s) for smoothing. For cortical thickness a good starting value is 15mm, For no filtering use a value of 0 and for multiple smoothing sizes define multiple values.'};
+
+  fwhm_surf2         = cfg_entry;
+  fwhm_surf2.tag     = 'fwhm_surf2';
+  fwhm_surf2.name    = 'Smoothing Filter Size(s) for Folding Measures in FWHM';
+  fwhm_surf2.strtype = 'r';
+  fwhm_surf2.num     = [1 Inf];
+  fwhm_surf2.val     = {15};
+  fwhm_surf2.help    = {
+    'Select filter size(s) for smoothing. For folding measures a good starting value is 25mm, For no filtering use a value of 0 and for multiple smoothing sizes define multiple values.'};
   
   % files long with two different selection schemes
   % - timepoints-subjects
@@ -295,7 +321,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   catversion          = cfg_menu;
   catversion.tag      = 'catversion';
   catversion.name     = 'CAT preprocessing version';
-  catversion.labels   = {'CAT12.6 (2019/03)',sprintf('%s: Segmentation r%s (%s) - actual release',catver.rel,catver.ver,datestr(catver.dat,'YYYY/mm'))};
+  catversion.labels   = {'CAT12.6 (2019/03)',sprintf('%s r%s (%s) - actual release',catver.rel,catver.ver,datestr(catver.dat,'YYYY/mm'))};
   catversion.values   = {'estwrite1445','estwrite'};
   if expert
     catversion.labels = [{'CAT12.3 (2018/12)'}  catversion.labels(1:end)];
@@ -326,7 +352,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
     'Although even the standard TPM of SPM gives robust results in general, ' ...
     'it is recommended to use a specific TPM for children data.' ...
     'The children specific TPM in CAT12 is created using the TOM toolbox and 394 children' ...
-    'from the NIH MRI Study of Normal Brain Development (age 5..18 years)'. '] ...
+    'from the NIH MRI Study of Normal Brain Development (age 5..18 years). '] ...
     ''
     ... further information about the SPM TPM?
     ... further information about the children TPM?
@@ -362,7 +388,11 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
 
 
   % nproc - unse only a menu for simpler access? - could maybe a problem if numcore miss some cores
-  cores             = feature('numcores'); 
+  if isdeployed
+    cores = 0;
+  else
+    cores             = feature('numcores'); 
+  end
   if 0 % enter value
     nproc           = cfg_entry;
     nproc.strtype   = 'w';
@@ -405,7 +435,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   catsimple         = cfg_exbranch;
   catsimple.tag     = 'cat_simple';
   catsimple.name    = 'CAT12 Simple Preprocessing'; 
-  catsimple.val     = {data catversion tpm surface};
+  catsimple.val     = {data catversion tpm fwhm_vol surface};
   if expert
     catsimple.val   = [catsimple.val {vROI sROI ignoreErrors}];
   end
@@ -415,20 +445,20 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   if cores > 1 & ~isdeployed % use multithreading only if available and not deployed code
     catsimple.val   = [catsimple.val {nproc}];
   end
-  if expert>1 % add final debuging option
+  if expert>1 % add final debugging option
     catsimple.val   = [catsimple.val {debug}];
   end
   catsimple.prog    = @cat_simple;
   catsimple.vout    = @(job) vout_catsimple(job);
   catsimple.help    = { 
-   ['This batch is a fully standardized cross-sectional CAT preprocessing that prepare your data ' ...
+   ['This batch is a fully standardized cross-sectional CAT preprocessing that prepares your data ' ...
     'for voxel- (VBM), surface- (SBM) and region-based morphometry analysis (RBM). ' ...
-    'It classifies the GM and WM brain tissue (segmentation) and maps them to the template space (spacial registration), ' ...
-    'where it is smoothed with 8 mm (see MRI subdirectory). ' ... % ### UPDATE SMOOTHING ###
-    'Next the central cortical surface is reconstructed and cortical measures were estimated (such as thickness, area, volume, and gyrification), ' ...
-    'registered to the template surface (spherical registration) and smoothed 12 mm (see surf subdirectory). ' ... % ### UPDATE SMOOTHING ###
+    'It classifies the GM and WM brain tissue (segmentation) and maps them to the template space (spatial registration), ' ...
+    'where it is smoothed and saved in the mri subdirectory). ' ... % ### UPDATE SMOOTHING ###
+    'In the next step the central cortical surface is optionally reconstructed and cortical measures such as thickness, area, volume, and gyrification are estimated, ' ...
+    'registered to the template surface (spherical registration) and smoothed (see surf subdirectory). ' ... % ### UPDATE SMOOTHING ###
     'For region-of-interest (ROI) analysis the volumetric Neuromorphometrics and surface-based Desikan atlas are applied (see label subdirectory) ' ...
-    'Moreover, statistical nuisance parameter such as total intracranial volume (TIV) and total surface area (TSA) were estimated (see report directory).']
+    'Moreover,  total intracranial volume (TIV) is estimated (see report directory) to be used as nuisance parameter in statistical analysis.']
     ''
     'Main reference:'
     '  CAT Toolbox paper' % ### UPDATE PAPER ###
@@ -486,7 +516,7 @@ function dep = vout_catsimple(job)
 % _________________________________________________________________________
 
 % ### UPDATE SMOOTHING ###
-  vsmooth = [4 8 12];
+  vsmooth = job.fwhm_vol;
   ssmooth = [6 12 24];
   
   % volume data

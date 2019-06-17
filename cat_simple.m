@@ -11,7 +11,7 @@ function output = cat_simple(job)
   def.nproc         = feature('numcores');
   def.surface       = 1; 
   def.debug         = 0;
-  def.ignoreErrors  = 0;
+  def.ignoreErrors  = 1;
   job = cat_io_checkinopt(job,def); 
   
   expert = cat_get_defaults('extopts.expertgui'); 
@@ -203,7 +203,7 @@ function output = cat_simple(job)
   
   % volumetric smoothing
   % -----------------------------------------------------------------------
-  vsmooth = [4,8,12]; 
+  vsmooth = job.fwhm_vol; 
   for si = 1:numel(vsmooth)
     for ti = 1:2
       mbi = mbi + 1;  
@@ -365,7 +365,7 @@ function output = cat_simple(job)
   
   % estimate TIV & CGW
   % -----------------------------------------------------------------------
-  % * I am not sure if this is usefull here because it is befor any removal
+  % * I am not sure if this is useful here because it is befor any removal
   %   of files
   % * this estimation should be replaced in future by a more general script
   % -----------------------------------------------------------------------
