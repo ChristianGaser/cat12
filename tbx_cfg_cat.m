@@ -113,7 +113,7 @@ estwrite.name   = 'CAT12: Segmentation';
 %NEW NAME?: [catv,catr,catd] = cat_version;
 %           estwrite.name    = sprintf('CAT12.6plus: Segmentation %s (%s/%s)',catr,catd(1:4),catd(6:7));
 % use multithreading only if availabe
-if feature('numcores') > 1
+if feature('numcores') > 1 && ~isdeployed
   if expert>1
     estwrite.val    = {data data_wmh nproc opts extopts output};
   else

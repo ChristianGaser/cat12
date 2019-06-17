@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1481 | gaser | 2019-06-15 14:55:00
+r1482 | gaser | 2019-06-17 08:43:20
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_io_xml.m
+M       cat_surf_results.m
+M       tbx_cfg_cat.m
+
+(1) Fixed: For deployed versions number of cores is automatically set to 0.
+(2) Changed: Initialization in cat12.m is called only for the first call of 
+    cat12.
+(3) Fixed: Updated cat_io_xml.m to support deployed versions.
+(4) Changed: Ticklength andGui entries modified in cat_surf_results.m
+------------------------------------------------------------------------
+r1481 | gaser | 2019-06-15 14:55:32 +0200 (Sa, 15 Jun 2019) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +22,7 @@ M       cat12.m
 
 (1) Fixed: Old cat12 windows were not closed.
 (2) Fixed: Changed use of image handles in cat12.m
+
 ------------------------------------------------------------------------
 r1480 | dahnke | 2019-06-06 12:48:36 +0200 (Do, 06 Jun 2019) | 14 lines
 
