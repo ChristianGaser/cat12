@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1483 | gaser | 2019-06-17 17:28:59
+r1484 | gaser | 2019-06-18 00:20:31
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_catsimple.m
+M       cat_simple.m
+
+Changed: Added fields for smoothing to cat_*simple.m.
+------------------------------------------------------------------------
+r1483 | gaser | 2019-06-17 17:29:33 +0200 (Mo, 17 Jun 2019) | 18 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -18,6 +27,7 @@ A       templates_1.50mm/TPM_Age11.5.nii
 (3) Changed: Chnaged CAT12 default to ignore errors.
 (4) Fixed: Overlay of hull surface for skull-stripped brains was not
     working in cat_surf_create_TPM_hull_surface.m
+
 ------------------------------------------------------------------------
 r1482 | gaser | 2019-06-17 08:43:52 +0200 (Mo, 17 Jun 2019) | 13 lines
 
