@@ -83,7 +83,7 @@ atlases.help     = {'Writing options of ROI atlas maps.'
 
 ROI        = cfg_choice;
 ROI.tag    = 'ROImenu';
-ROI.name   = 'ROI analysis';
+ROI.name   = 'Process ROIs';
 if cat_get_defaults('output.ROI')>0
   ROI.val  = {atlases};
 else
@@ -169,7 +169,7 @@ end
 
 nosROI        = cfg_branch;
 nosROI.tag    = 'noROI';
-nosROI.name   = 'No sROI processing';
+nosROI.name   = 'No surface ROI processing';
 nosROI.help   = {'No surface ROI processing'};
 
 exatlas  = cat_get_defaults('extopts.satlas'); 
@@ -224,14 +224,14 @@ satlases          = cfg_branch;
 satlases.tag      = 'satlases';
 satlases.name     = 'Surface atlases';
 satlases.val      = matlas;
-satlases.help     = {'Writing options of surface ROI atlas maps.'
+satlases.help     = {'Writing options for surface ROI atlas maps.'
 ''
 };
 
 
 sROI        = cfg_choice;
 sROI.tag    = 'sROImenu';
-sROI.name   = 'Surface ROI analysis';
+sROI.name   = 'Process Surface ROIs';
 if cat_get_defaults('output.surface')>0 && cat_get_defaults('output.ROI')>0
   sROI.val  = {satlases};
 else

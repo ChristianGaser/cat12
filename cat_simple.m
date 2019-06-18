@@ -9,13 +9,14 @@ function output = cat_simple(job)
   def.catversion    = 'estwrite';
   def.tpm           = fullfile(spm('dir'),'TPM','TPM.nii');
   def.nproc         = feature('numcores');
-  def.surface       = 1; 
+%  def.surface       = 1; 
   def.debug         = 0;
   def.ignoreErrors  = 1;
   job = cat_io_checkinopt(job,def); 
   
-  expert = cat_get_defaults('extopts.expertgui'); 
-  
+  expert    = cat_get_defaults('extopts.expertgui'); 
+  proc_surf = isfield(job.surface,'yes');
+
   % ROI atlas setup
   % -----------------------------------------------------------------------
   % volume default ROIs
@@ -28,7 +29,7 @@ function output = cat_simple(job)
   end
   
   % surface default ROIs
-  if job.surface==0 && isfield(job,'sROImenu') && ~isfield(job.sROImenu,'noROI')
+  if ~proc_surf && isfield(job,'sROImenu') && ~isfield(job.sROImenu,'noROI')
     cat_io_cprintf('err', ...
       ['\nYou cannot select surface ROI analysis without surface processing.\n' ...
        'Select surface processing or turn of surface ROI analysis.\n\n']);
@@ -36,7 +37,7 @@ function output = cat_simple(job)
     return
   end
   
-  if isfield(job,'sROImenu') % expert/developer GUI that allows control each atlas map 
+  if isfield(job,'sROImenu') % expert/developer GUI that allows control for each atlas map 
     if isfield(job.sROImenu,'satlases')
       % image output
       def.satlases = job.sROImenu.satlases;
@@ -109,8 +110,8 @@ function output = cat_simple(job)
     case 'long1173plus',      estwrite = 'CAT12.3: Segment longitudinal data R1392 (2018/12)';
     case 'long1445',          estwrite = 'CAT12.6: Segment longitudinal data R1445 (2019/03)';
     case 'estwrite',          estwrite = 'CAT12: Segmentation:';
-    case 'estwrite1173',      estwrite = 'CAT12: Segmentation R1173 (2017/09):'; %.1
-    case 'estwrite1173plus',  estwrite = 'CAT12: Segmentation R1173 (2018/12):'; %.3
+    case 'estwrite1173',      estwrite = 'CAT12.1: Segmentation R1173 (2017/09):'; %.1
+    case 'estwrite1173plus',  estwrite = 'CAT12.3: Segmentation R1173 (2018/12):'; %.3
     case 'estwrite1445',      estwrite = 'CAT12.6: Segmentation R1445 (2019/03)';
   end
   
@@ -118,7 +119,7 @@ function output = cat_simple(job)
   
   mbi = 1;
 
-  % set input files (see handling for longitidinal data above)
+  % set input files (see handling for longitudinal data above)
   if long
     matlabbatch{mbi}.spm.tools.cat.(job.catversion).subj = job.subj; 
     temp   = [job.subj(:).mov]; 
@@ -149,8 +150,11 @@ function output = cat_simple(job)
   matlabbatch{mbi}.spm.tools.cat.(job.catversion).nproc          = 0;
   matlabbatch{mbi}.spm.tools.cat.(job.catversion).output.GM.mod  = 1; 
   matlabbatch{mbi}.spm.tools.cat.(job.catversion).output.WM.mod  = 1; 
-  matlabbatch{mbi}.spm.tools.cat.(job.catversion).output.surface = job.surface;
+  matlabbatch{mbi}.spm.tools.cat.(job.catversion).output.surface = proc_surf;
   
+  % set registration
+  matlabbatch{mbi}.spm.tools.cat.(job.catversion).extopts.registration = job.registration; 
+
   if expert
     matlabbatch{mbi}.spm.tools.cat.(job.catversion).extopts.admin.ignoreErrors = job.ignoreErrors; 
   end
@@ -168,11 +172,11 @@ function output = cat_simple(job)
   if job.debug 
     switch job.catversion
       case {'estwrite1445','long1445'}
-        matlabbatch{mbi}.spm.tools.cat.(job.catversion).extopts.registration.regstr       = eps;            % fast shooting only in new versions! 
-        matlabbatch{mbi}.spm.tools.cat.(job.catversion).output.surface                    = job.surface*7;  % use 0.8 mm for pbt ans fast registration (=7)
-        matlabbatch{mbi}.spm.tools.cat.(job.catversion).extopts.admin.lazy                = 1;              % use lazy .. did not work yet - missing DEPs
+        matlabbatch{mbi}.spm.tools.cat.(job.catversion).extopts.registration.regstr       = eps;             % fast shooting only in new versions! 
+        matlabbatch{mbi}.spm.tools.cat.(job.catversion).output.surface                    = int(proc_surf)*7;% use 0.8 mm for pbt ans fast registration (=7)
+        matlabbatch{mbi}.spm.tools.cat.(job.catversion).extopts.admin.lazy                = 1;               % use lazy .. did not work yet - missing DEPs
     end
-    matlabbatch{mbi}.spm.tools.cat.(job.catversion).extopts.segmentation.restypes.fixed   = [2 0];          % use only 2 mm for VBM preprocessing
+    matlabbatch{mbi}.spm.tools.cat.(job.catversion).extopts.segmentation.restypes.fixed   = [2 0];           % use only 2 mm for VBM preprocessing
   end
   
   % here we have to (re)move some fields!
@@ -203,24 +207,29 @@ function output = cat_simple(job)
   
   % volumetric smoothing
   % -----------------------------------------------------------------------
-  vsmooth = job.fwhm_vol; 
+  vsmooth = job.fwhm_vol;
   for si = 1:numel(vsmooth)
-    for ti = 1:2
-      mbi = mbi + 1;  
-      if long
-        matlabbatch{mbi}.spm.spatial.smooth.data = cfg_dep(...
-          sprintf('%s mwp%d Image',estwrite,ti), ...
-          substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-          substruct('.','mwp1', '()',{':'}));
-      else
-        matlabbatch{mbi}.spm.spatial.smooth.data = cfg_dep( ...
-          sprintf('%s mwp%d Image',estwrite,ti), ...
-          substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-          substruct('.','tiss', '()',{1}, '.','mwp', '()',{':'}));
-      end
-    end
-    matlabbatch{mbi}.spm.spatial.smooth.fwhm    = repmat( vsmooth(si) ,1,3);
-    matlabbatch{mbi}.spm.spatial.smooth.prefix  = sprintf('s%d',vsmooth(si));
+		if long
+		  for di = 1:numel(job.datalong.subjects)
+				mbi = mbi + 1;  
+				matlabbatch{mbi}.spm.spatial.smooth.data = cfg_dep(...
+				sprintf('%s Segmented longitudinal data (Subj %d)',estwrite, di), ...
+				substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+				substruct('.','sess', '()',{1}, '.','files'));
+				matlabbatch{mbi}.spm.spatial.smooth.fwhm    = repmat( vsmooth(si) ,1,3);
+				matlabbatch{mbi}.spm.spatial.smooth.prefix  = sprintf('s%d',vsmooth(si));
+			end
+		else
+			for ti = 1:2
+				mbi = mbi + 1;
+				matlabbatch{mbi}.spm.spatial.smooth.data = cfg_dep( ...
+					sprintf('%s mwp%d Image',estwrite,ti), ...
+					substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+					substruct('.','tiss', '()',{ti}, '.','mwp', '()',{':'}));
+				matlabbatch{mbi}.spm.spatial.smooth.fwhm    = repmat( vsmooth(si) ,1,3);
+				matlabbatch{mbi}.spm.spatial.smooth.prefix  = sprintf('s%d',vsmooth(si));
+			end
+		end
   end
 
   
@@ -231,7 +240,7 @@ function output = cat_simple(job)
   
   % surfaces 
   % -----------------------------------------------------------------------
-  if job.surface
+  if proc_surf
     % estimate surface measures 
     % ---------------------------------------------------------------------
     mbi = mbi + 1; 
@@ -268,10 +277,13 @@ function output = cat_simple(job)
 
     % surface smoothing
     % -----------------------------------------------------------------------
-    ssmooth  = [6,12,24]; 
+		if proc_surf
+			ssmooth1  = job.surface.yes.fwhm_surf1;
+			ssmooth2  = job.surface.yes.fwhm_surf2;
+		end
     measures = {};
     
-    % prepare the datafields depending on the internal selction above
+    % prepare the datafields depending on the internal selection above
     if isfield(matlabbatch{mbi}.spm.tools.cat.stools.surfextract,'GI') && matlabbatch{mbi}.spm.tools.cat.stools.surfextract.GI
       measures = [measures; {'gyrification', 'lPGI'}]; 
     end
@@ -304,8 +316,8 @@ function output = cat_simple(job)
       measures = [measures; {'surface GM volume', 'lPGIL'}]; 
     end
     
-    % create surface smoothing batch
-    for si = 1:numel(ssmooth)
+    % create surface smoothing batch for thickness
+    for si = 1:numel(ssmooth1)
       mbi = mbi + 1;  
       % thickness
       if long
@@ -319,10 +331,18 @@ function output = cat_simple(job)
           substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
           substruct('()',{1}, '.','lhthickness', '()',{':'}));
       end
-      
-      % further parameter
+            
+      matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.merge_hemi   = 1;
+      matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.mesh32k      = 1;
+      matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.fwhm_surf    = ssmooth1(si);
+      matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.nproc        = 0;
+    end
+
+    for si = 1:numel(ssmooth2)
+      mbi = mbi + 1;        
+      % further parameters
       for mi = 1:size(measures,1)
-        matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.data_surf{mi+1}(1) = ...
+        matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.data_surf{mi}(1) = ...
           cfg_dep(sprintf('Extract additional surface parameters: Left %s',measures{mi,1}), ...
           substruct('.','val', '{}',{surf_mbi}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
           substruct('()',{1}, '.',measures{mi,2}, '()',{':'}));
@@ -330,14 +350,14 @@ function output = cat_simple(job)
       
       matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.merge_hemi   = 1;
       matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.mesh32k      = 1;
-      matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.fwhm_surf    = ssmooth(si);
+      matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.fwhm_surf    = ssmooth2(si);
       matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.nproc        = 0;
     end
     
     
     
     % surface ROI data mapping
-    if 0
+    if 1
       rdata  = cat_get_defaults('extopts.satlas');
       rfiles = cell(size(rdata,1),1);
       for ri = 1:size(rdata,1) 
@@ -406,13 +426,13 @@ function output = cat_simple(job)
     repfolder  = 'report';
   end
   
-  % unsmoothed RAW Data
+  % unsmoothed segmentations
   for fi = 1:numel(job.data)
     output.mwp1{fi} = spm_file(job.data,'prefix',fullfile(mrifolder,'mwp1'));
     output.mwp2{fi} = spm_file(job.data,'prefix',fullfile(mrifolder,'mwp2'));
   end
   
-  if job.surface && exist('measures','var')
+  if proc_surf && exist('measures','var')
     for mi = 1:size(measures,1)
       for fi = 1:numel(job.data)
         output.measures{mi,1}{fi} = spm_file(job.data,'prefix',fullfile(surffolder,sprintf('mesh.%s.',measures{mi,1})),'ext','.gii');
@@ -428,12 +448,21 @@ function output = cat_simple(job)
     end
   end
   
-  if job.surface && exist('measures','var')
-    for si = 1:numel(ssmooth)
-      for mi = 1:size(measures,1)
-        for fi = 1:numel(job.data)
-          output.(sprintf('s%d%s',ssmooth(si),measures{mi,1})){fi} = ...
-            spm_file(job.data,'prefix',fullfile(surffolder,sprintf('s%dmm.mesh.%s.',ssmooth(si),measures{mi,1})),'ext','.gii');
+  if proc_surf && exist('measures','var')
+    for mi = 1:size(measures,1)
+      if strcmp(measures{mi,1},'thickness')
+        for si = 1:numel(ssmooth1)
+          for fi = 1:numel(job.data)
+            output.(sprintf('s%d%s',ssmooth1(si),measures{mi,1})){fi} = ...
+              spm_file(job.data,'prefix',fullfile(surffolder,sprintf('s%dmm.mesh.%s.',ssmooth1(si),measures{mi,1})),'ext','.gii');
+          end
+        end
+      else
+        for si = 1:numel(ssmooth2)
+          for fi = 1:numel(job.data)
+            output.(sprintf('s%d%s',ssmooth2(si),measures{mi,1})){fi} = ...
+              spm_file(job.data,'prefix',fullfile(surffolder,sprintf('s%dmm.mesh.%s.',ssmooth2(si),measures{mi,1})),'ext','.gii');
+          end
         end
       end
     end
@@ -447,10 +476,7 @@ function output = cat_simple(job)
   for fi = 1:numel(job.data)
     output.catxml{fi} = spm_file(job.data,'prefix',fullfile(repfolder,'cat_'),'ext','.xml');
   end
-  
-  
-  
-  
+    
   spm_jobman('initcfg'); % reinitialize
   spm_jobman('run',matlabbatch); %,inputs{:});
 end
