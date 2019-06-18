@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1484 | gaser | 2019-06-18 00:20:31
+r1485 | gaser | 2019-06-18 18:01:35
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_ROI.m
+M       cat_conf_catsimple.m
+M       cat_conf_long.m
+M       cat_simple.m
+M       tbx_cfg_cat.m
+
+Fixed: Many changes and additional options to cat_*simple.m that should now run
+for cross-sectional data without errors.
+------------------------------------------------------------------------
+r1484 | gaser | 2019-06-18 00:21:03 +0200 (Di, 18 Jun 2019) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +20,7 @@ M       cat_conf_catsimple.m
 M       cat_simple.m
 
 Changed: Added fields for smoothing to cat_*simple.m.
+
 ------------------------------------------------------------------------
 r1483 | gaser | 2019-06-17 17:29:33 +0200 (Mo, 17 Jun 2019) | 18 lines
 

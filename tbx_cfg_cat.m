@@ -138,7 +138,7 @@ estwrite.help   = {
 
 % 1173
 estwrite1173        = estwrite; 
-estwrite1173.name   = 'CAT12: Segmentation R1173 (2017/09)';
+estwrite1173.name   = 'CAT12.1: Segmentation R1173 (2017/09)';
 %NEW NAME?: estwrite1173.name   = 'CAT12.1: Segmentation R1392 (2017/09)';
 estwrite1173.tag    = 'estwrite1173';
 estwrite1173.prog   = @cat_run1173;
@@ -146,7 +146,7 @@ estwrite1173.help   = [estwrite1173.help;{'';'This batch calls the stable versio
 
 % 1173+ = 1392
 estwrite1173plus        = estwrite1173;
-estwrite1173plus.name   = 'CAT12: Segmentation R1173 plus (2018/12)';
+estwrite1173plus.name   = 'CAT12.3: Segmentation R1173 plus (2018/12)';
 %NEW NAME?: estwrite1173plus.name   = 'CAT12.3: Segmentation R1392 (2018/12)';
 estwrite1173plus.tag    = 'estwrite1173plus';
 estwrite1173plus.prog   = @cat_run1173plus;

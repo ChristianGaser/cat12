@@ -94,7 +94,7 @@ output  = cat_conf_output(expert);
 %------------------------------------------------------------------------
 
 long = cfg_exbranch;
-long.name = 'Segment longitudinal data';
+long.name = 'CAT12: Segment longitudinal data';
 long.tag  = 'long';
 if newapproach % new way - not working
   
@@ -167,7 +167,7 @@ else
   else
     long.val  = {esubjs,nproc,opts,extopts,output,ROI,modulate,dartel};
   end
-  long.vout = @(job) vout_long(job);
+  long.vout = @vout_long;
 end
 long.prog = @cat_long_multi_run;
 

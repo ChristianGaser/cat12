@@ -48,12 +48,12 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
 
   fwhm_vol         = cfg_entry;
   fwhm_vol.tag     = 'fwhm_vol';
-  fwhm_vol.name    = 'Smoothing Filter Size(s) for Thickness in FWHM';
+  fwhm_vol.name    = 'Smoothing Filter Size(s) for Volumes in FWHM';
   fwhm_vol.strtype = 'r';
   fwhm_vol.num     = [1 Inf];
-  fwhm_vol.val     = {15};
+  fwhm_vol.val     = {8};
   fwhm_vol.help    = {
-    'Select filter size(s) for smoothing. A good starting value is 8mm, For no filtering use a value of 0 and for multiple smoothing sizes define multiple values.'};
+    'Select filter size(s) for smoothing. A good starting value is 8mm. For no filtering use a value of 0 and for multiple smoothing sizes input several values.'};
 
   fwhm_surf1         = cfg_entry;
   fwhm_surf1.tag     = 'fwhm_surf1';
@@ -62,16 +62,16 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   fwhm_surf1.num     = [1 Inf];
   fwhm_surf1.val     = {15};
   fwhm_surf1.help    = {
-    'Select filter size(s) for smoothing. For cortical thickness a good starting value is 15mm, For no filtering use a value of 0 and for multiple smoothing sizes define multiple values.'};
+    'Select filter size(s) for smoothing. For cortical thickness a good starting value is 15mm. For no filtering use a value of 0 and for multiple smoothing sizes input several values.'};
 
   fwhm_surf2         = cfg_entry;
   fwhm_surf2.tag     = 'fwhm_surf2';
   fwhm_surf2.name    = 'Smoothing Filter Size(s) for Folding Measures in FWHM';
   fwhm_surf2.strtype = 'r';
   fwhm_surf2.num     = [1 Inf];
-  fwhm_surf2.val     = {15};
+  fwhm_surf2.val     = {20};
   fwhm_surf2.help    = {
-    'Select filter size(s) for smoothing. For folding measures a good starting value is 25mm, For no filtering use a value of 0 and for multiple smoothing sizes define multiple values.'};
+    'Select filter size(s) for smoothing. For folding measures a good starting value is 20-25mm. For no filtering use a value of 0 and for multiple smoothing sizes input several values.'};
   
   % files long with two different selection schemes
   % - timepoints-subjects
@@ -348,31 +348,41 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   tpm.val           = {'adults'};
   tpm.help          = {[
     'CAT uses the tissue probability map (TPM) only for the initial SPM ' ...
-    'segmentation which is followed by a prior independent AMAP appraoch.' ...
+    'segmentation which is followed by a prior independent AMAP approach.' ...
     'Although even the standard TPM of SPM gives robust results in general, ' ...
     'it is recommended to use a specific TPM for children data.' ...
     'The children specific TPM in CAT12 is created using the TOM toolbox and 394 children' ...
-    'from the NIH MRI Study of Normal Brain Development (age 5..18 years). '] ...
+    'from the NIH MRI Study of Normal Brain Development (age 5..18 years, mean age 11.5 years). '] ...
     ''
     ... further information about the SPM TPM?
     ... further information about the children TPM?
     };
 
+  [vROI,sROI]       = cat_conf_ROI(expert);    
+  extopts           = cat_conf_extopts(expert);
   
-  surface           = cfg_menu;
+  no                = cfg_const;
+  no.tag            = 'no';
+  no.name           = 'No';
+  no.val            = {1};
+  no.help           = {'No Surface processing'};
+
+  yes               = cfg_branch;
+  yes.tag           = 'yes';
+  yes.name          = 'Yes';
+  yes.val           = {sROI,fwhm_surf1,fwhm_surf2};
+  yes.help          = {'Process surfaces'};
+
+  surface           = cfg_choice;
+  surface.name      = 'Surface prcessing';
   surface.tag       = 'surface';
-  surface.name      = 'Surface-based processing';
-  surface.labels    = {'No','Yes'};
-  surface.values    = {0 1};
-  surface.def       = @(val)cat_get_defaults('output.surface', val{:});
+  surface.values    = {no yes};
+  surface.val       = {no};
   surface.help      = {
     'Use surface-based preprocessing to estimate cortical surface, area, volume, and folding. '
     'Please note that surface reconstruction additionally requires about 20-60 min of computation time.'
     ''
   };
-
-
-  [vROI,sROI]         = cat_conf_ROI(expert);    
   
   
   ignoreErrors        = cfg_menu;
@@ -435,9 +445,9 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   catsimple         = cfg_exbranch;
   catsimple.tag     = 'cat_simple';
   catsimple.name    = 'CAT12 Simple Preprocessing'; 
-  catsimple.val     = {data catversion tpm fwhm_vol surface};
+  catsimple.val     = {data catversion tpm extopts.val{4} vROI fwhm_vol surface};
   if expert
-    catsimple.val   = [catsimple.val {vROI sROI ignoreErrors}];
+    catsimple.val   = [catsimple.val {ignoreErrors}];
   end
   if expert > 1 % further mods do not work right now!
     catsimple.val   = [catsimple.val(1) {mods} catsimple.val(2:end)];
@@ -470,9 +480,9 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   catsimplelong       = cfg_exbranch;
   catsimplelong.tag   = 'cat_simple_long';
   catsimplelong.name  = 'CAT12 Simple Longitudinal Preprocessing';
-  catsimplelong.val   = {datalong catversion tpm surface}; 
+  catsimplelong.val   = {datalong catversion tpm extopts.val{4} vROI fwhm_vol surface}; 
   if expert
-    catsimplelong.val = [catsimplelong.val {vROI sROI ignoreErrors}];
+    catsimplelong.val = [catsimplelong.val {ignoreErrors}];
   end
   if expert > 1
     catsimplelong.val = [catsimplelong.val(1) {longmods} catsimplelong.val(2:end)];
@@ -516,8 +526,13 @@ function dep = vout_catsimple(job)
 % _________________________________________________________________________
 
 % ### UPDATE SMOOTHING ###
-  vsmooth = job.fwhm_vol;
-  ssmooth = [6 12 24];
+  vsmooth   = job.fwhm_vol;
+  proc_surf = isfield(job.surface,'yes');
+  
+  if proc_surf
+    ssmooth1  = job.surface.yes.fwhm_surf1;
+    ssmooth2  = job.surface.yes.fwhm_surf2;
+  end
   
   % volume data
   for si = 1:numel(vsmooth)
@@ -532,7 +547,7 @@ function dep = vout_catsimple(job)
   end
   
   % surface data
-  if job.surface
+  if isfield(job.surface,'yes')
     measures = {'thickness','curvature'}; %,'area','volume', 'myelination'
     if isfield(job,'mod')
       fname    =  fieldnames( [job.mod(:).name] );
@@ -543,12 +558,21 @@ function dep = vout_catsimple(job)
       measures = [measures,fname];
     end
     for mi = 1:numel(measures)
-      for si = 1:numel(ssmooth)
-        dep(end+1)          = cfg_dep; %#ok<AGROW>
-        dep(end).sname      = sprintf('%dmm smoothed %s',ssmooth(si),measures{mi});
-        dep(end).src_output = substruct('.',sprintf('s%d%s',ssmooth(si),measures{mi}),'()',{':'});
-        dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-      end
+      if strcmp(measures{mi},'thickness')
+				for si = 1:numel(ssmooth1)
+					dep(end+1)          = cfg_dep; %#ok<AGROW>
+					dep(end).sname      = sprintf('%dmm smoothed %s',ssmooth1(si),measures{mi});
+					dep(end).src_output = substruct('.',sprintf('s%d%s',ssmooth1(si),measures{mi}),'()',{':'});
+					dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+				end
+      else
+				for si = 1:numel(ssmooth2)
+					dep(end+1)          = cfg_dep; %#ok<AGROW>
+					dep(end).sname      = sprintf('%dmm smoothed %s',ssmooth2(si),measures{mi});
+					dep(end).src_output = substruct('.',sprintf('s%d%s',ssmooth2(si),measures{mi}),'()',{':'});
+					dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+				end
+			end
     end
   end
   
