@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1485 | gaser | 2019-06-18 18:01:35
+r1486 | gaser | 2019-06-19 13:31:26
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+ M      templates_1.50mm/TPM_Age11.5.nii
+
+Changed: Added button to change user mode in CAT12 GUI.
+------------------------------------------------------------------------
+r1485 | gaser | 2019-06-18 18:02:09 +0200 (Di, 18 Jun 2019) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +20,7 @@ M       tbx_cfg_cat.m
 
 Fixed: Many changes and additional options to cat_*simple.m that should now run
 for cross-sectional data without errors.
+
 ------------------------------------------------------------------------
 r1484 | gaser | 2019-06-18 00:21:03 +0200 (Di, 18 Jun 2019) | 7 lines
 
