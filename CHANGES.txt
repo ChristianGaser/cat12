@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1486 | gaser | 2019-06-19 13:31:26
+r1487 | gaser | 2019-06-19 14:22:16
+
+Changed paths:
+M       CHANGES.txt
+M       templates_1.50mm/neuromorphometrics.csv
+
+Fixed: Corrected atlas names for Neuromorphometrics atlas (thanks to Christina 
+Mundinger for pointing to this issue).
+------------------------------------------------------------------------
+r1486 | gaser | 2019-06-19 13:31:55 +0200 (Mi, 19 Jun 2019) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +16,7 @@ M       cat12.m
  M      templates_1.50mm/TPM_Age11.5.nii
 
 Changed: Added button to change user mode in CAT12 GUI.
+
 ------------------------------------------------------------------------
 r1485 | gaser | 2019-06-18 18:02:09 +0200 (Di, 18 Jun 2019) | 11 lines
 
