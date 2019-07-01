@@ -282,7 +282,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     % for VBM Dartel, an affine registration was used and we now have to add the scaling factor
 
     elseif (write(3)==1 && transform.warped.dartel==2) || (write(3)==2 && transform.warped.dartel==1)
-    % for VBM Shooting, a ridid registration was used and no further changes are required for standard SPM warped output
+    % for VBM Shooting, a rigid registration was used and no further changes are required for standard SPM warped output
 
     end
 

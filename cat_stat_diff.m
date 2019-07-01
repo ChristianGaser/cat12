@@ -35,7 +35,7 @@ if nargin == 0
     glob = 0;
 else
   try
-    V{i} = spm_data_hdr_read(P);
+    V{1} = spm_data_hdr_read(P);
   catch
     error('Error reading file. Ensure that you either have an image file or a surface texture file with values.');
   end

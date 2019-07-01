@@ -155,7 +155,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       dispmat = res.Affine; 
       warning('OFF','MATLAB:tex')
       spm_orthviews('BB', job.extopts.bb*0.95 );
-    case 'ridid'
+    case 'rigid'
       % this does not work so good... AC has a little offset ...
       aff = spm_imatrix(res.Affine);  scale = aff(7:9); 
       spm_orthviews('BB', job.extopts.bb ./ mean(scale));
@@ -199,7 +199,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 
     VT0x.mat = dispmat * VT0x.mat; 
     hho = spm_orthviews('Image',VT0x,pos(1,:));
-    spm_orthviews('Caption',hho,{T1txt},'FontSize',fontsize,'FontWeight','Bold');
+    spm_orthviews('Caption',hho,{T1txt},'FontSize',fontsize-1,'FontWeight','Bold');
     spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
     cc{1} = axes('Position',[pos(1,1) + 0.26 0.37 0.02 0.15],'Parent',fg);     
     try image(cc{1},(60:-1:1)'); end
@@ -228,7 +228,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     Vm.pinfo  = repmat([1;0],1,size(Ym,3));
     Vm.mat    = dispmat * Vm.mat; 
     hhm = spm_orthviews('Image',Vm,pos(2,:));
-    spm_orthviews('Caption',hhm,{'m*.nii (Int. Norm.)'},'FontSize',fontsize,'FontWeight','Bold');
+    spm_orthviews('Caption',hhm,{'m*.nii (Intensity normalized T1)'},'FontSize',fontsize-1,'FontWeight','Bold');
     spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
     cc{2} = axes('Position',[pos(2,1) + 0.26 0.37 0.02 0.15],'Parent',fg);
     try image(cc{2},(60:-1:1)'); end 
@@ -385,7 +385,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   
   %% legend
   spm_orthviews('Reposition',[0 0 0]); 
-  spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize,'FontWeight','Bold');
+  spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize-1,'FontWeight','Bold');
   spm_orthviews('window',hhp0,[0 cmmax]); caxis([0,2]);
   global st;
   if useoverlay>1
@@ -455,9 +455,10 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 
       %% TPM legend
       try % some error with text in MATLAB 2015b - ccl was no double?
-        ccl{1} = axes('Position',[pos(1,1:2) 0 0] + [0.33 -0.005 0.02 0.02],'Parent',fg);
-        cclp = plot(ccl{1},([0 0.4;0.6 1])',[0 0; 0 0],'b-'); text(double(ccl{1}),1.2,0,'TPM fit');
-        set( cclp,'LineWidth',0.75); axis(ccl{1},'off')
+        ccl = axes('Position',[pos(1,1:2) 0 0] + [0.33 0 0.02 0.02],'Parent',fg);
+        cclp = plot(ccl,([0 0.4;0.6 1])',[0 0; 0 0],'b-'); 
+        text(ccl,1.2,0,['Brain and skull',char(10),'overlay from affine',char(10),'registered TPM'],'Fontsize',fontsize-2);
+        set( cclp,'LineWidth',0.75); axis(ccl,'off')
       end
     end
   end

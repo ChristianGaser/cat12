@@ -280,11 +280,11 @@ pbtres.help    = {
 lazy         = cfg_menu;
 lazy.tag     = 'lazy';
 lazy.name    = 'Lazy processing';
-lazy.labels  = {'yes','No'};
+lazy.labels  = {'Yes','No'};
 lazy.values  = {1,0};
 lazy.val     = {0};
 lazy.help    = {
-  'Do not process data if result already exist. '
+    'Do not process data if the result already exists. '
 };
 
 experimental        = cfg_menu;
