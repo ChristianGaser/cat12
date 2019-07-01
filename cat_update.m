@@ -74,7 +74,7 @@ if rnew > r
     if ~nargout, fprintf(msg); else varargout = {sts, msg}; end
 else
     sts = 0;
-    msg = sprintf('Your version of CAT12 is up-to-date.');
+    msg = sprintf('Your version of CAT12 is up to date.');
     if ~nargout, fprintf([blanks(9) msg '\n']);
     else varargout = {sts, msg}; end
     return

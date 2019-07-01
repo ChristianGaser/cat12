@@ -654,7 +654,7 @@ scatter(X(:,1),X(:,2),30,C,'o','Linewidth',2);
 
 xlabel('<----- Worst ---      Mean correlation      --- Best ------>  ','FontSize',FS-1,'FontWeight','Bold');
 ylabel('<----- Best ---      Weighted overall image quality      --- Worst ------>  ','FontSize',FS-1,'FontWeight','Bold');
-title('<--- Best -- Mahalanobis distance -- Worst ---->  ','FontSize',FS+1,'FontWeight','Bold');
+title('<--- Smallest -- Mahalanobis distance -- Largest ---->  ','FontSize',FS+1,'FontWeight','Bold');
 
 % add colorbar
 H.cbar = axes('Position',pos.cbar,'Parent',H.figure);
@@ -826,15 +826,22 @@ xpos = -0.40 - n_samples*0.1;
 
 if (length(data_boxp) > 2)
   if quality_order > 0
-    text(xpos, ylim_min,'<----- Low rating (poor quality)  ','Color','red','Rotation',...
-        90,'HorizontalAlignment','left','FontSize',FS,'FontWeight','Bold')
-    text(xpos, ylim_max,'High rating (good quality) ------>  ','Color','green','Rotation',...
-        90,'HorizontalAlignment','right','FontSize',FS,'FontWeight','Bold')
+		text(xpos, ylim_min,'<----- Low rating (poor quality)  ','Color','red','Rotation',...
+				90,'HorizontalAlignment','left','FontSize',FS,'FontWeight','Bold')
+		text(xpos, ylim_max,'High rating (good quality) ------>  ','Color','green','Rotation',...
+				90,'HorizontalAlignment','right','FontSize',FS,'FontWeight','Bold')
   else
-    text(xpos, ylim_max,'Low rating (poor quality) ------>  ','Color','red','Rotation',...
-        90,'HorizontalAlignment','right','FontSize',FS,'FontWeight','Bold')
-    text(xpos, ylim_min,'<----- High rating (good quality)  ','Color','green','Rotation',...
-        90,'HorizontalAlignment','left','FontSize',FS,'FontWeight','Bold')
+    if strfind(name_boxp,'Mahalanobis')
+			text(xpos, ylim_max,'Largest distance to sample ------>  ','Color','red','Rotation',...
+					90,'HorizontalAlignment','right','FontSize',FS,'FontWeight','Bold')
+			text(xpos, ylim_min,'<----- Smallest distance to sample  ','Color','green','Rotation',...
+					90,'HorizontalAlignment','left','FontSize',FS,'FontWeight','Bold')
+		else
+			text(xpos, ylim_max,'Low rating (poor quality) ------>  ','Color','red','Rotation',...
+					90,'HorizontalAlignment','right','FontSize',FS,'FontWeight','Bold')
+			text(xpos, ylim_min,'<----- High rating (good quality)  ','Color','green','Rotation',...
+					90,'HorizontalAlignment','left','FontSize',FS,'FontWeight','Bold')
+		end
   end
   text(xpos, (ylim_max+ylim_min)/2,sprintf('%s',name_boxp),'Color','black','Rotation',...
         90,'HorizontalAlignment','center','FontSize',FS,'FontWeight','Bold')

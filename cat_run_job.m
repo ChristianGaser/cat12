@@ -792,6 +792,7 @@ function cat_run_job(job,tpm,subj)
     end
     %%
 return
+
 %=======================================================================
 function [Ym,Yt,Ybg,WMth] = APPmini(obj,VF)
 %% very simple affine preprocessing (APP)
@@ -824,6 +825,7 @@ function [Ym,Yt,Ybg,WMth] = APPmini(obj,VF)
   Ybg  = cat_vol_morph(Ym<0.2,'l',[100 1000])>0;
   
 return
+
 function APP_RMSE = checkAPP(Ym,Ysrc) 
 %% check Ym
 %  ------------------------------------------------------------------------
@@ -843,8 +845,8 @@ function APP_RMSE = checkAPP(Ym,Ysrc)
   Ysrc = Ysrc + min(Ysrc(:)); 
   
   % normalized gradient maps
-  Ygm = cat_vol_grad(Ym)   ./ Ym;     
-  Ygs = cat_vol_grad(Ysrc) ./ Ysrc;
+  Ygm = cat_vol_grad(Ym)   ./ (Ym + eps);     
+  Ygs = cat_vol_grad(Ysrc) ./ (Ysrc + eps);
 
   % use only the central region and values in the expected tissue range
   sYm  = round(size(Ym) / 5);
