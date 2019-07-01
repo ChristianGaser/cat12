@@ -90,7 +90,7 @@ function varargout = cat_surf_resamp(varargin)
   rPsdata = cell(size(P,1),1);
   
   for i=1:size(P,1)
-    if ~exist(P(i,:),'file')
+    if ~exist(deblank(P(i,:)),'file')
       cat_io_cprintf('warn',sprintf('The file "%s" does not exist!\n',deblank(P(i,:)))); 
       continue
     end

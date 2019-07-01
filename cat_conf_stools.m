@@ -35,7 +35,7 @@ function stools = cat_conf_stools(expert)
     };
  
   
-  % do not process, if result already exist
+  % do not process, if result already exists
   % ____________________________________________________________________
   lazy         = cfg_menu;
   lazy.tag     = 'lazy';
@@ -44,7 +44,7 @@ function stools = cat_conf_stools(expert)
   lazy.values  = {1,0};
   lazy.val     = {0};
   lazy.help    = {
-    'Do not process data if the result exist. '
+    'Do not process data if the result already exists. '
   };
 
 
@@ -911,7 +911,7 @@ function [surfresamp,surfresamp_fs] = cat_surf_resamp_GUI(expert,nproc,merge_hem
   surfresamp      = cfg_exbranch;
   surfresamp.tag  = 'surfresamp';
   surfresamp.name = 'Resample and Smooth Surface Data';
-  if expert>1
+  if expert
     surfresamp.val  = {sample_surf,merge_hemi,mesh32k,fwhm_surf,lazy,nproc};
   else
     surfresamp.val  = {sample_surf,merge_hemi,mesh32k,fwhm_surf,nproc};
@@ -1307,8 +1307,10 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
   surfextract      = cfg_exbranch;
   surfextract.tag  = 'surfextract';
   surfextract.name = 'Extract additional surface parameters';
-  if expert > 1
+  if expert == 2
     surfextract.val  = {data_surf_extract, area,gmv, GI,FD,SD, GIL,surfaces, nproc, lazy}; % area, 
+  elseif expert == 1
+    surfextract.val  = {data_surf_extract,GI,FD,SD,nproc,lazy};
   else
     surfextract.val  = {data_surf_extract,GI,FD,SD,nproc};
   end
