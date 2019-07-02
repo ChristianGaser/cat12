@@ -19,7 +19,7 @@ if cat_get_defaults('extopts.expertgui')>1
 end
 
 global alphaval filename H YpY YpYsorted  data_array data_array_diff pos ind_sorted ind_sorted_display mean_cov FS X mesh_detected ...
-mn_data mx_data V Vchanged sample isxml sorted isscatter MD show_name bplot names_changed img img_alpha allow_violin
+mn_data mx_data V Vchanged sample isxml sorted isscatter MD show_name bplot names_changed img img_alpha show_violin
 
 % show data by fileorder
 sorted = 0;
@@ -42,7 +42,7 @@ else
   is_gSF = 0;
 end
 
-allow_violin = 1;
+show_violin = 1;
 
 % read filenames for each sample and indicate sample parameter
 if isfield(job,'data_vol')
@@ -618,9 +618,9 @@ return
 %-----------------------------------------------------------------------
 function checkbox_plot(obj, event_obj)
 %-----------------------------------------------------------------------
-  global H allow_violin
+  global H show_violin
   
-  allow_violin = get(H.plotbox,'Value');
+  show_violin = get(H.plotbox,'Value');
   show_boxplot;
 return
 
@@ -738,7 +738,7 @@ return
 %-----------------------------------------------------------------------
 function show_boxplot(data_boxp, name_boxp, quality_order)
 %-----------------------------------------------------------------------
-global H pos filename FS sample ind_sorted_display show_name bp allow_violin
+global H pos filename FS sample ind_sorted_display show_name bp show_violin
 
 if nargin == 0
   data_boxp = bp.data;
@@ -756,13 +756,14 @@ xpos = cell(1,n_samples);
 data = cell(1,n_samples);
 
 hold on
+allow_violin = 1;
 for i=1:n_samples
   ind = find(sample == i);
-  data{i} = data_boxp(ind);
-  
-  if length(ind) < 8
-    allow_violin = 0;
+  if length(ind)<10
+    allow_violin = 0; 
+    show_violin = 0;
   end
+  data{i} = data_boxp(ind);
   
   if n_samples == 1
     xpos{i} = (i-1)+2*(0:length(ind)-1)/(length(ind)-1);
@@ -787,17 +788,18 @@ H.fnambox = uicontrol(H.figure,...
     'BackgroundColor',[0.8 0.8 0.8],...
     'Interruptible','on','Visible','on','FontSize',FS-2);
 
+% allow violin plot onl if samples are all large enough
 if allow_violin
   H.plotbox = uicontrol(H.figure,...
     'string','Violinplot','Units','normalized',...
     'position',pos.plotbox,'callback',@checkbox_plot,...
     'Style','CheckBox','HorizontalAlignment','center',...
-    'ToolTipString','Switch to Violinplot','value',allow_violin,...
+    'ToolTipString','Switch to Violinplot','value',show_violin,...
     'BackgroundColor',[0.8 0.8 0.8],...
     'Interruptible','on','Visible','on','FontSize',FS-2);
 end
 
-opt = struct('groupnum',0,'ygrid',0,'violin',2*allow_violin,'median',2,'groupcolor',jet(n_samples));
+opt = struct('groupnum',0,'ygrid',0,'violin',2*show_violin,'median',2,'groupcolor',jet(n_samples));
 ylim_add = 0.075;
 
 cat_plot_boxplot(data,opt);

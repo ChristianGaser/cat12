@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1488 | gaser | 2019-07-01 22:57:39
+r1489 | gaser | 2019-07-02 11:29:14
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main_reportfig.m
+M       cat_stat_check_cov.m
+M       cat_stat_check_cov2.m
+M       cat_surf_results.m
+
+(1) Fixed: Corrected use of handles for older Matlab versions.
+(2) Fixed: Checkbox for vilonplot in cat_stat_check_cov* disappeared.
+------------------------------------------------------------------------
+r1488 | gaser | 2019-07-01 22:58:14 +0200 (Mo, 01 Jul 2019) | 27 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -27,6 +39,7 @@ M       html/cat.html
 (5) Changed: Added lazy-option to expert mode.
 (6) Fixed: Suppress warnings for uninitialized parameters in cat_batch_cat.m
 (7) Fixed: Division by zero in cat_run_job.m.
+
 ------------------------------------------------------------------------
 r1487 | gaser | 2019-06-19 14:22:23 +0200 (Mi, 19 Jun 2019) | 7 lines
 
