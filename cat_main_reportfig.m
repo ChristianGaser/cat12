@@ -202,14 +202,14 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     spm_orthviews('Caption',hho,{T1txt},'FontSize',fontsize-1,'FontWeight','Bold');
     spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
     cc{1} = axes('Position',[pos(1,1) + 0.26 0.37 0.02 0.15],'Parent',fg);     
-    try image(cc{1},(60:-1:1)'); end
+    image((60:-1:1)','Parent',cc{1});
 
     if job.inv_weighting
       set(cc{1},'YTick',ytick,'YTickLabel',fliplr(yticklabeli),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-        'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
+        'FontSize',fontsize-1,'FontWeight','Bold','YAxisLocation','right');
     else  
       set(cc{1},'YTick',ytick,'YTickLabel',fliplr(yticklabelo),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-        'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
+        'FontSize',fontsize-1,'FontWeight','Bold','YAxisLocation','right');
     end
   else
     cat_io_cprintf('warn','WARNING: Can''t display original file "%s"!\n',VT.fname); 
@@ -228,12 +228,12 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     Vm.pinfo  = repmat([1;0],1,size(Ym,3));
     Vm.mat    = dispmat * Vm.mat; 
     hhm = spm_orthviews('Image',Vm,pos(2,:));
-    spm_orthviews('Caption',hhm,{'m*.nii (Intensity normalized T1)'},'FontSize',fontsize-1,'FontWeight','Bold');
+    spm_orthviews('Caption',hhm,{'m*.nii (Intensity Normalized T1)'},'FontSize',fontsize-1,'FontWeight','Bold');
     spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
     cc{2} = axes('Position',[pos(2,1) + 0.26 0.37 0.02 0.15],'Parent',fg);
-    try image(cc{2},(60:-1:1)'); end 
+    image((60:-1:1)','Parent',cc{2}); 
     set(cc{2},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-      'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
+      'FontSize',fontsize-1,'FontWeight','Bold','YAxisLocation','right');
   end
  
   
@@ -401,9 +401,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     st.vols{3}.blobs{1} = rmfield(st.vols{3}.blobs{1},'cbar'); % remove handle to avoid position updates
   else
     cc{3} = axes('Position',[pos(3,1) + 0.26 0.02 0.02 0.15],'Parent',fg);
-    try image(cc{3},(60:-1:1)'); end
+    image((60:-1:1)','Parent',cc{3});
     set(cc{3},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-      'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
+      'FontSize',fontsize-1,'FontWeight','Bold','YAxisLocation','right');
   end
   if ~debug, clear Yp0; end
   %spm_orthviews('redraw');
@@ -454,12 +454,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       spm_orthviews('redraw',id);
 
       %% TPM legend
-      try % some error with text in MATLAB 2015b - ccl was no double?
-        ccl = axes('Position',[pos(1,1:2) 0 0] + [0.33 0 0.02 0.02],'Parent',fg);
-        cclp = plot(ccl,([0 0.4;0.6 1])',[0 0; 0 0],'b-'); 
-        text(ccl,1.2,0,['Brain and skull',char(10),'overlay from affine',char(10),'registered TPM'],'Fontsize',fontsize-2);
-        set( cclp,'LineWidth',0.75); axis(ccl,'off')
-      end
+      ccl = axes('Position',[pos(1,1:2) 0 0] + [0.33 0 0.02 0.02],'Parent',fg);
+      cclp = plot(ccl,([0 0.4;0.6 1])',[0 0; 0 0],'b-'); 
+      text(1.2,0,['Brain and skull',char(10),'overlay from affine',char(10),'registered TPM'],...
+          'Parent',ccl,'Fontsize',fontsize-2);
+      set(cclp,'LineWidth',0.75); axis(ccl,'off')
     end
   end
   
@@ -539,9 +538,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         end
         
         colormap(cmap);  set(hSD{1}.colourbar,'visible','off'); 
-        cc{4} = axes('Position',[0.63 0.02 0.3 0.01],'Parent',fg); image(cc{4},(121:1:120+surfcolors));
+        cc{4} = axes('Position',[0.63 0.02 0.3 0.01],'Parent',fg); image((121:1:120+surfcolors),'Parent',cc{4});
         set(cc{4},'XTick',1:(surfcolors-1)/6:surfcolors,'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
-          'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize,'FontWeight','Bold');
+          'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize-1,'FontWeight','Bold');
       catch
         cat_io_cprintf('warn','WARNING: Can''t display surface!\n',VT.fname);   
       end
@@ -562,7 +561,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   fgold.PaperPosition     = get(fg,'PaperPosition');
   fgold.resize            = get(fg,'resize');
 
-  % it is necessary to change some figure properties especialy the fontsizes 
+  % it is necessary to change some figure properties especially the fontsizes 
   set(fg,'PaperPositionMode','auto','resize','on','PaperPosition',[0 0 1 1]);
   for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize*0.8); end; end
   for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize*0.8); end;
@@ -585,9 +584,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     try 
       cat_surf_render2('ColourMap',hSD{1}.axis,gray(128));
       cat_surf_render2('Clim',hSD{1}.axis,[0 6]);
-      axes(cc{4}); image(cc{4},0:60);
+      axes(cc{4}); image(0:60,'Parent',cc{4});
       set(cc{4},'XTick',max(1,0:10:60),'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
-        'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize,'FontWeight','Bold');
+        'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize-1,'FontWeight','Bold');
     end
   end
 

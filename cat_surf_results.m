@@ -966,20 +966,20 @@ switch lower(action)
             % standard text
             if mode 
               H.dtxt(3).ax  = axes('Parent', H.panel(1), 'Position',tpos{3}, 'Visible', 'off','tag','cat_surf_results_text');
-              H.dtxt(3).txt = text(H.dtxt(3).ax,0,1,sprintf('%s %s %s: \n%s - %s:\n%s:', 'mean',char(177),'std','min','max','median'),'color',[0.5 0.5 0.5]);
+              H.dtxt(3).txt = text(0,1,sprintf('%s %s %s: \n%s - %s:\n%s:', 'mean',char(177),'std','min','max','median'),'color',[0.5 0.5 0.5],'Parent',H.dtxt(3).ax);
             else
               H.dtxt(3).ax(1) = axes('Parent', H.panel(1), 'Position',tpos{1}, 'Visible', 'off','tag','cat_surf_results_text');
               H.dtxt(3).ax(2) = axes('Parent', H.panel(1), 'Position',tpos{2}, 'Visible', 'off','tag','cat_surf_results_text');
               H.dtxt(3).ax(3) = axes('Parent', H.panel(1), 'Position',tpos{3}, 'Visible', 'off','tag','cat_surf_results_text');
               H.dtxt(3).ax(4) = axes('Parent', H.panel(1), 'Position',tpos{4}, 'Visible', 'off','tag','cat_surf_results_text');
               H.dtxt(3).ax(5) = axes('Parent', H.panel(1), 'Position',tpos{5}, 'Visible', 'off','tag','cat_surf_results_text');
-              text(H.dtxt(3).ax(1),0,1,sprintf('side'),'color',[0.5 0.5 0.5]);
-              text(H.dtxt(3).ax(1),0,1,sprintf('\n\nleft'),'color',color{1});
-              text(H.dtxt(3).ax(1),0,1,sprintf('\n\n\n\nright'),'color',color{2});
-              text(H.dtxt(3).ax(2),0,1,'min','color',[0.5 0.5 0.5],'HorizontalAlignment','center');
-              text(H.dtxt(3).ax(3),0,1,['mean ' char(177) ' std'],'color',[0.5 0.5 0.5],'HorizontalAlignment','center');
-              text(H.dtxt(3).ax(4),0,1,'median','color',[0.5 0.5 0.5],'HorizontalAlignment','center');
-              text(H.dtxt(3).ax(5),0,1,'max','color',[0.5 0.5 0.5],'HorizontalAlignment','right');
+              text(0,1,sprintf('side'),'color',[0.5 0.5 0.5],'Parent',H.dtxt(3).ax(1));
+              text(0,1,sprintf('\n\nleft'),'color',color{1},'Parent',H.dtxt(3).ax(1));
+              text(0,1,sprintf('\n\n\n\nright'),'color',color{2},'Parent',H.dtxt(3).ax(1));
+              text(0,1,'min','color',[0.5 0.5 0.5],'HorizontalAlignment','center','Parent',H.dtxt(3).ax(2));
+              text(0,1,['mean ' char(177) ' std'],'color',[0.5 0.5 0.5],'HorizontalAlignment','center','Parent',H.dtxt(3).ax(3));
+              text(0,1,'median','color',[0.5 0.5 0.5],'HorizontalAlignment','center','Parent',H.dtxt(3).ax(4));
+              text(0,1,'max','color',[0.5 0.5 0.5],'HorizontalAlignment','right','Parent',H.dtxt(3).ax(5));
             end
             for i=1:2
               side = getappdata(H.patch( i*2 - 1 ), 'data');
@@ -1003,16 +1003,16 @@ switch lower(action)
                   %
                   if mode
                     H.dtxt(i).ax  = axes('Parent', H.panel(1), 'Position',tpos{i}, 'Visible', 'off','tag','cat_surf_results_text');
-                    H.dtxt(i).txt = text(H.dtxt(i).ax,0,1,sprintf('%10.3f %s %0.3f\n%10.3f - %0.3f\n',...
+                    H.dtxt(i).txt = text(0,1,sprintf('%10.3f %s %0.3f\n%10.3f - %0.3f\n',...
                       cat_stat_nanmean(side(:)),char(177),cat_stat_nanstd(side(:)),...
                       min(side(:)),max(side(:)),med),...
-                      'color',color{i},'HorizontalAlignment','center');
+                      'color',color{i},'HorizontalAlignment','center','Parent',H.dtxt(i).ax);
                   else
-                    text(H.dtxt(3).ax(2),0,1,sprintf('%s%0.3f',sprintf(repmat('\n',1,i*2)),min(side(:))),'color',color{i},'HorizontalAlignment','center');
-                    text(H.dtxt(3).ax(3),0,1,sprintf('%s%0.3f%s%0.3f',sprintf(repmat('\n',1,i*2)),cat_stat_nanmean(side(:)),char(177),...
-                      cat_stat_nanstd(side(:))),'color',color{i},'HorizontalAlignment','center');
-                    text(H.dtxt(3).ax(4),0,1,sprintf('%s%0.3f',sprintf(repmat('\n',1,i*2)),cat_stat_nanmedian(side(:))),'color',color{i},'HorizontalAlignment','center');
-                    text(H.dtxt(3).ax(5),0,1,sprintf('%s%0.3f',sprintf(repmat('\n',1,i*2)),max(side(:))),'color',color{i},'HorizontalAlignment','right');
+                    text(0,1,sprintf('%s%0.3f',sprintf(repmat('\n',1,i*2)),min(side(:))),'color',color{i},'HorizontalAlignment','center','Parent',H.dtxt(3).ax(2));
+                    text(0,1,sprintf('%s%0.3f%s%0.3f',sprintf(repmat('\n',1,i*2)),cat_stat_nanmean(side(:)),char(177),...
+                      cat_stat_nanstd(side(:))),'color',color{i},'HorizontalAlignment','center','Parent',H.dtxt(3).ax(3));
+                    text(0,1,sprintf('%s%0.3f',sprintf(repmat('\n',1,i*2)),cat_stat_nanmedian(side(:))),'color',color{i},'HorizontalAlignment','center','Parent',H.dtxt(3).ax(4));
+                    text(0,1,sprintf('%s%0.3f',sprintf(repmat('\n',1,i*2)),max(side(:))),'color',color{i},'HorizontalAlignment','right','Parent',H.dtxt(3).ax(5));
                   end
                 end
               end
@@ -2481,7 +2481,7 @@ if H.show_info
     delete(findobj('tag','cat_surf_result_title'));
    %   axes('Parent', H.panel(1), 'Position',tpos{i}, 'Visible', 'off','tag','cat_surf_results_text');
     ax = axes('Parent',H.panel(1),'Position',[0.5 0.82 0.9 0.05],'visible','off','tag','cat_surf_result_title');  
-    text(ax,0,1,spm_str_manip(H.S{1}.name, 'k150d'),'HorizontalAlignment','center','interpreter','none','Color', 1 - H.bkg_col);
+    text(0,1,spm_str_manip(H.S{1}.name, 'k150d'),'HorizontalAlignment','center','interpreter','none','Color', 1 - H.bkg_col,'Parent',ax);
                     
     %set(get(getappdata(H.patch(1), 'axis'), 'Title'), 'String', ...
     %    spm_str_manip(H.S{1}.name, 'k50d'), 'Interpreter', 'none', 'Color', 1 - H.bkg_col)

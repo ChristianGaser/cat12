@@ -255,7 +255,7 @@ function varargout = cat_stat_check_cov2(job)
     cscc.display.WP = 10;
   end
   
-  cscc.H.allow_violin = 1;  
+  cscc.H.show_violin = 1;  
   
   popb = [0.038 0.035];  % size of the small buttons
   popm = 0.780;          % x-position of the control elements
@@ -4005,7 +4005,7 @@ return
 function checkbox_plot(obj, event_obj)
 %-----------------------------------------------------------------------
   global cscc
-  cscc.H.allow_violin = get(cscc.H.plotbox,'Value');
+  cscc.H.show_violin = get(cscc.H.plotbox,'Value');
   show_boxplot;
 return
 
@@ -4076,6 +4076,7 @@ function show_boxplot(data_boxp, name_boxp, quality_order, obj)
 
   %% create filenames
   hold on
+  allow_violin = 1;
   for i=1:cscc.datagroups.n_samples
     indtype   = { cscc.select.trash1d' 'k.' [0 0 0] 10; ~cscc.select.trash1d' 'rx' [1 0 0] 3}; 
     gnames{i} = sprintf('S%d',i);
@@ -4085,10 +4086,11 @@ function show_boxplot(data_boxp, name_boxp, quality_order, obj)
         datap{i} = data_boxp(ind);
         if ii==1, data{i} = datap{i}; end
 
-        if length(ind) < 8
-          cscc.H.allow_violin = 0;
-        end
-
+				if length(ind)<10
+					allow_violin = 0; 
+          cscc.H.show_violin = 0;
+				end
+				
         if cscc.datagroups.n_samples == 1
           xcscc.pos{i} = (i-1)+2*(0:length(ind)-1)/(length(ind)-1);
         else
@@ -4110,15 +4112,18 @@ function show_boxplot(data_boxp, name_boxp, quality_order, obj)
     end 
   end
 
+% allow violin plot onl if samples are all large enough
+if allow_violin
 	cscc.H.plotbox = uicontrol(cscc.H.graphics,...
 			'string','Violinplot','Units','normalized',...
 			'position',cscc.pos.plotbox,'callback',@checkbox_plot,...
 			'Style','CheckBox','HorizontalAlignment','center',...
-			'ToolTipString','Switch to Violinplot','value',cscc.H.allow_violin,...
+			'ToolTipString','Switch to Violinplot','value',cscc.H.show_violin,...
 			'Interruptible','on','Visible','on','FontSize',cscc.display.FS(cscc.display.FSi));
-  
+end
+
   %% create boxplot
-  opt = struct('groupnum',0,'ygrid',1,'box',1,'violin',2*cscc.H.allow_violin,'median',2,...
+  opt = struct('groupnum',0,'ygrid',1,'box',1,'violin',2*cscc.H.show_violin,'median',2,...
                'groupcolor',jet(cscc.datagroups.n_samples),'names',{gnames},...
                'xlim',[-.25 cscc.datagroups.n_samples+1.25]); 
   if max(data_boxp) > min(data_boxp)
