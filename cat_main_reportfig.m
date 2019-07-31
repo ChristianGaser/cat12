@@ -33,7 +33,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
  
   if cat_get_defaults('extopts.send_info')
     url = sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%sfinished',cat_version,'%2F',computer,'%2F');
-    urlread(url);
+    try, urlread(url); end
   end
 
   VT  = res.image(1); 
