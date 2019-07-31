@@ -1,7 +1,7 @@
 function cat_io_report(job,qa,subj,createerr)
 % ______________________________________________________________________
 % CAT error report to write the main processing parameter, the error
-% message, some image parameter and add a pricture of the original 
+% message, some image parameter and add a picture of the original 
 % image centered by its AC.
 %
 % This function is called in cat_run_newcatch.

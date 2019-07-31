@@ -221,7 +221,7 @@ end
 
 % always use filling for this median plot option
 if opt.fill == 0.5 & opt.vertical
-    fprintf('Filling with 0.5 will only work in horizontal view. Set filling to 1.\n');
+    fprintf('Filling with 0.5 will only works in horizontal view. Set filling to 1.\n');
     opt.fill = 1;
 end
 

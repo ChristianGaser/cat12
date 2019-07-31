@@ -223,7 +223,8 @@ cat.extopts.experimental = 0;     % experimental functions: 0 - default, 1 - cal
 cat.extopts.print        = 2;     % display and print out pdf-file of results: 0 - off, 2 - volume only, 2 - volume and surface (default)
 cat.extopts.fontsize     = get(0,'defaultuicontrolFontSize'); % default font size for GUI; 
 %cat.extopts.fontsize     = spm('FontSizes',7); % set default font size for GUI manually; increase value for larger fonts or set it to 
-
+cat.extopts.send_info    = 1;     % send Matlab and CAT12 version to SBM server for internal use only. If you don't want to send this 
+                                  % information set this flag to "0"
 
 % Expert options - ROIs
 %=======================================================================
