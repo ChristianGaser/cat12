@@ -1,5 +1,31 @@
 ------------------------------------------------------------------------
-r1489 | gaser | 2019-07-02 11:29:14
+r1490 | gaser | 2019-07-31 09:49:36
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+M       cat_batch_cat.m
+M       cat_defaults.m
+M       cat_io_report.m
+A       cat_io_send_to_server.m
+M       cat_main_reportfig.m
+M       cat_plot_boxplot.m
+M       cat_run_newcatch.m
+M       html/cat.html
+M       html/cat.txt
+D       html/cat_ackknowledgement.html
+        > moved to html/cat_acknowledgement.html
+A  +    html/cat_acknowledgement.html
+        > moved from html/cat_ackknowledgement.html
+
+(1) Fixed: Many typos...
+(2) Changed: Added image tracker to provide statistics about Matlab and CAT12 
+    versions and (un)successful preprocessings.
+(3) Changed: Added cat.extopts.send_info flag to control sending of statistics
+    tp SBM server.
+------------------------------------------------------------------------
+r1489 | gaser | 2019-07-02 11:29:46 +0200 (Di, 02 Jul 2019) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +36,7 @@ M       cat_surf_results.m
 
 (1) Fixed: Corrected use of handles for older Matlab versions.
 (2) Fixed: Checkbox for vilonplot in cat_stat_check_cov* disappeared.
+
 ------------------------------------------------------------------------
 r1488 | gaser | 2019-07-01 22:58:14 +0200 (Mo, 01 Jul 2019) | 27 lines
 

@@ -88,14 +88,10 @@
         <li><a href=cat_orthogonality.html>Design orthogonality</a></li>
         <li><a href=cat_FAQ.html>FAQ</a></li>
         <li><a href=cat_stuff.html>Links, sources & recommendations</a></li>
-        <li><a href=cat_ackknowledgement.html>Acknowledgement</a></li>
+        <li><a href=cat_acknowledgement.html>Acknowledgement</a></li>
       </ol>
-            
-      
       
     </div>
-  
-    
   
     <div id="footer">
       <p>Copyright (C) Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
