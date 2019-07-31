@@ -321,7 +321,12 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   catversion          = cfg_menu;
   catversion.tag      = 'catversion';
   catversion.name     = 'CAT preprocessing version';
-  catversion.labels   = {'CAT12.6 (2019/03)',sprintf('%s r%s (%s) - actual release',catver.rel,catver.ver,datestr(catver.dat,'YYYY/mm'))};
+  try
+    dstr              = datestr(catver.dat,'YYYY/mm');
+  catch
+    dstr              = catver.dat;
+  end 
+  catversion.labels   = {'CAT12.6 (2019/03)',sprintf('%s r%s (%s) - actual release',catver.rel,catver.ver,dstr)};
   catversion.values   = {'estwrite1445','estwrite'};
   if expert
     catversion.labels = [{'CAT12.3 (2018/12)'}  catversion.labels(1:end)];

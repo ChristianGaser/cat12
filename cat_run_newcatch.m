@@ -36,7 +36,7 @@ function cat_run_newcatch(job,tpm,subj)
 
     if cat_get_defaults('extopts.send_info')
       url = sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%s%s',cat_version,'%2F',computer,'%2F',caterr.message);
-      urlread(url);
+      try, urlread(url); end
     end
 
     % write error report

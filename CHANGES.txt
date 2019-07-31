@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1490 | gaser | 2019-07-31 09:49:36
+r1491 | gaser | 2019-07-31 14:10:34
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+M       cat_conf_catsimple.m
+M       cat_main_reportfig.m
+M       cat_run_newcatch.m
+M       html/cat.html
+
+(1) Fixed: Added try function to urlread in case that websever is down. 
+(2) Changed: Removed use of mac-address to create uniqe user id.
+------------------------------------------------------------------------
+r1490 | gaser | 2019-07-31 09:50:15 +0200 (Mi, 31 Jul 2019) | 24 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -24,6 +38,7 @@ A  +    html/cat_acknowledgement.html
     versions and (un)successful preprocessings.
 (3) Changed: Added cat.extopts.send_info flag to control sending of statistics
     tp SBM server.
+
 ------------------------------------------------------------------------
 r1489 | gaser | 2019-07-02 11:29:46 +0200 (Di, 02 Jul 2019) | 10 lines
 
