@@ -34,6 +34,11 @@ function cat_run_newcatch(job,tpm,subj)
     cat_io_cprintf('err',sprintf('\n%s\nCAT Preprocessing error for %s:\n%s\n%s\n%s\n', ...
       repmat('-',1,72),nam,repmat('-',1,72),caterr.message,repmat('-',1,72)));  
 
+    if cat_get_defaults('extopts.send_info')
+      url = sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%s%s',cat_version,'%2F',computer,'%2F',caterr.message);
+      urlread(url);
+    end
+
     % write error report
     caterrtxt = cell(numel(caterr.stack)+2,1);
     caterrtxt{1} = sprintf('%s\n',caterr.identifier);

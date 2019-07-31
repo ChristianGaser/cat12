@@ -78,6 +78,9 @@ if nargin <= 1
 	
 	[catversion.rel, catversion.ver, catversion.dat] = cat_version;
 	
+	% send Matlab version to server
+	cat_io_send_to_server;
+	
 	% check for new CAT12 version
 	[sts, msg] = cat_update;
 	if isfinite(sts) && sts >= 0

@@ -31,6 +31,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 
   dbs = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
  
+  if cat_get_defaults('extopts.send_info')
+    url = sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%sfinished',cat_version,'%2F',computer,'%2F');
+    urlread(url);
+  end
+
   VT  = res.image(1); 
   VT0 = res.image0(1);
   [pth,nam] = spm_fileparts(VT0.fname); 
