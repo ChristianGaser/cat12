@@ -1,5 +1,25 @@
 ------------------------------------------------------------------------
-r1491 | gaser | 2019-07-31 14:10:34
+r1492 | gaser | 2019-08-02 07:54:45
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+M       cat_io_report.m
+MM      cat_io_send_to_server.m
+M       cat_run_newcatch.m
+M       html/cat.html
+M       html/cat.txt
+M       html/cat_instruction_templates.html
+M       html/cat_methods_FN.html
+M       html/cat_methods_RBM.html
+A       html/cat_statistics.html
+
+(1) Fixed: Corrected some links in online help.  
+(2) Changed: Added html about CAT12 user statistics.
+(3) Changed: Added more detailed error information to statistics.
+------------------------------------------------------------------------
+r1491 | gaser | 2019-07-31 14:46:14 +0200 (Mi, 31 Jul 2019) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +32,7 @@ M       html/cat.html
 
 (1) Fixed: Added try function to urlread in case that websever is down. 
 (2) Changed: Removed use of mac-address to create uniqe user id.
+
 ------------------------------------------------------------------------
 r1490 | gaser | 2019-07-31 09:50:15 +0200 (Mi, 31 Jul 2019) | 24 lines
 
