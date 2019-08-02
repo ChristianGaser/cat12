@@ -564,7 +564,16 @@ function cat_io_report(job,qa,subj,createerr)
     for id=1
       spm_orthviews('AddContext',id); % need the context menu for mesh handling
 
-      spm_ov_mesh('display',id,Phull); 
+      try
+        spm_ov_mesh('display',id,Phull);
+      catch
+        fprintf('Please update to a newer version of spm12 for using this contour overlay\n');
+        try
+          spm_update
+        catch
+          fprintf('Update to the newest SPM12 version failed. Please update manually.\n');
+        end
+      end
 
       % apply affine scaling for gifti objects
       for ix=1:numel(Phull) 

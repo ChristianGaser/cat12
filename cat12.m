@@ -79,7 +79,7 @@ if nargin <= 1
 	[catversion.rel, catversion.ver, catversion.dat] = cat_version;
 	
 	% send Matlab version to server
-  url = sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s','Start','%2F',version('-release'))
+  url = sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s','Start','%2F',version('-release'));
   try, urlread(url); end
 	
 	% check for new CAT12 version

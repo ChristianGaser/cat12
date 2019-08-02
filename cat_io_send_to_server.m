@@ -8,7 +8,7 @@ function cat_io_send_to_server
 %
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: cat_io_send_to_server.m 1355 2018-08-13 13:53:48Z gaser $
+% $Id$
 
 % don't do anything if default is not set
 if ~cat_get_defaults('extopts.send_info'), return; end
