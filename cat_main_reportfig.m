@@ -127,7 +127,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   end
 
   colormap(cmap);
-  spm_orthviews('Redraw');
+  try spm_orthviews('Redraw'); end
 
   warning('OFF','MATLAB:tex')
   htext = zeros(5,2,2);
@@ -149,7 +149,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   % position values of the orthview/surface subfigures
   pos = [0.01 0.38 0.48 0.36; 0.51 0.38 0.48 0.36; ...
          0.01 0.01 0.48 0.36; 0.51 0.01 0.48 0.36];
-  spm_orthviews('Reset');
+  try spm_orthviews('Reset'); end
 
 
   % BB box is not optimal for all images
@@ -159,11 +159,16 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     case 'affine'
       dispmat = res.Affine; 
       warning('OFF','MATLAB:tex')
+<<<<<<< .mine
+      try spm_orthviews('BB', job.extopts.bb*0.95 ); end
+    case 'rigid'
+=======
       spm_orthviews('BB', job.extopts.bb*0.95 );
     case 'rigid'
+>>>>>>> .r1492
       % this does not work so good... AC has a little offset ...
       aff = spm_imatrix(res.Affine);  scale = aff(7:9); 
-      spm_orthviews('BB', job.extopts.bb ./ mean(scale));
+      try spm_orthviews('BB', job.extopts.bb ./ mean(scale)); end
       dispmat = R; 
   end
 
@@ -203,9 +208,17 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     if ~debug, clear Yo; end
 
     VT0x.mat = dispmat * VT0x.mat; 
+<<<<<<< .mine
+    try
+      hho = spm_orthviews('Image',VT0x,pos(1,:));
+      spm_orthviews('Caption',hho,{T1txt},'FontSize',fontsize-1,'FontWeight','Bold');
+      spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
+    end
+=======
     hho = spm_orthviews('Image',VT0x,pos(1,:));
     spm_orthviews('Caption',hho,{T1txt},'FontSize',fontsize-1,'FontWeight','Bold');
     spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
+>>>>>>> .r1492
     cc{1} = axes('Position',[pos(1,1) + 0.26 0.37 0.02 0.15],'Parent',fg);     
     image((60:-1:1)','Parent',cc{1});
 
@@ -232,9 +245,17 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     %Vm.dat(:,:,:) = single(Ym .* min(1,3/12 + (Yp0>1/6)));      % intensity normalized with brainmask (incorrect axis label)
     Vm.pinfo  = repmat([1;0],1,size(Ym,3));
     Vm.mat    = dispmat * Vm.mat; 
+<<<<<<< .mine
+    try
+      hhm = spm_orthviews('Image',Vm,pos(2,:));
+      spm_orthviews('Caption',hhm,{'m*.nii (Int. Norm.)'},'FontSize',fontsize,'FontWeight','Bold');
+      spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
+    end
+=======
     hhm = spm_orthviews('Image',Vm,pos(2,:));
     spm_orthviews('Caption',hhm,{'m*.nii (Intensity Normalized T1)'},'FontSize',fontsize-1,'FontWeight','Bold');
     spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
+>>>>>>> .r1492
     cc{2} = axes('Position',[pos(2,1) + 0.26 0.37 0.02 0.15],'Parent',fg);
     image((60:-1:1)','Parent',cc{2}); 
     set(cc{2},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
@@ -290,22 +311,23 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   VO.pinfo  = repmat([1;0],1,size(Yp0,3));
   VO.mat    = dispmat * VO.mat; 
   if exist('hhp0','var')
-    spm_orthviews('Delete', hhp0); %#ok<NODEF>
+    try spm_orthviews('Delete', hhp0); end %#ok<NODEF>
     clear hhp0;
-  end 
-  hhp0    = spm_orthviews('Image',VO,pos(3,:));
-  spm_orthviews('window',hhp0,[0 1.3]);
-
+  end
+  try 
+    hhp0    = spm_orthviews('Image',VO,pos(3,:));
+    spm_orthviews('window',hhp0,[0 1.3]);
+  end
+  
   LAB = job.extopts.LAB;
   NS  = @(Ys,s) Ys==s | Ys==s+1;
   if useoverlay>1
-    spm_orthviews('window',hhp0,[0 2]);
+    try spm_orthviews('window',hhp0,[0 2]); end
     V2 = VO;
     switch useoverlay
       case 22 % classic red mask
         V2.dat(:,:,:) = min(59,min(1,Yp0/3) + 60*(smooth3((abs(Yp0 - Ym*3)>0.6).*cat_vol_morph(abs(Yp0 - Ym*3)>0.8,'d',2).*(Yp0>0.5))>0.5)); 
-        spm_orthviews('addtruecolourimage',hhp0,V2,...
-          [0.05 0.4 1; gray(58); 0.8 0.2 0.2],0.5,3,0)
+        try spm_orthviews('addtruecolourimage',hhp0,V2, [0.05 0.4 1; gray(58); 0.8 0.2 0.2],0.5,3,0); end
       case 2 % red mask high contrast (default)
         
         % basic head/brain tissue
@@ -363,35 +385,39 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         bv3 = [0.4 0.2 0.2; 0.6 0.2 0.2; 1 0 0];
         
         % mapping
-        spm_orthviews('addtruecolourimage',hhp0,V2,...
-          [BCGWH; g29; wmhc9; vent3; bv3],1,2,0); % Change
+        try spm_orthviews('addtruecolourimage',hhp0,V2, [BCGWH; g29; wmhc9; vent3; bv3],1,2,0); end % Change
 
       case 3 % red mask
         Ychange = 60*(smooth3((abs(Yp0 - Ym*3)>0.6).*cat_vol_morph(abs(Yp0 - Ym*3)>0.8,'d',2) .* (Yp0>0.5))>0.5);
         BCGWH = pink(15); BCGWH = min(1,BCGWH + [zeros(13,3);repmat((1:2)'/2,1,3)]); 
         V2.dat(:,:,:) = min(0.5,Ym/3).*(Yp0<0.5) + (Yp0/4*1.4+0.5).*(Yp0>0.5) + Ychange; %V2.dat(Yp0<0.5 & Yp0>2.5) = nan; %V2.dat = 3*(V2.dat>0.5)
-        spm_orthviews('addtruecolourimage',hhp0,V2,...
-          [flipud(BCGWH);gray(44);1 0 0],1,2,0);
+        try spm_orthviews('addtruecolourimage',hhp0,V2, [flipud(BCGWH);gray(44);1 0 0],1,2,0); end
       case 4 % gray - color
         BCGWH = cat_io_colormaps('BCGWHwov',60); BCGWH(46:end,:) = []; 
         V2.dat(:,:,:) = min(0.5,Ym/3).*(Yp0<0.5) + (Yp0/4*1.4+0.5).*(Yp0>0.5); %V2.dat(Yp0<0.5 & Yp0>2.5) = nan; %V2.dat = 3*(V2.dat>0.5)
-        spm_orthviews('addtruecolourimage',hhp0,V2,...
-          [gray(16);BCGWH],1,2,0);
+        try spm_orthviews('addtruecolourimage',hhp0,V2, [gray(16);BCGWH],1,2,0); end
       case 5 % gray - color
         BCGWH = cat_io_colormaps('BCGWHnov',60); BCGWH(46:end,:) = []; 
         V2.dat(:,:,:) = min(0.5,Ym/3).*(Yp0<0.5) + (Yp0/4*1.4+0.5).*(Yp0>0.5); %V2.dat(Yp0<0.5 & Yp0>2.5) = nan; %V2.dat = 3*(V2.dat>0.5)
-        spm_orthviews('addtruecolourimage',hhp0,V2,...
-          [flipud(gray(16));BCGWH],1,2,0);
+        try spm_orthviews('addtruecolourimage',hhp0,V2, [flipud(gray(16));BCGWH],1,2,0); end
     end
-    spm_orthviews('redraw');
+    try spm_orthviews('redraw'); end
   else
-    spm_orthviews('window',hhp0,[0 cmmax]);
+    try spm_orthviews('window',hhp0,[0 cmmax]); end
   end
   
   %% legend
+<<<<<<< .mine
+  try
+    spm_orthviews('Reposition',[0 0 0]); 
+    spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize-1,'FontWeight','Bold');
+    spm_orthviews('window',hhp0,[0 cmmax]); caxis([0,2]);
+  end
+=======
   spm_orthviews('Reposition',[0 0 0]); 
   spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize-1,'FontWeight','Bold');
   spm_orthviews('window',hhp0,[0 cmmax]); caxis([0,2]);
+>>>>>>> .r1492
   global st;
   if useoverlay>1
   % make SPM colorbar invisible (cannot delete it because SPM orthviews need it later)  
@@ -421,7 +447,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     %Phull = {fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','bh.hull.cat.gii')};
     Phull = {cat_surf_create_TPM_hull_surface(res.tpm)};
     for id=1
-      spm_orthviews('AddContext',id); % need the context menu for mesh handling
+      try spm_orthviews('AddContext',id); end % need the context menu for mesh handling
 
       try
         spm_ov_mesh('display',id,Phull);
@@ -430,14 +456,20 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         try
           spm_update
         catch
+        
           fprintf('Update to the newest SPM12 version failed. Please update manually.\n');
+        end
+        try
+          
+        catch
+          cat_io_cprintf('err','There is still an error in the "spm_ov_mesh" function.\n');
         end
       end
 
       % apply affine scaling for gifti objects
       for ix=1:numel(Phull) 
         % load mesh
-        spm_ov_mesh('display',id,Phull(ix)); 
+        try spm_ov_mesh('display',id,Phull(ix)); end 
 
         % apply affine scaling for gifti objects
         V = (dispmat * inv(res.Affine) * ([st.vols{id}.mesh.meshes(ix).vertices,...
@@ -455,8 +487,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       UD.width = 0.75; 
       UD.style = repmat({'b--'},1,numel(Phull));
       set(hM,'UserData',UD);
-      spm_ov_mesh('redraw',id);
-      spm_orthviews('redraw',id);
+      try spm_ov_mesh('redraw',id); end
+      try spm_orthviews('redraw',id); end
 
       %% TPM legend
       ccl = axes('Position',[pos(1,1:2) 0 0] + [0.33 0 0.02 0.02],'Parent',fg);
@@ -482,11 +514,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     end
     
     for id=ids
-      spm_orthviews('AddContext',id); % need the context menu for mesh handling
+      try spm_orthviews('AddContext',id); end % need the context menu for mesh handling
 
       for ix=1:numel(Psurf) 
         % load mesh
-        spm_ov_mesh('display',id,Psurf(ix).Pcentral); 
+        try spm_ov_mesh('display',id,Psurf(ix).Pcentral); end
 
         % apply affine scaling for gifti objects
         V = (dispmat * ([st.vols{id}.mesh.meshes(end).vertices,...
@@ -504,7 +536,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       UD.width = [repmat(0.75,1,numel(UD.width) - numel(Psurf))  repmat(0.5,1,numel(Psurf))]; 
       UD.style = [repmat({'b--'},1,numel(UD.width) - numel(Psurf)) repmat({'k-'},1,numel(Psurf))];
       set(hM,'UserData',UD);
-      spm_ov_mesh('redraw',id);
+      try spm_ov_mesh('redraw',id); end
       
       %% TPM legend
       try
@@ -600,9 +632,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 
   WMfactor0 = WMth * 4/3; %mean(res.mn(res.lkp==2)) * 4/3; 
   WMfactor1 = 4/3; 
-  if exist('hho' ,'var'), spm_orthviews('window',hho ,[0 WMfactor0]); end
-  if exist('hhm' ,'var'), spm_orthviews('window',hhm ,[0 WMfactor1]); end
-  if exist('hhp0','var'), try, spm_orthviews('window',hhp0,[0 WMfactor1]); end; end
+  if exist('hho' ,'var'), try spm_orthviews('window',hho ,[0 WMfactor0]); end; end
+  if exist('hhm' ,'var'), try spm_orthviews('window',hhm ,[0 WMfactor1]); end; end
+  if exist('hhp0','var'), try spm_orthviews('window',hhp0,[0 WMfactor1]); end; end
   
   
   %% change line style of TPM surf
@@ -614,7 +646,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     UD.style = [repmat({'r--'},1,numel(UD.width) - numel(Psurf)) repmat({'k-'},1,numel(Psurf))];
     set( cclp,'Color', [1 0 0]);
     set(hM,'UserData',UD);
-    spm_ov_mesh('redraw',id);
+    try spm_ov_mesh('redraw',id); end
   end  
   
   warning('OFF','MATLAB:subscripting:noSubscriptsSpecified'); % jep off

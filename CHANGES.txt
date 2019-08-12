@@ -1,5 +1,37 @@
 ------------------------------------------------------------------------
-r1492 | gaser | 2019-08-02 07:54:45
+r1493 | dahnke | 2019-08-12 12:07:11
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_stools.m
+M       cat_defaults.m
+M       cat_io_checkdepfiles.m
+M       cat_io_report.m
+M       cat_main.m
+M       cat_main_reportfig.m
+M       cat_surf_calc.m
+M       cat_surf_createCS.m
+M       cat_surf_fun.m
+M       cat_surf_info.m
+M       cat_surf_parameters.m
+M       cat_surf_render2.m
+M       cat_vol_pbt.m
+
+(1) Fixed:    Corrected process bar output in cat_surf_calc.
+(2) Fixed:    Small corrections in cat_surf_render2 to save images.
+(3) Fixed:    Added further try-catch blocks for spm_orthviews and
+              spm_ov_mesh in cat_main_reportfig and cat_io_report.
+(4) Fixed:    Corrected bugs in cat_io_checkdepfiles.
+(5) Changed:  Switch area-function code. 
+(6) New:      Added pbtlas to avoid thickness underestimation in 
+              strongly myelinated regions. Changes in cat_vol_pbt  
+              but also in cat_surf_createCS, cat_conf_extopts, cat_defaults.
+(7) Fixed:    Added work-around for silly surface reconstruction error.      
+(8) New:      Added new thickness metrics to cat_surf_parameter,  
+              cat_surf_fun, and cat_conf_stools.         
+------------------------------------------------------------------------
+r1492 | gaser | 2019-08-02 07:55:19 +0200 (Fr, 02 Aug 2019) | 18 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -18,6 +50,7 @@ A       html/cat_statistics.html
 (1) Fixed: Corrected some links in online help.  
 (2) Changed: Added html about CAT12 user statistics.
 (3) Changed: Added more detailed error information to statistics.
+
 ------------------------------------------------------------------------
 r1491 | gaser | 2019-07-31 14:46:14 +0200 (Mi, 31 Jul 2019) | 12 lines
 
