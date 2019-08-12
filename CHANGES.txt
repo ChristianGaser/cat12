@@ -1,5 +1,25 @@
 ------------------------------------------------------------------------
-r1493 | dahnke | 2019-08-12 12:07:11
+r1494 | gaser | 2019-08-12 13:37:04
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+M       cat_conf_stools.m
+M       cat_defaults.m
+M       cat_main_reportfig.m
+M       cat_stat_spm.m
+M       cat_surf_parameters.m
+M       cat_vol_pbt.m
+M       html/cat.html
+M       html/cat_statistics.html
+M       html/images/CAT.png
+
+(1) Fixed: Added global function to cat_stat_spm.m 
+(2) Fixed: Corrected typos and updated help text.
+
+------------------------------------------------------------------------
+r1493 | dahnke | 2019-08-12 12:09:42 +0200 (Mo, 12 Aug 2019) | 30 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -30,6 +50,7 @@ M       cat_vol_pbt.m
 (7) Fixed:    Added work-around for silly surface reconstruction error.      
 (8) New:      Added new thickness metrics to cat_surf_parameter,  
               cat_surf_fun, and cat_conf_stools.         
+
 ------------------------------------------------------------------------
 r1492 | gaser | 2019-08-02 07:55:19 +0200 (Fr, 02 Aug 2019) | 18 lines
 

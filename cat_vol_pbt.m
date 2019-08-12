@@ -16,7 +16,7 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
 %   opt.resV   voxel resolution (only isotropic)
 %   opt.method choose of method {'pbt2x','pbt2'} with default=pbt2x as 
 %              the method that is described in the paper.
-%   opt.pbtlas GM intensity correction to reduce myelineation effects
+%   opt.pbtlas GM intensity correction to reduce myelination effects
 %              (added 201908)
 % ______________________________________________________________________
 %
@@ -104,7 +104,7 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
       % GM/WM boundary.
       % This model was implemented after the results of Shahrzad Kharabian
       % Masouleh (Juelich) that showed strong underestimations and increased
-      % variance in CAT compared to FS and CIVIT.
+      % variance in CAT compared to FS and CIVET.
       % RD 201908
       
         stime = cat_io_cmd('    WM boundar optimization: ','g5','',opt.verb);
@@ -113,10 +113,10 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
         
         %% WM intensity:
         %  The result should be a map with an average value of 1 and no
-        %  anatomical structures (maybe somedifferencence for regional
-        %  folding independent pattern).
-        %  Important to avoid gyral overestimations, however to small
-        %  filter size / low number of iteration scan also lead to errors.
+        %  anatomical structures (maybe some differencence for regional
+        %  folding-independent pattern).
+        %  Important to avoid gyral overestimations, however too small
+        %  filter size / low number of iterations can also cause errors.
         [Ymfr,resT2] = cat_vol_resize(Ymf,'reduceV',opt.resV,mean(vx_vol_org),32,'meanm'); 
         YM2max = max(0,min(1,Ymfr-2)); YM2max(YM2max<0.0) = 0; % lower threshold > higher filter range/more iterations
         YM2max = YM2max .* cat_vol_morph(YM2max>0 ,'l',[10 0.1 ]);   
@@ -298,7 +298,7 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
     Ygmt2 = cat_vol_pbtp(round(4-Ymf),Ycsfd,Ywmd);
     
     % Error handling 
-    % For some unkown reasons the sulcus reconstruction of cat_vol_pbtp failed in some cases (not direct reproducable).      
+    % For some unkown reasons the sulcus reconstruction of cat_vol_pbtp failed in some cases (not directly reproducable).      
     % Reprocessing is solving this problem, but further investigation of cat_vol_pbtp.cpp would be good (RD 20190811).
     % Maybe it depends on the initialization of the regions, e.g., using Ymf without rounding and incorrect boundary seams to increase the problems.  
     mask   = @(Y) Y(:)>0 & Y(:)<1000000; 
