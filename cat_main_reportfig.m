@@ -159,13 +159,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     case 'affine'
       dispmat = res.Affine; 
       warning('OFF','MATLAB:tex')
-<<<<<<< .mine
       try spm_orthviews('BB', job.extopts.bb*0.95 ); end
     case 'rigid'
-=======
-      spm_orthviews('BB', job.extopts.bb*0.95 );
-    case 'rigid'
->>>>>>> .r1492
       % this does not work so good... AC has a little offset ...
       aff = spm_imatrix(res.Affine);  scale = aff(7:9); 
       try spm_orthviews('BB', job.extopts.bb ./ mean(scale)); end
@@ -208,17 +203,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     if ~debug, clear Yo; end
 
     VT0x.mat = dispmat * VT0x.mat; 
-<<<<<<< .mine
     try
       hho = spm_orthviews('Image',VT0x,pos(1,:));
       spm_orthviews('Caption',hho,{T1txt},'FontSize',fontsize-1,'FontWeight','Bold');
       spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
     end
-=======
-    hho = spm_orthviews('Image',VT0x,pos(1,:));
-    spm_orthviews('Caption',hho,{T1txt},'FontSize',fontsize-1,'FontWeight','Bold');
-    spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
->>>>>>> .r1492
     cc{1} = axes('Position',[pos(1,1) + 0.26 0.37 0.02 0.15],'Parent',fg);     
     image((60:-1:1)','Parent',cc{1});
 
@@ -245,17 +234,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     %Vm.dat(:,:,:) = single(Ym .* min(1,3/12 + (Yp0>1/6)));      % intensity normalized with brainmask (incorrect axis label)
     Vm.pinfo  = repmat([1;0],1,size(Ym,3));
     Vm.mat    = dispmat * Vm.mat; 
-<<<<<<< .mine
     try
       hhm = spm_orthviews('Image',Vm,pos(2,:));
-      spm_orthviews('Caption',hhm,{'m*.nii (Int. Norm.)'},'FontSize',fontsize,'FontWeight','Bold');
+      spm_orthviews('Caption',hhm,{'m*.nii (Intensity Normalized T1)'},'FontSize',fontsize-1,'FontWeight','Bold');
       spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
     end
-=======
-    hhm = spm_orthviews('Image',Vm,pos(2,:));
-    spm_orthviews('Caption',hhm,{'m*.nii (Intensity Normalized T1)'},'FontSize',fontsize-1,'FontWeight','Bold');
-    spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
->>>>>>> .r1492
     cc{2} = axes('Position',[pos(2,1) + 0.26 0.37 0.02 0.15],'Parent',fg);
     image((60:-1:1)','Parent',cc{2}); 
     set(cc{2},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
@@ -407,17 +390,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   end
   
   %% legend
-<<<<<<< .mine
   try
     spm_orthviews('Reposition',[0 0 0]); 
     spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize-1,'FontWeight','Bold');
     spm_orthviews('window',hhp0,[0 cmmax]); caxis([0,2]);
   end
-=======
-  spm_orthviews('Reposition',[0 0 0]); 
-  spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize-1,'FontWeight','Bold');
-  spm_orthviews('window',hhp0,[0 cmmax]); caxis([0,2]);
->>>>>>> .r1492
   global st;
   if useoverlay>1
   % make SPM colorbar invisible (cannot delete it because SPM orthviews need it later)  

@@ -50,7 +50,7 @@ function varargout = cat_surf_parameters(job)
   % implemented but under test
   def.area        = 0; % estimate area
   def.gmv         = 0; % cortical volume
-  % futher thickness measures by estimating the IS and OS by Tnormal that 
+  % further thickness measures by estimating the IS and OS by Tnormal that 
   % result in Tpbt = Tnormal = Tnear
   def.thickness.Tfs   = 0; % Freesurfer thickness metric = mean([ Tnear(IS) Tnear(OS) ],2) 
   def.thickness.Tmin  = 0; % mininmal   thickness metric = min([  Tnear(IS) Tnear(OS) ],2)
