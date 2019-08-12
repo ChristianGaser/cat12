@@ -1248,11 +1248,11 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
     thickness.val  = {Tfs,Tmin,Tmax}; 
     thickness.help = {
       'For comparison of different thickness metrics in general see (MacDonalds et al. 1999, Lerch et al. 2005).'
-      '  Tnear      .. closes point from a surface to another one'
+      '  Tnear      .. closest point from a surface to another one'
       '  Tnormal    .. distance measured by following the surface normal (not really used)'
       '  Tfs        .. Freesurfer distance metric that is the mean of the Tnear metric of '
       '                (i) the white to the pial surface and (ii) the pial to the white surface (Fischl et al. 2000)'      
-      '  Tpbt       .. voxelbased thickness metrics (Dahnke et al., 2013)'
+      '  Tpbt       .. voxel-based thickness metrics (Dahnke et al., 2013)'
       '  Tlaplacian .. Laplacian based thickness metric (Jones et al., 2000, Lerch et al. 2005)'
       '  Tlink      .. distance between surface with the same surface structure that is in general the result of a deformation'
       '  Tmin       .. minimum Tnear distance between two surfaces'
@@ -1361,17 +1361,10 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
   surfextract      = cfg_exbranch;
   surfextract.tag  = 'surfextract';
   surfextract.name = 'Extract additional surface parameters';
-<<<<<<< .mine
   if expert == 2
     surfextract.val  = {data_surf_extract, area,gmv, GI,FD,SD, GIL, thickness, surfaces, nproc, lazy}; % area, 
   elseif expert == 1
     surfextract.val  = {data_surf_extract,GI,FD,SD,Tfs, surfaces,nproc,lazy};
-=======
-  if expert == 2
-    surfextract.val  = {data_surf_extract, area,gmv, GI,FD,SD, GIL,surfaces, nproc, lazy}; % area, 
->>>>>>> .r1492
-  elseif expert == 1
-    surfextract.val  = {data_surf_extract,GI,FD,SD,nproc,lazy};
   else
     surfextract.val  = {data_surf_extract,GI,FD,SD,nproc};
   end

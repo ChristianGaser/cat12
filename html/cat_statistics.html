@@ -25,18 +25,18 @@
     <div id="content">
       <h2>Statistics about CAT12 use</h2>      
       <p>
-        </br>CAT12 uses the anonymized IP address (e.g. 192.168.100.xxx) for geolocation and sends information about Matlab version, CAT12 version, computer platform, and error messages to the SBM server, This helps us to get statistics about the use of CAT12 and more importantly about possible errors.
+        </br>CAT12 uses the anonymized IP address (e.g. 192.168.100.xxx) for geolocation and sends information about Matlab version, CAT12 version, computer platform, and error messages to the our SBM server. This is invaluable to us to get statistics about the use of CAT12 and more importantly about possible errors and helps us to fix them.
         </br>If you don't want to have a unique web analytics cookie identification number assigned to your computer to avoid the aggregation and analysis of data collected on this website, you can select the opt-out option at the bottom of this page.
         
-        </br>Finally, you can set the flag
-         "cat.extopts.send_info" in <a href="matlab:open cat_defaults;">cat_defaults.m</a> to "0" to prevent sending any anonymized information to the SBM server.
+        </br>Furthermore, you can also set the flag
+         "cat.extopts.send_info" in <a href="matlab:open cat_defaults;">cat_defaults.m</a> to "0" to prevent sending any (anonymized) information to our SBM server. However, keep in mind that we need those information to fix possible errors and to get statistics about Matlab and CAT12 versions.
       </p>
       <p>
-        </br>CAT12 statistics:
+        </br>Description of CAT12 statistics:
       </p>
         <ul>
-          <li>CAT12.X: Information about CAT12 version, computer platform and successful or unsuccessful preprocessings. This data is sent to the SBM server during preprocessing to obtain information about possible errors and the overall number of successful preprocessings (see pageviews).</li>
-          <li>Start: Information about Matlab version. This data is sent to the SBM server when CAT12 is started and provides the approximate number of (unique) users (see unique pageviews).</li>
+          <li>Start: Information about Matlab version. This data is sent to our SBM server when CAT12 is started and provides the approximate number of (unique) users (see unique pageviews)</li>
+          <li>CAT12.X: Information about CAT12 version, computer platform and successful or unsuccessful preprocessings. This data is sent to our SBM server during preprocessing to obtain information about possible errors and the overall number of successful preprocessings (see pageviews).</li>
         </ul>
         <ul>
     </div>
@@ -45,6 +45,23 @@
 		
 		<div id="widgetIframe"><iframe width="100%" height="350" src="http://www.neuro.uni-jena.de/piwik/index.php?module=Widgetize&action=iframe&moduleToWidgetize=UserCountry&actionToWidgetize=getCountry&idSite=1&period=range&date=last3650&disableLink=1&widget=1&viewDataTable=cloud&language=en" scrolling="yes" frameborder="0" marginheight="0" marginwidth="0"></iframe></div>
 		
+    <div id="content">
+      <h2>Which information is sent?</h2>      
+      <p>
+  	    <ul>
+          <li>Anonymized IP address (e.g. 192.168.100.xxx) is sent to the SBM server for geolocation and to get number of unique users.</li>
+          <li>Information about Matlab version is sent when CAT12 is started using the following Matlab command:
+	          </br><i> urlread(sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s','Start','%2F',version('-release')));</i>
+          </li>
+          <li>Information about CAT12 version and computer platform is sent after successful preprocessing using the Matlab command:
+	          </br><i> urlread(sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%sfinished',cat_version,'%2F',computer,'%2F'));</i>	          
+          </li>
+          <li>Information about CAT12 version and computer platform is sent after errors during preprocessing using the Matlab command:
+	          </br><i> urlread(sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%s%s%s%s',cat_version,'%2F',computer,'%2F',caterr.message,'%2F',str_err));</i>  	          
+          </li>
+        </ul>
+        <ul>
+    </div>
 
     <div id="widgetIframe"><iframe frameborder="no" width="600px" height="200px" src="http://www.neuro.uni-jena.de/piwik/index.php?module=CoreAdminHome&action=optOut&language=en"></iframe></div>
 
