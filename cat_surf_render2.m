@@ -121,8 +121,16 @@ switch lower(action)
         if isfield(O,'pcdata'), O.pcdata = cellstr(O.pcdata); end
         if isfield(O,'pmesh'),  O.pmesh  = cellstr(O.pmesh); end
         renderer = get(H.figure,'Renderer');
-        set(H.figure,'Renderer','OpenGL');
-        
+        try
+          % warning to error
+          val = feval('set',H.figure,'Renderer','OpenGL');
+          if isempty(val)==0 
+              error('OpenGLerr')
+          end
+        catch 
+          cat_io_cprintf('err','OpenGL error - cannot display surface\n');
+          return
+        end
       if ~isstruct(varargin{1}) && ~isa(varargin{1},'gifti')
         % surface info
         if nargin>=3
@@ -894,7 +902,7 @@ switch lower(action)
         
         % -- Colorrange --   
         c = uimenu(cmenu, 'Label','Colorrange');
-        uimenu(c, 'Label','Synchronise colorranges', 'Visible','off', ...
+        uimenu(c, 'Label','Synchronise colorranges', 'Visible','on', ...
             'Checked','off', 'Tag','SynchroMenu', 'Callback',{@mySynchroniseCaxis, H});
         uimenu(c, 'Label','Min-max'    , 'Checked','off', 'Callback', {@myCaxis, H, 'auto'},'Separator', 'on');
         uimenu(c, 'Label','2-98 %'     , 'Checked','off', 'Callback', {@myCaxis, H, '2p'});
@@ -993,10 +1001,10 @@ switch lower(action)
               'Callback', {@myPrintResolution, H, printres(ri)});
           end
           % print
-          uimenu(cmenu, 'Label','Save As...', 'Callback', {@mySave, H});
+          uimenu(cmenu, 'Label','Save As...', 'Callback', {@mySavePNG, H});
         else
           % print
-          uimenu(cmenu, 'Label','Save As...','Separator', 'on', 'Callback', {@mySave, H});
+          uimenu(cmenu, 'Label','Save As...','Separator', 'on', 'Callback', {@mySavePNG, H});
         end
         
              
@@ -1571,7 +1579,11 @@ objatlases  = findobj(obj,'Label','Atlases');
 objcbar     = findobj(obj,'Label','Colorbar');
 objcmap     = findobj(obj,'Label','Colormap');
 objcrange   = findobj(obj,'Label','Colorrange');
-if ~isempty(findobj(get(objatlases,'children'),'Checked','on')) || ...
+if ~isempty(H.patch.FaceVertexCData)
+  set(objcbar  ,'Enable','on');
+  set(objcmap  ,'Enable','on');
+  set(objcrange,'Enable','on');
+elseif ~isempty(findobj(get(objatlases,'children'),'Checked','on')) || ...
    (isempty(findobj(get(objtextures,'children'),'Checked','on')) && ...
     isempty(findobj(get(objatlases,'children'),'Checked','on'))) || ...
    (~isempty(objtextures) && isempty(findobj(findobj(get(objtextures,'children'),'Label','none'),'Checked','off'))) || ...
@@ -2247,18 +2259,17 @@ end
 function mySavePNG(obj,evt,H,filename)
   %%
   if ~exist('filename','var')
+    filename = get(H.figure,'Name'); 
+  end
+  
+  [pth,nam,ext] = fileparts(filename);
+  if isempty(pth), pth = cd; end
+  if ~strcmp({'.gii','.png'},ext), nam = [nam ext]; end
+  if isempty(nam) || exist(fullfile(pth,[nam '.png']),'file') || ~exist(pth,'dir')
     filename = uiputfile({...
-      '*.png' 'PNG files (*.png)'}, 'Save as');
+      '*.png' 'PNG files (*.png)'}, 'Save as',nam);
   else
-    [pth,nam,ext] = fileparts(filename);
-    if isempty(pth), pth = cd; end
-    if ~strcmp({'.gii','.png'},ext), nam = [nam ext]; end
-    if isempty(nam)
-      filename = uiputfile({...
-        '*.png' 'PNG files (*.png)'}, 'Save as',nam);
-    else
-      filename = fullfile(pth,[nam '.png']);
-    end
+    filename = fullfile(pth,[nam '.png']);
   end
   
   u  = get(H.axis,'units');
@@ -2288,9 +2299,12 @@ function mySavePNG(obj,evt,H,filename)
   %a = get(h,'children');
   %set(a,'Position',get(a,'Position').*[0 0 1 1]+[10 10 0 0]);       
   if isdeployed
-      deployprint(h, '-dpng', '-opengl', fullfile(pth, filename));
+      deployprint(h, '-dpng', '-opengl',sprintf('-r%d',cat_get_defaults('print.dpi')), filename);
   else
-      print(h, '-dpng', '-opengl', fullfile(pth, filename));
+      print(h, '-dpng', '-opengl', sprintf('-r%d',cat_get_defaults('print.dpi')), filename);
+  end
+  for pi=1:numel(H.patch)
+    if get(H.patch(pi),'LineWidth')>0; set(H.patch(pi),'LineWidth',0.5); end % restore mesh default 
   end
   close(h);
   set(getappdata(obj,'fig'),'renderer',r);
@@ -2369,7 +2383,8 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
             atlases  = findobj(get(findobj(H.figure,'Label','Atlases'),'children'),'checked','on'); 
             if ~strcmp(H.sinfo(1).texture,'defects') && ...
                 ( (~isempty(textures) && ~strcmp(textures.Label,'none')) || ...
-                  (~isempty(atlases)  && ~strcmp(atlases.Label,'none')))
+                  (~isempty(atlases)  && ~strcmp(atlases.Label,'none')) || ...
+                  (~isempty(H.patch.FaceVertexCData)) )
               colorbar('Position',[.93 0.2 0.02 0.6]); 
               colormap(getappdata(H.patch(1),'colourmap'));
             end

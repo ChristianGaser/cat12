@@ -28,9 +28,9 @@ function varargout = cat_surf_fun(action,S,varargin)
 %
 % * Surface area mapping
 %   - Estimate nearest neighbor mapping between two surfaces S1 and S2
-%      edgemap = cat_surf_surf2surf('createEdgemap',S1,S2);
+%      edgemap = cat_surf_fun('createEdgemap',S1,S2);
 %   - Applay mapping 
-%      cdata2 = cat_surf_maparea('useEdgemap',cdata,edgemap);
+%      cdata2 = cat_surf_fun('useEdgemap',cdata,edgemap);
 %
 % * Other helping functions:
 %   E   = cat_surf_fun('graph2edge',T); % get edges of a triangulation T
@@ -74,6 +74,20 @@ function varargout = cat_surf_fun(action,S,varargin)
     case 'core'
       if nargout==1, varargout{1} = cat_surf_core(S,varargin{1}); end
       if nargout==2, [varargout{1},varargout{2}] = cat_surf_core(S,varargin{1}); end
+    case {'tfs','tmin','tmax'}
+      if numel(varargin)==1
+        if nargout==1
+          varargout{1} = cat_surf_thickness(action,S,varargin{1}); 
+        else
+          cat_surf_thickness(action,S,varargin{1});
+        end
+      else
+        if nargout==1
+          varargout{1} = cat_surf_thickness(action,S); 
+        else
+          cat_surf_thickness(action,S);
+        end
+      end
     case {'inner','outer','white','pial','innervar','outervar','whitevar','pialvar'}
       if numel(varargin)==1
         switch nargout % surface & texture input
@@ -131,15 +145,18 @@ end
 %  that finally performs the mapping. 
 %  ------------------------------------------------------------------------
 %  Robert Dahnke 2019/04
-function edgemap = cat_surf_surf2surf(S1,S2)
+function edgemap = cat_surf_surf2surf(S1,S2,normalize)
 %  ------------------------------------------------------------------------
 %  Create mapping by nearest neighbor.
 %  ------------------------------------------------------------------------
 %  Robert Dahnke 2019/04
+  if ~exist('normalize','var'), normalize=1; end
 
   % 0. Normalize input
-  S1.vertices = S1.vertices/max(S1.vertices(:));
-  S2.vertices = S2.vertices/max(S2.vertices(:)) * 0.98; % need slight difference for Delaunay! 
+  if normalize
+    S1.vertices = S1.vertices/max(S1.vertices(:));
+    S2.vertices = S2.vertices/max(S2.vertices(:)) * 0.98; % need slight difference for Delaunay! 
+  end
   
   % 1. Delaunay triangulation for fast search
   D1 = delaunayn(double(S1.vertices)); 
@@ -169,6 +186,7 @@ function edgemap = cat_surf_surf2surf(S1,S2)
   
   % 5. Create a weighting function to project data from Si2St and St2Si.
   edgemap.edges     = E;
+  edgemap.dist      = EL;
   edgemap.nvertices = [size(S1.vertices,1),size(S2.vertices,1)];
   edgemap.nforward  = 1  ./ nE1(E(:,1)); 
   edgemap.nbackward = 1  ./ nE2(E(:,2));
@@ -616,6 +634,68 @@ function [SH,V] = cat_surf_hull(S)
   % final mesh operations
   SH.vertices = [SH.vertices(:,2) SH.vertices(:,1) SH.vertices(:,3)]; % matlab flip
   SH.vertices = SH.vertices + repmat(min(S.vertices),size(SH.vertices,1),1) - 5;
+end
+
+function PTN = cat_surf_thickness(action,PS,PT)
+  if ~exist('T','var')
+    % create inner and outer surfaces
+    PIS  = cat_surf_fun('inner',PS);  % estimate inner surface
+    POS  = cat_surf_fun('outer',PS);  % estimate outer surface
+  else
+    % create inner and outer surfaces
+    PIS  = cat_surf_fun('inner',PS,PT);  % estimate inner surface
+    POS  = cat_surf_fun('outer',PS,PT);  % estimate outer surface
+  end
+  
+  % load surfaces
+  IS = gifti(PIS); 
+  OS = gifti(POS);
+  
+  % edgemap
+  % create mapping between 
+  Pedgemap = cat_io_strrep(PS,{'.central.';'.gii'},{'.edgemapnative.';'.mat'});
+  if 0%exist(Pedgemap,'file') % ... you have to test if central is older than the edgemap to use this 
+    load(Pedgemap,'edgemap'); 
+  else
+    %%
+    stime2  = clock;
+    fprintf('  Estimate mapping for native surface');
+    edgemap = cat_surf_surf2surf(IS,OS,0); 
+    %edgemap.dist = sum ( (IS.vertices(edgemap.edges(:,1),:) - OS.vertices(edgemap.edges(:,2),:)).^2 , 2).^0.5;  
+    %save(Pedgemap,'edgemap'); 
+    fprintf(' takes %ds\n',round(etime(clock,stime2))); 
+  end
+
+  % create thickness metric mapping matrix
+  switch lower(action)
+    case {'tfs','tmin'}
+      Tnear = inf(edgemap.nvertices(1),2,'single'); 
+      for i=1:size(edgemap.edges,1)
+        Tnear(edgemap.edges(i,1),1) = min( [ Tnear(edgemap.edges(i,1),1) edgemap.dist(i)  ] ) ;
+        Tnear(edgemap.edges(i,2),2) = min( [ Tnear(edgemap.edges(i,2),2) edgemap.dist(i)  ] ) ;
+      end
+    case 'tmax'
+      Tfar  = zeros(edgemap.nvertices(1),2,'single'); 
+      for i=1:size(edgemap.edges,1)
+        Tfar(edgemap.edges(i,1),1)  = max( [ Tfar(edgemap.edges(i,1),1) edgemap.dist(i)  ] ) ;
+        Tfar(edgemap.edges(i,2),2)  = max( [ Tfar(edgemap.edges(i,2),2) edgemap.dist(i)  ] ) ;
+      end
+  end
+    
+  switch lower(action)
+    case 'tfs'
+      TN  = mean(Tnear,2);
+      PTN = cat_io_strrep(PS,{'.central.';'.gii'},{'.thicknessfs.';''});
+    case 'tmin'
+      TN  = min(Tnear,[],2);
+      PTN = cat_io_strrep(PS,{'.central.';'.gii'},{'.thicknessmin.';''});
+    case 'tmax'
+      TN  = max(Tfar,[],2);
+      PTN = cat_io_strrep(PS,{'.central.';'.gii'},{'.thicknessmax.';''});
+  end
+  
+  % save smoothed textures
+  cat_io_FreeSurfer('write_surf_data',PTN,TN);
 end
 
 function [SH,V] = cat_surf_core(S,opt)

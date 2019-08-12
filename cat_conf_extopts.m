@@ -272,6 +272,16 @@ pbtres.help    = {
   ''
 };
 
+pbtlas         = cfg_menu;
+pbtlas.tag     = 'pbtlas';
+pbtlas.name    = 'Use correction for cortical myelination';
+pbtlas.labels  = {'No','Yes'};
+pbtlas.values  = {0 1};
+pbtlas.def     = @(val)cat_get_defaults('extopts.pbtlas', val{:});
+pbtlas.help    = {
+  'Apply correction for cortical myelination by local intensity adaption to improve the description of the GM/WM boundary (added in CAT12.7).'
+  ''
+};
 
 %------------------------------------------------------------------------
 % special expert and developer options 
@@ -816,7 +826,7 @@ admin.help = {'CAT12 parameter to control the behaviour of the preprocessing pip
 surface       = cfg_branch;
 surface.tag   = 'surface';
 surface.name  = 'Surface Options';
-surface.val   = {pbtres scale_cortex add_parahipp close_parahipp};
+surface.val   = {pbtres pbtlas scale_cortex add_parahipp close_parahipp};
 surface.help  = {'CAT12 parameter to control the surface processing.';''};
 
 

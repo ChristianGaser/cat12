@@ -134,7 +134,7 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
   clear Yms;
    
   % filling
-  Ymf  = max(Ym,min(0.95,YMF)); 
+  Ymf  = max(Ym,min(1,YMF)); 
   Ymfs = cat_vol_smooth3X(Ymf,1); 
   Ytmp = cat_vol_morph(YMF,'d',3) & Ymfs>2.3/3;
   Ymf(Ytmp) = max(min(Ym(Ytmp),0),Ymfs(Ytmp)); clear Ytmp Ymfs; 
@@ -296,7 +296,7 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
       case {'lc','rc'},  [Ymfs,Yside,BB] = cat_vol_resize({Ymfs,Yside},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
     end
     
-    imethod = 'linear'; %cubic'; % cubic should be better in general - however, linear is better for small thickness 
+    imethod         = 'cubic'; % cubic should be better in general - however, linear is better for small thickness (version?)
     [Ymfs,resI]     = cat_vol_resize(max(1,Ymfs),'interp',V,opt.interpV,imethod);                  % interpolate volume
     Yside           = cat_vol_resize(Yside,'interp',V,opt.interpV,imethod)>0.5;                    % interpolate volume (small dilatation)
     
@@ -310,7 +310,7 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
     if strcmp(opt.pbtmethod,'pbt3')
       [Yth1i,Yppi] = cat_vol_pbt3(Ymfs,struct('method',opt.pbtmethod,'cb',iscerebellum,'resV',opt.interpV,'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1])); % avoid underestimated thickness in gyri
     else
-      [Yth1i,Yppi] = cat_vol_pbt(Ymfs,struct('method',opt.pbtmethod,'resV',opt.interpV,'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1])); % avoid underestimated thickness in gyri
+      [Yth1i,Yppi] = cat_vol_pbt(Ymfs,struct('method',opt.pbtmethod,'resV',opt.interpV,'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1],'pbtlas',opt.pbtlas)); % avoid underestimated thickness in gyri
     end  
     %%
     if ~opt.WMT && ~debug, clear Ymfs; end

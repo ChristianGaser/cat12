@@ -578,7 +578,7 @@ function cat_io_report(job,qa,subj,createerr)
       % apply affine scaling for gifti objects
       for ix=1:numel(Phull) 
         % load mesh
-        spm_ov_mesh('display',id,Phull(ix)); 
+        try spm_ov_mesh('display',id,Phull(ix)); end 
 
         %% apply affine scaling for gifti objects (inv(cat_err_res.res.Affine)
         V = (inv(Affine) * ([st.vols{id}.mesh.meshes(ix).vertices,...
@@ -596,7 +596,7 @@ function cat_io_report(job,qa,subj,createerr)
       UD.width = 0.75; 
       UD.style = repmat({'b--'},1,numel(Phull));
       set(hM,'UserData',UD);
-      spm_ov_mesh('redraw',id);
+      try spm_ov_mesh('redraw',id); end
       spm_orthviews('redraw',id);
 
       %% TPM legend
@@ -699,7 +699,7 @@ function cat_io_report(job,qa,subj,createerr)
     UD.width = 0.75; 
     UD.style = repmat({'r--'},1,numel(Phull));
     set(hM,'UserData',UD);
-    spm_ov_mesh('redraw',id);
+    try spm_ov_mesh('redraw',id); end
   end  
   
   warning('ON','MATLAB:subscripting:noSubscriptsSpecified')

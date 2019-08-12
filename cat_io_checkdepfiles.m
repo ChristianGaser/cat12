@@ -51,7 +51,8 @@ function [S,Stype,removed] = cat_io_checkdepfiles(S,usedummy)
         SFN(ii) = SFNi; 
         clear SFNi;
       end    
-      if numel(SFN)==1 && size(SFN{1},1)==0 && ~isequal(SFN,S.(FN{i}))
+      if isstruct(SFN)==0 
+       if numel(SFN)==1 && size(SFN{1},1)==0 && ~isequal(SFN,S.(FN{i}))
         if usedummy
           SFN = {create_dummy_volume(SFNtype)};
         else
@@ -63,10 +64,11 @@ function [S,Stype,removed] = cat_io_checkdepfiles(S,usedummy)
             'and following batches will may not work correctly!\n\n'])); 
           SFN = {};
         end
-      elseif removed
+       elseif removed
         cat_io_cprintf('warn',sprintf([
            'One or multiple files do not exist and were removed from the dependency list' \n ...
            'and following batches those file input number and order is relevant may do not work properly!\n\n'])); 
+       end
       end
       S.(FN{i}) = SFN; 
       

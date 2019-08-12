@@ -659,10 +659,11 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
       end
     end
   else
-  %% default surface reconstruction
+  %% default surface reconstruction 
+  %  sum(Yth1(Yth1(:)>median(Yth1(Yth1(:)>0))*2 ))./sum(Yth1(Yth1(:)>0)) > 0.1 > error
     [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size] = ...
-      cat_surf_createCS(VT,VT0,Ymix,Yl1,Yp0/3,YMF,struct('pbtmethod','pbt2x',...
-      'interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},...
+      cat_surf_createCS(VT,VT0,Ymix,Yl1,Yp0/3,YMF,struct('pbtmethod','pbt2x','interpV',job.extopts.pbtres,...
+      'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas,... % pbtlas is the new parameter to reduce myelination effects
       'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT)); 
   end
   
