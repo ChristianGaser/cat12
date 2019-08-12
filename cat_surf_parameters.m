@@ -50,6 +50,11 @@ function varargout = cat_surf_parameters(job)
   % implemented but under test
   def.area        = 0; % estimate area
   def.gmv         = 0; % cortical volume
+  % futher thickness measures by estimating the IS and OS by Tnormal that 
+  % result in Tpbt = Tnormal = Tnear
+  def.thickness.Tfs   = 0; % Freesurfer thickness metric = mean([ Tnear(IS) Tnear(OS) ],2) 
+  def.thickness.Tmin  = 0; % mininmal   thickness metric = min([  Tnear(IS) Tnear(OS) ],2)
+  def.thickness.Tmax  = 0; % maximal    thickness metric = max([  Tnear(IS) Tnear(OS) ],2) that is only 
   % experimental measures (cat_get_defaults('extopts.expertgui'))
   % def.GIL         = 0; % defined below due to numeric/structure definion
   % further surfaces
@@ -57,6 +62,7 @@ function varargout = cat_surf_parameters(job)
   def.surfaces.OS = 0; % create outer surface
   
   job = cat_io_checkinopt(job,def);
+  if isfield(job,'Tfs'), job.thickness.Tfs = job.Tfs; end
   
   % estimate Laplacian-based gyrification index (including inward, outward, and generalized GI) 
   if ~isfield(job,'GIL'), job.GIL = 0; end
@@ -115,6 +121,10 @@ function varargout = cat_surf_parameters(job)
       PiGI    = fullfile(pp,strrep(ff,'central','inwardGI'));            
       PoGI    = fullfile(pp,strrep(ff,'central','outwardGI'));            
       PgGI    = fullfile(pp,strrep(ff,'central','generalizedGI'));        
+      % thickness measures
+      Ptfs    = fullfile(pp,strrep(ff,'central','thicknessfs'));      
+      Ptmin   = fullfile(pp,strrep(ff,'central','thicknessmin'));      
+      Ptmax   = fullfile(pp,strrep(ff,'central','thicknessmax'));      
       % other surfaces 
       PIS     = fullfile(pp,strrep([ff ex],'central','white'));         
       POS     = fullfile(pp,strrep([ff ex],'central','pial'));         
@@ -130,7 +140,7 @@ function varargout = cat_surf_parameters(job)
         if exist(Parea,'file') && job.lazy  
           if job.verb, fprintf('exist - Display %s\n',spm_file(Parea,'link','cat_surf_display(''%s'')')); end
         else 
-          if job.area==1
+          if job.area==2
             cmd = sprintf('CAT_DumpSurfArea -log -sphere "%s" "%s" "%s"',Psphere,Pname,Parea);
             [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
           else
@@ -289,6 +299,52 @@ function varargout = cat_surf_parameters(job)
 
   
       
+      
+      %% ----------------------------------------------------------------------
+      %  Further thickness measures.
+      %  ----------------------------------------------------------------------
+      %existIOS = [exist(PIS,'file') exist(POS,'file')]; 
+      
+      if job.thickness.Tfs
+        if exist(Ptfs,'file') && job.lazy  
+          if job.verb, fprintf('exist - Display %s\n',spm_file(Ptfs,'link','cat_surf_display(''%s'')')); end
+        else
+          stime = clock; 
+          cat_surf_fun('Tfs',Pname);
+          if job.verb, fprintf('%4.0fs - Display %s\n',etime(clock,stime),spm_file(Ptfs,'link','cat_surf_display(''%s'')')); end
+        end
+        if nargout==1, varargout{1}.([sides{si} 'Tfs']){i} = Ptfs; end  
+        measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
+      end
+      
+      if job.thickness.Tmin
+        if exist(Ptmin,'file') && job.lazy  
+          if job.verb, fprintf('exist - Display %s\n',spm_file(Ptmin,'link','cat_surf_display(''%s'')')); end
+        else
+          stime = clock; 
+          cat_surf_fun('Tmin',Pname);
+          if job.verb, fprintf('%4.0fs - Display %s\n',etime(clock,stime),spm_file(Ptmin,'link','cat_surf_display(''%s'')')); end
+        end
+        if nargout==1, varargout{1}.([sides{si} 'Tmin']){i} = Ptmin; end  
+        measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
+      end
+      
+      if job.thickness.Tmax
+        if exist(Ptmax,'file') && job.lazy  
+          if job.verb, fprintf('exist - Display %s\n',spm_file(Ptmax,'link','cat_surf_display(''%s'')')); end
+        else
+          stime = clock; 
+          cat_surf_fun('Tmax',Pname);
+          if job.verb, fprintf('%4.0fs - Display %s\n',etime(clock,stime),spm_file(Ptmax,'link','cat_surf_display(''%s'')')); end
+        end
+        if nargout==1, varargout{1}.([sides{si} 'Tmax']){i} = Ptmax; end  
+        measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
+      end
+      
+      % delete temporary surface files
+      %if existIOS
+        % hier muesste ich noch die IS und OS ggf. aufraeumen
+      %end
       
       %% ----------------------------------------------------------------------
       %  No measures, but I do not want another script. However, this leads

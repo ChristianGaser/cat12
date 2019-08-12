@@ -1,6 +1,6 @@
 function varargout = cat_surf_calc(job)
 % ______________________________________________________________________
-% Texture Calculation Tool - Only batch mode available. 
+% Surface Calculation Tool - Only batch mode available. 
 %
 % [Psdata] = cat_surf_smooth(job)
 %
@@ -75,11 +75,10 @@ function varargout = cat_surf_calc(job)
     if strcmp(strrep(job.expression,' ',''),'s1') % this is just a copy
       copyfile(job.cdata{1},job.output);
     else
+      job.verb = 1; 
       surfcalc(job);
     end
     fprintf('Output %s\n',spm_file(job.output,'link','cat_surf_display(''%s'')'));
-    
-    
   
   elseif job.datahandling==1
   % multisubject  
@@ -104,7 +103,7 @@ function varargout = cat_surf_calc(job)
     
     if job.nproc==0 
       spm_progress_bar('Init',numel(job.cdata{1}),...
-        sprintf('Texture Calculator\n%d',numel(job.cdata{1})),'Subjects Completed'); 
+        sprintf('Surface Calculator\n%d',numel(job.cdata{1})),'Subjects Completed'); 
     end
     
     for si = 1:numel(job.cdata{1}) % for subjects
@@ -168,7 +167,7 @@ function varargout = cat_surf_calc(job)
     
     if job.nproc==0 
       spm_progress_bar('Init',numel(job.cdata{1}),...
-        sprintf('Texture Calculator\n%d',numel(job.cdata{1})),'Subjects Completed'); 
+        sprintf('Surface Calculator\n%d',numel(job.cdata{1})),'Subjects Completed'); 
     end
 
     for di = 1:numel(job.cdata) % for subjects
@@ -210,6 +209,7 @@ function surfcalc(job)
     
   def.debug     = cat_get_defaults('extopts.verb')>2;
   def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
+  def.pbar      = 0;
   job = cat_io_checkinopt(job,def);
 
   %% calculation 
@@ -227,7 +227,7 @@ function surfcalc(job)
   if job.verb
     spm_clf('Interactive'); 
     spm_progress_bar('Init',numel(job.cdata),...
-      sprintf('Texture Calculator\n%s',job.output),'Input Textures Completed'); 
+      sprintf('Surface Calculator\n%s',job.output),'Input Surfaces Completed'); 
   end
   sdata = struct('dsize',[],'fsize',[],'vsize',[]); 
   for si = 1:ceil(sinfo1(1).nvertices/subsetsize)
@@ -248,7 +248,15 @@ function surfcalc(job)
       if sinfo(i).ftype==1 
         GS = gifti(job.cdata{i});
         if isfield(GS,'cdata')
-          d  = reshape(GS.cdata,1,sinfo1(1).nvertices);
+          try
+            d  = reshape(GS.cdata,1,sinfo1(1).nvertices);
+          catch
+            if i>1 && numel(job.cdata{i-1})~=numel(job.cdata{i})
+              fprintf('cat_surf_calc:gificdata',...
+                'Number of elements must be equal:\n%12d entries in file %s\n%12d entries in file %s\n',...
+                numel(job.cdata{i-1}), job.cdata{i-1}, numel(job.cdata{i}), job.cdata{i});
+            end
+          end
         else
           error('cat_surf_calc:gifticdata',...
             'No texture found in ''s''!',job.cdata{i}); 
@@ -265,12 +273,12 @@ function surfcalc(job)
       end
       if i>1
         if any(sdata(i).dsize~=sdata(i-1).dsize)
-          if sinfo.resampled==0
+          if sinfo(i).resampled==0
             error('cat_surf_calc:texturesize',...
-              'Textures ''s%d'' (%s) does not match previous texture (non-resampled input)!%s',i,job.cdata{i}); 
+              'Surface ''s%d'' (%s) does not match previous texture (non-resampled input)!%s',i,job.cdata{i}); 
           else            
             error('cat_surf_calc:texturesize',...
-              'Textures ''s%d'' (%s) does not match previous texture!%s',i,job.cdata{i}); 
+              'Surface ''s%d'' (%s) does not match previous texture!%s',i,job.cdata{i}); 
           end
         end
         if sinfo(i).datatype==3 && ...

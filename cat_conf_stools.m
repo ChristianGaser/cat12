@@ -208,6 +208,9 @@ function surf2roi = cat_surf_surf2roi_GUI(expert,nproc)
   ROIs.num     = [1 Inf];
   ROIs.help    = {'These are the ROI atlas files. Both sides will be processed.'};
 
+  
+% not used
+%{ 
 % ROI area
   area         = cfg_menu;
   area.tag     = 'area';
@@ -225,6 +228,7 @@ function surf2roi = cat_surf_surf2roi_GUI(expert,nproc)
   vernum.values  = {0,1};
   vernum.val     = {1}; 
   vernum.help    = {'Count vertices of each ROI.'};
+%}
   
 % average mode within a ROI  
   % mean
@@ -1203,8 +1207,58 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
       GIL.tag  = GILtype.tag;
       GIL.val  = {GILtype,GIcoremodel,GIcoreth,laplaceerr,GIstreamopt,GILfs,GInorm,GIsuffix,GIwritehull}; %GIhullmodel,
     end
-
+  end
+  if expert
+    %% Thickness measures
+    Tfs        = cfg_menu;
+    Tfs.name   = 'Freesurfer thickness (Tfs)';
+    Tfs.tag    = 'Tfs';
+    Tfs.labels = {'No','Yes'};
+    Tfs.values = {0,1};
+    Tfs.val    = {0};
+    Tfs.help   = {
+      'Freesurfer thickness metric: Tfs = mean( [ Tnear(IS) Tnear(OS) ] )'
+    };
   
+    Tmin        = cfg_menu;
+    Tmin.name   = 'Minimum thickness (Tmin)';
+    Tmin.tag    = 'Tmin';
+    Tmin.labels = {'No','Yes'};
+    Tmin.values = {0,1};
+    Tmin.val    = {0};
+    Tmin.help   = {
+      'Minimum thickness metric: Tmin = min( [ Tnear(IS) Tnear(OS) ] )'
+    };
+      
+    Tmax        = cfg_menu;
+    Tmax.name   = 'Maximum thickness (Tmax)';
+    Tmax.tag    = 'Tmax';
+    Tmax.labels = {'No','Yes'};
+    Tmax.values = {0,1};
+    Tmax.val    = {0};
+    Tmax.help   = {
+      'Maximum thickness metric: Tmax = max( [ Tnear(IS) Tnear(OS) ] )'
+      'This metric is only for error diagnostic!'
+    };
+      
+    % main note
+    thickness      = cfg_branch;
+    thickness.name = 'Further thickness metrics';
+    thickness.tag  = 'thickness';
+    thickness.val  = {Tfs,Tmin,Tmax}; 
+    thickness.help = {
+      'For comparison of different thickness metrics in general see (MacDonalds et al. 1999, Lerch et al. 2005).'
+      '  Tnear      .. closes point from a surface to another one'
+      '  Tnormal    .. distance measured by following the surface normal (not really used)'
+      '  Tfs        .. Freesurfer distance metric that is the mean of the Tnear metric of '
+      '                (i) the white to the pial surface and (ii) the pial to the white surface (Fischl et al. 2000)'      
+      '  Tpbt       .. voxelbased thickness metrics (Dahnke et al., 2013)'
+      '  Tlaplacian .. Laplacian based thickness metric (Jones et al., 2000, Lerch et al. 2005)'
+      '  Tlink      .. distance between surface with the same surface structure that is in general the result of a deformation'
+      '  Tmin       .. minimum Tnear distance between two surfaces'
+      '  Tmax       .. maximum Tnear distance between two surfaces'
+    };
+    
     %% Inner and outer surfaces
     %  -----------------------------------------------------------------
     OS        = cfg_menu;
@@ -1270,8 +1324,8 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
     area.name   = 'Surface area';
     area.tag    = 'area';
     area.labels = {'No','Yes'}; 
-    area.values = {0,2}; 
-    area.val    = {2}; 
+    area.values = {0,1}; 
+    area.val    = {1}; 
     area.help   = {
       'WARNING: IN DEVELOPMENT!'
       'This method requires a sum-based mapping rather than the mean-based interpolation. The mapping utilize the Delaunay graph to transfer the area around a vertex to its nearest neighbor(s). See Winkler et al.,  2017. '}; 
@@ -1307,8 +1361,15 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
   surfextract      = cfg_exbranch;
   surfextract.tag  = 'surfextract';
   surfextract.name = 'Extract additional surface parameters';
+<<<<<<< .mine
+  if expert == 2
+    surfextract.val  = {data_surf_extract, area,gmv, GI,FD,SD, GIL, thickness, surfaces, nproc, lazy}; % area, 
+  elseif expert == 1
+    surfextract.val  = {data_surf_extract,GI,FD,SD,Tfs, surfaces,nproc,lazy};
+=======
   if expert == 2
     surfextract.val  = {data_surf_extract, area,gmv, GI,FD,SD, GIL,surfaces, nproc, lazy}; % area, 
+>>>>>>> .r1492
   elseif expert == 1
     surfextract.val  = {data_surf_extract,GI,FD,SD,nproc,lazy};
   else
