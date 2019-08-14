@@ -1,5 +1,30 @@
 ------------------------------------------------------------------------
-r1494 | gaser | 2019-08-12 13:37:04
+r1495 | gaser | 2019-08-14 18:17:39
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_defaults.m
+M       cat_surf_createCS.m
+M       cat_surf_resamp.m
+M       cat_surf_vol2surf.m
+M       html/cat.html
+ M      html/cat_statistics.html
+
+(1) Changed: Implemented Freesurfer distance method Tfs, which is using the mean
+    of the closest distances between surf1-surf2 and surf2-surf1. This reduces
+    occurance of larger thickness values. For mapping the files ?h.pbt.* can be
+    still used which are the old thickness metrics from PBT and are more
+    appropriate for mapping 3D measures.
+(2) Changed: cat_createCS is now using some experimental features that were 
+    enabled before with the flag new_release. This includes check for self-
+    intersection during surface refinement and mny smaller improvements during
+    that step.
+(3) Added: Added CAT binary CAT_SurfDistance which is estimating the new FS
+    distance measure.
+
+------------------------------------------------------------------------
+r1494 | gaser | 2019-08-12 13:37:38 +0200 (Mo, 12 Aug 2019) | 18 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -17,6 +42,7 @@ M       html/images/CAT.png
 
 (1) Fixed: Added global function to cat_stat_spm.m 
 (2) Fixed: Corrected typos and updated help text.
+
 
 ------------------------------------------------------------------------
 r1493 | dahnke | 2019-08-12 12:09:42 +0200 (Mo, 12 Aug 2019) | 30 lines

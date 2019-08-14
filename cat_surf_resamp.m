@@ -116,7 +116,7 @@ function varargout = cat_surf_resamp(varargin)
       continue
     end
    
-    % define output name for lazy 
+    % define output name for lazy option
     surfacefield = 'central'; 
     if job.lazy
       for j=1:length(hemistr)
@@ -148,7 +148,7 @@ function varargout = cat_surf_resamp(varargin)
     if ~job.lazy || (job.merge_hemi && ~exist(Psdata{i},'file')) || ...
         (~job.merge_hemi && ~exist(lPsdata{i},'file') && ~exist(rPsdata{i},'file')) 
 
-      % go through left and right and potential cerebellar hemispheres
+      % go through left and right and potentially cerebellar hemispheres
       for j=1:length(hemistr)
 
         % add hemisphere name
@@ -165,7 +165,6 @@ function varargout = cat_surf_resamp(varargin)
         k = strfind(name,'.');
         pname = ff(k(1)+1:k(2)-1);
         Pcentralf  = [strrep(name,pname,surfacefield) '.gii'];
-        %Psphere    = fullfile(pp,strrep(Pcentralf,surfacefield,'sphere'));
         Pspherereg = fullfile(pp,strrep(Pcentralf,surfacefield,'sphere.reg'));
         Pvalue     = fullfile(pp,strrep(Pcentralf,surfacefield,[pname str_resamp]));
         Pvalue     = strrep(Pvalue,'.gii',''); % remove .gii extension
