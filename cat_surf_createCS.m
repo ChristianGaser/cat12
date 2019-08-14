@@ -65,12 +65,12 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
   def.add_parahipp    = cat_get_defaults('extopts.add_parahipp');
   def.scale_cortex    = cat_get_defaults('extopts.scale_cortex');
   def.close_parahipp  = cat_get_defaults('extopts.close_parahipp');
-  def.opt.pbtmethod   = 'pbt2x';
+  def.pbtmethod = 'pbt2x';
   def.WMT       = 0; % WM/CSF width/depth/thickness
   def.sharpenCB = 0; % in development
+  def.distance  = 1; % Tfs: Freesurfer method using mean(Tnear1,Tnear2)
   def.extract_pial_white = 0; % Estimate pial and white matter surface (in development and very slow!)
-
-  def.new_release       = 0; % developer flag to test new functionality for new release
+  def.new_release        = 0; % developer flag to test new functionality for new release (currently not used)
 
   opt           = cat_io_updateStruct(def,opt);
   opt.fast      = any(~cellfun('isempty',strfind(opt.surf,'fst'))) + any(~cellfun('isempty',strfind(opt.surf,'sfst')));
@@ -79,11 +79,8 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
   opt.interpVold = opt.interpV; 
   opt.surf      = cat_io_strrep(opt.surf,{'sfst','fst','v'},'');
   
-  if opt.new_release || opt.extract_pial_white
-    force_no_selfintersections = 1;
-  else
-    force_no_selfintersections = 0;
-  end
+  % check for self-intersections during surface refinement with CAT_SurfDeform
+  force_no_selfintersections = 1;
   
   if opt.fast==2, opt.reduceCS = 40000; end
   if opt.fast
@@ -232,7 +229,8 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
     Pcentral   = fullfile(pp,surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff));          % central
     Ppial      = fullfile(pp,surffolder,sprintf('%s.pial.%s.gii',opt.surf{si},ff));             % pial (GM/CSF)
     Pwhite     = fullfile(pp,surffolder,sprintf('%s.white.%s.gii',opt.surf{si},ff));            % white (WM/GM)
-    Pthick     = fullfile(pp,surffolder,sprintf('%s.thickness.%s',opt.surf{si},ff));            % thickness / GM depth
+    Pthick     = fullfile(pp,surffolder,sprintf('%s.thickness.%s',opt.surf{si},ff));            % FS thickness / GM depth
+    Ppbt       = fullfile(pp,surffolder,sprintf('%s.pbt.%s',opt.surf{si},ff));                  % PBT thickness / GM depth
     Pmask      = fullfile(pp,surffolder,sprintf('%s.mask.%s',opt.surf{si},ff));                 % mask
     Ptemp      = fullfile(pp,surffolder,sprintf('%s.temp.%s',opt.surf{si},ff));                 % temporary file
     Pgwo       = fullfile(pp,surffolder,sprintf('%s.depthWMo.%s',opt.surf{si},ff));             % gyrus width / GWM depth / gyral span
@@ -248,7 +246,7 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
     Pfsavgsph  = fullfile(opt.fsavgDir, sprintf('%s.sphere.freesurfer.gii',opt.surf{si}));      % fsaverage sphere    
     Pfsavgmask = fullfile(opt.fsavgDir, sprintf('%s.mask',opt.surf{si}));                       % fsaverage mask    
     
-    surffile = {'Praw','Psphere0','Pcentral','Pthick','Pgw','Pgww','Psw',...
+    surffile = {'Praw','Psphere0','Pcentral','Pthick','Ppbt','Pgw','Pgww','Psw',...
       'Pdefects0','Pdefects','Psphere','Pspherereg','Pfsavg','Pfsavgsph','Pwhite','Ppial'};
     for sfi=1:numel(surffile)
       eval(sprintf('Psurf(si).%s = %s;',surffile{sfi},surffile{sfi})); 
@@ -549,7 +547,7 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
       else
         facevertexcdata = isocolors2(Yth1,CS.vertices); 
       end
-      cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
+      cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
       
       % map WM and CSF width data (corrected by thickness)
       if opt.WMT > 1
@@ -666,32 +664,30 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
     end
     
-    if opt.new_release
-      % read final surface and map thickness data
-      CS = gifti(Pcentral);
-      % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
-      warning off MATLAB:subscripting:noSubscriptsSpecified
-      CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
-      facevertexcdata = isocolors2(Yth1,CS.vertices); 
-      cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
-    
-      % final correction of central surface in highly folded areas with high mean curvature
-      % The distance value of 0.2 corrects the previous scaling of the cortex with 0.7 to finally
-      % result in the correct central surface. Equi-volume weighting of 2.0 provides better starting 
-      % points in folded areas for the subsequent surface deformation
-      stime = cat_io_cmd('  Correction of central surface in highly folded areas 1','g5','',opt.verb,stime);
-      cmd = sprintf(['CAT_Central2Pial -equivolume -weight 2.0 "%s" "%s" "%s" 0.2'], ...
-                         Pcentral,Pthick,Pcentral);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
-    
-      % need refinement because some vertices are too large to be deformed with high accuracy
-      if opt.fast
-        cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 0',Pcentral,Pcentral,4 * opt.vdist / scale_cerebellum); % adaption for cerebellum
-      else
-        cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 1',Pcentral,Pcentral,2 * opt.vdist / scale_cerebellum); % adaption for cerebellum
-      end
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
-    end
+		% read final surface and map thickness data
+		CS = gifti(Pcentral);
+		% ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
+		warning off MATLAB:subscripting:noSubscriptsSpecified
+		CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
+		facevertexcdata = isocolors2(Yth1,CS.vertices); 
+		cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
+	
+		% final correction of central surface in highly folded areas with high mean curvature
+		% The distance value of 0.2 corrects the previous scaling of the cortex with 0.7 to finally
+		% result in the correct central surface. Equi-volume weighting of 2.0 provides better starting 
+		% points in folded areas for the subsequent surface deformation
+		stime = cat_io_cmd('  Correction of central surface in highly folded areas 1','g5','',opt.verb,stime);
+		cmd = sprintf(['CAT_Central2Pial -equivolume -weight 2.0 "%s" "%s" "%s" 0.2'], ...
+											 Pcentral,Ppbt,Pcentral);
+		[ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+	
+		% need refinement because some vertices are too large to be deformed with high accuracy
+		if opt.fast
+			cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 0',Pcentral,Pcentral,4 * opt.vdist / scale_cerebellum); % adaption for cerebellum
+		else
+			cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 1',Pcentral,Pcentral,2 * opt.vdist / scale_cerebellum); % adaption for cerebellum
+		end
+		[ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
 
     % surface refinement by surface deformation based on the PP map
     stime = cat_io_cmd('  Refine central surface','g5','',opt.verb,stime);
@@ -711,11 +707,7 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
     if opt.fast
       cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 0',Pcentral,Pcentral,4 * opt.vdist / scale_cerebellum); % adaption for cerebellum
     else
-      if opt.new_release
-        cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 1',Pcentral,Pcentral,1.75 * opt.vdist / scale_cerebellum); % adaption for cerebellum
-      else
-        cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 0',Pcentral,Pcentral,1.5 * opt.vdist / scale_cerebellum); % adaption for cerebellum
-      end
+      cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 1',Pcentral,Pcentral,1.75 * opt.vdist / scale_cerebellum); % adaption for cerebellum
     end
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
 
@@ -736,13 +728,13 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
     warning off MATLAB:subscripting:noSubscriptsSpecified
     CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
     facevertexcdata = isocolors2(Yth1,CS.vertices); 
-    cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
+    cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
 
     % final correction of central surface in highly folded areas with high mean curvature
     if ~opt.fast
       stime = cat_io_cmd('  Correction of central surface in highly folded areas 2','g5','',opt.verb,stime);
       cmd = sprintf(['CAT_Central2Pial -equivolume -weight 0.3 "%s" "%s" "%s" 0'], ...
-                       Pcentral,Pthick,Pcentral);
+                       Pcentral,Ppbt,Pcentral);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
     end
 
@@ -753,7 +745,7 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
       % will be close enough and opposite sides will almost touch
       stime = cat_io_cmd('  Estimation of pial surface','g5','',opt.verb,stime);
       cmd = sprintf(['CAT_Central2Pial -check_intersect "%s" "%s" "%s" 0.6'], ...
-                       Pcentral,Pthick,Ppial);
+                       Pcentral,Ppbt,Ppial);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
   
       % GM/CSF border is at 1.5/3
@@ -765,13 +757,13 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
 
       stime = cat_io_cmd('  Correction of pial surface in highly folded areas','g5','',opt.verb,stime);
       cmd = sprintf(['CAT_Central2Pial -equivolume -weight 0.3 "%s" "%s" "%s" 0'], ...
-                       Ppial,Pthick,Ppial);
+                       Ppial,Ppbt,Ppial);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
 
       % estimation of white matter surface
       stime = cat_io_cmd('  Estimation of white matter surface','g5','',opt.verb,stime);
       cmd = sprintf(['CAT_Central2Pial -check_intersect "%s" "%s" "%s" -0.5'], ...
-                       Pcentral,Pthick,Pwhite);
+                       Pcentral,Ppbt,Pwhite);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
   
       % GM/WM border is at 2.5/3
@@ -783,7 +775,7 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
 
       stime = cat_io_cmd('  Correction of white matter surface in highly folded areas','g5','',opt.verb,stime);
       cmd = sprintf(['CAT_Central2Pial -equivolume -weight 0.3 "%s" "%s" "%s" 0'], ...
-                       Pwhite,Pthick,Pwhite);
+                       Pwhite,Ppbt,Pwhite);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
 
       % update central surface as average between white and pial surface
@@ -794,7 +786,7 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
       if 0 % more testing necessary to also correct thickness
         % correction of cortical thickness
         cmd = sprintf(['CAT_Hausdorff  "%s" "%s" "%s"'], ...
-                       Pwhite,Ppial,Pthick);
+                       Pwhite,Ppial,Ppbt);
         [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
       end
     end
@@ -822,16 +814,17 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
     
     
     % set thickness values to zero for masked area (use inverse transformation to map mask)
-    if opt.new_release
+    % does not work properly for all data...
+    if 0
       stime = cat_io_cmd('  Correct thickness','g5','',opt.verb,stime);
       cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"', ...
         Pfsavg,Pfsavgsph,Pspherereg,Ptemp,Pfsavgmask,Pmask);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);      
       resampled_mask = cat_io_FreeSurfer('read_surf_data',Pmask);
       
-      % set thickness to zero for masked area and write thickness data
+      % set thickness to 0 for masked area and write thickness data
       facevertexcdata(resampled_mask < 0.5) = 0;
-      cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);  
+      cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);  
       delete(Pmask)
       delete(Ptemp);
     end
@@ -879,6 +872,19 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
       S.(opt.surf{si}) = setfield(S.(opt.surf{si}),'th3',facevertexcdata3);
     end
     clear Yth1i
+
+    % estimate Freesurfer thickness measure Tfs using mean(Tnear1,Tnear2)
+    if opt.distance == 1
+      if opt.extract_pial_white && ~opt.fast % use white and pial surfaces
+        cmd = sprintf('CAT_SurfDistance -mean "%s" "%s" "%s"',Pwhite,Ppial,Pthick);
+        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+      else % use central surface and thickness
+        cmd = sprintf('CAT_SurfDistance -mean -thickness "%s" "%s" "%s"',Ppbt,Pcentral,Pthick);
+        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+      end
+    else % otherwise simply copy ?h.pbt.* to ?h.thickness.*
+      copyfile(Ppbt,Pthick);
+    end
     
     % we have to delete the original faces, because they have a different number of vertices after
     % CAT_FixTopology!

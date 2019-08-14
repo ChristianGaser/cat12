@@ -204,6 +204,7 @@ cat.extopts.T1           = {fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii')};
 % surface options
 cat.extopts.pbtres         = 0.5;   % internal resolution for thickness estimation in mm (default 0.5) 
 cat.extopts.pbtlas         = 1;     % reduce myelination effects:  1 - default in 12.7+
+cat.extopts.distance       = 1;     % distance method for estimating thickness:  1 - Tfs: Freesurfer method using mean(Tnear1,Tnear2) (default in 12.7+); 0 - Tlink: linked distance (used before 12.7)
 cat.extopts.close_parahipp = 0;     % optionally apply closing inside mask for parahippocampal gyrus to get rid of the holes that lead to large
                                     % cuts in gyri after topology correction. However, this may also lead to poorer quality of topology 
                                     % correction for other data and should be only used if large cuts in the parahippocampal areas occur
