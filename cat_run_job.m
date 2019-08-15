@@ -136,8 +136,8 @@ function cat_run_job(job,tpm,subj)
         %  There were some images that should not be processed. So we have  
         %  to check for large slice thickness and low spatial resolution.
         %  RD201909: I tried 4x4x4 and 1x1x8 mm data with default and NLM 
-        %  interpolation. Also NLM show less edges and more correct
-        %  surfaces the thickness results are worse and the limits are ok. 
+        %  interpolation. Also NLM shows less edges and more correct
+        %  surfaces and the thickness results are worse and the limits are ok. 
         %  -----------------------------------------------------------------
         for n=1:numel(job.channel) 
           V = spm_vol(job.channel(n).vols{subj});

@@ -144,7 +144,7 @@ cat.extopts.mrf          = 1;    % MRF weighting:                             0 
 cat.extopts.INV          = 1;    %  Invert PD/T2 images for preprocessing:    0 - no processing, 1 - try intensity inversion, 2 - synthesize T1 image; default 1
 
 % resolution options
-cat.extopts.restype      = 'fixed';      % resolution handling: 'native','fixed','best'
+cat.extopts.restype      = 'optimal';    % resolution handling: 'native','fixed','best', 'optimal'
 cat.extopts.resval       = [1.0 0.10];   % resolution value and its tolerance range for the 'fixed' and 'best' restype
 
 %{

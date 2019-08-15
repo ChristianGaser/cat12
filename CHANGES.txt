@@ -1,5 +1,39 @@
 ------------------------------------------------------------------------
-r1496 | dahnke | 2019-08-15 15:38:13
+r1497 | gaser | 2019-08-15 16:28:14
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_conf_extopts.m
+M       cat_defaults.m
+D       cat_io_send_to_server.m
+        > moved to cg_io_send_to_server.m
+M       cat_run_job.m
+M       cat_run_newcatch.m
+M       cat_surf_createCS.m
+M       cat_surf_vol2surf.m
+M       cat_vol_pbt.m
+A  +    cg_io_send_to_server.m
+        > moved from cat_io_send_to_server.m
+M       html/cat.html
+M       spm_cat12.m
+
+(1) Changed: Removed check for self-intersections because this was too slow.
+(2) Changed: Anonymize filenames in error messages that are send to the SBM
+    server. Furthermore categorize reports in finished|errors to get a better
+    overview.
+(3) Changed: Added again flag new_release to better control some of the new 
+    functions in cat_surf_createCS.m.
+(4) Changed: Changed parameters for initial CAT_Central2Pial and CAT_RefineMesh
+    in cat_surf_createCS.m.
+(5) Changed: Anonymize filename in error message that is send to SBM server.
+(6) Changed: Set interpolation to new "optimal" setting in cat_defaults.m.
+(7) Fixed: Corrected some typos.
+(8) Fixed: Corrected error with exist command in cat_surf_vol2surf.m
+
+------------------------------------------------------------------------
+r1496 | dahnke | 2019-08-15 15:40:32 +0200 (Do, 15 Aug 2019) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +46,7 @@ M       cat_vol_pbt.m
 (1) Changed:  Small corrections in cat_vol_pbt.
 (2) Fixed:    Added thickness estimation to the fast pipeline.
 (3) New:      Added new 'optimal' resolution setting. 
+
 
 ------------------------------------------------------------------------
 r1495 | gaser | 2019-08-14 18:18:11 +0200 (Mi, 14 Aug 2019) | 23 lines
