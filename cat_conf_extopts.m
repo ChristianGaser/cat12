@@ -395,36 +395,59 @@ resfixed.help   = {
     ''
   }; 
 
+resopt        = cfg_entry;
+resopt.tag    = 'optimal';
+resopt.name   = 'Optimal resolution';
+resopt.def    = @(val)cat_get_defaults('extopts.resval', val{:});
+resopt.num    = [1 2];
+resopt.help   = {
+    'Preprocessing with an "optimal" voxel dimension that utilize the median and the volume of the voxel size for special handling of anisotropic images.  In many cases, untypically high slice-resolution (e.g. 0.5 mm for 1.5 Tesla) comes along with higher slice-thickness and increased image interferences.  Our tests showed that a simple interpolation to the best voxel resolution not only resulted in much longer calculation times but also in a worste segmenation (and surface reconstruction) compared to the fixed option with e.g. 1 mm.  Hence, this option tries to incooperate the voxel volume and its isotropy to balance the internal resolution.  E.g., an image with 0.5x0.5x1.5 mm will resampled at a resolution of 0.7x0.7x0.7 mm. ' 
+    'The first parameters defines the lowest spatial resolution, while the second defines a tolerance range to avoid tiny interpolations for almost correct resolutions. '
+    ''
+    'Examples:'
+    '  Parameters    native resolution       internal resolution'
+    '  [1.00 0.10]    0.95 1.05 1.25     >     0.95 1.05 1.00'
+    '  [1.00 0.10]    0.80 0.80 1.00     >     0.80 0.80 0.80'
+    '  [1.00 0.10]    0.50 0.50 2.00     >     1.00 1.00 1.00'
+    '  [1.00 0.10]    0.50 0.50 1.50     >     0.70 0.70 0.70'
+    '  [1.00 0.10]    0.80 1.00 1.00     >     1.00 1.00 1.00'
+    ''
+  };
 
 restype        = cfg_choice;
 restype.tag    = 'restypes';
 restype.name   = 'Internal resampling for preprocessing';
 switch cat_get_defaults('extopts.restype')
-  case 'native', restype.val = {resnative};
-  case 'best',   restype.val = {resbest};
-  case 'fixed',  restype.val = {resfixed};
+  case 'native',  restype.val = {resnative};
+  case 'best',    restype.val = {resbest};
+  case 'fixed',   restype.val = {resfixed};
+  case 'optimal', restype.val = {resopt};
 end
 if ~expert
   restype        = cfg_menu;
   restype.tag    = 'restypes';
   restype.name   = 'Internal resampling for preprocessing';
   restype.labels = {
+    'Optimal'
     'Fixed 1.0 mm'
     'Fixed 0.8 mm'
     'Best native'
   };
-  restype.values = {struct('fixed',[1.0 0.1]) ...
-                    struct('fixed',[0.8 0.1]) ...
-                    struct('best', [0.5 0.1])};
-  restype.val    = {struct('fixed',[1.0 0.1])};
+  restype.values = {struct('optimal', [1.0 0.1]) ...
+                    struct('fixed',   [1.0 0.1]) ...
+                    struct('fixed',   [0.8 0.1]) ...
+                    struct('best',    [0.5 0.1])};
+  restype.val    = {struct('optimal', [1.0 0.1])};
   restype.help   = [regstr.help; { ...
     'The default fixed image resolution offers a good trade-off between optimal quality and preprocessing time and memory demands. Standard structural data with a voxel resolution around 1 mm or even data with high in-plane resolution and large slice thickness (e.g. 0.5x0.5x1.5 mm) will benefit from this setting. If you have higher native resolutions the highres option "Fixed 0.8 mm" will sometimes offer slightly better preprocessing quality with an increase of preprocessing time and memory demands. In case of even higher resolutions and high signal-to-noise ratio (e.g. for 7 T data) the "Best native" option will process the data on the highest native resolution. I.e. a resolution of 0.4x0.7x1.0 mm will be interpolated to 0.4x0.4x0.4 mm. A tolerance range of 0.1 mm is used to avoid interpolation artifacts, i.e. a resolution of 0.95x1.01x1.08 mm will not be interpolated in case of the "Fixed 1.0 mm"!  '
+    'This "optimal" option prefers an isotropic voxel size with at least 1.1 mm that is controlled by the median voxel size and a volume term that balance sample of highly anisotropic voxels.'
     ''
   }];
 else
-  restype.values = {resnative resbest resfixed};
+  restype.values = {resopt resnative resbest resfixed};
   restype.help   = {
     'The default fixed image resolution offers a good trade-off between optimal quality and preprocessing time and memory demands. Standard structural data with a voxel resolution around 1mm or even data with high in-plane resolution and large slice thickness (e.g. 0.5x0.5x1.5 mm) will benefit from this setting. If you have higher native resolutions a change of the fixed resolution to smaller values will sometimes offer slightly better preprocessing quality with a increase of preprocessing time and memory demands. In case of even higher resolutions and high signal-to-noise ratio (e.g. for 7T data) the "Best native" option will process the data on the highest native resolution. I.e. a resolution of 0.4x0.7x1.0 mm will be interpolated to 0.4x0.4x0.4 mm. A tolerance range of 0.1 mm is used to avoid interpolation artifacts, i.e. a resolution of 0.95x1.01x1.08 mm will not be interpolated in case of the "Fixed 1.0 mm"!  '
+    'This "optimal" option prefers an isotropic voxel size with at least 1.1 mm that is controlled by the median voxel size and a volume term that balance sample of highly anisotropic voxels.'
     ''
   }; 
 end
