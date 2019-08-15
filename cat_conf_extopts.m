@@ -440,14 +440,14 @@ if ~expert
   restype.val    = {struct('optimal', [1.0 0.1])};
   restype.help   = [regstr.help; { ...
     'The default fixed image resolution offers a good trade-off between optimal quality and preprocessing time and memory demands. Standard structural data with a voxel resolution around 1 mm or even data with high in-plane resolution and large slice thickness (e.g. 0.5x0.5x1.5 mm) will benefit from this setting. If you have higher native resolutions the highres option "Fixed 0.8 mm" will sometimes offer slightly better preprocessing quality with an increase of preprocessing time and memory demands. In case of even higher resolutions and high signal-to-noise ratio (e.g. for 7 T data) the "Best native" option will process the data on the highest native resolution. I.e. a resolution of 0.4x0.7x1.0 mm will be interpolated to 0.4x0.4x0.4 mm. A tolerance range of 0.1 mm is used to avoid interpolation artifacts, i.e. a resolution of 0.95x1.01x1.08 mm will not be interpolated in case of the "Fixed 1.0 mm"!  '
-    'This "optimal" option prefers an isotropic voxel size with at least 1.1 mm that is controlled by the median voxel size and a volume term that balance sample of highly anisotropic voxels.'
+    'This "optimal" option prefers an isotropic voxel size with at least 1.1 mm that is controlled by the median voxel size and a volume term that penalizes highly anisotropic voxels.'
     ''
   }];
 else
   restype.values = {resopt resnative resbest resfixed};
   restype.help   = {
     'The default fixed image resolution offers a good trade-off between optimal quality and preprocessing time and memory demands. Standard structural data with a voxel resolution around 1mm or even data with high in-plane resolution and large slice thickness (e.g. 0.5x0.5x1.5 mm) will benefit from this setting. If you have higher native resolutions a change of the fixed resolution to smaller values will sometimes offer slightly better preprocessing quality with a increase of preprocessing time and memory demands. In case of even higher resolutions and high signal-to-noise ratio (e.g. for 7T data) the "Best native" option will process the data on the highest native resolution. I.e. a resolution of 0.4x0.7x1.0 mm will be interpolated to 0.4x0.4x0.4 mm. A tolerance range of 0.1 mm is used to avoid interpolation artifacts, i.e. a resolution of 0.95x1.01x1.08 mm will not be interpolated in case of the "Fixed 1.0 mm"!  '
-    'This "optimal" option prefers an isotropic voxel size with at least 1.1 mm that is controlled by the median voxel size and a volume term that balance sample of highly anisotropic voxels.'
+    'This "optimal" option prefers an isotropic voxel size with at least 1.1 mm that is controlled by the median voxel size and a volume term that penalizes highly anisotropic voxels.'
     ''
   }; 
 end

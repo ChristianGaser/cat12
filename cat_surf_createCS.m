@@ -70,7 +70,7 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
   def.sharpenCB = 0; % in development
   def.distance  = 1; % Tfs: Freesurfer method using mean(Tnear1,Tnear2)
   def.extract_pial_white = 0; % Estimate pial and white matter surface (in development and very slow!)
-  def.new_release        = 0; % developer flag to test new functionality for new release (currently not used)
+  def.new_release        = 1; % developer flag to test new functionality for new release
 
   opt           = cat_io_updateStruct(def,opt);
   opt.fast      = any(~cellfun('isempty',strfind(opt.surf,'fst'))) + any(~cellfun('isempty',strfind(opt.surf,'sfst')));
@@ -78,9 +78,13 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
   opt.interpV   = max(0.1,min([opt.interpV,1.5]));
   opt.interpVold = opt.interpV; 
   opt.surf      = cat_io_strrep(opt.surf,{'sfst','fst','v'},'');
-  
+
   % check for self-intersections during surface refinement with CAT_SurfDeform
-  force_no_selfintersections = 1;
+  if opt.extract_pial_white
+    force_no_selfintersections = 1;
+  else
+    force_no_selfintersections = 0;
+  end
   
   if opt.fast==2, opt.reduceCS = 40000; end
   if opt.fast
@@ -600,7 +604,6 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
       EC0 = size(CS.vertices,1) + size(CS.faces,1) - size(spm_mesh_edges(CS),1);
       EC  = EC + abs(EC0);
       
-      
       % estimate Freesurfer thickness measure Tfs using mean(Tnear1,Tnear2)
       if opt.distance == 1
         if opt.extract_pial_white && ~opt.fast % use white and pial surfaces
@@ -627,9 +630,9 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
       % after reducepatch many triangles have very large area which causes isses for resampling
       % RefineMesh adds triangles in those areas
       if opt.fast
-        cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Praw,Praw,4 * opt.vdist / scale_cerebellum); % adaption for cerebellum
+        cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 0',Praw,Praw,4 * opt.vdist / scale_cerebellum); % adaption for cerebellum
       else  
-        cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Praw,Praw,2 * opt.vdist / scale_cerebellum); % adaption for cerebellum
+        cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 0',Praw,Praw,2 * opt.vdist / scale_cerebellum); % adaption for cerebellum
       end
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
     
@@ -678,31 +681,30 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
     end
     
-		% read final surface and map thickness data
-		CS = gifti(Pcentral);
-		% ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
-		warning off MATLAB:subscripting:noSubscriptsSpecified
-		CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
-		facevertexcdata = isocolors2(Yth1,CS.vertices); 
-		cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
-	
-		% final correction of central surface in highly folded areas with high mean curvature
-		% The distance value of 0.2 corrects the previous scaling of the cortex with 0.7 to finally
-		% result in the correct central surface. Equi-volume weighting of 2.0 provides better starting 
-		% points in folded areas for the subsequent surface deformation
-		stime = cat_io_cmd('  Correction of central surface in highly folded areas 1','g5','',opt.verb,stime);
-		cmd = sprintf(['CAT_Central2Pial -equivolume -weight 2.0 "%s" "%s" "%s" 0.2'], ...
-											 Pcentral,Ppbt,Pcentral);
-		[ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
-	
-		% need refinement because some vertices are too large to be deformed with high accuracy
-		if opt.fast
-			cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 0',Pcentral,Pcentral,4 * opt.vdist / scale_cerebellum); % adaption for cerebellum
-		else
-			cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 1',Pcentral,Pcentral,2 * opt.vdist / scale_cerebellum); % adaption for cerebellum
-		end
-		[ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
-
+    if opt.new_release
+			% read final surface and map thickness data
+			CS = gifti(Pcentral);
+			% ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
+			warning off MATLAB:subscripting:noSubscriptsSpecified
+			CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
+			facevertexcdata = isocolors2(Yth1,CS.vertices); 
+			cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
+		
+			% final correction of central surface in highly folded areas with high mean curvature with weight of 0.7
+			stime = cat_io_cmd('  Correction of central surface in highly folded areas 1','g5','',opt.verb,stime);
+			cmd = sprintf(['CAT_Central2Pial -equivolume -weight 0.7 "%s" "%s" "%s" 0'], ...
+												 Pcentral,Ppbt,Pcentral);
+			[ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+		
+			% we need some refinement because some vertices are too large to be deformed with high accuracy
+			if opt.fast
+				cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 0',Pcentral,Pcentral,4 * opt.vdist / scale_cerebellum); % adaption for cerebellum
+			else
+				cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 1',Pcentral,Pcentral,2 * opt.vdist / scale_cerebellum); % adaption for cerebellum
+			end
+			[ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+    end
+    
     % surface refinement by surface deformation based on the PP map
     stime = cat_io_cmd('  Refine central surface','g5','',opt.verb,stime);
     th = 0.5;
@@ -721,7 +723,11 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
     if opt.fast
       cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 0',Pcentral,Pcentral,4 * opt.vdist / scale_cerebellum); % adaption for cerebellum
     else
-      cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 1',Pcentral,Pcentral,1.75 * opt.vdist / scale_cerebellum); % adaption for cerebellum
+      if opt.new_release
+        cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 1',Pcentral,Pcentral,1.6 * opt.vdist / scale_cerebellum); % adaption for cerebellum
+      else
+        cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 0',Pcentral,Pcentral,1.5 * opt.vdist / scale_cerebellum); % adaption for cerebellum
+      end
     end
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
 
