@@ -135,31 +135,36 @@ function cat_run_job(job,tpm,subj)
         %  -----------------------------------------------------------------
         %  There were some images that should not be processed. So we have  
         %  to check for large slice thickness and low spatial resolution.
+        %  RD201909: I tried 4x4x4 and 1x1x8 mm data with default and NLM 
+        %  interpolation. Also NLM show less edges and more correct
+        %  surfaces the thickness results are worse and the limits are ok. 
         %  -----------------------------------------------------------------
         for n=1:numel(job.channel) 
           V = spm_vol(job.channel(n).vols{subj});
           vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
 
-          if any(vx_vol>5)  % too thin slices
+          reslimits = [5 3 8]; 
+          if any(vx_vol>reslimits(1))  % too thin slices
             error('CAT:cat_main:TooLowResolution', sprintf(...
-                 ['Voxel resolution has to be better than 5 mm in any dimension \n' ...
+                 ['Voxel resolution has to be better than %s mm in any dimension \n' ...
                   'for reliable CAT preprocessing! \n' ...
                   'This image has a resolution %0.2fx%0.2fx%0.2f mm%s. '], ... 
-                    vx_vol,char(179))); %#ok<SPERR>
+                   reslimits(1),vx_vol,char(179))); %#ok<SPERR>
           end
-          if prod(vx_vol)>27  % too small voxel volume (smaller than 3x3x3 mm3)
+          if prod(vx_vol)>reslimits(2)^3  % too small voxel volume (smaller than 3x3x3 mm3)
             error('CAT:cat_main:TooHighVoxelVolume', ...
-                 ['Voxel volume has to be smaller than 10 mm%s (around 3x3x3 mm%s) to \n' ...
+                 ['Voxel volume has to be smaller than %d mm%s (around %dx%dx%d mm%s) to \n' ...
                   'allow a reliable CAT preprocessing! \n' ...
                   'This image has a voxel volume of %0.2f mm%s. '], ...
+                  reslimits(2)^3,reslimits(2),reslimits(2),reslimits(2),...
                   char(179),char(179),prod(vx_vol),char(179));
           end
-          if max(vx_vol)/min(vx_vol)>8 % anisotropy 
+          if max(vx_vol)/min(vx_vol)>reslimits(3) % anisotropy 
             error('CAT:cat_main:TooStrongIsotropy', sprintf(...
-                 ['Voxel isotropy (max(vx_size)/min(vx_size)) has to be smaller than 8 to \n' ...
+                 ['Voxel isotropy (max(vx_size)/min(vx_size)) has to be smaller than %d to \n' ...
                   'allow a reliable CAT preprocessing! \n' ...
                   'This image has a resolution %0.2fx%0.2fx%0.2f mm%s and a isotropy of %0.2f. '], ...
-                  vx_vol,char(179),max(vx_vol)/min(vx_vol))); %#ok<SPERR>
+                  reslimits(3),vx_vol,char(179),max(vx_vol)/min(vx_vol))); %#ok<SPERR>
           end
         end
 
@@ -258,8 +263,15 @@ function cat_run_job(job,tpm,subj)
             case 'best'
               best_vx  = max( min(vx_vol) ,job.extopts.restypes.(restype)(1)); 
               vx_voli  = min(vx_vol ,best_vx ./ ((vx_vol > (best_vx + job.extopts.restypes.(restype)(2)))+eps));
+            case 'optimal'
+              aniso 	= @(vx_vol) (max(vx_vol) / min(vx_vol)^(1/3))^(1/3);                                              % penetration factor
+              volres 	= @(vx_vol) repmat( round( aniso(vx_vol) * prod(vx_vol)^(1/3) * 10)/10 , 1 , 3);                  % volume resolution
+              optresi	= @(vx_vol) min( job.extopts.restypes.(restype)(1) , max( median(vx_vol) , volres(vx_vol) ) );		% optimal resolution 
+              optdiff	= @(vx_vol) abs( vx_vol - optresi(vx_vol) ) < job.extopts.restypes.(restype)(2);          				% tolerance limites
+              optimal	= @(vx_vol) vx_vol .* optdiff(vx_vol) + optresi(vx_vol) .* (1 - optdiff(vx_vol) );                % final optimal resolution 
+              vx_voli = optimal(vx_vol); 
             otherwise 
-              error('cat_run_job:restype','Unknown resolution type ''%s''. Choose between ''fixed'',''native'', and ''best''.',restype)
+              error('cat_run_job:restype','Unknown resolution type ''%s''. Choose between ''fixed'',''native'',''optimal'', and ''best''.',restype)
           end
 
           % interpolation 

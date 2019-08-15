@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1495 | gaser | 2019-08-14 18:17:39
+r1496 | dahnke | 2019-08-15 15:38:13
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       cat_run_job.m
+M       cat_surf_createCS.m
+M       cat_vol_pbt.m
+
+(1) Changed:  Small corrections in cat_vol_pbt.
+(2) Fixed:    Added thickness estimation to the fast pipeline.
+(3) New:      Added new 'optimal' resolution setting. 
+
+------------------------------------------------------------------------
+r1495 | gaser | 2019-08-14 18:18:11 +0200 (Mi, 14 Aug 2019) | 23 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -22,6 +37,7 @@ M       html/cat.html
     that step.
 (3) Added: Added CAT binary CAT_SurfDistance which is estimating the new FS
     distance measure.
+
 
 ------------------------------------------------------------------------
 r1494 | gaser | 2019-08-12 13:37:38 +0200 (Mo, 12 Aug 2019) | 18 lines
