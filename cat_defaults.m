@@ -186,6 +186,17 @@ fixed:
       [1.00 0.02]     0.95 1.05 1.25     >     1.00 1.00 1.00
       [0.75 0.10]     0.75 0.95 1.25     >     0.75 0.75 0.75
 
+optimal: 
+    This option prefers an isotropic voxel size that is controlled by the median voxel size and a volume term that balance sample of highly anisotropic voxels.  
+    The first parameter controls the lower resolution limit second parameter is used to avoid tiny interpolations for almost correct resolutions. 
+ 
+    Examples: 
+      Parameters     native resolution       internal resolution
+      [1.00 0.10]     0.50 0.50 0.90     >     0.50 0.50 0.60
+      [1.00 0.10]     0.50 0.50 1.00     >     0.70 0.70 0.70
+      [1.00 0.10]     0.80 0.80 1.00     >     1.00 1.00 1.00
+      [1.00 0.10]     0.45 0.45 1.70     >     0.90 0.90 0.90
+      [1.00 0.10]     0.95 1.05 1.25     >     0.95 1.05 1.00
 %}
 
 

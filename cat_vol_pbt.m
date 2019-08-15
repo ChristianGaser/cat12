@@ -16,7 +16,7 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
 %   opt.resV   voxel resolution (only isotropic)
 %   opt.method choose of method {'pbt2x','pbt2'} with default=pbt2x as 
 %              the method that is described in the paper.
-%   opt.pbtlas GM intensity correction to reduce myelination effects
+%   opt.pbtlas GM intensity correction to reduce myelineation effects
 %              (added 201908)
 % ______________________________________________________________________
 %
@@ -104,7 +104,7 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
       % GM/WM boundary.
       % This model was implemented after the results of Shahrzad Kharabian
       % Masouleh (Juelich) that showed strong underestimations and increased
-      % variance in CAT compared to FS and CIVET.
+      % variance in CAT compared to FS and CIVIT.
       % RD 201908
       
         stime = cat_io_cmd('    WM boundar optimization: ','g5','',opt.verb);
@@ -113,10 +113,10 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
         
         %% WM intensity:
         %  The result should be a map with an average value of 1 and no
-        %  anatomical structures (maybe some differencence for regional
-        %  folding-independent pattern).
-        %  Important to avoid gyral overestimations, however too small
-        %  filter size / low number of iterations can also cause errors.
+        %  anatomical structures (maybe somedifferencence for regional
+        %  folding independent pattern).
+        %  Important to avoid gyral overestimations, however to small
+        %  filter size / low number of iteration scan also lead to errors.
         [Ymfr,resT2] = cat_vol_resize(Ymf,'reduceV',opt.resV,mean(vx_vol_org),32,'meanm'); 
         YM2max = max(0,min(1,Ymfr-2)); YM2max(YM2max<0.0) = 0; % lower threshold > higher filter range/more iterations
         YM2max = YM2max .* cat_vol_morph(YM2max>0 ,'l',[10 0.1 ]);   
@@ -135,15 +135,24 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
         
         % This is a simple tissue thickness model from a more central GM layer 
         % (currently 2.1, possible range 1.5 to 2.2) to avoid corrections 
-        % in thicker areas (mostly gyris). 
-        Ywd   = cat_vbdist(2.1 - Ymfr); % estimate distance map to central/WM surface, lower thresholds are also possible (range 1.5 to 2.2, default 2.1) 
+        %% in thicker areas (mostly gyris). 
+        Ygd   = cat_vbdist(2.1 - Ymfr); % estimate distance map to central/WM surface, lower thresholds are also possible (range 1.5 to 2.2, default 2.1) 
+        Ygdt  = cat_vol_pbtp(max(2,min(3,4-Ymfr)),Ygd,inf(size(Ygd),'single')) * mean(resT2.vx_volr);
+        Ygdt  = cat_vol_median3(Ygdt,Ygdt>0.01,Ygdt>0.01);                    
+        Ygdt  = cat_vol_localstat(Ygdt,Ygdt>0.1,1/mean(resT2.vx_volr),1);    
+
+        Ywd   = cat_vbdist(2.5 - Ymfr);  
         Ywdt  = cat_vol_pbtp(max(2,min(3,4-Ymfr)),Ywd,inf(size(Ywd),'single')) * mean(resT2.vx_volr);
         Ywdt  = cat_vol_median3(Ywdt,Ywdt>0.01,Ywdt>0.01);                    
         Ywdt  = cat_vol_localstat(Ywdt,Ywdt>0.1,1/mean(resT2.vx_volr),1);    
-        clear Ywd
+
         
+        %%
         % estimate local GM average intensity 
-        YM2min   = max(0,min(1.5,Ymfr - lth)) .* (Ymfr<( (YM2maxr+2) .* (2.5 + min(0.45,Ywdt/8) )) /3) .* ...
+        YM2min   = max(0,min(1.5,Ymfr - lth)) .* ...
+                      (Ymfr<( (YM2maxr+2) .* (2.5 + min(0.45,Ygdt/8) )) /3) .* ...
+                      (Ymfr<( (YM2maxr+2) .* (2.5 + min(0.45,Ywdt/8) )) /3) .* ...
+                      (Ywd<4*mean(resT2.vx_volr)) .*...
                       (cat_vbdist(single(Ymfr./YM2maxr<2))<3.5/mean(resT2.vx_volr)); %clear YM2maxr Ywdt 
                     
         % remove small dots
@@ -155,7 +164,7 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
         YM = Ymfr>2 & YM2min==0; YM = cat_vol_morph(YM,'dd',1) & ~YM; YM2min( YM ) = YM2min2( YM );
         YM2min2 = cat_vol_localstat(YM2min,YM2min>0,1,3);
         YM = Ymfr<2 & YM2min==0; YM = cat_vol_morph(YM,'dd',1) & ~YM; YM2min( YM ) = YM2min2( YM ); 
-        clear Ymfr YM
+        %clear Ymfr YM
 
         % remove further atypical values
         YM2mina = YM2min; 
@@ -164,17 +173,38 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
         end
         YM2min  = YM2min .* ((YM2mina - YM2min)>-0.2 & (YM2mina - YM2min)<0.3); clear YM2mina;
         
+        % remove PVE 
+        YM2min = cat_vol_median3(YM2min,YM2min>0); 
+        
         % further local filtering
         for ix=1:10 %round(5/mean(resT2.vx_volr)) 
           YM2min = cat_vol_localstat(YM2min,YM2min>0,1/mean(resT2.vx_volr),1);
         end
+        YM2min(Ywd>6*mean(resT2.vx_volr)) = 0.01; 
         
         YM2min  = cat_vol_approx(YM2min,'nh',resT2.vx_volr,2); % use (slow) high resolutions
         YM2min  = cat_vol_resize(YM2min,'dereduceV',resT2);
+        Ywd     = cat_vol_resize(Ywd,'dereduceV',resT2);
         YM2min  = YM2min - (2 - lth);
         
         %% create intensity optimized boundary image
-        YM      = max(0,min(1,((Ymf - (YM2min + 2)) ./ (YM2max - YM2min)  ))); 
+        YM    = max(0,min(1,((Ymf - (YM2min + 2)) ./ (YM2max - YM2min)  ))); 
+        %% use only fat areas
+        YMo  = max(0,min(1,(Ymf-2)));
+        YMc  = YMo - YM;
+        YMc(YMc>0 & YMc<0.15) = YMc(YMc>0 & YMc<0.15);
+        YMc(YMc>0 & YMc<0.10) = YMc(YMc>0 & YMc<0.10)/2;
+        YMc(YMc>0 & YMc<0.05) = YMc(YMc>0 & YMc<0.05)/4;
+        YMc(YMc<0.05) = 0;
+        YM   = YMo  - YMc; 
+        clear YMo YMc YMcs;
+      
+        % distance corrections to stabilize thin structures
+        YM    = max(YM,min(1,Ywd/mean(resT2.vx_volr)/2 - 2)); % L4 distance based corrections
+        YMd   = 0.75 - YM; YMd(YM>0.9) = nan; 
+        YM    = max(YM,min(1,cat_vol_eidist(YMd,ones(size(YM),'single'),[1 1 1],1,1,0,opt.debug) - 0.5));  
+        
+        %%
         for ix=1:3, YM(YM>0.5 & smooth3(YM>0.5)<0.2) = 0.45; end
         YM(cat_vol_morph(YM>0.9 ,'lc')) = 1; 
         YM(YMM) = nan;
@@ -298,7 +328,7 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
     Ygmt2 = cat_vol_pbtp(round(4-Ymf),Ycsfd,Ywmd);
     
     % Error handling 
-    % For some unkown reasons the sulcus reconstruction of cat_vol_pbtp failed in some cases (not directly reproducable).      
+    % For some unkown reasons the sulcus reconstruction of cat_vol_pbtp failed in some cases (not direct reproducable).      
     % Reprocessing is solving this problem, but further investigation of cat_vol_pbtp.cpp would be good (RD 20190811).
     % Maybe it depends on the initialization of the regions, e.g., using Ymf without rounding and incorrect boundary seams to increase the problems.  
     mask   = @(Y) Y(:)>0 & Y(:)<1000000; 

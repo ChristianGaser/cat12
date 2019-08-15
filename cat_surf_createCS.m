@@ -600,6 +600,20 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
       EC0 = size(CS.vertices,1) + size(CS.faces,1) - size(spm_mesh_edges(CS),1);
       EC  = EC + abs(EC0);
       
+      
+      % estimate Freesurfer thickness measure Tfs using mean(Tnear1,Tnear2)
+      if opt.distance == 1
+        if opt.extract_pial_white && ~opt.fast % use white and pial surfaces
+          cmd = sprintf('CAT_SurfDistance -mean "%s" "%s" "%s"',Pwhite,Ppial,Pthick);
+          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+        else % use central surface and thickness
+          cmd = sprintf('CAT_SurfDistance -mean -thickness "%s" "%s" "%s"',Ppbt,Pcentral,Pthick);
+          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+        end
+      else % otherwise simply copy ?h.pbt.* to ?h.thickness.*
+        copyfile(Ppbt,Pthick);
+      end
+
       %%
       clear CS
       continue
