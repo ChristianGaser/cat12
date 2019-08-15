@@ -33,7 +33,20 @@ function cat_run_newcatch(job,tpm,subj)
 
     cat_io_cprintf('err',sprintf('\n%s\nCAT Preprocessing error for %s:\n%s\n%s\n%s\n', ...
       repmat('-',1,72),nam,repmat('-',1,72),caterr.message,repmat('-',1,72)));  
-
+    
+    % check for filenames that are usually indicated by '"'
+    ind_str = strfind(caterr.message,'"');
+    
+    % anonymize by removing filename if two '"' characters were found
+    if length(ind_str) == 2
+      caterr_message_str = [caterr.message(1:ind_str(1)-1) caterr.message(ind_str(2)+1:end)];
+    else
+      caterr_message_str = caterr.message;
+    end
+    
+    % also replace any slashes
+    caterr_message_str = regexprep(caterr_message_str, '/' , '%20');
+    
     % send error information, CAT12 version and computer system
     if cat_get_defaults('extopts.send_info')
       str_err = [];
@@ -41,9 +54,9 @@ function cat_run_newcatch(job,tpm,subj)
         str_err = [str_err '|' caterr.stack(si).name ':' num2str(caterr.stack(si).line)];
       end      
       str_err = str_err(2:end); % remove first "|"
-      url = sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%s%s%s%s',cat_version,'%2F',computer,'%2F',caterr.message,'%2F',str_err);
-      url = regexprep(url, '\n', '%20'); % replace spaces
-      url = regexprep(url, ' ' , '%20'); % replace returns
+      url = sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%s%s%s%s%s%s',cat_version,'%2F',computer,'%2F','errors','%2F',caterr_message_str,'%2F',str_err);
+      url = regexprep(url, '\n', '%20'); % replace returns
+      url = regexprep(url, ' ' , '%20'); % replace spaces
       try, urlread(url); end
     end
 
