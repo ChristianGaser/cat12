@@ -44,9 +44,14 @@ function cat_run_newcatch(job,tpm,subj)
       caterr_message_str = caterr.message;
     end
     
-    % also replace any slashes
-    caterr_message_str = regexprep(caterr_message_str, '/' , '%20');
+    % again check for filenames indicated by slashes/backslashes
+    ind_str = [strfind(caterr_message_str,'/') strfind(caterr_message_str,'\')];
     
+    % further anonymize by removing filename if slashes/backslashes were found
+    if length(ind_str) > 1
+      caterr_message_str =  caterr_message_str(ind_str(end)+1:end);
+    end
+
     % send error information, CAT12 version and computer system
     if cat_get_defaults('extopts.send_info')
       str_err = [];
