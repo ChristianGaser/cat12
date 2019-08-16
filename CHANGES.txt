@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1497 | gaser | 2019-08-15 16:28:14
+r1498 | gaser | 2019-08-16 16:05:06
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_run_newcatch.m
+M       cat_surf_createCS.m
+M       html/cat.html
+
+(1) Changed: Optimized parameters for surface reconstruction in 
+    cat_surf_createCS.m.
+(2) Changed: Updated and optimized creation of pial and white surface in
+    cat_surf_createCS.m.
+(3) Changed: Added further anonymization of filenames to cat_run_newcatch.m
+------------------------------------------------------------------------
+r1497 | gaser | 2019-08-15 16:28:31 +0200 (Do, 15 Aug 2019) | 32 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -31,6 +46,7 @@ M       spm_cat12.m
 (6) Changed: Set interpolation to new "optimal" setting in cat_defaults.m.
 (7) Fixed: Corrected some typos.
 (8) Fixed: Corrected error with exist command in cat_surf_vol2surf.m
+
 
 ------------------------------------------------------------------------
 r1496 | dahnke | 2019-08-15 15:40:32 +0200 (Do, 15 Aug 2019) | 13 lines
