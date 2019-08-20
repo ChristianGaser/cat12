@@ -256,9 +256,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   %       (bad handling of PVE head values)
   %
   %   2 - color overlay for head and brain (DEFAULT)
-  %       (good for skull stripping but worste representation of brain tissues) 
+  %       (good for skull stripping but worst representation of brain tissues) 
   %   3 - color overlay for head and brain (inverse head) 
-  %       (good for skull stripping but worste representation of brain tissues) 
+  %       (good for skull stripping but worst representation of brain tissues) 
   %
   %   4 - black background + gray head + cat brain colors
   %       (miss some details in CSF tissues)
@@ -428,25 +428,17 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 
       try
         spm_ov_mesh('display',id,Phull);
+        ov_mesh = 1;
       catch
         fprintf('Please update to a newer version of spm12 for using this contour overlay\n');
-        try
-          spm_update
-        catch
-        
-          fprintf('Update to the newest SPM12 version failed. Please update manually.\n');
-        end
-        try
-          
-        catch
-          cat_io_cprintf('err','There is still an error in the "spm_ov_mesh" function.\n');
-        end
+        ov_mesh = 0;
+        continue;
       end
 
       % apply affine scaling for gifti objects
       for ix=1:numel(Phull) 
         % load mesh
-        try spm_ov_mesh('display',id,Phull(ix)); end 
+        if ov_mesh spm_ov_mesh('display',id,Phull(ix)); end 
 
         % apply affine scaling for gifti objects
         V = (dispmat * inv(res.Affine) * ([st.vols{id}.mesh.meshes(ix).vertices,...
@@ -464,7 +456,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       UD.width = 0.75; 
       UD.style = repmat({'b--'},1,numel(Phull));
       set(hM,'UserData',UD);
-      try spm_ov_mesh('redraw',id); end
+      if ov_mesh spm_ov_mesh('redraw',id); end
       try spm_orthviews('redraw',id); end
 
       %% TPM legend
@@ -495,7 +487,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 
       for ix=1:numel(Psurf) 
         % load mesh
-        try spm_ov_mesh('display',id,Psurf(ix).Pcentral); end
+        if ov_mesh
+          spm_ov_mesh('display',id,Psurf(ix).Pcentral);
+        else
+          continue
+        end
 
         % apply affine scaling for gifti objects
         V = (dispmat * ([st.vols{id}.mesh.meshes(end).vertices,...
@@ -513,7 +509,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       UD.width = [repmat(0.75,1,numel(UD.width) - numel(Psurf))  repmat(0.5,1,numel(Psurf))]; 
       UD.style = [repmat({'b--'},1,numel(UD.width) - numel(Psurf)) repmat({'k-'},1,numel(Psurf))];
       set(hM,'UserData',UD);
-      try spm_ov_mesh('redraw',id); end
+      if ov_mesh spm_ov_mesh('redraw',id); end
       
       %% TPM legend
       try
@@ -615,7 +611,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   
   
   %% change line style of TPM surf
-  if job.extopts.expertgui>0 - showTPMsurf
+  if (job.extopts.expertgui>0 - showTPMsurf) & ov_mesh
     id = 1; 
     hM = findobj(st.vols{id}.ax{1}.cm,'Label','Mesh');
     UD = get(hM,'UserData');
@@ -623,7 +619,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     UD.style = [repmat({'r--'},1,numel(UD.width) - numel(Psurf)) repmat({'k-'},1,numel(Psurf))];
     set( cclp,'Color', [1 0 0]);
     set(hM,'UserData',UD);
-    try spm_ov_mesh('redraw',id); end
+    spm_ov_mesh('redraw',id);
   end  
   
   warning('OFF','MATLAB:subscripting:noSubscriptsSpecified'); % jep off

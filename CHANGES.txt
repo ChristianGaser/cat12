@@ -1,5 +1,28 @@
 ------------------------------------------------------------------------
-r1498 | gaser | 2019-08-16 16:05:06
+r1499 | gaser | 2019-08-20 08:51:01
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_stools.m
+M       cat_conf_stoolsexp.m
+M       cat_defaults.m
+M       cat_main_reportfig.m
+M       cat_surf_createCS.m
+M       html/cat.html
+M       html/cat_starting.html
+
+(1) Changed: Changed recommendation and default for smoothing size to smaller
+    values. 
+(2) Changed: Added thickness limit of 5mm similar to Freesurfer to surface
+    pipeline.
+    cat_surf_createCS.m.
+(3) Fixed: Check whether new spm_ov_mesh.m from SPM12 update is available and
+    skip skull overlay if not.
+(4) Changed: Disabled new pbtlas correction because of instabilities for data 
+    with larger atrophy.
+------------------------------------------------------------------------
+r1498 | gaser | 2019-08-16 16:05:38 +0200 (Fr, 16 Aug 2019) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +36,7 @@ M       html/cat.html
 (2) Changed: Updated and optimized creation of pial and white surface in
     cat_surf_createCS.m.
 (3) Changed: Added further anonymization of filenames to cat_run_newcatch.m
+
 ------------------------------------------------------------------------
 r1497 | gaser | 2019-08-15 16:28:31 +0200 (Do, 15 Aug 2019) | 32 lines
 
