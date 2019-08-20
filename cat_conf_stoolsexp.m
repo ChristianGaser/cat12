@@ -86,7 +86,7 @@ function stoolsexp = cat_conf_stoolsexp
   smooth.data.tag     = 'data';
   smooth.data.name    = 'Sample';
   smooth.data.filter  = 'any';
-  smooth.data.ufilter = '^[rl]h.(?!cent|sphe|defe).*';
+  smooth.data.ufilter = '^[rl]h.(?!cent|sphe|defe|hull|pbt).*';
   smooth.data.num     = [1 Inf];
   smooth.data.help    = {'Select surface data (texture) files for smoothing.'};
   

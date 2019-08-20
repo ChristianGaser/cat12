@@ -65,7 +65,8 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
   def.pbtmethod = 'pbt2x';
   def.WMT       = 0; % WM/CSF width/depth/thickness
   def.sharpenCB = 0; % in development
-  def.distance  = 1; % Tfs: Freesurfer method using mean(Tnear1,Tnear2)
+  def.thick_measure      = 1; % Tfs: Freesurfer method using mean(Tnear1,Tnear2)
+  def.thick_limit        = 5; % 5mm upper limit for thickness (same limit as used in Freesurfer)
   def.extract_pial_white = 0; % Estimate pial and white matter surface (in development and very slow!)
   def.new_release        = 0; % developer flag to test new functionality for new release (currently not used)
   def.add_parahipp       = cat_get_defaults('extopts.add_parahipp');
@@ -605,7 +606,7 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
       EC  = EC + abs(EC0);
       
       % estimate Freesurfer thickness measure Tfs using mean(Tnear1,Tnear2)
-      if opt.distance == 1
+      if opt.thick_measure == 1
         if opt.extract_pial_white && ~opt.fast % use white and pial surfaces
           cmd = sprintf('CAT_SurfDistance -mean "%s" "%s" "%s"',Pwhite,Ppial,Pthick);
           [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
@@ -613,6 +614,11 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
           cmd = sprintf('CAT_SurfDistance -mean -thickness "%s" "%s" "%s"',Ppbt,Pcentral,Pthick);
           [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
         end
+      
+        % apply upper thickness limit
+        facevertexcdata = cat_io_FreeSurfer('read_surf_data',Pthick);  
+        facevertexcdata(facevertexcdata > opt.thick_limit) = opt.thick_limit;
+        cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);  
       else % otherwise simply copy ?h.pbt.* to ?h.thickness.*
         copyfile(Ppbt,Pthick);
       end
@@ -690,7 +696,7 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
     cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
   
     % final correction of central surface in highly folded areas with high mean curvature with weight of 0.7
-    stime = cat_io_cmd('  Correction of central surface in highly folded areas 1','g5','',opt.verb,stime);
+    stime = cat_io_cmd('  Correction of central surface in highly folded areas','g5','',opt.verb,stime);
     cmd = sprintf(['CAT_Central2Pial -equivolume -weight 0.7 "%s" "%s" "%s" 0'], ...
                        Pcentral,Ppbt,Pcentral);
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
@@ -880,7 +886,7 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
     clear Yth1i
 
     % estimate Freesurfer thickness measure Tfs using mean(Tnear1,Tnear2)
-    if opt.distance == 1
+    if opt.thick_measure == 1
       if opt.extract_pial_white && ~opt.fast % use white and pial surfaces
         cmd = sprintf('CAT_SurfDistance -mean "%s" "%s" "%s"',Pwhite,Ppial,Pthick);
         [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
@@ -888,6 +894,11 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
         cmd = sprintf('CAT_SurfDistance -mean -thickness "%s" "%s" "%s"',Ppbt,Pcentral,Pthick);
         [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
       end
+      
+      % apply upper thickness limit
+			facevertexcdata = cat_io_FreeSurfer('read_surf_data',Pthick);  
+			facevertexcdata(facevertexcdata > opt.thick_limit) = opt.thick_limit;
+			cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);  
     else % otherwise simply copy ?h.pbt.* to ?h.thickness.*
       copyfile(Ppbt,Pthick);
     end

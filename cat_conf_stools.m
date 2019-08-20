@@ -889,7 +889,7 @@ function [surfresamp,surfresamp_fs] = cat_surf_resamp_GUI(expert,nproc,merge_hem
   if expert > 1
     data_surf.ufilter = '^lh.';
   else
-    data_surf.ufilter = '^lh.(?!cent|sphe|defe|hull).*';
+    data_surf.ufilter = '^lh.(?!cent|sphe|defe|hull|pbt).*';
   end
   data_surf.num     = [1 Inf];
   data_surf.help    = {'Select surfaces data files for left hemisphere for resampling to template space.'};
@@ -908,9 +908,9 @@ function [surfresamp,surfresamp_fs] = cat_surf_resamp_GUI(expert,nproc,merge_hem
   fwhm_surf.name    = 'Smoothing Filter Size in FWHM';
   fwhm_surf.strtype = 'r';
   fwhm_surf.num     = [1 1];
-  fwhm_surf.val     = {15};
+  fwhm_surf.val     = {12};
   fwhm_surf.help    = {
-    'Select filter size for smoothing. For cortical thickness a good starting value is 15mm, while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) need a larger filter size of about 20-25mm. For no filtering use a value of 0.'};
+    'Select filter size for smoothing. For cortical thickness a good starting value is 12mm, while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) need a larger filter size of about 20-25mm. For no filtering use a value of 0.'};
 
   surfresamp      = cfg_exbranch;
   surfresamp.tag  = 'surfresamp';
