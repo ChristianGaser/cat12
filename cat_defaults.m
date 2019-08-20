@@ -214,8 +214,9 @@ cat.extopts.T1           = {fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii')};
 
 % surface options
 cat.extopts.pbtres         = 0.5;   % internal resolution for thickness estimation in mm (default 0.5) 
-cat.extopts.pbtlas         = 1;     % reduce myelination effects:  1 - default in 12.7+
-cat.extopts.distance       = 1;     % distance method for estimating thickness:  1 - Tfs: Freesurfer method using mean(Tnear1,Tnear2) (default in 12.7+); 0 - Tlink: linked distance (used before 12.7)
+cat.extopts.pbtlas         = 0;     % reduce myelination effects (experimental, not yet working properly!)
+cat.extopts.thick_measure  = 1;     % distance method for estimating thickness:  1 - Tfs: Freesurfer method using mean(Tnear1,Tnear2) (default in 12.7+); 0 - Tlink: linked distance (used before 12.7)
+cat.extopts.thick_limit    = 5;     % upper limit for Tfs thickness measure similar to Freesurfer (only valid if cat.extopts.thick_measure is set to "1"
 cat.extopts.close_parahipp = 0;     % optionally apply closing inside mask for parahippocampal gyrus to get rid of the holes that lead to large
                                     % cuts in gyri after topology correction. However, this may also lead to poorer quality of topology 
                                     % correction for other data and should be only used if large cuts in the parahippocampal areas occur
@@ -232,7 +233,7 @@ cat.extopts.verb         = 2;     % verbose output:        1 - default; 2 - deta
 cat.extopts.ignoreErrors = 1;     % catch errors:          0 - stop with error (default); 1 - catch preprocessing errors (requires MATLAB 2008 or higher); 
 cat.extopts.expertgui    = 0;     % control of user GUI:   0 - common user modus with simple GUI; 1 - expert modus with extended GUI; 2 - developer modus with full GUI
 cat.extopts.subfolders   = 1;     % use subfolders such as mri, surf, report, and label to organize your data
-cat.extopts.experimental = 0;     % experimental functions: 0 - default, 1 - call experimental unsave functions
+cat.extopts.experimental = 0;     % experimental functions: 0 - default, 1 - call experimental unsafe functions
 cat.extopts.print        = 2;     % display and print out pdf-file of results: 0 - off, 2 - volume only, 2 - volume and surface (default)
 cat.extopts.fontsize     = get(0,'defaultuicontrolFontSize'); % default font size for GUI; 
 %cat.extopts.fontsize     = spm('FontSizes',7); % set default font size for GUI manually; increase value for larger fonts or set it to 
