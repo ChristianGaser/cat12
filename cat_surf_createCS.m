@@ -697,7 +697,7 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
   
     % final correction of central surface in highly folded areas with high mean curvature with weight of 0.7
     stime = cat_io_cmd('  Correction of central surface in highly folded areas','g5','',opt.verb,stime);
-    cmd = sprintf(['CAT_Central2Pial -equivolume -weight 0.7 "%s" "%s" "%s" 0'], ...
+    cmd = sprintf(['CAT_Central2Pial -equivolume -weight 0.7 "%s" "%s" "%s" 0.2'], ...
                        Pcentral,Ppbt,Pcentral);
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
   
@@ -753,7 +753,9 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
     % final correction of central surface in highly folded areas with high mean curvature
     if ~opt.fast
       stime = cat_io_cmd('  Correction of central surface in highly folded areas 2','g5','',opt.verb,stime);
-      cmd = sprintf(['CAT_Central2Pial -equivolume -weight 0.5 "%s" "%s" "%s" 0'], ...
+      cmd = sprintf(['CAT_BlurSurfHK "%s" "%s" 1'], Pcentral,Pcentral);
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+      cmd = sprintf(['CAT_Central2Pial -equivolume -weight 0.6 "%s" "%s" "%s" 0'], ...
                        Pcentral,Ppbt,Pcentral);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
     end
