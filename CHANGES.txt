@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1499 | gaser | 2019-08-20 08:51:01
+r1500 | gaser | 2019-08-21 14:33:48
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_surf_createCS.m
+M       html/cat.html
+
+Changed: Slight optimization of parameters for surface pipeline in 
+cat_surf_createCS.m.
+
+------------------------------------------------------------------------
+r1499 | gaser | 2019-08-20 08:51:35 +0200 (Di, 20 Aug 2019) | 21 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -21,6 +33,7 @@ M       html/cat_starting.html
     skip skull overlay if not.
 (4) Changed: Disabled new pbtlas correction because of instabilities for data 
     with larger atrophy.
+
 ------------------------------------------------------------------------
 r1498 | gaser | 2019-08-16 16:05:38 +0200 (Fr, 16 Aug 2019) | 13 lines
 
