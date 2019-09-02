@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1500 | gaser | 2019-08-21 14:33:48
+r1501 | gaser | 2019-09-02 09:28:57
+
+Changed paths:
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       cat_surf_createCS.m
+M       cat_surf_vol2surf.m
+
+(1) Fixed: Corrected print out of mapping points for volume to surface mapping
+if only one mapping point was defined.
+(2) Changed: Pial and WM surface are now using a corrected pbt image for better
+and start at central surface to prevent intersections and obtain better surface
+estimation in cat_surf_createCS.m (experimental).
+
+------------------------------------------------------------------------
+r1500 | gaser | 2019-08-21 14:34:20 +0200 (Mi, 21 Aug 2019) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +24,7 @@ M       html/cat.html
 
 Changed: Slight optimization of parameters for surface pipeline in 
 cat_surf_createCS.m.
+
 
 ------------------------------------------------------------------------
 r1499 | gaser | 2019-08-20 08:51:35 +0200 (Di, 20 Aug 2019) | 21 lines

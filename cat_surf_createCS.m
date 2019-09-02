@@ -415,19 +415,14 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
     %  because CAT_DeformSurf achieved better results using that resolution
     Yppt = cat_vol_resize(Yppi,'deinterp',resI);                        % back to original resolution
     Yppt = cat_vol_resize(Yppt,'dereduceBrain',BB);                     % adding of background
-    Vpp  = cat_io_writenii(V,Yppt,'','pp','percentage position map','uint8',[0,1/255],[1 0 0 0]);
-
-    % save hemisphere of Yp0 label image 
+    
+    % scale Yppt so that backgrounds remains 0 and WM 1, but cortical band is 
+    % now in the range of 0.1..0.9
     if opt.extract_pial_white
-      % mask hemispheres and regions
-      switch opt.surf{si}
-        case {'lh'},  Yp0s = Yp0 .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB)) .* (mod(Ya,2)==1);  
-        case {'rh'},  Yp0s = Yp0 .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB)) .* (mod(Ya,2)==0);   
-        case {'lc'},  Yp0s = Yp0 .* (Ya>0) .*   NS(Ya,opt.LAB.CB).* (mod(Ya,2)==1);  
-        case {'rc'},  Yp0s = Yp0 .* (Ya>0) .*   NS(Ya,opt.LAB.CB).* (mod(Ya,2)==0); 
-      end 
-      Vyp0s  = cat_io_writenii(V,Yp0s,'','yp0s','scaled image','uint8',[0,1/255],[1 0 0 0]);
+      indi = find((Yppt>0) & (Yppt<0.99999));
+      Yppt(indi) = 0.1 + (0.8*Yppt(indi));
     end
+    Vpp  = cat_io_writenii(V,Yppt,'','pp','percentage position map','uint8',[0,1/255],[1 0 0 0]);
     
     Vpp1 = Vpp; 
     Vpp1.fname    = fullfile(pp,mrifolder,['pp1' ff '.nii']);
@@ -607,13 +602,8 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
       
       % estimate Freesurfer thickness measure Tfs using mean(Tnear1,Tnear2)
       if opt.thick_measure == 1
-        if opt.extract_pial_white && ~opt.fast % use white and pial surfaces
-          cmd = sprintf('CAT_SurfDistance -mean "%s" "%s" "%s"',Pwhite,Ppial,Pthick);
-          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
-        else % use central surface and thickness
-          cmd = sprintf('CAT_SurfDistance -mean -thickness "%s" "%s" "%s"',Ppbt,Pcentral,Pthick);
-          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
-        end
+        cmd = sprintf('CAT_SurfDistance -mean -thickness "%s" "%s" "%s"',Ppbt,Pcentral,Pthick);
+        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
       
         % apply upper thickness limit
         facevertexcdata = cat_io_FreeSurfer('read_surf_data',Pthick);  
@@ -762,36 +752,51 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
 
     % final correction of cortical thickness using pial and WM surface
     if opt.extract_pial_white && ~opt.fast
-      % estimation of pial surface
-      stime = cat_io_cmd('  Estimation of pial surface','g5','',opt.verb,stime);
-      cmd = sprintf(['CAT_Central2Pial -check_intersect "%s" "%s" "%s" 0.5'], ...
-                       Pcentral,Ppbt,Ppial);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
   
-      % GM/CSF border 
-      th2 = 1.5;
+      % estimation of pial surface
+      th2 = 0.1; % GM/CSF border
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .2 ' ...
-                     'avg -0.05 0.05 .1 .1 5 0 "%g" "%g" n 0 0 0 100 0.01 0.0 %d'], ...
-                     Vyp0s.fname,Ppial,Ppial,th2,th2,force_no_selfintersections);
+                     'avg -0.05 0.05 .1 .1 5 0 "%g" "%g" n 0 0 0 300 0.001 0.0 %d'], ...
+                     Vpp.fname,Pcentral,Ppial,th2,th2,force_no_selfintersections);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
 
+      % if deformation stopped earlier call CAT_Central2Pial to get closer to the pial surface
+      if ~isempty(strfind(RS,'Stopped after'))
+        stime = cat_io_cmd('  Estimation of pial surface','g5','',opt.verb,stime);
+        cmd = sprintf(['CAT_Central2Pial -check_intersect "%s" "%s" "%s" 0.3'], ...
+                       Pcentral,Ppbt,Ppial);
+        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+        
+        cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .2 ' ...
+                     'avg -0.05 0.05 .1 .1 5 0 "%g" "%g" n 0 0 0 300 0.001 0.0 %d'], ...
+                     Vpp.fname,Ppial,Ppial,th2,th2,force_no_selfintersections);
+        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+      end
+
       stime = cat_io_cmd('  Correction of pial surface in highly folded areas','g5','',opt.verb,stime);
-      cmd = sprintf(['CAT_Central2Pial -equivolume -weight 1.5 "%s" "%s" "%s" 0'], ...
+      cmd = sprintf(['CAT_Central2Pial -equivolume -weight 0.5 "%s" "%s" "%s" 0'], ...
                        Ppial,Ppbt,Ppial);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
 
       % estimation of white matter surface
-      stime = cat_io_cmd('  Estimation of white matter surface','g5','',opt.verb,stime);
-      cmd = sprintf(['CAT_Central2Pial -check_intersect "%s" "%s" "%s" -0.5'], ...
-                       Pcentral,Ppbt,Pwhite);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
-  
-      % GM/WM border
-      th2 = 2.5;
+      th2 = 0.9; % GM/WM border
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .2 ' ...
-                     'avg -0.05 0.05 .1 .1 5 0 "%g" "%g" n 0 0 0 100 0.01 0.0 %d'], ...
-                     Vyp0s.fname,Pwhite,Pwhite,th2,th2,force_no_selfintersections);
+                     'avg -0.05 0.05 .1 .1 5 0 "%g" "%g" n 0 0 0 300 0.001 0.0 %d'], ...
+                     Vpp.fname,Pcentral,Pwhite,th2,th2,force_no_selfintersections);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+
+      % if deformation stopped earlier call CAT_Central2Pial to get closer to the white matter surface
+      if ~isempty(strfind(RS,'Stopped after'))
+        stime = cat_io_cmd('  Estimation of white matter surface','g5','',opt.verb,stime);
+        cmd = sprintf(['CAT_Central2Pial -check_intersect "%s" "%s" "%s" -0.3'], ...
+                       Pcentral,Ppbt,Pwhite);
+        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+        
+        cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .2 ' ...
+                     'avg -0.05 0.05 .1 .1 5 0 "%g" "%g" n 0 0 0 300 0.001 0.0 %d'], ...
+                     Vpp.fname,Pwhite,Pwhite,th2,th2,force_no_selfintersections);
+        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+      end
 
       stime = cat_io_cmd('  Correction of white matter surface in highly folded areas','g5','',opt.verb,stime);
       cmd = sprintf(['CAT_Central2Pial -equivolume -weight 0.5 "%s" "%s" "%s" 0'], ...
@@ -914,9 +919,6 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
     delete(Psphere0);
     delete(Vpp.fname);
     delete(Vpp1.fname);
-    if opt.extract_pial_white
-      delete(Vyp0s.fname);
-    end
     clear CS
   end  
   
