@@ -247,7 +247,11 @@ function out = cat_surf_vol2surf(varargin)
   end
   fprintf('Mapping %s volume(s) %s grid positions: ',space_str, mapping_str);
   for i=1:job.mapping.(mapping).steps
-    fprintf(' %g', job.mapping.(mapping).startpoint + (i-1)*(job.mapping.(mapping).endpoint-job.mapping.(mapping).startpoint)/(job.mapping.(mapping).steps-1));
+    if job.mapping.(mapping).steps > 1
+      fprintf(' %g', job.mapping.(mapping).startpoint + (i-1)*(job.mapping.(mapping).endpoint-job.mapping.(mapping).startpoint)/(job.mapping.(mapping).steps-1));
+    else
+      fprintf(' %g', job.mapping.(mapping).startpoint);
+    end
   end
   fprintf('.\n\n');
   if isempty(job.datafieldname), dsep = ''; else dsep = '_'; end
