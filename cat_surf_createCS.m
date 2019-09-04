@@ -592,7 +592,6 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
       if ~debug
         delete(Vpp.fname);
         delete(Vpp1.fname);
-        if exist('Vyp0s','var'), delete(Vyp0s.fname); end
       end
       fprintf('%5.0fs\n',etime(clock,stime)); 
       

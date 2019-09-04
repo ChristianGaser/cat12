@@ -164,6 +164,15 @@ function out = cat_surf_vol2surf(varargin)
     end
   end
     
+  % if only 1 volume but multiple surfaces are given then fill
+  % up the missing volume names with the single volume name
+  if (n_vol == 1) && (n_surf > 1)
+    for i=2:n_surf
+      data_vol{i} = data_vol{1};
+      istemp(i) = 0;
+    end
+  end
+
   %%
   side  = {'data_mesh_lh','data_mesh_rh'};
   sside = {'sinfo_lh','sinfo_rh'};
@@ -301,7 +310,7 @@ function out = cat_surf_vol2surf(varargin)
             end
           case 'rel_mapping'
             switch job.mapping.(mapping).class
-              case {1,'GM'},  addstr = sprintf(' -thickness "%s" ',P.thickness{vi,si}); 
+              case {1,'GM'},  addstr = sprintf(' -thickness "%s" ',P.thickness{vi,si});
               case {2,'WM'},  error('Not yet supported');
               case {3,'CSF'}, error('Not yet supported'); 
             end

@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1501 | gaser | 2019-09-02 09:28:57
+r1502 | gaser | 2019-09-04 11:02:57
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_defaults.m
+M       cat_surf_createCS.m
+M       cat_surf_vol2surf.m
+M       html/cat.html
+
+(1) Fixed: Corrected deleting of temporary files in cat_surf_createCS.m for 
+    creation of pial and WM surface.
+(2) Changed: Added automatically filling up of filenames if only 1 volume but 
+    multiple surfaces are given in cat_surf_vol2surf.m
+------------------------------------------------------------------------
+r1501 | gaser | 2019-09-02 09:29:29 +0200 (Mo, 02 Sep 2019) | 13 lines
 
 Changed paths:
 M       CAT12-Manual.pdf
@@ -12,6 +27,7 @@ if only one mapping point was defined.
 (2) Changed: Pial and WM surface are now using a corrected pbt image for better
 and start at central surface to prevent intersections and obtain better surface
 estimation in cat_surf_createCS.m (experimental).
+
 
 ------------------------------------------------------------------------
 r1500 | gaser | 2019-08-21 14:34:20 +0200 (Mi, 21 Aug 2019) | 10 lines
