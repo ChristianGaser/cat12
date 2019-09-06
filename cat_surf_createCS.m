@@ -893,7 +893,9 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
 
     % estimate Freesurfer thickness measure Tfs using mean(Tnear1,Tnear2)
     if opt.thick_measure == 1
-      if opt.extract_pial_white && ~opt.fast % use white and pial surfaces
+      % not ready yet
+      if 0
+%      if opt.extract_pial_white && ~opt.fast % use white and pial surfaces
         cmd = sprintf('CAT_SurfDistance -mean "%s" "%s" "%s"',Pwhite,Ppial,Pthick);
         [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
       else % use central surface and thickness

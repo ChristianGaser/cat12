@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1502 | gaser | 2019-09-04 11:02:57
+r1503 | gaser | 2019-09-06 17:18:12
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_extopts.m
+M       cat_surf_createCS.m
+M       html/cat.html
+
+(1) Changed: Updated help text for stroke lesion tool.
+(2) Changed: Deselected use of pial and WM surface for thickness estimation
+    for experiemntal pial+WM surface creation in cat_surf_createCS.m.
+------------------------------------------------------------------------
+r1502 | gaser | 2019-09-04 11:03:30 +0200 (Mi, 04 Sep 2019) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +26,7 @@ M       html/cat.html
     creation of pial and WM surface.
 (2) Changed: Added automatically filling up of filenames if only 1 volume but 
     multiple surfaces are given in cat_surf_vol2surf.m
+
 ------------------------------------------------------------------------
 r1501 | gaser | 2019-09-02 09:29:29 +0200 (Mo, 02 Sep 2019) | 13 lines
 
