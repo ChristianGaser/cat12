@@ -644,8 +644,8 @@ slc.name   = 'Stroke Lesion Correction (SLC) - in development';
 slc.def    = @(val)cat_get_defaults('extopts.SLC', val{:});
 slc.help   = {
   'WARNING: Please note that the handling of stroke lesion is still under development. '
-  'Without further correction, stroke lesions will be handled by their most probable tissue class, i.e. typically as CSF or GM. Because the spatial registration tries to normalize these regions, the normalization of large regions lead to storng inproper deformations. '
-  'To avoid poor deformations, we created a work-around by manually defined lesion maps. The ... tool can be used to set the tissue intensity to zeros to avoid normalization of stroke lesions. '
+  'Without further correction, stroke lesions will be handled by their most probable tissue class, i.e. typically as CSF or GM. Because the spatial registration tries to normalize these regions, the normalization of large regions will lead to strong inproper deformations. '
+  'To avoid poor deformations, we created a work-around by manually defined lesion maps. The "Manual image (lesion) masking" tool can be used to set the image intensity to zeros to avoid normalization of stroke lesions. '
   ''
   ' 0) No Correction. '
   ' 1) Correction of manually defined regions that were set to zeros. '
