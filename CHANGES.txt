@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1503 | gaser | 2019-09-06 17:18:12
+r1504 | gaser | 2019-09-10 16:33:26
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_createCS.m
+M       cg_io_send_to_server.m
+
+Changed: Slightly changed deformation parameters in cat_surf_createCS.m.
+------------------------------------------------------------------------
+r1503 | gaser | 2019-09-06 17:18:48 +0200 (Fr, 06 Sep 2019) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +20,7 @@ M       html/cat.html
 (1) Changed: Updated help text for stroke lesion tool.
 (2) Changed: Deselected use of pial and WM surface for thickness estimation
     for experiemntal pial+WM surface creation in cat_surf_createCS.m.
+
 ------------------------------------------------------------------------
 r1502 | gaser | 2019-09-04 11:03:30 +0200 (Mi, 04 Sep 2019) | 13 lines
 

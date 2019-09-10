@@ -726,7 +726,7 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
                      Vpp.fname,Pcentral,Pcentral,th,th,0);
     else
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .2 ' ...
-                     'avg -0.05 0.05 .1 .1 5 0 "%g" "%g" n 0 0 0 50 0.01 0.0 %d'], ...
+                     'avg -0.15 0.15 .1 .1 5 0 "%g" "%g" n 0 0 0 150 0.01 0.0 %d'], ...
                      Vpp.fname,Pcentral,Pcentral,th,th,force_no_selfintersections);
     end
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
@@ -744,7 +744,7 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
       stime = cat_io_cmd('  Correction of central surface in highly folded areas 2','g5','',opt.verb,stime);
       cmd = sprintf(['CAT_BlurSurfHK "%s" "%s" 1'], Pcentral,Pcentral);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
-      cmd = sprintf(['CAT_Central2Pial -equivolume -weight 0.6 "%s" "%s" "%s" 0'], ...
+      cmd = sprintf(['CAT_Central2Pial -equivolume -weight 0.4 "%s" "%s" "%s" 0'], ...
                        Pcentral,Ppbt,Pcentral);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
     end
