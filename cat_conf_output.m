@@ -33,8 +33,9 @@ function [output,output_spm,output1173] = cat_conf_output(expert)
   if expert == 2
     surface.labels = {'No','lh + rh','lh + rh + cerebellum',...
       'lh + rh (fast, no registration)','lh + rh + cerebellum (fast, no registration)', ...
-      'lh + rh (fast registration)','lh + rh + cerebellum (fast registration)','Thickness estimation (for ROI analysis only)', 'Full'};
-    surface.values = {0 1 2 5 6 7 8 9 12};
+      ... 'lh + rh (fast registration)','lh + rh + cerebellum (fast registration)',... 7 8 
+      'Thickness estimation (for ROI analysis only)', 'Full'};
+    surface.values = {0 1 2,5 6,9 12}; % 7 8 
     surface.help   = [surface.help; {
       'Cerebellar reconstruction is still in development and is strongly limited due to the high frequency of folding and image properties! '
       ''

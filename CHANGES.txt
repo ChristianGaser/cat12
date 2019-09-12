@@ -1,5 +1,36 @@
 ------------------------------------------------------------------------
-r1504 | gaser | 2019-09-10 16:33:26
+r1505 | dahnke | 2019-09-12 18:15:01
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_output.m
+M       cat_defaults.m
+M       cat_main.m
+M       cat_surf_createCS.m
+M       cat_surf_fun.m
+M       cat_surf_info.m
+M       cat_surf_render2.m
+M       cat_vol_pbt.m
+
+(1) Added collcorr parameter to control surface collision correction in 
+    cat_conf_extopts, cat_defaults, and cat_main.
+(2) Cleaned cat_surf_createCS and removed fast-registration option of the 
+    developer mode in cat_surf_createCS. Add new collision correction. 
+    Changed order of functions to improve surface accuracy. 
+(3) Added new subfunction in cat_surf_fun to save surfaces and correct
+    surface collisions.
+(4) Added handling for pial, white, and layer4 surfaces in cat_surf_info 
+    and cat_surf_render2. Added surface info field to the menu.
+(5) Limited search for surface and textures in cat_surf_render2 to a 
+    directory depth of 1.
+(6) Small changes in the WM boundary optimization in cat_vol_pbt.
+
+
+
+
+------------------------------------------------------------------------
+r1504 | gaser | 2019-09-10 16:33:57 +0200 (Di, 10 Sep 2019) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +38,7 @@ M       cat_surf_createCS.m
 M       cg_io_send_to_server.m
 
 Changed: Slightly changed deformation parameters in cat_surf_createCS.m.
+
 ------------------------------------------------------------------------
 r1503 | gaser | 2019-09-06 17:18:48 +0200 (Fr, 06 Sep 2019) | 11 lines
 

@@ -280,6 +280,28 @@ pbtlas.values  = {0 1};
 pbtlas.def     = @(val)cat_get_defaults('extopts.pbtlas', val{:});
 pbtlas.help    = {
   'Apply correction for cortical myelination by local intensity adaption to improve the description of the GM/WM boundary (added in CAT12.7).'
+  'Experimental parameter, not yet working properly!'
+  ''
+};
+
+collcorr         = cfg_menu;
+collcorr.tag     = 'collcorr';
+collcorr.name    = 'Correct for surface collisions';
+collcorr.labels  = {'No','Approach A','Approach B','Approach A & B','Approach A & B + post correction'};
+collcorr.values  = {0 1 2 3 4};
+collcorr.def     = @(val)cat_get_defaults('extopts.collcorr', val{:});
+collcorr.help    = {
+  ['In theory, adding/removing of the half-thickness to/from the central surface allows a good definition of the ' ...
+   'pial/white surface. In praxis however using of different distance/thickness metrics lead to small overlaps ' ...
+   'of the pial/white surfaces in some gyri/sulci. ' ...
+   'E.g. a gyrus with blurred white matter have often a low minimal thickness to' ...
+   'the sulcus and a large maximal thickness to its top (e.g. superior temporal gyrus).' ...
+   'The Tpbt thickness combines multiple values within the cortical sheet that final result in some longer distances ' ...
+   'compared to the Correct for surface collisions of the estimated white and pial surfaces (added in CAT12.7).']
+  '' 
+  'Approach A applied an afterwards corrections that based on the Delaunay triangulation.'
+  'Appraoch B use a classical surface deformation approach.'
+  'Experimental parameter, not yet working properly!'
   ''
 };
 
@@ -849,7 +871,7 @@ admin.help = {'CAT12 parameter to control the behaviour of the preprocessing pip
 surface       = cfg_branch;
 surface.tag   = 'surface';
 surface.name  = 'Surface Options';
-surface.val   = {pbtres pbtlas scale_cortex add_parahipp close_parahipp};
+surface.val   = {pbtres pbtlas collcorr scale_cortex add_parahipp close_parahipp};
 surface.help  = {'CAT12 parameter to control the surface processing.';''};
 
 

@@ -1,4 +1,4 @@
-function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
+function [Ygmt,Ypp,Ymf,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
 % ______________________________________________________________________
 %
 % Cortical thickness and surface position estimation. 
@@ -107,8 +107,8 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
       % variance in CAT compared to FS and CIVET.
       % RD 201908
       
-        stime = cat_io_cmd('    WM boundary optimization: ','g5','',opt.verb);
-        vx_vol_org = sqrt(sum(opt.vmat(1:3,1:3).^2));
+        stime = cat_io_cmd('    WM boundar optimization: ','g5','',opt.verb);
+        vx_vol_org = 1; %max(1,sqrt(sum(opt.vmat(1:3,1:3).^2))));
         
         
         %% WM intensity:
@@ -127,7 +127,7 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
         YM2max  = cat_vol_approx(YM2max,'nh',resT2.vx_volr,2); % use (slow) high resolutions 
         YM2max  = cat_vol_resize(YM2max,'dereduceV',resT2);
 
-        
+ %  stime = cat_io_cmd(sprintf('    WM distance (GM - %0.2f): ',mean(vx_vol_org)),'g5','',opt.verb,stime);      
         %% GM intensity:
         %  find the higher intesity GM average and avoid the CSF PVE 
         lth = 1.8; %1.8; % 1.8 - 2.2
@@ -186,7 +186,7 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
         YM2min  = cat_vol_resize(YM2min,'dereduceV',resT2);
         Ywd     = cat_vol_resize(Ywd,'dereduceV',resT2);
         YM2min  = YM2min - (2 - lth);
-        
+ %stime = cat_io_cmd(sprintf('    WM distance (GM - %0.2f): ',mean(vx_vol_org)),'g5','',opt.verb,stime);              
         %% create intensity optimized boundary image
         YM    = max(0,min(1,((Ymf - (YM2min + 2)) ./ (YM2max - YM2min)  ))); 
         %% use only fat areas
@@ -203,7 +203,7 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
         YM    = max(YM,min(1,Ywd/mean(resT2.vx_volr)/2 - 2)); % L4 distance based corrections
         YMd   = 0.75 - YM; YMd(YM>0.9) = nan; 
         YM    = max(YM,min(1,cat_vol_eidist(YMd,ones(size(YM),'single'),[1 1 1],1,1,0,opt.debug) - 0.5));  
-        
+   %stime = cat_io_cmd(sprintf('    WM distance (GM - %0.2f): ',mean(vx_vol_org)),'g5','',opt.verb,stime);            
         %%
         for ix=1:3, YM(YM>0.5 & smooth3(YM>0.5)<0.2) = 0.45; end
         YM(cat_vol_morph(YM>0.9 ,'lc')) = 1; 
@@ -237,9 +237,9 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
     % limit the distance values outside the GM/CSF boudary to the distance possible in the GM
     YM  = Ywmd>minfdist & Ymf<=1.5; Ywmd(YM) = Ywmd(YM) - Ycsfdc(YM); Ywmd(isinf(Ywmd)) = 0; clear Ycsfdc;
     % smoothing of distance values inside the GM
-    YM  = Ywmd>minfdist & Ymf> 1.5; YwmdM = Ywmd; YwmdM = cat_vol_localstat(YwmdM,YM,1,1); Ywmd(YM) = YwmdM(YM);
+    %YM  = Ywmd>minfdist & Ymf> 1.5; YwmdM = Ywmd; YwmdM = cat_vol_localstat(YwmdM,YM,1,1); Ywmd(YM) = YwmdM(YM);
     % smoothing of distance values outside the GM
-    YM  = Ywmd>minfdist & Ymf<=1.5; YwmdM = Ywmd; for i=1:2, YwmdM = cat_vol_localstat(YwmdM,YM,1,1); end; Ywmd(YM) = YwmdM(YM);
+    YM  = Ywmd>minfdist & Ymf<=1.5; YwmdM = Ywmd; for i=1:1, YwmdM = cat_vol_localstat(YwmdM,YM,1,1); end; Ywmd(YM) = YwmdM(YM);
     % reducing outliers in the GM/CSF area
     YM  = Ywmd>minfdist & Ymf< 2.0; YwmdM = Ywmd; YwmdM = cat_vol_median3(YwmdM,YM,YM); Ywmd(YM) = YwmdM(YM); clear YwmdM YM;
   end
@@ -284,12 +284,12 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
   if ~bin
     if exist('YMwm','var')
       YM = Ycsfd>minfdist & YMwm>=0.5; Ycsfd(YM) = Ycsfd(YM) - Ywmdc(YM); Ycsfd(isinf(-Ycsfd)) = 0; clear Ywmdc;
-      YM = Ycsfd>minfdist & YMwm< 0.5; YcsfdM = Ycsfd; YcsfdM = cat_vol_localstat(YcsfdM,YM,1,1); Ycsfd(YM) = YcsfdM(YM);
-      YM = Ycsfd>minfdist & YMwm>=0.5; YcsfdM = Ycsfd; for i=1:2, YcsfdM = cat_vol_localstat(YcsfdM,YM,1,1); end; Ycsfd(YM) = YcsfdM(YM);
+      %YM = Ycsfd>minfdist & YMwm< 0.5; YcsfdM = Ycsfd; YcsfdM = cat_vol_localstat(YcsfdM,YM,1,1); Ycsfd(YM) = YcsfdM(YM);
+      YM = Ycsfd>minfdist & YMwm>=0.5; YcsfdM = Ycsfd; for i=1:1, YcsfdM = cat_vol_localstat(YcsfdM,YM,1,1); end; Ycsfd(YM) = YcsfdM(YM);
     else
       YM = Ycsfd>minfdist & Ymf>=2.5; Ycsfd(YM) = Ycsfd(YM) - Ywmdc(YM); Ycsfd(isinf(-Ycsfd)) = 0; clear Ywmdc;
-      YM = Ycsfd>minfdist & Ymf< 2.5; YcsfdM = Ycsfd; YcsfdM = cat_vol_localstat(YcsfdM,YM,1,1); Ycsfd(YM) = YcsfdM(YM);
-      YM = Ycsfd>minfdist & Ymf>=2.5; YcsfdM = Ycsfd; for i=1:2, YcsfdM = cat_vol_localstat(YcsfdM,YM,1,1); end; Ycsfd(YM) = YcsfdM(YM);
+      %YM = Ycsfd>minfdist & Ymf< 2.5; YcsfdM = Ycsfd; YcsfdM = cat_vol_localstat(YcsfdM,YM,1,1); Ycsfd(YM) = YcsfdM(YM);
+      YM = Ycsfd>minfdist & Ymf>=2.5; YcsfdM = Ycsfd; for i=1:1, YcsfdM = cat_vol_localstat(YcsfdM,YM,1,1); end; Ycsfd(YM) = YcsfdM(YM);
     end
     YM = Ycsfd>minfdist & Ymf> 2.0; YcsfdM = Ycsfd;  YcsfdM = cat_vol_median3(YcsfdM,YM,YM); Ycsfd(YM) = YcsfdM(YM); clear YcsfdM YM;
   end  
@@ -303,7 +303,7 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
   %  PBTv is new version that uses the volume rather than the distance. 
   %  Although this works in principle, this is biased by interpolation 
   %  artifacts and not-optimal WMD mapping.  
-  iter = 1/mean(opt.resV);
+  iter = 0;%round(0.5/mean(opt.resV));
   if strcmp(opt.method,'pbtv')  
     Ywmdo = Ywmd+0; 
     
@@ -380,11 +380,42 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
     stime = cat_io_cmd('    PBT2 thickness: ','g5','',opt.verb,stime);
     
     % estimate thickness with PBT approach
-    if opt.pbtlas, Ymf = 1 + Ywmd>0 & Ycsfd>0 + (Ywmd==0 & Ymf>2); end
+    if opt.pbtlas, Ymfo=Ymf; Ymf = single(1 + 2*((Ywmd>0 & Ycsfd>0) | Ymfo>2)) - (Ywmd>0 & Ycsfd>0);  end
+    
+    % estimate thickness with PBT approach
+    if opt.pbtlas, Ymfo=Ymf; Ymf = single(1 + 2*((Ywmd>0 & Ycsfd>0) | Ymfo>2)) - (Ywmd>0 & Ycsfd>0);  end
     Ygmt  = cat_vol_pbtp(Ymf,Ywmd,Ycsfd);   
     
+    % Error handling 
+    % For some unkown reasons the sulcus reconstruction of cat_vol_pbtp failed in some cases (not directly reproducable).      
+    % Reprocessing is solving this problem, but further investigation of cat_vol_pbtp.cpp would be good (RD 20190811).
+    % Maybe it depends on the initialization of the regions, e.g., using Ymf without rounding and incorrect boundary seams to increase the problems.  
+    mask   = @(Y) Y(:)>0 & Y(:)<1000000; 
+    rerun = 0; rerunlim = 3; 
+    while rerun <= rerunlim && isnan( mean( Ygmt(mask(Ygmt))) ) || mean( Ygmt(mask(Ygmt)))>100
+      Ygmt = cat_vol_pbtp(round(Ymf),Ywmd,Ycsfd);  
+      rerun = rerun + 1; 
+      pause(rand*3);
+    end
+    if rerun == rerunlim && isnan( mean( Ygmt(mask(Ygmt))) ) || mean( Ygmt(mask(Ygmt)))>100
+      error('cat_vol_pbtp:bad_mapping','Untypcial values in PBT thickness mapping detected. ');
+    end
+    
+    % avoid meninges !
+    Ygmt = min(Ygmt,Ycsfd+Ywmd);
+    
+    % median filter to remove outliers
+    Ygmt = cat_vol_median3(Ygmt,Ygmt>0,Ygmt>0);
+    
+    YM      = Ymf>=1.5 & Ymf<2.5; Ypp = zeros(size(Ymf),'single'); Ypp(Ymf>=2.5) = 1;
+    Ypp(YM) = min(Ycsfd(YM),Ygmt(YM) - Ywmd(YM)) ./ (Ygmt(YM) + eps); Ypp(Ypp>2) = 0;
+        
     % filter result
-    Ygmts = Ygmt; for i=1:iter, Ygmts = cat_vol_localstat(Ygmts,Ygmt>0 & Ymf>1.5,1,1); end; Ygmt(Ygmts>0) = Ygmts(Ygmts>0);
+    if exist('Ymfo','var'); Ymf=Ymfo; end
+    Ygmts = Ygmt; for i=1:iter, Ygmts = cat_vol_localstat(Ygmts,(Ygmt>1 | Ypp>0.1) & Ygmt>0 & (Ygmt>1 | Ymf>1.8),1,1); end; Ygmt(Ygmts>0) = Ygmts(Ygmts>0); 
+    
+    % filter result
+    Ygmts = Ygmt; for i=1:iter, Ygmts = cat_vol_localstat(Ygmts,(Ygmt>1 | Ypp>0.1) & Ygmts>0 & (Ygmt>1 | Ymf>1.8),1,1); end; Ygmt(Ygmts>0) = Ygmts(Ygmts>0);
   end
   
   
