@@ -30,9 +30,9 @@ cat.opts.biasreg   = 0.001;                   % Bias regularisation (cat.opts.bi
 cat.opts.biasfwhm  = 60;                      % Bias FWHM (cat.opts.biasstr has to be 0!) - 30:10:120,inf 
                                               %   lower values for strong bias fields, but check for overfitting of the thalamus (values <45 mm)
 cat.opts.samp      = 3;                       % Sampling distance - alternative: 1.5 
-                                              %   Initial SPM segmentation resolution, whereas the AMAP runs on the full or speciefied resolution
+                                              %   Initial SPM segmentation resolution, whereas the AMAP runs on the full or specified resolution
                                               %   described by cat.extopts.restype and cat.extopts.resval. Higher resolution did not improve the
-                                              %   results in most results (but increase caluculation time were.  
+                                              %   results in most results (but increase calculation time were.  
 cat.opts.redspmres = 0.0;                     % limit image resolution for internal SPM preprocessing output in mm (default: 1.0)
 
                                               
@@ -214,6 +214,7 @@ cat.extopts.T1           = {fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii')};
 
 % surface options
 cat.extopts.pbtres         = 0.5;   % internal resolution for thickness estimation in mm (default 0.5) 
+cat.extopts.collcorr       = 0;     % correction of surface collisions (experimental, not yet working properly!): 0 - none; 1 - approach A; 2 - approach B, 3 - both
 cat.extopts.pbtlas         = 0;     % reduce myelination effects (experimental, not yet working properly!)
 cat.extopts.thick_measure  = 1;     % distance method for estimating thickness:  1 - Tfs: Freesurfer method using mean(Tnear1,Tnear2) (default in 12.7+); 0 - Tlink: linked distance (used before 12.7)
 cat.extopts.thick_limit    = 5;     % upper limit for Tfs thickness measure similar to Freesurfer (only valid if cat.extopts.thick_measure is set to "1"

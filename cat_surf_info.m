@@ -118,6 +118,9 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     'Psphere','',...    % meshfile
     'Pspherereg','',... % meshfile
     'Pdefects','',...   % meshfile
+    'Ppial','',...      % meshfile
+    'Pwhite','',...     % meshfile
+    'Player4','',...    % meshfile
     'Pdata','',...      % datafile
     'preside','', ...
     'posside','' ...
@@ -328,10 +331,10 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
         case {'defects'} % surf
           sinfo(i).Pmesh = sinfo(i).fname;
           sinfo(i).Pdata = sinfo(i).fname;
-        case {'central','white','pial''inner','outer','sphere','hull','core'} % only mesh
+        case {'central','white','pial','inner','outer','sphere','hull','core','layer4'} % only mesh
           sinfo(i).Pmesh = sinfo(i).fname;
           sinfo(i).Pdata = '';
-        case {'thickness','thicknessfs','thicknessmin','thicknessmax',...
+        case {'pbt','thickness','thicknessfs','thicknessmin','thicknessmax',...
               'gyrification','frac','logsulc','GWMdepth','WMdepth','CSFdepth',...
               'depthWM','depthGWM','depthCSF','depthWMg','inwardGI','outwardGI','generalizedGI','area',...
               'gyruswidth','gyruswidthWM','sulcuswidth'} % only thickness
@@ -412,13 +415,32 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     end
     
     [ppm,ffm,eem]        = fileparts(sinfo(i).Pmesh);
+    ffm                  = cat_io_strrep(ffm,{'central','white','pial','inner','outer','sphere','hull','core','layer4'},'central');
     sinfo(i).Phull       = fullfile(ppm,strrep(strrep([ffm eem],'.central.','.hull.'),'.gii',''));
     sinfo(i).Pcore       = fullfile(ppm,strrep(strrep([ffm eem],'.central.','.core.'),'.gii',''));
     sinfo(i).Psphere     = fullfile(ppm,strrep([ffm eem],'.central.','.sphere.'));
     sinfo(i).Pspherereg  = fullfile(ppm,strrep([ffm eem],'.central.','.sphere.reg.'));
     sinfo(i).Pdefects    = fullfile(ppm,strrep([ffm eem],'.central.','.defects.'));
-    if ~exist(sinfo(i).Psphere ,'file'), sinfo(i).Psphere  = ''; end
+    sinfo(i).Player4     = fullfile(ppm,strrep([ffm eem],'.central.','.layer4.'));
+    sinfo(i).Pwhite      = fullfile(ppm,strrep([ffm eem],'.central.','.white.'));
+    sinfo(i).Ppial       = fullfile(ppm,strrep([ffm eem],'.central.','.pial.'));
+
     if ~exist(sinfo(i).Pdefects,'file'), sinfo(i).Pdefects = ''; end
+
+    % check if files exist and if they have the same structure (size)
+    Pmesh_data = dir(sinfo(i).Pmesh);
+    FN = {'Phull','Pcore','Psphere','Pspherereg','Pwhite','Ppial','Player4'};
+    for fni = 1:numel(FN)
+      if exist(sinfo(i).(FN{fni}) ,'file')
+        Pdata = dir(sinfo(i).(FN{fni}));
+        if abs(Pmesh_data.bytes - Pdata.bytes)>1500 % data saved by CAT tools may vary a little bit
+          sinfo(i).(FN{fni})  = '';
+        end
+      else
+        sinfo(i).(FN{fni})  = '';
+      end
+    end
+    
 
     
     if sinfo(i).exist && readsurf

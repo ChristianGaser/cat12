@@ -459,17 +459,17 @@ switch lower(action)
           c = uimenu(cmenu, 'Label', 'Textures');
           if sinfo1.resampled
             if sinfo1.resampled_32k
-              tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('*%s.*.resampled_32k.%s*',sinfo1.side,sinfo1.name));
+              tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('*%s.*.resampled_32k.%s*',sinfo1.side,sinfo1.name),struct('maxdepth',1));
             else
-              tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('*%s.*.resampled.%s*',sinfo1.side,sinfo1.name));
+              tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('*%s.*.resampled.%s*',sinfo1.side,sinfo1.name),struct('maxdepth',1));
             end
-            sfiles = {'central.','sphere.','sphere.reg.','hull.','inflate.','core.','white','pial','inner.','outer.','.annot','defects.'}; 
+            sfiles = {'central.','sphere.','sphere.reg.','hull.','inflate.','core.','white','pial','inner.','outer.','.annot','defects.','layer4'}; 
             for i=1:numel(sfiles)
               tfiles(cellfun('isempty',strfind(tfiles,sfiles{i}))==0) = [];  
             end
           else
-            tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('%s.*.%s*',sinfo1.side,sinfo1.name));
-            sfiles = {'central.','sphere.','sphere.reg.','hull.','inflate.','core.','white','pial','inner.','outer.','.annot','defects.','AGI.','SGI.'}; 
+            tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('%s.*.%s*',sinfo1.side,sinfo1.name),struct('maxdepth',1));
+            sfiles = {'central.','sphere.','sphere.reg.','hull.','inflate.','core.','white.','pial.','inner.','outer.','.annot','defects.','AGI.','SGI.','layer4'}; 
             for i=1:numel(sfiles)
               tfiles(cellfun('isempty',strfind(tfiles,sfiles{i}))==0) = [];  
             end
@@ -486,7 +486,7 @@ switch lower(action)
           end
           set(c,'UserData',H.textures); 
           uimenu(c, 'Label', 'Synchronise Views', 'Visible','off','Checked','off', 'Tag','SynchroMenu', 'Callback',{@mySynchroniseTexture, H});
-          uimenu(c, 'Label','none', 'Interruptible','off','Separator','on','Checked',checked{2-any(usetexture)}, 'Callback',{@myChangeTexture, H}); 
+          uimenu(c, 'Label','none', 'Interruptible','off','Separator','off','Checked',checked{2-any(usetexture)}, 'Callback',{@myChangeTexture, H}); 
           if strcmp(H.sinfo(1).texture,'defects'), set(c,'Enable','off');  end
           if numel(tfiles)
             uimenu(c, 'Label', H.textures{1,1},'Interruptible','off','Separator','on','Checked',checked{usetexture(1)+1},'Callback',{@myChangeTexture, H});
@@ -639,8 +639,8 @@ switch lower(action)
             labeldir = sinfo1(1).pp;
           end
           % find xml-files
-          H.RBM.vlabelfile = cat_vol_findfiles(labeldir,sprintf('catROI_%s.xml',sinfo1(1).name));
-          H.RBM.slabelfile = cat_vol_findfiles(labeldir,sprintf('catROIs_%s.xml',sinfo1(1).name));
+          H.RBM.vlabelfile = cat_vol_findfiles(labeldir,sprintf('catROI_%s.xml',sinfo1(1).name),struct('maxdepth',1));
+          H.RBM.slabelfile = cat_vol_findfiles(labeldir,sprintf('catROIs_%s.xml',sinfo1(1).name),struct('maxdepth',1));
 
           % read xml-files ... this is realy slow for real XMLs >> MAT solution!
           % atlas-names
@@ -712,39 +712,41 @@ switch lower(action)
               str32k = '';
             end
             H.meshs = { 
-                'Individual', H.patch(1).Vertices 
+                'Central'   , H.patch(1).Vertices 
                 'Average'   , fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1.side '.central.freesurfer.gii']);    
                 'Inflated'  , fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1.side '.inflated.freesurfer.gii']);   
                 'Sphere'    , fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1.side '.sphere.freesurfer.gii']);  
                 'Dartel'    , fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1.side '.central.Template_T1_IXI555_MNI152_GS.gii']);  
                 ...'Hull'      , fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1.side '.hull.freesurfer.gii']);  
                 ...'Pial'      , fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1.side '.pial.freesurfer.gii']);   
-                ...'WM'        , fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1.side '.wm.freesurfer.gii']);  
+                ...'WM'        , fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1.side '.white.freesurfer.gii']);  
                 'Custom'    ,'';    
               };
 
-            uimenu(c, 'Label','Individual', 'Checked','on',  'Callback',{@myChangeMesh, H});
+            uimenu(c, 'Label','Central',    'Checked','on',  'Callback',{@myChangeMesh, H});
             uimenu(c, 'Label','Average',    'Checked','off', 'Callback',{@myChangeMesh, H});
             uimenu(c, 'Label','Inflated',   'Checked','off', 'Callback',{@myChangeMesh, H});
             uimenu(c, 'Label','Dartel',     'Checked','off', 'Callback',{@myChangeMesh, H});
             uimenu(c, 'Label','Sphere',     'Checked','off', 'Callback',{@myChangeMesh, H});
            %uimenu(c, 'Label','Hull',       'Checked','off', 'Callback',{@myChangeMesh, H});
            %uimenu(c, 'Label','Pial',       'Checked','off', 'Callback',{@myChangeMesh, H});
-           %uimenu(c, 'Label','WM',         'Checked','off', 'Callback',{@myChangeMesh, H});
+           %uimenu(c, 'Label','White',         'Checked','off', 'Callback',{@myChangeMesh, H});
           else
             H.meshs = { 
-                'Individual', H.patch(1).Vertices 
+                'Central', H.patch(1).Vertices 
                 ...'Inflated'  , fullfile(spm('Dir'),'toolbox','cat12','templates_surfaces',[sinfo1.side '.inflated.freesurfer.gii']);  
-                ...'Pial'      , fullfile(spm('Dir'),'toolbox','cat12','templates_surfaces',[sinfo1.side '.pial.freesurfer.gii']);  
-                ...'WM '       , fullfile(spm('Dir'),'toolbox','cat12','templates_surfaces',[sinfo1.side '.wm.freesurfer.gii']);  
+                'Pial'      , sinfo1.Ppial;  
+                'White'     , sinfo1.Pwhite;  
+                'Layer4'    , sinfo1.Player4
                 'Hull'      , sinfo1.Phull;  
                 'Core'      , sinfo1.Pcore;  
                 'Sphere'    , sinfo1.Psphere;  
                 };
-            uimenu(c, 'Label','Individual', 'Checked','on',  'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Pmesh,'file')>1)});  
+            uimenu(c, 'Label','Central', 'Checked','on',  'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Pmesh,'file')>1)});  
            %uimenu(c, 'Label','Inflated',   'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Pmesh,'file')>1)});
-           %uimenu(c, 'Label','Pial',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Ppial,'file')>1)});
-           %uimenu(c, 'Label','WM',         'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Pwm,'file')>1)});
+            uimenu(c, 'Label','Pial',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Ppial,'file')>1)});
+            uimenu(c, 'Label','White',      'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Pwhite,'file')>1)});
+            uimenu(c, 'Label','Layer4',     'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Player4,'file')>1)});
             uimenu(c, 'Label','Hull',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Phull,'file')>1)});  
             uimenu(c, 'Label','Core',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Pcore,'file')>1)});  
             uimenu(c, 'Label','Sphere',     'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Psphere,'file')>1)});  
@@ -779,16 +781,16 @@ switch lower(action)
         % find nii-files
         if exist(labeldir,'dir') && exist(labeldir,'dir')
           H.niftis = [ ...
-            cat_vol_findfiles(labeldir,sprintf('m%s.nii',sinfo1(1).name)); 
-            cat_vol_findfiles(labeldir,sprintf('mi%s.nii',sinfo1(1).name)); 
-            cat_vol_findfiles(labeldir,sprintf('p*%s.nii',sinfo1(1).name)); 
+            cat_vol_findfiles(labeldir,sprintf('m%s.nii',sinfo1(1).name),struct('maxdepth',1)); 
+            cat_vol_findfiles(labeldir,sprintf('mi%s.nii',sinfo1(1).name),struct('maxdepth',1)); 
+            cat_vol_findfiles(labeldir,sprintf('p*%s.nii',sinfo1(1).name),struct('maxdepth',1)); 
             ]; 
         else
           H.niftis = []; 
         end
           
         if sinfo1.resampled && exist(labeldir,'dir')
-          H.niftis = [H.niftis; cat_vol_findfiles(labeldir,sprintf('*%s.nii',sinfo1(1).name))];
+          H.niftis = [H.niftis; cat_vol_findfiles(labeldir,sprintf('*%s.nii',sinfo1(1).name),struct('maxdepth',1))];
         end
         H.niftis = unique( H.niftis );
         H.niftis = [H.niftis H.niftis]; 
@@ -843,8 +845,17 @@ switch lower(action)
         % ???
         uimenu(cmenu, 'Label','Overlay...', 'Interruptible','off', 'Callback',{@myOverlay, H});
         
-        
-        
+        %%
+        EC = size(H.patch.Vertices,1) + size(H.patch.Faces,1) - ...
+          size(spm_mesh_edges(struct('vertices',H.patch.Vertices','faces',H.patch.Faces)),1); 
+        c1 = uimenu(cmenu, 'Label','Surface Information');
+        uimenu(c1, 'Label', sprintf('Dir:    %s'            ,spm_str_manip(sinfo1(1).pp,  'a40'))); 
+        uimenu(c1, 'Label', sprintf('File:   %s'            ,spm_str_manip(sinfo1(1).name,'a40'))); 
+        uimenu(c1, 'Label', sprintf('Side:  %s'            ,sinfo1(1).side)); 
+        uimenu(c1, 'Label', sprintf('Vertices:               %0.0f'  ,size(H.patch.Vertices,1)), 'Interruptible','off','Separator','on');
+        uimenu(c1, 'Label', sprintf('Faces:                   %0.0f' ,size(H.patch.Faces,1)),    'Interruptible','off');
+        uimenu(c1, 'Label', sprintf('Euler Number:     %d'    ,EC),    'Interruptible','off');
+        %%
         % Inflation off ... to slow and unimportant
         % uimenu(cmenu, 'Label','Inflate', 'Interruptible','off', 'Callback',{@myInflate, H});
         
@@ -907,7 +918,8 @@ switch lower(action)
         uimenu(c, 'Label','Min-max'    , 'Checked','off', 'Callback', {@myCaxis, H, 'auto'},'Separator', 'on');
         uimenu(c, 'Label','2-98 %'     , 'Checked','off', 'Callback', {@myCaxis, H, '2p'});
         uimenu(c, 'Label','5-95 %'     , 'Checked','off', 'Callback', {@myCaxis, H, '5p'});
-        uimenu(c, 'Label','Thickness'  , 'Checked','off', 'Callback', {@myCaxis, H, [0 6]},'Separator', 'on');
+        uimenu(c, 'Label','Thickness 0.5 - 5 mm'  , 'Checked','off', 'Callback', {@myCaxis, H, [0.5 5]},'Separator', 'on');
+        uimenu(c, 'Label','Thickness 0.0 - 6 mm'  , 'Checked','off', 'Callback', {@myCaxis, H, [0   6]},'Separator', 'off');
         uimenu(c, 'Label','Custom...'  , 'Checked','off', 'Callback', {@myCaxis, H, 'custom'},'Separator', 'on');
         uimenu(c, 'Label','Custom %...', 'Checked','off', 'Callback', {@myCaxis, H, 'customp'});
         
@@ -1282,7 +1294,7 @@ switch lower(action)
         if nargin>1 && isnumeric(varargin{2}) && numel(varargin{2})==2
             caxis(H.axis,varargin{2} .* [1 1+eps]);
         else
-            caxis(H.axis,[min(d),max(d)] .* [1 1+eps])
+            caxis(H.axis,[min(d(:)),max(d(:))] .* [1 1+eps])
             %varargin{2} = [min(d),max(d)];
         end
         
@@ -2911,7 +2923,10 @@ for pi=pis
   end
 
   if size(C,1) ~= size(curv,1)
-    error('Colordata does not fit to underlying mesh.');
+    error('cat_surf_render:add_wrong_mesh',[...
+      'Colordata does not fit to underlying mesh.\n' ...
+      '  Colordata:   %d values\n' ...
+      '  Surface:     %d vertices'],size(curv,1),size(C,1) );
   end
 
  %C = repmat(~any(v,1),3,1)' .* curv + repmat(any(v,1),3,1)' .* C;
