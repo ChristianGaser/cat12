@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1505 | dahnke | 2019-09-12 18:15:01
+r1506 | gaser | 2019-09-13 12:20:28
+
+Changed paths:
+M       CHANGES.txt
+M       cat_batch_cat.m
+M       cat_surf_createCS.m
+A       cat_surf_createCS2.m
+
+(1) Fixed: Suppress warning for longitudinal batch mode that is called from 
+    command shell.
+(2) Changed: Moved new experimental cat_surf_createCS.m to cat_surf_createCS2.m
+    and make the previous version again to the default cat_surf_createCS.m.
+------------------------------------------------------------------------
+r1505 | dahnke | 2019-09-12 18:17:33 +0200 (Do, 12 Sep 2019) | 29 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -25,6 +38,7 @@ M       cat_vol_pbt.m
 (5) Limited search for surface and textures in cat_surf_render2 to a 
     directory depth of 1.
 (6) Small changes in the WM boundary optimization in cat_vol_pbt.
+
 
 
 
