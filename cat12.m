@@ -93,10 +93,10 @@ if nargin <= 1
 	
 	% get default font size
 	FS = cat_get_defaults('extopts.fontsize');
-	if isempty(FS) || FS > 14
+	if isempty(FS)
 		FS = get(0,'defaultuicontrolFontSize');
 	end
-	FS = min(9, FS);
+	FS = max(9, FS);
 end
 
 % Begin initialization code - DO NOT EDIT
