@@ -357,7 +357,7 @@ elseif expert==1
     ''
   }];
 else
-  opts.val  = {tpm,affreg,biasstr,accstr};
+  opts.val  = {tpm,affreg,biasstr};
    
 end
 

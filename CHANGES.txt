@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1506 | gaser | 2019-09-13 12:20:28
+r1507 | gaser | 2019-09-23 15:13:12
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+M       cat_conf_opts.m
+M       html/cat.html
+
+(1) Changed: Moved "spm processing accuracy" option to expert mode.
+(2) Fixed: Handling of font size in cat12.m was not correct.
+------------------------------------------------------------------------
+r1506 | gaser | 2019-09-13 12:20:58 +0200 (Fr, 13 Sep 2019) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +23,7 @@ A       cat_surf_createCS2.m
     command shell.
 (2) Changed: Moved new experimental cat_surf_createCS.m to cat_surf_createCS2.m
     and make the previous version again to the default cat_surf_createCS.m.
+
 ------------------------------------------------------------------------
 r1505 | dahnke | 2019-09-12 18:17:33 +0200 (Do, 12 Sep 2019) | 29 lines
 
