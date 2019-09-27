@@ -463,13 +463,13 @@ switch lower(action)
             else
               tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('*%s.*.resampled.%s*',sinfo1.side,sinfo1.name),struct('maxdepth',1));
             end
-            sfiles = {'central.','sphere.','sphere.reg.','hull.','inflate.','core.','white','pial','inner.','outer.','.annot','defects.','layer4'}; 
+            sfiles = {'.central.','.sphere.','.sphere.reg.','.hull.','.inflate.','.core.','.white.','.pial.','.inner.','.outer.','.annot.','.defects.','.layer4.'}; 
             for i=1:numel(sfiles)
               tfiles(cellfun('isempty',strfind(tfiles,sfiles{i}))==0) = [];  
             end
           else
             tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('%s.*.%s*',sinfo1.side,sinfo1.name),struct('maxdepth',1));
-            sfiles = {'central.','sphere.','sphere.reg.','hull.','inflate.','core.','white.','pial.','inner.','outer.','.annot','defects.','AGI.','SGI.','layer4'}; 
+            sfiles = {'.central.','.sphere.','.sphere.reg.','.hull.','.inflate.','.core.','.white.','.pial.','.inner.','.outer.','.annot.','.defects.','.AGI.','.SGI.','.layer4.'}; 
             for i=1:numel(sfiles)
               tfiles(cellfun('isempty',strfind(tfiles,sfiles{i}))==0) = [];  
             end
@@ -712,25 +712,29 @@ switch lower(action)
               str32k = '';
             end
             H.meshs = { 
-                'Central'   , H.patch(1).Vertices 
+                'Central'   , H.patch(1).Vertices;
+                'Pial'      , fullfile(sinfo1.pp,[sinfo1.side '.pial.resampled.' sinfo1.name '.gii']);   
+                'White'     , fullfile(sinfo1.pp,[sinfo1.side '.white.resampled.' sinfo1.name '.gii']);  
+                'Layer4'    , fullfile(sinfo1.pp,[sinfo1.side '.layer4.resampled.' sinfo1.name '.gii']);   
+                'Hull'      , fullfile(sinfo1.pp,[sinfo1.side '.hull.resampled.' sinfo1.name '.gii']);  
+                ...
                 'Average'   , fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1.side '.central.freesurfer.gii']);    
                 'Inflated'  , fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1.side '.inflated.freesurfer.gii']);   
-                'Sphere'    , fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1.side '.sphere.freesurfer.gii']);  
                 'Dartel'    , fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1.side '.central.Template_T1_IXI555_MNI152_GS.gii']);  
-                ...'Hull'      , fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1.side '.hull.freesurfer.gii']);  
-                ...'Pial'      , fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1.side '.pial.freesurfer.gii']);   
-                ...'WM'        , fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1.side '.white.freesurfer.gii']);  
+                'Sphere'    , fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1.side '.sphere.freesurfer.gii']);  
                 'Custom'    ,'';    
               };
 
             uimenu(c, 'Label','Central',    'Checked','on',  'Callback',{@myChangeMesh, H});
-            uimenu(c, 'Label','Average',    'Checked','off', 'Callback',{@myChangeMesh, H});
+            uimenu(c, 'Label','Pial',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(H.meshs{2,2},'file')>1)});  
+            uimenu(c, 'Label','White',      'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(H.meshs{3,2},'file')>1)});  
+            uimenu(c, 'Label','Layer4',     'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(H.meshs{4,2},'file')>1)});  
+            uimenu(c, 'Label','Hull',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(H.meshs{5,2},'file')>1)});  
+            uimenu(c, 'Label','Average',    'Checked','off', 'Callback',{@myChangeMesh, H},'Separator','on');
             uimenu(c, 'Label','Inflated',   'Checked','off', 'Callback',{@myChangeMesh, H});
             uimenu(c, 'Label','Dartel',     'Checked','off', 'Callback',{@myChangeMesh, H});
             uimenu(c, 'Label','Sphere',     'Checked','off', 'Callback',{@myChangeMesh, H});
-           %uimenu(c, 'Label','Hull',       'Checked','off', 'Callback',{@myChangeMesh, H});
-           %uimenu(c, 'Label','Pial',       'Checked','off', 'Callback',{@myChangeMesh, H});
-           %uimenu(c, 'Label','White',         'Checked','off', 'Callback',{@myChangeMesh, H});
+            %uimenu(c, 'Label','Sphere',     'Checked','off', 'Callback',{@myChangeMesh, H},'Separator',1);
           else
             H.meshs = { 
                 'Central', H.patch(1).Vertices 
@@ -750,6 +754,7 @@ switch lower(action)
             uimenu(c, 'Label','Hull',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Phull,'file')>1)});  
             uimenu(c, 'Label','Core',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Pcore,'file')>1)});  
             uimenu(c, 'Label','Sphere',     'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Psphere,'file')>1)});  
+%            uimenu(c, 'Label','Checkreg',   'Checked','off', 'Callback',{@myCheckreg, H},'Separator',1);  
             H.meshs(end+1,:) = { 'Custom','';};
           end
           uimenu(c, 'Label','Custom...', 'Interruptible','off', 'Separator','on', 'Callback',{@myChangeGeometry, H});
@@ -849,12 +854,22 @@ switch lower(action)
         EC = size(H.patch.Vertices,1) + size(H.patch.Faces,1) - ...
           size(spm_mesh_edges(struct('vertices',H.patch.Vertices','faces',H.patch.Faces)),1); 
         c1 = uimenu(cmenu, 'Label','Surface Information');
-        uimenu(c1, 'Label', sprintf('Dir:    %s'            ,spm_str_manip(sinfo1(1).pp,  'a40'))); 
-        uimenu(c1, 'Label', sprintf('File:   %s'            ,spm_str_manip(sinfo1(1).name,'a40'))); 
-        uimenu(c1, 'Label', sprintf('Side:  %s'            ,sinfo1(1).side)); 
+        uimenu(c1, 'Label', sprintf('Dir:    %s'              ,spm_str_manip(sinfo1(1).pp,  'a40'))); 
+        uimenu(c1, 'Label', sprintf('File:   %s'              ,spm_str_manip(sinfo1(1).name,'a40'))); 
+        uimenu(c1, 'Label', sprintf('Side:  %s'               ,sinfo1(1).side)); 
         uimenu(c1, 'Label', sprintf('Vertices:               %0.0f'  ,size(H.patch.Vertices,1)), 'Interruptible','off','Separator','on');
         uimenu(c1, 'Label', sprintf('Faces:                   %0.0f' ,size(H.patch.Faces,1)),    'Interruptible','off');
         uimenu(c1, 'Label', sprintf('Euler Number:     %d'    ,EC),    'Interruptible','off');
+        if isfield(H,'cdata')
+          uimenu(c1, 'Tag','SurfDataMenu1','Interruptible','off','Label',sprintf('Data: %s\n',''),'Separator','on'); 
+          uimenu(c1, 'Tag','SurfDataMenu2','Interruptible','off','Label',sprintf('  median:           %0.4f\n',median(H.cdata)),'Separator','on'); 
+          uimenu(c1, 'Tag','SurfDataMenu3','Interruptible','off','Label',sprintf('  mean %s std:     %0.4f %s %0.4f\n',...
+            char(177),mean(H.cdata),char(177),std(H.cdata))); 
+          uimenu(c1, 'Tag','SurfDataMenu4','Interruptible','off','Label',sprintf('  min / max:       %0.4f / %0.4f',min(H.cdata),max(H.cdata))); 
+        end
+        if exist('cg_hist2d','file')
+          uimenu(c1, 'Label', 'Histogram',    'Interruptible','off','Separator','on','Callback',{@myHist, H});
+        end
         %%
         % Inflation off ... to slow and unimportant
         % uimenu(cmenu, 'Label','Inflate', 'Interruptible','off', 'Callback',{@myInflate, H});
@@ -1666,6 +1681,8 @@ function myPostCallback(obj,evt,H)
 %    end
 %end
 %==========================================================================
+function myCheckreg(H)
+
 function varargout = myCrossBar(varargin)
 
 switch lower(varargin{1})
@@ -2096,7 +2113,11 @@ if cat_stat_nanmean(d(:))>0 && cat_stat_nanstd(d(:),1)>0
 end
 set(get(get(obj,'parent'),'children'),'Checked','off');
 set(obj,'Checked','on');
-
+%==========================================================================
+function myHist(obj,evt,H)
+objTextures = findobj(get(findobj(get(get(obj,'parent'),'parent'),'Label','Textures'),'Children'),'Checked','on');
+currentTexture = cellfun('isempty',strfind( H.textures(:,1) , objTextures.Label ))==0; 
+cg_hist2d( struct( 'P' , H.textures{currentTexture,2}.fname ))
 %==========================================================================
 function mySynchroniseCaxis(obj,evt,H)
 P = findobj('Tag','CATSurfRender','Type','Patch');

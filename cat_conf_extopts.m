@@ -284,26 +284,77 @@ pbtlas.help    = {
   ''
 };
 
+% currently only for developer
 collcorr         = cfg_menu;
 collcorr.tag     = 'collcorr';
-collcorr.name    = 'Correct for surface collisions';
-collcorr.labels  = {'No','Approach A','Approach B','Approach A & B','Approach A & B + post correction'};
-collcorr.values  = {0 1 2 3 4};
+collcorr.name    = 'Correction for surface collisions';
+collcorr.labels  = {...
+  'No (createCS; 0)','Surface Deformation Approach (createCS; 1)',...
+  'No (createCS2; 20)','Surface Deformation Approach (createCS2; 21)',...
+  'Delaunay Approach with Intensity Optimization (createCS2; 22)'};
+collcorr.values  = {0 1 20 21 22};
 collcorr.def     = @(val)cat_get_defaults('extopts.collcorr', val{:});
 collcorr.help    = {
   ['In theory, adding/removing of the half-thickness to/from the central surface allows a good definition of the ' ...
    'pial/white surface. In praxis however using of different distance/thickness metrics lead to small overlaps ' ...
    'of the pial/white surfaces in some gyri/sulci. ' ...
-   'E.g. a gyrus with blurred white matter have often a low minimal thickness to' ...
-   'the sulcus and a large maximal thickness to its top (e.g. superior temporal gyrus).' ...
+   'E.g., a gyrus with blurred white matter have often a lower thickness to' ...
+   'the sulcus and a larger thickness to its top (e.g., superior temporal gyrus).' ...
    'The Tpbt thickness combines multiple values within the cortical sheet that final result in some longer distances ' ...
-   'compared to the Correct for surface collisions of the estimated white and pial surfaces (added in CAT12.7).']
-  '' 
-  'Approach A applied an afterwards corrections that based on the Delaunay triangulation.'
-  'Appraoch B use a classical surface deformation approach.'
-  'Experimental parameter, not yet working properly!'
-  ''
+   'compared to the correct for surface collisions of the estimated white and pial surfaces (added in CAT12.7, 201909).']
+   '' 
+   'Experimental parameter, not yet working properly!'
+   ''
 };
+
+% This is just an developer parameter (maybe for experts later) 
+% I expect that 300k surfaces support best quality in relation to processing
+% time, because surface reconstruction times are dominated by the registration
+% that depend on the mesh resolution of the individual and template brain. 
+% I will test and cleanup the setting in future - goal is to have only 3 levels with useful processing time differences: 
+%   low - 100k; optimal 300-400k; fine 600-800k; 
+
+simple = 1; % use only 3 levels
+
+vdist         = cfg_menu;
+vdist.tag     = 'vdist';
+vdist.name    = 'Mesh resolution';
+if simple
+  vdist.labels  = {'minimal','optimal','super-fine'};
+  vdist.values  = {27/3 4/3 1/3}; % this is the square of the refinement distance 
+else
+  vdist.labels  = {'minimal','low','optimal','fine','super-fine','ultra-fine'};
+  vdist.values  = {27/3 9/3 4/3 2/3 1/3 1/6}; % this is the square of the refinement distance 
+end
+vdist.val     = {4/3}; % .def = @(val)cat_get_defaults('extopts.vdist', val{:});
+vdist.help    = {
+  ['Higher mesh resolution may support more accurate surface reconstruction.  However, this is only useful for high resolution data (<0.8 mm). ' ...
+   'For each level, the resolution is doubled and accuracy is increased lightly (square root), resulting in a linear increase of processing time for surface creation. ' ...
+   'Because the processing time of the surface registration depends on the resolution of the individual and the template surface (about 300k faces), ' ...
+   'processing speed does not profit by lower individual resolution. ']};
+if simple
+  vdist.help = [ vdist.help ; { 
+   ''
+   '  minimal:    maximal vertex distance 4.24 mm > ~100k faces'
+   '  optimal:    maximal vertex distance 1.61 mm > ~300k faces'
+   '  super-fine: maximal vertex distance 0.82 mm > ~600k faces'
+   }];
+else
+  vdist.help = [ vdist.help ; { 
+   ''
+   '  minimal:    maximal vertex distance 4.24 mm > ~100k faces'
+   '  low:        maximal vertex distance 2.45 mm > ~200k faces'
+   '  optimal:    maximal vertex distance 1.61 mm > ~300k faces'
+   '  fine:       maximal vertex distance 1.15 mm > ~400k faces'
+   '  super-fine: maximal vertex distance 0.82 mm > ~600k faces'
+   '  ultra-fine: maximal vertex distance 0.57 mm > ~800k faces'
+   }];
+end
+vdist.help = [ vdist.help ; { 
+ ''
+ 'Experimental development parameter that only works for the "createCS2" options of "Correct for surface collisions" (added in CAT12.7, 201909)!'
+ ''
+}];
 
 %------------------------------------------------------------------------
 % special expert and developer options 
@@ -871,7 +922,11 @@ admin.help = {'CAT12 parameter to control the behaviour of the preprocessing pip
 surface       = cfg_branch;
 surface.tag   = 'surface';
 surface.name  = 'Surface Options';
-surface.val   = {pbtres pbtlas collcorr scale_cortex add_parahipp close_parahipp};
+if expert>1
+  surface.val   = {pbtres pbtlas collcorr vdist scale_cortex add_parahipp close_parahipp};
+else
+  surface.val   = {pbtres pbtlas scale_cortex add_parahipp close_parahipp};
+end
 surface.help  = {'CAT12 parameter to control the surface processing.';''};
 
 
