@@ -30,7 +30,7 @@ function varargout = cat_check_system_output(status,result,debugON,trerr)
     end
   end
   if nargin > 2
-    if debugON && ~strcmp(result,'')
+    if debugON>0 && ~strcmp(result,'')
       fprintf('%s',sprintf(result)); 
     end
   end

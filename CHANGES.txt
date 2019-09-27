@@ -1,5 +1,36 @@
 ------------------------------------------------------------------------
-r1507 | gaser | 2019-09-23 15:13:12
+r1508 | dahnke | 2019-09-27 14:17:06
+
+Changed paths:
+M       CHANGES.txt
+M       cat_check_system_output.m
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       cat_main.m
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       cat_surf_fun.m
+M       cat_surf_render2.m
+M       cat_surf_resamp.m
+M       cat_vol_partvol.m
+M       development/Template_2_IXI555_MNI152_GS1mm.nii
+
+(1) Changed:   Updated "collcorr" development parameter in cat_conf_extopts and  
+               added "vdist" parameter to control the mesh resolution. Updated
+               also related settings and comments in cat_defaults.
+(2) Changed:   Updated surface reconstruction settings in cat_main.                    
+(3) Changed:   Added evaluation settings in cat_surf_createCS. 
+               Added output of white and pial surface.
+(4) Changed:   Heavy updates in cat_surf_createCS.
+(5) Changed:   Heavy updates in cat_surf_fun for the sub-functions cat_surf_evalCS,  
+               cat_surf_saveICO and cat_surf_collcorr. 
+(6) Changed:   Corrections in cat_surf_render2 to support menu entries for 
+               available (resampled) surfaces and further evaluation data files.
+(7) Fixed:     Corrected setting for thalamus cutting for surface reconstruction 
+               in cat_vol_partvol.  
+(8) Fixed:     Tiny corrections in cat_check_system_output. 
+------------------------------------------------------------------------
+r1507 | gaser | 2019-09-23 15:13:43 +0200 (Mo, 23 Sep 2019) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +41,7 @@ M       html/cat.html
 
 (1) Changed: Moved "spm processing accuracy" option to expert mode.
 (2) Fixed: Handling of font size in cat12.m was not correct.
+
 ------------------------------------------------------------------------
 r1506 | gaser | 2019-09-13 12:20:58 +0200 (Fr, 13 Sep 2019) | 11 lines
 
