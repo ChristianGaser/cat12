@@ -67,20 +67,18 @@ function varargout = cat_surf_fun(action,S,varargin)
       switch nargin
         case 2
           if isfield(S,'cdata'), varargout{1} = cat_surf_smoothtexture(S,S.cdata,1); end
-        case 3, varargout{1} = cat_surf_smoothtexture(S,varargin{1});
-        case 4, varargout{1} = cat_surf_smoothtexture(S,varargin{1},varargin{2});
-        case 5, varargout{1} = cat_surf_smoothtexture(S,varargin{1},varargin{2},varargin{3});
+        otherwise, varargout{1} = cat_surf_smoothtexture(S,varargin{:});
       end
     case 'maparea'    
       % do the final area projection
-      if nargout==1, varargout{1} = cat_surf_maparea(S,varargin{1}); end
-      if nargout==2, [varargout{1},varargout{2}] = cat_surf_maparea(S,varargin{1}); end
+      if nargout==1, varargout{1} = cat_surf_maparea(S,varargin{:}); end
+      if nargout==2, [varargout{1},varargout{2}] = cat_surf_maparea(S,varargin{:}); end
     case 'hull'
       if nargout==1, varargout{1} = cat_surf_hull(S); end
       if nargout==2, [varargout{1},varargout{2}] = cat_surf_hull(S); end
     case 'core'
-      if nargout==1, varargout{1} = cat_surf_core(S,varargin{1}); end
-      if nargout==2, [varargout{1},varargout{2}] = cat_surf_core(S,varargin{1}); end
+      if nargout==1, varargout{1} = cat_surf_core(S,varargin{:}); end
+      if nargout==2, [varargout{1},varargout{2}] = cat_surf_core(S,varargin{:}); end
     case {'tfs','tmin','tmax'}
       if numel(varargin)==1
         if nargout==1
@@ -98,9 +96,9 @@ function varargout = cat_surf_fun(action,S,varargin)
     case {'inner','outer','white','pial','innervar','outervar','whitevar','pialvar'}
       if numel(varargin)==1
         switch nargout % surface & texture input
-          case 0, cat_surf_GMboundarySurface(action,S,varargin{1});
-          case 1, varargout{1} = cat_surf_GMboundarySurface(action,S,varargin{1}); 
-          case 2, [varargout{1},varargout{2}] = cat_surf_GMboundarySurface(action,S,varargin{1}); 
+          case 0, cat_surf_GMboundarySurface(action,S,varargin{:});
+          case 1, varargout{1} = cat_surf_GMboundarySurface(action,S,varargin{:}); 
+          case 2, [varargout{1},varargout{2}] = cat_surf_GMboundarySurface(action,S,varargin{:}); 
         end
       else % file input
         switch nargout
@@ -109,27 +107,21 @@ function varargout = cat_surf_fun(action,S,varargin)
           case 2, [varargout{1},varargout{2}] = cat_surf_GMboundarySurface(action,S); 
         end
       end
+    case 'evalcs'
+      varargout{1} = cat_surf_evalCS(S,varargin{:});
+    case 'createinneroutersurface'
+      cat_surf_createinneroutersurface(S,varargin{:});
+    case 'show_orthview'
+      cat_surf_show_orthview(S,varargin{:});
     case 'saveico'
-      switch nargin
-        case 5, cat_surf_saveICO(S,varargin{1},varargin{2},varargin{3});
-        case 6, cat_surf_saveICO(S,varargin{1},varargin{2},varargin{3},varargin{4});
-        case 7, cat_surf_saveICO(S,varargin{1},varargin{2},varargin{3},varargin{4},varargin{5});
-        case 8, cat_surf_saveICO(S,varargin{1},varargin{2},varargin{3},varargin{4},varargin{5},varargin{6});
-      end
+      cat_surf_saveICO(S,varargin{:});
     case 'collisioncorrection'
-      switch nargin
-        case 4
-          [varargout{1},varargout{2}] = cat_surf_collision_correction(S,varargin{1},varargin{2});
-        case 5
-          [varargout{1},varargout{2}] = cat_surf_collision_correction(S,varargin{1},varargin{2},varargin{3});
-        case 6
-          [varargout{1},varargout{2}] = cat_surf_collision_correction(S,varargin{1},varargin{2},varargin{3},varargin{4});
-      end
+      [varargout{1},varargout{2},varargout{3}] = cat_surf_collision_correction(S,varargin{:});
     case 'vdist'
       [varargout{1},varargout{2}] = cat_surf_vdist(S,varargin);
     case 'surf2vol'
       if nargin>2
-        [varargout{1},varargout{2},varargout{3}] = cat_surf_surf2vol(S,varargin{1});
+        [varargout{1},varargout{2},varargout{3}] = cat_surf_surf2vol(S,varargin{:});
       else
         [varargout{1},varargout{2},varargout{3}] = cat_surf_surf2vol(S);
       end
@@ -142,18 +134,18 @@ function varargout = cat_surf_fun(action,S,varargin)
     case 'cdatamappingtst'
       cat_surf_cdatamappingtst;
     case 'createedgemap'
-      varargout{1} = cat_surf_surf2surf(S,varargin{1});
+      varargout{1} = cat_surf_surf2surf(S,varargin{:});
     case 'useedgemap'
-      varargout{1} = cat_surf_maparea(S,varargin{1});
+      varargout{1} = cat_surf_maparea(S,varargin{:});
     case 'gmv'
-      varargout{1} = cat_surf_gmv(S,varargin{1});
+      varargout{1} = cat_surf_gmv(S,varargin{:});
     case 'cdatamapping' 
       if nargin<3, varargin{3} = ''; end
       if nargin<4, varargin{4} = struct(); end
       if nargout>1
-        [varargout{1},varargout{2}] = cat_surf_cdatamapping(S,varargin{1},varargin{2},varargin{3});
+        [varargout{1},varargout{2}] = cat_surf_cdatamapping(S,varargin{:});
       else
-        varargout{1} = cat_surf_cdatamapping(S,varargin{1},varargin{2},varargin{3});
+        varargout{1} = cat_surf_cdatamapping(S,varargin{:});
       end 
     otherwise
       error('Unknow action "%s"!\n',action); 
@@ -264,7 +256,21 @@ function cdata2 = cat_surf_edgemap(edgemap,cdata,idir)
     end    
   end
 end
-
+function [IS,OS] = cat_surf_createinneroutersurface(S,T,Yp0)
+  if ~exist('Yp0','var')
+    % render surface
+    
+    
+    Yp0 = 0; 
+  end
+  
+  % call laplace 
+  L = cat_surf_laplace(Yp0);
+  
+  % create streamlines
+  IS.vertices = cat_surf_steams(L  ,T/2);
+  OS.vertices = cat_surf_steams(1-L,T/2);
+end
 function VV = cat_surf_gmv(IS,OS)
 %%
   V = double([IS.vertices;OS.vertices]);
@@ -323,7 +329,7 @@ function varargout = cat_surf_GMboundarySurface(type,varargin)
     case {'pial' ,'outer'}, direction =  0.5;
   end
   
-  if nargin==2
+  if nargin>=2
     %% use filenames
     [pp,ff,ee] = spm_fileparts(varargin{1}); 
     
@@ -333,7 +339,11 @@ function varargout = cat_surf_GMboundarySurface(type,varargin)
     else
       Praw   = varargin{1};
     end
-    Pthick = cat_io_strrep(Praw,{'central','.gii'},{'pbt',''});
+    if nargin==3
+      Pthick = varargin{2};
+    else
+      Pthick = cat_io_strrep(Praw,{'central','.gii'},{'pbt',''});
+    end
     Ptype  = cat_io_strrep(Praw,'central',type);
     
     cmd = sprintf('CAT_Central2Pial "%s" "%s" "%s" %0.2f',Praw,Pthick,Ptype,direction); 
@@ -785,11 +795,210 @@ function [SH,V] = cat_surf_core(S,opt)
   SH.vertices = [SH.vertices(:,2) SH.vertices(:,1) SH.vertices(:,3)]; % matlab flip
   SH.vertices = SH.vertices + repmat(min(S.vertices),size(SH.vertices,1),1) - 5;
 end
-function cat_surf_saveICO(S,Tpbt,Pcs,subdir,writeTfs,C)
+function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,verb)
+% cat_surf_evalCS in cat_surf_fun
+% _________________________________________________________________________
+% print out some values
+%   res = cat_surf_fun('evalCS',CS[,T,Ym,Yppt])
+%   res = cat_surf_evalCS(CS[,T,Ym,Yppt])
+%    
+%   CS  .. central surface
+%   T   .. cortical thickness
+%   Ym  .. intensity normalized file with BG=0, CSF=1/3, GM=2/3, and WM=1
+%   Ypp .. percent position map 
+%   Pcentral .. number of classes for further thickness evaluation or a
+%               given filename to detect specific thickness phantom rules
+%   verb .. .print results
+%
+%   res .. structure with data fields of the printed values
+% _________________________________________________________________________
+% Robert Dahnke 201909
+
+% - maybe also save and link (surface + hist) some files in future
+% - the Layer4 handling with the global variables is horrible 
+
+  global vmati mati vmat
+ 
+  QMC       = cat_io_colormaps('marks+',17);
+  color     = @(m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
+  rms       = @(x) mean( x.^2 ).^0.5;
+  rate      = @(x,best,worst) min(6,max(1, max(0,x-best) ./ (worst-best) * 5 + 1));
+  
+  if ~exist('verb','var'), verb = 1; end
+
+  N  = spm_mesh_normals(CS);   % normalized surface normals                           
+  M  = spm_mesh_smooth(CS);    % smoothing matrix
+  if exist('T','var')
+    VI = CS.vertices - N .* repmat(T/2,1,3); % white surface
+    VO = CS.vertices + N .* repmat(T/2,1,3); % pial surface
+  end
+  
+  if exist('Pcentral','var') && ischar(Pcentral)
+    Player4   = strrep(Pcentral,'.central.','.layer4.'); 
+    Ppbt      = strrep(Pcentral(1:end-4),'.central.','.pbt.'); 
+    Pcentralx = strrep(Pcentral,'.central.','.centralx.'); 
+    Player4x  = strrep(Pcentral,'.central.','.layer4x.'); 
+    Ppbtx     = strrep(Pcentral(1:end-4),'.central.','.pbtx.'); 
+  
+    if ~isempty(vmati) && ~isempty(mati)
+      if exist(Player4,'file')
+        uL4 = 1; 
+        L4 = gifti(Player4);
+      else
+        if ~exist(Pcentral,'file') && ~exist(Ppbt,'file') && ~isempty(vmat)
+          CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
+          if mati(7)<0, CS.faces = [CS.faces(:,1) CS.faces(:,3) CS.faces(:,2)]; end
+          save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Pcentralx,'Base64Binary');
+          cat_io_FreeSurfer('write_surf_data',Ppbtx,T);  
+          cmd = sprintf('CAT_Central2Pial -equivolume -weight 1 "%s" "%s" "%s" 0', ...
+                         Pcentralx,Ppbtx,Player4x);
+        else
+          cmd = sprintf('CAT_Central2Pial -equivolume -weight 1 "%s" "%s" "%s" 0', ...
+                         Pcentral,Ppbt,Player4x);
+        end
+        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+        L4 = gifti(Player4x);
+        uL4 = 1; 
+        delete(Player4x); 
+        if exist(Pcentralx,'file'), delete(Pcentralx); end
+        if exist(Ppbtx,'file'), delete(Ppbtx); end
+      end
+    else
+      uL4 = 0;
+    end
+  else
+    uL4 = 0;
+  end
+  if uL4
+    warning off MATLAB:subscripting:noSubscriptsSpecified
+    VC = (vmati*[L4.vertices' ; ones(1,size(L4.vertices,1))])';
+  end
+  
+  % local intensities
+  if exist('Ym','var')
+    II = isocolors2(Ym,VI); 
+    IO = isocolors2(Ym,VO); 
+    % local adaption for GM intensity changes by myelination 
+    IIs = single(spm_mesh_smooth(M,double(II),round(100 * sqrt(size(CS.faces,1)/180000)))); 
+    IOs = single(spm_mesh_smooth(M,double(II),round(100 * sqrt(size(CS.faces,1)/180000)))); 
+    % normalization
+    II  = II./(IIs/mean(IIs)) - 2.5/3; clear IIs;
+    IO  = IO./(IOs/mean(IOs)) - 1.5/3; clear IOs;
+    if uL4
+      ML  = spm_mesh_smooth(L4);    % smoothing matrix
+      IC  = isocolors2(Ym,VC); 
+      ICs = single(spm_mesh_smooth(ML,double(IC),round(100 * sqrt(size(CS.faces,1)/180000)))); 
+      IC  = IC./(ICs/mean(ICs)) - mean(ICs); clear ICs;
+    end
+    % output
+    if verb
+      fprintf('    Local intensity RMSE (lower=better): ')
+      if uL4
+        cat_io_cprintf( color( rate( mean( [rms(II),rms(IC),rms(IO)] ) , 0.05 , 0.20 )) , sprintf('%0.4f ',mean( [rms(II),rms(IC),rms(IO)] )) ); 
+      else
+        cat_io_cprintf( color( rate( mean( [rms(II),rms(IO)] ) , 0.05 , 0.20 )) , sprintf('%0.4f ',mean( [rms(II),rms(IO)] )) ); 
+      end
+      cat_io_cprintf( color( rate( rms(II) , 0.05 , 0.20 )) , sprintf('(IS=%0.4f,',rms(II)) ); 
+      if uL4, cat_io_cprintf( color( rate( rms(IC) , 0.05 , 0.20 )) , sprintf('L4=%0.4f,',rms(IC)) ); end
+      cat_io_cprintf( color( rate( rms(IO) , 0.05 , 0.20 )) , sprintf('OS=%0.4f)\n',rms(IO)) ); 
+    end
+    res.RMSE_Ym_white  = rms(II);
+    if uL4, res.RMSE_Ym_layer4 = rms(IC); end
+    res.RMSE_Ym_pial   = rms(IO);
+    clear II IO; 
+  end
+  
+  if exist('Ypp','var')
+    % Yppi analysis
+    II = isocolors2(Ypp,VI);          II = II - 1.0;
+    IC = isocolors2(Ypp,CS.vertices); IC = IC - 0.5; 
+    IO = isocolors2(Ypp,VO);          IO = IO - 0.0;
+    % output
+    if verb
+      fprintf('    Local position  RMSE (lower=better): '); 
+      cat_io_cprintf( color( rate( mean( [rms(IC),rms(II),rms(IO)]) , 0.05 , 0.30 )) ,sprintf('%0.4f ',mean( [rms(IC),rms(II),rms(IO)] )) ); 
+      cat_io_cprintf( color( rate( rms(II) , 0.05 , 0.30 )) , sprintf('(IS=%0.4f,' ,rms(II)) ); 
+      cat_io_cprintf( color( rate( rms(IC) , 0.05 , 0.30 )) , sprintf('CS=%0.4f,'  ,rms(IC)) ); 
+      cat_io_cprintf( color( rate( rms(IO) , 0.05 , 0.30 )) , sprintf('OS=%0.4f)\n',rms(IO)) ); 
+    end
+    res.RMSE_Ypp_white   = rms(II);
+    res.RMSE_Ypp_pial    = rms(IO);
+    res.RMSE_Ypp_central = rms(IC);
+  end 
+  
+  % thickness analysis
+  if exist('T','var')
+    if exist('Tclasses','var') && ~isempty(Pcentral)
+      if ischar(Pcentral)
+        if strfind(Pcentral,'dilated1.5-2.5mm')
+          T = cat_stat_histth(T,0.95);
+          Pcentral = 3;
+        else
+          Pcentral = 0;
+        end
+      end
+      
+      if Pcentral>0
+        if Pcentral>7 || Pcentral<1
+          warning('Tclasses has to be between 2 and 7.');
+          Pcentral = min(7,max(3,Pcentral)); 
+        end
+        [mn,sd] = kmeans3D(T,Pcentral);
+        if verb
+          fprintf('    Thickness mean (%d class(es)):       ',Pcentral)
+          fprintf('%7.4f',mn); fprintf('\n'); 
+          fprintf('    Thickness std  (%d class(es)):       ',Pcentral)
+          fprintf('%7.4f',sd); fprintf('\n');
+        end
+        res.thickness_mean_nclasses = mn;
+        res.thickness_std_nclasses  = sd;
+      end
+    end
+      
+    res.thickness_mn_sd_md_mx = [mean(T),std(T),median(T),max(T)];
+    if verb
+      fprintf('    Thickness values:                    %0.4f%s%0.4f (md=%0.4f,mx=%0.4f)\n',...
+        res.thickness_mn_sd_md_mx(1),char(177),res.thickness_mn_sd_md_mx(2:end)); 
+    end
+  end
+  
+  % curvature analyis
+  if 0
+    C = abs(spm_mesh_curvature(CS));
+    res.abscurv_mn_sd_md_mx = [mean(C),std(C),median(C),max(C)];
+    if verb
+      fprintf('    Abs mean curvature values:           %0.4f%s%0.4f (md=%0.4f,mx=%0.4f)\n',...
+        res.abscurv_mn_sd_md_mx(1),char(177),res.abscurv_mn_sd_md_mx(2:end)); 
+    end
+  end
+  
+  % surface values
+  EC  = size(CS.vertices,1) + size(CS.faces,1) - size(spm_mesh_edges(CS),1);
+  res.euler_characteristic = EC; 
+  if verb
+    fprintf('    Faces / Euler:                       %d / %d \n',size(CS.faces,1), EC );
+  end
+end
+function cat_surf_saveICO(S,Tpbt,Pcs,subdir,writeTfs,Pm,C)
+% _________________________________________________________________________
+% Save surface data for debuging:
 % Creates and save the white and pial surfaces based on the displacement by
 % the half thickness along the surface normals and use the inner and outer
 % surfaces to create the layer4 surface.
 % Saves also the thickness file.
+%
+%   cat_surf_saveICO(S,Tpbt,Pcs,subdir,writeTfs[,C,Pm])
+%
+%   S         .. central surface
+%   T         .. cortical thickness
+%   Pcs       .. central surface file name (with full path)
+%   subdir    .. addition subdirecty in the standard surface directory
+%   writeTfs  .. estimate FreeSurfer thickness metric
+% [in development]
+%   C         .. write further surface data
+%   Pm        .. intensity file/volume to map data to the surfaces
+% _________________________________________________________________________
+% Robert Dahnke 201908
 
   [pp,ff,ee] = spm_fileparts(Pcs);
   if ~exist('subdir','var')
@@ -812,15 +1021,18 @@ function cat_surf_saveICO(S,Tpbt,Pcs,subdir,writeTfs,C)
   VI  = S.vertices + N .* repmat(Tpbt/2,1,3); 
   VO  = S.vertices - N .* repmat(Tpbt/2,1,3); 
  
-  % filenames
+  % surface filenames
   Pcentral = fullfile(pp,subdir,[ff ee]);   
   Pwhite   = fullfile(pp,subdir,strrep([ff ee],'central','white'));   
   Ppial    = fullfile(pp,subdir,strrep([ff ee],'central','pial'));   
   Pthick   = fullfile(pp,subdir,strrep(ff,'central','thickness'));   
   Ppbt     = fullfile(pp,subdir,strrep(ff,'central','pbt'));   
+  PintIS   = fullfile(pp,subdir,strrep(ff,'central','Ym-white'));
+  PintOS   = fullfile(pp,subdir,strrep(ff,'central','Ym-pial'));
+  PintL4   = fullfile(pp,subdir,strrep(ff,'central','Ym-L4'));
   Pcol     = fullfile(pp,subdir,strrep(ff,'central','collision'));   
   Player4  = fullfile(pp,subdir,strrep([ff ee],'central','layer4'));   
-  
+
   % save surfaces
   save(gifti(struct('faces',S.faces,'vertices',S.vertices)),Pcentral,'Base64Binary');
   save(gifti(struct('faces',S.faces,'vertices',VI)),Pwhite,'Base64Binary');
@@ -828,12 +1040,12 @@ function cat_surf_saveICO(S,Tpbt,Pcs,subdir,writeTfs,C)
 
   % save thickness
   cat_io_FreeSurfer('write_surf_data',Ppbt,Tpbt);
-  if exist('writeTfs','var') && writeTfs
+  if exist('writeTfs','var') && ~isempty(writeTfs) && writeTfs
     cmd = sprintf('CAT_SurfDistance -mean "%s" "%s" "%s"',Pwhite,Ppial,Pthick);
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
     fprintf('Display thickness: %s\n',spm_file(Pthick ,'link','cat_surf_display(''%s'')'));
   end
-  if exist('C','var')
+  if exist('C','var') && ~isempty(C)
     cat_io_FreeSurfer('write_surf_data',Pcol,C);
   end
   
@@ -842,10 +1054,62 @@ function cat_surf_saveICO(S,Tpbt,Pcs,subdir,writeTfs,C)
                    Pcentral,Ppbt,Player4);
   [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
   
+  % save intensities
+  if ~exist('Pm','var')
+    % volume filenames for spm_orthview
+    sinfo = cat_surf_info(Pcentral);
+    
+    if cat_get_defaults('extopts.subfolders')
+      Pm = fullfile(spm_str_manip(pp,'h'),'mri',['m' sinfo.name '.nii']); 
+    else
+      Pm = fullfile(pp,['m' sinfo.name '.nii']); 
+    end
+    if ~exist(Pm,'file')
+      Pm = fullfile(spm_str_manip(pp,'hh'),'mri',['m' sinfo.name '.nii']); 
+    end
+    if ~exist(Pm,'file')
+      Pm = fullfile(spm_str_manip(pp,'h'),[sinfo.name '.nii']); 
+    end
+    if ~exist(Pm,'file')
+      Pm = ''; 
+    end
+  end
+  
+  if ~isnumeric( Pm ) && exist(Pm,'file')
+    % use the file data
+    cmd = sprintf('CAT_3dVol2Surf -cubic -steps 1 -start 0 -end 0 "%s" "%s" "%s"',Pwhite , Pm, PintIS);
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+    cmd = sprintf('CAT_3dVol2Surf -cubic -steps 1 -start 0 -end 0 "%s" "%s" "%s"',Ppial  , Pm, PintOS);
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+    cmd = sprintf('CAT_3dVol2Surf -cubic -steps 1 -start 0 -end 0 "%s" "%s" "%s"',Player4, Pm, PintL4);
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+  elseif ndims(Pm)==3
+    % use a given volume 
+    SL = gifti(Player4);
+    warning off MATLAB:subscripting:noSubscriptsSpecified
+    SL.vertices = (S.vmati*[SL.vertices' ; ones(1,size(SL.vertices,1))])';
+    if S.mati(7)<0,  SL.faces = [SL.faces(:,1) SL.faces(:,3) SL.faces(:,2)]; end
+    VL = SL.vertices;
+
+    int = isocolors(Pm,VO); cat_io_FreeSurfer('write_surf_data',PintOS,int);
+    int = isocolors(Pm,VI); cat_io_FreeSurfer('write_surf_data',PintIS,int);
+    int = isocolors(Pm,VL); cat_io_FreeSurfer('write_surf_data',PintL4,int);
+  end
+  
   % display something to click
-  fprintf('\n    Display surface: %s\n',spm_file(Ppbt  ,'link','cat_surf_display(''%s'')'));
+  fprintf('\n    Display surface:  %s\n',spm_file(Ppbt  ,'link','cat_surf_display(''%s'')'));
+  if ~isempty(Pm)
+    fprintf('    Show in orthview: %s\n',spm_file(Pm ,'link',...
+      [ sprintf('cat_surf_fun(''show_orthview'',{''%s'';''%s'';''%s''},',Pcentral,Ppial,Pwhite) '''%s'')']));
+  end
+  
+  if 0
+    if ndims(Pm)==3, Ym=Pm; else, Ym=spm_read_vols(spm_vol(Pm)); end
+    res = cat_surf_evalCS(S,Tpbt,Ym,Ypp,Tclasses)
+  end
 end
-function [SN,TN] = cat_surf_collision_correction(S,T,Y,debug,Pcs)
+function [SN,TN,E] = cat_surf_collision_correction(S,T,Y,Ypp,Yl4,opt) 
+% _________________________________________________________________________
 % Delaunay based collision dectection:
 % 1) Correction for local curvature
 % 2) Creation of a Delaunay graph 
@@ -860,423 +1124,635 @@ function [SN,TN] = cat_surf_collision_correction(S,T,Y,debug,Pcs)
 % This is a prototype that allows correction of the worst things but not 
 % all collisions. 
 %
-%   [SN,TN] = cat_surf_collision_correction(S,T,Y,debug,Pcs)
+%   [SN,TN,E] = cat_surf_collision_correction(S,T,Y[,debug,E,Pcs])
 %
-%   SN    .. new surface
-%   TN    .. new thickness
-%   S     .. original surface
-%   T     .. original thickness
-%   Y     .. segmentation map or intensity normalized images 
-%            for intra/inter surface edge definition
-%   debug .. option to write the un- and corrected cortical surfaces in a
-%            subdirectory
-%   Pcs   .. central surface file name
-%
+%   SN      .. new surface
+%   TN      .. new thickness
+%   S       .. original surface
+%   T       .. original thickness
+%   Y       .. segmentation map or intensity normalized images 
+%              for intra/inter surface edge definition
+%   Yl4     .. layer4 intensity surface map
+%   opt     .. parameter structure
+%    .debug .. option to write the un- and corrected cortical surfaces in a
+%              subdirectory
+%    .verb  ..
+%    .E     .. Delaunay edge map (from previous run or empty matrix as input)
+%    .Pcs   .. central surface file name to write debugging files
+%    ... experimental settings
+%    .smoothCSinput  ..
+%    .model          ..
+%    .PVEcorr        ..
+%    .slowdown       ..
+%    .
+% _________________________________________________________________________
 % Robert Dahnke 201909
 
 
-  % correction for flipped faces to have always the same normal direction
-  if S.mati(7)<0, S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); flipped = 1; else flipped = 0; end
+% -------------------------------------------------------------------------
+% Todo:
+% - full support of parameters & recall 
+% - support of different correction models 
+%   (e.g. only collision vs. intensity correction)
+% - full documentation and detailed comments
+% - helping boundary surfaces? 
+%   > partially implemented 
+%   > very slow +20-60s for each just for creation  
+% - stable subset/list (also as internal/external error measure
+% - use of gradients and divergence rather simple intensity information
+% - use of Ypp
+% - optimization of the layer 4 (layer concept)
+% - face-flipping correction that can not be handled by Delaunay because of
+%   its neighbor limits
+% - improved evaluation concept
+% - improved validation concept
+% - fast mapping c-function for edge to surf that combine multiple values
+%   given by an index map by different functions (mean,min,max,std)
+% - surface filter sub-function to remove outlier
+% - triangle height rather than edge distance (or combination)
+% -------------------------------------------------------------------------
 
-  if ~exist('debug','var'), debug = 1; end
-  write = debug & exist('Pcs','var');
+  if ~exist('opt','var'), opt = struct(); end 
+
+  % default variables 
+  def.Pcs               = '';     % filename to write debugging output data
+  def.debug             = 1;      % debugging output vs. memory optimization 
+  def.verb              = 1;      % display debugging information 
+  def.E                 = [];     % inter-surface Delaunay edges (of a previous run) 
+  def.boundarySurfaces  = 0;      % use inner and outer boundary surface to improve the Delaunay graph 
+  def.smoothCSinput     = 0;      % smooth the input CS for more stable Delaunay triangulation in case of locally oversampled surfaces 
+  def.PVEcorr           = 1;      % correction of PVE values for 2 boundaries in on voxel (experimental)
+  def.slowdown          = 1;      % slowdown may stabilize the process over the iterations   
+  def.model             = 2;      % 0 - only collcorr, 1 - only intopt, 2 - both  
+  def.vx_vol            = 1; 
+  opt                   = cat_io_checkinopt(opt,def); clear def;
+  def.write             = opt.debug & ~isempty(opt.Pcs);
+  opt                   = cat_io_checkinopt(opt,def); 
   
-  % larger surface need more smoothing to avoid triangulation problems 
-  sf = round( (size(S.faces,1) / 50000).^0.5 );  % empirical value 
-  if max(Y(:))<1.5, Y = Y.*2+1; end               
   
-  if debug, fprintf('\n'); end
-  if write, cat_surf_saveICO(S,T,Pcs,sprintf('pre_collcorr_%0.0fk',round( size(S.faces,1)/1000 / 10) * 10 ),0); end
-  stime = cat_io_cmd(sprintf('    Delaunay triangulation of %d vertices:',size(S.vertices,1)),'g5','',debug); 
-  
-  % smothing fucntions for data and surfaces
-  M   = spm_mesh_smooth(S);   % for spm_smoothing matrix
-  rms = @(x) sum(x.^2).^0.5;  % for error handling of mad vertices
-  smoothsurf = @(V,s) [ ...   % simple surface smoothing 
+  % helping smoothing functions for data and surfaces
+  M   = spm_mesh_smooth(S);         % for spm_smoothing matrix
+  rms = @(x) mean( x.^2 ) .^ 0.5;   % for error handling of mad vertices
+  smoothsurf = @(V,s) [ ...         % simple surface smoothing 
     spm_mesh_smooth(M,double(V(:,1)),s) , ...
     spm_mesh_smooth(M,double(V(:,2)),s) , ...
     spm_mesh_smooth(M,double(V(:,3)),s) ];
   
   
-  
-  %% Curvature based correction
-  %  The local mean curvature describes simplified the inverse radius of a
-  %  fitting sphere that describes one limit of a normal transformation. 
-  %  If the thickness is larger that the radius we have to correct it and 
-  %  update the central surface point. 
-  %  The empirical values are not further validated and only tested for the
-  %  "single_subj" and "HR075" datasets (RD20190912).
-  %
-  V  = S.vertices; 
-  SS = S; SS.vertices = smoothsurf(V,2);        % empirical value 
-  C  = spm_mesh_curvature( SS ); clear SS; 
-  C  = spm_mesh_smooth(M,C,4);                  % empirical value
-  N  = spm_mesh_normals(S);     
-  
-  % cortical thickness is limit by the local curvature because C = 1/R 
-  TI = T/2;  TI(C>0) = min( TI(C>0) , 0.5./abs( C(C>0) ) ); % inner thickness between central and white surface
-  TO = T/2;  TO(C<0) = min( TO(C<0) , 0.5./abs( C(C<0) ) ); % outer thickness between central and outer surface
-  clear C;
-  
-  % smooth result
-  TI = single(spm_mesh_smooth(M,double(TI),5)); % empirical value
-  TO = single(spm_mesh_smooth(M,double(TO),5)); % empirical value
+  % detection and correction for flipped faces to have always the same normal direction
+  lim = 1:round(size(S.vertices,1)/1000):size(S.vertices,1); 
+  N   = spm_mesh_normals(S);   
+  VOl = S.vertices(lim,:) - N(lim,:) .* repmat(T(lim)/2,1,3); 
+  VIl = S.vertices(lim,:) + N(lim,:) .* repmat(T(lim)/2,1,3); 
+  YOl = isocolors2(Y,VOl); 
+  YIl = isocolors2(Y,VIl); 
+  flipped = mean(YOl) > mean(YIl); 
+  clear N VOl VIl YOl YIl lim; 
+  if flipped, S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); end
   
   
-  % estimate the new cortical thickness and correct the inner and outer 
-  % surface to update the central point
-  VO = V - N .* repmat(TO,1,3);
-  VI = V + N .* repmat(TI,1,3);
+  % larger surface need more smoothing to avoid triangulation problems 
+  sf = round( sqrt( size(S.faces,1) / 50000) );  % ### empirical value 
+  if max(Y(:))<1.5, Y = Y.*2+1; else, Y = max(1,Y); end              
+  if opt.debug, fprintf('\n'); end
+  if opt.write, cat_surf_saveICO(S,T,Pcs,sprintf('pre_collcorr_%0.0fk',round( size(S.faces,1)/1000 / 10) * 10 ),0); end
+  stime = cat_io_cmd(sprintf('    Delaunay triangulation of %d vertices (sf=%d):',size(S.vertices,1),sf),'g5','',opt.debug); 
+
   
-  S.vertices = mean(cat(3,VI,VO),3); 
-  if 0
-  % debugging function that directly returns this first correction
-    TN = TO + TI; 
-    SN = S; 
-    if write, cat_surf_saveICO(SN,TN,Pcs,sprintf('post_collcorr_%0.0fk',round( size(S.faces,1)/1000 / 10) * 10 ),0); else, fprintf('\n'); end
-    return;
+  
+
+  
+  
+  %% Creation of the inter surface edges based on a Delaunay graph 
+  %  ----------------------------------------------------------------------
+  %  There is a short cut to apply further iterations without processing
+  %  the graph again. 
+  %  ----------------------------------------------------------------------
+  if isfield(opt,'E') && isempty(opt.E)
+    
+    % Early versions used a smoothed surface to reduce problems due to
+    % artifacts. However, the improved input meshed (createCS2 pipeline)
+    % do not need smoothing and surface smoothing can not be combined 
+    % with helping surfaces (inner and outer surface points). 
+    VS = double(S.vertices); 
+    if opt.smoothCSinput
+      % Surface smoothing as loop to correct for outlier due to incorrect surfaces.
+      % Using the smoothing directly create some extrem large spikes - don't know why (RD20190912).
+      % The smoothing is not required in newer version (RD20190922)
+      for i = 1:opt.smoothCSinput                           
+        VSi = smoothsurf(VS,2); 
+        VM  = rms(VSi - VS)<2; 
+        VS(VM,:) = VSi(VM,:); 
+      end
+      VS = smoothsurf(VS,1);
+    end
+    if ~opt.debug, clear VSi VM; end
+
+    
+    % helping boundary surface - (uncorrected) inner or/and outer surface 
+    % this was slow (20-60 seconds) and did not work so simple/fast ... need further work
+    % maybe just use low resolution surfaces (1 mm)
+    if opt.boundarySurfaces
+      if opt.smoothCSinput, error('Initial surface smoothing "smoothCSinput" can not be combined with "boundarySurfaces".\n'), end
+      VB = S.vertices;                             
+      if opt.boundarySurfaces == 1 || opt.boundarySurfaces == 3
+        UOS = isosurface(Y,1.5); 
+        VS  = [ VS ; UOS.vertices ]; 
+        VB  = [ VB ; UOS.vertices ]; 
+        if ~opt.debug, clear UOS; end 
+      end
+      if opt.boundarySurfaces == 2 || opt.boundarySurfaces == 3
+        UIS = isosurface(Y,1.5); 
+        VS  = [ VS ; UIS.vertices ]; 
+        VB  = [ VB ; UIS.vertices ]; 
+        if ~opt.debug, clear UIS; end 
+      end
+    end
+    
+    
+    % Delaunay graph
+    D  = single(delaunayn( VS )); 
+    if ~opt.debug, clear VS; end            
+
+    % decompose delaunay graph into its edges
+    E  = uint32(cat_surf_edges(D));   
+    nE = size(E,1); 
+    if ~opt.debug, clear D; end
+    if opt.debug, cat_io_cprintf('g5',sprintf('%5.0fs\n',etime(clock,stime))); end
+
+
+    % separate helping boundary surfaces
+    if opt.boundarySurfaces == 2 || opt.boundarySurfaces == 3
+      Etmep = sum( E>( size(S.vertices,1) + any(opt.boundarySurfaces==[1,3]).*size(UOS.vertices,1) ) , 2 )>0; 
+      EUIS  = E( Etmep , : ); 
+      EUIS( sum( EUIS>numel(S.vertices) , 2 )~=1, :) = []; % remove all edges that are not between the CS and the UIS
+      EUIS  = sort(EUIS,2); 
+      E( Etmep , : ) = [];
+    end
+    if opt.boundarySurfaces == 1 || opt.boundarySurfaces == 3
+      Etmep = sum( E>( size(S.vertices,1) ) , 2 )>0; 
+      EUOS  = E( Etmep , : ); 
+      EUOS( sum( EUOS>numel(S.vertices) , 2 )~=1, :) = []; % remove all edges that are not between the CS and the UOS
+      EUOS  = sort(EUOS,2); 
+      E( Etmep , : ) = []; 
+    end
+    
+
+    %% Remove intra-surface edges 
+    %  --------------------------------------------------------------------
+    %  If we remove too much then the correction will not work.
+    %  If we do not remove enough then it will add sulci in regions without sulci
+
+    V  = S.vertices;
+
+    % remove edge that we know from the surface - super save
+    stime = clock; 
+    EF = uint32(cat_surf_edges(S.faces));           
+    E  = setdiff(E,EF,'rows'); clear EF; 
+    
+    % remove edges between neigbors of each point - relative save
+    % get neighbor matrix
+    [NE,MED] = spm_mesh_neighbours(M); 
+    nNE = size(NE,1);
+
+    % extra element that link on itself and replace the 0 in NE that does not allow matrix indexing 
+    NIL = nNE + 1; 
+    NE(NIL,:)  = NIL * ones(1,size(NE,2)); NE(NE==0) = nNE+1;
+    
+    % further levels
+    % use higher levels only for large surfaces (use sqrt to compensate area grow factor)
+    nlevel = 2; % max(2,round( 1 + sqrt( ceil( size(S.faces,1) / 300000 ) ))); 
+    for nli = 1:nlevel % nice idear but not working yet
+      for ni = 1:size(NE,2)
+        NEN = sum( NE == repmat( NE(NE(:,ni),ni) , 1 , size(NE,2) ),2)>0; 
+        NE  = [ NE  min( NIL , NE(:,ni)  + NIL*NEN) ];  %#ok<AGROW>
+        MED = [ MED MED(:,ni) ];  %#ok<AGROW>
+      end
+      
+      % sort entries
+      [NE,NEsi] = sort(NE,2); MED = MED(NEsi); clear NEsi
+      NILi = min([ size(NE,2) , find( sum(NE == NIL,1) >= size(NE,1)*0.5 , 1, 'first') - 1]);
+      NE  = NE(:,1:NILi); 
+      MED = MED(:,1:NILi);  
+    end
+    NE(NE==NIL) = 0; 
+
+    % remove edges from the neigbor list
+    for i=2:size(NE,2)
+      E = setdiff(E,[NE(:,1) NE(:,i)],'rows'); 
+      E = setdiff(E,[NE(:,i) NE(:,1)],'rows'); 
+    end
+    clear NE
+    if opt.debug
+      cat_io_cprintf('g5',sprintf('    remove edges by surface (l%d):%8d > %9d (%0.2f%%%%) %9.0fs',...
+        nlevel,nE,size(E,1),size(E,1)./nE,etime(clock,stime)));
+    else
+      clear nE
+    end
+
+
+    % remove edge by distance - this is not clear but it helps
+    stime = clock; 
+    LE  = sum( (V(E(:,1),:) - V(E(:,2),:)).^2 , 2) .^ 0.5; % length of edge
+    DE  = min( LE > max(0.5,min(1,max(MED(:)))) , min( LE - T(E(:,1))*0.33 , LE - T(E(:,2))*0.33 ));
+    NEd = abs(DE); clear LE DE MED;
+
+    % remove by angle .. sum(NEa)./numel(NEa), figure, hist( S1alpha, -180:1:180)
+    %   N(S)alpha  .. angle between the (smoothed) normals of each edge
+    %                 (~0? = surface edge; ~180? between surface edge)       
+    %   S[12]alpha .. angle between the edge and the first normal    
+    %                 (~0?/~180? = surface edge; ~90? = between surface edge)
+    % 
+    N  = spm_mesh_normals(S);                 
+    NS = N; for i=1:80*sf, NSS = smoothsurf(NS,1); NM = rms(NS - NSS)<0.5; NS(NM,:) = NSS(NM,:); end 
+    Nalpha  = [angle(NS(E(:,1),:), NS(E(:,2),:)), ...
+               angle(NS(E(:,2),:), NS(E(:,1),:))]; clear NS
+    SNalpha = [angle(N(E(:,1),:),  V(E(:,1),:) - V(E(:,2),:)), ...
+               angle(N(E(:,2),:),  V(E(:,2),:) - V(E(:,1),:))]; 
+    NEna    = mean(Nalpha/180,2); clear Nalpha                       % figure, hist( NEna , 0:0.01:1);
+    NEsa    = (abs(90  - SNalpha)/90  + abs(90  - SNalpha)/90)/2;    % figure, hist( NEsa , 0:0.01:1);
+    clear SNalpha; 
+
+    % remove by intensity given by the centroids of the edges
+    VC  = cat_surf_centroid(V,E); 
+    IC  = isocolors2(Y,VC); clear VC;
+    % outer surface intensity
+    VO  = V - N .* repmat(T/2,1,3); 
+    VOC = cat_surf_centroid(VO,E); 
+    IO  = isocolors2(Y,VOC); clear VOC VO; 
+    % inner surface intensity
+    VI  = V + N .* repmat(T/2,1,3) + 0.1; % GM/WM  
+    VIC = cat_surf_centroid(VI,E); 
+    II  = isocolors2(Y,VIC); clear VIC VI; 
+    VI  = V + N .* repmat(T/2,1,3) + 0.5; % save WM  
+    VIC = cat_surf_centroid(VI,E); 
+    II  = max(II,isocolors2(Y,VIC)); clear VIC VI; % use max to get WM value 
+    VI  = V + N .* repmat(T/2,1,3) + 1.0; % supersave WM  
+    VIC = cat_surf_centroid(VI,E); 
+    II  = max(II,isocolors2(Y,VIC)); clear VIC VI; % use max to get WM value 
+    % combine all intensities 
+    NEi = 1 - min(1,max(abs(diff([II IC IO],1,2)),[],2)); 
+    %ET  = mean([II IC IO],2)>2.25; % edge classification 
+    if ~opt.debug, clear II IC IO; end
+
+    % combine all measures by product to remove many things
+    % I also though about an adaptive threshold but it is not so easy ...
+    NE = prod( [NEd NEi NEna*2 NEsa*2] ,2); % 1.75 % larger values > remove less
+    NE = NE < .05; %05; %max(eps,mean(NE) - 1*std(NE)); % smaller values > remove less
+    E (NE,:) = []; %if exist('ET','var'), ET(NE) = []; end
+    if opt.debug
+      cat_io_cprintf('g5',sprintf('\n    remove edges by intensity:            > %9d (%0.2f%%%%) %9.0fs',...
+        size(E,1),size(E,1)./nE,etime(clock,stime))); stime = clock;
+    else
+      clear NE NEd NEi NEna NEsa
+    end
+
+   %fprintf('\nsf = %0.2f',sf);
   else
-    T  = TO + TI; 
+    N  = spm_mesh_normals(S);   
   end
-  clear VO VI TI TO N; 
   
   
   
-  
-  %% edge creation based on Delaunay graph 
-  %  smooth central surface to create robust Delaunay
-  
-  % surface smoothing (as loop to correct for outlier due to incorrect surfaces)
-  VS  = double(S.vertices); 
-  for i = 1:100*sf
-    VSi = smoothsurf(VS,2); 
-    VM  = rms(VSi-VS)<2; 
-    VS(VM,:) = VSi(VM,:); 
+  if opt.debug
+    cat_io_cprintf('g5','\n    Prepare Optimization:'); stime = clock; 
   end
-  VS = smoothsurf(VS,1);
-  if ~debug, clear VSi VM; end
   
-  % delaunay graph
-  D  = single(delaunayn( VS )); 
-  if ~debug, clear VS; end            
-  
-  % decompose delaunay graph into its edges
-  E  = uint32(cat_surf_edges(D));   
-  nE = size(E,1); 
-  if ~debug, clear D; end
-  if debug, cat_io_cprintf('g5',sprintf('%5.0fs\n',etime(clock,stime))); end
-  
-  
-  
-  
-  %% Remove intra-surface edges 
-  %  if you remove to much then the correction will not work
-  %  if you do not remove enough then it will add sulci in regions without sulci
-  V  = S.vertices;
-  
-  
-  % remove edge that we know from the surface - super save
-  stime = clock; 
-  EF = uint32(cat_surf_edges(S.faces));           
-  E  = setdiff(E,EF,'rows'); clear EF; 
-  % remove edges between neigbors of each point - relative save
-  nlevel   = 1 + ( size(S.faces,1) > 80000 ) + ( size(S.faces,1) > 50000 ); % use higher levels only for large surfaces
-  [NE,MED] = spm_mesh_neighbours(M); 
-  if nlevel>1, [NE2,MED2] = spm_mesh_neighbours(M); NE = [NE NE2]; MED = [MED MED2]; end
-  if nlevel>2, [NE2,MED2] = spm_mesh_neighbours(M); NE = [NE NE2]; MED = [MED MED2]; end
-  clear NE2 MED2
-  for i=2:size(NE,2)
-    E = setdiff(E,[NE(:,1) NE(:,i)],'rows'); 
-    E = setdiff(E,[NE(:,i) NE(:,1)],'rows'); 
-  end
-  clear NE
-  if debug, cat_io_cprintf('g5',sprintf('    remove edges by surface:  %10d > %10d (%0.2f%%%%) %9.0fs',nE,size(E,1),size(E,1)./nE,etime(clock,stime))); end
-  
-  
-  % remove edge by distance - this is not clear but it helps
-  stime = clock; 
-  LE  = sum( (V(E(:,1),:) - V(E(:,2),:)).^2 , 2) .^ 0.5; % length of edge
-  DE  = min( LE > max(0.5,min(1,max(MED(:)))) , min( LE - T(E(:,1))*0.33 , LE - T(E(:,2))*0.33 ));
-  NEd = abs(DE); clear LE DE MED;
-  
-  % remove by angle .. sum(NEa)./numel(NEa), figure, hist( S1alpha, -180:1:180)
-  %   N(S)alpha  .. angle between the (smoothed) normals of each edge
-  %                 (~0? = surface edge; ~180? between surface edge)       
-  %   S[12]alpha .. angle between the edge and the first normal    
-  %                 (~0?/~180? = surface edge; ~90? = between surface edge)
-  % 
-  N  = spm_mesh_normals(S);                 
-  NS = N; for i=1:80*sf, NSS = smoothsurf(NS,1); NM = rms(NS - NSS)<0.5; NS(NM,:) = NSS(NM,:); end 
-  Nalpha  = [angle(NS(E(:,1),:), NS(E(:,2),:)), ...
-             angle(NS(E(:,2),:), NS(E(:,1),:))]; 
+  %% updated measures
   SNalpha = [angle(N(E(:,1),:),  V(E(:,1),:) - V(E(:,2),:)), ...
              angle(N(E(:,2),:),  V(E(:,2),:) - V(E(:,1),:))]; 
-  NEna    = mean(Nalpha/180,2);                                    % figure, hist( NEna , 0:0.01:1);
-  NEsa    = (abs(90  - SNalpha)/90  + abs(90  - SNalpha)/90)/2;    % figure, hist( NEsa , 0:0.01:1);
-  
-  % remove by intensity given by the centroids of the edges
+
   VC  = cat_surf_centroid(V,E); 
   IC  = isocolors(Y,VC); clear VC;
-  % outer surface intensity
-  VO  = V - N .* repmat(T/2,1,3); 
-  VOC = cat_surf_centroid(VO,E); 
-  IO  = isocolors(Y,VOC); clear VOC VO; 
-  % inner surface intensity
-  VI  = V + N .* repmat(T/2,1,3) + 0.1; % GM/WM  
-  VIC = cat_surf_centroid(VI,E); 
-  II  = isocolors(Y,VIC); clear VIC VI; 
-  VI  = V + N .* repmat(T/2,1,3) + 0.5; % save WM  
-  VIC = cat_surf_centroid(VI,E); 
-  II  = max(II,isocolors(Y,VIC)); clear VIC VI; % use max to get WM value 
-  VI  = V + N .* repmat(T/2,1,3) + 1.0; % supersave WM  
-  VIC = cat_surf_centroid(VI,E); 
-  II  = max(II,isocolors(Y,VIC)); clear VIC VI; % use max to get WM value 
-  % combine all intensities 
-  NEi = 1 - min(1,max(abs(diff([II IC IO],1,2)),[],2)); 
-  %ET  = mean([II IC IO],2)>2.25; % edge classification 
-  if ~debug, clear II IC IO; end
 
-  % combine all measures by product to remove many things
-  % I also though about an adaptive threshold but it is not so easy ...
-  NE = prod( [NEd NEi NEna NEsa] ,2); 
-  NE = NE < .05; %max(eps,mean(NE) - 1*std(NE)); 
-  E (NE,:) = []; if exist('ET','var'), ET(NE) = []; end
-  if debug, cat_io_cprintf('g5',sprintf('\n    remove edges by surface:  %10d > %10d (%0.2f%%%%) %9.0fs',...
-      nE,size(E,1),size(E,1)./nE,etime(clock,stime))); end
-
+  OE  = min(1,(min(SNalpha,[],2)<90) + IC<2.15);
+  IE  = min(1,(max(SNalpha,[],2)>90) + IC>2.15);
+      
+  if 1
+    % avoid PBT overestimation in gyri (well thickness is correct but
+    % measures non-linear/non-orthogonal)
+    TN = single(spm_mesh_smooth(M,double(T), sf * 20 )); 
+    T  = min(T,TN); 
+  end
   
- %fprintf('\nsf = %0.2f',sf);
-  SNalpha = [angle(N(E(:,1),:),  V(E(:,1),:) - V(E(:,2),:)), ...
-             angle(N(E(:,2),:),  V(E(:,2),:) - V(E(:,1),:))]; 
-           
-           
+  TN = T; SN = S; TCsum = 0; %#ok<NASGU>
+  TCsumo = inf; TNold = inf;
+  maxiter  = 20;  % main number of iterations 
+  maxiter2 = 20;  % limit of adapting the mixing model
+  
+  Yl4 = single(spm_mesh_smooth(M,double(Yl4),sf/4 * 100));
+  
+  % I did not manage to use curvate ...
+  %C   = spm_mesh_curvature(S); 
+  %C   = spm_mesh_smooth(M,C,1);
+
+  % PVE doubleside correction: 
+  % If a voxel contain 38% GM and 62% CSF and has one boundary, it is approximately at the 38% position of the voxel.  
+  % If the same voxel contain two boundaries, the each boundary is approximately at the 19% position of that voxel.    
+  % Hence, I try to measure the filling effect in regions of two boundaries by the local minimum/maximum to estimate 
+  % double the PVE effect (like a sharpening).
+  % However, this is relative slow ...
+  if opt.PVEcorr 
+    Ypvec = cat_vol_localstat(max(1,cat_vol_localstat(min(2,max(1,Y)),Y>1,2,3)),Y>1,2,2);
+    Ypvew = cat_vol_localstat(max(2,cat_vol_localstat(min(3,max(2,Y)),Y>1,2,2)),Y>1,2,3);
+    Y = max(1,min(3,Y - ((max(Ypvec,Y))-Y) + (Y-(min(Ypvew,Y)))));
+  end
+  
+  if opt.debug
+    stime = cat_io_cmd('  Optimize surface:','g5','',opt.verb,stime); fprintf('\n');
+  end
+      
   %% Iterative correction routine
-  TN = T; SN = S; 
-  maxiter = 10; TCsumo = inf; 
-  for j=1:maxiter*10
+  for j=1:maxiter+1
     V   = single(SN.vertices);
 
     % update surface normales  
-    NS  = spm_mesh_normals(SN); 
+    N   = spm_mesh_normals(SN); 
     
     % inner and outer surface
     VO  = V - N .* repmat(TN/2,1,3);
     VI  = V + N .* repmat(TN/2,1,3);
 
     
-    % first correction step that works but also could be improved
-    if 1 % general debugging setting to ignore this block
+    % First correction step that works but also could be improved.
+    % ---------------------------------------------------------------------
+    % Complex side specific correction by the inter-surface edges, that 
+    % used the angle between the edges and normals to define edges within 
+    % a suclus (outer) or within a gyrus (inner). 
+    % In general, only inter-surface edges are expected here, those
+    % distance describes the maximal local thickness.  We also add some 
+    % sulcus-width to avoid collisions but the effect will be small due 
+    % to the smoothing.
+    % There are problems that not all points have a inter-surface edge, 
+    % so it is necessary to smooth to include unconnected neighbors  
+    % LEC, LEOC, and LEIC represent the distance error by collisions
+    % of each edge.
+    % ---------------------------------------------------------------------
     
-      % edgelength of the central, inner, and outer surface
-      LE  = sum( (V(E(:,1),:)  - V(E(:,2),:)).^2  , 2) .^ 0.5;
-      LEO = sum( (VO(E(:,1),:) - VO(E(:,2),:)).^2 , 2) .^ 0.5;
-      LEI = sum( (VI(E(:,1),:) - VI(E(:,2),:)).^2 , 2) .^ 0.5;
+    % edgelength of the central, inner, and outer surface
+    % ###
+    %   The edgelength is just the simples measure - the high of the
+    %   tetraeder would be more excact.
+    % ###
+    LE  = sum( (V(E(:,1),:)  - V(E(:,2),:)).^2  , 2) .^ 0.5;          % distance between the central surface (~ thickness/2 + thickness/2)
+    LEO = sum( (VO(E(:,1),:) - VO(E(:,2),:)).^2 , 2) .^ 0.5;          % distance between the outer surface (~?minimal/maximal distance) 
+    LEI = sum( (VI(E(:,1),:) - VI(E(:,2),:)).^2 , 2) .^ 0.5;          % distance between the inner surface (~ minimal/maximal distance)
+    if opt.boundarySurfaces == 1 || opt.boundarySurfaces == 3
+      LEUOS = sum( (VB(EUOS(:,1),:)  - VB(EUOS(:,2),:)).^2  , 2) .^ 0.5;  % distance b
+    end
+    if opt.boundarySurfaces == 2 || opt.boundarySurfaces == 3
+      LEUIS = sum( (VB(EUIS(:,1),:)  - VB(EUIS(:,2),:)).^2  , 2) .^ 0.5;
+    end
 
-      
-      % correct surface 
-      % - there is the problem that not all points are connected, 
-      %   so it is necessary to smooth to include unconnected neighbors  
-      % - in general, only inter-surface-edges are expected here, those
-      %   distance describes the maximal local thickness
-      % - we also add some sulcus-width to avoid collisions but the effect
-      %   will be small due to the smoothing
-      % - LEC, LEOC, and LEIC represent the distance error by collisions
-      %   of each edge
-      sulcuswidth = 0.2;
-      LEC  = max(0, (TN(E(:,1))/2 + TN(E(:,2))/2) - max(0,LE - sulcuswidth )); % * (maxiter/10 - j) / (maxiter/10)) );
-      LEOC = LEO*0; %max(0, sulcuswidth - LEO);
-      LEIC = LEI*0; %max(0, sulcuswidth - LEI);
-
-      % map the collision edge error to the surface by using the maximum
-      simple = 0; 
-      if simple 
-        % Simple correction without side differentiation:
-        % This corrects towards the CS without further differentiation of 
-        % the reason of the correction. I.e. and outer surface collision 
-        % correction will also move the inner surface towards the central 
-        % surfaces. 
-        %
-        % This was my first step and can be removed later (RD201909). 
-
-        TC  = TN*0; 
-        for ni=1:size(E,1)
-          TC(E(ni,1)) = max([TC(E(ni,1)), LEC(ni), LEOC(ni), LEIC(ni)]); 
-          TC(E(ni,2)) = max([TC(E(ni,2)), LEC(ni), LEOC(ni), LEIC(ni)]); 
-        end 
-        TCsum = max(TC(TC>0)); 
-
-        % smooth the correction map and reestimate the inner and outer surface
-        % to estimate a corrected Tlink thickness 
-        TC  = max(0,min(TC,single(spm_mesh_smooth(M,double(TC),max(0,2*sf)))*0.75 + single(spm_mesh_smooth(M,double(TC),max(0,0.5*sf)))*0.75 )); 
-        TNC = max(0,TN - TC);                       % estimate corrected thickness  
-        VOC = V - NS .* repmat(TNC/2,1,3);          % outer surface
-        VIC = V + NS .* repmat(TNC/2,1,3);          % inner surface
-
-        % thickness smoothness is a problem by the number of iterations so I have to limit it! 
-        % however we apply this correction only in affected areas
-        TNC = sum( (VIC - VOC).^2 , 2) .^ 0.5;      % Tlink 
-        TNS = single(spm_mesh_smooth(M,double(TNC),max(1,min(10,sf)) )); % * ((maxiter*10) - j)/(maxiter*10) ));clear TNC; 
-        TC  = single(spm_mesh_smooth(M,double(TC ),max(1,min(10,sf)) )); % * ((maxiter*10) - j)/(maxiter*10) ));
-        TN(TC>0) = TNS(TC>0);                      % only in corrected areas; 
-        VOC = V - NS .* repmat(TN/2,1,3);          % outer surface
-        VIC = V + NS .* repmat(TN/2,1,3);          % inner surface
-      
-        % filter surfaces
-        VOS = smoothsurf(VOC,1); VOC(TC>0) = VOC(TC>0)*0.5 + 0.5*VOS(TC>0); clear VOS;
-        VIS = smoothsurf(VIC,1); VIC(TC>0) = VIC(TC>0)*0.5 + 0.5*VIS(TC>0); clear VIS;
+    % estimate error for each Delaunay edge 
+    % (sum local thickness and sulcuswidth vs. the length of the edge) 
+    %sulcuswidth = 0.0; % worse results with additional width
+    LECP = max(0, LE - ( TN(E(:,1))/2 + TN(E(:,2))/2 + 0.02 ) ) / 2; % - sulcuswidth )); 
+    LEC  = max(-inf, (TN(E(:,1))/2 + TN(E(:,2))/2) - (LE - 0.02) ) / 2; % - sulcuswidth )); 
+    LEOC = LEO .* max(-inf, 0.02 - LEO) / 2; %clear LEO; % minimum distance between points (rare spaecial case) 
+    LEIC = LEI .* max(-inf, 0.02 - LEI) / 2; %clear LEI; % minimum distance between points (rare spaecial case)
+    TNP  = repmat(TN,3,1); %2 + any(opt.boundarySurfaces == [1,3]) + any(opt.boundarySurfaces == [2,3]) ,1);
+    if opt.boundarySurfaces == 1 || opt.boundarySurfaces == 3
+      LEUOC = max(0, LEUOS - ( TNP(EUOS(:,1))/2 ) );
+    end
+    if opt.boundarySurfaces == 2 || opt.boundarySurfaces == 3
+      LEUIC = max(0, LEUIS - ( TNP(EUIS(:,1))/2 ) );
+    end
+    
+    
+    
+    % map the Delaunay edge correction to the vertices (simple maximum)
+    % ###
+    %   You may (also) use some intensity information here! ... added
+    %   Moreover, a loop is very slow and the estimation of a mapping
+    %   would be better! But how? ... partially implemented
+    % ###
+    %{
+            EOid = TN*0; EIid = TN*0; 
+            for ni=1:size(E,1)
+              EOid(E(ni,1)) = EOid(E(ni,1)) .* , LEC(ni) .* OE(ni), LEOC(ni)]); 
+              EOid(E(ni,2)) = max([EOid(E(ni,2)), LEC(ni) .* OE(ni), LEOC(ni)]); 
+              EIid(E(ni,1)) = max([TIC(E(ni,1)), LEC(ni) .* IE(ni), LEIC(ni)]); 
+              EIid(E(ni,2)) = max([TIC(E(ni,2)), LEC(ni) .* IE(ni), LEIC(ni)]); 
+            end
+    %}
+    OE = min(1,(min(SNalpha,[],2)<60) + IC<2.15);
+    IE = min(1,(max(SNalpha,[],2)>60) + IC>2.15); 
         
-      else
-        % Complex correction with side differentiation: 
-        % Here, the angle between of the inter-surface edges is used to
-        % differentiate between the edges within a suclus (outer) or within
-        % a gyrus (inner). 
-        TOC = TN*0; TIC = TN*0;
-        for ni=1:size(E,1)
-          TOC(E(ni,1)) = max([TOC(E(ni,1)), LEC(ni) .* (SNalpha(ni,1)<=90), LEOC(ni)]); 
-          TOC(E(ni,2)) = max([TOC(E(ni,2)), LEC(ni) .* (SNalpha(ni,2)<=90), LEOC(ni)]); 
-          TIC(E(ni,1)) = max([TIC(E(ni,1)), LEC(ni) .* (SNalpha(ni,1)>90), LEIC(ni)]); 
-          TIC(E(ni,2)) = max([TIC(E(ni,2)), LEC(ni) .* (SNalpha(ni,2)>90), LEIC(ni)]); 
-        end 
-
-        % estimate first corrected inner and outer thickness 
-        TOC = max(0,min(TOC,single(spm_mesh_smooth(M,double(TOC),max(0,4.0*sf))*1.50 ) + ...
-                            single(spm_mesh_smooth(M,double(TOC),max(0,2.0*sf))*0.75 ) + ...
-                            single(spm_mesh_smooth(M,double(TOC),max(0,0.5*sf))*0.25 ) ));
-        TIC = max(0,min(TIC,single(spm_mesh_smooth(M,double(TIC),max(0,4.0*sf))*1.50 ) + ...
-                            single(spm_mesh_smooth(M,double(TIC),max(0,2.0*sf))*0.75 ) + ...
-                            single(spm_mesh_smooth(M,double(TIC),max(0,0.5*sf))*0.25 ) ));
-        TC  = TOC + TIC; TCsum = mean(TC(TC>0)); 
+    TOC = TN*0; TIC = TN*0; TOCP = TN*0; TICP = TN*0; %PVE_LEOC = TN*0; PVE_LEIC = TN*0;
+    app = 1; 
+    if app == 1
+      for ni=1:size(E,1)
+       % OE = min(1,(min(SNalpha(ni,:))<60) + IC(ni)<2.15);
+       % IE = min(1,(max(SNalpha(ni,:))>60) + IC(ni)>2.15); 
         
-        % estiamte new inner and outer surfaces
-        VOC = V - NS .* repmat( max(0,TN/2 - TOC/2 - TIC/2),1,3);    % outer surface 
-        VIC = V + NS .* repmat( max(0,TN/2 - TIC/2 - TOC/2),1,3);    % inner surface
-        clear TIC TOC;
-  
-        % filter surfaces - that is not so easy and will "deform" some
-        % cortical structures .. so you need a mask .. maybe by curvature
-        % information?
-     %   VOS = smoothsurf(VOC,1); VOC(TC>0) = VOS(TC>0); clear VOS;
-     %   VIS = smoothsurf(VIC,1); VIC(TC>0) = VIS(TC>0); clear VIS;
-
-        % estimate new smooth thickness function - here smoothing is OK!
-        TNC = sum( (VIC - VOC).^2 , 2) .^ 0.5;      % Tlink 
-        TNS = single(spm_mesh_smooth(M,double(TNC),max(1,min(10,sf)) ));
-        TC  = single(spm_mesh_smooth(M,double(TC ),max(1,min(10,sf)) )); 
-% nutze diese information erst um ausreißer zu erfassen ... in einer 4 mm dicken regione wird kein 1 mm sulcus sein!        
+        %{
+        PVE_LEOC(E(ni,1)) = max(0,opt.vx_vol - LEOC(ni)); 
+        PVE_LEOC(E(ni,2)) = max(0,opt.vx_vol - LEOC(ni)); 
+        PVE_LEIC(E(ni,1)) = max(0,opt.vx_vol - LEIC(ni)); 
+        PVE_LEIC(E(ni,2)) = max(0,opt.vx_vol - LEIC(ni)); 
+        %}
         
-        TN(TC>0) = TNS(TC>0);                      % only in corrected areas; 
-        clear TNS TNC
+        TOC(E(ni,1)) = max([TOC(E(ni,1)), LEC(ni) .* OE(ni)]); %, -inf*LEOC(ni)]); 
+        TOC(E(ni,2)) = max([TOC(E(ni,2)), LEC(ni) .* OE(ni)]); %, -inf*LEOC(ni)]); 
+        TIC(E(ni,1)) = max([TIC(E(ni,1)), LEC(ni) .* IE(ni), LEIC(ni)]); 
+        TIC(E(ni,2)) = max([TIC(E(ni,2)), LEC(ni) .* IE(ni), LEIC(ni)]); 
         
-        % update central surface
-        VN  = mean(cat(3,VIC,VOC),3); 
-        NS  = spm_mesh_normals(SN); 
-       % VNS = smoothsurf(VN,1); VN(TC>0) = VNS(TC>0); clear VNS;
-         
-        % update inner and outer surfaces
-        VOC = VN - NS .* repmat(TN/2,1,3);          % outer surface
-        VIC = VN + NS .* repmat(TN/2,1,3);          % inner surface
-
-% The idea was to improve the description here but the smoothing did now 
-% work and was overall too slow. 
-%{        
-        % filter surfaces
-      %  VOS = smoothsurf(VOC,1); VOC(TC>0) = VOS(TC>0); clear VOS;
-      %  VIS = smoothsurf(VIC,1); VIC(TC>0) = VIS(TC>0); clear VIS;
-        
-        % thickness smoothness is a problem by the number of iterations so I have to limit it! 
-        % however we apply this correction only in affected areas
-        TNC = sum( (VIC - VOC).^2 , 2) .^ 0.5; 
-        TNS = single(spm_mesh_smooth(M,double(TNC),max(1,min(10,sf)) )); % * ((maxiter*10) - j)/(maxiter*10) ));clear TNC; 
-        TOC = single(spm_mesh_smooth(M,double(TOC),max(1,min(10,sf)) )); % * ((maxiter*10) - j)/(maxiter*10) ));
-        TIC = single(spm_mesh_smooth(M,double(TIC),max(1,min(10,sf)) )); % * ((maxiter*10) - j)/(maxiter*10) ));
-        TN(TC>0) = TNS(TC>0);
-
-        VN  = mean(cat(3,VIC,VOC),3); 
-        VOC = VN - NS .* repmat(TN/2 - TOC,1,3);          % outer surface
-        VIC = VN + NS .* repmat(TN/2 - TIC,1,3);          % inner surface
-      
-        % filter surfaces
-        %VOS = smoothsurf(VOC,1); VOC(TC>0) = VOC(TC>0)*0.0 + 1.0*VOS(TC>0); clear VOS;
-        %VIS = smoothsurf(VIC,1); VIC(TC>0) = VIC(TC>0)*0.0 + 1.0*VIS(TC>0); clear VIS;
-%}
-
+        % with angle weighting ...
+        TOCP(E(ni,1)) = max([TOCP(E(ni,1)),LECP(ni) .* OE(ni)]); 
+        TOCP(E(ni,2)) = max([TOCP(E(ni,1)),LECP(ni) .* OE(ni)]); 
+        TICP(E(ni,1)) = max([TOCP(E(ni,1)),LECP(ni) .* IE(ni)]); 
+        TICP(E(ni,2)) = max([TOCP(E(ni,1)),LECP(ni) .* IE(ni)]); 
       end
     else
-      VOC = VO;
-      VIC = VI;
-    end
-    % upate thickness and surface
- %   TN  = sum( (VIC - VOC).^2 , 2) .^ 0.5;
- %   SN.vertices = mean(cat(3,VIC,VOC),3); 
-    
- 
- 
- 
-    %% detect reminding small overlaps in the following way
-    %  - the CS is expected to be correct and overlaps happens afters only for the IS and OS. 
-    %  - this means that the angle between the edge and the normal will flip alpha(CS) 
-    %  - I am not sure if this is really working (RD20190912)
-    if 1
-      NCalpha = angle(N(E(:,1),:),  V(E(:,1),:)   - V(E(:,2),:)); 
-      NOalpha = angle(N(E(:,1),:),  VOC(E(:,1),:) - VOC(E(:,2),:)); 
-      NIalpha = angle(N(E(:,1),:),  VIC(E(:,1),:) - VIC(E(:,2),:)); 
-      % flipped angles
-      NOcorr  = (NCalpha - NOalpha) > 90; 
-      NIcorr  = (NCalpha - NIalpha) > 90;
-     % Ncorr   = TNC * 0; Ncorr(E(NOcorr | NIcorr,1)) = 1; 
-      
-      %% correction vector and correction for outer surface
-      if 1
-        sulcuswidth = 0.2; 
-        NNcorr  = VOC(E(NOcorr,2),:) - VOC(E(NOcorr,1),:); 
-        VOC(E(NOcorr,1),:) = VOC(E(NOcorr,1),:) + NNcorr*(0.5 + sulcuswidth); 
-        VOC(E(NOcorr,2),:) = VOC(E(NOcorr,2),:) - NNcorr*(0.5 + sulcuswidth); 
-        % correction vector and correction for inner surface
-        NNcorr  = VIC(E(NIcorr,2),:) - VIC(E(NIcorr,1),:); 
-        VIC(E(NIcorr,1),:) = VIC(E(NIcorr,1),:) + NNcorr*(0.5 + sulcuswidth); 
-        VIC(E(NIcorr,2),:) = VIC(E(NIcorr,2),:) - NNcorr*(0.5 + sulcuswidth);
-      else
-        % neu - geht wohl nicht
-        NNcorr  = VOC(E(NOcorr,2),:) - VOC(E(NOcorr,1),:); 
-        NNcorrd = sum( NNcorr.^2 , 2) .^ 0.5;
-        VOC(E(NOcorr,1),:) = V(E(NOcorr,1),:) - NS(E(NOcorr,1),:) .* repmat(max(0,TN(E(NOcorr,1),:)/2 - NNcorrd/2),1,3); 
-        VOC(E(NOcorr,2),:) = V(E(NOcorr,2),:) - NS(E(NOcorr,2),:) .* repmat(max(0,TN(E(NOcorr,2),:)/2 - NNcorrd/2),1,3); 
-        % correction vector and correction for inner surface
-        NNcorr  = VIC(E(NIcorr,2),:) - VIC(E(NIcorr,1),:); 
-        NNcorrd = sum( NNcorr.^2 , 2) .^ 0.5;
-        VIC(E(NIcorr,1),:) = V(E(NIcorr,1),:) + NS(E(NIcorr,1),:) .* repmat(max(0,TN(E(NIcorr,1),:)/2 - NNcorrd/2),1,3); 
-        VIC(E(NIcorr,2),:) = V(E(NIcorr,2),:) + NS(E(NIcorr,2),:) .* repmat(max(0,TN(E(NIcorr,2),:)/2 - NNcorrd/2),1,3); 
+      for ni=1:size(E,1)
+        TOC(E(ni,1)) = max([TOC(E(ni,1)), LEC(ni) .* OE(ni), LEOC(ni)]); 
+        TOC(E(ni,2)) = max([TOC(E(ni,2)), LEC(ni) .* OE(ni), LEOC(ni)]); 
+        TIC(E(ni,1)) = max([TIC(E(ni,1)), LEC(ni) .* IE(ni), LEIC(ni)]); 
+        TIC(E(ni,2)) = max([TIC(E(ni,2)), LEC(ni) .* IE(ni), LEIC(ni)]); 
       end
-      %NC  = TN - sum( (VIC - VOC).^2 , 2) .^ 0.5; TCsum = max(NC(NC>0)); 
+    end
+    if opt.boundarySurfaces == 1 || opt.boundarySurfaces == 3
+      for ni=1:size(EUOS,1)
+         TOC( mod( EUOS(ni,1)-1 , size(SN,1) )+1) = LEUOC(ni); 
+      end
+    end
+    if opt.boundarySurfaces == 2 || opt.boundarySurfaces == 3
+      for ni=1:size(EUOS,1)
+         TOC( mod(EUIS(ni,1)-1, size(SN,1) )+1) = LEUIC(ni); 
+      end
+    end
+    clear LEC LEOC LIOC;
+    
+    if opt.slowdown
+      slowdown  = max(1,2/j); 
+    else
+      slowdown  = 1; 
+    end
+      
+    if opt.model == 0 || opt.model == 2
+      TOC  = single( spm_mesh_smooth(M,double(TOC), 1 ))*1.4;   TOC = TOC / (slowdown/2); 
+      TIC  = single( spm_mesh_smooth(M,double(TIC), 1 ))*1.2;   TIC = TIC / (slowdown/2); 
+      if opt.verb, fprintf('\n  TIC: %0.2f%s%0.2f, TOC: %0.2f%s%0.2f',mean(TIC),char(177),std(TIC),mean(TOC),char(177),std(TOC)); end
+    end
+    %%
+    if opt.model
+      % filter limits
+      TOCP  = single( spm_mesh_smooth(M,double(TOCP), 1 ))*1.0;% 1.5  
+      TICP  = single( spm_mesh_smooth(M,double(TICP), 1 ))*0.8;
+
+      % correction for intensities ...
+      YI    = isocolors2(Y,VI); 
+      YO    = isocolors2(Y,VO);  
+      YppO  = isocolors2(Ypp,VO);  
+     
+      if opt.model == 1, fprintf('\n'); end
+      if opt.verb, fprintf('  YIC: %0.2f%s%0.2f, YOC: %0.2f%s%0.2f',mean(YI),char(177),std(YI),mean(YO),char(177),std(YO)); end 
+
+      WMth  = 3; YI   = max( -TICP , max(-1, min(0.5, YI - ((WMth/2 + Yl4/2) )  ))  ) / (slowdown);
+      CSFth = 1; YO   = max( -TOCP , max(-1, min(0.5, ((CSFth/2 + Yl4/2) ) - YO ))  ) / (slowdown);% + 2*C
+      CSFth = 0; YppO = max( -TOCP , max(-0.05, min(0.05, 0.01 - YppO ))  ) / (slowdown);% + 2*C
+      
+      if 1
+        YC = isocolors2(Y,V ); 
+        YC = max( -0.5, min( 0.5, YC - Yl4 )) / (slowdown);
+        YI = YI * 0.8 + 0.2 * YC; 
+        YO = YO * 0.8 - 0.2 * YC; 
+      end
+      YO = YO * 0.8 - 0.2 * YppO; 
+        
+      if opt.verb, fprintf(', YIC: %0.2f%s%0.2f, YOC: %0.2f%s%0.2f',mean(YI),char(177),std(YI),mean(YO),char(177),std(YO)); end
+
+      VOC = V - N .* repmat( TN/2 - YO ,1,3);    % outer surface 
+      VIC = V + N .* repmat( TN/2 - YI ,1,3);    % inner surface
+
+      YIC   = isocolors2(Y,VIC); 
+      YOC   = isocolors2(Y,VOC);  
+      YppOC = isocolors2(Ypp,VOC);  
+
+      YI = YI .* ( abs(YI - (WMth/2 + Yl4/2))  > abs(YIC - (WMth/2 + Yl4/2)));
+      YO = YO .* ( abs((CSFth/2 + Yl4/2) - YO) > abs((CSFth/2 + Yl4/2) - YOC) & YppOC>0);
+
+      % filter correction 
+      YO = single(spm_mesh_smooth(M,double(YO), sf )); 
+      YI = single(spm_mesh_smooth(M,double(YI), sf ));
+
+% if the point is/was perfect then do not change      
+% if the new point is perfect / better than the old then simply use it?
+      
+      % combine 
+      if opt.model == 1 % only intensity 
+        TIC  = YI; 
+        TOC  = YO; 
+      elseif opt.model % combine
+        mixing = max(0,-0.2 + 1.0*(j/maxiter2));%0.8;
+        TIC  = mean( cat( 4, TIC*(1-mixing) , YI*mixing), 4); 
+        TOC  = mean( cat( 4, TOC*(1-mixing) , YO*mixing), 4); 
+      end  
     end
     
     
+    % estimate first corrected inner and outer thickness 
+    % Different levels of smoothing were use to have more effect on neighbors. 
+    TOC  = single( spm_mesh_smooth(M,double( TOC  ), sf*2 ));  
+    TIC  = single( spm_mesh_smooth(M,double( TIC  ), sf*2 ));
+    TC   = TOC + TIC; TCsum = rms(TC(TC>0));
+
+
+    % correction in specified areas that also include a general
+    % smoothness constrains of the cortical thickness
+    TNC = TN - TOC/2 - TIC/2; 
+    TNC = single(spm_mesh_smooth(M,double(TNC), sf*max(0.5,2 - 3*(j/maxiter2))) ); 
+    TN(TC>0) = TNC(TC>0);   
+    clear TC TNC flim;
+
     
+    % estimate new inner and outer surfaces
+    VOC = V - N .* repmat( TN/2 - TOC ,1,3);    % outer surface 
+    VIC = V + N .* repmat( TN/2 - TIC ,1,3);    % inner surface
+    clear TOC TIC;
     
-    %% upate thickness and surface
+%    svf = 0.05; 
+%    %VOC = VOC*(1-svf) + svf*smoothsurf(VOC,1); 
+%    VIC = VIC*(1-svf) + svf*smoothsurf(VIC,1); 
+    
+    % update thickness and surface
     TN  = sum( (VIC - VOC).^2 , 2) .^ 0.5;
     SN.vertices = mean(cat(3,VIC,VOC),3); 
     
     
     %% this is just for display and loop settings
     %  SX.vertices = VOC; SX.faces = S.faces; SX.facevertexcdata = TC; cat_surf_render2(SX);
-    stopiterth = 0.0002; 
-    if debug && ( j==1 || mod(j,10)==1 || TCsum<0.01 || abs(TCsumo - TCsum)<stopiterth ) 
+    stopiterth = 0.00005; 
+    if opt.debug && ( j==1 || mod(j,5)==1 || abs(TCsum)<0.01 || abs(TCsumo - TCsum)<stopiterth ) 
       TNM = TN>(mean(TN(:)) - 2*std(TN(:))) & TN<(mean(TN(:)) + 2*std(TN(:)));
-      cat_io_cprintf('g5',sprintf('\n    mean reminding overlap: %8.2f mm (Tlink: %4.2f%s%4.2f mm) %9.0fs',...
+      if ~opt.verb, fprintf('\n'); end
+      cat_io_cprintf('g5',sprintf('    reminding overlap:      %8.4f mm (Tlink: %4.2f%s%4.2f mm) %9.0fs',...
         TCsum,mean(TN(TNM)),char(177),std(TN(TNM)),etime(clock,stime) )); stime = clock;
     end
-    if TCsum<0.01 || abs(TCsumo - TCsum)<stopiterth, break; end
-    TCsumo = TCsum;
+    if ( TCsum<0.005 || abs(TCsumo - TCsum)<stopiterth) && abs( mean(TN(NM)) - TNold )<0.001, break; end
+    TCsumo = TCsum; TNold = mean(TN(NM)); 
   end
   
   % export cortical surfaces
-  if write, cat_surf_saveICO(SN,TN,Pcs,sprintf('post_collcorr_%0.0fk',round( size(S.faces,1)/1000 / 10) * 10 ),0); else fprintf('\n'); end
+  if opt.write, cat_surf_saveICO(SN,TN,Pcs,sprintf('post_collcorr_%0.0fk',round( size(S.faces,1)/1000 / 10) * 10 ),0); else fprintf('\n'); end
   
-  % flip back
+  
+  %% flip back
   if flipped, SN.faces = [SN.faces(:,1) SN.faces(:,3) SN.faces(:,2)]; SN.mati(7) = - SN.mati(7); end
   
 
+end
+function cat_surf_show_orthview(Psurf,Pm)
+  fg = spm_figure('GetWin','Graphics');
+  %fg = spm_figure('Create','SurfaceOverlay');%,Psurf);
+  spm_figure('clear')
+
+  id = 1;
+  global st
+
+  [pp,ff,ee] = spm_fileparts(Pm);
+  hhm = spm_orthviews('Image',spm_vol(Pm));
+  spm_orthviews('Caption',hhm,{'m*.nii (Intensity Normalized T1)'},'FontWeight','Bold');
+  if ff(1)=='m', spm_orthviews('window',hhm,[0.3 1.03]); caxis([0.3,1.03]); end
+  spm_orthviews('AddContext'); % need the context menu for mesh handling
+
+  ov_mesh = 1; 
+  for ix=1:numel(Psurf) 
+    
+    if ov_mesh && exist(Psurf{ix},'file')
+      try
+        spm_ov_mesh('display',id,Psurf{ix});
+      catch
+        fprintf('Please update to a newer version of spm12 for using this contour overlay\n');
+        ov_mesh = 0;
+        continue;
+      end
+    end
+  end
+
+  %% change line style
+  if ov_mesh
+    styles = {'b-','g-','r-','c-','m-','y-','w-','b.-','g.-','r.-','c.-','m.-','y.-','w.-'}; % need more if meshes were added
+    names  = {'central';'pial';'white';'';'';''};
+    hM = findobj(st.vols{1}.ax{1}.cm,'Label','Mesh');
+    UD = get(hM,'UserData');
+    UD.width = [repmat(0.75,1,numel(UD.width) - numel(Psurf))  repmat(0.5,1,numel(Psurf))]; 
+    UD.style = styles; %(1:numel(Psurf)); % need more if meshes were added
+    set(hM,'UserData',UD);
+    spm_ov_mesh('redraw',id);
+
+    % TPM legend
+    cc = axes('Position',[0.55 0.4 0.02 0.01],'Parent',fg);
+    text(cc,0,1,[spm_str_manip(pp,'t') '/' ff ':']); 
+    axis(cc,'off')
+    for ix=1:numel(Psurf) 
+      cc = axes('Position',[0.55 0.4 - 0.02*ix 0.02 0.01],'Parent',fg);
+      plot(cc,[0 1],[1 1],styles{ix}); 
+      text(cc,1.2,1,names{ix}); 
+      axis(cc,'off')
+    end
+  end
 end
 function C = cat_surf_centroid(V,F,n)
 % _________________________________________________________________________
@@ -1384,7 +1860,7 @@ function [V,vmat,vmati] = cat_surf_surf2vol(S,opt)
 %  SH.vertices = SH.vertices + imat;
 
   if ~exist('opt','var'), opt = struct(); end
-  def.debug  = 0;
+  def.debug  = 0;     % debugging output vs. memory optimization 
   def.pve    = 1;     % 0 - no PVE; 1 - PVE;
                       % 2 - fill with surface texture values without interpolation and masking (==4)    
                       % 3 - fill with surface texture values with    interpolation and masking (==5)
@@ -1522,4 +1998,44 @@ function N = patchnormals(FV) %
     N(B(i),:) = N(B(i),:) + n(i,:); 
     N(C(i),:) = N(C(i),:) + n(i,:); 
   end
+end
+function V = isocolors2(R,V,opt)
+% ______________________________________________________________________
+% calculates an interpolated value of a vertex in R  
+% We have to calculate everything with double, thus larger images will 
+% cause memory issues.
+% ______________________________________________________________________
+  
+  if isempty(V), return; end
+  if ndims(R)~=3,  error('MATLAB:isocolor2:dimsR','Only 2 or 3 dimensional input of R.'); end
+  if ~exist('opt','var'), opt=struct(); end
+  
+  def.interp = 'linear';
+  opt = cat_io_checkinopt(opt,def);
+  
+  if  isa(R,'double'), R = single(R); end
+  if ~isa(V,'double'), V = double(V); VD=0; else VD=1; end
+  
+  nV   = size(V,1);
+  ndim = size(V,2);
+  
+  switch opt.interp
+    case 'nearest'
+      V = max(1,min(round(V),repmat(size(R),nV,1))); 
+      V = R(sub2ind(size(R),V(:,2),V(:,1),V(:,3)));
+    case 'linear'
+      nb  = repmat(shiftdim(double([0 0 0;0 0 1;0 1 0;0 1 1;1 0 0;1 0 1;1 1 0;1 1 1]'),-1),nV,1);  
+      enb = repmat(shiftdim((ones(8,1,'double')*[size(R,2),size(R,1),size(R,3)])',-1),nV,1);  
+
+      % calculate the weight of a neigbor (volume of the other corner) and
+      w8b = reshape(repmat(V,1,2^ndim),[nV,ndim,2^ndim]); clear V;
+      % if the streamline is near the boundary of the image you could be out of range if you add 1 
+      n8b = min(floor(w8b) + nb,enb); clear enb
+      n8b = max(n8b,1);
+      w8b = flipdim(prod(abs(n8b - w8b),2),3);        
+
+      % multiply this with the intensity value of R
+      V = sum(R(sub2ind(size(R),n8b(:,2,:),n8b(:,1,:),n8b(:,3,:))) .* w8b,3);
+  end  
+  if ~VD, V = single(V); end
 end

@@ -45,6 +45,7 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
 %            Currently the result of this operation is the indexed value itself, 
 %            but in a future release, it will be an error. 
 warning('off','MATLAB:subscripting:noSubscriptsSpecified');
+cstime = clock;
 
 %#ok<*AGROW>
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
@@ -72,7 +73,7 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
   def.add_parahipp       = cat_get_defaults('extopts.add_parahipp');
   def.scale_cortex       = cat_get_defaults('extopts.scale_cortex');
   def.close_parahipp     = cat_get_defaults('extopts.close_parahipp');
-
+  
   opt            = cat_io_updateStruct(def,opt);
   opt.fast       = any(~cellfun('isempty',strfind(opt.surf,'fst'))) + any(~cellfun('isempty',strfind(opt.surf,'sfst')));
   opt.vol        = any(~cellfun('isempty',strfind(opt.surf,'v')));
@@ -232,6 +233,7 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
     Praw       = fullfile(pp,surffolder,sprintf('%s.central.nofix.%s.gii',opt.surf{si},ff));    % raw
     Psphere0   = fullfile(pp,surffolder,sprintf('%s.sphere.nofix.%s.gii',opt.surf{si},ff));     % sphere.nofix
     Pcentral   = fullfile(pp,surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff));          % central
+    Pcentralr  = fullfile(pp,surffolder,sprintf('%s.central.resampled.%s.gii',opt.surf{si},ff));          % central
     Ppial      = fullfile(pp,surffolder,sprintf('%s.pial.%s.gii',opt.surf{si},ff));             % pial (GM/CSF)
     Pwhite     = fullfile(pp,surffolder,sprintf('%s.white.%s.gii',opt.surf{si},ff));            % white (WM/GM)
     Pthick     = fullfile(pp,surffolder,sprintf('%s.thickness.%s',opt.surf{si},ff));            % FS thickness / GM depth
@@ -486,7 +488,7 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
     end
     
     if opt.verb>2, fprintf(txt); end
-    if ~debug, clear tmp Yppi Yppt; end
+    if ~debug, clear tmp; end
 
     if opt.verb>2   
       fprintf('%s %4.0fs\n',repmat(' ',1,66),etime(clock,stime)); 
@@ -611,6 +613,25 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
       else % otherwise simply copy ?h.pbt.* to ?h.thickness.*
         copyfile(Ppbt,Pthick);
       end
+      
+      
+      %% intenity based evaluation
+      CS = gifti(Pcentral);
+      % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
+      warning off MATLAB:subscripting:noSubscriptsSpecified
+      CS1.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
+      CS1.faces    = CS.faces; 
+      mati = spm_imatrix(V.mat); 
+      CS1.vmat = vmat; CS1.mati = mati; 
+      if mati(7)<0, CS1.faces = [CS1.faces(:,1) CS1.faces(:,3) CS1.faces(:,2)]; end
+      try
+        facevertexcdata1 = cat_io_FreeSurfer('read_surf_data',Ppbt);
+      catch
+        facevertexcdata1 = isocolors2(Yth1,CS1.vertices); 
+      end
+      cat_surf_fun('saveico',CS1,facevertexcdata1,Pcentral,'fast');
+      cat_surf_fun('evalCS',CS1,facevertexcdata1,Ym,Yppt,(strfind(Praw,'dilated1.5-2.5mm')>0)*5);
+      
 
       %%
       clear CS
@@ -806,8 +827,60 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
       cmd = sprintf(['CAT_AverageSurfaces -avg "%s" "%s" "%s"'], ...
                        Pcentral,Pwhite,Ppial);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
-
+      
+      updateThickness = 0;
+      if updateThickness % more testing necessary to also correct thickness
+        % correction of cortical thickness
+        cmd = sprintf('CAT_Hausdorff  "%s" "%s" "%s"',Pwhite,Ppial,Ppbt);
+        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+      end
+      
+      saveiconame = 'extract_pial_white';
+    else
+      updateThickness = 0;
+      saveiconame = 'default';
     end
+    
+    
+    % just a shortcut for manual tests 
+    writedebug = cat_get_defaults('extopts.expertgui')==2;
+    if writedebug %
+      %% intenity based evaluation
+      CS = gifti(Pcentral);
+      % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
+      warning off MATLAB:subscripting:noSubscriptsSpecified
+      CS1.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
+      CS1.faces    = CS.faces; 
+      mati = spm_imatrix(V.mat); 
+      CS1.vmat = vmat; CS1.mati = mati; 
+      if mati(7)<0, CS1.faces = [CS1.faces(:,1) CS1.faces(:,3) CS1.faces(:,2)]; end
+      if updateThickness
+        facevertexcdata1 = cat_io_FreeSurfer('read_surf_data',Ppbt);
+      else
+        facevertexcdata1 = isocolors2(Yth1,CS1.vertices); 
+      end
+      fprintf('%5.0fs\n',etime(clock,stime)); stime = []; 
+      cat_surf_fun('saveico',CS1,facevertexcdata1,Pcentral,saveiconame);
+      res = cat_surf_fun('evalCS',CS1,facevertexcdata1,Ym,Yppt,Pcentral);
+    end
+    % just a shortcut for manual tests 
+    if 0 
+      cat_io_cmd('  ','g5','',opt.verb,stime);  
+      S.(opt.surf{si}) = struct('faces',CS1.faces,'vertices',CS1.vertices,'vmat',vmat,'vmati',vmati,'mati',mati,'th1',facevertexcdata1); 
+
+      if si==numel(opt.surf) 
+        cat_io_cmd('  ','g5','',opt.verb,stime);
+        sprintf('%5ds\n',round(etime(clock,cstime)));
+      end
+      %%
+      if si==numel(opt.surf) && si==1 
+        cat_io_cmd('  ','g5','',opt.verb,cstime);
+        sprintf('%5ds\n',round(etime(clock,cstime)));
+      end
+      continue
+    end
+    
+    
 
     %% spherical surface mapping 2 of corrected surface
     stime = cat_io_cmd('  Spherical mapping with areal smoothing','g5','',opt.verb,stime); 
@@ -876,12 +949,66 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
       cat_io_FreeSurfer('write_surf_data',Psw,facevertexcdata3);
     end
     fprintf('%5.0fs\n',etime(clock,stime)); 
-    fprintf(' Surface Euler number: %d\n',EC0);
-    fprintf(' Overall size of topology defects: %d\n',defect_size0);
+    
+    
+    fprintf('  Surface Euler number:                  %d\n',EC0);
+    fprintf('  Overall size of topology defects:      %d',defect_size0);
 
+   
+    if writedebug 
+      % filenames for resmapling
+      Presamp   = fullfile(pp,surffolder,sprintf('%s.tmp.resampled.%s'    ,opt.surf{si},ff));  
+      Ppbtr     = fullfile(pp,surffolder,sprintf('%s.pbt.resampled.%s'    ,opt.surf{si},ff));  
+      Ppbtr_gii = [Ppbtr '.gii'];
+      
+      % resample values using warped sphere 
+      cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavgsph,Presamp,Ppbt,Ppbtr);
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+      
+      if 0 
+        % resample surface using warped sphere with better surface quality (using Spherical harmonics)
+        % ###
+        % deactivated because the resampling of the surface alone leads to displacements of the textures (RD20190927)!
+        % ###
+        cmd = sprintf('CAT_ResampleSphericalSurfSPH -n 327680 "%s" "%s" "%s"',Pcentral,Pspherereg,Presamp);
+        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+
+        % resample surface according to freesurfer sphere
+        cmd = sprintf('CAT_ResampleSurf "%s" NULL "%s" "%s"',Presamp,Pfsavgsph,Presamp);
+        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2); 
+      end
+      
+      % add values to resampled surf and save as gifti
+      cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Presamp,Ppbtr,Ppbtr_gii); 
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2); 
+      if exist(Ppbtr,'file'), delete(Ppbtr); end
+
+      % remove path from metadata to allow that files can be moved (pathname is fixed in metadata) 
+      [pp2,ff2,ex2] = spm_fileparts(Ppbtr_gii); %#ok<ASGLU>
+      g = gifti(Ppbtr_gii);
+      g.private.metadata = struct('name','SurfaceID','value',[ff2 ex2]);
+      save(g, Ppbtr_gii, 'Base64Binary');
+      
+      % intenity based evaluation
+      CSr = gifti(Ppbtr_gii);
+      % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
+      warning off MATLAB:subscripting:noSubscriptsSpecified
+      CS1.vertices = (vmati*[CSr.vertices' ; ones(1,size(CSr.vertices,1))])';
+      CS1.faces    = CSr.faces; 
+      mati = spm_imatrix(V.mat); 
+      CS1.vmat = vmat; CS1.mati = mati; 
+      if mati(7)<0, CS1.faces = [CS1.faces(:,1) CS1.faces(:,3) CS1.faces(:,2)]; end
+      cat_surf_fun('saveico',CS1,CSr.cdata,Pcentralr,[saveiconame '_resampled']);
+      cat_surf_fun('evalCS',CS1,CSr.cdata,Ym,Yppi,Pcentralr);
+      clear CSr CS1
+    else
+      fprintf('\n'); 
+    end
+    clear Yppi; 
+    
     % visualize a side
     % csp=patch(CS); view(3), camlight, lighting phong, axis equal off; set(csp,'facecolor','interp','edgecolor','none')
-
+    
     % create output structure
     S.(opt.surf{si}) = struct('faces',CS.faces,'vertices',CS.vertices,'vmat',vmat,...
         'vmati',vmati,'th1',facevertexcdata);
@@ -921,6 +1048,11 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
     delete(Vpp.fname);
     delete(Vpp1.fname);
     clear CS
+    
+    % create white and central surfaces
+    cat_surf_fun('white',Pcentral);
+    cat_surf_fun('pial',Pcentral);
+    
   end  
   
   % calculate mean EC and defect size for all surfaces
@@ -931,6 +1063,12 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
     for si=1:numel(Psurf)
       fprintf('Display thickness: %s\n',spm_file(Psurf(si).Pthick,'link','cat_surf_display(''%s'')'));
     end
+  end
+  
+  % just an output for test with one hemisphere
+  if si==numel(opt.surf) && si==1 
+    cat_io_cmd('  ','g5','',1);
+    sprintf('%5ds\n',round(etime(clock,cstime)));
   end
 end
 

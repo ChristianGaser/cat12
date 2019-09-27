@@ -738,7 +738,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
   %% side aligment using laplace to correct for missalignments due to the normalization
   stime = cat_io_cmd('  Side alignment','g5','',verb,stime); dispc=dispc+1;
   YBG  = Ya1==LAB.BG | Ya1==LAB.TH;
-  YMF  = Ya1==LAB.VT | Ya1==LAB.BG | Ya1==LAB.TH | Ya1==LAB.HI; 
+  YMF  = Ya1==LAB.VT | Ya1==LAB.BG | Ya1==LAB.TH | Ya1==LAB.HI | Ya1==LAB.TH; % add the thalamus (RD20190913)
   YMF2 = cat_vol_morph(YMF,'d',2,vx_vol) | Ya1==LAB.CB | Ya1==LAB.BS | Ya1==LAB.MB;
   Ymf  = max(Ym,smooth3(single(YMF2*3))); 
   Ycenter = cat_vol_smooth3X(YS==0,6)<0.9 & cat_vol_smooth3X(YS==1,6)<0.9 & ~YMF2 & Yp0>0 & Ym<3.1 & (Yp0<2.5 | Ya1==LAB.BV);
@@ -749,7 +749,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
   
   %% YMF for FreeSurfer fsaverage
   Ysm  = cat_vol_morph(Ys==2,'d',1.75,vx_vol) & cat_vol_morph(Ys==1,'d',1.75,vx_vol);
-  YMF  = cat_vol_morph(Ya1==LAB.VT | Ya1==LAB.BG | Ya1==LAB.HI | (Ya1==LAB.TH & smooth3(Yp0)>2),'c',3,vx_vol) & ~Ysm; 
+  YMF  = cat_vol_morph(Ya1==LAB.VT | Ya1==LAB.BG | Ya1==LAB.HI | (Ya1==LAB.TH & smooth3(Yp0)>1.25),'c',3,vx_vol) & ~Ysm; % changed thalamus (RD20190913)
   %YMF  = YMF | (cat_vol_morph(YA==LAB.CT & YBG,'c',6) & ~Ysm); 
   YMF  = Ym<=2.5  & cat_vol_morph(YMF | Ym>2.3,'c',1) & cat_vol_morph(YMF,'d',2,vx_vol);
   YMF  = smooth3(YMF)>0.5;

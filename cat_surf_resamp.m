@@ -233,18 +233,23 @@ function varargout = cat_surf_resamp(varargin)
           [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
         end
 
-        % resample surface using warped sphere with better surface quality (using Spherical harmonics)
-        cmd = sprintf('CAT_ResampleSphericalSurfSPH -n 327680 "%s" "%s" "%s"',Pcentral,Pspherereg,Presamp);
-        [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
-
-        % resample surface according to freesurfer sphere
-        cmd = sprintf('CAT_ResampleSurf "%s" NULL "%s" "%s"',Presamp,Pfsavg,Presamp);
-        [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
+		if 0
+		  % resample surface using warped sphere with better surface quality (using Spherical harmonics)
+		  % ###
+		  % deactivated because the resampling of the surface alone leads to displacements of the textures (RD20190927)!
+		  % ###
+		  cmd = sprintf('CAT_ResampleSphericalSurfSPH -n 327680 "%s" "%s" "%s"',Pcentral,Pspherereg,Presamp);
+		  [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
+	
+		  % resample surface according to freesurfer sphere
+		  cmd = sprintf('CAT_ResampleSurf "%s" NULL "%s" "%s"',Presamp,Pfsavg,Presamp);
+		  [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
+		end
 
         % smooth resampled values
         % don't use mask for cerebellum
         if strcmp(hemi,'lc') || strcmp(hemi,'rc')
-          cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue);
+          cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue);
         else
           cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue,Pmask);
         end
