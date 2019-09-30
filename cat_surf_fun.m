@@ -826,6 +826,11 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,verb)
   
   if ~exist('verb','var'), verb = 1; end
 
+  if 0 %isfield(CS,'vmat') && isfield(CS,'mati') 
+    CS.vertices = (CS.vmat * [CS.vertices' ; ones(1,size(CS.vertices,1))])';
+    if CS.mati(7)<0, CS.faces = [CS.faces(:,1) CS.faces(:,3) CS.faces(:,2)]; end
+  end
+  
   N  = spm_mesh_normals(CS);   % normalized surface normals                           
   M  = spm_mesh_smooth(CS);    % smoothing matrix
   if exist('T','var')
@@ -845,21 +850,25 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,verb)
         uL4 = 1; 
         L4 = gifti(Player4);
       else
-        if ~exist(Pcentral,'file') && ~exist(Ppbt,'file') && ~isempty(vmat)
-          CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
-          if mati(7)<0, CS.faces = [CS.faces(:,1) CS.faces(:,3) CS.faces(:,2)]; end
-          save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Pcentralx,'Base64Binary');
+   %     if ~exist(Pcentral,'file') && ~exist(Ppbt,'file') && ~isempty(vmat)
+          CS1 = CS; CS1.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
+          if mati(7)<0, CS1.faces = [CS1.faces(:,1) CS1.faces(:,3) CS1.faces(:,2)]; end
+          save(gifti(struct('faces',CS1.faces,'vertices',CS1.vertices)),Pcentralx,'Base64Binary');
           cat_io_FreeSurfer('write_surf_data',Ppbtx,T);  
           cmd = sprintf('CAT_Central2Pial -equivolume -weight 1 "%s" "%s" "%s" 0', ...
                          Pcentralx,Ppbtx,Player4x);
-        else
-          cmd = sprintf('CAT_Central2Pial -equivolume -weight 1 "%s" "%s" "%s" 0', ...
-                         Pcentral,Ppbt,Player4x);
+        %else
+        %  cmd = sprintf('CAT_Central2Pial -equivolume -weight 1 "%s" "%s" "%s" 0', ...
+        %                 Pcentral,Ppbt,Player4x);
+        %end
+        try
+          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+          L4 = gifti(Player4x);
+          uL4 = 1; 
+          delete(Player4x);
+        catch
+          uL4 = 1; 
         end
-        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
-        L4 = gifti(Player4x);
-        uL4 = 1; 
-        delete(Player4x); 
         if exist(Pcentralx,'file'), delete(Pcentralx); end
         if exist(Ppbtx,'file'), delete(Ppbtx); end
       end
@@ -926,6 +935,58 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,verb)
     res.RMSE_Ypp_central = rms(IC);
   end 
   
+  % CAT_SelfIntersect  surface_file output_values_file
+  if exist('Pcentral','var') && ischar(Pcentral)
+    [pp,ff,ee] = spm_fileparts(Pcentral);
+    
+    %Pselfw = fullfile(pp,strrep(ff,'central','whiteselfintersect'));
+    %Pselfp = fullfile(pp,strrep(ff,'central','pialselfintersect'));
+    
+    %if ~exist(Pselfw,'file')  
+      Pwhite = fullfile(pp,strrep([ff ee],'central','whitex'));   
+      Ppial  = fullfile(pp,strrep([ff ee],'central','pialx'));   
+      Pselfw = fullfile(pp,strrep(ff,'central','whiteselfintersect'));
+      Pselfp = fullfile(pp,strrep(ff,'central','pialselfintersect'));
+    
+      % save surfaces
+      save(gifti(struct('faces',CS.faces,'vertices',VI)),Pwhite,'Base64Binary');
+      save(gifti(struct('faces',CS.faces,'vertices',VO)),Ppial,'Base64Binary');
+
+      % write self intersection maps
+      %tic
+      cmd = sprintf('CAT_SelfIntersect "%s" "%s"',Pwhite,Pselfw); 
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+      cmd = sprintf('CAT_SelfIntersect "%s" "%s"',Ppial,Pselfp); 
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+      %toc
+    
+    %end
+    
+      selfw = cat_io_FreeSurfer('read_surf_data',Pselfw);
+      selfp = cat_io_FreeSurfer('read_surf_data',Pselfp);
+
+      area = cat_surf_area(CS);
+      
+      res.white_self_interection_area = sum((selfw(:)>0) .* area(:)) / 100;
+      res.pial_self_interection_area  = sum((selfp(:)>0) .* area(:)) / 100;
+      res.white_self_interections     = res.white_self_interection_area / sum(area(:)/100) * 100;
+      res.pial_self_interections      = res.pial_self_interection_area  / sum(area(:)/100) * 100;
+      
+      if verb
+        fprintf('    Self intersections (white,pial):     '); 
+        cat_io_cprintf( color( rate( res.white_self_interections , 0 , 50 )) , ...
+          sprintf('%0.2f%%%% (%0.2f cm%s) ',res.white_self_interections,res.white_self_interection_area,char(178))); 
+        cat_io_cprintf( color( rate( res.pial_self_interections , 0 , 50 )) , ...
+          sprintf('%0.2f%%%% (%0.2f cm%s)\n',res.white_self_interections,res.pial_self_interection_area,char(178))); 
+      end
+
+      delete(Pwhite);
+      delete(Ppial); 
+      delete(Pselfw);
+      delete(Pselfp); 
+
+  end
+  
   % thickness analysis
   if exist('T','var')
     if exist('Tclasses','var') && ~isempty(Pcentral)
@@ -976,7 +1037,10 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,verb)
   EC  = size(CS.vertices,1) + size(CS.faces,1) - size(spm_mesh_edges(CS),1);
   res.euler_characteristic = EC; 
   if verb
-    fprintf('    Faces / Euler:                       %d / %d \n',size(CS.faces,1), EC );
+    fprintf('    Faces / Euler:                       '); 
+    cat_io_cprintf( color( rate( 1 - max(0,size(CS.faces,1)/300000) , 0 , 0.9 )) , sprintf('%d / ',size(CS.faces,1)));
+    cat_io_cprintf( color( rate( abs(EC-2) , 0 , 30 )) , sprintf('%d',EC));
+    fprintf('\n'); 
   end
 end
 function cat_surf_saveICO(S,Tpbt,Pcs,subdir,writeTfs,Pm,C)
@@ -1032,12 +1096,20 @@ function cat_surf_saveICO(S,Tpbt,Pcs,subdir,writeTfs,Pm,C)
   PintL4   = fullfile(pp,subdir,strrep(ff,'central','Ym-L4'));
   Pcol     = fullfile(pp,subdir,strrep(ff,'central','collision'));   
   Player4  = fullfile(pp,subdir,strrep([ff ee],'central','layer4'));   
+  Pselfw   = fullfile(pp,subdir,strrep([ff ee],'central','whiteselfintersect'));
+  Pselfp   = fullfile(pp,subdir,strrep([ff ee],'central','pialselfintersect'));
 
   % save surfaces
   save(gifti(struct('faces',S.faces,'vertices',S.vertices)),Pcentral,'Base64Binary');
   save(gifti(struct('faces',S.faces,'vertices',VI)),Pwhite,'Base64Binary');
   save(gifti(struct('faces',S.faces,'vertices',VO)),Ppial,'Base64Binary');
 
+  % write self intersection maps
+  cmd = sprintf('CAT_SelfIntersect "%s" "%s"',Pwhite,Pselfw); 
+  [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+  cmd = sprintf('CAT_SelfIntersect "%s" "%s"',Ppial,Pselfp); 
+  [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+  
   % save thickness
   cat_io_FreeSurfer('write_surf_data',Ppbt,Tpbt);
   if exist('writeTfs','var') && ~isempty(writeTfs) && writeTfs
@@ -1611,15 +1683,15 @@ function [SN,TN,E] = cat_surf_collision_correction(S,T,Y,Ypp,Yl4,opt)
 
       WMth  = 3; YI   = max( -TICP , max(-1, min(0.5, YI - ((WMth/2 + Yl4/2) )  ))  ) / (slowdown);
       CSFth = 1; YO   = max( -TOCP , max(-1, min(0.5, ((CSFth/2 + Yl4/2) ) - YO ))  ) / (slowdown);% + 2*C
-      CSFth = 0; YppO = max( -TOCP , max(-0.05, min(0.05, 0.01 - YppO ))  ) / (slowdown);% + 2*C
+      CSFth = 0; Yppc = max( -TOCP , max(-0.05, min(0.05, 0.01 - YppO ))  ) / (slowdown);% + 2*C
       
       if 1
         YC = isocolors2(Y,V ); 
         YC = max( -0.5, min( 0.5, YC - Yl4 )) / (slowdown);
         YI = YI * 0.8 + 0.2 * YC; 
-        YO = YO * 0.8 - 0.2 * YC; 
+        YO = (YO * 0.8 - 0.2 * YC) .* min(1,YppO*20); 
       end
-      YO = YO * 0.8 - 0.2 * YppO; 
+      YO = YO * 0.8 - 0.2 * Yppc; 
         
       if opt.verb, fprintf(', YIC: %0.2f%s%0.2f, YOC: %0.2f%s%0.2f',mean(YI),char(177),std(YI),mean(YO),char(177),std(YO)); end
 

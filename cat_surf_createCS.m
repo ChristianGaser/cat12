@@ -1,4 +1,4 @@
-function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,opt)
+function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,opt)
 % ______________________________________________________________________
 % Surface creation and thickness estimation.
 %
@@ -46,6 +46,12 @@ function [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(V,V0,Ym,Ya,Yp0,YMF,op
 %            but in a future release, it will be an error. 
 warning('off','MATLAB:subscripting:noSubscriptsSpecified');
 cstime = clock;
+
+  % variables to tranfer from MATLAB to image coordinates used by loadSurf and saveSurf subfunctions
+  global vmat vmati mati
+  
+  % surface evaluation paramter 
+  res = struct('euler_characteristic',nan,'defect_size_promile',nan,'lh',struct(),'rh',struct()); 
 
 %#ok<*AGROW>
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
@@ -446,6 +452,8 @@ cstime = clock;
     stime = cat_io_cmd('  Create initial surface','g5','',opt.verb); if opt.verb>2, fprintf('\n'); end
     vmatBBV = spm_imatrix(V.mat);
 
+     % surface coordinate transformations that are used in the "saveCS" and "loadCS" functions  
+    mati  = spm_imatrix(V.mat); 
     vmat  = V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1];
     vmati = inv([vmat; 0 0 0 1]); vmati(4,:) = [];    
 
@@ -861,7 +869,7 @@ cstime = clock;
       end
       fprintf('%5.0fs\n',etime(clock,stime)); stime = []; 
       cat_surf_fun('saveico',CS1,facevertexcdata1,Pcentral,saveiconame);
-      res = cat_surf_fun('evalCS',CS1,facevertexcdata1,Ym,Yppt,Pcentral);
+      res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',CS1,facevertexcdata1,Ym,Yppt,Pcentral);
     end
     % just a shortcut for manual tests 
     if 0 
@@ -989,19 +997,19 @@ cstime = clock;
       g.private.metadata = struct('name','SurfaceID','value',[ff2 ex2]);
       save(g, Ppbtr_gii, 'Base64Binary');
       
-      % intenity based evaluation
-      CSr = gifti(Ppbtr_gii);
-      % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
+      %% intenity based evaluation
+      CS1 = gifti(Ppbtr_gii);
+      CSr = struct('vertices',CS1.vertices,'faces',CS1.faces,'cdata',CS1.cdata,'vmat',vmat,'mati',mati); 
+      CSr.vertices = (vmati*[CSr.vertices' ; ones(1,size(CSr.vertices,1))])';
+      if mati(7)<0, CSr.faces = [CSr.faces(:,1) CSr.faces(:,3) CSr.faces(:,2)]; end
       warning off MATLAB:subscripting:noSubscriptsSpecified
-      CS1.vertices = (vmati*[CSr.vertices' ; ones(1,size(CSr.vertices,1))])';
-      CS1.faces    = CSr.faces; 
-      mati = spm_imatrix(V.mat); 
-      CS1.vmat = vmat; CS1.mati = mati; 
-      if mati(7)<0, CS1.faces = [CS1.faces(:,1) CS1.faces(:,3) CS1.faces(:,2)]; end
-      cat_surf_fun('saveico',CS1,CSr.cdata,Pcentralr,[saveiconame '_resampled']);
-      cat_surf_fun('evalCS',CS1,CSr.cdata,Ym,Yppi,Pcentralr);
+      cat_surf_fun('saveico',CSr,CSr.cdata,Pcentralr,[saveiconame '_resampled']);
+      res.(opt.surf{si}).createCS_resampled = cat_surf_fun('evalCS',CSr,CSr.cdata,Ym,Yppt,Pcentralr);
       clear CSr CS1
-    else
+    end
+    if ~isfield( res.(opt.surf{si}),'createCS_final')
+      res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',loadSurf(Pcentral),cat_io_FreeSurfer('read_surf_data',Ppbt),Ym,Yppt,Pcentral);
+    else 
       fprintf('\n'); 
     end
     clear Yppi; 
@@ -1037,6 +1045,28 @@ cstime = clock;
     else % otherwise simply copy ?h.pbt.* to ?h.thickness.*
       copyfile(Ppbt,Pthick);
     end
+    
+    
+    %% average final values
+    FNres = fieldnames( res.(opt.surf{si}).createCS_final );
+    for fnr = 1:numel(FNres)
+      if ~isfield(res,'final') || ~isfield(res.final,FNres{fnr})
+        res.final.(FNres{fnr}) = res.(opt.surf{si}).createCS_final.(FNres{fnr}) / numel(opt.surf);
+      else
+        res.final.(FNres{fnr}) = res.final.(FNres{fnr}) + res.(opt.surf{si}).createCS_final.(FNres{fnr}) / numel(opt.surf);
+      end
+    end
+    FNres = fieldnames( res.(opt.surf{si}).createCS_resampled );
+    for fnr = 1:numel(FNres)
+      if isfield(res.(opt.surf{si}),'createCS_resampled') 
+        if ~isfield(res,'createCS_resampled') || ~isfield(res.createCS_resampled,FNres{fnr}) 
+          res.resampled.(FNres{fnr}) = res.(opt.surf{si}).createCS_resampled.(FNres{fnr}) / numel(opt.surf);
+        else
+          res.resampled.(FNres{fnr}) = res.resampled.(FNres{fnr}) + res.(opt.surf{si}).createCS_resampled.(FNres{fnr}) / numel(opt.surf);
+        end
+      end
+    end
+    
     
     % we have to delete the original faces, because they have a different number of vertices after
     % CAT_FixTopology!
