@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1508 | dahnke | 2019-09-27 14:17:06
+r1509 | dahnke | 2019-09-30 10:01:27
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       cat_surf_fun.m
+M       cat_vol_partvol.m
+
+(1) Fixed:   Corrected bugs in surface evaluation in cat_surf_fun and
+             cat_surf_createCS(2).
+(2) Fixed:   Corrected problems with to aggressive skull-stripping due to bad 
+             settings in cat_vol_partvol and cat_main_cleanup_gwc.
+            
+------------------------------------------------------------------------
+r1508 | dahnke | 2019-09-27 14:20:01 +0200 (Fr, 27 Sep 2019) | 29 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -29,6 +45,7 @@ M       development/Template_2_IXI555_MNI152_GS1mm.nii
 (7) Fixed:     Corrected setting for thalamus cutting for surface reconstruction 
                in cat_vol_partvol.  
 (8) Fixed:     Tiny corrections in cat_check_system_output. 
+
 ------------------------------------------------------------------------
 r1507 | gaser | 2019-09-23 15:13:43 +0200 (Mo, 23 Sep 2019) | 10 lines
 

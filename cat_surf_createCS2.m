@@ -522,7 +522,7 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,Yp0,Y
     %  need an additianal refine. 
     %  --------------------------------------------------------------------
     if opt.verb==1, fprintf('%s %4.0fs\n',repmat(' ',1,66),etime(clock,stimet)); end
-    stime = cat_io_cmd('  Create initial surface','g5','',opt.verb); if opt.verb>2, fprintf('\n'); end
+    stime = cat_io_cmd('  Create initial surface','g5','',opt.verb); %if opt.verb>2, fprintf('\n'); end
     
     
     % surface coordinate transformations that are used in the "saveCS" and "loadCS" functions  
@@ -687,7 +687,7 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,Yp0,Y
         clear CS
         continue
     end
-    % evaluate and save results
+    %% evaluate and save results
     CS1.vertices = CS.vertices; CS1.faces = CS.faces; CS1.vmat = vmat; CS1.vmati = vmati; CS1.mati = mati; 
     fprintf('%5.0fs',etime(clock,stime)); stime = []; 
     if opt.write_debugsurfs
@@ -1099,8 +1099,11 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,Yp0,Y
       else
         res.final.(FNres{fnr}) = res.final.(FNres{fnr}) + res.(opt.surf{si}).createCS_final.(FNres{fnr}) / numel(opt.surf);
       end
+    end
+    FNres = fieldnames( res.(opt.surf{si}).createCS_resampled );
+    for fnr = 1:numel(FNres)
       if isfield(res.(opt.surf{si}),'createCS_resampled') 
-        if ~isfield(res,'createCS_resampled') || ~isfield(res.createCS_resampled.(FNres{fnr})) 
+        if ~isfield(res,'createCS_resampled') || ~isfield(res.createCS_resampled,FNres{fnr}) 
           res.resampled.(FNres{fnr}) = res.(opt.surf{si}).createCS_resampled.(FNres{fnr}) / numel(opt.surf);
         else
           res.resampled.(FNres{fnr}) = res.resampled.(FNres{fnr}) + res.(opt.surf{si}).createCS_resampled.(FNres{fnr}) / numel(opt.surf);
