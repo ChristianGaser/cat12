@@ -1,5 +1,22 @@
 ------------------------------------------------------------------------
-r1509 | dahnke | 2019-09-30 10:01:27
+r1510 | gaser | 2019-10-16 12:11:56
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_batch_cat.m
+M       cat_conf_extopts.m
+M       cat_surf_createCS.m
+MM      cat_surf_createCS2.m
+M       html/cat.html
+M       html/cat_starting.html
+
+(1) Fixed: Added loadSurf function to cat_surf_createCS.m
+(2) Fixed: Added CAT_SelfIntersect binaries.
+(3) Fixed: Added new fields to cat_batch_cat.m to suppress warnings.
+(4) Changed: Some minor edits in help text.
+------------------------------------------------------------------------
+r1509 | dahnke | 2019-09-30 10:04:07 +0200 (Mo, 30 Sep 2019) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14,6 +31,7 @@ M       cat_vol_partvol.m
 (2) Fixed:   Corrected problems with to aggressive skull-stripping due to bad 
              settings in cat_vol_partvol and cat_main_cleanup_gwc.
             
+
 ------------------------------------------------------------------------
 r1508 | dahnke | 2019-09-27 14:20:01 +0200 (Fr, 27 Sep 2019) | 29 lines
 

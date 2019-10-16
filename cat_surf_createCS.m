@@ -1103,6 +1103,15 @@ cstime = clock;
 end
 
 %=======================================================================
+function CS = loadSurf(P)
+  global vmati mati
+  CS = gifti(P);
+  warning off MATLAB:subscripting:noSubscriptsSpecified
+  CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
+  if mati(7)<0, CS.faces = [CS.faces(:,1) CS.faces(:,3) CS.faces(:,2)]; end
+end
+
+%=======================================================================
 function [cdata,i] = correctWMdepth(CS,cdata,iter,lengthfactor)
 % ______________________________________________________________________
 % Correct deep WM depth values that does not fit to the local thickness 
