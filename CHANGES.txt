@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1510 | gaser | 2019-10-16 12:11:56
+r1511 | gaser | 2019-10-16 13:42:40
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       html/cat.html
+
+(1) Fixed: Field createCS_resampled was not correctly handled in
+    cat_surf_createCS.m and cat_surf_createCS2.m.
+(2) Changed: Some minor edits in help text.
+------------------------------------------------------------------------
+r1510 | gaser | 2019-10-16 12:12:29 +0200 (Mi, 16 Okt 2019) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +28,7 @@ M       html/cat_starting.html
 (2) Fixed: Added CAT_SelfIntersect binaries.
 (3) Fixed: Added new fields to cat_batch_cat.m to suppress warnings.
 (4) Changed: Some minor edits in help text.
+
 ------------------------------------------------------------------------
 r1509 | dahnke | 2019-09-30 10:04:07 +0200 (Mo, 30 Sep 2019) | 14 lines
 

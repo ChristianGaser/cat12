@@ -52,7 +52,7 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,Yp0,Y
   % variables to tranfer from MATLAB to image coordinates used by loadSurf and saveSurf subfunctions
   global vmat vmati mati
 
-  % surface evaluation paramter 
+  % surface evaluation parameter 
   res = struct('euler_characteristic',nan,'defect_size_promile',nan,'lh',struct(),'rh',struct()); 
   
   % set debuging variable
@@ -68,7 +68,7 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,Yp0,Y
   
   % reducepatch has some issues with self intersections and should only be used for "fast" option
   % There is a new SPM approach spm_mesh_reduce that is maybe more robust. 
-  % Higher resolution are at least required for animal preprocessing that is given by cat_main.
+  % Higher resolutions are at least required for animal preprocessing that is given by cat_main.
   def.LAB                 = cat_get_defaults('extopts.LAB');  % brain regions 
   def.SPM                 = 0;                                % surface-reconstration based on SPM segmentation input (see cat_main)
   def.pbtlas              = 0;                                % myelination correction option (in development - not working correctly in all data, RD201907)  
@@ -1077,7 +1077,7 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,Yp0,Y
       g.private.metadata = struct('name','SurfaceID','value',[ff2 ex2]);
       save(g, Ppbtr_gii, 'Base64Binary');
       
-      % intenity based evaluation
+      % intensity based evaluation
       CSr = loadSurf(Ppbtr_gii);
       CSr = struct('vertices',CSr.vertices,'faces',CSr.faces,'cdata',CSr.cdata,'vmat',vmat,'mati',mati); 
       cat_surf_fun('saveico',CSr,CSr.cdata,Pcentralr,sprintf('createCS_4_resampled_pbtres%0.2fmm_vdist%0.2fmm',opt.interpVold,opt.vdist)); 
@@ -1100,15 +1100,17 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,Yp0,Y
         res.final.(FNres{fnr}) = res.final.(FNres{fnr}) + res.(opt.surf{si}).createCS_final.(FNres{fnr}) / numel(opt.surf);
       end
     end
-    FNres = fieldnames( res.(opt.surf{si}).createCS_resampled );
-    for fnr = 1:numel(FNres)
-      if isfield(res.(opt.surf{si}),'createCS_resampled') 
-        if ~isfield(res,'createCS_resampled') || ~isfield(res.createCS_resampled,FNres{fnr}) 
-          res.resampled.(FNres{fnr}) = res.(opt.surf{si}).createCS_resampled.(FNres{fnr}) / numel(opt.surf);
-        else
-          res.resampled.(FNres{fnr}) = res.resampled.(FNres{fnr}) + res.(opt.surf{si}).createCS_resampled.(FNres{fnr}) / numel(opt.surf);
-        end
-      end
+    if opt.write_debugsurfs
+			FNres = fieldnames( res.(opt.surf{si}).createCS_resampled );
+			for fnr = 1:numel(FNres)
+				if isfield(res.(opt.surf{si}),'createCS_resampled') 
+					if ~isfield(res,'createCS_resampled') || ~isfield(res.createCS_resampled,FNres{fnr}) 
+						res.resampled.(FNres{fnr}) = res.(opt.surf{si}).createCS_resampled.(FNres{fnr}) / numel(opt.surf);
+					else
+						res.resampled.(FNres{fnr}) = res.resampled.(FNres{fnr}) + res.(opt.surf{si}).createCS_resampled.(FNres{fnr}) / numel(opt.surf);
+					end
+				end
+			end
     end
     
     
