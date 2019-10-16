@@ -38,7 +38,7 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,Yp0,Y
 % Structural Brain Mapping Group
 % University Jena
 % ______________________________________________________________________
-% $Id: cat_surf_createCS.m 1505 2019-09-12 16:17:33Z dahnke $ 
+% $Id$ 
 
 %#ok<*AGROW,*STREMP,*ASGLU,*SFLD,*STFLD>
 
@@ -1205,6 +1205,8 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,Yp0,Y
     end
   end
 end
+
+%=======================================================================
 function saveSurf(CS,P)
   global vmat mati
   
@@ -1212,6 +1214,8 @@ function saveSurf(CS,P)
   if mati(7)<0, CS.faces = [CS.faces(:,1) CS.faces(:,3) CS.faces(:,2)]; end
   save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),P,'Base64Binary');
 end
+
+%=======================================================================
 function CS = loadSurf(P)
   global vmati mati
   CS = gifti(P);
