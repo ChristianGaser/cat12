@@ -623,7 +623,7 @@ cstime = clock;
       end
       
       
-      %% intenity based evaluation
+      %% intensity based evaluation
       CS = gifti(Pcentral);
       % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
       warning off MATLAB:subscripting:noSubscriptsSpecified
@@ -853,7 +853,7 @@ cstime = clock;
     % just a shortcut for manual tests 
     writedebug = cat_get_defaults('extopts.expertgui')==2;
     if writedebug %
-      %% intenity based evaluation
+      %% intensity based evaluation
       CS = gifti(Pcentral);
       % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
       warning off MATLAB:subscripting:noSubscriptsSpecified
@@ -997,7 +997,7 @@ cstime = clock;
       g.private.metadata = struct('name','SurfaceID','value',[ff2 ex2]);
       save(g, Ppbtr_gii, 'Base64Binary');
       
-      %% intenity based evaluation
+      %% intensity based evaluation
       CS1 = gifti(Ppbtr_gii);
       CSr = struct('vertices',CS1.vertices,'faces',CS1.faces,'cdata',CS1.cdata,'vmat',vmat,'mati',mati); 
       CSr.vertices = (vmati*[CSr.vertices' ; ones(1,size(CSr.vertices,1))])';
@@ -1056,15 +1056,17 @@ cstime = clock;
         res.final.(FNres{fnr}) = res.final.(FNres{fnr}) + res.(opt.surf{si}).createCS_final.(FNres{fnr}) / numel(opt.surf);
       end
     end
-    FNres = fieldnames( res.(opt.surf{si}).createCS_resampled );
-    for fnr = 1:numel(FNres)
-      if isfield(res.(opt.surf{si}),'createCS_resampled') 
-        if ~isfield(res,'createCS_resampled') || ~isfield(res.createCS_resampled,FNres{fnr}) 
-          res.resampled.(FNres{fnr}) = res.(opt.surf{si}).createCS_resampled.(FNres{fnr}) / numel(opt.surf);
-        else
-          res.resampled.(FNres{fnr}) = res.resampled.(FNres{fnr}) + res.(opt.surf{si}).createCS_resampled.(FNres{fnr}) / numel(opt.surf);
-        end
-      end
+    if writedebug 
+			FNres = fieldnames( res.(opt.surf{si}).createCS_resampled );
+			for fnr = 1:numel(FNres)
+				if isfield(res.(opt.surf{si}),'createCS_resampled') 
+					if ~isfield(res,'createCS_resampled') || ~isfield(res.createCS_resampled,FNres{fnr}) 
+						res.resampled.(FNres{fnr}) = res.(opt.surf{si}).createCS_resampled.(FNres{fnr}) / numel(opt.surf);
+					else
+						res.resampled.(FNres{fnr}) = res.resampled.(FNres{fnr}) + res.(opt.surf{si}).createCS_resampled.(FNres{fnr}) / numel(opt.surf);
+					end
+				end
+			end
     end
     
     
