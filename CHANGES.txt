@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1511 | gaser | 2019-10-16 13:42:40
+r1512 | gaser | 2019-10-17 11:41:04
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_conf_stoolsexp.m
+M       cat_surf_fun.m
+M       cat_surf_results.m
+
+(1) Fixed: Updated text field for slider in cat_surf_results.m
+(2) Changed: Some minor changes in help text and file selection fields.
+------------------------------------------------------------------------
+r1511 | gaser | 2019-10-16 13:43:11 +0200 (Mi, 16 Okt 2019) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +23,7 @@ M       html/cat.html
 (1) Fixed: Field createCS_resampled was not correctly handled in
     cat_surf_createCS.m and cat_surf_createCS2.m.
 (2) Changed: Some minor edits in help text.
+
 ------------------------------------------------------------------------
 r1510 | gaser | 2019-10-16 12:12:29 +0200 (Mi, 16 Okt 2019) | 15 lines
 

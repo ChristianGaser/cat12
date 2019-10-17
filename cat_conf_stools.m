@@ -170,7 +170,7 @@ function surf2roi = cat_surf_surf2roi_GUI(expert,nproc)
     cdata.tag     = 'cdata';
     cdata.name    = '(Left) Surface Data Files';
     cdata.filter  = 'any';
-    cdata.ufilter = 'lh.(?!cent|sphe|defe|hull).*';
+    cdata.ufilter = 'lh.(?!cent|pial|white|sphe|defe|hull|pbt).*';
     cdata.num     = [1 Inf];
     cdata.help    = {'Surface data sample. Both sides will be processed'};
   else % only smoothed/resampled
@@ -178,7 +178,7 @@ function surf2roi = cat_surf_surf2roi_GUI(expert,nproc)
     cdata.tag     = 'cdata';
     cdata.name    = '(Left) Surface Data Files';
     cdata.filter  = 'any';
-    cdata.ufilter = '^lh.(?!cent|sphe|defe|hull).*';
+    cdata.ufilter = '^lh.(?!cent|pial|white|sphe|defe|hull|pbt).*';
     cdata.num     = [1 Inf];
     cdata.help    = {'Surface data sample. Both sides will be processed'};
   end
@@ -699,7 +699,7 @@ function [surfcalc,surfcalcsub] = cat_surf_calc_GUI(expert)
   cdata_sub.tag       = 'cdata';
   cdata_sub.name      = 'Surface Data Files';
   cdata_sub.filter    = 'gifti';
-  cdata_sub.ufilter   = '(lh|rh|mesh).(?!cent|sphe|defe|hull).*gii';
+  cdata_sub.ufilter   = '(lh|rh|mesh).(?!cent|pial|white|sphe|defe|hull).*gii';
   cdata_sub.num       = [1 Inf];
   cdata_sub.help      = {'These are the surface data files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order they are specified.'};
    
@@ -889,7 +889,7 @@ function [surfresamp,surfresamp_fs] = cat_surf_resamp_GUI(expert,nproc,merge_hem
   if expert > 1
     data_surf.ufilter = '^lh.';
   else
-    data_surf.ufilter = '^lh.(?!cent|sphe|defe|hull|pbt).*';
+    data_surf.ufilter = '^lh.(?!cent|pial|white|sphe|defe|hull|pbt).*';
   end
   data_surf.num     = [1 Inf];
   data_surf.help    = {'Select surfaces data files for left hemisphere for resampling to template space.'};
