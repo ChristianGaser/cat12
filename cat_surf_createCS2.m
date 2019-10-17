@@ -751,7 +751,7 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,Yp0,Y
     %  is possible useful.
     %  ... seams that this is working and it takes only a few seconds!
     %  --------------------------------------------------------------------
-    stime = cat_io_cmd('  Surface optimization and refinement:','g5','',opt.verb,stime); 
+    stime = cat_io_cmd('  Surface optimization and refinement','g5','',opt.verb,stime); 
 
     % refinement - important for sulci .. here we need a lot of details with a similar resolution as the Insula 
     cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Pcentral,Pcentral,0.8 / scale_cerebellum); 

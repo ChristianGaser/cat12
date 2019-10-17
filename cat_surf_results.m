@@ -913,8 +913,8 @@ switch lower(action)
         setappdata(H.patch(i), 'clim',H.clim);
         H = updateTexture(H, i ); 
       end
-      set(H.str_min, 'String', sprintf('%f',H.clim(2)));
-      set(H.str_max, 'String', sprintf('%f',H.clim(3)));
+      set(H.str_min, 'String', sprintf('%g',H.clim(2)));
+      set(H.str_max, 'String', sprintf('%g',H.clim(3)));
       show_colorbar(H); 
     
       
@@ -1272,10 +1272,8 @@ for ind = 1:5
     H = updateTexture(H, ind, d, col, H.show_transp);
 end
 
-% correct value of slider if no values are exceeding threshold
-if min_d > -thresh & H.n_surf == 1
-    set(H.slider_min, 'Value', 0);
-end
+set(H.slider_min, 'Value', H.clim(2))
+set(H.str_min, 'String', sprintf('%g',H.clim(2)));
 
 set(H.atlas, 'Enable', 'on');
 
@@ -1564,8 +1562,8 @@ end
 
 set(H.slider_min, 'Value', H.clim(2));
 set(H.slider_max, 'Value', H.clim(3));
-set(H.str_min, 'String', sprintf('%f',H.clim(2)));
-set(H.str_max, 'String', sprintf('%f',H.clim(3)));
+set(H.str_min, 'String', sprintf('%g',H.clim(2)));
+set(H.str_max, 'String', sprintf('%g',H.clim(3)));
 
 % update file information and colorbar
 checkbox_info;
@@ -1775,7 +1773,7 @@ if H.n_surf == 1
         'Value', H.S{1}.min, ...
         'FontName', 'Verdana', ...
         'FontSize', H.FS-1, ...
-        'NumFormat', '%f', ...
+        'NumFormat', '%g', ...
         'Callback', @slider_clim_min);
     
     [H.slider_max, tmp, H.str_max] = sliderPanel( ...
@@ -1788,7 +1786,7 @@ if H.n_surf == 1
         'Value', H.S{1}.max, ...
         'FontName', 'Verdana', ...
         'FontSize', H.FS-1, ...
-        'NumFormat', '%f', ...
+        'NumFormat', '%g', ...
         'Callback', @slider_clim_max);
 end
 
@@ -2318,7 +2316,7 @@ if H.surf_sel ~= 4
 end
 
 col = colormap;
-imwrite(img,col,filename);
+imwrite(img,col,fullfile(newpth,filename));
 
 %==========================================================================
 function slider_clim_min(hObject, evt)
