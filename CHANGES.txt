@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1512 | gaser | 2019-10-17 11:41:04
+r1513 | gaser | 2019-10-17 15:45:41
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       cat_surf_results.m
+
+(1) Fixed: Images were not saved in selected folder in cat_surf_results.m
+(2) Changed: Some minor changes in output during surface extraction.
+------------------------------------------------------------------------
+r1512 | gaser | 2019-10-17 11:41:42 +0200 (Do, 17 Okt 2019) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +21,7 @@ M       cat_surf_results.m
 
 (1) Fixed: Updated text field for slider in cat_surf_results.m
 (2) Changed: Some minor changes in help text and file selection fields.
+
 ------------------------------------------------------------------------
 r1511 | gaser | 2019-10-16 13:43:11 +0200 (Mi, 16 Okt 2019) | 11 lines
 
