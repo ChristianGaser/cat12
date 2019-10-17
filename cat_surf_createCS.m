@@ -690,7 +690,7 @@ cstime = clock;
     EC  = EC + abs(EC0);
     
     %% topology correction and surface refinement 
-    stime = cat_io_cmd('  Topology correction and surface refinement:','g5','',opt.verb,stime); 
+    stime = cat_io_cmd('  Topology correction and surface refinement','g5','',opt.verb,stime); 
     if opt.verb>2, fprintf('\n'); end
     if opt.fast
       cmd = sprintf('CAT_FixTopology -lim 128 -bw 512 -n 40960 -refine_length %g "%s" "%s" "%s"',4 * opt.vdist / scale_cerebellum,Praw,Psphere0,Pcentral);
