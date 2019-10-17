@@ -901,7 +901,7 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,verb)
     end
     % output
     if verb
-      fprintf('    Local intensity RMSE (lower=better): ')
+      fprintf('\n    Local intensity RMSE (lower=better): ')
       if uL4
         cat_io_cprintf( color( rate( mean( [rms(II),rms(IC),rms(IO)] ) , 0.05 , 0.20 )) , sprintf('%0.4f ',mean( [rms(II),rms(IC),rms(IO)] )) ); 
       else
@@ -1037,7 +1037,7 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,verb)
   EC  = size(CS.vertices,1) + size(CS.faces,1) - size(spm_mesh_edges(CS),1);
   res.euler_characteristic = EC; 
   if verb
-    fprintf('    Faces / Euler:                       '); 
+    fprintf('    Faces / Final Euler number:          '); 
     cat_io_cprintf( color( rate( 1 - max(0,size(CS.faces,1)/300000) , 0 , 0.9 )) , sprintf('%d / ',size(CS.faces,1)));
     cat_io_cprintf( color( rate( abs(EC-2) , 0 , 30 )) , sprintf('%d',EC));
     fprintf('\n'); 
