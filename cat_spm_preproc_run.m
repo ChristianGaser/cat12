@@ -101,6 +101,29 @@ for iter=1:nit
             if ~isempty(job.warp.affreg)
                 if isfield(job.warp,'Affine')
                     Affine = job.warp.Affine;
+                else
+                    % Sometimes the image origins are poorly specified, in which case it might be worth trying
+                    % the centre of the field of view instead. The idea here is to run a coarse registration
+                    % using two sets of starting estimates, and pick the one producing the better objective function.
+
+                    % Run using origin at centre of the field of view
+                    im1            = obj.image(1);
+                    M              = im1.mat;
+                    c              = (im1.dim+1)/2;
+                    im1.mat(1:3,4) = -M(1:3,1:3)*c(:);
+                    [Affine1,ll1]  = spm_maff8(im1,8,(obj.fwhm+1)*16,tpm,[],job.warp.affreg); % Closer to rigid
+                    Affine1        = Affine1*(im1.mat/M);
+
+                    % Run using the origin from the header
+                    im1            = obj.image(1);
+                    [Affine2,ll2]  = spm_maff8(im1,8,(obj.fwhm+1)*16,tpm,[],job.warp.affreg); % Closer to rigid
+
+                    % Pick the result with the best fit and use as starting estimate
+                    if ll1>ll2
+                        Affine  = Affine1;
+                    else
+                        Affine  = Affine2;
+                    end
                 end
                 Affine = spm_maff8(obj.image(1),job.warp.samp,(obj.fwhm+1)*16,tpm,Affine,job.warp.affreg); % Closer to rigid
                 Affine = spm_maff8(obj.image(1),job.warp.samp, obj.fwhm,     tpm,Affine,job.warp.affreg);
