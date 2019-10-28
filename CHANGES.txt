@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1513 | gaser | 2019-10-17 15:45:41
+r1514 | gaser | 2019-10-28 07:41:26
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_spm_preproc8.m
+M       cat_spm_preproc_run.m
+M       html/cat.html
+
+Changed: Modified some setting according to the new SPM12 update in
+cat_spm_preproc8.m and cat_spm_preproc_run.m.
+------------------------------------------------------------------------
+r1513 | gaser | 2019-10-17 15:46:13 +0200 (Do, 17 Okt 2019) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +21,7 @@ M       cat_surf_results.m
 
 (1) Fixed: Images were not saved in selected folder in cat_surf_results.m
 (2) Changed: Some minor changes in output during surface extraction.
+
 ------------------------------------------------------------------------
 r1512 | gaser | 2019-10-17 11:41:42 +0200 (Do, 17 Okt 2019) | 10 lines
 

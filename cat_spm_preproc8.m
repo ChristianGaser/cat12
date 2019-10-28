@@ -73,7 +73,7 @@ function results = cat_spm_preproc8(obj)
 % John Ashburner
 % $Id$
 
-wp_reg    = 1; % Bias wp towards 1
+wp_reg    = 100; % Bias wp towards 1/kB
 
 Affine    = obj.Affine;
 tpm       = obj.tpm;
@@ -436,7 +436,7 @@ for iter=1:30
                     vr(:,:,k) = (mom2(:,:,k) - mom1(:,k)*mom1(:,k)'/mom0(k) + N*vr0)/(mom0(k)+N); % US eq. 25
                 end
                 for k1=1:Kb
-                    wp(k1) = (sum(mom0(lkp==k1)) + wp_reg*1)/(mgm(k1) + wp_reg*Kb); % bias the solution towards 1
+                    wp(k1) = (sum(mom0(lkp==k1)) + wp_reg*1)/(mgm(k1) + wp_reg*Kb); % bias the solution towards 1/kB
                 end
                 wp = wp/sum(wp);
 
