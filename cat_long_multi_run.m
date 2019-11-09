@@ -8,6 +8,8 @@ global opts extopts output modulate dartel delete_temp ROImenu surfaces
 
 warning off;
 
+if isdeployed, job.nproc = 0; end
+
 % use some options from GUI or default file
 opts        = job.opts;
 extopts     = job.extopts;

@@ -368,7 +368,7 @@ function [check_mesh_cov,check_mesh_cov2] = check_mesh_cov_GUI
   check_mesh_cov2      = check_mesh_cov; 
   check_mesh_cov2.tag  = 'check_mesh_cov2';
   check_mesh_cov2.val  = {sample_cov,nuisance};
-  check_mesh_cov2.name = 'Check sample homogeneity of surfaces';
+  check_mesh_cov2.name = 'Check sample homogeneity of surfaces (new exp. version)';
   check_mesh_cov2.prog = @cat_stat_check_cov2;
 
 %==========================================================================
