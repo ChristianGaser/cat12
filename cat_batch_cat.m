@@ -1,7 +1,7 @@
 function cat_batch_cat(namefile,cat_defaults)
 % wrapper for using batch mode (see cat_batch_cat.sh)
 %
-% namefile      - array of file names
+% namefile      - array of file names or text file with file names
 % cat_defaults  - use this default file instead of cat_defaults.m
 %
 %_______________________________________________________________________
@@ -10,7 +10,7 @@ function cat_batch_cat(namefile,cat_defaults)
  %#ok<*TRYNC>
  
 if nargin < 1
-	fprintf('Syntax: cat_batch_cat(namefile)\n');
+	fprintf('Syntax: cat_batch_cat(namefile,cat_defaults)\n');
 	return
 end
 
@@ -31,16 +31,32 @@ else
         [pp, name] = spm_fileparts(cat_defaults);
         clear cat_defaults
         oldpath = pwd;
-        cd(pp)
+        if ~isempty(pp), cd(pp); end
         eval(name);
         cd(oldpath)
     end
 end
 
-fid = fopen(namefile,'r');
-names = textscan(fid,'%s');
-names = names{:};
-fclose(fid);
+if ~iscell(namefile)
+  [pth,nam,ext] = spm_fileparts(namefile);
+end
+
+% check whether namefile is a cell of filenames, a nifti filename,
+% or a text file with filenames
+if iscell(namefile)
+  names = namefile;
+  is_filelist = 1;
+elseif strcmp(ext,'.nii') | strcmp(ext,'.img')
+  names = cellstr(namefile);
+  is_filelist = 1;
+else % or use list of names in text file
+	fid = fopen(namefile,'r');
+	names = textscan(fid,'%s');
+	names = names{:};
+	fclose(fid);
+  is_filelist = 0;
+end
+
 n = length(names);
 
 if n == 0, error(sprintf('No file found in %s.\n',namefile)); end %#ok<SPERR>
@@ -60,7 +76,7 @@ for i=1:size(tmp_fields,1)
 end
 
 % remove output fields
-tmp_fields = char('atlas','te','pc','WMH','ROI','TPMC','label','CSF','WM','GM','las','bias','ct','SL','jacobian');
+tmp_fields = char('atlas','te','pc','WMH','ROI','TPMC','label','CSF','WM','GM','las','bias','ct','SL','jacobian','atlases');
 for i=1:size(tmp_fields,1)
   try
     matlabbatch{1}.spm.tools.cat.estwrite.output = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output,deblank(tmp_fields(i,:)));
@@ -101,7 +117,8 @@ catch %#ok<CTCH> % catch with lasterror is necessary for old matlab versions
   error('Batch failed.');
 end
 
-spm_unlink(char(namefile))
+% delete text file with filenames
+if ~is_filelist, spm_unlink(char(namefile)); end
 
 warning off
 exit

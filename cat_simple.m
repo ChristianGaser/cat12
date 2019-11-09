@@ -14,6 +14,8 @@ function output = cat_simple(job)
   def.ignoreErrors  = 1;
   job = cat_io_checkinopt(job,def); 
   
+  if isdeployed, job.nproc = 0; end
+  
   expert    = cat_get_defaults('extopts.expertgui'); 
   proc_surf = isfield(job.surface,'yes');
 

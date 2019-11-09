@@ -1,9 +1,10 @@
 #! /bin/bash
 
+# $Id$
+
 ########################################################
 # global parameters
 ########################################################
-# $Id$
 
 matlab=matlab     # you can use other matlab versions by changing the matlab parameter
 display=0         # use nodisplay option for matlab or not
