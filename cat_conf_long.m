@@ -158,15 +158,22 @@ else
   'Please note, that this option is only useful if you intend to create a customized DARTEl template for your longittudinal data. The DARTEL exported segmentations is saved for the the average image of all time points for one subject and can be used in order to create a customized template with the DARTEL toolbox. The resulting flow fields can be finally applied to the respective native segmentations (e.g. p1/p2 images) to obtain normalized segmentations according to the newly created DARTEL template.'
   ''
   };
-
   
   ROI       = output.val{2}; 
+  
   output.val(2:end) = [];
-  if expert
-    long.val  = {esubjs,nproc,opts,extopts,output,ROI,modulate,dartel,delete_temp};
+  
+  % use multithreading only if availabe
+  if feature('numcores') > 1 && ~isdeployed
+    if expert
+      long.val  = {esubjs,nproc,opts,extopts,output,ROI,modulate,dartel,delete_temp};
+    else
+      long.val  = {esubjs,nproc,opts,extopts,output,ROI,modulate,dartel};
+    end
   else
-    long.val  = {esubjs,nproc,opts,extopts,output,ROI,modulate,dartel};
+    long.val  = {esubjs,opts,extopts,output,ROI,modulate,dartel};
   end
+  
   long.vout = @vout_long;
 end
 long.prog = @cat_long_multi_run;
