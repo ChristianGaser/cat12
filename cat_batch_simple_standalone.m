@@ -6,8 +6,8 @@
 % data field, will be dynamically replaced by cat_batch_standalone.sh
 matlabbatch{1}.spm.tools.cat.cat_simple.data = '<UNDEFINED>';         
 
-% CAT12 version, see simple processing batch for more options
-% other catversions are 'estwrite1445'
+% Used CAT12 version
+% current options: 'estwrite' (actual release), 'estwrite1445' (12.5 r1445), 'estwrite1173' (12.1 r1173)
 matlabbatch{1}.spm.tools.cat.cat_simple.catversion = 'estwrite';      
 
 % template for initial affine registration/segmentation; 'adult','children'
@@ -21,6 +21,13 @@ matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.neuromorphometrics = 1;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.lpba40 = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.cobra = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.hammers = 0;
+matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.ibsr = 0;
+matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.aal = 0;
+matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.mori = 0;
+matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.anatomy = 0;
+
+% catch errors: 0 - stop with error (default); 1 - catch preprocessing errors (requires MATLAB 2008 or higher); 
+matlabbatch{1}.spm.tools.cat.cat_simple.ignoreErrors = 1;
 
 % define here surface atlases
 matlabbatch{1}.spm.tools.cat.cat_simple.surface.yes.sROImenu.satlases.Desikan = 1;

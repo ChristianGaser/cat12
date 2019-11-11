@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1515 | gaser | 2019-11-10 00:00:48
+r1516 | gaser | 2019-11-12 00:14:14
+
+Changed paths:
+M       CHANGES.txt
+M       cat_batch_simple_standalone.m
+M       cat_batch_standalone.m
+M       cat_batch_standalone.sh
+M       cat_defaults.m
+M       spm_cat12.m
+M       tbx_cfg_cat.m
+
+(1) Changed: Call batch scripts for standalone installations always in expert
+    mode to allow more options.
+(2) Changed: Call CAt12 GUI for standalone installation in default (non-
+    expert) mode.
+(3) Change: Use surface extraction by default.
+
+------------------------------------------------------------------------
+r1515 | gaser | 2019-11-10 00:01:28 +0100 (So, 10 Nov 2019) | 27 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -27,6 +45,7 @@ M       html/cat.html
     cat_batch_standalone.sh).
 (4) Fixed: Set number of processes to 0 for standalone (deployed) version.
 (5) Changed: Extended input parameters for cat_batch_cat.m
+
 ------------------------------------------------------------------------
 r1514 | gaser | 2019-10-28 07:42:00 +0100 (Mo, 28 Okt 2019) | 10 lines
 

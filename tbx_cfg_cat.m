@@ -22,6 +22,9 @@ if isempty(expert)
   expert = 0;
 end  
 
+% always use expert mode for standalone installations
+if isdeployed, expert = 1; end
+
 % try to estimate number of processor cores
 try
   numcores = feature('numcores');
