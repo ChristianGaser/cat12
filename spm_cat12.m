@@ -28,13 +28,16 @@ global deffile;
 global cprintferror;  % temporary, because of JAVA errors in cat_io_cprintf ... 20160307
 %try clearvars -global deffile;  end %#ok<TRYNC>
 
+% get expert level except for standalone installation, where the expert mode is initally disabled for the GUI
+expert   = cat_get_defaults('extopts.expertgui'); 
+if isdepoyed, expert = 0; end
+
 % start cat with different default file
 catdir = fullfile(spm('dir'),'toolbox','cat12'); 
 catdef = fullfile(catdir,'cat_defaults.m');
 if nargin==0 && (isempty(deffile) || strcmp(deffile,catdef))
   deffile = catdef; 
-  if ~strcmp(cat_get_defaults('extopts.species'),'human') || ...
-      cat_get_defaults('extopts.expertgui')>0
+  if ~strcmp(cat_get_defaults('extopts.species'),'human') || expert>0 
     restartspm = 1;
   else
     restartspm = 0;
@@ -196,7 +199,6 @@ end
 clear cat;
 
 % initialize atlas variable 
-expert   = cat_get_defaults('extopts.expertgui'); 
 exatlas  = cat_get_defaults('extopts.atlas'); 
 for ai = 1:size(exatlas,1)
   if exatlas{ai,2}<=expert && exist(exatlas{ai,1},'file')
@@ -210,7 +212,7 @@ for ai = 1:size(exatlas,1)
 end
 
 % temporary, because of JAVA errors in cat_io_cprintf ... 20160307
-if cat_get_defaults('extopts.expertgui')<2
+if expert<2
   cprintferror=1;
 end
 
@@ -238,7 +240,7 @@ spm_select('PrevDirs',{fullfile(spm('dir'),'toolbox','cat12')});
 
 %% command line output
 cat_io_cprintf('silentreset');
-switch cat_get_defaults('extopts.expertgui')
+switch expert
   case 0, expertguitext = '';
   case 1, expertguitext = ['Expert Mode' speciesdisp];
   case 2, expertguitext = ['Developer Mode' speciesdisp];

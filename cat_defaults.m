@@ -46,7 +46,7 @@ cat.opts.redspmres = 0.0;                     % limit image resolution for inter
 %   dartel    0/1/2/3 (none/rigid/affine/both)
 
 % save surface and thickness
-cat.output.surface     = 0;     % surface and thickness creation:   0 - no (default), 1 - lh+rh, 2 - lh+rh+cerebellum, 
+cat.output.surface     = 1;     % surface and thickness creation:   0 - no (default), 1 - lh+rh, 2 - lh+rh+cerebellum, 
                                 %   3 - lh, 4 - rh, 5 - lh+rh (fast, no registration, only for quick quality check and not for analysis),
                                 %   6 - lh+rh+cerebellum (fast, no registration, only for quick quality check and not for analysis)
                                 %   9 - thickness only (for ROI analysis, experimental!)
@@ -240,6 +240,9 @@ cat.extopts.fontsize     = get(0,'defaultuicontrolFontSize'); % default font siz
 %cat.extopts.fontsize     = spm('FontSizes',7); % set default font size for GUI manually; increase value for larger fonts or set it to 
 cat.extopts.send_info    = 1;     % send Matlab and CAT12 version to SBM server for internal statistics only. If you don't want to send this 
                                   % information set this flag to "0". See online help CAT12->CAT12 user statistics for more information
+
+% always use expert mode for standalone installations
+if isdeployed, cat.extopts.expertgui = 1; end
 
 % Expert options - ROIs
 %=======================================================================

@@ -162,10 +162,20 @@ run_cat ()
 	TMP=/tmp/cat_$$.m
 
   # copy everything except rows with UNDEFINED to temp file	
-	grep -v "UNDEFINED" $BATCHFILE > $TMP
+	grep -v "<UNDEFINED>" $BATCHFILE > $TMP
 
-	# extract parameter name of data structure
-	data=`grep "UNDEFINED" $BATCHFILE | grep -e "\.data" -e "\.cdata" -e "\.mov" | cut -f1 -d'='`
+  # count lines with parameter UNDEFINED and give warning that only the first line will be used
+	n_undefined=`grep "<UNDEFINED>" $BATCHFILE | wc -l`
+	if [ "$n_undefined" -gt 1 ]; then
+		echo "------------------------------------------------------------------------------------------------------"
+		echo "Warning: Only the first found occurence of the parameter <UNDEFINED> will be dynamically replaced:"
+		echo `grep -m 1 "<UNDEFINED>" $BATCHFILE`
+		echo "------------------------------------------------------------------------------------------------------"
+		echo
+	fi
+
+	# extract parameter name of data structure (1st occurance of "<UNDEFINED>")
+	data=`grep -m 1 "<UNDEFINED>" $BATCHFILE | cut -f1 -d'='`
 
   # surface data need an additional curly bracket
   if grep -q "\.data_surf" $BATCHFILE ; then
@@ -221,6 +231,11 @@ USAGE:
    -m   Matlab Compiler Runtime (MCR) folder (can be also defined by MCRROOT)
    -b   batch file
    
+   The first occurance of the parameter "<UNDEFINED>" in the batch file will be replaced by the
+   list of input files. You can use the existing batch files in CAT12 or create your own batch 
+   file with the SPM12 batch editor and leave the data field undefined. See cat_batch_standalone.m
+   for an example.
+   
 PURPOSE:
    Command line call of CAT12 segmentation for SPM12 standalone installation
 
@@ -244,7 +259,7 @@ EXAMPLE
    Parallelize CAT12 preprocessing by splitting all sTRIO*.nii files into 8 jobs 
    (processes) and save log file in /tmp folder. 
 
-   The parameter SPMROOT and MCRROOT have to be defined if no additional flags -s -m are used.      
+   The parameter SPMROOT and MCRROOT have to be defined if no additional flags -s -m are used.
 
 INPUT:
    analyze or nifti files
