@@ -987,7 +987,12 @@ h35 = uicontrol(...
 
 if expert == 1
   set(h35,'String','Switch to Beginner Mode');
+	% for standalone installations beginners mode is not allowed
+	if isdeployed
+		set(h35, 'Enable', 'off');
+	end
 end
+
 %-------------------------------------------------------------------
 % set bottom box
 h40 = uicontrol(...
