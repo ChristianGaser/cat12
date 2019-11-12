@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1516 | gaser | 2019-11-12 00:14:14
+r1517 | gaser | 2019-11-12 14:47:03
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+!       VBM12-Manual_Japanese.doc
+!       VBM12-Manual_Japanese.pdf
+M       cat12.m
+M       html/cat.html
+M       spm_cat12.m
+
+(1) Fixed: Removed forced use of nox-expert mode for standalone installation in
+    spm_cat12.m
+(2) Changed: Disable switch to beginners mode in GUI fpr standalone 
+    installations.
+------------------------------------------------------------------------
+r1516 | gaser | 2019-11-12 00:14:48 +0100 (Di, 12 Nov 2019) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +31,7 @@ M       tbx_cfg_cat.m
 (2) Changed: Call CAt12 GUI for standalone installation in default (non-
     expert) mode.
 (3) Change: Use surface extraction by default.
+
 
 ------------------------------------------------------------------------
 r1515 | gaser | 2019-11-10 00:01:28 +0100 (So, 10 Nov 2019) | 27 lines

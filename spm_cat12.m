@@ -28,9 +28,8 @@ global deffile;
 global cprintferror;  % temporary, because of JAVA errors in cat_io_cprintf ... 20160307
 %try clearvars -global deffile;  end %#ok<TRYNC>
 
-% get expert level except for standalone installation, where the expert mode is initally disabled for the GUI
+% get expert level except for standalone installation
 expert   = cat_get_defaults('extopts.expertgui'); 
-if isdepoyed, expert = 0; end
 
 % start cat with different default file
 catdir = fullfile(spm('dir'),'toolbox','cat12'); 
