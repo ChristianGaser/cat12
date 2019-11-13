@@ -1,5 +1,38 @@
 ------------------------------------------------------------------------
-r1517 | gaser | 2019-11-12 14:47:03
+r1518 | gaser | 2019-11-13 12:27:17
+
+Changed paths:
+M       CHANGES.txt
+M       Makefile
+D       cat_batch_resample_standalone.m
+        > moved to standalone/cat_standalone_resample.txt
+D       cat_batch_simple_standalone.m
+        > moved to standalone/cat_standalone_simple.txt
+D       cat_batch_standalone.m
+        > moved to standalone/cat_standalone_segment.txt
+D       cat_batch_standalone.sh
+        > moved to standalone/cat_standalone.sh
+D       cat_parallelize.sh
+        > moved to standalone/cat_parallelize.sh
+A       standalone
+A  +    standalone/cat_parallelize.sh
+        > moved from cat_parallelize.sh
+A  +    standalone/cat_standalone.sh
+        > moved from cat_batch_standalone.sh
+A  +    standalone/cat_standalone_resample.txt
+        > moved from cat_batch_resample_standalone.m
+A  +    standalone/cat_standalone_segment.txt
+        > moved from cat_batch_standalone.m
+A  +    standalone/cat_standalone_simple.txt
+        > moved from cat_batch_simple_standalone.m
+A       standalone/cat_standalone_smooth.txt
+
+(1) Changed: Moved standalone functions to separate folder "standalone" and
+    renamed files to begin with "cat_standalone".
+(2) Changed: Added option to define two additional arguments for 
+    cat_standalone.sh.
+------------------------------------------------------------------------
+r1517 | gaser | 2019-11-12 14:47:37 +0100 (Di, 12 Nov 2019) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14,6 +47,7 @@ M       spm_cat12.m
     spm_cat12.m
 (2) Changed: Disable switch to beginners mode in GUI fpr standalone 
     installations.
+
 ------------------------------------------------------------------------
 r1516 | gaser | 2019-11-12 00:14:48 +0100 (Di, 12 Nov 2019) | 16 lines
 
