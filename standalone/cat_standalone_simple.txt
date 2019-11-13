@@ -1,9 +1,9 @@
 % batch file of CAT12 simple processing for SPM12 standalone installation
 %
 %_______________________________________________________________________
-% $Id: cat_batch_simple_standalone.m 1510 2019-10-16 10:12:29Z gaser $
+% $Id$
 
-% data field, will be dynamically replaced by cat_batch_standalone.sh
+% data field, that will be dynamically replaced by cat_standalone.sh
 matlabbatch{1}.spm.tools.cat.cat_simple.data = '<UNDEFINED>';         
 
 % Used CAT12 version
