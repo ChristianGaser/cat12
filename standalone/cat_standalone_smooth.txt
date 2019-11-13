@@ -1,0 +1,19 @@
+% batch file of volume smoothing for SPM12 standalone installation
+%
+%_______________________________________________________________________
+% $Id: cat_standalone_smooth.txt 1510 2019-10-16 10:12:29Z gaser $
+
+% data field, that will be dynamically replaced by cat_standalone.sh
+matlabbatch{1}.spm.spatial.smooth.data = '<UNDEFINED>';
+
+% 1st parameter field, that will be dynamically replaced by cat_standalone.sh
+% smoothing filter size
+matlabbatch{1}.spm.spatial.smooth.fwhm = '<UNDEFINED>';
+
+% 2nd parameter field, that will be dynamically replaced by cat_standalone.sh
+% prepending string for emoothed file (e.g. 's6')
+matlabbatch{1}.spm.spatial.smooth.prefix = '<UNDEFINED>';
+
+matlabbatch{1}.spm.spatial.smooth.dtype = 0;
+matlabbatch{1}.spm.spatial.smooth.im = 0;
+
