@@ -39,12 +39,40 @@ function [output,output_spm,output1173] = cat_conf_output(expert)
     surface.help   = [surface.help; {
       'Cerebellar reconstruction is still in development and is strongly limited due to the high frequency of folding and image properties! '
       ''
-      'The fast reconstruction allows a _visual_ check of the processing quality by providing a reconstructed cortical surface and thickness values with slightly lower accuracy. It takes only a few minutes for both hemisheres by internally using 0.8 mm (instead of 0.5mm) spatial resolution and by skipping topology correction and surface registration. Please note that neither the surface nor the measures on the surface (e.g. thickness) can be used for any further statistical analysis! '
+      'The fast reconstruction allows a _visual_ check of the processing quality by providing a reconstructed cortical surface and thickness values with slightly lower accuracy. It takes only a few minutes for both hemispheres by internally using 0.8 mm (instead of 0.5 mm) spatial resolution and by skipping topology correction and surface registration. Please note that neither the surface nor the measures on the surface (e.g., thickness) can be used for any further statistical analysis! '
       ''
     }];    
   end
 
-
+  if expert 
+    % write specific output surface maps
+    % 0 none:       only surfaces (central,white,pial,sphere,sphere.reg)
+    % 1 default:    + thickness
+    % 2 expert:     + L4myelination, topology defects, 
+    % 3 developer:  + WM and CSF thickness, YppRMSEmap?
+    % 4 debug:      + substeps in subdirs 
+    surf_measures        = cfg_menu;
+    surf_measures.tag    = 'surf_measures';
+    surf_measures.name   = 'Surface measures';
+    surf_measures.labels = {'Default','Expert'};
+    surf_measures.values = {1 2};
+    surf_measures.val    = {1};
+    surf_measures.help   = {
+     ['Write additional surface measures that are currently under development. ' ...
+      'The defaults setting include only cortical thickness, whereas the expert level also ' ...
+      'writes a myelination map (normalized T1 intensity extracted at the layer 4 surface) and ' ...
+      'a map of topology defects coding the percentage size of the effect. '];
+    };
+    if expert == 2
+      surf_measures.labels = [ surf_measures.labels {'Developer','Debug'}];
+      surf_measures.values = [ surf_measures.values {3,4}];
+      surf_measures.val    = {3};
+      surf_measures.help   = [ surf_measures.help 
+        {'The developer option further write the gyral and sulcal thickness. '}
+        ];
+    end
+  end
+  
   %------------------------------------------------------------------------
   native        = cfg_menu;
   native.tag    = 'native';
@@ -292,6 +320,22 @@ function [output,output_spm,output1173] = cat_conf_output(expert)
     ''
   };
 
+  % percentual position maps - uses defaults from thickness
+  native.def    = @(val)cat_get_defaults('output.pp.native', val{:});
+  warped.def    = @(val)cat_get_defaults('output.pp.warped', val{:});
+  dartel.def    = @(val)cat_get_defaults('output.pp.dartel', val{:});
+  native.val    = {0};
+  warped.val    = {0};
+  dartel.val    = {0};
+  pp            = cfg_branch;
+  pp.tag        = 'pp';
+  pp.name       = 'Percentage Position';
+  pp.val        = {native warped dartel};
+  pp.help       = {
+    'Options to save percentage position maps (experimental).'
+    ''
+  };
+
   warps = cfg_menu;
   warps.tag    = 'warps';
   warps.name   = 'Deformation Fields';
@@ -315,9 +359,9 @@ function [output,output_spm,output1173] = cat_conf_output(expert)
   output.tag  = 'output';
   output.name = 'Writing options';
   if expert==2
-    output.val  = {surface ROI grey white csf gmt wmh sl tpmc atlas label bias las jacobianwarped warps}; 
+    output.val  = {surface surf_measures ROI grey white csf gmt pp wmh sl tpmc atlas label bias las jacobianwarped warps}; 
   elseif expert==1
-    output.val  = {surface ROI grey white csf wmh sl tpmc atlas label bias las jacobianwarped warps};
+    output.val  = {surface surf_measures ROI grey white csf wmh sl tpmc atlas label bias las jacobianwarped warps};
   else
     output.val  = {surface ROI grey white labelnative bias jacobianwarped warps};
   end

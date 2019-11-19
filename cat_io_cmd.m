@@ -102,7 +102,7 @@ function varargout = cat_io_cmd(str,style,strlength,verb,stime)
         end
       end
 
-      if ~strcmp(str,'testthisfunction') && nargout>0;
+      if ~strcmp(str,'testthisfunction') && nargout>0
         varargout{1} = clock; 
       end
       

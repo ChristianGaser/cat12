@@ -662,17 +662,36 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
   %% default surface reconstruction 
   %  sum(Yth1(Yth1(:)>median(Yth1(Yth1(:)>0))*2 ))./sum(Yth1(Yth1(:)>0)) > 0.1 > error
     if job.extopts.collcorr >= 20
-      %%
-      if ~isfield(job.extopts,'vdist'), job.extopts.vdist = 0;  end
+      for i=1:numel(surf), surf{i} = cat_io_strrep(surf{i},{'lc','rc'},'cb'); end 
+      surf = unique(surf); 
+      if any( ~cellfun('isempty', strfind(surf,'cb') ))
+        VT1 = spm_vol(fullfile(fileparts(job.extopts.templates{end}),'Template_T1_IXI555_MNI152_GS.nii')); 
+        fac = abs(tpm.V(1).mat(1)) / abs(VT1.mat(1));
+        YT  = single(spm_sample_vol(VT1,double(smooth3(Yy(:,:,:,1))*fac),double(smooth3(Yy(:,:,:,2))*fac),double(smooth3(Yy(:,:,:,3))*fac),2));
+        YT  = reshape(YT,size(Yy(:,:,:,1))); clear Yyi; 
+      else
+        YT  = [];
+      end
+      %% further GUI fields ...
+      if ~isfield(job.extopts,'vdist'),           job.extopts.vdist           = 0;  end
+      if ~isfield(job.extopts,'scale_cortex'),    job.extopts.scale_cortex    = cat_get_defaults('extopts.scale_cortex'); end
+      if ~isfield(job.extopts,'add_parahipp'),    job.extopts.add_parahipp    = cat_get_defaults('extopts.add_parahipp'); end
+      if ~isfield(job.extopts,'close_parahipp'),  job.extopts.close_parahipp  = cat_get_defaults('extopts.close_parahipp'); end
+      if ~isfield(job.extopts,'pbtmethod'),       job.extopts.pbtmethod       = cat_get_defaults('extopts.pbtmethod'); end
+      if ~isfield(job.output,'pp'),               job.output.pp               = struct('native',0,'warped',0,'dartel',0);  end
+      if ~isfield(job.output,'surf_measures'),    job.output.surf_measures    = 1; end
+  
       [Yth1, S, Psurf, qa.subjectmeasures.EC_abs, qa.subjectmeasures.defect_size, qa.createCS] = ...
-        cat_surf_createCS2(VT,VT0,Ymix,Yl1,Yp0/3,YMF,struct('pbtmethod','pbt2x','vdist',job.extopts.vdist,...
-        'interpV',job.extopts.pbtres,'collcorr',job.extopts.collcorr - 20, ...
+        cat_surf_createCS2(VT,VT0,Ymix,Yl1,YMF,YT,struct('trans',trans,... required for Ypp output
+        'vdist',job.extopts.vdist,'outputpp',job.output.pp,'surf_measures',job.output.surf_measures, ...
+        'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'collcorr',job.extopts.collcorr - 20,...
+        'scale_cortex', job.extopts.scale_cortex, 'add_parahipp', job.extopts.add_parahipp, 'close_parahipp', job.extopts.close_parahipp,  ....
         'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
-        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT)); 
+        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT));  
     else
       %%
       [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size, qa.createCS] = ...
-        cat_surf_createCS(VT,VT0,Ymix,Yl1,Yp0/3,YMF,struct('pbtmethod','pbt2x',...
+        cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,struct('pbtmethod','pbt2x',...
         'interpV',job.extopts.pbtres,'extract_pial_white',job.extopts.collcorr, ...
         'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
         'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT)); 
@@ -698,13 +717,13 @@ end
 
 %% ROI data extraction 
 %  ---------------------------------------------------------------------
-%  This part estimated indivudal measurements for different ROIs.
+%  This part estimated individual measurements for different ROIs.
 %  The ROIs are described in the CAT normalized space and there are to 
 %  ways to estimate them - (1) in subject space, and (2) in normalized 
 %  space. Estimation in normalized space is more direct an avoid further
 %  transformations. The way over the subject space have the advantage 
-%  that indivdiual anatomical refinients are possible, but the this has
-%  to be done and evalutated for each atlas. 
+%  that individual anatomical refinements are possible, but the this has
+%  to be done and evaluated for each atlas. 
 %  ---------------------------------------------------------------------
 if job.output.ROI  
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
@@ -724,12 +743,23 @@ qa.subjectmeasures.vol_abs_CGW = [
   prod(vx_vol)/1000/255 .* sum(Ycls{2}(:)) 0 0]; % ... WM WMHs SL
 if numel(Ycls)>6, qa.subjectmeasures.vol_abs_CGW(4) = prod(vx_vol)/1000/255 .* sum(Ycls{7}(:)); end % WMHs 
 if numel(Ycls)>7, qa.subjectmeasures.vol_abs_CGW(5) = prod(vx_vol)/1000/255 .* sum(Ycls{8}(:)); end % SL
+if job.output.surface && isfield(S,'lh') && isfield(S,'rh')
+  qa.subjectmeasures.surf_TSA    =  sum( cat_surf_fun('area',S.lh) )/100 + sum( cat_surf_fun('area',S.lh) )/100; 
+end
 qa.subjectmeasures.vol_TIV     =  sum(qa.subjectmeasures.vol_abs_CGW); 
 qa.subjectmeasures.vol_rel_CGW =  qa.subjectmeasures.vol_abs_CGW ./ qa.subjectmeasures.vol_TIV;
 if ~debug, clear Ycls; end
 if job.output.surface
-  qa.qualitymeasures.SurfaceEulerNumber = qa.subjectmeasures.EC_abs;
-  qa.qualitymeasures.SurfaceDefectArea  = qa.subjectmeasures.defect_size;
+  qa.qualitymeasures.SurfaceEulerNumber       = qa.subjectmeasures.EC_abs;
+  qa.qualitymeasures.SurfaceDefectArea        = qa.subjectmeasures.defect_size;
+  qa.qualitymeasures.SurfaceDefectNumber      = qa.createCS.defects;
+  qa.qualitymeasures.SurfaceIntensityRMSE     = qa.createCS.RMSE_Ym;
+  qa.qualitymeasures.SurfacePositionRMSE      = qa.createCS.RMSE_Ypp;
+  if isfield(qa,'createCS') && isfield(qa.createCS,'self_intersections')
+    qa.qualitymeasures.SurfaceSelfIntersections = qa.createCS.self_intersections;
+  else
+    qa.qualitymeasures.SurfaceSelfIntersections = []; 
+  end
 end
 stime = cat_io_cmd('Quality check'); job.stime = stime; 
 Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; Yp0(Yp0>3.1) = nan; % no analysis in WMH regions
@@ -740,14 +770,14 @@ clear Yp0;
 % surface data update
 if job.output.surface
   if exist('S','var')
-    if isfield(S,'lh') && isfield(S.lh,'th1'), th=S.lh.th1; else th=[]; end;
+    if isfield(S,'lh') && isfield(S.lh,'th1'), th=S.lh.th1; else, th=[]; end
     if isfield(S,'rh') && isfield(S.rh,'th1'), th=[th; S.rh.th1]; end
     qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
     if job.extopts.expertgui>1
-      if isfield(S,'lh') && isfield(S.lh,'th2'), th=S.lh.th2; else th=[]; end; 
+      if isfield(S,'lh') && isfield(S.lh,'th2'), th=S.lh.th2; else, th=[]; end 
       if isfield(S,'rh') && isfield(S.lh,'th2'), th=[th; S.rh.th2]; end
       qa.subjectmeasures.dist_gyruswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
-      if isfield(S,'lh') && isfield(S.lh,'th3'), th=S.lh.th3; else th=[]; end; 
+      if isfield(S,'lh') && isfield(S.lh,'th3'), th=S.lh.th3; else, th=[]; end 
       if isfield(S,'rh') && isfield(S.lh,'th3'), th=[th; S.rh.th3]; end
       qa.subjectmeasures.dist_sulcuswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
     end
@@ -784,7 +814,7 @@ if job.extopts.print
 end
 % final command line report
 cat_main_reportcmd(job,res,qa);
-
+%%
 return
 function [Ysrc,Ycls,Yy,res] = cat_main_resspmres(Ysrc,Ycls,Yy,res)
 %% cat_main_resspmres

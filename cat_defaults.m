@@ -106,6 +106,11 @@ cat.output.ct.native = 0;
 cat.output.ct.warped = 0;
 cat.output.ct.dartel = 0;
 
+% percentage possition (experimental)
+cat.output.pp.native = 0; 
+cat.output.pp.warped = 0;
+cat.output.pp.dartel = 0;
+
 % jacobian determinant 0/1 (none/yes)
 cat.output.jacobian.warped = 0;
 
@@ -134,7 +139,7 @@ cat.extopts.spm_kamap    = 0;    % Replace initial SPM by k-means AMAP segm.  0 
 cat.extopts.NCstr        =-Inf;  % Strength of the noise correction:          0 to 1; 0 - no filter, -Inf - auto, 1 - full, 2 - ISARNLM (else SANLM), default -Inf
 cat.extopts.LASstr       = 0.5;  % Strength of the local adaption:            0 to 1; default 0.5
 cat.extopts.BVCstr       = 0.5;  % Strength of the Blood Vessel Correction:   0 to 1; default 0.5
-cat.extopts.regstr       = 0;    % Strength of Shooting registration:         0 - Dartel, eps (fast), 0.5 (default) to 1 (accurate) optimized Shooting, 4 - default Shooting; default 0
+cat.extopts.regstr       = 0.5;  % Strength of Shooting registration:         0 - Dartel, eps (fast), 0.5 (default) to 1 (accurate) optimized Shooting, 4 - default Shooting; default 0
 cat.extopts.WMHC         = 1;    % Correction of WM hyperintensities:         0 - no correction, 1 - only for Dartel/Shooting
                                  %                                            2 - also correct segmentation (to WM), 3 - handle as separate class; default 1
 cat.extopts.WMHCstr      = 0.5;  % Strength of WM hyperintensity correction:  0 to 1; default 0.5
@@ -221,7 +226,7 @@ cat.extopts.T1           = {fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii')};
 
 % surface options
 cat.extopts.pbtres         = 0.5;   % internal resolution for thickness estimation in mm (default 0.5) 
-cat.extopts.collcorr       = 0;     % correction of surface collisions (experimental, not yet working properly!): 0 - none; 1 - Deformation; 20 - none2; 21 - Delaunay; 22 - Delaunay + Optimization 
+cat.extopts.collcorr       = 23;    % correction of surface collisions (experimental, not yet working properly!): 0 - none; 1 - Deformation; 20 - none2; 21 - Deformation; 22 - CAT_SI; 23 - PBT; 24 - PBT opt. 
 cat.extopts.pbtlas         = 0;     % reduce myelination effects (experimental, not yet working properly!)
 cat.extopts.thick_measure  = 1;     % distance method for estimating thickness:  1 - Tfs: Freesurfer method using mean(Tnear1,Tnear2) (default in 12.7+); 0 - Tlink: linked distance (used before 12.7)
 cat.extopts.thick_limit    = 5;     % upper limit for Tfs thickness measure similar to Freesurfer (only valid if cat.extopts.thick_measure is set to "1"
