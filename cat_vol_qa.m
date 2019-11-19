@@ -836,6 +836,7 @@ function varargout = cat_vol_qa(action,varargin)
       if opt.write_xml
         QAS.qualityratings = QAR.qualityratings;
         QAS.subjectratings = QAR.subjectratings;
+        QAS.ratings_help   = QAR.help;
         
         cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write'); %struct('QAS',QAS,'QAM',QAM)
       end

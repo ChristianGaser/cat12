@@ -43,7 +43,7 @@ function varargout = cat_surf_display(varargin)
       job = varargin{1};
       if ~isfield(job,'data') || isempty(job.data)
         if cat_get_defaults('extopts.expertgui')
-          job.data = spm_select([1 24],'any','Select surfaces or textures','','','(lh|rh|lc|rc|mesh).*');
+          job.data = spm_select([1 24],'any','Select surfaces or textures','','','(lh|rh|lc|rc|cb|mesh).*');
         else
           job.data = spm_select([1 24],'any','Select surfaces or textures','','','.*gii');
         end
@@ -55,7 +55,7 @@ function varargout = cat_surf_display(varargin)
     end
   else
     if cat_get_defaults('extopts.expertgui')
-        job.data = spm_select([1 24],'any','Select surfaces or textures','','','(lh|rh|lc|rc|mesh).*');
+        job.data = spm_select([1 24],'any','Select surfaces or textures','','','(lh|rh|lc|rc|cb|mesh).*');
     else
         job.data = spm_select([1 24],'any','Select surfaces or textures','','','.*gii');
     end

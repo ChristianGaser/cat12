@@ -195,6 +195,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     % side
     if     strfind(noname,'lh.'),   sinfo(i).side='lh';   sidei = strfind(noname,'lh.');
     elseif strfind(noname,'rh.'),   sinfo(i).side='rh';   sidei = strfind(noname,'rh.');
+    elseif strfind(noname,'cb.'),   sinfo(i).side='cb';   sidei = strfind(noname,'cb.');
     elseif strfind(noname,'mesh.'), sinfo(i).side='mesh'; sidei = strfind(noname,'mesh.');
     elseif strfind(noname,'lc.'),   sinfo(i).side='lc';   sidei = strfind(noname,'lc.');
     elseif strfind(noname,'rc.'),   sinfo(i).side='rc';   sidei = strfind(noname,'rc.');
@@ -218,7 +219,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
       else
         if gui
           if cat_get_defaults('extopts.expertgui')
-            sinfo(i).side = spm_input('Hemisphere',1,'lh|rh|lc|rc|mesh');
+            sinfo(i).side = spm_input('Hemisphere',1,'lh|rh|lc|rc|cb|mesh');
           else
             sinfo(i).side = spm_input('Hemisphere',1,'lh|rh|mesh');
           end
@@ -328,15 +329,16 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     % if the dataname is central we got a mesh or surf datafile
     if isempty(sinfo(i).Pdata) || isempty(sinfo(i).Pmesh) 
       switch sinfo(i).texture
-        case {'defects'} % surf
-          sinfo(i).Pmesh = sinfo(i).fname;
-          sinfo(i).Pdata = sinfo(i).fname;
+        %case {'defects'} % surf
+        %  sinfo(i).Pmesh = sinfo(i).fname;
+        %  sinfo(i).Pdata = sinfo(i).fname;
         case {'central','white','pial','inner','outer','sphere','hull','core','layer4'} % only mesh
           sinfo(i).Pmesh = sinfo(i).fname;
           sinfo(i).Pdata = '';
         case {'pbt','thickness','thicknessfs','thicknessmin','thicknessmax',...
               'gyrification','frac','logsulc','GWMdepth','WMdepth','CSFdepth',...
-              'depthWM','depthGWM','depthCSF','depthWMg','inwardGI','outwardGI','generalizedGI','area',...
+              'depthWM','depthGWM','depthCSF','depthWMg','inwardGI','outwardGI','generalizedGI',...
+              'area','defects',...
               'gyruswidth','gyruswidthWM','sulcuswidth'} % only thickness
           sinfo(i).Pdata = sinfo(i).fname;
       end
@@ -433,7 +435,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     for fni = 1:numel(FN)
       if exist(sinfo(i).(FN{fni}) ,'file')
         Pdata = dir(sinfo(i).(FN{fni}));
-        if abs(Pmesh_data.bytes - Pdata.bytes)>1500 % data saved by CAT tools may vary a little bit
+        if isempty(Pmesh_data) || isempty(Pdata) || abs(Pmesh_data.bytes - Pdata.bytes)>1500 % data saved by CAT tools may vary a little bit
           sinfo(i).(FN{fni})  = '';
         end
       else

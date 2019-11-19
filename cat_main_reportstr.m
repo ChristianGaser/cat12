@@ -32,7 +32,7 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
   color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
    
   %mark2str2 = @(mark,s,val) sprintf(sprintf('\\\\bf\\\\color[rgb]{%%0.2f %%0.2f %%0.2f}%s',s),color(QMC,mark),val);
-  marks2str = @(mark,str) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%s',color(QMC,mark),str);
+  marks2str   = @(mark,str) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%s',color(QMC,mark),str);
   mark2rps    = @(mark) min(100,max(0,105 - mark*10)) + isnan(mark).*mark;
   grades      = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
   mark2grad   = @(mark) grades{min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3)))};
@@ -148,9 +148,9 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
   end
   restype = char(fieldnames(job.extopts.restypes));
   if job.extopts.expertgui
-    str{1} = [str{1} struct('name', 'KAMAP / WMHC / SLC / restype:','value',...
-           sprintf('%d / %d / %d / %s',...
-          job.extopts.spm_kamap,job.extopts.WMHC,job.extopts.SLC,restype))];
+    str{1} = [str{1} struct('name', 'KAMAP / WMHC / SLC / collcorr / restype:','value',...
+           sprintf('%d / %d / %d / %d / %s',...
+          job.extopts.spm_kamap,job.extopts.WMHC,job.extopts.SLC,job.extopts.collcorr,restype))];
   else
     str{1} = [str{1} struct('name', 'restype:','value',sprintf('%s',restype))];
   end
@@ -185,18 +185,41 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
   if isfield(qa.qualitymeasures,'SurfaceEulerNumber') && ~isempty(qa.qualitymeasures.SurfaceEulerNumber)
     if job.extopts.expertgui
       str{2} = [str{2} struct('name',' Surface Euler number:','value',marks2str(qa.qualityratings.SurfaceEulerNumber,...
-                sprintf('%d', qa.qualitymeasures.SurfaceEulerNumber)))]; 
+                sprintf('%0.2f', qa.qualitymeasures.SurfaceEulerNumber)))]; 
+              
+      if isfield(qa.qualitymeasures,'SurfaceDefectNumber') && ~isempty(qa.qualitymeasures.SurfaceDefectNumber)
+        str{2}(end).name  = [str{2}(end).name(1:end-8)  ' / defect number:'];
+        str{2}(end).value = [str{2}(end).value ' / ' marks2str(qa.qualityratings.SurfaceDefectNumber,...
+                sprintf('%0.2f', qa.qualitymeasures.SurfaceDefectNumber)) ];
+      end
+            
     else
-      str{2} = [str{2} struct('name',' Surface Euler number:','value',sprintf('%d', qa.qualitymeasures.SurfaceEulerNumber))]; 
+      str{2} = [str{2} struct('name',' Surface Euler number:','value',sprintf('%0.2f', qa.qualitymeasures.SurfaceEulerNumber))]; 
     end
   end
+  
+  
   if isfield(qa.qualitymeasures,'SurfaceDefectArea') && ~isempty(qa.qualitymeasures.SurfaceDefectArea)
     if job.extopts.expertgui
-      str{2} = [str{2} struct('name',' Size of topology defects:','value',marks2str(qa.qualityratings.SurfaceDefectArea,...
-                sprintf('%d', qa.qualitymeasures.SurfaceDefectArea)))];
+      str{2} = [str{2} struct('name',' Topology defects size:','value',marks2str(qa.qualityratings.SurfaceDefectArea,...
+                sprintf('%0.2f%%', qa.qualitymeasures.SurfaceDefectArea)))];
+
+      if isfield(qa.qualitymeasures,'SurfaceSelfIntersections') && ~isempty(qa.qualitymeasures.SurfaceSelfIntersections)
+        str{2}(end).name  = [str{2}(end).name(1:end-6)  ' / self-inters. size:'];
+        str{2}(end).value = [str{2}(end).value ' / ' marks2str(qa.qualityratings.SurfaceSelfIntersections,...
+                sprintf('%0.2f%%', qa.qualitymeasures.SurfaceSelfIntersections)) ];
+      end
+   
     else
-      str{2} = [str{2} struct('name',' Size of topology defects:','value',sprintf('%d', qa.qualitymeasures.SurfaceDefectArea))];
+      str{2} = [str{2} struct('name',' Size of topology defects:','value',sprintf('%0.2f%%', qa.qualitymeasures.SurfaceDefectArea))];
     end
+    
+  end
+  
+  if job.extopts.expertgui && isfield(qa.qualityratings,'SurfaceIntensityRMSE')
+      str{2} = [str{2} struct('name',' Surface intensity / position RMSE:','value',[ marks2str( qa.qualityratings.SurfaceIntensityRMSE ,...
+        sprintf('%0.2f', qa.qualitymeasures.SurfaceIntensityRMSE)) ' / ' ...
+        marks2str( qa.qualityratings.SurfacePositionRMSE ,sprintf('%0.2f', qa.qualitymeasures.SurfacePositionRMSE) ) ] ) ];
   end
 
   % Subject Measures
@@ -229,11 +252,16 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
   end
   
   str{3} = [str{3} struct('name', ' TIV:','value', sprintf(['%0.0f cm' char(179)],qa.subjectmeasures.vol_TIV))];  
-
+  if isfield(qa.subjectmeasures,'surf_TSA') && job.extopts.expertgui>1
+    str{3}(end).name  = [str{3}(end).name  ' / TSA:']; 
+    str{3}(end).value = [str{3}(end).value sprintf(' / %0.0f cm%s' ,qa.subjectmeasures.surf_TSA,char(178))];  
+  end
 
   % Surface measures - Thickness, (Curvature, Depth, ...)
+  %if cellfun('isempty',strfind({Psurf(:).Pcentral},'ch.')), thstr = 'Cerebral Thickness'; else thstr = 'Thickness'; end
+  thstr = 'Thickness';
   if isfield(qa.subjectmeasures,'dist_thickness') && ~isempty(qa.subjectmeasures.dist_thickness)
-    str{3} = [str{3} struct('name', '\bfThickness:','value',sprintf('%5.2f%s%5.2f mm', ...
+    str{3} = [str{3} struct('name', ['\bf' thstr ':'],'value',sprintf('%5.2f%s%5.2f mm', ...
            qa.subjectmeasures.dist_thickness{1}(1),char(177),qa.subjectmeasures.dist_thickness{1}(2)))];
     if isfield(qa.subjectmeasures,'dist_gyruswidth') && ~isnan(qa.subjectmeasures.dist_gyruswidth{1}(1))
       str{3} = [str{3} struct('name', '\bfGyruswidth:','value',sprintf('%5.2f%s%5.2f mm', ...

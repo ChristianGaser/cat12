@@ -136,8 +136,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     htext(1,i,2) = text(0.51,0.98-(0.055*i), str{1}(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   end
   for i=1:size(str{2},2)  % qa-measurements
-    htext(2,i,1) = text(0.01,0.45-(0.055*i), str{2}(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-    htext(2,i,2) = text(0.25,0.45-(0.055*i), str{2}(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(2,i,1) = text(0.01,0.48-(0.055*i), str{2}(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(2,i,2) = text(0.25,0.48-(0.055*i), str{2}(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   end
   % qa-scala
   %htext(5,1,1) = text(0.01,0.45-(0.055*(i+2)),str4(1).name,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
@@ -420,6 +420,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   %% TPM overlay with brain/head and head/background surfaces
   warning('OFF','MATLAB:subscripting:noSubscriptsSpecified')
   showTPMsurf = 1; % ... also in default mode 
+  for id=1:numel(st.vols)
+    if isfield( st.vols{id}, 'mesh'), st = rmfield( st.vols{id} ,'mesh'); end
+  end
   if job.extopts.expertgui>0 - showTPMsurf
     %Phull = {fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','bh.hull.cat.gii')};
     Phull = {cat_surf_create_TPM_hull_surface(res.tpm)};
@@ -460,7 +463,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       try spm_orthviews('redraw',id); end
 
       %% TPM legend
-      ccl = axes('Position',[pos(1,1:2) 0 0] + [0.33 0 0.02 0.02],'Parent',fg);
+      ccl = axes('Position',[pos(1,1:2) 0 0] + [0.35 0 0.02 0.08],'Parent',fg);
       cclp = plot(ccl,([0 0.4;0.6 1])',[0 0; 0 0],'b-'); 
       text(1.2,0,['Brain and skull',char(10),'overlay from affine',char(10),'registered TPM'],...
           'Parent',ccl,'Fontsize',fontsize-2);
@@ -468,27 +471,38 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     end
   end
   
-  %%
-  if job.extopts.expertgui && exist('Psurf','var') && ~isempty(Psurf)
-    % prepare brainmask as mesh
-    %brainmesh = gifti( isosurface(Yp0,0.5) );
-    %vmat  = VO.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1];
-    %save( gifti(brainmesh) , []);
-   
-    %% add contex menu for principle test
-    if job.extopts.expertgui>1
-      ids = 1:3; 
-    else
-      ids = 3; %find(cellfun('isempty',st.vols)==0,1,'last');
-    end
+  %% 
+  if exist('Psurf','var') && ~isempty(Psurf)
+    % ... clearup this part of code when finished ...
     
-    for id=ids
+    %% add contex menu for principle test
+    Psurf2 = Psurf;
+    % phite/pial surface in segmentation view number 3
+    for ix=1:numel(Psurf2) 
+      Psurf2(end+1).Pcentral = Psurf2(ix).Pwhite; 
+      Psurf2(end+1).Pcentral = Psurf2(ix).Ppial; 
+    end
+    Psurf2(1:numel(Psurf)) = []; 
+  
+    for id=1:3
       try spm_orthviews('AddContext',id); end % need the context menu for mesh handling
 
-      for ix=1:numel(Psurf) 
+      
+      if id==3
+        nPsurf = numel(Psurf2); 
+        stxt   = 'white/pial';
+      else
+        nPsurf = numel(Psurf);
+        stxt   = 'central surface';
+      end
+      for ix=1:nPsurf
         % load mesh
         if ov_mesh
-          spm_ov_mesh('display',id,Psurf(ix).Pcentral);
+          if id==3
+            spm_ov_mesh('display',id,Psurf2(ix).Pcentral);
+          else
+            spm_ov_mesh('display',id,Psurf(ix).Pcentral);
+          end
         else
           continue
         end
@@ -506,15 +520,16 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       %% change line style
       hM = findobj(st.vols{id}.ax{1}.cm,'Label','Mesh');
       UD = get(hM,'UserData');
-      UD.width = [repmat(0.75,1,numel(UD.width) - numel(Psurf))  repmat(0.5,1,numel(Psurf))]; 
-      UD.style = [repmat({'b--'},1,numel(UD.width) - numel(Psurf)) repmat({'k-'},1,numel(Psurf))];
+      UD.width = [repmat(0.5,1,numel(UD.width) - nPsurf)  repmat(0.5,1,nPsurf)]; 
+      UD.style = [repmat({'b--'},1,numel(UD.width) - nPsurf) repmat({'k-'},1,nPsurf)];
       set(hM,'UserData',UD);
-      if ov_mesh spm_ov_mesh('redraw',id); end
+      if ov_mesh, spm_ov_mesh('redraw',id); end
       
       %% TPM legend
       try
-        ccl2{id} = axes('Position',[pos(id,1:2) 0 0] + [0.33 -0.015+0.02*(id>2) 0.02 0.02],'Parent',fg);
-        plot(ccl2{id},[0 1],[0 0],'k-'); text(double(ccl2{id}),1.2,0,'CS'); axis(ccl2{id},'off')
+        ccl2{id} = axes('Position',[pos(id,1:2) 0 0] + [0.35 0 0.02 0.02],'Parent',fg);
+        plot(ccl2{id},[0 1],[0 0],'k-'); axis(ccl2{id},'off')
+        text(1.2,0,stxt,'Parent',ccl2{id},'Fontsize',fontsize-2);
       end
     end
     
@@ -532,14 +547,17 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   
 %%
   imat = spm_imatrix(res.Affine); Rigid = spm_matrix([imat(1:6) 1 1 1 0 0 0]); clear imat;
+  id1  = find( ~cellfun('isempty',strfind({Psurf(:).Pcentral},'lh.')) ,1, 'first'); 
+         
   % surface
   if job.extopts.print>1
     if exist('Psurf','var') && ~isempty(Psurf)
       try
+        %%
         spm_figure('Focus','Graphics'); 
         hCS = subplot('Position',[0.50 0.05 0.55 0.30],'visible','off'); 
-        hSD = cat_surf_display(struct('data',Psurf(1).Pthick,'readsurf',0,'expert',2,...
-          'multisurf',job.output.surface,'view','s','menu',0,...
+        hSD = cat_surf_display(struct('data',Psurf(id1).Pthick,'readsurf',0,'expert',2,...
+          'multisurf',1,'view','s','menu',0,...
           'parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
        
         for ppi = 1:numel(hSD{1}.patch)
@@ -574,14 +592,14 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   % it is necessary to change some figure properties especially the fontsizes 
   set(fg,'PaperPositionMode','auto','resize','on','PaperPosition',[0 0 1 1]);
   for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize*0.8); end; end
-  for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize*0.8); end;
+  for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize*0.8); end
   
   warning('off','MATLAB:hg:patch:RGBColorDataNotSupported');
   print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
   print(fg, job.imgprint.ftype('jpeg'), job.imgprint.fdpi(job.imgprint.dpi/2), job.imgprint.fnamej); 
 
   for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize); end; end
-  for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize); end; 
+  for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize); end
   set(fg,'PaperPositionMode',fgold.PaperPositionMode,'resize',fgold.resize,'PaperPosition',fgold.PaperPosition);
   try
     fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);% windows error?
@@ -611,15 +629,17 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   
   
   %% change line style of TPM surf
-  if (job.extopts.expertgui>0 - showTPMsurf) & ov_mesh
-    id = 1; 
-    hM = findobj(st.vols{id}.ax{1}.cm,'Label','Mesh');
-    UD = get(hM,'UserData');
-    UD.width = [repmat(0.75,1,numel(UD.width) - numel(Psurf))  repmat(0.5,1,numel(Psurf))]; 
-    UD.style = [repmat({'r--'},1,numel(UD.width) - numel(Psurf)) repmat({'k-'},1,numel(Psurf))];
-    set( cclp,'Color', [1 0 0]);
-    set(hM,'UserData',UD);
-    spm_ov_mesh('redraw',id);
+  if (job.extopts.expertgui>0 - showTPMsurf) && ov_mesh
+    for id=1:3
+      hM = findobj(st.vols{id}.ax{1}.cm,'Label','Mesh');
+      UD = get(hM,'UserData');
+      if id==3; nPsurf = numel(Psurf2); else, nPsurf = numel(Psurf); end
+      UD.width = [repmat(0.5,1,numel(UD.width) - nPsurf)  repmat(0.5,1,nPsurf)]; 
+      UD.style = [repmat({'r--'},1,numel(UD.width) - nPsurf) repmat({'k-'},1,nPsurf)];
+      set( cclp,'Color', [1 0 0]);
+      set(hM,'UserData',UD);
+      spm_ov_mesh('redraw',id);
+    end
   end  
   
   warning('OFF','MATLAB:subscripting:noSubscriptsSpecified'); % jep off
