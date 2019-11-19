@@ -521,7 +521,7 @@ function varargout = cat_vol_qa(action,varargin)
       warning on
       QAS.hardware.computer     = mexext; 
       try
-        QAS.hardware.numcores = max(feature('numcores'),1);
+        QAS.hardware.numcores = max(cat_get_defaults('extopts.nproc'),1);
       catch
         QAS.hardware.numcores = 1;
       end

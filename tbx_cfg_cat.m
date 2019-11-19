@@ -27,7 +27,7 @@ if isdeployed, expert = 1; end
 
 % try to estimate number of processor cores
 try
-  numcores = feature('numcores');
+  numcores = cat_get_defaults('extopts.nproc')
   % because of poor memory management use only half of the cores for windows
   if ispc
     numcores = round(numcores/2);
@@ -38,7 +38,7 @@ catch
 end
 
 % force running in the foreground if only one processor was found or for compiled version
-if numcores == 1 || isdeployed, numcores = 0; end
+if numcores == 1 | isdeployed, numcores = 0; end
 
 %_______________________________________________________________________
 nproc         = cfg_entry;
@@ -116,7 +116,7 @@ estwrite.name   = 'CAT12: Segmentation';
 %NEW NAME?: [catv,catr,catd] = cat_version;
 %           estwrite.name    = sprintf('CAT12.6plus: Segmentation %s (%s/%s)',catr,catd(1:4),catd(6:7));
 % use multithreading only if availabe
-if feature('numcores') > 1 && ~isdeployed
+if numcores > 1 & ~isdeployed
   if expert>1
     estwrite.val    = {data data_wmh nproc opts extopts output};
   else
@@ -162,7 +162,7 @@ estwrite1445.tag    = 'estwrite1445';
 estwrite1445.prog   = @cat_run1445;
 estwrite1445.help   = [estwrite1445.help;{'';'This batch calls the stable version of the main preprocessing of release 1445 with only slight runtime bug fixes.';''}];
 
-if feature('numcores') > 1
+if numcores > 1
   estwrite1173.val      = {data nproc opts1173     extopts1173     output1173}; 
   estwrite1173plus.val  = {data nproc opts1173plus extopts1173plus output}; 
   if expert>1
@@ -185,7 +185,7 @@ estwrite_spm        =  cfg_exbranch;
 estwrite_spm.tag    = 'estwrite_spm';
 estwrite_spm.name   = 'CAT12: SPM Segmentation';
 % use multithreading only if availabe
-if feature('numcores') > 1
+if numcores > 1
   estwrite_spm.val  = {data_spm nproc extopts_spm output_spm};
 else
   estwrite_spm.val  = {data_spm extopts_spm output_spm};

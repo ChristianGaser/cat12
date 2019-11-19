@@ -8,7 +8,7 @@ function output = cat_simple(job)
   % defaults settings
   def.catversion    = 'estwrite';
   def.tpm           = fullfile(spm('dir'),'TPM','TPM.nii');
-  def.nproc         = feature('numcores');
+  def.nproc         = cat_get_defaults('extopts.nproc');
 %  def.surface       = 1; 
   def.debug         = 0;
   def.ignoreErrors  = 1;
