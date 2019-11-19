@@ -406,7 +406,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   if isdeployed
     cores = 0;
   else
-    cores             = feature('numcores'); 
+    cores             = cat_get_defaults('extopts.nproc'); 
   end
   if 0 % enter value
     nproc           = cfg_entry;

@@ -1113,9 +1113,7 @@ if ~gui_Create
     designEval = false;
     if (numargin>1 && ishghandle(varargin{2}))
         fig = varargin{2};
-        while ~isempty(fig) && ~isa(handle(fig),'figure')
-            fig = get(fig,'parent');
-        end
+        fig = ancestor(fig,'figure');
         designEval = isappdata(0,'CreatingGUIDEFigure');
     end
         

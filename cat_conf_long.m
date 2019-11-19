@@ -19,7 +19,7 @@ end
 
 % try to estimate number of processor cores
 try
-  numcores = feature('numcores');
+  numcores = cat_get_defaults('extopts.nproc');
   % because of poor memory management use only half of the cores for windows
   if ispc
     numcores = round(numcores/2);
@@ -30,7 +30,7 @@ catch
 end
 
 % force running in the foreground if only one processor was found or for compiled version
-if numcores == 1 || isdeployed, numcores = 0; end
+if numcores == 1 | isdeployed, numcores = 0; end
 
 %------------------------------------------------------------------------
 nproc         = cfg_entry;
@@ -164,7 +164,7 @@ else
   output.val(2:end) = [];
   
   % use multithreading only if availabe
-  if feature('numcores') > 1 && ~isdeployed
+  if numcores > 1 & ~isdeployed
     if expert
       long.val  = {esubjs,nproc,opts,extopts,output,ROI,modulate,dartel,delete_temp};
     else
