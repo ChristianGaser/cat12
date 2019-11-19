@@ -99,6 +99,7 @@ switch lower(action)
         if isempty(varargin)
             [M, sts] = spm_select(1,'any','Select surface mesh file');
             if ~sts, return; end
+            varargin{1} = cellstr(M);
         else
             M = varargin{1};
         end
@@ -141,7 +142,7 @@ switch lower(action)
           sinfo = cat_surf_info(M);
         end
         if ischar(varargin{1})
-          sinfo.Pmesh = varargin{1};
+          sinfo(1).Pmesh = varargin{1};
         end
        
         %%
@@ -233,7 +234,10 @@ switch lower(action)
             % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
             warning off MATLAB:subscripting:noSubscriptsSpecified
             % flip faces in case of defect surfaces
-            if strcmp(sinfo(1).texture,'defects'), S.faces = S.faces(:,[2,1,3]); end
+            if mean(max(S.vertices + spm_mesh_normals(S)) - max(S.vertices))>0
+            %if strcmp(sinfo(1).texture,'defects'), 
+              S.faces = S.faces(:,[2,1,3]); 
+            end
             labelmap = jet; 
             S = export(S,'patch');
             
@@ -344,7 +348,11 @@ switch lower(action)
             sinfo   = cat_surf_info('');
             H.sinfo = sinfo; 
             
-              if strcmp(sinfo(1).texture,'defects'), S.faces = S.faces(:,[2,1,3]); end
+            if mean(max(S.vertices + spm_mesh_normals(S)) - max(S.vertices))>0
+            %if strcmp(sinfo(1).texture,'defects'), 
+              S.faces = S.faces(:,[2,1,3]); 
+            end
+            %if strcmp(sinfo(1).texture,'defects'), S.faces = S.faces(:,[2,1,3]); end
       end
 
 
@@ -429,10 +437,10 @@ switch lower(action)
         
         % set default view
         cat_surf_render2('view',H,[   0  90]);
-        if numel(H.patch==1)
+        if numel(H.patch)==1
           if strcmp(H.sinfo(1).side,'lh'); cat_surf_render2('view',H,[ -90   0]);  end
           if strcmp(H.sinfo(1).side,'rh'); cat_surf_render2('view',H,[  90   0]);  end
-          if strcmp(H.sinfo(1).side,'ch'); cat_surf_render2('view',H,[  45  45]);  end
+          %if strcmp(H.sinfo(1).side,'ch'); cat_surf_render2('view',H,[  0   90]);  end
         end 
         
         % remember this zoom level
@@ -445,7 +453,7 @@ switch lower(action)
         
         if isempty(varargin), varargin{1} = gca; end
         H = getHandles(varargin{1});
-        sinfo1 = cat_surf_info(H.filename{1});
+        sinfo1 = cat_surf_info(H.filename);
         if ~isempty(get(H.patch(1),'UIContextMenu')), return; end
         
         cmenu = uicontextmenu('Callback',{@myMenuCallback, H});
@@ -455,34 +463,36 @@ switch lower(action)
         
         
         %% -- Textures -- 
-        if ~isempty(sinfo1.fname)
+        if ~isempty(sinfo1(1).fname)
           c = uimenu(cmenu, 'Label', 'Textures');
-          if sinfo1.resampled
-            if sinfo1.resampled_32k
-              tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('*%s.*.resampled_32k.%s*',sinfo1.side,sinfo1.name),struct('maxdepth',1));
+          for pi=1:numel(sinfo1)
+            if sinfo1(pi).resampled
+              if sinfo1(pi).resampled_32k
+                tfiles = cat_vol_findfiles(sinfo1(pi).pp,sprintf('*%s.*.resampled_32k.%s*',sinfo1(pi).side,sinfo1(pi).name),struct('maxdepth',1));
+              else
+                tfiles = cat_vol_findfiles(sinfo1(pi).pp,sprintf('*%s.*.resampled.%s*',sinfo1(pi).side,sinfo1(pi).name),struct('maxdepth',1));
+              end
+              sfiles = {'.central.','.sphere.','.sphere.reg.','.hull.','.inflate.','.core.','.white.','.pial.','.inner.','.outer.','.annot.','.defects.','.layer4.'}; 
+              for i=1:numel(sfiles)
+                tfiles(cellfun('isempty',strfind(tfiles,sfiles{i}))==0) = [];  
+              end
             else
-              tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('*%s.*.resampled.%s*',sinfo1.side,sinfo1.name),struct('maxdepth',1));
+              tfiles = cat_vol_findfiles(sinfo1(pi).pp,sprintf('%s.*.%s*',sinfo1(pi).side,sinfo1(pi).name),struct('maxdepth',1));
+              sfiles = {'.central.','.sphere.','.sphere.reg.','.hull.','.inflate.','.core.','.white.','.pial.','.inner.','.outer.','.annot.','.defects.','.AGI.','.SGI.','.layer4.'}; 
+              for i=1:numel(sfiles)
+                tfiles(cellfun('isempty',strfind(tfiles,sfiles{i}))==0) = [];  
+              end
             end
-            sfiles = {'.central.','.sphere.','.sphere.reg.','.hull.','.inflate.','.core.','.white.','.pial.','.inner.','.outer.','.annot.','.defects.','.layer4.'}; 
-            for i=1:numel(sfiles)
-              tfiles(cellfun('isempty',strfind(tfiles,sfiles{i}))==0) = [];  
+            if pi==1, H.textures = cell(numel(tfiles),1+numel(sinfo1)); end
+            if numel(tfiles)
+              for i=1:numel(tfiles)
+                H.textures{i,1+pi} = cat_surf_info(tfiles{i});
+                H.textures{i,1}    = H.textures{i,1+pi}.dataname; 
+              end
+              usetexture = cellfun('isempty',strfind(tfiles,H.filename{1}))==0;
+            else   
+              usetexture = 0; 
             end
-          else
-            tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('%s.*.%s*',sinfo1.side,sinfo1.name),struct('maxdepth',1));
-            sfiles = {'.central.','.sphere.','.sphere.reg.','.hull.','.inflate.','.core.','.white.','.pial.','.inner.','.outer.','.annot.','.defects.','.AGI.','.SGI.','.layer4.'}; 
-            for i=1:numel(sfiles)
-              tfiles(cellfun('isempty',strfind(tfiles,sfiles{i}))==0) = [];  
-            end
-          end
-          H.textures = cell(numel(tfiles),2);
-          if numel(tfiles)
-            for i=1:numel(tfiles)
-              H.textures{i,2} = cat_surf_info(tfiles{i});
-              H.textures{i,1} = H.textures{i,2}.dataname; 
-            end
-            usetexture = cellfun('isempty',strfind(tfiles,H.filename{1}))==0;
-          else   
-            usetexture = 0; 
           end
           set(c,'UserData',H.textures); 
           uimenu(c, 'Label', 'Synchronise Views', 'Visible','off','Checked','off', 'Tag','SynchroMenu', 'Callback',{@mySynchroniseTexture, H});
@@ -568,7 +578,7 @@ switch lower(action)
           %end
 
 
-          if ~isempty(strfind(fileparts(sinfo1.Pmesh),'_32k'))
+          if ~isempty(strfind(fileparts(sinfo1(1).Pmesh),'_32k'))
             str32k = '_32k';
           else
             str32k = '';
@@ -577,11 +587,11 @@ switch lower(action)
           vafiles = vatlas(:,1); safiles = satlas(:,1); 
           for ai = 1:size(vatlas,1)
             vafiles{ai} = fullfile(spm('Dir'),'toolbox','cat12',['atlases_surfaces' str32k],...
-              sprintf('%s.%s.Template_T1_IXI555_MNI152_GS',sinfo1.side,vatlas{ai,2}));
+              sprintf('%s.%s.Template_T1_IXI555_MNI152_GS',sinfo1(1).side,vatlas{ai,2}));
           end
           for ai = 1:size(satlas,1)
             safiles{ai} = fullfile(spm('Dir'),'toolbox','cat12',['atlases_surfaces' str32k],...
-              sprintf('%s.%s.freesurfer.annot',sinfo1.side,satlas{ai,2}));
+              sprintf('%s.%s.freesurfer.annot',sinfo1(1).side,satlas{ai,2}));
           end
           ntextures = size(H.textures,1);
           for i=1:size(satlas,1)
@@ -598,7 +608,7 @@ switch lower(action)
           useatlas2 = [zeros(ntextures2,1); cellfun('isempty',strfind(vafiles,H.filename{1}))==0];
 
           % atlas menu  
-          if sinfo1.resampled || strcmp(sinfo1.ee,'.annot')   
+          if sinfo1(1).resampled || strcmp(sinfo1(1).ee,'.annot')   
             c = uimenu(cmenu, 'Label', 'Atlases');
             if strcmp(H.sinfo(1).texture,'defects'), set(c,'Enable','off');  end
             uimenu(c, 'Label','none', 'Interruptible','off','Checked','off','Callback',{@myChangeTexture, H});
@@ -705,26 +715,31 @@ switch lower(action)
           %% -- Meshes --   
           c = uimenu(cmenu, 'Label', 'Meshes');
           if strcmp(H.sinfo(1).texture,'defects'), set(c,'Enable','off');  end
-          if sinfo1.resampled
-            if ~isempty(strfind(fileparts(sinfo1.Pmesh),'_32k'))
+          if sinfo1(1).resampled
+            if ~isempty(strfind(fileparts(sinfo1(1).Pmesh),'_32k'))
               str32k = '_32k';
             else
               str32k = '';
             end
             H.meshs = { 
-                'Central'   , H.patch(1).Vertices;
-                'Pial'      , fullfile(sinfo1.pp,[sinfo1.side '.pial.resampled.' sinfo1.name '.gii']);   
-                'White'     , fullfile(sinfo1.pp,[sinfo1.side '.white.resampled.' sinfo1.name '.gii']);  
-                'Layer4'    , fullfile(sinfo1.pp,[sinfo1.side '.layer4.resampled.' sinfo1.name '.gii']);   
-                'Hull'      , fullfile(sinfo1.pp,[sinfo1.side '.hull.resampled.' sinfo1.name '.gii']);  
-                ...
-                'Average'   , fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1.side '.central.freesurfer.gii']);    
-                'Inflated'  , fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1.side '.inflated.freesurfer.gii']);   
-                'Dartel'    , fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1.side '.central.Template_T1_IXI555_MNI152_GS.gii']);  
-                'Sphere'    , fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1.side '.sphere.freesurfer.gii']);  
-                'Custom'    ,'';    
-              };
-
+                'Central' ; 'Pial' ; 'White' ; 'Layer4' ; 'Hull' ; ... 
+                'Average' ; 'Inflated' ; 'Shooting' ; 'Sphere' ; 'Custom' };
+            for i=1:numel(H.patch)
+              H.meshs = [ H.meshs , { 
+                  H.patch(i).Vertices;
+                  fullfile(sinfo1(i).pp,[sinfo1(1).side '.pial.resampled.' sinfo1(i).name '.gii']);
+                  fullfile(sinfo1(i).pp,[sinfo1(1).side '.white.resampled.' sinfo1(i).name '.gii']);
+                  fullfile(sinfo1(i).pp,[sinfo1(1).side '.layer4.resampled.' sinfo1(i).name '.gii']);
+                  fullfile(sinfo1(i).pp,[sinfo1(1).side '.hull.resampled.' sinfo1(i).name '.gii']);
+                  fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1(i).side '.central.freesurfer.gii']);
+                  fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1(i).side '.inflated.freesurfer.gii']);
+                  fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1(i).side '.central.Template_T1_IXI555_MNI152_GS.gii']);
+                  fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1(i).side '.sphere.freesurfer.gii']); 
+                  '';
+                }];
+            end
+            
+            
             uimenu(c, 'Label','Central',    'Checked','on',  'Callback',{@myChangeMesh, H});
             uimenu(c, 'Label','Pial',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(H.meshs{2,2},'file')>1)});  
             uimenu(c, 'Label','White',      'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(H.meshs{3,2},'file')>1)});  
@@ -736,26 +751,29 @@ switch lower(action)
             uimenu(c, 'Label','Sphere',     'Checked','off', 'Callback',{@myChangeMesh, H});
             %uimenu(c, 'Label','Sphere',     'Checked','off', 'Callback',{@myChangeMesh, H},'Separator',1);
           else
-            H.meshs = { 
-                'Central', H.patch(1).Vertices 
-                ...'Inflated'  , fullfile(spm('Dir'),'toolbox','cat12','templates_surfaces',[sinfo1.side '.inflated.freesurfer.gii']);  
-                'Pial'      , sinfo1.Ppial;  
-                'White'     , sinfo1.Pwhite;  
-                'Layer4'    , sinfo1.Player4
-                'Hull'      , sinfo1.Phull;  
-                'Core'      , sinfo1.Pcore;  
-                'Sphere'    , sinfo1.Psphere;  
-                };
-            uimenu(c, 'Label','Central', 'Checked','on',  'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Pmesh,'file')>1)});  
-           %uimenu(c, 'Label','Inflated',   'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Pmesh,'file')>1)});
-            uimenu(c, 'Label','Pial',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Ppial,'file')>1)});
-            uimenu(c, 'Label','White',      'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Pwhite,'file')>1)});
-            uimenu(c, 'Label','Layer4',     'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Player4,'file')>1)});
-            uimenu(c, 'Label','Hull',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Phull,'file')>1)});  
-            uimenu(c, 'Label','Core',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Pcore,'file')>1)});  
-            uimenu(c, 'Label','Sphere',     'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Psphere,'file')>1)});  
+            H.meshs = { 'Central'; 'Pial' ; 'White' ; 'Layer4' ; 'Hull' ; 'Core' ; 'Sphere' ; 'Custom' };
+            for i=1:numel(H.patch)
+              H.meshs = [ H.meshs , {
+                  H.patch(i).Vertices; 
+                  ...'Inflated'  , fullfile(spm('Dir'),'toolbox','cat12','templates_surfaces',[sinfo1(1).side '.inflated.freesurfer.gii']);  
+                  sinfo1(i).Ppial;  
+                  sinfo1(i).Pwhite;  
+                  sinfo1(i).Player4
+                  sinfo1(i).Phull; 
+                  sinfo1(i).Pcore; 
+                  sinfo1(i).Psphere;  
+                  '';
+                  }];
+            end
+            uimenu(c, 'Label','Central', 'Checked','on',  'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1(1).Pmesh,'file')>1)});  
+           %uimenu(c, 'Label','Inflated',   'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1(1).Pmesh,'file')>1)});
+            uimenu(c, 'Label','Pial',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1(1).Ppial,'file')>1)});
+            uimenu(c, 'Label','White',      'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1(1).Pwhite,'file')>1)});
+            uimenu(c, 'Label','Layer4',     'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1(1).Player4,'file')>1)});
+            uimenu(c, 'Label','Hull',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1(1).Phull,'file')>1)});  
+            uimenu(c, 'Label','Core',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1(1).Pcore,'file')>1)});  
+            uimenu(c, 'Label','Sphere',     'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1(1).Psphere,'file')>1)});  
 %            uimenu(c, 'Label','Checkreg',   'Checked','off', 'Callback',{@myCheckreg, H},'Separator',1);  
-            H.meshs(end+1,:) = { 'Custom','';};
           end
           uimenu(c, 'Label','Custom...', 'Interruptible','off', 'Separator','on', 'Callback',{@myChangeGeometry, H});
         end
@@ -773,7 +791,7 @@ switch lower(action)
         
         
         
-     if ~isempty(sinfo1.fname)    
+     if ~isempty(sinfo1(1).fname)    
         % Volume menu
         % -----------------------------------------------------------------
         c = uimenu(cmenu, 'Label','Volume', 'Interruptible','off'); %, 'Callback',{@myImageSections, H});
@@ -794,7 +812,7 @@ switch lower(action)
           H.niftis = []; 
         end
           
-        if sinfo1.resampled && exist(labeldir,'dir')
+        if sinfo1(1).resampled && exist(labeldir,'dir')
           H.niftis = [H.niftis; cat_vol_findfiles(labeldir,sprintf('*%s.nii',sinfo1(1).name),struct('maxdepth',1))];
         end
         H.niftis = unique( H.niftis );
@@ -851,15 +869,19 @@ switch lower(action)
         uimenu(cmenu, 'Label','Overlay...', 'Interruptible','off', 'Callback',{@myOverlay, H});
         
         %%
-        EC = size(H.patch.Vertices,1) + size(H.patch.Faces,1) - ...
-          size(spm_mesh_edges(struct('vertices',H.patch.Vertices','faces',H.patch.Faces)),1); 
+        for i=1:numel(H.patch)
+          sV(i) = size(H.patch(i).Vertices,1);
+          sF(i) = size(H.patch(i).Faces,1);
+          EC(i) = size(H.patch(i).Vertices,1) + size(H.patch(i).Faces,1) - ...
+            size(spm_mesh_edges(struct('vertices',H.patch(i).Vertices','faces',H.patch(i).Faces)),1);
+        end
         c1 = uimenu(cmenu, 'Label','Surface Information');
         uimenu(c1, 'Label', sprintf('Dir:    %s'              ,spm_str_manip(sinfo1(1).pp,  'a40'))); 
         uimenu(c1, 'Label', sprintf('File:   %s'              ,spm_str_manip(sinfo1(1).name,'a40'))); 
         uimenu(c1, 'Label', sprintf('Side:  %s'               ,sinfo1(1).side)); 
-        uimenu(c1, 'Label', sprintf('Vertices:               %0.0f'  ,size(H.patch.Vertices,1)), 'Interruptible','off','Separator','on');
-        uimenu(c1, 'Label', sprintf('Faces:                   %0.0f' ,size(H.patch.Faces,1)),    'Interruptible','off');
-        uimenu(c1, 'Label', sprintf('Euler Number:     %d'    ,EC),    'Interruptible','off');
+        uimenu(c1, 'Label', sprintf('Vertices:               %s',sprintf('%0.0f ',sV)), 'Interruptible','off','Separator','on');
+        uimenu(c1, 'Label', sprintf('Faces:                   %s',sprintf('%0.0f ',sF)),    'Interruptible','off');
+        uimenu(c1, 'Label', sprintf('Euler Number:     %s'    ,sprintf('%d ',EC)),    'Interruptible','off');
         if isfield(H,'cdata')
           uimenu(c1, 'Tag','SurfDataMenu1','Interruptible','off','Label',sprintf('Data: %s\n',''),'Separator','on'); 
           uimenu(c1, 'Tag','SurfDataMenu2','Interruptible','off','Label',sprintf('  median:           %0.4f\n',median(H.cdata)),'Separator','on'); 
@@ -870,6 +892,7 @@ switch lower(action)
         if exist('cg_hist2d','file')
           uimenu(c1, 'Label', 'Histogram',    'Interruptible','off','Separator','on','Callback',{@myHist, H});
         end
+        uimenu(c1, 'Label', sprintf('Dir:    %s'              ,spm_str_manip(sinfo1(1).pp,  'a40'))); 
         %%
         % Inflation off ... to slow and unimportant
         % uimenu(cmenu, 'Label','Inflate', 'Interruptible','off', 'Callback',{@myInflate, H});
@@ -943,9 +966,11 @@ switch lower(action)
         % -- Lighting --   
         c = uimenu(cmenu, 'Label','Lighting'); 
         macon = {'on' 'off'}; isinner = strcmp(H.catLighting,'inner'); 
+        isouter = strcmp(H.catLighting,'outer'); 
         uimenu(c, 'Label','Cam',    'Checked',macon{isinner+1}, 'Callback', {@myLighting, H,'cam'});
         if ismac && ~strcmp(H.sinfo(1).texture,'defects')
           uimenu(c, 'Label','Inner',  'Checked',macon{2-isinner}, 'Callback', {@myLighting, H,'inner'});
+          uimenu(c, 'Label','Outer',  'Checked',macon{2-isouter}, 'Callback', {@myLighting, H,'outer'});
         end
         uimenu(c, 'Label','Set1',   'Checked','off', 'Callback', {@myLighting, H,'set1'}, 'Separator', 'on');
         uimenu(c, 'Label','Set2',   'Checked','off', 'Callback', {@myLighting, H,'set2'});
@@ -1606,7 +1631,7 @@ objatlases  = findobj(obj,'Label','Atlases');
 objcbar     = findobj(obj,'Label','Colorbar');
 objcmap     = findobj(obj,'Label','Colormap');
 objcrange   = findobj(obj,'Label','Colorrange');
-if ~isempty(H.patch.FaceVertexCData)
+if ~isempty(H.patch(1).FaceVertexCData)
   set(objcbar  ,'Enable','on');
   set(objcmap  ,'Enable','on');
   set(objcrange,'Enable','on');
@@ -1897,6 +1922,23 @@ switch newcatLighting
     switch H.catLighting
       case 'none'
         % nothing to do...
+      case 'outer'
+        switch H.sinfo(1).texture
+          case 'defects'
+            mylit = 'lit';
+          otherwise
+            mylit = 'unlit';
+        end            
+        H.light(2) = light('Position',[0 0 0],'parent',H.axis,'Style','infinite');
+        for pi=1:numel(H.patch)
+          H.patch(1).Faces = [H.patch(1).Faces(:,2),H.patch(1).Faces(:,1),H.patch(1).Faces(:,3)];
+        end
+        for pi=1:numel(H.patch)
+          ks = get(H.patch(pi),'SpecularStrength'); set(H.patch(pi),'SpecularStrength',min(0.1,ks));
+          n  = get(H.patch(pi),'SpecularExponent'); set(H.patch(pi),'SpecularExponent',max(2,n)); 
+          set(H.patch(pi),'BackFaceLighting',mylit);
+        end
+        
       case 'inner'
         switch H.sinfo(1).texture
           case 'defects'
@@ -2298,11 +2340,12 @@ function mySavePNG(obj,evt,H,filename)
   [pth,nam,ext] = fileparts(filename);
   if isempty(pth), pth = cd; end
   if ~strcmp({'.gii','.png'},ext), nam = [nam ext]; end
-  if isempty(nam) || exist(fullfile(pth,[nam '.png']),'file') || ~exist(pth,'dir')
-    filename = uiputfile({...
+  if isempty(nam) || exist(fullfile(pth,[nam '.png']),'file') || ~exist(pth,'dir') || pth(1)=='.'
+    [filename,filepath] = uiputfile({...
       '*.png' 'PNG files (*.png)'}, 'Save as',nam);
   else
-    filename = fullfile(pth,[nam '.png']);
+    [filepath,ff,ee] = spm_fileparts(fullfile(pth,[nam '.png']));
+    filename = [ff ee]; 
   end
   
   u  = get(H.axis,'units');
@@ -2323,19 +2366,26 @@ function mySavePNG(obj,evt,H,filename)
   copyobj(H.axis,h);
   set(H.axis,'units',u);
   set(get(h,'children'),'visible','off');
-  if ~strcmp(H.sinfo(1).texture,'defects')
+
+  if ~strcmp(H.sinfo(1).texture,'defects') && ~strcmp(H.sinfo(1).texture,'central')
     colorbar('Position',[.93 0.2 0.02 0.6]); 
   end
   colormap(getappdata(H.patch(1),'colourmap'));
+  
+  if isempty(cat_get_defaults('print.dpi'))
+    cat_get_defaults('print.dpi',300); 
+  end
+  
   [pp,ff,ee] = fileparts(H.filename{1}); 
   %H.text = annotation('textbox','string',[ff ee],'position',[0.0,0.97,0.2,0.03],'LineStyle','none','Interpreter','none');    
   %a = get(h,'children');
   %set(a,'Position',get(a,'Position').*[0 0 1 1]+[10 10 0 0]);       
   if isdeployed
-      deployprint(h, '-dpng', '-opengl',sprintf('-r%d',cat_get_defaults('print.dpi')), filename);
+      deployprint(h, '-dpng', '-opengl',sprintf('-r%d',cat_get_defaults('print.dpi')), fullfile(filepath,filename));
   else
-      print(h, '-dpng', '-opengl', sprintf('-r%d',cat_get_defaults('print.dpi')), filename);
+      print(h, '-dpng', '-opengl', sprintf('-r%d',cat_get_defaults('print.dpi')), fullfile(filepath,filename));
   end
+  fprintf('Save as "%s".\n',fullfile(filepath,filename))
   for pi=1:numel(H.patch)
     if get(H.patch(pi),'LineWidth')>0; set(H.patch(pi),'LineWidth',0.5); end % restore mesh default 
   end
@@ -2471,18 +2521,20 @@ oldslices = findobj(get(H.axis,'children'),'type','surf','Tag','volumeSlice');
 delete(oldslices);
 
 id = find(cellfun('isempty',strfind(H.meshs(:,1),obj.Label))==0); 
-if ischar(H.meshs{id,2})
-  [pp,ff,ee] = spm_fileparts(H.meshs{id,2});  
-  switch ee
-      case '.gii'
-          M  = gifti(H.meshs{id,2}); 
-      otherwise
-          M  = cat_io_FreeSurfer('read_surf',H.meshs{id,2});
-          M  = gifti(M);
+for i=1:numel(H.patch)
+  if ischar(H.meshs{id,1+i})
+    [pp,ff,ee] = spm_fileparts(H.meshs{id,1+i});  
+    switch ee
+        case '.gii'
+            M  = gifti(H.meshs{id,1+i}); 
+        otherwise
+            M  = cat_io_FreeSurfer('read_surf',H.meshs{id,1+i});
+            M  = gifti(M);
+    end
+    H.patch(i).Vertices = M.vertices; 
+  else
+    H.patch(i).Vertices = H.meshs{id,1+i}; 
   end
-  H.patch(1).Vertices = M.vertices; 
-else
-  H.patch(1).Vertices = H.meshs{id,2}; 
 end
 %==========================================================================
 function myChangeROI(obj,evt,H)
@@ -2562,7 +2614,7 @@ for fi=1:numel(H.filename)
   
   cdata(adata==0) = nan; 
   for roii=1:size(rname,1)
-    if rname{roii}(1)==sinfo.side(1)
+    if rname{roii}(1)==sinfo(1).side(1)
       cdata(adata==rID(roii)) = rdata(roii); 
     end
   end
@@ -2594,7 +2646,6 @@ objcrange   = findobj(get(get(obj,'parent'),'parent'),'Label','Colorrange');
 if strcmp(get(get(obj,'parent'),'Label'),'Textures') || strcmp(get(get(obj,'parent'),'Label'),'ROIs')
   set(objcmap,'Enable','on');
   set(objcrange,'Enable','on');
-  myColourmap(findobj(get(objcmap,'children'),'Label','jet'),evt,H)
 elseif strcmp(get(get(obj,'parent'),'Label'),'Atlases')
   set(objcmap,'Enable','off');
   set(objcrange,'Enable','off'); 
@@ -2608,102 +2659,100 @@ if isempty(id)
   set(objcrange,'Enable','off'); 
   return
 end
-if isstruct(H.textures{id,2})
-  [pp,ff,ee] = spm_fileparts(H.textures{id,2}.fname);  
-  switch ee
-      case '.gii'
-          M  = gifti(H.textures{id,2}.fname); 
-      case '.annot'
-          %%
-          labelmap = zeros(0); labelnam = cell(0); labelmapclim = zeros(1,2); labeloid = zeros(0); labelid = zeros(0); nid=1;
-          
-          [fsv,cdatao,colortable] = cat_io_FreeSurfer('read_annotation',H.textures{id,2}.fname); clear fsv;
-          cdata   = zeros(size(cdatao));
-          entries = unique(cdatao); 
+for pi=1:numel(H.patch)
+  if isstruct(H.textures{id,1+pi})
+    [pp,ff,ee] = spm_fileparts(H.textures{id,1+pi}.fname);  
+    switch ee
+        case '.gii'
+            M  = gifti(H.textures{id,1+pi}.fname); 
+        case '.annot'
+            %%
+            labelmap = zeros(0); labelnam = cell(0); labelmapclim = zeros(1,2); labeloid = zeros(0); labelid = zeros(0); nid=1;
 
-          for ei = 1:numel(entries)
-            cid = find( labeloid == entries(ei) ,1); % previous imported label?
-            if ~isempty(cid) % previous imported label
-              cdata( round(cdatao) == entries(ei) ) = labelid(cid);  
-            else % new label > new entry
-              id = find( colortable.table(:,5)==entries(ei) , 1);
-              if ~isempty(id)
-                cdata( round(cdatao) == entries(ei) ) = nid;  
-                labelmap(nid,:) = colortable.table(id,1:3)/255;
-                labelnam(nid)   = colortable.struct_names(id);
-                labeloid(nid)   = entries(ei);
-                labelid(nid)    = nid;
-                labelmapclim(2) = nid;
-                nid             = nid+1;
+            [fsv,cdatao,colortable] = cat_io_FreeSurfer('read_annotation',H.textures{id,2}.fname); clear fsv;
+            cdata   = zeros(size(cdatao));
+            
+            entries = unique(cdatao); 
+            for ei = 1:numel(entries)
+              cid = find( labeloid == entries(ei) ,1); % previous imported label?
+              if ~isempty(cid) % previous imported label
+                cdata( round(cdatao) == entries(ei) ) = labelid(cid);  
+              else
+                idx = find( colortable.table(:,5)==entries(ei) , 1);
+                if ~isempty(idx)
+                  cdata( round(cdatao) == entries(ei) ) = nid;  
+                  labelmap(nid,:) = colortable.table(idx,1:3)/255;
+                  labelnam(nid)   = strrep( colortable.struct_names(idx) , '_' , '\_' );
+                  labeloid(nid)   = entries(ei);
+                  labelid(nid)    = nid;
+                  labelmapclim(2) = nid;
+                  nid             = nid+1;
+                end
               end
             end
-          end
-          
-         
-        
-          %{
-          cat_surf_render2('Colourbar',H,'off');
-          set(H.patch(1),'FaceVertexCData',cdata);
-          
-          H = cat_surf_render2('ColorBar',H.axis,'on'); 
-          labelnam2 = labelnam; for lni=1:numel(labelnam2),labelnam2{lni} = [' ' labelnam2{lni} ' ']; end
 
-          labellength = min(100,max(cellfun('length',labelnam2))); 
-          ss = max(1,round(diff(labelmapclim+1)/30)); 
-          ytick = labelmapclim(1)-0.5:ss:labelmapclim(2)+0.5;
-          
-          set(H.colourbar,'ytick',ytick,'yticklabel',labelnam2(1:ss:end),...
-            'Position',[max(0.75,0.98-0.008*labellength) 0.05 0.02 0.9],'ticklength',0.01,...
-            'TickLabelInterpreter','none');
-          set(H.axis,'Position',[0.1 0.1 min(0.6,0.98-0.008*labellength - 0.2) 0.8])
-          
-
-          
-          H.labelmap = struct('colormap',labelmap,'ytick',ytick,'labelnam2',{labelnam2});
-          setappdata(H.axis,'handles',H);
-        
-          setappdata(H.patch(1),'data',cdata);
-        %}
-          
-        %%  
-          setappdata(H.patch(1),'data',cdata);
-          set(H.patch(1),'cdata',cdata);
-          setappdata(H.patch(1),'colourmap',labelmap); 
-          cat_surf_render2('clim',H.axis,labelmapclim); 
-          %colormap(labelmap); %caxis(labelmapclim - [1 0]);
-          H2 = cat_surf_render2('ColorBar',H.axis,'on'); 
-          labelnam2 = labelnam; for lni=1:numel(labelnam2),labelnam2{lni} = [' ' labelnam2{lni} ' ']; end
-          labelnam2(end+1) = {''}; labelnam2(end+1) = {''}; 
-          labellength = min(100,max(cellfun('length',labelnam2))); 
-          ss = max(1,round(diff(labelmapclim+1)/30)); 
-          ytick = labelmapclim(1)-0.5:ss:labelmapclim(2)+0.5;
-          set(H2.colourbar,'ytick',ytick,'yticklabel',labelnam2(1:ss:end),...
-            'Position',[max(0.75,0.98-0.008*labellength) 0.05 0.02 0.9]);
-          try, set(H.colourbar,'TickLabelInterpreter','none'); end
-          set(H.axis,'Position',[0.1 0.1 min(0.6,0.98-0.008*labellength - 0.2) 0.8])
-          H.labelmap = struct('colormap',labelmap,'ytick',ytick,'labelnam2',{labelnam2});
-          setappdata(H.axis,'handles',H);
+            setappdata(H.patch(pi),'data',cdata);
+            set(H.patch(pi),'cdata',cdata);
+            setappdata(H.patch(pi),'colourmap',labelmap); 
+            cat_surf_render2('clim',H.axis,labelmapclim);
+            %% colormap(labelmap); %caxis(labelmapclim - [1 0]);
+            H2.colourbar = findobj(get(H.figure,'children'),'type','colorbar');
+            if isempty(H2.colourbar) %strcmp(get(findobj(H.figure,'Label','Colorbar'),'checked'),'off')
+              H2 = cat_surf_render2('ColorBar',H.axis,'on'); 
+            end
+            H2.colourbar.Limits = labelmapclim; 
+            colormap(H2.colourbar,[labelmap(2:end,:);labelmap(1,:)])
+            H2.colourbar.TickLength = 0;
+            labelnam2 = labelnam; for lni=1:numel(labelnam2),labelnam2{lni} = [' ' labelnam2{lni} ' ']; end
+            %% labelnam2(end+1) = {''}; labelnam2(end+1) = {''}; 
+            labellength = min(100,max(cellfun('length',labelnam2))); 
+            ss = 1; %max(1,round(diff(labelmapclim+1)/30)); 
+            ytick = labelmapclim(1)-0.5:ss:labelmapclim(2)+0.5;
+            set(H2.colourbar,'ytick',ytick,'yticklabel',labelnam2(1:ss:end),...
+             'Position',[max(0.75,0.98-0.01*labellength) 0.05 0.02 0.9]);
+            try, set(H.colourbar,'TickLabelInterpreter','none'); end
+            set(H.axis,'Position',[0.1 0.1 min(0.8,max(0.6,0.8-0.01*labellength)) 0.8])
+            H.labelmap = struct('colormap',labelmap,'ytick',ytick,'labelnam2',{labelnam2});
+            setappdata(H.axis,'handles',H);
 
 
-         
 
-%%
-          return
-          %labelnam = colortable.struct_names(id);    
-      otherwise
-          M  = cat_io_FreeSurfer('read_surf_data',H.textures{id,2}.fname);
-          M  = gifti(struct('cdata',double(M)));
+
+  %%
+            return
+            %labelnam = colortable.struct_names(id);    
+        otherwise
+            M  = cat_io_FreeSurfer('read_surf_data',H.textures{id,2}.fname);
+            M  = gifti(struct('cdata',double(M)));
+    end
+    setappdata(H.patch(pi),'data',M.cdata);
+    set(H.patch(pi),'cdata',M.cdata);
+    %% colormap(labelmap); %caxis(labelmapclim - [1 0]);
+    H2.colourbar = findobj(get(H.figure,'children'),'type','colorbar');
+    if ~isempty(H2.colourbar), delete(H2.colourbar); end
+    H2.colourbar = findobj(get(H.figure,'children'),'type','ContextMenu');
+    if isempty(H2.colourbar) %strcmp(get(findobj(H.figure,'Label','Colorbar'),'checked'),'off')
+      H2 = cat_surf_render2('ColorBar',H.axis); 
+    else
+      
+    end
+    cat_surf_render2('Colormap',H.axis,jet); 
+    %{
+    menu          = findobj(get(H.figure,'children'),'type','uicontextmenu');
+    colourbarmenu = get(findobj(menu.Children,'Label','Colormap'),'Children');
+    set(findobj(colourbarmenu,'Label','jet'),'Checked','On');
+    setappdata(H.patch(pi),'colourmap',jet); 
+    colormap(H2.colourbar,jet)
+    %}
+    set(H.axis,'Position',[0.1 0.1 0.8 0.8]);
+
+    if H.textures{id,1+pi}.smoothed==0
+      myCaxis(obj,evt,H,'1p')
+    else
+      myCaxis(obj,evt,H,'min-max')
+    end
+    set(H.figure,'Name',spm_file(H.textures{id,1+pi}.fname,'short80'));
   end
-  setappdata(H.patch(1),'data',M.cdata);
-  set(H.patch(1),'cdata',M.cdata);
-  cat_surf_render2('Colourbar',H,'off');
-  cat_surf_render2('Colourbar',H,'on');
-  if H.textures{id,2}.smoothed==0
-    myCaxis(obj,evt,H,'1p')
-  else
-    myCaxis(obj,evt,H,'min-max')
-  end
-  set(H.figure,'Name',spm_file(H.textures{id,2}.fname,'short80'));
 end
 
 %==========================================================================

@@ -1,5 +1,56 @@
 ------------------------------------------------------------------------
-r1519 | gaser | 2019-11-19 11:47:55
+r1520 | dahnke | 2019-11-19 22:49:45
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_output.m
+M       cat_defaults.m
+M       cat_io_cmd.m
+M       cat_main.m
+M       cat_main_reportfig.m
+M       cat_main_reportstr.m
+M       cat_stat_marks.m
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       cat_surf_display.m
+M       cat_surf_fun.m
+M       cat_surf_info.m
+M       cat_surf_render2.m
+M       cat_vol_pbt3.m
+M       cat_vol_qa.m
+
+(1) New:      Added two new runtime optimized collision corrections approaches in 
+              cat_surf_fun that were called in cat_surf_createCS2. The first approach 
+              (collcorr22) utilizes the CAT_selfintersect function that makes it  
+              relativ slow (15 minutes), whereas the second approach (collcorr23) uses  
+              the relative position map of PBT that makes it quite fast (2 minutes) but 
+              less accurate. There is also an extended version (collcorr24) that
+              optimize the surface based on the Ypp map and an even more accurate 
+              version (collcorr25) that combines collcorr22 and collcorr24. 
+(2) Changed:  Updated extended expert options for mesh resolution and collision 
+              correction in cat_conf_extopts. 
+(3) Changed:  Many corrections and updates in cat_surf_createCS2 and cat_surf_fun that 
+              support the new self-intersection corrections and the evaluation of 
+              surface reconstruction. Small adaptions of cat_surf_createCS to support
+              the surface reconstruction measures but not for collision correction. 
+(4) Changed:  Added output for surface measures in cat_main, cat_main_reportstr, 
+              cat_main_reportfig, and cat_stat_marks.              
+(5) Fixed:    Corrected atlas colormap naming bug, texture and surface handling in 
+              cat_surf_render2. Little changes for PNG output. 
+(6) New:      Added expert output options for the percentage position map and surface  
+              measures in cat_conf_output, cat_defaults, and cat_surf_createCS2.
+(7) Fixed:    Corrected setting in cerebellar surface reconstruction and added
+              'cb' definition for reconstruction of both sides in cat_surf_info, 
+              cat_main, cat_surf_display, and cat_main_createCS2. 
+              Added standard resolution full cerebellar average surfaces 'cb.*'.
+(8) Fixed:    Corrected output of surface defect maps in cat_surf_createCS2
+              and added settings to cat_surf_info and cat_surf_render2.                
+(9) New:      Added improved version of PBT (cat_surf_pbt2 and 3).                           
+ 
+  
+------------------------------------------------------------------------
+r1519 | gaser | 2019-11-19 11:48:29 +0100 (Di, 19 Nov 2019) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +66,7 @@ M       html/cat.html
 M       tbx_cfg_cat.m
 
 Changed: Added suggestions by Guillaume Flandin to make CAT12 conform to Octave.
+
 ------------------------------------------------------------------------
 r1518 | gaser | 2019-11-13 12:27:46 +0100 (Mi, 13 Nov 2019) | 31 lines
 

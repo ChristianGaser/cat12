@@ -261,6 +261,25 @@ registration.help   = {
 
 %---------------------------------------------------------------------
 
+% This version is not ready right now and I packed all working improvments
+% (such as the Laplace-based blood-vessel-correction) into cat_surf_createCS2. 
+pbtver         = cfg_menu;
+pbtver.tag     = 'pbtmethod';
+pbtver.name    = 'Projection-based thickness';
+pbtver.labels  = {'PBT','PBTx','PBT2'};
+pbtver.values  = {'pbt2','pbt2x','pbt3'};
+pbtver.def     = @(val) 'pbt2x';
+pbtver.help    = {
+ ['Version of the projection-based thickness (PBT) thickness and surface reconstruction approach (Dahnke et al., 2013).  ' ...
+  'Version 2 first estimates a temporar central surface by utilizing higher CSF and lower WM boundaries to utilize the partial volume effect.  ' ...
+  'This surface divides the GM into a lower and upper GM area where PBT is used with sulcal reconstruction in the lower and gyrus reconstruction in the upper part. ' ...
+  'The estimated thickness values of each part were projected over the whole GM and sumed up to obtain the full thickness.  ' ...
+  'Similar to PBT, the project-based thickness and the direct thickness (of the distance maps without sulcus/gyrus reconstruction) are combined by using the minimum. '] 
+  ''
+  'Experimental development parameter - do not change! '
+  ''
+};
+
 pbtres         = cfg_entry;
 pbtres.tag     = 'pbtres';
 pbtres.name    = 'Voxel size for thickness estimation';
@@ -288,73 +307,72 @@ pbtlas.help    = {
 collcorr         = cfg_menu;
 collcorr.tag     = 'collcorr';
 collcorr.name    = 'Correction for surface collisions';
+if expert
 collcorr.labels  = {...
-  'No (createCS; 0)','Surface Deformation Approach (createCS; 1)',...
-  'No (createCS2; 20)','Surface Deformation Approach (createCS2; 21)',...
-  'Delaunay Approach with Intensity Optimization (createCS2; 22)'};
-collcorr.values  = {0 1 20 21 22};
-collcorr.def     = @(val)cat_get_defaults('extopts.collcorr', val{:});
+  'No (createCS1; 0)',...
+  'No (createCS2; 20)',...
+  'PBT Self-Intersect (createCS2; 23)',... 
+  'PBT + CAT Self-Intersect on Surface Normals (createCS2; 25)',... 
+  };
+  collcorr.values  = {0 20 23 25};
+end
 collcorr.help    = {
-  ['In theory, adding/removing of the half-thickness to/from the central surface allows a good definition of the ' ...
-   'pial/white surface. In practise however using of different distance/thickness metrics lead to small overlaps ' ...
-   'of the pial/white surfaces in some gyri/sulci. ' ...
-   'E.g., a gyrus with blurred white matter often has a lower thickness to' ...
-   'the sulcus and a larger thickness to its top (e.g., superior temporal gyrus).' ...
-   'The Tpbt thickness combines multiple values within the cortical sheet that finally results in some longer distances ' ...
-   'compared to the correction for surface collisions of the estimated white and pial surfaces (added in CAT12.7, 201909).']
-   '' 
-   'Experimental parameter, not yet working properly!'
+  ['The creation of the white and pial surface by adding/removing half thickness from the central surface requires further optimization to avoid self-intersections of the surfaces.  ' ...
+   'These self-intersection occurs for thin structures in strongly folded regions and were caused by different distance metrics.  ' ...
+   'Most self-intersections can be fast corrected (~2 minutes) by a new correction added in CAT12.7 (201911) using the percentage position map of the PBT approach (default). ' ... 
+   'Although this works quite good in most cases tiny self-intersections still remain and a more efficient but much slower correction (plus ~30 minutes). ']
    ''
 };
+if expert>1
+  collcorr.labels  = {...
+    'No (createCS; 0)',...
+    'CAT Selfintersect surface deformation approach (createCS; 1)',... not working
+    'No (createCS2; 20)',...
+    'CAT self-intersect surface deformation approach (createCS2; 21)',... 
+    'CAT self-intersect surface normal approach (createCS2; 22)',... 
+    'PBT self-intersect without optimization (createCS2; 23)',... 
+    'PBT self-intersect with optimization (createCS2; 24)',... 
+    'PBT + CAT Selfintersect (createCS2; 25)',... 
+    ...'Delaunay Approach with Intensity Optimization (createCS2; 26)', ... not working at all
+    };
+  collcorr.values  = {0 1 20 21 22 23 24 25};
+  collcorr.help    = [collcorr.help 
+    { ...
+   ['There is also an older surface deformation approach (collcorr = 1 | 21) that currently stops too early and results in underestimation of the cortical thickness. ' ...
+    'Moreover, there is a faster version of the "CAT self-intersect surface normal approach" (collcorr = 22) and an optimized version of the PBT (collcorr = 24). '] 
+    ''} ]; 
+end
+collcorr.def     = @(val)cat_get_defaults('extopts.collcorr', val{:});
+
+
 
 % This is just an developer parameter (maybe for experts later) 
 % I expect that 300k surfaces support best quality in relation to processing
 % time, because surface reconstruction times are dominated by the registration
 % that depends on the mesh resolution of the individual and template brain. 
-% I will test and cleanup the setting in future - goal is to have only 3 levels with useful processing time differences: 
-%   low - 100k; optimal 300-400k; fine 600-800k; 
-
-simple = 1; % use only 3 levels
+% However a fast and a refined accurate version could be interesting.
+% The fast version could be interesting for fast clinical processing but needs also low mesh average surfaces.  
+% The more accurate version could be useful for high quality surface rendering.
 
 vdist         = cfg_menu;
 vdist.tag     = 'vdist';
 vdist.name    = 'Mesh resolution';
-if simple
-  vdist.labels  = {'minimal','optimal','super-fine'};
-  vdist.values  = {27/3 4/3 1/3}; % this is the square of the refinement distance 
-else
-  vdist.labels  = {'minimal','low','optimal','fine','super-fine','ultra-fine'};
-  vdist.values  = {27/3 9/3 4/3 2/3 1/3 1/6}; % this is the square of the refinement distance 
-end
-vdist.val     = {4/3}; % .def = @(val)cat_get_defaults('extopts.vdist', val{:});
+vdist.labels  = {'low','optimal','fine'};
+vdist.values  = {27/3 4/3 1/6};   % this is the square of the refinement distance 
+vdist.val     = {4/3};            % .def = @(val)cat_get_defaults('extopts.vdist', val{:});
 vdist.help    = {
-  ['Higher mesh resolution may support more accurate surface reconstruction.  However, this is only useful for high resolution data (<0.8 mm). ' ...
-   'For each level, the resolution is doubled and accuracy is increased slightly (square root), resulting in a linear increase of processing time for surface creation. ' ...
-   'Because the processing time of the surface registration depends on the resolution of the individual and the template surface (about 300k faces), ' ...
-   'processing speed does not benefit from lower individual resolution. ']};
-if simple
-  vdist.help = [ vdist.help ; { 
-   ''
-   '  minimal:    maximal vertex distance 4.24 mm > ~100k faces'
-   '  optimal:    maximal vertex distance 1.61 mm > ~300k faces'
-   '  super-fine: maximal vertex distance 0.82 mm > ~600k faces'
-   }];
-else
-  vdist.help = [ vdist.help ; { 
-   ''
-   '  minimal:    maximal vertex distance 4.24 mm > ~100k faces'
-   '  low:        maximal vertex distance 2.45 mm > ~200k faces'
-   '  optimal:    maximal vertex distance 1.61 mm > ~300k faces'
-   '  fine:       maximal vertex distance 1.15 mm > ~400k faces'
-   '  super-fine: maximal vertex distance 0.82 mm > ~600k faces'
-   '  ultra-fine: maximal vertex distance 0.57 mm > ~800k faces'
-   }];
-end
-vdist.help = [ vdist.help ; { 
- ''
- 'Experimental development parameter that only works for the "createCS2" options of "Correct for surface collisions" (added in CAT12.7, 201909)!'
- ''
-}];
+ ['Higher mesh resolution may support more accurate surface reconstruction.  However, this is only useful for high resolution data (<0.8 mm). ' ...
+  'For each level, the resolution is doubled and accuracy is increased slightly (square root), resulting in a linear increase of processing time for surface creation. ' ...
+  'Because the processing time of the surface registration depends on the resolution of the individual and the template surface (about 300k faces), ' ...
+  'processing speed does not benefit from lower individual resolution. ']
+  ''
+  '  minimal:    maximal vertex distance 4.24 mm > ~100k faces'
+  '  optimal:    maximal vertex distance 1.61 mm > ~300k faces'
+  '  super-fine: maximal vertex distance 0.57 mm > ~900k faces'
+  ''
+  'Experimental development parameter that only works for the "createCS2" options of "Correct for surface collisions" (added in CAT12.7, 201909)!'
+  ''
+};
 
 %------------------------------------------------------------------------
 % special expert and developer options 
@@ -923,7 +941,7 @@ surface       = cfg_branch;
 surface.tag   = 'surface';
 surface.name  = 'Surface Options';
 if expert>1
-  surface.val   = {pbtres pbtlas collcorr vdist scale_cortex add_parahipp close_parahipp};
+  surface.val   = {pbtres pbtver pbtlas collcorr vdist scale_cortex add_parahipp close_parahipp}; % pbtver
 else
   surface.val   = {pbtres pbtlas scale_cortex add_parahipp close_parahipp};
 end
