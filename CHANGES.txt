@@ -1,5 +1,22 @@
 ------------------------------------------------------------------------
-r1518 | gaser | 2019-11-13 12:27:17
+r1519 | gaser | 2019-11-19 11:47:55
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+M       cat_conf_catsimple.m
+M       cat_conf_long.m
+M       cat_conf_stools.m
+M       cat_defaults.m
+M       cat_simple.m
+M       cat_vol_qa.m
+M       html/cat.html
+M       tbx_cfg_cat.m
+
+Changed: Added suggestions by Guillaume Flandin to make CAT12 conform to Octave.
+------------------------------------------------------------------------
+r1518 | gaser | 2019-11-13 12:27:46 +0100 (Mi, 13 Nov 2019) | 31 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -31,6 +48,7 @@ A       standalone/cat_standalone_smooth.txt
     renamed files to begin with "cat_standalone".
 (2) Changed: Added option to define two additional arguments for 
     cat_standalone.sh.
+
 ------------------------------------------------------------------------
 r1517 | gaser | 2019-11-12 14:47:37 +0100 (Di, 12 Nov 2019) | 14 lines
 

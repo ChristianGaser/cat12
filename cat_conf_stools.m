@@ -8,7 +8,7 @@ function stools = cat_conf_stools(expert)
 
   % try to estimate number of processor cores
   try
-    numcores = max(feature('numcores'),1);
+    numcores = max(cat_get_defaults('extopts.nproc'),1);
   catch
     numcores = 0;
   end

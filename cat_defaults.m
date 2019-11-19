@@ -147,6 +147,13 @@ cat.extopts.INV          = 1;    %  Invert PD/T2 images for preprocessing:    0 
 cat.extopts.restype      = 'optimal';    % resolution handling: 'native','fixed','best', 'optimal'
 cat.extopts.resval       = [1.0 0.10];   % resolution value and its tolerance range for the 'fixed' and 'best' restype
 
+% multiprocessor support
+if strcmpi(spm_check_version,'octave')
+  cat.extopts.nproc      = nproc;
+else
+  cat.extopts.nproc      = feature('numcores');
+end
+
 %{
 native:
     Preprocessing with native resolution.
