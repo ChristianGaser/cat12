@@ -27,7 +27,7 @@ if isdeployed, expert = 1; end
 
 % try to estimate number of processor cores
 try
-  numcores = cat_get_defaults('extopts.nproc')
+  numcores = cat_get_defaults('extopts.nproc');
   % because of poor memory management use only half of the cores for windows
   if ispc
     numcores = round(numcores/2);
@@ -38,7 +38,7 @@ catch
 end
 
 % force running in the foreground if only one processor was found or for compiled version
-if numcores == 1 | isdeployed, numcores = 0; end
+if numcores == 1 | isdeployed , numcores = 0; end
 
 %_______________________________________________________________________
 nproc         = cfg_entry;
@@ -264,13 +264,13 @@ end
 cdep = cfg_dep;
 cdep(end).sname      = 'CAT Report PDF';
 cdep(end).src_output = substruct('.','catreportpdf','()',{':'});
-cdep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+cdep(end).tgt_spec   = cfg_findspec({{'filter','pdf','strtype','e'}});
 
 % CAT report PDF file
 cdep = cfg_dep;
 cdep(end).sname      = 'CAT Report JGP';
 cdep(end).src_output = substruct('.','catreportjpg','()',{':'});
-cdep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+cdep(end).tgt_spec   = cfg_findspec({{'filter','jpg','strtype','e'}});
 
 % CAT report XML file
 cdep = cfg_dep;
@@ -285,25 +285,52 @@ cdep(end).src_output = substruct('.','catlog','()',{':'});
 cdep(end).tgt_spec   = cfg_findspec({{'filter','txt','strtype','e'}});
 
 
-% lh/rh central surface and thickness
+% lh/rh/cb central/white/pial/layer4 surface and thickness
+% ----------------------------------------------------------------------
 if isfield(opts,'surface')
-  if opts.surface
-    cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Left Central Surface';
-    cdep(end).src_output = substruct('()',{1}, '.','lhcentral','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-    cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Right Central Surface';
-    cdep(end).src_output = substruct('()',{1}, '.','rhcentral','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-    cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Left Thickness';
-    cdep(end).src_output = substruct('()',{1}, '.','lhthickness','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
-    cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Right Thickness';
-    cdep(end).src_output = substruct('()',{1}, '.','rhthickness','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+  surfaceoutput = { % surface texture
+    {'central','pial','white'}  % no measures - just surfaces
+    {}                          % default
+    {'layer4'}                  % expert
+    {}                          % developer
+  };
+  measureoutput = {
+    {}                          % no measures
+    {'thickness'}               % default
+    {'intlayer4','defects'}     % expert
+    {'depthWM','depthCSF'}      % developer
+  };
+  sides = {'lh','rh'}; 
+  sidenames = {'Left','Right'};
+  if any( job.output.surface == [ 2 6 8 ] )
+    sides = [sides {'cb'}]; 
+    sidenames = [sidenames {'Cerebellar'}]; 
+  end
+
+  % create fields
+  for si = 1:numel(sides)
+    for soi = 1:numel(surfaceoutput)
+      for soii = 1:numel(surfaceoutput{soi})
+        if ~isempty( surfaceoutput{soi} )
+          cdep(end+1)          = cfg_dep;
+          cdep(end).sname      = sprintf('%s %s%s Surface', sidenames{si}, ...
+            upper(surfaceoutput{soi}{soii}(1)), surfaceoutput{soi}{soii}(2:end));
+          cdep(end).src_output = substruct('()',{1}, '.', ...
+            sprintf('%s%s', sides{si} , surfaceoutput{soi}{soii} ),'()',{':'});
+          cdep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+        end
+      end
+      for soii = 1:numel(surfaceoutput{soi})
+        if ~isempty( measureoutput{soi} )
+          cdep(end+1)          = cfg_dep;
+          cdep(end).sname      = sprintf('%s %s%s', sidenames{si}, ...
+            upper(measureoutput{soi}{soii}(1)), measureoutput{soi}{soii}(2:end));
+          cdep(end).src_output = substruct('()',{1}, '.', ...
+            sprintf('%s%s', sides{si} , measureoutput{soi}{soii} ),'()',{':'});
+          cdep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+        end
+      end
+    end
   end
 end
 

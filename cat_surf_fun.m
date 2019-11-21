@@ -1282,9 +1282,9 @@ function cat_surf_saveICO(S,Tpbt,Pcs,subdir,Pm,mat,writeTfs,writeSI,writeL4,writ
   Ppial    = fullfile(pp,subdir,strrep([ff ee],'central','pial'));   
   Pthick   = fullfile(pp,subdir,strrep(ff,'central','thickness'));   
   Ppbt     = fullfile(pp,subdir,strrep(ff,'central','pbt'));   
-  PintIS   = fullfile(pp,subdir,strrep(ff,'central','Ym-white'));
-  PintOS   = fullfile(pp,subdir,strrep(ff,'central','Ym-pial'));
-  PintL4   = fullfile(pp,subdir,strrep(ff,'central','Ym-L4'));
+  PintIS   = fullfile(pp,subdir,strrep(ff,'central','intwhite'));
+  PintOS   = fullfile(pp,subdir,strrep(ff,'central','intpial'));
+  PintL4   = fullfile(pp,subdir,strrep(ff,'central','intlayer4'));
   Player4  = fullfile(pp,subdir,strrep([ff ee],'central','layer4'));   
   Pselfw   = fullfile(pp,subdir,strrep(ff,'central','whiteselfintersect'));
   Pselfp   = fullfile(pp,subdir,strrep(ff,'central','pialselfintersect'));

@@ -1,5 +1,44 @@
 ------------------------------------------------------------------------
-r1520 | dahnke | 2019-11-19 22:49:45
+r1521 | dahnke | 2019-11-21 19:59:00
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_output.m
+M       cat_main.m
+M       cat_main_reportfig.m
+M       cat_run.m
+M       cat_surf_createCS2.m
+M       cat_surf_fun.m
+M       cat_surf_info.m
+A       cat_vbdist.m
+A       cat_vol_downcut.m
+A       cat_vol_eidist.m
+A       cat_vol_eikonal3.m
+A       cat_vol_genus0.m
+A       cat_vol_interp3f.m
+A       cat_vol_laplace3.m
+A       cat_vol_laplace3R.m
+A       cat_vol_localstat.m
+A       cat_vol_median3.m
+A       cat_vol_median3c.m
+A       cat_vol_pbt2.m
+M       cat_vol_pbtp.cpp
+A       cat_vol_pbtp.m
+M       cat_vol_simgrow.c
+A       cat_vol_simgrow.m
+M       tbx_cfg_cat.m
+
+(1) Changed:    Added layer4 and myelination map output for developer 
+                in cat_surf_createCS.
+(2) Changed:    Updated dependencies of the surfaces and textures in 
+                cat_conf_output, cat_main, cat_run (not full working).
+(3) New:        Added reduce_mesh developer GUI variable to switch between
+                SPM, MATLAB, and no surface reduction in cat_conf_extopts.  
+(4) New:        Added matlab help file for cat_vol_* c and c++ functions.                 
+
+------------------------------------------------------------------------
+r1520 | dahnke | 2019-11-19 22:52:09 +0100 (Di, 19 Nov 2019) | 49 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -49,6 +88,7 @@ M       cat_vol_qa.m
 (9) New:      Added improved version of PBT (cat_surf_pbt2 and 3).                           
  
   
+
 ------------------------------------------------------------------------
 r1519 | gaser | 2019-11-19 11:48:29 +0100 (Di, 19 Nov 2019) | 15 lines
 

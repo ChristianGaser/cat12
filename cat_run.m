@@ -766,10 +766,8 @@ catreportjpg= {};
 catreportpdf= {};
 catreport   = {};
 catlog      = {};
-lhcentral   = {};
-rhcentral   = {};
-lhthickness = {};
-rhthickness = {};
+
+
 %roi         = {};
 %fordef      = {};
 %invdef      = {};
@@ -806,26 +804,52 @@ for j=1:n
 end
 
 
-
-% lh/rh central surface and thickness
+% lh/rh/cb central/white/pial/layer4 surface and thickness
 % ----------------------------------------------------------------------
-if job.output.surface
-    lhcentral = cell(n,1);
-    rhcentral = cell(n,1);
-    lhthickness = cell(n,1);
-    rhthickness = cell(n,1);
-    for j=1:n
-        lhcentral{j} = fullfile(parts{j,1},surffolder,['lh.central.',parts{j,2},'.gii']);
-        rhcentral{j} = fullfile(parts{j,1},surffolder,['rh.central.',parts{j,2},'.gii']);
-        lhthickness{j} = fullfile(parts{j,1},surffolder,['lh.thickness.',parts{j,2}]);
-        rhthickness{j} = fullfile(parts{j,1},surffolder,['rh.thickness.',parts{j,2}]);
-        if job.output.surface == 2
-            lhcentral{j} = fullfile(parts{j,1},surffolder,['lc.central.',parts{j,2},'.gii']);
-            rhcentral{j} = fullfile(parts{j,1},surffolder,['rc.central.',parts{j,2},'.gii']);
-            lhthickness{j} = fullfile(parts{j,1},surffolder,['lc.thickness.',parts{j,2}]);
-            rhthickness{j} = fullfile(parts{j,1},surffolder,['rc.thickness.',parts{j,2}]);
+surfaceoutput = { % surface texture
+  {'central','pial','white'}  % no measures - just surfaces
+  {}                          % default
+  {'layer4'}                  % expert
+  {}                          % developer
+};
+measureoutput = {
+  {}                          % no measures
+  {'thickness'}               % default
+  {'intlayer4','defects'}     % expert
+  {'depthWM','depthCSF'}      % developer
+};
+sides = {'lh','rh'}; 
+if any( job.output.surface == [ 2 6 8 ] )
+  sides = [sides {'cb'}]; 
+end
+voutsfields = {};
+
+% create fields
+for si = 1:numel(sides)
+  for soi = 1:numel(surfaceoutput)
+    % surfaces
+    for soii = 1:numel(surfaceoutput{soi})
+      eval( sprintf('%s%s = {};' , sides{si} , surfaceoutput{soi}{soii} ) ); 
+      if ~isempty( surfaceoutput{soi} ) && job.output.surface
+        for j = 1:n
+          eval( sprintf('%s%s{j} = fullfile( ''%s'' , ''%s'' , ''%s.%s.%s.gii'' ); ' , sides{si} , surfaceoutput{soi}{soii} , ...
+            parts{j,1} , surffolder , sides{si} , surfaceoutput{soi}{soii} , parts{j,2} ) ); 
+          voutsfields{end+1} = sprintf('%s%s',  sides{si} , surfaceoutput{soi}{soii} );
         end
+      end
     end
+    % measures
+    for soii = 1:numel(measureoutput{soi})
+      eval( sprintf('%s%s = {};' , sides{si} , measureoutput{soi}{soii} ) ); 
+      if ~isempty( measureoutput{soi} ) && job.output.surface
+        for j = 1:n
+          eval( sprintf('%s%s{j} = fullfile( ''%s'' , ''%s'' , ''%s.%s.%s'' ); ' , sides{si} , measureoutput{soi}{soii} , ...
+            parts{j,1} , surffolder , sides{si} , measureoutput{soi}{soii} , parts{j,2} ) ); 
+          voutsfields{end+1} = sprintf('%s%s',  sides{si} , measureoutput{soi}{soii} );
+        end
+      end
+    end
+  end
 end
 
 
@@ -1009,9 +1033,13 @@ vout  = struct('tiss',tiss,'label',{label},'wlabel',{wlabel},'rlabel',{rlabel},'
                'biascorr',{biascorr},'wbiascorr',{wbiascorr},'roi',{roi},'ibiascorr',{ibiascorr},...
                'wibiascorr',{wibiascorr},'ribiascorr',{ribiascorr},'aibiascorr',{aibiascorr},...
                'invdef',{invdef},'fordef',{fordef},'jacobian',{jacobian},'catreport',{catreport},...
-               'lhcentral',{lhcentral},'rhcentral',{rhcentral},'lhthickness',{lhthickness},...
-               'catlog',{catlog},'catreportpdf',{catreportpdf},'catreportjpg',{catreportjpg},...
-               'rhthickness',{rhthickness});
+               'catlog',{catlog},'catreportpdf',{catreportpdf},'catreportjpg',{catreportjpg});
+             
+% add surface fields            
+for fi=1:numel(voutsfields)
+  eval( sprintf( 'vout.(voutsfields{fi}) = {%s};', voutsfields{fi} )); 
+end
+
 %_______________________________________________________________________
 return
 

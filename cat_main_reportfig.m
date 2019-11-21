@@ -391,7 +391,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   
   %% legend
   try
-    spm_orthviews('Reposition',[0 0 0]); 
+    spm_orthviews('Reposition',[-25 0 0]); 
     spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize-1,'FontWeight','Bold');
     spm_orthviews('window',hhp0,[0 cmmax]); caxis([0,2]);
   end
@@ -476,7 +476,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     % ... clearup this part of code when finished ...
     
     %% add contex menu for principle test
-    Psurf2 = Psurf;
+    Psurf2 = Psurf; ids = 2:3;
     % phite/pial surface in segmentation view number 3
     for ix=1:numel(Psurf2) 
       Psurf2(end+1).Pcentral = Psurf2(ix).Pwhite; 
@@ -488,7 +488,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       try spm_orthviews('AddContext',id); end % need the context menu for mesh handling
 
       
-      if id==3
+      if any(id==ids)
         nPsurf = numel(Psurf2); 
         stxt   = 'white/pial';
       else
@@ -498,7 +498,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       for ix=1:nPsurf
         % load mesh
         if ov_mesh
-          if id==3
+          if any(id==ids)
             spm_ov_mesh('display',id,Psurf2(ix).Pcentral);
           else
             spm_ov_mesh('display',id,Psurf(ix).Pcentral);
@@ -633,7 +633,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     for id=1:3
       hM = findobj(st.vols{id}.ax{1}.cm,'Label','Mesh');
       UD = get(hM,'UserData');
-      if id==3; nPsurf = numel(Psurf2); else, nPsurf = numel(Psurf); end
+      if any(id==ids); nPsurf = numel(Psurf2); else, nPsurf = numel(Psurf); end
       UD.width = [repmat(0.5,1,numel(UD.width) - nPsurf)  repmat(0.5,1,nPsurf)]; 
       UD.style = [repmat({'r--'},1,numel(UD.width) - nPsurf) repmat({'k-'},1,nPsurf)];
       set( cclp,'Color', [1 0 0]);
