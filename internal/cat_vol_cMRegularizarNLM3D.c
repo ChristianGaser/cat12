@@ -14,8 +14,9 @@
 #include "math.h"
 #include "mex.h"
 #include <stdlib.h>
-#include "matrix.h"
 #include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 struct myargument
 {

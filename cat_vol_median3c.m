@@ -14,4 +14,4 @@
 %  See also cat_vol_median3, compile.
 %  ________________________________________________________________________
 %  Robert Dahnke, 2012/01 
-%  $Id: cat_conf_stools.m 1519 2019-11-19 10:48:29Z gaser $
+%  $Id$

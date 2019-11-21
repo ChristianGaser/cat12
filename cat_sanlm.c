@@ -7,7 +7,6 @@
 #include "math.h"
 #include "mex.h"
 #include <stdlib.h>
-#include "matrix.h"
 
 extern void anlm(float* ima, int v, int f, int rician, const int* dims);
 

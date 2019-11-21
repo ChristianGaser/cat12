@@ -17,7 +17,6 @@
  */
 
 #include "mex.h"   
-#include "matrix.h"
 #include "math.h"
 
 

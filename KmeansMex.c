@@ -5,7 +5,6 @@
  */
 
 #include "mex.h"
-#include "matrix.h"
 #include "math.h"
 #include "stdio.h"
 

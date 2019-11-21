@@ -508,8 +508,8 @@ function s = replace_strings(s)
 
 s = deblank(s);
 % replace spaces with "_" and characters like "<" or ">"
-s(findstr(s, ' ')) = '_';
-s(findstr(s, ':')) = '_';
+s(strfind(s, ' ')) = '_';
+s(strfind(s, ':')) = '_';
 s = spm_str_manip(s, 'v');
 
 return
