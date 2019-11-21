@@ -25,9 +25,10 @@
  */
 
 #include "mex.h"   
-#include "matrix.h"
 #include "math.h"
 #include "float.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 #ifndef ROUND
 #define ROUND( x ) ((long) ((x) + ( ((x) >= 0) ? 0.5 : (-0.5) ) ))

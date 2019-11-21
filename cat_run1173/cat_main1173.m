@@ -1922,11 +1922,11 @@ if printCATreport
     if job.output.surface
       str = [str struct('name', 'Voxel resolution (original > internal > PBT; vox):',...
              'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s > %4.2f mm%s; %4.2f mm  ', ...
-             qa.qualitymeasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179),job.extopts.pbtres,char(179),job.extopts.vox(1)))];
+             qa.qualitymeasures.res_vx_vol,native2unicode(179, 'latin1'),qa.qualitymeasures.res_vx_voli,native2unicode(179, 'latin1'),job.extopts.pbtres,native2unicode(179, 'latin1'),job.extopts.vox(1)))];
     else
       str = [str struct('name', 'Voxel resolution (original > intern; vox):',...
              'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s; %4.2f mm', ...
-             qa.qualitymeasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179),job.extopts.vox(1)))];
+             qa.qualitymeasures.res_vx_vol,native2unicode(179, 'latin1'),qa.qualitymeasures.res_vx_voli,native2unicode(179, 'latin1'),job.extopts.vox(1)))];
     end       
     % str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',job.extopts.vox))]; % does not work yet 
 
@@ -1949,13 +1949,13 @@ if printCATreport
     % Volume measures
     if job.extopts.WMHC>1
       str3 = struct('name', '\bfVolumes:','value',sprintf('%5s %5s %5s %5s%s','CSF','GM','WM','WMH')); 
-      str3 = [str3 struct('name', ' Absolute volume:','value',sprintf(['%5.0f %5.0f %5.0f %5.0f cm' char(179)], ...
+      str3 = [str3 struct('name', ' Absolute volume:','value',sprintf(['%5.0f %5.0f %5.0f %5.0f cm' native2unicode(179, 'latin1')], ...
               qa.subjectmeasures.vol_abs_CGW(1:4)))];
       str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%5.1f %5.1f %5.1f %5.1f %%', ...
               qa.subjectmeasures.vol_rel_CGW(1:4)*100))];
     else
       str3 = struct('name', '\bfVolumes:','value',sprintf('%5s %5s %5s %5s%s','CSF','GM','WM')); 
-      str3 = [str3 struct('name', ' Absolute volume:','value',sprintf(['%5.0f %5.0f %5.0f cm' char(179)], ...
+      str3 = [str3 struct('name', ' Absolute volume:','value',sprintf(['%5.0f %5.0f %5.0f cm' native2unicode(179, 'latin1')], ...
               qa.subjectmeasures.vol_abs_CGW(1:3)))];
       str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%5.1f %5.1f %5.1f %%', ...
               qa.subjectmeasures.vol_rel_CGW(1:3)*100))];
@@ -1970,7 +1970,7 @@ if printCATreport
       clear Yp0;
     end
     %
-    str3 = [str3 struct('name', ' TIV:','value', sprintf(['%0.0f cm' char(179)],qa.subjectmeasures.vol_TIV))];  
+    str3 = [str3 struct('name', ' TIV:','value', sprintf(['%0.0f cm' native2unicode(179, 'latin1')],qa.subjectmeasures.vol_TIV))];  
 
     % Surface measures - Thickness, (Curvature, Depth, ...)
     if isfield(qa.subjectmeasures,'dist_thickness') && ~isempty(qa.subjectmeasures.dist_thickness)

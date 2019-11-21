@@ -288,7 +288,7 @@ warning('off','MATLAB:subscripting:noSubscriptsSpecified');
       case 0, fprintf('%s:\n',opt.surf{si});
     end
     
-    stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,char(179))); stimet =stime;
+    stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,native2unicode(179, 'latin1'))); stimet =stime;
     
     % removing background (smoothing to remove artifacts)
     switch opt.surf{si}

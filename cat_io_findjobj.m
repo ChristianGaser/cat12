@@ -405,7 +405,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
         % 'Cleaner' error handling - strip the stack info etc.
         err = lasterror;  %#ok
         err.message = regexprep(err.message,'Error using ==> [^\n]+\n','');
-        if isempty(findstr(mfilename,err.message))
+        if isempty(strfind(mfilename,err.message))
             % Indicate error origin, if not already stated within the error message
             err.message = [mfilename ': ' err.message];
         end
@@ -1763,7 +1763,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
                     catch
                         visible = 1;
                     end
-                    visible = visible && isempty(findstr(get(childNode,'Name'),'color="gray"'));
+                    visible = visible && isempty(strfind(get(childNode,'Name'),'color="gray"'));
                     %if any(strcmp(childNode.getName,nodesToUnExpand))
                     %name = char(childNode.getName);
                     if any(cellfun(@(s)~isempty(strmatch(s,char(childNode.getName))),nodesToUnExpand)) || ~visible

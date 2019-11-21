@@ -13,4 +13,4 @@
 %  See also bwdist, cat_vol_eidist, compile.
 %  ________________________________________________________________________
 %  Robert Dahnke 2010/01
-%  $Id: cat_conf_stools.m 1519 2019-11-19 10:48:29Z gaser $
+%  $Id$

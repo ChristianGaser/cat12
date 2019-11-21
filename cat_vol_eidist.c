@@ -64,10 +64,11 @@
  
 
 #include "mex.h"   
-#include "matrix.h"
 #include "math.h"
 #include "float.h"
 #include "limits.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 #ifdef _MSC_VER
   #define FINFINITY (FLT_MAX+FLT_MAX);

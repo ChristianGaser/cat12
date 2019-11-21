@@ -1,8 +1,7 @@
 #include "genus0.h"
-
-#ifdef MATLAB_MEX_FILE
+#include <stdio.h>
+#include <stdlib.h>
 #include <mex.h> 
-#endif
 
 static int verbose,invconnectivity, connectivity, autocrop[3][2];
 static int img_horiz,img_vert,img_depth,paddeddims[3];

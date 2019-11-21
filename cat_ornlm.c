@@ -7,7 +7,6 @@
 #include "math.h"
 #include "mex.h"
 #include <stdlib.h>
-#include "matrix.h"
 
 extern void ornlm(float* ima, float* fima, int v, int f, float h, const int* dims);
 

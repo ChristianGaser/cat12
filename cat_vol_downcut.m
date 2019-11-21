@@ -24,4 +24,4 @@
 %  See also cat_vol_simgrow, compile.
 %  ________________________________________________________________________
 %  Robert Dahnke, 2010/10 
-%  $Id: cat_conf_stools.m 1519 2019-11-19 10:48:29Z gaser $
+%  $Id$

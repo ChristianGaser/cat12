@@ -326,7 +326,7 @@ if ~isfield(res,'spmpp')
     if job.extopts.expertgui && isfield(res,'Ylesion') && sum(res.Ylesion(:))>1000 
       cat_warnings = cat_io_addwarning(cat_warnings,...
           'CAT:cat_main_SLC_noExpDef',sprintf(['SLC is deactivated but there are %0.2f cm' ...
-          char(179) ' of voxels with zero value inside the brain!'],prod(vx_vol) .* sum(res.Ylesion(:)) / 1000 )); 
+          native2unicode(179, 'latin1') ' of voxels with zero value inside the brain!'],prod(vx_vol) .* sum(res.Ylesion(:)) / 1000 )); 
       fprintf('\n');
     end
   end

@@ -231,7 +231,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS1173(V,Ym,Ya,YMF,opt)
     %% thickness estimation
     if si==1, fprintf('\n'); end
     fprintf('%s:\n',opt.surf{si});
-    stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,char(179)));
+    stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,native2unicode(179, 'latin1')));
     
     % removing background (smoothing to remove artifacts)
     switch opt.surf{si}
