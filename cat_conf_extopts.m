@@ -345,6 +345,25 @@ end
 collcorr.def     = @(val)cat_get_defaults('extopts.collcorr', val{:});
 
 
+reduce_mesh         = cfg_menu;
+reduce_mesh.tag     = 'reduce_mesh';
+reduce_mesh.name    = 'Reduce Mesh';
+reduce_mesh.labels  = {...
+  'No reduction (0)',...
+  'SPM approach (1)',...
+  'MATLAB approach (2)',...
+  ...'No reduction 1 mm (3)',... possible but to much work 
+};
+reduce_mesh.values  = {0 1 2};
+reduce_mesh.val     = {2}; 
+reduce_mesh.help    = {
+  ['Surface reduction is essential for speed and also an equaly distributed meshes. ' ...
+   'However, both SPM and MATLAB function can result in fatal MATLAB crashs. ' ...
+   'This variable controls the use of these functions and possible alternatives. ' ]
+   ''
+};
+
+
 
 % This is just an developer parameter (maybe for experts later) 
 % I expect that 300k surfaces support best quality in relation to processing
@@ -941,7 +960,7 @@ surface       = cfg_branch;
 surface.tag   = 'surface';
 surface.name  = 'Surface Options';
 if expert>1
-  surface.val   = {pbtres pbtver pbtlas collcorr vdist scale_cortex add_parahipp close_parahipp}; % pbtver
+  surface.val   = {pbtres pbtver pbtlas collcorr reduce_mesh vdist scale_cortex add_parahipp close_parahipp}; % pbtver
 else
   surface.val   = {pbtres pbtlas scale_cortex add_parahipp close_parahipp};
 end

@@ -1,6 +1,6 @@
 /* quasi-euclidean distance calculation
  * _____________________________________________________________________________
- * [GMT,RPM,WMD,CSFD,II] = eqdist(SEG,WMD,CSFD[,opt])
+ * [GMT,RPM,WMD,CSFD,II] = cat_vol_pbtp(SEG,WMD,CSFD[,opt])
  *
  * SEG  = (single) segment image with low and high boundary bd
  * GMT  = (single) thickness image
