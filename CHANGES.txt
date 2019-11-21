@@ -1,5 +1,32 @@
 ------------------------------------------------------------------------
-r1521 | dahnke | 2019-11-21 19:59:00
+r1522 | gaser | 2019-11-21 22:04:13
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       cat_main_LASs.m
+A  +    cat_parallelize.sh
+M       cat_run.m
+M       cat_stat_check_SPM.m
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       cat_surf_results.m
+D       cat_vol_pbt2.m
+M       cat_vol_slice_overlay.m
+M       html/cat.html
+M       html/cat_starting.html
+MM      standalone/cat_standalone_smooth.txt
+
+(1) Changed: Typos...
+(2) Fixed: Corrected position of window for slice overlay window and
+    orthogonality check.
+(3) Changed: Changed path in slice overlay tool for saving image files to 
+    data folder.
+(4) Changed: Disabled parallel processing for only one subject.
+------------------------------------------------------------------------
+r1521 | dahnke | 2019-11-21 20:01:03 +0100 (Do, 21 Nov 2019) | 37 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -36,6 +63,7 @@ M       tbx_cfg_cat.m
 (3) New:        Added reduce_mesh developer GUI variable to switch between
                 SPM, MATLAB, and no surface reduction in cat_conf_extopts.  
 (4) New:        Added matlab help file for cat_vol_* c and c++ functions.                 
+
 
 ------------------------------------------------------------------------
 r1520 | dahnke | 2019-11-19 22:52:09 +0100 (Di, 19 Nov 2019) | 49 lines

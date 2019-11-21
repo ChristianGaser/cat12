@@ -33,6 +33,11 @@ function varargout = cat_run(job)
 %  The lazy processing will only process files, if one of the output
 %  is missed and if the same preprocessing options were used before.
 %  -----------------------------------------------------------------
+
+% disable parallel processing for only one subject
+n_subjects = numel(job.data);
+if n_subjects == 1, job.nproc = 0; end
+
 if isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.extopts.admin.lazy && ...
   ~isfield(job,'process_index') && isfield(job,'nproc') && job.nproc>.1 && (~isfield(job,'process_index'))  
   jobo.vout = vout_job(job);    % expected output
@@ -40,8 +45,6 @@ if isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.exto
   jobl.vout = vout_job(jobl);   
   job.data  = remove_already_processed(jobl); 
 end
-
-
 
 % split job and data into separate processes to save computation time
 if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))  

@@ -951,7 +951,7 @@ switch lower(action)
             % print colors (red, green/dark-green
             color  = {[1 0 0],[0 1 0]/(1+H.bkg_col(1))};  
             linet  = {'-','--'};
-            % possition of the right and the left text box
+            % position of the right and the left text box
             if mode
               tpos = {[0.49 0.015 0.065 0.03],[0.565 0.015 0.065 0.03],[0.4 0.015 0.12 0.03]};
             else
