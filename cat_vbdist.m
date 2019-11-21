@@ -1,0 +1,16 @@
+%cat_vbdist Voxel-based euclidean distance calculation.
+%  Calculates the euclidean distance without partial volume effect to an 
+%  object in P with a boundary of 0.5.
+% 
+%  [D,I,L] = cat_vbdist(P[,R])
+%  
+%  D (single)  .. distance image
+%  I (uint32)  .. index of nearest point
+%  L (uint8)   .. label map
+%  P (single)  .. input image 
+%  R (logical) .. range for distance calculation (to speedup processing)
+%
+%  See also bwdist, cat_vol_eidist, compile.
+%  ________________________________________________________________________
+%  Robert Dahnke 2010/01
+%  $Id: cat_conf_stools.m 1519 2019-11-19 10:48:29Z gaser $

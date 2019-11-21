@@ -662,9 +662,8 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
   %% default surface reconstruction 
   %  sum(Yth1(Yth1(:)>median(Yth1(Yth1(:)>0))*2 ))./sum(Yth1(Yth1(:)>0)) > 0.1 > error
     if job.extopts.collcorr >= 20
-      for i=1:numel(surf), surf{i} = cat_io_strrep(surf{i},{'lc','rc'},'cb'); end 
       surf = unique(surf); 
-      if any( ~cellfun('isempty', strfind(surf,'cb') ))
+      if 0 %any( ~cellfun('isempty', strfind(surf,'cb') ))  % ... I want to avoid this if possible - it also seem to be worse to use it 
         VT1 = spm_vol(fullfile(fileparts(job.extopts.templates{end}),'Template_T1_IXI555_MNI152_GS.nii')); 
         fac = abs(tpm.V(1).mat(1)) / abs(VT1.mat(1));
         YT  = single(spm_sample_vol(VT1,double(smooth3(Yy(:,:,:,1))*fac),double(smooth3(Yy(:,:,:,2))*fac),double(smooth3(Yy(:,:,:,3))*fac),2));
@@ -678,9 +677,9 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
       if ~isfield(job.extopts,'add_parahipp'),    job.extopts.add_parahipp    = cat_get_defaults('extopts.add_parahipp'); end
       if ~isfield(job.extopts,'close_parahipp'),  job.extopts.close_parahipp  = cat_get_defaults('extopts.close_parahipp'); end
       if ~isfield(job.extopts,'pbtmethod'),       job.extopts.pbtmethod       = cat_get_defaults('extopts.pbtmethod'); end
-      if ~isfield(job.output,'pp'),               job.output.pp               = struct('native',0,'warped',0,'dartel',0);  end
-      if ~isfield(job.output,'surf_measures'),    job.output.surf_measures    = 1; end
-  
+      %if ~isfield(job.output,'pp'),               job.output.pp               = struct('native',0,'warped',0,'dartel',0);  end % this is now in defaults and not required here 
+      if ~isfield(job.output,'surf_measures'),    job.output.surf_measures    = 1; end % developer
+      
       [Yth1, S, Psurf, qa.subjectmeasures.EC_abs, qa.subjectmeasures.defect_size, qa.createCS] = ...
         cat_surf_createCS2(VT,VT0,Ymix,Yl1,YMF,YT,struct('trans',trans,... required for Ypp output
         'vdist',job.extopts.vdist,'outputpp',job.output.pp,'surf_measures',job.output.surf_measures, ...
@@ -1031,17 +1030,17 @@ function [Ymix,job,surf,WMT,stime] = cat_main_surf_preppara(Ymi,Yp0,job,vx_vol)
   % specify surface
   switch job.output.surface
     case 1, surf = {'lh','rh'};
-    case 2, surf = {'lh','rh','lc','rc'};
+    case 2, surf = {'lh','rh','cb'};
     case 3, surf = {'lh'};
     case 4, surf = {'rh'};
     % fast surface reconstruction without simple spherical mapping     
     case 5, surf = {'lhfst','rhfst'};                   
-    case 6, surf = {'lhfst','rhfst','lcfst','rcfst'};    
+    case 6, surf = {'lhfst','rhfst','cbfst'}; 
     % fast surface reconstruction with simple spherical mapping     
     case 7, surf = {'lhsfst','rhsfst'};                    
-    case 8, surf = {'lhsfst','rhsfst','lcsfst','rcsfst'}; 
+    case 8, surf = {'lhsfst','rhsfst','cbsfst'};
     % estimate only volumebased thickness
-    case 9, surf = {'lhv','rhv'}; %,'lcv','rcv'}; 
+    case 9, surf = {'lhv','rhv'}; 
     otherwise, surf = {};
   end
   if ~job.output.surface && any( [job.output.ct.native job.output.ct.warped job.output.ct.dartel] )
