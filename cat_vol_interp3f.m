@@ -50,4 +50,4 @@
 %  See also compile.
 %  ________________________________________________________________________
 %  <a href="www.brian-amberg.de/">Brian Amberg, 2008</a> 
-%  $Id: cat_conf_stools.m 1519 2019-11-19 10:48:29Z gaser $
+%  $Id$

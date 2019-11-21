@@ -23,9 +23,10 @@
  */
 
 #include "mex.h"   
-#include "matrix.h"
 #include "math.h"
 #include "float.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 
 /* estimate minimum of A and its index in A */

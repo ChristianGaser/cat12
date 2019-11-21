@@ -1056,7 +1056,7 @@ function [linetocell,cellcount] = splittocell(varargin)
       if ldelim==1
           cpos=[(1-ldelim),find(line==delimiter)];
       else
-          cpos=[(1-ldelim),findstr(line,delimiter)];
+          cpos=[(1-ldelim),strfind(line,delimiter)];
       end
       lcpos =size(cpos,2);
 

@@ -1,5 +1,90 @@
 ------------------------------------------------------------------------
-r1522 | gaser | 2019-11-21 22:04:13
+r1523 | gaser | 2019-11-22 00:11:49
+
+Changed paths:
+M       BayesMex.c
+M       CHANGES.txt
+M       Contents.m
+M       KmeansMex.c
+M       cat12.m
+M       cat_amap.c
+A       cat_amap.mex
+M       cat_io_findjobj.m
+M       cat_main.m
+M       cat_main_LAS2.m
+M       cat_main_reportstr.m
+M       cat_ornlm.c
+A       cat_ornlm.mex
+M       cat_run1173/cat_main1173.m
+M       cat_run1173/cat_run_job10701173.m
+M       cat_run1173/cat_run_job1173.m
+M       cat_run1173/cat_surf_createCS1173.m
+M       cat_run1173plus/cat_main1173plus.m
+M       cat_run1173plus/cat_run_job10701173plus.m
+M       cat_run1173plus/cat_run_job1173plus.m
+M       cat_run1445/cat_main1445.m
+M       cat_run1445/cat_run_job10701445.m
+M       cat_run1445/cat_run_job1445.m
+M       cat_run1445/cat_surf_createCS1445.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+M       cat_sanlm.c
+A       cat_sanlm.mex
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       cat_vbdist.c
+MM      cat_vbdist.m
+A       cat_vbdist.mex
+M       cat_vol_ROIval.c
+M       cat_vol_downcut.c
+MM      cat_vol_downcut.m
+A       cat_vol_downcut.mex
+M       cat_vol_eidist.c
+MM      cat_vol_eidist.m
+A       cat_vol_eidist.mex
+M       cat_vol_eikonal3.c
+MM      cat_vol_eikonal3.m
+M       cat_vol_findfiles.m
+M       cat_vol_genus0.c
+MM      cat_vol_genus0.m
+A       cat_vol_genus0.mex
+M       cat_vol_gradient3.c
+A       cat_vol_gradient3.mex
+MM      cat_vol_interp3f.m
+A       cat_vol_interp3f.mex
+M       cat_vol_laplace3.c
+MM      cat_vol_laplace3.m
+A       cat_vol_laplace3.mex
+M       cat_vol_laplace3R.c
+MM      cat_vol_laplace3R.m
+A       cat_vol_laplace3R.mex
+M       cat_vol_localstat.c
+MM      cat_vol_localstat.m
+A       cat_vol_localstat.mex
+M       cat_vol_median3.c
+MM      cat_vol_median3.m
+A       cat_vol_median3.mex
+M       cat_vol_median3c.c
+MM      cat_vol_median3c.m
+A       cat_vol_median3c.mex
+M       cat_vol_pbtp.cpp
+A       cat_vol_pbtp.mex
+M       cat_vol_pbtv.cpp
+M       cat_vol_simgrow.c
+A       cat_vol_simgrow.mex
+M       cat_vol_slice_overlay.m
+M       development/cat_surf_createCS.m
+M       genus0.c
+M       html/cat.html
+M       internal/cat_vol_cMRegularizarNLM3D.c
+A       internal/cat_vol_cMRegularizarNLM3D.mex
+
+(1) Fixed: Made c-files compatible to Octave by removing the matrix.h header.
+(2) Added: Mex-files for Octave.
+(3) Changed: Made some Matlab code compatibe to Octave (Thanks to Guillaume
+    Flandin for suggestions).
+------------------------------------------------------------------------
+r1522 | gaser | 2019-11-21 22:04:20 +0100 (Do, 21 Nov 2019) | 25 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -25,6 +110,7 @@ MM      standalone/cat_standalone_smooth.txt
 (3) Changed: Changed path in slice overlay tool for saving image files to 
     data folder.
 (4) Changed: Disabled parallel processing for only one subject.
+
 ------------------------------------------------------------------------
 r1521 | dahnke | 2019-11-21 20:01:03 +0100 (Do, 21 Nov 2019) | 37 lines
 
