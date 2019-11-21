@@ -131,7 +131,7 @@ cstime = clock;
     end
   end
 
-  % function to estimate the number of interations of the surface deformation: d=distance in mm and a=accuracy 
+  % function to estimate the number of interactions of the surface deformation: d=distance in mm and a=accuracy 
   QMC    = cat_io_colormaps('marks+',17);
   color  = @(m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
   rate   = @(x,best,worst) min(6,max(1, max(0,x-best) ./ (worst-best) * 5 + 1));
