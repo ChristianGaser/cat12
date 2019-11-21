@@ -25,6 +25,7 @@ if nargin == 0
     
 end
 
+spm_figure('GetWin','Graphics');
 FS = spm('FontSizes');
 
 % check filename whether log. scaling was used
@@ -222,7 +223,7 @@ end
 pos1 = get(spm_figure('FindWin', 'Graphics'), 'Position');
 
 screensize = get(0, 'screensize');
-set(h0, 'Position', [pos1(1), pos1(2) + 0.9 * screensize(4), 2 * size(ref_img, 2), 2 * size(ref_img, 1)], ...
+set(h0, 'Position', [10, 10, 2 * size(ref_img, 2), 2 * size(ref_img, 1)], ...
     'MenuBar', 'none', ...
     'Resize', 'off', ...
     'PaperType', 'A4', ...
@@ -244,7 +245,6 @@ switch lower(OV.transform)
     case 'axial'
         dim = xy .* SO.img(1).vol.dim(1:2);
 end
-screensize = get(0, 'screensize');
 
 % use double size
 dim = 2 * dim;
@@ -468,9 +468,9 @@ if ~strcmp(image_ext, 'none')
     fprintf('Image %s saved.\n', imaname);
     
     if n_slice > 0
-        imaname = [lower(OV.transform) '_' replace_strings(OV.slices_str(ind, :)) '.' image_ext];
+        imaname = [pt2 lower(OV.transform) '_' replace_strings(OV.slices_str(ind, :)) '.' image_ext];
     else
-        imaname = [lower(OV.transform) '.' image_ext];
+        imaname = [pt2 lower(OV.transform) '.' image_ext];
     end
     
     saveas(h0, imaname, image_ext);
@@ -578,6 +578,7 @@ end
 clear global SO
 global SO %#ok<REDEF> this is print as error
 
+spm_clf('Interactive'); 
 spm_input('!SetNextPos', 1);
 
 % load images

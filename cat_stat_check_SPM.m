@@ -172,7 +172,7 @@ end
 
 if check_ortho
     fprintf('\n-------------------------------------------\n');
-    fprintf('      Check design orthogoanlity\n');
+    fprintf('      Check design orthogonality\n');
     fprintf('-------------------------------------------\n');
     check_orthogonality(SPM.xX);
 end
@@ -229,7 +229,7 @@ FS = cat_get_defaults('extopts.fontsize');
 h = figure(3);
 clf(h);
 
-set(h,'MenuBar','none','Position',[10 ws(4) 0.85*ws(3) 0.85*ws(4)],'NumberTitle','off',...
+set(h,'MenuBar','none','Position',[10 10 0.85*ws(3) 0.85*ws(4)],'NumberTitle','off',...
     'Color',[1 1 1]);
 
 %-Title

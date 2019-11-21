@@ -1,7 +1,7 @@
 % batch file of volume smoothing for SPM12 standalone installation
 %
 %_______________________________________________________________________
-% $Id: cat_standalone_smooth.txt 1510 2019-10-16 10:12:29Z gaser $
+% $Id$
 
 % data field, that will be dynamically replaced by cat_standalone.sh
 matlabbatch{1}.spm.spatial.smooth.data = '<UNDEFINED>';
