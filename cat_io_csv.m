@@ -186,6 +186,8 @@ function writecsv(filename,C,sheet,pos,opt)
   end
 
   M=cell(size(C,1),1);
+  if strcmpi(spm_check_version,'octave'), M =cellstr(M); end
+  
   for i=1:size(C,1)
     for j=1:size(C,2)
       if ~isstruct(C{i,j}) && ~iscell(C{i,j})

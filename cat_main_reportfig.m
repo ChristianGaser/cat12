@@ -33,7 +33,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
  
   if cat_get_defaults('extopts.send_info')
     url = sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%sfinished',cat_version,'%2F',computer,'%2F');
-    try, urlread(url); end
+		try
+			[s,sts] = urlread(url,'Timeout',2);
+		catch
+			[s,sts] = urlread(url);
+		end
   end
 
   VT  = res.image(1); 
@@ -129,7 +133,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   colormap(cmap);
   try spm_orthviews('Redraw'); end
 
-  warning('OFF','MATLAB:tex')
+  warning('off','MATLAB:tex')
   htext = zeros(5,2,2);
   for i=1:size(str{1},2)   % main parameter
     htext(1,i,1) = text(0.01,0.98-(0.055*i), str{1}(i).name  ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
@@ -154,11 +158,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 
   % BB box is not optimal for all images
   disptype = 'affine'; 
-  warning('OFF','MATLAB:handle_graphics:exceptions:SceneNode')
+  warning('off','MATLAB:handle_graphics:exceptions:SceneNode')
   switch disptype
     case 'affine'
       dispmat = res.Affine; 
-      warning('OFF','MATLAB:tex')
+      warning('off','MATLAB:tex')
       try spm_orthviews('BB', job.extopts.bb*0.95 ); end
     case 'rigid'
       % this does not work so good... AC has a little offset ...
@@ -399,14 +403,14 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   if useoverlay>1
   % make SPM colorbar invisible (cannot delete it because SPM orthviews need it later)  
     %st.vols{3}.blobs{1}.cbar.Visible    = 'off';
-    warning('OFF','MATLAB:warn_r14_stucture_assignment');
-    st.vols{3}.blobs{1}.cbar.YTick       = ytickp0/30;
-    st.vols{3}.blobs{1}.cbar.XTick       = [];
-    st.vols{3}.blobs{1}.cbar.YTickLabel  = yticklabelp0;
-    st.vols{3}.blobs{1}.cbar.XTickLabel  = {};
-    st.vols{3}.blobs{1}.cbar.YAxisLocation = 'right';
-    st.vols{3}.blobs{1}.cbar.Position = [pos(3,1) + 0.26 0.02 0.02 0.15]; 
-    st.vols{3}.blobs{1} = rmfield(st.vols{3}.blobs{1},'cbar'); % remove handle to avoid position updates
+    warning('off','MATLAB:warn_r14_stucture_assignment');
+    set(st.vols{3}.blobs{1}.cbar.YTick, ytickp0/30);
+    set(st.vols{3}.blobs{1}.cbar.XTick, []);
+    set(st.vols{3}.blobs{1}.cbar.YTickLabel, yticklabelp0);
+    set(st.vols{3}.blobs{1}.cbar.XTickLabel, {});
+    set(st.vols{3}.blobs{1}.cbar.YAxisLocation, 'right');
+    set(st.vols{3}.blobs{1}.cbar.Position, [pos(3,1) + 0.26 0.02 0.02 0.15]); 
+    set(st.vols{3}.blobs{1}, rmfield(st.vols{3}.blobs{1},'cbar')); % remove handle to avoid position updates
   else
     cc{3} = axes('Position',[pos(3,1) + 0.26 0.02 0.02 0.15],'Parent',fg);
     image((60:-1:1)','Parent',cc{3});
@@ -418,7 +422,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   
   
   %% TPM overlay with brain/head and head/background surfaces
-  warning('OFF','MATLAB:subscripting:noSubscriptsSpecified')
+  warning('off','MATLAB:subscripting:noSubscriptsSpecified')
   showTPMsurf = 1; % ... also in default mode 
   for id=1:numel(st.vols)
     if isfield( st.vols{id}, 'mesh'), st = rmfield( st.vols{id} ,'mesh'); end
@@ -465,7 +469,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       %% TPM legend
       ccl = axes('Position',[pos(1,1:2) 0 0] + [0.35 0 0.02 0.08],'Parent',fg);
       cclp = plot(ccl,([0 0.4;0.6 1])',[0 0; 0 0],'b-'); 
-      text(1.2,0,['Brain and skull',char(10),'overlay from affine',char(10),'registered TPM'],...
+      text(1.2,0,['Brain and skull',native2unicode (10 'latin1'),'overlay from affine',native2unicode (10 'latin1'),'registered TPM'],...
           'Parent',ccl,'Fontsize',fontsize-2);
       set(cclp,'LineWidth',0.75); axis(ccl,'off')
     end
@@ -642,6 +646,6 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     end
   end  
   
-  warning('OFF','MATLAB:subscripting:noSubscriptsSpecified'); % jep off
+  warning('off','MATLAB:subscripting:noSubscriptsSpecified'); % jep off
 
 end

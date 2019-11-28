@@ -1,5 +1,50 @@
 ------------------------------------------------------------------------
-r1523 | gaser | 2019-11-22 00:11:49
+r1524 | gaser | 2019-11-28 17:59:54
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_amap.mexmaci64
+M       cat_io_cprintf.m
+M       cat_io_csv.m
+M       cat_io_matlabversion.m
+M       cat_io_report.m
+M       cat_main_reportfig.m
+M       cat_ornlm.mexmaci64
+M       cat_run_newcatch.m
+M       cat_sanlm.mexmaci64
+M       cat_update.m
+M       cat_vbdist.mexmaci64
+M       cat_vol_downcut.mexmaci64
+M       cat_vol_eidist.c
+M       cat_vol_eidist.mex
+M       cat_vol_eidist.mexmaci64
+M       cat_vol_genus0.mexmaci64
+M       cat_vol_gradient3.mexmaci64
+M       cat_vol_interp3f.mexmaci64
+M       cat_vol_laplace3.mexmaci64
+M       cat_vol_laplace3R.mexmaci64
+M       cat_vol_localstat.c
+M       cat_vol_localstat.mex
+M       cat_vol_localstat.mexmaci64
+M       cat_vol_median3.mexmaci64
+M       cat_vol_median3c.mexmaci64
+M       cat_vol_pbtp.cpp
+MM      cat_vol_pbtp.m
+M       cat_vol_pbtp.mex
+M       cat_vol_pbtp.mexmaci64
+MM      cat_vol_simgrow.m
+M       cat_vol_simgrow.mexmaci64
+M       compile.m
+M       internal/cat_vol_cMRegularizarNLM3D.mexmaci64
+
+(1) Changed: Made some Matlab code compatibe to Octave (Thanks to Guillaume
+    Flandin for suggestions).
+(2) Fixed: Corrected output parameters of cat_vol_pbtp.cpp.
+(3) Changed: Added timeout parameter to urlread to prevent long wating times
+    if server is not responding.
+------------------------------------------------------------------------
+r1523 | gaser | 2019-11-22 00:12:24 +0100 (Fr, 22 Nov 2019) | 83 lines
 
 Changed paths:
 M       BayesMex.c
@@ -83,6 +128,7 @@ A       internal/cat_vol_cMRegularizarNLM3D.mex
 (2) Added: Mex-files for Octave.
 (3) Changed: Made some Matlab code compatibe to Octave (Thanks to Guillaume
     Flandin for suggestions).
+
 ------------------------------------------------------------------------
 r1522 | gaser | 2019-11-21 22:04:20 +0100 (Do, 21 Nov 2019) | 25 lines
 
