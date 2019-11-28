@@ -24,16 +24,24 @@ function varargout = compile(comp,test,verb)
 
 %#ok<*NASGU,*ASGLU,*LERR,*TRYNC>
 
-  fprintf('-----------------------------------------------------------------------------------\n');
-  fprintf('Please check that for new mex-files functions such as mxCreateNumericArray has the \n');
-  fprintf('right data type for the variable dims (const mwSize*). Otherwise compilation with \n');
-  fprintf('Matlab >= R2017a will be not successful!\n');
-  fprintf('-----------------------------------------------------------------------------------\n\n');
-  
-  if strcmp(mexext,'mexmaci64') && verLessThan('matlab','9.2')
-    warning('WARNING: Matlab version should be at least R2017a for compilation under Mac.');
-  end
 
+  if strcmpi(spm_check_version,'octave')
+    mexcmd = 'mkoctfile --mex';
+  else
+  
+		fprintf('-----------------------------------------------------------------------------------\n');
+		fprintf('Please check that for new mex-files functions such as mxCreateNumericArray has the \n');
+		fprintf('right data type for the variable dims (const mwSize*). Otherwise compilation with \n');
+		fprintf('Matlab >= R2017a will be not successful!\n');
+		fprintf('-----------------------------------------------------------------------------------\n\n');
+		
+		if strcmp(mexext,'mexmaci64') && verLessThan('matlab','9.2')
+			warning('WARNING: Matlab version should be at least R2017a for compilation under Mac.');
+		end
+
+    mexcmd = 'mex';
+  end
+  
   try % failed in older MATLABs
     rng('default'); rng(13); % fix random numbers
   end
@@ -63,7 +71,7 @@ function varargout = compile(comp,test,verb)
   d6  = zeros(13,13,10,'single'); d6(3,:,:)=0.2; d6(4:13,:,:)=1; d6(14,:,:)=1.2; d6(4,6:8,:)=0.5; 
         d6(15,:,:)=2; d6(2:5,7,:) = 0.1; d6(5:10,7,:) = 0.8; d6(10:end-4,7,:) = 0.3; 
         d6(6:end-1,[1:4,end-3:end],:) = 2; d6(13,10,:) = 1; d6(6:12,10,:) = 1.8; d6(2:3,8:9,:)  = 0.7;
-        ds('d2','',1,d6,Ycsfdi/3*2,Ywmdi/3*2,Ygmti/2,5); colormap jet;
+  if (verb>2), ds('d2','',1,d6,Ycsfdi/3*2,Ywmdi/3*2,Ygmti/2,5); colormap jet; end
   d6(2:3,6:7,:)  = 0.5;
   %% ground truth distance map for the d1 map
   dc  = zeros(10,10,10,'single'); for si=3:8; dc(si,:,:)=si-2.5; end; dc(5,5,5) = NaN; % csf distance
@@ -129,7 +137,7 @@ function varargout = compile(comp,test,verb)
           if nci==1
             cd(catdir)
             %try
-              rc{nci}{ncj} = evalc(['mex ' mexflag ' ' nc{nci}{ncj}]);
+              rc{nci}{ncj} = evalc([mexcmd ' ' mexflag ' ' nc{nci}{ncj}]);
             %{
             catch 
               rcc{nci}(ncj) = 1; 
@@ -145,13 +153,13 @@ function varargout = compile(comp,test,verb)
             if strcmp(nc{nci}{ncj},'cat_vol_cMRegularizarNLM3D.c') 
               % additional windows version
               if any(strcmp({'mexw32','mexw64'},mexext))
-                rc{nci}{ncj} = evalc(['mex ' mexflag ' ' ff 'w' ee]);
+                rc{nci}{ncj} = evalc([mexcmd ' ' mexflag ' ' ff 'w' ee]);
                 movefile([ff 'w' mexext],[ff mexext]);
               else
-                rc{nci}{ncj} = evalc(['mex ' mexflag ' ' nc{nci}{ncj}]);
+                rc{nci}{ncj} = evalc([mexcmd ' ' mexflag ' ' nc{nci}{ncj}]);
               end
             else
-               rc{nci}{ncj} = evalc(['mex ' mexflag ' ' nc{nci}{ncj}]);
+               rc{nci}{ncj} = evalc([mexcmd ' ' mexflag ' ' nc{nci}{ncj}]);
             end
             cd(catdir)
           end
@@ -354,7 +362,7 @@ function varargout = compile(comp,test,verb)
     %  matlab function
     %    ds('l2','',1,d1,d1,(d1+1)/3,d{10}/10,10)
     ni          = ni + 1;
-    n{ni}       = 'cat_vol_pbtp';      
+    n{ni}       = 'cat_vol_pbtp';   
     [d{ni},dpp] = cat_vol_pbtp(d1+1,dw,dc);  
     r(ni)       = rms(d{ni}(d1==1)) - 5.5; 
     s(ni)       = r(ni)<0.05;

@@ -280,7 +280,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
    */
   if ( verb ) {
     printf("\ncat_vol_eidist.c debuging mode:\n  Initialize Parameter: \n");
-    printf("    size(B) = %d %d %d\n",sL[0],sL[1],sL[2]); 
+    printf("    size(B) = %d %d %d\n",(int)sL[0],(int)sL[1],(int)sL[2]); 
     printf("    vx_vol  = %0.0f %0.0f %0.0f\n",s1,s2,s3); 
     printf("    euclid  = %d\n",(int) euclid); 
     printf("    setnan  = %d\n",(int) setnan); 

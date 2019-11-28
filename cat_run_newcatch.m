@@ -62,7 +62,11 @@ function cat_run_newcatch(job,tpm,subj)
       url = sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%s%s%s%s%s%s',cat_version,'%2F',computer,'%2F','errors','%2F',caterr_message_str,'%2F',str_err);
       url = regexprep(url, '\n', '%20'); % replace returns
       url = regexprep(url, ' ' , '%20'); % replace spaces
-      try, urlread(url); end
+      try
+        [s,sts] = urlread(url,'Timeout',2);
+      catch
+        [s,sts] = urlread(url);
+      end
     end
 
     % write error report
