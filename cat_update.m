@@ -42,7 +42,12 @@ r = 0;
 r = str2double(r);
 
 % get new release numbers
-[s,sts] = urlread(url);
+try
+  [s,sts] = urlread(url,'Timeout',2);
+catch
+  [s,sts] = urlread(url);
+end
+
 if ~sts
   sts = NaN;
   msg = sprintf('Cannot access %s. Please check your proxy and/or firewall to allow access.\nYou can download your update at %s\n',url,url); 

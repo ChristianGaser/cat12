@@ -118,13 +118,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   float 	    du, dv, dw, dnu, dnv, dnw, d, dcf, WMu, WMv, WMw, GMu, GMv, GMw, SEGl, SEGu, tmpfloat;
   int         ni,u,v,w,nu,nv,nw, tmpint, WMC=0, CSFC=0;
     
-  // main volumes - actual without memory optimation ...
+  // main volumes - actual without memory optimization ...
   plhs[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
   plhs[1] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
+  
+/* not yet defined  
   plhs[2] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
   plhs[3] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
   plhs[4] = mxCreateNumericArray(dL,sL,mxUINT32_CLASS,mxREAL);  
-  
+*/  
+
   // input variables
   float*SEG  = (float *)mxGetPr(prhs[0]);
   float*WMD  = (float *)mxGetPr(prhs[1]);

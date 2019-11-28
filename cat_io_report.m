@@ -556,7 +556,7 @@ function cat_io_report(job,qa,subj,createerr)
   
   %% TPM overlay with brain/head and head/background surfaces
   global st;
-  warning('OFF','MATLAB:subscripting:noSubscriptsSpecified')
+  warning('off','MATLAB:subscripting:noSubscriptsSpecified')
   showTPMsurf = 1; % ... also in default mode 
   if job.extopts.expertgui>0 - showTPMsurf
     %Phull = {fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','bh.hull.cat.gii')};

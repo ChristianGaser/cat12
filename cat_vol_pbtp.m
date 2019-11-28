@@ -1,13 +1,10 @@
 %cat_vol_pbtp Projection-Based Thickness.
 %  Main thickness projection function (<a href="matlab:web('http://dbm.neuro.uni-jena.de/pdf-files/Dahnke-NI12.pdf','-browser');">Dahnke et al., 2011)</a>).
 %
-%  [GMT,RPM,WMDC,CSFDC,II] = cat_vol_pbtp(SEG,WMD,CSFD[,opt])
+%  [GMT,RPM] = cat_vol_pbtp(SEG,WMD,CSFD[,opt])
 %
 %  GMT   (3D  single) .. thickness image
 %  RPM   (3D  single) .. radial position map
-%  WMDC  (3D  single) .. CSF distance map
-%  CSFDC (3D  single) .. CSF distance map
-%  II    (3D  uint32) .. index of the inner (WM)  boundary voxel
 %  SEG   (3D  single) .. segment image with low and high boundary bd
 %                        (default 1=CSF, 2=GM, 3=WM)
 %  WMD   (3D  single) .. CSF distance map
@@ -21,4 +18,4 @@
 %  See also cat_vbdist, cat_vol_eidist, compile.
 %  ________________________________________________________________________
 %  Robert Dahnke 2009/11, 2011/12
-%  $Id: cat_conf_stools.m 1519 2019-11-19 10:48:29Z gaser $
+%  $Id$

@@ -175,7 +175,7 @@ function count = cat_io_cprintf(style,format,varargin)
 
       % The following is for debug use only:
       %global docElement txt el
-      if ~exist('el','var') || isempty(el),  el=handle([]);  end  %#ok mlint short-circuit error ("used before defined")
+      try, if ~exist('el','var') || isempty(el),  el=handle([]);  end; end %#ok mlint short-circuit error ("used before defined")
       if nargin<1, showDemo(majorVersion,minorVersion); return;  end
       %if isempty(style),  return;  end
       if isempty(style), style='text'; end

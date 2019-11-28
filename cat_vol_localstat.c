@@ -125,10 +125,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   /*
    * Display Initial Parameter
    */
-  if ( verb ) printf("\ncat_vol_localstat.c debuging mode:\n  Initialize Parameter: \n");
-  if ( verb ) printf("    size(B) = %d %d %d\n",sL[0],sL[1],sL[2]); 
-  if ( verb ) printf("    nb      = %d\n",nh); 
-  if ( verb ) printf("    stat    = %d\n",st); 
+  if ( verb ) {
+    printf("\ncat_vol_localstat.c debuging mode:\n  Initialize Parameter: \n");
+    printf("    size(B) = %d %d %d\n",(int)sL[0],(int)sL[1],(int)sL[2]); 
+    printf("    nb      = %d\n",nh); 
+    printf("    stat    = %d\n",st); 
+  }
   
   
   if (st==7) {

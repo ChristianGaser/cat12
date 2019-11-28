@@ -1,4 +1,16 @@
-function year=cat_io_matlabversion(varargin)
+function year = cat_io_matlabversion(varargin)
+% return Matlab version year
+%_______________________________________________________________________
+%
+%_______________________________________________________________________
+% $Id$
+
+
+  if strcmpi(spm_check_version,'octave')
+    year = 20001;
+    return
+  end
+  
   vers = version;
   [t1,t2,t3,year] = regexp(vers,'\(R.....\)');
   switch year{1}(end-1)
