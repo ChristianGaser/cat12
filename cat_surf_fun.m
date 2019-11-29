@@ -1,61 +1,89 @@
 function varargout = cat_surf_fun(action,S,varargin)
-% Set of functions to modify and evaluate surfaces. 
+%cat_surf_fun Set of functions to modify and evaluate surfaces. 
+%  Call without parameters (only action) will print the help of this action.
 % 
-% varargout = cat_surf_fun(action,S,varargin)
+%  varargout = cat_surf_fun(action,S,varargin)
+% 
+%  varargout, varargin .. variable input depending on the called action
+%  action              .. string to call a subfuction 
+%  S                   .. surface structure with vertices and faces 
 %
-% * Distance estimation:
-%   D   = cat_surf_fun('dist',S);     % Estimates the distance between the 
-%                                       local vertices of the faces of S.
-%   D   = cat_surf_fun('vdist',S);    % Estimates the distance of each 
-%                                       voxel to the surface
+%  Actions: 
+%  * Distance estimation:
+%    <a href="matlab:help cat_surf_fun>cat_surf_dist;">dist</a>    Estimate edge length of faces in S.
+%              D = cat_surf_fun('dist',S);    
+%    <a href="matlab:help cat_surf_fun>cat_surf_vdist;">vdist</a>   Estimate distance of each voxel to S.
+%              D = cat_surf_fun('vdist',S);    
+%    <a href="matlab:help cat_surf_fun>cat_surf_thickness;">tfs</a>     Estimate FreeSurfer thickness.
+%              T = cat_surf_fun('Tfs',S,varargin{1}); 
+%    <a href="matlab:help cat_surf_fun>cat_surf_thickness;">tmin</a>    Estimate minimum thickness.
+%              T = cat_surf_fun('Tmin',S,varargin{1}); 
+%    <a href="matlab:help cat_surf_fun>cat_surf_thickness;">tmax</a>    Estimate maximum thickness.
+%              T = cat_surf_fun('Tmax',S,varargin{1}); 
 %
-%   A   = cat_surf_fun('area',S);     % estimate surface area (faces)
+%  * Data mapping:
+%    <a href="matlab:help cat_surf_fun>cat_surf;">?</a>        Map face data to vertices. 
+%                     V = cat_surf_fun('?',S,F);   
+%    <a href="matlab:help cat_surf_fun>cat_surf_cdatamapping;">cdatamapping</a>   Map texture cdata from S2 to S1.
+%                     C = cat_surf_fun('cdatamapping',S1,S2,cdata[,opt]); 
+%    <a href="matlab:help cat_surf_fun>cat_surf_createEdgemap;">createEdgemap</a>  Creates mapping between two surfaces.  
+%                     edgemap = cat_surf_fun('createEdgemap',S1,S2);
+%    <a href="matlab:help cat_surf_fun>cat_surf_createEdgemap;">useEdgemap</a>     Apply mapping between two surfaces.  
+%                     cdata2 = cat_surf_fun('useEdgemap',cdata,edgemap);
 %
-% * Data mapping:
-%   V   = cat_surf_fun(S,F);          % map face data to vertices
-%   C   = cat_surf_fun('cdatamapping',S1,S2,cdata[,opt]); 
-%                                     % map texture cdata from S2 to S1.
+%  * Surface (data) rendering:
+%    <a href="matlab:help cat_surf_fun>cat_surf_surf2vol;">surf2vol</a> Render surface (data) to a volume. 
+%              V = cat_surf_fun('surf2vol',S,varargin{1}); 
 %
-% * Surface (data) rendering:
-%   V   = cat_surf_fun('surf2vol',S,varargin{1}); 
-%                                     % render surface (data) in a volume
+%  * Surface modification:
+%    <a href="matlab:help cat_surf_fun>cat_surf_hull;">hull</a>      Estimate hull surface. 
+%              HS = cat_surf_fun('hull',S);      
+%    <a href="matlab:help cat_surf_fun>cat_surf_core;">core</a>      Estimate core  surface.  
+%              HS  = cat_surf_fun('core',S);    
+%    <a href="matlab:help cat_surf_fun>cat_surf_createinneroutersurface;">inner</a>     Estimate inner surface.  
+%              IS  = cat_surf_fun('inner',S,T);  
+%    <a href="matlab:help cat_surf_fun>cat_surf_createinneroutersurface;">outer</a>     Estimate outer surface.  
+%              OS  = cat_surf_fun('outer',S,T);  
+%    <a href="matlab:help cat_surf_fun>cat_surf_saveICO;">saveICO</a>   Save multiple output surfaces & measures.  
+%              cat_surf_saveICO(S,T,Pcentral,subdir,writeTfs,C)
 %
-% * Surface modification:
-%   HS  = cat_surf_fun('hull',S);     % estimate hull  surface
-%   HS  = cat_surf_fun('core',S);     % estimate core  surface
-%   IS  = cat_surf_fun('inner',S,T);  % estimate inner surface
-%   OS  = cat_surf_fun('outer',S,T);  % estimate outer surface
+%  * Other functions:
+%    <a href="matlab:help cat_surf_fun>cat_suf_smoothtexture;">smoothcdata</a>   Smooth surface data.  
+%              
+% 
 %
-% * Surface modification 2:
-%   cat_surf_saveICO(S,T,Pcentral,subdir,writeTfs,C)
-%   Creates and save the white and pial surfaces based on the displacement 
-%   by the half thickness along the surface normals and use the white and 
-%   pial surfaces to create the layer4 surface.
-%   Saves also the thickness file "pbt" and "thickness".
+%  * Helping functions: 
+%    <a href="matlab:help cat_surf_fun>cat_surf_area;">area</a>    Estimate face surface area. 
+%              A = cat_surf_fun('area',S);  
+%    <a href="matlab:help cat_surf_fun>cat_surf_graph2edge;">graph2edge</a>    Extract edges of a triangulation T. 
+%              E = cat_surf_fun('graph2edge',T); 
 %
-% * Surface area mapping
-%   - Estimate nearest neighbor mapping between two surfaces S1 and S2
-%      edgemap = cat_surf_fun('createEdgemap',S1,S2);
-%   - Applay mapping 
-%      cdata2 = cat_surf_fun('useEdgemap',cdata,edgemap);
+%  * Test functions:
+%    <a href="matlab:help cat_surf_fun>cat_surf_createEdgemap;">cdatamappingtst</a> 
 %
-% * Other helping functions:
-%   E   = cat_surf_fun('graph2edge',T); % get edges of a triangulation T
-%
-% * Test functions
-%   'cdatamappingtst'
-%
-% ______________________________________________________________________
-% Robert Dahnke 
-% Structural Brain Mapping Group
-% University Jena
-% ______________________________________________________________________
+% See also spm_mesh_* functions.
+% _________________________________________________________________________
+% Robert Dahnke, 2016-2019
 % $Id$ 
+
+% See also spm_mesh_area, spm_mesh_borders,
+%   spm_mesh_calc, spm_mesh_clusters, spm_mesh_contour, spm_mesh_curvature,
+%   spm_mesh_detect, spm_mesh_distmtx, spm_mesh_edges, spm_mesh_euler, 
+%   spm_mesh_geodesic, spm_mesh_get_lm, spm_mesh_inflate, spm_mesh_join, 
+%   spm_mesh_label, spm_mesh_max, spm_mesh_neighbours, spm_mesh_normals, 
+%   spm_mesh_polyhedron, spm_mesh_project, spm_mesh_reduce, spm_mesh_refine
+%   spm_mesh_resels, spm_mesh_smooth, spm_mesh_sphere, spm_mesh_split, 
+%   spm_mesh_to_grid, spm_mesh_transform, spm_mesh_utils.
+%   spm_mesh_adjacency
 
 %#ok<*ASGLU,*AGROW>
 
   switch lower(action)
-    case {'dist','distance'}
+    case 'normals'
+      if nargin<2, help cat_surf_fun>cat_surf_normals; return; end
+      varargout{1} = cat_surf_normals(S); 
+    
+    case 'dist'
       if nargin<2, help cat_surf_fun>cat_surf_dist; return; end
       varargout{1} = cat_surf_dist(S);
       
@@ -173,7 +201,7 @@ function varargout = cat_surf_fun(action,S,varargin)
       [varargout{1},varargout{2}] = cat_surf_vdist(S,varargin);
     
     case 'surf2vol'
-    % render surface (data) into volume space
+    % Render surface (data) into volume space. See also spm_mesh_to_grid. 
       if nargin<2, help cat_surf_fun>show_orthview; return; end
       if nargin>2
         [varargout{1},varargout{2},varargout{3}] = cat_surf_surf2vol(S,varargin{:});
@@ -182,7 +210,7 @@ function varargout = cat_surf_fun(action,S,varargin)
       end
       
     case 'smat'
-    % applay matrix transformation 
+    % Apply matrix transformation. See also spm_mesh_transform.
       if nargin<2, help cat_surf_fun>cat_surf_mat; return; end
       varargout{1} = cat_surf_mat(S,varargin{:});
     
@@ -225,10 +253,10 @@ function varargout = cat_surf_fun(action,S,varargin)
       end
       
     case 'isocolors'
-    % similar to MATLAB isocolor function but faster and support to use mat
-    % files
+    % Similar to MATLAB isocolor function but faster and support to use mat
+    % files. See also spm_mesh_project. 
       if nargin<2, help cat_surf_fun>isocolors2; return; end
-      varargout{1} = isocolors2(S,varargin{:});
+      varargout{1} = cat_surf_isocolors2(S,varargin{:});
     
     otherwise
       error('Unknow action "%s"! Check "help cat_surf_fun".\n',action); 
@@ -1034,8 +1062,8 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
   %  Here we have to use the Layer 4 rather than the central surface.
   %  All values will depend on age!
   if exist('Ym','var')
-    II = isocolors2(Ym,VI,mat);  
-    IO = isocolors2(Ym,VO,mat); 
+    II = cat_surf_isocolors2(Ym,VI,mat);  
+    IO = cat_surf_isocolors2(Ym,VO,mat); 
     % local adaption for GM intensity changes by myelination 
     IIs = single(spm_mesh_smooth(M,double(II),round(100 * sqrt(size(CS.faces,1)/180000)))); 
     IOs = single(spm_mesh_smooth(M,double(II),round(100 * sqrt(size(CS.faces,1)/180000)))); 
@@ -1046,7 +1074,7 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
     
     if uL4
       ML  = spm_mesh_smooth(L4);    % smoothing matrix
-      IC  = isocolors2(Ym,L4,mat);  
+      IC  = cat_surf_isocolors2(Ym,L4,mat);  
       ICs = single(spm_mesh_smooth(ML,double(IC),round(100 * sqrt(size(CS.faces,1)/180000)))); 
       IC  = IC./(ICs/mean(ICs)) - mean(ICs); clear ICs;
     end
@@ -1079,9 +1107,9 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
   %  Here we can of course use the central surface
   %  This will be relative age independent.
   if exist('Ypp','var')
-    II = isocolors2(Ypp,VI,mat);          
-    IC = isocolors2(Ypp,CS,mat); 
-    IO = isocolors2(Ypp,VO,mat);         
+    II = cat_surf_isocolors2(Ypp,VI,mat);          
+    IC = cat_surf_isocolors2(Ypp,CS,mat); 
+    IO = cat_surf_isocolors2(Ypp,VO,mat);         
     II = II - 1.0;
     IC = IC - 0.5;
     IO = IO - 0.0;
@@ -1349,8 +1377,8 @@ function cat_surf_saveICO(S,Tpbt,Pcs,subdir,Pm,mat,writeTfs,writeSI,writeL4,writ
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
     end
   elseif ndims(Pm)==3
-    int = isocolors2(Pm,VO,mat); cat_io_FreeSurfer('write_surf_data',PintOS,int);
-    int = isocolors2(Pm,VI,mat); cat_io_FreeSurfer('write_surf_data',PintIS,int);
+    int = cat_surf_isocolors2(Pm,VO,mat); cat_io_FreeSurfer('write_surf_data',PintOS,int);
+    int = cat_surf_isocolors2(Pm,VI,mat); cat_io_FreeSurfer('write_surf_data',PintIS,int);
     if writeL4
       % use a given volume 
       SL = gifti(Player4);
@@ -1360,7 +1388,7 @@ function cat_surf_saveICO(S,Tpbt,Pcs,subdir,Pm,mat,writeTfs,writeSI,writeL4,writ
       %if S.mati(7)<0,  SL.faces = [SL.faces(:,1) SL.faces(:,3) SL.faces(:,2)]; end
       %VL = SL.vertices;
 
-      int = isocolors2(Pm,SL,mat); cat_io_FreeSurfer('write_surf_data',PintL4,int);
+      int = cat_surf_isocolors2(Pm,SL,mat); cat_io_FreeSurfer('write_surf_data',PintL4,int);
     end
 
     % define filename (same block as above)
@@ -1438,11 +1466,11 @@ function Sg = cat_surf_volgrad(varargin)
   V2  = V + N*d;
   
   if exist('mat','var')
-    Si1 = isocolors2(Y,V1,mat);
-    Si2 = isocolors2(Y,V2,mat);
+    Si1 = cat_surf_isocolors2(Y,V1,mat);
+    Si2 = cat_surf_isocolors2(Y,V2,mat);
   else
-    Si1 = isocolors2(Y,V1);
-    Si2 = isocolors2(Y,V2);
+    Si1 = cat_surf_isocolors2(Y,V1);
+    Si2 = cat_surf_isocolors2(Y,V2);
   end
   
   Sg  = Si1 - Si2; 
@@ -1761,9 +1789,9 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
     % if the gradients point in totally other directions that we had 
     % crossed an anatomical border and have an self intersection
     opt.alphaYpp = 20; % max(5 , min(30, 15 / T ))';
-    selfp = ( spm_mesh_smooth( M , double( angle( Vg , VOg )) ,1 ) > opt.alphaYpp ); % | (T>2 & angle( VIg , VOg ) > opt.alphaYpp*2 ); 
+    selfp = ( spm_mesh_smooth( M , double( cat_surf_edgeangle( Vg , VOg )) ,1 ) > opt.alphaYpp ); % | (T>2 & angle( VIg , VOg ) > opt.alphaYpp*2 ); 
     %selfc = ( spm_mesh_smooth( M , double( angle( Vg , N   )) ,1 ) > opt.alphaYpp ); % | (T>2 & angle( VIg , VOg ) > opt.alphaYpp*2 ); 
-    selfw = ( spm_mesh_smooth( M , double( angle( Vg , VIg )) ,1 ) > opt.alphaYpp );
+    selfw = ( spm_mesh_smooth( M , double( cat_surf_edgeangle( Vg , VIg )) ,1 ) > opt.alphaYpp );
     
     % correction scheme that based on the original thickness
     % selfo self direction
@@ -1785,8 +1813,8 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
       
       if opt.optmod == 3
         % intensity model based on the Ym
-        YI = isocolors2(Y,VI,opt.mat);
-        YO = isocolors2(Y,VO,opt.mat);
+        YI = cat_surf_isocolors2(Y,VI,opt.mat);
+        YO = cat_surf_isocolors2(Y,VO,opt.mat);
 
         if opt.verb, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),char(177),std(YI),mean(YO),char(177),std(YO)); end 
       
@@ -1799,8 +1827,8 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
         YO = max(-1, min(1, ( YO - CGth ) * max(0.05,0.2 .* (1 - i / opt.iteropt) ) ));
       elseif opt.optmod == 2
         % intensity model based on the Ym
-        YI = isocolors2(Ypp,VI,opt.mat); YI = isocolors2(Y,VI,opt.mat) + YI - (YI>eps) .* 0.95; 
-        YO = isocolors2(Ypp,VO,opt.mat); YO = isocolors2(Y,VO,opt.mat) + YO - (YO>eps) .* 0.05;  
+        YI = cat_surf_isocolors2(Ypp,VI,opt.mat); YI = cat_surf_isocolors2(Y,VI,opt.mat) + YI - (YI>eps) .* 0.95; 
+        YO = cat_surf_isocolors2(Ypp,VO,opt.mat); YO = cat_surf_isocolors2(Y,VO,opt.mat) + YO - (YO>eps) .* 0.05;  
 
         if opt.verb, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),char(177),std(YI),mean(YO),char(177),std(YO)); end 
       
@@ -1816,8 +1844,8 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
         CGth = 0.02;
         
         % position model based on the Ypp
-        YI = isocolors2(Ypp,VI,opt.mat); 
-        YO = isocolors2(Ypp,VO,opt.mat);  
+        YI = cat_surf_isocolors2(Ypp,VI,opt.mat); 
+        YO = cat_surf_isocolors2(Ypp,VO,opt.mat);  
 
         if 1+opt.verb>1, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),char(177),std(YI),mean(YO),char(177),std(YO)); end 
 
@@ -1831,37 +1859,37 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
       VOC   = S.vertices - N .* repmat( Tp - (Tpc - YO) ,1,3);    % outer surface 
       
       if opt.optmod == 3
-        YIC   = isocolors2(Y,VIC,opt.mat);
-        YOC   = isocolors2(Y,VOC,opt.mat);  
+        YIC   = cat_surf_isocolors2(Y,VIC,opt.mat);
+        YOC   = cat_surf_isocolors2(Y,VOC,opt.mat);  
       elseif opt.optmod == 2   
-        YIC = isocolors2(Ypp,VIC,opt.mat); YIC = isocolors2(Y,VIC,opt.mat) + YIC - (YIC>eps) .* 0.95; 
-        YOC = isocolors2(Ypp,VOC,opt.mat); YOC = isocolors2(Y,VOC,opt.mat) + YOC - (YOC>eps) .* 0.05;  
+        YIC = cat_surf_isocolors2(Ypp,VIC,opt.mat); YIC = cat_surf_isocolors2(Y,VIC,opt.mat) + YIC - (YIC>eps) .* 0.95; 
+        YOC = cat_surf_isocolors2(Ypp,VOC,opt.mat); YOC = cat_surf_isocolors2(Y,VOC,opt.mat) + YOC - (YOC>eps) .* 0.05;  
       else
-        YIC   = isocolors2(Ypp,VIC,opt.mat);
-        YOC   = isocolors2(Ypp,VOC,opt.mat);  
+        YIC   = cat_surf_isocolors2(Ypp,VIC,opt.mat);
+        YOC   = cat_surf_isocolors2(Ypp,VOC,opt.mat);  
       end
       
-      YppI  = isocolors2(Ypp,VI,opt.mat);
-      YppIC = isocolors2(Ypp,VIC,opt.mat);  
+      YppI  = cat_surf_isocolors2(Ypp,VI,opt.mat);
+      YppIC = cat_surf_isocolors2(Ypp,VIC,opt.mat);  
       VIg   = cat_surf_volgrad(VIC,N,Ypp,opt.mat);
       YI    = YI .* ( Twc==0 & ...
         abs( GWth - YI ) > abs( GWth - YIC )  & ...
-        angle( Vg , VIg ) < opt.alphaYpp & ...
+        cat_surf_edgeangle( Vg , VIg ) < opt.alphaYpp & ...
         ( YppIC > YppI | YppI>0.98) & (YppIC<0.98 | YIC<2.9) & YIC<2.95 ); % 0.98 & 2.9
       clear YppIC YIC YppI VIg; 
       
       % test new outer surface position
-      YppO  = isocolors2(Ypp,VO,opt.mat);  
-      YppOC = isocolors2(Ypp,VOC,opt.mat);  
+      YppO  = cat_surf_isocolors2(Ypp,VO,opt.mat);  
+      YppOC = cat_surf_isocolors2(Ypp,VOC,opt.mat);  
       VOg   = cat_surf_volgrad(VOC,N,Ypp,opt.mat);
       if opt.optmod 
         YO  = YO .* YppOC .* ( Tpc==0 & ...
           abs( YO - CGth ) > abs( YOC - CGth ) & ...
-          angle( Vg , VOg ) < opt.alphaYpp & ...
+          cat_surf_edgeangle( Vg , VOg ) < opt.alphaYpp & ...
           YppOC < YppO & YppOC>0.02 & YOC>1.50); % 0.01 & 1.5 
       else
         YO  = YO .* (0.5+0.5*YppOC) .* ( Tpc==0 & ...
-          angle( Vg , VOg ) < opt.alphaYpp & ...
+          cat_surf_edgeangle( Vg , VOg ) < opt.alphaYpp & ...
           YppOC>0.02 );
       end
       clear YppOC YOC YppO VOg; 
@@ -1906,7 +1934,7 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
       E    = spm_mesh_edges(S);
       V    = S.vertices;
 
-      VCOA = angle( V(E(:,1),:) - V(E(:,2),:) , VOC(E(:,1),:) - VOC(E(:,2),:) ); 
+      VCOA = cat_surf_edgeangle( V(E(:,1),:) - V(E(:,2),:) , VOC(E(:,1),:) - VOC(E(:,2),:) ); 
       VCOC = VOC(E(VCOA>fa,1),:)/2 + VOC(E(VCOA>fa,2),:)/2; 
       VOC(E(VCOA>fa,1),:) = VCOC; VOC(E(VCOA>fa,2),:) = VCOC; clear VCOC;
       VTPO = T*0; VTPO(E(VCOA>fa,1)) = 1; VTPO(E(VCOA>fa,2)) = 1; clear VCOA;
@@ -1915,7 +1943,7 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
       clear VCOC VTPM;
 
       
-      VCIA = angle( V(E(:,1),:) - V(E(:,2),:) , VIC(E(:,1),:) - VIC(E(:,2),:) ); 
+      VCIA = cat_surf_edgeangle( V(E(:,1),:) - V(E(:,2),:) , VIC(E(:,1),:) - VIC(E(:,2),:) ); 
       VCIC = VIC(E(VCIA>fa,1),:)/2 + VIC(E(VCIA>fa,2),:)/2; 
       VIC(E(VCIA>fa,1),:) = VCIC; VIC(E(VCIA>fa,2),:) = VCIC; clear VCIC;
       VTPI = T*0; VTPI(E(VCIA>fa,1)) = 1; VTPI(E(VCIA>fa,2)) = 1; clear VCIA;
@@ -2094,8 +2122,8 @@ function [SN,TN,E] = cat_surf_collision_correction(S,T,Y,Ypp,Yl4,opt)
   N   = spm_mesh_normals(S);   
   VOl = S.vertices(lim,:) - N(lim,:) .* repmat(T(lim)/2,1,3); 
   VIl = S.vertices(lim,:) + N(lim,:) .* repmat(T(lim)/2,1,3); 
-  YOl = isocolors2(Y,VOl); 
-  YIl = isocolors2(Y,VIl); 
+  YOl = cat_surf_isocolors2(Y,VOl); 
+  YIl = cat_surf_isocolors2(Y,VIl); 
   flipped = mean(YOl) > mean(YIl); 
   clear N VOl VIl YOl YIl lim; 
   if flipped, S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); end
@@ -2255,31 +2283,31 @@ function [SN,TN,E] = cat_surf_collision_correction(S,T,Y,Ypp,Yl4,opt)
         % 
         N  = spm_mesh_normals(S);                 
         NS = N; for i=1:80*sf, NSS = smoothsurf(NS,1); NM = rms(NS - NSS)<0.5; NS(NM,:) = NSS(NM,:); end 
-        Nalpha  = [angle(NS(E(:,1),:), NS(E(:,2),:)), ...
-                   angle(NS(E(:,2),:), NS(E(:,1),:))]; clear NS
-        SNalpha = [angle(N(E(:,1),:),  V(E(:,1),:) - V(E(:,2),:)), ...
-                   angle(N(E(:,2),:),  V(E(:,2),:) - V(E(:,1),:))]; 
+        Nalpha  = [cat_surf_edgeangle(NS(E(:,1),:), NS(E(:,2),:)), ...
+                   cat_surf_edgeangle(NS(E(:,2),:), NS(E(:,1),:))]; clear NS
+        SNalpha = [cat_surf_edgeangle(N(E(:,1),:),  V(E(:,1),:) - V(E(:,2),:)), ...
+                   cat_surf_edgeangle(N(E(:,2),:),  V(E(:,2),:) - V(E(:,1),:))]; 
         NEna    = mean(Nalpha/180,2); clear Nalpha                       % figure, hist( NEna , 0:0.01:1);
         NEsa    = (abs(90  - SNalpha)/90  + abs(90  - SNalpha)/90)/2;    % figure, hist( NEsa , 0:0.01:1);
         clear SNalpha; 
 
         % remove by intensity given by the centroids of the edges
         VC  = cat_surf_centroid(V,E); 
-        IC  = isocolors2(Y,VC); clear VC;
+        IC  = cat_surf_isocolors2(Y,VC); clear VC;
         % outer surface intensity
         VO  = V - N .* repmat(T/2,1,3); 
         VOC = cat_surf_centroid(VO,E); 
-        IO  = isocolors2(Y,VOC); clear VOC VO; 
+        IO  = cat_surf_isocolors2(Y,VOC); clear VOC VO; 
         % inner surface intensity
         VI  = V + N .* repmat(T/2,1,3) + 0.1; % GM/WM  
         VIC = cat_surf_centroid(VI,E); 
-        II  = isocolors2(Y,VIC); clear VIC VI; 
+        II  = cat_surf_isocolors2(Y,VIC); clear VIC VI; 
         VI  = V + N .* repmat(T/2,1,3) + 0.5; % save WM  
         VIC = cat_surf_centroid(VI,E); 
-        II  = max(II,isocolors2(Y,VIC)); clear VIC VI; % use max to get WM value 
+        II  = max(II,cat_surf_isocolors2(Y,VIC)); clear VIC VI; % use max to get WM value 
         VI  = V + N .* repmat(T/2,1,3) + 1.0; % supersave WM  
         VIC = cat_surf_centroid(VI,E); 
-        II  = max(II,isocolors2(Y,VIC)); clear VIC VI; % use max to get WM value 
+        II  = max(II,cat_surf_isocolors2(Y,VIC)); clear VIC VI; % use max to get WM value 
         % combine all intensities 
         NEi = 1 - min(1,max(abs(diff([II IC IO],1,2)),[],2)); 
         %ET  = mean([II IC IO],2)>2.25; % edge classification 
@@ -2312,8 +2340,8 @@ function [SN,TN,E] = cat_surf_collision_correction(S,T,Y,Ypp,Yl4,opt)
   end
   
   %% updated measures
-  SNalpha = [angle(N(E(:,1),:),  V(E(:,1),:) - V(E(:,2),:)), ...
-             angle(N(E(:,2),:),  V(E(:,2),:) - V(E(:,1),:))]; 
+  SNalpha = [cat_surf_edgeangle(N(E(:,1),:),  V(E(:,1),:) - V(E(:,2),:)), ...
+             cat_surf_edgeangle(N(E(:,2),:),  V(E(:,2),:) - V(E(:,1),:))]; 
 
   VC  = cat_surf_centroid(V,E); 
   IC  = isocolors(Y,VC); clear VC;
@@ -2542,9 +2570,9 @@ opt.model=0;
       TICP  = single( spm_mesh_smooth(M,double(TICP), 1 ))*0.8;
 
       % correction for intensities ...
-      YI    = isocolors2(Y,VI); 
-      YO    = isocolors2(Y,VO);  
-      YppO  = isocolors2(Ypp,VO);  
+      YI    = cat_surf_isocolors2(Y,VI); 
+      YO    = cat_surf_isocolors2(Y,VO);  
+      YppO  = cat_surf_isocolors2(Ypp,VO);  
      
       if opt.model == 1, fprintf('\n'); end
       if opt.verb, fprintf('  YIC: %0.2f%s%0.2f, YOC: %0.2f%s%0.2f',mean(YI),char(177),std(YI),mean(YO),char(177),std(YO)); end 
@@ -2566,9 +2594,9 @@ opt.model=0;
       VOC = V - N .* repmat( TN/2 - YO ,1,3);    % outer surface 
       VIC = V + N .* repmat( TN/2 - YI ,1,3);    % inner surface
 
-      YIC   = isocolors2(Y,VIC); 
-      YOC   = isocolors2(Y,VOC);  
-      YppOC = isocolors2(Ypp,VOC);  
+      YIC   = cat_surf_isocolors2(Y,VIC); 
+      YOC   = cat_surf_isocolors2(Y,VOC);  
+      YppOC = cat_surf_isocolors2(Ypp,VOC);  
 
       YI = YI .* ( abs(YI - (WMth/2 + Yl4/2))  > abs(YIC - (WMth/2 + Yl4/2)));
       YO = YO .* ( abs((CSFth/2 + Yl4/2) - YO) > abs((CSFth/2 + Yl4/2) - YOC) & YppOC>0);
@@ -3234,8 +3262,8 @@ function [Yp,Yt,vmat1,vmat1i] = cat_surf_surf2vol(S,Y,T,type,opt)
 
         % values
         rms = @(x) mean( x.^2 ) .^ 0.5;   
-        Tgmt = isocolors2(Ygmt, ([0 1 0; 1 0 0; 0 0 1] *  [eye(3) vmat1'] * [S.vertices';ones(1,size(S.vertices,1))] )' );
-        Tpbt = isocolors2(Ypbt, ([0 1 0; 1 0 0; 0 0 1] *  [eye(3) vmat1'] * [S.vertices';ones(1,size(S.vertices,1))] )' );
+        Tgmt = cat_surf_isocolors2(Ygmt, ([0 1 0; 1 0 0; 0 0 1] *  [eye(3) vmat1'] * [S.vertices';ones(1,size(S.vertices,1))] )' );
+        Tpbt = cat_surf_isocolors2(Ypbt, ([0 1 0; 1 0 0; 0 0 1] *  [eye(3) vmat1'] * [S.vertices';ones(1,size(S.vertices,1))] )' );
         
         fprintf('\n  T_surf:    %0.2f%s%0.2f (md=%0.2f)\n',mean(T),char(177),std(T),median(T));
         fprintf('  T_direct:  %0.2f%s%0.2f (md=%0.2f, RMSE=%0.2f)\n',...
@@ -3461,12 +3489,18 @@ function [V,vmat,vmati] = cat_surf_surf2vol_old(S,opt)
   %SH.vertices = [SH.vertices(:,2) SH.vertices(:,1) SH.vertices(:,3)]; % matlab flip
   %SH.vertices = SH.vertices + repmat(min(S.vertices),size(SH.vertices,1),1) - 5;
 end
-function alpha = angle(N1,N2)
+function alpha = cat_surf_edgeangle(N1,N2)
+%cat_surf_fun>cat_surf_edgeangle Estimate angle between two vectors. 
+%
+%  alpha = cat_surf_edgeangle(N1,N2)
+%  ________________________________________________________________________
+%  Robert Dahnke 201909
+
   if 1 % fast version
     alpha = acosd( dot(N1,N2,2) ./ ( sum(N1.^2,2).^.5 .* sum(N2.^2,2).^.5 ));
   else
     %%
-    alpha = zeros(size(N1,1),1);
+    alpha = zeros(size(N1,1),1,'single');
     for i=1:size(N1,1)
       a = N1(i,:); b = N2(i,:); 
       alpha(i) = acosd( dot(a,b) / (norm(a) * norm(b)) ); 
@@ -3474,33 +3508,43 @@ function alpha = angle(N1,N2)
   end
 end
 
-function N = patchnormals(FV) % 
-% Vertex normals of a triangulated mesh, area weighted, left-hand-rule 
-% N = patchnormals(FV) - struct with fields, faces Nx3 and vertices Mx3 
-% N: vertex normals as Mx3
+function N = cat_surf_normals(S) 
+%cat_surf_normals Surface normals. 
+%  Vertex normals of a triangulated mesh, area weighted, left-hand-rule 
+%  N = patchnormals(FV) - struct with fields, faces Nx3 and vertices Mx3 
+%  N: vertex normals as Mx3
 %
-% https://de.mathworks.com/matlabcentral/fileexchange/24330-patch-normals
-% by Dirk-Jan Kroon
+%  https://de.mathworks.com/matlabcentral/fileexchange/24330-patch-normals
+%  by Dirk-Jan Kroon
+%
+%  See also spm_mesh_normals.
+%  ________________________________________________________________________
+%  Dirk-Jan Kroon, Robert Dahnke, 2019
 
-  %face corners index 
-  A = FV.faces(:,1); 
-  B = FV.faces(:,2); 
-  C = FV.faces(:,3);
+%  Well, I now use spm_mesh_normals, but maybe we need it some day.
 
-  %face normals 
-  n = cross(FV.vertices(A,:)-FV.vertices(B,:),FV.vertices(C,:)-FV.vertices(A,:)); %area weighted
+  % face corners index 
+  A = S.faces(:,1); 
+  B = S.faces(:,2); 
+  C = S.faces(:,3);
 
-  %vertice normals 
-  N = zeros(size(FV.vertices)); %init vertex normals 
-  for i = 1:size(FV.faces,1) %step through faces (a vertex can be reference any number of times) 
-    N(A(i),:) = N(A(i),:) + n(i,:); %sum face normals 
+  % face normals 
+  n = cross(S.vertices(A,:)-S.vertices(B,:),S.vertices(C,:)-S.vertices(A,:)); %area weighted
+
+  % vertice normals 
+  N = zeros(size(S.vertices));      % init vertex normals 
+  for i = 1:size(S.faces,1)         % step through faces (a vertex can be reference any number of times) 
+    N(A(i),:) = N(A(i),:) + n(i,:); % sum face normals 
     N(B(i),:) = N(B(i),:) + n(i,:); 
     N(C(i),:) = N(C(i),:) + n(i,:); 
   end
+  
+  % normalize
+  Ns = sum(N,2);
+  N  = N ./ repmat(Ns,1,3); 
 end
 function S = cat_surf_mat(S,mat,invers,nin)
-%  cat_surf_fun('smat'): cat_surf_fun>cat_surf_mat
-%  ------------------------------------------------------------------------
+%cat_surf_fun>cat_surf_mat 
 %  Apply transformation matrix mat to a surface structure S. 
 %
 %  S = cat_surf_fun('smat',S,mat[,inv,nin])
@@ -3513,6 +3557,8 @@ function S = cat_surf_mat(S,mat,invers,nin)
 %  nin      .. set normal direction pointing to the inside (default = 1)
 %
 %  Used in cat_surf_createCS.
+%  
+%  See also spm_mesh_transform.
 %  ------------------------------------------------------------------------
 %  Robert Dahnke 201911
 
@@ -3521,7 +3567,7 @@ function S = cat_surf_mat(S,mat,invers,nin)
   if ~exist('mat','var'), error('cat_surf_fun:cat_surf_mat:incompleteInput','Need transformation matrix as input!'); end 
 
   if ~isempty(mat)
-    if isnumeric(S);
+    if isnumeric(S)
       % only vertices
       if invers
         S          = ( inv( mat ) * [S' ; ones(1,size(S,1))])'; 
@@ -3549,18 +3595,22 @@ function S = cat_surf_mat(S,mat,invers,nin)
     if ( nin && ~CSnin ) ||  ( ~nin && CSnin )
       S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; 
     end
-  %else
-  %  if nin, error('cat_surf_fun:cat_surf_mat:setNormals','Can only set normals if a surface structure is given!\n'); end
   end
 end
-function I = isocolors2(V,Y,mat,interp)
-% ______________________________________________________________________
-% calculates an interpolated value of a vertex in R  
-% We have to calculate everything with double, thus larger images will 
-% cause memory issues.
-% ______________________________________________________________________
-  
-  %global mati
+function I = cat_surf_isocolors2(V,Y,mat,interp)
+%cat_surf_fun>cat_surf_isocolors2 Map volume data to surface.
+%  Calculates an interpolated value of a vertex V in Y.  
+%
+%  I = cat_surf_isocolors2(V,Y,mat,interp)
+% 
+%  I      .. facevertexcdata
+%  V      .. vertices or surface struct
+%  mat    .. transformation matrix
+%  interp .. interpolation type ('nearest','linear)
+%
+%  See also isocolors, spm_mesh_project.
+%  _____________________________________________________________________
+%  Robert Dahnke, 2009-2019
   
   if isempty(Y), return; end
   if ~isnumeric(V) && isfield(V,'vertices'), V = V.vertices; end 
@@ -3568,17 +3618,7 @@ function I = isocolors2(V,Y,mat,interp)
   if ~ismatrix(V) && ndims(Y)~=3, VR = Y; Y = V; V = VR; end; clear VR % flip
   if ndims(Y)~=3,  error('MATLAB:isocolor2:dimsY','Only 2 or 3 dimensional input of Y.'); end
   if ~exist('interp','var'); interp = 'linear'; end 
-%  if ~exist('opt','var'), opt=struct(); end
   
-  %def.interpBB = struct('BB',[],'interpV',1);
-  %def.interp   = 'linear';
-  %def.mati     = []; 
- % def.mat      = []; 
- % opt = cat_io_checkinopt(opt,def);
-  %if isfield(opt,'BB'),       opt.interpBB.BB      = opt.BB; end
-  %if isfield(opt,'interpV'),  opt.interpBB.interpV = opt.interpV; end
-  
-  %if ~isempty(opt.mati) && ~isempty(mati), mymati = opt.mati; else mymati = mati; end
   if isa(V,'double'), V = single(V); end
   if isnumeric(Y)
     if ~isa(Y,'double')
@@ -3592,15 +3632,7 @@ function I = isocolors2(V,Y,mat,interp)
     Y    = single(Ygii.vertices); 
     YD   = 0; 
   end
-  
-  
-  % CS.vertices = CS.vertices .* repmat(abs(opt.interpV ./ mati([8,7,9])),size(CS.vertices,1),1);
-  % CS.vertices = CS.vertices +  repmat( BB.BB([3,1,5]) - 1,size(CS.vertices,1),1);
-  %if ~isempty(mymati) && ~isempty(opt.interpBB.BB)
-  %  V = V - repmat( (opt.interpBB.BB([3,1,5]) - 1) .* mymati([8,7,9]) ,size(V,1),1);            % correction for boundary box 
-   % V = V ./ (repmat(abs(opt.interpBB.interpV ./ mymati([8,7,9])),size(V,1),1));   % resolution adaption
-  %end
-  
+
   
   % inverse transformation of the given mat
   if exist('mat','var') && ~isempty(mat)
@@ -3608,10 +3640,11 @@ function I = isocolors2(V,Y,mat,interp)
   end
   
   
-  
   nV   = size(V,1);
   ndim = size(V,2);
+ 
   
+  % We have to process everything with double, thus larger images will cause memory issues.
   switch interp
     case 'nearest'
       V = max(1,min(round(V),repmat(size(Y),nV,1))); 

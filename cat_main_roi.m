@@ -195,26 +195,31 @@ function wYv = cat_vol_ROInorm(Yv,warped,ai,mod,FA)
         [wYv,w] = spm_diffeo('push',Yv,warped.y,warped.odim(1:3)); spm_field('boundary',1);
         wYv = spm_field(w,wYv,[sqrt(sum(warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]);
       elseif any( vx_vol_Vdef > vx_vol_Vlai*2)
-        %% increase resolution
-        fc   = ceil(vx_vol_Vdef / vx_vol_Vlai);
-        ddim = (size(warped.y)-1)*fc+1; ddim(4)=[]; 
-        eyev = eye(4); eyev(1:end-1) = eyev(1:end-1) * 1/fc;
-        Yy   = zeros([ddim 3],'single');                        
-        for k1=1:3
-          for i=1:ddim(3),
-            Yy(:,:,i,k1) = single(spm_slice_vol(warped.y(:,:,:,k1),eyev*spm_matrix([0 0 i]),ddim(1:2),[1,NaN])); % adapt for res
+        try
+          %% increase resolution - this caused many memory error messages (RD201911) 
+          fc   = ceil(vx_vol_Vdef / vx_vol_Vlai);
+          ddim = (size(warped.y)-1)*fc+1; ddim(4)=[]; 
+          eyev = eye(4); eyev(1:end-1) = eyev(1:end-1) * 1/fc;
+          Yy   = zeros([ddim 3],'single');                        
+          for k1=1:3
+            for i=1:ddim(3),
+              Yy(:,:,i,k1) = single(spm_slice_vol(warped.y(:,:,:,k1),eyev*spm_matrix([0 0 i]),ddim(1:2),[1,NaN])); % adapt for res
+            end
           end
+          Yvi  = zeros(ddim,'single'); 
+          for i=1:ddim(3),
+            Yvi(:,:,i) = single(spm_slice_vol(Yv(:,:,:),eyev*spm_matrix([0 0 i]),ddim(1:2),[1,NaN])); % adapt for res
+          end
+
+          [wYv,w]  = spm_diffeo('push',Yvi,Yy,warped.odim(1:3));
+          % divide by jacdet to get unmodulated data
+          wYv = wYv./(w+0.001); 
+        catch
+          cat_io_cprintf('warn','\n  Possible memory problems use default push operation.'); 
+          [wYv,w]  = spm_diffeo('push',Yv,warped.y,warped.odim(1:3));
+          % divide by jacdet to get unmodulated data
+          wYv = wYv./(w+0.001); 
         end
-        Yvi  = zeros(ddim,'single'); 
-        for i=1:ddim(3),
-          Yvi(:,:,i) = single(spm_slice_vol(Yv(:,:,:),eyev*spm_matrix([0 0 i]),ddim(1:2),[1,NaN])); % adapt for res
-        end
-        
-        [wYv,w]  = spm_diffeo('push',Yvi,Yy,warped.odim(1:3));
-        % divide by jacdet to get unmodulated data
-        wYv = wYv./(w+0.001); 
-        
-       
       else      
         [wYv,w]  = spm_diffeo('push',Yv,warped.y,warped.odim(1:3));
         % divide by jacdet to get unmodulated data
