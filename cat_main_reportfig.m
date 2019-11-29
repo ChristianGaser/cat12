@@ -404,13 +404,13 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   % make SPM colorbar invisible (cannot delete it because SPM orthviews need it later)  
     %st.vols{3}.blobs{1}.cbar.Visible    = 'off';
     warning('off','MATLAB:warn_r14_stucture_assignment');
-    set(st.vols{3}.blobs{1}.cbar.YTick, ytickp0/30);
-    set(st.vols{3}.blobs{1}.cbar.XTick, []);
-    set(st.vols{3}.blobs{1}.cbar.YTickLabel, yticklabelp0);
-    set(st.vols{3}.blobs{1}.cbar.XTickLabel, {});
-    set(st.vols{3}.blobs{1}.cbar.YAxisLocation, 'right');
-    set(st.vols{3}.blobs{1}.cbar.Position, [pos(3,1) + 0.26 0.02 0.02 0.15]); 
-    set(st.vols{3}.blobs{1}, rmfield(st.vols{3}.blobs{1},'cbar')); % remove handle to avoid position updates
+    set(st.vols{3}.blobs{1}.cbar,'YTick', ytickp0/30);
+    set(st.vols{3}.blobs{1}.cbar,'XTick', []);
+    set(st.vols{3}.blobs{1}.cbar,'YTickLabel', yticklabelp0);
+    set(st.vols{3}.blobs{1}.cbar,'XTickLabel', {});
+    set(st.vols{3}.blobs{1}.cbar,'YAxisLocation', 'right');
+    set(st.vols{3}.blobs{1}.cbar,'Position', [pos(3,1) + 0.26 0.02 0.02 0.15]); 
+    st.vols{3}.blobs{1} = rmfield(st.vols{3}.blobs{1},'cbar'); % remove handle to avoid position updates
   else
     cc{3} = axes('Position',[pos(3,1) + 0.26 0.02 0.02 0.15],'Parent',fg);
     image((60:-1:1)','Parent',cc{3});
