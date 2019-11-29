@@ -1,4 +1,4 @@
-function varargout = cat_conf_long(varargin)
+function varargout = cat_conf_long1445(varargin)
 % Configuration file for longitudinal data
 %
 % Christian Gaser
