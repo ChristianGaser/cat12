@@ -1,4 +1,4 @@
-function opts = cat_conf_opts(expert)
+function opts = cat_conf_opts1445(expert)
 % Configuration file for CAT SPM options
 %
 % Christian Gaser
