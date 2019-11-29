@@ -469,7 +469,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       %% TPM legend
       ccl = axes('Position',[pos(1,1:2) 0 0] + [0.35 0 0.02 0.08],'Parent',fg);
       cclp = plot(ccl,([0 0.4;0.6 1])',[0 0; 0 0],'b-'); 
-      text(1.2,0,['Brain and skull',native2unicode (10 'latin1'),'overlay from affine',native2unicode (10 'latin1'),'registered TPM'],...
+      text(1.2,0,['Brain and skull',native2unicode(10,'latin1'),'overlay from affine',native2unicode(10,'latin1'),'registered TPM'],...
           'Parent',ccl,'Fontsize',fontsize-2);
       set(cclp,'LineWidth',0.75); axis(ccl,'off')
     end

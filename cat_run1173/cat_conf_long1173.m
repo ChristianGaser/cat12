@@ -1,4 +1,4 @@
-function long = cat_conf_long
+function long = cat_conf_long1173
 % Configuration file for longitudinal data
 %
 % Christian Gaser

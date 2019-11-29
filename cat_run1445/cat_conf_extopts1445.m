@@ -1,4 +1,4 @@
-function extopts = cat_conf_extopts(expert,spm)
+function extopts = cat_conf_extopts1445(expert,spm)
 % Configuration file for extended CAT options
 %
 % Christian Gaser
