@@ -20,7 +20,7 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ywmdc] = cat_vol_pbt2(Ymf,opt)
 %              (added 201908)
 % ______________________________________________________________________
 %
-%   Dahnke, R; Yotter R; Gaser C.
+%   Dahnke, R; Yotter R; Gaser C. 
 %   Cortical thickness and central surface estimation.
 %   NeuroImage 65 (2013) 226-248.
 % ______________________________________________________________________
@@ -32,11 +32,11 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ywmdc] = cat_vol_pbt2(Ymf,opt)
 %
 % ______________________________________________________________________
 % $Id: cat_vol_pbt.m 1505 2019-09-12 16:17:33Z dahnke $ 
- 
- 
+
+
 % default variables and check/set function  
   if ~exist('opt','var'), opt=struct(); end
- 
+
   def.resV      = 1;
   def.dmethod   = 'eidist';
   def.method    = 'pbt2x';  % pbt is worse ... just for tests!
@@ -57,8 +57,8 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ywmdc] = cat_vol_pbt2(Ymf,opt)
     Ymx = cat_vol_morph(Ymf>2.2,'lo'); Ymf(Ymf>2.2 & ~Ymx)=2.1; clear Ymx
     Ymx = cat_vol_morph(Ymf>1.5,'lo'); Ymf(Ymf>1.5 & ~Ymx)=1.2; clear Ymx
   end
- 
- 
+
+
   %% Distance maps
   if (sum(round(Ymf(:))==Ymf(:)) / numel(Ymf))>0.9, bin=1; else bin=0; end
   
@@ -77,8 +77,8 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ywmdc] = cat_vol_pbt2(Ymf,opt)
   %  the Insula).
   
   newspeedmapF = 1; 
- 
- 
+
+
   if opt.verb, fprintf('\n'); end; stime2=clock;
   YMM = cat_vol_morph(Ymf<1.5,'e',1) | isnan(Ymf);
   switch opt.dmethod
@@ -126,7 +126,7 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ywmdc] = cat_vol_pbt2(Ymf,opt)
         end
         YM2max  = cat_vol_approx(YM2max,'nh',resT2.vx_volr,2); % use (slow) high resolutions 
         YM2max  = cat_vol_resize(YM2max,'dereduceV',resT2);
- 
+
  %  stime = cat_io_cmd(sprintf('    WM distance (GM - %0.2f): ',mean(vx_vol_org)),'g5','',opt.verb,stime);      
         %% GM intensity:
         %  find the higher intesity GM average and avoid the CSF PVE 
@@ -140,12 +140,12 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ywmdc] = cat_vol_pbt2(Ymf,opt)
         Ygdt  = cat_vol_pbtp(max(2,min(3,4-Ymfr)),Ygd,inf(size(Ygd),'single')) * mean(resT2.vx_volr);
         Ygdt  = cat_vol_median3(Ygdt,Ygdt>0.01,Ygdt>0.01);                    
         Ygdt  = cat_vol_localstat(Ygdt,Ygdt>0.1,1/mean(resT2.vx_volr),1);    
- 
+
         Ywd   = cat_vbdist(2.5 - Ymfr);  
         Ywdt  = cat_vol_pbtp(max(2,min(3,4-Ymfr)),Ywd,inf(size(Ywd),'single')) * mean(resT2.vx_volr);
         Ywdt  = cat_vol_median3(Ywdt,Ywdt>0.01,Ywdt>0.01);                    
         Ywdt  = cat_vol_localstat(Ywdt,Ywdt>0.1,1/mean(resT2.vx_volr),1);    
- 
+
         
         %%
         % estimate local GM average intensity 
@@ -165,7 +165,7 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ywmdc] = cat_vol_pbt2(Ymf,opt)
         YM2min2 = cat_vol_localstat(YM2min,YM2min>0,1,3);
         YM = Ymfr<2 & YM2min==0; YM = cat_vol_morph(YM,'dd',1) & ~YM; YM2min( YM ) = YM2min2( YM ); 
         %clear Ymfr YM
- 
+
         % remove further atypical values
         YM2mina = YM2min; 
         for ix=1:10
@@ -293,8 +293,8 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ywmdc] = cat_vol_pbt2(Ymf,opt)
     end
     YM = Ycsfd>minfdist & Ymf> 2.0; YcsfdM = Ycsfd;  YcsfdM = cat_vol_median3(YcsfdM,YM,YM); Ycsfd(YM) = YcsfdM(YM); clear YcsfdM YM;
   end  
- 
- 
+
+
   %% PBT thickness mapping 
   %  PBT is the default thickness estimation, but PBT2x is the optimized
   %  version that usex both sulci and gyri refinements, because not only 
@@ -387,13 +387,13 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ywmdc] = cat_vol_pbt2(Ymf,opt)
     Ypp(Ypp==0 & Ymf>=2.5 & Ywmd<1)  = 0.99; 
     Ypp(Ypp==0 & Ymf>=2.0 & Ywmd<2)  = 0.985; 
     Ypp(Ypp==0 & Ymf>=2.5)           = 0.95; 
- 
+
     Ypp = Ypp*(1-fs) + fs*cat_vol_median3(Ypp,Ymf>1.1 & Ymf<2.9 & (Ypp>0.1 | Ypp==0),true(size(Ypp)),0.1);
     Ypp = Ypp*(1-fs) + fs*cat_vol_median3(Ypp,Ymf>1.1 & Ymf<2.9 & (Ypp>0.1 | Ypp==0),true(size(Ypp)),0.1);
- 
+
     Ypp(Ypp>0.5 & ~cat_vol_morph(Ypp>0.5,'ldo',0.50/opt.resV)) = 0.49;
     Ypp(Ypp<0.5 & ~cat_vol_morph(Ypp<0.5,'l'  ,0.25/opt.resV)) = 0.51;
- 
+
  
   else
     % Estimation of thickness map Ygmt and percentual position map Ypp.
@@ -438,13 +438,13 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ywmdc] = cat_vol_pbt2(Ymf,opt)
     Ypp(Ypp==0 & Ymf>=2.5 & Ywmd<1)  = 0.99; 
     Ypp(Ypp==0 & Ymf>=2.0 & Ywmd<2)  = 0.985; 
     Ypp(Ypp==0 & Ymf>=2.5)           = 0.95; 
- 
+
     Ypp = Ypp*(1-fs) + fs*cat_vol_median3(Ypp,Ymf>1.1 & Ymf<2.9 & (Ypp>0.1 | Ypp==0),true(size(Ypp)),0.1);
     Ypp = Ypp*(1-fs) + fs*cat_vol_median3(Ypp,Ymf>1.1 & Ymf<2.9 & (Ypp>0.1 | Ypp==0),true(size(Ypp)),0.1);
- 
+
     Ypp(Ypp>0.5 & ~cat_vol_morph(Ypp>0.5,'ldo',0.50/opt.resV)) = 0.49;
     Ypp(Ypp<0.5 & ~cat_vol_morph(Ypp<0.5,'l'  ,0.25/opt.resV)) = 0.51;
- 
+
     
     % filter result
     if exist('Ymfo','var'); Ymf=Ymfo; end

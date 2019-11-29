@@ -106,12 +106,12 @@ function varargout = cat_surf_resamp(varargin)
     
     name0 = [ff(3:end) ex];          % remove leading hemisphere information
     name0 = strrep(name0,'.gii',''); % remove .gii extension
-    hemistr = {'lh','rh','lc','rc'};
+    hemistr = {'lh','rh','cb'};
     exist_hemi = [];
     
     if ~isempty(strfind(name0,'white')) || ~isempty(strfind(name0,'inner')) || ...
        ~isempty(strfind(name0,'pial'))  || ~isempty(strfind(name0,'outer')) || ...
-       ~isempty(strfind(name0,'hull'))  || ~isempty(strfind(name0,'inner')) 
+       ~isempty(strfind(name0,'core'))  || ~isempty(strfind(name0,'hull'))  
       cat_io_cprintf('err',sprintf('ERROR - White matter, pial, hull, or core surfaces can not be resampled so far!\n'));
       continue
     end

@@ -827,28 +827,38 @@ if any( job.output.surface == [ 2 6 8 ] )
 end
 voutsfields = {};
 
+def.output.surf_measures = 1;
+job = cat_io_checkinopt(job,def); 
 % create fields
 for si = 1:numel(sides)
+  % surfaces
   for soi = 1:numel(surfaceoutput)
-    % surfaces
     for soii = 1:numel(surfaceoutput{soi})
       eval( sprintf('%s%s = {};' , sides{si} , surfaceoutput{soi}{soii} ) ); 
       if ~isempty( surfaceoutput{soi} ) && job.output.surface
+        eval( sprintf('%s%s = cell(n,1);' , sides{si} , surfaceoutput{soi}{soii} ) ); 
         for j = 1:n
-          eval( sprintf('%s%s{j} = fullfile( ''%s'' , ''%s'' , ''%s.%s.%s.gii'' ); ' , sides{si} , surfaceoutput{soi}{soii} , ...
-            parts{j,1} , surffolder , sides{si} , surfaceoutput{soi}{soii} , parts{j,2} ) ); 
+          eval( sprintf('%s%s{j} = fullfile(  parts{j,1} , surffolder , ''%s.%s.%s.gii'' ); ' , ...
+            sides{si} , surfaceoutput{soi}{soii} , ...
+            sides{si} , surfaceoutput{soi}{soii} , parts{j,2} ) ); 
           voutsfields{end+1} = sprintf('%s%s',  sides{si} , surfaceoutput{soi}{soii} );
         end
       end
     end
-    % measures
-    for soii = 1:numel(measureoutput{soi})
-      eval( sprintf('%s%s = {};' , sides{si} , measureoutput{soi}{soii} ) ); 
-      if ~isempty( measureoutput{soi} ) && job.output.surface
-        for j = 1:n
-          eval( sprintf('%s%s{j} = fullfile( ''%s'' , ''%s'' , ''%s.%s.%s'' ); ' , sides{si} , measureoutput{soi}{soii} , ...
-            parts{j,1} , surffolder , sides{si} , measureoutput{soi}{soii} , parts{j,2} ) ); 
-          voutsfields{end+1} = sprintf('%s%s',  sides{si} , measureoutput{soi}{soii} );
+  end
+  % measures
+  for soi = 1:numel(measureoutput)
+    if soi <= job.output.surf_measures
+      for soii = 1:numel(measureoutput{soi})
+        eval( sprintf('%s%s = {};' , sides{si} , measureoutput{soi}{soii} ) ); 
+        if ~isempty( measureoutput{soi} ) && job.output.surface
+          eval( sprintf('%s%s = cell(n,1);' , sides{si} , measureoutput{soi}{soii} ) ); 
+          for j = 1:n
+            eval( sprintf('%s%s{j} = fullfile( parts{j,1} , surffolder , ''%s.%s.%s'' ); ' , ...
+              sides{si} , measureoutput{soi}{soii} , ...
+              sides{si} , measureoutput{soi}{soii} , parts{j,2} ) ); 
+            voutsfields{end+1} = sprintf('%s%s',  sides{si} , measureoutput{soi}{soii} );
+          end
         end
       end
     end
@@ -1040,7 +1050,7 @@ vout  = struct('tiss',tiss,'label',{label},'wlabel',{wlabel},'rlabel',{rlabel},'
              
 % add surface fields            
 for fi=1:numel(voutsfields)
-  eval( sprintf( 'vout.(voutsfields{fi}) = {%s};', voutsfields{fi} )); 
+  eval( sprintf( 'vout.(voutsfields{fi}) = %s;', voutsfields{fi} ) ); 
 end
 
 %_______________________________________________________________________
