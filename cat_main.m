@@ -210,7 +210,8 @@ if ~isfield(res,'spmpp')
       job2.extopts.reg.affreg  = 0;      % new affine registration
       res2.do_dartel           = 1;      % use dartel
     end
-    if job.extopts.new_release
+    if job.extopts.new_release && 0 
+      % improvements for large ventricle ... not working now (RD201911)
       if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
         [trans,res.ppe.reginitp] = cat_main_registration2(job2,res2,Ycls(1:2),Yy,tpm.M,res.Ylesion); 
       else

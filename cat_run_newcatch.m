@@ -34,32 +34,123 @@ function cat_run_newcatch(job,tpm,subj)
     cat_io_cprintf('err',sprintf('\n%s\nCAT Preprocessing error for %s:\n%s\n%s\n%s\n', ...
       repmat('-',1,72),nam,repmat('-',1,72),caterr.message,repmat('-',1,72)));  
     
-    % check for filenames that are usually indicated by '"'
-    ind_str = strfind(caterr.message,'"');
     
-    % anonymize by removing filename if two '"' characters were found
-    if length(ind_str) == 2
-      caterr_message_str = [caterr.message(1:ind_str(1)-1) caterr.message(ind_str(2)+1:end)];
-    else
-      caterr_message_str = caterr.message;
+    %% check for filenames that are usually indicated by '"'
+    testmessage = 1; % just for tests 
+    if testmessage
+     caterr.identifier =  'CAT:error0815:BadFileInput'; 
+     caterr.message    = ['Bad values variable "xyz" in "C:\private\patient\name" ' ...
+       'and \n also in the second line "/private2/patient/name".\n ' ...
+       'But also without /private3/pat3/nam3 and C:\blub\bla. ' ...
+       'Don''t forget special character for    area (33 mm' char(178) ...
+       ') or volume (3 mm' char(179) ') or 33' char(177) '0.33%.\n' ...
+       'Ignore/Replace unclear chars :' char(200:210)];  
     end
     
-    % again check for filenames indicated by slashes/backslashes
-    ind_str = [strfind(caterr_message_str,'/') strfind(caterr_message_str,'\')];
+    % anonymize by removing filename within '"' characters were found
+    ind_str  = strfind(caterr.message,'"');
+    ind_str2 = [strfind(caterr.message,'/') strfind(caterr.message,'\') ...
+      strfind(caterr.message,'.nii') strfind(caterr.message,'.gii')];
+    
+    caterr_id = caterr.identifier;
+    caterr_message_str = caterr.message;
+    if mod(length(ind_str),2) == 0
+      for i = length(ind_str):-2:1
+        if any( ind_str2>ind_str(i-1) & ind_str2<ind_str(i) ) % replace only files "a/b" "c:\c" but not variables "var" 
+          caterr_message_str = [ caterr_message_str(1:ind_str(i-1)) 'FILE' caterr_message_str(ind_str(i):end) ];
+        end
+      end
+    end
+    
+    % again check for filenames indicated by slashes/backslashes ... , 
+    caterr_id          = cat_io_strrep(caterr_id         ,{'\\','\n','\t','\a','\f','\r','\v'},' ');  
+    caterr_message_str = cat_io_strrep(caterr_message_str,{'\\','\n','\t','\a','\f','\r','\v'},' ');  
+    caterr_message_str = cat_io_strrep(caterr_message_str,{'   '},' ');  
+    caterr_message_str = cat_io_strrep(caterr_message_str,{'  '},' ');  
+    
+    % replace special character may used in some messages
+    rc = { {char(177) char(178) char(179) } {'+-' '2' '3'} };
+    caterr_id           = char( cat_io_strrep(caterr_id         , rc{1} , rc{2}) ); 
+    caterr_message_str  = char( cat_io_strrep(caterr_message_str, rc{1} , rc{2}) ); 
+    
     
     % further anonymize by removing filename if slashes/backslashes were found
-    if length(ind_str) > 1
-      caterr_message_str =  caterr_message_str(ind_str(end)+1:end);
+    % seperate the string into words, find path-strings and replace them 
+    words = textscan(caterr_message_str,'%s'); words = words{1}; 
+    files = find( ~cellfun('isempty',strfind(words,'\')) | ~cellfun('isempty',strfind(words,'/')) == true);
+    for wi = numel(files):-1:1
+      if any(words{files(wi)}(end) == '.,;'), words{files(wi)}(end) = []; end  
+      caterr_message_str = char( strrep( caterr_message_str , words(files(wi)) , '"FILE"') ); 
     end
-
-    % send error information, CAT12 version and computer system
-    if cat_get_defaults('extopts.send_info')
-      str_err = [];
+    clear words files
+    
+    % finally remove/replace bad characters
+    whitelist           = [ char(48:57) char(65:89) char(97:122) ' +-\/_;:."<=>|()&!?%?`''?^[]'];
+    caterr_idi          = false( size( caterr_id ) );
+    caterr_message_stri = false( size( caterr_message_str) ); 
+    for wi=1:numel(whitelist)
+      caterr_idi( caterr_id == whitelist(wi) ) = true; 
+      caterr_message_stri( caterr_message_str == whitelist(wi) ) = true; 
+    end
+    if 0 % remove 
+      caterr_id          = caterr_id(caterr_idi);
+      caterr_message_str = caterr_message_str(caterr_message_stri);
+    else % replace ... maybe better do avoid empty messages
+      caterr_id(~caterr_idi) = 'X';
+      caterr_message_str(~caterr_message_stri) = 'X';
+    end
+    
+    % Or a private/general part that is useful for users but not for us. 
+    
+    
+    % We may can use a general limitation for the error message?
+    maxlength = 256;
+    if numel(caterr_message_str)>maxlength
+      caterr_message_str = [spm_str_manip(caterr_message_str,sprintf('f%d',maxlength)) ' ...']; 
+    end
+    
+    if testmessage
+      disp(caterr_message_str)
+    end
+    
+    %% remove uninteresting messages
+    ignore_message = 0; 
+    keywords_mid = {
+      'cat_run_job:restype'
+      }; 
+    keywords = {
+      '** failed to open'
+      'Access is denied.'
+      'Cant open file'
+      'Cant create file mapping. ' 
+      'Cannot create output file '
+      'cp: cannot create regular file'
+      'File too small'
+      'File'
+      'Image does not have 3 dimensions.'
+      'insufficient image overlap'
+      'Invalid file identifier.'
+      'Out of memomory.' 
+      'Permission denied'
+      'The process cannot access the file '
+      'There was a problem while generating '
+      'Unable to write file'
+      'Voxel resolution has to be better than 5 mm'
+      };
+    if any( ~cellfun('isempty',strfindi( keywords_mid, caterr_message_str )==1 )) || ...
+       any( ~cellfun('isempty',strfindi( keywords, caterr_message_str )==1 ))
+      ignore_message = 1; 
+    end
+    
+    %% send error information, CAT12 version and computer system
+    if cat_get_defaults('extopts.send_info') && ~ignore_message && job.extopts.expertgui<2
+      [v,rev] = cat_version; expertguistr = ' ed';
+      str_err = sprintf('%s%s|',rev,expertguistr(job.extopts.expertgui)); % revision and guilevel
       for si=1:numel(caterr.stack)
         str_err = [str_err '|' caterr.stack(si).name ':' num2str(caterr.stack(si).line)];
       end      
       str_err = str_err(2:end); % remove first "|"
-      url = sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%s%s%s%s%s%s',cat_version,'%2F',computer,'%2F','errors','%2F',caterr_message_str,'%2F',str_err);
+      url = sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%s%s%s%s%s%s%s',cat_version,'%2F',computer,'%2F','errors','%2F',caterr_id,'%2F',caterr_message_str,str_err);
       url = regexprep(url, '\n', '%20'); % replace returns
       url = regexprep(url, ' ' , '%20'); % replace spaces
       try

@@ -307,6 +307,8 @@ if isfield(opts,'surface')
     sidenames = [sidenames {'Cerebellar'}]; 
   end
 
+  def.output.surf_measures = 1;
+  job = cat_io_checkinopt(job,def); 
   % create fields
   for si = 1:numel(sides)
     for soi = 1:numel(surfaceoutput)
@@ -320,14 +322,18 @@ if isfield(opts,'surface')
           cdep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
         end
       end
-      for soii = 1:numel(surfaceoutput{soi})
-        if ~isempty( measureoutput{soi} )
-          cdep(end+1)          = cfg_dep;
-          cdep(end).sname      = sprintf('%s %s%s', sidenames{si}, ...
-            upper(measureoutput{soi}{soii}(1)), measureoutput{soi}{soii}(2:end));
-          cdep(end).src_output = substruct('()',{1}, '.', ...
-            sprintf('%s%s', sides{si} , measureoutput{soi}{soii} ),'()',{':'});
-          cdep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+    end
+    for soi = 1:numel(surfaceoutput)
+      if soi <= job.output.surf_measures
+        for soii = 1:numel(measureoutput{soi})
+          if ~isempty( measureoutput{soi} ) 
+            cdep(end+1)          = cfg_dep;
+            cdep(end).sname      = sprintf('%s %s%s', sidenames{si}, ...
+              upper(measureoutput{soi}{soii}(1)), measureoutput{soi}{soii}(2:end));
+            cdep(end).src_output = substruct('()',{1}, '.', ...
+              sprintf('%s%s', sides{si} , measureoutput{soi}{soii} ),'()',{':'});
+            cdep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+          end
         end
       end
     end

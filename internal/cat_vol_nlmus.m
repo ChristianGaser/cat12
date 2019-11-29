@@ -60,8 +60,22 @@ function varargout = cat_vol_nlmus(varargin)
 
   if nargin == 0 
       job.data = cellstr(spm_select([1 Inf],'image','select images to filter'));
-  else
+  elseif nargin == 1 && isstruct(varargin{1})
       job = varargin{1};
+  else 
+      src = varargin{1}; 
+      if nargin>1
+        if isstruct( varargin{2} )
+          job = varargin{2}; 
+        else
+          job.interp = varargin{2};
+        end
+      end
+      if nargin>2
+        job.vx_vol = varargin{3}; 
+      end
+      job.data = 'matlab'; 
+      job.src  = 1; 
   end
 
   if ~isfield(job,'data') || isempty(job.data)
@@ -75,12 +89,14 @@ function varargout = cat_vol_nlmus(varargin)
   def.intmeth   = {'spline','nearest'};
   def.verb      = 1;
   def.interp    = [1 1 1];
+  def.vx_vol    = [1 1 1];
   def.maxiter   = 0;
   def.rician    = 1; 
   def.rf        = 0.001;
   def.writeinit = 1; 
   def.sanlm     = 0;
   def.mask      = 0;
+  def.src       = 0;
   def.finalinterp = 0; 
   
   job = cat_io_checkinopt(job,def);
@@ -89,21 +105,30 @@ function varargout = cat_vol_nlmus(varargin)
     job.prefix = [job.prefix 'sanlm_'];
   end
    
+  if ~job.src 
+    V = spm_vol(char(job.data)); Vn = V; 
+    %V = rmfield(V,'private');
   
-  V = spm_vol(char(job.data));
-  %V = rmfield(V,'private');
- 
-  fnames = cell(size(job.data));
-  spm_clf('Interactive'); 
-  spm_progress_bar('Init',numel(job.data),'NLM-Interpolation','Volumes Complete');
+    fnames = cell(size(job.data));
+    spm_clf('Interactive'); 
+    spm_progress_bar('Init',numel(job.data),'NLM-Interpolation','Volumes Complete');
+  else
+    V.mat = eye(4); 
+    V.fname = ''; 
+    V.descrip = ''; 
+  end
   for i = 1:numel(job.data)
     [pth,nm,xt,vr] = spm_fileparts(deblank(V(i).fname));
     
     % load and prepare data
-    src = single(spm_read_vols(V(i)));
-    src(isnan(src)) = 0; % prevent NaN
-    vx_vol = sqrt(sum(V(i).mat(1:3,1:3).^2)); % voxel resolution
-    if  V(i).dt(1)<16, V(i).dt(1) = 16; end  % use at least float precision
+    if ~job.src 
+      src = single(spm_read_vols(V(i)));
+      src(isnan(src)) = 0; % prevent NaN
+      vx_vol = sqrt(sum(V(i).mat(1:3,1:3).^2)); % voxel resolution
+      if  V(i).dt(1)<16, V(i).dt(1) = 16; end  % use at least float precision
+    else
+      vx_vol = job.vx_vol;
+    end
     
     if job.verb
       % interpolation factor
@@ -125,7 +150,7 @@ function varargout = cat_vol_nlmus(varargin)
     
     %% SANLM or ISARNLM noise correction
     %  -----------------------------------------------------------------
-    if job.sanlm
+    if ~job.src && job.sanlm
         %%
         if job.verb, stime = cat_io_cmd('\n  SANLM-filtering','g5',''); end
         cat_vol_sanlm(struct('data',V(i).fname,'verb',0,'prefix','n','NCstr',-inf));
@@ -133,18 +158,18 @@ function varargout = cat_vol_nlmus(varargin)
         src = single(spm_read_vols(Vn(i)));
     end
         
-    th = max(mean(src(src(:)>0)),abs(mean(src(src(:)<0))));
-    src = (src / th) * 100; 
+      th = max(mean(src(src(:)>0)),abs(mean(src(src(:)<0))));
+      src = (src / th) * 100; 
     
-     % histogram limit for sigma ...
-    [hsrc,hval] = hist(src(:),10000); hp = cumsum(hsrc)./sum(hsrc); itol = 0.0001;
-    minfsrc = hval(find(hp>itol,1,'first')); 
-    maxfsrc = hval(find(hp<(1-itol),1,'last')); 
-    if job.sanlm==0
-      if min(src(:))~=0, src(src<hval(find(hp>itol,1,'first'))) = hval(find(hp>itol,1,'first')); end
-      src(src>hval(find(hp<(1-itol),1,'last')))  = hval(find(hp<(1-itol),1,'last')); 
-    end
-    %job.interp = job.interp .* 1./round(job.interp./min(job.interp));
+    % histogram limit for sigma ...
+      [hsrc,hval] = hist(src(:),10000); hp = cumsum(hsrc)./sum(hsrc); itol = 0.0001;
+      minfsrc = hval(find(hp>itol,1,'first')); 
+      maxfsrc = hval(find(hp<(1-itol),1,'last')); 
+      if job.sanlm==0
+        if min(src(:))~=0, src(src<hval(find(hp>itol,1,'first'))) = hval(find(hp>itol,1,'first')); end
+        src(src>hval(find(hp<(1-itol),1,'last')))  = hval(find(hp<(1-itol),1,'last')); 
+      end
+      %job.interp = job.interp .* 1./round(job.interp./min(job.interp));
     
     % interpolation factor
       if numel(job.interp)==1
@@ -167,7 +192,7 @@ function varargout = cat_vol_nlmus(varargin)
     
     %% write spline interpolation image for comparison
     %  -----------------------------------------------------------------
-    if job.writeinit
+    if ~job.src && job.writeinit
       if job.verb
         if exist('stime','var')
           stime = cat_io_cmd(sprintf('  Write intial %s interpolation',job.intmeth{1}),'g5','',job.verb,stime); 
@@ -332,31 +357,37 @@ function varargout = cat_vol_nlmus(varargin)
     end
     
     %%
-    Vn(i)=V(i); 
-    Vn(i).fname = fullfile(pth,[job.prefix nm '.nii' vr]);
-    if exist(Vn(i).fname,'file'), delete(Vn(i).fname); end
-    spm_write_vol(Vn(i), (src / 100) * th);
-    fnames{i} = Vn(i).fname; 
-    
-    if job.verb, cat_io_cmd(' ','n','',job.verb,stime); end
-    %fprintf('%4.0fs\n',etime(clock,stimei));
-    spm_progress_bar('Set',i);
+    if ~job.src 
+      Vn(i)=V(i); 
+      Vn(i).fname = fullfile(pth,[job.prefix nm '.nii' vr]);
+      if exist(Vn(i).fname,'file'), delete(Vn(i).fname); end
+      spm_write_vol(Vn(i), (src / 100) * th);
+      fnames{i} = Vn(i).fname; 
+
+      if job.verb, cat_io_cmd(' ','n','',job.verb,stime); end
+      %fprintf('%4.0fs\n',etime(clock,stimei));
+      spm_progress_bar('Set',i);
+    else
+      varargout{1} = (src / 100) * th; 
+    end
     %%
     %spm_file([{job.data{i}};{fnames{i}}],'link','spm_orthviews(''Image'',spm_file(''%s''))')
 
   end
-  spm_progress_bar('Clear'); fprintf('\n');
   
-  if nargout>=1, varargout{1} = fnames; end
-  if nargout>=2, varargout{2} = V; end
-  
+  if ~job.src 
+    spm_progress_bar('Clear'); fprintf('\n');
+
+    if nargout>=1, varargout{1} = fnames; end
+    if nargout>=2, varargout{2} = V; end
+  end
 end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [nima1]=InitialInterpolation(nima1,lf,intmeth,roundfactor)
-
+%%
   warning off; 
   
   s   = size(nima1).*lf;
