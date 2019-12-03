@@ -33,11 +33,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
  
   if cat_get_defaults('extopts.send_info')
     url = sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%sfinished',cat_version,'%2F',computer,'%2F');
-		try
-			[s,sts] = urlread(url,'Timeout',2);
-		catch
-			[s,sts] = urlread(url);
-		end
+    try
+      [s,sts] = urlread(url,'Timeout',2);
+    catch
+      [s,sts] = urlread(url);
+    end
   end
 
   VT  = res.image(1); 
@@ -542,13 +542,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     % remove menu
     %if ~debug, spm_orthviews('RemoveContext',id); end 
   end
-  
-  
-  
-  
-  
-  
-  
+    
 %%
   imat = spm_imatrix(res.Affine); Rigid = spm_matrix([imat(1:6) 1 1 1 0 0 0]); clear imat;
   id1  = find( ~cellfun('isempty',strfind({Psurf(:).Pcentral},'lh.')) ,1, 'first'); 
@@ -560,10 +554,17 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         %%
         spm_figure('Focus','Graphics'); 
         hCS = subplot('Position',[0.50 0.05 0.55 0.30],'visible','off'); 
-        hSD = cat_surf_display(struct('data',Psurf(id1).Pthick,'readsurf',0,'expert',2,...
-          'multisurf',1,'view','s','menu',0,...
-          'parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
-       
+        renderer = get(fg,'Renderer');
+        
+        % only add contours if OpenGL is found (to prevent crashing on clusters)
+        if strcmpi(renderer,'opengl')
+          hSD = cat_surf_display(struct('data',Psurf(id1).Pthick,'readsurf',0,'expert',2,...
+            'multisurf',1,'view','s','menu',0,...
+            'parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
+        else
+          fprintf('Surface display suppressed due to OpenGL issues.\n');
+        end
+        
         for ppi = 1:numel(hSD{1}.patch)
           V = (Rigid * ([hSD{1}.patch(ppi).Vertices, ones(size(hSD{1}.patch(ppi).Vertices,1),1)])' )'; 
           V(:,4) = []; hSD{1}.patch(ppi).Vertices = V;

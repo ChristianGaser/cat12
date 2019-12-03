@@ -65,7 +65,7 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Y
   
   % reducepatch has some issues with self intersections and should only be used for "fast" option
   % There is a new SPM approach spm_mesh_reduce that is maybe more robust. 
-  % Higher resolution are at least required for animal preprocessing that is given by cat_main.
+  % Higher resolution is at least required for animal preprocessing that is given by cat_main.
   def.LAB                 = cat_get_defaults('extopts.LAB');  % brain regions 
   def.SPM                 = 0;                                % surface-reconstration based on SPM segmentation input (see cat_main)
   def.pbtlas              = 0;                                % myelination correction option (in development - not working correctly in all data, RD201907)  
@@ -450,7 +450,7 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Y
     
     
     %% pbt calculation
-    stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,char(179))); stimet =stime;
+    stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,native2unicode(179, 'latin1'))); stimet =stime;
     if strcmp(opt.pbtmethod,'pbt3') %|| opt.collcorr>0
       [Yth1i,Yppi] = cat_vol_pbt3(Ymfs,struct('method',opt.pbtmethod,'cb',iscerebellum,'resV',opt.interpV,...
         'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1])); % avoid underestimated thickness in gyri
