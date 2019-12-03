@@ -184,7 +184,7 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
     sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR))))];
   if isfield(qa.qualitymeasures,'SurfaceEulerNumber') && ~isempty(qa.qualitymeasures.SurfaceEulerNumber)
     if job.extopts.expertgui
-      str{2} = [str{2} struct('name',' Surface Euler number:','value',marks2str(qa.qualityratings.SurfaceEulerNumber,...
+      str{2} = [str{2} struct('name',' Mean surface Euler number:','value',marks2str(qa.qualityratings.SurfaceEulerNumber,...
                 sprintf('%0.2f', qa.qualitymeasures.SurfaceEulerNumber)))]; 
               
       if isfield(qa.qualitymeasures,'SurfaceDefectNumber') && ~isempty(qa.qualitymeasures.SurfaceDefectNumber)
@@ -194,14 +194,14 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
       end
             
     else
-      str{2} = [str{2} struct('name',' Surface Euler number:','value',sprintf('%0.2f', qa.qualitymeasures.SurfaceEulerNumber))]; 
+      str{2} = [str{2} struct('name',' Mean surface Euler number:','value',sprintf('%0.2f', qa.qualitymeasures.SurfaceEulerNumber))]; 
     end
   end
   
   
   if isfield(qa.qualitymeasures,'SurfaceDefectArea') && ~isempty(qa.qualitymeasures.SurfaceDefectArea)
     if job.extopts.expertgui
-      str{2} = [str{2} struct('name',' Topology defects size:','value',marks2str(qa.qualityratings.SurfaceDefectArea,...
+      str{2} = [str{2} struct('name',' Mean topology defects size:','value',marks2str(qa.qualityratings.SurfaceDefectArea,...
                 sprintf('%0.2f%%', qa.qualitymeasures.SurfaceDefectArea)))];
 
       if isfield(qa.qualitymeasures,'SurfaceSelfIntersections') && ~isempty(qa.qualitymeasures.SurfaceSelfIntersections)
@@ -211,7 +211,7 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
       end
    
     else
-      str{2} = [str{2} struct('name',' Size of topology defects:','value',sprintf('%0.2f%%', qa.qualitymeasures.SurfaceDefectArea))];
+      str{2} = [str{2} struct('name',' Mean size of topology defects:','value',sprintf('%0.2f%%', qa.qualitymeasures.SurfaceDefectArea))];
     end
     
   end

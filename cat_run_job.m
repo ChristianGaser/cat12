@@ -149,7 +149,7 @@ function cat_run_job(job,tpm,subj)
                  ['Voxel resolution has to be better than %s mm in any dimension \n' ...
                   'for reliable CAT preprocessing! \n' ...
                   'This image has a resolution %0.2fx%0.2fx%0.2f mm%s. '], ... 
-                   reslimits(1),vx_vol,char(179))); %#ok<SPERR>
+                   reslimits(1),vx_vol,native2unicode(179, 'latin1'))); %#ok<SPERR>
           end
           if prod(vx_vol)>reslimits(2)^3  % too small voxel volume (smaller than 3x3x3 mm3)
             error('cat_run_job:TooHighVoxelVolume', ...
@@ -157,14 +157,14 @@ function cat_run_job(job,tpm,subj)
                   'allow a reliable CAT preprocessing! \n' ...
                   'This image has a voxel volume of %0.2f mm%s. '], ...
                   reslimits(2)^3,reslimits(2),reslimits(2),reslimits(2),...
-                  char(179),char(179),prod(vx_vol),char(179));
+                  native2unicode(179, 'latin1'),native2unicode(179, 'latin1'),prod(vx_vol),native2unicode(179, 'latin1'));
           end
           if max(vx_vol)/min(vx_vol)>reslimits(3) % anisotropy 
             error('cat_run_job:TooStrongIsotropy', sprintf(...
                  ['Voxel isotropy (max(vx_size)/min(vx_size)) has to be smaller than %d to \n' ...
                   'allow a reliable CAT preprocessing! \n' ...
                   'This image has a resolution %0.2fx%0.2fx%0.2f mm%s and a isotropy of %0.2f. '], ...
-                  reslimits(3),vx_vol,char(179),max(vx_vol)/min(vx_vol))); %#ok<SPERR>
+                  reslimits(3),vx_vol,native2unicode(179, 'latin1'),max(vx_vol)/min(vx_vol))); %#ok<SPERR>
           end
         end
 
@@ -264,11 +264,11 @@ function cat_run_job(job,tpm,subj)
               best_vx  = max( min(vx_vol) ,job.extopts.restypes.(restype)(1)); 
               vx_voli  = min(vx_vol ,best_vx ./ ((vx_vol > (best_vx + job.extopts.restypes.(restype)(2)))+eps));
             case 'optimal'
-              aniso 	= @(vx_vol) (max(vx_vol) / min(vx_vol)^(1/3))^(1/3);                                              % penetration factor
-              volres 	= @(vx_vol) repmat( round( aniso(vx_vol) * prod(vx_vol)^(1/3) * 10)/10 , 1 , 3);                  % volume resolution
-              optresi	= @(vx_vol) min( job.extopts.restypes.(restype)(1) , max( median(vx_vol) , volres(vx_vol) ) );		% optimal resolution 
-              optdiff	= @(vx_vol) abs( vx_vol - optresi(vx_vol) ) < job.extopts.restypes.(restype)(2);          				% tolerance limites
-              optimal	= @(vx_vol) vx_vol .* optdiff(vx_vol) + optresi(vx_vol) .* (1 - optdiff(vx_vol) );                % final optimal resolution 
+              aniso   = @(vx_vol) (max(vx_vol) / min(vx_vol)^(1/3))^(1/3);                                              % penetration factor
+              volres  = @(vx_vol) repmat( round( aniso(vx_vol) * prod(vx_vol)^(1/3) * 10)/10 , 1 , 3);                  % volume resolution
+              optresi = @(vx_vol) min( job.extopts.restypes.(restype)(1) , max( median(vx_vol) , volres(vx_vol) ) );    % optimal resolution 
+              optdiff = @(vx_vol) abs( vx_vol - optresi(vx_vol) ) < job.extopts.restypes.(restype)(2);                  % tolerance limites
+              optimal = @(vx_vol) vx_vol .* optdiff(vx_vol) + optresi(vx_vol) .* (1 - optdiff(vx_vol) );                % final optimal resolution 
               vx_voli = optimal(vx_vol); 
             otherwise 
               error('cat_run_job:restype','Unknown resolution type ''%s''. Choose between ''fixed'',''native'',''optimal'', and ''best''.',restype)
@@ -378,7 +378,7 @@ function cat_run_job(job,tpm,subj)
                 cat_io_cprintf('warn',sprintf(...
                  ['           %0.2f%%%% zeros, %d object(s), %d background region(s) \n' ...
                   '           %4.0f cm%s, normalized SD of all tissues %0.2f \n'],...
-                  ppe.affreg.skullstrippedpara(1:4),char(179),ppe.affreg.skullstrippedpara(5))); 
+                  ppe.affreg.skullstrippedpara(1:4),native2unicode(179, 'latin1'),ppe.affreg.skullstrippedpara(5))); 
               end
             elseif job.extopts.gcutstr<0 && ~ppe.affreg.skullstripped
               cat_io_cprintf('warn',[...
@@ -424,7 +424,11 @@ function cat_run_job(job,tpm,subj)
                 cat_version,'%2F',computer,'%2F','errors','%2F','cat_run_job:failedAPP','%2F','WARNING: APP failed. Use simple scaling.','cat_run_job');
               url = regexprep(url, '\n', '%20'); % replace returns
               url = regexprep(url, ' ' , '%20'); % replace spaces
-              try, urlread(url); end
+              try
+                [s,sts] = urlread(url,'Timeout',2);
+              catch
+                [s,sts] = urlread(url);
+              end
             end
             APPRMS = checkAPP(Ym,Ysrc); 
             if APPRMS>1 

@@ -1,5 +1,27 @@
 ------------------------------------------------------------------------
-r1527 | dahnke | 2019-11-29 14:59:29
+r1528 | gaser | 2019-12-03 12:40:49
+
+Changed paths:
+M       CHANGES.txt
+M       cat_batch_long.m
+M       cat_conf_tools.m
+M       cat_main_reportfig.m
+M       cat_main_reportstr.m
+D       cat_parallelize.sh
+M       cat_run_job.m
+M       cat_surf_createCS2.m
+
+(1) Changed: Check wheter OpenGL is set in cat_main_reportfig.m to prevent
+    crashing on headless cluster computers.
+(2) Changed: Added my last changes again from previous commits that were 
+    overwritten.
+(3) Changed: Added timeout parameter to urlread.
+(4) Changed: Warping regularization for longitudinal registration is increased.
+(5) Changed: Force single-processor use for shell-script calls of longitudinal
+    batch.
+(6) Removed: Deleted doubled cat_parallize.sh.
+------------------------------------------------------------------------
+r1527 | dahnke | 2019-11-29 15:01:00 +0100 (Fr, 29 Nov 2019) | 24 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -23,6 +45,7 @@ M       tbx_cfg_cat.m
 (4) Changed:    Updated cerebellar pipeline.  
 (5) Changed:    Added variable use in NLM interpolation.  
 (6) Docu:       Updated help in cat_surf_fun.
+
 
 ------------------------------------------------------------------------
 r1526 | gaser | 2019-11-29 13:34:02 +0100 (Fr, 29 Nov 2019) | 25 lines

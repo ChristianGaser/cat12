@@ -840,7 +840,7 @@ function realign  = cat_vol_series_align_GUI(data)
   }';
   bparam.strtype  = 'e';
   bparam.num      = [1 1];
-  bparam.val      = {1e6};
+  bparam.val      = {1e7};
 
   wparam          = cfg_entry;   
   wparam.tag      = 'wparam';
