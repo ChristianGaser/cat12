@@ -51,6 +51,8 @@ else
 end
 
 matlabbatch{1}.spm.tools.cat.tools.long.subj.mov = cell(n,1);
+matlabbatch{1}.spm.tools.cat.tools.long.nproc = 0;
+
 for i=1:n
   matlabbatch{1}.spm.tools.cat.tools.long.subj.mov{i} = names{i};
 end
