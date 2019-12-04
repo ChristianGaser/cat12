@@ -251,7 +251,8 @@ function varargout = cat_surf_fun(action,S,varargin)
       else
         varargout{1} = cat_surf_cdatamapping(S,varargin{:});
       end
-      
+    case 'reduce'
+      varargout{1} = cat_surf_reduce(S,varargin{:});
     case 'isocolors'
     % Similar to MATLAB isocolor function but faster and support to use mat
     % files. See also spm_mesh_project. 
@@ -263,6 +264,42 @@ function varargout = cat_surf_fun(action,S,varargin)
   end
     
 end
+
+function S = cat_surf_reduce(S,red)
+  Ptemp = tempname; 
+  Ptmpo = [Ptemp 'o.gii'];
+  Ptmpn = [Ptemp 'n.gii'];
+  
+  % save surface
+  save(gifti(struct('faces',S.faces,'vertices',S.vertices)),Ptmpo,'Base64Binary');
+  clear Sgii 
+  
+  % call  
+  for i=1:5
+    %fprintf('.');
+    if ispc
+      cmds = sprintf('set PATH=%s; start ',fullfile(matlabroot,'bin')); 
+    else
+      cmds = sprintf('%s/',fullfile(matlabroot,'bin'));
+    end
+    cmd = sprintf(['matlab -nojvm -nosplash -nodisplay -r ' ...
+      '"try, %s; catch, disp(''Error''); end; exit; "'],...
+      sprintf(['addpath(''%s''); S = gifti(''%s''); '...
+        'S = reducepatch( struct(''vertices'',S.vertices,''faces'',S.faces) , %g); ' ...
+        'save(gifti(S),''%s'',''Base64Binary''); '],fullfile(spm('dir'),'toolbox','cat12'),Ptmpo,red,Ptmpn));
+    evalc('[ST, RS] = system([cmds,cmd]); cat_check_system_output(ST,RS,1);');
+
+    if exist(Ptmpn,'file'); break; end
+  end
+  delete(Ptmpo)
+  if ~exist(Ptmpn,'file'); 
+    error('cat_surf_fun:reducemesh','Failed %d times to reduce surface resolution.',i);
+  end
+  
+  Sgii = gifti(Ptmpn); delete(Ptmpn); 
+  S = struct('vertices',Sgii.vertices,'faces',Sgii.faces);
+end
+
 
 %% area mapping concept
 %  ------------------------------------------------------------------------
@@ -2669,7 +2706,7 @@ opt.model=0;
   
 
 end
-function cat_surf_show_orthview(Psurf,Pm)
+function cat_surf_show_orthview(Psurf,Pm,color,cnames)
   fg = spm_figure('GetWin','Graphics');
   %fg = spm_figure('Create','SurfaceOverlay');%,Psurf);
   spm_figure('clear')
@@ -2701,6 +2738,12 @@ function cat_surf_show_orthview(Psurf,Pm)
   if ov_mesh
     styles = {'b-','g-','r-','c-','m-','y-','w-','b.-','g.-','r.-','c.-','m.-','y.-','w.-'}; % need more if meshes were added
     names  = {'central';'pial';'white';'';'';''};
+    if exist('color','var')
+      styles(1:numel(color)) = color; 
+      if exist('cnames','var')
+        names(1:numel(color)) = cnames; 
+      end  
+    end    
     hM = findobj(st.vols{1}.ax{1}.cm,'Label','Mesh');
     UD = get(hM,'UserData');
     UD.width = [repmat(0.75,1,numel(UD.width) - numel(Psurf))  repmat(0.5,1,numel(Psurf))]; 

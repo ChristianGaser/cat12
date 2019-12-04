@@ -82,7 +82,10 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Y
   def.add_parahipp        = cat_get_defaults('extopts.add_parahipp');
   def.scale_cortex        = cat_get_defaults('extopts.scale_cortex');
   def.close_parahipp      = cat_get_defaults('extopts.close_parahipp');
-  def.reduce_mesh         = 2;                                % 0 - none; 1 - spm, 2 - matlab; there seams to be a bug in the c-function that kills matlab 
+  def.reduce_mesh         = 3;                                % 0 - no reduction but surface creation on internal rather interpolated resolution;
+                                                              % 1 - spm reduce, 2 - matlab reduce; there seams to be a bug in the c-function that kills matlab 
+                                                              % 3 - call matlab reduce in external matlab
+                                                              % 4 - use no reduction (very slow) 
   def.outputpp.native     = 0;                                % output of Ypp map for cortical orientation in EEG/MEG 
   def.outputpp.warped     = 0;
   def.outputpp.dartel     = 0;
@@ -322,6 +325,7 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Y
   for si=1:numel(opt.surf)
    
     % surface filenames
+    Pm         = fullfile(pp,mrifolder, sprintf('m%s',ff));    % raw
     Praw       = fullfile(pp,surffolder,sprintf('%s.central.nofix.%s.gii',opt.surf{si},ff));    % raw
     Psphere0   = fullfile(pp,surffolder,sprintf('%s.sphere.nofix.%s.gii',opt.surf{si},ff));     % sphere.nofix
     Pcentral   = fullfile(pp,surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff));          % central
@@ -620,13 +624,27 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Y
     % surface coordinate transformation matrix
     matI              = spm_imatrix(V.mat); 
     matI(7:9)         = sign( matI(7:9))   .* repmat( opt.interpV , 1 , 3); 
-    matIBB            = spm_imatrix(V.mat   * [eye(4,3) [ (BB.BB([1,3,5])' - 1) ; 1]]); 
-    matIBB(7:9)       = sign( matIBB(7:9)) .* repmat( opt.interpV , 1 , 3); 
+    matiBB            = spm_imatrix(V.mat   * [eye(4,3) [ (BB.BB([1,3,5])' - 1) ; 1]]); 
+    matIBB            = matiBB; 
+    matIBB(7:9)       = sign( matiBB(7:9)) .* repmat( opt.interpV , 1 , 3); 
     Smat.matlabi_mm   = V.mat * [0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1];                % CAT internal space
     Smat.matlabI_mm   = spm_matrix(matI) * [0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1];     % PBT interpolated space
     Smat.matlabIBB_mm = spm_matrix(matIBB) * [0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1];   % PBT interpolated
+    Smat.matlabiBB_mm = spm_matrix(matiBB) * [0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1];   % PBT interpolated
  
-    
+    % create intial surface on lower resolution to support fast processing
+    if opt.reduce_mesh == 0
+      % save old variables
+      Yppio = Yppi;
+      Ymfso = Ymfs; 
+
+      % use original internal resolution ... 
+      Yppi  = cat_vol_resize(Yppi,'deinterp',resI);                      
+      Ymfs  = cat_vol_resize(Ymfs,'deinterp',resI);                      
+      Yth1i = cat_vol_resize(Yth1i,'deinterp',resI);    
+      mask_parahipp = cat_vol_resize(single(mask_parahipp),'deinterp',resI)>0.5;    
+    end
+  
     %% scaling correction to reduce topology errors in the parahippocampus
     % ### not tested for cerebellum yet (RD201909) ###
     if ~iscerebellum
@@ -662,6 +680,7 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Y
       Yppisc = max(0.55 .* (Yppi>=1),min(1.5, Yppisc .* Yts )); % factor 1 is Ypp at 0.5 > limit 0.55 and 1.5 
       scale_cortex = scale_cortex * median( Yts(:) );
     end
+    clear Yth1i;
     
     % we use another scaling and can therefore update this map
     Yppisc = Yppisc .* Ymfs/2; 
@@ -671,7 +690,7 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Y
     Yppisc( Yppisc>0.5 & ~cat_vol_morph(Yppisc>0.5,'l')) = 0;  % remove small dots
 
    
-%%
+    %%
     % Marching cubes surface creation and correction for the boundary box 
     % used within the surface creation process.  It is better to use the 
     % full voxel resolution in combination with surface reduction rather   
@@ -684,7 +703,6 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Y
     %   However, this is quite complex and I miss the time go on ... 
     %   RD201911
     % #####
-    %%
     if iscerebellum
       %% region-growing
       % Ylt = single( cat_vol_morph(Yppi<0.1,'l') +  2 * cat_vol_morph(Yppi>0.9,'l') );
@@ -774,7 +792,11 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Y
     %%
     [Yvxdef,defect_number0] = spm_bwlabel( double(abs(Yppi05c - (Yppisc>0.5))>0) ); clear Yppi05c;
     EC0            = size(CS.vertices,1) + size(CS.faces,1) - size(spm_mesh_edges(CS),1);
-    vdefects       = cat_surf_fun('isocolors',CS,cat_vol_morph(Yvxdef,'d'),Smat.matlabIBB_mm)>0; clear Yvxdef; 
+    if opt.reduce_mesh>0 
+      vdefects       = cat_surf_fun('isocolors',CS,cat_vol_morph(Yvxdef,'d'),Smat.matlabIBB_mm)>0; clear Yvxdef;
+    else
+      vdefects       = cat_surf_fun('isocolors',CS,cat_vol_morph(Yvxdef,'d'),Smat.matlabiBB_mm)>0; clear Yvxdef;
+    end 
     defect_size0   = sum(vdefects > 0) / length(vdefects) * 100; % percent
     defect_area0   = sum(vdefects > 0) / length(vdefects) .* ...
       sum(cat_surf_fun('area',CS)) / opt.interpV / 100; % cm2
@@ -786,7 +808,17 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Y
       cat_io_cprintf('g5',' )');
       fprintf(repmat(' ',1,max(0,14 - numel(sprintf('%d/%d/%0.2f%%%% )',EC0,defect_number0,defect_size0))))); 
     end
-    CS = cat_surf_fun('smat',CS,Smat.matlabIBB_mm);   % translate to mm coordinates 
+    
+    % translate to mm coordinates
+    if opt.reduce_mesh>0 
+      CS = cat_surf_fun('smat',CS,Smat.matlabIBB_mm);   
+    else
+      CS = cat_surf_fun('smat',CS,Smat.matlabiBB_mm);   
+      
+      % restore old variables
+      Yppi = Yppio; clear Yppio;
+      Ymfs = Ymfso; clear Ymfso; 
+    end  
     if opt.surf_measures > 1, CSraw0 = CS; end       % need this map later to create a common defect map
     if ~debug, clear mask_parahipp_smoothed; end
     
@@ -794,19 +826,23 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Y
     
     %% reduce resolution with higher resolution for cerebellum and fast option
     %  ##########
-    %    Both the SPM as well as the MATLAB function crashed my MATLAB
+    %  * Both the SPM as well as the MATLAB function crashed my MATLAB
     %    multiple times (unreproducible and fatal).
-    %    However, I have not idea why this happen and if it only on my system
+    %    However, I have no idea why this happen and if it only on my system
     %    or how I could avoid or catch it because it is not just a simple error. 
     %    > This also happens if I only use double.
+    %    > It also happens on the server. 
     %  RD201911
+    %  * use the same mesh resolution for the cerebellum for acceptable processing times. 
     %  ##########
-    if opt.reduce_mesh 
+    if opt.reduce_mesh>0 && opt.reduce_mesh<4 
       CS.vertices = double(CS.vertices); CS.faces = double(CS.faces); 
       if opt.reduce_mesh == 1
         CS = spm_mesh_reduce(CS, 81920 / (1 + (opt.vdist>2)) * (1 + 0*iscerebellum) );
       elseif  opt.reduce_mesh == 2
         CS = reducepatch(CS, 81920 / (1 + (opt.vdist>2)) * (1 + 0*iscerebellum) );
+      elseif  opt.reduce_mesh == 3
+        CS = cat_surf_fun('reduce',CS, 81920 / (1 + (opt.vdist>2)) * (1 + 0*iscerebellum) ); 
       end  
       % remove bad faces 
       CS = correctReducePatch(CS);
@@ -1008,7 +1044,12 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Y
     stime = cat_io_cmd('  Surface optimization and refinement:','g5','',opt.verb,stime); 
 
     % refinement - important for sulci .. here we need a lot of details with a similar resolution as the Insula 
-    cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Pcentral,Pcentral,0.8); 
+    if opt.reduce_mesh>0 % SPM/MATLAB reduce and accurate version
+      meshres = 0.8; % this will create a super resolution that has to be reduced or will result in long processing times 
+    else
+      meshres = opt.vdist;
+    end
+    cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Pcentral,Pcentral, meshres ); 
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
 
     % surface refinement (this time even before reduction)
@@ -1020,13 +1061,16 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Y
     end
     
     % reduce - as far as the Insula/Amygdala is not so heavily folded compared to sulci this region is first reduced 
-    CS = loadSurf(Pcentral); rfaces =  min( max( 81920 , opt.reduceCS/2 ) , 81920 * 4 );
-    if opt.reduce_mesh
+    CS = loadSurf(Pcentral); 
+    if opt.reduce_mesh>0 && opt.reduce_mesh<4
+      rfaces =  min( max( 81920 , opt.reduceCS/2 ) , 81920 * 4 );
       CS.vertices = double(CS.vertices); CS.faces = double(CS.faces); 
       if opt.reduce_mesh == 1
         CS = spm_mesh_reduce(struct('vertices',CS.vertices,'faces',CS.faces),rfaces); 
       elseif  opt.reduce_mesh == 2
         CS = reducepatch(struct('vertices',CS.vertices,'faces',CS.faces),rfaces); 
+      elseif  opt.reduce_mesh == 3
+        CS = cat_surf_fun('reduce',CS,rfaces); 
       end
       % remove bad faces 
       CS = correctReducePatch(CS);
@@ -1589,6 +1633,24 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Y
     for si=1:numel(Psurf)
       fprintf('  Display thickness: %s\n',spm_file(Psurf(si).Pthick,'link','cat_surf_display(''%s'')'));
     end
+    
+    
+    %% surfaces in spm_orthview
+    if exist(Pm,'file'), Po = Pm; else, Po = V0.fname; end
+    
+    Porthfiles = '{'; Porthcolor = '{'; Porthnames = '{';
+    for si=1:numel(Psurf)
+      Porthfiles = [ Porthfiles , sprintf('''%s'',''%s'',',Psurf(si).Ppial, Psurf(si).Pwhite )]; 
+      Porthcolor = [ Porthcolor , '''-g'',''-r'',' ]; 
+      Porthnames = [ Porthnames , '''white'',''pial'',' ];
+    end
+    Porthfiles = [ Porthfiles(1:end-1) '}']; 
+    Porthcolor = [ Porthcolor(1:end-1) '}']; 
+    Porthnames = [ Porthnames(1:end-1) '}']; 
+      
+    fprintf('    Show in orthview: %s\n',spm_file(Po ,'link',...
+      sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,Po,Porthcolor,Porthnames))) ;
+
   end
 end
 function saveSurf(CS,P)
