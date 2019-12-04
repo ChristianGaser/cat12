@@ -480,7 +480,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     % ... clearup this part of code when finished ...
     
     %% add contex menu for principle test
-    Psurf2 = Psurf; ids = 2:3;
+    Psurf2 = Psurf; ids = 1:3;
     % phite/pial surface in segmentation view number 3
     for ix=1:numel(Psurf2) 
       Psurf2(end+1).Pcentral = Psurf2(ix).Pwhite; 
