@@ -225,20 +225,20 @@ cat.extopts.brainmask    = {fullfile(spm('Dir'),'toolbox','FieldMap','brainmask.
 cat.extopts.T1           = {fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii')};                                        % T1 for affine registration
 
 % surface options
-cat.extopts.pbtres         = 0.5;   % internal resolution for thickness estimation in mm (default 0.5) 
-cat.extopts.collcorr       = 23;    % correction of surface collisions (experimental, not yet working properly!): 0 - none; 1 - Deformation; 20 - none2; 21 - Deformation; 22 - CAT_SI; 23 - PBT; 24 - PBT opt. 
-cat.extopts.pbtlas         = 0;     % reduce myelination effects (experimental, not yet working properly!)
-cat.extopts.thick_measure  = 1;     % distance method for estimating thickness:  1 - Tfs: Freesurfer method using mean(Tnear1,Tnear2) (default in 12.7+); 0 - Tlink: linked distance (used before 12.7)
-cat.extopts.thick_limit    = 5;     % upper limit for Tfs thickness measure similar to Freesurfer (only valid if cat.extopts.thick_measure is set to "1"
-cat.extopts.close_parahipp = 0;     % optionally apply closing inside mask for parahippocampal gyrus to get rid of the holes that lead to large
-                                    % cuts in gyri after topology correction. However, this may also lead to poorer quality of topology 
-                                    % correction for other data and should be only used if large cuts in the parahippocampal areas occur
-cat.extopts.scale_cortex   = 0.7;   % scale intensity values for cortex to start with initial surface that is closer to GM/WM border to prevent that gyri/sulci are glued 
-                                    % if you still have glued gyri/sulci (mainly in the occ. lobe) you can try to decrease this value (start with 0.6)
-                                    % please note that decreasing this parameter also increases the risk of an interrupted parahippocampal gyrus
-cat.extopts.add_parahipp   = 0.1;   % increase values in the parahippocampal area to prevent large cuts in the parahippocampal gyrus (initial surface in this area
-                                    % will be closer to GM/CSF border)
-                                    % if the parahippocampal gyrus is still cut you can try to increase this value (start with 0.15)
+cat.extopts.pbtres         = 0.5; % internal resolution for thickness estimation in mm (default 0.5) 
+cat.extopts.collcorr       = 23;  % correction of surface collisions (experimental, not yet working properly!): 0 - none; 1 - Deformation; 20 - none2; 21 - Deformation; 22 - CAT_SI; 23 - PBT; 24 - PBT opt. 
+cat.extopts.pbtlas         = 0;   % reduce myelination effects (experimental, not yet working properly!)
+cat.extopts.thick_measure  = 1;   % distance method for estimating thickness:  1 - Tfs: Freesurfer method using mean(Tnear1,Tnear2) (default in 12.7+); 0 - Tlink: linked distance (used before 12.7)
+cat.extopts.thick_limit    = 5;   % upper limit for Tfs thickness measure similar to Freesurfer (only valid if cat.extopts.thick_measure is set to "1"
+cat.extopts.close_parahipp = 0;   % optionally apply closing inside mask for parahippocampal gyrus to get rid of the holes that lead to large
+                                  % cuts in gyri after topology correction. However, this may also lead to poorer quality of topology 
+                                  % correction for other data and should be only used if large cuts in the parahippocampal areas occur
+cat.extopts.scale_cortex   = 0.7; % scale intensity values for cortex to start with initial surface that is closer to GM/WM border to prevent that gyri/sulci are glued 
+                                  % if you still have glued gyri/sulci (mainly in the occ. lobe) you can try to decrease this value (start with 0.6)
+                                  % please note that decreasing this parameter also increases the risk of an interrupted parahippocampal gyrus
+cat.extopts.add_parahipp   = 0.1; % increase values in the parahippocampal area to prevent large cuts in the parahippocampal gyrus (initial surface in this area
+                                  % will be closer to GM/CSF border)
+                                  % if the parahippocampal gyrus is still cut you can try to increase this value (start with 0.15)
 
 % visualisation, print, developing, and debugging options
 cat.extopts.colormap     = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
@@ -252,7 +252,9 @@ cat.extopts.fontsize     = get(0,'defaultuicontrolFontSize'); % default font siz
 %cat.extopts.fontsize     = spm('FontSizes',7); % set default font size for GUI manually; increase value for larger fonts or set it to 
 cat.extopts.send_info    = 1;     % send Matlab and CAT12 version to SBM server for internal statistics only. If you don't want to send this 
                                   % information set this flag to "0". See online help CAT12->CAT12 user statistics for more information
-
+cat.extopts.gifti_dat    = 1;     % save gifti files after resampling with external dat-file, which increases speed of gifti-processing and keeps SPM.mat file small
+                                  % because the cdata field is not saved with full data in SPM.mat.
+                                  
 % always use expert mode for standalone installations
 if isdeployed, cat.extopts.expertgui = 1; end
 
