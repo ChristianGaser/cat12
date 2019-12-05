@@ -1607,7 +1607,7 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Y
     if cat_get_defaults('extopts.expertgui')
     % color output currently only for expert ...
       fprintf('  Average thickness:                     ');
-      cat_io_cprintf( color( rate( abs( mean(mnth) - 2.5 ) , 0 , 2.0 )) , sprintf('%0.4f'  , mean(mnth) ) );  fprintf(' %s ',char(177));
+      cat_io_cprintf( color( rate( abs( mean(mnth) - 2.5 ) , 0 , 2.0 )) , sprintf('%0.4f'  , mean(mnth) ) );  fprintf(' %s ',native2unicode(177, 'latin1'));
       cat_io_cprintf( color( rate( abs( mean(sdth) - 0.5 ) , 0 , 1.0 )) , sprintf('%0.4f mm\n', mean(sdth) ) );
   
       fprintf('  Surface intensity / position RMSE:     ');
@@ -1625,7 +1625,7 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Y
       cat_io_cprintf( color( rate(  defect_size   , 0 , 10  * (1+9*iscerebellum)) ) , sprintf('%0.2f%%%% ' , defect_size ) );
       fprintf('\n');
     else
-      fprintf('  Average thickness:                     %0.4f %s %0.4f mm\n' , mean(mnth), char(177), mean(sdth));
+      fprintf('  Average thickness:                     %0.4f %s %0.4f mm\n' , mean(mnth), native2unicode(177, 'latin1'), mean(sdth));
       %fprintf('  Surface intensity / position RMSE:     %0.4f & %0.4f\n'      , mean(sdRMSE_Ym) ,mean(sdRMSE_Ypp) );
       fprintf('  Euler characteristic / defect size:    %0d / %0.2f%%%%\n'     , EC, defect_size);
     end

@@ -800,7 +800,9 @@ if sdepth == 0 || ...
 
         % and without ?
         else
-            ilist = dir([path patterns{pcount}]);
+            % prevent doubled wildcards that are not allowed
+            patterns{pcount} = regexprep(patterns{pcount}, '**', '*');
+            ilist = dir(fullefile(path,patterns{pcount}));
         end
         slist = numel(ilist);
 
