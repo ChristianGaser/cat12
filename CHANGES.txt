@@ -1,5 +1,22 @@
 ------------------------------------------------------------------------
-r1529 | dahnke | 2019-12-04 12:33:57
+r1530 | gaser | 2019-12-05 09:36:10
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main_reportstr.m
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       cat_surf_fun.m
+M       cat_vol_findfiles.m
+
+(1) Fixed: prevent use of doubled wildcards in cat_fol_findfiles.m that were
+    not allowed.
+(2) Changed: Disabled printout of computation time for each single step of 
+    collission detection in cat_surf_fun.m and reformated some code.
+(3) Changed: Added some changes for compatibility for Octave.
+
+------------------------------------------------------------------------
+r1529 | dahnke | 2019-12-04 12:36:39 +0100 (Mi, 04 Dez 2019) | 18 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -16,6 +33,7 @@ A       cat_vol_ROIval.m
 (3) Changed:    Use white/pial surface in all report figures.
 (4) New:        Added orthview output for all surfaces in cat_main and 
                 updated cat_surf_fun>cat_surf_show_orthview.
+
 
 
 ------------------------------------------------------------------------
