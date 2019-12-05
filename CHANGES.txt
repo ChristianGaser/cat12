@@ -1,5 +1,27 @@
 ------------------------------------------------------------------------
-r1530 | gaser | 2019-12-05 09:36:10
+r1531 | gaser | 2019-12-05 17:06:57
+
+Changed paths:
+M       CHANGES.txt
+M       cat_defaults.m
+M       cat_stat_spm.m
+M       cat_surf_resamp.m
+M       cat_surf_resamp_freesurfer.m
+M       cat_surf_results.m
+MM      cat_vol_ROIval.m
+M       cat_vol_findfiles.m
+MM      cat_vol_pbt2.m
+
+(1) Fixed: Typo that caused crash in cat_vol_findfiles.m.
+(2) Fixed: Corrected unnecessary update of info filed that caused problems
+    in cat_surf_results.m after switching between different results.
+(3) Changed: Changed gifti-format after resampling to use external dat-files.
+    This will increase processing speed and prevents that SPM.mat file for 
+    surfaces gets too large. This can be optionally disabled in cat_defaults.m.
+(4) Changed: Reformatted cat_stat_spm.m
+
+------------------------------------------------------------------------
+r1530 | gaser | 2019-12-05 09:36:42 +0100 (Do, 05 Dez 2019) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14,6 +36,7 @@ M       cat_vol_findfiles.m
 (2) Changed: Disabled printout of computation time for each single step of 
     collission detection in cat_surf_fun.m and reformated some code.
 (3) Changed: Added some changes for compatibility for Octave.
+
 
 ------------------------------------------------------------------------
 r1529 | dahnke | 2019-12-04 12:36:39 +0100 (Mi, 04 Dez 2019) | 18 lines

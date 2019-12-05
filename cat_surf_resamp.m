@@ -65,8 +65,16 @@ function varargout = cat_surf_resamp(varargin)
     str_resamp = '.resampled';
   end
 
+  % use external dat-file if defined to increase processing speed and keep SPM.mat file small
+  % because the cdata field is not saved with full data in SPM.mat
+  if cat_get_defaults('extopts.gifti_dat') 
+    gformat = 'ExternalFileBinary';
+  else
+    gformat = 'Base64Binary';
+  end
+
   % split job and data into separate processes to save computation time
-  if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
+  if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index')) && (size(P,1)>1)
     if nargout==1
       varargout{1} = cat_parallelize(job,mfilename,'data_surf');
     else
@@ -233,18 +241,18 @@ function varargout = cat_surf_resamp(varargin)
           [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
         end
 
-		if 0
-		  % resample surface using warped sphere with better surface quality (using Spherical harmonics)
-		  % ###
-		  % deactivated because the resampling of the surface alone leads to displacements of the textures (RD20190927)!
-		  % ###
-		  cmd = sprintf('CAT_ResampleSphericalSurfSPH -n 327680 "%s" "%s" "%s"',Pcentral,Pspherereg,Presamp);
-		  [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
-	
-		  % resample surface according to freesurfer sphere
-		  cmd = sprintf('CAT_ResampleSurf "%s" NULL "%s" "%s"',Presamp,Pfsavg,Presamp);
-		  [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
-		end
+    if 0
+      % resample surface using warped sphere with better surface quality (using Spherical harmonics)
+      % ###
+      % deactivated because the resampling of the surface alone leads to displacements of the textures (RD20190927)!
+      % ###
+      cmd = sprintf('CAT_ResampleSphericalSurfSPH -n 327680 "%s" "%s" "%s"',Pcentral,Pspherereg,Presamp);
+      [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
+  
+      % resample surface according to freesurfer sphere
+      cmd = sprintf('CAT_ResampleSurf "%s" NULL "%s" "%s"',Presamp,Pfsavg,Presamp);
+      [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
+    end
 
         % smooth resampled values
         % don't use mask for cerebellum
@@ -266,8 +274,13 @@ function varargout = cat_surf_resamp(varargin)
 
         g = gifti(Psname);
         g.private.metadata = struct('name','SurfaceID','value',[ff2 ex2]);
-        save(g, Psname, 'Base64Binary');
-
+        
+        if job.merge_hemi
+          save(g, Psname, 'Base64Binary');
+        else
+          save(g, Psname, gformat);
+        end
+        
         delete(Presamp);
         delete(Pfwhm);
         if job.fwhm_surf > 0, delete(Pvalue); end
@@ -302,17 +315,7 @@ function varargout = cat_surf_resamp(varargin)
           case {2,4}
             M0 = gifti({Pfwhm_all{1}, Pfwhm_all{2}});
             delete(Pfwhm_all{1}); delete(Pfwhm_all{2})
-            M.faces = [M0(1).faces; M0(2).faces+size(M0(1).vertices,1)];
-            M.vertices = [M0(1).vertices; M0(2).vertices];
-            M.cdata = [M0(1).cdata; M0(2).cdata];
-          %{
-          case 4 % THIS CASE CAN NOT BE REACHED! RD20180408
-            M0 = gifti({Pfwhm_all{3}, Pfwhm_all{4}});
-            delete(Pfwhm_all{3}); delete(Pfwhm_all{4})
-            M.faces = [M.faces; M0(1).faces+2*size(M0(1).vertices,1); M0(2).faces+3*size(M0(1).vertices,1)];
-            M.vertices = [M.vertices; M0(1).vertices; M0(2).vertices];
-            M.cdata = [M.cdata; M0(1).cdata; M0(2).cdata];
-          %}
+            M = gifti(spm_mesh_join([M0(1) M0(2)]));
           case 1
             cat_io_cprintf('err',sprintf('      - No data for opposite hemisphere found for %s!\n',fullfile(pp,Pfwhm)));
           case 3
@@ -322,9 +325,8 @@ function varargout = cat_surf_resamp(varargin)
         end
 
         if numel(exist_hemi) > 1
-          M.mat = M0(1).mat;
-          M.private.metadata = struct('name','SurfaceID','value',Pfwhm);
-          save(gifti(M), fullfile(pp,Pfwhm), 'Base64Binary');
+          M.private.metadata(1) = struct('name','SurfaceID','value',Pfwhm);
+          save(M, fullfile(pp,Pfwhm), gformat);
           Psdata{i} = fullfile(pp,Pfwhm);
         end
 
