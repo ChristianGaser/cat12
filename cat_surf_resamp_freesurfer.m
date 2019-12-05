@@ -29,6 +29,14 @@ function cat_surf_resamp_freesurfer(vargin)
 
   hemi_str = char('lh','rh');
   
+  % use external dat-file if defined to increase processing speed and keep SPM.mat file small
+  % because the cdata field is not saved with full data in SPM.mat
+  if cat_get_defaults('extopts.gifti_dat')
+    gformat = 'ExternalFileBinary';
+  else
+    gformat = 'Base64Binary';
+  end
+  
   for i=1:size(Psubj,1)
   
     stime = clock; 
@@ -86,7 +94,12 @@ function cat_surf_resamp_freesurfer(vargin)
       [pp2,ff2,ex2]   = spm_fileparts([Pfwhm '.gii']);
       g = gifti([Pfwhm '.gii']);
       g.private.metadata = struct('name','SurfaceID','value',[ff2 ex2]);
-      save(g, [Pfwhm '.gii'], 'Base64Binary');
+      
+      if vargin.merge_hemi
+        save(g, [Pfwhm '.gii'], 'Base64Binary');
+      else
+        save(g, [Pfwhm '.gii'], gformat);
+      end
   
       delete(Presamp);
       delete(Pfwhm);
@@ -103,12 +116,9 @@ function cat_surf_resamp_freesurfer(vargin)
       if numel(exist_hemi) > 1
         M0 = gifti({Pfwhm_all{1}, Pfwhm_all{2}});
         delete(Pfwhm_all{1}); delete(Pfwhm_all{2})
-        M.faces = [M0(1).faces; M0(2).faces+size(M0(1).vertices,1)];
-        M.vertices = [M0(1).vertices; M0(2).vertices];
-        M.cdata = [M0(1).cdata; M0(2).cdata];
-        M.mat = M0(1).mat;
+        M = gifti(spm_mesh_join([M0(1) M0(2)]));
         M.private.metadata = struct('name','SurfaceID','value',[ff ex]);
-        save(gifti(M), Pfwhm, 'Base64Binary');
+        save(M, Pfwhm, gformat);
         Psdata{i} = Pfwhm;
       else
         disp('No data for opposite hemisphere found!');

@@ -457,7 +457,6 @@ switch lower(action)
                 meshes_merged = H.merged;
                 
                 for ind = 1:2
-                    
                     % read meshes
                     H.S{ind}.info = cat_surf_info(H.S{ind}.name, 1);
                     
@@ -492,7 +491,7 @@ switch lower(action)
                             try
                                 Y = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
                             catch
-                                error('No data in surfaces found.');
+                                error('No data in surfaces found or surfaces have different mesh structure (32k vs. 164k).');
                             end
                             if H.is32k
                                 H.S{1}.Y = Y(1:32492, :);
@@ -1473,9 +1472,6 @@ H.S{2}.name = H.S2.name(sel, :);
 H.S{1}.Y = H.S1.Y(:, sel);
 H.S{2}.Y = H.S2.Y(:, sel);
 
-H.S{1}.info = cat_surf_info(H.S{1}.name, 0);
-H.S{2}.info = cat_surf_info(H.S{2}.name, 0);
-
 % check whether data for left or right hemipshere are all non-zero
 ind1 = find(H.S{1}.Y(:) ~= 0);
 ind2 = find(H.S{2}.Y(:) ~= 0);
@@ -1600,7 +1596,6 @@ for ind = 1:2
         case 4
             H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], [H.S{ind}.info(1).side '.patch.freesurfer.gii']);
     end
-    
     H.S{ind}.M = gifti(H.S{ind}.info(1).Pmesh);
 end
 
@@ -2779,7 +2774,7 @@ else
     txt = {sprintf('Node %d', node)};
 end
 
-% for merged meshe we only have one SPM.mat with data from both hemispheres
+% for merged meshes we only have one SPM.mat with data from both hemispheres
 if H.merged
     % add offset for right hemisphere
     if round(ind / 2) == 2
