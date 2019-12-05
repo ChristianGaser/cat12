@@ -265,6 +265,7 @@ function varargout = cat_surf_fun(action,S,varargin)
     
 end
 
+
 function S = cat_surf_reduce(S,red)
   Ptemp = tempname; 
   Ptmpo = [Ptemp 'o.gii'];
@@ -363,6 +364,7 @@ function edgemap = cat_surf_surf2surf(S1,S2,normalize)
   edgemap.dforward  = EL ./ EL1(E(:,1)); 
   edgemap.dbackward = EL ./ EL2(E(:,2)); 
 end
+
 function varargout = cat_surf_maparea(varargin)
 %  Apply graph-based mapping
 %  ------------------------------------------------------------------------
@@ -396,6 +398,7 @@ function varargout = cat_surf_maparea(varargin)
 
   varargout{1} = cat_surf_edgemap(edgemap,cdata,idir);
 end
+
 function cdata2 = cat_surf_edgemap(edgemap,cdata,idir)
   if idir==0
     cdata2 = zeros(edgemap.nvertices(2),1,'single');
@@ -411,6 +414,7 @@ function cdata2 = cat_surf_edgemap(edgemap,cdata,idir)
     end    
   end
 end
+
 function [IS,OS] = cat_surf_createinneroutersurface(S,T,Yp0)
   if ~exist('Yp0','var')
     % render surface
@@ -426,6 +430,7 @@ function [IS,OS] = cat_surf_createinneroutersurface(S,T,Yp0)
   IS.vertices = cat_surf_steams(L  ,T/2);
   OS.vertices = cat_surf_steams(1-L,T/2);
 end
+
 function VV = cat_surf_gmv(IS,OS)
 % Estimate the volume between the given inner and outer boundary surface.
 % 
@@ -460,6 +465,7 @@ function VV = cat_surf_gmv(IS,OS)
   VV = VV./max(1,DS); 
  
 end
+
 function DV = tetraedervolume(D,V)
 % estimate tetraeder volume by the Cayley-Menger determinant
 % Robert Dahnke 201904
@@ -483,6 +489,7 @@ function DV = tetraedervolume(D,V)
     DV(i) = sqrt(det( DM .^2 ) / 288);
   end
 end
+
 function varargout = cat_surf_GMboundarySurface(type,varargin)
 %
 %   ... = cat_surf_GMboundarySurface(type,Ps,Pth)
@@ -1019,6 +1026,7 @@ function [SH,V] = cat_surf_core(S,opt)
   SH.vertices = [SH.vertices(:,2) SH.vertices(:,1) SH.vertices(:,3)]; % matlab flip
   SH.vertices = SH.vertices + repmat(min(S.vertices),size(SH.vertices,1),1) - 5;
 end
+
 function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
 % _________________________________________________________________________
 % cat_surf_evalCS in cat_surf_fun print out some values to characterize a
@@ -1250,7 +1258,7 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
     res.thickness_mn_sd_md_mx = [mean(T),std(T),median(T),max(T)];
     if verb
       fprintf('    Thickness values:                    %0.4f%s%0.4f (md=%0.4f,mx=%0.4f)\n',...
-        res.thickness_mn_sd_md_mx(1),char(177),res.thickness_mn_sd_md_mx(2:end)); 
+        res.thickness_mn_sd_md_mx(1),native2unicode(177, 'latin1'),res.thickness_mn_sd_md_mx(2:end)); 
     end
   end
   
@@ -1263,7 +1271,7 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
     res.abscurv_mn_sd_md_mx = [mean(C),std(C),median(C),max(C)];
     if verb
       fprintf('    Abs mean curvature values:           %0.4f%s%0.4f (md=%0.4f,mx=%0.4f)\n',...
-        res.abscurv_mn_sd_md_mx(1),char(177),res.abscurv_mn_sd_md_mx(2:end)); 
+        res.abscurv_mn_sd_md_mx(1),native2unicode(177, 'latin1'),res.abscurv_mn_sd_md_mx(2:end)); 
     end
   end
   
@@ -1280,6 +1288,7 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
     fprintf('\n'); 
   end
 end
+
 function cat_surf_saveICO(S,Tpbt,Pcs,subdir,Pm,mat,writeTfs,writeSI,writeL4,writeInt)
 % _________________________________________________________________________
 % Save surface data for debugging:
@@ -1462,6 +1471,7 @@ function cat_surf_saveICO(S,Tpbt,Pcs,subdir,Pm,mat,writeTfs,writeSI,writeL4,writ
     res = cat_surf_evalCS(S,Tpbt,Ym,Ypp,Tclasses)
   end
 end
+
 function Sg = cat_surf_volgrad(varargin)
 % _________________________________________________________________________
 % This function estimates the local gradient in an image along the surface
@@ -1512,6 +1522,7 @@ function Sg = cat_surf_volgrad(varargin)
   
   Sg  = Si1 - Si2; 
 end
+
 function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt) 
 % _________________________________________________________________________
 % Correction of self-intersection (S) by iterative use of the 
@@ -1673,9 +1684,10 @@ function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt)
     if corrsize <= opt.accuracy, final = final + 1; end
     if opt.verb
       cat_io_cprintf('g5',sprintf( ...
-        '    Step %2d (SS=%02.0f%%%%, SI=%5.2f%%%%, T=%4.2f%s%4.2f)                    %5.0fs\n',...
+        '    Step %2d (SS=%02.0f%%%%, SI=%5.2f%%%%, T=%4.2f%s%4.2f)',...
         i,corrsize*100, (sum(selfw>0)/2 + sum(selfp>0)/2) / numel(selfw) * 100,...
-        mean(Tn),char(177),std(Tn),etime(clock,stime))); stime = clock;  
+        mean(Tn),native2unicode(177, 'latin1'),std(Tn)));  
+      fprintf(sprintf('%s',repmat('\b',1,73*2)));
     end
     if  (sum(selfw>0)/2 + sum(selfp>0)/2) / numel(selfw) * 100  <  opt.accuracy % if changes are below a specified relative level
       if final < 4 && (sum(selfw>0)/2 + sum(selfp>0)/2)>0                       % do some additional iterations if required
@@ -1686,9 +1698,11 @@ function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt)
     end
   end
   
+  fprintf('\n');
   % final settings: back to world thickness in mm 
   if flipped, S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); end
 end
+
 function flipped = cat_surf_checkNormalDir(S)
 % estimate the orientation of the surface by adding the normals and
 % testing which directions makes the surface great again :D
@@ -1696,6 +1710,7 @@ function flipped = cat_surf_checkNormalDir(S)
   Snin    = mean( abs(S.vertices(:) - N(:) ) ) > mean( abs(S.vertices(:) + N(:) ) ); 
   flipped = ~Snin;
 end
+
 function V = cat_surf_smooth(M,V,s,mode)
   if ~exist('s','var'), s = 1; end
   if ~exist('mode','var'), mode = 0; end
@@ -1730,6 +1745,7 @@ function V = cat_surf_smooth(M,V,s,mode)
     single(V);
   end
 end
+
 function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
 % _________________________________________________________________________
 % This function utilize the percentage position map Ypp map of the 
@@ -1853,7 +1869,7 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
         YI = cat_surf_isocolors2(Y,VI,opt.mat);
         YO = cat_surf_isocolors2(Y,VO,opt.mat);
 
-        if opt.verb, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),char(177),std(YI),mean(YO),char(177),std(YO)); end 
+        if opt.verb, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),native2unicode(177, 'latin1'),std(YI),mean(YO),native2unicode(177, 'latin1'),std(YO)); end 
       
         % to fast corrections can jump gyri/sulci 
         GWth = 3 * 0.5 + 0.5 * Yl4; 
@@ -1867,7 +1883,7 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
         YI = cat_surf_isocolors2(Ypp,VI,opt.mat); YI = cat_surf_isocolors2(Y,VI,opt.mat) + YI - (YI>eps) .* 0.95; 
         YO = cat_surf_isocolors2(Ypp,VO,opt.mat); YO = cat_surf_isocolors2(Y,VO,opt.mat) + YO - (YO>eps) .* 0.05;  
 
-        if opt.verb, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),char(177),std(YI),mean(YO),char(177),std(YO)); end 
+        if opt.verb, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),native2unicode(177, 'latin1'),std(YI),mean(YO),native2unicode(177, 'latin1'),std(YO)); end 
       
         % to fast corrections can jump gyri/sulci 
         GWth = 3 * 0.5 + 0.5 * Yl4; 
@@ -1884,7 +1900,7 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
         YI = cat_surf_isocolors2(Ypp,VI,opt.mat); 
         YO = cat_surf_isocolors2(Ypp,VO,opt.mat);  
 
-        if 1+opt.verb>1, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),char(177),std(YI),mean(YO),char(177),std(YO)); end 
+        if 1+opt.verb>1, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),native2unicode(177, 'latin1'),std(YI),mean(YO),native2unicode(177, 'latin1'),std(YO)); end 
 
         % correction value 
         YI = max(-1, min(1, ( GWth - YI ) * max(0.01,0.02 .* (1 - i / opt.iteropt)) ));
@@ -1931,7 +1947,7 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
       end
       clear YppOC YOC YppO VOg; 
       
-      if opt.verb>1, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),char(177),std(YI),mean(YO),char(177),std(YO)); end
+      if opt.verb>1, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),native2unicode(177, 'latin1'),std(YI),mean(YO),native2unicode(177, 'latin1'),std(YO)); end
       % YO = YO ./ max(0.8,TN/mean(TN(:))); % less correction if thicker than the average - this does not work!  
       
       % smooth data 
@@ -2047,8 +2063,9 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
     if corrsize <= opt.accuracy, final = final + 1; end
     if opt.verb
       cat_io_cprintf('g5',sprintf( ...
-        '    Step %2d (SS=%02.0f%%%%, SI=%5.2f%%%%, T=%4.2f%s%4.2f)                      %5.0fs\n',...
-        i,corrsize*100, SI, mean(Tn),char(177),std(Tn),etime(clock,stime))); stime = clock;  
+        '    Step %2d (SS=%02.0f%%%%, SI=%5.2f%%%%, T=%4.2f%s%4.2f)',...
+        i,corrsize*100, SI, mean(Tn),native2unicode(177, 'latin1'),std(Tn)));  
+      fprintf(sprintf('%s',repmat('\b',1,73*2)));
     end
     if  ((sum(selfw>0)/2 + sum(selfp>0)/2) / numel(selfw) * 100  <  opt.accuracy) || (i>opt.iterfull && SI<0.1 && abs(SI - SIO)<0.005) % if changes are below a specified relative level
       if final < 4 && (sum(selfw>0)/2 + sum(selfp>0)/2)>0 && i>opt.iterfull  && abs(SI - SIO)>0.005                      % do some additional iterations if required
@@ -2060,9 +2077,11 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
     SIO = SI;
   end
   
+  fprintf('\n');
   if flipped, S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); end
   
 end 
+
 function [SN,TN,E] = cat_surf_collision_correction(S,T,Y,Ypp,Yl4,opt) 
 % _________________________________________________________________________
 % Delaunay based collision detection:
@@ -2598,7 +2617,7 @@ opt.model=0;
     if opt.model == 0 || opt.model == 2
       TOC  = single( spm_mesh_smooth(M,double(TOC), sf ))*1.4;   TOC = TOC / (slowdown/2); 
       TIC  = single( spm_mesh_smooth(M,double(TIC), sf ))*1.2;   TIC = TIC / (slowdown/2); 
-      if opt.verb, fprintf('\n  TIC: %0.2f%s%0.2f, TOC: %0.2f%s%0.2f',mean(TIC),char(177),std(TIC),mean(TOC),char(177),std(TOC)); end
+      if opt.verb, fprintf('\n  TIC: %0.2f%s%0.2f, TOC: %0.2f%s%0.2f',mean(TIC),native2unicode(177, 'latin1'),std(TIC),mean(TOC),native2unicode(177, 'latin1'),std(TOC)); end
     end
     %%
     if opt.model
@@ -2612,7 +2631,7 @@ opt.model=0;
       YppO  = cat_surf_isocolors2(Ypp,VO);  
      
       if opt.model == 1, fprintf('\n'); end
-      if opt.verb, fprintf('  YIC: %0.2f%s%0.2f, YOC: %0.2f%s%0.2f',mean(YI),char(177),std(YI),mean(YO),char(177),std(YO)); end 
+      if opt.verb, fprintf('  YIC: %0.2f%s%0.2f, YOC: %0.2f%s%0.2f',mean(YI),native2unicode(177, 'latin1'),std(YI),mean(YO),native2unicode(177, 'latin1'),std(YO)); end 
 
       WMth  = 3; YI   = max( -TICP , max(-1, min(0.5, YI - ((WMth/2 + Yl4/2) )  ))  ) / (slowdown);
       CSFth = 1; YO   = max( -TOCP , max(-1, min(0.5, ((CSFth/2 + Yl4/2) ) - YO ))  ) / (slowdown);% + 2*C
@@ -2626,7 +2645,7 @@ opt.model=0;
       end
       YO = YO * 0.8 - 0.2 * Yppc; 
         
-      if opt.verb, fprintf(', YIC: %0.2f%s%0.2f, YOC: %0.2f%s%0.2f',mean(YI),char(177),std(YI),mean(YO),char(177),std(YO)); end
+      if opt.verb, fprintf(', YIC: %0.2f%s%0.2f, YOC: %0.2f%s%0.2f',mean(YI),native2unicode(177, 'latin1'),std(YI),mean(YO),native2unicode(177, 'latin1'),std(YO)); end
 
       VOC = V - N .* repmat( TN/2 - YO ,1,3);    % outer surface 
       VIC = V + N .* repmat( TN/2 - YI ,1,3);    % inner surface
@@ -2689,8 +2708,8 @@ opt.model=0;
       TNM = TN>(mean(TN(:)) - 2*std(TN(:))) & TN<(mean(TN(:)) + 2*std(TN(:)));
       if ~opt.verb, fprintf('\n'); end
       try
-        cat_io_cprintf('g5',sprintf('    reminding overlap:      %8.4f mm (Tlink: %4.2f%s%4.2f mm) %9.0fs',...
-          TCsum,mean(TN(TNM)),char(177),std(TN(TNM)),etime(clock,stime) )); stime = clock;
+        cat_io_cprintf('g5',sprintf('    remaining overlap:      %8.4f mm (Tlink: %4.2f%s%4.2f mm) %9.0fs',...
+          TCsum,mean(TN(TNM)),native2unicode(177, 'latin1'),std(TN(TNM)),etime(clock,stime) )); stime = clock;
       end
     end
     if ( TCsum<0.005 || abs(TCsumo - TCsum)<stopiterth) && abs( mean(TN(NM)) - TNold )<0.001, break; end
@@ -2706,6 +2725,7 @@ opt.model=0;
   
 
 end
+
 function cat_surf_show_orthview(Psurf,Pm,color,cnames)
   fg = spm_figure('GetWin','Graphics');
   %fg = spm_figure('Create','SurfaceOverlay');%,Psurf);
@@ -2763,6 +2783,7 @@ function cat_surf_show_orthview(Psurf,Pm,color,cnames)
     end
   end
 end
+
 function C = cat_surf_centroid(V,F,n)
 % _________________________________________________________________________
 % calculates the centroid of a region
@@ -2786,6 +2807,7 @@ function C = cat_surf_centroid(V,F,n)
     end
   end
 end  
+
 function [Yd,Yv] = cat_surf_vdist(S,V,M,opt)
 % CAT surface rendering with PVE by distance approximation.
 %
@@ -2874,6 +2896,7 @@ function [Yd,Yv] = cat_surf_vdist(S,V,M,opt)
   %Yd = reshape(VDD,size(Y)) .* sign(90-reshape(VSD,size(Y))); 
   %Yv = min(1,max(0,Yd + 0.5)); 
 end
+
 function S=cat_surf_meshinterp(S,interp,method,distth)  
   if ~exist('interp','var'), interp = 1; else interp=single(interp); end
   if interp==0, return, end
@@ -2959,6 +2982,7 @@ function S=cat_surf_meshinterp(S,interp,method,distth)
   end
   S.vertices = V; S.faces = double(F); if exist('C','var'), S.facevertexcdata = C; end
 end
+
 function [V,F,C]=reduce_points(V,F,C)
   try
     [V,~,j]  = unique(V, 'rows'); 
@@ -2972,12 +2996,14 @@ function [V,F,C]=reduce_points(V,F,C)
   else             F = j(F);  if exist('C','var'), C=j(C);  end    
   end
 end
+
 function cdata2 = cat_surf_surf2vol2surf(S,S2,cdata,res)
  % create volume 
  % render data
  % aprax
  % proejcet 
 end
+
 function [Yp,Yt,vmat1,vmat1i] = cat_surf_surf2vol(S,Y,T,type,opt)
 % cat_surf_surf2vol
 % _________________________________________________________________________
@@ -3308,11 +3334,11 @@ function [Yp,Yt,vmat1,vmat1i] = cat_surf_surf2vol(S,Y,T,type,opt)
         Tgmt = cat_surf_isocolors2(Ygmt, ([0 1 0; 1 0 0; 0 0 1] *  [eye(3) vmat1'] * [S.vertices';ones(1,size(S.vertices,1))] )' );
         Tpbt = cat_surf_isocolors2(Ypbt, ([0 1 0; 1 0 0; 0 0 1] *  [eye(3) vmat1'] * [S.vertices';ones(1,size(S.vertices,1))] )' );
         
-        fprintf('\n  T_surf:    %0.2f%s%0.2f (md=%0.2f)\n',mean(T),char(177),std(T),median(T));
+        fprintf('\n  T_surf:    %0.2f%s%0.2f (md=%0.2f)\n',mean(T),native2unicode(177, 'latin1'),std(T),median(T));
         fprintf('  T_direct:  %0.2f%s%0.2f (md=%0.2f, RMSE=%0.2f)\n',...
-          mean(Ygmt(Ygmt(:)>0)),char(177),std(Ygmt(Ygmt(:)>0)),median(Ygmt(Ygmt(:)>0)),rms(T - Tgmt));
+          mean(Ygmt(Ygmt(:)>0)),native2unicode(177, 'latin1'),std(Ygmt(Ygmt(:)>0)),median(Ygmt(Ygmt(:)>0)),rms(T - Tgmt));
         fprintf('  T_pbtfast  %0.2f%s%0.2f (md=%0.2f, RMSE=%0.2f)\n',...
-          mean(Ypbt(Ypbt(:)>0)),char(177),std(Ypbt(Ypbt(:)>0)),median(Ypbt(Ypbt(:)>0)),rms(T - Tpbt));
+          mean(Ypbt(Ypbt(:)>0)),native2unicode(177, 'latin1'),std(Ypbt(Ypbt(:)>0)),median(Ypbt(Ypbt(:)>0)),rms(T - Tpbt));
         cat_io_cmd(' ','g5','',opt.verb);
       end
   end
@@ -3324,6 +3350,7 @@ function [Yp,Yt,vmat1,vmat1i] = cat_surf_surf2vol(S,Y,T,type,opt)
     fprintf('%5.0fs\n',etime(clock,ftime)); 
   end
 end
+
 function [V,vmat,vmati] = cat_surf_surf2vol_old(S,opt)
 %% render inner surface area 
 %  Render the volume V with V==1 within the surface. 
@@ -3532,6 +3559,7 @@ function [V,vmat,vmati] = cat_surf_surf2vol_old(S,opt)
   %SH.vertices = [SH.vertices(:,2) SH.vertices(:,1) SH.vertices(:,3)]; % matlab flip
   %SH.vertices = SH.vertices + repmat(min(S.vertices),size(SH.vertices,1),1) - 5;
 end
+
 function alpha = cat_surf_edgeangle(N1,N2)
 %cat_surf_fun>cat_surf_edgeangle Estimate angle between two vectors. 
 %
@@ -3586,6 +3614,7 @@ function N = cat_surf_normals(S)
   Ns = sum(N,2);
   N  = N ./ repmat(Ns,1,3); 
 end
+
 function S = cat_surf_mat(S,mat,invers,nin)
 %cat_surf_fun>cat_surf_mat 
 %  Apply transformation matrix mat to a surface structure S. 
@@ -3640,6 +3669,7 @@ function S = cat_surf_mat(S,mat,invers,nin)
     end
   end
 end
+
 function I = cat_surf_isocolors2(V,Y,mat,interp)
 %cat_surf_fun>cat_surf_isocolors2 Map volume data to surface.
 %  Calculates an interpolated value of a vertex V in Y.  
