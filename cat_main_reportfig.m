@@ -545,12 +545,12 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     
 %%
   imat = spm_imatrix(res.Affine); Rigid = spm_matrix([imat(1:6) 1 1 1 0 0 0]); clear imat;
-  id1  = find( ~cellfun('isempty',strfind({Psurf(:).Pcentral},'lh.')) ,1, 'first'); 
          
   % surface
   if job.extopts.print>1
     if exist('Psurf','var') && ~isempty(Psurf)
       try
+        id1  = find( ~cellfun('isempty',strfind({Psurf(:).Pcentral},'lh.')) ,1, 'first'); 
         %%
         spm_figure('Focus','Graphics'); 
         hCS = subplot('Position',[0.50 0.05 0.55 0.30],'visible','off'); 
@@ -634,15 +634,16 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   
   
   %% change line style of TPM surf
-  if (job.extopts.expertgui>0 - showTPMsurf) && ov_mesh
+  if (job.extopts.expertgui>0 - showTPMsurf) && ov_mesh && exist('Psurf','var') && ~isempty(Psurf)
     for id=1:3
-      hM = findobj(st.vols{id}.ax{1}.cm,'Label','Mesh');
-      UD = get(hM,'UserData');
-      if any(id==ids); nPsurf = numel(Psurf2); else, nPsurf = numel(Psurf); end
-      UD.width = [repmat(0.5,1,numel(UD.width) - nPsurf)  repmat(0.5,1,nPsurf)]; 
-      UD.style = [repmat({'r--'},1,numel(UD.width) - nPsurf) repmat({'k-'},1,nPsurf)];
+      
+        hM = findobj(st.vols{id}.ax{1}.cm,'Label','Mesh');
+        UD = get(hM,'UserData');
+        if any(id==ids); nPsurf = numel(Psurf2); else, nPsurf = numel(Psurf); end
+        UD.width = [repmat(0.5,1,numel(UD.width) - nPsurf)  repmat(0.5,1,nPsurf)]; 
+        UD.style = [repmat({'r--'},1,numel(UD.width) - nPsurf) repmat({'k-'},1,nPsurf)];
+        set(hM,'UserData',UD);
       set( cclp,'Color', [1 0 0]);
-      set(hM,'UserData',UD);
       spm_ov_mesh('redraw',id);
     end
   end  

@@ -193,7 +193,7 @@ xml = convert(xmltree(deblank(roi_names{1})));
 % get selected atlas and measure
 [sel_atlas, sel_measure, atlas, measure] = get_atlas_measure(xml);
 % get names IDs and values of selected atlas and measure inside ROIs
-[ROInames ROIids ROIvalues] = get_ROI_measure(roi_names, sel_atlas, sel_measure);
+[ROInames ROIids ROIvalues] = get_ROI_measure(roi_names, atlas, measure);
 
 % get name of contrast
 str_con = deblank(xCon(Ic).name);
@@ -334,6 +334,12 @@ end
 
 atlas_loaded = 0;
 
+% set empty index for found results
+ind_corr = cell(n_corr,1);
+for c = 1:n_corr
+  ind_corr{c} = [];
+end
+
 % go through left and right hemisphere and structures in both hemispheres
 for i = sort(unique(hemi_code))'
 
@@ -403,7 +409,7 @@ for i = sort(unique(hemi_code))'
   % display and save thresholded sorted p-values for each correction
   for c = 1:n_corr
     ind = find(Pcorr_sel{c}(indP)<alpha);
-    ind_corr{c} = ind;
+    ind_corr{c} = [ind_corr{c} ind];
     if ~isempty(ind)
       fprintf('\n%s (P<%g, %s):\n',hemistr{i},alpha,corr{c});
        fprintf('%9s\t%9s\t%9s\t%s\n','P-value',[statstr '-value'],'Ze-value',atlas);
@@ -454,6 +460,7 @@ end
 % prepare display ROI results according to found results
 corr{n_corr+1} = 'Do not display';
 ind_show = [];
+
 for c=1:n_corr
   if ~isempty(ind_corr{c})
     ind_show = [ind_show c];
@@ -642,13 +649,13 @@ measure = useful_measures{sel_measure};
 measure = deblank(measure);
 
 %_______________________________________________________________________
-function [ROInames ROIids ROIvalues] = get_ROI_measure(roi_names, sel_atlas, sel_measure)
+function [ROInames ROIids ROIvalues] = get_ROI_measure(roi_names, atlas, measure)
 % get names, IDs and values inside ROI for a selected atlas
 %
 % FORMAT [ROInames ROIids ROIvalues] = get_ROI_measure(roi_names, sel_atlas, sel_measure);
 % roi_names    - cell of ROI xml files
-% sel_atlas    - index of selected atlas
-% sel_measure  - index of selected measure
+% atlas        - name of selected atlas
+% measure      - name selected measure
 %
 % ROInames     - array 2*rx1 of ROI names (r - # of ROIs)
 % ROIids       - array 2*rx1 of ROI IDs for left and right hemisphere
@@ -668,25 +675,31 @@ for i=1:n_data
 
   atlases = fieldnames(xml);
   
-  measures = fieldnames(xml.(atlases{sel_atlas}).data);
-  ROInames = xml.(atlases{sel_atlas}).names;
-  ROIids = xml.(atlases{sel_atlas}).ids;
+  measures = fieldnames(xml.(atlas).data);
+  ROInames = xml.(atlas).names;
+  ROIids = xml.(atlas).ids;
 
-  % check that all measures were found
   try
-    tmp = measures{sel_measure};
+    val = xml.(atlas).data.(measure);
   catch
+    measure_found = 0;
     for j = 1:numel(measures)
-      fprintf('Available measures in %s:\n %s\n',roi_names{i},measures{j});
+      if strcmp(deblank(measures{j}),deblank(measure_name)); 
+        val = xml.(atlas).data.(measures{j});
+        measure_found = 1;
+        break;
+      end
     end
-    error('Please check your label files. Measure is not available in %s.\n',roi_names{i});
-  end
 
-  val = xml.(atlases{sel_atlas}).data.(measures{sel_measure});
+    % check that all measures were found
+    if ~measure_found
+      error('Please check your label files. Measure is not available in %s.\n',roi_names{i});
+    end
+  end
   
   if i==1, ROIvalues = zeros(n_data, numel(val)); end
-  
-  ROIvalues(i,:) = xml.(atlases{sel_atlas}).data.(measures{sel_measure});
+
+  ROIvalues(i,:) = xml.(atlas).data.(measure);
 
   spm_progress_bar('Set',i);  
 end
