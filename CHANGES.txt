@@ -1,5 +1,28 @@
 ------------------------------------------------------------------------
-r1531 | gaser | 2019-12-05 17:06:57
+r1532 | gaser | 2019-12-11 18:04:16
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_defaults.m
+M       cat_main_reportfig.m
+M       cat_plot_boxplot.m
+M       cat_stat_analyze_ROIs.m
+A       cat_stat_confplot_spm.m
+M       cat_surf_createCS2.m
+M       cat_surf_results.m
+M       html/cat.html
+
+(1) Added: New tool for plotting confidence intervals and boxplots for results
+    of stat. analysis.
+(2) Fixed: Undefined H.merged parameter in cat_surf_results.m caused problems.
+(3) Changed: Set reduce_mesh to "0" and collcorr to "20" in surface pipeline.
+(4) Fixed: Boxplot with only raw data was not using "hold on" and was deleted.
+(5) Fixed: Report function was not working without surfaces outputs.
+(6) Fixed: ROI-analysis crashed and/or was falsified if different numbers of 
+    atlases were stored for a sample.
+------------------------------------------------------------------------
+r1531 | gaser | 2019-12-05 17:07:30 +0100 (Do, 05 Dez 2019) | 20 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -19,6 +42,7 @@ MM      cat_vol_pbt2.m
     This will increase processing speed and prevents that SPM.mat file for 
     surfaces gets too large. This can be optionally disabled in cat_defaults.m.
 (4) Changed: Reformatted cat_stat_spm.m
+
 
 ------------------------------------------------------------------------
 r1530 | gaser | 2019-12-05 09:36:42 +0100 (Do, 05 Dez 2019) | 15 lines

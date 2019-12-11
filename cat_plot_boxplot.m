@@ -620,6 +620,7 @@ for i=1:qn
 
   % optionally also show data either as points or short lines
   if opt.showdata == 1
+    if i==1, hold on; end
     if opt.vertical
       plot((i-offset)*ones(1,length(data{i})),data{i}(:),'.','Color',0.25*opt.groupcolor(i,:));
     else

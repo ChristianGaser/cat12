@@ -82,8 +82,8 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Y
   def.add_parahipp        = cat_get_defaults('extopts.add_parahipp');
   def.scale_cortex        = cat_get_defaults('extopts.scale_cortex');
   def.close_parahipp      = cat_get_defaults('extopts.close_parahipp');
-  def.reduce_mesh         = 3;                                % 0 - no reduction but surface creation on internal rather interpolated resolution;
-                                                              % 1 - spm reduce, 2 - matlab reduce; there seams to be a bug in the c-function that kills matlab 
+  def.reduce_mesh         = 0;                                % 0 - no reduction but surface creation on internal rather interpolated resolution;
+                                                              % 1 - spm reduce, 2 - matlab reduce; there seems to be a bug in the c-function that kills matlab 
                                                               % 3 - call matlab reduce in external matlab
                                                               % 4 - use no reduction (very slow) 
   def.outputpp.native     = 0;                                % output of Ypp map for cortical orientation in EEG/MEG 
