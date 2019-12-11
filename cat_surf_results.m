@@ -93,6 +93,7 @@ switch lower(action)
         H.str32k       = '';
         H.SPM_found    = 1;
         H.surf_sel     = 1;
+        H.merged       = 1;
 % colorbar addon histogram & values
 % 
       
