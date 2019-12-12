@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1533 | gaser | 2019-12-12 23:29:10
+r1534 | gaser | 2019-12-13 00:09:15
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_confplot_spm.m
+A       cat_vol_pbt2.m
+
+(1) Changed: Added option to additionally plot raw data to 
+    cat_stat_confplot_spm.m.
+(2) Fixed: Again added cat_vol_pbt2.m.
+------------------------------------------------------------------------
+r1533 | gaser | 2019-12-12 23:29:44 +0100 (Do, 12 Dez 2019) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +24,7 @@ M       templates_1.50mm/hammers.txt
 (1) Changed: Updated license information of Hammers atlas and print website
     to fill out license agreement during preprocessing.
 (2) Fixed: Corrected help text.
+
 ------------------------------------------------------------------------
 r1532 | gaser | 2019-12-11 18:04:50 +0100 (Mi, 11 Dez 2019) | 21 lines
 
