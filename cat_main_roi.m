@@ -1,12 +1,12 @@
 function cat_main_roi(job,trans,Ycls,Yp0) 
 % ______________________________________________________________________
 %  ROI Partitioning:
-%  This part estimated individual measurements for different ROIs.
-%  The ROIs are described in the CAT normalized space and there are to 
+%  This part estimates individual measurements for different ROIs.
+%  The ROIs are defined in the CAT normalized space and there are two 
 %  ways to estimate them - (1) in subject space, and (2) in normalized 
-%  space. Estimation in normalized space is more direct an avoid further
-%  transformations. The way over the subject space have the advantage 
-%  that individual anatomical refinements are possible, but the this has
+%  space. Estimation in normalized space is more direct and avoids further
+%  transformations. The way over the subject space has the advantage 
+%  that individual anatomical refinements are possible, but this has
 %  to be done and evaluated for each atlas. 
 % ______________________________________________________________________
 %
@@ -61,7 +61,7 @@ function cat_main_roi(job,trans,Ycls,Yp0)
   for ai=1:size(FA,1)
     %%
     if ai==1 || any(VAvx_vol(ai,:)~=VAvx_vol(ai-1,:))
-      % resampe data in atlas resolution for the first time or if the atlas resolution change 
+      % resample data in atlas resolution for the first time or if the atlas resolution changes
       
       % map data to actual template space
       if ai==1

@@ -441,6 +441,7 @@ if isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.exto
   % set default output even it was not processed this time
   varargout{1} = jobo.vout; 
 end
+
 % remove files that do not exist
 varargout{1} = cat_io_checkdepfiles( varargout{1} );
 return
@@ -525,7 +526,17 @@ function job = update_job(job)
     [pp,ff,ee]  = spm_fileparts(job.extopts.atlas{ai,1}); 
     job.extopts.atlas{ai,4} = job.extopts.atlas{ai,2}<=cat_get_defaults('extopts.expertgui') && ...
       exist(job.extopts.atlas{ai,1},'file') && isfield(def.output,'atlases') && isfield(def.output.atlases,ff) && def.output.atlases.(ff);
+    % show licence message
+    if ~isempty(strfind(ff,'hammers')) & job.extopts.atlas{ai,4}
+      disp('--------------------------------------------')
+      disp('Free academic end user license agreement')
+      alert_str = ['For using the Hammers atlas, please fill out license agreement at <a href =',...
+      ' "http://brain-development.org/brain-atlases/adult-brain-atlases/adult-brain-maximum-probability-map-hammers-mith-atlas-n30r83-in-mni-space">www.brain-development.org</a>'];
+      disp(alert_str);
+      disp('--------------------------------------------')
+    end
   end
+
   job = cat_io_checkinopt(job,def);
   if ~isfield(job.extopts,'restypes')
     job.extopts.restypes.(def.extopts.restype) = job.extopts.resval;  
@@ -711,6 +722,7 @@ function job = update_job(job)
 
   job.channel  = struct('vols',{job.data});
   job.tissue   = tissue;
+
 return;
 
 %_______________________________________________________________________

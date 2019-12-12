@@ -119,7 +119,7 @@ for ali=1:numel(atlaslist)
   if any(~cellfun('isempty',strfind(atlaslist(ali),'lpba40')))
     ROI.help = [ROI.help; strrep({
         '(MAI) LPBA40 (56 GM ROIs of 40 subjects, 2008):'
-        '    The LONI Probabilistic Brain Atlas (LPBA40) is a series of maps of brain anatomic regions. These maps were estimated from a set of whole-head MRI of 40 human volunteers. Each MRI was manually delineated to identify a set of 56 structures in the brain, most of which are within the cortex. These delineations were then transformed into a common atlas space to obtian a set of coregistered anatomical labels. The original MRI data were also transformed into the atlas space. '
+        '    The LONI Probabilistic Brain Atlas (LPBA40) is a series of maps of brain anatomical regions. These maps were estimated from a set of whole-head MRI of 40 human volunteers. Each MRI was manually delineated to identify a set of 56 structures in the brain, most of which are within the cortex. These delineations were then transformed into a common atlas space to obtian a set of coregistered anatomical labels. The original MRI data were also transformed into the atlas space. '
         '    Shattuck et al. 2008. Construction of a 3D Probabilistic Atlas of Human Cortical Structures, NeuroImage 39 (3): 1064-1070. DOI:	10.1016/j.neuroimage.2007.09.031'
         ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
   end
