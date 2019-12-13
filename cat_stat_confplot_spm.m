@@ -9,7 +9,7 @@
 % xyz            - coordinates of local cluster maximum     
 %__________________________________________________________________________
 % Christian Gaser
-% $Id: cat_stat_confplot_spm.m 38 2014-04-09 09:01:05Z gaser $
+% $Id$
 
 global xY H
 

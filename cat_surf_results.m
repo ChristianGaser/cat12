@@ -89,11 +89,13 @@ switch lower(action)
         H.cursor_mode  = 1;
         H.text_mode    = 1;
         H.border_mode  = 0;
-        H.is32k        = 0;
         H.str32k       = '';
         H.SPM_found    = 1;
         H.surf_sel     = 1;
         H.merged       = 1;
+        H.isfsavg      = 1;
+        H.fixscl       = 0;
+        
 % colorbar addon histogram & values
 % 
       
@@ -128,7 +130,6 @@ switch lower(action)
           'fig',    [2*WS(3)+10 10 0.6*WS(3) WS(3)],... 
           'sel',    [0.050 0.935 0.900 0.050],...[0.290 0.930 0.425 0.050],...
           'nam',    [0.050 0.875 0.900 0.050],...
-          'scaling',[0.050 0.260 0.425 0.050],... % developer
           'surf',   [0.050 0.800 0.425 0.050],'mview',   [0.525 0.800 0.425 0.050],... 
           'text',   [0.050 0.725 0.425 0.050],'thresh',  [0.525 0.725 0.425 0.050],... 
           'cmap',   [0.050 0.650 0.425 0.050],'atlas',   [0.525 0.650 0.425 0.050],...
@@ -136,18 +137,19 @@ switch lower(action)
           'nocbar', [0.050 0.500 0.425 0.050],'transp',  [0.525 0.500 0.425 0.050],... 
           'info',   [0.050 0.425 0.425 0.050],'bkg',     [0.525 0.425 0.425 0.050],... 
           'inv',    [0.050 0.350 0.425 0.050],'hide_neg',[0.525 0.350 0.425 0.050],...
+          'fixscl', [0.050 0.260 0.425 0.050],'scaling', [0.050 0.260 0.425 0.050],...
           'ovmin',  [0.050 0.125 0.425 0.100],'ovmax',   [0.525 0.125 0.425 0.100],... 
           'save',   [0.050 0.050 0.425 0.050],'close',   [0.525 0.050 0.425 0.050]);
         
-  		  H.figure = figure(22);
-	  	  clf(H.figure);
-		
-		    set(H.figure, 'MenuBar', 'none', 'Position', H.pos{1}.fig, ...
-			      'Name', 'CAT Results', 'NumberTitle', 'off', 'Renderer', 'OpenGL');
-			    
-			  H.panel(1) = uipanel('Position',[0 0 2/2.6 1],'units','normalized','BackgroundColor',...
-			      H.bkg_col,'BorderType','none'); 
-			  H.panel(2) = uipanel('Position',[2/2.6 0 0.6/2.6 1],'units','normalized','BorderType','none','BackgroundColor',H.col(1,:)); 
+        H.figure = figure(22);
+        clf(H.figure);
+    
+        set(H.figure, 'MenuBar', 'none', 'Position', H.pos{1}.fig, ...
+            'Name', 'CAT Results', 'NumberTitle', 'off', 'Renderer', 'OpenGL');
+          
+        H.panel(1) = uipanel('Position',[0 0 2/2.6 1],'units','normalized','BackgroundColor',...
+            H.bkg_col,'BorderType','none'); 
+        H.panel(2) = uipanel('Position',[2/2.6 0 0.6/2.6 1],'units','normalized','BorderType','none','BackgroundColor',H.col(1,:)); 
         
         % define S structure that contains information for lh and rh
         H.S{1}.name = ''; H.S{1}.side = 'lh';
@@ -414,6 +416,16 @@ switch lower(action)
               'ToolTipString', 'Threshold', ...
               'Interruptible', 'on', 'Enable', 'off');
         end
+        
+        H.fix = uicontrol(H.panel(2), ...
+            'String', 'Fix scaling', 'Units', 'normalized', ...
+            'BackgroundColor',H.col(1,:),...
+            'Position', H.pos{2}.fixscl, ...
+            'Style', 'CheckBox', 'HorizontalAlignment', 'center', ...
+            'Callback', {@checkbox_fixscl}, ...
+            'FontSize',H.FS,...
+            'ToolTipString', 'Fix scaling', ...
+            'Interruptible', 'on', 'Visible', 'off');        
                 
         if nargin >= 3
             
@@ -459,17 +471,14 @@ switch lower(action)
                 
                 for ind = 1:2
                     % read meshes
-                    H.S{ind}.info = cat_surf_info(H.S{ind}.name, 1);
-                    
+                    H.S{ind}.info = cat_surf_info(H.S{ind}.name, 1);                    
                     if H.S{ind}.info(1).nvertices == 64984
                         H.str32k = '_32k';
-                        H.is32k = 1;
                     else
                         H.str32k = '';
-                        H.is32k = 0;
                     end
 
-                    if ~strcmp(H.S{ind}.info(1).side, 'lh') && ~strcmp(H.S{ind}.info(1).side, 'rh')%strcmp(H.S{ind}.info(1).side, 'mesh')
+                    if ~strcmp(H.S{ind}.info(1).side, 'lh') && ~strcmp(H.S{ind}.info(1).side, 'rh')
                         meshes_merged = 1;
                         if ind == 1
                             H.S{ind}.info(1).side = 'lh';
@@ -481,8 +490,7 @@ switch lower(action)
                                 ['templates_surfaces' H.str32k], 'rh.central.freesurfer.gii');
                         end
                     end
-                    H.S{ind}.M = gifti(H.S{ind}.info(1).Pmesh);
-                    
+                    H.S{ind}.M = gifti(H.S{ind}.info(1).Pmesh);                    
                     % get adjacency information
                     H.S{ind}.A = spm_mesh_adjacency(H.S{ind}.M);
                     
@@ -494,12 +502,25 @@ switch lower(action)
                             catch
                                 error('No data in surfaces found or surfaces have different mesh structure (32k vs. 164k).');
                             end
-                            if H.is32k
-                                H.S{1}.Y = Y(1:32492, :);
-                                H.S{2}.Y = Y(32493:end, :);
-                            else
-                                H.S{1}.Y = Y(1:163842, :);
-                                H.S{2}.Y = Y(163843:end, :);
+                            H.nY2 = size(Y,1)/2;
+                            H.S{1}.Y = Y(1:H.nY2, :);
+                            H.S{2}.Y = Y((H.nY2+1):end, :);
+                            
+                            % if size of cdata does not fit to mesh size load the underlying
+                            % mesh instead of fsaverage mesh and divide hemispheres into lh/rh
+                            if size(Y,1) ~= (size(H.S{ind}.M.faces,1)+4)
+                              Mg = gifti(deblank(H.S{ind}.name(1,:)));
+                              sz_faces2 = size(Mg.faces,1)/2;
+                              sz_vertices2 = size(Mg.vertices,1)/2;
+                              H.S{ind}.M.faces = Mg.faces(1:sz_faces2,:);
+                              H.S{ind}.M.vertices = Mg.vertices(1:sz_vertices2,:);
+                              H.isfsavg = 0;
+                            end
+                        else
+                            % load rh mesh
+                            if ~H.isfsavg
+                              H.S{2}.M.faces = Mg.faces(((sz_faces2+1):end),:) - sz_vertices2;
+                              H.S{2}.M.vertices = Mg.vertices((sz_vertices2+1):end,:);
                             end
                         end
                     else
@@ -605,6 +626,9 @@ switch lower(action)
                    'FontSize',H.FS,...
                     'ToolTipString', 'Select results', ...
                     'Interruptible', 'on', 'Enable', 'on');
+                    
+              % enable fixing of scale
+              set(H.fix, 'Visible', 'on');
             end
             
             display_results_all;
@@ -641,19 +665,19 @@ switch lower(action)
             end
             
             % enable some menus only if mesh data can be assumed to be resampled
-            if (length(H.S{1}.Y) == 32492 || length(H.S{1}.Y) == 163842)
-                set(H.surf, 'Enable', 'on');
-                set(H.text, 'Enable', 'on');
+            if (length(H.S{1}.Y) == 32492 || length(H.S{1}.Y) == 163842 || length(H.S{1}.Y) == 40962) && H.isfsavg
+                set(H.surf,   'Enable', 'on');
+                set(H.text,   'Enable', 'on');
                 set(H.cursor, 'Enable', 'on');
                 set(H.border, 'Enable', 'on');
             end
             
-            set(H.save, 'Enable', 'on');
-            set(H.mview, 'Enable', 'on');
+            set(H.save,   'Enable', 'on');
+            set(H.mview,  'Enable', 'on');
             set(H.nocbar, 'Enable', 'on');
-            set(H.bkg, 'Enable', 'on');
+            set(H.bkg,    'Enable', 'on');
             set(H.transp, 'Enable', 'on');
-            set(H.info, 'Enable', 'on');
+            set(H.info,   'Enable', 'on');
             if isfield(H,'scaling')
               set(H.scaling, 'Enable', 'on');
             end
@@ -662,10 +686,6 @@ switch lower(action)
                 set(H.inv, 'Enable', 'on');
                 set(H.hide_neg, 'Enable', 'on');
                 set(H.hide_neg, 'Value', 0);
-            end
-            
-            if H.n_surf == 1
-                set(H.cmap, 'Enable', 'on');
             end
             
             H.rdata{1} = [];
@@ -957,7 +977,7 @@ switch lower(action)
             else
               tpos = {[0.4 0.015 0.12 0.06],[0.445 0.015 0.065 0.06],[0.497 0.015 0.065 0.06],[0.55 0.015 0.065 0.06],[0.60 0.015 0.065 0.06]};
             end
-            % histrogram axis 
+            % histogram axis 
             H.histax = axes('Parent', H.panel(1), 'Position', [0.4 0.102 0.20 0.15],'Visible', 'off', 'tag','cat_surf_results_hist'); 
             try
               xlim(H.histax,H.clim(2:3).*[1 1+eps]);
@@ -1540,7 +1560,11 @@ for ind = 1:5
     if H.S{1}.thresh > 0.00015
         setappdata(H.patch(ind), 'clip', H.clip);
     end
-    setappdata(H.patch(ind), 'clim', H.clim);
+    
+    % update clim only for non-fixed scaling
+    if ~H.fixscl
+      setappdata(H.patch(ind), 'clim', H.clim);
+    end
     col = getappdata(H.patch(ind), 'col');
     
     if ind > 4
@@ -1557,10 +1581,13 @@ if H.S{1}.min > - H.thresh_value
     set(H.slider_min, 'Value', 0);
 end
 
-set(H.slider_min, 'Value', H.clim(2));
-set(H.slider_max, 'Value', H.clim(3));
-set(H.str_min, 'String', sprintf('%g',H.clim(2)));
-set(H.str_max, 'String', sprintf('%g',H.clim(3)));
+% update sliders for non-fixed scaling
+if ~H.fixscl
+  set(H.slider_min, 'Value', H.clim(2));
+  set(H.slider_max, 'Value', H.clim(3));
+  set(H.str_min, 'String', sprintf('%g',H.clim(2)));
+  set(H.str_max, 'String', sprintf('%g',H.clim(3)));
+end
 
 % update file information and colorbar
 checkbox_info;
@@ -2164,7 +2191,7 @@ lh = []; rh = []; lh_rh = [];
 if ~exist('P','var')
   P = spm_select([1 24], 'mesh', 'Select up to 24 maps for left and right hemisphere');
 end
-info = cat_surf_info(P);
+info = cat_surf_info(P,0);
 
 n = size(P, 1);
 
@@ -2172,10 +2199,8 @@ for i = 1:n
     
     if info(i).nvertices == 64984
         H.str32k = '_32k';
-        H.is32k = 1;
     else
         H.str32k = '';
-        H.is32k = 0;
     end
     
     % check whether name contains 'log' that indicates a logP file
@@ -2374,9 +2399,14 @@ if ~H.disable_cbar
     H = show_colorbar(H);
 end
 
-%-----------------------------------------------------------------------
+%==========================================================================
+function checkbox_fixscl(obj, event_obj)
+global H
+
+H.fixscl = get(H.fix, 'Value');
+
+%==========================================================================
 function Ho = checkbox_hide_neg(obj, event_obj)
-%-----------------------------------------------------------------------
 global H
 
 H.no_neg = get(H.hide_neg, 'Value');
@@ -2779,11 +2809,7 @@ end
 if H.merged
     % add offset for right hemisphere
     if round(ind / 2) == 2
-        if H.is32k
-            XYZ = XYZ + 32492;
-        else
-            XYZ = XYZ + 163842;
-        end
+        XYZ = XYZ + H.nY2;
     end
     
     % always one mesh
