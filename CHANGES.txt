@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1534 | gaser | 2019-12-13 00:09:15
+r1535 | gaser | 2019-12-13 16:39:46
+
+Changed paths:
+M       CHANGES.txt
+MM      cat_stat_confplot_spm.m
+M       cat_surf_calc.m
+M       cat_surf_info.m
+M       cat_surf_results.m
+
+(1) Changed: Updated cat_surf_results.m to also allow meshes that are not
+    based on fsaverage structure.
+(2) Changed: Added option for fixing scaling to cat_surf_results.m.
+(3) Changed: Use original mesh info in cat_surf_info.m if cdata and mesh are 
+    defined to also allow meshes that are not based on fsaverage.
+(4) Changed: Save mesh as Base64Binary in cat_surf_calc.m
+------------------------------------------------------------------------
+r1534 | gaser | 2019-12-13 00:09:52 +0100 (Fr, 13 Dez 2019) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +25,7 @@ A       cat_vol_pbt2.m
 (1) Changed: Added option to additionally plot raw data to 
     cat_stat_confplot_spm.m.
 (2) Fixed: Again added cat_vol_pbt2.m.
+
 ------------------------------------------------------------------------
 r1533 | gaser | 2019-12-12 23:29:44 +0100 (Do, 12 Dez 2019) | 13 lines
 

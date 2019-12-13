@@ -332,9 +332,9 @@ function surfcalc(job)
   if sinfo1.datatype==3 || strcmp(job.output(end-3:end),'.gii')
     if ~strcmp(job.output(end-3:end),'.gii'), job.output = [job.output '.gii']; end
     if sinfo1.datatype==3
-      save(gifti(struct('vertices',shiftdim(vdata),'faces',S1{1}.faces,'cdata',cdata')),job.output);
+      save(gifti(struct('vertices',shiftdim(vdata),'faces',S1{1}.faces,'cdata',cdata')),job.output,'Base64Binary');
     else
-      save(gifti(struct('cdata',cdata)),job.output);
+      save(gifti(struct('cdata',cdata)),job.output,'Base64Binary');
     end
   else
     cat_io_FreeSurfer('write_surf_data',job.output,cdata');
