@@ -326,6 +326,16 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     if isempty(sinfo(i).Pdata) && sinfo(i).exist && readsurf && isfield(S,'cdata')
       sinfo(i).Pdata = sinfo(i).fname;
     end
+
+    % check whether cdata field and mesh structure exist for gifti data
+    if strcmp(sinfo(i).ee,'.gii') && sinfo(i).exist && ~readsurf && (isempty(sinfo(i).Pdata) || isempty(sinfo(i).Pmesh))
+      S = gifti(sinfo(i).fname);
+      if isfield(S,'cdata') & isfield(S,'faces') & isfield(S,'vertices')
+        sinfo(i).Pmesh = sinfo(i).fname;
+        sinfo(i).Pdata = sinfo(i).fname;
+      end
+    end
+
     % if the dataname is central we got a mesh or surf datafile
     if isempty(sinfo(i).Pdata) || isempty(sinfo(i).Pmesh) 
       switch sinfo(i).texture
