@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1535 | gaser | 2019-12-13 16:39:46
+r1536 | gaser | 2019-12-17 12:06:26
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_defaults.m
+M       cat_stat_analyze_ROIs.m
+M       cat_surf_results.m
+MM      cat_vol_pbt2.m
+M       html/cat.html
+
+(1) Changed: Updated cat_surf_results.m for desling with two-sides meshes only.
+(2) Changed: Temporary lh/rh files of ROI surface anaylsis will be deleted
+    in cat_stat_analyze_ROIs.m.
+(3) Changed: Disabled collision correction in cat_defaults.m that is not yet 
+    working properly.
+
+------------------------------------------------------------------------
+r1535 | gaser | 2019-12-13 16:40:18 +0100 (Fr, 13 Dez 2019) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14,6 +32,7 @@ M       cat_surf_results.m
 (3) Changed: Use original mesh info in cat_surf_info.m if cdata and mesh are 
     defined to also allow meshes that are not based on fsaverage.
 (4) Changed: Save mesh as Base64Binary in cat_surf_calc.m
+
 ------------------------------------------------------------------------
 r1534 | gaser | 2019-12-13 00:09:52 +0100 (Fr, 13 Dez 2019) | 9 lines
 

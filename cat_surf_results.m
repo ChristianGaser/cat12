@@ -2,9 +2,8 @@ function varargout = cat_surf_results(action, varargin)
 % Visualise results for both hemispheres of surface-based analysis 
 % (preferable on log P-maps). 
 %
-% FORMAT y = cat_surf_results('Disp',leftSurface,rightSurface)
-% leftSurface  - a GIfTI filename/object or patch structure
-% rightSurface - a GIfTI filename/object or patch structure
+% FORMAT y = cat_surf_results('Disp',Surface)
+% Surface  - a GIfTI filename/object or patch structure
 %
 % y            - adjusted, predicted or raw response
 %
@@ -92,7 +91,6 @@ switch lower(action)
         H.str32k       = '';
         H.SPM_found    = 1;
         H.surf_sel     = 1;
-        H.merged       = 1;
         H.isfsavg      = 1;
         H.fixscl       = 0;
         
@@ -117,7 +115,7 @@ switch lower(action)
         % change size and position of flatmaps for >= R20014b
         if spm_check_version('matlab', '8.4') >= 0
             H.viewpos{2}(3, :) = [-0.075 0.150 0.650 0.650]; % lh lateral
-            H.viewpos{4}(3, :) = [0.425 0.150 0.650 0.650]; % rh lateral
+            H.viewpos{4}(3, :) = [0.425 0.150 0.650 0.650];  % rh lateral
         end
         
         % figure 1 with result window
@@ -427,16 +425,15 @@ switch lower(action)
             'ToolTipString', 'Fix scaling', ...
             'Interruptible', 'on', 'Visible', 'off');        
                 
-        if nargin >= 3
+        if nargin >= 2
             
             H.S{1}.name = varargin{1};
-            H.S{2}.name = varargin{2};
+            H.S{2}.name = varargin{1};
             
             [pth{1}, nm1, ext1] = spm_fileparts(H.S{1}.name(1, :));
-            [pth{2}, nm2, ext2] = spm_fileparts(H.S{2}.name(1, :));
             
             % SPM.mat found for both hemispheres (not working yet)
-            if strcmp([nm1 ext1], 'SPM.mat') || strcmp([nm2 ext2], 'SPM.mat')
+            if strcmp([nm1 ext1], 'SPM.mat')
                 H.logP = 0;
                 
                 if strcmp([nm1 ext1], 'SPM.mat')
@@ -467,109 +464,65 @@ switch lower(action)
             else
                 
                 H.logP = 1;
-                meshes_merged = H.merged;
                 
-                for ind = 1:2
-                    % read meshes
-                    H.S{ind}.info = cat_surf_info(H.S{ind}.name, 1);                    
-                    if H.S{ind}.info(1).nvertices == 64984
-                        H.str32k = '_32k';
-                    else
-                        H.str32k = '';
-                    end
+                % read meshes
+                H.S{1}.info = cat_surf_info(H.S{1}.name, 1);                    
+                H.S{2}.info = H.S{1}.info;                    
+                if H.S{1}.info(1).nvertices == 64984
+                    H.str32k = '_32k';
+                else
+                    H.str32k = '';
+                end
 
-                    if ~strcmp(H.S{ind}.info(1).side, 'lh') && ~strcmp(H.S{ind}.info(1).side, 'rh')
-                        meshes_merged = 1;
-                        if ind == 1
-                            H.S{ind}.info(1).side = 'lh';
-                            H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ...
-                                ['templates_surfaces' H.str32k], 'lh.central.freesurfer.gii');
-                        else
-                            H.S{ind}.info(1).side = 'rh';
-                            H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ....
-                                ['templates_surfaces' H.str32k], 'rh.central.freesurfer.gii');
-                        end
-                    end
+                H.S{1}.info(1).side = 'lh';
+                H.S{1}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ...
+                        ['templates_surfaces' H.str32k], 'lh.central.freesurfer.gii');
+                H.S{2}.info(1).side = 'rh';
+                H.S{2}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ....
+                        ['templates_surfaces' H.str32k], 'rh.central.freesurfer.gii');
+
+                for ind = 1:2
                     H.S{ind}.M = gifti(H.S{ind}.info(1).Pmesh);                    
                     % get adjacency information
                     H.S{ind}.A = spm_mesh_adjacency(H.S{ind}.M);
-                    
-                    % cdata found?
-                    if meshes_merged
-                        if ind == 1
-                            try
-                                Y = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
-                            catch
-                                error('No data in surfaces found or surfaces have different mesh structure (32k vs. 164k).');
-                            end
-                            H.nY2 = size(Y,1)/2;
-                            H.S{1}.Y = Y(1:H.nY2, :);
-                            H.S{2}.Y = Y((H.nY2+1):end, :);
-                            
-                            % if size of cdata does not fit to mesh size load the underlying
-                            % mesh instead of fsaverage mesh and divide hemispheres into lh/rh
-                            if size(Y,1) ~= (size(H.S{ind}.M.faces,1)+4)
-                              Mg = gifti(deblank(H.S{ind}.name(1,:)));
-                              sz_faces2 = size(Mg.faces,1)/2;
-                              sz_vertices2 = size(Mg.vertices,1)/2;
-                              H.S{ind}.M.faces = Mg.faces(1:sz_faces2,:);
-                              H.S{ind}.M.vertices = Mg.vertices(1:sz_vertices2,:);
-                              H.isfsavg = 0;
-                            end
-                        else
-                            % load rh mesh
-                            if ~H.isfsavg
-                              H.S{2}.M.faces = Mg.faces(((sz_faces2+1):end),:) - sz_vertices2;
-                              H.S{2}.M.vertices = Mg.vertices((sz_vertices2+1):end,:);
-                            end
-                        end
-                    else
-                        gind = gifti(H.S{ind}.name);
-                        if isfield(gind,'cdata')
-                            H.S{ind}.Y = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
-                        else
-                            if ind == 1
-                                gind = gifti(H.S{2}.name);
-                                if isfield(gind,'cdata')
-                                    if isnumeric(gind.cdata)
-                                        H.S{1}.Y = zeros(size(gind.cdata));
-                                    else
-                                        H.S{1}.Y = zeros(gind.cdata.dim);
-                                    end
-                                    H.S{1}.name = '';
-                                else
-                                    error('No data in surfaces found.');
-                                end
-                            else
-                                gind = gifti(H.S{1}.name);
-                                if isfield(gind,'cdata')
-                                    if isnumeric(gind.cdata)
-                                        H.S{2}.Y = zeros(size(gind.cdata));
-                                    else
-                                        H.S{2}.Y = zeros(gind.cdata.dim);
-                                    end
-                                    H.S{2}.name = '';
-                                else
-                                    error('No data in surfaces found.');
-                                end
-                            end
-                        end
-                    end
+                end
+
+                if isempty(strfind(H.S{1}.info(1).ff, 'log'))
+                    H.logP = 0;
+                end
+
+                try
+                    Y = spm_data_read(spm_data_hdr_read(H.S{1}.name));
+                catch
+                    error('No data in surfaces found or surfaces have different mesh structure (32k vs. 164k).');
+                end
+                H.nY2 = size(Y,1)/2;
+                H.S{1}.Y = Y(1:H.nY2, :);
+                H.S{2}.Y = Y((H.nY2+1):end, :);
+                
+                % if size of cdata does not fit to mesh size load the underlying
+                % mesh instead of fsaverage mesh and divide hemispheres into lh/rh
+                if size(Y,1) ~= (size(H.S{1}.M.faces,1)+4)
+                  Mg = gifti(deblank(H.S{1}.name(1,:)));
+                  sz_faces2 = size(Mg.faces,1)/2;
+                  sz_vertices2 = size(Mg.vertices,1)/2;
+                  H.S{1}.M.faces = Mg.faces(1:sz_faces2,:);
+                  H.S{1}.M.vertices = Mg.vertices(1:sz_vertices2,:);
+                  H.isfsavg = 0;
+                end
+
+                if ~H.isfsavg
+                  H.S{2}.M.faces = Mg.faces(((sz_faces2+1):end),:) - sz_vertices2;
+                  H.S{2}.M.vertices = Mg.vertices((sz_vertices2+1):end,:);
+                end
                                       
-                    % check whether name contains 'log' that indicates a logP file
-                    for i = 1:size(H.S{ind}.name, 1)
-                        if isempty(strfind(H.S{ind}.info(i).ff, 'log'))
-                            H.logP = 0;
-                        end
-                    end
-                end                    
             end
             
             % rescue original name for later result selection
             H.S1 = H.S{1};
             H.S2 = H.S{2};
             
-            H.n_surf = max(numel(H.S{1}.info), numel(H.S{2}.info));
+            H.n_surf = numel(H.S{1}.info);
             H.view = 1;
             H.show_transp = 1;
             H.disable_cbar = 0;
@@ -634,13 +587,11 @@ switch lower(action)
             display_results_all;
             
             H.SPM_found = 1;
-            for i = 1:2
-                SPM_name = fullfile(H.S{i}.info(1).pp, 'SPM.mat');
-                
-                % SPM.mat exist?
-                if ~isempty(H.S{i}.name)
-                    H.SPM_found = 0;
-                end
+            SPM_name = fullfile(H.S{1}.info(1).pp, 'SPM.mat');
+            
+            % SPM.mat exist?
+            if ~isempty(H.S{1}.name)
+                H.SPM_found = 0;
             end
 
             % Don't allow plot functions for RGB maps or if SPM.mat was not found
@@ -929,9 +880,9 @@ switch lower(action)
       end
 
       %% update textures of each patch
-      for i=1:numel(H.patch) 
-        setappdata(H.patch(i), 'clim',H.clim);
-        H = updateTexture(H, i ); 
+      for j=1:numel(H.patch) 
+        setappdata(H.patch(j), 'clim',H.clim);
+        H = updateTexture(H, j); 
       end
       set(H.str_min, 'String', sprintf('%g',H.clim(2)));
       set(H.str_max, 'String', sprintf('%g',H.clim(3)));
@@ -1974,7 +1925,7 @@ end
 
 H.axis = axes('Position', win, 'Parent', H.panel(1), 'Visible', 'off');
 H.figure = ancestor(H.axis, 'figure');
-axes(H.axis);
+%axes(H.axis);
 
 if isfield(M, 'facevertexcdata')
     H.cdata = M.facevertexcdata;
@@ -2186,7 +2137,6 @@ function select_data(obj, event_obj, P)
 global H
 
 H.logP = 1;
-lh = []; rh = []; lh_rh = [];
 
 if ~exist('P','var')
   P = spm_select([1 24], 'mesh', 'Select up to 24 maps for left and right hemisphere');
@@ -2208,46 +2158,16 @@ for i = 1:n
         H.logP = 0;
     end
     
-    % check where left and right hemisphere data were found
-    if strcmp(info(i).side, 'lh')
-        lh = [lh i];
-    elseif strcmp(info(i).side, 'rh')
-        rh = [rh i];
-    elseif strcmp(info(i).side, 'mesh')
-        lh_rh = [lh_rh i];
-    else % asume mesh
-        lh_rh = [lh_rh i];
+    if strcmp(info(i).side, 'lh') | strcmp(info(i).side, 'rh')
+        error('Display of separate hemispheres is not supported anymore');
     end
+
 end
 
-% merged meshes?
-if ~isempty(lh_rh)
-    % don't mix mesh and lh+rh data
-    if ~isempty(lh) || ~isempty(rh)
-        error('Mixing of left and right with merged surface data is not supported.');
-    end
-    
-    H.merged = 1;
-    H.S{1}.name = P(lh_rh, :);
-    H.S{2}.name = P(lh_rh, :);
-else % lh or rh meshes
-    H.merged = 0;
-    H.S{1}.name = P(lh, :);
-    H.S{2}.name = P(rh, :);
-    if numel(lh) > 1 || numel(rh) > 1
-        msg = 'Warning: Display of multiple left and right surface data will not work correctly. Please only use merged hemisphere data for multiple selected surface data or just select one left and right data set.';
-        h = spm('alert*', msg, '', spm('CmdLine'), 1);
-        select_data;
-    end
-end
+H.S{1}.name = P;
+H.S{2}.name = P;
 
-if isempty(H.S{2}.name)
-    H.S{2}.name = fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], 'rh.central.freesurfer.gii');
-elseif isempty(H.S{1}.name)
-    H.S{1}.name = fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], 'lh.central.freesurfer.gii');
-end
-
-cat_surf_results('disp', H.S{1}.name, H.S{2}.name);
+cat_surf_results('disp', P);
 
 %==========================================================================
 function save_image(obj, event_obj, filename)
@@ -2651,35 +2571,31 @@ switch H.cursor_mode
         end
         
         SPM_found = 1;
-        for i = 1:(2-H.merged)
-            SPM_name = fullfile(H.S{i}.info(1).pp, 'SPM.mat');
-            
-            % SPM.mat exist?
-            if exist(SPM_name, 'file')
-                load(SPM_name);
+        SPM_name = fullfile(H.S{i}.info(1).pp, 'SPM.mat');
+        
+        % SPM.mat exist?
+        if exist(SPM_name, 'file')
+            load(SPM_name);
 
-                % if analysis was moved we have to correct header structure
-                SPM.VResMS = spm_data_hdr_read(fullfile(H.S{i}.info(1).pp,SPM.VResMS.fname));
-                Vbeta = spm_data_hdr_read(fullfile(H.S{i}.info(1).pp,SPM.Vbeta(1).fname));
-                for j=2:numel(SPM.Vbeta)
-                  Vbeta(j) = spm_data_hdr_read(fullfile(H.S{i}.info(1).pp,SPM.Vbeta(j).fname));
-                end
-                SPM.Vbeta = Vbeta;
-                H.SPM{i} = SPM;
-
-                if i == 1
-                    str = 'predicted, adjusted or raw values?';
-                    H.predicted = spm_input(str, 1, 'b', {'predicted', 'adjusted', 'raw'}, [1 0 -1]);
-                    
-                    % ask for contrast for predicted or adjusted data
-                    if H.predicted >= 0
-                        H.Ic = spm_input('Which contrast?', 2, 'm', {SPM.xCon.name});
-                    end
-                end
-            elseif ~isempty(H.S{i}.name)
-                SPM_found = 0;
-                spm('alert!', 'No SPM.mat file found.\nPlease check that you have not moved your files or your result file was moved from the folder where the SPM.mat is stored.', 1);
+            % if analysis was moved we have to correct header structure
+            SPM.VResMS = spm_data_hdr_read(fullfile(H.S{1}.info(1).pp,SPM.VResMS.fname));
+            Vbeta = spm_data_hdr_read(fullfile(H.S{1}.info(1).pp,SPM.Vbeta(1).fname));
+            for j=2:numel(SPM.Vbeta)
+              Vbeta(j) = spm_data_hdr_read(fullfile(H.S{1}.info(1).pp,SPM.Vbeta(j).fname));
             end
+            SPM.Vbeta = Vbeta;
+            H.SPM{1} = SPM;
+
+            str = 'predicted, adjusted or raw values?';
+            H.predicted = spm_input(str, 1, 'b', {'predicted', 'adjusted', 'raw'}, [1 0 -1]);
+            
+            % ask for contrast for predicted or adjusted data
+            if H.predicted >= 0
+                H.Ic = spm_input('Which contrast?', 2, 'm', {SPM.xCon.name});
+            end
+        elseif ~isempty(H.S{1}.name)
+            SPM_found = 0;
+            spm('alert!', 'No SPM.mat file found.\nPlease check that you have not moved your files or your result file was moved from the folder where the SPM.mat is stored.', 1);
         end
         
         if SPM_found
@@ -2806,15 +2722,13 @@ else
 end
 
 % for merged meshes we only have one SPM.mat with data from both hemispheres
-if H.merged
-    % add offset for right hemisphere
-    if round(ind / 2) == 2
-        XYZ = XYZ + H.nY2;
-    end
-    
-    % always one mesh
-    ind = 1;
+% add offset for right hemisphere
+if round(ind / 2) == 2
+    XYZ = XYZ + H.nY2;
 end
+
+% always one mesh
+ind = 1;
 
 [y, cbeta, CI] = get_cluster_data(H, XYZ, ind);
 
