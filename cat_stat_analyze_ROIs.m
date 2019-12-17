@@ -453,6 +453,8 @@ if mesh_detected
     M.cdata = [M0(1).cdata; M0(2).cdata];
     M.private.metadata = struct('name','SurfaceID','value',name_mesh);
     save(gifti(M), name_mesh, 'Base64Binary');
+    spm_unlink(name_lh);
+    spm_unlink(name_rh);
   end
       
 end
@@ -532,13 +534,6 @@ else % surface results display
     cat_surf_results('Disp',name_mesh,name_mesh);
   end
   
-  % delete single hemi files because we already have merged hemispheres
-  for c = 1:n_corr
-    if show_results
-      spm_unlink(['lh.logP' corr_short{show_results} output_name '.gii']); 
-      spm_unlink(['rh.logP' corr_short{show_results} output_name '.gii']);
-    end
-  end
 end
 
 %_______________________________________________________________________
