@@ -60,9 +60,9 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   fwhm_surf1.name    = 'Smoothing Filter Size(s) for Thickness in FWHM';
   fwhm_surf1.strtype = 'r';
   fwhm_surf1.num     = [1 Inf];
-  fwhm_surf1.val     = {15};
+  fwhm_surf1.val     = {12};
   fwhm_surf1.help    = {
-    'Select filter size(s) for smoothing. For cortical thickness a good starting value is 15mm. For no filtering use a value of 0 and for multiple smoothing sizes input several values.'};
+    'Select filter size(s) for smoothing. For cortical thickness a good starting value is 12mm. For no filtering use a value of 0 and for multiple smoothing sizes input several values.'};
 
   fwhm_surf2         = cfg_entry;
   fwhm_surf2.tag     = 'fwhm_surf2';
@@ -382,7 +382,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   surface.name      = 'Surface prcessing';
   surface.tag       = 'surface';
   surface.values    = {no yes};
-  surface.val       = {no};
+  surface.val       = {yes};
   surface.help      = {
     'Use surface-based preprocessing to estimate cortical surface, area, volume, and folding. '
     'Please note that surface reconstruction additionally requires about 20-60 min of computation time.'
@@ -402,7 +402,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   };
 
 
-  % nproc - unse only a menu for simpler access? - could maybe a problem if numcore miss some cores
+  % nproc - use only a menu for simpler access? - could maybe a problem if numcore misses some cores
   if isdeployed
     cores = 0;
   else
@@ -469,7 +469,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
    ['This batch is a fully standardized cross-sectional CAT preprocessing that prepares your data ' ...
     'for voxel- (VBM), surface- (SBM) and region-based morphometry analysis (RBM). ' ...
     'It classifies the GM and WM brain tissue (segmentation) and maps them to the template space (spatial registration), ' ...
-    'where it is smoothed and saved in the mri subdirectory). ' ... % ### UPDATE SMOOTHING ###
+    'where it is smoothed and saved in the mri subdirectory. ' ... % ### UPDATE SMOOTHING ###
     'In the next step the central cortical surface is optionally reconstructed and cortical measures such as thickness, area, volume, and gyrification are estimated, ' ...
     'registered to the template surface (spherical registration) and smoothed (see surf subdirectory). ' ... % ### UPDATE SMOOTHING ###
     'For region-of-interest (ROI) analysis the volumetric Neuromorphometrics and surface-based Desikan atlas are applied (see label subdirectory) ' ...
