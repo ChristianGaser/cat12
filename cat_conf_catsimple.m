@@ -450,14 +450,17 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   catsimple         = cfg_exbranch;
   catsimple.tag     = 'cat_simple';
   catsimple.name    = 'CAT12 Simple Preprocessing'; 
-  catsimple.val     = {data catversion tpm extopts.val{4} vROI fwhm_vol surface};
+
   if expert
+    catsimple.val   = {data catversion tpm extopts.val{2} vROI fwhm_vol surface};
     catsimple.val   = [catsimple.val {ignoreErrors}];
+  else
+    catsimple.val   = {data catversion tpm extopts.val{4} vROI fwhm_vol surface};
   end
   if expert > 1 % further mods do not work right now!
     catsimple.val   = [catsimple.val(1) {mods} catsimple.val(2:end)];
   end
-  if cores > 1 & ~isdeployed % use multithreading only if available and not deployed code
+  if cores > 1 & ~isdeployed % use multithreading only if available and not for deployed code
     catsimple.val   = [catsimple.val {nproc}];
   end
   if expert>1 % add final debugging option
