@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1537 | gaser | 2019-12-18 11:15:49
+r1538 | gaser | 2019-12-18 15:48:21
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_catsimple.m
+M       cat_run.m
+
+(1) Fixed: Corrected dependencies in cat_run.m.
+(2) Fixed: Corrected registration options for simple processing in expert mode.
+
+------------------------------------------------------------------------
+r1537 | gaser | 2019-12-18 11:16:23 +0100 (Mi, 18 Dez 2019) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +24,7 @@ M       tbx_cfg_cat.m
 
 (1) Changed: Added check that CAT12 is not installed with multiple instances.
 (2) Changed: Corrected unnecessary data_surf cell-structure for resampling batch.
+
 
 ------------------------------------------------------------------------
 r1536 | gaser | 2019-12-17 12:07:00 +0100 (Di, 17 Dez 2019) | 16 lines
