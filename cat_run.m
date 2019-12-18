@@ -828,8 +828,8 @@ surfaceoutput = { % surface texture
   {}                          % developer
 };
 measureoutput = {
-  {}                          % no measures
   {'thickness'}               % default
+  {}                          % no measures
   {'intlayer4','defects'}     % expert
   {'depthWM','depthCSF'}      % developer
 };
