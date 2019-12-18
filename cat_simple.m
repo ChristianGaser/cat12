@@ -9,7 +9,6 @@ function output = cat_simple(job)
   def.catversion    = 'estwrite';
   def.tpm           = fullfile(spm('dir'),'TPM','TPM.nii');
   def.nproc         = cat_get_defaults('extopts.nproc');
-%  def.surface       = 1; 
   def.debug         = 0;
   def.ignoreErrors  = 1;
   job = cat_io_checkinopt(job,def); 
@@ -92,7 +91,7 @@ function output = cat_simple(job)
   
   %% split job and data into separate processes to save computation time
   %  ----------------------------------------------------------------------
-  if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
+  if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index')) && (numel(job.data)>1)
     if nargout==1
       output = cat_parallelize(job,mfilename,pfield);
     else
@@ -323,12 +322,12 @@ function output = cat_simple(job)
       mbi = mbi + 1;  
       % thickness
       if long
-        matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.data_surf{1}(1) = ...
+        matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.data_surf(1) = ...
          cfg_dep(sprintf('%s Left Thickness',estwrite), ...
           substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
           substruct('.','thick', '()',{':'}));
       else
-        matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.data_surf{1}(1) = ...
+        matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.data_surf(1) = ...
           cfg_dep(sprintf('%s Left Thickness',estwrite), ...
           substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
           substruct('()',{1}, '.','lhthickness', '()',{':'}));
@@ -344,7 +343,7 @@ function output = cat_simple(job)
       mbi = mbi + 1;        
       % further parameters
       for mi = 1:size(measures,1)
-        matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.data_surf{mi}(1) = ...
+        matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.data_surf(mi) = ...
           cfg_dep(sprintf('Extract additional surface parameters: Left %s',measures{mi,1}), ...
           substruct('.','val', '{}',{surf_mbi}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
           substruct('()',{1}, '.',measures{mi,2}, '()',{':'}));

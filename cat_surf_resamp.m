@@ -23,7 +23,7 @@ function varargout = cat_surf_resamp(varargin)
   if nargin == 1
     if iscell(varargin{1}.data_surf)
       P = ''; 
-      for i=1:numel(varargin{1}.data_surf)
+      for i = 1:numel(varargin{1}.data_surf)
         P = [P; varargin{1}.data_surf{i}];  
       end
       P = char(P); 
@@ -349,15 +349,7 @@ function varargout = cat_surf_resamp(varargin)
       
   if nargout==1
     if job.merge_hemi
-      if iscell(varargin{1}.data_surf)
-        n = cumsum(cellfun(@numel,varargin{1}.data_surf)); 
-        a = [1 n+1]; a(end) = [];  
-        for i=1:numel(varargin{1}.data_surf)
-          varargout{1}.Psdata{i} = Psdata( a(i) : n(i));
-        end
-      else
-        varargout{1}.Psdata = Psdata; 
-      end
+      varargout{1}.Psdata ={Psdata}; 
     else
       varargout{1}.lPsdata = {lPsdata}; 
       varargout{1}.rPsdata = {rPsdata}; 

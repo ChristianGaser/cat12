@@ -4,7 +4,7 @@
 % $Id$
 
 % data field, that will be dynamically replaced by cat_standalone.sh
-matlabbatch{1}.spm.tools.cat.stools.surfresamp.data_surf = {'<UNDEFINED>'};
+matlabbatch{1}.spm.tools.cat.stools.surfresamp.data_surf = '<UNDEFINED>';
 
 % merge hemispheres?
 matlabbatch{1}.spm.tools.cat.stools.surfresamp.merge_hemi = 1;

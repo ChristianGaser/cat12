@@ -28,12 +28,20 @@ global deffile;
 global cprintferror;  % temporary, because of JAVA errors in cat_io_cprintf ... 20160307
 %try clearvars -global deffile;  end %#ok<TRYNC>
 
+% check that CAT12 is installed in the correct folder
+pth = fileparts(which(mfilename));
+[pth2, nam]=fileparts(pth);
+if ~strcmp(nam,'cat12')
+  spm('alert!',sprintf('Please check that you do not have multiple CAT12 installations in your path!\nYour current CAT12 version is installed in %s but should be installed in %s',pth,fullfile(spm('dir'),'toolbox','cat12')),'WARNING');
+end
+
 % get expert level except for standalone installation
 expert   = cat_get_defaults('extopts.expertgui'); 
 
 % start cat with different default file
 catdir = fullfile(spm('dir'),'toolbox','cat12'); 
 catdef = fullfile(catdir,'cat_defaults.m');
+
 if nargin==0 && (isempty(deffile) || strcmp(deffile,catdef))
   deffile = catdef; 
   if ~strcmp(cat_get_defaults('extopts.species'),'human') || expert>0 
