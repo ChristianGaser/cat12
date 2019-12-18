@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1536 | gaser | 2019-12-17 12:06:26
+r1537 | gaser | 2019-12-18 11:15:49
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_catsimple.m
+M       cat_conf_stools.m
+M       cat_simple.m
+M       cat_surf_resamp.m
+M       spm_cat12.m
+M       standalone/cat_standalone_resample.txt
+M       tbx_cfg_cat.m
+
+(1) Changed: Added check that CAT12 is not installed with multiple instances.
+(2) Changed: Corrected unnecessary data_surf cell-structure for resampling batch.
+
+------------------------------------------------------------------------
+r1536 | gaser | 2019-12-17 12:07:00 +0100 (Di, 17 Dez 2019) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +31,7 @@ M       html/cat.html
     in cat_stat_analyze_ROIs.m.
 (3) Changed: Disabled collision correction in cat_defaults.m that is not yet 
     working properly.
+
 
 ------------------------------------------------------------------------
 r1535 | gaser | 2019-12-13 16:40:18 +0100 (Fr, 13 Dez 2019) | 14 lines

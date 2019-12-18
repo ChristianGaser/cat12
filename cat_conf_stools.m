@@ -60,8 +60,8 @@ function stools = cat_conf_stools(expert)
   merge_hemi.values  = {0,1};
   merge_hemi.val     = {1};
   merge_hemi.help    = {
-    'Meshes for left and right hemisphere can be merged to one single mesh. This simplifies the analysis because only one analysis has to be made for both hemispheres.'
-    'However, this also means that data size is double for one single analysis which might be too memory demanding for studies with several hundreds or even more files. If your model cannot be estimated due to memory issues you should not merge the resampled data.'
+    'Meshes for left and right hemisphere can be merged to one single mesh. This simplifies the analysis because only one analysis has to be made for both hemispheres and this is the recommended approach.'
+    'However, this also means that data size is doubled for one single analysis which might be too memory demanding for studies with several hundreds or even more files. If your model cannot be estimated due to memory issues you should not merge the resampled data.'
   };
 
 
@@ -882,26 +882,17 @@ function [surfresamp,surfresamp_fs] = cat_surf_resamp_GUI(expert,nproc,merge_hem
 %% Resample and smooth surfaces 
 %  ------------------------------------------------------------------------
 
-  data_surf         = cfg_files;
-  data_surf.tag     = 'data_surf';
-  data_surf.name    = '(Left) Surfaces Data';
-  data_surf.filter  = 'any';
-  if expert > 1
-    data_surf.ufilter = '^lh.';
-  else
-    data_surf.ufilter = '^lh.(?!cent|pial|white|sphe|defe|hull|pbt).*';
-  end
-  data_surf.num     = [1 Inf];
-  data_surf.help    = {'Select surfaces data files for left hemisphere for resampling to template space.'};
-
-  sample_surf            = cfg_repeat;
-  sample_surf.tag        = 'sample';
-  sample_surf.name       = 'Data';
-  sample_surf.values     = {data_surf};
+  sample_surf            = cfg_files;
+  sample_surf.tag        = 'data_surf';
+  sample_surf.name       = '(Left) Surfaces Data';
   sample_surf.num        = [1 Inf];
-  sample_surf.help       = {...
-  'Specify data for each sample. If you specify different samples the mean correlation is displayed in separate boxplots for each sample.'};
-
+  sample_surf.filter     = 'any';
+  if expert > 1
+    sample_surf.ufilter  = '^lh.';
+  else
+    sample_surf.ufilter  = '^lh.(?!cent|pial|white|sphe|defe|hull|pbt).*';
+  end
+  sample_surf.help       = {'Select surfaces data files for left hemisphere for resampling to template space.'};
   
   fwhm_surf         = cfg_entry;
   fwhm_surf.tag     = 'fwhm_surf';
@@ -1654,85 +1645,21 @@ else
   depsfnames{1} = 'hemisphere'; 
 end
 
-if iscell(job.data_surf)
-  %% multdata input
-  
-  for di = 1:numel(job.data_surf)
-    
-    % try to set a specific name of dependency objects
-    if isobject(job.data_surf{di})
-      if length(job.data_surf{di})==1 % one type
-        ni = find(job.data_surf{di}.sname==':',1,'first');
-        if ~isempty(ni)
-          depsfnames{1} = cat_io_strrep(job.data_surf{di}.sname(ni+1:end),{'Left'},{''}); 
-        else
-          depsfnames{1} = cat_io_strrep(job.data_surf{di}.sname,{'Extract additional surface parameters: ','Left '},{'',''});
-        end
-      else
-        depsfnames = cell(size(job.data_surf)); 
-        for ddi=1:length(job.data_surf{di})
-          depsfnames{ddi} = cat_io_strrep(job.data_surf{di}(ddi).sname,{'Extract additional surface parameters: ','Left '},{'',''});
-        end
-      end
-    end
-    
-    for ddi=1:numel(depsfnames)
-      % create new dependency object
-      if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
-      if job.merge_hemi
-        dep(end).sname      = ['Merged' depsfnames{ddi}];
-        dep(end).src_output = substruct('()',{1}, '.','Psdata','{}',{di},'()',{':'});
-        dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-      else
-        dep(end).sname      = ['Left' depsfnames{ddi}];
-        dep(end).src_output = substruct('()',{1}, '.','lPsdata','()',{di},'()',{':'});
-        dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-        dep(end+1)          = cfg_dep; %#ok<AGROW>
-        dep(end).sname      = ['Right' depsfnames{ddi}];
-        dep(end).src_output = substruct('()',{1}, '.','rPsdata','()',{numel(job.data_surf) + di},'()',{':'});
-        dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-      end
-    end
-  end
-  
-else
-  % single data input ... old version
-  
-  if iscell(job.data_surf) && iscell(job.data_surf{1})
-    for di = 1:numel(job.data_surf)
-      if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
-      if job.merge_hemi
-        dep(end).sname      = ['Merged' depsfnames{1}];
-        dep(end).src_output = substruct('()',{1}, '.','Psdata','{}',{di},'()',{':'});
-        dep(end).src_output = substruct('()',{1}, '.','Psdata','.',sprintf('set%02d',di),'()',{':'});
-        dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-      else
-        dep(end).sname      = ['Left' depsfnames{1}];
-        dep(end).src_output = substruct('()',{1}, '.','lPsdata','()',{di},'()',{':'});
-        dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-        dep(end+1)          = cfg_dep; %#ok<AGROW>
-        dep(end).sname      = ['Right' depsfnames{1}];
-        dep(end).src_output = substruct('()',{1}, '.','rPsdata','()',{numel(job.data_surf) + di},'()',{':'});
-        dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-      end
-    end
-  end
-
-  if job.merge_hemi
-    dep(1)            = cfg_dep;
-    dep(1).sname      = ['Merged' depsfnames 's']; 
-    dep(1).src_output = substruct('()',{1}, '.','Psdata','()',{':'});
-    dep(1).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-  else
-    dep(1)            = cfg_dep;
-    dep(1).sname      = ['Left' depsfnames]; 
-    dep(1).src_output = substruct('()',{1}, '.','lPsdata','()',{':'});
-    dep(1).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-    dep(2)            = cfg_dep;
-    dep(2).sname      = ['Right' depsfnames]; 
-    dep(2).src_output = substruct('()',{1}, '.','rPsdata','()',{':'});
-    dep(2).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-  end
+for di = 1:numel(job.data_surf)
+	if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
+	if job.merge_hemi
+		dep(end).sname      = ['Merged' depsfnames{1}];
+		dep(end).src_output = substruct('()',{1}, '.','Psdata','{}',{di},'()',{':'});
+		dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+	else
+		dep(end).sname      = ['Left' depsfnames{1}];
+		dep(end).src_output = substruct('()',{1}, '.','lPsdata','()',{di},'()',{':'});
+		dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+		dep(end+1)          = cfg_dep; %#ok<AGROW>
+		dep(end).sname      = ['Right' depsfnames{1}];
+		dep(end).src_output = substruct('()',{1}, '.','rPsdata','()',{numel(job.data_surf) + di},'()',{':'});
+		dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+	end
 end
 
 %==========================================================================  
