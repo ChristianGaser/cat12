@@ -36,7 +36,7 @@ function cat_run_newcatch(job,tpm,subj)
     
     
     %% check for filenames that are usually indicated by '"'
-    testmessage = 1; % just for tests 
+    testmessage = 0; % just for tests 
     if testmessage
      caterr.identifier =  'CAT:error0815:BadFileInput'; 
      caterr.message    = ['Bad values variable "xyz" in "C:\private\patient\name" ' ...
@@ -137,10 +137,12 @@ function cat_run_newcatch(job,tpm,subj)
       'Unable to write file'
       'Voxel resolution has to be better than 5 mm'
       };
+if 0
     if any( ~cellfun('isempty',strfindi( keywords_mid, caterr_message_str )==1 )) || ...
        any( ~cellfun('isempty',strfindi( keywords, caterr_message_str )==1 ))
       ignore_message = 1; 
     end
+end    
     
     %% send error information, CAT12 version and computer system
     if cat_get_defaults('extopts.send_info') && ~ignore_message && job.extopts.expertgui<2

@@ -427,6 +427,8 @@ switch lower(action)
                 
         if nargin >= 2
             
+            if isempty(varargin{1}), return; end
+            
             H.S{1}.name = varargin{1};
             H.S{2}.name = varargin{1};
             
