@@ -1,5 +1,26 @@
 ------------------------------------------------------------------------
-r1538 | gaser | 2019-12-18 15:48:21
+r1539 | gaser | 2019-12-30 09:45:31
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_main.m
+M       cat_run_newcatch.m
+M       cat_surf_resamp.m
+M       cat_surf_results.m
+M       html/cat.html
+M       html/cat_starting.html
+
+(1) Changed: Extraction of ROI-based thickness is not necessary anymore because
+    this is now included in the segmentation pipeline in cat_main.m.
+(2) Changed: Updated Quick Start Guide.
+(3) Fixed: cat_surf_results now intercepts empty varargin field.
+(4) Changed: Removed unnecessary 2nd cell structure for input data in 
+    cat_surf_resamp.m.
+(5) Fixed: Commented out missing strfindi function and testmessage in 
+    cat_run_newcatch.m.
+------------------------------------------------------------------------
+r1538 | gaser | 2019-12-18 15:48:43 +0100 (Mi, 18 Dez 2019) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +29,7 @@ M       cat_run.m
 
 (1) Fixed: Corrected dependencies in cat_run.m.
 (2) Fixed: Corrected registration options for simple processing in expert mode.
+
 
 ------------------------------------------------------------------------
 r1537 | gaser | 2019-12-18 11:16:23 +0100 (Mi, 18 Dez 2019) | 14 lines

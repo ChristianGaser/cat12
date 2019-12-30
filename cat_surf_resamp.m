@@ -22,11 +22,11 @@ function varargout = cat_surf_resamp(varargin)
 
   if nargin == 1
     if iscell(varargin{1}.data_surf)
-      P = ''; 
+      P = []; 
       for i = 1:numel(varargin{1}.data_surf)
-        P = [P; varargin{1}.data_surf{i}];  
+        P = char(P, varargin{1}.data_surf{i});  
       end
-      P = char(P); 
+      P = P(2:end,:);
     else
       P = char(varargin{1}.data_surf);
     end
@@ -241,27 +241,17 @@ function varargout = cat_surf_resamp(varargin)
           [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
         end
 
-    if 0
-      % resample surface using warped sphere with better surface quality (using Spherical harmonics)
-      % ###
-      % deactivated because the resampling of the surface alone leads to displacements of the textures (RD20190927)!
-      % ###
-      cmd = sprintf('CAT_ResampleSphericalSurfSPH -n 327680 "%s" "%s" "%s"',Pcentral,Pspherereg,Presamp);
-      [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
-  
-      % resample surface according to freesurfer sphere
-      cmd = sprintf('CAT_ResampleSurf "%s" NULL "%s" "%s"',Presamp,Pfsavg,Presamp);
-      [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
-    end
+        if job.fwhm_surf > 0
 
-        % smooth resampled values
-        % don't use mask for cerebellum
-        if strcmp(hemi,'lc') || strcmp(hemi,'rc')
-          cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue);
-        else
-          cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue,Pmask);
+					% smooth resampled values
+					% don't use mask for cerebellum
+					if strcmp(hemi,'lc') || strcmp(hemi,'rc')
+						cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue);
+					else
+						cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue,Pmask);
+					end
+					[ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
         end
-        [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
 
         % add values to resampled surf and save as gifti
         cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Presamp,Pfwhm,Pfwhm_gii);
