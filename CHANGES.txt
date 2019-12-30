@@ -1,11 +1,20 @@
 ------------------------------------------------------------------------
-r1542 | gaser | 2019-12-30 16:46:53
+r1543 | gaser | 2019-12-30 17:19:42
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_results.m
+
+Fixed: Removed some inconsistencies in cat_surf_results.m.
+------------------------------------------------------------------------
+r1542 | gaser | 2019-12-30 16:47:26 +0100 (Mo, 30 Dez 2019) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_surf_results.m
 
 Fixed: Global parameter H was removed by accident.
+
 ------------------------------------------------------------------------
 r1541 | gaser | 2019-12-30 16:35:48 +0100 (Mo, 30 Dez 2019) | 8 lines
 

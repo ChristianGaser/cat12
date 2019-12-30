@@ -68,7 +68,7 @@ switch lower(action)
     case 'disp'
       
         % remove any existing data
-        if exist(H,'var') & isfield(H,'S')
+        if exist('H','var') & isfield(H,'S')
            H = rmfield(H,'S');
         end
 
@@ -249,7 +249,7 @@ switch lower(action)
             'Callback', 'spm(''PopUpCB'',gcbo)', ...
             'FontSize',H.FS,...
             'ToolTipString', 'Threshold', ...
-            'Interruptible', 'on', 'Enable', 'off');
+            'Interruptible', 'on', 'Enable', 'on');
         
         str = {'Atlas Labeling', 'Desikan-Killiany DK40', 'Destrieux 2009', 'HCP Multi-Modal Parcellation'};
         tmp = {{@select_atlas, 1}, ...
@@ -343,7 +343,7 @@ switch lower(action)
             'Callback', {@checkbox_inv}, ...
             'FontSize',H.FS,...
             'ToolTipString', 'Invert results', ...
-            'Interruptible', 'on', 'Enable', 'off');
+            'Interruptible', 'on', 'Enable', 'on');
         
         % show only results for pos. contrast
         H.hide_neg = uicontrol(H.panel(2), ...
@@ -634,13 +634,7 @@ switch lower(action)
             if isfield(H,'scaling')
               set(H.scaling, 'Enable', 'on');
             end
-            
-            if min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0 & H.n_surf == 1
-                set(H.inv, 'Enable', 'on');
-                set(H.hide_neg, 'Enable', 'on');
-                set(H.hide_neg, 'Value', 0);
-            end
-            
+                        
             H.rdata{1} = [];
             H.rdata{2} = [];
             H.rdata{3} = [];
@@ -1720,6 +1714,10 @@ end
 % only show threshold popup if log-name was found and minimal value > 0 is < 1
 if H.logP & (H.S{1}.thresh < 1)
     set(H.thresh, 'Enable', 'on');
+    if min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0 & H.n_surf == 1
+      set(H.hide_neg, 'Enable', 'on');
+      set(H.hide_neg, 'Value', 0);
+    end
 end
 
 if H.n_surf == 1
@@ -2159,10 +2157,11 @@ if H.border_mode
 
   if ind < 5 % single hemisphere views
     Cm = H.S{round(ind / 2)}.Cm;
+    col = jet(size(Cm,1));
     for j=1:size(Cm,1)
       if ~isempty(Cm{j})
 				for i=1:size(Cm,2)
-					h3 = plot3(Cm{j}(i).xdata,Cm{j}(i).ydata,Cm{j}(i).zdata,'k-','LineWidth',2);
+					h3 = plot3(Cm{j}(i).xdata,Cm{j}(i).ydata,Cm{j}(i).zdata,'Color',col(j,:),'LineWidth',2);
 					setappdata(H.patch(ind), 'h3', [getappdata(H.patch(ind), 'h3'); h3]);
 					set(h3,'Parent',Ha);
 				end
@@ -2171,10 +2170,11 @@ if H.border_mode
   else
     for k = 1:2
       Cm = H.S{k}.Cm;
+      col = jet(size(Cm,1));
       for j=1:size(Cm,1)
         if ~isempty(Cm{j})
 					for i=1:size(Cm,2)
-						h3 = plot3(Cm{j}(i).xdata,Cm{j}(i).ydata,Cm{j}(i).zdata,'k-','LineWidth',2);
+						h3 = plot3(Cm{j}(i).xdata,Cm{j}(i).ydata,Cm{j}(i).zdata,'Color',col(j,:),'LineWidth',2);
 						setappdata(H.patch(ind), 'h3', [getappdata(H.patch(ind), 'h3'); h3]);
 						set(h3,'Parent',Ha);
 					end
