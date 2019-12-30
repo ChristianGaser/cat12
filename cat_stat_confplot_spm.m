@@ -11,7 +11,7 @@
 % Christian Gaser
 % $Id$
 
-global xY Hb
+global xY H
 
 try
     [xyz,i] = spm_XYZreg('NearestXYZ',spm_XYZreg('GetCoords',hReg),xSPM.XYZmm);
@@ -37,11 +37,11 @@ xY.def = spm_input('VOI definition...',1,'b',...
 Q      = ones(1,size(xSPM.XYZmm,2));
 
 % default font size and boxplot
-if ~exist('Hb','var') | (exist('Hb','var') & isempty(Hb))
-  Hb.fs = 18;
-  Hb.boxplot = 1;
-  Hb.medianplot = 0;
-  Hb.rawdata = 0;
+if ~exist('H','var') | (exist('H','var') & isempty(H))
+  H.fs = 18;
+  H.boxplot = 1;
+  H.medianplot = 0;
+  H.rawdata = 0;
 end
 
 if ~exist('scale','var')
@@ -115,10 +115,10 @@ try
   y = spm_get_data(SPM.xY.VY, XYZ);
   fprintf(sprintf('%s',repmat('\b',1,150)));
   fprintf(sprintf('%s',repmat(' ',1,150)));
-  Hb.y_found = 1;
+  H.y_found = 1;
 catch
   warning('No raw data found! Please check that you have not moved your data.\n');
-  Hb.y_found = 0;
+  H.y_found = 0;
 end
 
 ResMS  = spm_get_data(SPM.VResMS,XYZ);
@@ -187,69 +187,69 @@ end
 
 % GUI figure
 %--------------------------------------------------------------
-Hb.h10 = figure(10);
+H.h10 = figure(10);
 %clf
-set(Hb.h10,'Position',[0 800 150 550],'MenuBar','none','NumberTitle','off');
-hNewButton = uicontrol(Hb.h10,...
+set(H.h10,'Position',[0 800 150 550],'MenuBar','none','NumberTitle','off');
+hNewButton = uicontrol(H.h10,...
     'Position',[20 500 110 20],...
     'Callback','cat_stat_confplot_spm',...
     'Interruptible','on',...
     'Style','Pushbutton',...
     'String','Plot');
-hClearButton = uicontrol(Hb.h10,...
+hClearButton = uicontrol(H.h10,...
     'position',[20 460 110 20],...
-    'Callback','clear names Ic scale colored groupcolor repeated_anova H',...
+    'Callback','clear -globalvar H;clear names Ic scale colored groupcolor repeated_anova',...
     'Interruptible','on',...
     'Style','Pushbutton',...
     'String','Reset variables');
-hSaveButton = uicontrol(Hb.h10,...
+hSaveButton = uicontrol(H.h10,...
     'position',[20 420 110 20],...
     'Callback',{@save_image},...
     'Interruptible','on',...
     'Style','Pushbutton',...
     'String','Save images');
-hCloseButton = uicontrol(Hb.h10,...
+hCloseButton = uicontrol(H.h10,...
     'position',[20 380 110 20],...
-    'Callback','close(10,11,12)',...
+    'Callback','clear -globalvar H;close(10,11,12)',...
     'Interruptible','on',...
     'Style','Pushbutton',...
     'String','Close windows');
-hShowBoxplot = uicontrol(Hb.h10,...
+hShowBoxplot = uicontrol(H.h10,...
     'position',[20 340 110 20],...
     'Callback',(@show_boxplot),...
     'Interruptible','on',...
     'Style','CheckBox',...
     'Visible','off',...
-    'Value',Hb.boxplot,...
+    'Value',H.boxplot,...
     'String','Show Boxplot');
-hShowRawdata = uicontrol(Hb.h10,...
+hShowRawdata = uicontrol(H.h10,...
     'position',[20 300 110 20],...
     'Callback',(@show_rawdata),...
     'Interruptible','on',...
     'Style','CheckBox',...
     'Visible','off',...
-    'Value',Hb.rawdata,...
+    'Value',H.rawdata,...
     'String','Show Raw Data');
-hShowMedianplot = uicontrol(Hb.h10,...
+hShowMedianplot = uicontrol(H.h10,...
     'position',[20 260 110 20],...
     'Callback',(@show_medianplot),...
     'Interruptible','on',...
     'Style','CheckBox',...
     'Visible','off',...
-    'Value',Hb.medianplot,...
+    'Value',H.medianplot,...
     'String','Show Medianplot');
-htext = uicontrol(Hb.h10,...
+htext = uicontrol(H.h10,...
     'position',[20 200 60 20],...
     'Style','Text',...
     'String','Font Size');
-hedit = uicontrol(Hb.h10,...
+hedit = uicontrol(H.h10,...
     'position',[80 200 50 20],...
     'Callback',{@set_font_size},...
     'Interruptible','on',...
     'Style','Edit',...
-    'String',num2str(Hb.fs));
+    'String',num2str(H.fs));
 
-if Hb.y_found
+if H.y_found
   set(hShowBoxplot,'Visible','on');
   set(hShowRawdata,'Visible','on');
   if ~isempty(repeated_anova)
@@ -261,10 +261,10 @@ end
 %--------------------------------------------------------------
 
 if ~exist('H','var') | (exist('H','var') & ~isfield(H,'h11'))
-  Hb.h11 = figure(11);
-  set(Hb.h11,'Position',[150 800 800 550],'NumberTitle','off','MenuBar','none');
+  H.h11 = figure(11);
+  set(H.h11,'Position',[150 800 800 550],'NumberTitle','off','MenuBar','none');
 else
-  Hb.h11 = figure(11);
+  H.h11 = figure(11);
 end
 
 cla
@@ -296,7 +296,7 @@ hold off
 
 % prepare raw values for boxplot
 %--------------------------------------------------------------
-if Hb.y_found
+if H.y_found
 	if scale == 1
 			y_label = 'raw signal';
 	else
@@ -309,20 +309,20 @@ if Hb.y_found
   end
   
   if ~exist('H','var') | (exist('H','var') & ~isfield(H,'h12'))
-     Hb.h12 = figure(12);
-    set(Hb.h12,'Position',[950 800 800 550],'NumberTitle','off','MenuBar','none');
+     H.h12 = figure(12);
+    set(H.h12,'Position',[950 800 800 550],'NumberTitle','off','MenuBar','none');
   else
-     Hb.h12 = figure(12);
+     H.h12 = figure(12);
   end
   cla
   
-  if Hb.rawdata
+  if H.rawdata
     vshowdata = 1;
   else
     vshowdata = 0;
   end
   
-  if Hb.boxplot
+  if H.boxplot
     vbox = 1;
     voutliers = 1;
   else
@@ -349,7 +349,7 @@ if Hb.y_found
     end
   end  
 
-  if ~isempty(repeated_anova) & Hb.medianplot
+  if ~isempty(repeated_anova) & H.medianplot
     hold on
 
     plot_data = zeros(n_effects,1);
@@ -364,24 +364,24 @@ if Hb.y_found
     hold off
   end
     
-  set(gca(Hb.h12),'FontSize',Hb.fs);
+  set(gca(H.h12),'FontSize',H.fs);
 end
 
-set(gca(Hb.h11),'FontSize',Hb.fs);
+set(gca(H.h11),'FontSize',H.fs);
 
 %==========================================================================
 function set_font_size(obj, event_obj)
 
-global Hb
+global H
 
-Hb.fs = str2num(get(obj,'String'));
+H.fs = str2num(get(obj,'String'));
 
-if isempty(Hb.fs) | numel(Hb.fs)>1
+if isempty(H.fs) | numel(H.fs)>1
   fprintf('Error: Please enter a single number for defining font size\n');
 else
-  set(gca(Hb.h11),'FontSize',Hb.fs);
-  if Hb.y_found
-    set(gca(Hb.h12),'FontSize',Hb.fs);
+  set(gca(H.h11),'FontSize',H.fs);
+  if H.y_found
+    set(gca(H.h12),'FontSize',H.fs);
   end
 end
 
@@ -390,10 +390,10 @@ end
 %==========================================================================
 function show_rawdata(obj, event_obj, filename)
 
-global Hb
+global H
 
-if Hb.boxplot | Hb.medianplot
-  Hb.rawdata = get(obj, 'Value');
+if H.boxplot | H.medianplot
+  H.rawdata = get(obj, 'Value');
 end
 
 end
@@ -401,10 +401,10 @@ end
 %==========================================================================
 function show_medianplot(obj, event_obj, filename)
 
-global Hb
+global H
 
-if Hb.rawdata | Hb.boxplot
-  Hb.medianplot = get(obj, 'Value');
+if H.rawdata | H.boxplot
+  H.medianplot = get(obj, 'Value');
 end
 
 end
@@ -412,10 +412,10 @@ end
 %==========================================================================
 function show_boxplot(obj, event_obj, filename)
 
-global Hb
+global H
 
-if Hb.rawdata | Hb.medianplot
-  Hb.boxplot = get(obj, 'Value');
+if H.rawdata | H.medianplot
+  H.boxplot = get(obj, 'Value');
 end
 
 end
@@ -423,7 +423,7 @@ end
 %==========================================================================
 function save_image(obj, event_obj, filename)
 
-global xY Hb
+global xY H
 
 if ~exist('filename', 'var')
     
@@ -448,8 +448,8 @@ filename = regexprep(filename,'.png','');
 
 try
   % keep background color
-  set(Hb.h10, 'InvertHardcopy', 'off', 'PaperPositionMode', 'auto');
-  hh = getframe(Hb.h11);
+  set(H.h10, 'InvertHardcopy', 'off', 'PaperPositionMode', 'auto');
+  hh = getframe(H.h11);
   img = hh.cdata;
   col = colormap;
   saved_file = fullfile(newpth,['estimates_' filename '.png']);
@@ -459,11 +459,11 @@ catch
   fprintf('File %s could not be saved.\n',saved_file);
 end
 
-if Hb.y_found
+if H.y_found
   try
     % keep background color
-    set(Hb.h12, 'InvertHardcopy', 'off', 'PaperPositionMode', 'auto');
-    hh = getframe(Hb.h12);
+    set(H.h12, 'InvertHardcopy', 'off', 'PaperPositionMode', 'auto');
+    hh = getframe(H.h12);
     img = hh.cdata;
     col = colormap;
     saved_file = fullfile(newpth,['boxplot_' filename '.png']);
