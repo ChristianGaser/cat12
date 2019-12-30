@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1541 | gaser | 2019-12-30 16:35:32
+r1542 | gaser | 2019-12-30 16:46:53
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_results.m
+
+Fixed: Global parameter H was removed by accident.
+------------------------------------------------------------------------
+r1541 | gaser | 2019-12-30 16:35:48 +0100 (Mo, 30 Dez 2019) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +16,7 @@ M       cat_surf_results.m
 
 Changed: Undo renaming of global parameter H in some functions und rather
 delete variable with flag -globalvar after closing.
+
 ------------------------------------------------------------------------
 r1540 | gaser | 2019-12-30 15:50:59 +0100 (Mo, 30 Dez 2019) | 12 lines
 

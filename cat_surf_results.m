@@ -67,9 +67,8 @@ switch lower(action)
     %======================================================================
     case 'disp'
       
-        clear -globalvar H
         % remove any existing data
-        if isfield(H,'S')
+        if exist(H,'var') & isfield(H,'S')
            H = rmfield(H,'S');
         end
 
