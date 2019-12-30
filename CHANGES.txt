@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1539 | gaser | 2019-12-30 09:45:31
+r1540 | gaser | 2019-12-30 15:50:26
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_confplot_spm.m
+M       cat_surf_results.m
+
+(1) Changed: Renamed global parameter H in some functions to not interfere
+    between these functions.
+(3) Changed: Use new approach to overlay atlas borders that results in finer 
+    lines in cat_surf_results.m
+(4) Fixed: Subject factors were only available in repeated anova designs in 
+    cat_stat_confplot_spm.m.
+------------------------------------------------------------------------
+r1539 | gaser | 2019-12-30 09:46:05 +0100 (Mo, 30 Dez 2019) | 19 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -19,6 +33,7 @@ M       html/cat_starting.html
     cat_surf_resamp.m.
 (5) Fixed: Commented out missing strfindi function and testmessage in 
     cat_run_newcatch.m.
+
 ------------------------------------------------------------------------
 r1538 | gaser | 2019-12-18 15:48:43 +0100 (Mi, 18 Dez 2019) | 9 lines
 
