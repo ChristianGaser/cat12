@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1540 | gaser | 2019-12-30 15:50:26
+r1541 | gaser | 2019-12-30 16:35:32
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_confplot_spm.m
+M       cat_surf_results.m
+
+Changed: Undo renaming of global parameter H in some functions und rather
+delete variable with flag -globalvar after closing.
+------------------------------------------------------------------------
+r1540 | gaser | 2019-12-30 15:50:59 +0100 (Mo, 30 Dez 2019) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +22,7 @@ M       cat_surf_results.m
     lines in cat_surf_results.m
 (4) Fixed: Subject factors were only available in repeated anova designs in 
     cat_stat_confplot_spm.m.
+
 ------------------------------------------------------------------------
 r1539 | gaser | 2019-12-30 09:46:05 +0100 (Mo, 30 Dez 2019) | 19 lines
 
