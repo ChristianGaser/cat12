@@ -1,11 +1,22 @@
 ------------------------------------------------------------------------
-r1545 | gaser | 2020-01-05 21:37:24
+r1546 | gaser | 2020-01-05 22:37:57
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_results.m
+M       cat_vol_slice_overlay.m
+
+(1) Fixed: Corrected path of output image file for cat_vol_slice_overlay.m.
+(2) Changed: Disabled some widgets in cat_surf_results after start.
+------------------------------------------------------------------------
+r1545 | gaser | 2020-01-05 21:37:52 +0100 (So, 05 Jan 2020) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 A       cat_vol_pbt2.m
 
 Fixed: Again added deleted cat_vol_pbt2.m
+
 ------------------------------------------------------------------------
 r1544 | gaser | 2020-01-05 21:36:13 +0100 (So, 05 Jan 2020) | 9 lines
 
