@@ -305,6 +305,7 @@ function varargout = cat_surf_resamp(varargin)
           case {2,4}
             M0 = gifti({Pfwhm_all{1}, Pfwhm_all{2}});
             delete(Pfwhm_all{1}); delete(Pfwhm_all{2})
+            warning('off','MATLAB:subscripting:noSubscriptsSpecified');
             M = gifti(spm_mesh_join([M0(1) M0(2)]));
           case 1
             cat_io_cprintf('err',sprintf('      - No data for opposite hemisphere found for %s!\n',fullfile(pp,Pfwhm)));

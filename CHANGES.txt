@@ -1,11 +1,23 @@
 ------------------------------------------------------------------------
-r1543 | gaser | 2019-12-30 17:19:42
+r1544 | gaser | 2020-01-05 21:35:39
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_resamp.m
+M       cat_surf_resamp_freesurfer.m
+D       cat_vol_pbt2.m
+
+Changed: Suppress annoying subscripts warning in combination with 
+spm_mesh_join.m
+------------------------------------------------------------------------
+r1543 | gaser | 2019-12-30 17:20:10 +0100 (Mo, 30 Dez 2019) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_surf_results.m
 
 Fixed: Removed some inconsistencies in cat_surf_results.m.
+
 ------------------------------------------------------------------------
 r1542 | gaser | 2019-12-30 16:47:26 +0100 (Mo, 30 Dez 2019) | 6 lines
 
