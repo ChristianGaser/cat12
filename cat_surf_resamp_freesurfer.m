@@ -116,6 +116,7 @@ function cat_surf_resamp_freesurfer(vargin)
       if numel(exist_hemi) > 1
         M0 = gifti({Pfwhm_all{1}, Pfwhm_all{2}});
         delete(Pfwhm_all{1}); delete(Pfwhm_all{2})
+        warning('off','MATLAB:subscripting:noSubscriptsSpecified');
         M = gifti(spm_mesh_join([M0(1) M0(2)]));
         M.private.metadata = struct('name','SurfaceID','value',[ff ex]);
         save(M, Pfwhm, gformat);
