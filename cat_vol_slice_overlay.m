@@ -435,14 +435,14 @@ if ~strcmp(image_ext, 'none')
     if isempty(pt)
         pt2 = '';
     else
-        pt2 = spm_fileparts(pt);
-        if isempty(pt2)
+        [tmp,nm2] = spm_fileparts(pt);
+        if isempty(nm2)
             pt2 = [pt '_']; 
         else
-            pt2 = [pt2 '_']; 
+            pt2 = [nm2 '_']; 
         end
     end
-    
+    pt2
     
     % use shorter ext for jpeg
     if ~isfield(OV, 'save')

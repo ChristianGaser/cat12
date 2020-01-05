@@ -249,7 +249,7 @@ switch lower(action)
             'Callback', 'spm(''PopUpCB'',gcbo)', ...
             'FontSize',H.FS,...
             'ToolTipString', 'Threshold', ...
-            'Interruptible', 'on', 'Enable', 'on');
+            'Interruptible', 'on', 'Enable', 'off');
         
         str = {'Atlas Labeling', 'Desikan-Killiany DK40', 'Destrieux 2009', 'HCP Multi-Modal Parcellation'};
         tmp = {{@select_atlas, 1}, ...
@@ -343,7 +343,7 @@ switch lower(action)
             'Callback', {@checkbox_inv}, ...
             'FontSize',H.FS,...
             'ToolTipString', 'Invert results', ...
-            'Interruptible', 'on', 'Enable', 'on');
+            'Interruptible', 'on', 'Enable', 'off');
         
         % show only results for pos. contrast
         H.hide_neg = uicontrol(H.panel(2), ...
@@ -631,6 +631,8 @@ switch lower(action)
             set(H.bkg,    'Enable', 'on');
             set(H.transp, 'Enable', 'on');
             set(H.info,   'Enable', 'on');
+            set(H.cmap,   'Enable', 'on');
+            set(H.inv,    'Enable', 'on');
             if isfield(H,'scaling')
               set(H.scaling, 'Enable', 'on');
             end
