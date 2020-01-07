@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1546 | gaser | 2020-01-05 22:37:57
+r1547 | gaser | 2020-01-07 10:54:18
+
+Changed paths:
+M       CHANGES.txt
+M       html/cat_versions.html
+
+Changed: Corrected some typos.
+------------------------------------------------------------------------
+r1546 | gaser | 2020-01-05 22:38:09 +0100 (So, 05 Jan 2020) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +16,7 @@ M       cat_vol_slice_overlay.m
 
 (1) Fixed: Corrected path of output image file for cat_vol_slice_overlay.m.
 (2) Changed: Disabled some widgets in cat_surf_results after start.
+
 ------------------------------------------------------------------------
 r1545 | gaser | 2020-01-05 21:37:52 +0100 (So, 05 Jan 2020) | 6 lines
 
