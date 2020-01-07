@@ -1,11 +1,26 @@
 ------------------------------------------------------------------------
-r1547 | gaser | 2020-01-07 10:54:18
+r1548 | gaser | 2020-01-07 14:19:33
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_main_reportstr.m
+MM      cat_vol_pbt2.m
+M       html/cat_methods_templates.html
+M       html/cat_starting_cattest.html
+M       html/cat_versions.html
+
+(1) Changed: Updated help text.
+(2) Changed: Updated version information.
+------------------------------------------------------------------------
+r1547 | gaser | 2020-01-07 10:54:52 +0100 (Di, 07 Jan 2020) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       html/cat_versions.html
 
 Changed: Corrected some typos.
+
 ------------------------------------------------------------------------
 r1546 | gaser | 2020-01-05 22:38:09 +0100 (So, 05 Jan 2020) | 8 lines
 

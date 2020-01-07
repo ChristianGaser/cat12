@@ -185,7 +185,7 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
   if isfield(qa.qualitymeasures,'SurfaceEulerNumber') && ~isempty(qa.qualitymeasures.SurfaceEulerNumber)
     if job.extopts.expertgui
       str{2} = [str{2} struct('name',' Mean surface Euler number:','value',marks2str(qa.qualityratings.SurfaceEulerNumber,...
-                sprintf('%0.2f', qa.qualitymeasures.SurfaceEulerNumber)))]; 
+                sprintf('%g', qa.qualitymeasures.SurfaceEulerNumber)))]; 
               
       if isfield(qa.qualitymeasures,'SurfaceDefectNumber') && ~isempty(qa.qualitymeasures.SurfaceDefectNumber)
         str{2}(end).name  = [str{2}(end).name(1:end-8)  ' / defect number:'];
@@ -194,7 +194,7 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
       end
             
     else
-      str{2} = [str{2} struct('name',' Mean surface Euler number:','value',sprintf('%0.2f', qa.qualitymeasures.SurfaceEulerNumber))]; 
+      str{2} = [str{2} struct('name',' Mean surface Euler number:','value',sprintf('%g', qa.qualitymeasures.SurfaceEulerNumber))]; 
     end
   end
   
