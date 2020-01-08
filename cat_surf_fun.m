@@ -1107,6 +1107,7 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
   %  Here we have to use the Layer 4 rather than the central surface.
   %  All values will depend on age!
   if exist('Ym','var')
+    warning off MATLAB:subscripting:noSubscriptsSpecified  
     II = cat_surf_isocolors2(Ym,VI,mat);  
     IO = cat_surf_isocolors2(Ym,VO,mat); 
     % local adaption for GM intensity changes by myelination 
@@ -1279,6 +1280,7 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
   
   
   % surface values
+  warning off MATLAB:subscripting:noSubscriptsSpecified  
   EC  = size(CS.vertices,1) + size(CS.faces,1) - size(spm_mesh_edges(CS),1);
   res.euler_characteristic = EC; 
   if verb
