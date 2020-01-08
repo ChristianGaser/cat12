@@ -824,7 +824,7 @@ end
 surfaceoutput = { % surface texture
   {'central','pial','white'}  % no measures - just surfaces
   {}                          % default
-  {'layer4'}                  % expert
+  {}                          % expert
   {}                          % developer
 };
 measureoutput = {

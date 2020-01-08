@@ -1,5 +1,38 @@
 ------------------------------------------------------------------------
-r1548 | gaser | 2020-01-07 14:19:33
+r1549 | gaser | 2020-01-08 10:59:45
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_amap.mexmaci64
+M       cat_ornlm.mexmaci64
+M       cat_run.m
+M       cat_sanlm.mexmaci64
+M       cat_surf_createCS.m
+M       cat_surf_fun.m
+M       cat_vbdist.mexmaci64
+M       cat_vol_downcut.mexmaci64
+M       cat_vol_eidist.mexmaci64
+M       cat_vol_genus0.mexmaci64
+M       cat_vol_gradient3.mexmaci64
+M       cat_vol_interp3f.mexmaci64
+M       cat_vol_laplace3.mexmaci64
+M       cat_vol_laplace3R.mexmaci64
+M       cat_vol_localstat.mexmaci64
+M       cat_vol_median3.mexmaci64
+M       cat_vol_median3c.mexmaci64
+M       cat_vol_pbtp.mexmaci64
+M       cat_vol_simgrow.mexmaci64
+M       compile.m
+M       html/cat.html
+M       internal/cat_vol_cMRegularizarNLM3D.mexmaci64
+
+(1) Changed: Optimized flags for compiling.
+(2) Changed: Tried to get rid of annoying subscript warning for gifti function 
+    again.
+(3) Changed: Removed layer4 from dependency list in cat_run.m.
+------------------------------------------------------------------------
+r1548 | gaser | 2020-01-07 14:20:08 +0100 (Di, 07 Jan 2020) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +45,7 @@ M       html/cat_versions.html
 
 (1) Changed: Updated help text.
 (2) Changed: Updated version information.
+
 ------------------------------------------------------------------------
 r1547 | gaser | 2020-01-07 10:54:52 +0100 (Di, 07 Jan 2020) | 6 lines
 

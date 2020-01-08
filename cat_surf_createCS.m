@@ -1020,6 +1020,7 @@ cstime = clock;
     % csp=patch(CS); view(3), camlight, lighting phong, axis equal off; set(csp,'facecolor','interp','edgecolor','none')
     
     % create output structure
+    warning off MATLAB:subscripting:noSubscriptsSpecified
     S.(opt.surf{si}) = struct('faces',CS.faces,'vertices',CS.vertices,'th1',facevertexcdata);
     if opt.WMT > 1
       S.(opt.surf{si}) = setfield(S.(opt.surf{si}),'th2',facevertexcdata2);
