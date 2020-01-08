@@ -1,5 +1,46 @@
 ------------------------------------------------------------------------
-r1549 | gaser | 2020-01-08 10:59:45
+r1550 | gaser | 2020-01-08 15:59:22
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_amap.mexa64
+M       cat_amap.mexw64
+M       cat_ornlm.mexa64
+M       cat_ornlm.mexw64
+M       cat_sanlm.mexa64
+M       cat_sanlm.mexw64
+M       cat_vbdist.mexa64
+M       cat_vbdist.mexw64
+M       cat_vol_downcut.mexa64
+M       cat_vol_downcut.mexw64
+M       cat_vol_eidist.mexa64
+M       cat_vol_eidist.mexw64
+M       cat_vol_genus0.mexa64
+M       cat_vol_genus0.mexw64
+M       cat_vol_gradient3.mexa64
+M       cat_vol_gradient3.mexw64
+M       cat_vol_interp3f.mexa64
+M       cat_vol_interp3f.mexw64
+M       cat_vol_laplace3.mexa64
+M       cat_vol_laplace3.mexw64
+M       cat_vol_laplace3R.mexa64
+M       cat_vol_laplace3R.mexw64
+M       cat_vol_localstat.mexa64
+M       cat_vol_localstat.mexw64
+M       cat_vol_median3.mexa64
+M       cat_vol_median3.mexw64
+M       cat_vol_median3c.mexa64
+M       cat_vol_median3c.mexw64
+M       cat_vol_pbtp.mexa64
+M       cat_vol_pbtp.mexw64
+M       cat_vol_simgrow.mexa64
+M       cat_vol_simgrow.mexw64
+M       html/cat.html
+
+(Changed: Recompiled mex-files and CAT-binaries with new optimized flags.
+------------------------------------------------------------------------
+r1549 | gaser | 2020-01-08 11:00:23 +0100 (Mi, 08 Jan 2020) | 31 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -31,6 +72,7 @@ M       internal/cat_vol_cMRegularizarNLM3D.mexmaci64
 (2) Changed: Tried to get rid of annoying subscript warning for gifti function 
     again.
 (3) Changed: Removed layer4 from dependency list in cat_run.m.
+
 ------------------------------------------------------------------------
 r1548 | gaser | 2020-01-07 14:20:08 +0100 (Di, 07 Jan 2020) | 12 lines
 
