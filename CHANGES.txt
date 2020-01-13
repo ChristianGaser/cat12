@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1550 | gaser | 2020-01-08 15:59:22
+r1551 | gaser | 2020-01-13 09:33:04
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_plot_boxplot.m
+M       cat_stat_confplot_spm.m
+M       cat_surf_results.m
+M       html/cat.html
+
+1. Changed: Added adjustement for plotting raw data to cat_stat_confplot_spm.m.
+2. Changed: Updated help text for cat_plot_boxplot.m.
+3. Changed: Updated adjustment for raw data in cat_surf_results and added 
+   boxplot for raw data.
+------------------------------------------------------------------------
+r1550 | gaser | 2020-01-08 15:59:58 +0100 (Mi, 08 Jan 2020) | 39 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -39,6 +54,7 @@ M       cat_vol_simgrow.mexw64
 M       html/cat.html
 
 (Changed: Recompiled mex-files and CAT-binaries with new optimized flags.
+
 ------------------------------------------------------------------------
 r1549 | gaser | 2020-01-08 11:00:23 +0100 (Mi, 08 Jan 2020) | 31 lines
 
