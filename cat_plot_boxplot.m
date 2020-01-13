@@ -1,7 +1,7 @@
 function [out,s] = cat_plot_boxplot(data,opt)
 % _________________________________________________________________________
 %
-% usage: vargout = cat_plot_boxplot(data,opt);
+% usage: [out, s] = cat_plot_boxplot(data,opt);
 %
 %  opt.style       = 0;             % predefined styles: 
 %                                     0 - boxplot
@@ -45,7 +45,17 @@ function [out,s] = cat_plot_boxplot(data,opt)
 %  opt.sat         = 0.50;          % saturation of the box
 %  opt.subsets     = false(1,numel(data)); 
 %  opt.hflip       = 0;             % flip x-axis in case of horizontal bars
-
+%
+%  The returned matrix s has one column for each dataset as follows:
+%
+%    1  minimum
+%    2  1st quartile
+%    3  2nd quartile (median)
+%    4  3rd quartile
+%    5  maximum
+%    6  lower confidence limit for median
+%    7  upper confidence limit for median
+%
 % The box plot is a graphical display that simultaneously describes several 
 % important features of a data set, such as center, spread, departure from 
 % symmetry, and identification of observations that lie unusually far from
