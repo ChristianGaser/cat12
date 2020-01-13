@@ -1,28 +1,27 @@
-% [signal_change0, xyz] = cat_stat_confplot_spm(SPM,xSPM,hReg,scale,names,Ic)
+% [signal_change, xyz] = cat_stat_confplot_spm(SPM,xSPM,hReg,names,Ic)
 %
 % SPM, xSPM, hReg - parameters saved in workspace
-% scale    - scale factor for percent signal change of data
 % name     - optional names of columns given as {'name1','name2'...}
 % Ic       - number of contrast (usually 1 for effects of interest)   
 %
-% signal_change0 - scaled beta to obtain percent signal change
+% signal_change  - signal change
 % xyz            - coordinates of local cluster maximum     
 %__________________________________________________________________________
 % Christian Gaser
 % $Id$
 
-global xY H
+global xY Hc x
 
 try
-    [xyz,i] = spm_XYZreg('NearestXYZ',spm_XYZreg('GetCoords',hReg),xSPM.XYZmm);
-    spm_XYZreg('SetCoords',xyz,hReg);
+  [xyz,i] = spm_XYZreg('NearestXYZ',spm_XYZreg('GetCoords',hReg),xSPM.XYZmm);
+  spm_XYZreg('SetCoords',xyz,hReg);
 catch
-    [hReg xSPM SPM] = spm_results_ui('Setup');
-    [xyz,i] = spm_XYZreg('NearestXYZ',spm_XYZreg('GetCoords',hReg),xSPM.XYZmm);
-    spm_XYZreg('SetCoords',xyz,hReg);
+  [hReg xSPM SPM] = spm_results_ui('Setup');
+  [xyz,i] = spm_XYZreg('NearestXYZ',spm_XYZreg('GetCoords',hReg),xSPM.XYZmm);
+  spm_XYZreg('SetCoords',xyz,hReg);
 end
 
-CI    = 1.6449;         % = spm_invNcdf(1 - 0.05);
+CI = 1.6449;         % = spm_invNcdf(1 - 0.05);
 
 %-Colour specifications
 %-----------------------------------------------------------------------
@@ -34,18 +33,20 @@ Cplot = 'Parameter estimates';
 %-----------------------------------------------------------------------
 xY.def = spm_input('VOI definition...',1,'b',...
       {'sphere','box','cluster','voxel'},[],4);
-Q      = ones(1,size(xSPM.XYZmm,2));
+Q = ones(1,size(xSPM.XYZmm,2));
 
 % default font size and boxplot
-if ~exist('H','var') | (exist('H','var') & isempty(H))
-  H.fs = 18;
-  H.boxplot = 1;
-  H.medianplot = 0;
-  H.rawdata = 0;
-end
-
-if ~exist('scale','var')
-    scale = spm_input('Scaling factor','+1', 'm',['1 (no scaling)|100 (for percent signal change)'],[1 100],2);
+if ~exist('Hc','var') | (exist('Hc','var') & isempty(Hc))
+  Hc.FS = 18;          % font size
+  Hc.LW = 2;           % line width
+  Hc.MS = 10;          % marker size
+  Hc.boxplot = 1;      % show boxplot
+  Hc.medianplot = 0;   % show median line
+  Hc.rawdata = 0;      % show raw data
+  Hc.adjust = 1;       % adjust raw data
+  Hc.connected = 0;    % show connected lines for repeated anova
+  Hc.legend = 1;       % show legend
+  Hc.line = cell(1,1); % trend line property 
 end
 
 if ~exist('colored','var')
@@ -84,11 +85,11 @@ switch xY.def
 
   case 'cluster'
   %---------------------------------------------------------------
-  [x i] = spm_XYZreg('NearestXYZ',xyz,xSPM.XYZmm);
+  [x0 i] = spm_XYZreg('NearestXYZ',xyz,xSPM.XYZmm);
   A     = spm_clusters(xSPM.XYZ);
   Q     = find(A == A(i));
   XYZstr = sprintf(' averaged in cluster');
-  xY.string = sprintf('cluster_at_%g_%g_%gmm',x);
+  xY.string = sprintf('cluster_at_%g_%g_%gmm',x0);
 
   case 'voxel'
   %---------------------------------------------------------------
@@ -115,10 +116,11 @@ try
   y = spm_get_data(SPM.xY.VY, XYZ);
   fprintf(sprintf('%s',repmat('\b',1,150)));
   fprintf(sprintf('%s',repmat(' ',1,150)));
-  H.y_found = 1;
+  Hc.y_found = 1;
 catch
-  warning('No raw data found! Please check that you have not moved your data.\n');
-  H.y_found = 0;
+  fprintf('No raw data found! Please check that you have not moved your data.\n');
+  Hc.y_found = 0;
+  try, close(Hc.h12); end
 end
 
 ResMS  = spm_get_data(SPM.VResMS,XYZ);
@@ -129,142 +131,238 @@ Bcov   = Bcov;
 % determine which contrast
 %---------------------------------------------------------------
 if ~exist('Ic','var')
-    Ic    = spm_input('Which contrast?','!+1','m',{SPM.xCon.name});
+  Ic = spm_input('Which contrast?','!+1','m',{SPM.xCon.name});
 end
+
+xCon = SPM.xCon(Ic);
 
 TITLE = {Cplot XYZstr};
 
 % find contrast and related columns in design matrix
 %-------------------------------------------------------------- 
-c = SPM.xCon(Ic).c';
-[ind_x, ind_y] = find(c~=0);
-ind_y = unique(ind_y);
+c0 = xCon.c;
+
+[indi, indj] = find(c0~=0);
+ind_X = unique(indi)';
 X = SPM.xX.X;
-X = X(:,ind_y);
+X = X(:,ind_X);
 n_effects = size(X,2);
 
-if ~exist('names','var')
-    define_names = spm_input('Define names?',1,'yes|use numbers',[1 0],1);
-    if define_names
-        names = [];
-        for i=1:n_effects
-            new_name = spm_input(['Name for parameter ' num2str(i)],1,'s');
-            names = strvcat(names,new_name);
-        end
+covariate = 0;
+
+% check for covariates
+if ~isempty(SPM.xX.iC) & n_effects <= 2
+  for i=1:n_effects
+    % contrast is defined at entries of iC
+    if ~isempty(find(ind_X(i) == SPM.xX.iC))
+      covariate = 1;
     else
-        names = num2str((1:n_effects)');
+      covariate = 0;
     end
+  end
+end
+
+c0 = c0(ind_X,:);
+
+if ~exist('names','var')
+  define_names = spm_input('Define names?',1,'yes|use numbers',[1 0],1);
+  if define_names
+    names = [];
+    for i=1:n_effects
+      new_name = spm_input(['Name for parameter ' num2str(i)],1,'s');
+      names = strvcat(names,new_name);
+    end
+  else
+    names = num2str((1:n_effects)');
+  end
 end
 
 % compute contrast of parameter estimates and 90% C.I.
 %-------------------------------------------------------------- 
-signal_change0 = SPM.xCon(Ic).c'*beta0;
-signal_change  = SPM.xCon(Ic).c'*beta;
-CI    = CI*sqrt(diag(SPM.xCon(Ic).c'*Bcov*SPM.xCon(Ic).c));
+signal_change0 = xCon.c'*beta0;
+signal_change  = xCon.c'*beta;
+CI = CI*sqrt(diag(xCon.c'*Bcov*xCon.c));
 
 if ~exist('repeated_anova','var')
   repeated_anova = ~isempty(SPM.xX.iB);
+  
   if repeated_anova
-		[rw,cl] = find(SPM.xX.I == length(SPM.xX.iB)); % find column which codes subject factor (length(xX.iB) -> n_subj)
-		% expect that subject factors are 2nd colum, group 3rd column, time 4th column
-		if cl(1) == 2
-			n_groups = max(SPM.xX.I(:,3));
-			count = 0;
-			for i=1:n_groups
-				ind_times{i} = count + (1:max(SPM.xX.I(find(SPM.xX.I(:,3)==i),4)));
-				count = max(SPM.xX.I(find(SPM.xX.I(:,3)==i),4));
-			end
-			n_time = max(SPM.xX.I(:,4));
-			n_groupsxtime = n_groups*n_time;
-			if n_groupsxtime ~= n_effects
-				repeated_anova = [];
-			end
-		else
-			repeated_anova = [];
-		end
-	end
+    [rw,cl] = find(SPM.xX.I == length(SPM.xX.iB)); % find column which codes subject factor (length(xX.iB) -> n_subj)
+    
+    % expect that subject factors are 2nd colum, group 3rd column, time 4th column
+    if cl(1) == 2
+      n_groups = max(SPM.xX.I(:,3));
+      count = 0;
+      for i=1:n_groups
+        ind_times{i} = count + (1:max(SPM.xX.I(find(SPM.xX.I(:,3)==i),4)));
+        count = max(SPM.xX.I(find(SPM.xX.I(:,3)==i),4));
+      end
+      n_time = max(SPM.xX.I(:,4));
+      n_groupsxtime = n_groups*n_time;
+      
+      if n_groupsxtime ~= n_effects
+        repeated_anova = 0;
+      end
+    else
+      repeated_anova = 0;
+    end
+  end
 end
 
 % GUI figure
 %--------------------------------------------------------------
-H.h10 = figure(10);
-%clf
-set(H.h10,'Position',[0 800 150 550],'MenuBar','none','NumberTitle','off');
-hNewButton = uicontrol(H.h10,...
+
+% estimate maximum available window width for the two windows
+Ms = spm('WinSize','0',1);
+menu_width = 150;
+max_width = floor((Ms(3) - menu_width)/2);
+max_width = min(max_width, 800);
+
+Hc.h10 = figure(10);
+clf
+
+set(Hc.h10,'Position',[0 800 menu_width 550],'MenuBar','none','NumberTitle','off');
+hNewButton = uicontrol(Hc.h10,...
     'Position',[20 500 110 20],...
     'Callback','cat_stat_confplot_spm',...
     'Interruptible','on',...
     'Style','Pushbutton',...
     'String','Plot');
-hClearButton = uicontrol(H.h10,...
+hClearButton = uicontrol(Hc.h10,...
     'position',[20 460 110 20],...
-    'Callback','clear -globalvar H;clear names Ic scale colored groupcolor repeated_anova',...
+    'Callback','clear -globalvar Hc;clear names Ic colored groupcolor repeated_anova',...
     'Interruptible','on',...
     'Style','Pushbutton',...
     'String','Reset variables');
-hSaveButton = uicontrol(H.h10,...
+hSaveButton = uicontrol(Hc.h10,...
     'position',[20 420 110 20],...
     'Callback',{@save_image},...
     'Interruptible','on',...
     'Style','Pushbutton',...
     'String','Save images');
-hCloseButton = uicontrol(H.h10,...
+hCloseButton = uicontrol(Hc.h10,...
     'position',[20 380 110 20],...
-    'Callback','clear -globalvar H;close(10,11,12)',...
+    'Callback','clear -globalvar Hc;clear names Ic colored groupcolor repeated_anova,close(10,11,12)',...
     'Interruptible','on',...
     'Style','Pushbutton',...
     'String','Close windows');
-hShowBoxplot = uicontrol(H.h10,...
-    'position',[20 340 110 20],...
+htext1 = uicontrol(Hc.h10,...
+    'position',[20 340 60 20],...
+    'Style','Text',...
+    'String','Font Size');
+hedit1 = uicontrol(Hc.h10,...
+    'position',[80 340 50 20],...
+    'Callback',{@set_font_size},...
+    'Interruptible','on',...
+    'Style','Edit',...
+    'String',num2str(Hc.FS));
+htext2 = uicontrol(Hc.h10,...
+    'position',[20 300 60 20],...
+    'Visible','off',...
+    'Style','Text',...
+    'String','Line width');
+hedit2 = uicontrol(Hc.h10,...
+    'position',[80 300 50 20],...
+    'Callback',{@set_line_width},...
+    'Interruptible','on',...
+    'Style','Edit',...
+    'Visible','off',...
+    'String',num2str(Hc.LW));
+htext3 = uicontrol(Hc.h10,...
+    'position',[20 270 60 20],...
+    'Visible','off',...
+    'Style','Text',...
+    'String','Marker Size');
+hedit3 = uicontrol(Hc.h10,...
+    'position',[80 270 50 20],...
+    'Callback',{@set_marker_size},...
+    'Interruptible','on',...
+    'Style','Edit',...
+    'Visible','off',...
+    'String',num2str(Hc.MS));
+hAdjustData = uicontrol(Hc.h10,...
+    'position',[20 240 110 20],...
+    'Callback',(@adjust_data),...
+    'Interruptible','on',...
+    'Style','CheckBox',...
+    'Visible','off',...
+    'Value',Hc.adjust,...
+    'ToolTip','Adjust raw data for potential covariates and subject effects',...
+    'String','Adjust Raw Data');
+hShowBoxplot = uicontrol(Hc.h10,...
+    'position',[20 220 110 20],...
     'Callback',(@show_boxplot),...
     'Interruptible','on',...
     'Style','CheckBox',...
     'Visible','off',...
-    'Value',H.boxplot,...
+    'Value',Hc.boxplot,...
     'String','Show Boxplot');
-hShowRawdata = uicontrol(H.h10,...
-    'position',[20 300 110 20],...
+hShowRawdata = uicontrol(Hc.h10,...
+    'position',[20 200 110 20],...
     'Callback',(@show_rawdata),...
     'Interruptible','on',...
     'Style','CheckBox',...
     'Visible','off',...
-    'Value',H.rawdata,...
+    'Value',Hc.rawdata,...
     'String','Show Raw Data');
-hShowMedianplot = uicontrol(H.h10,...
-    'position',[20 260 110 20],...
+hShowMedianplot = uicontrol(Hc.h10,...
+    'position',[20 180 110 20],...
     'Callback',(@show_medianplot),...
     'Interruptible','on',...
     'Style','CheckBox',...
     'Visible','off',...
-    'Value',H.medianplot,...
+    'Value',Hc.medianplot,...
     'String','Show Medianplot');
-htext = uicontrol(H.h10,...
-    'position',[20 200 60 20],...
-    'Style','Text',...
-    'String','Font Size');
-hedit = uicontrol(H.h10,...
-    'position',[80 200 50 20],...
-    'Callback',{@set_font_size},...
+hShowConnected = uicontrol(Hc.h10,...
+    'position',[20 160 110 20],...
+    'Callback',(@show_connected),...
     'Interruptible','on',...
-    'Style','Edit',...
-    'String',num2str(H.fs));
+    'Style','CheckBox',...
+    'Visible','off',...
+    'Value',Hc.connected,...
+    'String','Connect Lines');
+hShowLegend = uicontrol(Hc.h10,...
+    'position',[20 140 110 20],...
+    'Callback',(@show_legend),...
+    'Interruptible','on',...
+    'Style','CheckBox',...
+    'Visible','off',...
+    'Value',Hc.legend,...
+    'String','Show Legend');
 
-if H.y_found
-  set(hShowBoxplot,'Visible','on');
-  set(hShowRawdata,'Visible','on');
-  if ~isempty(repeated_anova)
-    set(hShowMedianplot,'Visible','on');
+if Hc.y_found
+  set(hAdjustData,'Visible','on');
+  
+  if covariate
+    set(htext2,'Visible','on');
+    set(hedit2,'Visible','on');
+    set(htext3,'Visible','on');
+    set(hedit3,'Visible','on');
+
+    if repeated_anova
+      set(hShowConnected,'Visible','on');
+      set(hShowLegend,'Visible','on');
+    end
+  else
+    set(hShowBoxplot,'Visible','on');
+    set(hShowRawdata,'Visible','on');
+
+    if repeated_anova
+      set(hShowMedianplot,'Visible','on');
+      set(htext2,'Visible','on');
+      set(hedit2,'Visible','on');
+    end
   end
 end
 
 % % signal change plot
 %--------------------------------------------------------------
 
-if ~exist('H','var') | (exist('H','var') & ~isfield(H,'h11'))
-  H.h11 = figure(11);
-  set(H.h11,'Position',[150 800 800 550],'NumberTitle','off','MenuBar','none');
+if ~exist('Hc','var') | (exist('Hc','var') & ~isfield(Hc,'h11'))
+  Hc.h11 = figure(11);
+  set(Hc.h11,'Position',[menu_width 800 max_width 550],'NumberTitle','off','MenuBar','none');
 else
-  H.h11 = figure(11);
+  Hc.h11 = figure(11);
 end
 
 cla
@@ -294,35 +392,88 @@ end
 
 hold off
 
+if repeated_anova
+  if n_groups > 3
+    Hc.col = jet(n_groups);
+  else
+    Hc.col = [1 0 0;0 0 1; 0 1 0];
+  end
+else
+  Hc.col = [1 0 0;0 0 1; 0 1 0];
+end
+
 % prepare raw values for boxplot
 %--------------------------------------------------------------
-if H.y_found
-	if scale == 1
-			y_label = 'raw signal';
-	else
-			y_label = 'percent signal change';
-	end
-	
-  y2 = cell(n_effects,1);
-  for i=1:n_effects
-    y2{i} = scale*y(find(X(:,i)~=0),:);
+if Hc.y_found
+
+  % adjust raw data
+  if Hc.adjust
+
+		% define subject effects and potential covariates
+		G_columns = [SPM.xX.iB SPM.xX.iC];
+		
+		% only consider nuisance parameters and parameters where
+		% contrast is defined
+		for i=1:n_effects
+			G_columns(find(G_columns==ind_X(i))) = [];
+		end
+		
+		% remove nuisance effects from data
+		if ~isempty(G_columns)
+			G = SPM.xX.X(:,G_columns);
+			G = G - mean(G);
+			y = y - G*(pinv(G)*y);
+		end
   end
   
-  if ~exist('H','var') | (exist('H','var') & ~isfield(H,'h12'))
-     H.h12 = figure(12);
-    set(H.h12,'Position',[950 800 800 550],'NumberTitle','off','MenuBar','none');
-  else
-     H.h12 = figure(12);
+  % use mean inside cluster
+  y = mean(y,2);
+  
+  y_label = 'raw signal';
+  
+  % estimate group means for correction for repeated anovas or interaction designs
+  % expect that subject factors are 2nd colum, group 3rd column, time 4th column
+  if Hc.adjust & (repeated_anova | ((n_groups > 1) & covariate))
+		mean_group = zeros(n_groups,1);
+		count_times = 1;
+		for i=1:n_groups
+			ind_group = find(SPM.xX.I(:,3) == i);
+			if repeated_anova
+			  % find subjects effects in that group
+				ind_subj = unique(SPM.xX.I(ind_group,2));
+				n_subj_group = numel(ind_subj);
+				n_times = max(SPM.xX.I(ind_group,4));
+				mean_group(i) = sum(beta(SPM.xX.iH(count_times:(count_times+n_times-1))))/n_times + ...
+				  sum(beta(SPM.xX.iB(ind_subj)))/n_subj_group;
+				count_times = count_times + n_times;
+			else
+				mean_group(i) = beta(SPM.xX.iH(i));
+			end
+			y(ind_group,:) = y(ind_group,:) - mean(y(ind_group,:)) + mean_group(i);
+		end
   end
+  
+  yy = cell(n_effects,1);
+  for i=1:n_effects
+    yy{i} = y(find(X(:,i)~=0),:);
+  end
+  
+  if ~exist('Hc','var') | (exist('Hc','var') & ~isfield(Hc,'h12'))
+    Hc.h12 = figure(12);
+    set(Hc.h12,'Position',[max_width+menu_width 800 max_width 550],'NumberTitle','off','MenuBar','none');
+  else
+    Hc.h12 = figure(12);
+  end
+  
   cla
   
-  if H.rawdata
+  if Hc.rawdata
     vshowdata = 1;
   else
     vshowdata = 0;
   end
   
-  if H.boxplot
+  if Hc.boxplot
     vbox = 1;
     voutliers = 1;
   else
@@ -332,68 +483,200 @@ if H.y_found
 
   vstruct = struct('showdata',vshowdata,'box',vbox,'outliers',voutliers);
   if ~isempty(groupcolor)
-    vstruct = setfield('groupcolor',groupcolor);
+    vstruct = setfield(vstruct,'groupcolor',groupcolor);
   end
 
-  if isempty(y2{1}), return, end
-  cat_plot_boxplot(y2,vstruct);
+
+  if isempty(yy{1}), return, end
+  
+  title_name = 'raw data ';
+  if Hc.adjust, title_name = ['adjusted ' title_name]; end
+
+  if covariate
+
+    % previous plot must be deleted
+    clf
     
-  TITLE = {'Boxplot of raw data ' XYZstr};
+    xx = cell(n_effects,1);
+    % use existing x-variable if available
+    if exist('x','var') & numel(x)==size(X,1)
+      xx_array = [min(x) max(x)]; 
+      for i=1:n_effects
+        xx{i} = x(X(:,i)~=0);
+      end
+      x0 = x;
+    else
+      xx_array = [min(X(X~=0)) max(X(X~=0))]; 
+      for i=1:n_effects
+        xx{i} = X(:,i);
+        xx{i}(xx{i}==0) = [];
+      end
+      x0 = sum(X,2);
+    end
+        
+    hold on
+    for i=1:n_effects
+      x2 = xx{i};
+      y2 = mean(yy{i},2);
+      plot(x2,y2,'.','MarkerSize',Hc.MS,'Color',Hc.col(i,:));
+
+      P = polyfit(x2,y2,1);       
+      % plot trend line
+      Hc.line{i} = plot(xx_array,polyval(P,xx_array),'Color',Hc.col(i,:),'LineWidth',Hc.LW);
+    end
+
+    % for repeated anovas also plot connected lines if defined
+    if repeated_anova & Hc.connected
+      % coding of subject factor should be hopefully always 2nd column of xX.I
+      n_subjects = max(SPM.xX.I(:,2));
+
+      y0 = mean(y,2);
+      for i=1:n_subjects
+
+        ind = find(SPM.xX.I(:,2) == i);
+        x_tmp = x0(ind);
+        y_tmp = y0(ind);
+        
+        if ~isempty(ind)
+          line(x_tmp,y_tmp,'Color',Hc.col(SPM.xX.I(ind(1),3),:));
+        end
+      end
+    end
+    
+    hold off
+
+    if Hc.legend
+      if n_effects == 2
+        legend(names(1,:),['Fit ' names(1,:)],names(2,:),['Fit ' names(2,:)])
+      else
+        legend(names(1,:),['Fit ' names(1,:)])
+      end
+    end
+
+    TITLE = {['Scatterplot of ' title_name] XYZstr};
+  else
+    cat_plot_boxplot(yy,vstruct);
+    TITLE = {['Boxplot of ' title_name] XYZstr};
+    set(gca,'XLim',[0.4 (length(signal_change) + 0.6)],'XTick',1:length(signal_change));
+    
+    if exist('names','var')
+      if size(names,1) == length(signal_change)
+        set(gca,'XTickLabel',names,'TickLabelInterpreter','none');
+      end
+    end  
+    
+    if repeated_anova & Hc.medianplot
+      hold on
+  
+      plot_data = zeros(n_effects,1);
+      count = 1;
+      for i=1:n_groups
+        for j=1:length(ind_times{i})
+          plot_data(count) = median(yy{ind_times{i}(j)});
+          count = count + 1;
+        end
+        Hc.line{i} = plot(ind_times{i},plot_data(ind_times{i}),'Color',Hc.col(i,:),'LineWidth',Hc.LW);
+      end
+      hold off
+    end
+  end
+  
   title(TITLE,'FontSize',14,'FontWeight','bold')
   ylabel(y_label,'FontSize',12)
-  set(gca,'XLim',[0.4 (length(signal_change) + 0.6)],'XTick',1:length(signal_change));
-  
-  if exist('names','var')
-    if size(names,1) == length(signal_change)
-      set(gca,'XTickLabel',names,'TickLabelInterpreter','none');
-    end
-  end  
 
-  if ~isempty(repeated_anova) & H.medianplot
-    hold on
-
-    plot_data = zeros(n_effects,1);
-    count = 1;
-    for i=1:n_groups
-      for j=1:length(ind_times{i})
-        plot_data(count) = median(y2{ind_times{i}(j)});
-        count = count + 1;
-      end
-      plot(ind_times{i},plot_data(ind_times{i}),'r','Linewidth',2);
-    end
-    hold off
-  end
     
-  set(gca(H.h12),'FontSize',H.fs);
+  set(gca(Hc.h12),'FontSize',Hc.FS);
 end
 
-set(gca(H.h11),'FontSize',H.fs);
+set(gca(Hc.h11),'FontSize',Hc.FS);
 
 %==========================================================================
 function set_font_size(obj, event_obj)
 
-global H
+global Hc
 
-H.fs = str2num(get(obj,'String'));
+Hc.FS = str2num(get(obj,'String'));
 
-if isempty(H.fs) | numel(H.fs)>1
+if isempty(Hc.FS) | numel(Hc.FS)>1
   fprintf('Error: Please enter a single number for defining font size\n');
 else
-  set(gca(H.h11),'FontSize',H.fs);
-  if H.y_found
-    set(gca(H.h12),'FontSize',H.fs);
+  set(gca(Hc.h11),'FontSize',Hc.FS);
+  if Hc.y_found
+    set(gca(Hc.h12),'FontSize',Hc.FS);
   end
 end
+
+end
+
+%==========================================================================
+function set_line_width(obj, event_obj)
+
+global Hc
+
+Hc.LW = str2num(get(obj,'String'));
+
+if isempty(Hc.LW) | numel(Hc.LW)>1
+  fprintf('Error: Please enter a single number for defining line width\n');
+else
+  if Hc.y_found
+    if ~isempty(Hc.line{1})
+      for i=1:numel(Hc.line)
+        set(Hc.line{i},'LineWidth',Hc.LW);        
+      end
+    end
+  end
+end
+
+end
+
+%==========================================================================
+function set_marker_size(obj, event_obj)
+
+global Hc
+
+Hc.MS = str2num(get(obj,'String'));
+
+if isempty(Hc.MS) | numel(Hc.MS)>1
+  fprintf('Error: Please enter a single marker for defining plot symbols\n');
+else
+  if Hc.y_found
+    ic = findobj(Hc.h12, 'Type', 'line');
+    for i=1:numel(ic)
+      % Marker has more than two points
+      if numel(get(ic(i),'XData')) > 2
+        set(ic(i),'MarkerSize',Hc.MS);
+      end
+    end
+  end
+end
+
+end
+
+%==========================================================================
+function adjust_data(obj, event_obj, filename)
+
+global Hc
+
+Hc.adjust = get(obj, 'Value');
+
+end
+
+%==========================================================================
+function show_connected(obj, event_obj, filename)
+
+global Hc
+
+Hc.connected = get(obj, 'Value');
 
 end
 
 %==========================================================================
 function show_rawdata(obj, event_obj, filename)
 
-global H
+global Hc
 
-if H.boxplot | H.medianplot
-  H.rawdata = get(obj, 'Value');
+if Hc.boxplot | Hc.medianplot
+  Hc.rawdata = get(obj, 'Value');
 end
 
 end
@@ -401,10 +684,10 @@ end
 %==========================================================================
 function show_medianplot(obj, event_obj, filename)
 
-global H
+global Hc
 
-if H.rawdata | H.boxplot
-  H.medianplot = get(obj, 'Value');
+if Hc.rawdata | Hc.boxplot
+  Hc.medianplot = get(obj, 'Value');
 end
 
 end
@@ -412,18 +695,27 @@ end
 %==========================================================================
 function show_boxplot(obj, event_obj, filename)
 
-global H
+global Hc
 
-if H.rawdata | H.medianplot
-  H.boxplot = get(obj, 'Value');
+if Hc.rawdata | Hc.medianplot
+  Hc.boxplot = get(obj, 'Value');
 end
+
+end
+
+%==========================================================================
+function show_legend(obj, event_obj, filename)
+
+global Hc
+
+Hc.legend = get(obj, 'Value');
 
 end
 
 %==========================================================================
 function save_image(obj, event_obj, filename)
 
-global xY H
+global xY Hc
 
 if ~exist('filename', 'var')
     
@@ -448,8 +740,8 @@ filename = regexprep(filename,'.png','');
 
 try
   % keep background color
-  set(H.h10, 'InvertHardcopy', 'off', 'PaperPositionMode', 'auto');
-  hh = getframe(H.h11);
+  set(Hc.h10, 'InvertHardcopy', 'off', 'PaperPositionMode', 'auto');
+  hh = getframe(Hc.h11);
   img = hh.cdata;
   col = colormap;
   saved_file = fullfile(newpth,['estimates_' filename '.png']);
@@ -459,11 +751,11 @@ catch
   fprintf('File %s could not be saved.\n',saved_file);
 end
 
-if H.y_found
+if Hc.y_found
   try
     % keep background color
-    set(H.h12, 'InvertHardcopy', 'off', 'PaperPositionMode', 'auto');
-    hh = getframe(H.h12);
+    set(Hc.h12, 'InvertHardcopy', 'off', 'PaperPositionMode', 'auto');
+    hh = getframe(Hc.h12);
     img = hh.cdata;
     col = colormap;
     saved_file = fullfile(newpth,['boxplot_' filename '.png']);
