@@ -463,7 +463,7 @@ function cat_io_report(job,qa,subj,createerr)
       try
         %%
         if isfield(cat_err_res.init,'Yp0')
-          Yp0s           = single(cat_vol_resize(cat_err_res.init.Yp0,'dereduceBrain',cat_err_res.init.BB)) / 255*5*2; 
+          Yp0s           = single(cat_vol_resize(cat_err_res.init.Yp0,'dereduceBrain',cat_err_res.init.BB)) / 255 * 3; 
           Vp0            = rmfield(spm_vol(Pn),'private');
           Vp0.dt         = [16 0]; 
           Vp0.dat        = Yp0s;

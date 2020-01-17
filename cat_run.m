@@ -822,17 +822,29 @@ end
 % lh/rh/cb central/white/pial/layer4 surface and thickness
 % ----------------------------------------------------------------------
 surfaceoutput = { % surface texture
-  {'central','pial','white'}  % no measures - just surfaces
+  {'central'}                 % no measures - just surfaces
   {}                          % default
   {}                          % expert
-  {}                          % developer
+  {'pial','white'}            % developer
 };
 measureoutput = {
   {'thickness'}               % default
   {}                          % no measures
-  {'intlayer4','defects'}     % expert
+  {}                          % expert
   {'depthWM','depthCSF'}      % developer
 };
+% no output of intlayer4 or defects in cat_surf_createCS but in cat_surf_createCS2 (but not with fast) 
+if isfield(job,'extopts') && isfield(job.extopts,'surface') && ...
+   isfield(job.extopts.surface,'collcorr') && job.extopts.surface.collcorr>19 
+
+  surfaceoutput{1} = [surfaceoutput{1},{'pial','white'}];
+  surfaceoutput{4} = {}; 
+  if any( job.output.surface ~= [ 5 6 ] ) % fast pipeline
+    surfaceoutput{3} = {'layer4'}; 
+    measureoutput{3} = {'intlayer4','defects'};
+  end
+end
+
 sides = {'lh','rh'}; 
 if any( job.output.surface == [ 2 6 8 ] )
   sides = [sides {'cb'}]; 
@@ -840,27 +852,30 @@ end
 voutsfields = {};
 
 def.output.surf_measures = 1;
+def.extopts.expertgui    = 0;
 job = cat_io_checkinopt(job,def); 
 % create fields
 for si = 1:numel(sides)
   % surfaces
   for soi = 1:numel(surfaceoutput)
-    for soii = 1:numel(surfaceoutput{soi})
-      eval( sprintf('%s%s = {};' , sides{si} , surfaceoutput{soi}{soii} ) ); 
-      if ~isempty( surfaceoutput{soi} ) && job.output.surface
-        eval( sprintf('%s%s = cell(n,1);' , sides{si} , surfaceoutput{soi}{soii} ) ); 
-        for j = 1:n
-          eval( sprintf('%s%s{j} = fullfile(  parts{j,1} , surffolder , ''%s.%s.%s.gii'' ); ' , ...
-            sides{si} , surfaceoutput{soi}{soii} , ...
-            sides{si} , surfaceoutput{soi}{soii} , parts{j,2} ) ); 
-          voutsfields{end+1} = sprintf('%s%s',  sides{si} , surfaceoutput{soi}{soii} );
+    if soi < job.extopts.expertgui + 2
+      for soii = 1:numel(surfaceoutput{soi})
+        eval( sprintf('%s%s = {};' , sides{si} , surfaceoutput{soi}{soii} ) ); 
+        if ~isempty( surfaceoutput{soi} ) && job.output.surface
+          eval( sprintf('%s%s = cell(n,1);' , sides{si} , surfaceoutput{soi}{soii} ) ); 
+          for j = 1:n
+            eval( sprintf('%s%s{j} = fullfile(  parts{j,1} , surffolder , ''%s.%s.%s.gii'' ); ' , ...
+              sides{si} , surfaceoutput{soi}{soii} , ...
+              sides{si} , surfaceoutput{soi}{soii} , parts{j,2} ) ); 
+            voutsfields{end+1} = sprintf('%s%s',  sides{si} , surfaceoutput{soi}{soii} );
+          end
         end
       end
     end
   end
   % measures
   for soi = 1:numel(measureoutput)
-    if soi <= job.output.surf_measures
+    if soi < job.extopts.expertgui + 2
       for soii = 1:numel(measureoutput{soi})
         eval( sprintf('%s%s = {};' , sides{si} , measureoutput{soi}{soii} ) ); 
         if ~isempty( measureoutput{soi} ) && job.output.surface

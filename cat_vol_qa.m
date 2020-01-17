@@ -665,7 +665,7 @@ function varargout = cat_vol_qa(action,varargin)
       Ygm2 = cat_vol_morph(Yp0>1.1,'e') & cat_vol_morph(Yp0<2.9,'e');   % avoid PVE 2
       Ygm  = (Ygm1 | Ygm2) & Ysc<0.9;                                   % avoid PVE & no subcortex
       Ywm  = cat_vol_morph(Yp0>2.1,'e') & Yp0>2.9 & ...                 % avoid PVE & subcortex
-        Yms>min(cat_stat_nanmean(T1th(2:3)),(T1th(2) + 2*noise*diff(T1th(2:3))));   % avoid WMHs2
+        Yms>min(cat_stat_nanmean(T1th(2:3)),(T1th(2) + 2*noise*abs(diff(T1th(2:3)))));   % avoid WMHs2
       clear Ygm1 Ygm2; % Ysc; 
       
       %% further refinements of the tissue maps
@@ -674,7 +674,7 @@ function varargout = cat_vol_qa(action,varargin)
              Yms<(T2th(1)+0.1*noise*diff(T2th(1:2)));
       if sum(Ycm(:)>0)<10; Ycm=cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<cat_stat_nanmean(T1th(1:2)),'e') & Yp0<1.25; end
       if sum(Ycm(:)>0)<10; Ycm=Yp0>0.5 & Yms<cat_stat_nanmean(T1th(1:2)) & Yp0<1.25; end     
-      Ygm  = Ygm & Yms>(T2th(2)-2*noise*diff(T1th(2:3))) & Yms<(T2th(2)+2*noise*diff(T1th(2:3)));
+      Ygm  = Ygm & Yms>(T2th(2)-2*noise*abs(diff(T1th(2:3)))) & Yms<(T2th(2)+2*noise*abs(diff(T1th(2:3))));
       Ygm(smooth3(Ygm)<0.2) = 0;
       Ycm  = cat_vol_morph(Ycm,'lc'); % to avoid holes
       Ywm  = cat_vol_morph(Ywm,'lc'); % to avoid holes

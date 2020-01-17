@@ -63,7 +63,15 @@ function cat_run_job(job,tpm,subj)
     [pp,ff,ee,ex] = spm_fileparts(job.data{subj});  %#ok<ASGLU>
     catlog = fullfile(pth,reportfolder,['catlog_' ff '.txt']);
     if exist(catlog,'file'), delete(catlog); end % write every time a new file, turn this of to have an additional log file
-    diary(catlog); 
+    % check if not another diary is already written that is not the default- or catlog-file. 
+    olddiary = spm_str_manip( get(0,'DiaryFile') , 't');
+    usediary = ~isempty(strfind( olddiary , 'diary' )) | ~isempty(strfind( olddiary , 'catlog_' )); 
+    if usediary
+      diary(catlog); 
+      diary on; 
+    else  
+      cat_io_cprintf('warn',sprintf('External diary log is writen to "%s".\n',get(0,'DiaryFile'))); 
+    end
     
     % print current CAT release number and subject file
     [n,r] = cat_version;
@@ -810,6 +818,10 @@ function cat_run_job(job,tpm,subj)
       delete(fullfile(pp,[ff,ee]));
     end
     %%
+    
+    if usediary
+      diary off;
+    end
 return
 
 %=======================================================================
