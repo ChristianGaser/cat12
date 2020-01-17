@@ -160,6 +160,14 @@ function varargout = cat_surf_fun(action,S,varargin)
         end
       end
       
+    case 'disterr'
+      switch nargout
+        case 0, cat_surf_disterr(S,varargin{:});
+        case 1, varargout{1} = cat_surf_disterr(S,varargin{:});
+        case 2, [varargout{1},varargout{2}] = cat_surf_disterr(S,varargin{:});
+      end
+        
+      
     case 'evalcs'
     % evaluation of the central and inner/outer surfaces
       if nargin<2, help cat_surf_fun>cat_surf_evalCS; return; end
@@ -276,8 +284,9 @@ function S = cat_surf_reduce(S,red)
   clear Sgii 
   
   % call  
-  for i=1:5
+  for i=1:3
     %fprintf('.');
+    if i>1, pause(5); end
     if ispc
       cmds = sprintf('set PATH=%s; start ',fullfile(matlabroot,'bin')); 
     else
@@ -289,12 +298,12 @@ function S = cat_surf_reduce(S,red)
         'S = reducepatch( struct(''vertices'',S.vertices,''faces'',S.faces) , %g); ' ...
         'save(gifti(S),''%s'',''Base64Binary''); '],fullfile(spm('dir'),'toolbox','cat12'),Ptmpo,red,Ptmpn));
     evalc('[ST, RS] = system([cmds,cmd]); cat_check_system_output(ST,RS,1);');
-
+    
     if exist(Ptmpn,'file'); break; end
   end
   delete(Ptmpo)
   if ~exist(Ptmpn,'file'); 
-    error('cat_surf_fun:reducemesh','Failed %d times to reduce surface resolution.',i);
+    error('cat_surf_fun:reducemesh','Failed %d times to reduce surface resolution.\n%s',i);
   end
   
   Sgii = gifti(Ptmpn); delete(Ptmpn); 
@@ -1074,25 +1083,20 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
     Ppbtx     = strrep(Pcentral(1:end-4),'.central.','.pbtx.'); 
   
     if ~isempty(mat); 
-      if exist(Player4,'file')
+      save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Pcentralx,'Base64Binary');
+      cat_io_FreeSurfer('write_surf_data',Ppbtx,T);  
+      cmd = sprintf('CAT_Central2Pial -equivolume -weight 1 "%s" "%s" "%s" 0', ...
+                     Pcentralx,Ppbtx,Player4x);
+      try
+        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+        L4 = gifti(Player4x);
         uL4 = 1; 
-        L4 = gifti(Player4);
-      else
-        save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Pcentralx,'Base64Binary');
-        cat_io_FreeSurfer('write_surf_data',Ppbtx,T);  
-        cmd = sprintf('CAT_Central2Pial -equivolume -weight 1 "%s" "%s" "%s" 0', ...
-                       Pcentralx,Ppbtx,Player4x);
-        try
-          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
-          L4 = gifti(Player4x);
-          uL4 = 1; 
-          delete(Player4x);
-        catch
-          uL4 = 1; 
-        end
-        if exist(Pcentralx,'file'), delete(Pcentralx); end
-        if exist(Ppbtx,'file'),     delete(Ppbtx); end
+        delete(Player4x);
+      catch
+        uL4 = 1; 
       end
+      if exist(Pcentralx,'file'), delete(Pcentralx); end
+      if exist(Ppbtx,'file'),     delete(Ppbtx); end
     else
       uL4 = 0;
     end
@@ -1564,8 +1568,7 @@ function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt)
   opt          = cat_io_checkinopt(opt,def); 
   opt.iterfull = find( 1 ./ opt.redterm.^(1:100)  < opt.accuracy , 1); % + 2 maximum number of iterations
   
-  stime        = clock;
-  sf           = round( sqrt( size(S.faces,1) / 50000) ) * 2; % smoothing iterations depend on mesh size ### empirical value 
+  sf           = round( sqrt( size(S.faces,1) / 50000) ) * 1; % smoothing iterations depend on mesh size ### empirical value 
   M            = spm_mesh_smooth(S);                          % for spm_smoothing matrix
 
   % filenames
@@ -1660,9 +1663,17 @@ function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt)
     Tpc = Tpc./max(Tpc(:)); Tpc = single(spm_mesh_smooth(M,double(Tpc) , 1)); VOCSf = repmat(0.2 .* Tpc(Tpc>0),1,3); 
     Twc = Twc./max(Twc(:)); Twc = single(spm_mesh_smooth(M,double(Twc) , 1)); VICSf = repmat(0.5 .* Twc(Twc>0),1,3);
 
+    % extra thickenss smoothing
+    Sa   = cat_surf_fun('area',S); 
+    Tsw  = repmat( max(0,min(1,max( (Tn-3)/6 , (Tn ./ (Sa * 4) - 3) / 6) )) ,1,3); clear Sa;
+    VOCS = smoothsurf(VOC,2); VOC = VOC.*(1-Tsw) + Tsw.*VOCS;
+    VICS = smoothsurf(VIC,2); VIC = VIC.*(1-Tsw) + Tsw.*VICS;
+    clear VOCS VICS Tsw;
+    
     for is=1
       VOCS = smoothsurf(VOC,1); VOC(Tpc>0,:) = VOC(Tpc>0,:).*(1-VOCSf) + VOCSf.*VOCS(Tpc>0,:);
       VICS = smoothsurf(VIC,1); VIC(Twc>0,:) = VIC(Twc>0,:).*(1-VICSf) + VICSf.*VICS(Twc>0,:);
+      clear VOCS VICS Tsw;
     end
     
     % update thickness and central surface position
@@ -1686,10 +1697,10 @@ function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt)
     if corrsize <= opt.accuracy, final = final + 1; end
     if opt.verb
       cat_io_cprintf('g5',sprintf( ...
-        '    Step %2d (SS=%02.0f%%%%, SI=%5.2f%%%%, T=%4.2f%s%4.2f)',...
+        '    Step %2d (SS=%02.0f%%%%, SI=%5.2f%%%%, T=%4.2f%s%4.2f)\n',...
         i,corrsize*100, (sum(selfw>0)/2 + sum(selfp>0)/2) / numel(selfw) * 100,...
         mean(Tn),native2unicode(177, 'latin1'),std(Tn)));  
-      fprintf(sprintf('%s',repmat('\b',1,73*2)));
+      %fprintf('/sprintf('%s',repmat('\b',1,73*2)));
     end
     if  (sum(selfw>0)/2 + sum(selfp>0)/2) / numel(selfw) * 100  <  opt.accuracy % if changes are below a specified relative level
       if final < 4 && (sum(selfw>0)/2 + sum(selfp>0)/2)>0                       % do some additional iterations if required
@@ -1783,18 +1794,17 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
   def.verb     = 1;       % display information 
   def.debug    = 2;       % save results 
   def.relvert  = 0.01;    % percentual error of vertices with self-intersections (1.00 = 1%)  
-  def.accuracy = 0.00625; % smallest used step-size (the value should not be to small 
+  def.accuracy = 1/2^3;  % smallest used step-size (the value should not be to small   ... 0.00625
                           % because there should also be a gab between the structures and a reasonalbe running time) 
   def.optimize = 1;       % use position/intensity values for optimization  
-  def.optmod   = 0;       % optimization mode (0 - Ypp, 1 - Ym, 2 - Ypp & Ym)
+  def.optmod   = 2;       % optimization mode (0 - Ypp, 1 - Ym, 2 - Ypp & Ym)
   def.mat      = [];
   %def.interpBB = struct('BB',[],'interpV',1);
   opt          = cat_io_checkinopt(opt,def); 
-  opt.iteropt  = 2*find( 1 ./ opt.redterm.^(1:100)  < opt.accuracy , 1); 
+  opt.iteropt  = find( 1 ./ opt.redterm.^(1:100)  < opt.accuracy , 1); 
   opt.iterfull = round( opt.iteropt * (1 + opt.optimize) ); 
   
-  stime        = clock;
-  sf           = round( sqrt( size(S.faces,1) / 50000) ) * 2;  % ### empirical value 
+  sf           = round( sqrt( size(S.faces,1) / 50000) ); %2;  % ### empirical value 
   M            = spm_mesh_smooth(S);                           % for spm_smoothing matrix
 
 
@@ -1817,8 +1827,28 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
     Yl4 = single(spm_mesh_smooth(M,double(Yl4),sf/4 * 50));
   end
   
-  Tn  = T; 
-  N   = spm_mesh_normals(S); 
+  Tn  = T; meshnorm = 1; 
+  if meshnorm
+    N   = spm_mesh_normals(S);
+    
+  else
+    %%
+    V   = cat_surf_mat(S.vertices,opt.mat,1); 
+    N   = isonormals(1-Ypp,V); %[V(:,2),V(:,1),V(:,3)]);
+    % normalize
+    Ns  = sum(N.^2,2).^.5;
+    N   = N ./ repmat(Ns,1,3); %clear Ns; 
+    N   = cat_surf_mat(N,opt.mat .* [[ones(3,3) zeros(3,1)];zeros(1,3) 1],0); 
+    
+    %%
+    %NS  = spm_mesh_normals(S);
+   % N(Ns<0.2) = NS(Ns<0.2);  
+    
+  end
+  N   = smoothsurf(N,sf * 2); 
+  Ns  = sum(N.^2,2).^.5;
+  N   = N ./ repmat(Ns,1,3); %clear Ns; 
+  
   i   = 0; final = 0; 
   SIO = 1; 
  
@@ -1878,8 +1908,8 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
         CGth = 1 * 0.7 + 0.3 * Yl4;
 
         % correction value 
-        YI = max(-1, min(1, ( GWth - YI ) * max(0.05,0.2 .* (1 - i / opt.iteropt) ) ));
-        YO = max(-1, min(1, ( YO - CGth ) * max(0.05,0.2 .* (1 - i / opt.iteropt) ) ));
+        YI = max(-1, min(1, ( GWth - YI ) * max(0.02,0.8 .* max(0.5,1 - i / opt.iteropt) ) ));
+        YO = max(-1, min(1, ( YO - CGth ) * max(0.02,0.8 .* max(0.5,1 - i / opt.iteropt) ) ));
       elseif opt.optmod == 2
         % intensity model based on the Ym
         YI = cat_surf_isocolors2(Ypp,VI,opt.mat); YI = cat_surf_isocolors2(Y,VI,opt.mat) + YI - (YI>eps) .* 0.95; 
@@ -1892,8 +1922,8 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
         CGth = 1 * 0.7 + 0.3 * Yl4;
 
         % correction value 
-        YI = max(-1, min(1, ( GWth - YI ) * max(0.002,0.01 .* (1 - i / opt.iteropt) ) ));
-        YO = max(-1, min(1, ( YO - CGth ) * max(0.002,0.01 .* (1 - i / opt.iteropt) ) ));
+        YI = max(-1, min(1, ( GWth - YI ) * max(0.02,0.4 .* max(0.5,1 - i / opt.iteropt / 2) ) ));
+        YO = max(-1, min(1, ( YO - CGth ) * max(0.02,0.4 .* max(0.5,1 - i / opt.iteropt / 2) ) ));
       else
         GWth = 0.98;
         CGth = 0.02;
@@ -1904,9 +1934,9 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
 
         if 1+opt.verb>1, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),native2unicode(177, 'latin1'),std(YI),mean(YO),native2unicode(177, 'latin1'),std(YO)); end 
 
-        % correction value 
-        YI = max(-1, min(1, ( GWth - YI ) * max(0.01,0.02 .* (1 - i / opt.iteropt)) ));
-        YO = max(-1, min(1, ( YO - CGth ) * max(0.01,0.02 .* (1 - i / opt.iteropt)) ));
+        % correction value 0.01, 0.02
+        YI = max(-1, min(1, ( GWth - YI ) * max(0.02,0.2 .* (1 - i / opt.iteropt / 2 )) ));
+        YO = max(-1, min(1, ( YO - CGth ) * max(0.02,0.2 .* (1 - i / opt.iteropt / 2 )) ));
       end  
       
       % test new inner surface position
@@ -1983,8 +2013,8 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
     VIC = S.vertices + N .* repmat(Tw,1,3); 
     
     % edge flip
-    if 1
-      sm   = 1;  % smoothness
+    if 1 % this has a large effect
+      sm   = sf; % smoothness - 1 is not enougth
       fa   = 60; % error angle (worst case is 180 )
       E    = spm_mesh_edges(S);
       V    = S.vertices;
@@ -2013,7 +2043,7 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
     
    % adaptive smoothing
   %  Tpc = abs(Tpc); Twc = abs(Twc);
-    Tf  = max(1,min(3,Tn)); inorm = ( opt.iteropt*3 - i ) / (opt.iteropt*3); 
+    Tf  = max(1,min(5,Tn)); inorm = ( opt.iteropt*3 - i ) / (opt.iteropt*3); 
     Tpc = Tpc./max(Tpc(:)); Tpc = single(spm_mesh_smooth(M,double(Tpc) , 1 )) * 1/2 .* Tf; VOCSf = max(0,min(1,repmat(0.2 .* inorm .* abs(Tpc(Tpc>0 | VTPO(:,1)>0)),1,3))); 
     Twc = Twc./max(Twc(:)); Twc = single(spm_mesh_smooth(M,double(Twc) , 1 )) * 2/2 .* Tf; VICSf = max(0,min(1,repmat(0.8 .* inorm .* abs(Twc(Twc>0 | VTPI(:,1)>0)),1,3)));
 
@@ -2022,17 +2052,25 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
       VICS = smoothsurf(VIC,1); VIC(Twc>0 | VTPI(:,1)>0,:) = VIC(Twc>0 | VTPI(:,1)>0,:).*(1-VICSf) + VICSf.*VICS(Twc>0 | VTPI(:,1)>0,:);
     end
     clear VTPI VTPO
+
+    % extra thickenss smoothing
+    if opt.optimize
+      Sa   = cat_surf_fun('area',S); 
+      Tsw  = repmat( max(0,min(1,max( (Tn-3)/6 , (Tn ./ (Sa * 4) - 3) / 6) )) ,1,3) * 0.5; % * min(1,0.02 / opt.iterfull); 
+      VOCS = smoothsurf(VOC,sf); VOC = VOC.*(1-Tsw) + Tsw.*VOCS;
+      VICS = smoothsurf(VIC,sf); VIC = VIC.*(1-Tsw) + Tsw.*VICS;
+    end
     
     % full smooting 
-    if opt.optimize %|| i<opt.iterfull 
-      VOCSf = repmat(Tf * 0.02 / opt.iterfull,1,3);  VOCS = smoothsurf(VOC,1); VOC = VOC.*(1-VOCSf) + VOCSf.*VOCS; clear VOCSf;
-      VICSf = repmat(Tf * 0.05 / opt.iterfull,1,3);  VICS = smoothsurf(VIC,1); VIC = VIC.*(1-VICSf) + VICSf.*VICS; clear VICSf;
+    if opt.optimize  
+      VOCSf = repmat(Tf * 0.02 / opt.iterfull,1,3);  VOCS = smoothsurf(VOC,sf/2); VOC = VOC.*(1-VOCSf) + VOCSf.*VOCS; clear VOCSf;
+      VICSf = repmat(Tf * 0.05 / opt.iterfull,1,3);  VICS = smoothsurf(VIC,sf/2); VIC = VIC.*(1-VICSf) + VICSf.*VICS; clear VICSf;
     end
     clear VICS VOCS 
     
-    % outlier smoothing
-    VOC = cat_surf_smooth(M,VOC,2,1);
-    VIC = cat_surf_smooth(M,VIC,2,1);
+    % outlier smoothing 
+    VOC = cat_surf_smooth(M,VOC,sf,1);
+    VIC = cat_surf_smooth(M,VIC,sf,1);
     
     % remove outlier
     VOCc = spm_mesh_curvature( struct('vertices',VOC,'faces',S.faces) ); 
@@ -2040,8 +2078,8 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
     
     if mod(i,5)==0 || final
       Tn   = max(0.01,sum( (VIC - VOC).^2 , 2) .^ 0.5 );
-      Tns  = spm_mesh_smooth(M,Tn,1);
-      Tnss = spm_mesh_smooth(M,Tn,5);
+      Tns  = spm_mesh_smooth(M,Tn,sf/2);
+      Tnss = spm_mesh_smooth(M,Tn,sf/2 * 5);
       Tnm  = abs( Tns - T )>0.5/(final+1) & (VOCc>60 & VICc>60); clear Tns;  
       Tn( Tnm ) = Tnss( Tnm ); clear Tnss; 
       VIC( Tnm ,:)  = S.vertices( Tnm ,:) + N( Tnm ,:) .* repmat( Tn( Tnm )/2 ,1,3);    % inner surface
@@ -2057,7 +2095,22 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
 
     % update normals
     if corrsize<=0.25
-      N   = spm_mesh_normals(S); 
+      if meshnorm
+        N   = spm_mesh_normals(S);
+      else
+        V   = cat_surf_mat(S.vertices,opt.mat,1); 
+        N   = isonormals(1-Ypp,V); %[V(:,2),V(:,1),V(:,3)]);
+        % normalize
+        Ns  = sum(N.^2,2).^.5;
+        N   = N ./ repmat(Ns,1,3); %clear Ns; 
+        N   = cat_surf_mat(N,opt.mat .* [[ones(3,3) zeros(3,1)];zeros(1,3) 1],0); 
+
+        %NS  = spm_mesh_normals(S);
+        %N(Ns<0.2) = NS(Ns<0.2);  
+      end
+      N   = smoothsurf(N,sf * 2); 
+      Ns  = sum(N.^2,2).^.5;
+      N   = N ./ repmat(Ns,1,3); %clear Ns; 
     end
     
     SI = (sum(selfw>0)/2 + sum(selfp>0)/2) / numel(selfw) * 100; 
@@ -2067,7 +2120,8 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
       cat_io_cprintf('g5',sprintf( ...
         '    Step %2d (SS=%02.0f%%%%, SI=%5.2f%%%%, T=%4.2f%s%4.2f)',...
         i,corrsize*100, SI, mean(Tn),native2unicode(177, 'latin1'),std(Tn)));  
-      fprintf(sprintf('%s',repmat('\b',1,73*2)));
+      fprintf('\n')
+      %fprintf(sprintf('%s',repmat('\b',1,73*2)));
     end
     if  ((sum(selfw>0)/2 + sum(selfp>0)/2) / numel(selfw) * 100  <  opt.accuracy) || (i>opt.iterfull && SI<0.1 && abs(SI - SIO)<0.005) % if changes are below a specified relative level
       if final < 4 && (sum(selfw>0)/2 + sum(selfp>0)/2)>0 && i>opt.iterfull  && abs(SI - SIO)>0.005                      % do some additional iterations if required
@@ -2083,7 +2137,35 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
   if flipped, S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); end
   
 end 
+function [Sve,Svde] = cat_surf_disterr(S,T,mat,Yp0,tol)
 
+  % render volume
+  % [Yp,Yt,vmat1,vmat1i] = cat_surf_surf2vol(S,Y,T,type,opt)
+  Yp0S = cat_surf_surf2vol(S,Yp0,T,'seg',struct('mat',mat));
+  Ycs  = cat_surf_surf2vol(S,Yp0,T,'p0',struct('mat',mat));
+  
+  Ydiff = Yp0S - Yp0;
+  
+  % Delaunay triangulation 
+  D  = delaunayn(S);
+  
+  % select relevant points for projection
+  PI = find( abs(Ydiff) > tol & Ycs>0 ); 
+  PO = find( abs(Ydiff) > tol & Ycs<0 );
+  
+  % project points
+  [DI,II] = dnear(D,PI); 
+  [DO,IO] = dnear(D,PI); 
+  
+  % remove to close points
+  
+  
+  % mapping
+  for di = 1:numel(DI)
+    Sve(  II(di) )  = Sve(  II(di) ) + Ydiff( PI(di) );             % just the volume 
+    Svde( II(di) )  = Svde( II(di) ) + DI(di) * Ydiff( PI(di) );    % weighted by distance 
+  end
+end
 function [SN,TN,E] = cat_surf_collision_correction(S,T,Y,Ypp,Yl4,opt) 
 % _________________________________________________________________________
 % Delaunay based collision detection:
@@ -3613,7 +3695,7 @@ function N = cat_surf_normals(S)
   end
   
   % normalize
-  Ns = sum(N,2);
+  Ns = sum(N.^2,2).^.5;
   N  = N ./ repmat(Ns,1,3); 
 end
 

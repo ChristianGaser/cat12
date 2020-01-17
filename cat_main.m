@@ -458,7 +458,6 @@ if ~isfield(res,'spmpp')
   qa.subjectmeasures.WMH_WM_rel = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(2.5/3*255));   % relative WMH volume to WM without PVE
   qa.subjectmeasures.WMH_abs    = prod(vx_vol)/1000 * qa.subjectmeasures.WMH_abs;             % absolute WMH volume without PVE in cm^3
   [cat_err_res.init.Yp0,cat_err_res.init.BB] = cat_vol_resize(Yp0,'reduceBrain',vx_vol,2,Yp0>0.5); 
-  cat_err_res.init.Yp0 = cat_vol_ctype(cat_err_res.init.Yp0/3*255);
   clear Ywmhrel Yp0
   
 
@@ -553,7 +552,6 @@ if ~isfield(res,'spmpp')
   
   % update error report structure
   [cat_err_res.init.Yp0,cat_err_res.init.BB] = cat_vol_resize(Yp0b,'reduceBrain',vx_vol,2,Yp0b>0.5); 
-  cat_err_res.init.Yp0 = cat_vol_ctype(cat_err_res.init.Yp0/3*255);
   
   % store smaller version
   Yp0b = Yp0b(indx,indy,indz); 
@@ -678,7 +676,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
       if ~isfield(job.extopts,'add_parahipp'),    job.extopts.add_parahipp    = cat_get_defaults('extopts.add_parahipp'); end
       if ~isfield(job.extopts,'close_parahipp'),  job.extopts.close_parahipp  = cat_get_defaults('extopts.close_parahipp'); end
       if ~isfield(job.extopts,'pbtmethod'),       job.extopts.pbtmethod       = cat_get_defaults('extopts.pbtmethod'); end
-      if ~isfield(job.extopts,'reduce_mesh'),     job.extopts.reduce_mesh     = 3; end % cat_get_defaults('extopts.pbtmethod'); end
+      if ~isfield(job.extopts,'reduce_mesh'),     job.extopts.reduce_mesh     = 1; end % cat_get_defaults('extopts.reduce_mesh'); end
       %if ~isfield(job.output,'pp'),               job.output.pp               = struct('native',0,'warped',0,'dartel',0);  end % this is now in defaults and not required here 
       if ~isfield(job.output,'surf_measures'),    job.output.surf_measures    = 1; end % developer
       

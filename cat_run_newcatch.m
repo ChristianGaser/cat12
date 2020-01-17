@@ -115,10 +115,14 @@ function cat_run_newcatch(job,tpm,subj)
     
     %% remove uninteresting messages
     ignore_message = 0; 
-    keywords_mid = {
-      'cat_run_job:restype'
-      }; 
     keywords = {
+      ... possible orientation and resolution errors issues
+      'insufficient image overlap'
+      'Image does not have 3 dimensions.'
+      'Voxel resolution has to be better than 5 mm'
+      'Out of memory.' 
+      'cat_run_job:restype'
+      ... file reading/writing messages
       '** failed to open'
       'Access is denied.'
       'Cant open file'
@@ -126,28 +130,22 @@ function cat_run_newcatch(job,tpm,subj)
       'Cannot create output file '
       'cp: cannot create regular file'
       'File too small'
-      'File'
-      'Image does not have 3 dimensions.'
-      'insufficient image overlap'
       'Invalid file identifier.'
-      'Out of memomory.' 
       'Permission denied'
       'The process cannot access the file '
       'There was a problem while generating '
       'Unable to write file'
-      'Voxel resolution has to be better than 5 mm'
       };
-if 0
-    if any( ~cellfun('isempty',strfindi( keywords_mid, caterr_message_str )==1 )) || ...
-       any( ~cellfun('isempty',strfindi( keywords, caterr_message_str )==1 ))
-      ignore_message = 1; 
+    for ki = 1:numel(keywords)
+      if strfind( caterr_message_str , keywords{ki} ) 
+        ignore_message = 1; 
+      end
     end
-end    
-    
+
     %% send error information, CAT12 version and computer system
     if cat_get_defaults('extopts.send_info') && ~ignore_message && job.extopts.expertgui<2
       [v,rev] = cat_version; expertguistr = ' ed';
-      str_err = sprintf('%s%s|',rev,expertguistr(job.extopts.expertgui)); % revision and guilevel
+      str_err = sprintf('%s%s|',rev,deblank(expertguistr(job.extopts.expertgui + 1))); % revision and guilevel
       for si=1:numel(caterr.stack)
         str_err = [str_err '|' caterr.stack(si).name ':' num2str(caterr.stack(si).line)];
       end      

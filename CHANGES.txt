@@ -1,5 +1,72 @@
 ------------------------------------------------------------------------
-r1551 | gaser | 2020-01-13 09:33:04
+r1552 | dahnke | 2020-01-17 11:17:23
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       cat_io_report.m
+M       cat_main.m
+M       cat_main_amap.m
+M       cat_main_registration.m
+M       cat_main_reportfig.m
+M       cat_main_reportstr.m
+M       cat_plot_boxplot.m
+M       cat_run.m
+M       cat_run1173/cat_main1173.m
+M       cat_run1173plus/cat_main1173plus.m
+M       cat_run_job.m
+M       cat_run_newcatch.m
+M       cat_spm_preproc8.m
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       cat_surf_fun.m
+M       cat_tst_BWPsliceartifact.m
+M       cat_vol_pbt.m
+M       cat_vol_pbt2.m
+A       cat_vol_pbtp.c
+M       cat_vol_pbtp.mexmaci64
+A       cat_vol_pbtp2.c
+A       cat_vol_pbtp2.mexmaci64
+M       cat_vol_qa.m
+M       cat_vol_sanlm.m
+M       cat_vol_urqio.m
+M       tbx_cfg_cat.m
+
+(1)  Changed:  Updated GUI to control mesh resolution of cat_surf_createCS2 in
+               cat_conf_extopts, supporting now also lower mesh-resolutions by 
+               mesh generation at lower volume resolutions. 
+               Updated surface parameters in cat_defaults to control mesh 
+               creation (reduce_mesh) and resolution (vdist) used in 
+               cat_surf_createCS2.
+(2)  Changed:  Small updates of cat_surf_collcorr in cat_surf_fun. 
+(3)  Fixed:	   Corrected batch dependencies of additional surfaces and measures
+               in tbx_cfg_cat and cat_run.
+(4)  Fixed:    Corrections for bad inputs in cat_plot_boxplot.
+(5)  Fixed:    Many corrections in cat_surf_createCS(2) to avoid different
+               results if the processing order of left and right hemisphere 
+               is switched.
+(6)  Fixed:    Added/updated seed definition in cat_vol_sanlm, cat_main_amap,
+               cat_spm_preproc, cat_tst_BWPsliceartifact, and cat_vol_urquio. 
+(7)  Fixed:    Corrected "strfindi" error in cat_run_newcatch.
+(8)  Fixed:    Avoid creation of diary file if another file is used and 
+               display a warning (cat_run_job). 
+(9)  Fixed:    Replaced cat_vol_pbtp from cpp to c, and added an improved 
+               version cat_vol_pbtp2.c for cat_surf_createCS2. 
+(10) Fixed:    Corrected bug in the layer4 evaluation in cat_surf_evalCS in
+               cat_surf_fun.
+(12) Fixed:    Added abs in a definition in cat_vol_qa to avoid problems
+               with negative values. 
+(13) Fixed:    Corrected displaying of the segmentation in the error report 
+               in cat_io_report and cat_main.
+(14) Fixed:    Deactivated seed generation warning in cat_main_registration. 
+(15) Fixed:    Display CS in CAT report (cat_main_reportfig) if collcorr<20  
+               and no developer mode is used.
+(16) Fixed:    Removed SPM accuracy line from the CAT report of standard user
+               in cat_main_reportstr.              
+               
+------------------------------------------------------------------------
+r1551 | gaser | 2020-01-13 09:33:37 +0100 (Mo, 13 Jan 2020) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +80,7 @@ M       html/cat.html
 2. Changed: Updated help text for cat_plot_boxplot.m.
 3. Changed: Updated adjustment for raw data in cat_surf_results and added 
    boxplot for raw data.
+
 ------------------------------------------------------------------------
 r1550 | gaser | 2020-01-08 15:59:58 +0100 (Mi, 08 Jan 2020) | 39 lines
 

@@ -314,14 +314,14 @@ cstime = clock;
     
     % removing background (smoothing to remove artifacts)
     switch opt.surf{si}
-      case {'lh','rh'},  [Ymfs,Yside,mask_parahipp,BB] = cat_vol_resize({Ymfs,Yside,mask_parahipp},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
-      case {'lc','rc'},  [Ymfs,Yside,BB] = cat_vol_resize({Ymfs,Yside},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
+      case {'lh','rh'},  [Ymfs,Ysidei,mask_parahipp,BB] = cat_vol_resize({Ymfs,Yside,mask_parahipp},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
+      case {'lc','rc'},  [Ymfs,Ysidei,BB] = cat_vol_resize({Ymfs,Yside},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
     end
     interpBB = BB; interpBB.interpV = opt.interpV; 
      
     imethod         = 'cubic'; % cubic should be better in general - however, linear is better for small thickness (version?)
     [Ymfs,resI]     = cat_vol_resize(max(1,Ymfs),'interp',V,opt.interpV,imethod);                  % interpolate volume
-    Yside           = cat_vol_resize(Yside,'interp',V,opt.interpV,imethod)>0.5;                    % interpolate volume (small dilatation)
+    Ysidei          = cat_vol_resize(single(Ysidei>0.5),'interp',V,opt.interpV,imethod)>0.5;       % interpolate volume (small dilatation)
     
     if ~iscerebellum
       mask_parahipp   = cat_vol_resize(mask_parahipp,'interp',V,opt.interpV)>0.5;          % interpolate volume
@@ -337,10 +337,10 @@ cstime = clock;
     end  
     %%
     Yth1i(Yth1i>10)=0; Yppi(isnan(Yppi))=0;  
-    [D,I] = cat_vbdist(Yth1i,Yside); Yth1i = Yth1i(I); clear D I;       % add further values around the cortex
-    Yth1t = cat_vol_resize(Yth1i,'deinterp',resI); clear Yth1i;         % back to original resolution
-    Yth1t = cat_vol_resize(Yth1t,'dereduceBrain',BB);                   % adding background
-    Yth1  = max(Yth1,Yth1t);                                            % save on main image
+    [D,I] = cat_vbdist(Yth1i,Ysidei); Yth1i = Yth1i(I); clear D I Ysidei;   % add further values around the cortex
+    Yth1t = cat_vol_resize(Yth1i,'deinterp',resI); %clear Yth1i;             % back to original resolution
+    Yth1t = cat_vol_resize(Yth1t,'dereduceBrain',BB);                       % adding background
+    Yth1  = max(Yth1,Yth1t .* Yside);                                       % save on main image
     clear Yth1t;
     %fprintf('%5.0fs\n',etime(clock,stime)); 
     
@@ -575,14 +575,14 @@ cstime = clock;
                      '"%g"  "%g"  n ' ...                    min_isovalue  max_isovalue  +/-/n 
                      '0  0  0 ' ...                          gradient_threshold  angle  tolerance  
                      '10  0.03  0.0 0'], ...                 max_iterations movement_threshold  stop_threshold force_no_selfintersections
-                      Vpp1.fname,Pcentral,Pcentral,th,th);
+                      Vpp.fname,Pcentral,Pcentral,th,th);
       [ST, RS] = cat_system(cmds); cat_check_system_output(ST,RS,opt.verb-2);
     
       % load surf and project thickness
       CS = gifti(Pcentral);
       % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
       warning off MATLAB:subscripting:noSubscriptsSpecified
-      facevertexcdata = cat_surf_fun('isocolors',Yth1,CS,Smat.matlabi_mm); 
+      facevertexcdata = cat_surf_fun('isocolors',Yth1i,CS,Smat.matlabIBB_mm); 
       cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
       
       % map WM and CSF width data (corrected by thickness)
@@ -655,10 +655,10 @@ cstime = clock;
       try
         facevertexcdata1 = cat_io_FreeSurfer('read_surf_data',Ppbt);
       catch
-        facevertexcdata1 = cat_surf_fun('isocolors',Yth1,CS,Smat.matlabi_mm);   
+        facevertexcdata1 = cat_surf_fun('isocolors',Yth1i,CS,Smat.matlabIBB_mm); 
       end
-      cat_surf_fun('saveico',CS1,facevertexcdata1,Pcentral,'fast',Ymfs,Smat.matlabIBB_mm);
-      res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',CS1,facevertexcdata1,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
+      cat_surf_fun('saveico',CS,facevertexcdata1,Pcentral,'fast',Ymfs,Smat.matlabIBB_mm);
+      res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',CS,facevertexcdata1,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
 
       %%
       clear CS
@@ -720,7 +720,7 @@ cstime = clock;
     CS = gifti(Pcentral);
     % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
     warning off MATLAB:subscripting:noSubscriptsSpecified
-    facevertexcdata = cat_surf_fun('isocolors',Yth1,CS,Smat.matlabi_mm);
+    facevertexcdata = cat_surf_fun('isocolors',Yth1i,CS,Smat.matlabIBB_mm); 
     cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
   
     % final correction of central surface in highly folded areas with high mean curvature with weight of 0.7
@@ -774,7 +774,7 @@ cstime = clock;
     CS = gifti(Pcentral);
     % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
     warning off MATLAB:subscripting:noSubscriptsSpecified
-    facevertexcdata = cat_surf_fun('isocolors',Yth1,CS,Smat.matlabi_mm); 
+    facevertexcdata = cat_surf_fun('isocolors',Yth1i,CS,Smat.matlabIBB_mm); 
     cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
 
     % final correction of central surface in highly folded areas with high mean curvature
@@ -869,7 +869,7 @@ cstime = clock;
     if updateThickness
       facevertexcdata1 = cat_io_FreeSurfer('read_surf_data',Ppbt);
     else
-      facevertexcdata1 = cat_surf_fun('isocolors',Yth1,CS,Smat.matlabi_mm); 
+      facevertexcdata1 = cat_surf_fun('isocolors',Yth1i,CS,Smat.matlabIBB_mm); 
     end
     fprintf('%5.0fs',etime(clock,stime)); stime = []; 
     if writedebug
@@ -1082,9 +1082,10 @@ cstime = clock;
     clear CS
     
     % create white and central surfaces
-    cat_surf_fun('white',Pcentral);
-    cat_surf_fun('pial',Pcentral);
-    
+    if cat_get_defaults('extopts.expertgui') == 2
+      cat_surf_fun('white',Pcentral);
+      cat_surf_fun('pial',Pcentral);
+    end
   end  
   
   % calculate mean EC and defect size for all surfaces

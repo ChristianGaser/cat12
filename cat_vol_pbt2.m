@@ -137,12 +137,12 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ywmdc] = cat_vol_pbt2(Ymf,opt)
         % (currently 2.1, possible range 1.5 to 2.2) to avoid corrections 
         %% in thicker areas (mostly gyris). 
         Ygd   = cat_vbdist(2.1 - Ymfr); % estimate distance map to central/WM surface, lower thresholds are also possible (range 1.5 to 2.2, default 2.1) 
-        Ygdt  = cat_vol_pbtp(max(2,min(3,4-Ymfr)),Ygd,inf(size(Ygd),'single')) * mean(resT2.vx_volr);
+        Ygdt  = cat_vol_pbtp2(max(2,min(3,4-Ymfr)),Ygd,inf(size(Ygd),'single')) * mean(resT2.vx_volr);
         Ygdt  = cat_vol_median3(Ygdt,Ygdt>0.01,Ygdt>0.01);                    
         Ygdt  = cat_vol_localstat(Ygdt,Ygdt>0.1,1/mean(resT2.vx_volr),1);    
 
         Ywd   = cat_vbdist(2.5 - Ymfr);  
-        Ywdt  = cat_vol_pbtp(max(2,min(3,4-Ymfr)),Ywd,inf(size(Ywd),'single')) * mean(resT2.vx_volr);
+        Ywdt  = cat_vol_pbtp2(max(2,min(3,4-Ymfr)),Ywd,inf(size(Ywd),'single')) * mean(resT2.vx_volr);
         Ywdt  = cat_vol_median3(Ywdt,Ywdt>0.01,Ywdt>0.01);                    
         Ywdt  = cat_vol_localstat(Ywdt,Ywdt>0.1,1/mean(resT2.vx_volr),1);    
 
@@ -325,31 +325,32 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ywmdc] = cat_vol_pbt2(Ymf,opt)
     
     % estimate thickness with PBT approach
     if opt.pbtlas, Ymfo=Ymf; Ymf = single(1 + 2*((Ywmd>0 & Ycsfd>0) | Ymfo>2)) - (Ywmd>0 & Ycsfd>0);  end
-    Ygmt1 = cat_vol_pbtp(round(Ymf),Ywmd,Ycsfd);  
-    Ygmt2 = cat_vol_pbtp(round(4-Ymf),Ycsfd,Ywmd);
+    Ygmt1 = cat_vol_pbtp2((Ymf),Ywmd,Ycsfd);  
+    Ygmt2 = cat_vol_pbtp2((4-Ymf),Ycsfd,Ywmd);
     
     % Error handling 
     % For some unkown reasons the sulcus reconstruction of cat_vol_pbtp failed in some cases (not directly reproducable).      
     % Reprocessing is solving this problem, but further investigation of cat_vol_pbtp.cpp would be good (RD 20190811).
     % Maybe it depends on the initialization of the regions, e.g., using Ymf without rounding and incorrect boundary seams to increase the problems.  
+    % Now use cat_vol_pbtp2.cpp (RD20200111).
     mask   = @(Y) Y(:)>0 & Y(:)<1000000; 
     rerun = 0; rerunlim = 3; 
     while rerun <= rerunlim && isnan( mean( Ygmt1(mask(Ygmt1))) ) || mean( Ygmt1(mask(Ygmt1)))>100
-      Ygmt1 = cat_vol_pbtp(round(Ymf),Ywmd,Ycsfd);  
+      Ygmt1 = cat_vol_pbtp2((Ymf),Ywmd,Ycsfd);  
       rerun = rerun + 1; 
       pause(rand*3);
     end
     if rerun == rerunlim && isnan( mean( Ygmt1(mask(Ygmt1))) ) || mean( Ygmt1(mask(Ygmt1)))>100
-      error('cat_vol_pbtp:bad_mapping1','Untypcial values in PBT thickness mapping detected. ');
+      error('cat_vol_pbtp2:bad_mapping1','Untypcial values in PBT thickness mapping detected. ');
     end
     rerun = 0; 
     while rerun <= rerunlim && isnan( mean( Ygmt2(mask(Ygmt2))) ) || mean( Ygmt2(mask(Ygmt2)))>100
-      Ygmt2 = cat_vol_pbtp(round(4-Ymf),Ycsfd,Ywmd);
+      Ygmt2 = cat_vol_pbtp2((4-Ymf),Ycsfd,Ywmd);
       rerun = rerun + 1; 
       pause(rand*3);
     end
     if rerun == rerunlim && rerunlim && isnan( mean( Ygmt2(mask(Ygmt2))) ) || mean( Ygmt2(mask(Ygmt2)))>100
-      error('cat_vol_pbtp:bad_mapping2','Untypcial values in PBT thickness mapping detected. ');
+      error('cat_vol_pbtp2:bad_mapping2','Untypcial values in PBT thickness mapping detected. ');
     end
     
     %% avoid meninges !
@@ -404,7 +405,7 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ywmdc] = cat_vol_pbt2(Ymf,opt)
     
     % estimate thickness with PBT approach
     if opt.pbtlas, Ymfo=Ymf; Ymf = single(1 + 2*((Ywmd>0 & Ycsfd>0) | Ymfo>2)) - (Ywmd>0 & Ycsfd>0);  end
-    Ygmt    = cat_vol_pbtp( round(Ymf) ,Ywmd,Ycsfd);   
+    Ygmt    = cat_vol_pbtp2( (Ymf) ,Ywmd,Ycsfd);   
     Ygmt    = Ygmt*(1-fs) + fs*cat_vol_median3(Ygmt,Ygmt>0,Ygmt>0,0.05);
     Ypp     = zeros(size(Ymf),'single'); Ypp(Ymf>=2.5) = 1;  YM      = Ygmt>0; 
     Ypp(YM) = min(Ycsfd(YM),Ygmt(YM) - Ywmd(YM)) ./ (Ygmt(YM) + eps); Ypp(Ypp>2) = 0;
@@ -414,15 +415,16 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ywmdc] = cat_vol_pbt2(Ymf,opt)
     % For some unkown reasons the sulcus reconstruction of cat_vol_pbtp failed in some cases (not directly reproducable).      
     % Reprocessing is solving this problem, but further investigation of cat_vol_pbtp.cpp would be good (RD 20190811).
     % Maybe it depends on the initialization of the regions, e.g., using Ymf without rounding and incorrect boundary seams to increase the problems.  
+    % Now use cat_vol_pbtp2.cpp (RD20200111).
     mask   = @(Y) Y(:)>0 & Y(:)<1000000; 
     rerun = 0; rerunlim = 3; 
     while rerun <= rerunlim && isnan( mean( Ygmt(mask(Ygmt))) ) || mean( Ygmt(mask(Ygmt)))>100
-      Ygmt = cat_vol_pbtp(round(Ymf),Ywmd,Ycsfd);  
+      Ygmt = cat_vol_pbtp2((Ymf),Ywmd,Ycsfd);  
       rerun = rerun + 1; 
       pause(rand*3);
     end
     if rerun == rerunlim && isnan( mean( Ygmt(mask(Ygmt))) ) || mean( Ygmt(mask(Ygmt)))>100
-      error('cat_vol_pbtp:bad_mapping','Untypcial values in PBT thickness mapping detected. ');
+      error('cat_vol_pbtp2:bad_mapping','Untypcial values in PBT thickness mapping detected. ');
     end
     
     % avoid meninges !

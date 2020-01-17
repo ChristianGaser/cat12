@@ -524,6 +524,7 @@ if ~opt.vertical
   tmp = quartile_xthin;  quartile_xthin = quartile_ythin;   quartile_ythin = tmp;
 end
 
+offset = 0;
 for i=1:qn
   
   if opt.fill
@@ -665,39 +666,45 @@ for i=1:qn
       max(4,min(8,80/nc)),'Marker',opt.symbol(2),'MarkerEdgeColor',opt.symbolcolor,'LineStyle','none');
   end
   
-  % add labels
+  if all( cellfun(@all,cellfun(@isnan,data,'uniformOutput',false) ))
+    hold off; 
+    text(numel(data)/2 + 1/2,0.5,'No (non-NaN) data!','color',[0.8 0 0],'FontWeight','Bold','HorizontalAlignment','center','FontSize',opt.FS*1.2);
+    opt.ygrid = 0; 
+    hold on;
+  end
   if ~opt.vertical
     set(gca,'YTick',1:numel(opt.names),'YTickLabel',opt.names,'TickLength',[0 0],'ylim',[0.5 numel(opt.names)+0.5]);
-    if ~isempty(opt.ylim) && diff(opt.ylim)~=0
+    if ~isempty(opt.ylim) && diff(opt.ylim)~=0 && ~all( isnan(opt.ylim) )
       xlim(gca,opt.ylim);
     end
-    if ~isempty(opt.xlim) && diff(opt.xlim)~=0
+    if ~isempty(opt.xlim) && diff(opt.xlim)~=0 && ~all( isnan(opt.xlim) )
       ylim(gca,opt.xlim);
     end
   else
     set(gca,'XTick',1:numel(opt.names),'XTickLabel',opt.names,'TickLength',[0 0],'xlim',[0.5 numel(opt.names)+0.5]);
-    if ~isempty(opt.ylim) && diff(opt.ylim)~=0
+    if ~isempty(opt.ylim) && diff(opt.ylim)~=0 && ~all( isnan(opt.ylim) )
       ylim(gca,opt.ylim);
     end
-    if ~isempty(opt.xlim) && diff(opt.xlim)~=0
+    if ~isempty(opt.xlim) && diff(opt.xlim)~=0 && ~all( isnan(opt.xlim) )
       xlim(gca,opt.xlim);
     end
   end
-  
+
   try, set(gca,'TickLabelInterpreter','none'); end
 
   if ~isempty(opt.fontsize)
     set(gca,'FontSize',opt.fontsize);
   end
 
+
   % plot yticks
-  
+
   if opt.ygrid 
-		if strcmp(opt.gridline,'-')
-			linecolor = [0.8 0.8 0.8];
-		else
-			linecolor = [0.65 0.65 0.65];
-		end
+    if strcmp(opt.gridline,'-')
+      linecolor = [0.8 0.8 0.8];
+    else
+      linecolor = [0.65 0.65 0.65];
+    end
     %%
     if opt.vertical, xytick = 'Ytick'; xylab = 'YTickLabel'; else xytick = 'Xtick'; xylab = 'XTickLabel'; end
     if isfield(opt,'ytick')
@@ -713,7 +720,7 @@ for i=1:qn
     else
       set(gca,xylab,num2str( ytick',acc)); 
     end
-    
+
     if ytick(1)<=opt.ylim(1)+eps,   ytick(1)=[];   end
     if ytick(end)>=opt.ylim(2)-eps, ytick(end)=[]; end
     if opt.vertical
@@ -738,7 +745,9 @@ for i=1:qn
       uistack(h2,'bottom')
     end
   end
-  
+
+
+
   %% subsets
   if any(opt.subsets)
     f2 = [];
@@ -757,7 +766,7 @@ for i=1:qn
     uistack(h1,'bottom')
     if opt.ygrid>1, uistack(h2,'bottom'); end
   end
-   
+  
 %%
 hold off
 
