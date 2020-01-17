@@ -285,21 +285,33 @@ cdep(end).src_output = substruct('.','catlog','()',{':'});
 cdep(end).tgt_spec   = cfg_findspec({{'filter','txt','strtype','e'}});
 
 
-% lh/rh/cb central/white/pial/layer4 surface and thickness
+% lh/rh/cb central/white/pial/layer4 surface and thickness (see also cat_run!)
 % ----------------------------------------------------------------------
 if isfield(opts,'surface')
   surfaceoutput = { % surface texture
-    {'central','pial','white'}  % no measures - just surfaces
+    {'central'}                 % no measures - just surfaces
     {}                          % default
-    {'layer4'}                  % expert
-    {}                          % developer
+    {}                          % expert
+    {'pial','white'}            % developer
   };
   measureoutput = {
     {'thickness'}               % default
     {}                          % no measures
-    {'intlayer4','defects'}     % expert
+    {}                          % expert
     {'depthWM','depthCSF'}      % developer
   };
+  % no output of intlayer4 or defects in cat_surf_createCS but in cat_surf_createCS2 (but not with fast) 
+  if isfield(job,'extopts') && isfield(job.extopts,'surface') && ...
+     isfield(job.extopts.surface,'collcorr') && job.extopts.surface.collcorr>19 
+    
+    surfaceoutput{1} = [surfaceoutput{1},{'pial','white'}];
+    surfaceoutput{4} = {}; 
+    if any( job.output.surface ~= [ 5 6 ] ) % fast pipeline
+      surfaceoutput{3} = {'layer4'}; 
+      measureoutput{3} = {'intlayer4','defects'};
+    end
+  end
+  
   sides = {'lh','rh'}; 
   sidenames = {'Left','Right'};
   if any( job.output.surface == [ 2 6 8 ] )
@@ -308,23 +320,26 @@ if isfield(opts,'surface')
   end
 
   def.output.surf_measures = 1;
+  def.extopts.expertgui    = 0;
   job = cat_io_checkinopt(job,def); 
   % create fields
   for si = 1:numel(sides)
     for soi = 1:numel(surfaceoutput)
-      for soii = 1:numel(surfaceoutput{soi})
-        if ~isempty( surfaceoutput{soi} )
-          cdep(end+1)          = cfg_dep;
-          cdep(end).sname      = sprintf('%s %s%s Surface', sidenames{si}, ...
-            upper(surfaceoutput{soi}{soii}(1)), surfaceoutput{soi}{soii}(2:end));
-          cdep(end).src_output = substruct('()',{1}, '.', ...
-            sprintf('%s%s', sides{si} , surfaceoutput{soi}{soii} ),'()',{':'});
-          cdep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+      if soi < job.extopts.expertgui + 2
+        for soii = 1:numel(surfaceoutput{soi})
+          if ~isempty( surfaceoutput{soi} )
+            cdep(end+1)          = cfg_dep;
+            cdep(end).sname      = sprintf('%s %s%s Surface', sidenames{si}, ...
+              upper(surfaceoutput{soi}{soii}(1)), surfaceoutput{soi}{soii}(2:end));
+            cdep(end).src_output = substruct('()',{1}, '.', ...
+              sprintf('%s%s', sides{si} , surfaceoutput{soi}{soii} ),'()',{':'});
+            cdep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+          end
         end
       end
     end
     for soi = 1:numel(surfaceoutput)
-      if soi <= job.output.surf_measures
+      if soi < job.extopts.expertgui + 2
         for soii = 1:numel(measureoutput{soi})
           if ~isempty( measureoutput{soi} ) 
             cdep(end+1)          = cfg_dep;

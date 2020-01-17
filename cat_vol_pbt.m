@@ -334,18 +334,33 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
     mask   = @(Y) Y(:)>0 & Y(:)<1000000; 
     rerun = 0; rerunlim = 3; 
     while rerun <= rerunlim && isnan( mean( Ygmt1(mask(Ygmt1))) ) || mean( Ygmt1(mask(Ygmt1)))>100
+      Ywmd0 = Ywmd+0; Ycsfd0 = Ycsfd+0; 
       Ygmt1 = cat_vol_pbtp(round(Ymf),Ywmd,Ycsfd);  
+      if sum( abs(Ywmd(:) - Ywmd0(:)) ) > 0 || sum( abs(Ycsfd(:) - Ycsfd0(:)) ) > 0 
+        cat_io_cprintf('warn','cat_vol_pbtp:change_val1','Changed Ywmd or Ycsfd in Ygmt1 mapping.');
+      end  
+      clear Ywmd0 Ycsfd0;  
       rerun = rerun + 1; 
       pause(rand*3);
+      if ~(rerun == rerunlim && isnan( mean( Ygmt1(mask(Ygmt1))) ) || mean( Ygmt1(mask(Ygmt1)))>100)
+        cat_io_cprintf('warn','cat_vol_pbtp:bad_mapping1','Untypcial values in PBT thickness mapping detected. ');
+      end
     end
     if rerun == rerunlim && isnan( mean( Ygmt1(mask(Ygmt1))) ) || mean( Ygmt1(mask(Ygmt1)))>100
       error('cat_vol_pbtp:bad_mapping1','Untypcial values in PBT thickness mapping detected. ');
     end
     rerun = 0; 
     while rerun <= rerunlim && isnan( mean( Ygmt2(mask(Ygmt2))) ) || mean( Ygmt2(mask(Ygmt2)))>100
-      Ygmt2 = cat_vol_pbtp(round(4-Ymf),Ycsfd,Ywmd);
+      Ygmt2 = cat_vol_pbtp(round(4-Ymf),Ycsfd,Ywmd);  
+      if sum( abs(Ywmd(:) - Ywmd0(:)) ) > 0 || sum( abs(Ycsfd(:) - Ycsfd0(:)) ) > 0 
+        cat_io_cprintf('warn','cat_vol_pbtp:change_val1','Changed Ywmd or Ycsfd in Ygmt1 mapping.');
+      end  
+      clear Ywmd0 Ycsfd0;  
       rerun = rerun + 1; 
       pause(rand*3);
+      if ~(rerun == rerunlim && isnan( mean( Ygmt1(mask(Ygmt1))) ) || mean( Ygmt1(mask(Ygmt1)))>100)
+        cat_io_cprintf('warn','cat_vol_pbtp:bad_mapping2','Untypcial values in PBT thickness mapping detected. ');
+      end
     end
     if rerun == rerunlim && rerunlim && isnan( mean( Ygmt2(mask(Ygmt2))) ) || mean( Ygmt2(mask(Ygmt2)))>100
       error('cat_vol_pbtp:bad_mapping2','Untypcial values in PBT thickness mapping detected. ');

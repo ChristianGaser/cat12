@@ -38,6 +38,11 @@ function cat_vol_urqio(job)
 % $Id$
 
 
+  % this function adds noise to the data to stabilize processing and we
+  % have to define a specific random pattern to get the same results each time
+  if exist('rng','file') == 2, rng('default'); rng(0); else, rand('state',0); randn('state',0); end
+
+
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
 
   % default options
@@ -549,7 +554,7 @@ function cat_vol_urqio(job)
       Ydc2 = cat_stat_histth(Ydc2); 
       % pd
       YM   = Ypmc>0.01 & Yb & ~Ywc & smooth3((Ypmc - (1.25-YminAm))>0.1 | Ypmc<0.3 | Ybv>1)>0.1; 
-      YH   = 1.1 - 0.05*rand(size(YM)); 
+      YH   = 1.1 - 0.05* (randn(size(YM))/4); % RD20200115: replaced rand(size(YM))
       Ypc2 = Ypmc; Ypc2(YM) = min(YH(YM),1.25-YminAm(YM).*Yb(YM)); 
       Ypc2 = cat_stat_histth(Ypc2); 
       % t1 = inverse pd 

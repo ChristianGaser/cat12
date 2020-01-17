@@ -99,9 +99,11 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
       str{1}(end).value = [str{1}(end).value sprintf('%0.2f (%0.2f/%0.2f)',job.opts.acc,job.opts.samp,job.opts.tol)]; 
     end
   else
-    str{1} = [str{1} struct('name', '','value','')];
-    str{1}(end).name  = [str{1}(end).name(1:end-1) 'SPM accuracy (samp/tol)'];
-    str{1}(end).value = [str{1}(end).value sprintf('%0.2f / %0.2f',job.opts.samp,job.opts.tol)]; 
+    if job.extopts.expertgui
+      str{1} = [str{1} struct('name', '','value','')];
+      str{1}(end).name  = [str{1}(end).name(1:end-1) 'SPM accuracy (samp/tol)'];
+      str{1}(end).value = [str{1}(end).value sprintf('%0.2f / %0.2f',job.opts.samp,job.opts.tol)]; 
+    end
   end
 
 

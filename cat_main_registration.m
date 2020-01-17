@@ -136,7 +136,10 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
     obj.fwhm = 1;
     if isfield(obj,'tpm'), obj = rmfield(obj,'tpm'); end
     obj.tpm = spm_load_priors8(res.tpm(1:2));
+    wo = warning('QUERY','MATLAB:RandStream:ActivatingLegacyGenerators'); wo = strfind( wo.state , 'on');
+    if wo, warning('OFF','MATLAB:RandStream:ActivatingLegacyGenerators'); end
     Affine  = spm_maff8(obj.image,obj.samp,obj.fwhm,obj.tpm,res.Affine,job.opts.affreg,80);
+    if wo, warning('ON','MATLAB:RandStream:ActivatingLegacyGenerators'); end
     res.Affine = Affine;
     spm_progress_bar('Clear');
   end

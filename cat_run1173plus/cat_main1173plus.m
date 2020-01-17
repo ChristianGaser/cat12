@@ -12,6 +12,11 @@ function Ycls = cat_main1173plus(res,tpm,job)
 
 %#ok<*ASGLU>
 
+% this function adds noise to the data to stabilize processing and we
+% have to define a specific random pattern to get the same results each time
+if exist('rng','file') == 2, rng('default'); rng(0); else, rand('state',0); randn('state',0); end
+
+    
 % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
 dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
 

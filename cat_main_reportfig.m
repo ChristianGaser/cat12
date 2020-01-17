@@ -478,9 +478,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   %% 
   if exist('Psurf','var') && ~isempty(Psurf)
     % ... clearup this part of code when finished ...
-    
-    %% add contex menu for principle test
-    Psurf2 = Psurf; ids = 1:3;
+    % add contex menu for principle test
+    Psurf2 = Psurf;
+    if job.extopts.expertgui==2, ids = 1:3; else ids = []; end
     % phite/pial surface in segmentation view number 3
     for ix=1:numel(Psurf2) 
       Psurf2(end+1).Pcentral = Psurf2(ix).Pwhite; 
