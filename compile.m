@@ -83,7 +83,7 @@ function varargout = compile(comp,test,verb)
       'cat_vol_gradient3.c'
       'cat_vol_simgrow.c'
       'cat_vol_localstat.c'
-      'cat_vol_pbtp.cpp'
+      'cat_vol_pbtp.c'
       'cat_vol_interp3f.cpp'
       'cat_vol_eidist.c'
       'cat_vol_genus0.c genus0.c'

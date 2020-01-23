@@ -502,14 +502,13 @@ if Hc.y_found
     if exist('x','var') & numel(x)==size(X,1)
       xx_array = [min(x) max(x)]; 
       for i=1:n_effects
-        xx{i} = x(X(:,i)~=0);
+        xx{i} = X(H.SPM{1}.xX.I(:,3)==i);
       end
       x0 = x;
     else
       xx_array = [min(X(X~=0)) max(X(X~=0))]; 
       for i=1:n_effects
-        xx{i} = X(:,i);
-        xx{i}(xx{i}==0) = [];
+        xx{i} = X(H.SPM{1}.xX.I(:,3)==i,i);
       end
       x0 = sum(X,2);
     end

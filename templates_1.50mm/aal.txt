@@ -19,8 +19,7 @@ If you use these atlases, please cite the references below.
 
 
 Websites:    
-A) http://www.fz-juelich.de/inm/inm-1/DE/Forschung/_docs/SPMAnatomyToolbox/SPMAnatomyToolbox_node.html
-
+A) http://www.gin.cnrs.fr/en/tools/aal/
 
 References:
 1) Collins DL, Zijdenbos AP, Kollokian V, Sled JG, Kabani NJ, Holmes CJ, et al.
@@ -36,7 +35,7 @@ anatomical parcellation of the MNI MRI single subject brain. Neuroimage 2002;
 
 --------------------------------------------------------------------------------
 
-Anatomical Automatic Labeling (AAL) For SPM8
+Anatomical Automatic Labeling (AAL) for SPM8
 Version v1
 Date 14/06/2010
 E-mail : aalgin@cyceron.fr.
