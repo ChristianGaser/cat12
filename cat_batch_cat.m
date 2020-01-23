@@ -68,7 +68,7 @@ matlabbatch{1}.spm.tools.cat.estwrite.data = cellstr(names);
 tmp_fields = char('NCstr','BVCstr','regstr','WMHC','WMHCstr','mrf','INV','restype','resval','species','darteltpm','shootingtpm',...
             'cat12atlas','brainmask','T1','pbtres','close_parahipp','scale_cortex','add_parahipp','colormap','verb','ignoreErrors',...
             'expertgui','subfolders','experimental','atlas','LAB','print','cleanupstr','SLC','spm_kamap','fontsize','satlas',...
-            'send_info','pbtlas','thick_measure','thick_limit','collcorr');
+            'send_info','pbtlas','thick_measure','thick_limit','collcorr','nproc','gifti_dat');
 for i=1:size(tmp_fields,1)
   try
     matlabbatch{1}.spm.tools.cat.estwrite.extopts = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.extopts,deblank(tmp_fields(i,:)));
@@ -76,7 +76,7 @@ for i=1:size(tmp_fields,1)
 end
 
 % remove output fields
-tmp_fields = char('atlas','te','pc','WMH','ROI','TPMC','label','CSF','WM','GM','las','bias','ct','SL','jacobian','atlases');
+tmp_fields = char('atlas','te','pc','WMH','ROI','TPMC','label','CSF','WM','GM','las','bias','ct','SL','jacobian','atlases','pp');
 for i=1:size(tmp_fields,1)
   try
     matlabbatch{1}.spm.tools.cat.estwrite.output = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output,deblank(tmp_fields(i,:)));
