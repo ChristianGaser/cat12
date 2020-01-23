@@ -1,5 +1,62 @@
 ------------------------------------------------------------------------
-r1552 | dahnke | 2020-01-17 11:17:23
+r1553 | gaser | 2020-01-23 08:37:02
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Contents_info.txt
+M       cat_amap.mexa64
+M       cat_amap.mexw64
+M       cat_batch_cat.m
+M       cat_ornlm.mexa64
+M       cat_ornlm.mexw64
+M       cat_sanlm.mexa64
+M       cat_sanlm.mexw64
+M       cat_stat_confplot_spm.m
+M       cat_surf_results.m
+M       cat_vbdist.mexa64
+M       cat_vbdist.mexw64
+M       cat_vol_downcut.mexa64
+M       cat_vol_downcut.mexw64
+M       cat_vol_eidist.mexa64
+M       cat_vol_eidist.mexw64
+M       cat_vol_genus0.mexa64
+M       cat_vol_genus0.mexw64
+M       cat_vol_gradient3.mexa64
+M       cat_vol_gradient3.mexw64
+M       cat_vol_interp3f.mexa64
+M       cat_vol_interp3f.mexw64
+M       cat_vol_laplace3.mexa64
+M       cat_vol_laplace3.mexw64
+M       cat_vol_laplace3R.mexa64
+M       cat_vol_laplace3R.mexw64
+M       cat_vol_localstat.mexa64
+M       cat_vol_localstat.mexw64
+M       cat_vol_median3.mexa64
+M       cat_vol_median3.mexw64
+M       cat_vol_median3c.mexa64
+M       cat_vol_median3c.mexw64
+M       cat_vol_pbtp.mexa64
+M       cat_vol_pbtp.mexmaci64
+M       cat_vol_pbtp.mexw64
+M       cat_vol_simgrow.mexa64
+M       cat_vol_simgrow.mexw64
+M       compile.m
+M       html/cat.html
+M       html/cat.txt
+M       templates_1.50mm/aal.txt
+M       templates_1.50mm/cobra.txt
+A       use_of_external_software.txt
+
+1. Changed: Updated license information.
+2. Changed: Updated compile tool to consider changed files.
+3. Changed: Recompiled for all systems.
+4. Changed: Updated many functions in cat_surf_results and changed plotting
+   for raw data.
+5. Changed: Updated cat_stat_confplot_spm.m to correctly consider covariates.
+6. Changed: Added new flags to cat_batch_cat.m. 
+------------------------------------------------------------------------
+r1552 | dahnke | 2020-01-17 11:19:24 +0100 (Fr, 17 Jan 2020) | 65 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -65,6 +122,7 @@ M       tbx_cfg_cat.m
 (16) Fixed:    Removed SPM accuracy line from the CAT report of standard user
                in cat_main_reportstr.              
                
+
 ------------------------------------------------------------------------
 r1551 | gaser | 2020-01-13 09:33:37 +0100 (Mo, 13 Jan 2020) | 13 lines
 

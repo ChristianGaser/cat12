@@ -47,7 +47,7 @@ function varargout = cat_surf_results(action, varargin)
 % Christian Gaser & Robert Dahnke (batch-mode)
 % $Id$
 
-global H y
+global H y x
 
 %-Input parameters
 %--------------------------------------------------------------------------
@@ -1442,6 +1442,9 @@ H.S{2}.name = H.S2.name(sel, :);
 H.S{1}.Y = H.S1.Y(:, sel);
 H.S{2}.Y = H.S2.Y(:, sel);
 
+H.S{1}.info = cat_surf_info(H.S{1}.name, 1);          
+H.S{2}.info = H.S{1}.info;            
+
 % check whether data for left or right hemipshere are all non-zero
 ind1 = find(H.S{1}.Y(:) ~= 0);
 ind2 = find(H.S{2}.Y(:) ~= 0);
@@ -2239,11 +2242,10 @@ global H
 %%
 
 dcm_obj = datacursormode(H.figure);
-
 set(dcm_obj, 'Enable', 'off');
 
 try
-  delete(findall(gca, 'Type', 'hggroup', 'HandleVisibility', 'off'));
+  delete(findall(gcf,'Type','hggroup'));
 end
 
 if ~exist('filename', 'var')
@@ -2313,7 +2315,7 @@ pos = getpixelposition(H.panel(1));
 hh = getframe(H.figure,pos);
 
 img = frame2im(hh);
-if H.surf_sel ~= 4
+if H.surf_sel ~= 4 & ~isfield(H, 'dataplot')
   % crop image if it's not a flatmap
   sz = size(img);
   img = img(round(0.1*sz(1):sz(1)),round(0.05*sz(2):0.95*sz(2)),:);
@@ -2493,14 +2495,10 @@ H.show_info = get(H.info, 'Value');
 
 if H.show_info
   delete(findobj('tag','cat_surf_result_title'));
-   %   axes('Parent', H.panel(1), 'Position',tpos{i}, 'Visible', 'off','tag','cat_surf_results_text');
+
   ax = axes('Parent',H.panel(1),'Position',[0.5 0.82 0.9 0.05],'visible','off','tag','cat_surf_result_title');  
   text(0,1,spm_str_manip(H.S{1}.name, 'k150d'),'HorizontalAlignment','center','interpreter','none','Color', 1 - H.bkg_col,'Parent',ax);
           
-  %set(get(getappdata(H.patch(1), 'axis'), 'Title'), 'String', ...
-  %  spm_str_manip(H.S{1}.name, 'k50d'), 'Interpreter', 'none', 'Color', 1 - H.bkg_col)
-  %set(get(getappdata(H.patch(3), 'axis'), 'Title'), 'String', ...
-  %  spm_str_manip(H.S{2}.name, 'k50d'), 'Interpreter', 'none', 'Color', 1 - H.bkg_col)
 else
   delete(findobj('tag','cat_surf_result_title'));
   set(get(getappdata(H.patch(1), 'axis'), 'Title'), 'String', '')
@@ -2641,7 +2639,7 @@ switch H.cursor_mode
   case {4, 5}
     
     try
-      delete(findall(gca, 'Type', 'hggroup', 'HandleVisibility', 'off'));
+      delete(findall(gcf,'Type','hggroup'));
     end
     
     SPM_found = 1;
@@ -2649,6 +2647,14 @@ switch H.cursor_mode
     
     % SPM.mat exist?
     if exist(SPM_name, 'file')
+    
+      % remove filename info to prevent overlapping
+      if H.show_info
+        set(H.info, 'Value', 0);
+        H.show_info = 0;
+        checkbox_info;
+      end
+
       load(SPM_name);
 
       % if analysis was moved we have to correct header structure
@@ -2675,7 +2681,11 @@ switch H.cursor_mode
     if SPM_found
       set(dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', ...
         'DisplayStyle', 'datatip', 'Updatefcn', {@myDataCursorCluster});
-      fprintf('The values are available at the MATLAB command line as variable ''y''\n');
+      if H.predicted > -2
+        fprintf('The values are available at the MATLAB command line as variable ''y''\n');
+      else
+        fprintf('The adjusted raw values are available at the MATLAB command line as variable ''y''\n');
+      end
     end
   case 6 % enable/disable rotate3d
     clearDataCursorPlot(H);
@@ -2694,12 +2704,12 @@ end
 try
   dcm_obj = datacursormode(H.figure);
   set(dcm_obj, 'Enable', 'off');
-  delete(findall(gca, 'Type', 'hggroup', 'HandleVisibility', 'off'));
+  delete(findall(gcf,'Type','hggroup'));
 end
 
 %==========================================================================
 function txt = myDataCursorCluster(obj, evt)
-global H y
+global H y x
 
 % first entries are atlases
 plot_mean = H.cursor_mode - 4;
@@ -2819,10 +2829,26 @@ hold(H.dataplot, 'on')
 set(H.dataplot, 'XColor', 1 - H.bkg_col, 'YColor', 1 - H.bkg_col,...
     'YGrid','on','Visible','on');
 
+xX = H.SPM{1}.xX;
+iH = xX.iH;
+
+Ic = [];
+nm = H.S{1}.info(1).ff;
+% end with _0???.ext?
+if length(nm) > 4
+  if strcmp(nm(length(nm) - 4:length(nm) - 3), '_0')
+    Ic = str2double(nm(length(nm) - 3:length(nm)));
+  end
+else
+  if isfield(H,'Ic')
+    Ic = H.Ic;
+  end
+end
+
 if H.predicted >=0
   ystr = 'contrast estimate';
   h = bar(H.dataplot, cbeta);
-  set(h, 'FaceColor', H.col(1, :))
+  set(h, 'FaceColor', H.col(1, :));
   
   % standard error
   %--------------------------------------------------------------
@@ -2831,19 +2857,103 @@ if H.predicted >=0
     line([j j], ([CI(j) -CI(j)] + cbeta(j)), 'LineWidth', 6, 'Color', H.col(2, :), 'Parent', H.dataplot)
   end
   set(H.dataplot, 'XLim', [0.4 (length(cbeta) + 0.6)], 'XTicklabel', '', 'XTick', [], 'YGrid','off')
-
+  ylim(H.dataplot,'auto')
 else
   ystr = 'raw data';
-  h = plot(H.dataplot, y);
-  set(h, 'Color', H.col(2, :))
-  set(H.dataplot, 'XLim', [0 (length(y))], 'XTicklabel', '', 'XTick', [])
+  
+
+  c0 = H.SPM{1}.xCon(Ic).c;
+  
+  [indi, indj] = find(c0~=0);
+  ind_X = unique(indi)';
+  X = H.SPM{1}.xX.X;
+  X = X(:,ind_X);
+
+  covariate = 0;
+  
+  % check for covariates
+  if ~isempty(H.SPM{1}.xX.iC) & numel(ind_X) <= 2
+    for i=1:numel(ind_X)
+      % contrast is defined at entries of iC
+      if ~isempty(find(ind_X(i) == H.SPM{1}.xX.iC))
+        covariate = 1;
+      else
+        covariate = 0;
+      end
+    end
+  end
+  c0 = c0(ind_X,:);
+
+  % show scatter plot and linear fit
+  if covariate & numel(ind_X)<=2
+    axes(H.dataplot);
+    cla
+    
+    xx = cell(numel(ind_X),1);
+    
+    % use existing x-variable if available
+    if exist('x','var') & numel(x)==size(X,1)
+      xx_array = [min(x) max(x)]; 
+      for i=1:numel(ind_X)
+        xx{i} = X(H.SPM{1}.xX.I(:,3)==i);
+      end
+      x0 = x;
+    else
+      xx_array = [min(X(X~=0)) max(X(X~=0))]; 
+      for i=1:numel(ind_X)
+        xx{i} = X(H.SPM{1}.xX.I(:,3)==i,i);
+      end
+      x0 = sum(X,2);
+    end
+
+    col = [1 0 0;0 0 1; 0 1 0];
+    yy = cell(numel(iH),1);
+    
+    for i=1:numel(iH)
+      ind_data = find(any(xX.X(:,xX.iH(i)),2));
+      yy{i} = y(ind_data,:);
+    end
+
+    hold on
+    for i=1:numel(ind_X)
+      x2 = xx{i};
+      y2 = mean(yy{i},2);
+      plot(x2,y2,'.','MarkerSize',10,'Color',col(i,:));
+      P = polyfit(x2,y2,1);       
+      % plot trend line
+      plot(xx_array,polyval(P,xx_array),'Color',col(i,:),'LineWidth',2);
+    end
+    hold off
+    fprintf('Red: 1st group');
+    if numel(ind_X==2), fprintf('\tBlue: 2nd group'); end
+    fprintf('\n');
+    
+    xlim(H.dataplot,'auto')
+    ylim(H.dataplot,'auto')
+    set(H.dataplot,'XTickMode','auto');
+    
+  elseif ~isempty(iH) & numel(iH)>1 & (H.predicted < 0)
+    yy = cell(numel(iH),1);
+    
+    for i=1:numel(iH)
+      ind_data = find(any(xX.X(:,xX.iH(i)),2));
+      yy{i} = y(ind_data,:);
+    end
+    
+    vstruct = struct('showdata',0,'box',1,'outliers',1);
+    axes(H.dataplot);
+    cat_plot_boxplot(yy,vstruct);
+    
+  else
+    h = plot(H.dataplot, y);
+    set(h, 'Color', H.col(2, :))
+    set(H.dataplot, 'XLim', [0 (length(y))], 'XTicklabel', '', 'XTick', [])
+  end
+
 end
 
-xX = H.SPM{1}.xX;
-iH = xX.iH;
-
 % plot group coding for Anovas with more than 1 group and native data
-if ~isempty(iH) & numel(iH)>1 & (H.predicted < 0) & isempty(xX.iB)
+if 0 %~isempty(iH) & numel(iH)>1 & (H.predicted < 0) & isempty(xX.iB)
   yl = get(H.dataplot,'YLim');
   pcol = gray(numel(iH)+2);
   for i=1:numel(iH)
@@ -2855,20 +2965,6 @@ if ~isempty(iH) & numel(iH)>1 & (H.predicted < 0) & isempty(xX.iB)
     end
   end
   
-end
-
-nm = H.S{1}.info(1).ff;
-
-Ic = [];
-% end with _0???.ext?
-if length(nm) > 4
-  if strcmp(nm(length(nm) - 4:length(nm) - 3), '_0')
-    Ic = str2double(nm(length(nm) - 3:length(nm)));
-  end
-else
-  if isfield(H,'Ic')
-    Ic = H.Ic;
-  end
 end
 
 if ~isempty(Ic)
@@ -2946,17 +3042,37 @@ if H.predicted >= 0
   end
 
   y = Y + R;
+  y = cat_stat_nanmean(y, 2);
 else
+  y = cat_stat_nanmean(y, 2);
+
   % also adjust raw data
   if H.predicted==-2
-    if ~isempty(Ic)
+    if ~isempty(Ic)     
+      
       c0 = SPM.xCon(Ic).c;
       
       [indi, indj] = find(c0~=0);
       ind_X = unique(indi)';
     
+      covariate = 0;
+      
+      % check for covariates
+      if ~isempty(SPM.xX.iC) & numel(ind_X) <= 2
+        for i=1:numel(ind_X)
+          % contrast is defined at entries of iC
+          if ~isempty(find(ind_X(i) == SPM.xX.iC))
+            covariate = 1;
+          else
+            covariate = 0;
+          end
+        end
+      end
+      c0 = c0(ind_X,:);
+      repeated_anova = ~isempty(SPM.xX.iB);
+
       % define subject effects and potential covariates
-      G_columns = [SPM.xX.iC];
+      G_columns = [SPM.xX.iB SPM.xX.iC];
       
       % only consider nuisance parameters and parameters where
       % contrast is defined
@@ -2967,9 +3083,34 @@ else
       if ~isempty(G_columns)
         % remove nuisance effects from data
         G = SPM.xX.X(:,G_columns);
-        y_mean = repmat(cat_stat_nanmean(y), [size(y,1) 1]);
-        y = y - G*(pinv(G)*y) + y_mean;
+        G = G - mean(G);
+        y = y - G*(pinv(G)*y);
       end
+
+
+      if repeated_anova | ((n_groups > 1) & covariate)
+        beta0  = spm_data_read(SPM.Vbeta,'xyz',XYZ);
+        beta   = mean(beta0,2);
+        n_groups = max(SPM.xX.I(:,3));
+        mean_group = zeros(n_groups,1);
+        count_times = 1;
+        for i=1:n_groups
+          ind_group = find(SPM.xX.I(:,3) == i);
+          if repeated_anova
+            % find subjects effects in that group
+            ind_subj = unique(SPM.xX.I(ind_group,2));
+            n_subj_group = numel(ind_subj);
+            n_times = max(SPM.xX.I(ind_group,4));
+            mean_group(i) = sum(beta(SPM.xX.iH(count_times:(count_times+n_times-1))))/n_times + ...
+              sum(beta(SPM.xX.iB(ind_subj)))/n_subj_group;
+            count_times = count_times + n_times;
+          else
+            mean_group(i) = beta(SPM.xX.iH(i));
+          end
+          y(ind_group,:) = y(ind_group,:) - mean(y(ind_group,:)) + mean_group(i);
+        end
+      end
+
     else
       fprintf('No adjustement for raw data possible!\n');
     end
@@ -2977,8 +3118,6 @@ else
   cbeta = [];
   CI = [];
 end
-
-y = cat_stat_nanmean(y, 2);
 
 %==========================================================================
 function txt = myDataCursorAtlas(obj, evt, H)

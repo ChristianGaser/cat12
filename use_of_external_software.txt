@@ -1,0 +1,134 @@
+Licenses
+--------
+CAT12 is free but copyright software, distributed under the terms of the GNU General Public Licence as published by the Free Software Foundation; either version 2 of the Licence, or (at your option) any later version.
+
+If you use any CAT12 code for commercial application, please email christian.gaser@uni-jena.de.
+
+Other Components
+----------------
+CAT12 contains elements from the following software or data:
+
+SPM12
+    https://www.fil.ion.ucl.ac.uk/spm/software/spm12/
+    Copyright 1991,1994-2020 FIL
+
+Minc (Medical Image NetCDF)
+    ftp://mouldy.bic.mni.mcgill.ca/pub/minc/README.
+    Copyright 1993-2000 Peter Neelin and David MacDonald, McConnell Brain
+    Imaging Centre, Montreal Neurological Institute, McGill University.
+
+NetCDF
+    http://www.unidata.ucar.edu/packages/netcdf.
+    Copyright 1993-1999 University Corporation for Atmospheric Research/Unidata
+
+The BIC Programming Library
+    http://www.bic.mni.mcgill.ca/software/bicpl/main.html
+    
+ba_interp3
+    https://www.mathworks.com/matlabcentral/mlc-downloads/downloads/submissions/21702/versions/1/previews/ba_interp3/ba_interp3.html
+    Copyright 2008 Brain Amberg
+
+Marching Cubes
+    http://thomas.lewiner.org/publication_page.php?pubkey=marching_cubes_jgt
+    Lewiner T, Lopes H, Vieira AW, TavaresG.
+    Efficient Implementation of Marching Cubes¥ Cases with Topological Guarantees},
+    Journal of Graphics Tools 2003; 8(2): 1-15. 
+
+FFTW3
+    http://www.fftw.org/
+    Copyright 2003. 2007-11 Matteo Frigo and Massachusetts Institute of Technology, Boston MA, USA
+    
+S2kit
+    https://www.cs.cmu.edu/~dhuber/files/s2kit_fx.pdf
+    Copyright 2004 Peter Kostelec, Dan Rockmore
+
+Expat
+    https://libexpat.github.io/
+    Copyright 2001-2019 Expat maintainers
+    
+GIFTI C Lib
+    https://www.nitrc.org/projects/gifti/
+    Author: Richard Reynolds, SSCC, DIRP, NIMH, National Institutes of Health
+    
+ZLIB DATA COMPRESSION LIBRARY
+    http://www.gzip.org/zli
+    Copyright 1995-2004 Jean-loup Gailly and Mark Adler
+    
+Anatomical Automatic Labeling (AAL) 1
+    http://www.gin.cnrs.fr/en/tools/aal/
+    Copyright 2020 Groupe d'imagerie neurofonctionnelle (GIN-IMN)
+    Tzourio-Mazoyer N, Landeau B, Papathanassiou D, Crivello F, Etard O, Delcroix N, et al. 
+    Automated anatomical labelling of activations in spm using a macroscopic anatomical parcellation of the MNI MRI single subject brain. 
+    Neuroimage 2002; 15: 273-289.
+    
+Anatomy Atlas
+    http://www.fz-juelich.de/inm/inm-1/DE/Forschung/_docs/SPMAnatomyToolbox/SPMAnatomyToolbox_node.html
+    Eickhoff SB, Stephan KE, Mohlberg H, Grefkes C, Fink GR, Amunts K, Zilles K. 
+    A new SPM toolbox for combining probabilistic cytoarchitectonic maps and functional imaging data. 
+    NeuroImage 2005, 25(4), 1325-1335.
+
+CoBra Atlas
+    http://cobralab.ca/atlases
+    Copyright Computational Brain Anatomy Laboratory at the Douglas Institute (CoBra Lab)
+    Entis JJ, Doerga P, Barrett LF, Dickerson BC. 
+    A reliable protocol for the manual segmentation of the human amygdala and its subregions using ultra-high resolution MRI. 
+    Neuroimage. 2012;60(2):1226-35.
+
+Hammers Atlas
+    http://brain-development.org/brain-atlases/adult-brain-atlases/adult-brain-maximum-probability-map-hammers-mith-atlas-n30r83-in-mni-space
+    Copyright 2004-2011 Imperial College of Science Technology & Medicine (“Imperial”)
+    Hammers A, Allom R, Koepp MJ, Free SL, Myers R, Lemieux L, Mitchell TN, Brooks DJ, Duncan JS. 
+    Three-dimensional maximum probability atlas of the human brain, with particular reference to the temporal lobe. 
+    Hum Brain Mapp 2003, 19: 224-247. 
+
+IBSR Atlas
+    http://www.cma.mgh.harvard.edu/ibsr/
+    Copyright The General Hospital Corporation, Boston MA, USA ("MGH")
+
+LONI Probabilistic Brain Atlas (LPBA40)
+    http://www.loni.usc.edu/atlases/Atlas_Detail.php?atlas_id=12
+    LONI Research License (no commercial use)
+    Shattuck DW, Mirza M, Adisetiyo V, Hojatkashani C, Salamon G, Narr KL, Poldrack RA, Bilder RM, Toga AW
+    Construction of a 3D Probabilistic Atlas of Human Cortical Structures
+    NeuroImage 2008, 39 (3): 1064-1070.
+
+MICCAI 2012 Grand Challenge and Workshop on Multi-Atlas Labeling (Neuromorphometrics)
+    http://Neuromorphometrics.com/
+    Copyright Neuromorphometrics, Inc., Somerville, MA
+
+Mori atlas:
+    http://www.spl.harvard.edu/publications/item/view/1883
+    http://wiki.slicer.org/slicerWiki/index.php/Slicer3:Mori-Atlas_labels
+    Copyright Surgical Planning Laboratory - Brigham & Women's Hospital, Boston MA, USA
+    Oishi K, Faria A, Jiang H, Li X, Akhter K, Zhang J, Hsu JT, Miller MI, van Zijl PC, Albert M, Lyketsos CG, Woods R, Toga AW, Pike GB, Rosa-Neto P, Evans A, Mazziotta J, Mori S. 
+    Atlas-based whole brain white matter analysis using large deformation diffeomorphic metric mapping: application to normal elderly and Alzheimer's disease participants. 
+    Neuroimage. 2009 46(2):486-99.
+    
+IXI Dataset
+    http://brain-development.org/ixi-dataset/
+    Copyright by Biomedical Image Analysis Group, Imperial College London
+
+Desikan-Killiany Atlas (DK40)
+    https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation
+    Copyright The General Hospital Corporation, Boston MA, USA ("MGH")
+
+Destrieux Atlas
+    https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation
+    https://surfer.nmr.mgh.harvard.edu/fswiki/DestrieuxAtlasChanges
+    Copyright The General Hospital Corporation, Boston MA, USA ("MGH")
+    
+Human Connectome Project (HCP) Multi-Modal Parcellation - See https://balsa.wustl.edu/study/show/RVVG
+    Copyright 2020 Washington University School of Medicine
+
+Local-Global Intrinsic Functional Connectivity Parcellation
+    https://github.com/ThomasYeoLab/CBIG/tree/master/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal
+    Copyright 2016 Computational Brain Imaging Group (CBIG)
+
+CAT12 use in other packages
+--------------------------------------------------------------
+BrainStorm
+https://github.com/brainstorm-tools/brainstorm3/issues/219
+
+ExploreASL
+https://github.com/ExploreASL/ExploreASL/blob/master/External/README_SPM.txt
+https://github.com/ExploreASL/ExploreASL/blob/master/Functions/xASL_qc_CAT12_IQR.m
