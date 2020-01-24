@@ -504,7 +504,8 @@ cstime = clock;
     end
 
     if opt.reduceCS>0
-      txt = evalc('[tmp,CS.faces,CS.vertices] = cat_vol_genus0(Yppisc,th_initial);');
+      % apply voxel-based topology correction only for smaller defects < 30 voxel
+      [tmp,CS] = cat_vol_genus0opt(Yppisc,th_initial,30 * (1-iscerebellum),debug);
       
       % correction for the boundary box used within the surface creation process 
       CS = cat_surf_fun('smat',CS,Smat.matlabIBB_mm); % translate to mm coordinates 
@@ -513,7 +514,9 @@ cstime = clock;
       % if no mesh reduction is selected use lower-scaled Yppt with original voxel size
       Yppt = cat_vol_resize(Yppisc,'deinterp',resI);                        % back to original resolution
       Yppt = cat_vol_resize(Yppt,'dereduceBrain',BB);                     % adding of background
-      txt  = evalc('[tmp,CS.faces,CS.vertices] = cat_vol_genus0(Yppt,th_initial);');
+
+      % apply voxel-based topology correction only for smaller defects < 30 voxel
+      [tmp,CS] = cat_vol_genus0opt(Yppt,th_initial,30 * (1-iscerebellum),debug);
       CS   = cat_surf_fun('smat',CS,Smat.matlabi_mm); % translate to mm coordinates 
       [Yvxdef,defect_number0] = spm_bwlabel( double(abs(tmp - (Yppt>0.5))>0) ); clear tmp
     end
@@ -1184,6 +1187,63 @@ cstime = clock;
       fprintf('  Display thickness: %s\n',spm_file(Psurf(si).Pthick,'link','cat_surf_display(''%s'')'));
     end
   end
+end
+
+function varargout = cat_vol_genus0opt(Yo,th,limit,debug)
+% cat_vol_genus0opt: Voxel-based topology optimization and surface creation 
+%   The correction of large defects is often not optimal and this function
+%   uses only small corrections. 
+% 
+%    [Yc,S] = cat_vol_genus0vol(Yo[,limit,debug])
+%  
+%    Yc    .. corrected volume 
+%    Yo    .. original volume 
+%    S     .. surface 
+%    th    .. threshold for creating surface
+%    limit .. maximum number of voxels to correct a defect (default = 30)
+%    debug .. print details.  
+%
+
+  if nargin < 2, th = 0.5; end
+  if nargin < 3, limit = 30; end
+  if nargin < 4, debug = 0; end
+  
+  Yc = Yo; nooptimization = limit==0;  %#ok<NASGU>
+  if limit==0
+    % use all corrections
+    if nargout>1
+      txt = evalc(sprintf('[Yc,S.faces,S.vertices] = cat_vol_genus0(Yo,th,nooptimization);'));
+    else
+      txt = evalc(sprintf('Yc = cat_vol_genus0(Yo,th,nooptimization);'));
+    end
+    
+    if debug, fprintf(txt); end
+  else
+    % use only some corrections
+    txt = evalc(sprintf('Yc = cat_vol_genus0(Yo,th,nooptimization);'));
+    
+    % remove larger corrections
+    Yvxcorr = abs(Yc - (Yo > th))>0; 
+    Yvxdef  = spm_bwlabel( double( Yvxcorr ) ); clear Yppiscrc; 
+    Yvxdef  = cat_vol_morph(Yvxdef,'l',[inf limit]) > 0; % large corrections that we remove 
+    
+    if debug
+      fprintf(txt); 
+      fprintf('  Number of voxels of genus-topocorr: %d\n  Finally used corrections:  %0.2f%%\n', ...
+        sum(Yvxcorr(:)) , 100 * sum(Yvxcorr(:) & ~Yvxdef(:)) / sum(Yvxcorr(:)) );
+    end
+    
+    Yc = Yc & ~Yvxdef; 
+  
+    % final surface creation without correction
+    if nargout>1
+      evalc(sprintf('[Yt,S.faces,S.vertices] = cat_vol_genus0( single(Yc) ,th,1);')); 
+    end
+  
+  end
+  
+  varargout{1} = Yc; 
+  if nargout>1, varargout{2} = S; end
 end
 
 %=======================================================================

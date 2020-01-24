@@ -111,6 +111,9 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
     opt.collcorr = 3;
   end
   
+  % isosurface threshold
+  th_initial = 0.5;
+
   % distance between vertices that can be set directly by "vdist" or indirectly by "interpV"  
   % - surface should have more than 80k faces to look nice, whereas more than 400k does not improve the visual quality 
   % - controlled by power function to avoid a quadratic grow of the number of faces
@@ -903,14 +906,14 @@ fprintf('%26.22f | %26.22f | %26.22f\n',std(Ymfs(:)),std(Yth1i(:)),std(Yppi(:)))
     else
       % Main initial surface creation using cat_vol_genus0
       % cat_vol_genus0 uses a "simple" marching cube without use of isovalues
-      % that is use in the MATLAB isosurface function. Our test showed that
+      % that is used in the MATLAB isosurface function. Our test showed that
       % the surface deformation allows the same or better accuracy and also
       % that the meshes of cat_vol_genus0 are more regular and also allow 
       % voxel-based topology optimization.  
       
       if opt.reduce_mesh==0 || opt.reduce_mesh>2 % full resolution  
         
-        [Yppi05c,CS] = cat_vol_genus0opt(Yppisc,30 * (1-iscerebellum),debug);
+        [Yppi05c,CS] = cat_vol_genus0opt(Yppisc,th_initial,30 * (1-iscerebellum),debug);
         
         %Yppi05c = Yppisc; evalc(sprintf('clear CS; [Yppi05c,CS.faces,CS.vertices] = cat_vol_genus0(Yppisc,0.5,nosurfopt);')); % no_adjustment
         [Yvxdef,defect_number0] = spm_bwlabel( double(abs(Yppi05c - (Yppisc>0.5))>0) ); clear Yppi05c;
@@ -935,7 +938,7 @@ fprintf('%26.22f | %26.22f | %26.22f\n',std(Ymfs(:)),std(Yth1i(:)),std(Yppi(:)))
           clear Yvxcorr
         end
 %}
-        Yppiscr = cat_vol_genus0opt(Yppisc,30 * (1-iscerebellum),debug);
+        Yppiscr = cat_vol_genus0opt(Yppisc,th_initial,30 * (1-iscerebellum),debug);
         
         if 1
           % optimized downsampling to avoid blurring of thin gyri/sulci 
@@ -985,7 +988,7 @@ fprintf('%26.22f | %26.22f | %26.22f\n',std(Ymfs(:)),std(Yth1i(:)),std(Yppi(:)))
         if ~debug, clear Yppigyri Yppislci; end
         [Yppiscr,resL] = cat_vol_resize(Yppiscr,'interp',VI,rf);
         %evalc(sprintf('clear CS; [Yppi05c,CS.faces,CS.vertices] = cat_vol_genus0(Yppiscr,0.5,1);')); % no_adjustment
-        [Yppi05c,CS] = cat_vol_genus0opt(Yppiscr,5 * (1-iscerebellum),debug);
+        [Yppi05c,CS] = cat_vol_genus0opt(Yppiscr,th_initial,5 * (1-iscerebellum),debug);
         [Yvxdef,defect_number0] = spm_bwlabel( double(abs(Yppi05c - (Yppiscr>0.5))>0) ); clear Yppi05c;
         Yvxdef = cat_vol_resize(cat_vol_morph(Yvxdef,'d'),'deinterp',resL); % #### this is not ideal and need refinement ###  
         if ~debug, clear Yppiscr; end
@@ -1297,7 +1300,7 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
       [ST, RS] = cat_system(cmds); cat_check_system_output(ST,RS,opt.verb-3);
     end 
     % read final surface and map thickness data
-		CS = loadSurf(Pcentral);
+    CS = loadSurf(Pcentral);
     facevertexcdata = cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm); 
     cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
 fprintf('SR1: V=%d, MN(CT)=%0.20f, SD(CT)=%0.20f\n',size(CS.vertices,1),mean(facevertexcdata(:)),std(facevertexcdata(:)));    
@@ -1682,9 +1685,9 @@ fprintf('SR2: V=%d, SD(CT)=%0.20f\n',size(CS.vertices,1),std(facevertexcdata(:))
       end
       
       % apply upper thickness limit
-			facevertexcdata = cat_io_FreeSurfer('read_surf_data',Pthick);  
-			facevertexcdata(facevertexcdata > opt.thick_limit) = opt.thick_limit;
-			cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);  
+      facevertexcdata = cat_io_FreeSurfer('read_surf_data',Pthick);  
+      facevertexcdata(facevertexcdata > opt.thick_limit) = opt.thick_limit;
+      cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);  
     else % otherwise simply copy ?h.pbt.* to ?h.thickness.*
       copyfile(Ppbt,Pthick);
     end
@@ -1863,23 +1866,25 @@ fprintf('SR2: V=%d, SD(CT)=%0.20f\n',size(CS.vertices,1),std(facevertexcdata(:))
 
   end
 end
-function varargout = cat_vol_genus0opt(Yo,limit,debug)
-% cat_vol_genus0opt: Voxel-bases topology optimization and surface creation 
+
+function varargout = cat_vol_genus0opt(Yo,th,limit,debug)
+% cat_vol_genus0opt: Voxel-based topology optimization and surface creation 
 %   The correction of large defects is often not optimal and this function
-%   use only small corrections. 
+%   uses only small corrections. 
 % 
 %    [Yc,S] = cat_vol_genus0vol(Yo[,limit,debug])
 %  
 %    Yc    .. corrected volume 
 %    Yo    .. original volume 
 %    S     .. surface 
+%    th    .. threshold for creating surface
 %    limit .. maximum number of voxels to correct a defect (default = 30)
 %    debug .. print details.  
 %
 
-  if ~exist('debug','var'), debug = 0;  end
-  if ~exist('limit','var'), limit = 30; end
-  th = 0.5; 
+  if nargin < 2, th = 0.5; end
+  if nargin < 3, limit = 30; end
+  if nargin < 4, debug = 0; end
   
   Yc = Yo; nooptimization = limit==0;  %#ok<NASGU>
   if limit==0
@@ -1912,21 +1917,23 @@ function varargout = cat_vol_genus0opt(Yo,limit,debug)
     if nargout>1
       evalc(sprintf('[Yt,S.faces,S.vertices] = cat_vol_genus0( single(Yc) ,th,1);')); 
     end
-    if debug, fprintf(txt); end
   
   end
   
   varargout{1} = Yc; 
   if nargout>1, varargout{2} = S; end
 end
+
 function saveSurf(CS,P)
   save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),P,'Base64Binary');
 end
+
 function CS1 = loadSurf(P)
   CS = gifti(P);
   CS1.vertices = CS.vertices; CS1.faces = CS.faces; 
   if isfield(CS,'cdata'), CS1.cdata = CS.cdata; end
 end
+
 function CS = correctReducePatch(CS)
   % remove bad faces 
   badv = find( sum( spm_mesh_neighbours(CS)>0,2) == 2); 
@@ -1935,6 +1942,7 @@ function CS = correctReducePatch(CS)
   for fi=numel(badv):-1:1; CS.faces(CS.faces > badv(fi)) = CS.faces(CS.faces > badv(fi)) - 1; end
   CS.vertices(badv,:) = []; 
 end
+
 %=======================================================================
 function [cdata,i] = correctWMdepth(CS,cdata,iter,lengthfactor)
 % ______________________________________________________________________

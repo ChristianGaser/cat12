@@ -1,5 +1,24 @@
 ------------------------------------------------------------------------
-r1553 | gaser | 2020-01-23 08:37:02
+r1554 | gaser | 2020-01-24 23:40:44
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       cat_vol_genus0.c
+M       cat_vol_genus0.mexmaci64
+M       genus0.c
+
+(1) Fixed: Corrected error in genus0.c that caused deviations between
+    different systems due to code that was not conform to C90.
+(2) Changed: Removed 2nd loop for voxel-wise topology correction in
+    cat_vol_genus0.c and cleaned code.
+(3) Changed: Added threshold-parameter to intrnal cat_vol_genus0opt function
+    in cat_surf_createCS2.m and cleaned code.
+(4) Changed: Added cat_vol_genus0opt to cat_surf_createCS.m to only remove
+    smaller topology defects initially in 3D space.
+------------------------------------------------------------------------
+r1553 | gaser | 2020-01-23 08:37:40 +0100 (Do, 23 Jan 2020) | 55 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -55,6 +74,7 @@ A       use_of_external_software.txt
    for raw data.
 5. Changed: Updated cat_stat_confplot_spm.m to correctly consider covariates.
 6. Changed: Added new flags to cat_batch_cat.m. 
+
 ------------------------------------------------------------------------
 r1552 | dahnke | 2020-01-17 11:19:24 +0100 (Fr, 17 Jan 2020) | 65 lines
 
