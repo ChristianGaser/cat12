@@ -1,5 +1,5 @@
 % Computational Anatomy Toolbox
-% Version 1551 (CAT12.7) 2020-01-13
+% Version 1554 (CAT12.7) 2020-01-24
 % __________________________________________________________________________
 % Copyright (C) Christian Gaser christian.gaser@uni-jena.de
 %
@@ -11,7 +11,12 @@
 % of SPM12 (Wellcome Department of Cognitive Neurology) to provide computational
 % morphometry. It is developed by Christian Gaser and Robert Dahnke (University
 % of Jena, Departments of Psychiatry and Neurology) and is available to the 
-% scientific community under the terms of the GNU General Public License.
+% scientific community under the terms of the GNU General Public Licence as 
+% published by the Free Software Foundation; either version 2 of the Licence, 
+% or (at your option) any later version.
+%
+% If you use any CAT12 code for commercial application, please email 
+% christian.gaser@uni-jena.de.
 %
 % General files
 %   INSTALL.txt                      - installation instructions
