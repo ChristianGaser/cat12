@@ -1,5 +1,53 @@
 ------------------------------------------------------------------------
-r1554 | gaser | 2020-01-24 23:40:44
+r1555 | gaser | 2020-01-25 00:47:06
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_amap.mexa64
+M       cat_amap.mexw64
+M       cat_ornlm.mexa64
+M       cat_ornlm.mexw64
+M       cat_sanlm.mexa64
+M       cat_sanlm.mexw64
+M       cat_vbdist.mexa64
+M       cat_vbdist.mexw64
+M       cat_vol_downcut.mexa64
+M       cat_vol_downcut.mexw64
+M       cat_vol_eidist.mexa64
+M       cat_vol_eidist.mexw64
+M       cat_vol_genus0.mexa64
+M       cat_vol_genus0.mexmaci64
+M       cat_vol_genus0.mexw64
+M       cat_vol_gradient3.mexa64
+M       cat_vol_gradient3.mexw64
+M       cat_vol_interp3f.mexa64
+M       cat_vol_interp3f.mexw64
+M       cat_vol_laplace3.mexa64
+M       cat_vol_laplace3.mexw64
+M       cat_vol_laplace3R.mexa64
+M       cat_vol_laplace3R.mexw64
+M       cat_vol_localstat.mexa64
+M       cat_vol_localstat.mexw64
+M       cat_vol_median3.mexa64
+M       cat_vol_median3.mexw64
+M       cat_vol_median3c.mexa64
+M       cat_vol_median3c.mexw64
+MM      cat_vol_pbtp.c
+M       cat_vol_pbtp.mexa64
+M       cat_vol_pbtp.mexw64
+ M      cat_vol_pbtp2.c
+ M      cat_vol_pbtp2.mexmaci64
+M       cat_vol_simgrow.mexa64
+M       cat_vol_simgrow.mexw64
+M       html/cat.html
+M       use_of_external_software.txt
+
+1. Changed: Recompiled mex-files for all systems.
+2. Changed: Made cat_vol_pbtp.c more conform to older gcc versions.
+
+------------------------------------------------------------------------
+r1554 | gaser | 2020-01-24 23:41:19 +0100 (Fr, 24 Jan 2020) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -17,6 +65,7 @@ M       genus0.c
     in cat_surf_createCS2.m and cleaned code.
 (4) Changed: Added cat_vol_genus0opt to cat_surf_createCS.m to only remove
     smaller topology defects initially in 3D space.
+
 ------------------------------------------------------------------------
 r1553 | gaser | 2020-01-23 08:37:40 +0100 (Do, 23 Jan 2020) | 55 lines
 

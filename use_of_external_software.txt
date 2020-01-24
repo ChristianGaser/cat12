@@ -28,6 +28,10 @@ ba_interp3
     https://www.mathworks.com/matlabcentral/mlc-downloads/downloads/submissions/21702/versions/1/previews/ba_interp3/ba_interp3.html
     Copyright 2008 Brain Amberg
 
+diffeo2d/optimizer2d
+    https://www.fil.ion.ucl.ac.uk/spm/software/spm8/
+    Copyright 2007 John Ashburner
+
 Marching Cubes
     http://thomas.lewiner.org/publication_page.php?pubkey=marching_cubes_jgt
     Lewiner T, Lopes H, Vieira AW, TavaresG.
