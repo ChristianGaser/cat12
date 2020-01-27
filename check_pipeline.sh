@@ -265,6 +265,7 @@ postprocess ()
         revision_cat=`grep version_cat ${i}| cut -f2 -d">"|cut -f1 -d"<"`
       fi
       label=${calc_tmp}/label/catROI_`basename $i| sed -e 's/cat_//g'`
+      labels=${calc_tmp}/label/catROIs_`basename $i| sed -e 's/cat_//g'`
       report=${calc_tmp}/report/cat_`basename $i| sed -e 's/cat_//g'`
       subj=`basename $i | sed -e 's/\.xml//g' -e 's/cat_//g'`
 
@@ -306,14 +307,14 @@ postprocess ()
         mv tmp$$ ${subj}_Vcsf.csv
       fi
 
-      # grep for ct and update csv file
+      # grep for thickness and update csv file
       # check first for keyword neuromorphometrics and print next 200 lines
-      ct=`grep -A200 "<neuromorphometrics" $label |grep ct | sed -e 's/;/,/g'|cut -f2 -d"["|cut -f1 -d"]"`
-      if [ ! -z "$ct" ]; then
+      thickness=`grep -A200 "<aparc_DK40" $labels |grep thickness | sed -e 's/;/,/g'|cut -f2 -d"["|cut -f1 -d"]"`
+      if [ ! -z "$thickness" ]; then
         # add entry to csv file and sort and only keep unique lines
-        echo "${revision_cat},${ct}" >> ${subj}_ct.csv
-        cat ${subj}_ct.csv |sort -r|uniq > tmp$$
-        mv tmp$$ ${subj}_ct.csv
+        echo "${revision_cat},${thickness}" >> ${subj}_thickness.csv
+        cat ${subj}_thickness.csv |sort -r|uniq > tmp$$
+        mv tmp$$ ${subj}_thickness.csv
       fi
 
       # scp updated csv files to dbm server
