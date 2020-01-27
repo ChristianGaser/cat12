@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1555 | gaser | 2020-01-25 00:47:06
+r1556 | gaser | 2020-01-27 17:04:53
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_batch_cat.m
+M       check_pipeline.sh
+M       html/cat.html
+ M      use_of_external_software.txt
+
+1. Changed: Extended check_pipline_ROIs.m for use of thickness data.
+2. Changed: Added flags to cat_batch_cat.m to prevent wrnings for batch mode.
+
+------------------------------------------------------------------------
+r1555 | gaser | 2020-01-25 00:47:44 +0100 (Sa, 25 Jan 2020) | 46 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -45,6 +59,7 @@ M       use_of_external_software.txt
 
 1. Changed: Recompiled mex-files for all systems.
 2. Changed: Made cat_vol_pbtp.c more conform to older gcc versions.
+
 
 ------------------------------------------------------------------------
 r1554 | gaser | 2020-01-24 23:41:19 +0100 (Fr, 24 Jan 2020) | 17 lines
