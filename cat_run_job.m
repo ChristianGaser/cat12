@@ -428,14 +428,16 @@ function cat_run_job(job,tpm,subj)
               %% very simple affine preprocessing ... only simple warning
               cat_io_cprintf('warn',sprintf('WARNING: APP failed. Use simple scaling.\n'));
               [Ym,Yt,Ybg,WMth] = APPmini(obj,VF); %#ok<ASGLU>
-              url = sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%s%s%s%s%s%s%s',...
-                cat_version,'%2F',computer,'%2F','errors','%2F','cat_run_job:failedAPP','%2F','WARNING: APP failed. Use simple scaling.','cat_run_job');
-              url = regexprep(url, '\n', '%20'); % replace returns
-              url = regexprep(url, ' ' , '%20'); % replace spaces
-              try
-                [s,sts] = urlread(url,'Timeout',2);
-              catch
-                [s,sts] = urlread(url);
+              if cat_get_defaults('extopts.send_info')
+                url = sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%s%s%s%s%s%s%s',...
+                  cat_version,'%2F',computer,'%2F','errors','%2F','cat_run_job:failedAPP','%2F','WARNING: APP failed. Use simple scaling.','cat_run_job');
+                url = regexprep(url, '\n', '%20'); % replace returns
+                url = regexprep(url, ' ' , '%20'); % replace spaces
+                try
+                  [s,sts] = urlread(url,'Timeout',2);
+                catch
+                  [s,sts] = urlread(url);
+                end
               end
             end
             APPRMS = checkAPP(Ym,Ysrc); 

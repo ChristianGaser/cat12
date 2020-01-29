@@ -275,16 +275,14 @@ postprocess ()
       scp -q -P 2222 ${scp_target}/${subj}*csv .
 
       # grep for vol_TIV and vol_abs_CGW and update csv file
-      # check first for keywords and print next 8 lines
-      vol_TIV=`grep -A12 "<subjectmeasures" $report |grep vol_TIV |cut -f2 -d">"|cut -f1 -d"<"`
-      vol_CGW=`grep -A12 "<subjectmeasures" $report |grep vol_abs_CGW | sed -e 's/\ /,/g'|cut -f2 -d"["|cut -f1 -d"]"|cut -f1-4 -d','`
-      if [ ! -z "$vol_TIV" ]; then
-        if [ ! -z "$vol_CGW" ]; then
-          # add entry to csv file and sort and only keep unique lines
-          echo "${revision_cat},${vol_TIV},${vol_CGW}" >> ${subj}_vol.csv
-          cat ${subj}_vol.csv |sort -r|uniq > tmp$$
-          mv tmp$$ ${subj}_vol.csv
-          fi
+      # check first for keywords and print next 5 lines
+      vol_TIV=`grep -A5 "<vol_abs_CGW" $report |grep vol_TIV |cut -f2 -d">"|cut -f1 -d"<"`
+      vol_CGW=`grep "<vol_abs_CGW" $report | sed -e 's/\ /,/g'|cut -f2 -d"["|cut -f1 -d"]"|cut -f1-4 -d','`
+      if [ ! -z "$vol_TIV" ] & [ ! -z "$vol_CGW" ]; then
+				# add entry to csv file and sort and only keep unique lines
+				echo "${revision_cat},${vol_TIV},${vol_CGW}" >> ${subj}_vol.csv
+				cat ${subj}_vol.csv |sort -r|uniq > tmp$$
+				mv tmp$$ ${subj}_vol.csv
       fi
 
       # grep for Vgm and update csv file
@@ -309,7 +307,7 @@ postprocess ()
 
       # grep for thickness and update csv file
       # check first for keyword neuromorphometrics and print next 200 lines
-      thickness=`grep -A200 "<aparc_DK40" $labels |grep thickness | sed -e 's/;/,/g'|cut -f2 -d"["|cut -f1 -d"]"`
+      thickness=`grep -A200 "<aparc_DK40" $labels |grep thickness | sed -e 's/\ /,/g' -e 's/;/,/g'|cut -f2 -d"["|cut -f1 -d"]"`
       if [ ! -z "$thickness" ]; then
         # add entry to csv file and sort and only keep unique lines
         echo "${revision_cat},${thickness}" >> ${subj}_thickness.csv

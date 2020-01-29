@@ -1,5 +1,28 @@
 ------------------------------------------------------------------------
-r1558 | dahnke | 2020-01-29 12:25:57
+r1559 | gaser | 2020-01-29 13:38:01
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+M       cat_conf_tools.m
+M       cat_main.m
+M       cat_run_job.m
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       cat_vol_defs.m
+M       check_pipeline.sh
+M       check_pipeline_ROIs.m
+M       compile.m
+M       html/cat.html
+
+1. Changed: Updated size-parameter for topology correction.
+2. Changed: Added categorical interpolation to deformation tools.
+3. Fixed: Changed keywords to search for check_pipeline.sh.
+4. Changed: Added check for send_info-flag to urlread-calls.
+
+------------------------------------------------------------------------
+r1558 | dahnke | 2020-01-29 12:28:17 +0100 (Mi, 29 Jan 2020) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +30,7 @@ M       cat_io_writenii.m
 M       development/Template_0_IXI555_MNI152_GS1mm.nii
 
 (1)  Fixed:    Corrected bug in writing single/float32 images in cat_main_write.   
+
 
 ------------------------------------------------------------------------
 r1557 | dahnke | 2020-01-29 10:34:03 +0100 (Mi, 29 Jan 2020) | 27 lines

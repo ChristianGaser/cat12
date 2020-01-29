@@ -505,7 +505,7 @@ cstime = clock;
 
     if opt.reduceCS>0
       % apply voxel-based topology correction only for smaller defects < 30 voxel
-      [tmp,CS] = cat_vol_genus0opt(Yppisc,th_initial,30 * (1-iscerebellum),debug);
+      [tmp,CS] = cat_vol_genus0opt(Yppisc,th_initial,15 * (1-iscerebellum),debug);
       
       % correction for the boundary box used within the surface creation process 
       CS = cat_surf_fun('smat',CS,Smat.matlabIBB_mm); % translate to mm coordinates 
@@ -516,7 +516,7 @@ cstime = clock;
       Yppt = cat_vol_resize(Yppt,'dereduceBrain',BB);                     % adding of background
 
       % apply voxel-based topology correction only for smaller defects < 30 voxel
-      [tmp,CS] = cat_vol_genus0opt(Yppt,th_initial,30 * (1-iscerebellum),debug);
+      [tmp,CS] = cat_vol_genus0opt(Yppt,th_initial,15 * (1-iscerebellum),debug);
       CS   = cat_surf_fun('smat',CS,Smat.matlabi_mm); % translate to mm coordinates 
       [Yvxdef,defect_number0] = spm_bwlabel( double(abs(tmp - (Yppt>0.5))>0) ); clear tmp
     end
