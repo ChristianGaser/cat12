@@ -236,7 +236,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     else
       sinfo(i).posside = noname;
     end
-    
+
     % smoothed
     if isempty(sinfo(i).preside)
       sinfo(i).smoothed = 0; 
@@ -308,7 +308,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     % ROI
     sinfo(i).roi = ~isempty(strfind(sinfo(i).posside,'.ROI'));
     
-    
+
     
     % find Mesh and Data Files
     %  -----------------------------------------------------------------
@@ -326,16 +326,16 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     if isempty(sinfo(i).Pdata) && sinfo(i).exist && readsurf && isfield(S,'cdata')
       sinfo(i).Pdata = sinfo(i).fname;
     end
-
+    
     % check whether cdata field and mesh structure exist for gifti data
-    if strcmp(sinfo(i).ee,'.gii') && sinfo(i).exist && ~readsurf && (isempty(sinfo(i).Pdata) || isempty(sinfo(i).Pmesh))
+    if strcmp(sinfo(i).ee,'.gii') && sinfo(i).exist && readsurf && (isempty(sinfo(i).Pdata) || isempty(sinfo(i).Pmesh))
       S = gifti(sinfo(i).fname);
-      if isfield(S,'cdata') & isfield(S,'faces') & isfield(S,'vertices')
+      if isfield(S,'cdata') && isfield(S,'faces') && isfield(S,'vertices')
         sinfo(i).Pmesh = sinfo(i).fname;
         sinfo(i).Pdata = sinfo(i).fname;
       end
     end
-
+    
     % if the dataname is central we got a mesh or surf datafile
     if isempty(sinfo(i).Pdata) || isempty(sinfo(i).Pmesh) 
       switch sinfo(i).texture
@@ -371,6 +371,8 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     end
     % if we got still no mesh than we can use SPM.mat information or average mesh
     % ...
+
+    
     if isempty(sinfo(i).Pmesh) %&& sinfo(i).ftype==1
       try 
         if ischar(SPM.xVol.G)
@@ -426,7 +428,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
       end
       sinfo(i).Pdata = sinfo(i).fname;
     end
-    
+
     [ppm,ffm,eem]        = fileparts(sinfo(i).Pmesh);
     ffm                  = cat_io_strrep(ffm,{'central','white','pial','inner','outer','sphere','hull','core','layer4'},'central');
     sinfo(i).Phull       = fullfile(ppm,strrep(strrep([ffm eem],'.central.','.hull.'),'.gii',''));
@@ -455,6 +457,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     end
     
 
+
     
     if sinfo(i).exist && readsurf
       if isfield(S,'vertices'), 
@@ -477,6 +480,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
       if isfield(S,'faces'),    sinfo(i).nfaces    = size(S.faces,1); end
       if isfield(S,'cdata'),    sinfo(i).ncdata    = size(S.cdata,1); end
     end
+
     
     sinfo(i).catxml = fullfile(pp,['cat_' sinfo(i).name '*.xml']);
     if ~exist(sinfo(i).catxml,'file'), sinfo(i).catxml = ''; end 

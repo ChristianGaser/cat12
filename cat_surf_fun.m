@@ -211,12 +211,25 @@ function varargout = cat_surf_fun(action,S,varargin)
     case 'surf2vol'
     % Render surface (data) into volume space. See also spm_mesh_to_grid. 
       if nargin<2, help cat_surf_fun>show_orthview; return; end
-      if nargin>2
-        [varargout{1},varargout{2},varargout{3}] = cat_surf_surf2vol(S,varargin{:});
+      if nargout>2
+        if nargin>2
+          [varargout{1},varargout{2},varargout{3}] = cat_surf_surf2vol(S,varargin{:});
+        else
+          [varargout{1},varargout{2},varargout{3}] = cat_surf_surf2vol(S);
+        end
+      elseif nargout>1
+        if nargin>2
+          [varargout{1},varargout{2}] = cat_surf_surf2vol(S,varargin{:});
+        else
+          [varargout{1},varargout{2}] = cat_surf_surf2vol(S);
+        end
       else
-        [varargout{1},varargout{2},varargout{3}] = cat_surf_surf2vol(S);
+        if nargin>2
+          varargout{1} = cat_surf_surf2vol(S,varargin{:});
+        else
+          varargout{1} = cat_surf_surf2vol(S);
+        end
       end
-      
     case 'smat'
     % Apply matrix transformation. See also spm_mesh_transform.
       if nargin<2, help cat_surf_fun>cat_surf_mat; return; end
@@ -535,6 +548,9 @@ function varargout = cat_surf_GMboundarySurface(type,varargin)
       Pthick = varargin{2};
     else
       Pthick = cat_io_strrep(Praw,{'central','.gii'},{'pbt',''});
+      if ~exist(Pthick,'file') 
+        Pthick = cat_io_strrep(Praw,{'central','.gii'},{'thickness',''});
+      end
     end
     Ptype  = cat_io_strrep(Praw,'central',type);
     
@@ -3145,7 +3161,11 @@ function [Yp,Yt,vmat1,vmat1i] = cat_surf_surf2vol(S,Y,T,type,opt)
     error('Position map creation requires a thickness map T.\n');
   end
 
-  vx_vol = sqrt(sum(opt.mat(1:3,1:3).^2));
+  if ~isempty(opt.mat)
+    vx_vol = sqrt(sum(opt.mat(1:3,1:3).^2));
+  else
+    vx_vol = [1 1 1];
+  end
   opt.interpBB.interpV = vx_vol(1);
   
   %% save a temporary version of S and refine it
@@ -3222,6 +3242,8 @@ function [Yp,Yt,vmat1,vmat1i] = cat_surf_surf2vol(S,Y,T,type,opt)
       end
     end
     %T    = isocolors(Yt,([0 1 0; 1 0 0; 0 0 1] *  [eye(3) vmat'] * [So.vertices';ones(1,size(So.vertices,1))] )' ); % self projection
+  else
+    Yt = nan(size(Y),'single');
   end
   if strcmpi(type,'val')
     if (opt.verb) > 0,  fprintf('%5.0fs\n',etime(clock,stime)); end
@@ -3427,7 +3449,9 @@ function [Yp,Yt,vmat1,vmat1i] = cat_surf_surf2vol(S,Y,T,type,opt)
       end
   end
   
-  Yt  = Yt .* (Y>0);
+  if exist('Yt','var')
+    Yt  = Yt .* (Y>0);
+  end
   if opt.verb
     fprintf('%5.0fs\n',etime(clock,stime)); 
     cat_io_cmd(' ','g5','',opt.verb);

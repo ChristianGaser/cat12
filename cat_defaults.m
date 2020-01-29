@@ -9,7 +9,7 @@ function cat_defaults
 %_______________________________________________________________________
 % $Id$
 
-if exist('cat','var'), clear cat; end 
+clear -globalvar cat; 
 global cat
 
 
