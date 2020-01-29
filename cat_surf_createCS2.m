@@ -913,7 +913,7 @@ fprintf('%26.22f | %26.22f | %26.22f\n',std(Ymfs(:)),std(Yth1i(:)),std(Yppi(:)))
       
       if opt.reduce_mesh==0 || opt.reduce_mesh>2 % full resolution  
         
-        [Yppi05c,CS] = cat_vol_genus0opt(Yppisc,th_initial,30 * (1-iscerebellum),debug);
+        [Yppi05c,CS] = cat_vol_genus0opt(Yppisc,th_initial,15 * (1-iscerebellum),debug);
         
         %Yppi05c = Yppisc; evalc(sprintf('clear CS; [Yppi05c,CS.faces,CS.vertices] = cat_vol_genus0(Yppisc,0.5,nosurfopt);')); % no_adjustment
         [Yvxdef,defect_number0] = spm_bwlabel( double(abs(Yppi05c - (Yppisc>0.5))>0) ); clear Yppi05c;
@@ -938,7 +938,7 @@ fprintf('%26.22f | %26.22f | %26.22f\n',std(Ymfs(:)),std(Yth1i(:)),std(Yppi(:)))
           clear Yvxcorr
         end
 %}
-        Yppiscr = cat_vol_genus0opt(Yppisc,th_initial,30 * (1-iscerebellum),debug);
+        Yppiscr = cat_vol_genus0opt(Yppisc,th_initial,15 * (1-iscerebellum),debug);
         
         if 1
           % optimized downsampling to avoid blurring of thin gyri/sulci 

@@ -24,7 +24,6 @@ for i=1:size(P,1)
   rev = num2str(cell2mat(C(2:end,1)));
   
   roi_names = C(1,:);
-
   roi_values = cell2mat(C(2:end,2:end));
   mean_values = mean(roi_values);
   roi_values = roi_values - mean_values;

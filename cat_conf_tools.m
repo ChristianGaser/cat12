@@ -770,14 +770,15 @@ function [defs,defs2] = cat_vol_defs_GUI()
   interp.labels   = {
     'Nearest neighbour','Trilinear','2nd Degree B-spline',...
     '3rd Degree B-Spline ','4th Degree B-Spline ','5th Degree B-Spline',...
-    '6th Degree B-Spline','7th Degree B-Spline'};
-  interp.values   = {0,1,2,3,4,5,6,7};
+    '6th Degree B-Spline','7th Degree B-Spline','Categorical'};
+  interp.values   = {0,1,2,3,4,5,6,7,-1};
   interp.val      = {1};
   interp.help     = {
     'The method by which the images are sampled when being written in a different space.'
     '    Nearest Neighbour:     - Fastest, but not normally recommended.'
     '    Bilinear Interpolation:     - OK for PET, or realigned fMRI.'
-    '    B-spline Interpolation:     - Better quality (but slower) interpolation/* \cite{thevenaz00a}*/, especially with higher degree splines.  Do not use B-splines when there is any region of NaN or Inf in the images. '
+    '    B-spline Interpolation:     - Better quality (but slower) interpolation/* \cite{thevenaz00a}*/, especially with higher degree splines.  Can produce values outside the original range (e.g. small negative values from an originally all positive image). Do not use B-splines when there is any region of NaN or Inf in the images. '
+    '    Categorical Interpolation:  - Slow (particularly when there are lots of categories). This is intended to warp categorical images such as label maps.'
   }';
 
   modulate        = cfg_menu;
