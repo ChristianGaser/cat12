@@ -1,5 +1,34 @@
 ------------------------------------------------------------------------
-r1556 | gaser | 2020-01-27 17:04:53
+r1557 | dahnke | 2020-01-29 10:31:49
+
+Changed paths:
+M       CHANGES.txt
+M       cat_defaults.m
+M       cat_main_write.m
+M       cat_run1173/cat_defaults1173.m
+M       cat_run1445/cat_conf_extopts1445.m
+M       cat_run1445/cat_conf_opts1445.m
+M       cat_run1445/cat_defaults1445.m
+M       cat_run1445/cat_get_defaults1445.m
+M       cat_stat_check_cov.m
+M       cat_stat_check_cov2.m
+M       cat_surf_fun.m
+M       cat_surf_gyrification.m
+M       cat_surf_info.m
+M       compile.m
+
+(1)  Changed:  Updated changes due to cat_vol_pbt(2).c in compile function.
+(2)  Fixed:    Corrected error using subversion1445 in cat_defaults1445,
+               cat_get_defaults1445, cat_conf_opts1445, cat_conf_extopts1445, 
+               and cat
+(3)  Fixed:    Corrected setting of global cat, cat1173, and cat1445 variables
+               in cat_defaults, cat_defaults1173, and cat_defaults1445.
+(4)  Fixed:    Switch from uint16 to single output for normalized data to avoid
+               further processing problems. Thanks to Martin Gell for pointing 
+               out this problem.              
+               
+------------------------------------------------------------------------
+r1556 | gaser | 2020-01-27 17:05:27 +0100 (Mo, 27 Jan 2020) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +40,7 @@ M       html/cat.html
 
 1. Changed: Extended check_pipline_ROIs.m for use of thickness data.
 2. Changed: Added flags to cat_batch_cat.m to prevent wrnings for batch mode.
+
 
 ------------------------------------------------------------------------
 r1555 | gaser | 2020-01-25 00:47:44 +0100 (Sa, 25 Jan 2020) | 46 lines
