@@ -52,6 +52,13 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
       case {'single','double'}, spmtype = 'float32'; 
       otherwise
     end
+  else
+    switch spmtype
+      case 'logical',           spmtype = 'uint8';   
+      case 'char',              spmtype = 'uint8'; 
+      case {'single','double'}, spmtype = 'float32'; 
+      otherwise
+    end
   end  
   
   if ~exist('range','var'),  range  = [0 1]; end
