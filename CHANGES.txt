@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1557 | dahnke | 2020-01-29 10:31:49
+r1558 | dahnke | 2020-01-29 12:25:57
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_writenii.m
+M       development/Template_0_IXI555_MNI152_GS1mm.nii
+
+(1)  Fixed:    Corrected bug in writing single/float32 images in cat_main_write.   
+
+------------------------------------------------------------------------
+r1557 | dahnke | 2020-01-29 10:34:03 +0100 (Mi, 29 Jan 2020) | 27 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -27,6 +37,7 @@ M       compile.m
                further processing problems. Thanks to Martin Gell for pointing 
                out this problem.              
                
+
 ------------------------------------------------------------------------
 r1556 | gaser | 2020-01-27 17:05:27 +0100 (Mo, 27 Jan 2020) | 12 lines
 
