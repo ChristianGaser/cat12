@@ -1,4 +1,4 @@
-function varargout = cat_get_defaults(defstr, varargin)
+function varargout = cat_get_defaults1445(defstr, varargin)
 % Get/set the defaults values associated with an identifier
 % FORMAT defval = cat_get_defaults(defstr)
 % Return the defaults value associated with identifier "defstr". 
@@ -27,13 +27,13 @@ function varargout = cat_get_defaults(defstr, varargin)
 % spm_get_defaults
 % $Id$
 
-global cat;
-if isempty(cat)
-    cat_defaults;
+global cat1445;
+if isempty(cat1445)
+    cat_defaults1445;
 end
 
 if nargin == 0
-    varargout{1} = cat;
+    varargout{1} = cat1445;
     return
 end
 
@@ -44,7 +44,7 @@ subs = struct('type','.','subs',tags{1}');
 if nargin == 1
     % default output
     try
-      varargout{1} = subsref(cat, subs);
+      varargout{1} = subsref(cat1445, subs);
     catch
       varargout{1} = []; 
     end
@@ -63,13 +63,13 @@ elseif nargin == 2
         case 'rmentry'
           % removes the complete entry of the given defstr
             %fprintf('Remove entry "%s" "cat"!\n',tags{1}{1});
-            cat = rmfield(cat,defstr); 
+            cat1445 = rmfield(cat1445,defstr); 
         otherwise
           % add an new entry
-            cat = subsasgn(cat, subs, varargin{1});
+            cat1445 = subsasgn(cat1445, subs, varargin{1});
     end
 end
 if nargout == 1
   % output in case changes in cat
-    varargout{1} = cat;
+    varargout{1} = cat1445;
 end

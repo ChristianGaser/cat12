@@ -332,7 +332,7 @@ function varargout = cat_stat_check_cov2(job)
   % get all input scans/surfaces
   cscc.files.data = {}; cscc.files.dataid = zeros(0,3); 
   for i = 1:numel(job.(datafield))
-    cscc.files.data   = [cscc.files.data;job.(datafield){i}];
+    cscc.files.data   = [cscc.files.data;cellstr(char(job.(datafield){i}))];
     cscc.files.dataid = [cscc.files.dataid; ...
      [(numel(cscc.files.dataid) + (1:numel(job.(datafield){i})) - 1)', ...
       repmat(i,numel(job.(datafield){i}),1), ...
@@ -345,7 +345,7 @@ function varargout = cat_stat_check_cov2(job)
   %  ----------------------------------------------------------------------
   trashdirname = '+cat_checkcov_excluded'; 
   if ~isfield(job,'trashdirhome')
-    [dirnames,dparts] = spm_str_manip(cscc.files.data,'hC'); 
+    [dirnames,dparts] = spm_str_manip(char(cscc.files.data(:)),'hC'); 
     [pp,dd,ee] = spm_fileparts(dparts.s); dd = [dd ee]; 
   else
     pp = job.trashdirhome;

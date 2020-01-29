@@ -187,7 +187,7 @@ function Psgi = cat_surf_SGI_laplacian(sinfo,opt)
     
     % create hull volume
     [Sh,Yh] = cat_surf_fun('hull',Scs); clear Sc; %#ok<ASGLU>
-    [Yo,mat1] = cat_surf_fun('surf2vol',Scs);
+    [Yo,Yt,mat1] = cat_surf_fun('surf2vol',Scs); clear Yt %#ok<ASGLU>
   
     % estimate mapping
     opt.streamopt = opt.GIstreamopt; 

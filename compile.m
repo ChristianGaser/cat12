@@ -83,7 +83,12 @@ function varargout = compile(comp,test,verb)
       'cat_vol_gradient3.c'
       'cat_vol_simgrow.c'
       'cat_vol_localstat.c'
+<<<<<<< .mine
       'cat_vol_pbtp.c'
+      'cat_vol_pbtp2.c'
+=======
+      'cat_vol_pbtp.c'
+>>>>>>> .r1553
       'cat_vol_interp3f.cpp'
       'cat_vol_eidist.c'
       'cat_vol_genus0.c genus0.c'
@@ -365,6 +370,11 @@ function varargout = compile(comp,test,verb)
     ni          = ni + 1;
     n{ni}       = 'cat_vol_pbtp';   
     [d{ni},dpp] = cat_vol_pbtp(d1+1,dw,dc);  
+    r(ni)       = rms(d{ni}(d1==1)) - 5.5; 
+    s(ni)       = r(ni)<0.05;
+    % pbt2
+    n{ni}       = 'cat_vol_pbtp2';   
+    [d{ni},dpp] = cat_vol_pbtp2(d1+1,dw,dc);  
     r(ni)       = rms(d{ni}(d1==1)) - 5.5; 
     s(ni)       = r(ni)<0.05;
     

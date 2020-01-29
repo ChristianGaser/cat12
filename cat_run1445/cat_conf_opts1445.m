@@ -22,7 +22,7 @@ tpm.tag     = 'tpm';
 tpm.name    = 'Tissue Probability Map';
 tpm.filter  = 'image';
 tpm.ufilter = '.*';
-tpm.def     =  @(val)cat_get_defaults('opts.tpm', val{1});
+tpm.def     =  @(val)cat_get_defaults1445('opts.tpm', val{1});
 tpm.help    = {
   'Select the tissue probability image that includes 6 tissue probability classes for (1) grey matter, (2) white matter, (3) cerebrospinal fluid, (4) bone, (5) non-brain soft tissue, and (6) the background.  CAT uses the TPM only for the initial SPM segmentation.  Hence, it is more independent and allows accurate and robust processing even with the standard TPM in case of strong anatomical differences, e.g. very old/young brains.  Nevertheless, for children data we recommend to use customized TPMs created using the Template-O-Matic toolbox. '
   ''
@@ -32,7 +32,7 @@ tpm.help    = {
   ''
 };
 tpm.num     = [1 1];
-tpm.def     =  @(val)cat_get_defaults('opts.tpm', val{:});
+tpm.def     =  @(val)cat_get_defaults1445('opts.tpm', val{:});
 if expert>1
   tpm.help  = [tpm.help 
    {
@@ -55,7 +55,7 @@ ngaus.tag     = 'ngaus';
 ngaus.name    = 'Gaussians per class';
 ngaus.strtype = 'n';
 ngaus.num     = [1 6];
-ngaus.def     = @(val)cat_get_defaults('opts.ngaus', val{:});
+ngaus.def     = @(val)cat_get_defaults1445('opts.ngaus', val{:});
 ngaus.help    = {
   'The number of Gaussians used to represent the intensity distribution for each tissue class can be greater than one.  In other words, a tissue probability map may be shared by several clusters.  The assumption of a single Gaussian distribution for each class does not hold for a number of reasons.  In particular, a voxel may not be purely of one tissue type, and instead contain signal from a number of different tissues (partial volume effects).  Some partial volume voxels could fall at the interface between different classes, or they may fall in the middle of structures such as the thalamus, which may be considered as being either grey or white matter.  Various other image segmentation approaches use additional clusters to model such partial volume effects.  These generally assume that a pure tissue class has a Gaussian intensity distribution, whereas intensity distributions for partial volume voxels are broader, falling between the intensities of the pure classes.  Unlike these partial volume segmentation approaches, the model adopted here simply assumes that the intensity distribution of each class may not be Gaussian, and assigns belonging probabilities according to these non-Gaussian distributions.  Typical numbers of Gaussians could be one to three for grey and white matter, two for CSF, three for bone, four for other soft tissues and two for air (background).'
   ''
@@ -70,7 +70,7 @@ ngaus.help    = {
 biasstr         = cfg_menu;
 biasstr.tag     = 'biasstr';
 biasstr.name    = 'Strength of SPM Inhomogeneity Correction';
-biasstr.def     = @(val)cat_get_defaults('opts.biasstr', val{:});
+biasstr.def     = @(val)cat_get_defaults1445('opts.biasstr', val{:});
 if ~expert
   biasstr.labels  = {'light','medium','strong'};
   biasstr.values  = {0.25 0.50 0.75};
@@ -129,7 +129,7 @@ end
 biasreg        = cfg_menu;
 biasreg.tag    = 'biasreg';
 biasreg.name   = 'Bias regularisation';
-biasreg.def    = @(val)cat_get_defaults('opts.biasreg', val{:});
+biasreg.def    = @(val)cat_get_defaults1445('opts.biasreg', val{:});
 if 0
   biasreg.labels = {'No regularisation (0)','Extremely light regularisation (0.00001)','Very light regularisation (0.0001)','Light regularisation (0.001)','Medium regularisation (0.01)','Heavy regularisation (0.1)','Very heavy regularisation (1)','Extremely heavy regularisation (10)'};
   biasreg.values = {0, 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10};
@@ -165,7 +165,7 @@ else
   biasfwhm.labels = {'30mm cutoff','40mm cutoff','50mm cutoff','60mm cutoff','70mm cutoff','80mm cutoff','90mm cutoff'};
   biasfwhm.values = {30,40,50,60,70,80,90};
 end
-biasfwhm.def    = @(val)cat_get_defaults('opts.biasfwhm', val{:});
+biasfwhm.def    = @(val)cat_get_defaults1445('opts.biasfwhm', val{:});
 biasfwhm.help   = {
   'FWHM of Gaussian smoothness of bias.  This parameter is controlled by the biasreg parameter if biasstr>0.  Test on the BWP and real data showed that 50 to 60 mm works best for nearly all datasets and only some 7 Tesla scans require further adaption! '
   '  30-40 mm:  low filter size for very strong fields (e.g. 7 or 3 Tesla data) '
@@ -187,7 +187,7 @@ biasspm.help   = {
 bias        = cfg_choice;
 bias.tag    = 'bias';
 bias.name   = 'Biascorrection parameter';
-if cat_get_defaults('opts.biasstr')>0
+if cat_get_defaults1445('opts.biasstr')>0
   bias.val = {biasstr};
 else
   bias.val = {biasspm};
@@ -214,7 +214,7 @@ bias.help   = {
 %   [0.0 0.8  0.2   0.8  0.2]   % 
 %------------------------------------------------------------------------
 warpreg         = cfg_entry;
-warpreg.def     = @(val)cat_get_defaults('opts.warpreg', val{:});
+warpreg.def     = @(val)cat_get_defaults1445('opts.warpreg', val{:});
 warpreg.tag     = 'warpreg';
 warpreg.name    = 'Warping Regularisation';
 warpreg.strtype = 'r';
@@ -251,7 +251,7 @@ else
   affreg.labels = {'ICBM space template - European brains','ICBM space template - East Asian brains','No regularisation'};
   affreg.values = {'mni','eastern','none'};
 end
-affreg.def    = @(val)cat_get_defaults('opts.affreg', val{:});
+affreg.def    = @(val)cat_get_defaults1445('opts.affreg', val{:});
 
 
 
@@ -265,7 +265,7 @@ samp.tag     = 'samp';
 samp.name    = 'Sampling distance';
 samp.strtype = 'r';
 samp.num     = [1 1];
-samp.def    = @(val)cat_get_defaults('opts.samp', val{:});
+samp.def    = @(val)cat_get_defaults1445('opts.samp', val{:});
 samp.help   = {
   'This encodes the approximate distance between sampled points when estimating the model parameters.  Smaller values use more of the data, but the procedure is slower and needs more memory.  Determining the "best" setting involves a compromise between speed and accuracy.'
   ''
@@ -278,7 +278,7 @@ tol.name    = 'SPM iteration accuracy';
 tol.help    = { ...
     'Parameter to control the iteration stop criteria of SPM preprocessing fucntions. In most cases the standard value is good enough for the initialization in CAT. However, some images with servere (local) inhomogeneities or atypical anatomy may benefit by further iterations. '
   };
-tol.def    = @(val)cat_get_defaults('opts.tol', val{:}); 
+tol.def    = @(val)cat_get_defaults1445('opts.tol', val{:}); 
 tol.labels = {'average (default)' 'high (slow)' 'ultra high (very slow)'};
 tol.values = {1e-4 1e-5 1e-6};
 if expert
@@ -304,7 +304,7 @@ accstr.help    = { ...
   };
 accstr.labels = {'average (default)' 'high (slow)' 'ulta high (very slow)'};
 accstr.values = {0.5 0.75 1.0};
-accstr.def    = @(val)cat_get_defaults('opts.accstr', val{:}); % no cat_defaults entry
+accstr.def    = @(val)cat_get_defaults1445('opts.accstr', val{:}); % no cat_defaults entry
 if expert
   accstr.labels = [{'ultra low (superfast)' 'low (fast)'} accstr.labels];
   accstr.values = [{0 0.25} accstr.values];
@@ -314,7 +314,7 @@ end
 acc        = cfg_choice;
 acc.tag    = 'acc';
 acc.name   = 'SPM preprocessing accuracy parameters';
-if cat_get_defaults('opts.accstr')>0
+if cat_get_defaults1445('opts.accstr')>0
   acc.val  = {accstr};
 else
   acc.val  = {accspm};
@@ -330,7 +330,7 @@ redspmres.tag     = 'redspmres';
 redspmres.name    = 'SPM preprocessing output resolution limit';
 redspmres.strtype = 'r';
 redspmres.num     = [1 1];
-redspmres.def     = @(val)cat_get_defaults('opts.redspmres', val{:});
+redspmres.def     = @(val)cat_get_defaults1445('opts.redspmres', val{:});
 redspmres.help    = {'Limit SPM preprocessing resolution to improve robustness and performance. Use 0 to process data in the full internal resolution.' ''};
 
 

@@ -23,7 +23,7 @@ vox.tag     = 'vox';
 vox.name    = 'Voxel size for normalized images';
 vox.strtype = 'r';
 vox.num     = [1 1];
-vox.def     = @(val)cat_get_defaults('extopts.vox', val{:});
+vox.def     = @(val)cat_get_defaults1445('extopts.vox', val{:});
 vox.help    = {
   'The (isotropic) voxel sizes of any spatially normalised written images. A non-finite value will be replaced by the average voxel size of the tissue probability maps used by the segmentation.'
   ''
@@ -45,7 +45,7 @@ end
 darteltpm         = cfg_files;
 darteltpm.tag     = 'darteltpm';
 darteltpm.name    = 'Dartel Template';
-darteltpm.def     = @(val)cat_get_defaults('extopts.darteltpm', val{:});
+darteltpm.def     = @(val)cat_get_defaults1445('extopts.darteltpm', val{:});
 darteltpm.num     = [1 1];
 darteltpm.filter  = 'image';
 darteltpm.ufilter = 'Template_1'; 
@@ -61,7 +61,7 @@ darteltpm.help    = {
 shootingtpm         = cfg_files;
 shootingtpm.tag     = 'shootingtpm';
 shootingtpm.name    = 'Shooting Template';
-shootingtpm.def     = @(val)cat_get_defaults('extopts.shootingtpm', val{:});
+shootingtpm.def     = @(val)cat_get_defaults1445('extopts.shootingtpm', val{:});
 shootingtpm.num     = [1 1];
 shootingtpm.filter  = 'image';
 shootingtpm.ufilter = 'Template_0'; 
@@ -79,7 +79,7 @@ cat12atlas.tag     = 'cat12atlas';
 cat12atlas.name    = 'CAT12 ROI atlas';
 cat12atlas.filter  = 'image';
 cat12atlas.ufilter = 'cat';
-cat12atlas.def     = @(val)cat_get_defaults('extopts.cat12atlas', val{:});
+cat12atlas.def     = @(val)cat_get_defaults1445('extopts.cat12atlas', val{:});
 cat12atlas.num     = [1 1];
 cat12atlas.help    = {
   'CAT12 atlas file to handle major regions.'
@@ -92,7 +92,7 @@ brainmask.tag     = 'brainmask';
 brainmask.name    = 'Brainmask';
 brainmask.filter  = 'image';
 brainmask.ufilter = 'brainmask';
-brainmask.def     = @(val)cat_get_defaults('extopts.brainmask', val{:});
+brainmask.def     = @(val)cat_get_defaults1445('extopts.brainmask', val{:});
 brainmask.num     = [1 1];
 brainmask.help    = {
   'Initial brainmask.'
@@ -105,7 +105,7 @@ T1.tag     = 'T1';
 T1.name    = 'T1';
 T1.filter  = 'image';
 T1.ufilter = 'T1';
-T1.def     = @(val)cat_get_defaults('extopts.T1', val{:});
+T1.def     = @(val)cat_get_defaults1445('extopts.T1', val{:});
 T1.num     = [1 1];
 T1.help    = {
   'Affine registration template.'
@@ -121,7 +121,7 @@ bb.tag     = 'bb';
 bb.name    = 'Bounding box';
 bb.strtype = 'r';
 bb.num     = [2 3];
-bb.def     = @(val)cat_get_defaults('extopts.bb', val{:});
+bb.def     = @(val)cat_get_defaults1445('extopts.bb', val{:});
 bb.help    = {'The bounding box (in mm) of the volume which is to be written (relative to the anterior commissure).'
 ''
 };
@@ -211,8 +211,8 @@ else
     }]; 
 end
 regstr.tag    = 'regstr';
-if cat_get_defaults('extopts.regstr')>0
-  regstr.def    = @(val)cat_get_defaults('extopts.regstr',val{:});
+if cat_get_defaults1445('extopts.regstr')>0
+  regstr.def    = @(val)cat_get_defaults1445('extopts.regstr',val{:});
 else
   regstr.val    = {0.5};
 end
@@ -242,7 +242,7 @@ if expert<2
   registration.tag    = 'registration';
   registration.name   = 'Spatial Registration';
   registration.values = {dartel shooting};
-  if cat_get_defaults('extopts.regstr')==0
+  if cat_get_defaults1445('extopts.regstr')==0
     registration.val  = {dartel};
   else
     registration.val  = {shooting};
@@ -266,7 +266,7 @@ pbtres.tag     = 'pbtres';
 pbtres.name    = 'Voxel size for thickness estimation';
 pbtres.strtype = 'r';
 pbtres.num     = [1 1];
-pbtres.def     = @(val)cat_get_defaults('extopts.pbtres', val{:});
+pbtres.def     = @(val)cat_get_defaults1445('extopts.pbtres', val{:});
 pbtres.help    = {
   'Internal isotropic resolution for thickness estimation in mm.'
   ''
@@ -292,7 +292,7 @@ experimental.tag    = 'experimental';
 experimental.name   = 'Use experimental code';
 experimental.labels = {'No','Yes'};
 experimental.values = {0 1};
-experimental.def    = @(val)cat_get_defaults('extopts.experimental', val{:});
+experimental.def    = @(val)cat_get_defaults1445('extopts.experimental', val{:});
 experimental.help   = {
   'Use experimental code and functions.'
   ''
@@ -305,7 +305,7 @@ ignoreErrors.tag    = 'ignoreErrors';
 ignoreErrors.name   = 'Ignore errors';
 ignoreErrors.labels = {'No','Yes'};
 ignoreErrors.values = {0 1};
-ignoreErrors.def    = @(val)cat_get_defaults('extopts.ignoreErrors', val{:});
+ignoreErrors.def    = @(val)cat_get_defaults1445('extopts.ignoreErrors', val{:});
 ignoreErrors.help   = {
   'Catch preprocessing errors and move on with the next subject'
 };
@@ -315,7 +315,7 @@ verb.tag     = 'verb';
 verb.name    = 'Verbose processing level';
 verb.labels  = {'none','default','details'};
 verb.values  = {0 1 2};
-verb.def     = @(val)cat_get_defaults('extopts.verb', val{:});
+verb.def     = @(val)cat_get_defaults1445('extopts.verb', val{:});
 verb.help    = {
   'Verbose processing.'
 };
@@ -326,7 +326,7 @@ print.tag     = 'print';
 print.name    = 'Create CAT report';
 print.labels  = {'No','Yes (volume only)','Yes (volume and surfaces)'};
 print.values  = {0 1 2};
-print.def     = @(val)cat_get_defaults('extopts.print', val{:});
+print.def     = @(val)cat_get_defaults1445('extopts.print', val{:});
 print.help    = {
   'Create final CAT report that requires Java.'
 };
@@ -353,7 +353,7 @@ resnative.help   = {
 resbest        = cfg_entry;
 resbest.tag    = 'best';
 resbest.name   = 'Best native resolution';
-resbest.def    = @(val)cat_get_defaults('extopts.resval', val{:});
+resbest.def    = @(val)cat_get_defaults1445('extopts.resval', val{:});
 resbest.num    = [1 2];
 resbest.help   = {
     'Preprocessing with the best (minimal) voxel dimension of the native image. The first parameters defines the lowest spatial resolution for every dimension, while the second defines a tolerance range to avoid tiny interpolations for almost correct resolutions. '
@@ -389,7 +389,7 @@ resfixed.help   = {
 restype        = cfg_choice;
 restype.tag    = 'restypes';
 restype.name   = 'Internal resampling for preprocessing';
-switch cat_get_defaults('extopts.restype')
+switch cat_get_defaults1445('extopts.restype')
   case 'native', restype.val = {resnative};
   case 'best',   restype.val = {resbest};
   case 'fixed',  restype.val = {resfixed};
@@ -429,7 +429,7 @@ mrf.tag     = 'mrf';
 mrf.name    = 'Strength of MRF noise correction';
 mrf.labels  = {'none','light','medium','strong','auto'};
 mrf.values  = {0 0.1 0.2 0.3 1};
-mrf.def     = @(val)cat_get_defaults('extopts.mrf', val{:});
+mrf.def     = @(val)cat_get_defaults1445('extopts.mrf', val{:});
 mrf.help    = {
   'Strength of the MRF noise correction of the AMAP segmentation. '
   ''
@@ -442,7 +442,7 @@ mrf.help    = {
 cleanupstr         = cfg_menu;
 cleanupstr.tag     = 'cleanupstr';
 cleanupstr.name    = 'Strength of Final Clean Up';
-cleanupstr.def     = @(val)cat_get_defaults('extopts.cleanupstr', val{:});
+cleanupstr.def     = @(val)cat_get_defaults1445('extopts.cleanupstr', val{:});
 if ~expert
   cleanupstr.labels  = {'none','light','medium','strong'};
   cleanupstr.values  = {0 0.25 0.50 0.75};
@@ -474,7 +474,7 @@ end
 gcutstr           = cfg_menu;
 gcutstr.tag       = 'gcutstr';
 gcutstr.name      = 'Skull-Stripping';
-gcutstr.def       = @(val)cat_get_defaults('extopts.gcutstr', val{:});
+gcutstr.def       = @(val)cat_get_defaults1445('extopts.gcutstr', val{:});
 gcutstr.help      = {
   'Method of initial skull-stripping before AMAP segmentation. The SPM approach works quite stable for the majority of data. However, in some rare cases parts of GM (i.e. in frontal lobe) might be cut. If this happens the GCUT approach is a good alternative. GCUT is a graph-cut/region-growing approach starting from the WM area. '
   'APRG (adaptive probability region-growing) is a new method that refines the probability maps of the SPM approach by region-growing techniques of the gcut approach with a final surface-based optimization strategy. This is currently the method with the most accurate and reliable results. '
@@ -514,7 +514,7 @@ else
     ''
   };
 end
-NCstr.def    = @(val)cat_get_defaults('extopts.NCstr', val{:});
+NCstr.def    = @(val)cat_get_defaults1445('extopts.NCstr', val{:});
 
 
 %------------------------------------------------------------------------
@@ -526,7 +526,7 @@ BVCstr.tag     = 'BVCstr';
 BVCstr.name    = 'Strength of Blood Vessel Corrections';
 BVCstr.labels  = {'none (0)','light (eps)','medium (0.50)','strong (1.00)'};
 BVCstr.values  = {0 eps 0.50 1.00};
-BVCstr.def     = @(val)cat_get_defaults('extopts.BVCstr', val{:});
+BVCstr.def     = @(val)cat_get_defaults1445('extopts.BVCstr', val{:});
 BVCstr.help    = {
   'Strength of the Blood Vessel Correction (BVC).'
   ''
@@ -546,7 +546,7 @@ else
   LASstr.labels  = {'none (0)','ultralight (eps)','light (0.25)','medium (0.50)','strong (0.75)','heavy (1.00)'};
   LASstr.values  = {0 eps 0.25 0.50 0.75 1.00};
 end
-LASstr.def     = @(val)cat_get_defaults('extopts.LASstr', val{:});
+LASstr.def     = @(val)cat_get_defaults1445('extopts.LASstr', val{:});
 LASstr.help    = {
   'Additionally to WM-inhomogeneities, GM intensity can vary across different regions such as the motor cortex, the basal ganglia, or the occipital lobe. These changes have an anatomical background (e.g. iron content, myelinization), but are dependent on the MR-protocol and often lead to underestimation of GM at higher intensities and overestimation of CSF at lower intensities. Therefore, a local intensity transformation of all tissue classes is used to reduce these effects in the image. This local adaptive segmentation (LAS) is applied before the final AMAP segmentation.'
   ''
@@ -559,7 +559,7 @@ LASstr.help    = {
 wmhc        = cfg_menu;
 wmhc.tag    = 'WMHC';
 wmhc.name   = 'WM Hyperintensity Correction (WMHCs) - in development';
-wmhc.def    = @(val)cat_get_defaults('extopts.WMHC', val{:});
+wmhc.def    = @(val)cat_get_defaults1445('extopts.WMHC', val{:});
 wmhc.help   = {
   'WARNING: Please note that the detection of WM hyperintensies is still under development and does not have the same accuracy as approaches that additionally consider FLAIR images (e.g. Lesion Segmentation Toolbox)! '
   'In aging or (neurodegenerative) diseases WM intensity can be reduced locally in T1 or increased in T2/PD images. These so-called WM hyperintensies (WMHs) can lead to preprocessing errors. Large GM areas next to the ventricle can cause normalization problems. Therefore, a temporary correction for normalization is useful if WMHs are expected. CAT allows different ways to handle WMHs: '
@@ -595,7 +595,7 @@ WMHCstr.tag     = 'WMHCstr';
 WMHCstr.name    = 'Strength of WMH Correction';
 WMHCstr.labels  = {'none (0)','light (eps)','medium (0.50)','strong (1.00)'};
 WMHCstr.values  = {0 eps 0.50 1.00};
-WMHCstr.def     = @(val)cat_get_defaults('extopts.WMHCstr', val{:});
+WMHCstr.def     = @(val)cat_get_defaults1445('extopts.WMHCstr', val{:});
 WMHCstr.help    = {
   'Strength of the modification of the WM Hyperintensity Correction (WMHC).'
   ''
@@ -608,7 +608,7 @@ WMHCstr.help    = {
 slc        = cfg_menu;
 slc.tag    = 'SLC';
 slc.name   = 'Stroke Lesion Correction (SLC) - in development';
-slc.def    = @(val)cat_get_defaults('extopts.SLC', val{:});
+slc.def    = @(val)cat_get_defaults1445('extopts.SLC', val{:});
 slc.help   = {
   'WARNING: Please note that the handling of stroke lesion is still under development. '
   'Without further correction, stroke lesions will be handled by their most probable tissue class, i.e. typically as CSF or GM. Because the spatial registration tries to normalize these regions, the normalization of large regions lead to storng inproper deformations. '
@@ -669,7 +669,7 @@ app.help   = { ...
     ' full    - iterative SPM bias correction on different resolutions and final high resolution bias correction' 
     ' default - default APP bias correction (r1070)' 
   };
-app.def    = @(val)cat_get_defaults('extopts.APP', val{:});
+app.def    = @(val)cat_get_defaults1445('extopts.APP', val{:});
 app.labels = {'none','light','full','default'};
 app.values = {0 1 2 1070};
 if expert
@@ -722,7 +722,7 @@ if expert>1
       '  The affreg routine process a affine registration based the orignal input (T1) image and a similar weighted scan . '
       '  The maffreg routine use'
     };
-  %spm_affreg.def    = @(val)cat_get_defaults('extopts.spm_affreg', val{:}); 
+  %spm_affreg.def    = @(val)cat_get_defaults1445('extopts.spm_affreg', val{:}); 
   spm_affreg.labels = {
     'no affine registration' ... 
     'only affreg' ...
@@ -746,7 +746,7 @@ if expert>1
       ' k-means AMAP - k-means AMAP approach ' 
       ''
     };
-  spm_kamap.def    = @(val)cat_get_defaults('extopts.spm_kamap', val{:});  
+  spm_kamap.def    = @(val)cat_get_defaults1445('extopts.spm_kamap', val{:});  
   spm_kamap.labels = {'SPM Unified Segmentation','k-means AMAP'};
   spm_kamap.values = {0 2};
 end
@@ -758,7 +758,7 @@ scale_cortex.tag     = 'scale_cortex';
 scale_cortex.name    = 'Modify cortical surface creation';
 scale_cortex.strtype = 'r';
 scale_cortex.num     = [1 1];
-scale_cortex.def     = @(val)cat_get_defaults('extopts.scale_cortex', val{:});
+scale_cortex.def     = @(val)cat_get_defaults1445('extopts.scale_cortex', val{:});
 scale_cortex.help    = {
   'Scale intensity values for cortex to start with initial surface that is closer to GM/WM border to prevent that gyri/sulci are glued if you still have glued gyri/sulci (mainly in the occ. lobe).  You can try to decrease this value (start with 0.6).  Please note that decreasing this parameter also increases the risk of an interrupted parahippocampal gyrus.'
   ''
@@ -769,7 +769,7 @@ add_parahipp.tag     = 'add_parahipp';
 add_parahipp.name    = 'Modify parahippocampal surface creation';
 add_parahipp.strtype = 'r';
 scale_cortex.num     = [1 1];
-add_parahipp.def     = @(val)cat_get_defaults('extopts.add_parahipp', val{:});
+add_parahipp.def     = @(val)cat_get_defaults1445('extopts.add_parahipp', val{:});
 add_parahipp.help    = {
   'Increase values in the parahippocampal area to prevent large cuts in the parahippocampal gyrus (initial surface in this area will be closer to GM/CSF border if the parahippocampal gyrus is still cut.  You can try to increase this value (start with 0.15).'
   ''
@@ -780,7 +780,7 @@ close_parahipp.tag     = 'close_parahipp';
 close_parahipp.name    = 'Initial morphological closing of parahippocampus';
 close_parahipp.labels  = {'No','Yes'};
 close_parahipp.values  = {0 1};
-close_parahipp.def     = @(val)cat_get_defaults('extopts.close_parahipp', val{:});
+close_parahipp.def     = @(val)cat_get_defaults1445('extopts.close_parahipp', val{:});
 close_parahipp.help    = {
   'Apply initial morphological closing inside mask for parahippocampal gyrus to minimize the risk of large cuts of parahippocampal gyrus after topology correction. However, this may also lead to poorer quality of topology correction for other data and should be only used if large cuts in the parahippocampal areas occur.'
   ''
