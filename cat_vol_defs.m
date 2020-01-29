@@ -1,5 +1,5 @@
 function cat_vol_defs(job)
-% Apply deformations to images. In contrast to spm_defs images are saved
+% Apply deformations to images. In contrast to spm_deformations images are saved
 % in the original directory.
 %_______________________________________________________________________
 % Christian Gaser
@@ -19,8 +19,8 @@ end
 def.verb = cat_get_defaults('extopts.verb'); 
 job      = cat_io_checkinopt(job,def);
 
-PI   = job.images;
-intp = job.interp;
+PI     = job.images;
+interp = job.interp;
 
 for i=1:numel(PU),
 
@@ -36,7 +36,7 @@ for i=1:numel(PU),
     else % many subjects
       PIi = char(PI{m}{i}); 
     end
-    PIri = apply_def(Def,mat,PIi,intp,job.modulate);
+    PIri = apply_def(Def,mat,PIi,interp,job.modulate);
     
     if job.verb
       fprintf('Display resampled %s\n',spm_file(PIri,'link','spm_image(''Display'',''%s'')'));
@@ -56,10 +56,10 @@ Def = reshape(Def,[d(1:3) d(5)]);
 mat = Nii.mat;
 
 %_______________________________________________________________________
-function filename = apply_def(Def,mat,filenames,intrp,modulate)
+function out = apply_def(Def,mat,filenames,interp0,modulate)
 % Warp an image or series of images according to a deformation field
 
-intrp = [intrp*[1 1 1], 0 0 0];
+interp = [interp0*[1 1 1], 0 0 0];
 
 for i=1:size(filenames,1),
 
@@ -107,7 +107,7 @@ for i=1:size(filenames,1),
         NO.dat.fname = fullfile(pth,['m0w',nam,ext]);
         NO.descrip   = sprintf('Warped & Jac scaled (nonlinear only)');
     end
-    filename = NO.dat.fname; 
+    out = NO.dat.fname; 
     
     NO.extras      = [];
     create(NO);
@@ -146,12 +146,34 @@ for i=1:size(filenames,1),
         %------------------------------------------------------------------
         for k=k_range
             for l=l_range
-                C   = spm_diffeo('bsplinc',single(NI.dat(:,:,:,j,k,l)),intrp);
-                dat = spm_diffeo('bsplins',C,Y,intrp);
-                if modulate
-                  dat = dat.*double(dt);
+                f0  = single(NI.dat(:,:,:,j,k,l));
+                if interp0>=0
+                    c  = spm_diffeo('bsplinc',f0,interp);
+                    f1 = spm_diffeo('bsplins',c,Y,interp);
+                else
+                    % Warp labels
+                    U  = unique(f0(:));
+                    if numel(U)>255
+                        error('Too many label values.');
+                    end
+                    f1   = zeros(dim(1:3),class(f0));
+                    p1   = zeros(size(f1),'single');
+                    filt = [0.125 0.75 0.125];
+                    for u=U'
+                        g0       = single(f0==u);
+                        g0       = convn(g0,reshape(filt,[3,1,1]),'same');
+                        g0       = convn(g0,reshape(filt,[1,3,1]),'same');
+                        g0       = convn(g0,reshape(filt,[1,1,3]),'same');
+                        tmp      = spm_diffeo('bsplins',g0,Y,[abs(interp(1:3)) interp(4:end)]);
+                        msk1     = (tmp>p1);
+                        p1(msk1) = tmp(msk1);
+                        f1(msk1) = u;
+                    end
                 end
-                NO.dat(:,:,:,j,k,l) = dat;
+                if modulate
+                  f1 = f1.*double(dt);
+                end
+                NO.dat(:,:,:,j,k,l) = f1;
             end
         end
     end
