@@ -29,7 +29,7 @@ cat.opts.biasreg   = 0.001;                   % Bias regularisation (cat.opts.bi
                                               %   smaller values for stronger bias fields
 cat.opts.biasfwhm  = 60;                      % Bias FWHM (cat.opts.biasstr has to be 0!) - 30:10:120,inf 
                                               %   lower values for strong bias fields, but check for overfitting of the thalamus (values <45 mm)
-cat.opts.samp      = 3;                       % Sampling distance - alternative: 1.5 
+cat.opts.samp      = 2;                       % Sampling distance - alternative: 1.5 
                                               %   Initial SPM segmentation resolution, whereas the AMAP runs on the full or specified resolution
                                               %   described by cat.extopts.restype and cat.extopts.resval. Higher resolution did not improve the
                                               %   results in most results (but increase calculation time were.  
