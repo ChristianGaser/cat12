@@ -146,8 +146,8 @@ function varargout = cat_surf_surf2roi(job)
               catROI{si}.(rinfo.dataname).names(1:2:size(rrcsv,1)*2-2,1) = rrcsv(2:end,2);
               catROI{si}.(rinfo.dataname).names(2:2:size(rrcsv,1)*2-2,1) = lrcsv(2:end,2);
               for roii=1:2:numel(catROI{si}.(rinfo.dataname).ids)-1
-                catROI{si}.(rinfo.dataname).names{roii}   = ['l' catROI{si}.(rinfo.dataname).names{roii}];
-                catROI{si}.(rinfo.dataname).names{roii+1} = ['r' catROI{si}.(rinfo.dataname).names{roii+1}];
+                catROI{si}.(rinfo.dataname).names{roii,1}   = ['l' catROI{si}.(rinfo.dataname).names{roii}];
+                catROI{si}.(rinfo.dataname).names{roii+1,1} = ['r' catROI{si}.(rinfo.dataname).names{roii+1}];
               end 
             otherwise
               catROI{si}.(rinfo.dataname).ids      = rcsv(1:end,1);
@@ -169,14 +169,14 @@ function varargout = cat_surf_surf2roi(job)
               end
               for roii=1:numel(catROI{si}.(rinfo.dataname).ids)
                 switch catROI{si}.(rinfo.dataname).names{roii}(1)
-                  case 'l', catROI{si}.(rinfo.dataname).data.(fieldname)(roii) = ...
+                  case 'l', catROI{si}.(rinfo.dataname).data.(fieldname)(roii,1) = ...
                       eval(sprintf('%s%s(lCS.cdata(lrdata==catROI{si}.(rinfo.dataname).ids(roii)))',nanfunc,FN{ai}));
-                  case 'r', catROI{si}.(rinfo.dataname).data.(fieldname)(roii) = ...
+                  case 'r', catROI{si}.(rinfo.dataname).data.(fieldname)(roii,1) = ...
                       eval(sprintf('%s%s(rCS.cdata(rrdata==catROI{si}.(rinfo.dataname).ids(roii)))',nanfunc,FN{ai})); 
-                  case 'b', catROI{si}.(rinfo.dataname).data.(fieldname)(roii) = ...
+                  case 'b', catROI{si}.(rinfo.dataname).data.(fieldname)(roii,1) = ...
                       eval(sprintf(['%s%s(lCS.cdata(lrdata==catROI{si}.(rinfo.dataname).ids(roii))) + ' ...
                                     '%s%s(rCS.cdata(rrdata==catROI{si}.(rinfo.dataname).ids(roii)))'],nanfunc,FN{ai},nanfunc,FN{ai}));
-                  otherwise, catROI{si}.(rinfo.dataname).data.(fieldname)(roii) = nan; 
+                  otherwise, catROI{si}.(rinfo.dataname).data.(fieldname)(roii,1) = nan; 
                 end
               end
               
