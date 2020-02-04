@@ -574,9 +574,9 @@ function job = update_job(job)
   %  Although lower resolution (>3 mm) is not really faster and maybe much 
   %  worse in sense of quality, it is simpler to have a linear decline
   %  rather than describing the other case. 
-  %  RD20200130: Takes me a day to figure out that the SPM7771 US failed in 
+  %  RD20200130: Took me a day to figure out that the SPM7771 US failed in 
   %              T1_dargonchow but also single_subjT1 by lower sampl res.
-  %              Keep in mind that this effects volume resolution (^3), eg
+  %              Keep in mind that this affects volume resolution (^3), eg
   %              [32 16 8 4 2] .^(1/3) is close to these values
   sampval           = [3 2.5 2 1.5 1]; 
   tolval            = [1e-2 1e-3 1e-4 1e-5 1e-6];

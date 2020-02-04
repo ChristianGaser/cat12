@@ -281,7 +281,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
 
   %% MRF
   % Used spm_mrf help and tested the probability TPM map for Q without good results.         
-  nmrf_its = 0; % 10 interations better to get full probability in thin GM areas 
+  nmrf_its = 0; % 10 iterations better to get full probability in thin GM areas 
   spm_progress_bar('init',nmrf_its,['MRF: Working on ' nam],'Iterations completed');
   if isfield(res,'mg'), Kb = max(res.lkp); else Kb = size(res.intensity(1).lik,2); end
   G   = ones([Kb,1],'single');

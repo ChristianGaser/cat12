@@ -441,10 +441,10 @@ cstime = clock;
       indi = find((Yppt>0) & (Yppt<0.99999));
       Yppt(indi) = 0.1 + (0.8*Yppt(indi));
     end
-    Vpp  = cat_io_writenii(V,Yppt,'','pp','percentage position map','uint8',[0,1/255],[1 0 0 0]);
+    Vpp  = cat_io_writenii(V,Yppt,'',sprintf('%s.pp',opt.surf{si}),'percentage position map','uint8',[0,1/255],[1 0 0 0]);
     
     Vpp1 = Vpp; 
-    Vpp1.fname    = fullfile(pp,mrifolder,['pp1' ff '.nii']);
+    Vpp1.fname    = fullfile(pp,mrifolder,sprintf('%s.pp1%s.nii',opt.surf{si},ff));
     vmat2         = spm_imatrix(Vpp1.mat);
     Vpp1.dim(1:3) = round(Vpp1.dim .* abs(vmat2(7:9)*(1 + iscerebellum)));   % use double resolution in case of cerebellum
     vmat2(7:9)    = sign(vmat2(7:9)).*[1 1 1]/(1 + iscerebellum);            % use double resolution in case of cerebellum

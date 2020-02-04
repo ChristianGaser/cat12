@@ -9,7 +9,7 @@ function cat_vol_correct_slice_scaling(varargin)
 % To control the filter direction and number of iterations we test the 
 % if one gradient is untpyical high. If this is the case the filter is
 % applyed for this direction as long as all gradient get more similar.
-% In most cases only 1-3 interations are necessary.
+% In most cases only 1-3 iterations are necessary.
 % The filter use information from the foreground (object/tissue) to 
 % estimate the correction filed. Background information are used to 
 % stabilize the estimation of the WM threshhold. 
@@ -59,7 +59,7 @@ function cat_vol_correct_slice_scaling(varargin)
 % 
 % - Other methods:
 %   - Slice correction also by 'caret_command -volume-bias-correction'?
-%     - not full automatic, no direction / interation criteria
+%     - not full automatic, no direction / iteration criteria
 %   - SLED log correction?
 %   - 
 
