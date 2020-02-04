@@ -165,7 +165,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
       lowres                     = 2.5;                   % lowest resolution .. best between 2 and 3 mm 
       tpmres                     = abs(tpmM(1));          % TPM resolution 
       tempres                    = abs(tmpM(1));          % template resolution 
-      reg(regstri).opt.nits      = dreg.nits;             % registration interation (shooting default = 24)
+      reg(regstri).opt.nits      = dreg.nits;             % registration iteration (shooting default = 24)
       reg(regstri).opt.vxreg     = tpmres;                % regularisation parameter that original depend on the template resolution
       reg(regstri).opt.rres      = tempres;               % final registration resolution 
       reg(regstri).opt.stepsize  = (lowres - reg(regstri).opt.rres)/4;  % stepsize of reduction 
@@ -190,7 +190,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
       % Default Shooting  
         reg(regstri).opt.rres        = tempres;           % registration resolution depending on template resolution 
         reg(regstri).opt.stepsize    = 0;                 % stepsize of reduction 
-        reg(regstri).opt.nits        = 24;                % Dartel default interation number
+        reg(regstri).opt.nits        = 24;                % Dartel default iteration number
         reg(regstri).opt.resfac      = ones(1,5);         % reduction factor 
         reg(regstri).opt.ll1th       = 0;                 % smaller better/slower
         reg(regstri).opt.ll3th       = 0;                 % smaller better/slower 
@@ -259,7 +259,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
         reg(regstri).opt.stepsize      = max(eps,0.5);          % stepsize of reduction
         reg(regstri).opt.rres          = 1.0;                   % registration resolution expert parameter ...
         reg(regstri).opt.vxreg         = 1.5;                   % regularisation parameter that original depend on the template resolution
-        reg(regstri).opt.nits          = 5;                     % registration interation (shooting default = 24)
+        reg(regstri).opt.nits          = 5;                     % registration iteration (shooting default = 24)
         reg(regstri).opt.ll1th         = 0.01;                  % smaller better/slower
         reg(regstri).opt.ll3th         = 0.04;                  % smaller better/slower 
         res.do_dartel                  = 2;                     % method, 1 - Dartel, 2 - Shooting

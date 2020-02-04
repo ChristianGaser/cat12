@@ -27,7 +27,7 @@ disp('Compiling cat_ornlm.c')
 pth = fileparts(which(mfilename));
 p_path = pwd;
 cd(pth);
-mex -O cat_ornlm.c ornlm.c 
+mex -O cat_ornlm.c ornlm_float.c 
 cd(p_path);
 
 out = cat_ornlm(in, v, f, h);

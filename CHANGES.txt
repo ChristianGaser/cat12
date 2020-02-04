@@ -1,5 +1,30 @@
 ------------------------------------------------------------------------
-r1560 | dahnke | 2020-01-30 15:36:10
+r1561 | gaser | 2020-02-04 16:48:58
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_main_LAS.m
+M       cat_main_registration.m
+M       cat_main_updateSPM.m
+M       cat_ornlm.m
+M       cat_run.m
+M       cat_run_job_APP_SPMinit.m
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       cat_vol_atlas.m
+M       cat_vol_correct_slice_scaling.m
+M       cat_vol_laplace3.c
+M       cat_vol_laplace3.m
+M       cat_vol_laplace3R.c
+M       cat_vol_laplace3R.m
+M       html/cat.html
+
+1. Changed: Added side-name to pp-file in cat_surf_createCS*.m.
+2. Fixed: Corrected typos...
+
+------------------------------------------------------------------------
+r1560 | dahnke | 2020-01-30 15:38:24 +0100 (Do, 30 Jan 2020) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +37,7 @@ M       cat_surf_surf2roi.m
               the last SPM update (R7771). Updated also the definition of 
               the opt.accstr parameter in cat_run to use 2 mm as default. 
 (2) Changed:  Modified XML structure of surface ROIs in cat_surf_surf2roi.   
+
 
 ------------------------------------------------------------------------
 r1559 | gaser | 2020-01-29 13:38:39 +0100 (Mi, 29 Jan 2020) | 21 lines

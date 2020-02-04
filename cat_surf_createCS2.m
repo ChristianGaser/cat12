@@ -662,12 +662,12 @@ fprintf('%26.22f | %26.22f | %26.22f\n',std(Ymfs(:)),std(Yth1i(:)),std(Yppi(:)))
     Ypp = max(Ypp,Yppt .* Yside); 
     
     % this is the map that we want to keep in the original image resolution
-    Vpp  = cat_io_writenii(V0,Ypp,'mri','pp' ,'percentage position map','uint8',[0,1/255],...
+    Vpp  = cat_io_writenii(V0,Ypp,'mri',sprintf('%s.pp',opt.surf{si}) ,'percentage position map','uint8',[0,1/255],...
       min([1 1 2],[1 opt.outputpp.warped opt.outputpp.dartel]),opt.trans);
     Vpp  = Vpp(1); 
     
     % just an internal map with 1 mm resolution 
-    Vppt          = cat_io_writenii(V,Yppt,'','ppt' ,'percentage position map','uint8',[0,1/255],[1 0 0]); clear Yppt
+    Vppt          = cat_io_writenii(V,Yppt,'',sprintf('%s.ppt',opt.surf{si}) ,'percentage position map','uint8',[0,1/255],[1 0 0]); clear Yppt
     Vpp1          = Vppt(1);
     %{
     defres        = 1 * ones(1,3); % not tested 
