@@ -3,13 +3,13 @@
  * Filter SEG within the intensity range of low and high until the changes
  * are below TH. 
  *
- * L = laplace3(SEG,low,high,TH)
+ * L = cat_vollaplace3(SEG,low,high,TH)
  *
  * SEG  = 3d sinlge input matrix
  * low  = low boundary threshold
  * high = high boundary threshold
- * TH   = threshold to controll the number of interations
- *        maximum change of an element after interation
+ * TH   = threshold to control the number of iterations
+ *        maximum change of an element after iteration
  *
  * ________________________________________________________________________
  * Robert Dahnke

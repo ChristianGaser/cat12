@@ -5,8 +5,8 @@
  * SEG  = 3d sinlge input matrix
  * low  = low boundary threshold
  * high = high boundary threshold
- * TH   = threshold to controll the number of interations
- *        maximum change of an element after interation
+ * TH   = threshold to control the number of iterations
+ *        maximum change of an element after iteration
  *
  * TODO: change of L1 and L2 by pointer
  * _____________________________________________________________________

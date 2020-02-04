@@ -6,8 +6,8 @@
 %
 %  SEG  .. 3D single input matrix
 %  R    .. 3D boolean volume to describe the filter area
-%  TH   .. threshold to controll the number of interations
-%          maximum change of an element after interation
+%  TH   .. threshold to control the number of iterations
+%          maximum change of an element after iteration
 %
 %  See also cat_vol_laplace3, compile.
 %  ________________________________________________________________________

@@ -111,13 +111,13 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
   %% try SPM preprocessing
   %  ----------------------------------------------------------
   %  * if SPM failed we go on without bias correction 
-  %  * further interations on different resolution are usefull
+  %  * further iterations on different resolution are usefull
   %    (the first run correct the worst problems and should 
   %     a correct registration of the next runs)
   %  * best results for strong corrections (fwhm 30 to 45 mm)
   %  * SPM preprocessing is very fast (and gives you results in 
   %    the template resolution?) but writing results in the 
-  %    original resolution is very slow, so using 2 interations
+  %    original resolution is very slow, so using 2 iterations
   %    is maybe optimal
   %  * much slower for biasfwhm<35 mm and samp<4.5 mm
   %  * the final operation is much slower (3 times) becauserun it

@@ -8,7 +8,7 @@ function cat_vol_atlas(atlas,refinei)
 % A refinement (median-filter + complete brain labeling) is possible. 
 % Each Atlas should have a txt-file with information 
 %
-% WARNING: This script only create uint8 maps!
+% WARNING: This script only creates uint8 maps!
 %
 % cat_vol_atlas(atlas,refine)
 % 
@@ -37,7 +37,7 @@ function cat_vol_atlas(atlas,refinei)
 %        nur projektion, ggf. original csv-struktur, nummer, ...
 %     2) optimiert .... atlas+.nii
 %        ... meins
-% - opt-struktur für paraemter
+% - opt-struktur für parameter
 %
 % - Zusammenfassung von Atlanten:
 %   Zusatzfunktion die auf den normalisierten Daten aufbauen könnte.

@@ -7,8 +7,8 @@
 %  SEG  .. 3D single input matrix
 %  low  .. low boundary threshold
 %  high .. high boundary threshold
-%  TH   .. threshold to controll the number of interations
-%          maximum change of an element after interation
+%  TH   .. threshold to control the number of iterations
+%          maximum change of an element after iteration
 %
 %  See also cat_vol_laplace3R, compile.
 %  ________________________________________________________________________

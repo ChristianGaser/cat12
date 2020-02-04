@@ -175,7 +175,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   %% adaption of the LASstr depending on average basal values 
   LASstr  = min(1,max(0.01,LASstr * LASmod));                           % adaption by local BG variation
   LASfs   = 1 / max(0.01,LASstr);                                       % smoothing filter strength 
-  LASi    = min(8,round(LASfs));                                        % smoothing interation (limited)
+  LASi    = min(8,round(LASfs));                                        % smoothing iteration (limited)
    
   
   %% helping segments
