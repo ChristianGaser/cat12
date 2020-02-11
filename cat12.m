@@ -80,12 +80,8 @@ if nargin <= 1
   
   % send Matlab version to server
   if cat_get_defaults('extopts.send_info')
-    url = sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s','Start','%2F',version('-release'));
-    try
-      [s,sts] = urlread(url,'Timeout',2);
-    catch
-      [s,sts] = urlread(url);
-    end
+    urlinfo = sprintf('%s%s%s','Start','%2F',version('-release'));
+    cat_io_send_to_server(urlinfo);
   end
   
   % check for new CAT12 version

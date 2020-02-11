@@ -11,7 +11,7 @@
     <div id="header">
       <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
       <p>
-          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
+          <a href="matlab:web('http://www.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
           <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');">Department of Neurology</a> | 
           <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');">Department of Psychiatry</a> | 
           <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
@@ -41,9 +41,9 @@
         <ul>
     </div>
 
-		<div id="widgetIframe"><iframe width="100%" height="350" src="http://www.neuro.uni-jena.de/piwik/index.php?module=Widgetize&action=iframe&moduleToWidgetize=Actions&actionToWidgetize=getPageTitles&idSite=1&period=range&date=last3650&disableLink=1&widget=1&language=en" scrolling="yes" frameborder="0" marginheight="0" marginwidth="0"></iframe></div>
+		<div id="widgetIframe"><iframe width="100%" height="350" src="http://141.35.69.218/piwik/index.php?module=Widgetize&action=iframe&moduleToWidgetize=Actions&actionToWidgetize=getPageTitles&idSite=1&period=range&date=last3650&disableLink=1&widget=1&language=en" scrolling="yes" frameborder="0" marginheight="0" marginwidth="0"></iframe></div>
 		
-		<div id="widgetIframe"><iframe width="100%" height="350" src="http://www.neuro.uni-jena.de/piwik/index.php?module=Widgetize&action=iframe&moduleToWidgetize=UserCountry&actionToWidgetize=getCountry&idSite=1&period=range&date=last3650&disableLink=1&widget=1&viewDataTable=cloud&language=en" scrolling="yes" frameborder="0" marginheight="0" marginwidth="0"></iframe></div>
+		<div id="widgetIframe"><iframe width="100%" height="350" src="http://141.35.69.218/piwik/index.php?module=Widgetize&action=iframe&moduleToWidgetize=UserCountry&actionToWidgetize=getCountry&idSite=1&period=range&date=last3650&disableLink=1&widget=1&viewDataTable=cloud&language=en" scrolling="yes" frameborder="0" marginheight="0" marginwidth="0"></iframe></div>
 		
     <div id="content">
       <h2>Which information is sent?</h2>      
@@ -51,19 +51,19 @@
   	    <ul>
           <li>Anonymized IP address (e.g. 192.168.100.xxx) is sent to the SBM server for geolocation and to get number of unique users.</li>
           <li>Information about Matlab version is sent when CAT12 is started using the following Matlab command:
-	          </br><i> urlread(sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s','Start','%2F',version('-release')));</i>
+	          </br><i> urlread(sprintf('http://141.35.69.218/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s','Start','%2F',version('-release')));</i>
           </li>
-          <li>Information about CAT12 version and computer platform is sent after successful preprocessing using the Matlab command:
-	          </br><i> urlread(sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%sfinished',cat_version,'%2F',computer,'%2F'));</i>	          
+          <li>Information about CAT12 version, computer platform and number of files to be processed is sent during preprocessing using the Matlab command:
+	          </br><i> urlread(sprintf('http://141.35.69.218/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%s%s%s%d',cat_version,'%2F',computer,'%2F','processed','%2F',n_subjects));</i>	          
           </li>
-          <li>Information about CAT12 version and computer platform is sent after errors during preprocessing using the Matlab command:
-	          </br><i> urlread(sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%s%s%s%s',cat_version,'%2F',computer,'%2F',caterr.message,'%2F',str_err));</i>  	          
+          <li>Information about CAT12 version and computer platform is sent during preprocessing if any errors occurred using the Matlab command:
+	          </br><i> urlread(sprintf('http://141.35.69.218/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%s%s%s%s',cat_version,'%2F',computer,'%2F',caterr.message,'%2F',str_err));</i>  	          
           </li>
         </ul>
         <ul>
     </div>
 
-    <div id="widgetIframe"><iframe frameborder="no" width="600px" height="200px" src="http://www.neuro.uni-jena.de/piwik/index.php?module=CoreAdminHome&action=optOut&language=en"></iframe></div>
+    <div id="widgetIframe"><iframe frameborder="no" width="600px" height="200px" src="http://141.35.69.218/piwik/index.php?module=CoreAdminHome&action=optOut&language=en"></iframe></div>
 
     <div id="content"><a href="cat.html">< CAT</a></div>  
     <div id="footer">
