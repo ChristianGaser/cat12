@@ -1,5 +1,30 @@
 ------------------------------------------------------------------------
-r1562 | dahnke | 2020-02-11 14:51:07
+r1563 | gaser | 2020-02-11 17:00:38
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat12.m
+M       cat_install_tfce.m
+A       cat_io_send_to_server.m
+M       cat_main_reportfig.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_newcatch.m
+M       cat_stat_confplot_spm.m
+M       cat_update.m
+M       html/cat.html
+M       html/cat_statistics.html
+
+1. Changed: Updated ip-address for piwik server and cat12-files.
+2. Changed: Added new function to send information to piwik-server.
+3. Changed: Now, only the number of processed files are sent to piwik server.
+4. Fixed: Plot for parameter estimates in cat_stat_confplot_spm.m was falsly 
+   limited to two effects.
+
+------------------------------------------------------------------------
+r1562 | dahnke | 2020-02-11 14:53:30 +0100 (Di, 11 Feb 2020) | 37 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -37,6 +62,7 @@ A       templates_surfaces_32k/mesh.inflated.freesurfer.gii
               cat_defaults, tbx_cat_defaults, cat_conf_output, cat_main
               and cat_run.              
               
+
 ------------------------------------------------------------------------
 r1561 | gaser | 2020-02-04 16:49:34 +0100 (Di, 04 Feb 2020) | 23 lines
 

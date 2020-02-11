@@ -150,14 +150,8 @@ function cat_run_newcatch(job,tpm,subj)
         str_err = [str_err '|' caterr.stack(si).name ':' num2str(caterr.stack(si).line)];
       end      
       str_err = str_err(2:end); % remove first "|"
-      url = sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%s%s%s%s%s%s%s',cat_version,'%2F',computer,'%2F','errors','%2F',caterr_id,'%2F',caterr_message_str,str_err);
-      url = regexprep(url, '\n', '%20'); % replace returns
-      url = regexprep(url, ' ' , '%20'); % replace spaces
-      try
-        [s,sts] = urlread(url,'Timeout',2);
-      catch
-        [s,sts] = urlread(url);
-      end
+      urlinfo = sprintf('%s%s%s%s%s%s%s%s%s%s',cat_version,'%2F',computer,'%2F','errors','%2F',caterr_id,'%2F',caterr_message_str,str_err);
+      cat_io_send_to_server(urlinfo);
     end
 
     % write error report

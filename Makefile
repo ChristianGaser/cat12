@@ -10,9 +10,9 @@ DATE=`svn info |grep 'Last Changed Date: '|sed -e 's/Last Changed Date: //g'|cut
 TARGET=/Users/gaser/spm/spm12/toolbox/cat12
 TARGET2=/Volumes/UltraMax/spm12/toolbox/cat12
 
-STARGET_HOST=dbm.neuro.uni-jena.de
-STARGET_HTDOCS=${STARGET_HOST}:/Applications/xampp/htdocs/
-STARGET_FOLDER=/Applications/xampp/htdocs/cat12
+STARGET_HOST=141.35.69.218
+STARGET_HTDOCS=${STARGET_HOST}:/volume1/web/
+STARGET_FOLDER=/volume1/web/cat12
 STARGET=${STARGET_HOST}:${STARGET_FOLDER}
 
 MATLAB_FILES=Contents.* cat_*.m spm_cat12.m tbx_cfg_cat.m sliderPanel.m slice_overlay.m kmeans3D.m cat_run*
@@ -21,7 +21,7 @@ MISC_FILES=CAT12-Manual.pdf CHANGES.txt INSTALL.txt standalone templates_1.50mm 
 
 FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
 
-ZIPFILE=cat12_r$(REVISION).zip
+ZIPFILE=cat12_r${REVISION}.zip
 
 install: 
 	-@echo install
@@ -59,7 +59,7 @@ zip: update
 	-@zip ${ZIPFILE} -rm cat12
 
 scp: zip
-	-@echo scp to http://dbm.neuro.uni-jena.de/cat12/${ZIPFILE}
+	-@echo scp to http://${STARGET_HOST}/cat12/${ZIPFILE}
 	-@scp -P 2222 CHANGES.txt CAT12-Manual.pdf ${ZIPFILE} ${STARGET}
 	-@test ! -d cat12-html || rm -r cat12-html
 	-@cp -R html cat12-html
@@ -68,10 +68,10 @@ scp: zip
 	-@perl -p -i -e "s/matlab:web\(\'//g" cat12-html/*.html
 	-@cp cat12-html/cat.html cat12-html/index.html
 	-@scp -r -P 2222 cat12-html ${STARGET_HTDOCS}/
-	-@bash -c "ssh ${STARGET_HOST} ln -Fs ${STARGET_FOLDER}/${ZIPFILE} ${STARGET_FOLDER}/cat12_latest.zip"
+	-@bash -c "ssh -p 2222 ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${ZIPFILE} ${STARGET_FOLDER}/cat12_latest.zip"
 	
 scp_manual:
-	-@echo scp CAT12-Manual.pdf to http://dbm.neuro.uni-jena.de/cat12
+	-@echo scp CAT12-Manual.pdf to http://${STARGET_HOST}/cat12
 	-@scp -P 2222 CAT12-Manual.pdf ${STARGET}
 
 cp_binaries: 
