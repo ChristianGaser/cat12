@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1563 | gaser | 2020-02-11 17:00:38
+r1564 | gaser | 2020-02-11 17:10:37
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_ROI.m
+M       html/cat.html
+ M      templates_surfaces/mesh.inflated.freesurfer.gii
+ M      templates_surfaces_32k/mesh.inflated.freesurfer.gii
+
+Fixed: Typos...
+------------------------------------------------------------------------
+r1563 | gaser | 2020-02-11 17:00:46 +0100 (Di, 11 Feb 2020) | 23 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -22,6 +34,7 @@ M       html/cat_statistics.html
 3. Changed: Now, only the number of processed files are sent to piwik server.
 4. Fixed: Plot for parameter estimates in cat_stat_confplot_spm.m was falsly 
    limited to two effects.
+
 
 ------------------------------------------------------------------------
 r1562 | dahnke | 2020-02-11 14:53:30 +0100 (Di, 11 Feb 2020) | 37 lines
