@@ -334,15 +334,14 @@ switch lower(action)
         if ismac, H.catLighting = 'inner'; else H.catLighting = 'cam'; end
         %H.catLighting = 'cam';
         
-        H.light(1) = camlight; set(H.light(1),'Parent',H.axis); 
+        H.light(1) = camlight('headlight','infinite'); set(H.light(1),'Parent',H.axis,'Tag','camlight'); 
         switch H.catLighting
           case 'inner'
             % switch off local light (camlight)
-            caml = findall(gcf,'Type','light','Style','local');     
-            set(caml,'visible','off');
+            set(H.light(1),'visible','off');
             
             % set inner light
-            H.light(2) = light('Position',[0 0 0]); 
+            H.light(2) = light('Position',[0 0 0],'Tag','centerlight'); 
             set(H.patch,'BackFaceLighting','unlit');
         end
         
@@ -478,15 +477,17 @@ switch lower(action)
         if ismac
           uimenu(c, 'Label','inner',  'Checked',macon{2-isinner}, 'Callback', {@myLighting, H,'inner'});
         end
-        uimenu(c, 'Label','set1',   'Checked','off', 'Callback', {@myLighting, H,'set1'});
+        uimenu(c, 'Label','set1',   'Checked','off', 'Callback', {@myLighting, H,'set1'}, 'Separator', 'on');
         uimenu(c, 'Label','set2',   'Checked','off', 'Callback', {@myLighting, H,'set2'});
         uimenu(c, 'Label','set3',   'Checked','off', 'Callback', {@myLighting, H,'set3'});
-        uimenu(c, 'Label','top',    'Checked','off', 'Callback', {@myLighting, H,'top'}, 'Separator', 'on');
-        uimenu(c, 'Label','bottom', 'Checked','off', 'Callback', {@myLighting, H,'bottom'});
-        uimenu(c, 'Label','left',   'Checked','off', 'Callback', {@myLighting, H,'left'});
-        uimenu(c, 'Label','right',  'Checked','off', 'Callback', {@myLighting, H,'right'});
-        uimenu(c, 'Label','front',  'Checked','off', 'Callback', {@myLighting, H,'front'});
-        uimenu(c, 'Label','back',   'Checked','off', 'Callback', {@myLighting, H,'back'});
+        if 0
+          uimenu(c, 'Label','top',    'Checked','off', 'Callback', {@myLighting, H,'top'}, 'Separator', 'on');
+          uimenu(c, 'Label','bottom', 'Checked','off', 'Callback', {@myLighting, H,'bottom'});
+          uimenu(c, 'Label','left',   'Checked','off', 'Callback', {@myLighting, H,'left'});
+          uimenu(c, 'Label','right',  'Checked','off', 'Callback', {@myLighting, H,'right'});
+          uimenu(c, 'Label','front',  'Checked','off', 'Callback', {@myLighting, H,'front'});
+          uimenu(c, 'Label','back',   'Checked','off', 'Callback', {@myLighting, H,'back'});
+        end
         uimenu(c, 'Label','grid',   'Checked','off', 'Callback', {@myLighting, H,'grid'}, 'Separator', 'on');
         uimenu(c, 'Label','none',   'Checked','off', 'Callback', {@myLighting, H,'none'});
         
@@ -1008,11 +1009,11 @@ setappdata(H.axis,'handles',H);
 function myPostCallback(obj,evt,H)
 P = findobj('Tag','CATSurfRender','Type','Patch');
 if numel(P) == 1
-  if strcmp(H.catLighting,'cam') && ~isempty(H.light), camlight(H.light(1)); end
+  if strcmp(H.light(1).Visible,'on'), camlight(H.light(1),'headlight','infinite'); end
 else
     for i=1:numel(P)
         H = getappdata(ancestor(P(i),'axes'),'handles');
-        if strcmp(H.catLighting,'cam') && ~isempty(H.light), camlight(H.light(1)); end
+        if strcmp(H.light(1).Visible,'on'), camlight(H.light(1),'headlight','infinite'); end
     end
 end
 
@@ -1106,7 +1107,7 @@ end
 function myView(obj,evt,H,varargin)
 view(H.axis,varargin{1});
 axis(H.axis,'image');
-if strcmp(H.catLighting,'cam') && ~isempty(H.light), camlight(H.light(1)); end
+if strcmp(H.catLighting,'cam') && ~isempty(H.light), camlight(H.light(1),'headlight','infinite'); end
 
 %==========================================================================
 function myColourbar(obj,evt,H)
@@ -1121,9 +1122,10 @@ function myLighting(obj,evt,H,newcatLighting)
 y = {'on','off'}; toggle = @(x) y{1+strcmpi(x,'on')};
 % set old lights
 H.catLighting = newcatLighting;
-delete(findall(gcf,'Type','light','Style','infinite')); % remove old infinite lights
-caml = findall(gcf,'Type','light','Style','local');     % switch off local light (camlight)
-
+delete(findall(H.axis,'Type','light','Tag',''));                    % remove old infinite lights
+delete(findall(H.axis,'Type','light','Tag','centerlight'));     
+caml = findall(H.axis,'Type','light','Tag','camlight');   % switch off camlight
+    
 % new lights
 lighting gouraud
 set(caml,'visible','off');
@@ -1169,6 +1171,7 @@ switch H.catLighting
     set(H.patch,'LineStyle','-','EdgeColor',[0 0 0]);
     set(H.patch,'AmbientStrength',0.7,'DiffuseStrength',0.1,'SpecularStrength',0.6,'SpecularExponent',10);
   case 'cam'
+    camlight(H.light(1),'headlight','infinite');
     set(caml,'visible','on');
 end
 set(get(get(obj,'parent'),'children'),'Checked','off');
@@ -1309,7 +1312,7 @@ for i=1:numel(P)
     H = getappdata(ancestor(P(i),'axes'),'handles');
     set(H.axis,'cameraposition',v);
     axis(H.axis,'image');
-    if strcmp(H.catLighting,'cam') && ~isempty(H.light), camlight(H.light(1)); end
+    if strcmp(H.catLighting,'cam') && ~isempty(H.light), camlight(H.light(1),'headlight','infinite'); end
 end
 
 %==========================================================================

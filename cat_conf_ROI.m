@@ -39,9 +39,19 @@ for ai = 1:size(exatlas,1)
     end
     atlaslist{end+1,1} = ff; 
 
+    license = {'' ' (non-commercial)'}; 
+    if size(exatlas,2)>4
+      lic = exatlas{ai,5}; 
+    else
+      switch ff
+        case 'hammers', lic = 1; 
+        otherwise,      lic = 0; 
+      end
+    end
+    
     matlas{mai}        = cfg_menu;
     matlas{mai}.tag    = ff;
-    matlas{mai}.name   = ff; 
+    matlas{mai}.name   = [ff license{lic+1}]; 
     matlas{mai}.labels = {'No','Yes'};
     matlas{mai}.values = {0 1};
     matlas{mai}.def    = eval(sprintf('@(val) cat_get_defaults(''output.atlases.%s'', val{:});',ff)); 
@@ -72,10 +82,29 @@ for ai = 1:size(exatlas,1)
   end
 end
 
+ownatlas              = cfg_files;
+ownatlas.tag          = 'ownatlas';
+ownatlas.name         = 'own atlas maps';
+ownatlas.help         = { 
+  sprintf([
+    'Select images that should be used as further atlas maps.  ' ...
+    'The maps should only contain positive integer for regions of interest.  ' ...
+    'You can use a CSV-file, with the same name as the atlas, to define region ' ...
+    'names similar to the CSV-files of other atlas files in "%s".  ' ...
+    'The CSV-file, should have an headler line containing the number of the ROI "ROIid", ' ...
+    'the abbreviation of the ROI "ROIabbr", and the full name of the ROI "ROIname".  ' ...
+    'The GM, WM, and CSF values will be extracted for all regions. '], ...
+    fullfile( spm('dir'), 'toolbox', 'cat12', 'templates_1.50mm') ); 
+  ''};
+ownatlas.filter       = 'image';
+ownatlas.ufilter      = '.*';
+ownatlas.val{1}       = {''};
+ownatlas.num          = [0 Inf];
+
 atlases          = cfg_branch;
 atlases.tag      = 'atlases';
 atlases.name     = 'Atlases';
-atlases.val      = matlas;
+atlases.val      = [matlas,{ownatlas}];
 atlases.help     = {'Writing options of ROI atlas maps.'
 ''
 };
@@ -175,9 +204,8 @@ nosROI.help   = {'No surface ROI processing'};
 exatlas  = cat_get_defaults('extopts.satlas'); 
 matlas = {}; mai = 1; atlaslist = {}; 
 for ai = 1:size(exatlas,1)
-  afile = char(cat_vol_findfiles( fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces') , ['lh.' exatlas{ai,2} '*.annot'] ));
-  if exatlas{ai,3}<=expert && ~isempty(afile)
-    [pp,ff]  = spm_fileparts( afile ); 
+  if exatlas{ai,3}<=expert && ~isempty(exatlas{ai,2})
+    [pp,ff]  = spm_fileparts( exatlas{ai,2} ); 
     name = exatlas{ai,1}; 
 
     % if output.atlases.ff does not exist then set it by the default file value
@@ -186,9 +214,21 @@ for ai = 1:size(exatlas,1)
     end
     atlaslist{end+1,1} = name; 
 
+    if cat_get_defaults('extopts.expertgui') 
+      if strcmp(spm_str_manip(pp,'t'),'atlases_surfaces_32k')
+        addname = ' (32k)';
+      elseif strcmp(spm_str_manip(pp,'t'),'atlases_surfaces')
+        addname = ' (160k)';
+      else
+        addname = '';
+      end
+    else
+      addname = '';
+    end
+    
     matlas{mai}        = cfg_menu;
     matlas{mai}.tag    = name;
-    matlas{mai}.name   = name; 
+    matlas{mai}.name   = [name addname]; 
     matlas{mai}.labels = {'No','Yes'};
     matlas{mai}.values = {0 1};
     matlas{mai}.def    = eval(sprintf('@(val) cat_get_defaults(''output.atlases.%s'', val{:});',ff)); 
@@ -220,10 +260,17 @@ for ai = 1:size(exatlas,1)
   end
 end
 
+ownsatlas          = ownatlas;
+ownsatlas.filter   = '';
+ownsatlas.ufilter  = '.*'; 
+ownsatlas.help     = { 
+  'Select FreeSurfer surface annotation files (*.annot), FreeSurfer CURV-files, or GIFTI surfaces with positve integer with 32k or 160k faces. ';
+  ''};
+
 satlases          = cfg_branch;
 satlases.tag      = 'satlases';
 satlases.name     = 'Surface atlases';
-satlases.val      = matlas;
+satlases.val      = [matlas,{ownatlas}];
 satlases.help     = {'Writing options for surface ROI atlas maps.'
 ''
 };

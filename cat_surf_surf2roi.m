@@ -92,7 +92,7 @@ function varargout = cat_surf_surf2roi(job)
         [vertices, lrdata, colortable, lrcsv] = cat_io_FreeSurfer('read_annotation',job.rdata{ri});
         [vertices, rrdata, colortable, rrcsv] = cat_io_FreeSurfer('read_annotation',char(cat_surf_rename(job.rdata{ri},'side','rh')));
         clear vertices colortable;
-      case 'gii';
+      case 'gii'
         % gifti and csv-files
         rrdata = gifti(job.rdata{ri});
         lrdata = gifti(char(cat_surf_rename(rinfo,'side','rh'))); 
@@ -121,11 +121,17 @@ function varargout = cat_surf_surf2roi(job)
         sinfo = cat_surf_info(job.cdata{ti}{si},0);
         
         if all(~cell2mat(strfind({'central','hull','sphere','sphere.reg','resampledBySurf2roi'},sinfo.dataname)))
-
+          
+          if size(lrdata,1) > 150000
+            type = '160k';
+          else
+            type = '32k';
+          end
+          
           % load surface cdata 
           if job.resamp && sinfo.resampled==0 % do temporary resampling
-            lCS = get_resampled_values(job.cdata{ti}{si},job.debug);
-            rCS = get_resampled_values(cat_surf_rename(sinfo,'side','rh'),job.debug); 
+            lCS = get_resampled_values(job.cdata{ti}{si},job.debug,type);
+            rCS = get_resampled_values(cat_surf_rename(sinfo,'side','rh'),job.debug,type); 
           else
             switch sinfo.ee
               case '.gii'
@@ -206,10 +212,14 @@ function varargout = cat_surf_surf2roi(job)
   
 end
 
-function resamp = get_resampled_values(P,debug)
-  fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
+function resamp = get_resampled_values(P,debug,type)
+  if ~exist('type','var'), type = '160k'; end
+  switch type
+    case '160k', fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
+    case '32k',  fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k');
+  end   
   P = deblank(char(P));
-
+ 
   [pp,ff,ex]   = spm_fileparts(P);
 
   name = [ff ex];
@@ -227,6 +237,7 @@ function resamp = get_resampled_values(P,debug)
   Pfsavg     = fullfile(fsavgDir,[hemi '.sphere.freesurfer.gii']);
   Pmask      = fullfile(fsavgDir,[hemi '.mask']);
 
+  
   % check whether temporary resampled file already exists
   if ~exist(Pvalue,'file')
         

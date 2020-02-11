@@ -31,16 +31,18 @@ function cat_main_roi(job,trans,Ycls,Yp0)
   vx_vol  = sqrt( sum( trans.native.Vi.mat(1:3,1:3).^2 ) ); % voxel size of the processed image
 
   stime = cat_io_cmd('ROI estimation');   
-  if job.extopts.verb, fprintf('\n'); end; 
+  if job.extopts.verb, fprintf('\n'); end 
 
   % get atlases
   FAF = job.extopts.atlas; 
   FA  = {}; fai = 1;
   AN  = fieldnames(job.output.atlases);
   for ai = 1:numel(AN)
-    fafi = find(cellfun('isempty',strfind(FAF(:,1),[AN{ai} '.']))==0);
-    if ~isempty(fafi) && (isempty(job.output.atlases.(AN{ai})) || ...
-        job.output.atlases.(AN{ai})) , FA(fai,:) = FAF(fafi,:); fai = fai+1; end %#ok<AGROW>
+    fafi = find(cellfun('isempty',strfind(FAF(:,1),[AN{ai} '.']))==0,1); %#ok<STRCL1>
+    if ~isempty(fafi) && (isempty(job.output.atlases.(AN{ai})) || job.output.atlases.(AN{ai})) 
+      FA(fai,:) = FAF(fafi,:);  %#ok<AGROW>
+      fai = fai+1; 
+    end
   end
 
   if isempty(FA)
@@ -115,6 +117,10 @@ function cat_main_roi(job,trans,Ycls,Yp0)
     transa.odim = transw.odim;
     wYa   = cat_vol_ROInorm([],transa,ai,0,FA);
 
+    if job.extopts.WMHC == 3   
+      FA{ai,3} = unique( [FA{ai,3} {'wmh'}] ); %#ok<AGROW>
+    end
+    
 
     %% extract ROI data
     csv   = cat_vol_ROIestimate(wYp0,wYa,wYcls,ai,'V',[],FA{ai,3},FA);  % volume
@@ -125,8 +131,8 @@ function cat_main_roi(job,trans,Ycls,Yp0)
     % the ventricles or regions with relative low GM volume or high CSF volume. 
       csv  = cat_vol_ROIestimate(wYp0,wYa,wYth1,ai,'T',csv,{'gm'},job.extopts.atlas); %.*wYmim
       % correct for ventricular regions that use the 'Ven' keyword.
-      ven  = find(cellfun('isempty',strfind( csv(:,2) , 'Ven'))==0);
-      csv(ven,end) = {nan}; 
+      ven  = find(cellfun('isempty',strfind( csv(:,2) , 'Ven'))==0); %#ok<STRCL1>
+      csv(ven,end) = {nan};  %#ok<FNDSB>
       % correct for regions with relative low GM (<10%) or high CSF volume (>50%). 
       csvf = cat_vol_ROIestimate(wYp0,wYa,wYcls,ai,'V',[],{'csf','gm','wm'},FA);
       vola = [nan,nan,nan;cell2mat(csvf(2:end,3:end))]; 
@@ -160,8 +166,9 @@ function wYv = cat_vol_ROInorm(Yv,warped,ai,mod,FA)
   % load mask (and complete undefined parts)
   if isempty(Yv)
     % no input - load atlas
-   
-    if ~exist(FA{ai,1},'file')
+    [pp,ff,ee] = spm_fileparts(FA{ai,1});
+    FAai1 = fullfile(pp,[ff ee]); 
+    if ~exist(FAai1,'file')
       error('cat:cat_main:missAtlas','Miss cat atlas-file ''%s''!',FA{ai,1});
     end
     % try multiple times, because of read error in parallel processing
@@ -202,12 +209,12 @@ function wYv = cat_vol_ROInorm(Yv,warped,ai,mod,FA)
           eyev = eye(4); eyev(1:end-1) = eyev(1:end-1) * 1/fc;
           Yy   = zeros([ddim 3],'single');                        
           for k1=1:3
-            for i=1:ddim(3),
+            for i=1:ddim(3)
               Yy(:,:,i,k1) = single(spm_slice_vol(warped.y(:,:,:,k1),eyev*spm_matrix([0 0 i]),ddim(1:2),[1,NaN])); % adapt for res
             end
           end
           Yvi  = zeros(ddim,'single'); 
-          for i=1:ddim(3),
+          for i=1:ddim(3)
             Yvi(:,:,i) = single(spm_slice_vol(Yv(:,:,:),eyev*spm_matrix([0 0 i]),ddim(1:2),[1,NaN])); % adapt for res
           end
 
@@ -277,6 +284,7 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA)
     if exist(csvf,'file')
       csv = cat_io_csv(csvf,'','',struct('delimiter',';')); 
     else
+      cat_io_cprintf('warn',sprintf('\n    Cannot find ''%s'' csv-file with region names! ',ff)); 
       csv = [num2cell((1:max(Ya(:)))') ...
         cellstr([repmat('ROI',max(Ya(:)),1) num2str((1:max(Ya(:)))','%03d')]) ...
         cellstr([repmat('ROI',max(Ya(:)),1) num2str((1:max(Ya(:)))','%03d')])];
@@ -285,7 +293,7 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA)
     % remove empty rows and prepare structure names
     if size(csv,2)>2, csv(:,3:end)=[]; end
     for ri=size(csv,1):-1:1
-      if isempty(csv{ri,1}) || isempty(csv{ri,2}); 
+      if isempty(csv{ri,1}) || isempty(csv{ri,2}) 
         csv(ri,:)=[];
       elseif csv{ri,1}==0
         csv(ri,:)=[];
@@ -305,12 +313,13 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA)
         csv{1,end+1} = [name tissue{ti}];  %#ok<AGROW>
         for ri=2:size(csv,1)
           switch lower(tissue{ti})
-            case 'csf',   Ymm=single(Yv{3}) .* single(Ya==csv{ri,1});
-            case 'gm',    Ymm=single(Yv{1}) .* single(Ya==csv{ri,1});
-            case 'wm',    Ymm=single(Yv{2}) .* single(Ya==csv{ri,1});
-            case 'wmh',   Ymm=single(Yv{2}) .* single(Ya==csv{ri,1}); 
-            case 'brain', Ymm=single(Yv{1} + Yv{2} + Yv{3}) .* single(Ya==csv{ri,1});
-            case '',      Ymm=single(Ya==csv{ri,1});
+            case 'csf',    Ymm = single(Yv{3}) .* single(Ya==csv{ri,1});
+            case 'gm',     Ymm = single(Yv{1}) .* single(Ya==csv{ri,1});
+            case 'wm',     Ymm = single(Yv{2}) .* single(Ya==csv{ri,1});
+            case 'wmh',    Ymm = single(Yv{7}) .* single(Ya==csv{ri,1}); 
+            case 'brain',  Ymm = single(Yv{1} + Yv{2} + Yv{3} + Yv{7}) .* single(Ya==csv{ri,1});
+            case 'tissue', Ymm = single(        Yv{2} + Yv{3} + Yv{7}) .* single(Ya==csv{ri,1});
+            case '',       Ymm = single(Ya==csv{ri,1});
           end
           csv{ri,end} = 1/1000 * cat_stat_nansum(Ymm(:));
         end
@@ -319,12 +328,13 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA)
       otherwise % 
         csv{1,end+1} = strrep([name tissue{ti}],'Tgm','ct');  %#ok<AGROW>
         switch lower(tissue{ti})
-          case 'csf',   Ymm=Yp0toC(Yp0,1); 
-          case 'gm',    Ymm=Yp0toC(Yp0,2); 
-          case 'wm',    Ymm=Yp0toC(Yp0,3); 
-          case 'wmh',   Ymm=Yp0toC(Yp0,4); 
-          case 'brain', Ymm=Yp0>0.5;
-          case '',      Ymm=true(size(Yp0));
+          case 'csf',    Ymm = Yp0toC(Yp0,1); 
+          case 'gm',     Ymm = Yp0toC(Yp0,2); 
+          case 'wm',     Ymm = Yp0toC(Yp0,3); 
+          case 'wmh',    Ymm = Yp0toC(Yp0,4); 
+          case 'brain',  Ymm = Yp0>0.5;
+          case 'tissue', Ymm = Yp0>1.5;
+          case '',       Ymm = true(size(Yp0));
         end
         for ri=2:size(csv,1)
           csv{ri,end} = cat_stat_nanmean(Yv(Ya(:)==csv{ri,1} & Ymm(:)));

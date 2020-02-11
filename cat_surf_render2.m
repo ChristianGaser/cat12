@@ -122,6 +122,8 @@ switch lower(action)
         if isfield(O,'pcdata'), O.pcdata = cellstr(O.pcdata); end
         if isfield(O,'pmesh'),  O.pmesh  = cellstr(O.pmesh); end
         renderer = get(H.figure,'Renderer');
+        
+        %{
         try
           % warning to error
           val = feval('set',H.figure,'Renderer','OpenGL');
@@ -132,6 +134,7 @@ switch lower(action)
           cat_io_cprintf('err','OpenGL error - cannot display surface\n');
           return
         end
+        %}
       if ~isstruct(varargin{1}) && ~isa(varargin{1},'gifti')
         % surface info
         if nargin>=3
@@ -365,14 +368,17 @@ switch lower(action)
         % default lighting
         if 1 && ismac, H.catLighting = 'inner'; else H.catLighting = 'cam'; end
 
-        H.light(1) = camlight; set(H.light(1),'Parent',H.axis); 
+        
+        [caz,cel]  = view;
+        H.light(1) = camlight('headlight','infinite'); 
+        set(H.light(1),'Parent',H.axis,'Tag','camlight'); 
         switch H.catLighting
           case 'inner'
             % switch off local light (camlight)
             set(H.light(1),'visible','off','parent',H.axis);
 
             % set inner light
-            H.light(2) = light('Position',[0 0 0],'parent',H.axis); 
+            H.light(2) = light('Position',[0 0 0],'parent',H.axis,'Tag','centerlight'); 
             for pi=1:numel(H.patch)
               set(H.patch(pi),'BackFaceLighting','unlit');
             end
@@ -433,6 +439,10 @@ switch lower(action)
           %try
             cat_surf_render2('ContextMenu',H);
           %end
+        end
+        
+        if strcmp(renderer,'painters')
+          
         end
         
         % set default view
@@ -968,14 +978,14 @@ switch lower(action)
         macon = {'on' 'off'}; isinner = strcmp(H.catLighting,'inner'); 
         isouter = strcmp(H.catLighting,'outer'); 
         uimenu(c, 'Label','Cam',    'Checked',macon{isinner+1}, 'Callback', {@myLighting, H,'cam'});
-        if ismac && ~strcmp(H.sinfo(1).texture,'defects')
+        if ismac %&& ~strcmp(H.sinfo(1).texture,'defects')
           uimenu(c, 'Label','Inner',  'Checked',macon{2-isinner}, 'Callback', {@myLighting, H,'inner'});
           uimenu(c, 'Label','Outer',  'Checked',macon{2-isouter}, 'Callback', {@myLighting, H,'outer'});
         end
         uimenu(c, 'Label','Set1',   'Checked','off', 'Callback', {@myLighting, H,'set1'}, 'Separator', 'on');
         uimenu(c, 'Label','Set2',   'Checked','off', 'Callback', {@myLighting, H,'set2'});
         uimenu(c, 'Label','Set3',   'Checked','off', 'Callback', {@myLighting, H,'set3'});
-        if expert
+        if 0 % expert
           uimenu(c, 'Label','Top',    'Checked','off', 'Callback', {@myLighting, H,'top'}, 'Separator', 'on');
           uimenu(c, 'Label','Bottom', 'Checked','off', 'Callback', {@myLighting, H,'bottom'});
           uimenu(c, 'Label','Left',   'Checked','off', 'Callback', {@myLighting, H,'left'});
@@ -1408,6 +1418,13 @@ switch lower(action)
         end
         setappdata(H.axis,'handles',H);
 
+    %-TextureTransparency
+    %======================================================================
+    case 'texturetransparency'
+        if isempty(varargin), varargin{1} = gca; end
+        H = getHandles(varargin{1}); 
+        myTextureTransparency(H,[],H)
+   
     %-Otherwise...
     %======================================================================
     otherwise
@@ -1686,16 +1703,16 @@ function myPostCallback(obj,evt,H)
     cam.ang = get(H.axis,'CameraViewAngle');
     P = findobj('Tag','CATSurfRender','Type','Patch');
     P = setxor(H.patch,P); 
-    if strcmp(H.light(1).Visible,'on'), camlight(H.light(1)); end
+    if strcmp(H.light(1).Visible,'on'), camlight(H.light(1),'headlight','infinite'); end
     for i=1:numel(P)
         HP = getappdata(ancestor(P(i),'axes'),'handles');
         set(HP.axis,'cameraposition',cam.pos,'CameraUpVector',cam.vec,...
           'CameraViewAngle',cam.ang,'CameraTarget',cam.tag);
         axis(HP.axis,'image');
-        if strcmp(HP.catLighting,'cam') && ~isempty(HP.light), camlight(HP.light(1)); end
+        if strcmp(HP.catLighting,'cam') && ~isempty(HP.light), camlight(HP.light(1),'headlight','infinite'); end
     end
   else
-    if strcmp(H.light(1).Visible,'on'), camlight(H.light(1)); end
+    if strcmp(H.light(1).Visible,'on'), camlight(H.light(1),'headlight','infinite'); end
   end  
 %P = findobj(obj,'Tag','CATSurfRender','Type','Patch');
 %if numel(P) == 1
@@ -1865,7 +1882,7 @@ end
 function myView(obj,evt,H,varargin)
 view(H.axis,varargin{1});
 axis(H.axis,'image');
-if strcmp(H.catLighting,'cam') && ~isempty(H.light), camlight(H.light(1)); end
+if strcmp(H.catLighting,'cam') && ~isempty(H.light), camlight(H.light(1),'headlight','infinite'); end
 
 %==========================================================================
 function myZoom(obj,evt,H,action)
@@ -1911,8 +1928,9 @@ switch newcatLighting
     y = {'on','off'}; toggle = @(x) y{1+strcmpi(x,'on')};
     % set old lights
     H.catLighting = newcatLighting;
-    delete(findall(H.axis,'Type','light','Style','infinite')); % remove old infinite lights
-    caml = findall(H.axis,'Type','light','Style','local');     % switch off local light (camlight)
+    delete(findall(H.axis,'Type','light','Tag',''));                    % remove old infinite lights
+    delete(findall(H.axis,'Type','light','Tag','centerlight'));     
+    caml = findall(H.axis,'Type','light','Tag','camlight');   % switch off camlight
     set(caml,'visible','off'); 
 
     % new lights
@@ -1982,8 +2000,9 @@ switch newcatLighting
         H.light(5) = light('Position',[ 0 -1  1],'Color',repmat(0.2,1,3),'parent',H.axis,'Style','infinite'); 
         H.light(6) = light('Position',[ 0  0 -1],'Color',repmat(0.1,1,3),'parent',H.axis,'Style','infinite');   
       case 'cam'
-        pause(0.01); % this is necessary to remove lights of previous used lightset ... don't know why, but without it didn't work!
-        set(caml,'Visible','on');  camlight(caml);
+        %pause(0.01); % this is necessary to remove lights of previous used lightset ... don't know why, but without it didn't work!
+        camlight(H.light(1),'headlight','infinite');
+        set(caml,'Visible','on');  
     end
     lighting gouraud
     set(get(get(obj,'parent'),'children'),'Checked','off');
@@ -2241,7 +2260,7 @@ for i=1:numel(P)
     H = getappdata(ancestor(P(i),'axes'),'handles');
     set(H.axis,'cameraposition',v,'CameraUpVector',a,'CameraViewAngle',b);
     axis(H.axis,'image');
-    if strcmp(H.catLighting,'cam') && ~isempty(H.light), camlight(H.light(1)); end
+    if strcmp(H.catLighting,'cam') && ~isempty(H.light), camlight(H.light(1),'headlight','infinite'); end
 end
 %==========================================================================
 function mySynchroniseViews(obj,evt,H)

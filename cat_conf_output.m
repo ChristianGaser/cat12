@@ -354,15 +354,15 @@ function [output,output_spm,output1173] = cat_conf_output(expert)
 
   %% ------------------------------------------------------------------------
   
-  ROI         = cat_conf_ROI(expert);       % ROI options
+  [ROI,sROI]  = cat_conf_ROI(expert);       % ROI options
   
   output      = cfg_branch;
   output.tag  = 'output';
   output.name = 'Writing options';
   if expert==2
-    output.val  = {surface surf_measures ROI grey white csf gmt pp wmh sl tpmc atlas label bias las jacobianwarped warps}; 
+    output.val  = {surface surf_measures ROI sROI grey white csf gmt pp wmh sl tpmc atlas label bias las jacobianwarped warps}; 
   elseif expert==1
-    output.val  = {surface surf_measures ROI grey white csf wmh sl tpmc atlas label bias las jacobianwarped warps};
+    output.val  = {surface ROI sROI grey white csf wmh sl tpmc atlas label bias las jacobianwarped warps};
   else
     output.val  = {surface ROI grey white labelnative bias jacobianwarped warps};
   end

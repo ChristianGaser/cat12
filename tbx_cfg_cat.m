@@ -116,7 +116,7 @@ estwrite.name   = 'CAT12: Segmentation';
 %NEW NAME?: [catv,catr,catd] = cat_version;
 %           estwrite.name    = sprintf('CAT12.6plus: Segmentation %s (%s/%s)',catr,catd(1:4),catd(6:7));
 % use multithreading only if availabe
-if numcores > 1 & ~isdeployed
+if numcores > 1 && ~isdeployed
   if expert>1
     estwrite.val    = {data data_wmh nproc opts extopts output};
   else
@@ -357,7 +357,7 @@ end
 
 % XML label
 if isfield(opts,'ROImenu') && isfield(opts.ROImenu,'atlases') && ...
-  any(cell2mat(struct2cell(opts.ROImenu.atlases)))
+  any(cell2mat(struct2cell(opts.ROImenu.atlases(1:end-1))))
     cdep(end+1)          = cfg_dep;
     cdep(end).sname      = 'ROI XML File';
     cdep(end).src_output = substruct('()',{1}, '.','roi','()',{'1'});

@@ -609,7 +609,7 @@ function varargout = cat_stat_check_cov2(job)
       'Protocol-based IQR (PIQR)'; ...
       'Euler number';...
       'Size of topology defects (TDS)'};
-    cscc.data.QM_names = cscc.data.QM_names(1:size(cscc.data.QM,2)); % remove Euler
+    cscc.data.QM_names = cscc.data.QM_names(1:min( numel(cscc.data.QM_names) , size(cscc.data.QM,2) )); % remove Euler
     
     spm_progress_bar('Init',n_subjects,'Load xml-files','subjects completed')
     spm_figure('GetWin','Interactive');

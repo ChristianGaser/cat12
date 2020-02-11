@@ -485,15 +485,64 @@ function job = update_job(job)
   % ROI atlas maps
   if isfield(job.output,'ROImenu') % expert/developer GUI that allows control each atlas map 
     if isfield(job.output.ROImenu,'atlases')
-      % image output
-      def.output.atlases = job.output.ROImenu.atlases;
-      def.output.ROI     = any(cell2mat(struct2cell(job.output.ROImenu.atlases))); 
+      %% image output
+      atlases = rmfield(job.output.ROImenu.atlases,'ownatlas'); 
+      def.output.atlases = atlases;
+      def.output.ROI     = any(cell2mat(struct2cell(atlases))) || ~isempty( job.output.ROImenu.atlases.ownatlas ); 
+      
+      if ~isempty( job.output.ROImenu.atlases.ownatlas ) && ~isempty( job.output.ROImenu.atlases.ownatlas{1} )
+        for i=1:numel( job.output.ROImenu.atlases.ownatlas ) 
+          [pp,ff,ee] = spm_fileparts( job.output.ROImenu.atlases.ownatlas{i} ); 
+          if any(~cellfun('isempty',strfind( spm_str_manip( def.extopts.atlas(:,1) ,'cs') ,ff)))
+            error('cat_run:ownatlasname', ...
+             ['There is a atlas file name conflict. Each atlas name has to be unique. \n' ...
+              'Please rename your own atlas map "%s". \n'],fullfile(pp,[ff ee]) ); 
+          else
+            % add new atlas  
+            def.output.atlases.(ff) = 1; 
+            def.extopts.atlas = [ def.extopts.atlas; [ {job.output.ROImenu.atlases.ownatlas{i}} {def.extopts.expertgui} {{'gm','wm','csf'}} {0} ] ]; 
+          end
+        end
+      end
     else
       def.output.atlases = struct();
       def.output.ROI     = 0; 
     end
     job = cat_io_checkinopt(job,def);
   end
+  % ROI atlas maps
+  if isfield(job.output,'sROImenu') % expert/developer GUI that allows control each atlas map 
+    if isfield(job.output.sROImenu,'satlases')
+      %% image output
+      satlases = rmfield(job.output.sROImenu.satlases,'ownatlas'); 
+      def.output.satlases = satlases;
+      def.output.sROI     = any(cell2mat(struct2cell(satlases))) || ~isempty( job.output.ROImenu.satlases.ownatlas ); 
+      
+      if ~isempty( job.output.sROImenu.satlases.ownatlas ) && ~isempty( job.output.sROImenu.satlases.ownatlas{1} )
+        for i=1:numel( job.output.sROImenu.satlases.ownatlas ) 
+          [pp,ff,ee] = spm_fileparts( job.output.sROImenu.satlases.ownatlas{i} ); 
+          if any(~cellfun('isempty',strfind( spm_str_manip( def.extopts.satlas(:,1) ,'cs') ,ff)))
+            error('cat_run:ownatlasname', ...
+             ['There is a surface atlas file name conflict. Each atlas name has to be unique. \n' ...
+              'Please rename your own surface atlas map "%s". \n'],fullfile(pp,[ff ee]) ); 
+          else
+            % add new atlas  
+            def.output.satlases.(ff) = 1; 
+            def.extopts.satlas = [ def.extopts.satlas; [ {ff} job.output.sROImenu.satlases.ownatlas(i) {def.extopts.expertgui} {0} ] ]; 
+          end
+        end
+      end
+    else
+      def.output.atlases = struct();
+      def.output.sROI    = 0; 
+    end
+    job = cat_io_checkinopt(job,def);
+  else
+    def.output.atlases = struct();
+    def.output.sROI    = 0; 
+    job = cat_io_checkinopt(job,def);
+  end
+  
   
   if ~isfield(job.output,'atlases') 
     % default GUI that only allow to switch on the settings defined in the default file 
@@ -508,7 +557,26 @@ function job = update_job(job)
       job.output.ROI     = any(cell2mat(struct2cell(job.output.atlases))); 
     end
   end
- 
+  if ~isfield(job.output,'satlases') 
+    % default GUI that only allow to switch on the settings defined in the default file 
+    if ~isfield(job.extopts,'satlas')
+      job.extopts.satlas  = def.extopts.satlas;
+    end
+    
+    job.output.satlases   = struct();
+    if job.output.sROI 
+      % if output, than use the parameter of the default file
+      job.output.satlases = cell2struct(job.extopts.satlas(:,4)',spm_str_manip(job.extopts.satlas(:,1),'tr')',2);
+      job.output.sROI     = any(cell2mat(struct2cell(job.output.satlases))); 
+    end
+  end  
+  
+  if ~isfield(job.output,'atlases')
+    if ~isfield(job.extopts,'atlas') && job.output.surface
+      job.extopts.satlas = def.extopts.satlas;
+    end
+  end  
+  
   % simplyfied default user GUI input
   if isfield(job.output,'labelnative') 
     job.output.label.native = job.output.labelnative; 
@@ -527,7 +595,7 @@ function job = update_job(job)
     job.extopts.atlas{ai,4} = job.extopts.atlas{ai,2}<=cat_get_defaults('extopts.expertgui') && ...
       exist(job.extopts.atlas{ai,1},'file') && isfield(def.output,'atlases') && isfield(def.output.atlases,ff) && def.output.atlases.(ff);
     % show licence message
-    if ~isempty(strfind(ff,'hammers')) & job.extopts.atlas{ai,4}
+    if ~isempty(strfind(ff,'hammers')) && job.extopts.atlas{ai,4}
       disp('--------------------------------------------')
       disp('Free academic end user license agreement')
       alert_str = ['For using the Hammers atlas, please fill out license agreement at <a href =',...
@@ -536,6 +604,7 @@ function job = update_job(job)
       disp('--------------------------------------------')
     end
   end
+
 
   job = cat_io_checkinopt(job,def);
   if ~isfield(job.extopts,'restypes')
@@ -574,9 +643,9 @@ function job = update_job(job)
   %  Although lower resolution (>3 mm) is not really faster and maybe much 
   %  worse in sense of quality, it is simpler to have a linear decline
   %  rather than describing the other case. 
-  %  RD20200130: Took me a day to figure out that the SPM7771 US failed in 
+  %  RD20200130: Takes me a day to figure out that the SPM7771 US failed in 
   %              T1_dargonchow but also single_subjT1 by lower sampl res.
-  %              Keep in mind that this affects volume resolution (^3), eg
+  %              Keep in mind that this effects volume resolution (^3), eg
   %              [32 16 8 4 2] .^(1/3) is close to these values
   sampval           = [3 2.5 2 1.5 1]; 
   tolval            = [1e-2 1e-3 1e-4 1e-5 1e-6];
