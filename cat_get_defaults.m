@@ -50,6 +50,10 @@ if nargin == 1
     end
     return;
 elseif nargin == 2
+  if iscell( varargin{1} )
+    % add an new entry
+    cat = subsasgn(cat, subs, varargin{1});
+  else
     switch varargin{1}
         case 'rmfield'
           % remove the last field of the given defstr
@@ -68,6 +72,7 @@ elseif nargin == 2
           % add an new entry
             cat = subsasgn(cat, subs, varargin{1});
     end
+  end
 end
 if nargout == 1
   % output in case changes in cat

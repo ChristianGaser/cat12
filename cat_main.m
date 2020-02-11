@@ -704,27 +704,35 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
       [0,0.0001],job.output.ct,trans,single(Ycls{1})/255,0.1);
   end
   
-  % estimate surface ROI estimates for thickness
-  [pp,ff]   = spm_fileparts(VT.fname);
-  if cat_get_defaults('extopts.subfolders')
-    surffolder = 'surf';
-    pp = spm_str_manip(pp,'h'); % remove 'mri' in pathname that already exists
-  else
-    surffolder = '';
-  end
-  if ff(1)=='n'
-    if (exist(fullfile(pp,[ff(2:end) '.nii']), 'file')) || (exist(fullfile(pp,[ff(2:end) '.img']), 'file'))
-      ff = ff(2:end);
+  if job.output.sROI
+    cat_io_cmd('  Surface ROI estimation');  
+    
+    %% estimate surface ROI estimates for thickness
+    [pp,ff]   = spm_fileparts(VT.fname);
+    if cat_get_defaults('extopts.subfolders')
+      surffolder = 'surf';
+      pp = spm_str_manip(pp,'h'); % remove 'mri' in pathname that already exists
+    else
+      surffolder = '';
     end
-  end
-  Pthick_lh = cell(1,1);
-  Pthick_lh{1} = fullfile(pp,surffolder,sprintf('lh.thickness.%s',ff));
-  cat_surf_surf2roi(struct('cdata',{{Pthick_lh}}));
+    if ff(1)=='n'
+      if (exist(fullfile(pp,[ff(2:end) '.nii']), 'file')) || (exist(fullfile(pp,[ff(2:end) '.img']), 'file'))
+        ff = ff(2:end);
+      end
+    end
 
+    Psatlas_lh   = job.extopts.satlas(  [job.extopts.satlas{:,3}]>0 , 2);
+    Pthick_lh    = cell(1,1);
+    Pthick_lh{1} = fullfile(pp,surffolder,sprintf('lh.thickness.%s',ff));
+    cat_surf_surf2roi(struct('cdata',{{Pthick_lh}},'rdata',{Psatlas_lh}));
+  end
+  
   cat_io_cmd('Surface and thickness estimation');  
   fprintf('%5.0fs\n',etime(clock,stime));
   if ~debug; clear YMF Yp0; end
   if ~debug && ~job.output.ROI && job.output.surface, clear Yth1; end
+  
+  
 else
   %if ~debug; clear Ymi; end
 end

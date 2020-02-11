@@ -1,5 +1,44 @@
 ------------------------------------------------------------------------
-r1561 | gaser | 2020-02-04 16:48:58
+r1562 | dahnke | 2020-02-11 14:51:07
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_ROI.m
+M       cat_conf_output.m
+M       cat_defaults.m
+M       cat_get_defaults.m
+M       cat_main.m
+M       cat_main_roi.m
+M       cat_run.m
+M       cat_stat_check_cov2.m
+M       cat_surf_render.m
+M       cat_surf_render2.m
+M       cat_surf_resamp.m
+M       cat_surf_surf2roi.m
+M       html/cat_methods_RBM.html
+M       tbx_cfg_cat.m
+A       templates_surfaces/mesh.inflated.freesurfer.gii
+A       templates_surfaces_32k/mesh.inflated.freesurfer.gii
+
+(1) New:      Added OS to CAT report. 
+(2) Changed:  Updated camlight setting in cat_surf_render(2) to avoid
+              shadows by using frontal light.  
+(3) Fixed:    Corrected bug in cat_surf_render input in developer mode.
+(4) Fixed:    Corrected bug in cat_stat_checkcov2.
+(5) Fixed:    Corrected bug in cat_surf_resamp that depends on the 
+              input structures of different user levels.
+(6) Changed:  Updated cat_get_defaults for cell updates.
+(7) Changed:  Updated cat_main_roi for WMH output in case of WMHC==3.
+              Added support for own atlas maps.
+(8) Changed:  Added differentiation between 32k and 160k surfaces and
+              basic support of own atlas maps in cat_surf_surf2roi.
+(9) New:      Added menu elements to support own volume- and surface-
+              based atlas maps.  Updated surface atlas definition in 
+              cat_defaults, tbx_cat_defaults, cat_conf_output, cat_main
+              and cat_run.              
+              
+------------------------------------------------------------------------
+r1561 | gaser | 2020-02-04 16:49:34 +0100 (Di, 04 Feb 2020) | 23 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -22,6 +61,7 @@ M       html/cat.html
 
 1. Changed: Added side-name to pp-file in cat_surf_createCS*.m.
 2. Fixed: Corrected typos...
+
 
 ------------------------------------------------------------------------
 r1560 | dahnke | 2020-01-30 15:38:24 +0100 (Do, 30 Jan 2020) | 13 lines
