@@ -195,7 +195,7 @@ if ~exist('repeated_anova','var')
       count = 0;
       for i=1:n_groups
         ind_times{i} = count + (1:max(SPM.xX.I(find(SPM.xX.I(:,3)==i),4)));
-        count = max(SPM.xX.I(find(SPM.xX.I(:,3)==i),4));
+        count = count + max(SPM.xX.I(find(SPM.xX.I(:,3)==i),4));
       end
       n_time = max(SPM.xX.I(:,4));
       n_groupsxtime = n_groups*n_time;
