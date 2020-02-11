@@ -22,9 +22,13 @@ function varargout = cat_surf_resamp(varargin)
 
   if nargin == 1
     if iscell(varargin{1}.data_surf)
-      P = []; 
+      P = ''; 
       for i = 1:numel(varargin{1}.data_surf)
-        P = char(P, varargin{1}.data_surf{i});  
+        if iscell( varargin{1}.data_surf{i} )
+          P = [P; char(varargin{1}.data_surf{i})];  
+        else
+          P = char( [cellstr(P); varargin{1}.data_surf(i) ] );  
+        end
       end
       P = P(2:end,:);
     else
