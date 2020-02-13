@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1564 | gaser | 2020-02-11 17:10:37
+r1565 | gaser | 2020-02-13 10:57:35
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_ROI.m
+M       cat_conf_stools.m
+M       cat_defaults.m
+MM      cat_io_send_to_server.m
+M       cat_run.m
+M       templates_1.50mm/lpba40.txt
+M       use_of_external_software.txt
+
+(1) Changed: Updated license information for atlases and added printing of
+    licene information for LPBA40 and Hammers atlas.
+(2) Changed: Updated defaults for atlases.
+(3) Changed: Recompiled CAT-binaries because of error in CAT_3dVol2Surf for
+    equi-volume mapping.
+------------------------------------------------------------------------
+r1564 | gaser | 2020-02-11 17:10:56 +0100 (Di, 11 Feb 2020) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +28,7 @@ M       html/cat.html
  M      templates_surfaces_32k/mesh.inflated.freesurfer.gii
 
 Fixed: Typos...
+
 ------------------------------------------------------------------------
 r1563 | gaser | 2020-02-11 17:00:46 +0100 (Di, 11 Feb 2020) | 23 lines
 

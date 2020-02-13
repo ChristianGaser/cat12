@@ -526,9 +526,9 @@ function [vol2surf,vol2tempsurf] = cat_surf_vol2surf_GUI(expert,merge_hemi,mesh3
   };
   rel_equivol_mapping.help    = {
     'Map volumetric data from relative positions within a tissue class using equi-volume approach. '
-    'This option is using the approach by Bok (Z. Gesamte Neurol. Psychiatr. 12, 682???750, 1929). '
+    'This option is using the approach by Bok (Z. Gesamte Neurol. Psychiatr. 12, 682-750, 1929). '
     'Here, the volume between the grids is constant. The correction is based on Waehnert et al. (NeuroImage, 93: 210-220, 2014).'
-    'Please note that this option is intended for high-resolution (f)MRI data only'
+    'Please note that this option is intended for high-resolution (f)MRI data only.'
     '' 
   };
 

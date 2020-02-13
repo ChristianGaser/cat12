@@ -39,12 +39,13 @@ for ai = 1:size(exatlas,1)
     end
     atlaslist{end+1,1} = ff; 
 
-    license = {'' ' (non-commercial)'}; 
+    license = {'' ' (no commercial use)' ' (free academic use)'}; 
     if size(exatlas,2)>4
       lic = exatlas{ai,5}; 
     else
       switch ff
-        case 'hammers', lic = 1; 
+        case 'hammers', lic = 2; 
+        case 'lpba40' , lic = 1; 
         otherwise,      lic = 0; 
       end
     end
