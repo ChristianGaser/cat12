@@ -14,6 +14,10 @@ References:
 This paper should be referenced in any works that use the data provided here.
 Any feedback regarding this collection of data can be addressed to David Shattuck (shattuck@loni.ucla.edu). We encourage investigators who develop projects based on this collection to let us know about their work.
 
+License:
+LONI Research License (no commercial use)
+https://www.loni.usc.edu/docs/atlases_methods/Human_Atlas_Methods.pdf
+
 --------------------------------------------------------------------------------
 
 Delineation
