@@ -13,7 +13,7 @@ function cat_io_send_to_server(urlinfo)
 %   Department of Neurology
 %   University Jena
 % ______________________________________________________________________
-% $Id: cat_io_send_to_server.m 1552 2020-01-17 10:19:24Z gaser $
+% $Id$
   
 urlinfo = regexprep(urlinfo, '\n', '%20'); % replace returns
 urlinfo = regexprep(urlinfo, ' ' , '%20'); % replace spaces

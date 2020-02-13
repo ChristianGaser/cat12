@@ -604,9 +604,17 @@ function job = update_job(job)
     % show licence message
     if ~isempty(strfind(ff,'hammers')) && job.extopts.atlas{ai,4}
       disp('--------------------------------------------')
-      disp('Free academic end user license agreement')
+      disp('Free academic end user license agreement for Hammers atlas')
       alert_str = ['For using the Hammers atlas, please fill out license agreement at <a href =',...
       ' "http://brain-development.org/brain-atlases/adult-brain-atlases/adult-brain-maximum-probability-map-hammers-mith-atlas-n30r83-in-mni-space">www.brain-development.org</a>'];
+      disp(alert_str);
+      disp('--------------------------------------------')
+    end
+    if ~isempty(strfind(ff,'lpba40')) && job.extopts.atlas{ai,4}
+      disp('--------------------------------------------')
+      disp('No commercial use of LPBA40 atlas')
+      alert_str = ['Permission is granted to use this atlas without charge for non-commercial research purposes only: <a href =',...
+      ' "https://www.loni.usc.edu/docs/atlases_methods/Human_Atlas_Methods.pdf">https://www.loni.usc.edu/docs/atlases_methods/Human_Atlas_Methods.pdf</a>'];
       disp(alert_str);
       disp('--------------------------------------------')
     end
