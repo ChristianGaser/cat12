@@ -97,7 +97,6 @@ function out = cat_surf_vol2surf(varargin)
   end
   job = cat_io_checkinopt(job,def);
   
-
   % if no data_mesh_lh is given for normalized space use default
   % Dartel template surface
   if ~isfield(job,'data_mesh_lh')
@@ -232,6 +231,11 @@ function out = cat_surf_vol2surf(varargin)
   mapdef.class = 'GM';
   job.mapping.(mapping) = cat_io_checkinopt( job.mapping.(mapping),mapdef);
  
+  % if only one step is defined force use of "max" as sampling function
+  if job.mapping.(mapping).steps == 1
+    job.sample{1} = 'max';
+  end
+  
   mappingstr = sprintf('-%s -%s -steps "%d" -start "%0.4f" -end "%0.4f"',...
        job.interp{1},job.sample{1}, job.mapping.(mapping).steps, job.mapping.(mapping).startpoint,...
        job.mapping.(mapping).endpoint);   
