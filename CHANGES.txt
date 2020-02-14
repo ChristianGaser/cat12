@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1566 | gaser | 2020-02-13 11:25:02
+r1567 | gaser | 2020-02-14 13:49:39
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       html/cat.html
+M       html/cat.txt
+M       html/cat_acknowledgement.html
+A       html/cat_licences.html
+A       html/cat_references.html
+D       use_of_external_software.txt
+
+(1) Changed: Added license information about used software and atlases.
+(2) Changed: Added site with references for citation.
+
+------------------------------------------------------------------------
+r1566 | gaser | 2020-02-13 11:25:08 +0100 (Do, 13 Feb 2020) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +23,7 @@ M       cat_surf_vol2surf.m
 
 Fixed: If only one step is defined for volume mapping force use of "max" as 
 sampling function.
+
 ------------------------------------------------------------------------
 r1565 | gaser | 2020-02-13 10:58:08 +0100 (Do, 13 Feb 2020) | 16 lines
 
