@@ -546,7 +546,7 @@ function job = update_job(job)
     job = cat_io_checkinopt(job,def);
   else
     def.output.atlases = struct();
-    def.output.sROI    = 0; 
+    def.output.sROI    = 1; 
     job = cat_io_checkinopt(job,def);
   end
   
