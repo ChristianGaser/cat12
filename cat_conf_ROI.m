@@ -113,7 +113,7 @@ atlases.help     = {'Writing options of ROI atlas maps.'
 
 ROI        = cfg_choice;
 ROI.tag    = 'ROImenu';
-ROI.name   = 'Process ROIs';
+ROI.name   = 'Process Volume ROIs';
 if cat_get_defaults('output.ROI')>0
   ROI.val  = {atlases};
 else

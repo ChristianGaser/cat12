@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1567 | gaser | 2020-02-14 13:49:39
+r1568 | gaser | 2020-02-14 15:36:31
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_ROI.m
+M       cat_run.m
+M       html/cat.html
+
+Fixed: Writing of surface ROIs were not recognized in cat_run.m for default
+user mode.
+------------------------------------------------------------------------
+r1567 | gaser | 2020-02-14 13:49:49 +0100 (Fr, 14 Feb 2020) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +25,7 @@ D       use_of_external_software.txt
 
 (1) Changed: Added license information about used software and atlases.
 (2) Changed: Added site with references for citation.
+
 
 ------------------------------------------------------------------------
 r1566 | gaser | 2020-02-13 11:25:08 +0100 (Do, 13 Feb 2020) | 7 lines
