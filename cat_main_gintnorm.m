@@ -232,7 +232,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     %         max(res.mn(res.lkp==1 & res.mg'>0.1)) ...
     %         max(res.mn(res.lkp==2 & res.mg'>0.1))];
     T3th  = [BGmin ... minimum
-             BGcon ... cat_stat_nanmean background (MT contrast with strong background noise)
+             min(BGcon,BGmin*0.1+0.9*T3th3(1)) ... cat_stat_nanmean background (MT contrast with strong background noise)
              T3th3 ... csf gm wm 
              max(T3th3) + abs(diff(T3th3([1,numel(T3th3)])/2)) ... higher
              max(T3th3(end) + abs(diff(T3th3([1,numel(T3th3)])/2)) , ... maximum

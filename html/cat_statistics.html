@@ -36,7 +36,7 @@
       </p>
         <ul>
           <li>Start: Information about Matlab version. This data is sent to our SBM server when CAT12 is started and provides the approximate number of (unique) users (see unique pageviews)</li>
-          <li>CAT12.X: Information about CAT12 version, computer platform and successful or unsuccessful preprocessings. This data is sent to our SBM server during preprocessing to obtain information about possible errors and the overall number of successful preprocessings (see pageviews).</li>
+          <li>CAT12.X: Information about CAT12 version, computer platform and unsuccessful preprocessings. This data is sent to our SBM server during preprocessing to obtain information about possible errors (see pageviews).</li>
         </ul>
         <ul>
     </div>
@@ -52,9 +52,6 @@
           <li>Anonymized IP address (e.g. 192.168.100.xxx) is sent to the SBM server for geolocation and to get number of unique users.</li>
           <li>Information about Matlab version is sent when CAT12 is started using the following Matlab command:
 	          </br><i> urlread(sprintf('http://141.35.69.218/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s','Start','%2F',version('-release')));</i>
-          </li>
-          <li>Information about CAT12 version, computer platform and number of files to be processed is sent during preprocessing using the Matlab command:
-	          </br><i> urlread(sprintf('http://141.35.69.218/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%s%s%s%d',cat_version,'%2F',computer,'%2F','processed','%2F',n_subjects));</i>	          
           </li>
           <li>Information about CAT12 version and computer platform is sent during preprocessing if any errors occurred using the Matlab command:
 	          </br><i> urlread(sprintf('http://141.35.69.218/piwik/piwik.php?idsite=1&rec=1&action_name=%s%s%s%s%s%s%s',cat_version,'%2F',computer,'%2F',caterr.message,'%2F',str_err));</i>  	          
