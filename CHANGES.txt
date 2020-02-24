@@ -1,5 +1,24 @@
 ------------------------------------------------------------------------
-r1568 | gaser | 2020-02-14 15:36:31
+r1569 | gaser | 2020-02-24 14:24:12
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_main_gintnorm.m
+M       cat_run.m
+M       cat_vol_groupwise_ls.m
+M       html/cat.html
+ M      html/cat_licences.html
+ M      html/cat_references.html
+M       html/cat_statistics.html
+
+(1) Changed: Disabled send of piwik information about number of processed files.
+(2) Changed: Added call to old spm_diffeo function for fmg if the new functions
+    ends up in NaNs in cat_vol_groupwise_ls.m.
+(3) Changed: Updated parameters for MT contrasts with strong background noise.
+------------------------------------------------------------------------
+r1568 | gaser | 2020-02-14 15:37:03 +0100 (Fr, 14 Feb 2020) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +29,7 @@ M       html/cat.html
 
 Fixed: Writing of surface ROIs were not recognized in cat_run.m for default
 user mode.
+
 ------------------------------------------------------------------------
 r1567 | gaser | 2020-02-14 13:49:49 +0100 (Fr, 14 Feb 2020) | 14 lines
 
