@@ -366,7 +366,7 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
                     f     = spm_diffeo('bsplins',img(i).f,y,ord);
 
                     if all(isfinite(b_settings(i,:)))
-                        ebias = exp(spm_diffeo('samp',param(i).bias,y));
+                        ebias = exp(spm_diffeo('pullc',param(i).bias,y));
                     else
                         ebias = ones(size(f),'single');
                     end
@@ -542,7 +542,7 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
                         end
 
                         f           = spm_diffeo('bsplins',img(i).f,y,ord);
-                        ebias       = exp(spm_diffeo('samp',param(i).bias,y));
+                        ebias       = exp(spm_diffeo('pullc',param(i).bias,y));
 
                         msk         = isfinite(f) & isfinite(ebias);
                         smu         = mu(:,:,m).*ebias;
@@ -613,7 +613,7 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
                         f     = spm_diffeo('bsplins',img(i).f,y,ord);
 
                         if all(isfinite(b_settings(i,:)))
-                            ebias = exp(spm_diffeo('samp',param(i).bias,y));
+                            ebias = exp(spm_diffeo('pullc',param(i).bias,y));
                         else
                             ebias = ones(size(f),'single');
                         end
@@ -648,7 +648,14 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
                     gra         = gra*prec(i);
 
                     gra         = gra + spm_diffeo('vel2mom',param(i).v0,[vx w_settings(i,:)*sc]);
-                    param(i).v0 = param(i).v0 - spm_diffeo('fmg',Hess, gra, [vx w_settings(i,:)*sc 2 2]); % Gauss-Newton
+                    
+                    % use old approach if this ends in NaNs
+                    tmp_fmg = spm_diffeo('fmg',Hess, gra, [vx w_settings(i,:)*sc 2 2]);
+                    if ~all(isfinite(tmp_fmg))
+                      tmp_fmg = spm_diffeo_old('fmg',Hess, gra, [vx w_settings(i,:)*sc 2 2]);
+                    end
+                    
+                    param(i).v0 = param(i).v0 - tmp_fmg; % Gauss-Newton
 
                     clear Hess gra
                 end
@@ -786,7 +793,7 @@ if need_mom
                 dt    = spm_diffeo('det',param(i).J(:,:,m,:,:));
                 y     = transform_warp(M,param(i).y(:,:,m,:));
                 f     = spm_diffeo('bsplins',img(i).f,y,ord);
-                ebias = exp(spm_diffeo('samp',param(i).bias,y));
+                ebias = exp(spm_diffeo('pullc',param(i).bias,y));
                 b     = (f-mu(:,:,m).*ebias).*ebias.*dt;
                 b(~isfinite(b)) = 0;
                 mom(:,:,m) = b;
@@ -1160,23 +1167,28 @@ y = zeros([d(1:3) 3],'single');
 [y(:,:,:,1),y(:,:,:,2),y(:,:,:,3)] = ndgrid(single(1:d(1)),single(1:d(2)),single(1:d(3)));
 %_______________________________________________________________________
 
-%_______________________________________________________________________
 function [M_avg,d] = compute_avg_mat(Mat0,dims)
 % Compute an average voxel-to-world mapping and suitable dimensions
-% FORMAT [M_avg,d] = compute_avg_mat(Mat0,dims)
+% FORMAT [M_avg,d] = spm_compute_avg_mat(Mat0,dims)
 % Mat0  - array of matrices (4x4xN)
 % dims  - image dimensions (Nx3)
 % M_avg - voxel-to-world mapping
 % d     - dimensions for average image
 %
+%__________________________________________________________________________
+% Copyright (C) 2012-2019 Wellcome Trust Centre for Neuroimaging
+
+% John Ashburner
+% $Id$
+
 
 % Rigid-body matrices computed from exp(p(1)*B(:,:,1)+p(2)+B(:,:,2)...)
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 B = se3_basis;
 
 % Find combination of 90 degree rotations and flips that brings all
 % the matrices closest to axial
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 Matrices = Mat0;
 pmatrix  = [1,2,3; 2,1,3; 3,1,2; 3,2,1; 1,3,2; 2,3,1];
 for i=1:size(Matrices,3)
@@ -1207,17 +1219,17 @@ for i=1:size(Matrices,3)
 end
 
 % Average of these matrices
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 M_avg = spm_meanm(Matrices);
 
 % If average involves shears, then find the closest matrix that does not
 % require them
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 p = spm_imatrix(M_avg);
 if sum(p(10:12).^2)>1e-8
 
     % Zooms computed from exp(p(7)*B2(:,:,1)+p(8)*B2(:,:,2)+p(9)*B2(:,:,3))
-    %-----------------------------------------------------------------------
+    %----------------------------------------------------------------------
     B2        = zeros(4,4,3);
     B2(1,1,1) = 1;
     B2(2,2,2) = 1;
@@ -1244,7 +1256,7 @@ if sum(p(10:12).^2)>1e-8
 end
 
 % Ensure that the FoV covers all images, with a few voxels to spare
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 mn    =  Inf*ones(3,1);
 mx    = -Inf*ones(3,1);
 for i=1:size(Mat0,3)
@@ -1263,18 +1275,12 @@ mx    = ceil(mx);
 mn    = floor(mn);
 d     = (mx-mn+7)';
 M_avg = M_avg * [eye(3) mn-4; 0 0 0 1];
-
-% check whether entry for x-voxel-size is positive and correct it
-[mx, ind] = max(abs(M_avg(1,1:3)));
-if (M_avg(1,ind) > 0)
-  M_avg(1,:) = -M_avg(1,:);
-end
 return;
-%_______________________________________________________________________
+%__________________________________________________________________________
 
-%_______________________________________________________________________
+%__________________________________________________________________________
 function B = se3_basis
-% Basis functions for the lie algebra of the special Eucliden group
+% Basis functions for the lie algebra of the special Euclidean group
 % (SE(3)).
 B        = zeros(4,4,6);
 B(1,4,1) = 1;
@@ -1283,8 +1289,10 @@ B(3,4,3) = 1;
 B([1,2],[1,2],4) = [0 1;-1 0];
 B([3,1],[3,1],5) = [0 1;-1 0];
 B([2,3],[2,3],6) = [0 1;-1 0];
-return
-%_______________________________________________________________________
+return;
+%__________________________________________________________________________
+
+
 
 %_______________________________________________________________________
 function t = transf(B1,B2,B3,T)

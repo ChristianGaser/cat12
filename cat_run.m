@@ -38,12 +38,13 @@ function varargout = cat_run(job)
 n_subjects = numel(job.data);
 if n_subjects == 1, job.nproc = 0; end
 
-% send Matlab version to server
+%{ send Matlab version to server
 if cat_get_defaults('extopts.send_info')
   urlinfo = sprintf('%s%s%s%s%s%s%d',cat_version,'%2F',computer,'%2F','processed',...
      '%2F',n_subjects);
   cat_io_send_to_server(urlinfo);
 end
+%}
 
 if isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.extopts.admin.lazy && ...
   ~isfield(job,'process_index') && isfield(job,'nproc') && job.nproc>.1 && (~isfield(job,'process_index'))  
