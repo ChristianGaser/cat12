@@ -92,7 +92,7 @@ end
 ROI.values = {noROI atlases};
 ROI.help   = {
 'Export of ROI data of volume to a xml-files. '
-'For further information see atlas specific text files in "templates_1.50mm" CAT12 subdir. '
+'For further information see atlas specific text files in "templates_volumes" CAT12 subdir. '
 ''
 'For thickness estimation the projection-based thickness (PBT) [Dahnke:2012] is used that average cortical thickness for each GM voxel. '
 ''
@@ -138,7 +138,7 @@ for ali=1:numel(atlaslist)
         '    See IBSR terms "http://www.nitrc.org/projects/ibsr"'
         ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
   end
-  if any(~cellfun('isempty',strfind(atlaslist(ali),'aal')))
+  if any(~cellfun('isempty',strfind(atlaslist(ali),'aal3')))
     ROI.help = [ROI.help; strrep({
         '(MAI) AAL (122 GM ROIs of 1 subject, 2002):'
         '    Combining probabilistic cytoarchitectonic maps and functional imaging data of a single Brain.'

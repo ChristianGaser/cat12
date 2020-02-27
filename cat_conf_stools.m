@@ -968,7 +968,7 @@ function roi2surf = cat_roi_roi2surf_GUI
   r2s.ROIs.name    = 'ROI atlas files';
   r2s.ROIs.filter  = 'xml';
   r2s.ROIs.ufilter = '.*';
-  r2s.ROIs.dir     = fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm'); 
+  r2s.ROIs.dir     = fullfile(spm('dir'),'toolbox','cat12','templates_volumes'); 
   r2s.ROIs.num     = [1 Inf];
   r2s.ROIs.help    = {'These are the indiviudal ROI atlas files from the label directory. Choose XML files.'};
 

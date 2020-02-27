@@ -5,7 +5,7 @@ resdir = '/Users/dahnke/Neuroimaging/spm12/toolbox/cat12/tmp';
 %S = '/Volumes/vbmDB/MRData/vbm12tst/results/deffiles/cat_defaults_rd/BO/surf/lh.central.Collins.gii'; 
 %S = '/Volumes/vbmDB/MRData/vbm12tst/results/deffiles/cat_defaults_rd/BO/surf/s15mm.lh.thickness.resampled.Collins.gii'; 
 S = '/Volumes/vbmDB/MRData/vbm12tst/results/deffiles/cat_defaults_rd/BO/surf/s15mm.rh.thickness.resampled.Collins.gii'; 
-%P = '/Users/dahnke/Neuroimaging/spm12/toolbox/cat12/templates_1.50mm/Template_T1_IXI555_MNI152.nii';
+%P = '/Users/dahnke/Neuroimaging/spm12/toolbox/cat12/templates_volumes/Template_T1_IXI555_MNI152.nii';
 
 if ~exist(resdir,'dir'), mkdir(resdir); end
 

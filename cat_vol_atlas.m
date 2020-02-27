@@ -165,7 +165,7 @@ function cat_vol_atlas(atlas,refinei)
   % --------------------------------------------------------------------
   elseif strcmpi(atlas,'cat12') 
 
-    cat12tempdir = fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm');
+    cat12tempdir = fullfile(spm('dir'),'toolbox','cat12','templates_volumes');
   
     A.l1A = fullfile(cat12tempdir,'l1A.nii');
     A.ham = fullfile(cat12tempdir,'hammers.nii');
@@ -510,7 +510,7 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine,Pxml] = mydata(atlas)
     %}
     
     case 'cat12'
-      mdir    = resdir; %fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm');
+      mdir    = resdir; %fullfile(spm('dir'),'toolbox','cat12','templates_volumes');
       P       = cat_vol_findfiles(mdir,'*.nii');
       PA      = cat_vol_findfiles(mdir,'*.nii');
       Ps      = {''};
@@ -554,7 +554,7 @@ function call_cat(P)
   matlabbatch{1}.spm.tools.cat.estwrite.opts.affreg             = 'mni';
   matlabbatch{1}.spm.tools.cat.estwrite.opts.warpreg            = [0 0.001 0.5 0.05 0.2];
   matlabbatch{1}.spm.tools.cat.estwrite.extopts.darteltpm       = ...
-    {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_1_IXI555_MNI152.nii')};
+    {fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_1_IXI555_MNI152.nii')};
   matlabbatch{1}.spm.tools.cat.estwrite.extopts.print           = 1;
   matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface         = 0;
   matlabbatch{1}.spm.tools.cat.estwrite.output.GM.native        = 0;
@@ -642,7 +642,7 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel)
   % Therefore we create a table cod that contain in the first column the 
   % original label and in the second column the optimized value.
   % --------------------------------------------------------------------
-  VC = spm_vol(fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm/Template_1_IXI555_MNI152.nii'));
+  VC = spm_vol(fullfile(spm('dir'),'toolbox','cat12','templates_volumes/Template_1_IXI555_MNI152.nii'));
   V  = spm_vol(char(P));
   VA = spm_vol(char(PA));
   Y  = spm_read_vols(VA(1));
@@ -1015,7 +1015,7 @@ function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel)
   
   % 4D-probability map
   % --------------------------------------------------------------------
-  VC = spm_vol(fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm/Template_1_IXI555_MNI152.nii')); VC=VC(1);
+  VC = spm_vol(fullfile(spm('dir'),'toolbox','cat12','templates_volumes/Template_1_IXI555_MNI152.nii')); VC=VC(1);
  
   N             = nifti;
   N.dat         = file_array(fullfile(resdir,['a4D' atlas '.nii']),[VC.dim(1:3) ...
@@ -1669,7 +1669,7 @@ function create_cat_atlas(A,C,LAB)
 
   % output file
 %  VC = spm_vol(A.ham); VC.fname = C; 
-  VC = spm_vol(fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm/Template_1_IXI555_MNI152.nii')); VC=VC(1);
+  VC = spm_vol(fullfile(spm('dir'),'toolbox','cat12','templates_volumes/Template_1_IXI555_MNI152.nii')); VC=VC(1);
   VC.fname = C; 
   
   if 1

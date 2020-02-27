@@ -97,7 +97,7 @@ function varargout = cat_surf_surf2roi(job)
         rrdata = gifti(job.rdata{ri});
         lrdata = gifti(char(cat_surf_rename(rinfo,'side','rh'))); 
         
-        rdatacsv = cat_vol_findfiles(strrep(rinfo.pp,'atlases_surfaces','templates_1.50mm'),[rinfo.dataname '*.csv']);
+        rdatacsv = cat_vol_findfiles(strrep(rinfo.pp,'atlases_surfaces','templates_volumes'),[rinfo.dataname '*.csv']);
         if ~isempty(rdatacsv{1})
           rcsv=cat_io_csv(rdatacsv{1});
         end
@@ -106,7 +106,7 @@ function varargout = cat_surf_surf2roi(job)
         lrdata = cat_io_FreeSurfer('read_surf_data',job.rdata{ri});
         rrdata = cat_io_FreeSurfer('read_surf_data',char(cat_surf_rename(rinfo,'side','rh'))); 
         
-        rdatacsv = cat_vol_findfiles(strrep(rinfo.pp,'atlases_surfaces','templates_1.50mm'),[rinfo.dataname '*.csv']);
+        rdatacsv = cat_vol_findfiles(strrep(rinfo.pp,'atlases_surfaces','templates_volumes'),[rinfo.dataname '*.csv']);
         if ~isempty(rdatacsv{1})
           rcsv=cat_io_csv(rdatacsv{1});
         end

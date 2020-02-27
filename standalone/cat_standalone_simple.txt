@@ -22,7 +22,7 @@ matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.lpba40 = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.cobra = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.hammers = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.ibsr = 0;
-matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.aal = 0;
+matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.aal3 = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.mori = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.anatomy = 0;
 

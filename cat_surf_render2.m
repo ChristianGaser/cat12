@@ -525,7 +525,7 @@ switch lower(action)
             'LPBA40'             'lpba40';
             'Hammers'            'hammers';
             'Mori'               'mori';
-            'AAL'                'aal';
+            'AAL'                'aal3';
             ...
             'DK40'               'aparc_DK40';
             ...'Destrieux2005'      'aparc_a2005s';
@@ -541,7 +541,7 @@ switch lower(action)
               'LPBA40'             'lpba40';
               'Hammers'            'hammers';
               'Mori'               'mori';
-              'AAL'                'aal';
+              'AAL'                'aal3';
               };
             satlas = {
               'DK40'               'aparc_DK40';
@@ -558,7 +558,7 @@ switch lower(action)
               'LPBA40'             'lpba40';
               'Hammers'            'hammers';
               'Mori'               'mori';
-              'AAL'                'aal';
+              'AAL'                'aal3';
               };
             satlas = {
               'DK40'               'aparc_DK40';

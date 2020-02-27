@@ -59,7 +59,7 @@ if exp
   % CAT SPM segment
   matlabbatch{1}{3}.spm.tools.cat.estwrite_spm.data(1)                 = cfg_dep('Segment: c1 Images', substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','c', '()',{':'}));
   matlabbatch{1}{3}.spm.tools.cat.estwrite_spm.nproc                   = 0;
-  matlabbatch{1}{3}.spm.tools.cat.estwrite_spm.extopts.darteltpm       = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_1_IXI555_MNI152.nii')};
+  matlabbatch{1}{3}.spm.tools.cat.estwrite_spm.extopts.darteltpm       = {fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_1_IXI555_MNI152.nii')};
   matlabbatch{1}{3}.spm.tools.cat.estwrite_spm.extopts.vox             = 1.5;
   if exp
     matlabbatch{1}{3}.spm.tools.cat.estwrite_spm.extopts.ignoreErrors  = 0;
