@@ -1,5 +1,5 @@
 % Computational Anatomy Toolbox
-% Version 1568 (CAT12.7) 2020-02-14
+% Version 1570 (CAT12.7) 2020-02-24
 % __________________________________________________________________________
 % Copyright (C) Christian Gaser christian.gaser@uni-jena.de
 %
@@ -152,7 +152,7 @@
 %                                      in MNI152 space provided for 6 different iteration steps
 %   Template_T1_IXI555_MNI152_GS.nii - average of 555 T1 images of IXI database in MNI152 space after 
 %                                      Geodesic Shooting
-%   aal.*                            - AAL atlas
+%   aal3.*                           - AAL3 atlas
 %   anatomy.*                        - Anatomy atlas
 %   hammers.*                        - Hammers atlas
 %   ibsr.*                           - IBSR atlas

@@ -144,7 +144,7 @@ function output = cat_simple(job)
         {fullfile(spm('dir'),'tpm','TPM.nii')};
     case 'childen'
       matlabbatch{mbi}.spm.tools.cat.(job.catversion).opts.tpm = ...
-        {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','TPM_Age11.5.nii')};
+        {fullfile(spm('dir'),'toolbox','cat12','templates_volumes','TPM_Age11.5.nii')};
   end
   
   % setting of standard fields

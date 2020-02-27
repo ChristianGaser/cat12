@@ -90,7 +90,7 @@ function varargout = cat_stat_spm2x(vargin)
 % Christian Gaser
 % $Id$
 
-if nargin == 1
+if nargin > 0
     if isfield(vargin,'data_T2x')
       T2x = 1;
       stat = 'T';
@@ -146,11 +146,17 @@ if nargin == 1
 end
 
 if nargin < 1
+    %-Get type of statistic
+    %-------------------------------------------------------------------
+    T2x = spm_input('Type of statistic',1,'b','T|F',[1 0],1);
+
     if T2x
+        stat = 'T';
         P = spm_select(Inf,'^spmT.*(img|nii|gii)','Select T-images');
         sel = spm_input('Convert t value to?',1,'m',...
           '1-p|-log(1-p)|correlation coefficient cc|effect size d|apply thresholds without conversion',1:5, 2);
     else
+        stat = 'F';
         P = spm_select(Inf,'^spmF.*(img|nii|gii)','Select F-images');
         sel = spm_input('Convert F value to?',1,'m',...
           '1-p|-log(1-p)|coefficient of determination R^2|apply thresholds without conversion',1:4, 2);
@@ -349,7 +355,7 @@ for i=1:size(P,1)
         end
         
         % atlas measures
-        if isfield(vargin,'atlas') && ~strcmp(vargin.atlas,'None')
+        if (nargin > 0) && isfield(vargin,'atlas') && ~strcmp(vargin.atlas,'None')
             labk   = cell(max(A)+2,1);
             Pl     = cell(max(A)+2,1);
             Zj     = cell(max(A)+2,1);
@@ -403,7 +409,7 @@ for i=1:size(P,1)
                                 Q = [Q j];
                                 
                                 % save atlas measures for 3D data
-                                if isfield(vargin,'atlas') && ~strcmp(vargin.atlas,'None')
+                                if (nargin > 0) && isfield(vargin,'atlas') && ~strcmp(vargin.atlas,'None')
                                     [labk{i2}, Pl{i2}]  = spm_atlas('query',xA,XYZmm(:,j));
                                     Zj{i2} = Z(:,j);
                                     XYZmmj{i2} = XYZmm(:,j);
@@ -423,7 +429,7 @@ for i=1:size(P,1)
                     Q = [Q j];
                     
                     % save atlas measures for 3D data
-                    if isfield(vargin,'atlas') && ~strcmp(vargin.atlas,'None')
+                    if (nargin > 0) && isfield(vargin,'atlas') && ~strcmp(vargin.atlas,'None')
                         [labk{i2}, Pl{i2}]  = spm_atlas('query',xA,XYZmm(:,j));
                         Zj{i2} = Z(:,j);
                         XYZmmj{i2} = XYZmm(:,j);
@@ -524,7 +530,7 @@ for i=1:size(P,1)
         Pname{i} = deblank(fullfile(pth,name));
 
         % print table for 3D data
-        if isfield(vargin,'atlas') && ~strcmp(vargin.atlas,'None')
+        if (nargin > 0) && isfield(vargin,'atlas') && ~strcmp(vargin.atlas,'None')
             % sort T/F values and print from max to min values
             [tmp, maxsort] = sort(maxZ,'descend');
         

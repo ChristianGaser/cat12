@@ -177,9 +177,9 @@ cat1173plus.extopts.species      = 'human';
 % Affine PreProcessing (APP) with rough bias correction and brain extraction for special anatomies (nonhuman/neonates) 
 cat1173plus.extopts.APP          = 1070;   % 0 - none; 1070 - default; [1 - light; 2 - full; 3 - strong; 4 - heavy, 5 - animal (no affreg)]
 cat1173plus.extopts.vox          = 1.5; % voxel size for normalized data (EXPERIMENTAL:  inf - use Tempate values)
-cat1173plus.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_1_IXI555_MNI152.nii')};     % Indicate first Dartel template (Template_1)
-cat1173plus.extopts.shootingtpm  = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_0_IXI555_MNI152_GS.nii')};  % Indicate first Shooting template (Template 0) - not working
-cat1173plus.extopts.cat12atlas   = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cat.nii')};                       % CAT atlas with major regions for VBM, SBM & ROIs
+cat1173plus.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_1_IXI555_MNI152.nii')};     % Indicate first Dartel template (Template_1)
+cat1173plus.extopts.shootingtpm  = {fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_0_IXI555_MNI152_GS.nii')};  % Indicate first Shooting template (Template 0) - not working
+cat1173plus.extopts.cat12atlas   = {fullfile(spm('dir'),'toolbox','cat12','templates_volumes','cat.nii')};                       % CAT atlas with major regions for VBM, SBM & ROIs
 cat1173plus.extopts.brainmask    = {fullfile(spm('Dir'),'toolbox','FieldMap','brainmask.nii')};                                 % Brainmask for affine registration
 cat1173plus.extopts.T1           = {fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii')};                                        % T1 for affine registration
 
@@ -214,14 +214,14 @@ cat1173plus.extopts.print        = 2;     % display and print out pdf-file of re
 %  tissue      = {['csf','gm','wm','brain','none']}  - tissue classes for volume estimation
 %  use         = [ 0 | 1 ]                           - default setting to use this atlas 
 cat1173plus.extopts.atlas       = { ... 
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii')  0      {'csf','gm'}        1; ... % atlas based on 35 subjects
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')              0      {'gm'}              0; ... % atlas based on 40 subjects
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cobra.nii')               0      {'gm','wm'}         0; ... % hippocampus-amygdala-cerebellum, 5 subjects, 0.6 mm voxel size 
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')             0      {'csf','gm','wm'}   0; ... % atlas based on 20 subjects
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')                1      {'csf','gm'}        0; ... % less regions, 18 subjects, low T1 image quality
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')                 1      {'gm'}              0; ... % many regions, but only labeled on one subject 
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii')                1      {'gm','wm'}         0; ... % only one subject, but with WM regions
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','anatomy.nii')             1      {'gm','wm'}         0; ... % ROIs requires further work >> use Anatomy toolbox
+  fullfile(spm('dir'),'toolbox','cat12','templates_volumes','neuromorphometrics.nii')  0      {'csf','gm'}        1; ... % atlas based on 35 subjects
+  fullfile(spm('dir'),'toolbox','cat12','templates_volumes','lpba40.nii')              0      {'gm'}              0; ... % atlas based on 40 subjects
+  fullfile(spm('dir'),'toolbox','cat12','templates_volumes','cobra.nii')               0      {'gm','wm'}         0; ... % hippocampus-amygdala-cerebellum, 5 subjects, 0.6 mm voxel size 
+  fullfile(spm('dir'),'toolbox','cat12','templates_volumes','hammers.nii')             0      {'csf','gm','wm'}   0; ... % atlas based on 20 subjects
+  fullfile(spm('dir'),'toolbox','cat12','templates_volumes','ibsr.nii')                1      {'csf','gm'}        0; ... % less regions, 18 subjects, low T1 image quality
+  fullfile(spm('dir'),'toolbox','cat12','templates_volumes','aal3.nii')                 1      {'gm'}              0; ... % many regions, but only labeled on one subject 
+  fullfile(spm('dir'),'toolbox','cat12','templates_volumes','mori.nii')                1      {'gm','wm'}         0; ... % only one subject, but with WM regions
+  fullfile(spm('dir'),'toolbox','cat12','templates_volumes','anatomy.nii')             1      {'gm','wm'}         0; ... % ROIs requires further work >> use Anatomy toolbox
 }; 
 
 
