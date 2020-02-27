@@ -16,8 +16,8 @@
 % ---------------------------------------------------------------------
 
 % template images
-PT1    = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152_GS.nii')};
-PA     = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii')};
+PT1    = {fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_T1_IXI555_MNI152_GS.nii')};
+PA     = {fullfile(spm('dir'),'toolbox','cat12','templates_volumes','neuromorphometrics.nii')};
 % SPM result directory
 Dres   = {'/Users/dahnke/Neuroimaging/spm12/toolbox/cat12/cattest/CAT12R1054_PCWIN64/mri/'};                            
 

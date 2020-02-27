@@ -129,9 +129,9 @@ if update
         end
 
         % delete old volume template files 
-        templatefiles = dir(fullfile(d,'cat12','templates_1.50mm','*.*'));
+        templatefiles = dir(fullfile(d,'cat12','templates_volumes','*.*'));
         for i=1:length(templatefiles)
-          name = fullfile(d,'cat12','templates_1.50mm',templatefiles(i).name);
+          name = fullfile(d,'cat12','templates_volumes',templatefiles(i).name);
           spm_unlink(name);
         end
 

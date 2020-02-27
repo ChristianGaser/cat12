@@ -211,7 +211,7 @@ function varargout = cat_surf_display(varargin)
       
       
       % temporary colormap
-      if any(strcmpi({'neuromorphometrics','lpba40','ibsr','hammers','mori','aal'},sinfo(i).dataname))
+      if any(strcmpi({'neuromorphometrics','lpba40','ibsr','hammers','mori','aal3'},sinfo(i).dataname))
         %%
         switch lower(sinfo(i).dataname)
           case 'neuromorphometrics', rngid=3; 
@@ -219,7 +219,7 @@ function varargout = cat_surf_display(varargin)
           case 'ibsr',               rngid=1; 
           case 'hammers',            rngid=5;  
           case 'mori',               rngid=3; 
-          case 'aal',                rngid=11; 
+          case 'aal3',               rngid=11; 
           otherwise,                 rngid=1; 
         end
         

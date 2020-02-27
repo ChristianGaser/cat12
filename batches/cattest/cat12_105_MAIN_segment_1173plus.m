@@ -30,9 +30,9 @@ end
 % -- extopts -----------------------------------------------------------
 % registration
 matlabbatch{1}.spm.tools.cat.estwrite1173plus.extopts.registration.darteltpm          = ...
-  { fullfile( spm('dir') , 'toolbox' , 'cat12' , 'templates_1.50mm' , 'Template_1_IXI555_MNI152.nii' ) };
+  { fullfile( spm('dir') , 'toolbox' , 'cat12' , 'templates_volumes' , 'Template_1_IXI555_MNI152.nii' ) };
 matlabbatch{1}.spm.tools.cat.estwrite1173plus.extopts.registration.shootingtpm        = ...
-  { fullfile( spm('dir') , 'toolbox' , 'cat12' , 'templates_1.50mm' , 'Template_0_IXI555_MNI152_GS.nii' ) };
+  { fullfile( spm('dir') , 'toolbox' , 'cat12' , 'templates_volumes' , 'Template_0_IXI555_MNI152_GS.nii' ) };
 matlabbatch{1}.spm.tools.cat.estwrite1173plus.extopts.registration.regstr             = 0;   matlabbatch{1}.spm.tools.cat.estwrite1173plus.extopts.vox                             = 1.5;
 if exp==0
   matlabbatch{1}.spm.tools.cat.estwrite1173plus.extopts.APP                           = 1070;
@@ -63,7 +63,7 @@ elseif exp>0 % EXPERT
 end
 if exp>1 % DEVELOPER
   matlabbatch{1}.spm.tools.cat.estwrite1173plus.extopts.segmentation.BVCstr              = 0;       
-  matlabbatch{1}.spm.tools.cat.estwrite1173plus.extopts.registration.cat12atlas          = { fullfile( spm('dir') , 'toolbox' , 'cat12' , 'templates_1.50mm' , 'cat.nii' ) };
+  matlabbatch{1}.spm.tools.cat.estwrite1173plus.extopts.registration.cat12atlas          = { fullfile( spm('dir') , 'toolbox' , 'cat12' , 'templates_volumes' , 'cat.nii' ) };
   matlabbatch{1}.spm.tools.cat.estwrite1173plus.extopts.registration.brainmask           = { fullfile( spm('dir') , 'toolbox' , 'FieldMap' , 'brainmask.nii' ) };
   matlabbatch{1}.spm.tools.cat.estwrite1173plus.extopts.registration.T1                  = { fullfile( spm('dir') , 'toolbox' , 'FieldMap' ,  'T1.nii' ) };
 % matlabbatch{1}.spm.tools.cat.estwrite1173plus.extopts.mrf              = 1;  
@@ -79,7 +79,7 @@ matlabbatch{1}.spm.tools.cat.estwrite1173plus.output.ROImenu.atlases.cobra      
 matlabbatch{1}.spm.tools.cat.estwrite1173plus.output.ROImenu.atlases.hammers              = 0;
 if exp
   matlabbatch{1}.spm.tools.cat.estwrite1173plus.output.ROImenu.atlases.ibsr               = 0;
-  matlabbatch{1}.spm.tools.cat.estwrite1173plus.output.ROImenu.atlases.aal                = 0;
+  matlabbatch{1}.spm.tools.cat.estwrite1173plus.output.ROImenu.atlases.aal3               = 0;
   matlabbatch{1}.spm.tools.cat.estwrite1173plus.output.ROImenu.atlases.mori               = 0;
   matlabbatch{1}.spm.tools.cat.estwrite1173plus.output.ROImenu.atlases.anatomy            = 0;
 end

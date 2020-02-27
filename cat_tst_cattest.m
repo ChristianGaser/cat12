@@ -152,10 +152,10 @@ function [mainbatch,perror] = cat_tst_cattest(job)
     ...
     'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.opts.tpm'                           'tpm' ...       
       {{fullfile(spm('dir'),'TPM','TPM.nii')} ...  
-       {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','TPM_Age11.5.nii')} ...                                     % children
+       {fullfile(spm('dir'),'toolbox','cat12','templates_volumes','TPM_Age11.5.nii')} ...                                     % children
        {fullfile(spm('dir'),'TPM','TPM.nii'); ...                                                                            % multi-TPM
-        fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','TPM_ba0_ha0.nii'); ...
-        fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','TPM_ba0_ha0.nii')} };     
+        fullfile(spm('dir'),'toolbox','cat12','templates_volumes','TPM_ba0_ha0.nii'); ...
+        fullfile(spm('dir'),'toolbox','cat12','templates_volumes','TPM_ba0_ha0.nii')} };     
     ... SPM bias
     ... SPM acc
     ... == parameter in default GUI ==
@@ -165,7 +165,7 @@ function [mainbatch,perror] = cat_tst_cattest(job)
     'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.segmentation.gcutstr'       'gcutstr'    {0 0.5 -1};       % def=2;
     ...'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.registration.darteltpm'  'template'   { ... 
     ...'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.registration.darteltpm'  'template'   { ... 
-    ...  {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_0_IXI555_MNI152_GS.nii')}};   % Shooting template
+    ...  {fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_0_IXI555_MNI152_GS.nii')}};   % Shooting template
     'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.registration.regstr'        'regstr'     {0.5 4};          % def=0;  
     ... == parameter in expert GUI ==
     'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.segmentation.cleanupstr'    'cleanupstr' {0.0 0.01 1.0};   % def=0.5;
@@ -197,10 +197,10 @@ function [mainbatch,perror] = cat_tst_cattest(job)
     %{
     'cat12_105_MAIN_segment_1173plus' 1  1 'spm.tools.cat.estwrite1173plus.opts.tpm'                           'tpm' ...       
       {{fullfile(spm('dir'),'TPM','TPM.nii')} ...  
-       {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','TPM_Age11.5.nii')} ...                                     % children
+       {fullfile(spm('dir'),'toolbox','cat12','templates_volumes','TPM_Age11.5.nii')} ...                                     % children
        {fullfile(spm('dir'),'TPM','TPM.nii'); ...                                                                            % multi-TPM
-        fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','TPM_ba0_ha0.nii'); ...
-        fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','TPM_ba0_ha0.nii')} };     
+        fullfile(spm('dir'),'toolbox','cat12','templates_volumes','TPM_ba0_ha0.nii'); ...
+        fullfile(spm('dir'),'toolbox','cat12','templates_volumes','TPM_ba0_ha0.nii')} };     
     ... SPM bias
     ... SPM acc
     ... == parameter in default GUI ==
@@ -210,7 +210,7 @@ function [mainbatch,perror] = cat_tst_cattest(job)
     'cat12_105_MAIN_segment_1173plus' 1  1 'spm.tools.cat.estwrite1173plus.extopts.gcutstr'                    'gcutstr'    {0 0.5 -1};       % def=2; OK;
     ...'cat12_105_MAIN_segment_1173plus' 1  1 'spm.tools.cat.estwrite1173plus.extopts.registration.darteltpm'  'template'   { ... 
     ...'cat12_105_MAIN_segment_1173plus' 1  1 'spm.tools.cat.estwrite1173plus.extopts.registration.darteltpm'  'template'   { ... 
-    ...  {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_0_IXI555_MNI152_GS.nii')}};   % Shooting template
+    ...  {fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_0_IXI555_MNI152_GS.nii')}};   % Shooting template
     'cat12_105_MAIN_segment_1173plus' 1  1 'spm.tools.cat.estwrite1173plus.extopts.registration.regstr'        'regstr'     {0.5 4};          % def=0; OK;  
     ... == parameter in expert GUI ==
     %}

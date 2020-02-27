@@ -17,7 +17,7 @@ STARGET=${STARGET_HOST}:${STARGET_FOLDER}
 
 MATLAB_FILES=Contents.* cat_*.m spm_cat12.m tbx_cfg_cat.m sliderPanel.m slice_overlay.m kmeans3D.m cat_run*
 C_FILES=Amap.[ch] ornlm_float.c sanlm_float.c MrfPrior.c Pve.c Kmeans.c cat_*.c* cat_*.mex* vollib.c genus0.[ch] tricases.h spm_diffeo_old.mex*
-MISC_FILES=CAT12-Manual.pdf CHANGES.txt INSTALL.txt standalone templates_1.50mm html templates_surfaces templates_surfaces_32k atlases_surfaces atlases_surfaces_32k cat12.* CAT.* distribute_to_server.sh cat_*.sh
+MISC_FILES=CAT12-Manual.pdf CHANGES.txt INSTALL.txt standalone templates_volumes html templates_surfaces templates_surfaces_32k atlases_surfaces atlases_surfaces_32k cat12.* CAT.* distribute_to_server.sh cat_*.sh
 
 FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
 
@@ -50,6 +50,12 @@ update:
 	-@cat INSTALL_info.txt >> INSTALL.txt
 	-@perl -p -i -e "s/${OLDVERSION}/${NEWVERSION}/g" spm_cat12.m
 	-@cat html/cat.txt | sed -e 's/VERSION/'${NEWVERSION}'/g' -e 's/RELNUMBER/r'${REVISION}'/g' -e 's/DATE/'${DATE}'/g' > html/cat.html
+	-@test ! -d cat12-html || rm -r cat12-html
+	-@cp -R html cat12-html
+	-@perl -p -i -e "s/\','-browser'\);//g" cat12-html/*.html
+	-@perl -p -i -e "s/\','-browser'\)//g" cat12-html/*.html
+	-@perl -p -i -e "s/matlab:web\(\'//g" cat12-html/*.html
+	-@cp cat12-html/cat.html cat12-html/index.html
 
 zip: update
 	-@echo zip
@@ -58,15 +64,9 @@ zip: update
 	-@cp -rp ${FILES} cat12
 	-@zip ${ZIPFILE} -rm cat12
 
-scp: zip
+scp: html zip
 	-@echo scp to http://${STARGET_HOST}/cat12/${ZIPFILE}
 	-@scp -P 2222 CHANGES.txt CAT12-Manual.pdf ${ZIPFILE} ${STARGET}
-	-@test ! -d cat12-html || rm -r cat12-html
-	-@cp -R html cat12-html
-	-@perl -p -i -e "s/\','-browser'\);//g" cat12-html/*.html
-	-@perl -p -i -e "s/\','-browser'\)//g" cat12-html/*.html
-	-@perl -p -i -e "s/matlab:web\(\'//g" cat12-html/*.html
-	-@cp cat12-html/cat.html cat12-html/index.html
 	-@scp -r -P 2222 cat12-html ${STARGET_HTDOCS}/
 	-@bash -c "ssh -p 2222 ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${ZIPFILE} ${STARGET_FOLDER}/cat12_latest.zip"
 	

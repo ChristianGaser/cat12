@@ -1,5 +1,77 @@
 ------------------------------------------------------------------------
-r1570 | gaser | 2020-02-24 15:08:22
+r1571 | gaser | 2020-02-27 15:50:35
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Contents_info.txt
+M       Makefile
+A  +    aal.csv
+        > moved from templates_volumes/aal.csv
+A  +    aal.nii
+        > moved from templates_volumes/aal.nii
+A  +    aal.txt
+        > moved from templates_volumes/aal.txt
+M       batches/cat12batch_RBM_and_SBM_for_SPM.m
+M       batches/cattest/cat12_101_MAIN_segment.m
+M       batches/cattest/cat12_104_MAIN_segment_SPM.m
+M       batches/cattest/cat12_105_MAIN_segment_1173plus.m
+M       batches/cattest/cat12_106_MAIN_segment_1173.m
+M       batches/cattest/cat12_201_VBM_deformation.m
+M       cat_conf_ROI.m
+M       cat_conf_stools.m
+M       cat_defaults.m
+M       cat_install_atlases.m
+M       cat_main_registration.m
+M       cat_run1173/cat_conf_ROI1173.m
+M       cat_run1173/cat_defaults1173.m
+M       cat_run1173/cat_main_registration1173.m
+M       cat_run1173plus/cat_defaults1173plus.m
+M       cat_run1445/cat_conf_ROI1445.m
+M       cat_run1445/cat_defaults1445.m
+M       cat_run1445/cat_main_registration1445.m
+M       cat_simple.m
+M       cat_stat_spm2x.m
+M       cat_surf_display.m
+M       cat_surf_render2.m
+M       cat_surf_surf2roi.m
+M       cat_tst_cattest.m
+M       cat_update.m
+M       cat_vol_atlas.m
+M       cat_vol_slice_overlay.m
+M       cat_vol_slice_overlay_rgb_ui.m
+M       check_pipeline/batch_volume_pipeline.m
+M       html/cat.html
+M       html/cat.txt
+M       html/cat_licences.html
+M       html/cat_methods_RBM.html
+M       html/cat_references.html
+M       html/cat_versions.html
+M       internal/cat_example_surfsmooth.m
+M       internal/cat_vol_atlas.m
+M       internal/cat_vol_optimizeTemplate.m
+M       standalone/cat_standalone_simple.txt
+D       templates_1.50mm
+        > moved to templates_volumes
+A  +    templates_volumes
+        > moved from templates_1.50mm
+D  +    templates_volumes/aal.csv
+        > moved to aal.csv
+D  +    templates_volumes/aal.nii
+        > moved to aal.nii
+D  +    templates_volumes/aal.txt
+        > moved to aal.txt
+
+(1) Changed: Added AAL3 atlas and removed old AAL atlas.
+(2) Changed: Renamed template folder for volumes to "templates_volumes" and 
+    changed all functions with references to this folder.
+(3) Changed: Updated version information.
+(4) Changed: Atlases that are installed in spm12/atlas are now named 
+    cat12_atlasname.
+(5) Changed: Added Matlab links to online help for references.
+(6) Fixed: Interactive call to cat_stat_spm2x was missing some parameters.
+------------------------------------------------------------------------
+r1570 | gaser | 2020-02-24 15:08:56 +0100 (Mo, 24 Feb 2020) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +79,7 @@ M       cat_vol_groupwise_ls.m
 
 Changed all calls in cat_vol_groupwise_ls.m to old spm_diffeo function because 
 for many data the Hessian matrix could not be estimated.
+
 
 ------------------------------------------------------------------------
 r1569 | gaser | 2020-02-24 14:24:47 +0100 (Mo, 24 Feb 2020) | 17 lines

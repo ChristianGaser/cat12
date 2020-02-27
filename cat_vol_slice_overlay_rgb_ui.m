@@ -9,9 +9,9 @@ global SO
 % ---------------------------------------------------------------------------------------
 % image array of max. 3 images
 % ---------------------------------------------------------------------------------------
-name = char(fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm/cobra.nii'),...
-            fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm/mori.nii'),...
-            fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm/cat.nii'));
+name = char(fullfile(spm('dir'),'toolbox','cat12','templates_volumes/cobra.nii'),...
+            fullfile(spm('dir'),'toolbox','cat12','templates_volumes/mori.nii'),...
+            fullfile(spm('dir'),'toolbox','cat12','templates_volumes/cat.nii'));
 
 range = [0 1]; % this should be adapted to the image range
 logP = 0;      % option to use log-scaled colorbars if the input is a log-transformed p-map
@@ -19,7 +19,7 @@ logP = 0;      % option to use log-scaled colorbars if the input is a log-transf
 % ---------------------------------------------------------------------------------------
 % underlying image
 % ---------------------------------------------------------------------------------------
-SO.img(1).vol = spm_vol(fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm/Template_T1_IXI555_MNI152_GS.nii'));
+SO.img(1).vol = spm_vol(fullfile(spm('dir'),'toolbox','cat12','templates_volumes/Template_T1_IXI555_MNI152_GS.nii'));
 SO.img(1).prop = 1;
 SO.img(1).cmap = gray;
 SO.img(1).range = [0.2 1];  % image range have to be adapted

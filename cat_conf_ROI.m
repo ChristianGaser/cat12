@@ -95,7 +95,7 @@ ownatlas.help         = {
     'The CSV-file should have an header line containing the number of the ROI "ROIid", ' ...
     'the abbreviation of the ROI "ROIabbr" and the full name of the ROI "ROIname".  ' ...
     'The GM, WM, and CSF values will be extracted for all regions. '], ...
-    fullfile( spm('dir'), 'toolbox', 'cat12', 'templates_1.50mm') ); 
+    fullfile( spm('dir'), 'toolbox', 'cat12', 'templates_volumes') ); 
   ''};
 ownatlas.filter       = 'image';
 ownatlas.ufilter      = '.*';
@@ -122,7 +122,7 @@ end
 ROI.values = {noROI atlases};
 ROI.help   = {
 'Export of ROI data of volume to a xml-files. '
-'For further information see atlas specific text files in "templates_1.50mm" CAT12 subdir. '
+'For further information see atlas specific text files in "templates_volumes" CAT12 subdir. '
 ''
 'For thickness estimation the projection-based thickness (PBT) [Dahnke:2012] is used that average cortical thickness for each GM voxel. '
 ''
@@ -168,12 +168,11 @@ for ali=1:numel(atlaslist)
         '    See IBSR terms "http://www.nitrc.org/projects/ibsr"'
         ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
   end
-  if any(~cellfun('isempty',strfind(atlaslist(ali),'aal')))
+  if any(~cellfun('isempty',strfind(atlaslist(ali),'aal3')))
     ROI.help = [ROI.help; strrep({
-        '(MAI) AAL (122 GM ROIs of 1 subject, 2002):'
-        '    Combining probabilistic cytoarchitectonic maps and functional imaging data of a single Brain.'
+        '(MAI) AAL3 (170 GM ROIs of 1 subject, 2020):'
         '    Tzourio-Mazoyer et al., Automated anatomical labelling of activations in spm using a macroscopic anatomical parcellation of the MNI MRI single subject brain. Neuroimage 2002, 15: 273-289.'
-        '    http://www.fz-juelich.de/inm/inm-1/DE/Forschung/_docs/SPMAnatomyToolbox/SPMAnatomyToolbox_node.html'
+        '    Rolls et al., Automated anatomical labelling atlas 3. Neuroimage 2020; 206:116189.'
         ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
   end
   if any(~cellfun('isempty',strfind(atlaslist,'mori')))
@@ -288,7 +287,7 @@ end
 sROI.values = {nosROI satlases};
 sROI.help   = {
 'Export of ROI data of volume to a xml-files. '
-'For further information see atlas specific text files in "templates_1.50mm" CAT12 subdir. '
+'For further information see atlas specific text files in "templates_volumes" CAT12 subdir. '
 ''
 'For thickness estimation the projection-based thickness (PBT) [Dahnke:2012] is used that average cortical thickness for each GM voxel. '
 ''

@@ -28,7 +28,7 @@ function cat_vol_optimizeTemplate(job)
   
   % set ouput path/name
   if ~isfield('output',job) || isempty(job.output)
-    job.output = spm_input('output path and suffix','+1','s',fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','restest','IXI555_MNI152_new.nii'));
+    job.output = spm_input('output path and suffix','+1','s',fullfile(spm('dir'),'toolbox','cat12','templates_volumes','restest','IXI555_MNI152_new.nii'));
   end
   
   %
