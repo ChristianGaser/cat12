@@ -19,9 +19,9 @@ matlabbatch{1}.spm.tools.cat.(estwrite).data = '<UNDEFINED>';
 % Remove comments and edit entry if you would like to change the Dartel/Shooting approach
 % Otherwise the default value from cat_defaults.m is used.
 % entry for choosing dartel approach
-%matlabbatch{1}.spm.tools.cat.(estwrite).extopts.registration.dartel.darteltpm = {'/Users/gaser/spm/spm12/toolbox/cat12/templates_1.50mm/Template_1_IXI555_MNI152.nii'};
+%matlabbatch{1}.spm.tools.cat.(estwrite).extopts.registration.dartel.darteltpm = {'/Users/gaser/spm/spm12/toolbox/cat12/templates_volumes/Template_1_IXI555_MNI152.nii'};
 % entry for choosing shooting approach
-%matlabbatch{1}.spm.tools.cat.(estwrite).extopts.registration.shooting.shootingtpm = {'/Users/gaser/spm/spm12/toolbox/cat12/templates_1.50mm/Template_0_IXI555_MNI152_GS.nii'};
+%matlabbatch{1}.spm.tools.cat.(estwrite).extopts.registration.shooting.shootingtpm = {'/Users/gaser/spm/spm12/toolbox/cat12/templates_volumes/Template_0_IXI555_MNI152_GS.nii'};
 % Strength of Shooting registration: 0 - Dartel, eps (fast), 0.5 (default) to 1 (accurate) optimized Shooting, 4 - default Shooting; default 0.5
 %matlabbatch{1}.spm.tools.cat.(estwrite).extopts.registration.shooting.regstr = 0.5;
 

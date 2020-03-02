@@ -1649,7 +1649,7 @@ for di = 1:numel(job.data_surf)
 	if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
 	if job.merge_hemi
 		dep(end).sname      = ['Merged' depsfnames{1}];
-		dep(end).src_output = substruct('()',{1}, '.','Psdata','{}',{di},'()',{':'});
+		dep(end).src_output = substruct('()',{1}, '.','Psdata','()',{di},'()',{':'});
 		dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
 	else
 		dep(end).sname      = ['Left' depsfnames{1}];
