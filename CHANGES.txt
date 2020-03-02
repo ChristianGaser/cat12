@@ -1,5 +1,22 @@
 ------------------------------------------------------------------------
-r1573 | gaser | 2020-03-02 22:30:00
+r1574 | gaser | 2020-03-03 00:54:41
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_io_checkdepfiles.m
+M       cat_main_registration2.m
+M       cat_stat_analyze_ROIs.m
+M       cat_surf_results.m
+M       cat_vol_slice_overlay_ui.m
+M       standalone/cat_standalone_segment.txt
+
+(1) Fixed: Updated new templyte_volumes folder in remaining functions,
+(2) Changed: Added suppression of annoying subscripting warning.
+(3) Fixed: Added warning that spm12 update is necessary for new contour 
+    overlay function in cat_surf_results.m.
+------------------------------------------------------------------------
+r1573 | gaser | 2020-03-02 22:30:34 +0100 (Mo, 02 Mär 2020) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +28,7 @@ A       spm_diffeo_old.mexw64
 
 Added: spm_diffeo.mexmaci from previous SPM12 release that were more stable for
 non-linear longitduinal registration.
+
 ------------------------------------------------------------------------
 r1572 | gaser | 2020-03-02 12:50:29 +0100 (Mo, 02 Mär 2020) | 19 lines
 

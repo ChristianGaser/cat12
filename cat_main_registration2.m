@@ -295,12 +295,12 @@ function [trans,reg] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
            (res.do_dartel==2 && job.extopts.regstr(regstri)==0)
           if res.do_dartel==2 && job.extopts.regstr(regstri)==0
             cat_io_cprintf('warn','Switch to default Dartel Template.\n');
-            job.extopts.templates      = cat_vol_findfiles(fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm'),'Template_*_IXI555_MNI152.nii'); 
+            job.extopts.templates      = cat_vol_findfiles(fullfile(spm('dir'),'toolbox','cat12','templates_volumes'),'Template_*_IXI555_MNI152.nii'); 
             job.extopts.templates(end) = []; 
             reg(regstri).opt.rres = job.extopts.vox(voxi); 
           elseif res.do_dartel==1 && job.extopts.regstr(regstri)>0
             cat_io_cprintf('warn','Switch to default Shooting Template.\n');
-            job.extopts.templates = cat_vol_findfiles(fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm'),'Template_*_IXI555_MNI152_GS.nii',struct('depth',1)); 
+            job.extopts.templates = cat_vol_findfiles(fullfile(spm('dir'),'toolbox','cat12','templates_volumes'),'Template_*_IXI555_MNI152_GS.nii',struct('depth',1)); 
           end
         end
         res.tpm2 = cell(1,numel(job.extopts.templates)); 
