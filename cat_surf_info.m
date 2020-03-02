@@ -200,6 +200,12 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     elseif strfind(noname,'lc.'),   sinfo(i).side='lc';   sidei = strfind(noname,'lc.');
     elseif strfind(noname,'rc.'),   sinfo(i).side='rc';   sidei = strfind(noname,'rc.');
     else
+      
+      % skip for volume files
+      if strcmp(ee,'.nii')
+        continue
+      end
+      
       % if SPM.mat exist use that for side information
       if exist(fullfile(pp,'SPM.mat'),'file')
         load(fullfile(pp,'SPM.mat'));
