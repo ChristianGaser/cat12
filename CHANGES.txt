@@ -1,5 +1,26 @@
 ------------------------------------------------------------------------
-r1571 | gaser | 2020-02-27 15:50:35
+r1572 | gaser | 2020-03-02 12:49:55
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_surf_info.m
+M       cat_surf_results.m
+M       check_pipeline.sh
+M       html/cat.html
+
+(1) Changed: option to save files in a defined folder in check_pipeline.sh.
+(2) Changed: Added functionality to cat_surf_results to map results from 3D 
+    volume data to the surface. Volumes are mapped using a absmax mapping 
+    function inside the cortical band of the Dartel/Shooting surface template.
+(3) Fixed: Solved smaller inconsistencies in cat_surf_results if you select
+    a different results file in the GUI.
+(4) Changed: Updated cat_surf_info to deal with volume files which allows
+    to use this function also for volumes in cat_surf_results.
+
+------------------------------------------------------------------------
+r1571 | gaser | 2020-02-27 15:51:11 +0100 (Do, 27 Feb 2020) | 70 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -70,6 +91,7 @@ D  +    templates_volumes/aal.txt
     cat12_atlasname.
 (5) Changed: Added Matlab links to online help for references.
 (6) Fixed: Interactive call to cat_stat_spm2x was missing some parameters.
+
 ------------------------------------------------------------------------
 r1570 | gaser | 2020-02-24 15:08:56 +0100 (Mo, 24 Feb 2020) | 8 lines
 
