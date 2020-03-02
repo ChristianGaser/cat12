@@ -90,6 +90,6 @@ archive:
 	
 check_pipeline: update install
 	-@echo Check pipeline
-	-@ls ./check_pipeline.sh -s ~/spm/spm12 -bg 8 -f /Volumes/UltraMax/check_pipeline/check_pipeline_files.txt
+	-@./check_pipeline.sh -d /Volumes/UltraMax/check_pipeline/ -s ~/spm/spm12 -bg 8 -f /Volumes/UltraMax/check_pipeline/check_pipeline_files.txt
 	-@echo Please finally call post-processing with the resp. pid: check_pipeline.sh -p pid
 	

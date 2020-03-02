@@ -12,6 +12,7 @@ spm12_dir=""
 spm12_tmp=/tmp/spm12$$
 calc_tmp=/tmp/calc$$
 file_list=""
+proc_dir=$PWD
 bg_flag=" -fg -p 1"
 bg=0
 postprocess_only=0
@@ -36,7 +37,7 @@ main ()
   if [  $bg -eq 0 ]; then
     postprocess
   fi
-  
+    
   exit 0
 }
 
@@ -63,6 +64,11 @@ parse_args ()
         --spm* | -s*)
             exit_if_empty "$optname" "$optarg"
             spm12_dir=$optarg
+            shift
+            ;;
+        --dir* | -d*)
+            exit_if_empty "$optname" "$optarg"
+            proc_dir=$optarg
             shift
             ;;
         --file* | -f*)
@@ -219,9 +225,9 @@ run_pipeline ()
   
   # run cat12 in foreground with all files in tmp folder
   if [ -f "${spm12_tmp}/toolbox/cat12/cat_batch_cat.sh" ]; then
-    ${spm12_tmp}/toolbox/cat12/cat_batch_cat.sh ${bg_flag} ${calc_tmp}/*.[in][mi][gi] 
+    ${spm12_tmp}/toolbox/cat12/cat_batch_cat.sh -l ${proc_dir} ${bg_flag} ${calc_tmp}/*.[in][mi][gi] 
   else
-    ${spm12_tmp}/toolbox/cat12/cat_batch_vbm.sh ${bg_flag} ${calc_tmp}/*.[in][mi][gi] 
+    ${spm12_tmp}/toolbox/cat12/cat_batch_vbm.sh -l ${proc_dir} ${bg_flag} ${calc_tmp}/*.[in][mi][gi] 
   fi
   
 }
@@ -248,11 +254,11 @@ postprocess ()
   # if postprocess_only < 0 we assume that this is the release number
   if [ $postprocess_only -lt 0 ]; then
     release=`echo $postprocess_only| cut -f2 -d'-'`
-    if [ ! -d check_r${release} ]; then
-      echo Please check release number. Directory check_r${release} was not found.
+    if [ ! -d ${proc_dir}/check_r${release} ]; then
+      echo Please check release number. Directory ${proc_dir}/check_r${release} was not found.
       exit 1
     fi
-    calc_tmp=check_r${release}
+    calc_tmp=${proc_dir}/check_r${release}
   fi
   
 
@@ -282,7 +288,7 @@ postprocess ()
 				# add entry to csv file and sort and only keep unique lines
 				echo "${revision_cat},${vol_TIV},${vol_CGW}" >> ${subj}_vol.csv
 				cat ${subj}_vol.csv |sort -r|uniq > tmp$$
-				mv tmp$$ ${subj}_vol.csv
+				mv tmp$$ ${proc_dir}/${subj}_vol.csv
       fi
 
       # grep for Vgm and update csv file
@@ -292,7 +298,7 @@ postprocess ()
         # add entry to csv file and sort and only keep unique lines
         echo "${revision_cat},${Vgm}" >> ${subj}_Vgm.csv
         cat ${subj}_Vgm.csv |sort -r|uniq > tmp$$
-        mv tmp$$ ${subj}_Vgm.csv
+        mv tmp$$ ${proc_dir}/${subj}_Vgm.csv
       fi
       
       # grep for Vcsf and update csv file
@@ -302,7 +308,7 @@ postprocess ()
         # add entry to csv file and sort and only keep unique lines
         echo "${revision_cat},${Vcsf}" >> ${subj}_Vcsf.csv
         cat ${subj}_Vcsf.csv |sort -r|uniq > tmp$$
-        mv tmp$$ ${subj}_Vcsf.csv
+        mv tmp$$ ${proc_dir}/${subj}_Vcsf.csv
       fi
 
       # grep for thickness and update csv file
@@ -312,7 +318,7 @@ postprocess ()
         # add entry to csv file and sort and only keep unique lines
         echo "${revision_cat},${thickness}" >> ${subj}_thickness.csv
         cat ${subj}_thickness.csv |sort -r|uniq > tmp$$
-        mv tmp$$ ${subj}_thickness.csv
+        mv tmp$$ ${proc_dir}/${subj}_thickness.csv
       fi
 
       # scp updated csv files to dbm server
@@ -323,33 +329,31 @@ postprocess ()
     # rename tmp-folder and zip and scp them
     if [ ! -z "$revision_cat" ]; then
       if [ ! $postprocess_only -lt 0 ]; then
-        if [ -d check_r${revision_cat} ]; then
-          mv ${calc_tmp}/*/ check_r${revision_cat}/
+        if [ -d ${proc_dir}/check_r${revision_cat} ]; then
+          mv ${calc_tmp}/*/ ${proc_dir}/check_r${revision_cat}/
         else
-          mv ${calc_tmp} check_r${revision_cat}
-        fi
-        if [ ! -d spm12_r${revision_cat} ]; then
-          mv ${spm12_tmp} spm12_r${revision_cat}
+          mv ${calc_tmp} ${proc_dir}/check_r${revision_cat}
         fi
       fi
       
       # prepare renderview if tool is found and surface processing is enabled
       if [ ! -z `which CAT_View_Render_Matrix_ui` ] & [ $volumes_only -eq 0 ]; then
-        CAT_View_Render_Matrix_ui check_r${revision_cat}/surf
+        CAT_View_Render_Matrix_ui ${proc_dir}/check_r${revision_cat}/surf
+        mv check_r${revision_cat}*.png ${proc_dir}/
       else
         echo "You need CAT_View_Render_Matrix_ui and image_matrix.sh for preparing render view."
       fi
 
       # delete original files, WM and normalized T1 images
       if [ ! $postprocess_only -lt 0 ]; then
-        rm check_r${revision_cat}/*.[in][mi][gi]
-        rm check_r${revision_cat}/mri/mwp2*
-        rm check_r${revision_cat}/mri/wm*
+        rm ${proc_dir}/check_r${revision_cat}/*.[in][mi][gi]
+        rm ${proc_dir}/check_r${revision_cat}/mri/mwp2*
+        rm ${proc_dir}/check_r${revision_cat}/mri/wm*
 
-        zip -q check_r${revision_cat}.zip -r check_r${revision_cat}
-        scp -q -P 2222 check_r${revision_cat}.zip $scp_target
+        zip -q ${proc_dir}/check_r${revision_cat}.zip -r ${proc_dir}/check_r${revision_cat}
+        scp -q -P 2222 ${proc_dir}/check_r${revision_cat}.zip $scp_target
       fi
-      scp -q -P 2222 check_r*png $scp_target
+      scp -q -P 2222 ${proc_dir}/check_r${revision_cat}*.png $scp_target
     fi
   fi
   
@@ -364,10 +368,11 @@ help ()
 cat <<__EOM__
 
 USAGE:
-  check_pipeline.sh -s spm12_folder [-p process_id] [-r cat12_zip_file] [-b number_of_processes] [-v] [-f file_list | filenames]
+  check_pipeline.sh -s spm12_folder [-p process_id] [-r cat12_zip_file] [-d proc_folder] [-b number_of_processes] [-v] [-f file_list | filenames]
   
    -r   zip-file of CAT12 release that will be used for checking. If no zip-file is given, then the current CAT12 release will be used.
    -s   folder of spm12 installation
+   -d   folder for writing processed files and results (default $proc_folder)
    -f   list with file names for checking
    -p   post-process given pid
    -b   run check_pipeline.sh in the background

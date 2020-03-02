@@ -73,26 +73,27 @@ switch lower(action)
     end
 
     % set start values
-    y        = [];
-    H.clip       = [];
-    H.clim       = [];
-    H.XTick      = [];
-    H.bkg_col    = [0 0 0];
+    y              = [];
+    H.clip         = [];
+    H.clim         = [];
+    H.XTick        = [];
+    H.bkg_col      = [0 0 0];
     H.show_inv     = 0;
-    H.no_neg     = 0;
+    H.no_neg       = 0;
     H.show_transp  = 1; 
-    H.col      = [.8 .8 .8; 1 .5 .5];
-    H.FS       = cat_get_defaults('extopts.fontsize');
-    H.n_surf     = 1;
+    H.n_surf       = 1;
     H.thresh_value = 0;
     H.cursor_mode  = 1;
     H.text_mode    = 1;
     H.border_mode  = 0;
-    H.str32k     = '';
+    H.str32k       = '';
     H.SPM_found    = 1;
     H.surf_sel     = 1;
-    H.isfsavg    = 1;
-    H.fixscl     = 0;
+    H.results_sel  = 1;
+    H.isfsavg      = 1;
+    H.fixscl       = 0;
+    H.col          = [.8 .8 .8; 1 .5 .5];
+    H.FS           = cat_get_defaults('extopts.fontsize');
     
 % colorbar addon histogram & values
 % 
@@ -432,99 +433,76 @@ switch lower(action)
       H.S{1}.name = varargin{1};
       H.S{2}.name = varargin{1};
       
-      [pth{1}, nm1, ext1] = spm_fileparts(H.S{1}.name(1, :));
-      
-      % SPM.mat found for both hemispheres (not working yet)
-      if strcmp([nm1 ext1], 'SPM.mat')
-        H.logP = 0;
-        
-        if strcmp([nm1 ext1], 'SPM.mat')
-          ind = 1;
-        else ind = 2; end
-        
-        swd1 = pwd;
-        spm_figure('GetWin', 'Interactive');
-        cd(pth{ind})
-        xSPM.swd = pwd;
-        [xSPM, v] = spm_getSPM(xSPM);
-        cd(swd1);
-        
-        dat = struct('XYZ', v.XYZ, ...
-          't', v.Z', ...
-          'mat', v.M, ...
-          'dim', v.DIM, ...
-          'dat', v.Z');
-        
-        H.S{ind}.info = cat_surf_info(H.S{ind}.name, 0);
-        g = gifti(H.S{ind}.info.Pmesh);
-        
-        mat = v.M;
-        V = g.vertices;
-        XYZ = double(inv(mat) * [V'; ones(1, size(V, 1))]);
-        H.S{ind}.Y = spm_sample_vol(Y, XYZ(1, :), XYZ(2, :), XYZ(3, :), 0)';
-        H.S{ind}.Y = spm_mesh_project(g.vertices, dat)';
-      else
-        
-        H.logP = 1;
-        
-        % read meshes
-        H.S{1}.info = cat_surf_info(H.S{1}.name, 1);          
-        H.S{2}.info = H.S{1}.info;            
-        if H.S{1}.info(1).nvertices == 64984
-          H.str32k = '_32k';
-        else
-          H.str32k = '';
-        end
-
-        H.S{1}.info(1).side = 'lh';
-        H.S{1}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ...
-            ['templates_surfaces' H.str32k], 'lh.central.freesurfer.gii');
-        H.S{2}.info(1).side = 'rh';
-        H.S{2}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ....
-            ['templates_surfaces' H.str32k], 'rh.central.freesurfer.gii');
-
-        for ind = 1:2
-          H.S{ind}.M = gifti(H.S{ind}.info(1).Pmesh);            
-          % get adjacency information
-          H.S{ind}.A = spm_mesh_adjacency(H.S{ind}.M);
-        end
-
-        if isempty(strfind(H.S{1}.info(1).ff, 'log'))
-          H.logP = 0;
-        end
-
-        try
-          Y = spm_data_read(spm_data_hdr_read(H.S{1}.name));
-        catch
-          error('No data in surfaces found or surfaces have different mesh structure (32k vs. 164k).');
-        end
-        H.nY2 = size(Y,1)/2;
-        H.S{1}.Y = Y(1:H.nY2, :);
-        H.S{2}.Y = Y((H.nY2+1):end, :);
-        
-        % if size of cdata does not fit to mesh size load the underlying
-        % mesh instead of fsaverage mesh and divide hemispheres into lh/rh
-        if size(Y,1) ~= (size(H.S{1}.M.faces,1)+4)
-          Mg = gifti(deblank(H.S{1}.name(1,:)));
-          sz_faces2 = size(Mg.faces,1)/2;
-          sz_vertices2 = size(Mg.vertices,1)/2;
-          H.S{1}.M.faces = Mg.faces(1:sz_faces2,:);
-          H.S{1}.M.vertices = Mg.vertices(1:sz_vertices2,:);
-          H.isfsavg = 0;
-        end
-
-        if ~H.isfsavg
-          H.S{2}.M.faces = Mg.faces(((sz_faces2+1):end),:) - sz_vertices2;
-          H.S{2}.M.vertices = Mg.vertices((sz_vertices2+1):end,:);
-        end
+      try
+        Y = spm_data_read(spm_data_hdr_read(H.S{1}.name));
+      catch
+        error('No data in surfaces found or surfaces have different mesh structure (32k vs. 164k).');
+      end
+                  
+      [pth{1}, nm1, ext1] = spm_fileparts(H.S{1}.name(1,:));
                     
+      % read meshes
+      H.S{1}.info = cat_surf_info(H.S{1}.name, 1);          
+      H.S{2}.info = H.S{1}.info;            
+      H.n_surf = numel(H.S{1}.info);
+      if H.S{1}.info(1).nvertices == 64984
+        H.str32k = '_32k';
+      else
+        H.str32k = '';
+      end
+
+      H.S{1}.info(1).side = 'lh';
+      H.S{1}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ...
+          ['templates_surfaces' H.str32k], 'lh.central.freesurfer.gii');
+      H.S{2}.info(1).side = 'rh';
+      H.S{2}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ....
+          ['templates_surfaces' H.str32k], 'rh.central.freesurfer.gii');
+
+      for ind = 1:2
+        H.S{ind}.M = gifti(H.S{ind}.info(1).Pmesh);            
+        % get adjacency information
+        H.S{ind}.A = spm_mesh_adjacency(H.S{ind}.M);
+      end
+
+      H.logP = ones(H.n_surf,1);
+
+      for i=1:H.n_surf
+        if isempty(strfind(H.S{1}.info(i).ff, 'log'))
+          H.logP(i) = 0;
+        end
+      end
+
+      H.nY2 = size(Y,1)/2;
+      H.S{1}.Y = Y(1:H.nY2, :);
+      H.S{2}.Y = Y((H.nY2+1):end, :);
+
+      % delete temporary files that were created for volume mapping
+      for i=1:H.n_surf
+        if H.isvol(i)
+          delete(deblank(H.S{1}.name(i,:)))
+        end
       end
       
+      % if size of cdata does not fit to mesh size load the underlying
+      % mesh instead of fsaverage mesh and divide hemispheres into lh/rh
+      if size(Y,1) ~= (size(H.S{1}.M.faces,1)+4)
+        Mg = gifti(deblank(H.S{1}.name(1,:)));
+        sz_faces2 = size(Mg.faces,1)/2;
+        sz_vertices2 = size(Mg.vertices,1)/2;
+        H.S{1}.M.faces = Mg.faces(1:sz_faces2,:);
+        H.S{1}.M.vertices = Mg.vertices(1:sz_vertices2,:);
+        H.isfsavg = 0;
+      end
+
+      if ~H.isfsavg
+        H.S{2}.M.faces = Mg.faces(((sz_faces2+1):end),:) - sz_vertices2;
+        H.S{2}.M.vertices = Mg.vertices((sz_vertices2+1):end,:);
+      end
+                          
       % rescue original name for later result selection
       H.S1 = H.S{1};
       H.S2 = H.S{2};
       
-      H.n_surf = numel(H.S{1}.info);
       H.view = 1;
       H.show_transp = 1;
       H.disable_cbar = 0;
@@ -597,7 +575,7 @@ switch lower(action)
       end
 
       % Don't allow plot functions for RGB maps or if SPM.mat was not found
-      if H.n_surf > 1 && H.SPM_found
+      if (H.n_surf > 1 && H.SPM_found) | H.isvol(1)
         str = {'Data Cursor', 'Disable data cursor', 'Atlas regions: Desikan-Killiany DK40', ...
           'Atlas regions: Destrieux 2009', 'Atlas region: HCP Multi-Modal Parcellation', ...
           'Enable/Disable rotate3d'};
@@ -607,14 +585,7 @@ switch lower(action)
              {@select_cursor, 3}, ...
              {@select_cursor, 5}};
         
-        H.cursor = uicontrol(H.panel(2), ...
-           'String', str, 'Units', 'normalized', ...
-          'Position', H.pos{2}.cursor, 'UserData', tmp, ...
-          'Style', 'PopUp', 'HorizontalAlignment', 'center', ...
-          'Callback', 'spm(''PopUpCB'',gcbo)', ...
-          'FontSize',H.FS,...
-          'ToolTipString', 'Data Cursor Mode', ...
-          'Interruptible', 'on', 'Enable', 'off');
+        set(H.cursor,'String', str, 'UserData', tmp);
       end
       
       % enable some menus only if mesh data can be assumed to be resampled
@@ -1210,6 +1181,17 @@ global H
 H.thresh_value = thresh;
 H.clip = [true -thresh thresh];
 
+% only show threshold popup if log-name was found and minimal value > 0 is < 1
+if H.logP(H.results_sel) & (thresh < 1)
+  if min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0 & H.n_surf == 1
+    set(H.hide_neg, 'Enable', 'on');
+    set(H.hide_neg, 'Value', 0);
+  end
+else
+  set(H.hide_neg, 'Enable', 'off');
+  set(H.hide_neg, 'Value', 0);
+end
+
 H.no_neg = get(H.hide_neg, 'Value');
 
 % get min value for both hemispheres
@@ -1244,7 +1226,9 @@ end
 set(H.slider_min, 'Value', H.clim(2))
 set(H.str_min, 'String', sprintf('%g',H.clim(2)));
 
-set(H.atlas, 'Enable', 'on');
+if ~H.isvol(H.results_sel)
+  set(H.atlas, 'Enable', 'on');
+end
 
 if ~H.disable_cbar
   H = show_colorbar(H);
@@ -1347,7 +1331,7 @@ for ind = [1 3]
       fprintf('\n%s', spm_str_manip(H.S{round(ind / 2)}.info(indsurf).fname, 'k50d'));
       fprintf('\n______________________________________________________\n\n');
       
-      if H.logP, fprintf('%7s\t%8s\t%s\n', 'P-value', 'Size', 'Overlap of atlas region');
+      if H.logP(H.results_sel), fprintf('%7s\t%8s\t%s\n', 'P-value', 'Size', 'Overlap of atlas region');
       else, fprintf('%7s\t%8s\t%s\n', 'Value  ', 'Size', 'Overlap of atlas region'); end
       
       for i = 1:max(C)
@@ -1356,7 +1340,7 @@ for ind = [1 3]
         
         dmax = d(indp); dmax = max(dmax(N));
         
-        if H.logP, fprintf('\n%1.5f\t%8d', 10^(-dmax), k);
+        if H.logP(H.results_sel), fprintf('\n%1.5f\t%8d', 10^(-dmax), k);
         else, fprintf('\n%6.1f\t%8d', dmax, k); end
         
         Nrdata = rdata2(N);
@@ -1394,7 +1378,7 @@ for ind = [1 3]
       fprintf('\n%s', spm_str_manip(H.S{round(ind / 2)}.info(indsurf).fname, 'k50d'));
       fprintf('\n______________________________________________________\n\n');
       
-      if H.logP, fprintf('%7s\t%8s\t%s\n', 'P-value', 'Size', 'Overlap of atlas region');
+      if H.logP(H.results_sel), fprintf('%7s\t%8s\t%s\n', 'P-value', 'Size', 'Overlap of atlas region');
       else, fprintf('%7s\t%8s\t%s\n', 'Value  ', 'Size', 'Overlap of atlas region'); end
       
       for i = 1:max(C)
@@ -1402,7 +1386,7 @@ for ind = [1 3]
         k = length(N);
         
         dmin = d(indn); dmin = min(dmin(N));
-        if H.logP, fprintf('\n%1.5f\t%8d', 10^(dmin), k);
+        if H.logP(H.results_sel), fprintf('\n%1.5f\t%8d', 10^(dmin), k);
         else, fprintf('\n%6.1f\t%8d', -dmin, k); end
         
         Nrdata = rdata2(N);
@@ -1434,6 +1418,8 @@ if nargout, Ho = H; end
 function Ho = select_results(sel)
 %-----------------------------------------------------------------------
 global H
+
+H.results_sel = sel;
 
 clearDataCursorPlot(H);
 
@@ -1544,9 +1530,55 @@ end
 % update file information and colorbar
 checkbox_info;
 
+% only show threshold popup if log-name was found and minimal value > 0 is < 1
+if H.logP(H.results_sel) & (H.S{1}.thresh < 1)
+  set(H.thresh, 'Enable', 'on');
+  if min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0 & H.n_surf == 1
+    set(H.hide_neg, 'Enable', 'on');
+    set(H.hide_neg, 'Value', 0);
+  end
+else
+  set(H.thresh,   'Enable', 'off');
+  set(H.hide_neg, 'Enable', 'off');
+  set(H.hide_neg, 'Value', 0);
+end
+
+% enable/disable atlas widget
+if H.isvol(sel)
+  set(H.atlas, 'Enable', 'off');
+else
+  set(H.atlas, 'Enable', 'on');
+end
+
 if ~H.disable_cbar
   H = show_colorbar(H);
 end
+
+% Don't allow plot functions for volume data
+if H.isvol(sel)
+  str = {'Data Cursor', 'Disable data cursor', 'Atlas regions: Desikan-Killiany DK40', ...
+    'Atlas regions: Destrieux 2009', 'Atlas region: HCP Multi-Modal Parcellation', ...
+    'Enable/Disable rotate3d'};
+  tmp = {{@select_cursor, 0}, ...
+       {@select_cursor, 1}, ...
+       {@select_cursor, 2}, ...
+       {@select_cursor, 3}, ...
+       {@select_cursor, 5}};
+else
+  str = {'Data Cursor', 'Disable data cursor', 'Atlas regions: Desikan-Killiany DK40', ...
+    'Atlas regions: Destrieux 2009', 'Atlas region: HCP Multi-Modal Parcellation', ...
+    'Plot data at vertex', ...
+    'Plot mean data inside cluster', 'Enable/Disable rotate3d'};
+  tmp = {{@select_cursor, 0}, ...
+       {@select_cursor, 1}, ...
+       {@select_cursor, 2}, ...
+       {@select_cursor, 3}, ...
+       {@select_cursor, 4}, ...
+       {@select_cursor, 5}, ...
+       {@select_cursor, 6}};
+end
+set(H.cursor,'String', str, 'UserData', tmp);
+
 
 % print selected filename
 cla(H.nam);
@@ -1617,6 +1649,7 @@ else
   set(H.cursor, 'Enable', 'on');
   set(H.mview, 'Enable', 'on');
 end
+
 if nargout, Ho = H; end
 
 %-----------------------------------------------------------------------
@@ -1717,7 +1750,7 @@ for ind = 1:5
 end
 
 % only show threshold popup if log-name was found and minimal value > 0 is < 1
-if H.logP & (H.S{1}.thresh < 1)
+if H.logP(H.results_sel) & (H.S{1}.thresh < 1)
   set(H.thresh, 'Enable', 'on');
   if min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0 & H.n_surf == 1
     set(H.hide_neg, 'Enable', 'on');
@@ -1725,7 +1758,7 @@ if H.logP & (H.S{1}.thresh < 1)
   end
 end
 
-if H.n_surf == 1
+if H.n_surf == 1 & ~H.isvol(H.results_sel)
   % get sure that image is thresholded and there are at least 20% zero/NaN areas
   if (sum(d ~= 0) / numel(d) < 0.8)
     set(H.atlas, 'Enable', 'on');
@@ -1784,7 +1817,7 @@ if H.n_surf == 1
   H.cbar = axes('Parent', H.panel(1), 'Position', H.pos{1}.cbar(1, :), 'Color', H.bkg_col, 'Visible', 'off','tag','cat_surf_results_colorbar');
   H.colourbar = colorbar('peer', H.cbar, 'Northoutside');
   
-  if H.logP, title(H.cbar, 'p-value', 'Color', 1 - H.bkg_col); end
+  if H.logP(H.results_sel), title(H.cbar, 'p-value', 'Color', 1 - H.bkg_col); end
   clim = getappdata(H.patch(1), 'clim');
   axis(H.cbar, 'off');
   
@@ -1808,7 +1841,7 @@ if H.n_surf == 1
     end
   end
   
-  if H.logP
+  if H.logP(H.results_sel)
     
     XTick = get(H.colourbar, 'XTick');
     
@@ -2202,17 +2235,62 @@ function select_data(obj, event_obj, P)
 %-----------------------------------------------------------------------
 global H
 
-H.logP = 1;
-
 if ~exist('P','var')
-  P = spm_select([1 24], 'mesh', 'Select up to 24 maps for left and right hemisphere');
+  P = spm_select([1 24], {'mesh','image'}, 'Select up to 24 maps for overlay');
 end
-info = cat_surf_info(P,0);
 
 n = size(P, 1);
 
+% correct filename and extension for volumes
 for i = 1:n
-  
+  % volume found?
+  if ~isempty(strfind(P(i,:),'.nii,'))
+    P(i,:) = strrep(P(i,:),'.nii,1','.nii  ');
+  end
+end
+
+P0 = cell(n,1);
+H.isvol = zeros(n,1);
+H.logP = zeros(n,1);
+
+% check for volumes
+for i = 1:n
+  if ~isempty(strfind(P(i,:),'.nii'))
+    % names for template and thickness file and output 
+    Pvol = deblank(P(i,:));
+    [pp,ff,ee] = spm_fileparts(Pvol);
+    Pmesh_lh  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','lh.central.Template_T1_IXI555_MNI152_GS.gii');
+    Pthick_lh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','lh.thickness.Template_T1_IXI555_MNI152_GS');
+    Pout_lh   = fullfile(pp,['lh.',ff '.gii']);
+    Pmesh_rh  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','rh.central.Template_T1_IXI555_MNI152_GS.gii');
+    Pthick_rh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','rh.thickness.Template_T1_IXI555_MNI152_GS');
+    Pout_rh   = fullfile(pp,['rh.',ff '.gii']);
+    Pout      = fullfile(pp,['mesh.',ff '.resampled_32k.gii']);
+        
+    % map 3D volume to template surface inside cortical band with maxabs mapping function
+    cmd = sprintf('CAT_3dVol2Surf -linear -maxabs -steps 7 -start -0.5 -end 0.5 -thickness "%s" "%s" "%s" "%s"',Pthick_lh, Pmesh_lh, Pvol, Pout_lh);
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+    cmd = sprintf('CAT_3dVol2Surf -linear -maxabs -steps 7 -start -0.5 -end 0.5 -thickness "%s" "%s" "%s" "%s"',Pthick_rh, Pmesh_rh, Pvol, Pout_rh);
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+
+    % combine left and right hemipshere data
+    M_lh = gifti(Pout_lh);
+    M_rh = gifti(Pout_rh);
+    delete(Pout_lh); delete(Pout_rh); % delete temporary files
+    M.cdata = [M_lh.cdata; M_rh.cdata];
+    M.private.metadata = struct('name','SurfaceID','value',Pout);
+    save(gifti(M), Pout, 'Base64Binary');
+    P0{i} = Pout; 
+    H.isvol(i) = 1;
+  else
+    P0{i} = deblank(P(i,:));
+  end
+end
+
+P0   = char(P0);
+info = cat_surf_info(P0,0);
+
+for i = 1:n
   if info(i).nvertices == 64984
     H.str32k = '_32k';
   else
@@ -2221,7 +2299,7 @@ for i = 1:n
   
   % check whether name contains 'log' that indicates a logP file
   if isempty(strfind(info(i).ff, 'log'))
-    H.logP = 0;
+    H.logP(i) = 0;
   end
   
   if strcmp(info(i).side, 'lh') | strcmp(info(i).side, 'rh')
@@ -2230,10 +2308,10 @@ for i = 1:n
 
 end
 
-H.S{1}.name = P;
-H.S{2}.name = P;
+H.S{1}.name = P0;
+H.S{2}.name = P0;
 
-cat_surf_results('disp', P);
+cat_surf_results('disp', P0);
 
 %==========================================================================
 function save_image(obj, event_obj, filename)
@@ -2315,7 +2393,7 @@ pos = getpixelposition(H.panel(1));
 hh = getframe(H.figure,pos);
 
 img = frame2im(hh);
-if H.surf_sel ~= 4 & ~isfield(H, 'dataplot')
+if H.results_sel ~= 4 & ~isfield(H, 'dataplot')
   % crop image if it's not a flatmap
   sz = size(img);
   img = img(round(0.1*sz(1):sz(1)),round(0.05*sz(2):0.95*sz(2)),:);
@@ -2429,7 +2507,9 @@ if min_d > -thresh & H.n_surf == 1
   set(H.slider_min, 'Value', 0);
 end
 
-set(H.atlas, 'Enable', 'on');
+if ~H.isvol(H.results_sel)
+  set(H.atlas, 'Enable', 'on');
+end
 
 if ~H.disable_cbar
   H = show_colorbar(H);
