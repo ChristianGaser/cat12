@@ -49,6 +49,9 @@ function varargout = cat_surf_results(action, varargin)
 
 global H y x
 
+% ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
+warning off MATLAB:subscripting:noSubscriptsSpecified
+
 %-Input parameters
 %--------------------------------------------------------------------------
 if ~nargin, action = 'Disp'; end
@@ -2173,10 +2176,15 @@ if H.border_mode
     M = H.S{k}.M;
     H.S{k}.Cm = cell(numel(t),1);
     for i=1:numel(t)
-    T = zeros(size(rdata));
-    T(rdata == datarange(i)) = 1;
-    Cm = spm_mesh_contour(M,struct('T',T,'t',0.5));
-    H.S{k}.Cm{i} = Cm;
+      T = zeros(size(rdata));
+      T(rdata == datarange(i)) = 1;
+      try
+        Cm = spm_mesh_contour(M,struct('T',T,'t',0.5));
+        H.S{k}.Cm{i} = Cm;
+      catch
+        fprintf('Please update SPM12 for using that function.\n');
+        break
+      end
     end
   end
   for k=1:5

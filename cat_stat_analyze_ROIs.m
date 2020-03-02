@@ -377,7 +377,7 @@ for i = sort(unique(hemi_code))'
   else
     % load volume atlas only once
     if ~atlas_loaded
-      V = spm_vol(fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm',[atlas '.nii']));
+      V = spm_vol(fullfile(spm('dir'),'toolbox','cat12','templates_volumes',[atlas '.nii']));
       data0 = round(spm_data_read(V));
       atlas_loaded = 1;
   
@@ -510,7 +510,7 @@ if ~mesh_detected
   % display ROI results for label image
   if show_results
     % display image as overlay
-    OV.reference_image = fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152_GS.nii');
+    OV.reference_image = fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_T1_IXI555_MNI152_GS.nii');
     OV.reference_range = [0.2 1.0];                        % intensity range for reference image
     OV.opacity = Inf;                                      % transparency value for overlay (<1)
     OV.cmap    = jet;                                      % colormap for overlay
