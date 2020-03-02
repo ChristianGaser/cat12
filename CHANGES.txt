@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1572 | gaser | 2020-03-02 12:49:55
+r1573 | gaser | 2020-03-02 22:30:00
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+A       spm_diffeo_old.c
+A       spm_diffeo_old.mexa64
+A       spm_diffeo_old.mexmaci64
+A       spm_diffeo_old.mexw64
+
+Added: spm_diffeo.mexmaci from previous SPM12 release that were more stable for
+non-linear longitduinal registration.
+------------------------------------------------------------------------
+r1572 | gaser | 2020-03-02 12:50:29 +0100 (Mo, 02 Mär 2020) | 19 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -18,6 +31,7 @@ M       html/cat.html
     a different results file in the GUI.
 (4) Changed: Updated cat_surf_info to deal with volume files which allows
     to use this function also for volumes in cat_surf_results.
+
 
 ------------------------------------------------------------------------
 r1571 | gaser | 2020-02-27 15:51:11 +0100 (Do, 27 Feb 2020) | 70 lines
