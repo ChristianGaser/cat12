@@ -87,7 +87,7 @@ if ~ischar(action)
     action   = 'Disp';
 end
 
-varargout = {[]};
+if nargout, varargout = {[]}; end
 
 %-Action
 %--------------------------------------------------------------------------
@@ -140,6 +140,18 @@ switch lower(action)
         if nargin>=3
           sinfo = cat_surf_info(varargin{3}); 
         elseif nargin>=1
+          if ischar(varargin{1})
+            %%
+            for i=1:size(varargin{1},1)
+              [pp,ff,ee] = spm_fileparts(varargin{1}(i,:)); 
+              varargin{1}(i,:) = fullfile(pp,[ff strrep(ee,'.dat','.gii')]);
+            end
+          else
+            for i=1:numel(varargin{1})
+              [pp,ff,ee] = spm_fileparts(varargin{1}{i}); 
+              varargin{1}{i} = fullfile(pp,[ff strrep(ee,'.dat','.gii')]);
+            end
+          end
           sinfo = cat_surf_info(varargin{1}); 
         else
           sinfo = cat_surf_info(M);
@@ -166,6 +178,7 @@ switch lower(action)
                 otherwise
                     S  = gifti(cat_io_FreeSurfer('read_surf',sinfo(pi).Pmesh));
             end
+            
             
             if ~isfield(S,'cdata') && ~isempty(O) && isfield(O,'pcdata')
               % load texture
@@ -231,8 +244,10 @@ switch lower(action)
                       labelmapclim = [min(cdata) max(cdata)];
               end
               S.cdata = cdata; clear cdata; 
-            elseif isfield(S,'cdata')
-              labelmapclim = [min(S.cdata) max(S.cdata)];
+              S = export(S,'patch');
+            elseif isfield(S,'cdata') 
+              S = export(S,'patch');
+              labelmapclim = [min(S.facevertexcdata) max(S.facevertexcdata)];
             end
             % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
             warning off MATLAB:subscripting:noSubscriptsSpecified
@@ -242,7 +257,7 @@ switch lower(action)
               S.faces = S.faces(:,[2,1,3]); 
             end
             labelmap = jet; 
-            S = export(S,'patch');
+            
             
             
             % Patch
@@ -964,6 +979,8 @@ switch lower(action)
         uimenu(c, 'Label','Synchronise colorranges', 'Visible','on', ...
             'Checked','off', 'Tag','SynchroMenu', 'Callback',{@mySynchroniseCaxis, H});
         uimenu(c, 'Label','Min-max'    , 'Checked','off', 'Callback', {@myCaxis, H, 'auto'},'Separator', 'on');
+        uimenu(c, 'Label','0-100%'     , 'Checked','off', 'Callback', {@myCaxis, H, '0p'});
+        uimenu(c, 'Label','1-99 %'     , 'Checked','off', 'Callback', {@myCaxis, H, '1p'});
         uimenu(c, 'Label','2-98 %'     , 'Checked','off', 'Callback', {@myCaxis, H, '2p'});
         uimenu(c, 'Label','5-95 %'     , 'Checked','off', 'Callback', {@myCaxis, H, '5p'});
         uimenu(c, 'Label','Thickness 0.5 - 5 mm'  , 'Checked','off', 'Callback', {@myCaxis, H, [0.5 5]},'Separator', 'on');
@@ -1190,7 +1207,7 @@ switch lower(action)
           end
         end
         %}
-        if isempty(d) || ~any(d(:)), varargout = {H}; return; end
+        if isnargout && (isempty(d) || ~any(d(:))), varargout = {H}; return; end
         if isempty(col), col = hot(256); end
         if ~isfield(H,'colourbar') || ~ishandle(H.colourbar)
             H.colourbar = colorbar('peer',H.axis); %'EastOutside');
@@ -1258,7 +1275,7 @@ switch lower(action)
     case {'colourmap', 'colormap'}
         if isempty(varargin), varargin{1} = gca; end
         H = getHandles(varargin{1});
-        if length(varargin) == 1
+        if length(varargin) == 1 && nargout
             varargout = { getappdata(H.patch(1),'colourmap') };
             return;
         else
@@ -1324,7 +1341,7 @@ switch lower(action)
     case 'clim'
         if isempty(varargin), varargin{1} = gca; end
         H = getHandles(varargin{1});
-        if length(varargin) == 1
+        if length(varargin) == 1 && nargout
             c = getappdata(H.patch(1),'clim');
             if ~isempty(c), c = c(2:3); end
             varargout = { c };
@@ -1372,7 +1389,7 @@ switch lower(action)
     case 'clip'
         if isempty(varargin), varargin{1} = gca; end
         H = getHandles(varargin{1});
-        if length(varargin) == 1
+        if length(varargin) == 1 && nargout
             c = getappdata(H.patch(1),'clip');
             if ~isempty(c), c = c(2:3); end
             varargout = { c };
@@ -1435,7 +1452,7 @@ switch lower(action)
        % end
 end
 
-varargout = {H};
+if nargout, varargout = {H}; end
 
 
 %==========================================================================
@@ -2145,6 +2162,8 @@ if cat_stat_nanmean(d(:))>0 && cat_stat_nanstd(d(:),1)>0
     switch rangetype
         case 'min-max', 
             range = [min(d) max(d)]; 
+        case '0p'
+            range = cat_vol_iscaling(d,[0.001 0.999]);
         case '1p'
             range = cat_vol_iscaling(d,[0.01 0.99]);
         case '2p'
@@ -2177,8 +2196,12 @@ set(obj,'Checked','on');
 %==========================================================================
 function myHist(obj,evt,H)
 objTextures = findobj(get(findobj(get(get(obj,'parent'),'parent'),'Label','Textures'),'Children'),'Checked','on');
-currentTexture = cellfun('isempty',strfind( H.textures(:,1) , objTextures.Label ))==0; 
-cg_hist2d( struct( 'P' , H.textures{currentTexture,2}.fname ))
+if isfield( H , 'textures')
+  currentTexture = cellfun('isempty',strfind( H.textures(:,1) , objTextures.Label ))==0; 
+  cg_hist2d( struct( 'P' , H.textures{currentTexture,2}.fname ))
+else
+  cg_hist2d(  H.cdata );
+end
 %==========================================================================
 function mySynchroniseCaxis(obj,evt,H)
 P = findobj('Tag','CATSurfRender','Type','Patch');
@@ -2262,6 +2285,7 @@ for i=1:numel(P)
     axis(H.axis,'image');
     if strcmp(H.catLighting,'cam') && ~isempty(H.light), camlight(H.light(1),'headlight','infinite'); end
 end
+
 %==========================================================================
 function mySynchroniseViews(obj,evt,H)
 y = {'on','off'}; toggle = @(x) y{1+strcmpi(x,'on')};
@@ -2701,7 +2725,9 @@ for pi=1:numel(H.patch)
                 if ~isempty(idx)
                   cdata( round(cdatao) == entries(ei) ) = nid;  
                   labelmap(nid,:) = colortable.table(idx,1:3)/255;
-                  labelnam(nid)   = strrep( colortable.struct_names(idx) , '_' , '\_' );
+                  labelnam(nid)   = colortable.struct_names(idx);
+                  labelnam(nid)   = strrep( labelnam(nid) , '_' , ' '); %'\_' );
+                  labelnam{nid}   = [labelnam{nid} sprintf(' [%d]',entries(ei))];
                   labeloid(nid)   = entries(ei);
                   labelid(nid)    = nid;
                   labelmapclim(2) = nid;

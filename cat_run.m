@@ -660,14 +660,20 @@ function job = update_job(job)
   %  worse in sense of quality, it is simpler to have a linear decline
   %  rather than describing the other case. 
   %  RD20200130: Takes me a day to figure out that the SPM7771 US failed in 
-  %              T1_dargonchow but also single_subjT1 by lower sampl res.
+  %              T1_dargonchow but also single_subjT1 by lower sampl res:
+  %                sampval = [3 2.5 2 1.5 1];
   %              Keep in mind that this effects volume resolution (^3), eg
-  %              [32 16 8 4 2] .^(1/3) is close to these values
-  sampval           = [3 2.5 2 1.5 1]; 
-  tolval            = [1e-2 1e-3 1e-4 1e-5 1e-6];
+  %              [32 16 8 4 2] .^(1/3) is close to these values. 
+  %  RD20200301: However, this setting is really slow and did not solve all
+  %              problems, so we go back to previous settings.
+  %                sampval =  [5 4 3 2 1]; % that describes volume of 
+  %              [125 64 27 8 1] that is also describes the changes in 
+  %              processing time roughly 
+  sampval               = [5 4 3 2 1]; 
+  tolval                = [1e-2 1e-3 1e-4 1e-5 1e-6];
   if isfield(job.opts,'accstr') && ~isfield(job.opts,'acc') 
-    job.opts.samp     = sampval( round(job.opts.accstr*4 + 1) );
-    job.opts.tol      = tolval(  round(job.opts.accstr*4 + 1) );
+    job.opts.samp       = sampval( round(job.opts.accstr*4 + 1) );
+    job.opts.tol        = tolval(  round(job.opts.accstr*4 + 1) );
   elseif isfield(job.opts,'acc') % developer settings 
     if isfield(job.opts.acc,'accstr')
       job.opts.accstr   = job.opts.acc.accstr; 

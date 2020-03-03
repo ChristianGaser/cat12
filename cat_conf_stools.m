@@ -94,7 +94,7 @@ function stools = cat_conf_stools(expert)
   flipsides                        = cat_surf_flipsides_GUI;
   surf2roi                         = cat_surf_surf2roi_GUI(expert,nproc);
   roi2surf                         = cat_roi_roi2surf_GUI; 
-  
+  surfstat                         = cat_surf_stat_GUI; 
   
   
 %% Toolset
@@ -117,6 +117,7 @@ function stools = cat_conf_stools(expert)
       renderresults, ...      .cat.disp/plot/write?
       roi2surf, ...           .cat.rtools?
       flipsides, ...          .cat.stools
+      surfstat ...
       };    
   elseif expert==1
     stools.values = { ...
@@ -131,6 +132,7 @@ function stools = cat_conf_stools(expert)
       surfcalcsub, ...
       surf2roi, ...
       flipsides, ...
+      surfstat ...
       };
   else
     stools.values = { ...
@@ -144,12 +146,31 @@ function stools = cat_conf_stools(expert)
       vol2tempsurf, ...
       surfcalc, ...
       surfcalcsub, ...
+      surfstat ...
       };
   end
 
 %==========================================================================
 % subfunctions of batch GUIs
 %==========================================================================
+function surfstat = cat_surf_stat_GUI
+
+  spmmat          = cfg_files;
+  spmmat.tag      = 'spmmat';
+  spmmat.name     = 'Select SPM.mat files';
+  spmmat.filter   = {'mat'};
+  spmmat.ufilter  = '^SPM\.mat$';
+  spmmat.num      = [1 inf];
+  spmmat.help     = {'Select the SPM.mat file that contains the design specification.'};
+
+  surfstat        = cfg_exbranch;
+  surfstat.tag    = 'SPM';
+  surfstat.name   = 'Estimate Surface Model';
+  surfstat.val    = {spmmat};
+  surfstat.prog   = @cat_stat_spm;
+  surfstat.vout   = @vout_cat_stat_spm;
+  surfstat.help   = {
+    ''};
 
 function surf2roi = cat_surf_surf2roi_GUI(expert,nproc)
 %% surface to ROI (in template space)
@@ -745,15 +766,15 @@ function [surfcalc,surfcalcsub] = cat_surf_calc_GUI(expert)
     'volume, resulting in a new surface measure or texture for each subject. ' ...
     'So you have to create one sample for each surface measure and select for each of them all subject. ' ...
     'In our example, we have two samples: (i) one with thickness that include the thickness data of all subjects and ' ...
-    '(ii) another one that inlcudes the surface area data of the same subjects. ' ...
-    'It is therefore important that you select excactly the same subjects in the same order! ' ... 
-    'Hence, the name entry speciefy a the name of the the new surface measure (MEASUREENAME) in the resulting file: ']
+    '(ii) another one that includes the surface area data of the same subjects. ' ...
+    'It is therefore important that you select exactly the same subjects in the same order! ' ... 
+    'Hence, the name entry specify a the name of the the new surface measure (MEASUREENAME) in the resulting file: ']
     '  [rh|lh].TEXTURNAME[.resampled].subjectname[.gii]' 
     ''
    ['Data-wise means can be used to process each sample by the imcalc operation. ' ...
-    'Hence, it require that each surface measure has the same datasize - being from one subject or being resampled.' ...
-    'This can be usefull if you want to average the data of multiple subjects (e.g., mean(S) or std(S)) or ' ...
-    'if you want to process multiple new measure of the same subject but with variing number of inputs (e.g., for multiple time points. ' ...
+    'Hence, it require that each surface measure has the same data size - being from one subject or being resampled.' ...
+    'This can be useful if you want to average the data of multiple subjects (e.g., mean(S) or std(S)) or ' ...
+    'if you want to process multiple new measure of the same subject but with varying number of inputs (e.g., for multiple time points. ' ...
     'If each sample contain different subject than the SUBJECTNAME is replaced otherwise the TEXTURENAME: ']
     '  [rh|lh].TEXTURNAME[.resampled].SUBJECTNAME[.gii]'
     ''
@@ -1032,18 +1053,19 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
   % absolute mean curvature
   GI        = cfg_menu;
   if expert 
-    GI.name = 'Gyrification index (absolute mean curvature)';
+    GI.name   = 'Gyrification index (absolute mean curvature)';
+    GI.labels = {'No','Unscaled','Scaled','Both'};
+    GI.values = {0,1,2,3};
   else
     GI.name = 'Gyrification index';
+    GI.labels = {'No','Yes'};
+    GI.values = {0,1};
   end
   GI.tag    = 'GI';
-  GI.labels = {'No','Yes'};
-  GI.values = {0,1};
   GI.val    = {1};
   GI.help   = {
     'Extract gyrification index (GI) based on absolute mean curvature. The method is described in Luders et al. NeuroImage, 29: 1224-1230, 2006.'
   };
-
 
   if expert>1
     % ---------------------------------------------------------------------
@@ -1054,13 +1076,13 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
     GIL.tag    = 'GIL';
     GIL.labels = {'No','inward','outward','generalized','all'};
     GIL.values = {0,1,2,3,4};
-    GIL.val    = {4}; 
+    GIL.val    = {0}; 
     GIL.help   = {[ ...
       'WARNING: This GI measures is still in development and not verified yet!\n\n ' ...
       'Extraction of Laplacian-based gyrification indices as local area relation between the individual folded and the unfolded surface. ' ...
       'The Laplacian approach supports an optimal mapping between the surfaces but the classical definition of the outer hull result in a measure that focuses on inward folding. ' ...
       '\n\n' ...
-      'The "inward" option use only the hull surface resulting in high sulcal values (Dahnke et al. 2010, Li et al. 2014) and is a local 3D represenstation of Zilles gyrification index (Zilles et al. 1989). ' ...
+      'The "inward" option use only the hull surface resulting in high sulcal values (Dahnke et al. 2010, Li et al. 2014) and is a local 3D representation of Zilles gyrification index (Zilles et al. 1989). ' ...
       'The "outward" option use only the core surface and result in high gyral values. However, the core definition is expected to be less robust for very strong tissue atrophy. ' ...
       'The "generalized" option combine both models resulting in an independent folding model that is expected to require less smoothing for surface-based analysis (15 mm). ' ...
       '\n\n' ...
@@ -1100,7 +1122,7 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
       GInorm.help        = {[ ...
         'Normalization function (after area filtering) to avoid the exponential increase of the GI values and to have more gaussian-like value distribution.' ...
         'To avoid negative values in case of logarithmic functions the values were corrected by the basis of the logarithmic function, e.g. +10 for log10. ' ...
-        'The logarithmic fucntion supports stronger compensation of high values. This is especially important for the inward and outward but not generalized GI. ' ...
+        'The logarithmic function supports stronger compensation of high values. This is especially important for the inward and outward but not generalized GI. ' ...
         ]};
       
       % Relative (brain size depending) or absolute (in mm) filtering?
@@ -1137,9 +1159,9 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
       GIwritehull.help   = {'Write hull/core surface use in the Laplacian gyrification index estimation.'};
       
       % hull model - This is not yet implemented! 
-      % The idea behind is that the hemisphere-based hull is artifical too
-      % and that are more natural definiton is given by the full intra-
-      % cranial volume. However, this have to include the cerebelum and 
+      % The idea behind is that the hemisphere-based hull is artificial too
+      % and that are more natural definition is given by the full intra-cranial
+      % volume. However, this have to include the cerebellum and 
       % brainstem as well and needs to utilize the Yp0 map!
       %
       %{
@@ -1162,7 +1184,7 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
       GIcoremodel.help   = {[ ...
         'There are multiple ways to define the central core of the brain structure and it is unclear which one fits best. ' ...
         'It should have some anatomical meaning (so the ventricles would be nice as source of cortical development) ' ...
-        'but being at once independ by aging (so ventricles are not real good). ' ...
+        'but being at once independent of aging (so ventricles are not real good). ' ...
         'It should be defined on an individual level (to support the scaling/normalization of head size within and between species) ' ...
         'to remove rather than increasing individual effects. ' ...
         ] '' };
@@ -1257,7 +1279,7 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
     OS.tag    = 'OS';
     OS.labels = {'No','Yes'};
     OS.values = {0,1};
-    OS.val    = {1};
+    OS.val    = {0};
     OS.help   = {
       'Creates the pial surface (outer cortical surface) by moving each vertices of the central surface by the half local thickness along the surface normal.'
     };
@@ -1267,7 +1289,7 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
     IS.tag    = 'IS';
     IS.labels = {'No','Yes'};
     IS.values = {0,1};
-    IS.val    = {1};
+    IS.val    = {0};
     IS.help   = {
       'Creates the white matter surface (inner cortical surface) by moving each vertices of the central surface by the half local thickness along the surface normal.'
     };
@@ -1294,13 +1316,12 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
     ''
   };
 
+
   % sulcal depth with a hull surface that based on surface-inflation.
   % ADD cite! - VanEssen?
   SD        = cfg_menu;
   SD.name   = 'Sulcus depth';
   SD.tag    = 'SD';
-  SD.labels = {'No','Yes'};
-  SD.values = {0,1};
   SD.val    = {1};
   SD.help   = {
     'Extract sqrt-transformed sulcus depth based on the euclidean distance between the central surface and its convex hull.'
@@ -1308,15 +1329,39 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
     'Transformation with sqrt-function is used to render the data more normally distributed.'
     ''
   };
+  if expert>1
+    SD.labels = {'No','Unscaled','Scaled','Both'};
+    SD.values = {0,1,2,3};
+    SD.help   = [SD.help;{''; ['The "unscaled" version may requires normalization by brain size, ' ...
+      'whereas the scaled version does not.']}]; 
+  else
+    SD.labels = {'No','Yes'};
+    SD.values = {0,1};
+  end
+  
 
+  % affine normalized measures
+  if expert>1
+    tGI        = cfg_menu;
+    tGI.name   = 'Toro''s gyrification index';
+    tGI.tag    = 'tGI';
+    tGI.labels = {'No','Unscaled','Scaled','Scaled extended','All'};
+    tGI.values = {0,1,2,3,4};
+    tGI.val    = {0};
+    tGI.help   = {
+      'Extract Affine normalized version of Toro''s gyrification index (ntGI). The method is described in Toro et al., 2008.'
+    };
+  end
+  
+  
   % surface area ... 
   if expert>1
     area        = cfg_menu;
     area.name   = 'Surface area';
     area.tag    = 'area';
-    area.labels = {'No','Yes'}; 
-    area.values = {0,1}; 
-    area.val    = {1}; 
+    area.labels = {'No','Unscaled','Scaled','Both'}; 
+    area.values = {0,1,2,3}; 
+    area.val    = {0}; 
     area.help   = {
       'WARNING: IN DEVELOPMENT!'
       'This method requires a sum-based mapping rather than the mean-based interpolation. The mapping utilize the Delaunay graph to transfer the area around a vertex to its nearest neighbor(s). See Winkler et al.,  2017. '}; 
@@ -1333,9 +1378,9 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
     gmv        = cfg_menu;
     gmv.name   = 'Surface GM volume';
     gmv.tag   = 'gmv';
-    gmv.labels = {'No','Yes'}; 
-    gmv.values = {0,1}; 
-    gmv.val    = {1}; 
+    gmv.labels = {'No','Unscaled','Scaled','Both'}; 
+    gmv.values = {0,1,2,3}; 
+    gmv.val    = {0}; 
     gmv.help   = {
       'WARNING: NOT WORKING RIGHT NOW!'
       'This method requires a sum-based mapping rather than the mean-based interpolation. The mapping utilize the Delaunay graph to transfer the area around a vertex to its closes neighbor(s) that is also use for the area mapping. '}; 
@@ -1353,9 +1398,9 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
   surfextract.tag  = 'surfextract';
   surfextract.name = 'Extract additional surface parameters';
   if expert == 2
-    surfextract.val  = {data_surf_extract, area,gmv, GI,FD,SD, GIL, thickness, surfaces, nproc, lazy}; % area, 
+    surfextract.val  = {data_surf_extract, area,gmv, GI, SD, FD, tGI, GIL, thickness, surfaces, nproc, lazy}; % area, 
   elseif expert == 1
-    surfextract.val  = {data_surf_extract,GI,FD,SD,Tfs, surfaces,nproc,lazy};
+    surfextract.val  = {data_surf_extract,GI,FD,SD, surfaces,nproc,lazy};
   else
     surfextract.val  = {data_surf_extract,GI,FD,SD,nproc};
   end
@@ -1393,7 +1438,7 @@ function renderresults = cat_surf_results_GUI(expert)
   texture.labels       = {'Mean curvature', 'Sulcal depth'};
   texture.values       = {1,2};
   texture.val          = {1};
-  texture.help         = {'Select a underlaying surface texture to illutrate the cortical folding pattern by mean curvature or sulcal depth.' ''};
+  texture.help         = {'Select a underlaying surface texture to illustrate the cortical folding pattern by mean curvature or sulcal depth.' ''};
   
   transparency         = cfg_menu;
   transparency.name    = 'Transparency';
@@ -1401,7 +1446,7 @@ function renderresults = cat_surf_results_GUI(expert)
   transparency.labels  = {'No', 'Yes'};
   transparency.values  = {0,1};
   transparency.val     = {1};
-  transparency.help    = {'Select a underlaying surface texture to illutrate the cortical folding pattern by mean curvature or sulcal depth.' ''};
+  transparency.help    = {'Select a underlaying surface texture to illustrate the cortical folding pattern by mean curvature or sulcal depth.' ''};
   
   view                  = cfg_menu;
   view.name             = 'Render view';
@@ -1409,7 +1454,7 @@ function renderresults = cat_surf_results_GUI(expert)
   view.labels           = {'Show top view', 'Show bottom view', 'Show only lateral and medial views'};
   view.values           = {1,-1,2};
   view.val              = {1};
-  view.help             = {'Select diffent types of surface views. The "top view"/"bottom view" shows later and medial view of the left and right hemisphere and the top/bottom view in middle. The view option has no effect in case of flatmaps.' ''};
+  view.help             = {'Select different types of surface views. The "top view"/"bottom view" shows later and medial view of the left and right hemisphere and the top/bottom view in middle. The view option has no effect in case of flatmaps.' ''};
   
   colormap              = cfg_menu;
   colormap.name         = 'Colormap';
@@ -1417,7 +1462,7 @@ function renderresults = cat_surf_results_GUI(expert)
   colormap.labels       = {'Jet', 'Hot', 'HSV', 'Cold-hot'};
   colormap.values       = {1,2,3,4};
   colormap.val          = {1};
-  colormap.help         = {'Select the colormap for data visualisation.' ''};
+  colormap.help         = {'Select the colormap for data visualization.' ''};
   
   colorbar              = cfg_menu;
   colorbar.name         = 'Colorbar';
@@ -1446,7 +1491,7 @@ function renderresults = cat_surf_results_GUI(expert)
   showfilename.labels   = {'No','Yes'};
   showfilename.values   = {0,1};
   showfilename.val      = {1};
-  showfilename.help     = {'Print the filename at the top of the left and right hemishere.' ''};
+  showfilename.help     = {'Print the filename at the top of the left and right hemisphere.' ''};
   
   invcolormap           = cfg_menu;
   invcolormap.name      = 'Inverse colormap';
@@ -1581,25 +1626,33 @@ function dep = vout_cat_surf_results(job)
 function dep = vout_surfextract(job)
 
 measures = { % para-field , para-subfield , para-val , output-var, [left|right] dep-var-name 
-  'GI'        ''      1      'GI'             'gyrification'; 
-  'FD'        ''      1      'FD'             'fractal dimension';
-  'SD'        ''      1      'SD'             'sulcal depth';
+  'GI'        ''      [1 3]  'GI'             'gyrification'; 
+  'GI'        ''      [2 3]  'GIs'            'scaled gyrification'; 
+  'FD'        ''       1     'FD'             'fractal dimension';
+  'SD'        ''      [1 3]  'SD'             'sulcal depth';
+  'SD'        ''      [2 3]  'SDs'            'scaled sulcal depth';
+  ...
+  'tGI'       ''      [1 4]  'tGI'            'Toro GI'; 
+  'tGI'       ''      [2 4]  'tGIs'           'scaled Toro GI'; 
+  'tGI'       ''      [3 4]  'tGIsx'          'exscaled Toro GI'; 
   ...
   'GIL'       ''      [1 4]  'iGI'            'inward-folding Laplacian-based GI'; 
   'GIL'       ''      [2 4]  'oGI'            'outward-folding Laplacian-based GI'; 
   'GIL'       ''      [3 4]  'gGI'            'generalized Laplacian-based GI'; 
   ... 
-  'area'      ''      [1 2]  'area'           'surface area'; 
+  'area'      ''      [1 3]  'area'           'surface area'; 
+  'area'      ''      [2 3]  'areas'          'scaled surface area'; 
   'gmv'       ''      [1 2]  'gmv'            'surface GM volume'; 
+  ... scaled GMV? < maybe directly normalized by TIV?
   ...
-  'surfaces'  'IS'    1      'white'          'white matter surface';
-  'surfaces'  'OS'    1      'pial'           'pial surface';
+  'surfaces'  'IS'     1     'white'          'white matter surface';
+  'surfaces'  'OS'     1     'pial'           'pial surface';
   'GIL'       'hull'  [1 4]  'hull'           'hull surface';
   'GIL'       'core'  [2 4]  'core'           'core surface';
   };
 sides = {
   'l' 'Left';
-  'r' 'Right';
+  ...'r' 'Right';
   }; 
 
 for si=1:size(sides,1)
@@ -1655,10 +1708,10 @@ for di = 1:numel(job.data_surf)
 		dep(end).sname      = ['Left' depsfnames{1}];
 		dep(end).src_output = substruct('()',{1}, '.','lPsdata','()',{di},'()',{':'});
 		dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
-		dep(end+1)          = cfg_dep; %#ok<AGROW>
-		dep(end).sname      = ['Right' depsfnames{1}];
-		dep(end).src_output = substruct('()',{1}, '.','rPsdata','()',{numel(job.data_surf) + di},'()',{':'});
-		dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+		%dep(end+1)          = cfg_dep; %#ok<AGROW>
+		%dep(end).sname      = ['Right' depsfnames{1}];
+		%dep(end).src_output = substruct('()',{1}, '.','rPsdata','()',{numel(job.data_surf) + di},'()',{':'});
+		%dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
 	end
 end
 
@@ -1719,4 +1772,10 @@ function dep = vout_cat_surf_flipsides(job)
   dep(1).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
 
 %==========================================================================  
+function dep = vout_cat_stat_spm(job)
+  dep(1)            = cfg_dep;
+  dep(1).sname      = 'SPM.mat File';
+  dep(1).src_output = substruct('.','spmmat');
+  dep(1).tgt_spec   = cfg_findspec({{'filter','mat','strtype','e'}});
 
+%==========================================================================  
