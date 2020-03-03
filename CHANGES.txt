@@ -1,5 +1,47 @@
 ------------------------------------------------------------------------
-r1574 | gaser | 2020-03-03 00:54:41
+r1575 | dahnke | 2020-03-03 12:47:36
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_defaults.m
+M       cat_io_FreeSurfer.m
+A       cat_io_rerun.m
+M       cat_main_gintnorm.m
+M       cat_parallelize.m
+M       cat_run.m
+M       cat_spm_preproc8.m
+M       cat_stat_spm.m
+M       cat_surf_fun.m
+M       cat_surf_parameters.m
+M       cat_surf_render2.m
+M       cat_surf_resamp.m
+M       cat_surf_results.m
+A       cat_surf_scaling.m
+
+(1)  Changed:   Updated GUI and management of additional surface measures in cat_surf_param
+                and cat_conf_stools. Removed other thickness measures from the expert GUI 
+                because Tfs is now part of the default processing. Prepared scaled/normalized
+                surface measures in the development mode that are currently under test.
+(2)  Changed:   Update command line progress output in cat_surf_resamp and cat_surf_parameters.
+(3)  New:       Added batch support for surface statistic in cat_stat_spm and cat_conf_stools.
+(4)  Fixed:     Corrected bug in cat_io_FreeSurfer to map Freesurfer surface data to gifti ('fs2gii'). 
+(5)  Fixed:     Corrected rare bug in cat_main_gintnorm. 
+(6)  Fixed:     Reset bias correction changes in cat_spm_preproc8 that caused multiple errors.
+                Reset SPM accuracy defaults in cat_defaults and cat_run. 
+(7)  Fixed:     Corrected errors in area estimation/mapping in cat_resamp. Worked on improving
+                area mapping from faces to vertices in cat_surf_fun:cat_surf_area but did not 
+                finish it yet. 
+(8)  New:       Added cat_io_rerun function that estimates if a file needs to be reprocessed 
+                when it input-file has changes (used e.g. in cat_surf_parameters).
+(9)  New:       Added cat_surf_scaling to estimate a global scaling factors to improve 
+                scaling invariance of different brain folding measures in cat_surf_parameters.
+(10) Fixed:     Corrected command line progress output in cat_parallelize.
+(11) Fixed:     Corrected display bugs in cat_surf_render2.
+(12) Fixed:     Corrected bug in surface based GM volume estimation but it still needs a
+                final evaluation.
+------------------------------------------------------------------------
+r1574 | gaser | 2020-03-03 00:55:15 +0100 (Di, 03 Mär 2020) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +57,7 @@ M       standalone/cat_standalone_segment.txt
 (2) Changed: Added suppression of annoying subscripting warning.
 (3) Fixed: Added warning that spm12 update is necessary for new contour 
     overlay function in cat_surf_results.m.
+
 ------------------------------------------------------------------------
 r1573 | gaser | 2020-03-02 22:30:34 +0100 (Mo, 02 Mär 2020) | 11 lines
 

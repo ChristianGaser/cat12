@@ -865,111 +865,112 @@ switch lower(action)
   %======================================================================
   case 'hist'
     if nargin>1
-    if varargin{1}~=any(isempty(findobj('tag','cat_surf_results_hist'))) 
-      cat_surf_results('hist')
-    end
+      if varargin{1}~=any(isempty(findobj('tag','cat_surf_results_hist'))) 
+        cat_surf_results('hist')
+      end
     else
     
-    if numel(H.patch)>=5 && H.patch(1).isvalid &&  H.patch(3).isvalid &&  H.patch(5).isvalid
+      if numel(H.patch)>=5 && H.patch(1).isvalid &&  H.patch(3).isvalid &&  H.patch(5).isvalid
 
-      if nargin>1, draw = varargin{1}; else, draw = ~any(isempty(findobj('tag','cat_surf_results_hist'))); end
+        if nargin>1, draw = varargin{1}; else, draw = ~any(isempty(findobj('tag','cat_surf_results_hist'))); end
 
-      % move elements if histogram is added or removed
-      if draw==0 || draw~=2
-      top = H.patch(5).Parent; 
-      pos = get(top,'Position'); 
-      set(top,'Position',pos + sign(any(isempty(findobj('tag','cat_surf_results_hist')))-0.5) * [0 0.13 0 0]);
-      end
+        % move elements if histogram is added or removed
+        if draw==0 || draw~=2
+        top = H.patch(5).Parent; 
+        pos = get(top,'Position'); 
+        set(top,'Position',pos + sign(any(isempty(findobj('tag','cat_surf_results_hist')))-0.5) * [0 0.13 0 0]);
+        end
 
-      if any(isnan(H.clim)), cat_surf_results('clims','default'); end
+        if any(isnan(H.clim)), cat_surf_results('clims','default'); end
 
-      % draw/update histgram / or remove it
-      mode = 0; 
-      if any(isempty(findobj('tag','cat_surf_results_hist'))) || draw==2 
-      if draw==2
-        delete(findobj('tag','cat_surf_results_hist'));
-        if isfield(H,'hist'); H = rmfield(H,'hist'); end
-      end
+        % draw/update histgram / or remove it
+        mode = 0; 
+        if any(isempty(findobj('tag','cat_surf_results_hist'))) || draw==2 
+        if draw==2
+          delete(findobj('tag','cat_surf_results_hist'));
+          if isfield(H,'hist'); H = rmfield(H,'hist'); end
+        end
 
-      % print colors (red, green/dark-green
-      color  = {[1 0 0],[0 1 0]/(1+H.bkg_col(1))};  
-      linet  = {'-','--'};
-      % position of the right and the left text box
-      if mode
-        tpos = {[0.49 0.015 0.065 0.03],[0.565 0.015 0.065 0.03],[0.4 0.015 0.12 0.03]};
-      else
-        tpos = {[0.4 0.015 0.12 0.06],[0.445 0.015 0.065 0.06],[0.497 0.015 0.065 0.06],[0.55 0.015 0.065 0.06],[0.60 0.015 0.065 0.06]};
-      end
-      % histogram axis 
-      H.histax = axes('Parent', H.panel(1), 'Position', [0.4 0.102 0.20 0.15],'Visible', 'off', 'tag','cat_surf_results_hist'); 
-      try
-        xlim(H.histax,H.clim(2:3).*[1 1+eps]);
-      catch
-        disp(1);
-      end
-      hold on;
-      % standard text
-      if mode 
-        H.dtxt(3).ax  = axes('Parent', H.panel(1), 'Position',tpos{3}, 'Visible', 'off','tag','cat_surf_results_text');
-        H.dtxt(3).txt = text(0,1,sprintf('%s %s %s: \n%s - %s:\n%s:', 'mean',char(177),'std','min','max','median'),'color',[0.5 0.5 0.5],'Parent',H.dtxt(3).ax);
-      else
-        H.dtxt(3).ax(1) = axes('Parent', H.panel(1), 'Position',tpos{1}, 'Visible', 'off','tag','cat_surf_results_text');
-        H.dtxt(3).ax(2) = axes('Parent', H.panel(1), 'Position',tpos{2}, 'Visible', 'off','tag','cat_surf_results_text');
-        H.dtxt(3).ax(3) = axes('Parent', H.panel(1), 'Position',tpos{3}, 'Visible', 'off','tag','cat_surf_results_text');
-        H.dtxt(3).ax(4) = axes('Parent', H.panel(1), 'Position',tpos{4}, 'Visible', 'off','tag','cat_surf_results_text');
-        H.dtxt(3).ax(5) = axes('Parent', H.panel(1), 'Position',tpos{5}, 'Visible', 'off','tag','cat_surf_results_text');
-        text(0,1,sprintf('side'),'color',[0.5 0.5 0.5],'Parent',H.dtxt(3).ax(1));
-        text(0,1,sprintf('\n\nleft'),'color',color{1},'Parent',H.dtxt(3).ax(1));
-        text(0,1,sprintf('\n\n\n\nright'),'color',color{2},'Parent',H.dtxt(3).ax(1));
-        text(0,1,'min','color',[0.5 0.5 0.5],'HorizontalAlignment','center','Parent',H.dtxt(3).ax(2));
-        text(0,1,['mean ' char(177) ' std'],'color',[0.5 0.5 0.5],'HorizontalAlignment','center','Parent',H.dtxt(3).ax(3));
-        text(0,1,'median','color',[0.5 0.5 0.5],'HorizontalAlignment','center','Parent',H.dtxt(3).ax(4));
-        text(0,1,'max','color',[0.5 0.5 0.5],'HorizontalAlignment','right','Parent',H.dtxt(3).ax(5));
-      end
-      for i=1:2
-        side = getappdata(H.patch( i*2 - 1 ), 'data');
-        
-        if ~all(isnan(side))
-        % histogram plot may fail due to NAN or whatever ...
-        [d,h] = hist( side(~isinf(side(:)) & ~isnan(side(:)) & side(:)<3.4027e+38 & side(:)>-3.4027e+38 & side(:)<H.clim(3) & side(:)>H.clim(2) ), ...
-          H.clim(2) : diff(H.clim(2:3))/100 : H.clim(3) );
-        d = d./numel(side);
-        % plot histogram line and its median
-        med = cat_stat_nanmedian(side(:));
-        quantile = [h(find(cumsum(d)/sum(d)>0.25,1,'first')),h(find(cumsum(d)/sum(d)>0.75,1,'first'))]; 
-        % print histogram
-        line(H.histax,h,d,'color',color{i},'LineWidth',1);
-        % print median
-        line(H.histax,[med med],[0 d(find(h>=med,1,'first'))],'color',color{i},'linestyle',linet{i});
-        % print quantile 
-        if numel(quantile)>1
-          fill(H.histax,[quantile(1)   quantile(2)   quantile(2)      quantile(1)],...
-                max(d)*(0.08*[i i (i+1) (i+1)] + 0.16),color{i});
-          %
-          if mode
-          H.dtxt(i).ax  = axes('Parent', H.panel(1), 'Position',tpos{i}, 'Visible', 'off','tag','cat_surf_results_text');
-          H.dtxt(i).txt = text(0,1,sprintf('%10.3f %s %0.3f\n%10.3f - %0.3f\n',...
-            cat_stat_nanmean(side(:)),char(177),cat_stat_nanstd(side(:)),...
-            min(side(:)),max(side(:)),med),...
-            'color',color{i},'HorizontalAlignment','center','Parent',H.dtxt(i).ax);
-          else
-          text(0,1,sprintf('%s%0.3f',sprintf(repmat('\n',1,i*2)),min(side(:))),'color',color{i},'HorizontalAlignment','center','Parent',H.dtxt(3).ax(2));
-          text(0,1,sprintf('%s%0.3f%s%0.3f',sprintf(repmat('\n',1,i*2)),cat_stat_nanmean(side(:)),char(177),...
-            cat_stat_nanstd(side(:))),'color',color{i},'HorizontalAlignment','center','Parent',H.dtxt(3).ax(3));
-          text(0,1,sprintf('%s%0.3f',sprintf(repmat('\n',1,i*2)),cat_stat_nanmedian(side(:))),'color',color{i},'HorizontalAlignment','center','Parent',H.dtxt(3).ax(4));
-          text(0,1,sprintf('%s%0.3f',sprintf(repmat('\n',1,i*2)),max(side(:))),'color',color{i},'HorizontalAlignment','right','Parent',H.dtxt(3).ax(5));
+        % print colors (red, green/dark-green
+        color  = {[1 0 0],[0 1 0]/(1+H.bkg_col(1))};  
+        linet  = {'-','--'};
+        % position of the right and the left text box
+        tabpos = 0.005; 
+        if mode
+          tpos = {[0.49 tabpos 0.065 0.03],[0.565 tabpos 0.065 0.03],[0.4 tabpos 0.12 0.03]};
+        else
+          tpos = {[0.4 tabpos 0.12 0.06],[0.445 tabpos 0.065 0.06],[0.497 tabpos 0.065 0.06],[0.55 tabpos 0.065 0.06],[0.60 tabpos 0.065 0.06]};
+        end
+        % histogram axis 
+        H.histax = axes('Parent', H.panel(1), 'Position', [0.4 0.102 0.20 0.15],'Visible', 'off', 'tag','cat_surf_results_hist'); 
+        try
+          xlim(H.histax,H.clim(2:3).*[1 1+eps]);
+        catch
+          disp(1);
+        end
+        hold on;
+        % standard text
+        if mode 
+          H.dtxt(3).ax  = axes('Parent', H.panel(1), 'Position',tpos{3}, 'Visible', 'off','tag','cat_surf_results_text');
+          H.dtxt(3).txt = text(0,1,sprintf('%s %s %s: \n%s - %s:\n%s:', 'mean',char(177),'std','min','max','median'),'color',[0.5 0.5 0.5],'Parent',H.dtxt(3).ax);
+        else
+          H.dtxt(3).ax(1) = axes('Parent', H.panel(1), 'Position',tpos{1}, 'Visible', 'off','tag','cat_surf_results_text');
+          H.dtxt(3).ax(2) = axes('Parent', H.panel(1), 'Position',tpos{2}, 'Visible', 'off','tag','cat_surf_results_text');
+          H.dtxt(3).ax(3) = axes('Parent', H.panel(1), 'Position',tpos{3}, 'Visible', 'off','tag','cat_surf_results_text');
+          H.dtxt(3).ax(4) = axes('Parent', H.panel(1), 'Position',tpos{4}, 'Visible', 'off','tag','cat_surf_results_text');
+          H.dtxt(3).ax(5) = axes('Parent', H.panel(1), 'Position',tpos{5}, 'Visible', 'off','tag','cat_surf_results_text');
+          text(0,1,sprintf('side'),'color',[0.5 0.5 0.5],'Parent',H.dtxt(3).ax(1));
+          text(0,1,sprintf('\n\nleft'),'color',color{1},'Parent',H.dtxt(3).ax(1));
+          text(0,1,sprintf('\n\n\n\nright'),'color',color{2},'Parent',H.dtxt(3).ax(1));
+          text(0,1,'min','color',[0.5 0.5 0.5],'HorizontalAlignment','center','Parent',H.dtxt(3).ax(2));
+          text(0,1,['mean ' char(177) ' std'],'color',[0.5 0.5 0.5],'HorizontalAlignment','center','Parent',H.dtxt(3).ax(3));
+          text(0,1,'median','color',[0.5 0.5 0.5],'HorizontalAlignment','center','Parent',H.dtxt(3).ax(4));
+          text(0,1,'max','color',[0.5 0.5 0.5],'HorizontalAlignment','right','Parent',H.dtxt(3).ax(5));
+        end
+        for i=1:2
+          side = getappdata(H.patch( i*2 - 1 ), 'data');
+
+          if ~all(isnan(side))
+          % histogram plot may fail due to NAN or whatever ...
+          [d,h] = hist( side(~isinf(side(:)) & ~isnan(side(:)) & side(:)<3.4027e+38 & side(:)>-3.4027e+38 & side(:)<H.clim(3) & side(:)>H.clim(2) ), ...
+            H.clim(2) : diff(H.clim(2:3))/100 : H.clim(3) );
+          d = d./numel(side);
+          % plot histogram line and its median
+          med = cat_stat_nanmedian(side(:));
+          quantile = [h(find(cumsum(d)/sum(d)>0.25,1,'first')),h(find(cumsum(d)/sum(d)>0.75,1,'first'))]; 
+          % print histogram
+          line(H.histax,h,d,'color',color{i},'LineWidth',1);
+          % print median
+          line(H.histax,[med med],[0 d(find(h>=med,1,'first'))],'color',color{i},'linestyle',linet{i});
+          % print quantile 
+          if numel(quantile)>1
+            fill(H.histax,[quantile(1)   quantile(2)   quantile(2)      quantile(1)],...
+                  max(d)*(0.08*[i i (i+1) (i+1)] + 0.16),color{i});
+            %
+            if mode
+            H.dtxt(i).ax  = axes('Parent', H.panel(1), 'Position',tpos{i}, 'Visible', 'off','tag','cat_surf_results_text');
+            H.dtxt(i).txt = text(0,1,sprintf('%10.3f %s %0.3f\n%10.3f - %0.3f\n',...
+              cat_stat_nanmean(side(:)),char(177),cat_stat_nanstd(side(:)),...
+              min(side(:)),max(side(:)),med),...
+              'color',color{i},'HorizontalAlignment','center','Parent',H.dtxt(i).ax);
+            else
+            text(0,1,sprintf('%s%0.3f',sprintf(repmat('\n',1,i*2)),min(side(:))),'color',color{i},'HorizontalAlignment','center','Parent',H.dtxt(3).ax(2));
+            text(0,1,sprintf('%s%0.3f%s%0.3f',sprintf(repmat('\n',1,i*2)),cat_stat_nanmean(side(:)),char(177),...
+              cat_stat_nanstd(side(:))),'color',color{i},'HorizontalAlignment','center','Parent',H.dtxt(3).ax(3));
+            text(0,1,sprintf('%s%0.3f',sprintf(repmat('\n',1,i*2)),cat_stat_nanmedian(side(:))),'color',color{i},'HorizontalAlignment','center','Parent',H.dtxt(3).ax(4));
+            text(0,1,sprintf('%s%0.3f',sprintf(repmat('\n',1,i*2)),max(side(:))),'color',color{i},'HorizontalAlignment','right','Parent',H.dtxt(3).ax(5));
+            end
+          end
           end
         end
-        end
+
+        else
+        delete(findobj('tag','cat_surf_results_text'));
+        delete(findobj('tag','cat_surf_results_hist'));
+        if isfield(H,'hist'); H = rmfield(H,'hist'); end
+        end 
+
       end
-
-      else
-      delete(findobj('tag','cat_surf_results_text'));
-      delete(findobj('tag','cat_surf_results_hist'));
-      if isfield(H,'hist'); H = rmfield(H,'hist'); end
-      end 
-
-    end
     end
     
     
@@ -2389,7 +2390,7 @@ else
     [filename, newpth] = uiputfile({ ...
       '*.png' 'PNG files (*.png)'}, 'Save as', nam);
   else
-    filename = fullfile(pth, [nam '.png']);
+    filename = [nam '.png'];
     newpth = pth;
   end
 end
