@@ -507,7 +507,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),median(Ysrc(Ycls{end}(:)>128))]);
     BMth  = max(BGmin,min(BGcon,T3th(1) - diff(T3th(1:2)))); %max(0.01,cat_stat_nanmedian(Ysrc(Ybm(:))));
     Ywm   = (Ycls{2}>128  & Yg<gth) | ((Ym-Ydiv*2)>(1-0.05*cat_stat_nanmean(vx_vol)) & Yb2); % intensity | structure (neonate contast problem)
-    Ycm   = smooth3((Ycls{3}>240 | Ym<0.4) & Yg<gth*3 & Yb & ~Ywm & Ycls{1}<8 & Ysrc>BMth & Ym<0.5)>0.5; % important to avoid PVE!
+    Ycm   = smooth3((Ycls{3}>240 | Ym<0.4) & Yg<gth*3 & Yb & ~Ywm & Ycls{1}<8 & Ysrc>BMth & Ym<0.7)>0.5; % important to avoid PVE!
 
     % If SPM get totaly wrong maps due to bad image orientations our 
     % segment were incorrect too (or empty) and peak estimation fail.

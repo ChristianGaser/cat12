@@ -1,4 +1,4 @@
-function cat_stat_spm(SPM)
+function varargout = cat_stat_spm(SPM)
 % Workaround to use fsaverage surface as SurfaceID (for displaying results)
 % spm_spm is used to estimate the model and the mesh of the 1st file in the model 
 % is replaced by the fsaverage brain because this mesh is used for overlaying
@@ -9,11 +9,18 @@ function cat_stat_spm(SPM)
 
 if nargin == 0
   P = spm_select([1 Inf],'^SPM\.mat$','Select SPM.mat file(s)');
+elseif exist('SPM','var') && isfield(SPM,'spmmat')
+  P = char(SPM.spmmat); spmmat = SPM.spmmat;
+end
+if exist('P','var')
   for i=1:size(P,1)
     swd = spm_file(P(i,:),'fpath');
     load(fullfile(swd,'SPM.mat'));
     SPM.swd  = swd; 
     cat_stat_spm(SPM);
+  end
+  if nargout && exist('spmmat','var') 
+    varargout{1}.spmmat = spmmat;
   end
   return
 end
@@ -50,9 +57,9 @@ if exist(fsavgDir,'dir') == 7 && (SPM.xY.VY(1).dim(1) == 163842 || SPM.xY.VY(1).
 
 		% cerebellar lobes?
 		if SPM.xY.VY(1).dim(1) == 655368
-			M0 = gifti({fullfile(fsavgDir, 'lc.central.freesurfer.gii'), fullfile(fsavgDir, 'rc.central.freesurfer.gii')});
-			G.faces = [G.faces; M0(1).faces+2*size(M0(1).vertices,1); M0(2).faces+3*size(M0(1).vertices,1)];
-			G.vertices = [G.vertices; M0(1).vertices; M0(2).vertices];
+			M0 = gifti({fullfile(fsavgDir, 'cb.central.freesurfer.gii')});  %, fullfile(fsavgDir, 'rc.central.freesurfer.gii')});
+			G.faces = [G.faces; M0(1).faces+2*size(M0(1).vertices,1)];      % ; M0(2).faces+3*size(M0(1).vertices,1)];
+			G.vertices = [G.vertices; M0(1).vertices];                      % ; M0(2).vertices];
 		end
 		
 		SPM.xVol.G = G;
@@ -85,5 +92,9 @@ if exist(fsavgDir,'dir') == 7 && (SPM.xY.VY(1).dim(1) == 163842 || SPM.xY.VY(1).
 	end	
 end
 
-spm_spm(SPM);
+if nargout>0
+  varargout{1} = spm_spm(SPM);
+else
+  spm_spm(SPM);
+end  
 end

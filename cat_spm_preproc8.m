@@ -73,7 +73,10 @@ function results = cat_spm_preproc8(obj)
 % John Ashburner
 % $Id$
 
-wp_reg    = 100; % Bias wp towards 1/kB
+% RD20200301: The wp_reg parameter was changed in SPM12 R7771 to 100 but 
+%             we observed several processing problems in the initial SPM
+%             parameter estimation in cat_run but also in cat_main_gintnorm.  
+wp_reg    = 1; % Bias wp towards 1/kB 
 
 Affine    = obj.Affine;
 tpm       = obj.tpm;

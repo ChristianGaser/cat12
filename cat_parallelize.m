@@ -457,13 +457,13 @@ function varargout = cat_parallelize(job,func,datafield)
             if ~isstruct( jobs(i).(datafield) )
               %%
               findSID = find(cellfun('isempty',SID)==0,1,'last'); 
-              if ~isempty(findSID), catSID(si) = findSID; end
+              if ~isempty(findSID), catSID(i) = findSID; end
               
-              if numel(catSID)>1 && ( catSIDlast(i) <= catSID(i) ) 
+              if numel(catSID)>1 && ( catSIDlast(i) < catSID(i) ) 
                 try
-                  catSIDlast(i) = catSID(si);
+                  catSIDlast(i) = catSID(i);
                   cat_io_cprintf([ 0 0 0 ],sprintf('  %d/%d (pjob %d: %d/%d): %s\n',...
-                    cid+1,sum( numel(job_data) ),  i,  catSID(i), numel(jobs(i).(datafield)), ...
+                    sum(catSID) ,sum( numel(job_data) ),  i,  catSID(i), numel(jobs(i).(datafield)), ...
                     spm_str_manip( jobs(i).(datafield){catSID(i)} , 'k40') )); 
                   cid = cid + 1; 
                 end

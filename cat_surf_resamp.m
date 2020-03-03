@@ -102,8 +102,11 @@ function varargout = cat_surf_resamp(varargin)
   rPsdata = cell(size(P,1),1);
   
   for i=1:size(P,1)
+    pstr = sprintf(sprintf('%% %ds',max(10,round(log10(size(P,1))+3) * 2)),sprintf('%d/%d) ',i,size(P,1)));  
+    nstr = repmat(' ',1,numel(pstr)); 
+    
     if ~exist(deblank(P(i,:)),'file')
-      cat_io_cprintf('warn',sprintf('The file "%s" does not exist!\n',deblank(P(i,:)))); 
+      cat_io_cprintf('warn',sprintf('%sERROR - The file "%s" does not exist!\n',pstr,deblank(P(i,:)))); 
       continue
     end
     
@@ -111,20 +114,20 @@ function varargout = cat_surf_resamp(varargin)
     [pp,ff,ex]   = spm_fileparts(deblank(P(i,:)));
     if any([strfind(ff,'.sphere.'),strfind(ff,'.central.')])
       if job.verb
-        fprintf('Cannot process "%s"!\n',deblank(P(i,:)));
+        fprintf('%sERROR - Cannot process "%s"!\n',pstr,deblank(P(i,:)));
       end
       continue; 
     end
     
     name0 = [ff(3:end) ex];          % remove leading hemisphere information
     name0 = strrep(name0,'.gii',''); % remove .gii extension
-    hemistr = {'lh','rh','cb'};
+    hemistr = {'lh','rh'}; %,'cb'};
     exist_hemi = [];
     
     if ~isempty(strfind(name0,'white')) || ~isempty(strfind(name0,'inner')) || ...
        ~isempty(strfind(name0,'pial'))  || ~isempty(strfind(name0,'outer')) || ...
        ~isempty(strfind(name0,'core'))  || ~isempty(strfind(name0,'hull'))  
-      cat_io_cprintf('err',sprintf('ERROR - White matter, pial, hull, or core surfaces can not be resampled so far!\n'));
+      cat_io_cprintf('err',sprintf('%sERROR - White matter, pial, hull, or core surfaces can not be resampled so far!\n',pstr));
       continue
     end
    
@@ -157,8 +160,8 @@ function varargout = cat_surf_resamp(varargin)
       end
     end
     
-    if ~job.lazy || (job.merge_hemi && ~exist(Psdata{i},'file')) || ...
-        (~job.merge_hemi && ~exist(lPsdata{i},'file') && ~exist(rPsdata{i},'file')) 
+    if ~job.lazy || (job.merge_hemi && cat_io_rerun(Psdata{i},P(i,:)) ) || ...
+        (~job.merge_hemi && cat_io_rerun(lPsdata{i},P(i,:)) && cat_io_rerun(rPsdata{i},P(i,:)) ) 
 
       % go through left and right and potentially cerebellar hemispheres
       for j=1:length(hemistr)
@@ -170,7 +173,7 @@ function varargout = cat_surf_resamp(varargin)
         Pvalue0 = fullfile(pp,name);
 
         % check that file exists
-        if ~exist(Pvalue0,'file'), continue; end
+        %if ~exist(Pvalue0,'file'), continue; end
 
         exist_hemi = [exist_hemi j]; 
 
@@ -215,15 +218,17 @@ function varargout = cat_surf_resamp(varargin)
           else
             Pedgemap = cat_io_strrep(Pcentral,{'.central.';'.gii'},{'.edgemap164k.';'.mat'});
           end
+          Ssreg   = gifti(Pspherereg); 
           if exist(Pedgemap,'file')
             load(Pedgemap,'edgemap'); 
-          else
+          end
+          if ~exist('edgemap','var') || ~isfield(edgemap,'nvertices') || edgemap.nvertices(1) ~= size(Ssreg.vertices,1)  
             %%
             stime2  = clock;
             if job.mesh32k
-              fprintf('  Estimate mapping for 32k surface');
+              fprintf('\t\tEstimate mapping for 32k surface');
             else
-              fprintf('  Estimate mapping for 164k surface');
+              fprintf('\t\tEstimate mapping for 164k surface');
             end
             Ssreg   = gifti(Pspherereg); 
             Sfsavg  = gifti(Pfsavg);
@@ -233,9 +238,14 @@ function varargout = cat_surf_resamp(varargin)
             fprintf(' takes %ds\n',round(etime(clock,stime2))); 
           end
 
+          %% resample values using warped sphere 
+          
           % load individual surface and area file, apply edgemap and save resampled file
-          cdata   = cat_io_FreeSurfer('read_surf_data',Pvalue0);
+          cdata  = cat_io_FreeSurfer('read_surf_data',Pvalue0);
           ncdata = cat_surf_fun('useEdgemap',cdata,edgemap); 
+          cat_io_FreeSurfer('write_surf_data',Pvalue,ncdata); 
+          cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,Pvalue0,Pvalue);
+          [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
           cat_io_FreeSurfer('write_surf_data',Pvalue,ncdata); 
           clear Si clear Si edgemap; 
 
@@ -247,23 +257,25 @@ function varargout = cat_surf_resamp(varargin)
 
         if job.fwhm_surf > 0
 
-					% smooth resampled values
+					%% smooth resampled values
 					% don't use mask for cerebellum
 					if strcmp(hemi,'lc') || strcmp(hemi,'rc')
 						cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue);
 					else
 						cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue,Pmask);
 					end
-					[ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
+					[ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr);
+          %%
+          if err, continue; end
         end
 
-        % add values to resampled surf and save as gifti
+        %% add values to resampled surf and save as gifti
         cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Presamp,Pfwhm,Pfwhm_gii);
-        [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
+        [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr);% if err, continue; end
 
         if exist(Pfwhm_gii,'file'), Psname = Pfwhm_gii; end
 
-        % remove path from metadata to allow that files can be moved (pathname is fixed in metadata) 
+        %% remove path from metadata to allow that files can be moved (pathname is fixed in metadata) 
         [pp2,ff2,ex2]   = spm_fileparts(Psname); %#ok<ASGLU>
 
         g = gifti(Psname);
@@ -279,7 +291,7 @@ function varargout = cat_surf_resamp(varargin)
         delete(Pfwhm);
         if job.fwhm_surf > 0, delete(Pvalue); end
 
-        if job.verb
+        if 0 %job.verb
           fprintf('Resampling %s\n',Psname);
         end
 
@@ -307,16 +319,20 @@ function varargout = cat_surf_resamp(varargin)
         % combine left and right and optionally cerebellar meshes
         switch numel(exist_hemi)
           case {2,4}
-            M0 = gifti({Pfwhm_all{1}, Pfwhm_all{2}});
+            try
+              M0 = gifti({Pfwhm_all{1}, Pfwhm_all{2}});
+            catch
+              cat_io_cprintf('err',sprintf('%sERROR - Problem while reading %s!\n',pstr,Pfwhm_all{1})); 
+            end
             delete(Pfwhm_all{1}); delete(Pfwhm_all{2})
             warning('off','MATLAB:subscripting:noSubscriptsSpecified');
             M = gifti(spm_mesh_join([M0(1) M0(2)]));
           case 1
-            cat_io_cprintf('err',sprintf('      - No data for opposite hemisphere found for %s!\n',fullfile(pp,Pfwhm)));
+            cat_io_cprintf('err',sprintf('%sERROR - No data for opposite hemisphere found for %s!\n',pstr,fullfile(pp,Pfwhm)));
           case 3
-            cat_io_cprintf('err',sprintf('      - No data for opposite cerebellar hemisphere found for %s!\n',fullfile(pp,Pfwhm)));
+            cat_io_cprintf('err',sprintf('%sERROR - No data for opposite cerebellar hemisphere found for %s!\n',pstr,fullfile(pp,Pfwhm)));
           case 0 
-            cat_io_cprintf('err',sprintf('      - No data was found for %s!\n',fullfile(pp,Pfwhm)));
+            cat_io_cprintf('err',sprintf('%sERROR - No data was found for %s!\n',pstr,fullfile(pp,Pfwhm)));
         end
 
         if numel(exist_hemi) > 1
@@ -326,12 +342,19 @@ function varargout = cat_surf_resamp(varargin)
         end
 
         if job.verb && ~isempty(Psdata{i}) 
-          fprintf('%4.0fs - Display resampled %s\n',etime(clock,stime),spm_file(Psdata{i},'link','cat_surf_display(''%s'')'));
+          fprintf('%s%4.0fs - Display resampled %s\n',pstr,etime(clock,stime),spm_file(Psdata{i},'link','cat_surf_display(''%s'')'));
+        end
+      else
+        if job.verb && ~isempty(lPsdata{i}) 
+          fprintf('%s%4.0fs - Display resampled %s\n',pstr,etime(clock,stime),spm_file(lPsdata{i},'link','cat_surf_display(''%s'')'));
+        end
+        if job.verb && ~isempty(rPsdata{i}) 
+          fprintf('%s%4.0fs - Display resampled %s\n',pstr,etime(clock,stime),spm_file(rPsdata{i},'link','cat_surf_display(''%s'')'));
         end
       end
     else
       if job.verb && ~isempty(Psdata{i}) 
-        fprintf('exist - Display resampled %s\n',spm_file(Psdata{i},'link','cat_surf_display(''%s'')'));
+        fprintf('%sexist - Display resampled %s\n',pstr,spm_file(Psdata{i},'link','cat_surf_display(''%s'')'));
       end  
     end
     

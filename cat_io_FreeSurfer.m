@@ -265,6 +265,8 @@ function varargout = fs2gii(varargin)
     
     if isfield(job,'cdata') 
       S.cdata = read_curv(job.cdata{si});     
+    elseif ~exist('S','var')
+      S.cdata = read_curv(job.data{si});     
     end
     
     job.fname{si} = [job.fname{si} '.gii'];
@@ -273,6 +275,7 @@ function varargout = fs2gii(varargin)
     if job.delete
       delete(job.data{si});
     end
+    clear S;
   end
   
   if nargout>0

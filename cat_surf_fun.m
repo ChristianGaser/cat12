@@ -419,6 +419,9 @@ function varargout = cat_surf_maparea(varargin)
   end
 
   varargout{1} = cat_surf_edgemap(edgemap,cdata,idir);
+  
+  % filter with 1/mean(edgelegnth?
+  % check for area?
 end
 
 function cdata2 = cat_surf_edgemap(edgemap,cdata,idir)
@@ -464,27 +467,36 @@ function VV = cat_surf_gmv(IS,OS)
 %
 % Robert Dahnke 201904
 
-  V = double([IS.vertices;OS.vertices]);
+  IV = IS.vertices*0.45 + 0.55*OS.vertices; 
+  OV = OS.vertices*0.45 + 0.55*OS.vertices;
 
   % create Delaunay triangulation 
-  D  = delaunayn(V); 
+  D  = delaunayn(double([IV;OV])); clear IV OV;  
   
-  % classify and remove non GM tetraeder
+  % #############
+  % classify and remove non GM tetraeder that have only WM points (ok) but
+  % only GM? points ( this will not work for all gyri/sulci)
+  % #############
+  % - you maybe can use the centerpoint and then ...
+  % - or you just use two verly lighty displaced surfaces, ie. 0.01 mm
+  %   thickness that would give a Delaunay triangulation without the bad
+  %   gyral effects!
+  % #############
   DS = D>size(IS.vertices,1);
   D( sum(DS,2)==0 | sum(DS,2)==4 ,:)  = [];  
   clear DS;
   
   % estimate tetraeder volume
-  DV = tetraedervolume(D,V);
+  DV = tetraedervolume(D,double([IS.vertices;OS.vertices]));
   
   %% map volume to faces
-  VV = zeros(size(IS.vertices,1),1,'single'); DS = VV;
-  DF = D; DF(DF>size(IS.vertices,1)) = DF(DF>size(IS.vertices,1)) - size(IS.vertices,1);
-  for i=1:numel(DF)
-    VV(DF(i)) = VV(DF(i)) + DV( D(i) );  
-    DS(DF(i)) = DS(DF(i)) + 1; 
+  VV = zeros(size(IS.vertices,1),1,'single'); 
+  DF = D; DF(DF>size(IS.vertices,1)) = DF(DF>size(IS.vertices,1)) - size(IS.vertices,1); % to use the IS indices for mapping 
+  for i=1:size(DV,1)
+    for j=1:4
+      VV(DF(i,j)) = VV(DF(i,j)) + DV( i ) / 4;  
+    end
   end
-  VV = VV./max(1,DS); 
  
 end
 
@@ -550,6 +562,10 @@ function varargout = cat_surf_GMboundarySurface(type,varargin)
       Pthick = cat_io_strrep(Praw,{'central','.gii'},{'pbt',''});
       if ~exist(Pthick,'file') 
         Pthick = cat_io_strrep(Praw,{'central','.gii'},{'thickness',''});
+      end
+      if ~exist(Pthick,'file') && exist(cat_io_strrep(Praw,'central','pbt'),'file')
+        Pthick = cat_io_strrep(Praw,{'central','.gii'},{'pbt',''});
+        movefile(cat_io_strrep(Praw,{'central'},{'pbt'}),Pthick);
       end
     end
     Ptype  = cat_io_strrep(Praw,'central',type);
@@ -828,27 +844,72 @@ function [AV,AF] = cat_surf_area(S)
 %
 
   % facearea (Horonsche Form)
-  D = cat_surf_dist(S);
-  facesp = sum(D,2) / 2;  % s = (a + b + c) / 2;
-  AF = (facesp .* (facesp - D(:,1)) .* (facesp - D(:,2)) .* (facesp - D(:,3))).^0.5; % area=sqrt(s*(s-a)*(s-b)*(s-c));
-  
-  % numerical (to small point differences) and mapping problems (crossing of streamlines)
-  % -> correction because this is theoretical not possible (Laplace field theory)
-  AF(AF==0) = eps; % to small values
-  AF = abs(AF);    % streamline-crossing
+  method = 2;
+  if method == 1
+    %%
+    D = cat_surf_dist(S);
+    facesp = sum(D,2) / 2;  % s = (a + b + c) / 2;
+    AF = (facesp .* (facesp - D(:,1)) .* (facesp - D(:,2)) .* (facesp - D(:,3))).^0.5; % area=sqrt(s*(s-a)*(s-b)*(s-c));
+
+    % numerical (to small point differences) and mapping problems (crossing of streamlines)
+    % -> correction because this is theoretical not possible (Laplace field theory)
+    AF(AF==0) = eps; % to small values
+    AF = abs(AF);    % streamline-crossing
+
+    AV = cat_surf_F2V(S,AF);
+  elseif method == 2
+    %%
+    AF = spm_mesh_area(S,1);
+    AV = cat_surf_F2V(S,AF);
+  else
+    %% edge points
+    vn   = size(S.vertices,1);
+    V1   = S.vertices(S.faces(:,1),:); 
+    V2   = S.vertices(S.faces(:,2),:);
+    V3   = S.vertices(S.faces(:,3),:);
+    V12  = mean( cat( 3 , V1 , V2 ) , 3); 
+    V13  = mean( cat( 3 , V1 , V3 ) , 3); 
+    V23  = mean( cat( 3 , V2 , V3 ) , 3); 
+    %V123 = circumcenter( struct( 'Points' , [ V1 ; V2 ; V3 ] , 'ConnectivityList' , [ (1:vn)' (1:vn)'+vn (1:vn)'+vn*2 ] )); % center of mass
+    V123 = circlefit3d( V1 , V2 , V3 );
+
+%%   
+    SR11.faces = S.faces; SR11.vertices = [V1 V12 V123]; 
+    SR12.faces = S.faces; SR12.vertices = [V1 V13 V123]; 
+    SR21.faces = S.faces; SR21.vertices = [V2 V12 V123]; 
+    SR22.faces = S.faces; SR22.vertices = [V2 V23 V123];
+    SR31.faces = S.faces; SR31.vertices = [V3 V13 V123]; 
+    SR32.faces = S.faces; SR32.vertices = [V3 V23 V123];
     
-  AV = cat_surf_F2V(S,AF);
+    %% outer circle point
+    AF3 = [ abs(spm_mesh_area(SR11,1))' + abs(spm_mesh_area(SR12,1))' , ...
+            abs(spm_mesh_area(SR21,1))' + abs(spm_mesh_area(SR22,1))' , ...
+            abs(spm_mesh_area(SR31,1))' + abs(spm_mesh_area(SR32,1))'];
+    
+     AF = sum( AF3( S.faces ) , 2); 
+     AV = cat_surf_F2V(S,AF); 
+  end
+   %%
+%   AV = cat_mesh_smooth(S,AV,5); 
+
 end
 
 function data = cat_surf_F2V(S,odata)
 %% mapping of facedata to vertices
 
+  %A  = spm_mesh_distmtx(S,0);
+  %A  = full(sum(A,2)); 
+  %FA = A(S.faces);
+  %FA = (1./FA.^16); 
+  %FA = FA ./ repmat(sum(FA,2),1,3); 
+  
   data   = zeros(size(S.vertices,1),1);
   [v,f]  = sort(S.faces(:)); 
   [f,fj] = ind2sub(size(S.faces),f);  
   far    = odata(f);
+%  FA     = FA(f,:);
   for i=1:numel(v)
-    data(v(i)) = data(v(i)) + far(i)/3; 
+    data(v(i)) = data(v(i)) + far(i) / 3;% .* FA(i); %
   end
 
   %  data = data ./ vcount; %size(S.vertices,2); % Schwerpunkt... besser Voronoi, aber wie bei ner Oberflaeche im Raum???
