@@ -139,6 +139,8 @@ function vf = vfiles_smooth(job)
     vf(i) = cat_surf_rename(sinfo(i),'dataname',sprintf('s%d%s',job.fwhm,sinfo(i).dataname));
   end
 return;
+
+%_______________________________________________________________________
 function vf = vfiles_avg(job)
   if isempty(job.outdir{1})
     outdir = spm_fileparts(job.data{1});

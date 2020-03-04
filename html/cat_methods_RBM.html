@@ -45,7 +45,7 @@
         <li>[lr]h.logPThreshold_NameOfContrast_NameOfAtlas_Measure.gii</li>
       </ul>
       <p>
-These maps can be optionally visualized using <a class="function" href="matlab:cat_vol_slice_overlay;">overlay selected slices</a></li> for volume maps or <a class="function" href="matlab:y=cat_surf_results;">Display surface results</a> for surface maps.<br/>
+These maps can be optionally visualized using <a class="function" href="matlab:cat_vol_slice_overlay;">overlay selected slices</a></li> for volume maps or <a class="function" href="matlab:y=cat_surf_results;">Surface Overlay</a> for surface maps.<br/>
         In order to analyze different measures (e.g. Vgm/Vwm for volumes or thickness/gyrification for surfaces) you can use any existing volume-based analysis to extract different volume measures or any existing surface-based analysis to extract different surface measures. To give an example: An existing SPM.mat file with a VBM analysis of GM allows you to analyze ROI measures for both, GM as well as WM. Thus, it is not necessary to have a SPM.mat file of a VBM analysis of WM. The same holds for surface-based analysis. If you have an existing SPM.mat for the analysis of cortical thickness you can also estimate ROI analysis for gyrification or fractal dimension. However, it is necessary to extract before ROI-based measures for each subject using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surf2roi');">Extract Additional Surface Parameters</a>.<br/>    
         For ROI analysis of surfaces you can select the SPM.mat file of the analysis either for the left or right hemisphere or the merged hemispheres. The design should be the same and the ROI results will be always estimated for both hemispheres.<br/>
         Please note, that if you have moved your data after estimating your original voxel- or surfaced-based statistics the needed ROI files cannot be found.
@@ -62,7 +62,7 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
         Thus, if you have used the default VBM processing pipeline it is recommended to use the CAT12 atlases in DARTEL space rather than the SPM Neuromorphometrics atlas.
         In order to use CAT12 atlases you have to call the <a class="function" href="matlab:cat_install_atlases">cat_install_atlases</a> function once that will copy the atlases to SPM.
         By default only Neuromorphometics, LPBA40, and Hammers atlas maps are used and are indicated in the name by a leading ''dartel_''.<br/>
-        Atlas maps for surfaces can be used with <a class="function" href="matlab:y=cat_surf_results;">Display surface results</a>. Here, the data cursor function allows you to display atlas regions under the cursor. Furthermore, you can use the ''Atlas labeling'' function to print a list of atlas regions of the resulting clusters.
+        Atlas maps for surfaces can be used with <a class="function" href="matlab:y=cat_surf_results;">Surface Overlay</a>. Here, the data cursor function allows you to display atlas regions under the cursor. Furthermore, you can use the ''Atlas labeling'' function to print a list of atlas regions of the resulting clusters.
       </p>
          
       <ul>

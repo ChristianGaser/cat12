@@ -216,6 +216,8 @@ get_release ()
 run_pipeline ()
 {
   
+  echo PID is $$
+  
   # set ROI output and surface output
   if [ $volumes_only -eq 0 ]; then
     echo "cat.output.surface = 1;" >> ${spm12_tmp}/toolbox/cat12/cat_defaults.m
@@ -314,6 +316,7 @@ postprocess ()
       # grep for thickness and update csv file
       # check first for keyword neuromorphometrics and print next 200 lines
       thickness=`grep -A200 "<aparc_DK40" $labels |grep thickness | sed -e 's/\ /,/g' -e 's/;/,/g'|cut -f2 -d"["|cut -f1 -d"]"`
+      thickness=`grep -A200 "<aparc_DK40" $labels |grep thickness | sed -e 's/;/,/g' -e 's/;/,/g'|cut -f2 -d"["|cut -f1 -d"]"`
       if [ ! -z "$thickness" ]; then
         # add entry to csv file and sort and only keep unique lines
         echo "${revision_cat},${thickness}" >> ${subj}_thickness.csv
@@ -337,11 +340,11 @@ postprocess ()
       fi
       
       # prepare renderview if tool is found and surface processing is enabled
-      if [ ! -z `which CAT_View_Render_Matrix_ui` ] & [ $volumes_only -eq 0 ]; then
-        CAT_View_Render_Matrix_ui ${proc_dir}/check_r${revision_cat}/surf
-        mv check_r${revision_cat}*.png ${proc_dir}/
+      if [ ! -z `which render_surf.sh` ] & [ $volumes_only -eq 0 ]; then
+        render_surf.sh -range 0 6 ${proc_dir}/check_r${revision_cat}/surf
+        mv check_r${revision_cat}*.png ${proc_dir}/ >/dev/null 2>&1
       else
-        echo "You need CAT_View_Render_Matrix_ui and image_matrix.sh for preparing render view."
+        echo "You need render_surf.sh and image_matrix.sh for preparing render view."
       fi
 
       # delete original files, WM and normalized T1 images
@@ -415,7 +418,7 @@ EXAMPLE:
 USED FUNCTIONS:
    CAT12 toolbox
    SPM12
-   CAT_View_Render_Matrix_ui
+   render_surf.sh
    image_matrix.sh
 
 This script was written by Christian Gaser (christian.gaser@uni-jena.de).

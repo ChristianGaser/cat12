@@ -721,7 +721,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
       end
     end
 
-    Psatlas_lh   = job.extopts.satlas(  [job.extopts.satlas{:,3}]>0 , 2);
+    Psatlas_lh   = job.extopts.satlas(  [job.extopts.satlas{:,4}]>0 , 2);
     Pthick_lh    = cell(1,1);
     Pthick_lh{1} = fullfile(pp,surffolder,sprintf('lh.thickness.%s',ff));
     cat_surf_surf2roi(struct('cdata',{{Pthick_lh}},'rdata',{Psatlas_lh}));

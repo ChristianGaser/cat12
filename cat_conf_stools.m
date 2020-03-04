@@ -1332,7 +1332,7 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
   if expert>1
     SD.labels = {'No','Unscaled','Scaled','Both'};
     SD.values = {0,1,2,3};
-    SD.help   = [SD.help;{''; ['The "unscaled" version may requires normalization by brain size, ' ...
+    SD.help   = [SD.help;{''; ['The "unscaled" version may require normalization by brain size, ' ...
       'whereas the scaled version does not.']}]; 
   else
     SD.labels = {'No','Yes'};
@@ -1703,11 +1703,11 @@ for di = 1:numel(job.data_surf)
 	if job.merge_hemi
 		dep(end).sname      = ['Merged' depsfnames{1}];
 		dep(end).src_output = substruct('()',{1}, '.','Psdata','()',{di},'()',{':'});
-		dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+		dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
 	else
 		dep(end).sname      = ['Left' depsfnames{1}];
 		dep(end).src_output = substruct('()',{1}, '.','lPsdata','()',{di},'()',{':'});
-		dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+		dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
 		%dep(end+1)          = cfg_dep; %#ok<AGROW>
 		%dep(end).sname      = ['Right' depsfnames{1}];
 		%dep(end).src_output = substruct('()',{1}, '.','rPsdata','()',{numel(job.data_surf) + di},'()',{':'});
