@@ -1,5 +1,27 @@
 ------------------------------------------------------------------------
-r1575 | dahnke | 2020-03-03 12:47:36
+r1576 | gaser | 2020-03-04 14:37:29
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_conf_stools.m
+M       cat_conf_stoolsexp.m
+M       cat_main.m
+M       cat_surf_parameters.m
+M       cat_surf_results.m
+M       check_pipeline.sh
+M       html/cat.html
+M       html/cat_methods_RBM.html
+M       html/cat_starting.html
+M       html/cat_versions.html
+
+(1) Changed: Lots of changes in cat_surf_results.
+(2) Changed: Updated online help.
+(3) Fixed: Surface ROI estimation during preprocessing selected too many atlases.
+
+------------------------------------------------------------------------
+r1575 | dahnke | 2020-03-03 12:49:34 +0100 (Di, 03 Mär 2020) | 40 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -40,6 +62,7 @@ A       cat_surf_scaling.m
 (11) Fixed:     Corrected display bugs in cat_surf_render2.
 (12) Fixed:     Corrected bug in surface based GM volume estimation but it still needs a
                 final evaluation.
+
 ------------------------------------------------------------------------
 r1574 | gaser | 2020-03-03 00:55:15 +0100 (Di, 03 Mär 2020) | 15 lines
 
