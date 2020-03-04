@@ -110,11 +110,11 @@ switch lower(action)
     
     % result window with 5 surface views and alternative positions without top view and  only with lateral views
     H.viewpos = {[0.025 0.450 0.375 0.375;  0.025 0.450 0.375 0.375;  0.025 2.000 0.375 0.375],... % lh medial
-           [0.025 0.025 0.375 0.375;  0.025 0.025 0.375 0.375;  0.175 0.350 0.175 0.350],... % lh lateral
-           [0.600 0.450 0.375 0.375;  0.600 0.450 0.375 0.375;  0.600 2.000 0.375 0.375],... % rh medial
-           [0.600 0.025 0.375 0.375;  0.600 0.025 0.375 0.375;  0.675 0.350 0.175 0.350],... % rh lateral
-           [0.300 0.150 0.400 0.500;  0.300 2.000 0.400 0.500;  0.300 2.000 0.400 0.500],... % lh+rh top
-           [0.400 0.750 0.200 0.225;  0.400 0.300 0.200 0.225;  0.400 0.750 0.200 0.225]};   % data plot
+                 [0.025 0.025 0.375 0.375;  0.025 0.025 0.375 0.375;  0.175 0.350 0.175 0.350],... % lh lateral
+                 [0.600 0.450 0.375 0.375;  0.600 0.450 0.375 0.375;  0.600 2.000 0.375 0.375],... % rh medial
+                 [0.600 0.025 0.375 0.375;  0.600 0.025 0.375 0.375;  0.675 0.350 0.175 0.350],... % rh lateral
+                 [0.300 0.150 0.400 0.500;  0.300 2.000 0.400 0.500;  0.300 2.000 0.400 0.500],... % lh+rh top
+                 [0.400 0.750 0.200 0.225;  0.400 0.300 0.200 0.225;  0.400 0.750 0.200 0.225]};   % data plot
     
     % change size and position of flatmaps for >= R20014b
     if spm_check_version('matlab', '8.4') >= 0
@@ -124,24 +124,24 @@ switch lower(action)
     
     % figure 1 with result window
     H.pos{1} = struct( ...
-      'fig', [10 10 round(2.6*WS(3)) WS(3)], ... % figure
+      'fig',  [10 10 round(2.6*WS(3)) WS(3)], ... % figure
       'cbar', [0.400 -0.150 0.200 0.300; 0.440 0.025 0.120 0.120]);% colorbar
     
     % figure 2 with GUI
     H.pos{2} = struct(...
-      'fig',  [2*WS(3)+10 10 0.6*WS(3) WS(3)],... 
-      'sel',  [0.050 0.935 0.900 0.050],...[0.290 0.930 0.425 0.050],...
-      'nam',  [0.050 0.875 0.900 0.050],...
-      'surf', [0.050 0.800 0.425 0.050],'mview',   [0.525 0.800 0.425 0.050],... 
-      'text', [0.050 0.725 0.425 0.050],'thresh',  [0.525 0.725 0.425 0.050],... 
-      'cmap', [0.050 0.650 0.425 0.050],'atlas',   [0.525 0.650 0.425 0.050],...
+      'fig',    [2*WS(3)+10 10 0.6*WS(3) WS(3)],... 
+      'sel',    [0.050 0.935 0.900 0.050],...[0.290 0.930 0.425 0.050],...
+      'nam',    [0.050 0.875 0.900 0.050],...
+      'surf',   [0.050 0.800 0.425 0.050],'mview',   [0.525 0.800 0.425 0.050],... 
+      'text',   [0.050 0.725 0.425 0.050],'thresh',  [0.525 0.725 0.425 0.050],... 
+      'cmap',   [0.050 0.650 0.425 0.050],'atlas',   [0.525 0.650 0.425 0.050],...
       'cursor', [0.050 0.575 0.425 0.050],'border',  [0.525 0.575 0.425 0.050],...
       'nocbar', [0.050 0.500 0.425 0.050],'transp',  [0.525 0.500 0.425 0.050],... 
-      'info', [0.050 0.425 0.425 0.050],'bkg',   [0.525 0.425 0.425 0.050],... 
-      'inv',  [0.050 0.350 0.425 0.050],'hide_neg',[0.525 0.350 0.425 0.050],...
+      'info',   [0.050 0.425 0.425 0.050],'bkg',     [0.525 0.425 0.425 0.050],... 
+      'inv',    [0.050 0.350 0.425 0.050],'hide_neg',[0.525 0.350 0.425 0.050],...
       'fixscl', [0.050 0.260 0.425 0.050],'scaling', [0.050 0.260 0.425 0.050],...
       'ovmin',  [0.050 0.125 0.425 0.100],'ovmax',   [0.525 0.125 0.425 0.100],... 
-      'save', [0.050 0.050 0.425 0.050],'close',   [0.525 0.050 0.425 0.050]);
+      'save',   [0.050 0.050 0.425 0.050],'close',   [0.525 0.050 0.425 0.050]);
     
     H.figure = figure(22);
     clf(H.figure);
@@ -190,12 +190,12 @@ switch lower(action)
 
     % select results for lh and rh
     H.sel = uicontrol(H.panel(2), ...
-      'String', 'Select Surface Data', 'Units', 'normalized', ...
+      'String', 'Select Data for Surface Overlay', 'Units', 'normalized', ...
       'Position', H.pos{2}.sel, ...
       'Style', 'Pushbutton', 'HorizontalAlignment', 'center', ...
       'Callback', @select_data, ...
       'FontSize',H.FS,...
-      'ToolTipString', 'Select results (up to 24) for both hemispheres (e.g. log-p maps)', ...
+      'ToolTipString', 'Select results (up to 24) for both hemispheres (e.g. log-p volume or surface maps)', ...
       'Interruptible', 'on', 'Enable', 'on');
     
     H.save = uicontrol(H.panel(2), ...
@@ -207,11 +207,11 @@ switch lower(action)
       'ToolTipString', 'Save png image', ...
       'Interruptible', 'on', 'Enable', 'off');
 
-    str = {'Surface', 'Central', 'Inflated', 'Dartel', 'Flatmap'};
+    str = {'Surface', 'FSaverage', 'Inflated', 'Dartel', 'Flatmap'};
     tmp = {{@select_surf, 1}, ...
-         {@select_surf, 2}, ...
-         {@select_surf, 3}, ...
-         {@select_surf, 4}};
+           {@select_surf, 2}, ...
+           {@select_surf, 3}, ...
+           {@select_surf, 4}};
     
     % underlying surface
     H.surf = uicontrol(H.panel(2), ...
@@ -225,9 +225,9 @@ switch lower(action)
     
     str = {'Threshold', 'No threshold', 'P<0.05', 'P<0.01', 'P<0.001'};
     tmp = {{@select_thresh, 0}, ...
-         {@select_thresh, 1.3}, ...
-         {@select_thresh, 2}, ...
-         {@select_thresh, 3}};
+           {@select_thresh, 1.3}, ...
+           {@select_thresh, 2}, ...
+           {@select_thresh, 3}};
     
     % threshold
     H.thresh = uicontrol(H.panel(2), ...
@@ -241,9 +241,9 @@ switch lower(action)
     
     str = {'Colormap', 'jet', 'hot', 'hsv', 'cold-hot'};
     tmp = {{@select_cmap, 1}, ...
-         {@select_cmap, 2}, ...
-         {@select_cmap, 3}, ...
-         {@select_cmap, 4}};
+           {@select_cmap, 2}, ...
+           {@select_cmap, 3}, ...
+           {@select_cmap, 4}};
     
     % colormap
     H.cmap = uicontrol(H.panel(2), ...
@@ -257,8 +257,8 @@ switch lower(action)
     
     str = {'Atlas Labeling', 'Desikan-Killiany DK40', 'Destrieux 2009', 'HCP Multi-Modal Parcellation'};
     tmp = {{@select_atlas, 1}, ...
-         {@select_atlas, 2}, ...
-         {@select_atlas, 3}};
+           {@select_atlas, 2}, ...
+           {@select_atlas, 3}};
     
     % atlas for labeling
     H.atlas = uicontrol(H.panel(2), ...
@@ -270,17 +270,18 @@ switch lower(action)
       'ToolTipString', 'Atlas Labeling', ...
       'Interruptible', 'on', 'Enable', 'off');
     
-    str = {'Data Cursor', 'Disable data cursor', 'Atlas regions: Desikan-Killiany DK40', ...
-      'Atlas regions: Destrieux 2009', 'Atlas region: HCP Multi-Modal Parcellation', ...
-      'Plot data at vertex', ...
+    str = {'Data Cursor', 'Disable data cursor', 'Atlas regions: All Atlases', ...
+      'Atlas regions: Desikan-Killiany DK40', 'Atlas regions: Destrieux 2009', ...
+      'Atlas region: HCP Multi-Modal Parcellation', 'Plot data at vertex', ...
       'Plot mean data inside cluster', 'Enable/Disable rotate3d'};
     tmp = {{@select_cursor, 0}, ...
-         {@select_cursor, 1}, ...
-         {@select_cursor, 2}, ...
-         {@select_cursor, 3}, ...
-         {@select_cursor, 4}, ...
-         {@select_cursor, 5}, ...
-         {@select_cursor, 6}};
+           {@select_cursor, 1}, ...
+           {@select_cursor, 2}, ...
+           {@select_cursor, 3}, ...
+           {@select_cursor, 4}, ...
+           {@select_cursor, 5}, ...
+           {@select_cursor, 6}, ...
+           {@select_cursor, 7}};
     
     % data cursor for data plotting and atlas names
     H.cursor = uicontrol(H.panel(2), ...
@@ -294,8 +295,8 @@ switch lower(action)
     
     str = {'View', 'Show top view', 'Show bottom view', 'Show only lateral and medial views'};
     tmp = {{@select_view, 1}, ...
-         {@select_view, -1}, ...
-         {@select_view, 2}};
+           {@select_view, -1}, ...
+           {@select_view, 2}};
     
     % view
     H.mview = uicontrol(H.panel(2), ...
@@ -309,7 +310,7 @@ switch lower(action)
     
     str = {'Underlay', 'Mean curvature', 'Sulcal depth'};
     tmp = {{@select_texture, 1}, ...
-         {@select_texture, 2}};
+           {@select_texture, 2}};
     
     % underlying texture
     H.text = uicontrol(H.panel(2), ...
@@ -324,9 +325,9 @@ switch lower(action)
     str = {'Atlas Border', 'No Overlay', 'Overlay Desikan-Killiany DK40', 'Overlay Destrieux 2009', ...
          'Overlay HCP Multi-Modal Parcellation'};
     tmp = {{@select_border, 0}, ...
-         {@select_border, 1}, ...
-         {@select_border, 2}, ...
-         {@select_border, 3}};
+           {@select_border, 1}, ...
+           {@select_border, 2}, ...
+           {@select_border, 3}};
     
     % atlas for border overlay
     H.border = uicontrol(H.panel(2), ...
@@ -579,14 +580,15 @@ switch lower(action)
 
       % Don't allow plot functions for RGB maps or if SPM.mat was not found
       if (H.n_surf > 1 && H.SPM_found) | H.isvol(1)
-        str = {'Data Cursor', 'Disable data cursor', 'Atlas regions: Desikan-Killiany DK40', ...
-          'Atlas regions: Destrieux 2009', 'Atlas region: HCP Multi-Modal Parcellation', ...
-          'Enable/Disable rotate3d'};
+        str = {'Data Cursor', 'Disable data cursor', 'Atlas regions: All atlases',...
+          'Atlas regions: Desikan-Killiany DK40', 'Atlas regions: Destrieux 2009',...
+          'Atlas region: HCP Multi-Modal Parcellation', 'Enable/Disable rotate3d'};
         tmp = {{@select_cursor, 0}, ...
-             {@select_cursor, 1}, ...
-             {@select_cursor, 2}, ...
-             {@select_cursor, 3}, ...
-             {@select_cursor, 5}};
+               {@select_cursor, 1}, ...
+               {@select_cursor, 2}, ...
+               {@select_cursor, 3}, ...
+               {@select_cursor, 4}, ...
+               {@select_cursor, 6}};
         
         set(H.cursor,'String', str, 'UserData', tmp);
       end
@@ -1560,26 +1562,30 @@ end
 
 % Don't allow plot functions for volume data
 if H.isvol(sel)
-  str = {'Data Cursor', 'Disable data cursor', 'Atlas regions: Desikan-Killiany DK40', ...
-    'Atlas regions: Destrieux 2009', 'Atlas region: HCP Multi-Modal Parcellation', ...
-    'Enable/Disable rotate3d'};
+  str = {'Data Cursor', 'Disable data cursor', 'Atlas regions: All Atlases', ...
+    'Atlas regions: Desikan-Killiany DK40', 'Atlas regions: Destrieux 2009', ...
+    'Atlas region: HCP Multi-Modal Parcellation', 'Enable/Disable rotate3d'};
   tmp = {{@select_cursor, 0}, ...
-       {@select_cursor, 1}, ...
-       {@select_cursor, 2}, ...
-       {@select_cursor, 3}, ...
-       {@select_cursor, 5}};
+         {@select_cursor, 1}, ...
+         {@select_cursor, 2}, ...
+         {@select_cursor, 3}, ...
+         {@select_cursor, 4}, ...
+         {@select_cursor, 6}};
+
 else
-  str = {'Data Cursor', 'Disable data cursor', 'Atlas regions: Desikan-Killiany DK40', ...
-    'Atlas regions: Destrieux 2009', 'Atlas region: HCP Multi-Modal Parcellation', ...
-    'Plot data at vertex', ...
+  str = {'Data Cursor', 'Disable data cursor', 'Atlas regions: All Atlases', ...
+    'Atlas regions: Desikan-Killiany DK40', 'Atlas regions: Destrieux 2009', ...
+    'Atlas region: HCP Multi-Modal Parcellation', 'Plot data at vertex', ...
     'Plot mean data inside cluster', 'Enable/Disable rotate3d'};
   tmp = {{@select_cursor, 0}, ...
-       {@select_cursor, 1}, ...
-       {@select_cursor, 2}, ...
-       {@select_cursor, 3}, ...
-       {@select_cursor, 4}, ...
-       {@select_cursor, 5}, ...
-       {@select_cursor, 6}};
+         {@select_cursor, 1}, ...
+         {@select_cursor, 2}, ...
+         {@select_cursor, 3}, ...
+         {@select_cursor, 4}, ...
+         {@select_cursor, 5}, ...
+         {@select_cursor, 6}, ...
+         {@select_cursor, 7}};
+
 end
 set(H.cursor,'String', str, 'UserData', tmp);
 
@@ -2203,31 +2209,35 @@ if H.border_mode
   hold on
 
   if ind < 5 % single hemisphere views
-  Cm = H.S{round(ind / 2)}.Cm;
-  col = jet(size(Cm,1));
-  for j=1:size(Cm,1)
-    if ~isempty(Cm{j})
-    for i=1:size(Cm,2)
-      h3 = plot3(Cm{j}(i).xdata,Cm{j}(i).ydata,Cm{j}(i).zdata,'Color',col(j,:),'LineWidth',2);
-      setappdata(H.patch(ind), 'h3', [getappdata(H.patch(ind), 'h3'); h3]);
-      set(h3,'Parent',Ha);
-    end
-    end
-  end
-  else
-  for k = 1:2
-    Cm = H.S{k}.Cm;
+    Cm = H.S{round(ind / 2)}.Cm;
     col = jet(size(Cm,1));
     for j=1:size(Cm,1)
-    if ~isempty(Cm{j})
-      for i=1:size(Cm,2)
-      h3 = plot3(Cm{j}(i).xdata,Cm{j}(i).ydata,Cm{j}(i).zdata,'Color',col(j,:),'LineWidth',2);
-      setappdata(H.patch(ind), 'h3', [getappdata(H.patch(ind), 'h3'); h3]);
-      set(h3,'Parent',Ha);
+%      col_sel = col(j,:);
+      col_sel = 'k';
+      if ~isempty(Cm{j})
+        for i=1:size(Cm,2)
+          h3 = plot3(Cm{j}(i).xdata,Cm{j}(i).ydata,Cm{j}(i).zdata,'Color',col_sel,'LineWidth',2);
+          setappdata(H.patch(ind), 'h3', [getappdata(H.patch(ind), 'h3'); h3]);
+          set(h3,'Parent',Ha);
+        end
       end
     end
+  else
+    for k = 1:2
+      Cm = H.S{k}.Cm;
+      col = jet(size(Cm,1));
+      for j=1:size(Cm,1)
+%        col_sel = col(j,:);
+        col_sel = 'k';
+        if ~isempty(Cm{j})
+          for i=1:size(Cm,2)
+            h3 = plot3(Cm{j}(i).xdata,Cm{j}(i).ydata,Cm{j}(i).zdata,'Color',col_sel,'LineWidth',2);
+            setappdata(H.patch(ind), 'h3', [getappdata(H.patch(ind), 'h3'); h3]);
+            set(h3,'Parent',Ha);
+          end
+        end
+      end
     end
-  end
   end
   
   hold off
@@ -2245,7 +2255,7 @@ function select_data(obj, event_obj, P)
 global H
 
 if ~exist('P','var')
-  P = spm_select([1 24], {'mesh','image'}, 'Select up to 24 maps for overlay');
+  P = spm_select([1 24], {'mesh','image'}, 'Select up to 24 volume or surface maps');
 end
 
 n = size(P, 1);
@@ -2291,6 +2301,11 @@ for i = 1:n
     save(gifti(M), Pout, 'Base64Binary');
     P0{i} = Pout; 
     H.isvol(i) = 1;
+    
+    % print warning if no SPM.mat file was found
+    if ~exist(fullfile(pp, 'SPM.mat'), 'file')
+      fprintf('Warning: Please ensure that %s is spatially registered and is located in CAT12 Dartel/Shooting space.\n',[ff ee]);
+    end
   else
     P0{i} = deblank(P(i,:));
   end
@@ -2326,14 +2341,17 @@ cat_surf_results('disp', P0);
 function save_image(obj, event_obj, filename)
 
 global H
-%%
+%% 
 
+%{
+% delete data cursor
 dcm_obj = datacursormode(H.figure);
 set(dcm_obj, 'Enable', 'off');
 
 try
   delete(findall(gcf,'Type','hggroup'));
 end
+%}
 
 if ~exist('filename', 'var')
   
@@ -2585,7 +2603,7 @@ H.show_info = get(H.info, 'Value');
 if H.show_info
   delete(findobj('tag','cat_surf_result_title'));
 
-  ax = axes('Parent',H.panel(1),'Position',[0.5 0.82 0.9 0.05],'visible','off','tag','cat_surf_result_title');  
+  ax = axes('Parent',H.panel(1),'Position',[0.5 0.65 0.9 0.05],'visible','off','tag','cat_surf_result_title');  
   text(0,1,spm_str_manip(H.S{1}.name, 'k150d'),'HorizontalAlignment','center','interpreter','none','Color', 1 - H.bkg_col,'Parent',ax);
           
 else
@@ -2620,6 +2638,7 @@ end
 
 %==========================================================================
 function H = getHandles(H)
+
 if ~nargin || isempty(H), H = gca; end
 if ishandle(H) & ~isappdata(H, 'handles')
   a = H; clear H;
@@ -2706,7 +2725,6 @@ for ind = 1:5
   H = updateTexture(H, ind, d, col, H.show_transp);
 end
 
-
 %==========================================================================
 function select_cursor(cursor_mode)
 
@@ -2721,11 +2739,11 @@ switch H.cursor_mode
     rotate3d off;
     
     clearDataCursorPlot(H);
-  case {1, 2, 3}
+  case {1, 2, 3, 4}
     clearDataCursorPlot(H);
     set(dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', ...
       'DisplayStyle', 'datatip', 'Updatefcn', {@myDataCursorAtlas, H});
-  case {4, 5}
+  case {5, 6}
     
     try
       delete(findall(gcf,'Type','hggroup'));
@@ -2737,13 +2755,14 @@ switch H.cursor_mode
     % SPM.mat exist?
     if exist(SPM_name, 'file')
     
+%{
       % remove filename info to prevent overlapping
       if H.show_info
         set(H.info, 'Value', 0);
         H.show_info = 0;
         checkbox_info;
       end
-
+%}
       load(SPM_name);
 
       % if analysis was moved we have to correct header structure
@@ -2777,7 +2796,7 @@ switch H.cursor_mode
       end
     end
   case 6 % enable/disable rotate3d
-    clearDataCursorPlot(H);
+    cle7rDataCursorPlot(H);
     rotate3d;
     disp('Use mouse to rotate views.');
 end
@@ -2801,7 +2820,7 @@ function txt = myDataCursorCluster(obj, evt)
 global H y x
 
 % first entries are atlases
-plot_mean = H.cursor_mode - 4;
+plot_mean = H.cursor_mode - 5;
 pos = get(evt, 'Position');
 
 i = ismember(get(H.patch(1), 'vertices'), pos, 'rows');
@@ -2889,9 +2908,14 @@ if plot_mean
     end
   end
 else
-  % use single node as region
+  % print value at cursor
   XYZ = node;
-  txt = {sprintf('Node %d', node)};
+  value = H.S{round(ind / 2)}.Y(node);
+  if H.logP
+    txt = {sprintf('p=%g', 10^(-value))};
+  else
+    txt = {sprintf('Value %g', value)};
+  end
 end
 
 % for merged meshes we only have one SPM.mat with data from both hemispheres
@@ -2936,8 +2960,11 @@ end
 
 if H.predicted >=0
   ystr = 'contrast estimate';
-  h = bar(H.dataplot, cbeta);
-  set(h, 'FaceColor', H.col(1, :));
+  groupcolor = jet(size(cbeta,1));
+  for i=1:size(cbeta,1)
+    h = bar(H.dataplot, i, cbeta(i,:));
+    set(h, 'FaceColor', groupcolor(i,:), 'FaceAlpha', 0.75);
+  end
   
   % standard error
   %--------------------------------------------------------------
@@ -3176,11 +3203,10 @@ else
         y = y - G*(pinv(G)*y);
       end
 
-
+      n_groups = max(SPM.xX.I(:,3));
       if repeated_anova | ((n_groups > 1) & covariate)
         beta0  = spm_data_read(SPM.Vbeta,'xyz',XYZ);
         beta   = mean(beta0,2);
-        n_groups = max(SPM.xX.I(:,3));
         mean_group = zeros(n_groups,1);
         count_times = 1;
         for i=1:n_groups
@@ -3213,14 +3239,6 @@ function txt = myDataCursorAtlas(obj, evt, H)
 
 pos = get(evt, 'Position');
 
-if H.cursor_mode == 1
-  txt = {'Desikan DK40'};
-elseif H.cursor_mode == 2
-  txt = {'Destrieux 2009'};
-elseif H.cursor_mode == 3
-  txt = {'HCP_MMP1'};
-end
-
 i = ismember(get(H.patch(1), 'vertices'), pos, 'rows');
 node = find(i);
 ind = 1;
@@ -3231,15 +3249,51 @@ if isempty(node)
   ind = 2;
 end
 
-rdata_pos = H.rdata{H.cursor_mode}(node, ind);
+if H.cursor_mode > 1
 
-rcsv = H.rcsv{H.cursor_mode};
-
-for j = 2:size(rcsv, 1)
-  if rdata_pos == rcsv{j, 1}
-    txt = {txt{:} [H.S{ind}.side ' ' rcsv{j, 2}]};
-    j = size(rcsv, 1);
+  sel_atlas = H.cursor_mode - 1;
+  switch sel_atlas
+    case 1
+      txt = {'Desikan DK40'};
+    case 2
+      txt = {'Destrieux 2009'};
+    case 3
+      txt = {'HCP_MMP1'};
   end
+  
+  rdata_pos = H.rdata{sel_atlas}(node, ind);
+  rcsv = H.rcsv{sel_atlas};
+  
+  for j = 2:size(rcsv, 1)
+    if rdata_pos == rcsv{j, 1}
+      txt = {txt{:} [H.S{ind}.side ' ' rcsv{j, 2}]};
+      continue
+    end
+  end
+else
+
+  txt = {''};
+  for sel_atlas=1:3
+    switch sel_atlas
+      case 1
+        atlas_str = 'Desikan DK40: ';
+      case 2
+        atlas_str = 'Destrieux 2009: ';
+      case 3
+        atlas_str = 'HCP_MMP1: ';
+    end
+    
+    rdata_pos = H.rdata{sel_atlas}(node, ind);
+    rcsv = H.rcsv{sel_atlas};
+    
+    for j = 2:size(rcsv, 1)
+      if rdata_pos == rcsv{j, 1}
+        txt = {txt{:} [atlas_str H.S{ind}.side ' ' rcsv{j, 2}]};
+        continue
+      end
+    end
+  end
+  txt=txt(2:4);
 end
 
 %==========================================================================

@@ -36,7 +36,7 @@
           <li>Changes in preprocessing pipeline (which affects your results compared to CAT12.6)</li>
           <ul>
             <li>Geodesic shooting registration and surface estimation are now used by default.</li>
-            <li>The surface pipeline is largely updated: (1) Parameters for surface reconstruction were optimized. (2) Freesurfer distance method Tfs is now implemented, which is computed as the average of  the closest distances from the pial to the white matter surface and from the white matter to the pial surface. This reduces the occurrence of larger thickness values and results in more reliable thickness measures. For mapping of 3D data the old thickness metrics from PBT is more appropriate and is still used.</li>
+            <li>The surface pipeline is largely updated: (1) Parameters for surface reconstruction were optimized. (2) Freesurfer distance method Tfs is now implemented, which is computed as the average of  the closest distances from the pial to the white matter surface and from the white matter to the pial surface. This reduces the occurrence of larger thickness values and results in more reliable thickness measures. For mapping of 3D data the old thickness metric from PBT is more appropriate and is still used.</li>
             <li>Internal resampling is now using a new ''optimal'' resolution setting to better support high-resolution data.</li>
             <li>Changed recommendation and defaults for smoothing size to smaller values.</li>
             <li>Renamed template folder for volumes to templates_volumes.</li>
@@ -50,10 +50,11 @@
             <li>New GUI</li>
             <li>Added older preprocessing pipelines (12.1, 12.3, 12.6) to provide compatible versions to previous preprocessings. These older preprocessing pipelines are available via the <a class="function" href="matlab:spm_jobman('interactive')">SPM batch editor</a (SPM -> Tools -> CAT12) or through expert mode.</li>
             <li>Added simple batch for cross-sectional and longitudinal data that combines several processing steps from preprocessing to smoothing. These batches are available via the <a class="function" href="matlab:spm_jobman('interactive')">SPM batch editor</a (SPM -> Tools -> CAT12) or through expert mode.</li>
-            <li>Added shell script cat_standalone.sh to call CAT12 batch files (in expert mode) for SPM12 standalone installation (e.g. for HPCs).</li>
-            <li>CAT12 now uses Piwik for anonymized CAT12 user statistics (i.e. version information, potential errors). See <a href="cat_statistics.html">CAT12 user statistics</a> for more information.</li>
+            <li>The function <a class="function" href="matlab:y=cat_surf_results;">Display surface results</a> can now also visualize results from VBM analysis and maps the 3D volume information onto the surface using an absmax mapping function inside the cortical band. The function is now renamed to ''Surface Overlay''.</li>
+            <li>CAT12 now uses Piwik for anonymized CAT12 user statistics (i.e. version information, potential errors). See <a href="cat_statistics.html">CAT12 user statistics</a> for more information. This can be optionally disabled in <a class="function" href="matlab:open cat_defaults;">cat_defaults.m</a>.</li>
             <li>Extraction of ROI-based thickness is not necessary anymore because this is now included in the segmentation pipeline in cat_main.m.</li>
-            <li>Changed gifti-format after resampling to use external dat-files. This will increase processing speed and prevents that SPM.mat file for surfaces gets too large. This can be optionally disabled in <a class="function" href="matlab:open cat_defaults;">cat_defaults.m</a>.</li>
+            <li>Changed gifti-format after resampling to use external dat-files. This increases processing speed and prevents that the SPM.mat file for surfaces gets too large. This can be optionally disabled in <a class="function" href="matlab:open cat_defaults;">cat_defaults.m</a>.</li>
+            <li>Updated and extended examples for statistical designs and respective contrasts in the CAT12 manual.</li>
           </ul>
         </ul> 
       </p>

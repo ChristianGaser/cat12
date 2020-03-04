@@ -119,7 +119,7 @@ function varargout = cat_surf_parameters(job)
         [pp,ff,ex] = spm_fileparts(Pname);
         name       = [ff ex];
         Psname     = fullfile( pp , strrep([ff ex],'central','scentral') ); 
-        Pname2     = fullfile( pp , strrep([ff ex],'central','central2') );   % temporar surface with noise for failed save sulcal depth estimation 
+        Pname2     = fullfile( pp , strrep([ff ex],'central','central2') );   % temporary surface with noise for failed save sulcal depth estimation 
         % dependencies
         PGI     = { 
           fullfile(pp,strrep(ff,'central','gyrification'));                    % unscaled absolute mean curvature   
