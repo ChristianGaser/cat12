@@ -1,4 +1,4 @@
-function ROI = cat_conf_ROI(expert)
+function [ROI,atlases] = cat_conf_ROI1445(expert)
 %_______________________________________________________________________
 % wrapper for calling CAT ROI options
 %_______________________________________________________________________

@@ -1,4 +1,4 @@
-function [output,output_spm,output1173] = cat_conf_output(expert)
+function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
 % writing options for data
 %_______________________________________________________________________
 %
@@ -392,6 +392,7 @@ function [output,output_spm,output1173] = cat_conf_output(expert)
 
   % additional segmentation versions
   [ROI1173,atlases1173]         = cat_conf_ROI1173(expert);       % ROI options
+  [ROI1445,atlases1445]         = cat_conf_ROI1445(expert);       % ROI options
   
   output1173            = output;
   if expert==2
@@ -400,6 +401,15 @@ function [output,output_spm,output1173] = cat_conf_output(expert)
     output1173.val      = {surface ROI1173 atlases1173 grey white csf wmh label bias las jacobian warps};
   else
     output1173.val      = {surface ROI1173 grey white jacobian warps};
+  end
+  
+  output1445            = output;
+  if expert==2
+    output1445.val      = {surface ROI1445 atlases1445 grey white csf wmh tpmc atlas label bias las jacobian warps}; 
+  elseif expert==1
+    output1445.val      = {surface ROI1445 atlases1445 grey white csf wmh label bias las jacobian warps};
+  else
+    output1445.val      = {surface ROI1445 grey white jacobian warps};
   end
 
 	output_spm  = output; 

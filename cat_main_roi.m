@@ -20,6 +20,9 @@ function cat_main_roi(job,trans,Ycls,Yp0)
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
  
   [pth,nam] = spm_fileparts( trans.native.Vo.fname ); 
+    
+  % in case of SPM input segmentation we have to add the name here to have a clearly different naming of the CAT output 
+  if isfield(job,'spmpp'), nam = ['c1' nam]; end
   
   % definition of subfolders
   if job.extopts.subfolders

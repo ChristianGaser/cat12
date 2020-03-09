@@ -168,7 +168,25 @@ function cat_io_report(job,qa,subj,createerr)
     if ~isfield(cat_err_res.res,'Affine'), cat_err_res.res.Affine = eye(4); end
     if ~isfield(cat_err_res,'obj') || ~isfield(cat_err_res.obj,'Affine'), cat_err_res.obj.Affine = eye(4); end
     
-    qa.qualitymeasures.res_vx_vol  = sqrt(sum(VT0.mat(1:3,1:3).^2));
+    [ver_cat, rev_cat] = cat_version;
+    ver_cat = ver_cat(4:end); % remove leading CAT
+    [nam,rev_spm] = spm('Ver');
+    QAS.software.version_spm = rev_spm;
+    A = ver;
+    for i=1:length(A)
+      if strcmp(A(i).Name,'MATLAB')
+        QAS.software.version_matlab = A(i).Version; 
+      end
+    end
+    clear A
+    OSname = {'LINUX','WIN','MAC'};
+    qa.software.system               = OSname{1 + ispc + ismac};
+    qa.software.version_cat          = ver_cat;
+    if ~isfield(qa.software,'version_segment')
+      qa.software.version_segment    = rev_cat;
+    end
+    qa.software.revision_cat         = rev_cat;
+    qa.qualitymeasures.res_vx_vol    = sqrt(sum(VT0.mat(1:3,1:3).^2));
     try
       qa.qualitymeasures.res_vx_voli = sqrt(sum(VT1.mat(1:3,1:3).^2));
     catch

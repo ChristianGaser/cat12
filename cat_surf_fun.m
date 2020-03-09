@@ -888,6 +888,11 @@ function [AV,AF] = cat_surf_area(S)
     
      AF = sum( AF3( S.faces ) , 2); 
      AV = cat_surf_F2V(S,AF); 
+     
+     % the COM is equal to divide by three and the estimation of the
+     % circumcircle point was not so easy or fast possible as I hoped ...
+     %   https://en.wikipedia.org/wiki/Triangle#Computing_the_area_of_a_triangle
+     %   https://en.wikipedia.org/wiki/Circumscribed_circle
   end
    %%
 %   AV = cat_mesh_smooth(S,AV,5); 

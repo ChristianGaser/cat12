@@ -18,10 +18,12 @@ function cat_warnings = cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans,cat_war
  
   %VT  = res.image(1);  % denoised/interpolated n*.nii % RD 20190328
   VT0 = res.image0(1); % original 
-  [pth,nam] = spm_fileparts(VT0.fname);  
+  [pth,nam,ee,ie] = spm_fileparts(VT0.fname); 
+  
+  % in case of SPM input segmentation we have to add the name here to have a clearly different naming of the CAT output 
+  if isfield(res,'spmpp'), nam = ['c1' nam]; VT0.fname = fullfile(pth,[nam,ee,ie]); end
 
   %d = VT.dim(1:3); % RD 20190328
-
   tc = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)]; 
 
   % definition of subfolders

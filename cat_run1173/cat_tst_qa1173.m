@@ -216,7 +216,9 @@ function varargout = cat_tst_qa1173(action,varargin)
         V   = res.image;
         cat_warnings = varargin{5};
         species = varargin{6};
+          
         if isfield(varargin{7},'qa')
+          if isfield(varargin{7}.qa,'software') && isfield(varargin{7}.qa.software,'version_segment'), QAS.software.version_segment = varargin{7}.qa.software.version_segment; end
           if isfield(varargin{7}.qa,'qualitymeasures'), QAR.qualitymeasures = cat_io_updateStruct(QAR,varargin{7}.qa.qualitymeasures); end
           if isfield(varargin{7}.qa,'subjectmeasures'), QAS.subjectmeasures = cat_io_updateStruct(QAS,varargin{7}.qa.subjectmeasures); end
         end
@@ -508,6 +510,8 @@ function varargout = cat_tst_qa1173(action,varargin)
         end
       end
       clear A
+      OSname = {'LINUX','WIN','MAC'};
+      QAS.software.system       = OSname{1 + ispc + ismac};
       QAS.software.version_cat  = rev_cat;
       QAS.software.function     = which('cat_vol_qa');
       QAS.software.markdefs     = which('cat_stat_marks');
@@ -567,6 +571,8 @@ function varargout = cat_tst_qa1173(action,varargin)
         end
       end
       clear A
+      OSname = {'LINUX','WIN','MAC'};
+      QAS.software.system       = OSname{1 + ispc + ismac};
       QAS.software.version_cat  = rev_cat;
       QAS.software.function     = which('cat_vol_qa');
       QAS.software.markdefs     = which('cat_stat_marks');
