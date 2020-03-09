@@ -1111,6 +1111,7 @@ if ~isfield(res,'spmpp')
 
   Yp0 = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
   Ywmhrel = NS(Yl1,23);
+  qa.software.version_segment   = strrep(mfilename,'cat_main',''); 
   qa.subjectmeasures.WMH_abs    = sum(Ywmhrel(:));                                            % absolute WMH volume without PVE
   qa.subjectmeasures.WMH_rel    = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(0.5/3*255));   % relative WMH volume to TIV without PVE
   qa.subjectmeasures.WMH_WM_rel = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(2.5/3*255));   % relative WMH volume to WM without PVE
@@ -1612,7 +1613,7 @@ if job.output.surface
     %% using the Ymi map
     Ymix = Ymi .* (Yp0>0.5);
     %if ~debug, clear Yp0; end 
-    if 1 % new
+    if 0 % new 
       [Yth1,S,Psurf,EC,defect_size] = cat_surf_createCS(VT,VT0,Ymix,Yl1,Yp0/3,YMF,...
         struct('pbtmethod','pbt2x','interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
         'verb',job.extopts.verb,'WMT',0));  

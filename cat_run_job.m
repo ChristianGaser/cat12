@@ -134,6 +134,7 @@ function cat_run_job(job,tpm,subj)
         res.image0 = spm_vol([ofname ex]);
         res.imagec = spm_vol([cfname ex]);
         res.spmpp  = 1; 
+        job.spmpp  = 1; 
         
         cat_err_res.obj = obj; 
     else
@@ -791,7 +792,7 @@ function cat_run_job(job,tpm,subj)
     end
     
     % updated tpm information for skull-stripped data should be available for cat_main
-    if isfield(obj.tpm,'bg1') && ( ppe.affreg.skullstripped || job.extopts.gcutstr<0 )
+    if isfield(obj.tpm,'bg1') && exist('ppe','var') && ( ppe.affreg.skullstripped || job.extopts.gcutstr<0 )
       fname = res.tpm(1).fname;
       res.tpm       = obj.tpm;
       res.tpm(1).fname = fname;

@@ -38,7 +38,7 @@ catch
 end
 
 % force running in the foreground if only one processor was found or for compiled version
-if numcores == 1 | isdeployed , numcores = 0; end
+if numcores == 1 || isdeployed , numcores = 0; end
 
 %_______________________________________________________________________
 nproc         = cfg_entry;
@@ -92,13 +92,13 @@ data_spm.preview  = @(f) spm_check_registration(char(f));
 %% ------------------------------------------------------------------------
 tools       = cat_conf_tools(expert);     % volume tools
 stools      = cat_conf_stools(expert);    % surface tools
-if expert 
+if expert > 1
   stoolsexp = cat_conf_stoolsexp;       % surface expert tools
 end
 extopts     = cat_conf_extopts(expert);   
 opts        = cat_conf_opts(expert); 
 %ROI       = cat_conf_ROI(expert);       % ROI options
-[output,output_spm,output1173] = cat_conf_output(expert); 
+[output,output_spm,output1173,output1445] = cat_conf_output(expert); 
 
 %------------------------------------------------------------------------
 % additional segmentation versions
@@ -164,19 +164,19 @@ estwrite1445.help   = [estwrite1445.help;{'';'This batch calls the stable versio
 
 if numcores > 1
   estwrite1173.val      = {data nproc opts1173     extopts1173     output1173}; 
-  estwrite1173plus.val  = {data nproc opts1173plus extopts1173plus output}; 
+  estwrite1173plus.val  = {data nproc opts1173plus extopts1173plus output1445}; 
   if expert>1
-    estwrite1445.val    = {data data_wmh nproc opts1445     extopts1445     output}; 
+    estwrite1445.val    = {data data_wmh nproc opts1445     extopts1445     output1445}; 
   else
-    estwrite1445.val    = {data nproc opts1445     extopts1445     output}; 
+    estwrite1445.val    = {data nproc opts1445     extopts1445     output1445}; 
   end
 else
   estwrite1173.val      = {data opts1173     extopts1173     output1173};
-  estwrite1173plus.val  = {data opts1173plus extopts1173plus output};
+  estwrite1173plus.val  = {data opts1173plus extopts1173plus output1445};
   if expert>1
-    estwrite1445.val    = {data data_wmh opts1445     extopts1445     output};
+    estwrite1445.val    = {data data_wmh opts1445     extopts1445     output1445};
   else
-    estwrite1445.val    = {data opts1445     extopts1445     output};
+    estwrite1445.val    = {data opts1445     extopts1445     output1445};
   end
 end
 
@@ -217,9 +217,9 @@ cat        = cfg_choice;
 cat.name   = 'CAT12';
 cat.tag    = 'cat';
 if expert==2
-  cat.values = {estwrite estwrite_spm estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools };
+  cat.values = {estwrite estwrite_spm estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools stoolsexp};
 elseif expert==1
-  cat.values = {estwrite estwrite_spm estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools};
+  cat.values = {estwrite estwrite_spm estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools };
 else
   cat.values = {estwrite estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools}; 
 end

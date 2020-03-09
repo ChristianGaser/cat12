@@ -91,18 +91,37 @@ function tools = cat_conf_tools(expert)
   suffix.val        = {''};
   suffix.help       = {''};
 
+  fname             = prefix; 
+  fname.name        = 'Filename';
+  fname.tag         = 'fname';
+  fname.val         = {'CATcheckdesign_'}; 
+  fname.help        = {'Basic filename to save figures.'};
+   
+  save              = cfg_menu;
+  save.name         = 'Save & close windows';
+  save.tag          = 'save';
+  save.labels       = {'Save & close','Save only','No'};
+  save.values       = {2,1,0};
+  save.val          = {0};
+  save.help         = {'Save and close figures for batch processing.'};
   
-
+  colormap              = cfg_menu;
+  save.name         = 'Save & close windows';
+  save.tag          = 'save';
+  save.labels       = {'Save & close','Save only','No'};
+  save.values       = {2,1,0};
+  save.val          = {0};
+  save.help         = {'Save and close figures for batch processing.'};
 
 
 % get subbatches
 % -------------------------------------------------------------------------
   [T2x,T2x_surf,F2x,F2x_surf] = cat_stat_T2x_GUI;
-  [check_cov, check_cov2]     = cat_stat_check_cov_GUI(data_xml);
+  [check_cov, check_cov2]     = cat_stat_check_cov_GUI(data_xml,outdir,fname,save,expert);
   [defs,defs2]                = cat_vol_defs_GUI;
   nonlin_coreg                = cat_conf_nonlin_coreg;
   headtrimming                = cat_vol_headtrimming_GUI(intlim,spm_type,prefix,suffix,expert);
-  check_SPM                   = cat_stat_check_SPM_GUI; 
+  check_SPM                   = cat_stat_check_SPM_GUI(outdir,fname,save,expert); 
   showslice                   = cat_stat_showslice_all_GUI(data_vol);
   maskimg                     = cat_vol_maskimage_GUI(data,prefix);
   calcvol                     = cat_stat_TIV_GUI;
@@ -461,7 +480,7 @@ function sanlm = cat_vol_sanlm_GUI(data,intlim,spm_type,prefix,suffix,expert)
   end
   sanlm                 = cfg_exbranch;
   sanlm.tag             = 'sanlm';
-  sanlm.name            = 'Spatially adaptive non-local means denoising filter';
+  sanlm.name            = 'Spatially adaptive non-local means (SANLM) denoising filter';
   if expert>1 % developer
     sanlm.val           = {data spm_type prefix suffix intlim addnoise rician replaceNANandINF nlmfilter};
   elseif expert
@@ -470,7 +489,7 @@ function sanlm = cat_vol_sanlm_GUI(data,intlim,spm_type,prefix,suffix,expert)
     sanlm.val           = {data spm_type prefix nlmfilter};
   end
   sanlm.prog            = @cat_vol_sanlm;
-  sanlm.vfiles          = @vfiles_sanlm;
+  sanlm.vout            = @vfiles_sanlm;
   sanlm.help            = {
     'This function applies an spatial adaptive (sub-resolution) non-local means denoising filter to the data. This filter will remove noise while preserving edges. The filter strength is automatically estimated based on the standard deviation of the noise. '
     ''
@@ -512,7 +531,7 @@ function spmtype = cat_io_volctype_GUI(data,  intlim,  spm_type,prefix,suffix,ex
     spmtype.val       = {data spm_type prefix intlim};
   end
   spmtype.prog        = @cat_io_volctype;
-  spmtype.vfiles      = @vfiles_volctype;
+  spmtype.vout        = @vfiles_volctype;
   spmtype.help        = {
     'Convert the image data type to reduce disk-space.'
     'Uses 99.99% of the main intensity histogram to avoid problems due to outliers. Although the internal scaling supports a relative high accuracy for the limited number of bits, special values such as NAN and INF will be lost!'
@@ -713,7 +732,7 @@ function maskimg = cat_vol_maskimage_GUI(data,prefix)
   maskimg.name    = 'Manual image (lesion) masking'; 
   maskimg.val     = {data mask bmask recalc prefix};
   maskimg.prog    = @cat_vol_maskimage;
-  maskimg.vfiles  = @vfiles_maskimg;
+  maskimg.vout    = @vfiles_maskimg;
   maskimg.help    = {
     'Mask images to avoid segmentation and registration errors in brain lesion. The number of mask images has to be equal to the number of the original images. Voxels inside the lesion mask(s) and outside the brainmask(s) will be set to zero. '
     'If you have multiple lesion masks than add them with the original images, eg. "images = {sub01.nii; sub02.nii; sub01.nii}" and "mask = {sub01_lesion1.nii; sub02_lesion1.nii; sub01_lesion2.nii}". Alternatively, you can choose only one original image and a various number of mask files.'
@@ -805,7 +824,7 @@ function [defs,defs2] = cat_vol_defs_GUI()
   defs.name       = 'Apply deformations (many images)';
   defs.val        = {field1,images1,interp,modulate};
   defs.prog       = @cat_vol_defs;
-  defs.vfiles     = @vfiles_defs;
+  defs.vout       = @vfiles_defs;
   defs.help       = {'This is a utility for applying a deformation field of one subject to many images.'};
 
   defs2           = cfg_exbranch;
@@ -813,7 +832,7 @@ function [defs,defs2] = cat_vol_defs_GUI()
   defs2.name      = 'Apply deformations (many subjects)';
   defs2.val       = {field,images,interp,modulate};
   defs2.prog      = @cat_vol_defs;
-  defs2.vfiles    = @vfiles_defs2;
+  defs2.vout      = @vfiles_defs2;
   defs2.help      = {'This is a utility for applying deformation fields of many subjects to images.'};
 return
 
@@ -1293,12 +1312,11 @@ function showslice = cat_stat_showslice_all_GUI(data_vol)
   showslice.help  = {'This function displays a selected slice for all images and indicates the respective filenames which is useful to check image quality for a large number of files in a circumscribed region (slice).'};
 
 %_______________________________________________________________________
-function [check_cov, check_cov2] = cat_stat_check_cov_GUI(data_xml) 
+function [check_cov, check_cov2] = cat_stat_check_cov_GUI(data_xml,outdir,fname,save,expert) 
  
   % --- update input data ---
   data_xml.name     = 'Quality measures (optional)';
   data_xml.help     = {'Select optional the quality measures that are saved during segmentation as xml-files in the report folder. This additionally allows to analyze image quality parameters such as noise, and bias. Please note, that the order of the xml-files should be the same as the other data files.'};
-
   
   % --- further data ---
   c                 = cfg_entry;
@@ -1341,7 +1359,11 @@ function [check_cov, check_cov2] = cat_stat_check_cov_GUI(data_xml)
   check_cov         = cfg_exbranch;
   check_cov.tag     = 'check_cov';
   check_cov.name    = 'Check sample homogeneity of 3D data';
-  check_cov.val     = {sample,data_xml,gap,nuisance};
+  if expert>1
+    check_cov.val     = {sample,data_xml,gap,nuisance, outdir,fname,save};
+  else
+    check_cov.val     = {sample,data_xml,gap,nuisance};
+  end
   check_cov.prog    = @cat_stat_check_cov;
   check_cov.help    = {
     'In order to identify images with poor image quality or even artefacts you can use this function. Images have to be in the same orientation with same voxel size and dimension (e.g. normalized images without smoothing). The idea of this tool is to check the correlation of all files across the sample.'
@@ -1358,7 +1380,8 @@ function [check_cov, check_cov2] = cat_stat_check_cov_GUI(data_xml)
   check_cov2.prog   = @cat_stat_check_cov2;
 
 %_______________________________________________________________________
-function check_SPM = cat_stat_check_SPM_GUI
+function check_SPM = cat_stat_check_SPM_GUI(outdir,fname,save,expert) 
+
   spmmat                      = cfg_files;
   spmmat.tag                  = 'spmmat';
   spmmat.name                 = 'Select SPM.mat';
@@ -1387,7 +1410,11 @@ function check_SPM = cat_stat_check_SPM_GUI
   do_check_cov                = cfg_branch;
   do_check_cov.tag            = 'do_check_cov';
   do_check_cov.name           = 'Yes';
-  do_check_cov.val            = {use_unsmoothed_data adjust_data};
+  if expert>1
+    do_check_cov.val            = {use_unsmoothed_data adjust_data ,outdir,fname,save};
+  else
+    do_check_cov.val            = {use_unsmoothed_data adjust_data};
+  end  
   do_check_cov.help           = {''};
 
   none                        = cfg_const;
@@ -1395,7 +1422,7 @@ function check_SPM = cat_stat_check_SPM_GUI
   none.name                   = 'No';
   none.val                    = {1};
   none.help                   = {''};
-  
+
   check_SPM_cov               = cfg_choice;
   check_SPM_cov.name          = 'Check for sample homogeneity';
   check_SPM_cov.tag           = 'check_SPM_cov';
@@ -1854,9 +1881,14 @@ function cdep = vfiles_urqio(job)
 %%
 return;
 %_______________________________________________________________________
-function vf = vfiles_sanlm(job)
-  job.returnOnlyFilename = 1; 
-  vf = cat_vol_sanlm(job); 
+function dep = vfiles_sanlm(varargin)
+  %job.returnOnlyFilename = 1; 
+  %vf = cat_vol_sanlm(job); 
+  
+  dep(1)            = cfg_dep;
+  dep(1).sname      = 'SANLM Images';
+  dep(1).src_output = substruct('.','files');
+  dep(1).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 return;
 %_______________________________________________________________________
 function vf = vfiles_maskimg(job)
@@ -1961,14 +1993,14 @@ return
 %------------------------------------------------------------------------
 function cdep = vout_reslice(job)
   ind  = 1;
-  if job.write_avg,
+  if job.write_avg
       cdep(ind)            = cfg_dep;
       cdep(ind).sname      = 'Midpoint Average';
       cdep(ind).src_output = substruct('.','avg','()',{':'});
       cdep(ind).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
       ind = ind + 1;
   end
-  if job.write_rimg,
+  if job.write_rimg
       cdep(ind)            = cfg_dep;
       cdep(ind).sname      = 'Realigned images';
       cdep(ind).src_output = substruct('.','rimg','()',{':'});

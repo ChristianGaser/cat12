@@ -1,4 +1,4 @@
-function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
+function [trans,reg] = cat_main_registration1445(job,res,Ycls,Yy,tpmM,Ylesion)
 % ______________________________________________________________________
 %  Spatial registration function of cat_main preprocessing that include
 %  the SPM DARTEL and (optimized) SHOOTING registration approaches. 

@@ -1207,7 +1207,7 @@ switch lower(action)
           end
         end
         %}
-        if isnargout && (isempty(d) || ~any(d(:))), varargout = {H}; return; end
+        if nargout && (isempty(d) || ~any(d(:))), varargout = {H}; return; end
         if isempty(col), col = hot(256); end
         if ~isfield(H,'colourbar') || ~ishandle(H.colourbar)
             H.colourbar = colorbar('peer',H.axis); %'EastOutside');

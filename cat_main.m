@@ -453,6 +453,8 @@ if ~isfield(res,'spmpp')
   LAB  = job.extopts.LAB;
   Yp0 = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
   Ywmhrel = single(Ycls{1})/255 .* NS(Yl1,23); 
+  qa.software.version_segment   = strrep(mfilename,'cat_main','');                            % if cat_main# save the # revision number 
+  if isfield(res,'spmpp'), qa.software.version_segment = 'SPM'; end                           % if SPM segmentation is used as input
   qa.subjectmeasures.WMH_abs    = sum(Ywmhrel(:));                                            % absolute WMH volume without PVE
   qa.subjectmeasures.WMH_rel    = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(0.5/3*255));   % relative WMH volume to TIV without PVE
   qa.subjectmeasures.WMH_WM_rel = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(2.5/3*255));   % relative WMH volume to WM without PVE
@@ -571,7 +573,11 @@ else
 %  a PVE or other refinements. 
 %  ------------------------------------------------------------------------
   [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,cat_warnings] = ...
-    cat_main_SPMpp(Ysrc,Ycls,Yy,job);
+    cat_main_SPMpp(Ysrc,Ycls,Yy,job,res);
+  
+  job.inv_weighting = 0; 
+  
+  fprintf('%5.0fs',etime(clock,stime)); 
 end
 
 
@@ -788,7 +794,7 @@ end
 stime = cat_io_cmd('Quality check'); job.stime = stime; 
 Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; Yp0(Yp0>3.1) = nan; % no analysis in WMH regions
 qa    = cat_vol_qa('cat12',Yp0,VT0.fname,Ym,res,cat_warnings,job.extopts.species, ...
-          struct('write_csv',0,'write_xml',1,'method','cat12','job',job,'qa',qa));
+          struct('write_csv',0,'write_xml',1,'method','cat12','job',job,'qa',qa,'prefix','cat_c1'));
 clear Yp0; 
 
 % surface data update
@@ -811,8 +817,10 @@ if job.output.surface
   end
   
   %qam = cat_stat_marks('eval',job.cati,qa,'cat12'); % ... not ready
-
-  cat_io_xml(fullfile(pth,res.reportfolder,['cat_' nam '.xml']),struct(...
+  
+  % in case of SPM input segmentation we have to add the name here to have a clearly different naming of the CAT output 
+  if isfield(res,'spmpp'), namspm = 'c1'; else, namspm = ''; end
+  cat_io_xml(fullfile(pth,res.reportfolder,['cat_' namspm nam '.xml']),struct(...
     ... 'subjectratings',qam.subjectmeasures, ... not ready
     'subjectmeasures',qa.subjectmeasures,'ppe',res.ppe),'write+'); % here we have to use the write+!
 end  
@@ -970,7 +978,7 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
   d = VT.dim(1:3);
 
 return
-function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,cat_warnings] = cat_main_SPMpp(Ysrc,Ycls,Yy,job)
+function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,cat_warnings] = cat_main_SPMpp(Ysrc,Ycls,Yy,job,res)
 %% SPM segmentation input  
 %  ------------------------------------------------------------------------
 %  Here, DARTEL and PBT processing is prepared. 
@@ -1011,11 +1019,11 @@ function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,cat_warnings] = cat_main_SPMp
   else
     job.inv_weighting   = 0; 
   end
-  if ~debug, clear Ysrc; end
+  clear Ysrc
   
   % the intensity normalized images are here represented by the segmentation 
-  Ym   = Yp0/255;
-  Ymi  = Yp0/255; 
+  Ym   = Yp0/255*5/3;
+  Ymi  = Yp0/255*5/3; 
    
   % low resolution Yp0b
   sz = size(Yb);
@@ -1024,16 +1032,14 @@ function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,cat_warnings] = cat_main_SPMp
   indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
   indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
   Yp0b = Yp0(indx,indy,indz);
-  if ~debug, clear Yp0 Yb; end
+  clear Yp0 Yb; 
   
   % load atlas map and prepare filling mask YMF
   % compared to CAT default processing, we have here the DARTEL mapping, but no individual refinement 
   Vl1 = spm_vol(job.extopts.cat12atlas{1});
   Yl1 = cat_vol_ctype(spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
   Yl1 = reshape(Yl1,size(Ym)); [D,I] = cat_vbdist(single(Yl1>0)); Yl1 = Yl1(I);   
-  YMF = NS(Yl1,job.extopts.LAB.VT) | NS(Yl1,job.extopts.LAB.BG) | NS(Yl1,job.extopts.LAB.BG); 
-  
-  fprintf('%5.0fs\n',etime(clock,stime));  
+  YMF = NS(Yl1,job.extopts.LAB.VT) | NS(Yl1,job.extopts.LAB.BG) | NS(Yl1,job.extopts.LAB.BG);  
 return
 function [Ymix,job,surf,WMT,stime] = cat_main_surf_preppara(Ymi,Yp0,job,vx_vol)
 %  ------------------------------------------------------------------------

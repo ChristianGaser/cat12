@@ -555,6 +555,33 @@ for i=1:n_subjects
     end
   end
 end
+if isfield(job,'save') && job.save
+  %% filenames
+  if ~isempty(job.fname)
+    dpi = cat_get_defaults('print.dpi'); 
+    if isempty(dpi), dpi = 150; end
+    
+    fignames   = {'matrix','boxplot'};
+    figuresids = {figure(2),spm_figure('FindWin','Graphics')};
+    if isempty(job.outdir{1}), job.outdir{1} = pwd; end
+    
+    % save
+    warning('OFF','MATLAB:print:UIControlsScaled');
+    for i=1:2
+      fname = fullfile(job.outdir{1},[job.fname fignames{i} '.png']);
+      print(figuresids{i}, '-dpng', '-opengl', sprintf('-r%d',dpi), fname);
+    end
+    warning('ON','MATLAB:print:UIControlsScaled');
+  end
+  
+  
+  %% close
+  if job.save>1
+    spm_figure('Clear','Graphics');
+    for i=2:26, try, close(i); end; end
+  end
+  
+end
 
 %-End
 %-----------------------------------------------------------------------

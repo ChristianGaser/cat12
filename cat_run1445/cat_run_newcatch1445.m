@@ -1,4 +1,4 @@
-function cat_run_newcatch(job,tpm,subj)
+function cat_run_newcatch1445(job,tpm,subj)
 % ______________________________________________________________________
 % This function contains the new matlab try-catch block.
 % The new try-catch block has to be in a separate file to avoid an error.
@@ -12,7 +12,7 @@ function cat_run_newcatch(job,tpm,subj)
   [pth,nam,ext] = spm_fileparts(job.channel(1).vols{subj}); 
 
   try
-    cat_run_job(job,tpm,subj); % the cat_run_job1070 is only called by older functions
+    cat_run_job1445(job,tpm,subj); % the cat_run_job1070 is only called by older functions
   catch caterr 
     %% add further information for special errors
     if isempty(caterr.identifier)

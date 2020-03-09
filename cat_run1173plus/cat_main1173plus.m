@@ -1114,6 +1114,7 @@ if ~isfield(res,'spmpp')
 
   Yp0 = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
   Ywmhrel = NS(Yl1,23);
+  qa.software.version_segment   = strrep(mfilename,'cat_main',''); 
   qa.subjectmeasures.WMH_abs    = sum(Ywmhrel(:));                                            % absolute WMH volume without PVE
   qa.subjectmeasures.WMH_rel    = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(0.5/3*255));   % relative WMH volume to TIV without PVE
   qa.subjectmeasures.WMH_WM_rel = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(2.5/3*255));   % relative WMH volume to WM without PVE

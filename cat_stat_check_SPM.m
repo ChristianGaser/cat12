@@ -166,6 +166,13 @@ if check_cov
     if ~all(SPM.xGX.gSF==1)
         job_check_cov.gSF = SPM.xGX.gSF;
     end
+    
+    % batch mode 
+    if isfield(job.check_SPM_cov.do_check_cov,'save')
+      job_check_cov.fname  = job.check_SPM_cov.do_check_cov.fname; 
+      job_check_cov.outdir = job.check_SPM_cov.do_check_cov.outdir; 
+      job_check_cov.save   = job.check_SPM_cov.do_check_cov.save; 
+    end
 
     cat_stat_check_cov(job_check_cov);
 end
@@ -174,12 +181,33 @@ if check_ortho
     fprintf('\n-------------------------------------------\n');
     fprintf('      Check design orthogonality\n');
     fprintf('-------------------------------------------\n');
-    check_orthogonality(SPM.xX);
+    h = check_orthogonality(SPM.xX);
+    
+    if isfield(job.check_SPM_cov.do_check_cov,'save')
+      %%
+      if ~isempty(job.check_SPM_cov.do_check_cov.fname)
+        dpi = cat_get_defaults('print.dpi'); 
+        if isempty(dpi), dpi = 150; end
+
+        if isempty(job.check_SPM_cov.do_check_cov.outdir{1}), job.check_SPM_cov.do_check_cov.outdir{1} = pwd; end
+
+        % save
+        warning('OFF','MATLAB:print:UIControlsScaled');
+        fname = fullfile(job.check_SPM_cov.do_check_cov.outdir{1},[job.check_SPM_cov.do_check_cov.fname 'DesignOrthogonality.png']);
+        print(h, '-dpng', '-opengl', sprintf('-r%d',dpi), fname);
+        warning('ON','MATLAB:print:UIControlsScaled');
+      end
+
+      
+      if job.check_SPM_cov.do_check_cov.save>1
+        close(h)
+      end
+    end
 end
 
 %---------------------------------------------------------------
 
-function check_orthogonality(varargin)
+function h = check_orthogonality(varargin)
 % modified function desorth from spm_DesRep.m for checking design orthogonality
 
 if ~isstruct(varargin{1})
@@ -390,6 +418,7 @@ for sf = fieldnames(xs)'
 end
 
 colormap(gray)
+
 
 %---------------------------------------------------------------
 

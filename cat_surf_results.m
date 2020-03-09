@@ -58,7 +58,7 @@ if ~nargin, action = 'Disp'; end
 
 if ~ischar(action)
   varargin = {action varargin{:}};
-  action = 'Disp';
+  action = 'batch';
 end
 
 
@@ -71,7 +71,7 @@ switch lower(action)
   case 'disp'
     
     % remove any existing data
-    if exist('H','var') & isfield(H,'S')
+    if exist('H','var') && isfield(H,'S')
        H = rmfield(H,'S');
     end
 
@@ -109,12 +109,13 @@ switch lower(action)
     end
     
     % result window with 5 surface views and alternative positions without top view and  only with lateral views
-    H.viewpos = {[0.025 0.450 0.375 0.375;  0.025 0.450 0.375 0.375;  0.025 2.000 0.375 0.375],... % lh medial
-                 [0.025 0.025 0.375 0.375;  0.025 0.025 0.375 0.375;  0.175 0.350 0.175 0.350],... % lh lateral
-                 [0.600 0.450 0.375 0.375;  0.600 0.450 0.375 0.375;  0.600 2.000 0.375 0.375],... % rh medial
-                 [0.600 0.025 0.375 0.375;  0.600 0.025 0.375 0.375;  0.675 0.350 0.175 0.350],... % rh lateral
-                 [0.300 0.150 0.400 0.500;  0.300 2.000 0.400 0.500;  0.300 2.000 0.400 0.500],... % lh+rh top
-                 [0.400 0.750 0.200 0.225;  0.400 0.300 0.200 0.225;  0.400 0.750 0.200 0.225]};   % data plot
+    eh = 0.03;
+    H.viewpos = {[0.025 0.450+eh 0.375 0.375;  0.025 0.450+eh 0.375 0.375;  0.025 2.000+eh 0.375 0.375],... % lh medial
+                 [0.025 0.025+eh 0.375 0.375;  0.025 0.025+eh 0.375 0.375;  0.175 0.350+eh 0.175 0.350],... % lh lateral
+                 [0.600 0.450+eh 0.375 0.375;  0.600 0.450+eh 0.375 0.375;  0.600 2.000+eh 0.375 0.375],... % rh medial
+                 [0.600 0.025+eh 0.375 0.375;  0.600 0.025+eh 0.375 0.375;  0.675 0.350+eh 0.175 0.350],... % rh lateral
+                 [0.300 0.150+eh 0.400 0.500;  0.300 2.000+eh 0.400 0.500;  0.300 2.000+eh 0.400 0.500],... % lh+rh top
+                 [0.400 0.750+eh 0.200 0.225;  0.400 0.300+eh 0.200 0.225;  0.400 0.750+eh 0.200 0.225]};   % data plot
     
     % change size and position of flatmaps for >= R20014b
     if spm_check_version('matlab', '8.4') >= 0
@@ -165,7 +166,7 @@ switch lower(action)
       str = [{['Datarange ' char(133)]},labels];
       tmp = {}; 
       for il=1:numel(labels)
-      tmp = [tmp {{ @(x)cat_surf_results('clims',x),labels{il} }}]; %#ok<AGROW>
+        tmp = [tmp {{ @(x)cat_surf_results('clims',x),labels{il} }}]; %#ok<AGROW>
       end
 
       H.scaling = uicontrol(H.panel(2), ...
@@ -393,7 +394,7 @@ switch lower(action)
       'ToolTipString', 'Show file information in image', ...
       'Interruptible', 'on', 'Enable', 'off');
     
-    if cat_get_defaults('extopts.expertgui')<2
+    if cat_get_defaults('extopts.expertgui')<3
       H.nocbar = uicontrol(H.panel(2), ...
         'String', 'Hide colorbar', 'Units', 'normalized', ...
         'BackgroundColor',H.col(1,:),...
@@ -609,7 +610,7 @@ switch lower(action)
       set(H.info,   'Enable', 'on');
       set(H.cmap,   'Enable', 'on');
       set(H.inv,    'Enable', 'on');
-      if isfield(H,'scaling')
+      if isfield(H,'scaling') &&  isvalid(H.scaling)
         set(H.scaling, 'Enable', 'on');
       end
             
@@ -645,7 +646,8 @@ switch lower(action)
   %-ColourBar
   %======================================================================
   case {'colourbar', 'colorbar'}
-    if nargin>1
+    % RD202003 Colorbars with histogram does not work stable
+    if 0 %nargin>1
       if varargin{1} == 2
         cat_surf_results('hist',1); 
       else
@@ -657,9 +659,9 @@ switch lower(action)
     else
       set(H.nocbar, 'Value', ~get(H.nocbar, 'Value') );
       checkbox_nocbar;
-      if ~get(H.nocbar, 'Value')
-        cat_surf_results('hist',0); 
-      end
+      %if ~get(H.nocbar, 'Value')
+      %  cat_surf_results('hist',0); 
+      %end
     end
      %{  
     %if isempty(varargin), varargin{1} = gca; end
@@ -858,8 +860,10 @@ switch lower(action)
     setappdata(H.patch(j), 'clim',H.clim);
     H = updateTexture(H, j); 
     end
-    set(H.str_min, 'String', sprintf('%g',H.clim(2)));
-    set(H.str_max, 'String', sprintf('%g',H.clim(3)));
+    if isvalid(H.str_min)
+      set(H.str_min, 'String', sprintf('%g',H.clim(2)));
+      set(H.str_max, 'String', sprintf('%g',H.clim(3)));
+    end
     show_colorbar(H); 
   
     
@@ -897,7 +901,7 @@ switch lower(action)
         color  = {[1 0 0],[0 1 0]/(1+H.bkg_col(1))};  
         linet  = {'-','--'};
         % position of the right and the left text box
-        tabpos = 0.005; 
+        tabpos = 0.010; 
         if mode
           tpos = {[0.49 tabpos 0.065 0.03],[0.565 tabpos 0.065 0.03],[0.4 tabpos 0.12 0.03]};
         else
@@ -1098,14 +1102,18 @@ switch lower(action)
     % create window
     select_data([],[],char(job.cdata));
     
-    % set parameter
-    FN = {'surface','view','texture','transparency','colorbar','colormap','invcolormap','background','showfilename','clims'}; 
+    %% set parameter
+    % RD202003: not working ... ,'colorbar'
+    FN = {'surface','view','texture','transparency','invcolormap','colormap','clims','background','showfilename'}; 
     for fni=1:numel(FN)
       %%
-      if isfield(job,'render') && isfield(job.render,FN{fni})
-      cat_surf_results(FN{fni},job.render.(FN{fni})); 
+      if isfield(job,'render') && isfield(job.render,FN{fni}) 
+        try
+          cat_surf_results(FN{fni},job.render.(FN{fni})); 
+        end
       end
     end
+
     FN = {'threshold','hide_neg'}; 
     for fni=1:numel(FN)
       if isfield(job,'stat') && isfield(job.stat,FN{fni})
@@ -1113,7 +1121,7 @@ switch lower(action)
       end
     end
     
-    % save result
+    %% save result
     if isfield(job,'fparts')
       fparts = job.fparts; 
       files = cat_surf_results('print',fparts);
@@ -1841,7 +1849,7 @@ if H.n_surf == 1
   % Update colorbar colors if clipping is used
   clip = getappdata(H.patch(1), 'clip');
   if ~isempty(clip)
-    if ~isnan(clip(2)) & ~isnan(clip(3))
+    if ~isnan(clip(2)) && ~isnan(clip(3))
       ncol = length(col);
       col_step = (clim(3) - clim(2)) / ncol;
       cmin = max([1, ceil((clip(2) - clim(2)) / col_step)]);
@@ -1860,9 +1868,9 @@ if H.n_surf == 1
 
     % if threshold is between 1.3..1.4 (p<0.05) change XTick accordingly and correct by 0.3
     if ~isempty(clip)
-      if clip(3) >= 1.3 & clip(3) <= 1.4
+      if clip(3) >= 1.3 && clip(3) <= 1.4
         XTick_step = ceil((clim(3) - clim(2)) / 5);
-        if clip(2) <= - 1.3 & clip(2) >= - 1.4
+        if clip(2) <= - 1.3 && clip(2) >= - 1.4
           XTick = [(round(clim(2)) - 0.3):XTick_step: - 1.3 0 1.3:XTick_step:(round(clim(3)) + 0.3)];
         else
           XTick = [0 1.3:XTick_step:(round(clim(3)) + 0.3)];
@@ -2160,9 +2168,9 @@ if ~H.border_mode
   try
     h3 = getappdata(H.patch(k), 'h3');
     if ~isempty(h3)
-    for i=1:size(h3,1)
-      delete(h3(i))
-    end
+      for i=1:size(h3,1)
+        delete(h3(i))
+      end
     end
   end
   end
@@ -2244,7 +2252,7 @@ if H.border_mode
 
 end
 
-if isfield(H,'histax')
+if 0 %isfield(H,'histax')
   cat_surf_results('hist')
   cat_surf_results('hist')
 end
@@ -2259,6 +2267,7 @@ if ~exist('P','var')
 end
 
 n = size(P, 1);
+if n == 0; return; end
 
 % correct filename and extension for volumes
 for i = 1:n
@@ -2326,7 +2335,7 @@ for i = 1:n
     H.logP(i) = 0;
   end
   
-  if strcmp(info(i).side, 'lh') | strcmp(info(i).side, 'rh')
+  if strcmp(info(i).side, 'lh') || strcmp(info(i).side, 'rh')
     error('Display of separate hemispheres is not supported anymore');
   end
 
@@ -2416,11 +2425,11 @@ end
 % keep background color
 set(H.figure, 'InvertHardcopy', 'off', 'PaperPositionMode', 'auto');
 
-pos = getpixelposition(H.panel(1));
+pos = round(getpixelposition(H.panel(1))); 
 hh = getframe(H.figure,pos);
 
 img = frame2im(hh);
-if H.results_sel ~= 4 & ~isfield(H, 'dataplot')
+if H.results_sel ~= 4 && ~isfield(H, 'dataplot')
   % crop image if it's not a flatmap
   sz = size(img);
   img = img(round(0.1*sz(1):sz(1)),round(0.05*sz(2):0.95*sz(2)),:);
@@ -2556,7 +2565,7 @@ for ind = 1:5
 end
 
 % update colorbar
-if H.n_surf == 1 & ~H.disable_cbar
+if H.n_surf == 1 && ~H.disable_cbar
   H = show_colorbar(H);
 end
 
@@ -2603,7 +2612,7 @@ H.show_info = get(H.info, 'Value');
 if H.show_info
   delete(findobj('tag','cat_surf_result_title'));
 
-  ax = axes('Parent',H.panel(1),'Position',[0.5 0.65 0.9 0.05],'visible','off','tag','cat_surf_result_title');  
+  ax = axes('Parent',H.panel(1),'Position',[0.5 0.0 0.9 0.03],'visible','off','tag','cat_surf_result_title','Color',H.bkg_col);  
   text(0,1,spm_str_manip(H.S{1}.name, 'k150d'),'HorizontalAlignment','center','interpreter','none','Color', 1 - H.bkg_col,'Parent',ax);
           
 else
@@ -2640,7 +2649,7 @@ end
 function H = getHandles(H)
 
 if ~nargin || isempty(H), H = gca; end
-if ishandle(H) & ~isappdata(H, 'handles')
+if ishandle(H) && ~isappdata(H, 'handles')
   a = H; clear H;
   H.axis = a;
   H.figure = ancestor(H.axis, 'figure');

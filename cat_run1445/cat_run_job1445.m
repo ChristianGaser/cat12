@@ -1,4 +1,4 @@
-function cat_run_job(job,tpm,subj)
+function cat_run_job1445(job,tpm,subj)
 % run CAT 
 % ______________________________________________________________________
 %
@@ -66,7 +66,7 @@ function cat_run_job(job,tpm,subj)
     diary(catlog); 
     
     % print current CAT release number and subject file
-    [n,r] = cat_version;
+    n = 'CAT12.6'; r = '1445';     %[n,r] = cat_version;
     str  = sprintf('%s r%s: %d/%d',n,r,subj,numel(job.channel(1).vols));
     str2 = spm_str_manip(job.channel(1).vols{subj}(1:end-2),['a' num2str(70 - length(str))]);
     cat_io_cprintf([0.2 0.2 0.8],'\n%s\n%s: %s%s\n%s\n',...
@@ -401,7 +401,7 @@ function cat_run_job(job,tpm,subj)
               if job.extopts.APP == 1070 
                 [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init1070(Ysrc,vx_vol,job.extopts.verb); %#ok<ASGLU>
               else % new version R1144
-                [Ym,Yt,Ybg,WMth,bias,Tth,ppe.APPi] = cat_run_job_APP_init(...
+                [Ym,Yt,Ybg,WMth,bias,Tth,ppe.APPi] = cat_run_job_APP_init10701445(...
                   Ysrc,vx_vol,struct('verb',job.extopts.verb,'APPstr',job.opts.biasstr));  %#ok<ASGLU>
               end
             catch %apperr
@@ -783,7 +783,7 @@ function cat_run_job(job,tpm,subj)
     if exist('Ylesion','var'), res.Ylesion = Ylesion; else res.Ylesion = false(size(res.image.dim)); end; clear Ylesion;
     if exist('redspmres','var'); res.redspmres = redspmres; res.image1 = image1; end
     job.subj = subj; 
-    cat_main(res,obj.tpm,job);
+    cat_main1445(res,obj.tpm,job);
     
     % delete denoised/interpolated image
     [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});

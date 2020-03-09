@@ -1,4 +1,4 @@
-function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
+function [Yb,Yl1] = cat_main_gcut1445(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
 % This is an exclusive subfunction of cat_main.
 % ______________________________________________________________________
 %

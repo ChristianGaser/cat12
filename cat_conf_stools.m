@@ -95,6 +95,7 @@ function stools = cat_conf_stools(expert)
   surf2roi                         = cat_surf_surf2roi_GUI(expert,nproc);
   roi2surf                         = cat_roi_roi2surf_GUI; 
   surfstat                         = cat_surf_stat_GUI; 
+  surfcon                          = cat_surf_spm_cfg_con;
   
   
 %% Toolset
@@ -114,10 +115,11 @@ function stools = cat_conf_stools(expert)
       surfcalc, ...           .cat.stools
       surfcalcsub, ...        .cat.stools
       surf2roi, ...           .cat.rtools?
-      renderresults, ...      .cat.disp/plot/write?
       roi2surf, ...           .cat.rtools?
       flipsides, ...          .cat.stools
       surfstat ...
+      surfcon ...
+      renderresults, ...      .cat.disp/plot/write?
       };    
   elseif expert==1
     stools.values = { ...
@@ -131,8 +133,9 @@ function stools = cat_conf_stools(expert)
       surfcalc, ...
       surfcalcsub, ...
       surf2roi, ...
-      flipsides, ...
       surfstat ...
+      surfcon ...
+      renderresults, ...      .cat.disp/plot/write?
       };
   else
     stools.values = { ...
@@ -147,12 +150,33 @@ function stools = cat_conf_stools(expert)
       surfcalc, ...
       surfcalcsub, ...
       surfstat ...
+      surfcon ...
+      renderresults ...
       };
   end
 
 %==========================================================================
 % subfunctions of batch GUIs
 %==========================================================================
+function con = cat_surf_spm_cfg_con
+  con      = spm_cfg_con;
+  con.name = ['Surface ' con.name];
+  con.vout = @vout_stats; % gifti rather than nifti output
+
+function dep = vout_stats(varargin)
+  dep(1)            = cfg_dep;
+  dep(1).sname      = 'SPM.mat File';
+  dep(1).src_output = substruct('.','spmmat');
+  dep(1).tgt_spec   = cfg_findspec({{'filter','mat','strtype','e'}});
+  dep(2)            = cfg_dep;
+  dep(2).sname      = 'All Con Surfaces';
+  dep(2).src_output = substruct('.','con');
+  dep(2).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+  dep(3)            = cfg_dep;
+  dep(3).sname      = 'All Stats Surfaces';
+  dep(3).src_output = substruct('.','spm');
+  dep(3).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+
 function surfstat = cat_surf_stat_GUI
 
   spmmat          = cfg_files;
@@ -1469,12 +1493,12 @@ function renderresults = cat_surf_results_GUI(expert)
   colorbar.tag          = 'colorbar';
   if expert>1
     colorbar.labels     = {'Off', 'On', 'On with histogram'};
-    colorbar.values     = {1,2,3};
+    colorbar.values     = {0,1,2};
   else
     colorbar.labels     = {'Off', 'On'};
-    colorbar.values     = {1,2};
+    colorbar.values     = {0,1};
   end
-  colorbar.val          = {3};
+  colorbar.val          = {1};
   colorbar.help         = {'Print colorbar (with histogram).' ''};
  
   background            = cfg_menu;
@@ -1505,19 +1529,19 @@ function renderresults = cat_surf_results_GUI(expert)
     clims               = cfg_menu;
     clims.name          = 'Data range';
     clims.tag           = 'clims';
-    clims.labels        = {'MSD2','MSD4','MSD8','SD2','SD4','SD8','%99.5','%99','min-max','0-max'};
-    clims.values        = {'MSD2','MSD4','MSD8','SD2','SD4','SD8','%99.5','%99','min-max','0-max'};
-    clims.val           = {'MSD4'};
+    clims.labels        = {'default','MSD2','MSD4','MSD8','SD2','SD4','SD8','%99.5','%99','min-max','0-max'};
+    clims.values        = {'','MSD2','MSD4','MSD8','SD2','SD4','SD8','%99.5','%99','min-max','0-max'};
+    clims.val           = {''};
     clims.help          = {'Define normalized datarange' ''};
   end
   
   render                = cfg_exbranch;
   render.tag            = 'render';
   render.name           = 'Render options';
-  if expert>1
-    render.val          = {surface,view,texture,transparency,colormap,invcolormap,colorbar,background,clims,showfilename};  
+  if expert>1 % ... not working ... colorbar,
+    render.val          = {surface,view,texture,transparency,colormap,invcolormap,background,clims,showfilename};  
   else
-    render.val          = {surface,view,texture,transparency,colormap,invcolormap,colorbar,background,showfilename};  
+    render.val          = {surface,view,texture,transparency,colormap,invcolormap,background,showfilename};  
   end
   render.prog           = @cat_surf_results;
   render.help           = {'Rendering options for the surface output.'};  
@@ -1778,4 +1802,6 @@ function dep = vout_cat_stat_spm(job)
   dep(1).src_output = substruct('.','spmmat');
   dep(1).tgt_spec   = cfg_findspec({{'filter','mat','strtype','e'}});
 
+  % further files?
+  
 %==========================================================================  

@@ -1,4 +1,4 @@
-function varargout = cat_vol_sanlm(varargin)
+function out = cat_vol_sanlm(varargin)
 % Spatial Adaptive Non Local Means (SANLM) Denoising Filter
 %_______________________________________________________________________
 % Filter a set of images and add the prefix 'sanlm_'.
@@ -132,13 +132,9 @@ function varargout = cat_vol_sanlm(varargin)
     end 
     
     if nargin <= 1 && isstruct(varargin{1}) % job structure input
-        if nargout>0
-          varargout = cat_vol_sanlm_file(varargin{1});
-        else
-          cat_vol_sanlm_file(varargin{1});
-        end
+        out.files = cat_vol_sanlm_file(varargin{1});
     else % image input
-        varargout{1} = cat_vol_sanlm_filter(varargin{:});
+        out = cat_vol_sanlm_filter(varargin{:});
     end
 
 end
@@ -204,11 +200,11 @@ function varargout = cat_vol_sanlm_file(job)
         end
     end
     % just to get the resulting filenames for SPM batch mode
-    if job.returnOnlyFilename
-        for i = 1:numel(job.data)
+    for i = 1:numel(job.data)
             [pth,nm,xt,vr]  = spm_fileparts(deblank(job.data{i})); 
             varargout{1}{i} = fullfile(pth,[job.prefix nm job.suffix xt vr]);
-        end
+    end
+    if job.returnOnlyFilename
         return
     end
 

@@ -121,7 +121,7 @@ function varargout = cat_vol_qa(action,varargin)
           for fi=1:numel(Pp0)
             [pp,ff,ee] = spm_fileparts(Pp0{fi});
             [ppa,ppb] = spm_fileparts(pp); 
-            if strcmp(ppb,'mri'), ppo = ppa; else ppo = pp; end 
+            if strcmp(ppb,'mri'), ppo = ppa; else, ppo = pp; end 
 
             Po{fi} = fullfile(ppo,[ff(3:end) ee]); 
             Pm{fi} = fullfile(pp,[opt.mprefix  ff(3:end) ee]);
@@ -218,6 +218,7 @@ function varargout = cat_vol_qa(action,varargin)
         cat_warnings = varargin{5};
         species = varargin{6};
         if isfield(varargin{7},'qa')
+          if isfield(varargin{7}.qa,'software') && isfield(varargin{7}.qa.software,'version_segment'), QAS.software.version_segment = varargin{7}.qa.software.version_segment; end
           if isfield(varargin{7}.qa,'qualitymeasures'), QAS.qualitymeasures = cat_io_updateStruct(QAS,varargin{7}.qa.qualitymeasures); end
           if isfield(varargin{7}.qa,'subjectmeasures'), QAS.subjectmeasures = cat_io_updateStruct(QAS,varargin{7}.qa.subjectmeasures); end
         end
@@ -504,22 +505,19 @@ function varargout = cat_vol_qa(action,varargin)
       QAS.software.version_spm = rev_spm;
       A = ver;
       for i=1:length(A)
-        if strcmp(A(i).Name,'MATLAB'),
+        if strcmp(A(i).Name,'MATLAB')
           QAS.software.version_matlab = A(i).Version; 
         end
       end
       clear A
+      % 1 line: Matlab, SPM12, CAT12 version number and GUI and experimental mode 
+      OSname = {'LINUX','WIN','MAC'};
+      QAS.software.system       = OSname{1 + ispc + ismac};
       QAS.software.version_cat  = ver_cat;
+      if ~isfield(QAS.software,'version_segment')
+        QAS.software.version_segment = rev_cat;
+      end
       QAS.software.revision_cat = rev_cat;
-      QAS.software.function     = which('cat_vol_qa');
-      QAS.software.markdefs     = which('cat_stat_marks');
-      QAS.software.qamethod     = action; 
-      QAS.software.date         = datestr(clock,'yyyymmdd-HHMMSS');
-      warning off
-      QAS.software.opengl       = opengl('INFO');
-      QAS.software.opengldata   = opengl('DATA');
-      warning on
-      QAS.hardware.computer     = mexext; 
       try
         QAS.hardware.numcores = max(cat_get_defaults('extopts.nproc'),1);
       catch
@@ -561,15 +559,20 @@ function varargout = cat_vol_qa(action,varargin)
       % software, parameter and job information
       % ----------------------------------------------------------------
       [nam,rev_spm] = spm('Ver');
-      QAS.software.version_spm = rev_spm;
+      OSname = {'LINUX','WIN','MAC'};
+      QAS.software.system       = OSname{1 + ispc + ismac};
+      QAS.software.version_spm  = rev_spm;
       A = ver;
       for i=1:length(A)
-        if strcmp(A(i).Name,'MATLAB'),
+        if strcmp(A(i).Name,'MATLAB')
           QAS.software.version_matlab = A(i).Version; 
         end
       end
       clear A
       QAS.software.version_cat  = ver_cat;
+      if ~isfield(QAS.software,'version_segment')
+        QAS.software.version_segment = rev_cat;
+      end
       QAS.software.revision_cat = rev_cat;
       QAS.software.function     = which('cat_vol_qa');
       QAS.software.markdefs     = which('cat_stat_marks');
@@ -586,7 +589,7 @@ function varargout = cat_vol_qa(action,varargin)
         QAS.parameter.opts        = opt.job.opts;
         QAS.parameter.extopts     = opt.job.extopts;
         %QAS.parameter.output      = opt.job.output;
-        if exist('res','var');
+        if exist('res','var')
           rf = {'Affine','lkp','mn','vr'}; % important SPM preprocessing variables
           for rfi=1:numel(rf)
             if isfield(res,rf{rfi}), QAS.parameter.spm.(rf{rfi}) = res.(rf{rfi}); end
@@ -618,7 +621,7 @@ function varargout = cat_vol_qa(action,varargin)
       QAS.qualitymeasures.res_BB = sum(Yp0(:)>1.25 & M(:))*prod(abs(vx_vol)); 
 
       % check segmentation
-      spec = species; for ai=num2str(0:9); spec = strrep(spec,ai,''); end; 
+      spec = species; for ai=num2str(0:9); spec = strrep(spec,ai,''); end 
       bvol = species; for ai=char(65:122); bvol = strrep(bvol,ai,''); end; bvol = str2double(bvol);
       
       subvol = [sum(Yp0(:)>2.5 & Yp0(:)<3.1)*prod(vx_vol)/1000,... 
@@ -876,10 +879,10 @@ function noise = estimateNoiseLevel(Ym,YM,r,rms,vx_vol)
 % ----------------------------------------------------------------------
 % noise estimation within Ym and YM.
 % ----------------------------------------------------------------------
-  if ~exist('vx_vol','var');
+  if ~exist('vx_vol','var')
     vx_vol=[1 1 1]; 
   end
-  if ~exist('r','var');
+  if ~exist('r','var')
     r = 1;
   else
     r = min(10,max(max(vx_vol),r));

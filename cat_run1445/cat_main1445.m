@@ -1,4 +1,4 @@
-function Ycls = cat_main(res,tpm,job)
+function Ycls = cat_main1445(res,tpm,job)
 % ______________________________________________________________________
 % Write out CAT preprocessed data
 %
@@ -52,7 +52,7 @@ if ~isfield(res,'spmpp')
   %  bias correction. 
   %  -------------------------------------------------------------------
   if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap 
-    [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,Yy,tpm,job,res,vx_vol,stime2);
+    [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,Yy,tpm,job,res,vx_vol,stime2); % 1445?
   else
     P = zeros([size(Ycls{1}) numel(Ycls)],'uint8');
     for i=1:numel(Ycls), P(:,:,:,i) = Ycls{i}; end
@@ -67,7 +67,7 @@ if ~isfield(res,'spmpp')
   %  This is a large and important subfuction that represent the 
   %  starting point of the refined CAT preprocessing.
   %  -------------------------------------------------------------------
-  [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,tpm,job,res,stime,stime2);
+  [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,tpm,job,res,stime,stime2);  % 1445?
   
   
   
@@ -80,7 +80,7 @@ if ~isfield(res,'spmpp')
   %  slice. The images were scaled in a range of 0 to 1. The overlay 
   %  allows up to 20 colors
   %  -------------------------------------------------------------------
-  if debug;;
+  if debug;
     Ym   = Ysrc / T3th(3); %#ok<NASGU> % only WM scaling
     Yp0  = (single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255)/3; %#ok<NASGU> % label map
   end
@@ -106,11 +106,11 @@ if ~isfield(res,'spmpp')
     [Ysrcr,resGI] = cat_vol_resize(Ysrc       ,'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm');
     Ybr   = cat_vol_resize(single(Yb) ,'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm')>0.5;
     Yclsr = cell(size(Ycls)); for i=1:6, Yclsr{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,min(vx_vol*2,1.4),32); end
-    [Ymr,Ybr,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrcr,Yclsr,Ybr,resGI.vx_volr,res,Yy,job.extopts);
+    [Ymr,Ybr,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrcr,Yclsr,Ybr,resGI.vx_volr,res,Yy,job.extopts);  % 1445?
     clear Ymr Ybr Ysrcr Yclsr; 
     Ym = cat_main_gintnorm(Ysrc,Tth); 
   else
-    [Ym,Yb,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,job.extopts);
+    [Ym,Yb,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,job.extopts);  % 1445?
   end
 
   % update in inverse case ... required for LAS
@@ -212,15 +212,15 @@ if ~isfield(res,'spmpp')
     end
     if job.extopts.new_release
       if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
-        [trans,res.ppe.reginitp] = cat_main_registration2(job2,res2,Ycls(1:2),Yy,tpm.M,res.Ylesion); 
+        [trans,res.ppe.reginitp] = cat_main_registration2(job2,res2,Ycls(1:2),Yy,tpm.M,res.Ylesion);  % 1445?
       else
         [trans,res.ppe.reginitp] = cat_main_registration2(job2,res2,Ycls(1:2),Yy,tpm.M); 
       end
     else
       if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
-        [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M,res.Ylesion); 
+        [trans,res.ppe.reginitp] = cat_main_registration1445(job2,res2,Ycls(1:2),Yy,tpm.M,res.Ylesion); 
       else
-        [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M); 
+        [trans,res.ppe.reginitp] = cat_main_registration1445(job2,res2,Ycls(1:2),Yy,tpm.M); 
       end
     end
     Yy2  = trans.warped.y;
@@ -252,7 +252,7 @@ if ~isfield(res,'spmpp')
       [Ymi,Ym,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extoptsLAS2); % use Yclsi after cat_vol_partvol
     else
       stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
-      [Ymi,Ym,Ycls] = cat_main_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
+      [Ymi,Ym,Ycls] = cat_main_LAS1445(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
     end
     fprintf('%5.0fs\n',etime(clock,stime));
 
@@ -343,7 +343,7 @@ if ~isfield(res,'spmpp')
   %  Of course we only want to do this for highres T1 data!
   %  ---------------------------------------------------------------------
   NS = @(Ys,s) Ys==s | Ys==s+1; 
-  if job.extopts.BVCstr && ~job.inv_weighting && all(vx_vol<2); 
+  if job.extopts.BVCstr && ~job.inv_weighting && all(vx_vol<2) 
     stime = cat_io_cmd(sprintf('Blood vessel correction (BVCstr=%0.2f)',job.extopts.BVCstr));
 
     Ybv  = cat_vol_smooth3X(cat_vol_smooth3X( ...
@@ -375,7 +375,7 @@ if ~isfield(res,'spmpp')
   if job.extopts.gcutstr>0 && job.extopts.gcutstr<=1
     try 
       stime = cat_io_cmd(sprintf('Skull-stripping using graph-cut (gcutstr=%0.2f)',job.extopts.gcutstr));
-      [Yb,Yl1] = cat_main_gcut(Ymo,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
+      [Yb,Yl1] = cat_main_gcut1445(Ymo,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
       
       % extend gcut brainmask by brainmask derived from SPM12 segmentations if necessary
       if ~job.inv_weighting, Yb = Yb | Yb0; end
@@ -435,7 +435,7 @@ if ~isfield(res,'spmpp')
   else
     for i=1:3, Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i); end
     Yp0b = Yb(indx,indy,indz); 
-  end;
+  end
   if ~debug; clear Ymo; end
   clear prob
 
@@ -452,6 +452,7 @@ if ~isfield(res,'spmpp')
   LAB  = job.extopts.LAB;
   Yp0 = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
   Ywmhrel = single(Ycls{1})/255 .* NS(Yl1,23); 
+  qa.software.version_segment   = strrep(mfilename,'cat_main',''); 
   qa.subjectmeasures.WMH_abs    = sum(Ywmhrel(:));                                            % absolute WMH volume without PVE
   qa.subjectmeasures.WMH_rel    = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(0.5/3*255));   % relative WMH volume to TIV without PVE
   qa.subjectmeasures.WMH_WM_rel = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(2.5/3*255));   % relative WMH volume to WM without PVE
@@ -606,7 +607,7 @@ end
   if job.extopts.new_release % ... there is an error
     [trans,res.ppe.reg] = cat_main_registration2(job,res,Yclsd,Yy,tpm.M,Ylesions);
   else
-    [trans,res.ppe.reg] = cat_main_registration(job,res,Yclsd,Yy,tpm.M,Ylesions);
+    [trans,res.ppe.reg] = cat_main_registration1445(job,res,Yclsd,Yy,tpm.M,Ylesions);
   end
   clear Yclsd Ylesions;
   if ~res.do_dartel
@@ -653,7 +654,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
         if smeth(smi)==1, pbtmethod = 'pbt2xf'; elseif smeth(smi)==3, pbtmethod = 'pbt3'; end
         cat_io_cprintf('blue',sprintf('\nPBT Test99 - surf_%s_%0.2f\n',pbtmethod,sres(sresi)));
         [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size] = ...
-          cat_surf_createCS(VT,VT0,Ymix,Yl1,Yp0/3,YMF,struct('pbtmethod',pbtmethod,...
+          cat_surf_createCS1445(VT,VT0,Ymix,Yl1,Yp0/3,YMF,struct('pbtmethod',pbtmethod,...
           'interpV',sres(sresi),'Affine',res.Affine,'surf',{surf},...
           'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT)); 
       end
@@ -661,7 +662,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
   else
   %% default surface reconstruction
     [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size] = ...
-      cat_surf_createCS(VT,VT0,Ymix,Yl1,Yp0/3,YMF,struct('pbtmethod','pbt2x',...
+      cat_surf_createCS1445(VT,VT0,Ymix,Yl1,Yp0/3,YMF,struct('pbtmethod','pbt2x',...
       'interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},...
       'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT)); 
   end
@@ -727,14 +728,14 @@ clear Yp0;
 % surface data update
 if job.output.surface
   if exist('S','var')
-    if isfield(S,'lh') && isfield(S.lh,'th1'), th=S.lh.th1; else th=[]; end;
+    if isfield(S,'lh') && isfield(S.lh,'th1'), th=S.lh.th1; else, th=[]; end
     if isfield(S,'rh') && isfield(S.rh,'th1'), th=[th; S.rh.th1]; end
     qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
     if job.extopts.expertgui>1
-      if isfield(S,'lh') && isfield(S.lh,'th2'), th=S.lh.th2; else th=[]; end; 
+      if isfield(S,'lh') && isfield(S.lh,'th2'), th=S.lh.th2; else, th=[]; end
       if isfield(S,'rh') && isfield(S.lh,'th2'), th=[th; S.rh.th2]; end
       qa.subjectmeasures.dist_gyruswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
-      if isfield(S,'lh') && isfield(S.lh,'th3'), th=S.lh.th3; else th=[]; end; 
+      if isfield(S,'lh') && isfield(S.lh,'th3'), th=S.lh.th3; else, th=[]; end
       if isfield(S,'rh') && isfield(S.lh,'th3'), th=[th; S.rh.th3]; end
       qa.subjectmeasures.dist_sulcuswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
     end
@@ -850,7 +851,7 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
   bb = job.extopts.bb;
   vx = job.extopts.vox(1);
   bb(~isfinite(bb)) = bb1(~isfinite(bb));
-  if ~isfinite(vx), vx = abs(prod(vx1))^(1/3); end; 
+  if ~isfinite(vx), vx = abs(prod(vx1))^(1/3); end
   bb(1,:) = vx.*round(bb(1,:)./vx);
   bb(2,:) = vx.*round(bb(2,:)./vx);
   res.bb = bb; 
