@@ -1,5 +1,59 @@
 ------------------------------------------------------------------------
-r1576 | gaser | 2020-03-04 14:37:29
+r1577 | dahnke | 2020-03-09 18:33:57
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_catsimple.m
+M       cat_conf_output.m
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+A       cat_io_lazy.m
+M       cat_io_report.m
+M       cat_main.m
+M       cat_main_reportfig.m
+M       cat_main_reportstr.m
+M       cat_main_roi.m
+M       cat_main_write.m
+M       cat_run1173/cat_main1173.m
+M       cat_run1173/cat_tst_qa1173.m
+M       cat_run1173plus/cat_main1173plus.m
+M       cat_run1445/cat_conf_ROI1445.m
+M       cat_run1445/cat_main1445.m
+M       cat_run1445/cat_main_LAS1445.m
+M       cat_run1445/cat_main_gcut1445.m
+M       cat_run1445/cat_main_registration1445.m
+M       cat_run1445/cat_run1445.m
+M       cat_run1445/cat_run_job1445.m
+M       cat_run1445/cat_run_newcatch1445.m
+M       cat_run_job.m
+M       cat_stat_check_SPM.m
+M       cat_stat_check_cov.m
+M       cat_stat_spm2x.m
+M       cat_surf_fun.m
+M       cat_surf_render2.m
+M       cat_surf_results.m
+M       cat_version.m
+M       cat_vol_qa.m
+M       cat_vol_sanlm.m
+M       development/Template_1_IXI555_MNI152_GS1mm.nii
+M       tbx_cfg_cat.m
+
+(1)  Changed:   Added OS system and CAT segmentation version to CAT reports
+                in cat_main_reportstr, cat_vol_qa, cat_io_report.
+(2)  Fixed:     Corrected function calls in pipeline 1445 and 1173 in 
+                cat_conf_output
+(3)  New:       Added contrast manager for surface in cat_conf_stools.
+(4)  Updated:   Removed colorbar settings from cat_surf_render GUI in cat_conf_stools.
+(5)  New:       Added functions to save and close figure in cat_stat_check_cov and 
+                cat_stat_check_SPM and control fields on the developer GUI.
+(6)  Fixed:     Corrected bugs in CAT preprocessing with SPM input segmentation
+                in cat_main, cat_main_reportfig, cat_main_roi, cat_run_job, and cat_main_write.
+(7)  Fixed:     Corrected incorrect dependencies in cat_vol_sanlm                
+(8)  Changed:   Added output of empty files in cat_stat_spm2x to support dependencies. 
+(9)  Fixed:     Corrected definition in cat_version (first Content.m then Content.txt) 
+
+------------------------------------------------------------------------
+r1576 | gaser | 2020-03-04 14:38:09 +0100 (Mi, 04 Mär 2020) | 20 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -19,6 +73,7 @@ M       html/cat_versions.html
 (1) Changed: Lots of changes in cat_surf_results.
 (2) Changed: Updated online help.
 (3) Fixed: Surface ROI estimation during preprocessing selected too many atlases.
+
 
 ------------------------------------------------------------------------
 r1575 | dahnke | 2020-03-03 12:49:34 +0100 (Di, 03 Mär 2020) | 40 lines

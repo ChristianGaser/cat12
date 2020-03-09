@@ -460,7 +460,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   if expert > 1 % further mods do not work right now!
     catsimple.val   = [catsimple.val(1) {mods} catsimple.val(2:end)];
   end
-  if cores > 1 & ~isdeployed % use multithreading only if available and not for deployed code
+  if cores > 1 && ~isdeployed % use multithreading only if available and not for deployed code
     catsimple.val   = [catsimple.val {nproc}];
   end
   if expert>1 % add final debugging option
@@ -495,7 +495,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   if expert > 1
     catsimplelong.val = [catsimplelong.val(1) {longmods} catsimplelong.val(2:end)];
   end
-  if cores > 1 & ~isdeployed % use multithreading only if available and not deployed code
+  if cores > 1 && ~isdeployed % use multithreading only if available and not deployed code
     catsimplelong.val = [catsimplelong.val {nproc}];
   end
   if expert>1

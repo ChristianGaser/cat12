@@ -730,12 +730,12 @@ function vout = run_job(job)
     % See also cat_run_newcatch.
     % __________________________________________________________________
     if cat_io_matlabversion>20072 
-      cat_run_newcatch(job,tpm,subj); 
+      cat_run_newcatch1445(job,tpm,subj); 
     else
       if job.extopts.APP == 1070
         cat_run_job1070(job,tpm,subj); 
       else
-        cat_run_job(job,tpm,subj); 
+        cat_run_job1445(job,tpm,subj); 
       end
     end
   end

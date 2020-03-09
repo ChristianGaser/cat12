@@ -1,4 +1,4 @@
-function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vol,extopts,Tth) 
+function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS1445(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vol,extopts,Tth) 
 % This is an exclusive subfunction of cat_main.
 % ______________________________________________________________________
 %

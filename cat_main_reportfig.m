@@ -34,6 +34,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   VT  = res.image(1); 
   VT0 = res.image0(1);
   [pth,nam] = spm_fileparts(VT0.fname); 
+    
+  % in case of SPM input segmentation we have to add the name here to have a clearly different naming of the CAT output 
+  if isfield(res,'spmpp'), nam = ['c1' nam]; end % no changes in VT0!
    
   % definition of subfolders
   if job.extopts.subfolders
@@ -52,7 +55,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       fg = spm_figure('Create','Graphics','visible','off'); 
     else
       fg = spm_figure('Create','Graphics','visible','on'); 
-    end;
+    end
   else
     if nprog, set(fg,'visible','off'); end
   end
@@ -233,15 +236,15 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       hhm = spm_orthviews('Image',Vm,pos(2,:));
       spm_orthviews('Caption',hhm,{'m*.nii (Intensity Normalized T1)'},'FontSize',fontsize-1,'FontWeight','Bold');
       spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
+      cc{2} = axes('Position',[pos(2,1) + 0.26 0.37 0.02 0.15],'Parent',fg);
+      image((60:-1:1)','Parent',cc{2}); 
+      set(cc{2},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
+        'FontSize',fontsize-1,'FontWeight','Bold','YAxisLocation','right');
     end
-    cc{2} = axes('Position',[pos(2,1) + 0.26 0.37 0.02 0.15],'Parent',fg);
-    image((60:-1:1)','Parent',cc{2}); 
-    set(cc{2},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-      'FontSize',fontsize-1,'FontWeight','Bold','YAxisLocation','right');
   end
  
   
-  
+
   %  Yp0 - segmentation in original space
   %  ----------------------------------------------------------------------
   %  Use different kind of overlays to visualize the segmentation: 
@@ -296,7 +299,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     hhp0    = spm_orthviews('Image',VO,pos(3,:));
     spm_orthviews('window',hhp0,[0 1.3]);
   end
-  
+
   LAB = job.extopts.LAB;
   NS  = @(Ys,s) Ys==s | Ys==s+1;
   if useoverlay>1
@@ -358,7 +361,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         else
           wmhc9 = cat_io_colormaps('orange',9);
         end
-        
+  
         % colormap of blood vessels
         bv3 = [0.4 0.2 0.2; 0.6 0.2 0.2; 1 0 0];
         
@@ -383,6 +386,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   else
     try spm_orthviews('window',hhp0,[0 cmmax]); end
   end
+   
+  
   
   %% legend
   try
@@ -391,21 +396,22 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     spm_orthviews('window',hhp0,[0 cmmax]); caxis([0,2]);
   end
   global st;
-  if useoverlay>1
+  if isfield(res,'spmpp'), id=2; else, id=3; end
+  if useoverlay>1 
   % make SPM colorbar invisible (cannot delete it because SPM orthviews need it later)  
     %st.vols{3}.blobs{1}.cbar.Visible    = 'off';
     warning('off','MATLAB:warn_r14_stucture_assignment');
-    set(st.vols{3}.blobs{1}.cbar,'YTick', ytickp0/30);
-    set(st.vols{3}.blobs{1}.cbar,'XTick', []);
-    set(st.vols{3}.blobs{1}.cbar,'YTickLabel', yticklabelp0);
-    set(st.vols{3}.blobs{1}.cbar,'XTickLabel', {});
-    set(st.vols{3}.blobs{1}.cbar,'YAxisLocation', 'right');
-    set(st.vols{3}.blobs{1}.cbar,'Position', [pos(3,1) + 0.26 0.02 0.02 0.15]); 
-    st.vols{3}.blobs{1} = rmfield(st.vols{3}.blobs{1},'cbar'); % remove handle to avoid position updates
+    set(st.vols{id}.blobs{1}.cbar,'YTick', ytickp0/30);
+    set(st.vols{id}.blobs{1}.cbar,'XTick', []);
+    set(st.vols{id}.blobs{1}.cbar,'YTickLabel', yticklabelp0);
+    set(st.vols{id}.blobs{1}.cbar,'XTickLabel', {});
+    set(st.vols{id}.blobs{1}.cbar,'YAxisLocation', 'right');
+    set(st.vols{id}.blobs{1}.cbar,'Position', [pos(3,1) + 0.26 0.02 0.02 0.15]); 
+    st.vols{id}.blobs{1} = rmfield(st.vols{id}.blobs{1},'cbar'); % remove handle to avoid position updates
   else
-    cc{3} = axes('Position',[pos(3,1) + 0.26 0.02 0.02 0.15],'Parent',fg);
-    image((60:-1:1)','Parent',cc{3});
-    set(cc{3},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
+    cc{id} = axes('Position',[pos(3,1) + 0.26 0.02 0.02 0.15],'Parent',fg);
+    image((60:-1:1)','Parent',cc{id});
+    set(cc{id},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
       'FontSize',fontsize-1,'FontWeight','Bold','YAxisLocation','right');
   end
   if ~debug, clear Yp0; end
@@ -465,13 +471,14 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       set(cclp,'LineWidth',0.75); axis(ccl,'off')
     end
   end
-  
+ 
+ 
   %% 
   if exist('Psurf','var') && ~isempty(Psurf)
     % ... clearup this part of code when finished ...
     % add contex menu for principle test
     Psurf2 = Psurf;
-    if job.extopts.expertgui==2, ids = 1:3; else ids = []; end
+    if job.extopts.expertgui==2, ids = 1:3; else, ids = []; end
     % phite/pial surface in segmentation view number 3
     for ix=1:numel(Psurf2) 
       Psurf2(end+1).Pcentral = Psurf2(ix).Pwhite; 
@@ -479,10 +486,10 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     end
     Psurf2(1:numel(Psurf)) = []; 
   
-    for id=1:3
+    for id=1:(3 - isfield(res,'spmpp') )
       try spm_orthviews('AddContext',id); end % need the context menu for mesh handling
 
-      
+
       if any(id==ids)
         nPsurf = numel(Psurf2); 
         stxt   = 'white/pial';
@@ -519,22 +526,21 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       UD.style = [repmat({'b--'},1,numel(UD.width) - nPsurf) repmat({'k-'},1,nPsurf)];
       set(hM,'UserData',UD);
       if ov_mesh, spm_ov_mesh('redraw',id); end
-      
+
       %% TPM legend
       try
-        ccl2{id} = axes('Position',[pos(id,1:2) 0 0] + [0.35 0 0.02 0.02],'Parent',fg);
+        ccl2{id} = axes('Position',[pos(id + (id==2 && isfield(res,'spmpp')),1:2) 0 0] + [0.35 0 0.02 0.02],'Parent',fg);
         plot(ccl2{id},[0 1],[0 0],'k-'); axis(ccl2{id},'off')
         text(1.2,0,stxt,'Parent',ccl2{id},'Fontsize',fontsize-2);
       end
     end
-    
 
     
     % remove menu
     %if ~debug, spm_orthviews('RemoveContext',id); end 
   end
     
-%%
+  %%
   imat = spm_imatrix(res.Affine); Rigid = spm_matrix([imat(1:6) 1 1 1 0 0 0]); clear imat;
          
   % surface
@@ -627,15 +633,16 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   %% change line style of TPM surf
   if (job.extopts.expertgui>0 - showTPMsurf) && ov_mesh && exist('Psurf','var') && ~isempty(Psurf)
     for id=1:3
-      
+      if isfield(st.vols{id},'ax')   
         hM = findobj(st.vols{id}.ax{1}.cm,'Label','Mesh');
         UD = get(hM,'UserData');
         if any(id==ids); nPsurf = numel(Psurf2); else, nPsurf = numel(Psurf); end
         UD.width = [repmat(0.5,1,numel(UD.width) - nPsurf)  repmat(0.5,1,nPsurf)]; 
         UD.style = [repmat({'r--'},1,numel(UD.width) - nPsurf) repmat({'k-'},1,nPsurf)];
         set(hM,'UserData',UD);
-      set( cclp,'Color', [1 0 0]);
-      spm_ov_mesh('redraw',id);
+        set( cclp,'Color', [1 0 0]);
+        spm_ov_mesh('redraw',id);
+      end
     end
   end  
   

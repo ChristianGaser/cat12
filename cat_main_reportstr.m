@@ -42,14 +42,31 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
   % --------------------------------------------------------------------
   str{1} = [];
 
+  % use red output if a beta version is used
+  catv = qa.software.revision_cat; isbeta = strfind(lower(catv),'beta'); 
+  if ~isempty(isbeta), catv = [catv(1:isbeta-1) '\color[rgb]{0.8 0 0}' catv(isbeta:isbeta+3 ) '\color[rgb]{0.8 0 0}' catv(isbeta+4:end)]; end
+    
   % 1 line: Matlab, SPM12, CAT12 version number and GUI and experimental mode 
-  str{1} = [str{1} struct('name', 'Version: Matlab / SPM12 / CAT12:','value',...
-    sprintf('%s / %s / %s (%s)',qa.software.version_matlab,qa.software.version_spm,qa.software.version_cat,qa.software.revision_cat))];
+  str{1} = [str{1} struct('name', 'Version: OS / Matlab / SPM12 / CAT12:','value',...
+    sprintf('%s / %s / %s / %s (%s)',qa.software.system,qa.software.version_matlab,...
+    qa.software.version_spm,qa.software.version_cat,catv))];
+  % add CAT segmentation version if not current
+  if ~isempty(qa.software.version_segment)
+    str{1}(end).name = [str{1}(end).name(1:end-1) ' / seg:']; 
+    str{1}(end).value = [str{1}(end).value ' / \color[rgb]{0 0.2 1}' qa.software.version_segment '']; 
+  end 
+  % write GUI mode
   if     job.extopts.expertgui==1, str{1}(end).value = [str{1}(end).value '\bf\color[rgb]{0 0.2 1}e']; 
   elseif job.extopts.expertgui==2, str{1}(end).value = [str{1}(end).value '\bf\color[rgb]{0 0.2 1}d'];
   end  
-  if job.extopts.experimental, str{1}(end).value = [str{1}(end).value '\bf\color[rgb]{0 0.2 1}x']; end  
+  % write experimental flag
+  if str{1}(end).value(end)==')'
+    if job.extopts.experimental, str{1}(end).value = [str{1}(end).value(1:end-1) '\bf\color[rgb]{0 0.2 1}x\color[rgb]{0 0 0})']; end  
+  else
+    if job.extopts.experimental, str{1}(end).value = [str{1}(end).value '\bf\color[rgb]{0 0.2 1}x']; end  
+  end
 
+  
   % 2 lines: TPM, Template, Normalization method with voxel size
   str{1} = [str{1} struct('name', 'Tissue Probability Map:','value',strrep(spm_str_manip(res.tpm(1).fname,'k40d'),'_','\_'))];
   if res.do_dartel
