@@ -449,6 +449,8 @@ switch lower(action)
       % read meshes
       H.S{1}.info = cat_surf_info(H.S{1}.name, 1);          
       H.S{2}.info = H.S{1}.info;            
+      H.S{1}.info(1).side = 'lh';
+      H.S{2}.info(1).side = 'rh';
       H.n_surf = numel(H.S{1}.info);
       if H.S{1}.info(1).nvertices == 64984
         H.str32k = '_32k';
@@ -1195,15 +1197,16 @@ global H
 H.thresh_value = thresh;
 H.clip = [true -thresh thresh];
 
-% only show threshold popup if log-name was found and minimal value > 0 is < 1
-if H.logP(H.results_sel) & (thresh < 1)
+if H.logP(H.results_sel) & (H.S{1}.thresh < 1)
+  set(H.thresh, 'Enable', 'on');
   if min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0 & H.n_surf == 1
     set(H.hide_neg, 'Enable', 'on');
-    set(H.hide_neg, 'Value', 0);
+%    set(H.hide_neg, 'Value', 0);
   end
 else
+  set(H.thresh,   'Enable', 'off');
   set(H.hide_neg, 'Enable', 'off');
-  set(H.hide_neg, 'Value', 0);
+%  set(H.hide_neg, 'Value', 0);
 end
 
 H.no_neg = get(H.hide_neg, 'Value');
@@ -1220,7 +1223,16 @@ end
 if H.no_neg
   H.clip = [true -Inf thresh];
   clim = [true 0 clim(3)];
-  set(H.slider_min, 'Value', 0);
+  set(H.slider_min, 'Min', 0);
+  set(H.slider_max, 'Min', 0);
+%elseif (thresh > 0)
+%  set(H.slider_min, 'Min', ceil(2*H.clim(2)))
+%  set(H.slider_max, 'Min', ceil(2*H.clim(2)))
+end
+
+if (thresh > 0)
+  set(H.slider_min, 'Value', thresh)
+  set(H.str_min, 'String', sprintf('%g',thresh));
 end
 
 for ind = 1:5
@@ -1236,9 +1248,6 @@ for ind = 1:5
   min_d = min(min_d, min(d(:)));
   H = updateTexture(H, ind, d, col, H.show_transp);
 end
-
-set(H.slider_min, 'Value', H.clim(2))
-set(H.str_min, 'String', sprintf('%g',H.clim(2)));
 
 if ~H.isvol(H.results_sel)
   set(H.atlas, 'Enable', 'on');
@@ -1444,6 +1453,8 @@ H.S{2}.Y = H.S2.Y(:, sel);
 
 H.S{1}.info = cat_surf_info(H.S{1}.name, 1);          
 H.S{2}.info = H.S{1}.info;            
+H.S{1}.info(1).side = 'lh';
+H.S{2}.info(1).side = 'rh';
 
 % check whether data for left or right hemipshere are all non-zero
 ind1 = find(H.S{1}.Y(:) ~= 0);
@@ -1504,6 +1515,8 @@ end
 if H.no_neg
   H.clip = [true -Inf H.clip(3)];
   set(H.slider_min, 'Value', 0);
+  set(H.slider_min, 'Min', 0);
+  set(H.slider_max, 'Min', 0);
 end
 
 H.n_surf = 1;
@@ -1531,12 +1544,16 @@ end
 % correct value of slider if no values are exceeding threshold
 if H.S{1}.min > - H.thresh_value
   set(H.slider_min, 'Value', 0);
+  set(H.slider_min, 'Min', 0);
+  set(H.slider_max, 'Min', 0);
 end
 
 % update sliders for non-fixed scaling
 if ~H.fixscl
   set(H.slider_min, 'Value', H.clim(2));
   set(H.slider_max, 'Value', H.clim(3));
+%  set(H.slider_min, 'Min', ceil(0.5*H.clim(2)), 'Max', ceil(2*H.clim(3)));
+%  set(H.slider_max, 'Min', ceil(0.5*H.clim(2)), 'Max', ceil(2*H.clim(3)));
   set(H.str_min, 'String', sprintf('%g',H.clim(2)));
   set(H.str_max, 'String', sprintf('%g',H.clim(3)));
 end
@@ -1547,12 +1564,14 @@ checkbox_info;
 % only show threshold popup if log-name was found and minimal value > 0 is < 1
 if H.logP(H.results_sel) & (H.S{1}.thresh < 1)
   set(H.thresh, 'Enable', 'on');
-  if min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0 & H.n_surf == 1
-    set(H.hide_neg, 'Enable', 'on');
-    set(H.hide_neg, 'Value', 0);
-  end
 else
-  set(H.thresh,   'Enable', 'off');
+  set(H.thresh, 'Enable', 'off');
+end
+
+if min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0 & H.n_surf == 1
+  set(H.hide_neg, 'Enable', 'on');
+  set(H.hide_neg, 'Value', 0);
+else
   set(H.hide_neg, 'Enable', 'off');
   set(H.hide_neg, 'Value', 0);
 end
@@ -1624,7 +1643,8 @@ for ind = 1:2
       H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], ...
       [H.S{ind}.info(1).side '.central.Template_T1_IXI555_MNI152_GS.gii']);
     case 4
-      H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], [H.S{ind}.info(1).side '.patch.freesurfer.gii']);
+      H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], ...
+      [H.S{ind}.info(1).side '.patch.freesurfer.gii']);
   end
   H.S{ind}.M = gifti(H.S{ind}.info(1).Pmesh);
 end
@@ -1770,10 +1790,11 @@ end
 % only show threshold popup if log-name was found and minimal value > 0 is < 1
 if H.logP(H.results_sel) & (H.S{1}.thresh < 1)
   set(H.thresh, 'Enable', 'on');
-  if min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0 & H.n_surf == 1
-    set(H.hide_neg, 'Enable', 'on');
-    set(H.hide_neg, 'Value', 0);
-  end
+end
+
+if min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0 & H.n_surf == 1
+  set(H.hide_neg, 'Enable', 'on');
+  set(H.hide_neg, 'Value', 0);
 end
 
 if H.n_surf == 1 & ~H.isvol(H.results_sel)
@@ -1791,15 +1812,19 @@ end
 if H.n_surf == 1
   
   % allow slider a more extended range
-  mnx = ceil(2 * max(abs([H.S{1}.min H.S{1}.max])));
-  
+  max_abs = ceil(2 * max(abs([H.S{1}.min H.S{1}.max])));
+  if H.S{1}.min < 0
+    mnx = [-max_abs max_abs];
+  else
+    mnx = [0 max_abs];
+  end
   [H.slider_min, tmp, H.str_min] = sliderPanel( ...
     'Parent', H.panel(2), ...
     'Title', 'Overlay min', ...
     'Position', H.pos{2}.ovmin, ...
     'Backgroundcolor', H.col(1,:), ...
-    'Min', -mnx, ...
-    'Max', mnx, ...
+    'Min', mnx(1), ...
+    'Max', mnx(2), ...
     'Value', H.S{1}.min, ...
     'FontName', 'Verdana', ...
     'FontSize', H.FS-1, ...
@@ -1811,8 +1836,8 @@ if H.n_surf == 1
     'Title', 'Overlay max', ...
     'Position', H.pos{2}.ovmax, ...
     'Backgroundcolor', H.col(1,:), ...
-    'Min', -mnx, ...
-    'Max', mnx, ...
+    'Min', mnx(1), ...
+    'Max', mnx(2), ...
     'Value', H.S{1}.max, ...
     'FontName', 'Verdana', ...
     'FontSize', H.FS-1, ...
@@ -2445,6 +2470,11 @@ global H
 val = get(hObject, 'Value');
 c = getappdata(H.patch(1), 'clim');
 
+% prevent range exceeding
+if val > c(3)
+  return
+end
+
 for ind = 1:5
   setappdata(H.patch(ind), 'clim', [true val c(3)]);
   col = getappdata(H.patch(ind), 'col');
@@ -2465,6 +2495,11 @@ global H
 
 val = get(hObject, 'Value');
 c = getappdata(H.patch(1), 'clim');
+
+% prevent range exceeding
+if val < c(2)
+  return
+end
 
 for ind = 1:5
   setappdata(H.patch(ind), 'clim', [true c(2) val]);
@@ -2521,11 +2556,15 @@ if H.no_neg
   H.clip = [true -Inf thresh];
   H.clim = [true thresh clim(3)];
   set(H.slider_min, 'Value', 0);
+  set(H.slider_min, 'Min', 0);
+  set(H.slider_max, 'Min', 0);
 else
   H.clip = [true -thresh thresh];
   if min_d < -thresh
     H.clim = [true -clim(3) clim(3)];
     set(H.slider_min, 'Value', -clim(3));
+    set(H.slider_min, 'Min', ceil(-2*clim(3)));
+    set(H.slider_max, 'Min', ceil(-2*clim(3)));
   end
 end
 
@@ -2541,6 +2580,8 @@ end
 % correct value of slider if no values are exceeding threshold
 if min_d > -thresh & H.n_surf == 1
   set(H.slider_min, 'Value', 0);
+  set(H.slider_min, 'Min', 0);
+  set(H.slider_max, 'Min', 0);
 end
 
 if ~H.isvol(H.results_sel)
@@ -2807,7 +2848,7 @@ switch H.cursor_mode
   case 6 % enable/disable rotate3d
     cle7rDataCursorPlot(H);
     rotate3d;
-    disp('Use mouse to rotate views.');
+    fprintf('Use mouse to rotate views.\n');
 end
 
 %==========================================================================
@@ -3271,6 +3312,12 @@ if H.cursor_mode > 1
   end
   
   rdata_pos = H.rdata{sel_atlas}(node, ind);
+  
+  if rdata_pos == 0
+    txt={''};
+    return
+  end
+  
   rcsv = H.rcsv{sel_atlas};
   
   for j = 2:size(rcsv, 1)
@@ -3293,6 +3340,11 @@ else
     end
     
     rdata_pos = H.rdata{sel_atlas}(node, ind);
+    if rdata_pos == 0
+      txt={''};
+      return
+    end
+
     rcsv = H.rcsv{sel_atlas};
     
     for j = 2:size(rcsv, 1)
