@@ -37,7 +37,7 @@ install2:
 
 help:
 	-@echo Available commands:
-	-@echo install zip scp scp_manual update cp_binaries archive check_pipeline
+	-@echo install zip scp scp_manual update cp_binaries archive check_pipeline checklist
 
 update:
 	-@svn update
@@ -80,6 +80,37 @@ cp_binaries:
 	-@for i in CAT.glnx86/CAT*; do cp ~/work/c/CAT/build-x86_64-pc-linux/Progs/`basename $${i}` CAT.glnx86/ ; done
 	-@for i in CAT.w32/CAT*; do cp ~/work/c/CAT/build-i586-mingw32/Progs/`basename $${i}` CAT.w32/ ; done
 	-@for i in CAT.maci64/CAT*; do cp ~/work/c/CAT/build-native/Progs/`basename $${i}` CAT.maci64/ ; done
+
+checklist:
+	-@echo    
+	-@echo Checklist for testing CAT12 in order to release
+	-@echo -----------------------------------------------
+	-@echo 1. Check Testdaten
+	-@echo    CAT12 GUI Segment
+	-@echo    mv surf surf_rXXXX -range 0 6
+	-@echo    render_surf.sh surf_rXXXX -range 0 6
+	-@echo    
+	-@echo 2. Check Pipeline + cat_batch_cat.sh
+	-@echo    make check_pipeline
+	-@echo    check_pipeline.sh -p pid
+	-@echo    check_pipeline_ROIs.m	-> check render views check_r*matrix.png and histograms
+	-@echo    
+	-@echo 3. Check Batches and Dependencies
+	-@echo    cd check_pipeline
+	-@echo    batch_volume_pipeline.m
+	-@echo    batch_surface_pipeline.m
+	-@echo    
+	-@echo 4. Check Expert Mode
+	-@echo    "cat12('expert')"
+	-@echo    CAT12 GUI Segment
+	-@echo    
+	-@echo 5. Check Previous Release
+	-@echo    "cat12('expert')"
+	-@echo    CAT12 GUI Segment CAT12.X
+	-@echo    
+	-@echo 6. Check Windows + Linux
+	-@echo    VirtualBox.app
+	-@echo    CAT12 GUI Segment
 
 archive:
 	-@echo available archives to install

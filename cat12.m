@@ -76,6 +76,8 @@ if nargin <= 1
   sc     = max(1,(WSM(4)/550));
   sz     = sc*[391 550]; % window size
   
+  [catversion.rel, catversion.ver, catversion.dat] = cat_version;
+
   % check for update and send Matlab version with 10s delay
   start(timer('StartDelay',10,'TimerFcn',@call_server));  
   
@@ -1337,8 +1339,6 @@ end
 
 %-------------------------------------------------------------------
 function call_server(varargin)
-
-[catversion.rel, catversion.ver, catversion.dat] = cat_version;
 
 % send Matlab version to server
 if cat_get_defaults('extopts.send_info')

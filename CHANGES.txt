@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1578 | gaser | 2020-03-10 10:18:44
+r1579 | gaser | 2020-03-10 14:51:09
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat12.m
+MM      cat_io_lazy.m
+M       cat_surf_results.m
+M       html/cat.html
+
+(1) Fixed: Removed inconsistencies in cat_surf_results.
+(2) Fixed: Variable cat_version was not set in cat12.m
+(3) Changed: Added checklist to Makefile
+
+------------------------------------------------------------------------
+r1578 | gaser | 2020-03-10 10:19:19 +0100 (Di, 10 Mär 2020) | 22 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -21,6 +37,7 @@ MM      spm_diffeo_old.c
     found first for deployed versions.
 (3) Changed: Timer call of update-check and server request in cat12.m to 
     prevent delayed GUI responses.
+
 
 ------------------------------------------------------------------------
 r1577 | dahnke | 2020-03-09 18:36:03 +0100 (Mo, 09 Mär 2020) | 51 lines
