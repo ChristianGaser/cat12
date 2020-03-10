@@ -442,7 +442,6 @@ if ~strcmp(image_ext, 'none')
             pt2 = [nm2 '_']; 
         end
     end
-    pt2
     
     % use shorter ext for jpeg
     if ~isfield(OV, 'save')

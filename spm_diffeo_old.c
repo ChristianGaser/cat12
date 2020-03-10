@@ -1,4 +1,4 @@
-/* $Id: spm_diffeo.c 6799 2016-05-20 16:50:25Z john $ */
+/* $Id$ */
 /* (c) John Ashburner (2011) */
 
 #include "mex.h"

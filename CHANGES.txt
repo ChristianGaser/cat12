@@ -1,5 +1,29 @@
 ------------------------------------------------------------------------
-r1577 | dahnke | 2020-03-09 18:33:57
+r1578 | gaser | 2020-03-10 10:18:44
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+MM      cat_io_rerun.m
+M       cat_surf_results.m
+ M      cat_surf_scaling.m
+M       cat_version.m
+M       cat_vol_slice_overlay.m
+M       html/cat.html
+MM      spm_diffeo_old.c
+ M      spm_diffeo_old.mexa64
+ M      spm_diffeo_old.mexmaci64
+ M      spm_diffeo_old.mexw64
+
+(1) Changed: Lots of changes in cat_surf_results.
+(2) Changed: Made changes back in cat_version.m because Contents.txt should be
+    found first for deployed versions.
+(3) Changed: Timer call of update-check and server request in cat12.m to 
+    prevent delayed GUI responses.
+
+------------------------------------------------------------------------
+r1577 | dahnke | 2020-03-09 18:36:03 +0100 (Mo, 09 Mär 2020) | 51 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -35,7 +59,6 @@ M       cat_surf_results.m
 M       cat_version.m
 M       cat_vol_qa.m
 M       cat_vol_sanlm.m
-M       development/Template_1_IXI555_MNI152_GS1mm.nii
 M       tbx_cfg_cat.m
 
 (1)  Changed:   Added OS system and CAT segmentation version to CAT reports
@@ -51,6 +74,7 @@ M       tbx_cfg_cat.m
 (7)  Fixed:     Corrected incorrect dependencies in cat_vol_sanlm                
 (8)  Changed:   Added output of empty files in cat_stat_spm2x to support dependencies. 
 (9)  Fixed:     Corrected definition in cat_version (first Content.m then Content.txt) 
+
 
 ------------------------------------------------------------------------
 r1576 | gaser | 2020-03-04 14:38:09 +0100 (Mi, 04 Mär 2020) | 20 lines
