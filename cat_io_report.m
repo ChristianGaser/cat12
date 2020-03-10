@@ -179,8 +179,13 @@ function cat_io_report(job,qa,subj,createerr)
       end
     end
     clear A
-    OSname = {'LINUX','WIN','MAC'};
-    qa.software.system               = OSname{1 + ispc + ismac};
+    
+    if ispc, OSname = 'WIN';
+    elseif,  OSname = 'MAC';
+    else,    OSname = 'LINUX';
+    end
+    
+    qa.software.system               = OSname;
     qa.software.version_cat          = ver_cat;
     if ~isfield(qa.software,'version_segment')
       qa.software.version_segment    = rev_cat;
