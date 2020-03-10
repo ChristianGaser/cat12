@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1579 | gaser | 2020-03-10 14:51:09
+r1580 | gaser | 2020-03-10 15:08:10
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_report.m
+M       cat_vol_qa.m
+
+Fixed: Estimation of operation system was not correct.
+------------------------------------------------------------------------
+r1579 | gaser | 2020-03-10 14:51:42 +0100 (Di, 10 Mär 2020) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +22,7 @@ M       html/cat.html
 (1) Fixed: Removed inconsistencies in cat_surf_results.
 (2) Fixed: Variable cat_version was not set in cat12.m
 (3) Changed: Added checklist to Makefile
+
 
 ------------------------------------------------------------------------
 r1578 | gaser | 2020-03-10 10:19:19 +0100 (Di, 10 Mär 2020) | 22 lines
