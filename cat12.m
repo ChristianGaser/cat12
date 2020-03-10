@@ -76,22 +76,8 @@ if nargin <= 1
   sc     = max(1,(WSM(4)/550));
   sz     = sc*[391 550]; % window size
   
-  [catversion.rel, catversion.ver, catversion.dat] = cat_version;
-  
-  % send Matlab version to server
-  if cat_get_defaults('extopts.send_info')
-    urlinfo = sprintf('%s%s%s','Start','%2F',version('-release'));
-    cat_io_send_to_server(urlinfo);
-  end
-  
-  % check for new CAT12 version
-  if ~isdeployed
-    [sts, msg] = cat_update;
-    if isfinite(sts) && sts >= 0
-      fprintf(msg);
-      fprintf('\n');
-    end
-  end
+  % check for update and send Matlab version with 10s delay
+  start(timer('StartDelay',10,'TimerFcn',@call_server));  
   
   cat_bg = imread(fullfile(spm('dir'),'toolbox','cat12','html','images','cat_bg.jpg'));
   
@@ -1347,6 +1333,26 @@ try
                 ~isempty(strfind(varargin{1}, '_CreateFcn'))) );
 catch
     result = false;
+end
+
+%-------------------------------------------------------------------
+function call_server(varargin)
+
+[catversion.rel, catversion.ver, catversion.dat] = cat_version;
+
+% send Matlab version to server
+if cat_get_defaults('extopts.send_info')
+  urlinfo = sprintf('%s%s%s','Start','%2F',version('-release'));
+  cat_io_send_to_server(urlinfo);
+end
+
+% check for new CAT12 version
+if ~isdeployed
+  [sts, msg] = cat_update;
+  if isfinite(sts) && sts >= 0
+    fprintf(msg);
+    fprintf('\n');
+  end
 end
 
 
