@@ -1515,6 +1515,7 @@ end
 if H.no_neg
   H.clip = [true -Inf H.clip(3)];
   set(H.slider_min, 'Value', 0);
+  set(H.str_min, 'String', 0);
   set(H.slider_min, 'Min', 0);
   set(H.slider_max, 'Min', 0);
 end
@@ -1544,6 +1545,7 @@ end
 % correct value of slider if no values are exceeding threshold
 if H.S{1}.min > - H.thresh_value
   set(H.slider_min, 'Value', 0);
+  set(H.str_min, 'String', 0);
   set(H.slider_min, 'Min', 0);
   set(H.slider_max, 'Min', 0);
 end
@@ -1552,8 +1554,13 @@ end
 if ~H.fixscl
   set(H.slider_min, 'Value', H.clim(2));
   set(H.slider_max, 'Value', H.clim(3));
-%  set(H.slider_min, 'Min', ceil(0.5*H.clim(2)), 'Max', ceil(2*H.clim(3)));
-%  set(H.slider_max, 'Min', ceil(0.5*H.clim(2)), 'Max', ceil(2*H.clim(3)));
+  if H.clim(2) > 0
+    set(H.slider_min, 'Min', ceil(0.5*H.clim(2)), 'Max', ceil(2*H.clim(3)));
+    set(H.slider_max, 'Min', ceil(0.5*H.clim(2)), 'Max', ceil(2*H.clim(3)));
+  else
+    set(H.slider_min, 'Min', ceil(2*H.clim(2)), 'Max', ceil(2*H.clim(3)));
+    set(H.slider_max, 'Min', ceil(2*H.clim(2)), 'Max', ceil(2*H.clim(3)));
+  end
   set(H.str_min, 'String', sprintf('%g',H.clim(2)));
   set(H.str_max, 'String', sprintf('%g',H.clim(3)));
 end
@@ -1598,7 +1605,6 @@ if H.isvol(sel)
          {@select_cursor, 3}, ...
          {@select_cursor, 4}, ...
          {@select_cursor, 6}};
-
 else
   str = {'Data Cursor', 'Disable data cursor', 'Atlas regions: All Atlases', ...
     'Atlas regions: Desikan-Killiany DK40', 'Atlas regions: Destrieux 2009', ...
@@ -1612,10 +1618,9 @@ else
          {@select_cursor, 5}, ...
          {@select_cursor, 6}, ...
          {@select_cursor, 7}};
-
 end
-set(H.cursor,'String', str, 'UserData', tmp);
 
+set(H.cursor,'String', str, 'UserData', tmp);
 
 % print selected filename
 cla(H.nam);
@@ -1818,6 +1823,7 @@ if H.n_surf == 1
   else
     mnx = [0 max_abs];
   end
+  
   [H.slider_min, tmp, H.str_min] = sliderPanel( ...
     'Parent', H.panel(2), ...
     'Title', 'Overlay min', ...
@@ -2556,6 +2562,7 @@ if H.no_neg
   H.clip = [true -Inf thresh];
   H.clim = [true thresh clim(3)];
   set(H.slider_min, 'Value', 0);
+  set(H.str_min, 'String', 0);
   set(H.slider_min, 'Min', 0);
   set(H.slider_max, 'Min', 0);
 else
@@ -2563,6 +2570,7 @@ else
   if min_d < -thresh
     H.clim = [true -clim(3) clim(3)];
     set(H.slider_min, 'Value', -clim(3));
+    set(H.str_min, 'String', sprintf('%g',-clim(3)));
     set(H.slider_min, 'Min', ceil(-2*clim(3)));
     set(H.slider_max, 'Min', ceil(-2*clim(3)));
   end
@@ -2580,6 +2588,7 @@ end
 % correct value of slider if no values are exceeding threshold
 if min_d > -thresh & H.n_surf == 1
   set(H.slider_min, 'Value', 0);
+  set(H.str_min, 'String', 0);
   set(H.slider_min, 'Min', 0);
   set(H.slider_max, 'Min', 0);
 end

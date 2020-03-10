@@ -23,7 +23,7 @@ function run = cat_io_rerun(files,filedates)
 %
 % _________________________________________________________________________
 % Robert Dahnke
-% $Id: cat_parallelize.m 1480 2019-06-06 10:48:36Z dahnke $
+% $Id$
 
   files = cellstr(files);
   if iscellstr(filedates) || ischar(filedates)
