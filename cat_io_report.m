@@ -180,9 +180,9 @@ function cat_io_report(job,qa,subj,createerr)
     end
     clear A
     
-    if ispc, OSname = 'WIN';
-    elseif,  OSname = 'MAC';
-    else,    OSname = 'LINUX';
+    if ispc,      OSname = 'WIN';
+    elseif ismac, OSname = 'MAC';
+    else          OSname = 'LINUX';
     end
     
     qa.software.system               = OSname;

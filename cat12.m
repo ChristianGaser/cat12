@@ -79,7 +79,11 @@ if nargin <= 1
   [catversion.rel, catversion.ver, catversion.dat] = cat_version;
 
   % check for update and send Matlab version with 10s delay
-  start(timer('StartDelay',10,'TimerFcn',@call_server));  
+  if strcmpi(spm_check_version,'octave')
+    call_server;
+  else
+    start(timer('StartDelay',10,'TimerFcn',@call_server));  
+  end
   
   cat_bg = imread(fullfile(spm('dir'),'toolbox','cat12','html','images','cat_bg.jpg'));
   

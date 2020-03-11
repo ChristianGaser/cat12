@@ -1,5 +1,48 @@
 ------------------------------------------------------------------------
-r1581 | dahnke | 2020-03-11 11:17:27
+r1582 | gaser | 2020-03-11 17:54:34
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+M       cat_amap.mexmaci64
+M       cat_conf_stools.m
+M       cat_io_report.m
+M       cat_main_roi.m
+M       cat_sanlm.mexmaci64
+M       cat_simple.m
+M       cat_vol_median3.mexmaci64
+M       cat_vol_median3c.mexmaci64
+M       cat_vol_qa.m
+M       check_pipeline/batch_surface_pipeline.m
+A       check_pipeline/surf/lh.pbt.IXI002-Guys-0828-T1
+A       check_pipeline/surf/lh.pbt.IXI016-Guys-0697-T1
+A       check_pipeline/surf/lh.pbt.IXI017-Guys-0698-T1
+A       check_pipeline/surf/lh.pbt.IXI019-Guys-0702-T1
+D       check_pipeline/surf/lh.thickness.IXI002-Guys-0828-T1
+D       check_pipeline/surf/lh.thickness.IXI016-Guys-0697-T1
+D       check_pipeline/surf/lh.thickness.IXI017-Guys-0698-T1
+D       check_pipeline/surf/lh.thickness.IXI019-Guys-0702-T1
+A       check_pipeline/surf/rh.pbt.IXI002-Guys-0828-T1
+A       check_pipeline/surf/rh.pbt.IXI016-Guys-0697-T1
+A       check_pipeline/surf/rh.pbt.IXI017-Guys-0698-T1
+A       check_pipeline/surf/rh.pbt.IXI019-Guys-0702-T1
+D       check_pipeline/surf/rh.thickness.IXI002-Guys-0828-T1
+D       check_pipeline/surf/rh.thickness.IXI016-Guys-0697-T1
+D       check_pipeline/surf/rh.thickness.IXI017-Guys-0698-T1
+D       check_pipeline/surf/rh.thickness.IXI019-Guys-0702-T1
+M       html/cat.html
+M       templates_volumes/cobra.csv
+
+(1) Fixed: Removed some inconsistencies in cobra.csv
+(2) Fixed: Modified and extended batch_surface_pipeline.m to consider new 
+    dependencies. 
+(3) Fixed: Check for OS-name was not correct.
+(4) Fixed: Typo for release number in cat_simple.m
+(5) Fixed: Removed some smaller bugs in cat_main_roi.m
+(6) Fixed: Prepared Octave compatibility in cat12.m.
+------------------------------------------------------------------------
+r1581 | dahnke | 2020-03-11 11:20:09 +0100 (Mi, 11 Mär 2020) | 60 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -59,6 +102,7 @@ A       templates_surfaces/cb.sphere.freesurfer.gii
                 and cat12.
 (7)  New:       Added cb surfaces.
 ≈
+
 
 ------------------------------------------------------------------------
 r1580 | gaser | 2020-03-10 15:08:43 +0100 (Di, 10 Mär 2020) | 7 lines
