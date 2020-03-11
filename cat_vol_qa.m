@@ -511,9 +511,9 @@ function varargout = cat_vol_qa(action,varargin)
       end
       clear A
       % 1 line: Matlab, SPM12, CAT12 version number and GUI and experimental mode 
-      if ispc, OSname = 'WIN';
-      elseif,  OSname = 'MAC';
-      else,    OSname = 'LINUX';
+      if ispc,      OSname = 'WIN';
+      elseif ismac, OSname = 'MAC';
+      else          OSname = 'LINUX';
       end
       
       QAS.software.system       = OSname;
@@ -563,9 +563,9 @@ function varargout = cat_vol_qa(action,varargin)
       % software, parameter and job information
       % ----------------------------------------------------------------
       [nam,rev_spm] = spm('Ver');
-      if ispc, OSname = 'WIN';
-      elseif,  OSname = 'MAC';
-      else,    OSname = 'LINUX';
+      if ispc,      OSname = 'WIN';
+      elseif ismac, OSname = 'MAC';
+      else          OSname = 'LINUX';
       end
       
       QAS.software.system       = OSname;

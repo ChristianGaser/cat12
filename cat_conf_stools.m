@@ -1463,11 +1463,11 @@ function renderresults = cat_surf_results_GUI(expert)
   % input data
   cdata                = cfg_files;
   cdata.tag            = 'cdata';
-  cdata.name           = 'Template surface data files';
+  cdata.name           = 'Result files';
   cdata.filter         = 'any';
   cdata.ufilter        = '.*';
   cdata.num            = [1 Inf];
-  cdata.help           = {'Select resampled surface data. ' ''};
+  cdata.help           = {'Select data for surface overlay. ' ''};
   
   
   % == render options ==
