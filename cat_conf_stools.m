@@ -927,18 +927,41 @@ function [surfresamp,surfresamp_fs] = cat_surf_resamp_GUI(expert,nproc,merge_hem
 %% Resample and smooth surfaces 
 %  ------------------------------------------------------------------------
 
-  sample_surf            = cfg_files;
-  sample_surf.tag        = 'data_surf';
-  sample_surf.name       = '(Left) Surfaces Data';
-  sample_surf.num        = [1 Inf];
-  sample_surf.filter     = 'any';
+if 0 % old 
+  data_surf            = cfg_files;
+  data_surf.tag        = 'data_surf';
+  data_surf.name       = '(Left) Surfaces Data';
+  data_surf.num        = [1 Inf];
+  data_surf.filter     = 'any';
   if expert > 1
-    sample_surf.ufilter  = '^lh.';
+    data_surf.ufilter  = '^lh.';
   else
-    sample_surf.ufilter  = '^lh.(?!cent|pial|white|sphe|defe|hull|pbt).*';
+    data_surf.ufilter  = '^lh.(?!cent|pial|white|sphe|defe|hull|pbt).*';
   end
-  sample_surf.help       = {'Select surfaces data files for left hemisphere for resampling to template space.'};
-  
+  data_surf.help       = {'Select surfaces data files for left hemisphere for resampling to template space.'};
+
+else
+  data_surf         = cfg_files;
+  data_surf.tag     = 'data_surf';
+  data_surf.name    = '(Left) Surfaces Data';
+  data_surf.filter  = 'any';
+  if expert > 1
+    data_surf.ufilter = '^lh.';
+  else
+    data_surf.ufilter = '^lh.(?!cent|pial|white|sphe|defe|hull|pbt).*';
+  end
+  data_surf.num     = [1 Inf];
+  data_surf.help    = {'Select surfaces data files for left hemisphere for resampling to template space.'};
+
+  sample_surf            = cfg_repeat;
+  sample_surf.tag        = 'sample';
+  sample_surf.name       = 'Data';
+  sample_surf.values     = {data_surf};
+  sample_surf.num        = [1 Inf];
+  sample_surf.help       = {...
+  'Specify data for each sample. If you specify different samples the mean correlation is displayed in separate boxplots for each sample.'};
+end
+
   fwhm_surf         = cfg_entry;
   fwhm_surf.tag     = 'fwhm_surf';
   fwhm_surf.name    = 'Smoothing Filter Size in FWHM';
@@ -954,7 +977,7 @@ function [surfresamp,surfresamp_fs] = cat_surf_resamp_GUI(expert,nproc,merge_hem
   if expert
     surfresamp.val  = {sample_surf,merge_hemi,mesh32k,fwhm_surf,lazy,nproc};
   else
-    surfresamp.val  = {sample_surf,merge_hemi,mesh32k,fwhm_surf,nproc};
+    surfresamp.val  = {data_surf,merge_hemi,mesh32k,fwhm_surf,nproc};
   end
   surfresamp.prog = @cat_surf_resamp;
   surfresamp.vout = @(job) vout_surf_resamp(job);
@@ -1716,29 +1739,74 @@ dep(1).tgt_spec   = cfg_findspec({{'filter','xml','strtype','e'}});
 
 %==========================================================================
 function dep = vout_surf_resamp(job)
-if job.merge_hemi
-  depsfnames{1} = 'hemispheres'; 
-else
-  depsfnames{1} = 'hemisphere'; 
-end
 
-for di = 1:numel(job.data_surf)
-	if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
-	if job.merge_hemi
-		dep(end).sname      = ['Merged' depsfnames{1}];
-		dep(end).src_output = substruct('()',{1}, '.','Psdata','()',{di},'()',{':'});
-		dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-	else
-		dep(end).sname      = ['Left' depsfnames{1}];
-		dep(end).src_output = substruct('()',{1}, '.','lPsdata','()',{di},'()',{':'});
-		dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-		%dep(end+1)          = cfg_dep; %#ok<AGROW>
-		%dep(end).sname      = ['Right' depsfnames{1}];
-		%dep(end).src_output = substruct('()',{1}, '.','rPsdata','()',{numel(job.data_surf) + di},'()',{':'});
-		%dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
-	end
+% First we have to catch possible dependency definition problems.
+if isobject(job.data_surf) && numel(job.data_surf)>1 % simple file input
+  error('cat_surf_resamp:FileDepError',...
+   ['CAT resample and smooth support only one dependeny per file input \n' ...
+    'to support further separate processing. ']); 
+elseif iscell(job.data_surf)
+  nDEP = zeros(numel(job.data_surf));
+  for i = 1:numel(job.data_surf)
+    if isobject(job.data_surf{i}) && numel(job.data_surf{i})>1
+      nDEP(i) = numel(job.data_surf{i});
+    end
+  end
+  msg = ['The CAT batch "Resample and Smooth Surface Data" supports only one \n' ...
+    'dependency per input sample to support further separate processing. '];
+  for i = 1:numel(job.data_surf)
+    if nDEP(i)>1
+      msg = [msg sprintf('\n  Sample %d has %d dependencies.',i,nDEP(i))]; %#ok<AGROW>
+    end
+  end
+  if sum(nDEP)>0
+    error('cat_surf_resamp:SampleDepError',msg); 
+  end
 end
-
+%% here we have to extract the texture name to have useful output names
+mname = repmat({''},1,numel(job.data_surf));
+if isobject(job.data_surf) 
+  sep       = strfind(job.data_surf.sname,':');
+  mname{1}  = spm_str_manip( cat_io_strrep( job.data_surf.sname(sep+1:end) , {' ','Left'} ,{'' ''}) ); 
+elseif iscell(job.data_surf) 
+  for i=1:numel(job.data_surf)
+    if isobject(job.data_surf{i})
+      sep       = strfind(job.data_surf{i}.sname,':');
+      mname{i}  = spm_str_manip( cat_io_strrep( job.data_surf{i}.sname(sep+1:end) , {' ','Left'} ,{'' ''}) ); 
+    else
+      sinfo = cat_surf_info(job.data_surf{i});
+      mname{1} = sinfo.texture; 
+    end
+  end
+% else is empty initialization
+end
+%%
+if iscell(job.data_surf) && ( iscell( job.data_surf{1} ) || isobject(job.data_surf{1} ) )
+% this differentiation is important otherwise it has problemes with cellstrings
+  for di = 1:numel(job.data_surf)
+    if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
+    if job.merge_hemi
+      dep(end).sname      = ['Merged resampled ' mname{di}];
+      dep(end).src_output = substruct('.','sample','()',{di},'.','Psdata'); %,'()',{':'});
+      dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+    else
+      dep(end).sname      = ['Left resampled ' mname{di}];
+      dep(end).src_output = substruct('.','sample','()',{di},'.','lPsdata'); %,'()',{':'});
+      dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+    end
+  end
+else % file input - just one texture type 
+  dep = cfg_dep; 
+  if job.merge_hemi
+    dep(end).sname      = ['Merged resampled ' mname{1}];
+    dep(end).src_output = substruct('.','sample','()',{1},'.','Psdata'); %,'()',{':'});
+    dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+  else
+    dep(end).sname      = ['Left resampled ' mname{1}];
+    dep(end).src_output = substruct('.','sample','()',{1},'.','lPsdata'); %,'()',{':'});
+    dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+  end
+end
 %==========================================================================  
 function dep = vout_cat_surf_calc(job)
   % improve data description 

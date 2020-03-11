@@ -1,4 +1,4 @@
-function varargout = cat_surf_resamp(varargin)
+function vout = cat_surf_resamp(varargin)
 % ______________________________________________________________________
 % Function to resample parameters to template space and smooth it.
 %
@@ -20,14 +20,20 @@ function varargout = cat_surf_resamp(varargin)
 
   SVNid = '$Rev$';
 
+  
+  % transform input 
+  % due to dependencies the input has to be a cell-area of cellstr in 
+  % general 
+  % expert gui with complex input with further cell level 
+  % internal representation and final output as cell of cellstr
   if nargin == 1
     if iscell(varargin{1}.data_surf)
       P = ''; 
       for i = 1:numel(varargin{1}.data_surf)
-        if iscell( varargin{1}.data_surf{i} )
-          P = [P; char(varargin{1}.data_surf{i})];  
+        if iscell(varargin{1}.data_surf)
+          P = char( [cellstr(P); varargin{1}.data_surf{i} ] ); %[P; char(varargin{1}.data_surf{i})];  
         else
-          P = char( [cellstr(P); varargin{1}.data_surf(i) ] );  
+          P = char( [cellstr(P); varargin{1}.data_surf(i) ] ); %[P; char(varargin{1}.data_surf{i})];  
         end
       end
       P = P(2:end,:);
@@ -37,7 +43,7 @@ function varargout = cat_surf_resamp(varargin)
     job  = varargin{1}; 
   else
     spm_clf('Interactive'); 
-    P = cellstr(spm_select([1 inf],'any','Select surface data'));
+    P  = cellstr(spm_select([1 inf],'any','Select surface data'));
     job = struct();
   end
 
@@ -79,11 +85,8 @@ function varargout = cat_surf_resamp(varargin)
 
   % split job and data into separate processes to save computation time
   if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index')) && (size(P,1)>1)
-    if nargout==1
-      varargout{1} = cat_parallelize(job,mfilename,'data_surf');
-    else
-      cat_parallelize(job,mfilename,'data_surf');
-    end
+    %if nargout==1
+    vout.Psdata = cat_parallelize(job,mfilename,'data_surf');
     return
   end  
   
@@ -364,15 +367,29 @@ function varargout = cat_surf_resamp(varargin)
   if isfield(job,'process_index')
     fprintf('Done\n'); 
   end
-      
-  if nargout==1
-    if job.merge_hemi
-      varargout{1}.Psdata ={Psdata}; 
+  
+  if job.merge_hemi
+    if iscell(varargin{1}.data_surf) && iscell(varargin{1}.data_surf{1})
+      n = cumsum(cellfun(@numel,varargin{1}.data_surf)); 
+      a = [1 n+1]; a(end) = [];  
+      for i=1:numel(varargin{1}.data_surf)
+        vout.sample(i).Psdata = Psdata( a(i) : n(i));
+      end
     else
-      varargout{1}.lPsdata = {lPsdata}; 
-      varargout{1}.rPsdata = {rPsdata}; 
+      vout.sample(1).Psdata = Psdata; 
+    end
+  else
+    if iscell(varargin{1}.data_surf) && iscell(varargin{1}.data_surf{1})
+      n = cumsum(cellfun(@numel,varargin{1}.data_surf)); 
+      a = [1 n+1]; a(end) = [];  
+      for i=1:numel(varargin{1}.data_surf)
+        vout.sample(1).lPsdata = lPsdata( a(i) : n(i));
+      end
+    else
+      vout.sample(1).lPsdata = lPsdata; 
     end
   end
   
   spm_progress_bar('Clear');
 end
+

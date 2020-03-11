@@ -11,6 +11,7 @@ addpath(fileparts(which(mfilename)));
 addpath(fullfile(fileparts(which(mfilename)),'cat_run1173'));
 addpath(fullfile(fileparts(which(mfilename)),'cat_run1173plus'));
 addpath(fullfile(fileparts(which(mfilename)),'cat_run1445'));
+addpath(fullfile(fileparts(which(mfilename)),'cat_run1585'));
 
 %% ------------------------------------------------------------------------
 try
@@ -98,16 +99,18 @@ end
 extopts     = cat_conf_extopts(expert);   
 opts        = cat_conf_opts(expert); 
 %ROI       = cat_conf_ROI(expert);       % ROI options
-[output,output_spm,output1173,output1445] = cat_conf_output(expert); 
+[output,output_spm,output1173,output1445,output1585] = cat_conf_output(expert); 
 
 %------------------------------------------------------------------------
 % additional segmentation versions
 extopts1173                   = cat_conf_extopts1173(expert);   
 extopts1173plus               = cat_conf_extopts1173plus(expert);   
 extopts1445                   = cat_conf_extopts1445(expert);   
+extopts1585                   = cat_conf_extopts1585(expert);   
 opts1173                      = cat_conf_opts1173(expert); 
 opts1173plus                  = cat_conf_opts1173plus(expert); 
 opts1445                      = cat_conf_opts1445(expert); 
+opts1585                      = cat_conf_opts1585(expert); 
 
 %% ------------------------------------------------------------------------
 estwrite        = cfg_exbranch;
@@ -162,21 +165,33 @@ estwrite1445.tag    = 'estwrite1445';
 estwrite1445.prog   = @cat_run1445;
 estwrite1445.help   = [estwrite1445.help;{'';'This batch calls the stable version of the main preprocessing of release 1445 with only slight runtime bug fixes.';''}];
 
+% 1585
+estwrite1585        = estwrite; 
+estwrite1585.name   = 'CAT12.7: Segmentation R1585 (2020/03)';
+estwrite1585.tag    = 'estwrite1585';
+estwrite1585.prog   = @cat_run1585;
+estwrite1585.help   = [estwrite1585.help;{'';'This batch calls the stable version of the main preprocessing of release 1585 with only slight runtime bug fixes.';''}];
+
+
 if numcores > 1
   estwrite1173.val      = {data nproc opts1173     extopts1173     output1173}; 
   estwrite1173plus.val  = {data nproc opts1173plus extopts1173plus output1445}; 
   if expert>1
     estwrite1445.val    = {data data_wmh nproc opts1445     extopts1445     output1445}; 
+    estwrite1585.val    = {data data_wmh nproc opts1585     extopts1585     output1585}; 
   else
     estwrite1445.val    = {data nproc opts1445     extopts1445     output1445}; 
+    estwrite1585.val    = {data nproc opts1585     extopts1585     output1585}; 
   end
 else
   estwrite1173.val      = {data opts1173     extopts1173     output1173};
   estwrite1173plus.val  = {data opts1173plus extopts1173plus output1445};
   if expert>1
     estwrite1445.val    = {data data_wmh opts1445     extopts1445     output1445};
+    estwrite1585.val    = {data data_wmh opts1585     extopts1585     output1585}; 
   else
     estwrite1445.val    = {data opts1445     extopts1445     output1445};
+    estwrite1585.val    = {data opts1585     extopts1585     output1585}; 
   end
 end
 
@@ -217,11 +232,11 @@ cat        = cfg_choice;
 cat.name   = 'CAT12';
 cat.tag    = 'cat';
 if expert==2
-  cat.values = {estwrite estwrite_spm estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools stoolsexp};
+  cat.values = {estwrite estwrite_spm estwrite1585 estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools stoolsexp};
 elseif expert==1
-  cat.values = {estwrite estwrite_spm estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools };
+  cat.values = {estwrite estwrite_spm estwrite1585 estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools };
 else
-  cat.values = {estwrite estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools}; 
+  cat.values = {estwrite estwrite1585 estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools}; 
 end
 %------------------------------------------------------------------------
 
