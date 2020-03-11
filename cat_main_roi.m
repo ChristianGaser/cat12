@@ -65,7 +65,7 @@ function cat_main_roi(job,trans,Ycls,Yp0)
 
   for ai=1:size(FA,1)
     %%
-    if ai==1 || any(VAvx_vol(ai,:)~=VAvx_vol(ai-1,:))
+    if ai==1 || any(VAvx_vol(ai,:)~=VAvx_vol(ai-1,:)) || any(VA(ai).dim~=VA(ai-1).dim)
       % resample data in atlas resolution for the first time or if the atlas resolution changes
       
       % map data to actual template space
@@ -74,7 +74,8 @@ function cat_main_roi(job,trans,Ycls,Yp0)
       else
         stime2  = cat_io_cmd('  Data mapping to normalized atlas space','g5','', job.extopts.verb-1,stime2); 
       end  
-      transw      = trans.warped;                     % dartel/shooting deformation data 
+
+      transw      = trans.warped;                     % dartel/shooting deformation data
       transw.odim = VA(ai).dim;                       % adaption for atlas image size
       transw.ress = job.extopts.vox(1)./VAvx_vol(ai,:);  % adaption for atlas sampling resolution 
 
@@ -82,7 +83,7 @@ function cat_main_roi(job,trans,Ycls,Yp0)
       wYcls    = cat_vol_ROInorm(Ycls,transw,1,1,FA);
 
       if exist('Ywmh','var')
-        wYcls(7) = cat_vol_ctype(cat_vol_ROInorm({single(Ywmh)},transw,1,1,FA));
+        wYcls{7} = cat_vol_ctype(cat_vol_ROInorm({single(Ywmh)},transw,1,1,FA));
       end
 
       % correction for voxel size of the orignal image
@@ -117,17 +118,16 @@ function cat_main_roi(job,trans,Ycls,Yp0)
     % map atlas to actual template space 
     transa      = trans.warped; 
     transa.M1   = VA(ai).mat;
-    transa.odim = transw.odim;
+    transa.odim = VA(ai).dim;
     wYa   = cat_vol_ROInorm([],transa,ai,0,FA);
 
     if job.extopts.WMHC == 3   
       FA{ai,3} = unique( [FA{ai,3} {'wmh'}] ); %#ok<AGROW>
     end
     
-
     %% extract ROI data
     csv   = cat_vol_ROIestimate(wYp0,wYa,wYcls,ai,'V',[],FA{ai,3},FA);  % volume
-
+    
     % thickness
     if exist('Yth1','var') 
     % For thickness we want to avoid values in non-cortical regions such as 
