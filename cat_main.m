@@ -454,7 +454,7 @@ if ~isfield(res,'spmpp')
   Yp0 = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
   Ywmhrel = single(Ycls{1})/255 .* NS(Yl1,23); 
   qa.software.version_segment   = strrep(mfilename,'cat_main','');                            % if cat_main# save the # revision number 
-  if isfield(res,'spmpp'), qa.software.version_segment = 'SPM'; end                           % if SPM segmentation is used as input
+  if isfield(res,'spmpp') && res.spmpp, qa.software.version_segment = 'SPM'; end                           % if SPM segmentation is used as input
   qa.subjectmeasures.WMH_abs    = sum(Ywmhrel(:));                                            % absolute WMH volume without PVE
   qa.subjectmeasures.WMH_rel    = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(0.5/3*255));   % relative WMH volume to TIV without PVE
   qa.subjectmeasures.WMH_WM_rel = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(2.5/3*255));   % relative WMH volume to WM without PVE
@@ -793,9 +793,11 @@ if job.output.surface
 end
 stime = cat_io_cmd('Quality check'); job.stime = stime; 
 Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; Yp0(Yp0>3.1) = nan; % no analysis in WMH regions
+% in case of SPM input segmentation we have to add the name here to have a clearly different naming of the CAT output 
+if isfield(res,'spmpp') && res.spmpp, namspm = 'c1'; else, namspm = ''; end
 qa    = cat_vol_qa('cat12',Yp0,VT0.fname,Ym,res,cat_warnings,job.extopts.species, ...
-          struct('write_csv',0,'write_xml',1,'method','cat12','job',job,'qa',qa,'prefix','cat_c1'));
-clear Yp0; 
+          struct('write_csv',0,'write_xml',1,'method','cat12','job',job,'qa',qa,'prefix',['cat_' namspm]));
+clear Yp0;
 
 % surface data update
 if job.output.surface
@@ -817,9 +819,6 @@ if job.output.surface
   end
   
   %qam = cat_stat_marks('eval',job.cati,qa,'cat12'); % ... not ready
-  
-  % in case of SPM input segmentation we have to add the name here to have a clearly different naming of the CAT output 
-  if isfield(res,'spmpp'), namspm = 'c1'; else, namspm = ''; end
   cat_io_xml(fullfile(pth,res.reportfolder,['cat_' namspm nam '.xml']),struct(...
     ... 'subjectratings',qam.subjectmeasures, ... not ready
     'subjectmeasures',qa.subjectmeasures,'ppe',res.ppe),'write+'); % here we have to use the write+!

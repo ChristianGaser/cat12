@@ -30,8 +30,8 @@ function cat_admin_create_segment_version(catdir,rev,update,fnames)
 %#ok<*AGROW>
 
   if ~exist('catdir','var'), catdir = fullfile(spm('dir'),'toolbox','cat12'); end
-  if ~exist('update','var'), update = 0; end 
-  if ~exist('rev','var'),    rev    = '1445'; end 
+  if ~exist('update','var'), update = 0; end % RD20200310 not working
+  if ~exist('rev','var'),    rev    = '1585'; end 
   
   % This defintion also include uncommented files that are expected to
   % undergo only small changes (debugging rather development) and where 
@@ -47,40 +47,38 @@ function cat_admin_create_segment_version(catdir,rev,update,fnames)
       otherwise % new version
         fnames = {
           ... -- preprocessing batch configuration 
-          'cat_conf_extopts'
-          'cat_conf_opts'
-          'cat_conf_long'
+          'cat_conf_extopts'...
+          'cat_conf_opts'...
+          'cat_conf_long'...
+          'cat_conf_ROI'...
           ...
           ... -- old default definitions
-          'cat_defaults'
-          'cat_get_defaults'
-          ...
-          ... -- cat_run and new/oldcatch
-          'cat_run'
-          'cat_nun_newcatch'
-          'cat_run_oldcatch'
+          'cat_get_defaults'...
+          'cat_defaults'...
           ...
           ... -- cat_run_job and preprocessing relevant subfunctions
-          'car_run_job'
-          'car_run_job1070'
-          'cat_run_job_APP_final'
-          'cat_run_job_APP_init'
-          'cat_run_job_APP_init1070' 
-          'cat_run_job_APP_SPMinit'
-          'cat_run_job_APP_SPMfinal'
-          'cat_run_job_APRGs'
+          'cat_run_job_APP_final' ...
+          'cat_run_job_APP_init' ...
+          'cat_run_job_APP_init1070' ...
+          'cat_run_job_APP_SPMinit' ...
+          'cat_run_job_APP_SPMfinal' ...
+          'cat_run_job_APRGs' ...
+          ...'cat_run_oldcatch'... outdated
+          'cat_run_newcatch'...
+          'cat_run_job1070'...
+          'cat_run_job'...
+          'cat_run'...
           ...'cat_run_job_multiTPM' ... developer function 
           ...
           ... -- cat_main and preprocessing relevant subfunctions
-          'cat_main_amap'
-          'cat_main_APRG'           
-          ...'cat_main_kamap'       ... developer function
-          'cat_main_LAS'
+          'cat_main_amap'...
+          'cat_main_APRG' ...          
+          'cat_main_kamap'          ... developer function
+          'cat_main_LAS'...
           'cat_main_registration'   ... changes are expected in future 
           ... 'cat_main_registration2'  ... changes expected but developer function 
           'cat_main_updateSPM'      ... changes are possible 
           'cat_main_updateWMHs'     ... changes are possible
-          ...
           ... -- cat_main subfunctions where no further development is expected
           ...'cat_main_gintnorm'
           ...'cat_main_gintnormi'
@@ -93,13 +91,17 @@ function cat_admin_create_segment_version(catdir,rev,update,fnames)
           ...'cat_main_reportcmd
           ...'cat_main_reportfig
           ...'cat_main_reportstr
+          'cat_main' ...
           ... 
           ... -- important vol function that may need improvements or undergo changes 
-          'cat_vol_approx'
+          'cat_vol_approx'...
           ...
           ... surface functions
-          'cat_surf_createCS'
-          'cat_vol_pbt'             ... not expected 
+          'cat_surf_createCS'...
+          'cat_surf_createCS2'...
+          'cat_vol_pbt'...
+          ...
+          ... not expected 
           ...
           ...
         };
@@ -111,8 +113,8 @@ function cat_admin_create_segment_version(catdir,rev,update,fnames)
   %% create and copy files 
   if update
     ndir  = fullfile(catdir,['cat_run' rev]); 
-    files = findfiles(ndir,'*.m');
-    for fi=1:numel(fnames)
+    files = cat_vol_findfiles(ndir,'*.m');
+    for fi = 1:numel(files)
       [~,ff] = spm_fileparts(files{fi});
       nfiles{fi}  = files{fi}; 
       fnames{fi}  = ff; 
@@ -130,7 +132,7 @@ function cat_admin_create_segment_version(catdir,rev,update,fnames)
       sfiles = cat_vol_findfiles(catdir,[fnames{fi} '.m']);
       if isempty(sfiles) % no files > remove function entry
         fprintf('Cannot find "%s" - remove from list.\n',fnames{fi})
-        fnames(fi) = []; 
+        fnames{fi} = []; 
       else
         files{fi} = sfiles{1}; 
       end
@@ -138,10 +140,11 @@ function cat_admin_create_segment_version(catdir,rev,update,fnames)
 
     % create a subversion directory
     ndir = fullfile(catdir,['cat_run' rev]); 
-    if ~exist(ndir,'dir')
-      mkdir(ndir); 
+    if exist(ndir,'dir')
+      movefile(ndir,[ndir '_old' datestr(clock,'YYYYmmdd-hhMMss')],'f');
     end
-
+    mkdir(ndir); 
+    
     % copy each file of the list to it
     for fi=1:numel(files)
       [~,ff,ee] = spm_fileparts(files{fi});
@@ -160,7 +163,7 @@ function cat_admin_create_segment_version(catdir,rev,update,fnames)
     txt = fread(fo,'*char'); 
     fclose(fo);
     for mi = 1:numel(fnames)
-      txt = strrep(txt',fnames{mi},nfnames{mi})';
+      txt = strrep(txt',[fnames{mi} '('],[nfnames{mi} '('])';
     end
     
     % write results 

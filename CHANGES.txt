@@ -1,5 +1,67 @@
 ------------------------------------------------------------------------
-r1580 | gaser | 2020-03-10 15:08:10
+r1581 | dahnke | 2020-03-11 11:17:27
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_conf_output.m
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       cat_io_volctype.m
+M       cat_main.m
+A       cat_run1585
+A       cat_run1585/cat_conf_ROI1585.m
+A       cat_run1585/cat_conf_extopts1585.m
+A       cat_run1585/cat_conf_long1585.m
+A       cat_run1585/cat_conf_opts1585.m
+A       cat_run1585/cat_defaults1585.m
+A       cat_run1585/cat_get_defaults1585.m
+A       cat_run1585/cat_main1585.m
+A       cat_run1585/cat_main_APRG1585.m
+A       cat_run1585/cat_main_LAS1585.m
+A       cat_run1585/cat_main_amap1585.m
+A       cat_run1585/cat_main_kamap1585.m
+A       cat_run1585/cat_main_registration1585.m
+A       cat_run1585/cat_main_updateSPM1585.m
+A       cat_run1585/cat_main_updateWMHs1585.m
+A       cat_run1585/cat_run1585.m
+A       cat_run1585/cat_run_job10701585.m
+A       cat_run1585/cat_run_job1585.m
+A       cat_run1585/cat_run_job_APP_SPMfinal1585.m
+A       cat_run1585/cat_run_job_APP_SPMinit1585.m
+A       cat_run1585/cat_run_job_APP_final1585.m
+A       cat_run1585/cat_run_job_APP_init10701585.m
+A       cat_run1585/cat_run_job_APP_init1585.m
+A       cat_run1585/cat_run_job_APRGs1585.m
+A       cat_run1585/cat_run_newcatch1585.m
+A       cat_run1585/cat_surf_createCS1585.m
+A       cat_run1585/cat_surf_createCS21585.m
+A       cat_run1585/cat_vol_approx1585.m
+A       cat_run1585/cat_vol_pbt1585.m
+M       cat_simple.m
+M       cat_surf_parameters.m
+M       cat_surf_resamp.m
+M       cat_vol_maskimage.m
+M       internal/cat_admin_create_estwrite_version.m
+M       tbx_cfg_cat.m
+A       templates_surfaces/cb.central.freesurfer.gii
+A       templates_surfaces/cb.sphere.freesurfer.gii
+
+(1)  Fixed:     Corrected DEPs in cat_io_volctype and cat_vol_maskimage.
+(2)  Fixed:     Corrected DEPs in cat_surf_resamp and cat_conf_stools.  
+(2)  Fixed:     Corrected bug in cat_simple.
+(3)  Fixed:     Corrected bugs in cat_admin_create_estwrite_version.
+(4)  Fixed:     Corrected bug in cat_main in relation to SPMpp batch. 
+(5)  Fixed:     Corrected bug for gyrification output in cat_surf_parameters.
+ 
+(6)  New:       Added stable preprocessing batch 1585 with new directory 
+                and changes in tbx_cfg_cat, cat_conf_output, cat_simple, 
+                and cat12.
+(7)  New:       Added cb surfaces.
+≈
+
+------------------------------------------------------------------------
+r1580 | gaser | 2020-03-10 15:08:43 +0100 (Di, 10 Mär 2020) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +69,7 @@ M       cat_io_report.m
 M       cat_vol_qa.m
 
 Fixed: Estimation of operation system was not correct.
+
 ------------------------------------------------------------------------
 r1579 | gaser | 2020-03-10 14:51:42 +0100 (Di, 10 Mär 2020) | 14 lines
 
