@@ -1,4 +1,4 @@
-function varargout = cat_io_volctype(varargin)
+function out = cat_io_volctype(varargin)
 % ______________________________________________________________________
 % Convert datatype of images, to have more space on your harddisk. 
 % In example most tissue classifcations can saved as uint8 or uint16 
@@ -93,8 +93,8 @@ function varargout = cat_io_volctype(varargin)
     job.prefix = ['_' spm_type(ctype)]; 
   end
   for si=1:numel(job.data)
-    [pp,ff,ee,dd]    = spm_fileparts(job.data{si});
-    varargout{1}{si} = fullfile(pp,[job.prefix ff job.suffix ee dd]);
+    [pp,ff,ee,dd] = spm_fileparts(job.data{si});
+    out.files{si} = fullfile(pp,[job.prefix ff job.suffix ee dd]);
   end
   if job.returnOnlyFilename, return; end
   

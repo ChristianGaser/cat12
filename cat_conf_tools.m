@@ -1891,9 +1891,14 @@ function dep = vfiles_sanlm(varargin)
   dep(1).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 return;
 %_______________________________________________________________________
-function vf = vfiles_maskimg(job)
-  job.returnOnlyFilename = 1; 
-  vf = cat_vol_maskimage(job); 
+function dep = vfiles_maskimg(varargin)
+  %job.returnOnlyFilename = 1; 
+  %vf = cat_vol_maskimage(job); 
+  
+  dep            = cfg_dep;
+  dep.sname      = 'Masked Images';
+  dep.src_output = substruct('.','files');
+  dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 return;
 %_______________________________________________________________________
 function cdep = vfiles_headtrimming(job)
@@ -1957,9 +1962,14 @@ function cdep = vfiles_headtrimming(job)
 
 return;
 %_______________________________________________________________________
-function vf = vfiles_volctype(job)
-  job.returnOnlyFilename = 1; 
-  vf = cat_io_volctype(job);
+function dep = vfiles_volctype(varargin)
+ % job.returnOnlyFilename = 1; 
+ % vf = cat_io_volctype(job);
+    
+  dep            = cfg_dep;
+  dep.sname      = ['Images'];
+  dep.src_output = substruct('.','files');
+  dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 return;
 %_______________________________________________________________________
 function vf = vfiles_qa(job)
@@ -1983,7 +1993,7 @@ function dep = vout_avg(job)
 return
 
 %------------------------------------------------------------------------
-function dep = vout_stat_TIV(job)
+function dep = vout_stat_TIV(varargin)
   dep            = cfg_dep;
   dep.sname      = 'TIV';
   dep.src_output = substruct('.','calcvol','()',{':'});

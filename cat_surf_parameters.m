@@ -228,7 +228,7 @@ function varargout = cat_surf_parameters(job)
         
         if job.GI
         %% gyrification index based on absolute mean curvature
-          for GIi = setdiff( (1:2) .* (job.SD==[1 2] | job.SD==[3 3]) ,0) 
+          for GIi = setdiff( (1:2) .* (job.GI==[1 2] | job.GI==[3 3]) ,0) 
             if ~cat_io_rerun(PGI{GIi},Pname) && job.lazy  
               if job.verb, fprintf('%sexist - Display %s\n',nstr,spm_file(PGI{GIi},'link','cat_surf_display(''%s'')')); end
             else

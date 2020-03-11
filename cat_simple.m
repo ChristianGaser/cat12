@@ -110,10 +110,12 @@ function output = cat_simple(job)
     case 'long1173',          estwrite = 'CAT12.1: Segment longitudinal data R1173 (2017/09)';
     case 'long1173plus',      estwrite = 'CAT12.3: Segment longitudinal data R1392 (2018/12)';
     case 'long1445',          estwrite = 'CAT12.6: Segment longitudinal data R1445 (2019/03)';
+    case 'long1285',          estwrite = 'CAT12.7: Segment longitudinal data R1585 (2020/03)';
     case 'estwrite',          estwrite = 'CAT12: Segmentation:';
     case 'estwrite1173',      estwrite = 'CAT12.1: Segmentation R1173 (2017/09):'; %.1
     case 'estwrite1173plus',  estwrite = 'CAT12.3: Segmentation R1173 (2018/12):'; %.3
     case 'estwrite1445',      estwrite = 'CAT12.6: Segmentation R1445 (2019/03)';
+    case 'estwrite1585',      estwrite = 'CAT12.7: Segmentation R1585 (2020/03)';
   end
   
   
@@ -172,12 +174,12 @@ function output = cat_simple(job)
   % for fast tests of the whole pipeline of the developer mode
   if job.debug 
     switch job.catversion
-      case {'estwrite1445','long1445'}
-        matlabbatch{mbi}.spm.tools.cat.(job.catversion).extopts.registration.regstr       = eps;             % fast shooting only in new versions! 
-        matlabbatch{mbi}.spm.tools.cat.(job.catversion).output.surface                    = int(proc_surf)*7;% use 0.8 mm for pbt ans fast registration (=7)
-        matlabbatch{mbi}.spm.tools.cat.(job.catversion).extopts.admin.lazy                = 1;               % use lazy .. did not work yet - missing DEPs
+      case {'estwrite1445','long1445','estwrite1585','long1585'}
+        matlabbatch{mbi}.spm.tools.cat.(job.catversion).extopts.registration.regstr       = eps;                 % fast shooting only in new versions! 
+        matlabbatch{mbi}.spm.tools.cat.(job.catversion).extopts.admin.lazy                = 0;                   % use lazy .. did not work yet - missing DEPs
+        matlabbatch{mbi}.spm.tools.cat.(job.catversion).output.surface                    = double(proc_surf)*7; % use 0.8 mm for pbt ans fast registration (=7)
     end
-    matlabbatch{mbi}.spm.tools.cat.(job.catversion).extopts.segmentation.restypes.fixed   = [2 0];           % use only 2 mm for VBM preprocessing
+    matlabbatch{mbi}.spm.tools.cat.(job.catversion).extopts.segmentation.restypes.fixed   = [2 0];               % use only 2 mm for VBM preprocessing
   end
   
   % here we have to (re)move some fields!

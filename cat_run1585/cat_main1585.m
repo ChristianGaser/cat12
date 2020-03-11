@@ -1,8 +1,8 @@
-function Ycls = cat_main(res,tpm,job)
+function Ycls = cat_main1585(res,tpm,job)
 % ______________________________________________________________________
 % Write out CAT preprocessed data
 %
-% FORMAT Ycls = cat_main(res,tpm,job)
+% FORMAT Ycls = cat_main1585(res,tpm,job)
 %
 % based on John Ashburners version of
 % spm_preproc_write8.m 2531 2008-12-05 18:59:26Z john $
@@ -10,7 +10,7 @@ function Ycls = cat_main(res,tpm,job)
 % ______________________________________________________________________
 % Christian Gaser
 % ______________________________________________________________________
-% $Id$
+% $Id: cat_main.m 1577 2020-03-09 17:36:03Z dahnke $
 
 %#ok<*ASGLU>
 
@@ -35,7 +35,7 @@ stime2 = cat_io_cmd('  Write Segmentation','g5','',job.extopts.verb-1);
 
 
 %% CAT vs. SPMpp Pipeline
-if ~isfield(res,'spmpp')
+if ~isfield(res,'spmpp') 
   %% Update SPM results in case of reduced SPM preprocessing resultion 
   %  -------------------------------------------------------------------
   if isfield(res,'redspmres')
@@ -52,7 +52,7 @@ if ~isfield(res,'spmpp')
   %  bias correction. 
   %  -------------------------------------------------------------------
   if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap 
-    [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,Yy,tpm,job,res,vx_vol,stime2);
+    [P,res,stime2] = cat_main_kamap1585(Ysrc,Ycls,Yy,tpm,job,res,vx_vol,stime2);
   else
     P = zeros([size(Ycls{1}) numel(Ycls)],'uint8');
     for i=1:numel(Ycls), P(:,:,:,i) = Ycls{i}; end
@@ -67,7 +67,7 @@ if ~isfield(res,'spmpp')
   %  This is a large and important subfuction that represent the 
   %  starting point of the refined CAT preprocessing.
   %  -------------------------------------------------------------------
-  [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,tpm,job,res,stime,stime2);
+  [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1585(Ysrc,P,Yy,tpm,job,res,stime,stime2);
   
   
   
@@ -219,9 +219,9 @@ if ~isfield(res,'spmpp')
       end
     else
       if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
-        [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M,res.Ylesion); 
+        [trans,res.ppe.reginitp] = cat_main_registration1585(job2,res2,Ycls(1:2),Yy,tpm.M,res.Ylesion); 
       else
-        [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M); 
+        [trans,res.ppe.reginitp] = cat_main_registration1585(job2,res2,Ycls(1:2),Yy,tpm.M); 
       end
     end
     Yy2  = trans.warped.y;
@@ -234,7 +234,7 @@ if ~isfield(res,'spmpp')
     Ybd = true(size(Ym)); Ybd(3:end-2,3:end-2,3:end-2) = 0; Ybd(~isnan(Yy2(:,:,:,1))) = 0; Yy2(isnan(Yy2))=0; 
     for k1=1:3
       Yy2(:,:,:,k1) = Yy(:,:,:,k1) .* Ybd + Yy2(:,:,:,k1) .* (1-Ybd);
-      Yy2(:,:,:,k1) = cat_vol_approx(Yy2(:,:,:,k1),'nn',vx_vol,3); 
+      Yy2(:,:,:,k1) = cat_vol_approx1585(Yy2(:,:,:,k1),'nn',vx_vol,3); 
     end
     Yy = Yy2; 
     clear Yy2; 
@@ -403,7 +403,7 @@ if ~isfield(res,'spmpp')
   %    prob .. new AMAP segmenation (4D)
   %    ind* .. index elements to asign a subvolume
   %  -------------------------------------------------------------------
-  [prob,indx,indy,indz] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res);
+  [prob,indx,indy,indz] = cat_main_amap1585(Ymi,Yb,Yb0,Ycls,job,res);
   
   
   
@@ -611,7 +611,7 @@ end
   if job.extopts.new_release % ... there is an error
     [trans,res.ppe.reg] = cat_main_registration2(job,res,Yclsd,Yy,tpm.M,Ylesions);
   else
-    [trans,res.ppe.reg] = cat_main_registration(job,res,Yclsd,Yy,tpm.M,Ylesions);
+    [trans,res.ppe.reg] = cat_main_registration1585(job,res,Yclsd,Yy,tpm.M,Ylesions);
   end
   clear Yclsd Ylesions;
   if ~res.do_dartel
@@ -626,7 +626,7 @@ end
   
 %% update WMHs 
 %  ---------------------------------------------------------------------
-Ycls = cat_main_updateWMHs(Ym,Ycls,Yy,tpm,job,res,trans);
+Ycls = cat_main_updateWMHs1585(Ym,Ycls,Yy,tpm,job,res,trans);
   
 
 
@@ -658,7 +658,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
         if smeth(smi)==1, pbtmethod = 'pbt2xf'; elseif smeth(smi)==3, pbtmethod = 'pbt3'; end
         cat_io_cprintf('blue',sprintf('\nPBT Test99 - surf_%s_%0.2f\n',pbtmethod,sres(sresi)));
         [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size] = ...
-          cat_surf_createCS(VT,VT0,Ymix,Yl1,Yp0/3,YMF,struct('pbtmethod',pbtmethod,...
+          cat_surf_createCS1585(VT,VT0,Ymix,Yl1,Yp0/3,YMF,struct('pbtmethod',pbtmethod,...
           'interpV',sres(sresi),'Affine',res.Affine,'surf',{surf},...
           'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT)); 
       end
@@ -678,16 +678,16 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
       end
       %% further GUI fields ...
       if ~isfield(job.extopts,'vdist'),           job.extopts.vdist           = 0;  end
-      if ~isfield(job.extopts,'scale_cortex'),    job.extopts.scale_cortex    = cat_get_defaults('extopts.scale_cortex'); end
-      if ~isfield(job.extopts,'add_parahipp'),    job.extopts.add_parahipp    = cat_get_defaults('extopts.add_parahipp'); end
-      if ~isfield(job.extopts,'close_parahipp'),  job.extopts.close_parahipp  = cat_get_defaults('extopts.close_parahipp'); end
-      if ~isfield(job.extopts,'pbtmethod'),       job.extopts.pbtmethod       = cat_get_defaults('extopts.pbtmethod'); end
-      if ~isfield(job.extopts,'reduce_mesh'),     job.extopts.reduce_mesh     = 1; end % cat_get_defaults('extopts.reduce_mesh'); end
+      if ~isfield(job.extopts,'scale_cortex'),    job.extopts.scale_cortex    = cat_get_defaults1585('extopts.scale_cortex'); end
+      if ~isfield(job.extopts,'add_parahipp'),    job.extopts.add_parahipp    = cat_get_defaults1585('extopts.add_parahipp'); end
+      if ~isfield(job.extopts,'close_parahipp'),  job.extopts.close_parahipp  = cat_get_defaults1585('extopts.close_parahipp'); end
+      if ~isfield(job.extopts,'pbtmethod'),       job.extopts.pbtmethod       = cat_get_defaults1585('extopts.pbtmethod'); end
+      if ~isfield(job.extopts,'reduce_mesh'),     job.extopts.reduce_mesh     = 1; end % cat_get_defaults1585('extopts.reduce_mesh'); end
       %if ~isfield(job.output,'pp'),               job.output.pp               = struct('native',0,'warped',0,'dartel',0);  end % this is now in defaults and not required here 
       if ~isfield(job.output,'surf_measures'),    job.output.surf_measures    = 1; end % developer
       
       [Yth1, S, Psurf, qa.subjectmeasures.EC_abs, qa.subjectmeasures.defect_size, qa.createCS] = ...
-        cat_surf_createCS2(VT,VT0,Ymix,Yl1,YMF,YT,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
+        cat_surf_createCS21585(VT,VT0,Ymix,Yl1,YMF,YT,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
         'vdist',job.extopts.vdist,'outputpp',job.output.pp,'surf_measures',job.output.surf_measures, ...
         'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'collcorr',job.extopts.collcorr - 20,...
         'scale_cortex', job.extopts.scale_cortex, 'add_parahipp', job.extopts.add_parahipp, 'close_parahipp', job.extopts.close_parahipp,  ....
@@ -696,7 +696,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
     else
       %%
       [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size, qa.createCS] = ...
-        cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,struct('pbtmethod','pbt2x',...
+        cat_surf_createCS1585(VT,VT0,Ymix,Yl1,YMF,struct('pbtmethod','pbt2x',...
         'interpV',job.extopts.pbtres,'extract_pial_white',job.extopts.collcorr, ...
         'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
         'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT)); 
@@ -715,7 +715,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
     
     %% estimate surface ROI estimates for thickness
     [pp,ff]   = spm_fileparts(VT.fname);
-    if cat_get_defaults('extopts.subfolders')
+    if cat_get_defaults1585('extopts.subfolders')
       surffolder = 'surf';
       pp = spm_str_manip(pp,'h'); % remove 'mri' in pathname that already exists
     else
@@ -878,7 +878,7 @@ function [Ysrc,Ycls,Yy,res] = cat_main_resspmres(Ysrc,Ycls,Yy,res)
   % Update Ysrc:
   Ysrc = cat_vol_resize(Ysrc,'deinterp',res.redspmres,'cubic');
   Ybf  = res.image1.dat ./ Ysrc; 
-  Ybf  = cat_vol_approx(Ybf .* (Ysrc~=0 & Ybf>0.25 & Ybf<1.5),'nn',1,8);
+  Ybf  = cat_vol_approx1585(Ybf .* (Ysrc~=0 & Ybf>0.25 & Ybf<1.5),'nn',1,8);
   Ysrc = res.image1.dat ./ Ybf; clear Ybf; 
   res.image = res.image1; 
     res  = rmfield(res,'image1');
