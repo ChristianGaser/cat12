@@ -501,7 +501,7 @@ function job = update_job(job)
       if ~isempty( job.output.ROImenu.atlases.ownatlas ) && ~isempty( job.output.ROImenu.atlases.ownatlas{1} )
         for i=1:numel( job.output.ROImenu.atlases.ownatlas ) 
           [pp,ff,ee] = spm_fileparts( job.output.ROImenu.atlases.ownatlas{i} ); 
-          if any(~cellfun('isempty',strfind( spm_str_manip( def.extopts.atlas(:,1) ,'cs') ,ff)))
+          if any( strcmp( spm_str_manip( def.extopts.atlas( cell2mat(def.extopts.atlas(:,2)) < cat_get_defaults('extopts.expertgui') + 1 ,1) ,'cs') ,ff))
             error('cat_run:ownatlasname', ...
              ['There is a atlas file name conflict. Each atlas name has to be unique. \n' ...
               'Please rename your own atlas map "%s". \n'],fullfile(pp,[ff ee]) ); 
