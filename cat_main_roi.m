@@ -41,7 +41,7 @@ function cat_main_roi(job,trans,Ycls,Yp0)
   FA  = {}; fai = 1;
   AN  = fieldnames(job.output.atlases);
   for ai = 1:numel(AN)
-    fafi = find(cellfun('isempty',strfind(FAF(:,1),[AN{ai} '.']))==0,1); %#ok<STRCL1>
+    fafi = find(cellfun('isempty',strfind(FAF(:,1),[AN{ai} '.']))==0,1); 
     if ~isempty(fafi) && (isempty(job.output.atlases.(AN{ai})) || job.output.atlases.(AN{ai})) 
       FA(fai,:) = FAF(fafi,:);  %#ok<AGROW>
       fai = fai+1; 
@@ -62,7 +62,8 @@ function cat_main_roi(job,trans,Ycls,Yp0)
     [VAs,VAi] = sortrows(VAvx_vol);  %#ok<ASGLU>
     FA = FA(VAi,:); VA = VA(VAi,:); VAvx_vol = VAvx_vol(VAi,:); 
   end
-
+  
+  %stime2= clock;
   for ai=1:size(FA,1)
     %%
     if ai==1 || any(VAvx_vol(ai,:)~=VAvx_vol(ai-1,:)) || any(VA(ai).dim~=VA(ai-1).dim)
@@ -77,8 +78,12 @@ function cat_main_roi(job,trans,Ycls,Yp0)
 
       transw      = trans.warped;                     % dartel/shooting deformation data
       transw.odim = VA(ai).dim;                       % adaption for atlas image size
-      transw.ress = job.extopts.vox(1)./VAvx_vol(ai,:);  % adaption for atlas sampling resolution 
-
+      %transw.omat = VA(ai).mat * trans.affine.mat / VA(ai).mat;
+      transw.ress = job.extopts.vox(1)./VAvx_vol(ai,:);  % adaption for atlas sampling resolution
+      mati        = spm_imatrix( trans.affine.mat - VA(ai).mat) ; 
+      vdim        = spm_imatrix( VA(ai).mat ); % trans.affine.mat ); 
+      matit       = mati(1:3) ./ vdim(7:9); 
+      transw.y    = cat(4,trans.warped.y(:,:,:,1) + matit(1), trans.warped.y(:,:,:,2) + matit(2), trans.warped.y(:,:,:,3) + matit(3) );
       wYp0     = cat_vol_ROInorm(Yp0,transw,1,0,FA);
       wYcls    = cat_vol_ROInorm(Ycls,transw,1,1,FA);
 
@@ -98,7 +103,12 @@ function cat_main_roi(job,trans,Ycls,Yp0)
         fprintf('%8.2f %8.2f %8.2f\n', [cat_stat_nansum(wYcls{1}(:)),cat_stat_nansum(wYcls{2}(:)),cat_stat_nansum(wYcls{3}(:))]  / 1000); 
         fprintf('%8.2f %8.2f %8.2f\n', [cat_stat_nansum(Ycls{1}(:)),cat_stat_nansum(Ycls{2}(:)),cat_stat_nansum(Ycls{3}(:))] * prod(vx_vol) / 1000 / 255); 
       end
-
+      atest = mean( ([cat_stat_nansum(wYcls{1}(:)),cat_stat_nansum(wYcls{2}(:)),cat_stat_nansum(wYcls{3}(:))]) ./ ...
+                   ([cat_stat_nansum(Ycls{1}(:)),cat_stat_nansum(Ycls{2}(:)),cat_stat_nansum(Ycls{3}(:))] * prod(vx_vol) / 255) ); 
+      if atest<0.9 || atest>1.1
+        warning('cat_main_roi:atlasEval','There is probably a problem in the mapping of the "%s" atlas.\n',atlas); 
+      end
+  
       %wYm      = cat_vol_ROInorm(Ym,transw,1,0,job.extopts.atlas);         % intensity
 
       if exist('Yth1','var')
@@ -117,7 +127,9 @@ function cat_main_roi(job,trans,Ycls,Yp0)
 
     % map atlas to actual template space 
     transa      = trans.warped; 
-    transa.M1   = VA(ai).mat;
+    transa.ndim = trans.affine.odim;
+    transa.nmat = trans.affine.mat; 
+    transa.omat = VA(ai).mat;
     transa.odim = VA(ai).dim;
     wYa   = cat_vol_ROInorm([],transa,ai,0,FA);
 
@@ -134,7 +146,7 @@ function cat_main_roi(job,trans,Ycls,Yp0)
     % the ventricles or regions with relative low GM volume or high CSF volume. 
       csv  = cat_vol_ROIestimate(wYp0,wYa,wYth1,ai,'T',csv,{'gm'},job.extopts.atlas); %.*wYmim
       % correct for ventricular regions that use the 'Ven' keyword.
-      ven  = find(cellfun('isempty',strfind( csv(:,2) , 'Ven'))==0); %#ok<STRCL1>
+      ven  = find(cellfun('isempty',strfind( csv(:,2) , 'Ven'))==0); 
       csv(ven,end) = {nan};  %#ok<FNDSB>
       % correct for regions with relative low GM (<10%) or high CSF volume (>50%). 
       csvf = cat_vol_ROIestimate(wYp0,wYa,wYcls,ai,'V',[],{'csf','gm','wm'},FA);
@@ -178,7 +190,6 @@ function wYv = cat_vol_ROInorm(Yv,warped,ai,mod,FA)
     for i=1:5
       try
         wVv = spm_vol(FA{ai,1});
-        wYv = spm_read_vols(wVv);
         break
       catch 
         pause(0.5)
@@ -186,9 +197,20 @@ function wYv = cat_vol_ROInorm(Yv,warped,ai,mod,FA)
     end
      
     % resample atlas, if the atlas resolution differs from the actual template resolution
-    if 0  %wVv.mat(1) ~= warped.M1(1)
-      wVv2 = wVv; wVv2.mat = warped.M1; wVv2.dim = warped.odim; 
-      [t,wYv] = cat_vol_imcalc(wVv,wVv2,'i1',struct('interp',0,'verb',0));
+    for i=1:5
+      try
+      %if any(wVv.mat(:) ~= warped.nmat(:)) || any( wVv.dim ~= warped.ndim )
+      % wVv2 = wVv; wVv2.mat = warped.nmat; wVv2.dim = warped.ndim;  
+      %  [t,wYv] = cat_vol_imcalc([wVv2,wVv],wVv2,'i2',struct('interp',0,'verb',0));
+      if any(wVv.mat(:) ~= warped.omat(:)) || any( wVv.dim ~= warped.odim )
+        wVv2 = wVv; wVv2.mat = warped.omat; wVv2.dim = warped.odim;  
+        [t,wYv] = cat_vol_imcalc([wVv2,wVv],wVv2,'i2',struct('interp',0,'verb',0));
+      else
+        wYv = spm_read_vols(wVv);
+      end
+      catch
+        pause(0.5)
+      end
     end
     wYv = cat_vol_ctype(wYv,wVv(1).private.dat.dtype);
   else
@@ -204,7 +226,7 @@ function wYv = cat_vol_ROInorm(Yv,warped,ai,mod,FA)
       if old % this did not work for the thickness map?  
         [wYv,w] = spm_diffeo('push',Yv,warped.y,warped.odim(1:3)); spm_field('boundary',1);
         wYv = spm_field(w,wYv,[sqrt(sum(warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]);
-      elseif any( vx_vol_Vdef > vx_vol_Vlai*2)
+      elseif 0 %any( vx_vol_Vdef > vx_vol_Vlai*2)
         try
           %% increase resolution - this caused many memory error messages (RD201911) 
           fc   = ceil(vx_vol_Vdef / vx_vol_Vlai);

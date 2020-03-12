@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1582 | gaser | 2020-03-11 17:54:34
+r1583 | dahnke | 2020-03-12 20:24:35
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main_roi.m
+M       cat_run.m
+
+(1)  Fixed:     Corrected bug in ROI evaluation. 
+------------------------------------------------------------------------
+r1582 | gaser | 2020-03-11 17:55:11 +0100 (Mi, 11 Mär 2020) | 41 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -41,6 +50,7 @@ M       templates_volumes/cobra.csv
 (4) Fixed: Typo for release number in cat_simple.m
 (5) Fixed: Removed some smaller bugs in cat_main_roi.m
 (6) Fixed: Prepared Octave compatibility in cat12.m.
+
 ------------------------------------------------------------------------
 r1581 | dahnke | 2020-03-11 11:20:09 +0100 (Mi, 11 Mär 2020) | 60 lines
 
