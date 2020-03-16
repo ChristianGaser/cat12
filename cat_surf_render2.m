@@ -469,6 +469,7 @@ switch lower(action)
         end 
         
         % remember this zoom level
+        axis vis3d; %zoom(1.15);
         zoom reset
         
         
@@ -1730,7 +1731,8 @@ function myPostCallback(obj,evt,H)
     end
   else
     if strcmp(H.light(1).Visible,'on'), camlight(H.light(1),'headlight','infinite'); end
-  end  
+  end
+  axis vis3d;
 %P = findobj(obj,'Tag','CATSurfRender','Type','Patch');
 %if numel(P) == 1
 %else
@@ -1829,6 +1831,7 @@ for pi=1:numel(H.patch)
 end
 set(get(get(obj,'parent'),'children'),'Checked','off');
 set(obj,'Checked','on');
+%==========================================================================
 function myTextureTransparency(obj,evt,H)
 y = {'on','off'}; toggle = @(x) y{1+strcmpi(x,'on')};
 set(obj,'Checked',toggle(get(obj,'Checked')));

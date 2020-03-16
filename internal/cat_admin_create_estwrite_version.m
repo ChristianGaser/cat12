@@ -29,6 +29,9 @@ function cat_admin_create_segment_version(catdir,rev,update,fnames)
 
 %#ok<*AGROW>
 
+% TODO:
+% - change cat variable to cat# in cat_defaults
+
   if ~exist('catdir','var'), catdir = fullfile(spm('dir'),'toolbox','cat12'); end
   if ~exist('update','var'), update = 0; end % RD20200310 not working
   if ~exist('rev','var'),    rev    = '1585'; end 
