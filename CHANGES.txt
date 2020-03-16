@@ -1,5 +1,26 @@
 ------------------------------------------------------------------------
-r1583 | dahnke | 2020-03-12 20:24:35
+r1584 | dahnke | 2020-03-16 11:17:48
+
+Changed paths:
+M       CHANGES.txt
+M       cat_defaults.m
+M       cat_main_reportfig.m
+M       cat_run1173/cat_defaults1173.m
+M       cat_run1173plus/cat_defaults1173plus.m
+M       cat_run1445/cat_defaults1445.m
+M       cat_run1585/cat_defaults1585.m
+M       cat_stat_spm.m
+A       cat_stat_spm_results_ui.m
+M       cat_surf_render.m
+M       cat_surf_render2.m
+M       internal/cat_admin_create_estwrite_version.m
+
+(1)  Fixed:     Added openGL error to prevent zombie server processes.
+(2)  New:       Added cat_stat_spm_results_ui for surface statistic. 
+                Needs integration in CAT GUI. 
+
+------------------------------------------------------------------------
+r1583 | dahnke | 2020-03-12 20:26:36 +0100 (Do, 12 Mär 2020) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +28,7 @@ M       cat_main_roi.m
 M       cat_run.m
 
 (1)  Fixed:     Corrected bug in ROI evaluation. 
+
 ------------------------------------------------------------------------
 r1582 | gaser | 2020-03-11 17:55:11 +0100 (Mi, 11 Mär 2020) | 41 lines
 

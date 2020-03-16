@@ -40,6 +40,8 @@ else
 end
 
 % check that folder exist and number of vertices fits
+job.surftype = 2; 
+surftype = {'freesurfer','Template_T1_IXI555_MNI152_GS'};
 if exist(fsavgDir,'dir') == 7 && (SPM.xY.VY(1).dim(1) == 163842 || SPM.xY.VY(1).dim(1) == 327684 || ...
 		SPM.xY.VY(1).dim(1) == 655368) || SPM.xY.VY(1).dim(1) == 32492 || SPM.xY.VY(1).dim(1) == 64984
 	
@@ -50,8 +52,8 @@ if exist(fsavgDir,'dir') == 7 && (SPM.xY.VY(1).dim(1) == 163842 || SPM.xY.VY(1).
 	hemi_ind = [hemi_ind strfind(ff,'mesh.')];
 	if ~isempty(hemi_ind)
 		
-		SPM.xY.VY(1).private.private.metadata = struct('name','SurfaceID','value',fullfile(fsavgDir, 'mesh.central.freesurfer.gii'));
-		M0 = gifti({fullfile(fsavgDir, 'lh.central.freesurfer.gii'), fullfile(fsavgDir, 'rh.central.freesurfer.gii')});
+		SPM.xY.VY(1).private.private.metadata = struct('name','SurfaceID','value',fullfile(fsavgDir, ['mesh.central.' surftype{job.surftype} '.gii']));
+		M0 = gifti({fullfile(fsavgDir, ['lh.central.' surftype{job.surftype} '.gii']), fullfile(fsavgDir, ['rh.central.' surftype{job.surftype} '.gii'])});
 		G.faces = [M0(1).faces; M0(2).faces+size(M0(1).vertices,1)];
 		G.vertices = [M0(1).vertices; M0(2).vertices];
 
@@ -60,7 +62,8 @@ if exist(fsavgDir,'dir') == 7 && (SPM.xY.VY(1).dim(1) == 163842 || SPM.xY.VY(1).
 			M0 = gifti({fullfile(fsavgDir, 'cb.central.freesurfer.gii')});  %, fullfile(fsavgDir, 'rc.central.freesurfer.gii')});
 			G.faces = [G.faces; M0(1).faces+2*size(M0(1).vertices,1)];      % ; M0(2).faces+3*size(M0(1).vertices,1)];
 			G.vertices = [G.vertices; M0(1).vertices];                      % ; M0(2).vertices];
-		end
+    end
+    clear M0;
 		
 		SPM.xVol.G = G;
 		
@@ -78,8 +81,8 @@ if exist(fsavgDir,'dir') == 7 && (SPM.xY.VY(1).dim(1) == 163842 || SPM.xY.VY(1).
 		hemi_ind = [hemi_ind strfind(ff,'rh.')];
 		hemi = ff(hemi_ind:hemi_ind+1);
 		if ~isempty(hemi)
-			SPM.xY.VY(1).private.private.metadata = struct('name','SurfaceID','value',fullfile(fsavgDir,[hemi '.central.freesurfer.gii']));
-			G = fullfile(fsavgDir,[hemi '.central.freesurfer.gii']);
+			SPM.xY.VY(1).private.private.metadata = struct('name','SurfaceID','value',fullfile(fsavgDir,[hemi '.central.' surftype{job.surftype} '.gii']));
+			G = fullfile(fsavgDir,[hemi '.central.' surftype{job.surftype} '.gii']);
 			SPM.xVol.G = gifti(G);
 			
 			% remove memory demanding faces and vertices which are not necessary

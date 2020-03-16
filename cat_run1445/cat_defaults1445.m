@@ -10,7 +10,7 @@ function cat_defaults1445
 % $Id$
 
 
-clear -globalvar cat1445; 
+clear global cat1445; 
 global cat1445
 
 

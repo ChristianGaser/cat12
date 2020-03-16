@@ -544,35 +544,39 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   imat = spm_imatrix(res.Affine); Rigid = spm_matrix([imat(1:6) 1 1 1 0 0 0]); clear imat;
          
   % surface
-  if job.extopts.print>1
+  if job.extopts.print>1 
     if exist('Psurf','var') && ~isempty(Psurf)
-      try
-        id1  = find( ~cellfun('isempty',strfind({Psurf(:).Pcentral},'lh.')) ,1, 'first'); 
-        %%
-        spm_figure('Focus','Graphics'); 
-        hCS = subplot('Position',[0.50 0.05 0.55 0.30],'visible','off'); 
-        renderer = get(fg,'Renderer');
-        
-        % only add contours if OpenGL is found (to prevent crashing on clusters)
-        if strcmpi(renderer,'opengl')
-          hSD = cat_surf_display(struct('data',Psurf(id1).Pthick,'readsurf',0,'expert',2,...
-            'multisurf',1,'view','s','menu',0,...
-            'parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
-        else
-          fprintf('Surface display suppressed due to OpenGL issues.\n');
+      if opengl('info')
+        try
+          id1  = find( ~cellfun('isempty',strfind({Psurf(:).Pcentral},'lh.')) ,1, 'first'); 
+          %%
+          spm_figure('Focus','Graphics'); 
+          hCS = subplot('Position',[0.50 0.05 0.55 0.30],'visible','off'); 
+          renderer = get(fg,'Renderer');
+
+          % only add contours if OpenGL is found (to prevent crashing on clusters)
+          if strcmpi(renderer,'opengl')
+            hSD = cat_surf_display(struct('data',Psurf(id1).Pthick,'readsurf',0,'expert',2,...
+              'multisurf',1,'view','s','menu',0,...
+              'parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
+          else
+            fprintf('Surface display suppressed due to OpenGL issues.\n');
+          end
+
+          for ppi = 1:numel(hSD{1}.patch)
+            V = (Rigid * ([hSD{1}.patch(ppi).Vertices, ones(size(hSD{1}.patch(ppi).Vertices,1),1)])' )'; 
+            V(:,4) = []; hSD{1}.patch(ppi).Vertices = V;
+          end
+
+          colormap(cmap);  set(hSD{1}.colourbar,'visible','off'); 
+          cc{4} = axes('Position',[0.63 0.02 0.3 0.01],'Parent',fg); image((121:1:120+surfcolors),'Parent',cc{4});
+          set(cc{4},'XTick',1:(surfcolors-1)/6:surfcolors,'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
+            'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize-1,'FontWeight','Bold');
+        catch
+          cat_io_cprintf('warn','WARNING: Can''t display surface!\n',VT.fname);   
         end
-        
-        for ppi = 1:numel(hSD{1}.patch)
-          V = (Rigid * ([hSD{1}.patch(ppi).Vertices, ones(size(hSD{1}.patch(ppi).Vertices,1),1)])' )'; 
-          V(:,4) = []; hSD{1}.patch(ppi).Vertices = V;
-        end
-        
-        colormap(cmap);  set(hSD{1}.colourbar,'visible','off'); 
-        cc{4} = axes('Position',[0.63 0.02 0.3 0.01],'Parent',fg); image((121:1:120+surfcolors),'Parent',cc{4});
-        set(cc{4},'XTick',1:(surfcolors-1)/6:surfcolors,'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
-          'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize-1,'FontWeight','Bold');
-      catch
-        cat_io_cprintf('warn','WARNING: Can''t display surface!\n',VT.fname);   
+      else
+        cat_io_cprintf('warn','WARNING: Surface rending without openGL is deactivated to present zoombie processes on servern!\n',VT.fname);   
       end
     end
   end
