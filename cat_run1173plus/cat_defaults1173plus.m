@@ -9,7 +9,7 @@ function cat_defaults1173plus
 %_______________________________________________________________________
 % $Id$
 
-if exist('cat','var'), clear cat; end 
+clear global cat1173plus 
 global cat1173plus
 
 
