@@ -576,7 +576,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
           cat_io_cprintf('warn','WARNING: Can''t display surface!\n',VT.fname);   
         end
       else
-        cat_io_cprintf('warn','WARNING: Surface rending without openGL is deactivated to present zoombie processes on servern!\n',VT.fname);   
+        cat_io_cprintf('warn','WARNING: Surface rending without openGL is deactivated to prevent zoombie processes on servers!\n',VT.fname);   
       end
     end
   end

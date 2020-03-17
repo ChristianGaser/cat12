@@ -436,7 +436,7 @@ switch lower(action)
             uimenu(cmenu, 'Label','Change underlying mesh...', 'Interruptible','off', ...
                 'Callback',{@myChangeGeometry, H});
         else
-            % -- suraface meshs --
+            % -- surface meshs --
             c = uimenu(cmenu, 'Label', 'Meshes');
 
             sinfo1 = cat_surf_info( H.filename ); 
