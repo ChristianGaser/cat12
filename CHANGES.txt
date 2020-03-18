@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1586 | dahnke | 2020-03-18 07:35:08
+r1587 | dahnke | 2020-03-18 14:02:34
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_spm_results_ui.m
+M       cat_surf_render.m
+
+(1)  Fixed:     Corrected some of the bugs in cat_stat_spm_results_ui and cat_surf_render.
+
+------------------------------------------------------------------------
+r1586 | dahnke | 2020-03-18 07:37:19 +0100 (Mi, 18 Mär 2020) | 18 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -17,6 +27,7 @@ M       templates_surfaces_32k/mesh.central.Template_T1_IXI555_MNI152_GS.gii
 (1)  Fixed:     Corrected bugs in cat_vol_headtrimming.
 (2)  Fixed:     Corrected problems in cat_main_roi for atlases with 
                 different image properties (resolution and boundary box).
+
 
 ------------------------------------------------------------------------
 r1585 | gaser | 2020-03-17 22:31:57 +0100 (Di, 17 Mär 2020) | 14 lines
