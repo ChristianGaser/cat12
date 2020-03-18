@@ -1,5 +1,25 @@
 ------------------------------------------------------------------------
-r1585 | gaser | 2020-03-17 22:31:04
+r1586 | dahnke | 2020-03-18 07:35:08
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_defaults.m
+M       cat_main_reportfig.m
+M       cat_main_roi.m
+M       cat_stat_spm.m
+M       cat_stat_spm_results_ui.m
+M       cat_surf_render.m
+M       cat_surf_results.m
+M       cat_vol_headtrimming.m
+M       templates_surfaces_32k/mesh.central.Template_T1_IXI555_MNI152_GS.gii
+
+(1)  Fixed:     Corrected bugs in cat_vol_headtrimming.
+(2)  Fixed:     Corrected problems in cat_main_roi for atlases with 
+                different image properties (resolution and boundary box).
+
+------------------------------------------------------------------------
+r1585 | gaser | 2020-03-17 22:31:57 +0100 (Di, 17 Mär 2020) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14,6 +34,7 @@ A       templates_surfaces_32k/mesh.central.Template_T1_IXI555_MNI152_GS.gii
 (1) Added: Meshes for Shooting template surface.
 (2) Changed: Default surface for cat_stat_spm.m back to FSAverage.
 (3) Fixed: Typos.
+
 ------------------------------------------------------------------------
 r1584 | dahnke | 2020-03-16 11:19:58 +0100 (Mo, 16 Mär 2020) | 19 lines
 

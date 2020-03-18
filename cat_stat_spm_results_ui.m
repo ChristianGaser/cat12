@@ -325,6 +325,13 @@ switch lower(Action), case 'setup'                         %-Set up results
     
 % CAT.begin    
 % -------------------------------------------------------------------------
+% ToDo:
+% * add batch call with render settings > cat_conf_stools
+% * add atlas data coursor > cat_surf_render
+% * add colorbar > cat_surf_render
+% * fix contrast box boundaries
+% * full atlas integration > spm_atlas, spm_XYZreg, spm_list (lot of work) 
+% -------------------------------------------------------------------------
 if useCAT
     [pp,ff,ee] = spm_fileparts(xSPM.Vspm.fname);
     if strcmp(ee,'.gii')
