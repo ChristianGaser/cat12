@@ -184,13 +184,17 @@ function varargout = cat_vol_headtrimming(job)
     %% estimate trimming parameter
     V = spm_vol(char(job.images{si}));
     Y = zeros(V(1).dim,'single');
-    for di = 1:max(1,min(numel(V,job.avg)))
-      Y = Y + single(spm_read_vols(V(di))); 
+    if job.avg
+      for di = 1:max(1,min(numel(V,job.avg)))
+        Y = Y + single(spm_read_vols(V(di))); 
+      end
+      Y = Y ./ max(1,min(numel(V,job.avg)));
     end
-    Y = Y ./ max(1,min(numel(V,job.avg)));
+
+    % create mask
+    if job.mask, Ymask = Y > 0; end 
     
-    if job.mask, Ymask = Y > 0; end
-    
+    % intensity normalization 
     vx_vol  = sqrt(sum(V(1).mat(1:3,1:3).^2)); 
     [Y,hth] = cat_stat_histth(smooth3(Y),job.range1,0); 
     Y = (Y - hth(1)) ./ abs(diff(hth));
@@ -201,7 +205,7 @@ function varargout = cat_vol_headtrimming(job)
     Yb = smooth3(Yb)>job.pth; 
     Yb = cat_vol_morph(Yb,'do',job.open,vx_vol); 
     Yb = cat_vol_morph(Yb,'l',[10 0.1]); 
-    [Yt,redB] = cat_vol_resize(Y,'reduceBrain',vx_vol,job.addvox,Yb); clear Yt;  %#ok<ASGLU>
+    [Yt,redB] = cat_vol_resize(Y,'reduceBrain',vx_vol,job.addvox,Yb); clear Yt Y;  %#ok<ASGLU>
     
     % prepare update of AC orientation
     mati  = spm_imatrix(V(1).mat); mati(1:3) = mati(1:3) + mati(7:9).*(redB.BB(1:2:end) - 1);
@@ -229,6 +233,7 @@ function varargout = cat_vol_headtrimming(job)
       Vo(di) = spm_vol(P{1}); 
       Yo = single(spm_read_vols(Vo(di)));
 
+      % applay mask
       if job.mask, Yo = Yo.*Ymask; end
 
       Yo = cat_vol_resize(Yo,'reduceBrain',vx_vol,job.addvox,Yb); 

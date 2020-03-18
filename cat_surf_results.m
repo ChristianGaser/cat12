@@ -2842,7 +2842,7 @@ switch H.cursor_mode
       end
     elseif ~isempty(H.S{1}.name)
       SPM_found = 0;
-      spm('alert!', 'No SPM.mat file found. Please check that you have not moved your files or your result file was moved from the folder where the SPM.mat is stored.', 1);
+      spm('alert!', 'No SPM.mat file found.\nPlease check that you have not moved your files or your result file was moved from the folder where the SPM.mat is stored.', 1);
     end
     
     if SPM_found
@@ -2855,7 +2855,7 @@ switch H.cursor_mode
       end
     end
   case 6 % enable/disable rotate3d
-    clearDataCursorPlot(H);
+    cle7rDataCursorPlot(H);
     rotate3d;
     fprintf('Use mouse to rotate views.\n');
 end
