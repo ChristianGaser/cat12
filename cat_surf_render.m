@@ -349,8 +349,9 @@ switch lower(action)
             set(H.patch,'BackFaceLighting','unlit');
         end
         
-        
+        set(H.axis,'Visible','On');
         H.rotate3d = rotate3d(H.axis);
+        set(H.axis,'Visible','Off');
         set(H.rotate3d,'ActionPostCallback',{@myPostCallback, H});
         if ~results
           set(H.rotate3d,'Enable','on');
@@ -1354,11 +1355,22 @@ set(obj,'Checked','on');
 %==========================================================================
 function mySwitchRotate(obj,evt,H)
 if strcmpi(get(H.rotate3d,'enable'),'on')
-    set(H.rotate3d,'enable','off');
+    rotate3d(H.axis,'off');
     set(obj,'Checked','off');
 else
-    set(H.rotate3d,'enable','on');
+    rotate3d(H.axis,'on');
     set(obj,'Checked','on');
+    
+    % fine red lines of the SPM result table
+%{
+    hRes.Fgraph       = spm_figure('FindWin','Graphics');
+     
+    hRes.Fline        = findobj(hRes.Fgraph,'Type','Line','Tag','');
+    hRes.FlineAx      = get(hRes.Fline,'parent');
+
+    set(hRes.Fline,'HitTest','off');
+    for axi = 1:numel( hRes.FlineAx ), rotate3d(hRes.FlineAx{axi},'off'); end
+    %}
 end
 
 %==========================================================================
@@ -1598,10 +1610,12 @@ if ~isempty(d) && any(d(:))
 end
 hMe = findobj(H.axis,'Tag','CrossBar');
 if ~isempty(hMe)
-    ws = warning('off');
-    spm_XYZreg('SetCoords',pos,get(hMe,'UserData'));
+    %ws = warning('off');
     myCrossBar('SetCoords',pos,hMe);
-    warning(ws);
+    %spm_XYZreg('SetCoords',pos,get(hMe,'UserData')); 
+    
+    spm_orthviews('Reposition',pos)
+    %warning(ws);
 end
 cat_stat_spm_results_ui('spm_list_cleanup');
 
