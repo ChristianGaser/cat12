@@ -2,12 +2,17 @@ function cat_main_roi(job,trans,Ycls,Yp0)
 % ______________________________________________________________________
 %  ROI Partitioning:
 %  This part estimates individual measurements for different ROIs.
-%  The ROIs are defined in the CAT normalized space and there are two 
-%  ways to estimate them - (1) in subject space, and (2) in normalized 
-%  space. Estimation in normalized space is more direct and avoids further
-%  transformations. The way over the subject space has the advantage 
-%  that individual anatomical refinements are possible, but this has
-%  to be done and evaluated for each atlas. 
+%  The ROIs are defined in the CAT normalized space and there are three 
+%  ways to estimate them: (1) in (internal) subject space, (2) in 
+%  normalized space (where also the VBM is done and that is defined 
+%  by extopts.vox, and (3) in the atlas space.
+%  Estimation in normalized space is more direct and avoids further
+%  transformations or individual adaptions. The way over the subject space
+%  has the advantage that individual anatomical refinements are possible, 
+%  but this has to be done and evaluated for each atlas and it is not so 
+%  simple at the end. Another thing (that came up later) was the evaluation
+%  in atlas space, that most relevant because some atlas maps use now
+%  higher resolutions to describe fine structures. 
 % ______________________________________________________________________
 %
 %   Robert Dahnke (robert.dahnke@uni-jena.de)
@@ -32,11 +37,13 @@ function cat_main_roi(job,trans,Ycls,Yp0)
   end
 
   vx_vol  = sqrt( sum( trans.native.Vi.mat(1:3,1:3).^2 ) ); % voxel size of the processed image
+  vx_voln = sqrt( sum( trans.affine.mat(1:3,1:3).^2 ) );    % voxel size of the registration space
 
-  stime = cat_io_cmd('ROI estimation');   
-  if job.extopts.verb, fprintf('\n'); end 
+  % print progress
+  stime = cat_io_cmd('ROI estimation'); if job.extopts.verb, fprintf('\n'); end 
 
-  % get atlases
+  
+  % get atlases maps that should be evaluated
   FAF = job.extopts.atlas; 
   FA  = {}; fai = 1;
   AN  = fieldnames(job.output.atlases);
@@ -47,7 +54,6 @@ function cat_main_roi(job,trans,Ycls,Yp0)
       fai = fai+1; 
     end
   end
-
   if isempty(FA)
     % deactivate output
     FN = job.output.atlas; 
@@ -74,64 +80,36 @@ function cat_main_roi(job,trans,Ycls,Yp0)
         stime2  = cat_io_cmd('  Data mapping to normalized atlas space','g5','', job.extopts.verb-1); 
       else
         stime2  = cat_io_cmd('  Data mapping to normalized atlas space','g5','', job.extopts.verb-1,stime2); 
-      end  
-
-      transw      = trans.warped;                     % dartel/shooting deformation data
-      transw.odim = VA(ai).dim;                       % adaption for atlas image size
-      %transw.omat = VA(ai).mat * trans.affine.mat / VA(ai).mat;
-      transw.ress = job.extopts.vox(1)./VAvx_vol(ai,:);  % adaption for atlas sampling resolution
+      end
+      
+      %wVv = spm_vol(FA{ai,1});   % atlas volume information 
+      transw = rmfield(trans.warped,'yx');     % dartel/shooting deformation data
+      transw.odim = VA(ai).dim;
+      transw.M1   = VA(ai).mat;
       mati        = spm_imatrix( trans.affine.mat - VA(ai).mat) ; 
       vdim        = spm_imatrix( VA(ai).mat ); % trans.affine.mat ); 
-      matit       = mati(1:3) ./ vdim(7:9); 
-      transw.y    = cat(4,trans.warped.y(:,:,:,1) + matit(1), trans.warped.y(:,:,:,2) + matit(2), trans.warped.y(:,:,:,3) + matit(3) );
-      wYp0     = cat_vol_ROInorm(Yp0,transw,1,0,FA);
-      wYcls    = cat_vol_ROInorm(Ycls,transw,1,1,FA);
-
-      if exist('Ywmh','var')
-        wYcls{7} = cat_vol_ctype(cat_vol_ROInorm({single(Ywmh)},transw,1,1,FA));
-      end
-
-      % correction for voxel size of the orignal image
-      for ci=1:numel(wYcls)
-        if ~isempty(wYcls{ci})
-          wYcls{ci} = wYcls{ci} * prod(vx_vol); 
-        end      
-      end
-      if debug
-        %% check voxel size of an atlas map that labels the whole brain
-        fprintf('\n%8s %8s %8s\n','GM','WM','CSF') 
-        fprintf('%8.2f %8.2f %8.2f\n', [cat_stat_nansum(wYcls{1}(:)),cat_stat_nansum(wYcls{2}(:)),cat_stat_nansum(wYcls{3}(:))]  / 1000); 
-        fprintf('%8.2f %8.2f %8.2f\n', [cat_stat_nansum(Ycls{1}(:)),cat_stat_nansum(Ycls{2}(:)),cat_stat_nansum(Ycls{3}(:))] * prod(vx_vol) / 1000 / 255); 
-      end
-      atest = mean( ([cat_stat_nansum(wYcls{1}(:)),cat_stat_nansum(wYcls{2}(:)),cat_stat_nansum(wYcls{3}(:))]) ./ ...
-                   ([cat_stat_nansum(Ycls{1}(:)),cat_stat_nansum(Ycls{2}(:)),cat_stat_nansum(Ycls{3}(:))] * prod(vx_vol) / 255) ); 
-      if atest<0.9 || atest>1.1
-        warning('cat_main_roi:atlasEval','There is probably a problem in the mapping of the "%s" atlas.\n',atlas); 
-      end
-  
-      %wYm      = cat_vol_ROInorm(Ym,transw,1,0,job.extopts.atlas);         % intensity
-
-      if exist('Yth1','var')
-        % ROI based thickness of all GM voxels per ROI
-        Yth1x = Yth1; Yth1x(Yp0toC(Yp0,2)<0.5) = nan;
-        wYth1 = cat_vol_ROInorm(Yth1x,transw,1,0,FA);
-        wYth1(wYth1==0) = nan; 
-        clear Yth1x; 
-      end
+      matit       = mati(1:3) ./ vdim(7:9)./vx_vol; 
+      for i=1:3, transw.y(:,:,:,i) = transw.y(:,:,:,i) * job.extopts.vox ./ VAvx_vol(ai,i);  end
+      transw.y    = cat(4,transw.y(:,:,:,1) + matit(1), transw.y(:,:,:,2) + matit(2), transw.y(:,:,:,3) + matit(3) );
     end
+    
+    %% haveing the new map you can project the segmentation
+    wYp0     = cat_vol_ROInorm(Yp0 ,transw,1,0,FA);
+    wYcls    = cat_vol_ROInorm(Ycls,transw,1,1,FA);
+    wYa      = cat_vol_ROInorm([],[],ai,0,FA);
 
-    % ds('l2','',1.5,wYm,round(wYp0),wYm,single(wYa)/50 .* (wYp0<2.5),70)
-
+    if debug % this does not work in case of trimmed atlases set do not include the full brain 
+      fprintf('\n%8s %8s %8s\n','GM','WM','CSF') 
+      fprintf('%8.2f %8.2f %8.2f\n', [cat_stat_nansum(wYcls{1}(:)),cat_stat_nansum(wYcls{2}(:)),cat_stat_nansum(wYcls{3}(:))] / 1000); 
+      fprintf('%8.2f %8.2f %8.2f\n', [cat_stat_nansum(Ycls{1}(:)) ,cat_stat_nansum(Ycls{2}(:)) ,cat_stat_nansum(Ycls{3}(:)) ] * prod(vx_vol) / 1000 / 255); 
+      fprintf('\n');
+    end      
+ 
     [px,atlas] = fileparts(FA{ai,1}); clear px; %#ok<ASGLU>
     stime2 = cat_io_cmd(sprintf('  ROI estimation of ''%s'' atlas',atlas),'g5','', job.extopts.verb-1,stime2);
 
     % map atlas to actual template space 
-    transa      = trans.warped; 
-    transa.ndim = trans.affine.odim;
-    transa.nmat = trans.affine.mat; 
-    transa.omat = VA(ai).mat;
-    transa.odim = VA(ai).dim;
-    wYa   = cat_vol_ROInorm([],transa,ai,0,FA);
+    %wYa   = cat_vol_ROInorm([],[],ai,0,FA);
 
     if job.extopts.WMHC == 3   
       FA{ai,3} = unique( [FA{ai,3} {'wmh'}] ); %#ok<AGROW>
@@ -190,38 +168,41 @@ function wYv = cat_vol_ROInorm(Yv,warped,ai,mod,FA)
     for i=1:5
       try
         wVv = spm_vol(FA{ai,1});
+        wYv = spm_read_vols(wVv);
         break
       catch 
         pause(0.5)
       end
     end
-     
-    % resample atlas, if the atlas resolution differs from the actual template resolution
-    for i=1:5
-      try
-      %if any(wVv.mat(:) ~= warped.nmat(:)) || any( wVv.dim ~= warped.ndim )
-      % wVv2 = wVv; wVv2.mat = warped.nmat; wVv2.dim = warped.ndim;  
-      %  [t,wYv] = cat_vol_imcalc([wVv2,wVv],wVv2,'i2',struct('interp',0,'verb',0));
-      if any(wVv.mat(:) ~= warped.omat(:)) || any( wVv.dim ~= warped.odim )
-        wVv2 = wVv; wVv2.mat = warped.omat; wVv2.dim = warped.odim;  
-        [t,wYv] = cat_vol_imcalc([wVv2,wVv],wVv2,'i2',struct('interp',0,'verb',0));
-      else
-        wYv = spm_read_vols(wVv);
-      end
-      catch
-        pause(0.5)
+
+    if 0
+      % resample atlas, if the atlas resolution differs from the actual template resolution
+      for i=1:5
+        try
+        %if any(wVv.mat(:) ~= warped.nmat(:)) || any( wVv.dim ~= warped.ndim )
+        % wVv2 = wVv; wVv2.mat = warped.nmat; wVv2.dim = warped.ndim;  
+        %  [t,wYv] = cat_vol_imcalc([wVv2,wVv],wVv2,'i2',struct('interp',0,'verb',0));
+        if any(wVv.mat(:) ~= warped.omat(:)) || any( wVv.dim ~= warped.odim )
+          wVv2 = wVv; wVv2.mat = warped.omat; wVv2.dim = warped.odim;  
+          [t,wYv] = cat_vol_imcalc([wVv2,wVv],wVv2,'i2',struct('interp',0,'verb',0));
+        else
+          wYv = spm_read_vols(wVv);
+        end
+        catch
+          pause(0.5)
+        end
       end
     end
     wYv = cat_vol_ctype(wYv,wVv(1).private.dat.dtype);
   else
     % map image to atlas space
-    for yi=1:numel(warped.ress), warped.y(:,:,:,yi) = warped.y(:,:,:,yi) * warped.ress(yi); end
+    %for yi=1:numel(warped.ress), warped.y(:,:,:,yi) = warped.y(:,:,:,yi) * warped.ress(yi); end
     if mod==0
       old = 0;
       
-      Vlai = spm_vol(FA{ai,1});
-      vx_vol_Vlai   = sqrt(sum(Vlai.mat(1:3,1:3).^2));
-      vx_vol_Vdef   = sqrt(sum(warped.M1(1:3,1:3).^2));
+      %Vlai = spm_vol(FA{ai,1});
+      %vx_vol_Vlai   = sqrt(sum(Vlai.mat(1:3,1:3).^2));
+      %vx_vol_Vdef   = sqrt(sum(warped.M1(1:3,1:3).^2));
       
       if old % this did not work for the thickness map?  
         [wYv,w] = spm_diffeo('push',Yv,warped.y,warped.odim(1:3)); spm_field('boundary',1);
@@ -266,6 +247,7 @@ function wYv = cat_vol_ROInorm(Yv,warped,ai,mod,FA)
         % The 2nd reason to use the old modulation is compatibility with cat_vol_defs.m
         Yy = spm_diffeo('invdef',warped.y,warped.odim,eye(4),warped.M0);
         w  = spm_diffeo('def2det',Yy)/det(warped.M0(1:3,1:3)); clear Yy;
+       % w  = w * mean(warped.ress(yi)); 
         % ensure that jacobian det is positive (no clue why some times the sign is switched)
         if mean(w(~isnan(w))) < 0, w = -w; end 
         w(:,:,[1 end]) = NaN; w(:,[1 end],:) = NaN; w([1 end],:,:) = NaN;
@@ -309,10 +291,13 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA)
     if exist(csvf,'file')
       csv = cat_io_csv(csvf,'','',struct('delimiter',';')); 
     else
+      IDs = unique(Ya); 
       cat_io_cprintf('warn',sprintf('\n    Cannot find ''%s'' csv-file with region names! ',ff)); 
-      csv = [num2cell((1:max(Ya(:)))') ...
-        cellstr([repmat('ROI',max(Ya(:)),1) num2str((1:max(Ya(:)))','%03d')]) ...
-        cellstr([repmat('ROI',max(Ya(:)),1) num2str((1:max(Ya(:)))','%03d')])];
+      %ROIid;ROIabbr;ROIname;ROIbaseid;ROIbasename;Voxel;Volume;XYZ
+      csv = [{'ROIid','ROIabbr','ROIname'}; ...
+        num2cell(IDs) ...
+        cellstr([repmat('ROI',numel(IDs)) num2str(IDs,'%03d')]) ...
+        cellstr([repmat('ROI',numel(IDs)) num2str(IDs,'%03d')])];
     end
     
     % remove empty rows and prepare structure names

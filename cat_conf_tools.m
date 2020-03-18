@@ -666,7 +666,7 @@ function headtrimming = cat_vol_headtrimming_GUI(intlim,spm_type,prefix,suffix,e
   mask.name             = 'Final masking with source image';
   mask.tag              = 'mask';
   mask.labels           = {'Yes','No'};
-  mask.values           = {0,1};
+  mask.values           = {1,0};
   mask.val              = {1};
   mask.help             = {'Use source image for trimming and final masking (e.g. for skull-stripping in longitudinal pipeline).'};
 
