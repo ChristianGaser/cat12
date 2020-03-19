@@ -19,7 +19,7 @@ function [Affine2,Yb,Ymi,Ym0] = cat_run_job_APRGs1585(Ysrc,Ybg,VF,Pb,Pbt,Affine,
 %   Department of Neurology
 %   University Jena
 % ______________________________________________________________________
-% $Id: cat_run_job_APRGs.m 1435 2019-03-06 11:24:38Z dahnke $
+% $Id$
 
   dbs = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
  

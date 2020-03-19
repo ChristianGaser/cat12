@@ -39,7 +39,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS21585(V,V0,Ym,Ya,YM
 % Structural Brain Mapping Group
 % University Jena
 % ______________________________________________________________________
-% $Id: cat_surf_createCS2.m 1561 2020-02-04 15:49:34Z gaser $ 
+% $Id$ 
 
 %#ok<*AGROW,*STREMP,*ASGLU,*SFLD,*STFLD>
 
