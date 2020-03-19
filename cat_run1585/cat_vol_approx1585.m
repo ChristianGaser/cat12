@@ -33,7 +33,7 @@ function TA=cat_vol_approx1585(T,method,vx_vol,res,opt)
 % Structural Brain Mapping Group
 % University Jena
 %
-% $Id: cat_vol_approx.m 1316 2018-05-03 16:32:07Z dahnke $
+% $Id$
 
   if nargin==0, help cat_vol_approx; return; end
   if ~exist('res','var'); res=4; end

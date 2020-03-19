@@ -124,7 +124,7 @@ function varargout = cat_stat_spm_results_ui(varargin)
 % Copyright (C) 1996-2018 Wellcome Trust Centre for Neuroimaging
  
 % Karl Friston & Andrew Holmes
-% $Id: spm_results_ui.m 7388 2018-08-06 12:04:26Z guillaume $
+% $Id$
  
  
 %==========================================================================
@@ -235,8 +235,11 @@ function varargout = cat_stat_spm_results_ui(varargin)
 % deletes HandleGraphics objects, but only if they're valid, thus avoiding
 % warning statements from MATLAB.
 %__________________________________________________________________________
- 
-SVNid = '$Rev: 7388 $'; 
+%
+% modified version of
+% spm_results_ui.m 7388 2018-08-06
+
+SVNid = '$Rev$'; 
 
 %-Condition arguments
 %--------------------------------------------------------------------------

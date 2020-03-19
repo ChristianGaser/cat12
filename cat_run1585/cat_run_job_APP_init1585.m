@@ -10,7 +10,7 @@ function [Ym,Yt,Ybg,WMth,bias,Tth,pior] = cat_run_job_APP_init1585(Ysrco,vx_vol,
 %  a typical intensity around GM.
 %  _____________________________________________________________________
 %  Robert Dahnke
-%  $Id: cat_run_job_APP_init.m 1407 2018-12-15 19:58:05Z dahnke $
+%  $Id$
 
   if ~exist('opt','var'); opt = struct(); end
   def.APPstr = 0.5;  % strength of bias correction (smoothness of bias field; 0=smooth; 1=hard)

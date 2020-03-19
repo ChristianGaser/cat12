@@ -22,7 +22,7 @@ function [prob,indx,indy,indz] = cat_main_amap1585(Ymi,Yb,Yb0,Ycls,job,res)
 % Structural Brain Mapping Group
 % University Jena 
 % ______________________________________________________________________
-% $Id: cat_main_amap.m 1552 2020-01-17 10:19:24Z dahnke $ 
+% $Id$ 
 
 
   % this function adds noise to the data to stabilize processing and we

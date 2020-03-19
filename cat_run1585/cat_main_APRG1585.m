@@ -19,7 +19,7 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG1585(Ysrc,P,res,T3th)
 %   Department of Neurology
 %   University Jena
 % ______________________________________________________________________
-% $Id: cat_main_APRG.m 1435 2019-03-06 11:24:38Z dahnke $
+% $Id$
 
   dbs = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
 
