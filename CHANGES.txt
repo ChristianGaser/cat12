@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1588 | gaser | 2020-03-19 10:30:48
+r1589 | dahnke | 2020-03-19 15:38:55
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main_roi.m
+M       cat_stat_spm_results_ui.m
+
+(1)  Fixed:     Corrected further bugs in cat_stat_spm_results_ui.
+(2)  Fixed:     Corrected further mapping errors in cat_main_roi.
+
+------------------------------------------------------------------------
+r1588 | gaser | 2020-03-19 10:31:26 +0100 (Do, 19 Mär 2020) | 50 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -50,6 +61,7 @@ M       html/cat.html
  M      templates_surfaces/cb.sphere.freesurfer.gii
 
 Changed: Added changes from revision 1585 again that were lost.
+
 ------------------------------------------------------------------------
 r1587 | dahnke | 2020-03-18 14:04:49 +0100 (Mi, 18 Mär 2020) | 8 lines
 

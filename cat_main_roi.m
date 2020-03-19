@@ -88,7 +88,7 @@ function cat_main_roi(job,trans,Ycls,Yp0)
       transw.M1   = VA(ai).mat;
       mati        = spm_imatrix( trans.affine.mat - VA(ai).mat) ; 
       vdim        = spm_imatrix( VA(ai).mat ); % trans.affine.mat ); 
-      matit       = mati(1:3) ./ vdim(7:9)./vx_vol; 
+      matit       = mati(1:3) ./ vdim(7:9); %./vx_vol; 
       for i=1:3, transw.y(:,:,:,i) = transw.y(:,:,:,i) * job.extopts.vox ./ VAvx_vol(ai,i);  end
       transw.y    = cat(4,transw.y(:,:,:,1) + matit(1), transw.y(:,:,:,2) + matit(2), transw.y(:,:,:,3) + matit(3) );
     end
