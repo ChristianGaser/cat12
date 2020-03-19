@@ -31,7 +31,7 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ycsfdc] = cat_vol_pbt1585(Ymf,opt)
 %   University Jena
 %
 % ______________________________________________________________________
-% $Id: cat_vol_pbt.m 1552 2020-01-17 10:19:24Z dahnke $ 
+% $Id$ 
 
 
 % default variables and check/set function  

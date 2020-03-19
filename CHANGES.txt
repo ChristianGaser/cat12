@@ -1,5 +1,57 @@
 ------------------------------------------------------------------------
-r1587 | dahnke | 2020-03-18 14:02:34
+r1588 | gaser | 2020-03-19 10:30:48
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_defaults.m
+M       cat_main_reportfig.m
+MM      cat_run1585/cat_conf_ROI1585.m
+MM      cat_run1585/cat_conf_extopts1585.m
+MM      cat_run1585/cat_conf_long1585.m
+MM      cat_run1585/cat_conf_opts1585.m
+MM      cat_run1585/cat_defaults1585.m
+MM      cat_run1585/cat_get_defaults1585.m
+MM      cat_run1585/cat_main1585.m
+MM      cat_run1585/cat_main_APRG1585.m
+MM      cat_run1585/cat_main_LAS1585.m
+MM      cat_run1585/cat_main_amap1585.m
+MM      cat_run1585/cat_main_kamap1585.m
+MM      cat_run1585/cat_main_registration1585.m
+MM      cat_run1585/cat_main_updateSPM1585.m
+MM      cat_run1585/cat_main_updateWMHs1585.m
+MM      cat_run1585/cat_run1585.m
+MM      cat_run1585/cat_run_job10701585.m
+MM      cat_run1585/cat_run_job1585.m
+MM      cat_run1585/cat_run_job_APP_SPMfinal1585.m
+ M      cat_run1585/cat_run_job_APP_SPMinit1585.m
+MM      cat_run1585/cat_run_job_APP_final1585.m
+MM      cat_run1585/cat_run_job_APP_init10701585.m
+MM      cat_run1585/cat_run_job_APP_init1585.m
+MM      cat_run1585/cat_run_job_APRGs1585.m
+MM      cat_run1585/cat_run_newcatch1585.m
+MM      cat_run1585/cat_surf_createCS1585.m
+MM      cat_run1585/cat_surf_createCS21585.m
+MM      cat_run1585/cat_vol_approx1585.m
+MM      cat_run1585/cat_vol_pbt1585.m
+MM      cat_stat_spm_results_ui.m
+M       cat_surf_render.m
+M       cat_surf_results.m
+ M      check_pipeline/surf/lh.pbt.IXI002-Guys-0828-T1
+ M      check_pipeline/surf/lh.pbt.IXI016-Guys-0697-T1
+ M      check_pipeline/surf/lh.pbt.IXI017-Guys-0698-T1
+ M      check_pipeline/surf/lh.pbt.IXI019-Guys-0702-T1
+ M      check_pipeline/surf/rh.pbt.IXI002-Guys-0828-T1
+ M      check_pipeline/surf/rh.pbt.IXI016-Guys-0697-T1
+ M      check_pipeline/surf/rh.pbt.IXI017-Guys-0698-T1
+ M      check_pipeline/surf/rh.pbt.IXI019-Guys-0702-T1
+M       html/cat.html
+ M      templates_surfaces/cb.central.freesurfer.gii
+ M      templates_surfaces/cb.sphere.freesurfer.gii
+
+Changed: Added changes from revision 1585 again that were lost.
+------------------------------------------------------------------------
+r1587 | dahnke | 2020-03-18 14:04:49 +0100 (Mi, 18 Mär 2020) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +59,7 @@ M       cat_stat_spm_results_ui.m
 M       cat_surf_render.m
 
 (1)  Fixed:     Corrected some of the bugs in cat_stat_spm_results_ui and cat_surf_render.
+
 
 ------------------------------------------------------------------------
 r1586 | dahnke | 2020-03-18 07:37:19 +0100 (Mi, 18 Mär 2020) | 18 lines

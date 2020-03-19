@@ -33,7 +33,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS1585(V,Ym,Ya,YMF,opt)
 % Structural Brain Mapping Group
 % University Jena
 % ______________________________________________________________________
-% $Id: cat_surf_createCS.m 1523 2019-11-21 23:12:24Z gaser $ 
+% $Id$ 
 
 %#ok<*AGROW>
 

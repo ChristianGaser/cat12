@@ -25,7 +25,7 @@ function varargout = cat_get_defaults1585(defstr, varargin)
 
 % based on Volkmar Glauches version of
 % spm_get_defaults
-% $Id: cat_get_defaults.m 1562 2020-02-11 13:53:30Z dahnke $
+% $Id$
 
 global cat;
 if isempty(cat)

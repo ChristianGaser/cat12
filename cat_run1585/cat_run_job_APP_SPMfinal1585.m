@@ -6,7 +6,7 @@ function  [Ymc,Ymi] = cat_run_job_APP_SPMfinal1585(Po,vout,vx_vol,verb,fstr)
 %
 %  _____________________________________________________________________
 %  Robert Dahnke
-%  $Id: cat_run_job_APP_SPMfinal.m 1384 2018-10-31 19:55:27Z dahnke $
+%  $Id$
 
 
   % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 

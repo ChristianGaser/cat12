@@ -5,7 +5,7 @@ function cat_run_newcatch1585(job,tpm,subj)
 %
 % See also cat_run_newcatch.
 % ______________________________________________________________________
-% $Revision: 1563 $  $Date: 2020-02-11 17:00:46 +0100 (Tue, 11 Feb 2020) $
+% $Revision$  $Date$
 
   global cat_err_res;
 

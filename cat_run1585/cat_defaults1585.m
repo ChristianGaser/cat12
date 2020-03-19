@@ -7,7 +7,7 @@ function cat_defaults1585
 %
 % Care must be taken when modifying this file
 %_______________________________________________________________________
-% $Id: cat_defaults.m 1575 2020-03-03 11:49:34Z dahnke $
+% $Id$
 
 clear global cat1585; 
 global cat1585

@@ -10,7 +10,7 @@ function Ycls = cat_main_updateWMHs1585(Ym,Ycls,Yy,tpm,job,res,trans)
 %   Department of Neurology
 %   University Jena
 % ______________________________________________________________________
-% $Id: cat_main_updateWMHs.m 1393 2018-11-19 08:36:43Z dahnke $
+% $Id$
 
   % update WMHs?
   if numel(Ycls)>6
