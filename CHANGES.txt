@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1591 | gaser | 2020-03-23 23:19:34
+r1592 | gaser | 2020-03-24 00:10:03
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+
+Fixed: Corrected help string in cat_conf_tools.m that caused errors.
+------------------------------------------------------------------------
+r1591 | gaser | 2020-03-23 23:20:09 +0100 (Mo, 23 Mär 2020) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -16,6 +24,7 @@ M       templates_volumes/cobra.nii
     rigid and mean for non-linear registration.
 (2) Changed: Decreased FOV for Cobra atlas.
 (3) Changed: Updated online help and manual.
+
 ------------------------------------------------------------------------
 r1590 | dahnke | 2020-03-23 08:38:58 +0100 (Mo, 23 Mär 2020) | 19 lines
 
