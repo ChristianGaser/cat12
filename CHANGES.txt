@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1590 | dahnke | 2020-03-23 08:36:33
+r1591 | gaser | 2020-03-23 23:19:34
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_tools.m
+M       cat_vol_groupwise_ls.m
+M       html/cat.html
+M       html/cat_versions.html
+ M      templates_surfaces/mesh.central.Template_T1_IXI555_MNI152_GS.gii
+ M      templates_surfaces_32k/mesh.central.Template_T1_IXI555_MNI152_GS.gii
+M       templates_volumes/cobra.nii
+
+(1) Changed: Average image in cat_vol_groupwise_ls.m is using median for 
+    rigid and mean for non-linear registration.
+(2) Changed: Decreased FOV for Cobra atlas.
+(3) Changed: Updated online help and manual.
+------------------------------------------------------------------------
+r1590 | dahnke | 2020-03-23 08:38:58 +0100 (Mo, 23 Mär 2020) | 19 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -19,6 +37,7 @@ M       cat_surf_render.m
 (5)  Fixed:     Corrected some bugs in cat_surf_render to show the colorbar in 
                 cat_surf_spm_results_ui.                  
                                   
+
 ------------------------------------------------------------------------
 r1589 | dahnke | 2020-03-19 15:41:22 +0100 (Do, 19 Mär 2020) | 9 lines
 
