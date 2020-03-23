@@ -255,6 +255,12 @@ switch lower(Action), case 'setup'                         %-Set up results
     %-Initialise
     %----------------------------------------------------------------------
     spm('FnBanner',mfilename,SVNid);
+    try
+      dcm = datacursormode(spm_figure('FindWin','Graphics')); 
+      set(dcm,'Enable','off','UpdateFcn',[]); 
+      
+      spm_figure('Clear',spm_figure('FindWin','Graphics')); 
+    end
     [Finter,Fgraph,CmdLine] = spm('FnUIsetup','Stats: Results');
     spm_clf('Satellite');
  
@@ -603,12 +609,16 @@ end
     hRes.FgraphAx     = findobj( hRes.FgraphC,'Type','Axes');
     hRes.FgraphAxPos  = cell2mat(get( hRes.FgraphAx , 'Position'));
     hRes.Ftext        = findobj(hRes.Fgraph,'Type','Text');
+    % fine red lines of the SPM result table
+    hRes.Fline        = findobj(hRes.Fgraph,'Type','Line','Tag','');% ,'UIcontextMenu',[]);
+    hRes.FlineAx      = get(hRes.Fline,'parent');
 
     % find the SPM result texts to fix them against rotation
     hres.Ftext      = findobj(hRes.Fgraph,'Type','Text','Color',[0.7 0.7 0.7]); 
     hRes.Ftext3dres = get(  hres.Ftext ,'parent'); 
    % for axi=1:numel(hRes.Ftext),      set( hRes.Ftext(axi),'Color',[0.2 0.2 0.2]); end
-    for axi=1:numel(hRes.Ftext3dres), set( hRes.Ftext3dres{axi},'HitTest','off'); end
+    for axi = 1:numel(hRes.Ftext3dres), set( hRes.Ftext3dres{axi},'HitTest','off'); end
+    for axi = 1:numel(hRes.FlineAx ),   set( hRes.FlineAx{axi},'visible','off'); end
     
     % make nice contrast box that is a bit larger than the orinal boxes
     hRes.Fcons        = hRes.FgraphAx( hRes.FgraphAxPos(:,1) == 0.65 & hRes.FgraphAxPos(:,2) > 0.6 ) ;  
@@ -1672,15 +1682,16 @@ assignin('base','so',so);
 %==========================================================================
 function spm_list_cleanup(hReg)
 %==========================================================================
-  hRes.Fgraph       = spm_figure('FindWin','Graphics');
+  hRes.Fgraph       = [spm_figure('FindWin','Graphics'),spm_figure('FindWin','Satellite')];
 
   % fine red lines of the SPM result table
   hRes.Fline        = findobj(hRes.Fgraph,'Type','Line','Tag','');% ,'UIcontextMenu',[]);
   hRes.FlineAx      = get(hRes.Fline,'parent');
   
-  set(hRes.Fline,'HitTest','off'); %set(hRes.FlineAx{axi},'HitTest','off','visible','off');
+  set(hRes.Fline,'HitTest','off'); %
   for axi = 1:numel( hRes.FlineAx ),  rotate3d(hRes.FlineAx{axi},'off'); end
-  
+  for axi = 1:numel( hRes.FlineAx ),  set(hRes.FlineAx{axi},'visible','off'); end
+   
   %%
   hRes.Img        = get(findobj(hRes.Fgraph,'Type','Image','Tag','Transverse'),'parent');
   for axi = 1:numel( hRes.Img  ),  rotate3d(hRes.Img{axi},'off'); end
@@ -1693,7 +1704,7 @@ function spm_list_cleanup(hReg)
   set(hRes.Ftext3dspm,'visible','off','HitTest','off');
   
   %% get backgroundcolor
-  bgc = get(hRes.Fgraph,'Color'); 
+  bgc = get(spm_figure('FindWin','Graphics'),'Color'); 
   % get low contrast texts 
   Ftextcol = cell2mat(get(hRes.Ftext,'Color'));
   %% invert text

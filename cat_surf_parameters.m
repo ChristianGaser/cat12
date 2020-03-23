@@ -81,7 +81,7 @@ function varargout = cat_surf_parameters(job)
     if nargout==1
       varargout{1} = cat_parallelize(job,mfilename,'data_surf');
     else
-      cat_parallelize(job,mfilename,'data_surf');
+      varargout{1} = cat_parallelize(job,mfilename,'data_surf');
     end
     return
   end
