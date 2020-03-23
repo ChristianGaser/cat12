@@ -272,31 +272,31 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
               % reduce bounding box at final resolution level
               if reduce
                 fprintf('Reduce bounding box for final resolution level.\n');
-								vx_vol  = sqrt(sum(pyramid(level).mat(1:3,1:3).^2)); 
-								
-								% intensity normalization using 99% of data (to ignore outliers)
-								[msk,hth] = cat_stat_histth(smooth3(mu),0.99,0); 
-								msk = (msk - hth(1)) ./ abs(diff(hth));
-								
-								% masking (borrowed from head-trimming)
-								msk = smooth3(msk)>0.05; 
-								msk = cat_vol_morph(msk,'do',2,vx_vol); 
-								msk = cat_vol_morph(msk,'l',[10 0.1]); 
-								[msk,redB] = cat_vol_resize(mu,'reduceBrain',vx_vol,2,msk); 
-								clear msk
-						
-						    % correct mat information and dimensions
-								mati  = spm_imatrix(pyramid(level).mat); 
-								mati(1:3) = mati(1:3) + mati(7:9).*(redB.BB(1:2:end) - 1);
-								pyramid(level).mat = spm_matrix(mati);
-								pyramid(level).d = redB.sizeTr;
-								
-								% update some size-dependent parameters
-								M_avg     = pyramid(level).mat;
-								d         = pyramid(level).d;
-	
-								% re-estimate mu using new dimensions
-								[mu,ss,nvox,D] = compute_mean(pyramid(level), param, ord);
+                vx_vol  = sqrt(sum(pyramid(level).mat(1:3,1:3).^2)); 
+                
+                % intensity normalization using 99% of data (to ignore outliers)
+                [msk,hth] = cat_stat_histth(smooth3(mu),0.99,0); 
+                msk = (msk - hth(1)) ./ abs(diff(hth));
+                
+                % masking (borrowed from head-trimming)
+                msk = smooth3(msk)>0.05; 
+                msk = cat_vol_morph(msk,'do',2,vx_vol); 
+                msk = cat_vol_morph(msk,'l',[10 0.1]); 
+                [msk,redB] = cat_vol_resize(mu,'reduceBrain',vx_vol,2,msk); 
+                clear msk
+            
+                % correct mat information and dimensions
+                mati  = spm_imatrix(pyramid(level).mat); 
+                mati(1:3) = mati(1:3) + mati(7:9).*(redB.BB(1:2:end) - 1);
+                pyramid(level).mat = spm_matrix(mati);
+                pyramid(level).d = redB.sizeTr;
+                
+                % update some size-dependent parameters
+                M_avg     = pyramid(level).mat;
+                d         = pyramid(level).d;
+  
+                % re-estimate mu using new dimensions
+                [mu,ss,nvox,D] = compute_mean(pyramid(level), param, ord);
               end          
 
               % create mask at final level to allow masked registration
@@ -442,15 +442,15 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
                     end
 
                     if ~all(isfinite(w_settings(i,:)))
-											dt = dt(mskr);
-											d1 = d1(mskr).*ebias;
-											d2 = d2(mskr).*ebias;
-											d3 = d3(mskr).*ebias;
+                      dt = dt(mskr);
+                      d1 = d1(mskr).*ebias;
+                      d2 = d2(mskr).*ebias;
+                      d3 = d3(mskr).*ebias;
                     else
-											dt = dt(msk);
-											d1 = d1(msk).*ebias;
-											d2 = d2(msk).*ebias;
-											d3 = d3(msk).*ebias;
+                      dt = dt(msk);
+                      d1 = d1(msk).*ebias;
+                      d2 = d2(msk).*ebias;
+                      d3 = d3(msk).*ebias;
                     end
                     
                     % Derivatives w.r.t. an affine transform
@@ -754,8 +754,13 @@ if need_wimg
 end
 
 if need_avg
-    mu = median(vol,4);
-
+    % use media for rigid registration and mean for non-linear registration
+    if all(isfinite(w_settings(i,:)))
+        mu = median(vol,4);
+    else
+        mu = mean(vol,4);
+    end
+    
     if any(strcmp('wavg',output))
         [pth,nam]   = fileparts(Nii(1).dat.fname);
         nam         = fullfile(pth,['avg_' nam '.nii']);
@@ -1383,14 +1388,14 @@ for subit=1:nits
     end
 
     % temporarily estimate whole bias field to check for huge values
-		r3 = zeros(size(volG));
-		for z=1:size(volG,3)
-				r3(:,:,z)  = transf(B1bias,B2bias,B3bias(z,:),Tbias);
-		end;
-		
+    r3 = zeros(size(volG));
+    for z=1:size(volG,3)
+        r3(:,:,z)  = transf(B1bias,B2bias,B3bias(z,:),Tbias);
+    end;
+    
     % additionally check if 1./exp(r3) is getting too large and regularization
     % should be increased
-		% "-4" equals roughly to a max value of 50 for 1./exp(r3)
+    % "-4" equals roughly to a max value of 50 for 1./exp(r3)
     if (subit > 1 && ll>oll) || min(r3(:)) < -4
         % Hasn't improved, so go back to previous solution
         Tbias = oTbias;
