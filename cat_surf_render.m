@@ -138,9 +138,9 @@ switch lower(action)
         end
         O = getOptions(varargin{2:end});
         if isfield(O,'results')
-          results = O.results;
+          H.results = O.results;
         else
-          results = 0; 
+          H.results = 0; 
         end
         if isfield(O,'cdata') % data input
             M.cdata = O.cdata; 
@@ -353,7 +353,7 @@ switch lower(action)
         H.rotate3d = rotate3d(H.axis);
         set(H.axis,'Visible','Off');
         set(H.rotate3d,'ActionPostCallback',{@myPostCallback, H});
-        if ~results
+        if ~H.results
           set(H.rotate3d,'Enable','on');
         end
         %try
@@ -402,7 +402,7 @@ switch lower(action)
 
         %-Add context menu
         %------------------------------------------------------------------
-        cat_surf_render('ContextMenu',H,results);
+        cat_surf_render('ContextMenu',H);
         
         
         % set default view
@@ -418,13 +418,12 @@ switch lower(action)
     %======================================================================
     case 'contextmenu'
         if isempty(varargin), varargin{1} = gca; end
-        if nargin>1, results = varargin{2}; end
         H = getHandles(varargin{1});
         if ~isempty(get(H.patch,'UIContextMenu')), return; end
         
         % -- Inflate, Overlay , Underlay, Label
         cmenu = uicontextmenu('Callback',{@myMenuCallback, H});
-        if ~results        
+        if ~H.results        
             uimenu(cmenu, 'Label','Inflate', 'Interruptible','off', ...
                 'Callback',{@myInflate, H});
 
@@ -484,7 +483,7 @@ switch lower(action)
         
         
         % -- Views --
-        if ~results
+        if H.results
                 uimenu(cmenu, 'Label','Rotate', 'Checked','off', 'Separator','on', ...
                     'Callback',{@mySwitchRotate, H});
         else
@@ -503,9 +502,9 @@ switch lower(action)
 
         
         % -- Colorbar --
-        if ~results        
+        %if ~H.results        
           uimenu(cmenu, 'Label','Colorbar', 'Callback', {@myColourbar, H});
-        end
+        %end
 
         
         % -- Colormap --
@@ -519,8 +518,9 @@ switch lower(action)
           if any(i == [5,9]) 
             uimenu(c, 'Label', clrmp{i}, 'Checked','off', 'Callback', {@myColourmap, H}, 'Separator', 'on');
           else
-            if i==1
+            if i == 1 + H.results*3
               uimenu(c, 'Label', clrmp{i}, 'Checked','on', 'Callback', {@myColourmap, H});
+              myColourmap([],[],H,'colormap',clrmp{i})
             else
               uimenu(c, 'Label', clrmp{i}, 'Checked','off', 'Callback', {@myColourmap, H});
             end
@@ -532,7 +532,7 @@ switch lower(action)
 
         
         % -- Colorrange --
-        if ~results         
+        if ~H.results         
           c = uimenu(cmenu, 'Label','Colorrange');
           uimenu(c, 'Label','min-max'    , 'Checked','off', 'Callback', {@myCaxis, H, 'auto'});
           uimenu(c, 'Label','2-98 %'     , 'Checked','off', 'Callback', {@myCaxis, H, '2p'});
@@ -557,7 +557,7 @@ switch lower(action)
         uimenu(c, 'Label','grid',   'Checked','off', 'Callback', {@myLighting, H,'grid'}, 'Separator', 'on');
         uimenu(c, 'Label','none',   'Checked','off', 'Callback', {@myLighting, H,'none'});
    
-        if results
+        if H.results
           c = uimenu(cmenu, 'Label','Mesh texture');
           uimenu(c, 'Label','bright',  'Checked','off', 'Callback', {@mySurfcolor, H,1.0});
           uimenu(c, 'Label','medium',  'Checked','off', 'Callback', {@mySurfcolor, H,0.5});
@@ -568,7 +568,7 @@ switch lower(action)
         end
         
         % -- Cross --
-        if results
+        if H.results
           c = uimenu(cmenu, 'Label','Crossbar');
           uimenu(c, 'Label','off',      'Checked','off', 'Callback', {@myCross, H,'setsize',0});
           uimenu(c, 'Label','small',    'Checked','off', 'Callback', {@myCross, H,'setsize',50});
@@ -583,7 +583,7 @@ switch lower(action)
         
         
         % -- Material --
-        if ~results           
+        if ~H.results           
           c = uimenu(cmenu, 'Label','Material');
           uimenu(c, 'Label','dull',     'Checked','on',  'Callback', {@myMaterial, H,'dull'});
           uimenu(c, 'Label','shiny',    'Checked','off', 'Callback', {@myMaterial, H,'shiny'});
@@ -600,38 +600,66 @@ switch lower(action)
         uimenu(c, 'Label','TextureTransparency',        'Checked','on',   'Callback', {@myTextureTransparency, H});
         for ti=1:numel(tlevel)
           if ti==1
-            uimenu(c, 'Label',sprintf('%0.0f%%',tlevel(ti)), 'Checked',reson{2 - (ti==2)}, 'Callback', {@myTransparency, H}, 'Separator', 'on');
+            uimenu(c, 'Label',sprintf('%0.0f%%',tlevel(ti)), 'Checked',reson{2 - (ti==1 + H.results*4)}, 'Callback', {@myTransparency, H}, 'Separator', 'on');
           else
-            uimenu(c, 'Label',sprintf('%0.0f%%',tlevel(ti)), 'Checked',reson{2 - (ti==2)}, 'Callback', {@myTransparency, H});
+            uimenu(c, 'Label',sprintf('%0.0f%%',tlevel(ti)), 'Checked',reson{2 - (ti==1 + H.results*4)}, 'Callback', {@myTransparency, H});
           end
         end
         
         
         % -- Background --
         col   = get(H.figure,'Color');
-        if isempty(col) || all(col==[0 0 0]), col = [eps eps eps]; end
+        if isempty(col) || all(col==[1 1 1]), col = [0.94 0.94 0.94]; end % default color
         bgs = {'off','off','off','off','off'}; 
-        if     all(col==[0.94 0.94 0.94]), bgs{1} = 'on'; 
-        elseif all(col==[0.10 0.20 0.40]), bgs{2} = 'on';
-        elseif all(col==[1.00 1.00 1.00]), bgs{3} = 'on'; 
-        elseif all(col==[eps  eps  eps ]), bgs{4} = 'on'; 
-        else,                     bgs{5} = 'on';
+        if     all(col==[0.94 0.94 0.94]), bgs{1} = 'on'; % light gray
+        elseif all(col==[0.10 0.20 0.40]), bgs{2} = 'on'; % dark blue
+        elseif all(col==[1.00 1.00 0.999]),bgs{3} = 'on'; % the white is slighly different 
+        elseif all(col==[0.00 0.00 0.00]), bgs{4} = 'on'; % 
+        else,                              bgs{5} = 'on';
         end
         c = uimenu(cmenu, 'Label','Background Color');
         uimenu(c, 'Label','Lightgray', 'Checked',bgs{1}, 'Callback', {@myBackgroundColor, H, [0.94 0.94 0.94]}); 
         uimenu(c, 'Label','Darkblue',  'Checked',bgs{2}, 'Callback', {@myBackgroundColor, H, [0.10 0.20 0.40]});
-        uimenu(c, 'Label','White',     'Checked',bgs{3}, 'Callback', {@myBackgroundColor, H, [1.00 1.00 1.00]}); 
-        uimenu(c, 'Label','Black',     'Checked',bgs{4}, 'Callback', {@myBackgroundColor, H, [eps  eps  eps ]}); 
+        uimenu(c, 'Label','White',     'Checked',bgs{3}, 'Callback', {@myBackgroundColor, H, [1.00 1.00 0.999]}); 
+        uimenu(c, 'Label','Black',     'Checked',bgs{4}, 'Callback', {@myBackgroundColor, H, [0.00 0.00 0.00]}); 
         uimenu(c, 'Label','Custom...', 'Checked',bgs{5}, 'Callback', {@myBackgroundColor, H, []}, 'Separator', 'on'); 
         %set(H.figure,'Color',col); whitebg(H.figure,col); set(H.figure,'Color',col);
         
+        if H.results
+            % definition and loading of the atlas maps for data coursor 
+            % - is it useful to load them at the start?
+            % - is it useful to show it or the outlines? 
+            % - there is at least no space for the legend 
+            % - use of own atlas maps? 
+            satlas = {
+                'Desikan'     'aparc_DK40';
+                'Destrieux'   'aparc_a2009s';
+                'HCP'         'aparc_HCP_MMP1';};
+            if ~isempty(strfind(fileparts(sinfo1(1).Pmesh),'_32k'))
+              str32k = '_32k';
+            else
+              str32k = '';
+            end
+            %%
+            for ai = 1:size(satlas,1)
+              % define file
+              safiles = fullfile(spm('Dir'),'toolbox','cat12',['atlases_surfaces' str32k],...
+                sprintf('%s.%s.freesurfer.annot',sinfo1(1).side,satlas{ai,2}));
+                
+              % loading
+              [S,sdata,odata,rnames] = cat_surf_load(safiles,'mesh',2);
+              H.satlases(ai).adata   = S.facevertexcdata;
+              H.satlases(ai).rnames  = rnames; 
+              H.satlases(ai).names   = [satlas(ai,:) safiles]; 
+            end
+        end
         
         % -- Data Coursor --
         uimenu(cmenu, 'Label','Data Cursor', 'Callback', {@myDataCursor, H});
 
         
         % -- Slider --
-        if ~results        
+        if ~H.results        
           uimenu(cmenu, 'Label','Slider', 'Callback', {@myAddslider, H});
         end
         
@@ -643,11 +671,11 @@ switch lower(action)
         set(H.rotate3d,'enable','off');
         try set(H.rotate3d,'uicontextmenu',cmenu); end
         try set(H.patch,   'uicontextmenu',cmenu); end
-        if ~results
+        if ~H.results
           set(H.rotate3d,'enable','on');
         end
 
-        dcm_obj = datacursormode(H.figure);
+        dcm_obj = datacursormode(H.figure);  
         set(dcm_obj, 'Enable','off', 'SnapToDataVertex','on', ...
             'DisplayStyle','Window', 'Updatefcn',{@myDataCursorUpdate, H});
         
@@ -703,6 +731,11 @@ switch lower(action)
         if nargin < 3, varargin{2} = []; end
         updateTexture(H,varargin{2:end});
         
+        tr1 = findobj(get(findobj('Label','Transparency'),'children'),'checked','on'); 
+        tr2 = findobj(get(findobj('Label','Transparency'),'children'),'checked','on','Label','TextureTransparency');
+        myTransparency([],[],H,get(setdiff(tr1,tr2) ,'Label'));
+        
+        
     %-Slices
     %======================================================================
     case 'slices'
@@ -737,8 +770,10 @@ switch lower(action)
         if strcmpi(varargin{2},'off')
             if isfield(H,'colourbar') && ishandle(H.colourbar)
                %set(H.colourbar,'visible','off')  
-               set(H.axis,'Position',[0.10 0.10 0.8 0.8]);
-               delete(H.colourbar); 
+               if ~H.results
+                 set(H.axis,'Position',get(H.axis,'position') .* [0.10 0.10 0.8 0.8]);
+               end
+               delete(H.colourbar);
                H = rmfield(H,'colourbar');
                setappdata(H.axis,'handles',H);
             end
@@ -758,10 +793,17 @@ switch lower(action)
         if isempty(d) || ~any(d(:)), varargout = {H}; return; end
         if isempty(col), col = hot(256); end
         if ~isfield(H,'colourbar') || ~ishandle(H.colourbar)
-            H.colourbar = colorbar('peer',H.axis); %'EastOutside');
-            set(H.colourbar,'Tag','','Position',[.93 0.2 0.02 0.6]);
+            if H.results
+              H.colourbar = colorbar('peer',H.axis,'southoutside'); %'EastOutside');
+              set(H.colourbar,'Tag','','Position',get(H.axis,'position') .* [1.05 1 0.25 0.02]);
+            else
+              H.colourbar = colorbar('peer',H.axis); %'EastOutside');
+              set(H.colourbar,'Tag','','Position',get(H.axis,'position') .* [.93 0.2 0.02 0.6]);
+            end
             set(get(H.colourbar,'Children'),'Tag','');
         end
+        caxis(H.axis,[min(d(:)),max(d(:))] .* [1 1+eps])
+        
         c(1:size(col,1),1,1:size(col,2)) = col;
         ic = findobj(H.colourbar,'Type','image');
         clim = getappdata(H.patch, 'clim');
@@ -791,13 +833,14 @@ switch lower(action)
             if clim(3) > clim(2)
               set(ic,'YData',clim(2:3));
               set(H.colourbar,'YLim',clim(2:3));
+              caxis(H.axis,[min(d(:)),max(d(:))] .* [1 1+eps])
             end
         end
         if isfield(H,'labelmap')
           labellength = min(100,max(cellfun('length',H.labelmap.labelnam2))); 
           ss = diff(H.labelmap.ytick(1:2)); 
           set(H.colourbar,'ytick',H.labelmap.ytick,'yticklabel',H.labelmap.labelnam2(1:ss:end),...
-            'Position',[max(0.75,0.98-0.008*labellength) 0.05 0.02 0.9]);
+            'Position',get(H.axis,'position') .* [max(0.75,0.98-0.008*labellength) 0.05 0.02 0.9]);
           try, set(H.colourbar,'TickLabelInterpreter','none'); end
           set(H.axis,'Position',[0.1 0.1 min(0.6,0.98-0.008*labellength - 0.2) 0.8])
         end
@@ -1313,8 +1356,13 @@ else
 end
 
 %==========================================================================
-function myTransparency(obj,evt,H)
-t = 1 - sscanf(get(obj,'Label'),'%d%%') / 100;
+function myTransparency(obj,evt,H,varargin)
+if ~isempty(varargin)
+  
+  t = 1 - sscanf(varargin{1},'%d%%') / 100;
+else
+  t = 1 - sscanf(get(obj,'Label'),'%d%%') / 100;
+end
 %%
 curv = getappdata(H.patch,'curvature');
 col  = getappdata(H.patch,'colourmap');
@@ -1322,9 +1370,9 @@ v    = get( H.patch, 'UserData');
 %%
 C    = zeros(size(v,2),1);
 clim = getappdata(H.patch, 'clim');
-if isempty(clim), clim = [false NaN NaN]; end
+if isempty(clim), clim = [false nan nan]; end
 mi   = clim(2); ma = clim(3);
-%%
+
 if size(col,1)>3 && size(col,1) ~= size(v,1)
     if size(v,1) == 1
         if ~clim(1), mi = min(v(:)); ma = max(v(:)); end
@@ -1343,9 +1391,12 @@ else
         C = C + v(i,:)'/ma * col(i,:);
     end
 end
-%}
 %%
-set(H.patch,'FaceVertexAlphaData',t + (1-t) * C/255);
+if any(isnan(clim))
+  set(H.patch,'FaceVertexAlphaData',t + (1-t) * zeros(size(C))/255);
+else
+  set(H.patch,'FaceVertexAlphaData',t + (1-t) * C/255);
+end
 set(H.patch,'FaceAlpha','interp'); 
 set(H.patch,'AlphaDataMapping','scaled');
 alim([0 1]);
@@ -1541,34 +1592,31 @@ end
 
 %==========================================================================
 function myColourmap(obj,evt,H,varargin)
+dx = get(H.patch,'UserData'); dx = [min(dx) min(dx(dx~=0)) max(dx)]; 
 if ~isempty(varargin)
   switch varargin{1}
     case 'color'
       c = uisetcolor(H.figure,'Pick a surface color...');
-      H = cat_surf_render('Colourmap',H,c);
-    case 'custom'
-      c = colormap; clow = c(1:4:256,:);
-      H = cat_surf_render('Colourmap',H,clow,16); colormap(clow);
-      colormapeditor;
-      %cn = colormap; [GX,GY] = meshgrid(0.5+eps:size(cn,1)/256:size(cn,1)+.5-eps,1:3); 
-      %cnhigh = interp2(cn,GY,GX); 
-      %H = cat_surf_render('Colourmap',H,cnhigh); colormap(cnhigh);
+    case 'colormap'
+      c=feval(varargin{2},256);
     otherwise
-      H=cat_surf_render('Colourmap',H,feval(get(obj,'Label'),256));
+      c = feval(get(obj,'Label'),256); 
   end
 else
   switch get(obj,'Label')
     case {'CAThot','CAThotinv','CATcold','CATcoldinv'}
       catcm = get(obj,'Label'); catcm(1:3) = []; 
-      H=cat_surf_render('Colourmap',H,cat_io_colormaps(catcm,256));
+      c=cat_io_colormaps(catcm,256);
     case 'CATtissues'
-      H=cat_surf_render('Colourmap',H,cat_io_colormaps('BCGWHw',256));
+      c=cat_io_colormaps('BCGWHw',256);
     case 'CATcold&hot'
-      H=cat_surf_render('Colourmap',H,cat_io_colormaps('BWR',256));
+      c=cat_io_colormaps('BWR',256); 
     otherwise 
-      H=cat_surf_render('Colourmap',H,feval(get(obj,'Label'),256));
+      c = feval(get(obj,'Label'),256); 
   end
 end
+if ~isempty(dx), c(1:round(size(c,1) * dx(2)/dx(3)),:) = 0.5; end
+cat_surf_render('Colourmap',H,c);
 set(get(get(obj,'parent'),'children'),'Checked','off');
 %if isfield(H,'colourbar'),H=cat_surf_render('Clim',H,H.colourbar.Limits); end
 set(obj,'Checked','on');
@@ -1592,22 +1640,33 @@ end
 %==========================================================================
 function myDataCursor(obj,evt,H)
 dcm_obj = datacursormode(H.figure);
-%myCross(obj,evt,H,'setsize',0);
 set(dcm_obj, 'Enable','on', 'SnapToDataVertex','on', ...
-    'DisplayStyle','Window', 'Updatefcn',{@myDataCursorUpdate, H});
+    'DisplayStyle','datatip', 'Updatefcn',{@myDataCursorUpdate, H}); %Window
 
 %==========================================================================
 function txt = myDataCursorUpdate(obj,evt,H)
+set(findobj(obj),'String',{''});
 pos = get(evt,'Position');
 txt = {['X: ',num2str(pos(1))],...
        ['Y: ',num2str(pos(2))],...
        ['Z: ',num2str(pos(3))]};
 i = ismember(get(H.patch,'vertices'),pos,'rows');
-txt = {['Node: ' num2str(find(i))] txt{:}};
+if isfield(H,'results') && H.results && isfield(H,'satlases') 
+  txt{1} = sprintf('Node: %d (%0.0f %0.0f %0.0f mm)',find(i),pos);
+  for ai = 1:numel(H.satlases)
+    txt{1 + ai} =  sprintf('%s: %s', H.satlases(ai).names{1}, ...
+      H.satlases(ai).rnames.struct_names{  H.satlases(ai).adata(i) == H.satlases(ai).rnames.table(:,5) } ); 
+  end
+else
+  txt = {['Node: ' num2str(find(i))] txt{:}};  
+end
 d = getappdata(H.patch,'data');
 if ~isempty(d) && any(d(:))
     if any(i), txt = {txt{:} ['T: ',num2str(d(i))]}; end
 end
+set(findobj(obj),'String',txt);
+
+
 hMe = findobj(H.axis,'Tag','CrossBar');
 if ~isempty(hMe)
     %ws = warning('off');
@@ -1617,32 +1676,42 @@ if ~isempty(hMe)
     spm_orthviews('Reposition',pos)
     %warning(ws);
 end
-cat_stat_spm_results_ui('spm_list_cleanup');
+try
+  cat_stat_spm_results_ui('spm_list_cleanup');
+end
 
 %==========================================================================
 function myBackgroundColor(obj,evt,H,varargin)
-if isempty(varargin{1})
-    c = uisetcolor(H.figure, ...
-        'Pick a background color...');
-    if numel(c) == 1, return; end
-else
-    c = varargin{1};
-end
-reds = findobj(H.figure,'Color',[1 0 0]);
-h = findobj(H.figure,'Tag','SPMMeshRenderBackground');
-if isempty(h)
-    set(H.figure,'Color',c);
-    whitebg(H.figure,c);
-    set(H.figure,'Color',c);
-else
-    set(h,'Color',c);
-    whitebg(H.figure,c);
-    set(h,'Color',c);
-end
-set(reds,'Color',[1 0 0]);
-set(get(get(obj,'parent'),'children'),'Checked','off'); % deactivate all 
-set(obj,'Checked','on');
+    % get color
+    if isempty(varargin{1})
+        c = uisetcolor(H.figure, ...
+            'Pick a background color...');
+        if numel(c) == 1, return; end
+    else
+        c = varargin{1};
+    end
+    
+    % get the main figure and the possible satelite
+    h = findobj(H.figure,'Tag','SPMMeshRenderBackground');
+    if isempty(h), h = H.figure; end
+    h = [h,spm_figure('FindWin','Satellite')];
+    
+    % find color objects that should not be inverted
+    % ... we started with red and maybe add more later
+    reds = findobj(h,'Color',[1 0 0]);
 
+    
+    % set new color and invert other objects (e.g., fonts and lines)
+    set(h,'Color',c); 
+    whitebg(h,c);
+    set(h,'Color',c);
+
+    % reset red objects
+    set(reds,'Color',[1 0 0]);
+    
+    set(get(get(obj,'parent'),'children'),'Checked','off'); % deactivate all 
+    set(obj,'Checked','on');
+    cat_stat_spm_results_ui('spm_list_cleanup');
 
 %==========================================================================
 function mySavePNG(obj,evt,H,filename)

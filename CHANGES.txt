@@ -1,5 +1,26 @@
 ------------------------------------------------------------------------
-r1589 | dahnke | 2020-03-19 15:38:55
+r1590 | dahnke | 2020-03-23 08:36:33
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_spm_results_ui.m
+A       cat_surf_load.m
+M       cat_surf_parameters.m
+M       cat_surf_rename.m
+M       cat_surf_render.m
+
+(1)  Changed:   Added colormap change for satellite result figure.
+(2)  Fixed:     Corrected output of cat_surf_rename in case of missing parameters.
+(3)  New:       Added new function cat_surf_load to combine different surface data 
+                files into one single mesh structure used in the cat_surf_render   
+                function called by cat_surf_spm_results_ui.
+(4)  New:       Added surface atlas description in the datatip function in  
+                cat_surf_render if the results flag is active.
+(5)  Fixed:     Corrected some bugs in cat_surf_render to show the colorbar in 
+                cat_surf_spm_results_ui.                  
+                                  
+------------------------------------------------------------------------
+r1589 | dahnke | 2020-03-19 15:41:22 +0100 (Do, 19 Mär 2020) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +29,7 @@ M       cat_stat_spm_results_ui.m
 
 (1)  Fixed:     Corrected further bugs in cat_stat_spm_results_ui.
 (2)  Fixed:     Corrected further mapping errors in cat_main_roi.
+
 
 ------------------------------------------------------------------------
 r1588 | gaser | 2020-03-19 10:31:26 +0100 (Do, 19 Mär 2020) | 50 lines
