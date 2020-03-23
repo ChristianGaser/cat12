@@ -890,7 +890,8 @@ function realign  = cat_vol_series_align_GUI(data)
   write_avg           = cfg_menu;
   write_avg.tag       = 'write_avg';
   write_avg.name      = 'Save Mid-point average';
-  write_avg.help      = {'Do you want to save the mid-point average template image? This is likely to be useful for groupwise alignment, and is prefixed by ``avg_'''' and written out in the same directory of the first time point data.'};
+  write_avg.help      = {'Do you want to save the mid-point average template image? This is likely to be useful for groupwise alignment, and is prefixed by ``avg_'''' and written out in the same directory of the first time point data. Please note that with rigid registration the median is stored instead of the average image.
+'};
   write_avg.labels    = {'Save','Dont save'};
   write_avg.values    = { 1 0 };
   write_avg.val       = {1};
@@ -1782,7 +1783,7 @@ function avg_img = cat_vol_average_GUI(data,outdir)
   avg_img.tag     = 'avg_img';
   avg_img.name    = 'Image Average';
   avg_img.val     = {data output outdir};
-  avg_img.help    = {'This function is for calculating the average of a set of images, which should be of same dimension and voxel size.'};
+  avg_img.help    = {'This function is for calculating the average of a set of images, which should be of same dimension and voxel size (i.e. after spatial registration).'};
   avg_img.prog    = @cat_vol_avg;
   avg_img.vout    = @vout_avg;
 
