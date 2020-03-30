@@ -1,11 +1,21 @@
 ------------------------------------------------------------------------
-r1592 | gaser | 2020-03-24 00:10:03
+r1593 | gaser | 2020-03-30 16:40:13
+
+Changed paths:
+M       CHANGES.txt
+M       cat_run.m
+ M      cat_surf_load.m
+
+Changed: Editor in cat_run.m will not open anymore in headless mode. 
+------------------------------------------------------------------------
+r1592 | gaser | 2020-03-24 00:10:39 +0100 (Di, 24 Mär 2020) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_conf_tools.m
 
 Fixed: Corrected help string in cat_conf_tools.m that caused errors.
+
 ------------------------------------------------------------------------
 r1591 | gaser | 2020-03-23 23:20:09 +0100 (Mo, 23 Mär 2020) | 16 lines
 
