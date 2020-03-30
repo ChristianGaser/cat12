@@ -176,13 +176,18 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
           end
         end
         
-        % open file in editor
+        % open file in editor if GUI is available
         test = inf; 
-        edit(log_name{i});
+        if ~strcmpi(spm_check_version,'octave') && usejava('jvm') && feature('ShowFigureWindows') && usejava('awt')
+          edit(log_name{i});
+      end
       end
     end
 
-    edit(log_name{i});
+    % open file in editor if GUI is available
+    if ~strcmpi(spm_check_version,'octave') && usejava('jvm') && feature('ShowFigureWindows') && usejava('awt')
+      edit(log_name{i});
+    end
     if PID(i)>0
       fprintf('\nCheck %s for logging information (PID: ',spm_file(log_name{i},'link','edit(''%s'')')); 
       cat_io_cprintf([1 0 0.5],sprintf('%d',PID(i))); 
