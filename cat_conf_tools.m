@@ -824,7 +824,7 @@ function [defs,defs2] = cat_vol_defs_GUI()
   defs.name       = 'Apply deformations (many images)';
   defs.val        = {field1,images1,interp,modulate};
   defs.prog       = @cat_vol_defs;
-  defs.vout       = @vfiles_defs;
+  defs.vfiles     = @vfiles_defs;
   defs.help       = {'This is a utility for applying a deformation field of one subject to many images.'};
 
   defs2           = cfg_exbranch;
@@ -832,7 +832,7 @@ function [defs,defs2] = cat_vol_defs_GUI()
   defs2.name      = 'Apply deformations (many subjects)';
   defs2.val       = {field,images,interp,modulate};
   defs2.prog      = @cat_vol_defs;
-  defs2.vout      = @vfiles_defs2;
+  defs2.vfiles    = @vfiles_defs2;
   defs2.help      = {'This is a utility for applying deformation fields of many subjects to images.'};
 return
 
