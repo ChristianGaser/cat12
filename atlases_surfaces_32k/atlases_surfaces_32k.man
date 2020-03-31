@@ -60,10 +60,8 @@
 % --------------------------------------------------------------------------------
 % Local-Global Intrinsic Functional Connectivity Parcellation by Schaefer et al.
 %
-% These atlases are available for different numbers of parcellations (100, 200, 400, 600, 
-% 800, 1000) and networks (7, 17) and are based on resting state data from 1489 subjects.
-%
-% Please note that these atlases were only provided with CAT12 as HCP 32k meshes.
+% These atlases are available for different numbers of parcellations (100, 200, 400, 600) 
+% and are based on resting state data from 1489 subjects.
 %
 % If you use these atlases, please cite the references below.
 % 

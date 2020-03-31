@@ -277,6 +277,10 @@ cat.extopts.atlas       = { ...
   fullfile(spm('dir'),'toolbox','cat12','templates_volumes','aal3.nii')                1      {'gm'}              0; ... % many regions, but only labeled on one subject 
   fullfile(spm('dir'),'toolbox','cat12','templates_volumes','mori.nii')                1      {'gm','wm'}         0; ... % only one subject, but with WM regions
   fullfile(spm('dir'),'toolbox','cat12','templates_volumes','anatomy.nii')             1      {'gm','wm'}         0; ... % ROIs requires further work >> use Anatomy toolbox
+  fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Schaefer2018_100Parcels_17Networks_order.nii') 1 {'gm'} 0; ... % atlas based on rsfMRI data from 1489 subjects
+  fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Schaefer2018_200Parcels_17Networks_order.nii') 1 {'gm'} 0; ... % atlas based on rsfMRI data from 1489 subjects
+  fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Schaefer2018_400Parcels_17Networks_order.nii') 1 {'gm'} 0; ... % atlas based on rsfMRI data from 1489 subjects
+  fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Schaefer2018_600Parcels_17Networks_order.nii') 1 {'gm'} 0; ... % atlas based on rsfMRI data from 1489 subjects
 }; 
 
 % { name fileid GUIlevel use } - in development
@@ -284,19 +288,11 @@ cat.extopts.satlas      = { ...
   'Desikan'                fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_a2009s.freesurfer.annot')                        0   1;  
   'Destrieux'              fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_DK40.freesurfer.annot')                          0   1;  
   'HCP'                    fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_HCP_MMP1.freesurfer.annot')                      0   0; 
-  ... many Schaefer atlases ...
-  'Schaefer2018_100P_7N'   fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces_32k','lh.Schaefer2018_100Parcels_7Networks_order.annot')    1   0; 
-  'Schaefer2018_100P_17N'  fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces_32k','lh.Schaefer2018_100Parcels_17Networks_order.annot')   1   0; 
-  'Schaefer2018_200P_7N'   fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces_32k','lh.Schaefer2018_200Parcels_7Networks_order.annot')    1   0; % as default?
-  'Schaefer2018_200P_17N'  fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces_32k','lh.Schaefer2018_200Parcels_17Networks_order.annot')   1   0; % as default?
-  'Schaefer2018_400P_7N'   fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces_32k','lh.Schaefer2018_400Parcels_7Networks_order.annot')    1   0; 
-  'Schaefer2018_400P_17N'  fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces_32k','lh.Schaefer2018_400Parcels_17Networks_order.annot')   1   0; 
-  'Schaefer2018_600P_7N'   fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces_32k','lh.Schaefer2018_600Parcels_7Networks_order.annot')    1   0; 
-  'Schaefer2018_600P_17N'  fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces_32k','lh.Schaefer2018_600Parcels_17Networks_order.annot')   1   0; 
-  'Schaefer2018_800P_7N'   fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces_32k','lh.Schaefer2018_800Parcels_7Networks_order.annot')    1   0; % as default?
-  'Schaefer2018_800P_17N'  fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces_32k','lh.Schaefer2018_800Parcels_17Networks_order.annot')   1   0; % as default?
-  'Schaefer2018_1000P_7N'  fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces_32k','lh.Schaefer2018_1000Parcels_7Networks_order.annot')   1   0; 
-  'Schaefer2018_1000P_17N' fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces_32k','lh.Schaefer2018_1000Parcels_17Networks_order.annot')  1   0; 
+  ... Schaefer atlases ...
+  'Schaefer2018_100P_17N'  fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.Schaefer2018_100Parcels_17Networks_order.annot')       1   0; 
+  'Schaefer2018_200P_17N'  fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.Schaefer2018_200Parcels_17Networks_order.annot')       0   0;
+  'Schaefer2018_400P_17N'  fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.Schaefer2018_400Parcels_17Networks_order.annot')       1   0; 
+  'Schaefer2018_600P_17N'  fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.Schaefer2018_600Parcels_17Networks_order.annot')       1   0; 
 }; 
 
 

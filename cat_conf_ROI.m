@@ -175,16 +175,24 @@ for ali=1:numel(atlaslist)
         '    Rolls et al., Automated anatomical labelling atlas 3. Neuroimage 2020; 206:116189.'
         ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
   end
-  if any(~cellfun('isempty',strfind(atlaslist,'mori')))
+  if any(~cellfun('isempty',strfind(atlaslist(ali),'mori')))
     ROI.help = [ROI.help; strrep({
         '(MAI) MORI (128 GM/WM ROIs of 1 subject, 2009):'
         '    Oishi et al. Atlas-based whole brain white matter analysis using large deformation diffeomorphic metric mapping: application to normal elderly and Alzheimer''s disease participants. 2009'
         ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
   end
-  if any(~cellfun('isempty',strfind(atlaslist,'anatomy')))
+  if any(~cellfun('isempty',strfind(atlaslist(ali),'anatomy')))
     ROI.help = [ROI.help; strrep({
         '(MAI) Anatomy (44 GM/WM ROIs in 10 post-mortem subjects, 2014):'
         '    Eickhoff SB, Stephan KE, Mohlberg H, Grefkes C, Fink GR, Amunts K, Zilles K. A new SPM toolbox for combining probabilistic cytoarchitectonic maps and functional imaging data. NeuroImage 25(4), 1325-1335, 2005'
+        ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
+  end
+  if any(~cellfun('isempty',strfind(atlaslist(ali),'Schaefer2018_200Parcels_17Networks_order')))
+    ROI.help = [ROI.help; strrep({
+        '(MAI) Local-Global Intrinsic Functional Connectivity Parcellation by Schaefer et al.:'
+        'These atlases are available for different numbers of parcellations (100, 200, 400, 600)'
+        'and are based on resting state data from 1489 subjects.'
+        'https://github.com/ThomasYeoLab/CBIG/tree/master/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal'
         ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
   end
 end
