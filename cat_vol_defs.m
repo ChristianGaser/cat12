@@ -22,6 +22,10 @@ job      = cat_io_checkinopt(job,def);
 PI     = job.images;
 interp = job.interp;
 
+if interp < 0 && job.modulate
+  warning('Modulation in combination with categorical interpolation is not meaningful!.');
+end
+
 for i=1:numel(PU),
 
   [pth,nam,ext] = spm_fileparts(PU{i});
@@ -85,6 +89,26 @@ for i=1:size(filenames,1),
         NO.dat.scl_slope = 1.0;
         NO.dat.scl_inter = 0.0;
         NO.dat.dtype     = 'float32-le';
+    end
+    
+    % set slope to 1 for categorical interpolation
+    if interp0 < 0
+        NO.dat.scl_slope = 1.0;
+        NO.dat.scl_inter = 0.0;
+        
+        % select data type w.r.t. maximum value
+        f0  = single(NI.dat(:,:,:,:,:,:));
+        max_val = max(f0(:)); clear f0
+        if max_val < 2^8
+          NO.dat.dtype   = 'uint8-le';
+          fprintf('Set data type to uint8\n.')
+        elseif max_val < 2^16
+          NO.dat.dtype   = 'uint16-le';
+          fprintf('Set data type to uint16\n.')
+        else 
+          NO.dat.dtype   = 'float32-le';
+          fprintf('Set data type to float32\n.')
+        end
     end
 
     dim            = size(Def);
@@ -153,7 +177,7 @@ for i=1:size(filenames,1),
                 else
                     % Warp labels
                     U  = unique(f0(:));
-                    if numel(U)>255
+                    if numel(U)>1000
                         error('Too many label values.');
                     end
                     f1   = zeros(dim(1:3),class(f0));

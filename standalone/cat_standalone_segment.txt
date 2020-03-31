@@ -96,9 +96,13 @@ matlabbatch{1}.spm.tools.cat.(estwrite).output.ROImenu.atlases.lpba40 = 0;
 matlabbatch{1}.spm.tools.cat.(estwrite).output.ROImenu.atlases.cobra = 0;
 matlabbatch{1}.spm.tools.cat.(estwrite).output.ROImenu.atlases.hammers = 0;
 matlabbatch{1}.spm.tools.cat.(estwrite).output.ROImenu.atlases.ibsr = 0;
-matlabbatch{1}.spm.tools.cat.(estwrite).output.ROImenu.atlases.aal = 0;
+matlabbatch{1}.spm.tools.cat.(estwrite).output.ROImenu.atlases.aal3 = 0;
 matlabbatch{1}.spm.tools.cat.(estwrite).output.ROImenu.atlases.mori = 0;
 matlabbatch{1}.spm.tools.cat.(estwrite).output.ROImenu.atlases.anatomy = 0;
+matlabbatch{1}.spm.tools.cat.(estwrite).output.ROImenu.atlases.Schaefer2018_100Parcels_17Networks_order = 0;
+matlabbatch{1}.spm.tools.cat.(estwrite).output.ROImenu.atlases.Schaefer2018_200Parcels_17Networks_order = 0;
+matlabbatch{1}.spm.tools.cat.(estwrite).output.ROImenu.atlases.Schaefer2018_400Parcels_17Networks_order = 0;
+matlabbatch{1}.spm.tools.cat.(estwrite).output.ROImenu.atlases.Schaefer2018_600Parcels_17Networks_order = 0;
 
 % Writing options (see cat_defaults for the description of parameters)
 %   native    0/1     (none/yes)
