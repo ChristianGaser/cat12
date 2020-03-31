@@ -1,5 +1,107 @@
 ------------------------------------------------------------------------
-r1594 | gaser | 2020-03-30 16:55:04
+r1595 | gaser | 2020-03-31 14:32:25
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       atlases_surfaces/atlases_surfaces.man
+A       atlases_surfaces/lh.Schaefer2018_100Parcels_17Networks_order.annot
+A       atlases_surfaces/lh.Schaefer2018_200Parcels_17Networks_order.annot
+A       atlases_surfaces/lh.Schaefer2018_400Parcels_17Networks_order.annot
+A       atlases_surfaces/lh.Schaefer2018_600Parcels_17Networks_order.annot
+A       atlases_surfaces/rh.Schaefer2018_100Parcels_17Networks_order.annot
+A       atlases_surfaces/rh.Schaefer2018_200Parcels_17Networks_order.annot
+A       atlases_surfaces/rh.Schaefer2018_400Parcels_17Networks_order.annot
+A       atlases_surfaces/rh.Schaefer2018_600Parcels_17Networks_order.annot
+M       atlases_surfaces_32k/atlases_surfaces_32k.man
+D       atlases_surfaces_32k/lh.Schaefer2018_1000Parcels_17Networks_order.annot
+        > moved to atlases_surfaces_not_distributed/lh.Schaefer2018_1000Parcels_17Networks_order.annot
+D       atlases_surfaces_32k/lh.Schaefer2018_1000Parcels_7Networks_order.annot
+        > moved to atlases_surfaces_not_distributed/lh.Schaefer2018_1000Parcels_7Networks_order.annot
+D       atlases_surfaces_32k/lh.Schaefer2018_100Parcels_7Networks_order.annot
+        > moved to atlases_surfaces_not_distributed/lh.Schaefer2018_100Parcels_7Networks_order.annot
+D       atlases_surfaces_32k/lh.Schaefer2018_200Parcels_7Networks_order.annot
+        > moved to atlases_surfaces_not_distributed/lh.Schaefer2018_200Parcels_7Networks_order.annot
+D       atlases_surfaces_32k/lh.Schaefer2018_400Parcels_7Networks_order.annot
+        > moved to atlases_surfaces_not_distributed/lh.Schaefer2018_400Parcels_7Networks_order.annot
+D       atlases_surfaces_32k/lh.Schaefer2018_600Parcels_7Networks_order.annot
+        > moved to atlases_surfaces_not_distributed/lh.Schaefer2018_600Parcels_7Networks_order.annot
+D       atlases_surfaces_32k/lh.Schaefer2018_800Parcels_17Networks_order.annot
+        > moved to atlases_surfaces_not_distributed/lh.Schaefer2018_800Parcels_17Networks_order.annot
+D       atlases_surfaces_32k/lh.Schaefer2018_800Parcels_7Networks_order.annot
+        > moved to atlases_surfaces_not_distributed/lh.Schaefer2018_800Parcels_7Networks_order.annot
+D       atlases_surfaces_32k/rh.Schaefer2018_1000Parcels_17Networks_order.annot
+        > moved to atlases_surfaces_not_distributed/rh.Schaefer2018_1000Parcels_17Networks_order.annot
+D       atlases_surfaces_32k/rh.Schaefer2018_1000Parcels_7Networks_order.annot
+        > moved to atlases_surfaces_not_distributed/rh.Schaefer2018_1000Parcels_7Networks_order.annot
+D       atlases_surfaces_32k/rh.Schaefer2018_100Parcels_7Networks_order.annot
+        > moved to atlases_surfaces_not_distributed/rh.Schaefer2018_100Parcels_7Networks_order.annot
+D       atlases_surfaces_32k/rh.Schaefer2018_200Parcels_7Networks_order.annot
+        > moved to atlases_surfaces_not_distributed/rh.Schaefer2018_200Parcels_7Networks_order.annot
+D       atlases_surfaces_32k/rh.Schaefer2018_400Parcels_7Networks_order.annot
+        > moved to atlases_surfaces_not_distributed/rh.Schaefer2018_400Parcels_7Networks_order.annot
+D       atlases_surfaces_32k/rh.Schaefer2018_600Parcels_7Networks_order.annot
+        > moved to atlases_surfaces_not_distributed/rh.Schaefer2018_600Parcels_7Networks_order.annot
+D       atlases_surfaces_32k/rh.Schaefer2018_800Parcels_17Networks_order.annot
+        > moved to atlases_surfaces_not_distributed/rh.Schaefer2018_800Parcels_17Networks_order.annot
+D       atlases_surfaces_32k/rh.Schaefer2018_800Parcels_7Networks_order.annot
+        > moved to atlases_surfaces_not_distributed/rh.Schaefer2018_800Parcels_7Networks_order.annot
+A  +    atlases_surfaces_not_distributed/lh.Schaefer2018_1000Parcels_17Networks_order.annot
+        > moved from atlases_surfaces_32k/lh.Schaefer2018_1000Parcels_17Networks_order.annot
+A  +    atlases_surfaces_not_distributed/lh.Schaefer2018_1000Parcels_7Networks_order.annot
+        > moved from atlases_surfaces_32k/lh.Schaefer2018_1000Parcels_7Networks_order.annot
+A  +    atlases_surfaces_not_distributed/lh.Schaefer2018_100Parcels_7Networks_order.annot
+        > moved from atlases_surfaces_32k/lh.Schaefer2018_100Parcels_7Networks_order.annot
+A  +    atlases_surfaces_not_distributed/lh.Schaefer2018_200Parcels_7Networks_order.annot
+        > moved from atlases_surfaces_32k/lh.Schaefer2018_200Parcels_7Networks_order.annot
+A  +    atlases_surfaces_not_distributed/lh.Schaefer2018_400Parcels_7Networks_order.annot
+        > moved from atlases_surfaces_32k/lh.Schaefer2018_400Parcels_7Networks_order.annot
+A  +    atlases_surfaces_not_distributed/lh.Schaefer2018_600Parcels_7Networks_order.annot
+        > moved from atlases_surfaces_32k/lh.Schaefer2018_600Parcels_7Networks_order.annot
+A  +    atlases_surfaces_not_distributed/lh.Schaefer2018_800Parcels_17Networks_order.annot
+        > moved from atlases_surfaces_32k/lh.Schaefer2018_800Parcels_17Networks_order.annot
+A  +    atlases_surfaces_not_distributed/lh.Schaefer2018_800Parcels_7Networks_order.annot
+        > moved from atlases_surfaces_32k/lh.Schaefer2018_800Parcels_7Networks_order.annot
+A  +    atlases_surfaces_not_distributed/rh.Schaefer2018_1000Parcels_17Networks_order.annot
+        > moved from atlases_surfaces_32k/rh.Schaefer2018_1000Parcels_17Networks_order.annot
+A  +    atlases_surfaces_not_distributed/rh.Schaefer2018_1000Parcels_7Networks_order.annot
+        > moved from atlases_surfaces_32k/rh.Schaefer2018_1000Parcels_7Networks_order.annot
+A  +    atlases_surfaces_not_distributed/rh.Schaefer2018_100Parcels_7Networks_order.annot
+        > moved from atlases_surfaces_32k/rh.Schaefer2018_100Parcels_7Networks_order.annot
+A  +    atlases_surfaces_not_distributed/rh.Schaefer2018_200Parcels_7Networks_order.annot
+        > moved from atlases_surfaces_32k/rh.Schaefer2018_200Parcels_7Networks_order.annot
+A  +    atlases_surfaces_not_distributed/rh.Schaefer2018_400Parcels_7Networks_order.annot
+        > moved from atlases_surfaces_32k/rh.Schaefer2018_400Parcels_7Networks_order.annot
+A  +    atlases_surfaces_not_distributed/rh.Schaefer2018_600Parcels_7Networks_order.annot
+        > moved from atlases_surfaces_32k/rh.Schaefer2018_600Parcels_7Networks_order.annot
+A  +    atlases_surfaces_not_distributed/rh.Schaefer2018_800Parcels_17Networks_order.annot
+        > moved from atlases_surfaces_32k/rh.Schaefer2018_800Parcels_17Networks_order.annot
+A  +    atlases_surfaces_not_distributed/rh.Schaefer2018_800Parcels_7Networks_order.annot
+        > moved from atlases_surfaces_32k/rh.Schaefer2018_800Parcels_7Networks_order.annot
+M       cat_conf_ROI.m
+M       cat_defaults.m
+M       cat_vol_defs.m
+M       html/cat.html
+M       standalone/cat_standalone_segment.txt
+A       templates_volumes/Schaefer2018_100Parcels_17Networks_order.csv
+A       templates_volumes/Schaefer2018_100Parcels_17Networks_order.nii
+A       templates_volumes/Schaefer2018_200Parcels_17Networks_order.csv
+A       templates_volumes/Schaefer2018_200Parcels_17Networks_order.nii
+A       templates_volumes/Schaefer2018_400Parcels_17Networks_order.csv
+A       templates_volumes/Schaefer2018_400Parcels_17Networks_order.nii
+A       templates_volumes/Schaefer2018_600Parcels_17Networks_order.csv
+A       templates_volumes/Schaefer2018_600Parcels_17Networks_order.nii
+A       templates_volumes/aal3.csv
+A       templates_volumes/aal3.nii
+A       templates_volumes/aal3.txt
+
+(1) Added: Added Schaefer volume atlases.
+(2) Changed. For categorical interpolation in "Apply deformations" the data
+    type is automatically chosen according to maximum value in the label image.
+(3) Changed: Removed Schaefer atlases with > 600 parcellations.
+(4) Changed: Updated atlas information in all tools.
+------------------------------------------------------------------------
+r1594 | gaser | 2020-03-30 16:55:33 +0200 (Mo, 30 Mär 2020) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +109,7 @@ M       cat_conf_tools.m
 
 Fixed: Corrected dependency names in cat_conf_tools.m that caused errors in 
 longitudinal batch mode.
+
 
 ------------------------------------------------------------------------
 r1593 | gaser | 2020-03-30 16:40:48 +0200 (Mo, 30 Mär 2020) | 7 lines
