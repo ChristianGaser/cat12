@@ -228,7 +228,7 @@ spm('FnBanner',mfilename,cat_version);
 url = fullfile(spm('Dir'),'toolbox','cat12','html','cat.html');
 spm_help('!Disp',url,'',Fgraph,'Computational Anatomy Toolbox for SPM12');
 
-[ST, RS] = cat_system('CAT_DumpCurv -h');
+[ST, RS] = cat_system('CAT_3dVol2Surf');
 % because status will not give 0 for help output we have to check whether we can find the
 % keyword "Usage" in output
 if isempty(strfind(RS,'Usage'));
