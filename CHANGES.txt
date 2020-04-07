@@ -1,5 +1,36 @@
 ------------------------------------------------------------------------
-r1595 | gaser | 2020-03-31 14:32:25
+r1596 | gaser | 2020-04-07 20:24:38
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+M       cat_amap.mex
+M       cat_ornlm.mex
+M       cat_sanlm.mex
+M       cat_vbdist.mex
+M       cat_vol_downcut.mex
+M       cat_vol_eidist.mex
+M       cat_vol_genus0.mex
+M       cat_vol_gradient3.mex
+M       cat_vol_interp3f.mex
+M       cat_vol_laplace3.mex
+M       cat_vol_laplace3R.mex
+M       cat_vol_localstat.mex
+M       cat_vol_median3.mex
+M       cat_vol_median3c.mex
+M       cat_vol_pbtp.mex
+M       cat_vol_simgrow.mex
+M       html/cat.html
+A       internal/cat_io_send_udp_to_server.m
+M       internal/cat_vol_cMRegularizarNLM3D.mex
+M       spm_cat12.m
+
+(1) Added: Internal tool to send udp information.
+(2) Changed: Updated cat12.m and spm_cat12.m to be more conform across 
+    different systems.
+------------------------------------------------------------------------
+r1595 | gaser | 2020-03-31 14:33:37 +0200 (Di, 31 Mär 2020) | 100 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -100,6 +131,7 @@ A       templates_volumes/aal3.txt
     type is automatically chosen according to maximum value in the label image.
 (3) Changed: Removed Schaefer atlases with > 600 parcellations.
 (4) Changed: Updated atlas information in all tools.
+
 ------------------------------------------------------------------------
 r1594 | gaser | 2020-03-30 16:55:33 +0200 (Mo, 30 Mär 2020) | 8 lines
 
