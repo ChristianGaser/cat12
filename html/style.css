@@ -162,8 +162,9 @@ h4 {
 }
 
 h5 {
-  color: #666;
+  color: #444;
   margin-top: 1.5em;
+  margin-bottom: 0em;
   font-size: 1.0em;
 }
   
@@ -205,6 +206,7 @@ table {
   /*
   background-color: #ffeda0;
   */
+  font: small 'Lucida Grande', Verdana, Arial, Sans-Serif;
   border-collapse: collapse;
   border: none;
 }

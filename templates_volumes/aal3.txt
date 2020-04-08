@@ -50,4 +50,4 @@ locus coeruleus, and raphe nuclei. The new atlas is available as a toolbox for
 SPM, and can be used with MRIcron.
 
 --------------------------------------------------------------------------------
-$Id: aal.txt 1553 2020-01-23 07:37:40Z gaser $
+$Id$
