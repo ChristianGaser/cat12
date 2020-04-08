@@ -1,5 +1,38 @@
 ------------------------------------------------------------------------
-r1596 | gaser | 2020-04-07 20:24:38
+r1597 | gaser | 2020-04-09 00:43:49
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+ M      atlases_surfaces/lh.Schaefer2018_100Parcels_17Networks_order.annot
+ M      atlases_surfaces/lh.Schaefer2018_200Parcels_17Networks_order.annot
+ M      atlases_surfaces/lh.Schaefer2018_400Parcels_17Networks_order.annot
+ M      atlases_surfaces/lh.Schaefer2018_600Parcels_17Networks_order.annot
+ M      atlases_surfaces/rh.Schaefer2018_100Parcels_17Networks_order.annot
+ M      atlases_surfaces/rh.Schaefer2018_200Parcels_17Networks_order.annot
+ M      atlases_surfaces/rh.Schaefer2018_400Parcels_17Networks_order.annot
+ M      atlases_surfaces/rh.Schaefer2018_600Parcels_17Networks_order.annot
+M       html/cat.html
+M       html/cat_methods_FN.html
+M       html/cat_starting.html
+M       html/style.css
+ M      templates_volumes/Schaefer2018_100Parcels_17Networks_order.csv
+ M      templates_volumes/Schaefer2018_100Parcels_17Networks_order.nii
+ M      templates_volumes/Schaefer2018_200Parcels_17Networks_order.csv
+ M      templates_volumes/Schaefer2018_200Parcels_17Networks_order.nii
+ M      templates_volumes/Schaefer2018_400Parcels_17Networks_order.csv
+ M      templates_volumes/Schaefer2018_400Parcels_17Networks_order.nii
+ M      templates_volumes/Schaefer2018_600Parcels_17Networks_order.csv
+ M      templates_volumes/Schaefer2018_600Parcels_17Networks_order.nii
+ M      templates_volumes/aal3.csv
+ M      templates_volumes/aal3.nii
+MM      templates_volumes/aal3.txt
+
+(1) Changed: Updated help site for naming convention of output files.
+(2) Changed: Updated Makefile.
+------------------------------------------------------------------------
+r1596 | gaser | 2020-04-07 20:25:35 +0200 (Di, 07 Apr 2020) | 29 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -29,6 +62,7 @@ M       spm_cat12.m
 (1) Added: Internal tool to send udp information.
 (2) Changed: Updated cat12.m and spm_cat12.m to be more conform across 
     different systems.
+
 ------------------------------------------------------------------------
 r1595 | gaser | 2020-03-31 14:33:37 +0200 (Di, 31 Mär 2020) | 100 lines
 

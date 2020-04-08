@@ -37,9 +37,18 @@ install2:
 
 help:
 	-@echo Available commands:
-	-@echo install zip scp scp_manual update cp_binaries archive check_pipeline checklist
+	-@echo install zip scp scp_manual doc update cp_binaries archive check_pipeline checklist
 
-update:
+doc:
+	-@cat html/cat.txt | sed -e 's/VERSION/'${NEWVERSION}'/g' -e 's/RELNUMBER/r'${REVISION}'/g' -e 's/DATE/'${DATE}'/g' > html/cat.html
+	-@test ! -d cat12-html || rm -r cat12-html
+	-@cp -R html cat12-html
+	-@perl -p -i -e "s/\','-browser'\);//g" cat12-html/*.html
+	-@perl -p -i -e "s/\','-browser'\)//g" cat12-html/*.html
+	-@perl -p -i -e "s/matlab:web\(\'//g" cat12-html/*.html
+	-@cp cat12-html/cat.html cat12-html/index.html
+
+update: doc
 	-@svn update
 	-@echo '% Computational Anatomy Toolbox' > Contents.m
 	-@echo '% Version' ${REVISION}' ('${NEWVERSION}')' ${DATE} >> Contents.m
@@ -49,13 +58,6 @@ update:
 	-@echo '% Version ' ${REVISION} ${NEWVERSION} ${DATE} >> INSTALL.txt
 	-@cat INSTALL_info.txt >> INSTALL.txt
 	-@perl -p -i -e "s/${OLDVERSION}/${NEWVERSION}/g" spm_cat12.m
-	-@cat html/cat.txt | sed -e 's/VERSION/'${NEWVERSION}'/g' -e 's/RELNUMBER/r'${REVISION}'/g' -e 's/DATE/'${DATE}'/g' > html/cat.html
-	-@test ! -d cat12-html || rm -r cat12-html
-	-@cp -R html cat12-html
-	-@perl -p -i -e "s/\','-browser'\);//g" cat12-html/*.html
-	-@perl -p -i -e "s/\','-browser'\)//g" cat12-html/*.html
-	-@perl -p -i -e "s/matlab:web\(\'//g" cat12-html/*.html
-	-@cp cat12-html/cat.html cat12-html/index.html
 
 zip: update
 	-@echo zip
