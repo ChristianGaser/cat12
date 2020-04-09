@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1598 | gaser | 2020-04-09 16:41:09
+r1599 | gaser | 2020-04-10 01:17:59
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+A  +    cat_spm_results_ui.m
+        > moved from cat_stat_spm_results_ui.m
+D       cat_stat_spm_results_ui.m
+        > moved to cat_spm_results_ui.m
+
+(1) Changed: Renamed cat_stat_spm_results_ui.m to cat_spm_results_ui.m and
+    added functionality to optionally call TFCE results.
+(2) Changed: Added option to call results to CAT12 GUI.
+------------------------------------------------------------------------
+r1598 | gaser | 2020-04-09 16:41:45 +0200 (Do, 09 Apr 2020) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -17,6 +31,7 @@ M       tbx_cfg_cat.m
 (1) Changed: Made some function compatible to Octave.
 (2) Changed: Changed some of the defaults for displaying surfaces with 
     cat_surf_render.m (transparency, texture, crossbar).
+
 ------------------------------------------------------------------------
 r1597 | gaser | 2020-04-09 00:44:32 +0200 (Do, 09 Apr 2020) | 31 lines
 
