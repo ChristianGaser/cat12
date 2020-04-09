@@ -484,7 +484,7 @@ switch lower(action)
         
         % -- Views --
         if H.results
-                uimenu(cmenu, 'Label','Rotate', 'Checked','off', 'Separator','on', ...
+          uimenu(cmenu, 'Label','Rotate', 'Checked','off', 'Separator','on', ...
                     'Callback',{@mySwitchRotate, H});
         else
           uimenu(cmenu, 'Label','Rotate', 'Checked','on', 'Separator','on', ...
@@ -558,10 +558,10 @@ switch lower(action)
         uimenu(c, 'Label','none',   'Checked','off', 'Callback', {@myLighting, H,'none'});
    
         if H.results
-          c = uimenu(cmenu, 'Label','Mesh texture');
+          c = uimenu(cmenu, 'Label','Mesh Texture');
           uimenu(c, 'Label','bright',  'Checked','off', 'Callback', {@mySurfcolor, H,1.0});
-          uimenu(c, 'Label','medium',  'Checked','off', 'Callback', {@mySurfcolor, H,0.5});
-          uimenu(c, 'Label','dark',    'Checked','on',  'Callback', {@mySurfcolor, H,0.0});
+          uimenu(c, 'Label','medium',  'Checked','on',  'Callback', {@mySurfcolor, H,0.5});
+          uimenu(c, 'Label','dark',    'Checked','off', 'Callback', {@mySurfcolor, H,0.0});
           uimenu(c, 'Label','dull',    'Checked','on',  'Callback', {@myMaterial, H,'dull'}, 'Separator', 'on');
           uimenu(c, 'Label','shiny',   'Checked','off', 'Callback', {@myMaterial, H,'shiny'});
           uimenu(c, 'Label','metal',   'Checked','off', 'Callback', {@myMaterial, H,[0.2 0.7 0.5 2]});
@@ -572,8 +572,8 @@ switch lower(action)
           c = uimenu(cmenu, 'Label','Crossbar');
           uimenu(c, 'Label','off',      'Checked','off', 'Callback', {@myCross, H,'setsize',0});
           uimenu(c, 'Label','small',    'Checked','off', 'Callback', {@myCross, H,'setsize',50});
-          uimenu(c, 'Label','medium',   'Checked','off', 'Callback', {@myCross, H,'setsize',100});
-          uimenu(c, 'Label','large',    'Checked','on',  'Callback', {@myCross, H,'setsize',200});
+          uimenu(c, 'Label','medium',   'Checked','on',  'Callback', {@myCross, H,'setsize',100});
+          uimenu(c, 'Label','large',    'Checked','off', 'Callback', {@myCross, H,'setsize',200});
           uimenu(c, 'Label','red',      'Checked','on',  'Callback', {@myCross, H,'setcolor',[1 0 0]},'Separator', 'on');
           uimenu(c, 'Label','blue',     'Checked','off', 'Callback', {@myCross, H,'setcolor',[0 0 1]});
           uimenu(c, 'Label','white',    'Checked','off', 'Callback', {@myCross, H,'setcolor',[1 1 1]});
@@ -600,9 +600,9 @@ switch lower(action)
         uimenu(c, 'Label','TextureTransparency',        'Checked','on',   'Callback', {@myTextureTransparency, H});
         for ti=1:numel(tlevel)
           if ti==1
-            uimenu(c, 'Label',sprintf('%0.0f%%',tlevel(ti)), 'Checked',reson{2 - (ti==1 + H.results*4)}, 'Callback', {@myTransparency, H}, 'Separator', 'on');
+            uimenu(c, 'Label',sprintf('%0.0f%%',tlevel(ti)), 'Checked',reson{2 - (ti==1 + H.results*1)}, 'Callback', {@myTransparency, H}, 'Separator', 'on');
           else
-            uimenu(c, 'Label',sprintf('%0.0f%%',tlevel(ti)), 'Checked',reson{2 - (ti==1 + H.results*4)}, 'Callback', {@myTransparency, H});
+            uimenu(c, 'Label',sprintf('%0.0f%%',tlevel(ti)), 'Checked',reson{2 - (ti==1 + H.results*1)}, 'Callback', {@myTransparency, H});
           end
         end
         
@@ -1238,6 +1238,7 @@ else
     end
 end
 axis vis3d;
+
 %==========================================================================
 function mySurfcolor(obj,evt,H,val)
   c  = get(get(obj,'parent'),'children'); 
@@ -1248,6 +1249,7 @@ function mySurfcolor(obj,evt,H,val)
   setappdata(H.axis,'handles',H);
   H.surfbrightness = val;
   updateTexture(H,d);
+  
 %==========================================================================
 function myCross(obj,evt,H,action,val)
   hs = findobj(H.axis,'Marker','+'); 
@@ -1276,6 +1278,7 @@ function myCross(obj,evt,H,action,val)
     set(findobj(pobj,'Label',labs{li}),'Checked','off');
   end
   set(obj,'Checked','on');
+  
 %==========================================================================
 function varargout = myCrossBar(varargin)
 
@@ -1287,7 +1290,7 @@ switch lower(varargin{1})
     H  = varargin{2};
     xyz = varargin{3};
     hold(H.axis,'on');
-    hs = plot3(xyz(1),xyz(2),xyz(3),'Marker','+','MarkerSize',200,'LineWidth',2,...
+    hs = plot3(xyz(1),xyz(2),xyz(3),'Marker','+','MarkerSize',100,'LineWidth',2,...
         'parent',H.axis,'Color',[1 0 0],'Tag','CrossBar','ButtonDownFcn',{});
     varargout = {hs};
     
@@ -2048,7 +2051,7 @@ ttrans = findobj(H.figure,'Label','TextureTransparency');
 ctrans = ~isempty(ttrans) && strcmp(ttrans.Checked,'on'); 
 
 if ~isfield(H,'surfbrightness'), 
-  scmenu = get( findobj(H.figure,'Label','Mesh texture'),'Children');   
+  scmenu = get( findobj(H.figure,'Label','Mesh Texture'),'Children');   
   c  = findobj( scmenu ,'Checked', 'on'); 
   cb = get( findobj( c ,'Checked', 'on') , 'Callback' ); 
   for cbi=1:numel(cb), if strcmp(char(cb{cbi}{1}),'mySurfcolor'), H.surfbrightness = cb{cbi}{3}; end; end
