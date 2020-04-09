@@ -11,9 +11,16 @@ function cat_run_newcatch(job,tpm,subj)
 
   [pth,nam,ext] = spm_fileparts(job.channel(1).vols{subj}); 
 
+  % don't use try-catch call for octave
+  if strcmpi(spm_check_version,'octave')
+    cat_run_job(job,tpm,subj); % the cat_run_job1070 is only called by older functions
+    return  
+  end
+  
   try
     cat_run_job(job,tpm,subj); % the cat_run_job1070 is only called by older functions
   catch caterr 
+
     %% add further information for special errors
     if isempty(caterr.identifier)
       switch caterr.message

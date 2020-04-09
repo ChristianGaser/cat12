@@ -39,7 +39,8 @@ catch
 end
 
 % force running in the foreground if only one processor was found or for compiled version
-if numcores == 1 || isdeployed , numcores = 0; end
+% or for Octave
+if numcores == 1 || isdeployed || strcmpi(spm_check_version,'octave'), numcores = 0; end
 
 %_______________________________________________________________________
 nproc         = cfg_entry;
