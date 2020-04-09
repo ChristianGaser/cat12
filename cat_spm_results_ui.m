@@ -248,6 +248,11 @@ if nargin == 0, Action='Setup'; else Action=varargin{1}; end
 useCAT = 2; % 0-like SPM, 1-surface handling, 2-cat_surf_renderer  
  
 global result_ui_varargout use_tfce;
+
+% prevent that TFCE is called if not yet installed
+if ~exist(fullfile(spm('dir'),'toolbox','TFCE'),'dir')
+  use_tfce = 0;
+end
  
 %==========================================================================
 switch lower(Action), case 'setup'                         %-Set up results
