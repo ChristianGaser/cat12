@@ -7,7 +7,7 @@ function year = cat_io_matlabversion(varargin)
 
 
   if strcmpi(spm_check_version,'octave')
-    year = 20001;
+    year = 20201;
     return
   end
   

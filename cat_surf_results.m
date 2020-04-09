@@ -2153,7 +2153,7 @@ if any(v(:))
     end
   end
   for i = 1:size(v, 1)
-    C = C + squeeze(ind2rgb(floor(((v(i, :) - mi) / (ma - mi)) * size(col, 1)), col(:, :, i)));
+    C = C + squeeze(ind2rgb(floor(((v(i, :) - mi) / (ma - mi)) * (size(col, 1)-1)), col(:, :, i)));
   end
 end
 
