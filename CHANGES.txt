@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1601 | gaser | 2020-04-13 00:22:48
+r1602 | gaser | 2020-04-13 01:38:48
+
+Changed paths:
+M       CHANGES.txt
+M       cat_spm_results_ui.m
+
+Fixed: Corrected some inconsistencies in cat_spm_results_ui.m.
+------------------------------------------------------------------------
+r1601 | gaser | 2020-04-13 00:22:54 +0200 (Mo, 13 Apr 2020) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +20,7 @@ RM      templates_volumes/aal3.txt
 (1) Fixed: Corrected bug in ROI analysis that occured if only a few regions were
     found to be significant.
 (2) Fixed: Removed unnecessary cell-structure in cat_standalone.sh
+
 ------------------------------------------------------------------------
 r1600 | gaser | 2020-04-10 01:31:30 +0200 (Fr, 10 Apr 2020) | 7 lines
 
