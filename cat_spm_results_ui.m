@@ -247,7 +247,7 @@ SVNid = '$Rev$';
 if nargin == 0, Action='Setup'; else Action=varargin{1}; end
 useCAT = 2; % 0-like SPM, 1-surface handling, 2-cat_surf_renderer  
  
-global result_ui_varargout use_tfce;
+global result_ui_varargout use_tfce mesh_detect
 
 % prevent that TFCE is called if not yet installed
 if ~exist(fullfile(spm('dir'),'toolbox','TFCE'),'dir')
@@ -314,6 +314,12 @@ switch lower(Action), case 'setup'                         %-Set up results
         return;
     end
  
+    if spm_mesh_detect(xSPM.Vspm)
+      mesh_detect = 1;
+    else
+      mesh_detect = 0;
+    end
+
     %-Ensure pwd = swd so that relative filenames are valid
     %----------------------------------------------------------------------
     cd(SPM.swd)
@@ -370,43 +376,38 @@ switch lower(Action), case 'setup'                         %-Set up results
     end
 
     
-		% CAT.begin    
-		% -------------------------------------------------------------------------
-		% ToDo:
-		% * add batch call with render settings > cat_conf_stools
-		% * add atlas data coursor > cat_surf_render
-		% * add colorbar > cat_surf_render
-		% * fix contrast box boundaries
-		% * full atlas integration > spm_atlas, spm_XYZreg, spm_list (lot of work) 
-		% -------------------------------------------------------------------------
-		if useCAT
-				[pp,ff,ee] = spm_fileparts(xSPM.Vspm.fname);
-				if strcmp(ee,'.gii')
-					datatype = 'Surface (3D)'; 
-				 % units    = {'mm' 'mm'}; 
-				end
-				
-				% change surface ?
-				% - first we have to use the Shooting Surface for the statistic to
-				%   obtain more meaningful MNI coordinates 
-				% - here we have to change to the used surface (FSaverage)
-				if use_tfce
-				  defsurf = 0; % 0-no change, 1-FS, 2-GS;
-				else
-				  defsurf = 1; % 0-no change, 1-FS, 2-GS;
-				end
-				if defsurf
-					FSavg = '.freesurfer.gii'; 
-					GSavg = '.Template_T1_IXI555_MNI152_GS.gii';
-					SPM.xVol.G = strrep(SPM.xVol.G,GSavg,FSavg);
-				end
-				
-				% change coordinates to spherial ??
-				%XYZmmFS = xSPM.
-				
-		end
-		% -------------------------------------------------------------------------
-		% CAT.end
+    % CAT.begin    
+    % -------------------------------------------------------------------------
+    % ToDo:
+    % * add batch call with render settings > cat_conf_stools
+    % * add atlas data coursor > cat_surf_render
+    % * add colorbar > cat_surf_render
+    % * fix contrast box boundaries
+    % * full atlas integration > spm_atlas, spm_XYZreg, spm_list (lot of work) 
+    % -------------------------------------------------------------------------
+    if useCAT
+        [pp,ff,ee] = spm_fileparts(xSPM.Vspm.fname);
+        if strcmp(ee,'.gii')
+          datatype = 'Surface (3D)'; 
+         % units    = {'mm' 'mm'}; 
+        end
+        
+        % change surface ?
+        % - first we have to use the Shooting Surface for the statistic to
+        %   obtain more meaningful MNI coordinates 
+        % - here we have to change to the used surface (FSaverage)
+        if spm_mesh_detect(xSPM.Vspm) & exist('spm_cat12')
+          FSavg = '.freesurfer.gii'; 
+          GSavg = '.Template_T1_IXI555_MNI152_GS.gii';
+          SPM.xVol.G = strrep(SPM.xVol.G,GSavg,FSavg);
+        end
+        
+        % change coordinates to spherial ??
+        %XYZmmFS = xSPM.
+        
+    end
+    % -------------------------------------------------------------------------
+    % CAT.end
 
     if spm_mesh_detect(xSPM.Vspm)
         DIM(3) = Inf; % force 3D coordinates
@@ -523,14 +524,14 @@ switch lower(Action), case 'setup'                         %-Set up results
     try
         thresDesc = xSPM.thresDesc;
         if use_tfce
-						text(0,12,sprintf('Height threshold %s',thresDesc),'Parent',hResAx)
+            text(0,12,sprintf('Height threshold %s',thresDesc),'Parent',hResAx)
         else
-						if strcmp(xSPM.STAT,'P')
-								text(0,12,sprintf('Height threshold %s',thresDesc),'Parent',hResAx)
-						else
-								text(0,12,sprintf('Height threshold %c = %0.6f  {%s}',xSPM.STAT,xSPM.u,thresDesc),'Parent',hResAx)
-						end
-				end
+            if strcmp(xSPM.STAT,'P')
+                text(0,12,sprintf('Height threshold %s',thresDesc),'Parent',hResAx)
+            else
+                text(0,12,sprintf('Height threshold %c = %0.6f  {%s}',xSPM.STAT,xSPM.u,thresDesc),'Parent',hResAx)
+            end
+        end
     catch
         text(0,12,sprintf('Height threshold %c = %0.6f',xSPM.STAT,xSPM.u),'Parent',hResAx)
     end
@@ -777,7 +778,7 @@ switch lower(Action), case 'setup'                         %-Set up results
  
         %-SPM area - used for Volume of Interest analyses
         %------------------------------------------------------------------
-        if spm_mesh_detect(xSPM.Vspm)
+        if spm_mesh_detect(xSPM.Vspm) | use_tfce
             Enable = 'off';
         else
             Enable = 'on';
@@ -852,10 +853,9 @@ switch lower(Action), case 'setup'                         %-Set up results
             'previous surface rendering'};
 
         tmp0 = {'spm_transverse(''set'',xSPM,hReg)',...
-            ['spm_sections(xSPM,hReg);','spm_orthviews(''RemoveBlobs'',1);'],...
+            'spm_sections(xSPM,hReg);',...
             ['spm_sections(xSPM,hReg,fullfile(spm(''dir''),''toolbox'',''cat12'','...
              '''templates_volumes'',''Template_T1_IXI555_MNI152_GS.nii''));',...
-             'spm_orthviews(''RemoveBlobs'',1);', ...
              'cat_spm_results_ui(''spm_list_cleanup'');',...
             ],... 
              {@myslover},...
@@ -863,7 +863,7 @@ switch lower(Action), case 'setup'                         %-Set up results
             '''t'',     xSPM.Z'',',...
             '''mat'',   xSPM.M,',...
             '''dim'',   xSPM.DIM))'],...
-            ['global prevsect;','spm_sections(xSPM,hReg,prevsect);','spm_orthviews(''RemoveBlobs'',1);'],...
+            ['global prevsect;','spm_sections(xSPM,hReg,prevsect);'],...
             ['global prevrend;','if ~isstruct(prevrend)',...
             'prevrend = struct(''rendfile'','''',''brt'',[],''col'',[]); end;',...            
             'spm_render(    struct( ''XYZ'',    xSPM.XYZ,',...
@@ -872,24 +872,24 @@ switch lower(Action), case 'setup'                         %-Set up results
             '''dim'',   xSPM.DIM),prevrend.brt,prevrend.rendfile)']};
             
         if spm_mesh_detect(xSPM.Vspm)
-            ind = [1 3 4 7];
+            ind = [1 3 7];
         else
             ind = [1:3 5:numel(str0)];
         end
         
-        % use average image if cat12 exists
+        % add average image only if cat12 exists
         if exist('spm_cat12')
           ind = sort([ind 4]);
         end
-        
+
         % select entries
-        str  = str0{ind};
-        tstr = tstr0{ind};
-        tmp  = tmp0{ind};
-				
+        str  = str0(ind);
+        tstr = tstr0(ind);
+        tmp  = tmp0(ind(2:end)-1);
+        
         uicontrol('Parent',hPan,'Style','popupmenu','String',str,...
             'FontSize',FS(10),...
-            'ToolTipString',cat(2,tstr),...
+            'ToolTipString',cat(2,tstr{:}),...
             'Callback','spm(''PopUpCB'',gcbo)',...
             'UserData',tmp,...
             'Interruptible','on','Enable','on',...
@@ -945,53 +945,53 @@ switch lower(Action), case 'setup'                         %-Set up results
     hC   = uimenu(Finter,'Label','Contrasts', 'Tag','ContrastsUI');
     
     if use_tfce
-				hC1  = uimenu(hC,'Label','Change Contrast');
-				
-				for i=1:numel(SPM.xCon)
-						% check whether TFCE results were found
-						if exist(sprintf('%s_log_p_%04d.nii',xSPM.STAT,i)) || ...
-							 exist(sprintf('%s_log_p_%04d.gii',xSPM.STAT,i))
-								xSPM2 = xSPM;
-								xSPM2.invResult = 0;
-								hC2 = uimenu(hC1,'Label',[SPM.xCon(i).STAT, ': ', SPM.xCon(i).name], ...
-										'UserData',struct('Ic',i),...
-										'Callback',{@mychgcon,xSPM2});
-								if any(xSPM.Ic == i) & ~xSPM.invResult
-										set(hC2,'ForegroundColor',[0 0 1],'Checked','on');
-								end
-								xSPM2 = xSPM;
-								xSPM2.invResult = 1;
-								hC3 = uimenu(hC1,'Label',['(inverse contrast) ',SPM.xCon(i).STAT, ': ', SPM.xCon(i).name], ...
-										'UserData',struct('Ic',i),...
-										'Callback',{@mychgcon,xSPM2});
-								if any(xSPM.Ic == i) & xSPM.invResult
-										set(hC3,'ForegroundColor',[0 0 1],'Checked','on');
-								end
-						end
-				end
+        hC1  = uimenu(hC,'Label','Change Contrast');
+        
+        for i=1:numel(SPM.xCon)
+            % check whether TFCE results were found
+            if exist(sprintf('%s_log_p_%04d.nii',xSPM.STAT,i)) || ...
+               exist(sprintf('%s_log_p_%04d.gii',xSPM.STAT,i))
+                xSPM2 = xSPM;
+                xSPM2.invResult = 0;
+                hC2 = uimenu(hC1,'Label',[SPM.xCon(i).STAT, ': ', SPM.xCon(i).name], ...
+                    'UserData',struct('Ic',i),...
+                    'Callback',{@mychgcon,xSPM2});
+                if any(xSPM.Ic == i) & ~xSPM.invResult
+                    set(hC2,'ForegroundColor',[0 0 1],'Checked','on');
+                end
+                xSPM2 = xSPM;
+                xSPM2.invResult = 1;
+                hC3 = uimenu(hC1,'Label',['(inverse contrast) ',SPM.xCon(i).STAT, ': ', SPM.xCon(i).name], ...
+                    'UserData',struct('Ic',i),...
+                    'Callback',{@mychgcon,xSPM2});
+                if any(xSPM.Ic == i) & xSPM.invResult
+                    set(hC3,'ForegroundColor',[0 0 1],'Checked','on');
+                end
+            end
+        end
     else
-				hC1  = uimenu(hC,'Label','New Contrast...',...
-						'UserData',struct('Ic',0),...
-						'Callback',{@mychgcon,xSPM});
-				hC1 = uimenu(hC,'Label','Change Contrast');
-				for i=1:numel(SPM.xCon)
-						hC2 = uimenu(hC1,'Label',[SPM.xCon(i).STAT, ': ', SPM.xCon(i).name], ...
-								'UserData',struct('Ic',i),...
-								'Callback',{@mychgcon,xSPM});
-						if any(xSPM.Ic == i)
-								set(hC2,'ForegroundColor',[0 0 1],'Checked','on');
-						end
-				end
-				hC1 = uimenu(hC,'Label','Previous Contrast',...
-						'Accelerator','P',...
-						'UserData',struct('Ic',xSPM.Ic-1),...
-						'Callback',{@mychgcon,xSPM});
-				if xSPM.Ic-1<1, set(hC1,'Enable','off'); end
-				hC1 = uimenu(hC,'Label','Next Contrast',...
-						'Accelerator','N',...
-						'UserData',struct('Ic',xSPM.Ic+1),...
-						'Callback',{@mychgcon,xSPM});
-				if xSPM.Ic+1>numel(SPM.xCon), set(hC1,'Enable','off'); end
+        hC1  = uimenu(hC,'Label','New Contrast...',...
+            'UserData',struct('Ic',0),...
+            'Callback',{@mychgcon,xSPM});
+        hC1 = uimenu(hC,'Label','Change Contrast');
+        for i=1:numel(SPM.xCon)
+            hC2 = uimenu(hC1,'Label',[SPM.xCon(i).STAT, ': ', SPM.xCon(i).name], ...
+                'UserData',struct('Ic',i),...
+                'Callback',{@mychgcon,xSPM});
+            if any(xSPM.Ic == i)
+                set(hC2,'ForegroundColor',[0 0 1],'Checked','on');
+            end
+        end
+        hC1 = uimenu(hC,'Label','Previous Contrast',...
+            'Accelerator','P',...
+            'UserData',struct('Ic',xSPM.Ic-1),...
+            'Callback',{@mychgcon,xSPM});
+        if xSPM.Ic-1<1, set(hC1,'Enable','off'); end
+        hC1 = uimenu(hC,'Label','Next Contrast',...
+            'Accelerator','N',...
+            'UserData',struct('Ic',xSPM.Ic+1),...
+            'Callback',{@mychgcon,xSPM});
+        if xSPM.Ic+1>numel(SPM.xCon), set(hC1,'Enable','off'); end
     end
     
     hC1 = uimenu(hC,'Label','Significance level','Separator','on');
@@ -1061,6 +1061,8 @@ switch lower(Action), case 'setup'                         %-Set up results
     case 'spm_list_cleanup'
     %======================================================================
         % cat_spm_results_ui('spm_list_cleanup',hReg)
+        
+        if ~mesh_detect, return; end
         if nargin>1
           spm_list_cleanup(varargin{2}); 
         else
