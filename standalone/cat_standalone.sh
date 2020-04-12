@@ -188,7 +188,7 @@ run_cat ()
   
   # surface data need an additional curly bracket
   if grep -q "\.data_surf" $BATCHFILE ; then
-    echo "$data = {{" >> $TMP
+    echo "$data = {" >> $TMP
   else
     echo "$data = {" >> $TMP
 	fi
@@ -214,7 +214,7 @@ run_cat ()
 
   # surface data need an additional curly bracket
   if grep -q "\.data_surf" $BATCHFILE ; then
-	  echo "     }};" >> $TMP
+	  echo "     };" >> $TMP
 	else
 	  echo "     };" >> $TMP
 	fi
