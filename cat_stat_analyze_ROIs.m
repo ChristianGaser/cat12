@@ -409,8 +409,9 @@ for i = sort(unique(hemi_code))'
   % display and save thresholded sorted p-values for each correction
   for c = 1:n_corr
     ind = find(Pcorr_sel{c}(indP)<alpha);
-    ind_corr{c} = [ind_corr{c} ind];
+    if size(ind,1) > 1, ind = ind'; end
     if ~isempty(ind)
+      ind_corr{c} = [ind_corr{c} ind];
       fprintf('\n%s (P<%g, %s):\n',hemistr{i},alpha,corr{c});
        fprintf('%9s\t%9s\t%9s\t%s\n','P-value',[statstr '-value'],'Ze-value',atlas);
       for j=1:length(ind)

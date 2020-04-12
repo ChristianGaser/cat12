@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1600 | gaser | 2020-04-10 01:31:01
+r1601 | gaser | 2020-04-13 00:22:48
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_analyze_ROIs.m
+M       standalone/cat_standalone.sh
+RM      templates_volumes/aal3.csv
+RM      templates_volumes/aal3.nii
+RM      templates_volumes/aal3.txt
+
+(1) Fixed: Corrected bug in ROI analysis that occured if only a few regions were
+    found to be significant.
+(2) Fixed: Removed unnecessary cell-structure in cat_standalone.sh
+------------------------------------------------------------------------
+r1600 | gaser | 2020-04-10 01:31:30 +0200 (Fr, 10 Apr 2020) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +21,7 @@ M       cat_spm_results_ui.m
 
 Changed: Added check to cat_spm_results_ui if TFCE is installed (for general 
 use in CAT12).
+
 ------------------------------------------------------------------------
 r1599 | gaser | 2020-04-10 01:18:34 +0200 (Fr, 10 Apr 2020) | 12 lines
 
