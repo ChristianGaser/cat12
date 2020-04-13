@@ -1,11 +1,21 @@
 ------------------------------------------------------------------------
-r1602 | gaser | 2020-04-13 01:38:48
+r1603 | gaser | 2020-04-13 02:11:53
+
+Changed paths:
+M       CHANGES.txt
+M       cat_spm_results_ui.m
+
+Fixed: Corrected bug with non-detectable call_list function in 
+cat_spm_results_ui.m
+------------------------------------------------------------------------
+r1602 | gaser | 2020-04-13 01:39:24 +0200 (Mo, 13 Apr 2020) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_spm_results_ui.m
 
 Fixed: Corrected some inconsistencies in cat_spm_results_ui.m.
+
 ------------------------------------------------------------------------
 r1601 | gaser | 2020-04-13 00:22:54 +0200 (Mo, 13 Apr 2020) | 12 lines
 
