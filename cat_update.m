@@ -27,7 +27,7 @@ if isdeployed
   return;
 end
 
-url = 'http://141.35.69.218/cat12/';
+url = 'http://www.neuro.uni-jena.de/cat12/';
 
 if ~nargin
     update = false;

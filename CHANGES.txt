@@ -1,5 +1,24 @@
 ------------------------------------------------------------------------
-r1603 | gaser | 2020-04-13 02:11:53
+r1604 | gaser | 2020-04-14 14:38:53
+
+Changed paths:
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+M       cat_install_tfce.m
+M       cat_io_send_to_server.m
+M       cat_update.m
+M       html/cat.html
+M       html/cat_starting.html
+M       html/cat_versions.html
+M       tbx_cfg_cat.m
+
+(1) Changed: Updated version information and online help.
+(2) Changed: Removed temporary 1585 version from GUI.
+(3) Changed: Updated server address.
+------------------------------------------------------------------------
+r1603 | gaser | 2020-04-13 02:12:27 +0200 (Mo, 13 Apr 2020) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +26,7 @@ M       cat_spm_results_ui.m
 
 Fixed: Corrected bug with non-detectable call_list function in 
 cat_spm_results_ui.m
+
 ------------------------------------------------------------------------
 r1602 | gaser | 2020-04-13 01:39:24 +0200 (Mo, 13 Apr 2020) | 6 lines
 
