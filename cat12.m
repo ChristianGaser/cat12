@@ -82,7 +82,11 @@ if nargin <= 1
   if strcmpi(spm_check_version,'octave')
     call_server;
   else
-    start(timer('StartDelay',10,'TimerFcn',@call_server));  
+    try
+      start(timer('StartDelay',10,'TimerFcn',@call_server));  
+    catch
+      call_server;
+    end
   end
   
   cat_bg = imread(fullfile(spm('dir'),'toolbox','cat12','html','images','cat_bg.jpg'));
@@ -1349,10 +1353,8 @@ end
 % check for new CAT12 version
 if ~isdeployed
   [sts, msg] = cat_update;
-  if isfinite(sts) && sts >= 0
-    fprintf(msg);
-    fprintf('\n');
-  end
+  fprintf(msg);
+  fprintf('\n');
 end
 
 

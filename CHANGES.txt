@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1605 | gaser | 2020-04-14 20:44:01
+r1606 | gaser | 2020-04-14 21:23:57
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+
+Fixed: Corrected bug with update function.
+------------------------------------------------------------------------
+r1605 | gaser | 2020-04-14 20:44:36 +0200 (Di, 14 Apr 2020) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +17,7 @@ M       html/cat.html
 M       tbx_cfg_cat.m
 
 Fixed: Corrected bug with (disabled) temporary version r1585.
+
 ------------------------------------------------------------------------
 r1604 | gaser | 2020-04-14 14:39:10 +0200 (Di, 14 Apr 2020) | 17 lines
 
