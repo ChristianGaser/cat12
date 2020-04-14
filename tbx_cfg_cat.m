@@ -11,7 +11,7 @@ addpath(fileparts(which(mfilename)));
 addpath(fullfile(fileparts(which(mfilename)),'cat_run1173'));
 addpath(fullfile(fileparts(which(mfilename)),'cat_run1173plus'));
 addpath(fullfile(fileparts(which(mfilename)),'cat_run1445'));
-addpath(fullfile(fileparts(which(mfilename)),'cat_run1585'));
+%addpath(fullfile(fileparts(which(mfilename)),'cat_run1585'));
 
 %% ------------------------------------------------------------------------
 try
@@ -233,11 +233,14 @@ cat        = cfg_choice;
 cat.name   = 'CAT12';
 cat.tag    = 'cat';
 if expert==2
-  cat.values = {estwrite estwrite_spm estwrite1585 estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools stoolsexp};
+%  cat.values = {estwrite estwrite_spm estwrite1585 estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools stoolsexp};
+  cat.values = {estwrite estwrite_spm estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools stoolsexp};
 elseif expert==1
-  cat.values = {estwrite estwrite_spm estwrite1585 estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools };
+%  cat.values = {estwrite estwrite_spm estwrite1585 estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools };
+  cat.values = {estwrite estwrite_spm estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools };
 else
-  cat.values = {estwrite estwrite1585 estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools}; 
+%  cat.values = {estwrite estwrite1585 estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools}; 
+  cat.values = {estwrite estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools}; 
 end
 %------------------------------------------------------------------------
 
