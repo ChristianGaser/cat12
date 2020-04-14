@@ -41,7 +41,7 @@
           <li>Select threshold masking with an absolute value of 0.1. This threshold can ultimately be increased to 0.2 or even 0.25.</li>
           <li>If you find a considerable correlation between TIV and any other parameter of interest it is advisable to use global scaling with TIV. For more information, refer to <a href="cat_orthogonality.html">Orthogonality</a>.</li>
         </ul>
-        <li><a class="function" href="matlab:spm_jobman('interactive','','spm.stats.fmri_est');">Estimate</a> model and finally call <a class="function" href="matlab:cat_results_ui;">Results</a>.</li>
+        <li><a class="function" href="matlab:spm_jobman('interactive','','spm.stats.fmri_est');">Estimate</a> model and finally call <a class="function" href="matlab:[hReg xSPM SPM] = cat_spm_results_ui('Setup');">Results</a>.</li>
         <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x');">Transform and Threshold SPM-maps</a> to (log-scaled) p-maps or correlation maps.</li>
         <li>Optionally, you can try <a class="function" href="matlab:if exist(fullfile(spm('dir'),'toolbox','TFCE')),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">Threshold-Free Cluster Enhancement</a> (TFCE) with the SPM.mat file of a previously estimated statistical design.</li>
         <li>Optionally <a class="function" href="matlab:cat_vol_slice_overlay;">Overlay Selected Slices</a>. If you are using log-p scaled maps from "Transform SPM-maps" without thresholds, use the following values as the lower range for the colormap for the thresholding: 1.3 (P&lt;0.05); 2 (P&lt;0.01); 3 (P&lt;0.001).</li>
@@ -62,7 +62,7 @@
           <li>It is not necessary to use any threshold masking.</li>
           <li>If you find a considerable correlation between a nuisance parameter and any other parameter of interest it is advisable to use global scaling with that parameter. For more information, refer to <a href="cat_orthogonality.html">Orthogonality</a>.</li>
         </ul>
-        <li><a class="function" href="matlab:cat_stat_spm;">Estimate</a> surface model and finally call <a class="function" href="matlab:cat_results_ui;">Results</a>.</li>
+        <li><a class="function" href="matlab:cat_stat_spm;">Estimate</a> surface model and finally call <a class="function" href="matlab:[hReg xSPM SPM] = cat_spm_results_ui('Setup');">Results</a>.</li>
         <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x_surf');">Transform and Threshold SPM-maps</a> to (log-scaled) p-maps or correlation maps.</li>
         <li>Optionally, you can try <a class="function" href="matlab:if exist(fullfile(spm('dir'),'toolbox','TFCE')),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">Threshold-Free Cluster Enhancement</a> (TFCE) with the SPM.mat file of a previously estimated statistical design.</li>
         <li>Optionally <a class="function" href="matlab:y=cat_surf_results;">Surface Overlay</a> for both hemispheres. Select the results (preferably saved as log-p maps with "Transform SPM-maps" for the merged hemispheres to display rendering views of your results.</li>

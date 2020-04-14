@@ -16,7 +16,7 @@ if install
     d0 = spm('Dir');
     d = fullfile(spm('Dir'),'toolbox'); 
     lastwarn('');
-    s = unzip('http://141.35.69.218/tfce/tfce_latest.zip', d);
+    s = unzip('http://www.neuro.uni-jena.de/tfce/tfce_latest.zip', d);
     fprintf('         Success: %d files have been downloaded.\n',numel(s));
     addpath(d0);
     rehash

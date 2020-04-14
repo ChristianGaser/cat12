@@ -18,7 +18,7 @@ function cat_io_send_to_server(urlinfo)
 urlinfo = regexprep(urlinfo, '\n', '%20'); % replace returns
 urlinfo = regexprep(urlinfo, ' ' , '%20'); % replace spaces
 
-piwikserver = 'http://141.35.69.218/piwik/piwik.php?idsite=1&rec=1&action_name=';
+piwikserver = 'http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=';
 url = sprintf('%s%s',piwikserver,urlinfo);
 
 try
