@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1604 | gaser | 2020-04-14 14:38:53
+r1605 | gaser | 2020-04-14 20:44:01
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_output.m
+M       html/cat.html
+M       tbx_cfg_cat.m
+
+Fixed: Corrected bug with (disabled) temporary version r1585.
+------------------------------------------------------------------------
+r1604 | gaser | 2020-04-14 14:39:10 +0200 (Di, 14 Apr 2020) | 17 lines
 
 Changed paths:
 M       CAT12-Manual.pdf
@@ -17,6 +28,7 @@ M       tbx_cfg_cat.m
 (1) Changed: Updated version information and online help.
 (2) Changed: Removed temporary 1585 version from GUI.
 (3) Changed: Updated server address.
+
 ------------------------------------------------------------------------
 r1603 | gaser | 2020-04-13 02:12:27 +0200 (Mo, 13 Apr 2020) | 7 lines
 
