@@ -1,4 +1,17 @@
 function cat_vol_slice_overlay(OV)
+% Extension/wrapper to slice_overlay
+% Call help for slice_overlay for any help
+% 
+% Additional fields to slice_overlay:
+% OV.xy    - define number of columns and rows
+%            comment this out for interactive selection
+% OV.atlas - define atlas for labeling
+%            comment this out for interactive selection
+%            or use 'none' for no atlas information
+% OV.save  - save result as png/jpg/pdf/tif
+%            comment this out for interactive selection or use '' for not 
+%            saving any file or use just file extension (png/jpg/pdf/tif) to 
+%            automatically estimate filename to save
 %__________________________________________________________________________
 % Christian Gaser
 % $Id$
@@ -417,15 +430,22 @@ if ~isempty(xA)
 	fprintf('\n');
 end
 
+auto_savename = 0;
 % save image
 if ~isfield(OV, 'save')
-    image_ext = spm_input('Save image file?', '+1', 'none|png|jpg|pdf|tif', char('none', 'png', 'jpeg', 'pdf', 'tiff'), 2);
+    image_ext = spm_input('Save image file?', '+1', 'none|png|jpg|pdf|tif', char('none', 'png', 'jpg', 'pdf', 'tiff'), 2);
 else
     if isempty(OV.save)
-        image_ext = 'none';
+        image_ext = spm_input('Save image file?', '+1', 'none|png|jpg|pdf|tif', char('none', 'png', 'jpg', 'pdf', 'tiff'), 2);
     else
         [pp, nn, ee] = spm_fileparts(OV.save);
-        image_ext = ee(2:end);
+        if ~isempty(ee)
+            image_ext = ee(2:end);
+        else
+            % if only the extension is given then automatically estimate filename for saving
+            image_ext = OV.save;
+            auto_savename = 1;
+        end
     end
 end
 
@@ -443,17 +463,21 @@ if ~strcmp(image_ext, 'none')
         end
     end
     
-    % use shorter ext for jpeg
     if ~isfield(OV, 'save')
-        if strcmp(image_ext, 'jpeg')
-            imaname = spm_input('Filename', '+1', 's', [pt2 nm '_' lower(OV.transform) '.jpg']);
-        else
-            imaname = spm_input('Filename', '+1', 's', [pt2 nm '_' lower(OV.transform) '.' image_ext]);
-        end
+        imaname = spm_input('Filename', '+1', 's', [pt2 nm '_' lower(OV.transform) '.' image_ext]);
     else
-        imaname = OV.save;
+        if auto_savename
+            imaname = [pt2 nm '_' lower(OV.transform) '.' image_ext];
+        else
+            imaname = OV.save;
+        end
     end
     
+		% jpg needs full name to be accepted
+		if strcmp(image_ext, 'jpg')
+				image_ext = 'jpeg';
+		end
+
     % and print
     H = findobj(get(SO.figure, 'Children'), 'flat', 'Type', 'axes');
     set(H, 'Units', 'normalized')
