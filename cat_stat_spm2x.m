@@ -530,7 +530,7 @@ for i=1:size(P,1)
         str_num = spm_str_manip(str_num,'v');
     
         if T2x && neg_results
-        neg_str = '_bi'; 
+            neg_str = '_bi'; 
         else
             neg_str = '';
         end
@@ -553,7 +553,7 @@ for i=1:size(P,1)
         fprintf('  Display %s\n',spm_file(Pname{i},'link','cat_surf_display(''%s'')')); 
 
         % print table for 3D data
-        if (nargin > 0) && isfield(job,'atlas') && ~strcmp(job.atlas,'None')
+        if (nargin > 0) && isfield(job,'atlas') && ~strcmp(job.atlas,'None') && ~isempty(XYZ)
             % sort T/F values and print from max to min values
             [tmp, maxsort] = sort(maxZ,'descend');
         

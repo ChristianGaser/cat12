@@ -1,4 +1,6 @@
 function cat_vol_slice_overlay_rgb_ui
+% Wrapper to cat_vol_slice_overlay for overlaying
+% 3 different images to a RGB overlay
 %__________________________________________________________________________
 % Christian Gaser
 % $Id$
@@ -51,7 +53,7 @@ slices = slices{ind};
 
 
 for i=(1:size(name,1))+1
-    SO.img(i).background = 0;
+  SO.img(i).background = 0;
 	SO.img(i).vol = spm_vol(deblank(name(i-1,:)));
 	SO.img(i).prop = 1;
 
@@ -132,7 +134,7 @@ end
 
 return
 
-function xy=get_xy(n)
+function xy = get_xy(n)
 
 nn = round(n^0.4);
 if n>8, x = nn:round(n/nn); else x = 1:n; end
@@ -157,7 +159,7 @@ xy = unique(xy,'rows');
 return
 
 % --------------------------------------------------------------------------
-function s=remove_zeros(s)
+function s = remove_zeros(s)
 
 pos = length(s);
 while pos>1
