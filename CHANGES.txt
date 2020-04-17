@@ -1,11 +1,27 @@
 ------------------------------------------------------------------------
-r1606 | gaser | 2020-04-14 21:23:57
+r1607 | gaser | 2020-04-18 00:51:33
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_spm2x.m
+M       cat_vol_slice_overlay.m
+M       cat_vol_slice_overlay_rgb_ui.m
+M       cat_vol_slice_overlay_ui.m
+
+(1) Fixed: Corrected bug in cat_stat_sp2x.m if no results were found and atlas 
+    function was enabed.
+(2) Changed: Updated cat_vol_slice_overlay to automatically estimate filename 
+    for saving.
+(3) Changed: Added helptext to cat_vol_slice_overlay*.m
+------------------------------------------------------------------------
+r1606 | gaser | 2020-04-14 21:24:35 +0200 (Di, 14 Apr 2020) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat12.m
 
 Fixed: Corrected bug with update function.
+
 ------------------------------------------------------------------------
 r1605 | gaser | 2020-04-14 20:44:36 +0200 (Di, 14 Apr 2020) | 9 lines
 
