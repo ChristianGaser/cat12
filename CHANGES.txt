@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1607 | gaser | 2020-04-18 00:51:33
+r1608 | gaser | 2020-04-20 22:25:20
+
+Changed paths:
+M       CHANGES.txt
+M       cat_spm_results_ui.m
+M       cat_stat_check_cov.m
+M       cat_stat_check_cov2.m
+
+(1) Fixed: Removed bug in cat_spm_results_ui.m where surface results could not
+    be displayed.
+(2) Changed: Added some more checks for missing or non-valid parameters in
+    cat_stat_check_cov*.m
+------------------------------------------------------------------------
+r1607 | gaser | 2020-04-18 00:52:07 +0200 (Sa, 18 Apr 2020) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +26,7 @@ M       cat_vol_slice_overlay_ui.m
 (2) Changed: Updated cat_vol_slice_overlay to automatically estimate filename 
     for saving.
 (3) Changed: Added helptext to cat_vol_slice_overlay*.m
+
 ------------------------------------------------------------------------
 r1606 | gaser | 2020-04-14 21:24:35 +0200 (Di, 14 Apr 2020) | 6 lines
 

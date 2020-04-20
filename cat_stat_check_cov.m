@@ -122,6 +122,10 @@ if ~isempty(xml_files)
     end
     
     xml = cat_io_xml(deblank(xml_files(i,:)));
+    if ~isfield(xml,'qualityratings') && ~isfield(xml,'QAM')
+      fprintf('Quality rating is not saved for %s. Report file %s is incomplete.\nPlease repeat preprocessing amd check for potential errors in the ''err'' folder.\n',V(i).fname,xml_files(i,:));    
+      return
+    end
     if mesh_detected
       if isfield(xml.qualityratings,'NCR')
       % check for newer available surface measures
@@ -266,6 +270,11 @@ else
 
     % remove nuisance and add mean again (otherwise correlations are quite small and misleading)
     if ~isempty(G) 
+      [indinf,tmp] = find(isinf(G) | isnan(G));
+      if ~isempty(indinf)
+        fprintf('Nuisance parameter for %s is Inf or NaN.\n',V(indinf).fname);
+        return
+      end
       Ymean = repmat(mean(Y), [n_subjects 1]);
       Y = Y - G*(pinv(G)*Y) + Ymean;
     end

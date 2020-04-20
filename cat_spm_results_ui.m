@@ -399,7 +399,9 @@ switch lower(Action), case 'setup'                         %-Set up results
         if spm_mesh_detect(xSPM.Vspm) & exist('spm_cat12')
           FSavg = '.freesurfer.gii'; 
           GSavg = '.Template_T1_IXI555_MNI152_GS.gii';
-          SPM.xVol.G = strrep(SPM.xVol.G,GSavg,FSavg);
+          if ischar(SPM.xVol.G)
+            SPM.xVol.G = strrep(SPM.xVol.G,GSavg,FSavg);
+          end
         end
         
         % change coordinates to spherial ??
