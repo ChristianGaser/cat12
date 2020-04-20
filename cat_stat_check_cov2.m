@@ -724,6 +724,11 @@ function varargout = cat_stat_check_cov2(job)
 
     % remove nuisance and add mean again (otherwise correlations are quite small and misleading)
     if ~isempty(G) 
+      [indinf,tmp] = find(isinf(G) | isnan(G));
+      if ~isempty(indinf)
+        fprintf('Nuisance parameter for %s is Inf or NaN.\n',V(indinf).fname);
+        return
+      end
       Ymean = repmat(mean(Y), [n_subjects 1]);
       Y = Y - G*(pinv(G)*Y) + Ymean;
     end
