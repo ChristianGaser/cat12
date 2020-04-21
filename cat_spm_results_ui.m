@@ -286,26 +286,26 @@ switch lower(Action), case 'setup'                         %-Set up results
         SPM.Ic = Ic; SPM.xCon = xCon;
         
         % check for existing TFCE results for this contrast
-        if numel(Ic)==1 & exist(sprintf('%s_log_p_%04d.nii',xCon(Ic).STAT,Ic)) || ...
-          exist(sprintf('%s_log_p_%04d.gii',xCon(Ic).STAT,Ic))
-          stat_str = {'TFCE',xCon(Ic).STAT};
-          statType = spm_input('Type of statistic',1,'m',...
-              sprintf('TFCE (non-parametric)|%s (non-parametric)|%s (SPM parametric)',...
-              xCon(Ic).STAT,xCon(Ic).STAT),[],1);
-          if statType < 3
-              use_tfce = 1;
-              SPM.statType = stat_str{statType};
-              [SPM,xSPM] = tfce_getSPM(SPM);
-              xSPM.statType = stat_str{statType};
-          else
-              use_tfce = 0;
-              [SPM,xSPM] = spm_getSPM(SPM);
-              xSPM.statType = xCon(Ic).STAT;
-          end
+        if numel(Ic)==1 & exist(fullfile(swd,sprintf('%s_log_p_%04d.nii',xCon(Ic).STAT,Ic))) || ...
+                          exist(fullfile(swd,sprintf('%s_log_p_%04d.gii',xCon(Ic).STAT,Ic)))
+						stat_str = {'TFCE',xCon(Ic).STAT};
+						statType = spm_input('Type of statistic',1,'m',...
+								sprintf('TFCE (non-parametric)|%s (non-parametric)|%s (SPM parametric)',...
+								xCon(Ic).STAT,xCon(Ic).STAT),[],1);
+						if statType < 3
+								use_tfce = 1;
+								SPM.statType = stat_str{statType};
+								[SPM,xSPM] = tfce_getSPM(SPM);
+								xSPM.statType = stat_str{statType};
+						else
+								use_tfce = 0;
+								[SPM,xSPM] = spm_getSPM(SPM);
+								xSPM.statType = xCon(Ic).STAT;
+						end
         else
-          use_tfce = 0;
-          [SPM,xSPM] = spm_getSPM(SPM);
-          xSPM.statType = xCon(Ic).STAT;
+						use_tfce = 0;
+						[SPM,xSPM] = spm_getSPM(SPM);
+						xSPM.statType = xCon(Ic).STAT;
         end
     end
  
@@ -621,9 +621,12 @@ switch lower(Action), case 'setup'                         %-Set up results
     Hv = get(H,'Visible');
     set(hResAx,'Tag','PermRes','UserData',struct('H',H,'Hv',{Hv}))
  
+
+    TabDat = call_list('List',xSPM,hReg);
+
     %-Finished results setup
     %----------------------------------------------------------------------
-    varargout = {hReg,xSPM,SPM};
+    varargout = {hReg,xSPM,SPM,TabDat};
     spm('Pointer','Arrow')
  
  
@@ -636,7 +639,6 @@ switch lower(Action), case 'setup'                         %-Set up results
 
     if isfield(xSPM,'G')
         % create SPM result table and fix elements to avoid rotation of tables
-        call_list('List',xSPM,hReg); 
         spm_list_cleanup; 
 
         % corrections for top elements
@@ -962,8 +964,8 @@ switch lower(Action), case 'setup'                         %-Set up results
         
         for i=1:numel(SPM.xCon)
             % check whether TFCE results were found
-            if exist(sprintf('%s_log_p_%04d.nii',xSPM.STAT,i)) || ...
-               exist(sprintf('%s_log_p_%04d.gii',xSPM.STAT,i))
+            if exist(fullfile(SPM.swd,sprintf('%s_log_p_%04d.nii',xSPM.STAT,i))) || ...
+               exist(fullfile(SPM.swd,sprintf('%s_log_p_%04d.gii',xSPM.STAT,i)))
                 xSPM2 = xSPM;
                 xSPM2.invResult = 0;
                 hC2 = uimenu(hC1,'Label',[SPM.xCon(i).STAT, ': ', SPM.xCon(i).name], ...
@@ -1649,8 +1651,7 @@ if ~isempty(xSPM.thresDesc)
 end
 hReg = spm_XYZreg('FindReg',spm_figure('GetWin','Interactive'));
 xyz  = spm_XYZreg('GetCoords',hReg);
-[hReg,xSPM,SPM] = cat_spm_results_ui('setup',xSPM2);
-TabDat = call_list('List',xSPM,hReg);
+[hReg,xSPM,SPM, TabDat] = cat_spm_results_ui('setup',xSPM2);
 spm_XYZreg('SetCoords',xyz,hReg);
 spm_list_cleanup;
 assignin('base','hReg',hReg);
@@ -1771,49 +1772,53 @@ assignin('base','so',so);
 %==========================================================================
 function spm_list_cleanup(hReg)
 %==========================================================================
-  hRes.Fgraph       = [spm_figure('FindWin','Graphics'),spm_figure('FindWin','Satellite')];
+global mesh_detect
 
-  % fine red lines of the SPM result table
-  hRes.Fline        = findobj(hRes.Fgraph,'Type','Line','Tag','');% ,'UIcontextMenu',[]);
-  hRes.FlineAx      = get(hRes.Fline,'parent');
-  
-  set(hRes.Fline,'HitTest','off'); %
-  for axi = 1:numel( hRes.FlineAx ),  rotate3d(hRes.FlineAx{axi},'off'); end
-  for axi = 1:numel( hRes.FlineAx ),  set(hRes.FlineAx{axi},'visible','off'); end
-   
-  %%
-  hRes.Img        = get(findobj(hRes.Fgraph,'Type','Image','Tag','Transverse'),'parent');
-  for axi = 1:numel( hRes.Img  ),  rotate3d(hRes.Img{axi},'off'); end
-  
-  %% find the SPM string within the surface axis 
-  hRes.Ftext        = findobj(hRes.Fgraph,'Type','Text');
-  stext             = get(hRes.Ftext,'String'); 
-  hRes.Ftext3dspm   = findobj(hRes.Fgraph,'Type','Text','String', ...
-    stext{ find(~cellfun('isempty',strfind(stext,'SPM\{'))) } );
-  set(hRes.Ftext3dspm,'visible','off','HitTest','off');
-  
-  %% get backgroundcolor
-  bgc = get(spm_figure('FindWin','Graphics'),'Color'); 
-  % get low contrast texts 
-  Ftextcol = cell2mat(get(hRes.Ftext,'Color'));
-  %% invert text
-  rms = @(x) mean(x.^2,2).^0.5; 
-  bgcdist = rms(Ftextcol - repmat(bgc, numel(hRes.Ftext), 1)); 
-  bgcdist = abs(bgcdist)<0.3;
-  if ~isempty(bgcdist) 
-    for fi = 1:numel(bgcdist)
-      if bgcdist(fi)>0
-        set( hRes.Ftext( fi ) , 'Color' , min(1,max(0, 1 - Ftextcol( fi ,:))) );  
-      end
-    end
-  end
-  
-  %% update spm_XYZreg XYZ update function
-  if ~exist('hReg','var')
-    ListXYZ=findobj('ButtonDownFcn','spm_XYZreg(''SetCoords'',get(gcbo,''UserData''),hReg,1);');
-    for i=1:numel(ListXYZ)
-      set(ListXYZ(i),'ButtonDownFcn',[get(ListXYZ(i),'ButtonDownFcn') ' cat_spm_results_ui(''spm_list_cleanup'');']); 
-    end
-  end
+if ~mesh_detect, return; end
+
+hRes.Fgraph       = [spm_figure('FindWin','Graphics'),spm_figure('FindWin','Satellite')];
+
+% fine red lines of the SPM result table
+hRes.Fline        = findobj(hRes.Fgraph,'Type','Line','Tag','');% ,'UIcontextMenu',[]);
+hRes.FlineAx      = get(hRes.Fline,'parent');
+
+set(hRes.Fline,'HitTest','off'); %
+for axi = 1:numel( hRes.FlineAx ),  rotate3d(hRes.FlineAx{axi},'off'); end
+for axi = 1:numel( hRes.FlineAx ),  set(hRes.FlineAx{axi},'visible','off'); end
+ 
+%%
+hRes.Img        = get(findobj(hRes.Fgraph,'Type','Image','Tag','Transverse'),'parent');
+for axi = 1:numel( hRes.Img  ),  rotate3d(hRes.Img{axi},'off'); end
+
+%% find the SPM string within the surface axis 
+hRes.Ftext        = findobj(hRes.Fgraph,'Type','Text');
+stext             = get(hRes.Ftext,'String'); 
+hRes.Ftext3dspm   = findobj(hRes.Fgraph,'Type','Text','String', ...
+	stext{ find(~cellfun('isempty',strfind(stext,'SPM\{'))) } );
+set(hRes.Ftext3dspm,'visible','off','HitTest','off');
+
+%% get backgroundcolor
+bgc = get(spm_figure('FindWin','Graphics'),'Color'); 
+% get low contrast texts 
+Ftextcol = cell2mat(get(hRes.Ftext,'Color'));
+%% invert text
+rms = @(x) mean(x.^2,2).^0.5; 
+bgcdist = rms(Ftextcol - repmat(bgc, numel(hRes.Ftext), 1)); 
+bgcdist = abs(bgcdist)<0.3;
+if ~isempty(bgcdist) 
+	for fi = 1:numel(bgcdist)
+		if bgcdist(fi)>0
+			set( hRes.Ftext( fi ) , 'Color' , min(1,max(0, 1 - Ftextcol( fi ,:))) );  
+		end
+	end
+end
+
+%% update spm_XYZreg XYZ update function
+if ~exist('hReg','var')
+	ListXYZ=findobj('ButtonDownFcn','spm_XYZreg(''SetCoords'',get(gcbo,''UserData''),hReg,1);');
+	for i=1:numel(ListXYZ)
+		set(ListXYZ(i),'ButtonDownFcn',[get(ListXYZ(i),'ButtonDownFcn') ' cat_spm_results_ui(''spm_list_cleanup'');']); 
+	end
+end
 %==========================================================================
 
