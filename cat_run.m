@@ -499,7 +499,7 @@ function job = update_job(job)
   if isfield(job.output,'ROImenu') % expert/developer GUI that allows control each atlas map 
     if isfield(job.output.ROImenu,'atlases')
       %% image output
-      atlases = rmfield(job.output.ROImenu.atlases,'ownatlas'); 
+      try, atlases = rmfield(job.output.ROImenu.atlases,'ownatlas'); end
       def.output.atlases = atlases;
       def.output.ROI     = any(cell2mat(struct2cell(atlases))) || ~isempty( job.output.ROImenu.atlases.ownatlas ); 
       

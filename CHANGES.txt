@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1608 | gaser | 2020-04-20 22:25:20
+r1609 | gaser | 2020-04-21 22:38:05
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_run.m
+M       cat_spm_results_ui.m
+M       html/cat.html
+
+(1) Fixed: Removed dome inconsitencies in cat_spm_results_ui.m where existing
+    TFCE results were initially not found. 
+(2) Fixed: Corrected incompatibiliy with older SPM12 versions in cat_run.m.
+------------------------------------------------------------------------
+r1608 | gaser | 2020-04-20 22:25:55 +0200 (Mo, 20 Apr 2020) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +24,7 @@ M       cat_stat_check_cov2.m
     be displayed.
 (2) Changed: Added some more checks for missing or non-valid parameters in
     cat_stat_check_cov*.m
+
 ------------------------------------------------------------------------
 r1607 | gaser | 2020-04-18 00:52:07 +0200 (Sa, 18 Apr 2020) | 13 lines
 
