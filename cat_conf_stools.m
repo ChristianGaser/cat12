@@ -1303,7 +1303,7 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
       
     % main note
     thickness      = cfg_branch;
-    thickness.name = 'Further thickness metrics';
+    thickness.name = 'Additional thickness metrics';
     thickness.tag  = 'thickness';
     thickness.val  = {Tfs,Tmin,Tmax}; 
     thickness.help = {
@@ -1343,7 +1343,7 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
   
     % main note
     surfaces      = cfg_branch;
-    surfaces.name = 'Further surfaces';
+    surfaces.name = 'Additional surfaces';
     surfaces.tag  = 'surfaces';
     surfaces.val  = {IS,OS}; 
     
@@ -1592,7 +1592,7 @@ function renderresults = cat_surf_results_GUI(expert)
   stat.name             = 'Statistical options';
   stat.val              = {threshold,hideNegRes};  
   stat.prog             = @cat_surf_results;
-  stat.help             = {'Further options for statistical maps.'};  
+  stat.help             = {'Additional options for statistical maps.'};  
   
   
   % == filename ==
