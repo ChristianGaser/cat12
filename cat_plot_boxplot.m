@@ -379,7 +379,13 @@ for i=1:nc
   
   % estimate kernel density for violin plot
   if opt.violin
+    try
     [tmp, f, u] = kde(col,2^n2);
+    catch
+      fprintf('WARNING: Creating violin plot failed.\n');
+      opt.violin = 0;
+      break
+    end
     f = (f/max(f)*opt.boxwidth*0.3)'; % width of violin plot is more narrow
     F(:,i) = f;
     U(:,i) = u;

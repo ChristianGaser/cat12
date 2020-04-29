@@ -8,7 +8,10 @@ function varargout = cat_surf_results(action, varargin)
 % y        - adjusted, predicted or raw response
 %
 %
-% Futher actions for batch mode: 
+% Further actions for batch mode: 
+%  * cat_surf_results('disp',filename(s)) 
+%  Init display for selected file(s)
+%
 %  * cat_surf_results('batch',job) 
 %  See cat_conf_stools. 
 %
@@ -23,22 +26,34 @@ function varargout = cat_surf_results(action, varargin)
 %  Select render view.
 %  1 - topview, 2 - bottomview, 3 - sideview
 %
+%  * cat_surf_results('colorbar')
+%  Disable colorbar.
+%
 %  * cat_surf_results('colormap',1..4)
 %  Select overlay colormap.
 %  1 - jet, 2 - hot, 3 - hsv, 4 - cold-hot
 %
-%  * cat_surf_results('invcolormap'[,0..1])
+%  * cat_surf_results('invcolormap',[0..1])
 %  Default (0) or inverts colormap (1). Toggles without input.
 %  
-%  * cat_surf_results('background',[,0..2])
+%  * cat_surf_results('background',[0..2])
 %  White (1) or black (0|2) background. Toggles without input.
 %
-%  * cat_surf_results('showfilename'[,0..1]); 
+%  * cat_surf_results('showfilename',[0..1]); 
 %  Show (1) or not show (0) surface name in figure. Toggles without input.
 %
-%  * cat_surf_results('threshold'[,0..4]);
+%  * cat_surf_results('clim',[val]);
+%  Define clim to define view range. 
+%
+%  * cat_surf_results('clip',[mn mx]);
+%  Define clip to limit view range. 
+%
+%  * cat_surf_results('threshold',[0..4]);
 %  Define statistical threshold. 
 %  0 - none, 1.3 - 0.05, 2 - 0.01, 3 - 0.001
+%
+%  * cat_surf_results('transparency');
+%  Disable transparency. 
 %
 %  * cat_surf_results('hide_neg',[,0..1]); 
 %  Hide negative results (1) or show everything (0). Toggles without input.
@@ -483,9 +498,12 @@ switch lower(action)
       H.S{1}.Y = Y(1:H.nY2, :);
       H.S{2}.Y = Y((H.nY2+1):end, :);
 
+      
       % delete temporary files that were created for volume mapping
       for i=1:H.n_surf
-        if H.isvol(i)
+        if ~isfield(H,'isvol')
+          H.isvol(i) = 0;
+        elseif H.isvol(i)
           delete(deblank(H.S{1}.name(i,:)))
         end
       end
@@ -751,9 +769,9 @@ switch lower(action)
       cm = varargin{1}; 
       switch cm
       case {1,2,3,4},  cmap = cm; 
-      case 'jet',    cmap = 1; 
-      case 'hot',    cmap = 2; 
-      case 'hsv',    cmap = 3; 
+      case 'jet',      cmap = 1; 
+      case 'hot',      cmap = 2; 
+      case 'hsv',      cmap = 3; 
       case 'cold-hot', cmap = 4; 
       otherwise
         error('Unknown colormap\n');
@@ -817,6 +835,8 @@ switch lower(action)
     end
   
     
+  %-CLims
+  %======================================================================
   case 'clims'
     if nargin>1, H.datascale    = varargin{1}; end
     if nargin>2, H.datascaleval = varargin{2}; end
@@ -869,7 +889,7 @@ switch lower(action)
     show_colorbar(H); 
   
     
-  %- print histogram
+  %- show histogram
   %======================================================================
   case 'hist'
     if nargin>1
@@ -2699,7 +2719,7 @@ end
 function H = getHandles(H)
 
 if ~nargin || isempty(H), H = gca; end
-if ishandle(H) && ~isappdata(H, 'handles')
+if ishandle(H) & ~isappdata(H, 'handles')
   a = H; clear H;
   H.axis = a;
   H.figure = ancestor(H.axis, 'figure');

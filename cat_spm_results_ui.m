@@ -284,6 +284,7 @@ switch lower(Action), case 'setup'                         %-Set up results
         load(fullfile(swd,'SPM.mat'));
         [Ic,xCon] = spm_conman(SPM,'T&F',Inf,'    Select contrast(s)...');
         SPM.Ic = Ic; SPM.xCon = xCon;
+        SPM.swd = swd;
         
         % check for existing TFCE results for this contrast
         if numel(Ic)==1 & exist(fullfile(swd,sprintf('%s_log_p_%04d.nii',xCon(Ic).STAT,Ic))) || ...
