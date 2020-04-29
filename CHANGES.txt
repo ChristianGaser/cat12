@@ -1,5 +1,24 @@
 ------------------------------------------------------------------------
-r1609 | gaser | 2020-04-21 22:38:05
+r1610 | gaser | 2020-04-29 18:48:34
+
+Changed paths:
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_plot_boxplot.m
+M       cat_spm_results_ui.m
+M       cat_stat_analyze_ROIs.m
+M       cat_surf_results.m
+
+(1) Fixed: Solved error with displaying surface ROI results in 
+    cat_surf_results.m.
+(2) Fixed: Current directory of results was not considered in 
+    cat_spm_results_ui.m.
+(3) Changed: Updated help text and CAT12 manual (contrasts for 
+    longitudinal designs with 2 groups).
+(4) Fixed: In rare cases violinplot in cat_plot_boxplot.m failed.
+------------------------------------------------------------------------
+r1609 | gaser | 2020-04-21 22:38:40 +0200 (Di, 21 Apr 2020) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +30,7 @@ M       html/cat.html
 (1) Fixed: Removed dome inconsitencies in cat_spm_results_ui.m where existing
     TFCE results were initially not found. 
 (2) Fixed: Corrected incompatibiliy with older SPM12 versions in cat_run.m.
+
 ------------------------------------------------------------------------
 r1608 | gaser | 2020-04-20 22:25:55 +0200 (Mo, 20 Apr 2020) | 11 lines
 

@@ -532,7 +532,7 @@ else % surface results display
   % display ROI surface results
   if show_results
     name_mesh = ['mesh.logP' corr_short{show_results} output_name '.gii'];
-    cat_surf_results('Disp',name_mesh,name_mesh);
+    cat_surf_results('Disp',name_mesh);
   end
   
 end
