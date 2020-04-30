@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1610 | gaser | 2020-04-29 18:48:34
+r1611 | gaser | 2020-04-30 08:59:48
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_surf_resamp_freesurfer.m
+M       html/cat.html
+
+Fixed: Resampling for longitudinal Freesurfer data was not finding the correct
+folder name.
+------------------------------------------------------------------------
+r1610 | gaser | 2020-04-29 18:49:12 +0200 (Mi, 29 Apr 2020) | 17 lines
 
 Changed paths:
 M       CAT12-Manual.pdf
@@ -17,6 +28,7 @@ M       cat_surf_results.m
 (3) Changed: Updated help text and CAT12 manual (contrasts for 
     longitudinal designs with 2 groups).
 (4) Fixed: In rare cases violinplot in cat_plot_boxplot.m failed.
+
 ------------------------------------------------------------------------
 r1609 | gaser | 2020-04-21 22:38:40 +0200 (Di, 21 Apr 2020) | 11 lines
 
