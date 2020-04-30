@@ -41,10 +41,10 @@ function cat_surf_resamp_freesurfer(vargin)
   
     stime = clock; 
     exist_hemi = [];
-    [pp,name]   = spm_fileparts(deblank(Psubj(i,:)));
+    [pp,name,ext]   = spm_fileparts(deblank(Psubj(i,:)));
     
     % subject directory
-    dname = fullfile(pp,name,'surf');
+    dname = fullfile(pp,[name ext],'surf');
   
     % check that surf subfolder exists
     if ~exist(dname,'dir')
