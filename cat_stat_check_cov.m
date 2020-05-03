@@ -204,14 +204,12 @@ pos = struct(...
     'show',   [0.775 0.875 0.200 0.050],... % button to show worst cases
     'boxp',   [0.775 0.820 0.200 0.050],... % button to display boxplot
     'sort',   [0.775 0.775 0.200 0.050],... % button to enable ordered matrix
+    'fnambox',[0.775 0.735 0.200 0.050],... % show filenames?
     'text',   [0.775 0.600 0.200 0.150],... % textbox
     'aslider',[0.775 0.555 0.200 0.040],... % slider for alpha overlay
     'slice',  [0.775 0.050 0.200 0.400],... % two single images according to position of mouse pointer
     'sslider',[0.775 0.010 0.200 0.040],... % slider for z-slice   
-...    'fnambox',[0.830 0.001 0.160 0.032],... % show filenames in boxplot 
-    'fnambox',  [0.775 0.750 0.200 0.050],... % show filenames?
-    'plotbox',[0.875 0.750 0.200 0.050]);   % switch between boxplot and violin plot 
-...    'plotbox',[0.830 0.022 0.160 0.032]);   % switch between boxplot and violin plot 
+    'plotbox',[0.875 0.735 0.200 0.050]);   % switch between boxplot and violin plot 
 
 if mesh_detected
   % rescue unscaled data min/max
@@ -337,23 +335,45 @@ end
 
 filename = struct('s',{fname_s},'e',{fname_e},'m',{fname_m});
 
-% print suspecious files with cov>0.925
-YpY_tmp = YpY - tril(YpY);
-[indx, indy] = find(YpY_tmp>0.925);
+% print suspecious files with high cov
+% use slightly higher threshold for (smoothed) mesh data
+YpY_tmp = YpY - triu(YpY);
+if mesh_detected
+  [indx, indy] = find(YpY_tmp>0.950 & YpY_tmp < (1-eps));
+else
+  [indx, indy] = find(YpY_tmp>0.925);
+end
 
-% if more than 25% of the data this points to longitudinal data of one subject
+% if more than 25% of the data were found, this points to longitudinal data of one subject
 % and no warning will appear
-if ~isempty(indx) && (sqrt(length(indx)) < 0.25*n_subjects)
-  fprintf('\nUnusual large correlation (check that subjects are not identical):\n');
-  for i=1:length(indx)
-    % exclude diagonal
-    if indx(i) ~= indy(i)
-      % report file with lower mean correlation first
-      if mean_cov(indx(i)) < mean_cov(indy(i))
-        fprintf('%s and %s: %3.3f\n',filename.m{indx(i)},filename.m{indy(i)},YpY(indx(i),indy(i)));
-      else
-        fprintf('%s and %s: %3.3f\n',filename.m{indy(i)},filename.m{indx(i)},YpY(indy(i),indx(i)));
+if ~isempty(indx)
+ if (length(indx) < 0.25*n_subjects)
+    fprintf('\nWARNING: Unusual large correlation (check that subjects are not identical):\n');
+    for i = 1:length(indx)
+      % exclude diagonal
+      if indx(i) ~= indy(i)
+        if n_samples > 1
+          fprintf('%s (sample %d) and %s (sample %d): %g\n',filename.m{indx(i)},sample(indx(i)),filename.m{indy(i)},sample(indy(i)),YpY(indx(i),indy(i)));
+        else
+          fprintf('%s and %s: %g\n',filename.m{indx(i)},filename.m{indy(i)},YpY(indx(i),indy(i)));
+        end
       end
+    end
+  else
+    fprintf('\nMany unusual large correlations were found (e.g. common in longitudinal data).\n');
+  end
+end
+
+[indx, indy] = find(YpY_tmp==1);
+
+% give warning that data are identical
+if ~isempty(indx)
+  fprintf('\nWARNING: Data of these subjects are identical!\n');
+  for i = 1:length(indx)
+    if n_samples > 1
+      fprintf('%s (sample %d) and %s (sample %d)\n',filename.m{indx(i)},sample(indx(i)),filename.m{indy(i)},sample(indy(i)));
+    else
+      fprintf('%s and %s\n',filename.m{indx(i)},filename.m{indy(i)});
     end
   end
 end
@@ -545,25 +565,6 @@ end
    
 show_boxplot(mean_cov,'Mean correlation  ',1);
 
-% check for replicates
-for i=1:n_subjects
-  for j=1:n_subjects
-    if (i>j) && (mean_cov(i) == mean_cov(j))
-      try
-        nami = deblank(V(i).fname);
-        namj = deblank(V(j).fname);
-        if strcmp(nami(end-1:end),',1')
-          nami = nami(1:end-2);
-        end 
-        if strcmp(namj(end-1:end),',1')
-          namj = namj(1:end-2);
-        end 
-        s = unix(['diff ' nami ' ' namj]);
-        if (s==0), fprintf(['\nWarning: ' nami ' and ' namj ' are same files?\n']); end
-      end
-    end
-  end
-end
 if isfield(job,'save') && job.save
   %% filenames
   if ~isempty(job.fname)
