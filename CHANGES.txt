@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1611 | gaser | 2020-04-30 08:59:48
+r1612 | gaser | 2020-05-03 14:18:17
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_check_cov.m
+M       cat_stat_check_cov2.m
+
+Changed: Updated list of doubled and similar data in cat_stat_check_cov*.m
+------------------------------------------------------------------------
+r1611 | gaser | 2020-04-30 09:00:24 +0200 (Do, 30 Apr 2020) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +18,7 @@ M       html/cat.html
 
 Fixed: Resampling for longitudinal Freesurfer data was not finding the correct
 folder name.
+
 ------------------------------------------------------------------------
 r1610 | gaser | 2020-04-29 18:49:12 +0200 (Mi, 29 Apr 2020) | 17 lines
 

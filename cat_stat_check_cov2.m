@@ -862,31 +862,52 @@ function varargout = cat_stat_check_cov2(job)
 
 
 
-  %% print suspecious files with cov>0.925
+  %% print suspecious files with high cov
+  % use slightly higher threshold for (smoothed) mesh data
   %  ------------------------------------------------------------------------
   cscc.data.YpY_tmp = cscc.data.YpY - tril(cscc.data.YpY);
-  [indx, indy] = find(cscc.data.YpY_tmp>0.925);
+  if cscc.H.mesh_detected
+    [indx, indy] = find(cscc.data.YpY_tmp>0.950 & cscc.data.YpY_tmp < (1-eps));
+  else
+    [indx, indy] = find(cscc.data.YpY_tmp>0.925);
+  end
   [siv,si] = sort(cscc.data.YpY(sub2ind(size(cscc.data.YpY),indx,indy)),'descend');
   % if more than 25% of the data this points to longitudinal data of one 
   % subject and no warning will appear
-  cscc.data.islongitudinal = (sqrt(length(indx)) > 0.25*n_subjects);
-  if ~isempty(indx) && ~cscc.data.islongitudinal
-    fprintf('\nUnusual large correlation (check that subjects are not identical):\n');
-    for i=si'
-      % exclude diagonal
-      if indx(i) ~= indy(i)
-        % report file with lower mean correlation first
-        if cscc.data.mean_cov(indx(i)) < cscc.data.mean_cov(indy(i))
+  cscc.data.islongitudinal = (length(indx) > 0.25*n_subjects);
+  if ~isempty(indx)
+    if ~cscc.data.islongitudinal
+      fprintf('\nUnusual large correlation (check that subjects are not identical):\n');
+      for i=si'
+        % exclude diagonal
+        if indx(i) ~= indy(i)
           cat_io_cprintf('w',sprintf('  %0.4f',cscc.data.YpY(indx(i),indy(i)))); 
           cat_io_cprintf('n',' between ');
           cat_io_cprintf('b',cscc.files.fname.m{indx(i)}); cat_io_cprintf('n',' and ');
           cat_io_cprintf('b',cscc.files.fname.m{indy(i)}); fprintf('\n');
-        else
-          cat_io_cprintf('w',sprintf('  %0.4f',cscc.data.YpY(indy(i),indx(i)))); 
-          cat_io_cprintf('n',' between ');
-          cat_io_cprintf('b',cscc.files.fname.m{indy(i)}); cat_io_cprintf('n',' and ');
-          cat_io_cprintf('b',cscc.files.fname.m{indx(i)}); fprintf('\n');
         end
+      end
+    else
+      fprintf('\nMany unusual large correlations were found (e.g. common in longitudinal data).\n');
+    end
+  end
+
+  [indx, indy] = find(cscc.data.YpY_tmp == 1);
+  % give warning that data are identical
+  if ~isempty(indx)
+    fprintf('\nWARNING: Data of these subjects are identical!\n');
+    for i=1:length(indx)
+      if cscc.datagroups.n_samples > 1
+        fprintf('%s (sample %d) and %s (sample %d)\n',filename.m{indx(i)},sample(indx(i)),filename.m{indy(i)},sample(indy(i)));
+        cat_io_cprintf('w',sprintf('  %0.4f',cscc.data.YpY(indx(i),indy(i)))); 
+        cat_io_cprintf('n',' between ');
+        cat_io_cprintf('b',sprintf('%s (sample %d)',cscc.files.fname.m{indx(i)},cscc.datagroups.sample(indx(i)))); cat_io_cprintf('n',' and ');
+        cat_io_cprintf('b',sprintf('%s (sample %d)',cscc.files.fname.m{indy(i)},cscc.datagroups.sample(indy(i)))); fprintf('\n');
+      else
+        cat_io_cprintf('w',sprintf('  %0.4f',cscc.data.YpY(indx(i),indy(i)))); 
+        cat_io_cprintf('n',' between ');
+        cat_io_cprintf('b',cscc.files.fname.m{indx(i)}); cat_io_cprintf('n',' and ');
+        cat_io_cprintf('b',cscc.files.fname.m{indy(i)}); fprintf('\n');
       end
     end
   end
