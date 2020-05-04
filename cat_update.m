@@ -86,7 +86,7 @@ else
 end
 
 if update
-    overwrite = spm_input('Update',1,'yes|no',[1 0],1);
+    overwrite = spm_input(sprintf('Update to r%d',rnew),1,'yes|no',[1 0],1);
     d0 = spm('Dir');
     d = fullfile(spm('Dir'),'toolbox'); 
     
