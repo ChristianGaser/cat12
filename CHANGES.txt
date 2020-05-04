@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1612 | gaser | 2020-05-03 14:18:17
+r1613 | gaser | 2020-05-04 19:35:33
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_update.m
+M       html/cat.txt
+
+Changed: Update function skips use of spm('alert') because messages after 
+successful update were too long.
+------------------------------------------------------------------------
+r1612 | gaser | 2020-05-03 14:18:52 +0200 (So, 03 Mai 2020) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +18,7 @@ M       cat_stat_check_cov.m
 M       cat_stat_check_cov2.m
 
 Changed: Updated list of doubled and similar data in cat_stat_check_cov*.m
+
 ------------------------------------------------------------------------
 r1611 | gaser | 2020-04-30 09:00:24 +0200 (Do, 30 Apr 2020) | 9 lines
 
