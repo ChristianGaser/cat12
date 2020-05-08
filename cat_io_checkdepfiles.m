@@ -33,7 +33,9 @@ function [S,Stype,removed] = cat_io_checkdepfiles(S,usedummy)
         S(i,:)  = '';
         Stype   = ee;
         removed = 1; 
-        cat_io_cprintf('warn',sprintf('  Remove "%s" from dependency list because it does not exist!\n',fullfile(pp,[ff ee]))); 
+        % prevent interpreting backslash as escape character
+        removeFile = strrep(fullfile(pp,[ff ee]), '\', '\\');
+        cat_io_cprintf('warn',sprintf('  Remove "%s" from dependency list because it does not exist!\n',removeFile));
       end
     end
   elseif iscell(S)
