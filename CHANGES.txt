@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1613 | gaser | 2020-05-04 19:35:33
+r1614 | gaser | 2020-05-08 16:39:14
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_io_checkdepfiles.m
+M       html/cat.html
+
+(1) Changed: Added some remarks fro precompiling to Makefile
+(2) Fixed: Prevented interpreting backslash as escape character in 
+    cat_io_checkdepfiles.m. Thanks to Brendan Balken for pointing to that issue.
+------------------------------------------------------------------------
+r1613 | gaser | 2020-05-04 19:36:07 +0200 (Mo, 04 Mai 2020) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +22,7 @@ M       html/cat.txt
 
 Changed: Update function skips use of spm('alert') because messages after 
 successful update were too long.
+
 ------------------------------------------------------------------------
 r1612 | gaser | 2020-05-03 14:18:52 +0200 (So, 03 Mai 2020) | 7 lines
 

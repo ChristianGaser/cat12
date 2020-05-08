@@ -37,7 +37,7 @@ install2:
 
 help:
 	-@echo Available commands:
-	-@echo install zip scp scp_manual doc update cp_binaries archive check_pipeline checklist
+	-@echo install zip scp scp_manual doc update cp_binaries archive check_pipeline checklist precompile
 
 doc:
 	-@cat html/cat.txt | sed -e 's/VERSION/'${NEWVERSION}'/g' -e 's/RELNUMBER/r'${REVISION}'/g' -e 's/DATE/'${DATE}'/g' > html/cat.html
@@ -113,6 +113,18 @@ checklist:
 	-@echo 6. Check Windows + Linux
 	-@echo    VirtualBox.app
 	-@echo    CAT12 GUI Segment
+
+precompile:
+	-@echo    
+	-@echo Checklist for precompiling CAT12
+	-@echo -----------------------------------------------
+	-@echo    Start spm12
+	-@echo    cd spm12/config
+	-@echo    spm_make_standalone
+	-@echo    Ubuntu 19.10: mv  /Users/gaser/spm/standalone/spm12.ctf /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Linux/
+	-@echo    Windows 10: mv  /Users/gaser/spm/standalone/spm12.* /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Win/
+	-@echo    Mac OS: mv  /Users/gaser/spm/standalone/spm12.app /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Mac/
+	-@echo    
 
 archive:
 	-@echo available archives to install
