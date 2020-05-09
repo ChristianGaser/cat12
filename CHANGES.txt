@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1614 | gaser | 2020-05-08 16:39:14
+r1615 | gaser | 2020-05-09 12:19:06
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_main.m
+M       cat_run.m
+
+(1) Fixed: Dependencies for rigidly aligned data were missing the "_rigid" term.
+(2) Fixed: Skip getting ROI values for fast versions of surface extraction.
+------------------------------------------------------------------------
+r1614 | gaser | 2020-05-08 16:39:49 +0200 (Fr, 08 Mai 2020) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +22,7 @@ M       html/cat.html
 (1) Changed: Added some remarks fro precompiling to Makefile
 (2) Fixed: Prevented interpreting backslash as escape character in 
     cat_io_checkdepfiles.m. Thanks to Brendan Balken for pointing to that issue.
+
 ------------------------------------------------------------------------
 r1613 | gaser | 2020-05-04 19:36:07 +0200 (Mo, 04 Mai 2020) | 9 lines
 
