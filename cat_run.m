@@ -1021,7 +1021,7 @@ end
 if job.output.bias.dartel==1
     rbiascorr = cell(n,1);
     for j=1:n
-        rbiascorr{j} = fullfile(parts{j,1},mrifolder,['rm',parts{j,2},'.nii']);
+        rbiascorr{j} = fullfile(parts{j,1},mrifolder,['rm',parts{j,2},'_rigid.nii']);
     end
 end
 
@@ -1051,7 +1051,7 @@ end
 if job.output.las.dartel==1
     ribiascorr = cell(n,1);
     for j=1:n
-        ribiascorr{j} = fullfile(parts{j,1},mrifolder,['rmi',parts{j,2},'.nii']);
+        ribiascorr{j} = fullfile(parts{j,1},mrifolder,['rmi',parts{j,2},'_rigid.nii']);
     end
 end
 
@@ -1082,7 +1082,7 @@ end
 if job.output.label.dartel==1
     rlabel = cell(n,1);
     for j=1:n
-        rlabel{j} = fullfile(parts{j,1},mrifolder,['rp0',parts{j,2},'.nii']);
+        rlabel{j} = fullfile(parts{j,1},mrifolder,['rp0',parts{j,2},'_rigid.nii']);
     end
 end
 
@@ -1107,7 +1107,7 @@ for i=1:numel(job.tissue)
     if job.tissue(i).native(2)
         tiss(i).rp = cell(n,1);
         for j=1:n
-            tiss(i).rp{j} = fullfile(parts{j,1},mrifolder,['rp',num2str(i),parts{j,2},'.nii']);
+            tiss(i).rp{j} = fullfile(parts{j,1},mrifolder,['rp',num2str(i),parts{j,2},'_rigid.nii']);
         end
     end
     if job.tissue(i).native(3)

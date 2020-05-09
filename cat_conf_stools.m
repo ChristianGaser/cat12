@@ -1396,7 +1396,7 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
     tGI.values = {0,1,2,3,4};
     tGI.val    = {0};
     tGI.help   = {
-      'Extract Affine normalized version of Toro''s gyrification index (ntGI). The method is described in Toro et al., 2008.'
+      'Extract affine normalized version of Toro''s gyrification index (ntGI). The method is described in Toro et al., 2008.'
     };
   end
   
