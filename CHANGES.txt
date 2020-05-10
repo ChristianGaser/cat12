@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1615 | gaser | 2020-05-09 12:19:06
+r1616 | gaser | 2020-05-10 23:16:15
+
+Changed paths:
+M       CHANGES.txt
+M       cat_vol_groupwise_ls.m
+M       html/cat_statistics.html
+
+(1) Changed: Added visitor plot to CAT12 user statistic page.
+(2) Changed: Use weighted average of mean and median w.r.t. local stdev for 
+    creating average image for rigid registration in longitudinal mode.
+------------------------------------------------------------------------
+r1615 | gaser | 2020-05-09 12:19:40 +0200 (Sa, 09 Mai 2020) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +20,7 @@ M       cat_run.m
 
 (1) Fixed: Dependencies for rigidly aligned data were missing the "_rigid" term.
 (2) Fixed: Skip getting ROI values for fast versions of surface extraction.
+
 ------------------------------------------------------------------------
 r1614 | gaser | 2020-05-08 16:39:49 +0200 (Fr, 08 Mai 2020) | 11 lines
 
