@@ -754,9 +754,24 @@ if need_wimg
 end
 
 if need_avg
-    % use media for rigid registration and mean for non-linear registration
+    % use median for rigid registration and mean for non-linear registration
     if all(isfinite(w_settings(i,:)))
-        mu = median(vol,4);
+        vol_mean   = mean(vol,4);
+        vol_median = median(vol,4);
+        vol_std    = std(vol,[],4);
+        
+        % get 0..95% range
+        [d,h] = hist(vol_std(:),100);
+        d = d./numel(vol_std(:));
+        quantile95 = h(find(cumsum(d)/sum(d)>0.95,1,'first')); 
+        
+        % scale std image with quantile95 value and limit range 0..1
+        vol_std = vol_std./quantile95;
+        vol_std(vol_std>1) = 1;
+        
+        % weighted scaling w.r.t. local std
+        mu = vol_std.*vol_median + (1-vol_std).*vol_mean;
+
     else
         mu = mean(vol,4);
     end
