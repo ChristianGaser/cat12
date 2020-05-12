@@ -637,7 +637,6 @@ cat_warnings = cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans,cat_warnings);
 if debug, clear Yp0; end
 
 
-
 %% surface creation and thickness estimation
 %  ---------------------------------------------------------------------
 if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9 && ...
@@ -660,7 +659,8 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
         [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size] = ...
           cat_surf_createCS(VT,VT0,Ymix,Yl1,Yp0/3,YMF,struct('pbtmethod',pbtmethod,...
           'interpV',sres(sresi),'Affine',res.Affine,'surf',{surf},...
-          'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT)); 
+          'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,...
+          'useprior',job.useprior)); 
       end
     end
   else
@@ -692,14 +692,14 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
         'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'collcorr',job.extopts.collcorr - 20,...
         'scale_cortex', job.extopts.scale_cortex, 'add_parahipp', job.extopts.add_parahipp, 'close_parahipp', job.extopts.close_parahipp,  ....
         'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
-        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT));  
+        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior));  
     else
       %%
       [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size, qa.createCS] = ...
         cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,struct('pbtmethod','pbt2x',...
         'interpV',job.extopts.pbtres,'extract_pial_white',job.extopts.collcorr, ...
         'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
-        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT)); 
+        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior)); 
     end
   end
   
@@ -732,7 +732,6 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
     Pthick_lh{1} = fullfile(pp,surffolder,sprintf('lh.thickness.%s',ff));
     
     % skip getting ROI values for fast versions
-    tmp=job.output.surface
     if job.output.surface < 5 && job.output.surface > 6
       cat_surf_surf2roi(struct('cdata',{{Pthick_lh}},'rdata',{Psatlas_lh}));
     end

@@ -1,5 +1,27 @@
 ------------------------------------------------------------------------
-r1616 | gaser | 2020-05-10 23:16:15
+r1617 | gaser | 2020-05-13 00:36:10
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_tools.m
+M       cat_long_main.m
+M       cat_long_multi_run.m
+M       cat_main.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_surf_createCS.m
+M       tbx_cfg_cat.m
+
+(1) Changed: Added option to use estimated parameters of (average) image 
+    for using as prior for affine registration, segmentation and surface 
+    extraction.
+(2) Changed: Modified longitudinal batch w.r.t. the use of prior information.
+(3) Fixed: Corrected typos.
+(4) Changed: Parallel mode is now disabled in longitudinal batch if only one
+    subject is selected.
+------------------------------------------------------------------------
+r1616 | gaser | 2020-05-10 23:16:49 +0200 (So, 10 Mai 2020) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +31,7 @@ M       html/cat_statistics.html
 (1) Changed: Added visitor plot to CAT12 user statistic page.
 (2) Changed: Use weighted average of mean and median w.r.t. local stdev for 
     creating average image for rigid registration in longitudinal mode.
+
 ------------------------------------------------------------------------
 r1615 | gaser | 2020-05-09 12:19:40 +0200 (Sa, 09 Mai 2020) | 9 lines
 
