@@ -91,6 +91,16 @@ data_spm.help     = {
   'Select SPM segmentations for class 1 for all subjects. Names for all other remaining classes 2 and 3 are automatically estimated.'};
 data_spm.preview  = @(f) spm_check_registration(char(f));
 
+useprior          = cfg_files;
+useprior.tag      = 'useprior';
+useprior.name     = 'Use of prior';
+useprior.filter   = 'image';
+useprior.ufilter  = '.*';
+useprior.num      = [0 1];
+useprior.val      = {''};
+useprior.help     = {
+  'Use of priors'};
+
 %% ------------------------------------------------------------------------
 tools       = cat_conf_tools(expert);     % volume tools
 stools      = cat_conf_stools(expert);    % surface tools
@@ -123,12 +133,14 @@ estwrite.name   = 'CAT12: Segmentation';
 % use multithreading only if availabe
 if numcores > 1 && ~isdeployed
   if expert>1
-    estwrite.val    = {data data_wmh nproc opts extopts output};
+    estwrite.val    = {data data_wmh nproc useprior opts extopts output};
+  elseif expert == 1
+    estwrite.val    = {data nproc useprior opts extopts output}; 
   else
     estwrite.val    = {data nproc opts extopts output}; 
   end
 else
-  estwrite.val    = {data opts extopts output};
+  estwrite.val    = {data useprior opts extopts output};
 end
 estwrite.prog   = @cat_run;
 estwrite.vout   = @vout;

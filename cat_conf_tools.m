@@ -972,7 +972,7 @@ function realign  = cat_vol_series_align_GUI(data)
     'The resliced images are named the same as the originals, except that they are prefixed by ''r''.'
   };
   realign.prog          = @cat_vol_series_align;
-  realign.vout          = @vout_reslice;
+  realign.vout          = @vout_realign;
 
 return
 
@@ -2001,7 +2001,7 @@ function dep = vout_stat_TIV(varargin)
 return
 
 %------------------------------------------------------------------------
-function cdep = vout_reslice(job)
+function cdep = vout_realign(job)
   ind  = 1;
   if job.write_avg
       cdep(ind)            = cfg_dep;

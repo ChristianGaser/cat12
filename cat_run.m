@@ -455,6 +455,10 @@ if isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.exto
   varargout{1} = jobo.vout; 
 end
 
+% clear useprior option to ensure that option is st to default
+% for next processings
+cat.useprior = '';
+
 % remove files that do not exist
 varargout{1} = cat_io_checkdepfiles( varargout{1} );
 return
@@ -1202,6 +1206,7 @@ function [data,err] = remove_already_processed(job,verb)
   end
   cat_io_cprintf('warn',sprintf('  Process %d subjects!\n',numel(data)));
 return
+
 %=======================================================================
 function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
   if job.extopts.subfolders
