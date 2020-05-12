@@ -310,11 +310,11 @@ function cat_run_job(job,tpm,subj)
           %% APP bias correction (APPs1 and APPs2)
           %  ------------------------------------------------------------
           %  Bias correction is essential for stable affine registration 
-          %  but also the following preprocessing. This approach use the
-          %  SPM Unified segmentation for intial bais correction of the 
-          %  input data with different FWHM (low to high frequency) and 
-          %  resolution (low to high).
-          %  As far as SPM finaly also gives us a nice initial segmenation 
+          %  but also the following preprocessing. This approach uses the
+          %  SPM Unified segmentation for intial bias correction of the 
+          %  input data with different FWHMs (low to high frequency) and 
+          %  resolutions (low to high).
+          %  As far as SPM finally also gives us a nice initial segmentation 
           %  why not use it for a improved maximum based correction?!
           %  ------------------------------------------------------------
    % 20181222       if ~strcmp(job.extopts.species,'human'), job.extopts.APP = 5; end
@@ -472,8 +472,28 @@ function cat_run_job(job,tpm,subj)
           aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
           aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
 
+          % use affine transformation of given (average) data for longitudinal mode
+          if isfield(job,'useprior') && ~isempty(job.useprior)
+            priorname = job.useprior{1};
+            [pp,ff,ee,ex] = spm_fileparts(priorname);  %#ok<ASGLU>
+            catxml = fullfile(pth,reportfolder,['cat_' ff '.xml']);
+            
+            % check that file exists and get affine transformation
+            if exist(catxml,'file')
+              fprintf('\nUse affine transformation from %s\n',priorname);
+              xml = cat_io_xml(catxml);
+              Affine = xml.parameter.spm.Affine;
+              affscale = 1;
+              useprior = 1;
+            else
+              cat_io_cprintf('warn',sprintf('WARNING: File %s not found. Use individual affine transformation\n',catxml));
+              useprior = 0;
+            end
+          else
+            useprior = 0;
+          end
           
-          if 1 %strcmp('human',job.extopts.species) 
+          if ~useprior
             % affine registration
             try
               spm_plot_convergence('Init','Coarse affine registration','Mean squared difference','Iteration');
@@ -492,8 +512,6 @@ function cat_run_job(job,tpm,subj)
               Affine = eye(4); 
             end
             warning on
-          else
-            Affine = eye(4); affscale = 1;
           end
 
           
@@ -506,23 +524,22 @@ function cat_run_job(job,tpm,subj)
           %  masked head is here less problematic.
           %  ---------------------------------------------------------
           %    ds('l2','',vx_vol,Ym,Yb,Ym,Yp0,90)
-          aflags.sep = obj.samp/2; 
-          aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
-          aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
-          
-          stime = cat_io_cmd('Affine registration','','',1,stime); 
-          if job.extopts.APP>0
-            VF.dt         = [spm_type('UINT8') spm_platform('bigend')];
-            VF.pinfo      = repmat([1;0],1,size(Ym,3));
-            VF.dat(:,:,:) = cat_vol_ctype(Ym*200); 
-          end
-          VF1 = spm_smoothto8bit(VF,aflags.sep);
-          VG1 = spm_smoothto8bit(VG,aflags.sep);
-          %VG1 = spm_smoothto8bit(VG,0.5); % older, possibly better
           
           
           % fine affine registration 
-          if 1 %strcmp('human',job.extopts.species) 
+          if ~useprior 
+            aflags.sep = obj.samp/2; 
+            aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
+            aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
+            
+            stime = cat_io_cmd('Affine registration','','',1,stime); 
+            if job.extopts.APP>0
+              VF.dt         = [spm_type('UINT8') spm_platform('bigend')];
+              VF.pinfo      = repmat([1;0],1,size(Ym,3));
+              VF.dat(:,:,:) = cat_vol_ctype(Ym*200); 
+            end
+            VF1 = spm_smoothto8bit(VF,aflags.sep);
+            VG1 = spm_smoothto8bit(VG,aflags.sep);
             try
               spm_plot_convergence('Init','Affine registration','Mean squared difference','Iteration');
             catch
@@ -618,7 +635,7 @@ function cat_run_job(job,tpm,subj)
         %  This may not work for non human data (or very small brains).
         %  This part should be an external (coop?) function?
         stime = cat_io_cmd('SPM preprocessing 1 (estimate 1):','','',1,stime);
-        if ~isempty(job.opts.affreg) %strcmp('human',job.extopts.species) 
+        if ~isempty(job.opts.affreg) & ~useprior 
           if numel(job.opts.tpm)>1
             %% merging of multiple TPMs
             obj2 = obj; obj2.image.dat(:,:,:) = max(0.0,Ym);

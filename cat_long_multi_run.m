@@ -75,7 +75,7 @@ end
 
 
 % split job and data into separate processes to save computation time
-if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
+if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index')) && numel(job.subj) > 1
   if nargout==1
     varargout{1} = cat_parallelize(job,mfilename,'subj');
   else
@@ -87,3 +87,4 @@ else
   spm_jobman('run',jobs,inputs{:}); 
 end
 warning on;
+cat12

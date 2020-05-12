@@ -806,7 +806,6 @@ else
     ''}];
 end
 
-
 %------------------------------------------------------------------------
 % Currently there are to much different strategies and this parameter needs 
 % revision. There a three basic APP functions that each include an initial 
@@ -861,7 +860,6 @@ if expert
      }];
 end
 app.help   = [app.help;{''}];
-
 
 %------------------------------------------------------------------------
 
