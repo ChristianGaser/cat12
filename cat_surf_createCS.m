@@ -296,7 +296,7 @@ cstime = clock;
       if ~useprior
         cat_io_cprintf('warn',sprintf('WARNING: Surface files for %s not found. Move on with individual surface extraction.\n',priorname));
       else
-        fprintf('Use existing surface from %s as prior and thus skip many processing steps.\n',priorname)
+        fprintf('\nUse existing surface from %s as prior and thus skip many processing steps.\n',priorname)
       end      
     else
       useprior = 0;

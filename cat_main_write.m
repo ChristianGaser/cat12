@@ -182,7 +182,7 @@ function cat_warnings = cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans,cat_war
         job.output.TPMC.mod job.output.TPMC.dartel]),trans);
     end
   end
-  %clear cls clsi fn Ycls; % we need this maps later for the ROIs
+  %clear cls clsi fn Ycls; % we need these maps later for the ROIs
 
   % write jacobian determinant
   if job.output.jacobian.warped

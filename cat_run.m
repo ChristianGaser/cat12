@@ -455,7 +455,7 @@ if isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.exto
   varargout{1} = jobo.vout; 
 end
 
-% clear useprior option to ensure that option is st to default
+% clear useprior option to ensure that option is set back to default
 % for next processings
 cat.useprior = '';
 
@@ -926,13 +926,13 @@ end
 % lh/rh/cb central/white/pial/layer4 surface and thickness
 % ----------------------------------------------------------------------
 surfaceoutput = { % surface texture
-  {'central'}                 % no measures - just surfaces
+  {'central','sphere','sphere.reg'} % no measures - just surfaces
   {}                          % default
   {}                          % expert
   {'pial','white'}            % developer
 };
 measureoutput = {
-  {'thickness'}               % default
+  {'thickness','pbt'}         % default
   {}                          % no measures
   {}                          % expert
   {'depthWM','depthCSF'}      % developer
@@ -964,14 +964,16 @@ for si = 1:numel(sides)
   for soi = 1:numel(surfaceoutput)
     if soi < job.extopts.expertgui + 2
       for soii = 1:numel(surfaceoutput{soi})
-        eval( sprintf('%s%s = {};' , sides{si} , surfaceoutput{soi}{soii} ) ); 
+        % remove dots in name (e.g. for sphere.reg)
+        surfaceoutput_str = strrep(surfaceoutput{soi}{soii},'.','');
+        eval( sprintf('%s%s = {};' , sides{si} , surfaceoutput_str ) ); 
         if ~isempty( surfaceoutput{soi} ) && job.output.surface
-          eval( sprintf('%s%s = cell(n,1);' , sides{si} , surfaceoutput{soi}{soii} ) ); 
+          eval( sprintf('%s%s = cell(n,1);' , sides{si} , surfaceoutput_str ) ); 
           for j = 1:n
             eval( sprintf('%s%s{j} = fullfile(  parts{j,1} , surffolder , ''%s.%s.%s.gii'' ); ' , ...
-              sides{si} , surfaceoutput{soi}{soii} , ...
+              sides{si} , surfaceoutput_str , ...
               sides{si} , surfaceoutput{soi}{soii} , parts{j,2} ) ); 
-            voutsfields{end+1} = sprintf('%s%s',  sides{si} , surfaceoutput{soi}{soii} );
+            voutsfields{end+1} = sprintf('%s%s',  sides{si} , surfaceoutput_str );
           end
         end
       end
