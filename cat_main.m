@@ -642,6 +642,10 @@ if debug, clear Yp0; end
 if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9 && ...
    any( [job.output.ct.native job.output.ct.warped job.output.ct.dartel job.output.ROI] ))
  
+  if ~isfield(job,'useprior')
+    job.useprior = '';
+  end
+  
   % prepare some parameter
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*5/255; 
   [Ymix,job,surf,WMT] = cat_main_surf_preppara(Ymi,Yp0,job,vx_vol);
