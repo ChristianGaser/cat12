@@ -93,13 +93,17 @@ data_spm.preview  = @(f) spm_check_registration(char(f));
 
 useprior          = cfg_files;
 useprior.tag      = 'useprior';
-useprior.name     = 'Use of prior';
+useprior.name    = 'Use prior for longitudinal data';
 useprior.filter   = 'image';
 useprior.ufilter  = '.*';
 useprior.num      = [0 1];
 useprior.val      = {''};
-useprior.help     = {
-  'Use of priors'};
+useprior.help    = {
+  'Please note that this option is only intended for longitudinal data and internally automatically set to the average image of all time points. Thus, please do not edit this option!'
+  ''
+  'The average image is used as a first estimate for affine transformation, segmentation and surface extraction. The idea is that by initializing with the average image we can reduce random variations and improve the robustness and sensitivity of the entire longitudinal pipeline. Furthermore, it significantly increases the speed of the surface extraction.'
+  ''
+};
 
 %% ------------------------------------------------------------------------
 tools       = cat_conf_tools(expert);     % volume tools
@@ -299,20 +303,20 @@ cdep(end).sname      = 'CAT Report PDF';
 cdep(end).src_output = substruct('.','catreportpdf','()',{':'});
 cdep(end).tgt_spec   = cfg_findspec({{'filter','pdf','strtype','e'}});
 
-% CAT report PDF file
-cdep = cfg_dep;
+% CAT report JPG file
+cdep(end+1) = cfg_dep;
 cdep(end).sname      = 'CAT Report JGP';
 cdep(end).src_output = substruct('.','catreportjpg','()',{':'});
 cdep(end).tgt_spec   = cfg_findspec({{'filter','jpg','strtype','e'}});
 
 % CAT report XML file
-cdep = cfg_dep;
+cdep(end+1) = cfg_dep;
 cdep(end).sname      = 'CAT Report';
 cdep(end).src_output = substruct('.','catreport','()',{':'});
 cdep(end).tgt_spec   = cfg_findspec({{'filter','xml','strtype','e'}});
 
 % CAT log file
-cdep = cfg_dep;
+cdep(end+1) = cfg_dep;
 cdep(end).sname      = 'CAT log-file';
 cdep(end).src_output = substruct('.','catlog','()',{':'});
 cdep(end).tgt_spec   = cfg_findspec({{'filter','txt','strtype','e'}});
@@ -322,13 +326,13 @@ cdep(end).tgt_spec   = cfg_findspec({{'filter','txt','strtype','e'}});
 % ----------------------------------------------------------------------
 if isfield(opts,'surface')
   surfaceoutput = { % surface texture
-    {'central'}                 % no measures - just surfaces
+    {'central','sphere','sphere.reg'} % no measures - just surfaces
     {}                          % default
     {}                          % expert
     {'pial','white'}            % developer
   };
   measureoutput = {
-    {'thickness'}               % default
+    {'thickness','pbt'}         % default
     {}                          % no measures
     {}                          % expert
     {'depthWM','depthCSF'}      % developer
@@ -361,11 +365,13 @@ if isfield(opts,'surface')
       if soi < job.extopts.expertgui + 2
         for soii = 1:numel(surfaceoutput{soi})
           if ~isempty( surfaceoutput{soi} )
+            % remove dots in name (e.g. for sphere.reg)
+            surfaceoutput_str = strrep(surfaceoutput{soi}{soii},'.','');
             cdep(end+1)          = cfg_dep;
             cdep(end).sname      = sprintf('%s %s%s Surface', sidenames{si}, ...
-              upper(surfaceoutput{soi}{soii}(1)), surfaceoutput{soi}{soii}(2:end));
+              upper(surfaceoutput_str(1)), surfaceoutput_str(2:end));
             cdep(end).src_output = substruct('()',{1}, '.', ...
-              sprintf('%s%s', sides{si} , surfaceoutput{soi}{soii} ),'()',{':'});
+              sprintf('%s%s', sides{si} , surfaceoutput_str ),'()',{':'});
             cdep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
           end
         end

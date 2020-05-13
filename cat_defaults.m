@@ -101,6 +101,12 @@ cat.output.label.native = 1;
 cat.output.label.warped = 0;
 cat.output.label.dartel = 0;
 
+% Tissue classes 4-6 to create own TPMs
+cat.output.TPMC.native = 0; 
+cat.output.TPMC.warped = 0;
+cat.output.TPMC.mod    = 0;
+cat.output.TPMC.dartel = 0;
+
 % cortical thickness (experimental)
 cat.output.ct.native = 0; 
 cat.output.ct.warped = 0;
@@ -146,7 +152,7 @@ cat.extopts.WMHCstr      = 0.5;  % Strength of WM hyperintensity correction:  0 
 cat.extopts.SLC          = 0;    % Stroke lesion correction (SLC):            0 - no correction, 1 - handling of manual lesion that have to be set to zero!
                                  %                                            2 - automatic lesion detection (in development)
 cat.extopts.mrf          = 1;    % MRF weighting:                             0 to 1; <1 - weighting, 1 - auto; default 1
-cat.extopts.INV          = 1;    %  Invert PD/T2 images for preprocessing:    0 - no processing, 1 - try intensity inversion, 2 - synthesize T1 image; default 1
+cat.extopts.INV          = 1;    % Invert PD/T2 images for preprocessing:    0 - no processing, 1 - try intensity inversion, 2 - synthesize T1 image; default 1
 
 % resolution options
 cat.extopts.restype      = 'optimal';    % resolution handling: 'native','fixed','best', 'optimal'
@@ -298,18 +304,12 @@ cat.extopts.satlas      = { ...
 
 
 %=======================================================================
-% PRIVATE PARAMETER (NOT FOR GENERAL USE)
+% PRIVATE PARAMETERS (NOT FOR GENERAL USE)
 %=======================================================================
 
 
 % Additional maps
 %=======================================================================
-% Tissue classes 4-6 to create own TPMs
-cat.output.TPMC.native = 0; 
-cat.output.TPMC.warped = 0;
-cat.output.TPMC.mod    = 0;
-cat.output.TPMC.dartel = 0;
-
 % atlas maps (for evaluation)
 cat.output.atlas.native = 0; 
 cat.output.atlas.warped = 0; 
