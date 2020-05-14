@@ -601,9 +601,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize*0.8); end
   
   warning('off','MATLAB:hg:patch:RGBColorDataNotSupported');
-  % the PDF is is an image because openGL is use but -painters would not look good for surfaces ... 
-  print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
-  print(fg, job.imgprint.ftype('jpeg'), job.imgprint.fdpi(job.imgprint.dpi/2), job.imgprint.fnamej); 
+  % the PDF is is an image because openGL is used but -painters would not look good for surfaces ... 
+  try % does not work in headless mode without java
+    print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
+    print(fg, job.imgprint.ftype('jpeg'), job.imgprint.fdpi(job.imgprint.dpi/2), job.imgprint.fnamej); 
+  end
 
   for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize); end; end
   for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize); end
