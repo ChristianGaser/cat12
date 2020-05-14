@@ -44,7 +44,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   data.filter       = 'image';
   data.ufilter      = '.*';
   data.num          = [1 Inf];
-  data.help         = {'Select one high resolution T1 image for each subject. '};
+  data.help         = {'Select the same number and order of subjects for each time point. '};
 
   fwhm_vol         = cfg_entry;
   fwhm_vol.tag     = 'fwhm_vol';
@@ -84,19 +84,19 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   timepoints.name   = 'Timepoints';
   timepoints.values = {timepoint};
   timepoints.num    = [2 Inf];
-  timepoints.help   = {'Specify the same number and order of subjects for each timepoint. '};
+  timepoints.help   = {'Specify time points. '};
 
   subjlong          = data; 
   subjlong.num      = [2 Inf];
   subjlong.tag      = 'subjects';
   subjlong.name     = 'Subject';
-  subjlong.help     = {'Select all longitudinal high resolution T1 images of one subject. '};
+  subjlong.help     = {'Select all longitudinal T1 images for this subject. '};
   subjects          = cfg_repeat;
   subjects.tag      = 'subjects';
   subjects.name     = 'Subjects';
   subjects.values   = {subjlong};
   subjects.num      = [1 Inf];
-  subjects.help     = {'Specify the same number and order of subjects for each timepoint. '};
+  subjects.help     = {'Specify subjects. '};
 
   datalong          = cfg_choice;
   datalong.tag      = 'datalong';
@@ -104,9 +104,9 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   datalong.values   = {timepoints subjects};
   datalong.val      = {timepoints};
   datalong.help     = {
-   ['Select mode of longitudinal data selection for timepoints or subjects. ' ...
-    'In case of timepoints you can create multiple timepoints where each timepoints has to contain the same number and order of subjects. ' ...
-    'If you have a varying number of timepoints you have to use the subject mode where you have to define the files of each subject. ']
+   ['Select mode of longitudinal data selection for time points or subjects. ' ...
+    'In case of time points you can create multiple time points where each time point has to contain the same number and order of subjects. ' ...
+    'If you have a varying number of time points you have to use the subject mode where you have to define the files of each subject separately. ']
   }; 
 
 
@@ -379,7 +379,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   yes.help          = {'Process surfaces'};
 
   surface           = cfg_choice;
-  surface.name      = 'Surface prcessing';
+  surface.name      = 'Surface processing';
   surface.tag       = 'surface';
   surface.values    = {no yes};
   surface.val       = {yes};

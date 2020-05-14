@@ -99,7 +99,7 @@ useprior.ufilter  = '.*';
 useprior.num      = [0 1];
 useprior.val      = {''};
 useprior.help    = {
-  'Please note that this option is only intended for longitudinal data and internally automatically set to the average image of all time points. Thus, please do not edit this option!'
+  'Please note that this option is only intended for longitudinal data and is internally automatically set to the average image of all time points. Thus, please do not edit this option!'
   ''
   'The average image is used as a first estimate for affine transformation, segmentation and surface extraction. The idea is that by initializing with the average image we can reduce random variations and improve the robustness and sensitivity of the entire longitudinal pipeline. Furthermore, it significantly increases the speed of the surface extraction.'
   ''
@@ -116,6 +116,9 @@ opts        = cat_conf_opts(expert);
 %ROI       = cat_conf_ROI(expert);       % ROI options
 %[output,output_spm,output1173,output1445,output1585] = cat_conf_output(expert); 
 [output,output_spm,output1173,output1445] = cat_conf_output(expert); 
+long        = cat_conf_long;
+long1173    = cat_conf_long1173;
+long1445    = cat_conf_long1445;
 
 %------------------------------------------------------------------------
 % additional segmentation versions
@@ -131,7 +134,7 @@ opts1445                      = cat_conf_opts1445(expert);
 %% ------------------------------------------------------------------------
 estwrite        = cfg_exbranch;
 estwrite.tag    = 'estwrite';
-estwrite.name   = 'CAT12: Segmentation';
+estwrite.name   = 'CAT12: Segmentation (current release)';
 %NEW NAME?: [catv,catr,catd] = cat_version;
 %           estwrite.name    = sprintf('CAT12.6plus: Segmentation %s (%s/%s)',catr,catd(1:4),catd(6:7));
 % use multithreading only if availabe
@@ -250,15 +253,16 @@ end
 cat        = cfg_choice;
 cat.name   = 'CAT12';
 cat.tag    = 'cat';
+
 if expert==2
 %  cat.values = {estwrite estwrite_spm estwrite1585 estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools stoolsexp};
-  cat.values = {estwrite estwrite_spm estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools stoolsexp};
+  cat.values = {estwrite estwrite_spm estwrite1445 estwrite1173plus estwrite1173 long long1173 long1445 catsimple catsimple_long tools stools stoolsexp};
 elseif expert==1
 %  cat.values = {estwrite estwrite_spm estwrite1585 estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools };
-  cat.values = {estwrite estwrite_spm estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools };
+  cat.values = {estwrite estwrite_spm estwrite1445 estwrite1173plus estwrite1173 long long1173 long1445 catsimple catsimple_long tools stools };
 else
 %  cat.values = {estwrite estwrite1585 estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools}; 
-  cat.values = {estwrite estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools}; 
+  cat.values = {estwrite estwrite1445 estwrite1173plus estwrite1173 long long1173 long1445 catsimple catsimple_long tools stools}; 
 end
 %------------------------------------------------------------------------
 

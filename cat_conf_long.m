@@ -42,7 +42,7 @@ nproc.num     = [1 1];
 nproc.help    = {
     'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be split into separate processes that run in the background. You can even close Matlab, which will not affect the processes that will run in the background without GUI. If you do not want to run processes in the background then set this value to 0.'
     ''
-    'Keep in mind that each process needs about 1.5..2GB of RAM, which should be considered to choose the appropriate  number of processes.'
+    'Keep in mind that each process needs about 1.5..2GB of RAM, which should be considered to choose the appropriate number of processes.'
     ''
     'Please further note that no additional modules in the batch can be run except CAT12 segmentation. Any dependencies will be broken for subsequent modules.'
   };
@@ -74,7 +74,6 @@ esubjs.num     = [1 Inf];
 esubjs.help = {...
 'Specify data for each subject.'};
 
-
 %------------------------------------------------------------------------
 delete_temp        = cfg_menu;
 delete_temp.tag    = 'delete_temp';
@@ -83,7 +82,7 @@ delete_temp.labels = {'No','Yes'};
 delete_temp.values = {0 1};
 delete_temp.val    = {1};
 delete_temp.help = {
-'Temporary files such as the native segmentations or deformation fields are usually removed after preprocessing. However, if you like to keep these files you can use this option.'
+'Temporary files such as the native segmentations, deformation fields or any processed data from the average image are usually removed after preprocessing. However, if you like to keep these files (for debugging) you can enable this option.'
 ''
 };
 
@@ -94,7 +93,7 @@ output  = cat_conf_output(expert);
 %------------------------------------------------------------------------
 
 long = cfg_exbranch;
-long.name = 'CAT12: Segment longitudinal data';
+long.name = 'CAT12: Segment longitudinal data (current release)';
 long.tag  = 'long';
 if newapproach % new way - not working
   
@@ -202,7 +201,7 @@ for k=1:numel(job.subj)
         dep = [dep cdep];
     end
 end;
-% add all surface/thickness files! of all timepoints and all subjects
+% add all surface/thickness files! of all time points and all subjects
 if job.output.surface
     for k=1:numel(job.subj)
         dep(end+1)          = cfg_dep;
