@@ -1,5 +1,30 @@
 ------------------------------------------------------------------------
-r1620 | dahnke | 2020-05-14 15:54:51
+r1621 | gaser | 2020-05-14 17:29:48
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_batch_long.m
+M       cat_batch_long.sh
+M       cat_conf_long.m
+M       cat_long_main.m
+M       cat_long_multi_run.m
+M       cat_main_reportfig.m
+M       cat_surf_parameters.m
+M       cat_vol_approx.m
+M       html/cat.html
+M       tbx_cfg_cat.m
+
+(1) Changed: Reordered and removed some items in tbx_cfg_cat.m.
+(2) Changed: Headless mode without will not allow printing pdf/jpg report.
+(3) Changed: Added selection options for longitudinal mode for subjects and
+    time points (borrowed from simple long. processing).
+(4) Changed: Many changes in longitudinal batch.
+(5) Fixed: Disabled dependencies for long. batch because it's not yet working.
+(6) Changed: Updated shell and batch for longitudinal processing from command 
+    line.
+------------------------------------------------------------------------
+r1620 | dahnke | 2020-05-14 15:59:40 +0200 (Do, 14 Mai 2020) | 89 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -87,6 +112,7 @@ M       templates_animals/chimpanzee_cat.nii
 							with other folding measures. 
 (28) Fixed:	  Corrected bug in case of TPMs with only 3 input classes by assuming that 
               class 4 is the undefined background. Added also a warning.               
+
 
 
 ------------------------------------------------------------------------

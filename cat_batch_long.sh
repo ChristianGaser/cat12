@@ -10,7 +10,7 @@ matlab=matlab     # you can use other matlab versions by changing the matlab par
 defaults_file=""
 LOGDIR=$PWD
 nojvm=""
-output_surface=0
+output_surface=1
 fg=
 
 ########################################################
@@ -61,7 +61,11 @@ parse_args ()
             exit_if_empty "$optname" "$optarg"
             output_surface=1
             ;;
-        --nojvm | -n*)
+        --nosurf* | -nos*)
+            exit_if_empty "$optname" "$optarg"
+            output_surface=0
+            ;;
+        --nojvm | -noj*)
             exit_if_empty "$optname" "$optarg"
             nojvm=" -nojvm "
             ;;
@@ -248,13 +252,13 @@ help ()
 cat <<__EOM__
 
 USAGE:
-   cat_batch_long.sh file1.nii file2.nii ... filex.nii [-d] [-m matlabcommand]
+   cat_batch_long.sh [-d] [-m matlabcommand] [-nosurf] file1.nii file2.nii ... filex.nii 
    
-   -m       matlab command
-   -d       optional default file
-   -fg      do not run matlab process in background
-   -surface enable surface and thickness estimation
-   -nojvm   supress call of jvm using the -nojvm flag
+   -m         matlab command
+   -d         optional default file
+   -fg        do not run matlab process in background
+   -nosurf    disable surface and thickness estimation
+   -nojvm     supress call of jvm using the -nojvm flag
 
    Only one batch filename is allowed. Optionally you can set the matlab command 
    with the "-m" option. As default no display is used (via the -nodisplay option 

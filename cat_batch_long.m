@@ -13,7 +13,7 @@ if nargin < 1
 end
 
 if nargin < 2
-  output_surface = 0;
+  output_surface = 1;
 else
   % string argument has to be converted 
   if isstr(output_surface)
@@ -50,21 +50,20 @@ else
     end
 end
 
-matlabbatch{1}.spm.tools.cat.long.subj.mov = cell(n,1);
+matlabbatch{1}.spm.tools.cat.long.datalong.subjects{1} = names;
 matlabbatch{1}.spm.tools.cat.long.nproc = 0;
-
-for i=1:n
-  matlabbatch{1}.spm.tools.cat.long.subj.mov{i} = names{i};
-end
-
 matlabbatch{1}.spm.tools.cat.long.modulate = 1;
 
 if output_surface == 1
   matlabbatch{1}.spm.tools.cat.long.output.surface = 1;
+else
+  matlabbatch{1}.spm.tools.cat.long.output.surface = 0;
 end
 
 warning off
 try
+  % use expert mode for long. batch
+  cat12('expert')
   spm_jobman('initcfg');
   spm_jobman('run',matlabbatch);
 catch %#ok<CTCH> % catch with lasterror is necessary for old matlab versions

@@ -47,32 +47,51 @@ nproc.help    = {
     'Please further note that no additional modules in the batch can be run except CAT12 segmentation. Any dependencies will be broken for subsequent modules.'
   };
 %------------------------------------------------------------------------
+% files long with two different selection schemes
+% - timepoints-subjects
+% - subjects-timepoints
+data              = cfg_files;
+data.tag          = 'data';
+data.name         = 'Volumes';
+data.filter       = 'image';
+data.ufilter      = '.*';
+data.num          = [1 Inf];
+data.help         = {'Select the same number and order of subjects for each time point. '};
 
-mov = cfg_files;
-mov.name = 'Longitudinal data for this subject';
-mov.tag  = 'mov';
-mov.filter = 'image';
-mov.num  = [2 Inf];
-mov.help   = {...
-'These are the data of the same subject.'};
-%------------------------------------------------------------------------
+timepoint         = data; 
+timepoint.tag     = 'timepoints';
+timepoint.name    = 'Timepoint';
 
-subj = cfg_branch;
-subj.name = 'Subject';
-subj.tag = 'subj';
-subj.val = {mov};
-subj.help = {...
-'Images of the same subject.'};
+timepoints        = cfg_repeat;
+timepoints.tag    = 'timepoints';
+timepoints.name   = 'Timepoints';
+timepoints.values = {timepoint};
+timepoints.num    = [2 Inf];
+timepoints.help   = {'Specify time points. '};
 
-%------------------------------------------------------------------------
+subjlong          = data; 
+subjlong.num      = [2 Inf];
+subjlong.tag      = 'subjects';
+subjlong.name     = 'Subject';
+subjlong.help     = {'Select all longitudinal T1 images for this subject. '};
 
-esubjs         = cfg_repeat;
-esubjs.tag     = 'esubjs';
-esubjs.name    = 'Data';
-esubjs.values  = {subj};
-esubjs.num     = [1 Inf];
-esubjs.help = {...
-'Specify data for each subject.'};
+subjects          = cfg_repeat;
+subjects.tag      = 'subjects';
+subjects.name     = 'Subjects';
+subjects.values   = {subjlong};
+subjects.num      = [1 Inf];
+subjects.help     = {'Specify subjects. '};
+
+datalong          = cfg_choice;
+datalong.tag      = 'datalong';
+datalong.name     = 'Longitudinal data';
+datalong.values   = {timepoints subjects};
+datalong.val      = {subjects};
+datalong.help     = {
+ ['Select mode of longitudinal data selection for time points or subjects. ' ...
+  'In case of "time points" you can create multiple time points where each time point has to contain the same number and order of subjects. ' ...
+  'If you have a varying number of time points for each subject you have to use the "subject" mode where you have to define the files of each subject separately. ']
+}; 
 
 %------------------------------------------------------------------------
 delete_temp        = cfg_menu;
@@ -118,7 +137,7 @@ if newapproach % new way - not working
   if expert
     output.val = [output.val, delete_temp]; 
   end
-  long.val  = {esubjs,nproc,opts,extopts,output}; 
+  long.val  = {datalong,nproc,opts,extopts,output}; 
   long.vout = @vout_long2;
 else
   % old appraoch
@@ -165,20 +184,23 @@ else
   % use multithreading only if availabe
   if numcores > 1 & ~isdeployed
     if expert
-      long.val  = {esubjs,nproc,opts,extopts,output,ROI,modulate,dartel,delete_temp};
+      long.val  = {datalong,nproc,opts,extopts,output,ROI,modulate,dartel,delete_temp};
     else
-      long.val  = {esubjs,nproc,opts,extopts,output,ROI,modulate,dartel};
+      long.val  = {datalong,nproc,opts,extopts,output,ROI,modulate,dartel};
     end
   else
-    long.val  = {esubjs,opts,extopts,output,ROI,modulate,dartel};
+    long.val  = {datalong,opts,extopts,output,ROI,modulate,dartel};
   end
-  
-  long.vout = @vout_long;
+ 
+% does not yet work! 
+%  long.vout = @vout_long;
 end
 long.prog = @cat_long_multi_run;
 
 long.help = {
-'This option provides customized processing of longitudinal data. Please note that this processing pipeline was optimized for processing and detecting small changes over time as response to short-time plasticity effects (e.g. due to learning and training). This pipelines will not work properly for large longitudinal changes where large parts of the brain will change over time (e.g. atropy due to Alzheimers disease or ageing). This is due to the effect that the spatial normalization parameters are estimated using a mean image of all time points and subsequently applied to all time points. If large atrophy occurs between the time points this can lead to a shift of tissue borders and might result in areas of decreased volumes over time that are surrounded by areas of increased volumes due to this shifting issues. For data with large volume changes over time I would recommend to use the cross-sectional pipeline or the longitudinal toolbox in SPM12.'
+'This option provides customized processing of longitudinal data. Please note that this processing pipeline was optimized for processing and detecting smaller changes over time as response to short-time plasticity effects (e.g. due to learning and training). This pipelines will probably not that sensitive for larger longitudinal changes where large parts of the brain will change over time (e.g. atropy due to Alzheimers disease or ageing). This is due to the effect that the spatial normalization parameters are estimated using the deformations of all time points and subsequently applied to all time points. If large atrophy occurs between the time points this can lead to a shift of tissue borders and might result in areas of decreased volumes over time that are surrounded by areas of increased volumes due to this shifting issues. For data with larger volume changes over time you can also try the longitudinal toolbox in SPM12.'
+''
+'Please note that the surface-based preprocessing and also the ROI estimates are not affected by the potentially lower sensitivity to larger changes, as the realigned images are used independently to create cortical surfaces, thickness, or ROI estimates. Thus, surface- or ROI-based approaches in CAT12 could be also a good alternative for finding larger changes.'
 ''
 };
 
@@ -190,6 +212,14 @@ return;
 
 %------------------------------------------------------------------------
 function dep = vout_long(job)
+
+% this is not yet working!
+if isfield(job.datalong,'subjects')
+  job.subj = job.datalong.subjects;
+else
+  job.subj = job.datalong.timepoints;
+end
+
 for k=1:numel(job.subj)
     cdep            = cfg_dep;
     cdep.sname      = sprintf('Segmented longitudinal data (Subj %d)',k);
@@ -201,6 +231,7 @@ for k=1:numel(job.subj)
         dep = [dep cdep];
     end
 end;
+
 % add all surface/thickness files! of all time points and all subjects
 if job.output.surface
     for k=1:numel(job.subj)
