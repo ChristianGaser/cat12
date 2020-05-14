@@ -504,7 +504,7 @@ switch lower(action)
               end
             else
               tfiles = cat_vol_findfiles(sinfo1(pi).pp,sprintf('%s.*.%s*',sinfo1(pi).side,sinfo1(pi).name),struct('maxdepth',1));
-              sfiles = {'.central.','.sphere.','.sphere.reg.','.hull.','.inflate.','.core.','.white.','.pial.','.inner.','.outer.','.annot.','.defects.','.AGI.','.SGI.','.layer4.'}; 
+              sfiles = {'.central.','.sphere.','.sphere.reg.','.hull.','.inflate.','.core.','.white.','.pial.','.inner.','.outer.','.annot.','.defects.','.toroGI.','.lGI.','.layer4.'}; 
               for i=1:numel(sfiles)
                 tfiles(cellfun('isempty',strfind(tfiles,sfiles{i}))==0) = [];  
               end
@@ -3044,7 +3044,7 @@ for pi=pis
     error('cat_surf_render:add_wrong_mesh',[...
       'Colordata does not fit to underlying mesh.\n' ...
       '  Colordata:   %d values\n' ...
-      '  Surface:     %d vertices'],size(curv,1),size(C,1) );
+      '  Surface:     %d vertices'],size(C,1),size(curv,1) );
   end
 
  %C = repmat(~any(v,1),3,1)' .* curv + repmat(any(v,1),3,1)' .* C;

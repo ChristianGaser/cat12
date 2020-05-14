@@ -142,7 +142,9 @@ function varargout = cat_surf_fun(action,S,varargin)
           cat_surf_thickness(action,S);
         end
       end
-      
+    case 'meshinterp'
+      %S=cat_surf_meshinterp(S,interp,method,distth)  
+      varargout{1} = cat_surf_meshinterp(S,varargin{:});  
     case {'inner','outer','white','pial','innervar','outervar','whitevar','pialvar'}
     % create different cortical surfaces
       if nargin<2, help cat_surf_fun>cat_surf_GMboundarySurface; return; end
@@ -210,8 +212,14 @@ function varargout = cat_surf_fun(action,S,varargin)
     
     case 'surf2vol'
     % Render surface (data) into volume space. See also spm_mesh_to_grid. 
-      if nargin<2, help cat_surf_fun>show_orthview; return; end
-      if nargout>2
+      if nargin<2, help cat_surf_fun>surf2vol; return; end
+      if nargout>3
+        if nargin>2
+          [varargout{1},varargout{2},varargout{3},varargout{4}] = cat_surf_surf2vol(S,varargin{:});
+        else
+          [varargout{1},varargout{2},varargout{3},varargout{4}] = cat_surf_surf2vol(S);
+        end
+      elseif nargout>2
         if nargin>2
           [varargout{1},varargout{2},varargout{3}] = cat_surf_surf2vol(S,varargin{:});
         else
@@ -3214,7 +3222,7 @@ function [Yp,Yt,vmat1,vmat1i] = cat_surf_surf2vol(S,Y,T,type,opt)
   def.acc        = 1;     % larger value - more layer - more exact but slower
   def.bdist      = 5;     % default volume 
   def.fsize      = 10;
-  def.verb       = 1; 
+  def.verb       = 0; 
   def.testseggmt = 0;
   def.interpBB   = struct('BB',[],'interpV',1,'mati',mati,'vmati',vmati);
   def.mat        = [];
@@ -3236,7 +3244,7 @@ function [Yp,Yt,vmat1,vmat1i] = cat_surf_surf2vol(S,Y,T,type,opt)
   
   %% save a temporary version of S and refine it
   if ~strcmpi(type,'val')
-    stime = cat_io_cmd('  Refine mesh','g5','',opt.verb);
+    if opt.verb, stime = cat_io_cmd('  Refine mesh','g5','',opt.verb); end
     Praw = [tempname '.gii'];
     save(gifti(struct('vertices',S.vertices,'faces',S.faces)),Praw); 
     cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Praw,Praw,opt.refine .* mean(vx_vol)); 
@@ -3287,12 +3295,14 @@ function [Yp,Yt,vmat1,vmat1i] = cat_surf_surf2vol(S,Y,T,type,opt)
   
   %% transfer thickness information to refined surface by volume rendering
   if ~isempty(T)
-    if exist('stime','var')
-      stime = cat_io_cmd('  Render thickness/data','g5','',opt.verb,stime);
-    else
-      stime = cat_io_cmd('  Render thickness/data','g5','',opt.verb);
+    if opt.verb
+      if exist('stime','var')
+        stime = cat_io_cmd('  Render thickness/data','g5','',opt.verb,stime);
+      else
+        stime = cat_io_cmd('  Render thickness/data','g5','',opt.verb);
+      end
     end
-    Yt = nan(size(Y),'single'); 
+    Yt = nan(size(Y),'single');
     % render points
     I  = sub2ind(size(Y),...
         max(1,min(size(Y,1),round(S.vertices(:,1) + vmat1(1)))),...
@@ -3321,7 +3331,7 @@ function [Yp,Yt,vmat1,vmat1i] = cat_surf_surf2vol(S,Y,T,type,opt)
   
  
   %% smooth the normals to avoid problems with self-intersections
-  stime = cat_io_cmd('  Smooth normals','g5','',opt.verb,stime);
+  if opt.verb, stime = cat_io_cmd('  Smooth normals','g5','',opt.verb,stime); end
   Mr = spm_mesh_smooth(Sr);   
   smoothsurf = @(Y,s) [ ...        
     spm_mesh_smooth(Mr,double(Y(:,1)),s) , ...
@@ -3333,7 +3343,7 @@ function [Yp,Yt,vmat1,vmat1i] = cat_surf_surf2vol(S,Y,T,type,opt)
   
   
   %% render surface
-  stime = cat_io_cmd('  Render final map','g5','',opt.verb,stime);
+  if opt.verb, stime = cat_io_cmd('  Render final map','g5','',opt.verb,stime); end
   switch lower(type)
     case {'pve','seg','pp'}
       %% render surface with PVE 

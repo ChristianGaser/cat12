@@ -65,6 +65,12 @@ function varargout = cat_surf_calc(job)
     if isempty(outdir), outdir = fileparts(job.cdata{1}); end
 
     if job.usetexturefield 
+      useinput = strfind('INPUT',job.dataname);
+      if ~isempty(useinput)
+        sinfo = cat_surf_info(job.cata{1}); 
+        job.dataname = strrep(job.dataname,'INPUT',sinfo.texture); 
+      end
+        
       job.output = char(cat_surf_rename(job.cdata{1},...
         'preside','','pp',outdir,'name','','dataname',job.dataname,'ee',ee));  
     else

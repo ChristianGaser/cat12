@@ -23,7 +23,9 @@ function out = cat_io_volctype(varargin)
   end
   def.force               = 1; 
   def.verb                = 1;
-  def.suffix             = '';
+  def.lazy                = 1; 
+  def.suffix              = '';
+  def.intscale            = 0; 
   def.returnOnlyFilename  = 0; 
   job = cat_io_checkinopt(job,def); 
 
@@ -107,73 +109,98 @@ function out = cat_io_volctype(varargin)
   spm_clf('Interactive'); 
   spm_progress_bar('Init',numel(job.data),'SANLM-Filtering','Volumes Complete');
   for si=1:numel(job.data)
-    V = spm_vol(strrep(job.data{si},',1',''));
-    Y = spm_read_vols(V); 
+    if cat_io_rerun( out.files{si} , job.data{si} )
+      V = spm_vol(strrep(job.data{si},',1',''));
+      Y = spm_read_vols(V); 
 
-    [pp,ff,ee] = spm_fileparts(V(1).fname);
-      
-    [Yt,clim] = cat_stat_histth(Y,range); clear Yt;  %#ok<ASGLU>
-    
-    if round(cvals)~=cvals && ccvals~=0
-      switch ctype
-        case {2,256}, V(1).pinfo(1) = (clim(2) - clim(1)) / 256;
-        case {4,512}, V(1).pinfo(1) = (clim(2) - clim(1)) / 256^2;
-      end
-    else
-       V(1).pinfo(1) = cvals; 
-    end
-    
-    if any(clim<0)
-      switch V(1).dt(1) 
-        case 2,   ctype = 4;  
-        case 512, ctype = 256; 
-      end
-    else
-      switch V(1).dt(1) 
-        case 4,   ctype = 2;  
-        case 256, ctype = 512; 
-      end
-    end
-    % special case for external input
-    if ctype>0
-      V(1).dt(1) = ctype;
-      descrip = [V(1).descrip ' > ' spm_type(ctype)];
-    else
-      descrip = V(1).descrip;
-    end
-    
+      [pp,ff,ee] = spm_fileparts(V(1).fname);
 
-    % replace NAN and INF in case of integer
-    switch V(1).dt(1) 
-      case {2,4,256,512}
-        Y(isnan(Y)) = 0;
-        Y(isinf(Y) & Y<0) = min(Y(:));
-        Y(isinf(Y) & Y>0) = max(Y(:));
+      [Yt,clim] = cat_stat_histth(Y,range); clear Yt;  %#ok<ASGLU>
+
+      if round(cvals)~=cvals && ccvals~=0
+        switch ctype
+          case {2,256}, V(1).pinfo(1) = (clim(2) - clim(1)) / 256;
+          case {4,512}, V(1).pinfo(1) = (clim(2) - clim(1)) / 256^2;
+        end
+      else
+         V(1).pinfo(1) = cvals; 
+      end
+
+      if any(clim<0)
+        switch V(1).dt(1) 
+          case 2,   ctype = 4;  
+          case 512, ctype = 256; 
+        end
+      else
+        switch V(1).dt(1) 
+          case 4,   ctype = 2;  
+          case 256, ctype = 512; 
+        end
+      end
+      % special case for external input
+      if ctype>0
+        V(1).dt(1) = ctype;
+        descrip = [V(1).descrip ' > ' spm_type(ctype)];
+      else
+        descrip = V(1).descrip;
+      end
+
+
+      % replace NAN and INF in case of integer
+      switch V(1).dt(1) 
+        case {2,4,256,512}
+          Y(isnan(Y)) = 0;
+          Y(isinf(Y) & Y<0) = min(Y(:));
+          Y(isinf(Y) & Y>0) = max(Y(:));
+      end
+
+
+      if job.intscale
+        Y = ( Y - min(Y(:)) ) / diff([min(Y(:)),max(Y(:))]);
+        if job.intscale==2
+          if any( ctype == [ 256 512 768 2 4 8] ) %  all integer types
+            error('cat_io_volctype:improperDatatype','Selected datatype does not provide selected intesity range.');
+          else
+            Y = Y * (2^8  - 1); 
+          end
+        elseif job.intscale==2
+          if ctype == 256  %  int8
+            error('cat_io_volctype:improperDatatype','Selected datatype does not provide selected intesity range.');
+          else
+            Y = Y * (2^8  - 1); 
+          end
+        elseif job.intscale==3
+          if any( ctype == [ 256 2 4 ] ) % int8 uint8 int16
+            error('cat_io_volctype:improperDatatype','Selected datatype does not provide selected intesity range.');
+          else
+            Y = Y * (2^16 - 1);
+          end
+        end
+      end
+
+
+      if ndims(Y)==4
+        %%
+        V(1).fname    = fullfile(pp,[job.prefix ff job.suffix ee]);
+        if exist(V(1).fname,'file'), delete(V(1).fname); end % delete required in case of smaller file size! 
+        N              = nifti;
+        N.dat          = file_array(fullfile(pp,[job.prefix ff ee]),min([inf inf inf size(Y,4)],size(Y)),[ctype spm_platform('bigend')],0,job.cvals,0);
+        N.descrip      = descrip; 
+        N.mat          = V(1).mat;
+        N.mat0         = V(1).private.mat0;
+        N.descrip      = V(1).descrip;
+        create(N);    
+        %Y(:,:,:,3) = Y(:,:,:,3) + Y(:,:,:,4);
+        N.dat(:,:,:,:) = Y(:,:,:,:);
+      else
+        V(1).fname    = fullfile(pp,[job.prefix ff job.suffix ee]);
+        V(1).descrip  = descrip; 
+        V = rmfield(V,'private');
+        if exist(V(1).fname,'file'), delete(V(1).fname); end % delete required in case of smaller file size!
+        spm_write_vol(V,Y);
+      end
+      spm_progress_bar('Set',si);
     end
-    
-    
-   
-    if ndims(Y)==4
-      %%
-      V(1).fname    = fullfile(pp,[job.prefix ff job.suffix ee]);
-      if exist(V(1).fname,'file'), delete(V(1).fname); end % delete required in case of smaller file size! 
-      N              = nifti;
-      N.dat          = file_array(fullfile(pp,[job.prefix ff ee]),min([inf inf inf size(Y,4)],size(Y)),[ctype spm_platform('bigend')],0,job.cvals,0);
-      N.descrip      = descrip; 
-      N.mat          = V(1).mat;
-      N.mat0         = V(1).private.mat0;
-      N.descrip      = V(1).descrip;
-      create(N);    
-      %Y(:,:,:,3) = Y(:,:,:,3) + Y(:,:,:,4);
-      N.dat(:,:,:,:) = Y(:,:,:,:);
-    else
-      V(1).fname    = fullfile(pp,[job.prefix ff job.suffix ee]);
-      V(1).descrip  = descrip; 
-      V = rmfield(V,'private');
-      if exist(V(1).fname,'file'), delete(V(1).fname); end % delete required in case of smaller file size!
-      spm_write_vol(V,Y);
-    end
-    spm_progress_bar('Set',si);
+    spm_progress_bar('Clear');
   end
-  spm_progress_bar('Clear');
 end

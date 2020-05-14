@@ -36,6 +36,19 @@ function tools = cat_conf_tools(expert)
   data.num          = [1 Inf];
   data.help         = {''};
 
+  
+  % do not process, if result already exists
+  lazy         = cfg_menu;
+  lazy.tag     = 'lazy';
+  lazy.name    = 'Lazy processing';
+  lazy.labels  = {'Yes','No'};
+  lazy.values  = {1,0};
+  lazy.val     = {0};
+  lazy.help    = {
+    'Do not process data if the result already exists. '
+  };
+
+
 % CHECK USE
   data_vol          = cfg_files;
   data_vol.name     = 'Sample data';
@@ -105,14 +118,6 @@ function tools = cat_conf_tools(expert)
   save.val          = {0};
   save.help         = {'Save and close figures for batch processing.'};
   
-  colormap              = cfg_menu;
-  save.name         = 'Save & close windows';
-  save.tag          = 'save';
-  save.labels       = {'Save & close','Save only','No'};
-  save.values       = {2,1,0};
-  save.val          = {0};
-  save.help         = {'Save and close figures for batch processing.'};
-
 
 % get subbatches
 % -------------------------------------------------------------------------
@@ -120,12 +125,14 @@ function tools = cat_conf_tools(expert)
   [check_cov, check_cov2]     = cat_stat_check_cov_GUI(data_xml,outdir,fname,save,expert);
   [defs,defs2]                = cat_vol_defs_GUI;
   nonlin_coreg                = cat_conf_nonlin_coreg;
+  %createTPM                   = cat_conf_createTPM(data_vol); 
+  createTPMlong               = cat_conf_createTPMlong(data_vol);
   headtrimming                = cat_vol_headtrimming_GUI(intlim,spm_type,prefix,suffix,expert);
   check_SPM                   = cat_stat_check_SPM_GUI(outdir,fname,save,expert); 
   showslice                   = cat_stat_showslice_all_GUI(data_vol);
   maskimg                     = cat_vol_maskimage_GUI(data,prefix);
   calcvol                     = cat_stat_TIV_GUI;
-  spmtype                     = cat_io_volctype_GUI(data,intlim,spm_type,prefix,suffix,expert);
+  spmtype                     = cat_io_volctype_GUI(data,intlim,spm_type,prefix,suffix,expert,lazy);
   calcroi                     = cat_roi_fun_GUI(outdir);
   avg_img                     = cat_vol_average_GUI(data,outdir);
   realign                     = cat_vol_series_align_GUI(data);
@@ -161,6 +168,7 @@ function tools = cat_conf_tools(expert)
     headtrimming, ...                     cat.pre.vtools.
     ...
     realign, ...                          cat.pre.long.?
+    createTPMlong, ...                    cat.pre.long.createTPM
     ...
     nonlin_coreg, ...                     cat.pre.vtools.
     defs, ...                             cat.pre.vtools.
@@ -170,6 +178,73 @@ function tools = cat_conf_tools(expert)
   if expert 
     tools.values = [tools.values,{urqio}]; 
   end
+return
+
+function createTPMlong = cat_conf_createTPMlong(data)
+% This is a special version of the cat_vol_createTPM batch only for the
+% longitudinal preprocessing without further GUI interaction and well
+% defined input.
+% 
+% RD202005
+
+  % update input
+  data.tag             = 'files';
+  data.name            = 'GM segments';
+  data.help            = {'Select GM segments.  The other tissue classes (2-6) will be selected automaticelly. '};
+  
+  fstrength            = cfg_menu;
+  fstrength.tag        = 'fstrength';
+  fstrength.name       = 'Filtermodel';
+  fstrength.labels     = {
+    'low (plasticity)'
+    'medium (aging)'
+    'strong (development)'};
+  fstrength.values     = {1 2 3};
+  fstrength.val        = {1};
+  fstrength.help       = {
+    ['Main filter control parameter with 3 settings, (1) low for small variations in plasticity, ' ...
+     '(2) medium for average changes in aging, and (3) strong for large variations in development'] 
+     ''
+  };
+
+  verb                 = cfg_menu;
+  verb.tag             = 'verb';
+  verb.name            = 'Verbose output';
+  verb.labels          = {'No' 'Yes'};
+  verb.values          = {0 1};
+  verb.val             = {1};
+  verb.help            = {
+    'Be verbose.'
+    ''
+    };
+
+  writeBM                 = cfg_menu;
+  writeBM.tag             = 'writeBM';
+  writeBM.name            = 'Write brainmask';
+  writeBM.labels          = {'No' 'Yes'};
+  writeBM.values          = {0 1};
+  writeBM.val             = {1};
+  writeBM.help            = {
+    'Save brainmask image.'
+    ''
+    };
+  
+  % main
+  createTPMlong        = cfg_exbranch;
+  createTPMlong.tag    = 'createTPMlong';
+  createTPMlong.name   = 'Longitudinal TPM creation';
+  createTPMlong.val    = {data,fstrength,writeBM,verb};
+  createTPMlong.prog   = @cat_long_createTPM;
+  createTPMlong.vfiles = @vfiles_createTPMlong;
+  createTPMlong.vout   = @vfiles_createTPMlong;
+  createTPMlong.help   = {
+    'Create individual TPMs for longitudinal preprocessing. This is a special version of the cat_vol_createTPM batch only for the longitudinal preprocessing without further GUI interaction and well defined input. '
+   ['There has to be 6 tissue classes images (GM,WM,CSF,HD1,HD2,BG) that can be in the native space, the affine or a non-linear normalized space.  ' ...
+    'However, the affine normalized or a soft non-linear normalized space is expected to give the best result (see options in cat_main_registration).  ' ...
+    'A resolution of 1.5 mm seams to be quite optimal as far as we have to smooth anyway.  ' ...
+    'The images will be filtered in different ways to allow soft meanderings of anatomical structures.  ' ...
+    'WMHs should probably be corrected to WM (WMHC=2) in the average preprocessing.' ]
+      ''};
 return
 
 function iqr = cat_stat_IQR_GUI(data_xml)
@@ -494,7 +569,7 @@ function sanlm = cat_vol_sanlm_GUI(data,intlim,spm_type,prefix,suffix,expert)
 
 return
 
-function spmtype = cat_io_volctype_GUI(data,  intlim,  spm_type,prefix,suffix,expert)
+function spmtype = cat_io_volctype_GUI(data,  intlim,  spm_type,prefix,suffix,expert,lazy)
   % update variables 
   data.help           = {'Select images for data type conversion';''};
   
@@ -515,14 +590,22 @@ function spmtype = cat_io_volctype_GUI(data,  intlim,  spm_type,prefix,suffix,ex
   spm_type.values(1)  = []; % remove native case
   spm_type.tag        = 'ctype';
   
+  intscale            = cfg_menu;
+  intscale.name       = 'Intensity scaling';
+  intscale.tag        = 'intscale';
+  intscale.labels     = {'Yes (0-65535)','Yes (0-255)','Yes (0-1)','No'};
+  intscale.values     = {3,2,1,0};
+  intscale.val        = {2};
+  intscale.help       = {'Normalize image intensities.'};
+
   % new
   spmtype             = cfg_exbranch;
   spmtype.tag         = 'spmtype';
   spmtype.name        = 'Image data type converter'; 
   if expert
-    spmtype.val       = {data spm_type prefix suffix intlim};
+    spmtype.val       = {data spm_type prefix suffix intlim intscale lazy};
   else
-    spmtype.val       = {data spm_type prefix intlim};
+    spmtype.val       = {data spm_type prefix intlim intscale};
   end
   spmtype.prog        = @cat_io_volctype;
   spmtype.vout        = @vfiles_volctype;
@@ -1961,8 +2044,15 @@ function dep = vfiles_volctype(varargin)
  % vf = cat_io_volctype(job);
     
   dep            = cfg_dep;
-  dep.sname      = ['Images'];
-  dep.src_output = substruct('.','files');
+  dep.sname      = 'Converted Images';
+  dep.src_output = substruct('.','files','()',{':'});
+  dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+return;
+%_______________________________________________________________________
+function dep = vfiles_createTPMlong(varargin)
+  dep            = cfg_dep;
+  dep.sname      = 'Longitudinal TPMs';
+  dep.src_output = substruct('.','tpm','()',{':'});
   dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 return;
 %_______________________________________________________________________

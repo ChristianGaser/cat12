@@ -666,7 +666,7 @@ function varargout = cat_vol_qa(action,varargin)
       % basic tissue classes - erosion to avoid PVE, std to avoid other tissues (like WMHs)
       voli = @(v) (v ./ (pi * 4./3)).^(1/3); 
       rad  = voli( QAS.subjectmeasures.vol_TIV) ./ cat_stat_nanmean(vx_vol);
-      Ysc  = 1-cat_vol_smooth3X(Yp0<1 | Yo==0,min(24,max(16,rad*2)));   % fast 'distance' map
+      Ysc  = 1-cat_vol_smooth3X(Yp0<1 | Ym==0,min(24,max(16,rad*2)));   % fast 'distance' map
       Ycm  = cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<cat_stat_nanmean(T1th(1:2)),'e') & ...
               Ysc>0.75 & Yp0<1.25;% avoid PVE & ventricle focus
       if sum(Ycm(:)>0)<10; Ycm=cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<cat_stat_nanmean(T1th(1:2)),'e') & Yp0<1.25; end
@@ -706,43 +706,54 @@ function varargout = cat_vol_qa(action,varargin)
       Yg  = cat_vol_resize(Yo .* Ygm,'reduceV',vx_volx,res,32,'meanm'); % GM thr.
       Yw  = cat_vol_resize(Yo .* Ywe,'reduceV',vx_volx,res,32,'meanm'); % WM thr. and bias correction (Ywme)
       Ywc = cat_vol_resize(Ym .* Ywe,'reduceV',vx_volx,res,32,'meanm'); % for bias correction
-      Ywb = cat_vol_resize(Yo .* Ywm,'reduceV',vx_volx,res,32,'max');   % for WM inhomogeneity estimation (avoid PVE)
+      Ywb = cat_vol_resize( (Yo + min(Yo(:))) .* Ywm,'reduceV',vx_volx,res,32,'max') - min(Yo(:));   % for WM inhomogeneity estimation (avoid PVE)
       Ywn = cat_vol_resize(Yo .* Ywm,'reduceV',vx_volx,res,32,'meanm'); % for WM noise
       Ycn = cat_vol_resize(Yo .* Ycm,'reduceV',vx_volx,res,32,'meanm'); % for CSF noise
       Ycm = cat_vol_resize(Ycm      ,'reduceV',vx_volx,res,32,'meanm'); % CSF thr. (minimum to avoid PVE)
       Ygm = cat_vol_resize(Ygm      ,'reduceV',vx_volx,res,32,'meanm'); % GM thr.
       Ywm = cat_vol_resize(Ywm      ,'reduceV',vx_volx,res,32,'meanm'); % WM thr. and bias correction (Ywme)
       Ywe = cat_vol_resize(Ywe      ,'reduceV',vx_volx,res,32,'meanm'); % WM thr. and bias correction (Ywme)
+      Ycm = Ycm>=0.5; 
+      Ygm = Ygm>=0.5; 
+      Ywm = Ywm>=0.5; 
+      Ywe = Ywe>=0.5; 
       
-      % only voxel that were the product of 
-      Yc  = Yc  .* (Ycm>=0.5); Yg  = Yg  .* (Ygm>=0.5);  Yw  = Yw  .* (Ywe>=0.5); 
-      Ywc = Ywc .* (Ywe>=0.5); Ywb = Ywb .* (Ywm>=0.5);  Ywn = Ywn .* (Ywm>=0.5);
-      Ycn = Ycn .* (Ycm>=0.5);
+      %% only voxel that were the product of 
+      if sum(Ycm(:))>10, Yc  = Yc  .* Ycm; Ycn = Ycn .* Ycm;end
+      if sum(Ygm(:))>10, Yg  = Yg  .* Ygm; end
+      if sum(Ywm(:))>10, Yw  = Yw  .* Ywe; Ywb = Ywb .* Ywm;  Ywn = Ywn .* Ywm; end 
+      if sum(Ywe(:))>10, Ywc = Ywc .* Ywe; end
       
-      clear Ycm Ygm Ywm Ywme;
+      
+      %clear Ycm Ygm Ywm Ywme;
       [Yo,Ym,Yp0,resr] = cat_vol_resize({Yo,Ym,Yp0},'reduceV',vx_volx,res,32,'meanm'); 
       resr.vx_volo = vx_vol; vx_vol=resr.vx_red .* resr.vx_volo;
-      
-      % intensity scaling for normalized Ym maps like in CAT12
-      Ywc = Ywc .* (cat_stat_nanmean(Yo(Yp0(:)>2))/cat_stat_nanmean(Ym(Yp0(:)>2)));
-      
+
+      %% intensity scaling for normalized Ym maps like in CAT12
+      if  cat_stat_nanmean(Yo(Yp0(:)>2))<0
+        Ywc = Ywc .* (cat_stat_nanmean(Yo(Yp0(:)>2))/cat_stat_nanmean(2 - Ym(Yp0(:)>2))); % RD202004: negative values in chimp data showed incorrect scalling
+      else
+        Ywc = Ywc .* (cat_stat_nanmean(Yo(Yp0(:)>2))/cat_stat_nanmean(Ym(Yp0(:)>2)));
+      end
       %% bias correction for original map, based on the 
-      WI  = Yw./max(eps,Ywc); WI(isnan(WI) | isinf(WI)) = 0; 
+      WI  = zeros(size(Yw),'single'); WI(Ywc(:)~=0) = Yw(Ywc(:)~=0)./Ywc(Ywc(:)~=0); WI(isnan(Ywe) | isinf(WI) | Ywe==0) = 0;
       WI  = cat_vol_approx(WI,2);
       WI  = cat_vol_smooth3X(WI,1);
-      Ywn = Ywn./WI; Ywn = round(Ywn*1000)/1000;
-      Ymi = Yo ./WI; Ymi = round(Ymi*1000)/1000;
-      Yc  = Yc ./WI; Yc  = round(Yc *1000)/1000;
-      Yg  = Yg ./WI; Yg  = round(Yg *1000)/1000;
-      Yw  = Yw ./WI; Yw  = round(Yw *1000)/1000;
+
+      Ywn = Ywn./max(eps,WI); Ywn = round(Ywn*1000)/1000;
+      Ymi = Yo ./max(eps,WI); Ymi = round(Ymi*1000)/1000;
+      Yc  = Yc ./max(eps,WI); Yc  = round(Yc *1000)/1000;
+      Yg  = Yg ./max(eps,WI); Yg  = round(Yg *1000)/1000;
+      Yw  = Yw ./max(eps,WI); Yw  = round(Yw *1000)/1000;
+
       clear WIs ;
       
-      Ywb = Ywb ./ cat_stat_nanmean(Ywb(Yp0(:)>2));
+      %Ywb = Ywb ./ cat_stat_nanmean(Ywb(Yp0(:)>2));
      
-      % tissue segments for contrast estimation etc. 
-      CSFth = cat_stat_nanmean(Yc(~isnan(Yc(:)) & Yc(:)~=0)); 
-      GMth  = cat_stat_nanmean(Yg(~isnan(Yg(:)) & Yg(:)~=0));
-      WMth  = cat_stat_nanmean(Yw(~isnan(Yw(:)) & Yw(:)~=0)); 
+      %% tissue segments for contrast estimation etc. 
+      CSFth = cat_stat_nanmean(Yc(Ycm(:))); if isnan(CSFth),  CSFth = cat_stat_nanmean(Ycn(Ycm(:))./WI(Ycm(:))); end
+      GMth  = cat_stat_nanmean(Yg(Ygm(:)));
+      WMth  = cat_stat_nanmean(Yw(Ywm(:))); 
       T3th  = [CSFth GMth WMth];
       
       % estimate background
@@ -793,7 +804,7 @@ function varargout = cat_vol_qa(action,varargin)
       %   and anatomica variance, so its better to use GM-WM contrast 
       %   and take care of overoptimisation with values strongly >1/3
       %   of the relative contrast
-      contrast = min(abs(diff(QAS.qualitymeasures.tissue_mn(3:4)))) ./ (max([WMth,GMth])); % default contrast
+      contrast = min(abs(diff(QAS.qualitymeasures.tissue_mn(3:4)))) ./ abs(diff([BGth,max([WMth,GMth])])); % default contrast
       contrast = contrast + min(0,13/36 - contrast)*1.2;                      % avoid overoptimsization
       QAS.qualitymeasures.contrast  = contrast * (max([WMth,GMth])); 
       QAS.qualitymeasures.contrastr = contrast;
@@ -803,19 +814,28 @@ function varargout = cat_vol_qa(action,varargin)
       %% noise estimation (original (bias corrected) image)
       % WM variance only in one direction to avoid WMHs!
       rms=1; nb=1;
-      NCww = sum(Ywn(:)>0) * prod(vx_vol);
-      NCwc = sum(Ycn(:)>0) * prod(vx_vol);
-      [Yos2,YM2] = cat_vol_resize({Ywn,Ywn>0},'reduceV',vx_vol,3,16,'meanm');
-      NCRw = estimateNoiseLevel(Yos2,YM2>0.5,nb,rms) / max(GMth,WMth) / contrast  ; 
+      Ywmn = cat_vol_morph(Ywm,'o');
+      NCww = sum(Ywmn(:)) * prod(vx_vol);
+      NCwc = sum(Ycm(:)) * prod(vx_vol);
+      signal_intensity = abs( diff( [min(BGth,CSFth) , max(GMth,WMth)] )); 
+      [Yos2,YM2] = cat_vol_resize({Ywn,Ywmn},'reduceV',vx_vol,max(3 * min(vx_vol) ,3),16,'meanm');
+      YM2 = cat_vol_morph(YM2,'o'); % we have to be sure that there are neigbors otherwise the variance is underestimated 
+      NCRw = estimateNoiseLevel(Yos2,YM2>0.5,nb,rms) / signal_intensity / contrast  ; 
+      if isnan(NCRw)
+        NCRw = estimateNoiseLevel(Ywn,Ywmn,nb,rms) / signal_intensity / contrast  ; 
+      end
       if BGth<-0.1 && WMth<3, NCRw=NCRw/3; end% MT weighting
       clear Yos0 Yos1 Yos2 YM0 YM1 YM2;
         
-      % CSF variance of large ventricle
+      %% CSF variance of large ventricle
       % for typical T2 images we have too much signal in the CSF and can't use it for noise estimation!
       wcth = 200; 
       if CSFth<GMth && NCwc>wcth
-        [Yos2,YM2] = cat_vol_resize({Ycn,Ycn>0},'reduceV',vx_vol,3,16,'meanm');
-        NCRc = estimateNoiseLevel(Yos2,YM2>0.5,nb,rms) / max(GMth,WMth)  / contrast ; 
+        [Yos2,YM2] = cat_vol_resize({Ycn,Ycm},'reduceV',vx_vol,max(3 * min(vx_vol) ,3),16,'meanm');
+        NCRc = estimateNoiseLevel(Yos2,YM2>0.5,nb,rms) / signal_intensity / contrast ; 
+        if isnan(NCRc)
+          NCRc = estimateNoiseLevel(Ycn,Ycm,nb,rms) / signal_intensity / contrast ; 
+        end
         clear Yos0 Yos1 Yos2 YM0 YM1 YM2;
       else
         NCRc = 0;
@@ -834,8 +854,8 @@ function varargout = cat_vol_qa(action,varargin)
       
       %% Bias/Inhomogeneity (original image with smoothed WM segment)
       Yosm = cat_vol_resize(Ywb,'reduceV',vx_vol,3,32,'meanm');      % resolution and noise reduction
-      for si=1:max(1,min(3,round(QAS.qualitymeasures.NCR*4))), Yosm = cat_vol_localstat(Yosm,Yosm>0,1,1); end 
-      QAS.qualitymeasures.ICR  = cat_stat_nanstd(Yosm(Yosm(:)>0)) / contrast;
+      for si=1:max(1,min(3,round(QAS.qualitymeasures.NCR*4))), mth = min(Yosm(:)) + 1; Yosm = cat_vol_localstat(Yosm + mth,Yosm~=0,1,1) - mth; end 
+      QAS.qualitymeasures.ICR  = cat_stat_nanstd(Yosm(Yosm(:)~=0)) / signal_intensity / contrast;
       %QAS.qualitymeasures.CIR  = 1 / QAS.qualitymeasures.ICR;
 
       

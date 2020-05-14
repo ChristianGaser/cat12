@@ -125,7 +125,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
 
   
   % additional affine registration of the GM segment
-  if dreg.affreg
+  if ~isempty(dreg.affreg) && dreg.affreg && ~isempty(job.opts.affreg)
     %%
     obj.image         = res.image; 
     obj.image.pinfo   = repmat([255;0],1,size(Ycls{1},3));

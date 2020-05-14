@@ -1,5 +1,5 @@
-function run = cat_io_rerun(files,filedates)
-%cat_io_rerun. Test if a file is newer than another file.  
+function run = cat_io_rerun(files,filedates,verb)
+%cat_io_rerun(f1,fd). Test if a file f1 is newer than another file/date fd.  
 % This function is used to estimated if a file is newer than another given 
 % file or date. For instance file is the result of anther file that was 
 % changed in the meantime, it has to be reprocessed. 
@@ -13,18 +13,19 @@ function run = cat_io_rerun(files,filedates)
 %
 % Examples: 
 %  1) Is the working directory younger than the SPM dir?
-%     cat_io_lazy(pwd,spm('dir'); 
+%     cat_io_rerun(pwd,spm('dir'); 
 %
 %  2) Is the working directory younger than one month?
-%     cat_io_lazy(pwd,clock - [0 1 0 0 0 0]) 
+%     cat_io_rerun(pwd,clock - [0 1 0 0 0 0]) 
 %   
 %  3) Is this function younger than one year?
-%     cat_io_lazy(which('cat_io_lazy'),clock - [1 0 0 0 0 0]) 
+%     cat_io_rerun(which('cat_io_rerun'),clock - [1 0 0 0 0 0]) 
 %
 % _________________________________________________________________________
 % Robert Dahnke
 % $Id$
 
+  if ~exist('verb','var'), verb = 0; end
   files = cellstr(files);
   if iscellstr(filedates) || ischar(filedates)
     filedates = cellstr(filedates);
@@ -32,7 +33,7 @@ function run = cat_io_rerun(files,filedates)
       filedates = repmat(filedates,numel(files),1);
     else
       if ~isempty(filedates) && numel(files) ~= numel(filedates)
-        error('ERROR:cat_io_lazy:inputsize','Number of files and filedates has to be equal.\n')
+        error('ERROR:cat_io_rerun:inputsize','Number of files and filedates has to be equal.\n')
       end
     end  
   else 
@@ -43,6 +44,7 @@ function run = cat_io_rerun(files,filedates)
   
   run = ones(size(files)); 
   for fi = 1:numel(files)
+    [pp,ff,ee] = spm_fileparts(files{fi}); files{fi} = fullfile(pp,[ff ee]); % remove additional dimensions ",1" 
     if ~exist(files{fi},'file')
       run(fi) = 1; 
     else 
@@ -50,19 +52,29 @@ function run = cat_io_rerun(files,filedates)
       if numel(fdata)>1
         run = num2cell(run); 
       end
-      if exist('filedates','var') && iscellstr(filedates) && exist(filedates{fi},'file')
-        fdata2 = dir(filedates{fi});
-        if numel(fdata)>1
-          run{fi} = [fdata(:).datenum] < fdata2.datenum;
-        else
-          run(fi) = fdata.datenum < fdata2.datenum;
+      
+      if exist('filedates','var') && iscellstr(filedates) 
+        [pp,ff,ee] = spm_fileparts(filedates{fi}); filedates{fi} = fullfile(pp,[ff ee]); % remove additional dimensions ",1" 
+        if exist(filedates{fi},'file')
+          fdata2 = dir(filedates{fi});
+          if verb
+            fprintf('Input 1: %50s: %s\n',fdata.name,datestr(fdata.datenum)); 
+            fprintf('Input 2: %50s: %s\n',fdata2.name,datestr(fdata2.datenum));
+          end
+          if numel(fdata)>1
+            run{fi} = [fdata(:).datenum] < fdata2.datenum;
+          else
+            run(fi) = fdata.datenum < fdata2.datenum;
+          end
         end
-      elseif ~isempty(filedates) 
+      elseif ~isempty(filedates) && isdatetime( filedates(fi,:) )
         if numel(fdata)>1
           run{fi} = [fdata(:).datenum] < datenum( filedates(fi,:) );
         else
           run(fi) = fdata.datenum < datenum( filedates(fi,:) );
         end
+      else
+        run(fi) = 1;
       end
     end
   end
