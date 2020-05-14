@@ -478,7 +478,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     % ... clearup this part of code when finished ...
     % add contex menu for principle test
     Psurf2 = Psurf;
-    if job.extopts.expertgui==2, ids = 1:3; else, ids = []; end
+    if job.extopts.expertgui==2 && exist(Psurf2(ix).Pwhite,'file') && exist(Psurf2(ix).Ppial,'file'), ids = 1:3; else, ids = []; end
     % phite/pial surface in segmentation view number 3
     for ix=1:numel(Psurf2) 
       Psurf2(end+1).Pcentral = Psurf2(ix).Pwhite; 
@@ -601,6 +601,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize*0.8); end
   
   warning('off','MATLAB:hg:patch:RGBColorDataNotSupported');
+  % the PDF is is an image because openGL is use but -painters would not look good for surfaces ... 
   print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
   print(fg, job.imgprint.ftype('jpeg'), job.imgprint.fdpi(job.imgprint.dpi/2), job.imgprint.fnamej); 
 

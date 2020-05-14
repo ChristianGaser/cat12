@@ -28,6 +28,9 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
 % Examples:
 %   There is a cell mode test part in the file...%
 %
+% TODO:
+% - RD202005: This function needs a full update with full description
+%             and a full test design. 
 % ______________________________________________________________________
 % Robert Dahnke
 % Structural Brain Mapping Group
@@ -41,6 +44,15 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
   if ~exist('method','var'); method='nn'; end
   
   if ~exist('opt','var'), opt=struct(); end
+  % The function approximate only value larger than zeros due to step-wise development. 
+  % The most easy update was to shift the value and use a mask to redefine the filter volume.
+  if min(T(:))<0 
+    mask  = T==0;
+    cf    = min(T(T(:)~=0)) - 1; 
+    T     = T - cf;
+    T(mask) = 0; 
+  end
+  
   def.lfI  = 0.40;
   def.lfO  = 0.40;
   def.hull = 1;
@@ -48,8 +60,8 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
   opt.lfO = min(10,max(0.0001,opt.lfO));
   
   T(isnan(T) | isinf(T))=0; 
-  maxT = max(T(T(:)<inf & ~isnan(T(:))));
-  T = single(T/max(eps,maxT));
+  maxT = max([ eps; T(T(:)~=0 & T(:)<inf & ~isnan(T(:))) ]);
+  T = single(T/maxT);
   
   if 0 % T(isnan(T))=0;
     % outlier removal ... not yet
@@ -153,6 +165,10 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
   
   TA  = cat_vol_resize(TAr,'dereduceV',resTr);
   TA  = TA*maxT;
+  
+  if exist('cf','var')
+    TA = TA + cf;
+  end
 end
 function cat_tst_pre_approx
   %%

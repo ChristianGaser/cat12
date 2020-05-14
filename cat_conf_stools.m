@@ -96,6 +96,7 @@ function stools = cat_conf_stools(expert)
   roi2surf                         = cat_roi_roi2surf_GUI; 
   surfstat                         = cat_surf_stat_GUI; 
   surfcon                          = cat_surf_spm_cfg_con;
+  surfres                          = cat_surf_spm_cfg_results; 
   
   
 %% Toolset
@@ -119,6 +120,7 @@ function stools = cat_conf_stools(expert)
       flipsides, ...          .cat.stools
       surfstat ...
       surfcon ...
+      surfres ...
       renderresults, ...      .cat.disp/plot/write?
       };    
   elseif expert==1
@@ -135,6 +137,7 @@ function stools = cat_conf_stools(expert)
       surf2roi, ...
       surfstat ...
       surfcon ...
+      surfres ...
       renderresults, ...      .cat.disp/plot/write?
       };
   else
@@ -151,6 +154,7 @@ function stools = cat_conf_stools(expert)
       surfcalcsub, ...
       surfstat ...
       surfcon ...
+      surfres ...
       renderresults ...
       };
   end
@@ -158,12 +162,22 @@ function stools = cat_conf_stools(expert)
 %==========================================================================
 % subfunctions of batch GUIs
 %==========================================================================
+function res = cat_surf_spm_cfg_results 
+% Surface based version of the SPM result function (tiny changes).
+  res       = spm_cfg_results;
+  res.prog  = @cat_stat_spm_run_results;
+  res.name  = ['Surface ' res.name];
+
 function con = cat_surf_spm_cfg_con
+% Surface based version of the SPM contrast tools that only change the 
+% dependency settings updated here in vout_stats.
   con      = spm_cfg_con;
   con.name = ['Surface ' con.name];
   con.vout = @vout_stats; % gifti rather than nifti output
 
 function dep = vout_stats(varargin)
+% Surface based version of the SPM contrast tools that only change the 
+% dependency settings updated here.
   dep(1)            = cfg_dep;
   dep(1).sname      = 'SPM.mat File';
   dep(1).src_output = substruct('.','spmmat');
@@ -178,6 +192,12 @@ function dep = vout_stats(varargin)
   dep(3).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
 
 function surfstat = cat_surf_stat_GUI
+% Surface based version of the SPM result GUI. 
+% This function include multipe updates to (i) deactivate buttons that 
+% are not working for surfaces and (ii) new control functions to avoid 
+% problems with the object rotation function (that also rotate the result
+% tables and not only the surfaces), but also (iii) some visual updates
+% with predefined settings for result visualization. 
 
   spmmat          = cfg_files;
   spmmat.tag      = 'spmmat';
@@ -927,20 +947,7 @@ function [surfresamp,surfresamp_fs] = cat_surf_resamp_GUI(expert,nproc,merge_hem
 %% Resample and smooth surfaces 
 %  ------------------------------------------------------------------------
 
-if 0 % old 
-  data_surf            = cfg_files;
-  data_surf.tag        = 'data_surf';
-  data_surf.name       = '(Left) Surfaces Data';
-  data_surf.num        = [1 Inf];
-  data_surf.filter     = 'any';
-  if expert > 1
-    data_surf.ufilter  = '^lh.';
-  else
-    data_surf.ufilter  = '^lh.(?!cent|pial|white|sphe|defe|hull|pbt).*';
-  end
-  data_surf.help       = {'Select surfaces data files for left hemisphere for resampling to template space.'};
 
-else
   data_surf         = cfg_files;
   data_surf.tag     = 'data_surf';
   data_surf.name    = '(Left) Surfaces Data';
@@ -953,14 +960,19 @@ else
   data_surf.num     = [1 Inf];
   data_surf.help    = {'Select surfaces data files for left hemisphere for resampling to template space.'};
 
+  data_surf_mixed   = data_surf; 
+  data_surf_mixed.tag     = 'data_surf_mixed';
+  data_surf_mixed.name    = '(Left) Mixed Surfaces Data';
+  data_surf_mixed.help    = [data_surf.help {'This version allows input of multiple dependencies!'}];
+  
   sample_surf            = cfg_repeat;
   sample_surf.tag        = 'sample';
   sample_surf.name       = 'Data';
-  sample_surf.values     = {data_surf};
+  sample_surf.values     = {data_surf,data_surf_mixed};
   sample_surf.num        = [1 Inf];
   sample_surf.help       = {...
   'Specify data for each sample. If you specify different samples the mean correlation is displayed in separate boxplots for each sample.'};
-end
+
 
   fwhm_surf         = cfg_entry;
   fwhm_surf.tag     = 'fwhm_surf';
@@ -1099,10 +1111,10 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
   
   % absolute mean curvature
   GI        = cfg_menu;
-  if expert 
+  if expert>1
     GI.name   = 'Gyrification index (absolute mean curvature)';
-    GI.labels = {'No','Unscaled','Scaled','Both'};
-    GI.values = {0,1,2,3};
+    GI.labels = {'No','Yes (MNI approach)','Yes (Dong approach)'};
+    GI.values = {0,1,2};
   else
     GI.name = 'Gyrification index';
     GI.labels = {'No','Yes'};
@@ -1113,6 +1125,14 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
   GI.help   = {
     'Extract gyrification index (GI) based on absolute mean curvature. The method is described in Luders et al. NeuroImage, 29: 1224-1230, 2006.'
   };
+  if expert>1
+    GI.help = [ GI.help; 
+    {['Because curvature depend on object size a normalization / scaling of the full surface by the radius of sphere with the volume of the hull surface is used. ' ...
+      'The default curvature estimation uses a fast approach that is less robust for the sampling of the surface and a more accurate but slower version is available. ' ...
+      'based on Dong et al. (2005) Curvature estimation on triangular mesh, JZUS.']}];
+  end
+  
+  
 
   if expert>1
     % ---------------------------------------------------------------------
@@ -1191,12 +1211,13 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
       GILfs.name         = 'Final filter size';
       GILfs.strtype      = 'r';
       GILfs.val          = {0.1}; 
-      GILfs.num          = [1 1];
+      GILfs.num          = [1 inf];
       GILfs.help         = {[ ...
         'Filter of the Laplacian based GI has to be done for the area variables of the folded and unfolded surfaces. ' ...
         'Values between 0 and 1 describe relative smoothing depending on the brain size, whereas values larger/equal than one describes the filter size in mm.']}; 
 
       % save temporary surfaces 
+      %{
       GIwritehull        = cfg_menu;
       GIwritehull.name   = 'Laplacian gyrification indices hull/core surface output';
       GIwritehull.tag    = 'GIwritehull';
@@ -1204,13 +1225,13 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
       GIwritehull.values = {0,1};
       GIwritehull.val    = {1};
       GIwritehull.help   = {'Write hull/core surface use in the Laplacian gyrification index estimation.'};
+      %}
       
       % hull model - This is not yet implemented! 
       % The idea behind is that the hemisphere-based hull is artificial too
       % and that are more natural definition is given by the full intra-cranial
       % volume. However, this have to include the cerebellum and 
       % brainstem as well and needs to utilize the Yp0 map!
-      %
       %{
       GIhullmodel        = cfg_menu;
       GIhullmodel.name   = 'Hull model';
@@ -1237,6 +1258,7 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
         ] '' };
       
       % threshold for core estimation 
+      %{
       GIcoreth           = cfg_entry;
       GIcoreth.name      = 'Core threshold';
       GIcoreth.tag       = 'GIcoreth';
@@ -1247,6 +1269,7 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
         'Lower thresholds remove less gyri whereas high thresholds remove more gyri depending on the used core model. ' ...
         'Initial test range between 0.05 (remove only very high frequency structures) and 0.25 (remove everything that is not close to the insula). ' ...
         ] ''};
+     %}
       
       % add own suffix to support multiple GI estimations
       GIsuffix         = cfg_entry;
@@ -1265,9 +1288,11 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
       GIL      = cfg_branch;
       GIL.name = GILtype.name;
       GIL.tag  = GILtype.tag;
-      GIL.val  = {GILtype,GIcoremodel,GIcoreth,laplaceerr,GIstreamopt,GILfs,GInorm,GIsuffix,GIwritehull}; %GIhullmodel,
+      GIL.val  = {GILtype,GIcoremodel,laplaceerr,GIstreamopt,GILfs,GIsuffix}; %GIhullmodel,,GIwritehull
     end
   end
+  % RD202004 not required anymore because FS Tfs is now the default maybe again in furture 
+  %{
   if expert
     %% Thickness measures
     Tfs        = cfg_menu;
@@ -1318,7 +1343,10 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
       '  Tmin       .. minimum Tnear distance between two surfaces'
       '  Tmax       .. maximum Tnear distance between two surfaces'
     };
-    
+  end
+  %}
+  % RD202004: writing of the pial and white will be also default soon but maybe some have older surface and need this function 
+  if expert
     %% Inner and outer surfaces
     %  -----------------------------------------------------------------
     OS        = cfg_menu;
@@ -1376,38 +1404,59 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
     'Transformation with sqrt-function is used to render the data more normally distributed.'
     ''
   };
-  if expert>1
-    SD.labels = {'No','Unscaled','Scaled','Both'};
-    SD.values = {0,1,2,3};
-    SD.help   = [SD.help;{''; ['The "unscaled" version may require normalization by brain size, ' ...
-      'whereas the scaled version does not.']}]; 
-  else
-    SD.labels = {'No','Yes'};
-    SD.values = {0,1};
-  end
+  SD.labels = {'No','Yes'};
+  SD.values = {0,1};
   
 
   % affine normalized measures
+  if expert>1 % RD202004: I hope to make this available also for default users ... 
+    if expert>1
+      tGI           = cfg_entry;
+      tGI.name      = 'Toro''s gyrification index';
+      tGI.tag       = 'tGI';
+      tGI.strtype   = 'r';
+      tGI.num       = [1 inf];
+      tGI.val       = {0};
+      tGI.help      = {
+        'Toro''s gyrification index (#toroGI) with definable radii.  The original method is described in Toro et al., 2008.'
+      };
+    else
+      tGI        = cfg_menu;
+      tGI.name   = 'Toro''s gyrification index';
+      tGI.tag    = 'tGI';
+      tGI.labels = {'No','Yes'};
+      tGI.values = {0,1};
+      tGI.val    = {0};
+      tGI.help   = {
+        'Different versions of Toro''s gyrification index (#toroGI). The original method is described in Toro et al., 2008.'
+      };
+    end
+    %   ['Area normalized version of Toro''s gyrification index (toroGI) with 20 mm sphere radius. The original method is described in Toro et al., 2008.' ...
+    %    'In addition to Toro''s approach the radius is normalized for individual total surface area so that the approach is scaling invariant. ' ...
+    %    'As reference total surface area the template mesh from CAT12 is used with a surface area of 90000mm^2. ']
+  end
+  
   if expert>1
-    tGI        = cfg_menu;
-    tGI.name   = 'Toro''s gyrification index';
-    tGI.tag    = 'tGI';
-    tGI.labels = {'No','Unscaled','Scaled','Scaled extended','All'};
-    tGI.values = {0,1,2,3,4};
-    tGI.val    = {0};
-    tGI.help   = {
-      'Extract affine normalized version of Toro''s gyrification index (ntGI). The method is described in Toro et al., 2008.'
+    lGI        = cfg_menu;
+    lGI.name   = 'Schaer''s local gyrification index (lGI)';
+    lGI.tag    = 'lGI';
+    lGI.labels = {'No','Yes'};
+    lGI.values = {0,1};
+    lGI.val    = {0};
+    lGI.help   = {
+      'Marie Schaer''s local gyrification index from the FreeSurfer package.  The original method is described in Schaer et al., 2008.'
+      'The function is only for internal comparisons and requires modification in cat_surf_resamp and other functions.' 
     };
   end
   
   
-  % surface area ... 
+  % surface area 
   if expert>1
     area        = cfg_menu;
     area.name   = 'Surface area';
     area.tag    = 'area';
-    area.labels = {'No','Unscaled','Scaled','Both'}; 
-    area.values = {0,1,2,3}; 
+    area.labels = {'No','Yes'}; 
+    area.values = {0,1}; 
     area.val    = {0}; 
     area.help   = {
       'WARNING: IN DEVELOPMENT!'
@@ -1425,17 +1474,74 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
     gmv        = cfg_menu;
     gmv.name   = 'Surface GM volume';
     gmv.tag   = 'gmv';
-    gmv.labels = {'No','Unscaled','Scaled','Both'}; 
-    gmv.values = {0,1,2,3}; 
+    gmv.labels = {'No','Yes'};
+    gmv.values = {0,1}; 
     gmv.val    = {0}; 
     gmv.help   = {
       'WARNING: NOT WORKING RIGHT NOW!'
       'This method requires a sum-based mapping rather than the mean-based interpolation. The mapping utilize the Delaunay graph to transfer the area around a vertex to its closes neighbor(s) that is also use for the area mapping. '}; 
-
   end
   
-
-
+  if expert>1
+    % Normalization is relevant for most measures to be scaling-invariant. 
+    % It is also required for the GI because they use a closing to create 
+    % the hull. 
+    % However, even with normalization we have to correct for TIV because
+    % larger brain have probably a different folding pattern (more folding).
+    % The different measures further requires log10-log10 normalization 
+    % (allometrie) that also improves their distribution (more Gaussian like)
+    % 
+    norm          = cfg_menu;
+    norm.name     = 'Measure normalization';
+    norm.tag      = 'norm';
+    norm.help   = {
+      ['It is important to use TIV as confound in all analysis because even the measure or surface is normalized there is still a non-linear difference between smaller an larger brain (Im et al. 2008)! ' ...
+       'Moreover, these biological measurements grow with different exponential factors and requires an allometric scaling by log10! ' ...
+       'The measure normalization is only a technical aspect of "equal" (relativ vs. absolute) measurements! ']
+       ''
+      ['Complexity is in general measured in relation to the size of the structure (see also fractal dimensions). '...
+       'I.e., if we compare the shape of an peach and melons we have to adapt/scale the measure by the size of the fruit or we have to normalize(scale the size of the fruit. ' ...
+       'For normalization we can use measurements in 1D (e.g., average distance to the center of mass), 2D (total surface area), or 3D (total surface volume). ' ...
+       'To avoid further side effects by folding, we can use the convex hull surface rather than the folded surface. ' ...
+       'For brains, the convex hull is very close to the total intracranial volume (TIV) that we use in voxel-based morphometrie. ' ...
+       'However, the segmentation-based TIV is not used here to use only surface-definied measures. ' ...
+       'For scaling the 2D and 3D measures has to be transformed to a 1D values, where we use the spherical area/volume equation for estimation of the radius. ' ...
+       'The radius is further normalized by a factor of ... to obtain an average brain size that is expected by most folding measures that use for instance a sphere for local estimation. ']
+      };
+    % I prepared the full menu for possible tests but currently I miss the
+    % time and would only focus on the 31 that performed best in theory but 
+    % also some small global tests compared to the TIV.
+    if expert>2 
+      norm.labels = {'No',...
+        'Surface to COM distance (10)','Hull to COM distance (11)', ...
+        'Total surface area (20)','Total hull area (21)', ...
+        'Total surface volume (30)','Total hull volume (31)'}; 
+      norm.values = {0, 10,11, 20,21, 30,31}; 
+      norm.val    = {31}; 
+      norm.help   = [norm.help; {
+        'Further options for tests and evaluation.'
+        }];
+    else
+      norm.labels = {'No','Yes'}; 
+      norm.values = {0,1};
+      norm.val    = {1}; 
+    end
+  
+      
+    %{
+    % this should be better part of cat resample and smooth
+    log           = cfg_menu;
+    log.name      = 'Allometric normalization (log10)';
+    log.tag       = 'log';
+    log.labels    = {'No','Yes'}; 
+    log.values    = {0,1}; 
+    log.val       = {1}; 
+    log.help      = {
+       ''
+      };
+    %}
+  end
+  
   % main menu
   % 
   % TODO:
@@ -1445,11 +1551,11 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
   surfextract.tag  = 'surfextract';
   surfextract.name = 'Extract additional surface parameters';
   if expert == 2
-    surfextract.val  = {data_surf_extract, area,gmv, GI, SD, FD, tGI, GIL, thickness, surfaces, nproc, lazy}; % area, 
+    surfextract.val  = {data_surf_extract, area,gmv, GI, SD, FD, tGI, lGI, GIL, surfaces, norm, nproc, lazy}; % area, 
   elseif expert == 1
     surfextract.val  = {data_surf_extract,GI,FD,SD, surfaces,nproc,lazy};
   else
-    surfextract.val  = {data_surf_extract,GI,FD,SD,nproc};
+    surfextract.val  = {data_surf_extract,GI,FD,SD, nproc};
   end
   surfextract.prog = @cat_surf_parameters;
   surfextract.vout = @vout_surfextract;
@@ -1661,7 +1767,7 @@ function dep = vout_vol2surf(job)
   end
   
 %==========================================================================
-function dep = vout_cat_surf_results(job)
+function dep = vout_cat_surf_results(varargin)
 %% 
 
   dep(1)            = cfg_dep;
@@ -1673,29 +1779,32 @@ function dep = vout_cat_surf_results(job)
 function dep = vout_surfextract(job)
 
 measures = { % para-field , para-subfield , para-val , output-var, [left|right] dep-var-name 
-  'GI'        ''      [1 3]  'GI'             'gyrification'; 
-  'GI'        ''      [2 3]  'GIs'            'scaled gyrification'; 
-  'FD'        ''       1     'FD'             'fractal dimension';
-  'SD'        ''      [1 3]  'SD'             'sulcal depth';
-  'SD'        ''      [2 3]  'SDs'            'scaled sulcal depth';
+  'GI'        ''      [1 3]     'GI'             'MNI gyrification';       % fast AMC on original surface 
+  'GI'        ''      [2 3]     'GIp'            'Pong gyrification';      % accurate AMC on scaled surface
   ...
-  'tGI'       ''      [1 4]  'tGI'            'Toro GI'; 
-  'tGI'       ''      [2 4]  'tGIs'           'scaled Toro GI'; 
-  'tGI'       ''      [3 4]  'tGIsx'          'exscaled Toro GI'; 
+  'FD'        ''       1        'FD'             'fractal dimension';
   ...
-  'GIL'       ''      [1 4]  'iGI'            'inward-folding Laplacian-based GI'; 
-  'GIL'       ''      [2 4]  'oGI'            'outward-folding Laplacian-based GI'; 
-  'GIL'       ''      [3 4]  'gGI'            'generalized Laplacian-based GI'; 
+  'SD'        ''       1        'SD'             'sulcal depth';
+  ...
+  'tGI'       ''       1        'tGI20mm'        'Toro GI 20 mm';          % original Toro approach with 20 mm 
+  'tGI'       ''      -1        'tGIa'           'Toro GI adaptive';       % Toro GI with variable radius 
+  'tGI'       ''      []        'tGI%02dmm'      'Toro GI %02d mm';        % mutliple input that replace %d
+  ...
+  'lGI'       ''       1        'lGI'            'Schaer''s lGI';                  
+  ...
+  'GIL'       ''      [1 4]     'iGI'            'inward-folding Laplacian-based GI'; 
+  'GIL'       ''      [2 4]     'oGI'            'outward-folding Laplacian-based GI'; 
+  'GIL'       ''      [3 4]     'gGI'            'generalized Laplacian-based GI'; 
   ... 
-  'area'      ''      [1 3]  'area'           'surface area'; 
-  'area'      ''      [2 3]  'areas'          'scaled surface area'; 
-  'gmv'       ''      [1 2]  'gmv'            'surface GM volume'; 
-  ... scaled GMV? < maybe directly normalized by TIV?
+  'area'      ''      1         'area'           'surface area'; 
   ...
-  'surfaces'  'IS'     1     'white'          'white matter surface';
-  'surfaces'  'OS'     1     'pial'           'pial surface';
-  'GIL'       'hull'  [1 4]  'hull'           'hull surface';
-  'GIL'       'core'  [2 4]  'core'           'core surface';
+  'gmv'       ''      [1 3]     'gmv'            'surface GM volume'; 
+  'gmv'       ''      [2 3]     'gmvp'           'projected GM volume'; 
+  ...
+  'surfaces'  'IS'     1        'white'          'white matter surface';
+  'surfaces'  'OS'     1        'pial'           'pial surface';
+  'GIL'       'hull'  [1 3]     'hull'           'hull surface';
+  'GIL'       'core'  [2 3]     'core'           'core surface';
   };
 sides = {
   'l' 'Left';
@@ -1715,14 +1824,24 @@ for si=1:size(sides,1)
         dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
       end
     else
-      if isfield(job,measures{mi,1}) && ...
-       ( ( isnumeric( job.(measures{mi,1}) ) && any( job.(measures{mi,1})==measures{mi,3} ) ) || ... % no subfield
-         ( isfield(job.(measures{mi,1}),measures{mi,1}) && any( job.(measures{mi,1}).(measures{mi,1})==measures{mi,3} ) ) || ... % with same subfield - GI dev. mode
-         ( isfield(job.(measures{mi,1}),measures{mi,2}) && any( job.(measures{mi,1}).(measures{mi,2})==measures{mi,3} ) ) ) % with other subfield
-        if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
-        dep(end).sname      = [sides{si,2} ' ' measures{mi,5}];
-        dep(end).src_output = substruct('()',{1}, '.',[sides{si,1} 'P' measures{mi,4}],'()',{':'});
-        dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+      if isfield(job,measures{mi,1}) && ~(strcmp(measures{mi,2},'hull') || strcmp(measures{mi,2},'core')) 
+        if isnumeric( job.(measures{mi,1}) ) && isempty( measures{mi,3} ) % Multiple input
+          for mii = 1:numel( job.(measures{mi,1}) )
+            if job.(measures{mi,1})(mii)>1
+              if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
+              dep(end).sname      = [sides{si,2} ' ' sprintf( measures{mi,5}, job.(measures{mi,1})(mii) ) ];
+              dep(end).src_output = substruct('()',{1}, '.',[sides{si,1} 'P' sprintf(measures{mi,4}, job.(measures{mi,1})(mii))],'()',{':'});
+              dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+            end
+          end
+        elseif ( ( isnumeric( job.(measures{mi,1}) ) && any( job.(measures{mi,1})==measures{mi,3} ) ) || ... % no subfield
+           ( isfield(job.(measures{mi,1}),measures{mi,1}) && any( job.(measures{mi,1}).(measures{mi,1})==measures{mi,3} ) ) || ... % with same subfield - GI dev. mode
+           ( isfield(job.(measures{mi,1}),measures{mi,2}) && any( job.(measures{mi,1}).(measures{mi,2})==measures{mi,3} ) ) ) % with other subfield
+          if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
+          dep(end).sname      = [sides{si,2} ' ' measures{mi,5}];
+          dep(end).src_output = substruct('()',{1}, '.',[sides{si,1} 'P' measures{mi,4}],'()',{':'});
+          dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+        end
       end
     end
   end
@@ -1740,71 +1859,101 @@ dep(1).tgt_spec   = cfg_findspec({{'filter','xml','strtype','e'}});
 %==========================================================================
 function dep = vout_surf_resamp(job)
 
-% First we have to catch possible dependency definition problems.
-if isobject(job.data_surf) && numel(job.data_surf)>1 % simple file input
-  error('cat_surf_resamp:FileDepError',...
-   ['CAT resample and smooth support only one dependeny per file input \n' ...
-    'to support further separate processing. ']); 
-elseif iscell(job.data_surf)
-  nDEP = zeros(numel(job.data_surf));
-  for i = 1:numel(job.data_surf)
-    if isobject(job.data_surf{i}) && numel(job.data_surf{i})>1
-      nDEP(i) = numel(job.data_surf{i});
-    end
-  end
-  msg = ['The CAT batch "Resample and Smooth Surface Data" supports only one \n' ...
-    'dependency per input sample to support further separate processing. '];
-  for i = 1:numel(job.data_surf)
-    if nDEP(i)>1
-      msg = [msg sprintf('\n  Sample %d has %d dependencies.',i,nDEP(i))]; %#ok<AGROW>
-    end
-  end
-  if sum(nDEP)>0
-    error('cat_surf_resamp:SampleDepError',msg); 
-  end
-end
-%% here we have to extract the texture name to have useful output names
-mname = repmat({''},1,numel(job.data_surf));
-if isobject(job.data_surf) 
-  sep       = strfind(job.data_surf.sname,':');
-  mname{1}  = spm_str_manip( cat_io_strrep( job.data_surf.sname(sep+1:end) , {' ','Left'} ,{'' ''}) ); 
-elseif iscell(job.data_surf) 
-  for i=1:numel(job.data_surf)
-    if isobject(job.data_surf{i})
-      sep       = strfind(job.data_surf{i}.sname,':');
-      mname{i}  = spm_str_manip( cat_io_strrep( job.data_surf{i}.sname(sep+1:end) , {' ','Left'} ,{'' ''}) ); 
+if isfield(job,'sample') && isfield(job,'data_surf_mixed')
+  if isfield(job,'sample') 
+    if isfield(job,'data_surf')
+      job.data_surf = [job.sample.data_surf_mixed];
     else
-      sinfo = cat_surf_info(job.data_surf{i});
-      mname{1} = sinfo.texture; 
+      job.data_surf = {'<UNDEFINED>'};
     end
   end
-% else is empty initialization
-end
-%%
-if iscell(job.data_surf) && ( iscell( job.data_surf{1} ) || isobject(job.data_surf{1} ) )
-% this differentiation is important otherwise it has problemes with cellstrings
-  for di = 1:numel(job.data_surf)
-    if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
-    if job.merge_hemi
-      dep(end).sname      = ['Merged resampled ' mname{di}];
-      dep(end).src_output = substruct('.','sample','()',{di},'.','Psdata'); %,'()',{':'});
-      dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-    else
-      dep(end).sname      = ['Left resampled ' mname{di}];
-      dep(end).src_output = substruct('.','sample','()',{di},'.','lPsdata'); %,'()',{':'});
-      dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-    end
-  end
-else % file input - just one texture type 
+  % simple version with mixed input
   dep = cfg_dep; 
   if job.merge_hemi
-    dep(end).sname      = ['Merged resampled ' mname{1}];
+    dep(end).sname      = 'Merged resampled';
     dep(end).src_output = substruct('.','sample','()',{1},'.','Psdata'); %,'()',{':'});
     dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
   else
-    dep(end).sname      = ['Left resampled ' mname{1}];
+    dep(end).sname      = 'Left resampled';
     dep(end).src_output = substruct('.','sample','()',{1},'.','lPsdata'); %,'()',{':'});
     dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+  end
+else
+  if isfield(job,'sample') 
+    if isfield(job,'data_surf')
+      job.data_surf = [job.sample.data_surf];
+    else
+      job.data_surf = {'<UNDEFINED>'};
+    end
+  end
+  % First we have to catch possible dependency definition problems.
+  if isobject(job.data_surf) && numel(job.data_surf)>1 % simple file input
+    error('cat_surf_resamp:FileDepError',...
+     ['CAT resample and smooth support only one dependeny per file input \n' ...
+      'to support further separate processing. ']); 
+  elseif iscell(job.data_surf)
+    nDEP = zeros(numel(job.data_surf));
+    for i = 1:numel(job.data_surf)
+      if isobject(job.data_surf{i}) && numel(job.data_surf{i})>1
+        nDEP(i) = numel(job.data_surf{i});
+      end
+    end
+    msg = ['The CAT batch "Resample and Smooth Surface Data" supports only one \n' ...
+      'dependency per input sample to support further separate processing. '];
+    for i = 1:numel(job.data_surf)
+      if nDEP(i)>1
+        msg = [msg sprintf('\n  Sample %d has %d dependencies.',i,nDEP(i))]; %#ok<AGROW>
+      end
+    end
+    if sum(nDEP)>0
+      error('cat_surf_resamp:SampleDepError',msg); 
+    end
+  end
+
+  %% here we have to extract the texture name to have useful output names
+  mname = repmat({''},1,numel(job.data_surf));
+  if isobject(job.data_surf) 
+    sep       = strfind(job.data_surf.sname,':');
+    mname{1}  = spm_str_manip( cat_io_strrep( job.data_surf.sname(sep+1:end) , {' ','Left'} ,{'' ''}) ); 
+  elseif iscell(job.data_surf) 
+    for i=1:numel(job.data_surf)
+      if isobject(job.data_surf{i})
+        sep       = strfind(job.data_surf{i}.sname,':');
+        mname{i}  = spm_str_manip( cat_io_strrep( job.data_surf{i}.sname(sep+1:end) , {' ','Left'} ,{'' ''}) ); 
+      else
+        sinfo = cat_surf_info(job.data_surf{i});
+        mname{1} = sinfo.texture; 
+      end
+    end
+  % else is empty initialization
+  end
+
+  %%
+  if iscell(job.data_surf) && ( iscell( job.data_surf{1} ) || isobject(job.data_surf{1} ) )
+  % this differentiation is important otherwise it has problemes with cellstrings
+    for di = 1:numel(job.data_surf)
+      if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
+      if job.merge_hemi
+        dep(end).sname      = ['Merged resampled ' mname{di}];
+        dep(end).src_output = substruct('.','sample','()',{di},'.','Psdata'); %,'()',{':'});
+        dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+      else
+        dep(end).sname      = ['Left resampled ' mname{di}];
+        dep(end).src_output = substruct('.','sample','()',{di},'.','lPsdata'); %,'()',{':'});
+        dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+      end
+    end
+  else % file input - just one texture type 
+    dep = cfg_dep; 
+    if job.merge_hemi
+      dep(end).sname      = ['Merged resampled ' mname{1}];
+      dep(end).src_output = substruct('.','sample','()',{1},'.','Psdata'); %,'()',{':'});
+      dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+    else
+      dep(end).sname      = ['Left resampled ' mname{1}];
+      dep(end).src_output = substruct('.','sample','()',{1},'.','lPsdata'); %,'()',{':'});
+      dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+    end
   end
 end
 %==========================================================================  
@@ -1855,7 +2004,7 @@ function dep = vout_cat_surf_calcsub(job)
   
 
 %==========================================================================  
-function dep = vout_cat_surf_flipsides(job)
+function dep = vout_cat_surf_flipsides(varargin)
  
 
   dep(1)            = cfg_dep;
@@ -1864,7 +2013,7 @@ function dep = vout_cat_surf_flipsides(job)
   dep(1).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
 
 %==========================================================================  
-function dep = vout_cat_stat_spm(job)
+function dep = vout_cat_stat_spm(varargin)
   dep(1)            = cfg_dep;
   dep(1).sname      = 'SPM.mat File';
   dep(1).src_output = substruct('.','spmmat');

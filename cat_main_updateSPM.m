@@ -43,6 +43,10 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
   YbA = YbA | cat_vol_morph(YbA & sum(P(:,:,:,1:2),4)>4 ,'dd',2.4,vx_vol);
   
   
+  if size(P,4)<4
+    P(:,:,:,4) = 1 - sum(P,4); 
+  end
+  
   % transfer tissue outside the brain mask to head  ... 
   % RD 201807: I am not sure if this is a good idea. Please test this with children! 
   for i=1:3

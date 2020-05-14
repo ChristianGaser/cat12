@@ -714,7 +714,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
       [0,0.0001],job.output.ct,trans,single(Ycls{1})/255,0.1);
   end
   
-  if job.output.sROI
+  if job.output.sROI && all(job.output.surface~=[5 6]) % no fast without registration
     cat_io_cmd('  Surface ROI estimation');  
     
     %% estimate surface ROI estimates for thickness

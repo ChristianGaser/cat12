@@ -166,7 +166,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
   Yclso   = Ycls; 
   [Ym,BB] = cat_vol_resize( Ym  , 'reduceBrain' , vx_vol , round(10/mean(vx_vol)) , Yb0 );
   Yb      = cat_vol_resize( Yb0 , 'reduceBrain' , vx_vol , round(10/mean(vx_vol)) , Yb0 ); clear Yb0; 
-  for i = 1:6, Ycls{i} = cat_vol_resize(Ycls{i} , 'reduceBrain' , vx_vol , BB.BB); end
+  for i = 1:numel(Ycls), Ycls{i} = cat_vol_resize(Ycls{i} , 'reduceBrain' , vx_vol , BB.BB); end
   
   
   % helping maps (Yg = mean gradient = edge) and divergence (CSF or WM skeleton)
@@ -789,10 +789,10 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
   if Tth.T3th(Tth.T3thx==1) == Tth.T3thx(Tth.T3thx==1) % invers intensities (T2/PD) 
     Ymg = max(eps,(Ysrc + srcmin)./Ylab{2}); 
   else
-    Ymg = (Ysrc + srcmin)./max(eps,(Ylab{2} + srcmin)); 
-    Ymg = Ymg * Tth.T3th(Tth.T3thx==3)/(Tth.T3thx(Tth.T3thx==3)/3);
+    Ymg = Ysrc ./ max(eps,Ylab{2}); 
+    Ymg = Ymg * Tthc.T3th(Tthc.T3thx==3)/(Tthc.T3thx(Tthc.T3thx==3)/3) + srcmin; % RD202004: corrected srcmin-correction
   end
-  clear Ylab Ysrc
+  if ~debug, clear Ylab Ysrc; end
   Ymg = cat_main_gintnorm(Ymg,Tth); 
   
  

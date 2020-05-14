@@ -314,15 +314,17 @@ cstime = clock;
       case {'rh'},  Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.BV) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB)) .* (mod(Ya,2)==0); Yside = mod(Ya,2)==0;  
       case {'lc'},  Ymfs = Ymf .* (Ya>0) .*   NS(Ya,opt.LAB.CB).* (mod(Ya,2)==1); Yside = mod(Ya,2)==1; 
       case {'rc'},  Ymfs = Ymf .* (Ya>0) .*   NS(Ya,opt.LAB.CB).* (mod(Ya,2)==0); Yside = mod(Ya,2)==0; 
+      case {'cb'},  Ymfs = Ymf .* (Ya>0) .*   NS(Ya,opt.LAB.CB);                  Yside = mod(Ya,2)==0; 
     end 
     
     switch opt.surf{si}
       case {'lh','rh'}, opt.interpV = opt.interpVold; 
       case {'lc','rc'}, opt.interpV = opt.interpVold / 2 ; 
+      case {'cb'},      opt.interpV = opt.interpVold; 
     end 
     
     % check for cerebellar hemis
-    iscerebellum = strcmp(opt.surf{si},'lc') || strcmp(opt.surf{si},'rc');
+    iscerebellum = strcmp(opt.surf{si},'lc') || strcmp(opt.surf{si},'rc') || strcmp(opt.surf{si},'cb');
     
     % scaling factor for reducing patches and refinement for cerebellar hemis 2..4 according to voxel size
     % or 1 for cerebrum
@@ -348,6 +350,7 @@ cstime = clock;
     switch opt.surf{si}
       case {'lh','rh'},  [Ymfs,Ysidei,mask_parahipp,BB] = cat_vol_resize({Ymfs,Yside,mask_parahipp},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
       case {'lc','rc'},  [Ymfs,Ysidei,BB] = cat_vol_resize({Ymfs,Yside},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
+      case {'cb'},       [Ymfs,Ysidei,BB] = cat_vol_resize({Ymfs,Yside},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
     end
     interpBB = BB; interpBB.interpV = opt.interpV; 
      
@@ -1184,7 +1187,12 @@ cstime = clock;
     res.self_intersections      = mean([SIw,SIp]);
     res.self_intersections_area = mean([SIwa,SIpa]);
   end
-    
+  
+  % create white and central surfaces
+  if cat_get_defaults('extopts.expertgui')
+    cat_surf_fun('white',Pcentral);
+    cat_surf_fun('pial',Pcentral);
+  end
   
   if opt.verb && ~opt.vol  
     % display some evaluation 

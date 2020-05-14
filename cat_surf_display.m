@@ -1,6 +1,6 @@
 function varargout = cat_surf_display(varargin)
 % ______________________________________________________________________
-% Function to display surfaces. Wrapper to cat_surf_render.
+% Function to display surfaces. Wrapper to cat_surf_render(2).
 %
 % [Psdata] = cat_surf_display(job)
 % 
@@ -116,7 +116,7 @@ function varargout = cat_surf_display(varargin)
     % 2 - load all structures of the same side 
     % 1 - load other side of same structure
     if job.multisurf
-      if strcmp('r',sinfo(i).side(1)), oside = ['l' sinfo(i).side(2)]; else oside = ['r' sinfo(i).side(2)]; end
+      if strcmp('r',sinfo(i).side(1)), oside = ['l' sinfo(i).side(2)]; else, oside = ['r' sinfo(i).side(2)]; end
       if job.multisurf==3
         Pmesh = [ ...
           cat_surf_rename(sinfo(i).Pmesh,'side','lh') cat_surf_rename(sinfo(i).Pmesh,'side','rh') ...
@@ -125,7 +125,7 @@ function varargout = cat_surf_display(varargin)
           cat_surf_rename(sinfo(i).Pdata,'side','lh') cat_surf_rename(sinfo(i).Pdata,'side','rh') ...
           cat_surf_rename(sinfo(i).Pdata,'side','lc') cat_surf_rename(sinfo(i).Pdata,'side','rc')];
       elseif job.multisurf==2
-        if strcmp('h',sinfo(i).side(2)), oside = [sinfo(i).side(1) 'c']; else oside = [sinfo(i).side(1) 'h']; end
+        if strcmp('h',sinfo(i).side(2)), oside = [sinfo(i).side(1) 'c']; else, oside = [sinfo(i).side(1) 'h']; end
         Pmesh = [sinfo(i).Pmesh cat_surf_rename(sinfo(i).Pmesh,'side',oside)]; 
         Pdata = [sinfo(i).Pdata cat_surf_rename(sinfo(i).Pdata,'side',oside)]; 
       else
@@ -268,7 +268,7 @@ function varargout = cat_surf_display(varargin)
             if     strfind(sinfo(i).posside,'-Igm.ROI'),  clim = [2/3 2/3] .* [0.9 1.1];        % balanced PVE
             elseif strfind(sinfo(i).posside,'-Iwm.ROI'),  clim = [0.85 1.05];                   % below 1 because of a lot of GM/WM PVE
             elseif strfind(sinfo(i).posside,'-Icsf.ROI'), clim = [1.33/3 1.33/3] .* [0.8 1.2];  % higher 1/3 because of a lot of GM/CSF PVE
-            else                                          clim = cat_vol_iscaling(h.cdata);
+            else,                                         clim = cat_vol_iscaling(h.cdata);
             end
             if job.expert<2
               cat_surf_render('clim',h.axis,clim);
@@ -280,7 +280,7 @@ function varargout = cat_surf_display(varargin)
           case {'central'}
             % default curvature
             set(h.patch,'AmbientStrength',0.2,'DiffuseStrength',0.8,'SpecularStrength',0.1)
-          case ''
+          otherwise
             % no texture name
             if ~isempty(h.cdata)
               clim = cat_vol_iscaling(h.cdata);
@@ -302,44 +302,6 @@ function varargout = cat_surf_display(varargin)
               end
               
             end
-          otherwise
-            %%
-            ranges = {
-              ... name single group
-              'thickness'         [0.5  5.0]  [0.5  5.0]
-              'gyruswidthWM'      [0.5  8.0]  [1.0  7.0]
-              'gyruswidth'        [1.0 12.0]  [1.5 11.0]
-              'fractaldimension'  [0.0  4.0]  [1.0  4.0]
-              'sulcuswidth'       [0.0  3.0]  [0.0  3.0]
-              'gyrification'      [ 15   35]  [ 15   35]
-              'sqrtsulc'          [0.0  5.0]  [0.0  5.0]
-              'WMdepth'           [1.0  6.0]  [1.0  5.0]
-              'GWMdepth'          [1.5 10.0]  [1.5  9.0]
-              'CSFdepth'          [0.5  2.0]  [0.5  2.0]
-              'depthWM'           [0.0  4.0]  [0.0  3.0]
-              'depthWMg'          [0.0  1.0]  [0.0  0.5]
-              'depthGWM'          [0.5  5.0]  [2.5  6.0]
-              'depthCSF'          [0.5  2.0]  [0.5  2.0]  
-            };
-
-            texturei = find(cellfun('isempty',strfind(ranges(:,1),sinfo(i).texture))==0,1,'first');
-
-            if ~isempty(texturei)
-              if job.expert<2
-                cat_surf_render('clim',h.axis,ranges{texturei,3});
-              else
-                cat_surf_render2('clim',h.axis,ranges{texturei,3});
-              end
-            else
-              if ~isempty(h.cdata)
-                clim = cat_vol_iscaling(h.cdata);  
-                if job.expert<2
-                  cat_surf_render('clim',h.axis,clim);
-                else
-                  cat_surf_render2('clim',h.axis,clim);
-                end
-              end
-            end
         end    
       else
         if job.expert<2
@@ -348,23 +310,10 @@ function varargout = cat_surf_display(varargin)
           cat_surf_render2('clim',h.axis,job.caxis);
         end
       end
-%     catch %#ok<CTCH>
-%       if ~exist('h','var')
-%         try
-%           cat_io_cprintf('err',sprintf('Texture error. Display surface only.\n'));
-%           h = cat_surf_render(job.data{i});
-%         catch %#ok<CTCH>
-%           cat_io_cprintf('err',sprintf('ERROR: Can''t display surface %s\n',job.data{i})); 
-%         end
-%       end
-%       continue
-%     end
-    
-    
+
     
     
     %% view
-    
     if ~isfield(job,'view')
       if strcmp(sinfo(i).side,'lh') && ~job.multisurf
         job.view = 'left'; 
@@ -396,7 +345,7 @@ function varargout = cat_surf_display(varargin)
     %% print
     if job.imgprint.do 
       %%
-      if isempty(job.imgprint.dir), ppp = sinfo(i).pp; else  ppp=job.imgprint.dir;  end
+      if isempty(job.imgprint.dir), ppp = sinfo(i).pp; else, ppp=job.imgprint.dir;  end
       if ~exist(ppp,'dir'), mkdir(ppp); end
       pfname = fullfile(ppp,sprintf('%s%s.%s',sinfo(i).ff,viewname,job.imgprint.type));
       print(h.figure , def.imgprint.ftype(job.imgprint.type) , job.imgprint.fdpi(job.imgprint.dpi) , pfname ); 

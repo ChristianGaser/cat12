@@ -237,7 +237,7 @@ function varargout = cat_parallelize(job,func,datafield)
     else
       %% conclusion without filelist
       spm_clf('Interactive'); 
-      spm_progress_bar('Init', sum( numel(job_data) ) ,'CAT-Preprocessing','Volumes Complete');      
+      spm_progress_bar('Init', sum( numel(job_data) ) ,'CAT-Preprocessing','Cases Started/Processed');      
       
       fprintf('\nStarted %d jobs with the following PIDs:\n',job.nproc);
       for i=1:job.nproc
@@ -260,7 +260,7 @@ function varargout = cat_parallelize(job,func,datafield)
       if job.getPID>1
         cat_io_cprintf('warn',sprintf('\nKilling of this process will not kill the parallel processes!\n'));
         fprintf('_______________________________________________________________\n');
-        fprintf('Process volumes (see catlog files for details!):\n');
+        fprintf('Process datasets (see catlog files for details!):\n');
         
         % jobIDs .. variable to handle different processing parameters
         %           [ subID , asignedproc , procID , started , finished , error , printed_started , printed_finished ]  
@@ -456,8 +456,8 @@ function varargout = cat_parallelize(job,func,datafield)
             %  if one subject was successfully or with error processed ( any(cattime>0) || ~isempty(caterr) )
             if ~isstruct( jobs(i).(datafield) )
               %%
-              findSID = find(cellfun('isempty',SID)==0,1,'last'); 
-              if ~isempty(findSID), catSID(i) = findSID; end
+              findSIDi = find(cellfun('isempty',SID)==0,1,'last'); 
+              if ~isempty(findSIDi), catSID(i) = findSIDi; end
               
               if numel(catSID)>1 && ( catSIDlast(i) < catSID(i) ) 
                 try
@@ -465,7 +465,7 @@ function varargout = cat_parallelize(job,func,datafield)
                   cat_io_cprintf([ 0 0 0 ],sprintf('  %d/%d (pjob %d: %d/%d): %s\n',...
                     sum(catSID) ,sum( numel(job_data) ),  i,  catSID(i), numel(jobs(i).(datafield)), ...
                     spm_str_manip( jobs(i).(datafield){catSID(i)} , 'k40') )); 
-                  cid = cid + 1; 
+                  cid = max( cid + 1 , sum(catSID) ); 
                 end
               end
             end

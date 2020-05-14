@@ -230,7 +230,7 @@ function Psgi = cat_surf_SGI_laplacian(sinfo,opt)
             eval(sprintf('iGI = %s(max(0,iGI + 2));',opt.GInorm)); 
             eval(sprintf('oGI = %s(max(0,oGI + 2));',opt.GInorm)); 
             eval(sprintf('gGI = %s(max(0,gGI + 2));',opt.GInorm)); 
-          case 'log10',
+          case 'log10'
             eval(sprintf('iGI = %s(max(0,iGI + 10));',opt.GInorm)); 
             eval(sprintf('oGI = %s(max(0,oGI + 10));',opt.GInorm)); 
             eval(sprintf('gGI = %s(max(0,gGI + 10));',opt.GInorm)); 
@@ -281,46 +281,49 @@ function Psgi = cat_surf_SGI_laplacian(sinfo,opt)
   
   %% area smoothing and GI estimation
   Af = cat_surf_smootharea(S,S,opt.GIpresmooth);
-  Ah = cat_surf_smootharea(S,SH,opt.GIpresmooth,cat_surf_smootharea(S,S,3)*2);
-  Ac = cat_surf_smootharea(S,SC,opt.GIpresmooth,cat_surf_smootharea(S,S,3)*2);
-  Sa = SH; Sa.vertices = (Sa.vertices + SC.vertices)/2; 
-  Aa = cat_surf_smootharea(S,Sa,opt.GIpresmooth,cat_surf_smootharea(S,S,3)*2);
-  
-  % GI estimation
-  iGI  = Af ./ max(eps,Ah); 
-  oGI  = Af ./ max(eps,Ac); 
-  gGI  = Af ./ max(eps,Aa); 
-
+  if opt.GIL==1 || opt.GIL==3 || opt.GIL==4
+    Ah = cat_surf_smootharea(S,SH,opt.GIpresmooth,cat_surf_smootharea(S,S,3)*2);
+    iGI  = Af ./ max(eps,Ah); 
+  end
+  if opt.GIL==2 || opt.GIL==3 || opt.GIL==4
+    Ac = cat_surf_smootharea(S,SC,opt.GIpresmooth,cat_surf_smootharea(S,S,3)*2);
+    oGI  = Af ./ max(eps,Ac); 
+  end
+  if opt.GIL==3 || opt.GIL==4
+    Sa = SH; Sa.vertices = (Sa.vertices + SC.vertices)/2; 
+    Aa = cat_surf_smootharea(S,Sa,opt.GIpresmooth,cat_surf_smootharea(S,S,3)*2);
+    gGI  = Af ./ max(eps,Aa); 
+  end
   
   %% normalization function 
   switch opt.GInorm
     case 'log'
-      eval(sprintf('iGI = %s(max(0,iGI + exp(1)));',opt.GInorm)); 
-      eval(sprintf('oGI = %s(max(0,oGI + exp(1)));',opt.GInorm)); 
-      eval(sprintf('gGI = %s(max(0,gGI + exp(1)));',opt.GInorm)); 
+      if exist('iGI','var'), eval(sprintf('iGI = %s(max(0,iGI + exp(1)));',opt.GInorm)); end
+      if exist('oGI','var'), eval(sprintf('oGI = %s(max(0,oGI + exp(1)));',opt.GInorm)); end
+      if exist('gGI','var'), eval(sprintf('gGI = %s(max(0,gGI + exp(1)));',opt.GInorm)); end
     case 'log2'
-      eval(sprintf('iGI = %s(max(0,iGI + 2));',opt.GInorm)); 
-      eval(sprintf('oGI = %s(max(0,oGI + 2));',opt.GInorm)); 
-      eval(sprintf('gGI = %s(max(0,gGI + 2));',opt.GInorm)); 
-    case 'log10',
-      eval(sprintf('iGI = %s(max(0,iGI + 10));',opt.GInorm)); 
-      eval(sprintf('oGI = %s(max(0,oGI + 10));',opt.GInorm)); 
-      eval(sprintf('gGI = %s(max(0,gGI + 10));',opt.GInorm)); 
+      if exist('iGI','var'), eval(sprintf('iGI = %s(max(0,iGI + 2));',opt.GInorm)); end
+      if exist('oGI','var'), eval(sprintf('oGI = %s(max(0,oGI + 2));',opt.GInorm)); end
+      if exist('gGI','var'), eval(sprintf('gGI = %s(max(0,gGI + 2));',opt.GInorm)); end
+    case 'log10'
+      if exist('iGI','var'), eval(sprintf('iGI = %s(max(0,iGI + 10));',opt.GInorm)); end
+      if exist('oGI','var'), eval(sprintf('oGI = %s(max(0,oGI + 10));',opt.GInorm)); end
+      if exist('gGI','var'), eval(sprintf('gGI = %s(max(0,gGI + 10));',opt.GInorm)); end
     case {'',1}
       % nothing to do
     case num2cell(2:10) 
-      iGI = nthroot(iGI,opt.GInorm); 
-      oGI = nthroot(oGI,opt.GInorm); 
-      gGI = nthroot(gGI,opt.GInorm); 
+      if exist('iGI','var'), iGI = nthroot(iGI,opt.GInorm); end 
+      if exist('oGI','var'), oGI = nthroot(oGI,opt.GInorm); end
+      if exist('gGI','var'), gGI = nthroot(gGI,opt.GInorm); end
     otherwise
       error('Unknown normalization function %s!\n',opt.GInorm);
   end
 
   
   % export textures
-  cat_io_FreeSurfer('write_surf_data',Psigi,iGI);
-  cat_io_FreeSurfer('write_surf_data',Psogi,oGI);
-  cat_io_FreeSurfer('write_surf_data',Psggi,gGI);
+  if exist('iGI','var'), cat_io_FreeSurfer('write_surf_data',Psigi,iGI); end
+  if exist('oGI','var'), cat_io_FreeSurfer('write_surf_data',Psogi,oGI); end
+  if exist('gGI','var'), cat_io_FreeSurfer('write_surf_data',Psggi,gGI); end
   
   
   if 0
