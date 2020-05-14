@@ -46,12 +46,16 @@ if cat_get_defaults('extopts.send_info')
 end
 %}
 
-if isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.extopts.admin.lazy && ...
-  ~isfield(job,'process_index') && isfield(job,'nproc') && job.nproc>.1 && (~isfield(job,'process_index'))  
-  jobo.vout = vout_job(job);    % expected output
+if ( isfield(job.extopts,'lazy') && job.extopts.lazy && ~isfield(job,'process_index') ) || ...
+   ( isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.extopts.admin.lazy && ~isfield(job,'process_index') )
   jobl      = update_job(job);
-  jobl.vout = vout_job(jobl);   
+  jobl.vout = vout_job(jobl); 
   job.data  = remove_already_processed(jobl); 
+  if numel(job.data)==0 
+  % If everything is ready (no new subject or subject that requires 
+  % reprocessing) then we need no parrallel jobs.
+    job.nproc = 0; 
+  end
 end
 
 % split job and data into separate processes to save computation time
@@ -449,10 +453,10 @@ end
 job = update_job(job);
 
 varargout{1} = run_job(job);
-if isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.extopts.admin.lazy && ...
-  ~isfield(job,'process_index') && isfield(job,'nproc') && job.nproc>-1 && (~isfield(job,'process_index'))  
+if ( isfield(job.extopts,'lazy') && job.extopts.lazy  && ~isfield(job,'process_index')) || ...
+   ( isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.extopts.admin.lazy  && ~isfield(job,'process_index'))
   % set default output even it was not processed this time
-  varargout{1} = jobo.vout; 
+  varargout{1} = jobl.vout; 
 end
 
 % clear useprior option to ensure that option is set back to default
@@ -883,8 +887,8 @@ rlabel      = {};
 alabel      = {};
 catreportjpg= {};
 catreportpdf= {};
-catreport   = {};
 catlog      = {};
+catxml      = {};
 
 
 %roi         = {};
@@ -912,14 +916,10 @@ end
 % ----------------------------------------------------------------------
 roi = cell(n,1);
 for j=1:n
-    catreport{j}    = fullfile(parts{j,1},reportfolder,['cat_',parts{j,2},'.xml']);
-    catreportpdf{j} = fullfile(parts{j,1},reportfolder,['catreport_',parts{j,2},'.pdf']);
-    catreportjpg{j} = fullfile(parts{j,1},reportfolder,['catreportj_',parts{j,2},'.jpg']);
-end
-
-% 
-for j=1:n
-    catlog{j} = fullfile(parts{j,1},reportfolder,['catlog_',parts{j,2},'.txt']);
+    catxml{j,1}       = fullfile(parts{j,1},reportfolder,['cat_',parts{j,2},'.xml']);
+    catlog{j,1}       = fullfile(parts{j,1},reportfolder,['catlog_',parts{j,2},'.txt']);
+    catreportpdf{j,1} = fullfile(parts{j,1},reportfolder,['catreport_',parts{j,2},'.pdf']);
+    catreportjpg{j,1} = fullfile(parts{j,1},reportfolder,['catreportj_',parts{j,2},'.jpg']);
 end
 
 
@@ -1178,7 +1178,7 @@ end
 vout  = struct('tiss',tiss,'label',{label},'wlabel',{wlabel},'rlabel',{rlabel},'alabel',{alabel},...
                'biascorr',{biascorr},'wbiascorr',{wbiascorr},'roi',{roi},'ibiascorr',{ibiascorr},...
                'wibiascorr',{wibiascorr},'ribiascorr',{ribiascorr},'aibiascorr',{aibiascorr},...
-               'invdef',{invdef},'fordef',{fordef},'jacobian',{jacobian},'catreport',{catreport},...
+               'invdef',{invdef},'fordef',{fordef},'jacobian',{jacobian},'catxml',{catxml},...
                'catlog',{catlog},'catreportpdf',{catreportpdf},'catreportjpg',{catreportjpg});
              
 % add surface fields            
@@ -1222,7 +1222,7 @@ function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
   end
 
   lazy = 0;
-  
+lazy = 1; FNok = 0; return  
   [pp,ff] = spm_fileparts(job.data{subj}); 
   catxml  = fullfile(pp,reportfolder,['cat_' ff '.xml']);
   

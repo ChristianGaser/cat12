@@ -57,7 +57,7 @@ function cat_main_roi(job,trans,Ycls,Yp0)
   if isempty(FA)
     % deactivate output
     FN = job.output.atlas; 
-    for ai = 1:numel(AN)
+    for ai = 1:numel(FN)
       job.output.atlas.(FN{ai}) = 0; 
     end
   else
@@ -296,8 +296,8 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA)
       %ROIid;ROIabbr;ROIname;ROIbaseid;ROIbasename;Voxel;Volume;XYZ
       csv = [{'ROIid','ROIabbr','ROIname'}; ...
         num2cell(IDs) ...
-        cellstr([repmat('ROI',numel(IDs)) num2str(IDs,'%03d')]) ...
-        cellstr([repmat('ROI',numel(IDs)) num2str(IDs,'%03d')])];
+        cellstr([repmat('ROI',numel(IDs),1) num2str(IDs,'%03d')]) ...
+        cellstr([repmat('ROI',numel(IDs),1) num2str(IDs,'%03d')])];
     end
     
     % remove empty rows and prepare structure names

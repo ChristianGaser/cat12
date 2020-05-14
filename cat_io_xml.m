@@ -64,8 +64,15 @@ function varargout = cat_io_xml(file,varargin)
     if numel(varargin)==0
       action='read';
     elseif numel(varargin)==1 
-      if   ischar(varargin{1}), action='read'; % can only be read yet
-      else S=varargin{1}; action='write';
+      if ischar(varargin{1})
+        action='read'; % can only be read yet
+      else
+        if isstruct(varargin{1})
+          S=varargin{1};
+        else
+          error('cat_io_xml:needStructurToSave','The variable to write has to be a structure.\n');
+        end
+        action='write';
       end
     elseif numel(varargin)==2
       S=varargin{1}; action=varargin{2};

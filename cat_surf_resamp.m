@@ -21,12 +21,30 @@ function vout = cat_surf_resamp(varargin)
   SVNid = '$Rev$';
 
   
-  % transform input 
-  % due to dependencies the input has to be a cell-area of cellstr in 
-  % general 
-  % expert gui with complex input with further cell level 
-  % internal representation and final output as cell of cellstr
+  % Transform input 
+  % Due to dependencies the input has to be a cell-array of cellstr in general.
+  % However, the expert GUI allows additional cases to handle or ignore dependencies.
+  % This results in a more complex input with another cell level, internal 
+  % representation and final output as cell of cellstr.
   if nargin == 1
+  	% complex developer input of different structures to handle dependencies differently
+  	% here we have to build the classical input structure
+    if isfield(varargin{1},'sample')
+      if ~isfield(varargin{1},'data_surf')
+        varargin{1}.data_surf = {};
+      end
+      for si=1:numel(varargin{1}.sample)
+        if isfield(varargin{1}.sample{si},'data_surf')          
+          varargin{1}.data_surf = [varargin{1}.data_surf varargin{1}.sample{:}.data_surf];
+        elseif isfield(varargin{1}.sample{si},'data_surf_mixed')    
+          varargin{1}.data_surf = [varargin{1}.data_surf varargin{1}.sample{:}.data_surf_mixed];
+        end
+      end
+      varargin{1} = rmfield(varargin{1},'sample');
+      varargin{1}.data_surf = unique(varargin{1}.data_surf); 
+    end
+    
+    % classical simple input structure
     if iscell(varargin{1}.data_surf)
       P = ''; 
       for i = 1:numel(varargin{1}.data_surf)

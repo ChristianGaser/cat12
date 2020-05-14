@@ -71,7 +71,14 @@ function varargout = cat_stat_histth(src,percent,opt)
     end
   end
   
-  
+  if ~isreal(src)
+    % RD202004: This should not happen but it does in surprise some chimp 
+    %           images with strong negative intensities.  At some point in 
+    %           cat_vol_sanlm or here the image becomes complex and create 
+    %           an error in the histogram fucntion - so I convert it back. 
+    src = real(src);
+  end
+
   % histogram
   % use adaptive number of bins to 
   hsrc = zeros(1,opt.hbins); hbins = opt.hbins;

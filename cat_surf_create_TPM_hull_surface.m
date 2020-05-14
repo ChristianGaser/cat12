@@ -49,7 +49,7 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm)
   
   
   % nothing to do - just return filename 
-  if exist(Phull,'file'), return; end
+  if 0 && exist(Phull,'file'), return; end
     
   
   % load SPM-TPM-structure
@@ -61,15 +61,13 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm)
   % create brainmask surface
   Yb   = exp(tpm.dat{1}) + exp(tpm.dat{2}) + exp(tpm.dat{3});
   Sh   = isosurface(Yb,0.5);
-  % create head surface
-  if 1 
-    Yhd = 1 - exp(tpm.dat{6});
-    Yhd = cat_vol_morph(Yhd,'l',[1 0.5]);
-    Yhd = ~cat_vol_morph(~Yhd,'l',[1 0.5]);
-    Shd = isosurface(Yhd,0.5);
-    Sh.faces    = [Sh.faces; Shd.faces + size(Sh.vertices,1)];
-    Sh.vertices = [Sh.vertices; Shd.vertices];
-  end
+  % create head surface based on 5 classes with average probability threshold
+	Yhd = exp(tpm.dat{1}) + exp(tpm.dat{2}) + exp(tpm.dat{3}) + exp(tpm.dat{4}) + exp(tpm.dat{5});
+	Yhd = cat_vol_morph(Yhd>0.5,'l',[1 0.5]);
+	Yhd = ~cat_vol_morph(~Yhd,'l',[1 0.5]);
+	Shd = isosurface(Yhd,0.5);
+	Sh.faces    = [Sh.faces; Shd.faces + size(Sh.vertices,1)];
+	Sh.vertices = [Sh.vertices; Shd.vertices];
   Sh  = reducepatch(Sh,0.2);
       
     

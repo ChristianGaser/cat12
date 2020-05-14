@@ -493,7 +493,7 @@ function cat_run_job(job,tpm,subj)
             useprior = 0;
           end
           
-          if ~useprior
+          if strcmp('human',job.extopts.species) && ~useprior
             % affine registration
             try
               spm_plot_convergence('Init','Coarse affine registration','Mean squared difference','Iteration');
@@ -527,7 +527,7 @@ function cat_run_job(job,tpm,subj)
           
           
           % fine affine registration 
-          if ~useprior 
+          if strcmp('human',job.extopts.species) && ~useprior 
             aflags.sep = obj.samp/2; 
             aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
             aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
@@ -540,6 +540,7 @@ function cat_run_job(job,tpm,subj)
             end
             VF1 = spm_smoothto8bit(VF,aflags.sep);
             VG1 = spm_smoothto8bit(VG,aflags.sep);
+
             try
               spm_plot_convergence('Init','Affine registration','Mean squared difference','Iteration');
             catch
@@ -635,7 +636,7 @@ function cat_run_job(job,tpm,subj)
         %  This may not work for non human data (or very small brains).
         %  This part should be an external (coop?) function?
         stime = cat_io_cmd('SPM preprocessing 1 (estimate 1):','','',1,stime);
-        if ~isempty(job.opts.affreg) & ~useprior 
+        if ~isempty(job.opts.affreg) && strcmp('human',job.extopts.species) && ~useprior 
           if numel(job.opts.tpm)>1
             %% merging of multiple TPMs
             obj2 = obj; obj2.image.dat(:,:,:) = max(0.0,Ym);
@@ -771,7 +772,16 @@ function cat_run_job(job,tpm,subj)
           end
           
           if suc==0
-            error('cat_run_job:spm_preproc8','Error in spm_preproc8. Check image and orientation. \n');
+            %%
+            mati = spm_imatrix(V.mat);
+            
+            error('cat_run_job:spm_preproc8',sprintf([
+              'Error in spm_preproc8. Check image and orientation. \n'...
+              '  Volume size (x,y,z):   %8.0f %8.0f %8.0f \n' ...
+              '  Origin (x,y,z):        %8.1f %8.1f %8.1f \n' ...
+              '  Rotation (deg):        %8.1f %8.1f %8.1f \n' ...
+              '  Resolution:            %8.1f %8.1f %8.1f \n'],...
+              V.dim,[mati(1:3),mati(4:6),mati(7:9),]));
           end
           
           res.image.dat = tmp;
@@ -802,12 +812,24 @@ function cat_run_job(job,tpm,subj)
         % inactive preprocessing of inverse images (PD/T2) 
         if job.extopts.INV==0 && any(diff(Tth(1:3))<=0)
           error('cat_run_job:BadImageProperties', ...
-          ['CAT12 is designed to work only on highres T1 images.\n' ...
+          ['CAT12 is designed to work only on highres T1 images. \n' ...
            'T2/PD preprocessing can be forced on your own risk by setting \n' ...
            '''cat12.extopts.INV=1'' in the cat_default file. If this was a highres \n' ...
            'T1 image then the initial segmentation might be failed, probably \n' ...
            'because of alignment problems (please check image orientation).']);    
         end
+        
+        % RD202005:  I am not sure if it is useful to just print a warning or a full error.  However, it will take some time to fix this issue.  
+        if any( Tth(2:3)<0 )
+          %error('cat_run_job:NegativeTissueValues', ...
+          %%
+          cat_io_cprintf('err',sprintf( ...
+           ['CAT12 was developed for images with positve values and negative values can lead to \n', ...
+            'preprocessing problems. The average intensities of CSF/GM/WM are %0.4f/%0.4f/%0.4f. \n', ...
+            'If you observe problems, you can use the %s to scale your data.\n'], Tth(1:3), ...
+            spm_file('Datatype-batch','link','spm_jobman(''interactive'','''',''spm.tools.cat.tools.spmtype'');')));
+        end
+          
 
     end
     
