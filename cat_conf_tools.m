@@ -131,9 +131,6 @@ function tools = cat_conf_tools(expert)
   realign                     = cat_vol_series_align_GUI(data);
   sanlm                       = cat_vol_sanlm_GUI(data,intlim,spm_type,prefix,suffix,expert);
   urqio                       = cat_vol_urqio_GUI;
-  long                        = cat_conf_long;
-  long1173                    = cat_conf_long1173;
-  long1445                    = cat_conf_long1445;
   iqr                         = cat_stat_IQR_GUI(data_xml);
   %qa                         = cat_vol_qa_GUI(data);
   
@@ -164,9 +161,6 @@ function tools = cat_conf_tools(expert)
     headtrimming, ...                     cat.pre.vtools.
     ...
     realign, ...                          cat.pre.long.?
-    long, ...                             cat.pre.long.?
-    long1173, ...
-    long1445, ...
     ...
     nonlin_coreg, ...                     cat.pre.vtools.
     defs, ...                             cat.pre.vtools.

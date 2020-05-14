@@ -85,7 +85,7 @@ function stools = cat_conf_stools(expert)
 
 %% import GUIs
 %  ------------------------------------------------------------------------
-  [check_mesh_cov,check_mesh_cov2] = check_mesh_cov_GUI;
+  [check_mesh_cov,check_mesh_cov2] = cat_stat_check_cov_mesh_GUI;
   [surfresamp,surfresamp_fs]       = cat_surf_resamp_GUI(expert,nproc,merge_hemi,mesh32k,lazy);
   [vol2surf,vol2tempsurf]          = cat_surf_vol2surf_GUI(expert,merge_hemi,mesh32k);
   [surfcalc,surfcalcsub]           = cat_surf_calc_GUI(expert);
@@ -353,7 +353,7 @@ function surf2roi = cat_surf_surf2roi_GUI(expert,nproc)
   };
 
 %==========================================================================
-function [check_mesh_cov,check_mesh_cov2] = check_mesh_cov_GUI
+function [check_mesh_cov,check_mesh_cov2] = cat_stat_check_cov_mesh_GUI
 
 %% Surface correlation and quality check
 %-----------------------------------------------------------------------
