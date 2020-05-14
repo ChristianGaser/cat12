@@ -158,7 +158,7 @@ estwrite.help   = {
 ''
 'Additionally, the segmentation approach uses a Partial Volume Estimation (PVE) with a simplified mixed model of at most two tissue types (Tohka et al. 2004). We start with an initial segmentation into three pure classes: gray matter (GM), white matter (WM), and cerebrospinal fluid (CSF) based on the above described AMAP estimation. The initial segmentation is followed by a PVE of two additional mixed classes: GM-WM and GM-CSF. This results in an estimation of the amount (or fraction) of each pure tissue type present in every voxel (as single voxels - given by their size - probably contain more than one tissue type) and thus provides a more accurate segmentation.'
 ''
-'Another important extension to the SPM12 segmentation is the integration of the Dartel normalisation (Ashburner 2007) into the toolbox by an already existing Dartel template in MNI space. This template was derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org) and provides the six Dartel iteration. Thus, for the majority of studies the creation of sample-specific Dartel templates is not necessary anymore.'};
+'Another important extension to the SPM12 segmentation is the integration of the Dartel or Geodesic Shooting registration into the toolbox by an already existing Dartel/Shooting template in MNI space. This template was derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org) and provides the several Dartel or Shooting iterations. Thus, for the majority of studies the creation of sample-specific templates is not necessary anymore and is mainly recommended for children data.'};
 
 %------------------------------------------------------------------------
 % CAT surface processing with existing SPM segmentation 
@@ -220,7 +220,7 @@ end
 extopts_spm = cat_conf_extopts(expert,1);   
 estwrite_spm        =  cfg_exbranch;
 estwrite_spm.tag    = 'estwrite_spm';
-estwrite_spm.name   = 'CAT12: SPM Segmentation';
+estwrite_spm.name   = 'SPM12 Segmentation with surface and thickness estimation';
 % use multithreading only if availabe
 if numcores > 1
   estwrite_spm.val  = {data_spm nproc extopts_spm output_spm};
@@ -230,7 +230,7 @@ end
 estwrite_spm.prog   = @cat_run;
 estwrite_spm.vout   = @vout;
 estwrite_spm.help   = {
-'CAT processing with thickness estimation and surface creation for SPM segmentation which is using the input of CSF, GM, and WM and also integrates Dartel normalisation (Ashburner 2007) into the toolbox by an already existing Dartel template in MNI space. This template was derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org) and provides the six Dartel iteration. Thus, for the majority of studies the creation of sample-specific Dartel templates is not necessary anymore.'};
+'Thickness estimation and surface creation for SPM segmentation which is using the input of CSF, GM, and WM of the SPM12 segmentation (instead of CAT12 segmentation) and also integrates Dartel or Geodesic Shoothing registration into the toolbox by an already existing Dartel template in MNI space. This template was derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org) and provides the several Dartel or Shooting iterations. Thus, for the majority of studies the creation of sample-specific Dartel templates is not necessary anymore.'};
 
 %------------------------------------------------------------------------
 
@@ -255,14 +255,14 @@ cat.name   = 'CAT12';
 cat.tag    = 'cat';
 
 if expert==2
-%  cat.values = {estwrite estwrite_spm estwrite1585 estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools stoolsexp};
-  cat.values = {estwrite estwrite_spm estwrite1445 estwrite1173plus estwrite1173 long long1173 long1445 catsimple catsimple_long tools stools stoolsexp};
+%  cat.values = {estwrite estwrite1585 estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long estwrite_spm tools stools stoolsexp};
+  cat.values = {estwrite estwrite1445 estwrite1173plus estwrite1173 long long1173 long1445 catsimple catsimple_long estwrite_spm tools stools stoolsexp};
 elseif expert==1
-%  cat.values = {estwrite estwrite_spm estwrite1585 estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools };
-  cat.values = {estwrite estwrite_spm estwrite1445 estwrite1173plus estwrite1173 long long1173 long1445 catsimple catsimple_long tools stools };
+%  cat.values = {estwrite estwrite1585 estwrite1445 estwrite1173plus estwrite1173 catsimple estwrite_spm tools stools };
+  cat.values = {estwrite estwrite1445 estwrite1173plus estwrite1173 long long1173 long1445 catsimple estwrite_spm tools stools };
 else
-%  cat.values = {estwrite estwrite1585 estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long tools stools}; 
-  cat.values = {estwrite estwrite1445 estwrite1173plus estwrite1173 long long1173 long1445 catsimple catsimple_long tools stools}; 
+%  cat.values = {estwrite estwrite1585 estwrite1445 estwrite1173plus estwrite1173 catsimple tools stools}; 
+  cat.values = {estwrite estwrite1445 estwrite1173plus estwrite1173 long long1173 long1445 catsimple tools stools}; 
 end
 %------------------------------------------------------------------------
 

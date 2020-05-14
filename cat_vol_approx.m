@@ -44,7 +44,7 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
   if ~exist('method','var'); method='nn'; end
   
   if ~exist('opt','var'), opt=struct(); end
-  % The function approximate only value larger than zeros due to step-wise development. 
+  % The function approximates only values larger than zeros due to step-wise development. 
   % The most easy update was to shift the value and use a mask to redefine the filter volume.
   if min(T(:))<0 
     mask  = T==0;

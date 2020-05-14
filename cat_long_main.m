@@ -6,29 +6,20 @@
 
 global opts extopts output modulate dartel delete_temp ROImenu surfaces cat
 
-if isempty(dartel),       dartel=0; end
-if isempty(modulate),     modulate=1; end
-if isempty(surfaces),     surfaces=cat_get_defaults('output.surfaces'); end
-if isempty(delete_temp),  delete_temp=1; end
-
+if isempty(dartel),       dartel      = 0; end
+if isempty(modulate),     modulate    = 1; end
+if isempty(surfaces),     surfaces    = cat_get_defaults('output.surfaces'); end
+if isempty(delete_temp),  delete_temp = 1; end
 
 write_CSF = cat_get_defaults('output.CSF.mod') > 0;
 
-
 if isfield(extopts,'admin') && isfield(extopts.admin,'lazy') && extopts.admin.lazy
+  fprintf('\nCAT12 is restarted in developer mode to enable additional options.\n');
   cat12('developer');
 else
+  fprintf('\nCAT12 is restarted in expert mode to enable additional options.\n');
   cat12('expert');
 end
-
-% correct extopts fields for expert mode
-tmp_fields = char('APP','LASstr','gcutstr','restypes');
-segmentation = '';
-for i=1:size(tmp_fields,1)
-  segmentation = setfield(segmentation,deblank(tmp_fields(i,:)),extopts.(deblank(tmp_fields(i,:))));
-  extopts = rmfield(extopts,deblank(tmp_fields(i,:)));
-end
-extopts.segmentation = segmentation;
 
 warning('off','MATLAB:DELETE:FileNotFound');
 
@@ -49,7 +40,7 @@ else
 end
 
 
-% longitudinal rigid registration with final masking
+% 1) longitudinal rigid registration with final masking
 %-----------------------------------------------------------------------
 mbi = mbi + 1; mb_rigid = mbi; 
 matlabbatch{mbi}.spm.tools.cat.tools.series.bparam          = 1e6;
@@ -57,9 +48,7 @@ matlabbatch{mbi}.spm.tools.cat.tools.series.use_brainmask   = 1;
 matlabbatch{mbi}.spm.tools.cat.tools.series.reduce          = 1;
 matlabbatch{mbi}.spm.tools.cat.tools.series.data            = '<UNDEFINED>';
 
-
-
-% cat12 segmentation of average image 
+% 2) cat12 segmentation of average image 
 %-----------------------------------------------------------------------
 mbi = mbi + 1; mb_catavg = mbi;
 matlabbatch{mbi}.spm.tools.cat.estwrite.data(1)             = cfg_dep('Longitudinal Registration: Midpoint Average', substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','avg', '()',{':'}));
@@ -75,9 +64,7 @@ if exist('output','var') && ~isempty(output)
 end
 % surface estimation
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.surface      = surfaces;
-if exist('ROImenu','var') && ~isempty(ROImenu)
-  matlabbatch{mbi}.spm.tools.cat.estwrite.output.ROImenu    = ROImenu;
-end
+matlabbatch{mbi}.spm.tools.cat.long.ROImenu.noROI           = struct([]);
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.GM.native    = 0;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.GM.dartel    = 2;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.GM.mod       = 0;
@@ -89,7 +76,7 @@ matlabbatch{mbi}.spm.tools.cat.estwrite.output.TPMC.dartel  = 2;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.bias.warped  = 0;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.warps        = [0 0];
 
-% cat12 segmentation of realigned images 
+% 3) cat12 segmentation of realigned images with prior from avg image
 %-----------------------------------------------------------------------
 mbi = mbi + 1; mb_cat = mbi;
 % use average image as prior for affine transformation and surface extraction
@@ -122,16 +109,14 @@ matlabbatch{mbi}.spm.tools.cat.estwrite.output.bias.warped  = 0;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.warps        = [1 0];
 matlabbatch{mbi}.spm.tools.cat.estwrite.useprior(1)         = cfg_dep('Longitudinal Registration: Midpoint Average', substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','avg', '()',{':'}));
 
-% averaging deformations
+% 4) averaging deformations
 %-----------------------------------------------------------------------
 mbi = mbi + 1; mb_avgdef = mbi;
 matlabbatch{mbi}.spm.tools.cat.tools.avg_img.data(1)  = cfg_dep('CAT12: Segmentation (current release): Deformation Field', substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','fordef', '()',{':'}));
 matlabbatch{mbi}.spm.tools.cat.tools.avg_img.output   = '';
 matlabbatch{mbi}.spm.tools.cat.tools.avg_img.outdir   = {''};
 
-
-
-% applying deformations to native segmentations
+% 5) applying deformations to native segmentations
 %-----------------------------------------------------------------------
 mbi = mbi + 1; 
 matlabbatch{mbi}.spm.tools.cat.tools.defs.field1(1)   = cfg_dep('Image Average: Average Image: ', substruct('.','val', '{}',{mb_avgdef}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','files'));
@@ -146,9 +131,7 @@ if modulate
 end
 matlabbatch{mbi}.spm.tools.cat.tools.defs.interp      = 1;
 
-
-
-% applying deformations to average T1 image
+% 6) applying deformations to average T1 image
 %-----------------------------------------------------------------------
 mbi = mbi + 1; 
 matlabbatch{mbi}.spm.tools.cat.tools.defs.field1(1)   = cfg_dep('Image Average: Average Image: ', substruct('.','val', '{}',{mb_avgdef}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','files'));
@@ -156,24 +139,31 @@ matlabbatch{mbi}.spm.tools.cat.tools.defs.images(1)   = cfg_dep('Longitudinal Re
 matlabbatch{mbi}.spm.tools.cat.tools.defs.interp      = 1;
 matlabbatch{mbi}.spm.tools.cat.tools.defs.modulate    = 0;
 
-
-
-% delete temporary files
+% 7) delete temporary files
 %-----------------------------------------------------------------------
 if delete_temp
   mbi = mbi + 1; 
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(1)  = cfg_dep('CAT12: Segmentation (current release): p1 Image', substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','p', '()',{':'}));
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(2)  = cfg_dep('CAT12: Segmentation (current release): p2 Image', substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{2}, '.','p', '()',{':'}));
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(3)  = cfg_dep('CAT12: Segmentation (current release): Deformation Field', substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','fordef', '()',{':'}));
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(4)  = cfg_dep('CAT12: Segmentation (current release): rp1 affine Image', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','rpa', '()',{':'}));
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(5)  = cfg_dep('CAT12: Segmentation (current release): rp2 affine Image', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{2}, '.','rpa', '()',{':'}));
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(6)  = cfg_dep('CAT12: Segmentation (current release): rp3 affine Image', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{3}, '.','rpa', '()',{':'}));
-  c = 7;
+  c = 1;
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c)  = cfg_dep('CAT12: Segmentation (current release): p1 Image', substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','p', '()',{':'})); c = c+1;
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c)  = cfg_dep('CAT12: Segmentation (current release): p2 Image', substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{2}, '.','p', '()',{':'})); c = c+1;
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c)  = cfg_dep('CAT12: Segmentation (current release): Deformation Field', substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','fordef', '()',{':'})); c = c+1;
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): CAT Report JGP', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','catreportjpg', '()',{':'})); c = c+1;
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): CAT Report', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','catreport', '()',{':'})); c = c+1;
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): CAT log-file', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','catlog', '()',{':'})); c = c+1;
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): rp1 affine Image', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','rpa', '()',{':'})); c = c+1;
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): rp2 affine Image', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{2}, '.','rpa', '()',{':'})); c = c+1;
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): rp3 affine Image', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{3}, '.','rpa', '()',{':'})); c = c+1;  
   if surfaces
-    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c)  = cfg_dep('CAT12: Segmentation (current release): Left Central Surface', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','lhcentral', '()',{':'})); c = c+1;
-    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c)  = cfg_dep('CAT12: Segmentation (current release): Left Thickness', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','lhthickness', '()',{':'})); c = c+1;
-    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c)  = cfg_dep('CAT12: Segmentation (current release): Right Central Surface', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','rhcentral', '()',{':'})); c = c+1;
-    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c)  = cfg_dep('CAT12: Segmentation (current release): Right Thickness', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','rhthickness', '()',{':'})); c = c+1;
+    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Left Central Surface', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','lhcentral', '()',{':'})); c = c+1;
+    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Left Sphere Surface', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','lhsphere', '()',{':'})); c = c+1;
+    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Left Spherereg Surface', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','lhspherereg', '()',{':'})); c = c+1;
+    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Left Thickness', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','lhthickness', '()',{':'})); c = c+1;
+    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Left Pbt', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','lhpbt', '()',{':'})); c = c+1;
+    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Right Central Surface', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','rhcentral', '()',{':'})); c = c+1;
+    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Right Sphere Surface', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','rhsphere', '()',{':'})); c = c+1;
+    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Right Spherereg Surface', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','rhspherereg', '()',{':'})); c = c+1;
+    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Right Thickness', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','rhthickness', '()',{':'})); c = c+1;
+    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Right Pbt', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','rhpbt', '()',{':'})); c = c+1;
   end
   if write_CSF
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): p3 Image', substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{3}, '.','p', '()',{':'}));
@@ -181,9 +171,7 @@ if delete_temp
   matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.delete  = false;
 end
 
-
-
-% display finishing
+% 8) display finishing
 %-----------------------------------------------------------------------
 mbi = mbi + 1; 
 matlabbatch{mbi}.cfg_basicio.run_ops.call_matlab.inputs{1}.images(1)  = cfg_dep('Longitudinal Rigid Registration: Realigned images', substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','rimg', '()',{':'}));
