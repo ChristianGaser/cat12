@@ -50,17 +50,17 @@ else
     end
 end
 
-matlabbatch{1}.spm.tools.cat.tools.long.subj.mov = cell(n,1);
-matlabbatch{1}.spm.tools.cat.tools.long.nproc = 0;
+matlabbatch{1}.spm.tools.cat.long.subj.mov = cell(n,1);
+matlabbatch{1}.spm.tools.cat.long.nproc = 0;
 
 for i=1:n
-  matlabbatch{1}.spm.tools.cat.tools.long.subj.mov{i} = names{i};
+  matlabbatch{1}.spm.tools.cat.long.subj.mov{i} = names{i};
 end
 
-matlabbatch{1}.spm.tools.cat.tools.long.modulate = 1;
+matlabbatch{1}.spm.tools.cat.long.modulate = 1;
 
 if output_surface == 1
-  matlabbatch{1}.spm.tools.cat.tools.long.output.surface = 1;
+  matlabbatch{1}.spm.tools.cat.long.output.surface = 1;
 end
 
 warning off
