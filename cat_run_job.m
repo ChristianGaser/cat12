@@ -337,7 +337,7 @@ function cat_run_job(job,tpm,subj)
         obj.fwhm     = job.opts.fwhm;
         obj.biasreg  = job.opts.biasreg;
         obj.biasfwhm = job.opts.biasfwhm;
-        obj.tpm      = tpm;        
+        obj.tpm      = tpm;   
         obj.reg      = job.opts.warpreg;
         obj.samp     = job.opts.samp;              
         obj.tol      = job.opts.tol;
@@ -476,7 +476,7 @@ function cat_run_job(job,tpm,subj)
           if isfield(job,'useprior') && ~isempty(job.useprior)
             priorname = job.useprior{1};
             [pp,ff,ee,ex] = spm_fileparts(priorname);  %#ok<ASGLU>
-            catxml = fullfile(pth,reportfolder,['cat_' ff '.xml']);
+            catxml = fullfile(pp,reportfolder,['cat_' ff '.xml']);
             
             % check that file exists and get affine transformation
             if exist(catxml,'file')
