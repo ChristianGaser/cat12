@@ -1,5 +1,26 @@
 ------------------------------------------------------------------------
-r1621 | gaser | 2020-05-14 17:29:48
+r1622 | gaser | 2020-05-15 15:18:07
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+MM      cat_long_createTPM.m
+M       cat_long_main.m
+ M      cat_stat_results.m
+MM      cat_stat_spm_results_ui.m
+A       cat_surf_map_atlas.m
+M       html/cat.html
+
+(1) Changed: Added new function to map Freesurfer annot atlas labels to 
+             individual surfaces: cat_surf_map_atlas.m
+(2) Changed: Updated Resampling function CAT_ResampleSurf to support label 
+             interpolation.
+(3) Changed: Compiled all CAT*c files to consider new changes.
+(4) Changed: Updated new long. mode and integrated new function to use long 
+             TPMs.
+------------------------------------------------------------------------
+r1621 | gaser | 2020-05-14 17:30:16 +0200 (Do, 14 Mai 2020) | 23 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -23,6 +44,7 @@ M       tbx_cfg_cat.m
 (5) Fixed: Disabled dependencies for long. batch because it's not yet working.
 (6) Changed: Updated shell and batch for longitudinal processing from command 
     line.
+
 ------------------------------------------------------------------------
 r1620 | dahnke | 2020-05-14 15:59:40 +0200 (Do, 14 Mai 2020) | 89 lines
 
