@@ -124,7 +124,7 @@ function varargout = cat_stat_spm_results_ui(varargin)
 % Copyright (C) 1996-2018 Wellcome Trust Centre for Neuroimaging
  
 % Karl Friston & Andrew Holmes
-% $Id: cat_stat_spm_results_ui.m 1590 2020-03-23 07:38:58Z dahnke $
+% $Id$
  
  
 %==========================================================================
@@ -239,7 +239,7 @@ function varargout = cat_stat_spm_results_ui(varargin)
 % modified version of
 % spm_results_ui.m 7388 2018-08-06
 
-SVNid = '$Rev: 1590 $'; 
+SVNid = '$Rev$'; 
 
 %-Condition arguments
 %--------------------------------------------------------------------------
