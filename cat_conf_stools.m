@@ -91,9 +91,9 @@ function stools = cat_conf_stools(expert)
   [surfcalc,surfcalcsub]           = cat_surf_calc_GUI(expert);
   renderresults                    = cat_surf_results_GUI(expert);
   surfextract                      = cat_surf_parameters_GUI(expert,nproc,lazy);
-  flipsides                        = cat_surf_flipsides_GUI;
+  flipsides                        = cat_surf_flipsides_GUI(expert);
   surf2roi                         = cat_surf_surf2roi_GUI(expert,nproc);
-  roi2surf                         = cat_roi_roi2surf_GUI; 
+  roi2surf                         = cat_roi_roi2surf_GUI(expert); 
   surfstat                         = cat_surf_stat_GUI; 
   surfcon                          = cat_surf_spm_cfg_con;
   surfres                          = cat_surf_spm_cfg_results; 
@@ -104,60 +104,25 @@ function stools = cat_conf_stools(expert)
   stools = cfg_choice;
   stools.name   = 'Surface Tools';
   stools.tag    = 'stools';
-  if expert==2
-    stools.values = { ...
-      check_mesh_cov, ...     .cat.stat
-      check_mesh_cov2, ...    .cat.stat
-      surfextract, ...        .cat.stools
-      surfresamp, ...         .cat.stools
-      surfresamp_fs,...       .cat.stools
-      vol2surf, ...           .cat.stools
-      vol2tempsurf, ...       .cat.stools
-      surfcalc, ...           .cat.stools
-      surfcalcsub, ...        .cat.stools
-      surf2roi, ...           .cat.rtools?
-      roi2surf, ...           .cat.rtools?
-      flipsides, ...          .cat.stools
-      surfstat ...
-      surfcon ...
-      surfres ...
-      renderresults, ...      .cat.disp/plot/write?
-      };    
-  elseif expert==1
-    stools.values = { ...
-      check_mesh_cov, ...
-      check_mesh_cov2, ...
-      surfextract, ...
-      surfresamp, ...
-      surfresamp_fs,...
-      vol2surf, ...
-      vol2tempsurf, ...
-      surfcalc, ...
-      surfcalcsub, ...
-      surf2roi, ...
-      surfstat ...
-      surfcon ...
-      surfres ...
-      renderresults, ...      .cat.disp/plot/write?
-      };
-  else
-    stools.values = { ...
-      check_mesh_cov, ...
-      check_mesh_cov2, ...
-      surfextract, ...
-      surfresamp, ...
-      surfresamp_fs,...
-      surf2roi, ...
-      vol2surf, ...
-      vol2tempsurf, ...
-      surfcalc, ...
-      surfcalcsub, ...
-      surfstat ...
-      surfcon ...
-      surfres ...
-      renderresults ...
-      };
-  end
+  stools.values = { ...
+    check_mesh_cov, ...     .cat.stat
+    check_mesh_cov2, ...    .cat.stat
+    surfextract, ...        .cat.stools
+    surfresamp, ...         .cat.stools
+    surfresamp_fs,...       .cat.stools
+    vol2surf, ...           .cat.stools
+    vol2tempsurf, ...       .cat.stools
+    surfcalc, ...           .cat.stools
+    surfcalcsub, ...        .cat.stools
+    surf2roi, ...           .cat.rtools?
+      roi2surf, ...         .cat.rtools? (developer)
+      flipsides, ...        .cat.stools  (developer)
+    surfstat ...
+    surfcon ...
+    surfres ...
+    renderresults, ...      .cat.disp/plot/write?
+  };    
+
 
 %==========================================================================
 % subfunctions of batch GUIs
@@ -271,6 +236,7 @@ function surf2roi = cat_surf_surf2roi_GUI(expert,nproc)
   end
   ROIs.dir     = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces'); 
   ROIs.num     = [1 Inf];
+  ROIs.hidden  = expert<2;
   ROIs.help    = {'These are the ROI atlas files. Both sides will be processed.'};
 
   
@@ -347,21 +313,20 @@ function surf2roi = cat_surf_surf2roi_GUI(expert,nproc)
     avg.max ...
     avg.median ...
   };
+  avg.main.hidden    = expert<2;
+
+
+  nproc.hidden  = expert<2;
 
 %% main function
   surf2roi      = cfg_exbranch;
   surf2roi.tag  = 'surf2roi';
   surf2roi.name = 'Extract ROI-based surface values';
-  switch expert
-  case 2
-    surf2roi.val  = {
-      cdata_sample ...
-      ROIs ...
-      nproc ... 
-      avg.main};
-  case {0, 1}
-    surf2roi.val  = {cdata_sample};
-  end
+  surf2roi.val  = {
+    cdata_sample ...
+    ROIs ...
+    nproc ... 
+    avg.main};
   surf2roi.prog = @cat_surf_surf2roi;
   surf2roi.vout = @vout_surf_surf2roi;
   surf2roi.help = {
@@ -457,6 +422,7 @@ function [vol2surf,vol2tempsurf] = cat_surf_vol2surf_GUI(expert,merge_hemi,mesh3
   interp.labels  = {'Nearest neighbour','Linear','Cubic'};
   interp.values  = {{'nearest_neighbour'},{'linear'},{'cubic'}};
   interp.val     = {{'linear'}};
+  interp.hidden  = expert<1;
   interp.help    = {
     'Volume extraction interpolation type. '
     ' -linear:            Use linear interpolation (default).'
@@ -664,24 +630,15 @@ function [vol2surf,vol2tempsurf] = cat_surf_vol2surf_GUI(expert,merge_hemi,mesh3
   vol2surf      = cfg_exbranch;
   vol2surf.tag  = 'vol2surf';
   vol2surf.name = 'Map Volume (Native Space) to Individual Surface';
-  if expert
-    vol2surf.val = {
-      data_sub ...
-      data_surf_sub_lh ...
-      sample ...
-      interp ...
-      datafieldname ...
-      mapping_native ...
-      };
-  else
-    vol2surf.val = {
-      data_sub ...
-      data_surf_sub_lh ...
-      sample ...
-      datafieldname ...
-      mapping_native ...
+  vol2surf.val = {
+    data_sub ...
+    data_surf_sub_lh ...
+    sample ...
+    interp ...
+    datafieldname ...
+    mapping_native ...
     };
-  end
+
   vol2surf.prog = @cat_surf_vol2surf;
   vol2surf.vout = @vout_vol2surf;
   vol2surf.help = {
@@ -801,6 +758,7 @@ function [surfcalc,surfcalcsub] = cat_surf_calc_GUI(expert)
   datahandling.labels = {'subjectwise','datawise'};
   datahandling.values = {1,2};
   datahandling.val    = {1};
+  datahandling.hidden = expert<2;
   datahandling.help   = {...
     'There are two ways to hand surface calculation for many subjects: (i) subjectwise or (ii) datawise.'
     ''
@@ -886,37 +844,23 @@ function [surfcalc,surfcalcsub] = cat_surf_calc_GUI(expert)
   surfcalcsub      = cfg_exbranch;
   surfcalcsub.tag  = 'surfcalcsub';
   surfcalcsub.name = 'Surface Calculator (subject-wise)';
-  if expert>1
-    surfcalcsub.val  = {
-      cdata_sample ...
-      datahandling ...
-      dataname ...
-      outdir ...
-      expression ...
-      dmtx ...
-    };
-    surfcalcsub.help = {
-      'Mathematical operations for surface data sets (textures).'
-      'In contrast to the "Surface Calculator" it allows to apply the same expression to multiple subjects. Please note that a fixed name structure is expected: [rh|lh].TEXTURENAME[.resampled].subjectname[.gii]. Here TEXTURENAME will be replaced by the output name.'
-    };
-  else
-    surfcalcsub.val  = {
-      cdata_sample ...
-      dataname ...
-      outdir ...
-      expression ...
-      dmtx ...
-    };
-    surfcalcsub.help = {
-      'Mathematical operations for surface data sets (textures).'
-      'In contrast to the "Surface Calculator" it allows to apply the same expression to multiple subjects. Please note that a fixed name structure is expected: [rh|lh].TEXTURENAME[.resampled].subjectname[.gii]. Here TEXTURENAME will be replaced by the output name.'
-    };
-  end
+  surfcalcsub.val  = {
+    cdata_sample ...
+    datahandling ... developer
+    dataname ...
+    outdir ...
+    expression ...
+    dmtx ...
+  };
+  surfcalcsub.help = {
+    'Mathematical operations for surface data sets (textures).'
+    'In contrast to the "Surface Calculator" it allows to apply the same expression to multiple subjects. Please note that a fixed name structure is expected: [rh|lh].TEXTURENAME[.resampled].subjectname[.gii]. Here TEXTURENAME will be replaced by the output name.'
+  };
   surfcalcsub.prog = @cat_surf_calc;
   surfcalcsub.vout = @(job) vout_cat_surf_calcsub(job);
  
 %==========================================================================
-function flipsides = cat_surf_flipsides_GUI
+function flipsides = cat_surf_flipsides_GUI(expert)
 % Flipsides
 %-----------------------------------------------------------------------
   cdata               = cfg_files;
@@ -939,6 +883,7 @@ function flipsides = cat_surf_flipsides_GUI
   flipsides.name      = 'Flip right to left hemisphere';
   flipsides.val       = {cdata}; % replace later by cdata_sample ... update vout ...
   flipsides.prog      = @cat_surf_flipsides;
+  flipsides.hidden    = expert<2; 
   flipsides.help      = {'This function flip the right hemisphere to the left side, to allow side' ''};
   flipsides.vout      = @(job) vout_cat_surf_flipsides(job); 
 
@@ -947,6 +892,7 @@ function [surfresamp,surfresamp_fs] = cat_surf_resamp_GUI(expert,nproc,merge_hem
 %% Resample and smooth surfaces 
 %  ------------------------------------------------------------------------
 
+  lazy.hidden       = expert<1;
 
   data_surf         = cfg_files;
   data_surf.tag     = 'data_surf';
@@ -987,9 +933,9 @@ function [surfresamp,surfresamp_fs] = cat_surf_resamp_GUI(expert,nproc,merge_hem
   surfresamp.tag  = 'surfresamp';
   surfresamp.name = 'Resample and Smooth Surface Data';
   if expert
-    surfresamp.val  = {sample_surf,merge_hemi,mesh32k,fwhm_surf,lazy,nproc};
+    surfresamp.val  = {sample_surf, merge_hemi,mesh32k,fwhm_surf,lazy,nproc};
   else
-    surfresamp.val  = {data_surf,merge_hemi,mesh32k,fwhm_surf,nproc};
+    surfresamp.val  = {data_surf,   merge_hemi,mesh32k,fwhm_surf,lazy,nproc};
   end
   surfresamp.prog = @cat_surf_resamp;
   surfresamp.vout = @(job) vout_surf_resamp(job);
@@ -1038,7 +984,7 @@ function [surfresamp,surfresamp_fs] = cat_surf_resamp_GUI(expert,nproc,merge_hem
   'If you have existing Freesurfer data (e.g. thickness) this function can be used to resample these data, smooth the resampled data, and convert Freesurfer data to gifti format.'};
 
 %==========================================================================
-function roi2surf = cat_roi_roi2surf_GUI
+function roi2surf = cat_roi_roi2surf_GUI(expert)
 %% roi to surface  
 %  ------------------------------------------------------------------------
 
@@ -1082,17 +1028,18 @@ function roi2surf = cat_roi_roi2surf_GUI
 % average function? - not required 
  
 % main function
-  roi2surf      = cfg_exbranch;
-  roi2surf.tag  = 'roi2surf';
-  roi2surf.name = 'Map ROI data to the surface';
-  roi2surf.val  = {
+  roi2surf        = cfg_exbranch;
+  roi2surf.tag    = 'roi2surf';
+  roi2surf.name   = 'Map ROI data to the surface';
+  roi2surf.val    = {
     r2s.ROIs ...
     r2s.atlas ...
     r2s.data ...
     r2s.surf ...
     };
-  roi2surf.prog = @cat_roi_roi2surf;
-  roi2surf.help = {
+  roi2surf.prog   = @cat_roi_roi2surf;
+  roi2surf.hidden = expert<2;
+  roi2surf.help   = {
     ''
   };
 
@@ -1134,163 +1081,164 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
   
   
 
+
+  % ---------------------------------------------------------------------
+  % DFG project measures
+  % ---------------------------------------------------------------------
+  GIL        = cfg_menu;
+  GIL.name   = 'Laplacian gyrification indices';
+  GIL.tag    = 'GIL';
+  GIL.labels = {'No','inward','outward','generalized','all'};
+  GIL.values = {0,1,2,3,4};
+  GIL.val    = {0}; 
+  GIL.hidden = expert<2; 
+  GIL.help   = {[ ...
+    'WARNING: This GI measures is still in development and not verified yet!\n\n ' ...
+    'Extraction of Laplacian-based gyrification indices as local area relation between the individual folded and the unfolded surface. ' ...
+    'The Laplacian approach supports an optimal mapping between the surfaces but the classical definition of the outer hull result in a measure that focuses on inward folding. ' ...
+    '\n\n' ...
+    'The "inward" option use only the hull surface resulting in high sulcal values (Dahnke et al. 2010, Li et al. 2014) and is a local 3D representation of Zilles gyrification index (Zilles et al. 1989). ' ...
+    'The "outward" option use only the core surface and result in high gyral values. However, the core definition is expected to be less robust for very strong tissue atrophy. ' ...
+    'The "generalized" option combine both models resulting in an independent folding model that is expected to require less smoothing for surface-based analysis (15 mm). ' ...
+    '\n\n' ...
+    'This research part of the DFG project DA 2167/1-1 (2019/04 - 2012/04).\n\n' ...
+  ]};
+
   if expert>1
+    % Developer/expert parameters? 
+    GILtype            = GIL; 
+
+    % to small values may lead to problems in high resolution data?
+    % > compensation term in cat_surf_gyrification 
+    laplaceerr         = cfg_menu;
+    laplaceerr.name    = 'Laplacian filter accuracy';
+    laplaceerr.tag     = 'laplaceerr';
+    laplaceerr.labels  = {'0.001','0.0001','0.00001'};
+    laplaceerr.values  = {0.001,0.0001,0.00001};
+    laplaceerr.val     = {0.0001};
+    laplaceerr.help    = {'Filter accuracy of the voxel-base Laplace filter applied before streamline estimation. Smaller values are more accurate but increase processing time. \n\n'};
+
+    % check if this compensate for voxel size!
+    GIstreamopt        = cfg_menu;
+    GIstreamopt.name   = 'Streamline accuracy';
+    GIstreamopt.tag    = 'GIstreamopt';
+    GIstreamopt.labels = {'0.01','0.001','0.0001'};
+    GIstreamopt.values = {0.01,0.001,0.0001};
+    GIstreamopt.val    = {0.01};
+    GIstreamopt.help   = {'Stepsize of the Laplacian streamline estimation. Small values are more accurate but increase processing and memory demands. \n\n'};
+
+    % normalization function
+    GInorm             = cfg_menu;
+    GInorm.name        = 'Normalization function';
+    GInorm.tag         = 'GInorm';
+    GInorm.labels      = {'none','2nd root','3rd root','6th root','10th root','log2','log','log10'};
+    GInorm.values      = {1,2,3,6,10,'log2','log','log10'};
+    GInorm.val         = {'log10'};
+    GInorm.help        = {[ ...
+      'Normalization function (after area filtering) to avoid the exponential increase of the GI values and to have more gaussian-like value distribution.' ...
+      'To avoid negative values in case of logarithmic functions the values were corrected by the basis of the logarithmic function, e.g. +10 for log10. ' ...
+      'The logarithmic function supports stronger compensation of high values. This is especially important for the inward and outward but not generalized GI. ' ...
+      ]};
+
+    % Relative (brain size depending) or absolute (in mm) filtering?
+    % For animals relative should be more correct! 
+    %
+    % Comment RD20190409
     % ---------------------------------------------------------------------
-    % DFG project measures
+    % Smoothing has to be done on the original surfaces to guarantee that 
+    % the local GI is equal to the global on. 
+    % We got similar problems for "resample and smooth" as for the "area"
+    % measure. 
+    % Maybe an "resample and smooth" (automatic) normalization option can 
+    % help that guarantee the right kind of handling, e.g. global mean or
+    % sum?
     % ---------------------------------------------------------------------
-    GIL        = cfg_menu;
-    GIL.name   = 'Laplacian gyrification indices';
-    GIL.tag    = 'GIL';
-    GIL.labels = {'No','inward','outward','generalized','all'};
-    GIL.values = {0,1,2,3,4};
-    GIL.val    = {0}; 
-    GIL.help   = {[ ...
-      'WARNING: This GI measures is still in development and not verified yet!\n\n ' ...
-      'Extraction of Laplacian-based gyrification indices as local area relation between the individual folded and the unfolded surface. ' ...
-      'The Laplacian approach supports an optimal mapping between the surfaces but the classical definition of the outer hull result in a measure that focuses on inward folding. ' ...
-      '\n\n' ...
-      'The "inward" option use only the hull surface resulting in high sulcal values (Dahnke et al. 2010, Li et al. 2014) and is a local 3D representation of Zilles gyrification index (Zilles et al. 1989). ' ...
-      'The "outward" option use only the core surface and result in high gyral values. However, the core definition is expected to be less robust for very strong tissue atrophy. ' ...
-      'The "generalized" option combine both models resulting in an independent folding model that is expected to require less smoothing for surface-based analysis (15 mm). ' ...
-      '\n\n' ...
-      'This research part of the DFG project DA 2167/1-1 (2019/04 - 2012/04).\n\n' ...
-    ]};
-  
-    if expert>1
-      % Developer/expert parameters? 
-      GILtype            = GIL; 
-    
-      % to small values may lead to problems in high resolution data?
-      % > compensation term in cat_surf_gyrification 
-      laplaceerr         = cfg_menu;
-      laplaceerr.name    = 'Laplacian filter accuracy';
-      laplaceerr.tag     = 'laplaceerr';
-      laplaceerr.labels  = {'0.001','0.0001','0.00001'};
-      laplaceerr.values  = {0.001,0.0001,0.00001};
-      laplaceerr.val     = {0.0001};
-      laplaceerr.help    = {'Filter accuracy of the voxel-base Laplace filter applied before streamline estimation. Smaller values are more accurate but increase processing time. \n\n'};
 
-      % check if this compensate for voxel size!
-      GIstreamopt        = cfg_menu;
-      GIstreamopt.name   = 'Streamline accuracy';
-      GIstreamopt.tag    = 'GIstreamopt';
-      GIstreamopt.labels = {'0.01','0.001','0.0001'};
-      GIstreamopt.values = {0.01,0.001,0.0001};
-      GIstreamopt.val    = {0.01};
-      GIstreamopt.help   = {'Stepsize of the Laplacian streamline estimation. Small values are more accurate but increase processing and memory demands. \n\n'};
+    GILfs              = cfg_entry;
+    GILfs.tag          = 'GIpresmooth';
+    GILfs.name         = 'Final filter size';
+    GILfs.strtype      = 'r';
+    GILfs.val          = {0.1}; 
+    GILfs.num          = [1 inf];
+    GILfs.help         = {[ ...
+      'Filter of the Laplacian based GI has to be done for the area variables of the folded and unfolded surfaces. ' ...
+      'Values between 0 and 1 describe relative smoothing depending on the brain size, whereas values larger/equal than one describes the filter size in mm.']}; 
 
-      % normalization function
-      GInorm             = cfg_menu;
-      GInorm.name        = 'Normalization function';
-      GInorm.tag         = 'GInorm';
-      GInorm.labels      = {'none','2nd root','3rd root','6th root','10th root','log2','log','log10'};
-      GInorm.values      = {1,2,3,6,10,'log2','log','log10'};
-      GInorm.val         = {'log10'};
-      GInorm.help        = {[ ...
-        'Normalization function (after area filtering) to avoid the exponential increase of the GI values and to have more gaussian-like value distribution.' ...
-        'To avoid negative values in case of logarithmic functions the values were corrected by the basis of the logarithmic function, e.g. +10 for log10. ' ...
-        'The logarithmic function supports stronger compensation of high values. This is especially important for the inward and outward but not generalized GI. ' ...
-        ]};
-      
-      % Relative (brain size depending) or absolute (in mm) filtering?
-      % For animals relative should be more correct! 
-      %
-      % Comment RD20190409
-      % ---------------------------------------------------------------------
-      % Smoothing has to be done on the original surfaces to guarantee that 
-      % the local GI is equal to the global on. 
-      % We got similar problems for "resample and smooth" as for the "area"
-      % measure. 
-      % Maybe an "resample and smooth" (automatic) normalization option can 
-      % help that guarantee the right kind of handling, e.g. global mean or
-      % sum?
-      % ---------------------------------------------------------------------
-    
-      GILfs              = cfg_entry;
-      GILfs.tag          = 'GIpresmooth';
-      GILfs.name         = 'Final filter size';
-      GILfs.strtype      = 'r';
-      GILfs.val          = {0.1}; 
-      GILfs.num          = [1 inf];
-      GILfs.help         = {[ ...
-        'Filter of the Laplacian based GI has to be done for the area variables of the folded and unfolded surfaces. ' ...
-        'Values between 0 and 1 describe relative smoothing depending on the brain size, whereas values larger/equal than one describes the filter size in mm.']}; 
+    % save temporary surfaces 
+    %{
+    GIwritehull        = cfg_menu;
+    GIwritehull.name   = 'Laplacian gyrification indices hull/core surface output';
+    GIwritehull.tag    = 'GIwritehull';
+    GIwritehull.labels = {'No','Yes'};
+    GIwritehull.values = {0,1};
+    GIwritehull.val    = {1};
+    GIwritehull.help   = {'Write hull/core surface use in the Laplacian gyrification index estimation.'};
+    %}
 
-      % save temporary surfaces 
-      %{
-      GIwritehull        = cfg_menu;
-      GIwritehull.name   = 'Laplacian gyrification indices hull/core surface output';
-      GIwritehull.tag    = 'GIwritehull';
-      GIwritehull.labels = {'No','Yes'};
-      GIwritehull.values = {0,1};
-      GIwritehull.val    = {1};
-      GIwritehull.help   = {'Write hull/core surface use in the Laplacian gyrification index estimation.'};
-      %}
-      
-      % hull model - This is not yet implemented! 
-      % The idea behind is that the hemisphere-based hull is artificial too
-      % and that are more natural definition is given by the full intra-cranial
-      % volume. However, this have to include the cerebellum and 
-      % brainstem as well and needs to utilize the Yp0 map!
-      %{
-      GIhullmodel        = cfg_menu;
-      GIhullmodel.name   = 'Hull model';
-      GIhullmodel.tag    = 'GIhullmodel';
-      GIhullmodel.labels = {'Hemisphere-based','Skull-based'};
-      GIhullmodel.values = {0,1};
-      GIhullmodel.val    = {0};
-      GIhullmodel.help   = {'There are two different hull definitions: (i) the classical using a semi-convex hull for each hemisphere and (ii) the full intracranial volume with both hemispheres and the cerebellum. ' ''};
-      %}
-      
-      % core model 
-      GIcoremodel        = cfg_menu;
-      GIcoremodel.name   = 'Core model';
-      GIcoremodel.tag    = 'GIcoremodel';
-      GIcoremodel.labels = {'1','2','3'};
-      GIcoremodel.values = {1,2,3};
-      GIcoremodel.val    = {1};
-      GIcoremodel.help   = {[ ...
-        'There are multiple ways to define the central core of the brain structure and it is unclear which one fits best. ' ...
-        'It should have some anatomical meaning (so the ventricles would be nice as source of cortical development) ' ...
-        'but being at once independent of aging (so ventricles are not real good). ' ...
-        'It should be defined on an individual level (to support the scaling/normalization of head size within and between species) ' ...
-        'to remove rather than increasing individual effects. ' ...
-        ] '' };
-      
-      % threshold for core estimation 
-      %{
-      GIcoreth           = cfg_entry;
-      GIcoreth.name      = 'Core threshold';
-      GIcoreth.tag       = 'GIcoreth';
-      GIcoreth.strtype   = 'r';
-      GIcoreth.num       = [1 1];
-      GIcoreth.val       = {0.2};
-      GIcoreth.help      = {[ ...
-        'Lower thresholds remove less gyri whereas high thresholds remove more gyri depending on the used core model. ' ...
-        'Initial test range between 0.05 (remove only very high frequency structures) and 0.25 (remove everything that is not close to the insula). ' ...
-        ] ''};
-     %}
-      
-      % add own suffix to support multiple GI estimations
-      GIsuffix         = cfg_entry;
-      GIsuffix.tag     = 'GIsuffix';
-      GIsuffix.name    = 'Suffix';
-      GIsuffix.strtype = 's';
-      GIsuffix.num     = [0 Inf];
-      GIsuffix.val     = {''};
-      GIsuffix.help    = {[ ...
-        'Specify the string to be appended to the filenames of the filtered image file(s). ' ...
-        'Default suffix is "".' ...
-        ... 'Use "PARA" to add input parameters, e.g. "_lerr%1d_sacc%1d_fs%03d_smodel%d[_coreth%02d]" with ... . '
-        ] ''};
-    
-      % main note
-      GIL      = cfg_branch;
-      GIL.name = GILtype.name;
-      GIL.tag  = GILtype.tag;
-      GIL.val  = {GILtype,GIcoremodel,laplaceerr,GIstreamopt,GILfs,GIsuffix}; %GIhullmodel,,GIwritehull
-    end
+    % hull model - This is not yet implemented! 
+    % The idea behind is that the hemisphere-based hull is artificial too
+    % and that are more natural definition is given by the full intra-cranial
+    % volume. However, this have to include the cerebellum and 
+    % brainstem as well and needs to utilize the Yp0 map!
+    %{
+    GIhullmodel        = cfg_menu;
+    GIhullmodel.name   = 'Hull model';
+    GIhullmodel.tag    = 'GIhullmodel';
+    GIhullmodel.labels = {'Hemisphere-based','Skull-based'};
+    GIhullmodel.values = {0,1};
+    GIhullmodel.val    = {0};
+    GIhullmodel.help   = {'There are two different hull definitions: (i) the classical using a semi-convex hull for each hemisphere and (ii) the full intracranial volume with both hemispheres and the cerebellum. ' ''};
+    %}
+
+    % core model 
+    GIcoremodel        = cfg_menu;
+    GIcoremodel.name   = 'Core model';
+    GIcoremodel.tag    = 'GIcoremodel';
+    GIcoremodel.labels = {'1','2','3'};
+    GIcoremodel.values = {1,2,3};
+    GIcoremodel.val    = {1};
+    GIcoremodel.help   = {[ ...
+      'There are multiple ways to define the central core of the brain structure and it is unclear which one fits best. ' ...
+      'It should have some anatomical meaning (so the ventricles would be nice as source of cortical development) ' ...
+      'but being at once independent of aging (so ventricles are not real good). ' ...
+      'It should be defined on an individual level (to support the scaling/normalization of head size within and between species) ' ...
+      'to remove rather than increasing individual effects. ' ...
+      ] '' };
+
+    % threshold for core estimation 
+    %{
+    GIcoreth           = cfg_entry;
+    GIcoreth.name      = 'Core threshold';
+    GIcoreth.tag       = 'GIcoreth';
+    GIcoreth.strtype   = 'r';
+    GIcoreth.num       = [1 1];
+    GIcoreth.val       = {0.2};
+    GIcoreth.help      = {[ ...
+      'Lower thresholds remove less gyri whereas high thresholds remove more gyri depending on the used core model. ' ...
+      'Initial test range between 0.05 (remove only very high frequency structures) and 0.25 (remove everything that is not close to the insula). ' ...
+      ] ''};
+   %}
+
+    % add own suffix to support multiple GI estimations
+    GIsuffix         = cfg_entry;
+    GIsuffix.tag     = 'GIsuffix';
+    GIsuffix.name    = 'Suffix';
+    GIsuffix.strtype = 's';
+    GIsuffix.num     = [0 Inf];
+    GIsuffix.val     = {''};
+    GIsuffix.help    = {[ ...
+      'Specify the string to be appended to the filenames of the filtered image file(s). ' ...
+      'Default suffix is "".' ...
+      ... 'Use "PARA" to add input parameters, e.g. "_lerr%1d_sacc%1d_fs%03d_smodel%d[_coreth%02d]" with ... . '
+      ] ''};
+
+    % main note
+    GIL      = cfg_branch;
+    GIL.name = GILtype.name;
+    GIL.tag  = GILtype.tag;
+    GIL.val  = {GILtype,GIcoremodel,laplaceerr,GIstreamopt,GILfs,GIsuffix}; %GIhullmodel,,GIwritehull
   end
+  
   % RD202004 not required anymore because FS Tfs is now the default maybe again in furture 
   %{
   if expert
@@ -1346,36 +1294,37 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
   end
   %}
   % RD202004: writing of the pial and white will be also default soon but maybe some have older surface and need this function 
-  if expert
-    %% Inner and outer surfaces
-    %  -----------------------------------------------------------------
-    OS        = cfg_menu;
-    OS.name   = 'Pial surface';
-    OS.tag    = 'OS';
-    OS.labels = {'No','Yes'};
-    OS.values = {0,1};
-    OS.val    = {0};
-    OS.help   = {
-      'Creates the pial surface (outer cortical surface) by moving each vertices of the central surface by the half local thickness along the surface normal.'
-    };
+
   
-    IS        = cfg_menu;
-    IS.name   = 'White matter surface';
-    IS.tag    = 'IS';
-    IS.labels = {'No','Yes'};
-    IS.values = {0,1};
-    IS.val    = {0};
-    IS.help   = {
-      'Creates the white matter surface (inner cortical surface) by moving each vertices of the central surface by the half local thickness along the surface normal.'
-    };
-  
-    % main note
-    surfaces      = cfg_branch;
-    surfaces.name = 'Additional surfaces';
-    surfaces.tag  = 'surfaces';
-    surfaces.val  = {IS,OS}; 
-    
-  end
+  %% Inner and outer surfaces
+  %  -----------------------------------------------------------------
+  OS        = cfg_menu;
+  OS.name   = 'Pial surface';
+  OS.tag    = 'OS';
+  OS.labels = {'No','Yes'};
+  OS.values = {0,1};
+  OS.val    = {0};
+  OS.help   = {
+    'Creates the pial surface (outer cortical surface) by moving each vertices of the central surface by the half local thickness along the surface normal.'
+  };
+
+  IS        = cfg_menu;
+  IS.name   = 'White matter surface';
+  IS.tag    = 'IS';
+  IS.labels = {'No','Yes'};
+  IS.values = {0,1};
+  IS.val    = {0};
+  IS.help   = {
+    'Creates the white matter surface (inner cortical surface) by moving each vertices of the central surface by the half local thickness along the surface normal.'
+  };
+
+  % main note
+  surfaces        = cfg_branch;
+  surfaces.name   = 'Additional surfaces';
+  surfaces.tag    = 'surfaces';
+  surfaces.hidden = expert<1;
+  surfaces.val    = {IS,OS}; 
+
 
   % Rachels fractal dimension by spherical harmonics
   FD        = cfg_menu;
@@ -1399,133 +1348,129 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
   SD.tag    = 'SD';
   SD.val    = {1};
   SD.help   = {
-    'Extract sqrt-transformed sulcus depth based on the euclidean distance between the central surface and its convex hull.'
+    'Extract sulcus depth based on the euclidean distance between the central surface and its convex hull.'
     ''
-    'Transformation with sqrt-function is used to render the data more normally distributed.'
-    ''
+    ...'Transformation with sqrt-function is used to render the data more normally distributed.'
+    ...''
   };
   SD.labels = {'No','Yes'};
   SD.values = {0,1};
   
 
   % affine normalized measures
-  if expert>1 % RD202004: I hope to make this available also for default users ... 
-    if expert>1
-      tGI           = cfg_entry;
-      tGI.name      = 'Toro''s gyrification index';
-      tGI.tag       = 'tGI';
-      tGI.strtype   = 'r';
-      tGI.num       = [1 inf];
-      tGI.val       = {0};
-      tGI.help      = {
-        'Toro''s gyrification index (#toroGI) with definable radii.  The original method is described in Toro et al., 2008.'
-      };
-    else
-      tGI        = cfg_menu;
-      tGI.name   = 'Toro''s gyrification index';
-      tGI.tag    = 'tGI';
-      tGI.labels = {'No','Yes'};
-      tGI.values = {0,1};
-      tGI.val    = {0};
-      tGI.help   = {
-        'Different versions of Toro''s gyrification index (#toroGI). The original method is described in Toro et al., 2008.'
-      };
-    end
-    %   ['Area normalized version of Toro''s gyrification index (toroGI) with 20 mm sphere radius. The original method is described in Toro et al., 2008.' ...
-    %    'In addition to Toro''s approach the radius is normalized for individual total surface area so that the approach is scaling invariant. ' ...
-    %    'As reference total surface area the template mesh from CAT12 is used with a surface area of 90000mm^2. ']
-  end
-  
   if expert>1
-    lGI        = cfg_menu;
-    lGI.name   = 'Schaer''s local gyrification index (lGI)';
-    lGI.tag    = 'lGI';
-    lGI.labels = {'No','Yes'};
-    lGI.values = {0,1};
-    lGI.val    = {0};
-    lGI.help   = {
-      'Marie Schaer''s local gyrification index from the FreeSurfer package.  The original method is described in Schaer et al., 2008.'
-      'The function is only for internal comparisons and requires modification in cat_surf_resamp and other functions.' 
+    tGI           = cfg_entry;
+    tGI.name      = 'Toro''s gyrification index';
+    tGI.tag       = 'tGI';
+    tGI.strtype   = 'r';
+    tGI.num       = [1 inf];
+    tGI.val       = {0};
+    tGI.hidden    = expert<1; 
+    tGI.help      = {
+      'Toro''s gyrification index (#toroGI) with definable radii.  The original method is described in Toro et al., 2008.'
+    };
+  else
+    tGI        = cfg_menu;
+    tGI.name   = 'Toro''s gyrification index';
+    tGI.tag    = 'tGI';
+    tGI.labels = {'No','Yes'};
+    tGI.values = {0,1};
+    tGI.val    = {0};
+    tGI.hidden = expert<1; 
+    tGI.help   = {
+      'Different versions of Toro''s gyrification index (#toroGI). The original method is described in Toro et al., 2008.'
     };
   end
+  
+  lGI        = cfg_menu;
+  lGI.name   = 'Schaer''s local gyrification index (lGI)';
+  lGI.tag    = 'lGI';
+  lGI.labels = {'No','Yes'};
+  lGI.values = {0,1};
+  lGI.val    = {0};
+  lGI.hidden = expert<2;
+  lGI.help   = {
+    'Marie Schaer''s local gyrification index from the FreeSurfer package.  The original method is described in Schaer et al., 2008.'
+    'The function is only for internal comparisons and requires modification in cat_surf_resamp and other functions.' 
+  };
   
   
   % surface area 
-  if expert>1
-    area        = cfg_menu;
-    area.name   = 'Surface area';
-    area.tag    = 'area';
-    area.labels = {'No','Yes'}; 
-    area.values = {0,1}; 
-    area.val    = {0}; 
-    area.help   = {
-      'WARNING: IN DEVELOPMENT!'
-      'This method requires a sum-based mapping rather than the mean-based interpolation. The mapping utilize the Delaunay graph to transfer the area around a vertex to its nearest neighbor(s). See Winkler et al.,  2017. '}; 
-    %{
-    % Winklers method is not implemented right now (201904)
-    area.help   = {
-      'Extract log10-transformed local surface area using re-parameterized tetrahedral surface. The method is described in Winkler et al. NeuroImage, 61: 1428-1443, 2012.'
-      ''
-      'Log-transformation is used to render the data more normally distributed.'
-      ''
-    };
-    %}
-   
-    gmv        = cfg_menu;
-    gmv.name   = 'Surface GM volume';
-    gmv.tag   = 'gmv';
-    gmv.labels = {'No','Yes'};
-    gmv.values = {0,1}; 
-    gmv.val    = {0}; 
-    gmv.help   = {
-      'WARNING: NOT WORKING RIGHT NOW!'
-      'This method requires a sum-based mapping rather than the mean-based interpolation. The mapping utilize the Delaunay graph to transfer the area around a vertex to its closes neighbor(s) that is also use for the area mapping. '}; 
-  end
+  area        = cfg_menu;
+  area.name   = 'Surface area';
+  area.tag    = 'area';
+  area.labels = {'No','Yes'}; 
+  area.values = {0,1}; 
+  area.val    = {0};
+  area.hidden = expert<2;
+  area.help   = {
+    'WARNING: IN DEVELOPMENT!'
+    'This method requires a sum-based mapping rather than the mean-based interpolation. The mapping utilize the Delaunay graph to transfer the area around a vertex to its nearest neighbor(s). See Winkler et al.,  2017. '}; 
+  %{
+  % Winklers method is not implemented right now (201904)
+  area.help   = {
+    'Extract log10-transformed local surface area using re-parameterized tetrahedral surface. The method is described in Winkler et al. NeuroImage, 61: 1428-1443, 2012.'
+    ''
+    'Log-transformation is used to render the data more normally distributed.'
+    ''
+  };
+  %}
+
+  gmv        = cfg_menu;
+  gmv.name   = 'Surface GM volume';
+  gmv.tag   = 'gmv';
+  gmv.labels = {'No','Yes'};
+  gmv.values = {0,1}; 
+  gmv.val    = {0}; 
+  gmv.hidden = expert<2;
+  gmv.help   = {
+    'WARNING: NOT WORKING RIGHT NOW!'
+    'This method requires a sum-based mapping rather than the mean-based interpolation. The mapping utilize the Delaunay graph to transfer the area around a vertex to its closes neighbor(s) that is also use for the area mapping. '}; 
   
-  if expert>1
-    % Normalization is relevant for most measures to be scaling-invariant. 
-    % It is also required for the GI because they use a closing to create 
-    % the hull. 
-    % However, even with normalization we have to correct for TIV because
-    % larger brain have probably a different folding pattern (more folding).
-    % The different measures further requires log10-log10 normalization 
-    % (allometrie) that also improves their distribution (more Gaussian like)
-    % 
-    norm          = cfg_menu;
-    norm.name     = 'Measure normalization';
-    norm.tag      = 'norm';
-    norm.help   = {
-      ['It is important to use TIV as confound in all analysis because even the measure or surface is normalized there is still a non-linear difference between smaller an larger brain (Im et al. 2008)! ' ...
-       'Moreover, these biological measurements grow with different exponential factors and requires an allometric scaling by log10! ' ...
-       'The measure normalization is only a technical aspect of "equal" (relativ vs. absolute) measurements! ']
-       ''
-      ['Complexity is in general measured in relation to the size of the structure (see also fractal dimensions). '...
-       'I.e., if we compare the shape of an peach and melons we have to adapt/scale the measure by the size of the fruit or we have to normalize(scale the size of the fruit. ' ...
-       'For normalization we can use measurements in 1D (e.g., average distance to the center of mass), 2D (total surface area), or 3D (total surface volume). ' ...
-       'To avoid further side effects by folding, we can use the convex hull surface rather than the folded surface. ' ...
-       'For brains, the convex hull is very close to the total intracranial volume (TIV) that we use in voxel-based morphometrie. ' ...
-       'However, the segmentation-based TIV is not used here to use only surface-definied measures. ' ...
-       'For scaling the 2D and 3D measures has to be transformed to a 1D values, where we use the spherical area/volume equation for estimation of the radius. ' ...
-       'The radius is further normalized by a factor of ... to obtain an average brain size that is expected by most folding measures that use for instance a sphere for local estimation. ']
-      };
-    % I prepared the full menu for possible tests but currently I miss the
-    % time and would only focus on the 31 that performed best in theory but 
-    % also some small global tests compared to the TIV.
-    if expert>2 
-      norm.labels = {'No',...
-        'Surface to COM distance (10)','Hull to COM distance (11)', ...
-        'Total surface area (20)','Total hull area (21)', ...
-        'Total surface volume (30)','Total hull volume (31)'}; 
-      norm.values = {0, 10,11, 20,21, 30,31}; 
-      norm.val    = {31}; 
-      norm.help   = [norm.help; {
-        'Further options for tests and evaluation.'
-        }];
-    else
-      norm.labels = {'No','Yes'}; 
-      norm.values = {0,1};
-      norm.val    = {1}; 
-    end
+
+  % Normalization is relevant for most measures to be scaling-invariant. 
+  % It is also required for the GI because they use a closing to create 
+  % the hull. 
+  % However, even with normalization we have to correct for TIV because
+  % larger brain have probably a different folding pattern (more folding).
+  % The different measures further requires log10-log10 normalization 
+  % (allometrie) that also improves their distribution (more Gaussian like)
+  norm          = cfg_menu;
+  norm.name     = 'Measure normalization';
+  norm.tag      = 'norm';
+  norm.hidden   = expert<1;
+  norm.help     = {
+    ['It is important to use TIV as confound in all analysis because even the measure or surface is normalized there is still a non-linear difference between smaller an larger brain (Im et al. 2008)! ' ...
+     'Moreover, these biological measurements grow with different exponential factors and requires an allometric scaling by log10! ' ...
+     'The measure normalization is only a technical aspect of "equal" (relativ vs. absolute) measurements! ']
+     ''
+    ['Complexity is in general measured in relation to the size of the structure (see also fractal dimensions). '...
+     'I.e., if we compare the shape of an peach and melons we have to adapt/scale the measure by the size of the fruit or we have to normalize(scale the size of the fruit. ' ...
+     'For normalization we can use measurements in 1D (e.g., average distance to the center of mass), 2D (total surface area), or 3D (total surface volume). ' ...
+     'To avoid further side effects by folding, we can use the convex hull surface rather than the folded surface. ' ...
+     'For brains, the convex hull is very close to the total intracranial volume (TIV) that we use in voxel-based morphometrie. ' ...
+     'However, the segmentation-based TIV is not used here to use only surface-definied measures. ' ...
+     'For scaling the 2D and 3D measures has to be transformed to a 1D values, where we use the spherical area/volume equation for estimation of the radius. ' ...
+     'The radius is further normalized by a factor of ... to obtain an average brain size that is expected by most folding measures that use for instance a sphere for local estimation. ']
+    };
+  % I prepared the full menu for possible tests but currently I miss the
+  % time and would only focus on the 31 that performed best in theory but 
+  % also some small global tests compared to the TIV.
+  if expert>2 
+    norm.labels = {'No',...
+      'Surface to COM distance (10)','Hull to COM distance (11)', ...
+      'Total surface area (20)','Total hull area (21)', ...
+      'Total surface volume (30)','Total hull volume (31)'}; 
+    norm.values = {0, 10,11, 20,21, 30,31}; 
+    norm.val    = {31}; 
+    norm.help   = [norm.help; {
+      'Further options for tests and evaluation.'
+      }];
+  else
+    norm.labels = {'No','Yes'}; 
+    norm.values = {0,1};
+    norm.val    = {1}; 
+  end
   
       
     %{
@@ -1540,23 +1485,25 @@ function surfextract = cat_surf_parameters_GUI(expert,nproc,lazy)
        ''
       };
     %}
-  end
+
+  lazy.hidden = expert<1;
   
   % main menu
   % 
   % TODO:
-  % - add a branch for measures?
-  % - add a branch for options?
+  % - add a branch for measures? - no, keep it simple
+  % - add a branch for options?  - no, keep it simple
   surfextract      = cfg_exbranch;
   surfextract.tag  = 'surfextract';
   surfextract.name = 'Extract additional surface parameters';
-  if expert == 2
-    surfextract.val  = {data_surf_extract, area,gmv, GI, SD, FD, tGI, lGI, GIL, surfaces, norm, nproc, lazy}; % area, 
-  elseif expert == 1
-    surfextract.val  = {data_surf_extract,GI,FD,SD, surfaces,nproc,lazy};
-  else
-    surfextract.val  = {data_surf_extract,GI,FD,SD, nproc};
-  end
+  surfextract.val  = {data_surf_extract, ...
+    area,gmv, ... developer
+    GI, SD, FD, ...
+    tGI, ... expert
+    lGI, GIL, ... developer
+    surfaces, norm, ... expert
+    nproc, ... 
+    lazy}; % expert 
   surfextract.prog = @cat_surf_parameters;
   surfextract.vout = @vout_surfextract;
   surfextract.help = {'Additional surface parameters can be extracted that can be used for statistical analysis.'};
@@ -1654,24 +1601,20 @@ function renderresults = cat_surf_results_GUI(expert)
   invcolormap.val       = {0};
   invcolormap.help      = {'Use inverse colormap.' ''};
  
-  if expert>1
-    clims               = cfg_menu;
-    clims.name          = 'Data range';
-    clims.tag           = 'clims';
-    clims.labels        = {'default','MSD2','MSD4','MSD8','SD2','SD4','SD8','%99.5','%99','min-max','0-max'};
-    clims.values        = {'','MSD2','MSD4','MSD8','SD2','SD4','SD8','%99.5','%99','min-max','0-max'};
-    clims.val           = {''};
-    clims.help          = {'Define normalized datarange' ''};
-  end
+  clims               = cfg_menu;
+  clims.name          = 'Data range';
+  clims.tag           = 'clims';
+  clims.labels        = {'default','MSD2','MSD4','MSD8','SD2','SD4','SD8','%99.5','%99','min-max','0-max'};
+  clims.values        = {'','MSD2','MSD4','MSD8','SD2','SD4','SD8','%99.5','%99','min-max','0-max'};
+  clims.val           = {''};
+  clims.hidden        = expert<2; 
+  clims.help          = {'Define normalized datarange' ''};
   
+  % ... not working ... colorbar,
   render                = cfg_exbranch;
   render.tag            = 'render';
   render.name           = 'Render options';
-  if expert>1 % ... not working ... colorbar,
-    render.val          = {surface,view,texture,transparency,colormap,invcolormap,background,clims,showfilename};  
-  else
-    render.val          = {surface,view,texture,transparency,colormap,invcolormap,background,showfilename};  
-  end
+  render.val          = {surface,view,texture,transparency,colormap,invcolormap,background,clims,showfilename};  
   render.prog           = @cat_surf_results;
   render.help           = {'Rendering options for the surface output.'};  
   
