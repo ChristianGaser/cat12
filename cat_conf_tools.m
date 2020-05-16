@@ -137,7 +137,7 @@ function tools = cat_conf_tools(expert)
   avg_img                     = cat_vol_average_GUI(data,outdir);
   realign                     = cat_vol_series_align_GUI(data);
   sanlm                       = cat_vol_sanlm_GUI(data,intlim,spm_type,prefix,suffix,expert);
-  urqio                       = cat_vol_urqio_GUI;
+  %urqio                       = cat_vol_urqio_GUI; % this cause problems
   iqr                         = cat_stat_IQR_GUI(data_xml);
   %qa                         = cat_vol_qa_GUI(data);
   
@@ -175,9 +175,11 @@ function tools = cat_conf_tools(expert)
     defs2, ...                            cat.pre.vtools.
     avg_img, ...                          cat.pre.vtoolsexp.
     };
-  if expert 
-    tools.values = [tools.values,{urqio}]; 
-  end
+  
+  %RD202005: the cause problems at Christians installation ... check it 
+  %if expert 
+  %  tools.values = [tools.values,{urqio}]; 
+  %end
 return
 
 function createTPMlong = cat_conf_createTPMlong(data)
@@ -196,14 +198,16 @@ function createTPMlong = cat_conf_createTPMlong(data)
   fstrength.tag        = 'fstrength';
   fstrength.name       = 'Filtermodel';
   fstrength.labels     = {
-    'low (plasticity)'
-    'medium (aging)'
+    'very small (plasticity)'
+    'small (plasticty/aging)'
+    'medium (aging/development)'
     'strong (development)'};
-  fstrength.values     = {1 2 3};
+  fstrength.values     = {1 2 3 4};
   fstrength.val        = {1};
   fstrength.help       = {
-    ['Main filter control parameter with 3 settings, (1) low for small variations in plasticity, ' ...
-     '(2) medium for average changes in aging, and (3) strong for large variations in development'] 
+    ['Main filter control parameter with 4 settings, (1) very small for variations in plasticity, ' ...
+     '(2) small for changes in pasticity/short time aging, (3) medium for changes in long-time aging '...
+     'and short-time development, and (3) strong for large variations in long-time development'] 
      ''
   };
 
@@ -321,21 +325,20 @@ function sanlm = cat_vol_sanlm_GUI(data,intlim,spm_type,prefix,suffix,expert)
     'Remove strong outliers (salt and pepper noise) with more than n times of the average local correction strength. Larger values will result in stronger corrections, whereas lower values result in less corrections. Changes will be more visible in high quality areas/images.' 
   };
 
-  if expert 
-    % developer with matrix values
-    NCstr           = cfg_entry;
-    NCstr.tag       = 'NCstr';
-    NCstr.name      = 'Strength of noise corrections';
-    NCstr.strtype   = 'r';
-    NCstr.num       = [1 1]; %inf]; % this case did not work with yet
-    NCstr.def       = @(val) cat_get_defaults('extopts.NCstr', val{:});
-    NCstr.help      = {
-     ['Strength of the spatial adaptive (sub-resolution) non-local means (SANLM) noise correction. Please note that the filter strength is automatically estimated. Change this parameter only for specific conditions. ' ...
-      'Typical values are: none (0), classic (1), light (2), medium (3|-inf), strong (4), heavy (5). The "classic" option use the ordinal SANLM filter without further adaptions. The "light" option uses the half filter strength of "medium" cases. The "strong" option use 8-times of the "medium" filter strength. Sub-resolution filtering is only used in case of high image resolution below 0.8 mm or in case of the "heavy" option. ' ...
-      'For the global modified scheme use smaller values (>0) for less denoising, higher values (<=1) for stronger denoising, and "inf" for an automatic estimated threshold. Negative values control the local adaptive scheme, with the default "-inf"|"-1", that successfully tested on a variety of scans. Use higher values (>-1,<0) for less filtering and lower values "<-1" for stronger filtering. The value 0 will turn off any noise correction.']
-      ''
-    };
-  end
+  % developer with matrix values
+  NCstr           = cfg_entry;
+  NCstr.tag       = 'NCstr';
+  NCstr.name      = 'Strength of noise corrections';
+  NCstr.strtype   = 'r';
+  NCstr.num       = [1 1]; %inf]; % this case did not work with yet
+  NCstr.def       = @(val) cat_get_defaults('extopts.NCstr', val{:});
+  NCstr.hidden    = expert<1;
+  NCstr.help      = {
+   ['Strength of the spatial adaptive (sub-resolution) non-local means (SANLM) noise correction. Please note that the filter strength is automatically estimated. Change this parameter only for specific conditions. ' ...
+    'Typical values are: none (0), classic (1), light (2), medium (3|-inf), strong (4), heavy (5). The "classic" option use the ordinal SANLM filter without further adaptions. The "light" option uses the half filter strength of "medium" cases. The "strong" option use 8-times of the "medium" filter strength. Sub-resolution filtering is only used in case of high image resolution below 0.8 mm or in case of the "heavy" option. ' ...
+    'For the global modified scheme use smaller values (>0) for less denoising, higher values (<=1) for stronger denoising, and "inf" for an automatic estimated threshold. Negative values control the local adaptive scheme, with the default "-inf"|"-1", that successfully tested on a variety of scans. Use higher values (>-1,<0) for less filtering and lower values "<-1" for stronger filtering. The value 0 will turn off any noise correction.']
+    ''
+  };
 
   % noise correction level
   NCstrm            = cfg_menu;
@@ -414,84 +417,92 @@ function sanlm = cat_vol_sanlm_GUI(data,intlim,spm_type,prefix,suffix,expert)
 
 
   % very special parameter ...
-  if expert
-    iter         = cfg_entry;
-    iter.tag     = 'iter';
-    iter.name    = 'Number of additional sub-resolution iterations';
-    iter.strtype = 'r';
-    iter.num     = [1 1];
-    iter.val     = {0};
-    iter.help    = {
-      'Choose number of additional iterations that can further reduce sub-resolution noise but also anatomical information, e.g. larger blood vessel or small gyri/sulci.'
-      ''
+  % -----------------------------------------------------------------------
+  iter         = cfg_entry;
+  iter.tag     = 'iter';
+  iter.name    = 'Number of additional sub-resolution iterations';
+  iter.strtype = 'r';
+  iter.num     = [1 1];
+  iter.val     = {0};
+  iter.hidden  = expert<1;
+  iter.help    = {
+    'Choose number of additional iterations that can further reduce sub-resolution noise but also anatomical information, e.g. larger blood vessel or small gyri/sulci.'
+    ''
+  };
+
+  iterm         = cfg_entry;
+  iterm.tag     = 'iterm';
+  iterm.name    = 'Number of additional iterations';
+  iterm.strtype = 'r';
+  iterm.num     = [1 1];
+  iterm.val     = {0};
+  iterm.hidden  = expert<1;
+  iterm.help    = {
+    'Choose number of additional iterations that can further reduce noise but also anatomical information, e.g. smaller blood-vessels.'
+    ''
+  };
+
+  relativeIntensityAdaptionTH         = cfg_entry;
+  relativeIntensityAdaptionTH.tag     = 'relativeIntensityAdaptionTH';
+  relativeIntensityAdaptionTH.name    = 'Strength of smoothing of the relative filter strength limit';
+  relativeIntensityAdaptionTH.strtype = 'r';
+  relativeIntensityAdaptionTH.num     = [1 1];
+  relativeIntensityAdaptionTH.val     = {2};
+  relativeIntensityAdaptionTH.hidden  = expert<1;
+  relativeIntensityAdaptionTH.help    = {
+    'Smoothing of the relative filter strength limitation.'
+    ''
+  };
+
+  resolutionDependency                = cfg_menu;
+  resolutionDependency.tag            = 'resolutionDependency';
+  resolutionDependency.name           = 'Resolution depended filtering';
+  resolutionDependency.labels         = {'Yes' 'No'};
+  resolutionDependency.values         = {1 0};
+  resolutionDependency.val            = {0};
+  resolutionDependency.hidden         = expert<1;
+  resolutionDependency.help           = {
+    'Resolution depending filtering with reduced filter strength in data with low spatial resolution defined by the "Range of resolution dependency".'
+    ''
     };
 
-    iterm         = cfg_entry;
-    iterm.tag     = 'iterm';
-    iterm.name    = 'Number of additional iterations';
-    iterm.strtype = 'r';
-    iterm.num     = [1 1];
-    iterm.val     = {0};
-    iterm.help    = {
-      'Choose number of additional iterations that can further reduce noise but also anatomical information, e.g. smaller blood-vessels.'
-      ''
+  resolutionDependencyRange           = cfg_entry;
+  resolutionDependencyRange.tag       = 'resolutionDependencyRange';
+  resolutionDependencyRange.name      = 'Range of resolution dependency';
+  resolutionDependencyRange.strtype   = 'r';
+  resolutionDependencyRange.num       = [1 2];
+  resolutionDependencyRange.val       = {[1 2.5]};
+  resolutionDependencyRange.hidden    = expert<1;
+  resolutionDependencyRange.help      = {
+    'Definition of the spatial resolution for "full filtering" (first value) and "no filtering" (second value), with [1 2.5] for typical structural data of humans. '
+    ''
+  };
+
+  resolutionReduction                 = cfg_menu;
+  resolutionReduction.tag             = 'red';
+  resolutionReduction.name            = 'Low resolution filtering';
+  resolutionReduction.labels          = {'Yes (allways)' 'Yes (only highres <0.8 mm)' 'No'};
+  resolutionReduction.values          = {11 1 0};
+  resolutionReduction.val             = {0};
+  resolutionReduction.hidden          = expert<1;
+  resolutionReduction.help            = {
+    'Some MR images were interpolated or use a limited frequency spectrum to support higher spatial resolution with acceptable scan-times (e.g., 0.5x0.5x1.5 mm on a 1.5 Tesla scanner). However, this can result in "low-frequency" noise that can not be handled by the standard NLM-filter. Hence, an additional filtering step is used on a reduces resolution. As far as filtering of low resolution data will also remove anatomical information the filter use by default maximal one reduction with a resolution limit of 1.6 mm. I.e. a 0.5x0.5x1.5 mm image is reduced to 1.0x1.0x1.5 mm, whereas a 0.8x0.8x0.4 mm images is reduced to 0.8x0.8x0.8 mm and a 1x1x1 mm dataset is not reduced at all. '
+    ''
     };
 
-    relativeIntensityAdaptionTH         = cfg_entry;
-    relativeIntensityAdaptionTH.tag     = 'relativeIntensityAdaptionTH';
-    relativeIntensityAdaptionTH.name    = 'Strength of smoothing of the relative filter strength limit';
-    relativeIntensityAdaptionTH.strtype = 'r';
-    relativeIntensityAdaptionTH.num     = [1 1];
-    relativeIntensityAdaptionTH.val     = {2};
-    relativeIntensityAdaptionTH.help    = {
-      'Smoothing of the relative filter strength limitation.'
-      ''
+  verb                                = cfg_menu;
+  verb.tag                            = 'verb';
+  verb.name                           = 'Verbose output';
+  verb.labels                         = {'No' 'Yes'};
+  verb.values                         = {0 1};
+  verb.val                            = {1};
+  verb.hidden                         = expert<1;
+  verb.help                           = {
+    'Be verbose.'
+    ''
     };
+  % -----------------------------------------------------------------------
 
-    resolutionDependency                = cfg_menu;
-    resolutionDependency.tag            = 'resolutionDependency';
-    resolutionDependency.name           = 'Resolution depended filtering';
-    resolutionDependency.labels         = {'Yes' 'No'};
-    resolutionDependency.values         = {1 0};
-    resolutionDependency.val            = {0};
-    resolutionDependency.help           = {
-      'Resolution depending filtering with reduced filter strength in data with low spatial resolution defined by the "Range of resolution dependency".'
-      ''
-      };
-
-    resolutionDependencyRange           = cfg_entry;
-    resolutionDependencyRange.tag       = 'resolutionDependencyRange';
-    resolutionDependencyRange.name      = 'Range of resolution dependency';
-    resolutionDependencyRange.strtype   = 'r';
-    resolutionDependencyRange.num       = [1 2];
-    resolutionDependencyRange.val       = {[1 2.5]};
-    resolutionDependencyRange.help      = {
-      'Definition of the spatial resolution for "full filtering" (first value) and "no filtering" (second value), with [1 2.5] for typical structural data of humans. '
-      ''
-    };
-
-    resolutionReduction                 = cfg_menu;
-    resolutionReduction.tag             = 'red';
-    resolutionReduction.name            = 'Low resolution filtering';
-    resolutionReduction.labels          = {'Yes (allways)' 'Yes (only highres <0.8 mm)' 'No'};
-    resolutionReduction.values          = {11 1 0};
-    resolutionReduction.val             = {0};
-    resolutionReduction.help            = {
-      'Some MR images were interpolated or use a limited frequency spectrum to support higher spatial resolution with acceptable scan-times (e.g., 0.5x0.5x1.5 mm on a 1.5 Tesla scanner). However, this can result in "low-frequency" noise that can not be handled by the standard NLM-filter. Hence, an additional filtering step is used on a reduces resolution. As far as filtering of low resolution data will also remove anatomical information the filter use by default maximal one reduction with a resolution limit of 1.6 mm. I.e. a 0.5x0.5x1.5 mm image is reduced to 1.0x1.0x1.5 mm, whereas a 0.8x0.8x0.4 mm images is reduced to 0.8x0.8x0.8 mm and a 1x1x1 mm dataset is not reduced at all. '
-      ''
-      };
-
-    verb                                = cfg_menu;
-    verb.tag                            = 'verb';
-    verb.name                           = 'Verbose output';
-    verb.labels                         = {'No' 'Yes'};
-    verb.values                         = {0 1};
-    verb.val                            = {1};
-    verb.help                           = {
-      'Be verbose.'
-      ''
-      };
-  end
 
   
   
@@ -511,15 +522,14 @@ function sanlm = cat_vol_sanlm_GUI(data,intlim,spm_type,prefix,suffix,expert)
       'Optimized SANLM filter with adaptive predefined parameters for simplified GUI cases.' 
   }; 
 
-  if expert
-    nlm_expert          = cfg_branch;
-    nlm_expert.tag      = 'expert';
-    nlm_expert.name     = 'Optimized filter (expert options)';
-    nlm_expert.val      = {NCstr iter iterm outlier relativeIntensityAdaption relativeIntensityAdaptionTH relativeFilterStengthLimit resolutionDependency resolutionDependencyRange resolutionReduction};
-    nlm_expert.help     = {
-        'Optimized SANLM filter with all parameters.' 
-    }; 
-  end
+  nlm_expert          = cfg_branch;
+  nlm_expert.tag      = 'expert';
+  nlm_expert.name     = 'Optimized filter (expert options)';
+  nlm_expert.hidden   = expert<0;
+  nlm_expert.val      = {NCstr iter iterm outlier relativeIntensityAdaption relativeIntensityAdaptionTH relativeFilterStengthLimit resolutionDependency resolutionDependencyRange resolutionReduction};
+  nlm_expert.help     = {
+      'Optimized SANLM filter with all parameters.' 
+  }; 
 
   nlmfilter             = cfg_choice;
   nlmfilter.tag         = 'nlmfilter';
@@ -550,13 +560,10 @@ function sanlm = cat_vol_sanlm_GUI(data,intlim,spm_type,prefix,suffix,expert)
   sanlm                 = cfg_exbranch;
   sanlm.tag             = 'sanlm';
   sanlm.name            = 'Spatially adaptive non-local means (SANLM) denoising filter';
-  if expert>1 % developer
-    sanlm.val           = {data spm_type prefix suffix intlim addnoise rician replaceNANandINF nlmfilter};
-  elseif expert
-    sanlm.val           = {data spm_type prefix suffix addnoise rician replaceNANandINF nlmfilter};
-  else
-    sanlm.val           = {data spm_type prefix nlmfilter};
-  end
+  
+  intlim.hidden         = expert<2;
+  
+  sanlm.val             = {data spm_type prefix suffix intlim addnoise rician replaceNANandINF nlmfilter};
   sanlm.prog            = @cat_vol_sanlm;
   sanlm.vout            = @vfiles_sanlm;
   sanlm.help            = {
@@ -581,6 +588,7 @@ function spmtype = cat_io_volctype_GUI(data,  intlim,  spm_type,prefix,suffix,ex
     ''
   };
   
+  suffix.hidden       = expert<2;
   suffix.help         = {
     'Specify the string to be prepended to the filenames of the converted image file(s). Default prefix is ''''. Use "PARA" to add the datatype to the filename.'
     ''
@@ -602,11 +610,7 @@ function spmtype = cat_io_volctype_GUI(data,  intlim,  spm_type,prefix,suffix,ex
   spmtype             = cfg_exbranch;
   spmtype.tag         = 'spmtype';
   spmtype.name        = 'Image data type converter'; 
-  if expert
-    spmtype.val       = {data spm_type prefix suffix intlim intscale lazy};
-  else
-    spmtype.val       = {data spm_type prefix intlim intscale};
-  end
+  spmtype.val         = {data spm_type prefix suffix intlim intscale lazy};
   spmtype.prog        = @cat_io_volctype;
   spmtype.vout        = @vfiles_volctype;
   spmtype.help        = {
@@ -618,11 +622,15 @@ return
 
 function headtrimming = cat_vol_headtrimming_GUI(intlim,spm_type,prefix,suffix,expert)
 
+  suffix.hidden         = expert<1; 
+  intlim.hidden         = expert<1; 
+  
   % update input variables
   intlim1               = intlim;
   intlim1.tag           = 'intlim1';
   intlim1.name          = 'Global intensity limitation for masking';
   intlim1.val           = {90};
+  intlim1.hidden        = expert<1; 
   intlim1.help          = {'General intensity limitation to remove strong outliers by using 90% of the original histogram values. To high values will include background noise and do not allow trimming, whereas to low values will cut objects with low values (e.g. by image inhomogeneities). ' ''};
 
   prefix.val            = {'trimmed_'};
@@ -721,6 +729,7 @@ function headtrimming = cat_vol_headtrimming_GUI(intlim,spm_type,prefix,suffix,e
   avg.strtype           = 'r';
   avg.num               = [1 1];
   avg.val               = {0};
+  avg.hidden            = expert<1; 
   avg.help              = {'By default, only the source image is used for masking. However sometimes it is helpful to use the average of all additional images (avg=1) or the first n images inclusive th source image (avg>1) of the given set.' ''};
 
   open                  = cfg_entry;
@@ -729,6 +738,7 @@ function headtrimming = cat_vol_headtrimming_GUI(intlim,spm_type,prefix,suffix,e
   open.strtype          = 'n';
   open.num              = [1 1];
   open.val              = {2};
+  open.hidden           = expert<1; 
   open.help             = {'The morphological opening of the mask allows to avoid problems due to noise in the background. However, too large opening will also remove the skull or parts of the brain.' ''};
 
   addvox                = cfg_entry;
@@ -737,6 +747,7 @@ function headtrimming = cat_vol_headtrimming_GUI(intlim,spm_type,prefix,suffix,e
   addvox.strtype        = 'w';
   addvox.num            = [1 1];
   addvox.val            = {2};
+  addvox.hidden         = expert<1; 
   addvox.help           = {'Add # voxels around the original mask to avoid to hard masking.' ''};
 
   mask                  = cfg_menu;
@@ -752,11 +763,7 @@ function headtrimming = cat_vol_headtrimming_GUI(intlim,spm_type,prefix,suffix,e
   headtrimming         = cfg_exbranch;
   headtrimming.tag     = 'datatrimming';
   headtrimming.name    = 'Image data trimming'; 
-  if expert
-    headtrimming.val   = {timages prefix mask suffix intlim1 pth avg open addvox spm_type intlim};
-  else
-    headtrimming.val   = {timages prefix mask pth spm_type};
-  end
+  headtrimming.val     = {timages prefix mask suffix intlim1 pth avg open addvox spm_type intlim};
   headtrimming.prog    = @cat_vol_headtrimming;
   headtrimming.vout    = @vfiles_headtrimming;
   headtrimming.help    = {
@@ -1459,6 +1466,10 @@ function [check_cov, check_cov2] = cat_stat_check_cov_GUI(data_xml,outdir,fname,
 %_______________________________________________________________________
 function check_SPM = cat_stat_check_SPM_GUI(outdir,fname,save,expert) 
 
+  outdir.hidden               = expert<2;
+  fname.hidden                = expert<2; 
+  save.hidden                 = expert<2;
+
   spmmat                      = cfg_files;
   spmmat.tag                  = 'spmmat';
   spmmat.name                 = 'Select SPM.mat';
@@ -1487,11 +1498,7 @@ function check_SPM = cat_stat_check_SPM_GUI(outdir,fname,save,expert)
   do_check_cov                = cfg_branch;
   do_check_cov.tag            = 'do_check_cov';
   do_check_cov.name           = 'Yes';
-  if expert>1
-    do_check_cov.val            = {use_unsmoothed_data adjust_data ,outdir,fname,save};
-  else
-    do_check_cov.val            = {use_unsmoothed_data adjust_data};
-  end  
+  do_check_cov.val            = {use_unsmoothed_data adjust_data ,outdir,fname,save};
   do_check_cov.help           = {''};
 
   none                        = cfg_const;

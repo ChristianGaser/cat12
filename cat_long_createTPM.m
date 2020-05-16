@@ -81,16 +81,21 @@ function out = cat_long_createTPM(job)
   
   % main parameter to define three major settings
   if     job.fstrength == 1 % hard TPM small changes in plasticity 
+    job.localsmooth  = 0.2;   % this filters only within the tissue PVE range and distribute the local tissue amount more equaly 
+    job.median       = 0.2;   % the median remove more details als localsmooth
+    job.smoothness   = 0.2;   % this is the main weight of the Gaussian smoothing filter scsize                          
+    job.defTPMmix    = 0.001; % only very low amount of the standard SPM TPM 
+  elseif job.fstrength == 2 % hard TPM small changes in plasticity 
     job.localsmooth  = 0.5;   % this filters only within the tissue PVE range and distribute the local tissue amount more equaly 
     job.median       = 0.5;   % the median remove more details als localsmooth
     job.smoothness   = 0.5;   % this is the main weight of the Gaussian smoothing filter scsize                          
     job.defTPMmix    = 0.01;  % only very low amount of the standard SPM TPM 
-  elseif job.fstrength == 2 % medium changes in aging (default)            
+  elseif job.fstrength == 3 % medium changes in aging (default)            
     job.localsmooth  = 1;      
     job.median       = 1;
     job.smoothness   = 1;                            
     job.defTPMmix    = 0.05;       
-  elseif job.fstrength == 3 % soft TPM for strong changes in development
+  elseif job.fstrength == 4 % soft TPM for strong changes in development
     def.localsmooth  = 1;      
     job.median       = 1;
     job.smoothness   = 4;                             

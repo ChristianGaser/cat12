@@ -170,7 +170,7 @@ function cat_io_report(job,qa,subj,createerr)
     
     [ver_cat, rev_cat] = cat_version;
     ver_cat = ver_cat(4:end); % remove leading CAT
-    [nam,rev_spm] = spm('Ver');
+    [namspmv,rev_spm] = spm('Ver');
     QAS.software.version_spm = rev_spm;
     A = ver;
     for i=1:length(A)

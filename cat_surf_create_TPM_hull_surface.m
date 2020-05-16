@@ -49,7 +49,7 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm)
   
   
   % nothing to do - just return filename 
-  if 0 && exist(Phull,'file'), return; end
+  if ~cat_io_rerun(Phull,Ptpm), return; end
     
   
   % load SPM-TPM-structure
