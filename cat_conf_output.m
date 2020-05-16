@@ -129,11 +129,12 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
   native.def  = @(val)cat_get_defaults('output.las.native', val{:});
   warped.def  = @(val)cat_get_defaults('output.las.warped', val{:});
   dartel.def  = @(val)cat_get_defaults('output.las.dartel', val{:});
-  las        = cfg_branch;
-  las.tag    = 'las';
-  las.name   = 'Bias, noise and local intensity corrected T1 image';
-  las.val    = {native warped dartel};
-  las.help   = {
+  las         = cfg_branch;
+  las.tag     = 'las';
+  las.name    = 'Bias, noise and local intensity corrected T1 image';
+  las.val     = {native warped dartel};
+  las.hidden  = expert<1;
+  las.help    = {
     'This is the option to save a bias, noise, and local intensity corrected version of the original T1 image. MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity of the image (bias). These artifacts, although not usually a problem for visual inspection, can impede automated processing of the images. The bias corrected version should have more uniform intensities within the different types of tissues and can be saved in native space and/or normalised. Noise is corrected by an adaptive non-local mean (NLM) filter (Manjon 2008, Medical Image Analysis 12).'
   ''
   };
@@ -152,29 +153,31 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
 
   %------------------------------------------------------------------------
 
-  if expert
-    native.def  = @(val)cat_get_defaults('output.label.native', val{:});
-    warped.def  = @(val)cat_get_defaults('output.label.warped', val{:});
-    dartel.def  = @(val)cat_get_defaults('output.label.dartel', val{:});
 
-    label       = cfg_branch;
-    label.tag   = 'label';
-    label.name  = 'PVE label image';
-    label.val   = {native warped dartel};
-    label.help  = {
-    'This is the option to save a labeled version of your segmentations for fast visual comparision. Labels are saved as Partial Volume Estimation (PVE) values with different mix classes for GM-WM (2.5) and GM-CSF (1.5). BG=0, CSF=1, GM=2, WM=3, WMH=4 (if WMHC=3), SL=1.5 (if SLC)'
-    ''
-    };
-  else
-    labelnative      = native;
-    labelnative.tag  = 'labelnative';
-    labelnative.name = 'PVE label image in native space';
-    labelnative.def  = @(val)cat_get_defaults('output.label.native', val{:});
-    labelnative.help = {
-    'This is the option to save a labeled version of your segmentations in native space for fast visual comparision and preprocessing quality control. Labels are saved as Partial Volume Estimation (PVE) values with different mix classes for GM-WM (2.5) and GM-CSF (1.5). BG=0, CSF=1, GM=2, WM=3, WMH=4 (if WMHC=3), SL=1.5 (if SLC)'
-    ''
-    }; 
-  end
+  native.def   = @(val)cat_get_defaults('output.label.native', val{:});
+  warped.def   = @(val)cat_get_defaults('output.label.warped', val{:});
+  dartel.def   = @(val)cat_get_defaults('output.label.dartel', val{:});
+
+  label        = cfg_branch;
+  label.tag    = 'label';
+  label.name   = 'PVE label image';
+  label.val    = {native warped dartel};
+  label.hidden = expert<1;
+  label.help   = {
+  'This is the option to save a labeled version of your segmentations for fast visual comparision. Labels are saved as Partial Volume Estimation (PVE) values with different mix classes for GM-WM (2.5) and GM-CSF (1.5). BG=0, CSF=1, GM=2, WM=3, WMH=4 (if WMHC=3), SL=1.5 (if SLC)'
+  ''
+  };
+
+  labelnative      = native;
+  labelnative.tag  = 'labelnative';
+  labelnative.name = 'PVE label image in native space';
+  labelnative.def  = @(val)cat_get_defaults('output.label.native', val{:});
+  label.hidden     = expert<1;
+  labelnative.help = {
+  'This is the option to save a labeled version of your segmentations in native space for fast visual comparision and preprocessing quality control. Labels are saved as Partial Volume Estimation (PVE) values with different mix classes for GM-WM (2.5) and GM-CSF (1.5). BG=0, CSF=1, GM=2, WM=3, WMH=4 (if WMHC=3), SL=1.5 (if SLC)'
+  ''
+  }; 
+
 
   %------------------------------------------------------------------------
 
@@ -244,6 +247,7 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
   csf.help      = {'Options to save CSF images.'
   ''
   };
+  csf.hidden    = expert<1;
   csf_spm       = csf;
   csf.val       = {native warped modulated dartel};
   csf_spm.val   = {warped modulated dartel};
@@ -257,6 +261,7 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
   tpmc.tag      = 'TPMC';
   tpmc.name     = 'Tissue Probability Map Classes';
   tpmc.val      = {native warped modulated dartel};
+  tpmc.hidden   = expert<1;
   tpmc.help     = {'Option to save the SPM tissue class 4 to 6: p#*.img, wp#*.img and m[0]wp#*.img.'
   ''
   };
@@ -270,6 +275,7 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
   wmh.tag       = 'WMH';
   wmh.name      = 'White matter hyperintensities (WMHs)';
   wmh.val       = {native warped modulated dartel};
+  wmh.hidden    = expert<1;
   wmh.help      = {'WARNING: Please note that the detection of WM hyperintensies (WMHs) is still under development and does not have the same accuracy as approaches that additionally consider FLAIR images (e.g. Lesion Segmentation Toolbox)!'
   'Options to save WMH images, if WMHC==3: p7*.img, wp7*.img and m[0]wp7*.img.'
   ''
@@ -280,11 +286,12 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
   warped.def    = @(val)cat_get_defaults('output.SL.warped', val{:});
   modulated.def = @(val)cat_get_defaults('output.SL.mod',    val{:});
   dartel.def    = @(val)cat_get_defaults('output.SL.dartel', val{:});
-  sl           = cfg_branch;
-  sl.tag       = 'SL';
-  sl.name      = 'Stroke lesions (SLs) - in development';
-  sl.val       = {native warped modulated dartel};
-  sl.help      = {'WARNING: Please note that the handling of stroke lesions (SLs) is still under development! '
+  sl            = cfg_branch;
+  sl.tag        = 'SL';
+  sl.name       = 'Stroke lesions (SLs) - in development';
+  sl.val        = {native warped modulated dartel};
+  sl.hidden     = expert<1;
+  sl.help       = {'WARNING: Please note that the handling of stroke lesions (SLs) is still under development! '
   'To save SL images, SLC has to be active and (SLs has to be labeled): p8*.img, wp8*.img and m[0]wp8*.img.'
   ''
   };
@@ -296,11 +303,7 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
   atlas         = cfg_branch;
   atlas.tag     = 'atlas';
   atlas.name    = 'Atlas label maps';
-  if expert>1
-      atlas.val     = {native warped dartel};
-  else
-      atlas.val     = {native dartel};
-  end    
+  atlas.hidden  = expert<1;
   atlas.help    = {
     'WARNING: The functions that create these maps are still under development! This is the option to save an atlas map with major structures (a1*). Odd numbers code the left, even numbers the right hemisphere. Furthermore, AAL and Broadman atlas maps were created based on maps from MRIcron that where adapted to the other VBM maps. Other maps are used from the IBASPM toolbox.  http://www.thomaskoenig.ch/Lester/ibaspm.htmAnatomy toolbox:Alexander Hammers brain atlas from the Euripides project:   www.brain-development.org  Hammers A, Allom R, Koepp MJ, Free SL, Myers R, Lemieux L, Mitchell   TN, Brooks DJ, Duncan JS. Three-dimensional maximum probability atlas   of the human brain, with particular reference to the temporal lobe.   Hum Brain Mapp 2003, 19: 224-247.'
   ''
@@ -317,6 +320,7 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
   gmt.tag     = 'ct';
   gmt.name    = 'Cortical Thickness';
   gmt.val     = {native warped dartel};
+  gmt.hidden  = expert<2;
   gmt.help    = {
     'Options to save cortical thickess maps (experimental).'
     ''
@@ -333,6 +337,7 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
   pp.tag        = 'pp';
   pp.name       = 'Percentage Position';
   pp.val        = {native warped dartel};
+  pp.hidden     = expert<1;
   pp.help       = {
     'Options to save percentage position maps (experimental).'
     ''
@@ -360,13 +365,7 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
   output      = cfg_branch;
   output.tag  = 'output';
   output.name = 'Writing options';
-  if expert==2
-    output.val  = {surface surf_measures ROI sROI grey white csf gmt pp wmh sl tpmc atlas label bias las jacobianwarped warps}; 
-  elseif expert==1
-    output.val  = {surface ROI sROI grey white csf wmh sl tpmc atlas label bias las jacobianwarped warps};
-  else
-    output.val  = {surface ROI grey white labelnative bias jacobianwarped warps};
-  end
+  output.val  = {surface surf_measures ROI sROI grey white csf gmt pp wmh sl tpmc atlas label labelnative bias las jacobianwarped warps}; 
   output.help = {
   'There are a number of options about what kind of data you like save. The routine can be used for saving images of tissue classes, as well as bias corrected images. The native space option will save a tissue class image (p*) that is in alignment with the original image. You can also save spatially normalised versions - both with (m[0]wp*) and without (wp*) modulation. In the cat toolbox, the voxel size of the spatially normalised versions is 1.5 x 1.5 x 1.5mm as default. The saved images of the tissue classes can directly be used for doing voxel-based morphometry (both un-modulated and modulated). All you need to do is smooth them and do the stats (which means no more questions on the mailing list about how to do "optimized VBM"). Please note that many less-common options are only available in expert mode (e.g. CSF, labels, atlas maps).'
   ''
@@ -395,44 +394,20 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
   [ROI1173,atlases1173]         = cat_conf_ROI1173(expert);       % ROI options
   [ROI1445,atlases1445]         = cat_conf_ROI1445(expert);       % ROI options
 %  [ROI1585,atlases1585]         = cat_conf_ROI1585(expert);       % ROI options
+  atlases1173.hidden    = expert<1;
+  atlases1445.hidden    = expert<1;
   
   output1173            = output;
-  if expert==2
-    output1173.val      = {surface ROI1173 atlases1173 grey white csf wmh tpmc atlas label bias las jacobian warps}; 
-  elseif expert==1
-    output1173.val      = {surface ROI1173 atlases1173 grey white csf wmh label bias las jacobian warps};
-  else
-    output1173.val      = {surface ROI1173 grey white jacobian warps};
-  end
+  output1173.val        = {surface ROI1173 atlases1173 grey white csf wmh tpmc atlas label bias las jacobian warps}; 
   
   output1445            = output;
-  if expert==2
-    output1445.val      = {surface ROI1445 atlases1445 grey white csf wmh tpmc atlas label bias las jacobian warps}; 
-  elseif expert==1
-    output1445.val      = {surface ROI1445 atlases1445 grey white csf wmh label bias las jacobian warps};
-  else
-    output1445.val      = {surface ROI1445 grey white jacobian warps};
-  end
+  output1445.val        = {surface ROI1445 atlases1445 grey white csf wmh tpmc atlas label bias las jacobian warps}; 
 
-if 0
-  output1585            = output;
-  if expert==2
-    output1585.val      = {surface ROI1585 atlases1585 grey white csf wmh tpmc atlas label bias las jacobian warps}; 
-  elseif expert==1
-    output1585.val      = {surface ROI1585 atlases1585 grey white csf wmh label bias las jacobian warps};
-  else
-    output1585.val      = {surface ROI1585 atlases1585 grey white jacobian warps};
-  end
-end
+  %output1585            = output;
+  %output1585.val        = {surface ROI1585 atlases1585 grey white csf wmh tpmc atlas label bias las jacobian warps}; 
   
-	output_spm  = output; 
-	if expert==2
-		output_spm.val  = {ROI surface grey_spm white_spm csf_spm label jacobianwarped warps}; 
-	elseif expert==1
-		output_spm.val  = {ROI surface grey_spm white_spm csf_spm label jacobianwarped warps};
-	else % also CSF output because it is requiered as input ...
-		output_spm.val  = {ROI surface grey_spm white_spm csf_spm labelnative jacobianwarped warps};
-	end
+	output_spm            = output; % also CSF output because it is requiered as input ... 
+  output_spm.val        = {ROI surface grey_spm white_spm csf_spm label labelnative jacobianwarped warps}; 
 
 return
 %------------------------------------------------------------------------

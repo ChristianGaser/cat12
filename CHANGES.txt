@@ -1,11 +1,36 @@
 ------------------------------------------------------------------------
-r1623 | gaser | 2020-05-15 18:09:51
+r1624 | dahnke | 2020-05-16 16:47:49
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_output.m
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       cat_io_report.m
+M       cat_long_createTPM.m
+M       cat_run.m
+M       cat_surf_create_TPM_hull_surface.m
+D       html/vbm_vol_correct_slice_scaling_768.png
+M       tbx_cfg_cat.m
+M       templates_animals/chimpanzee_TPM.nii
+M       templates_surfaces/bh.headbrain.TPM.gii
+
+(1) New:			Added dependencies for TPM output.
+(2) Changed:	Use hidden field to avoid GUI elements on simpler
+							GUI levels rather than to avoid creation. 
+(3) New:			Added another TPM level with smaller smoothing. 
+(4) Fixed: 		Corrected small bug in cat_surf_create_TPM_hull_surface.
+(5) Fixed:		Corrected bug in naming the error output files in cat_io_report.  		
+------------------------------------------------------------------------
+r1623 | gaser | 2020-05-15 18:10:02 +0200 (Fr, 15 Mai 2020) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_run_job.m
 
 Fixed: Prior for long. batch was sometimes using wrong folder.
+
 ------------------------------------------------------------------------
 r1622 | gaser | 2020-05-15 15:18:40 +0200 (Fr, 15 Mai 2020) | 19 lines
 

@@ -823,11 +823,13 @@ function job = update_job(job)
   tissue(3).native = [job.output.CSF.native (job.output.CSF.dartel==1)    (job.output.CSF.dartel==2)   ];
 
   % never write class 4-6
-  for i=4:6
-    tissue(i).warped = [0 0 0];
-    tissue(i).native = [0 0 0];
+  if isfield(job.output,'TPMC')
+    for i=4:6
+      tissue(i).warped = [job.output.TPMC.warped (job.output.TPMC.mod==1)       (job.output.TPMC.mod==2)      ];
+      tissue(i).native = [job.output.TPMC.native (job.output.TPMC.dartel==1)    (job.output.TPMC.dartel==2)   ];
+    end
   end
-
+  
   job.channel  = struct('vols',{job.data});
   job.tissue   = tissue;
 

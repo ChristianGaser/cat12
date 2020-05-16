@@ -269,6 +269,7 @@ pbtver.name    = 'Projection-based thickness';
 pbtver.labels  = {'PBT','PBTx','PBT2'};
 pbtver.values  = {'pbt2','pbt2x','pbt3'};
 pbtver.def     = @(val) 'pbt2x';
+pbtver.hidden  = expert<2;
 pbtver.help    = {
  ['Version of the projection-based thickness (PBT) thickness and surface reconstruction approach (Dahnke et al., 2013).  ' ...
   'Version 2 first estimates a temporary central surface by utilizing higher CSF and lower WM boundaries to utilize the partial volume effect.  ' ...
@@ -342,6 +343,7 @@ if expert>1
     'Moreover, there is a faster version of the "CAT self-intersect surface normal approach" (collcorr = 22) and an optimized version of the PBT (collcorr = 24). '] 
     ''} ]; 
 end
+collcorr.hidden  = expert<2; 
 collcorr.def     = @(val)cat_get_defaults('extopts.collcorr', val{:});
 
 
@@ -359,6 +361,7 @@ reduce_mesh.labels  = { ...
 };
 reduce_mesh.values  = {0 1 2 3 5 4 6};
 reduce_mesh.def     = @(val)cat_get_defaults('extopts.reduce_mesh', val{:});
+reduce_mesh.hidden  = expert<2;
 reduce_mesh.help    = {
   ['Limitation of the surface resolution is essential for fast processing and acurate and equaly distributed meshes. ' ...
    'Mesh resolution depends in general on the voxel resolution used for surface creation and can be modified afterwards by refinment and reduction. ' ...
@@ -382,12 +385,13 @@ reduce_mesh.help    = {
    'These settings are still in developent!'
    ''
 };
+%{
 if expert
   reduce_mesh.labels  = [reduce_mesh.labels(1:2) {'MATLAB approach external (7)'} reduce_mesh.labels(3:end)];
   reduce_mesh.values  = [reduce_mesh.values(1:2) 7                                reduce_mesh.values(3:end)];
   reduce_mesh.help    = [reduce_mesh.help;{'Option (7) opens an external MATLAB to apply the mesh reduction and only worked on ower systems.';''}]; 
 end
-
+%}
 
 
 % This is just an developer parameter (maybe for experts later) 
@@ -404,6 +408,7 @@ vdist.name    = 'Mesh resolution';
 vdist.labels  = {'low','optimal','fine'};
 vdist.values  = {27/3 4/3 1/6};   % this is the square of the refinement distance 
 vdist.def     = @(val)cat_get_defaults('extopts.vdist', val{:});
+vdist.hidden  = expert<2; 
 vdist.help    = {
  ['Higher mesh resolution may support more accurate surface reconstruction.  However, this is only useful for high resolution data (<0.8 mm). ' ...
   'For each level, the resolution is doubled and accuracy is increased slightly (square root), resulting in a linear increase of processing time for surface creation. ' ...
@@ -438,6 +443,7 @@ experimental.name   = 'Use experimental code';
 experimental.labels = {'No','Yes'};
 experimental.values = {0 1};
 experimental.def    = @(val)cat_get_defaults('extopts.experimental', val{:});
+experimental.hidden = expert<2;
 experimental.help   = {
   'Use experimental code and functions.'
   ''
@@ -599,6 +605,7 @@ mrf.name    = 'Strength of MRF noise correction';
 mrf.labels  = {'none','light','medium','strong','auto'};
 mrf.values  = {0 0.1 0.2 0.3 1};
 mrf.def     = @(val)cat_get_defaults('extopts.mrf', val{:});
+mrf.hidden  = expert<2;
 mrf.help    = {
   'Strength of the MRF noise correction of the AMAP segmentation. '
   ''
@@ -696,6 +703,7 @@ BVCstr.name    = 'Strength of Blood Vessel Corrections';
 BVCstr.labels  = {'none (0)','light (eps)','medium (0.50)','strong (1.00)'};
 BVCstr.values  = {0 eps 0.50 1.00};
 BVCstr.def     = @(val)cat_get_defaults('extopts.BVCstr', val{:});
+BVCstr.hidden  = expert<2;
 BVCstr.help    = {
   'Strength of the Blood Vessel Correction (BVC).'
   ''
@@ -863,60 +871,59 @@ app.help   = [app.help;{''}];
 
 %------------------------------------------------------------------------
 
-if expert>1
-  new_release        = cfg_menu;
-  new_release.tag    = 'new_release';
-  new_release.name   = 'New release functions';
-  new_release.help   = { ...
-      'Use new rather then standard functions. '
-    };
-  new_release.val    = {0};  
-  new_release.labels = {'No','Yes'};
-  new_release.values = {0 1};
-end
+new_release        = cfg_menu;
+new_release.tag    = 'new_release';
+new_release.name   = 'New release functions';
+new_release.help   = { ...
+    'Use new rather then standard functions. '
+  };
+new_release.val    = {0};  
+new_release.labels = {'No','Yes'};
+new_release.values = {0 1};
+new_release.hidden = expert<2;
 
 %------------------------------------------------------------------------
   
-if expert>1
-  % different Affine registations ... not implemented yet
-  %{
-  spm_affreg        = cfg_menu;
-  spm_affreg.tag    = 'spm_affreg'; 
-  spm_affreg.name   = 'Affine registration approach';
-  spm_affreg.help   = { ...
-      'The affine registion is highly important for the whole pipeline. Failures result in low overlap to the TPM that troubles the Unified Segmenation and all following steps. Therefore, CAT uses different routines to obtain the best solution. However, this can fail especial in atypical subjects (very young/old) and we deside that it is maybe usefull to test the steps separately. Brain or head masks can imrove the results in some but also lead to problems in other cases.'
-      ''
-      '  The affreg routine process a affine registration based the orignal input (T1) image and a similar weighted scan . '
-      '  The maffreg routine use'
-    };
-  %spm_affreg.def    = @(val)cat_get_defaults('extopts.spm_affreg', val{:}); 
-  spm_affreg.labels = {
-    'no affine registration' ... 
-    'only affreg' ...
-    'only maffreg' ...
-    'affreg + maffreg' ...
-    'affreg + maffreg supervised' ...
-    };
-  spm_affreg.values = {0 1 2 3 4};
-  spm_affreg.val    = 3;
-  %}
-  
-  % AMAP rather than SPM segmentation 
-  spm_kamap        = cfg_menu;
-  spm_kamap.tag    = 'spm_kamap';
-  spm_kamap.name   = 'Initial segmentation';
-  spm_kamap.help   = { ...
-      'In rare cases the Unified Segmentation can fail in highly abnormal brains, where e.g. the cerebrospinal fluid of superlarge ventricles (hydrocephalus) were classified as white matter. However, if the affine registration is correct, the AMAP segmentation with an prior-independent k-means initialization can be used to replace the SPM brain tissue classification. ' 
-      'Moreover, if the default Dartel and Shooting registrations will fail then the "Optimized Shooting - superlarge ventricles" option for "Spatial registration" is required! '
-      ''
-      ' SPM Unified Segmentation - use SPM Unified Segmentation segmentation (default) ' 
-      ' k-means AMAP - k-means AMAP approach ' 
-      ''
-    };
-  spm_kamap.def    = @(val)cat_get_defaults('extopts.spm_kamap', val{:});  
-  spm_kamap.labels = {'SPM Unified Segmentation','k-means AMAP'};
-  spm_kamap.values = {0 2};
-end
+
+% different Affine registations ... not implemented yet
+%{
+spm_affreg        = cfg_menu;
+spm_affreg.tag    = 'spm_affreg'; 
+spm_affreg.name   = 'Affine registration approach';
+spm_affreg.help   = { ...
+    'The affine registion is highly important for the whole pipeline. Failures result in low overlap to the TPM that troubles the Unified Segmenation and all following steps. Therefore, CAT uses different routines to obtain the best solution. However, this can fail especial in atypical subjects (very young/old) and we deside that it is maybe usefull to test the steps separately. Brain or head masks can imrove the results in some but also lead to problems in other cases.'
+    ''
+    '  The affreg routine process a affine registration based the orignal input (T1) image and a similar weighted scan . '
+    '  The maffreg routine use'
+  };
+%spm_affreg.def    = @(val)cat_get_defaults('extopts.spm_affreg', val{:}); 
+spm_affreg.labels = {
+  'no affine registration' ... 
+  'only affreg' ...
+  'only maffreg' ...
+  'affreg + maffreg' ...
+  'affreg + maffreg supervised' ...
+  };
+spm_affreg.values = {0 1 2 3 4};
+spm_affreg.val    = 3;
+%}
+
+% AMAP rather than SPM segmentation 
+spm_kamap        = cfg_menu;
+spm_kamap.tag    = 'spm_kamap';
+spm_kamap.name   = 'Initial segmentation';
+spm_kamap.help   = { ...
+    'In rare cases the Unified Segmentation can fail in highly abnormal brains, where e.g. the cerebrospinal fluid of superlarge ventricles (hydrocephalus) were classified as white matter. However, if the affine registration is correct, the AMAP segmentation with an prior-independent k-means initialization can be used to replace the SPM brain tissue classification. ' 
+    'Moreover, if the default Dartel and Shooting registrations will fail then the "Optimized Shooting - superlarge ventricles" option for "Spatial registration" is required! '
+    ''
+    ' SPM Unified Segmentation - use SPM Unified Segmentation segmentation (default) ' 
+    ' k-means AMAP - k-means AMAP approach ' 
+    ''
+  };
+spm_kamap.def    = @(val)cat_get_defaults('extopts.spm_kamap', val{:});  
+spm_kamap.labels = {'SPM Unified Segmentation','k-means AMAP'};
+spm_kamap.values = {0 2};
+%spm_kamap.hidden = expert<1; % RD202005: activated also for default and expert users to support error handling! 
 
 %------------------------------------------------------------------------
 
@@ -957,38 +964,29 @@ close_parahipp.help    = {
 % special subbranches for experts and developer to cleanup the GUI 
 %------------------------------------------------------------------------
 
-segmentation      = cfg_branch;
-segmentation.tag  = 'segmentation';
-segmentation.name = 'Segmentation Options';
-if expert==1
-  segmentation.val  = {app,NCstr,LASstr,gcutstr,cleanupstr,wmhc,slc,restype};
-elseif expert==2
-  segmentation.val  = {app,NCstr,spm_kamap,LASstr,gcutstr,cleanupstr,BVCstr,wmhc,slc,mrf,restype}; % WMHCstr,
-end
-segmentation.help = {'CAT12 parameter to control the tissue classification.';''};
+segmentation        = cfg_branch;
+segmentation.tag    = 'segmentation';
+segmentation.name   = 'Segmentation Options';
+segmentation.val    = {app,NCstr,spm_kamap,LASstr,gcutstr,cleanupstr,BVCstr,wmhc,slc,mrf,restype}; % WMHCstr,
+segmentation.hidden = expert<1; 
+segmentation.help   = {'CAT12 parameter to control the tissue classification.';''};
 
 
-admin      = cfg_branch;
-admin.tag  = 'admin';
-admin.name = 'Administration Options';
-if expert==1
-  admin.val  = {lazy ignoreErrors verb print};
-elseif expert==2
-  admin.val  = {experimental new_release lazy ignoreErrors verb print};
-end
-admin.help = {'CAT12 parameter to control the behaviour of the preprocessing pipeline.';''};
+admin         = cfg_branch;
+admin.tag     = 'admin';
+admin.name    = 'Administration Options';
+admin.val     = {experimental new_release lazy ignoreErrors verb print};
+admin.hidden  = expert<1; 
+admin.help    = {'CAT12 parameter to control the behaviour of the preprocessing pipeline.';''};
 
 %------------------------------------------------------------------------
 
-surface       = cfg_branch;
-surface.tag   = 'surface';
-surface.name  = 'Surface Options';
-if expert>1
-  surface.val   = {pbtres pbtver pbtlas collcorr reduce_mesh vdist scale_cortex add_parahipp close_parahipp}; % pbtver
-else
-  surface.val   = {pbtres pbtlas scale_cortex add_parahipp close_parahipp};
-end
-surface.help  = {'CAT12 parameter to control the surface processing.';''};
+surface         = cfg_branch;
+surface.tag     = 'surface';
+surface.name    = 'Surface Options';
+surface.val     = {pbtres pbtver pbtlas collcorr reduce_mesh vdist scale_cortex add_parahipp close_parahipp}; 
+surface.hidden  = expert<1;
+surface.help    = {'CAT12 parameter to control the surface processing.';''};
 
 
 %------------------------------------------------------------------------
@@ -999,17 +997,13 @@ extopts       = cfg_branch;
 extopts.tag   = 'extopts';
 extopts.name  = 'Extended options for CAT12 preprocessing';
 if ~spm
-  if expert>0 % experimental expert options
+  if expert>0 % expert options
     extopts.val   = {segmentation,registration,vox,surface,admin}; 
   else
-    extopts.val   = {app,LASstr,gcutstr,registration,vox,restype}; % NCstr?
+    extopts.val   = {app,spm_kamap,LASstr,gcutstr,registration,vox,restype}; 
   end
 else
   % SPM based surface processing and thickness estimation
-  if expert>0 % experimental expert options
-    extopts.val   = {registration,vox,surface,admin}; 
-  else
-    extopts.val   = {registration,vox}; 
-  end 
+  extopts.val   = {registration,vox,surface,admin}; 
 end
 extopts.help  = {'Using the extended options you can adjust special parameters or the strength of different corrections ("0" means no correction and "0.5" is the default value that works best for a large variety of data).'};

@@ -42,7 +42,7 @@ end
 % or for Octave
 if numcores == 1 || isdeployed || strcmpi(spm_check_version,'octave'), numcores = 0; end
 
-%_______________________________________________________________________
+%_____________________________f__________________________________________
 nproc         = cfg_entry;
 nproc.tag     = 'nproc';
 nproc.name    = 'Split job into separate processes';
@@ -93,12 +93,13 @@ data_spm.preview  = @(f) spm_check_registration(char(f));
 
 useprior          = cfg_files;
 useprior.tag      = 'useprior';
-useprior.name    = 'Use prior for longitudinal data';
+useprior.name     = 'Use prior for longitudinal data';
 useprior.filter   = 'image';
 useprior.ufilter  = '.*';
 useprior.num      = [0 1];
 useprior.val      = {''};
-useprior.help    = {
+useprior.hidden   = true; % allways hidden 
+useprior.help     = {
   'Please note that this option is only intended for longitudinal data and is internally automatically set to the average image of all time points. Thus, please do not edit this option!'
   ''
   'The average image is used as a first estimate for affine transformation, segmentation and surface extraction. The idea is that by initializing with the average image we can reduce random variations and improve the robustness and sensitivity of the entire longitudinal pipeline. Furthermore, it significantly increases the speed of the surface extraction.'
@@ -108,9 +109,8 @@ useprior.help    = {
 %% ------------------------------------------------------------------------
 tools       = cat_conf_tools(expert);     % volume tools
 stools      = cat_conf_stools(expert);    % surface tools
-if expert > 1
-  stoolsexp = cat_conf_stoolsexp;       % surface expert tools
-end
+stoolsexp   = cat_conf_stoolsexp;       % surface expert tools
+stoolsexp.hidden = expert<2;
 extopts     = cat_conf_extopts(expert);   
 opts        = cat_conf_opts(expert); 
 %ROI       = cat_conf_ROI(expert);       % ROI options
@@ -188,11 +188,11 @@ estwrite1445.help   = [estwrite1445.help;{'';'This batch calls the stable versio
 
 % 1585
 if 0
-estwrite1585        = estwrite; 
-estwrite1585.name   = 'CAT12.7: Segmentation R1585 (2020/03)';
-estwrite1585.tag    = 'estwrite1585';
-estwrite1585.prog   = @cat_run1585;
-estwrite1585.help   = [estwrite1585.help;{'';'This batch calls the stable version of the main preprocessing of release 1585 with only slight runtime bug fixes.';''}];
+  estwrite1585        = estwrite; 
+  estwrite1585.name   = 'CAT12.7: Segmentation R1585 (2020/03)';
+  estwrite1585.tag    = 'estwrite1585';
+  estwrite1585.prog   = @cat_run1585;
+  estwrite1585.help   = [estwrite1585.help;{'';'This batch calls the stable version of the main preprocessing of release 1585 with only slight runtime bug fixes.';''}];
 end
 
 if numcores > 1
@@ -217,7 +217,20 @@ else
   end
 end
 
+previous        =  cfg_choice;
+previous.tag    = 'previous';
+previous.name   = 'Previous stable segmentations';
+previous.values = {estwrite1445 estwrite1173plus estwrite1173 };
+previous.hidden = expert<1;
+
+previouslong        =  cfg_choice;
+previouslong.tag    = 'previouslong';
+previouslong.name   = 'Previous stable long. segmentations';
+previouslong.values = {long1445 long1173 };
+previouslong.hidden = expert<1;
+
 extopts_spm = cat_conf_extopts(expert,1);   
+
 estwrite_spm        =  cfg_exbranch;
 estwrite_spm.tag    = 'estwrite_spm';
 estwrite_spm.name   = 'SPM12 Segmentation with surface and thickness estimation';
@@ -229,6 +242,7 @@ else
 end
 estwrite_spm.prog   = @cat_run;
 estwrite_spm.vout   = @vout;
+estwrite_spm.hidden = expert<1;
 estwrite_spm.help   = {
 'Thickness estimation and surface creation for SPM segmentation which is using the input of CSF, GM, and WM of the SPM12 segmentation (instead of CAT12 segmentation) and also integrates Dartel or Geodesic Shoothing registration into the toolbox by an already existing Dartel template in MNI space. This template was derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org) and provides the several Dartel or Shooting iterations. Thus, for the majority of studies the creation of sample-specific Dartel templates is not necessary anymore.'};
 
@@ -247,6 +261,7 @@ end
 
 if exist('cat_conf_catsimple','file')
   [catsimple,catsimple_long] = cat_conf_catsimple(expert);
+  catsimple_long.hidden = expert<2;
 end
   
 %------------------------------------------------------------------------
@@ -254,16 +269,8 @@ cat        = cfg_choice;
 cat.name   = 'CAT12';
 cat.tag    = 'cat';
 
-if expert==2
-%  cat.values = {estwrite estwrite1585 estwrite1445 estwrite1173plus estwrite1173 catsimple catsimple_long estwrite_spm tools stools stoolsexp};
-  cat.values = {estwrite estwrite1445 estwrite1173plus estwrite1173 long long1173 long1445 catsimple catsimple_long estwrite_spm tools stools stoolsexp};
-elseif expert==1
-%  cat.values = {estwrite estwrite1585 estwrite1445 estwrite1173plus estwrite1173 catsimple estwrite_spm tools stools };
-  cat.values = {estwrite estwrite1445 estwrite1173plus estwrite1173 long long1173 long1445 catsimple estwrite_spm tools stools };
-else
-%  cat.values = {estwrite estwrite1585 estwrite1445 estwrite1173plus estwrite1173 catsimple tools stools}; 
-  cat.values = {estwrite estwrite1445 estwrite1173plus estwrite1173 long long1173 long1445 catsimple tools stools}; 
-end
+% your version - cat.values = {estwrite estwrite1445 estwrite1173plus estwrite1173 long long1173 long1445 catsimple catsimple_long estwrite_spm tools stools stoolsexp};
+cat.values = {estwrite long catsimple catsimple_long previous previouslong estwrite_spm tools stools stoolsexp};
 %------------------------------------------------------------------------
 
 %------------------------------------------------------------------------
@@ -298,6 +305,14 @@ if isfield(opts,'CSF')
   end
 end
 
+if isfield(opts,'TPMC')
+  for i=4:6
+    tissue(i).warped = [opts.TPMC.warped (opts.TPMC.mod==1)       (opts.TPMC.mod==2)      ];
+    if isfield(opts.TPMC,'native')
+      tissue(i).native = [opts.CSF.native (opts.CSF.dartel==1)    (opts.TPMC.dartel==2)   ];
+    end
+  end
+end
 % This depends on job contents, which may not be present when virtual
 % outputs are calculated.
 
