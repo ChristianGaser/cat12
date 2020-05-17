@@ -230,7 +230,7 @@ function surf2roi = cat_surf_surf2roi_GUI(expert,nproc)
   ROIs.name    = '(Left) ROI atlas files';
   ROIs.filter  = 'any';
   if expert 
-    ROIs.ufilter = 'lh.aparc.*';
+    ROIs.ufilter = '^lh.*\.annot$';
   else
     ROIs.ufilter = 'lh.aparc_(a2009s|DK40|HCP_MMP1).*'; % not yet working for all atlases
   end
