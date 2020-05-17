@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1624 | dahnke | 2020-05-16 16:47:49
+r1625 | dahnke | 2020-05-17 16:03:52
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_long.m
+M       cat_conf_output.m
+M       cat_long_main.m
+MM      cat_surf_map_atlas.m
+M       tbx_cfg_cat.m
+
+(1) Fixed:  Corrected small bugs with wrong fields in longitudinal GUI.
+(2) New:    Added surface atlas element to the longitudinal GUI.
+
+------------------------------------------------------------------------
+r1624 | dahnke | 2020-05-16 16:51:13 +0200 (Sa, 16 Mai 2020) | 22 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -22,6 +36,7 @@ M       templates_surfaces/bh.headbrain.TPM.gii
 (3) New:			Added another TPM level with smaller smoothing. 
 (4) Fixed: 		Corrected small bug in cat_surf_create_TPM_hull_surface.
 (5) Fixed:		Corrected bug in naming the error output files in cat_io_report.  		
+
 ------------------------------------------------------------------------
 r1623 | gaser | 2020-05-15 18:10:02 +0200 (Fr, 15 Mai 2020) | 6 lines
 
