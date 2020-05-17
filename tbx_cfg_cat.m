@@ -113,7 +113,6 @@ stoolsexp   = cat_conf_stoolsexp;       % surface expert tools
 stoolsexp.hidden = expert<2;
 extopts     = cat_conf_extopts(expert);   
 opts        = cat_conf_opts(expert); 
-%ROI       = cat_conf_ROI(expert);       % ROI options
 %[output,output_spm,output1173,output1445,output1585] = cat_conf_output(expert); 
 [output,output_spm,output1173,output1445] = cat_conf_output(expert); 
 long        = cat_conf_long;

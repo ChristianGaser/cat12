@@ -46,33 +46,31 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
     }];    
   end
 
-  if expert 
-    % write specific output surface maps
-    % 0 none:       only surfaces (central,white,pial,sphere,sphere.reg)
-    % 1 default:    + thickness
-    % 2 expert:     + L4myelination, topology defects, 
-    % 3 developer:  + WM and CSF thickness, YppRMSEmap?
-    % 4 debug:      + substeps in subdirs 
-    surf_measures        = cfg_menu;
-    surf_measures.tag    = 'surf_measures';
-    surf_measures.name   = 'Surface measures';
-    surf_measures.labels = {'Default','Expert'};
-    surf_measures.values = {1 2};
-    surf_measures.val    = {1};
-    surf_measures.help   = {
-     ['Write additional surface measures that are currently under development. ' ...
-      'The defaults setting include only cortical thickness, whereas the expert level also ' ...
-      'writes a myelination map (normalized T1 intensity extracted at the layer 4 surface) and ' ...
-      'a map of topology defects coding the percentage size of the effect. '];
-    };
-    if expert == 2
-      surf_measures.labels = [ surf_measures.labels {'Developer','Debug'}];
-      surf_measures.values = [ surf_measures.values {3,4}];
-      surf_measures.val    = {3};
-      surf_measures.help   = [ surf_measures.help 
-        {'The developer option further write the gyral and sulcal thickness. '}
-        ];
-    end
+  % write specific output surface maps
+  % 0 none:       only surfaces (central,white,pial,sphere,sphere.reg)
+  % 1 default:    + thickness
+  % 2 expert:     + L4myelination, topology defects, 
+  % 3 developer:  + WM and CSF thickness, YppRMSEmap?
+  % 4 debug:      + substeps in subdirs 
+  surf_measures        = cfg_menu;
+  surf_measures.tag    = 'surf_measures';
+  surf_measures.name   = 'Surface measures';
+  surf_measures.labels = {'Default','Expert'};
+  surf_measures.values = {1 2};
+  surf_measures.val    = {1};
+  surf_measures.help   = {
+   ['Write additional surface measures that are currently under development. ' ...
+    'The defaults setting include only cortical thickness, whereas the expert level also ' ...
+    'writes a myelination map (normalized T1 intensity extracted at the layer 4 surface) and ' ...
+    'a map of topology defects coding the percentage size of the effect. '];
+  };
+  if expert == 2
+    surf_measures.labels = [ surf_measures.labels {'Developer','Debug'}];
+    surf_measures.values = [ surf_measures.values {3,4}];
+    surf_measures.val    = {3};
+    surf_measures.help   = [ surf_measures.help 
+      {'The developer option further write the gyral and sulcal thickness. '}
+      ];
   end
   
   %------------------------------------------------------------------------
