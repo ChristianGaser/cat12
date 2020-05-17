@@ -42,7 +42,7 @@ end
 % or for Octave
 if numcores == 1 || isdeployed || strcmpi(spm_check_version,'octave'), numcores = 0; end
 
-%_____________________________f__________________________________________
+%_______________________________________________________________________
 nproc         = cfg_entry;
 nproc.tag     = 'nproc';
 nproc.name    = 'Split job into separate processes';
