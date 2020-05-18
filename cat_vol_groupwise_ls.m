@@ -754,16 +754,16 @@ if need_wimg
 end
 
 if need_avg
-    % use median for rigid registration and mean for non-linear registration
+    % use weighted median for rigid registration and mean for non-linear registration
     if all(isfinite(w_settings(i,:)))
         vol_mean   = mean(vol,4);
         vol_median = median(vol,4);
         vol_std    = std(vol,[],4);
         
         % get 0..95% range
-        [d,h] = hist(vol_std(:),100);
-        d = d./numel(vol_std(:));
-        quantile95 = h(find(cumsum(d)/sum(d)>0.95,1,'first')); 
+        [nvol,hvol] = hist(vol_std(:),100);
+        nvol = nvol./numel(vol_std(:));
+        quantile95 = hvol(find(cumsum(nvol)/sum(nvol)>0.95,1,'first')); 
         
         % scale std image with quantile95 value and limit range 0..1
         vol_std = vol_std./quantile95;
@@ -903,8 +903,6 @@ if need_jac
     for i=numel(param):-1:1
         if all(isfinite(w_settings(i,:)))
             dt = spm_diffeo_old('det',param(i).J);
-            d
-            whos
             if any(strcmp('wjac',output))
                 [pth,nam]   = fileparts(Nii(i).dat.fname);
                 nam         = fullfile(pth,['j_' nam '.nii']);

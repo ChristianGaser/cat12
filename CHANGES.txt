@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1627 | gaser | 2020-05-18 12:49:31
+r1628 | gaser | 2020-05-18 12:52:13
+
+Changed paths:
+M       CHANGES.txt
+M       cat_vol_groupwise_ls.m
+
+Fixed: Corrected bug in cat_vol_groupwise_ls.m for non-linear registration
+       where a variable was overwritten.
+------------------------------------------------------------------------
+r1627 | gaser | 2020-05-18 12:50:08 +0200 (Mo, 18 Mai 2020) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +18,7 @@ M       cat_vol_groupwise_ls.m
 (1) Fixed: Corrected false deletion of cat_surf_map_atlas.m
 (2) Fixed: Corrected bug in cat_vol_groupwise_ls.m for non-linear registration
            where a variable was overwritten.
+
 ------------------------------------------------------------------------
 r1626 | gaser | 2020-05-18 00:17:00 +0200 (Mo, 18 Mai 2020) | 11 lines
 
