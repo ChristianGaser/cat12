@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1626 | gaser | 2020-05-18 00:16:25
+r1627 | gaser | 2020-05-18 12:49:31
+
+Changed paths:
+M       CHANGES.txt
+A  +    cat_surf_map_atlas.m
+M       cat_vol_groupwise_ls.m
+
+(1) Fixed: Corrected false deletion of cat_surf_map_atlas.m
+(2) Fixed: Corrected bug in cat_vol_groupwise_ls.m for non-linear registration
+           where a variable was overwritten.
+------------------------------------------------------------------------
+r1626 | gaser | 2020-05-18 00:17:00 +0200 (Mo, 18 Mai 2020) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +21,7 @@ D       cat_surf_map_atlas.m
 M       tbx_cfg_cat.m
 
 Fixed: Corrected ROI menus for long. mode.
+
 
 ------------------------------------------------------------------------
 r1625 | dahnke | 2020-05-17 16:04:25 +0200 (So, 17 Mai 2020) | 12 lines
