@@ -903,11 +903,13 @@ if need_jac
     for i=numel(param):-1:1
         if all(isfinite(w_settings(i,:)))
             dt = spm_diffeo_old('det',param(i).J);
+            d
+            whos
             if any(strcmp('wjac',output))
                 [pth,nam]   = fileparts(Nii(i).dat.fname);
                 nam         = fullfile(pth,['j_' nam '.nii']);
                 Nio         = nifti;
-                Nio.dat     = file_array(nam,d,'float32',0,1,0);
+                Nio.dat     = file_array(nam,size(dt),'float32',0,1,0);
                 Nio.mat     = M_avg;
                 Nio.mat0    = Nio.mat;
                 Nio.mat_intent  = 'Aligned';
@@ -935,7 +937,7 @@ if need_div
                 [pth,nam]   = fileparts(Nii(i).dat.fname);
                 nam         = fullfile(pth,['dv_' nam '.nii']);
                 Nio         = nifti;
-                Nio.dat     = file_array(nam,d,'float32',0,1,0);
+                Nio.dat     = file_array(nam,size(dv),'float32',0,1,0);
                 Nio.mat     = M_avg;
                 Nio.mat0    = Nio.mat;
                 Nio.mat_intent  = 'Aligned';
