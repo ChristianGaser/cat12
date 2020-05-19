@@ -16,23 +16,9 @@ write_CSF = cat_get_defaults('output.CSF.mod') > 0;
 if isfield(extopts,'admin') && isfield(extopts.admin,'lazy') && extopts.admin.lazy
   fprintf('\nCAT12 is restarted in developer mode to enable additional options.\n');
   cat12('developer');
-else
-  fprintf('\nCAT12 is restarted in expert mode to enable additional options.\n');
-  cat12('expert');
 end
 
 warning('off','MATLAB:DELETE:FileNotFound');
-
-% correct extopts fields for expert mode
-if ~isfield(extopts,'segmentation')
-  tmp_fields = char('APP','LASstr','gcutstr','restypes');
-  segmentation = '';
-  for i=1:size(tmp_fields,1)
-    segmentation = setfield(segmentation,deblank(tmp_fields(i,:)),extopts.(deblank(tmp_fields(i,:))));
-    extopts = rmfield(extopts,deblank(tmp_fields(i,:)));
-  end
-  extopts.segmentation = segmentation;
-end
 
 % display start
 if 0 %~isempty(extopts)  

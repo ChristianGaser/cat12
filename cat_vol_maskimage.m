@@ -25,7 +25,7 @@ function out = cat_vol_maskimage(job)
   job.mask  = cellstr(job.mask);
   job.bmask = cellstr(job.bmask);
   
-  % convert to realy empty strings
+  % convert to really empty strings
   if numel(job.mask)==1  && isempty(job.mask{1}),  job.mask  = {}; end
   if numel(job.bmask)==1 && isempty(job.bmask{1}), job.bmask = {}; end
   
