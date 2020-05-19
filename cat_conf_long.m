@@ -30,7 +30,8 @@ catch
 end
 
 % force running in the foreground if only one processor was found or for compiled version
-if numcores == 1 | isdeployed, numcores = 0; end
+% or for Octave
+if numcores == 1 || isdeployed || strcmpi(spm_check_version,'octave'), numcores = 0; end
 
 %------------------------------------------------------------------------
 nproc         = cfg_entry;
@@ -39,6 +40,7 @@ nproc.name    = 'Split job into separate processes';
 nproc.strtype = 'w';
 nproc.val     = {numcores};
 nproc.num     = [1 1];
+nproc.hidden  = numcores <= 1 || isdeployed;
 nproc.help    = {
     'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be split into separate processes that run in the background. You can even close Matlab, which will not affect the processes that will run in the background without GUI. If you do not want to run processes in the background then set this value to 0.'
     ''
@@ -185,9 +187,7 @@ else
   ROI = output.val{ find(cellfun('isempty',strfind(FN,'ROImenu'))==0,1) }; 
   
   output.val(2:end) = [];
-  
-  
-  nproc.hidden = ~(numcores > 1 & ~isdeployed); % support multithreading only if availabe
+    
   delete_temp.hidden = expert<1;
   
   long.val  = {datalong,nproc,opts,extopts,output,ROI,sROI,modulate,dartel,delete_temp};

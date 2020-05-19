@@ -289,24 +289,24 @@ switch lower(Action), case 'setup'                         %-Set up results
         % check for existing TFCE results for this contrast
         if numel(Ic)==1 & exist(fullfile(swd,sprintf('%s_log_p_%04d.nii',xCon(Ic).STAT,Ic))) || ...
                           exist(fullfile(swd,sprintf('%s_log_p_%04d.gii',xCon(Ic).STAT,Ic)))
-						stat_str = {'TFCE',xCon(Ic).STAT};
-						statType = spm_input('Type of statistic',1,'m',...
-								sprintf('TFCE (non-parametric)|%s (non-parametric)|%s (SPM parametric)',...
-								xCon(Ic).STAT,xCon(Ic).STAT),[],1);
-						if statType < 3
-								use_tfce = 1;
-								SPM.statType = stat_str{statType};
-								[SPM,xSPM] = tfce_getSPM(SPM);
-								xSPM.statType = stat_str{statType};
-						else
-								use_tfce = 0;
-								[SPM,xSPM] = spm_getSPM(SPM);
-								xSPM.statType = xCon(Ic).STAT;
-						end
+            stat_str = {'TFCE',xCon(Ic).STAT};
+            statType = spm_input('Type of statistic',1,'m',...
+                sprintf('TFCE (non-parametric)|%s (non-parametric)|%s (SPM parametric)',...
+                xCon(Ic).STAT,xCon(Ic).STAT),[],1);
+            if statType < 3
+                use_tfce = 1;
+                SPM.statType = stat_str{statType};
+                [SPM,xSPM] = tfce_getSPM(SPM);
+                xSPM.statType = stat_str{statType};
+            else
+                use_tfce = 0;
+                [SPM,xSPM] = spm_getSPM(SPM);
+                xSPM.statType = xCon(Ic).STAT;
+            end
         else
-						use_tfce = 0;
-						[SPM,xSPM] = spm_getSPM(SPM);
-						xSPM.statType = xCon(Ic).STAT;
+            use_tfce = 0;
+            [SPM,xSPM] = spm_getSPM(SPM);
+            xSPM.statType = xCon(Ic).STAT;
         end
     end
  
@@ -764,11 +764,11 @@ switch lower(Action), case 'setup'                         %-Set up results
             'FontSize',FS(10),...
             'ForegroundColor',[1 1 1],...
             'BackgroundColor',[179 179 179]/255);
-				if use_tfce
-					callback = 'TabDat = tfce_list(''List'',xSPM,hReg);cat_spm_results_ui(''spm_list_cleanup'',hReg);';
-				else
-					callback = 'TabDat = spm_list(''List'',xSPM,hReg);cat_spm_results_ui(''spm_list_cleanup'',hReg);';
-				end
+        if use_tfce
+          callback = 'TabDat = tfce_list(''List'',xSPM,hReg);cat_spm_results_ui(''spm_list_cleanup'',hReg);';
+        else
+          callback = 'TabDat = spm_list(''List'',xSPM,hReg);cat_spm_results_ui(''spm_list_cleanup'',hReg);';
+        end
         uicontrol('Parent',hPan,'Style','PushButton','String','whole brain',...
             'Units','Pixels',...
             'FontSize',FS(10),...
@@ -777,11 +777,11 @@ switch lower(Action), case 'setup'                         %-Set up results
             'Callback',callback,...
             'Interruptible','on','Enable','on',... 
             'Position',[005 055 100 020].*WS);
-				if use_tfce
-					callback = 'TabDat = tfce_list(''ListCluster'',xSPM,hReg);cat_spm_results_ui(''spm_list_cleanup'',hReg);';
-				else
-					callback = 'TabDat = spm_list(''ListCluster'',xSPM,hReg);cat_spm_results_ui(''spm_list_cleanup'',hReg);';
-				end
+        if use_tfce
+          callback = 'TabDat = tfce_list(''ListCluster'',xSPM,hReg);cat_spm_results_ui(''spm_list_cleanup'',hReg);';
+        else
+          callback = 'TabDat = spm_list(''ListCluster'',xSPM,hReg);cat_spm_results_ui(''spm_list_cleanup'',hReg);';
+        end
         uicontrol('Parent',hPan,'Style','PushButton','String','current cluster',...
             'Units','Pixels',...
             'FontSize',FS(10),...
@@ -1795,7 +1795,7 @@ for axi = 1:numel( hRes.Img  ),  rotate3d(hRes.Img{axi},'off'); end
 hRes.Ftext        = findobj(hRes.Fgraph,'Type','Text');
 stext             = get(hRes.Ftext,'String'); 
 hRes.Ftext3dspm   = findobj(hRes.Fgraph,'Type','Text','String', ...
-	stext{ find(~cellfun('isempty',strfind(stext,'SPM\{'))) } );
+  stext{ find(~cellfun('isempty',strfind(stext,'SPM\{'))) } );
 set(hRes.Ftext3dspm,'visible','off','HitTest','off');
 
 %% get backgroundcolor
@@ -1807,19 +1807,19 @@ rms = @(x) mean(x.^2,2).^0.5;
 bgcdist = rms(Ftextcol - repmat(bgc, numel(hRes.Ftext), 1)); 
 bgcdist = abs(bgcdist)<0.3;
 if ~isempty(bgcdist) 
-	for fi = 1:numel(bgcdist)
-		if bgcdist(fi)>0
-			set( hRes.Ftext( fi ) , 'Color' , min(1,max(0, 1 - Ftextcol( fi ,:))) );  
-		end
-	end
+  for fi = 1:numel(bgcdist)
+    if bgcdist(fi)>0
+      set( hRes.Ftext( fi ) , 'Color' , min(1,max(0, 1 - Ftextcol( fi ,:))) );  
+    end
+  end
 end
 
 %% update spm_XYZreg XYZ update function
 if ~exist('hReg','var')
-	ListXYZ=findobj('ButtonDownFcn','spm_XYZreg(''SetCoords'',get(gcbo,''UserData''),hReg,1);');
-	for i=1:numel(ListXYZ)
-		set(ListXYZ(i),'ButtonDownFcn',[get(ListXYZ(i),'ButtonDownFcn') ' cat_spm_results_ui(''spm_list_cleanup'');']); 
-	end
+  ListXYZ=findobj('ButtonDownFcn','spm_XYZreg(''SetCoords'',get(gcbo,''UserData''),hReg,1);');
+  for i=1:numel(ListXYZ)
+    set(ListXYZ(i),'ButtonDownFcn',[get(ListXYZ(i),'ButtonDownFcn') ' cat_spm_results_ui(''spm_list_cleanup'');']); 
+  end
 end
 %==========================================================================
 

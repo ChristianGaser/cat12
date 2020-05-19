@@ -166,7 +166,7 @@ elseif expert==1
     '  0.5 .. "Optimized Shooting - standard"   .. TR/2:TR/4:TR (avg. change rate)'
     '  1.0 .. "Optimized Shooting - fine"       .. TR/2:TR/4:TR (small change rate)'
     ''
-    '  11  .. "Optimized Shooting - stong"      .. max( 1.0 , [3.0:0.5:1.0] )'
+    '  11  .. "Optimized Shooting - strong"     .. max( 1.0 , [3.0:0.5:1.0] )'
     '  22  .. "Optimized Shooting - medium"     .. max( 1.5 , [3.0:0.5:1.0] )'
     '  23  .. "Optimized Shooting - soft"       .. max( 2.0 , [3.0:0.5:1.0] )'
    }];
@@ -309,11 +309,11 @@ collcorr         = cfg_menu;
 collcorr.tag     = 'collcorr';
 collcorr.name    = 'Correction for surface collisions';
 if expert
-collcorr.labels  = {...
-  'No (createCS1; 0)',...
-  'No (createCS2; 20)',...
-  'PBT Self-Intersect (createCS2; 23)',... 
-  'PBT + CAT Self-Intersect on Surface Normals (createCS2; 25)',... 
+  collcorr.labels  = {...
+    'No (createCS1; 0)',...
+    'No (createCS2; 20)',...
+    'PBT Self-Intersect (createCS2; 23)',... 
+    'PBT + CAT Self-Intersect on Surface Normals (createCS2; 25)',... 
   };
   collcorr.values  = {0 20 23 25};
 end
@@ -961,7 +961,7 @@ close_parahipp.help    = {
 };
 
 %------------------------------------------------------------------------
-% special subbranches for experts and developer to cleanup the GUI 
+% special subbranches for experts and developers to cleanup the GUI 
 %------------------------------------------------------------------------
 
 segmentation        = cfg_branch;
