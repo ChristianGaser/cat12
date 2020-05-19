@@ -24,7 +24,7 @@ if isempty(expert)
 end  
 
 % always use expert mode for standalone installations
-if isdeployed, expert = 1; end
+%if isdeployed, expert = 1; end
 
 % try to estimate number of processor cores
 try
@@ -49,6 +49,7 @@ nproc.name    = 'Split job into separate processes';
 nproc.strtype = 'w';
 nproc.val     = {numcores};
 nproc.num     = [1 1];
+nproc.hidden  = numcores <= 1 || isdeployed;
 nproc.help    = {
     'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be split into separate processes that run in the background. If you do not want to run processes in the background then set this value to 0.'
     ''
@@ -75,6 +76,7 @@ data_wmh.name     = 'Additional FLAIR Volumes';
 data_wmh.filter   = 'image';
 data_wmh.ufilter  = '.*';
 data_wmh.num      = [0 Inf];
+data_wmh.hidden   = expert < 2;
 data_wmh.help     = {
   'Select highres FLAIR data for segmentation. This assumes that there is one scan for each T1 scan.'
   'WARNING: WMH segmentation (with/without FLAIR) is in development!'};
@@ -136,18 +138,7 @@ estwrite.tag    = 'estwrite';
 estwrite.name   = 'CAT12: Segmentation (current release)';
 %NEW NAME?: [catv,catr,catd] = cat_version;
 %           estwrite.name    = sprintf('CAT12.6plus: Segmentation %s (%s/%s)',catr,catd(1:4),catd(6:7));
-% use multithreading only if availabe
-if numcores > 1 && ~isdeployed
-  if expert>1
-    estwrite.val    = {data data_wmh nproc useprior opts extopts output};
-  elseif expert == 1
-    estwrite.val    = {data nproc useprior opts extopts output}; 
-  else
-    estwrite.val    = {data nproc opts extopts output}; 
-  end
-else
-  estwrite.val    = {data useprior opts extopts output};
-end
+estwrite.val    = {data data_wmh nproc useprior opts extopts output};
 estwrite.prog   = @cat_run;
 estwrite.vout   = @vout;
 estwrite.help   = {
@@ -194,27 +185,10 @@ if 0
   estwrite1585.help   = [estwrite1585.help;{'';'This batch calls the stable version of the main preprocessing of release 1585 with only slight runtime bug fixes.';''}];
 end
 
-if numcores > 1
-  estwrite1173.val      = {data nproc opts1173     extopts1173     output1173}; 
-  estwrite1173plus.val  = {data nproc opts1173plus extopts1173plus output1445}; 
-  if expert>1
-    estwrite1445.val    = {data data_wmh nproc opts1445     extopts1445     output1445}; 
-%    estwrite1585.val    = {data data_wmh nproc opts1585     extopts1585     output1585}; 
-  else
-    estwrite1445.val    = {data nproc opts1445     extopts1445     output1445}; 
-%    estwrite1585.val    = {data nproc opts1585     extopts1585     output1585}; 
-  end
-else
-  estwrite1173.val      = {data opts1173     extopts1173     output1173};
-  estwrite1173plus.val  = {data opts1173plus extopts1173plus output1445};
-  if expert>1
-    estwrite1445.val    = {data data_wmh opts1445     extopts1445     output1445};
-%    estwrite1585.val    = {data data_wmh opts1585     extopts1585     output1585}; 
-  else
-    estwrite1445.val    = {data opts1445     extopts1445     output1445};
-%    estwrite1585.val    = {data opts1585     extopts1585     output1585}; 
-  end
-end
+estwrite1173.val      = {data nproc opts1173     extopts1173     output1173}; 
+estwrite1173plus.val  = {data nproc opts1173plus extopts1173plus output1445}; 
+estwrite1445.val      = {data data_wmh nproc opts1445     extopts1445     output1445}; 
+% estwrite1585.val    = {data data_wmh nproc opts1585     extopts1585     output1585}; 
 
 previous        =  cfg_choice;
 previous.tag    = 'previous';
@@ -233,12 +207,7 @@ extopts_spm = cat_conf_extopts(expert,1);
 estwrite_spm        =  cfg_exbranch;
 estwrite_spm.tag    = 'estwrite_spm';
 estwrite_spm.name   = 'SPM12 Segmentation with surface and thickness estimation';
-% use multithreading only if availabe
-if numcores > 1
-  estwrite_spm.val  = {data_spm nproc extopts_spm output_spm};
-else
-  estwrite_spm.val  = {data_spm extopts_spm output_spm};
-end
+estwrite_spm.val    = {data_spm nproc extopts_spm output_spm};
 estwrite_spm.prog   = @cat_run;
 estwrite_spm.vout   = @vout;
 estwrite_spm.hidden = expert<1;

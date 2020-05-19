@@ -60,7 +60,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     if nprog, set(fg,'visible','off'); end
   end
   set(fg,'windowstyle','normal'); 
-  spm_figure('Clear',fg); 
+  try, spm_figure('Clear',fg); end
   switch computer
     case {'PCWIN','PCWIN64'}, fontsize = 8;
     case {'GLNXA','GLNXA64'}, fontsize = 8;

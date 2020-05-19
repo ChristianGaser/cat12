@@ -58,7 +58,7 @@ function cat_main_roi(job,trans,Ycls,Yp0)
     % deactivate output
     FN = job.output.atlas; 
     for ai = 1:numel(FN)
-      job.output.atlas.(FN{ai}) = 0; 
+      try, job.output.atlas.(FN{ai}) = 0; end
     end
   else
     % get atlas resolution 
