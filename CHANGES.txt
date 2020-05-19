@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1629 | gaser | 2020-05-19 12:44:27
+r1630 | gaser | 2020-05-19 16:52:54
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_output.m
+M       cat_long_main.m
+M       cat_vol_maskimage.m
+
+(1) Changed: Removed expert-call in long. batch mode which is not needed 
+             anymore.
+(2) Fixed:   Corrected weird bug in cat_conf_tools.m that caused crash of SPM 
+             batch system.
+
+------------------------------------------------------------------------
+r1629 | gaser | 2020-05-19 12:45:05 +0200 (Di, 19 Mai 2020) | 18 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -17,6 +31,7 @@ M       tbx_cfg_cat.m
 (2) Fixed:   Corrected some calls to functions/options that often crashed 
              according to piwik analysis
 (3) Fixed:   Corrected (wrong) calls to cat_stat_spm_results*
+
 
 ------------------------------------------------------------------------
 r1628 | gaser | 2020-05-18 12:52:46 +0200 (Mo, 18 Mai 2020) | 7 lines

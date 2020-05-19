@@ -392,19 +392,35 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
   [ROI1173,atlases1173]         = cat_conf_ROI1173(expert);       % ROI options
   [ROI1445,atlases1445]         = cat_conf_ROI1445(expert);       % ROI options
 %  [ROI1585,atlases1585]         = cat_conf_ROI1585(expert);       % ROI options
+
+  % CG 20200819: this is not yet working and crashes SPM batch system and we need the old exoert check below
   atlases1173.hidden    = expert<1;
   atlases1445.hidden    = expert<1;
   
   output1173            = output;
-  output1173.val        = {surface ROI1173 atlases1173 grey white csf wmh tpmc atlas label bias las jacobian warps}; 
-  
-  output1445            = output;
-  output1445.val        = {surface ROI1445 atlases1445 grey white csf wmh tpmc atlas label bias las jacobian warps}; 
+  if expert
+    output1173.val      = {surface ROI1173 atlases1173 grey white csf wmh tpmc atlas label bias las jacobian warps}; 
+  else
+    output1173.val      = {surface ROI1173 grey white csf wmh tpmc atlas label bias las jacobian warps};
+  end
 
-  %output1585            = output;
-  %output1585.val        = {surface ROI1585 atlases1585 grey white csf wmh tpmc atlas label bias las jacobian warps}; 
+  output1445            = output;
+  if expert
+    output1445.val      = {surface ROI1445 atlases1445 grey white csf wmh tpmc atlas label bias las jacobian warps}; 
+  else
+    output1445.val      = {surface ROI1445 grey white csf wmh tpmc atlas label bias las jacobian warps};
+  end
+
+if 0
+  output1585            = output;
+  if expert
+    output1585.val      = {surface ROI1585 atlases1585 grey white csf wmh tpmc atlas label bias las jacobian warps}; 
+  else
+    output1585.val      = {surface ROI1585 atlases1585 grey white csf wmh tpmc atlas label bias las jacobian warps};
+  end
+end
   
-	output_spm            = output; % also CSF output because it is requiered as input ... 
+	output_spm  = output; 
   output_spm.val        = {ROI surface grey_spm white_spm csf_spm label labelnative jacobianwarped warps}; 
 
 return
