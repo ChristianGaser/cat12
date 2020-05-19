@@ -1,5 +1,5 @@
 function hRes = cat_stat_results
-% just a batch used to create cat_stat_spm_results_ui 
+% just a batch used to create cat_spm_results_ui 
 % delete 202006 or later
 
 
@@ -7,9 +7,9 @@ function hRes = cat_stat_results
   %% call modified SPM statistic 
   if 0%exist('xSPM','var');
     xSPM.thresDesc = 'FWE';
-    [hReg,xSPM] = cat_stat_spm_results_ui('Setup',xSPM); 
+    [hReg,xSPM] = cat_spm_results_ui('Setup',xSPM); 
   else
-    [hReg,xSPM] = cat_stat_spm_results_ui; 
+    [hReg,xSPM] = cat_spm_results_ui; 
   end
   
   % create SPM result table
