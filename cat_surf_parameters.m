@@ -140,8 +140,9 @@ function varargout = cat_surf_parameters(job)
         end
         Psname     = fullfile( pp , strrep([ff ex],'central',[prefix 'central']) );
         % -- toroGI
-        PtGI = cell(numel( job.tGI ) ,2);
-        for ti = 1:numel( job.tGI )
+        ntGI = min(0,numel( job.tGI ));
+        PtGI = cell(ntGI ,2);
+        for ti = 1:ntGI
           if     job.tGI(ti) == -1,  tGIname = sprintf('%storoGIa'     ,prefix);     % adaptive radius
           elseif job.tGI(ti) ==  1,  tGIname = sprintf('%storoGI20mm'  ,prefix);     % one is the spacial case of 20 mm
           elseif job.tGI(ti) >   1,  tGIname = sprintf('%storoGI%02dmm',prefix,job.tGI(ti));  

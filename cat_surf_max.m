@@ -27,6 +27,7 @@ function [N,Z,M,A,XYZ] = cat_surf_max(X,L,G)
 %--------------------------------------------------------------------------
 LL     = NaN(size(G.vertices,1),1);
 LL(L(1,:)) = X;
+warning('off','MATLAB:subscripting:noSubscriptsSpecified');
 [C, N0] = spm_mesh_clusters(G,LL);
 
 %-Get local maxima
