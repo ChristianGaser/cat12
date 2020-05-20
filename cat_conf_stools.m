@@ -324,11 +324,18 @@ nproc.hidden  = expert<2;
 surf2roi      = cfg_exbranch;
 surf2roi.tag  = 'surf2roi';
 surf2roi.name = 'Extract ROI-based surface values';
-surf2roi.val  = {
-  cdata_sample ...
-  ROIs ...
-  nproc ... 
-  avg.main};
+% CG 20200820: here we still have to use the differentiation between different modes 
+% because the developer settings are not yet working
+switch expert
+case 2
+  surf2roi.val  = {
+    cdata_sample ...
+    ROIs ...
+    nproc ... 
+    avg.main};
+case {0, 1}
+  surf2roi.val  = {cdata_sample};
+end
 surf2roi.prog = @cat_surf_surf2roi;
 surf2roi.vout = @vout_surf_surf2roi;
 surf2roi.help = {
