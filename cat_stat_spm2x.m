@@ -347,6 +347,7 @@ for i=1:size(P,1)
         if  isfield(SPM.xVol,'G') % mesh detected?
             T = false(SPM.xVol.DIM');
             T(XYZ(1,:)) = true;
+            warning('off','MATLAB:subscripting:noSubscriptsSpecified');
             G = export(gifti(SPM.xVol.G),'patch');
             A = spm_mesh_clusters(G,T)';
             A = A(XYZ(1,:));
@@ -371,6 +372,7 @@ for i=1:size(P,1)
             fprintf('Use local RPV values to correct for non-stationary of smoothness.\n');
 
             Q     = [];
+            warning('off','MATLAB:subscripting:noSubscriptsSpecified');
             if isfield(SPM.xVol,'G') % mesh detected?
                 [N2,Z2,XYZ2,A2,L2]  = cat_surf_max(abs(Z),XYZ,gifti(SPM.xVol.G));
             else

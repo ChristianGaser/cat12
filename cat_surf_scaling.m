@@ -49,6 +49,7 @@ function rn = cat_surf_scaling(job)
 
   [pp,ff] = spm_fileparts(job.file); 
   
+  warning('off','MATLAB:subscripting:noSubscriptsSpecified');
   S = export(gifti( job.file ), 'patch');
 
   if job.norm == 12 % affine 

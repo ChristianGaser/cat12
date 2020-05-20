@@ -1,11 +1,27 @@
 ------------------------------------------------------------------------
-r1632 | gaser | 2020-05-20 14:56:29
+r1633 | gaser | 2020-05-20 16:59:27
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_spm2x.m
+R       cat_surf_map_atlas.m
+M       cat_surf_max.m
+M       cat_surf_parameters.m
+M       cat_surf_scaling.m
+M       check_pipeline/batch_volume_pipeline.m
+
+(1) Changed: Added some more suppressions of annoying subscript warnings.
+(2) Fixed:   Field for Toro-GI was not correctly set in cat_surf_parameters.m
+
+------------------------------------------------------------------------
+r1632 | gaser | 2020-05-20 14:57:05 +0200 (Mi, 20 Mai 2020) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_main.m
 
 Fixed: OI estimation for surfaces was skipped in cat_main.m
+
 ------------------------------------------------------------------------
 r1631 | gaser | 2020-05-20 09:59:07 +0200 (Mi, 20 Mai 2020) | 9 lines
 

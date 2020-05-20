@@ -5,7 +5,7 @@ function cat_surf_map_atlas(central_files, atlas_files)
 % central - array of file names for left central surface
 % atlas   - array of file names for Freesurfer annot atlas files
 %_______________________________________________________________________
-% $Id$
+% $Id: cat_surf_map_atlas.m 1621 2020-05-14 15:30:16Z gaser $
 
 fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
 atlasDir  = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces');

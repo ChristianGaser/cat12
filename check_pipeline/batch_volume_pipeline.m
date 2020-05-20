@@ -60,6 +60,7 @@ OV.name = char(fullfile(pth,'analysis/volume/logP_neg_p0.1_pkFWE5_k590_bi.nii'))
 OV.range   =[[3 6]];
 OV.slices_str = char('-20:5:45');
 OV.transform = char('coronal');
+OV.atlas = 'none';
 OV.xy = [3 5];
 OV.save = 'result.png';
 OV.labels.format = '%3.1f';
