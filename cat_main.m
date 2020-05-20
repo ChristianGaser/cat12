@@ -735,10 +735,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
     Pthick_lh    = cell(1,1);
     Pthick_lh{1} = fullfile(pp,surffolder,sprintf('lh.thickness.%s',ff));
     
-    % skip getting ROI values for fast versions
-    if job.output.surface < 5 && job.output.surface > 6
-      cat_surf_surf2roi(struct('cdata',{{Pthick_lh}},'rdata',{Psatlas_lh}));
-    end
+    cat_surf_surf2roi(struct('cdata',{{Pthick_lh}},'rdata',{Psatlas_lh}));
   end
   
   cat_io_cmd('Surface and thickness estimation');  
