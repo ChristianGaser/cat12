@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1630 | gaser | 2020-05-19 16:52:54
+r1631 | gaser | 2020-05-20 09:58:29
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_stools.m
+M       html/cat.html
+
+Fixed: We still have to use the differentiation between different modes because
+       the developersettings for surf2roi are not yet working
+------------------------------------------------------------------------
+r1630 | gaser | 2020-05-19 16:53:30 +0200 (Di, 19 Mai 2020) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +22,7 @@ M       cat_vol_maskimage.m
              anymore.
 (2) Fixed:   Corrected weird bug in cat_conf_tools.m that caused crash of SPM 
              batch system.
+
 
 ------------------------------------------------------------------------
 r1629 | gaser | 2020-05-19 12:45:05 +0200 (Di, 19 Mai 2020) | 18 lines
