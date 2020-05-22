@@ -57,7 +57,7 @@ if isfield(job,'datalong')
   job = rmfield(job,'datalong');
 end
 
-jobs = repmat({'cat_long_main.m'}, 1, numel(job.subj));
+jobs = repmat({'cat_long_mainShoot.m'}, 1, numel(job.subj));
 inputs = cell(1, numel(job.subj));
 
 if cat_get_defaults('extopts.subfolders')

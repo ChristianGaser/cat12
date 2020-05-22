@@ -125,7 +125,7 @@ function tools = cat_conf_tools(expert)
   [check_cov, check_cov2]     = cat_stat_check_cov_GUI(data_xml,outdir,fname,save,expert);
   [defs,defs2]                = cat_vol_defs_GUI;
   nonlin_coreg                = cat_conf_nonlin_coreg;
-  %createTPM                   = cat_conf_createTPM(data_vol); 
+  createTPM                   = cat_conf_createTPM(data_vol,expert); 
   createTPMlong               = cat_conf_createTPMlong(data_vol);
   headtrimming                = cat_vol_headtrimming_GUI(intlim,spm_type,prefix,suffix,expert);
   check_SPM                   = cat_stat_check_SPM_GUI(outdir,fname,save,expert); 
@@ -134,8 +134,10 @@ function tools = cat_conf_tools(expert)
   calcvol                     = cat_stat_TIV_GUI;
   spmtype                     = cat_io_volctype_GUI(data,intlim,spm_type,prefix,suffix,expert,lazy);
   calcroi                     = cat_roi_fun_GUI(outdir);
+  resize                      = cat_conf_vol_resize(data,prefix,expert);
   avg_img                     = cat_vol_average_GUI(data,outdir);
   realign                     = cat_vol_series_align_GUI(data);
+  shootlong                   = cat_conf_shoot(expert); 
   sanlm                       = cat_vol_sanlm_GUI(data,intlim,spm_type,prefix,suffix,expert);
   %urqio                       = cat_vol_urqio_GUI; % this cause problems
   iqr                         = cat_stat_IQR_GUI(data_xml);
@@ -166,10 +168,13 @@ function tools = cat_conf_tools(expert)
     maskimg, ...                          cat.pre.vtools.
     spmtype, ...                          cat.pre.vtools.
     headtrimming, ...                     cat.pre.vtools.
+    resize, ...
     ...
-    realign, ...                          cat.pre.long.?
-    createTPMlong, ...                    cat.pre.long.createTPM
+    realign, ...                          cat.pre.long.?          % hidden
+    shootlong,...                         cat.pre.long.?          % hidden
+    createTPMlong, ...                    cat.pre.long.createTPM  % hidden
     ...
+    createTPM, ...                        
     nonlin_coreg, ...                     cat.pre.vtools.
     defs, ...                             cat.pre.vtools.
     defs2, ...                            cat.pre.vtools.
@@ -182,12 +187,240 @@ function tools = cat_conf_tools(expert)
   %end
 return
 
+function resize = cat_conf_vol_resize(data,prefix,expert)
+% -------------------------------------------------------------------------
+% Simple function to resize images. 
+% 
+% RD202005
+% -------------------------------------------------------------------------
+
+           
+  % developer with matrix values
+  res           = cfg_entry;
+  res.tag       = 'res';
+  res.name      = 'Isotropic resolution';
+  res.strtype   = 'r';
+  res.num       = [1 1]; 
+  res.val       = {1}; 
+  res.help      = {
+   'Voxel resolution.'
+  };
+
+  method        = cfg_menu; 
+  method.tag    = 'method';
+  method.name   = 'Method'; 
+  method.labels = {'linear','cubic','nearest'}; 
+  method.values = {'linear','cubic','nearest'}; 
+  method.val    = {'cubic'}; 
+  method.help   = {'Interpolation type.'}; 
+
+  resize        = cfg_exbranch;
+  resize.tag    = 'resize';
+  resize.name   = 'Resize images';
+  resize.val    = {data,res,method,prefix};
+  resize.prog   = @cat_vol_resize;
+  resize.vfiles = @vfiles_resize;
+  resize.vout   = @vfiles_resize;
+  resize.hidden = expert<2; 
+  resize.help   = {'Interpolation of images.' ''};
+return
+
+function shootlong = cat_conf_shoot(expert)
+% -------------------------------------------------------------------------
+% This is slighly modified version of the original Shooting that allows to 
+% specify another default file. It is required to remove light movements of
+% structures in longidudinal data.
+% Although this is a general batch it is here defined a private function 
+% called only from the CAT longidudinal batch.
+% 
+% RD202005
+% -------------------------------------------------------------------------
+
+  % get shooting toolbox definition
+  shoot = tbx_cfg_shoot; 
+  
+  % find the create template batch
+  FN = cell(1,numel(shoot.values)); for fni=1:numel( shoot.values ), FN{fni} = shoot.values{fni}.name; end
+  fi = find(cellfun('isempty',strfind(FN,'Run Shooting (create Templates)'))==0,1);
+  
+  % field to select an m-file with similar to shooting defaults.
+  dfile              = cfg_files; 
+  dfile.tag          = 'dfile';
+  dfile.name         = 'Shooting default file';
+  dfile.filter       = 'm';
+  dfile.ufilter      = '.*';
+  dfile.num          = [0 1];
+  dfile.val          = {{''}};
+  dfile.help         = {'Select one Shooting defaults matlab m-file.  If empty Shooting "spm_shoot_defaults" is used. '};
+  
+  % creat new version 
+  shootlong          = shoot.values{fi}; 
+  shootlong.prog     = @cat_spm_shoot_template; 
+  shootlong.hidden   = expert<2; 
+  shootlong.val      = [shootlong.val {dfile}]; 
+  
+return
+
+function createTPM = cat_conf_createTPM(data,expert)
+% -------------------------------------------------------------------------
+% Batch to create own templates based on a Shooting template or a CAT pre-
+% processing
+% 
+% RD202005
+% -------------------------------------------------------------------------
+
+  % Shooting template input files
+  tfiles                 = data; 
+  tfiles.tag             = 'tfiles';
+  tfiles.name            = 'First Shooting Template';
+  tfiles.help            = {'Select GM segment of the first Shooting template.  The other tissue classes (2-?) will be selected automaticelly.  '};
+  tfiles.ufilter         = '^Template.*';
+  tfiles.num             = [1 1];
+  
+  % T1 input images
+  mfiles                 = data; 
+  mfiles.tag             = 'mfiles';
+  mfiles.name            = 'Intensity normalzed images';
+  mfiles.help            = {
+    ['Select all intensity optimized output images in native space (m*.nii).  ' ...
+     'The registration files of the Shoothing template (y_*) are selected automatically.  ' ...
+     'It is assumed that you have run the "Create Shooting Template" batch in the same directory.  ']
+    };
+  mfiles.ufilter         = '^m.*';
+  mfiles.num             = [0 Inf];
+  
+  % atlas maps
+  afiles                 = data; 
+  afiles.tag             = 'afiles';
+  afiles.name            = 'Atlas maps';
+  afiles.help            = {
+    ['Select all atlas maps in native space normaly writte into the label directory.  ' ...
+     'If you want to algin different atlas maps than you can simply add them here were the total file number is a multiply of the "Intensity normalized images".  ' ...
+     'The registration files of the Shoothing template (y_*) are selected automatically.  ' ...
+     'It is assumed that you have run the "Create Shooting Template" batch in the same directory.  ']
+    };
+  afiles.ufilter         = '.*';
+  afiles.num             = [0 Inf];
+  afiles.hidden          = true; % version 2
+
+  % Shooting input settings
+  shooting               = cfg_branch;
+  shooting.tag           = 'shooting';
+  shooting.name          = 'Shooting';
+  shooting.val           = {tfiles mfiles afiles};
+  shooting.help          = {
+    'Input settings for available Shooting templates.' 
+  }; 
+
+  % CAT wp1 tissue segments
+  pfiles                 = data; 
+  pfiles.tag             = 'pfiles';
+  pfiles.name            = 'Normalized GM segments';
+  pfiles.help            = {'Select the normalized GM segments (wp1*.nii).  The other tissue classes (2-6) will be selected automaticelly.  '};
+  pfiles.ufilter         = '^wp1.*';
+  pfiles.num             = [1 Inf];
+  
+  wmfiles                = mfiles; 
+  wmfiles.tag            = 'mfiles';
+  wmfiles.name           = 'Normalized intensity normalzed images';
+  wmfiles.help           = {
+    ['Select all normalized intensity optimized output images in native space (wm*.nii).  ' ...
+     'The number of file has to be equal to the number of input segmentations.']
+    };
+  wmfiles.ufilter        = '^wm.*';
+  wmfiles.num            = [0 Inf];
+
+  wafiles                = afiles; 
+  wafiles.tag            = 'afiles';
+  wafiles.name           = 'Atlas maps';
+  wafiles.help           = {
+    ['Select all atlas maps in native space normaly writte into the label directory.  ' ...
+     'If you want to algin different atlas maps than you can simply add them here were the total file number is a multiply of the "Intensity normalized images".  ']
+    };
+  wafiles.ufilter        = '.*';
+  wafiles.num            = [0 Inf];
+  wafiles.hidden         = true; % version 2
+  
+  % Shooting input settings
+  cat        = cfg_branch;
+  cat.tag    = 'cat';
+  cat.name   = 'CAT';
+  cat.val    = {pfiles wmfiles afiles};
+  cat.help   = {
+    'Input settings for normalized CAT results.' 
+  }; 
+
+  input                = cfg_choice;
+  input.tag            = 'input';
+  input.name           = 'TPM creation';
+  input.values         = {shooting,cat};
+  input.val            = {shooting}; 
+  input.help           = {
+    'Selection between Shooting and CAT data input.'
+    };
+  
+  
+  % options
+  fstrength            = cfg_menu;
+  fstrength.tag        = 'fstrength';
+  fstrength.name       = 'Filtermodel';
+  fstrength.labels     = {
+    'very small (plasticity)'
+    'small (plasticty/aging)'
+    'medium (aging/development)'
+    'strong (development)'};
+  fstrength.values     = {1 2 3 4};
+  fstrength.val        = {1};
+  fstrength.help       = {
+    ['Main filter control parameter with 4 settings, (1) very small for variations in plasticity, ' ...
+     '(2) small for changes in pasticity/short time aging, (3) medium for changes in long-time aging '...
+     'and short-time development, and (3) strong for large variations in long-time development'] 
+     ''
+  };
+
+  % resolution?
+  
+  % boundary box optimization 
+    
+  verb                 = cfg_menu;
+  verb.tag             = 'verb';
+  verb.name            = 'Verbose output';
+  verb.labels          = {'No' 'Yes'};
+  verb.values          = {0 1};
+  verb.val             = {1};
+  verb.help            = {
+    'Be verbose.'
+    ''
+    };
+
+  % main
+  createTPM        = cfg_exbranch;
+  createTPM.tag    = 'createTPMlong';
+  createTPM.name   = 'TPM creation';
+  createTPM.val    = {input,fstrength,verb};
+  createTPM.prog   = @cat_vol_createTPM;
+  createTPM.vfiles = @vfiles_createTPM;
+  createTPM.vout   = @vfiles_createTPM;
+  createTPM.hidden = expert<2;
+  createTPM.help   = {
+    'Create individual TPMs for longitudinal preprocessing. This is a special version of the cat_vol_createTPM batch only for the longitudinal preprocessing without further GUI interaction and well defined input. '
+   ['There has to be 6 tissue classes images (GM,WM,CSF,HD1,HD2,BG) that can be in the native space, the affine or a non-linear normalized space.  ' ...
+    'However, the affine normalized or a soft non-linear normalized space is expected to give the best result (see options in cat_main_registration).  ' ...
+    'A resolution of 1.5 mm seams to be quite optimal as far as we have to smooth anyway.  ' ...
+    'The images will be filtered in different ways to allow soft meanderings of anatomical structures.  ' ...
+    'WMHs should probably be corrected to WM (WMHC=2) in the average preprocessing.' ]
+      ''};
+return
+
+
 function createTPMlong = cat_conf_createTPMlong(data)
+% -------------------------------------------------------------------------
 % This is a special version of the cat_vol_createTPM batch only for the
 % longitudinal preprocessing without further GUI interaction and well
 % defined input.
 % 
 % RD202005
+% -------------------------------------------------------------------------
 
   % update input
   data.tag             = 'files';
@@ -241,6 +474,7 @@ function createTPMlong = cat_conf_createTPMlong(data)
   createTPMlong.prog   = @cat_long_createTPM;
   createTPMlong.vfiles = @vfiles_createTPMlong;
   createTPMlong.vout   = @vfiles_createTPMlong;
+  createTPMlong.hidden = true; 
   createTPMlong.help   = {
     'Create individual TPMs for longitudinal preprocessing. This is a special version of the cat_vol_createTPM batch only for the longitudinal preprocessing without further GUI interaction and well defined input. '
    ['There has to be 6 tissue classes images (GM,WM,CSF,HD1,HD2,BG) that can be in the native space, the affine or a non-linear normalized space.  ' ...
@@ -1056,6 +1290,7 @@ function realign  = cat_vol_series_align_GUI(data)
     'The resliced images are named the same as the originals, except that they are prefixed by ''r''.'
   };
   realign.prog          = @cat_vol_series_align;
+  realign.hidden        = true; 
   realign.vout          = @vout_realign;
 
 return
@@ -2056,10 +2291,39 @@ function dep = vfiles_volctype(varargin)
   dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 return;
 %_______________________________________________________________________
+function dep = vfiles_createTPM(varargin)
+  dep(1)              = cfg_dep;
+  dep(1).sname        = 'TPM';
+  dep(1).src_output   = substruct('.','tpm','()',{':'});
+  dep(1).tgt_spec     = cfg_findspec({{'filter','image','strtype','e'}});
+  
+  dep(end+1)          = cfg_dep;
+  dep(end).sname      = 'T1';
+  dep(end).src_output = substruct('.','t1','()',{':'});
+  dep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+
+  dep(end+1)          = cfg_dep;
+  dep(end).sname      = 'atlases';
+  dep(end).src_output = substruct('.','atlas','()',{':'});
+  dep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+
+  dep(end+1)          = cfg_dep;
+  dep(end).sname      = 'brainmask';
+  dep(end).src_output = substruct('.','brainmask','()',{':'});
+  dep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+return;
+%_______________________________________________________________________
 function dep = vfiles_createTPMlong(varargin)
   dep            = cfg_dep;
   dep.sname      = 'Longitudinal TPMs';
   dep.src_output = substruct('.','tpm','()',{':'});
+  dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+return;
+%_______________________________________________________________________
+function dep = vfiles_resize(varargin)
+  dep            = cfg_dep;
+  dep.sname      = 'Resized';
+  dep.src_output = substruct('.','res','()',{':'});
   dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 return;
 %_______________________________________________________________________

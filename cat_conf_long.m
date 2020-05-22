@@ -182,9 +182,8 @@ else
   % extract only the ROI and sROI menu
   FN = cell(1,numel(output.val));  for fni=1:numel(output.val), FN{fni} = output.val{fni}.tag; end
   sROI = output.val{ find(cellfun('isempty',strfind(FN,'sROImenu'))==0,1) }; 
-%  ROI  = output.val{ intersect( find(cellfun('isempty',strfind(FN,'ROImenu'))==0) , ...
-%                     find(cellfun('isempty',strfind(FN,'sROImenu'))==0,1) ) }; 
-  ROI = output.val{ find(cellfun('isempty',strfind(FN,'ROImenu'))==0,1) }; 
+  ROI  = output.val{ setdiff( find(cellfun('isempty',strfind(FN,'ROImenu'))==0) , ...
+                     find(cellfun('isempty',strfind(FN,'sROImenu'))==0,1) ) }; 
   
   output.val(2:end) = [];
     
