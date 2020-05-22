@@ -28,9 +28,71 @@ function varargout=cat_vol_resize(T,operation,varargin)
   
   if nargin==0, help cat_vol_resize; return; end
   if isempty(T), varargout{1} = T; return; end
-  if ndims(T)>2, TI=T; clear T; T{1}=TI; end %else varargout{1}=T; end 
-  if nargin<2, error('ERROR: cat_vol_resolution: not enough input!\n'); end
+  if nargin<2
+    if isstruct(T)
+      job = T; 
+      
+      % set defaults
+      def.res     = 1; 
+      def.method  = 'cubic'; 
+      def.prefix  = 'i'; 
+      def.verb    = 1;
+      def.lazy    = 0;
+      job         = cat_io_checkinopt(job,def); 
+      
+      for fi = 1:numel(job.data)
+        fnameres = spm_file(job.data{fi},'prefix',job.prefix); 
+        [pp,ff,ee] = spm_fileparts(fnameres); fnameres = fullfile(pp,[ff ee]); 
+        varargout{1}.res{fi} = fnameres; 
+        if job.lazy && ~cat_io_rerun(fnameres,job.data{fi} ) 
+          if job.verb, fprintf('  Exist %s\n',fnameres); end
+        else
+          V  = spm_vol(job.data{fi});
+          
+          if isfield(V,'private') 
+            dims = ndims(V.private.dat);
+            if dims>3
+              Nii = nifti(V.fname);
+              Y   = single(Nii.dat(:,:,:,:,:));
+            else
+              Y  = spm_read_vols(V);
+            end
+          else
+            Y  = spm_read_vols(V); 
+          end
+          
+          [Y,res] = cat_vol_resize(Y,'interp',V,job.res,job.method);
+          
+          Vo = res.hdrN; Vo.fname = fnameres;
+          if isfield(Vo,'pinfo'),   Vo = rmfield(Vo,'pinfo'); end
+          if isfield(Vo,'private'), Vo = rmfield(Vo,'private'); end
+          if exist('dims','var') && dims>3
+            Ndef      = nifti;
+            Ndef.dat  = file_array(fnameres,size(Y),[spm_type('float32') spm_platform('bigend')],0,1,0);
+            Ndef.mat  = Vo.mat;
+            Ndef.mat0 = Vo.mat;
+            Ndef.descrip = V.descrip;
+            create(Ndef);
+            if dims>4
+              Ndef.dat(:,:,:,:,:) = Y;
+            else
+              Ndef.dat(:,:,:,:) = Y;
+            end
+            clear dims
+          else
+            spm_write_vol(Vo,Y); 
+          end
+          clear Y
+          if job.verb, fprintf('  Write %s\n',fnameres); end
+        end
+      end
 
+      return
+    else
+      error('ERROR: cat_vol_resolution: not enough input!\n'); 
+    end
+  end
+  if ndims(T)>2, TI=T; clear T; T{1}=TI; end %else varargout{1}=T; end 
   
   switch lower(operation)
     % REDUCE & DEREDUCE
@@ -391,13 +453,13 @@ function varargout=cat_vol_resize(T,operation,varargin)
       varargout{1}.dat = cat_vol_resize(Y,'deinterp',varargin{1},method);
       
     case 'interp'
-      if numel(varargin)>0, hdr = varargin{1}; end
-      if numel(varargin)>1, res = varargin{2}; end
+      if numel(varargin)>0, V      = varargin{1}; end
+      if numel(varargin)>1, res    = varargin{2}; end
       if numel(varargin)>2, method = varargin{3}; end
        
-      if ~exist('hdr','var') || isempty(hdr),
-        hdr.mat=[1 0 0 1;0 1 0 1; 0 0 1 1; 0 0 0 1]; 
-        hdr.dim=size(T); 
+      if ~exist('V','var') || isempty(V),
+        V.mat=[1 0 0 1;0 1 0 1; 0 0 1 1; 0 0 0 1]; 
+        V.dim=size(T); 
       end
       if numel(res)==1, res(2:3)=res; end
       if numel(res)==2, res=[res(1),res]; end
@@ -406,41 +468,79 @@ function varargout=cat_vol_resize(T,operation,varargin)
       T = single(T{1});
 
       res    = round(res*100)/100;
-      resV   = round(sqrt(sum(hdr.mat(1:3,1:3).^2))*100)/100;
-      hdrO   = hdr; 
+      resV   = round(sqrt(sum(V.mat(1:3,1:3).^2))*100)/100;
       sizeO  = size(T);
 
       if all(res>0)
         if 1% any(resV>res)
           % final size of the interpolated image
+          % ##########
+          % RD202005: This is not corrected and can cause displacements (a
+          % little offset ... use AC
+          % ##########
           [Dx,Dy,Dz]=meshgrid(single(res(2) / resV(2) : res(2)/resV(2) : size(T,2)),...
                               single(res(1) / resV(1) : res(1)/resV(1) : size(T,1)),...
                               single(res(3) / resV(3) : res(3)/resV(3) : size(T,3))); 
           %T = spm_sample_vol(T,Dx,Dy,Dz,method);
-          T = cat_vol_interp3f(T,Dx,Dy,Dz,method);
+          if ndims(T)>3
+            dims = size(T); 
+            TI = zeros([size(Dx) dims(4:end)],'single'); 
+            for d4i = 1:size(T,4)
+              if ndims(T)>4
+                for d5i = 1:size(T,5)
+                  TI(:,:,:,d4i,d5i) = cat_vol_interp3f(T(:,:,:,d4i,d5i),Dx,Dy,Dz,method);
+                end
+              else
+                TI(:,:,:,d4i) = cat_vol_interp3f(T(:,:,:,d4i),Dx,Dy,Dz,method);
+              end
+            end
+            T = TI; clear TI; 
+          else
+            T = cat_vol_interp3f(T,Dx,Dy,Dz,method);
+          end
           clear Dx Dy Dz;
 
-          hdr.dim=size(T);
-          if isfield(hdr,'pinfo'), hdr.pinfo = repmat([1;0],1,size(T,3)); end
+          V.dim=size(T);
+          if isfield(V,'pinfo'), V.pinfo = repmat([1;0],1,size(T,3)); end
           %hdr.mat([1,2,3,5,6,7,9,10,11]) = hdr.mat([1,2,3,5,6,7,9,10,11]) .* res(1);
-        else
-          d = single(res./resV);
-          [Rx,Ry,Rz]=meshgrid(d(1):d(1):size(T,2),d(2):d(2):size(T,1),d(3):d(3):size(T,3));
-          T = cat_vol_interp3f(T,Rx,Ry,Rz,method);
-          clear Rx Ry Rz;
+          
+          Vo = V; 
+          vmat = spm_imatrix(V.mat);
+          vmat(7:9) = sign(vmat(7:9)).*res(1:3);
+          Vo.mat = spm_matrix(vmat);
 
-          hdr.dim=size(T);
-         % hdr.mat([1,2,3,5,6,7,9,10,11]) = hdr.mat([1,2,3,5,6,7,9,10,11]) .* res(1);
-      %    hdr.mat([1,6,11])  = sign(hdr.mat([1,6,11]))  .* res;
+        else
+          Vi = V; 
+          imat      = spm_imatrix(Vi.mat); 
+          dim       = size(V.private.dat); 
+          Vi.dim    = round(dim(1:3) .* resV./res);
+          %if numel(dim)>3, Vi.dim = [Vi.dim dim(4:end)];  end
+          imat(7:9) = resV .* sign(imat(7:9));
+          Vi.mat    = spm_matrix(imat);
+          if 0 %ndims(T)>3
+            dims = size(T); 
+            TI = zeros([size(Dx) dims(4:end)]); 
+            for d4i = 1:size(T,4)
+              if size(T)>4
+                for d5i = 1:size(T,5)
+                  Vx = V; Vx.fname = sprintf('%s,%d',Vx.fname,d5i);
+                  Vi.fname = ''; 
+                  [Vo,T(:,:,:,d4i,d5i)] = cat_vol_imcalc(V,Vi,'i1',struct('interp',6,'verb',0));
+                end
+              else
+                [Vo,T(:,:,:,d4i)] = cat_vol_imcalc(V,Vi,'i1',struct('interp',6,'verb',0));
+              end
+            end
+            T = TI; clear TI; 
+          else
+            [Vo,T] = cat_vol_imcalc(V,Vi,'i1',struct('interp',6,'verb',0));
+          end
         end
       end
-      vmat = spm_imatrix(hdr.mat);
-      vmat(7:9) = sign(vmat(7:9)).*res(1:3);
-      hdr.mat = spm_matrix(vmat);
-      
+     
       varargout{1}       = T;
-      varargout{2}.hdrO  = hdrO;
-      varargout{2}.hdrN  = hdr;
+      varargout{2}.hdrO  = V;
+      varargout{2}.hdrN  = Vo;
       varargout{2}.sizeO = sizeO;
       varargout{2}.sizeN = size(T);
       varargout{2}.resO  = resV;

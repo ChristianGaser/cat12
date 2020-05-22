@@ -713,16 +713,11 @@ function varargout = cat_vol_qa(action,varargin)
       Ygm = cat_vol_resize(Ygm      ,'reduceV',vx_volx,res,32,'meanm'); % GM thr.
       Ywm = cat_vol_resize(Ywm      ,'reduceV',vx_volx,res,32,'meanm'); % WM thr. and bias correction (Ywme)
       Ywe = cat_vol_resize(Ywe      ,'reduceV',vx_volx,res,32,'meanm'); % WM thr. and bias correction (Ywme)
-      Ycm = Ycm>=0.5; 
-      Ygm = Ygm>=0.5; 
-      Ywm = Ywm>=0.5; 
-      Ywe = Ywe>=0.5; 
       
-      %% only voxel that were the product of 
-      if sum(Ycm(:))>10, Yc  = Yc  .* Ycm; Ycn = Ycn .* Ycm;end
-      if sum(Ygm(:))>10, Yg  = Yg  .* Ygm; end
-      if sum(Ywm(:))>10, Yw  = Yw  .* Ywe; Ywb = Ywb .* Ywm;  Ywn = Ywn .* Ywm; end 
-      if sum(Ywe(:))>10, Ywc = Ywc .* Ywe; end
+      % only voxel that were the product of 
+      Yc  = Yc  .* (Ycm>=0.5); Yg  = Yg  .* (Ygm>=0.5);  Yw  = Yw  .* (Ywe>=0.5); 
+      Ywc = Ywc .* (Ywe>=0.5); Ywb = Ywb .* (Ywm>=0.5);  Ywn = Ywn .* (Ywm>=0.5);
+      Ycn = Ycn .* (Ycm>=0.5);
       
       
       %clear Ycm Ygm Ywm Ywme;
@@ -748,12 +743,12 @@ function varargout = cat_vol_qa(action,varargin)
 
       clear WIs ;
       
-      %Ywb = Ywb ./ cat_stat_nanmean(Ywb(Yp0(:)>2));
+      Ywb = Ywb ./ cat_stat_nanmean(Ywb(Yp0(:)>2));
      
-      %% tissue segments for contrast estimation etc. 
-      CSFth = cat_stat_nanmean(Yc(Ycm(:))); if isnan(CSFth),  CSFth = cat_stat_nanmean(Ycn(Ycm(:))./WI(Ycm(:))); end
-      GMth  = cat_stat_nanmean(Yg(Ygm(:)));
-      WMth  = cat_stat_nanmean(Yw(Ywm(:))); 
+      % tissue segments for contrast estimation etc. 
+      CSFth = cat_stat_nanmean(Yc(~isnan(Yc(:)) & Yc(:)~=0)); 
+      GMth  = cat_stat_nanmean(Yg(~isnan(Yg(:)) & Yg(:)~=0));
+      WMth  = cat_stat_nanmean(Yw(~isnan(Yw(:)) & Yw(:)~=0)); 
       T3th  = [CSFth GMth WMth];
       
       % estimate background
@@ -804,7 +799,7 @@ function varargout = cat_vol_qa(action,varargin)
       %   and anatomica variance, so its better to use GM-WM contrast 
       %   and take care of overoptimisation with values strongly >1/3
       %   of the relative contrast
-      contrast = min(abs(diff(QAS.qualitymeasures.tissue_mn(3:4)))) ./ abs(diff([BGth,max([WMth,GMth])])); % default contrast
+      contrast = min(abs(diff(QAS.qualitymeasures.tissue_mn(3:4)))) ./ abs(diff([min([CSFth,BGth]),max([WMth,GMth])])); % default contrast
       contrast = contrast + min(0,13/36 - contrast)*1.2;                      % avoid overoptimsization
       QAS.qualitymeasures.contrast  = contrast * (max([WMth,GMth])); 
       QAS.qualitymeasures.contrastr = contrast;
@@ -814,15 +809,24 @@ function varargout = cat_vol_qa(action,varargin)
       %% noise estimation (original (bias corrected) image)
       % WM variance only in one direction to avoid WMHs!
       rms=1; nb=1;
-      Ywmn = cat_vol_morph(Ywm,'o');
-      NCww = sum(Ywmn(:)) * prod(vx_vol);
-      NCwc = sum(Ycm(:)) * prod(vx_vol);
-      signal_intensity = abs( diff( [min(BGth,CSFth) , max(GMth,WMth)] )); 
-      [Yos2,YM2] = cat_vol_resize({Ywn,Ywmn},'reduceV',vx_vol,max(3 * min(vx_vol) ,3),16,'meanm');
-      YM2 = cat_vol_morph(YM2,'o'); % we have to be sure that there are neigbors otherwise the variance is underestimated 
-      NCRw = estimateNoiseLevel(Yos2,YM2>0.5,nb,rms) / signal_intensity / contrast  ; 
-      if isnan(NCRw)
-        NCRw = estimateNoiseLevel(Ywn,Ywmn,nb,rms) / signal_intensity / contrast  ; 
+      if 1
+        NCww = sum(Ywn(:)>0) * prod(vx_vol);
+        NCwc = sum(Ycn(:)>0) * prod(vx_vol);
+        [Yos2,YM2] = cat_vol_resize({Ywn,Ywn>0},'reduceV',vx_vol,3,16,'meanm');
+        signal_intensity = abs( diff( [min(BGth,CSFth) , max(GMth,WMth)] )); 
+        NCRw = estimateNoiseLevel(Yos2,YM2>0.5,nb,rms) / signal_intensity / contrast  ; 
+      else     
+        % RD202005: not correct working?
+        Ywmn = cat_vol_morph(Ywm,'o');
+        NCww = sum(Ywmn(:)) * prod(vx_vol);
+        NCwc = sum(Ycm(:)) * prod(vx_vol);
+        signal_intensity = abs( diff( [min(BGth,CSFth) , max(GMth,WMth)] )); 
+        [Yos2,YM2] = cat_vol_resize({Ywn,Ywmn},'reduceV',vx_vol,max(3 * min(vx_vol) ,3),16,'meanm');
+        YM2 = cat_vol_morph(YM2,'o'); % we have to be sure that there are neigbors otherwise the variance is underestimated 
+        NCRw = estimateNoiseLevel(Yos2,YM2>0.5,nb,rms) / signal_intensity / contrast  ; 
+        if isnan(NCRw)
+          NCRw = estimateNoiseLevel(Ywn,Ywmn,nb,rms) / signal_intensity / contrast  ; 
+        end
       end
       if BGth<-0.1 && WMth<3, NCRw=NCRw/3; end% MT weighting
       clear Yos0 Yos1 Yos2 YM0 YM1 YM2;
@@ -831,10 +835,16 @@ function varargout = cat_vol_qa(action,varargin)
       % for typical T2 images we have too much signal in the CSF and can't use it for noise estimation!
       wcth = 200; 
       if CSFth<GMth && NCwc>wcth
-        [Yos2,YM2] = cat_vol_resize({Ycn,Ycm},'reduceV',vx_vol,max(3 * min(vx_vol) ,3),16,'meanm');
-        NCRc = estimateNoiseLevel(Yos2,YM2>0.5,nb,rms) / signal_intensity / contrast ; 
-        if isnan(NCRc)
-          NCRc = estimateNoiseLevel(Ycn,Ycm,nb,rms) / signal_intensity / contrast ; 
+        if 1
+          [Yos2,YM2] = cat_vol_resize({Ycn,Ycn>0},'reduceV',vx_vol,3,16,'meanm');
+          NCRc = estimateNoiseLevel(Yos2,YM2>0.5,nb,rms) / signal_intensity  / contrast ; 
+        else
+          % RD202005: not correct working?
+          [Yos2,YM2] = cat_vol_resize({Ycn,Ycm},'reduceV',vx_vol,max(3 * min(vx_vol) ,3),16,'meanm');
+          NCRc = estimateNoiseLevel(Yos2,YM2>0.5,nb,rms) / signal_intensity / contrast ; 
+          if isnan(NCRc)
+            NCRc = estimateNoiseLevel(Ycn,Ycm,nb,rms) / signal_intensity / contrast ; 
+          end
         end
         clear Yos0 Yos1 Yos2 YM0 YM1 YM2;
       else

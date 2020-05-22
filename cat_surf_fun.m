@@ -83,6 +83,9 @@ function varargout = cat_surf_fun(action,S,varargin)
       if nargin<2, help cat_surf_fun>cat_surf_normals; return; end
       varargout{1} = cat_surf_normals(S); 
     
+    case 'angle'
+      varargout{1} = cat_surf_edgeangle(S,varargin{1});
+      
     case 'dist'
       if nargin<2, help cat_surf_fun>cat_surf_dist; return; end
       varargout{1} = cat_surf_dist(S);
