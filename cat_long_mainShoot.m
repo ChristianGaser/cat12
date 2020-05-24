@@ -13,29 +13,7 @@ if isempty(delete_temp),  delete_temp = 1; end
 
 write_CSF = cat_get_defaults('output.CSF.mod') > 0;
 
-%{
-if isfield(extopts,'admin') && isfield(extopts.admin,'lazy') && extopts.admin.lazy
-  fprintf('\nCAT12 is restarted in developer mode to enable additional options.\n');
-  cat12('developer');
-else
-  fprintf('\nCAT12 is restarted in expert mode to enable additional options.\n');
-  cat12('expert');
-end
-%}
 warning('off','MATLAB:DELETE:FileNotFound');
-
-
-% correct extopts fields for expert mode
-if ~isfield(extopts,'segmentation')
-  tmp_fields = char('APP','LASstr','gcutstr','restypes');
-  segmentation = '';
-  for i=1:size(tmp_fields,1)
-    segmentation = setfield(segmentation,deblank(tmp_fields(i,:)),extopts.(deblank(tmp_fields(i,:))));
-    extopts = rmfield(extopts,deblank(tmp_fields(i,:)));
-  end
-  extopts.segmentation = segmentation;
-end
-
 
 % display start
 if 0 %~isempty(extopts)  
@@ -57,10 +35,11 @@ end
 % 1) longitudinal rigid registration with final masking (SAVG space)
 % -----------------------------------------------------------------------
 % Here we bring all time points to the same rigid orientation, reslice the
-% images, correct roughly for inhomogeneities and create an average image.
+% images, correct roughly for inhomogeneities between time points and create 
+% an average image.
 % ########
-% RD202005: In case of strong developemental difference due to head size
-%           an affine registration or John's longidutinal average is maybe 
+% RD202005: In case of strong developmental differences due to head size
+%           an affine registration or John's longitudinal average is maybe 
 %           required.
 % ########
 mbi = mbi + 1; mb_rigid = mbi; 
@@ -104,11 +83,11 @@ matlabbatch{mbi}.spm.tools.cat.estwrite.output.warps        = [0 0];
 
 % 3) creating longitudinal TPM
 % -----------------------------------------------------------------------
-% Using a subjectspecific TPM allow to stabilize the preprocessing of the
+% Using a subject-specific TPM allows to stabilize the preprocessing of the
 % indivividual time points, mostly of the initial affine registration and 
-% the Unified segmentation that also compensate for slight structural 
+% the Unified segmentation that also compensates for slight structural 
 % changes between the time points.  However the effects on the final AMAP
-% segmenatio are relative small. 
+% segmenation are relatively small. 
 mbi = mbi + 1; mb_tpm = mbi;
 matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.files(1) = cfg_dep('CAT12: Segmentation (current release): rp1 affine Image', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','rpa', '()',{':'}));
 matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.fstrength = 2;
@@ -118,7 +97,7 @@ matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.verb = 1;
 
 % 4) cat12 segmentation of realigned images with prior from step 2  
 % -----------------------------------------------------------------------
-% In this step each timepoint is estimated seperatelly but uses the prior
+% In this step each time point is estimated separatelly but uses the prior
 % from the SAVG - the TPM from step 3 for segmentation (and the individual 
 % surface from step 2)
 mbi = mbi + 1; mb_cat = mbi;
@@ -158,7 +137,7 @@ matlabbatch{mbi}.spm.tools.cat.estwrite.opts.tpm            = cfg_dep('Longitudi
 
 % 5) averaging deformations
 % -----------------------------------------------------------------------
-% To map the data into the MNI space, the time-point specific deformations
+% To map the data to the MNI space, the time point specific deformations
 % were averaged. 
 % #######
 % RD202005: In case of developemental data, we may need to use the 
@@ -174,16 +153,16 @@ matlabbatch{mbi}.spm.tools.cat.tools.avg_img.outdir   = {''};
 % 6) creating time point specific deformation 
 % -----------------------------------------------------------------------
 % To reduce longitudinal changes of moving structures between time points 
-% an longitudinal Shooting template are estimated.
+% a longitudinal Shooting template is estimated.
 % #######
-% RD202005: In case of developemental data, we may need to use differnt
-%           Shooting parameter (e.g., more iterations, more low-freq.
+% RD202005: In case of developemental data, we may need to use different
+%           Shooting parameters (e.g., more iterations, more low-freq.
 %           changes to adapt for head size changes.
 % #######
 
 lowres = 2; % define resolution in mm
 if lowres
-  % reduce resultion 
+  % reduce resolution 
   % It would be also possible to use the rigid output from the time points 
   % but those depend on user definition of extopts.vox and we are more
   % flexible and probably faster and more robust this way.
@@ -226,7 +205,7 @@ end
 
 
 
-% 7) applying time-point deformations to rigid native segmentations
+% 7) applying time point deformations to rigid native segmentations
 % -----------------------------------------------------------------------
 % this is the first simple approach with full resolution
 mb_aGS = zeros(1,2 + single(write_CSF));
@@ -243,7 +222,7 @@ for ci = 1:2 + single(write_CSF)
 end
 
 
-% 8) applying deformations to time-point-optimized native segmentations
+% 8) applying deformations to time point optimized native segmentations
 % -----------------------------------------------------------------------
 % applying deformations to tissues
 mbi = mbi + 1; 
@@ -301,10 +280,11 @@ if delete_temp
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Resize images: Resized', substruct('.','val', '{}',{mb_lr(1)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','res', '()',{':'})); c = c+1;
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Resize images: Resized', substruct('.','val', '{}',{mb_lr(2)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','res', '()',{':'})); c = c+1;
   end
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Run Shooting (create Templates): Template (0)', substruct('.','val', '{}',{mb_GSI}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','template', '()',{':'})); c = c+1;
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Run Shooting (create Templates): Velocity Fields', substruct('.','val', '{}',{mb_GSI}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','vel', '()',{':'})); c = c+1;
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Run Shooting (create Templates): Deformation Fields', substruct('.','val', '{}',{mb_GSI}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','def', '()',{':'})); c = c+1; 
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Run Shooting (create Templates): Jacobian Fields', substruct('.','val', '{}',{mb_GSI}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','jac', '()',{':'})); c = c+1;
+% not yet working
+%  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Run Shooting (create Templates): Template (0)', substruct('.','val', '{}',{mb_GSI}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','template', '()',{':'})); c = c+1;
+%  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Run Shooting (create Templates): Velocity Fields', substruct('.','val', '{}',{mb_GSI}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','vel', '()',{':'})); c = c+1;
+%  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Run Shooting (create Templates): Deformation Fields', substruct('.','val', '{}',{mb_GSI}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','def', '()',{':'})); c = c+1; 
+%  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Run Shooting (create Templates): Jacobian Fields', substruct('.','val', '{}',{mb_GSI}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','jac', '()',{':'})); c = c+1;
   for ci = 1:2 + single(write_CSF)
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Apply deformations (many subjects): All Output Files', substruct('.','val', '{}',{mb_aGS(ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','vfiles')); c = c+1;
   end

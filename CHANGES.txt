@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1634 | dahnke | 2020-05-22 20:27:52
+r1635 | gaser | 2020-05-25 00:37:52
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_long_mainShoot.m
+A       cat_long_shoot_defaults.m
+A       cat_spm_shoot_template.m
+MM      cat_surf_map_atlas.m
+A       cat_vol_createTPM.m
+
+(1) Fixed:   Added missing files for new longitudinal batch mode.
+(2) Changed: Removed correction of segmentation field in cat_long_mainShoot.m
+(3) Changed: Updated help texts in new functions and corrected typos.
+------------------------------------------------------------------------
+r1634 | dahnke | 2020-05-22 20:31:12 +0200 (Fr, 22 Mai 2020) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -16,6 +31,7 @@ M       cat_vol_resize.m
 (2) New:       Added general create TPM batch.
 (3) Changed:   Hid longitudinal create TPM and realign batches.
 (4) New:       Added batch to resize images and update cat_vol_resize. 
+
 
 ------------------------------------------------------------------------
 r1633 | gaser | 2020-05-20 17:00:04 +0200 (Mi, 20 Mai 2020) | 13 lines
