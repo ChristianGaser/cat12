@@ -227,10 +227,10 @@ return
 
 function shootlong = cat_conf_shoot(expert)
 % -------------------------------------------------------------------------
-% This is slighly modified version of the original Shooting that allows to 
-% specify another default file. It is required to remove light movements of
-% structures in longidudinal data.
-% Although this is a general batch it is here defined a private function 
+% This is slightly modified version of the original Shooting that allows to 
+% specify another default file. It is required to remove slight movements of
+% between scans in longidudinal data.
+% Although this is a general batch it is here defined as a private function 
 % called only from the CAT longidudinal batch.
 % 
 % RD202005
@@ -251,7 +251,7 @@ function shootlong = cat_conf_shoot(expert)
   dfile.ufilter      = '.*';
   dfile.num          = [0 1];
   dfile.val          = {{''}};
-  dfile.help         = {'Select one Shooting defaults matlab m-file.  If empty Shooting "spm_shoot_defaults" is used. '};
+  dfile.help         = {'Select one Shooting default matlab m-file.  If empty Shooting "spm_shoot_defaults" is used. '};
   
   % creat new version 
   shootlong          = shoot.values{fi}; 
@@ -273,18 +273,18 @@ function createTPM = cat_conf_createTPM(data,expert)
   tfiles                 = data; 
   tfiles.tag             = 'tfiles';
   tfiles.name            = 'First Shooting Template';
-  tfiles.help            = {'Select GM segment of the first Shooting template.  The other tissue classes (2-?) will be selected automaticelly.  '};
+  tfiles.help            = {'Select GM segment of the first Shooting template.  The other tissue classes (2-?) will be selected automatically.  '};
   tfiles.ufilter         = '^Template.*';
   tfiles.num             = [1 1];
   
   % T1 input images
   mfiles                 = data; 
   mfiles.tag             = 'mfiles';
-  mfiles.name            = 'Intensity normalzed images';
+  mfiles.name            = 'Intensity normalized images';
   mfiles.help            = {
-    ['Select all intensity optimized output images in native space (m*.nii).  ' ...
+    ['Select all intensity normalized output images in native space (m*.nii).  ' ...
      'The registration files of the Shoothing template (y_*) are selected automatically.  ' ...
-     'It is assumed that you have run the "Create Shooting Template" batch in the same directory.  ']
+     'It is assumed that you run the "Create Shooting Template" batch in the same directory.  ']
     };
   mfiles.ufilter         = '^m.*';
   mfiles.num             = [0 Inf];
@@ -294,10 +294,10 @@ function createTPM = cat_conf_createTPM(data,expert)
   afiles.tag             = 'afiles';
   afiles.name            = 'Atlas maps';
   afiles.help            = {
-    ['Select all atlas maps in native space normaly writte into the label directory.  ' ...
-     'If you want to algin different atlas maps than you can simply add them here were the total file number is a multiply of the "Intensity normalized images".  ' ...
+    ['Select all atlas maps in native space usually written in the label directory.  ' ...
+     'If you want to align different atlas maps then you can simply add them here where the total file number is a multiple of the "Intensity normalized images".  ' ...
      'The registration files of the Shoothing template (y_*) are selected automatically.  ' ...
-     'It is assumed that you have run the "Create Shooting Template" batch in the same directory.  ']
+     'It is assumed that you run the "Create Shooting Template" batch in the same directory.  ']
     };
   afiles.ufilter         = '.*';
   afiles.num             = [0 Inf];
@@ -316,13 +316,13 @@ function createTPM = cat_conf_createTPM(data,expert)
   pfiles                 = data; 
   pfiles.tag             = 'pfiles';
   pfiles.name            = 'Normalized GM segments';
-  pfiles.help            = {'Select the normalized GM segments (wp1*.nii).  The other tissue classes (2-6) will be selected automaticelly.  '};
+  pfiles.help            = {'Select the normalized GM segments (wp1*.nii).  The other tissue classes (2-6) will be selected automatically.  '};
   pfiles.ufilter         = '^wp1.*';
   pfiles.num             = [1 Inf];
   
   wmfiles                = mfiles; 
   wmfiles.tag            = 'mfiles';
-  wmfiles.name           = 'Normalized intensity normalzed images';
+  wmfiles.name           = 'Normalized intensity normalized images';
   wmfiles.help           = {
     ['Select all normalized intensity optimized output images in native space (wm*.nii).  ' ...
      'The number of file has to be equal to the number of input segmentations.']
@@ -334,8 +334,8 @@ function createTPM = cat_conf_createTPM(data,expert)
   wafiles.tag            = 'afiles';
   wafiles.name           = 'Atlas maps';
   wafiles.help           = {
-    ['Select all atlas maps in native space normaly writte into the label directory.  ' ...
-     'If you want to algin different atlas maps than you can simply add them here were the total file number is a multiply of the "Intensity normalized images".  ']
+    ['Select all atlas maps in native space usually written in the label directory.  ' ...
+     'If you want to align different atlas maps then you can simply add them here where the total file number is a multiple of the "Intensity normalized images".  ']
     };
   wafiles.ufilter        = '.*';
   wafiles.num            = [0 Inf];
