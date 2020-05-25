@@ -218,7 +218,7 @@ for ai = 1:size(exatlas,1)
 
     % if output.atlases.ff does not exist then set it by the default file value
     if isempty(cat_get_defaults(['output.satlases.' name]))
-      cat_get_defaults(['output.atlases.' ff], exatlas{ai,4})
+      cat_get_defaults(['output.satlases.' name], exatlas{ai,4})
     end
     atlaslist{end+1,1} = name; 
 
@@ -239,7 +239,7 @@ for ai = 1:size(exatlas,1)
     matlas{mai}.name   = [name addname]; 
     matlas{mai}.labels = {'No','Yes'};
     matlas{mai}.values = {0 1};
-    matlas{mai}.def    = eval(sprintf('@(val) cat_get_defaults(''output.atlases.%s'', val{:});',ff)); 
+    matlas{mai}.def    = eval(sprintf('@(val) cat_get_defaults(''output.satlases.%s'', val{:});',name)); 
     
     txtfile = fullfile(pp,[name '.txt']);
     if exist(txtfile,'file')
@@ -262,8 +262,8 @@ for ai = 1:size(exatlas,1)
   else
     name = exatlas{ai,1}; 
     
-    if ~isempty(cat_get_defaults(['output.atlases.' name]))
-      cat_get_defaults(['output.atlases.' name],'rmfield');
+    if ~isempty(cat_get_defaults(['output.satlases.' name]))
+      cat_get_defaults(['output.satlases.' name],'rmfield');
     end
   end
 end

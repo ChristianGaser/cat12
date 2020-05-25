@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1635 | gaser | 2020-05-25 00:37:52
+r1636 | dahnke | 2020-05-25 20:04:49
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_ROI.m
+MM      cat_long_mainShoot.m
+M       spm_cat12.m
+
+(1) Fixed:   Corrected surface ROI batch definition in cat_conf_ROI and spm_cat12. 
+(2) Fixed:	 Corrected deletion of shooting files in long batch.
+------------------------------------------------------------------------
+r1635 | gaser | 2020-05-25 00:38:28 +0200 (Mo, 25 Mai 2020) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +24,7 @@ A       cat_vol_createTPM.m
 (1) Fixed:   Added missing files for new longitudinal batch mode.
 (2) Changed: Removed correction of segmentation field in cat_long_mainShoot.m
 (3) Changed: Updated help texts in new functions and corrected typos.
+
 ------------------------------------------------------------------------
 r1634 | dahnke | 2020-05-22 20:31:12 +0200 (Fr, 22 Mai 2020) | 17 lines
 
