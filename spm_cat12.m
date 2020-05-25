@@ -218,6 +218,20 @@ for ai = 1:size(exatlas,1)
   end
 end
 
+exsatlas  = cat_get_defaults('extopts.satlas'); 
+for ai = 1:size(exsatlas,1)
+  if exsatlas{ai,3}<=expert && exist(exsatlas{ai,2},'file')
+    name = exsatlas{ai,1};
+
+    % if output.atlases.ff does not exist then set it by the default file value
+    if isempty(cat_get_defaults(['output.satlases.' name]))
+      cat_get_defaults(['output.satlases.' name], exsatlas{ai,4})
+    end
+  end
+end
+
+ 
+
 % temporary, because of JAVA errors in cat_io_cprintf ... 20160307
 if expert<2
   cprintferror=1;
