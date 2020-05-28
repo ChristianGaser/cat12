@@ -1290,7 +1290,6 @@ function realign  = cat_vol_series_align_GUI(data)
     'The resliced images are named the same as the originals, except that they are prefixed by ''r''.'
   };
   realign.prog          = @cat_vol_series_align;
-  realign.hidden        = true; 
   realign.vout          = @vout_realign;
 
 return

@@ -383,7 +383,7 @@ end
 
 % XML label
 if isfield(opts,'ROImenu') && isfield(opts.ROImenu,'atlases') && ...
-  any(cell2mat(struct2cell(opts.ROImenu.atlases(1:end-1))))
+  ~isempty(struct2cell(opts.ROImenu.atlases))
     cdep(end+1)          = cfg_dep;
     cdep(end).sname      = 'ROI XML File';
     cdep(end).src_output = substruct('()',{1}, '.','roi','()',{'1'});

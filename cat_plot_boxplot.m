@@ -133,6 +133,19 @@ if nargin==0, help cat_plot_boxplot; return; end
 % default parameter
 if ~exist('opt','var'), opt = struct(''); end
 
+% data has to be defined as cell and should be converted if numeric
+if isnumeric(data)
+  if isfield(opt,'switch') && opt.switch
+    data = data';
+  end
+  sz = size(data);
+  tmp = data; clear data
+  data = cell(sz(2),1);
+  for i = 1:sz(2)
+    data{i} = tmp(:,i);
+  end
+end
+
 def.notched     = 0;
 def.symbol      = '+o';
 def.vertical    = 1;
@@ -181,20 +194,6 @@ end
 opt             = cat_io_checkinopt(opt,def);
 opt.notched     = max(0,min(1,opt.notched));
 opt.trans       = max(0,min(1,opt.trans * (opt.sat*4) ));
-
-% data has to be defined as cell and should be converted if numeric
-if isnumeric(data)
-  % sometimes you cannot switch between columns and rows
-  if opt.switch
-    data = data';
-  end
-  sz = size(data);
-  tmp = data; clear data
-  data = cell(sz(2),1);
-  for i = 1:sz(2)
-    data{i} = tmp(:,i);
-  end
-end
 
 if max(opt.subsets)>1
   subsets = zeros(1,numel(data)); 

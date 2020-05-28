@@ -78,8 +78,8 @@ matlabbatch{mbi}.spm.tools.cat.estwrite.output.WM.mod       = 0;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.CSF.dartel   = 2; 
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.TPMC.dartel  = 2;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.bias.warped  = 0;
+matlabbatch{mbi}.spm.tools.cat.estwrite.output.label.native = 0;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.warps        = [0 0];
-
 
 % 3) creating longitudinal TPM
 % -----------------------------------------------------------------------
@@ -131,6 +131,7 @@ if write_CSF
   matlabbatch{mbi}.spm.tools.cat.estwrite.output.CSF.native = 1; % also write CSF?
 end
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.bias.warped  = 0;
+matlabbatch{mbi}.spm.tools.cat.estwrite.output.label.native = 0;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.warps        = [1 0];
 matlabbatch{mbi}.spm.tools.cat.estwrite.useprior(1)         = cfg_dep('Longitudinal Registration: Midpoint Average', substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','avg', '()',{':'}));
 matlabbatch{mbi}.spm.tools.cat.estwrite.opts.tpm            = cfg_dep('Longitudinal TPM creation: Longitudinal TPMs', substruct('.','val', '{}',{mb_tpm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tpm', '()',{':'}));
@@ -262,6 +263,12 @@ if delete_temp
   matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): rp1 affine Image', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','rpa', '()',{':'})); c = c+1;
   matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): rp2 affine Image', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{2}, '.','rpa', '()',{':'})); c = c+1;
   matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): rp3 affine Image', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{3}, '.','rpa', '()',{':'})); c = c+1;  
+
+% CG 20200828 not yet working
+%  if exist('ROImenu','var') && ~isempty(ROImenu)
+%    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): ROI XML File', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','roi', '()',{1})); c = c+1;
+%  end
+  
   % surfaces
   if surfaces
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Left Central Surface', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','lhcentral', '()',{':'})); c = c+1;
@@ -275,6 +282,8 @@ if delete_temp
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Right Thickness', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','rhthickness', '()',{':'})); c = c+1;
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Right Pbt', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','rhpbt', '()',{':'})); c = c+1;
   end
+  % longTPM
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Longitudinal TPM creation: Longitudinal TPMs', substruct('.','val', '{}',{mb_tpm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tpm', '()',{':'})); c = c+1;
   % timepoint deformations
   if lowres
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Resize images: Resized', substruct('.','val', '{}',{mb_lr(1)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','res', '()',{':'})); c = c+1;
@@ -289,6 +298,32 @@ if delete_temp
   end
   % final command of this batch 
   matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.delete  = false;
+  
+  % remove rp* files using path/file operations because of missing dependencies
+  mbi = mbi + 1;
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(1) = cfg_dep('File Selector (Batch Mode): Selected Files (rp)', substruct('.','val', '{}',{mb_file}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','files'));
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.delete = false;
+
+  mbi = mbi + 1; mb_dir = mbi;
+  matlabbatch{mbi}.cfg_basicio.file_dir.cfg_fileparts.files(1) = cfg_dep('CAT12: Segmentation (current release): rp1 affine Image', substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','rpa', '()',{':'}));
+  mbi = mbi + 1; mb_file = mbi;
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_fplist.dir(1) = cfg_dep('Get Pathnames: Directories', substruct('.','val', '{}',{mb_dir}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','p'));
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_fplist.filter = '^rp';
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_fplist.rec = 'FPList';
+  mbi = mbi + 1;
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(1) = cfg_dep('File Selector (Batch Mode): Selected Files', substruct('.','val', '{}',{mb_file}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','files'));
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.delete = false;
+
+  % remove cat_avg* files using path/file operations because of missing dependencies
+  mbi = mbi + 1; mb_dir2 = mbi;
+  matlabbatch{mbi}.cfg_basicio.file_dir.cfg_fileparts.files(1) = cfg_dep('CAT12: Segmentation (current release): CAT Report', substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','catxml', '()',{':'}));
+  mbi = mbi + 1; mb_file2 = mbi;
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_fplist.dir(1) = cfg_dep('Get Pathnames: Directories', substruct('.','val', '{}',{mb_dir2}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','p'));
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_fplist.filter = '^cat_avg';
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_fplist.rec = 'FPList';
+  mbi = mbi + 1;
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(1) = cfg_dep('File Selector (Batch Mode): Selected Files (rp)', substruct('.','val', '{}',{mb_file2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','files'));
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.delete = false;
 end
 
 
