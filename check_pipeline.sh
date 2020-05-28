@@ -17,7 +17,7 @@ bg_flag=" -fg -p 1"
 bg=0
 postprocess_only=0
 volumes_only=0
-scp_target="dbm.neuro.uni-jena.de:/Applications/xampp/htdocs/check_pipeline/"
+scp_target="dbm.neuro.uni-jena.de:/volume1/web/check_pipeline/"
 
 ########################################################
 # run main

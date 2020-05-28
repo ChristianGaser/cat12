@@ -20,11 +20,15 @@ for i=1:size(P,1)
       if strcmp(C{j,k},'NaN'), C{j,k} = 0; end
     end
   end
-
-  rev = num2str(cell2mat(C(2:end,1)));
   
-  roi_names = C(1,:);
-  roi_values = cell2mat(C(2:end,2:end));
+  if ischar(C{1,1})
+    ind = 2;
+  else
+    ind = 1;
+  end
+  rev = num2str(cell2mat(C(ind:end,1)));
+  
+  roi_values = cell2mat(C(ind:end,2:end));
   mean_values = mean(roi_values);
   roi_values = roi_values - mean_values;
 
