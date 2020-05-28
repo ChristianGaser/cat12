@@ -891,11 +891,6 @@ catreportjpg= {};
 catreportpdf= {};
 catlog      = {};
 catxml      = {};
-
-
-%roi         = {};
-%fordef      = {};
-%invdef      = {};
 jacobian    = {};
 
 if job.extopts.subfolders

@@ -113,6 +113,7 @@ for i=1:numel(P)
   switch numel(files)
     case 0
       fprintf('Label file %s not found in %s. Please check whether you have extracted ROI-based surface values or have moved your data.\n',sname,pth_label);
+      roi_files_found = 0;
     case 1
       roi_names{i} = files{1};
       roi_files_found = roi_files_found + 1;
@@ -134,7 +135,7 @@ for i=1:numel(P)
       roi_files_found = roi_files_found + 1;
   end
   
-  if exist('roi_names','var')
+  if exist('roi_names','var') && roi_files_found == n
     disp(roi_names{i}) 
   end 
   

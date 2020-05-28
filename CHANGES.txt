@@ -1,5 +1,32 @@
 ------------------------------------------------------------------------
-r1636 | dahnke | 2020-05-25 20:04:49
+r1637 | gaser | 2020-05-28 17:08:26
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_ROI.m
+M       cat_conf_tools.m
+M       cat_long_mainShoot.m
+M       cat_plot_boxplot.m
+M       cat_run.m
+M       cat_stat_analyze_ROIs.m
+M       check_pipeline.sh
+M       check_pipeline_ROIs.m
+M       html/cat.html
+M       tbx_cfg_cat.m
+
+(1) Changed: Updated longitudinal pipeline
+(2) Changed: Updated server name in check_pipeline.sh
+(3) Changed: Unset hidden flag for longitudinal registration.
+(4) Fixed:   Dependency for ROI output was not working.
+(5) Fixed:   check_pipeline_ROIs was not correctly dealing with csv without
+             header.
+(6) Fixed:   Check for missing ROI xml files was not working.
+(7) Fixed:   Non-cell data in cat_plot_boxplot.m were not correctly converted
+             to cell data.
+
+------------------------------------------------------------------------
+r1636 | dahnke | 2020-05-25 20:07:09 +0200 (Mo, 25 Mai 2020) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +36,7 @@ M       spm_cat12.m
 
 (1) Fixed:   Corrected surface ROI batch definition in cat_conf_ROI and spm_cat12. 
 (2) Fixed:	 Corrected deletion of shooting files in long batch.
+
 ------------------------------------------------------------------------
 r1635 | gaser | 2020-05-25 00:38:28 +0200 (Mo, 25 Mai 2020) | 13 lines
 
