@@ -15,7 +15,7 @@ function d = cat_long_shoot_defaults
 % Copyright (C) Wellcome Trust Centre for Neuroimaging (2009)
 
 % John Ashburner
-% $Id: spm_shoot_defaults.m 6489 2015-06-26 11:46:29Z john $
+% $Id$
 
 
 %_______________________________________________________________________
