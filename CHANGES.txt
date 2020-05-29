@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1637 | gaser | 2020-05-28 17:08:26
+r1638 | gaser | 2020-05-29 16:51:59
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_mainShoot.m
+MM      cat_long_shoot_defaults.m
+MM      cat_spm_shoot_template.m
+ M      cat_vol_createTPM.m
+
+Fixed: Last file deletions in longitudinal pipeline were not yet working.
+
+------------------------------------------------------------------------
+r1637 | gaser | 2020-05-28 17:09:16 +0200 (Do, 28 Mai 2020) | 25 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -24,6 +36,7 @@ M       tbx_cfg_cat.m
 (6) Fixed:   Check for missing ROI xml files was not working.
 (7) Fixed:   Non-cell data in cat_plot_boxplot.m were not correctly converted
              to cell data.
+
 
 ------------------------------------------------------------------------
 r1636 | dahnke | 2020-05-25 20:07:09 +0200 (Mo, 25 Mai 2020) | 9 lines

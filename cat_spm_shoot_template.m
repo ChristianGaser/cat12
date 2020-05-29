@@ -16,7 +16,7 @@ function out = cat_spm_shoot_template(job)
 % Copyright (C) Wellcome Trust Centre for Neuroimaging (2009)
 
 % John Ashburner
-% $Id: spm_shoot_template.m 7718 2019-11-27 11:18:53Z john $
+% $Id$
 
 %_______________________________________________________________________
 
