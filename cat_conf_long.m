@@ -181,7 +181,7 @@ else
   
   % extract only the ROI and sROI menu
   FN = cell(1,numel(output.val));  for fni=1:numel(output.val), FN{fni} = output.val{fni}.tag; end
-  sROI = output.val{ find(cellfun('isempty',strfind(FN,'sROImenu'))==0,1) }; 
+%  sROI = output.val{ find(cellfun('isempty',strfind(FN,'sROImenu'))==0,1) }; 
   ROI  = output.val{ setdiff( find(cellfun('isempty',strfind(FN,'ROImenu'))==0) , ...
                      find(cellfun('isempty',strfind(FN,'sROImenu'))==0,1) ) }; 
   
@@ -189,7 +189,7 @@ else
     
   delete_temp.hidden = expert<1;
   
-  long.val  = {datalong,nproc,opts,extopts,output,ROI,sROI,modulate,dartel,delete_temp};
+  long.val  = {datalong,nproc,opts,extopts,output,ROI,modulate,dartel,delete_temp};
   
 % does not yet work! 
 %  long.vout = @vout_long;
