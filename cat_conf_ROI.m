@@ -297,7 +297,7 @@ sROI.help   = {
 'Export of ROI data of volume to a xml-files. '
 'For further information see atlas specific text files in "templates_volumes" CAT12 subdir. '
 ''
-'For thickness estimation the projection-based thickness (PBT) [Dahnke:2012] is used that average cortical thickness for each GM voxel. '
+'For thickness estimation the projection-based thickness (PBT) [Dahnke:2012] is used that averages cortical thickness for each GM voxel. '
 ''
 'There are different atlas maps available: '
 }; 

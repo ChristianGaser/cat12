@@ -4,7 +4,7 @@
 % $Id$
 %-----------------------------------------------------------------------
 
-global opts extopts output modulate dartel delete_temp ROImenu sROImenu surfaces cat
+global opts extopts output modulate dartel delete_temp ROImenu surfaces cat
 
 if isempty(dartel),       dartel      = 0; end
 if isempty(modulate),     modulate    = 1; end
@@ -117,9 +117,6 @@ end
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.surface      = surfaces;
 if exist('ROImenu','var') && ~isempty(ROImenu)
   matlabbatch{mbi}.spm.tools.cat.estwrite.output.ROImenu    = ROImenu;
-end
-if exist('sROImenu','var') && ~isempty(sROImenu)
-  matlabbatch{mbi}.spm.tools.cat.estwrite.output.sROImenu   = sROImenu;
 end
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.GM.native    = 1;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.GM.dartel    = dartel;
