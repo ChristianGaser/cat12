@@ -365,7 +365,7 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
   output      = cfg_branch;
   output.tag  = 'output';
   output.name = 'Writing options';
-  output.val  = {surface surf_measures ROI sROI grey white csf gmt pp wmh sl tpmc atlas label labelnative bias las jacobianwarped warps}; 
+  output.val  = {surface surf_measures ROI grey white csf gmt pp wmh sl tpmc atlas label labelnative bias las jacobianwarped warps}; 
   output.help = {
   'There are a number of options about what kind of data you like save. The routine can be used for saving images of tissue classes, as well as bias corrected images. The native space option will save a tissue class image (p*) that is in alignment with the original image. You can also save spatially normalised versions - both with (m[0]wp*) and without (wp*) modulation. In the cat toolbox, the voxel size of the spatially normalised versions is 1.5 x 1.5 x 1.5mm as default. The saved images of the tissue classes can directly be used for doing voxel-based morphometry (both un-modulated and modulated). All you need to do is smooth them and do the stats (which means no more questions on the mailing list about how to do "optimized VBM"). Please note that many less-common options are only available in expert mode (e.g. CSF, labels, atlas maps).'
   ''

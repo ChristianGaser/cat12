@@ -238,7 +238,7 @@ ROIs.filter  = 'any';
 ROIs.ufilter = '^lh.*\.annot$';
 ROIs.dir     = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces'); 
 ROIs.num     = [1 Inf];
-ROIs.hidden  = expert<2;
+%ROIs.hidden  = expert<2;
 ROIs.help    = {'These are the ROI atlas files. Both sides will be processed.'};
 
 
@@ -334,7 +334,7 @@ case 2
     nproc ... 
     avg.main};
 case {0, 1}
-  surf2roi.val  = {cdata_sample};
+  surf2roi.val  = {cdata_sample,ROIs};
 end
 surf2roi.prog = @cat_surf_surf2roi;
 surf2roi.vout = @vout_surf_surf2roi;

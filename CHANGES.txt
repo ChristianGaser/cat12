@@ -1,5 +1,22 @@
 ------------------------------------------------------------------------
-r1639 | gaser | 2020-06-04 12:46:25
+r1640 | gaser | 2020-06-04 17:50:11
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_ROI.m
+M       cat_conf_long.m
+M       cat_conf_output.m
+M       cat_conf_stools.m
+M       cat_long_main.m
+M       cat_long_mainShoot.m
+M       cat_long_multi_run.m
+M       html/cat.html
+
+(1) Changed: Removed sROI menu from pipeline.
+(2) Changed: Added sROI option to extract ROI function for surfaces.
+------------------------------------------------------------------------
+r1639 | gaser | 2020-06-04 12:47:03 +0200 (Do, 04 Jun 2020) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +26,7 @@ M       tbx_cfg_cat.m
 (1) Changed: Check successful loading of previous CAT12 versions and skip GUI
              entries if any problems occur.
 (2) Fixed:   Corrected deletion of thickness data if debugging was enabled.
+
 ------------------------------------------------------------------------
 r1638 | gaser | 2020-05-29 16:52:39 +0200 (Fr, 29 Mai 2020) | 10 lines
 
