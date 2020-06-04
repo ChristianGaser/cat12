@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1638 | gaser | 2020-05-29 16:51:59
+r1639 | gaser | 2020-06-04 12:46:25
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_createCS.m
+M       tbx_cfg_cat.m
+
+(1) Changed: Check successful loading of previous CAT12 versions and skip GUI
+             entries if any problems occur.
+(2) Fixed:   Corrected deletion of thickness data if debugging was enabled.
+------------------------------------------------------------------------
+r1638 | gaser | 2020-05-29 16:52:39 +0200 (Fr, 29 Mai 2020) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +20,7 @@ MM      cat_spm_shoot_template.m
  M      cat_vol_createTPM.m
 
 Fixed: Last file deletions in longitudinal pipeline were not yet working.
+
 
 ------------------------------------------------------------------------
 r1637 | gaser | 2020-05-28 17:09:16 +0200 (Do, 28 Mai 2020) | 25 lines

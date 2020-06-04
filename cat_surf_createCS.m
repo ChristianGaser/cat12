@@ -1116,8 +1116,10 @@ cstime = clock;
       end
       delete(Psphere0);
     end
-    delete(Vpp.fname);
-    delete(Vpp1.fname);
+    if ~debug
+      delete(Vpp.fname);
+      delete(Vpp1.fname);
+    end
     clear CS
     
     % create white and central surfaces

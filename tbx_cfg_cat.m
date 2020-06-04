@@ -118,19 +118,25 @@ opts        = cat_conf_opts(expert);
 %[output,output_spm,output1173,output1445,output1585] = cat_conf_output(expert); 
 [output,output_spm,output1173,output1445] = cat_conf_output(expert); 
 long        = cat_conf_long;
-long1173    = cat_conf_long1173;
-long1445    = cat_conf_long1445;
 
 %------------------------------------------------------------------------
 % additional segmentation versions
-extopts1173                   = cat_conf_extopts1173(expert);   
-extopts1173plus               = cat_conf_extopts1173plus(expert);   
-extopts1445                   = cat_conf_extopts1445(expert);   
-%extopts1585                   = cat_conf_extopts1585(expert);   
-opts1173                      = cat_conf_opts1173(expert); 
-opts1173plus                  = cat_conf_opts1173plus(expert); 
-opts1445                      = cat_conf_opts1445(expert); 
-%opts1585                      = cat_conf_opts1585(expert); 
+try
+  long1173                      = cat_conf_long1173;
+  long1445                      = cat_conf_long1445;
+  extopts1173                   = cat_conf_extopts1173(expert);   
+  extopts1173plus               = cat_conf_extopts1173plus(expert);   
+  extopts1445                   = cat_conf_extopts1445(expert);   
+ %extopts1585                   = cat_conf_extopts1585(expert);   
+  opts1173                      = cat_conf_opts1173(expert); 
+  opts1173plus                  = cat_conf_opts1173plus(expert); 
+  opts1445                      = cat_conf_opts1445(expert); 
+ %opts1585                      = cat_conf_opts1585(expert); 
+  load_previous = 1;
+catch
+  fprintf('\nWarning: Loading of old CAT12 versions was not successful and will be skipped\n');
+  load_previous = 0;
+end
 
 %% ------------------------------------------------------------------------
 estwrite        = cfg_exbranch;
@@ -154,53 +160,55 @@ estwrite.help   = {
 % CAT surface processing with existing SPM segmentation 
 
 % 1173
-estwrite1173        = estwrite; 
-estwrite1173.name   = 'CAT12.1: Segmentation R1173 (2017/09)';
-%NEW NAME?: estwrite1173.name   = 'CAT12.1: Segmentation R1392 (2017/09)';
-estwrite1173.tag    = 'estwrite1173';
-estwrite1173.prog   = @cat_run1173;
-estwrite1173.help   = [estwrite1173.help;{'';'This batch calls the stable version of the main preprocessing of release R1173 with only slight runtime bug fixes.';''}];
+if load_previous
+  estwrite1173        = estwrite; 
+  estwrite1173.name   = 'CAT12.1: Segmentation R1173 (2017/09)';
+  %NEW NAME?: estwrite1173.name   = 'CAT12.1: Segmentation R1392 (2017/09)';
+  estwrite1173.tag    = 'estwrite1173';
+  estwrite1173.prog   = @cat_run1173;
+  estwrite1173.help   = [estwrite1173.help;{'';'This batch calls the stable version of the main preprocessing of release R1173 with only slight runtime bug fixes.';''}];
+  
+  % 1173+ = 1392
+  estwrite1173plus        = estwrite1173;
+  estwrite1173plus.name   = 'CAT12.3: Segmentation R1173 plus (2018/12)';
+  %NEW NAME?: estwrite1173plus.name   = 'CAT12.3: Segmentation R1392 (2018/12)';
+  estwrite1173plus.tag    = 'estwrite1173plus';
+  estwrite1173plus.prog   = @cat_run1173plus;
+  estwrite1173plus.help   = [estwrite1173.help;{'';'This batch calls the revised version of the main preprocessing of release R1173 that include upgrades by several subfunctions (e.g. skull-stripping) from the current CAT12 version.';''}];
+  
+  % 1445
+  estwrite1445        = estwrite; 
+  estwrite1445.name   = 'CAT12.6: Segmentation R1445 (2019/03)';
+  estwrite1445.tag    = 'estwrite1445';
+  estwrite1445.prog   = @cat_run1445;
+  estwrite1445.help   = [estwrite1445.help;{'';'This batch calls the stable version of the main preprocessing of release 1445 with only slight runtime bug fixes.';''}];
+  
+  % 1585
+  if 0
+    estwrite1585        = estwrite; 
+    estwrite1585.name   = 'CAT12.7: Segmentation R1585 (2020/03)';
+    estwrite1585.tag    = 'estwrite1585';
+    estwrite1585.prog   = @cat_run1585;
+    estwrite1585.help   = [estwrite1585.help;{'';'This batch calls the stable version of the main preprocessing of release 1585 with only slight runtime bug fixes.';''}];
+  end
+  
+  estwrite1173.val      = {data nproc opts1173     extopts1173     output1173}; 
+  estwrite1173plus.val  = {data nproc opts1173plus extopts1173plus output1445}; 
+  estwrite1445.val      = {data data_wmh nproc opts1445     extopts1445     output1445}; 
+  % estwrite1585.val    = {data data_wmh nproc opts1585     extopts1585     output1585}; 
 
-% 1173+ = 1392
-estwrite1173plus        = estwrite1173;
-estwrite1173plus.name   = 'CAT12.3: Segmentation R1173 plus (2018/12)';
-%NEW NAME?: estwrite1173plus.name   = 'CAT12.3: Segmentation R1392 (2018/12)';
-estwrite1173plus.tag    = 'estwrite1173plus';
-estwrite1173plus.prog   = @cat_run1173plus;
-estwrite1173plus.help   = [estwrite1173.help;{'';'This batch calls the revised version of the main preprocessing of release R1173 that include upgrades by several subfunctions (e.g. skull-stripping) from the current CAT12 version.';''}];
-
-% 1445
-estwrite1445        = estwrite; 
-estwrite1445.name   = 'CAT12.6: Segmentation R1445 (2019/03)';
-estwrite1445.tag    = 'estwrite1445';
-estwrite1445.prog   = @cat_run1445;
-estwrite1445.help   = [estwrite1445.help;{'';'This batch calls the stable version of the main preprocessing of release 1445 with only slight runtime bug fixes.';''}];
-
-% 1585
-if 0
-  estwrite1585        = estwrite; 
-  estwrite1585.name   = 'CAT12.7: Segmentation R1585 (2020/03)';
-  estwrite1585.tag    = 'estwrite1585';
-  estwrite1585.prog   = @cat_run1585;
-  estwrite1585.help   = [estwrite1585.help;{'';'This batch calls the stable version of the main preprocessing of release 1585 with only slight runtime bug fixes.';''}];
+  previous        =  cfg_choice;
+  previous.tag    = 'previous';
+  previous.name   = 'Previous stable segmentations';
+  previous.values = {estwrite1445 estwrite1173plus estwrite1173 };
+  previous.hidden = expert<1;
+  
+  previouslong        =  cfg_choice;
+  previouslong.tag    = 'previouslong';
+  previouslong.name   = 'Previous stable long. segmentations';
+  previouslong.values = {long1445 long1173 };
+  previouslong.hidden = expert<1;
 end
-
-estwrite1173.val      = {data nproc opts1173     extopts1173     output1173}; 
-estwrite1173plus.val  = {data nproc opts1173plus extopts1173plus output1445}; 
-estwrite1445.val      = {data data_wmh nproc opts1445     extopts1445     output1445}; 
-% estwrite1585.val    = {data data_wmh nproc opts1585     extopts1585     output1585}; 
-
-previous        =  cfg_choice;
-previous.tag    = 'previous';
-previous.name   = 'Previous stable segmentations';
-previous.values = {estwrite1445 estwrite1173plus estwrite1173 };
-previous.hidden = expert<1;
-
-previouslong        =  cfg_choice;
-previouslong.tag    = 'previouslong';
-previouslong.name   = 'Previous stable long. segmentations';
-previouslong.values = {long1445 long1173 };
-previouslong.hidden = expert<1;
 
 extopts_spm = cat_conf_extopts(expert,1);   
 
@@ -216,17 +224,6 @@ estwrite_spm.help   = {
 
 %------------------------------------------------------------------------
 
-%{
-seg        = cfg_choice;
-seg.name   = 'Preprocessing';
-seg.tag    = 'seg';
-if expert
-  seg.values = { estwrite estwrite1173 estwrite1173plus }; 
-else
-  seg.values = { estwrite estwrite1173 estwrite1173plus }; 
-end
-%}
-
 if exist('cat_conf_catsimple','file')
   [catsimple,catsimple_long] = cat_conf_catsimple(expert);
   catsimple_long.hidden = expert<2;
@@ -238,7 +235,11 @@ cat.name   = 'CAT12';
 cat.tag    = 'cat';
 
 % your version - cat.values = {estwrite estwrite1445 estwrite1173plus estwrite1173 long long1173 long1445 catsimple catsimple_long estwrite_spm tools stools stoolsexp};
-cat.values = {estwrite long catsimple catsimple_long previous previouslong estwrite_spm tools stools stoolsexp};
+if load_previous
+  cat.values = {estwrite long catsimple catsimple_long previous previouslong estwrite_spm tools stools stoolsexp};
+else
+  cat.values = {estwrite long catsimple catsimple_long estwrite_spm tools stools stoolsexp};
+end
 %------------------------------------------------------------------------
 
 %------------------------------------------------------------------------
