@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1640 | gaser | 2020-06-04 17:50:11
+r1641 | gaser | 2020-06-05 14:32:19
+
+Changed paths:
+M       CHANGES.txt
+M       cat_batch_long.m
+M       cat_batch_long.sh
+M       cat_conf_long.m
+M       cat_long_createTPM.m
+M       cat_long_multi_run.m
+M       cat_vol_groupwise_ls.m
+
+(1) Changed: Added option for longitudinal mode for detecting large changes.
+(2) Changed: Updated batch scripts to consider new option for large changes.
+(3) Fixed:   Prevent negative values in longitudinal registration after
+             intra-subject bias correction.
+------------------------------------------------------------------------
+r1640 | gaser | 2020-06-04 17:50:51 +0200 (Do, 04 Jun 2020) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +31,7 @@ M       html/cat.html
 
 (1) Changed: Removed sROI menu from pipeline.
 (2) Changed: Added sROI option to extract ROI function for surfaces.
+
 ------------------------------------------------------------------------
 r1639 | gaser | 2020-06-04 12:47:03 +0200 (Do, 04 Jun 2020) | 9 lines
 

@@ -56,7 +56,14 @@ if isfield(job,'datalong')
   job = rmfield(job,'datalong');
 end
 
-jobs = repmat({'cat_long_mainShoot.m'}, 1, numel(job.subj));
+% decide whether we use model for small or large changes
+if job.longmodel == 1
+  jobs = repmat({'cat_long_main.m'}, 1, numel(job.subj));
+else
+  % additionally apply deformations between scans to deal with larger changes
+  jobs = repmat({'cat_long_mainShoot.m'}, 1, numel(job.subj));
+end
+
 inputs = cell(1, numel(job.subj));
 
 if cat_get_defaults('extopts.subfolders')
