@@ -91,9 +91,23 @@ datalong.values   = {timepoints subjects};
 datalong.val      = {subjects};
 datalong.help     = {
  ['Select mode of longitudinal data selection for time points or subjects. ' ...
-  'In case of "time points" you can create multiple time points where each time point has to contain the same number and order of subjects. ' ...
-  'If you have a varying number of time points for each subject you have to use the "subject" mode where you have to define the files of each subject separately. ']
+  'In case of "timepoints" you can create multiple time points where each time point has to contain the same number and order of subjects. ' ...
+  'If you have a varying number of time points for each subject you have to use the "subjects" mode where you have to define the files of each subject separately. ']
 }; 
+
+%------------------------------------------------------------------------
+longmodel        = cfg_menu;
+longmodel.tag    = 'longmodel';
+longmodel.name   = 'Longitudinal Model';
+longmodel.labels = {'Optimized for detecting small changes (i.e. plasticity/learning effects','Optimized for detecting large changes (i.e. aging/developmental effects)'};
+longmodel.values = {1 2};
+longmodel.val    = {1};
+longmodel.help = {
+'The longitudinal pre-processing in CAT12 has been developed and optimized to detect subtle effects over shorter periods of time (e.g. brain plasticity or training effects after a few weeks or even shorter periods of time) and is less sensitive to detect larger changes over longer periods of time (e.g. ageing or developmental effects). To detect larger effects, we also offer a model that additionally takes into account deformations between time points. The use of deformations between the time points makes it possible to estimate and detect larger changes, while subtle effects over shorter periods of time in the range of weeks or a few months are more difficult to detect.'
+''
+'Please note that due to the additional warping and modulation steps, the resulting files are saved with "mwmwp1r" for gray matter instead of "mwp1r"'
+''
+};
 
 %------------------------------------------------------------------------
 delete_temp        = cfg_menu;
@@ -139,7 +153,7 @@ if newapproach % new way - not working
   if expert
     output.val = [output.val, delete_temp]; 
   end
-  long.val  = {datalong,nproc,opts,extopts,output}; 
+  long.val  = {datalong,longmodel,nproc,opts,extopts,output}; 
   long.vout = @vout_long2;
 else
   % old appraoch
@@ -189,7 +203,7 @@ else
     
   delete_temp.hidden = expert<1;
   
-  long.val  = {datalong,nproc,opts,extopts,output,ROI,modulate,dartel,delete_temp};
+  long.val  = {datalong,longmodel,nproc,opts,extopts,output,ROI,modulate,dartel,delete_temp};
   
 % does not yet work! 
 %  long.vout = @vout_long;

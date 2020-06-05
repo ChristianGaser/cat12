@@ -18,7 +18,7 @@ function out = cat_long_createTPM(job)
 % 
 %   job
 %    .files        .. cellstr of input files of the GM segment p1*.nii
-%    .fstrength    .. main controll paramter 
+%    .fstrength    .. main control paramter 
 %                     0 = use original parameters
 %                     1 = hard settings for small variations (plasticity)
 %                     2 = medium settings for avg variations (aging)

@@ -735,6 +735,10 @@ for i=1:numel(param)
   vol(:,:,:,i) = bias_correction(mu,vol(:,:,:,i),[],pyramid(1),bias_nits,bias_fwhm,bias_reg,bias_lmreg);
 end
 
+% correct if minimum is < 0
+min_vol = min(vol(:));
+if min_vol, vol = vol - min_vol; end
+
 if need_wimg
     for i=1:numel(param)
         img = vol(:,:,:,i);
