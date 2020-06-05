@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1641 | gaser | 2020-06-05 14:32:19
+r1642 | gaser | 2020-06-05 16:11:26
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_vol_groupwise_ls.m
+
+(1) Changed: Removed call to previous versions from CAT12 GUI:
+(2) Changed: Changed output format for long. data to float32.
+------------------------------------------------------------------------
+r1641 | gaser | 2020-06-05 14:32:57 +0200 (Fr, 05 Jun 2020) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14,6 +24,7 @@ M       cat_vol_groupwise_ls.m
 (2) Changed: Updated batch scripts to consider new option for large changes.
 (3) Fixed:   Prevent negative values in longitudinal registration after
              intra-subject bias correction.
+
 ------------------------------------------------------------------------
 r1640 | gaser | 2020-06-04 17:50:51 +0200 (Do, 04 Jun 2020) | 15 lines
 
