@@ -11,6 +11,7 @@ defaults_file=""
 LOGDIR=$PWD
 nojvm=""
 output_surface=1
+large_changes=0
 fg=
 
 ########################################################
@@ -57,6 +58,10 @@ parse_args ()
             defaults_file=$optarg
             shift
             ;;
+        --large* | -large*)
+            exit_if_empty "$optname" "$optarg"
+            large_changes=1
+            ;;
         --surface* | -s*)
             exit_if_empty "$optname" "$optarg"
             output_surface=1
@@ -73,7 +78,7 @@ parse_args ()
             exit_if_empty "$optname" "$optarg"
             fg=1
             ;;
-        --logdir* | -l*)
+        --logdir* | -log*)
             exit_if_empty "$optname" "$optarg"
             LOGDIR=$optarg
             if [ ! -d $LOGDIR ] 
@@ -211,7 +216,7 @@ run_batch ()
     echo Check $vbmlog for logging information
     echo
 
-    COMMAND="cat_batch_long('${TMP}','${output_surface}','${defaults_file}')"
+    COMMAND="cat_batch_long('${TMP}','${output_surface}','${large_changes}','${defaults_file}')"
     echo Running ${ARG_LIST}
     echo > $vbmlog
     echo ---------------------------------- >> $vbmlog
@@ -252,12 +257,13 @@ help ()
 cat <<__EOM__
 
 USAGE:
-   cat_batch_long.sh [-d] [-m matlabcommand] [-nosurf] file1.nii file2.nii ... filex.nii 
+   cat_batch_long.sh [-d] [-m matlabcommand] [-nosurf] [-large] file1.nii file2.nii ... filex.nii 
    
    -m         matlab command
    -d         optional default file
    -fg        do not run matlab process in background
    -nosurf    disable surface and thickness estimation
+   -large     use longitudinal model for detecting large changes (e.g. ageing or development)
    -nojvm     supress call of jvm using the -nojvm flag
 
    Only one batch filename is allowed. Optionally you can set the matlab command 
