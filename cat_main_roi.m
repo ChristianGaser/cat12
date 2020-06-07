@@ -1,4 +1,4 @@
-function cat_main_roi(job,trans,Ycls,Yp0) 
+function cat_main_roi(job,trans,Ycls,Yp0,verb) 
 % ______________________________________________________________________
 %  ROI Partitioning:
 %  This part estimates individual measurements for different ROIs.
@@ -24,6 +24,8 @@ function cat_main_roi(job,trans,Ycls,Yp0)
   
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
  
+  if ~exist('verb','var'), verb = 0; end 
+  
   [pth,nam] = spm_fileparts( trans.native.Vo.fname ); 
     
   % in case of SPM input segmentation we have to add the name here to have a clearly different naming of the CAT output 
@@ -83,25 +85,30 @@ function cat_main_roi(job,trans,Ycls,Yp0)
       end
       
       %wVv = spm_vol(FA{ai,1});   % atlas volume information 
-      transw = rmfield(trans.warped,'yx');     % dartel/shooting deformation data
-      transw.odim = VA(ai).dim;
-      transw.M1   = VA(ai).mat;
+      transw = rmfield(trans.warped,'yx');      % dartel/shooting deformation data
+      transw.odim = VA(ai).dim;                 % size of the boundary box of the atlas we have to render the tissues
+      transw.M1   = VA(ai).mat;                 % boundary box position 
+      % adapt y for the atlas resolution (for loop) and for the new position (matit) 
       mati        = spm_imatrix( trans.affine.mat - VA(ai).mat) ; 
       vdim        = spm_imatrix( VA(ai).mat ); % trans.affine.mat ); 
-      matit       = mati(1:3) ./ vdim(7:9); %./vx_vol; 
-      for i=1:3, transw.y(:,:,:,i) = transw.y(:,:,:,i) * job.extopts.vox ./ VAvx_vol(ai,i);  end
+      matit       = mati(1:3) ./ vdim(7:9); 
+      transw.ViVt = prod(vx_vol) ./ job.extopts.vox^3;
+      for i=1:3, transw.y(:,:,:,i) = transw.y(:,:,:,i) .* job.extopts.vox ./ VAvx_vol(ai,i) ;  end
       transw.y    = cat(4,transw.y(:,:,:,1) + matit(1), transw.y(:,:,:,2) + matit(2), transw.y(:,:,:,3) + matit(3) );
     end
     
     %% haveing the new map you can project the segmentation
-    wYp0     = cat_vol_ROInorm(Yp0 ,transw,1,0,FA);
-    wYcls    = cat_vol_ROInorm(Ycls,transw,1,1,FA);
+    wYp0     = cat_vol_ROInorm(Yp0 ,transw,ai,0,FA);
+    wYcls    = cat_vol_ROInorm(Ycls,transw,ai,1,FA);
     wYa      = cat_vol_ROInorm([],[],ai,0,FA);
 
-    if debug % this does not work in case of trimmed atlases set do not include the full brain 
-      fprintf('\n%8s %8s %8s\n','GM','WM','CSF') 
-      fprintf('%8.2f %8.2f %8.2f\n', [cat_stat_nansum(wYcls{1}(:)),cat_stat_nansum(wYcls{2}(:)),cat_stat_nansum(wYcls{3}(:))] / 1000); 
+    if debug || verb 
+      %% this does not work in case of trimmed atlases set do not include the full brain 
+      fprintf('\n%8s %8s %8s\n','GM','WM','CSF') %* prod(vx_vol) 
+      fprintf('%8.2f %8.2f %8.2f\n', [cat_stat_nansum(wYcls{1}(:)),cat_stat_nansum(wYcls{2}(:)),cat_stat_nansum(wYcls{3}(:))] * job.extopts.vox^3 / 1000); 
       fprintf('%8.2f %8.2f %8.2f\n', [cat_stat_nansum(Ycls{1}(:)) ,cat_stat_nansum(Ycls{2}(:)) ,cat_stat_nansum(Ycls{3}(:)) ] * prod(vx_vol) / 1000 / 255); 
+      fprintf('%8.2f %8.2f %8.2f\n', ([cat_stat_nansum(wYcls{1}(:)),cat_stat_nansum(wYcls{2}(:)),cat_stat_nansum(wYcls{3}(:))]  / 1000) ./ ...
+        ([cat_stat_nansum(Ycls{1}(:)) ,cat_stat_nansum(Ycls{2}(:)) ,cat_stat_nansum(Ycls{3}(:)) ] * prod(vx_vol) / 1000 / 255)); 
       fprintf('\n');
     end      
  
@@ -116,7 +123,7 @@ function cat_main_roi(job,trans,Ycls,Yp0)
     end
     
     %% extract ROI data
-    csv   = cat_vol_ROIestimate(wYp0,wYa,wYcls,ai,'V',[],FA{ai,3},FA);  % volume
+    csv   = cat_vol_ROIestimate(wYp0,wYa,wYcls,ai,'V',[],FA{ai,3},FA,job.extopts.vox);  % volume
     
     % thickness
     if exist('Yth1','var') 
@@ -127,7 +134,7 @@ function cat_main_roi(job,trans,Ycls,Yp0)
       ven  = find(cellfun('isempty',strfind( csv(:,2) , 'Ven'))==0); 
       csv(ven,end) = {nan};  %#ok<FNDSB>
       % correct for regions with relative low GM (<10%) or high CSF volume (>50%). 
-      csvf = cat_vol_ROIestimate(wYp0,wYa,wYcls,ai,'V',[],{'csf','gm','wm'},FA);
+      csvf = cat_vol_ROIestimate(wYp0,wYa,wYcls * job.extopts.vox^3,ai,'V',[],{'csf','gm','wm'},FA);
       vola = [nan,nan,nan;cell2mat(csvf(2:end,3:end))]; 
       volr = vola ./ repmat(sum(vola,2),1,3); 
       csv(volr(:,2)<0.1 | volr(:,2)>0.5,end) = {nan}; 
@@ -139,10 +146,12 @@ function cat_main_roi(job,trans,Ycls,Yp0)
   end 
 
   % write results
-  catROI = cat_roi_fun('csvtab2xmlroi',ROI);
-  cat_io_xml(fullfile(pth,labelfolder,['catROI_' nam '.xml']),catROI,'write'); 
+  if size(FA,1)>0 % if there was an atlas
+    catROI = cat_roi_fun('csvtab2xmlroi',ROI);
+    cat_io_xml(fullfile(pth,labelfolder,['catROI_' nam '.xml']),catROI,'write'); 
 
-  cat_io_cmd(' ','g5','',job.extopts.verb,stime2);
+    cat_io_cmd(' ','g5','',job.extopts.verb,stime2);
+  end
   cat_io_cmd('','n','',1,stime);
   
 return
@@ -200,14 +209,10 @@ function wYv = cat_vol_ROInorm(Yv,warped,ai,mod,FA)
     if mod==0
       old = 0;
       
-      %Vlai = spm_vol(FA{ai,1});
-      %vx_vol_Vlai   = sqrt(sum(Vlai.mat(1:3,1:3).^2));
-      %vx_vol_Vdef   = sqrt(sum(warped.M1(1:3,1:3).^2));
-      
       if old % this did not work for the thickness map?  
         [wYv,w] = spm_diffeo('push',Yv,warped.y,warped.odim(1:3)); spm_field('boundary',1);
         wYv = spm_field(w,wYv,[sqrt(sum(warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]);
-      elseif 0 %any( vx_vol_Vdef > vx_vol_Vlai*2)
+      elseif 0%any( vx_vol_Vdef > vx_vol_Vlai*2)
         try
           %% increase resolution - this caused many memory error messages (RD201911) 
           fc   = ceil(vx_vol_Vdef / vx_vol_Vlai);
@@ -247,7 +252,6 @@ function wYv = cat_vol_ROInorm(Yv,warped,ai,mod,FA)
         % The 2nd reason to use the old modulation is compatibility with cat_vol_defs.m
         Yy = spm_diffeo('invdef',warped.y,warped.odim,eye(4),warped.M0);
         w  = spm_diffeo('def2det',Yy)/det(warped.M0(1:3,1:3)); clear Yy;
-       % w  = w * mean(warped.ress(yi)); 
         % ensure that jacobian det is positive (no clue why some times the sign is switched)
         if mean(w(~isnan(w))) < 0, w = -w; end 
         w(:,:,[1 end]) = NaN; w(:,[1 end],:) = NaN; w([1 end],:,:) = NaN;
@@ -256,13 +260,22 @@ function wYv = cat_vol_ROInorm(Yv,warped,ai,mod,FA)
       wYv = cell(1,numel(Yv));
       for i=1:numel(Yv)
         if nicemapping 
+          %%
           [wYv{i},w2] = spm_diffeo('push',single(Yv{i})/255,warped.y,warped.odim(1:3)); 
           % divide by jacdet to get unmodulated data
-          wYv{i} = wYv{i}./(w2+0.001); 
-          wYv{i} = wYv{i} .* w;
+          wYv{i} = wYv{i}./max(w2,0.001); 
+          %spm_smooth(w2,w2,4 ./ sqrt(sum(warped.M0(1:3,1:3).^2)) )
+
+  %        Vlai = spm_vol(FA{ai,1});
+  %        VAvx_vol   = sqrt(sum(Vlai.mat(1:3,1:3).^2));
+  %        vx_vol = [0.75 0.75 0.75];
+   %       vx_volTPM = 1.0 ; 
+          
+          wYv{i} = wYv{i} .* w * warped.ViVt;
         else
           % simple push
           [wYv{i},w] = spm_diffeo('push',single(Yv{i})/255,warped.y,warped.odim(1:3)); 
+          wYv{i} = wYv{i} .* w;
         end
       end
     else
@@ -276,7 +289,7 @@ return
 %=======================================================================
 
 %=======================================================================
-function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA)
+function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA,vox)
 % ----------------------------------------------------------------------
 % estimate values
 % ----------------------------------------------------------------------
@@ -331,7 +344,7 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA)
             case 'tissue', Ymm = single(        Yv{2} + Yv{3} + Yv{7}) .* single(Ya==csv{ri,1});
             case '',       Ymm = single(Ya==csv{ri,1});
           end
-          csv{ri,end} = 1/1000 * cat_stat_nansum(Ymm(:));
+          csv{ri,end} = 1/1000 * cat_stat_nansum(Ymm(:)) .* vox^3;
         end
       case 'c'
         return

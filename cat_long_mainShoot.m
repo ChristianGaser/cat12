@@ -4,12 +4,13 @@
 % $Id$
 %-----------------------------------------------------------------------
 
-global opts extopts output modulate dartel delete_temp ROImenu surfaces cat
+global opts extopts output modulate dartel delete_temp longmodel ROImenu surfaces cat 
 
 if isempty(dartel),       dartel      = 0; end
 if isempty(modulate),     modulate    = 1; end
 if isempty(surfaces),     surfaces    = cat_get_defaults('output.surfaces'); end
 if isempty(delete_temp),  delete_temp = 1; end
+if isempty(longmodel),    longmodel   = 0; end
 
 write_CSF = cat_get_defaults('output.CSF.mod') > 0;
 
@@ -78,8 +79,8 @@ matlabbatch{mbi}.spm.tools.cat.estwrite.output.WM.mod       = 0;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.CSF.dartel   = 2; 
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.TPMC.dartel  = 2;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.bias.warped  = 0;
-matlabbatch{mbi}.spm.tools.cat.estwrite.output.label.native = 0;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.warps        = [0 0];
+
 
 % 3) creating longitudinal TPM
 % -----------------------------------------------------------------------
@@ -128,7 +129,6 @@ if write_CSF
   matlabbatch{mbi}.spm.tools.cat.estwrite.output.CSF.native = 1; % also write CSF?
 end
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.bias.warped  = 0;
-matlabbatch{mbi}.spm.tools.cat.estwrite.output.label.native = 0;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.warps        = [1 0];
 matlabbatch{mbi}.spm.tools.cat.estwrite.useprior(1)         = cfg_dep('Longitudinal Registration: Midpoint Average', substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','avg', '()',{':'}));
 matlabbatch{mbi}.spm.tools.cat.estwrite.opts.tpm            = cfg_dep('Longitudinal TPM creation: Longitudinal TPMs', substruct('.','val', '{}',{mb_tpm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tpm', '()',{':'}));
@@ -148,6 +148,7 @@ matlabbatch{mbi}.spm.tools.cat.tools.avg_img.output   = '';
 matlabbatch{mbi}.spm.tools.cat.tools.avg_img.outdir   = {''};
 
 
+if longmodel
 % 6) creating time point specific deformation 
 % -----------------------------------------------------------------------
 % To reduce longitudinal changes of moving structures between time points 
@@ -158,65 +159,58 @@ matlabbatch{mbi}.spm.tools.cat.tools.avg_img.outdir   = {''};
 %           changes to adapt for head size changes.
 % #######
 
-lowres = 2; % define resolution in mm
-if lowres
-  % reduce resolution 
-  % It would be also possible to use the rigid output from the time points 
-  % but those depend on user definition of extopts.vox and we are more
-  % flexible and probably faster and more robust this way.
-  mb_lr = zeros(1,2);
-  for ci = 1:2 % only GM and WM are reqired for Shooting
-    mbi = mbi + 1; mb_lr(ci) = mbi; % have to do this for all shooting tissues to get the dependencies
-    matlabbatch{mbi}.spm.tools.cat.tools.resize.data(1)  = cfg_dep(sprintf('CAT12: Segmentation (current release): p%d Image',ci), substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{ci}, '.','p', '()',{':'}));
-    matlabbatch{mbi}.spm.tools.cat.tools.resize.res      = lowres;
-    matlabbatch{mbi}.spm.tools.cat.tools.resize.method   = 'cubic';
-    matlabbatch{mbi}.spm.tools.cat.tools.resize.prefix   = 'l'; % need to be another file
-  end
-  % Shooting low res
-  mbi = mbi + 1; mb_GS = mbi;
-  matlabbatch{mbi}.spm.tools.cat.tools.warp.images{1}(1) = cfg_dep('Resize images: Resized', substruct('.','val', '{}',{mb_lr(1)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','res', '()',{':'}));
-  matlabbatch{mbi}.spm.tools.cat.tools.warp.images{2}(1) = cfg_dep('Resize images: Resized', substruct('.','val', '{}',{mb_lr(2)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','res', '()',{':'}));
-  matlabbatch{mbi}.spm.tools.cat.tools.warp.dfile        = {fullfile(spm('dir'),'toolbox','cat12','cat_long_shoot_defaults.m')};
-
-  % interpolate to acceptable resolution (higher than vox) 
-  mbi = mbi + 1; mb_GSI = mbi; % have to do this for all shooting tissues to get the dependencies
-  matlabbatch{mbi}.spm.tools.cat.tools.resize.data(1)    = cfg_dep('Run Shooting (create Templates): Deformation Fields', substruct('.','val', '{}',{mb_GS}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','def', '()',{':'}));
-  try
-    matlabbatch{mbi}.spm.tools.cat.tools.resize.res      = matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.vox;
-  catch
-    try 
-      matlabbatch{mbi}.spm.tools.cat.tools.resize.res    = min(matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.registration.vox);
-    catch
-      matlabbatch{mbi}.spm.tools.cat.tools.resize.res    = 1; 
-    end
-  end
-  matlabbatch{mbi}.spm.tools.cat.tools.resize.method     = 'cubic';
-  matlabbatch{mbi}.spm.tools.cat.tools.resize.prefix     = ''; % has to be another name
-else
-  % Shooting full res
-  mbi = mbi + 1; mb_GS = mbi;
-  matlabbatch{mbi}.spm.tools.cat.tools.warp.images{1}(1) = cfg_dep('CAT12: Segmentation (current release): p1 Image', substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','p', '()',{':'}));
-  matlabbatch{mbi}.spm.tools.cat.tools.warp.images{2}(1) = cfg_dep('CAT12: Segmentation (current release): p2 Image', substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{2}, '.','p', '()',{':'}));
-  matlabbatch{mbi}.spm.tools.cat.tools.warp.dfile        = {fullfile(spm('dir'),'toolbox','cat12','cat_long_shoot_defaults.m')};
-end
-
-
-
-
-% 7) applying time point deformations to rigid native segmentations
-% -----------------------------------------------------------------------
-% this is the first simple approach with full resolution
-mb_aGS = zeros(1,2 + single(write_CSF));
-for ci = 1:2 + single(write_CSF)
-  mbi = mbi + 1; mb_aGS(ci) = mbi;
+  lowres = 2; % define resolution in mm
   if lowres
-    matlabbatch{mbi}.spm.tools.cat.tools.defs2.field(1)   = cfg_dep('Resize images: Resized', substruct('.','val', '{}',{mb_GSI}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','res', '()',{':'}));
-  else 
-    matlabbatch{mbi}.spm.tools.cat.tools.defs2.field(1)   = cfg_dep('Run Shooting (create Templates): Deformation Fields', substruct('.','val', '{}',{mb_GS}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','def', '()',{':'}));
+    % reduce resolution 
+    % It would be also possible to use the rigid output from the time points 
+    % but those depend on user definition of extopts.vox and we are more
+    % flexible and probably faster and more robust this way.
+    mb_lr = zeros(1,2);
+    for ci = 1:2 % only GM and WM are reqired for Shooting
+      mbi = mbi + 1; mb_lr(ci) = mbi; % have to do this for all shooting tissues to get the dependencies
+      matlabbatch{mbi}.spm.tools.cat.tools.resize.data(1)     = cfg_dep(sprintf('CAT12: Segmentation (current release): p%d Image',ci), substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{ci}, '.','p', '()',{':'}));
+      matlabbatch{mbi}.spm.tools.cat.tools.resize.restype.res = lowres;
+      matlabbatch{mbi}.spm.tools.cat.tools.resize.interp      = 5;
+      matlabbatch{mbi}.spm.tools.cat.tools.resize.prefix      = 'l'; % need to be another file
+    end
+    % Shooting low res
+    mbi = mbi + 1; mb_GS = mbi;
+    matlabbatch{mbi}.spm.tools.cat.tools.warp.images{1}(1)    = cfg_dep('Resize images: Resized', substruct('.','val', '{}',{mb_lr(1)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','res', '()',{':'}));
+    matlabbatch{mbi}.spm.tools.cat.tools.warp.images{2}(1)    = cfg_dep('Resize images: Resized', substruct('.','val', '{}',{mb_lr(2)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','res', '()',{':'}));
+    matlabbatch{mbi}.spm.tools.cat.tools.warp.dfile           = {fullfile(spm('dir'),'toolbox','cat12','cat_long_shoot_defaults.m')};
+
+    % reinterpolate original resolution 
+    mbi = mbi + 1; mb_GSI = mbi; % have to do this for all shooting tissues to get the dependencies
+    matlabbatch{mbi}.spm.tools.cat.tools.resize.data(1)       = cfg_dep('Run Shooting (create Templates): Deformation Fields', substruct('.','val', '{}',{mb_GS}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','def', '()',{':'}));
+    matlabbatch{mbi}.spm.tools.cat.tools.resize.restype.Pref  = {'/Volumes/WD4TBE2/MRData/202005 - LongShoot/mri/p0avg_deface_1007_v1_t1w.nii,1'};
+    matlabbatch{mbi}.spm.tools.cat.tools.resize.interp        = 5;
+    matlabbatch{mbi}.spm.tools.cat.tools.resize.prefix        = ''; % has to be another name?
+  else
+    % Shooting full res
+    mbi = mbi + 1; mb_GS = mbi;
+    matlabbatch{mbi}.spm.tools.cat.tools.warp.images{1}(1)    = cfg_dep('CAT12: Segmentation (current release): p1 Image', substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','p', '()',{':'}));
+    matlabbatch{mbi}.spm.tools.cat.tools.warp.images{2}(1)    = cfg_dep('CAT12: Segmentation (current release): p2 Image', substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{2}, '.','p', '()',{':'}));
+    matlabbatch{mbi}.spm.tools.cat.tools.warp.dfile           = {fullfile(spm('dir'),'toolbox','cat12','cat_long_shoot_defaults.m')};
   end
-  matlabbatch{mbi}.spm.tools.cat.tools.defs2.images{1}(1) = cfg_dep(sprintf('CAT12: Segmentation (current release): p%d Image',ci), substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{ci}, '.','p', '()',{':'}));
-  matlabbatch{mbi}.spm.tools.cat.tools.defs2.interp       = 1;
-  if modulate, matlabbatch{mbi}.spm.tools.cat.tools.defs2.modulate  = modulate; end  % modulation option for applying deformations
+
+
+
+
+  % 7) applying time point deformations to rigid native segmentations
+  % -----------------------------------------------------------------------
+  % this is the first simple approach with full resolution
+  mb_aGS = zeros(1,2 + single(write_CSF));
+  for ci = 1:2 + single(write_CSF)
+    mbi = mbi + 1; mb_aGS(ci) = mbi;
+    if lowres
+      matlabbatch{mbi}.spm.tools.cat.tools.defs2.field(1)   = cfg_dep('Resize images: Resized', substruct('.','val', '{}',{mb_GSI}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','res', '()',{':'}));
+    else 
+      matlabbatch{mbi}.spm.tools.cat.tools.defs2.field(1)   = cfg_dep('Run Shooting (create Templates): Deformation Fields', substruct('.','val', '{}',{mb_GS}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','def', '()',{':'}));
+    end
+    matlabbatch{mbi}.spm.tools.cat.tools.defs2.images{1}(1) = cfg_dep(sprintf('CAT12: Segmentation (current release): p%d Image',ci), substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{ci}, '.','p', '()',{':'}));
+    matlabbatch{mbi}.spm.tools.cat.tools.defs2.interp       = 1;
+    if modulate, matlabbatch{mbi}.spm.tools.cat.tools.defs2.modulate  = modulate; end  % modulation option for applying deformations
+  end
 end
 
 
@@ -226,7 +220,11 @@ end
 mbi = mbi + 1; 
 matlabbatch{mbi}.spm.tools.cat.tools.defs.field1(1)       = cfg_dep('Image Average: Average Image: ', substruct('.','val', '{}',{mb_avgdef}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','files'));
 for ci = 1:2 + single(write_CSF) % fill image sets
-  matlabbatch{mbi}.spm.tools.cat.tools.defs.images(ci)    = cfg_dep('Apply deformations (many subjects): All Output Files', substruct('.','val', '{}',{mb_aGS(ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','vfiles'));
+  if longmodel
+    matlabbatch{mbi}.spm.tools.cat.tools.defs.images(ci)  = cfg_dep('Apply deformations (many subjects): All Output Files', substruct('.','val', '{}',{mb_aGS(ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','vfiles'));
+  else
+    matlabbatch{mbi}.spm.tools.cat.tools.defs.images(ci)  = cfg_dep(sprintf('CAT12: Segmentation (current release): p%d Image',ci), substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{ci}, '.','p', '()',{':'}));
+  end
 end
 matlabbatch{mbi}.spm.tools.cat.tools.defs.interp          = 1;
 if modulate, matlabbatch{mbi}.spm.tools.cat.tools.defs.modulate = modulate; end  % modulation option for applying deformations
@@ -246,33 +244,8 @@ matlabbatch{mbi}.spm.tools.cat.tools.defs.modulate        = 0;
 % 10) delete temporary files
 % -----------------------------------------------------------------------
 if delete_temp
-
+  mbi = mbi + 1; 
   c = 1;
-
-  % find rp* files using path/file operations because of missing dependencies
-if 0
-  mbi = mbi + 1; mb_dir1 = mbi;
-  matlabbatch{mbi}.cfg_basicio.file_dir.cfg_fileparts.files(1) = cfg_dep('CAT12: Segmentation (current release): rp1 affine Image', substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','rpa', '()',{':'}));
-  mbi = mbi + 1; mb_file1 = mbi;
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_fplist.dir(1) = cfg_dep('Get Pathnames: Directories', substruct('.','val', '{}',{mb_dir1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','p'));
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_fplist.filter = '^rp[456]';
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_fplist.rec = 'FPList';
-
-  % find cat_avg*xml/mat files using path/file operations because of missing dependencies
-  mbi = mbi + 1; mb_dir2 = mbi;
-  matlabbatch{mbi}.cfg_basicio.file_dir.cfg_fileparts.files(1) = cfg_dep('CAT12: Segmentation (current release): CAT Report', substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','catxml', '()',{':'}));
-  mbi = mbi + 1; mb_file2 = mbi;
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_fplist.dir(1) = cfg_dep('Get Pathnames: Directories', substruct('.','val', '{}',{mb_dir2}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','p'));
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_fplist.filter = '^cat_avg';
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_fplist.rec = 'FPList';
-
-  % add files from above
-  mbi = mbi + 1; 
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('File Selector (Batch Mode): Selected Files', substruct('.','val', '{}',{mb_file1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','files')); c = c+1;
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('File Selector (Batch Mode): Selected Files', substruct('.','val', '{}',{mb_file2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','files')); c = c+1;
-end
-
-  mbi = mbi + 1; 
   % time point specific preprocessing data
   for ci = 1:2 + single(write_CSF)
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep(sprintf('CAT12: Segmentation (current release): p%d Image',ci), substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{ci}, '.','p', '()',{':'})); c = c+1;
@@ -285,12 +258,6 @@ end
   matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): rp1 affine Image', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','rpa', '()',{':'})); c = c+1;
   matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): rp2 affine Image', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{2}, '.','rpa', '()',{':'})); c = c+1;
   matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): rp3 affine Image', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{3}, '.','rpa', '()',{':'})); c = c+1;  
-
-% CG 20200828 not yet working
-%  if exist('ROImenu','var') && ~isempty(ROImenu)
-%    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): ROI XML File', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','roi', '()',{1})); c = c+1;
-%  end
-  
   % surfaces
   if surfaces
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Left Central Surface', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','lhcentral', '()',{':'})); c = c+1;
@@ -304,8 +271,6 @@ end
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Right Thickness', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','rhthickness', '()',{':'})); c = c+1;
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Right Pbt', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','rhpbt', '()',{':'})); c = c+1;
   end
-  % longTPM
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Longitudinal TPM creation: Longitudinal TPMs', substruct('.','val', '{}',{mb_tpm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tpm', '()',{':'})); c = c+1;
   % timepoint deformations
   if lowres
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Resize images: Resized', substruct('.','val', '{}',{mb_lr(1)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','res', '()',{':'})); c = c+1;
@@ -318,7 +283,6 @@ end
   for ci = 1:2 + single(write_CSF)
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Apply deformations (many subjects): All Output Files', substruct('.','val', '{}',{mb_aGS(ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','vfiles')); c = c+1;
   end
-  
   % final command of this batch 
   matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.delete  = false;
 end

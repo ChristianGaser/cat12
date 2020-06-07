@@ -1,11 +1,45 @@
 ------------------------------------------------------------------------
-r1643 | gaser | 2020-06-05 16:16:43
+r1644 | dahnke | 2020-06-07 19:00:44
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_long_mainShoot.m
+M       cat_long_multi_run.m
+M       cat_main_roi.m
+M       cat_run_job.m
+M       cat_vol_createTPM.m
+M       cat_vol_headtrimming.m
+M       cat_vol_resize.m
+M       development/Template_3_IXI555_MNI152_GS1mm.nii
+M       spm_cat12.m
+M       tbx_cfg_cat.m
+
+(1) New:      Update cat_vol_resize and the resize batch to use volume
+							properties of another image.  In contrast to imcalc also 
+							the first 3 dimensions of additional n-dimensional 
+							components are resized.  
+(2) New:		  Added parameter to control application of deformation in 
+              the longitudinal pipeline.						
+(3) Changed:  Restructured TPM creation pipeline focusing on Shooting 
+							input as far as this is the core routine to normalized
+							data of another cohort. Updated batch GUI in cat_conf_tools.      
+(4) Fixed:		Corrected rare bug in cat_main_registration. 
+(5) Fixed: 		Corrected bugs in cat_main_roi if no atlas is available 
+							and incorrect volume estimation for specific combinations
+							of atlas, template and image resolution.		
+(6) Fixed: 		Corrected bug in cat_vol_headtrimming.	
+(7) Changed: 	Added longmodel variable to cat_long_multi_mainShoot batch. 
+
+------------------------------------------------------------------------
+r1643 | gaser | 2020-06-05 16:16:48 +0200 (Fr, 05 Jun 2020) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat12.m
 
 Changed: Again added (corrected) call to previous versions from CAT12 GUI
+
 
 ------------------------------------------------------------------------
 r1642 | gaser | 2020-06-05 16:12:03 +0200 (Fr, 05 Jun 2020) | 8 lines
