@@ -189,6 +189,8 @@ function varargout = cat_vol_headtrimming(job)
         Y = Y + single(spm_read_vols(V(di))); 
       end
       Y = Y ./ max(1,min(numel(V,job.avg)));
+    else
+      Y = single(spm_read_vols(V(di))); 
     end
 
     % create mask

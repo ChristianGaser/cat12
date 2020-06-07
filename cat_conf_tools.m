@@ -125,7 +125,7 @@ function tools = cat_conf_tools(expert)
   [check_cov, check_cov2]     = cat_stat_check_cov_GUI(data_xml,outdir,fname,save,expert);
   [defs,defs2]                = cat_vol_defs_GUI;
   nonlin_coreg                = cat_conf_nonlin_coreg;
-  createTPM                   = cat_conf_createTPM(data_vol,expert); 
+  createTPM                   = cat_conf_createTPM(data_vol,expert,suffix,outdir); 
   createTPMlong               = cat_conf_createTPMlong(data_vol);
   headtrimming                = cat_vol_headtrimming_GUI(intlim,spm_type,prefix,suffix,expert);
   check_SPM                   = cat_stat_check_SPM_GUI(outdir,fname,save,expert); 
@@ -134,7 +134,7 @@ function tools = cat_conf_tools(expert)
   calcvol                     = cat_stat_TIV_GUI;
   spmtype                     = cat_io_volctype_GUI(data,intlim,spm_type,prefix,suffix,expert,lazy);
   calcroi                     = cat_roi_fun_GUI(outdir);
-  resize                      = cat_conf_vol_resize(data,prefix,expert);
+  resize                      = cat_conf_vol_resize(data,prefix,expert,outdir);
   avg_img                     = cat_vol_average_GUI(data,outdir);
   realign                     = cat_vol_series_align_GUI(data);
   shootlong                   = cat_conf_shoot(expert); 
@@ -187,42 +187,89 @@ function tools = cat_conf_tools(expert)
   %end
 return
 
-function resize = cat_conf_vol_resize(data,prefix,expert)
+function resize = cat_conf_vol_resize(data,prefix,expert,outdir)
 % -------------------------------------------------------------------------
-% Simple function to resize images. 
+% Simple function to resize and scale images. 
 % 
 % RD202005
 % -------------------------------------------------------------------------
 
            
   % developer with matrix values
-  res           = cfg_entry;
-  res.tag       = 'res';
-  res.name      = 'Isotropic resolution';
-  res.strtype   = 'r';
-  res.num       = [1 1]; 
-  res.val       = {1}; 
-  res.help      = {
-   'Voxel resolution.'
+  res             = cfg_entry;
+  res.tag         = 'res';
+  res.name        = 'Isotropic resolution';
+  res.strtype     = 'r';
+  res.num         = [1 inf]; 
+  res.val         = {1}; 
+  res.help        = {
+   ['Voxel resolution in mm.  For isotropocic resolution you can enter 1 value (e.g., 1.2 for 1.2x1.2x1.2 mm' char(179) ...
+   '), otherwise you have to specify all 3 dimensions. '] 
   };
 
-  method        = cfg_menu; 
-  method.tag    = 'method';
-  method.name   = 'Method'; 
-  method.labels = {'linear','cubic','nearest'}; 
-  method.values = {'linear','cubic','nearest'}; 
-  method.val    = {'cubic'}; 
-  method.help   = {'Interpolation type.'}; 
+  % this is a special expert case
+  scale           = cfg_entry;
+  scale.tag       = 'scale';
+  scale.name      = 'Scaling';
+  scale.strtype   = 'r';
+  scale.num       = [1 inf]; 
+  scale.val       = {1}; 
+  scale.hidden    = expert<2; 
+  scale.help      = {
+   'Scaling to resize the object by changing the voxel size. A value of 0.5 for instance will half the xyz scale of the object.  '
+  };
 
-  resize        = cfg_exbranch;
-  resize.tag    = 'resize';
-  resize.name   = 'Resize images';
-  resize.val    = {data,res,method,prefix};
-  resize.prog   = @cat_vol_resize;
-  resize.vfiles = @vfiles_resize;
-  resize.vout   = @vfiles_resize;
-  resize.hidden = expert<2; 
-  resize.help   = {'Interpolation of images.' ''};
+  % trim data (increase or decrease boundary box) 
+  trim           = cfg_entry;
+  trim.tag       = 'trim';
+  trim.name      = 'Trimming';
+  trim.strtype   = 'r';
+  trim.num       = [1 6]; 
+  trim.val       = {[0 0 0 0 0 0]}; 
+  trim.hidden    = expert<2; 
+  trim.help      = {
+   'Change boundary box by adding (positive values) or removing (negative values) voxel on each side (-x,+x,-y,+y,-z,+z). '
+  };
+
+
+  % use header to resample to 
+  Pref            = data; 
+  Pref.tag        = 'Pref';
+  Pref.name       = 'Alternative image space';
+  Pref.num        = [1 1]; 
+  Pref.val        = {''}; % this is not working
+  Pref.help       = {[
+    'Alternative output space to resample to another image. ' ...
+    'Leaf empty to use space of input image. ' ...
+    'Set voxel resolution to 0 to use the resolution of this images. ']};
+  
+  % main setting
+  restype         = cfg_choice; 
+  restype.tag     = 'restype';
+  restype.name    = 'Resize type';
+  restype.values  = {res,Pref,scale,trim};
+  restype.val     = {res}; 
+  restype.help    = {'The images can be resize to (i) a specific resolution and (ii) to the space of another images (like in ImCalc). '};
+  if ~scale.hidden
+    restype.help  = [ restype.help {'Moreover, the data of the volume can be rescaled, e.g., to adopt template data for other species. The images were not resliced in this case. '}];
+  end
+    
+  % imcalc interpolation field
+  imcalc          = spm_cfg_imcalc;
+  method          = imcalc.val{6}.val{3}; 
+  clear imcalc
+  
+  prefix.val      = {'r'}; 
+  
+  resize          = cfg_exbranch;
+  resize.tag      = 'resize';
+  resize.name     = 'Resize images';
+  resize.val      = {data,restype,method,prefix,outdir};
+  resize.prog     = @cat_vol_resize;
+  resize.vfiles   = @vfiles_resize;
+  resize.vout     = @vfiles_resize;
+  resize.hidden   = expert<2; 
+  resize.help     = {'Interpolation of images.' ''};
 return
 
 function shootlong = cat_conf_shoot(expert)
@@ -261,7 +308,7 @@ function shootlong = cat_conf_shoot(expert)
   
 return
 
-function createTPM = cat_conf_createTPM(data,expert)
+function createTPM = cat_conf_createTPM(data,expert,name,outdir)
 % -------------------------------------------------------------------------
 % Batch to create own templates based on a Shooting template or a CAT pre-
 % processing
@@ -272,139 +319,153 @@ function createTPM = cat_conf_createTPM(data,expert)
   % Shooting template input files
   tfiles                 = data; 
   tfiles.tag             = 'tfiles';
-  tfiles.name            = 'First Shooting Template';
-  tfiles.help            = {'Select GM segment of the first Shooting template.  The other tissue classes (2-?) will be selected automatically.  '};
+  tfiles.name            = 'First spatial registration template';
+  tfiles.help            = {'Select all Dartel/Shooting template volume, i.e., you have to select in general 6 Dartel or 5 Shooting template volumes. ' ''};
   tfiles.ufilter         = '^Template.*';
-  tfiles.num             = [1 1];
+  tfiles.num             = [1 Inf];
   
-  % T1 input images
+  % local intensity normalized T1 input images
   mfiles                 = data; 
   mfiles.tag             = 'mfiles';
-  mfiles.name            = 'Intensity normalized images';
-  mfiles.help            = {
-    ['Select all intensity normalized output images in native space (m*.nii).  ' ...
-     'The registration files of the Shoothing template (y_*) are selected automatically.  ' ...
-     'It is assumed that you run the "Create Shooting Template" batch in the same directory.  ']
-    };
-  mfiles.ufilter         = '^m.*';
+  mfiles.name            = 'Normalized tissue maps';
+  mfiles.help            = {[ ...
+    'Select the averaged normalized tissue volumes.  ' ...
+    'Use "CAT Apply Deformation" or "SPM Deformation" tools to apply the mapping of Dartel/Shooting ' ...
+    'to map all tissue maps from the individual to the template space.  ' ...
+    'Next use SPM imcalc to average each tissue class.  ' ...
+    'Use CAT expert mode to write all tissue classes p1 to p6 to native space (use the TPM output field for p4-6) and correct WMHs to WM (WMHC=3).  ' ...
+    'If this field is empty the template tissues are use to simulted a T1 image.  ' '']};
+  mfiles.ufilter         = '.*';
+  mfiles.val             = {''}; 
   mfiles.num             = [0 Inf];
+  
+  % normalized tissue maps
+  pfiles                 = data; 
+  pfiles.tag             = 'pfiles';
+  pfiles.name            = 'Normalized intensity maps';
+  pfiles.help            = {[
+    'Select all normalized tissue volume.  ' ...
+    'Use "CAT Apply Deformation" or "SPM Deformation" tools to apply the mapping of Dartel/Shooting ' ...
+    'to map all local intensity normalized T1 maps from the individual to the template space.  ' ...
+    'Next use SPM imcalc to average all images.  ' ...
+    'Use CAT expert mode to write the local intensity normalized maps in native space.  ' ...
+    'If this field is empty the template tissues are use instead. ' '']};
+  pfiles.ufilter         = '.*';
+  pfiles.val             = {''}; 
+  pfiles.num             = [0 Inf];
   
   % atlas maps
   afiles                 = data; 
   afiles.tag             = 'afiles';
   afiles.name            = 'Atlas maps';
-  afiles.help            = {
-    ['Select all atlas maps in native space usually written in the label directory.  ' ...
-     'If you want to align different atlas maps then you can simply add them here where the total file number is a multiple of the "Intensity normalized images".  ' ...
-     'The registration files of the Shoothing template (y_*) are selected automatically.  ' ...
-     'It is assumed that you run the "Create Shooting Template" batch in the same directory.  ']
+  afiles.help            = {[
+    'Select all atlas maps in native space usually written in the label directory. ' ...
+    'Use "CAT Apply Deformation" or "SPM Deformation" tools to apply the mapping of Dartel/Shooting ' ...
+    'to map all individual atlas maps from the individual to the template space.  ' ...
+    'Next use SPM imcalc to average all images with discrete interpolation. ' ...
+    'Use CAT expert mode to write out selected volume atlases maps into native space.  ' ... 
+    'If this field is empty no atlas files are generated and no Template is generated.  ']
     };
   afiles.ufilter         = '.*';
+  afiles.val             = {''}; 
   afiles.num             = [0 Inf];
-  afiles.hidden          = true; % version 2
-
-  % Shooting input settings
-  shooting               = cfg_branch;
-  shooting.tag           = 'shooting';
-  shooting.name          = 'Shooting';
-  shooting.val           = {tfiles mfiles afiles};
-  shooting.help          = {
-    'Input settings for available Shooting templates.' 
-  }; 
-
-  % CAT wp1 tissue segments
-  pfiles                 = data; 
-  pfiles.tag             = 'pfiles';
-  pfiles.name            = 'Normalized GM segments';
-  pfiles.help            = {'Select the normalized GM segments (wp1*.nii).  The other tissue classes (2-6) will be selected automatically.  '};
-  pfiles.ufilter         = '^wp1.*';
-  pfiles.num             = [1 Inf];
   
-  wmfiles                = mfiles; 
-  wmfiles.tag            = 'mfiles';
-  wmfiles.name           = 'Normalized intensity normalized images';
-  wmfiles.help           = {
-    ['Select all normalized intensity optimized output images in native space (wm*.nii).  ' ...
-     'The number of file has to be equal to the number of input segmentations.']
-    };
-  wmfiles.ufilter        = '^wm.*';
-  wmfiles.num            = [0 Inf];
-
-  wafiles                = afiles; 
-  wafiles.tag            = 'afiles';
-  wafiles.name           = 'Atlas maps';
-  wafiles.help           = {
-    ['Select all atlas maps in native space usually written in the label directory.  ' ...
-     'If you want to align different atlas maps then you can simply add them here where the total file number is a multiple of the "Intensity normalized images".  ']
-    };
-  wafiles.ufilter        = '.*';
-  wafiles.num            = [0 Inf];
-  wafiles.hidden         = true; % version 2
+  logfile                = data; 
+  logfile.tag            = 'logfile';
+  logfile.name           = 'Log/report file';
+  logfile.help           = {'Select a file where the report is added at the end. '};
+  logfile.ufilter         = '.*';
+  logfile.val             = {''}; 
+  logfile.num             = [0 1];
   
-  % Shooting input settings
-  cat        = cfg_branch;
-  cat.tag    = 'cat';
-  cat.name   = 'CAT';
-  cat.val    = {pfiles wmfiles afiles};
-  cat.help   = {
-    'Input settings for normalized CAT results.' 
-  }; 
-
-  input                = cfg_choice;
-  input.tag            = 'input';
-  input.name           = 'TPM creation';
-  input.values         = {shooting,cat};
-  input.val            = {shooting}; 
-  input.help           = {
-    'Selection between Shooting and CAT data input.'
-    };
+  % input files
+  files               = cfg_branch;
+  files.tag           = 'files';
+  files.name          = 'Files';
+  files.val           = {tfiles pfiles mfiles afiles logfile};
+  files.help          = {'Define input files. All images has to be in the same space having the same resolution. ' ''}; 
+  
   
   
   % options
   fstrength            = cfg_menu;
   fstrength.tag        = 'fstrength';
-  fstrength.name       = 'Filtermodel';
-  fstrength.labels     = {
-    'very small (plasticity)'
-    'small (plasticty/aging)'
-    'medium (aging/development)'
-    'strong (development)'};
-  fstrength.values     = {1 2 3 4};
-  fstrength.val        = {1};
-  fstrength.help       = {
-    ['Main filter control parameter with 4 settings, (1) very small for variations in plasticity, ' ...
-     '(2) small for changes in pasticity/short time aging, (3) medium for changes in long-time aging '...
-     'and short-time development, and (3) strong for large variations in long-time development'] 
-     ''
-  };
+  fstrength.name       = 'Filterstength';
+  fstrength.labels     = {'small' 'medium' 'strong'};
+  fstrength.values     = {2 3 4};
+  fstrength.val        = {2};
+  fstrength.help       = {'Main filter control parameter with 3 levels. ' ''};
 
-  % resolution?
   
-  % boundary box optimization 
-    
+  % trimming?   > main batch (= boundary box optimization)
+  % resolution? > main batch
+  
+  
+  % name 
+  name.tag             = 'name';
+  name.name            = 'Template name'; 
+  name.val             = {'MyTemplate'};
+  
+  % verb
   verb                 = cfg_menu;
   verb.tag             = 'verb';
   verb.name            = 'Verbose output';
   verb.labels          = {'No' 'Yes'};
   verb.values          = {0 1};
   verb.val             = {1};
-  verb.help            = {
-    'Be verbose.'
-    ''
-    };
+  verb.help            = {'Be verbose.' ''};
 
+  % input files
+  opt                  = cfg_branch;
+  opt.tag              = 'opt';
+  opt.name             = 'Options';
+  opt.val              = {fstrength,name,outdir,verb,};
+  opt.help             = {'Main options.' ''}; 
+  
+  % verb
+  verb                 = cfg_menu;
+  verb.tag             = 'verb';
+  verb.name            = 'Verbose output';
+  verb.labels          = {'No' 'Yes'};
+  verb.values          = {0 1};
+  verb.val             = {1};
+  verb.help            = {'Be verbose.' ''};
+
+  
+  %{
+  def.write.name        = 'MyTemplate'; % template name
+  def.write.outdir      = '';           % main output directory
+  def.write.subdir      = '';           % create sub directory
+  def.write.TPM         = 1;            % write TPM 
+  def.write.TPMc        = 1;            % write seperate TPM classes
+  def.write.TPM4        = 1;            % write 4 class TPM  
+  def.write.TPM4c       = 1;            % write seperate 4 class TPM
+  def.write.T1          = 1;            % write T1  
+  def.write.T2          = 1;            % write T2 
+  def.write.GS          = 1;            % write Shooting template
+  def.write.DT          = 1;            % create and write Dartel template
+  job.write.brainmask   = 1;            % write brainmask
+  %}
+  
+  % input files
+  write               = cfg_branch;
+  write.tag           = 'write';
+  write.name          = 'Output';
+  write.val           = {};
+  write.help          = {'' ''}; 
+  
   % main
   createTPM        = cfg_exbranch;
   createTPM.tag    = 'createTPMlong';
   createTPM.name   = 'TPM creation';
-  createTPM.val    = {input,fstrength,verb};
+  createTPM.val    = {files, opt, write};
   createTPM.prog   = @cat_vol_createTPM;
   createTPM.vfiles = @vfiles_createTPM;
   createTPM.vout   = @vfiles_createTPM;
   createTPM.hidden = expert<2;
   createTPM.help   = {
-    'Create individual TPMs for longitudinal preprocessing. This is a special version of the cat_vol_createTPM batch only for the longitudinal preprocessing without further GUI interaction and well defined input. '
-   ['There has to be 6 tissue classes images (GM,WM,CSF,HD1,HD2,BG) that can be in the native space, the affine or a non-linear normalized space.  ' ...
+    'Create individual TPMs for preprocessing by using Dartel/Shooting templates. ' 
+   ['SPM use TPMs with 6 tissue classes (GM,WM,CSF,HD1,HD2,BG), whereas the head classes (HD) can be empty.   ' ...
     'However, the affine normalized or a soft non-linear normalized space is expected to give the best result (see options in cat_main_registration).  ' ...
     'A resolution of 1.5 mm seams to be quite optimal as far as we have to smooth anyway.  ' ...
     'The images will be filtered in different ways to allow soft meanderings of anatomical structures.  ' ...
@@ -440,7 +501,7 @@ function createTPMlong = cat_conf_createTPMlong(data)
   fstrength.help       = {
     ['Main filter control parameter with 4 settings, (1) very small for variations in plasticity, ' ...
      '(2) small for changes in pasticity/short time aging, (3) medium for changes in long-time aging '...
-     'and short-time development, and (3) strong for large variations in long-time development'] 
+     'and short-time development, and (3) strong for large variations in long-time development. '] 
      ''
   };
 
@@ -1290,6 +1351,7 @@ function realign  = cat_vol_series_align_GUI(data)
     'The resliced images are named the same as the originals, except that they are prefixed by ''r''.'
   };
   realign.prog          = @cat_vol_series_align;
+  realign.hidden        = true; 
   realign.vout          = @vout_realign;
 
 return
