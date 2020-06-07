@@ -111,7 +111,7 @@ switch lower(deffile)
       %case {'newworldmonkeys','newworldmonkey'},  species = 'monkey_newworld'; speciesdisp = ' (newworld monkeys)';
       %case {'mammals','mammal'},                  species = 'mammal';          speciesdisp = ' (mammal)';
       case {'chimpanzees','chimpanzee'},          species = 'chimpanzee';      speciesdisp = ' (chimpanzee)';
-      case {'macaca'},                            species = 'macaca';          speciesdisp = ' (macaca)';
+      case {'macaque','macaques'},    					  species = 'macaque';         speciesdisp = ' (macaque)';
       case {'baboons','baboon'},                  species = 'baboon';          speciesdisp = ' (baboon)';
       case {'dogs','dog'},                        species = 'dog';             speciesdisp = ' (dogs)';
       otherwise

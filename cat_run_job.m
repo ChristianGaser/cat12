@@ -636,29 +636,31 @@ function cat_run_job(job,tpm,subj)
         %  This may not work for non human data (or very small brains).
         %  This part should be an external (coop?) function?
         stime = cat_io_cmd('SPM preprocessing 1 (estimate 1):','','',1,stime);
-        if ~isempty(job.opts.affreg) && strcmp('human',job.extopts.species) && ~useprior 
-          if numel(job.opts.tpm)>1
-            %% merging of multiple TPMs
-            obj2 = obj; obj2.image.dat(:,:,:) = max(0.0,Ym);
-            [Affine,obj.tpm,res0] = cat_run_job_multiTPM(job,obj2,Affine,ppe.affreg.skullstripped,1); %#ok<ASGLU>
-            Affine3 = Affine; 
-          elseif strcmp(job.extopts.species,'human')
-            %% only one TPM (old approach); 
-            spm_plot_convergence('Init','Fine affine registration','Mean squared difference','Iteration');
-            warning off 
-            Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg,80); 
-            if any(any(isnan(Affine2(1:3,:))))
-              Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*4,obj.tpm,Affine ,job.opts.affreg,80);
-              if any(any(isnan(Affine2(1:3,:)))) 
-                Affine2 = Affine; 
-              end
-            end
-            Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,       obj.tpm,Affine2,job.opts.affreg,80);
-            warning on  
-            if ~any(any(isnan(Affine3(1:3,:)))), Affine = Affine3; end
-          else
-            Affine2 = Affine1; 
-            Affine3 = Affine1; 
+        if ~isempty(job.opts.affreg) && strcmp('human',job.extopts.species) 
+         if ~useprior 
+           if numel(job.opts.tpm)>1
+							%% merging of multiple TPMs
+							obj2 = obj; obj2.image.dat(:,:,:) = max(0.0,Ym);
+							[Affine,obj.tpm,res0] = cat_run_job_multiTPM(job,obj2,Affine,ppe.affreg.skullstripped,1); %#ok<ASGLU>
+							Affine3 = Affine; 
+						elseif strcmp(job.extopts.species,'human')
+							%% only one TPM (old approach); 
+							spm_plot_convergence('Init','Fine affine registration','Mean squared difference','Iteration');
+							warning off 
+							Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg,80); 
+							if any(any(isnan(Affine2(1:3,:))))
+								Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*4,obj.tpm,Affine ,job.opts.affreg,80);
+								if any(any(isnan(Affine2(1:3,:)))) 
+									Affine2 = Affine; 
+								end
+							end
+							Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,       obj.tpm,Affine2,job.opts.affreg,80);
+							warning on  
+							if ~any(any(isnan(Affine3(1:3,:)))), Affine = Affine3; end
+						else
+							Affine2 = Affine1; 
+							Affine3 = Affine1; 
+						end
           end
           if 0
             %% visual control for development and debugging
