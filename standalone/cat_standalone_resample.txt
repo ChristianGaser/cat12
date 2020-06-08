@@ -6,12 +6,6 @@
 % data field, that will be dynamically replaced by cat_standalone.sh
 matlabbatch{1}.spm.tools.cat.stools.surfresamp.data_surf = '<UNDEFINED>';
 
-% merge hemispheres?
-matlabbatch{1}.spm.tools.cat.stools.surfresamp.merge_hemi = 1;
-
-% set this to 1 for skipping processing if already processed data exist
-matlabbatch{1}.spm.tools.cat.stools.surfresamp.lazy = 0;
-
 % 1st parameter field, that will be dynamically replaced by cat_standalone.sh
 % smoothing filter size surface values
 % use 12-15mm for cortical thickness and 20-25mm for folding measures
@@ -20,3 +14,9 @@ matlabbatch{1}.spm.tools.cat.stools.surfresamp.fwhm_surf = '<UNDEFINED>';
 % 2nd parameter field, that will be dynamically replaced by cat_standalone.sh
 % use 32k mesh from HCP or 164k mesh from Freesurfer
 matlabbatch{1}.spm.tools.cat.stools.surfresamp.mesh32k = '<UNDEFINED>';
+
+% merge hemispheres?
+matlabbatch{1}.spm.tools.cat.stools.surfresamp.merge_hemi = 1;
+
+% set this to 1 for skipping processing if already processed data exist
+matlabbatch{1}.spm.tools.cat.stools.surfresamp.lazy = 0;

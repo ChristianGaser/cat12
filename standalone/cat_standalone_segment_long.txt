@@ -1,0 +1,71 @@
+% Batch file of CAT12 longitudinal segmentation for SPM12 standalone installation
+%
+%_______________________________________________________________________
+% $Id: cat_standalone_segment_long.txt 1595 2020-03-31 12:33:37Z gaser $
+
+% first undefined data field, that will be dynamically replaced by cat_standalone.sh
+matlabbatch{1}.spm.tools.cat.long.datalong.subjects = '<UNDEFINED>';
+
+% Remove comments if you would like to change TPM by using additional arguments in cat_standalone.sh 
+% or change this field manually by editing the "<UNDEFINED" field
+% Otherwise the default value from cat_defaults.m is used.
+% 1st parameter field, that will be dynamically replaced by cat_standalone.sh
+%matlabbatch{1}.spm.tools.cat.long.opts.tpm = '<UNDEFINED>';
+
+% Remove comments if you would like to change the longitusinal model by using additional arguments in cat_standalone.sh 
+% or change this field manually by editing the "<UNDEFINED" field
+% 2nd parameter field, that will be dynamically replaced by cat_standalone.sh
+% (1) small changes (i.e. plasticity/learning effects)
+% (2) large changes (i.e. aging/developmental effects)
+matlabbatch{1}.spm.tools.cat.long.longmodel = '<UNDEFINED>';
+
+% Remove comments and edit entry if you would like to change the Dartel/Shooting approach
+% Otherwise the default value from cat_defaults.m is used.
+% entry for choosing shooting approach
+%matlabbatch{1}.spm.tools.cat.long.extopts.registration.shooting.shootingtpm = {'/Users/gaser/spm/spm12/toolbox/cat12/templates_volumes/Template_0_IXI555_MNI152_GS.nii'};
+% entry for choosing dartel approach
+%matlabbatch{1}.spm.tools.cat.long.extopts.registration.dartel.darteltpm = {'/Users/gaser/spm/spm12/toolbox/cat12/templates_volumes/Template_1_IXI555_MNI152.nii'};
+% Strength of Shooting registration: 0 - Dartel, eps (fast), 0.5 (default) to 1 (accurate) optimized Shooting, 4 - default Shooting; default 0.5
+%matlabbatch{1}.spm.tools.cat.long.extopts.registration.shooting.regstr = 0.5;
+
+% Affine regularisation (SPM12 default = mni) - '';'mni';'eastern';'subj';'none';'rigid'
+matlabbatch{1}.spm.tools.cat.long.opts.affreg = 'mni';
+
+% Strength of the bias correction that controls the biasreg and biasfwhm parameter (CAT only!)
+% 0 - use SPM parameter; eps - ultralight, 0.25 - light, 0.5 - medium, 0.75 - strong, and 1 - heavy corrections
+% job.opts.biasreg	= min(  10 , max(  0 , 10^-(job.opts.biasstr*2 + 2) ));
+% job.opts.biasfwhm	= min( inf , max( 30 , 30 + 60*job.opts.biasstr ));  
+matlabbatch{1}.spm.tools.cat.long.opts.biasstr = 0.5;
+
+% Affine PreProcessing (APP) with rough bias correction and brain extraction for special anatomies (nonhuman/neonates) 
+% 0 - none; 1070 - default; [1 - light; 2 - full; 1144 - update of 1070, 5 - animal (no affreg)]
+matlabbatch{1}.spm.tools.cat.long.extopts.APP = 1070;
+
+% Strength of the local adaption: 0 to 1; default 0.5
+matlabbatch{1}.spm.tools.cat.long.extopts.LASstr = 0.5;
+
+% Strength of skull-stripping: 0 - SPM approach; eps to 1  - gcut; 2 - new APRG approach; -1 - no skull-stripping (already skull-stripped); default = 2
+matlabbatch{1}.spm.tools.cat.long.extopts.gcutstr = 2;
+
+% voxel size for normalized data (EXPERIMENTAL: inf - use Tempate values)
+matlabbatch{1}.spm.tools.cat.long.extopts.vox = 1.5;
+
+% resolution handling: 'native','fixed','best', 'optimal'
+matlabbatch{1}.spm.tools.cat.long.extopts.restypes.optimal = [1 0.1];
+
+% surface and thickness creation:   0 - no (default), 1 - lh+rh, 2 - lh+rh+cerebellum, 
+% 3 - lh, 4 - rh, 5 - lh+rh (fast, no registration, only for quick quality check and not for analysis),
+% 6 - lh+rh+cerebellum (fast, no registration, only for quick quality check and not for analysis)
+% 9 - thickness only (for ROI analysis, experimental!)
+% +10 to estimate WM and CSF width/depth/thickness (experimental!)
+matlabbatch{1}.spm.tools.cat.long.output.surface = 1;
+
+% define here volume atlases
+matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.neuromorphometrics = 1;
+matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.lpba40 = 0;
+matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.cobra = 0;
+matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.hammers = 0;
+matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.ownatlas = {''};
+matlabbatch{1}.spm.tools.cat.long.modulate = 1;
+matlabbatch{1}.spm.tools.cat.long.dartel = 0;
+matlabbatch{1}.spm.tools.cat.long.delete_temp = 1;
