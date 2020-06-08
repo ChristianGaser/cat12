@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1644 | dahnke | 2020-06-07 19:00:44
+r1645 | gaser | 2020-06-08 12:21:41
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_run_job.m
+M       tbx_cfg_cat.m
+
+(1) Changed: XML label output for batch has ocasionally some issues for checking
+             ROImenu structure.
+(2) Changed: Supress warning for creating existing directories in cat_run_job.m.
+(3) Changed: Updated help text in cat_conf_tools.m and again removed hidden flag
+             for longitudinal registration.
+
+------------------------------------------------------------------------
+r1644 | dahnke | 2020-06-07 19:02:53 +0200 (So, 07 Jun 2020) | 30 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,7 +26,6 @@ M       cat_run_job.m
 M       cat_vol_createTPM.m
 M       cat_vol_headtrimming.m
 M       cat_vol_resize.m
-M       development/Template_3_IXI555_MNI152_GS1mm.nii
 M       spm_cat12.m
 M       tbx_cfg_cat.m
 
@@ -30,6 +44,7 @@ M       tbx_cfg_cat.m
 							of atlas, template and image resolution.		
 (6) Fixed: 		Corrected bug in cat_vol_headtrimming.	
 (7) Changed: 	Added longmodel variable to cat_long_multi_mainShoot batch. 
+
 
 ------------------------------------------------------------------------
 r1643 | gaser | 2020-06-05 16:16:48 +0200 (Fr, 05 Jun 2020) | 7 lines
