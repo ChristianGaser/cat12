@@ -187,8 +187,8 @@ run_cat ()
   fi
   
   # surface data need an additional curly bracket
-  if grep -q "\.data_surf" $BATCHFILE ; then
-    echo "$data = {" >> $TMP
+  if grep -q -e "\.datalong" $BATCHFILE ; then
+    echo "$data = {{" >> $TMP
   else
     echo "$data = {" >> $TMP
 	fi
@@ -213,8 +213,8 @@ run_cat ()
   done
 
   # surface data need an additional curly bracket
-  if grep -q "\.data_surf" $BATCHFILE ; then
-	  echo "     };" >> $TMP
+  if grep -q -e "\.datalong" $BATCHFILE ; then
+	  echo "     }};" >> $TMP
 	else
 	  echo "     };" >> $TMP
 	fi
@@ -228,7 +228,6 @@ run_cat ()
   
 	eval "\"${SPMROOT}/run_spm12.sh\"" $MCRROOT "batch" $TMP
 #	rm $TMP
-
   exit 0
 }
 
