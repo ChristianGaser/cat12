@@ -387,7 +387,7 @@ if isfield(opts,'ROImenu') && isfield(opts.ROImenu,'atlases')
   % sometimes this does not work...
   try
     is_ROI = any(cell2mat(struct2cell(opts.ROImenu.atlases(1:end-1))));
-  else
+  catch
     is_ROI = ~isempty(struct2cell(opts.ROImenu.atlases));
   end
   if is_ROI

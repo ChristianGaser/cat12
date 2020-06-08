@@ -38,7 +38,7 @@ function cat_run_job(job,tpm,subj)
     if job.extopts.subfolders
     
       folders = {'mri','report'};
-      warning('off', 'MATLAB:MKDIR:DirectoryExists');.
+      warning('off', 'MATLAB:MKDIR:DirectoryExists');
       for i=1:numel(folders)
         if ~exist(fullfile(pth,folders{i}),'dir')
           mkdir(fullfile(pth,folders{i}));
