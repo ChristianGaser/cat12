@@ -4,9 +4,6 @@ function out = cat_long_multi_run(job)
 % Christian Gaser
 % $Id$
 
-global opts extopts output modulate dartel delete_temp longmodel ROImenu surfaces
-
-
 warning off;
 
 if isdeployed, job.nproc = 0; end
@@ -20,6 +17,8 @@ dartel      = job.dartel;
 ROImenu     = job.ROImenu;
 longmodel   = job.longmodel;
 surfaces    = job.output.surface;
+
+setappdata(0,'job',job);
 
 if isfield(job,'delete_temp')  
   delete_temp = job.delete_temp;
