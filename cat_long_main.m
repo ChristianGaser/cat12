@@ -4,19 +4,31 @@
 % $Id$
 %-----------------------------------------------------------------------
 
-global opts extopts output modulate dartel delete_temp ROImenu surfaces cat
-
-if isempty(dartel),       dartel      = 0; end
-if isempty(modulate),     modulate    = 1; end
-if isempty(surfaces),     surfaces    = cat_get_defaults('output.surfaces'); end
-if isempty(delete_temp),  delete_temp = 1; end
+% global variables don't work properly in deployed mode, thus we have to use
+% setappdat/getappdata
+try
+  job         = getappdata(0,'job');
+  opts        = job.opts;
+  extopts     = job.extopts;
+  output      = job.output;
+  modulate    = job.modulate;
+  dartel      = job.dartel;
+  ROImenu     = job.ROImenu;
+  longmodel   = job.longmodel;
+  surfaces    = job.output.surface;
+  if isfield(job,'delete_temp')  
+    delete_temp = job.delete_temp;
+  else
+    delete_temp = 1;
+  end
+catch
+  dartel = 0;
+  modulate = 1;
+  delete_temp = 1;
+  surfaces    = cat_get_defaults('output.surfaces'); 
+end
 
 write_CSF = cat_get_defaults('output.CSF.mod') > 0;
-
-if isfield(extopts,'admin') && isfield(extopts.admin,'lazy') && extopts.admin.lazy
-  fprintf('\nCAT12 is restarted in developer mode to enable additional options.\n');
-  cat12('developer');
-end
 
 warning('off','MATLAB:DELETE:FileNotFound');
 
