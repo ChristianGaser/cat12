@@ -24,7 +24,7 @@ if isempty(expert)
 end  
 
 % always use expert mode for standalone installations
-%if isdeployed, expert = 1; end
+if isdeployed, expert = 1; end
 
 % try to estimate number of processor cores
 try

@@ -29,7 +29,7 @@
       <h2>Quick start guide</h2>
       <h4>VBM data</h4>
       <ul>
-        <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data using defaults (use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.long');">Segment Longitudinal Data</a> for longitudinal data).</li>
+        <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data using defaults (use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.long');">Segment Longitudinal Data</a> for longitudinal data).</li>
         <li>Estimate <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.calcvol');">total intracranial volume (TIV)</a> to correct for different brain size and volume.</li>
         <li>Check the data quality with <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_cov');">Sample Homogeneity</a> for VBM data  (optionally consider TIV and age as nuisance variable).</li>
         <li><a class="function" href="matlab:spm_jobman('interactive','','spm.spatial.smooth');">Smooth</a> data (recommended start value 6-8mm<sup>1</sup>).</li>
@@ -50,7 +50,7 @@
 
       <h4>Additional surface data</h4>
       <ul>
-        <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data and also select "Surface and thickness estimation" under "Writing options" (for longitudinal data use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.long');">Segment Longitudinal Data</a>).</li>
+        <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data and also select "Surface and thickness estimation" under "Writing options" (for longitudinal data use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.long');">Segment Longitudinal Data</a>).</li>
         <li>Optionally, <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfextract');">Extract Additional Surface Parameters</a> (e.g. sulcal depth, gyrification index, cortical complexity).</li>
         <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfresamp');">Resample & smooth</a> surface data (suggested starting value 12mm for cortical thickness and 20-25mm for folding measures<sup>1</sup>, use the default merging of hemispheres).</li>
         <li>Check data quality using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.check_mesh_cov');">Sample Homogeneity</a> for surface data.</li>
