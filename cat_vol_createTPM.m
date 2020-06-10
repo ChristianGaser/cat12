@@ -1,4 +1,4 @@
-function varagout = cat_vol_createTPM(job)
+%function varagout = cat_vol_createTPM(job)
 %cat_vol_createTPM.  Script to create a CAT preprocessing template.
 % Iterative generation of new preprocessing templates that include a tissue
 % probability map (TPM), registration T1/T2 maps with/without head, a brain
@@ -128,8 +128,32 @@ function varagout = cat_vol_createTPM(job)
     job.write.name   = 'chimpanzee';
     job.write.subdir = 'chimp';
     
+    if 0
+      %% correct cat side alignement if data was interpolated
+      Pm = job.files.mfiles{1};  Vm = spm_vol(Pm);  Ym = spm_read_vols(Vm);
+      Pa = job.files.afiles{1};  Va = spm_vol(Pa);  Ya = spm_read_vols(Va);
+      ds('d2sm','',1,Ym(:,:,:)/3 + (mod(Ya,2)==1)/3,single(Ya(:,:,:)/20),120)
+      %% estiate the offset
+      clear vxxyz; 
+      offset = 2; % fit better for 1 mm resolution  
+      vxi = find( (mod(Ya,2)==1 ) );
+      [vxxyz(:,1),vxxyz(:,2),vxxyz(:,3)] = ind2sub(size(Ya), vxi); 
+      vxxyz(:,1) = vxxyz(:,1) + offset; 
+      vxi2 = sub2ind(size(Ya), vxxyz(:,1), vxxyz(:,2), vxxyz(:,3)); 
+      modYa2 = false(size(Ya)); modYa2(vxi2) = true; 
+      modYa2 = (mod(Ya,2)==1 ) - modYa2 & cat_vol_morph(mod(Ya,2)==0 & Ya>0,'d',offset ); 
+      Yac = Ya; 
+      Yac(modYa2 ) = Yac( modYa2 ) + 1 ;
+      ds('d2sm','',1,Ym(:,:,:)/3 + (mod(Ya,2)==1)/3, Ym(:,:,:)/3 + (mod(Yac,2)==1)/3,120)
+      %% save result
+      [ppa,ffa,eea] = spm_fileparts(Va.fname); Vac = Va; Vac.fname = fullfile(ppa,['c' ffa eea]); 
+      spm_write_vol(Vac,Yac);
+      job.files.afiles{1} = Vac.fname; 
+    end
+ 
     
-     %% job.test
+    
+    %% job.test
     job.files.tfiles = { % Shooting template
       '/Users/dahnke/Documents/MATLAB/spm12/toolbox/cat12/templates_animals/+macaque create TPM/rmacaque_Template_0_GS.nii,1';
       '/Users/dahnke/Documents/MATLAB/spm12/toolbox/cat12/templates_animals/+macaque create TPM/rmacaque_Template_1_GS.nii,1';
@@ -346,7 +370,7 @@ function varagout = cat_vol_createTPM(job)
   Ytpm = clsnorm(Ytpm);
   
 
-  %% optimize CAT (and other) atlases ????
+  % optimize CAT (and other) atlases ????
   %   * update brain mask ?  - yes
   %   * update tissue ?      - no
   %   * checke range
@@ -451,7 +475,7 @@ function varagout = cat_vol_createTPM(job)
   end
  
 
-  %%   2) average T1/T2 maps 
+  %   2) average T1/T2 maps 
   %   ---------------------------------------------------------------------
   % - write T1 output
   if job.write.T1
@@ -514,7 +538,7 @@ function varagout = cat_vol_createTPM(job)
   
   
   
-  %%   brain mask
+  %   brain mask
   %   ---------------------------------------------------------------------
   if job.write.brainmask
     out.bm    = fullfile(job.write.outdir,sprintf('%s_brainmask.nii',job.write.name));
@@ -532,7 +556,7 @@ function varagout = cat_vol_createTPM(job)
 
   
   
-  %%  3) Dartel/Shooting Templates
+  %   3) Dartel/Shooting Templates
   %   ---------------------------------------------------------------------
 
   % - Update Shooting template
@@ -551,7 +575,8 @@ function varagout = cat_vol_createTPM(job)
       out.GS{ti} = fullfile(job.write.outdir,sprintf('%s_Template_%d_GS.nii',job.write.name,ti-1));
       Ndef      = nifti;
       Ndef.dat  = file_array( out.GS{ti} ,[size(Ytmp{1}), numel(Ytmp)],...
-                  [spm_type('float32') spm_platform('bigend')],0,1,0);
+                  ...[spm_type('float32') spm_platform('bigend')],0,1,0);
+                  [spm_type('uint8') spm_platform('bigend')],0,1/255,0);
       Ndef.mat  = Vtemp0.mat;
       Ndef.mat0 = Vtemp0.mat;
       Ndef.descrip = sprintf('%s Shooting template',job.write.name,ti);
@@ -598,7 +623,8 @@ function varagout = cat_vol_createTPM(job)
       out.DT{nti} = fullfile(job.write.outdir,sprintf('%s_Template_%d.nii',job.write.name,nti));
       Ndef      = nifti;
       Ndef.dat  = file_array( out.DT{nti} ,[size(Ytmp{1}), numel(Ytmp)],...
-                  [spm_type('float32') spm_platform('bigend')],0,1,0);
+                  ... [spm_type('float32') spm_platform('bigend')],0,1,0);
+                  [spm_type('uint8') spm_platform('bigend')],0,1/255,0);
       Ndef.mat  = Vtemp0.mat;
       Ndef.mat0 = Vtemp0.mat;
       Ndef.descrip = sprintf('%s simulated Dartel template',job.write.name,nti);
@@ -613,7 +639,7 @@ function varagout = cat_vol_createTPM(job)
     
     
     
-  %% - write atlas maps
+  % - write atlas maps
   if exist('Ya','var')
     % get names of possible txt and csv files
     for ai = 1:numel(job.files.afiles)
@@ -679,7 +705,7 @@ function varagout = cat_vol_createTPM(job)
   
   
 
-  %% - display output
+  % - display output
   if job.verb
     % display TPM 1-3 
     % display TPM 5-6
@@ -741,4 +767,4 @@ function varagout = cat_vol_createTPM(job)
     print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
     
   end
-end
+%end
