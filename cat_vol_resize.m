@@ -104,7 +104,6 @@ function varargout=cat_vol_resize(T,operation,varargin)
             error('Undefined setting.');            
           end
           
-          if isfield(Vo,'pinfo'),   Vo = rmfield(Vo,'pinfo'); end
           if isfield(Vo,'private'), Vo = rmfield(Vo,'private'); end
           
           if strcmp(job.data{fi},fnameres) && exist(fnameres,'file'), delete(fnameres); end
@@ -597,7 +596,13 @@ function varargout=cat_vol_resize(T,operation,varargin)
       
       T  = single(T{1});
       
-      if exist('V2','var'), Vi = V2; else, Vi = V; end
+      if exist('V2','var')
+        Vi       = V2; 
+        Vi.pinfo = V.pinfo; 
+        Vi.dt    = V.dt;
+      else
+        Vi = V; 
+      end
       resV      = sqrt(sum(Vi.mat(1:3,1:3).^2));
       vmat      = spm_imatrix(Vi.mat);
       sizeO     = size(T);
@@ -611,7 +616,7 @@ function varargout=cat_vol_resize(T,operation,varargin)
       end
       
       % main interpolation 
-      Vt = V; 
+      Vt = V;
       if ndims(T)>3
         % high dimensional cases requires the interpolation of the each n-D
         % component. Here, we handle only the 4D (e.g. TPM,fMRI?) and 5D
@@ -627,12 +632,12 @@ function varargout=cat_vol_resize(T,operation,varargin)
         end
         dims = size(T); 
 
-        TI = zeros([Vi.dim dims(4:end)]); 
+        TI = zeros([Vi.dim dims(4:end)],'single'); 
         for d4i = 1:size(T,4)
           if numel(T)
             for d5i = 1:size(T,5)
-              Vt.dat(:,:,:) = cat_vol_ctype(T(:,:,:,d4i,d5i),spm_type(Vt.dt(1))); 
-              Vi.dat(:,:,:) = cat_vol_ctype(T(:,:,:,d4i,d5i),spm_type(Vt.dt(1))); 
+              Vt.dat(:,:,:) = single(T(:,:,:,d4i,d5i)); Vt.dt(1) = 16;
+              Vi.dat(:,:,:) = single(T(:,:,:,d4i,d5i)); Vi.dt(1) = 16;
               [Vo,TI(:,:,:,d4i,d5i)] = cat_vol_imcalc(Vt,Vi,'i1',struct('interp',interp,'verb',0));
               if nonan
                 TT = TI(:,:,:,d4i,d5i); [D,I] = cat_vbdist( single(~isnan(TT)) ); TI(:,:,:,d4i,d5i) = TT(I); clear I D TT; 
