@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1648 | dahnke | 2020-06-10 13:12:26
+r1649 | dahnke | 2020-06-10 21:26:40
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main_roi.m
+
+(1) Changed:   Update subject space estimation and interpolation 
+               option in cat_main_roi.
+
+------------------------------------------------------------------------
+r1648 | dahnke | 2020-06-10 13:14:47 +0200 (Mi, 10 Jun 2020) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +22,7 @@ M       cat_vol_resize.m
 
 (1) Fixed:     Corrected data type bugs in cat_vol_resize.
 (2) Changed:   Cleanup of cat_main_roi with new debugging output.
+
 
 ------------------------------------------------------------------------
 r1647 | gaser | 2020-06-09 17:57:01 +0200 (Di, 09 Jun 2020) | 18 lines
