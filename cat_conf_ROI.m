@@ -100,6 +100,7 @@ ownatlas.help         = {
 ownatlas.filter       = 'image';
 ownatlas.ufilter      = '.*';
 ownatlas.val{1}       = {''};
+ownatlas.dir          = fullfile(spm('dir'),'toolbox','cat12','template_volumes');
 ownatlas.num          = [0 Inf];
 
 atlases          = cfg_branch;

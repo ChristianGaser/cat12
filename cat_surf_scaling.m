@@ -35,6 +35,12 @@ function rn = cat_surf_scaling(job)
 %		 Currently the hull definition based on a approach that renders the 
 %    surface and used closing. This could probably replaced by the real 
 %    mathematical hull (at least as previous scaling).    
+%  - RD202006 - inoptimal hull defintion 2: 
+%    Another problem is that the process strongly depend on the used 
+%    object - typically the left or right hemishpere but what happen
+%    if we use the cerbellum?
+%    > So it is maybe better to use left and right but nothing more for
+%      scaling?
 % _________________________________________________________________________
 % Robert Dahnke 202004
 % $Id$

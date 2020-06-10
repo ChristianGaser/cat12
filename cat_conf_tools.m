@@ -198,7 +198,7 @@ function resize = cat_conf_vol_resize(data,prefix,expert,outdir)
   % developer with matrix values
   res             = cfg_entry;
   res.tag         = 'res';
-  res.name        = 'Isotropic resolution';
+  res.name        = 'Resolution';
   res.strtype     = 'r';
   res.num         = [1 inf]; 
   res.val         = {1}; 
@@ -246,7 +246,7 @@ function resize = cat_conf_vol_resize(data,prefix,expert,outdir)
   % main setting
   restype         = cfg_choice; 
   restype.tag     = 'restype';
-  restype.name    = 'Resize type';
+  restype.name    = 'Operation';
   restype.values  = {res,Pref,scale,trim};
   restype.val     = {res}; 
   restype.help    = {'The images can be resize to (i) a specific resolution and (ii) to the space of another images (like in ImCalc). '};
@@ -322,7 +322,7 @@ function createTPM = cat_conf_createTPM(data,expert,name,outdir)
   tfiles.name            = 'First spatial registration template';
   tfiles.help            = {'Select all Dartel/Shooting template volumes, i.e., you have to select in general 6 Dartel or 5 Shooting template volumes. ' ''};
   tfiles.ufilter         = '^Template.*';
-  tfiles.num             = [3 Inf];
+  tfiles.num             = [1 Inf];
   
   % local intensity normalized T1 input images
   mfiles                 = data; 
