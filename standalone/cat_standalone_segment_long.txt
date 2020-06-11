@@ -1,7 +1,7 @@
 % Batch file of CAT12 longitudinal segmentation for SPM12 standalone installation
 %
 %_______________________________________________________________________
-% $Id: cat_standalone_segment_long.txt 1595 2020-03-31 12:33:37Z gaser $
+% $Id$
 
 % first undefined data field, that will be dynamically replaced by cat_standalone.sh
 matlabbatch{1}.spm.tools.cat.long.datalong.subjects = '<UNDEFINED>';

@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1649 | dahnke | 2020-06-10 21:26:40
+r1650 | gaser | 2020-06-11 12:50:53
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_report.m
+M       cat_main_LAS2.m
+M       cat_main_gintnorm.m
+MM      standalone/cat_standalone_segment_long.txt
+
+(1) Changed: Added some more try/catch to ensure that ignoreErrors is running.
+(2) Fixed:   Changed estimation of tissue peaks in cat_main_gintnorm.m that 
+             failed if multiple peaks were deviating too much for a single 
+             tissue. 
+
+------------------------------------------------------------------------
+r1649 | dahnke | 2020-06-10 21:28:49 +0200 (Mi, 10 Jun 2020) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +22,7 @@ M       cat_main_roi.m
 
 (1) Changed:   Update subject space estimation and interpolation 
                option in cat_main_roi.
+
 
 ------------------------------------------------------------------------
 r1648 | dahnke | 2020-06-10 13:14:47 +0200 (Mi, 10 Jun 2020) | 13 lines
