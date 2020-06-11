@@ -1,5 +1,5 @@
 function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,extopts)
-% This is an exclusive subfunction of cat_main.
+% This is a subfunction of cat_main.
 % ______________________________________________________________________
 % Global intensity normalization based on tissue thresholds estimated as 
 % median intensity in the SPM tissue maps refined by edge (gradient) 
@@ -44,7 +44,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
  
   if isstruct(Ycls)
     
-    %% final peaks and intesity scaling
+    %% final peaks and intensity scaling
     %  -----------------------------------------------------------------
     T3th  = Ycls.T3th;
     T3thx = Ycls.T3thx;
@@ -69,9 +69,9 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     return
   end
     
-  clsint  = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
+  clsint  = @(x) mean(Ysrc(Ycls{x}>0.5));
   clsints = @(x,y) [round( res.mn(res.lkp==x) * 10^5)/10^5; res.mg(res.lkp==x-((y==0)*8))']; 
- 
+
   inv_weighting = 0;
   if nargout==7
     cat_warnings = struct('identifier',{},'message',{});
@@ -93,7 +93,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
   %  intensity checks and noise contrast ratio (contrast part 1)
   %  -------------------------------------------------------------------
   % relation between the GM/WM and CSF/GM and CSF/WM contrast has to be
-  % greater that 3 times of the maximum contrast (max-min).
+  % greater than 3 times of the maximum contrast (max-min).
   clear Yn
   checkcontrast = @(T3th,minContrast) ...
     abs(diff(T3th([1,3]))) < (max(T3th(:))-min(T3th(:)))*minContrast || ...
