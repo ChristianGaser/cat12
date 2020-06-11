@@ -166,8 +166,12 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
   Yclso   = Ycls; 
   [Ym,BB] = cat_vol_resize( Ym  , 'reduceBrain' , vx_vol , round(10/mean(vx_vol)) , Yb0 );
   Yb      = cat_vol_resize( Yb0 , 'reduceBrain' , vx_vol , round(10/mean(vx_vol)) , Yb0 ); clear Yb0; 
-  for i = 1:numel(Ycls), Ycls{i} = cat_vol_resize(Ycls{i} , 'reduceBrain' , vx_vol , BB.BB); end
   
+  try
+    for i = 1:numel(Ycls), Ycls{i} = cat_vol_resize(Ycls{i} , 'reduceBrain' , vx_vol , BB.BB); end
+  catch
+    error('LAS failed probably due to bad tissue contrast.\n');
+  end
   
   % helping maps (Yg = mean gradient = edge) and divergence (CSF or WM skeleton)
   Yg    = cat_vol_grad( Ym , vx_vol );
