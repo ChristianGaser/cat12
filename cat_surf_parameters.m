@@ -47,7 +47,7 @@ function varargout = cat_surf_parameters(job)
   def.verb        = cat_get_defaults('extopts.verb'); 
   def.debug       = cat_get_defaults('extopts.verb')>2;
   def.lazy        = 0;  % do not reprocess existing results
-  def.norm        = 1;  % apply inital surface normalization for job.normmeasure (GI measures) using cat_surf_scaling 
+  def.norm        = 0;  % apply inital surface normalization for job.normmeasure (GI measures) using cat_surf_scaling 
                         % [0-none,1-default,12-affine,1-radius,11-hullradius,2-area,21-hullarea,30-surfacevolume,31-hullvolume];
   def.normprefix  = 'n';
   % output parameter of validated measures 

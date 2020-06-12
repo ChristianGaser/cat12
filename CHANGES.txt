@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1652 | gaser | 2020-06-12 15:57:17
+r1653 | gaser | 2020-06-12 17:01:28
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_surf_parameters.m
+M       check_pipeline/batch_surface_pipeline.m
+M       html/cat.html
+
+(1) Changed: Deselected normalization option for extracting surface parameters.
+(2) Changed: Updated batch_surface_pipeline.m
+------------------------------------------------------------------------
+r1652 | gaser | 2020-06-12 15:57:55 +0200 (Fr, 12 Jun 2020) | 9 lines
 
 Changed paths:
 M       CAT12-Manual.pdf
@@ -9,6 +21,7 @@ M       cat_conf_long.m
 M       html/cat.html
 
 Changed: Updated help text and CAT12 manual.
+
 ------------------------------------------------------------------------
 r1651 | gaser | 2020-06-12 14:39:55 +0200 (Fr, 12 Jun 2020) | 15 lines
 
