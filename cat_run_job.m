@@ -638,8 +638,8 @@ function cat_run_job(job,tpm,subj)
         %  This part should be an external (coop?) function?
         stime = cat_io_cmd('SPM preprocessing 1 (estimate 1):','','',1,stime);
         if ~isempty(job.opts.affreg) && strcmp('human',job.extopts.species) 
-         if ~useprior 
-           if numel(job.opts.tpm)>1
+          if ~useprior 
+            if numel(job.opts.tpm)>1
               %% merging of multiple TPMs
               obj2 = obj; obj2.image.dat(:,:,:) = max(0.0,Ym);
               [Affine,obj.tpm,res0] = cat_run_job_multiTPM(job,obj2,Affine,ppe.affreg.skullstripped,1); %#ok<ASGLU>

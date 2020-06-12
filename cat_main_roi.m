@@ -26,7 +26,7 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
 
   if ~exist('opt','var'), opt = struct(); end
-  def.type   = 1; % 1 - atlas space, 2 - native space 
+  def.type   = 2; % 1 - atlas space, 2 - native space 
   def.write  = 0; % 1 - display some results, 2 - display results and write some maps  
   def.interp = 0; % use the interpolation that is also used in cat_io_writenii 
   opt = cat_io_checkinopt(opt,def); 

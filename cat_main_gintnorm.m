@@ -69,7 +69,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     return
   end
     
-  clsint  = @(x) mean(Ysrc(Ycls{x}>0.5));
+  clsint  = @(x) mean(Ysrc(Ycls{x}>0.9));
   clsints = @(x,y) [round( res.mn(res.lkp==x) * 10^5)/10^5; res.mg(res.lkp==x-((y==0)*8))']; 
 
   inv_weighting = 0;
@@ -107,7 +107,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
            '  (BG=%0.2f, CSF=%0.2f, GM=%0.2f, WM=%0.2f)\n'],BGth,T3th3),numel(cat_warnings)==0);
   end
   
-  if T3th3(1)>T3th3(3) && T3th3(2)>T3th3(3) && T3th3(1)>T3th3(2) % invers (T2 / PD)
+  if T3th3(1)>T3th3(3) && T3th3(2)>T3th3(3) && T3th3(1)>T3th3(2) % inverse (T2 / PD)
     cat_warnings = cat_io_addwarning(cat_warnings,...
       'CAT:cat_main:InverseContrast',...
       sprintf(['Inverse tissue contrast! \n' ...
@@ -372,8 +372,23 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     end
   
 
-  else 
-    error('cat_main:badTissueContrast',...
+  else % if everything fails assume that the image is T1 and cross fingers
+    BGmin = min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))); 
+    T3th3(1) = min( min(clsints(3,0)) , mean(Ysrc(Ycls{3}(:)>240))); 
+    BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),median(Ysrc(Ycls{end}(:)>128))]);
+    %T3th3 = [max( min(res.mn(res.lkp==3 & res.mg'>0.3/sum(res.lkp==3)))*.05 + .95*max(res.mn(res.lkp==2 & res.mg'>0.3/sum(res.lkp==2))) , ...
+    %              min(res.mn(res.lkp==3 & res.mg'>0.3/sum(res.lkp==3)))) ...
+    %         max(res.mn(res.lkp==1 & res.mg'>0.1)) ...
+    %         max(res.mn(res.lkp==2 & res.mg'>0.1))];
+    T3th  = [BGmin ... minimum
+             min(BGcon,BGmin*0.1+0.9*T3th3(1)) ... cat_stat_nanmean background (MT contrast with strong background noise)
+             T3th3 ... csf gm wm 
+             max(T3th3) + abs(diff(T3th3([1,numel(T3th3)])/2)) ... higher
+             max(T3th3(end) + abs(diff(T3th3([1,numel(T3th3)])/2)) , ... maximum
+              max(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:))))) ];
+    T3thx = [0,0.05,1:5];
+    Ysrcr = round(Ysrc*10^5)/10^5; 
+    warning('cat_main:badTissueContrast',...
       sprintf([...
         'Bad tissue contrast (BG=%0.2f, CSF=%0.2f, GM=%0.2f, WM=%0.2f): \n' ...
         '  This can be the result of (i) an improper SPM segmentation caused by \n' ...
