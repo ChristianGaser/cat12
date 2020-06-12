@@ -36,7 +36,7 @@ stime2 = cat_io_cmd('  Write Segmentation','g5','',job.extopts.verb-1);
 
 %% CAT vs. SPMpp Pipeline
 if ~isfield(res,'spmpp')
-  %% Update SPM results in case of reduced SPM preprocessing resultion 
+  %% Update SPM results in case of reduced SPM preprocessing resolution 
   %  -------------------------------------------------------------------
   if isfield(res,'redspmres')
     [Ysrc,Ycls,Yy,res] = cat_main_resspmres(Ysrc,Ycls,Yy,res);
