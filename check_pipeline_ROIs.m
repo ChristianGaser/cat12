@@ -33,10 +33,12 @@ for i=1:size(P,1)
   roi_values = roi_values - mean_values;
 
   figure
-  if abs(max(roi_values(:))) < 50
+  if abs(max(roi_values(:))) > 50
+    cat_plot_boxplot(roi_values',struct('names',rev,'violin',0,'showdata',1,'outliers',0));
+  elseif abs(max(roi_values(:))) > 2
     cat_plot_boxplot(roi_values',struct('names',rev,'violin',0,'showdata',1,'outliers',0,'ylim',[-1 1]));
   else
-    cat_plot_boxplot(roi_values',struct('names',rev,'violin',0,'showdata',1,'outliers',0));
+    cat_plot_boxplot(roi_values',struct('names',rev,'violin',0,'showdata',1,'outliers',0,'ylim',[-.2 .2]));
   end
   pos = get(gcf,'Position');
   pos(3:4) = [1000 500];

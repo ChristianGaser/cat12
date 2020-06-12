@@ -1,5 +1,22 @@
 ------------------------------------------------------------------------
-r1650 | gaser | 2020-06-11 12:50:53
+r1651 | gaser | 2020-06-12 14:39:15
+
+Changed paths:
+M       CHANGES.txt
+M       Makefile
+M       cat_main.m
+M       cat_main_gintnorm.m
+M       cat_main_roi.m
+M       cat_run_job.m
+M       check_pipeline_ROIs.m
+
+(1) Changed: Updated criterai fpr getting peaks in cat_main_gintnorm.m to a more
+             conservative value.
+(2) Changed: Changed plotting limits in check_pipeline_ROIs.m.
+(3) Changed: Set calculation of ROI values to native space in cat_main_rois.m
+
+------------------------------------------------------------------------
+r1650 | gaser | 2020-06-11 12:51:31 +0200 (Do, 11 Jun 2020) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +29,7 @@ MM      standalone/cat_standalone_segment_long.txt
 (2) Fixed:   Changed estimation of tissue peaks in cat_main_gintnorm.m that 
              failed if multiple peaks were deviating too much for a single 
              tissue. 
+
 
 ------------------------------------------------------------------------
 r1649 | dahnke | 2020-06-10 21:28:49 +0200 (Mi, 10 Jun 2020) | 8 lines
