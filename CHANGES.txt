@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1651 | gaser | 2020-06-12 14:39:15
+r1652 | gaser | 2020-06-12 15:57:17
+
+Changed paths:
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_long.m
+M       html/cat.html
+
+Changed: Updated help text and CAT12 manual.
+------------------------------------------------------------------------
+r1651 | gaser | 2020-06-12 14:39:55 +0200 (Fr, 12 Jun 2020) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14,6 +25,7 @@ M       check_pipeline_ROIs.m
              conservative value.
 (2) Changed: Changed plotting limits in check_pipeline_ROIs.m.
 (3) Changed: Set calculation of ROI values to native space in cat_main_rois.m
+
 
 ------------------------------------------------------------------------
 r1650 | gaser | 2020-06-11 12:51:31 +0200 (Do, 11 Jun 2020) | 13 lines
