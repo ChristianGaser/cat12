@@ -743,7 +743,6 @@ function varargout = cat_vol_qa(action,varargin)
 
       clear WIs ;
       
-      Ywb = Ywb ./ cat_stat_nanmean(Ywb(Yp0(:)>2));
      
       % tissue segments for contrast estimation etc. 
       CSFth = cat_stat_nanmean(Yc(~isnan(Yc(:)) & Yc(:)~=0)); 

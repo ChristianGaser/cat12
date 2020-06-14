@@ -95,7 +95,7 @@ function cat_run_job(job,tpm,subj)
     if exist(fullfile(pp,['c1' ff(3:end) ee]),'file') && ...
        exist(fullfile(pp,['c2' ff(3:end) ee]),'file') && ...
        exist(fullfile(pp,['c3' ff(3:end) ee]),'file') && ...
-       exist(fullfile(pp,[ff(3:end) '_seg8.mat']),'file');
+       exist(fullfile(pp,[ff(3:end) '_seg8.mat']),'file')
        
         job.data{subj}          = fullfile(pp,[ff ee]); 
         job.channel.vols{subj}  = fullfile(pp,[ff ee]); 
@@ -106,7 +106,9 @@ function cat_run_job(job,tpm,subj)
           images = char(images,job.channel(n).vols{subj});
         end
 
+        [cv,cr]      = cat_version;
         obj.image    = spm_vol(images);
+        obj.image.descrip = sprintf('%sR%s < %s',cv,cr,obj.image.descrip); % add CAT version 
         obj.fwhm     = job.opts.fwhm;
         obj.biasreg  = cat(1,job.opts.biasreg);
         obj.biasfwhm = cat(1,job.opts.biasfwhm);
@@ -115,10 +117,10 @@ function cat_run_job(job,tpm,subj)
         obj.lkp      = [];
         spm_check_orientations(obj.image);
         
-        if all(isfinite(cat(1,job.tissue.ngaus))),
-            for k=1:numel(job.tissue),
+        if all(isfinite(cat(1,job.tissue.ngaus)))
+            for k=1:numel(job.tissue)
                 obj.lkp = [obj.lkp ones(1,job.tissue(k).ngaus)*k];
-            end;
+            end
         end
         
         obj.reg      = job.opts.warpreg;
@@ -580,7 +582,7 @@ function cat_run_job(job,tpm,subj)
           mat      = obj.image0.mat \ obj.image.mat;
           Ylesion  = smooth3(Ylesion); 
           Ylesionr = zeros(obj.image.dim,'single'); 
-          for i=1:obj.image.dim(3),
+          for i=1:obj.image.dim(3)
             Ylesionr(:,:,i) = single(spm_slice_vol(Ylesion,mat*spm_matrix([0 0 i]),obj.image.dim(1:2),[1,NaN]));
           end
           Ylesion = Ylesionr>0.5; clear Ylesionr;
@@ -609,7 +611,6 @@ function cat_run_job(job,tpm,subj)
               Ymc = Ym * abs(diff([bth,WMth])) + bth; 
               clear bth
             end
-            clear Ysrc; 
             
             % set variable and write image
             obj.image.dat(:,:,:)         = Ymc;  
@@ -619,12 +620,21 @@ function cat_run_job(job,tpm,subj)
             obj.image.dt    = [spm_type('FLOAT32') spm_platform('bigend')];
             obj.image.pinfo = repmat([1;0],1,size(Ymc,3));
 
-            % mask the background
+            % mask the eroded background
+            % RD202006: masking of distant background
+            % This have strong effects for some images but I found no good 
+            % explanation how to use the mask. However, it seams that it is
+            % useful to mask unclear and/or bad background voxels but not 
+            % all of the. So we use the eroded background segment mask and 
+            % remove also regions with 0 and no gradient that are often the
+            % result of defacing, skull-stripping and reslicing.
             if exist('Ybg','var')
+              Ymsk          = cat_vol_morph( ~Ybg ,'dd',15,vx_vol) & ... % remove voxels far from head
+                              ~( cat_vol_grad( Ysrc , vx_vol)==0  &  Ysrc==0 ); % remove voxel that are 0 and have no gradient
               obj.msk       = VF; 
               obj.msk.pinfo = repmat([255;0],1,size(Ybg,3));
               obj.msk.dt    = [spm_type('uint8') spm_platform('bigend')];
-              obj.msk.dat   = uint8(~Ybg); 
+              obj.msk.dat   = uint8( Ymsk );  % RD202006 background corona to have save background values
               obj.msk       = spm_smoothto8bit(obj.msk,0.1); 
             end            
             clear Ysrc; 
@@ -665,7 +675,7 @@ function cat_run_job(job,tpm,subj)
           end
           if 0
             %% visual control for development and debugging
-            VFa = VF; VFa.mat = Affine * VF.mat; %Fa.mat = res0(2).Affine * VF.mat;
+            VFa = VF; VFa.mat = Affine3 * VF.mat; %Fa.mat = res0(2).Affine * VF.mat;
             if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
             [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1));  
             %[Vmsk,Yb] = cat_vol_imcalc([VFa;obj.tpm.V(1:3)],Pbt,'i2 + i3 + i4',struct('interp',3,'verb',0));  
@@ -738,6 +748,8 @@ function cat_run_job(job,tpm,subj)
             res = cat_spm_preproc8(obj);
             warning on; 
           else
+            % Use a low resolution version to speed up preprocessing.
+            % RD202006: rarely used
             image1 = obj.image; 
             [obj.image,redspmres]  = cat_vol_resize(obj.image,'interpv',1);
             res = cat_spm_preproc8(obj);
@@ -749,17 +761,31 @@ function cat_run_job(job,tpm,subj)
           if ppe.affreg.skullstripped, res.mn(end) = 0; end 
 
         catch
-          tmp = obj.image.dat; 
-          if exist('Ybi','var')
-            obj.image.dat = obj.image.dat .* (cat_vbdist(single(Ybi>0.5))<10);
-          else
-            VFa = VF; VFa.mat = Affine * VF.mat; %Fa.mat = res0(2).Affine * VF.mat;
-            if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
-            [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1));  
-            ds('d2sm','',1,Ym,Ym.*(Yb>0.5),round(size(Yb,3)*0.6))
-            obj.image.dat = obj.image.dat .* (cat_vbdist(single(Yb>0.5))<10);
-          end
+          stime = cat_io_cmd('SPM preprocessing 1 (estimate 3):','','',job.extopts.verb-1,stime);
           
+          % save the masked default image for the error report
+          tmp = obj.image.dat; 
+          tmp(obj.msk.dat<1) = NaN;           
+          
+          % Ignore larger parts of the image that a far from the brainmask. 
+          % RD202006: masking of distant non-brain voxels 
+          % Because the masking (obj.msk) was a bit unclear I previously
+          % set voxel 10 mm outside the brain mask to zero. However, I now 
+          % use the msk field and also increase the radius to 20 mm to have
+          more skull.
+          if ~exist('Ybi','var') && exist(Pb,'file')
+            % If there is no mask yet then load a affine registered brain mask 
+            % version of it. 
+            VFa = VF; VFa.mat = Affine * VF.mat; 
+            if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
+            [Vmsk,Ybi] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1));  
+            % ds('d2sm','',1,Ym,Ym.*(Ybi>0.5),round(size(Ybi,3)*0.6))
+            obj.msk = cat_vbdist(single(Ybi>0.5),true(size(Ybi)),vx_vol)<20;
+          end
+          obj.msk.dat = cat_vbdist(single(Ybi>0.5),true(size(Ybi)),vx_vol)<20;
+          
+          
+          % in some cases lower! accuracy worked better - I don't know why
           suc = 0;
           while obj.tol<1
             obj.tol = obj.tol * 10;
@@ -774,19 +800,48 @@ function cat_run_job(job,tpm,subj)
             delete(fullfile(pp,[ff,ee]));
           end
           
+          
           if suc==0
-            %%
+            %% If it was not possible to run SPM then print an error message. 
+            %  RD202006: Alternatively we could try the kmeans here but I  
+            %  think it is better to give an error here and use manual
+            %  selection by the job.extopts.init
+
             mati = spm_imatrix(V.mat);
-            
-            error('cat_run_job:spm_preproc8',sprintf([
-              'Error in spm_preproc8. Check image and orientation. \n'...
+            emsg = sprintf([
+              'Error in spm_preproc8 that possibly happens due to bad orientation or untypical contrast. \n' ...
+              '%s and/or apply %s with intensity normalization.  \n' ...
+              'If the image is a normal T1 image with good contrast and correct orientation that you \n' ...
+              'can share with us than please contact us (%s). \n' ...
               '  Volume size (x,y,z):   %8.0f %8.0f %8.0f \n' ...
               '  Origin (x,y,z):        %8.1f %8.1f %8.1f \n' ...
               '  Rotation (deg):        %8.1f %8.1f %8.1f \n' ...
               '  Resolution:            %8.1f %8.1f %8.1f \n'],...
-              V.dim,[mati(1:3),mati(4:6),mati(7:9),]));
+              spm_file('Check image orientation/contrast','link',['spm_image(''Display'', ''' ofname ''')']), ...
+              spm_file('head trimming','link','spm_jobman(''interactive'','''',''spm.tools.cat.tools.datatrimming'');'), ...
+              spm_file('vbmweb@gmail.com','link','web(''mailto:vbmweb@gmail.com'');'), ...
+              V.dim,[mati(1:3),mati(4:6),mati(7:9)]); 
+            
+        %   fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(Pgmv{gmvi},'link','cat_surf_display(''%s'')'));  
+            
+            if exist('Ybi','var') && exist('Ybg','var')
+              % estimate some thresholds with kmeans3D in specific ROIs
+              try %#ok<TRYNC> % this has to be save although a variable is miss in some cases 
+                Tcgw = kmeans3D(tmp(Ybi(:)>0.5),5); Tcgw([2,4]) = [];
+                Thd  = kmeans3D(tmp(~Ybg(:) & Ybi(:)<0.5),2);
+                Tbg  = kmeans3D(tmp(obj.msk.dat(:)>0 & Ybi(:)<0.5),1);
+                Tth  = [Tcgw Thd Tbg]; 
+                emsg = [emsg, sprintf([
+                  '  Brain tissues:         %8.2f %8.2f %8.2f \n' ...
+                  '  Head tissues / BG:     %8.2f %8.2f %8.2f \n'], Tth)];
+                cat_err_res.res.Tth = Tth;   
+              end 
+            end
+          
+            error('cat_run_job:spm_preproc8',emsg);
           end
           
+          % udpate the last image version
           res.image.dat = tmp;
           obj.image.dat = tmp; 
           clear tmp;
@@ -794,8 +849,15 @@ function cat_run_job(job,tpm,subj)
         warning on 
         fprintf('%5.0fs\n',etime(clock,stime));   
 
+        
+        
+        
         %% check contrast (and convergence)
-        %min(1,max(0,1 - sum( shiftdim(res.vr) ./ res.mn' .* res.mg ./ mean(res.mn(res.lkp(2))) ) ));  
+        %  RD202006: SPM peak averaging 
+        %  To get one single tissue value the following definition is correct 
+        %  in principle but outliers can have strong effect on mean estimation: 
+        %    clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
+        %  So we have to be careful by using these values.
           
         clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
         Tgw = [cat_stat_nanmean(res.mn(res.lkp==1)) cat_stat_nanmean(res.mn(res.lkp==2))]; 
@@ -813,7 +875,9 @@ function cat_run_job(job,tpm,subj)
         cat_err_res.res = res;   
         
         % inactive preprocessing of inverse images (PD/T2) 
-        if job.extopts.INV==0 && any(diff(Tth(1:3))<=0)
+        % RD202006: Throw error?
+        % I turned this error here off to use the later check in cat_main_gintnorm.
+        if 0 %job.extopts.INV==0 && any(diff(Tth(1:3))<=0)
           error('cat_run_job:BadImageProperties', ...
           ['CAT12 is designed to work only on highres T1 images. \n' ...
            'T2/PD preprocessing can be forced on your own risk by setting \n' ...
@@ -822,12 +886,12 @@ function cat_run_job(job,tpm,subj)
            'because of alignment problems (please check image orientation).']);    
         end
         
-        % RD202005:  I am not sure if it is useful to just print a warning or a full error.  However, it will take some time to fix this issue.  
+        % RD202006: Throw warning/error?
+        % Due to inaccuracies of the clsint function it is better to print 
+        % this as intense warning.
         if any( Tth(2:3)<0 )
-          %error('cat_run_job:NegativeTissueValues', ...
-          %%
           cat_io_cprintf('err',sprintf( ...
-           ['CAT12 was developed for images with positve values and negative values can lead to \n', ...
+           ['CAT12 was developed for images with positive values and negative values can lead to \n', ...
             'preprocessing problems. The average intensities of CSF/GM/WM are %0.4f/%0.4f/%0.4f. \n', ...
             'If you observe problems, you can use the %s to scale your data.\n'], Tth(1:3), ...
             spm_file('Datatype-batch','link','spm_jobman(''interactive'','''',''spm.tools.cat.tools.spmtype'');')));
@@ -848,6 +912,14 @@ function cat_run_job(job,tpm,subj)
     res.tpm    = obj.tpm.V;
     res.stime  = stime0;
     res.catlog = catlog; 
+    if exist('Ymsk','var')
+      res.bge = ~Ymsk; 
+    elseif exist('Ybg','var')
+      % If the background was estimated we want to save it to improve the 
+      % SPM segmentation in regions outside the TPM volume. 
+      % RD202006: set value arbitrary to 10 mm 
+      res.bge = cat_vol_morph(Ybg,'de',10,vx_vol); 
+    end
     res.image0 = spm_vol(job.channel(1).vols0{subj}); 
     if exist('Ylesion','var'), res.Ylesion = Ylesion; else res.Ylesion = false(size(res.image.dim)); end; clear Ylesion;
     if exist('redspmres','var'); res.redspmres = redspmres; res.image1 = image1; end

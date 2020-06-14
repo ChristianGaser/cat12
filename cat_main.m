@@ -68,6 +68,8 @@ if ~isfield(res,'spmpp')
   %  starting point of the refined CAT preprocessing.
   %  -------------------------------------------------------------------
   [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,tpm,job,res,stime,stime2);
+  clear P; 
+
   
   
   
@@ -634,7 +636,26 @@ Ycls = cat_main_updateWMHs(Ym,Ycls,Yy,tpm,job,res,trans);
 %  ---------------------------------------------------------------------
 Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
 cat_warnings = cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans,cat_warnings);
-if debug, clear Yp0; end
+if 0 
+  %% just for tests
+  res2 = res; 
+  job2 = job; 
+  job2.output.GM.warped     = 1; 
+  job2.output.GM.mod        = 3; 
+  job2.output.label.warped  = 1; 
+  job2.output.bias.warped   = 1; 
+  % write push for comparision 
+  [pppush,ffpush,eepush]    = spm_fileparts(res2.image0.fname);
+  res2.image0.fname         = fullfile(pppush,sprintf('%s%s%1.2f%s',ffpush,'-push',job.extopts.vox,eepush)); 
+  trans.warped.push         = 1; 
+  trans.warped.verb         = 1; 
+  cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job2,res2,trans,cat_warnings);
+  % write pull for comparision 
+  res2.image0.fname          = fullfile(pppush,sprintf('%s%s%1.2f%s',ffpush,'-pull',job.extopts.vox,eepush)); 
+  trans.warped.push         = 0; 
+  cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job2,res2,trans,cat_warnings);
+end
+if ~debug, clear Yp0; end
 
 
 %% surface creation and thickness estimation
