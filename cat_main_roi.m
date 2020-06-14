@@ -14,6 +14,31 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
 %  in atlas space, that most relevant because some atlas maps use now
 %  higher resolutions to describe fine structures or have a smaller 
 %  boundary box. 
+%
+%  cat_main_roi(job,trans,Ycls,Yp0,opt) 
+%   
+%  job        .. cat preprocessing job
+%   .extopts 
+%    .verb    .. display progress
+%    .atlas   ..
+%   .output
+%    .atlases .. setting what atlas has to be used
+%
+%  trans      .. cat preprocessing registration structure
+%    ...
+%
+%  Ycls       .. tissue segmentation as cell structure 
+%  Yp0        .. label map with CSF = 1, GM = 2, and WM = 3
+%  opt        .. paramter structure
+%   .type     .. mapping type 
+%                  1 - native space (default)
+%                  2 - atlas space (push - faster but less acurate)
+%                  3 - atlas space (inv+pull - slower but more accurate)
+%   .write    .. write debugging output 
+%                  0 - no debugging (default)
+%                  1 - display some results
+%                  2 - display results and write some maps  
+%
 % ______________________________________________________________________
 %
 %   Robert Dahnke (robert.dahnke@uni-jena.de)
@@ -23,12 +48,9 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
 % ______________________________________________________________________
 % $Id$
   
-  dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
-
   if ~exist('opt','var'), opt = struct(); end
-  def.type   = 2; % 1 - atlas space, 2 - native space 
-  def.write  = 0; % 1 - display some results, 2 - display results and write some maps  
-  def.interp = 0; % use the interpolation that is also used in cat_io_writenii 
+  def.type   = 1;     % 1 - native space, 2 - atlas space push, 3 - atlas space pull
+  def.write  = 0;     % 1 - display some results, 2 - display results and write some maps  
   opt = cat_io_checkinopt(opt,def); 
   
   
@@ -71,7 +93,7 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
     % deactivate output
     FN = job.output.atlas; 
     for ai = 1:numel(FN)
-      try, job.output.atlas.(FN{ai}) = 0; end
+      job.output.atlas.(FN{ai}) = 0;
     end
   else
     % get atlas resolution 
@@ -82,8 +104,8 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
     FA = FA(VAi,:); VA = VA(VAi,:); VAvx_vol = VAvx_vol(VAi,:); 
   end
   
-  if opt.type == 2 
-    wYp0  = Yp0;
+  if opt.type == 1 % native space
+    wYp0  = Yp0; wYcls = cell(1:numel(Ycls)); 
     for i = 1:numel(Ycls), wYcls{i} = single(Ycls{i})/255; end
     vx_volw = vx_vol; 
   end
@@ -98,38 +120,37 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
 
 
     % resample data in atlas resolution for the first time or if the atlas resolution changes
-    if opt.interp
-      transw = trans.warped;                  % dartel/shooting deformation data
-    else
-      transw = rmfield(trans.warped,'yx');    % interpolated dartel/shooting deformation data
-    end
+    transw      = trans.warped;  
     transw.odim = VA(ai).dim;                 % size of the boundary box of the atlas we have to render the tissues
     transw.M1   = VA(ai).mat;                 % boundary box position 
     % adapt y for the atlas resolution (for loop) and for the new position (matit) 
     mati        = spm_imatrix( trans.affine.mat - VA(ai).mat) ; 
     vdim        = spm_imatrix( VA(ai).mat ); % trans.affine.mat ); 
     matit       = mati(1:3) ./ vdim(7:9); 
-    if opt.interp
-% ########
-% There is still a problem of the modulated values in the writing part.  
-% ########
-      interpol  = round( mean( size(transw.yx(:,:,:,1)) ./ size(Yp0)));     
-      amat      = trans.affine.mat; amat(1:3,1:3) =  amat(1:3,1:3) / interpol; 
-      mati      = spm_imatrix( amat - VA(ai).mat) ; 
-      matit     = mati(1:3) ./ (vdim(7:9) ); 
-      for i=1:3, transw.yx(:,:,:,i) = transw.yx(:,:,:,i) .* job.extopts.vox ./ VAvx_vol(ai,i);  end
-      transw.ViVt = prod(vx_vol / interpol) ./ job.extopts.vox^3;
-      transw.yx   = cat(4,transw.yx(:,:,:,1) + matit(1), transw.yx(:,:,:,2) + matit(2), transw.yx(:,:,:,3) + matit(3) );
-    else
-      for i=1:3, transw.y(:,:,:,i) = transw.y(:,:,:,i) .* job.extopts.vox ./ VAvx_vol(ai,i);  end
-      transw.y    = cat(4,transw.y(:,:,:,1) + matit(1), transw.y(:,:,:,2) + matit(2), transw.y(:,:,:,3) + matit(3) );
-      transw.ViVt = prod(vx_vol) ./ job.extopts.vox^3;
+    for i=1:3, transw.y(:,:,:,i) = transw.y(:,:,:,i) .* job.extopts.vox ./ VAvx_vol(ai,i);  end
+    transw.y    = cat(4,transw.y(:,:,:,1) + matit(1), transw.y(:,:,:,2) + matit(2), transw.y(:,:,:,3) + matit(3) );
+    transw.ViVt = prod(vx_vol) ./ job.extopts.vox^3;
+    
+    if opt.type == 3
+      % Modulation using spm_diffeo and push introduces aliasing artefacts,
+      % thus we use the def2det function of the inverted deformations to obtain the old and 
+      % in my view a more appropriate jacobian determinant 
+      % The 2nd reason to use the old modulation is compatibility with cat_vol_defs.m
+      transw.yi = spm_diffeo('invdef' , transw.y, VA(ai).dim, eye(4),eye(4)); 
+      transw.w  = max( eps , spm_diffeo('def2det', transw.yi)  * transw.ViVt ); 
+      % avoid boundary effects that are not good for the global measurements 
+      transw.w(:,:,[1 end]) = NaN; transw.w(:,[1 end],:) = NaN; transw.w([1 end],:,:) = NaN;
+      % filter the resampled data to reduce interpolation artefacts 
+      transw.fs = transw.fs .* job.extopts.vox ./ VAvx_vol(ai,i);
+      spm_smooth(transw.w,transw.w,transw.fs); % filter determinant to reduce interpolation artefacts 
+      clear maxw;
     end
+    
     % map segments for new atlas space
-    if opt.type == 1 % atlas space
-      wYp0  = cat_vol_roi_map2atlas(Yp0 ,transw,0);
-      wYcls = cat_vol_roi_map2atlas(Ycls,transw,1);
-      wYa   = cat_vol_roi_load_atlas(FA{ai,1});
+    if opt.type == 2 || opt.type == 3 % atlas space
+      wYp0    = cat_vol_roi_map2atlas(Yp0 ,transw,0);
+      wYcls   = cat_vol_roi_map2atlas(Ycls,transw,1);
+      wYa     = cat_vol_roi_load_atlas(FA{ai,1});
       vx_volw = repmat(job.extopts.vox,1,3);
     else
       wYa = cat_vol_roi_load_atlas(FA{ai,1}, transw);
@@ -158,7 +179,7 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
 
     
     % display and debugging
-    if ( debug || opt.write ) 
+    if opt.write 
       %% this does not work in case of trimmed atlases set do not include the full brain 
       fprintf('\n%8s %8s %8s | %8s %8s %8s %8s %8s %8s\n','GM','WM','CSF','R1','R2','R3','R4','R5','R6') %* prod(vx_vol) 
       fprintf('%8.2f %8.2f %8.2f | %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f\n', ...
@@ -167,30 +188,33 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
         [cat_stat_nansum(Ycls{1}(:))  ,cat_stat_nansum(Ycls{2}(:)) ,cat_stat_nansum(Ycls{3}(:)) ] * prod(vx_vol)  / 1000 / 255); 
       fprintf('%8.2f %8.2f %8.2f\n', ...
         ([cat_stat_nansum(wYcls{1}(:)),cat_stat_nansum(wYcls{2}(:)),cat_stat_nansum(wYcls{3}(:))] * prod(vx_volw) / 1000) ./ ...
-                                     ([cat_stat_nansum(Ycls{1}(:)) ,cat_stat_nansum(Ycls{2}(:)) ,cat_stat_nansum(Ycls{3}(:)) ] * prod(vx_vol) / 1000 / 255)); 
+                                     ([cat_stat_nansum(Ycls{1}(:)) ,cat_stat_nansum(Ycls{2}(:)) ,cat_stat_nansum(Ycls{3}(:)) ] * prod(vx_vol) / 1000 / 255 * 100)); 
       fprintf('\n');
       
       if opt.write>1 
         %% save mapped tissue map
-        if opt.type == 1
-          patlas = atlas;
-          wVai = spm_vol(FA{ai,1});   % atlas volume information 
+        if opt.type == 2 
+          patlas = '-pushed';
+          wVai   = spm_vol(FA{ai,1});   % atlas volume information 
+        elseif opt.type == 3
+          patlas = '-pulled';
+          wVai   = spm_vol(FA{ai,1});   % atlas volume information 
         else
-          patlas = ['s' atlas]; 
-          wVai   =  spm_vol(trans.native.Vi.fname);     % internal volume information
+          patlas = '-native'; 
+          wVai   = spm_vol(trans.native.Vi.fname);     % internal volume information
         end
-        wVai.fname = fullfile(pth,labelfolder,[nam '_' patlas '.nii']); 
-        wVai.dt(1) = 2;
+        wVai.fname    = fullfile(pth,labelfolder,[nam '_' atlas patlas '.nii']); 
+        wVai.dt(1)    = 2;
         wVai.pinfo(1) = 1;
         spm_write_vol(wVai,wYa);
 
-        wVai.fname = fullfile(pth,labelfolder,[nam '_' patlas '_p0.nii']); 
-        wVai.dt(1) = 2;
+        wVai.fname    = fullfile(pth,labelfolder,[nam '_' atlas '_p0' patlas '.nii']); 
+        wVai.dt(1)    = 2;
         wVai.pinfo(1) = 0.02;
         spm_write_vol(wVai,wYp0);
 
-        wVai.fname = fullfile(pth,labelfolder,[nam '_' patlas '_p1.nii']); 
-        wVai.dt(1) = 4; 
+        wVai.fname    = fullfile(pth,labelfolder,[nam '_' atlas '_p1' patlas '.nii']); 
+        wVai.dt(1)    = 4; 
         wVai.pinfo(1) = 0.001; %modulated!
         spm_write_vol(wVai,wYcls{1});
       end
@@ -262,44 +286,36 @@ function wYv = cat_vol_roi_map2atlas(Yv,warped,mod)
 % atlas a high resolution.  A pull operation of the inverse deformation or  
 % an interpolation of the deformation would help to improve it.
 % ----------------------------------------------------------------------
-
+  
+  if ~exist('usepull','var'), usepull = isfield(warped,'yi'); end
+  if ~exist('mod'    ,'var'); mod     = 0; end
+   
   % map image to atlas space
   if iscell(Yv) 
     % tissue case with uint8 coding
     wYv = cell(1,numel(Yv));
     for i=1:numel(Yv)
-      if isfield(warped,'yx')
-        interpol = log2(round( mean( size(warped.yx(:,:,:,1)) ./ size(Yv{i})))); 
-        if interpol
-          if all(Yv{i}*1000 == round(Yv{i}*1000)) % label maps
-            Yv{i} = interp3(Yv{i},interpol,'nearest');
-          else
-            Yv{i} = interp3(single(Yv{i}),interpol,'linear');
-          end
-        end
-        [wYv{i},w] = spm_diffeo('push', single(Yv{i})/255, warped.yx, warped.odim(1:3) );
+      if usepull
+        wYv{i} = spm_diffeo('pull', single(Yv{i})/255, warped.yi ); % normal
+        spm_smooth(wYv{i},wYv{i},warped.fs); 
+        if mod,  wYv{i} = wYv{i} .* warped.w; end
       else
         [wYv{i},w] = spm_diffeo('push', single(Yv{i})/255, warped.y, warped.odim(1:3) );
+        wYv{i} = wYv{i} * warped.ViVt; 
+        if ~mod,  wYv{i} = wYv{i} ./ eps(eps, w); end
       end
-      wYv{i} = wYv{i} * warped.ViVt;
-      if ~mod,  wYv{i} = wYv{i} ./ max(eps,w); end
     end
   else
-    if isfield(warped,'yx')
-      interpol = log2(round( mean( size(warped.yx(:,:,:,1)) ./ size(Yv)))); 
-      if interpol
-        if all(Yv*1000 == round(Yv*1000)) % label maps
-          Yv = interp3(Yv,interpol,'nearest');
-        else
-          Yv = interp3(Yv,interpol,'linear'); 
-        end
-      end
-      [wYv,w]  = spm_diffeo('push', Yv, warped.yx, warped.odim(1:3) );
+    if usepull == 1
+      wYv = spm_diffeo('pull', Yv, warped.yi ); % cirular ? 
+      spm_smooth(wYv,wYv,warped.fs); 
+      if mod,  wYv = wYv .* warped.w; end
     else
       [wYv,w]  = spm_diffeo('push', Yv, warped.y , warped.odim(1:3) );
+      % divide by jacdet to get unmodulated data
+      wYv = wYv * warped.ViVt; 
+      if ~mod, wYv = wYv ./ max(eps, w); end
     end
-    % divide by jacdet to get unmodulated data
-    wYv = wYv ./ max(eps,w); 
   end
 return
 %=======================================================================

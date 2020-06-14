@@ -55,9 +55,15 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
   end
   clear YbA;
   
+ 
+  % RD 202006: Correct background (from cat_run_job)
+  if isfield(res,'bge')
+    P(:,:,:,6) = max( cat_vol_ctype( res.bge * 255 ) , P(:,:,:,6) ); 
+    for i=1:5, P(:,:,:,i) = P(:,:,:,i) .* cat_vol_ctype(1 - res.bge); end
+  end
   
   % Cleanup for high resolution data
-  % Alghough the old cleanup is very slow for high resolution data, the   
+  % Although the old cleanup is very slow for high resolution data, the   
   % reduction of image resolution removes spatial segmentation information. 
   if job.opts.redspmres==0 % already done in case of redspmres
     if max(vx_vol)<1.5 && mean(vx_vol)<1.3
@@ -69,7 +75,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
   end
 
   
-  % garantee probability 
+  % guarantee probability 
   sP = (sum(single(P),4)+eps)/255;
   for k1=1:size(P,4), P(:,:,:,k1) = cat_vol_ctype(single(P(:,:,:,k1))./sP); end
   clear sP;
@@ -104,21 +110,23 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
     if size(P,4)==6
         error('CAT:cat_main:SPMpreprocessing:emptySegmentation', ...
          sprintf(['Empty Segmentation: \n ' ...
-          'Possibly the affine registration failed. Please check image orientation.\n' ...
+          'Possibly the affine registration failed. %s.\n' ...
           ' Tissue class:           %10s%10s%10s%10s%10s%10s\n' ...
           ' Rel. to image volume:   %10.2f%10.2f%10.2f%10.2f%10.2f%10.2f\n' ...
           ' Rel. to brain volume:   %10.2f%10.2f%10.2f%10.2f%10.2f%10.2f\n' ...
           ' Tissue intensity:       %10.2f%10.2f%10.2f%10.2f%10.2f%10.2f'],...
+          spm_file('Please check image orientation and quality','link',['spm_image(''Display'', ''' res.image0.fname ''')']), ...
           'BG','CSF','GM','WM','HDH','HDL', ...
           [ clsvol([6 3 1 2 4 5])/cat_stat_nansum(clsvol)*100, clsvol([6 3 1 2 4 5])/cat_stat_nansum(clsvol(1:3))*100, BGth,T3th,HDHth,HDLth]));  %#ok<SPERR>
     elseif size(P,4)==4 % skull-stripped
         error('CAT:cat_main:SPMpreprocessing:emptySegmentation', ...
          sprintf(['Empty Segmentation: \n ' ...
-          'Possibly the affine registration failed. Please check image orientation.\n' ...
+          'Possibly the affine registration failed. %s.\n' ...
           ' Tissue class:           %10s%10s%10s%10s\n' ...
           ' Rel. to image volume:   %10.2f%10.2f%10.2f%10.2f\n' ...
           ' Rel. to brain volume:   %10.2f%10.2f%10.2f%10.2f\n' ...
           ' Tissue intensity:       %10.2f%10.2f%10.2f%10.2f'],...
+          spm_file('Please check image orientation and quality','link',['spm_image(''Display'', ''' res.image0.fname ''')']), ...
           'BG','CSF','GM','WM', ...
           [ clsvol([4 3 1 2])/cat_stat_nansum(clsvol)*100, clsvol([4 3 1 2])/cat_stat_nansum(clsvol(1:3))*100, BGth,T3th]));  %#ok<SPERR>
     else
@@ -182,7 +190,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
   
   
   
-  %% save brainmask using SPM12 segmentations for later use
+  %% save brain mask using SPM12 segmentations for later use
   if ~exist('Ym0','var'),
     Ym0 = single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255;
   end
@@ -232,11 +240,11 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
 
     
     %% head to WM 
-    % Undercorrection of strong inhomogeneities in high field scans 
-    % (>1.5T) can cause missalignments of the template and therefore 
+    % Under-correction of strong inhomogeneities in high field scans 
+    % (>1.5T) can cause miss-alignments of the template and therefore 
     % miss classifications of the tissues that finally avoid further 
     % corrections in by LAS. 
-    % Typically the alginment failed in this cases because the high 
+    % Typically the alignment failed in this cases because the high 
     % intensities next to the head that were counted as head and not
     % corrected by SPM.
     % e.g. HR075, Magdeburg7T, SRS_SRS_Jena_DaRo81_T1_20150320-191509_MPR-08mm-G2-bw330-nbc.nii, ...
@@ -269,8 +277,8 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
     clear Ywm Ygm;
 
     
-    %% remove brain tissues outside the brainmask ...
-    %  tissues > skull (within the brainmask)
+    %% remove brain tissues outside the brain mask ...
+    %  tissues > skull (within the brain mask)
     Yhdc = uint8(smooth3( Ysrc/T3th(3).*(Ybb>cat_vol_ctype(0.2*255)) - Yp0 )>0.5); 
     sumP = sum(P(:,:,:,1:3),4); 
     P(:,:,:,4)   =  cat_vol_ctype( single(P(:,:,:,4)) + sumP .* ((Ybb<=cat_vol_ctype(0.05*255)) | Yhdc ) .* (Ysrc<T3th(2)));

@@ -103,6 +103,7 @@ roi2surf                         = cat_roi_roi2surf_GUI(expert);
 surfstat                         = cat_surf_stat_GUI; 
 surfcon                          = cat_surf_spm_cfg_con;
 surfres                          = cat_surf_spm_cfg_results; 
+%vx2surf                          = cat_surf_vx2surf_GUI(expert,nproc,lazy);
 
 
 %% Toolset
@@ -187,6 +188,48 @@ surfstat.vout   = @vout_cat_stat_spm;
 surfstat.help   = {
   ''};
 
+function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
+  % surf
+  data_surf_cov         = cfg_files;
+  data_surf_cov.tag     = 'surf';
+  data_surf_cov.name    = 'Left central surfaces';
+  data_surf_cov.filter  = 'gifti';
+  data_surf_cov.ufilter = 'central';
+  data_surf_cov.num     = [1 Inf];
+  data_surf_cov.help    = {'Select central surfaces.'};
+  
+  % msk
+  
+  % int
+  
+  % name      
+  
+  % dweighting [high low]
+  
+  % mapping
+  
+  %
+
+ 
+  % measure {vol, int, dist, idist)
+  
+  % opts
+  opts          = cfg_exbranch;
+  opts.tag      = 'opts';
+  opts.name     = 'Options';
+  opts.val      = {verb};
+  opts.help     = { };
+  
+  % main
+  vx2surf       = cfg_exbranch;
+  vx2surf.tag   = 'vx2surf';
+  vx2surf.name  = 'Map voxel-data to the surface';
+  vx2surf.val   = {surf,measure,opts};
+  vx2surf.prog  = @cat_surf_vx2surf;
+  vx2surf.vout  = @vout_surf_vx2surf;
+  vx2surf.help  = {}; 
+
+return
 function surf2roi = cat_surf_surf2roi_GUI(expert,nproc)
 %% surface to ROI (in template space)
 %  ---------------------------------------------------------------------

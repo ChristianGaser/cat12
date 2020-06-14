@@ -1,5 +1,37 @@
 ------------------------------------------------------------------------
-r1653 | gaser | 2020-06-12 17:01:28
+r1654 | dahnke | 2020-06-14 20:29:03
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_io_writenii.m
+M       cat_main.m
+M       cat_main_gintnorm.m
+M       cat_main_registration.m
+M       cat_main_roi.m
+M       cat_main_updateSPM.m
+M       cat_main_write.m
+M       cat_run_job.m
+M       cat_vol_qa.m
+
+(1) Changed:   Increase ROI for SPM US estimation in cat_run_job that 
+               use the inverse of a 15 mm eroded background segment. 
+(2) Changed:   Use the 15 mm eroded background segment from cat_run_job
+               in cat_main_updateSPM to reduce problems in regions 
+               without TPM definition.
+(3) Changed:   Updated handling of SPM preprocessing problems with 
+               more detailed and interactive error message in cat_run_job
+               and cat_main_gintnorm.                
+(4) Fixed:     Corrected bug in ICR estimation that applied signal 
+               intensity correction twice and result in to good values. 
+(5) Changed: 	 Added CAT version and revision to description of 
+               processed images.         
+(6) Changed:   Removed old interpolation of the deformation that was used
+               to improve the push operation in cat_main_registration, 
+               cat_main_roi and cat_io_writenii.
+               
+------------------------------------------------------------------------
+r1653 | gaser | 2020-06-12 17:02:05 +0200 (Fr, 12 Jun 2020) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +42,7 @@ M       html/cat.html
 
 (1) Changed: Deselected normalization option for extracting surface parameters.
 (2) Changed: Updated batch_surface_pipeline.m
+
 ------------------------------------------------------------------------
 r1652 | gaser | 2020-06-12 15:57:55 +0200 (Fr, 12 Jun 2020) | 9 lines
 
