@@ -519,19 +519,20 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
           end
           clear t1 t2 t3 M; 
 
-          vx_vols  = sqrt(sum(M0(1:3,1:3).^2));  
-          vx_volt  = sqrt(sum(M1(1:3,1:3).^2));  
-          interpol = any(vx_vols>vx_volt) + any(vx_vols/2>vx_volt);
-          if interpol
-            Yx = zeros(min([inf inf inf 3],size(Yyd)*2^interpol - 2^interpol + 1),'single');
-            if interpol
-              for i=1:3, Yx(:,:,:,i) = single(interp3(Yyd(:,:,:,i),interpol,'cubic')); end % linear
-            end
-          else
-            Yx = Yyd;
-          end
-
-          trans.warped = struct('y',Yyd,'yx',Yx,'odim',odim,'M0',M0,'M1',M1,'M2',M1\TAR*M0,'dartel',1);
+          % Modulation using spm_diffeo and push introduces aliasing artefacts,
+          % thus we use the def2det function of the inverted deformations to obtain the old and 
+          % in my view a more appropriate jacobian determinant 
+          % The 2nd reason to use the old modulation is compatibility with cat_vol_defs.m
+          yi2 = spm_diffeo('invdef' , Yyd, odim, eye(4), eye(4)); 
+          w   = max( eps , spm_diffeo('def2det', yi2 ) ); % .* prod( sqrt(sum( M1(1:3,1:3).^2))); 
+          % avoid boundary effects that are not good for the global measurements 
+          w(:,:,[1 end]) = NaN; w(:,[1 end],:) = NaN; w([1 end],:,:) = NaN;
+          % use half registration resolution to define the amout of
+          % smoothing to reduce registration artefacts
+          fs = newres / 2;
+          spm_smooth(w,w,fs);
+          
+          trans.warped = struct('y',Yyd,'yi',yi2,'w',w,'odim',odim,'M0',M0,'M1',M1,'M2',M1\TAR*M0,'dartel',1,'fs',fs);
           clear Yyd; 
 
 
@@ -860,41 +861,25 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
           end
           dt2 = spm_diffeo('def2det',yid); if ~debug, clear yid; end  
           
+          
+          % Modulation using spm_diffeo and push introduces aliasing artefacts,
+          % thus we use the def2det function of the inverted deformations to obtain the old and 
+          % in my view a more appropriate jacobian determinant 
+          % The 2nd reason to use the old modulation is compatibility with cat_vol_defs.m
+          yi2 = spm_diffeo('invdef' , yi, odim, eye(4), eye(4)); 
+          w   = max( eps , spm_diffeo('def2det', yi2 ) ); % .* prod( sqrt(sum( M1(1:3,1:3).^2))); 
+          % avoid boundary effects that are not good for the global measurements 
+          w(:,:,[1 end]) = NaN; w(:,[1 end],:) = NaN; w([1 end],:,:) = NaN;
+          % use half registration resolution to define the amout of
+          % smoothing to reduce registration artefacts
+          fs = newres / 2;
+          spm_smooth(w,w,fs);
 
-          % interpolation for improved output ... need update 2012/12
-          if dreg.fast
-            yx=yi; 
-          else
-            if 1
-              vx_vols  = sqrt(sum(M0(1:3,1:3).^2));  
-              vx_volt  = sqrt(sum(M1(1:3,1:3).^2));  
-              interpol = any(vx_vols>vx_volt) + any(vx_vols/2>vx_volt);
-              if interpol
-                yx = zeros(min([inf inf inf 3],size(yi)*2^interpol - 2^interpol + 1),'single');
-                if interpol
-                  for i=1:3, yx(:,:,:,i) = single(interp3(yi(:,:,:,i),interpol,'cubic')); end % linear
-                end
-                %yx=yx; % * regres/newres;
-              else
-                yx=yi; % * regres/newres;
-              end
-            else
-              % size update y - deformation field
-              yx = zeros([odims 3],'single'); 
-              My = eye(4); My(1:12) = My(1:12) * regres/newres;  Mys{ri}    = eye(4);
-              Mys{ri}(1:12)    = Mys{ri}(1:12) * reg(regstri).opt.resfac(ri)/reg(regstri).opt.resfac(ri-1);
-              for k1=1:3
-                for i=1:odims(ti,3),
-                  yx(:,:,i,k1) = single(spm_slice_vol(yo(:,:,:,k1),My*spm_matrix([0 0 i]),odims(ti,1:2),[1,NaN])) * regres/newres; % adapt for res
-                end
-                yx(~isfinite(yx) | yx<0)=eps; drawnow
-              end
-            end
-          end
+          % yi2 for fast high quality output
           if rigidShooting
-            trans.warped = struct('y',yi,'yx',yx,'odim',odim,'M0',M0,'M1',M1,'M2',M1\R*M0,'dartel',2);
+            trans.warped = struct('y',yi,'yi',yi2,'w',w,'odim',odim,'M0',M0,'M1',M1,'M2',M1\R*M0,'dartel',2,'fs',fs);
           else
-            trans.warped = struct('y',yi,'yx',yx,'odim',odim,'M0',M0,'M1',M1,'M2',M1\res.Affine*M0,'dartel',2);
+            trans.warped = struct('y',yi,'yi',yi2,'w',w,'odim',odim,'M0',M0,'M1',M1,'M2',M1\res.Affine*M0,'dartel',2,'fs',fs);
           end
           if job.output.jacobian.warped, trans.jc = struct('u',u,'odim',odim,'dt2',dt2); end % u ist nicht auf vox angepasst!
 
@@ -906,7 +891,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
 
 
         % Report
-        if (job.extopts.verb>1  && ~dreg.fast) || export
+        if job.extopts.verb>1 || export
 
           %% preparte output directory
           if job.extopts.subfolders, mrifolder = 'mri'; else mrifolder = ''; end
@@ -1019,7 +1004,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
         end
           
           
-        if export && ~dreg.fast
+        if export
           % write output
           stime = cat_io_cmd(sprintf('Write Output with %0.2f mm',job.extopts.vox(voxi)));
 
@@ -1076,7 +1061,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion)
 
           %% deformations y - dartel > subject
           if job.output.warps(1)
-              Yy2       = spm_diffeo('invdef',trans.warped.yx,trans.warped.odim,eye(4),trans.warped.M0);
+              Yy2       = spm_diffeo('invdef',trans.warped.y,trans.warped.odim,eye(4),trans.warped.M0);
               N         = nifti;
               N.dat     = file_array(fullfile(pth,mrifolder,testfolder,['y_', nam, '.nii']),[trans.warped.odim(1:3),1,3],'float32',0,1,0);
               N.mat     = trans.warped.M1;
