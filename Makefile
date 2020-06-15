@@ -17,7 +17,7 @@ STARGET=${STARGET_HOST}:${STARGET_FOLDER}
 
 MATLAB_FILES=Contents.* cat_*.m spm_cat12.m tbx_cfg_cat.m sliderPanel.m slice_overlay.m kmeans3D.m cat_run*
 C_FILES=Amap.[ch] ornlm_float.c sanlm_float.c MrfPrior.c Pve.c Kmeans.c cat_*.c* cat_*.mex* vollib.c genus0.[ch] tricases.h spm_diffeo_old.mex*
-MISC_FILES=CAT12-Manual.pdf CHANGES.txt INSTALL.txt standalone templates_volumes html templates_surfaces templates_surfaces_32k atlases_surfaces atlases_surfaces_32k cat12.* CAT.* distribute_to_server.sh cat_*.sh
+MISC_FILES=CAT12-Manual.pdf CHANGES.txt INSTALL.txt standalone templates_volumes html templates_surfaces templates_surfaces_32k atlases_surfaces atlases_surfaces_32k cat12.* CAT.* distribute_to_server.sh cat_*.sh  cat_long_main*txt
 
 FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
 
@@ -87,12 +87,12 @@ checklist:
 	-@echo    
 	-@echo Checklist for testing CAT12 in order to release
 	-@echo -----------------------------------------------
-	-@echo 1. Check Testdaten
-	-@echo    CAT12 GUI Segment
-	-@echo    mv surf surf_rXXXX -range 0 6
+	-@echo 1. Check Test data
+	-@echo	  cd  ~/matlab/vbm8/test/maci64 && calc_all.sh
+	-@echo    mv surf surf_rXXXX
 	-@echo    render_surf.sh surf_rXXXX -range 0 6
 	-@echo    
-	-@echo 2. Check Pipeline + cat_batch_cat.sh
+	-@echo 2. Check Pipeline
 	-@echo    make check_pipeline
 	-@echo    check_pipeline.sh -p pid
 	-@echo    check_pipeline_ROIs.m	-> check render views check_r*matrix.png and histograms

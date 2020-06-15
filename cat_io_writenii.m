@@ -1,7 +1,7 @@
 function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,transform,YM,YMth)
 % ______________________________________________________________________
 % Write an image Y with the properties described by V with the datatype 
-% spmtype for a specific range. Add the prefix pre and the descripion 
+% spmtype for a specific range. Add the prefix pre and the description 
 % desc to V. 
 %
 %   VO = cat_io_write_nii(Y,V[,pre,desc,spmtype,range,write,addpre,transform,YM,YMth])
@@ -11,7 +11,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
 %   VO      = ouput volume structure
 %   folder  = subfolder for writing data (default='')
 %   pre     = prefix for filename (default='')
-%   desc    = descripion that is added to the origin descripion 
+%   desc    = description that is added to the origin description 
 %             (default='CAT#R#')
 %   spmtype = spm image type (default given by the class of Y)
 %   write   = [native warped modulated dartel]
