@@ -622,10 +622,10 @@ function cat_run_job(job,tpm,subj)
 
             % mask the eroded background
             % RD202006: masking of distant background
-            % This have strong effects for some images but I found no good 
-            % explanation how to use the mask. However, it seams that it is
+            % This has strong effects for some images but I found no good 
+            % explanation how to use the mask. However, it seems that it is
             % useful to mask unclear and/or bad background voxels but not 
-            % all of the. So we use the eroded background segment mask and 
+            % all of them. So we use the eroded background segment mask and 
             % remove also regions with 0 and no gradient that are often the
             % result of defacing, skull-stripping and reslicing.
             if exist('Ybg','var')

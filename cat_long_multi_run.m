@@ -59,11 +59,21 @@ end
 
 % decide whether we use model for small or large changes
 if job.longmodel == 1
-  jobs = repmat({'cat_long_main.m'}, 1, numel(job.subj));
+  job_name = fullfile(spm('dir'),'toolbox','cat12','cat_long_main.txt');
 else
   % additionally apply deformations between scans to deal with larger changes
-  jobs = repmat({'cat_long_mainShoot.m'}, 1, numel(job.subj));
+  job_name = fullfile(spm('dir'),'toolbox','cat12','cat_long_mainShoot.txt');
 end
+
+% we have to copy the original txt-file to a matlab file because for deployed versions
+% matlab files will be always pre-compiled, but we need the original matlab file untouched
+m_job_name = strrep(job_name,'.txt','.m');
+if ~exist(m_job_name,'file')
+  copyfile(job_name,m_job_name);
+end
+
+% mirror jobs for all subjects
+jobs = repmat({m_job_name}, 1, numel(job.subj));
 
 inputs = cell(1, numel(job.subj));
 

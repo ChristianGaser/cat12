@@ -1,5 +1,31 @@
 ------------------------------------------------------------------------
-r1654 | dahnke | 2020-06-14 20:29:03
+r1655 | gaser | 2020-06-15 13:45:18
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_io_writenii.m
+D       cat_long_main.m
+        > moved to cat_long_main.txt
+A  +    cat_long_main.txt
+        > moved from cat_long_main.m
+D       cat_long_mainShoot.m
+        > moved to cat_long_mainShoot.txt
+A  +    cat_long_mainShoot.txt
+        > moved from cat_long_mainShoot.m
+M       cat_long_multi_run.m
+M       cat_main_roi.m
+M       cat_run_job.m
+M       html/cat.html
+
+(1) Changed: ROI estimation again changed to template space in cat_main_roi.m.
+(2) Fixed:   Longitudinal segmentation in deployed mode now uses a txt-file
+             for the batch jobs to prevent that matlab files are compiled and
+             therefore not readable by spm_jobman.m
+(3) Fixed:   Corrected typos...
+------------------------------------------------------------------------
+r1654 | dahnke | 2020-06-14 20:31:14 +0200 (So, 14 Jun 2020) | 30 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -30,6 +56,7 @@ M       cat_vol_qa.m
                to improve the push operation in cat_main_registration, 
                cat_main_roi and cat_io_writenii.
                
+
 ------------------------------------------------------------------------
 r1653 | gaser | 2020-06-12 17:02:05 +0200 (Fr, 12 Jun 2020) | 10 lines
 
