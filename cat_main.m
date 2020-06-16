@@ -638,22 +638,28 @@ Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5;
 cat_warnings = cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans,cat_warnings);
 if 0 
   %% just for tests
-  res2 = res; 
-  job2 = job; 
-  job2.output.GM.warped     = 1; 
-  job2.output.GM.mod        = 3; 
-  job2.output.label.warped  = 1; 
-  job2.output.bias.warped   = 1; 
+  %  Write important maps with push and pull and resolution specific file names.  
+  %  Report total tissue volumes in native and modulated warped space.
+  Yp0    = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
+  res2   = res; 
+  job2   = job; 
+  trans2 = trans;
+  % write all maps
+  job2.output.GM.warped     = 1; % test push/pull in general 
+  job2.output.GM.mod        = 3; % test modulation of push/pull 
+  job2.output.label.warped  = 1; % test general push/pull without modulation
+  job2.output.bias.warped   = 1; % test general push/pull without modulation
   % write push for comparision 
   [pppush,ffpush,eepush]    = spm_fileparts(res2.image0.fname);
   res2.image0.fname         = fullfile(pppush,sprintf('%s%s%1.2f%s',ffpush,'-push',job.extopts.vox,eepush)); 
-  trans.warped.push         = 1; 
-  trans.warped.verb         = 1; 
-  cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job2,res2,trans,cat_warnings);
+  trans2.warped.push        = 1; 
+  trans2.warped.verb        = 1; 
+  cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job2,res2,trans2,cat_warnings);
   % write pull for comparision 
-  res2.image0.fname          = fullfile(pppush,sprintf('%s%s%1.2f%s',ffpush,'-pull',job.extopts.vox,eepush)); 
-  trans.warped.push         = 0; 
-  cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job2,res2,trans,cat_warnings);
+  res2.image0.fname         = fullfile(pppush,sprintf('%s%s%1.2f%s',ffpush,'-pull',job.extopts.vox,eepush)); 
+  trans2.warped.push        = 0; 
+  cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job2,res2,trans2,cat_warnings);
+  clear res2 job2 trans2;
 end
 if ~debug, clear Yp0; end
 
@@ -780,6 +786,8 @@ end
 %  transformations. The way over the subject space has the advantage 
 %  that individual anatomical refinements are possible, but this has
 %  to be done and evaluated for each atlas. 
+%  Test call (type: 1-native,2-push,3-pull*; write: 1-verb,2-imgs):
+%     cat_main_roi(job,trans,Ycls,Yp0,struct('type',1,'write',1)); 
 %  ---------------------------------------------------------------------
 if job.output.ROI  
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 

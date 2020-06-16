@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1655 | gaser | 2020-06-15 13:45:18
+r1656 | dahnke | 2020-06-16 11:04:31
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_main.m
+M       cat_main_roi.m
+M       cat_main_write.m
+M       cat_run_job.m
+A       cat_surf_vx2surf.m
+
+(1) Fixed:    Corrected push/pull settings in cat_main_roi.    
+(2) Changed:  Some further comments. 
+(3) New:      Prepared a batch and function to map voxel value to the surface 
+              by push/pull operations cat_surf_vx2surf. 
+              
+
+------------------------------------------------------------------------
+r1655 | gaser | 2020-06-15 13:45:57 +0200 (Mo, 15 Jun 2020) | 24 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -24,6 +42,7 @@ M       html/cat.html
              for the batch jobs to prevent that matlab files are compiled and
              therefore not readable by spm_jobman.m
 (3) Fixed:   Corrected typos...
+
 ------------------------------------------------------------------------
 r1654 | dahnke | 2020-06-14 20:31:14 +0200 (So, 14 Jun 2020) | 30 lines
 

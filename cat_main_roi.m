@@ -69,8 +69,12 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
   vx_vol = sqrt( sum( trans.native.Vi.mat(1:3,1:3).^2 ) ); 
 
   % print progress
-  stime = cat_io_cmd('ROI estimation'); if job.extopts.verb, fprintf('\n'); end 
-
+  if job.extopts.expertgui
+    types = {'native','push atlas','pull atlas'}; 
+    stime = cat_io_cmd(sprintf('ROI estimation in %s space',types{opt.type})); if job.extopts.verb, fprintf('\n'); end 
+  else
+    stime = cat_io_cmd('ROI estimation'); if job.extopts.verb, fprintf('\n'); end 
+  end
   
   % get atlases maps that should be evaluated
   FAF = job.extopts.atlas; 
@@ -148,8 +152,8 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
     
     % map segments for new atlas space
     if opt.type == 2 || opt.type == 3 % atlas space
-      wYp0    = cat_vol_roi_map2atlas(Yp0 ,transw,0);
-      wYcls   = cat_vol_roi_map2atlas(Ycls,transw,1);
+      wYp0    = cat_vol_roi_map2atlas(Yp0 ,transw,0,opt.type==3);
+      wYcls   = cat_vol_roi_map2atlas(Ycls,transw,1,opt.type==3);
       wYa     = cat_vol_roi_load_atlas(FA{ai,1});
       vx_volw = repmat(job.extopts.vox,1,3);
     else
@@ -159,11 +163,12 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
     % extract ROI data
     csv   = cat_vol_ROIestimate(wYp0,wYa,wYcls,ai,'V',[],FA{ai,3},FA,vx_volw);  % volume
     
-    % thickness
+    % thickness 
+    % RD202006: this case does not exist anymore but may come back later
     if exist('Yth1','var') 
     % For thickness we want to avoid values in non-cortical regions such as 
     % the ventricles or regions with relative low GM volume or high CSF volume. 
-      csv  = cat_vol_ROIestimate(wYp0,wYa,wYth1,ai,'T',csv,{'gm'},job.extopts.atlas); %.*wYmim
+      csv  = cat_vol_ROIestimate(wYp0,wYa,wYth1,ai,'T',csv,{'gm'},FA); %.*wYmim
       % correct for ventricular regions that use the 'Ven' keyword.
       ven  = find(cellfun('isempty',strfind( csv(:,2) , 'Ven'))==0); 
       csv(ven,end) = {nan};  %#ok<FNDSB>
@@ -181,14 +186,20 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
     % display and debugging
     if opt.write 
       %% this does not work in case of trimmed atlases set do not include the full brain 
-      fprintf('\n%8s %8s %8s | %8s %8s %8s %8s %8s %8s\n','GM','WM','CSF','R1','R2','R3','R4','R5','R6') %* prod(vx_vol) 
-      fprintf('%8.2f %8.2f %8.2f | %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f\n', ...
-        [cat_stat_nansum(wYcls{1}(:)) ,cat_stat_nansum(wYcls{2}(:)),cat_stat_nansum(wYcls{3}(:))] * prod(vx_volw) / 1000, cell2mat( csv(2:7,3) )); 
+      %  * keep in mind that cobra is 
+      %    - only defined for some regions 
+      %    - has a smaller boundary box resulting in smaller global atlas space values and distortions close to the boudary (timmed ~= not trimmed) 
+      %  * mori is WM atlas and not all GM voxels were aligned to a region  
+      GMi = find(cellfun('isempty',strfind(FA{ai,3},'gm'))==0);
+      fprintf('\n%8s %8s %8s | %8s | %8s %8s %8s %8s %8s %8s\n','GM','WM','CSF','sum(RGM)','R1','R2','R3','R4','R5','R6') %* prod(vx_vol) 
+      fprintf('%8.2f %8.2f %8.2f | %8.2f | %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f\n', ...
+        [cat_stat_nansum(wYcls{1}(:)) ,cat_stat_nansum(wYcls{2}(:)),cat_stat_nansum(wYcls{3}(:))] * prod(vx_volw) / 1000, ...
+        sum( cell2mat( csv(2:end,2+GMi))), cell2mat( csv(2:7,2+GMi) )); 
       fprintf('%8.2f %8.2f %8.2f\n', ...
         [cat_stat_nansum(Ycls{1}(:))  ,cat_stat_nansum(Ycls{2}(:)) ,cat_stat_nansum(Ycls{3}(:)) ] * prod(vx_vol)  / 1000 / 255); 
       fprintf('%8.2f %8.2f %8.2f\n', ...
         ([cat_stat_nansum(wYcls{1}(:)),cat_stat_nansum(wYcls{2}(:)),cat_stat_nansum(wYcls{3}(:))] * prod(vx_volw) / 1000) ./ ...
-                                     ([cat_stat_nansum(Ycls{1}(:)) ,cat_stat_nansum(Ycls{2}(:)) ,cat_stat_nansum(Ycls{3}(:)) ] * prod(vx_vol) / 1000 / 255 * 100)); 
+                                     ([cat_stat_nansum(Ycls{1}(:)) ,cat_stat_nansum(Ycls{2}(:)) ,cat_stat_nansum(Ycls{3}(:)) ] * prod(vx_vol) / 1000 / 255) * 100); 
       fprintf('\n');
       
       if opt.write>1 
@@ -277,7 +288,7 @@ function wYa = cat_vol_roi_load_atlas(FAai,warped)
   wYa = cat_vol_ctype(wYa,wVa(1).private.dat.dtype);
 return
 %=======================================================================
-function wYv = cat_vol_roi_map2atlas(Yv,warped,mod)
+function wYv = cat_vol_roi_map2atlas(Yv,warped,mod,usepull)
 % ----------------------------------------------------------------------
 % Map data to the atlas space defined in the warped variable.
 %
@@ -335,8 +346,6 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA,vx_vox)
       csv = cat_io_csv(csvf,'','',struct('delimiter',';')); 
     else
       IDs = unique(Ya); 
-      %cat_io_cprintf('warn',sprintf('\n    Cannot find ''%s'' csv-file with region names! ',ff)); 
-      %ROIid;ROIabbr;ROIname;ROIbaseid;ROIbasename;Voxel;Volume;XYZ
       csv = [{'ROIid','ROIabbr','ROIname'}; ...
         num2cell(IDs) ...
         cellstr([repmat('ROI',numel(IDs),1) num2str(IDs,'%03d')]) ...
