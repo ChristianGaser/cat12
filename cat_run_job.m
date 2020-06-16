@@ -772,7 +772,7 @@ function cat_run_job(job,tpm,subj)
           % Because the masking (obj.msk) was a bit unclear I previously
           % set voxel 10 mm outside the brain mask to zero. However, I now 
           % use the msk field and also increase the radius to 20 mm to have
-          more skull.
+          % more skull.
           if ~exist('Ybi','var') && exist(Pb,'file')
             % If there is no mask yet then load a affine registered brain mask 
             % version of it. 

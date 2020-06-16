@@ -103,7 +103,7 @@ roi2surf                         = cat_roi_roi2surf_GUI(expert);
 surfstat                         = cat_surf_stat_GUI; 
 surfcon                          = cat_surf_spm_cfg_con;
 surfres                          = cat_surf_spm_cfg_results; 
-%vx2surf                          = cat_surf_vx2surf_GUI(expert,nproc,lazy);
+vx2surf                          = cat_surf_vx2surf_GUI(expert,nproc,lazy);
 
 
 %% Toolset
@@ -119,6 +119,7 @@ stools.values = { ...
   surfresamp_fs,...       .cat.stools
   vol2surf, ...           .cat.stools
   vol2tempsurf, ...       .cat.stools
+  vx2surf, ...            .cat.stools (expert)
   surfcalc, ...           .cat.stools
   surfcalcsub, ...        .cat.stools
   surf2roi, ...           .cat.rtools?
@@ -189,46 +190,223 @@ surfstat.help   = {
   ''};
 
 function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
+% This is a voxel-based project of value to the surface.
+
+
   % surf
-  data_surf_cov         = cfg_files;
-  data_surf_cov.tag     = 'surf';
-  data_surf_cov.name    = 'Left central surfaces';
-  data_surf_cov.filter  = 'gifti';
-  data_surf_cov.ufilter = 'central';
-  data_surf_cov.num     = [1 Inf];
-  data_surf_cov.help    = {'Select central surfaces.'};
+  surf                  = cfg_files;
+  surf.tag              = 'surf';
+  surf.name             = 'Left central surfaces';
+  surf.filter           = 'gifti';
+  surf.ufilter          = '^lh.central';
+  surf.num              = [1 Inf];
+  surf.help             = {'Select central surfaces.'};
   
+  % name of the measure
+  name                  = cfg_entry;
+  name.tag              = 'name';
+  name.name             = 'Name';
+  name.strtype          = 's';
+  name.num              = [1 Inf];
+  name.val              = {'vxvolume'};
+  name.help             = {
+    'Name of the measure that is used in the surface file name, e.g., "roi_volume" will result in "lh.roi_volume.S01" for a subject S01. '
+    'The surface data has to be smoothed and normalized in the next step. '
+    ''
+  };
+
+  iname                 = name; 
+  iname.val             = {'vxintensity'};
+  
+  dname                 = name; 
+  dname.val             = {'vxdistance'};
+
+  % distance weighting function [high low]
+  dweighting            = cfg_entry;
+  dweighting.tag        = 'dweighting';
+  dweighting.name       = 'Weighting [High Low]';
+  dweighting.strtype    = 'r';
+  dweighting.num        = [1 2]; 
+  dweighting.val        = {[0 10]};
+  dweighting.help       = {
+    'Distance based weighting from high to low, i.e. [0 10] means full weighting at 0 mm distanc and zero weighting at 10 mm distnace. '
+    ''
+  };
+
+  norm                  = cfg_menu;
+  norm.tag              = 'norm';
+  norm.name             = 'Final normalization';
+  norm.labels           = {'none','log10'};
+  norm.values           = {'log10'};
+  norm.val              = {'log10'}; 
+  norm.help             = {
+   ['For many measure a log10 normalization is useful to have normal distributed data ' ...
+    'but also to handle exponential dependencies to brain size. Moreover, it is important ' ...
+    'to use TIV as general confound in the analysis. '] ''};   
+  
+ 
+  % average
+  average               = cfg_menu;
+  average.tag           = 'vweighting';
+  average.name          = 'Average function';
+  average.labels        = {'mean','median','standard deviation','variance','minimum','maximum'};
+  average.values        = {'mean','median','std','var','min','max'};
+  average.val           = {'mean'}; 
+  average.help          = {'Average function for the projection of multiple voxels.' ''};   
+   
   % msk
-  
+  rimage                = cfg_files;
+  rimage.tag            = 'rimage';
+  rimage.name           = 'Region tissue partial volume mask';
+  rimage.help           = {'Select images that define the tissue/region that should be projected to the surface. ' ''};
+  rimage.filter         = 'image';
+  rimage.ufilter        = '.*';
+  rimage.num            = [1 Inf];
+
   % int
+  iimage                = cfg_files;
+  iimage.tag            = 'iimage';
+  iimage.name           = 'Intensity map';
+  iimage.help           = {'Select images those values are projected within the masked region. ' ''};
+  iimage.filter         = 'image';
+  iimage.ufilter        = '.*';
+  iimage.num            = [1 Inf];
   
-  % name      
+  if 0
+    % complex version
+    sdist                 = average;
+    sdist.tag             = 'sdist';
+    sdist.name            = 'Surface distance (average function)';
+
+    odist                 = cfg_menu;
+    odist.tag             = 'odist';
+    odist.name            = 'Object distance (type)';
+    odist.labels          = {'nearest','nearest with erosion'};
+    odist.values          = {'near','nearerode'};
+    odist.val             = {'near'}; 
+    odist.help            = {
+     ['The nearest option estimates a distance map from the object structure. ' ...
+      'It maps the inverse value (1/d) because the distance objects are expected to have lower effect in general. ' ...  
+      'The second option estimates multiple distance maps by stepwise erode all structures. ']
+      };
+
+    dmetric               = cfg_choice;
+    dmetric.tag           = 'dmetric';
+    dmetric.name          = 'Distance metric';
+    dmetric.values        = {sdist,odist};
+    dmetric.val           = {odist}; 
+    dmetric.help          = {
+     ['Average distance from the surface to the object or from the object to the surface. ' ...
+      'The surface distance estimate a voxel-based distance map and then average the values. ' ...
+      'The object based distance on the other side estimates (multiple) voxel-based distance maps to read out the value at the surface position. ' ...
+      'Hence, the closes structure (e.g. small lesions) normaly defines the distance but if erosion is used also larger far distance structures can taken into account. ']
+      ''};  
+  else
+    % simple version 
+    dmetric              = cfg_menu;
+    dmetric.tag          = 'odist';
+    dmetric.name         = 'Distance metric';
+    dmetric.labels       = {'Mean surface distance','Minimum object distance','Minimum object distance','Mean object distance'};
+    dmetric.values       = {'sdist','odist'};
+    dmetric.val          = {'odist'}; 
+    dmetric.help         = {
+     ['Average distance from the surface to the object or from the object to the surface. ' ...
+      'The surface distance is measured for each voxel and average for the closest vertex. ' ...
+      'The object based distance on the other side estimates (multiple) voxel-based distance maps to read out the value at the surface position. ' ...
+      'Hence, the closes structure (e.g. small lesions) normaly defines the distance but if erosion is used also larger far distance structures can taken into account. ']
+      ''};
+  end
   
-  % dweighting [high low]
+  outdir              = cfg_files;
+  outdir.tag          = 'outdir';
+  outdir.name         = 'Output Directory';
+  outdir.filter       = 'dir';
+  outdir.ufilter      = '.*';
+  outdir.num          = [0 1];
+  outdir.val{1}       = {''};
+  outdir.help         = {
+    'Files produced by this function will be written into this output directory.  If no directory is given, images will be written  to current working directory.  If both output filename and output directory contain a directory, then output filename takes precedence.'
+  };
   
-  % mapping
   
-  %
+  % measures
+  vmeasure              = cfg_branch;
+  vmeasure.tag          = 'vmeasure';
+  vmeasure.name         = 'Volume measure';
+  vmeasure.val          = {rimage,name,dweighting};
+  vmeasure.help         = {
+    'Extraction of local volume values of a specied tissue or region. '};
+
+  imeasure              = cfg_branch;
+  imeasure.tag          = 'imeasure';
+  imeasure.name         = 'Intensity measure';
+  imeasure.val          = {rimage,iimage,iname,dweighting,average};
+  imeasure.help         = {
+    'Extraction of local intensity values of one map in the regions defined by another. '};
+
+  dmeasure              = cfg_branch;
+  dmeasure.tag          = 'dmeasure';
+  dmeasure.name         = 'Distance measure';
+  dmeasure.val          = {rimage,dname,dweighting,dmetric2};
+  dmeasure.help         = {
+    'Extraction of local intensity values of one map in the regions defined by another. '};
+
+  
 
  
   % measure {vol, int, dist, idist)
+  measures              = cfg_repeat;
+  measures.tag          = 'measures';
+  measures.name         = 'Measures';
+  measures.values       = {vmeasure, imeasure, dmeasure};
+  measures.val          = {}; 
+  measures.help         = {
+    'Defintion of different volume, intensity and distance measures that were projected to the surface. ' ''};
   
+  % distance weighting function [high low]
+  smoothing             = cfg_entry;
+  smoothing.tag         = 'smooth';
+  smoothing.name        = 'smoothing';
+  smoothing.strtype     = 'r';
+  smoothing.num         = [1 1]; 
+  smoothing.val         = {0};
+  smoothing.hidden      = expert<2;
+  smoothing.help        = {
+    'Distance based weighting from high to low, i.e. [0 10] means full weighting at 0 mm distanc and zero weighting at 10 mm distnace. '
+    ''
+  };
+
+  interp                = cfg_menu;
+  interp.tag            = 'interp';
+  interp.name           = 'Interpolation';
+  interp.labels         = {'yes','no'};
+  interp.values         = {1,0};
+  interp.val            = {0}; 
+  interp.hidden         = expert<2;
+  interp.help           = {'Use interpolated voxel grid. ' ''};
+
   % opts
-  opts          = cfg_exbranch;
-  opts.tag      = 'opts';
-  opts.name     = 'Options';
-  opts.val      = {verb};
-  opts.help     = { };
+  opts                  = cfg_exbranch;
+  opts.tag              = 'opts';
+  opts.name             = 'Options';
+  opts.val              = {interp,norm,smoothing,outdir,lazy,nproc};
+  opts.help             = {'General processing options. ' ''};
   
   % main
-  vx2surf       = cfg_exbranch;
-  vx2surf.tag   = 'vx2surf';
-  vx2surf.name  = 'Map voxel-data to the surface';
-  vx2surf.val   = {surf,measure,opts};
-  vx2surf.prog  = @cat_surf_vx2surf;
-  vx2surf.vout  = @vout_surf_vx2surf;
-  vx2surf.help  = {}; 
-
+  vx2surf               = cfg_exbranch;
+  vx2surf.tag           = 'vx2surf';
+  vx2surf.name          = 'Map voxel-data to the surface';
+  vx2surf.val           = {surf,measures,opts}; %
+  vx2surf.prog          = @cat_surf_vx2surf;
+  %vx2surf.vout          = @vout_surf_vxvol2surf;
+  vx2surf.help          = {
+   ['Voxel-based projection of volume values to the individual surface. ' ...
+    'The approach aligns all voxels within a specified tissue/roi to its closes surface point. ' ...
+    'The volume, intensity or distance values were averaged in a user specified way and saved as a raw surface measure ' ...
+    'that has to be smoothed and resampled. ']
+    ''}; 
+  vx2surf.hidden        = expert<2;
+  
 return
 function surf2roi = cat_surf_surf2roi_GUI(expert,nproc)
 %% surface to ROI (in template space)

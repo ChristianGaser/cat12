@@ -35,7 +35,11 @@ function cat_warnings = cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans,cat_war
     mrifolder     = '';
   end
   
-  stime = cat_io_cmd('Write result maps');
+  if isfield(trans,'warped') && isfield(trans.warped,'push') && trans.warped.push
+    stime = cat_io_cmd('Write result maps (with push)');
+  else
+    stime = cat_io_cmd('Write result maps');
+  end
 
   % bias, noise and global corrected without masking for subject space and with masking for other spaces 
   cat_io_writenii(VT0,Ym,mrifolder,'m', ...Dartel
