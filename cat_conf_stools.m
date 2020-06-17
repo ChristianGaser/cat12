@@ -224,7 +224,7 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   % distance weighting function [high low]
   dweighting            = cfg_entry;
   dweighting.tag        = 'dweighting';
-  dweighting.name       = 'Weighting [High Low]';
+  dweighting.name       = 'Weighting / limitation [High Low]';
   dweighting.strtype    = 'r';
   dweighting.num        = [1 2]; 
   dweighting.val        = {[0 10]};
@@ -306,7 +306,7 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
     dmetric              = cfg_menu;
     dmetric.tag          = 'odist';
     dmetric.name         = 'Distance metric';
-    dmetric.labels       = {'Mean surface distance','Minimum object distance','Minimum object distance','Mean object distance'};
+    dmetric.labels       = {'Mean surface distance (Push)','Minimum object distance (Pull)'};
     dmetric.values       = {'sdist','odist'};
     dmetric.val          = {'odist'}; 
     dmetric.help         = {
@@ -315,8 +315,20 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
       'The object based distance on the other side estimates (multiple) voxel-based distance maps to read out the value at the surface position. ' ...
       'Hence, the closes structure (e.g. small lesions) normaly defines the distance but if erosion is used also larger far distance structures can taken into account. ']
       ''};
+      
+  
   end
   
+  inverse              = cfg_menu;
+  inverse.tag          = 'inverse';
+  inverse.name         = 'Inverse metric';
+  inverse.labels       = {'Yes','No'};
+  inverse.values       = {1,0};
+  inverse.val          = {1}; 
+  inverse.help         = {
+    'Use inverse distance measures 1/d with 1 if the object is close and 0 if it is far away. Use log10 scaling. '
+    ''};
+
   outdir              = cfg_files;
   outdir.tag          = 'outdir';
   outdir.name         = 'Output Directory';
@@ -333,8 +345,15 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   vmeasure              = cfg_branch;
   vmeasure.tag          = 'vmeasure';
   vmeasure.name         = 'Volume measure';
-  vmeasure.val          = {rimage,name,dweighting};
+  vmeasure.val          = {rimage,name,dweighting,inverse};
   vmeasure.help         = {
+    'Extraction of local volume values of a specied tissue or region. Modulated push from voxel- to surface-space. '};
+
+  rvmeasure              = cfg_branch;
+  rvmeasure.tag          = 'rvmeasure';
+  rvmeasure.name         = 'Relative volume measure';
+  rvmeasure.val          = {rimage,rimage,name,dweighting,inverse}; % mixing (A:(A|B) or (A:B) ?
+  rvmeasure.help         = {
     'Extraction of local volume values of a specied tissue or region. '};
 
   imeasure              = cfg_branch;
@@ -347,7 +366,7 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   dmeasure              = cfg_branch;
   dmeasure.tag          = 'dmeasure';
   dmeasure.name         = 'Distance measure';
-  dmeasure.val          = {rimage,dname,dweighting,dmetric2};
+  dmeasure.val          = {rimage,dname,dweighting,dmetric};
   dmeasure.help         = {
     'Extraction of local intensity values of one map in the regions defined by another. '};
 
@@ -389,7 +408,8 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   opts                  = cfg_exbranch;
   opts.tag              = 'opts';
   opts.name             = 'Options';
-  opts.val              = {interp,norm,smoothing,outdir,lazy,nproc};
+  %opts.val              = {interp,smoothing,norm,outdir,lazy,nproc};
+  opts.val              = {interp,smoothing,norm,outdir};
   opts.help             = {'General processing options. ' ''};
   
   % main
