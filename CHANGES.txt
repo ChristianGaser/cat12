@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1656 | dahnke | 2020-06-16 11:04:31
+r1657 | dahnke | 2020-06-17 13:12:43
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_main_updateSPM.m
+M       cat_run_job.m
+M       cat_surf_vx2surf.m
+
+(1) Fixed:    Added further correction in cat_main_updateSPM. 
+(2) Changed:  Added another try-catch layer in cat_run_job to 
+              handle errors in the initial segmentation.               
+(3) Fixed:    Corrected background definition bug in case of 
+              skull-stripped data in cat_main_updateSPM. 
+
+------------------------------------------------------------------------
+r1656 | dahnke | 2020-06-16 11:06:52 +0200 (Di, 16 Jun 2020) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +31,7 @@ A       cat_surf_vx2surf.m
 (3) New:      Prepared a batch and function to map voxel value to the surface 
               by push/pull operations cat_surf_vx2surf. 
               
+
 
 ------------------------------------------------------------------------
 r1655 | gaser | 2020-06-15 13:45:57 +0200 (Mo, 15 Jun 2020) | 24 lines

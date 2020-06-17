@@ -47,7 +47,44 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
     P(:,:,:,4) = 1 - sum(P,4); 
   end
   
-  % transfer tissue outside the brain mask to head  ... 
+  %% correction of CSF-GM-WM PVE voxels that were miss aligned to skull
+  %  RD202006: This is a special cases observed for the thickness phantom. 
+  %  With a coronal head-masking, SPM had problems with brain PVE values
+  %  classes that were to close to some head peaks and therefore miss 
+  %  classified in P(:,:,:,5).
+  % GM-WM
+  if size(P,4)>4
+    pth = 128; 
+    lth = min( clsint(1) , clsint(2) ); hth = max( clsint(1) , clsint(2) ); 
+    Ycls5b = YbA & cat_vol_morph(P(:,:,:,1)>pth | P(:,:,:,2)>pth,'c') & Ysrc>lth & Ysrc<hth; 
+    P5w = single(P(:,:,:,5)) .* Ycls5b .* max(0,min(1,abs(Ysrc - clsint(1)) ./ abs(diff([clsint(1),clsint(2)])))); 
+    P5g = single(P(:,:,:,5)) .* Ycls5b  -  P5w; 
+    P(:,:,:,1) = P(:,:,:,1) + uint8( P5w ); 
+    P(:,:,:,2) = P(:,:,:,2) + uint8( P5g ); 
+    P(:,:,:,5) = P(:,:,:,5) - uint8( P5g + P5w ); 
+    clear P5g P5w
+    % GM-CSF
+    lth = min( clsint(1) , clsint(3) ); hth = max( clsint(1) , clsint(3) ); 
+    Ycls5b = YbA & cat_vol_morph(P(:,:,:,1)>pth | P(:,:,:,3)>pth,'c') & Ysrc>lth & Ysrc<hth; 
+    P5c = single(P(:,:,:,5)) .* Ycls5b .* max(0,min(1,abs(Ysrc - clsint(1)) ./ abs(diff([clsint(1),clsint(3)])))); 
+    P5g = single(P(:,:,:,5)) .* Ycls5b  -  P5c; 
+    P(:,:,:,1) = P(:,:,:,1) + uint8( P5g ); 
+    P(:,:,:,3) = P(:,:,:,3) + uint8( P5c ); 
+    P(:,:,:,5) = P(:,:,:,5) - uint8( P5g + P5c ); 
+    clear P5g P5c
+    % WM-CSF
+    lth = min( clsint(2) , clsint(3) ); hth = max( clsint(2) , clsint(3) ); 
+    Ycls5b = YbA & cat_vol_morph(P(:,:,:,2)>pth | P(:,:,:,3)>pth,'c') & Ysrc>lth & Ysrc<hth; 
+    P5w = single(P(:,:,:,5)) .* Ycls5b .* max(0,min(1,abs(Ysrc - clsint(3)) ./ abs(diff([clsint(1),clsint(3)])))); 
+    P5c = single(P(:,:,:,5)) .* Ycls5b  -  P5w; 
+    P(:,:,:,2) = P(:,:,:,2) + uint8( P5w ); 
+    P(:,:,:,3) = P(:,:,:,3) + uint8( P5c ); 
+    P(:,:,:,5) = P(:,:,:,5) - uint8( P5w + P5c );
+    clear P5w P5c
+  end
+  
+  
+  %% transfer tissue outside the brain mask to head  ... 
   % RD 201807: I am not sure if this is a good idea. Please test this with children! 
   for i=1:3
     P(:,:,:,4) = cat_vol_ctype(single(P(:,:,:,4)) + single(P(:,:,:,i)) .* single(~YbA)); 
@@ -55,11 +92,11 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
   end
   clear YbA;
   
- 
+  
   % RD 202006: Correct background (from cat_run_job)
   if isfield(res,'bge')
-    P(:,:,:,6) = max( cat_vol_ctype( res.bge * 255 ) , P(:,:,:,6) ); 
-    for i=1:5, P(:,:,:,i) = P(:,:,:,i) .* cat_vol_ctype(1 - res.bge); end
+    P(:,:,:,end) = max( cat_vol_ctype( res.bge * 255 ) , P(:,:,:,end) ); 
+    for i=1:size(P,4)-1, P(:,:,:,i) = P(:,:,:,i) .* cat_vol_ctype(1 - res.bge); end
   end
   
   % Cleanup for high resolution data
