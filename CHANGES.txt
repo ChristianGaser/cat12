@@ -1,5 +1,30 @@
 ------------------------------------------------------------------------
-r1657 | dahnke | 2020-06-17 13:12:43
+r1658 | gaser | 2020-06-18 15:49:31
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_amap.mexmaci64
+M       cat_conf_stools.m
+M       cat_main_gintnorm.m
+M       cat_main_reportfig.m
+M       cat_main_updateSPM.m
+M       cat_run_job.m
+M       cat_sanlm.mexmaci64
+M       cat_vol_median3.mexmaci64
+M       cat_vol_median3c.mexmaci64
+M       cat_vol_pbtp.c
+M       cat_vol_pbtp.mexmaci64
+M       cat_vol_pbtp2.mexmaci64
+M       html/cat.html
+
+(1) Changed: Added try/catch to part of cat_main_reportfig.m where the main
+             window often seems to be closed by some users.
+(2) Changed: Updated help text and comments.
+(3) Fixed:   Partially rescued settings for cat_vol_pbtp.c from r155x where
+             thickness estimation was more accurate.
+------------------------------------------------------------------------
+r1657 | dahnke | 2020-06-17 13:15:21 +0200 (Mi, 17 Jun 2020) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +38,7 @@ M       cat_surf_vx2surf.m
               handle errors in the initial segmentation.               
 (3) Fixed:    Corrected background definition bug in case of 
               skull-stripped data in cat_main_updateSPM. 
+
 
 ------------------------------------------------------------------------
 r1656 | dahnke | 2020-06-16 11:06:52 +0200 (Di, 16 Jun 2020) | 16 lines

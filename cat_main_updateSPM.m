@@ -47,10 +47,10 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
     P(:,:,:,4) = 1 - sum(P,4); 
   end
   
-  %% correction of CSF-GM-WM PVE voxels that were miss aligned to skull
-  %  RD202006: This is a special cases observed for the thickness phantom. 
+  %% correction of CSF-GM-WM PVE voxels that were misaligned to skull
+  %  RD202006: This is a special case observed for the thickness phantom. 
   %  With a coronal head-masking, SPM had problems with brain PVE values
-  %  classes that were to close to some head peaks and therefore miss 
+  %  classes that were too close to some head peaks and therefore mis- 
   %  classified in P(:,:,:,5).
   % GM-WM
   if size(P,4)>4

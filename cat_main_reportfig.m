@@ -67,7 +67,12 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     case {'MACI','MACI64'},   fontsize = 9.5;
     otherwise,                fontsize = 9.5;
   end
-  ax=axes('Position',[0.01 0.75 0.98 0.24],'Visible','off','Parent',fg);
+  
+  try
+    ax = axes('Position',[0.01 0.75 0.98 0.24],'Visible','off','Parent',fg);
+  catch
+    error('Do not close the SPM Graphics window during preprocessing');
+  end
 
   text(0,0.99,  ['Segmentation: ' spm_str_manip(res.image0(1).fname,'k60d') '       '],...
     'FontSize',fontsize+1,'FontWeight','Bold','Interpreter','none','Parent',ax);
@@ -525,7 +530,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       UD.width = [repmat(0.5,1,numel(UD.width) - nPsurf)  repmat(0.5,1,nPsurf)]; 
       UD.style = [repmat({'b--'},1,numel(UD.width) - nPsurf) repmat({'k-'},1,nPsurf)];
       set(hM,'UserData',UD);
-      if ov_mesh, spm_ov_mesh('redraw',id); end
+      if ov_mesh, try, spm_ov_mesh('redraw',id); end; end
 
       %% TPM legend
       try

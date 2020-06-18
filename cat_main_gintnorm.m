@@ -69,7 +69,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     return
   end
     
-  clsint  = @(x) mean(Ysrc(Ycls{x}>0.9));
+  clsint  = @(x) cat_stat_nanmedian(Ysrc(Ycls{x} > 128)); 
   clsints = @(x,y) [round( res.mn(res.lkp==x) * 10^5)/10^5; res.mg(res.lkp==x-((y==0)*8))']; 
 
   inv_weighting = 0;
