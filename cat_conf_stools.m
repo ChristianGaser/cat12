@@ -190,7 +190,7 @@ surfstat.help   = {
   ''};
 
 function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
-% This is a voxel-based project of value to the surface.
+% This is a voxel-based projection of values to the surface.
 
 
   % surf
@@ -229,7 +229,7 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   dweighting.num        = [1 2]; 
   dweighting.val        = {[0 10]};
   dweighting.help       = {
-    'Distance based weighting from high to low, i.e. [0 10] means full weighting at 0 mm distanc and zero weighting at 10 mm distnace. '
+    'Distance based weighting from high to low, i.e. [0 10] means full weighting at 0 mm distance and zero weighting at 10 mm distance. '
     ''
   };
 
@@ -391,7 +391,7 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   smoothing.val         = {0};
   smoothing.hidden      = expert<2;
   smoothing.help        = {
-    'Distance based weighting from high to low, i.e. [0 10] means full weighting at 0 mm distanc and zero weighting at 10 mm distnace. '
+    'Distance based weighting from high to low, i.e. [0 10] means full weighting at 0 mm distance and zero weighting at 10 mm distance. '
     ''
   };
 
@@ -421,7 +421,7 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   %vx2surf.vout          = @vout_surf_vxvol2surf;
   vx2surf.help          = {
    ['Voxel-based projection of volume values to the individual surface. ' ...
-    'The approach aligns all voxels within a specified tissue/roi to its closes surface point. ' ...
+    'The approach aligns all voxels within a specified tissue/roi to its closest surface point. ' ...
     'The volume, intensity or distance values were averaged in a user specified way and saved as a raw surface measure ' ...
     'that has to be smoothed and resampled. ']
     ''}; 

@@ -61,11 +61,11 @@ float pmax(const float GMT[], const float RPM[], const float SEG[], const float 
   /* the mean of the highest values*/
   float maximum2=maximum; float m2n=0; 
   for (int i=0;i<=sA;i++) {
-    if ( ( GMT[i] < 1e15 ) && ( maximum < GMT[i] ) &&   /* ( (maximum - 1) < GMT[i] ) && */
-         ( SEG[i] >= 1.0 ) && ( SEGI>1.2 && SEGI<=2.75 ) && 
+    if ( ( GMT[i] < 1e15 ) && ( (maximum - 1) < GMT[i] ) && 
+         ( SEG[i] >= 0.0 ) && ( SEGI>1.2 && SEGI<=2.75 ) && 
          ( ( (RPM[i] - ND[i] * 1.2 ) <= WMD ) ) && 
          ( ( (RPM[i] - ND[i] * 0.5 ) >  WMD ) || ( SEG[i]<1.5 ) ) &&
-         ( ( ( (SEGI * max(1.0,min(1.2,SEGI-1.5)) ) >= SEG[i] ) ) || ( SEG[i]<1.5 ) ) ) 
+         ( ( ( (SEGI * max(1.0,min(1.2,SEGI-1.0)) ) >= SEG[i] ) ) || ( SEG[i]<1.5 ) ) ) 
       { maximum2 = maximum2 + GMT[i]; m2n++; } 
   }
   if ( m2n > 0 )  maximum = (maximum2 - maximum)/m2n;
