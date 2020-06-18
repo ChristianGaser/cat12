@@ -632,9 +632,9 @@ function cat_run_job(job,tpm,subj)
             % We use a noisy corona here to avoid that SPM try to fit a
             % head class into it.
             % RD202006: thickness phantom problems
-            % Masking cause general problems in the SPM US with Christian's 
+            % Masking causes general problems in SPM US with Christian's 
             % thickness phantom (brain PVE voxels were aligned to class 5) 
-            % that requred further correction in cat_main_updateSPM. 
+            % that required further correction in cat_main_updateSPM. 
             if exist('Ybg','var')
               Ymsk          = cat_vol_morph( ~Ybg ,'dd',15,vx_vol) & ...        % remove voxels far from head
                               ~( Ybg & rand(size(Ybg))>0.5) & ...               % have a noisy corona
@@ -750,15 +750,15 @@ function cat_run_job(job,tpm,subj)
         %  there are still severe problems in the SPM US in some cases 
         %  that of course also depends on our settings. Hence, we have 
         %  to try different settings, e.g. with/without masking.  In 
-        %  some cases the US may run but produce a bad result that will 
+        %  some cases the US may run but produces a bad result that will 
         %  cause many problems in cat_main and its subfunctions, so we 
         %  should test the result, may run alternative settings and 
-        %  couse the best try. 
+        %  choose the best trial. 
         %  Possible settings: 
         %    * with / without masking (seams to be quite powerful) 
         %    . optimized image (not so easy to handle)
         %      maybe use the low resolution option 
-        %    . modidy SPM accuracy (?)
+        %    . modify SPM accuracy (?)
         %    . apply skull-stripping (not optimal > last option)
         % 
         %     ds('l2','a',0.5,Ym,Ybg,Ym,Ym,140);
@@ -766,10 +766,10 @@ function cat_run_job(job,tpm,subj)
         warning off 
         try 
           % This is the first level where we try to process the image with 
-          % a mask that removes voxel far from the head and a holey corona
+          % a mask that removes voxel far from the head and a corona
           % to have some random background voxels. 
           % The mask helps in many cases to avoid bad voxels and also
-          % increase processing speed but in some cases it cause also
+          % increases processing speed but in some cases it causes also
           % severe problems. 
           
           % inital estimate
@@ -781,7 +781,7 @@ function cat_run_job(job,tpm,subj)
             warning on; 
           else
             % Use a low resolution version to speed up preprocessing.
-            % This averages voxels and reduce noise and artefacts. 
+            % This averages voxels and reduces noise and artefacts. 
             % RD202006: rarely used
             image1 = obj.image; 
             [obj.image,redspmres]  = cat_vol_resize(obj.image,'interpv',1);
