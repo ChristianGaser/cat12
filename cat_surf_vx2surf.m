@@ -8,7 +8,7 @@ function out = cat_surf_vx2surf(job)
 % 
 % ______________________________________________________________________
 % Robert Dahnke
-% $Id: cat_io_writenii.m 1655 2020-06-15 11:45:57Z gaser $
+% $Id$
 
 %#ok<*WNOFF,*WNON,*ASGLU>
 
