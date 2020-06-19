@@ -49,7 +49,7 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
 % $Id$
   
   if ~exist('opt','var'), opt = struct(); end
-  def.type   = 3;     % 1 - native space, 2 - atlas space push, 3 - atlas space pull
+  def.type   = 1;     % 1 - native space, 2 - atlas space push, 3 - atlas space pull
   def.write  = 0;     % 1 - display some results, 2 - display results and write some maps  
   opt = cat_io_checkinopt(opt,def); 
   

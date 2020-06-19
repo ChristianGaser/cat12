@@ -1,5 +1,54 @@
 ------------------------------------------------------------------------
-r1658 | gaser | 2020-06-18 15:49:31
+r1659 | gaser | 2020-06-19 11:43:44
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_amap.mexa64
+M       cat_amap.mexw64
+M       cat_main_roi.m
+M       cat_ornlm.mexa64
+M       cat_ornlm.mexw64
+M       cat_sanlm.mexa64
+M       cat_sanlm.mexw64
+MM      cat_surf_vx2surf.m
+M       cat_vbdist.mexa64
+M       cat_vbdist.mexw64
+M       cat_vol_downcut.mexa64
+M       cat_vol_downcut.mexw64
+M       cat_vol_eidist.mexa64
+M       cat_vol_eidist.mexw64
+M       cat_vol_genus0.mexa64
+M       cat_vol_genus0.mexw64
+M       cat_vol_gradient3.mexa64
+M       cat_vol_gradient3.mexw64
+M       cat_vol_interp3f.mexa64
+M       cat_vol_interp3f.mexw64
+M       cat_vol_laplace3.mexa64
+M       cat_vol_laplace3.mexw64
+M       cat_vol_laplace3R.mexa64
+M       cat_vol_laplace3R.mexw64
+M       cat_vol_localstat.mexa64
+M       cat_vol_localstat.mexw64
+M       cat_vol_median3.mexa64
+M       cat_vol_median3.mexw64
+M       cat_vol_median3c.mexa64
+M       cat_vol_median3c.mexw64
+M       cat_vol_pbtp.c
+M       cat_vol_pbtp.mexa64
+M       cat_vol_pbtp.mexmaci64
+M       cat_vol_pbtp.mexw64
+M       cat_vol_simgrow.mexa64
+M       cat_vol_simgrow.mexw64
+M       html/cat.html
+
+(1) Changed: Changed space for estimating ROI volumes to native space because 
+             this gave better overlap to original volumes.
+(2) Changed: Changed some settings in cat_vol_pbtp.c and recompiled that file.
+(3) Changed: Added support for precompiled Linux version.
+------------------------------------------------------------------------
+r1658 | gaser | 2020-06-18 15:50:11 +0200 (Do, 18 Jun 2020) | 23 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -23,6 +72,7 @@ M       html/cat.html
 (2) Changed: Updated help text and comments.
 (3) Fixed:   Partially rescued settings for cat_vol_pbtp.c from r155x where
              thickness estimation was more accurate.
+
 ------------------------------------------------------------------------
 r1657 | dahnke | 2020-06-17 13:15:21 +0200 (Mi, 17 Jun 2020) | 14 lines
 

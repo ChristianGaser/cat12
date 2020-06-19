@@ -10,6 +10,9 @@ DATE=`svn info |grep 'Last Changed Date: '|sed -e 's/Last Changed Date: //g'|cut
 TARGET=/Users/gaser/spm/spm12/toolbox/cat12
 TARGET2=/Volumes/UltraMax/spm12/toolbox/cat12
 
+PRECOMPILED=/Users/gaser/install/Matlab/Matlab_R2017b
+CAT12=/Users/gaser/matlab/cat12
+
 STARGET_HOST=141.35.69.218
 STARGET_HTDOCS=${STARGET_HOST}:/volume1/web/
 STARGET_FOLDER=/volume1/web/cat12
@@ -25,15 +28,15 @@ ZIPFILE=cat12_r${REVISION}.zip
 
 install: 
 	-@echo install
-	-@test ! -d ${TARGET} || rm -rf ${TARGET}
-	-@mkdir ${TARGET}
-	-@cp -R ${FILES} ${TARGET}
+	-@test ! -d ${TARGET} || rm -rf ${TARGET}/*
+	-@mkdir -p ${TARGET}
+	-@cp -R ${FILES} ${TARGET}/
 
 install2:
 	-@echo install2
-	-@test ! -d ${TARGET2} || rm -rf ${TARGET2}
-	-@mkdir ${TARGET2}
-	-@cp -R ${FILES} ${TARGET2}
+	-@test ! -d ${TARGET2} || rm -rf ${TARGET2}/*
+	-@mkdir -p ${TARGET2}
+	-@cp -R ${FILES} ${TARGET2}/
 
 help:
 	-@echo Available commands:
@@ -76,12 +79,22 @@ scp_manual:
 	-@echo scp CAT12-Manual.pdf to http://${STARGET_HOST}/cat12
 	-@scp -P 2222 CAT12-Manual.pdf ${STARGET}
 
+scp_precompile:
+	-@echo scp_precompile
+	-@for i in Linux ; do \
+	    mkdir -p MCR_$${i} ;\
+	    ln -s ${PRECOMPILED}/MCR_$${i}/*spm12* MCR_$${i}/ ;\
+	    zip cat12_latest_R2017b_MCR_$${i}.zip -r MCR_$${i} ;\
+	  done
+	-@scp -P 2222 cat12_latest_R2017b_MCR* ${STARGET}
+	-@rm -r cat12_latest_R2017b_MCR* MCR_*
+
 cp_binaries: 
 	-@echo copy binaries
 	-@test ! -f ~/work/c/CAT/build-*/Progs/*.o || rm ~/work/c/CAT/build-*/Progs/*.o
-	-@for i in CAT.glnx86/CAT*; do cp ~/work/c/CAT/build-x86_64-pc-linux/Progs/`basename $${i}` CAT.glnx86/ ; done
-	-@for i in CAT.w32/CAT*; do cp ~/work/c/CAT/build-i586-mingw32/Progs/`basename $${i}` CAT.w32/ ; done
-	-@for i in CAT.maci64/CAT*; do cp ~/work/c/CAT/build-native/Progs/`basename $${i}` CAT.maci64/ ; done
+	-@for i in CAT.glnx86/CAT*; do cp ~/work/c/CAT/build-x86_64-pc-linux/Progs/`basename $$${i}` CAT.glnx86/ ; done
+	-@for i in CAT.w32/CAT*; do cp ~/work/c/CAT/build-i586-mingw32/Progs/`basename $$${i}` CAT.w32/ ; done
+	-@for i in CAT.maci64/CAT*; do cp ~/work/c/CAT/build-native/Progs/`basename $$${i}` CAT.maci64/ ; done
 
 checklist:
 	-@echo    
