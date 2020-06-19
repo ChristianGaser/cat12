@@ -1,5 +1,41 @@
 ------------------------------------------------------------------------
-r1659 | gaser | 2020-06-19 11:43:44
+r1660 | dahnke | 2020-06-19 21:03:27
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_opts.m
+M       cat_main.m
+M       cat_main_amap.m
+M       cat_main_gintnorm.m
+M       cat_main_registration.m
+M       cat_main_registration2.m
+M       cat_main_reportfig.m
+M       cat_main_reportstr.m
+M       cat_main_updateSPM.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_job_APRGs.m
+M       cat_run_newcatch.m
+M       cat_vol_partvol.m
+M       cat_vol_qa.m
+M       tbx_cfg_cat.m
+
+(1) Fixed:    Added update of the affine registration of the final 
+              segmentation in cat_main_registration.                
+(2) New:      Prepared a new while loop that allows to test different  
+              segmentation settings to avoid errors due to in-optimal 
+              input definitions, e.g., by using a improper background
+              mask (changes in cat_run_job).               
+(3) New:      Added two additional flags to extopts.ignoreErrors that 
+              allows to run critical CAT functions and ignore warnings
+              and errors that cause all other changes.
+(4) Changed:  Corrected dependencies in case of fast surface reconstruction
+              in tbx_cfg_cat.
+                            
+
+------------------------------------------------------------------------
+r1659 | gaser | 2020-06-19 11:44:29 +0200 (Fr, 19 Jun 2020) | 47 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -47,6 +83,7 @@ M       html/cat.html
              this gave better overlap to original volumes.
 (2) Changed: Changed some settings in cat_vol_pbtp.c and recompiled that file.
 (3) Changed: Added support for precompiled Linux version.
+
 ------------------------------------------------------------------------
 r1658 | gaser | 2020-06-18 15:50:11 +0200 (Do, 18 Jun 2020) | 23 lines
 

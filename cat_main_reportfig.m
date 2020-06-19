@@ -327,14 +327,16 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         V2.dat(:,:,:) = min(0.49,Ym/fx).*(Yp0<0.5) + (Yp0/3+0.5).*(Yp0>0.5); 
         
         % meninges/blood vessels: GM > CSF
-        Ychange = 60*(smooth3( ...
-          (abs(Yp0 - Ym*3)>0.4) .* (Yp0<1.25) .* ~NS(Yl1,LAB.VT) .* ...
-          cat_vol_morph(abs(Yp0 - Ym*3)>0.5,'d',2) .* ...
-          (Yp0>0.5))>0.5);
-        %V2.dat(NS(Yl1,LAB.BV))     = 57/30; % BV???
-        V2.dat(Ychange & Ym<1.33/3) = 58/30;
-        V2.dat(Ychange & Ym>1.33/3) = 59/30;
-        V2.dat(Ychange & Ym>1.66/3) = 60/30; 
+        if job.extopts.ignoreErrors<1 
+          Ychange = 60*(smooth3( ...
+            (abs(Yp0 - Ym*3)>0.4) .* (Yp0<1.25) .* ~NS(Yl1,LAB.VT) .* ...
+            cat_vol_morph(abs(Yp0 - Ym*3)>0.5,'d',2) .* ...
+            (Yp0>0.5))>0.5);
+          %V2.dat(NS(Yl1,LAB.BV))     = 57/30; % BV???
+          V2.dat(Ychange & Ym<1.33/3) = 58/30;
+          V2.dat(Ychange & Ym>1.33/3) = 59/30;
+          V2.dat(Ychange & Ym>1.66/3) = 60/30; 
+        end
         
         % WMHs
         if job.extopts.WMHC > 1 || (qa.subjectmeasures.vol_rel_CGW(4)>0.03 || ...
@@ -368,7 +370,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         end
   
         % colormap of blood vessels
-        bv3 = [0.4 0.2 0.2; 0.6 0.2 0.2; 1 0 0];
+        %if job.extopts.ignoreErrors < 2
+          bv3 = [0.4 0.2 0.2; 0.6 0.2 0.2; 1 0 0];
+        %else
+        %  bv3 = [0.2 0.2 0.2; 0.3 0.3 0.3; 0.4 0.4 0.4];
+        %end
         
         % mapping
         try spm_orthviews('addtruecolourimage',hhp0,V2, [BCGWH; g29; wmhc9; vent3; bv3],1,2,0); end % Change

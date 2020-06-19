@@ -666,7 +666,7 @@ function job = update_job(job)
   if ~isfield(job.opts,'tol')
     job.opts.tol = cat_get_defaults('opts.tol');
   end
-  job.opts.tol = min(1e-2,max(1e-6, job.opts.tol));
+  job.opts.tol = min(1e-4,max(1e-16, job.opts.tol));
   
   %% handling of SPM accuracy options for specific GUI entry
   %  Although lower resolution (>3 mm) is not really faster and maybe much 
@@ -681,9 +681,14 @@ function job = update_job(job)
   %              problems, so we go back to previous settings.
   %                sampval =  [5 4 3 2 1]; % that describes volume of 
   %              [125 64 27 8 1] that is also describes the changes in 
-  %              processing time roughly 
+  %              processing time roughly
+  %  RD20200619: The tol parameter is more important than the resolution to
+  %              correct strong local inhomogeneities. So I make this even 
+  %              a bit more agressive and the stronges option will take 
+  %              hours. This is also more relevant for low contrast data 
+  %              with strange contrast.
   sampval               = [5 4 3 2 1]; 
-  tolval                = [1e-2 1e-3 1e-4 1e-5 1e-6];
+  tolval                = [1e-1 1e-2 1e-4 1e-8 1e-16];
   if isfield(job.opts,'accstr') && ~isfield(job.opts,'acc') 
     job.opts.samp       = sampval( round(job.opts.accstr*4 + 1) );
     job.opts.tol        = tolval(  round(job.opts.accstr*4 + 1) );
