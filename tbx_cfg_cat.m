@@ -312,19 +312,31 @@ cdep(end).tgt_spec   = cfg_findspec({{'filter','txt','strtype','e'}});
 
 % lh/rh/cb central/white/pial/layer4 surface and thickness (see also cat_run!)
 % ----------------------------------------------------------------------
+% In case of the fast surface processing without registration no spherical 
+% registration surface are available. Moreover, the central and thickness
+% cannot be used because the topology is also uncorrected. 
 if isfield(opts,'surface')
   surfaceoutput = { % surface texture
-    {'central','sphere','sphere.reg'} % no measures - just surfaces
+    {'central'}                 % no measures - just surfaces
     {}                          % default
-    {}                          % expert
+    {'sphere','sphere.reg'}     % expert
     {'pial','white'}            % developer
   };
+  if any( job.output.surface == [ 5 6 ] ) % no sphere's without registration
+    surfaceoutput{1} = setxor(surfaceoutput{1},{'sphere','sphere.reg'}); 
+    if cat_get_defaults('extopts.expertgui')<2
+      surfaceoutput{1} = setxor(surfaceoutput{1},{'central'}); 
+    end
+  end
   measureoutput = {
-    {'thickness','pbt'}         % default
-    {}                          % no measures
-    {}                          % expert
-    {'depthWM','depthCSF'}      % developer
+    {'thickness'}                 % default 
+    {}                            % no measures
+    {}                            % expert
+    {'pbt','depthWM','depthCSF'}  % developer
   };
+  if any( job.output.surface == [ 5 6 ] ) && cat_get_defaults('extopts.expertgui')<2
+    surfaceoutput{1} = setxor(surfaceoutput{1},{'thickness'}); 
+  end
   % no output of intlayer4 or defects in cat_surf_createCS but in cat_surf_createCS2 (but not with fast) 
   if isfield(job,'extopts') && isfield(job.extopts,'surface') && ...
      isfield(job.extopts.surface,'collcorr') && job.extopts.surface.collcorr>19 

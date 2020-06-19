@@ -454,11 +454,24 @@ experimental.help   = {
 ignoreErrors        = cfg_menu;
 ignoreErrors.tag    = 'ignoreErrors';
 ignoreErrors.name   = 'Ignore errors';
-ignoreErrors.labels = {'No','Yes'};
-ignoreErrors.values = {0 1};
+if 0 %expert>1
+  % The case 2 is trying to run all function and then catch errors but it 
+  % is maybe not really clear at what point it crash and what state the
+  % variables have. 
+  ignoreErrors.labels = {'No','Yes (next subject)','Yes (ignore warnings and go on)','Yes (use only backup functions)'};
+  ignoreErrors.values = {0 1 2 3};
+else
+  ignoreErrors.labels = {'No','Yes (next subject)','Yes (use simple backup functions)'};
+  ignoreErrors.values = {0 1 3};
+end
 ignoreErrors.def    = @(val)cat_get_defaults('extopts.ignoreErrors', val{:});
 ignoreErrors.help   = {
-  'Catch preprocessing errors and move on with the next subject'
+ ['Catch preprocessing errors and move on with the next subject or ignore all ' ...
+  'warning (e.g., bad intensities).  If warnings/errors are ignored, CAT will use ' ...
+  'simplified routines and skip some steps completely that requires good T1 contrasts like LAS. ' ...
+  'Without these corrections the SPM preprocessing with its bias correction is much more important. ' ...
+  'Hence, we suggest to use the higher SPM preprocessing quality option. ' ...
+  'It is here very important to check the results for preprocessing problems. ']
 };
 
 verb         = cfg_menu;
@@ -1000,7 +1013,7 @@ if ~spm
   if expert>0 % expert options
     extopts.val   = {segmentation,registration,vox,surface,admin}; 
   else
-    extopts.val   = {app,spm_kamap,LASstr,gcutstr,registration,vox,restype}; 
+    extopts.val   = {app,spm_kamap,LASstr,gcutstr,registration,vox,restype,ignoreErrors}; 
   end
 else
   % SPM based surface processing and thickness estimation

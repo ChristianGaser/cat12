@@ -66,6 +66,7 @@ if ~isfield(res,'spmpp')
   %  Fix class errors, brainmask etc. 
   %  This is a large and important subfuction that represent the 
   %  starting point of the refined CAT preprocessing.
+  %  RD202006: add ignoreErrors backup
   %  -------------------------------------------------------------------
   [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,tpm,job,res,stime,stime2);
   clear P; 
@@ -101,6 +102,8 @@ if ~isfield(res,'spmpp')
   %  and a global  and local intensity correction. The local intensity 
   %  correction refines the tissue maps to aproximate the local tissue 
   %  peaks of WM (maximum-based), GM, and CSF. 
+  %
+  %  RD202006: add ignoreErrors backup
   %  ---------------------------------------------------------------------
   stime = cat_io_cmd('Global intensity correction');
   if any( min(vx_vol*2,1.4)./vx_vol >= 2 )
@@ -246,19 +249,25 @@ if ~isfield(res,'spmpp')
 
 
   %% Local Intensity Correction 
+  %  RD202006: ignoreErrors>1 has probably strange contrasts so its better 
+  %            to avoid LAS here completelly. 
   Ymo = Ym;
-  if job.extopts.LASstr>0
-    if job.extopts.LASstr>1 
-      extoptsLAS2 = job.extopts;
-      extoptsLAS2.LASstr = extoptsLAS2.LASstr-1; 
-      stime = cat_io_cmd(sprintf('Local adaptive segmentation 2 (LASstr=%0.2f)',extoptsLAS2.LASstr));
-      [Ymi,Ym,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extoptsLAS2); % use Yclsi after cat_vol_partvol
+  if job.extopts.LASstr>0 
+    if job.extopts.ignoreErrors < 2
+      if job.extopts.LASstr>1 
+        extoptsLAS2 = job.extopts;
+        extoptsLAS2.LASstr = extoptsLAS2.LASstr-1; 
+        stime = cat_io_cmd(sprintf('Local adaptive segmentation 2 (LASstr=%0.2f)',extoptsLAS2.LASstr));
+        [Ymi,Ym,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extoptsLAS2); % use Yclsi after cat_vol_partvol
+      else
+        stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
+        [Ymi,Ym,Ycls] = cat_main_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth);
+      end
+      fprintf('%5.0fs\n',etime(clock,stime));
     else
-      stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
-      [Ymi,Ym,Ycls] = cat_main_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
+      cat_io_cprintf('warn','\n  IgnoreErrors: No LAS backup function. Use global intensity normalization \n')
+      Ymi = Ym; 
     end
-    fprintf('%5.0fs\n',etime(clock,stime));
-
     %
     % ### indlcude this in cat_main_LAS? ###
     %
@@ -288,8 +297,6 @@ if ~isfield(res,'spmpp')
     
     cat_io_cmd(' ','','',job.extopts.verb,stime); 
     fprintf('%5.0fs\n',etime(clock,stime));
-  else
-    Ymi = Ym; 
   end
   if ~debug; clear Ysrc ; end
   
@@ -344,26 +351,31 @@ if ~isfield(res,'spmpp')
   %  Problems can occure for strong biased images, because the partioning 
   %  has to be done before bias correction.
   %  Of course we only want to do this for highres T1 data!
+  %  RD202006: ignoreErrors>1 does not support optimized atlas maps yet. 
   %  ---------------------------------------------------------------------
   NS = @(Ys,s) Ys==s | Ys==s+1; 
-  if job.extopts.BVCstr && ~job.inv_weighting && all(vx_vol<2); 
-    stime = cat_io_cmd(sprintf('Blood vessel correction (BVCstr=%0.2f)',job.extopts.BVCstr));
+  if job.extopts.BVCstr && ~job.inv_weighting && all(vx_vol<2)
+    if job.extopts.ignoreErrors < 2  
+      stime = cat_io_cmd(sprintf('Blood vessel correction (BVCstr=%0.2f)',job.extopts.BVCstr));
 
-    Ybv  = cat_vol_smooth3X(cat_vol_smooth3X( ...
-      NS(Yl1,7) .* (Ymi*3 - (1.5-job.extopts.BVCstr)),0.3).^4,0.1)/3;
+      Ybv  = cat_vol_smooth3X(cat_vol_smooth3X( ...
+        NS(Yl1,7) .* (Ymi*3 - (1.5-job.extopts.BVCstr)),0.3).^4,0.1)/3;
 
-    % correct src images
-    Ymi   = max(0,Ymi - Ybv*2/3); 
-    Ymi   = cat_vol_median3(Ymi,cat_vol_morph(Ybv>0.5,'dilate')); 
-    Ymis  = cat_vol_smooth3X(Ymi); Ymi(Ybv>0.5) = Ymis(Ybv>0.5); clear Ymis;
+      % correct src images
+      Ymi   = max(0,Ymi - Ybv*2/3); 
+      Ymi   = cat_vol_median3(Ymi,cat_vol_morph(Ybv>0.5,'dilate')); 
+      Ymis  = cat_vol_smooth3X(Ymi); Ymi(Ybv>0.5) = Ymis(Ybv>0.5); clear Ymis;
 
-    % update classes
-    Ycls{1} = min(Ycls{1},cat_vol_ctype(255 - Ybv*127)); 
-    Ycls{2} = min(Ycls{2},cat_vol_ctype(255 - Ybv*127)); 
-    Ycls{3} = max(Ycls{3},cat_vol_ctype(127*Ybv)); 
+      % update classes
+      Ycls{1} = min(Ycls{1},cat_vol_ctype(255 - Ybv*127)); 
+      Ycls{2} = min(Ycls{2},cat_vol_ctype(255 - Ybv*127)); 
+      Ycls{3} = max(Ycls{3},cat_vol_ctype(127*Ybv)); 
 
-    fprintf('%5.0fs\n',etime(clock,stime));
-    clear Ybv p0; 
+      fprintf('%5.0fs\n',etime(clock,stime));
+      clear Ybv p0; 
+    else
+      cat_io_cprintf('err','\n  No BVC backup function \n')
+    end
   end
 
   
@@ -374,19 +386,24 @@ if ~isfield(res,'spmpp')
   %  old function is still available as backup solution.
   %  Futhermore, both parts prepare the initial segmentation map for the 
   %  AMAP function.
+  %  RD202006: ignoreErrors>1 does not support optimized atlas maps yet. 
   %  -------------------------------------------------------------------
   if job.extopts.gcutstr>0 && job.extopts.gcutstr<=1
-    try 
-      stime = cat_io_cmd(sprintf('Skull-stripping using graph-cut (gcutstr=%0.2f)',job.extopts.gcutstr));
-      [Yb,Yl1] = cat_main_gcut(Ymo,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
-      
-      % extend gcut brainmask by brainmask derived from SPM12 segmentations if necessary
-      if ~job.inv_weighting, Yb = Yb | Yb0; end
-      
-      fprintf('%5.0fs\n',etime(clock,stime));
-    catch %#ok<CTCH>
-      fprintf('\n'); cat_warnings = cat_io_addwarning(cat_warnings,'CAT:cat_main_gcut:err99','Unknown error in cat_main_gcut. Use old brainmask.'); fprintf('\n');
-      job.extopts.gcutstr = 99;
+    if job.extopts.ignoreErrors < 2 
+      try 
+        stime = cat_io_cmd(sprintf('Skull-stripping using graph-cut (gcutstr=%0.2f)',job.extopts.gcutstr));
+        [Yb,Yl1] = cat_main_gcut(Ymo,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
+
+        % extend gcut brainmask by brainmask derived from SPM12 segmentations if necessary
+        if ~job.inv_weighting, Yb = Yb | Yb0; end
+
+        fprintf('%5.0fs\n',etime(clock,stime));
+      catch %#ok<CTCH>
+        fprintf('\n'); cat_warnings = cat_io_addwarning(cat_warnings,'CAT:cat_main_gcut:err99','Unknown error in cat_main_gcut. Use old brainmask.'); fprintf('\n');
+        job.extopts.gcutstr = 99;
+      end
+    else
+      cat_io_cprintf('err','\n  No further refinement of the Skull-Stripping \n')
     end
   end
   % correct mask for skull-stripped images
@@ -404,9 +421,27 @@ if ~isfield(res,'spmpp')
   %
   %    prob .. new AMAP segmenation (4D)
   %    ind* .. index elements to asign a subvolume
+  %
+  %  RD202006: ignoreErrors>1 does not support optimized atlas maps yet. 
   %  -------------------------------------------------------------------
-  [prob,indx,indy,indz] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res);
-  
+  if job.extopts.ignoreErrors < 2
+    [prob,indx,indy,indz] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res);
+  else
+    try 
+      [prob,indx,indy,indz,amapTth] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res);
+      % check values 
+    catch
+      % use SPM 
+      prob = zeros([size(Ymi),3],'uint8');
+      for i = 1:3, prob(:,:,:,i) = Ycls{i}; end
+      sz = size(Yb);
+      [indx, indy, indz] = ind2sub(sz,find(Yb>0));
+      indx = max((min(indx) - 1),1):min((max(indx) + 1),sz(1));
+      indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
+      indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
+      prob = prob(indx,indy,indz,:);
+    end
+  end
   
   
   %% Final Cleanup
@@ -467,7 +502,7 @@ if ~isfield(res,'spmpp')
 
 
   % correction for normalization [and final segmentation]
-  if ( (job.extopts.WMHC && job.extopts.WMHCstr>0) || job.extopts.SLC) && ~job.inv_weighting
+  if ( (job.extopts.WMHC && job.extopts.WMHCstr>0) || job.extopts.SLC) && ~job.inv_weighting && job.extopts.ignoreErrors < 2
     % display something
     %{
     if job.extopts.WMHC==1
@@ -611,9 +646,25 @@ end
   
   % call Dartel/Shooting registration 
   if job.extopts.new_release % ... there is an error
-    [trans,res.ppe.reg] = cat_main_registration2(job,res,Yclsd,Yy,tpm.M,Ylesions);
+    [trans,res.ppe.reg,res.Affine] = cat_main_registration2(job,res,Yclsd,Yy,tpm.M,Ylesions);
   else
-    [trans,res.ppe.reg] = cat_main_registration(job,res,Yclsd,Yy,tpm.M,Ylesions);
+    if job.extopts.ignoreErrors
+      [trans,res.ppe.reg,res.Affine] = cat_main_registration(job,res,Yclsd,Yy,tpm.M,Ylesions);
+    else
+      try 
+        [trans,res.ppe.reg,res.Affine] = cat_main_registration(job,res,Yclsd,Yy,tpm.M,Ylesions);
+      catch
+        job.extopts.reg = 13; % low res 
+        try
+          [trans,res.ppe.reg,res.Affine] = cat_main_registration(job,res,Yclsd,Yy,tpm.M,Ylesions);
+        catch
+          if isfield(res,'imagesc'); VT0 = res.imagec(1); else VT0 = res.image0(1); end
+          trans.native.Vo = VT0;
+          trans.native.Vi = res.image(1);
+          
+        end
+      end      
+    end
   end
   clear Yclsd Ylesions;
   if ~res.do_dartel
@@ -628,8 +679,10 @@ end
   
 %% update WMHs 
 %  ---------------------------------------------------------------------
-Ycls = cat_main_updateWMHs(Ym,Ycls,Yy,tpm,job,res,trans);
-  
+if job.extopts.ignoreErrors < 2
+  Ycls = cat_main_updateWMHs(Ym,Ycls,Yy,tpm,job,res,trans);
+end
+
 
 
 %% write results
@@ -872,6 +925,7 @@ clear Yth1;
 %  lines in the command line window.
 %  ---------------------------------------------------------------------
 if job.extopts.print
+  %%
   str = cat_main_reportstr(job,res,qa,cat_warnings);
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
   if ~exist('Psurf','var'), Psurf = ''; end
@@ -1125,9 +1179,11 @@ function [Ymix,job,surf,WMT,stime] = cat_main_surf_preppara(Ymi,Yp0,job,vx_vol)
   end
   
   % surface creation and thickness estimation (only for test >> manual setting)
-  if 1
+  Yp0toC = @(c) 1-min(1,abs(Yp0-c));
+  Yp0th  = @(c) cat_stat_nanmedian( Ymi(Yp0toC(c) > 0.5) ); 
+  if ( Yp0th(1) < Yp0th(2) ) && ( Yp0th(2) < Yp0th(3) ) && ( Yp0th(3) > 0.9 ) % if T1
     Ymix = Ymi .* (Yp0>0.5); % | (cat_vol_morph(Yp0>0.5,'d') & Ymi<2/3)); %% using the Ymi map
-  else
-    Ymix = Yp0/3; %#ok<UNRCH> % use only the segmentation map (only for tests!)
+  else % use only the segmentation map if any other contrast (or for tests)
+    Ymix = Yp0 / 3;  
   end
 return

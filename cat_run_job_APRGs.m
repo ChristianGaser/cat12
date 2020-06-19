@@ -270,7 +270,7 @@ function [Affine2,Yb,Ymi,Ym0] = cat_run_job_APRGs(Ysrc,Ybg,VF,Pb,Pbt,Affine,vx_v
   Ybx = (exp(obj2.tpm.dat{1}) + exp(obj2.tpm.dat{2}) + exp(obj2.tpm.dat{3}))>0.5;
   for i=1:3,  obj2.tpm.dat{i}  = obj2.tpm.dat{i} .* Ybx; end
     
-if 0
+if 1
     %%
   obj2.msk       = VF; 
   obj2.msk.pinfo = repmat([255;0],1,size(Yb,3));
@@ -281,6 +281,10 @@ end
   
   % do registration
   Affine2  = spm_maff8(obj2.image, obj2.samp ,obj2.fwhm ,obj2.tpm ,Affine ,job.opts.affreg ,80);
+  if det(Affine \ Affine2)>1.5 || det(Affine2 \ Affine)>1.5
+    Affine2  = spm_maff8(obj2.image, obj2.samp ,obj2.fwhm ,obj2.tpm ,Affine , 'none'  ,80);
+  end
+    
   %%
   if 0
     %%

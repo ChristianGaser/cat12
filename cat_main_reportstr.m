@@ -65,7 +65,8 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
   else
     if job.extopts.experimental, str{1}(end).value = [str{1}(end).value '\bf\color[rgb]{0 0.2 1}x']; end  
   end
-
+  if job.extopts.ignoreErrors > 1, str{1}(end).value = [str{1}(end).value '    \bf\color[rgb]{0.8 0 0}Ignore Errors!']; end  
+  
   
   % 2 lines: TPM, Template, Normalization method with voxel size
   str{1} = [str{1} struct('name', 'Tissue Probability Map:','value',strrep(spm_str_manip(res.tpm(1).fname,'k40d'),'_','\_'))];
@@ -105,7 +106,7 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
     end
   else
     str{1}(end).name  = [str{1}(end).name(1:end-1) ' / biasreg / biasfwhm'];
-    str{1}(end).value = [str{1}(end).value sprintf(' / %0.2f / %0.2f',job.opts.biasreg,job.opts.biasfwhm)]; 
+    str{1}(end).value = [str{1}(end).value sprintf(' / %0.0e / %0.2f',job.opts.biasreg,job.opts.biasfwhm)]; 
   end
   if isfield(job.opts,'acc') && job.opts.acc>0
     str{1} = [str{1} struct('name', '','value','')];
@@ -113,13 +114,13 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
     str{1}(end).name  = [str{1}(end).name(1:end-1) 'SPM accuracy (samp/tol) '];  
     str{1}(end).value = [str{1}(end).value sprintf(' / %s',accstr{round(job.opts.acc*4)+1})];
     if job.extopts.expertgui % add the value
-      str{1}(end).value = [str{1}(end).value sprintf('%0.2f (%0.2f/%0.2f)',job.opts.acc,job.opts.samp,job.opts.tol)]; 
+      str{1}(end).value = [str{1}(end).value sprintf('%0.2f (%0.2f/%0.0e)',job.opts.acc,job.opts.samp,job.opts.tol)]; 
     end
   else
     if job.extopts.expertgui
       str{1} = [str{1} struct('name', '','value','')];
       str{1}(end).name  = [str{1}(end).name(1:end-1) 'SPM accuracy (samp/tol)'];
-      str{1}(end).value = [str{1}(end).value sprintf('%0.2f / %0.2f',job.opts.samp,job.opts.tol)]; 
+      str{1}(end).value = [str{1}(end).value sprintf('%0.2f / %0.0e',job.opts.samp,job.opts.tol)]; 
     end
   end
 
