@@ -661,32 +661,41 @@ function varargout = cat_vol_qa(action,varargin)
               cat_stat_nanmedian(Ym(Yp0toC(Yp0(:),2)>0.9)) ...
               cat_stat_nanmedian(Ym(Yp0toC(Yp0(:),3)>0.9))];
       noise = max(0,min(1,cat_stat_nanstd(Ym(Yp0(:)>2.9)) / min(abs(diff(T1th)))));
+      
       Yms = Ym+0; spm_smooth(Yms,Yms,repmat(double(noise)*4,1,3));      % smoothing to reduce high frequency noise
             
       % basic tissue classes - erosion to avoid PVE, std to avoid other tissues (like WMHs)
-      voli = @(v) (v ./ (pi * 4./3)).^(1/3); 
-      rad  = voli( QAS.subjectmeasures.vol_TIV) ./ cat_stat_nanmean(vx_vol);
-      Ysc  = 1-cat_vol_smooth3X(Yp0<1 | Ym==0,min(24,max(16,rad*2)));   % fast 'distance' map
-      Ycm  = cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<cat_stat_nanmean(T1th(1:2)),'e') & ...
-              Ysc>0.75 & Yp0<1.25;% avoid PVE & ventricle focus
-      if sum(Ycm(:)>0)<10; Ycm=cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<cat_stat_nanmean(T1th(1:2)),'e') & Yp0<1.25; end
-      if sum(Ycm(:)>0)<10; Ycm=Yp0>0.5 & Yms<cat_stat_nanmean(T1th(1:2)) & Yp0<1.25; end
-      %Ycm  = Ycm | (Yp0==1 & Ysc>0.7 & Yms<cat_stat_nanmean(T1th(2:3))); % HEBEL      
-      Ygm1 = round(Yp0*10)/10==2;                                       % avoid PVE 1
-      Ygm2 = cat_vol_morph(Yp0>1.1,'e') & cat_vol_morph(Yp0<2.9,'e');   % avoid PVE 2
-      Ygm  = (Ygm1 | Ygm2) & Ysc<0.9;                                   % avoid PVE & no subcortex
-      Ywm  = cat_vol_morph(Yp0>2.1,'e') & Yp0>2.9 & ...                 % avoid PVE & subcortex
-        Yms>min(cat_stat_nanmean(T1th(2:3)),(T1th(2) + 2*noise*abs(diff(T1th(2:3)))));   % avoid WMHs2
+      if T1th(1) < T1th(2) && T1th(2) < T1th(3)
+        voli = @(v) (v ./ (pi * 4./3)).^(1/3); 
+        rad  = voli( QAS.subjectmeasures.vol_TIV) ./ cat_stat_nanmean(vx_vol);
+        Ysc  = 1-cat_vol_smooth3X(Yp0<1 | Ym==0,min(24,max(16,rad*2)));   % fast 'distance' map
+        Ycm  = cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<cat_stat_nanmean(T1th(1:2)),'e') & ...
+                Ysc>0.75 & Yp0<1.25;% avoid PVE & ventricle focus
+        if sum(Ycm(:)>0)<10; Ycm=cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<cat_stat_nanmean(T1th(1:2)),'e') & Yp0<1.25; end
+        if sum(Ycm(:)>0)<10; Ycm=Yp0>0.5 & Yms<cat_stat_nanmean(T1th(1:2)) & Yp0<1.25; end
+        %Ycm  = Ycm | (Yp0==1 & Ysc>0.7 & Yms<cat_stat_nanmean(T1th(2:3))); % HEBEL      
+        Ygm1 = round(Yp0*10)/10==2;                                       % avoid PVE 1
+        Ygm2 = cat_vol_morph(Yp0>1.1,'e') & cat_vol_morph(Yp0<2.9,'e');   % avoid PVE 2
+        Ygm  = (Ygm1 | Ygm2) & Ysc<0.9;                                   % avoid PVE & no subcortex
+        Ywm  = cat_vol_morph(Yp0>2.1,'e') & Yp0>2.9 & ...                 % avoid PVE & subcortex
+          Yms>min(cat_stat_nanmean(T1th(2:3)),(T1th(2) + 2*noise*abs(diff(T1th(2:3)))));   % avoid WMHs2
+      else
+        Ycm = cat_vol_morph(Yp0>0 & Yp0<2,'e');
+        Ygm = cat_vol_morph(Yp0>1 & Yp0<3,'e');
+        Ywm = cat_vol_morph(Yp0>2 & Yp0<4,'e');
+      end
       clear Ygm1 Ygm2; % Ysc; 
       
       %% further refinements of the tissue maps
-      T2th = [median(Yms(Ycm)) median(Yms(Ygm)) median(Yms(Ywm))];
-      Ycm  = Ycm & Yms>(T2th(1)-16*noise*diff(T2th(1:2))) & Ysc &...
-             Yms<(T2th(1)+0.1*noise*diff(T2th(1:2)));
-      if sum(Ycm(:)>0)<10; Ycm=cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<cat_stat_nanmean(T1th(1:2)),'e') & Yp0<1.25; end
-      if sum(Ycm(:)>0)<10; Ycm=Yp0>0.5 & Yms<cat_stat_nanmean(T1th(1:2)) & Yp0<1.25; end     
-      Ygm  = Ygm & Yms>(T2th(2)-2*noise*abs(diff(T1th(2:3)))) & Yms<(T2th(2)+2*noise*abs(diff(T1th(2:3))));
-      Ygm(smooth3(Ygm)<0.2) = 0;
+      if T1th(1) < T1th(2) && T1th(2) < T1th(3)
+        T2th = [median(Yms(Ycm)) median(Yms(Ygm)) median(Yms(Ywm))];
+        Ycm  = Ycm & Yms>(T2th(1)-16*noise*diff(T2th(1:2))) & Ysc &...
+               Yms<(T2th(1)+0.1*noise*diff(T2th(1:2)));
+        if sum(Ycm(:)>0)<10; Ycm=cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<cat_stat_nanmean(T1th(1:2)),'e') & Yp0<1.25; end
+        if sum(Ycm(:)>0)<10; Ycm=Yp0>0.5 & Yms<cat_stat_nanmean(T1th(1:2)) & Yp0<1.25; end     
+        Ygm  = Ygm & Yms>(T2th(2)-2*noise*abs(diff(T1th(2:3)))) & Yms<(T2th(2)+2*noise*abs(diff(T1th(2:3))));
+        Ygm(smooth3(Ygm)<0.2) = 0;
+      end
       Ycm  = cat_vol_morph(Ycm,'lc'); % to avoid holes
       Ywm  = cat_vol_morph(Ywm,'lc'); % to avoid holes
       Ywe  = cat_vol_morph(Ywm,'e');  

@@ -229,9 +229,9 @@ warpreg.help    = {
 %------------------------------------------------------------------------
 % no large differences 
 % - mni was most stable
-% - rigid did not work in ~20% of the cases (and is of course not meanful here)
-% - subj and none led to idential results 
-% - no registrastion only for animals
+% - rigid did not work in ~20% of the cases (and is of course not meaningful here)
+% - subj and none led to identical results 
+% - no registration only for animals
 %------------------------------------------------------------------------
 affreg        = cfg_menu;
 affreg.tag    = 'affreg';
@@ -265,8 +265,8 @@ samp.tag     = 'samp';
 samp.name    = 'Sampling distance';
 samp.strtype = 'r';
 samp.num     = [1 1];
-samp.def    = @(val)cat_get_defaults('opts.samp', val{:});
-samp.help   = {
+samp.def     = @(val)cat_get_defaults('opts.samp', val{:});
+samp.help    = {
   'This encodes the approximate distance between sampled points when estimating the model parameters.  Smaller values use more of the data, but the procedure is slower and needs more memory.  Determining the "best" setting involves a compromise between speed and accuracy.'
   ''
 };
@@ -276,14 +276,14 @@ tol         = cfg_menu;
 tol.tag     = 'tol';
 tol.name    = 'SPM iteration accuracy';
 tol.help    = { ...
-    'Parameter to control the iteration stop criteria of SPM preprocessing fucntions. In most cases the standard value is good enough for the initialization in CAT. However, some images with servere (local) inhomogeneities or atypical anatomy may benefit by further iterations. '
+    'Parameter to control the iteration stop criteria of SPM preprocessing functions. In most cases the standard value is good enough for the initialization in CAT. However, some images with servere (local) inhomogeneities or atypical anatomy may benefit by further iterations. '
   };
 tol.def    = @(val)cat_get_defaults('opts.tol', val{:}); 
 tol.labels = {'average (default)' 'high (slow)' 'ultra high (very slow)'};
-tol.values = {1e-4 1e-5 1e-6};
-if expert
+tol.values = {1e-4 1e-8 1e-16};
+if 0 %expert
   tol.labels = [{'ultra low (superfast)' 'low (fast)'} tol.labels];
-  tol.values = [{1e-2 1e-3} tol.values];
+  tol.values = [{1e-1 1e-2} tol.values];
 end
 
 % single parameter 
@@ -292,7 +292,7 @@ accspm.tag    = 'spm';
 accspm.name   = 'Original SPM accuracy parameter';
 accspm.val    = {samp tol};
 accspm.help   = {
-  'Offical SPM resolution parameter "samp" and internal SPM iteration parameter "tol".' 
+  'Official SPM resolution parameter "samp" and internal SPM iteration parameter "tol".' 
 }; 
 
 % combined SPM processing accuracy parameter
@@ -300,14 +300,22 @@ accstr         = cfg_menu;
 accstr.tag     = 'accstr';
 accstr.name    = 'SPM processing accuracy';
 accstr.help    = { ...
-    'Parameter to control the accuracy of SPM preprocessing functions. In most images the standard accuracy is good enough for the initialization in CAT. However, some images with servere (local) inhomogeneities or atypical anatomy may benefit by additional iterations and higher resolution. '
+    'Parameter to control the accuracy of SPM preprocessing functions. In most images the standard accuracy is good enough for the initialization in CAT. However, some images with severe (local) inhomogeneities or atypical anatomy may benefit by additional iterations and higher resolution. '
   };
 accstr.labels = {'average (default)' 'high (slow)' 'ulta high (very slow)'};
 accstr.values = {0.5 0.75 1.0};
 accstr.def    = @(val)cat_get_defaults('opts.accstr', val{:}); % no cat_defaults entry
 if expert
-  accstr.labels = [{'ultra low (superfast)' 'low (fast)'} accstr.labels];
-  accstr.values = [{0 0.25} accstr.values];
+  %accstr.labels = [{'ultra low (superfast)' 'low (fast)'} accstr.labels];
+  %accstr.values = [{0 0.25} accstr.values];
+  accstr.help   = [accstr.help; 
+   {''
+   ['Overview of parameters: ' ...
+    '  accstr:  0.50   0.75   1.00' ...
+    '  samp:    3.00   2.00   1.00 (in mm)' ...
+    '  tol:     1e-4   1e-8   1e-16' ...
+    '' ...
+    'SPM default is samp = 3 mm with tol = 1e-4. ']}];
 end
 
 % single parameter
@@ -357,7 +365,7 @@ elseif expert==1
     ''
   }];
 else
-  opts.val  = {tpm,affreg,biasstr};
+  opts.val  = {tpm,affreg,biasstr,accstr};
    
 end
 

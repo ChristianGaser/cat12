@@ -1,4 +1,4 @@
-function [prob,indx,indy,indz] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
+function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
 % ______________________________________________________________________
 %
 % AMAP segmentation:
@@ -76,7 +76,7 @@ function [prob,indx,indy,indz] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
 
   % remove non-brain tissue with a smooth mask and set values inside the
   % brain at least to CSF to avoid wholes for images with CSF==BG.
-  if job.extopts.LASstr>0 
+  if job.extopts.LASstr>0 && job.extopts.ignoreErrors < 2
     Ywmstd = cat_vol_localstat(single(Ymib),Yp0b==3,1,4); 
     CSFnoise(1) = cat_stat_nanmean(Ywmstd(Ywmstd(:)>0))/mean(vx_vol); 
     Ywmstd = cat_vol_localstat(cat_vol_resize(single(Ymib),'reduceV',vx_vol,vx_vol*2,16,'meanm'),...
@@ -92,7 +92,7 @@ function [prob,indx,indy,indz] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
   end
   
   % adaptive mrf noise 
-  if job.extopts.mrf>=1 || job.extopts.mrf<0; 
+  if (job.extopts.mrf>=1 || job.extopts.mrf<0) %&& job.extopts.ignoreErrors < 2
     % estimate noise
     [Yw,Yg] = cat_vol_resize({Ymi.*(Ycls{1}>240),Ymi.*(Ycls{2}>240)},'reduceV',vx_vol,3,32,'meanm');
     Yn = max(cat(4,cat_vol_localstat(Yw,Yw>0,2,4),cat_vol_localstat(Yg,Yg>0,2,4)),[],4);
@@ -108,10 +108,16 @@ function [prob,indx,indy,indz] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
   % intensity values
   Ymib = double(Ymib); n_iters = 50; sub = round(32/min(vx_vol));   %#ok<NASGU>
   n_classes = 3; pve = 5; bias_fwhm = 0; init_kmeans = 0;           %#ok<NASGU>
-  if job.extopts.mrf~=0, iters_icm = 50; else iters_icm = 0; end    %#ok<NASGU>
+  if job.extopts.mrf~=0, iters_icm = 50; else, iters_icm = 0; end    %#ok<NASGU>
+  if job.extopts.ignoreErrors
+    init_kmeans = 0; % k-means was not stable working (e.g. HR075T2)
+    pve = 6; % seams to be more stable in HR075T2  
+    % we need more iterations and also some bias correction here because LAS etc. is missing
+    n_iters = 200; bias_fwhm = 60; sub = round(64/min(vx_vol)); 
+  end
 
   % remove noisy background for kmeans
-  if init_kmeans, Ymib(Ymib<0.1) = 0; end %#ok<UNRCH>
+  if init_kmeans && job.extopts.ignoreErrors<2, Ymib(Ymib<0.1) = 0; end %#ok<NASGU>
   
   % do segmentation  
   amapres = evalc(['prob = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
@@ -126,10 +132,15 @@ function [prob,indx,indy,indz] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
   
   
   if job.extopts.verb>1 
-    fprintf('    AMAP peaks: [CSF,GM,WM] = [%0.2f%s%0.2f,%0.2f%s%0.2f,%0.2f%s%0.2f]\n',...
-      th{1}(1),char(177),th{1}(2),th{2}(1),char(177),th{2}(2),th{3}(1),char(177),th{3}(2));
+    if job.extopts.ignoreErrors < 2
+      fprintf('    AMAP peaks: [CSF,GM,WM] = [%0.2f%s%0.2f,%0.2f%s%0.2f,%0.2f%s%0.2f]\n',...
+        th{1}(1),char(177),th{1}(2),th{2}(1),char(177),th{2}(2),th{3}(1),char(177),th{3}(2));
+    else
+      fprintf('    AMAP peaks: [%0.2f%s%0.2f,%0.2f%s%0.2f,%0.2f%s%0.2f]\n',...
+        th{1}(1),char(177),th{1}(2),th{2}(1),char(177),th{2}(2),th{3}(1),char(177),th{3}(2));
+    end
   end
-  if th{1}(1)<0 || th{1}(1)>0.6 || th{2}(1)<0.5 || th{2}(1)>0.9 || th{3}(1)<0.95-th{3}(2) || th{3}(1)>1.1
+  if th{1}(1)<0 || th{1}(1)>0.6 || th{2}(1)<0.5 || th{2}(1)>0.9 || th{3}(1)<0.95-th{3}(2) || th{3}(1)>1.1 || any( isnan( cell2mat(th) ) )
     error('cat_main:amap',['AMAP estimated untypical tissue peaks that point to an \n' ...
                            'error in the preprocessing before the AMAP segmentation. ']);
   end
