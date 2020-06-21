@@ -698,21 +698,78 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
       % [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,extopts)
 
       cat_io_cprintf('warn','\n  IgnoreErrors: cat_main_gintnorm - run backup function           ')
-                                
+      Yg      = cat_vol_grad(Ysrc,vx_vol) ./ max(eps,Ysrc + min(Ysrc(:)));
+      gth     = max(0.05,min( 1/3 , cat_stat_nanmean( Yg( cat_vol_morph( smooth3( Ycls{2}>240 )>0.5 ,'e') )) * 1.5 ));  
+      clsint  = @(x) cat_stat_nanmedian(Ysrc(Ycls{x}>128));
+      clsints = @(x) res.mn(res.lkp==x); 
+      
+      
+      bc = 1; 
+      if bc
+        % This is a quite simple bias corrections that should remove small 
+        % local reminding inhomogeneities. It must consider WMHs to avoid
+        % wrong corrections and get the correct WM peak. 
+        
+        % remove strong outlier
+        Ysrcs = cat_vol_median3(Ysrc,Yb,Yb,0.1); 
+        
+        % detect WMHs
+        clsintg = @(x) cat_stat_nanmedian(Ysrc(Ycls{x}>128 & Yg<gth)); 
+        Ygmp = max(0,Yb - max(0,abs( Ysrc - clsintg(1))) / abs(diff([clsintg(2),clsintg(1)])));   % GM int prob map
+        Ywmh = (Ygmp - single(Ycls{1})/255); Ywmh(smooth3(Ywmh)<0.5) = 0;                         % larger WMHs 
+        Ywmh = (Ygmp - single(Ycls{1})/255) .* cat_vol_morph(Ywmh>0.2,'d',2,vx_vol);              % also smaller WMHs around the large ones
+        Ywmh(smooth3(Ywmh)<0.3) = 0;                                                              % remove small dots
+        clsintg = @(x) cat_stat_nanmedian(Ysrcs(Ycls{x}>128 & Yg<gth & ~Ywmh));                   % awoid WMH areas
+        
+        % WM region
+        Ywm  = Ycls{2}>8 & smooth3(Ycls{3})<8 & ~cat_vol_morph(Ycls{1}>32,'o',2,vx_vol) & ~Ywmh;       % WM with close GM/WM PVE voxel
+        Ywm(smooth3(Ywm)<0.3) = 0;                                                                     % remove small dots
+        Ygwm = Ycls{1}>8 & ~Ywmh & ~Ywm & Ycls{2}>Ycls{3} & ~cat_vol_morph(Ycls{1}>128,'o',2,vx_vol);  % WM with more distant GM/WM PVE voxel
+        Ygwm = Ygwm | cat_vol_morph(Ywm,'d');                                                          % add neigbors to get a more stable area (use large min-max distance)
+        Ywmi = cat_vol_localstat(Ysrcs,Ywm,2,2 + (clsint(2)>clsint(1))) + ...                          % filter size 1 (1vx-more aggressive,2vx-more-save)
+               Ygwm .* cat_vol_localstat(Ysrcs,Ygwm,3,2 + (clsint(2)>clsint(1)));                      % filter size 2 (2vx-more aggressive,3vx-more-save)
+        Ywmm = Ywm | Ygwm; Ywmi(Ywmm) = Ywmi(Ywmm) ./ (Ywm(Ywmm) + Ygwm(Ywmm)); Ywm  = Ywmm;           % combine both areas
+        clear Ygwm Ywmm;                                                                               % cleanup   
+        
+        % CSF region - for CSF we cannot expect to have large CSF in the neighborhood  
+        Ycm  = Ycls{3}>8 & Ycls{2}==0 & smooth3(Ycls{1})<8 & Yg<min(0.5,gth*4);                        % CSF with PVE
+        Ycm  = cat_vol_morph(Ycm,'l',[0.01 100 ]); Ycm(smooth3(Ycm)<0.5) = 0;                          % remove smaller unconected structures and dots                
+        Ycm  = Ycm | (cat_vol_morph(smooth3(Ycm)<0.8 & Ycls{3}>128,'d') & Ycls{3}>250);                % enlarge neighborhood to get more stable definition 
+        Ycm(smooth3(Ycm)<0.5) = 0;                                                                     % remove dots
+        Ycmi = cat_vol_localstat(Ysrcs,Ycm,3,3 - (clsint(1)>clsint(3)));
+        
+        % GM without PVE
+        Ygm = cat_vol_morph(Ycls{1}>8,'e'); 
+        Ygm(smooth3(Ygm)<0.3) = 0; 
+        Ygmi = cat_vol_localstat(Ysrc,Ygm,2,1);
+        Ygmi = cat_vol_localstat(Ygmi,Ygm,1,1);
+        
+        % final correction map with correction for double counts
+        Yi   = Ywmi/clsintg(2) + Ygmi/clsintg(1) + Ycmi/clsintg(3) + res.bge;  % and also the eroded background  
+        Yim  =  Ycm &  Ygm &  Ywm; Yi(Yim) = Yi(Yim) ./ ( Ywm(Yim) + Ycm(Yim) + Ywm(Yim));
+        Yim  =  Ycm &  Ygm & ~Ywm; Yi(Yim) = Yi(Yim) ./ ( Ycm(Yim) + Ygm(Yim));
+        Yim  =  Ycm & ~Ygm &  Ywm; Yi(Yim) = Yi(Yim) ./ ( Ycm(Yim) + Ywm(Yim));
+        Yim  = ~Ycm &  Ygm &  Ywm; Yi(Yim) = Yi(Yim) ./ ( Ygm(Yim) + Ywm(Yim));
+        Yi   = cat_vol_approx(Yi,1); 
+        
+        %% correction 
+        % ds('d2sm','a',1,Ysrc/clsint(3),Ysrc ./ Yi / clsint(3),140)
+        Ysrc = Ysrc ./ Yi; 
+      else
+        clsintg = @(x) cat_stat_nanmedian(Ysrc(Ycls{x}>128 & Yg<gth)); % definition without WMHs
+      end
+      
+      
       % T3th3
       if ~exist('T3th3','var') || any(isnan(T3th3))
-        clsint  = @(x) cat_stat_nanmedian(Ysrc(Ycls{x}>128));
-        clsints = @(x) res.mn(res.lkp==x); 
         T3th3 = [clsint(3) clsint(1) clsint(2)];
         if any(isnan(T3th3))
           T3th3 = [clsints(3) clsints(1) clsints(2)];
         end
       end
-      
+     
       % T3th, T3thx - keep it simple and avoid inversion
       if ~exist('T3th','var') || ~exist('T3thx','var') || any(isnan(T3th))
-        Yg      = cat_vol_grad(Ysrc,vx_vol) ./ max(eps,Ysrc + min(Ysrc(:)));
-        clsintg = @(x) cat_stat_nanmedian(Ysrc(Ycls{x}>128 & Yg<0.2));
         T3th    = [min(Ysrc(:)) sort( [ clsintg(3) clsintg(1) clsintg(2) ] ) max(Ysrc(:)) ];
         T3thx   = [0,1,2,3,4];        
       end
@@ -730,8 +787,10 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
         Tth.T3th  = T3th;
         Tth.T3thx = T3thx;
       end
-
-      if ~exist('Ym','var')
+  
+      
+      %% Ym 
+      if 1%~exist('Ym','var')
         Ym = Ysrc + 0; 
         for i=2:numel(T3th)
           M = Ysrc>T3th(i-1) & Ysrc<=T3th(i);

@@ -323,7 +323,7 @@ if isfield(opts,'surface')
     {'pial','white'}            % developer
   };
   if any( job.output.surface == [ 5 6 ] ) % no sphere's without registration
-    surfaceoutput{1} = setxor(surfaceoutput{1},{'sphere','sphere.reg'}); 
+    surfaceoutput{1} = setxor(surfaceoutput{3},{'sphere','sphere.reg'}); 
     if cat_get_defaults('extopts.expertgui')<2
       surfaceoutput{1} = setxor(surfaceoutput{1},{'central'}); 
     end

@@ -103,8 +103,21 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
 
   try 
-    if extopts.ignoreErrors > 2 
-      error('runbackup')
+    if job.extopts.ignoreErrors > 1 
+      Yg      = cat_vol_grad(Ym,vx_vol) ./ max(eps,Ym);
+      gth     = max(0.05,min( 1/3 , cat_stat_nanmean( Yg( cat_vol_morph( smooth3( Ycls{2}>240 )>0.5 ,'e') )) * 1.5 )); 
+      clsintg = @(x) cat_stat_nanmedian(Ym(Ycls{x}>128 & Yg<gth)); 
+      Ygm     = max(0,Yb - max(0,abs( Ym - clsintg(1))) / abs(diff([clsintg(1),clsintg(2)])));   % simple GM  int prob map
+      Ywm     = max(0,Yb - max(0,abs( Ym - clsintg(2))) / abs(diff([clsintg(2),clsintg(1)])));   % simple WM  int prob map
+      Ycm     = max(0,Yb - max(0,abs( Ym - clsintg(3))) / abs(diff([clsintg(1),clsintg(3)])));   % simple CSF int prob map
+      %% replace original image by labelmap
+      %  The tissues classes are quite simple so we smooth the image. We cannot
+      %  use the SPM classes because they already include a WMH correction. 
+      Ym      = smooth3(Ygm*2 + Ywm*3 + Ycm)  .* Yb / 3;   
+      clear Ycm Ywm Ygm; 
+    end
+    if job.extopts.ignoreErrors > 2 
+      %error('runbackup')
     end
     
     def.uhrlim = 0.7; 
@@ -832,6 +845,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
         VA  = spm_vol(PA{1});
         Ya1 = uint8(spm_sample_vol(VA,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
         Ya1 = reshape(Ya1,size(Ym)); 
+        Ya1 = uint8(cat_vol_median3(single(Ya1),Yb,Yb)); 
       end
       
       if ~exist('YMF','var') || any( size(YMF) ~= size(Ym) )
