@@ -768,7 +768,7 @@ function cat_run_job(job,tpm,subj)
 
         old = 0; 
         if old
-        
+% #### keep this part temporary ... RD20200619.begin        
           warning off 
           try 
             % This is the first level where we try to process the image with 
@@ -908,20 +908,27 @@ function cat_run_job(job,tpm,subj)
           end
           warning on 
           fprintf('%5.0fs\n',etime(clock,stime));   
+% #### keep this part temporary ... RD20200619.end        
         else
           %% Run SPM preprocessing with different settings. 
           % Start with the most reasonable model. 
           % I am not really sure how many levels are useful - but less than a hand
-          stime  = cat_io_cmd('SPM preprocessing 1 (estimate 2):','','',job.extopts.verb-1,stime); fprintf('\n'); 
-          verbs  = 1;     % show results
+          stime  = cat_io_cmd('SPM preprocessing 1 (estimate 2):','','',job.extopts.verb-1,stime); 
           casei  = 0;     % iteration counter
-          acccon = 0.2;   % acceptable contrast (optimal is 0.5, default maybe 0.33 )
-          runcas = inf;   % stop for acceptable contrast (inf = test all, 2 = only casei<3) ... for test we start with inf
+          acccon = 0.25;  % acceptable contrast (optimal is 0.5, default maybe 0.35-0.45 in T1 )
+          if job.extopts.ignoreErrors > 1
+            runcas = inf; % stop for acceptable contrast (inf = test all, 2 = only casei<3) ... for test we start with inf
+            verbs  = 1;   % show results
+          else
+            runcas = 1;   % normaly we only want the first one
+            verbs  = 0;   % show results
+          end
           resi   = cell(1,4); modelname = cell(1,4); mincontrast = zeros(1,4); 
           
           % save the masked default image for the error report
           tmp = obj.image.dat; 
-          tmp(obj.msk.dat<1) = NaN;      
+          tmp(obj.msk.dat<1) = NaN;    
+          if verbs, fprintf('\n'); end
           while 1 
             casei = casei + 1; 
 
@@ -959,9 +966,9 @@ function cat_run_job(job,tpm,subj)
             end
             if verbs
               if casei == 1
-                stime  = cat_io_cmd(sprintf('  Run %s',modelname{casei}),'g5','',job.extopts.verb-1);
+                stime  = cat_io_cmd(sprintf('  Run %s',modelname{casei}),'g5',' ',job.extopts.verb-1);
               else
-                stime  = cat_io_cmd(sprintf('  Run %s',modelname{casei}),'g5','',job.extopts.verb-1,stime); 
+                stime  = cat_io_cmd(sprintf('  Run %s',modelname{casei}),'g5',' ',job.extopts.verb-1,stime); 
               end
             end
             
@@ -974,28 +981,27 @@ function cat_run_job(job,tpm,subj)
               resi{casei}.mn  = zeros(size(obj.lkp)); 
               resi{casei}.mg  = zeros(size(obj.lkp))'; 
               resi{casei}.lkp = obj.lkp; 
+              resi{casei}.ll  = 0; 
             end
             warning on; 
             
             % test result
             % - may use a weighted contrast, where a good WM-GM is more important? 
             clsint = @(resx,x) round( sum(resx.mn(resx.lkp==x) .* resx.mg(resx.lkp==x)') * 10^5)/10^5;
-            clscon = @(resx,c1,c2) abs( diff([clsint(resx,c1),clsint(resx,c2)]) ) ./ ...                                          % specific tissue contrast between class c1 and c2
+            clscon = @(resx,c1,c2) abs( diff([clsint(resx,c1),clsint(resx,c2)]) ) ./ ...  % specific tissue contrast between class c1 and c2
               (max([clsint(resx,1),clsint(resx,2),clsint(resx,3)]) - ...
-               min([clsint(resx,1),clsint(resx,2),clsint(resx,3)])) .* ...  % signal intensity (maximum brain tissue contrast)
-              (1 - any(isnan([clsint(resx,1),clsint(resx,2),clsint(resx,3)])));                                            % NaN as worst case
+               min([clsint(resx,1),clsint(resx,2),clsint(resx,3)])) .* ...                % signal intensity (maximum brain tissue contrast)
+              (1 - any(isnan([clsint(resx,1),clsint(resx,2),clsint(resx,3)])));           % NaN as worst case
             mincontrast(casei) = min( [ clscon(resi{casei},1,2) , clscon(resi{casei},2,3) , clscon(resi{casei},1,3) ] ); 
-            txt = sprintf(' (min tissue contrast: %0.3f) ',mincontrast(casei)); 
-            cat_io_cprintf('g5',sprintf('%s%s',repmat('\b',1,numel(txt)),txt)); 
+            if verbs
+              txt = sprintf(' (min tissue contrast: %0.3f,%0.2f) ',mincontrast(casei),resi{casei}.ll ./ (obj.samp^3 * 1000)); 
+              cat_io_cprintf('g5',sprintf('%s',txt)); %,repmat('\b',1,numel(txt)) 
+            end
             if ( mincontrast(casei) > acccon )  && ( casei >= runcas )
               res   = resi{casei}; 
               maxci = casei; 
-              fprintf('\n'); 
+              if verbs, fprintf('\n'); end
               break
-            else
-              if verbs
-                fprintf(''); 
-              end
             end
           end
           
@@ -1006,7 +1012,6 @@ function cat_run_job(job,tpm,subj)
               res = resi{maxci}; 
               if verbs
                 stime  = cat_io_cmd(sprintf('  Select %s',modelname{maxci}),'g5','',job.extopts.verb-1,stime); 
-               % cat_io_cprintf(0.5,'  Select "%s".\n',modelname(maxci));
               end
             end
           end

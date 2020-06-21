@@ -56,6 +56,8 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,Yy,tpm,job,res,vx_vol,stime2)
   % add some distance around brainmask (important for bias!)
   YbA = YbA | cat_vol_morph(YbA & (Ycls{1} + Ycls{2})>4 ,'dd',2.4,vx_vol);
   
+  % RD20200619: unclear severe MATLAB crashes calling cat_amap in the ignoreErrors pipeline
+  Ysrc = real(Ysrc);
   
   
   %% get some low intensity values (backgroudn or CSF)

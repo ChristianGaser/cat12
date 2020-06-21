@@ -110,6 +110,9 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
       labelmap = 0;
   end
   
+  % RD20200619: Just to be save, there was an error in the BWP MS1.
+  Y = real(Y); 
+  
   % write native file
   % ____________________________________________________________________
   if write(1)==1

@@ -1,5 +1,22 @@
 ------------------------------------------------------------------------
-r1660 | dahnke | 2020-06-19 21:03:27
+r1661 | dahnke | 2020-06-21 18:09:30
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_writenii.m
+M       cat_main.m
+M       cat_main_amap.m
+M       cat_main_gintnorm.m
+M       cat_main_kamap.m
+M       cat_main_reportstr.m
+M       cat_run_job.m
+M       cat_vol_partvol.m
+M       tbx_cfg_cat.m
+
+(1) Changed:    Different changes to avoid AMAP crash in the ignoreError pipeline.
+ 
+------------------------------------------------------------------------
+r1660 | dahnke | 2020-06-19 21:05:53 +0200 (Fr, 19 Jun 2020) | 34 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -33,6 +50,7 @@ M       tbx_cfg_cat.m
 (4) Changed:  Corrected dependencies in case of fast surface reconstruction
               in tbx_cfg_cat.
                             
+
 
 ------------------------------------------------------------------------
 r1659 | gaser | 2020-06-19 11:44:29 +0200 (Fr, 19 Jun 2020) | 47 lines
