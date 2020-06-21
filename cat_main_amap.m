@@ -1,4 +1,4 @@
-function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
+function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yp0o,Yb,Yb0,Ycls,job,res)
 % ______________________________________________________________________
 %
 % AMAP segmentation:
@@ -6,11 +6,12 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
 % a low level of iterations and no further bias correction, because
 % some images get tile artifacts. 
 %
-% [prob,indx,indy,indz] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
+% [prob,indx,indy,indz] = cat_main_amap(Ymi,Yp0o,Yb,Yb0,Ycls,job,res)
 %
 % prob .. new AMAP segmenation (4D)
 % ind* .. index elements to asign a subvolume
 % Ymi  .. local intensity normalized source image
+% Yp0o .. old Yp0 label map
 % Yb   .. brain mask
 % Yb0  .. origina brain mask 
 % Ycls .. SPM segmentation 
@@ -34,7 +35,8 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
   dbs  = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
 
   % correct for harder brain mask to avoid meninges in the segmentation
-  Ymib   = Ymi; Ymib(~Yb) = 0; 
+  % RD20200619: unclear severe MATLAB crashes calling cat_amap in the ignoreErrors pipeline
+  Ymib   = real(Ymi); Ymib(~Yb) = 0; 
   rf     = 10^4; Ymib = round(Ymib*rf)/rf;
   d      = size(Ymi); 
   vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
@@ -54,6 +56,10 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
           Yp0(:,:,i) = Yp0(:,:,i) + cat_vol_ctype((maxind == k1) .* (maxi~=0) * k1ind(k1) .* Yb(:,:,i)); 
         end
     end
+    
+    %% correct missing parts
+    Yp0(Yb & Yp0==0) = cat_vol_ctype( round( Yp0o(Yb & Yp0==0) ) ); 
+    
     if ~debug, clear maxi maxind Kb k1 cls2; end
   else
     % more direct method ... a little bit more WM, less CSF
@@ -140,10 +146,18 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
         th{1}(1),char(177),th{1}(2),th{2}(1),char(177),th{2}(2),th{3}(1),char(177),th{3}(2));
     end
   end
-  if th{1}(1)<0 || th{1}(1)>0.6 || th{2}(1)<0.5 || th{2}(1)>0.9 || th{3}(1)<0.95-th{3}(2) || th{3}(1)>1.1 || any( isnan( cell2mat(th) ) )
-    error('cat_main:amap',['AMAP estimated untypical tissue peaks that point to an \n' ...
-                           'error in the preprocessing before the AMAP segmentation. ']);
+  if job.extopts.ignoreErrors < 2
+    if th{1}(1)<0 || th{1}(1)>0.6 || th{2}(1)<0.5 || th{2}(1)>0.9 || th{3}(1)<0.95-th{3}(2) || th{3}(1)>1.1
+      error('cat_main:amap:peaks',['AMAP estimated untypical tissue peaks that point to an \n' ...
+                             'error in the preprocessing before the AMAP segmentation. ']);
+    end
+  else
+    if  any( isnan( cell2mat(th) ) )
+      error('cat_main:amap:nan',['AMAP estimated NaN tissue peaks that point to an \n' ...
+                                 'error in the preprocessing before the AMAP segmentation. ']);
+    end
   end
+  
   % reorder probability maps according to spm order
   clear Yp0b Ymib; 
   prob = prob(:,:,:,[2 3 1]);  %#ok<NODEF>

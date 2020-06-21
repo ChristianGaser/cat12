@@ -108,19 +108,22 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
     str{1}(end).name  = [str{1}(end).name(1:end-1) ' / biasreg / biasfwhm'];
     str{1}(end).value = [str{1}(end).value sprintf(' / %0.0e / %0.2f',job.opts.biasreg,job.opts.biasfwhm)]; 
   end
+  % 1 line 3: SPM segmentation accuracy with samp and tol
   if isfield(job.opts,'acc') && job.opts.acc>0
-    str{1} = [str{1} struct('name', '','value','')];
-    accstr = {'ultra low','low','std','high','ultra high'};
-    str{1}(end).name  = [str{1}(end).name(1:end-1) 'SPM accuracy (samp/tol) '];  
-    str{1}(end).value = [str{1}(end).value sprintf(' / %s',accstr{round(job.opts.acc*4)+1})];
-    if job.extopts.expertgui % add the value
+    %str{1} = [str{1} struct('name', '','value','')];
+    if job.extopts.expertgui==0
+      accstr = {'ultra low','low','std','high','ultra high'};
+      str{1}(end).name  = [str{1}(end).name(1:end-1) ' / accuracy '];  
+      str{1}(end).value = [str{1}(end).value sprintf(' / %s',accstr{round(job.opts.acc*4)+1})];
+    else % add the value
+      str{1}(end).name  = [str{1}(end).name(1:end-1) ' / acc (samp/tol) '];  
       str{1}(end).value = [str{1}(end).value sprintf('%0.2f (%0.2f/%0.0e)',job.opts.acc,job.opts.samp,job.opts.tol)]; 
     end
   else
     if job.extopts.expertgui
-      str{1} = [str{1} struct('name', '','value','')];
-      str{1}(end).name  = [str{1}(end).name(1:end-1) 'SPM accuracy (samp/tol)'];
-      str{1}(end).value = [str{1}(end).value sprintf('%0.2f / %0.0e',job.opts.samp,job.opts.tol)]; 
+      %str{1} = [str{1} struct('name', '','value','')];
+      str{1}(end).name  = [str{1}(end).name(1:end-1) '/ samp / tol '];
+      str{1}(end).value = [str{1}(end).value sprintf('/ %0.2f / %0.0e',job.opts.samp,job.opts.tol)]; 
     end
   end
 

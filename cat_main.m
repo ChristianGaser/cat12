@@ -84,7 +84,7 @@ if ~isfield(res,'spmpp')
   %  allows up to 20 colors
   %  -------------------------------------------------------------------
   if debug;;
-    Ym   = Ysrc / T3th(3); %#ok<NASGU> % only WM scaling
+    Ym   = Ysrc / max(T3th(1:3)); %#ok<NASGU> % only WM scaling
     Yp0  = (single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255)/3; %#ok<NASGU> % label map
   end
   
@@ -118,11 +118,11 @@ if ~isfield(res,'spmpp')
     [Ym,Yb,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,job.extopts);
   end
 
-  % update in inverse case ... required for LAS
+  %% update in inverse case ... required for LAS
   % 
   % ### include this in cat_main_gintnorm? 
   %
-  if job.inv_weighting
+  if job.inv_weighting && job.extopts.ignoreErrors < 2
 %    Ysrc = Ym * Tth.T3th(5); Tth.T3th = Tth.T3thx * Tth.T3th(5);
     if T3th(1)>T3th(3) && T3th(2)<T3th(3) && T3th(1)>T3th(2)
       Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
@@ -265,7 +265,8 @@ if ~isfield(res,'spmpp')
       end
       fprintf('%5.0fs\n',etime(clock,stime));
     else
-      cat_io_cprintf('warn','\n  IgnoreErrors: No LAS backup function. Use global intensity normalization \n')
+      stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
+      cat_io_cprintf('warn','\n  IgnoreErrors: No LAS backup function. Use global normalization. \n')
       Ymi = Ym; 
     end
     %
@@ -333,7 +334,7 @@ if ~isfield(res,'spmpp')
   else
     [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
     fprintf('%5.0fs\n',etime(clock,stime));
-    if job.extopts.expertgui && isfield(res,'Ylesion') && sum(res.Ylesion(:))>1000 
+    if job.extopts.expertgui && isfield(res,'Ylesion') && sum(res.Ylesion(:))>1000 && job.extopts.ignoreErrors < 2
       cat_warnings = cat_io_addwarning(cat_warnings,...
           'CAT:cat_main_SLC_noExpDef',sprintf(['SLC is deactivated but there are %0.2f cm' ...
           native2unicode(179, 'latin1') ' of voxels with zero value inside the brain!'],prod(vx_vol) .* sum(res.Ylesion(:)) / 1000 )); 
@@ -355,9 +356,9 @@ if ~isfield(res,'spmpp')
   %  ---------------------------------------------------------------------
   NS = @(Ys,s) Ys==s | Ys==s+1; 
   if job.extopts.BVCstr && ~job.inv_weighting && all(vx_vol<2)
+    stime = cat_io_cmd(sprintf('Blood vessel correction (BVCstr=%0.2f)',job.extopts.BVCstr));
     if job.extopts.ignoreErrors < 2  
-      stime = cat_io_cmd(sprintf('Blood vessel correction (BVCstr=%0.2f)',job.extopts.BVCstr));
-
+      
       Ybv  = cat_vol_smooth3X(cat_vol_smooth3X( ...
         NS(Yl1,7) .* (Ymi*3 - (1.5-job.extopts.BVCstr)),0.3).^4,0.1)/3;
 
@@ -374,7 +375,7 @@ if ~isfield(res,'spmpp')
       fprintf('%5.0fs\n',etime(clock,stime));
       clear Ybv p0; 
     else
-      cat_io_cprintf('err','\n  No BVC backup function \n')
+      cat_io_cprintf('warn','\n  IgnoreErrors: No BVC backup function. \n')
     end
   end
 
@@ -389,9 +390,9 @@ if ~isfield(res,'spmpp')
   %  RD202006: ignoreErrors>1 does not support optimized atlas maps yet. 
   %  -------------------------------------------------------------------
   if job.extopts.gcutstr>0 && job.extopts.gcutstr<=1
+    stime = cat_io_cmd(sprintf('Skull-stripping using graph-cut (gcutstr=%0.2f)',job.extopts.gcutstr));
     if job.extopts.ignoreErrors < 2 
       try 
-        stime = cat_io_cmd(sprintf('Skull-stripping using graph-cut (gcutstr=%0.2f)',job.extopts.gcutstr));
         [Yb,Yl1] = cat_main_gcut(Ymo,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
 
         % extend gcut brainmask by brainmask derived from SPM12 segmentations if necessary
@@ -403,7 +404,7 @@ if ~isfield(res,'spmpp')
         job.extopts.gcutstr = 99;
       end
     else
-      cat_io_cprintf('err','\n  No further refinement of the Skull-Stripping \n')
+      cat_io_cprintf('warn','\n  No graph-cut backup function. \n')
     end
   end
   % correct mask for skull-stripped images
@@ -425,13 +426,14 @@ if ~isfield(res,'spmpp')
   %  RD202006: ignoreErrors>1 does not support optimized atlas maps yet. 
   %  -------------------------------------------------------------------
   if job.extopts.ignoreErrors < 2
-    [prob,indx,indy,indz] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res);
+    [prob,indx,indy,indz] = cat_main_amap(Ymi,Yp0,Yb,Yb0,Ycls,job,res);
   else
     try 
-      [prob,indx,indy,indz,amapTth] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res);
-      % check values 
+      [prob,indx,indy,indz,amapTth] = cat_main_amap(Ymi,Yp0,Yb,Yb0,Ycls,job,res);
     catch
-      % use SPM 
+      % use SPM
+      cat_io_cprintf('warn','\n  IgnoreErrors: AMAP failed use SPM segmentation.               \n')
+      
       prob = zeros([size(Ymi),3],'uint8');
       for i = 1:3, prob(:,:,:,i) = Ycls{i}; end
       sz = size(Yb);
@@ -502,7 +504,7 @@ if ~isfield(res,'spmpp')
 
 
   % correction for normalization [and final segmentation]
-  if ( (job.extopts.WMHC && job.extopts.WMHCstr>0) || job.extopts.SLC) && ~job.inv_weighting && job.extopts.ignoreErrors < 2
+  if ( (job.extopts.WMHC && job.extopts.WMHCstr>0) || job.extopts.SLC) && ~job.inv_weighting % && job.extopts.ignoreErrors < 2
     % display something
     %{
     if job.extopts.WMHC==1
@@ -679,9 +681,9 @@ end
   
 %% update WMHs 
 %  ---------------------------------------------------------------------
-if job.extopts.ignoreErrors < 2
+%if job.extopts.ignoreErrors < 2
   Ycls = cat_main_updateWMHs(Ym,Ycls,Yy,tpm,job,res,trans);
-end
+%end
 
 
 
