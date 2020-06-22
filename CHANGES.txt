@@ -1,5 +1,29 @@
 ------------------------------------------------------------------------
-r1661 | dahnke | 2020-06-21 18:09:30
+r1662 | dahnke | 2020-06-22 21:02:21
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_report.m
+M       cat_long_mainShoot.txt
+M       cat_main.m
+M       cat_main_amap.m
+M       cat_main_gintnorm.m
+M       cat_run_job.m
+
+(1) Fixed:   Corrected error in cat_io_report.
+(2) Fixed:   Use internal definition for old label map and 
+             updated call of cat_main_amap. Update AMAP 
+             parametrization for ignoreError pipeline.
+(3) Fixed:   Corrected bias correction in ignoreErrors pipeline 
+             in cat_main_gintnorm. Tried to get more robust tissue
+             peak estimation.               
+(4) Fixed:   Corrected Pref definition in cat_long_mainShoot.txt. 
+(5) Changed: Use faster single SPM preprocessing in cat_run_job
+             now also in ignoreError case.
+(6) Changed: Use low WMHCstr in ignoreError pipeline in cat_main.
+
+------------------------------------------------------------------------
+r1661 | dahnke | 2020-06-21 18:11:54 +0200 (So, 21 Jun 2020) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +39,7 @@ M       tbx_cfg_cat.m
 
 (1) Changed:    Different changes to avoid AMAP crash in the ignoreError pipeline.
  
+
 ------------------------------------------------------------------------
 r1660 | dahnke | 2020-06-19 21:05:53 +0200 (Fr, 19 Jun 2020) | 34 lines
 
