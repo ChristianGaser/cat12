@@ -198,7 +198,7 @@ if longmodel
     % reinterpolate original resolution 
     mbi = mbi + 1; mb_GSI = mbi; % have to do this for all shooting tissues to get the dependencies
     matlabbatch{mbi}.spm.tools.cat.tools.resize.data(1)       = cfg_dep('Run Shooting (create Templates): Deformation Fields', substruct('.','val', '{}',{mb_GS}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','def', '()',{':'}));
-    matlabbatch{mbi}.spm.tools.cat.tools.resize.restype.Pref  = {'/Volumes/WD4TBE2/MRData/202005 - LongShoot/mri/p0avg_deface_1007_v1_t1w.nii,1'};
+    matlabbatch{mbi}.spm.tools.cat.tools.resize.restype.Pref  = cfg_dep('Longitudinal Registration: Midpoint Average', substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','avg', '()',{':'}));
     matlabbatch{mbi}.spm.tools.cat.tools.resize.interp        = 5;
     matlabbatch{mbi}.spm.tools.cat.tools.resize.prefix        = ''; % has to be another name?
   else

@@ -717,7 +717,9 @@ function cat_io_report(job,qa,subj,createerr)
 
   %warning on;  %#ok<WNON>
 
-  if job.extopts.expertgui>0 - showTPMsurf
+  if job.extopts.expertgui>0 - showTPMsurf && exist('hM','var') && ...
+    isfield(st,'vol') && iscell(st.vols) && numel(st.vols)>=id && ...
+    isfield(st.vols{id},'ax') && iscell(st.vols{id}.ax) && isfield(st.vols{id}.ax{1},'cm')
     id = 1; 
     hM = findobj(st.vols{id}.ax{1}.cm,'Label','Mesh');
     UD = get(hM,'UserData');

@@ -1,4 +1,4 @@
-function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yp0o,Yb,Yb0,Ycls,job,res)
+function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
 % ______________________________________________________________________
 %
 % AMAP segmentation:
@@ -11,7 +11,6 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yp0o,Yb,Yb0,Ycls,job,res)
 % prob .. new AMAP segmenation (4D)
 % ind* .. index elements to asign a subvolume
 % Ymi  .. local intensity normalized source image
-% Yp0o .. old Yp0 label map
 % Yb   .. brain mask
 % Yb0  .. origina brain mask 
 % Ycls .. SPM segmentation 
@@ -37,12 +36,14 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yp0o,Yb,Yb0,Ycls,job,res)
   % correct for harder brain mask to avoid meninges in the segmentation
   % RD20200619: unclear severe MATLAB crashes calling cat_amap in the ignoreErrors pipeline
   Ymib   = real(Ymi); Ymib(~Yb) = 0; 
+  Ymib(isnan(Ymib) | isinf(Ymib)) = 0;  
+  Ymib   = max(0,min(Ymib,2)); 
   rf     = 10^4; Ymib = round(Ymib*rf)/rf;
   d      = size(Ymi); 
   vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
   
   %  prepare data for segmentation
-  if 1
+  if 1 %job.extopts.ignoreErrors < 2
     %% classic approach, consider the WMH!
     Kb2 = 4;
     cls2 = zeros([d(1:2) Kb2]);
@@ -57,15 +58,26 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yp0o,Yb,Yb0,Ycls,job,res)
         end
     end
     
-    %% correct missing parts
+    %% correct missing parts by using the intensity normalized map or the old Yp0 label map
+    if job.extopts.ignoreErrors < 2
+      Yp0o = min(3,max(1,uint8(max(Yb,min(3,round(Ymi*3)))))); 
+    else
+      Yp0o = min(3,max(1,single(Ycls{3})/255*3 + single(Ycls{1})/255*2 + single(Ycls{2})/255));
+    end
     Yp0(Yb & Yp0==0) = cat_vol_ctype( round( Yp0o(Yb & Yp0==0) ) ); 
     
-    if ~debug, clear maxi maxind Kb k1 cls2; end
+    if ~debug, clear maxi maxind Kb k1 cls2 Yp0o; end
   else
     % more direct method ... a little bit more WM, less CSF
     Yp0 = uint8(max(Yb,min(3,round(Ymi*3)))); Yp0(~Yb) = 0;
-  end  
-
+  end 
+  Yp0o = min(3,max(1,uint8(max(Yb,min(3,round(Ymi*3))))));
+  Yp0(Yb & Yp0==0 | Yp0>3) = cat_vol_ctype( round( Yp0o(Yb & Yp0>3) ) ); 
+  if sum( Yp0(Yb(:))==0)>0 
+    error('cat_main_amap:badYp0def', ...
+      'Undefined tissues within the brain area may cause severe MATLAB errors while calling cat_amap.c.');
+  end
+  
 
   % use index to speed up and save memory
   sz = size(Yb);
@@ -97,6 +109,7 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yp0o,Yb,Yb0,Ycls,job,res)
   %     if ~job.output.surface, clear Yb; end
   end
   
+  
   % adaptive mrf noise 
   if (job.extopts.mrf>=1 || job.extopts.mrf<0) %&& job.extopts.ignoreErrors < 2
     % estimate noise
@@ -115,16 +128,17 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yp0o,Yb,Yb0,Ycls,job,res)
   Ymib = double(Ymib); n_iters = 50; sub = round(32/min(vx_vol));   %#ok<NASGU>
   n_classes = 3; pve = 5; bias_fwhm = 0; init_kmeans = 0;           %#ok<NASGU>
   if job.extopts.mrf~=0, iters_icm = 50; else, iters_icm = 0; end    %#ok<NASGU>
-  if job.extopts.ignoreErrors
-    init_kmeans = 0; % k-means was not stable working (e.g. HR075T2)
-    pve = 6; % seams to be more stable in HR075T2  
+  if job.extopts.ignoreErrors > 1
+    % init_kmeans = 0; % k-means was not stable working (e.g. HR075T2)
+    %clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5; % SPM peak definition  
+    %pve = 6 - (clsint(1)<clsint(2)); % seams to be more stable in HR075T2 ... but I will try the pve5 again after Christians comments  
     % we need more iterations and also some bias correction here because LAS etc. is missing
-    n_iters = 200; bias_fwhm = 60; sub = round(64/min(vx_vol)); 
+    n_iters = 200; bias_fwhm = 60; sub = round(64/min(vx_vol));  %#ok<NASGU>
   end
 
   % remove noisy background for kmeans
   if init_kmeans && job.extopts.ignoreErrors<2, Ymib(Ymib<0.1) = 0; end %#ok<NASGU>
-  
+ 
   % do segmentation  
   amapres = evalc(['prob = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
     'job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);']);

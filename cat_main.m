@@ -332,7 +332,9 @@ if ~isfield(res,'spmpp')
       end
     end
   else
-    [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
+    extopts2 = job.extopts; 
+    extopts2.WMHCstr = eps; 
+    [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,extopts2,tpm.V,noise,job,false(size(Ym)));
     fprintf('%5.0fs\n',etime(clock,stime));
     if job.extopts.expertgui && isfield(res,'Ylesion') && sum(res.Ylesion(:))>1000 && job.extopts.ignoreErrors < 2
       cat_warnings = cat_io_addwarning(cat_warnings,...
@@ -426,10 +428,10 @@ if ~isfield(res,'spmpp')
   %  RD202006: ignoreErrors>1 does not support optimized atlas maps yet. 
   %  -------------------------------------------------------------------
   if job.extopts.ignoreErrors < 2
-    [prob,indx,indy,indz] = cat_main_amap(Ymi,Yp0,Yb,Yb0,Ycls,job,res);
+    [prob,indx,indy,indz] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res);
   else
     try 
-      [prob,indx,indy,indz,amapTth] = cat_main_amap(Ymi,Yp0,Yb,Yb0,Ycls,job,res);
+      [prob,indx,indy,indz,amapTth] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res);
     catch
       % use SPM
       cat_io_cprintf('warn','\n  IgnoreErrors: AMAP failed use SPM segmentation.               \n')
