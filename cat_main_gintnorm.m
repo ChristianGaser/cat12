@@ -761,19 +761,31 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
         Ygm = cat_vol_morph(Ygm,'l',[0.01 100 ]); Ygm(smooth3(Ygm)<0.5) = 0; 
         Ygmi = cat_vol_localstat(Ysrc,Ygm,2,1);
         Ygmi = cat_vol_localstat(Ygmi,Ygm,1,1);
-        
+
+        % get background area
+        if isfield(res,'bge') 
+          if all(size(res.bge) == size(Ysrc))
+            Ybge = res.bge; 
+          else
+            % low resolution update
+            Ybge = cat_vol_resize(single(res.bge),'reduceV', vx_vol .* size(Ysrc)./size(res.bge), min(vx_vol*2, 1.4), 32, 'meanm')>0.5;
+          end
+        else
+          Ybge = cat_vol_morph(Ycls{6}>128,'de',15,vx_vol); 
+        end
         % final correction map with correction for double counts
-        Yi   =  Ywmi/clsintv(2) + Ygmi/clsintv(1) + Ycmi/clsintv(3) + res.bge;  % and also the eroded background  
+        Yi   =  Ywmi/clsintv(2) + Ygmi/clsintv(1) + Ycmi/clsintv(3) + single(Ybge); % and also the eroded background  
+        if ~debug, clear Ygmi Ywmi Ycmi Ybge; end 
         Yim  =  Ycm &  Ygm &  Ywm; Yi(Yim) = Yi(Yim) ./ ( Ywm(Yim) + Ycm(Yim) + Ywm(Yim));
         Yim  =  Ycm &  Ygm & ~Ywm; Yi(Yim) = Yi(Yim) ./ ( Ycm(Yim) + Ygm(Yim));
         Yim  =  Ycm & ~Ygm &  Ywm; Yi(Yim) = Yi(Yim) ./ ( Ycm(Yim) + Ywm(Yim));
         Yim  = ~Ycm &  Ygm &  Ywm; Yi(Yim) = Yi(Yim) ./ ( Ygm(Yim) + Ywm(Yim));
-        Yi(isnan(Yi) | isinf(Yi))=0; 
-        %%
+        Yi(isnan(Yi) | isinf(Yi))=0;
+        if ~debug, clear Yim Ycm Ygm Ywm; end 
         Yi   = cat_vol_approx(Yi,2); 
         
         %% correction 
-        % ds('d2sm','a',1,Ysrc/clsint(3),Ysrc ./ Yi / clsint(3),140)
+        %  ds('d2sm','a',1,Ysrc/clsint(3),Ysrc ./ Yi / clsint(3),140)
         Ysrc = Ysrc ./ Yi; 
       end
       
