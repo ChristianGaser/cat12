@@ -915,7 +915,7 @@ function cat_run_job(job,tpm,subj)
           % I am not really sure how many levels are useful - but less than a hand
           stime  = cat_io_cmd('SPM preprocessing 1 (estimate 2):','','',job.extopts.verb-1,stime); 
           casei  = 0;     % iteration counter
-          acccon = 0.25;  % acceptable contrast (optimal is 0.5, default maybe 0.35-0.45 in T1 )
+          acccon = 0.33;  % acceptable contrast (optimal is 0.5, default maybe 0.35-0.45 in T1 )
           runcas = 1;     % stop for acceptable contrast (inf = test all, 2 = only casei<3) ... for test we start with inf
           if job.extopts.ignoreErrors > 1
             verbs  = 1;   % show results

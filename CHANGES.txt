@@ -1,5 +1,26 @@
 ------------------------------------------------------------------------
-r1663 | gaser | 2020-06-23 16:57:00
+r1664 | dahnke | 2020-06-23 18:31:52
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_main_amap.m
+M       cat_main_gintnorm.m
+M       cat_main_updateSPM.m
+M       cat_run_job.m
+M       cat_surf_vx2surf.m
+
+(1) Fixed:   Corrected AMAP bias_fwhm parameter in ignoreError 
+             pipeline that cause fatal MATLAB errors. Corrected 
+             test of initial tissue definition.
+(2) Changed: Deactivated low resolution call of cat_main_gintnorm. 
+(3) Fixed:   Corrected bug with the background definition of the 
+             in ignoreError pipeline in the low resolution call 
+             of cat_main_gintnorm. 
+(4) Fixed:   Corrected bugs in ignoreError pipeline in cat_main_updateSPM.  
+              
+------------------------------------------------------------------------
+r1663 | gaser | 2020-06-23 16:57:40 +0200 (Di, 23 Jun 2020) | 32 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -32,6 +53,7 @@ M       tbx_cfg_cat.m
              found.
 (4) Fixed:   tpm folder in spm should not be used with capitals (thanks to 
              Martin Domin for pointing to that issue).
+
 ------------------------------------------------------------------------
 r1662 | dahnke | 2020-06-22 21:03:14 +0200 (Mo, 22 Jun 2020) | 22 lines
 

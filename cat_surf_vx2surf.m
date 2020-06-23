@@ -25,7 +25,7 @@ function out = cat_surf_vx2surf(job)
   %def.opt.dmethod  = 1;   % vbdist, eidist, laplace
   def.opt.surfside = 1;   % 1-inside (default),2-outside,3-both; only 1 is save in general  
   def.opt.outdir   = '';  % output directory
-  def.opt.verb     = 1;   % be verbose
+  def.opt.verb     = 2;   % be verbose
   
   job = cat_io_checkinopt(job,def); 
 
@@ -34,28 +34,56 @@ function out = cat_surf_vx2surf(job)
     job.surf = {
       '/Users/dahnke/Downloads/example_pvs/cat/surf/lh.central.t1w.gii';
       };
-    % GM volume push
+    % --- volume measures -------------------------------------------------
+    % Example 1:  GM volume push - similar to GM thickness
     mi=1; job.measures{mi}.vmeasure = struct(...
       'rimage',{ {'/Users/dahnke/Downloads/example_pvs/cat/mri/p1t1w.nii'} }, ...
+      'rimage2',{ {} }, ...
       'name','GMvol', ...
+      'imetric',1,...
       'dweighting',[0 10]); 
-    % WM volume push
+    % Example 2:  WM volume push - similar to WM thickness / depth / width
     mi=mi+1; job.measures{mi}.vmeasure = struct(...
       'rimage',{ {'/Users/dahnke/Downloads/example_pvs/cat/mri/p2t1w.nii'} }, ...
+      'rimage2',{ {} }, ...
       'name','WMvol', ...
+      'imetric',1,...
       'dweighting',[0 10]); 
-    % intensity values
+    % Example 3:  WMH volume push - absolute local leason size
+    %             (higher values are worse)
+    mi=mi+1; job.measures{mi}.vmeasure = struct(...
+      'rimage',{ {'/Users/dahnke/Downloads/example_pvs/cat/mri/p7t1w.nii'} }, ...    % ########## not working
+      'rimage2',{ {} }, ...
+      'name','WMHvol', ...
+      'dweighting',[0 10]); 
+    % Example 4:  WMH vs. WM volume push - local WM degeneration 
+    mi=mi+1; job.measures{mi}.vmeasure = struct(...
+      'rimage' ,{ {'/Users/dahnke/Downloads/example_pvs/cat/mri/p7t1w.nii'} }, ...
+      'rimage2',{ {'/Users/dahnke/Downloads/example_pvs/cat/mri/p2t1w.nii'} }, ...
+      'name','WMHvsWMvol', ...
+      'dweighting',[0 10]); 
+    % Example 5:  GM vs. WM volume push
+    mi=mi+1; job.measures{mi}.vmeasure = struct(...
+      'rimage' ,{ {'/Users/dahnke/Downloads/example_pvs/cat/mri/p2t1w.nii'} }, ...
+      'rimage2',{ {'/Users/dahnke/Downloads/example_pvs/cat/mri/p1t1w.nii'} }, ...
+      'name','WMvsGMvol', ...
+      'dweighting',[0 10]); 
+    % --- intensity measures ----------------------------------------------
+    % WM integrity values
     mi=mi+1; job.measures{mi}.imeasure = struct( ...
       'rimage',{ {'/Users/dahnke/Downloads/example_pvs/cat/mri/p7t1w.nii'} }, ...
       'iimage',{ {'/Users/dahnke/Downloads/example_pvs/cat/mri/mit1w.nii'} }, ...
       'name','stdint', ...
       'dweighting',[0 10],...
       'vweighting','mean'); 
+    % --- distance measures -----------------------------------------------
     % distance measure
     mi=mi+1; job.measures{mi}.dmeasure = struct( ...
       'rimage',{ {'/Users/dahnke/Downloads/example_pvs/cat/mri/p7t1w.nii'} }, ...
-      'name','stdint', ...
-      'dweighting',[0 10]); 
+      'name','WMHdist', ...
+      'dweighting',[4 5],...
+      'dmetric','',...
+      'imetric',1); % v2s (pull), s2v (push) dist
     %{
     job.measures{4}.dmeasure = struct( ...
       'rimage',{ {'/Users/dahnke/Downloads/example_pvs/cat/mri/p7t1w.nii'} }, ...
@@ -67,156 +95,237 @@ function out = cat_surf_vx2surf(job)
   end
 
   % main loop
-  Sout = struct();                 % ouput variable 
-  side = {'lh','rh','cb'};        % side names
-  fi = 1; si = 1; mi = 3;         % iteration variables
+  Sout = struct();                  % ouput variable 
+  side = {'lh','rh','cb'};          % side names
+  fi = 1; si = 1; mi = 3;           % iteration variables
   %%
-  for fi = 1:numel(job.surf)            % each subject
+  for fi = 1:numel(job.surf)        % each subject
+    if job.opt.verb, cat_io_cprintf([0 0 1],sprintf('  Subject %s:\n',spm_str_manip(job.surf{fi},'a80'))); end
+    stime = clock; 
+        
     for si = 1:numel(side)
       %% each surface 
       [ppS,ffS,eeS] = spm_fileparts(job.surf{fi}); 
       ffS = [cat_io_strrep(ffS(1:2),side,side{si}) ffS(3:end)]; 
-      S   = gifti( fullfile( ppS, [ffS eeS] ) ); 
-      S   = export(S);
+      if exist( fullfile( ppS, [ffS eeS] ) , 'file' )
+        S   = gifti( fullfile( ppS, [ffS eeS] ) ); 
+        S   = export(S);
 
-      %%
-      for mi = 1:numel(job.measures)         % each masked (e.g. GM, WM, ...)
-        measure = char( fieldnames( job.measures{mi} ) );
-        
-        if job.opt.interp
-          % interpolate and load mask
-          Vm = spm_vol(job.measures{mi}.(measure).rimage{fi});
-          Vo = Vm; Vo.fname = ''; 
-          mati = spm_imatrix(Vo.mat); 
-          mati(7:9) = mati(7:9) / (job.opt.interp + 1); 
-          Vo.mat   = spm_matrix(mati);  
-          Vo.dim   = Vo.dim * (job.opt.interp + 1); 
-          Vo.dim   = round(Vo.dim/2)*2 + 1; % always odd
+        for mi = 1:numel(job.measures)         % each masked (e.g. GM, WM, ...)
+          measure = char( fieldnames( job.measures{mi} ) );
+          mtime = cat_io_cmd(sprintf('  %2d) %s - %s',mi,measure,job.measures{mi}.(measure).name),'g6','',job.opt.verb>1,stime); 
+          if job.opt.verb>1,fprintf('\n'); end
 
-          [Vm,Ym] = cat_vol_imcalc(Vm,Vo,'i1',struct('interp',1));
-        else
-          % load mask
-          Vm = spm_vol(job.measures{mi}.(measure).rimage{fi});
-          Ym = spm_read_vols(Vm);
-        end
-        vx_vol = sqrt(sum(Vm.mat(1:3,1:3).^2));
+          ttime = cat_io_cmd('      Load roi/tissue volume','g5','',job.opt.verb>1); 
+          if job.opt.interp
+            % interpolate and load mask
+            Vm = spm_vol(job.measures{mi}.(measure).rimage{fi});
+            Vo = Vm; Vo.fname = ''; 
+            mati = spm_imatrix(Vo.mat); 
+            mati(7:9) = mati(7:9) / (job.opt.interp + 1); 
+            Vo.mat   = spm_matrix(mati);  
+            Vo.dim   = Vo.dim * (job.opt.interp + 1); 
+            Vo.dim   = round(Vo.dim/2)*2 + 1; % always odd
 
-
-        % refine mask 
-        if fi == 1
-          % render surface
-          S2 = S;  S2.vertices = Vm.mat \ ( [S2.vertices ones(size(S2.vertices,1),1)] )'; 
-          S2.vertices = S2.vertices([2,1,3],:)'; 
-          S2.faces = S2.faces(:,[2,1,3]);
-          Ys = cat_surf_fun('surf2vol',S2,Ym);
-        end
-        if job.opt.surfside == 1
-          Ym = Ym .* Ys;
-        elseif opt.surfside == 2 % this may cause problems due to other brain structures (other side, cerebellum) 
-          Ym = Ym .* (1-Ys);
-        elseif opt.surfside == 3
-          Ys2 = min(1,job.opt.sweight - cat_vbdist(  Ys,true(size(Ys)),vx_vol)) .* ...
-                min(1,job.opt.sweight - cat_vbdist(1-Ys,true(size(Ys)),vx_vol)); 
-          Ym = Ym .* Ys2;
-        end
-
-
-        % extract volume points within the mask
-        clear vxxyz; 
-        vxi  = find(Ym>0); 
-        [vxxyz(:,1),vxxyz(:,2),vxxyz(:,3)] = ind2sub(size(Ym),vxi);
-        vxmm = Vm.mat * ( [vxxyz ones(size(vxxyz,1),1)] )';
-        vxmm = vxmm(1:3,:)';
-
-        % create voronoi graph and search the nearest surface point for all voxel
-        if strcmp(measure,'dmeasure')
-          dgraph = delaunayn( double(vxmm)); 
-          [K, Sout{mi}.absD ]  = dsearchn( double(vxmm) , dgraph ,  double(S.vertices) );
-          Sout{mi}.absD = 1 ./ Sout{mi}.absD; 
-        else
-          dgraph = delaunayn( double(S.vertices)); 
-          [K,D]  = dsearchn( double(S.vertices) , dgraph ,  double(vxmm) );
-
-          % use weighting for D
-          if isinf( job.opt.dweight )
-            % use brain hull based size weighting 
-            rn = cat_surf_scaling(struct('file',job.surf{fi},'norm',31));
-            rn = rn * 10; 
-            Dw = max(0,1 - D ./ rn);
+            [Vm,Ym] = cat_vol_imcalc(Vm,Vo,'i1',struct('interp',1));
+            clear Vo;
           else
-            Dw = max(0,1 - (D - job.opt.dweight(1))  ./ job.opt.dweight(2));
+            % load mask
+            Vm = spm_vol(job.measures{mi}.(measure).rimage{fi});
+            Ym = spm_read_vols(Vm);
           end
-        end
+          vx_vol = sqrt(sum(Vm.mat(1:3,1:3).^2));
+          
+          if ~isempty( job.measures{mi}.(measure).rimage2 ) && ...
+              numel( job.measures{mi}.(measure).rimage2 ) > fi 
+            ttime = cat_io_cmd('      Load second roi/tissue volume','g5','',job.opt.verb>1); 
+            if job.opt.interp
+              % interpolate and load mask
+              Vm2 = spm_vol(job.measures{mi}.(measure).rimage2{fi});
+              Vo = Vm2; Vo.fname = ''; 
+              mati = spm_imatrix(Vo.mat); 
+              mati(7:9) = mati(7:9) / (job.opt.interp + 1); 
+              Vo.mat   = spm_matrix(mati);  
+              Vo.dim   = Vo.dim * (job.opt.interp + 1); 
+              Vo.dim   = round(Vo.dim/2)*2 + 1; % always odd
 
-
-        %  project data 
-        %  just count the voxels (local volume) and average the distance
-        %  values with/without weighting
-        switch measure
-          case 'dmeasure2'
-            Sout{mi}.absD  = eps + zeros(size(S.vertices,1),1);            % average absolute distance between a vertex and its closes voxels within the mask area 
-            Sout{mi}.absDw = Sout{mi}.absD;                                % distnace-weighted average absolute distance between a vertex and its closes voxels within the mask area 
-            for di = 1:numel(D)
-              Sout{mi}.absD(K(di))  = Sout{mi}.absD(K(di))  + D(di); 
-              Sout{mi}.absDw(K(di)) = Sout{mi}.absDw(K(di)) + Dw(di); 
+              [Vm2,Ym2] = cat_vol_imcalc(Vm2,Vo,'i1',struct('interp',1));
+              clear Vo;
+            else
+              % load mask
+              Vm2 = spm_vol(job.measures{mi}.(measure).rimage2{fi});
+              Ym2 = spm_read_vols(Vm2);
             end
+          end
 
-          case 'vmeasure'
-            Sout{mi}.absV  = eps + zeros(size(S.vertices,1),1);            % average volume the closes voxels of a vertex within the mask area
-            Sout{mi}.absVw = Sout{mi}.absV;                                % distnace-weighted average volume the closes voxels of a vertex within the mask area
-            for di = 1:numel(D)
-              Sout{mi}.absV(K(di))  = Sout{mi}.absV(K(di))  + Ym(vxi(K(di)));
-              Sout{mi}.absVw(K(di)) = Sout{mi}.absVw(K(di)) + Ym(vxi(K(di))) .* Dw(di);
+
+          % refine mask 
+          ttime = cat_io_cmd('      Side alignment','g5','',job.opt.verb>1,ttime); 
+          if si == 1
+            for ssi = 1:numel(side)
+              % render surface
+              ffS = [cat_io_strrep(ffS(1:2),side,side{ssi}) ffS(3:end)]; 
+              if exist( fullfile( ppS, [ffS eeS] ) , 'file' )
+                St  = gifti( fullfile( ppS, [ffS eeS] ) ); 
+                St  = export(St);
+                St.vertices = Vm.mat \ ( [St.vertices ones(size(St.vertices,1),1)] )'; 
+                St.vertices = St.vertices([2,1,3],:)'; 
+                St.faces    = St.faces(:,[2,1,3]);
+                if ssi == 1
+                  Ys = single(cat_surf_fun('surf2vol',St,Ym));
+                else
+                  Yt = cat_surf_fun('surf2vol',St,Ym);
+                  Ys(Yt>0) = ssi; 
+                end
+              end
             end
+          end
+          if job.opt.surfside == 1
+            Ym = Ym .* (Ys==si);
+            if exist('Ym2','var'), Ym2 = Ym2 .* (Ys==si); end
+          elseif opt.surfside == 2 % this may cause problems due to other brain structures (other side, cerebellum) 
+            Ym = Ym .* (1-(Ys==si));
+            if exist('Ym2','var'), Ym2 = Ym2 .* (Ys==si); end
+          elseif opt.surfside == 3
+            Ys2 = min(1,job.opt.sweight - cat_vbdist(  (Ys==si),true(size((Ys==si))),vx_vol)) .* ...
+                  min(1,job.opt.sweight - cat_vbdist(1-(Ys==si),true(size((Ys==si))),vx_vol)); 
+            Ym = Ym .* Ys2;
+            if exist('Ym2','var'), Ym2 = Ym2 .* Ys2; end
+          end
 
 
-            % if now weighting sum V should be equal in the volume and on the surface 
+          %% extract volume points within the mask
+          ttime = cat_io_cmd('      Estimate voxel to surface mapping','g5','',job.opt.verb>1,ttime); 
+          clear vxxyz; 
+          vxi  = find(Ym>0); 
+          [vxxyz(:,1),vxxyz(:,2),vxxyz(:,3)] = ind2sub(size(Ym),vxi);
+          vxmm = Vm.mat * ( [vxxyz ones(size(vxxyz,1),1)] )';
+          vxmm = vxmm(1:3,:)';
 
-          case 'imeasure'
-            % evaluate intensity values
+          % create voronoi graph and search the nearest surface point for all voxel
+          if strcmp(measure,'dmeasure')
+% not working yet            
+            dgraph = delaunayn( double(vxmm)); 
+            [K, Sout.absD ]  = dsearchn( double(vxmm) , dgraph ,  double(S.vertices) );
+            Sout.absD = 1 ./ Sout.absD; 
+          else
+            dgraph = delaunayn( double(S.vertices)); 
+            [K,D]  = dsearchn( double(S.vertices) , dgraph ,  double(vxmm) );
+
+            % use weighting for D
+            if isinf( job.opt.dweight )
+              % use brain hull based size weighting 
+              rn = cat_surf_scaling(struct('file',job.surf{fi},'norm',31));
+              rn = rn * 10; 
+              Dw = max(0,1 - D ./ rn);
+            else
+              Dw = max(0,1 - (D - job.opt.dweight(1))  ./ job.opt.dweight(2));
+            end
+          end
+          
+          if exist('Ym2','var')
+            % extract volume points within the mask
+            ttime = cat_io_cmd('      Estimate voxel to surface mapping for vol 2','g5','',job.opt.verb>1,ttime); 
+            clear vxxyz; 
+            vxi2  = find(Ym>0); 
+            [vxxyz2(:,1),vxxyz2(:,2),vxxyz2(:,3)] = ind2sub(size(Ym),vxi2);
+            vxmm2 = Vm.mat * ( [vxxyz2 ones(size(vxxyz2,1),1)] )';
+            vxmm2 = vxmm2(1:3,:)';
+
+            % create voronoi graph and search the nearest surface point for all voxel
+            if strcmp(measure,'dmeasure')
+  % not working yet            
+              dgraph2 = delaunayn( double(vxmm2)); 
+              [K2, Sout.absD ]  = dsearchn( double(vxmm2) , dgraph2 ,  double(S.vertices) );
+              Sout.absD = 1 ./ Sout.absD; 
+            else
+              dgraph2 = delaunayn( double(S.vertices)); 
+              [K2,D2] = dsearchn( double(S.vertices) , dgraph2 ,  double(vxmm2) );
+
+              % use weighting for D
+              if isinf( job.opt.dweight )
+                % use brain hull based size weighting 
+                rn  = cat_surf_scaling(struct('file',job.surf{fi},'norm',31));
+                rn  = rn * 10; 
+                Dw2 = max(0,1 - D2 ./ rn);
+              else
+                Dw2 = max(0,1 - (D2 - job.opt.dweight(1))  ./ job.opt.dweight(2));
+              end
+            end
+          end
+
+
+          %%  project data 
+          %  just count the voxels (local volume) and average the distance
+          %  values with/without weighting
+          ttime = cat_io_cmd('      Map data to surface','g5','',job.opt.verb>1,ttime); 
+          switch measure
+            case 'dmeasure2'
+              Sout.absD  = eps + zeros(size(S.vertices,1),1);            % average absolute distance between a vertex and its closes voxels within the mask area 
+              Sout.absDw = Sout.absD;                                % distnace-weighted average absolute distance between a vertex and its closes voxels within the mask area 
+              for di = 1:numel(D)
+                Sout.absD(K(di))  = Sout.absD(K(di))  + D(di); 
+                Sout.absDw(K(di)) = Sout.absDw(K(di)) + Dw(di); 
+              end
+
+            case 'vmeasure'
+              Sout.absV  = eps + zeros(size(S.vertices,1),1);            % average volume the closes voxels of a vertex within the mask area
+              Sout.absVw = Sout.absV;                                % distnace-weighted average volume the closes voxels of a vertex within the mask area
+              for di = 1:numel(D)
+                try
+                  Sout.absV(K(di))  = Sout.absV(K(di))  + Ym(vxi(K(di)));
+                  Sout.absVw(K(di)) = Sout.absVw(K(di)) + Ym(vxi(K(di))) .* Dw(di);
+                end
+              end
+
+
+              % if now weighting sum V should be equal in the volume and on the surface 
+
+            case 'imeasure'
+              % evaluate intensity values
+              %%
+              Vi = spm_vol(job.measures{mi}.(measure).iimage{fi});
+              Yi = spm_read_vols(Vi);
+
+              mnIDvS = 1 + zeros(size(S.vertices,1),1);
+              mnIDdS = 1 + zeros(size(S.vertices,1),1);
+              Sout.mnI  = eps + zeros(size(S.vertices,1),1);  % mean intensity of different images within the mask area        
+              Sout.mnIw = eps + zeros(size(S.vertices,1),1);  % distance-weighted mean intensity of different images within the mask area          
+              Sout.sdI  = eps + zeros(size(S.vertices,1),1);  % std of intensity of different images within the mask area         
+              Sout.sdIw = eps + zeros(size(S.vertices,1),1);  % distnace-weighted std of intensity of different images within the mask area 
+              % mean
+              for di = 1:numel(D)
+                mnIDvS(K(di))        = mnIDvS(K(di))        + 1;              % sum for mean estimation
+                mnIDdS(K(di))        = mnIDdS(K(di))        + Dw(di); 
+                Sout.mnI(K(di))  = Sout.mnI(K(di))  + Yi(K(di)) .* Ym(K(di));
+                Sout.mnIw(K(di)) = Sout.mnIw(K(di)) + Yi(K(di)) .* Ym(K(di)) .* Dw(di);
+              end
+              Sout.mnI           =  Sout.mnI  ./  mnIDvS;
+              Sout.mnIw          =  Sout.mnIw ./  mnIDdS;
+              % std
+              for di = 1:numel(D)
+                Sout.sdI(K(di))  = Sout.sdI(K(di))  + (Yi(K(di)) - Sout.mnI(K(di)))  .* Ym(K(di));
+                Sout.sdIw(K(di)) = Sout.sdIw(K(di)) + (Yi(K(di)) - Sout.mnIw(K(di))) .* Ym(K(di)) .* Dw(di);
+              end
+              Sout.sdI           =  Sout.sdI  ./  mnIDvS;
+              Sout.sdIw          =  Sout.sdIw ./  mnIDdS;
+              clear mnIDvS mnIDdS; 
+          end
+  %%
+          if 0
             %%
-            Vi = spm_vol(job.measures{mi}.(measure).iimage{fi});
-            Yi = spm_read_vols(Vi);
-
-            mnIDvS = 1 + zeros(size(S.vertices,1),1);
-            mnIDdS = 1 + zeros(size(S.vertices,1),1);
-            Sout{mi}.mnI  = eps + zeros(size(S.vertices,1),1);  % mean intensity of different images within the mask area        
-            Sout{mi}.mnIw = eps + zeros(size(S.vertices,1),1);  % distance-weighted mean intensity of different images within the mask area          
-            Sout{mi}.sdI  = eps + zeros(size(S.vertices,1),1);  % std of intensity of different images within the mask area         
-            Sout{mi}.sdIw = eps + zeros(size(S.vertices,1),1);  % distnace-weighted std of intensity of different images within the mask area 
-            % mean
-            for di = 1:numel(D)
-              mnIDvS(K(di))        = mnIDvS(K(di))        + 1;              % sum for mean estimation
-              mnIDdS(K(di))        = mnIDdS(K(di))        + Dw(di); 
-              Sout{mi}.mnI(K(di))  = Sout{mi}.mnI(K(di))  + Yi(K(di)) .* Ym(K(di));
-              Sout{mi}.mnIw(K(di)) = Sout{mi}.mnIw(K(di)) + Yi(K(di)) .* Ym(K(di)) .* Dw(di);
+            FN = 'absVw'; ci = 1; fs = 20; 
+            %FN = 'sdI'; ci = 1; fs = 400; 
+            %FN = 'absD'; ci = 1; fs = 400; 
+            if ~exist('M','var'); M = spm_mesh_smooth(S); end
+            if iscell(Sout.(FN))
+              Sf = spm_mesh_smooth(M,Sout.(FN){ci},fs); 
+            else
+              Sf = spm_mesh_smooth(M,Sout.(FN),fs); 
             end
-            Sout{mi}.mnI           =  Sout{mi}.mnI  ./  mnIDvS;
-            Sout{mi}.mnIw          =  Sout{mi}.mnIw ./  mnIDdS;
-            % std
-            for di = 1:numel(D)
-              Sout{mi}.sdI(K(di))  = Sout{mi}.sdI(K(di))  + (Yi(K(di)) - Sout{mi}.mnI(K(di)))  .* Ym(K(di));
-              Sout{mi}.sdIw(K(di)) = Sout{mi}.sdIw(K(di)) + (Yi(K(di)) - Sout{mi}.mnIw(K(di))) .* Ym(K(di)) .* Dw(di);
-            end
-            Sout{mi}.sdI           =  Sout{mi}.sdI  ./  mnIDvS;
-            Sout{mi}.sdIw          =  Sout{mi}.sdIw ./  mnIDdS;
-            clear mnIDvS mnIDdS; 
+            cat_surf_render2(struct('vertices',S.vertices,'faces',S.faces,'cdata',log10(Sf)));
+          end  
         end
-%%
-        if 0
-          %%
-          %FN = 'absV'; ci = 1; fs = 20; 
-          %FN = 'sdI'; ci = 1; fs = 400; 
-          FN = 'absD'; ci = 1; fs = 400; 
-          if ~exist('M','var'); M = spm_mesh_smooth(S); end
-          if iscell(Sout{mi}.(FN))
-            Sf = spm_mesh_smooth(M,Sout{mi}.(FN){ci},fs); 
-          else
-            Sf = spm_mesh_smooth(M,Sout{mi}.(FN),fs); 
-          end
-          cat_surf_render2(struct('vertices',S.vertices,'faces',S.faces,'cdata',log10(Sf)));
-        end  
-
       end
     end
   end
