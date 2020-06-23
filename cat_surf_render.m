@@ -1317,7 +1317,7 @@ switch lower(varargin{1})
     error('Unknown action string')
 
 end
-%cat_stat_spm_results_ui('spm_list_cleanup'); % does not work?
+%cat_spm_results_ui('spm_list_cleanup'); % does not work?
     
 
 %==========================================================================
@@ -1680,7 +1680,7 @@ if ~isempty(hMe)
     %warning(ws);
 end
 try
-  cat_stat_spm_results_ui('spm_list_cleanup');
+  cat_spm_results_ui('spm_list_cleanup');
 end
 
 %==========================================================================
@@ -1714,7 +1714,7 @@ function myBackgroundColor(obj,evt,H,varargin)
     
     set(get(get(obj,'parent'),'children'),'Checked','off'); % deactivate all 
     set(obj,'Checked','on');
-    cat_stat_spm_results_ui('spm_list_cleanup');
+    cat_spm_results_ui('spm_list_cleanup');
 
 %==========================================================================
 function mySavePNG(obj,evt,H,filename)

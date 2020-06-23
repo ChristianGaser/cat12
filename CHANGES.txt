@@ -1,5 +1,39 @@
 ------------------------------------------------------------------------
-r1662 | dahnke | 2020-06-22 21:02:21
+r1663 | gaser | 2020-06-23 16:57:00
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_extopts.m
+M       cat_io_writenii.m
+M       cat_long_createTPM.m
+M       cat_main.m
+M       cat_run.m
+M       cat_simple.m
+M       cat_spm_results_ui.m
+M       cat_stat_check_SPM.m
+D       cat_stat_spm_results_ui.m
+        > moved to development/cat_stat_spm_results_ui.m
+M       cat_surf_create_TPM_hull_surface.m
+M       cat_surf_render.m
+M       cat_tst_cattest.m
+A  +    development/cat_stat_spm_results_ui.m
+        > moved from cat_stat_spm_results_ui.m
+M       html/cat.html
+M       tbx_cfg_cat.m
+
+(1) Changed: Inverse contrasts are now only added for T-test in 
+             cat_spm_results_ui.m
+(2) Fixed:   Corrected smaller bugs in cat_stat_check_SPM.m and 
+             cat_spm_results_ui.m that were caused under rare circumstances.
+             mixing up with similar cat_spm_results_ui. that should be rather
+             used.
+(3) Fixed:   Corrected bug in tbx_cfg_cat.m when cat_conf_catsimple couldn't be
+             found.
+(4) Fixed:   tpm folder in spm should not be used with capitals (thanks to 
+             Martin Domin for pointing to that issue).
+------------------------------------------------------------------------
+r1662 | dahnke | 2020-06-22 21:03:14 +0200 (Mo, 22 Jun 2020) | 22 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -21,6 +55,7 @@ M       cat_run_job.m
 (5) Changed: Use faster single SPM preprocessing in cat_run_job
              now also in ignoreError case.
 (6) Changed: Use low WMHCstr in ignoreError pipeline in cat_main.
+
 
 ------------------------------------------------------------------------
 r1661 | dahnke | 2020-06-21 18:11:54 +0200 (So, 21 Jun 2020) | 15 lines

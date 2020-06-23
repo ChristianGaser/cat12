@@ -221,13 +221,6 @@ estwrite_spm.vout   = @vout;
 estwrite_spm.hidden = expert<1;
 estwrite_spm.help   = {
 'Thickness estimation and surface creation for SPM segmentation which is using the input of CSF, GM, and WM of the SPM12 segmentation (instead of CAT12 segmentation) and also integrates Dartel or Geodesic Shoothing registration into the toolbox by an already existing Dartel template in MNI space. This template was derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org) and provides the several Dartel or Shooting iterations. Thus, for the majority of studies the creation of sample-specific Dartel templates is not necessary anymore.'};
-
-%------------------------------------------------------------------------
-
-if exist('cat_conf_catsimple','file')
-  [catsimple,catsimple_long] = cat_conf_catsimple(expert);
-  catsimple_long.hidden = expert<2;
-end
   
 %------------------------------------------------------------------------
 cat        = cfg_choice;
@@ -235,10 +228,20 @@ cat.name   = 'CAT12';
 cat.tag    = 'cat';
 
 % your version - cat.values = {estwrite estwrite1445 estwrite1173plus estwrite1173 long long1173 long1445 catsimple catsimple_long estwrite_spm tools stools stoolsexp};
-if load_previous
-  cat.values = {estwrite long catsimple catsimple_long previous previouslong estwrite_spm tools stools stoolsexp};
+if exist('cat_conf_catsimple','file')
+  [catsimple,catsimple_long] = cat_conf_catsimple(expert);
+  catsimple_long.hidden = expert<2;
+  if load_previous
+    cat.values = {estwrite long catsimple catsimple_long previous previouslong estwrite_spm tools stools stoolsexp};
+  else
+    cat.values = {estwrite long catsimple catsimple_long estwrite_spm tools stools stoolsexp};
+  end
 else
-  cat.values = {estwrite long catsimple catsimple_long estwrite_spm tools stools stoolsexp};
+  if load_previous
+    cat.values = {estwrite long previous previouslong estwrite_spm tools stools stoolsexp};
+  else
+    cat.values = {estwrite long estwrite_spm tools stools stoolsexp};
+  end
 end
 %------------------------------------------------------------------------
 

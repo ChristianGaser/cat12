@@ -250,7 +250,7 @@ if ~isfield(res,'spmpp')
 
   %% Local Intensity Correction 
   %  RD202006: ignoreErrors>1 has probably strange contrasts so its better 
-  %            to avoid LAS here completelly. 
+  %            to avoid LAS here completely. 
   Ymo = Ym;
   if job.extopts.LASstr>0 
     if job.extopts.ignoreErrors < 2
@@ -434,7 +434,7 @@ if ~isfield(res,'spmpp')
       [prob,indx,indy,indz,amapTth] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res);
     catch
       % use SPM
-      cat_io_cprintf('warn','\n  IgnoreErrors: AMAP failed use SPM segmentation.               \n')
+      cat_io_cprintf('warn','\n  IgnoreErrors: AMAP failed, use SPM segmentation.               \n')
       
       prob = zeros([size(Ymi),3],'uint8');
       for i = 1:3, prob(:,:,:,i) = Ycls{i}; end

@@ -684,7 +684,7 @@ function job = update_job(job)
   %              processing time roughly
   %  RD20200619: The tol parameter is more important than the resolution to
   %              correct strong local inhomogeneities. So I make this even 
-  %              a bit more agressive and the stronges option will take 
+  %              a bit more agressive and the strongest option will take 
   %              hours. This is also more relevant for low contrast data 
   %              with strange contrast.
   sampval               = [5 4 3 2 1]; 

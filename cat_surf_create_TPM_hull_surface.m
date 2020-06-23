@@ -19,7 +19,7 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm)
 
   % check input
   if ~exist('tpm','var')
-    Ptpm = fullfile(spm('dir'),'TPM','TPM.nii');
+    Ptpm = fullfile(spm('dir'),'tpm','TPM.nii');
   else
     if ischar(tpm)
       Ptpm = tpm;
