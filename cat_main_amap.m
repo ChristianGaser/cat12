@@ -72,8 +72,8 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
     Yp0 = uint8(max(Yb,min(3,round(Ymi*3)))); Yp0(~Yb) = 0;
   end 
   Yp0o = min(3,max(1,uint8(max(Yb,min(3,round(Ymi*3))))));
-  Yp0(Yb & Yp0==0 | Yp0>3) = cat_vol_ctype( round( Yp0o(Yb & Yp0>3) ) ); 
-  if sum( Yp0(Yb(:))==0)>0 
+  Yp0(Yb & (Yp0<=0 | Yp0>3)) = min(3,max(1,cat_vol_ctype( round( Yp0o(Yb & (Yp0<=0 | Yp0>3)) ) ))); 
+  if sum( Yp0(Yb(:))==0 ) ~= 0 
     error('cat_main_amap:badYp0def', ...
       'Undefined tissues within the brain area may cause severe MATLAB errors while calling cat_amap.c.');
   end
@@ -124,16 +124,22 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
 
   % Amap parameters  - default sub=16 caused errors with highres data!
   % don't use bias_fwhm, because the Amap bias correction is not that efficient and also changes
-  % intensity values
+  % intensity values 
+  % RD202006 the bias_fwhm paraemter (and/or other) cause also MATLAB crashes in the ignoreError pipeline 
   Ymib = double(Ymib); n_iters = 50; sub = round(32/min(vx_vol));   %#ok<NASGU>
   n_classes = 3; pve = 5; bias_fwhm = 0; init_kmeans = 0;           %#ok<NASGU>
-  if job.extopts.mrf~=0, iters_icm = 50; else, iters_icm = 0; end    %#ok<NASGU>
+  if job.extopts.mrf~=0, iters_icm = 50; else, iters_icm = 0; end   %#ok<NASGU>
   if job.extopts.ignoreErrors > 1
-    % init_kmeans = 0; % k-means was not stable working (e.g. HR075T2)
-    %clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5; % SPM peak definition  
-    %pve = 6 - (clsint(1)<clsint(2)); % seams to be more stable in HR075T2 ... but I will try the pve5 again after Christians comments  
-    % we need more iterations and also some bias correction here because LAS etc. is missing
-    n_iters = 200; bias_fwhm = 60; sub = round(64/min(vx_vol));  %#ok<NASGU>
+    % init_kmeans = 0; % k-means was not stable working (e.g. HR075T2) 
+    %                  % and it is better to use also here the previous intensity scaling  
+    %
+    % clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5; % SPM peak definition  
+    % pve = 6 - (clsint(1)<clsint(2)); % seams to be more stable in HR075T2 ...
+    %                                  % but I will try the pve5 again after Christians comments  
+    %
+    % we need more iterations and also some bias correction here because LAS is missing
+    n_iters = 200; %#ok<NASGU>
+    % bias_fwhm = 60; % using bias_fwhm=60 caused MATLAB errors so we only use more iterations 
   end
 
   % remove noisy background for kmeans

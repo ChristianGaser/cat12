@@ -14,12 +14,14 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
   global cat_err_res; 
 
   try
-    if job.extopts.ignoreErrors > 2 
+    clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
+
+    if job.extopts.ignoreErrors > 2  && ...
+       ~( ( clsint(3) < clsint(1) ) &&  ( clsint(1) < clsint(2) ) ) % ~T1
       error('runbackup')
     end
     
-    clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
-
+    
     [pth,nam] = spm_fileparts(res.image0(1).fname); %#ok<ASGLU> % original   
 
     % voxel size parameter
@@ -389,29 +391,41 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
     % [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,tpm,job,res,stime,stime2)
 
     cat_io_cprintf('warn','\n  IgnoreErrors: cat_main_updateSPM - run backup function          ')
-
-    if ~exist('Ycls','var')
-      Ycls = cell(1,size(P,4)); 
-      for k1 = 1:size(P,4)
-        Ycls{k1} = P(:,:,:,k1); 
-      end
+    vx_vol  = sqrt(sum(res.image(1).mat(1:3,1:3).^2)); 
+    
+    if ~exist('Yb','var')
+      Yb = cat_vol_morph( cat_vol_morph( smooth3( sum(P(:,:,:,1:3),4))>192 , 'do' ,3,vx_vol) , 'lc' , 2,vx_vol);  
+    end
+    
+    % correct background
+    if isfield(res,'bge')
+      P(:,:,:,end) = max( cat_vol_ctype( res.bge * 255 ) , P(:,:,:,end) ); 
+      for i=1:size(P,4)-1, P(:,:,:,i) = P(:,:,:,i) .* cat_vol_ctype(1 - res.bge); end
     end
 
+
+    %% initial definition for threshold function 
+    Ycls = cell(1,size(P,4)); 
+    for k1 = 1:size(P,4)
+      if k1<4
+        Ycls{k1} = P(:,:,:,k1) .* uint8(Yb);
+      else
+        Ycls{k1} = P(:,:,:,k1) .* uint8(~Yb);
+      end        
+    end
+  
     % T3th - brain tissue thresholds
     % Use median for WM threshold estimation to avoid problems in case of WMHs!
     if ~exist('T3th','var') || any( isnan(T3th) )
-      clsint  = @(x) cat_stat_nanmedian(Ysrc(Ycls{x}>0.5));
-      clsints = @(x) res.mn(res.lkp==x);
+      clsint  = @(x) cat_stat_nanmedian(Ysrc(Ycls{x}>128));
+      clsints = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
       T3th = [clsint(3) clsint(1) clsint(2)];
-      if any(isnan(T3th))
-        T3th = [clsints(3) clsints(1) clsints(2)];
-      end
+      for i=1:3, if isnan(T3th(i)), T3th(i) = clsints(i); end; end
     end      
 
     % Yb - skull-stripping
     if ~exist('Yb','var')
       if size(P,4)==4 
-        vx_vol  = sqrt(sum(res.image(1).mat(1:3,1:3).^2)); 
         [Yb,Ybb,Yg,Ydiv,P] = cat_main_updateSPM_skullstriped(Ysrc,P,res,vx_vol,T3th); %#ok<ASGLU>
         clear Ybb Yg Ydiv 
       else
@@ -435,15 +449,27 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
       clear Ym0
     end
 
-    %% correct probability maps to 100% 
+    %% final definition with corrected probability maps 
     Ycls = cell(1,size(P,4)); 
+    Ysb  = zeros(size(Ysrc),'single'); 
+    Ysnb = zeros(size(Ysrc),'single'); 
     for k1 = 1:size(P,4)
       if k1<4
         Ycls{k1} = P(:,:,:,k1) .* uint8(Yb);
+        Ysb = Ysb + single(Ycls{k1}); 
       else
         Ycls{k1} = P(:,:,:,k1) .* uint8(~Yb);
-      end        
+        Ysnb = Ysnb + single(Ycls{k1}); 
+      end
     end
+    for k1 = 1:size(P,4)
+      if k1<4
+        Ycls{k1}(Yb>=0.5) = cat_vol_ctype(single( (Ycls{k1}(Yb>=0.5))) ./ Ysb(Yb>=0.5)  * 255 ); 
+      else
+        Ycls{k1}(Yb< 0.5) = cat_vol_ctype(single( (Ycls{k1}(Yb< 0.5))) ./ Ysnb(Yb< 0.5) * 255 ); 
+      end
+    end
+    clear Ysb Ysnb;
     
     fprintf('%5.0fs\n',etime(clock,stime));
      
