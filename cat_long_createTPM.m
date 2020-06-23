@@ -68,7 +68,7 @@ function out = cat_long_createTPM(job)
   def.median       = 1;                             % use median filter (values from 0 to 1) 
   def.sanlm        = 0;                             % use sanlm filter (0|1)
   def.localsmooth  = 1;                             % use futher local smoothing within the tissue class (values from 0 to 1) 
-  def.defTPM       = fullfile(spm('dir'),'TPM','TPM.nii'); % SPM TPM
+  def.defTPM       = fullfile(spm('dir'),'tpm','TPM.nii'); % SPM TPM
   def.defTPMmix    = 0.05;                          % percentual use of the SPM TPM 
   def.fstrength    = 0; 
   % public GUI

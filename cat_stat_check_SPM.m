@@ -194,7 +194,7 @@ if check_ortho
         % save
         warning('OFF','MATLAB:print:UIControlsScaled');
         fname = fullfile(job.check_SPM_cov.do_check_cov.outdir{1},[job.check_SPM_cov.do_check_cov.fname 'DesignOrthogonality.png']);
-        print(h, '-dpng', '-opengl', sprintf('-r%d',dpi), fname);
+        try, print(h, '-dpng', '-opengl', sprintf('-r%d',dpi), fname); end
         warning('ON','MATLAB:print:UIControlsScaled');
       end
 
