@@ -975,13 +975,16 @@ switch lower(Action), case 'setup'                         %-Set up results
                 if any(xSPM.Ic == i) & ~xSPM.invResult
                     set(hC2,'ForegroundColor',[0 0 1],'Checked','on');
                 end
-                xSPM2 = xSPM;
-                xSPM2.invResult = 1;
-                hC3 = uimenu(hC1,'Label',['(inverse contrast) ',SPM.xCon(i).STAT, ': ', SPM.xCon(i).name], ...
-                    'UserData',struct('Ic',i),...
-                    'Callback',{@mychgcon,xSPM2});
-                if any(xSPM.Ic == i) & xSPM.invResult
-                    set(hC3,'ForegroundColor',[0 0 1],'Checked','on');
+                % only add inverse contrasts for T-test
+                if SPM.xCon(i).STAT == 'T'
+                    xSPM2 = xSPM;
+                    xSPM2.invResult = 1;
+                    hC3 = uimenu(hC1,'Label',['(inverse contrast) ',SPM.xCon(i).STAT, ': ', SPM.xCon(i).name], ...
+                        'UserData',struct('Ic',i),...
+                        'Callback',{@mychgcon,xSPM2});
+                    if any(xSPM.Ic == i) & xSPM.invResult
+                        set(hC3,'ForegroundColor',[0 0 1],'Checked','on');
+                    end
                 end
             end
         end
@@ -1645,7 +1648,11 @@ if ~isempty(xSPM.thresDesc)
         if use_tfce
             xSPM2.invResult = xSPM.invResult;
         end
-        xSPM2.statType = xSPM.statType;
+        if isfield(xSPM,'statType')
+          xSPM2.statType = xSPM.statType;
+        elseif isfield(xSPM,'STAT')
+          xSPM2.statType = xSPM.STAT;
+        end
         xSPM2.u     = str2double(td.u);
         xSPM2.k     = xSPM.k;
     end

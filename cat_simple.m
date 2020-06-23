@@ -7,7 +7,7 @@ function output = cat_simple(job)
 
   % defaults settings
   def.catversion    = 'estwrite';
-  def.tpm           = fullfile(spm('dir'),'TPM','TPM.nii');
+  def.tpm           = fullfile(spm('dir'),'tpm','TPM.nii');
   def.nproc         = cat_get_defaults('extopts.nproc');
   def.debug         = 0;
   def.ignoreErrors  = 1;
