@@ -168,7 +168,7 @@ if check_cov
     end
     
     % batch mode 
-    if isfield(job.check_SPM_cov.do_check_cov,'save')
+    if nargin > 0 && isfield(job.check_SPM_cov.do_check_cov,'save')
       job_check_cov.fname  = job.check_SPM_cov.do_check_cov.fname; 
       job_check_cov.outdir = job.check_SPM_cov.do_check_cov.outdir; 
       job_check_cov.save   = job.check_SPM_cov.do_check_cov.save; 
@@ -183,7 +183,7 @@ if check_ortho
     fprintf('-------------------------------------------\n');
     h = check_orthogonality(SPM.xX);
     
-    if isfield(job.check_SPM_cov.do_check_cov,'save')
+    if nargin > 0 && isfield(job.check_SPM_cov.do_check_cov,'save')
       %%
       if ~isempty(job.check_SPM_cov.do_check_cov.fname)
         dpi = cat_get_defaults('print.dpi'); 

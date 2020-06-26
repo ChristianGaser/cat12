@@ -109,12 +109,12 @@ if ~isfield(res,'spmpp')
   if 0 %any( min(vx_vol*2,1.4)./vx_vol >= 2 ) && job.extopts.ignoreErros<2
     % guaranty average (lower) resolution with >0.7 mm
     % RD202006: This solution is not working when cat_main_gintnorm
-    %           optimize the image (e.g. bias correction). Just calling
+    %           optimizes the image (e.g. bias correction). Just calling
     %               Ym  = cat_main_gintnorm(Ysrc,Tth);  
     %           would not include the bias correction but also may use 
-    %           inacurate peaks that were estimated on slighly different 
-    %           image. So it is more save to turn it off because running 
-    %           the default case also in highres data only increase time
+    %           inaccurate peaks that were estimated on slighly different 
+    %           images. So it is more safe to turn it off because running 
+    %           the default case also in highres data only increases time
     %           and memory demands. 
     %           Possible test subject: ADHD200/ADHD200_HC_BEJ_1050345_T1_SD000000-RS00.nii        
     [Ysrcr,resGI] = cat_vol_resize(Ysrc       ,'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm');

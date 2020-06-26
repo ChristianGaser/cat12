@@ -1,5 +1,31 @@
 ------------------------------------------------------------------------
-r1664 | dahnke | 2020-06-23 18:31:52
+r1665 | gaser | 2020-06-26 16:59:38
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_main_amap.m
+M       cat_main_registration2.m
+M       cat_stat_analyze_ROIs.m
+M       cat_stat_check_SPM.m
+M       cat_surf_results.m
+M       cat_tst_cattest.m
+M       cat_vol_createTPM.m
+M       cat_vol_slice_overlay.m
+M       standalone/cat_standalone.sh
+
+(1) Changed: Updated cat_vol_slice_overlay.m to deal with inverse effects on
+             log-scaled p-values.
+(2) Fixed:   Automatic estimation of thresholds was not correct for already 
+             thresholded data with inverse effects in cat_surf_results.m.
+(3) Fixed:   Calling of cat_stat_check_SPM without parameters wasn't working.
+(4) Fixed:   Output arguments were not working standalone versions in
+             cat_main_registration2.m
+(5) Changed: Updated help texts.
+(6) Changed: Largely updated cat_stat_analyze_ROIs.m with more interaction,
+             output and options.
+------------------------------------------------------------------------
+r1664 | dahnke | 2020-06-23 18:32:34 +0200 (Di, 23 Jun 2020) | 19 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -19,6 +45,7 @@ M       cat_surf_vx2surf.m
              of cat_main_gintnorm. 
 (4) Fixed:   Corrected bugs in ignoreError pipeline in cat_main_updateSPM.  
               
+
 ------------------------------------------------------------------------
 r1663 | gaser | 2020-06-23 16:57:40 +0200 (Di, 23 Jun 2020) | 32 lines
 

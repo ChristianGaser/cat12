@@ -329,7 +329,7 @@ function [mainbatch,perror] = cat_tst_cattest(job)
   % --------------------------------------------------------------------
   % basic       = only defaults
   % userlevel   = only parameter defined for this userlevel without defaults
-  % full        = all paraemter defined for this and lower userlevels
+  % full        = all parameters defined for this and lower userlevels
   paralevelstr = 'Defaults|Userlevel|Full';
   if isempty(job.paralevel)
     paralevels   = eval(sprintf('{''%s''}',strrep(lower(paralevelstr),'|',''','''))); 

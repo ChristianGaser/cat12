@@ -1,4 +1,4 @@
-function [trans,reg,res.Affine] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
+function [trans,reg,Affine] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesion)
 % ______________________________________________________________________
 %  Spatial registration function of cat_main preprocessing that include
 %  the SPM DARTEL and (optimized) SHOOTING registration approaches. 
@@ -1379,6 +1379,8 @@ end
     end
   end
 
+  Affine = res.Affine;
+  
   % back to old directory 
   if exist('olddir','var'), cd(olddir); end
 end

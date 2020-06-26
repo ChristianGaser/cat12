@@ -1481,17 +1481,17 @@ ind1 = find(H.S{1}.Y(:) ~= 0);
 ind2 = find(H.S{2}.Y(:) ~= 0);
 
 % estimate min value > 0 and min/max values
-if ~isempty(ind1) & ~isempty(ind2)
-  H.S{1}.thresh = min(H.S{1}.Y(H.S{1}.Y(:) > 0));
-  H.S{1}.thresh = min(H.S{1}.thresh, min(H.S{2}.Y(H.S{2}.Y(:) > 0)));
+if ~isempty(ind1) && ~isempty(ind2)
+  H.S{1}.thresh = min(abs(H.S{1}.Y(abs(H.S{1}.Y(:)) > 0)));
+  H.S{1}.thresh = min(H.S{1}.thresh, min(abs(H.S{2}.Y(abs(H.S{2}.Y(:)) > 0))));
   H.S{1}.min = min(min(H.S{1}.Y(~isinf(H.S{1}.Y))), min(H.S{2}.Y(~isinf(H.S{2}.Y))));
   H.S{1}.max = max(max(H.S{1}.Y(~isinf(H.S{1}.Y))), max(H.S{2}.Y(~isinf(H.S{2}.Y))));
 elseif isempty(ind1)
-  H.S{1}.thresh = min(H.S{2}.Y(H.S{2}.Y(:) > 0));
+  H.S{1}.thresh = min(abs(H.S{2}.Y(abs(H.S{2}.Y(:)) > 0)));
   H.S{1}.min = min(H.S{2}.Y(~isinf(H.S{2}.Y)));
   H.S{1}.max = max(H.S{2}.Y(~isinf(H.S{2}.Y)));
 elseif isempty(ind2)
-  H.S{1}.thresh = min(H.S{1}.Y(H.S{1}.Y(:) > 0));
+  H.S{1}.thresh = min(abs(H.S{1}.Y(abs(H.S{1}.Y(:)) > 0)));
   H.S{1}.min = min(H.S{1}.Y(~isinf(H.S{1}.Y)));
   H.S{1}.max = max(H.S{1}.Y(~isinf(H.S{1}.Y)));
 end
@@ -1763,19 +1763,16 @@ ind2 = find(H.S{2}.Y(:) ~= 0);
 
 % estimate min value > 0 and min/max values
 if ~isempty(ind1) && ~isempty(ind2)
-  H.S{1}.thresh = min(H.S{1}.Y(H.S{1}.Y(:) > 0));
-  tmp = min(H.S{2}.Y(H.S{2}.Y(:) > 0));
-  if ~isempty(tmp)
-    H.S{1}.thresh = min(H.S{1}.thresh, tmp);
-  end
+  H.S{1}.thresh = min(abs(H.S{1}.Y(abs(H.S{1}.Y(:)) > 0)));
+  H.S{1}.thresh = min(H.S{1}.thresh, min(abs(H.S{2}.Y(abs(H.S{2}.Y(:)) > 0))));
   H.S{1}.min = min(min(H.S{1}.Y(~isinf(H.S{1}.Y))), min(H.S{2}.Y(~isinf(H.S{2}.Y))));
   H.S{1}.max = max(max(H.S{1}.Y(~isinf(H.S{1}.Y))), max(H.S{2}.Y(~isinf(H.S{2}.Y))));
 elseif isempty(ind1)
-  H.S{1}.thresh = min(H.S{2}.Y(H.S{2}.Y(:) > 0));
+  H.S{1}.thresh = min(abs(H.S{2}.Y(abs(H.S{2}.Y(:)) > 0)));
   H.S{1}.min = min(H.S{2}.Y(~isinf(H.S{2}.Y)));
   H.S{1}.max = max(H.S{2}.Y(~isinf(H.S{2}.Y)));
 elseif isempty(ind2)
-  H.S{1}.thresh = min(H.S{1}.Y(H.S{1}.Y(:) > 0));
+  H.S{1}.thresh = min(abs(H.S{1}.Y(abs(H.S{1}.Y(:)) > 0)));
   H.S{1}.min = min(H.S{1}.Y(~isinf(H.S{1}.Y)));
   H.S{1}.max = max(H.S{1}.Y(~isinf(H.S{1}.Y)));
 end
