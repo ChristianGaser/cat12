@@ -61,7 +61,7 @@
   def.files.mfiles      = {''};                         % T1 map
   def.files.afiles      = {''};                         % atlas maps
   def.files.logfile     = {''};                         % log file to write on  
-  % public paraemter
+  % public parameter
   def.verb              = 2;                            % be verbose (2=display result)
   def.rmShootBG         = 1;                            % remove Shooting background class (yes for CAT but other?)
   def.smoothness        = 4;                            % main smoothing factor

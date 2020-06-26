@@ -227,7 +227,7 @@ run_cat ()
   fi
   
 	eval "\"${SPMROOT}/run_spm12.sh\"" $MCRROOT "batch" $TMP
-#	rm $TMP
+	rm $TMP
   exit 0
 }
 
@@ -296,6 +296,7 @@ OUTPUT:
 
 USED FUNCTIONS:
    cat_standalone_segment.txt
+   cat_standalone_segment_long.txt
    cat_standalone_simple.txt
    cat_standalone_resample.txt
    cat_parallelize.sh
