@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1665 | gaser | 2020-06-26 16:59:38
+r1666 | gaser | 2020-06-26 17:01:24
+
+Changed paths:
+M       CHANGES.txt
+M       cat_vol_slice_overlay.m
+
+Fixed: Option for automatically selecting slices w.r.t. found maxima was not
+       always working.
+------------------------------------------------------------------------
+r1665 | gaser | 2020-06-26 17:00:18 +0200 (Fr, 26 Jun 2020) | 24 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -24,6 +33,7 @@ M       standalone/cat_standalone.sh
 (5) Changed: Updated help texts.
 (6) Changed: Largely updated cat_stat_analyze_ROIs.m with more interaction,
              output and options.
+
 ------------------------------------------------------------------------
 r1664 | dahnke | 2020-06-23 18:32:34 +0200 (Di, 23 Jun 2020) | 19 lines
 

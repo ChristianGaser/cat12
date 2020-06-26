@@ -110,7 +110,23 @@ if n_slice > 0
         end
     end
 else
-    slices{1} = OV.slices;
+    if isfield(OV,'slices')
+        slices{1} = OV.slices;
+    else
+        SO.img(2).vol = spm_vol(OV.name);
+        [mx, mn, XYZ, img2] = volmaxmin(SO.img(2).vol);
+        % threshold map and restrict coordinates
+        Q = find(img2 >= range(1) & img2 <= range(2));
+        XYZ = XYZ(:, Q);
+        img2 = img2(Q);
+        
+        M = SO.img(2).vol.mat;
+        XYZmm = M(1:3, :) * [XYZ; ones(1, size(XYZ, 2))];
+        
+        XYZ_unique = get_xyz_unique(XYZ, XYZmm, img2);
+        orientn = find(strcmpi(OV.transform, {'sagittal', 'coronal', 'axial'}));
+        slices{1} = XYZ_unique{orientn};
+    end
 end
 
 sl_name = [];
