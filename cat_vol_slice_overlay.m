@@ -306,7 +306,9 @@ if (SO.cbar == 2) & logP
     
     YTickLabel = [];
     for i = 1:length(YTick)
-        YTickLabel = char(YTickLabel, (sprintf(['%9.' num2str(YTick(i)) 'f '], 10^(-YTick(i)))));
+        % also handle neg. log p-values
+        val = 10^(-abs(YTick(i)))*sign(YTick(i));
+        YTickLabel = char(YTickLabel, (sprintf(['%9.' num2str(abs(YTick(i))) 'f '], val)));
     end
     
     % skip first empty entry

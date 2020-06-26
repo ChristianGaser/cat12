@@ -17,6 +17,7 @@ load(spmmat);
 write_beta = 0;
 
 % compare correlation coefficients between samples
+% experimental! might not working
 compare_two_samples = 0;
 
 cwd = fileparts(spmmat);
@@ -89,6 +90,7 @@ if ~mesh_detected
   end
 end
 
+fprintf('\nLoading files ')
 roi_files_found = 0;
 % get names of ROI xml files using saved filename in SPM.mat
 for i=1:numel(P)
@@ -134,12 +136,10 @@ for i=1:numel(P)
       roi_names{i} = files{ni};
       roi_files_found = roi_files_found + 1;
   end
-  
-  if exist('roi_names','var') && roi_files_found == n
-    disp(roi_names{i}) 
-  end 
-  
+  if roi_files_found, fprintf('.'); end
 end
+
+fprintf('\n')
 
 % select files interactively if no xml files were found
 if roi_files_found ~= n
@@ -196,6 +196,13 @@ xml = convert(xmltree(deblank(roi_names{1})));
 % get names IDs and values of selected atlas and measure inside ROIs
 [ROInames ROIids ROIvalues] = get_ROI_measure(roi_names, atlas, measure);
 
+if mesh_detected
+  [pth,nam,ext] = spm_fileparts(fname{1});
+  if isempty(strfind(fname{1},measure))
+    spm('alert!',sprintf('Selected measure ''%s'' differs from data in the analysis folder (e.g. %s)\nIf not yet done, please run ''Extract ROI-based Surface Values'' in ROI-Tools to extract additional surface ROI measures.',measure,[nam ext]));
+  end
+end
+
 % get name of contrast
 str_con = deblank(xCon(Ic).name);
 
@@ -217,7 +224,7 @@ X = SPM.xX.X;
 
 %-Apply global scaling
 %--------------------------------------------------------------------------
-for i = 1:size(Y,1)
+for i=1:size(Y,1)
 	Y(i,:) = Y(i,:)*SPM.xGX.gSF(i);
 end
 
@@ -304,18 +311,31 @@ for i=1:n_hemis
 end
 
 % prepare corrections for multiple comparisons
-corr = {'uncorrected','FDR corrected','Holm-Bonferroni corrected'};
+corr       = {'uncorrected','FDR corrected','Holm-Bonferroni corrected'};
 corr_short = {'','FDR','Holm'};
-n_corr = numel(corr);
-data = cell(size(corr));
-Pcorr = cell(size(corr));
-dataBeta = cell(length(ind_con));
+n_corr     = numel(corr);
+data       = cell(size(corr));
+Pcorr      = cell(size(corr));
+dataBeta   = cell(length(ind_con));
 
 % uncorrected p-values
-Pcorr{1} = p;
+Pcorr{1}     = p;
+
+% check for inverse effects and ask whether these should be also displayed
+ind_inv = find((1-p) < alpha);
+if ~isempty(ind_inv)
+  found_inv = 1;
+  Pcorr_inv  = cell(size(corr));
+  Pcorr_inv{1} = 1 - p;
+else
+  found_inv = 0;
+end
 
 % apply FDR correction
 Pcorr{2} = spm_P_FDR(p);
+if found_inv
+  Pcorr_inv{2} = spm_P_FDR(1 - p);
+end
 
 % apply Holm-Bonferroni correction: correct lowest P by n, second lowest by n-1...
 if n_corr > 2
@@ -331,32 +351,69 @@ if n_corr > 2
       break
     end
   end
+  if found_inv
+    [Psort0, indP0] = sort(1 - p);
+    n = length(Psort0);
+    Pcorr_inv{3} = ones(size(p));
+    for k=1:n
+      Pval = (1 - p(indP0(k)))*(n+1-k);
+      if Pval<alpha
+        Pcorr_inv{3}(indP0(k)) = Pval;
+      else
+        % stop here if corrected p-value exceeds alpha
+        break
+      end
+    end
+
+  end
 end
 
 atlas_loaded = 0;
 
 % set empty index for found results
-ind_corr = cell(n_corr,1);
-for c = 1:n_corr
-  ind_corr{c} = [];
+ind_corr     = cell(n_corr,1);
+ind_corr_inv = cell(n_corr,1);
+for c=1:n_corr
+  ind_corr{c}     = [];
+  ind_corr_inv{c} = [];
+end
+
+Pcorr_sel = cell(n_corr,1);
+if found_inv 
+  Pcorr_inv_sel = cell(n_corr,1);
+end
+
+fprintf('\n%s\n',repmat('_',[1,100]));
+fprintf('Analysis of %s in %s atlas using contrast %s from SPM.mat in \n%s\n',measure,atlas,str_con,cwd);
+fprintf('%s\n',repmat('_',[1,100]));
+
+if found_inv
+  found_inv = spm_input('Also show inverse effects?','+1','b','yes|no',[1,0],1);
+else
+  found_inv = 0;
 end
 
 % go through left and right hemisphere and structures in both hemispheres
-for i = sort(unique(hemi_code))'
+for i=sort(unique(hemi_code))'
 
   N_sel  = ROInames(hemi_ind{i});
   ID_sel = ROIids(hemi_ind{i});
   B_sel  = Beta(:,hemi_ind{i});
-  statval_sel  = statval(hemi_ind{i});
   Ze_sel = Ze(hemi_ind{i});
+  statval_sel = statval(hemi_ind{i});
 
-  for c = 1:n_corr
+  for c=1:n_corr
     Pcorr_sel{c} = Pcorr{c}(hemi_ind{i});
+    if found_inv
+      Pcorr_inv_sel{c} = Pcorr_inv{c}(hemi_ind{i});
+    end
   end
   
   % sort p-values for FDR and sorted output
   [Psort, indP] = sort(p(hemi_ind{i}));
-
+  if found_inv
+    [Psort_inv, indP_inv] = sort(1 - p(hemi_ind{i}));
+  end
 
   % select surface atlas for each hemisphere
   if mesh_detected
@@ -396,7 +453,7 @@ for i = sort(unique(hemi_code))'
   end
     
   output_name = [num2str(100*alpha) '_' str_con '_' atlas '_' measure];
-  atlas_name   = [atlas '_' measure];
+  atlas_name  = [atlas '_' measure];
   
   if write_beta
     for k=1:length(ind_con)
@@ -406,21 +463,52 @@ for i = sort(unique(hemi_code))'
       end
     end
   end
-  
+    
   % display and save thresholded sorted p-values for each correction
-  for c = 1:n_corr
+  for c=1:n_corr
     ind = find(Pcorr_sel{c}(indP)<alpha);
     if size(ind,1) > 1, ind = ind'; end
+    if found_inv
+      ind_inv = find(Pcorr_inv_sel{c}(indP_inv)<alpha);
+      if size(ind_inv,1) > 1, ind_inv = ind_inv'; end
+    end
     if ~isempty(ind)
       ind_corr{c} = [ind_corr{c} ind];
       fprintf('\n%s (P<%g, %s):\n',hemistr{i},alpha,corr{c});
-       fprintf('%9s\t%9s\t%9s\t%s\n','P-value',[statstr '-value'],'Ze-value',atlas);
+      if found_inv
+        fprintf('%9s\t%9s\t%9s\t%9s\t%s\n','P-value','contrast',[statstr '-value'],'Ze-value',atlas);
+      else
+        fprintf('%9s\t%9s\t%9s\t%s\n','P-value',[statstr '-value'],'Ze-value',atlas);
+      end
       for j=1:length(ind)
         data{c}(data0 == ID_sel(indP(ind(j)))) = -log10(Pcorr_sel{c}(indP(ind(j))));
-        fprintf('%9g\t%9g\t%9g\t%s\n',Pcorr_sel{c}(indP(ind(j))),statval_sel(indP(ind(j))),Ze_sel(indP(ind(j))),N_sel{indP(ind(j))}(:,2:end));
+        if found_inv
+          fprintf('%9g\t%9s\t%9g\t%9g\t%s\n',Pcorr_sel{c}(indP(ind(j))),'',statval_sel(indP(ind(j))),Ze_sel(indP(ind(j))),N_sel{indP(ind(j))}(:,2:end));
+        else
+          fprintf('%9g\t%9g\t%9g\t%s\n',Pcorr_sel{c}(indP(ind(j))),statval_sel(indP(ind(j))),Ze_sel(indP(ind(j))),N_sel{indP(ind(j))}(:,2:end));
+        end
       end
     end
-    
+
+    if ~isempty(ind_inv) & found_inv
+      ind_corr_inv{c} = [ind_corr_inv{c} ind_inv];
+      % print header here if no positive effects were found
+      if isempty(ind)
+        fprintf('\n%s (P<%g, %s):\n',hemistr{i},alpha,corr{c});
+        if found_inv
+          fprintf('%9s\t%9s\t%9s\t%9s\t%s\n','P-value','contrast',[statstr '-value'],'Ze-value',atlas);
+        else
+          fprintf('%9s\t%9s\t%9s\t%s\n','P-value',[statstr '-value'],'Ze-value',atlas);
+        end
+      end
+
+      if ~isempty(ind), fprintf('%s\n',repmat('-',[1,90])); end
+      for j=1:length(ind_inv)
+        data{c}(data0 == ID_sel(indP_inv(ind_inv(j)))) = log10(Pcorr_inv_sel{c}(indP_inv(ind_inv(j))));
+        fprintf('%9g\t%9s\t%9g\t%9g\t%s\n',Pcorr_inv_sel{c}(indP_inv(ind_inv(j))),'inverse',statval_sel(indP_inv(ind_inv(j))),Ze_sel(indP_inv(ind_inv(j))),N_sel{indP_inv(ind_inv(j))}(:,2:end));
+      end
+    end
+
     % write label surface with thresholded p-values
     if mesh_detected
       % save P-alues as float32
@@ -439,26 +527,6 @@ for i = sort(unique(hemi_code))'
   end
   fprintf('\n');
   
-end
-
-% merge hemispheres
-if mesh_detected
-
-  for c = 1:n_corr
-    % name for combined hemispheres
-    name_lh   = ['lh.logP'   corr_short{c} output_name '.gii'];
-    name_rh   = ['rh.logP'   corr_short{c} output_name '.gii'];
-    name_mesh = ['mesh.logP' corr_short{c} output_name '.gii'];
-  
-    % combine left and right 
-    M0 = gifti({name_lh, name_rh});
-    M.cdata = [M0(1).cdata; M0(2).cdata];
-    M.private.metadata = struct('name','SurfaceID','value',name_mesh);
-    save(gifti(M), name_mesh, 'Base64Binary');
-    spm_unlink(name_lh);
-    spm_unlink(name_rh);
-  end
-      
 end
 
 % prepare display ROI results according to found results
@@ -480,8 +548,43 @@ if nargin < 3
   end
 end
 
-% write label volume with thresholded p-values
-if ~mesh_detected
+% merge hemispheres
+if mesh_detected
+
+  for c=1:n_corr
+    % name for combined hemispheres
+    name_lh   = ['lh.logP'   corr_short{c} output_name '.gii'];
+    name_rh   = ['rh.logP'   corr_short{c} output_name '.gii'];
+    name_mesh = ['mesh.logP' corr_short{c} output_name '.gii'];
+  
+    % combine left and right 
+    M0 = gifti({name_lh, name_rh});
+    M.cdata = [M0(1).cdata; M0(2).cdata];
+    if ~found_inv, M.cdata(M.cdata < 0) = 0; end
+    M.private.metadata = struct('name','SurfaceID','value',name_mesh);
+    
+    if ~isempty(find(M.cdata~=0))
+      save(gifti(M), name_mesh, 'Base64Binary');
+        fprintf('\nLabel file with thresholded logP values (%s) was saved as %s.',corr{c},name_mesh);
+    end
+    spm_unlink(name_lh);
+    spm_unlink(name_rh);
+  end
+  
+  fprintf('\n');
+
+  if isempty(ind_show)
+    fprintf('No results found.\n');
+    show_results = 0;
+  end
+  
+  % display ROI surface results
+  if show_results
+    name_mesh = ['mesh.logP' corr_short{show_results} output_name '.gii'];
+    cat_surf_results('Disp',name_mesh);
+  end
+
+else % write label volume with thresholded p-values
 
   if isempty(ind_show)
     fprintf('No results found.\n');
@@ -493,8 +596,11 @@ if ~mesh_detected
     if ~isempty(ind_corr{c})
       V.fname = ['logP' corr_short{c} output_name '.nii'];
       V.dt(1) = 16;
-      spm_write_vol(V,data{c});
-      fprintf('\nLabel file with thresholded logP values (%s) was saved as %s.',corr{c},V.fname);
+      if ~found_inv, data{c}(data{c} < 0) = 0; end
+      if ~isempty(find(data{c}~=0))
+        spm_write_vol(V,data{c});
+        fprintf('\nLabel file with thresholded logP values (%s) was saved as %s.',corr{c},V.fname);
+      end
     end
   end
 
@@ -516,24 +622,16 @@ if ~mesh_detected
     OV.reference_range = [0.2 1.0];                        % intensity range for reference image
     OV.opacity = Inf;                                      % transparency value for overlay (<1)
     OV.cmap    = jet;                                      % colormap for overlay
-    OV.range   = [-log10(alpha) round(max(data{show_results}(isfinite(data{show_results}))))];
+    OV.range   = [-log10(alpha) ceil(max(data{show_results}(isfinite(data{show_results}))))];
+    if found_inv &   ~isempty(ind_corr_inv{show_results})
+      OV.range   = [-ceil(max(data{show_results}(isfinite(data{show_results})))) ceil(max(data{show_results}(isfinite(data{show_results}))))];
+    end
     OV.name = ['logP' corr_short{show_results} output_name '.nii'];
-    OV.slices_str = char('-30:4:60');
+    slices_str = spm_input('Select Slices','+1','m',{'-30:4:60','Estimate slices with local maxima'},{char('-30:4:60'),''});
+    OV.slices_str = slices_str{1};
     OV.transform = char('axial');
     cat_vol_slice_overlay(OV);
     fprintf('You can again call the result file %s using Slice Overlay in CAT12 with more options to select different slices and orientations.\n',OV.name);
-  end
-  
-else % surface results display
-  if isempty(ind_show)
-    fprintf('No results found.\n');
-    show_results = 0;
-  end
-  
-  % display ROI surface results
-  if show_results
-    name_mesh = ['mesh.logP' corr_short{show_results} output_name '.gii'];
-    cat_surf_results('Disp',name_mesh);
   end
   
 end
@@ -635,11 +733,7 @@ end
 n_measures = numel(useful_measures);
 
 % select a measure
-if size(measures,1) > 1
-  sel_measure = spm_input('Select measure','+1','m',useful_measures);
-else
-  sel_measure = 1;
-end
+sel_measure = spm_input('Select measure','+1','m',useful_measures);
 measure = useful_measures{sel_measure};
 
 % remove spaces
@@ -680,7 +774,7 @@ for i=1:n_data
     val = xml.(atlas).data.(measure);
   catch
     measure_found = 0;
-    for j = 1:numel(measures)
+    for j=1:numel(measures)
       if strcmp(deblank(measures{j}),deblank(measure_name)); 
         val = xml.(atlas).data.(measures{j});
         measure_found = 1;

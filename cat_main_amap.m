@@ -125,7 +125,7 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
   % Amap parameters  - default sub=16 caused errors with highres data!
   % don't use bias_fwhm, because the Amap bias correction is not that efficient and also changes
   % intensity values 
-  % RD202006 the bias_fwhm paraemter (and/or other) cause also MATLAB crashes in the ignoreError pipeline 
+  % RD202006 the bias_fwhm parameter (and/or other) also causes MATLAB crashes in the ignoreError pipeline 
   Ymib = double(Ymib); n_iters = 50; sub = round(32/min(vx_vol));   %#ok<NASGU>
   n_classes = 3; pve = 5; bias_fwhm = 0; init_kmeans = 0;           %#ok<NASGU>
   if job.extopts.mrf~=0, iters_icm = 50; else, iters_icm = 0; end   %#ok<NASGU>
