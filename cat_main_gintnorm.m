@@ -284,9 +284,9 @@ RD202006: This part includes an minium based WM bias correction that is
 % begin.neonatePipeline      
 % #########################################################################
 % RD202006: This part is the special neonate pipeline with problematic 
-            thissue contrast and havy processing.  It include some useful
+            thissue contrast and heavy processing.  It includes some useful
             ideas but need much further evaluation and tests. 
-            It include an extra bias correction and optimization of tissue
+            It includes an extra bias correction and optimization of tissue
             classes when the WM intensity is quite similar to the CSF
             intensity.
       
@@ -424,7 +424,7 @@ RD202006: This part includes an minium based WM bias correction that is
     else
       error('runbackup')      
 %{      
-%RD202006: remove this part when CAT12.7 is table      
+%RD202006: remove this part when CAT12.7 is stable      
       
       % if everything fails assume that the image is T1 and cross fingers
       BGmin = min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))); 
@@ -786,9 +786,9 @@ RD202006: This part includes an minium based WM bias correction that is
 
 % #########       
 % RD202006: Use bias correction in general?
-%           + it seams to work also in standard data
-%           - in standard T1 data LAS allreay include a BC but this may
-%             also profits by corrections here?
+%           + it sesms to work also with standard data
+%           - in standard T1 data LAS already includes a BC but this may
+%             also benefits by corrections here?
 %           - bias correction will alter the intensity values and the 
 %             spm estimation is not longer correct 
 %           > this is super in this backup case (that do not support LAS 

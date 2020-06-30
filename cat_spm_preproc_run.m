@@ -111,6 +111,7 @@ for iter=1:nit
                     M              = im1.mat;
                     c              = (im1.dim+1)/2;
                     im1.mat(1:3,4) = -M(1:3,1:3)*c(:);
+                    warning('off','MATLAB:RandStream:ActivatingLegacyGenerators')
                     [Affine1,ll1]  = spm_maff8(im1,8,(obj.fwhm+1)*16,tpm,[],job.warp.affreg); % Closer to rigid
                     Affine1        = Affine1*(im1.mat/M);
 
@@ -125,6 +126,7 @@ for iter=1:nit
                         Affine  = Affine2;
                     end
                 end
+                warning('off','MATLAB:RandStream:ActivatingLegacyGenerators')
                 Affine = spm_maff8(obj.image(1),job.warp.samp,(obj.fwhm+1)*16,tpm,Affine,job.warp.affreg); % Closer to rigid
                 Affine = spm_maff8(obj.image(1),job.warp.samp, obj.fwhm,     tpm,Affine,job.warp.affreg);
             end

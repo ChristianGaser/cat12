@@ -933,7 +933,12 @@ switch lower(action)
         end
         
         if nargin>1 && isnumeric(varargin{2}) && numel(varargin{2})==2
-            caxis(H.axis,varargin{2});
+            % use min/max if given range is the same
+            if diff(varargin{2})
+                caxis(H.axis,varargin{2});
+            else
+                caxis(H.axis,[min(d),max(d)])
+            end
         else
             caxis(H.axis,[min(d),max(d)])
             %varargin{2} = [min(d),max(d)];
