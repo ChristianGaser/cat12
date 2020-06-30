@@ -102,7 +102,7 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
     str{1}(end).name  = [str{1}(end).name(1:end-1) ' / biasstr '];  
     str{1}(end).value = [str{1}(end).value sprintf(' / %s',biasstr{round(job.opts.biasstr*4)+1})];
     if job.extopts.expertgui % add the value
-      str{1}(end).value = [str{1}(end).value sprintf('(%0.2f;breg:%0.2f;bfwhm:%0.2f)',job.opts.biasstr,job.opts.biasreg,job.opts.biasfwhm)]; 
+      str{1}(end).value = [str{1}(end).value sprintf('(%0.2f;breg:%0.0e;bfwhm:%0.0f)',job.opts.biasstr,job.opts.biasreg,job.opts.biasfwhm)]; 
     end
   else
     str{1}(end).name  = [str{1}(end).name(1:end-1) ' / biasreg / biasfwhm'];

@@ -452,11 +452,14 @@ function cat_run_job(job,tpm,subj)
 
             stime = cat_io_cmd('Affine registration','','',1,stime); 
 
+            % use further data limitiation and remove background for affreg 
+            [Ym2,ths]     = cat_stat_histth(Ym);
+            Ym2           = (Ym2 - ths(1)) ./ diff(ths) .* (1 - Ybg); 
             % write data to VF
             VF.dt         = [spm_type('UINT8') spm_platform('bigend')];
-            VF.dat(:,:,:) = cat_vol_ctype(Ym * 200,'uint8'); 
+            VF.dat(:,:,:) = cat_vol_ctype(Ym2 * 200,'uint8'); 
             VF.pinfo      = repmat([1;0],1,size(Ym,3));
-            clear WI; 
+            clear WI ths; 
 
             % smoothing
             resa  = obj.samp*2; % definine smoothing by sample size
@@ -907,12 +910,15 @@ function cat_run_job(job,tpm,subj)
             end
           end
           warning on 
-          fprintf('%5.0fs\n',etime(clock,stime));   
+          fprintf('%5.0fs\n',etime(clock,stime));
+          
 % #### keep this part temporary ... RD20200619.end        
         else
           %% Run SPM preprocessing with different settings. 
           % Start with the most reasonable model. 
           % I am not really sure how many levels are useful - but less than a hand
+          % RD202006: Maybe we could run this with faster settings 
+          % (lower samp & tol) to select the best mask definition? >> CAT12.8         
           stime  = cat_io_cmd('SPM preprocessing 1 (estimate 2):','','',job.extopts.verb-1,stime); 
           casei  = 0;     % iteration counter
           acccon = 0.33;  % acceptable contrast (optimal is 0.5, default maybe 0.35-0.45 in T1 )
@@ -934,6 +940,7 @@ function cat_run_job(job,tpm,subj)
             switch casei
               case 1
                 % use the coronal mask - nothing to do
+                if ppe.affreg.skullstripped, continue, end
                 obj2 = obj; 
                 modelname{casei} = 'with coronal background mask'; 
               case 2
@@ -1093,7 +1100,7 @@ function cat_run_job(job,tpm,subj)
         % inactive preprocessing of inverse images (PD/T2) 
         % RD202006: Throw error?
         % I turned this error here off to use the later check in cat_main_gintnorm.
-        if 0 %job.extopts.INV==0 && any(diff(Tth(1:3))<=0)
+        if 0 % any(diff(Tth(1:3))<=0)
           error('cat_run_job:BadImageProperties', ...
           ['CAT12 is designed to work only on highres T1 images. \n' ...
            'T2/PD preprocessing can be forced on your own risk by setting \n' ...

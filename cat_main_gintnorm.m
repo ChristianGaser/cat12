@@ -1,4 +1,4 @@
-function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,extopts)
+function [Ym,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,extopts)
 % This is a subfunction of cat_main.
 % ______________________________________________________________________
 % Global intensity normalization based on tissue thresholds estimated as 
@@ -46,6 +46,16 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     
     %% final peaks and intensity scaling
     %  -----------------------------------------------------------------
+    %  RD202006: 
+    %  This case is used for intensity normalized denoising.
+    %  This case was created to run cat_main_gintnorm on low resolution and
+    %  then update the high resolution case but I forgot that the full call
+    %  of cat_main_gintnorm also includes a bias correction in some cases. 
+    %  I.e. in the worst case of a high resolution scan the bias correction
+    %  was not used and also the estimated peaks were biased by the missing
+    %  correction. Hence, we skip the high resolution thing in case of bias
+    %  correction (mostly inverse contrast).
+    
     T3th  = Ycls.T3th;
     T3thx = Ycls.T3thx;
 
@@ -77,8 +87,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     clsint  = @(x) cat_stat_nanmedian(Ysrc(Ycls{x} > 128)); 
     clsints = @(x,y) [round( res.mn(res.lkp==x) * 10^5)/10^5; res.mg(res.lkp==x-((y==0)*8))']; 
 
-    inv_weighting = 0;
-    if nargout==7
+    if nargout>=6
       cat_warnings = struct('identifier',{},'message',{});
     end
     vxv    = 1/cat_stat_nanmean(vx_vol);
@@ -93,6 +102,9 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     % initial thresholds and intensity scaling
     T3th3 = [clsint(3) clsint(1) clsint(2)];
     BGth  = min(mean(Ysrc(Ycls{end}(:)>192)),clsint(end));
+ 
+    inv_weighting = ~(T3th3(1)<T3th3(2) && T3th3(2)<T3th3(3));
+   
 
 
     %% -------------------------------------------------------------------
@@ -111,13 +123,30 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
         'CAT:cat_main:LowContrast',...
         sprintf(['The contrast between different tissues is relative low! \n' ...
              '  (BG=%0.2f, CSF=%0.2f, GM=%0.2f, WM=%0.2f)\n'],BGth,T3th3),numel(cat_warnings)==0);
+% use backup pipeline?           
     end
 
+    
+% RD202006: Only process T1 data and call backup function otherwise. 
+%           Try to use the neonate pipeline below (case 3) in the backup 
+%           function to separate CSF from WM in the SPM segmentation in 
+%           a future release (CAT12.8?) if you have more test and valiation 
+%           data.
     if T3th3(1)>T3th3(3) && T3th3(2)>T3th3(3) && T3th3(1)>T3th3(2) % inverse (T2 / PD)
       cat_warnings = cat_io_addwarning(cat_warnings,...
         'CAT:cat_main:InverseContrast',...
         sprintf(['Inverse tissue contrast! \n' ...
              '(BG=%0.2f, CSF=%0.2f, GM=%0.2f, WM=%0.2f)\n'],BGth,T3th3(1:3)),numel(cat_warnings)==0);
+           
+      % RD202006: WM < GM < CSF      
+      % Use backup funtion in case of inverse contrast.
+      error('runbackup')
+                 
+%{
+RD202006: This part includes an minium based WM bias correction that is 
+          now part of the generalized bias correction in the backup function. 
+          This part can be removed in future.
+           
       T3th3(1) = max( max(clsints(3,0)) , mean(Ysrc(Ycls{3}(:)>240)));     
 
       % first initial scaling for gradients and divergence
@@ -227,6 +256,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
 
 
       inv_weighting = 1;
+%}
 
     elseif T3th3(1)<T3th3(2) && T3th3(2)<T3th3(3) % T1
       %%
@@ -249,6 +279,17 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
 
 
     elseif T3th3(1)>T3th3(3) && T3th3(2)<T3th3(3) && T3th3(1)>T3th3(2)
+      error('runbackup')
+%{   
+% begin.neonatePipeline      
+% #########################################################################
+% RD202006: This part is the special neonate pipeline with problematic 
+            thissue contrast and havy processing.  It include some useful
+            ideas but need much further evaluation and tests. 
+            It include an extra bias correction and optimization of tissue
+            classes when the WM intensity is quite similar to the CSF
+            intensity.
+      
     % This is a very special case of T2 weighting (of neonates) with
     % BG < GM < WM < CSF that need special correction for the sulcal 
     % CSF that mostly have WM like intensity due to the PVE. Hence, 
@@ -376,9 +417,16 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
           Ym = Ym / 3; 
           ds('l2','',vx_vol,Ysrc/T3th3(3), round(Ym*3),Ysrc/T3th3(3),Ym,60)
       end
+% #########################################################################
+% end.neonatePipeline      
+%}
 
-
-    else % if everything fails assume that the image is T1 and cross fingers
+    else
+      error('runbackup')      
+%{      
+%RD202006: remove this part when CAT12.7 is table      
+      
+      % if everything fails assume that the image is T1 and cross fingers
       BGmin = min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))); 
       T3th3(1) = min( min(clsints(3,0)) , mean(Ysrc(Ycls{3}(:)>240))); 
       BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),cat_stat_nanmedian(Ysrc(Ycls{end}(:)>128))]);
@@ -403,8 +451,11 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
           '  %s. '], ...
           BGth,T3th3(1),T3th3(2),T3th3(3)),numel(cat_warnings)==0,...
           spm_file('Please check image orientation and quality','link',['spm_image(''Display'', ''' res.image0.fname ''')']) ); 
+%}
     end
 
+    
+% RD202006: The following part is only for the standard T1 case.
 
 
 
@@ -483,6 +534,10 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
 
 
       %% skull-stripping warning
+% #########      
+% RD202006: Skull-Stripping warning in backup case?  
+%           Move to updateSPM ???
+% #########      
       if numel(Ycls)>4
         skulltest = (cat_stat_nanmedian(Ysrc(Ycls{5}(:)>192 & Ysrc(:)>T3th(2))) < ... 
            cat_stat_nanmedian(Ysrc(Ycls{3}(:)>192 & Ysrc(:)>0))); 
@@ -592,7 +647,14 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
 
       Tth.T3th  = T3th;
       Tth.T3thx = T3thx;
+      
+      
     elseif T3th3(1)>T3th3(3) && T3th3(2)>T3th3(3)
+       error('runbackup')
+%{       
+% RD202006:  GM < WM < CSF - part 2 of the neonate contrast?
+% Do not remove this special contrast case to early.
+      
       %% reestimation of brain mask
       Yb  = Ym>0.8 & Ym<1.2 & (Ycls{5}<64); Yb  = single(cat_vol_morph(Yb,'lo',1));
       [Ybr,Ymr,Ycls5,resT2] = cat_vol_resize({single(Yb),Ym,single(Ycls{5})/255},'reduceV',vx_vol,2,32); 
@@ -612,8 +674,16 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
       YM  = (smooth3(Ysrc<Tth.T3th(5)/1.2) & smooth3(Ysrc>Tth.T3th(4))) | Ym>2; 
       Ym = cat_vol_median3(Ym,YM,Ym<1.5,0.1); 
       cat_sanlm(Ym,1,3)
+%}
+       
     elseif T3th3(1)>T3th3(3) && T3th3(2)<T3th3(3) && T3th3(1)>T3th3(2)
-       %% filtering
+       error('runbackup')
+%{       
+% RD202006:  WM < GM < CSF - classic full inverse contrast (T2/PD)
+% Remove this special contrast case when CAT12.7iE becomes stable.
+
+       
+      %% filtering
       Ybb  = cat_vol_morph(cat_vol_morph(Yp0>0.5/3,'c',4),'d',2);
       if debug, Ymo = Ym; end 
       if 1
@@ -690,14 +760,18 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
         YM = (smooth3(Ysrc<Tth.T3th(5)/1.2) & smooth3(Ysrc>Tth.T3th(4))) | Ym>2; 
         Ym = cat_vol_median3(Ym,YM,Ym<1.5,0.1);
       end
+%}
     end
   catch e 
-    if extopts.ignoreErrors < 2
+    if extopts.ignoreErrors < 1
       rethrow(e)
     else
       % [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,extopts)
-
-      cat_io_cprintf('warn','\n  IgnoreErrors: cat_main_gintnorm - run backup function           ')
+      if extopts.ignoreErrors > 1
+        cat_io_cprintf('warn','\n  IgnoreErrors: cat_main_gintnorm - run generalized function      ')
+      else
+        cat_io_cprintf('warn','\n  No T1 contrast detected. Run generalized function               ')
+      end
       Ysrc    = cat_stat_histth(Ysrc,0.98); % remove outlier
       clsints = @(x,y) [round( res.mn(res.lkp==x) * 10^5)/10^5; res.mg(res.lkp==x-((y==0)*8))']; % SPM peak definition  
       clsint  = @(x) cat_stat_nanmedian(Ysrc(Ycls{x}>128));                                      % median within the tissue label 
@@ -709,7 +783,19 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
         % This is a quite simple bias corrections that should remove small 
         % local reminding inhomogeneities. It must consider WMHs to avoid
         % wrong corrections and get the correct WM peak. 
-      
+
+% #########       
+% RD202006: Use bias correction in general?
+%           + it seams to work also in standard data
+%           - in standard T1 data LAS allreay include a BC but this may
+%             also profits by corrections here?
+%           - bias correction will alter the intensity values and the 
+%             spm estimation is not longer correct 
+%           > this is super in this backup case (that do not support LAS 
+%             inclusive the bias correction there)
+% #########       
+        
+        
         Yg      = cat_vol_grad(Ysrc,vx_vol) ./ ... 
                   min( max([clsintv(1) clsintv(2) clsintv(3)]) , Ysrc); % normalize extrem values
         gth     = max(0.10,min( 1/3 , cat_stat_nanmean( Yg( cat_vol_morph( smooth3( Ycls{2}>240 )>0.5 ,'e') )) ));  
@@ -762,7 +848,17 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
         Ygmi = cat_vol_localstat(Ysrc,Ygm,2,1);
         Ygmi = cat_vol_localstat(Ygmi,Ygm,1,1);
 
+% ########        
+% RD202006: Use atlas data to improve/save subcortical areas > CAT12.?
+%           Use divergence to find gyri/sulci > CAT12.8
+%           Add skull-tissue bias correction  > CAT12.8
+% ########        
+        
+        
         % get background area
+% ########        
+% RD202006: Add skull-stripped special case! > CAT12.7
+% ########        
         if isfield(res,'bge') 
           if all(size(res.bge) == size(Ysrc))
             Ybge = res.bge; 
@@ -809,6 +905,9 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
         clear Ynw nc; 
       end
       
+% RD202006: Add contrast-rating to control WMHC and AMAP (CAT12.8?)
+
+
       % Tth
       if ~exist('Tth','var')
         Tth.T3th  = T3th;
@@ -827,21 +926,18 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
       Ym = Ym / 3; 
       clear M
       
-      if ~exist('inv_weighting','var')
-        inv_weighting = ~(T3th3(1)<T3th3(2) && T3th3(2)<T3th3(3)); % ~T1 
-      end
+      inv_weighting = ~(T3th3(1)<T3th3(2) && T3th3(2)<T3th3(3)); % ~T1 
       
-      if nargout==7 && ~exist('cat_warnings','var') 
-        cat_warnings = struct('identifier',{'cat_main_gintnorm:runBackup'},'message',{'Run simpliefied version of cat_main_gintnorm.'});
-      end
       
     end
   end
 
-  
+  if nargout>=6 && ~exist('cat_warnings','var') 
+    cat_warnings = struct('identifier',{'cat_main_gintnorm:runGeneral'},'message',{'Run generalized cat_main_gintnorm function.'});
+  end
   
   
   %% if there was a warning we need a new line 
-  if nargout==7 && numel(cat_warnings)>1, fprintf('\n'); cat_io_cmd(' ','','',1); end
+  if nargout==6 && numel(cat_warnings)>1, fprintf('\n'); cat_io_cmd(' ','','',1); end
 
 end

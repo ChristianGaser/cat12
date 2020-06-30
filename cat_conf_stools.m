@@ -208,7 +208,7 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   name.name             = 'Name';
   name.strtype          = 's';
   name.num              = [1 Inf];
-  name.val              = {'vxvolume'};
+  name.val              = {'vxvol'};
   name.help             = {
     'Name of the measure that is used in the surface file name, e.g., "roi_volume" will result in "lh.roi_volume.S01" for a subject S01. '
     'The surface data has to be smoothed and normalized in the next step. '
@@ -216,42 +216,56 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   };
 
   iname                 = name; 
-  iname.val             = {'vxintensity'};
+  iname.val             = {'vxint'};
   
   dname                 = name; 
-  dname.val             = {'vxdistance'};
+  dname.val             = {'vxdist'};
 
   % distance weighting function [high low]
   dweighting            = cfg_entry;
   dweighting.tag        = 'dweighting';
-  dweighting.name       = 'Weighting / limitation [High Low]';
+  dweighting.name       = 'Weighting / limitation [Low High High Low]';
   dweighting.strtype    = 'r';
-  dweighting.num        = [1 2]; 
-  dweighting.val        = {[0 10]};
+  dweighting.num        = [1 4]; 
+  dweighting.val        = {[0 0 0 10]};
   dweighting.help       = {
-    'Distance based weighting from high to low, i.e. [0 10] means full weighting at 0 mm distance and zero weighting at 10 mm distance. '
+   ['Distance based weighting outside and inside the surface from high to low. ' ...
+    'I.e. [2 0 5 10] means full weighting at 0 mm distance and zero weighting at ' ...
+    '2 mm distance outside of the surface and full weighting from 0 to 5 mm inside ' ...
+    'the surface with linear decrease from 1 to 0 between 5 and 10 mm inside of the surface. ']
     ''
   };
 
   norm                  = cfg_menu;
   norm.tag              = 'norm';
   norm.name             = 'Final normalization';
-  norm.labels           = {'none','log10'};
-  norm.values           = {'log10'};
-  norm.val              = {'log10'}; 
+  norm.labels           = {'none','log10a','log10b','log10c','log10d','log10e'};
+  norm.values           = {'','log10a','log10b','log10c','log10d','log10e'};
+  norm.val              = {''}; 
   norm.help             = {
    ['For many measure a log10 normalization is useful to have normal distributed data ' ...
     'but also to handle exponential dependencies to brain size. Moreover, it is important ' ...
-    'to use TIV as general confound in the analysis. '] ''};   
+    'to use TIV as general confound in the analysis. '] 
+    '  log10a = @(val) log10(val * 9/10 + 1)' 
+    '  log10b = @(val) log10(val * 99/100 + 1)/2' 
+    '  log10c = @(val) log10(val * 999/1000 + 1)/3'
+    '  log10d = @(val) log10(val * 9999/1000 + 1)/4'
+    '  log10e = @(val) log10(val * 99999/1000 + 1)/5'
+    ''};   
   
  
   % average
   average               = cfg_menu;
   average.tag           = 'vweighting';
   average.name          = 'Average function';
-  average.labels        = {'mean','median','standard deviation','variance','minimum','maximum'};
-  average.values        = {'mean','median','std','var','min','max'};
-  average.val           = {'mean'}; 
+  if expert
+    average.labels      = {'mean','median','standard deviation','variance','minimum','maximum'};
+    average.values      = {'mean','median','std','var','min','max'};
+  else
+    average.labels      = {'mean','standard deviation','variance'};
+    average.values      = {'mean','std','var'};
+  end
+  average.val           = {'mean'};
   average.help          = {'Average function for the projection of multiple voxels.' ''};   
    
   % msk
@@ -263,6 +277,11 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   rimage.ufilter        = '.*';
   rimage.num            = [1 Inf];
 
+  rimage2               = rimage;
+  rimage2.tag           = 'rimage2'; 
+  rimage2.name          = 'Second region mask for relativation';
+  rimage2.help          = {'i.e. WMH vs. WMV.'};
+  
   % int
   iimage                = cfg_files;
   iimage.tag            = 'iimage';
@@ -339,49 +358,7 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   outdir.help         = {
     'Files produced by this function will be written into this output directory.  If no directory is given, images will be written  to current working directory.  If both output filename and output directory contain a directory, then output filename takes precedence.'
   };
-  
-  
-  % measures
-  vmeasure              = cfg_branch;
-  vmeasure.tag          = 'vmeasure';
-  vmeasure.name         = 'Volume measure';
-  vmeasure.val          = {rimage,name,dweighting,inverse};
-  vmeasure.help         = {
-    'Extraction of local volume values of a specied tissue or region. Modulated push from voxel- to surface-space. '};
 
-  rvmeasure              = cfg_branch;
-  rvmeasure.tag          = 'rvmeasure';
-  rvmeasure.name         = 'Relative volume measure';
-  rvmeasure.val          = {rimage,rimage,name,dweighting,inverse}; % mixing (A:(A|B) or (A:B) ?
-  rvmeasure.help         = {
-    'Extraction of local volume values of a specied tissue or region. '};
-
-  imeasure              = cfg_branch;
-  imeasure.tag          = 'imeasure';
-  imeasure.name         = 'Intensity measure';
-  imeasure.val          = {rimage,iimage,iname,dweighting,average};
-  imeasure.help         = {
-    'Extraction of local intensity values of one map in the regions defined by another. '};
-
-  dmeasure              = cfg_branch;
-  dmeasure.tag          = 'dmeasure';
-  dmeasure.name         = 'Distance measure';
-  dmeasure.val          = {rimage,dname,dweighting,dmetric};
-  dmeasure.help         = {
-    'Extraction of local intensity values of one map in the regions defined by another. '};
-
-  
-
- 
-  % measure {vol, int, dist, idist)
-  measures              = cfg_repeat;
-  measures.tag          = 'measures';
-  measures.name         = 'Measures';
-  measures.values       = {vmeasure, imeasure, dmeasure};
-  measures.val          = {}; 
-  measures.help         = {
-    'Defintion of different volume, intensity and distance measures that were projected to the surface. ' ''};
-  
   % distance weighting function [high low]
   smoothing             = cfg_entry;
   smoothing.tag         = 'smooth';
@@ -395,6 +372,93 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
     ''
   };
 
+  type                = cfg_menu;
+  type.tag            = 'type';
+  type.name           = 'Tissue/region type';
+  type.labels         = {'GM','WM','CSF','WMH/lesion/tumor'};
+  type.values         = {'GM','WM','CSF','WMH'};
+  type.val            = {'WM'}; 
+  type.help           = {
+    ''};
+
+  vtype               = type; 
+  vtype.help          = {''};
+  
+  itype               = type; 
+  itype.help          = {''};
+
+  dtype               = type; 
+  dtype.help          = {''};
+
+  
+  % measures
+  vmeasure              = cfg_branch;
+  vmeasure.tag          = 'vmeasure';
+  vmeasure.name         = 'Volume measure';
+  if expert>1
+    vmeasure.val        = {rimage,rimage2,name,dweighting,norm,inverse};
+  else
+    vmeasure.val        = {rimage,rimage2,name,dweighting,norm};
+  end
+  vmeasure.help         = {
+    'Extraction of local volume values of a specied tissue or region. Modulated push from voxel- to surface-space. '};
+
+  imeasure              = cfg_branch;
+  imeasure.tag          = 'imeasure';
+  imeasure.name         = 'Intensity measure';
+  if expert>1
+    imeasure.val        = {rimage,iimage,iname,dweighting,norm,average};
+  else
+    imeasure.val        = {rimage,iimage,iname,dweighting,norm};
+  end  
+  imeasure.help         = {
+    'Extraction of local intensity values of one map in the regions defined by another. '};
+
+  dmeasure              = cfg_branch;
+  dmeasure.tag          = 'dmeasure';
+  dmeasure.name         = 'Distance measure';
+  if expert>1
+    dmeasure.val        = {rimage,dname,dweighting,norm,dmetric};
+  else
+    dmeasure.val        = {rimage,dname,dweighting,norm};
+  end
+  dmeasure.help         = {
+    'Extraction of local intensity values of one map in the regions defined by another. '};
+
+  % measures
+  vxmeasure              = cfg_branch;
+  vxmeasure.tag          = 'vxmeasure';
+  vxmeasure.name         = 'Predefined volume measure';
+  vxmeasure.val          = {vtype};
+  vxmeasure.help         = {
+    ''};
+
+  ixmeasure              = cfg_branch;
+  ixmeasure.tag          = 'ixmeasure';
+  ixmeasure.name         = 'Predefined intensity measure';
+  ixmeasure.val          = {itype};
+  ixmeasure.help         = {
+    ''};
+
+  dxmeasure              = cfg_branch;
+  dxmeasure.tag          = 'dxmeasure';
+  dxmeasure.name         = 'Predefined distance measure';
+  dxmeasure.val          = {dtype};
+  dxmeasure.help         = {
+    ''};
+
+  
+
+ 
+  % measure {vol, int, dist, idist)
+  measures              = cfg_repeat;
+  measures.tag          = 'measures';
+  measures.name         = 'Measures';
+  measures.values       = {vmeasure, imeasure, dmeasure, vxmeasure, ixmeasure, dxmeasure};
+  measures.val          = {}; 
+  measures.help         = {
+    'Defintion of different volume, intensity and distance measures that were projected to the surface. ' ''};
+  
   interp                = cfg_menu;
   interp.tag            = 'interp';
   interp.name           = 'Interpolation';
@@ -408,8 +472,11 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   opts                  = cfg_exbranch;
   opts.tag              = 'opts';
   opts.name             = 'Options';
-  %opts.val              = {interp,smoothing,norm,outdir,lazy,nproc};
-  opts.val              = {interp,smoothing,norm,outdir};
+  if expert
+    opts.val            = {interp,outdir}; % lazy,nproc,verb
+  else
+    opts.val            = {outdir};
+  end
   opts.help             = {'General processing options. ' ''};
   
   % main

@@ -1,5 +1,35 @@
 ------------------------------------------------------------------------
-r1666 | gaser | 2020-06-26 17:01:24
+r1667 | dahnke | 2020-06-30 10:28:41
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_defaults.m
+M       cat_main.m
+M       cat_main_amap.m
+M       cat_main_gintnorm.m
+M       cat_main_registration2.m
+M       cat_main_reportstr.m
+M       cat_run_job.m
+M       cat_surf_render2.m
+M       cat_surf_vx2surf.m
+
+(1) Fixed:     Corrected affine registration problems for input 
+               data with outliers in cat_run_job. 
+(2) New:       Added external calls of 'view' and 'clim' setting
+               in cat_surf_render2. 
+(3) Changed:   Updated functions in cat_surf_vx2surf and its GUI
+               in cat_conf_stools.
+(4) Changed:   Updated handling of T2/PD data in cat_main, 
+               cat_main_gintnorm, and cat_main_amap.                
+(5) Fixed:     Tiny correction of affine-registration parameter in 
+               cat_main_registration2.
+(6) Fixed:     Tiny corrections of parameter output in cat_main_reportstr.
+(7) Changed:   Set ignoreErrors=2 and reoved extopts.INV flag in cat_defaults.
+
+
+------------------------------------------------------------------------
+r1666 | gaser | 2020-06-26 17:01:29 +0200 (Fr, 26 Jun 2020) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +37,7 @@ M       cat_vol_slice_overlay.m
 
 Fixed: Option for automatically selecting slices w.r.t. found maxima was not
        always working.
+
 ------------------------------------------------------------------------
 r1665 | gaser | 2020-06-26 17:00:18 +0200 (Fr, 26 Jun 2020) | 24 lines
 
