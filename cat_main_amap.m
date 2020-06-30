@@ -35,6 +35,11 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
   dbs  = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
 
   try 
+    if job.extopts.ignoreErrors > 3
+      error('cat_main_amap:useSPM','Use SPM segmentation.'); 
+    end
+    
+    
     % correct for harder brain mask to avoid meninges in the segmentation
     % RD20200619: unclear severe MATLAB crashes calling cat_amap in the ignoreErrors pipeline
     Ymib   = real(Ymi); Ymib(~Yb) = 0; 
@@ -158,6 +163,8 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
     th{2}   = cell2mat(textscan(amapres{12},'%f*%f')); 
     th{3}   = cell2mat(textscan(amapres{13},'%f*%f')); 
 
+   
+    
 
     if job.extopts.verb>1 
       if (th{1}(1) < th{2}(1)) && (th{2}(1) < th{3}(1)) % T1 
@@ -189,6 +196,25 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
                                       '  [con(c1,c2),con(c1,c3),con(c2,c3)] = [%0.2f,%0.2f,%0.2f] '],con);
       end
     end
+    
+    if 0 % job.extopts.ignoreErrors > 1 && job.extopts.inv_weighting
+      % RD202006: catching of problems in low quality data - in development 
+      probs = prob; 
+      ap = [3 1 2]; for i=1:3, probs(:,:,:,i) = Ycls{ap(i)}(indx,indy,indz); end
+      Yp0  = (single(prob(:,:,:,1)) + single(prob(:,:,:,2))*2 + single(prob(:,:,:,3))*3)/255/3;
+      Yp0s = (single(probs(:,:,:,1)) + single(probs(:,:,:,2))*2 + single(probs(:,:,:,3))*3)/255/3;
+      if ( sum(abs(Yp0s(:) - Yp0(:))>0.4) / sum(Yp0(:)>0.5) ) > 0.02
+        Yrep = uint8( abs(Yp0s - Yp0) > 0.3  &  Yp0s>0.1); 
+        prob2 = prob; 
+        for i=1:3, prob2(:,:,:,i) = prob(:,:,:,i) .* (1-Yrep) + Yrep .* probs(:,:,:,i); end
+        Yp0c = (single(prob2(:,:,:,1)) + single(prob2(:,:,:,2))*2 + single(prob2(:,:,:,3))*3)/255/3;
+      end
+      %% separation just for tests/debugging
+      if ( sum(abs(Yp0s(:) - Yp0(:))>0.4) / sum(Yp0(:)>0.5) ) > 0.02
+        prob = prob2; 
+      end
+      clear Yp0 Yp0s Yp0c probs prob2
+    end
 
     % reorder probability maps according to spm order
     clear Yp0b Ymib; 
@@ -214,6 +240,7 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
       else
         Yp0  = single(Ycls{3})/255/3 + single(Ycls{1})/255*2/3 + single(Ycls{2})/255;
       end  
+      vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
       [cat_err_res.init.Yp0,cat_err_res.init.BB] = cat_vol_resize(Yp0,'reduceBrain',vx_vol,2,Yp0>0.5); 
       cat_err_res.init.Yp0 = cat_vol_ctype(cat_err_res.init.Yp0/3*255);
     
@@ -221,8 +248,12 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
     end
     
     % use SPM
-    cat_io_cprintf('warn','\n  AMAP failed, use SPM segmentation.               \n')
-
+    if job.extopts.ignoreErrors < 3
+      cat_io_cprintf('warn','\n  AMAP failed, use SPM segmentation.               \n')
+    else
+      cat_io_cprintf('warn','\n  AMAP deactivated, use SPM segmentation.          \n')
+    end
+    
     prob = zeros([size(Ymi),3],'uint8');
     for i = 1:3, prob(:,:,:,i) = Ycls{i}; end
     sz = size(Yb);

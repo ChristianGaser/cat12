@@ -454,25 +454,31 @@ experimental.help   = {
 ignoreErrors        = cfg_menu;
 ignoreErrors.tag    = 'ignoreErrors';
 ignoreErrors.name   = 'Ignore errors';
-if 0 %expert>1
+ignoreErrors.help   = {
+ ['Catch preprocessing errors and move on with the next subject or ignore all warnings (e.g., bad intensities). ' ...
+  'If warnings/errors are ignored, CAT will use backup routines and skip specialized steps ' ...
+  'that requires good T1 contrasts (e.g., LAS).  In case of errors, it will proceed with the next subject.  ' ...
+  'If you want to avoid processing of critical data and assure that only the main pipeline is used ' ...
+  'then select the "Yes (next subject)" option. ' ... 
+  'It is highly recommended to check for preprocessing problems, especially in non T1 contrasts. ']
+};
+if expert
   % The case 2 is trying to run all function and then catch errors but it 
   % is maybe not really clear at what point it crash and what state the
-  % variables have. 
-  ignoreErrors.labels = {'No','Yes (next subject)','Yes (ignore warnings and move on)','Yes (use only backup functions)'};
-  ignoreErrors.values = {0 1 2 3};
+  % variables have. To test the backup pipeline directly use value 3. In 
+  % low contrast cases it is maybe better to avoid the AMAP completely (4).
+  % Although, there is a routine to identify problematic AMAP cases this is
+  % quite new and may not working. 
+  ignoreErrors.labels = {'No (0)','Yes (next subject; 1)','Yes (use backup functions; 2)',...
+    'Yes (use ONLY backup functions; 3)','Yes (use ONLY backup functions without AMAP; 4)'};
+  ignoreErrors.values = {0 1 2 3 4};
+  ignoreErrors.help   = [ignoreErrors.help {'The options 3 and 4 were designed to test the backup funnction with/without AMAP.'}];
 else
-  ignoreErrors.labels = {'No','Yes (next subject)','Yes (use simple backup functions)'};
-  ignoreErrors.values = {0 1 3};
+  ignoreErrors.labels = {'Yes (next subject)','Yes (use backup functions)'};
+  ignoreErrors.values = {1 2};
 end
 ignoreErrors.def    = @(val)cat_get_defaults('extopts.ignoreErrors', val{:});
-ignoreErrors.help   = {
- ['Catch preprocessing errors and move on with the next subject or ignore all ' ...
-  'warnings (e.g., bad intensities).  If warnings/errors are ignored, CAT will use ' ...
-  'simplified routines and skip some steps completely that requires good T1 contrasts like LAS. ' ...
-  'Without these corrections the SPM preprocessing with its bias correction is much more important. ' ...
-  'Hence, we suggest to use the higher SPM preprocessing quality option. ' ...
-  'It is here very important to check the results for preprocessing problems. ']
-};
+
 
 verb         = cfg_menu;
 verb.tag     = 'verb';
