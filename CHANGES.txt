@@ -1,5 +1,12 @@
 ------------------------------------------------------------------------
-r1669 | gaser | 2020-06-30 16:52:08
+r1670 | gaser | 2020-06-30 17:07:30
+
+Changed paths:
+M       CHANGES.txt
+
+Changed: Corrected CHANGES.txt
+------------------------------------------------------------------------
+r1669 | gaser | 2020-06-30 16:52:56 +0200 (Di, 30 Jun 2020) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -17,6 +24,7 @@ M       cat_surf_results.m
 M       html/cat.html
 
 Changed: Corrected CHANGES.txt
+
 ------------------------------------------------------------------------
 r1668 | dahnke | 2020-06-30 15:53:19 +0200 (Di, 30 Jun 2020) | 12 lines
 
