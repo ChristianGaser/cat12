@@ -126,6 +126,7 @@ if ~isfield(res,'spmpp')
   else
     [Ym,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,job.extopts);
   end
+  job.extopts.inv_weighting = job.inv_weighting; 
   fprintf('%5.0fs\n',etime(clock,stime));
 
 
@@ -230,9 +231,9 @@ if ~isfield(res,'spmpp')
 
 
   %% Local Intensity Correction 
-  %  RD202006: ignoreErrors>1 has probably strange contrasts so its better 
-  %            to avoid LAS here completely. 
-  if job.extopts.LASstr>0 && job.extopts.ignoreErrors < 2 && ~job.inv_weighting
+  %  RD202006: Skip LAS in case of inverse contrast or if backup functions
+  %            are forced (ignoreErrors > 2). 
+  if job.extopts.LASstr>0 && job.extopts.ignoreErrors < 3 && ~job.inv_weighting
     if job.extopts.LASstr>1 
       extoptsLAS2 = job.extopts;
       extoptsLAS2.LASstr = extoptsLAS2.LASstr-1; 
@@ -293,17 +294,13 @@ if ~isfield(res,'spmpp')
   
   % RD202006: Only correct for WMHs if there is a good contrast
   %           Add this in the partvol function ?
-  extopts2 = job.extopts; 
-  if job.extopts.ignoreErrors > 2 || job.inv_weighting
-    extopts2.WMHCstr = eps; 
-  end
   stime = cat_io_cmd('ROI segmentation (partitioning)');
   if job.extopts.SLC
     if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
-      [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,extopts2,tpm.V,noise,job,res.Ylesion); %,Ydt,Ydti);
+      [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,res.Ylesion); %,Ydt,Ydti);
       fprintf('%5.0fs\n',etime(clock,stime));
     else 
-      [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,extopts2,tpm.V,noise,job,false(size(Ym)));
+      [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
       fprintf('%5.0fs\n',etime(clock,stime));
       if isfield(res,'Ylesion') && sum(res.Ylesion(:)==0) && job.extopts.SLC==1
         cat_warnings = cat_io_addwarning(cat_warnings,...
@@ -312,7 +309,7 @@ if ~isfield(res,'spmpp')
       end
     end
   else
-    [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,extopts2,tpm.V,noise,job,false(size(Ym)));
+    [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
     fprintf('%5.0fs\n',etime(clock,stime));
     if job.extopts.expertgui && isfield(res,'Ylesion') && sum(res.Ylesion(:))>1000 && job.extopts.ignoreErrors < 2
       cat_warnings = cat_io_addwarning(cat_warnings,...
@@ -336,7 +333,7 @@ if ~isfield(res,'spmpp')
   NS = @(Ys,s) Ys==s | Ys==s+1; 
   if job.extopts.BVCstr && all(vx_vol<2) % ~job.inv_weighting &&
     stime = cat_io_cmd(sprintf('Blood vessel correction (BVCstr=%0.2f)',job.extopts.BVCstr));
-    if job.extopts.ignoreErrors < 2  
+    if job.extopts.ignoreErrors < 3  
       
       Ybv  = cat_vol_smooth3X(cat_vol_smooth3X( ...
         NS(Yl1,7) .* (Ymi*3 - (1.5-job.extopts.BVCstr)),0.3).^4,0.1)/3;
@@ -370,7 +367,7 @@ if ~isfield(res,'spmpp')
   %  -------------------------------------------------------------------
   if job.extopts.gcutstr>0 && job.extopts.gcutstr<=1 &&  max(res.lkp) ~= 4 
     stime = cat_io_cmd(sprintf('Skull-stripping using graph-cut (gcutstr=%0.2f)',job.extopts.gcutstr));
-    if job.extopts.ignoreErrors < 2 
+    if job.extopts.ignoreErrors < 3 
       try 
         [Yb,Yl1] = cat_main_gcut(Ym,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
 
@@ -402,7 +399,8 @@ if ~isfield(res,'spmpp')
   %    prob .. new AMAP segmenation (4D)
   %    ind* .. index elements to asign a subvolume
   %
-  %  RD202006: ignoreErrors>1 does not support optimized atlas maps yet. 
+  %  RD202006: Updated ignoreErrors pipeline that try to use AMAP if 
+  %            ignoreError < 4.
   %  -------------------------------------------------------------------
   [prob,indx,indy,indz] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res);
  
@@ -612,20 +610,19 @@ end
   if job.extopts.new_release % ... there is an error
     [trans,res.ppe.reg,res.Affine] = cat_main_registration2(job,res,Yclsd,Yy,tpm.M,Ylesions);
   else
-    if job.extopts.ignoreErrors
+    if job.extopts.ignoreErrors == 1 
       [trans,res.ppe.reg,res.Affine] = cat_main_registration(job,res,Yclsd,Yy,tpm.M,Ylesions);
     else
       try 
         [trans,res.ppe.reg,res.Affine] = cat_main_registration(job,res,Yclsd,Yy,tpm.M,Ylesions);
       catch
-        job.extopts.reg = 13; % low res 
+        job.extopts.reg = 14; % low resolution version (2.5 mm) do avoid strong deformation in bad segmentations 
         try
           [trans,res.ppe.reg,res.Affine] = cat_main_registration(job,res,Yclsd,Yy,tpm.M,Ylesions);
         catch
           if isfield(res,'imagesc'); VT0 = res.imagec(1); else VT0 = res.image0(1); end
           trans.native.Vo = VT0;
           trans.native.Vi = res.image(1);
-          
         end
       end      
     end
@@ -643,9 +640,7 @@ end
   
 %% update WMHs 
 %  ---------------------------------------------------------------------
-%if job.extopts.ignoreErrors < 2
   Ycls = cat_main_updateWMHs(Ym,Ycls,Yy,tpm,job,res,trans);
-%end
 
 
 

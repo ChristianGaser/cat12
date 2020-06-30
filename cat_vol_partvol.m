@@ -445,7 +445,11 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
       % only if there is a lot of CSF and not too much noise
       extopts.WMHCstr = min( 1, max( 0, extopts.WMHCstr )); 
       csfvol  = max(eps,min(1.0, (vols  - 0.05) * 10 ));                     % relative CSF volume weighting
-      WMHCstr = max(eps,min(1.0, extopts.WMHCstr .* csfvol ));               % normalized WMHCstr 
+      if extopts.ignoreErrors > 2 || extopts.inv_weighting  % only small correction in the backup/inverse pipeline
+        WMHCstr = eps; 
+      else
+        WMHCstr = max(eps,min(1.0, extopts.WMHCstr .* csfvol ));               % normalized WMHCstr
+      end
       wmhvols = 40 - 30 * (1 - extopts.WMHCstr);                             % absolute WMH volume threshold
       mth     = [ min( 1.2 , 1.1 + noisew * (2 - extopts.WMHCstr) ) , ...  % lower tissue threshold
                   max( 2.5 , 2.9 - noisew * (2 - extopts.WMHCstr) ) ];     % upper tissue threshold
@@ -453,7 +457,6 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
 
       stime   = cat_io_cmd(sprintf('  WMH detection (WMHCstr=%0.02f > WMHCstr''=%0.02f)',...
                 extopts.WMHCstr,WMHCstr),'g5','',verb,stime); dispc=dispc+1;
-
       Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
 
       %% creation of helping masks with *YwmhL* and *Ycortex* as most important mask!
