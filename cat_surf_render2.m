@@ -9,6 +9,20 @@ function varargout = cat_surf_render2(action,varargin)
 % FORMAT H = cat_surf_render2(M)
 % Shortcut to previous call format.
 %
+% FORMAT H = cat_surf_render2('view',VIEW)
+% FORMAT H = cat_surf_render2('view',H,VIEW)
+% Camera line of sight
+% VIEW     - [az,el] set the azimuth and elevation angles of the camera
+%          - ['left'|'right'|'top'|'bottom'|'front'|'back'] 
+% H        - structure containing handles of various objects
+%
+% FORMAT H = cat_surf_render2('clim',LIMITS)
+% FORMAT H = cat_surf_render2('clim',H,LIMITS)
+% Set colormap limits.
+% H        - structure containing handles of various objects
+% LIMITS   - [cmin cmax] lower and upper limit  
+% LIMITS   - ['p1'|'p2'|'p5'] settings for 99, 98, and 95 percent    
+% 
 % FORMAT H = cat_surf_render2('ContextMenu',AX)
 % AX       - axis handle or structure returned by cat_surf_render2('Disp',...)
 %
@@ -1108,9 +1122,31 @@ switch lower(action)
     %-View
     %======================================================================
     case 'view'
-        if isempty(varargin), varargin{1} = gca; end
+        if numel(varargin)<2, varargin{2} = varargin{1}; varargin{1} = gca; end
         H = getHandles(varargin{1});
-        myView([],[],H,varargin{2});
+        if isnumeric(varargin{2})
+          myView([],[],H,varargin{2});
+        else
+          switch lower(varargin{2})
+            case {'r','right'}    
+              myView([],[],H,[  90   0]);
+            case {'l','left' }   
+              myView([],[],H,[ -90   0]);
+            case {'t','top','i','inferior'}    
+              myView([],[],H,[   0  90]);
+            case {'bo','bottom','s','superior'} 
+              myView([],[],H,[-180 -90]);
+            case {'f','front','a','anterior'} 
+              myView([],[],H,[-180   0]);
+            case {'ba','back','p','posterior'} 
+              myView([],[],H,[   0   0]);
+            otherwise 
+              error('cat_surf_render2:view:unknownView',...
+               ['Unknown view "%s". Use MATLAB view vektor (e.g., [90,0]) or one of the following keywords: \n' ...
+                '"left", "right", "top", "bottom", "front", "back".'],...
+                varargin{2});
+          end
+        end
 
     %-SaveAs
     %======================================================================
@@ -1341,18 +1377,38 @@ switch lower(action)
     %======================================================================
     case 'clim'
         if isempty(varargin), varargin{1} = gca; end
-        H = getHandles(varargin{1});
+        try
+            H = getHandles(varargin{1});
+        catch
+            varargin = [{gca} varargin{1}];
+            H = getHandles(varargin{1});
+        end
         if length(varargin) == 1 && nargout
             c = getappdata(H.patch(1),'clim');
             if ~isempty(c), c = c(2:3); end
             varargout = { c };
             return;
         else
-          for pi=1:numel(H.patch)
-            if strcmp(varargin{2},'on') || isempty(varargin{2}) || any(~isfinite(varargin{2}))
+          for pi=1:numel(H.patch) 
+            try
+              switch varargin{2}
+                case {'on',''}
+                  setappdata(H.patch(pi),'clim',[false NaN NaN]);
+                case {'auto','0p','1p','2p','5p'}
+                  myCaxis([],[],H,varargin{2});
+                otherwise
+                  if  any(~isfinite(varargin{2}))
+                    setappdata(H.patch(pi),'clim',[false NaN NaN]);
+                  else
+                    setappdata(H.patch(pi),'clim',[true varargin{2}]);
+                  end
+              end
+            catch
+              if strcmp(varargin{2},'on') || isempty(varargin{2}) || any(~isfinite(varargin{2}))
                 setappdata(H.patch(pi),'clim',[false NaN NaN]);
-            else
+              else
                 setappdata(H.patch(pi),'clim',[true varargin{2}]);
+              end
             end
             d = getappdata(H.patch(pi),'data');
             updateTexture(H,d,pi);
@@ -2163,7 +2219,7 @@ if cat_stat_nanmean(d(:))>0 && cat_stat_nanstd(d(:),1)>0
     range = [min(rangetype) max(rangetype)]; 
   else
     switch rangetype
-        case 'min-max', 
+        case 'min-max' 
             range = [min(d) max(d)]; 
         case '0p'
             range = cat_vol_iscaling(d,[0.001 0.999]);
