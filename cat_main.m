@@ -109,50 +109,22 @@ if ~isfield(res,'spmpp')
   if 0 %any( min(vx_vol*2,1.4)./vx_vol >= 2 ) && job.extopts.ignoreErros<2
     % guaranty average (lower) resolution with >0.7 mm
     % RD202006: This solution is not working when cat_main_gintnorm
-    %           optimizes the image (e.g. bias correction). Just calling
+    %           optimize the image (e.g. bias correction). Just calling
     %               Ym  = cat_main_gintnorm(Ysrc,Tth);  
     %           would not include the bias correction but also may use 
-    %           inaccurate peaks that were estimated on slighly different 
-    %           images. So it is more safe to turn it off because running 
-    %           the default case also in highres data only increases time
+    %           inacurate peaks that were estimated on slighly different 
+    %           image. So it is more save to turn it off because running 
+    %           the default case also in highres data only increase time
     %           and memory demands. 
     %           Possible test subject: ADHD200/ADHD200_HC_BEJ_1050345_T1_SD000000-RS00.nii        
-    [Ysrcr,resGI] = cat_vol_resize(Ysrc       ,'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm');
-    Ybr   = cat_vol_resize(single(Yb) ,'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm')>0.5;
+    [Ysrcr,resGI] = cat_vol_resize(Ysrc      , 'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm');
+    Ybr           = cat_vol_resize(single(Yb), 'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm')>0.5;
     Yclsr = cell(size(Ycls)); for i=1:6, Yclsr{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,min(vx_vol*2,1.4),32); end
-    [Ymr,Ybr,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrcr,Yclsr,Ybr,resGI.vx_volr,res,Yy,job.extopts);
+    [Ymr,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrcr,Yclsr,Ybr,resGI.vx_volr,res,Yy,job.extopts);
     clear Ymr Ybr Ysrcr Yclsr; 
     Ym = cat_main_gintnorm(Ysrc,Tth); 
   else
-    [Ym,Yb,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,job.extopts);
-  end
-
-  %% update in inverse case ... required for LAS
-  % 
-  % ### include this in cat_main_gintnorm? 
-  %
-  if job.inv_weighting && job.extopts.ignoreErrors < 2
-%    Ysrc = Ym * Tth.T3th(5); Tth.T3th = Tth.T3thx * Tth.T3th(5);
-    if T3th(1)>T3th(3) && T3th(2)<T3th(3) && T3th(1)>T3th(2)
-      Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
-       
-      Yp0  = single(Ycls{3})/255/3 + single(Ycls{1})/255*2/3 + single(Ycls{2})/255;
-      Yb2  = cat_vol_morph(Yp0>0.5,'lc',2); 
-      prob = cat(4,cat_vol_ctype(Yb2.*Yp0toC(Ym*3,2)*255),...
-                   cat_vol_ctype(Yb2.*Yp0toC(Ym*3,3)*255),...
-                   cat_vol_ctype(Yb2.*Yp0toC(min(3,Ym*3),1)*255));
-      
-      prob = cat_main_clean_gwc(prob,1,1);
-      
-      for ci=1:3, Ycls{ci} = prob(:,:,:,ci); end 
-      clear prob;  
-    end
-    Ysrc = Ym; Tth.T3thx(3:5) = 1/3:1/3:1; Tth.T3th = Tth.T3thx; T3th = 1/3:1/3:1;
-  end
-  if job.extopts.verb>2
-    tpmci  = 2; %tpmci + 1;
-    tmpmat = fullfile(pth,res.reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postgintnorm'));
-    save(tmpmat,'Ysrc','Ycls','Ym','Yb','T3th','vx_vol');
+    [Ym,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,job.extopts);
   end
   fprintf('%5.0fs\n',etime(clock,stime));
 
@@ -260,24 +232,17 @@ if ~isfield(res,'spmpp')
   %% Local Intensity Correction 
   %  RD202006: ignoreErrors>1 has probably strange contrasts so its better 
   %            to avoid LAS here completely. 
-  Ymo = Ym;
-  if job.extopts.LASstr>0 
-    if job.extopts.ignoreErrors < 2
-      if job.extopts.LASstr>1 
-        extoptsLAS2 = job.extopts;
-        extoptsLAS2.LASstr = extoptsLAS2.LASstr-1; 
-        stime = cat_io_cmd(sprintf('Local adaptive segmentation 2 (LASstr=%0.2f)',extoptsLAS2.LASstr));
-        [Ymi,Ym,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extoptsLAS2); % use Yclsi after cat_vol_partvol
-      else
-        stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
-        [Ymi,Ym,Ycls] = cat_main_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth);
-      end
-      fprintf('%5.0fs\n',etime(clock,stime));
+  if job.extopts.LASstr>0 && job.extopts.ignoreErrors < 2 && ~job.inv_weighting
+    if job.extopts.LASstr>1 
+      extoptsLAS2 = job.extopts;
+      extoptsLAS2.LASstr = extoptsLAS2.LASstr-1; 
+      stime = cat_io_cmd(sprintf('Local adaptive segmentation 2 (LASstr=%0.2f)',extoptsLAS2.LASstr));
+      [Ymi,Ym,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extoptsLAS2); % use Yclsi after cat_vol_partvol
     else
       stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
-      cat_io_cprintf('warn','\n  IgnoreErrors: No LAS backup function. Use global normalization. \n')
-      Ymi = Ym; 
+      [Ymi,Ym,Ycls] = cat_main_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth);
     end
+    fprintf('%5.0fs\n',etime(clock,stime));
     %
     % ### indlcude this in cat_main_LAS? ###
     %
@@ -286,7 +251,7 @@ if ~isfield(res,'spmpp')
       stime = cat_io_cmd(sprintf('  SANLM denoising after LAS (%s)',...
         NCstr.labels{find(cell2mat(NCstr.values)==job.extopts.NCstr,1,'first')}),'g5');
       
-      [Ymis,Ymior,BB]  = cat_vol_resize({Ymi,Ymo},'reduceBrain',vx_vol,round(2/mean(vx_vol)),Yb);
+      [Ymis,Ymior,BB]  = cat_vol_resize({Ymi,Ym},'reduceBrain',vx_vol,round(2/mean(vx_vol)),Yb);
       Ymis = cat_vol_sanlm(struct('data',res.image0.fname,'verb',0,'NCstr',job.extopts.NCstr),res.image,1,Ymis);
       
       Yc = abs(Ymis - Ymior); Yc = Yc * 6 * min(2,max(0,abs(job.extopts.NCstr))); 
@@ -307,13 +272,12 @@ if ~isfield(res,'spmpp')
     
     cat_io_cmd(' ','','',job.extopts.verb,stime); 
     fprintf('%5.0fs\n',etime(clock,stime));
+  else
+    cat_io_cprintf('warn','  Skip LAS due to image contrast. Use global normalization.        \n');
+    Ymi = Ym; 
   end
   if ~debug; clear Ysrc ; end
   
-  if job.extopts.verb>2
-    tpmci=tpmci+1; tmpmat = fullfile(pth,res.reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postLAS'));
-    save(tmpmat,'Ysrc','Ycls','Ymi','Yb','T3th','vx_vol');
-  end
   
   
   
@@ -326,13 +290,20 @@ if ~isfield(res,'spmpp')
   %  But for bias correction the ROIs are important too, to avoid over
   %  corrections in special regions like the cerbellum and subcortex. 
   %  ---------------------------------------------------------------------
+  
+  % RD202006: Only correct for WMHs if there is a good contrast
+  %           Add this in the partvol function ?
+  extopts2 = job.extopts; 
+  if job.extopts.ignoreErrors > 2 || job.inv_weighting
+    extopts2.WMHCstr = eps; 
+  end
   stime = cat_io_cmd('ROI segmentation (partitioning)');
   if job.extopts.SLC
     if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
-      [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,res.Ylesion); %,Ydt,Ydti);
+      [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,extopts2,tpm.V,noise,job,res.Ylesion); %,Ydt,Ydti);
       fprintf('%5.0fs\n',etime(clock,stime));
     else 
-      [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
+      [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,extopts2,tpm.V,noise,job,false(size(Ym)));
       fprintf('%5.0fs\n',etime(clock,stime));
       if isfield(res,'Ylesion') && sum(res.Ylesion(:)==0) && job.extopts.SLC==1
         cat_warnings = cat_io_addwarning(cat_warnings,...
@@ -341,8 +312,6 @@ if ~isfield(res,'spmpp')
       end
     end
   else
-    extopts2 = job.extopts; 
-    extopts2.WMHCstr = eps; 
     [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,extopts2,tpm.V,noise,job,false(size(Ym)));
     fprintf('%5.0fs\n',etime(clock,stime));
     if job.extopts.expertgui && isfield(res,'Ylesion') && sum(res.Ylesion(:))>1000 && job.extopts.ignoreErrors < 2
@@ -363,10 +332,9 @@ if ~isfield(res,'spmpp')
   %  Problems can occure for strong biased images, because the partioning 
   %  has to be done before bias correction.
   %  Of course we only want to do this for highres T1 data!
-  %  RD202006: ignoreErrors>1 does not support optimized atlas maps yet. 
   %  ---------------------------------------------------------------------
   NS = @(Ys,s) Ys==s | Ys==s+1; 
-  if job.extopts.BVCstr && ~job.inv_weighting && all(vx_vol<2)
+  if job.extopts.BVCstr && all(vx_vol<2) % ~job.inv_weighting &&
     stime = cat_io_cmd(sprintf('Blood vessel correction (BVCstr=%0.2f)',job.extopts.BVCstr));
     if job.extopts.ignoreErrors < 2  
       
@@ -398,13 +366,13 @@ if ~isfield(res,'spmpp')
   %  old function is still available as backup solution.
   %  Futhermore, both parts prepare the initial segmentation map for the 
   %  AMAP function.
-  %  RD202006: ignoreErrors>1 does not support optimized atlas maps yet. 
+  %  RD202006: cat_main_gcut requires T1 weighed input
   %  -------------------------------------------------------------------
-  if job.extopts.gcutstr>0 && job.extopts.gcutstr<=1
+  if job.extopts.gcutstr>0 && job.extopts.gcutstr<=1 &&  max(res.lkp) ~= 4 
     stime = cat_io_cmd(sprintf('Skull-stripping using graph-cut (gcutstr=%0.2f)',job.extopts.gcutstr));
     if job.extopts.ignoreErrors < 2 
       try 
-        [Yb,Yl1] = cat_main_gcut(Ymo,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
+        [Yb,Yl1] = cat_main_gcut(Ym,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
 
         % extend gcut brainmask by brainmask derived from SPM12 segmentations if necessary
         if ~job.inv_weighting, Yb = Yb | Yb0; end
@@ -436,25 +404,9 @@ if ~isfield(res,'spmpp')
   %
   %  RD202006: ignoreErrors>1 does not support optimized atlas maps yet. 
   %  -------------------------------------------------------------------
-  if job.extopts.ignoreErrors < 2
-    [prob,indx,indy,indz] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res);
-  else
-    try 
-      [prob,indx,indy,indz,amapTth] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res);
-    catch
-      % use SPM
-      cat_io_cprintf('warn','\n  IgnoreErrors: AMAP failed, use SPM segmentation.               \n')
-      
-      prob = zeros([size(Ymi),3],'uint8');
-      for i = 1:3, prob(:,:,:,i) = Ycls{i}; end
-      sz = size(Yb);
-      [indx, indy, indz] = ind2sub(sz,find(Yb>0));
-      indx = max((min(indx) - 1),1):min((max(indx) + 1),sz(1));
-      indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
-      indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
-      prob = prob(indx,indy,indz,:);
-    end
-  end
+  [prob,indx,indy,indz] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res);
+ 
+  
   
   
   %% Final Cleanup
@@ -478,7 +430,7 @@ if ~isfield(res,'spmpp')
     end
     if job.extopts.cleanupstr < 2 % use cleanupstr==2 to use only the old cleanup
       [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1(indx,indy,indz),... 
-        Ymo(indx,indy,indz),job.extopts,job.inv_weighting,vx_vol,indx,indy,indz); % new cleanup
+        Ym(indx,indy,indz),job.extopts,job.inv_weighting,vx_vol,indx,indy,indz); % new cleanup
     else
       for i=1:3, Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i); end
       Yp0b = Yb(indx,indy,indz); 
@@ -487,7 +439,6 @@ if ~isfield(res,'spmpp')
     for i=1:3, Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i); end
     Yp0b = Yb(indx,indy,indz); 
   end;
-  if ~debug; clear Ymo; end
   clear prob
 
 

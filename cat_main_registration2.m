@@ -139,6 +139,8 @@ function [trans,reg,Affine] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesio
     Affine  = spm_maff8(obj.image,obj.samp,obj.fwhm,obj.tpm,res.Affine,job.opts.affreg,80);
     res.Affine = Affine;
     spm_progress_bar('Clear');
+  else
+    Affine = res.Affine; 
   end
 
   do_req = res.do_dartel; 
