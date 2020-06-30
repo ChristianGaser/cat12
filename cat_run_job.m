@@ -923,7 +923,7 @@ function cat_run_job(job,tpm,subj)
           casei  = 0;     % iteration counter
           acccon = 0.33;  % acceptable contrast (optimal is 0.5, default maybe 0.35-0.45 in T1 )
           runcas = 1;     % stop for acceptable contrast (inf = test all, 2 = only casei<3) ... for test we start with inf
-          if job.extopts.ignoreErrors > 1
+          if job.extopts.ignoreErrors > 2
             verbs  = 1;   % show results
           else
             verbs  = 0;   % show results

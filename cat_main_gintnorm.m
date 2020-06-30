@@ -767,7 +767,7 @@ RD202006: This part includes an minium based WM bias correction that is
       rethrow(e)
     else
       % [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,extopts)
-      if extopts.ignoreErrors > 1
+      if extopts.ignoreErrors > 2
         cat_io_cprintf('warn','\n  IgnoreErrors: cat_main_gintnorm - run generalized function      ')
       else
         cat_io_cprintf('warn','\n  No T1 contrast detected. Run generalized function               ')

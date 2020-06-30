@@ -243,7 +243,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
 
   %%
     stime2 = cat_io_cmd('  Update probability maps','g5','',job.extopts.verb-1,stime2);
-    if ~(job.extopts.INV && any(sign(diff(T3th))==-1))
+    if all(sign(diff(T3th))>0)
       %% Update probability maps
       % background vs. head - important for noisy backgrounds such as in MT weighting
       if size(P,4)==4 % skull-stripped
@@ -391,6 +391,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
     % [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,tpm,job,res,stime,stime2)
 
     cat_io_cprintf('warn','\n  IgnoreErrors: cat_main_updateSPM - run backup function          ')
+    
     vx_vol  = sqrt(sum(res.image(1).mat(1:3,1:3).^2)); 
     
     if ~exist('Yb','var')
