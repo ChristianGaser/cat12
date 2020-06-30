@@ -2988,7 +2988,11 @@ else
   XYZ = node;
   value = H.S{round(ind / 2)}.Y(node);
   if H.logP
-    txt = {sprintf('p=%g', 10^(-value))};
+    if value < 0
+      txt = {sprintf('p=-%g', 10^(value))};
+    else
+      txt = {sprintf('p=%g', 10^(-value))};
+    end
   else
     txt = {sprintf('Value %g', value)};
   end

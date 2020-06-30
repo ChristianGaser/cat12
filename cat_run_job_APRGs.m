@@ -280,6 +280,7 @@ if 1
 end
   
   % do registration
+  warning('off','MATLAB:RandStream:ActivatingLegacyGenerators')
   Affine2  = spm_maff8(obj2.image, obj2.samp ,obj2.fwhm ,obj2.tpm ,Affine ,job.opts.affreg ,80);
   if det(Affine \ Affine2)>1.5 || det(Affine2 \ Affine)>1.5
     Affine2  = spm_maff8(obj2.image, obj2.samp ,obj2.fwhm ,obj2.tpm ,Affine , 'none'  ,80);

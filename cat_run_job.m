@@ -452,7 +452,7 @@ function cat_run_job(job,tpm,subj)
 
             stime = cat_io_cmd('Affine registration','','',1,stime); 
 
-            % use further data limitiation and remove background for affreg 
+            % use further data limitation and remove background for affreg 
             [Ym2,ths]     = cat_stat_histth(Ym);
             Ym2           = (Ym2 - ths(1)) ./ diff(ths) .* (1 - Ybg); 
             % write data to VF

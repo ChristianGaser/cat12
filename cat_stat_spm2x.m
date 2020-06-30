@@ -143,9 +143,8 @@ if nargin > 0
         neg_results = job.conversion.inverse;
     end
     
-end
+else
 
-if nargin < 1
     %-Get type of statistic
     %-------------------------------------------------------------------
     T2x = spm_input('Type of statistic',1,'b','T|F',[1 0],1);
@@ -297,16 +296,16 @@ for i=1:size(P,1)
     %-Calculate height threshold filtering
     %-------------------------------------------------------------------    
     if T2x && neg_results
-        Q      = find((Z > u) | (Z < -u));
+        Qh      = find((Z > u) | (Z < -u));
     else
-        Q      = find(Z > u);
+        Qh      = find(Z > u);
     end
 
     %-Apply height threshold
     %-------------------------------------------------------------------
-    Z      = Z(:,Q);
-    XYZ    = XYZ(:,Q);
-    if isempty(Q)
+    Z      = Z(:,Qh);
+    XYZ    = XYZ(:,Qh);
+    if isempty(Qh)
         fprintf('No voxels survive height threshold u=%0.2g\n',u);
     end
     
@@ -371,7 +370,7 @@ for i=1:size(P,1)
         if noniso
             fprintf('Use local RPV values to correct for non-stationary of smoothness.\n');
 
-            Q     = [];
+            Qe     = [];
             warning('off','MATLAB:subscripting:noSubscriptsSpecified');
             if isfield(SPM.xVol,'G') % mesh detected?
                 [N2,Z2,XYZ2,A2,L2]  = cat_surf_max(abs(Z),XYZ,gifti(SPM.xVol.G));
@@ -408,7 +407,7 @@ for i=1:size(P,1)
                         j = find(A == l);
                         if length(j)==N2(ind2)
                             if any(ismember(XYZ2(:,ind2)',XYZ(:,j)','rows'))
-                                Q = [Q j];
+                                Qe = [Qe j];
                                 
                                 % save atlas measures for 3D data
                                 if (nargin > 0) && isfield(job,'atlas') && ~strcmp(job.atlas,'None')
@@ -424,11 +423,11 @@ for i=1:size(P,1)
                 end
             end
         else
-            Q     = [];
+            Qe     = [];
             for i2 = 1:min(max(A))
                 j = find(A == i2);
                 if length(j) >= k
-                    Q = [Q j];
+                    Qe = [Qe j];
                     
                     % save atlas measures for 3D data
                     if (nargin > 0) && isfield(job,'atlas') && ~strcmp(job.atlas,'None')
@@ -443,9 +442,9 @@ for i=1:size(P,1)
         
         % ...eliminate voxels
         %-------------------------------------------------------------------
-        Z     = Z(:,Q);
-        XYZ   = XYZ(:,Q);
-        if isempty(Q)
+        Z     = Z(:,Qe);
+        XYZ   = XYZ(:,Qe);
+        if isempty(Qe)
             fprintf('No voxels survived extent threshold k=%3.1f\n',k);
         end
 
@@ -454,7 +453,7 @@ for i=1:size(P,1)
         p_extent_str = 'NoVox'; 
     end % (if ~isempty(XYZ))
 
-    if isempty(Q)
+    if isempty(Qe) || isempty(Qh)
         if T2x
           t2x  = inf;    
           switch sel
@@ -473,7 +472,7 @@ for i=1:size(P,1)
           end
         end      
     else
-        if T2x
+        if T2x % T-Test
           switch sel
           case 1
             t2x = 1-spm_Tcdf(Z,df(2));
@@ -488,7 +487,6 @@ for i=1:size(P,1)
             t2x_name = 'logP_';
           case 3
             t2x = Z./sqrt(Z.*Z + df(2));
-%            t2x = sign(Z).*(1./((df(2)./((Z.*Z)+eps))+1)).^0.5;
             t2x_name = 'R_';
           case 4
             t2x = 2*Z/sqrt(df(2));
@@ -497,7 +495,7 @@ for i=1:size(P,1)
             t2x = Z;
             t2x_name = 'T_';
           end
-        else
+        else % F-test
           switch sel
           case 1
             t2x = 1-spm_Fcdf(Z,df);
@@ -509,121 +507,124 @@ for i=1:size(P,1)
               % n = df(2)
               % p = df(1)
               t2x = 1 - 1./(1+(Z*(df(1)-1)/(df(2)-df(1))));
-%    	  	  t2x = (df(2)-1)*Z./(df(2) - df(1)+Z*(df(2) -1));
 		      t2x_name = 'R2_';
           case 4
             t2x = Z;
             t2x_name = 'F_';
           end
         end
+    end % (isempty(Qh))
+    str_num = deblank(xCon(Ic).name);
+
+    % replace spaces with "_" and characters like "<" or ">" with "gt" or "lt"
+    str_num(strfind(str_num,' ')) = '_';
+    strpos = strfind(str_num,' > ');
+    if ~isempty(strpos), str_num = [str_num(1:strpos-1) '_gt_' str_num(strpos+1:end)]; end
+    strpos = strfind(str_num,' < ');
+    if ~isempty(strpos), str_num = [str_num(1:strpos-1) '_lt_' str_num(strpos+1:end)]; end
+    strpos = strfind(str_num,'>');
+    if ~isempty(strpos), str_num = [str_num(1:strpos-1) 'gt' str_num(strpos+1:end)]; end
+    strpos = strfind(str_num,'<');
+    if ~isempty(strpos), str_num = [str_num(1:strpos-1) 'lt' str_num(strpos+1:end)]; end
+    str_num = spm_str_manip(str_num,'v');
+
+    if T2x && neg_results
+        neg_str = '_bi'; 
+    else
+        neg_str = '';
     end
-        str_num = deblank(xCon(Ic).name);
+   
+    if isfield(SPM.xVol,'G')
+        ext = '.gii';
+    else
+        ext = '.nii';
+    end
 
-        % replace spaces with "_" and characters like "<" or ">" with "gt" or "lt"
-        str_num(strfind(str_num,' ')) = '_';
-        strpos = strfind(str_num,' > ');
-        if ~isempty(strpos), str_num = [str_num(1:strpos-1) '_gt_' str_num(strpos+1:end)]; end
-        strpos = strfind(str_num,' < ');
-        if ~isempty(strpos), str_num = [str_num(1:strpos-1) '_lt_' str_num(strpos+1:end)]; end
-        strpos = strfind(str_num,'>');
-        if ~isempty(strpos), str_num = [str_num(1:strpos-1) 'gt' str_num(strpos+1:end)]; end
-        strpos = strfind(str_num,'<');
-        if ~isempty(strpos), str_num = [str_num(1:strpos-1) 'lt' str_num(strpos+1:end)]; end
-        str_num = spm_str_manip(str_num,'v');
+    if ~isempty(Qe) || u0 > -Inf
+       name = [t2x_name str_num p_height_str num2str(u0*100) p_extent_str '_k' num2str(k) neg_str ext];
+    else
+       name = [t2x_name str_num ext];
+    end
+
+    Pname{i} = deblank(fullfile(pth,name));
+
+    % only write and display files if some voxels survived thresholds
+    if ~isempty(Qh) && ~isempty(Qe)
+      fprintf('  Display %s\n',spm_file(Pname{i},'link','cat_surf_display(''%s'')')); 
+    end
     
-        if T2x && neg_results
-            neg_str = '_bi'; 
-        else
-            neg_str = '';
-        end
-       
-        if isfield(SPM.xVol,'G')
-            ext = '.gii';
-        else
-            ext = '.nii';
-        end
-
-        if ~isempty(Q) || u0 > -Inf
-           name = [t2x_name str_num p_height_str num2str(u0*100) p_extent_str '_k' num2str(k) neg_str ext];
-        else
-           name = [t2x_name str_num ext];
-        end
+    % print table for 3D data
+    if (nargin > 0) && isfield(job,'atlas') && ~strcmp(job.atlas,'None') && ~isempty(XYZ)
+        % sort T/F values and print from max to min values
+        [tmp, maxsort] = sort(maxZ,'descend');
     
-        Pname{i} = deblank(fullfile(pth,name));
+        % use ascending order for neg. values
+        indneg = find(tmp<0);
+        maxsort(indneg) = flipud(maxsort(indneg));
+    
+        if ~isempty(maxsort)
+            found_neg = 0;
+            found_pos = 0;
+            for l=1:length(maxsort)
+                j = maxsort(l); 
+                [tmp, indZ] = max(abs(Zj{j}));
+            
+                if ~isempty(indZ)
+                    if maxZ(j) < 0,  found_neg = found_neg + 1; end
+                    if maxZ(j) >= 0, found_pos = found_pos + 1; end
+                    
+                    % print header if the first pos./neg. result was found
+                    if found_pos == 1
+                        fprintf('\n______________________________________________________');
+                        fprintf('\n%s: Positive effects\n%s',name,atlas_name);
+                        fprintf('\n______________________________________________________\n\n');
+                        fprintf('%1s-%5s\t%7s\t%15s\t%s\n\n',STAT,'Value','   Size','    xyz [mm]   ','Overlap of atlas region');
+                    end
+                    if found_neg == 1
+                        fprintf('\n______________________________________________________');
+                        fprintf('\n%s: Negative effects\n%s',name,atlas_name);
+                        fprintf('\n______________________________________________________\n\n');
+                        fprintf('%1s-%5s\t%7s\t%15s\t%s\n\n',STAT,'Value','   Size','    xyz [mm]   ','Overlap of atlas region');
+                    end
+                    if ~found_pos && ~found_neg
+                        fprintf('\n______________________________________________________');
+                        fprintf('\n%s: No effects\n%s',name,atlas_name);
+                        fprintf('\n______________________________________________________\n\n');
+                    else
 
-        %fprintf('Save %s\n', name);
-        fprintf('  Display %s\n',spm_file(Pname{i},'link','cat_surf_display(''%s'')')); 
-
-        % print table for 3D data
-        if (nargin > 0) && isfield(job,'atlas') && ~strcmp(job.atlas,'None') && ~isempty(XYZ)
-            % sort T/F values and print from max to min values
-            [tmp, maxsort] = sort(maxZ,'descend');
-        
-            % use ascending order for neg. values
-            indneg = find(tmp<0);
-            maxsort(indneg) = flipud(maxsort(indneg));
-        
-            if ~isempty(maxsort)
-                found_neg = 0;
-                found_pos = 0;
-                for l=1:length(maxsort)
-                    j = maxsort(l); 
-                    [tmp, indZ] = max(abs(Zj{j}));
-                
-                    if ~isempty(indZ)
-                        if maxZ(j) < 0,  found_neg = found_neg + 1; end
-                        if maxZ(j) >= 0, found_pos = found_pos + 1; end
-                        
-                        % print header if the first pos./neg. result was found
-                        if found_pos == 1
-                            fprintf('\n______________________________________________________');
-                            fprintf('\n%s: Positive effects\n%s',name,atlas_name);
-                            fprintf('\n______________________________________________________\n\n');
-                            fprintf('%1s-%5s\t%7s\t%15s\t%s\n\n',STAT,'Value','   Size','    xyz [mm]   ','Overlap of atlas region');
-                        end
-                        if found_neg == 1
-                            fprintf('\n______________________________________________________');
-                            fprintf('\n%s: Negative effects\n%s',name,atlas_name);
-                            fprintf('\n______________________________________________________\n\n');
-                            fprintf('%1s-%5s\t%7s\t%15s\t%s\n\n',STAT,'Value','   Size','    xyz [mm]   ','Overlap of atlas region');
-                        end
-                        if ~found_pos && ~found_neg
-                            fprintf('\n______________________________________________________');
-                            fprintf('\n%s: No effects\n%s',name,atlas_name);
-                            fprintf('\n______________________________________________________\n\n');
-                        else
-
-                            fprintf('%7.2f\t%7d\t%4.0f %4.0f %4.0f',maxZ(j),length(Zj{j}),XYZmmj{j}(:,indZ));
-                            for m=1:numel(labk{j})
-                                if Pl{j}(m) >= 1
-                                    if m==1, fprintf('\t%3.0f%%\t%s\n',Pl{j}(m),labk{j}{m});
-                                    else     fprintf('%7s\t%7s\t%15s\t%3.0f%%\t%s\n','       ','       ','               ',...
-                                        Pl{j}(m),labk{j}{m});
-                                    end
+                        fprintf('%7.2f\t%7d\t%4.0f %4.0f %4.0f',maxZ(j),length(Zj{j}),XYZmmj{j}(:,indZ));
+                        for m=1:numel(labk{j})
+                            if Pl{j}(m) >= 1
+                                if m==1, fprintf('\t%3.0f%%\t%s\n',Pl{j}(m),labk{j}{m});
+                                else     fprintf('%7s\t%7s\t%15s\t%3.0f%%\t%s\n','       ','       ','               ',...
+                                    Pl{j}(m),labk{j}{m});
                                 end
                             end
                         end
                     end
                 end
             end
-            fprintf('\n');
         end
+        fprintf('\n');
+    end
 
+    % only write and display files if some voxels survived thresholds
+    if ~isempty(Qh) && ~isempty(Qe)
         %-Reconstruct (filtered) image from XYZ & T/Z pointlist
         %-----------------------------------------------------------------------
         Y      = zeros(Vspm.dim);
         OFF    = XYZ(1,:) + Vspm.dim(1)*(XYZ(2,:)-1 + Vspm.dim(2)*(XYZ(3,:)-1));
         Y(OFF) = t2x;
-
+    
         VO = Vspm;
         VO.fname = Pname{i};
         VO.dt = [spm_type('float32') spm_platform('bigend')];
-
+    
         VO = spm_data_hdr_write(VO);
         spm_data_write(VO,Y);
+    end
     
-    %end
-end
+end % (for i=1:size(P,1))
 
 out.Pname = Pname;  
 
