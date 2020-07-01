@@ -197,7 +197,7 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
       end
     end
     
-    if 0 % job.extopts.ignoreErrors > 1 && job.extopts.inv_weighting
+    if job.extopts.ignoreErrors > 1 && job.extopts.inv_weighting
       % RD202006: catching of problems in low quality data - in development 
       probs = prob; 
       ap = [3 1 2]; for i=1:3, probs(:,:,:,i) = Ycls{ap(i)}(indx,indy,indz); end

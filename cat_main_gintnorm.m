@@ -1,4 +1,4 @@
-function [Ym,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,extopts)
+function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,extopts)
 % This is a subfunction of cat_main.
 % ______________________________________________________________________
 % Global intensity normalization based on tissue thresholds estimated as 
@@ -81,15 +81,12 @@ function [Ym,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysr
     
   try
     if extopts.ignoreErrors > 2 
-      error('runbackup')
+      error('cat_main_gintnorm:runbackup','Test backup function.');
     end
     
     clsint  = @(x) cat_stat_nanmedian(Ysrc(Ycls{x} > 128)); 
     clsints = @(x,y) [round( res.mn(res.lkp==x) * 10^5)/10^5; res.mg(res.lkp==x-((y==0)*8))']; 
 
-    if nargout>=6
-      cat_warnings = struct('identifier',{},'message',{});
-    end
     vxv    = 1/cat_stat_nanmean(vx_vol);
     res.mn = round(res.mn*10^5)/10^5; 
 
@@ -119,10 +116,9 @@ function [Ym,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysr
       abs(diff(T3th(2:3)))   < (max(T3th(:))-min(T3th(:)))*minContrast;
 
     if checkcontrast(T3th3,1/9) && exist('cat_warnings','var') % contrast relation
-      cat_warnings = cat_io_addwarning(cat_warnings,...
-        'CAT:cat_main:LowContrast',...
+      cat_io_addwarning('CAT:cat_main:LowContrast',...
         sprintf(['The contrast between different tissues is relative low! \n' ...
-             '  (BG=%0.2f, CSF=%0.2f, GM=%0.2f, WM=%0.2f)\n'],BGth,T3th3),numel(cat_warnings)==0);
+             '  (BG=%0.2f, CSF=%0.2f, GM=%0.2f, WM=%0.2f)\n'],BGth,T3th3),numel(cat_io_addwarning)==0);
 % use backup pipeline?           
     end
 
@@ -133,14 +129,9 @@ function [Ym,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysr
 %           a future release (CAT12.8?) if you have more test and valiation 
 %           data.
     if T3th3(1)>T3th3(3) && T3th3(2)>T3th3(3) && T3th3(1)>T3th3(2) % inverse (T2 / PD)
-      cat_warnings = cat_io_addwarning(cat_warnings,...
-        'CAT:cat_main:InverseContrast',...
-        sprintf(['Inverse tissue contrast! \n' ...
-             '(BG=%0.2f, CSF=%0.2f, GM=%0.2f, WM=%0.2f)\n'],BGth,T3th3(1:3)),numel(cat_warnings)==0);
-           
       % RD202006: WM < GM < CSF      
       % Use backup funtion in case of inverse contrast.
-      error('runbackup')
+      error('cat_main_gintnorm:runbackup','Run PD/T2 processing.');
                  
 %{
 RD202006: This part includes an minium based WM bias correction that is 
@@ -279,7 +270,7 @@ RD202006: This part includes an minium based WM bias correction that is
 
 
     elseif T3th3(1)>T3th3(3) && T3th3(2)<T3th3(3) && T3th3(1)>T3th3(2)
-      error('runbackup')
+      error('cat_main_gintnorm:runbackup','Run backup pipeline due to non T1 contrast or neonate dataset.');
 %{   
 % begin.neonatePipeline      
 % #########################################################################
@@ -422,7 +413,7 @@ RD202006: This part includes an minium based WM bias correction that is
 %}
 
     else
-      error('runbackup')      
+      error('cat_main_gintnorm:runbackup','Test backup function due to unknow contrast.');
 %{      
 %RD202006: remove this part when CAT12.7 is stable      
       
@@ -521,13 +512,13 @@ RD202006: This part includes an minium based WM bias correction that is
         Ygw = Yb & ((single(Ycls{1})+single(Ycls{2}))>128);
         Ymp0diff = sqrt(cat_stat_nanmean(Ym(Ygw(:)) - Ymx(Ygw(:)))^2); 
         if Ymp0diff>0.10 && debug
-          cat_warnings = cat_io_addwarning(cat_warnings,...
-            'CAT:cat_main:badSPMsegment',sprintf(...
+          cat_io_addwarning('CAT:cat_main:badSPMsegment',sprintf(...
             ['SPM segmentation does not fit to the image (RMS(Ym,Yp0)=%0.2f).\n'...
              'This can be an alignment problem (check origin), ' ...
              'untypical subjects (neonates, non-human),\n'...
              'bad image contrast (C=%0.2f,G=%0.2f,W=%0.2f), \n'...
-             'low image quality (NCR~%0.2f), or something else ...'],Ymp0diff,T3th,noise),numel(cat_warnings)==0); 
+             'low image quality (NCR~%0.2f), or something else ...'],...
+             Ymp0diff,T3th,noise),numel(cat_io_addwarning)==0); 
         end
         clear Ymx;
       end
@@ -559,13 +550,11 @@ RD202006: This part includes an minium based WM bias correction that is
                          cat_stat_nanmedian(Ysrc(Ycls{3}(:)>128 & Ysrc(:)>0)), ...
                          cat_stat_nanmean(Ysrc(Ysrc>0))*0.5])*0.9; % 
             Ysrc  = cat_vol_laplace3R(max(CSFth,Ysrc),Yb & Ysrc==0,0.2) .* Yb;
-             cat_warnings = cat_io_addwarning(cat_warnings,...
-               'CAT:cat_main:SkullStripped',...
-               'Skull-stripped input image detected! Try boundary cleanup.',numel(cat_warnings)==0);  
+            cat_io_addwarning('CAT:cat_main:SkullStripped',...
+               'Skull-stripped input image detected! Try boundary cleanup.',numel(cat_io_addwarning)==0);  
           else
-             cat_warnings = cat_io_addwarning(cat_warnings,...
-               'CAT:cat_main:SkullStripped',...
-               'Skull-stripped input image?',numel(cat_warnings)==0); 
+            cat_io_addwarning('CAT:cat_main:SkullStripped',...
+               'Skull-stripped input image?',numel(cat_io_addwarning)==0); 
           end
         end
       end
@@ -766,12 +755,25 @@ RD202006: This part includes an minium based WM bias correction that is
     if extopts.ignoreErrors < 1
       rethrow(e)
     else
-      % [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,extopts)
+      % [Ym,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,extopts)
       if extopts.ignoreErrors > 2
-        cat_io_cprintf('warn','\n  IgnoreErrors: cat_main_gintnorm - run generalized function      ')
+        cat_io_addwarning('cat_main_gintnorm:runGeneral', ...
+          'IgnoreErrors: Run generalized function.',3);
       else
-        cat_io_cprintf('warn','\n  No T1 contrast detected. Run generalized function               ')
+        if exist('BGth','var') && exist('T3th3','var')
+          cat_io_addwarning('CAT:cat_main:InverseContrast',...
+            sprintf(['No T1 contrast detected. Run generalized function. \\n' ...
+               '  (BG=%0.2f, CSF=%0.2f, GM=%0.2f, WM=%0.2f)'],BGth,T3th3(1:3)),3);
+        else
+          cat_io_addwarning('CAT:cat_main:InverseContrast',...
+            sprintf('  No T1 contrast detected. Run generalized function.'),3);
+        end
       end
+      
+      % if this is a untypical error then print it as warning
+      if ~strcmp( e.identifier , 'cat_main_gintnorm:runbackup' ),  warning(e.message); end
+      
+      
       Ysrc    = cat_stat_histth(Ysrc,0.98); % remove outlier
       clsints = @(x,y) [round( res.mn(res.lkp==x) * 10^5)/10^5; res.mg(res.lkp==x-((y==0)*8))']; % SPM peak definition  
       clsint  = @(x) cat_stat_nanmedian(Ysrc(Ycls{x}>128));                                      % median within the tissue label 
@@ -857,7 +859,7 @@ RD202006: This part includes an minium based WM bias correction that is
         
         % get background area
 % ########        
-% RD202006: Add skull-stripped special case! > CAT12.7
+% RD202006: Add skull-stripped special case! > CAT12.8
 % ########        
         if isfield(res,'bge') 
           if all(size(res.bge) == size(Ysrc))
@@ -932,12 +934,13 @@ RD202006: This part includes an minium based WM bias correction that is
     end
   end
 
-  if nargout>=6 && ~exist('cat_warnings','var') 
-    cat_warnings = struct('identifier',{'cat_main_gintnorm:runGeneral'},'message',{'Run generalized cat_main_gintnorm function.'});
-  end
+  % RD202007 not required ... delete later
+  %if nargout>=6 && ~exist('cat_warnings','var') 
+  %  cat_warnings = struct('identifier',{'cat_main_gintnorm:runGeneral'},'message',{'Run generalized cat_main_gintnorm function.'});
+  %end
   
   
   %% if there was a warning we need a new line 
-  if nargout==6 && numel(cat_warnings)>1, fprintf('\n'); cat_io_cmd(' ','','',1); end
+  %if nargout>=6 && numel(cat_warnings)>1, fprintf('\n'); cat_io_cmd(' ','','',1); end
 
 end

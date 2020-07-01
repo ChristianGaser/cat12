@@ -92,10 +92,13 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
   % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,'cat_main_registration'); debug = 1; break; end; end
 
+  res.Affine0 = res.Affine; 
   
   % output
-  trans = struct();
-  reg   = struct();
+  Affine = res.Affine;
+  trans  = struct();
+  reg    = struct();
+  
   def.nits      = 64; 
   def.opt.ll1th = 0.001;          % smaller better/slower
   def.opt.ll3th = 0.002; 
@@ -125,31 +128,38 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
 
   
   % additional affine registration of the GM segment
-  if ~isempty(dreg.affreg) && dreg.affreg && ~isempty(job.opts.affreg) && job.extopts.ignoreErrors < 1
-    %%
+  % only if not the prior is used
+  if isfield(job,'useprior') && ~isempty(job.useprior)
+    Affine = res.Affine; 
+  elseif dreg.affreg
+    % Create maffreg obj structure similar to cat_run_job but only for the 
+    % GM segment.
     obj.image         = res.image; 
     obj.image.pinfo   = repmat([255;0],1,size(Ycls{1},3));
     obj.image.dt      = [spm_type('UINT8') spm_platform('bigend')];
     obj.image.dat     = cat_vol_ctype(single(Ycls{1})/2 + single(Ycls{2}));  
     if isfield(obj.image,'private'), obj.image = rmfield(obj.image,'private'); end
-    obj.samp = 1.5; 
-    obj.fwhm = 1;
+    obj.samp          = 1.5; 
+    obj.fwhm          = 1;
     if isfield(obj,'tpm'), obj = rmfield(obj,'tpm'); end
+
+    % call maffreg
     obj.tpm = spm_load_priors8(res.tpm(1:2));
+    
     wo = warning('QUERY','MATLAB:RandStream:ActivatingLegacyGenerators'); wo = strfind( wo.state , 'on');
     if wo, warning('OFF','MATLAB:RandStream:ActivatingLegacyGenerators'); end
-    Affine  = spm_maff8(obj.image,obj.samp,obj.fwhm,obj.tpm,res.Affine,job.opts.affreg,80);
+    Affine = spm_maff8(obj.image,obj.samp,obj.fwhm,obj.tpm,res.Affine,job.opts.affreg,80);
     if wo, warning('ON','MATLAB:RandStream:ActivatingLegacyGenerators'); end
+    
+    
     res.Affine = Affine;
     spm_progress_bar('Clear');
-  else
-    Affine = res.Affine; 
   end
 
   do_req = res.do_dartel; 
   % this is the main loop for different parameter
-  for regstri = numel(job.extopts.regstr):-1:1;
-    for voxi = numel(job.extopts.vox):-1:1; 
+  for regstri = numel(job.extopts.regstr):-1:1
+    for voxi = numel(job.extopts.vox):-1:1
       if (numel(job.extopts.regstr) || numel(job.extopts.vox)) && job.extopts.verb, fprintf('\n\n'); end 
       
       
@@ -299,28 +309,25 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
       
       
       %% resolutions:
-      %tpmres = abs(tpmM(1));                                                    % template resolution 
-      tmpres = abs(tmpM(1));                                                    % template resolution 
-      regres = reg(regstri).opt.rres; if isinf(regres), regres = tmpres; end    % registration resolution
-      newres = job.extopts.vox(voxi); if isinf(newres), newres = tmpres; end    % output resolution
+      %tpmres = abs(tpmM(1));                                                     % template resolution 
+      tmpres = abs(tmpM(1));                                                      % template resolution 
+      regres = reg(regstri).opt.rres; if isinf(regres), regres = tmpres; end      % registration resolution
+      newres = job.extopts.vox(voxi); if isinf(newres), newres = tmpres; end      % output resolution
 
 
       % mat matrices for different spaces
-      M0     = res.image.mat;                                                   % for (interpolated) individual volume
-      M1d    = tmpM;                                                            % for template 
+      M0     = res.image.mat;                                                     % for (interpolated) individual volume
+      M1d    = tmpM;                                                              % for template 
       imat=spm_imatrix(tmpM); imat(7:9)=imat(7:9) * newres/tmpres; M1=spm_matrix(imat); 
       imat=spm_imatrix(tmpM); imat(7:9)=imat(7:9) * regres/tmpres; M1r=spm_matrix(imat); 
       imat=spm_imatrix(tpmM); imat(7:9)=imat(7:9) * newres/tpmres; M1t=spm_matrix(imat); 
       imat=spm_imatrix(tpmM); imat(7:9)=imat(7:9) * regres/tpmres; M1tr=spm_matrix(imat); 
-%M1t = M1; M1tr = M1r;  % tpm origin is diffent in SPM and review
-      
-     % if job.extopts.regstr(regstri)==0, M1r=M1; end % Dartel only!
-    
+          
       % image dimension 
       VT  = res.image(1);
-      if isfield(res,'imagesc'); VT0 = res.imagec(1); else VT0 = res.image0(1); end
-      idim = VT.dim(1:3);                                                     % (interpolated) input image resolution
-      %idim = res.image(1).dim(1:3);                                          % input image resolution
+      if isfield(res,'imagesc'); VT0 = res.imagec(1); else, VT0 = res.image0(1); end
+      idim = VT.dim(1:3);                                                         % (interpolated) input image resolution
+      %idim = res.image(1).dim(1:3);                                              % input image resolution
       odim = floor(res.tpm2{1}(1).dim * tmpres/newres/2)*2+1;                     % output image size
       rdim = floor(res.tpm2{1}(1).dim * tmpres/regres/2)*2+1;                     % registration image size
       if job.extopts.regstr(regstri)==0, rdim = odim; end % Dartel only!
@@ -362,7 +369,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
       clear matr; 
 
       % save old spm normalization used for atlas map
-      trans.atlas.Yy = Yy; 
+      %trans.atlas.Yy = Yy; 
 
       % rigid vs. affine input in registration: 0 - rigid, 1 - affine (var only used by Dartel) 
       job.extopts.regra = 1; %job.extopts.regstr(regstri)==0; 
@@ -423,7 +430,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
             g = zeros([rdim(1:3) 2],'single');
             u = zeros([rdim(1:3) 3],'single');
             for k1=1:n1
-              for i=1:rdim(3),
+              for i=1:rdim(3)
                 f(:,:,i,k1) = single(spm_slice_vol(single(Ycls{k1}),Mar*spm_matrix([0 0 i]),rdim(1:2),[1,NaN])/255);
               end
             end
@@ -431,7 +438,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
             if exist('Ylesion','var') && sum(Ylesion(:))>0
               Ylesion = single(Ylesion); 
               ls = zeros(rdim(1:3),'single');
-              for i=1:rdim(3),
+              for i=1:rdim(3)
                 ls(:,:,i) = single(spm_slice_vol(single(Ylesion),Mar*spm_matrix([0 0 i]),rdim(1:2),[1,NaN]));
               end
             end
@@ -444,7 +451,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
               prm   = [rform, param(it).rparam, lmreg, cyc, its, param(it).K, code];
               % load new template for this iteration
               for k1=1:n1
-                for i=1:rdim(3),
+                for i=1:rdim(3)
                   g(:,:,i,k1) = single(spm_slice_vol(res.tpm2{it}(k1),Mad*spm_matrix([0 0 i]),rdim(1:2),[1,NaN]));
                 end
 
@@ -453,7 +460,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
                 end
               end
 
-              for j = 1:param(it).its,
+              for j = 1:param(it).its
                 it0 = it0 + 1;
                 [u,ll] = dartel3(u,f,g,prm);
                 reg(regstri).lld(it0,:)  = ll ./ [prod(rdim) prod(rdim) newres^3]; 
@@ -502,6 +509,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
             clear y0;
             [t1,t2] = ndgrid(1:idim(1),1:idim(2),1); t3 = 1:idim(3);
 
+% RD202007: Use old deformation as input also if a new affine registion was estiamted? 
             Yyd = Yy; 
             for z=1:idim(3)
               [t11,t22,t33] = defs2(Coef,z,Mar,prm,t1,t2,t3);
@@ -511,7 +519,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
             end
             clear Coef t1 t2 t3 t11 t22 t33 z
             M = mat\M1;
-            for i=1:size(Yyd,3),
+            for i=1:size(Yyd,3)
               t1          = Yyd(:,:,i,1);
               t2          = Yyd(:,:,i,2);
               t3          = Yyd(:,:,i,3);
@@ -573,7 +581,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
                 if ri==1, mat0reg = res.Affine\M1rr * vx2rr/vxtpm; end 
                 Mrregs{ri} = M0\inv(res.Affine)*M1rr*vx2rr/vx3rr;  
               end
-              if ri==1, Mys{ri} = eye(4); else Mys{ri}= eye(4); Mys{ri}(1:12) = Mys{ri}(1:12) * reg(regstri).opt.resfac(ri)/reg(regstri).opt.resfac(ri-1); end;
+              if ri==1, Mys{ri} = eye(4); else, Mys{ri}= eye(4); Mys{ri}(1:12) = Mys{ri}(1:12) * reg(regstri).opt.resfac(ri)/reg(regstri).opt.resfac(ri-1); end;
             end
 
             % if saffine, Mrregs{1} = M0\inv(res.Affine)*M1rr*vx2rr/vx3rr; end       
@@ -615,7 +623,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
             % ---------------------------------------------------------------------
    %R=res.Affine;
             it = 1; reg(regstri).dtc = zeros(1,5); ll  = zeros(1,2);
-            while it<=nits; 
+            while it<=nits 
               itime = clock;  
 
               if it==1 || (tmpl_no(it)~=tmpl_no(it-1)) 
@@ -630,7 +638,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
                   Yclsk1 = single(Ycls{k1}); 
                   f{k1}  = zeros(rdims(ti,1:3),'single');
                   if reg(regstri).opt.resfac(ti)>1, spm_smooth(Yclsk1,Yclsk1,repmat((reg(regstri).opt.resfac(ti)-1) * 2,1,3)); end
-                  for i=1:rdims(ti,3),
+                  for i=1:rdims(ti,3)
                     f{k1}(:,:,i) = single(spm_slice_vol(Yclsk1,Mrregs{ti}*spm_matrix([0 0 i]),rdims(ti,1:2),[1,NaN])/255); 
                   end
                   msk         = ~isfinite(f{k1});
@@ -645,7 +653,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
                   g{k1} = zeros(rdims(ti,1:3),'single');
                   tpm2k1 = res.tpm2{ti}(k1).private.dat(:,:,:,k1); 
                   if reg(regstri).opt.resfac(ti)>1, spm_smooth(tpm2k1,tpm2k1,repmat((reg(regstri).opt.resfac(ti)-1) * 2,1,3)); end
-                  for i=1:rdims(ti,3),
+                  for i=1:rdims(ti,3)
                     g{k1}(:,:,i) = single(spm_slice_vol(tpm2k1,Mads{ti}*spm_matrix([0 0 i]),rdims(ti,1:2),[1,NaN]));
                   end
                   g{k1}(isnan(g{k1}(:))) = min(g{k1}(:)); % remove boundary interpolation artefact
@@ -659,13 +667,13 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
                   Yclsk1 = single(Ylesion); 
                   if reg(regstri).opt.resfac(ti)>1, spm_smooth(Yclsk1,Yclsk1,repmat((reg(regstri).opt.resfac(ti)-1) * 2,1,3)); end
                   ls = zeros(rdims(ti,1:3),'single');
-                  for i=1:rdims(ti,3),
+                  for i=1:rdims(ti,3)
                     ls(:,:,i) = single(spm_slice_vol(Yclsk1,Mrregs{ti}*spm_matrix([0 0 i]),rdims(ti,1:2),[1,NaN])); 
                   end
                   for k1=1:numel(g)-1
                     tpm2k1 = res.tpm2{ti}(k1).private.dat(:,:,:,k1); 
                     t = zeros(rdims(ti,1:3),'single');
-                    for i=1:rdims(ti,3),
+                    for i=1:rdims(ti,3)
                       t(:,:,i) = single(spm_slice_vol(tpm2k1,Mads{ti}*spm_matrix([0 0 i]),rdims(ti,1:2),[1,NaN]));
                     end
 
@@ -710,7 +718,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
                   yo = y;  
                   y  = zeros([rdims(ti,:) 3],'single');                        
                   for k1=1:3
-                    for i=1:rdims(ti,3),
+                    for i=1:rdims(ti,3)
                       y(:,:,i,k1) = single(spm_slice_vol(yo(:,:,:,k1),Mys{ti}*spm_matrix([0 0 i]),rdims(ti,1:2),[1,NaN])) / Mys{ti}(1); % adapt for res
                     end
                     [D,I] = cat_vbdist(single(~isnan(y(:,:,:,k1)))); %#ok<ASGLU> % use neighbor value in case of nan
@@ -723,7 +731,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
                   uo = u; 
                   u  = zeros([rdims(ti,:) 3],'single');
                   for k1=1:3
-                    for i=1:rdims(ti,3),
+                    for i=1:rdims(ti,3)
                       u(:,:,i,k1) = single(spm_slice_vol(uo(:,:,:,k1),Mys{ti}*spm_matrix([0 0 i]),...
                         rdims(ti,1:2),[1,NaN])) / Mys{ti}(1); % (tempres(ti) / tempres(ti-1))^2; % adapt for res 
                     end
@@ -734,7 +742,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
                   %% size update dt
                   dto = dt;
                   dt  = zeros(rdims(ti,:),'single');
-                  for i=1:rdims(ti,3),
+                  for i=1:rdims(ti,3)
                     dt(:,:,i) = single(spm_slice_vol(dto,Mys{ti}*spm_matrix([0 0 i]),rdims(ti,1:2),[1,NaN]));
                     dt(~isfinite(dt))=1;
                   end
@@ -848,7 +856,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
               eyev = eye(4); eyev(1:end-1) = eyev(1:end-1) * M1t(1)./M1r(1);
               yid  = zeros([odim 3],'single');                        
               for k1=1:3
-                for i=1:odim(3),
+                for i=1:odim(3)
                   yid(:,:,i,k1) = single(spm_slice_vol(y(:,:,:,k1),eyev*spm_matrix([0 0 i]),odim(1:2),[1,NaN])) / eyev(1); % adapt for res
                 end
               end
@@ -896,7 +904,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
           if job.extopts.verb>1 || export
 
             %% preparte output directory
-            if job.extopts.subfolders, mrifolder = 'mri'; else mrifolder = ''; end
+            if job.extopts.subfolders, mrifolder = 'mri'; else, mrifolder = ''; end
             [pth,nam] = spm_fileparts(VT0.fname); 
             [temppp,tempff] = spm_fileparts(job.extopts.templates{1});  %#ok<ASGLU>
             if job.extopts.regstr(regstri)==0
@@ -919,7 +927,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
             else
               mdisplay = [0 1 0 1 0]; 
             end  
-            if job.extopts.regstr(regstri)==0, dartelfac = 1.5; else dartelfac = 1.0; end
+            if job.extopts.regstr(regstri)==0, dartelfac = 1.5; else, dartelfac = 1.0; end
             if mdisplay(1)
               fprintf('Registration power: \n'); 
               fprintf('%30s','Jacobian determinant: '); 
@@ -971,7 +979,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
               QMC   = cat_io_colormaps('marks+',17);
               color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
               if mdisplay(4)>1
-                for dti=1:size(reg(regstri).ll,1)-1, 
+                for dti=1:size(reg(regstri).ll,1)-1 
                   cat_io_cprintf( color(QMC, (reg(regstri).ll(dti,1) - 0.05) / 0.15 * 6),sprintf('%0.3f ',reg(regstri).ll(dti,1))); 
                 end
                 fprintf('| ');
@@ -989,7 +997,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
               QMC   = cat_io_colormaps('marks+',17);
               color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
               if mdisplay(5)>1
-                for dti=1:size(reg(regstri).cbr,2), 
+                for dti=1:size(reg(regstri).cbr,2)
                   cat_io_cprintf( color(QMC, (reg(regstri).cbr(dti))/2),sprintf('%0.3f ',reg(regstri).cbr(dti))); 
                 end
                 fprintf('| ');
@@ -1084,7 +1092,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
                 eyev = eye(4); eyev([1 6 11]) = eyev([1 6 11]) .* vx_volo./vx_voli; 
                 Yy2  = zeros([trans.native.Vo.dim 1 3],'single');                        
                 for k1=1:3
-                  for i=1:trans.native.Vo.dim(3),
+                  for i=1:trans.native.Vo.dim(3)
                     Yy2(:,:,i,:,k1) = trans.warped.M1(k1,4) + trans.warped.M1(k1,k1) * ...
                       single(spm_slice_vol(trans.warped.y(:,:,:,k1),eyev*spm_matrix([0 0 i]), ...
                       trans.native.Vo.dim(1:2),[1,NaN])); % adapt for res
@@ -1120,7 +1128,56 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
           end
         end
       catch
-        trans.warped.y = struct('y',Yy,'odim',odim,'M0',M0,'M1',M1,'M2',M1\R*M0,'dartel',res.do_dartel);
+        %% catch problems and use the original input
+        
+        cat_io_addwarning('cat_main_registration:regError','Registration problem use given input segmentation.');
+        res.Affine = res.Affine0; 
+        
+        % resolutions:
+        tmpres = abs(tmpM(1));                                                    % template resolution 
+        newres = job.extopts.vox(voxi); if isinf(newres), newres = tmpres; end    % output resolution
+
+        % mat matrices for different spaces
+        M0     = res.image.mat;                                                   % for (interpolated) individual volume
+        imat=spm_imatrix(tmpM); imat(7:9)=imat(7:9) * newres/tmpres; M1=spm_matrix(imat); 
+        imat=spm_imatrix(tpmM); imat(7:9)=imat(7:9) * newres/tpmres; M1t=spm_matrix(imat); 
+        
+        % image dimension 
+        VT  = res.image(1);
+        if isfield(res,'imagesc'); VT0 = res.imagec(1); else, VT0 = res.image0(1); end
+        idim = VT.dim(1:3);                                                         % (interpolated) input image resolution
+        odim = floor(res.tpm2{1}(1).dim * tmpres/newres/2)*2+1;                     % output image size
+        
+
+        % to write a correct x=-1 output image, we have to be sure that the x value of the bb is negative
+        if res.bb(1)<res.bb(2), bbt=res.bb(1); res.bb(1)=res.bb(2); res.bb(2)=bbt; clear bbt; end
+
+        % matrix to create the affine/rigide transformation matrices
+        mm   = [[res.bb(1,1) res.bb(2,1) res.bb(1,1) res.bb(2,1) res.bb(1,1) res.bb(2,1) res.bb(1,1) res.bb(2,1); 
+                 res.bb(1,2) res.bb(1,2) res.bb(2,2) res.bb(2,2) res.bb(1,2) res.bb(1,2) res.bb(2,2) res.bb(2,2);
+                 res.bb(1,3) res.bb(1,3) res.bb(1,3) res.bb(1,3) res.bb(2,3) res.bb(2,3) res.bb(2,3) res.bb(2,3)]; 
+                 ones(1,8)];
+        vx2  = M1\mm;
+        vx3  = M1t\mm;
+       
+        % affine parameters
+        Ma            = M0\inv(res.Affine)*M1t*vx2/vx3;                               % individual to registration space
+        mat0a         = res.Affine\M1t*vx2/vx3;                                       % mat0 for affine output
+        mata          = mm/vx3;                                                       % mat  for affine output
+        
+        % rigid parameters
+        [M3,R]        = spm_get_closest_affine( affind(rgrid( idim ) ,M0) , affind(Yy,tpmM) , single(Ycls{1})/255); clear M3; %#ok<ASGLU>
+        Mr            = M0\inv(R)*M1t*vx2/vx3;                                        % transformation from subject to registration space
+        mat0r         = R\M1t*vx2/vx3;                                                % mat0 for rigid ouput
+        matr          = mm/vx3;                                                       % mat  for rigid ouput
+        
+        % final structure
+        trans.native.Vo = VT0;
+        trans.native.Vi = res.image(1);
+        trans.affine    = struct('odim',odim,'mat',mata,'mat0',mat0a,'M',Ma);         % structure for cat_io_writenii
+        trans.rigid     = struct('odim',odim,'mat',matr,'mat0',mat0r,'M',Mr);         % structure for cat_io_writenii
+        %trans.atlas.Yy  = Yy;                                                         % save old spm normalization used for atlas map
+        trans.warped    = struct('y',Yy,'odim',odim,'M0',M0,'M1',M1,'M2',M1\R*M0,'dartel',res.do_dartel);
       end
     end
   end
@@ -1132,7 +1189,7 @@ end
 function x = rgrid(d)
   x = zeros([d(1:3) 3],'single');
   [x1,x2] = ndgrid(single(1:d(1)),single(1:d(2)));
-  for i=1:d(3),
+  for i=1:d(3)
       x(:,:,i,1) = x1;
       x(:,:,i,2) = x2;
       x(:,:,i,3) = single(i);
@@ -1141,7 +1198,7 @@ end
 %=======================================================================
 function y1 = affind(y0,M)
   y1 = zeros(size(y0),'single');
-  for d=1:3,
+  for d=1:3
       y1(:,:,:,d) = y0(:,:,:,1)*M(d,1);
       y1(:,:,:,d) = y1(:,:,:,d) + y0(:,:,:,2)*M(d,2);
       y1(:,:,:,d) = y1(:,:,:,d) + y0(:,:,:,3)*M(d,3) + M(d,4);

@@ -28,7 +28,8 @@ function cat_run_job(job,tpm,subj)
     
     clearvars -global cat_err_res;
     global cat_err_res; % for CAT error report
-    cat_err_res.stime = clock; 
+    cat_err_res.stime        = clock; 
+    cat_err_res.cat_warnings = struct('identifier',{},'message',{});
     
     stime  = clock; 
     stime0 = stime; % overall processing time
@@ -166,6 +167,12 @@ function cat_run_job(job,tpm,subj)
                     'for reliable CAT preprocessing! \n' ...
                     'This image has a resolution %0.2fx%0.2fx%0.2f mm%s. '], ... 
                      reslimits(1),vx_vol,native2unicode(179, 'latin1'))); %#ok<SPERR>
+            else
+              cat_io_addwarning('cat_run_job:TooLowResolution', sprintf(...
+                   sprintf(['Voxel resolution has to be better than %s mm in any dimension \n' ...
+                    'for reliable CAT preprocessing! \n' ...
+                    'This image has a resolution %0.2fx%0.2fx%0.2f mm%s. '], ... 
+                     reslimits(1),vx_vol,native2unicode(179, 'latin1'))));
             end
             if prod(vx_vol)>reslimits(2)^3  % too small voxel volume (smaller than 3x3x3 mm3)
               error('cat_run_job:TooHighVoxelVolume', ...
@@ -174,13 +181,26 @@ function cat_run_job(job,tpm,subj)
                     'This image has a voxel volume of %0.2f mm%s. '], ...
                     reslimits(2)^3,reslimits(2),reslimits(2),reslimits(2),...
                     native2unicode(179, 'latin1'),native2unicode(179, 'latin1'),prod(vx_vol),native2unicode(179, 'latin1'));
+            else
+              cat_io_addwarning('cat_run_job:TooHighVoxelVolume', ...
+                   sprintf(['Voxel volume has to be smaller than %d mm%s (around %dx%dx%d mm%s) to \n' ...
+                    'allow a reliable CAT preprocessing! \n' ...
+                    'This image has a voxel volume of %0.2f mm%s. '], ...
+                    reslimits(2)^3,reslimits(2),reslimits(2),reslimits(2),...
+                    native2unicode(179, 'latin1'),native2unicode(179, 'latin1'),prod(vx_vol),native2unicode(179, 'latin1')));
             end
             if max(vx_vol)/min(vx_vol)>reslimits(3) % anisotropy 
-              error('cat_run_job:TooStrongIsotropy', sprintf(...
+              error('cat_run_job:TooStrongIsotropy', ...
                    ['Voxel isotropy (max(vx_size)/min(vx_size)) has to be smaller than %d to \n' ...
                     'allow a reliable CAT preprocessing! \n' ...
                     'This image has a resolution %0.2fx%0.2fx%0.2f mm%s and a isotropy of %0.2f. '], ...
-                    reslimits(3),vx_vol,native2unicode(179, 'latin1'),max(vx_vol)/min(vx_vol))); %#ok<SPERR>
+                    reslimits(3),vx_vol,native2unicode(179, 'latin1'),max(vx_vol)/min(vx_vol)); 
+            else
+              cat_io_addwarning('cat_run_job:TooStrongIsotropy', sprintf(...
+                   ['Voxel isotropy (max(vx_size)/min(vx_size)) has to be smaller than %d to \n' ...
+                    'allow a reliable CAT preprocessing! \n' ...
+                    'This image has a resolution %0.2fx%0.2fx%0.2f mm%s and a isotropy of %0.2f. '], ...
+                    reslimits(3),vx_vol,native2unicode(179, 'latin1'),max(vx_vol)/min(vx_vol)));
             end
           end
         end
@@ -444,9 +464,14 @@ function cat_run_job(job,tpm,subj)
               end
             end
             APPRMS = checkAPP(Ym,Ysrc); 
-            if APPRMS>1 && job.extopts.ignoreErrors < 1 
-              error('cat_run_job:APPerror','Detect problems in APP preprocessing (APPRMS: %0.4f). Turn off APP preprocessing. ',APPRMS);
-            end 
+            if APPRMS>1 
+              if job.extopts.ignoreErrors < 1 
+                fprintf('\n'); 
+                error('cat_run_job:APPerror','Detect problems in APP preprocessing (APPRMS: %0.4f). Do not use APP results. ',APPRMS);
+              else
+                cat_io_addwarning('cat_run_job:APPerror',sprintf('Detect problems in APP preprocessing (APPRMS: %0.4f). Do not use APP results. ',APPRMS),3);
+              end 
+            end
         
             if ~debug, clear Yt; end
 
@@ -494,7 +519,7 @@ function cat_run_job(job,tpm,subj)
               affscale = 1;
               useprior = 1;
             else
-              cat_io_cprintf('warn',sprintf('WARNING: File %s not found. Use individual affine transformation\n',catxml));
+              cat_io_addwarning('cat_run_job:UseAffRegPrior','WARNING: Affine prior file "%s" not found. Use individual affine transformation. ',1);
               useprior = 0;
             end
           else
@@ -673,14 +698,29 @@ function cat_run_job(job,tpm,subj)
               %% only one TPM (old approach); 
               spm_plot_convergence('Init','Fine affine registration','Mean squared difference','Iteration');
               warning off 
-              Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg,80); 
+              [Affine2,ll(1)] = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg,80); 
+              if ll(1)<0.9
+                [Affine2o,ll(2)] = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,eye(4),job.opts.affreg,80); 
+                Affine2 = Affine2o; 
+                if ll(2)<0.9
+                  [Affine2n,ll(3)] = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,eye(4),'none',80); 
+                  if ll(3) > ll(2)
+                    job.opts.affreg = 'none';
+                    Affine2 = Affine2n;
+                  else
+                    if ll(1) < ll(2)
+                      Affine2 = Affineo; 
+                    end
+                  end
+                end
+              end
               if any(any(isnan(Affine2(1:3,:))))
                 Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*4,obj.tpm,Affine ,job.opts.affreg,80);
                 if any(any(isnan(Affine2(1:3,:)))) 
                   Affine2 = Affine; 
                 end
               end
-              Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,       obj.tpm,Affine2,job.opts.affreg,80);
+              Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,obj.tpm,Affine2,job.opts.affreg,80);
               warning on  
               if ~any(any(isnan(Affine3(1:3,:)))), Affine = Affine3; end
             else
@@ -1020,6 +1060,8 @@ function cat_run_job(job,tpm,subj)
                 stime  = cat_io_cmd(sprintf('  Select %s',modelname{maxci}),'g5','',job.extopts.verb-1,stime); 
               end
             end
+          else
+            if verbs, cat_io_cmd(' ','g5','',job.extopts.verb-1); end
           end
           
           if isempty(maxci) || (mincontrast(maxci) < 0.05 && job.extopts.ignoreErrors < 2)
@@ -1097,23 +1139,11 @@ function cat_run_job(job,tpm,subj)
         res.Tth = Tth; 
         cat_err_res.res = res;   
         
-        % inactive preprocessing of inverse images (PD/T2) 
-        % RD202006: Throw error?
-        % I turned this error here off to use the later check in cat_main_gintnorm.
-        if 0 % any(diff(Tth(1:3))<=0)
-          error('cat_run_job:BadImageProperties', ...
-          ['CAT12 is designed to work only on highres T1 images. \n' ...
-           'T2/PD preprocessing can be forced on your own risk by setting \n' ...
-           '''cat12.extopts.INV=1'' in the cat_default file. If this was a highres \n' ...
-           'T1 image then the initial segmentation might be failed, probably \n' ...
-           'because of alignment problems (please check image orientation).']);    
-        end
-        
         % RD202006: Throw warning/error?
         % Due to inaccuracies of the clsint function it is better to print 
         % this as intense warning.
         if any( Tth(2:3)<0 )
-          cat_io_cprintf('err',sprintf( ...
+          cat_io_addwarning('cat_run_job:negVal',sprintf( ...
            ['CAT12 was developed for images with positive values and negative values can lead to \n', ...
             'preprocessing problems. The average intensities of CSF/GM/WM are %0.4f/%0.4f/%0.4f. \n', ...
             'If you observe problems, you can use the %s to scale your data.\n'], Tth(1:3), ...

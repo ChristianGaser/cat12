@@ -1,4 +1,4 @@
-function str = cat_main_reportstr(job,res,qa,cat_warnings) 
+function str = cat_main_reportstr(job,res,qa) 
 % ______________________________________________________________________
 % 
 % Prepare text output for CAT report. This function may heavily change
@@ -27,6 +27,8 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
 % $Id$
 
 %#ok<*AGROW>
+
+  global cat_err_res; 
 
   QMC   = cat_io_colormaps('marks+',17);
   color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
@@ -65,7 +67,7 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
   else
     if job.extopts.experimental, str{1}(end).value = [str{1}(end).value '\bf\color[rgb]{0 0.2 1}x']; end  
   end
-  if job.extopts.ignoreErrors > 1, str{1}(end).value = [str{1}(end).value '    \bf\color[rgb]{0.8 0 0}Ignore Errors!']; end  
+  if job.extopts.ignoreErrors > 2, str{1}(end).value = [str{1}(end).value '    \bf\color[rgb]{0.8 0 0}Ignore Errors!']; end  
   
   
   % 2 lines: TPM, Template, Normalization method with voxel size
@@ -301,11 +303,11 @@ function str = cat_main_reportstr(job,res,qa,cat_warnings)
     floor(round(etime(clock,res.stime))/60),mod(round(etime(clock,res.stime)),60)))]; 
 
   % Warnings
-  if numel(cat_warnings)>0 && job.extopts.expertgui>0
+  if numel(cat_err_res.cat_warnings)>0 && job.extopts.expertgui>0
     str{2} = [str{2} struct('name', '','value','')]; 
     str{2} = [str{2} struct('name', '\bfWarnings:','value','')]; 
-    for wi=1:numel(cat_warnings)
-      shorter = cat_warnings(wi).identifier;
+    for wi=1:numel(cat_err_res.cat_warnings)
+      shorter = cat_err_res.cat_warnings(wi).identifier;
       % remove leading MATLAB, SPM or CAT elements
       dots    = max([min(strfind(shorter,'MATLAB')+7), ...
                      min(strfind(shorter,'SPM')+4), ...
