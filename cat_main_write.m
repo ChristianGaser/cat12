@@ -1,4 +1,4 @@
-function cat_warnings = cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans,cat_warnings)
+function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
 % ______________________________________________________________________
 % Write volumetric preprocessing results.
 %  
@@ -78,7 +78,7 @@ function cat_warnings = cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans,cat_war
   end
 
   % write WMH class maps
-  if job.extopts.WMHC>=3 && job.extopts.WMHCstr>0 && ~job.inv_weighting;
+  if job.extopts.WMHC>=3 && job.extopts.WMHCstr>0 && ~job.inv_weighting
     cat_io_writenii(VT0,single(Ycls{7})/255,mrifolder,'p7',[prefix 'WMH tissue map'],'uint8',[0,1/255],...
       min([1 1 0 3],[job.output.WMH.native job.output.WMH.warped ...
       job.output.WMH.mod job.output.WMH.dartel]),trans); % 1 0 0 0
@@ -91,11 +91,11 @@ function cat_warnings = cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans,cat_war
       job.output.WMH.mod job.output.WMH.dartel])
     % should write, but can not ...
     if job.extopts.WMHC<3
-      cat_warnings = cat_io_addwarning(cat_warnings,'CAT:cat_main_WMHC:output','Cannot write WMH images because no seperate class is used (set WMHC>=3).');
+      cat_io_addwarning('CAT:cat_main_WMHC:output','Cannot write WMH images because no seperate class is used (set WMHC>=3).');
     elseif job.extopts.WMHCstr==0
-      cat_warnings = cat_io_addwarning(cat_warnings,'CAT:cat_main_WMHC:output','Cannot write WMH images because WMHCstr is 0.');
+      cat_io_addwarning('CAT:cat_main_WMHC:output','Cannot write WMH images because WMHCstr is 0.');
     elseif job.inv_weighting
-      cat_warnings = cat_io_addwarning(cat_warnings,'CAT:cat_main_WMHC:output','Cannot write WMH images because inverse contrast was detected.');
+      cat_io_addwarning('CAT:cat_main_WMHC:output','Cannot write WMH images because inverse contrast was detected.');
     end
     % 
   end 
@@ -116,7 +116,7 @@ function cat_warnings = cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans,cat_war
   % tissue class, with good visible differences in the sulci.
   job.output.intsegments = job.extopts.experimental;
   if job.output.intsegments
-    if (any(tc(:)) || job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting); 
+    if (any(tc(:)) || job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting) 
 
       % intensity scaled tissue maps
       Yclsi = cell(1,3);
@@ -157,7 +157,7 @@ function cat_warnings = cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans,cat_war
       clear Yclsi; 
 
       % write WMH class maps
-      if job.extopts.WMHC>=3 && job.extopts.WMHCstr>0 && ~job.inv_weighting;
+      if job.extopts.WMHC>=3 && job.extopts.WMHCstr>0 && ~job.inv_weighting
         cat_io_writenii(VT0,(single(Ywmhp) + single(Ycls{7}))/255,mrifolder,...
           'pi7',[prefix 'WMH tissue map'],'uint8',[0,1/255],...
           min([1 1 0 2],[job.output.WMH.native job.output.WMH.warped ...
@@ -256,7 +256,7 @@ function cat_warnings = cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans,cat_war
       if ~debug, clear Yy; end
 
       % write map (mri as tissue subforder and mri_atals as ROI subfolder)
-      if isempty(mrifolder), amrifolder = ''; else amrifolder = 'mri_atlas'; end
+      if isempty(mrifolder), amrifolder = ''; else, amrifolder = 'mri_atlas'; end
       cat_io_writenii(VT0,Ylai,amrifolder,[atlas '_'],[prefix ' ' atlas ' original'],...
         'uint8',[0,1],job.output.atlas,trans);
       if ~debug, clear Vlai Ylai; end
@@ -286,7 +286,7 @@ function cat_warnings = cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans,cat_war
       eyev = eye(4); eyev([1 6 11]) = eyev([1 6 11]) .* vx_volo./vx_voli; 
       Yy2  = zeros([trans.native.Vo.dim 1 3],'single');                        
       for k1=1:3
-        for i=1:trans.native.Vo.dim(3),
+        for i=1:trans.native.Vo.dim(3)
           Yy2(:,:,i,:,k1) = trans.warped.M1(k1,4) + trans.warped.M1(k1,k1) * ...
             single(spm_slice_vol(trans.warped.y(:,:,:,k1),eyev*spm_matrix([0 0 i]), ...
             trans.native.Vo.dim(1:2),[1,NaN])); % adapt for res

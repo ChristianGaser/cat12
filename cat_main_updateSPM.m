@@ -1,4 +1,4 @@
-function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,tpm,job,res,stime,stime2)
+function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,tpm,job,res,stime,stime2)
 % ______________________________________________________________________
 %  Update SPM preprocessing. 
 %  Subfunction of cat_main.
@@ -16,9 +16,8 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
   try
     clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
 
-    if job.extopts.ignoreErrors > 2  && ...
-       ~( ( clsint(3) < clsint(1) ) &&  ( clsint(1) < clsint(2) ) ) % ~T1
-      error('runbackup')
+    if job.extopts.ignoreErrors > 2 % && ~( ( clsint(3) < clsint(1) ) &&  ( clsint(1) < clsint(2) ) ) % ~T1
+      error('cat_main_updateSPM:runbackup','Test backup function.');
     end
     
     
@@ -384,19 +383,25 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
     fprintf('%5.0fs\n',etime(clock,stime));
  
   catch e
+  % just try to translate the input to the output
+  %   [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,tpm,job,res,stime,stime2)
+
     if job.extopts.ignoreErrors < 2
       rethrow(e)
+    else 
+      % print that that backup function is used 
+      % print the error message as warning in the developer mode
+      cat_io_addwarning('cat_main_updateSPM:runbackup','IgnoreErrors: Run backup function',1)
+      if ~strcmp(e.identifier, 'cat_main_updateSPM:runbackup')
+        fprintf('\n'); 
+        warning(e.message); 
+        stime2 = cat_io_cmd(' ','g5','',job.extopts.verb-1); 
+      end
     end
-    % just try to translate the input to the output
-    % [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,tpm,job,res,stime,stime2)
-
-    cat_io_cprintf('warn','\n  IgnoreErrors: cat_main_updateSPM - run backup function          ')
     
-    vx_vol  = sqrt(sum(res.image(1).mat(1:3,1:3).^2)); 
+    % voxel size
+    vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2)); 
     
-    if ~exist('Yb','var')
-      Yb = cat_vol_morph( cat_vol_morph( smooth3( sum(P(:,:,:,1:3),4))>192 , 'do' ,3,vx_vol) , 'lc' , 2,vx_vol);  
-    end
     
     % correct background
     if isfield(res,'bge')
@@ -405,16 +410,19 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
     end
 
 
-    %% initial definition for threshold function 
+    % initial definition for threshold function 
     Ycls = cell(1,size(P,4)); 
+    Yb0  = cat_vol_morph( cat_vol_morph( smooth3( sum(P(:,:,:,1:3),4))>192 , 'do' ,3,vx_vol) , 'lc' , 2,vx_vol);  
     for k1 = 1:size(P,4)
       if k1<4
-        Ycls{k1} = P(:,:,:,k1) .* uint8(Yb);
+        Ycls{k1} = P(:,:,:,k1) .* uint8(Yb0);
       else
-        Ycls{k1} = P(:,:,:,k1) .* uint8(~Yb);
+        Ycls{k1} = P(:,:,:,k1) .* uint8(~Yb0);
       end        
     end
-  
+    clear Yb0; 
+    
+    
     % T3th - brain tissue thresholds
     % Use median for WM threshold estimation to avoid problems in case of WMHs!
     if ~exist('T3th','var') || any( isnan(T3th) )
@@ -424,19 +432,23 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
       for i=1:3, if isnan(T3th(i)), T3th(i) = clsints(i); end; end
     end      
 
+    
     % Yb - skull-stripping
     if ~exist('Yb','var')
       if size(P,4)==4 
+        cat_io_cprintf('warn','\n  Skull-stripped input - refine original mask                                 ')
         [Yb,Ybb,Yg,Ydiv,P] = cat_main_updateSPM_skullstriped(Ysrc,P,res,vx_vol,T3th); %#ok<ASGLU>
         clear Ybb Yg Ydiv 
       else
         try
-          Yb = cat_main_APRG(Ysrc,P,res,double(T3th));
+          Yb = cat_main_APRG(Ysrc,P,res,double(T3th)); 
         catch
           try
+            cat_io_addwarning('cat_main_updateSPM:runbackup:APRGerr','IgnoreErrors: cat_main_updateSPM APRG failed - run GCUT function.\n',1); 
             Yb = cat_main_updateSPM_gcut0(Ysrc,P,vx_vol,T3th);
           catch   
-            Yb = cat_vol_morph( sum(P(:,:,:,1:3),4) , 'lc' , 2);  
+            cat_io_addwarning('cat_main_updateSPM:runbackup:GCUTerr','IgnoreErrors: cat_main_updateSPM GCUT failed - use SPM brain mask.\n',1); 
+            Yb = cat_vol_morph( sum(P(:,:,:,1:3) > 128,4) , 'lc' , 2);  
           end
         end
       end
@@ -450,7 +462,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
       clear Ym0
     end
 
-    %% final definition with corrected probability maps 
+    % final definition with corrected probability maps 
     Ycls = cell(1,size(P,4)); 
     Ysb  = zeros(size(Ysrc),'single'); 
     Ysnb = zeros(size(Ysrc),'single'); 
@@ -472,9 +484,65 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,t
     end
     clear Ysb Ysnb;
     
-    fprintf('%5.0fs\n',etime(clock,stime));
-     
   end
+
+  
+  %% prepared for improved partitioning - RD20170320, RD20180416
+  %  Update the initial SPM normalization by a fast version of Shooting 
+  %  to improve the skull-stripping, the partitioning and LAS.
+  %  We need stong deformations in the ventricle for the partitioning 
+  %  but low deformations for the skull-stripping. Moreover, it has to 
+  %  be really fast > low resolution (3 mm) and less iterations. 
+  %  The mapping has to be done for the TPM resolution, but we have to 
+  %  use the Shooting template for mapping rather then the TPM because
+  %  of the cat12 atlas map.
+  %  
+  %  #### move fast shooting to the cat_main_updateSPM function ####
+  % 
+  stime = cat_io_cmd(sprintf('  Update registration'),'g5','',job.extopts.verb); 
+
+  res2 = res; 
+  job2 = job;
+  job2.extopts.verb           = 0;      % do not display process (people would may get confused) 
+  job2.extopts.vox            = abs(res.tpm(1).mat(1));  % TPM resolution to replace old Yy  
+  if job.extopts.regstr>0
+    job2.extopts.regstr       = 15;     % low resolution 
+    job2.extopts.reg.nits     = 16;     % less iterations
+    job2.extopts.reg.affreg   = 0;      % new affine registration
+    job2.extopts.shootingtpms(3:end) = [];             % remove high templates, we only need low frequency corrections
+    res2 = res; 
+    res2.do_dartel            = 2;      % use shooting
+  else
+    fprintf('\n');
+    job2.extopts.verb         = 0; 
+    job2.extopts.vox          = abs(res.tpm(1).mat(1));  % TPM resolution to replace old Yy 
+    job2.extopts.reg.iterlim  = 1;      % only 1-2 inner iterations
+    job2.extopts.reg.affreg   = 0;      % new affine registration
+    res2.do_dartel            = 1;      % use dartel
+  end
+  if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
+    [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M,res.Ylesion); 
+  else
+    [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M); 
+  end
+  Yy2  = trans.warped.y;
+ 
+  % Shooting did not include areas outside of the boundary box
+  %
+  % ### add to cat_main_registration?
+  %
+  Ybd = true(size(Ysrc)); Ybd(3:end-2,3:end-2,3:end-2) = 0; Ybd(~isnan(Yy2(:,:,:,1))) = 0; Yy2(isnan(Yy2))=0; 
+  for k1=1:3
+    Yy2(:,:,:,k1) = Yy(:,:,:,k1) .* Ybd + Yy2(:,:,:,k1) .* (1-Ybd);
+    Yy2(:,:,:,k1) = cat_vol_approx(Yy2(:,:,:,k1),'nn',vx_vol,3); 
+  end
+  Yy = Yy2; 
+  clear Yy2; 
+ 
+  fprintf('%5.0fs\n',etime(clock,stime));
+  
+  
+  
 end
 function [Yb,Ybb,Yg,Ydiv,P] = cat_main_updateSPM_skullstriped(Ysrc,P,res,vx_vol,T3th)
     Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
