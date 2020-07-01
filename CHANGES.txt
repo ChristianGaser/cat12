@@ -1,10 +1,34 @@
 ------------------------------------------------------------------------
-r1670 | gaser | 2020-06-30 17:07:30
+r1671 | dahnke | 2020-07-01 23:28:05
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_output.m
+M       cat_io_addwarning.m
+M       cat_io_report.m
+M       cat_main.m
+M       cat_main_amap.m
+M       cat_main_gintnorm.m
+M       cat_main_registration.m
+M       cat_main_reportstr.m
+M       cat_main_updateSPM.m
+M       cat_main_write.m
+M       cat_run_job.m
+M       cat_vol_qa.m
+
+(1) Fixed:     Updated command line output in cat_main_updateSPM (unfinished).
+(2) Changed:   Updated handling of preprocessing warnings (unfinished).
+(3) Fixed:     Corrected use of affine registration in cat_main_registration
+               and added longitudinal prior case. 
+
+------------------------------------------------------------------------
+r1670 | gaser | 2020-06-30 17:08:07 +0200 (Di, 30 Jun 2020) | 5 lines
 
 Changed paths:
 M       CHANGES.txt
 
 Changed: Corrected CHANGES.txt
+
 ------------------------------------------------------------------------
 r1669 | gaser | 2020-06-30 16:52:56 +0200 (Di, 30 Jun 2020) | 17 lines
 

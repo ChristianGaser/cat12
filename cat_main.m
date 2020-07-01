@@ -68,7 +68,7 @@ if ~isfield(res,'spmpp')
   %  starting point of the refined CAT preprocessing.
   %  RD202006: add ignoreErrors backup
   %  -------------------------------------------------------------------
-  [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,tpm,job,res,stime,stime2);
+  [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,tpm,job,res,stime,stime2);
   clear P; 
 
   
@@ -120,11 +120,11 @@ if ~isfield(res,'spmpp')
     [Ysrcr,resGI] = cat_vol_resize(Ysrc      , 'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm');
     Ybr           = cat_vol_resize(single(Yb), 'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm')>0.5;
     Yclsr = cell(size(Ycls)); for i=1:6, Yclsr{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,min(vx_vol*2,1.4),32); end
-    [Ymr,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrcr,Yclsr,Ybr,resGI.vx_volr,res,Yy,job.extopts);
+    [Ymr,T3th,Tth,job.inv_weighting,noise] = cat_main_gintnorm(Ysrcr,Yclsr,Ybr,resGI.vx_volr,res,Yy,job.extopts);
     clear Ymr Ybr Ysrcr Yclsr; 
     Ym = cat_main_gintnorm(Ysrc,Tth); 
   else
-    [Ym,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,job.extopts);
+    [Ym,T3th,Tth,job.inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,job.extopts);
   end
   job.extopts.inv_weighting = job.inv_weighting; 
   fprintf('%5.0fs\n',etime(clock,stime));
@@ -175,7 +175,7 @@ if ~isfield(res,'spmpp')
   %  
   %  #### move fast shooting to the cat_main_updateSPM function ####
   % 
-  if job.extopts.WMHC || job.extopts.SLC
+  if 0 %job.extopts.WMHC || job.extopts.SLC
     stime = cat_io_cmd(sprintf('Fast registration'),'','',job.extopts.verb); 
 
     res2 = res; 
@@ -274,7 +274,8 @@ if ~isfield(res,'spmpp')
     cat_io_cmd(' ','','',job.extopts.verb,stime); 
     fprintf('%5.0fs\n',etime(clock,stime));
   else
-    cat_io_cprintf('warn','  Skip LAS due to image contrast. Use global normalization.        \n');
+    cat_io_addwarning('cat_main:skipLAS','Skip LAS due to image contrast. Use global normalization.',0);
+    fprintf('%5.0fs\n',etime(clock,stime));
     Ymi = Ym; 
   end
   if ~debug; clear Ysrc ; end
@@ -303,19 +304,15 @@ if ~isfield(res,'spmpp')
       [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
       fprintf('%5.0fs\n',etime(clock,stime));
       if isfield(res,'Ylesion') && sum(res.Ylesion(:)==0) && job.extopts.SLC==1
-        cat_warnings = cat_io_addwarning(cat_warnings,...
-          'CAT:cat_main_SLC_noExpDef','SLC is set for manual lesions corection but no lesions were found!'); 
-        fprintf('\n');
+        cat_io_addwarning('CAT:cat_main_SLC_noExpDef','SLC is set for manual lesions corection but no lesions were found!',1); 
       end
     end
   else
     [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
     fprintf('%5.0fs\n',etime(clock,stime));
     if job.extopts.expertgui && isfield(res,'Ylesion') && sum(res.Ylesion(:))>1000 && job.extopts.ignoreErrors < 2
-      cat_warnings = cat_io_addwarning(cat_warnings,...
-          'CAT:cat_main_SLC_noExpDef',sprintf(['SLC is deactivated but there are %0.2f cm' ...
-          native2unicode(179, 'latin1') ' of voxels with zero value inside the brain!'],prod(vx_vol) .* sum(res.Ylesion(:)) / 1000 )); 
-      fprintf('\n');
+      cat_io_addwarning('CAT:cat_main_SLC_noExpDef',sprintf(['SLC is deactivated but there are %0.2f cm' ...
+          native2unicode(179, 'latin1') ' of voxels with zero value inside the brain!'],prod(vx_vol) .* sum(res.Ylesion(:)) / 1000 ),1); 
     end
   end
   if ~debug; clear YBG Ycr Ydt; end
@@ -376,11 +373,12 @@ if ~isfield(res,'spmpp')
 
         fprintf('%5.0fs\n',etime(clock,stime));
       catch %#ok<CTCH>
-        fprintf('\n'); cat_warnings = cat_io_addwarning(cat_warnings,'CAT:cat_main_gcut:err99','Unknown error in cat_main_gcut. Use old brainmask.'); fprintf('\n');
+        fprintf('\n'); 
+        cat_io_addwarning('CAT:cat_main_gcut:err99','Unknown error in cat_main_gcut. Use old brainmask.',1);
         job.extopts.gcutstr = 99;
       end
     else
-      cat_io_cprintf('warn','\n  No graph-cut backup function. \n')
+      cat_io_cprintf('warn','\n  No graph-cut backup function. Use old brainmask \n')
     end
   end
   % correct mask for skull-stripped images
@@ -545,9 +543,8 @@ if ~isfield(res,'spmpp')
     Yp0b = cat_vol_ctype(single(Ycls{1})*2/5 + single(Ycls{2})*3/5 + single(Ycls{3})*1/5,'uint8');
   
     if qa.subjectmeasures.WMH_rel>3 || qa.subjectmeasures.WMH_WM_rel>5 % #% of the TIV or the WM are affected
-      cat_warnings = cat_io_addwarning(cat_warnings,...
-        'MATLAB:SPM:CAT:cat_main:uncorrectedWMH',...
-        sprintf('Uncorrected WM lesions greater (%2.2f%%%%%%%% of the WM)!\\n',qa.subjectmeasures.WMH_rel));
+      cat_io_addwarning('MATLAB:SPM:CAT:cat_main:uncorrectedWMH',...
+        sprintf('Uncorrected WM lesions greater (%2.2f%%%%%%%% of the WM)!',qa.subjectmeasures.WMH_rel),1);
     end
   end
   
@@ -571,7 +568,7 @@ else
 %  We simply use the SPM segmentation as it is without further modelling of
 %  a PVE or other refinements. 
 %  ------------------------------------------------------------------------
-  [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,cat_warnings] = ...
+  [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa] = ...
     cat_main_SPMpp(Ysrc,Ycls,Yy,job,res);
   
   job.inv_weighting = 0; 
@@ -620,7 +617,7 @@ end
         try
           [trans,res.ppe.reg,res.Affine] = cat_main_registration(job,res,Yclsd,Yy,tpm.M,Ylesions);
         catch
-          if isfield(res,'imagesc'); VT0 = res.imagec(1); else VT0 = res.image0(1); end
+          if isfield(res,'imagesc'); VT0 = res.imagec(1); else, VT0 = res.image0(1); end
           trans.native.Vo = VT0;
           trans.native.Vi = res.image(1);
         end
@@ -647,7 +644,7 @@ end
 %% write results
 %  ---------------------------------------------------------------------
 Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
-cat_warnings = cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans,cat_warnings);
+cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans);
 if 0 
   %% just for tests
   %  Write important maps with push and pull and resolution specific file names.  
@@ -666,11 +663,11 @@ if 0
   res2.image0.fname         = fullfile(pppush,sprintf('%s%s%1.2f%s',ffpush,'-push',job.extopts.vox,eepush)); 
   trans2.warped.push        = 1; 
   trans2.warped.verb        = 1; 
-  cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job2,res2,trans2,cat_warnings);
+  cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job2,res2,trans2);
   % write pull for comparision 
   res2.image0.fname         = fullfile(pppush,sprintf('%s%s%1.2f%s',ffpush,'-pull',job.extopts.vox,eepush)); 
   trans2.warped.push        = 0; 
-  cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job2,res2,trans2,cat_warnings);
+  cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job2,res2,trans2);
   clear res2 job2 trans2;
 end
 if ~debug, clear Yp0; end
@@ -841,7 +838,7 @@ stime = cat_io_cmd('Quality check'); job.stime = stime;
 Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; Yp0(Yp0>3.1) = nan; % no analysis in WMH regions
 % in case of SPM input segmentation we have to add the name here to have a clearly different naming of the CAT output 
 if isfield(res,'spmpp') && res.spmpp, namspm = 'c1'; else, namspm = ''; end
-qa    = cat_vol_qa('cat12',Yp0,VT0.fname,Ym,res,cat_warnings,job.extopts.species, ...
+qa    = cat_vol_qa('cat12',Yp0,VT0.fname,Ym,res,job.extopts.species, ...
           struct('write_csv',0,'write_xml',1,'method','cat12','job',job,'qa',qa,'prefix',['cat_' namspm]));
 clear Yp0;
 
@@ -885,7 +882,7 @@ clear Yth1;
 %  ---------------------------------------------------------------------
 if job.extopts.print
   %%
-  str = cat_main_reportstr(job,res,qa,cat_warnings);
+  str = cat_main_reportstr(job,res,qa);
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
   if ~exist('Psurf','var'), Psurf = ''; end
   cat_main_reportfig(Ymi,Yp0,Yl1,Psurf,job,qa,res,str);
@@ -1024,19 +1021,18 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
   d = VT.dim(1:3);
 
 return
-function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,cat_warnings] = cat_main_SPMpp(Ysrc,Ycls,Yy,job,res)
+function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa] = cat_main_SPMpp(Ysrc,Ycls,Yy,job,res)
 %% SPM segmentation input  
 %  ------------------------------------------------------------------------
 %  Here, DARTEL and PBT processing is prepared. 
 %  We simply use the SPM segmentation as it is, without further modelling 
 %  of the partial volume effect or other refinements. 
 %  ------------------------------------------------------------------------
-
+  
   job.extopts.WMHC = 0;
   job.extopts.SLC  = 0;
   
-  cat_warnings        = struct('identifier',{},'message',{});   % warning structure from cat_main_gintnorm 
-  NS                  = @(Ys,s) Ys==s | Ys==s+1;                % for side independent atlas labels
+  NS = @(Ys,s) Ys==s | Ys==s+1;  % for side independent atlas labels
   
   % QA WMH values required by cat_vol_qa later
   qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE

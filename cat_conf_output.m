@@ -8,10 +8,12 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
 %
 %#ok<*AGROW>
  
-  try
-    expert = cat_get_defaults('extopts.expertgui');
-  catch %#ok<CTCH>
-    expert = 0; 
+  if ~exist('expert','var')
+    try
+      expert = cat_get_defaults('extopts.expertgui');
+    catch %#ok<CTCH>
+      expert = 0; 
+    end
   end
 
   %------------------------------------------------------------------------
@@ -19,9 +21,15 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
   surface        = cfg_menu;
   surface.tag    = 'surface';
   surface.name   = 'Surface and thickness estimation';
-  surface.labels = {'No','Yes'};
-  surface.values = {0 1};
-  surface.def    = @(val)cat_get_defaults('output.surface', val{:});
+  if exist('/Users/dahnke','dir') % only to support a fast overview also with the default GUI 
+    surface.labels = {'No','Yes','Yes (fast, no registration)'};
+    surface.values = {0 1 5};
+    surface.val    = {5}; 
+  else
+    surface.labels = {'No','Yes'};
+    surface.values = {0 1};
+    surface.def    = @(val)cat_get_defaults('output.surface', val{:});
+  end
   surface.help   = {
   'Use projection-based thickness (PBT) (Dahnke et al. 2012) to estimate cortical thickness and to create the central cortical surface for left and right hemisphere. Surface reconstruction includes topology correction (Yotter et al. 2011), spherical inflation (Yotter et al.) and spherical registration. Additionally you can also estimate surface parameters such as gyrification, cortical complexity or sulcal depth that can be subsequently analyzed at each vertex of the surface. '
   ''

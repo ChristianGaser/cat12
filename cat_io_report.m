@@ -205,7 +205,7 @@ function cat_io_report(job,qa,subj,createerr)
     qa.subjectmeasures.vol_abs_CGW = nan(1,4);
     qa.subjectmeasures.vol_rel_CGW = nan(1,4);
     qa.subjectmeasures.vol_TIV     = nan;
-    str = cat_main_reportstr(job,cat_err_res.res,qa,{});
+    str = cat_main_reportstr(job,cat_err_res.res,qa);
     str = str{1}; 
   
 

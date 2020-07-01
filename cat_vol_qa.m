@@ -78,8 +78,6 @@ function varargout = cat_vol_qa(action,varargin)
   % init output
   QAS = struct(); 
   QAR = struct(); 
-  cat_qa_warnings = struct('identifier',{},'message',{});
-  cat_warnings    = struct('identifier',{},'message',{});
   if nargout>0, varargout = cell(1,nargout); end
 
   if cat_get_defaults('extopts.subfolders')
@@ -215,12 +213,11 @@ function varargout = cat_vol_qa(action,varargin)
         Ym  = varargin{3}; 
         res = varargin{4};
         V   = res.image;
-        cat_warnings = varargin{5};
-        species = varargin{6};
-        if isfield(varargin{7},'qa')
-          if isfield(varargin{7}.qa,'software') && isfield(varargin{7}.qa.software,'version_segment'), QAS.software.version_segment = varargin{7}.qa.software.version_segment; end
-          if isfield(varargin{7}.qa,'qualitymeasures'), QAS.qualitymeasures = cat_io_updateStruct(QAS,varargin{7}.qa.qualitymeasures); end
-          if isfield(varargin{7}.qa,'subjectmeasures'), QAS.subjectmeasures = cat_io_updateStruct(QAS,varargin{7}.qa.subjectmeasures); end
+        species = varargin{5};
+        if isfield(varargin{6},'qa')
+          if isfield(varargin{6}.qa,'software') && isfield(varargin{6}.qa.software,'version_segment'), QAS.software.version_segment = varargin{6}.qa.software.version_segment; end
+          if isfield(varargin{6}.qa,'qualitymeasures'), QAS.qualitymeasures = cat_io_updateStruct(QAS,varargin{6}.qa.qualitymeasures); end
+          if isfield(varargin{6}.qa,'subjectmeasures'), QAS.subjectmeasures = cat_io_updateStruct(QAS,varargin{6}.qa.subjectmeasures); end
         end
         % opt = varargin{end} in line 96)
         opt.verb = 0;
@@ -340,7 +337,7 @@ function varargout = cat_vol_qa(action,varargin)
           end
   
           res.image = spm_vol(Pp0{fi}); 
-          [QASfi,QAMfi,cat_qa_warnings{fi}] = cat_vol_qa('cat12',Yp0,Vo,Ym,res,cat_warnings,species,opt);
+          [QASfi,QAMfi] = cat_vol_qa('cat12',Yp0,Vo,Ym,res,species,opt);
 
      
           QAS = cat_io_updateStruct(QAS,QASfi,0,fi);
@@ -590,12 +587,13 @@ function varargout = cat_vol_qa(action,varargin)
       QAS.software.opengl       = opengl('INFO');
       QAS.software.opengldata   = opengl('DATA');
       warning on
-      QAS.software.cat_warnings = cat_warnings;
+      QAS.software.cat_warnings = cat_io_addwarning;
  
       %QAS.parameter             = opt.job; 
       if isfield(opt,'job')
         QAS.parameter.opts        = opt.job.opts;
         QAS.parameter.extopts     = opt.job.extopts;
+        %QAS.parameter.cat_pp      = 
         %QAS.parameter.output      = opt.job.output;
         if exist('res','var')
           rf = {'Affine','lkp','mn','vr'}; % important SPM preprocessing variables
@@ -607,7 +605,6 @@ function varargout = cat_vol_qa(action,varargin)
      
       %% resolution, boundary box
       %  ---------------------------------------------------------------
-      QAS.software.cat_qa_warnings = struct('identifier',{},'message',{});
       vx_vol  = sqrt(sum(Vo.mat(1:3,1:3).^2));
       vx_voli = sqrt(sum(V.mat(1:3,1:3).^2));
       Yp0toC  = @(Yp0,c) 1-min(1,abs(Yp0-c));
@@ -895,7 +892,6 @@ function varargout = cat_vol_qa(action,varargin)
 
   end
 
-  if nargout>2, varargout{3} = cat_qa_warnings; end
   if nargout>1, varargout{2} = QAR; end
   if nargout>0, varargout{1} = QAS; end 
 
