@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1671 | dahnke | 2020-07-01 23:28:05
+r1672 | dahnke | 2020-07-02 10:25:30
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main_updateWMHs.m
+
+(1) Fixed:     Corrected bug of missing variable in case of WMHs.
+------------------------------------------------------------------------
+r1671 | dahnke | 2020-07-01 23:30:25 +0200 (Mi, 01 Jul 2020) | 21 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -20,6 +28,7 @@ M       cat_vol_qa.m
 (2) Changed:   Updated handling of preprocessing warnings (unfinished).
 (3) Fixed:     Corrected use of affine registration in cat_main_registration
                and added longitudinal prior case. 
+
 
 ------------------------------------------------------------------------
 r1670 | gaser | 2020-06-30 17:08:07 +0200 (Di, 30 Jun 2020) | 5 lines
