@@ -38,7 +38,7 @@ function Ycls = cat_main_updateWMHs(Ym,Ycls,Yy,tpm,job,res,trans)
         Yy = double(trans.warped.y);
       end
       YwmA = single( spm_sample_vol( VwmA ,Yy(:,:,:,1),Yy(:,:,:,2),Yy(:,:,:,3),1)); YwmA = reshape(YwmA,size(Ym)); 
-    else
+    elseif isfield(trans,'atlas')
       %% load template 
       VwmA = spm_vol([job.extopts.templates{end},',2']);  
       
@@ -60,6 +60,30 @@ function Ycls = cat_main_updateWMHs(Ym,Ycls,Yy,tpm,job,res,trans)
         Yy = double(Yy); 
       else
         Yy = double(trans.warped.y);
+      end
+      YwmA = single( spm_sample_vol( VwmA ,Yy(:,:,:,1),Yy(:,:,:,2),Yy(:,:,:,3),1)); YwmA = reshape(YwmA,size(Ym)); 
+    else
+      %% load template 
+      VwmA = spm_vol([job.extopts.templates{end},',2']);  
+      
+      if any( VwmA.dim ~= size(Yy(:,:,:,1)) )
+        % interpolation
+        yn = numel(Yy); 
+        p  = ones([4,yn/3],'single'); 
+        p(1,:) = Yy(1:yn/3);
+        p(2,:) = Yy(yn/3+1:yn/3*2);
+        p(3,:) = Yy(yn/3*2+1:yn);
+        amat   = VwmA.mat \ tpm.M; 
+        p      = amat(1:3,:) * p;
+
+        Yy = zeros([res.image(1).dim(1:3),3],'single'); 
+        Yy(1:yn/3)        = p(1,:);
+        Yy(yn/3+1:yn/3*2) = p(2,:);
+        Yy(yn/3*2+1:yn)   = p(3,:);
+
+        Yy = double(Yy); 
+      else
+        Yy = double(Yy);
       end
       YwmA = single( spm_sample_vol( VwmA ,Yy(:,:,:,1),Yy(:,:,:,2),Yy(:,:,:,3),1)); YwmA = reshape(YwmA,size(Ym)); 
     end
