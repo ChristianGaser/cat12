@@ -1,17 +1,19 @@
-function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th)
+function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th,cutstr)
 % ______________________________________________________________________
 %  Skull-stripping subfunction APRG (adaptive probability region-growing)
 %  of cat_main_updateSPM.
 %
-%  [Yb,Ym0,Yg,Ydiv] = cat_main_updateSPM(Ysrc,P,res)
+%  [Yb,Ym0,Yg,Ydiv] = cat_main_updateSPM(Ysrc,P,res,T3th,cutstr)
 %
-%   Ysrc  .. original input images
-%   P     .. tissue segmenation (4D)
-%   res   .. SPM preprocessing structure
-%   Yb    .. binary brain mask
-%   Ym0   .. probability brain mask
-%   Yg    .. absolute gradient map (eg. for tissue edges)
-%   Ydiv  .. divergence maps (eg. for blood vessels)
+%   Ysrc   .. original input images
+%   P      .. tissue segmenation (4D)
+%   res    .. SPM preprocessing structure
+%   T3th   .. tissue thresholds
+%   cutstr .. wider (0) or tider (0.99) masks (1 - auto; default: 0.5) 
+%   Yb     .. binary brain mask
+%   Ym0    .. probability brain mask
+%   Yg     .. absolute gradient map (eg. for tissue edges)
+%   Ydiv   .. divergence maps (eg. for blood vessels)
 % ______________________________________________________________________
 %
 %   Robert Dahnke (robert.dahnke@uni-jena.de)
@@ -25,6 +27,8 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th)
 
   % adaptive probability region-growing
   if debug, Po=P; end
+  
+  if ~exist('cutstr','var'), cutstr = 0; else, cutstr = mod(cutstr,1); end 
 
   vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
   clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
@@ -127,6 +131,8 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th)
   
 
   %% GM-CSF region
+if cutstr == 0 %old
+  %% GM-CSF region
   Yb2  = single(cat_vol_morph(Yb,'de',1.9,vx_vol)); 
   if T3th(1) < T3th(3)
     Yh   = (Yb2<0.5) & (Ysrc<sum(T3th(1:2).*[0.9 0.1]) | sum(P(:,:,:,4:6),4)>250 | ...
@@ -146,7 +152,34 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th)
   Yb(smooth3(Yb)<0.5) = 0; Yb(smooth3(Yb)>0.5) = 1; 
   Yb   = cat_vol_morph(Yb,'ldo',1.9,vx_vol);
   Yb   = cat_vol_morph(Yb,'ldc');
-
+else
+  Yb2  = single(cat_vol_morph(Yb,'de',1.9,vx_vol)); 
+    if T3th(1) < T3th(3)
+      Yh   = (Yb2<0.5) & (Ysrc<(T3th(1) - 0.5*(1-cutstr) * diff([T3th(1) min(T3th(2:3))])) | ...
+              cat_vol_morph(sum(P(:,:,:,4:6),4)>250,'e',2,vx_vol) | ...
+              Ysrc>cat_stat_nanmean(mean(T3th(1:2))) | Yg>BVth); 
+    else
+      Yh   = (Yb2<0.5) & (Ysrc>(T3th(1) + 0.5*(1-cutstr) * diff([T3th(1) max(T3th(2:3))])/2)) | ...
+              cat_vol_morph(sum(P(:,:,:,4:6),4)>250,'e',2,vx_vol) | ...
+              Ysrc<(T3th(3) - sum(T3th(2:3).*[0.5 0.5]) | Yg>BVth); 
+    end
+    Yh(smooth3(Yh)>0.7) = 1; Yh(smooth3(Yh)<0.3) = 0;   
+    Yh   = cat_vol_morph(Yh,'dc',1) | cat_vol_morph(~Yb,'de',10,vx_vol); 
+    Yh   = cat_vol_morph(Yh,'de',1,vx_vol);  Yb2(Yh) = nan; if ~debug, clear Yh; end
+    if T3th(1) < T3th(3) % T1 
+      [Yb2,YD] = cat_vol_downcut(Yb2,Ysrc/T3th(3),max(0.03,min(0.1,-RGth*2))); clear Yb2; %#ok<ASGLU>
+    else
+      [Yb2,YD] = cat_vol_downcut(Yb2,1 - Ysrc/T3th(3),max(0.03,min(0.1,-RGth))); clear Yb2; %#ok<ASGLU>
+    end
+    %%
+    Yb( (YD < 500 / mean(vx_vol) * (1 - cutstr/2)) & ...
+      Ysrc<(T3th(1) + 0.25*(1-cutstr) * min( abs( [ diff(T3th(1:2)) , diff(T3th(1:2:3)) ] ))) & ...
+      Ysrc>(T3th(1) - 0.25*(1-cutstr) * min( abs( [ diff(T3th(1:2)) , diff(T3th(1:2:3)) ] ))) ...
+      ) = 1; clear YD; 
+    Yb(smooth3(Yb)<0.5) = 0; Yb(smooth3(Yb)>0.5) = 1; 
+    Yb   = cat_vol_morph(Yb,'ldo',1.9,vx_vol);
+    Yb   = cat_vol_morph(Yb,'ldc');
+end
 
 
   %% CSF mask 2 with Yb
@@ -240,7 +273,7 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th)
   %  The default value of 0.5 which works best for validation data.
   %  However, by setting the value to 1 we can also use a surface to find the 
   %  optimal value, which is currently not stable enough.
-  cutstr    = 0.5; 
+  if cutstr==0; cutstr = 0.5; end
   cutstrs   = linspace(0.05,0.95,4); % 0.05,0.35,0.65,0.95]; 
   cutstrval = nan(1,4); 
   if debug, cutstrsa = zeros(0,8); end

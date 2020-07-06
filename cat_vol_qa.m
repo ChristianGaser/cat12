@@ -526,10 +526,11 @@ function varargout = cat_vol_qa(action,varargin)
       end
       
       
-      %opt.job  = rmfield(opt.job,{'data','channel','output'}); 
-      %QAS.parameter             = opt.job; 
+      % save important preprocessing parameter 
+      % remove LAS
       QAS.parameter.opts        = opt.job.opts;
-      QAS.parameter.extopts     = opt.job.extopts;
+      QAS.parameter.extopts     = rmfield(opt.job.extopts,...
+        {'LAB','atlas','satlas','darteltpms','shootingtpms','fontsize'});
       %QAS.parameter.output      = opt.job.output;
       QAS.parameter.caterr      = opt.caterr; 
       QAS.error                 = opt.caterrtxt; 
@@ -583,10 +584,13 @@ function varargout = cat_vol_qa(action,varargin)
       QAS.software.markdefs     = which('cat_stat_marks');
       QAS.software.qamethod     = action; 
       QAS.software.date         = datestr(clock,'yyyymmdd-HHMMSS');
+      % RD202007: not requried 
+      %{
       warning off
       QAS.software.opengl       = opengl('INFO');
       QAS.software.opengldata   = opengl('DATA');
       warning on
+      %}
       QAS.software.cat_warnings = cat_io_addwarning;
  
       %QAS.parameter             = opt.job; 

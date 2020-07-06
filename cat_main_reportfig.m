@@ -91,13 +91,24 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   % SPM_orthviews work with 60 values. 
   % For the surface we use a larger colormap.
   surfcolors = 128; 
+% #################
+% T1 vs T2/PD labeling
+% ################
   switch lower(cm)
     case {'bcgwhw','bcgwhn'} 
       % CAT colormap with larger range colorrange from 0 (BG) to 1 (WM) to 2 (HD).  
       ytick        = [1,5:5:60];
-      yticklabel   = {' BG',' ',' CSF',' CGM',' GM',' GWM',' WM',' ',' ',' ',' ',' ',' BV / HD '};
-      yticklabelo  = {' BG',' ','    ','    ','   ','     ',' avg WM  ',' ',' ',' ',' ',' ',' BV / HD '};
-      yticklabeli  = {' BG',' ','    ','    ','   ','  ','  ',' ',' ',' ',' ',' ',' BV / HD '};
+      if job.extopts.inv_weighting
+        Tth = [cat_stat_nanmedian(Ym(Yp0(:)>0.5 & Yp0(:)<1.5)),...
+               cat_stat_nanmedian(Ym(Yp0(:)>1.5 & Yp0(:)<2.5)),...
+               cat_stat_nanmedian(Ym(Yp0(:)>2.5 & Yp0(:)<3.5))]; 
+        [x,od] = sort(Tth); tiss = {' CSF',' GM',' WM'};  
+        yticklabel = {' BG',' ',tiss{od(1)},'    ',tiss{od(2)},'    ',tiss{od(3)},' ',' ',' ',' ',' ',' BV / HD '};
+      else
+        yticklabel = {' BG',' ',' CSF',' CGM',' GM',' GWM',' WM',' ',' ',' ',' ',' ',' BV / HD '};
+      end
+      yticklabelo  = {' BG',' ','    ','    ','   ','    ',' avg WM  ',' ',' ',' ',' ',' ',' BV / HD '};
+      yticklabeli  = {' BG',' ','    ','    ','   ','    ','         ',' ',' ',' ',' ',' ',' BV / HD '};
       cmap         = [cat_io_colormaps([cm 'ov'],60);flipud(cat_io_colormaps([cm 'ov'],60));jet(surfcolors)]; 
       cmmax        = 2;
     case {'jet','hsv','hot','cool','spring','summer','autumn','winter','gray','bone','copper','pink'}
@@ -132,6 +143,10 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   colormap(cmap);
   try spm_orthviews('Redraw'); end
 
+  
+% ##########
+% get axis elements for refined placement of colorbars
+% ###########
   warning('off','MATLAB:tex')
   htext = zeros(5,2,2);
   for i=1:size(str{1},2)   % main parameter
@@ -196,13 +211,17 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     % remove outlier to make it orthviews easier
     Yo = cat_stat_histth(Yo,99.99); 
    
-    if job.inv_weighting
-      WMth = cat_stat_nanmedian(Yo(Yp0(:)>2.5 & Yp0(:)<3.5))/2*3;
-      T1txt = '*.nii (Original PD/T2)'; 
+    if job.extopts.inv_weighting
+      Tth  = [cat_stat_nanmedian(Yo(Yp0(:)>0.5 & Yp0(:)<1.5)),...
+              cat_stat_nanmedian(Yo(Yp0(:)>1.5 & Yp0(:)<2.5)),...
+              cat_stat_nanmedian(Yo(Yp0(:)>2.5 & Yp0(:)<3.5))]; 
+      WMth = min(max(Tth),median(Tth)*2);
+      wstr = 'PD/T2';
     else
       WMth = cat_stat_nanmedian(Yo(Yp0(:)>2.8 & Yp0(:)<3.2)); clear Yo; 
-      T1txt = '*.nii (Original T1)'; 
+      wstr = 'T1';
     end
+    T1txt = ['*.nii (Original ' wstr ')']; 
     if ~debug, clear Yo; end
 
     VT0x.mat = dispmat * VT0x.mat; 
@@ -214,7 +233,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     cc{1} = axes('Position',[pos(1,1) + 0.26 0.37 0.02 0.15],'Parent',fg);     
     image((60:-1:1)','Parent',cc{1});
 
-    if job.inv_weighting
+    if job.extopts.inv_weighting
       set(cc{1},'YTick',ytick,'YTickLabel',fliplr(yticklabeli),'XTickLabel','','XTick',[],'TickLength',[0 0],...
         'FontSize',fontsize-1,'FontWeight','Bold','YAxisLocation','right');
     else  
@@ -239,7 +258,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     Vm.mat    = dispmat * Vm.mat; 
     try
       hhm = spm_orthviews('Image',Vm,pos(2,:));
-      spm_orthviews('Caption',hhm,{'m*.nii (Intensity Normalized T1)'},'FontSize',fontsize-1,'FontWeight','Bold');
+      spm_orthviews('Caption',hhm,{['m*.nii (Intensity normalized ' wstr ')']},'FontSize',fontsize-1,'FontWeight','Bold');
       spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
       cc{2} = axes('Position',[pos(2,1) + 0.26 0.37 0.02 0.15],'Parent',fg);
       image((60:-1:1)','Parent',cc{2}); 
@@ -579,9 +598,14 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
             V(:,4) = []; hSD{1}.patch(ppi).Vertices = V;
           end
 
+% ##########          
+% - 
+% - show thickness histogram (of each side) ?          
+% ##########          
+          if any( job.output.surface == [4 5] ); fst = ' \color[rgb]{1 0 0}FAST!'; else, fst = ''; end
           colormap(cmap);  set(hSD{1}.colourbar,'visible','off'); 
           cc{4} = axes('Position',[0.63 0.02 0.3 0.01],'Parent',fg); image((121:1:120+surfcolors),'Parent',cc{4});
-          set(cc{4},'XTick',1:(surfcolors-1)/6:surfcolors,'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
+          set(cc{4},'XTick',1:(surfcolors-1)/6:surfcolors,'XTickLabel',{'0','1','2','3','4','5',['          6 mm' fst]},...
             'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize-1,'FontWeight','Bold');
         catch
           cat_io_cprintf('warn','WARNING: Can''t display surface!\n',VT.fname);   
@@ -626,23 +650,33 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   end
 
   %% reset colormap to the simple SPM like gray60 colormap
+  % ... DELETE THIS LATER
+  %{
   if exist('hSD','var')
     % if there is a surface than we have to use the gray colormap also here
     % because the colorbar change!
+    % RD202007: I see nothing in a gray GM thickness map so I update the 
+    %           defintion of the colorbarimage and set only the lower 60 
+    %           colormap values (used by SPM) to gray
     try 
-      cat_surf_render2('ColourMap',hSD{1}.axis,gray(128));
+      %cat_surf_render2('ColourMap',hSD{1}.axis,gray(128));
       cat_surf_render2('Clim',hSD{1}.axis,[0 6]);
-      axes(cc{4}); image(0:60,'Parent',cc{4});
-      set(cc{4},'XTick',max(1,0:10:60),'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
+      axes(cc{4}); image(121:120+surfcolors,'Parent',cc{4}); %0:10:60
+      set(cc{4},'XTick',1:floor(surfcolors/6):surfcolors,'XTickLabel',{'0','1','2','3','4','5',['          6 mm' fst]},...
         'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize-1,'FontWeight','Bold');
     end
   end
+  %}
+  
+  %% new colorscale
+  cmap(1:60,:) = gray(60); cmap(61:120,:) = flip(pink(60),1); cmap(121:120+surfcolors,:) = jet(surfcolors); 
+  colormap(cmap); caxis([0,numel(cmap)]); 
 
-  % new colorscale
-  cmap = gray(60); colormap(cmap); caxis([0,numel(cmap)]); 
-
-  WMfactor0 = WMth * 4/3; %mean(res.mn(res.lkp==2)) * 4/3; 
-  WMfactor1 = 4/3; 
+  %%
+  %if job.extopts.inv_weighting
+    WMfactor0 = WMth * 7/6; %mean(res.mn(res.lkp==2)) * 4/3; 
+    WMfactor1 = 7/6; 
+  %end
   if exist('hho' ,'var'), try spm_orthviews('window',hho ,[0 WMfactor0]); end; end
   if exist('hhm' ,'var'), try spm_orthviews('window',hhm ,[0 WMfactor1]); end; end
   if exist('hhp0','var'), try spm_orthviews('window',hhp0,[0 WMfactor1]); end; end

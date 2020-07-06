@@ -1,11 +1,71 @@
 ------------------------------------------------------------------------
-r1672 | dahnke | 2020-07-02 10:25:30
+r1673 | dahnke | 2020-07-06 19:01:33
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_opts.m
+M       cat_conf_output.m
+M       cat_defaults.m
+M       cat_io_addwarning.m
+M       cat_main.m
+M       cat_main_APRG.m
+M       cat_main_amap.m
+M       cat_main_gintnorm.m
+M       cat_main_kamap.m
+M       cat_main_registration.m
+M       cat_main_reportfig.m
+M       cat_main_reportstr.m
+M       cat_main_updateSPM.m
+M       cat_main_write.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_job_APP_SPMfinal.m
+M       cat_run_job_APRGs.m
+M       cat_surf_createCS.m
+M       cat_vol_qa.m
+M       tbx_cfg_cat.m
+
+(1)  Changed:  Updated colormap definition to keep a jet thickness map 
+               in the open report figure (cat_main_reportfig). 
+(2)  Changed:  Removed opengl, (s)atlas, and LAB fields in cat_report. 
+(3)  Changed:  Modified position of useprior settings in cat_run_job. 
+(4)  Changed:  Added WHMC on default GUI to turn it off in case of problems
+               in special contrasts (cat_conf_extopts). 
+(5)  Changed:  Heavy update of the cat_io_addwarning and it calls to support
+               updates of T2/PD processing, to have 3 different warning levels
+               and simplified output handling in preprocessing report. 
+(6)  Changed:  Tiny cleanups of cat_main_gintnorm.               
+(7)  Changed:  Added some adaptions for PD/T2 processing in cat_main_amap.
+(8)  Fixed:    Corrected some tiny bugs in cat_main_updateSPM.           
+(9)  Fixed:    Added missing variable in cat_run_job with APP=none.
+(10) Fixed:    Corrected bug in KAMAP pipeline where bias_fwhm>0 cause
+               MATLAB crash. 
+(11) Fixed:    Corrected bugs due to changes in APP light and full pipeline. 
+(12) Fixed:    Corrected GM=CSF=WM=0 segmentation error in long pipeline that
+               was related to the individual TPM. 
+(13) Fixed:    Corrected bug in cat_main_registration.                
+(14) Fixed:    Corrected dependencies for fast surface processing in tbx_cfg_cat.               
+(15) New:      Integrated output of transformation matrix and with output
+               field on the expert GUI (cat_conf_output, cat_main_write, 
+               cat_main_registration, cat_defaults, tbx_cfg_cat).
+(16) New:      Added updated version of APRG to expert GUI 
+               (cat_main_APRG, cat_conf_extopts).   
+(17) New:      Added SPM super parameter to default GUI (cat_conf_opts) that
+               control biasfwhm, biasreg, samp, and tol and replace the two
+               separate bias and accuracy parameter.  
+(18) New:      Added recoloring of modified variables in cat_main_reportstr.      
+
+               
+------------------------------------------------------------------------
+r1672 | dahnke | 2020-07-02 10:26:11 +0200 (Do, 02 Jul 2020) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_main_updateWMHs.m
 
 (1) Fixed:     Corrected bug of missing variable in case of WMHs.
+
 ------------------------------------------------------------------------
 r1671 | dahnke | 2020-07-01 23:30:25 +0200 (Mi, 01 Jul 2020) | 21 lines
 

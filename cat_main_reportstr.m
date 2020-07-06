@@ -14,7 +14,6 @@ function str = cat_main_reportstr(job,res,qa)
 %   job          .. SPM/CAT parameter structure
 %   res          .. SPM preprocessing structure
 %   qa           .. CAT quality and subject information structure
-%   cat_warnings .. CAT warning structure
 %
 %   See also cat_main_reportfig and cat_main_reportcmd.
 % ______________________________________________________________________
@@ -26,9 +25,7 @@ function str = cat_main_reportstr(job,res,qa)
 % ______________________________________________________________________
 % $Id$
 
-%#ok<*AGROW>
-
-  global cat_err_res; 
+%#ok<*AGROW,*NOCOM>
 
   QMC   = cat_io_colormaps('marks+',17);
   color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
@@ -39,7 +36,15 @@ function str = cat_main_reportstr(job,res,qa)
   grades      = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
   mark2grad   = @(mark) grades{min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3)))};
 
-
+  catdef = cat_get_defaults; 
+  
+% blue for none defaults
+% orange for warning changes 
+  npara  = '\color[rgb]{0  0   0}'; 
+  cpara  = '\color[rgb]{0  0   1}'; 
+  wpara  = '\color[rgb]{1  0.3 0}'; 
+  
+  
   % CAT GUI parameter:
   % --------------------------------------------------------------------
   str{1} = [];
@@ -47,7 +52,10 @@ function str = cat_main_reportstr(job,res,qa)
   % use red output if a beta version is used
   catv = qa.software.revision_cat; isbeta = strfind(lower(catv),'beta'); 
   if ~isempty(isbeta), catv = [catv(1:isbeta-1) '\color[rgb]{0.8 0 0}' catv(isbeta:isbeta+3 ) '\color[rgb]{0.8 0 0}' catv(isbeta+4:end)]; end
-    
+
+%#####
+% red version in case of old version?
+%#####
   % 1 line: Matlab, SPM12, CAT12 version number and GUI and experimental mode 
   str{1} = [str{1} struct('name', 'Version: OS / Matlab / SPM12 / CAT12:','value',...
     sprintf('%s / %s / %s / %s (%s)',qa.software.system,qa.software.version_matlab,...
@@ -71,61 +79,91 @@ function str = cat_main_reportstr(job,res,qa)
   
   
   % 2 lines: TPM, Template, Normalization method with voxel size
-  str{1} = [str{1} struct('name', 'Tissue Probability Map:','value',strrep(spm_str_manip(res.tpm(1).fname,'k40d'),'_','\_'))];
+  if strcmp(res.tpm(1).fname,catdef.opts.tpm{1}), cp{1} = npara; else, cp{1} = cpara; end
+  str{1} = [str{1} struct('name', 'Tissue Probability Map:','value',[cp{1} strrep(spm_str_manip(res.tpm(1).fname,'k40d'),'_','\_')])];
   if res.do_dartel
     if job.extopts.regstr==0 % Dartel
+      if ~strcmp(job.extopts.darteltpm{1},catdef.extopts.darteltpm{1}), cp{1} = npara; else, cp{1} = cpara; end
       str{1} = [str{1} struct('name', 'Dartel Registration to: ',...
-                        'value',strrep(spm_str_manip(job.extopts.darteltpm{1},'k40d'),'_','\_'))];
+                        'value',[cp{1} strrep(spm_str_manip(job.extopts.darteltpm{1},'k40d'),'_','\_')])];
     elseif job.extopts.regstr==4 % Dartel
+      if ~strcmp(job.extopts.shootingtpm{1},catdef.extopts.shootingtpm{1}), cp{1} = npara; else, cp{1} = cpara; end
       str{1} = [str{1} struct('name', 'Shooting Registration to: ',...
-                        'value',strrep(spm_str_manip(job.extopts.shootingtpm{1},'k40d'),'_','\_'))];
+                        'value',[cp{1} strrep(spm_str_manip(job.extopts.shootingtpm{1},'k40d'),'_','\_')])];
     else
+      if ~strcmp(job.extopts.shootingtpm{1},catdef.extopts.shootingtpm{1}), cp{1} = npara; else, cp{1} = cpara; end
       if job.extopts.expertgui==0
         str{1} = [str{1} struct('name','Optimized Shooting Registration to:',...
                           'value',strrep(spm_str_manip(job.extopts.shootingtpm{1},'k40d'),'_','\_'))];
       else
         str{1} = [str{1} struct('name', sprintf('Optimized Shooting Registration (regstr:%s) to :',sprintf('%g ',job.extopts.regstr)),...
-                          'value',strrep(spm_str_manip(job.extopts.shootingtpm{1},'k40d'),'_','\_'))];
+                          'value',[cp{1} strrep(spm_str_manip(job.extopts.shootingtpm{1},'k40d'),'_','\_')])];
       end
     end
   end
 
   % 1 line 1: Affreg
-  str{1} = [str{1} struct('name', 'affreg:','value',sprintf('%s',job.opts.affreg))];
+  if strcmp(job.opts.affreg,catdef.opts.affreg), cp{1} = npara; else, cp{1} = cpara; end
+  if isfield(job,'useprior') && ~isempty(job.useprior) && exist(char(job.useprior),'file')
+    affstr = 'AVGprior';
+  else
+    affstr = job.opts.affreg; 
+  end
+  str{1} = [str{1} struct('name', 'affreg:','value',sprintf('%s{%s}',cp{1},affstr))];
   % 1 line 2: APP
 
-  APPstr = {'none','light','full','','','animal'}; APPstr{1071} = 'rough'; APPstr{1145} = 'rough(new)'; 
+  if job.extopts.APP == catdef.extopts.APP, cp{1} = npara; else, cp{1} = cpara; end
+  APPstr = {'none','light','full','','','animal'}; APPstr{1071} = 'default'; APPstr{1145} = 'default2'; 
   str{1}(end).name  = [str{1}(end).name(1:end-1) ' / APP ']; 
-  str{1}(end).value = [str{1}(end).value sprintf(' / %s',APPstr{job.extopts.APP+1})];
+  str{1}(end).value = [str{1}(end).value sprintf(' / %s{%s}',cp{1},APPstr{job.extopts.APP+1})];
 
+% #####
+% one new super SPM parameter?
+% #####
   % 1 line 3: biasstr / biasreg+biasfwhm
-  if job.opts.biasstr>0
+  if job.opts.biasacc>0
+    if job.opts.biasacc == catdef.opts.biasstr, cp{1} = npara; else, cp{1} = cpara; end % yes, catdef.opts.biasstr!
+    biasacc = {'ultralight','light','medium','strong','heavy'};
+    str{1}(end).name  = [str{1}(end).name(1:end-1) ' / biasstr '];  
+    str{1}(end).value = [str{1}(end).value sprintf(' / %s{%s}',cp{1},biasacc{round(job.opts.biasacc*4)+1})];
+    if job.extopts.expertgui % add the value
+      str{1}(end).value = [str{1}(end).value sprintf('(%0.2f;breg:%0.0e;bfwhm:%0.0f)',job.opts.biasacc,job.opts.biasreg,job.opts.biasfwhm)]; 
+    end
+  elseif job.opts.biasstr>0
+    if job.opts.biasstr == catdef.opts.biasstr, cp{1} = npara; else, cp{1} = cpara; end
     biasstr = {'ultralight','light','medium','strong','heavy'};
     str{1}(end).name  = [str{1}(end).name(1:end-1) ' / biasstr '];  
-    str{1}(end).value = [str{1}(end).value sprintf(' / %s',biasstr{round(job.opts.biasstr*4)+1})];
+    str{1}(end).value = [str{1}(end).value sprintf(' / %s{%s}',cp{1},biasstr{round(job.opts.biasstr*4)+1})];
     if job.extopts.expertgui % add the value
       str{1}(end).value = [str{1}(end).value sprintf('(%0.2f;breg:%0.0e;bfwhm:%0.0f)',job.opts.biasstr,job.opts.biasreg,job.opts.biasfwhm)]; 
     end
   else
+    if job.opts.biasreg  == catdef.opts.biasreg,  cp{1} = npara; else, cp{1} = cpara; end
+    if job.opts.biasfwhm == catdef.opts.biasfwhm, cp{2} = npara; else, cp{2} = cpara; end
     str{1}(end).name  = [str{1}(end).name(1:end-1) ' / biasreg / biasfwhm'];
-    str{1}(end).value = [str{1}(end).value sprintf(' / %0.0e / %0.2f',job.opts.biasreg,job.opts.biasfwhm)]; 
+    str{1}(end).value = [str{1}(end).value sprintf(' / %s{%0.0e} / %s{%0.2f}',cp{1},job.opts.biasreg,cp{2},job.opts.biasfwhm)]; 
   end
   % 1 line 3: SPM segmentation accuracy with samp and tol
   if isfield(job.opts,'acc') && job.opts.acc>0
     %str{1} = [str{1} struct('name', '','value','')];
+    if job.opts.acc == catdef.opts.acc, cp{3} = npara; else, cp{3} = cpara; end
     if job.extopts.expertgui==0
       accstr = {'ultra low','low','std','high','ultra high'};
       str{1}(end).name  = [str{1}(end).name(1:end-1) ' / accuracy '];  
-      str{1}(end).value = [str{1}(end).value sprintf(' / %s',accstr{round(job.opts.acc*4)+1})];
+      str{1}(end).value = [str{1}(end).value sprintf(' / %s{%s}',co,accstr{round(job.opts.acc*4)+1})];
     else % add the value
+      if job.opts.samp == catdef.opts.samp, cp{1} = npara; else, cp{1} = cpara; end
+      if job.opts.tol  == catdef.opts.tol,  cp{2} = npara; else, cp{2} = cpara; end
       str{1}(end).name  = [str{1}(end).name(1:end-1) ' / acc (samp/tol) '];  
-      str{1}(end).value = [str{1}(end).value sprintf('%0.2f (%0.2f/%0.0e)',job.opts.acc,job.opts.samp,job.opts.tol)]; 
+      str{1}(end).value = [str{1}(end).value sprintf('%s|%0.2f} (%s{%0.2f}/%s{%0.0e})',cp{3},job.opts.acc,cp{1},job.opts.samp,cp{2},job.opts.tol)]; 
     end
   else
     if job.extopts.expertgui
       %str{1} = [str{1} struct('name', '','value','')];
+      if job.opts.samp == catdef.opts.samp, cp{1} = npara; else, cp{1} = cpara; end
+      if job.opts.tol  == catdef.opts.tol,  cp{2} = npara; else, cp{2} = cpara; end
       str{1}(end).name  = [str{1}(end).name(1:end-1) '/ samp / tol '];
-      str{1}(end).value = [str{1}(end).value sprintf('/ %0.2f / %0.0e',job.opts.samp,job.opts.tol)]; 
+      str{1}(end).value = [str{1}(end).value sprintf('/ %s{%0.2f} / %s{%0.0e}',cp{1},job.opts.samp,cp{2},job.opts.tol)]; 
     end
   end
 
@@ -137,65 +175,90 @@ function str = cat_main_reportstr(job,res,qa)
              'ultralight+','ultralight+','light+','medium+','strong+','heavy+'};
   defstrm = @(x) defstr{ round(max(0,min(2,x))*4) + 1 + (x>0) + (x>1)};
   str{1} = [str{1} struct('name', 'Noise reduction:','value','')]; 
+  if job.extopts.NCstr == catdef.extopts.NCstr, cp{1} = npara; else, cp{1} = cpara; end 
   if job.extopts.NCstr==0 
     if job.extopts.mrf==0
-      str{1}(end).value = 'no noise correction';
+      str{1}(end).value = [cpara 'no noise correction'];
     else
       if job.extopts.expertgui==0
-        str{1}(end).value = 'MRF'; 
+        str{1}(end).value = [cpara 'MRF']; 
       else
-        str{1}(end).value = sprintf('MRF(%0.2f)',job.extopts.mrf); 
+        str{1}(end).value = sprintf('%sMRF(%0.2f)',cpara,job.extopts.mrf); 
       end  
     end
   else
-    str{1}(end).value = sprintf('SANLM(%s)',NCstr.labels{find(cell2mat(NCstr.values)==job.extopts.NCstr,1,'first')});
+    str{1}(end).value = sprintf('SANLM(%s{%s})',cp{1},NCstr.labels{find(cell2mat(NCstr.values)==job.extopts.NCstr,1,'first')});
   end
 
   if job.extopts.NCstr~=0 && job.extopts.mrf
     if job.extopts.expertgui==0
       str{1}(end).value = '+MRF'; 
     else
-      str{1}(end).value = sprintf('+MRF(%0.2f)',job.extopts.mrf); 
+      str{1}(end).value = sprintf('%s{+MRF(%0.2f)}',cpara,job.extopts.mrf); 
     end 
   end
 
 
   % 1 line(s): LASstr / GCUTstr / CLEANUPstr
-  str{1}(end).name  = 'LASstr / GCUTstr / CLEANUPstr:';
-  gcutstr  = {'none','SPM','GCUT','APRG'};  
+  if job.extopts.LASstr     == catdef.extopts.LASstr,     cp{1} = npara; else, cp{1} = cpara; end 
+  if job.extopts.gcutstr    == catdef.extopts.gcutstr,    cp{2} = npara; else, cp{2} = cpara; end 
+  if job.extopts.cleanupstr == catdef.extopts.cleanupstr, cp{3} = npara; else, cp{3} = cpara; end 
+  gcutstr  = {'none','SPM','GCUT','APRG','APRG2'};  
   if ~job.extopts.expertgui
-    str{1}(end).value = sprintf('%s / %s / %s',defstrm(job.extopts.LASstr),...
-      gcutstr{ceil(job.extopts.gcutstr+2)},defstrm(job.extopts.cleanupstr)); 
+    str{1}(end).name  = 'LAS strength / Skull-Stripping:';
+    str{1}(end).value = sprintf('%s{%s} / %s{%s}',...
+      cp{1},defstrm(job.extopts.LASstr),...
+      cp{2},gcutstr{ceil(job.extopts.gcutstr+2)}); 
   else
-    str{1}(end).value = sprintf('%s(%0.2f) / %s(%0.2f) / %s(%0.2f)',...
-      defstrm(job.extopts.LASstr),job.extopts.LASstr,gcutstr{ceil(job.extopts.gcutstr+2)},...
-      job.extopts.gcutstr,defstrm(job.extopts.cleanupstr),job.extopts.cleanupstr); 
+    str{1}(end).name  = 'LASstr / GCUTstr / CLEANUPstr:';
+    str{1}(end).value = sprintf('%s{%s(%0.2f)} / %s{%s(%0.2f)} / %s{%s(%0.2f)}',...
+      cp{1},defstrm(job.extopts.LASstr),job.extopts.LASstr,...
+      cp{2},gcutstr{ceil(job.extopts.gcutstr+2)},job.extopts.gcutstr,...
+      cp{3},defstrm(job.extopts.cleanupstr),job.extopts.cleanupstr); 
   end
+  if job.extopts.spm_kamap == catdef.extopts.spm_kamap,  cp{1} = npara; else, cp{1} = cpara; end 
+  if job.extopts.WMHC      == catdef.extopts.WMHC,       cp{2} = npara; else, cp{2} = cpara; end 
+  if job.extopts.SLC       == catdef.extopts.SLC,        cp{3} = npara; else, cp{3} = cpara; end 
+  if job.extopts.collcorr  == catdef.extopts.collcorr,   cp{4} = npara; else, cp{4} = cpara; end 
   restype = char(fieldnames(job.extopts.restypes));
+  if strcmp(restype, catdef.extopts.restype), cp{5} = npara; else, cp{5} = cpara; end 
+% ############
+% WMHC in case of SPM segmentation is SPM
+% ############
   if job.extopts.expertgui
     str{1} = [str{1} struct('name', 'KAMAP / WMHC / SLC / collcorr / restype:','value',...
-           sprintf('%d / %d / %d / %d / %s',...
-          job.extopts.spm_kamap,job.extopts.WMHC,job.extopts.SLC,job.extopts.collcorr,restype))];
+           sprintf('%s{%d} / %s{%d} / %s{%d} / %s{%d} / %s{%s}',...
+          cp{1},job.extopts.spm_kamap, cp{2},job.extopts.WMHC, cp{3},job.extopts.SLC, cp{4},job.extopts.collcorr, cp{5},restype))];
   else
-    str{1} = [str{1} struct('name', 'restype:','value',sprintf('%s',restype))];
+    kamapstr  = {'SPM US','','KAMAP'};  
+    wmhcstr   = {'none (WMH~GM)','temporary (WMH~ GM)','WM','own class'};
+    str{1} = [str{1} struct('name', 'Initial Segmentation / WMH Correction / Int. Res.:',...
+      'value',sprintf('%s{%s} / %s{%s} / %s{%s}',cp{1},kamapstr{job.extopts.spm_kamap+1}, cp{2},wmhcstr{job.extopts.WMHC+1}, cp{5},restype))];
   end
-  if ~strcmp('native',restype)
-    str{1}(end).value = [str{1}(end).value sprintf('(%0.2f %0.2f)',job.extopts.restypes.(restype))];
+  if ~strcmp('native',restype) && ~strcmp('best',restype)
+    if any(job.extopts.restypes.(restype) == catdef.extopts.resval),  cp{1} = npara; else, cp{1} = cpara; end 
+    str{1}(end).value = [str{1}(end).value sprintf('(%s{%0.2f %0.2f})',cp{1}, job.extopts.restypes.(restype))];
   end 
 
-  % line 8: surface parameter
+  % line 8: resolution parameter
+  % RD202007:  I am sure if a colorrating works here - it is just to much.
+  v3 = sprintf('%s',native2unicode(179, 'latin1')); 
   if job.output.surface
     str{1} = [str{1} struct('name', 'Voxel resolution (original > internal > PBT; vox):',...
-           'value',sprintf('%4.2fx%4.2fx%4.2f > %4.2fx%4.2fx%4.2f > %4.2f mm%s; %4.2f mm ', ... 
-           qa.qualitymeasures.res_vx_vol,qa.qualitymeasures.res_vx_voli,job.extopts.pbtres,native2unicode(179, 'latin1'),job.extopts.vox(1)))];
+           'value',sprintf('%4.2fx%4.2fx%4.2f > %4.2fx%4.2fx%4.2f > %4.2f%s mm%s; %4.2f%s mm%s ', ... 
+           qa.qualitymeasures.res_vx_vol,qa.qualitymeasures.res_vx_voli,job.extopts.pbtres,...
+           v3,v3,job.extopts.vox(1),v3,v3))];
   else
     str{1} = [str{1} struct('name', 'Voxel resolution (original > intern; vox):',...
-           'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s; %4.2f mm', ...
-           qa.qualitymeasures.res_vx_vol,native2unicode(179, 'latin1'),qa.qualitymeasures.res_vx_voli,native2unicode(179, 'latin1'),job.extopts.vox(1)))];
+           'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s; %4.2f%s mm%s', ...
+           qa.qualitymeasures.res_vx_vol,v3,qa.qualitymeasures.res_vx_voli,...
+           v3,job.extopts.vox(1),v3,v3))];
   end       
   % str{1} = [str{1} struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',job.extopts.vox))]; % does not work yet 
 
-
+  % line 9: surface parameter
+  
+  
   % Image Quality measures:
   % --------------------------------------------------------------------
   str{2} =       struct('name', '\bfImage and Preprocessing Quality:','value',''); 
@@ -212,7 +275,7 @@ function str = cat_main_reportstr(job,res,qa)
       str{2} = [str{2} struct('name',' Mean surface Euler number:','value',marks2str(qa.qualityratings.SurfaceEulerNumber,...
                 sprintf('%g', qa.qualitymeasures.SurfaceEulerNumber)))]; 
               
-      if isfield(qa.qualitymeasures,'SurfaceDefectNumber') && ~isempty(qa.qualitymeasures.SurfaceDefectNumber)
+      if isfield(qa.qualitymeasures,'SurfaceDefectNumber') && ~isempty(qa.qualitymeasures.SurfaceDefectNumber) 
         str{2}(end).name  = [str{2}(end).name(1:end-8)  ' / defect number:'];
         str{2}(end).value = [str{2}(end).value ' / ' marks2str(qa.qualityratings.SurfaceDefectNumber,...
                 sprintf('%0.2f', qa.qualitymeasures.SurfaceDefectNumber)) ];
@@ -223,8 +286,7 @@ function str = cat_main_reportstr(job,res,qa)
     end
   end
   
-  
-  if isfield(qa.qualitymeasures,'SurfaceDefectArea') && ~isempty(qa.qualitymeasures.SurfaceDefectArea)
+  if isfield(qa.qualitymeasures,'SurfaceDefectArea') && ~isempty(qa.qualitymeasures.SurfaceDefectArea) && ~any(job.output.surface == [5 6])
     if job.extopts.expertgui
       str{2} = [str{2} struct('name',' Mean topology defects size:','value',marks2str(qa.qualityratings.SurfaceDefectArea,...
                 sprintf('%0.2f%%', qa.qualitymeasures.SurfaceDefectArea)))];
@@ -303,23 +365,37 @@ function str = cat_main_reportstr(job,res,qa)
     floor(round(etime(clock,res.stime))/60),mod(round(etime(clock,res.stime)),60)))]; 
 
   % Warnings
-  if numel(cat_err_res.cat_warnings)>0 && job.extopts.expertgui>0
+%#######
+% key changes? 
+%  - use backup pipeline (with #?)
+%  - use AMAP/SPM/mixed ?
+%#######
+if 1
+  wn = numel(cat_io_addwarning);
+  if wn
     str{2} = [str{2} struct('name', '','value','')]; 
-    str{2} = [str{2} struct('name', '\bfWarnings:','value','')]; 
-    for wi=1:numel(cat_err_res.cat_warnings)
-      shorter = cat_err_res.cat_warnings(wi).identifier;
-      % remove leading MATLAB, SPM or CAT elements
-      dots    = max([min(strfind(shorter,'MATLAB')+7), ...
-                     min(strfind(shorter,'SPM')+4), ...
-                     min(strfind(shorter,'CAT')+4)]);
-      if ~isempty(dots), shorter = shorter(dots:end); end
-      % limit lenght of the string and replace critical character
-      shorter = spm_str_manip(shorter,'l40');
-      shorter = marks2str(4,shorter);
-      shorter = strrep(shorter,'_','\_');
-      str{2}    = [str{2} struct('name',shorter,'value','')];  
-    end
+    str{2} = [str{2} struct('name', ...
+      sprintf('\\color[rgb]{1 0.5 0}\\bf{%d Warnings} (see log/xml)',wn),'value','')]; 
   end
+else
+  for i=1:3, wn(i) = numel(cat_io_addwarning(i)); wns(i) = char(115 * (wn(i)~=1)); end
+  if sum(wn)>0
+    str{2} = [str{2} struct('name', '','value','')]; 
+    if job.extopts.expertgui
+      str{2} = [str{2} struct('name', ...
+        sprintf(['\\color[rgb]{0 0 1}%d note%s, \\color[rgb]{1 0.5 0}\\bf{%d warning%s}, ' ...
+          'and \\color[rgb]{1 0.5 0}\\bf{%d alert%s} (see log/xml)'],...
+          wn(1),wns(1),wn(2),wns(2),wn(3),wns(3)),'value','')]; 
+    else
+      % do not display notes
+      str{2} = [str{2} struct('name', ...
+        sprintf(['\\color[rgb]{1 0.5 0}\\bf{%d warning%s}, ' ...
+          'and \\color[rgb]{1 0.5 0}\\bf{%d alert%s} (see log/xml)'],...
+          wn(2),wns(2),wn(3),wns(3)),'value','')]; 
+    end  
+  end
+end
+
 
   % adding one space for correct printing of bold fonts
   for ssi = 1:numel(str)
@@ -329,4 +405,14 @@ function str = cat_main_reportstr(job,res,qa)
     end
   end
 
+end
+function cstr = isdefault(job,field,str)
+  
+  eval(['catval = job.' field ';']); 
+  catdef = cat_get_defaults(field);
+  if strcmp(catval,catdef)
+    cstr = str;
+  else
+    cstr = ['\color[rgb]{0 0 1}{' str '}']; 
+  end
 end

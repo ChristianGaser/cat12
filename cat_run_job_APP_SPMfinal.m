@@ -52,11 +52,11 @@ function  [Ymc,Ymi] = cat_run_job_APP_SPMfinal(Po,vout,vx_vol,verb,fstr)
     Ymr = cat_vol_resize(Ym,'reduceV',vx_vol,min(vx_vol*2,resTth),32,'meanm');
     Ybr   = cat_vol_resize(single(Yb),'reduceV',vx_vol,min(vx_vol*2,resTth),32,'meanm')>0.5;
     Yclsr = cell(size(Ycls)); for i=1:6, Yclsr{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,min(vx_vol*2,resTth),32); end
-    [Ymr,Ybr,T3th,Txth,inv_weighting,noise] = cat_main_gintnorm(Ymr,Yclsr,Ybr,vx_vol,res);
+    [Ymr,T3th,Txth,inv_weighting,noise] = cat_main_gintnorm(Ymr,Yclsr,Ybr,vx_vol,res);
     clear Ymr Ybr Yclsr; 
     Ymi = cat_main_gintnorm(Ym,Txth); 
   else
-    [Ymi,Yb,T3th,Txth,inv_weighting,noise] = cat_main_gintnorm(Ym,Ycls,Yb,vx_vol,res);
+    [Ymi,T3th,Txth,inv_weighting,noise] = cat_main_gintnorm(Ym,Ycls,Yb,vx_vol,res);
   end
 
   
