@@ -272,7 +272,7 @@ cstime = clock;
     Pfsavgmask = fullfile(opt.fsavgDir, sprintf('%s.mask',opt.surf{si}));                       % fsaverage mask    
     
     % use surface of given (average) data as prior for longitudinal mode
-    if isfield(opt,'useprior') && ~isempty(opt.useprior)
+    if isfield(opt,'useprior') && ~isempty(opt.useprior) && ~exist(char(job.useprior),'file')
       priorname = opt.useprior;
       % check that no fast option was used
       if opt.fast

@@ -199,7 +199,11 @@ function [Affine2,Yb,Ymi,Ym0] = cat_run_job_APRGs(Ysrc,Ybg,VF,Pb,Pbt,Affine,vx_v
   %% cutting parameter
   %  This is maybe a nice parameter to control the CSF masking.
   %  And even better we can use a surface to find the optimal value. :)
-  cutstr    = 1.0; % 0.85; 
+  if isfield(job.extopts,'cutstr')
+    cutstr  = job.extopts.cutstr; % 0.85; 
+  else
+    cutstr  = 1.0; % 0.85; 
+  end
   cutstrs   = linspace(0.3,0.95,4); % 0.05,0.35,0.65,0.95]; 
   cutstrval = nan(1,4); 
   if debug, cutstrsa = zeros(0,8); end
@@ -271,7 +275,7 @@ function [Affine2,Yb,Ymi,Ym0] = cat_run_job_APRGs(Ysrc,Ybg,VF,Pb,Pbt,Affine,vx_v
   for i=1:3,  obj2.tpm.dat{i}  = obj2.tpm.dat{i} .* Ybx; end
     
 if 1
-    %%
+  %% RD202007: hmm, masking without test ... 
   obj2.msk       = VF; 
   obj2.msk.pinfo = repmat([255;0],1,size(Yb,3));
   obj2.msk.dt    = [spm_type('uint8') spm_platform('bigend')];
@@ -281,11 +285,11 @@ end
   
   % do registration
   warning('off','MATLAB:RandStream:ActivatingLegacyGenerators')
-  Affine2  = spm_maff8(obj2.image, obj2.samp ,obj2.fwhm ,obj2.tpm ,Affine ,job.opts.affreg ,80);
-  if det(Affine \ Affine2)>1.5 || det(Affine2 \ Affine)>1.5
+  [Affine2,ll]  = spm_maff8(obj2.image, obj2.samp ,obj2.fwhm ,obj2.tpm ,Affine ,job.opts.affreg ,80);
+  if det(Affine \ Affine2)>1.5 || det(Affine2 \ Affine)>1.5 % || ll<0.9 % RD202007: add this maybe later
     Affine2  = spm_maff8(obj2.image, obj2.samp ,obj2.fwhm ,obj2.tpm ,Affine , 'none'  ,80);
   end
-    
+  
   %%
   if 0
     %%

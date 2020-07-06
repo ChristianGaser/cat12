@@ -12,7 +12,9 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Y
 % $Id$
 
   global cat_err_res; 
-
+  
+  res.AffineSPM = res.Affine;
+  
   try
     clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
 
@@ -30,7 +32,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Y
     d = res.image(1).dim(1:3);
 
 
-    stime2 = cat_io_cmd('  Update Segmentation','g5','',job.extopts.verb-1,stime2); 
+    stime2 = cat_io_cmd('  Update segmentation','g5','',job.extopts.verb-1,stime2); 
 
 
     % Create brain mask based on the the TPM classes
@@ -215,13 +217,15 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Y
     %  ----------------------------------------------------------------------
     %  Update Skull-Stripping 1
     %  ----------------------------------------------------------------------
-    stime2 = cat_io_cmd('  Update Skull-Stripping','g5','',job.extopts.verb-1,stime2); 
+    stime2 = cat_io_cmd('  Update skull-stripping','g5','',job.extopts.verb-1,stime2); 
     if size(P,4)==4 % skull-stripped
       [Yb,Ybb,Yg,Ydiv,P] = cat_main_updateSPM_skullstriped(Ysrc,P,res,vx_vol,T3th);
     elseif job.extopts.gcutstr==0 
       [Yb,Ybb,Yg,Ydiv] = cat_main_updateSPM_gcut0(Ysrc,P,vx_vol,T3th);
     elseif job.extopts.gcutstr==2
       [Yb,Ybb,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th);
+    elseif job.extopts.gcutstr>2 && job.extopts.gcutstr<3
+      [Yb,Ybb,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th,job.extopts.gcutstr);
     else
       [Yb,Ybb,Yg,Ydiv] = cat_main_updateSPM_gcutold(Ysrc,P,res,vx_vol,T3th);
     end
@@ -307,7 +311,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Y
       Ygm = Ygm & Yp0<2/3 & Yb & Yg<cat_stat_nanmean(Yg(P(:,:,:,1)>64)) & Ydiv<cat_stat_nanmean(Ydiv(P(:,:,:,1)>64)); % add GM with low SPM prob ... 
       Ygm = Ygm & (Ysrc>cat_stat_nansum(T3th(1:2).*[0.5 0.5])) & (Ysrc<cat_stat_nansum(T3th(2:3).*[0.2 0.8])); % but good intensity
       Ygm(smooth3(Ygm)<0.5)=0; 
-      clear Yg Ydiv;
+      clear Ydiv;
       Ygm = uint8(Ygm); 
       P(:,:,:,5) = P(:,:,:,5) .* (1-Ygm);
       P(:,:,:,3) = P(:,:,:,3) .* (1-Ygm);
@@ -316,7 +320,16 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Y
       Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
       clear Ywm Ygm;
 
-
+      %% head to CSF
+      Ycsf = (Ysrc > T3th(1) -  min( abs( [ diff(T3th(1:2)) diff(T3th(1:2:3)) ] ))/2 ) & ...
+             (Ysrc > T3th(1) +  min( abs( [ diff(T3th(1:2)) diff(T3th(1:2:3)) ] ))/2 ) & ...
+             Yb & sum(P(:,:,:,4:2:end),4)>0 & sum(P(:,:,:,1:3),4)<250 & ...
+             Yg<cat_stat_nanmean(Yg(P(:,:,:,3)>64)*1.5); % & Ydiv<cat_stat_nanmean(Ydiv(P(:,:,:,3)>64));
+      Ycsf(smooth3(Ycsf)<0.5)=0;
+      for pi=4:2:size(P,4), P(:,:,:,pi) = P(:,:,:,pi) .* cat_vol_ctype(1-Ycsf); end
+      P(:,:,:,3) = cat_vol_ctype(single(P(:,:,:,3)) + 255*single(Ycsf));
+      clear Yg;
+      
       %% remove brain tissues outside the brain mask ...
       %  tissues > skull (within the brain mask)
       Yhdc = uint8(smooth3( Ysrc/T3th(3).*(Ybb>cat_vol_ctype(0.2*255)) - Yp0 )>0.5); 
@@ -379,9 +392,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Y
     end
 
     clear Ybf
-    stime2 = cat_io_cmd(' ','g5','',job.extopts.verb-1,stime2); 
-    fprintf('%5.0fs\n',etime(clock,stime));
- 
+    
   catch e
   % just try to translate the input to the output
   %   [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,tpm,job,res,stime,stime2)
@@ -499,7 +510,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Y
   %  
   %  #### move fast shooting to the cat_main_updateSPM function ####
   % 
-  stime = cat_io_cmd(sprintf('  Update registration'),'g5','',job.extopts.verb); 
+  stime2 = cat_io_cmd(sprintf('  Update registration'),'g5','',job.extopts.verb,stime2); 
 
   res2 = res; 
   job2 = job;
@@ -521,9 +532,9 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Y
     res2.do_dartel            = 1;      % use dartel
   end
   if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
-    [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M,res.Ylesion); 
+    [trans,res.ppe.reginitp,res.Affine] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M,res.Ylesion); 
   else
-    [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M); 
+    [trans,res.ppe.reginitp,res.Affine] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M); 
   end
   Yy2  = trans.warped.y;
  
@@ -539,8 +550,9 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Y
   Yy = Yy2; 
   clear Yy2; 
  
+  stime2 = cat_io_cmd(' ','g5','',job.extopts.verb-1,stime2); 
   fprintf('%5.0fs\n',etime(clock,stime));
-  
+ 
   
   
 end

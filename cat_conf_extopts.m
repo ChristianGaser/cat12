@@ -681,8 +681,9 @@ if ~expert
   gcutstr.labels  = {'none (already skull-stripped)' 'SPM approach' 'GCUT approach' 'APRG approach'};
   gcutstr.values  = {-1 0 0.50 2};
 else
-  gcutstr.labels  = {'none (already skull-stripped) (-1)','SPM approach (0)','GCUT medium (0.50)','APRG approach (2)'};
-  gcutstr.values  = {-1 0 0.50 2};
+  gcutstr.labels  = {'none (already skull-stripped) (-1)','SPM approach (0)','GCUT medium (0.50)','APRG approach (2)',...
+    'APRG approach V2 (2.5)','APRG approach V2 wider (2.1)','APRG approach V2 tighter (2.9)'};
+  gcutstr.values  = {-1 0 0.50 2 2.5 2.1 2.9};
 end
 
 
@@ -754,7 +755,7 @@ LASstr.help    = {
 %------------------------------------------------------------------------
 wmhc        = cfg_menu;
 wmhc.tag    = 'WMHC';
-wmhc.name   = 'WM Hyperintensity Correction (WMHCs) - in development';
+wmhc.name   = 'WM Hyperintensity Correction (WMHCs)';
 wmhc.def    = @(val)cat_get_defaults('extopts.WMHC', val{:});
 wmhc.help   = {
   'WARNING: Please note that the detection of WM hyperintensies is still under development and does not have the same accuracy as approaches that additionally consider FLAIR images (e.g. Lesion Segmentation Toolbox)! '
@@ -763,23 +764,25 @@ wmhc.help   = {
   ' 0) No Correction (handled as GM). '
   ' 1) Temporary (internal) correction as WM for spatial normalization and estimation of cortical thickness. '
   ' 2) Permanent correction to WM. ' 
-  ' 3) Handling as separate class. '
-  ''
 };
-wmhc.values = {0 1 2 3};
 if expert>1
+  wmhc.help   = [wmhc.help {
+     ' 3) Handling as separate class. '
+     ''
+  }];
+  wmhc.values = {0 1 2 3};
   wmhc.labels = { ...
     'no correction (0)' ...
-    'set WMH as WM only for normalization (1) and thickness estimation' ... 
+    'set WMH temporary as WM (1)' ... 
     'set WMH as WM (2)' ...
     'set WMH as own class (3)' ...
   };
 else
+  wmhc.values = {0 1 2};
   wmhc.labels = { ...
     'no WMH correction' ...
-    'set WMH as WM only for normalization and thickness estimation' ... 
+    'set WMH temporary as WM' ... 
     'set WMH as WM' ...
-    'set WMH as own class' ...
   };
 end
 
@@ -930,7 +933,7 @@ spm_affreg.val    = 3;
 % AMAP rather than SPM segmentation 
 spm_kamap        = cfg_menu;
 spm_kamap.tag    = 'spm_kamap';
-spm_kamap.name   = 'Initial segmentation';
+spm_kamap.name   = 'Initial Segmentation';
 spm_kamap.help   = { ...
     'In rare cases the Unified Segmentation can fail in highly abnormal brains, where e.g. the cerebrospinal fluid of superlarge ventricles (hydrocephalus) were classified as white matter. However, if the affine registration is correct, the AMAP segmentation with an prior-independent k-means initialization can be used to replace the SPM brain tissue classification. ' 
     'Moreover, if the default Dartel and Shooting registrations will fail then the "Optimized Shooting - superlarge ventricles" option for "Spatial registration" is required! '
@@ -1019,7 +1022,7 @@ if ~spm
   if expert>0 % expert options
     extopts.val   = {segmentation,registration,vox,surface,admin}; 
   else
-    extopts.val   = {app,spm_kamap,LASstr,gcutstr,registration,vox,restype,ignoreErrors}; 
+    extopts.val   = {app,spm_kamap,LASstr,gcutstr,wmhc,registration,vox,restype,ignoreErrors}; 
   end
 else
   % SPM based surface processing and thickness estimation

@@ -200,13 +200,17 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
     if job.extopts.ignoreErrors > 1 && job.extopts.inv_weighting
       % RD202006: catching of problems in low quality data - in development 
       probs = prob; 
-      ap = [3 1 2]; for i=1:3, probs(:,:,:,i) = Ycls{ap(i)}(indx,indy,indz); end
+      ap = [3 1 2]; if numel(Ycls)==7, ap(4)=7; end
+      for i=1:numel(ap), probs(:,:,:,i) = Ycls{ap(i)}(indx,indy,indz); end
+      % WMHC
+      probs(:,:,:,2) = sum( probs(:,:,:,2:2:end) ,4); 
+      
+      Yp0s = (single(probs(:,:,:,1)) + single(probs(:,:,:,2))*2 + single( probs(:,:,:,3))*3)/255/3;
       Yp0  = (single(prob(:,:,:,1)) + single(prob(:,:,:,2))*2 + single(prob(:,:,:,3))*3)/255/3;
-      Yp0s = (single(probs(:,:,:,1)) + single(probs(:,:,:,2))*2 + single(probs(:,:,:,3))*3)/255/3;
       if ( sum(abs(Yp0s(:) - Yp0(:))>0.4) / sum(Yp0(:)>0.5) ) > 0.02
-        Yrep = uint8( abs(Yp0s - Yp0) > 0.3  &  Yp0s>0.1); 
+        Yrep = min(1, abs(Yp0s - Yp0) * 3); %uint8( abs(Yp0s - Yp0) > 0.3  &  Yp0s>0.1); 
         prob2 = prob; 
-        for i=1:3, prob2(:,:,:,i) = prob(:,:,:,i) .* (1-Yrep) + Yrep .* probs(:,:,:,i); end
+        for i=1:3, prob2(:,:,:,i) = cat_vol_ctype( single(prob(:,:,:,i)) .* (1-Yrep) + Yrep .* single(probs(:,:,:,i)) ); end
         Yp0c = (single(prob2(:,:,:,1)) + single(prob2(:,:,:,2))*2 + single(prob2(:,:,:,3))*3)/255/3;
       end
       %% separation just for tests/debugging
@@ -218,16 +222,16 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
 
     % reorder probability maps according to spm order
     clear Yp0b Ymib; 
-    prob = prob(:,:,:,[2 3 1]);  %#ok<NODEF>
+    prob = prob(:,:,:,[2 3 1]);  
     clear vol Ymib
 
     % finally use brainmask before cleanup that was derived from SPM12 segmentations and additionally include
     % areas where GM from Amap > GM from SPM12. This will result in a brainmask where GM areas
     % hopefully are all included and not cut 
-    if job.extopts.gcutstr>0 && ~job.inv_weighting
+    if job.extopts.gcutstr>0 && ~job.extopts.inv_weighting
       Yb0(indx,indy,indz) = Yb0(indx,indy,indz) | ((prob(:,:,:,1) > 0) & Yb(indx,indy,indz)); % & ~Ycls{1}(indx,indy,indz));
       for i=1:3
-        prob(:,:,:,i) = prob(:,:,:,i).*uint8(Yb0(indx,indy,indz));
+        prob(:,:,:,i) = prob(:,:,:,i).*uint8(Yb(indx,indy,indz));
       end
     end
 
@@ -249,9 +253,7 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
     
     % use SPM
     if job.extopts.ignoreErrors < 3
-      cat_io_cprintf('warn','\n  AMAP failed, use SPM segmentation.               \n')
-    else
-      cat_io_cprintf('warn','\n  AMAP deactivated, use SPM segmentation.          \n')
+      cat_io_addwarning(e.identifier,e.message); fprintf('\n') 
     end
     
     prob = zeros([size(Ymi),3],'uint8');

@@ -122,8 +122,11 @@ cat.output.jacobian.warped = 0;
 
 % deformations
 % order is [forward inverse]
-cat.output.warps        = [0 0];
+cat.output.warps      = [0 0];
 
+% transformations
+% order is affine rigid (both forward and inverse)
+cat.output.rmat       = 0;
 
 % Expert options
 %=======================================================================

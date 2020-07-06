@@ -175,12 +175,12 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
   ''
   };
 
-  labelnative      = native;
-  labelnative.tag  = 'labelnative';
-  labelnative.name = 'PVE label image in native space';
-  labelnative.def  = @(val)cat_get_defaults('output.label.native', val{:});
-  label.hidden     = expert<1;
-  labelnative.help = {
+  labelnative         = native;
+  labelnative.tag     = 'labelnative';
+  labelnative.name    = 'PVE label image in native space';
+  labelnative.def     = @(val)cat_get_defaults('output.label.native', val{:});
+  labelnative.hidden  = expert>0;
+  labelnative.help    = {
   'This is the option to save a labeled version of your segmentations in native space for fast visual comparision and preprocessing quality control. Labels are saved as Partial Volume Estimation (PVE) values with different mix classes for GM-WM (2.5) and GM-CSF (1.5). BG=0, CSF=1, GM=2, WM=3, WMH=4 (if WMHC=3), SL=1.5 (if SLC)'
   ''
   }; 
@@ -366,6 +366,18 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
   ''
   };
 
+  rmat = cfg_menu;
+  rmat.tag    = 'rmat';
+  rmat.name   = 'Registration Matrixes';
+  rmat.labels = {'No','Yes'};
+  rmat.values = {0 1};
+  rmat.def    = @(val)cat_get_defaults('output.rmat', val{:});
+  rmat.hidden = expert<1;
+  rmat.help   = {
+    'Deformation matrixes (affine and rigid) can be saved and used by the SPM Reorient Images Utility and/or applied to coregistered data from other modalities (e.g. fMRI). For normalising images to MNI space, you will need the forward transformation, whereas for normalising (eg) GIFTI surface files, you''ll need the inverse. It is also possible to transform data in MNI space on to the individual subject, which also requires the inverse transform. Transformation are saved as .mat files, which contain the tranformation matrix.'
+    ''
+  };
+
   %% ------------------------------------------------------------------------
   
   [ROI,sROI]  = cat_conf_ROI(expert);       % ROI options
@@ -373,7 +385,7 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
   output      = cfg_branch;
   output.tag  = 'output';
   output.name = 'Writing options';
-  output.val  = {surface surf_measures ROI grey white csf gmt pp wmh sl tpmc atlas label labelnative bias las jacobianwarped warps}; 
+  output.val  = {surface surf_measures ROI grey white csf gmt pp wmh sl tpmc atlas label labelnative bias las jacobianwarped warps rmat}; 
   output.help = {
   'There are a number of options about what kind of data you like save. The routine can be used for saving images of tissue classes, as well as bias corrected images. The native space option will save a tissue class image (p*) that is in alignment with the original image. You can also save spatially normalised versions - both with (m[0]wp*) and without (wp*) modulation. In the cat toolbox, the voxel size of the spatially normalised versions is 1.5 x 1.5 x 1.5mm as default. The saved images of the tissue classes can directly be used for doing voxel-based morphometry (both un-modulated and modulated). All you need to do is smooth them and do the stats (which means no more questions on the mailing list about how to do "optimized VBM"). Please note that many less-common options are only available in expert mode (e.g. CSF, labels, atlas maps).'
   ''
@@ -430,7 +442,7 @@ if 0
   end
 end
   
-	output_spm  = output; 
+	output_spm            = output; 
   output_spm.val        = {ROI surface grey_spm white_spm csf_spm label labelnative jacobianwarped warps}; 
 
 return

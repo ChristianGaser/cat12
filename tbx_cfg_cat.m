@@ -325,10 +325,9 @@ if isfield(opts,'surface')
     {'sphere','sphere.reg'}     % expert
     {'pial','white'}            % developer
   };
-  if any( job.output.surface == [ 5 6 ] ) % no sphere's without registration
-    surfaceoutput{1} = setxor(surfaceoutput{3},{'sphere','sphere.reg'}); 
-    if cat_get_defaults('extopts.expertgui')<2
-      surfaceoutput{1} = setxor(surfaceoutput{1},{'central'}); 
+  if any( job.output.surface == [ 5 6 ] ) %&& cat_get_defaults('extopts.expertgui')<2 % no sphere's without registration
+    for i = 1:3
+      surfaceoutput{i} = setdiff(surfaceoutput{i},{'central','sphere','sphere.reg'});
     end
   end
   measureoutput = {
@@ -337,8 +336,8 @@ if isfield(opts,'surface')
     {}                            % expert
     {'pbt','depthWM','depthCSF'}  % developer
   };
-  if any( job.output.surface == [ 5 6 ] ) && cat_get_defaults('extopts.expertgui')<2
-    surfaceoutput{1} = setxor(surfaceoutput{1},{'thickness'}); 
+  if any( job.output.surface == [ 5 6 ] ) %&& cat_get_defaults('extopts.expertgui')<2
+    measureoutput{1} = setdiff(measureoutput{1},{'thickness'}); 
   end
   % no output of intlayer4 or defects in cat_surf_createCS but in cat_surf_createCS2 (but not with fast) 
   if isfield(job,'extopts') && isfield(job.extopts,'surface') && ...
@@ -636,7 +635,27 @@ for i=1:numel(tissue)
     end
 end
 
+if job.output.rmat
+  cdep(end+1)          = cfg_dep;
+  cdep(end).sname      = sprintf('Affine forward transformation',i);
+  cdep(end).src_output = substruct('.','tiss','()',{i},'.','ta','()',{':'});
+  cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 
+  cdep(end+1)          = cfg_dep;
+  cdep(end).sname      = sprintf('Affine backward transformation',i);
+  cdep(end).src_output = substruct('.','tiss','()',{i},'.','ita','()',{':'});
+  cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+
+  cdep(end+1)          = cfg_dep;
+  cdep(end).sname      = sprintf('Rigid forward transformation',i);
+  cdep(end).src_output = substruct('.','tiss','()',{i},'.','tr','()',{':'});
+  cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+
+  cdep(end+1)          = cfg_dep;
+  cdep(end).sname      = sprintf('Rigid backward transformation',i);
+  cdep(end).src_output = substruct('.','tiss','()',{i},'.','itr','()',{':'});
+  cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end
 
 dep = cdep;
 
