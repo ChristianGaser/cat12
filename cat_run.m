@@ -461,7 +461,7 @@ end
 
 % clear useprior option to ensure that option is set back to default
 % for next processings
-cat.useprior = '';
+cat_get_defaults('useprior',''); 
 
 % remove files that do not exist
 varargout{1} = cat_io_checkdepfiles( varargout{1} );
@@ -491,6 +491,8 @@ function job = update_job(job)
   
   % get defaults
   def = cat_get_defaults;
+  def.useprior            = {}; % additional field for longitudinal processing of the single cases
+                                % that use the affine transformation of the AVG (xml-filename) 
   
   if isfield(job.extopts,'restypes')
     def.extopts.restype = (char(fieldnames(job.extopts.restypes))); 
@@ -499,7 +501,7 @@ function job = update_job(job)
   
   def.extopts.new_release = 0;
   def.extopts.lazy        = 0;
-  def.opts.fwhm           = 1;
+  def.opts.fwhm           = 1; % ############################## why is this set to 1 and not 0? 
   def.nproc               = 0; 
   def.getPID              = 2; % 0 - nothing (old), 1 - get PIDs, 2 - supervise PIDs 
    
@@ -643,6 +645,7 @@ function job = update_job(job)
   %% handling of SPM biasoptions for specific GUI entry
   if isfield(job.opts,'bias')
     if isfield(job.opts.bias,'spm')
+      job.opts.biasacc  = 0;
       job.opts.biasstr  = 0; 
       job.opts.biasfwhm = job.opts.bias.spm.biasfwhm; 
       job.opts.biasreg  = job.opts.bias.spm.biasreg; 
@@ -656,7 +659,11 @@ function job = update_job(job)
   %   biasreg  = [0.01  0.0032  0.0010  0.0003  0.0001] ? and ?
   %   biasfwhm = [30 45 60 75 90] for "30 + 60*biasstr? 
   %   biasfwhm = [30.32  42.65  60  84.39 118.71)] for "10^(5/6 + biasstr/3)?  .. allows lower fields 
-  if job.opts.biasstr>0 % update biasreg and biasfwhm only if biasreg>0
+  if isfield(job.opts,'biasacc') && job.opts.biasacc > 0
+    job.opts.acc      = job.opts.biasacc;
+    job.opts.biasreg	= min(  10 , max(  0 , 10^-(job.opts.biasstr*2 + 2) ));
+    job.opts.biasfwhm	= min( inf , max( 30 , 30 + 60*(1-job.opts.biasstr) ));  
+  elseif job.opts.biasstr > 0 % update biasreg and biasfwhm only if biasreg>0
     % limits only describe the SPM standard range
     job.opts.biasreg	= min(  10 , max(  0 , 10^-(job.opts.biasstr*2 + 2) ));
     job.opts.biasfwhm	= min( inf , max( 30 , 30 + 60*(1-job.opts.biasstr) ));  
@@ -864,7 +871,25 @@ function vout = run_job(job)
     end
   end
 
-  colormap(gray)
+  % use an extend colormap that also include 
+% ######################################################################
+% RD202007: In case of multiple subjects ...
+%           It should work to use additional colors, but it would also 
+%           be possible to clear the figure and load the CAT help.
+%           Another solution would be to run checkreg as conclusion or
+%           to create a final report that may only use some of the 
+%           checkreg results (better). 
+%           It should include (i) the main parameter (cat_main_reportstr),
+%           (2) a table with the number of successful and failed cases, 
+%           (3) the number of problematic cases (> checkreg) and maybe 
+%           (4) also include a average volume with variance overlay and
+%           surface with thickness variance.
+%           Such a report should be saved at the same place as the major 
+%           log files. 
+% ######################################################################
+  surfcolors = 128;
+  cmap(1:60,:) = gray(60); cmap(61:120,:) = flip(pink(60),1); cmap(121:120+surfcolors,:) = jet(surfcolors);  
+  colormap(cmap)
   
   if isfield(job,'nproc') && job.nproc>0 
     fprintf('\n%s',repmat('_',1,72));
@@ -926,19 +951,27 @@ end
 
 
 % lh/rh/cb central/white/pial/layer4 surface and thickness
-% ----------------------------------------------------------------------
+% ---------------------------------------------------------------------
 surfaceoutput = { % surface texture
-  {'central','sphere','sphere.reg'} % no measures - just surfaces
+  {'central'}                 % no measures - just surfaces
   {}                          % default
-  {}                          % expert
+  {'sphere','sphere.reg'}     % expert
   {'pial','white'}            % developer
 };
+if any( job.output.surface == [ 5 6 ] ) %&& cat_get_defaults('extopts.expertgui')<2 % no sphere's without registration
+  for i = 1:3
+    surfaceoutput{i} = setdiff(surfaceoutput{i},{'central','sphere','sphere.reg'});
+  end
+end
 measureoutput = {
-  {'thickness','pbt'}         % default
-  {}                          % no measures
-  {}                          % expert
-  {'depthWM','depthCSF'}      % developer
+  {'thickness'}                 % default 
+  {}                            % no measures
+  {}                            % expert
+  {'pbt','depthWM','depthCSF'}  % developer
 };
+if any( job.output.surface == [ 5 6 ] ) %&& cat_get_defaults('extopts.expertgui')<2
+  measureoutput{1} = setdiff(measureoutput{1},{'thickness'}); 
+end
 % no output of intlayer4 or defects in cat_surf_createCS but in cat_surf_createCS2 (but not with fast) 
 if isfield(job,'extopts') && isfield(job.extopts,'surface') && ...
    isfield(job.extopts.surface,'collcorr') && job.extopts.surface.collcorr>19 
@@ -1175,13 +1208,23 @@ if job.output.jacobian.warped
     end
 end
 
+% affine/ridid tranformation matrices 
+% ----------------------------------------------------------------------
+if job.output.rmat
+  ta  = {fullfile(parts{j,1},mrifolder,['t_' ,parts{j,2},'_affine_reorient.mat'])};
+  ita = {fullfile(parts{j,1},mrifolder,['it_',parts{j,2},'_affine_reorient.mat'])};
+  tr  = {fullfile(parts{j,1},mrifolder,['t_' ,parts{j,2},'_rigid_reorient.mat'])};
+  itr = {fullfile(parts{j,1},mrifolder,['it_',parts{j,2},'_rigid_reorient.mat'])};
+end
+
 
 % ----------------------------------------------------------------------
 vout  = struct('tiss',tiss,'label',{label},'wlabel',{wlabel},'rlabel',{rlabel},'alabel',{alabel},...
                'biascorr',{biascorr},'wbiascorr',{wbiascorr},'roi',{roi},'ibiascorr',{ibiascorr},...
                'wibiascorr',{wibiascorr},'ribiascorr',{ribiascorr},'aibiascorr',{aibiascorr},...
                'invdef',{invdef},'fordef',{fordef},'jacobian',{jacobian},'catxml',{catxml},...
-               'catlog',{catlog},'catreportpdf',{catreportpdf},'catreportjpg',{catreportjpg});
+               'catlog',{catlog},'catreportpdf',{catreportpdf},'catreportjpg',{catreportjpg},...
+               'ta',{ta},'ita',{ita},'tr',{tr},'itr',{itr});
              
 % add surface fields            
 for fi=1:numel(voutsfields)

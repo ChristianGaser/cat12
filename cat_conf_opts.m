@@ -64,6 +64,17 @@ ngaus.help    = {
 };
 
 
+biasacc         = cfg_menu;
+biasacc.tag     = 'biasacc';
+biasacc.name    = 'Power of SPM Inhomogeneity Correction';
+biasacc.def     = @(val)cat_get_defaults('opts.biasstr', val{:});
+biasacc.labels  = {'light','medium','strong','heavy'};
+biasacc.values  = {0.25 0.50 0.75 1.00};
+biasacc.help    = {
+  'Strength of the SPM inhomogeneity (bias) correction that simultaneously controls the SPM biasreg, biasfwhm, samp (resolution), and tol (iteration) parameter.  Modify this value only if you experience any problems!  Use smaller values for slighter corrections (e.g. in synthetic contrasts without visible bias) and higher values for stronger corrections (e.g. in 3 or 7 Tesla data with strong visible bias).  Stonger corrections often improve cortical results but can also cause overcorrection in larger GM structures such as the subcortical structurs, thalamus, or amygdala and will take longer.  Bias correction is further controlled by the Affine Preprocessing (APP). '
+  ''
+};
+
 %------------------------------------------------------------------------
 % Bias correction
 %------------------------------------------------------------------------
@@ -365,7 +376,7 @@ elseif expert==1
     ''
   }];
 else
-  opts.val  = {tpm,affreg,biasstr,accstr};
+  opts.val  = {tpm,affreg,biasacc};
    
 end
 

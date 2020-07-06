@@ -1,4 +1,4 @@
-function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,extopts)
+function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,extopts)
 % This is a subfunction of cat_main.
 % ______________________________________________________________________
 % Global intensity normalization based on tissue thresholds estimated as 
@@ -15,7 +15,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
 % intensity. 
 %
 %   [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] =
-%     cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res)
+%     cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,extopts)
 %
 %   Ym      .. intensity normalized image
 %   Yb      .. brain mask
@@ -41,7 +41,9 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
 % $Id$
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
 
-  
+  if ~exist('extopts','var')
+    extopts = cat_get_defaults('extopts');
+  end
   if isstruct(Ycls)
     
     %% final peaks and intensity scaling
@@ -762,11 +764,11 @@ RD202006: This part includes an minium based WM bias correction that is
       else
         if exist('BGth','var') && exist('T3th3','var')
           cat_io_addwarning('CAT:cat_main:InverseContrast',...
-            sprintf(['No T1 contrast detected. Run generalized function. \\n' ...
-               '  (BG=%0.2f, CSF=%0.2f, GM=%0.2f, WM=%0.2f)'],BGth,T3th3(1:3)),3);
+            sprintf(['No T1 contrast detected. Run generalized function. \\\\n' ...
+               '  (BG=%0.2f, CSF=%0.2f, GM=%0.2f, WM=%0.2f)'],BGth,T3th3(1:3)),1);
         else
           cat_io_addwarning('CAT:cat_main:InverseContrast',...
-            sprintf('  No T1 contrast detected. Run generalized function.'),3);
+            sprintf('  No T1 contrast detected. Run generalized function.'),1);
         end
       end
       

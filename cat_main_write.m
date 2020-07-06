@@ -322,7 +322,12 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
   end
   fprintf('%5.0fs\n',etime(clock,stime));
 
-
+  if job.output.rmat
+    M = trans.affine.A;      save(fullfile(pth,mrifolder,['t_' , nam, '_affine_reorient.mat']),'M');
+    M = inv(trans.affine.A); save(fullfile(pth,mrifolder,['it_', nam, '_affine_reorient.mat']),'M');
+    M = trans.rigid.R;       save(fullfile(pth,mrifolder,['t_' , nam, '_rigid_reorient.mat' ]),'M');
+    M = inv(trans.rigid.R);  save(fullfile(pth,mrifolder,['it_', nam, '_rigid_reorient.mat' ]),'M');
+  end
 
 
 end

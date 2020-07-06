@@ -120,13 +120,12 @@ if ~isfield(res,'spmpp')
     [Ysrcr,resGI] = cat_vol_resize(Ysrc      , 'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm');
     Ybr           = cat_vol_resize(single(Yb), 'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm')>0.5;
     Yclsr = cell(size(Ycls)); for i=1:6, Yclsr{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,min(vx_vol*2,1.4),32); end
-    [Ymr,T3th,Tth,job.inv_weighting,noise] = cat_main_gintnorm(Ysrcr,Yclsr,Ybr,resGI.vx_volr,res,Yy,job.extopts);
+    [Ymr,T3th,Tth,job.extopts.inv_weighting,noise] = cat_main_gintnorm(Ysrcr,Yclsr,Ybr,resGI.vx_volr,res,job.extopts);
     clear Ymr Ybr Ysrcr Yclsr; 
     Ym = cat_main_gintnorm(Ysrc,Tth); 
   else
-    [Ym,T3th,Tth,job.inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,job.extopts);
+    [Ym,T3th,Tth,job.extopts.inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,job.extopts);
   end
-  job.extopts.inv_weighting = job.inv_weighting; 
   fprintf('%5.0fs\n',etime(clock,stime));
 
 
@@ -151,11 +150,11 @@ if ~isfield(res,'spmpp')
       Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr);
     clear Yms Ybr BB;
     
-    if job.inv_weighting
-      Ysrc = Ym;
-    else
+    %if job.extopts.inv_weighting
+    %  Ysrc = Ym;
+    %else
       Ysrc = cat_main_gintnormi(Ym,Tth);
-    end
+    %end
     
     fprintf('%5.0fs\n',etime(clock,stime));
   end
@@ -233,7 +232,7 @@ if ~isfield(res,'spmpp')
   %% Local Intensity Correction 
   %  RD202006: Skip LAS in case of inverse contrast or if backup functions
   %            are forced (ignoreErrors > 2). 
-  if job.extopts.LASstr>0 && job.extopts.ignoreErrors < 3 && ~job.inv_weighting
+  if job.extopts.LASstr>0 && job.extopts.ignoreErrors < 3 && ~job.extopts.inv_weighting
     if job.extopts.LASstr>1 
       extoptsLAS2 = job.extopts;
       extoptsLAS2.LASstr = extoptsLAS2.LASstr-1; 
@@ -243,14 +242,13 @@ if ~isfield(res,'spmpp')
       stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
       [Ymi,Ym,Ycls] = cat_main_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth);
     end
-    fprintf('%5.0fs\n',etime(clock,stime));
     %
     % ### indlcude this in cat_main_LAS? ###
     %
     if job.extopts.NCstr~=0 
       % noise correction of the local normalized image Ymi, whereas only small changes are expected in Ym by the WM bias correction
-      stime = cat_io_cmd(sprintf('  SANLM denoising after LAS (%s)',...
-        NCstr.labels{find(cell2mat(NCstr.values)==job.extopts.NCstr,1,'first')}),'g5');
+      stimen = cat_io_cmd(sprintf('  SANLM denoising after LAS (%s)',...
+        NCstr.labels{find(cell2mat(NCstr.values)==job.extopts.NCstr,1,'first')}),'g5','',1,stime);
       
       [Ymis,Ymior,BB]  = cat_vol_resize({Ymi,Ym},'reduceBrain',vx_vol,round(2/mean(vx_vol)),Yb);
       Ymis = cat_vol_sanlm(struct('data',res.image0.fname,'verb',0,'NCstr',job.extopts.NCstr),res.image,1,Ymis);
@@ -269,12 +267,12 @@ if ~isfield(res,'spmpp')
       Ymis = cat_vol_median3(Ym,Ym>0 & Ym<0.4,Ym<0.4); Ym = Ym.*max(0.1,Ym>0.4) + Ymis.*min(0.9,Ym<=0.4);
       
       clear Ymis;
+      cat_io_cmd(' ','','',job.extopts.verb,stimen); 
     end    
     
-    cat_io_cmd(' ','','',job.extopts.verb,stime); 
     fprintf('%5.0fs\n',etime(clock,stime));
   else
-    cat_io_addwarning('cat_main:skipLAS','Skip LAS due to image contrast. Use global normalization.',0);
+    cat_io_addwarning('cat_main:skipLAS','Skip LAS due to image contrast. Use global normalization.',1,[0 0]);
     fprintf('%5.0fs\n',etime(clock,stime));
     Ymi = Ym; 
   end
@@ -304,7 +302,7 @@ if ~isfield(res,'spmpp')
       [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
       fprintf('%5.0fs\n',etime(clock,stime));
       if isfield(res,'Ylesion') && sum(res.Ylesion(:)==0) && job.extopts.SLC==1
-        cat_io_addwarning('CAT:cat_main_SLC_noExpDef','SLC is set for manual lesions corection but no lesions were found!',1); 
+        cat_io_addwarning('CAT:cat_main_SLC_noExpDef','SLC is set for manual lesions corection but no lesions were found!',1,[1 1]); 
       end
     end
   else
@@ -312,7 +310,7 @@ if ~isfield(res,'spmpp')
     fprintf('%5.0fs\n',etime(clock,stime));
     if job.extopts.expertgui && isfield(res,'Ylesion') && sum(res.Ylesion(:))>1000 && job.extopts.ignoreErrors < 2
       cat_io_addwarning('CAT:cat_main_SLC_noExpDef',sprintf(['SLC is deactivated but there are %0.2f cm' ...
-          native2unicode(179, 'latin1') ' of voxels with zero value inside the brain!'],prod(vx_vol) .* sum(res.Ylesion(:)) / 1000 ),1); 
+          native2unicode(179, 'latin1') ' of voxels with zero value inside the brain!'],prod(vx_vol) .* sum(res.Ylesion(:)) / 1000 ),1,[1 1]); 
     end
   end
   if ~debug; clear YBG Ycr Ydt; end
@@ -328,7 +326,7 @@ if ~isfield(res,'spmpp')
   %  Of course we only want to do this for highres T1 data!
   %  ---------------------------------------------------------------------
   NS = @(Ys,s) Ys==s | Ys==s+1; 
-  if job.extopts.BVCstr && all(vx_vol<2) % ~job.inv_weighting &&
+  if job.extopts.BVCstr && all(vx_vol<2) % ~job.extopts.inv_weighting &&
     stime = cat_io_cmd(sprintf('Blood vessel correction (BVCstr=%0.2f)',job.extopts.BVCstr));
     if job.extopts.ignoreErrors < 3  
       
@@ -369,16 +367,16 @@ if ~isfield(res,'spmpp')
         [Yb,Yl1] = cat_main_gcut(Ym,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
 
         % extend gcut brainmask by brainmask derived from SPM12 segmentations if necessary
-        if ~job.inv_weighting, Yb = Yb | Yb0; end
+        if ~job.extopts.inv_weighting, Yb = Yb | Yb0; end
 
         fprintf('%5.0fs\n',etime(clock,stime));
       catch %#ok<CTCH>
         fprintf('\n'); 
-        cat_io_addwarning('CAT:cat_main_gcut:err99','Unknown error in cat_main_gcut. Use old brainmask.',1);
+        cat_io_addwarning('CAT:cat_main_gcut:err99','Unknown error in cat_main_gcut. Use old brainmask.',1,[1 1]);
         job.extopts.gcutstr = 99;
       end
     else
-      cat_io_cprintf('warn','\n  No graph-cut backup function. Use old brainmask \n')
+      cat_io_addwarning('CAT:cat_main_gcut:err99','No graph-cut backup function. Use old brainmask.',1,[1 1]);
     end
   end
   % correct mask for skull-stripped images
@@ -426,7 +424,7 @@ if ~isfield(res,'spmpp')
     end
     if job.extopts.cleanupstr < 2 % use cleanupstr==2 to use only the old cleanup
       [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1(indx,indy,indz),... 
-        Ym(indx,indy,indz),job.extopts,job.inv_weighting,vx_vol,indx,indy,indz); % new cleanup
+        Ym(indx,indy,indz),job.extopts,job.extopts.inv_weighting,vx_vol,indx,indy,indz); % new cleanup
     else
       for i=1:3, Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i); end
       Yp0b = Yb(indx,indy,indz); 
@@ -462,7 +460,7 @@ if ~isfield(res,'spmpp')
 
 
   % correction for normalization [and final segmentation]
-  if ( (job.extopts.WMHC && job.extopts.WMHCstr>0) || job.extopts.SLC) && ~job.inv_weighting % && job.extopts.ignoreErrors < 2
+  if ( (job.extopts.WMHC && job.extopts.WMHCstr>0) || job.extopts.SLC) && ~job.extopts.inv_weighting % && job.extopts.ignoreErrors < 2
     % display something
     %{
     if job.extopts.WMHC==1
@@ -568,10 +566,8 @@ else
 %  We simply use the SPM segmentation as it is without further modelling of
 %  a PVE or other refinements. 
 %  ------------------------------------------------------------------------
-  [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa] = ...
+  [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,job.extopts.inv_weighting] = ...
     cat_main_SPMpp(Ysrc,Ycls,Yy,job,res);
-  
-  job.inv_weighting = 0; 
   
   fprintf('%5.0fs',etime(clock,stime)); 
 end
@@ -677,10 +673,6 @@ if ~debug, clear Yp0; end
 %  ---------------------------------------------------------------------
 if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9 && ...
    any( [job.output.ct.native job.output.ct.warped job.output.ct.dartel job.output.ROI] ))
- 
-  if ~isfield(job,'useprior')
-    job.useprior = '';
-  end
   
   % prepare some parameter
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*5/255; 
@@ -699,7 +691,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
         [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size] = ...
           cat_surf_createCS(VT,VT0,Ymix,Yl1,Yp0/3,YMF,struct('pbtmethod',pbtmethod,...
           'interpV',sres(sresi),'Affine',res.Affine,'surf',{surf},...
-          'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,...
+          'inv_weighting',job.extopts.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,...
           'useprior',job.useprior)); 
       end
     end
@@ -732,14 +724,14 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
         'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'collcorr',job.extopts.collcorr - 20,...
         'scale_cortex', job.extopts.scale_cortex, 'add_parahipp', job.extopts.add_parahipp, 'close_parahipp', job.extopts.close_parahipp,  ....
         'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
-        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior));  
+        'inv_weighting',job.extopts.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior));  
     else
       %%
       [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size, qa.createCS] = ...
         cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,struct('pbtmethod','pbt2x',...
         'interpV',job.extopts.pbtres,'extract_pial_white',job.extopts.collcorr, ...
         'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
-        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior)); 
+        'inv_weighting',job.extopts.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior)); 
     end
   end
   
@@ -1021,7 +1013,7 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
   d = VT.dim(1:3);
 
 return
-function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa] = cat_main_SPMpp(Ysrc,Ycls,Yy,job,res)
+function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,inv_weighting] = cat_main_SPMpp(Ysrc,Ycls,Yy,job,res)
 %% SPM segmentation input  
 %  ------------------------------------------------------------------------
 %  Here, DARTEL and PBT processing is prepared. 
@@ -1056,13 +1048,10 @@ function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa] = cat_main_SPMpp(Ysrc,Ycls,Y
   WMth = double(max(clsint(2),...
            cat_stat_nanmedian(cat_stat_nanmedian(cat_stat_nanmedian(Ysrc(Ycls{2}>192)))))); 
   T3th = [ min([  clsint(1) - diff([clsint(1),WMth]) ,clsint(3)]) , clsint(2) , WMth];
-  if T3th(3)<T3th(2) % inverse weighting allowed 
-    job.inv_weighting   = 1;                                     
-  else
-    job.inv_weighting   = 0; 
-  end
   clear Ysrc
   
+  inv_weighting = T3th(3)<T3th(2);                                     
+
   % the intensity normalized images are here represented by the segmentation 
   Ym   = Yp0/255*5/3;
   Ymi  = Yp0/255*5/3; 
@@ -1138,6 +1127,8 @@ function [Ymix,job,surf,WMT,stime] = cat_main_surf_preppara(Ymi,Yp0,job,vx_vol)
   Yp0th  = @(c) cat_stat_nanmedian( Ymi(Yp0toC(c) > 0.5) ); 
   if ( Yp0th(1) < Yp0th(2) ) && ( Yp0th(2) < Yp0th(3) ) && ( Yp0th(3) > 0.9 ) % if T1
     Ymix = Ymi .* (Yp0>0.5); % | (cat_vol_morph(Yp0>0.5,'d') & Ymi<2/3)); %% using the Ymi map
+  %elseif  ( Yp0th(1) > Yp0th(2) ) && ( Yp0th(2) > Yp0th(3) ) % if T1
+  %  Ymix = (4/3 - Ymi) .* (Yp0>0.5);
   else % use only the segmentation map if any other contrast (or for tests)
     Ymix = Yp0 / 3;  
   end

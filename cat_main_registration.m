@@ -106,8 +106,11 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
   def.affreg    = 1;              % additional affine registration
   def.iterlim   = inf;
   if ~isfield(job.extopts,'reg'), job.extopts.reg = struct(); end
-  dreg = cat_io_checkinopt(job.extopts.reg,def); 
-  
+  if isstruct( job.extopts.reg )
+    dreg = cat_io_checkinopt(job.extopts.reg,def);
+  else 
+    dreg = def; 
+  end
   
   % error in parallel processing - can't find shooting files (2016/12)
   % switch to shooting directory
@@ -129,9 +132,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
   
   % additional affine registration of the GM segment
   % only if not the prior is used
-  if isfield(job,'useprior') && ~isempty(job.useprior)
-    Affine = res.Affine; 
-  elseif dreg.affreg
+  if dreg.affreg && ( ~isfield(job,'useprior') || isempty(job.useprior) || ~exist(char(job.useprior),'file') )
     % Create maffreg obj structure similar to cat_run_job but only for the 
     % GM segment.
     obj.image         = res.image; 
@@ -148,11 +149,9 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
     
     wo = warning('QUERY','MATLAB:RandStream:ActivatingLegacyGenerators'); wo = strfind( wo.state , 'on');
     if wo, warning('OFF','MATLAB:RandStream:ActivatingLegacyGenerators'); end
-    Affine = spm_maff8(obj.image,obj.samp,obj.fwhm,obj.tpm,res.Affine,job.opts.affreg,80);
+    res.Affine = spm_maff8(obj.image,obj.samp,obj.fwhm,obj.tpm,res.Affine,job.opts.affreg,80);
     if wo, warning('ON','MATLAB:RandStream:ActivatingLegacyGenerators'); end
-    
-    
-    res.Affine = Affine;
+    Affine =  res.Affine;
     spm_progress_bar('Clear');
   end
 
@@ -160,7 +159,10 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
   % this is the main loop for different parameter
   for regstri = numel(job.extopts.regstr):-1:1
     for voxi = numel(job.extopts.vox):-1:1
-      if (numel(job.extopts.regstr) || numel(job.extopts.vox)) && job.extopts.verb, fprintf('\n\n'); end 
+      if regstri < numel(job.extopts.regstr) && job.extopts.verb && ...
+        (numel(job.extopts.regstr) || numel(job.extopts.vox)) 
+        fprintf('\n\n'); 
+      end 
       
       
       %% set dartel/shooting templates
@@ -355,7 +357,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
       Ma            = M0\inv(res.Affine)*M1t*vx2/vx3;                             % individual to registration space
       mat0a         = res.Affine\M1t*vx2/vx3;                                     % mat0 for affine output
       mata          = mm/vx3;                                                    % mat  for affine output
-      trans.affine  = struct('odim',odim,'mat',mata,'mat0',mat0a,'M',Ma);        % structure for cat_io_writenii
+      trans.affine  = struct('odim',odim,'mat',mata,'mat0',mat0a,'M',Ma,'A',res.Affine);   % structure for cat_io_writenii
       clear mata; 
 
       % rigid parameters
@@ -364,7 +366,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
       mat0reg       = R\M1tr*vx2/vx3;                                             
       mat0r         = R\M1t*vx2/vx3;                                              % mat0 for rigid ouput
       matr          = mm/vx3;                                                    % mat  for rigid ouput
-      trans.rigid   = struct('odim',odim,'mat',matr,'mat0',mat0r,'M',Mr);        % structure for cat_io_writenii
+      trans.rigid   = struct('odim',odim,'mat',matr,'mat0',mat0r,'M',Mr,'R',R);        % structure for cat_io_writenii
       res.rigid     = M0\inv(R); 
       clear matr; 
 

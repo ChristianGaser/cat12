@@ -234,8 +234,8 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,Yy,tpm,job,res,vx_vol,stime2)
   % don't use bias_fwhm, because the Amap bias correction is not that efficient
   % and also changes intensity values
   Ymib = double(Ymib); n_iters = 200; sub = round(128/min(vx_vol)); %#ok<NASGU>
-  n_classes = 3; pve = 5; bias_fwhm = 120; init_kmeans = 1;  %#ok<NASGU>
-  if job.extopts.mrf~=0, iters_icm = 50; else iters_icm = 0; end %#ok<NASGU>
+  n_classes = 3; pve = 5; bias_fwhm = 0; init_kmeans = 1;  %#ok<NASGU> % RD202007: bias_fwhm > 0 can cause MATLAB crashes
+  if job.extopts.mrf~=0, iters_icm = 50; else, iters_icm = 0; end %#ok<NASGU>
 
   
   % do segmentation and rep
