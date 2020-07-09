@@ -83,15 +83,15 @@ function str = cat_main_reportstr(job,res,qa)
   str{1} = [str{1} struct('name', 'Tissue Probability Map:','value',[cp{1} strrep(spm_str_manip(res.tpm(1).fname,'k40d'),'_','\_')])];
   if res.do_dartel
     if job.extopts.regstr==0 % Dartel
-      if ~strcmp(job.extopts.darteltpm{1},catdef.extopts.darteltpm{1}), cp{1} = npara; else, cp{1} = cpara; end
+      if strcmp(job.extopts.darteltpm{1},catdef.extopts.darteltpm{1}), cp{1} = npara; else, cp{1} = cpara; end
       str{1} = [str{1} struct('name', 'Dartel Registration to: ',...
                         'value',[cp{1} strrep(spm_str_manip(job.extopts.darteltpm{1},'k40d'),'_','\_')])];
     elseif job.extopts.regstr==4 % Dartel
-      if ~strcmp(job.extopts.shootingtpm{1},catdef.extopts.shootingtpm{1}), cp{1} = npara; else, cp{1} = cpara; end
+      if strcmp(job.extopts.shootingtpm{1},catdef.extopts.shootingtpm{1}), cp{1} = npara; else, cp{1} = cpara; end
       str{1} = [str{1} struct('name', 'Shooting Registration to: ',...
                         'value',[cp{1} strrep(spm_str_manip(job.extopts.shootingtpm{1},'k40d'),'_','\_')])];
     else
-      if ~strcmp(job.extopts.shootingtpm{1},catdef.extopts.shootingtpm{1}), cp{1} = npara; else, cp{1} = cpara; end
+      if strcmp(job.extopts.shootingtpm{1},catdef.extopts.shootingtpm{1}), cp{1} = npara; else, cp{1} = cpara; end
       if job.extopts.expertgui==0
         str{1} = [str{1} struct('name','Optimized Shooting Registration to:',...
                           'value',strrep(spm_str_manip(job.extopts.shootingtpm{1},'k40d'),'_','\_'))];

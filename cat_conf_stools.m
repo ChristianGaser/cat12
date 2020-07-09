@@ -6,6 +6,8 @@ function stools = cat_conf_stools(expert)
 % $Id$
 %_______________________________________________________________________
 
+%#ok<*NOCOM>
+
 % try to estimate number of processor cores
 try
   numcores = cat_get_defaults('extopts.nproc');
@@ -271,7 +273,7 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   % msk
   rimage                = cfg_files;
   rimage.tag            = 'rimage';
-  rimage.name           = 'Region tissue partial volume mask';
+  rimage.name           = 'Region/tissue (partial) volume mask';
   rimage.help           = {'Select images that define the tissue/region that should be projected to the surface. ' ''};
   rimage.filter         = 'image';
   rimage.ufilter        = '.*';
@@ -281,6 +283,8 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   rimage2.tag           = 'rimage2'; 
   rimage2.name          = 'Second region mask for relativation';
   rimage2.help          = {'i.e. WMH vs. WMV.'};
+  rimage2.val           = {''};
+  rimage2.num           = [0 Inf];
   
   % int
   iimage                = cfg_files;
@@ -372,25 +376,7 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
     ''
   };
 
-  type                = cfg_menu;
-  type.tag            = 'type';
-  type.name           = 'Tissue/region type';
-  type.labels         = {'GM','WM','CSF','WMH/lesion/tumor'};
-  type.values         = {'GM','WM','CSF','WMH'};
-  type.val            = {'WM'}; 
-  type.help           = {
-    ''};
 
-  vtype               = type; 
-  vtype.help          = {''};
-  
-  itype               = type; 
-  itype.help          = {''};
-
-  dtype               = type; 
-  dtype.help          = {''};
-
-  
   % measures
   vmeasure              = cfg_branch;
   vmeasure.tag          = 'vmeasure';
@@ -425,37 +411,122 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   dmeasure.help         = {
     'Extraction of local intensity values of one map in the regions defined by another. '};
 
-  % measures
-  vxmeasure              = cfg_branch;
-  vxmeasure.tag          = 'vxmeasure';
-  vxmeasure.name         = 'Predefined volume measure';
-  vxmeasure.val          = {vtype};
-  vxmeasure.help         = {
-    ''};
-
-  ixmeasure              = cfg_branch;
-  ixmeasure.tag          = 'ixmeasure';
-  ixmeasure.name         = 'Predefined intensity measure';
-  ixmeasure.val          = {itype};
-  ixmeasure.help         = {
-    ''};
-
-  dxmeasure              = cfg_branch;
-  dxmeasure.tag          = 'dxmeasure';
-  dxmeasure.name         = 'Predefined distance measure';
-  dxmeasure.val          = {dtype};
-  dxmeasure.help         = {
-    ''};
-
   
+  % predefined measures
+  % --- volume measures -------------------------------------------------
+  GMV             = cfg_menu;
+  GMV.tag         = 'GMV';
+  GMV.name        = 'GM volume';
+  GMV.labels      = {'Yes','No'};
+  GMV.values      = {1,0};
+  GMV.val         = {0}; 
+  GMV.hidden      = expert<1;
+  GMV.help        = {
+   ['Map local GM volume within 3 mm distance to the surface. ' ...
+    'The results are similar to the GM thickness map and represents the simplyfied form V_GM = A_GM * T_GM. '] 
+    ''};
 
+  WMV             = GMV; 
+  WMV.tag         = 'WMV';
+  WMV.name        = 'WM volume';
+  WMV.hidden      = expert<1;
+  WMV.help        = {
+   ['Map local WM volume within 10 mm distance to the surface. ' ...
+    'Especially the motorcortex and occipital areas have an enlarged volume compared to other ares. ' ...
+    'The enlargement could be related to the amount of myelination and hence depend on the preprocessing. '] 
+    ''};
+  
+  WMHV            = GMV; 
+  WMHV.tag        = 'WMHV';
+  WMHV.name       = 'WMH volume';
+  WMHV.hidden     = expert<1;
+  WMHV.help       = {
+    'Map local WMH volume within 10 mm distance to the surface. '
+    ''
+    'See also WMH vs WM volume measure.' 
+    ''};
+  
+  WMHVvsWMV       = GMV; 
+  WMHVvsWMV.tag   = 'WMHVvsWMV';
+  WMHVvsWMV.name  = 'WMH vs. WM volume';
+  WMHVvsWMV.hidden= expert<1;
+  WMHVvsWMV.help  = {
+    'Estimate the relation between the mapped local WMH and WM volume within 10 mm distance. '
+    ''};
+  
+  WMVvsGMV        = GMV; 
+  WMVvsGMV.tag    = 'WMVvsGMV';
+  WMVvsGMV.name   = 'WM vs. GM volume';
+  WMVvsGMV.hidden = expert<2;
+  WMVvsGMV.help   = {
+    'This describes the relation between the local amount of WM to GM and is some kind of folding measure. '
+    ''};
+  
+  % intensity
+  WMmnI           = GMV; 
+  WMmnI.tag       = 'WMmnI';
+  WMmnI.name      = 'WM mean intensity';
+  WMmnI.hidden    = expert<2;
+  WMmnI.help      = {
+    'This describes the mean intensity of the WM in a 7x7x7 box and describes the impact of WMHs in the volume. '
+    ''
+    'See also WM intensity variance.'
+    ''};
+ 
+  WMsdI           = GMV; 
+  WMsdI.tag       = 'WMsdI';
+  WMsdI.name      = 'WM intensity variance';
+  WMsdI.hidden    = expert<2;
+  WMsdI.help      = {
+   ['This describes the standard deviation of the intensity within the WM of a 7x7x7 box and describes the impact of WMHs in the volume. ' ...
+    'In contrast to the WM mean intensity it is less effected by WMHs and more sensitive to PVSs. ']
+    ''
+    'See also WM mean intensity. '
+    ''};
+  
+  GMmnI           = GMV; 
+  GMmnI.tag       = 'GMmnI';
+  GMmnI.name      = 'GM mean intensity';
+  GMmnI.hidden    = expert<2;
+  GMmnI.help      = {
+    'This describes the mean intensity of the GM in a 5x5x5 box and describes the myelination of the cortex. '
+    ''};
+  
+  % distances
+  WMD             = GMV; 
+  WMD.tag         = 'WMD';
+  WMD.name        = 'WM distance';
+  WMD.hidden      = expert<2;
+  WMD.help        = {
+   ['This another way to measures the cortical thickness with GMT = WMD * 2, ' ...
+    'because the central surface runs in the middle of the cortex. ']
+    'However, this is just an example to test the distance measure in general and it is better to use the thickness itself. '
+    ''};
+
+  WMHD            = GMV; 
+  WMHD.tag        = 'WMHD';
+  WMHD.name       = 'WMH distance';
+  WMHD.hidden     = expert<2;
+  WMHD.help       = {
+    'This describes the distance to the closest WMH. The measure is similar to the WMV. '
+    ''};
+  
+  % PVSdist
+  
+  xmeasure              = cfg_branch;
+  xmeasure.tag          = 'xmeasure';
+  xmeasure.name         = 'Predefined measures';
+  xmeasure.val          = {GMV,WMV,WMHV,WMHVvsWMV,WMVvsGMV,WMmnI,WMsdI,GMmnI,WMD,WMHD};
+  xmeasure.help         = {
+    'The are some predefined measures to project local tissue properties to the surface.'};
  
   % measure {vol, int, dist, idist)
   measures              = cfg_repeat;
   measures.tag          = 'measures';
   measures.name         = 'Measures';
-  measures.values       = {vmeasure, imeasure, dmeasure, vxmeasure, ixmeasure, dxmeasure};
-  measures.val          = {}; 
+  measures.num          = [1 inf];
+  measures.values       = {vmeasure, imeasure, dmeasure, xmeasure};
+  measures.val          = {xmeasure}; 
   measures.help         = {
     'Defintion of different volume, intensity and distance measures that were projected to the surface. ' ''};
   
@@ -473,9 +544,9 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   opts.tag              = 'opts';
   opts.name             = 'Options';
   if expert
-    opts.val            = {interp,outdir}; % lazy,nproc,verb
+    opts.val            = {interp,outdir,nproc}; % lazy,nproc,verb
   else
-    opts.val            = {outdir};
+    opts.val            = {outdir,nproc};
   end
   opts.help             = {'General processing options. ' ''};
   
@@ -485,7 +556,7 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   vx2surf.name          = 'Map voxel-data to the surface';
   vx2surf.val           = {surf,measures,opts}; %
   vx2surf.prog          = @cat_surf_vx2surf;
-  %vx2surf.vout          = @vout_surf_vxvol2surf;
+  vx2surf.vout          = @vout_cat_surf_vx2surf;
   vx2surf.help          = {
    ['Voxel-based projection of volume values to the individual surface. ' ...
     'The approach aligns all voxels within a specified tissue/roi to its closest surface point. ' ...
@@ -2034,6 +2105,21 @@ dep(1)            = cfg_dep;
 dep(1).sname      = 'Rendered surface data';
 dep(1).src_output = substruct('()',{1},'.','png','()',{':'});
 dep(1).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+
+%==========================================================================  
+function dep = vout_cat_surf_vx2surf(job)
+
+job.createDEPs = 1; 
+out = cat_surf_vx2surf(job); 
+
+dep = cfg_dep; 
+for mi = 1:numel(out.measures)
+  dep(mi)            = cfg_dep;
+  dep(mi).sname      = out.measures(mi).name;
+  dep(mi).src_output = substruct('.','measures','()',{mi},'.','files','()',{':'});
+  dep(mi).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+end
+
 
 %==========================================================================  
 function dep = vout_surfextract(job)

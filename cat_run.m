@@ -665,6 +665,7 @@ function job = update_job(job)
     job.opts.biasfwhm	= min( inf , max( 30 , 30 + 60*(1-job.opts.biasstr) ));  
   elseif job.opts.biasstr > 0 % update biasreg and biasfwhm only if biasreg>0
     % limits only describe the SPM standard range
+    job.opts.biasacc  = 0;
     job.opts.biasreg	= min(  10 , max(  0 , 10^-(job.opts.biasstr*2 + 2) ));
     job.opts.biasfwhm	= min( inf , max( 30 , 30 + 60*(1-job.opts.biasstr) ));  
   end
@@ -1215,6 +1216,11 @@ if job.output.rmat
   ita = {fullfile(parts{j,1},mrifolder,['it_',parts{j,2},'_affine_reorient.mat'])};
   tr  = {fullfile(parts{j,1},mrifolder,['t_' ,parts{j,2},'_rigid_reorient.mat'])};
   itr = {fullfile(parts{j,1},mrifolder,['it_',parts{j,2},'_rigid_reorient.mat'])};
+else
+  ta  = {}; 
+  ita = {};
+  tr  = {};
+  itr = {}; 
 end
 
 

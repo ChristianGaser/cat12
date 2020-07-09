@@ -1,5 +1,30 @@
 ------------------------------------------------------------------------
-r1673 | dahnke | 2020-07-06 19:01:33
+r1674 | dahnke | 2020-07-09 15:46:10
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_stools.m
+M       cat_main_gintnorm.m
+M       cat_main_reportstr.m
+M       cat_main_updateSPM.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_surf_vx2surf.m
+A       html/cat_methods_vx2surf.html
+A       html/images/cat_surf_vx2surf_evalGM.png
+A       html/images/cat_surf_vx2surf_smoothing.png
+A       html/images/cat_surf_vx2surf_vol-int-dist.png
+
+(1)  Changed:    Added dependencies for cat_surf_vx2surf batch. 
+                 Updated batch definition in cat_conf_stools.
+                 Added help HTML page. 
+(2)  Fixed:      Corrected little bugs in cat_conf_extopts, cat_run, and
+                 cat_main_reportstr.
+(3)  Commented:  Added documentation in cat_main_gintnorm.
+ 
+------------------------------------------------------------------------
+r1673 | dahnke | 2020-07-06 19:02:18 +0200 (Mo, 06 Jul 2020) | 57 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -57,6 +82,7 @@ M       tbx_cfg_cat.m
 (18) New:      Added recoloring of modified variables in cat_main_reportstr.      
 
                
+
 ------------------------------------------------------------------------
 r1672 | dahnke | 2020-07-02 10:26:11 +0200 (Do, 02 Jul 2020) | 6 lines
 
