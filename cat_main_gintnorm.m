@@ -87,6 +87,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
     end
     
     clsint  = @(x) cat_stat_nanmedian(Ysrc(Ycls{x} > 128)); 
+    %clsint  = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5; % better for ADNI ??? 
     clsints = @(x,y) [round( res.mn(res.lkp==x) * 10^5)/10^5; res.mg(res.lkp==x-((y==0)*8))']; 
 
     vxv    = 1/cat_stat_nanmean(vx_vol);

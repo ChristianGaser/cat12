@@ -98,7 +98,9 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Y
     clear YbA;
 
 
-    % RD 202006: Correct background (from cat_run_job)
+    % RD202006: Correct background (from cat_run_job)
+    % RD202007: The noisy zeros background in resliced data (e.g. long avg)
+    %           can possibly cause problems? - no 
     if isfield(res,'bge')
       P(:,:,:,end) = max( cat_vol_ctype( res.bge * 255 ) , P(:,:,:,end) ); 
       for i=1:size(P,4)-1, P(:,:,:,i) = P(:,:,:,i) .* cat_vol_ctype(1 - res.bge); end

@@ -1,0 +1,106 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link rel="stylesheet" type="text/css" href="spm.css" />
+    <link rel="stylesheet" type="text/css" href="../spm.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  
+  <body>
+    <div id="header" style="background: black url('images/contact.jpg') right;">
+      <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
+      <p>
+          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
+          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');">Department of Neurology</a> | 
+          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');">Department of Psychiatry</a> | 
+          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
+      </p>
+      <div id="breadcrumbs">
+        <a href="cat.html">CAT</a> > <a href="cat_methods.html">Methods</a> > <a href="cat_methods_vx2surf.html">Voxel to surface projection</a>
+      </div>
+    </div>
+      
+    <div id="content">
+      <h2>Voxel to surface projection <b style="color:#AA0000">(IN DEVELOPMENT)</b>:</h2>
+      <p>
+        The <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat12.stools...');">...</a> batch allows to map voxel information to the cortical surface.  It aligns all voxels of a masked region to their closest surface vertex (Figure <a ref="#fig:concept">1</a>).  This alignment is used to map the (a) local volume, (b) the local intensity described by a second input volume, or (c) the shortest distance of the masked region.  Although all type of measures describe similar things more global level each has some detailed (dis)advantage compared to the others.  For instance, the cortical thickness have a strong correlation to GM volume and very strong correlation to the shortest distance to the WM that is for the central surface about half of the thickness (see <a ref="#evalex">Evaluation examples</a>).  However, this tool focuses on the projection of subcortical change of the WM rather than cortical aspects but it can also be use to map aspects of lesions or tumors to the cortical surface (see <a ref="#predef">Predefined measures</a>).
+      </p>
+      <p id="fig:concept" style="text-align:center;"><img src="images/cat_surf_vx2surf_concept.png" width=90% height=auto alt="Concept figure how to map the volume, intensity, or distance of a region to the surface by using cat_surf_vx2surf." >
+	      </br>
+	      Figure 1:  Voxel-based mapping of the (a) local volume, (b) local intensity, or (c) distance of a specified tissue or region to the individual central surface.       
+      </p>
+      <!-- short introduction to mapping issues -->
+      <p>
+        However, there are also a lot of small differences for the used metric but also the mapping itself.  Absolute volume values for instance depend on the sampling resolution of the individual surface and require a special modulated mapping from the individual to the average surface compared to the simple interpolation for intensity or distance data.  Alternatively, a second volume can be use to create a relative measure (e.g., the proposition of dysfunctional WM volume of WM hyperintensities to the local WM volume) that is quite similar to the classic definition of a global gyrification index <i>GI = length(folded) / length(unfolded)</i> (<a href="http://link.springer.com/10.1007/BF00304699">Zilles et all, 1989</a>).
+      </p>
+      <!-- log10 normalization and smoothing issue -->
+      <p>
+        Another issue is that you have to assure that the resulting measure is normally distributed.  The cortical depth for instance, as the distance to the brain mask, has a ... histogram with many low and a very small number of high values.  Here, a <i>log10</i> transformation and strong smoothing (e.g., 100 mm or even more) allows to support normal distribution required for statistical analysis.  The strong smoothing also helps to reduce highly individual, sulci/gyri-specific mapping aspects although it reduce the spatial resolution at the same time (Figure <a ref="#fig:norm">2</a>).
+      </p>
+      <!-- this figure should show two-three surfaces with histogram to illustrate this issue (e.g., sulcal depth?) -->
+      <p id="fig:norm" style="text-align:center;"><img src="images/cat_surf_vx2surf_smoothing.png" width=90% height=auto alt="illustration of log10 normalization and smoothing" >
+	      </br>
+	      Figure 2:  Log10 normalization (a) and smoothing (b) are often helpful to support normal distributed that is required for many statistical approaches.
+      </p>
+      <!-- TIV confound issue -->
+      <p>
+        Moreover, nearly all measures depend on brain size in a non-linear way and the use of the (log10-transformed) TIV as confound is required (<a href="http://www.sciencedirect.com/science?_ob=ArticleURL&_udi=B6T0R-48472W7-2R&_user=6492750&_rdoc=1&_fmt=&_orig=search&_sort=d&view=c&_acct=C000056279&_version=1&_urlVersion=0&_userid=6492750&md5=255eded8dd26fe2b8654faf9b57719f7">Hofman, 1989</a>; <a href="http://cercor.oxfordjournals.org/cgi/content/full/18/9/2181">Im et al., 2008</a>).
+      </p>
+      <!-- conclusion -->
+      <p>
+        Hence, we recommend carful use of all measures especially in case of own definitions.  If you use this function please cite the CAT12 toolbox and (xxx).  
+        <!-- In case of questions and comments mail <a ref="mailto:robert.dahnke@uni-jena.de">robert.dahnke@uni-jena.de</a>. --> 
+      </p>
+        
+        
+        
+        
+      <h4 id="predef">Predefined measures</h4><label="xmeasures">
+      <p>
+        The tool was originally developed for the evaluation of WM changes in aging and you can find 2 predefined WMH measures for volume and distance. 
+        Moreover, we have added the basic GM measures described in the section <a ref="evalex">Evaluation examples</a> for basic understanding but we suggest to use the ... batch allows more accurate evaluation on sub-millimeter resolution and consideration of the meandering of the cortical layers. 
+        <!-- The used parameters can be found in Table <a ref="#tab:xmeasures">1</a>. --> 
+      </p>
+
+
+
+
+      <h4 id="predef">Background</h4><label="background">
+      <p>
+        The mapping of volume and intensity presents classical push operations that uses the sum for volumes and mean for intensity.  Like all push operations they have the problem that some vertices have a huge amount of aligned voxels (e.g., sulcal vertices for WM mapping) or only very few or even no voxels (e.g., gyral vertices for WM mapping).  This finally requires some basic smoothing to reduce this mapping artifact.  Although interpolation of the volume allows to reduce this problem it the improvement is negligible because strong smoothing is also required by other reasons, e.g., to remove individual folding effects.   
+        The distance mapping on the other side was implemented as pull and for each surface vertex the closes volume voxel of the ROI volume is estimated.  However, this also means that we cannot get information of structure hidden behind another one.  
+        <!-- Although also the distance metric can be implemented by a push operation with mean, it would be quite similar to a distance weighted push of the voxel volume. -->
+      </p>
+      <p>
+	      The mapping first identified all voxels and use a Delaunay triangulation to support a fast search (<i>O(n log n)</i>) of the closest surface vertices of each voxel for volume and intensity mapping or the closes voxels for the distance measure. 
+	      <!-- The intensity mapping utilize also a voxel-based evaluation of the mean or standard deviation of the intensity map within a distance of n voxel of masked voxels. --> 
+ 	    </p>
+	    <p>
+		  </p>
+
+
+
+      
+      <h4 id="evalex">Evaluation examples</h4>
+      <p>
+        To give some rough impression of the mapping expected correlations between GM thickness (estimated in the preprocessing) and the GM volume or the WM distance can be used (Figure <a ref="#fig:eval">3</a>).  Besides volume we have also a clear expectation about the local intensity of the cortex, with increased values in the motor-cortex and occipital lobe (Figure <a ref="#fig:eval2">4</a>).  
+      </p>
+      <!-- it would be good to estimate the correlation between the measures -->
+      <p id="fig:eval" style="text-align:center;"><img src="images/cat_surf_vx2surf_evalGM.png" width=90% height=auto alt="Illustration of different cortical measures." >
+	      </br>
+	      Figure 3: Different ways to evaluate the local amount of GM.  
+      </p>
+      <!-- only one figure? - two are easier to handle if you want to remove a port of it later -->
+      <p id="fig:eval2" style="text-align:center;"><img src="images/cat_surf_vx2surf_evalGM2.png" width=90% height=auto alt="Illustration of different cortical intensity mappings" >
+	      </br>
+	      Figure 4: Different ways to evaluate the local amount of GM by extracting the intensities of the intensity normalized T1 map (<i>m[i]*.nii</i>).  
+      </p>
+      
+    </div>
+    <div id="content"><a href="cat_methods.html">< Methods</a></div>  
+    <div id="footer">
+      <p>Copyright (C) Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
+    </div>
+  </body>
+</html>
