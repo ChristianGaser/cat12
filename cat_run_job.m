@@ -1018,11 +1018,11 @@ function cat_run_job(job,tpm,subj)
           casei  = 0;     % iteration counter
           rerun  = 0;     % rerun in case of TPM problems 
           acccon = 0.33;  % acceptable contrast (optimal is 0.5, default maybe 0.35-0.45 in T1 )
-          runcas = 1;     % stop for acceptable contrast (inf = test all, 2 = only casei<3) ... for test we start with inf
+          runcas = inf;     % stop for acceptable contrast (inf = test all, 2 = only casei<3) ... for test we start with inf
           if job.extopts.ignoreErrors > 2
             verbs  = 1;   % show results
           else
-            verbs  = 0;   % show results
+            verbs  = 1;   % show results
           end
           resi   = cell(1,4); modelname = cell(1,4); mincontrast = zeros(1,4); 
           
@@ -1121,6 +1121,7 @@ function cat_run_job(job,tpm,subj)
               end
             end
             
+            ll(casei) = resi{casei}.ll; 
             if verbs
               txt = sprintf(' (min tissue contrast: %0.3f,%0.2f) ',mincontrast(casei),resi{casei}.ll ./ (obj.samp^3 * 1000)); 
               cat_io_cprintf('g5',sprintf('%s',txt)); %,repmat('\b',1,numel(txt)) 
@@ -1132,10 +1133,11 @@ function cat_run_job(job,tpm,subj)
               break
             end
           end
-          
           if ~exist('res','var') || ~exist('maxci','var')
             % if no model was optimal than chouse the best
-            [maxc,maxci] = max(mincontrast(1:min(numel(mincontrast),find(cellfun('isempty',modelname))))); 
+            [maxc,maxci] = max(mincontrast(1:min(numel(mincontrast)      ,find(cellfun('isempty',modelname))))); 
+         %  [maxl,maxli] = max(ll(1:min(numel(ll ./ (obj.samp^3 * 1000) ),find(cellfun('isempty',modelname))))); 
+     
             if ~isempty(maxci)
               res = resi{maxci}; 
               if verbs

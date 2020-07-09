@@ -766,7 +766,7 @@ wmhc.help   = {
   ' 2) Permanent correction to WM. ' 
 };
 if expert>1
-  wmhc.help   = [wmhc.help {
+  wmhc.help   = [wmhc.help; {
      ' 3) Handling as separate class. '
      ''
   }];
