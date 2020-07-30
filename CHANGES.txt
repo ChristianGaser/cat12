@@ -1,5 +1,28 @@
 ------------------------------------------------------------------------
-r1674 | dahnke | 2020-07-09 15:46:10
+r1675 | gaser | 2020-07-30 14:51:50
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_batch_long.m
+M       cat_stat_analyze_ROIs.m
+M       cat_stat_check_cov.m
+M       cat_surf_createCS.m
+M       cat_vol_groupwise_ls.m
+M       check_pipeline.sh
+A       check_pipeline_homogeneity.m
+M       html/cat.html
+
+(1) Changed: Extended check_pipeline.sh for longitudinal data.
+(2) Added:   New tool for checking sample homogeneity for check_pipeline data.
+(3) Fixed:   Correction for negative values was always enabled in
+             cat_vol_groupwise_ls.m.
+(4) Fixed:   Corrected check for usepior option in cat_surf_createCS.m 
+(5) Fixed:   Output files are now always written in analysis folder in 
+             cat_stat_analyze_ROIs.m.
+(6) Fixed:   Check for input options added in cat_batch_long.m
+------------------------------------------------------------------------
+r1674 | dahnke | 2020-07-09 15:48:27 +0200 (Do, 09 Jul 2020) | 23 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -23,6 +46,7 @@ A       html/images/cat_surf_vx2surf_vol-int-dist.png
                  cat_main_reportstr.
 (3)  Commented:  Added documentation in cat_main_gintnorm.
  
+
 ------------------------------------------------------------------------
 r1673 | dahnke | 2020-07-06 19:02:18 +0200 (Mo, 06 Jul 2020) | 57 lines
 
