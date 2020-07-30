@@ -737,7 +737,7 @@ end
 
 % correct if minimum is < 0
 min_vol = min(vol(:));
-if min_vol, vol = vol - min_vol; end
+if min_vol < 0, vol = vol - min_vol; end
 
 if need_wimg
     for i=1:numel(param)

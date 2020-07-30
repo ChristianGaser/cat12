@@ -555,7 +555,7 @@ if mesh_detected
     % name for combined hemispheres
     name_lh   = ['lh.logP'   corr_short{c} output_name '.gii'];
     name_rh   = ['rh.logP'   corr_short{c} output_name '.gii'];
-    name_mesh = ['mesh.logP' corr_short{c} output_name '.gii'];
+    name_mesh = fullfile(cwd,['mesh.logP' corr_short{c} output_name '.gii']);
   
     % combine left and right 
     M0 = gifti({name_lh, name_rh});
@@ -594,7 +594,7 @@ else % write label volume with thresholded p-values
   % go through all corrections and save label image if sign. results were found
   for c=1:n_corr 
     if ~isempty(ind_corr{c})
-      V.fname = ['logP' corr_short{c} output_name '.nii'];
+      V.fname = fullfile(cwd,['logP' corr_short{c} output_name '.nii']);
       V.dt(1) = 16;
       if ~found_inv, data{c}(data{c} < 0) = 0; end
       if ~isempty(find(data{c}~=0))

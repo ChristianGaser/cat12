@@ -8,8 +8,8 @@ function cat_batch_long(namefile,output_surface,large_changes,cat_defaults)
 % $Id$
 
 if nargin < 1
-	fprintf('Syntax: cat_batch_long(namefile)\n');
-	exit
+  fprintf('Syntax: cat_batch_long(namefile)\n');
+  exit
 end
 
 if nargin < 2
@@ -18,6 +18,9 @@ else
   % string argument has to be converted 
   if isstr(output_surface)
     output_surface = str2num(output_surface);
+  end
+  if isstr(large_changes)
+    large_changes = str2num(large_changes);
   end
 end
 
@@ -37,17 +40,17 @@ spm_get_defaults;
 if nargin < 3
     cat_get_defaults;
 else
-    if isempty(cat_defaults)
-        cat_get_defaults;
-    else
-        fprintf('Use defaults in %s.\n',cat_defaults);
-        [pp, name] = spm_fileparts(cat_defaults);
-        clear cat_defaults
-        oldpath = pwd;
-        cd(pp)
-        eval(name);
-        cd(oldpath)
-    end
+  if isempty(cat_defaults)
+    cat_get_defaults;
+  else
+    fprintf('Use defaults in %s.\n',cat_defaults);
+    [pp, name] = spm_fileparts(cat_defaults);
+    clear cat_defaults
+    oldpath = pwd;
+    cd(pp)
+    eval(name);
+    cd(oldpath)
+  end
 end
 
 matlabbatch{1}.spm.tools.cat.long.datalong.subjects{1} = names;
