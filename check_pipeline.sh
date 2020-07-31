@@ -408,6 +408,7 @@ postprocess ()
     
     # prepare renderview if tool is found and surface processing is enabled
     if [ ! -z `which render_surf.sh` ] & [ $volumes_only -eq 0 ]; then
+      mkdir -p ${proc_dir}/check_r${revision_cat}/surf
       ln -s ${proc_dir}/check_r${revision_cat}/long/surf/* ${proc_dir}/check_r${revision_cat}/surf/
       render_surf.sh -range 0 6 ${proc_dir}/check_r${revision_cat}/surf 
       mv check_r${revision_cat}*.png ${proc_dir}/ >/dev/null 2>&1
