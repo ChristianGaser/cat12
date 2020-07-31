@@ -54,7 +54,7 @@ static void cgs3_mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray 
         mexErrMsgTxt("Incompatible 1st dimension.");
     if (mxGetDimensions(prhs[0])[1] != dm[1])
         mexErrMsgTxt("Incompatible 2nd dimension.");
-    if (mxGetDimensions(prhs[0])[2] != dm[1])
+    if (mxGetDimensions(prhs[0])[2] != dm[2])
         mexErrMsgTxt("Incompatible 3rd dimension.");
 
     if (!mxIsNumeric(prhs[2]) || mxIsComplex(prhs[2]) || mxIsSparse(prhs[2]) || !mxIsDouble(prhs[2]))

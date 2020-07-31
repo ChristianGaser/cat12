@@ -761,7 +761,12 @@ if need_avg
     % use weighted median for rigid registration and mean for non-linear registration
     if all(isfinite(w_settings(i,:)))
         vol_mean   = mean(vol,4);
-        vol_median = median(vol,4);
+        % use median for > 2 images, otherwise use min
+        if numel(param) > 2
+            vol_median = median(vol,4);
+        else
+            vol_median = min(vol,[],4);
+        end
         vol_std    = std(vol,[],4);
         
         % get 0..95% range
