@@ -1,5 +1,27 @@
 ------------------------------------------------------------------------
-r1675 | gaser | 2020-07-30 14:51:50
+r1676 | gaser | 2020-07-31 16:44:45
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_main_reportfig.m
+M       cat_surf_createCS.m
+M       cat_vol_groupwise_ls.m
+M       check_pipeline.sh
+M       html/cat.html
+ M      html/cat_methods_vx2surf.html
+ M      html/images/cat_surf_vx2surf_evalGM.png
+ M      html/images/cat_surf_vx2surf_smoothing.png
+ M      html/images/cat_surf_vx2surf_vol-int-dist.png
+M       spm_diffeo_old.c
+
+(1) Changed: For calculation of average/median image during rigid registration
+             the minimum instead of median is now used for the case of only two 
+             images.
+(2) Fixed:   Flag useprior was not correctly recognized in cat_surf_createCS.m
+
+------------------------------------------------------------------------
+r1675 | gaser | 2020-07-30 14:52:28 +0200 (Do, 30 Jul 2020) | 21 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -21,6 +43,7 @@ M       html/cat.html
 (5) Fixed:   Output files are now always written in analysis folder in 
              cat_stat_analyze_ROIs.m.
 (6) Fixed:   Check for input options added in cat_batch_long.m
+
 ------------------------------------------------------------------------
 r1674 | dahnke | 2020-07-09 15:48:27 +0200 (Do, 09 Jul 2020) | 23 lines
 
