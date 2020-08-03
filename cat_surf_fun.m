@@ -1163,10 +1163,12 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
   
   M  = spm_mesh_smooth(CS);    % smoothing matrix
   if exist('T','var') % thickness in voxel space 
-    N  = spm_mesh_normals(CS);
+    try
+      N  = spm_mesh_normals(CS);
     
-    VI = CS.vertices + N .* repmat(T / 2 ,1,3); % white surface
-    VO = CS.vertices - N .* repmat(T / 2 ,1,3); % pial surface
+      VI = CS.vertices + N .* repmat(T / 2 ,1,3); % white surface
+      VO = CS.vertices - N .* repmat(T / 2 ,1,3); % pial surface
+    end
   end
   
   if exist('Pcentral','var') && ischar(Pcentral)
