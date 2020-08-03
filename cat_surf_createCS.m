@@ -727,8 +727,12 @@ cstime = clock;
   
       % estimate size of topology defects 
       cmd = sprintf('CAT_MarkDefects "%s" "%s" "%s"',Praw,Psphere0,Pdefects0); 
-      [ST, RS] = cat_system(cmd);
-      sdefects       = cat_io_FreeSurfer('read_surf_data',Pdefects0); delete(Pdefects0);  
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+      try
+        sdefects       = cat_io_FreeSurfer('read_surf_data',Pdefects0); delete(Pdefects0);  
+      catch
+        sdefects = NaN;
+      end
       defect_number0 = defect_number0 + ceil( max(sdefects )); 
       defect_size0   = defect_size0   + sum(sdefects > 0) / length(sdefects) * 100; % percent
       defect_area0   = defect_area0   + sum(sdefects > 0) / length(sdefects) .* ...
