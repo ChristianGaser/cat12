@@ -3,7 +3,7 @@ function check_pipeline_homogeneity
 % cat12 releases using check_pipeline.sh
 %
 % _________________________________________________________________________
-% $Id: check_pipeline_homogeneity.m 1651 2020-06-12 12:39:55Z gaser $
+% $Id$
 
 long = spm_input('Longitudinal data?','+1','y/n',[1,0],2);
 

@@ -134,7 +134,7 @@ try
  %opts1585                      = cat_conf_opts1585(expert); 
   load_previous = 1;
 catch
-  fprintf('\nWarning: Loading of old CAT12 versions was not successful and will be skipped\n');
+  fprintf('\nWarning: Loading of older CAT12 segmentation versions was not successful and will be skipped.\n');
   load_previous = 0;
 end
 

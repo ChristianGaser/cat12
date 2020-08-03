@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1676 | gaser | 2020-07-31 16:44:45
+r1677 | gaser | 2020-08-03 14:54:49
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_run_job.m
+M       cat_surf_createCS.m
+M       cat_surf_fun.m
+MM      check_pipeline_homogeneity.m
+M       html/cat.html
+M       tbx_cfg_cat.m
+
+(1) Changed: Added some more try-catch commands to catch some errors that were
+             often found with piwik statistics.
+(2) Changed: Updated help text.
+------------------------------------------------------------------------
+r1676 | gaser | 2020-07-31 16:45:25 +0200 (Fr, 31 Jul 2020) | 20 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -19,6 +35,7 @@ M       spm_diffeo_old.c
              the minimum instead of median is now used for the case of only two 
              images.
 (2) Fixed:   Flag useprior was not correctly recognized in cat_surf_createCS.m
+
 
 ------------------------------------------------------------------------
 r1675 | gaser | 2020-07-30 14:52:28 +0200 (Do, 30 Jul 2020) | 21 lines
