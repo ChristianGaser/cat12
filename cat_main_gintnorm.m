@@ -135,134 +135,24 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
       % RD202006: WM < GM < CSF      
       % Use backup funtion in case of inverse contrast.
       error('cat_main_gintnorm:runbackup','Run PD/T2 processing.');
-                 
-%{
-RD202006: This part includes an minium based WM bias correction that is 
-          now part of the generalized bias correction in the backup function. 
-          This part can be removed in future.
-           
-      T3th3(1) = max( max(clsints(3,0)) , mean(Ysrc(Ycls{3}(:)>240)));     
-
-      % first initial scaling for gradients and divergence
-      if abs(diff( abs(diff( T3th3/diff(T3th3([3,1])) )) ))>0.4 % %T2
-        T3th  = [min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ...
-                 min( T3th3(3)*0.8+0.2*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) , BGth ) ...
-                 T3th3 ...
-                 ([T3th3(3)*0.5+0.5*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ... WM
-                  cat_stat_nanmean([T3th3(3), BGth ]) ... WM
-                  T3th3(2)*0.5 + 0.5*T3th3(1)... % CSF/GM
-                  max(T3th3) + abs(diff(T3th3([1,3])/2)) ... % CSF / BG
-                   ]) ];
-        T3thx = [0,0.05, 1,2,3.2, 1.1, 1.0, 1.75, 0.8]; 
-
-        [T3th,si] = sort(T3th);
-        T3thx     = T3thx(si);
-      else 
-        T3th  = [min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ...
-                 min( T3th3(3)*0.2+0.8*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) , BGth ) ...
-                 T3th3 ...
-                 ([T3th3(3)*0.5+0.5*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ... WM
-                  cat_stat_nanmean([T3th3(3), BGth ]) ... WM
-                  T3th3(2)*0.5 + 0.5*T3th3(1)... % CSF/GM
-                  max(T3th3) + abs(diff(T3th3([1,3])/2)) ... % CSF / BG
-                  max(T3th3(end) + abs(diff(T3th3([1,numel(T3th3)])/2)) , ...
-                   max(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ) ]) ];
-        T3thx = [0,0.05, 1,2,3, 2.0, 1.0, 1.75, 0.8, 0.2];
-
-        [T3th,si] = sort(T3th);
-        T3thx     = T3thx(si);
-      end
-
-      Ym = Ysrc+0; 
-      for i=2:numel(T3th)
-        M = Ysrc>T3th(i-1) & Ysrc<=T3th(i);
-        Ym(M(:)) = T3thx(i-1) + (Ysrc(M(:)) - T3th(i-1))/diff(T3th(i-1:i))*diff(T3thx(i-1:i));
-      end
-      M  = Ysrc>=T3th(end); 
-      Ym(M(:)) = numel(T3th)/6 + (Ysrc(M(:)) - T3th(i))/diff(T3th(end-1:end))*diff(T3thx(i-1:i));    
-      Ym = Ym / 3; 
-      %%
-      Yg    = cat_vol_grad(Ym,vx_vol);
-      Ydiv  = cat_vol_div(Ym,vx_vol);
-
-      %% tissues for bias correction
-      Ycm   = (Ym + Yg - Ydiv + single(Ycls{2})/255)<2/3 | ...
-              (Ycls{3} + Ycls{6} + Ycls{4} + Ycls{5})>128; 
-      Ycd   = cat_vbdist(single(Ycm));
-      Ybd   = cat_vbdist(cat_vol_morph(single((Ycls{6} + Ycls{4} + Ycls{5})>128),'lo',1));
-
-      Ywm  = (single(Ycls{2})/255 - Yg - Ydiv - max(0,3-Ycd-Ybd/40)/2)>0.7 | ... 
-             (Ym-Yg-Ydiv-max(0,3-Ycd-Ybd/40)/2)>0.8 & Ycls{1}+Ycls{2}>240;
-      Ywm(smooth3(Ywm)<0.3)=0;
-      Ygm  = (single(Ycls{1})/255 - abs(Ydiv)*8)>0.5 | ...
-             (single(Ycls{2}+Ycls{1})>240 & max(0,2-Ycd - max(0,Ybd/2-10))>0 & abs(Ydiv)<0.1);
-
-      %% bias correction
-      [Yi,resT2] = cat_vol_resize(Ysrc.*Ywm,'reduceV',vx_vol,1,16,'min');
-      Yig        = cat_vol_resize(Ysrc.*Ygm./cat_stat_nanmedian(Ysrc(Ygm(:)))*cat_stat_nanmedian(Ysrc(Ywm(:))),'reduceV',vx_vol,1,16,'meanm');
-      Yi = max(Yi,Yig); Yi(Yig>0) = min(Yig(Yig>0),Yi(Yig>0));
-      Yi = cat_vol_localstat(Yi,Yi>0,1,2);
-      for xi=1:2, Yi = cat_vol_localstat(Yi,Yi>0,2,1); end
-      Yi = cat_vol_approx(Yi,'nh',resT2.vx_volr,2); Yi = cat_vol_smooth3X(Yi,2); 
-      Yi = cat_vol_resize(Yi,'dereduceV',resT2)./cat_stat_nanmedian(Yi(Ycls{2}>192));  
-      Ysrcr = round(Ysrc ./ Yi * 10^5)/10^5; % * T3th3(3) * 1.05
-      if debug==0, clear Yg Ydiv Yn Yi; end
-
-      %% final thresholds
-      if 0  % old 
-        T3th  = [min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ...
-                 min( T3th3(3)*0.2+0.8*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) , BGth ) ...
-                 T3th3 ...
-                 ([T3th3(3)*0.3+0.7*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ...
-                  cat_stat_nanmean([T3th3(3),BGth]) ...
-                  clsint(2)*0.8 ...
-                  max(T3th3) + abs(diff(T3th3([1,numel(T3th3)])/2)) ...
-                  max(T3th3(end) + abs(diff(T3th3([1,numel(T3th3)])/2)) , ...
-                  max(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))))]) ];
-        T3thx = [0,0.05, 1,2,3, 2.9, 2.5, 2.0, 1.0, 0.7];
-      end
-      if abs(diff( abs(diff( T3th3/diff(T3th3([3,1])) )) ))>0.4 % %T2
-        T3th  = [min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ...
-                 min( T3th3(3)*0.8+0.2*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) , BGth ) ...
-                 T3th3 ...
-                 ([T3th3(3)*0.5+0.5*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ... WM
-                  cat_stat_nanmean([T3th3(3), BGth ]) ... WM
-                  T3th3(2)*0.5 + 0.5*T3th3(1)... % CSF/GM
-                  max(T3th3) + abs(diff(T3th3([1,3])/2)) ... % CSF / BG
-                   ]) ];
-        T3thx = [0,0.05, 1,2,3.2, 1.1, 1.0, 1.75, 0.8]; 
-      else
-        T3th  = [min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ...
-               min( T3th3(3)*0.2+0.8*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) , BGth ) ...
-               T3th3 ...
-               ([T3th3(3)*0.5+0.5*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ... WM
-                cat_stat_nanmean([T3th3(3), BGth ]) ... WM
-                T3th3(2)*0.5 + 0.5*T3th3(1)... % CSF/GM
-                max(T3th3) + abs(diff(T3th3([1,3])/2)) ... % CSF / BG
-                max(T3th3(end) + abs(diff(T3th3([1,numel(T3th3)])/2)) , ...
-                 max(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ) ]) ];
-        T3thx = [0,0.05, 1,2,3, 2.0, 1.0, 1.75, 0.8, 0.2];
-      end
-
-
-      [T3th,si] = sort(T3th);
-      T3thx     = T3thx(si);
-
-
-      inv_weighting = 1;
-%}
 
     elseif T3th3(1)<T3th3(2) && T3th3(2)<T3th3(3) % T1
       %%
       BGmin = min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))); 
       T3th3(1) = min( min(clsints(3,0)) , mean(Ysrc(Ycls{3}(:)>240))); 
-      BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),cat_stat_nanmedian(Ysrc(Ycls{end}(:)>128))]);
+      if res.ppe.affreg.highBG
+        BGminl = BGmin - 8 * diff( [BGmin T3th3(1)] ); % compenstate  BGminl*0.1+0.9*T3th3(1) the minimum is close to CSF here
+        BGcon  = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3))]);
+      else
+        BGminl = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),cat_stat_nanmedian(Ysrc(Ycls{end}(:)>128))]);
+        BGcon  = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),cat_stat_nanmedian(Ysrc(Ysrc(:)>BGminl & Ycls{end}(:)>128))]);
+      end
       %T3th3 = [max( min(res.mn(res.lkp==3 & res.mg'>0.3/sum(res.lkp==3)))*.05 + .95*max(res.mn(res.lkp==2 & res.mg'>0.3/sum(res.lkp==2))) , ...
       %              min(res.mn(res.lkp==3 & res.mg'>0.3/sum(res.lkp==3)))) ...
       %         max(res.mn(res.lkp==1 & res.mg'>0.1)) ...
       %         max(res.mn(res.lkp==2 & res.mg'>0.1))];
       T3th  = [BGmin ... minimum
-               min(BGcon,BGmin*0.1+0.9*T3th3(1)) ... cat_stat_nanmean background (MT contrast with strong background noise)
+               min(BGcon,BGminl*0.1+0.9*T3th3(1)) ... cat_stat_nanmean background (MT contrast with strong background noise)
                T3th3 ... csf gm wm 
                max(T3th3) + abs(diff(T3th3([1,numel(T3th3)])/2)) ... higher
                max(T3th3(end) + abs(diff(T3th3([1,numel(T3th3)])/2)) , ... maximum
@@ -417,41 +307,10 @@ RD202006: This part includes an minium based WM bias correction that is
 
     else
       error('cat_main_gintnorm:runbackup','Test backup function due to unknow contrast.');
-%{      
-%RD202006: remove this part when CAT12.7 is stable      
-      
-      % if everything fails assume that the image is T1 and cross fingers
-      BGmin = min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))); 
-      T3th3(1) = min( min(clsints(3,0)) , mean(Ysrc(Ycls{3}(:)>240))); 
-      BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),cat_stat_nanmedian(Ysrc(Ycls{end}(:)>128))]);
-      %T3th3 = [max( min(res.mn(res.lkp==3 & res.mg'>0.3/sum(res.lkp==3)))*.05 + .95*max(res.mn(res.lkp==2 & res.mg'>0.3/sum(res.lkp==2))) , ...
-      %              min(res.mn(res.lkp==3 & res.mg'>0.3/sum(res.lkp==3)))) ...
-      %         max(res.mn(res.lkp==1 & res.mg'>0.1)) ...
-      %         max(res.mn(res.lkp==2 & res.mg'>0.1))];
-      T3th  = [BGmin ... minimum
-               min(BGcon,BGmin*0.1+0.9*T3th3(1)) ... cat_stat_nanmean background (MT contrast with strong background noise)
-               T3th3 ... csf gm wm 
-               max(T3th3) + abs(diff(T3th3([1,numel(T3th3)])/2)) ... higher
-               max(T3th3(end) + abs(diff(T3th3([1,numel(T3th3)])/2)) , ... maximum
-                max(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:))))) ];
-      T3thx = [0,0.05,1:5];
-      Ysrcr = round(Ysrc*10^5)/10^5; 
-      warning('cat_main:badTissueContrast',...
-        sprintf([...
-          'Bad tissue contrast (BG=%0.2f, CSF=%0.2f, GM=%0.2f, WM=%0.2f): \n' ...
-          '  This can be the result of (i) an improper SPM segmentation caused by \n' ...
-          '  failed affine registration, (ii) improper image properties with low \n' ...
-          '  contrast-to-noise ratio, or (iii) by preprocessing error. \n' ...
-          '  %s. '], ...
-          BGth,T3th3(1),T3th3(2),T3th3(3)),numel(cat_warnings)==0,...
-          spm_file('Please check image orientation and quality','link',['spm_image(''Display'', ''' res.image0.fname ''')']) ); 
-%}
     end
 
     
 % RD202006: The following part is only for the standard T1 case.
-
-
 
     %% intensity scaling for gradient estimation
     Tth.T3th  = T3th;
@@ -573,8 +432,11 @@ RD202006: This part includes an minium based WM bias correction that is
       gth   = max(0.06,min(0.3,noise*6));
       %Ybm   = cat_vol_morph(Ycls{6}>240 & Ysrc<min(T3th),'lc'); 
       BGmin = min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))); 
-      BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),cat_stat_nanmedian(Ysrc(Ycls{end}(:)>128))]);
-      BMth  = max(BGmin,min(BGcon,T3th(1) - diff(T3th(1:2)))); %max(0.01,cat_stat_nanmedian(Ysrc(Ybm(:))));
+      %BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),cat_stat_nanmedian(Ysrc(Ycls{end}(:)>128))]);
+      if ~res.ppe.affreg.highBG
+        BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),cat_stat_nanmedian(Ysrc(Ysrc(:)>BGminl & Ycls{end}(:)>128))]);
+      end
+      BMth  = max(BGmin,mean([BGcon,T3th(1)])); % - diff(T3th(1:2)))); %max(0.01,cat_stat_nanmedian(Ysrc(Ybm(:))));
       Ywm   = (Ycls{2}>128  & Yg<gth) | ((Ym-Ydiv*2)>(1-0.05*cat_stat_nanmean(vx_vol)) & Yb2); % intensity | structure (neonate contast problem)
       Ycm   = smooth3((Ycls{3}>240 | Ym<0.4) & Yg<gth*3 & Yb & ~Ywm & Ycls{1}<8 & Ysrc>BMth & Ym<0.7)>0.5; % important to avoid PVE!
 
@@ -616,11 +478,18 @@ RD202006: This part includes an minium based WM bias correction that is
       %% final peaks and intesity scaling
       %  -----------------------------------------------------------------
       T3th3 = T3th_cls;
-      T3th  = [min(Ysrcr(~isnan(Ysrcr(:)) & ~isinf(Ysrcr(:)))) BMth min(BGth,mean([BMth,T3th3(1)])) T3th3 ...
+      if res.ppe.affreg.highBG
+        BMCSFth = BMth*0.9 + 0.1*T3th3(1);
+        T3thx = [3/5, 3/5, 4/5, 1:5];
+      else
+        BMCSFth = min(BGth,mean([BMth,T3th3(1)]));
+        T3thx   = [0,0.02,0.05,1:5];
+      end
+      T3th  = [min(Ysrcr(~isnan(Ysrcr(:)) & ~isinf(Ysrcr(:)))) BMth BMCSFth T3th3 ...
                 T3th3(end) + diff(T3th3([1,numel(T3th3)])/2) ... WM+
                 max(T3th3(end)+diff(T3th3([1,numel(T3th3)])/2) , ... max
                 max(Ysrcr(~isnan(Ysrcr(:)) & ~isinf(Ysrcr(:))))) ];
-      T3thx = [0,0.02,0.05,1:5];
+      
 
 
       % intensity scaling
@@ -670,89 +539,6 @@ RD202006: This part includes an minium based WM bias correction that is
        
     elseif T3th3(1)>T3th3(3) && T3th3(2)<T3th3(3) && T3th3(1)>T3th3(2)
        error('runbackup')
-%{       
-% RD202006:  WM < GM < CSF - classic full inverse contrast (T2/PD)
-% Remove this special contrast case when CAT12.7iE becomes stable.
-
-       
-      %% filtering
-      Ybb  = cat_vol_morph(cat_vol_morph(Yp0>0.5/3,'c',4),'d',2);
-      if debug, Ymo = Ym; end 
-      if 1
-        %% new approach
-        Yswm = Ycls{2}>Ycls{3} & Ycls{2}/32>Ycls{1} & Yg<0.2 & abs(Ydiv)<0.1; 
-        % identify CSF areas next to high intensity regions
-        Ycm = smooth3(Ym<0.5 & Ycls{3}>Ycls{2} & Ycls{3}>Ycls{1} & Ysrc>(T3th3(1)*0.5+0.5*(T3th3(3))))>0.2 & (Ysrc>(T3th3(1)*0.5+0.5*(T3th3(3))));
-        Ycm = cat_vol_morph(Ycm | (Yp0<1.2 & (Ym<0.5 | Ym>1.2) & cat_vol_morph(Ybb,'d',1)),'c',1);
-        Ycm = single(Ycm); Ycm(Ycm==0 & (Ysrc>(BGth*0.2+0.8*T3th3(2)) & Ysrc<(T3th3(2)*0.5+0.5*T3th3(3)) | ~Ybb | Yswm)) = nan;
-        [Ycm,YD]= cat_vol_downcut(Ycm,Ysrc./T3th3(3),-0.2); Ycm(YD>50)=0;  Ycm(smooth3(Ycm)<0.4)=0; 
-
-        %% identify the WM 
-        Ywm = ~Ycm & Ym>0.85 & Ym<1.05 & (Ycls{2}*2>Ycls{3} |  Ycls{1}*2>Ycls{3} | Yp0>1.2); Ywm(smooth3(Ywm)<0.5)=0;  
-        Ywm = cat_vol_morph(Ywm,'l',[inf 0.001])>0;
-        Ywm = single(Ywm); Ywm((Ywm==0 & Ym<0.8) | Ycm | ~Ybb | Ysrc>(T3th3(1)*0.5+0.5*(T3th3(3)))) = nan;
-        [Ywm,YD] = cat_vol_downcut(Ywm,Ysrc./T3th3(3),0.02);  Ywm(YD>400)=0; Ywm(smooth3(Ywm)<0.55)=0; clear YD; 
-        Ywm = single(Ywm); Ywm((Ywm==0 & Ym<0.8) | ~Ybb | Ysrc>(T3th3(1)*0.9+0.1*(T3th3(3)))) = nan;
-        [Ywm,YD] = cat_vol_downcut(Ywm,Ysrc./T3th3(3),0.01); Ywm(YD>800)=0; Ywm(smooth3(Ywm)<0.55)=0; clear YD; 
-        Ywm(Ysrc<(T3th3(2)*0.2+0.8*(T3th3(3))))=0;
-        Ywm = cat_vol_morph(Ywm,'l',[inf 0.001])>0;
-        %
-        Ywm = single(Ywm); Ywm(Ywm==0 & (Ym<0.7 | Ycm | Ysrc<(T3th3(2)*0.2+0.8*(T3th3(3)))) | ~Ybb) = nan;
-        [Ywm,YD] = cat_vol_downcut(Ywm,Ysrc./T3th3(3),0.01); Ywm(YD>800)=0; clear YD; 
-        Ywm = cat_vol_morph(Ywm,'l',[inf 0.001])>0;
-        %
-        Ywm = single(Ywm); Ywm(Ywm==0 & (Ym<0.7 | Ycm | Ysrc<(T3th3(2)*0.5+0.5*(T3th3(3)))) | ~Ybb) = nan;
-        [Ywm,YD] = cat_vol_downcut(Ywm,Ysrc./T3th3(3),-0.001); Ywm(YD>800)=0; clear YD; 
-        Ywm(Ysrc<(T3th3(2)*0.5+0.5*(T3th3(3))))=0;
-        Ywm = cat_vol_morph(Ywm,'l',[inf 0.001])>0;
-        Ywmd = cat_vbdist(single(Ywm),Ybb);
-
-  %%
-        Ycmx = (Ywmd .* Ym)>1 | ~Ybb | Ycm; 
-        Ycmx = Ycmx & (Yg>0.01 & abs(Ydiv)>0.0001) & cat_vol_smooth3X(Yp0)<0.995 & ~Ywm ; 
-        Ycmx(smooth3(Ycmx)<0.5)=0;
-        Ycmx = cat_vol_morph(Ycmx,'l',[inf 0.01])>0;
-
-
-        %% improve the CSF classification 
-        Ycm = Ycmx | smooth3(Ym<0.5 & Ycls{3}>Ycls{2} & Ycls{3}>Ycls{1} & Ysrc>(T3th3(1)*0.5+0.5*(T3th3(3))))>0.2 & (Ysrc>(T3th3(1)*0.5+0.5*(T3th3(3))));
-        Ycm = single(Ycm); Ycm(Ycm==0 & (~Ybb | Ywm | Ysrc<( T3th3(2)*0.8+0.2*(T3th3(3)))) ) = nan;
-        [Ycm,YD]= cat_vol_downcut(Ycm,Ysrc./T3th3(3),0.01); Ycm(YD>50)=0; Ycm(smooth3(Ycm)<0.4)=0; clear YD; 
-        Ycm = cat_vol_morph(Ycm,'l',[inf 0.1])>0;
-        %%
-        %Ycm = single(Ycm); Ycm((Ycm==0 & Ysrc>(T3th3(1)*0.5+0.5*(T3th3(3))) ) | ~Yb | smooth3(Ywm)>0 | Ysrc<(T3th3(2)*0.9+0.1*(T3th3(3)))) = nan;
-        %[Ycm,YD]= cat_vol_downcut(Ycm,Ysrc./T3th3(3),0.005); Ycm(YD>800)=0; Ycm(smooth3(Ycm)<0.4)=0; clear YD; 
-        %Ycm = Ycm | (Yp0<1.5 & Ym<0.5 & Yb); 
-
-        %% simultan region growing of CSF and WM tissue
-        Ypx = single(Ywm*3 + Ycm); Ypx(~Ybb | (Ym>0.6 & Ym<0.7)) = nan; Ypx = cat_vol_median3c(Ypx,Ybb); 
-        [Ypx,YD] = cat_vol_downcut(single(Ypx),Ysrc/T3th3(3),-0.01); Ypx(YD>50)=0; Ypx = cat_vol_median3c(Ypx,Ybb); Ypx(~Ybb) = nan;
-        [Ypx,YD] = cat_vol_downcut(single(Ypx),Ysrc/T3th3(3),-0.01); Ypx(YD>50)=0; clear YD; 
-
-        %% cortical thickness based modification 
-        Ys = Ypx==3 & Ym>2.5/3;
-        [Ysr,Ybr,resTx] = cat_vol_resize({single(Ys),Ybb},'reduceV',vx_vol,1,16,'meanm'); 
-        [Ygmt,Ypp] = cat_vol_pbt( single(1 + (Ybb.* (Ym>0.5)) + Ys) , ...
-          struct('verb',0,'dmethod','eidist','method','pbt2x') );
-
-        %% final correction
-        YM = cat_vol_smooth3X(Ypp,0.5)<0.3 & Ygmt>1 & Ym>2/3 & Ypx<2; 
-        YM = YM | (Ypx==1 & Ym>0.7 & Ym<0.9) | (Ycm & Ym>0.7);
-        YM = YM | (cat_vol_smooth3X(cat_vol_morph(~Ywm & Ygmt>0.1 & Ygmt<1.2 & Ypx<2,'c',1),1)>0.5 & Ywm); 
-        Ym(YM) = 0.5 + max(0,1 - Ym(YM))/2; 
-        %%
-        %Ym = cat_vol_median3(Ym,Yb & Ypp<0.5,Ypp<0.5,0.05); 
-        %Ym = cat_vol_median3(Ym,Yb & Ypp>0.5,Ypp>0.5,0.05);
-        %Ym = cat_vol_median3(Ym,Yb & Ym>0.8 & Ym>1.1,Yb,0.1);
-        cat_sanlm(Ym,1,3)
-      else
-        % old approach ...
-        %YM  = Ysrc<Tth.T3th(5)/1.2; 
-        %Ym(YM(:)) = Ysrc(YM(:)) / (Tth.T3th(5)/1.2); 
-        YM = (smooth3(Ysrc<Tth.T3th(5)/1.2) & smooth3(Ysrc>Tth.T3th(4))) | Ym>2; 
-        Ym = cat_vol_median3(Ym,YM,Ym<1.5,0.1);
-      end
-%}
     end
   catch e 
     if extopts.ignoreErrors < 1
@@ -776,8 +562,7 @@ RD202006: This part includes an minium based WM bias correction that is
       % if this is a untypical error then print it as warning
       if ~strcmp( e.identifier , 'cat_main_gintnorm:runbackup' ),  warning(e.message); end
       
-      
-      Ysrc    = cat_stat_histth(Ysrc,0.98); % remove outlier
+      Ysrc    = cat_stat_histth(Ysrc,extopts.histth); % remove outlier
       clsints = @(x,y) [round( res.mn(res.lkp==x) * 10^5)/10^5; res.mg(res.lkp==x-((y==0)*8))']; % SPM peak definition  
       clsint  = @(x) cat_stat_nanmedian(Ysrc(Ycls{x}>128));                                      % median within the tissue label 
       clsintv = [clsint(1) clsint(2) clsint(3)];
@@ -799,12 +584,11 @@ RD202006: This part includes an minium based WM bias correction that is
 %           > this is super in this backup case (that do not support LAS 
 %             inclusive the bias correction there)
 % #########       
-        
-        
         Yg      = cat_vol_grad(Ysrc,vx_vol) ./ ... 
-                  min( max([clsintv(1) clsintv(2) clsintv(3)]) , Ysrc); % normalize extrem values
+                min( max([clsintv(1) clsintv(2) clsintv(3)]) , Ysrc); % normalize extrem values
         gth     = max(0.10,min( 1/3 , cat_stat_nanmean( Yg( cat_vol_morph( smooth3( Ycls{2}>240 )>0.5 ,'e') )) ));  
-        clsintg = @(x) cat_stat_nanmedian(Ysrc(Ycls{x}>128 & Yg<gth*2)); 
+        clsintg = @(x) cat_stat_nanmedian(Ysrc(Ycls{x}>128 & Yg<gth*2));   
+        
               
         % remove strong outlier
         Ysrcs = cat_vol_median3(Ysrc,Yb,Yb,0.1); 
@@ -843,12 +627,12 @@ RD202006: This part includes an minium based WM bias correction that is
                 Ysrc>( clsintv(3) - con/4 ) & Ysrc<( clsintv(3) + con/2 );                      % CSF with PVE
         Ycsd = cat_vol_localstat(Ysrc,Ycm,1,4);
         Ycm(Ycsd/clsintv(3)>0.2) = 0;  
-        Ycm(smooth3(Ycm)<0.5) = 0; 
+        Ycm(smooth3(Ycm)<0.9) = 0; 
         % remove dots
         Ycmi = cat_vol_localstat(Ysrc,Ycm,3,1); %3 - (clsintg(1)>clsintg(3))); % minimum does not work in all cases
         
-        % GM without PVE
-        Ygm = cat_vol_morph(Ycls{1}>8,'e'); 
+        %% GM without PVE
+        Ygm = (cat_vol_morph(Ycls{1}>128,'e',1) | Ycls{1}>240) & Yg<gth * 2; 
         Ygm = cat_vol_morph(Ygm,'l',[0.01 100 ]); Ygm(smooth3(Ygm)<0.5) = 0; 
         Ygmi = cat_vol_localstat(Ysrc,Ygm,2,1);
         Ygmi = cat_vol_localstat(Ygmi,Ygm,1,1);
@@ -874,8 +658,11 @@ RD202006: This part includes an minium based WM bias correction that is
         else
           Ybge = cat_vol_morph(Ycls{6}>128,'de',15,vx_vol); 
         end
-        % final correction map with correction for double counts
-        Yi   =  Ywmi/clsintv(2) + Ygmi/clsintv(1) + Ycmi/clsintv(3) + single(Ybge); % and also the eroded background  
+        if res.ppe.affreg.highBG
+          Ybge = cat_vol_localstat(Ysrc,Ybge,2,1)/cat_stat_nanmean(Ysrc(Ybge(:)>0));
+        end
+        %% final correction map with correction for double counts
+        Yi   =  Ywmi/clsintv(2) + Ygmi/clsintv(1) + Ycmi/cat_stat_nanmean(Ycmi(Ycmi(:)>0)) + single(Ybge); % and also the eroded background  
         if ~debug, clear Ygmi Ywmi Ycmi Ybge; end 
         Yim  =  Ycm &  Ygm &  Ywm; Yi(Yim) = Yi(Yim) ./ ( Ywm(Yim) + Ycm(Yim) + Ywm(Yim));
         Yim  =  Ycm &  Ygm & ~Ywm; Yi(Yim) = Yi(Yim) ./ ( Ycm(Yim) + Ygm(Yim));
@@ -883,11 +670,11 @@ RD202006: This part includes an minium based WM bias correction that is
         Yim  = ~Ycm &  Ygm &  Ywm; Yi(Yim) = Yi(Yim) ./ ( Ygm(Yim) + Ywm(Yim));
         Yi(isnan(Yi) | isinf(Yi))=0;
         if ~debug, clear Yim Ycm Ygm Ywm; end 
-        Yi   = cat_vol_approx(Yi,2); 
+        Yiw   = cat_vol_approx(Yi,4 * (res.ppe.affreg.highBG * 3 + 1)); 
         
         %% correction 
         %  ds('d2sm','a',1,Ysrc/clsint(3),Ysrc ./ Yi / clsint(3),140)
-        Ysrc = Ysrc ./ Yi; 
+        Ysrc = Ysrc ./ Yiw; 
       end
       
       
@@ -897,9 +684,10 @@ RD202006: This part includes an minium based WM bias correction that is
       end
      
       % T3th, T3thx - keep it simple and avoid inversion
-      if ~exist('T3th','var') || ~exist('T3thx','var') || any(isnan(T3th))
-        T3th    = [min(Ysrc(:)) sort( [ clsintv(3) clsintv(1) clsintv(2) ] ) max(Ysrc(:)) ];
-        T3thx   = [0,1,2,3,4];        
+      if res.ppe.affreg.highBG, BGth = 0.5; else, BGth = 0.0; end
+      if ~exist('T3th','var') || ~exist('T3thx','var') || any(isnan(T3th3))
+        T3th  = [min(Ysrc(:)) sort( [ clsintv(3) clsintv(1) clsintv(2) ] ) max(Ysrc(:)) ];
+        T3thx = [BGth,1,2,3,4];        
       end
       
       % noise
@@ -943,7 +731,4 @@ RD202006: This part includes an minium based WM bias correction that is
   %end
   
   
-  %% if there was a warning we need a new line 
-  %if nargout>=6 && numel(cat_warnings)>1, fprintf('\n'); cat_io_cmd(' ','','',1); end
-
 end

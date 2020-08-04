@@ -190,6 +190,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   %  ----------------------------------------------------------------------
   %  Using of SPM peak values didn't work in some cases (5-10%), so we have 
   %  to load the image and estimate the WM intensity. 
+  VT0 = spm_vol(VT0.fname);
   try Yo  = single(VT0.private.dat(:,:,:)); end
   if isfield(res,'spmpp')
     VT0x = res.image0(1); 
@@ -202,14 +203,22 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     if any(size(Yo)~=size(Yp0))
       try Yo = single(VT.private.dat(:,:,:)); end
       if isfield(res,'spmpp')
-        VT0x = res.image(1); 
+        VT0x = spm_vol(res.image(1).fname); 
       else
-        VT0x = VT;
+        VT0x = spm_vol(VT.fname);
       end
     end
     
     % remove outlier to make it orthviews easier
-    Yo = cat_stat_histth(Yo,99.99); 
+    if res.ppe.affreg.highBG 
+      Yo = cat_stat_histth(Yo,[0.999999 0.9999],struct('scale',[0 255])); 
+    else
+      Yo = cat_stat_histth(Yo,job.extopts.histth,struct('scale',[0 255])); 
+    end
+    Yo = cat_vol_ctype(Yo);
+    VT0x.dt(1) = spm_type('uint8');
+    VT0x.pinfo = repmat([1;0],1,size(Yo,3));
+    VT0x.dat(:,:,:) = Yo; 
    
     if job.extopts.inv_weighting
       Tth  = [cat_stat_nanmedian(Yo(Yp0(:)>0.5 & Yp0(:)<1.5)),...
@@ -228,7 +237,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     try
       hho = spm_orthviews('Image',VT0x,pos(1,:));
       spm_orthviews('Caption',hho,{T1txt},'FontSize',fontsize-1,'FontWeight','Bold');
-      spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
+      spm_orthviews('window',hho,[0 single(WMth)*cmmax]); caxis([0,2]);
     end
     cc{1} = axes('Position',[pos(1,1) + 0.26 0.37 0.02 0.15],'Parent',fg);     
     image((60:-1:1)','Parent',cc{1});
@@ -472,7 +481,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       % apply affine scaling for gifti objects
       for ix=1:numel(Phull) 
         % load mesh
-        if ov_mesh spm_ov_mesh('display',id,Phull(ix)); end 
+        if ov_mesh, spm_ov_mesh('display',id,Phull(ix)); end 
 
         % apply affine scaling for gifti objects
         V = (dispmat * inv(res.Affine) * ([st.vols{id}.mesh.meshes(ix).vertices,...
@@ -490,15 +499,60 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       UD.width = 0.75; 
       UD.style = repmat({'b--'},1,numel(Phull));
       set(hM,'UserData',UD);
-      if ov_mesh spm_ov_mesh('redraw',id); end
+      if ov_mesh, spm_ov_mesh('redraw',id); end
       try spm_orthviews('redraw',id); end
 
       %% TPM legend
       ccl = axes('Position',[pos(1,1:2) 0 0] + [0.35 0 0.02 0.08],'Parent',fg);
       cclp = plot(ccl,([0 0.4;0.6 1])',[0 0; 0 0],'b-'); 
-      text(1.2,0,['Brain and skull',native2unicode(10,'latin1'),'overlay from affine',native2unicode(10,'latin1'),'registered TPM'],...
-          'Parent',ccl,'Fontsize',fontsize-2);
+      text(1.2,0,['Brain and skull',native2unicode(10,'latin1'),...
+        'overlay from affine',native2unicode(10,'latin1'),'registered TPM'],...
+        'Parent',ccl,'Fontsize',fontsize-2);
       set(cclp,'LineWidth',0.75); axis(ccl,'off')
+      
+      
+      
+% RD20200727:  res.Affine shows the final affine mapping but more relevant 
+%              for error handling is the intial affine registration before 
+%              the US that is now saved as res.Affine0. 
+%              However mapping both is to much if they are to similar, so 
+%              you have so quantify and evaluate the difference to add the
+%              second map when it is relevant ...
+%              You may also create a warning (in cat_main) and just look
+%              for the warning (or res.FIELD created there). 
+      if 0   
+        % apply affine scaling for gifti objects
+        for ix=1:numel(Phull) 
+          % load mesh
+          if ov_mesh, spm_ov_mesh('display',id,Phull(ix)); end 
+
+          % apply affine scaling for gifti objects
+            V0 = (dispmat * inv(res.Affine0) * ([st.vols{id}.mesh.meshes(ix).vertices,...
+               ones(size(st.vols{id}.mesh.meshes(ix).vertices,1),1)])' )';
+          V0(:,4) = [];
+          M0 = st.vols{id}.mesh.meshes(1:ix-1);
+          M1 = st.vols{id}.mesh.meshes(ix);
+          M1 = subsasgn(M1,struct('subs','vertices','type','.'),single(V0));
+          st.vols{id}.mesh.meshes = [M0,M1];
+        end
+        %% change line style
+        hM = findobj(st.vols{id}.ax{1}.cm,'Label','Mesh');
+        UD = get(hM,'UserData');
+        UD.width = 0.75; 
+        UD.style = repmat({'y--'},1,numel(Phull));
+        set(hM,'UserData',UD);
+        if ov_mesh, spm_ov_mesh('redraw',id); end
+        try spm_orthviews('redraw',id); end
+
+        %% TPM legend
+        ccl = axes('Position',[pos(1,1:2) 0 0] + [0.35 0.03 0.02 0.08],'Parent',fg);
+        cclp = plot(ccl,([0 0.4;0.6 1])',[0 0; 0 0],'y--'); 
+        text(1.2,0,['Brain and skull',native2unicode(10,'latin1'),...
+          'overlay from initial affine',native2unicode(10,'latin1'),'registered TPM'],...
+          'Parent',ccl,'Fontsize',fontsize-2);
+        set(cclp,'LineWidth',0.75); axis(ccl,'off')
+      end
+
     end
   end
  
@@ -620,7 +674,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 
   %% print subject report file as standard PDF/PNG/... file
   job.imgprint.type   = 'pdf';
-  job.imgprint.dpi    = 600;
+  job.imgprint.dpi    = 300;
   job.imgprint.fdpi   = @(x) ['-r' num2str(x)];
   job.imgprint.ftype  = @(x) ['-d' num2str(x)];
   job.imgprint.fname  = fullfile(pth,reportfolder,['catreport_'  nam '.' job.imgprint.type]); 
@@ -639,7 +693,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   % the PDF is is an image because openGL is used but -painters would not look good for surfaces ... 
   try % does not work in headless mode without java
     print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
-    print(fg, job.imgprint.ftype('jpeg'), job.imgprint.fdpi(job.imgprint.dpi/2), job.imgprint.fnamej); 
+    print(fg, job.imgprint.ftype('jpeg'), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fnamej); 
   end
 
   for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize); end; end
@@ -673,13 +727,12 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   colormap(cmap); caxis([0,numel(cmap)]); 
 
   %%
-  %if job.extopts.inv_weighting
-    WMfactor0 = WMth * 7/6; %mean(res.mn(res.lkp==2)) * 4/3; 
-    WMfactor1 = 7/6; 
-  %end
-  if exist('hho' ,'var'), try spm_orthviews('window',hho ,[0 WMfactor0]); end; end
-  if exist('hhm' ,'var'), try spm_orthviews('window',hhm ,[0 WMfactor1]); end; end
-  if exist('hhp0','var'), try spm_orthviews('window',hhp0,[0 WMfactor1]); end; end
+  WMfactor0 = single(WMth) * 8/6; 
+  WMfactor1 = 8/6; 
+  
+  if exist('hho' ,'var'), try, spm_orthviews('window',hho ,[0 WMfactor0]); set(cc{1},'YTick',ytick * 4/3 - 20); end; end
+  if exist('hhm' ,'var'), try, spm_orthviews('window',hhm ,[0 WMfactor1]); set(cc{2},'YTick',ytick * 4/3 - 20); end; end
+  if exist('hhp0','var'), try, spm_orthviews('window',hhp0,[0 WMfactor1]); end; end
   
   
   %% change line style of TPM surf

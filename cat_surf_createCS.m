@@ -272,31 +272,33 @@ cstime = clock;
     Pfsavgmask = fullfile(opt.fsavgDir, sprintf('%s.mask',opt.surf{si}));                       % fsaverage mask    
     
     % use surface of given (average) data as prior for longitudinal mode
-    if isfield(opt,'useprior') && ~isempty(opt.useprior) && exist(char(opt.useprior),'file')
+    if isfield(opt,'useprior') && ~isempty(opt.useprior) 
+      % RD20200729: delete later ... && exist(char(opt.useprior),'file') 
+      % if it not exist than filecopy has to print the error
       priorname = opt.useprior;
       % check that no fast option was used
       if opt.fast
-        cat_io_cprintf('warn',sprintf('WARNING: You cannot combine use of prior surfaces and fast option.\n'));        
+        fprintf('\n');
+        cat_io_addwarning('cat_surf_createCS:noPiorSurfaceWithFastReconstruction', ...
+          'You cannot combine use of prior surfaces and fast option.');        
         useprior = 0;
         break
       end
-      [pp0,ff0,ee0,ex0] = spm_fileparts(priorname);  %#ok<ASGLU>
+      [pp0,ff0] = spm_fileparts(priorname);
+      %if ~isempty( surffolder ), pp0 = [pp0(1:end-7) strrep(pp0(end-6:end),[filesep 'report'])]; end 
+      %ff0 = strrep(ff0,'cat_',''); 
 
       % try to copy surface files from prior to indivudal surface data 
       useprior = 1;
-      if ~copyfile(fullfile(pp0,surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff0)),Pcentral)
-        useprior = 0;
-      end
-      if ~copyfile(fullfile(pp0,surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff0)),Psphere)
-        useprior = 0;
-      end
-      if ~copyfile(fullfile(pp0,surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff0)),Pspherereg)
-        useprior = 0;
-      end
+      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff0)),Pcentral);
+      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff0)),Psphere);
+      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff0)),Pspherereg);
       if ~useprior
-        cat_io_cprintf('warn',sprintf('WARNING: Surface files for %s not found. Move on with individual surface extraction.\n',priorname));
+        fprintf('\n');
+        cat_io_addwarning('cat_surf_createCS:noPiorSurface', ...
+          sprintf('Surface files for %s not found. \\\\nMove on with individual surface extraction.',fullfile(pp0,ff0)));
       else
-        fprintf('\nUse existing surface from %s as prior and thus skip many processing steps.\n',priorname)
+        fprintf('\nUse existing surface from %s as prior and thus skip many processing steps.\n',fullfile(pp0,ff0));
       end      
     else
       useprior = 0;
@@ -917,11 +919,11 @@ cstime = clock;
     else
       facevertexcdata1 = cat_surf_fun('isocolors',Yth1i,CS,Smat.matlabIBB_mm); 
     end
-    fprintf('%5.0fs',etime(clock,stime)); 
     if writedebug
+      fprintf('%5.0fs',etime(clock,stime)); 
       cat_surf_fun('saveico',CS,facevertexcdata1,Pcentral,saveiconame,Ymfs);
     else
-      fprintf('\n');
+      %fprintf('\n');
     end
     res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',CS,facevertexcdata1,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2,cat_get_defaults('extopts.expertgui')>1);
     

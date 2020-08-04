@@ -101,7 +101,7 @@ function out = cat_vol_sanlm(varargin)
     def.NCstr                       = -Inf;      % 0 - no denoising, eps - light denoising, 
                                                  % 1 - maximum denoising, inf = auto; 
     def.rician                      = 0;         % use inf for GUI
-    def.intlim                      = 0.9999;    % general intensity limitation to remove strong outlier
+    def.intlim                      = [0.9999 0.9999];    % general intensity limitation to remove strong outlier
     def.resolutionDependency        = 1;         % resolution depending filter strength
     def.resolutionDependencyRange   = [1 2.5];   % [full-correction no-correction]
     def.relativeIntensityAdaption   = 1;         % use intensity to limit relative corrections (0 - none, 1 - full)
@@ -401,7 +401,7 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
             %  The average change rate in signal region is estimated (mNCs) and used as limit
             %  for corrections (job.relativeFilterStengthLimit), where higher values allow 
             %  stronger filtering. 
-            [NCi,range]  = cat_stat_histth(src,0.99); % lower values > more similar filtering
+            [NCi,range]  = cat_stat_histth(src,job.intlim); % lower values > more similar filtering
             NCi  = max(eps,log10( 1 + (NCi + range(1)) / diff(range) * 7 + 3 )); % bias corr + intensity normalization 
             NCi  = cat_vol_smooth3X( NCi , job.relativeIntensityAdaption / mean(vx_vol)); % smoothing
             if job.relativeIntensityAdaption>0 && ...

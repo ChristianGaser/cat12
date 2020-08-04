@@ -954,9 +954,9 @@ end
 % lh/rh/cb central/white/pial/layer4 surface and thickness
 % ---------------------------------------------------------------------
 surfaceoutput = { % surface texture
-  {'central'}                 % no measures - just surfaces
+  {'central','sphere','sphere.reg'}  % no measures - just surfaces
   {}                          % default
-  {'sphere','sphere.reg'}     % expert
+  {}                          % expert
   {'pial','white'}            % developer
 };
 if any( job.output.surface == [ 5 6 ] ) %&& cat_get_defaults('extopts.expertgui')<2 % no sphere's without registration
@@ -965,10 +965,10 @@ if any( job.output.surface == [ 5 6 ] ) %&& cat_get_defaults('extopts.expertgui'
   end
 end
 measureoutput = {
-  {'thickness'}                 % default 
+  {'thickness','pbt'}           % default 
   {}                            % no measures
   {}                            % expert
-  {'pbt','depthWM','depthCSF'}  % developer
+  {'depthWM','depthCSF'}        % developer
 };
 if any( job.output.surface == [ 5 6 ] ) %&& cat_get_defaults('extopts.expertgui')<2
   measureoutput{1} = setdiff(measureoutput{1},{'thickness'}); 

@@ -320,9 +320,9 @@ cdep(end).tgt_spec   = cfg_findspec({{'filter','txt','strtype','e'}});
 % cannot be used because the topology is also uncorrected. 
 if isfield(opts,'surface')
   surfaceoutput = { % surface texture
-    {'central'}                 % no measures - just surfaces
+    {'central','sphere','sphere.reg'}  % no measures - just surfaces
     {}                          % default
-    {'sphere','sphere.reg'}     % expert
+    {}                          % expert
     {'pial','white'}            % developer
   };
   if any( job.output.surface == [ 5 6 ] ) %&& cat_get_defaults('extopts.expertgui')<2 % no sphere's without registration
@@ -331,10 +331,10 @@ if isfield(opts,'surface')
     end
   end
   measureoutput = {
-    {'thickness'}                 % default 
-    {}                            % no measures
-    {}                            % expert
-    {'pbt','depthWM','depthCSF'}  % developer
+    {'thickness','pbt'}         % default 
+    {}                          % no measures
+    {}                          % expert
+    {'depthWM','depthCSF'}      % developer
   };
   if any( job.output.surface == [ 5 6 ] ) %&& cat_get_defaults('extopts.expertgui')<2
     measureoutput{1} = setdiff(measureoutput{1},{'thickness'}); 

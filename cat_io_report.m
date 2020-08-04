@@ -662,6 +662,7 @@ function cat_io_report(job,qa,subj,createerr)
     job.imgprint.fdpi  = @(x) ['-r' num2str(x)];
     job.imgprint.ftype = @(x) ['-d' num2str(x)];
     job.imgprint.fname     = fullfile(pth,reportfolder,['catreport_' nam '.' job.imgprint.type]); 
+    job.imgprint.fnamej    = fullfile(pth,reportfolder,['catreport_' nam '.jpg']); 
 
     fgold.PaperPositionMode = get(fg,'PaperPositionMode');
     fgold.PaperPosition     = get(fg,'PaperPosition');
@@ -672,6 +673,7 @@ function cat_io_report(job,qa,subj,createerr)
     set(fg,'PaperPositionMode','auto','resize','on','PaperPosition',[0 0 1 1]);
     for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize*0.8); end; end
     print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
+    print(fg, job.imgprint.ftype('jpeg')           , job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fnamej); 
     for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize); end; end
     set(fg,'PaperPositionMode',fgold.PaperPositionMode,'resize',fgold.resize,'PaperPosition',fgold.PaperPosition);
     fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);

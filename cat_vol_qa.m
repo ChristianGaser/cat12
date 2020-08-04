@@ -592,6 +592,10 @@ function varargout = cat_vol_qa(action,varargin)
       warning on
       %}
       QAS.software.cat_warnings = cat_io_addwarning;
+      % replace matlab newlines by HTML code
+      for wi = 1:numel( QAS.software.cat_warnings )
+        QAS.software.cat_warnings(wi).message = cat_io_strrep(  QAS.software.cat_warnings(wi).message , {'\\n', '\n'} , {'</br>','</br>'} ); 
+      end
  
       %QAS.parameter             = opt.job; 
       if isfield(opt,'job')
@@ -600,11 +604,13 @@ function varargout = cat_vol_qa(action,varargin)
         %QAS.parameter.cat_pp      = 
         %QAS.parameter.output      = opt.job.output;
         if exist('res','var')
-          rf = {'Affine','lkp','mn','vr'}; % important SPM preprocessing variables
+          rf = {'Affine','Affine0','lkp','mn','vr'}; % important SPM preprocessing variables
           for rfi=1:numel(rf)
-            if isfield(res,rf{rfi}), QAS.parameter.spm.(rf{rfi}) = res.(rf{rfi}); end
+            if isfield(res,rf{rfi}), QAS.SPMpreprocessing.(rf{rfi}) = res.(rf{rfi}); end
           end
         end
+        QAS.SPMpreprocessing.humanAffine  = spm_imatrix(QAS.SPMpreprocessing.Affine );
+        QAS.SPMpreprocessing.humanAffine0 = spm_imatrix(QAS.SPMpreprocessing.Affine0);
       end
      
       %% resolution, boundary box

@@ -50,12 +50,13 @@ function varargout = cat_surf_parameters(job)
   def.norm        = 0;  % apply inital surface normalization for job.normmeasure (GI measures) using cat_surf_scaling 
                         % [0-none,1-default,12-affine,1-radius,11-hullradius,2-area,21-hullarea,30-surfacevolume,31-hullvolume];
   def.normprefix  = 'n';
-  % output parameter of validated measures 
+  def.FS_HOME     = '/Volumes/WD4TBE2/TMP/freesurfer';
+% output parameter of validated measures 
   def.GI          = 0;  % estimate absolute mean curvature
   def.FD          = 0;  % estimate fractal dimension (Yotter:2012)
   def.SD          = 0;  % estimate sulcal depth
   def.tGI         = 0;  % Toro's GI
-  def.sGI         = 0;  % Schaer's GI
+  def.lGI         = 0;  % Schaer's lGI
   % implemented but under test
   def.area        = 0;  % estimate area
   def.gmv         = 0;  % cortical volume
@@ -71,6 +72,10 @@ function varargout = cat_surf_parameters(job)
   def.surfaces.OS = 0; % create outer surface
   
   job = cat_io_checkinopt(job,def);
+  if isfield(job,'tGI')
+    if any(isinf(job.tGI)), job.tGI(isinf(job.tGI)) = -1; end
+    job.tGI = unique(job.tGI);
+  end
   if isfield(job,'Tfs'), job.thickness.Tfs = job.Tfs; end
 
   % estimate Laplacian-based gyrification index (including inward, outward, and generalized GI) 
@@ -98,7 +103,7 @@ function varargout = cat_surf_parameters(job)
   % just a counter for the progress bar
   sides     = {'l','r'};
   measuresn = (job.GI>0) + (job.FD>0) + (job.SD>0) + ...
-              (job.area>0) + (job.gmv>0) + any(job.tGI>0) + (job.sGI>0) + ...
+              (job.area>0) + (job.gmv>0) + any(job.tGI>0) + (job.lGI>0) + ...
               ( ( isnumeric(job.GIL) && job.GIL ) || ( isstruct(job.GIL) && job.GIL.GIL ) ) + ...
               (job.surfaces.IS>0) + (job.surfaces.OS>0); 
   measuresn = measuresn * numel(sides);
@@ -133,24 +138,25 @@ function varargout = cat_surf_parameters(job)
         Parea   = fullfile(pp,strrep(ff,'central','area'));                
         Pgmv{1} = fullfile(pp,strrep(ff,'central','gmv'));                 % RD202005: need projection based version for tests
         % - measures with/without normalization 
-        switch num2str( job.norm , '%d' )
-          case '0',  prefix = '';                                          % no normalization ''
-          case '1',  prefix = job.normprefix;                              % default case with 'n'
+        switch job.norm %num2str( job.norm , '%d' )
+          case 0,  prefix = '';                                          % no normalization ''
+          case 1,  prefix = job.normprefix;                              % default case with 'n'
           otherwise, prefix = sprintf('%s%d', job.normprefix, job.norm);   % special normalization (only for developer tests)
         end
         Psname     = fullfile( pp , strrep([ff ex],'central',[prefix 'central']) );
         % -- toroGI
-        ntGI = min(0,numel( job.tGI ));
+        ntGI = numel( job.tGI );
         PtGI = cell(ntGI ,2);
         for ti = 1:ntGI
           if     job.tGI(ti) == -1,  tGIname = sprintf('%storoGIa'     ,prefix);     % adaptive radius
+          elseif isinf(job.tGI(ti)), tGIname = sprintf('%storoGIa'     ,prefix); job.tGI(ti) = -1;     % is not created but required as variable
           elseif job.tGI(ti) ==  1,  tGIname = sprintf('%storoGI20mm'  ,prefix);     % one is the spacial case of 20 mm
           elseif job.tGI(ti) >   1,  tGIname = sprintf('%storoGI%02dmm',prefix,job.tGI(ti));  
           elseif job.tGI(ti) ==  0,  tGIname = sprintf('%storoGI'      ,prefix);     % is not created but required as variable
           else,  error('cat_surf_parameters:badtGI','Incorrect tGI parameter.');  
           end
           PtGI{ti,1} = fullfile(pp,strrep(ff,'central',tGIname)); 
-          PtGI{ti,2} = tGIname(numel(prefix) + [1 6:end]); 
+          PtGI{ti,2} = tGIname([1+numel(prefix), 5 + numel(prefix):numel(tGIname)]); 
         end  
         % -- Schaer's GI
         PlGI  = fullfile(pp,strrep(ff,'central',[prefix 'lGI']));            
@@ -271,10 +277,10 @@ function varargout = cat_surf_parameters(job)
             else
               stime = clock; 
               if GIi==2 % Dong 
-                curv = cat_spm_mesh_curvature( export(gifti(Pxname),'patch') ,'tri'); 
+                curv = cat_spm_mesh_curvature( export(gifti(Pname),'patch') ,'tri'); 
                 cat_io_FreeSurfer('write_surf_data',PGI{GIi},curv ); clear curv;
               else % MNI
-                cmd = sprintf('CAT_DumpCurv "%s" "%s" 0 0 1',Pxname,PGI{GIi});
+                cmd = sprintf('CAT_DumpCurv "%s" "%s" 0 0 1',Pname,PGI{GIi});
                 [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug,job.trerr);
               end
               if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(PGI{GIi},'link','cat_surf_display(''%s'')')); end
@@ -345,19 +351,17 @@ function varargout = cat_surf_parameters(job)
         
         if job.tGI
         %% Toro's gyrification index
-          for ni = 1; 
-            for ti = 1:numel( job.tGI ) 
-              if job.tGI>0
-                if ~cat_io_rerun(PtGI{ti,1},Pxname) && job.lazy  
-                  if job.verb, fprintf('%sexist - Display %s\n',nstr,spm_file(PtGI{ti,1},'link','cat_surf_display(''%s'')')); end
-                else
-                  stime = clock; 
-                  cmd = sprintf('CAT_DumpSurfaceRatio "%s" "%s" %d -no_normalization %d',Pxname,PtGI{ti,1},job.tGI( ti ),job.tGI( ti )<0); 
-                  [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug,job.trerr);
-                  if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(PtGI{ti,1},'link','cat_surf_display(''%s'')')); end
-                end
-                if nargout==1, varargout{1}.([sides{si} 'P' PtGI{ti,2} ]){i} = PtGI{ti,1}; end
+          for ti = 1:numel( job.tGI ) 
+            if job.tGI(ti)~=0
+              if ~cat_io_rerun(PtGI{ti,1},Pxname) && job.lazy  
+                if job.verb, fprintf('%sexist - Display %s\n',nstr,spm_file(PtGI{ti,1},'link','cat_surf_display(''%s'')')); end
+              else
+                stime = clock; 
+                cmd = sprintf('CAT_DumpSurfaceRatio "%s" "%s" %d -no_normalization %d',Pxname,PtGI{ti,1},job.tGI( ti ),job.tGI( ti )<0); 
+                [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug,job.trerr);
+                if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(PtGI{ti,1},'link','cat_surf_display(''%s'')')); end
               end
+              if nargout==1, varargout{1}.([sides{si} 'P' PtGI{ti,2} ]){i} = PtGI{ti,1}; end
             end
           end
           
@@ -369,118 +373,121 @@ function varargout = cat_surf_parameters(job)
         if job.lGI 
           %% Schaer's GI
           %  Estimation of Schaer's GI in FreeSurfer using CAT surface. 
-          %  You have to update the FS_HOME directoy and you have to replace 
+          %  You have to update the job.FS_HOME directoy and you have to replace 
           %  line 83 in mris_compute_lgi to use a different surface file 
           %  "${input}h" for volume rending. 
           %     line 82:  # create a filled-volume from the input surface file...
           %     line 83:  set cmd=(mris_fill -c -r 0.5 ${input}h ${tmpdir}/${input}.filled.mgz)
           %  The GI is only added for internal comparisons.  
-          
-          FS_HOME = '/Volumes/WD4TBE2/TMP/freesurfer';
+          if ~exist(job.FS_HOME,'dir')
+            cat_io_cprintf('err',sprintf('%sERROR - lGI estimation only internally. \n',nstr)); 
+          else
+            stime = clock; 
 
-          
-          for ni = 1;
+            if ~cat_io_rerun(PlGI,Pxname) && job.lazy  
+              % check for old unremoved temporar data
+              Ppialfs  = fullfile(pp,strrep(ff,'central','pialfs')); 
+              [lpp,lff,lee] = spm_fileparts(Ppialfs);  
+              tmpdir = fullfile(lpp,['tmp-mris_compute_lgi-' lff lee]);
 
-            if ~exist(FS_HOME,'dir')
-              cat_io_cprintf('err',sprintf('%sERROR - lGI estimation only internally. \n',nstr)); 
-            else
-              stime = clock; 
-
-              if ~cat_io_rerun(PlGI,Pxname) && job.lazy  
-                % check for old unremoved temporar data
-                Ppialfs  = fullfile(pp,strrep(ff,'central','pialfs')); 
-                [lpp,lff,lee] = spm_fileparts(Ppialfs);  
-                tmpdir = fullfile(lpp,['tmp-mris_compute_lgi-' lff lee]);
-
-                if exist(tmpdir,'dir') 
-                  % remove temp dir
-                  files  = cat_vol_findfiles(tmpdir,'*'); 
-                  for fi=1:numel(files), delete(files{fi}); end
-                  rmdir(tmpdir);
-                end
-
-                if job.verb, fprintf('%sexist - Display %s\n',nstr,spm_file(PlGI,'link','cat_surf_display(''%s'')')); end
-              else   
-                Ppial = cat_surf_fun('pial',Pxname,Ppbt);
-
-                S = gifti(Ppial); 
-                %% smooth surface to reduce problems due to self-intersections?
-                s = 0;
-                if s>0
-                  MHS = spm_mesh_smooth(S); 
-                  S.vertices = [ ...
-                    spm_mesh_smooth(MHS,double(S.vertices(:,1)),s) , ...
-                    spm_mesh_smooth(MHS,double(S.vertices(:,2)),s) , ...
-                    spm_mesh_smooth(MHS,double(S.vertices(:,3)),s) ];
-                end
-
-                % write hull surface for estimation 
-                Ppial    = cat_surf_fun('pial',Pxname,Ppbt);
-                Ppialfs  = fullfile(pp,strrep(ff,'central','pialfs')); 
-                cat_io_FreeSurfer('write_surf',Ppialfs,S);
-
-                % Reorient file to support correct volume rendering to create the hull. 
-                % I don't know why but without the extra points only a small box is rendered.  
-                S2.vertices = [-S.vertices(:,1) S.vertices(:,3) -S.vertices(:,2)];
-                S2.faces    = [ S.faces(:,2)    S.faces(:,1)     S.faces(:,3)];
-                S2.vertices = [S2.vertices;
-                  [-128 -128 -128; 
-                    128  128  128]]; 
-                Ppialfsh = fullfile(pp,[strrep(ff,'central','pialfs') 'h']); 
-                cat_io_FreeSurfer('write_surf',Ppialfsh,S2); clear S2;
-
-
-                %% external solution that calls nearly the original script
-                [lpp,lff,lee] = spm_fileparts(Ppialfs);  
-                cmd = [ ...
-                  'export FREESURFER_HOME="' FS_HOME '"; ' ...                                                % set FreeSurfer home (FSH) directory
-                  'tcsh $FREESURFER_HOME' filesep 'SetUpFreeSurfer.csh; ' ...                                 % export FSH       
-                  'PATH=$PATH:' FS_HOME filesep 'bin:' FS_HOME filesep 'fsfast/bin:' matlabroot '/bin;' ...   % add FSH bin directories
-                  'cd ' lpp '; tcsh $FREESURFER_HOME/bin/mris_compute_lgi --i ' [lff lee] '; ' ...            % call lGI script
-                  ];
-
-                [status, result] = system(cmd);
-                if status || ~isempty(strfind(result,'ERROR')) || ~isempty(strfind(result,'Segmentation fault')) %#ok<STREMP>
-                  [status, result] = system(cmd);
-                end
-                if status || ~isempty(strfind(result,'ERROR')) || ~isempty(strfind(result,'Segmentation fault')) %#ok<STREMP>
-                  fid = fopen([Ppialfs '.log'],'w');
-                  fprintf(fid, '%s',result); 
-                  fclose(fid); 
-                  clear fid result status
-
-                  % remove temp dir
-                  tmpdir = fullfile(lpp,['tmp-mris_compute_lgi-' lff lee]);
-                  if exist(tmpdir,'dir')
-                    files  = cat_vol_findfiles(tmpdir,'*'); 
-                    for fi=1:numel(files), delete(files{fi}); end
-                    rmdir(tmpdir); 
-                  end
-                  clear tmpdir
-                end
-                clear status result
-                if exist(fullfile(lpp,[lff lee '_lgi']),'file')
-                  movefile(fullfile(lpp,[lff lee '_lgi']), PlGI); 
-                end
-
-
-                if exist(Ppial   ,'file'), delete(Ppial   ); end
-                if exist(Ppialfs ,'file'), delete(Ppialfs ); end
-                if exist(Ppialfsh,'file'), delete(Ppialfsh); end
-
-                %% dispaly something
-                if exist(FS_HOME,'dir')
-                  if exist(PlGI,'file')
-                    if nargout==1, varargout{1}.([sides{si} 'PlGI'  ]){1} = PlGI; end
-                    if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(PlGI,'link','cat_surf_display(''%s'')')); end
-                  else
-                    cat_io_cprintf('err',sprintf('%sERROR - no output %s\n',nstr,PlGI)); 
-                  end
-                end
+              if exist(tmpdir,'dir') 
+                % remove temp dir
+                files  = cat_vol_findfiles(tmpdir,'*'); 
+                for fi=1:numel(files), delete(files{fi}); end
+                rmdir(tmpdir);
               end
 
-              measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
+              if nargout==1, varargout{1}.([sides{si} 'PlGI'  ]){1} = PlGI; end
+              if job.verb, fprintf('%sexist - Display %s\n',nstr,spm_file(PlGI,'link','cat_surf_display(''%s'')')); end
+            else   
+              Ppial = cat_surf_fun('pial',Pxname,Ppbt);
+
+              S = gifti(Ppial); 
+              %% smooth surface to reduce problems due to self-intersections?
+              s = 0;
+              if s>0
+                MHS = spm_mesh_smooth(S); 
+                S.vertices = [ ...
+                  spm_mesh_smooth(MHS,double(S.vertices(:,1)),s) , ...
+                  spm_mesh_smooth(MHS,double(S.vertices(:,2)),s) , ...
+                  spm_mesh_smooth(MHS,double(S.vertices(:,3)),s) ];
+              end
+
+              % write hull surface for estimation 
+              Ppial    = cat_surf_fun('pial',Pxname,Ppbt);
+              Ppialfs  = fullfile(pp,strrep(ff,'central','pialfs')); 
+              cat_io_FreeSurfer('write_surf',Ppialfs,S);
+
+              % Reorient file to support correct volume rendering to create the hull. 
+              % I don't know why but without the extra points only a small box is rendered.  
+              S2.vertices = [-S.vertices(:,1) S.vertices(:,3) -S.vertices(:,2)];
+              S2.faces    = [ S.faces(:,2)    S.faces(:,1)     S.faces(:,3)];
+              S2.vertices = [S2.vertices;
+                [-128 -128 -128; 
+                  128  128  128]]; 
+              Ppialfsh = fullfile(pp,[strrep(ff,'central','pialfs') 'h']); 
+              cat_io_FreeSurfer('write_surf',Ppialfsh,S2); clear S2;
+
+
+              %% external solution that calls nearly the original script
+              %  Although it is possible to call the main script with ""
+              %  to support blanks the FS scripts do not, so I just print
+              %  an error here, followed by the main FS error message.  
+              [lpp,lff,lee] = spm_fileparts(Ppialfs);  
+              if sum(strfind(Ppialfs,' ')), cat_io_cprintf('err',...
+                  sprintf('Error: Freesurfer do not like blanks in filenames! Found %d blanks in: \n  %s\n', ...
+                  sum(strfind(Ppialfs,' ')),Ppialfs)); 
+              end
+              cmd = [ ...
+                'export FREESURFER_HOME="' job.FS_HOME '"; ' ...                                                % set FreeSurfer home (FSH) directory
+                'tcsh "$FREESURFER_HOME' filesep 'SetUpFreeSurfer.csh"; ' ...                                 % export FSH       
+                'PATH=$PATH:"' job.FS_HOME filesep 'bin":"' job.FS_HOME filesep 'fsfast/bin":"' matlabroot '/bin";' ...   % add FSH bin directories
+                'cd "' lpp '"; tcsh "$FREESURFER_HOME/bin/mris_compute_lgi" --i "' [lff lee] '"; ' ...            % call lGI script
+                ];
+
+              [status, result] = system(cmd);
+              if status || ~isempty(strfind(result,'ERROR')) || ~isempty(strfind(result,'Segmentation fault')) %#ok<STREMP>
+                [status, result] = system(cmd); 
+              end
+              if status || ~isempty(strfind(result,'ERROR')) || ~isempty(strfind(result,'Segmentation fault')) %#ok<STREMP>
+                cat_check_system_output(status,result,job.debug,job.trerr);
+
+                fid = fopen([Ppialfs '.log'],'w');
+                fprintf(fid, '%s',result); 
+                fclose(fid); 
+                clear fid result status
+
+                % remove temp dir
+                tmpdir = fullfile(lpp,['tmp-mris_compute_lgi-' lff lee]);
+                if exist(tmpdir,'dir')
+                  files  = cat_vol_findfiles(tmpdir,'*'); 
+                  for fi=1:numel(files), delete(files{fi}); end
+                  rmdir(tmpdir); 
+                end
+                clear tmpdir
+              end
+              clear status result
+              if exist(fullfile(lpp,[lff lee '_lgi']),'file')
+                movefile(fullfile(lpp,[lff lee '_lgi']), PlGI); 
+              end
+
+
+              if exist(Ppial   ,'file'), delete(Ppial   ); end
+              if exist(Ppialfs ,'file'), delete(Ppialfs ); end
+              if exist(Ppialfsh,'file'), delete(Ppialfsh); end
+
+              %% dispaly something
+              if exist(job.FS_HOME,'dir')
+                if exist(PlGI,'file')
+                  if nargout==1, varargout{1}.([sides{si} 'PlGI'  ]){1} = PlGI; end
+                  if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(PlGI,'link','cat_surf_display(''%s'')')); end
+                else
+                  cat_io_cprintf('err',sprintf('%sERROR - no output %s\n',nstr,PlGI)); 
+                end
+              end
             end
+
+            measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
           end
         end
         
@@ -504,17 +511,18 @@ function varargout = cat_surf_parameters(job)
             GIL    = job.GIL.GIL; 
             GILjob = job.GIL; 
             GILjob.verb = 0; 
+            GILjob.GIprefix = prefix; 
 
             % new experimental GIs
-            if isfield(job.GIL,'suffix')
-              PiGI    = fullfile(pp,strrep(ff,'central',['inwardGI',job.GIL.suffix]));            
-              PoGI    = fullfile(pp,strrep(ff,'central',['outwardGI',job.GIL.suffix]));            
-              PgGI    = fullfile(pp,strrep(ff,'central',['generalizedGI',job.GIL.suffix])); 
-              Phull   = fullfile(pp,strrep([ff '.gii'],'central',['hull',job.GIL.suffix])); 
-              Pcore   = fullfile(pp,strrep([ff '.gii'],'central',['core',job.GIL.suffix])); 
+            if isfield(job.GIL,'suffix') && isempty(job.GIL.suffix)
+              PiGI    = fullfile(pp,strrep(ff,'central',[prefix 'inwardGI',job.GIL.suffix]));            
+              PoGI    = fullfile(pp,strrep(ff,'central',[prefix 'outwardGI',job.GIL.suffix]));            
+              PgGI    = fullfile(pp,strrep(ff,'central',[prefix 'generalizedGI',job.GIL.suffix])); 
+              Phull   = fullfile(pp,strrep([ff '.gii'],'central',[prefix,'hull',job.GIL.suffix])); 
+              Pcore   = fullfile(pp,strrep([ff '.gii'],'central',[prefix,'core',job.GIL.suffix])); 
             else
-              Phull  = fullfile(pp,strrep([ff '.gii'],'central','hull')); 
-              Pcore  = fullfile(pp,strrep([ff '.gii'],'central','core'));
+              Phull   = fullfile(pp,strrep([ff '.gii'],'central',[prefix 'hull'])); 
+              Pcore   = fullfile(pp,strrep([ff '.gii'],'central',[prefix 'core']));
             end
           end
 
@@ -555,7 +563,6 @@ function varargout = cat_surf_parameters(job)
             end
           end
           
-          %%
           type  = 'iog'; 
           for gi=1:numel(PGIL)
             if job.verb && ~isempty(PGIL{1})
@@ -652,8 +659,8 @@ function varargout = cat_surf_parameters(job)
           measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
         end
 
-
-        if exist(Psname ,'file') && ~strcmp(Psname,Pname), delete(Psname);  end
+        % do not delete it otherwise lazy will not work (new file > new processing)
+        %if exist(Psname ,'file') && ~strcmp(Psname,Pname), delete(Psname);  end
       end
       spm_progress_bar('Set',i);
 

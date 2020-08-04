@@ -364,40 +364,37 @@ function str = cat_main_reportstr(job,res,qa)
   str{2} = [str{2} struct('name','\bfProcessing time:','value',sprintf('%02.0f:%02.0f min', ...
     floor(round(etime(clock,res.stime))/60),mod(round(etime(clock,res.stime)),60)))]; 
 
-  % Warnings
+  %% Warnings
 %#######
 % key changes? 
 %  - use backup pipeline (with #?)
 %  - use AMAP/SPM/mixed ?
+%  - add skull-stripping, background, ... settings? 
 %#######
-if 1
-  wn = numel(cat_io_addwarning);
-  if wn
-    str{2} = [str{2} struct('name', '','value','')]; 
-    str{2} = [str{2} struct('name', ...
-      sprintf('\\color[rgb]{1 0.5 0}\\bf{%d Warnings} (see log/xml)',wn),'value','')]; 
-  end
-else
-  for i=1:3, wn(i) = numel(cat_io_addwarning(i)); wns(i) = char(115 * (wn(i)~=1)); end
-  if sum(wn)>0
-    str{2} = [str{2} struct('name', '','value','')]; 
-    if job.extopts.expertgui
+	str{2} = [str{2} struct('name', '','value','')]; % empty line
+  wname  = {'note','warning','alert'}; 
+  wcolor = [0 0 1; 1 0.5 0; 0.8 0 0];
+  for wi=2:-1:0
+    warn = cat_io_addwarning(wi); 
+    wn   = numel(warn);
+    if wn
+      if job.extopts.expertgui > 1 - wi
+        msg  =  warn(1).identifier; 
+        for wmi=2:wn
+          msg = [msg ', ' warn(wmi).identifier ];
+        end
+      else
+        msg  = ' (see log/xml)'; 
+      end
+      if wn~=1, wnamepl='s'; else, wnamepl=''; end
       str{2} = [str{2} struct('name', ...
-        sprintf(['\\color[rgb]{0 0 1}%d note%s, \\color[rgb]{1 0.5 0}\\bf{%d warning%s}, ' ...
-          'and \\color[rgb]{1 0.5 0}\\bf{%d alert%s} (see log/xml)'],...
-          wn(1),wns(1),wn(2),wns(2),wn(3),wns(3)),'value','')]; 
-    else
-      % do not display notes
-      str{2} = [str{2} struct('name', ...
-        sprintf(['\\color[rgb]{1 0.5 0}\\bf{%d warning%s}, ' ...
-          'and \\color[rgb]{1 0.5 0}\\bf{%d alert%s} (see log/xml)'],...
-          wn(2),wns(2),wn(3),wns(3)),'value','')]; 
-    end  
-  end
-end
+        sprintf('\\color[rgb]{%0.1f %0.1f %0.1f}\\bf{%d %s%s} %s',...
+          wcolor(wi+1,:), wn,wname{wi+1},wnamepl, msg),'value','')]; 
+    end
+  end  
 
 
-  % adding one space for correct printing of bold fonts
+  %% adding one space for correct printing of bold fonts
   for ssi = 1:numel(str)
     for si = 1:numel(str{ssi})
       str{ssi}(si).name   = [str{ssi}(si).name  '  '];   
