@@ -132,6 +132,7 @@ function PSgi = cat_surf_gyrification(PS,opt)
   def.GIcoremodel    = 1;       % core model ( ... )
   def.GIcoreth       = 0.15;    % 0.1
   def.GIsuffix       = '';      % GI measure suffix
+  def.GIprefix       = '';      % GI measure prefix
   def.cleanup        = 0;       % remove temporary GI files
   
   opt = cat_io_checkinopt(opt,def);
@@ -168,11 +169,11 @@ function Psgi = cat_surf_SGI_laplacian(sinfo,opt)
 %     to the development of gyri. 
 %  ---------------------------------------------------------------------
 
-  Phull      = char(cat_surf_rename(sinfo,'dataname',['hull'          opt.GIsuffix],'ee',''));
-  Pcore      = char(cat_surf_rename(sinfo,'dataname',['core'          opt.GIsuffix],'ee',''));
-  Psigi      = char(cat_surf_rename(sinfo,'dataname',['inwardGI'      opt.GIsuffix],'ee',''));
-  Psogi      = char(cat_surf_rename(sinfo,'dataname',['outwardGI'     opt.GIsuffix],'ee',''));
-  Psggi      = char(cat_surf_rename(sinfo,'dataname',['generalizedGI' opt.GIsuffix],'ee',''));
+  Phull      = char(cat_surf_rename(sinfo,'dataname',[opt.GIprefix 'hull'          opt.GIsuffix],'ee',''));
+  Pcore      = char(cat_surf_rename(sinfo,'dataname',[opt.GIprefix 'core'          opt.GIsuffix],'ee',''));
+  Psigi      = char(cat_surf_rename(sinfo,'dataname',[opt.GIprefix 'inwardGI'      opt.GIsuffix],'ee',''));
+  Psogi      = char(cat_surf_rename(sinfo,'dataname',[opt.GIprefix 'outwardGI'     opt.GIsuffix],'ee',''));
+  Psggi      = char(cat_surf_rename(sinfo,'dataname',[opt.GIprefix 'generalizedGI' opt.GIsuffix],'ee',''));
   
   % load surface and create hull
   Scs = gifti(sinfo.Pmesh);

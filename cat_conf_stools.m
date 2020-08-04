@@ -241,19 +241,30 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   norm                  = cfg_menu;
   norm.tag              = 'norm';
   norm.name             = 'Final normalization';
-  norm.labels           = {'none','log10a','log10b','log10c','log10d','log10e'};
-  norm.values           = {'','log10a','log10b','log10c','log10d','log10e'};
   norm.val              = {''}; 
   norm.help             = {
    ['For many measures a log10 normalization is useful to obtain normal distributed data ' ...
     'but also to handle exponential dependencies to brain size. Moreover, it is important ' ...
     'to use TIV as general confound in the analysis. '] 
-    '  log10a = @(val) log10(val * 9/10 + 1)' 
-    '  log10b = @(val) log10(val * 99/100 + 1)/2' 
-    '  log10c = @(val) log10(val * 999/1000 + 1)/3'
-    '  log10d = @(val) log10(val * 9999/1000 + 1)/4'
-    '  log10e = @(val) log10(val * 99999/1000 + 1)/5'
     ''};   
+  if expert>1
+    norm.labels         = {'none','log10a','log10b','log10c','log10d','log10e'};
+    norm.values         = {'','log10a','log10b','log10c','log10d','log10e'};
+    norm.help           = [ norm.help ; {
+      '  log10a = @(val) log10(val * 9/10 + 1)' 
+      '  log10b = @(val) log10(val * 99/100 + 1)/2' 
+      '  log10c = @(val) log10(val * 999/1000 + 1)/3'
+      '  log10d = @(val) log10(val * 9999/1000 + 1)/4'
+      '  log10e = @(val) log10(val * 99999/1000 + 1)/5'
+    }]; 
+  else
+    norm.labels         = {'none','log10','log10p'};
+    norm.values         = {'','log10a','log10p'};
+    norm.help           = [ norm.help ; {
+      '  log10  = @(val) log10(val * 9/10 + 1)' 
+      '  log10p = @(val) log10(val * 999/1000 + 1)/3'
+    }]; 
+  end
   
  
   % average
@@ -338,8 +349,6 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
       'The object based distance on the other side estimates (multiple) voxel-based distance maps to read out the value at the surface position. ' ...
       'Hence, the closes structure (e.g. small lesions) normaly defines the distance but if erosion is used also larger far distance structures can taken into account. ']
       ''};
-      
-  
   end
   
   inverse              = cfg_menu;
@@ -468,7 +477,7 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   WMmnI.name      = 'WM mean intensity';
   WMmnI.hidden    = expert<2;
   WMmnI.help      = {
-    'This describes the mean intensity of the WM in a 7x7x7 box and describes the impact of WMHs in the volume. '
+    'This describes the mean intensity of the WM in a distance of 7 voxels and describes the impact of WMHs in the volume. '
     ''
     'See also WM intensity variance.'
     ''};
@@ -496,7 +505,7 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   WMD             = GMV; 
   WMD.tag         = 'WMD';
   WMD.name        = 'WM distance';
-  WMD.hidden      = expert<2;
+  WMD.hidden      = expert<1;
   WMD.help        = {
    ['This another way to measures the cortical thickness with GMT = WMD * 2, ' ...
     'because the central surface runs in the middle of the cortex. ']
@@ -506,7 +515,7 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   WMHD            = GMV; 
   WMHD.tag        = 'WMHD';
   WMHD.name       = 'WMH distance';
-  WMHD.hidden     = expert<2;
+  WMHD.hidden     = expert<1;
   WMHD.help       = {
     'This describes the distance to the closest WMH. The measure is similar to the WMV. '
     ''};
@@ -525,10 +534,10 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   measures.tag          = 'measures';
   measures.name         = 'Measures';
   measures.num          = [1 inf];
-  measures.values       = {vmeasure, imeasure, dmeasure, xmeasure};
+  measures.values       = {xmeasure, vmeasure, imeasure, dmeasure};
   measures.val          = {xmeasure}; 
   measures.help         = {
-    'Defintion of different volume, intensity and distance measures that were projected to the surface. ' ''};
+    'Application of predefined measures or own defintion of volume-, intensity-, distance-based ways to map voxel-based informations to the surface. ' ''};
   
   interp                = cfg_menu;
   interp.tag            = 'interp';
@@ -537,7 +546,10 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   interp.values         = {1,0};
   interp.val            = {0}; 
   interp.hidden         = expert<2;
-  interp.help           = {'Use interpolated voxel grid. ' ''};
+  interp.help           = {
+   ['Use interpolated voxel grid to improve mapping quality. ' ...
+    'However, it is expected that there are only small improvements that are not ' ...
+    'relevant because strong smoothing is also required by anatomical constrains. '] ''};
 
   % opts
   opts                  = cfg_exbranch;
@@ -548,19 +560,19 @@ function vx2surf = cat_surf_vx2surf_GUI(expert,nproc,lazy)
   else
     opts.val            = {outdir,nproc};
   end
-  opts.help             = {'General processing options. ' ''};
+  opts.help             = {'General processing options of all measures. ' ''};
   
   % main
   vx2surf               = cfg_exbranch;
   vx2surf.tag           = 'vx2surf';
-  vx2surf.name          = 'Map voxel-data to the surface';
+  vx2surf.name          = 'Map voxel-data to the surface (IN DEVELOPMENT)';
   vx2surf.val           = {surf,measures,opts}; %
   vx2surf.prog          = @cat_surf_vx2surf;
   vx2surf.vout          = @vout_cat_surf_vx2surf;
   vx2surf.help          = {
-   ['Voxel-based projection of volume values to the individual surface. ' ...
-    'The approach aligns all voxels within a specified tissue/roi to its closest surface point. ' ...
-    'The volume, intensity or distance values were averaged in a user specified way and saved as a raw surface measure ' ...
+   ['Voxel-based projection of volume values to the individual surface that is still IN DEVELOPMENT. ' ...
+    'The approach aligns all voxels within a specified tissue/ROI to its closest surface vertex. ' ...
+    'The volume, intensity, or distance values were averaged in a user specified way and saved as a raw surface measure ' ...
     'that has to be smoothed and resampled. ']
     ''}; 
   vx2surf.hidden        = expert<2;
@@ -1100,15 +1112,15 @@ function [surfcalc,surfcalcsub] = cat_surf_calc_GUI(expert)
 cdata               = cfg_files;
 cdata.tag           = 'cdata';
 cdata.name          = 'Surface Data Files';
-cdata.filter        = 'any';
-cdata.ufilter       = '(lh|rh|mesh).*';
+cdata.filter        = 'any'; % use any to support Freesurfer surfaces and dependencies
+cdata.ufilter       = '(lh|rh|mesh).*.gii';
 cdata.num           = [1 Inf];
 cdata.help          = {'These are the surface data files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order they are specified.'};
 
 cdata_sub           = cfg_files;
 cdata_sub.tag       = 'cdata';
 cdata_sub.name      = 'Surface Data Files';
-cdata_sub.filter    = 'gifti';
+cdata_sub.filter    = 'any'; % use any to support Freesurfer surfaces and dependencies
 cdata_sub.ufilter   = '(lh|rh|mesh).(?!cent|pial|white|sphe|defe|hull).*gii';
 cdata_sub.num       = [1 Inf];
 cdata_sub.help      = {'These are the surface data files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order they are specified.'};
@@ -1857,7 +1869,7 @@ if expert>2
 else
   norm.labels = {'No','Yes'}; 
   norm.values = {0,1};
-  norm.val    = {1}; 
+  norm.val    = {0}; 
 end
 
     
@@ -2134,7 +2146,7 @@ measures = { % para-field , para-subfield , para-val , output-var, [left|right] 
 ...
 'tGI'       ''       1        'tGI20mm'        'Toro GI 20 mm';          % original Toro approach with 20 mm 
 'tGI'       ''      -1        'tGIa'           'Toro GI adaptive';       % Toro GI with variable radius 
-'tGI'       ''      []        'tGI%02dmm'      'Toro GI %02d mm';        % mutliple input that replace %d
+'tGI'       ''      []        'tGI%02dmm'      'Toro GI %d mm';        % mutliple input that replace %d
 ...
 'lGI'       ''       1        'lGI'            'Schaer''s lGI';                  
 ...
@@ -2149,13 +2161,17 @@ measures = { % para-field , para-subfield , para-val , output-var, [left|right] 
 ...
 'surfaces'  'IS'     1        'white'          'white matter surface';
 'surfaces'  'OS'     1        'pial'           'pial surface';
-'GIL'       'hull'  [1 3]     'hull'           'hull surface';
-'GIL'       'core'  [2 3]     'core'           'core surface';
+...'GIL'       'hull'  [1 3]     'hull'           'hull surface';
+...'GIL'       'core'  [2 3]     'core'           'core surface';
 };
 sides = {
 'l' 'Left';
 ...'r' 'Right';
 }; 
+if isfield(job,'tGI') 
+  if any(isinf(job.tGI)), job.tGI(isinf(job.tGI)) = -1; end
+  job.tGI = unique(job.tGI); 
+end
 
 for si=1:size(sides,1)
 for mi=1:size(measures,1)
@@ -2168,6 +2184,16 @@ for mi=1:size(measures,1)
       dep(end).sname      = [sides{si,2} ' ' measures{mi,5}];
       dep(end).src_output = substruct('()',{1}, '.',[sides{si,1} 'P' measures{mi,4}],'()',{':'});
       dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+    end
+  elseif isfield(job,measures{mi,1}) && strcmp(measures{mi,1},'tGI') && isempty(measures{mi,3}) 
+    % special case for the hull and core surface due to the write field
+    for ti = 1:numel(job.(measures{mi,1}))
+      if job.(measures{mi,1})(ti)>1
+        if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
+        dep(end).sname      = [sides{si,2} ' ' sprintf( measures{mi,5} , job.(measures{mi,1})(ti) ) ];
+        dep(end).src_output = substruct('()',{1}, '.',sprintf( [sides{si,1} 'P' measures{mi,4}] , job.(measures{mi,1})(ti)),'()',{':'});
+        dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+      end
     end
   else
     if isfield(job,measures{mi,1}) && ~(strcmp(measures{mi,2},'hull') || strcmp(measures{mi,2},'core')) 

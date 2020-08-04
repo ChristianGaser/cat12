@@ -18,6 +18,7 @@ function [Ym,Yt,Ybg,WMth,bias,Tth,pior] = cat_run_job_APP_init(Ysrco,vx_vol,opt)
   def.icall  = 1;    % test inverse processing  
   def.verb   = 1;    % verbose level
   def.iproc  = 0; 
+  def.histth = [0.96 0.9999];
   opt = cat_io_checkinopt(opt,def); 
 
   dbs = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
@@ -38,11 +39,11 @@ function [Ym,Yt,Ybg,WMth,bias,Tth,pior] = cat_run_job_APP_init(Ysrco,vx_vol,opt)
   [Ysrc,resT1] = cat_vol_resize(Ysrc,'reduceV',vx_vol,2,msize,'meanm'); 
 
   % correction for negative backgrounds (MT weighting)
-  [Ym,BGth] = cat_stat_histth(Ysrc,99.99); BGth(2) = []; clear Ym;   %#ok<ASGLU>
+  [Ym,BGth] = cat_stat_histth(Ysrc,opt.histth); BGth(2) = []; clear Ym;   %#ok<ASGLU>
   
   % initial thresholds
   % correction for negative backgrounds (MT weighting)
-  [Ym,BGth] = cat_stat_histth(Ysrc,99.99); BGth(2) = []; clear Ym;   %#ok<ASGLU>
+  [Ym,BGth] = cat_stat_histth(Ysrc,opt.histth); BGth(2) = []; clear Ym;   %#ok<ASGLU>
   
   Ysrc = Ysrc - BGth; Ysrco = Ysrco - BGth; BGth2 = BGth; 
   Yg   = cat_vol_grad(Ysrc,vx_vol) ./ max(eps,Ysrc); 

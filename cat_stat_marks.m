@@ -39,9 +39,9 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
     
   def.tissue    = [ 1/3 3/12;  2/3 3/12;    1 3/12]; % ideal normalized tissue peak values 
   def.tisvolr   = [0.1754  0.1439; 0.4538  0.1998; 0.3688  0.1325; 0 0.1]; % relative expected tissue volumes
-  def.thickness = [2.50  1.0; 0.75  0.5];            % absolut  expected tickness
-  def.WMdepth   = [2.50  1.0; 1.50  1.0];            % absolut  expected tickness
-  def.CSFdepth  = [1.25  1.0; 0.25  0.5];            % absolut  expected tickness
+  def.thickness = [2.50  1.0; 0.75  0.5];            % absolut  expected thickness
+  def.WMdepth   = [2.50  1.0; 1.50  1.0];            % absolut  expected thickness
+  def.CSFdepth  = [1.25  1.0; 0.25  0.5];            % absolut  expected thickness
   def.CHvsCG    = [ 0.9  0.6;  0.1  0.4;    9    1]; % relation 
   NM=[0.0466 0.3949]; %NM = [NM(1) NM(1)+(NM(2)-NM(1))/5*6];  
   BM=[0.2178 1.1169*2]; %BM = [BM(1) BM(1)+(BM(2)-BM(1))/3*6];
@@ -64,7 +64,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
    'filedata'  'file'                  ''          []               'filename'
    'filedata'  'F'                     ''          []               'original filename used for QA'
    'filedata'  'Fm'                    ''          []               'modified filename used for QA'
-   'filedata'  'Fp0'                   ''          []               'segmentmap filename used for QA'
+   'filedata'  'Fp0'                   ''          []               'label map filename used for QA'
 % -- image quality measures on the original image ----------------------
   % - resolution - 
    'qualitymeasures'  'res_vx_vol'            'linear'    [  0.50   3.00]  'voxel dimensions'
@@ -75,10 +75,10 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
    'qualitymeasures'  'res_BB'                'linear'    [   200    500]  'brain next to the image boundary'
   % - tissue mean and varianz - 
    'qualitymeasures'  'tissue_mn'             'normal'    def.tissue       'mean within the tissue classes'
-   'qualitymeasures'  'tissue_std'            'normal'    [  0.10   0.20]  'std within the tissue classes'
+   'qualitymeasures'  'tissue_std'            'normal'    [  0.10   0.20]  'standard deviation within the tissue classes'
   % - contrast - 
-   'qualitymeasures'  'contrast'              'linear'    [  CM(1)   CM(2)]  'contrast between tissue classe' % das geht nicht
-   'qualitymeasures'  'contrastr'             'linear'    [  CM(1)   CM(2)]  'contrast between tissue classe'
+   'qualitymeasures'  'contrast'              'linear'    [  CM(1)   CM(2)]  'contrast between tissue classes' % das geht nicht
+   'qualitymeasures'  'contrastr'             'linear'    [  CM(1)   CM(2)]  'contrast between tissue classes'
   % - noise & contrast -
    'qualitymeasures'  'NCR'                   'linear'    [  NM(1)   NM(2)]  'noise to contrast ratio' 
   %'qualitymeasures'  'CNR'                   'linear'    [1/NM(1) 1/NM(2)]  'contrast to noise ratio'
@@ -86,16 +86,16 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
    'qualitymeasures'  'ICR'                   'linear'    [  BM(1)   BM(2)]  'inhomogeneity to contrast ratio' 
   %'qualitymeasures'  'CIR'                   'linear'    [1/BM(1) 1/BM(2)]  'contrast to inhomogeneity ratio'
   % - subject measures / preprocessing measures -
-  %'qualitymeasures'  'CJV'                   'linear'    [  0.12   0.18]  'coefficiant of variation - avg. std in GM and WM'
-  %'qualitymeasures'  'MPC'                   'linear'    [  0.11   0.33]  'mean preprocessing change map - diff. betw. opt. T1 and p0'
-  %'qualitymeasures'  'MJD'                   'linear'    [  0.05   0.15]  'mean jacobian determinant'
+  %'qualitymeasures'  'CJV'                   'linear'    [  0.12   0.18]  'coefficient of variation - avg. std in GM and WM'
+  %'qualitymeasures'  'MPC'                   'linear'    [  0.11   0.33]  'mean preprocessing change map - difference between optimal T1 and p0'
+  %'qualitymeasures'  'MJD'                   'linear'    [  0.05   0.15]  'mean Jacobean determinant'
   %'qualitymeasures'  'STC'                   'linear'    [  0.05   0.15]   'difference between template and label'
    'qualitymeasures'  'SurfaceEulerNumber'    'linear'    [     2    100]  'average number of Euler defects of created surfaces'
-   'qualitymeasures'  'SurfaceDefectArea'     'linear'    [     0     20]  'average area of topological defects in %'
-   'qualitymeasures'  'SurfaceDefectNumber'   'linear'    [     0    100]  'average number of defects.'
-   'qualitymeasures'  'SurfaceIntensityRMSE'  'linear'    [  0.05    0.3]  'RMSE of the expected boundary intensity Ym of the IS, OS, and CS.'
-   'qualitymeasures'  'SurfacePositionRMSE'   'linear'    [  0.05    0.3]  'RMSE of the expected boudnary position Ypp of the IS, OS, and CS.'
-   'qualitymeasures'  'SurfaceSelfIntersections' 'linear' [     0     20]   'Percental area of self-intersections of the IS and OS.'
+   'qualitymeasures'  'SurfaceDefectArea'     'linear'    [     0     20]  'average area of topological defects'
+   'qualitymeasures'  'SurfaceDefectNumber'   'linear'    [     0    100]  'average number of defects'
+   'qualitymeasures'  'SurfaceIntensityRMSE'  'linear'    [  0.05    0.3]  'RMSE of the expected boundary intensity Ym of the IS, OS, and CS'
+   'qualitymeasures'  'SurfacePositionRMSE'   'linear'    [  0.05    0.3]  'RMSE of the expected boundary position Ypp of the IS, OS, and CS'
+   'qualitymeasures'  'SurfaceSelfIntersections' 'linear' [     0     20]  'Percentual area of self-intersections of the IS and OS.'
 % -- subject-related data from the preprocessing -----------------------
   % - volumetric measures - 
    'subjectmeasures'  'vol_TIV'               'normal'    [  1400    400]  'total intracranial volume (GM+WM+VT)'
@@ -113,6 +113,15 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
    'subjectmeasures'  'dist_rel_depth'        'normal'    [  0.50   0.20]  'relative sulcal depth'
   % - area measures -
    'subjectmeasures'  'surf_TSA'              'normal'    [  1400    400]*2/3  'total surface area'
+  % - software - 
+   'software'         'cat_warnings'          ''          []               'CAT preprocessing warning structure with subfields for identifier, message, type, and data. See ../cat12/html/cat_methods_warnings.html'
+   'SPMpreprocessing' 'Affine0'               ''          []               'Initial affine matrix estimated in cat_run_job, used for SPM US.'
+   'SPMpreprocessing' 'Affine'                ''          []               'Final affine matrix extimated in cat_main_registration.'
+   'SPMpreprocessing' 'Affine0H'              ''          []               'Human version of the initial affine matrix  estimated in cat_run_job, used for SPM US [transXYZ rotationXYZ scaleXYZ shearXYZ]. '
+   'SPMpreprocessing' 'AffineH'               ''          []               'Human version of the final affine matrix extimated in cat_main_registration [transXYZ rotationXYZ scaleXYZ shearXYZ]'
+   'SPMpreprocessing' 'lkp'                   ''          []               'Number of SPM tissue classes.'
+   'SPMpreprocessing' 'mn'                    ''          []               'Mean value of SPM tissue class defined by the lkp field.'
+   'SPMpreprocessing' 'vr'                    ''          []               'Variance of SPM tissue class defined by the lkp field.'
   };
   if nargin>3 && isstruct(varargin{2}), def = cat_io_checkinopt(varargin{2},def); end
   

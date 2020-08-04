@@ -42,14 +42,14 @@ function [Affine2,Yb,Ymi,Ym0] = cat_run_job_APRGs(Ysrc,Ybg,VF,Pb,Pbt,Affine,vx_v
   
   %% estimate tissue thresholds for intensity normalization 
   bgth = kmeans3D(Ysrc(Ybg)); 
-  T5th = kmeans3D( cat_stat_histth(Ysrc(Yb0>0.5) ,0.95),5); 
+  T5th = kmeans3D( cat_stat_histth(Ysrc(Yb0>0.5) ,[0.95 0.99]),5); 
   T3th = T5th([1 3 5]); % use more agressive scaling to avoid skull-stripping 
   if 0 % WMHs?
     Txth = kmeans3D(Ysrc(Yb0>0.5 & ...
       Ysrc>nansum(T3th(1:2:3) .* [0.9 0.1]) & ...
       Ysrc<nansum(T3th(1:2:3) .* [0.1 0.9])),5); T3th(2) = mean(Txth(3:4)); 
   end
-  [Ysrc,th] = cat_stat_histth(Ysrc);
+  [Ysrc,th] = cat_stat_histth(Ysrc,[0.98 0.9999]);
   Ym = (Ysrc - mean([th(1),T3th(1)]) ) ./ (T3th(3) - mean([th(1),T3th(1)]) ); 
   Yg = cat_vol_grad(Ym,vx_vol) ./ Ym;   
   
@@ -215,8 +215,10 @@ function [Affine2,Yb,Ymi,Ym0] = cat_run_job_APRGs(Ysrc,Ybg,VF,Pb,Pbt,Affine,vx_v
       for i=1:numel(cutstrs)
         if isnan( cutstrval(i) )
           S = isosurface(Ymx,cutstrs(i),Ysrc2); 
-          cutstrval(i) = cutstrs(i)/10 + cat_stat_nanmean(S.facevertexcdata.^2).^0.5; %... % litte offset to get more CSF
+          if ~isempty(S.vertices)
+            cutstrval(i) = cutstrs(i)/10 + cat_stat_nanmean(S.facevertexcdata.^2).^0.5; %... % litte offset to get more CSF
             %mean(S.facevertexcdata) + std(S.facevertexcdata);
+          end
         end
       end
       [tmp,cutstrid] = sort(cutstrval); clear tmp; %#ok<ASGLU>
@@ -284,10 +286,14 @@ if 1
 end
   
   % do registration
-  warning('off','MATLAB:RandStream:ActivatingLegacyGenerators')
-  [Affine2,ll]  = spm_maff8(obj2.image, obj2.samp ,obj2.fwhm ,obj2.tpm ,Affine ,job.opts.affreg ,80);
-  if det(Affine \ Affine2)>1.5 || det(Affine2 \ Affine)>1.5 % || ll<0.9 % RD202007: add this maybe later
-    Affine2  = spm_maff8(obj2.image, obj2.samp ,obj2.fwhm ,obj2.tpm ,Affine , 'none'  ,80);
+  if ~isfield( job , 'useprior' ) || isempty( job.useprior )
+    warning('off','MATLAB:RandStream:ActivatingLegacyGenerators')
+    [Affine2,ll]  = spm_maff8(obj2.image, obj2.samp ,obj2.fwhm ,obj2.tpm ,Affine ,job.opts.affreg ,80);
+    if det(Affine \ Affine2)>1.5 || det(Affine2 \ Affine)>1.5 % || ll<0.9 % RD202007: add this maybe later
+      Affine2  = spm_maff8(obj2.image, obj2.samp ,obj2.fwhm ,obj2.tpm ,Affine , 'none'  ,80);
+    end
+  else
+    Affine2 = Affine; 
   end
   
   %%

@@ -132,7 +132,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Y
     else
       CMth = min( [  clsint(1) - diff([clsint(1),WMth]) , clsint(3) ]);
     end
-    T3th = [ CMth , clsint(1) , WMth];
+    T3th = double( [ CMth , clsint(1) , WMth]);
 
 
     %% Some error handling
@@ -225,7 +225,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Y
     elseif job.extopts.gcutstr==0 
       [Yb,Ybb,Yg,Ydiv] = cat_main_updateSPM_gcut0(Ysrc,P,vx_vol,T3th);
     elseif job.extopts.gcutstr==2
-      [Yb,Ybb,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th);
+      [Yb,Ybb,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th,0);
     elseif job.extopts.gcutstr>2 && job.extopts.gcutstr<3
       [Yb,Ybb,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th,job.extopts.gcutstr);
     else
@@ -262,19 +262,20 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Y
           Ybg  = cat_vol_resize(cat_vol_smooth3X(Ybgr,1),'dereduceV',resT2); 
           clear Ysrcr Ybgr; 
         else
-          Ybg = ~Yb;
+          Ybg = P(:,:,:,6); %~Yb;
         end
       end
-      P4   = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc<T3th(2))  .* (Ybg==0) + single(P(:,:,:,4)) .* (Ybg<1) ); % remove air in head
-      P5   = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc>=T3th(2)) .* (Ybg==0) + single(P(:,:,:,5)) .* (Ybg<1) ); % remove air in head
-      P6   = cat_vol_ctype( single(sum(P(:,:,:,4:5),4)) .* (Ybg==1) + single(P(:,:,:,6)) .* (Ybg>0) ); % add objects/artifacts to background
-      P(:,:,:,4) = P4;
-      P(:,:,:,5) = P5;
-      P(:,:,:,6) = P6;
-      clear P4 P5 P6;
+      if ~res.ppe.affreg.highBG
+        P4   = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc<T3th(2))  .* (Ybg==0) + single(P(:,:,:,4)) .* (Ybg<1) ); % remove air in head
+        P5   = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc>=T3th(2)) .* (Ybg==0) + single(P(:,:,:,5)) .* (Ybg<1) ); % remove air in head
+        P6   = cat_vol_ctype( single(sum(P(:,:,:,4:5),4)) .* (Ybg==1) + single(P(:,:,:,6)) .* (Ybg>0) ); % add objects/artifacts to background
+        P(:,:,:,4) = P4;
+        P(:,:,:,5) = P5;
+        P(:,:,:,6) = P6;
+        clear P4 P5 P6;
+      end
 
-
-      %% correct probability maps to 100% 
+      % correct probability maps to 100% 
       sumP = cat_vol_ctype(255 - sum(P(:,:,:,1:6),4));
       P(:,:,:,1) = P(:,:,:,1) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc>cat_stat_nanmean(T3th(1:2)) & Ysrc<cat_stat_nanmean(T3th(2:3)));
       P(:,:,:,2) = P(:,:,:,2) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc>=cat_stat_nanmean(T3th(2:3)));
@@ -283,8 +284,8 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Y
       P(:,:,:,5) = P(:,:,:,5) + sumP .* uint8( Ybg<0.5  & ~Yb & Ysrc>=T3th(2));
       P(:,:,:,6) = P(:,:,:,6) + sumP .* uint8( Ybg>=0.5 & ~Yb );
       clear Ybg sumP;
-
-
+      
+    
       %% head to WM 
       % Under-correction of strong inhomogeneities in high field scans 
       % (>1.5T) can cause miss-alignments of the template and therefore 
@@ -544,14 +545,15 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Y
   %
   % ### add to cat_main_registration?
   %
-  Ybd = true(size(Ysrc)); Ybd(3:end-2,3:end-2,3:end-2) = 0; Ybd(~isnan(Yy2(:,:,:,1))) = 0; Yy2(isnan(Yy2))=0; 
-  for k1=1:3
-    Yy2(:,:,:,k1) = Yy(:,:,:,k1) .* Ybd + Yy2(:,:,:,k1) .* (1-Ybd);
-    Yy2(:,:,:,k1) = cat_vol_approx(Yy2(:,:,:,k1),'nn',vx_vol,3); 
+  try
+    Ybd = true(size(Ysrc)); Ybd(3:end-2,3:end-2,3:end-2) = 0; Ybd(~isnan(Yy2(:,:,:,1))) = 0; Yy2(isnan(Yy2))=0; 
+    for k1=1:3
+      Yy2(:,:,:,k1) = Yy(:,:,:,k1) .* Ybd + Yy2(:,:,:,k1) .* (1-Ybd);
+      Yy2(:,:,:,k1) = cat_vol_approx(Yy2(:,:,:,k1),'nn',vx_vol,3); 
+    end
+    Yy = Yy2; 
+    clear Yy2; 
   end
-  Yy = Yy2; 
-  clear Yy2; 
- 
   stime2 = cat_io_cmd(' ','g5','',job.extopts.verb-1,stime2); 
   fprintf('%5.0fs\n',etime(clock,stime));
  
@@ -608,7 +610,7 @@ function [Yb,Ybb,Yg,Ydiv] = cat_main_updateSPM_gcutold(Ysrc,P,res,vx_vol,T3th)
     Ydiv = cat_vol_div((Ysrcb-BGth)/diff([BGth,T3th(3)]),vx_vol);
     Ybo  = cat_vol_morph(cat_vol_morph(Yp0>0.3,'lc',2),'d',brad/2/mean(vx_vol)); 
     BVth = diff(T3th(1:2:3))/abs(T3th(3))*1.5; 
-    RGth = diff(T3th(2:3))/abs(T3th(3))*0.1; 
+    RGth = double(diff(T3th(2:3))/abs(T3th(3))*0.1); 
     Yb   = single(cat_vol_morph((Yp0>1.9/3) | (Ybo & Ysrcb>mean(T3th(2)) & ...
            Ysrcb<T3th(3)*1.5 & Yg<0.5),'lo',max(0,0.6/mean(vx_vol)))); 
     

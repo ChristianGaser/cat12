@@ -31,7 +31,7 @@ function MODIFIEDSTR = cat_io_strrep(ORIGSTR,OLDSUBSTR,NEWSUBSTR)
           end
         else
           error('cat_io_strrep:input',...
-            'If multiple new stringswere used, their number must be equal to the number of old strings.\n'); 
+            'If multiple new strings were used, their number must be equal to the number of old strings.\n'); 
         end
       else
         MODIFIEDSTR = ORIGSTR; 

@@ -45,6 +45,7 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th,cutstr)
     cth = max(cth,cat_stat_nanmedian(Ysrc( cat_vol_morph( smooth3(P(:,:,:,3))>200 & ...
             Ysrc>sum(T3th(1:2).*[0.8 0.2]),'de',2,vx_vol) ) ));
   end  
+  T3th(1) = cth; 
   if max(res.lkp)==4
     bth = 0;
   else
@@ -131,6 +132,7 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th,cutstr)
   
 
   %% GM-CSF region
+  % Yh is the region that we exclude 
 if cutstr == 0 %old
   %% GM-CSF region
   Yb2  = single(cat_vol_morph(Yb,'de',1.9,vx_vol)); 
@@ -153,19 +155,22 @@ if cutstr == 0 %old
   Yb   = cat_vol_morph(Yb,'ldo',1.9,vx_vol);
   Yb   = cat_vol_morph(Yb,'ldc');
 else
-  Yb2  = single(cat_vol_morph(Yb,'de',1.9,vx_vol)); 
+    Yb2  = single(cat_vol_morph(cat_vol_morph(Yb,'de',1.9,vx_vol),'ldc',3)); 
     if T3th(1) < T3th(3)
-      Yh   = (Yb2<0.5) & (Ysrc<(T3th(1) - 0.5*(1-cutstr) * diff([T3th(1) min(T3th(2:3))])) | ...
+      Yh   = (Yb2<0.5) & ( Ysrc<(T3th(1) - 1*(1-cutstr) * diff([T3th(1) min(T3th(2:3))])) | ...
               cat_vol_morph(sum(P(:,:,:,4:6),4)>250,'e',2,vx_vol) | ...
-              Ysrc>cat_stat_nanmean(mean(T3th(1:2))) | Yg>BVth); 
+              (Ysrc>cat_stat_nanmean(mean(T3th(1:2))) & ~Yb) | Yg>BVth); 
     else
-      Yh   = (Yb2<0.5) & (Ysrc>(T3th(1) + 0.5*(1-cutstr) * diff([T3th(1) max(T3th(2:3))])/2)) | ...
+      Yh   = (Yb2<0.5) & ( Ysrc>(T3th(1) + 1*(1-cutstr) * diff([T3th(1) max(T3th(2:3))])/2) | ...
               cat_vol_morph(sum(P(:,:,:,4:6),4)>250,'e',2,vx_vol) | ...
-              Ysrc<(T3th(3) - sum(T3th(2:3).*[0.5 0.5]) | Yg>BVth); 
+              (Ysrc>cat_stat_nanmean(mean(T3th(1:2))) & ~Yb) | Yg>BVth); 
     end
     Yh(smooth3(Yh)>0.7) = 1; Yh(smooth3(Yh)<0.3) = 0;   
     Yh   = cat_vol_morph(Yh,'dc',1) | cat_vol_morph(~Yb,'de',10,vx_vol); 
-    Yh   = cat_vol_morph(Yh,'de',1,vx_vol);  Yb2(Yh) = nan; if ~debug, clear Yh; end
+    Yh   = cat_vol_morph(Yh,'de',1,vx_vol);  
+    Yh   = cat_vol_morph(Yh,'do',1,vx_vol);  
+    Yb2(Yh) = nan; if ~debug, clear Yh; end
+    %%
     if T3th(1) < T3th(3) % T1 
       [Yb2,YD] = cat_vol_downcut(Yb2,Ysrc/T3th(3),max(0.03,min(0.1,-RGth*2))); clear Yb2; %#ok<ASGLU>
     else
@@ -173,8 +178,8 @@ else
     end
     %%
     Yb( (YD < 500 / mean(vx_vol) * (1 - cutstr/2)) & ...
-      Ysrc<(T3th(1) + 0.25*(1-cutstr) * min( abs( [ diff(T3th(1:2)) , diff(T3th(1:2:3)) ] ))) & ...
-      Ysrc>(T3th(1) - 0.25*(1-cutstr) * min( abs( [ diff(T3th(1:2)) , diff(T3th(1:2:3)) ] ))) ...
+      Ysrc<(T3th(1) + 0.5*(1-cutstr) * min( abs( [ diff(T3th(1:2)) , diff(T3th(1:2:3)) ] ))) & ...
+      Ysrc>(T3th(1) - 0.5*(1-cutstr) * min( abs( [ diff(T3th(1:2)) , diff(T3th(1:2:3)) ] ))) ...
       ) = 1; clear YD; 
     Yb(smooth3(Yb)<0.5) = 0; Yb(smooth3(Yb)>0.5) = 1; 
     Yb   = cat_vol_morph(Yb,'ldo',1.9,vx_vol);
@@ -252,7 +257,7 @@ end
 
   %% create brain level set map
   %  Ym .. combination of brain tissue and CSF that is further corrected
-  %        for noise (median) and smoothness (Laplace) an finally 
+  %        for noise (median) and smoothness (Laplace) and finally 
   %        threshholded 
   Ym  = min(1,Yc + single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255 + Yb);
   Ym  = cat_vol_median3(Ym,Ym>0 & Ym<1);  % remove noise 
@@ -304,6 +309,7 @@ end
   %% normalize this map depending on the cutstr parameter 
   Yb  = cat_vol_morph(cat_vol_morph(Ym > cutstr,'lo'),'lc',2);
   Yb  = cat_vol_morph(Yb,'e') | (Ym>0.9) | (Yb & Yc>0.5);
+  Yb(smooth3(Yb)>0.7)=1;
   Yb(smooth3(Yb)<0.5)=0;
   Ybb = cat_vol_ctype( max(0,min(1,(Ym - cutstr)/(1-cutstr))) * 256); 
   Ym0 = Ybb; 

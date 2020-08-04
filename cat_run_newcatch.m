@@ -215,9 +215,11 @@ function cat_run_newcatch(job,tpm,subj)
       catfile = fullfile(pth,reportfolder,['cat_' nam '.xml']);
       logfile = fullfile(pth,reportfolder,['catlog_' nam '.txt']);
       repfile = fullfile(pth,reportfolder,['catreport_' nam '.pdf']);
+      rejfile = fullfile(pth,reportfolder,['catreport_' nam '.jpg']);
       if exist(catfile,'file'), copyfile(catfile,fullfile(pth,errfolder,suberrfolder)); end
-      if exist(logfile,'file'), copyfile(catfile,fullfile(pth,errfolder,suberrfolder)); end
+      if exist(logfile,'file'), copyfile(logfile,fullfile(pth,errfolder,suberrfolder)); end
       if exist(repfile,'file'), copyfile(repfile,fullfile(pth,errfolder,suberrfolder)); end
+      if exist(rejfile,'file'), copyfile(rejfile,fullfile(pth,errfolder,suberrfolder)); end
       if ismac || isunix
         [ST, RS] = system(sprintf('ln -s -F "%s" "%s"',...
           fullfile(pth,[nam ext]),fullfile(pth,errfolder,suberrfolder,[nam ext])));

@@ -127,6 +127,14 @@ opts    = cat_conf_opts(expert);
 output  = cat_conf_output(expert); 
 %------------------------------------------------------------------------
 
+% RD202007: Allow only lh+rh surface processing in long mode although this
+%           this does not help to update default settings via function handle.         
+clear FN; for vi = 1:numel(output.val), FN{vi} = output.val{vi}.tag; end
+surf = find(cellfun('isempty',strfind(FN,'surface'))==0); 
+output.val{surf}.labels = {'No','Yes'};
+output.val{surf}.values = {0 1}; 
+
+
 long = cfg_exbranch;
 long.name = 'CAT12: Segment longitudinal data (current release)';
 long.tag  = 'long';

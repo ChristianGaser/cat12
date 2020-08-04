@@ -272,8 +272,7 @@ if ~isfield(res,'spmpp')
     
     fprintf('%5.0fs\n',etime(clock,stime));
   else
-    cat_io_addwarning('cat_main:skipLAS','Skip LAS due to image contrast. Use global normalization.',1,[0 0]);
-    fprintf('%5.0fs\n',etime(clock,stime));
+    cat_io_addwarning('cat_main:skipLAS','Skip LAS due to image contrast. Use global normalization.',1,[0 1]);
     Ymi = Ym; 
   end
   if ~debug; clear Ysrc ; end
@@ -326,27 +325,31 @@ if ~isfield(res,'spmpp')
   %  Of course we only want to do this for highres T1 data!
   %  ---------------------------------------------------------------------
   NS = @(Ys,s) Ys==s | Ys==s+1; 
-  if job.extopts.BVCstr && all(vx_vol<2) % ~job.extopts.inv_weighting &&
-    stime = cat_io_cmd(sprintf('Blood vessel correction (BVCstr=%0.2f)',job.extopts.BVCstr));
-    if job.extopts.ignoreErrors < 3  
-      
-      Ybv  = cat_vol_smooth3X(cat_vol_smooth3X( ...
-        NS(Yl1,7) .* (Ymi*3 - (1.5-job.extopts.BVCstr)),0.3).^4,0.1)/3;
+  if job.extopts.BVCstr 
+    if all(vx_vol<2) % ~job.extopts.inv_weighting &&
+      stime = cat_io_cmd(sprintf('Blood vessel correction (BVCstr=%0.2f)',job.extopts.BVCstr));
+      try 
 
-      % correct src images
-      Ymi   = max(0,Ymi - Ybv*2/3); 
-      Ymi   = cat_vol_median3(Ymi,cat_vol_morph(Ybv>0.5,'dilate')); 
-      Ymis  = cat_vol_smooth3X(Ymi); Ymi(Ybv>0.5) = Ymis(Ybv>0.5); clear Ymis;
+        Ybv  = cat_vol_smooth3X(cat_vol_smooth3X( ...
+          NS(Yl1,7) .* (Ymi*3 - (1.5-job.extopts.BVCstr)),0.3).^4,0.1)/3;
 
-      % update classes
-      Ycls{1} = min(Ycls{1},cat_vol_ctype(255 - Ybv*127)); 
-      Ycls{2} = min(Ycls{2},cat_vol_ctype(255 - Ybv*127)); 
-      Ycls{3} = max(Ycls{3},cat_vol_ctype(127*Ybv)); 
+        % correct src images
+        Ymi   = max(0,Ymi - Ybv*2/3); 
+        Ymi   = cat_vol_median3(Ymi,cat_vol_morph(Ybv>0.5,'dilate')); 
+        Ymis  = cat_vol_smooth3X(Ymi); Ymi(Ybv>0.5) = Ymis(Ybv>0.5); clear Ymis;
 
-      fprintf('%5.0fs\n',etime(clock,stime));
-      clear Ybv p0; 
+        % update classes
+        Ycls{1} = min(Ycls{1},cat_vol_ctype(255 - Ybv*127)); 
+        Ycls{2} = min(Ycls{2},cat_vol_ctype(255 - Ybv*127)); 
+        Ycls{3} = max(Ycls{3},cat_vol_ctype(127 * Ybv)); 
+
+        fprintf('%5.0fs\n',etime(clock,stime));
+        clear Ybv p0; 
+      catch
+        cat_io_addwarning('cat_main:noBVCbackup','No BVC backup function.',1,[0 1]); 
+      end
     else
-      cat_io_cprintf('warn','\n  IgnoreErrors: No BVC backup function. \n')
+      cat_io_addwarning('cat_main:noBVC4lowres',sprintf('No BVC for low resolution data (%0.2fx%0.2fx%0.2fmm).',vx_vol),1,[0 1]); 
     end
   end
 
@@ -743,9 +746,9 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
   end
   
   if job.output.sROI && all(job.output.surface~=[5 6]) % no fast without registration
-    cat_io_cmd('  Surface ROI estimation');  
+    stime2 = cat_io_cmd('  Surface ROI estimation');  
     
-    %% estimate surface ROI estimates for thickness
+    % estimate surface ROI estimates for thickness
     [pp,ff]   = spm_fileparts(VT.fname);
     if cat_get_defaults('extopts.subfolders')
       surffolder = 'surf';
@@ -764,9 +767,11 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
     Pthick_lh{1} = fullfile(pp,surffolder,sprintf('lh.thickness.%s',ff));
     
     cat_surf_surf2roi(struct('cdata',{{Pthick_lh}},'rdata',{Psatlas_lh}));
+
+    fprintf('%5.0fs\n',etime(clock,stime2));
   end
   
-  cat_io_cmd('Surface and thickness estimation');  
+  cat_io_cmd('Surface and thickness estimation takes');  
   fprintf('%5.0fs\n',etime(clock,stime));
   if ~debug; clear YMF Yp0; end
   if ~debug && ~job.output.ROI && job.output.surface, clear Yth1; end
@@ -800,6 +805,8 @@ if ~debug, clear wYp0 wYcls wYv trans Yp0; end
 
 %% XML-report and Quality Control
 %  ---------------------------------------------------------------------
+%  RD20200725: evaluate difference between res.Affine and res.Affine0
+%              create error if to strong differences
 
 %  estimate brain tissue volumes and TIV
 qa.subjectmeasures.vol_abs_CGW = [

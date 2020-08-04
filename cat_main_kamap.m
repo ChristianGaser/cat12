@@ -60,9 +60,12 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,Yy,tpm,job,res,vx_vol,stime2)
   Ysrc = real(Ysrc);
   
   
-  %% get some low intensity values (backgroudn or CSF)
+  %% get some low intensity values (background or CSF)
   %  don't trust SPM background value in case of large ventricles
-  [Ysrc2,th] = cat_stat_histth(Ysrc); clear Ysrc2;
+  %  #########
+  %  RD202007:  Use high thresholds for MP2Rage data - need further tests!
+  %  #########
+  [Ysrc2,th] = cat_stat_histth(Ysrc,[0.999999 0.999999]); clear Ysrc2;
   T4th = [ th(1) ... 
     sum(res.mn(res.lkp==3).*res.mg(res.lkp==3)') ...
     sum(res.mn(res.lkp==1).*res.mg(res.lkp==1)') ...
@@ -103,7 +106,10 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,Yy,tpm,job,res,vx_vol,stime2)
   
   %% intensity normalization
   Ym = Ysrc; Ym(~cat_vol_morph(Yb,'e',3)) = nan; 
-  [Ymic,th] = cat_stat_histth(Ym,0.98); 
+  %  #########
+  %  RD202007:  Use high thresholds for MP2Rage data - need further tests!
+  %  #########
+  [Ymic,th] = cat_stat_histth(Ym,[0.999999 0.999999]); 
   Ym(isnan(Ym) | Ym>(th(2) + diff(th)*2)) = 0;
   [T3th,T3sd,T3md] = kmeans3D(Ymic((Ym(:)>0)),5); clear Ymic;  %#ok<ASGLU>
   if T3md(end)<0.08, T3th(end)=T3th(end-1); end
