@@ -169,21 +169,21 @@ run_cat ()
   fi
   
   # create temporary batch file
-	TMP=/tmp/cat_$$.m
+  TMP=/tmp/cat_$$.m
 
-  # copy everything except rows with UNDEFINED to temp file	
-	grep -v "<UNDEFINED>" $BATCHFILE > $TMP
+  # copy everything except rows with UNDEFINED to temp file 
+  grep -v "<UNDEFINED>" $BATCHFILE > $TMP
   
-	# extract parameter name of data structure (1st occurance of "<UNDEFINED>")
-	data=`grep -m 1 "<UNDEFINED>" $BATCHFILE | cut -f1 -d'='`
+  # extract parameter name of data structure (1st occurance of "<UNDEFINED>")
+  data=`grep -m 1 "<UNDEFINED>" $BATCHFILE | cut -f1 -d'='`
 
-	# extract parameter name of optional argument(s) (additional occurances of "<UNDEFINED>")
+  # extract parameter name of optional argument(s) (additional occurances of "<UNDEFINED>")
   if [ -n "$ARG1" ]; then # ARG1 defined?
-	  param1=`grep -m 2 "<UNDEFINED>" $BATCHFILE | tail -n 1 | cut -f1 -d'='`
-	  # extract parameter name of optional argument (3rd occurance of "<UNDEFINED>")
-		if [ -n "$ARG2" ]; then # ARG2 defined?
-			param2=`grep -m 3 "<UNDEFINED>" $BATCHFILE | tail -n 1 | cut -f1 -d'='`
-		fi
+    param1=`grep -m 2 "<UNDEFINED>" $BATCHFILE | tail -n 1 | cut -f1 -d'='`
+    # extract parameter name of optional argument (3rd occurance of "<UNDEFINED>")
+    if [ -n "$ARG2" ]; then # ARG2 defined?
+      param2=`grep -m 3 "<UNDEFINED>" $BATCHFILE | tail -n 1 | cut -f1 -d'='`
+    fi
   fi
   
   # surface data need an additional curly bracket
@@ -191,8 +191,8 @@ run_cat ()
     echo "$data = {{" >> $TMP
   else
     echo "$data = {" >> $TMP
-	fi
-	
+  fi
+  
   i=0
   ARG_LIST=""
   while [ "$i" -lt "$count" ]; do
@@ -207,18 +207,18 @@ run_cat ()
     fi
 
     # add file list
-		echo "'${FILE}'" >> $TMP
-		          
+    echo "'${FILE}'" >> $TMP
+              
     ((i++))
   done
 
   # surface data need an additional curly bracket
   if grep -q -e "\.datalong" $BATCHFILE ; then
-	  echo "     }};" >> $TMP
-	else
-	  echo "     };" >> $TMP
-	fi
-	
+    echo "     }};" >> $TMP
+  else
+    echo "     };" >> $TMP
+  fi
+  
   if [ -n "$ARG1" ]; then # ARG1 defined?
     echo "$param1 = $ARG1 ;" >> $TMP
     if [ -n "$ARG2" ]; then # ARG2 defined?
@@ -226,8 +226,8 @@ run_cat ()
     fi
   fi
   
-	eval "\"${SPMROOT}/run_spm12.sh\"" $MCRROOT "batch" $TMP
-	rm $TMP
+  eval "\"${SPMROOT}/run_spm12.sh\"" $MCRROOT "batch" $TMP
+  rm $TMP
   exit 0
 }
 

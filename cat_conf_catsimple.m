@@ -51,7 +51,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   fwhm_vol.name    = 'Smoothing Filter Size(s) for Volumes in FWHM';
   fwhm_vol.strtype = 'r';
   fwhm_vol.num     = [1 Inf];
-  fwhm_vol.val     = {8};
+  fwhm_vol.val     = {6};
   fwhm_vol.help    = {
     'Select filter size(s) for smoothing. A good starting value is 8mm. For no filtering use a value of 0 and for multiple smoothing sizes input several values.'};
 
