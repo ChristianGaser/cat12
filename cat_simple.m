@@ -155,10 +155,9 @@ function output = cat_simple(job)
   matlabbatch{mbi}.spm.tools.cat.(job.catversion).output.WM.mod  = 1; 
   matlabbatch{mbi}.spm.tools.cat.(job.catversion).output.surface = proc_surf;
   
-  % set registration
-  matlabbatch{mbi}.spm.tools.cat.(job.catversion).extopts.registration = job.registration; 
-
+  % set registration and error handling
   if expert
+    matlabbatch{mbi}.spm.tools.cat.(job.catversion).extopts.registration = job.registration; 
     matlabbatch{mbi}.spm.tools.cat.(job.catversion).extopts.admin.ignoreErrors = job.ignoreErrors; 
   end
   
@@ -212,27 +211,27 @@ function output = cat_simple(job)
   % -----------------------------------------------------------------------
   vsmooth = job.fwhm_vol;
   for si = 1:numel(vsmooth)
-		if long
-		  for di = 1:numel(job.datalong.subjects)
-				mbi = mbi + 1;  
-				matlabbatch{mbi}.spm.spatial.smooth.data = cfg_dep(...
-				sprintf('%s Segmented longitudinal data (Subj %d)',estwrite, di), ...
-				substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-				substruct('.','sess', '()',{1}, '.','files'));
-				matlabbatch{mbi}.spm.spatial.smooth.fwhm    = repmat( vsmooth(si) ,1,3);
-				matlabbatch{mbi}.spm.spatial.smooth.prefix  = sprintf('s%d',vsmooth(si));
-			end
-		else
-			for ti = 1:2
-				mbi = mbi + 1;
-				matlabbatch{mbi}.spm.spatial.smooth.data = cfg_dep( ...
-					sprintf('%s mwp%d Image',estwrite,ti), ...
-					substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-					substruct('.','tiss', '()',{ti}, '.','mwp', '()',{':'}));
-				matlabbatch{mbi}.spm.spatial.smooth.fwhm    = repmat( vsmooth(si) ,1,3);
-				matlabbatch{mbi}.spm.spatial.smooth.prefix  = sprintf('s%d',vsmooth(si));
-			end
-		end
+    if long
+      for di = 1:numel(job.datalong.subjects)
+        mbi = mbi + 1;  
+        matlabbatch{mbi}.spm.spatial.smooth.data = cfg_dep(...
+        sprintf('%s Segmented longitudinal data (Subj %d)',estwrite, di), ...
+        substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+        substruct('.','sess', '()',{1}, '.','files'));
+        matlabbatch{mbi}.spm.spatial.smooth.fwhm    = repmat( vsmooth(si) ,1,3);
+        matlabbatch{mbi}.spm.spatial.smooth.prefix  = sprintf('s%d',vsmooth(si));
+      end
+    else
+      for ti = 1:2
+        mbi = mbi + 1;
+        matlabbatch{mbi}.spm.spatial.smooth.data = cfg_dep( ...
+          sprintf('%s mwp%d Image',estwrite,ti), ...
+          substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+          substruct('.','tiss', '()',{ti}, '.','mwp', '()',{':'}));
+        matlabbatch{mbi}.spm.spatial.smooth.fwhm    = repmat( vsmooth(si) ,1,3);
+        matlabbatch{mbi}.spm.spatial.smooth.prefix  = sprintf('s%d',vsmooth(si));
+      end
+    end
   end
 
   
@@ -280,10 +279,10 @@ function output = cat_simple(job)
 
     % surface smoothing
     % -----------------------------------------------------------------------
-		if proc_surf
-			ssmooth1  = job.surface.yes.fwhm_surf1;
-			ssmooth2  = job.surface.yes.fwhm_surf2;
-		end
+    if proc_surf
+      ssmooth1  = job.surface.yes.fwhm_surf1;
+      ssmooth2  = job.surface.yes.fwhm_surf2;
+    end
     measures = {};
     
     % prepare the datafields depending on the internal selection above
@@ -324,15 +323,29 @@ function output = cat_simple(job)
       mbi = mbi + 1;  
       % thickness
       if long
-        matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.data_surf(1) = ...
-         cfg_dep(sprintf('%s Left Thickness',estwrite), ...
-          substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-          substruct('.','thick', '()',{':'}));
+        if expert
+          matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.sample{1}.data_surf(1) = ...
+            cfg_dep(sprintf('%s Left Thickness',estwrite), ...
+            substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('.','thick', '()',{':'}));
+        else
+          matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.data_surf(1) = ...
+            cfg_dep(sprintf('%s Left Thickness',estwrite), ...
+            substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('.','thick', '()',{':'}));
+        end
       else
-        matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.data_surf(1) = ...
-          cfg_dep(sprintf('%s Left Thickness',estwrite), ...
-          substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-          substruct('()',{1}, '.','lhthickness', '()',{':'}));
+        if expert
+          matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.sample{1}.data_surf(1) = ...
+            cfg_dep(sprintf('%s Left Thickness',estwrite), ...
+            substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('()',{1}, '.','lhthickness', '()',{':'}));
+        else
+          matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.data_surf(1) = ...
+            cfg_dep(sprintf('%s Left Thickness',estwrite), ...
+            substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('()',{1}, '.','lhthickness', '()',{':'}));
+        end
       end
             
       matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.merge_hemi   = 1;
@@ -345,10 +358,17 @@ function output = cat_simple(job)
       mbi = mbi + 1;        
       % further parameters
       for mi = 1:size(measures,1)
-        matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.data_surf(mi) = ...
-          cfg_dep(sprintf('Extract additional surface parameters: Left %s',measures{mi,1}), ...
-          substruct('.','val', '{}',{surf_mbi}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-          substruct('()',{1}, '.',measures{mi,2}, '()',{':'}));
+        if expert
+          matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.sample{1}.data_surf(mi) = ...
+            cfg_dep(sprintf('Extract additional surface parameters: Left %s',measures{mi,1}), ...
+            substruct('.','val', '{}',{surf_mbi}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('()',{1}, '.',measures{mi,2}, '()',{':'}));
+        else
+          matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.data_surf(mi) = ...
+            cfg_dep(sprintf('Extract additional surface parameters: Left %s',measures{mi,1}), ...
+            substruct('.','val', '{}',{surf_mbi}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('()',{1}, '.',measures{mi,2}, '()',{':'}));
+        end
       end
       
       matlabbatch{mbi}.spm.tools.cat.stools.surfresamp.merge_hemi   = 1;

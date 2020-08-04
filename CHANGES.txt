@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1677 | gaser | 2020-08-03 14:54:49
+r1678 | gaser | 2020-08-04 15:27:10
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_catsimple.m
+M       cat_simple.m
+M       html/cat.html
+M       standalone/cat_standalone.sh
+M       standalone/cat_standalone_resample.txt
+M       standalone/cat_standalone_simple.txt
+
+(1) Fixed:   Corrected data_surf field in standalone files and added atlases.
+(2) Changed: Changed default filter size for volume smoothing in cat_simple to 
+             6mm.
+------------------------------------------------------------------------
+r1677 | gaser | 2020-08-03 14:55:28 +0200 (Mo, 03 Aug 2020) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14,6 +30,7 @@ M       tbx_cfg_cat.m
 (1) Changed: Added some more try-catch commands to catch some errors that were
              often found with piwik statistics.
 (2) Changed: Updated help text.
+
 ------------------------------------------------------------------------
 r1676 | gaser | 2020-07-31 16:45:25 +0200 (Fr, 31 Jul 2020) | 20 lines
 
