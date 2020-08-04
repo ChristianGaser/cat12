@@ -1132,7 +1132,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
       catch
         %% catch problems and use the original input
         
-        cat_io_addwarning('cat_main_registration:regError','Registration problem use given input segmentation.');
+        cat_io_addwarning('cat_main_registration:regError','Registration problem due to given input segmentation.');
         res.Affine = res.Affine0; 
         
         % resolutions:

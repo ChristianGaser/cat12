@@ -15,6 +15,8 @@ function varargout = cat_stat_histth(src,percent,opt)
 %   res     .. limited input data 
 %   ths     .. estimated thresholds
 %   percent .. included values (default) = 0.998; 
+%              can be defined with upper and lower limit, e.g., to be more 
+%              aggressive in the background that has more values in general 
 %   verb    .. 0 - none 
 %              1 - histogram
 %              2 - histogram without boundary values
@@ -32,17 +34,20 @@ function varargout = cat_stat_histth(src,percent,opt)
 %    .hbins  .. bins for histogram estimation 
 %    .vacc   .. limit number of elements used in the violin plot
 %               e.g. vacc=100 means src(1:100:end)
+%    .scale  .. [low high], default [] - no scaling
+%               update ths to opt.scale !
 %
 % Examples: 
 %   s=10; b = randn(s,s,s); cat_stat_histth(b,0.9,4);
 %   s=10; b = rand(s,s,s);  cat_stat_histth(b,0.9,5);
+%   s=10; b = rand(s,s,s);  cat_stat_histth(b,[0.8,0.999],5);
 % ______________________________________________________________________
 % $Id$
 
 
   %% check input
   if nargin==0, help cat_stat_histth; return; end
-  if ~exist('src','var') || isempty(src); 
+  if ~exist('src','var') || isempty(src) 
     varargout{1} = src;
     varargout{2} = nan(1,2); 
     return; 
@@ -56,18 +61,23 @@ function varargout = cat_stat_histth(src,percent,opt)
   def.fs          = 16; 
   def.hbins       = 10000; 
   def.vacc        = max(1,min(100000,round(numel(src)/1000))); % reduce elements in violin plot
+  def.scale       = [];
   opt = cat_io_checkinopt(opt,def); 
 
+  tol = [ 0.002 0.002 ]; 
   if nargin==0, help cat_stat_histth; return; end
   if ~exist('percent','var') || isempty(percent)
-    tol = 0.002; 
+    tol = [ 0.002 0.002 ]; 
   else
-    if percent<=1
-      tol = 1 - percent; 
-    elseif percent<=100
-      tol = 1 - percent/100; 
-    else 
-      error('cat_stat_histth:percent','Percent has to be in the range of 1 to 100');  
+    if numel(percent)==1, percent(2) = percent(1); end
+    for pi = 1:2
+      if percent(pi)<=1
+        tol(pi) = 1 - percent(pi);
+      elseif percent<=100
+        tol(pi) = 1 - percent(pi)/100; 
+      else 
+        error('cat_stat_histth:percent','Percent has to be in the range of 1 to 100');  
+      end
     end
   end
   
@@ -91,21 +101,27 @@ function varargout = cat_stat_histth(src,percent,opt)
   
   % lower limit
   if opt.verb, srco=src; end
-  if min(src(:))~=0
-    ths(1) = hval(max([1,find(hp>tol,1,'first')])); 
-    src(src<ths(1)) = ths(1); 
-  else
-    ths(1) = 0; 
-  end
+  % Use the last value below tol rather than the first value above tol to 
+  % avoid problems 
+  ind    = max( [1,find(hp<tol(1),1,'last')]); 
+  ths(1) = mean( hval( ind:min(ind+1,numel(hval) ) ) ); 
+  src(src<ths(1)) = ths(1); 
   % upper limit
-  ths(2) = hval( min( [numel(hval) , find(hp<(1-tol),1,'last') ])); 
+  ind    = min( [numel(hval) , find(hp>(1-tol(2)),1,'first') ] ); 
+  ths(2) = mean( hval( max(1,ind-1):ind ) ); 
   src(src>ths(2)) = ths(2); 
+  
+  if ~isempty(opt.scale) && opt.scale(1)~=opt.scale(2) && diff(ths)~=0
+    src = ( src - ths(1) ) ./ diff(ths); 
+    src = src * diff(opt.scale) + opt.scale(1); 
+    ths = opt.scale; 
+  end
   
   %% display
   if opt.verb
     % get figure
     fh = findobj('name','cat_stat_histth');
-    if isempty(fh), figure('name','cat_stat_histth'); else figure(fh); clf; end
+    if isempty(fh), figure('name','cat_stat_histth'); else, figure(fh); clf; end
     
     % create main plot
     subplot('Position',[0.10 0.06 0.64 0.86]); 

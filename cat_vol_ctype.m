@@ -18,8 +18,10 @@ function Y=cat_vol_ctype(Y,type)
 %
 % $Id$
 % ______________________________________________________________________
-  
-   types = {'int8','int16','int32','int64','single','float32','float64'...
+ 
+  if nargin==0, help cat_vol_ctype; return; end
+
+  types = {'int8','int16','int32','int64','single','float32','float64'...
            'uint8','uint16','uint32','uint64','double'};
 
   if ~exist('type','var');

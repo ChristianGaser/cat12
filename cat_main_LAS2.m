@@ -576,9 +576,13 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
   % Add head tissue if it is available. 
   if cat_stat_nanmean(Ym(Ygwc))>0.1 && cat_stat_nanmean(Ysrc(Ycls{6}(:)>128))>T3th(1)
     % definion of head tissue
-    Ygwh = Ycls{6}>240 & ~Ygwc & ~Ygwg & Yg<0.5 & abs(Ydiv)<0.1 & ...
+    Ygwh = Ycls{6}>128 & ~Ygwc & ~Ygwg & Yg<0.5 & abs(Ydiv)<0.1 & ...
       Ysrc>min( res.mn(res.lkp==6) * 0.5 ) & Ysrc<max( res.mn(res.lkp==6) * 1.5 ); 
-    % go to low resolution
+    % remove outlier such as defaced areas in high intensity background ... let's start wit 2 std ...
+    Ygwhn = Ysrc < ( cat_stat_nanmedian( Ysrc(Ygwh(:)) )  - 2 * cat_stat_nanstd( Ysrc(Ygwh(:)) )  ) | ...
+            Ysrc > ( cat_stat_nanmedian( Ysrc(Ygwh(:)) )  + 2 * cat_stat_nanstd( Ysrc(Ygwh(:)) )  ); 
+    Ygwh( Ygwhn ) = false; clear Ygwhn
+    %% go to low resolution
     [Ygi,resTB] = cat_vol_resize(Ysrc .* Ygwh * T3th(3)/mean(Ysrc(Ygwh(:))),'reduceV',vx_vol,mres,32,'meanm');
     % additional approximation
     Ygi = cat_vol_approx(Ygi,'nh',resTB.vx_volr,2); Ygi = cat_vol_smooth3X(Ygi,2 * LASfs);
@@ -694,9 +698,13 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
   if debug==0; clear Ycm Ycmx; end
   
   %% reduce data to lower resolution 
+  Ybgx  = Ycls{6}>128; 
+  Ybgxn = Ysrc < ( cat_stat_nanmedian( Ysrc(Ybgx(:)) )  - 2 * cat_stat_nanstd( Ysrc(Ybgx(:)) )  ) | ...
+          Ysrc > ( cat_stat_nanmedian( Ysrc(Ybgx(:)) )  + 2 * cat_stat_nanstd( Ysrc(Ybgx(:)) )  ); 
+  Ybgx  = Ybgx & ~Ybgxn; clear Ybgxn;         
   [Yi,resT2] = cat_vol_resize( Yi              ,'reduceV',vx_vol,1,32,'meanm');
   Yii        = cat_vol_resize( Ylab{2}/T3th(3) ,'reduceV',vx_vol,1,32,'meanm');
-  Ybgx       = cat_vol_resize( Ycls{6}>240     ,'reduceV',vx_vol,1,32,'meanm');
+  Ybgx       = cat_vol_resize( Ybgx            ,'reduceV',vx_vol,1,32,'meanm');
   for xi = 1:2*LASi, Yi = cat_vol_localstat(Yi,Yi>0,3,1); end     % local smoothing
   Yi = cat_vol_approx(Yi,'nh',resT2.vx_volr,2);                   % approximation of the GM bias 
   Yi = min(Yi,Yii*(T3th(2) + 0.90*diff(T3th(2:3)))/T3th(3));      % limit upper values to avoid wholes in the WM
@@ -716,14 +724,14 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
   
   
   
-  
-  
+ %% 
+ if ~res.ppe.affreg.highBG 
   %% CSF & BG 
   %  The differentiation of CSF and Background is not allway good. In some
   %  images with low intensity (especially for defacing/skull-stripping)
   %  the CSF can be similar to the background. 
   stime = cat_io_cmd('  Estimate local tissue thresholds (CSF/BG)','g5','',verb,stime); 
-  Ynb   = smooth3( Ycls{6})>128 & Yg<0.05 & Ysrc<T3th(1); 
+  Ynb   = smooth3( Ycls{6})>128 & Yg<0.15; % & Ysrc<T3th(1); 
   Ynb   = cat_vol_morph(Ynb,'e',4*vxv); 
   if exist('Ygwh','var')
     Ynb = Ygwh & Ynb; 
@@ -735,24 +743,42 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
   %% The correction should be very smooth (and fast) for CSF and we can use 
   %  much lower resolution. 
   [Yc,resT2] = cat_vol_resize(Yc,'reduceV',vx_vol,8,16,'min'); % only pure CSF !!!
-  Yx         = cat_vol_resize(Yx,'reduceV',vx_vol,8,16,'mean');
-  Yx(Yx<1) = 0; % no boundary voxel
+  Yx         = cat_vol_resize(Yx,'reduceV',vx_vol,8,16,'meanm');
   
+  % correct Nans and remove outlier
+  Yc(isnan(Yc)) = 0;  Yc = cat_vol_median3(Yc,Yc~=0,true(size(Yc)),0.1);
+  Yx(isnan(Yx)) = 0;  Yx = cat_vol_median3(Yx,Yx~=0,true(size(Yc)),0.1);
+ 
   % CSF intensity show be higher than background intensity 
   Yx(Yc>0)=0; Yc(Yx>0)=0;
-  if cat_stat_nanmean(Yx(Yx~=0)) < cat_stat_nanmean(Yc(Yc~=0))
-    meanYx = min(median(Yc(Yc(:)>0)),median(Yx(Yx(:)>0))); 
-    meanYc = max(median(Yc(Yc(:)>0)),median(Yx(Yx(:)>0))); 
+  if 0 % no so important ... keep it simple?
+    if cat_stat_nanmean(Yx(Yx~=0)) < cat_stat_nanmean(Yc(Yc~=0))
+      meanYx = min(median(Yc(Yc(:)>0)),median(Yx(Yx(:)>0))); 
+      meanYc = max(median(Yc(Yc(:)>0)),median(Yx(Yx(:)>0))); 
+    else
+      meanYc = min(median(Yc(Yc(:)>0)),median(Yx(Yx(:)>0))); 
+      meanYx = max(median(Yc(Yc(:)>0)),median(Yx(Yx(:)>0))); 
+    end  
   else
-    meanYc = min(median(Yc(Yc(:)>0)),median(Yx(Yx(:)>0))); 
-    meanYx = max(median(Yc(Yc(:)>0)),median(Yx(Yx(:)>0))); 
-  end  
-  stdYbc = mean([std(Yc(Yc(:)>0)),std(Yx(Yx(:)>0))]);
+    meanYx = cat_stat_nanmean(   [ min(Ysrc(:)); Yx(Yx(:)>0) ]); 
+    meanYc = cat_stat_nanmedian( [ T3th(1)     ; Yc(Yc(:)>0) ]); 
+  end
   
-  % guaranty small difference between backgound and CSF intensity 
-  Yxa = cat_vol_approx(Yx ,'nh',resT2.vx_volr,16); 
-  Yca = cat_vol_approx(Yc + min(max( meanYx + stdYbc , meanYc - stdYbc ),...
-    Yx .* meanYc/max(eps,meanYx)),'nh',resT2.vx_volr,16); 
+  % correct for high intensity backgrounds (e.g. Gabi's R1)
+  %Yx  = Yx .* (Yx > (meanYc + max(0.1,std(Yc(Yc(:)>0)))));
+  
+  % avoid CSF in background and background in CSF
+  if ~res.ppe.affreg.highBG
+    bcd = max( abs( [ diff( [meanYx meanYc] ) min( diff( T3th/max(T3th(:)) ) ) ] ));
+    Yxc = Yx + (Yx==0 & Yc~=0) .* (Yc * meanYx/meanYc - 0.5 * bcd) + ... % avoid BG in the CSF (white dots in the blue CSF)
+      ( (Yx~=0) * 0.2 * bcd );  % this term is the lower HG intensity (some nice noise in the BG)
+    Ycc = Yc + (Yc==0 & Yx~=0) .* (Yx * meanYc/meanYx + 1.0 * bcd); % here we avoid CSF in the BG (higher boudnary) ... blue CSF dots in the BG
+   %Ycc = Yc + min(max( meanYx + stdYbc , meanYc - stdYbc ), Yx .* meanYc/max(eps,meanYx)); 
+  end
+  
+  %% guaranty small difference between backgound and CSF intensity 
+  Yxa = cat_vol_approx(Yxc ,'nh',resT2.vx_volr,16); 
+  Yca = cat_vol_approx(Ycc ,'nh',resT2.vx_volr,16); 
   if debug==0, clear Yc Yx; end
   Yca = Yca * 0.7 + 0.3 * max( mean(Yca(:)) , T3th(1)/T3th(3) );
   % smoothing 
@@ -765,6 +791,14 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
   Ylab{6} = cat_vol_smooth3X( Yxa , LASfs * 2 );
   if debug==0, clear Yxa Yca; end
   
+  if res.ppe.affreg.highBG
+    Ylab{6} = min(Ysrc(:)); 
+  end
+ else
+   % simple 
+   Ylab{3} = min( [ T3th(1) , cat_stat_nanmean(Ysrc(Ycm(:))) ] ); 
+   Ylab{6} = min( T3th(1) - min(diff(T3th)) , min( Ysrc(:) )); 
+ end
   
   
   %% restore original resolution

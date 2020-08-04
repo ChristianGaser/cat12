@@ -1,7 +1,7 @@
 function out = cat_io_volctype(varargin)
 % ______________________________________________________________________
-% Convert datatype of images, to have more space on your harddisk. 
-% In example most tissue classifcations can saved as uint8 or uint16 
+% Convert datatype of images, to have more space on your hard-disk. 
+% In example most tissue classifications can saved as uint8 or uint16 
 % rather than double or single. If the image contain negative values
 % int8/16 rather than uint8/16 is used. 
 % ______________________________________________________________________

@@ -188,7 +188,8 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
                                      'error in the preprocessing before the AMAP segmentation. ']);
       end
     else
-      % if there is a very low contrast between two peaks than create an error  
+      % if there is a very low contrast between two peaks then create an error  
+      % because the intensity normalization unsed before was probably incorrect 
       con = [ abs(diff([th{1}(1) th{2}(1)])) , abs(diff([th{1}(1) th{3}(1)])) , abs(diff([th{2}(1) th{3}(1)]))];
       if any( con < 0.15 )
         error('cat_main:amap:lowCon',['AMAP estimated quite low tissue contrast that point to problems \n' ...
@@ -253,7 +254,7 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
     
     % use SPM
     if job.extopts.ignoreErrors < 3
-      cat_io_addwarning(e.identifier,e.message); fprintf('\n') 
+      cat_io_addwarning(e.identifier,e.message,2,[0 1]);  
     end
     
     prob = zeros([size(Ymi),3],'uint8');

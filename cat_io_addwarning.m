@@ -1,10 +1,13 @@
-function varargout = cat_io_addwarning(id,mess,cls,nline,data)
+function varargout = cat_io_addwarning(id,mess,level,nline,data)
 %cat_io_addwarning. Collect preprocessing warnings in CAT12
-%  Uses the global struture cat_err_res to collect warnings in the CAT12
-%  preprocessing function cat_run_job, cat_run_main, etc. 
+% Uses the global struture cat_err_res to collect warnings in the CAT12
+% preprocessing function cat_run_job, cat_run_main, etc. 
+% Structure will be exported in cat_tst
 % 
-%   cat_io_addwarning(id,mess,cls,nline,data)
-%   warning_structure = cat_io_addwarning(cls);
+% See also ../cat12/html/cat_methods_warnings.html
+%
+%   cat_io_addwarning(id,mess,level,nline,data)
+%   warning_structure = cat_io_addwarning(level);
 %
 %   id    .. identifier
 %   mess  .. message
@@ -13,16 +16,27 @@ function varargout = cat_io_addwarning(id,mess,cls,nline,data)
 %            spaces, e.g. 'message line 1 \\nmessage line 2':
 %            >>WARNING: message line 1
 %            >>         message line 2
-%   cls   .. warning classes
-%            0 - note     (only relevant for experts/developer
-%            1 - warning  (uncitical aspectes that could be checked)
-%            2 - critical (severe problems that should be checked)
+%   level .. warning level
+%            0 - note    - only relevant for experts/developer
+%            1 - caution - uncitical aspectes that could be checked
+%            2 - alert   - severe problems that should be checked
 %   nline .. new line [before after] warning or by the following codes
 %            1 - add new line in command line output before message
 %            2 - add new line in command line output also after meassage
 %            3 - add also some space to processing time at the end
 %   data  .. structure with fields that are related to the warning,
 %            e.g., parameter or test results that cause the warning
+%            (in development)
+%
+% Examples: 
+%   cat_io_addwarning('reset') 
+%
+%   cat_io_addwarning('err99','Precessing failed',2,[0 1]);
+%   cat_io_addwarning('warn0815','Precessing bad',1,[0 1]);
+%   cat_io_addwarning('note3','Comment',0,[0 1]);
+%
+%   cat_io_addwarning    % get all warnings & notes
+%   cat_io_addwarning(2) % only get warnings
 % ______________________________________________________________________
 %
 %   Robert Dahnke (robert.dahnke@uni-jena.de)
@@ -35,18 +49,23 @@ function varargout = cat_io_addwarning(id,mess,cls,nline,data)
   global cat_err_res
   
   if ~isfield(cat_err_res,'cat_warnings')
-     cat_err_res.cat_warnings = struct('identifier',{},'message',{},'cls',[],'data',{});
+     cat_err_res.cat_warnings = struct('identifier',{},'message',{},'level',[],'data',{});
   elseif (nargin==1 && strcmp(id,'reset') )
-     cat_err_res = rmfield(cat_err_res,cat_warnings); 
-     cat_err_res.cat_warnings = struct('identifier',{},'message',{},'cls',[],'data',{});
+     cat_err_res = rmfield(cat_err_res,'cat_warnings'); 
+     cat_err_res.cat_warnings = struct('identifier',{},'message',{},'level',[],'data',{});
+     return; 
   end
 
   if nargin > 1 && ischar( id )
-    if nargin == 3 % old defintion
-      nline = cls; 
-      cls   = 1;
+    if nargin == 2
+      nline = [0 0]; 
+      level = 1; 
+    elseif nargin == 3 % old defintion
+      nline = level; 
+      level = 1;
     end 
-    if ~exist('data','var'), data = {}; end
+    if ~exist('data','var'),  data = {}; end
+    if ~exist('nline','var'), nline = [0 0]; end
     
     if numel(nline) == 1
       switch nline
@@ -62,15 +81,24 @@ function varargout = cat_io_addwarning(id,mess,cls,nline,data)
       nline2 = [0 0]; 
     end
     
+    if ~ischar(id)
+      error('cat_io_addwarning:idstr','Identifier must be a char'); 
+    end
+    if ~ischar(mess)
+      error('cat_io_addwarning:messstr','Message must be a char'); 
+    end
+    if ~isnumeric(level)
+      error('cat_io_addwarning:levelnum','Level must be numeric'); 
+    end
     
-    cat_err_res.cat_warnings(end+1) = struct('identifier',id,'message',mess,'cls',cls,'data',{data});
+    cat_err_res.cat_warnings(end+1) = struct('identifier',id,'message',mess,'level',level,'data',{data});
     
     if nline2(1)>0, fprintf('\n'); end
     warnstr = strrep(mess,'\\n','\n         '); 
-    if cls==0
-      cat_io_cmd(sprintf(['WARNING: ' warnstr]),'comment');
-    elseif cls==1
-      cat_io_cmd(sprintf(['WARNING: ' warnstr]),'warning');
+    if level==0
+      cat_io_cmd(sprintf(['NOTE:    ' warnstr]),'note');
+    elseif level==1
+      cat_io_cmd(sprintf(['CAUTION: ' warnstr]),'caution');
     else
       cat_io_cmd(sprintf(['ALERT:   ' warnstr]),'error');
       
@@ -86,7 +114,11 @@ function varargout = cat_io_addwarning(id,mess,cls,nline,data)
     if nargin == 0
       varargout{1} = cat_err_res.cat_warnings; 
     else
-      varargout{1} = cat_err_res.cat_warnings; 
+      if numel(cat_err_res.cat_warnings)>0
+        varargout{1} = cat_err_res.cat_warnings( [ cat_err_res.cat_warnings(:).level ] == id  ); 
+      else
+        varargout{1} = struct('identifier',{},'message',{},'level',[],'data',{});
+      end
     end
   end
 
