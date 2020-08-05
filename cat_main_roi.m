@@ -95,7 +95,7 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
 
   if isempty(FA)
     % deactivate output
-    FN = job.output.atlas; 
+    FN = fieldnames(job.output.atlas); 
     for ai = 1:numel(FN)
       job.output.atlas.(FN{ai}) = 0;
     end
