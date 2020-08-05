@@ -31,8 +31,8 @@ function varargout = cat_io_addwarning(id,mess,level,nline,data)
 % Examples: 
 %   cat_io_addwarning('reset') 
 %
-%   cat_io_addwarning('err99','Precessing failed',2,[0 1]);
-%   cat_io_addwarning('warn0815','Precessing bad',1,[0 1]);
+%   cat_io_addwarning('err99','Processing failed',2,[0 1]);
+%   cat_io_addwarning('warn0815','Processing bad',1,[0 1]);
 %   cat_io_addwarning('note3','Comment',0,[0 1]);
 %
 %   cat_io_addwarning    % get all warnings & notes

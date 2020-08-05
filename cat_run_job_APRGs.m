@@ -216,7 +216,7 @@ function [Affine2,Yb,Ymi,Ym0] = cat_run_job_APRGs(Ysrc,Ybg,VF,Pb,Pbt,Affine,vx_v
         if isnan( cutstrval(i) )
           S = isosurface(Ymx,cutstrs(i),Ysrc2); 
           if ~isempty(S.vertices)
-            cutstrval(i) = cutstrs(i)/10 + cat_stat_nanmean(S.facevertexcdata.^2).^0.5; %... % litte offset to get more CSF
+            cutstrval(i) = cutstrs(i)/10 + cat_stat_nanmean(S.facevertexcdata.^2).^0.5; %... % little offset to get more CSF
             %mean(S.facevertexcdata) + std(S.facevertexcdata);
           end
         end

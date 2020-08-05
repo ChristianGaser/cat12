@@ -9,7 +9,7 @@ long = spm_input('Longitudinal data?','+1','y/n',[1,0],2);
 
 [files,dirs] = spm_select('FPList','.','^check_r');
 
-job = struct('c',[],'data_xml',[],'gap',3);
+job = struct('c',[],'data_xml',[],'gap',3, 'verb',true);
 
 j = 0;
 for i = 1:size(dirs,1)
