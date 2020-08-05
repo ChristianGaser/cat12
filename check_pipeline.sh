@@ -137,12 +137,12 @@ copy_files ()
     echo "SPM12 directory is undefined!"
   fi
 
-  SIZE_OF_ARRAY="${#ARRAY[@]}"
-  SIZE_OF_ARRAY_LONG="${#ARRAY_LONG[@]}"
+  SIZE_OF_ARRAY=${#ARRAY[@]}
+  SIZE_OF_ARRAY_LONG=${#ARRAY_LONG[@]}
 
   old_dir=$PWD
 
-  if [ "$SIZE_OF_ARRAY" -eq 0 ] & [ "$SIZE_OF_ARRAY_LONG" -eq 0 ]; then
+  if [ "$SIZE_OF_ARRAY" -eq 0 ] && [ "$SIZE_OF_ARRAY_LONG" -eq 0 ]; then
     echo 'ERROR: No files given!' >&2
     help
     exit 1
@@ -351,7 +351,7 @@ postprocess ()
         # check first for keywords and print next 5 lines
         vol_TIV=`grep -A5 "<vol_abs_CGW" $report |grep vol_TIV |cut -f2 -d">"|cut -f1 -d"<"`
         vol_CGW=`grep "<vol_abs_CGW" $report | sed -e 's/\ /,/g'|cut -f2 -d"["|cut -f1 -d"]"|cut -f1-4 -d','`
-        if [ ! -z "$vol_TIV" ] & [ ! -z "$vol_CGW" ]; then
+        if [ ! -z "$vol_TIV" ] && [ ! -z "$vol_CGW" ]; then
           # add entry to csv file and sort and only keep unique lines
           echo "${revision_cat},${vol_TIV},${vol_CGW}" >> ${subj}_vol.csv
           cat ${subj}_vol.csv |sort -r|uniq > tmp$$
@@ -407,7 +407,7 @@ postprocess ()
     fi
     
     # prepare renderview if tool is found and surface processing is enabled
-    if [ ! -z `which render_surf.sh` ] & [ $volumes_only -eq 0 ]; then
+    if [ ! -z `which render_surf.sh` ] && [ $volumes_only -eq 0 ]; then
       mkdir -p ${proc_dir}/check_r${revision_cat}/surf
       ln -s ${proc_dir}/check_r${revision_cat}/long/surf/* ${proc_dir}/check_r${revision_cat}/surf/
       render_surf.sh -range 0 6 ${proc_dir}/check_r${revision_cat}/surf 

@@ -806,7 +806,7 @@ if ~debug, clear wYp0 wYcls wYv trans Yp0; end
 %% XML-report and Quality Control
 %  ---------------------------------------------------------------------
 %  RD20200725: evaluate difference between res.Affine and res.Affine0
-%              create error if to strong differences
+%              create error for too strong differences
 
 %  estimate brain tissue volumes and TIV
 qa.subjectmeasures.vol_abs_CGW = [
