@@ -27,4 +27,5 @@ warning off
 spm_jobman('initcfg');
 spm_jobman('run',matlabbatch);
 
+warning off
 exit

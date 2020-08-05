@@ -85,4 +85,5 @@ end
 
 spm_unlink(char(namefile))
 
+warning off
 exit

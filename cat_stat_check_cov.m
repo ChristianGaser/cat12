@@ -64,6 +64,10 @@ else
   is_gSF = 0;
 end
 
+if ~isfield(job,'verb')
+  job.verb = true;
+end
+
 show_violin = 1;
 
 % read filenames for each sample and indicate sample parameter
@@ -342,7 +346,7 @@ for i=1:n_subjects
   mean_cov(i) = mean(cov0);
 end
 
-if ~isfield(job,'verb') && verb~=0, fprintf('\n'); end
+if job.verb, fprintf('\n'); end
 fname_m = [];
 fname_tmp = cell(n_samples,1);
 fname_s   = cell(n_samples,1);
@@ -352,7 +356,7 @@ for i=1:n_samples
   [tmp, fname_tmp{i}] = spm_str_manip(char(V(sample == i).fname),'C');
   fname_m = [fname_m; fname_tmp{i}.m];
   fname_s{i} = fname_tmp{i}.s;
-  if ~isfield(job,'verb') && job.verb
+  if job.verb
     fprintf('Compressed filenames sample %d: %s  \n',i,tmp);
   end
 end
@@ -370,7 +374,7 @@ end
 
 % if more than 25% of the data were found, this points to longitudinal data of one subject
 % and no warning will appear
-if ~isempty(indx) && ( ~isfield(job,'verb') || job.verb )
+if ~isempty(indx) && job.verb
  if (length(indx) < 0.25*n_subjects)
     fprintf('\nWARNING: Unusual large correlation (check that subjects are not identical):\n');
     for i = 1:length(indx)
@@ -391,7 +395,7 @@ end
 [indx, indy] = find(YpY_tmp==1);
 
 % give warning that data are identical
-if ~isempty(indx) && ( ~isfield(job,'verb') || job.verb )
+if ~isempty(indx) && job.verb
   fprintf('\nWARNING: Data of these subjects are identical!\n');
   for i = 1:length(indx)
     if n_samples > 1
@@ -411,7 +415,7 @@ ind_sorted_display = ind_sorted;
 threshold_cov = mean(mean_cov) - 2*std(mean_cov);
 n_thresholded = min(find(mean_cov_sorted < threshold_cov));
 
-if ~isempty(n_thresholded) && ( ~isfield(job,'verb') || job.verb )
+if ~isempty(n_thresholded) && job.verb
   fprintf('\nThese data have a mean correlation below 2 standard deviations.\n');
   fprintf('This does not necessarily mean that you have to exclude these data. However, these data have to be carefully checked:\n');
   for i=n_thresholded:n_subjects
@@ -428,7 +432,7 @@ if nargout>0
                         'threshold_cov',threshold_cov);
 end
 
-if ~isfield(job,'verb') && verb~=0
+if job.verb
   % create figure
   H.figure = figure(2);
   clf(H.figure);

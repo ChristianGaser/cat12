@@ -39,9 +39,9 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
     
   def.tissue    = [ 1/3 3/12;  2/3 3/12;    1 3/12]; % ideal normalized tissue peak values 
   def.tisvolr   = [0.1754  0.1439; 0.4538  0.1998; 0.3688  0.1325; 0 0.1]; % relative expected tissue volumes
-  def.thickness = [2.50  1.0; 0.75  0.5];            % absolut  expected thickness
-  def.WMdepth   = [2.50  1.0; 1.50  1.0];            % absolut  expected thickness
-  def.CSFdepth  = [1.25  1.0; 0.25  0.5];            % absolut  expected thickness
+  def.thickness = [2.50  1.0; 0.75  0.5];            % absolute  expected thickness
+  def.WMdepth   = [2.50  1.0; 1.50  1.0];            % absolute  expected thickness
+  def.CSFdepth  = [1.25  1.0; 0.25  0.5];            % absolute  expected thickness
   def.CHvsCG    = [ 0.9  0.6;  0.1  0.4;    9    1]; % relation 
   NM=[0.0466 0.3949]; %NM = [NM(1) NM(1)+(NM(2)-NM(1))/5*6];  
   BM=[0.2178 1.1169*2]; %BM = [BM(1) BM(1)+(BM(2)-BM(1))/3*6];
@@ -88,7 +88,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
   % - subject measures / preprocessing measures -
   %'qualitymeasures'  'CJV'                   'linear'    [  0.12   0.18]  'coefficient of variation - avg. std in GM and WM'
   %'qualitymeasures'  'MPC'                   'linear'    [  0.11   0.33]  'mean preprocessing change map - difference between optimal T1 and p0'
-  %'qualitymeasures'  'MJD'                   'linear'    [  0.05   0.15]  'mean Jacobean determinant'
+  %'qualitymeasures'  'MJD'                   'linear'    [  0.05   0.15]  'mean Jacobian determinant'
   %'qualitymeasures'  'STC'                   'linear'    [  0.05   0.15]   'difference between template and label'
    'qualitymeasures'  'SurfaceEulerNumber'    'linear'    [     2    100]  'average number of Euler defects of created surfaces'
    'qualitymeasures'  'SurfaceDefectArea'     'linear'    [     0     20]  'average area of topological defects'
@@ -106,10 +106,10 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
    'subjectmeasures'  'vol_rel_BV'            'linear'    [  0.00   0.05]  'relative blood vessel volume'
    'subjectmeasures'  'vol_rel_WMH'           'linear'    [  0.00   0.05]  'relative WMH volume'
   % - distance / thickness measures - 
-   'subjectmeasures'  'dist_thickness'        'normal'    def.thickness    'absolut GM thickness'
-   'subjectmeasures'  'dist_WMdepth'          'normal'    def.WMdepth      'absolut WM depth'
-   'subjectmeasures'  'dist_CSFdepth'         'normal'    def.CSFdepth     'absolut CSF depth'
-   'subjectmeasures'  'dist_abs_depth'        'normal'    [  5.00   2.00]  'absolut  sulcal depth'
+   'subjectmeasures'  'dist_thickness'        'normal'    def.thickness    'absolute GM thickness'
+   'subjectmeasures'  'dist_WMdepth'          'normal'    def.WMdepth      'absolute WM depth'
+   'subjectmeasures'  'dist_CSFdepth'         'normal'    def.CSFdepth     'absolute CSF depth'
+   'subjectmeasures'  'dist_abs_depth'        'normal'    [  5.00   2.00]  'absolute  sulcal depth'
    'subjectmeasures'  'dist_rel_depth'        'normal'    [  0.50   0.20]  'relative sulcal depth'
   % - area measures -
    'subjectmeasures'  'surf_TSA'              'normal'    [  1400    400]*2/3  'total surface area'
