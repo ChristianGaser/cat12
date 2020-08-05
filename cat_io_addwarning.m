@@ -1,4 +1,4 @@
-function varargout = cat_io_addwarning(id,mess,level,nline,data)
+function varargout = cat_io_addwarning(id,mess,level,nline,data,usebox)
 %cat_io_addwarning. Collect preprocessing warnings in CAT12
 % Uses the global struture cat_err_res to collect warnings in the CAT12
 % preprocessing function cat_run_job, cat_run_main, etc. 
@@ -6,7 +6,7 @@ function varargout = cat_io_addwarning(id,mess,level,nline,data)
 % 
 % See also ../cat12/html/cat_methods_warnings.html
 %
-%   cat_io_addwarning(id,mess,level,nline,data)
+%   cat_io_addwarning(id,mess,level,nline,data,usebox)
 %   warning_structure = cat_io_addwarning(level);
 %
 %   id    .. identifier
@@ -27,6 +27,7 @@ function varargout = cat_io_addwarning(id,mess,level,nline,data)
 %   data  .. structure with fields that are related to the warning,
 %            e.g., parameter or test results that cause the warning
 %            (in development)
+%   usebox .. add a box around the message for command line output
 %
 % Examples: 
 %   cat_io_addwarning('reset') 
@@ -56,16 +57,13 @@ function varargout = cat_io_addwarning(id,mess,level,nline,data)
      return; 
   end
 
-  if nargin > 1 && ischar( id )
-    if nargin == 2
-      nline = [0 0]; 
-      level = 1; 
-    elseif nargin == 3 % old defintion
-      nline = level; 
-      level = 1;
-    end 
-    if ~exist('data','var'),  data = {}; end
-    if ~exist('nline','var'), nline = [0 0]; end
+  if nargin > 2 && ischar( id )
+    % variables
+    if ~exist('nline','var'),   nline = [0 0]; end
+    if ~exist('level','var'),   level = 1;  end
+    if ~exist('data','var'),    data  = {}; end
+    if ~exist('usebox','var'),  usebox = 1; end
+    % expert = cat_get_defaults('extopts.expertgui');  % not sure if the expert setting work
     
     if numel(nline) == 1
       switch nline
@@ -93,15 +91,33 @@ function varargout = cat_io_addwarning(id,mess,level,nline,data)
     
     cat_err_res.cat_warnings(end+1) = struct('identifier',id,'message',mess,'level',level,'data',{data});
     
-    if nline2(1)>0, fprintf('\n'); end
-    warnstr = strrep(mess,'\\n','\n         '); 
-    if level==0
-      cat_io_cmd(sprintf(['NOTE:    ' warnstr]),'note');
-    elseif level==1
-      cat_io_cmd(sprintf(['CAUTION: ' warnstr]),'caution');
-    else
-      cat_io_cmd(sprintf(['ALERT:   ' warnstr]),'error');
+    % Define a box that is open at the right side because it is not so
+    % easys to replace each linebreak with the right number of spaces.
+    usebox = usebox + 1; 
+    messi  = strfind(mess,'\\n');  
+    box(1) = struct('s','','i','','e','');
+    box(2) = struct(...
+      's',['  '   repmat('-',1,max( [ 71 , diff(messi)+10 ] )) '\n'], ... char(9559)
+      'i',['  '   ' '], ...
+      'e',['\n  ' repmat('-',1,max( [ 71 , diff(messi)+10 ] )) '\n']); % char(9595)
+    box(3) = struct(...
+      's',['  '   repmat('=',1,max( [ 71 , diff(messi)+10 ] )) '\n'], ... char(9559)
+      'i',['  '   ' '], ...
+      'e',['\n  ' repmat('=',1,max( [ 71 , diff(messi)+10 ] )) '\n']); % char(9595)
+    box(4) = struct(... % the chars are not vissible in the log file 
+      's',['  '   char(9556) repmat(char(9552),1,max( [ 71 , diff(messi)+10 ] )) '\n'], ... char(9559)
+      'i',['  '   char(9553) ' '], ...
+      'e',['\n  ' char(9562) repmat(char(9552),1,max( [ 71 , diff(messi)+10 ] )) '\n']); % char(9595)
       
+    % print output
+    if nline2(1)>0, fprintf('\n'); end
+    warnstr = strrep(mess,'\\n',['\n' box(usebox).i '             ']); 
+    if level==0
+      cat_io_cmd(sprintf([box(usebox).s box(usebox).i 'NOTE %02d:     ' id ':\n' box(usebox).i '             ' warnstr box(usebox).e ],numel(cat_io_addwarning(0))),'note');
+    elseif level==1
+      cat_io_cmd(sprintf([box(usebox).s box(usebox).i 'WARNING %02d:  ' id ':\n' box(usebox).i '             ' warnstr box(usebox).e ],numel(cat_io_addwarning(1))),'caution');
+    else
+      cat_io_cmd(sprintf([box(usebox+1).s box(usebox+1).i 'ALERT %02d:    ' id ':\n' box(usebox+1).i '             ' warnstr box(usebox+1).e ],numel(cat_io_addwarning(2))),'error');
     end
     if nline2(2) == 1 
       fprintf('\n'); 

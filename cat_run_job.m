@@ -267,15 +267,15 @@ function cat_run_job(job,tpm,subj)
           F0vol = cat_stat_nansum(YFm(:)>0.02) * prod(vx_vol) / 1000; 
           F0std = cat_stat_nanstd(YF(YFm(:)>0.2)/Oth); 
           % RD202008: improved object detection with gradient
-          Yg    = cat_vol_grad(YF,vx_vol/2); 
-          gth   = min(0.3,median(Yg(Yg(:)>median(Yg(Yg(:)>0.1))))); % object edges
-          YOB   = abs(YFm)>0.1 & smooth3(Yg)>gth;          % high intensity object edges 
-          YOB   = cat_vol_morph(YOB,'ldc',8);              % full object
-          % background  
+          Yg    = cat_vol_grad(YFm,max(2,vx_vol/2)); 
+          gth   = max(0.05,min(0.2,median(Yg(Yg(:)>median(Yg(Yg(:)>0.1)))))); % object edge threshold
+          YOB   = abs(YFm)>0.1 & Yg>gth;                                   % high intensity object edges 
+          YOB   = cat_vol_morph(YOB,'ldc',8*mean(vx_vol));                 % full object
+          %% background  
           if sum(YOB(:)>0)<numel(YOB)*0.9 && sum(YOB(:)>0)>numel(YOB)*0.1  % if there is a meanful background
-            YFC = ~cat_vol_morph(YOB,'lc',2);                              % close noisy background
+            YFC = ~cat_vol_morph(YOB,'lc',2*mean(vx_vol));                 % close noisy background
           else
-            YFC = ~cat_vol_morph(YOB,'lc',2);  
+            YFC = ~cat_vol_morph(YOB,'lc',2*mean(vx_vol));  
             msg = 'Detection of background failed.'; 
             cat_io_addwarning('cat_run_job:failedBGD',msg,1,[0 1]);
           end
@@ -425,33 +425,7 @@ function cat_run_job(job,tpm,subj)
         Pb      = char(job.extopts.brainmask);
         Pt1     = char(job.extopts.T1);
         
-        
-        % use affine transformation of given (average) data for longitudinal mode
-        if ~isempty(job.useprior)
-          priorname = job.useprior{1};
-          [pp,ff,ee,ex] = spm_fileparts(priorname);  %#ok<ASGLU>
-          catxml = fullfile(pp,reportfolder,['cat_' ff '.xml']);
-          
-          % check that file exists and get affine transformation
-          if exist(catxml,'file') 
-            cat_io_cmd(sprintf('Use affine transformation from %s',[ff ee]));
-            xml             = cat_io_xml(catxml);
-            Affine          = xml.SPMpreprocessing.Affine;
-            useprior        = 1; 
-            %job.useprior    = catxml; 
-            job.opts.affreg = ''; 
-          else
-            cat_io_addwarning('cat_run_job:UseAffRegPrior',...
-              sprintf('Affine prior file "%s" not found. \\\\nEstimate individual affine transformation. ',catxml),2,[1 2],catxml);
-            useprior        = 0;
-          end
-          clear catxml; 
-        else
-          useprior          = 0;
-        end
-        
-        
-        if ~isempty(job.opts.affreg) && ~useprior
+        if ~isempty(job.opts.affreg)      
           % first affine registration (with APP)
           
           % load template and remove the skull if the image is skull-stripped
@@ -538,7 +512,9 @@ function cat_run_job(job,tpm,subj)
         
             if ~debug, clear Yt; end
 
-            stime = cat_io_cmd('Affine registration','','',1,stime); 
+            if ~isfield(job,'useprior') || isempty(job.useprior)
+              stime = cat_io_cmd('Affine registration','','',1,stime); 
+            end
 
             % use further data limitation and remove background for affreg 
             [Ym2,ths]     = cat_stat_histth(Ym,job.extopts.histth);
@@ -556,7 +532,9 @@ function cat_run_job(job,tpm,subj)
 
           else
             % standard approach with static resa value and no VG smoothing
-            stime = cat_io_cmd('Coarse affine registration'); 
+            if ~isfield(job,'useprior') || isempty(job.useprior)
+              stime = cat_io_cmd('Coarse affine registration'); 
+            end
             resa  = 8;
             VF1   = spm_smoothto8bit(VF,resa); %#ok<NASGU>
             VG1   = VG;                        %#ok<NASGU>
@@ -568,8 +546,30 @@ function cat_run_job(job,tpm,subj)
           aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
           aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
 
+          % use affine transformation of given (average) data for longitudinal mode
+          if isfield(job,'useprior') && ~isempty(job.useprior)
+            priorname = job.useprior{1};
+            [pp,ff,ee,ex] = spm_fileparts(priorname);  %#ok<ASGLU>
+            catxml = fullfile(pp,reportfolder,['cat_' ff '.xml']);
+
+            % check that file exists and get affine transformation
+            if exist(catxml,'file') 
+              cat_io_cmd(sprintf('Use affine transformation from "%s"',ff),'','',1,stime); 
+              xml             = cat_io_xml(catxml);
+              Affine          = xml.SPMpreprocessing.Affine;
+              useprior        = 1; 
+              job.opts.affreg = 'prior'; 
+            else
+              cat_io_addwarning('cat_run_job:UseAffRegPrior',...
+                sprintf('Affine prior file "%s" not found. \\\\nEstimate individual affine transformation. ',catxml),2,[1 2],catxml);
+              useprior        = 0;
+            end
+            clear catxml; 
+          else
+            useprior          = 0;
+          end
           
-          if strcmp('human',job.extopts.species) 
+          if strcmp('human',job.extopts.species) && ~useprior
             % affine registration
             try
               spm_plot_convergence('Init','Coarse affine registration','Mean squared difference','Iteration');
@@ -603,7 +603,7 @@ function cat_run_job(job,tpm,subj)
           %    ds('l2','',vx_vol,Ym,Yb,Ym,Yp0,90)
           
           % fine affine registration 
-          if strcmp('human',job.extopts.species) 
+          if strcmp('human',job.extopts.species) && ~useprior 
             aflags.sep = obj.samp/2; 
             aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
             aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
@@ -667,20 +667,20 @@ function cat_run_job(job,tpm,subj)
         %  we have to rewrite the image, because SPM reads it again 
         if 1 %job.extopts.APP>0
             % WM threshold
-            Ysrc = single(spm_read_vols(spm_vol(obj.image(1)))); %single(obj.image.private.dat(:,:,:)); 
+            Ysrc = single(obj.image.private.dat(:,:,:)); 
             Ysrc(isnan(Ysrc) | isinf(Ysrc)) = min(Ysrc(:));
-            Ysrc = cat_stat_histth(Ysrc,job.extopts.histth);
-            
-            if ~exist('Ybg','var') %job.extopts.APP==1070 || job.extopts.APP==1144 
+
+            if job.extopts.APP==1070 || job.extopts.APP==1144 
               % APPinit is just a simple bias correction for affreg and should
               % not be used further although it maybe helps in some cases!
               Ymc = Ysrc; 
             else
-              %%
-              bth = cat_stat_nanmean(single(Ysrc( Ybg(:)))) - 2 * cat_stat_nanstd(single(Ysrc( Ybg(:)))); 
+              bth = min( [ mean(single(Ysrc( Ybg(:)))) - 2*std(single(Ysrc( Ybg(:)))) , ...
+                           mean(single(Ysrc(~Ybg(:)))) - 4*std(single(Ysrc(~Ybg(:)))) , ...
+                           min(single(Ysrc(~Ybg(:)))) ]); 
               % use bias corrected image with original intensities 
-              Ymc = (Ysrc - bth) / abs(diff([bth,WMth])); %
-              %clear bth
+              Ymc = Ym * abs(diff([bth,WMth])) + bth; 
+              clear bth
             end
             
             % set variable and write image
@@ -859,240 +859,59 @@ function cat_run_job(job,tpm,subj)
       
         
         %% SPM preprocessing 1
-        %  RD202006: Although affine registration works now quite good
-        %  there are still severe problems in the SPM US in some cases 
-        %  that of course also depends on our settings. Hence, we have 
-        %  to try different settings, e.g. with/without masking.  In 
-        %  some cases the US may run but produces a bad result that will 
-        %  cause many problems in cat_main and its subfunctions, so we 
-        %  should test the result, may run alternative settings and 
-        %  choose the best trial. 
-        %  Possible settings: 
-        %    * with / without masking (seams to be quite powerful) 
-        %    . optimized image (not so easy to handle)
-        %      maybe use the low resolution option 
-        %    . modify SPM accuracy (?)
-        %    . apply skull-stripping (not optimal > last option)
-        % 
-        %     ds('l2','a',0.5,Ym,Ybg,Ym,Ym,140);
-        %     ds('l2','a',0.5,Ysrc/WMth,Yb,Ysrc/WMth,Yb,140);
-
-        %% Run SPM preprocessing with different settings. 
-        % Start with the most reasonable model. 
-        % I am not really sure how many levels are useful - but less than a hand
-        % RD202006: Maybe we could run this with faster settings 
-        % (lower samp & tol) to select the best mask definition? >> CAT12.8         
-        stime  = cat_io_cmd('SPM preprocessing 1 (estimate 2):','','',job.extopts.verb-1,stime); 
-        casei  = 0;     % iteration counter
-        rerun  = 0;     % rerun in case of TPM problems 
-        acccon = 0.25; %33;  % acceptable contrast (optimal is 0.5, default maybe 0.35-0.45 in T1 )
-        runcas = 1;     % stop for acceptable contrast (inf = test all, 2 = only casei<3) ... for test we start with inf
-        if job.extopts.ignoreErrors > 2
-          verbs  = max(runcas>1,1);   % show results
-        else
-          verbs  = max(runcas>1,0);   % show results
-        end
-        resi   = cell(1,4); modelname = cell(1,4); mincontrast = zeros(1,4); 
-
-        % save the masked default image for the error report
-        tmp = obj.image.dat; 
-        tmp(obj.msk.dat<1) = NaN;    
-        if verbs, fprintf('\n'); end
-        while 1 
-          casei = casei + 1; 
-
-          switch casei
-            case 1
-              % use the coronal mask - nothing to do
-              if ppe.affreg.skullstripped, continue, end
-              obj2 = obj; 
-              modelname{casei} = 'coronal background mask'; 
-            case 2
-              % use now mask 
-              obj2 = rmfield(obj,'msk'); 
-              modelname{casei} = 'no background mask'; 
-            case 3
-              % use extrended brain mask
-              obj2 = obj; 
-              obj2.msk.dat = uint8(1 - Ybg); 
-              modelname{casei} = 'full background mask'; 
-              %{
-            case 4
-              obj2 = obj; 
-              if ~exist('Ybi','var') && exist(Pb,'file')
-                % If there is no mask yet then load a affine registered brain mask 
-                % version of it. 
-                VFa = VF; VFa.mat = Affine * VF.mat; 
-                if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
-                [Vmsk,Ybi] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1));  
-                % ds('d2sm','',1,Ym,Ym.*(Ybi>0.5),round(size(Ybi,3)*0.6))
-                obj2.msk.dat = cat_vbdist(single(Ybi>0.5),true(size(Ybi)),vx_vol)<20;
-                modelname{casei} = 'with extended brain mask'; 
-              end
-              obj2.msk.dat = cat_vbdist(single(Ybi>0.5),true(size(Ybi)),vx_vol)<20;
-              %}
-            otherwise
-              break
-          end
-          if verbs
-            if casei == 1
-              stime  = cat_io_cmd(sprintf('  Run "%s"',modelname{casei}),'g5',' ',job.extopts.verb-1);
-            else
-              stime  = cat_io_cmd(sprintf('  Run "%s"',modelname{casei}),'g5',' ',job.extopts.verb-1,stime); 
-            end
+        %  ds('l2','a',0.5,Ym,Ybg,Ym,Ym,140);
+        %  ds('l2','a',0.5,Ysrc/WMth,Yb,Ysrc/WMth,Yb,140);
+        warning off 
+        try 
+          % inital estimate
+          stime = cat_io_cmd('SPM preprocessing 1 (estimate 2):','','',job.extopts.verb-1,stime);
+          obj.tol = job.opts.tol;  
+          if job.opts.redspmres==0 
+            warning off; % turn off "Warning: Using 'state' to set RANDN's internal state causes RAND ..."
+            res = cat_spm_preproc8(obj);
+            warning on; 
           else
-            if casei == 1, fprintf('\n'); end            
+            image1 = obj.image; 
+            [obj.image,redspmres]  = cat_vol_resize(obj.image,'interpv',1);
+            res = cat_spm_preproc8(obj);
+            res.image1 = image1; 
+            clear reduce; 
           end
 
-          % run SPM 
-          try
-            evalc('resi{casei} = cat_spm_preproc8(obj2);'); 
-            if exist('bth','var') 
-              resi{casei}.image.dat(:,:,:) = Ysrc; 
-              resi{casei}.mn = resi{casei}.mn * abs(diff([bth,WMth])) + bth; 
-              resi{casei}.vr = resi{casei}.vr * abs(diff([bth,WMth]))^2; 
-            end
-            resi{casei}.ll  = resi{casei}.ll ./ (prod(vx_vol) * 1000);
-          catch
-            % if something failed than define the tissue contrast parameter with the worst case 
-            resi{casei}.mn  = zeros(size(obj.lkp)); 
-            resi{casei}.mg  = zeros(size(obj.lkp))'; 
-            resi{casei}.lkp = obj.lkp; 
-            resi{casei}.ll  = nan; 
-          end
-         
-          % test result
-          % - may use a weighted contrast, where a good WM-GM is more important? 
-          clsint = @(resx,x) round( sum(resx.mn(resx.lkp==x) .* resx.mg(resx.lkp==x)') * 10^5)/10^5;
-          clscon = @(resx,c1,c2) abs( diff([clsint(resx,c1),clsint(resx,c2)]) ) ./ ...- mean(resx.vr( resx.lkp(:)==c1 )) - mean(resx.vr( resx.lkp(:)==c2 ))  ) ./ ...  % specific tissue contrast between class c1 and c2
-            (max([clsint(resx,1),clsint(resx,2),clsint(resx,3)]) - ...
-             min([clsint(resx,1),clsint(resx,2),clsint(resx,3)])) .* ...                % signal intensity (maximum brain tissue contrast)
-            (1 - any(isnan([clsint(resx,1),clsint(resx,2),clsint(resx,3)])));           % NaN as worst case
-          mincontrast(casei) = min( [ clscon(resi{casei},1,2) , clscon(resi{casei},2,3) , clscon(resi{casei},1,3) ] ); 
+          % unknown BG detection problems in INDI_NHa > manual setting
+          if ppe.affreg.skullstripped, res.mn(end) = 0; end 
 
-          % test for TPM problems
-          % this problem occured for the long TPM and no other parameter changed something 
-          % RD202007 - version 0.1 - try to clean up later
-          if all( [ clsint(resi{casei},1) clsint(resi{casei},2) clsint(resi{casei},3) ] == 0 ) && ~exist('rerun','var') && rerun<5
-            %if strcmp( job.opts.tpm , dtpm ) % it may also help with the default SPM TPM 
-            if ~exist('rerun','var') && rerun < 3
-              casei = casei - 1; 
-              rerun = rerun + 1; 
-              cat_io_addwarning('cat_run_job:ownTPM',sprintf('Estimation problems with selected TPM. Try smoothing %d.',rerun),2,[1 1],resi{casei}); 
-              for i=1:numel(obj.tpm.dat) 
-                spm_smooth( obj.tpm.dat{i} , obj.tpm.dat{i} , rerun * [1 1 1]); 
-              end
-              continue
-            elseif strcmp( job.opts.tpm , dtpm )
-              cat_io_addwarning('cat_run_job:ownTPMerror','The new selected TPM does not work. Use SPM TPM.',2,[1 1],resi{casei}); 
-              casei = casei - 1; 
-              rerun = 1; 
-              dtpm  = fullfile(spm('dir'),'TPM','TPM.nii'); 
-              obj.tpm = spm_load_priors8(dtpm);
-              continue
-            else
-              rerun = inf; 
+        catch
+          tmp = obj.image.dat; 
+          if exist('Ybi','var')
+            obj.image.dat = obj.image.dat .* (cat_vbdist(single(Ybi>0.5))<10);
+          else
+            VFa = VF; VFa.mat = Affine * VF.mat; %Fa.mat = res0(2).Affine * VF.mat;
+            if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
+            [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1));  
+            ds('d2sm','',1,Ym,Ym.*(Yb>0.5),round(size(Yb,3)*0.6))
+            obj.image.dat = obj.image.dat .* (cat_vbdist(single(Yb>0.5))<10);
+          end
+          
+          suc = 0;
+          while obj.tol<1
+            obj.tol = obj.tol * 10;
+            try
+              res = cat_spm_preproc8(obj);
+              suc = 1;
             end
           end
-
-          ll(casei) = resi{casei}.ll; 
-          if verbs
-            if job.extopts.expertgui>1
-              txt = sprintf(' (%0.3f,%0.3f) ',mincontrast(casei), resi{casei}.ll); 
-            else
-              txt = sprintf(' (%0.3f) ',mincontrast(casei)); 
-            end
-            cat_io_cprintf('g5',sprintf('%s',txt)); %,repmat('\b',1,numel(txt)) 
-          end
-          if ( mincontrast(casei) > acccon )  && ( casei >= runcas )
-            res   = resi{casei}; 
-            maxc  = mincontrast(casei);
-            maxci = casei; 
-            if verbs, fprintf('\n'); end
-            break
+          
+          if any( (vx_vol ~= vx_voli) ) || ~strcmp(job.extopts.species,'human')
+            [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});
+            delete(fullfile(pp,[ff,ee]));
           end
         end
+        fprintf('%5.0fs\n',etime(clock,stime));
         clear Ysrc; 
 
 
-        if ~exist('res','var') || ~exist('maxci','var')
-          % if no model was optimal than chouse the best
-          [maxc,maxci] = max(mincontrast(1:min(numel(mincontrast),find(cellfun('isempty',modelname)))));  
-
-          if ~isempty(maxci)
-            if isnan(maxci) || maxc == 0
-              % error?
-            end
-            res = resi{maxci}; 
-            if verbs
-              stime  = cat_io_cmd(sprintf('  Select "%s"',modelname{maxci}),'g5','',job.extopts.verb-1,stime); 
-            end
-          else
-            % error?
-          end
-        else
-          if verbs, cat_io_cmd(' ','g5','',job.extopts.verb-1); end
-        end
-
-        if isempty(maxci) || isnan(maxci) || maxc == 0 || ((mincontrast(maxci) < 0.05 && job.extopts.ignoreErrors < 2)) || job.test_warnings
-          %% If it was not possible to run SPM then print an error message. 
-          %  RD202006: Alternatively we could try the kmeans here but I  
-          %  think it is better to give an error here and use manual
-          %  selection by the job.extopts.init
-
-          mati = spm_imatrix(V.mat);
-          emsg = sprintf([
-            'Error in spm_preproc8 that possibly happens due to \\\\n ' ...
-            'bad orientation or untypical contrast. %s \\\\n' ...
-            'and/or apply %s with intensity normalization. If the image is a  \\\\n' ...
-            'normal MRI image with good contrast and correct orientation that you \\\\n' ...
-            'can share with us than please contact us (%s). \\\\n' ...
-            '  Volume size (x,y,z):   %8.0f %8.0f %8.0f \\\\n' ...
-            '  Origin (x,y,z):        %8.1f %8.1f %8.1f \\\\n' ...
-            '  Rotation (deg):        %8.1f %8.1f %8.1f \\\\n' ...
-            '  Resolution:            %8.1f %8.1f %8.1f \\\\n'],...
-            spm_file('Check image orientation/contrast','link',['spm_image(''Display'', ''' ofname ''')']), ...
-            spm_file('head trimming','link','spm_jobman(''interactive'','''',''spm.tools.cat.tools.datatrimming'');'), ...
-            spm_file('vbmweb@gmail.com','link','web(''mailto:vbmweb@gmail.com'');'), ...
-            V.dim,[mati(1:3),mati(4:6),mati(7:9)]); 
-% ### 
-% write AC voxel coordinate???
-% ####
-          if exist('Ybi','var') && exist('Ybg','var')
-            % estimate some thresholds with kmeans3D in specific ROIs
-            try %#ok<TRYNC> % this has to be save although a variable is miss in some cases 
-              Tcgw = kmeans3D(tmp(Ybi(:)>0.5),5); Tcgw([2,4]) = [];
-              Thd  = kmeans3D(tmp(~Ybg(:) & Ybi(:)<0.5),2);
-              Tbg  = kmeans3D(tmp(obj.msk.dat(:)>0 & Ybi(:)<0.5),1);
-              Tth  = [Tcgw Thd Tbg]; 
-              emsg = [emsg, sprintf([
-                'Normalized tissue intensities: \\\\n' ...
-                '  Brain tissues:         %8.2f %8.2f %8.2f \\\\n' ...
-                '  Head tissues / BG:     %8.2f %8.2f %8.2f'], Tth)];
-              cat_err_res.res.Tth = Tth;   
-            end 
-          end
-
-          if ~exist('res','var')
-            error('cat_run_job:spm_preproc8',emsg);
-          else
-            if exist('Tth','var')
-              cat_io_addwarning('cat_run_job:spm_preproc8',emsg,2,[1 2],Tth); 
-            else
-              cat_io_addwarning('cat_run_job:spm_preproc8',emsg,2,[1 2]); 
-            end  
-          end
-
-          % udpate the last image version
-          res.image.dat = tmp;
-          obj.image.dat = tmp; 
-          clear tmp;
-          
-          
-          fprintf('%5.0fs\n',etime(clock,stime));
-        end
-
-        
+               
         
         %% check contrast (and convergence)
         %  RD202006: SPM peak averaging 

@@ -28,6 +28,8 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th,cutstr)
   % adaptive probability region-growing
   if debug, Po=P; end
   
+  % Use gcutstr in version 2 to control the width of the mask. 
+  % Smaller values are wider, larger values are tider, 0 use the old definition.
   if ~exist('cutstr','var'), cutstr = 0; else, cutstr = mod(cutstr,1); end 
 
   vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
@@ -44,8 +46,18 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th,cutstr)
     cth = max(cth,T3th(1));
     cth = max(cth,cat_stat_nanmedian(Ysrc( cat_vol_morph( smooth3(P(:,:,:,3))>200 & ...
             Ysrc>sum(T3th(1:2).*[0.8 0.2]),'de',2,vx_vol) ) ));
-  end  
-  T3th(1) = cth; 
+  end
+  % #########
+  % RD202008: Although cth should be better the last test showed problems 
+  %           in skull-stripping so its more save to use it for the V2 
+  %           that is only for experts. 
+  %           However, we should test this later again. 
+  % #########
+  if cutstr
+    T3th(1) = cth; 
+  end
+  
+  
   if max(res.lkp)==4
     bth = 0;
   else
@@ -98,7 +110,9 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th,cutstr)
 
 
   %% initial brain mask by region-growing
-% Todo: T2/PD, skull-stripped
+% ########## 
+% RD2020007: Todo: further adaption for T2/PD/MP2Rage and skull-stripped
+% ##########
   %  as CSF/GM+GM+WM without blood vessels (Yg<0.5) 
   Yb   = min(1,single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255 + Ycg/2); 
   Yb   = cat_vol_median3(Yb,Yb>0,true(size(Yb)));
@@ -131,10 +145,10 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th,cutstr)
   Yb   = cat_vol_morph(Yb,'ldc');
   
 
-  %% GM-CSF region
-  % Yh is the region that we exclude 
-if cutstr == 0 %old
-  %% GM-CSF region
+%% GM-CSF region
+% Yh is the region that we exclude 
+if cutstr == 0
+  %% RD202007: This is the original version without further adaptions/corrections
   Yb2  = single(cat_vol_morph(Yb,'de',1.9,vx_vol)); 
   if T3th(1) < T3th(3)
     Yh   = (Yb2<0.5) & (Ysrc<sum(T3th(1:2).*[0.9 0.1]) | sum(P(:,:,:,4:6),4)>250 | ...
@@ -155,36 +169,36 @@ if cutstr == 0 %old
   Yb   = cat_vol_morph(Yb,'ldo',1.9,vx_vol);
   Yb   = cat_vol_morph(Yb,'ldc');
 else
-    Yb2  = single(cat_vol_morph(cat_vol_morph(Yb,'de',1.9,vx_vol),'ldc',3)); 
-    if T3th(1) < T3th(3)
-      Yh   = (Yb2<0.5) & ( Ysrc<(T3th(1) - 1*(1-cutstr) * diff([T3th(1) min(T3th(2:3))])) | ...
-              cat_vol_morph(sum(P(:,:,:,4:6),4)>250,'e',2,vx_vol) | ...
-              (Ysrc>cat_stat_nanmean(mean(T3th(1:2))) & ~Yb) | Yg>BVth); 
-    else
-      Yh   = (Yb2<0.5) & ( Ysrc>(T3th(1) + 1*(1-cutstr) * diff([T3th(1) max(T3th(2:3))])/2) | ...
-              cat_vol_morph(sum(P(:,:,:,4:6),4)>250,'e',2,vx_vol) | ...
-              (Ysrc>cat_stat_nanmean(mean(T3th(1:2))) & ~Yb) | Yg>BVth); 
-    end
-    Yh(smooth3(Yh)>0.7) = 1; Yh(smooth3(Yh)<0.3) = 0;   
-    Yh   = cat_vol_morph(Yh,'dc',1) | cat_vol_morph(~Yb,'de',10,vx_vol); 
-    Yh   = cat_vol_morph(Yh,'de',1,vx_vol);  
-    Yh   = cat_vol_morph(Yh,'do',1,vx_vol);  
-    Yb2(Yh) = nan; if ~debug, clear Yh; end
-    %%
-    if T3th(1) < T3th(3) % T1 
-      [Yb2,YD] = cat_vol_downcut(Yb2,Ysrc/T3th(3),max(0.03,min(0.1,-RGth*2))); clear Yb2; %#ok<ASGLU>
-    else
-      [Yb2,YD] = cat_vol_downcut(Yb2,1 - Ysrc/T3th(3),max(0.03,min(0.1,-RGth))); clear Yb2; %#ok<ASGLU>
-    end
-    %%
-    Yb( (YD < 500 / mean(vx_vol) * (1 - cutstr/2)) & ...
-      Ysrc<(T3th(1) + 0.5*(1-cutstr) * min( abs( [ diff(T3th(1:2)) , diff(T3th(1:2:3)) ] ))) & ...
-      Ysrc>(T3th(1) - 0.5*(1-cutstr) * min( abs( [ diff(T3th(1:2)) , diff(T3th(1:2:3)) ] ))) ...
-      ) = 1; clear YD; 
-    Yb(smooth3(Yb)<0.5) = 0; Yb(smooth3(Yb)>0.5) = 1; 
-    Yb   = cat_vol_morph(Yb,'ldo',1.9,vx_vol);
-    Yb   = cat_vol_morph(Yb,'ldc');
+  %% RD202007: This is the new Version that is quite similar but controlled by gcutstr
+  Yb2  = single(cat_vol_morph(cat_vol_morph(Yb,'de',1.9,vx_vol),'ldc',3)); 
+  if T3th(1) < T3th(3)
+    Yh   = (Yb2<0.5) & ( Ysrc<(T3th(1) - 1*(1-cutstr) * diff([T3th(1) min(T3th(2:3))])) | ...
+            cat_vol_morph(sum(P(:,:,:,4:6),4)>250,'e',2,vx_vol) | ...
+            (Ysrc>cat_stat_nanmean(mean(T3th(1:2))) & ~Yb) | Yg>BVth); 
+  else
+    Yh   = (Yb2<0.5) & ( Ysrc>(T3th(1) + 1*(1-cutstr) * diff([T3th(1) max(T3th(2:3))])/2) | ...
+            cat_vol_morph(sum(P(:,:,:,4:6),4)>250,'e',2,vx_vol) | ...
+            (Ysrc>cat_stat_nanmean(mean(T3th(1:2))) & ~Yb) | Yg>BVth); 
+  end
+  Yh(smooth3(Yh)>0.7) = 1; Yh(smooth3(Yh)<0.3) = 0;   
+  Yh   = cat_vol_morph(Yh,'dc',1) | cat_vol_morph(~Yb,'de',10,vx_vol); 
+  Yh   = cat_vol_morph(Yh,'de',1,vx_vol);  
+  Yh   = cat_vol_morph(Yh,'do',1,vx_vol);  
+  Yb2(Yh) = nan; if ~debug, clear Yh; end
+  if T3th(1) < T3th(3) % T1 
+    [Yb2,YD] = cat_vol_downcut(Yb2,Ysrc/T3th(3),max(0.03,min(0.1,-RGth*2))); clear Yb2; %#ok<ASGLU>
+  else
+    [Yb2,YD] = cat_vol_downcut(Yb2,1 - Ysrc/T3th(3),max(0.03,min(0.1,-RGth))); clear Yb2; %#ok<ASGLU>
+  end
+  Yb( (YD < 500 / mean(vx_vol) * (1 - cutstr/2)) & ...
+    Ysrc<(T3th(1) + 0.5*(1-cutstr) * min( abs( [ diff(T3th(1:2)) , diff(T3th(1:2:3)) ] ))) & ...
+    Ysrc>(T3th(1) - 0.5*(1-cutstr) * min( abs( [ diff(T3th(1:2)) , diff(T3th(1:2:3)) ] ))) ...
+    ) = 1; clear YD; 
+  Yb(smooth3(Yb)<0.5) = 0; Yb(smooth3(Yb)>0.5) = 1; 
+  Yb   = cat_vol_morph(Yb,'ldo',1.9,vx_vol);
+  Yb   = cat_vol_morph(Yb,'ldc');
 end
+
 
 
   %% CSF mask 2 with Yb
@@ -278,7 +292,9 @@ end
   %  The default value of 0.5 which works best for validation data.
   %  However, by setting the value to 1 we can also use a surface to find the 
   %  optimal value, which is currently not stable enough.
-  if cutstr==0; cutstr = 0.5; end
+  %  RD202008: In the original version we final fix this to the average 
+  %            because the selection was not robust engough.
+  if cutstr==0; cutstr = 0.5; end % V2
   cutstrs   = linspace(0.05,0.95,4); % 0.05,0.35,0.65,0.95]; 
   cutstrval = nan(1,4); 
   if debug, cutstrsa = zeros(0,8); end
@@ -309,7 +325,7 @@ end
   %% normalize this map depending on the cutstr parameter 
   Yb  = cat_vol_morph(cat_vol_morph(Ym > cutstr,'lo'),'lc',2);
   Yb  = cat_vol_morph(Yb,'e') | (Ym>0.9) | (Yb & Yc>0.5);
-  Yb(smooth3(Yb)>0.7)=1;
+  if cutstr>0; Yb(smooth3(Yb)>0.7) = 1; end % RD202008: V2: a bit closing shoud be also fine ...
   Yb(smooth3(Yb)<0.5)=0;
   Ybb = cat_vol_ctype( max(0,min(1,(Ym - cutstr)/(1-cutstr))) * 256); 
   Ym0 = Ybb; 
