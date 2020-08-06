@@ -108,7 +108,9 @@ checklist:
 	-@echo 2. Check Pipeline
 	-@echo    make check_pipeline
 	-@echo    check_pipeline.sh -p pid
+	-@echo    check_all_matrix.sh
 	-@echo    check_pipeline_ROIs.m	-> check render views check_r*matrix.png and histograms
+	-@echo    check_pipeline_homogeneity.m	-> check sample homogeneity
 	-@echo    
 	-@echo 3. Check Batches and Dependencies
 	-@echo    cd check_pipeline
@@ -123,7 +125,11 @@ checklist:
 	-@echo    "cat12('expert')"
 	-@echo    CAT12 GUI Segment CAT12.X
 	-@echo    
-	-@echo 6. Check Windows + Linux
+	-@echo 6. Check Skull-Stripping
+	-@echo    cat12_all.m in /Volumes/UltraMax/validate_skullstripping_withT12
+	-@echo    calc_kappa_c0_SPM12_T12.m
+	-@echo    
+	-@echo 7. Check Windows + Linux
 	-@echo    VirtualBox.app
 	-@echo    CAT12 GUI Segment
 

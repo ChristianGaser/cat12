@@ -388,8 +388,7 @@ USAGE:
    -nojvm  supress call of jvm using the -nojvm flag
    
    Only one filename or pattern is allowed. This can be either a single file or a pattern
-   with wildcards to process multiple files. Optionally you can set the matlab command 
-   with the "-m" option and force to write already estimated segmentations with the "-w" option.
+   with wildcards to process multiple files. 
 
 PURPOSE:
    Command line call of CAT12 segmentation
