@@ -373,23 +373,25 @@ function str = cat_main_reportstr(job,res,qa)
 %#######
 	str{2} = [str{2} struct('name', '','value','')]; % empty line
   wname  = {'note','warning','alert'}; 
-  wcolor = [0 0 1; 1 0.5 0; 0.8 0 0];
+  wcolor = [0 0 1; 1 0.5 0; 0.8 0 0]; 
+  valnl  = 80; 
   for wi=2:-1:0
     warn = cat_io_addwarning(wi); 
     wn   = numel(warn);
     if wn
-      if job.extopts.expertgui > 1 - wi
-        msg  =  warn(1).identifier; 
+      if job.extopts.expertgui > -wi
+        msg  =  strrep(warn(1).identifier,'_','\_') ; 
         for wmi=2:wn
-          msg = [msg ', ' warn(wmi).identifier ];
+          msg = [msg ', ' strrep( warn(wmi).identifier,'_','\_') ];
+% linebreak may cause other problems ...          
+          if numel(msg)>valnl, msg = [msg '\\n']; valnl = valnl + 80; end 
         end
-      else
-        msg  = ' (see log/xml)'; 
+        
+        if wn~=1, wnamepl='s'; else, wnamepl=''; end
+        str{2} = [str{2} struct('name', ...
+          sprintf('\\color[rgb]{%0.1f %0.1f %0.1f}\\bf{%d %s%s} (%s)',...
+            wcolor(wi+1,:), wn,wname{wi+1},wnamepl, msg),'value','')]; 
       end
-      if wn~=1, wnamepl='s'; else, wnamepl=''; end
-      str{2} = [str{2} struct('name', ...
-        sprintf('\\color[rgb]{%0.1f %0.1f %0.1f}\\bf{%d %s%s} %s',...
-          wcolor(wi+1,:), wn,wname{wi+1},wnamepl, msg),'value','')]; 
     end
   end  
 

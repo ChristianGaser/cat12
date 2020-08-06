@@ -117,11 +117,17 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
    'software'         'cat_warnings'          ''          []               'CAT preprocessing warning structure with subfields for identifier, message, type, and data. See ../cat12/html/cat_methods_warnings.html'
    'SPMpreprocessing' 'Affine0'               ''          []               'Initial affine matrix estimated in cat_run_job, used for SPM US.'
    'SPMpreprocessing' 'Affine'                ''          []               'Final affine matrix extimated in cat_main_registration.'
-   'SPMpreprocessing' 'Affine0H'              ''          []               'Human version of the initial affine matrix  estimated in cat_run_job, used for SPM US [transXYZ rotationXYZ scaleXYZ shearXYZ]. '
-   'SPMpreprocessing' 'AffineH'               ''          []               'Human version of the final affine matrix extimated in cat_main_registration [transXYZ rotationXYZ scaleXYZ shearXYZ]'
    'SPMpreprocessing' 'lkp'                   ''          []               'Number of SPM tissue classes.'
    'SPMpreprocessing' 'mn'                    ''          []               'Mean value of SPM tissue class defined by the lkp field.'
    'SPMpreprocessing' 'vr'                    ''          []               'Variance of SPM tissue class defined by the lkp field.'
+   'SPMpreprocessing' 'Affine_translation'    ''          []               'Translation parameter of the affine registration [X Y Z]. '
+   'SPMpreprocessing' 'Affine_rotation '      ''          []               'Rotation parameter of the affine registration [X Y Z]. '
+   'SPMpreprocessing' 'Affine_scaling'        ''          []               'Scaling parameter of the affine registration [X Y Z]. '
+   'SPMpreprocessing' 'Affine_shearing'       ''          []               'Shearing parameter of the affine registration [X Y Z]. '
+   'SPMpreprocessing' 'Affine0_translation'   ''          []               'Translation parameter of the initial affine registration [X Y Z]. '
+   'SPMpreprocessing' 'Affine0_rotation '     ''          []               'Rotation parameter of the initial affine registration [X Y Z]. '
+   'SPMpreprocessing' 'Affine0_scaling'       ''          []               'Scaling parameter of the initial affine registration [X Y Z]. '
+   'SPMpreprocessing' 'Affine0_shearing'      ''          []               'Shearing parameter of the initial affine registration [X Y Z]. '
   };
   if nargin>3 && isstruct(varargin{2}), def = cat_io_checkinopt(varargin{2},def); end
   

@@ -105,19 +105,19 @@ function varargout = cat_io_addwarning(id,mess,level,nline,data,usebox)
       'i',['  '   ' '], ...
       'e',['\n  ' repmat('=',1,max( [ 71 , diff(messi)+10 ] )) '\n']); % char(9595)
     box(4) = struct(... % the chars are not vissible in the log file 
-      's',['  '   char(9556) repmat(char(9552),1,max( [ 71 , diff(messi)+10 ] )) '\n'], ... char(9559)
+      's',['  '   char(9556) repmat(char(9552),1,max( [ 71 , diff(messi)+9 ] )) '\n'], ... char(9559)
       'i',['  '   char(9553) ' '], ...
-      'e',['\n  ' char(9562) repmat(char(9552),1,max( [ 71 , diff(messi)+10 ] )) '\n']); % char(9595)
+      'e',['\n  ' char(9562) repmat(char(9552),1,max( [ 71 , diff(messi)+9 ] )) '\n']); % char(9595)
       
     % print output
     if nline2(1)>0, fprintf('\n'); end
     warnstr = strrep(mess,'\\n',['\n' box(usebox).i '             ']); 
     if level==0
-      cat_io_cmd(sprintf([box(usebox).s box(usebox).i 'NOTE %02d:     ' id ':\n' box(usebox).i '             ' warnstr box(usebox).e ],numel(cat_io_addwarning(0))),'note');
+      cat_io_cmd(sprintf([box(usebox).s box(usebox).i 'NOTE %02d:     ' id '\n' box(usebox).i '             ' warnstr box(usebox).e ],numel(cat_io_addwarning(0))),'note');
     elseif level==1
-      cat_io_cmd(sprintf([box(usebox).s box(usebox).i 'WARNING %02d:  ' id ':\n' box(usebox).i '             ' warnstr box(usebox).e ],numel(cat_io_addwarning(1))),'caution');
+      cat_io_cmd(sprintf([box(usebox).s box(usebox).i 'WARNING %02d:  ' id '\n' box(usebox).i '             ' warnstr box(usebox).e ],numel(cat_io_addwarning(1))),'caution');
     else
-      cat_io_cmd(sprintf([box(usebox+1).s box(usebox+1).i 'ALERT %02d:    ' id ':\n' box(usebox+1).i '             ' warnstr box(usebox+1).e ],numel(cat_io_addwarning(2))),'error');
+      cat_io_cmd(sprintf([box(usebox+1).s box(usebox+1).i 'ALERT %02d:    ' id '\n' box(usebox+1).i '             ' warnstr box(usebox+1).e ],numel(cat_io_addwarning(2))),'error');
     end
     if nline2(2) == 1 
       fprintf('\n'); 
