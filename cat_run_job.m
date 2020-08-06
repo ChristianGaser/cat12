@@ -261,21 +261,22 @@ function cat_run_job(job,tpm,subj)
           %  ------------------------------------------------------------
           VFn   = spm_vol(nfname); 
           YF    = spm_read_vols(VFn);
+          [YF,R]= cat_vol_resize(YF,'reduceV',vx_vol,2,32,'meanm');
           YF    = cat_stat_histth(YF,job.extopts.histth); 
           YFm   = cat_stat_histth(YF,[0.95 0.95],struct('scale',[0 1])); 
           Oth   = cat_stat_nanmean(YF(abs(YF(:))~=0 & YF(:)>cat_stat_nanmean(YF(:)))); 
-          F0vol = cat_stat_nansum(YFm(:)>0.02) * prod(vx_vol) / 1000; 
+          F0vol = cat_stat_nansum(YFm(:)>0.02) * prod(R.vx_volr) / 1000; 
           F0std = cat_stat_nanstd(YF(YFm(:)>0.2)/Oth); 
           % RD202008: improved object detection with gradient
-          Yg    = cat_vol_grad(YFm,max(2,vx_vol/2)); 
+          Yg    = cat_vol_grad(YFm,R.vx_volr); 
           gth   = max(0.05,min(0.2,median(Yg(Yg(:)>median(Yg(Yg(:)>0.1)))))); % object edge threshold
           YOB   = abs(YFm)>0.1 & Yg>gth;                                   % high intensity object edges 
-          YOB   = cat_vol_morph(YOB,'ldc',8*mean(vx_vol));                 % full object
-          %% background  
+          YOB   = cat_vol_morph(YOB,'ldc',8/mean(R.vx_volr));                 % full object
+          % background  
           if sum(YOB(:)>0)<numel(YOB)*0.9 && sum(YOB(:)>0)>numel(YOB)*0.1  % if there is a meanful background
-            YFC = ~cat_vol_morph(YOB,'lc',2*mean(vx_vol));                 % close noisy background
+            YBG = ~cat_vol_morph(YOB,'lc',2/mean(R.vx_volr));                 % close noisy background
           else
-            YFC = ~cat_vol_morph(YOB,'lc',2*mean(vx_vol));  
+            YBG = ~cat_vol_morph(YOB,'lc',2/mean(R.vx_volr));  
             msg = 'Detection of background failed.'; 
             cat_io_addwarning('cat_run_job:failedBGD',msg,1,[0 1]);
           end
@@ -284,8 +285,8 @@ function cat_run_job(job,tpm,subj)
           YCO   = true(size(YF)); YCO(hd(1):end-hd(1)+1,hd(2):end-hd(2)+1,hd(3):end-hd(3)+1) = false; 
           %% skull-stripping 
           [YL,numo] = spm_bwlabel(double(YF~=0),26);  clear YL;            %#ok<ASGLU> % number of objects
-          [YL,numi] = spm_bwlabel(double(YFC==0),26); clear YL;            %#ok<ASGLU> % number of background regions 
-          ppe.affreg.skullstrippedpara = [sum(YFC(:))/numel(YF) numo numi F0vol F0std]; 
+          [YL,numi] = spm_bwlabel(double(YBG==0),26); clear YL;            %#ok<ASGLU> % number of background regions 
+          ppe.affreg.skullstrippedpara = [sum(YBG(:))/numel(YF) numo numi F0vol F0std]; 
           ppe.affreg.skullstripped = ...
             ppe.affreg.skullstrippedpara(1)>0.5 && ...                     % many zeros
             ppe.affreg.skullstrippedpara(2)<15  && ...                     % only a few objects
@@ -297,9 +298,9 @@ function cat_run_job(job,tpm,subj)
           ppe.affreg.skullstripped = ppe.affreg.skullstripped && strcmp(job.extopts.species,'human');
           %% high intensity background (MP2Rage)
           ppe.affreg.highBGpara = [ ...
-            cat_stat_nanmedian( YFm( YFC(:) > 1/3 )) ... normal background
+            cat_stat_nanmedian( YFm( YBG(:) > 1/3 )) ... normal background
             cat_stat_nanmedian( YFm( YCO(:) > 1/3 )) ... pricture frame background 
-            cat_stat_nanstd( YFm(YFC(:)) > 1/3)]; % I am not sure if we should use the std, because inverted images are maybe quite similar
+            cat_stat_nanstd( YFm(YBG(:)) > 1/3)]; % I am not sure if we should use the std, because inverted images are maybe quite similar
           ppe.affreg.highBG     = ...
             ppe.affreg.highBGpara(1) > 1/3 || ...
             ppe.affreg.highBGpara(2) > 1/3; 
@@ -759,36 +760,40 @@ function cat_run_job(job,tpm,subj)
             % first we start with the given affine registration and affreg parameter (e.g. mni) and a very low resolution
             % RD202007: also here different maskings could be tested - however, it looks quite stable now 
             [Affine2,ppe.spm_maff8.ll(1)] = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg,80); 
-            ppe.spm_maff8.ll_help = ['ll(1) with affreg result, ll(2) without spm_affreg init, ' ...
-              'll(3) without spm_affreg and with opts.affreg=none; only test further cases if ll(i)<0.9'];   
-            if ppe.spm_maff8.ll(1)<0.9
-              % if there was no high overlap than we try if maff8 support better results without affreg initialization 
-              [Affine2o,ppe.spm_maff8.ll(2)] = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,eye(4),job.opts.affreg,80); 
-              Affine2 = Affine2o; 
-              if ppe.spm_maff8.ll(2)<0.9
-                % especially for very small heads the mni definiton is not good 
-                % we start here with the maff8 that is more robust to varying contrasts
-                [Affine2n,ppe.spm_maff8.ll(3)] = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,eye(4),'none',80); 
-                if ppe.spm_maff8.ll(3) > ppe.spm_maff8.ll(2)
-                  cat_io_addwarning('cat_run_job:spm_maff8','Use affreg=none due to better results.',1,[1 1],ppe.spm_maff8);
-                  job.opts.affreg = 'none'; % in this case we have to update the affreg parameter
-                  Affine2 = Affine2n;
-                else
-                  if ppe.spm_maff8.ll(1) < ppe.spm_maff8.ll(2)
-                    Affine2 = Affine2o; 
+            
+            if 1 % new approach with multiple tests
+              ppe.spm_maff8.ll_help = ['ll(1) with affreg result, ll(2) without spm_affreg init, ' ...
+                'll(3) without spm_affreg and with opts.affreg=none; only test further cases if ll(i)<0.9'];   
+              if ppe.spm_maff8.ll(1)<0.9
+                % if there was no high overlap than we try if maff8 support better results without affreg initialization 
+                [Affine2o,ppe.spm_maff8.ll(2)] = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,eye(4),job.opts.affreg,80); 
+                Affine2 = Affine2o; 
+                if ppe.spm_maff8.ll(2)<0.9
+                  % especially for very small heads the mni definiton is not good 
+                  % we start here with the maff8 that is more robust to varying contrasts
+                  [Affine2n,ppe.spm_maff8.ll(3)] = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,eye(4),'none',80); 
+                  if ppe.spm_maff8.ll(3) > ppe.spm_maff8.ll(2)
+                    cat_io_addwarning('cat_run_job:spm_maff8','Use affreg=none due to better results.',1,[1 1],ppe.spm_maff8);
+                    job.opts.affreg = 'none'; % in this case we have to update the affreg parameter
+                    Affine2 = Affine2n;
+                  else
+                    if ppe.spm_maff8.ll(1) < ppe.spm_maff8.ll(2)
+                      Affine2 = Affine2o; 
+                    end
                   end
                 end
               end
             end
-
-            % after this initial step we do some refined registration with less smoothing 
+            
+            % if nan than retry with less smoothing
             if any(any(isnan(Affine2(1:3,:))))
               Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*4,obj.tpm,Affine ,job.opts.affreg,80);
               if any(any(isnan(Affine2(1:3,:)))) 
                 Affine2 = Affine; 
               end
             end
-            Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,obj.tpm,Affine2,job.opts.affreg,80);
+            % after this initial step we do some refined registration with less smoothing 
+            [Affine3,ppe.spm_maff8.ll(4)]  = spm_maff8(obj.image(1),obj.samp,obj.fwhm,obj.tpm,Affine2,job.opts.affreg,80);
             if ~any(any(isnan(Affine3(1:3,:)))), Affine = Affine3; else, Affine = Affine2; end
 
             % turn warning on 
@@ -854,6 +859,7 @@ function cat_run_job(job,tpm,subj)
         % adpation parameter for affine registration? 0.98 and 1.02?
         %imat = spm_imatrix(Affine2); imat(7:9)=imat(7:9)*1.02; Affine2 = spm_matrix(imat); 
         
+
         obj.Affine = Affine;
         cat_err_res.obj = obj; 
       

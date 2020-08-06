@@ -535,7 +535,7 @@ function cat_io_report(job,qa,subj,createerr)
       end
     end
     if createerr==8, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
-
+    try, spm_orthviews('redraw'); end
 
     
     %% surface or histogram
@@ -662,7 +662,7 @@ function cat_io_report(job,qa,subj,createerr)
     job.imgprint.fdpi  = @(x) ['-r' num2str(x)];
     job.imgprint.ftype = @(x) ['-d' num2str(x)];
     job.imgprint.fname     = fullfile(pth,reportfolder,['catreport_' nam '.' job.imgprint.type]); 
-    job.imgprint.fnamej    = fullfile(pth,reportfolder,['catreport_' nam '.jpg']); 
+    job.imgprint.fnamej    = fullfile(pth,reportfolder,['catreportj_' nam '.jpg']); 
 
     fgold.PaperPositionMode = get(fg,'PaperPositionMode');
     fgold.PaperPosition     = get(fg,'PaperPosition');

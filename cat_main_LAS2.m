@@ -740,7 +740,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
   Yc = round(Ysrc./Ylab{2} .* (smooth3(Ycm)>0.5) * rf(2))/rf(2); 
   Yx = round(Ysrc./Ylab{2} .* Ynb * rf(2))/rf(2);
   
-  %% The correction should be very smooth (and fast) for CSF and we can use 
+  % The correction should be very smooth (and fast) for CSF and we can use 
   %  much lower resolution. 
   [Yc,resT2] = cat_vol_resize(Yc,'reduceV',vx_vol,8,16,'min'); % only pure CSF !!!
   Yx         = cat_vol_resize(Yx,'reduceV',vx_vol,8,16,'meanm');
@@ -760,20 +760,27 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
       meanYx = max(median(Yc(Yc(:)>0)),median(Yx(Yx(:)>0))); 
     end  
   else
-    meanYx = cat_stat_nanmean(   [ min(Ysrc(:)); Yx(Yx(:)>0) ]); 
-    meanYc = cat_stat_nanmedian( [ T3th(1)     ; Yc(Yc(:)>0) ]); 
+    meanYx = cat_stat_nanmean(   [ 0       ; Yx(Yx(:)>0) ]); 
+    meanYc = cat_stat_nanmedian( [ T3th(1) ; Yc(Yc(:)>0) ]); 
   end
   
   % correct for high intensity backgrounds (e.g. Gabi's R1)
   %Yx  = Yx .* (Yx > (meanYc + max(0.1,std(Yc(Yc(:)>0)))));
   
-  % avoid CSF in background and background in CSF
+  %% avoid CSF in background and background in CSF
   if ~res.ppe.affreg.highBG
     bcd = max( abs( [ diff( [meanYx meanYc] ) min( diff( T3th/max(T3th(:)) ) ) ] ));
     Yxc = Yx + (Yx==0 & Yc~=0) .* (Yc * meanYx/meanYc - 0.5 * bcd) + ... % avoid BG in the CSF (white dots in the blue CSF)
       ( (Yx~=0) * 0.2 * bcd );  % this term is the lower HG intensity (some nice noise in the BG)
-    Ycc = Yc + (Yc==0 & Yx~=0) .* (Yx * meanYc/meanYx + 1.0 * bcd); % here we avoid CSF in the BG (higher boudnary) ... blue CSF dots in the BG
+   if 0% (meanYx/meanYc) > 0.8 % this looks nice but its no good and change thickness 
+      Ycc = Yc + (Yc==0 & Yx~=0) .* (Yx * meanYc/meanYx + 0.5 * bcd); % here we avoid CSF in the BG (higher boudnary) ... blue CSF dots in the BG
+   else
+     Ycc = Yc;
+   end
    %Ycc = Yc + min(max( meanYx + stdYbc , meanYc - stdYbc ), Yx .* meanYc/max(eps,meanYx)); 
+  else
+    Yxc = Yx; 
+    Ycc = Yc; 
   end
   
   %% guaranty small difference between backgound and CSF intensity 
@@ -784,7 +791,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
   % smoothing 
   Yxa = cat_vol_smooth3X( Yxa , LASfs * 2 ); 
   Yca = cat_vol_smooth3X( Yca , LASfs * 2 );
-  % back to original resolution, combination with WM bias, and final smoothing
+  %% back to original resolution, combination with WM bias, and final smoothing
   Yca = cat_vol_resize(Yca,'dereduceV',resT2) .* Ylab{2};
   Yxa = cat_vol_resize(Yxa,'dereduceV',resT2) .* Ylab{2};
   Ylab{3} = cat_vol_smooth3X( Yca , LASfs * 2 );  
@@ -809,7 +816,9 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
     Yb2 = cat_vol_resize( single(Yb2) , 'dereduceV' , resT0 )>0.5;
   end
   
-  
+  % final scaling
+  Ylab{1} = Ylab{1} .* T3th(2) / cat_stat_nanmean( Ylab{1}(Ygm(:)>0.5)); 
+  Ylab{3} = Ylab{3} .* T3th(1) / cat_stat_nanmean( Ylab{3}(Ygm(:)>0.5)); 
   
   %% local intensity modification of the original image
   % --------------------------------------------------------------------

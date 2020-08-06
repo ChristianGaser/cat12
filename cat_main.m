@@ -421,7 +421,7 @@ if ~isfield(res,'spmpp')
     if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap
       prob = cat_main_clean_gwc(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol)),1); % new cleanup
     elseif job.extopts.cleanupstr < 2 % use cleanupstr==2 to use only the old cleanup
-      prob = cat_main_clean_gwc(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol))); % default cleanup
+      prob = cat_main_clean_gwc(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol)),1); % default cleanup
     else
       prob = cat_main_clean_gwc(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol)),0); % old cleanup
     end
