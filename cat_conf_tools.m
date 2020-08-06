@@ -268,7 +268,7 @@ function resize = cat_conf_vol_resize(data,prefix,expert,outdir)
   resize.prog     = @cat_vol_resize;
   resize.vfiles   = @vfiles_resize;
   resize.vout     = @vfiles_resize;
-  resize.hidden   = expert<2; 
+  %resize.hidden   = expert<2; 
   resize.help     = {'Interpolation of images.' ''};
 return
 

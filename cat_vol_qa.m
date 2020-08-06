@@ -609,9 +609,21 @@ function varargout = cat_vol_qa(action,varargin)
             if isfield(res,rf{rfi}), QAS.SPMpreprocessing.(rf{rfi}) = res.(rf{rfi}); end
           end
         end
-        QAS.SPMpreprocessing.humanAffine  = spm_imatrix(QAS.SPMpreprocessing.Affine );
-        QAS.SPMpreprocessing.humanAffine0 = spm_imatrix(QAS.SPMpreprocessing.Affine0);
+        hAffine  = spm_imatrix(QAS.SPMpreprocessing.Affine ); 
+        hAffine0 = spm_imatrix(QAS.SPMpreprocessing.Affine0); 
+        QAS.SPMpreprocessing.Affine_translation  = hAffine(1:3);
+        QAS.SPMpreprocessing.Affine_rotation     = hAffine(4:6);
+        QAS.SPMpreprocessing.Affine_scaling      = hAffine(7:9);
+        QAS.SPMpreprocessing.Affine_shering      = hAffine(10:12);
+        QAS.SPMpreprocessing.Affine0_translation = hAffine0(1:3);
+        QAS.SPMpreprocessing.Affine0_rotation    = hAffine0(4:6);
+        QAS.SPMpreprocessing.Affine0_scaling     = hAffine0(7:9);
+        QAS.SPMpreprocessing.Affine0_shering     = hAffine0(10:12);
       end
+% ##############
+% RD202008: create warning when Affine0 & Affine varies strongly ?
+% ##############
+      
      
       %% resolution, boundary box
       %  ---------------------------------------------------------------
@@ -880,7 +892,7 @@ function varargout = cat_vol_qa(action,varargin)
       %% Bias/Inhomogeneity (original image with smoothed WM segment)
       Yosm = cat_vol_resize(Ywb,'reduceV',vx_vol,3,32,'meanm');      % resolution and noise reduction
       for si=1:max(1,min(3,round(QAS.qualitymeasures.NCR*4))), mth = min(Yosm(:)) + 1; Yosm = cat_vol_localstat(Yosm + mth,Yosm~=0,1,1) - mth; end 
-      QAS.qualitymeasures.ICR  = cat_stat_nanstd(Yosm(Yosm(:)~=0)) / signal_intensity / contrast;
+      QAS.qualitymeasures.ICR  = cat_stat_nanstd(Yosm(Yosm(:)>0)) / signal_intensity / contrast;
       %QAS.qualitymeasures.CIR  = 1 / QAS.qualitymeasures.ICR;
 
       
