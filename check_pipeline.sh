@@ -1,4 +1,4 @@
- #! /bin/bash
+#! /bin/bash
 
 # $Id$
 
@@ -410,7 +410,7 @@ postprocess ()
     if [ ! -z `which render_surf.sh` ] && [ $volumes_only -eq 0 ]; then
       mkdir -p ${proc_dir}/check_r${revision_cat}/surf
       ln -s ${proc_dir}/check_r${revision_cat}/long/surf/* ${proc_dir}/check_r${revision_cat}/surf/
-      render_surf.sh -range 0 6 ${proc_dir}/check_r${revision_cat}/surf 
+      render_surf.sh -range 0 6 ${proc_dir}/check_r${revision_cat}/surf >/dev/null 2>&1
       mv check_r${revision_cat}*.png ${proc_dir}/ >/dev/null 2>&1
     else
       echo "You need render_surf.sh and image_matrix.sh for preparing render view."
