@@ -630,7 +630,10 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
         Ycm(smooth3(Ycm)<0.9) = 0; 
         % remove dots
         Ycmi = cat_vol_localstat(Ysrc,Ycm,3,1); %3 - (clsintg(1)>clsintg(3))); % minimum does not work in all cases
-        
+        if sum(Ycm) < 1000
+          Ycm  = Ycls{3}>192; 
+          Ycmi = Ycm .* clsintv(3); 
+        end
         %% GM without PVE
         Ygm = (cat_vol_morph(Ycls{1}>128,'e',1) | Ycls{1}>240) & Yg<gth * 2; 
         Ygm = cat_vol_morph(Ygm,'l',[0.01 100 ]); Ygm(smooth3(Ygm)<0.5) = 0; 
@@ -659,7 +662,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
           Ybge = cat_vol_morph(Ycls{6}>128,'de',15,vx_vol); 
         end
         if res.ppe.affreg.highBG
-          Ybge = cat_vol_localstat(Ysrc,Ybge,2,1)/cat_stat_nanmean(Ysrc(Ybge(:)>0));
+          Ybge = cat_vol_localstat(Ysrc,Ybge,2,1) / cat_stat_nanmean(Ysrc(Ybge(:)>0));
         end
         %% final correction map with correction for double counts
         Yi   =  Ywmi/clsintv(2) + Ygmi/clsintv(1) + Ycmi/cat_stat_nanmean(Ycmi(Ycmi(:)>0)) + single(Ybge); % and also the eroded background  
@@ -678,16 +681,20 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
       end
       
       
-      % T3th3
+      %% T3th3
       if ~exist('T3th3','var') || any(isnan(T3th3))
         T3th3 = [clsintv(3) clsintv(1) clsintv(2)];
       end
      
       % T3th, T3thx - keep it simple and avoid inversion
-      if res.ppe.affreg.highBG, BGth = 0.5; else, BGth = 0.0; end
+      if res.ppe.affreg.highBG
+        BGth = round( clsintv(6) / max([clsintv(3) clsintv(1) clsintv(2)]) * 6 ) / 2;
+      else
+        BGth = 0.05; 
+      end
       if ~exist('T3th','var') || ~exist('T3thx','var') || any(isnan(T3th3))
-        T3th  = [min(Ysrc(:)) sort( [ clsintv(3) clsintv(1) clsintv(2) ] ) max(Ysrc(:)) ];
-        T3thx = [BGth,1,2,3,4];        
+        T3th  = [min(Ysrc(:)) sort( [ clsint(6) clsintv(3) clsintv(1) clsintv(2) clsint(5) ] ) max(Ysrc(:)) ];
+        T3thx = [0,sort([BGth,1,2,3]),3.5,4];        
       end
       
       % noise
@@ -708,7 +715,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
       end
   
       
-      %% Ym 
+      % Ym 
       Ym = Ysrc + 0; 
       for i=2:numel(T3th)
         M = Ysrc>T3th(i-1) & Ysrc<=T3th(i);
