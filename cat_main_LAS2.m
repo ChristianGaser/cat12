@@ -803,10 +803,17 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
   end
  else
    % simple 
-   Ylab{3} = min( [ T3th(1) , cat_stat_nanmean(Ysrc(Ycm(:))) ] ); 
-   Ylab{6} = min( T3th(1) - min(diff(T3th)) , min( Ysrc(:) )); 
+   Ynb   = smooth3( Ycls{6})>128 & Yg<0.3; 
+   %Ynb   = cat_vol_morph(Ynb,'e',4*vxv); 
+  
+   Ylab{3} = ones(size(Ygm),'single') .* min( [ T3th(1)                   , cat_stat_nanmean(Ysrc(Ycm(:))) ] ); 
+   Ylab{6} = ones(size(Ynb),'single') .* min( [ T3th(1) - min(diff(T3th)) , cat_stat_nanmean(Ysrc(Ycm(:))) ] ); 
  end
   
+  % final scaling of GM and CSF (not required for WM)
+  Ylab{1} = Ylab{1} .* T3th(2) / cat_stat_nanmedian( Ylab{1}(Ygm(:)>0.5)); 
+  Ylab{3} = Ylab{3} .* T3th(1) / cat_stat_nanmedian( Ylab{3}(Ycm(:)>0.5)); 
+  %Ylab{6} = Ylab{6} .* cat_stat_nanmedian( Ysrc(Ynb(:)>0.5)) / cat_stat_nanmedian( Ylab{6}(Ynb(:)>0.5)); 
   
   %% restore original resolution
   if exist('resT0','var')
@@ -815,10 +822,6 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
     for i=[1 2 3 6], Ylab{i}  = cat_vol_resize (Ylab{i} , 'dereduceV' , resT0 ); end
     Yb2 = cat_vol_resize( single(Yb2) , 'dereduceV' , resT0 )>0.5;
   end
-  
-  % final scaling
-  Ylab{1} = Ylab{1} .* T3th(2) / cat_stat_nanmean( Ylab{1}(Ygm(:)>0.5)); 
-  Ylab{3} = Ylab{3} .* T3th(1) / cat_stat_nanmean( Ylab{3}(Ygm(:)>0.5)); 
   
   %% local intensity modification of the original image
   % --------------------------------------------------------------------

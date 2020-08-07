@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r | dahnke | 2020-08-06 22:44:39
+r | dahnke | 2020-08-07 14:53:31
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_addwarning.m
+M       cat_main.m
+M       cat_main_LAS2.m
+M       cat_main_gintnorm.m
+M       cat_main_reportfig.m
+
+(1)  Fixed:    Corrected bug in cat_main_LAS2 but there are still some contrast problems
+               in specific constrasts. 
+(2)  Fixed:    Corrected new line setting in cat_io_addwarning and calling functions
+               cat_main_gintnorm
+(3)  Changed:  Small adaption in Yp0 colormap in report figure in cat_main_reportfig.
+------------------------------------------------------------------------
+r1683 | dahnke | 2020-08-06 22:45:48 +0200 (Do, 06. Aug 2020) | 29 Zeilen
 
 Changed paths:
 M       CHANGES.txt
@@ -28,6 +44,7 @@ A       html/cat_methods_warnings.html
 (8)  Changed:  Added final scaling of the local correction maps in LAS  
                by the globally estimated values.
 (9)  Changed:  Activated visibility of the resize batch for all GUI levels. 
+
 
 ------------------------------------------------------------------------
 r1682 | gaser | 2020-08-06 14:06:53 +0200 (Do, 06. Aug 2020) | 14 Zeilen

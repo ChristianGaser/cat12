@@ -350,7 +350,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         elseif 0 % green head 
           BCGWH = [0 0.1 0.05; 0.05 0.2 0.1; 0.1 0.3 0.2; 0.15 0.4 0.3; summer(11)]; fx = 3; 
         else % blue head 
-          BCGWH = [0 0.05 0.1; 0.05 0.1 0.20; cat_io_colormaps('blue',13)];fx = 3;
+          BCGWH = [0 0 0; 0.01 0.02 0.04; 0.02 0.04 0.08; 0.04 0.08 0.16; 0.08 0.16 0.32; cat_io_colormaps('blue',10)];fx = 3;
         end
         V2.dat(:,:,:) = min(0.49,Ym/fx).*(Yp0<0.5) + (Yp0/3+0.5).*(Yp0>0.5); 
         
