@@ -421,7 +421,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
     % ####################################################################
     % ToDo: Separate detection of ventricular lesion and subventriculars 
     % ####################################################################
-    if extopts.WMHC>0 && extopts.WMHCstr>0
+    if extopts.WMHC>0 && extopts.WMHCstr>0 && ~extopts.inv_weighting
       % T1 bias correction
       Yi     = Ym .* (Yp0>2.5 & Ym>2.5 & cat_vol_morph(Ya1~=LAB.BG | Ya1~=LAB.VT | Ya1~=LAB.TH,'d',2)); 
       Yi     = cat_vol_median3(Yi,Yi>0,Yi>0); Yi = cat_vol_localstat(Yi,Yi>0,1,3);
