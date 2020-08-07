@@ -272,7 +272,7 @@ if ~isfield(res,'spmpp')
     
     fprintf('%5.0fs\n',etime(clock,stime));
   else
-    cat_io_addwarning('cat_main:skipLAS','Skip LAS due to image contrast. Use global normalization.',1,[0 1]);
+    cat_io_addwarning('cat_main:skipLAS','Skip LAS due to image contrast. Use global normalization.',0,[0 0]);
     Ymi = Ym; 
   end
   if ~debug; clear Ysrc ; end
@@ -301,14 +301,14 @@ if ~isfield(res,'spmpp')
       [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
       fprintf('%5.0fs\n',etime(clock,stime));
       if isfield(res,'Ylesion') && sum(res.Ylesion(:)==0) && job.extopts.SLC==1
-        cat_io_addwarning('CAT:cat_main_SLC_noExpDef','SLC is set for manual lesions corection but no lesions were found!',1,[1 1]); 
+        cat_io_addwarning('cat_main_SLC_noExpDef','SLC is set for manual lesions corection but no lesions were found!',1,[1 1]); 
       end
     end
   else
     [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
     fprintf('%5.0fs\n',etime(clock,stime));
     if job.extopts.expertgui && isfield(res,'Ylesion') && sum(res.Ylesion(:))>1000 && job.extopts.ignoreErrors < 2
-      cat_io_addwarning('CAT:cat_main_SLC_noExpDef',sprintf(['SLC is deactivated but there are %0.2f cm' ...
+      cat_io_addwarning('cat_main_SLC_noExpDef',sprintf(['SLC is deactivated but there are %0.2f cm' ...
           native2unicode(179, 'latin1') ' of voxels with zero value inside the brain!'],prod(vx_vol) .* sum(res.Ylesion(:)) / 1000 ),1,[1 1]); 
     end
   end
@@ -346,10 +346,10 @@ if ~isfield(res,'spmpp')
         fprintf('%5.0fs\n',etime(clock,stime));
         clear Ybv p0; 
       catch
-        cat_io_addwarning('cat_main:noBVCbackup','No BVC backup function.',1,[0 1]); 
+        cat_io_addwarning('cat_main:noBVCbackup','Error in BVC. No BVC backup function.',1,[0 0]); 
       end
     else
-      cat_io_addwarning('cat_main:noBVC4lowres',sprintf('No BVC for low resolution data (%0.2fx%0.2fx%0.2fmm).',vx_vol),1,[0 1]); 
+      cat_io_addwarning('cat_main:noBVC4lowres',sprintf('No BVC for low resolution data (%0.2fx%0.2fx%0.2fmm).',vx_vol),1,[0 0]); 
     end
   end
 
@@ -375,11 +375,11 @@ if ~isfield(res,'spmpp')
         fprintf('%5.0fs\n',etime(clock,stime));
       catch %#ok<CTCH>
         fprintf('\n'); 
-        cat_io_addwarning('CAT:cat_main_gcut:err99','Unknown error in cat_main_gcut. Use old brainmask.',1,[1 1]);
+        cat_io_addwarning('cat_main_gcut:err99','Unknown error in cat_main_gcut. Use old brainmask.',1,[1 1]);
         job.extopts.gcutstr = 99;
       end
     else
-      cat_io_addwarning('CAT:cat_main_gcut:err99','No graph-cut backup function. Use old brainmask.',1,[1 1]);
+      cat_io_addwarning('cat_main_gcut:err99','No graph-cut backup function. Use old brainmask.',1,[1 1]);
     end
   end
   % correct mask for skull-stripped images
@@ -544,7 +544,7 @@ if ~isfield(res,'spmpp')
     Yp0b = cat_vol_ctype(single(Ycls{1})*2/5 + single(Ycls{2})*3/5 + single(Ycls{3})*1/5,'uint8');
   
     if qa.subjectmeasures.WMH_rel>3 || qa.subjectmeasures.WMH_WM_rel>5 % #% of the TIV or the WM are affected
-      cat_io_addwarning('MATLAB:SPM:CAT:cat_main:uncorrectedWMH',...
+      cat_io_addwarning('cat_main:uncorrectedWMH',...
         sprintf('Uncorrected WM lesions greater (%2.2f%%%%%%%% of the WM)!',qa.subjectmeasures.WMH_rel),1);
     end
   end
