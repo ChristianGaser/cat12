@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r | dahnke | 2020-08-07 14:53:31
+r | dahnke | 2020-08-07 17:04:40
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_main_gintnorm.m
+M       cat_vol_partvol.m
+
+(1)  Fixed:    Corrected bug in cat_main_gintnorm.
+(2)  Fixed:    Use new old cleanup only for normal resolution and T1 contrast in cat_main.  
+(3)  Fixed:    Corrected WMHC setting for non T1 contrast in cat_vol_partvol. 
+
+------------------------------------------------------------------------
+r1684 | dahnke | 2020-08-07 14:54:16 +0200 (Fr, 07. Aug 2020) | 14 Zeilen
 
 Changed paths:
 M       CHANGES.txt
@@ -14,6 +27,7 @@ M       cat_main_reportfig.m
 (2)  Fixed:    Corrected new line setting in cat_io_addwarning and calling functions
                cat_main_gintnorm
 (3)  Changed:  Small adaption in Yp0 colormap in report figure in cat_main_reportfig.
+
 ------------------------------------------------------------------------
 r1683 | dahnke | 2020-08-06 22:45:48 +0200 (Do, 06. Aug 2020) | 29 Zeilen
 
