@@ -114,7 +114,7 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
   % The strong normalization of the T1 data can directly be used as tissue
   % segmentation. The Ymi images is scaled to get similar maps for each 
   % tissue class, with good visible differences in the sulci.
-  job.output.intsegments = job.extopts.experimental;
+  job.output.intsegments = job.extopts.experimental && job.extopts.expertGUI==2;
   if job.output.intsegments
     if (any(tc(:)) || job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting) 
 

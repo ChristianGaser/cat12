@@ -41,6 +41,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
 % $Id$
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
 
+  nwarnings = cat_io_addwarning; 
   if ~exist('extopts','var')
     extopts = cat_get_defaults('extopts');
   end
@@ -732,10 +733,8 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
     end
   end
 
-  % RD202007 not required ... delete later
-  %if nargout>=6 && ~exist('cat_warnings','var') 
-  %  cat_warnings = struct('identifier',{'cat_main_gintnorm:runGeneral'},'message',{'Run generalized cat_main_gintnorm function.'});
-  %end
   
-  
+  if numel(nwarnings) < numel(cat_io_addwarning) 
+    cat_io_cmd(' ','','',1); 
+  end
 end

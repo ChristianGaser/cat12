@@ -1,5 +1,40 @@
 ------------------------------------------------------------------------
-r | dahnke | 2020-08-07 17:04:40
+r | dahnke | 2020-08-10 18:15:10
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       cat_io_addwarning.m
+M       cat_io_cprintf.m
+M       cat_main.m
+M       cat_main_amap.m
+M       cat_main_clean_gwc.m
+M       cat_main_gintnorm.m
+M       cat_main_reportfig.m
+M       cat_main_write.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_newcatch.m
+M       cat_vol_resize.m
+
+(1)  Changed:   Reinitialize r1639 preprocessing functions due to unsolved 
+                problems in the current version that can be now accessed 
+                via the extopts.experimental flag. 
+                Added versions of cat_run_job, cat_main, cat_main_updateSPM, 
+                cat_main_LAS2, cat_vol_partvol that where called from cat_run
+                and cat_run_newcatch.  
+(2)  Changed:   Correction of background/skull-stripping estimation.
+(3)  Fixed:     Small corrections in cat_main_reportfig, cat_main_AMAP, and
+                cat_main_write.
+(4)  Fixed:     Corrected bug with background interpolation in cat_vol_resize 
+                in anonymized images.                 
+(5)  Changed:   Add more red to the warning color to improve visibility.  
+(6)  Changed:   Small corrections in cat_io_addwarning command line output.    
+(7)  Fixed:     Correction in cat_main_clean_gwc for improved cleanup.          
+
+------------------------------------------------------------------------
+r1685 | dahnke | 2020-08-07 17:05:22 +0200 (Fr, 07. Aug 2020) | 11 Zeilen
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +45,7 @@ M       cat_vol_partvol.m
 (1)  Fixed:    Corrected bug in cat_main_gintnorm.
 (2)  Fixed:    Use new old cleanup only for normal resolution and T1 contrast in cat_main.  
 (3)  Fixed:    Corrected WMHC setting for non T1 contrast in cat_vol_partvol. 
+
 
 ------------------------------------------------------------------------
 r1684 | dahnke | 2020-08-07 14:54:16 +0200 (Fr, 07. Aug 2020) | 14 Zeilen

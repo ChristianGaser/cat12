@@ -272,7 +272,8 @@ if ~isfield(res,'spmpp')
     
     fprintf('%5.0fs\n',etime(clock,stime));
   else
-    cat_io_addwarning('cat_main:skipLAS','Skip LAS due to image contrast. Use global normalization.',0,[0 0]);
+    % just a node because it is the result of the inverse contrast warning
+    cat_io_addwarning('cat_main:skipLAS','Skip LAS due to image contrast. Use global normalization.',0,[0 1]);
     Ymi = Ym; 
   end
   if ~debug; clear Ysrc ; end
@@ -346,10 +347,10 @@ if ~isfield(res,'spmpp')
         fprintf('%5.0fs\n',etime(clock,stime));
         clear Ybv p0; 
       catch
-        cat_io_addwarning('cat_main:noBVCbackup','Error in BVC. No BVC backup function.',1,[0 0]); 
+        cat_io_addwarning('cat_main:noBVCbackup','Error in BVC. No BVC backup function.',1,[0 1]); 
       end
     else
-      cat_io_addwarning('cat_main:noBVC4lowres',sprintf('No BVC for low resolution data (%0.2fx%0.2fx%0.2fmm).',vx_vol),1,[0 0]); 
+      cat_io_addwarning('cat_main:noBVC4lowres',sprintf('No BVC for low resolution data (%0.2fx%0.2fx%0.2fmm).',vx_vol),1,[0 1]); 
     end
   end
 
@@ -421,12 +422,12 @@ if ~isfield(res,'spmpp')
     if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap
       prob = cat_main_clean_gwc(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol)),1); % new cleanup
     elseif job.extopts.cleanupstr < 2 % use cleanupstr==2 to use only the old cleanup
-      newcleanup = mean(vx_vol)<1.2 && ~job.extopts.inv_weighting; 
-      prob = cat_main_clean_gwc(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol)),newcleanup); % default cleanup
+      prob = cat_main_clean_gwc(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol)),1); % default cleanup
     else
       prob = cat_main_clean_gwc(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol)),0); % old cleanup
     end
-    if job.extopts.cleanupstr < 2 % use cleanupstr==2 to use only the old cleanup
+    
+    if job.extopts.cleanupstr < 2 %&& ~job.extopts.inv_weighting % use cleanupstr==2 to use only the old cleanup
       [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1(indx,indy,indz),... 
         Ym(indx,indy,indz),job.extopts,job.extopts.inv_weighting,vx_vol,indx,indy,indz); % new cleanup
     else
@@ -436,7 +437,7 @@ if ~isfield(res,'spmpp')
   else
     for i=1:3, Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i); end
     Yp0b = Yb(indx,indy,indz); 
-  end;
+  end
   clear prob
 
 
