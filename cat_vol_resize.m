@@ -78,7 +78,39 @@ function varargout=cat_vol_resize(T,operation,varargin)
               Vref = spm_vol(char(job.restype.Pref));
               [Y,res] = cat_vol_resize(Y,'interphdr',V,job.restype.res,job.interp,Vref);
             else
-              [Y,res] = cat_vol_resize(Y,'interphdr',V,job.restype.res,job.interp); 
+              % job.interp = -1; % RD202008: not working yet - has a displacement
+              switch 1 %job.interp
+                case -1
+                % this cases is for a PVE based volume reduction and does not work yet
+                  [Yx,res ] = cat_vol_resize(Y ,'interphdr',V,job.restype.res,job.interp); 
+                  
+                  % volume average interpolation
+                  if any( res.resN > res.resO )
+                    %
+                    resf = ceil(res.resN ./ res.resO); 
+                    V2 = V; % V2mat = spm_imatrix(V2.mat); V2mat(1:3) = V2mat(1:3) - sign(V2mat(7:9))./resf;  V2.mat = spm_matrix(V2mat);
+                   
+                    [Yt,res2] = cat_vol_resize(Y ,'interphdr',V2,job.restype.res ./ resf,2);
+                    [Yt,res2] = cat_vol_resize(Yt,'reduceV'  ,res.resN, res.resN .* resf,2,'meanm');
+                    if 0
+                      Y = Yt; res = res2; 
+                    else
+                      Y = Yx; 
+                      Y(1:min([size(Y,1),size(Yt,1)]),...
+                        1:min([size(Y,2),size(Yt,2)]),...
+                        1:min([size(Y,3),size(Yt,3)])) = ...
+                        Yt(1:min([size(Y,1),size(Yt,1)]),...
+                          1:min([size(Y,2),size(Yt,2)]),...
+                          1:min([size(Y,3),size(Yt,3)]));
+                    end
+                  else
+                    Y = Yx; 
+                  end
+                 
+                  
+                otherwise
+                  [Y,res] = cat_vol_resize(Y,'interphdr',V,job.restype.res,job.interp); 
+              end
             end
             Vo = res.hdrN; Vo.fname = fnameres;
           
@@ -584,7 +616,7 @@ function varargout=cat_vol_resize(T,operation,varargin)
       if nargin>4, interp = varargin{3}; end
       if nargin>5, V2     = varargin{4}; end
       
-      nonan = 1; 
+      nonan = 0; 
       
       if ~exist('V','var') || isempty(V)
         V.mat=[1 0 0 1;0 1 0 1; 0 0 1 1; 0 0 0 1]; 

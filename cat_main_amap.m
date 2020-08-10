@@ -177,14 +177,14 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
     end
     % if one of the peaks is NaN than create an error
     if any( isnan( cell2mat(th) ) )
-      error('cat_main:amap:nan',['AMAP estimated NaN tissue peaks that point to an error in the \n' ...
+      error('cat_main_amap:nan',['AMAP estimated NaN tissue peaks that point to an error in the \\\\n' ...
                                  'preprocessing before the AMAP segmentation or inadequate input. ']);
     end
     % fine evaluation of tissue peaks
     if (th{1}(1) < th{2}(1)) && (th{2}(1) < th{3}(1)) % T1 
       % in the T1 contrast we have a clear expectation for each tissue class 
       if th{1}(1)<0 || th{1}(1)>0.6 || th{2}(1)<0.5 || th{2}(1)>0.9 || th{3}(1)<0.95-th{3}(2) || th{3}(1)>1.1
-        error('cat_main:amap:peaks',['AMAP estimated untypical tissue peaks that point to an \n' ...
+        error('cat_main_amap:peaks',['AMAP estimated untypical tissue peaks that point to an \\\\n' ...
                                      'error in the preprocessing before the AMAP segmentation. ']);
       end
     else
@@ -192,13 +192,15 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
       % because the intensity normalization unsed before was probably incorrect 
       con = [ abs(diff([th{1}(1) th{2}(1)])) , abs(diff([th{1}(1) th{3}(1)])) , abs(diff([th{2}(1) th{3}(1)]))];
       if any( con < 0.15 )
-        error('cat_main:amap:lowCon',['AMAP estimated quite low tissue contrast that point to problems \n' ...
-                                      'in the preprocessing before the AMAP segmentation or inadequate input. \n' ...
-                                      '  [con(c1,c2),con(c1,c3),con(c2,c3)] = [%0.2f,%0.2f,%0.2f] '],con);
+        error('cat_main_amap:lowCon',sprintf(['AMAP estimated quite low tissue contrast that point to problems \\\\\\\\n' ...
+                                      'in the preprocessing before the AMAP segmentation or inadequate input. \\\\\\\\n' ...
+                                      '  [con(c1,c2),con(c1,c3),con(c2,c3)] = [%0.2f,%0.2f,%0.2f] '],con)); % need sprintf!
       end
     end
     
-    if job.extopts.ignoreErrors > 1 && job.extopts.inv_weighting
+    if job.extopts.ignoreErrors > 1 && isfield(job.extopts,'inv_weighting') && job.extopts.inv_weighting
+      cat_io_addwarning('cat_main_amap:mixSPMAMAP','Mix SPM and AMAP segmentation. Use SPM in case of strong differences.',1,[0 1]) 
+      
       % RD202006: catching of problems in low quality data - in development 
       probs = prob; 
       ap = [3 1 2]; if numel(Ycls)==7, ap(4)=7; end
@@ -229,7 +231,7 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
     % finally use brainmask before cleanup that was derived from SPM12 segmentations and additionally include
     % areas where GM from Amap > GM from SPM12. This will result in a brainmask where GM areas
     % hopefully are all included and not cut 
-    if job.extopts.gcutstr>0 && ~job.extopts.inv_weighting
+    if job.extopts.gcutstr>0 && ~isfield(job.extopts,'inv_weighting') && ~job.extopts.inv_weighting
       Yb0(indx,indy,indz) = Yb0(indx,indy,indz) | ((prob(:,:,:,1) > 0) & Yb(indx,indy,indz)); % & ~Ycls{1}(indx,indy,indz));
       for i=1:3
         prob(:,:,:,i) = prob(:,:,:,i).*uint8(Yb(indx,indy,indz));

@@ -32,16 +32,18 @@ P = P2; clear sP P2;
 % large problems. >> TEST IT! (RD: 201812)
 %--------------------------------------------------------------------------
 if new
-  Yp0  = single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255*2 + single(P(:,:,:,2))/255*3;
-  Ybe  = cat_vol_morph(cat_vol_morph( cat_vol_morph(Yp0>0.5,'ldc',1), 'de', 5 ), 'lc'); % area close to the skull
+  %%
+  Yp0  = smooth3(single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255*2 + single(P(:,:,:,2))/255*3);
+  Ybe  = cat_vol_morph(cat_vol_morph( cat_vol_morph(Yp0>0.5,'ldc',1), 'de', 6 * level ), 'lc'); % area close to the skull % 5
   % mask WM
-  Ymsk = Ybe | cat_vol_morph( cat_vol_morph( Yp0>2.5 , 'do' , 0.5 + level/2 ) , 'l' , [10 0.1]); 
-  P(:,:,:,2) = cat_vol_ctype(single(P(:,:,:,2)) .* cat_vol_smooth3X(cat_vol_morph(Ymsk,'dd',1.5),0.5)); 
+  Ymsk = Ybe | ( cat_vol_morph( cat_vol_morph( Yp0>2.5  , 'do' , 1.0 + 2*level ) , 'l' , [10 0.1])) | ...
+               ( cat_vol_morph( cat_vol_morph( Yp0>2.8  , 'do' ,       2*level ) , 'l' , [10 0.1]));  
+  P(:,:,:,2) = min(P(:,:,:,2), cat_vol_ctype(single(P(:,:,:,2)) .* cat_vol_smooth3X(cat_vol_morph(Ymsk,'dd',1.5),0.5))); 
   Yp0  = single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255*2 + single(P(:,:,:,2))/255*3; % update
-  % mask GM (iter
-  Ywd  = cat_vol_morph( Yp0>2.5 , 'dd' , 5 - level); % area close to the WM
+  % mask GM (iter)
+  Ywd  = cat_vol_morph( Yp0>2.9 , 'dd' , 5 - level); % area close to the WM
   for i=1:2
-    Ymsk = cat_vol_morph(Ybe | (Ywd & cat_vol_morph( Yp0>1.5 , 'do' , level/2+1.5 )),'ldc',1); 
+    Ymsk = cat_vol_morph(Ybe | (Ywd & cat_vol_morph( Yp0>1.5 , 'do' , level/2 + 1.5 )),'ldc',1); 
     P(:,:,:,1) = cat_vol_ctype(single(P(:,:,:,1)) .* cat_vol_smooth3X(cat_vol_morph(Ymsk,'dd',1.5),0.5)); 
   end
   Yp0  = single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255*2 + single(P(:,:,:,2))/255*3; % update

@@ -59,7 +59,7 @@ function varargout = cat_io_addwarning(id,mess,level,nline,data,usebox)
 
   if nargin > 2 && ischar( id )
     % variables
-    if ~exist('nline','var'),   nline = [0 0]; end
+    if ~exist('nline','var'),   nline = [0 1]; end
     if ~exist('level','var'),   level = 1;  end
     if ~exist('data','var'),    data  = {}; end
     if ~exist('usebox','var'),  usebox = 1; end
@@ -76,7 +76,7 @@ function varargout = cat_io_addwarning(id,mess,level,nline,data,usebox)
     elseif numel(nline) == 2 
       nline2 = nline; 
     else
-      nline2 = [0 0]; 
+      nline2 = [0 1]; 
     end
     
     if ~ischar(id)
@@ -95,19 +95,20 @@ function varargout = cat_io_addwarning(id,mess,level,nline,data,usebox)
     % easys to replace each linebreak with the right number of spaces.
     usebox = usebox + 1; 
     messi  = [0,strfind(mess,'\\n'),numel(mess)];  
+    bsize  = max([ 68 + 4 , diff(messi) + 10 + 4]); % normal + oversize
     box(1) = struct('s','','i','','e','');
     box(2) = struct(...
-      's',['  '   repmat('-',1,max( [ 71 , diff(messi)+10 ] )) '\n'], ... char(9559)
-      'i',['  '   ' '], ...
-      'e',['\n  ' repmat('-',1,max( [ 71 , diff(messi)+10 ] )) '\n']); % char(9595)
+      's',['    '   repmat('-',1,bsize) '\n'], ... char(9559)
+      'i',['    '   ' '], ...
+      'e',['\n    ' repmat('-',1,bsize) '']); % char(9595)
     box(3) = struct(...
-      's',['  '   repmat('=',1,max( [ 71 , diff(messi)+10 ] )) '\n'], ... char(9559)
-      'i',['  '   ' '], ...
-      'e',['\n  ' repmat('=',1,max( [ 71 , diff(messi)+10 ] )) '\n']); % char(9595)
+      's',['    '   repmat('=',1,bsize) '\n'], ... char(9559)
+      'i',['    '   ' '], ...
+      'e',['\n    ' repmat('=',1,bsize) '']); % char(9595)
     box(4) = struct(... % the chars are not vissible in the log file 
-      's',['  '   char(9556) repmat(char(9552),1,max( [ 71 , diff(messi) + 13 ] )) '\n'], ... char(9559)
-      'i',['  '   char(9553) ' '], ...
-      'e',['\n  ' char(9562) repmat(char(9552),1,max( [ 71 , diff(messi) + 13 ] )) '']); % char(9595)
+      's',['    '   char(9556) repmat(char(9552),1,bsize) '\n'], ... char(9559)
+      'i',['    '   char(9553) ' '], ...
+      'e',['\n    ' char(9562) repmat(char(9552),1,bsize) '']); % char(9595)
       
     % print output
     if nline2(1)>0, fprintf('\n'); end
@@ -115,7 +116,7 @@ function varargout = cat_io_addwarning(id,mess,level,nline,data,usebox)
     if level==0
       cat_io_cmd(sprintf([box(usebox).s box(usebox).i 'NOTE %02d:     ' id '\n' box(usebox).i '             ' warnstr box(usebox).e ],numel(cat_io_addwarning(0))),'note');
     elseif level==1
-      cat_io_cmd(sprintf([box(usebox).s box(usebox).i 'WARNING %02d:  ' id '\n' box(usebox).i '             ' warnstr box(usebox).e ],numel(cat_io_addwarning(1))),'caution');
+      cat_io_cmd(sprintf([box(usebox).s box(usebox).i 'WARNING %02d:  ' id '\n' box(usebox).i '             ' warnstr box(usebox).e ],numel(cat_io_addwarning(1))),'warning');
     else
       cat_io_cmd(sprintf([box(usebox+1).s box(usebox+1).i 'ALERT %02d:    ' id '\n' box(usebox+1).i '             ' warnstr box(usebox+1).e ],numel(cat_io_addwarning(2))),'error');
     end
