@@ -24,7 +24,8 @@ function cat_run_job(job,tpm,subj)
 %#ok<*WNOFF,*WNON>
 
     job.test_warnings = 0; % just for tests
-    job.extopts.histth = [0.96 0.9999]; 
+    job.extopts.histth = [0.96 0.9999]; % histrogram thresholds
+    job.extopts.input  = 0; % 0 - auto (default), 1-with skull (normal), 2-skull-stripped, 3-high BG
 
     % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
     dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
@@ -254,10 +255,14 @@ function cat_run_job(job,tpm,subj)
           %   - only one object (the masked regions)
           %   - only one background (not in every case?)
           %   - less variance of tissue intensity (only 3 brain classes)
+          %   - no object close to the boudary
           %  RD202008: Added detection of high intensity background because
           %            they require a very low histogram threshold to avoid
           %            masking of CSF intensities that are then the lowest
           %            values. 
+          %  RD202008: Added variable for manual overwrite that maybe allow
+          %            to skip the processing (but the number are maybe
+          %            intersting in the XML report.
           %  ------------------------------------------------------------
           VFn   = spm_vol(nfname); 
           YF    = spm_read_vols(VFn);
@@ -283,15 +288,18 @@ function cat_run_job(job,tpm,subj)
           % image pricture frame to test for high intensity background in case of defaced data
           hd    = max(3,round(0.03 * size(YF))); 
           YCO   = true(size(YF)); YCO(hd(1):end-hd(1)+1,hd(2):end-hd(2)+1,hd(3):end-hd(3)+1) = false; 
+          hd    = max(6,round(0.06 * size(YF))); 
+          YCO2  = true(size(YF)); YCO2(hd(1):end-hd(1)+1,hd(2):end-hd(2)+1,hd(3):end-hd(3)+1) = false; 
           %% skull-stripping 
           [YL,numo] = spm_bwlabel(double(YF~=0),26);  clear YL;            %#ok<ASGLU> % number of objects
           [YL,numi] = spm_bwlabel(double(YBG==0),26); clear YL;            %#ok<ASGLU> % number of background regions 
-          ppe.affreg.skullstrippedpara = [sum(YBG(:))/numel(YF) numo numi F0vol F0std]; 
+          ppe.affreg.skullstrippedpara = [sum(YBG(:))/numel(YF) numo numi F0vol F0std sum(YCO2(:) .* YOB(:))/sum(YOB(:))]; 
           ppe.affreg.skullstripped = ...
             ppe.affreg.skullstrippedpara(1)>0.5 && ...                     % many zeros
             ppe.affreg.skullstrippedpara(2)<15  && ...                     % only a few objects
             ppe.affreg.skullstrippedpara(3)<10  && ...                     % only a few background regions 
-            F0vol<2500 && F0std<0.5;                                       % many zeros and not too big
+            F0vol<2500 && F0std<0.5 && ...                                 % many zeros and not too big
+            ppe.affreg.skullstrippedpara(3)<0.02;                          % there should be no object (neck) very close to the boundary
           ppe.affreg.skullstripped = ppe.affreg.skullstripped || ...
             sum([ppe.affreg.skullstrippedpara(1)>0.8 F0vol<1500 F0std<0.4])>1; % or 2 extreme values
           % not automatic detection in animals
@@ -305,14 +313,21 @@ function cat_run_job(job,tpm,subj)
             ppe.affreg.highBGpara(1) > 1/3 || ...
             ppe.affreg.highBGpara(2) > 1/3; 
           
+          if ~debug, clear YFC YBG YOB YCO YCO2 F0vol F0std numo numi hd; end 
+          
+          % manual overwrite 
+          switch job.extopts.input
+            case 1, ppe.affreg.skullstripped = 0; ppe.affreg.highBGpara = 0;
+            case 2, ppe.affreg.skullstripped = 1; ppe.affreg.highBGpara = 0;
+            case 3, ppe.affreg.skullstripped = 0; ppe.affreg.highBGpara = 1; 
+          end
+          
           if ppe.affreg.highBG
             msg = 'Detected high intensity background use lower histrogram thresholds.'; 
             cat_io_addwarning('cat_run_job:highBG',msg,1,[0 1],ppe.affreg.highBGpara);
             job.extopts.histth(1) = 0.999999;
           end
           
-          %%
-          if ~debug, clear YFC F0vol F0std numo numi; end 
           
           
           
@@ -773,7 +788,7 @@ function cat_run_job(job,tpm,subj)
                   % we start here with the maff8 that is more robust to varying contrasts
                   [Affine2n,ppe.spm_maff8.ll(3)] = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,eye(4),'none',80); 
                   if ppe.spm_maff8.ll(3) > ppe.spm_maff8.ll(2)
-                    cat_io_addwarning('cat_run_job:spm_maff8','Use affreg=none due to better results.',1,[1 1],ppe.spm_maff8);
+                    cat_io_addwarning('cat_run_job:spm_maff8','Use affreg=none due to better results.',1,[1 2],ppe.spm_maff8);
                     job.opts.affreg = 'none'; % in this case we have to update the affreg parameter
                     Affine2 = Affine2n;
                   else

@@ -474,8 +474,8 @@ if expert
   ignoreErrors.values = {0 1 2 3 4};
   ignoreErrors.help   = [ignoreErrors.help {'The options 3 and 4 were designed to test the backup funnction with/without AMAP.'}];
 else
-  ignoreErrors.labels = {'Yes (next subject)','Yes (use backup functions)'};
-  ignoreErrors.values = {1 2};
+  ignoreErrors.labels = {'No (0)','Yes (next subject)','Yes (use backup functions - IN DEVELOPMENT)'};
+  ignoreErrors.values = {0 1 2};
 end
 ignoreErrors.def    = @(val)cat_get_defaults('extopts.ignoreErrors', val{:});
 
@@ -945,6 +945,32 @@ spm_kamap.help   = { ...
 spm_kamap.def    = @(val)cat_get_defaults('extopts.spm_kamap', val{:});  
 spm_kamap.labels = {'SPM Unified Segmentation','k-means AMAP'};
 spm_kamap.values = {0 2};
+
+if 0 %expert
+  spm_kamap        = cfg_menu;
+  spm_kamap.tag    = 'pipeline';
+  spm_kamap.name   = 'Segmentation Pipeline';
+  spm_kamap.help   = { ...
+    'In rare cases the Unified Segmentation can fail in highly abnormal brains, where e.g. the cerebrospinal fluid of superlarge ventricles (hydrocephalus) were classified as white matter. However, if the affine registration is correct, the AMAP segmentation with an prior-independent k-means initialization can be used to replace the SPM brain tissue classification. ' 
+    'Moreover, if the default Dartel and Shooting registrations will fail then the "Optimized Shooting - superlarge ventricles" option for "Spatial registration" is required! '
+    ''
+    ' SPM Unified Segmentation - use SPM Unified Segmentation segmentation (default) ' 
+    ' k-means AMAP - k-means AMAP approach ' 
+    ''
+  };
+  spm_kamap.def    = @(val)cat_get_defaults('extopts.spm_kamap', val{:});  
+  spm_kamap.labels = {
+    'auto',              ... automatic selection 
+    'SPM + AMAP',        ... classical approach
+    'SPM + SPM&AMAP',    ... init: SPM + kmeans&AMAP    final: SPM/AMAP 
+    'k-means + AMAP',     ... init: SPM + kmeans&AMAP    final: AMAP 
+    };
+  spm_kamap.values = {0 2};
+  if expert
+    spm_kamap.labels = [{'auto'} spm_kamap.labels {''}];
+    spm_kamap.values = [{-1}     spm_kamap.values {}];
+  end
+end
 %spm_kamap.hidden = expert<1; % RD202005: activated also for default and expert users to support error handling! 
 
 %------------------------------------------------------------------------

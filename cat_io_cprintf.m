@@ -183,7 +183,7 @@ function count = cat_io_cprintf(style,format,varargin)
         switch lower(style)
           case {'t','txt','text','k'},    style=[0.0 0.0 0.0];
           case {'e','err','error'},       style=[0.8 0.0 0.0];
-          case {'w','warn','warning'},    style=[1.0 0.5 0.0];
+          case {'w','warn','warning'},    style=[1.0 0.3 0.0];
           case {'com','comment'},         style=[0.0 0.0 0.8];
           case {'note'},                  style=[0.0 0.0 1.0];
           case {'caution'},               style=[0.5 0.0 1.0];

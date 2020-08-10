@@ -210,10 +210,14 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     end
     
     % remove outlier to make it orthviews easier
-    if res.ppe.affreg.highBG 
+    if isfield(res.ppe,'affreg') && res.ppe.affreg.highBG 
       Yo = cat_stat_histth(Yo,[0.999999 0.9999],struct('scale',[0 255])); 
     else
-      Yo = cat_stat_histth(Yo,job.extopts.histth,struct('scale',[0 255])); 
+      if isfield(job.extopts,'histth')
+        Yo = cat_stat_histth(Yo,job.extopts.histth,struct('scale',[0 255])); 
+      else
+        Yo = cat_stat_histth(Yo,[0.999 0.999],struct('scale',[0 255])); 
+      end
     end
     Yo = cat_vol_ctype(Yo);
     VT0x.dt(1) = spm_type('uint8');
@@ -350,7 +354,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         elseif 0 % green head 
           BCGWH = [0 0.1 0.05; 0.05 0.2 0.1; 0.1 0.3 0.2; 0.15 0.4 0.3; summer(11)]; fx = 3; 
         else % blue head 
-          BCGWH = [0 0 0; 0.01 0.02 0.04; 0.02 0.04 0.08; 0.04 0.08 0.16; 0.08 0.16 0.32; cat_io_colormaps('blue',10)];fx = 3;
+          BCGWH = [0 0 0;  0.03 0.12 0.25; 0.05 0.18 0.40; cat_io_colormaps('blue',12)];fx = 3;
         end
         V2.dat(:,:,:) = min(0.49,Ym/fx).*(Yp0<0.5) + (Yp0/3+0.5).*(Yp0>0.5); 
         
