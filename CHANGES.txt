@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r | dahnke | 2020-08-10 18:15:10
+r | dahnke | 2020-08-11 13:57:55
+
+Changed paths:
+M       CHANGES.txt
+A       cat_main1639.m
+A       cat_main_LAS21639.m
+A       cat_main_gintnorm1639.m
+A       cat_main_updateSPM1639.m
+A       cat_run_job1639.m
+A       cat_vol_partvol1639.m
+
+(1)  New:      Added preprocessing versions of R1639.   
+------------------------------------------------------------------------
+r1686 | dahnke | 2020-08-10 18:17:38 +0200 (Mo, 10. Aug 2020) | 33 Zeilen
 
 Changed paths:
 M       CHANGES.txt
@@ -32,6 +45,7 @@ M       cat_vol_resize.m
 (5)  Changed:   Add more red to the warning color to improve visibility.  
 (6)  Changed:   Small corrections in cat_io_addwarning command line output.    
 (7)  Fixed:     Correction in cat_main_clean_gwc for improved cleanup.          
+
 
 ------------------------------------------------------------------------
 r1685 | dahnke | 2020-08-07 17:05:22 +0200 (Fr, 07. Aug 2020) | 11 Zeilen
