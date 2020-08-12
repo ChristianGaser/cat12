@@ -153,6 +153,7 @@ function count = cat_io_cprintf(style,format,varargin)
   end
 
   if cprintferror
+    warning off
     count1 = fprintf(format,varargin{:});
     if nargout
         count = count1;

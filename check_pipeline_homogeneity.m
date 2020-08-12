@@ -39,3 +39,10 @@ for i = 1:size(dirs,1)
 end
 
 cat_stat_check_cov(job)
+if long
+  name = 'check_cov_long';
+else
+  name = 'check_cov';
+end
+
+saveas(1,[name '.png']);
