@@ -8,7 +8,7 @@
 version='cat12.sh $Id: cat12.sh 1680 2020-08-05 11:04:49Z gaser $'
 
 cat12_dir=`dirname $0`
-defaults_file=""
+defaults=""
 matlab=matlab
 no_mwp=0
 rp=0
@@ -65,9 +65,9 @@ parse_args ()
             matlab=$optarg
             shift
             ;;
-        --defaults_file* | -d*)
+        --defaults* | -d*)
             exit_if_empty "$optname" "$optarg"
-            defaults_file=$optarg
+            defaults=$optarg
             shift
             ;;
         --bg* | -b*)
@@ -173,22 +173,22 @@ modifiy_defaults ()
 {
 
   # argument empty?
-  if [ ! "${defaults_file}" == "" ]; then
+  if [ ! "${defaults}" == "" ]; then
       # check wether absolute or relative names were given
-      if [ ! -f ${defaults_file} -a -f ${pwd}/${defaults_file} ]; then
-          defaults_file=${pwd}/${defaults_file}
+      if [ ! -f ${defaults} -a -f ${pwd}/${defaults} ]; then
+          defaults=${pwd}/${defaults}
       fi
 
       # check whether defaults file exist
-      if [ ! -f ${defaults_file} ];  then
-          echo Default file $defaults_file not found.
+      if [ ! -f ${defaults} ];  then
+          echo Default file $defaults not found.
           exit
       fi
   else
-    defaults_file=${cat12_dir}/cat_defaults.m
+    defaults=${cat12_dir}/cat_defaults.m
   fi
 
-  cp ${defaults_file} ${defaults_tmp}
+  cp ${defaults} ${defaults_tmp}
   
   if [ $no_surf -eq 1 ]; then
     echo "cat.output.surface = 0;" >> ${defaults_tmp}
@@ -243,13 +243,13 @@ cat <<__EOM__
 USAGE:
   cat12.sh filename|filepattern [-m matlab_command] [-d default_file] [-b number_of_processes] [-a add_to_defaults] [-ns] [-nm] [-rp] [-tpm TPM-file]
   
-   -m      matlab command (matlab version)
-   -b      run cat12.sh in the background
-   -d      optional default file
-   -a      add option to default file
-   -ns     do not estimate surface
-   -nm     do not estimate modulated and warped segmentations and ROI measures
-   -rp     estimate affine registered segmentations
+   --matlab   | -m      matlab command (matlab version)
+   --bg       | -b      run cat12.sh in the background with given number of processes
+   --defaults | -d      optional default file
+   --add      | -a      add option to default file
+   --no-surf  | -ns     skip surface and thickness estimatation
+   --no-mwp   | -nm     skip estimating modulated and warped segmentations and ROI measures
+   --rp       | -r      additionally estimate affine registered segmentations
 
   Only one filename or pattern is allowed. This can be either a single file or a pattern
   with wildcards to process multiple files. 
@@ -270,7 +270,7 @@ EXAMPLE:
    As matlab-command /usr/local/bin/matlab will be used.
    
    cat12.sh spm/spm12/canonical/single_subj_T1.nii
-   This command will process only the single file single_subj_T1.nii with the defaults bin cat_defaults.m
+   This command will process only the single file single_subj_T1.nii with the defaults in cat_defaults.m
 
    cat12.sh spm/spm12/canonical/single_subj_T1.nii -a "cat.extopts.WMHC = 3;"
    This command will process only the single file single_subj_T1.nii with the defaults bin cat_defaults.m and

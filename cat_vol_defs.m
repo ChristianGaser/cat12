@@ -31,8 +31,12 @@ for i=1:numel(PU),
   [pth,nam,ext] = spm_fileparts(PU{i});
   PU{i} = fullfile(pth,[nam ext]);
 
-  [Def,mat] = get_def(PU{i});
- 
+  if isfield(job,'vox') & isfield(job,'bb')
+    [Def,mat] = get_comp(PU{i});
+  else
+    [Def,mat] = get_def(PU{i});
+  end
+   
   for m=1:numel(PI)
     
     if many_images % many images
@@ -50,7 +54,7 @@ end
 return
 
 %_______________________________________________________________________
-function [Def,mat] = get_def(job)
+function [Def,mat,vx,bb] = get_def(job)
 % Load a deformation field saved as an image
 Nii = nifti(job);
 Def = single(Nii.dat(:,:,:,1,:));
@@ -58,6 +62,36 @@ d   = size(Def);
 if d(4)~=1 || d(5)~=3, error('Deformation field is wrong!'); end
 Def = reshape(Def,[d(1:3) d(5)]);
 mat = Nii.mat;
+
+vx  = sqrt(sum(Nii.mat(1:3,1:3).^2));
+if det(Nii.mat(1:3,1:3))<0, vx(1) = -vx(1); end
+
+o   = Nii.mat\[0 0 0 1]';
+o   = o(1:3)';
+dm  = size(Nii.dat);
+bb  = [-vx.*(o-1) ; vx.*(dm(1:3)-o)];
+
+%_______________________________________________________________________
+function [Def,mat] = get_comp(job)
+% Return the composition of two deformation fields.
+
+[Def,mat,vx,bb] = get_def(job{1});
+Def1         = Def;
+mat1         = mat;
+job.vox(~isfinite(job.vox)) = vx(~isfinite(job.vox));
+job.bb(~isfinite(job.bb))   = bb(~isfinite(job.bb));
+
+[mat, dim]   = spm_get_matdim('', job.vox, job.bb);
+Def          = identity(dim, mat);
+M            = inv(mat1);
+tmp          = zeros(size(Def),'single');
+tmp(:,:,:,1) = M(1,1)*Def(:,:,:,1)+M(1,2)*Def(:,:,:,2)+M(1,3)*Def(:,:,:,3)+M(1,4);
+tmp(:,:,:,2) = M(2,1)*Def(:,:,:,1)+M(2,2)*Def(:,:,:,2)+M(2,3)*Def(:,:,:,3)+M(2,4);
+tmp(:,:,:,3) = M(3,1)*Def(:,:,:,1)+M(3,2)*Def(:,:,:,2)+M(3,3)*Def(:,:,:,3)+M(3,4);
+Def(:,:,:,1) = single(spm_diffeo('bsplins',Def1(:,:,:,1),tmp,[1,1,1,0,0,0]));
+Def(:,:,:,2) = single(spm_diffeo('bsplins',Def1(:,:,:,2),tmp,[1,1,1,0,0,0]));
+Def(:,:,:,3) = single(spm_diffeo('bsplins',Def1(:,:,:,3),tmp,[1,1,1,0,0,0]));
+clear tmp
 
 %_______________________________________________________________________
 function out = apply_def(Def,mat,filenames,interp0,modulate)

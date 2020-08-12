@@ -24,7 +24,7 @@ function cat_run_job(job,tpm,subj)
 %#ok<*WNOFF,*WNON>
 
     job.test_warnings = 0; % just for tests
-    job.extopts.histth = [0.96 0.9999]; % histrogram thresholds
+    job.extopts.histth = [0.96 0.9999]; % histogram thresholds
     job.extopts.input  = 0; % 0 - auto (default), 1-with skull (normal), 2-skull-stripped, 3-high BG
 
     % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
