@@ -1198,10 +1198,26 @@ function [defs,defs2] = cat_vol_defs_GUI()
     ''
   };
 
+  bb             = cfg_entry;
+  bb.tag         = 'bb';
+  bb.name        = 'Bounding box';
+  bb.help        = {'The bounding box (in mm) of the volume which is to be written (relative to the anterior commissure).'};
+  bb.strtype     = 'r';
+  bb.num         = [2 3];
+  bb.def         = [NaN NaN NaN; NaN NaN NaN];
+  
+  vox             = cfg_entry;
+  vox.tag         = 'vox';
+  vox.name        = 'Voxel sizes';
+  vox.help        = {'The voxel sizes (x, y & z, in mm) of the written normalised images.'};
+  vox.strtype     = 'r';
+  vox.num         = [1 3];
+  vox.def         = [NaN NaN NaN];
+
   defs            = cfg_exbranch;
   defs.tag        = 'defs';
   defs.name       = 'Apply deformations (many images)';
-  defs.val        = {field1,images1,interp,modulate};
+  defs.val        = {field1,images1,bb,vox,interp,modulate};
   defs.prog       = @cat_vol_defs;
   defs.vfiles     = @vfiles_defs;
   defs.help       = {'This is a utility for applying a deformation field of one subject to many images.'};
@@ -1209,7 +1225,7 @@ function [defs,defs2] = cat_vol_defs_GUI()
   defs2           = cfg_exbranch;
   defs2.tag       = 'defs2';
   defs2.name      = 'Apply deformations (many subjects)';
-  defs2.val       = {field,images,interp,modulate};
+  defs2.val       = {field,images,bb,vox,interp,modulate};
   defs2.prog      = @cat_vol_defs;
   defs2.vfiles    = @vfiles_defs2;
   defs2.help      = {'This is a utility for applying deformation fields of many subjects to images.'};
