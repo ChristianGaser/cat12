@@ -9,7 +9,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
 %   Department of Neurology
 %   University Jena
 % ______________________________________________________________________
-% $Id: cat_main_updateSPM.m 1620 2020-05-14 13:59:40Z dahnke $
+% $Id$
 
 
   %dbs = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end

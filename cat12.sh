@@ -1,11 +1,11 @@
 #! /bin/bash
 
-# $Id: cat12.sh 1680 2020-08-05 11:04:49Z gaser $
+# $Id$
 
 ########################################################
 # global parameters
 ########################################################
-version='cat12.sh $Id: cat12.sh 1680 2020-08-05 11:04:49Z gaser $'
+version='cat12.sh $Id$'
 
 cat12_dir=`dirname $0`
 defaults=""
@@ -197,9 +197,11 @@ modifiy_defaults ()
   fi
 
   if [ $no_mwp -eq 1 ]; then
-    echo "cat.output.GM.mod = 0;" >> ${defaults_tmp}
-    echo "cat.output.WM.mod = 0;" >> ${defaults_tmp}
-    echo "cat.output.ROI    = 0;" >> ${defaults_tmp}
+    echo "cat.output.GM.mod      = 0;" >> ${defaults_tmp}
+    echo "cat.output.WM.mod      = 0;" >> ${defaults_tmp}
+    echo "cat.output.ROI         = 0;" >> ${defaults_tmp}
+    echo "cat.output.bias.warped = 0;" >> ${defaults_tmp}
+
   else
     echo "cat.output.GM.mod = 1;" >> ${defaults_tmp}
     echo "cat.output.WM.mod = 1;" >> ${defaults_tmp}

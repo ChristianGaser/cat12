@@ -38,7 +38,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm1
 %   Department of Neurology
 %   University Jena
 % ______________________________________________________________________
-% $Id: cat_main_gintnorm.m 1575 2020-03-03 11:49:34Z dahnke $
+% $Id$
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
 
  

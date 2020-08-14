@@ -283,7 +283,11 @@ for it=1:nits
 
             tmp = zeros([dm n1+1],'single');
             for j=1:n1+1
-                tmp(:,:,:,j) = spm_diffeo('pullc',f{j},y).*dt;
+                try
+                  tmp(:,:,:,j) = spm_diffeo('pullc',f{j},y).*dt;
+                catch
+                  tmp(:,:,:,j) = spm_diffeo('samp',f{j},y).*dt;
+                end
             end
             %clear f y dt
 
