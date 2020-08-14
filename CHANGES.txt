@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1689 | gaser | 2020-08-14 15:29:48
+r1690 | gaser | 2020-08-14 15:35:36
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_stat_check_cov.m
+M       html/cat.html
+
+(1) Changed: Again added check for new options for cat_stat_check_cov.m to show 
+             filenames and prefer boxplot.
+(2) Changed: Updated release name.
+------------------------------------------------------------------------
+r1689 | gaser | 2020-08-14 15:30:29 +0200 (Fr, 14 Aug 2020) | 38 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -38,6 +51,7 @@ M       templates_volumes/cobra.nii
 (7) Changed: Added check for new options for cat_stat_check_cov.m tp show 
              filenames and prefer boxplot.
             
+
 ------------------------------------------------------------------------
 r1688 | gaser | 2020-08-12 14:04:07 +0200 (Mi, 12 Aug 2020) | 20 lines
 
