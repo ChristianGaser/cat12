@@ -132,6 +132,8 @@ checklist:
 	-@echo 7. Check Windows + Linux
 	-@echo    VirtualBox.app
 	-@echo    CAT12 GUI Segment
+	-@echo    
+	-@echo 8. Check old SPM12 version on UltraMax
 
 precompile:
 	-@echo    

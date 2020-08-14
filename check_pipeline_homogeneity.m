@@ -5,44 +5,67 @@ function check_pipeline_homogeneity
 % _________________________________________________________________________
 % $Id$
 
-long = spm_input('Longitudinal data?','+1','y/n',[1,0],2);
+%long = spm_input('Longitudinal data?','+1','y/n',[1,0],2);
 
-[files,dirs] = spm_select('FPList','.','^check_r');
+min_release = 1575;
 
-job = struct('c',[],'data_xml',[],'gap',3, 'verb',true);
-
-j = 0;
-for i = 1:size(dirs,1)
-  folder = deblank(dirs(i,:));
-  if ~isempty(strfind(folder,'check_r'))
-    if long
-      files = spm_select('FPListRec',[folder '/long'],'^mw.*p1.*\.nii$');
-      mn_files = 2;
-    else
-      files = spm_select('FPListRec',folder,'^mwp1.*\.nii$');
-      mn_files = 5;
-    end
-    if size(files,1) >= mn_files
-      j = j + 1;
-      
-      % remove phantom data because there are only sparse entries for that data
-      for k = 1:size(files)
-        if ~isempty(strfind(files(k,:),'dilate'))
-          files(k,:) = [];
-          break
-        end
-      end
-      
-      job.data_vol{j} = files;
-    end
+% list nifti files and exclude longitudinal ADNI-data
+data = spm_select('List','.','.nii');
+ind = [];
+for i=1:size(data,1)
+  if ~isempty(strfind(data(i,:),'ADNI'))
+    ind = [ind i];
   end
 end
+data(ind,:) = [];
+data = char('ADNI-longitudinal',data);
+sel = spm_input('Data','1','m',data);
 
-cat_stat_check_cov(job)
-if long
-  name = 'check_cov_long';
-else
-  name = 'check_cov';
+job = struct('c',[],'data_xml',[],'gap',3, 'verb',true,'show_name',1,'show_violin',0);
+
+% longitudinal data
+if sel == 1
+  dirs = spm_select('List','.','dir','^check_r');
+  
+  % exclude older releases
+  ind = [];
+  for i = 1:size(dirs,1)
+    ind_r = strfind(dirs(i,:),'check_r');
+    release = str2num(dirs(i,ind_r+7:ind_r+10));
+    if release < min_release
+      ind = [ind i];
+    end
+  end
+  dirs(ind,:) = [];
+  
+  j = 0;
+  for i = 1:size(dirs,1)
+    folder = deblank(dirs(i,:));
+    if ~isempty(strfind(folder,'check_r'))
+      files = spm_select('FPListRec',[folder '/long'],'^mw.*p1.*\.nii$');
+      if size(files,1) >= 2
+        j = j + 1;        
+        job.data_vol{j} = files;
+      end
+    end
+  end
+else % selected cross-sectional data
+  files = spm_select('FPListRec','.',['^mwp1' deblank(data(sel,:))]);
+  ind = [];
+  for i=1:size(files,1)
+    ind_r = strfind(files(i,:),'check_r');
+    release = str2num(files(i,ind_r+7:ind_r+10));
+    if (release < min_release) | ~isempty(strfind(files(i,:),'not_used'))
+      ind = [ind i];
+    end
+  end
+  files(ind,:) = [];
+  job.data_vol{1} = files;
 end
 
-saveas(1,[name '.png']);
+cat_stat_check_cov(job);
+[pth filename] = spm_fileparts(deblank(data(sel,:)));
+ 
+name = ['check_cov' filename '.png'];
+
+saveas(1, name);

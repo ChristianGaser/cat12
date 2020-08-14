@@ -32,9 +32,9 @@ for i=1:numel(PU),
   PU{i} = fullfile(pth,[nam ext]);
 
   if isfield(job,'vox') & isfield(job,'bb')
-    [Def,mat] = get_comp(PU{i});
+    [Def,mat] = get_comp(PU{i},job);
   else
-    [Def,mat] = get_def(PU{i});
+    [Def,mat] = get_comp(PU{i});
   end
    
   for m=1:numel(PI)
@@ -54,9 +54,9 @@ end
 return
 
 %_______________________________________________________________________
-function [Def,mat,vx,bb] = get_def(job)
+function [Def,mat,vx,bb] = get_def(field)
 % Load a deformation field saved as an image
-Nii = nifti(job);
+Nii = nifti(field);
 Def = single(Nii.dat(:,:,:,1,:));
 d   = size(Def);
 if d(4)~=1 || d(5)~=3, error('Deformation field is wrong!'); end
@@ -72,26 +72,33 @@ dm  = size(Nii.dat);
 bb  = [-vx.*(o-1) ; vx.*(dm(1:3)-o)];
 
 %_______________________________________________________________________
-function [Def,mat] = get_comp(job)
+function [Def,mat] = get_comp(field,job)
 % Return the composition of two deformation fields.
 
-[Def,mat,vx,bb] = get_def(job{1});
-Def1         = Def;
-mat1         = mat;
-job.vox(~isfinite(job.vox)) = vx(~isfinite(job.vox));
-job.bb(~isfinite(job.bb))   = bb(~isfinite(job.bb));
+[Def,mat,vx,bb] = get_def(field);
 
-[mat, dim]   = spm_get_matdim('', job.vox, job.bb);
-Def          = identity(dim, mat);
-M            = inv(mat1);
-tmp          = zeros(size(Def),'single');
-tmp(:,:,:,1) = M(1,1)*Def(:,:,:,1)+M(1,2)*Def(:,:,:,2)+M(1,3)*Def(:,:,:,3)+M(1,4);
-tmp(:,:,:,2) = M(2,1)*Def(:,:,:,1)+M(2,2)*Def(:,:,:,2)+M(2,3)*Def(:,:,:,3)+M(2,4);
-tmp(:,:,:,3) = M(3,1)*Def(:,:,:,1)+M(3,2)*Def(:,:,:,2)+M(3,3)*Def(:,:,:,3)+M(3,4);
-Def(:,:,:,1) = single(spm_diffeo('bsplins',Def1(:,:,:,1),tmp,[1,1,1,0,0,0]));
-Def(:,:,:,2) = single(spm_diffeo('bsplins',Def1(:,:,:,2),tmp,[1,1,1,0,0,0]));
-Def(:,:,:,3) = single(spm_diffeo('bsplins',Def1(:,:,:,3),tmp,[1,1,1,0,0,0]));
-clear tmp
+% only estimate composite if job field is given
+if nargin > 1
+  % only move on if any vox or bb field is not NaN
+  if any(isfinite(job.vox)) | any(isfinite(job.bb))
+    Def1         = Def;
+    mat1         = mat;
+    job.vox(~isfinite(job.vox)) = vx(~isfinite(job.vox));
+    job.bb(~isfinite(job.bb))   = bb(~isfinite(job.bb));
+    
+    [mat, dim]   = spm_get_matdim('', job.vox, job.bb);
+    Def          = identity(dim, mat);
+    M            = inv(mat1);
+    tmp          = zeros(size(Def),'single');
+    tmp(:,:,:,1) = M(1,1)*Def(:,:,:,1)+M(1,2)*Def(:,:,:,2)+M(1,3)*Def(:,:,:,3)+M(1,4);
+    tmp(:,:,:,2) = M(2,1)*Def(:,:,:,1)+M(2,2)*Def(:,:,:,2)+M(2,3)*Def(:,:,:,3)+M(2,4);
+    tmp(:,:,:,3) = M(3,1)*Def(:,:,:,1)+M(3,2)*Def(:,:,:,2)+M(3,3)*Def(:,:,:,3)+M(3,4);
+    Def(:,:,:,1) = single(spm_diffeo('bsplins',Def1(:,:,:,1),tmp,[1,1,1,0,0,0]));
+    Def(:,:,:,2) = single(spm_diffeo('bsplins',Def1(:,:,:,2),tmp,[1,1,1,0,0,0]));
+    Def(:,:,:,3) = single(spm_diffeo('bsplins',Def1(:,:,:,3),tmp,[1,1,1,0,0,0]));
+    clear tmp
+  end
+end
 
 %_______________________________________________________________________
 function out = apply_def(Def,mat,filenames,interp0,modulate)

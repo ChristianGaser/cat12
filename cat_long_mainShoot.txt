@@ -225,6 +225,9 @@ if longmodel
     end
     matlabbatch{mbi}.spm.tools.cat.tools.defs2.images{1}(1) = cfg_dep(sprintf('CAT12: Segmentation (current release): p%d Image',ci), substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{ci}, '.','p', '()',{':'}));
     matlabbatch{mbi}.spm.tools.cat.tools.defs2.interp       = 1;
+    matlabbatch{mbi}.spm.tools.cat.tools.defs2.bb = [NaN NaN NaN
+                                                     NaN NaN NaN];
+    matlabbatch{mbi}.spm.tools.cat.tools.defs2.vox = [NaN NaN NaN];
     if modulate, matlabbatch{mbi}.spm.tools.cat.tools.defs2.modulate  = modulate; end  % modulation option for applying deformations
   end
 end

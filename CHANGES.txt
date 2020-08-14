@@ -1,5 +1,45 @@
 ------------------------------------------------------------------------
-r1688 | gaser | 2020-08-12 14:03:27
+r1689 | gaser | 2020-08-14 15:29:48
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+MM      cat12.sh
+M       cat_batch_long.sh
+M       cat_conf_tools.m
+M       cat_long_main.txt
+M       cat_long_mainShoot.txt
+MM      cat_main1639.m
+MM      cat_main_LAS21639.m
+MM      cat_main_gintnorm1639.m
+M       cat_main_reportfig.m
+MM      cat_main_updateSPM1639.m
+MM      cat_run_job1639.m
+M       cat_spm_shoot_template.m
+M       cat_stat_check_cov.m
+M       cat_vol_defs.m
+MM      cat_vol_partvol1639.m
+M       check_pipeline_homogeneity.m
+M       html/cat.html
+ M      html/cat_methods_warnings.html
+M       templates_volumes/cobra.nii
+
+(1) Changed: Extended check_pipeline_homogeneity.m to check homogenity for each
+             data set separetely.
+(2) Changed: Simplified call for composite deformations in cat_vol_defs.m
+(3) Changed: Added warning if not enough files were selected for longitudinal
+             processing with cat_batch_long.sh.
+(4) Fixed:   Call to spm_diffeo from oldSPM12 versions is now catched in 
+             cat_spm_shoot_template.m.
+(5) Fixed:   Added new bounding box and voxel size options to longitudinal 
+             pipeline files.
+(6) Changed: Updated checklist for Makefile.
+(7) Changed: Added check for new options for cat_stat_check_cov.m tp show 
+             filenames and prefer boxplot.
+            
+------------------------------------------------------------------------
+r1688 | gaser | 2020-08-12 14:04:07 +0200 (Mi, 12 Aug 2020) | 20 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -19,6 +59,7 @@ M       html/cat.html
 (2) Changed: Warnings for linking files will be suppressed in check_pipeline.sh.
 (3) Changed: Added options for bounding box and voxel size to deformation tools.
 (4) Changed: Suppress warnings in cat_io_cprintf.m for control sequences.
+
 
 ------------------------------------------------------------------------
 r1687 | dahnke | 2020-08-11 13:59:57 +0200 (Di, 11 Aug 2020) | 11 lines

@@ -1204,7 +1204,7 @@ function [defs,defs2] = cat_vol_defs_GUI()
   bb.help        = {'The bounding box (in mm) of the volume which is to be written (relative to the anterior commissure).'};
   bb.strtype     = 'r';
   bb.num         = [2 3];
-  bb.def         = [NaN NaN NaN; NaN NaN NaN];
+  bb.val         = {[NaN NaN NaN; NaN NaN NaN]};
   
   vox             = cfg_entry;
   vox.tag         = 'vox';
@@ -1212,7 +1212,7 @@ function [defs,defs2] = cat_vol_defs_GUI()
   vox.help        = {'The voxel sizes (x, y & z, in mm) of the written normalised images.'};
   vox.strtype     = 'r';
   vox.num         = [1 3];
-  vox.def         = [NaN NaN NaN];
+  vox.val         = {[NaN NaN NaN]};
 
   defs            = cfg_exbranch;
   defs.tag        = 'defs';

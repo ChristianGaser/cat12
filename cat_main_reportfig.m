@@ -755,7 +755,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         UD.style = [repmat({'r--'},1,numel(UD.width) - nPsurf) repmat({'k-'},1,nPsurf)];
         set(hM,'UserData',UD);
         set( cclp,'Color', [1 0 0]);
-        spm_ov_mesh('redraw',id);
+        try,spm_ov_mesh('redraw',id);end
       end
     end
   end  
