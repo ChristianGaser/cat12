@@ -148,6 +148,9 @@ if modulate
   matlabbatch{mbi}.spm.tools.cat.tools.defs.modulate  = modulate;
 end
 matlabbatch{mbi}.spm.tools.cat.tools.defs.interp      = 1;
+matlabbatch{mbi}.spm.tools.cat.tools.defs.bb  = [NaN NaN NaN
+                                                 NaN NaN NaN];
+matlabbatch{mbi}.spm.tools.cat.tools.defs.vox = [NaN NaN NaN];
 
 % 7) applying deformations to average T1 image
 %-----------------------------------------------------------------------
@@ -156,6 +159,9 @@ matlabbatch{mbi}.spm.tools.cat.tools.defs.field1(1)   = cfg_dep('Image Average: 
 matlabbatch{mbi}.spm.tools.cat.tools.defs.images(1)   = cfg_dep('Longitudinal Registration: Midpoint Average', substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','avg', '()',{':'}));
 matlabbatch{mbi}.spm.tools.cat.tools.defs.interp      = 1;
 matlabbatch{mbi}.spm.tools.cat.tools.defs.modulate    = 0;
+matlabbatch{mbi}.spm.tools.cat.tools.defs.bb  = [NaN NaN NaN
+                                                 NaN NaN NaN];
+matlabbatch{mbi}.spm.tools.cat.tools.defs.vox = [NaN NaN NaN];
 
 % 8) delete temporary files
 %-----------------------------------------------------------------------

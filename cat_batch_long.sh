@@ -138,6 +138,13 @@ check_files ()
       exit 1
   fi
 
+  if [ "$SIZE_OF_ARRAY" -lt 2 ]
+  then
+      echo 'ERROR: You have to define at least two files for longitudinal processing!' >&2
+      help
+      exit 1
+  fi
+
   i=0
   while [ "$i" -lt "$SIZE_OF_ARRAY" ]
   do
