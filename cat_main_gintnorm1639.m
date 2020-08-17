@@ -1,4 +1,4 @@
-function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm1639(Ysrc,Ycls,Yb,vx_vol,res,Yy,extopts)
+function [Ym,Yb,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm1639(Ysrc,Ycls,Yb,vx_vol,res,Yy,extopts)
 % This is an exclusive subfunction of cat_main.
 % ______________________________________________________________________
 % Global intensity normalization based on tissue thresholds estimated as 
@@ -14,7 +14,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm1
 % only give large GM areas like the basal ganlia, that have often a to high
 % intensity. 
 %
-%   [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] =
+%   [Ym,Yb,T3th3,Tth,inv_weighting,noise] =
 %     cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res)
 %
 %   Ym      .. intensity normalized image
@@ -41,6 +41,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm1
 % $Id$
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
 
+  nwarnings = cat_io_addwarning; 
  
   if isstruct(Ycls)
     
@@ -73,9 +74,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm1
   clsints = @(x,y) [round( res.mn(res.lkp==x) * 10^5)/10^5; res.mg(res.lkp==x-((y==0)*8))']; 
  
   inv_weighting = 0;
-  if nargout==7
-    cat_warnings = struct('identifier',{},'message',{});
-  end
+
   vxv    = 1/cat_stat_nanmean(vx_vol);
   res.mn = round(res.mn*10^5)/10^5; 
   
@@ -100,18 +99,16 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm1
     abs(diff(T3th(1:2)))   < (max(T3th(:))-min(T3th(:)))*minContrast || ...
     abs(diff(T3th(2:3)))   < (max(T3th(:))-min(T3th(:)))*minContrast;
    
-  if checkcontrast(T3th3,1/9) && exist('cat_warnings','var') % contrast relation
-    cat_warnings = cat_io_addwarning(cat_warnings,...
-      'CAT:cat_main:LowContrast',...
-      sprintf(['The contrast between different tissues is relative low! \n' ...
-           '  (BG=%0.2f, CSF=%0.2f, GM=%0.2f, WM=%0.2f)\n'],BGth,T3th3),numel(cat_warnings)==0);
-  end
+   if checkcontrast(T3th3,1/9) && exist('cat_warnings','var') % contrast relation
+      cat_io_addwarning([mfilename ':LowContrast'],...
+        sprintf(['The contrast between different tissues is relative low! \\n' ...
+             '  (BG=%0.2f, CSF=%0.2f, GM=%0.2f, WM=%0.2f)'],BGth,T3th3),2,[1 0]);        
+   end
   
   if T3th3(1)>T3th3(3) && T3th3(2)>T3th3(3) && T3th3(1)>T3th3(2) % invers (T2 / PD)
-    cat_warnings = cat_io_addwarning(cat_warnings,...
-      'CAT:cat_main:InverseContrast',...
-      sprintf(['Inverse tissue contrast! \n' ...
-           '(BG=%0.2f, CSF=%0.2f, GM=%0.2f, WM=%0.2f)\n'],BGth,T3th3(1:3)),numel(cat_warnings)==0);
+    cat_io_addwarning([mfilename ':InverseContrast'],...
+      sprintf(['Inverse tissue contrast! \\n' ...
+           '(BG=%0.2f, CSF=%0.2f, GM=%0.2f, WM=%0.2f)'],BGth,T3th3(1:3)),2,[1 0]);
     T3th3(1) = max( max(clsints(3,0)) , mean(Ysrc(Ycls{3}(:)>240)));     
     
     % first initial scaling for gradients and divergence
@@ -253,12 +250,11 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm1
   % increased the biasfwhm and the biasreg. Although, this did not work, 
   % the indroduce bias was smoother and could be corrected here very well. 
   
-    cat_warnings = cat_io_addwarning(cat_warnings,...
-      'CAT:cat_main:InverseContrast',...
-      sprintf(['Inverse tissue contrast that requires strong modifications! \n' ...
-           'In case of "BG<GM<WM<CSF", the CSF in sulci got WM-like intensities \n' ...
-           'due to the PVE and require severe correction that may fail! \n' ...
-           '  (BG=%0.2f, CSF=%0.2f, GM=%0.2f, WM=%0.2f)\n'],BGth,T3th3(1:3)),numel(cat_warnings)==0);
+    cat_io_addwarning([mfilename ':InverseContrast'],...
+      sprintf(['Inverse tissue contrast that requires strong modifications! \\n' ...
+           'In case of "BG<GM<WM<CSF", the CSF in sulci got WM-like intensities \\n' ...
+           'due to the PVE and require severe correction that may fail! \\n' ...
+           '  (BG=%0.2f, CSF=%0.2f, GM=%0.2f, WM=%0.2f)'],BGth,T3th3(1:3)),2,[1 0]);
     
     Sth   = clsint(2);      
     Ym    = (Ysrc - BGth) / ( Sth - BGth); 
@@ -380,7 +376,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm1
         '  failed affine registration, (ii) improper image properties with low \n' ...
         '  contrast-to-noise ratio, or (iii) by preprocessing error. \n' ...
         '  Please check image orientation and quality. '], ...
-        BGth,T3th3(1),T3th3(2),T3th3(3)),numel(cat_warnings)==0); %#ok<SPERR>
+        BGth,T3th3(1),T3th3(2),T3th3(3))); %#ok<SPERR>
   end
 
   
@@ -448,13 +444,12 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm1
       Ygw = Yb & ((single(Ycls{1})+single(Ycls{2}))>128);
       Ymp0diff = sqrt(cat_stat_nanmean(Ym(Ygw(:)) - Ymx(Ygw(:)))^2); 
       if Ymp0diff>0.10 && debug
-        cat_warnings = cat_io_addwarning(cat_warnings,...
-          'CAT:cat_main:badSPMsegment',sprintf(...
-          ['SPM segmentation does not fit to the image (RMS(Ym,Yp0)=%0.2f).\n'...
-           'This can be an alignment problem (check origin), ' ...
-           'untypical subjects (neonates, non-human),\n'...
-           'bad image contrast (C=%0.2f,G=%0.2f,W=%0.2f), \n'...
-           'low image quality (NCR~%0.2f), or something else ...'],Ymp0diff,T3th,noise),numel(cat_warnings)==0); 
+        cat_io_addwarning([mfilename ':badSPMsegment'],sprintf(...
+          ['SPM segmentation does not fit to the image (RMS(Ym,Yp0)=%0.2f).\\n'...
+           'This can be an alignment problem (check origin), \\n' ...
+           'untypical subjects (neonates, non-human),\\n'...
+           'bad image contrast (C=%0.2f,G=%0.2f,W=%0.2f), \\n'...
+           'low image quality (NCR~%0.2f), or something else ...'],Ymp0diff,T3th,noise),2,[1 0]); 
       end
       clear Ymx;
     end
@@ -482,13 +477,11 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm1
                        nanmedian(Ysrc(Ycls{3}(:)>128 & Ysrc(:)>0)), ...
                        cat_stat_nanmean(Ysrc(Ysrc>0))*0.5])*0.9; % 
           Ysrc  = cat_vol_laplace3R(max(CSFth,Ysrc),Yb & Ysrc==0,0.2) .* Yb;
-           cat_warnings = cat_io_addwarning(cat_warnings,...
-             'CAT:cat_main:SkullStripped',...
-             'Skull-stripped input image detected! Try boundary cleanup.',numel(cat_warnings)==0);  
+          cat_io_addwarning([mfilename ':SkullStripped'],...
+             'Skull-stripped input image detected! Try boundary cleanup.',1,[1 0]);  
         else
-           cat_warnings = cat_io_addwarning(cat_warnings,...
-             'CAT:cat_main:SkullStripped',...
-             'Skull-stripped input image?',numel(cat_warnings)==0); 
+          cat_io_addwarning([mfilename ':SkullStripped'],...
+             'Skull-stripped input image?',1,[1 0]); 
         end
       end
     end
@@ -671,9 +664,9 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm1
     
   
   
-  
-  
   %% if there was a warning we need a new line 
-  if nargout==7 && numel(cat_warnings)>1, fprintf('\n'); cat_io_cmd(' ','','',1); end
+  if numel(nwarnings) < numel(cat_io_addwarning) 
+    cat_io_cmd(' ','','',1); 
+  end
 
 end

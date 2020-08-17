@@ -23,7 +23,7 @@ function cat_run_job(job,tpm,subj)
 
 %#ok<*WNOFF,*WNON>
 
-    job.test_warnings = 0; % just for tests
+    job.test_warnings  = 0; % just for tests
     job.extopts.histth = [0.96 0.9999]; % histogram thresholds
     job.extopts.input  = 0; % 0 - auto (default), 1-with skull (normal), 2-skull-stripped, 3-high BG
 
@@ -43,7 +43,6 @@ function cat_run_job(job,tpm,subj)
     if job.extopts.subfolders
     
       folders = {'mri','report'};
-      warning('off', 'MATLAB:MKDIR:DirectoryExists');
       for i=1:numel(folders)
         if ~exist(fullfile(pth,folders{i}),'dir')
           mkdir(fullfile(pth,folders{i}));
@@ -91,6 +90,11 @@ function cat_run_job(job,tpm,subj)
           repmat(' ',1,70 - length(str) - length(str2)),str2,...
           repmat('-',1,72));
     clear r str str2
+    
+    if job.extopts.ignoreErrors>1
+      cat_io_addwarning([mfilename ':ignoreErrors'],'Run pipeline with backup functions (IN DEVELOPMENT).',1,[1 1]); 
+    end
+  
     
     %  -----------------------------------------------------------------
     %  separation of full CAT preprocessing and SPM segmentation
@@ -173,7 +177,7 @@ function cat_run_job(job,tpm,subj)
          
           % too thin slices
           if any( vx_vol > reslimits(1) ) || job.test_warnings
-            mid = 'cat_run_job:TooLowResolution'; 
+            mid = [mfilename ':TooLowResolution']; 
             msg = sprintf(['Voxel resolution should be better than %d mm in any dimension for \\\\n' ...
               'reliable preprocessing! This image has a resolution of %0.2fx%0.2fx%0.2f mm%s. '], ... 
               reslimits(1),vx_vol,native2unicode(179, 'latin1'));
@@ -186,7 +190,7 @@ function cat_run_job(job,tpm,subj)
           
           % too small voxel volume (smaller than 3x3x3 mm3)
           if prod(vx_vol) > reslimits(2)^3 || job.test_warnings
-            mid = 'cat_run_job:TooLargeVoxelVolume'; 
+            mid = [mfilename ':TooLargeVoxelVolume']; 
             msg = sprintf(['Voxel volume should be smaller than %d mm%s (around %dx%dx%d mm%s) for \\\\n' ...
                     'reliable preprocessing! This image has a voxel volume of %0.2f mm%s. '], ...
                     reslimits(2)^3,native2unicode(179, 'latin1'),reslimits(2),reslimits(2),reslimits(2),...
@@ -200,7 +204,7 @@ function cat_run_job(job,tpm,subj)
           
           % anisotropy
           if max(vx_vol) / min(vx_vol) > reslimits(3) || job.test_warnings
-            mid = 'cat_run_job:TooStrongAnisotropy';
+            mid = [mfilename ':TooStrongAnisotropy'];
             msg = sprintf(['Voxel anisotropy (max(vx_size)/min(vx_size)) should be smaller than %d for \\\\n' ...
                     'reliable preprocessing! This image has a resolution %0.2fx%0.2fx%0.2f mm%s \\\\nand a anisotropy of %0.2f. '], ...
                     reslimits(3),vx_vol,native2unicode(179, 'latin1'),max(vx_vol)/min(vx_vol));
@@ -282,7 +286,7 @@ function cat_run_job(job,tpm,subj)
             YBG = ~cat_vol_morph(YOB,'lc',2/mean(R.vx_volr));                 % close noisy background
           else
             YBG = ~cat_vol_morph(YOB,'lc',2/mean(R.vx_volr));  
-            msg = 'Detection of background failed.'; 
+            msg = [mfilename 'Detection of background failed.']; 
             cat_io_addwarning('cat_run_job:failedBGD',msg,1,[0 1]);
           end
           % image pricture frame to test for high intensity background in case of defaced data
@@ -324,7 +328,7 @@ function cat_run_job(job,tpm,subj)
           
           if ppe.affreg.highBG
             msg = 'Detected high intensity background use lower histrogram thresholds.'; 
-            cat_io_addwarning('cat_run_job:highBG',msg,1,[0 1],ppe.affreg.highBGpara);
+            cat_io_addwarning([mfilename ':highBG'],msg,1,[0 1],ppe.affreg.highBGpara);
             job.extopts.histth(1) = 0.999999;
           end
           
@@ -467,10 +471,10 @@ function cat_run_job(job,tpm,subj)
                   '  %4.0f cm%s; normalized SD of all tissues %0.2f'],...
                   ppe.affreg.skullstrippedpara(1:4),native2unicode(179, 'latin1'),ppe.affreg.skullstrippedpara(5))]; 
               end  
-              cat_io_addwarning('cat_run_job:skullStrippedInputWithSkullStripping',msg,1,[0 1],ppe.affreg.skullstrippedpara);
+              cat_io_addwarning([mfilename ':skullStrippedInputWithSkullStripping'],msg,1,[0 1],ppe.affreg.skullstrippedpara);
               
             elseif job.extopts.gcutstr<0 && ~ppe.affreg.skullstripped || job.test_warnings
-              cat_io_addwarning('cat_run_job:noSkullStrippingButSkull',[...
+              cat_io_addwarning([mfilename ':noSkullStrippingButSkull'],[...
                   'Skull-Stripping is deactivated but skull was detected. \\n' ...
                   'Go on without skull-stripping what possibly will fail.'],1,[0 1],ppe.affreg.skullstrippedpara);
             end
@@ -507,7 +511,7 @@ function cat_run_job(job,tpm,subj)
               end
             catch apperr
               %% very simple affine preprocessing ... only simple warning
-              cat_io_addwarning('cat_run_job:APPerror','APP failed. Use simple scaling.',1,[0 0],apperr);
+              cat_io_addwarning([mfilename ':APPerror'],'APP failed. Use simple scaling.',1,[0 0],apperr);
               [Ym,Yt,Ybg,WMth] = APPmini(obj,VF,job.extopts.histth); %#ok<ASGLU>
               if cat_get_defaults('extopts.send_info')
                 urlinfo = sprintf('%s%s%s%s%s%s%s%s%s%s',cat_version,'%2F',computer,'%2F','errors',...
@@ -519,9 +523,9 @@ function cat_run_job(job,tpm,subj)
             if APPRMS>1 || job.test_warnings
               if job.extopts.ignoreErrors < 1 
                 fprintf('\n'); 
-                error('cat_run_job:APPerror','Detect problems in APP preprocessing (APPRMS: %0.4f). Do not use APP results. ',APPRMS);
+                error([mfilename ':APPerror'],'Detect problems in APP preprocessing (APPRMS: %0.4f). Do not use APP results. ',APPRMS);
               else
-                cat_io_addwarning('cat_run_job:APPerror',...
+                cat_io_addwarning([mfilename ':APPerror'],...
                   sprintf('Detect problems in APP preprocessing (APPRMS: %0.4f). \\\\nDo not use APP results. ',APPRMS),1,[0 1],APPRMS);
               end 
             end
@@ -576,7 +580,7 @@ function cat_run_job(job,tpm,subj)
               useprior        = 1; 
               job.opts.affreg = 'prior'; 
             else
-              cat_io_addwarning('cat_run_job:UseAffRegPrior',...
+              cat_io_addwarning([mfilename ':UseAffRegPrior'],...
                 sprintf('Affine prior file "%s" not found. \\\\nEstimate individual affine transformation. ',catxml),2,[1 2],catxml);
               useprior        = 0;
             end
@@ -788,7 +792,7 @@ function cat_run_job(job,tpm,subj)
                   % we start here with the maff8 that is more robust to varying contrasts
                   [Affine2n,ppe.spm_maff8.ll(3)] = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,eye(4),'none',80); 
                   if ppe.spm_maff8.ll(3) > ppe.spm_maff8.ll(2)
-                    cat_io_addwarning('cat_run_job:spm_maff8','Use affreg=none due to better results.',1,[1 2],ppe.spm_maff8);
+                    cat_io_addwarning([mfilename ':spm_maff8'],'Use affreg=none due to better results.',1,[1 2],ppe.spm_maff8);
                     job.opts.affreg = 'none'; % in this case we have to update the affreg parameter
                     Affine2 = Affine2n;
                   else
@@ -960,7 +964,7 @@ function cat_run_job(job,tpm,subj)
           % Due to inaccuracies of the clsint function it is better to print 
           % this as intense warning.
           if any( Tth(2:3)<0 ) || job.test_warnings
-            cat_io_addwarning('cat_run_job:negVal',sprintf( ...
+            cat_io_addwarning([mfilename ':negVal'],sprintf( ...
              ['CAT12 was developed for images with positive values and \\\\n', ...
               'negative values can lead to preprocessing problems. The average \\\\n', ...
               'intensities of CSF/GM/WM are %0.4f/%0.4f/%0.4f. \\\\n', ...
