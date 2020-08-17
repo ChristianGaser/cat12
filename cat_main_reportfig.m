@@ -210,7 +210,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     end
     
     % remove outlier to make it orthviews easier
-    if isfield(res.ppe,'affreg') && res.ppe.affreg.highBG 
+    if isfield(res.ppe,'affreg') && isfield(res.ppe.affreg,'highBG') && res.ppe.affreg.highBG 
       Yo = cat_stat_histth(Yo,[0.999999 0.9999],struct('scale',[0 255])); 
     else
       if isfield(job.extopts,'histth')

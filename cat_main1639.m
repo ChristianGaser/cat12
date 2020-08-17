@@ -106,11 +106,11 @@ if ~isfield(res,'spmpp')
     [Ysrcr,resGI] = cat_vol_resize(Ysrc       ,'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm');
     Ybr   = cat_vol_resize(single(Yb) ,'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm')>0.5;
     Yclsr = cell(size(Ycls)); for i=1:6, Yclsr{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,min(vx_vol*2,1.4),32); end
-    [Ymr,Ybr,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm1639(Ysrcr,Yclsr,Ybr,resGI.vx_volr,res,Yy,job.extopts);
+    [Ymr,Ybr,T3th,Tth,job.inv_weighting,noise] = cat_main_gintnorm1639(Ysrcr,Yclsr,Ybr,resGI.vx_volr,res,Yy,job.extopts);
     clear Ymr Ybr Ysrcr Yclsr; 
     Ym = cat_main_gintnorm1639(Ysrc,Tth); 
   else
-    [Ym,Yb,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm1639(Ysrc,Ycls,Yb,vx_vol,res,Yy,job.extopts);
+    [Ym,Yb,T3th,Tth,job.inv_weighting,noise] = cat_main_gintnorm1639(Ysrc,Ycls,Yb,vx_vol,res,Yy,job.extopts);
   end
   job.extopts.inv_weighting = job.inv_weighting;
   
@@ -317,19 +317,15 @@ if ~isfield(res,'spmpp')
       [Yl1,Ycls,YMF] = cat_vol_partvol1639(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
       fprintf('%5.0fs\n',etime(clock,stime));
       if isfield(res,'Ylesion') && sum(res.Ylesion(:)==0) && job.extopts.SLC==1
-        cat_warnings = cat_io_addwarning(cat_warnings,...
-          'CAT:cat_main_SLC_noExpDef','SLC is set for manual lesions corection but no lesions were found!'); 
-        fprintf('\n');
+        cat_io_addwarning([mfilename ':SLC_noExpDef'],'SLC is set for manual lesions corection but no lesions were found!',1,[1 1]); 
       end
     end
   else
     [Yl1,Ycls,YMF] = cat_vol_partvol1639(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
     fprintf('%5.0fs\n',etime(clock,stime));
-    if job.extopts.expertgui && isfield(res,'Ylesion') && sum(res.Ylesion(:))>1000 
-      cat_warnings = cat_io_addwarning(cat_warnings,...
-          'CAT:cat_main_SLC_noExpDef',sprintf(['SLC is deactivated but there are %0.2f cm' ...
-          native2unicode(179, 'latin1') ' of voxels with zero value inside the brain!'],prod(vx_vol) .* sum(res.Ylesion(:)) / 1000 )); 
-      fprintf('\n');
+    if job.extopts.expertgui && isfield(res,'Ylesion') && sum(res.Ylesion(:))>1000 && job.extopts.ignoreErrors < 2
+      cat_io_addwarning([mfilename ':SLC_noExpDef'],sprintf(['SLC is deactivated but there are %0.2f cm' ...
+          native2unicode(179, 'latin1') ' of voxels with zero value inside the brain!'],prod(vx_vol) .* sum(res.Ylesion(:)) / 1000 ),1,[1 1]); 
     end
   end
   if ~debug; clear YBG Ycr Ydt; end
@@ -384,7 +380,7 @@ if ~isfield(res,'spmpp')
       
       fprintf('%5.0fs\n',etime(clock,stime));
     catch %#ok<CTCH>
-      fprintf('\n'); cat_warnings = cat_io_addwarning(cat_warnings,'CAT:cat_main_gcut:err99','Unknown error in cat_main_gcut. Use old brainmask.'); fprintf('\n');
+      cat_io_addwarning([mfilename ':gcuterror'],'Unknown error in cat_main_gcut. Use old brainmask.',1,[1 1]);
       job.extopts.gcutstr = 99;
     end
   end
@@ -547,9 +543,8 @@ if ~isfield(res,'spmpp')
     Yp0b = cat_vol_ctype(single(Ycls{1})*2/5 + single(Ycls{2})*3/5 + single(Ycls{3})*1/5,'uint8');
   
     if qa.subjectmeasures.WMH_rel>3 || qa.subjectmeasures.WMH_WM_rel>5 % #% of the TIV or the WM are affected
-      cat_warnings = cat_io_addwarning(cat_warnings,...
-        'MATLAB:SPM:CAT:cat_main:uncorrectedWMH',...
-        sprintf('Uncorrected WM lesions greater (%2.2f%%%%%%%% of the WM)!\\n',qa.subjectmeasures.WMH_rel));
+      cat_io_addwarning([mfilename ':uncorrectedWMH'],...
+        sprintf('Uncorrected WM lesions greater (%2.2f%%%%%%%% of the WM)!',qa.subjectmeasures.WMH_rel),1);
     end
   end
   
@@ -573,10 +568,8 @@ else
 %  We simply use the SPM segmentation as it is without further modelling of
 %  a PVE or other refinements. 
 %  ------------------------------------------------------------------------
-  [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,cat_warnings] = ...
+  [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,job.extopts.inv_weighting] = ...
     cat_main_SPMpp(Ysrc,Ycls,Yy,job,res);
-  
-  job.inv_weighting = 0; 
   
   fprintf('%5.0fs',etime(clock,stime)); 
 end
@@ -983,7 +976,7 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
   d = VT.dim(1:3);
 
 return
-function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,cat_warnings] = cat_main_SPMpp(Ysrc,Ycls,Yy,job,res)
+function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa] = cat_main_SPMpp(Ysrc,Ycls,Yy,job,res)
 %% SPM segmentation input  
 %  ------------------------------------------------------------------------
 %  Here, DARTEL and PBT processing is prepared. 
@@ -994,7 +987,6 @@ function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,cat_warnings] = cat_main_SPMp
   job.extopts.WMHC = 0;
   job.extopts.SLC  = 0;
   
-  cat_warnings        = struct('identifier',{},'message',{});   % warning structure from cat_main_gintnorm 
   NS                  = @(Ys,s) Ys==s | Ys==s+1;                % for side independent atlas labels
   
   % QA WMH values required by cat_vol_qa later
@@ -1019,12 +1011,9 @@ function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,cat_warnings] = cat_main_SPMp
   WMth = double(max(clsint(2),...
            cat_stat_nanmedian(cat_stat_nanmedian(cat_stat_nanmedian(Ysrc(Ycls{2}>192)))))); 
   T3th = [ min([  clsint(1) - diff([clsint(1),WMth]) ,clsint(3)]) , clsint(2) , WMth];
-  if T3th(3)<T3th(2) % inverse weighting allowed 
-    job.inv_weighting   = 1;                                     
-  else
-    job.inv_weighting   = 0; 
-  end
   clear Ysrc
+  
+  inv_weighting = T3th(3)<T3th(2);
   
   % the intensity normalized images are here represented by the segmentation 
   Ym   = Yp0/255*5/3;
