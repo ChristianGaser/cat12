@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1690 | gaser | 2020-08-14 15:35:36
+r1691 | gaser | 2020-08-17 08:36:44
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_main1639.m
+A       cat_main_clean_gwc1639.m
+M       cat_main_updateSPM1639.m
+M       html/cat.html
+
+(1) Changed: Added calss to cat_main_clean_gwc1639 for r1639 stream.
+(2) Added:   Rescued cat_main_clean_gwc1639.m from r1639.
+------------------------------------------------------------------------
+r1690 | gaser | 2020-08-14 15:35:42 +0200 (Fr, 14 Aug 2020) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +24,7 @@ M       html/cat.html
 (1) Changed: Again added check for new options for cat_stat_check_cov.m to show 
              filenames and prefer boxplot.
 (2) Changed: Updated release name.
+
 ------------------------------------------------------------------------
 r1689 | gaser | 2020-08-14 15:30:29 +0200 (Fr, 14 Aug 2020) | 38 lines
 
