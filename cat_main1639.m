@@ -108,7 +108,7 @@ if ~isfield(res,'spmpp')
     Yclsr = cell(size(Ycls)); for i=1:6, Yclsr{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,min(vx_vol*2,1.4),32); end
     [Ymr,Ybr,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm1639(Ysrcr,Yclsr,Ybr,resGI.vx_volr,res,Yy,job.extopts);
     clear Ymr Ybr Ysrcr Yclsr; 
-    Ym = cat_main_gintnorm(Ysrc,Tth); 
+    Ym = cat_main_gintnorm1639(Ysrc,Tth); 
   else
     [Ym,Yb,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm1639(Ysrc,Ycls,Yb,vx_vol,res,Yy,job.extopts);
   end
@@ -129,7 +129,7 @@ if ~isfield(res,'spmpp')
                    cat_vol_ctype(Yb2.*Yp0toC(Ym*3,3)*255),...
                    cat_vol_ctype(Yb2.*Yp0toC(min(3,Ym*3),1)*255));
       
-      prob = cat_main_clean_gwc(prob,1,1);
+      prob = cat_main_clean_gwc1639(prob,1,1);
       
       for ci=1:3, Ycls{ci} = prob(:,:,:,ci); end 
       clear prob;  
@@ -421,11 +421,11 @@ if ~isfield(res,'spmpp')
   if job.extopts.cleanupstr>0
      
     if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap
-      prob = cat_main_clean_gwc(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol)),1); % new cleanup
+      prob = cat_main_clean_gwc1639(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol)),1); % new cleanup
     elseif job.extopts.cleanupstr < 2 % use cleanupstr==2 to use only the old cleanup
-      prob = cat_main_clean_gwc(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol))); % default cleanup
+      prob = cat_main_clean_gwc1639(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol))); % default cleanup
     else
-      prob = cat_main_clean_gwc(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol)),0); % old cleanup
+      prob = cat_main_clean_gwc1639(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol)),0); % old cleanup
     end
     if job.extopts.cleanupstr < 2 % use cleanupstr==2 to use only the old cleanup
       [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1(indx,indy,indz),... 
@@ -868,7 +868,7 @@ function [Ysrc,Ycls,Yy,res] = cat_main_resspmres(Ysrc,Ycls,Yy,res)
   for i=1:numel(Ycls)
     [Pc(:,:,:,i),BB] = cat_vol_resize(Ycls{i},'reduceBrain',repmat(job.opts.redspmres,1,3),2,Yb); %#ok<AGROW>
   end 
-  Pc = cat_main_clean_gwc(Pc,1);
+  Pc = cat_main_clean_gwc1639(Pc,1);
   for i=1:numel(Ycls), Ycls{i} = cat_vol_resize(Pc(:,:,:,i),'dereduceBrain',BB); end; clear Pc Yb; 
   for ci=1:numel(Ycls)
     Ycls{ci} = cat_vol_ctype(cat_vol_resize(Ycls{ci},'deinterp',res.redspmres,'linear'));
