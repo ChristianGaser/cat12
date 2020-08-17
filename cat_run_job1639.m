@@ -23,16 +23,18 @@ function cat_run_job1639(job,tpm,subj)
 
 %#ok<*WNOFF,*WNON>
 
+    job.test_warnings = 0; % just for tests
+  
     % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
     dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
     
     clearvars -global cat_err_res;
     global cat_err_res; % for CAT error report
-    cat_err_res.stime = clock; 
-    
+    cat_err_res.stime        = clock; 
+    cat_err_res.cat_warnings = cat_io_addwarning('reset'); % reset warnings     
     stime  = clock; 
     stime0 = stime; % overall processing time
-
+    
     % create subfolders if not exist
     pth = spm_fileparts(job.channel(1).vols{subj}); 
     if job.extopts.subfolders
@@ -148,38 +150,62 @@ function cat_run_job1639(job,tpm,subj)
         %  There were some images that should not be processed. So we have  
         %  to check for large slice thickness and low spatial resolution.
         %  RD201909: I tried 4x4x4 and 1x1x8 mm data with default and NLM 
-        %  interpolation. Also NLM shows less edges and more correct
-        %  surfaces and the thickness results are worse and the limits are ok. 
+        %            interpolation. Also NLM shows less edges and more 
+        %            correct surfaces, the thickness results are worse and 
+        %            the limits are ok.
+        %  RD202007: Low resolution data is now allowed if ignoreErrer > 1.
+        %            Tested again NLM and Boeseflug interpolation and there
+        %            are many artefacts and simple spline interpolation is 
+        %            more save. 
         %  -----------------------------------------------------------------
         for n=1:numel(job.channel) 
           V = spm_vol(job.channel(n).vols{subj});
           vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
 
+          % maximum [ slice-thickness , volume^3 , anisotropy ]
           reslimits = [5 3 8]; 
-          if any(vx_vol>reslimits(1))  % too thin slices
-            error('cat_run_job:TooLowResolution', sprintf(...
-                 ['Voxel resolution has to be better than %s mm in any dimension \n' ...
-                  'for reliable CAT preprocessing! \n' ...
-                  'This image has a resolution %0.2fx%0.2fx%0.2f mm%s. '], ... 
-                   reslimits(1),vx_vol,native2unicode(179, 'latin1'))); %#ok<SPERR>
+         
+          % too thin slices
+          if any( vx_vol > reslimits(1) ) || job.test_warnings
+            mid = [mfilename 'cat_run_job:TooLowResolution']; 
+            msg = sprintf(['Voxel resolution should be better than %d mm in any dimension for \\\\n' ...
+              'reliable preprocessing! This image has a resolution of %0.2fx%0.2fx%0.2f mm%s. '], ... 
+              reslimits(1),vx_vol,native2unicode(179, 'latin1'));
+            if job.extopts.ignoreErrors < 2
+              error(mid,msg); %#ok<SPERR>
+            else
+              cat_io_addwarning(mid,msg,2,[0 1],vx_vol);
+            end
           end
-          if prod(vx_vol)>reslimits(2)^3  % too small voxel volume (smaller than 3x3x3 mm3)
-            error('cat_run_job:TooHighVoxelVolume', ...
-                 ['Voxel volume has to be smaller than %d mm%s (around %dx%dx%d mm%s) to \n' ...
-                  'allow a reliable CAT preprocessing! \n' ...
-                  'This image has a voxel volume of %0.2f mm%s. '], ...
-                  reslimits(2)^3,reslimits(2),reslimits(2),reslimits(2),...
-                  native2unicode(179, 'latin1'),native2unicode(179, 'latin1'),prod(vx_vol),native2unicode(179, 'latin1'));
+          
+          % too small voxel volume (smaller than 3x3x3 mm3)
+          if prod(vx_vol) > reslimits(2)^3 || job.test_warnings
+            mid = [mfilename 'cat_run_job:TooLargeVoxelVolume']; 
+            msg = sprintf(['Voxel volume should be smaller than %d mm%s (around %dx%dx%d mm%s) for \\\\n' ...
+                    'reliable preprocessing! This image has a voxel volume of %0.2f mm%s. '], ...
+                    reslimits(2)^3,native2unicode(179, 'latin1'),reslimits(2),reslimits(2),reslimits(2),...
+                    native2unicode(179, 'latin1'),prod(vx_vol),native2unicode(179, 'latin1'));
+            if job.extopts.ignoreErrors < 2
+              error(mid,msg); %#ok<SPERR>
+            else
+              cat_io_addwarning(mid,msg,2,[0 1],vx_vol);
+            end
           end
-          if max(vx_vol)/min(vx_vol)>reslimits(3) % anisotropy 
-            error('cat_run_job:TooStrongIsotropy', sprintf(...
-                 ['Voxel isotropy (max(vx_size)/min(vx_size)) has to be smaller than %d to \n' ...
-                  'allow a reliable CAT preprocessing! \n' ...
-                  'This image has a resolution %0.2fx%0.2fx%0.2f mm%s and a isotropy of %0.2f. '], ...
-                  reslimits(3),vx_vol,native2unicode(179, 'latin1'),max(vx_vol)/min(vx_vol))); %#ok<SPERR>
+          
+          % anisotropy
+          if max(vx_vol) / min(vx_vol) > reslimits(3) || job.test_warnings
+            mid = [mfilename 'cat_run_job:TooStrongAnisotropy'];
+            msg = sprintf(['Voxel anisotropy (max(vx_size)/min(vx_size)) should be smaller than %d for \\\\n' ...
+                    'reliable preprocessing! This image has a resolution %0.2fx%0.2fx%0.2f mm%s \\\\nand a anisotropy of %0.2f. '], ...
+                    reslimits(3),vx_vol,native2unicode(179, 'latin1'),max(vx_vol)/min(vx_vol));
+            if job.extopts.ignoreErrors < 2
+              error(mid,msg);  %#ok<SPERR>
+            else
+              cat_io_addwarning(mid,msg,2,[0 1],vx_vol);
+            end
           end
         end
-
+        
         % save original file name 
         for n=1:numel(job.channel) 
           job.channel(n).vols0{subj} = job.channel(n).vols{subj};
@@ -374,28 +400,22 @@ function cat_run_job1639(job,tpm,subj)
           if ppe.affreg.skullstripped || job.extopts.gcutstr<0
             % print a warning for all users that did not turn off skull-stripping 
             % because processing of skull-stripped data is not standard!
-            if job.extopts.gcutstr>=0
-              if job.extopts.APP==1 || job.extopts.APP==2
-                cat_io_cprintf('warn',[...
-                  'WARNING: Detected skull-stripped or strongly masked image. Skip APP. \n' ...
-                  '         Use skull-stripped initial affine registration template and  \n' ...
-                  '         TPM without head tissues (class 4 and 5)! \n']);
-              else
-                cat_io_cprintf('warn',[...
-                  'WARNING: Detected skull-stripped or strongly masked image. \n' ...
-                  '         Use skull-stripped initial affine registration template and \n' ...
-                  '         TPM without head tissues (class 4 and 5)! \n']);
-              end
-              if job.extopts.verb>1
-                cat_io_cprintf('warn',sprintf(...
-                 ['           %0.2f%%%% zeros, %d object(s), %d background region(s) \n' ...
-                  '           %4.0f cm%s, normalized SD of all tissues %0.2f \n'],...
-                  ppe.affreg.skullstrippedpara(1:4),native2unicode(179, 'latin1'),ppe.affreg.skullstrippedpara(5))); 
-              end
-            elseif job.extopts.gcutstr<0 && ~ppe.affreg.skullstripped
-              cat_io_cprintf('warn',[...
-                  'WARNING: Skull-Stripping is deactivated but skull was detected. \n' ...
-                  '         Go on without skull-stripping what probably will fail! \n']);
+            if job.extopts.gcutstr>=0 || job.test_warnings
+              msg = [...
+                'Detected skull-stripped or strongly masked image. Skip APP. \\n' ...
+                'Use skull-stripped initial affine registration template and \\n' ...
+                'TPM without head tissues (class 4 and 5)!']; 
+              if job.extopts.verb>1 && job.extopts.expertgui
+                 msg = [msg sprintf(['\\\\n  BG: %0.2f%%%%%%%% zeros; %d object(s); %d background region(s) \\\\n' ...
+                  '  %4.0f cm%s; normalized SD of all tissues %0.2f'],...
+                  ppe.affreg.skullstrippedpara(1:4),native2unicode(179, 'latin1'),ppe.affreg.skullstrippedpara(5))]; 
+              end  
+              cat_io_addwarning([mfilename 'cat_run_job:skullStrippedInputWithSkullStripping'],msg,1,[0 1],ppe.affreg.skullstrippedpara);
+              
+            elseif job.extopts.gcutstr<0 && ~ppe.affreg.skullstripped || job.test_warnings
+              cat_io_addwarning([mfilename 'cat_run_job:noSkullStrippingButSkull'],[...
+                  'Skull-Stripping is deactivated but skull was detected. \\n' ...
+                  'Go on without skull-stripping what possibly will fail.'],1,[0 1],ppe.affreg.skullstrippedpara);
             end
 
             % skull-stripping of the template
@@ -428,9 +448,9 @@ function cat_run_job1639(job,tpm,subj)
                 [Ym,Yt,Ybg,WMth,bias,Tth,ppe.APPi] = cat_run_job_APP_init(...
                   Ysrc,vx_vol,struct('verb',job.extopts.verb,'APPstr',job.opts.biasstr));  %#ok<ASGLU>
               end
-            catch %apperr
+            catch apperr
               %% very simple affine preprocessing ... only simple warning
-              cat_io_cprintf('warn',sprintf('WARNING: APP failed. Use simple scaling.\n'));
+              cat_io_addwarning([mfilename ':APPerror'],'APP failed. Use simple scaling.',1,[0 0],apperr);
               [Ym,Yt,Ybg,WMth] = APPmini(obj,VF); %#ok<ASGLU>
               if cat_get_defaults('extopts.send_info')
                 urlinfo = sprintf('%s%s%s%s%s%s%s%s%s%s',cat_version,'%2F',computer,'%2F','errors',...
@@ -439,9 +459,15 @@ function cat_run_job1639(job,tpm,subj)
               end
             end
             APPRMS = checkAPP(Ym,Ysrc); 
-            if APPRMS>1 
-              error('cat_run_job:APPerror','Detect problems in APP preprocessing (APPRMS: %0.4f). Turn off APP preprocessing. ',APPRMS);
-            end 
+            if APPRMS>1 || job.test_warnings
+              if job.extopts.ignoreErrors < 1 
+                fprintf('\n'); 
+                error('cat_run_job:APPerror','Detect problems in APP preprocessing (APPRMS: %0.4f). Do not use APP results. ',APPRMS);
+              else
+                cat_io_addwarning([mfilename ':APPerror'],...
+                  sprintf('Detect problems in APP preprocessing (APPRMS: %0.4f). \\\\nDo not use APP results. ',APPRMS),1,[0 1],APPRMS);
+              end 
+            end
         
             if ~debug, clear Yt; end
 
@@ -635,7 +661,11 @@ function cat_run_job1639(job,tpm,subj)
         %% Fine affine Registration with automatic selection in case of multiple TPMs. 
         %  This may not work for non human data (or very small brains).
         %  This part should be an external (coop?) function?
-        stime = cat_io_cmd('SPM preprocessing 1 (estimate 1):','','',1,stime);
+        if useprior
+          stime = cat_io_cmd('SPM preprocessing 1 (use prior):','','',1,stime); 
+        else
+          stime = cat_io_cmd('SPM preprocessing 1 (estimate 1):','','',1,stime); 
+        end
         if ~isempty(job.opts.affreg) && strcmp('human',job.extopts.species) && ~useprior 
           if numel(job.opts.tpm)>1
             %% merging of multiple TPMs
@@ -798,7 +828,7 @@ function cat_run_job1639(job,tpm,subj)
         Tgw = [cat_stat_nanmean(res.mn(res.lkp==1)) cat_stat_nanmean(res.mn(res.lkp==2))]; 
         Tth = [
           ... min(res.mn(res.lkp==6 & res.mg'>0.3)) ... % bg; ignore the background, because of MP2RGAGE, R1, and MT weighted images  
-          max( min( clsint(3) ,  max(Tgw)+abs(diff(Tgw))) , min(Tgw)-abs(diff(Tgw)) ) ... % csf with limit for T2!
+          max( min( clsint(3) ,  max(Tgw)+1.5*abs(diff(Tgw))) , min(Tgw)-1.5*abs(diff(Tgw)) ) ... % csf with limit for T2!
           clsint(1) ... gm
           clsint(2) ... wm 
           clsint(4) ... skull
@@ -809,8 +839,8 @@ function cat_run_job1639(job,tpm,subj)
         res.Tth = Tth; 
         cat_err_res.res = res;   
         
-        % inactive preprocessing of inverse images (PD/T2) 
-        if any(diff(Tth(1:3))<=0)
+        % inactive preprocessing of inverse images (PD/T2) ... just try
+        if 0 % any(diff(Tth(1:3))<=0)
           error('cat_run_job:BadImageProperties', ...
           ['CAT12 is designed to work only on highres T1 images. \n' ...
            'T2/PD preprocessing can be forced on your own risk by setting \n' ...
@@ -819,18 +849,17 @@ function cat_run_job1639(job,tpm,subj)
            'because of alignment problems (please check image orientation).']);    
         end
         
-        % RD202005:  I am not sure if it is useful to just print a warning or a full error.  However, it will take some time to fix this issue.  
-        if any( Tth(2:3)<0 )
-          %error('cat_run_job:NegativeTissueValues', ...
-          %%
-          cat_io_cprintf('err',sprintf( ...
-           ['CAT12 was developed for images with positve values and negative values can lead to \n', ...
-            'preprocessing problems. The average intensities of CSF/GM/WM are %0.4f/%0.4f/%0.4f. \n', ...
-            'If you observe problems, you can use the %s to scale your data.\n'], Tth(1:3), ...
-            spm_file('Datatype-batch','link','spm_jobman(''interactive'','''',''spm.tools.cat.tools.spmtype'');')));
-        end
-          
-
+        % RD202006: Throw warning/error?
+        % Due to inaccuracies of the clsint function it is better to print 
+        % this as intense warning.
+        if any( Tth(2:3)<0 ) || job.test_warnings
+					cat_io_addwarning([mfilename ':negVal'],sprintf( ...
+					 ['CAT12 was developed for images with positive values and \\\\n', ...
+						'negative values can lead to preprocessing problems. The average \\\\n', ...
+						'intensities of CSF/GM/WM are %0.4f/%0.4f/%0.4f. \\\\n', ...
+						'If you observe problems, you can use the %s to scale your data.'], Tth(1:3), ...
+						spm_file('Datatype-batch','link','spm_jobman(''interactive'','''',''spm.tools.cat.tools.spmtype'');')),2,[0 1],Tth);
+				end
     end
     
     % updated tpm information for skull-stripped data should be available for cat_main
@@ -843,6 +872,7 @@ function cat_run_job1639(job,tpm,subj)
             
     %% call main processing
     res.tpm     = obj.tpm.V;
+    res.ppe     = ppe; 
     res.stime   = stime0;
     res.catlog  = catlog; 
     res.Affine0 = res.Affine; 
