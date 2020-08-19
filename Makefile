@@ -9,6 +9,7 @@ DATE=`svn info |grep 'Last Changed Date: '|sed -e 's/Last Changed Date: //g'|cut
 
 TARGET=/Users/gaser/spm/spm12/toolbox/cat12
 TARGET2=/Volumes/UltraMax/spm12/toolbox/cat12
+TARGET3=paris.biomag.uni-jena.de:/Volumes/UltraMax/spm12/toolbox/cat12
 
 PRECOMPILED=/Users/gaser/install/Matlab/Matlab_R2017b
 CAT12=/Users/gaser/matlab/cat12
@@ -37,6 +38,10 @@ install2:
 	-@test ! -d ${TARGET2} || rm -rf ${TARGET2}/*
 	-@mkdir -p ${TARGET2}
 	-@cp -R ${FILES} ${TARGET2}/
+
+install3:
+	-@echo install3
+	-@scp -r ${FILES} ${TARGET3}/
 
 help:
 	-@echo Available commands:

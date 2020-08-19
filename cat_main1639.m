@@ -400,7 +400,7 @@ if ~isfield(res,'spmpp')
   %    prob .. new AMAP segmenation (4D)
   %    ind* .. index elements to asign a subvolume
   %  -------------------------------------------------------------------
-  [prob,indx,indy,indz] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res);
+  [prob,indx,indy,indz] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res);
   
   
   
