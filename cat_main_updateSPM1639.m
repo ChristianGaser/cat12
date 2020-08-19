@@ -62,7 +62,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   if job.opts.redspmres==0 % already done in case of redspmres
     if max(vx_vol)<1.5 && mean(vx_vol)<1.3
       for i=1:size(P,4), [Pc1(:,:,:,i),RR] = cat_vol_resize(P(:,:,:,i),'reduceV',vx_vol,job.extopts.uhrlim,32); end %#ok<AGROW>
-      Pc1 = cat_main_clean_gwc1639(Pc1,1);
+      Pc1 = cat_main_clean_gwc(Pc1,1);
       for i=1:size(P,4), P(:,:,:,i)   = cat_vol_resize(Pc1(:,:,:,i),'dereduceV',RR); end 
       clear Pc1 Pc2;
     end
