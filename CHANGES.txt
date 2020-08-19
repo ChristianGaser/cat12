@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1695 | gaser | 2020-08-19 16:59:42
+r1696 | gaser | 2020-08-19 17:34:09
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_main1639.m
+A       cat_main_clean_gwc1639.m
+M       cat_main_updateSPM1639.m
+M       html/cat.html
+
+Changed: Added cat_main_clean_gwc1639 and calls from r1639 functions again.
+------------------------------------------------------------------------
+r1695 | gaser | 2020-08-19 16:59:49 +0200 (Mi, 19 Aug 2020) | 14 lines
 
 Changed paths:
 M       CAT12-Manual.pdf
@@ -14,6 +26,7 @@ M       html/cat_versions.html
 
 (1) Changed: Updated online help and CAT12 manual.
 (2) Changed: Added more explanation used units for mean ROI function.
+
 ------------------------------------------------------------------------
 r1694 | dahnke | 2020-08-19 15:42:00 +0200 (Mi, 19 Aug 2020) | 15 lines
 
