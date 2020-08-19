@@ -52,38 +52,49 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
     %  prepare data for segmentation
     if 1 
       %% classic approach, consider the WMH!
-      Kb2 = 4;
-      cls2 = zeros([d(1:2) Kb2]);
-      Yp0  = zeros(d,'uint8');
+      k1ind = [1 2 3 1 0 0 1 0];  
+      Kb2   = min(numel(Ycls),numel(k1ind));
+      cls2  = zeros([d(1:2) Kb2]);
+      Yp0   = zeros(d,'uint8');
       for i=1:d(3)
           for k1 = 1:Kb2, cls2(:,:,k1) = Ycls{k1}(:,:,i); end
           % find maximum for reordered segmentations
           [maxi,maxind] = max(cls2(:,:,[3,1,2,4:Kb2]),[],3);
-          k1ind = [1 2 3 1 0 0 1 0]; 
           for k1 = 1:Kb2
             Yp0(:,:,i) = Yp0(:,:,i) + cat_vol_ctype((maxind == k1) .* (maxi~=0) * k1ind(k1) .* Yb(:,:,i)); 
           end
       end
 
       %% correct missing parts by using the intensity normalized map or the old Yp0 label map
+% ########## NEW ###########
+% RD202008: this may not working correctly 
+defineMissingParts = 1;
+if defineMissingParts
       if job.extopts.ignoreErrors < 2
         Yp0o = min(3,max(1,uint8(max(Yb,min(3,round(Ymi*3)))))); 
       else
         Yp0o = min(3,max(1,single(Ycls{3})/255*3 + single(Ycls{1})/255*2 + single(Ycls{2})/255));
       end
       Yp0(Yb & Yp0==0) = cat_vol_ctype( round( Yp0o(Yb & Yp0==0) ) ); 
+end
+% ########## NEW ###########
 
       if ~debug, clear maxi maxind Kb k1 cls2 Yp0o; end
     else
       % more direct method ... a little bit more WM, less CSF
       Yp0 = uint8(max(Yb,min(3,round(Ymi*3)))); Yp0(~Yb) = 0;
     end 
-    Yp0o = min(3,max(1,uint8(max(Yb,min(3,round(Ymi*3))))));
-    Yp0(Yb & (Yp0<=0 | Yp0>3)) = min(3,max(1,cat_vol_ctype( round( Yp0o(Yb & (Yp0<=0 | Yp0>3)) ) ))); 
+% ########## NEW ###########    
+% RD202008: class 0 is required and ignored by the AMAP
+if defineMissingParts
+    Yp0o = min(3,max(0,uint8(max(Yb,min(3,round(Ymi*3)))))); % class 0 is required!
+    Yp0(Yb & (Yp0<=0 | Yp0>3)) = min(3,max(1,cat_vol_ctype( round( Yp0o(Yb & (Yp0<=0 | Yp0>3)) ) ))); clear Yp0o
     if sum( Yp0(Yb(:)>0.5)==0 ) ~= 0 
       error('cat_main_amap:badYp0def', ...
         'Undefined tissues within the brain area may cause severe MATLAB errors while calling cat_amap.c.');
     end
+end
+% ########## NEW ###########
 
 
     % use index to speed up and save memory
