@@ -89,6 +89,7 @@ function mcsvtab = cat_roi_exportSample(job)
   def.delimiter     = ','; 
   def.point         = '.';
  
+  
   job = cat_io_checkinopt(job,def);
   [px,job.calcroi_name,ee] = spm_fileparts(job.calcroi_name);
   if ~strcmp(ee,'.csv'), job.calcroi_name = [job.calcroi_name ee]; end
@@ -118,6 +119,15 @@ function mcsvtab = cat_roi_exportSample(job)
   FN = {'catROI','catROIs'};
   for fni=1:numel(FN)
     if isfield(job,FN{fni})
+
+      fprintf('---------------------------------------------------------------------------------------------\n')
+      if strcmp(FN{fni},'catROIs')      
+        fprintf('The mean volume values in mL are saved to %s\n',job.outdir);
+      else
+        fprintf('The mean surface values are saved to %s\n',job.outdir);
+      end
+      fprintf('---------------------------------------------------------------------------------------------\n')
+
 
       catROI   = cat_io_xml(job.(FN{fni}));
 
@@ -173,8 +183,9 @@ function mcsvtab = cat_roi_exportSample(job)
 
           %% write result if measures are not beginning with "I" (intensity) or "T" (volume thickness)
           if ~strcmp(measures{mi}(1),'T') && ~strcmp(measures{mi}(1),'I')
-            cat_io_csv(fullfile(job.outdir,...
-              sprintf('%s_%s_%s_%s.csv',job.calcroi_name,FN{fni},atlases{ai},measures{mi})),...
+            csv_file = fullfile(job.outdir,sprintf('%s_%s_%s_%s.csv',job.calcroi_name,FN{fni},atlases{ai},measures{mi}));
+            fprintf('Save %s.\n',csv_file);
+            cat_io_csv(csv_file,...
               mcsvtab.(FN{fni}).(atlases{ai}).(measures{mi}),'','',struct('delimiter',job.delimiter,'komma',job.point));
           end
 
