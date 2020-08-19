@@ -37,12 +37,14 @@
           <ul>
             <li>Geodesic shooting registration and surface estimation are now used by default.</li>
             <li>The surface pipeline is largely updated: (1) Parameters for surface reconstruction were optimized. (2) Freesurfer distance method Tfs is now implemented, which is computed as the average of  the closest distances from the pial to the white matter surface and from the white matter to the pial surface. This reduces the occurrence of larger thickness values and results in more reliable thickness measures. For mapping of 3D data the old thickness metric from PBT is more appropriate and is still used.</li>
+            <li>An additional longitudinal model is implemented that also takes into account deformations between time points. The use of deformations between the time points makes it possible to estimate and detect larger changes, while subtle effects over shorter periods of time in the range of weeks or a few months can be better detected with the model for small changes.</li>
             <li>Minor changes were made to the segmentation approach to improve accuracy and reliability.</li>
             <li>Internal resampling is now using a new ''optimal'' resolution setting to better support high-resolution data.</li>
             <li>Changed recommendation and defaults for smoothing size to smaller values.</li>
             <li>Renamed template folder for volumes to templates_volumes.</li>
             <li>Atlases installed in spm12/atlas are now called cat12_atlasname.</li>
-            <li>The old AAL atlas has been replaced by the AAL3 atlas</li>
+            <li>The old AAL atlas has been replaced by the AAL3 atlas.</li>
+            <li>Cobra atlas is updated because of some previous inconsistencies.</li>
           </ul>
         </ul>
         <ul>

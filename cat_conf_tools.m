@@ -1935,7 +1935,7 @@ function calcroi = cat_roi_fun_GUI(outdir)
   calcroi_name.strtype  = 's';
   calcroi_name.num      = [1 Inf];
   calcroi_name.val      = {'ROI'};
-  calcroi_name.help     = {'The volume values in mL are written to the current working directory unless a valid full pathname is given. The output file will also include the name of the atlas and the measure (e.g. Vgm). The file is using tabstops to separate values in order to easily import the file into Excel or SPSS or any other software for subsequent analysis.'};
+  calcroi_name.help     = {'The mean volume values in mL (e.g. GM volume) or the mean surface values (e.g. thickness) are written to the current working directory unless a valid full pathname is given. The output file will also include the name of the atlas and the measure (e.g. Vgm). The file is using tabstops to separate values in order to easily import the file into Excel or SPSS or any other software for subsequent analysis.'};
 
   calcroi               = cfg_exbranch;
   calcroi.tag           = 'calcroi';
@@ -1944,8 +1944,8 @@ function calcroi = cat_roi_fun_GUI(outdir)
   %calcroi.val   = {roi_xml,usefolder,point,outdir,calcroi_name}; % usefolder is never used
   calcroi.prog          = @(job)cat_roi_fun('exportSample',job);
   calcroi.help          = {
-    'This function reads volume values in mL inside a ROI from different atlases and saves values for all data in a csv-file. '
-    'Missed values were replaced by NaN.'
+    'This function reads values inside a ROI from different atlases and saves either the mean volume values in mL (e.g. GM volume) or the mean surface values (e.g. thickness) for all data in a csv-file. '
+    'Missed values are replaced by NaN.'
   };
 
 %_______________________________________________________________________
