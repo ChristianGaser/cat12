@@ -22,8 +22,8 @@ if ST
     atlas_file = fullfile(pth,[nam '.nii']);
     new_atlas_name = ['cat12_' nam '.nii'];
     try
-      copyfile(atlas_file,fullfile(atlas_dir,new_atlas_name));
-      delete(old_xml_file);
+      copyfile(atlas_file,fullfile(atlas_dir,new_atlas_name),'f');
+      if exist(old_xml_file,'file'), delete(old_xml_file); end
       fprintf('Install %s\n',xml_file);
     catch
       disp('Writing error: Please check file permissions.');

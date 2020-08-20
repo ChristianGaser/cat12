@@ -9,7 +9,7 @@ DATE=`svn info |grep 'Last Changed Date: '|sed -e 's/Last Changed Date: //g'|cut
 
 TARGET=/Users/gaser/spm/spm12/toolbox/cat12
 TARGET2=/Volumes/UltraMax/spm12/toolbox/cat12
-TARGET3=paris.biomag.uni-jena.de:/Volumes/UltraMax/spm12/toolbox/cat12
+TARGET3=paris.biomag.uni-jena.de:/home/gaser/spm12/toolbox/cat12
 
 PRECOMPILED=/Users/gaser/install/Matlab/Matlab_R2017b
 CAT12=/Users/gaser/matlab/cat12
@@ -106,7 +106,7 @@ checklist:
 	-@echo Checklist for testing CAT12 in order to release
 	-@echo -----------------------------------------------
 	-@echo 1. Check Test data
-	-@echo	  cd  ~/matlab/vbm8/test/maci64 && calc_all.sh
+	-@echo    "cd  ~/matlab/vbm8/test/maci64 && calc_all.sh"
 	-@echo    mv surf surf_rXXXX
 	-@echo    render_surf.sh surf_rXXXX -range 0 6
 	-@echo    
@@ -139,6 +139,8 @@ checklist:
 	-@echo    CAT12 GUI Segment
 	-@echo    
 	-@echo 8. Check old SPM12 version on UltraMax
+	-@echo    
+	-@echo 9. Check thickness phantom 
 
 precompile:
 	-@echo    

@@ -7,9 +7,8 @@ If you use these atlases, please cite the references below.
 
 
 Websites:    
-A) http://www.spl.harvard.edu/publications/item/view/1883
-B) http://wiki.slicer.org/slicerWiki/index.php/Slicer3:Mori-Atlas_labels
-C) http://na-mic.org/Wiki/index.php/Projects:RegistrationLibrary:RegLib_C26
+A) http://wiki.slicer.org/slicerWiki/index.php/Slicer3:Mori-Atlas_labels
+B) http://na-mic.org/Wiki/index.php/Projects:RegistrationLibrary:RegLib_C26
 
 
 References:
