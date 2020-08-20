@@ -79,7 +79,7 @@ function varargout = cat_surf_calc(job)
     
     % call surfcalc
     if strcmp(strrep(job.expression,' ',''),'s1') % this is just a copy
-      copyfile(job.cdata{1},job.output);
+      copyfile(job.cdata{1},job.output,'f');
     else
       job.verb = 1; 
       surfcalc(job);
@@ -124,7 +124,7 @@ function varargout = cat_surf_calc(job)
       sjob.output   = job.output{si};
       try
         if strcmp(strrep(job.expression,' ',''),'s1') % this is just a copy
-          copyfile(sjob.cdata{1},job.output{si});
+          copyfile(sjob.cdata{1},job.output{si},'f');
         else
           surfcalc(sjob);
         end

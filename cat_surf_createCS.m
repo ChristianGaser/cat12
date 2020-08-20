@@ -290,9 +290,9 @@ cstime = clock;
 
       % try to copy surface files from prior to indivudal surface data 
       useprior = 1;
-      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff0)),Pcentral);
-      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff0)),Psphere);
-      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff0)),Pspherereg);
+      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff0)),Pcentral,'f');
+      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff0)),Psphere,'f');
+      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff0)),Pspherereg,'f');
       if ~useprior
         fprintf('\n');
         cat_io_addwarning('cat_surf_createCS:noPiorSurface', ...
@@ -686,7 +686,7 @@ cstime = clock;
           facevertexcdata(facevertexcdata > opt.thick_limit) = opt.thick_limit;
           cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);  
         else % otherwise simply copy ?h.pbt.* to ?h.thickness.*
-          copyfile(Ppbt,Pthick);
+          copyfile(Ppbt,Pthick,'f');
         end
         
         
@@ -1088,7 +1088,7 @@ cstime = clock;
 			facevertexcdata(facevertexcdata > opt.thick_limit) = opt.thick_limit;
 			cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);  
     else % otherwise simply copy ?h.pbt.* to ?h.thickness.*
-      copyfile(Ppbt,Pthick);
+      copyfile(Ppbt,Pthick,'f');
     end
     
     

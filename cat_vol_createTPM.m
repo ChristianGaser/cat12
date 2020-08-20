@@ -659,8 +659,8 @@
     end
     for ai = 1:numel(job.files.afiles)
       % txt and csv
-      if exist( Patlastxt{ai}, 'file' ), copyfile( Patlastxt{ai} , out.atlastxt{ai} ); end
-      if exist( Patlascsv{ai}, 'file' ), copyfile( Patlascsv{ai} , out.atlascsv{ai} ); end
+      if exist( Patlastxt{ai}, 'file' ), copyfile( Patlastxt{ai}, out.atlastxt{ai},'f' ); end
+      if exist( Patlascsv{ai}, 'file' ), copyfile( Patlascsv{ai}, out.atlascsv{ai},'f' ); end
       % nifti
       if max(Ya{ai}(:))>255, dtype = 'uint16'; else, dtype = 'uint8'; end
       Ndef      = nifti;

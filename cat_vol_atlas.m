@@ -1112,7 +1112,7 @@ function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel)
   create_spm_atlas_xml(fullfile(resdir,[atlas '.xml']),csv,Pxml);
   
   if ~isempty(Ptxt) && exist(Ptxt{1},'file')
-    copyfile(Ptxt{1},fullfile(resdir,[atlas '.txt']));
+    copyfile(Ptxt{1},fullfile(resdir,[atlas '.txt']),'f');
   end
 end
 
