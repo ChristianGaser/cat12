@@ -138,7 +138,7 @@ function cat_run_job(job,tpm,subj)
         cfname  = fullfile(pp,[ff ee]);
         ofname  = fullfile(pp,[ff(3:end) ee]); 
         nfname  = fullfile(pp,mrifolder,['n' ff '.nii']); 
-        copyfile(ofname,nfname); 
+        copyfile(ofname,nfname,'f'); 
 
         Ysrc0    = single(spm_read_vols(obj.image)); 
         Ylesion  = single(isnan(Ysrc0) | isinf(Ysrc0) | Ysrc0==0); clear Ysrc0;
@@ -230,7 +230,7 @@ function cat_run_job(job,tpm,subj)
           ofname  = fullfile(pp,[ff ee]); 
           nfname  = fullfile(pp,mrifolder,['n' ff '.nii']); 
           if strcmp(ee,'.nii')
-            copyfile(ofname,nfname); 
+            copyfile(ofname,nfname,'f'); 
           elseif strcmp(ee,'.img')
             V = spm_vol(job.channel(n).vols{subj});
             Y = spm_read_vols(V);

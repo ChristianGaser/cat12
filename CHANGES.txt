@@ -1,5 +1,33 @@
 ------------------------------------------------------------------------
-r1696 | gaser | 2020-08-19 17:34:09
+r1697 | gaser | 2020-08-20 16:07:23
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_install_atlases.m
+M       cat_long_multi_run.m
+M       cat_run_job.m
+M       cat_run_job1639.m
+M       cat_run_newcatch.m
+M       cat_surf_calc.m
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       cat_vol_atlas.m
+M       cat_vol_createTPM.m
+M       html/cat.html
+M       html/cat_licences.html
+M       html/cat_methods_RBM.html
+M       templates_volumes/mori.txt
+A       templates_volumes/schaefer.txt
+
+(1) Changed: Many updates to atlas information in online help.
+(2) Changed: Added 'f' flag to copyfile calls because of rare file permission
+             issues.
+(3) Changed: Updated Makefile.
+
+------------------------------------------------------------------------
+r1696 | gaser | 2020-08-19 17:34:42 +0200 (Mi, 19 Aug 2020) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +38,7 @@ M       cat_main_updateSPM1639.m
 M       html/cat.html
 
 Changed: Added cat_main_clean_gwc1639 and calls from r1639 functions again.
+
 ------------------------------------------------------------------------
 r1695 | gaser | 2020-08-19 16:59:49 +0200 (Mi, 19 Aug 2020) | 14 lines
 

@@ -69,7 +69,7 @@ end
 % matlab files will be always pre-compiled, but we need the original matlab file untouched
 m_job_name = strrep(job_name,'.txt','.m');
 if ~exist(m_job_name,'file')
-  copyfile(job_name,m_job_name);
+  copyfile(job_name,m_job_name,'f');
 end
 
 % mirror jobs for all subjects
