@@ -74,6 +74,6 @@ OV.save = 'png';
 % define atlas for labeling
 % comment this out for interactive selection
 % or use 'none' for no atlas information
-OV.atlas = 'dartel_neuromorphometrics';
+OV.atlas = 'cat12_neuromorphometrics';
 
 cat_vol_slice_overlay(OV)
