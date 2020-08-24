@@ -44,6 +44,13 @@ function cat_main_reportcmd(job,res,qa)
 
   fprintf('%s\n\n',repmat('-',1,72));
 
+  % definition of subfolders
+  if job.extopts.subfolders
+    reportfolder  = 'report';
+  else
+    reportfolder  = '';
+  end
+  
   % finish diary entry of "../report/cmdln_*.txt"
   % read diary and add the command-line output to the *.xml and *.mat file
   diary off; 

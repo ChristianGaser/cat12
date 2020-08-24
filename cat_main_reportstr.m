@@ -231,7 +231,7 @@ function str = cat_main_reportstr(job,res,qa)
           cp{1},job.extopts.spm_kamap, cp{2},job.extopts.WMHC, cp{3},job.extopts.SLC, cp{4},job.extopts.collcorr, cp{5},restype))];
   else
     kamapstr  = {'SPM US','','KAMAP'};  
-    wmhcstr   = {'none (WMH~GM)','temporary (WMH~ GM)','WM','own class'};
+    wmhcstr   = {'none (WMH=GM)','temporary (WMH=GM)','(WMH=WM)','own class'};
     str{1} = [str{1} struct('name', 'Initial Segmentation / WMH Correction / Int. Res.:',...
       'value',sprintf('%s{%s} / %s{%s} / %s{%s}',cp{1},kamapstr{job.extopts.spm_kamap+1}, cp{2},wmhcstr{job.extopts.WMHC+1}, cp{5},restype))];
   end
@@ -333,8 +333,8 @@ function str = cat_main_reportstr(job,res,qa)
   str{3}(end).value = [str{3}(end).value '%'];
 
   % warning if many WMH were found but no correction is active 
-  if job.extopts.WMHC<2 && (qa.subjectmeasures.vol_rel_CGW(4)>0.03 || ...
-     qa.subjectmeasures.vol_rel_CGW(4)/qa.subjectmeasures.vol_rel_CGW(3)>0.05)
+  if job.extopts.WMHC<2 && (qa.subjectmeasures.vol_rel_CGW(4)>0.01 || ...
+     qa.subjectmeasures.vol_rel_CGW(4)/qa.subjectmeasures.vol_rel_CGW(3)>0.02)
     str{3}(end).value = [str{3}(end).value sprintf('\\bf\\color[rgb]{1 0 1} WMHs!')];  
   end
   

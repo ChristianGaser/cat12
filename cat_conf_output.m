@@ -21,27 +21,21 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
   surface        = cfg_menu;
   surface.tag    = 'surface';
   surface.name   = 'Surface and thickness estimation';
-  if exist('/Users/dahnke','dir') % only to support a fast overview also with the default GUI 
-    surface.labels = {'No','Yes','Yes (fast, no registration)'};
-    surface.values = {0 1 5};
-    surface.val    = {5}; 
-  else
-    surface.labels = {'No','Yes'};
-    surface.values = {0 1};
-    surface.def    = @(val)cat_get_defaults('output.surface', val{:});
-  end
+  surface.labels = {'No','Yes','Yes - visual preview'};
+  surface.values = {0 1 5};
+  surface.def    = @(val)cat_get_defaults('output.surface', val{:});
   surface.help   = {
   'Use projection-based thickness (PBT) (Dahnke et al. 2012) to estimate cortical thickness and to create the central cortical surface for left and right hemisphere. Surface reconstruction includes topology correction (Yotter et al. 2011), spherical inflation (Yotter et al.) and spherical registration. Additionally you can also estimate surface parameters such as gyrification, cortical complexity or sulcal depth that can be subsequently analyzed at each vertex of the surface. '
   ''
-  'Please note, that surface reconstruction additionally requires about 20-60 min of computation time.'
+  'Please note, that surface reconstruction and registration additionally requires about 20-60 min of computation time.'
   ''
-  'You can also estimate thickness for ROI analysis only. This takes much less time, but does not allow to use the advantages of surface-based registration and smoothing and the extraction of additional surface parameters. Here, the analysis is restricted to cortical thickness in atlas-defined ROIs only.'
+  'A quick (1-3 min) surface pipeline is available for visual purpose (e.g., to check preprocessing quality) in the cross-sectional but not longitudinal pipeline.  Only the initial surfaces were created at a lower resolution and without topology correction, spherical mapping, and surface registration.  Please note that the estimated surface thickness files can therefore not be used for further analysis!  For differentiation, these files include "preview" in their filename and they are not available as batch dependencies objects. '
   ''
   };
 
   if expert == 2
     surface.labels = {'No','lh + rh','lh + rh + cb',...
-      'lh + rh (fast, no registration)','lh + rh + cb (fast, no registration)', ...
+      'lh + rh (preview)','lh + rh + cb (preview)', ...
       ...'lh + rh (fast registration)', ... 7
       'lh + rh + cb (fast registration)',... 8 
       'Thickness estimation (for ROI analysis only)', 'Full'};
@@ -49,8 +43,7 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
     surface.help   = [surface.help; {
       'Cerebellar reconstruction is still in development and is strongly limited due to the high frequency of folding and image properties! '
       ''
-      'The fast reconstruction allows a _visual_ check of the processing quality by providing a reconstructed cortical surface and thickness values with slightly lower accuracy. It takes only a few minutes for both hemispheres by internally using 0.8 mm (instead of 0.5 mm) spatial resolution and by skipping topology correction and surface registration. Please note that neither the surface nor the measures on the surface (e.g., thickness) can be used for any further statistical analysis! '
-      ''
+      'You can also estimate thickness for ROI analysis only. This takes much less time, but does not allow to use the advantages of surface-based registration and smoothing and the extraction of additional surface parameters. Here, the analysis is restricted to cortical thickness in atlas-defined ROIs only.'
     }];    
   end
 

@@ -67,15 +67,31 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     case {'MACI','MACI64'},   fontsize = 9.5;
     otherwise,                fontsize = 9.5;
   end
-  
+
+  % get axis
   try
     ax = axes('Position',[0.01 0.75 0.98 0.24],'Visible','off','Parent',fg);
   catch
     error('Do not close the SPM Graphics window during preprocessing');
   end
 
+  
+  % some sans serif fonts we prefere
+  if exist('ax','var')
+    fontname = get(ax,'fontname');
+  end
+  fonts  = listfonts; 
+  pfonts = {'Verdana','Arial','Helvetica','Tebuchet MS','Tahoma','Geneva','Microsoft Sans Serif'};
+  for pfi = 1:numel(pfonts)
+    ffonti = find(cellfun('isempty',strfind(fonts,pfonts{pfi},'ForceCellOutput',1))==0,1,'first'); 
+    if ~isempty( ffonti )
+      fontname  = fonts{ffonti};
+      break
+    end
+  end   
+  
   text(0,0.99,  ['Segmentation: ' spm_str_manip(res.image0(1).fname,'k60d') '       '],...
-    'FontSize',fontsize+1,'FontWeight','Bold','Interpreter','none','Parent',ax);
+    'FontName',fontname,'FontSize',fontsize+1,'FontWeight','Bold','Interpreter','none','Parent',ax);
 
   cm = job.extopts.colormap; 
 
@@ -140,7 +156,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     yticklabelp0{end-2} = ' \color[rgb]{1,0,1}WMHs > WM';
   end
 
-  colormap(cmap);
+  colormap(fg,cmap);
+  %spm_orthviews('colormap',cmap); 
   try spm_orthviews('Redraw'); end
 
   
@@ -150,18 +167,18 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   warning('off','MATLAB:tex')
   htext = zeros(5,2,2);
   for i=1:size(str{1},2)   % main parameter
-    htext(1,i,1) = text(0.01,0.98-(0.055*i), str{1}(i).name  ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
-    htext(1,i,2) = text(0.51,0.98-(0.055*i), str{1}(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(1,i,1) = text(0.01,0.98-(0.055*i), str{1}(i).name  ,'FontName',fontname,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
+    htext(1,i,2) = text(0.51,0.98-(0.055*i), str{1}(i).value ,'FontName',fontname,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   end
   for i=1:size(str{2},2)  % qa-measurements
-    htext(2,i,1) = text(0.01,0.48-(0.055*i), str{2}(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-    htext(2,i,2) = text(0.25,0.48-(0.055*i), str{2}(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(2,i,1) = text(0.01,0.48-(0.055*i), str{2}(i).name  ,'FontName',fontname,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(2,i,2) = text(0.25,0.48-(0.055*i), str{2}(i).value ,'FontName',fontname,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   end
   % qa-scala
   %htext(5,1,1) = text(0.01,0.45-(0.055*(i+2)),str4(1).name,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   for i=1:size(str{3},2)  % subject-measurements
-    htext(3,i,1) = text(0.51,0.45-(0.055*i), str{3}(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-    htext(3,i,2) = text(0.70,0.45-(0.055*i), str{3}(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(3,i,1) = text(0.51,0.45-(0.055*i), str{3}(i).name  ,'FontName',fontname,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(3,i,2) = text(0.70,0.45-(0.055*i), str{3}(i).value ,'FontName',fontname,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   end
 
   % position values of the orthview/surface subfigures
@@ -240,18 +257,18 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     VT0x.mat = dispmat * VT0x.mat; 
     try
       hho = spm_orthviews('Image',VT0x,pos(1,:));
-      spm_orthviews('Caption',hho,{T1txt},'FontSize',fontsize-1,'FontWeight','Bold');
-      spm_orthviews('window',hho,[0 single(WMth)*cmmax]); caxis([0,2]);
+      spm_orthviews('Caption',hho,{T1txt},'FontName',fontname,'FontSize',fontsize-1,'FontWeight','Bold');
+      spm_orthviews('window',hho,[0 single(WMth)*cmmax]); 
     end
     cc{1} = axes('Position',[pos(1,1) + 0.26 0.37 0.02 0.15],'Parent',fg);     
     image((60:-1:1)','Parent',cc{1});
 
     if job.extopts.inv_weighting
       set(cc{1},'YTick',ytick,'YTickLabel',fliplr(yticklabeli),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-        'FontSize',fontsize-1,'FontWeight','Bold','YAxisLocation','right');
+        'FontName',fontname,'FontSize',fontsize-1,'FontWeight','normal','YAxisLocation','right');
     else  
       set(cc{1},'YTick',ytick,'YTickLabel',fliplr(yticklabelo),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-        'FontSize',fontsize-1,'FontWeight','Bold','YAxisLocation','right');
+        'FontName',fontname,'FontSize',fontsize-1,'FontWeight','normal','YAxisLocation','right');
     end
   else
     cat_io_cprintf('warn','WARNING: Can''t display original file "%s"!\n',VT.fname); 
@@ -271,12 +288,12 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     Vm.mat    = dispmat * Vm.mat; 
     try
       hhm = spm_orthviews('Image',Vm,pos(2,:));
-      spm_orthviews('Caption',hhm,{['m*.nii (Intensity normalized ' wstr ')']},'FontSize',fontsize-1,'FontWeight','Bold');
-      spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
+      spm_orthviews('Caption',hhm,{['m*.nii (Intensity normalized ' wstr ')']},'FontName',fontname,'FontSize',fontsize-1,'FontWeight','Bold');
+      spm_orthviews('window',hhm,[0 cmmax]);
       cc{2} = axes('Position',[pos(2,1) + 0.26 0.37 0.02 0.15],'Parent',fg);
       image((60:-1:1)','Parent',cc{2}); 
       set(cc{2},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-        'FontSize',fontsize-1,'FontWeight','Bold','YAxisLocation','right');
+        'FontName',fontname,'FontSize',fontsize-1,'FontWeight','normal','YAxisLocation','right');
     end
   end
  
@@ -376,8 +393,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         V2.dat(Ychange & Ym>1.66/3) = 60/30; 
         
         % WMHs
-        if job.extopts.WMHC > 1 || (qa.subjectmeasures.vol_rel_CGW(4)>0.03 || ...
-          qa.subjectmeasures.vol_rel_CGW(4)/qa.subjectmeasures.vol_rel_CGW(3)>0.05)
+        if job.extopts.WMHC > 1 || (qa.subjectmeasures.vol_rel_CGW(4)>0.01 || ...
+          qa.subjectmeasures.vol_rel_CGW(4)/qa.subjectmeasures.vol_rel_CGW(3)>0.02)
           V2.dat(NS(Yl1,LAB.HI)) = 52/30;
         end
         
@@ -440,8 +457,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   %% legend
   try
     spm_orthviews('Reposition',[-25 0 0]); 
-    spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize-1,'FontWeight','Bold');
-    spm_orthviews('window',hhp0,[0 cmmax]); caxis([0,2]);
+    spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontName',fontname,'FontSize',fontsize-1,'FontWeight','Bold');
+    spm_orthviews('window',hhp0,[0 cmmax]);
   end
   global st;
   if isfield(res,'spmpp'), id=2; else, id=3; end
@@ -460,13 +477,13 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     cc{id} = axes('Position',[pos(3,1) + 0.26 0.02 0.02 0.15],'Parent',fg);
     image((60:-1:1)','Parent',cc{id});
     set(cc{id},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-      'FontSize',fontsize-1,'FontWeight','Bold','YAxisLocation','right');
+      'FontName',fontname,'FontSize',fontsize-1,'FontWeight','Bold','YAxisLocation','right');
   end
   if ~debug, clear Yp0; end
   %spm_orthviews('redraw');
   
   
-  %% TPM overlay with brain/head and head/background surfaces
+  % TPM overlay with brain/head and head/background surfaces
   warning('off','MATLAB:subscripting:noSubscriptsSpecified')
   showTPMsurf = 1; % ... also in default mode 
   for id=1:numel(st.vols)
@@ -516,7 +533,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       cclp = plot(ccl,([0 0.4;0.6 1])',[0 0; 0 0],'b-'); 
       text(1.2,0,['Brain and skull',native2unicode(10,'latin1'),...
         'overlay from affine',native2unicode(10,'latin1'),'registered TPM'],...
-        'Parent',ccl,'Fontsize',fontsize-2);
+        'Parent',ccl,'FontName',fontname,'Fontsize',fontsize-2);
       set(cclp,'LineWidth',0.75); axis(ccl,'off')
       
       
@@ -566,7 +583,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   end
  
  
-  %% 
+  % surfaces 
   if exist('Psurf','var') && ~isempty(Psurf)
     % ... clearup this part of code when finished ...
     % add contex menu for principle test
@@ -612,7 +629,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         st.vols{id}.mesh.meshes = [M0,M1];
       end
 
-      %% change line style
+      % change line style
       hM = findobj(st.vols{id}.ax{1}.cm,'Label','Mesh');
       UD = get(hM,'UserData');
       UD.width = [repmat(0.5,1,numel(UD.width) - nPsurf)  repmat(0.5,1,nPsurf)]; 
@@ -620,11 +637,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       set(hM,'UserData',UD);
       if ov_mesh, try, spm_ov_mesh('redraw',id); end; end
 
-      %% TPM legend
+      % TPM legend
       try
         ccl2{id} = axes('Position',[pos(id + (id==2 && isfield(res,'spmpp')),1:2) 0 0] + [0.35 0 0.02 0.02],'Parent',fg);
         plot(ccl2{id},[0 1],[0 0],'k-'); axis(ccl2{id},'off')
-        text(1.2,0,stxt,'Parent',ccl2{id},'Fontsize',fontsize-2);
+        text(1.2,0,stxt,'Parent',ccl2{id},'FontName',fontname,'Fontsize',fontsize-2);
       end
     end
 
@@ -633,7 +650,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     %if ~debug, spm_orthviews('RemoveContext',id); end 
   end
     
-  %%
+  
   imat = spm_imatrix(res.Affine); Rigid = spm_matrix([imat(1:6) 1 1 1 0 0 0]); clear imat;
          
   % surface
@@ -642,7 +659,6 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       if opengl('info')
         try
           id1  = find( ~cellfun('isempty',strfind({Psurf(:).Pcentral},'lh.')) ,1, 'first'); 
-          %%
           spm_figure('Focus','Graphics'); 
           hCS = subplot('Position',[0.50 0.05 0.55 0.30],'visible','off'); 
           renderer = get(fg,'Renderer');
@@ -655,21 +671,21 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
           else
             fprintf('Surface display suppressed due to OpenGL issues.\n');
           end
-
           for ppi = 1:numel(hSD{1}.patch)
             V = (Rigid * ([hSD{1}.patch(ppi).Vertices, ones(size(hSD{1}.patch(ppi).Vertices,1),1)])' )'; 
             V(:,4) = []; hSD{1}.patch(ppi).Vertices = V;
           end
 
 % ##########          
-% - 
-% - show thickness histogram (of each side) ?          
+% RD202007 show thickness histogram (of each side) ?          
 % ##########          
-          if any( job.output.surface == [4 5] ); fst = ' \color[rgb]{1 0 0}FAST!'; else, fst = ''; end
-          colormap(cmap);  set(hSD{1}.colourbar,'visible','off'); 
+          if any( job.output.surface == [4 5] ); fst = ' \color[rgb]{1 0 0}preview!'; else, fst = ''; end
+          colormap(fg,cmap);  set(hSD{1}.colourbar,'visible','off'); 
           cc{4} = axes('Position',[0.63 0.02 0.3 0.01],'Parent',fg); image((121:1:120+surfcolors),'Parent',cc{4});
-          set(cc{4},'XTick',1:(surfcolors-1)/6:surfcolors,'XTickLabel',{'0','1','2','3','4','5',['          6 mm' fst]},...
-            'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize-1,'FontWeight','Bold');
+          set(cc{4},'XTick',1:(surfcolors-1)/6:surfcolors,'XTickLabel',...
+            {'\color[rgb]{0 0 0}0','\color[rgb]{0 0 0}1','\color[rgb]{0 0 0}2',...
+             '\color[rgb]{0 0 0}3','\color[rgb]{0 0 0}4','\color[rgb]{0 0 0}5',['          6 mm' fst]},...
+            'YTickLabel','','YTick',[],'TickLength',[0 0],'FontName',fontname,'FontSize',fontsize-1,'FontWeight','normal');
         catch
           cat_io_cprintf('warn','WARNING: Can''t display surface!\n',VT.fname);   
         end
@@ -681,7 +697,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 
 
 
-  %% print subject report file as standard PDF/PNG/... file
+  % print subject report file as standard PDF/PNG/... file
   job.imgprint.type   = 'pdf';
   job.imgprint.dpi    = 300;
   job.imgprint.fdpi   = @(x) ['-r' num2str(x)];
@@ -695,9 +711,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 
   % it is necessary to change some figure properties especially the fontsizes 
   set(fg,'PaperPositionMode','auto','resize','on','PaperPosition',[0 0 1 1]);
-  for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize*0.8); end; end
-  for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize*0.8); end
-  
+  for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'FontName',fontname,'Fontsize',fontsize*0.8); end; end
+  for hti = 1:numel(cc), set(cc{hti},'FontName',fontname,'Fontsize',fontsize*0.8); end
   warning('off','MATLAB:hg:patch:RGBColorDataNotSupported');
   % the PDF is is an image because openGL is used but -painters would not look good for surfaces ... 
   try % does not work in headless mode without java
@@ -705,14 +720,15 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     print(fg, job.imgprint.ftype('jpeg'), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fnamej); 
   end
 
-  for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize); end; end
-  for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize); end
+  for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'FontName',fontname,'Fontsize',fontsize); end; end
+  for hti = 1:numel(cc), set(cc{hti},'FontName',fontname,'Fontsize',fontsize); end
   set(fg,'PaperPositionMode',fgold.PaperPositionMode,'resize',fgold.resize,'PaperPosition',fgold.PaperPosition);
   try
     fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);% windows error?
   end
 
-  %% reset colormap to the simple SPM like gray60 colormap
+  
+  % reset colormap to the simple SPM like gray60 colormap
   % ... DELETE THIS LATER
   %{
   if exist('hSD','var')
@@ -730,12 +746,12 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     end
   end
   %}
-  
-  %% new colorscale
-  cmap(1:60,:) = gray(60); cmap(61:120,:) = flip(pink(60),1); cmap(121:120+surfcolors,:) = jet(surfcolors); 
-  colormap(cmap); caxis([0,numel(cmap)]); 
 
-  %%
+  
+  % new colorscale
+  cmap(1:60,:) = gray(60); cmap(61:120,:) = flip(pink(60),1); cmap(121:120+surfcolors,:) = jet(surfcolors); 
+  colormap(fg,cmap); %caxis([0,numel(cmap)]); 
+
   WMfactor0 = single(WMth) * 8/6; 
   WMfactor1 = 8/6; 
   
@@ -744,7 +760,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   if exist('hhp0','var'), try, spm_orthviews('window',hhp0,[0 WMfactor1]); end; end
   
   
-  %% change line style of TPM surf
+  % change line style of TPM surf
   if (job.extopts.expertgui>0 - showTPMsurf) && ov_mesh && exist('Psurf','var') && ~isempty(Psurf)
     for id=1:3
       if isfield(st.vols{id},'ax')   

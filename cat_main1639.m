@@ -636,6 +636,8 @@ if debug, clear Yp0; end
 if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9 && ...
    any( [job.output.ct.native job.output.ct.warped job.output.ct.dartel job.output.ROI] ))
  
+  stime = clock; 
+ 
   if ~isfield(job,'useprior')
     job.useprior = '';
   end
@@ -732,7 +734,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
     cat_surf_surf2roi(struct('cdata',{{Pthick_lh}},'rdata',{Psatlas_lh}));
   end
   
-  cat_io_cmd('Surface and thickness estimation');  
+  cat_io_cmd('Surface and thickness estimation takes');  
   fprintf('%5.0fs\n',etime(clock,stime));
   if ~debug; clear YMF Yp0; end
   if ~debug && ~job.output.ROI && job.output.surface, clear Yth1; end
