@@ -8,10 +8,12 @@ function cat_stat_analyze_ROIs(spmmat,alpha,show_results)
 if nargin < 1
   spmmat = spm_select(1,'SPM.mat','Select SPM.mat file to get design');
 end
+
 if isempty(spmmat)
   return
+else
+  load(spmmat);
 end
-load(spmmat);
 
 % write beta images
 write_beta = 0;
@@ -580,7 +582,7 @@ if mesh_detected
   
   % display ROI surface results
   if show_results
-    name_mesh = ['mesh.logP' corr_short{show_results} output_name '.gii'];
+    name_mesh = fullfile(cwd,['mesh.logP' corr_short{show_results} output_name '.gii']);
     cat_surf_results('Disp',name_mesh);
   end
 
@@ -626,7 +628,10 @@ else % write label volume with thresholded p-values
     if found_inv &   ~isempty(ind_corr_inv{show_results})
       OV.range   = [-ceil(max(data{show_results}(isfinite(data{show_results})))) ceil(max(data{show_results}(isfinite(data{show_results}))))];
     end
-    OV.name = ['logP' corr_short{show_results} output_name '.nii'];
+    OV.name = fullfile(cwd,['logP' corr_short{show_results} output_name '.nii']);
+    OV.save = 'png';
+    OV.atlas = 'cat12_neuromorphometrics';
+    OV.xy = [4 6];
     slices_str = spm_input('Select Slices','+1','m',{'-30:4:60','Estimate slices with local maxima'},{char('-30:4:60'),''});
     OV.slices_str = slices_str{1};
     OV.transform = char('axial');

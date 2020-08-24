@@ -251,7 +251,14 @@ if isempty(strfind(RS,'Usage'));
   else
     [ST, RS] = system('uname -a');
   end
-  cat_io_cmd(sprintf('\nWARNING: Surface processing will not work because\n(1) CAT binaries are not compatible to your system or\n(2) Antivirus software is blocking to execute binaries:\n%s\n',RS),'warning');
+  cat_io_cmd(sprintf('\nWARNING: Surface processing will not work because\n(1) CAT binaries are not compatible to your system or\n(2) Antivirus software in Windwos or Gatekeeper in MAC OS is blocking to execute binaries:\n%s\n',RS),'warning');
+  % check Gatekeeper on MAC OS
+  if ismac
+    [ST, RS] = system('spctl --status');
+    if ~isempty(strfind(RS,'enabled'))
+      fprintf('\n\nPlease disable Gatekeeper on MAC OS!\n');
+    end
+  end
   fprintf('\n\nFor future support of your system please send this message to christian.gaser@uni-jena.de\n\n');
 end
 
