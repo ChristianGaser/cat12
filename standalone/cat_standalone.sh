@@ -6,6 +6,14 @@
 # run main
 ########################################################
 
+# get cat12 dir
+ARCH=`uname`
+if [ "$ARCH" == "Darwin" ]; then
+  cat12_dir="~/spm/standalone/spm12.app/Contents/MacOS/spm12/toolbox/cat12" 
+else
+  cat12_dir="your_folder/spm12/toolbox/cat12" 
+fi
+
 main ()
 {
   cwd=`dirname $0`
@@ -257,10 +265,10 @@ USAGE:
    will only run in expert mode to allow more options.
    See cat_standalone_segment.txt for an example. 
    
-   You can also define an one or two optional arguments to change other parameters that are indicated by "<UNDEFINED>"
-   in the batch file. Please take care of the order of the "<UNDEFINED>" fields in the batch file.
+   You can also define one or two optional arguments to change other parameters that are indicated by "<UNDEFINED>"
+   in the batch file. Please take care of the order of the "<UNDEFINED>" fields in the batch file!
    If you use a computer cluster it is recommended to use the batch files to only process one data set 
-   and use a job or queue tool to provide the single jobs to the cluster.
+   and use a job or queue tool to call the (single) jobs on the cluster.
    
 PURPOSE:
    Command line call of (CAT12) batch files for SPM12 standalone installation
@@ -268,6 +276,23 @@ PURPOSE:
 EXAMPLE
    cat_standalone.sh -s ~/spm/standalone/ -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment.txt sTRIO0001.nii
    Preprocess (segment) the single file sTRIO0001.nii using the default CAT12 preprocessing batch. 
+   SPM12 standalone version is located in ~/spm/standalone and Matlab Compiler Runtime in
+   /Applications/MATLAB/MATLAB_Runtime/v93/.
+
+   cat_standalone.sh -s ~/spm/standalone/ -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment.txt sTRIO0001.nii -a1 "${cat12_dir}/templates_volumes/TPM_Age11.5.nii"
+   Preprocess (segment) the single file sTRIO0001.nii using the default CAT12 preprocessing batch, but use the children TPM provided with CAT12. 
+   SPM12 standalone version is located in ~/spm/standalone and Matlab Compiler Runtime in
+   /Applications/MATLAB/MATLAB_Runtime/v93/.
+
+   cat_standalone.sh -s ~/spm/standalone/ -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment_long.txt sTRIO000*.nii -a1 "2"
+   Preprocess (segment) the files sTRIO000*.nii with the longitudinal pipeline optimized for detecting aging/developmental effects. 
+   In order to choose the longitudinal model optimized for detecting small changes due to plasticity/learning change the a1 parameter to "1".
+   SPM12 standalone version is located in ~/spm/standalone and Matlab Compiler Runtime in
+   /Applications/MATLAB/MATLAB_Runtime/v93/.
+
+   cat_standalone.sh -s ~/spm/standalone/ -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment_long.txt sTRIO000*.nii -a1 "1" -a2 "${cat12_dir}/templates_volumes/TPM_Age11.5.nii"
+   Preprocess (segment) the files sTRIO000*.nii with the longitudinal pipeline optimized for detecting plasticity/learning effects and use the 
+   children TPM provided with CAT12.
    SPM12 standalone version is located in ~/spm/standalone and Matlab Compiler Runtime in
    /Applications/MATLAB/MATLAB_Runtime/v93/.
 
