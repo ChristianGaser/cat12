@@ -86,9 +86,10 @@ scp_manual:
 
 scp_precompile:
 	-@echo scp_precompile
-	-@for i in Linux ; do \
+	-@for i in Linux Mac; do \
 	    mkdir -p MCR_$${i} ;\
-	    ln -s ${PRECOMPILED}/MCR_$${i}/*spm12* MCR_$${i}/ ;\
+	    ln -s ${PRECOMPILED}/MCR_$${i}/*spm12* ${PRECOMPILED}/MCR_$${i}/readme.txt MCR_$${i}/ ;\
+	    cp -r standalone MCR_$${i}/ ;\
 	    zip cat12_latest_R2017b_MCR_$${i}.zip -r MCR_$${i} ;\
 	  done
 	-@scp -P 2222 cat12_latest_R2017b_MCR* ${STARGET}

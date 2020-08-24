@@ -1,10 +1,31 @@
 ------------------------------------------------------------------------
-r1699 | gaser | 2020-08-24 09:57:32
+r1700 | gaser | 2020-08-24 13:33:24
+
+Changed paths:
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       check_pipeline/batch_surface_pipeline.m
+M       html/cat.html
+M       html/cat_versions.html
+M       standalone/cat_standalone.sh
+M       standalone/cat_standalone_segment.txt
+M       standalone/cat_standalone_segment_long.txt
+
+(1) Changed: Added standalone folder to precompiled CAT12 versions. 
+(2) Changed: Updated help text for cat_standalone.sh.
+(3) Fixed:   Corrected directory dependencies in standalone batch files.
+                          
+------------------------------------------------------------------------
+r1699 | gaser | 2020-08-24 09:58:11 +0200 (Mo, 24 Aug 2020) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
+M       Contents.m
 M       cat_stat_analyze_ROIs.m
 M       cat_vol_slice_overlay_ui.m
+M       html/cat.html
 M       spm_cat12.m
 MM      templates_volumes/schaefer.txt
 
@@ -13,6 +34,7 @@ MM      templates_volumes/schaefer.txt
 (2) Fixed:   Corrected atlas name in cat_vol_slice_overlay_ui.m.
 (4) Fixed:   Added missing path to batch mode in cat_stat_analyze_ROIs.m.
                           
+
 ------------------------------------------------------------------------
 r1698 | gaser | 2020-08-24 09:22:21 +0200 (Mo, 24 Aug 2020) | 22 lines
 
