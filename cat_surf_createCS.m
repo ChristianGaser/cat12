@@ -271,6 +271,12 @@ cstime = clock;
     Pfsavgsph  = fullfile(opt.fsavgDir, sprintf('%s.sphere.freesurfer.gii',opt.surf{si}));      % fsaverage sphere    
     Pfsavgmask = fullfile(opt.fsavgDir, sprintf('%s.mask',opt.surf{si}));                       % fsaverage mask    
     
+    if opt.fast == 1 % no registration
+      Pcentral   = fullfile(pp,surffolder,sprintf('%s.central.preview.%s.gii',opt.surf{si},ff));          % central
+      Ppbt       = fullfile(pp,surffolder,sprintf('%s.pbt.preview.%s',opt.surf{si},ff));                  % PBT thickness / GM depth
+      Pthick     = fullfile(pp,surffolder,sprintf('%s.thickness.preview.%s',opt.surf{si},ff));            % FS thickness / GM depth
+    end
+    
     % use surface of given (average) data as prior for longitudinal mode
     if isfield(opt,'useprior') && ~isempty(opt.useprior) 
       % RD20200729: delete later ... && exist(char(opt.useprior),'file') 

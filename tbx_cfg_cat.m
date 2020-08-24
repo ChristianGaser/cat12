@@ -337,7 +337,7 @@ if isfield(opts,'surface')
     {'depthWM','depthCSF'}      % developer
   };
   if any( job.output.surface == [ 5 6 ] ) %&& cat_get_defaults('extopts.expertgui')<2
-    measureoutput{1} = setdiff(measureoutput{1},{'thickness'}); 
+    measureoutput{1} = setdiff(measureoutput{1},{'thickness','pbt'}); 
   end
   % no output of intlayer4 or defects in cat_surf_createCS but in cat_surf_createCS2 (but not with fast) 
   if isfield(job,'extopts') && isfield(job.extopts,'surface') && ...
