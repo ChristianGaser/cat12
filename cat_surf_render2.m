@@ -127,7 +127,8 @@ switch lower(action)
             H.issubfigure = 1; 
             H.axis   = O.parent;
             H.figure = ancestor(H.axis,'figure');
-            figure(H.figure); axes(H.axis);
+            % this brigs the figure to the foregroudn :/
+            %figure(H.figure); axes(H.axis);
         else
             H.issubfigure = 0;
             H.figure = figure('Color',[1 1 1]);

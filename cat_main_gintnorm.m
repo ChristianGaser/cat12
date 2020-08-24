@@ -141,7 +141,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
       %%
       BGmin = min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))); 
       T3th3(1) = min( min(clsints(3,0)) , mean(Ysrc(Ycls{3}(:)>240))); 
-      if res.ppe.affreg.highBG
+      if isfield(res,'ppe') && isfield(res.ppe,'affreg') && isfield(res.ppe.affreg,'highBG') && res.ppe.affreg.highBG
         BGminl = BGmin - 8 * diff( [BGmin T3th3(1)] ); % compenstate  BGminl*0.1+0.9*T3th3(1) the minimum is close to CSF here
         BGcon  = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3))]);
       else
@@ -434,7 +434,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
       %Ybm   = cat_vol_morph(Ycls{6}>240 & Ysrc<min(T3th),'lc'); 
       BGmin = min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))); 
       %BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),cat_stat_nanmedian(Ysrc(Ycls{end}(:)>128))]);
-      if ~res.ppe.affreg.highBG
+      if isfield(res,'ppe') && isfield(res.ppe,'affreg') && isfield(res.ppe.affreg,'highBG') && ~res.ppe.affreg.highBG
         BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),cat_stat_nanmedian(Ysrc(Ysrc(:)>BGminl & Ycls{end}(:)>128))]);
       end
       BMth  = max(BGmin,mean([BGcon,T3th(1)])); % - diff(T3th(1:2)))); %max(0.01,cat_stat_nanmedian(Ysrc(Ybm(:))));
@@ -479,7 +479,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
       %% final peaks and intesity scaling
       %  -----------------------------------------------------------------
       T3th3 = T3th_cls;
-      if res.ppe.affreg.highBG
+      if isfield(res,'ppe') && isfield(res.ppe,'affreg') && isfield(res.ppe.affreg,'highBG') && res.ppe.affreg.highBG
         BMCSFth = BMth*0.9 + 0.1*T3th3(1);
         T3thx = [3/5, 3/5, 4/5, 1:5];
       else
@@ -662,7 +662,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
         else
           Ybge = cat_vol_morph(Ycls{6}>128,'de',15,vx_vol); 
         end
-        if res.ppe.affreg.highBG
+        if isfield(res,'ppe') && isfield(res.ppe,'affreg') && isfield(res.ppe.affreg,'highBG') && res.ppe.affreg.highBG
           Ybge = cat_vol_localstat(Ysrc,Ybge,2,1) / cat_stat_nanmean(Ysrc(Ybge(:)>0));
         end
         %% final correction map with correction for double counts
@@ -674,8 +674,11 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
         Yim  = ~Ycm &  Ygm &  Ywm; Yi(Yim) = Yi(Yim) ./ ( Ygm(Yim) + Ywm(Yim));
         Yi(isnan(Yi) | isinf(Yi))=0;
         if ~debug, clear Yim Ycm Ygm Ywm; end 
-        Yiw   = cat_vol_approx(Yi,4 * (res.ppe.affreg.highBG * 3 + 1)); 
-        
+        if isfield(res,'ppe') && isfield(res.ppe,'affreg') && isfield(res.ppe.affreg,'highBG') && res.ppe.affreg.highBG
+          Yiw   = cat_vol_approx(Yi,4 * (res.ppe.affreg.highBG * 3 + 1)); 
+        else
+          Yiw   = cat_vol_approx(Yi,4); 
+        end
         %% correction 
         %  ds('d2sm','a',1,Ysrc/clsint(3),Ysrc ./ Yi / clsint(3),140)
         Ysrc = Ysrc ./ Yiw; 
@@ -688,7 +691,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
       end
      
       % T3th, T3thx - keep it simple and avoid inversion
-      if res.ppe.affreg.highBG
+      if isfield(res,'ppe') && isfield(res.ppe,'affreg') && isfield(res.ppe.affreg,'highBG') && res.ppe.affreg.highBG
         BGth = round( clsintv(6) / max([clsintv(3) clsintv(1) clsintv(2)]) * 6 ) / 2;
       else
         BGth = 0.05; 
