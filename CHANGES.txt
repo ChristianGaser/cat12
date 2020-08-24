@@ -1,5 +1,29 @@
 ------------------------------------------------------------------------
-r1697 | gaser | 2020-08-20 16:07:23
+r1698 | gaser | 2020-08-24 09:21:38
+
+Changed paths:
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       cat_main.m
+ M      cat_main_clean_gwc1639.m
+M       cat_main_kamap.m
+M       cat_run_job1639.m
+M       html/cat.html
+M       html/cat_licences.html
+M       html/cat_methods_RBM.html
+M       html/cat_versions.html
+M       tbx_cfg_cat.m
+
+(1) Changed: Many updates to atlas information in online help.
+(2) Changed: Also use cat_main_amap1639 instead of cat_main_amap  in cat_main.m
+             and cat_main_kamap.m
+(3) Changed: Suppress warning for creating already existing directories in 
+             cat_run_job1639.m.
+(4) Fixed:   Added missing inv_weighting field to cat_main.m.
+                          
+------------------------------------------------------------------------
+r1697 | gaser | 2020-08-20 16:08:04 +0200 (Do, 20 Aug 2020) | 26 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -25,6 +49,7 @@ A       templates_volumes/schaefer.txt
 (2) Changed: Added 'f' flag to copyfile calls because of rare file permission
              issues.
 (3) Changed: Updated Makefile.
+
 
 ------------------------------------------------------------------------
 r1696 | gaser | 2020-08-19 17:34:42 +0200 (Mi, 19 Aug 2020) | 10 lines

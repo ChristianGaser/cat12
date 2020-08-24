@@ -120,12 +120,13 @@ if ~isfield(res,'spmpp')
     [Ysrcr,resGI] = cat_vol_resize(Ysrc      , 'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm');
     Ybr           = cat_vol_resize(single(Yb), 'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm')>0.5;
     Yclsr = cell(size(Ycls)); for i=1:6, Yclsr{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,min(vx_vol*2,1.4),32); end
-    [Ymr,T3th,Tth,job.extopts.inv_weighting,noise] = cat_main_gintnorm(Ysrcr,Yclsr,Ybr,resGI.vx_volr,res,job.extopts);
+    [Ymr,T3th,Tth,job.inv_weighting,noise] = cat_main_gintnorm(Ysrcr,Yclsr,Ybr,resGI.vx_volr,res,job.extopts);
     clear Ymr Ybr Ysrcr Yclsr; 
     Ym = cat_main_gintnorm(Ysrc,Tth); 
   else
-    [Ym,T3th,Tth,job.extopts.inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,job.extopts);
+    [Ym,T3th,Tth,job.inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,job.extopts);
   end
+  job.extopts.inv_weighting = job.inv_weighting;
   fprintf('%5.0fs\n',etime(clock,stime));
 
 
@@ -402,7 +403,7 @@ if ~isfield(res,'spmpp')
   %  RD202006: Updated ignoreErrors pipeline that try to use AMAP if 
   %            ignoreError < 4.
   %  -------------------------------------------------------------------
-  [prob,indx,indy,indz] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res);
+  [prob,indx,indy,indz] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res);
  
   
   
