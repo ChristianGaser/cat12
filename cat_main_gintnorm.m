@@ -142,7 +142,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
       BGmin = min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))); 
       T3th3(1) = min( min(clsints(3,0)) , mean(Ysrc(Ycls{3}(:)>240))); 
       if isfield(res,'ppe') && isfield(res.ppe,'affreg') && isfield(res.ppe.affreg,'highBG') && res.ppe.affreg.highBG
-        BGminl = BGmin - 8 * diff( [BGmin T3th3(1)] ); % compenstate  BGminl*0.1+0.9*T3th3(1) the minimum is close to CSF here
+        BGminl = BGmin - 8 * diff( [BGmin T3th3(1)] ); % compensate  BGminl*0.1+0.9*T3th3(1) the minimum is close to CSF here
         BGcon  = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3))]);
       else
         BGminl = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),cat_stat_nanmedian(Ysrc(Ycls{end}(:)>128))]);
@@ -476,7 +476,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
       end
 
 
-      %% final peaks and intesity scaling
+      %% final peaks and intensity scaling
       %  -----------------------------------------------------------------
       T3th3 = T3th_cls;
       if isfield(res,'ppe') && isfield(res.ppe,'affreg') && isfield(res.ppe.affreg,'highBG') && res.ppe.affreg.highBG
