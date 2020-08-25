@@ -1951,7 +1951,8 @@ if H.n_surf == 1
     set(H.colourbar, 'XTickLabel', XTickLabel(2:end, :), 'XTick', XTick);
   end % end H.logP
   
-  set(H.colourbar, 'XColor', 1-H.bkg_col, 'YColor', 1-H.bkg_col, 'TickDirection','out');
+  set(H.colourbar, 'XColor', 1-H.bkg_col, 'YColor', 1-H.bkg_col);
+  try, set(H.colourbar, 'TickDirection','out'); end
   try
     set(H.colourbar, 'TickLength', 0.01);
   catch
