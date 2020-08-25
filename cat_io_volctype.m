@@ -159,19 +159,19 @@ function out = cat_io_volctype(varargin)
         Y = ( Y - min(Y(:)) ) / diff([min(Y(:)),max(Y(:))]);
         if job.intscale==2
           if any( ctype == [ 256 512 768 2 4 8] ) %  all integer types
-            error('cat_io_volctype:improperDatatype','Selected datatype does not provide selected intesity range.');
+            error('cat_io_volctype:improperDatatype','Selected datatype does not provide selected intensity range.');
           else
             Y = Y * (2^8  - 1); 
           end
         elseif job.intscale==2
           if ctype == 256  %  int8
-            error('cat_io_volctype:improperDatatype','Selected datatype does not provide selected intesity range.');
+            error('cat_io_volctype:improperDatatype','Selected datatype does not provide selected intensity range.');
           else
             Y = Y * (2^8  - 1); 
           end
         elseif job.intscale==3
           if any( ctype == [ 256 2 4 ] ) % int8 uint8 int16
-            error('cat_io_volctype:improperDatatype','Selected datatype does not provide selected intesity range.');
+            error('cat_io_volctype:improperDatatype','Selected datatype does not provide selected intensity range.');
           else
             Y = Y * (2^16 - 1);
           end

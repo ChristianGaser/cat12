@@ -45,7 +45,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm1639(Ysrc,Ycls
  
   if isstruct(Ycls)
     
-    %% final peaks and intesity scaling
+    %% final peaks and intensity scaling
     %  -----------------------------------------------------------------
     T3th  = Ycls.T3th;
     T3thx = Ycls.T3thx;
@@ -536,7 +536,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm1639(Ysrc,Ycls
     end
     
     
-    %% final peaks and intesity scaling
+    %% final peaks and intensity scaling
     %  -----------------------------------------------------------------
     T3th3 = T3th_cls;
     T3th  = [min(Ysrcr(~isnan(Ysrcr(:)) & ~isinf(Ysrcr(:)))) BMth min(BGth,mean([BMth,T3th3(1)])) T3th3 ...

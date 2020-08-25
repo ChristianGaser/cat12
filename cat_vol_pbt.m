@@ -129,7 +129,7 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
 
  %  stime = cat_io_cmd(sprintf('    WM distance (GM - %0.2f): ',mean(vx_vol_org)),'g5','',opt.verb,stime);      
         %% GM intensity:
-        %  find the higher intesity GM average and avoid the CSF PVE 
+        %  find the higher intensity GM average and avoid the CSF PVE 
         lth = 1.8; %1.8; % 1.8 - 2.2
         [Ymfr,YM2maxr,resT2] = cat_vol_resize({Ymf,YM2max},'reduceV',opt.resV,mean(vx_vol_org),32,'meanm');
         
