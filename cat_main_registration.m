@@ -536,7 +536,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
             % in my view a more appropriate jacobian determinant 
             % The 2nd reason to use the old modulation is compatibility with cat_vol_defs.m
             yi2 = spm_diffeo('invdef' , Yyd, odim, eye(4), eye(4)); 
-            w   = max( eps , spm_diffeo('def2det', yi2 ) ); % .* prod( sqrt(sum( M1(1:3,1:3).^2))); 
+            w   = max( eps , abs(spm_diffeo('def2det', yi2 ) ) ); % .* prod( sqrt(sum( M1(1:3,1:3).^2))); 
             % avoid boundary effects that are not good for the global measurements 
             w(:,:,[1 end]) = NaN; w(:,[1 end],:) = NaN; w([1 end],:,:) = NaN;
             % use half registration resolution to define the amout of
@@ -871,7 +871,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
             else 
               yi  = spm_diffeo('invdef',yid,idim,inv(M1t\res.Affine*M0),eye(4));  % output yi in anatomical resolution 
             end
-            dt2 = spm_diffeo('def2det',yid); if ~debug, clear yid; end  
+            dt2   = abs(spm_diffeo('def2det',yid)); if ~debug, clear yid; end  
 
 
             % Modulation using spm_diffeo and push introduces aliasing artefacts,
@@ -879,7 +879,7 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
             % in my view a more appropriate jacobian determinant 
             % The 2nd reason to use the old modulation is compatibility with cat_vol_defs.m
             yi2 = spm_diffeo('invdef' , yi, odim, eye(4), eye(4)); 
-            w   = max( eps , spm_diffeo('def2det', yi2 ) ); % .* prod( sqrt(sum( M1(1:3,1:3).^2))); 
+            w   = max( eps , abs(spm_diffeo('def2det', yi2 ) ) ); % .* prod( sqrt(sum( M1(1:3,1:3).^2))); 
             % avoid boundary effects that are not good for the global measurements 
             w(:,:,[1 end]) = NaN; w(:,[1 end],:) = NaN; w([1 end],:,:) = NaN;
             % use half registration resolution to define the amout of

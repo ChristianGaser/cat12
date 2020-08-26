@@ -27,26 +27,35 @@ FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
 
 ZIPFILE=cat12_r${REVISION}.zip
 
-install: 
+# prepare txt file for deployed versions
+copy_longmode:
+	-@cp -R cat_long_mainShoot.m cat_long_mainShoot.txt
+
+# install
+install: copy_longmode
 	-@echo install
 	-@test ! -d ${TARGET} || rm -rf ${TARGET}/*
 	-@mkdir -p ${TARGET}
 	-@cp -R ${FILES} ${TARGET}/
 
-install2:
+#install on UltraMax
+install2: copy_longmode
 	-@echo install2
 	-@test ! -d ${TARGET2} || rm -rf ${TARGET2}/*
 	-@mkdir -p ${TARGET2}
 	-@cp -R ${FILES} ${TARGET2}/
 
-install3:
+#install on paris
+install3: copy_longmode
 	-@echo install3
 	-@scp -r ${FILES} ${TARGET3}/
 
+# print available commands
 help:
 	-@echo Available commands:
 	-@echo install zip scp scp_manual doc update cp_binaries archive check_pipeline checklist precompile
 
+#make html documentation
 doc:
 	-@cat html/cat.txt | sed -e 's/VERSION/'${NEWVERSION}'/g' -e 's/RELNUMBER/r'${REVISION}'/g' -e 's/DATE/'${DATE}'/g' > html/cat.html
 	-@test ! -d cat12-html || rm -r cat12-html
@@ -56,7 +65,8 @@ doc:
 	-@perl -p -i -e "s/matlab:web\(\'//g" cat12-html/*.html
 	-@cp cat12-html/cat.html cat12-html/index.html
 
-update: doc
+# update version numners
+update: doc copy_longmode
 	-@svn update
 	-@echo '% Computational Anatomy Toolbox' > Contents.m
 	-@echo '% Version' ${REVISION}' ('${NEWVERSION}')' ${DATE} >> Contents.m
@@ -67,6 +77,7 @@ update: doc
 	-@cat INSTALL_info.txt >> INSTALL.txt
 	-@perl -p -i -e "s/${OLDVERSION}/${NEWVERSION}/g" spm_cat12.m
 
+# zip release
 zip: update
 	-@echo zip
 	-@test ! -d cat12 || rm -r cat12
@@ -74,16 +85,19 @@ zip: update
 	-@cp -rp ${FILES} cat12
 	-@zip ${ZIPFILE} -rm cat12
 
+# scp release
 scp: html zip
 	-@echo scp to http://${STARGET_HOST}/cat12/${ZIPFILE}
 	-@scp -P 2222 CHANGES.txt CAT12-Manual.pdf ${ZIPFILE} ${STARGET}
 	-@scp -r -P 2222 cat12-html ${STARGET_HTDOCS}/
 	-@bash -c "ssh -p 2222 ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${ZIPFILE} ${STARGET_FOLDER}/cat12_latest.zip"
-	
+
+# scp manual
 scp_manual:
 	-@echo scp CAT12-Manual.pdf to http://${STARGET_HOST}/cat12
 	-@scp -P 2222 CAT12-Manual.pdf ${STARGET}
 
+# scp deployed versions
 scp_precompile:
 	-@echo scp_precompile
 	-@for i in Linux Mac; do \
@@ -95,6 +109,7 @@ scp_precompile:
 	-@scp -P 2222 cat12_latest_R2017b_MCR* ${STARGET}
 	-@rm -r cat12_latest_R2017b_MCR* MCR_*
 
+# copy binaries after cross-compiling
 cp_binaries: 
 	-@echo copy binaries
 	-@test ! -f ~/work/c/CAT/build-*/Progs/*.o || rm ~/work/c/CAT/build-*/Progs/*.o
@@ -102,6 +117,7 @@ cp_binaries:
 	-@for i in CAT.w32/CAT*; do cp ~/work/c/CAT/build-i586-mingw32/Progs/`basename $$${i}` CAT.w32/ ; done
 	-@for i in CAT.maci64/CAT*; do cp ~/work/c/CAT/build-native/Progs/`basename $$${i}` CAT.maci64/ ; done
 
+# print check list for releasing
 checklist:
 	-@echo    
 	-@echo Checklist for testing CAT12 in order to release
@@ -143,6 +159,7 @@ checklist:
 	-@echo    
 	-@echo 9. Check thickness phantom 
 
+# print help for precompiling
 precompile:
 	-@echo    
 	-@echo Checklist for precompiling CAT12
@@ -155,15 +172,16 @@ precompile:
 	-@echo    "Mac OS: rm -rf /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Mac/spm12.app; mv /Users/gaser/spm/standalone/spm12.app /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Mac/"
 	-@echo    
 
+# rescue from archives
 archive:
 	-@echo available archives to install
 	-@ls cat12_r*zip
 	-@test ! -d cat12 || rm -rf cat12
 	-@test ! -d ${TARGET} || rm -rf ${TARGET}
 	-@read -p "Type release number (3 or 4 digits), followed by [ENTER]:" ver; unzip cat12_r$${ver}.zip; cp -R cat12 ${TARGET}
-	
+
+# run check pipeline
 check_pipeline: update install
 	-@echo Check pipeline
 	-@./check_pipeline.sh -d /Volumes/UltraMax/check_pipeline/ -s ~/spm/spm12 -bg 8 -f /Volumes/UltraMax/check_pipeline/check_pipeline_files.txt
 	-@echo Please finally call post-processing with the resp. pid: check_pipeline.sh -p pid
-	

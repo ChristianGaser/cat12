@@ -57,19 +57,16 @@ if isfield(job,'datalong')
   job = rmfield(job,'datalong');
 end
 
-% decide whether we use model for small or large changes
-if job.longmodel == 1
-  job_name = fullfile(spm('dir'),'toolbox','cat12','cat_long_main.txt');
-else
-  % additionally apply deformations between scans to deal with larger changes
-  job_name = fullfile(spm('dir'),'toolbox','cat12','cat_long_mainShoot.txt');
-end
+job_name = fullfile(spm('dir'),'toolbox','cat12','cat_long_main.txt');
 
 % we have to copy the original txt-file to a matlab file because for deployed versions
 % matlab files will be always pre-compiled, but we need the original matlab file untouched
 m_job_name = strrep(job_name,'.txt','.m');
-if ~exist(m_job_name,'file')
-  copyfile(job_name,m_job_name,'f');
+if isdeployed
+  [status, mesg] = copyfile(job_name,m_job_name,'f');
+  if ~status
+    error(mesg);
+  end
 end
 
 % mirror jobs for all subjects
@@ -92,9 +89,9 @@ end
 out.surf = cell(''); out.thick = cell(''); out.mwp1 = cell('');
 out.catreport = cell(''); out.catroi = cell('');
 for i=1:numel(job.subj)
-	out.sess(i).warps = cell(1,1);
-	[pth,nam,ext,num] = spm_fileparts(job.subj(i).mov{1});
-	out.sess(i).warps{1} = fullfile(pth,mrifolder,['avg_y_', nam, ext, num]);
+  out.sess(i).warps = cell(1,1);
+  [pth,nam,ext,num] = spm_fileparts(job.subj(i).mov{1});
+  out.sess(i).warps{1} = fullfile(pth,mrifolder,['avg_y_', nam, ext, num]);
 
   out.sess(i).files = cell(numel(job.subj(i).mov),1);
   m = numel(job.subj(i).mov);
