@@ -1095,7 +1095,7 @@ end
           else 
             yi  = spm_diffeo('invdef',yid,idim,inv(M1t\res.Affine*M0),eye(4));  % output yi in anatomical resolution 
           end
-          dt2 = spm_diffeo('def2det',yid); if ~debug, clear yid; end  
+          dt2 = abs(spm_diffeo('def2det',yid)); if ~debug, clear yid; end  
           
 
           % interpolation for improved output ... need update 2012/12

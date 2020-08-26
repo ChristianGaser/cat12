@@ -1,5 +1,35 @@
 ------------------------------------------------------------------------
-r1702 | gaser | 2020-08-25 14:15:06
+r1703 | gaser | 2020-08-26 17:53:26
+
+Changed paths:
+M       CHANGES.txt
+M       Makefile
+A       cat_long_main.m
+M       cat_long_main.txt
+D       cat_long_mainShoot.txt
+M       cat_long_multi_run.m
+M       cat_main_registration.m
+M       cat_main_registration2.m
+M       cat_run.m
+M       cat_stat_check_cov.m
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       tbx_cfg_cat.m
+
+(1) Changed: Updated longitudinal pipeline and now only use cat_long_main.m
+             for both longitudinal models.
+(2) Changed: Updated and corrected dependencies in longitudinal batch.
+(3) Changed: Updated dependencies in CAT12 segmentation for some files.
+(4) Changed: Updated help texts.
+(5) Changed: Set boxplot as default in cat_stat_check_cov.m.
+(6) Changed: Updated Makefile.
+(7) Changed: Temporarily removed cat_simple from GUI because iT is not working yet.
+(8) Fixed:   Corrected use of positive Jacobian determinant in 
+             cat_main_registration*.m.
+
+
+------------------------------------------------------------------------
+r1702 | gaser | 2020-08-25 14:15:47 +0200 (Di, 25 Aug 2020) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -17,6 +47,7 @@ M       cat_vol_sanlm.m
 M       html/cat.html
 
 Changed: Updated help texts and comments.
+
 ------------------------------------------------------------------------
 r1701 | dahnke | 2020-08-24 14:05:58 +0200 (Mo, 24 Aug 2020) | 18 lines
 

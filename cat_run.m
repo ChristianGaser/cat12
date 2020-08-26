@@ -931,6 +931,8 @@ catreportpdf= {};
 catlog      = {};
 catxml      = {};
 jacobian    = {};
+roi         = {};
+sroi        = {};
 
 if job.extopts.subfolders
   roifolder    = 'label';
@@ -950,7 +952,6 @@ end
 
 % CAT report XML file
 % ----------------------------------------------------------------------
-roi = cell(n,1);
 for j=1:n
     catxml{j,1}       = fullfile(parts{j,1},reportfolder,['cat_',parts{j,2},'.xml']);
     catlog{j,1}       = fullfile(parts{j,1},reportfolder,['catlog_',parts{j,2},'.txt']);
@@ -1042,13 +1043,20 @@ for si = 1:numel(sides)
   end
 end
 
+% surface ROIs
+if job.output.surface
+  sroi = cell(n,1);
+  for j=1:n
+    sroi{j,1} = fullfile(parts{j,1},roifolder,['catROIs_',parts{j,2},'.xml']);
+  end
+end
 
 % XML label
 % ----------------------------------------------------------------------
 if job.output.ROI
     roi = cell(n,1);
     for j=1:n
-        roi{j} = fullfile(parts{j,1},roifolder,['catROI_',parts{j,2},'.xml']);
+        roi{j,1} = fullfile(parts{j,1},roifolder,['catROI_',parts{j,2},'.xml']);
     end
 end
 
@@ -1238,7 +1246,7 @@ vout  = struct('tiss',tiss,'label',{label},'wlabel',{wlabel},'rlabel',{rlabel},'
                'wibiascorr',{wibiascorr},'ribiascorr',{ribiascorr},'aibiascorr',{aibiascorr},...
                'invdef',{invdef},'fordef',{fordef},'jacobian',{jacobian},'catxml',{catxml},...
                'catlog',{catlog},'catreportpdf',{catreportpdf},'catreportjpg',{catreportjpg},...
-               'ta',{ta},'ita',{ita},'tr',{tr},'itr',{itr});
+               'ta',{ta},'ita',{ita},'tr',{tr},'itr',{itr},'sroi',{sroi});
              
 % add surface fields            
 for fi=1:numel(voutsfields)
@@ -1281,7 +1289,7 @@ function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
   end
 
   lazy = 0;
-lazy = 1; FNok = 0; return  
+  lazy = 1; FNok = 0; return  
   [pp,ff] = spm_fileparts(job.data{subj}); 
   catxml  = fullfile(pp,reportfolder,['cat_' ff '.xml']);
   
