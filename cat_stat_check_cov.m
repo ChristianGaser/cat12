@@ -71,7 +71,7 @@ end
 if isfield(job,'show_violin')
   show_violin = job.show_violin;
 else
-  show_violin = 1;
+  show_violin = 0;
 end
 
 if isfield(job,'show_name')

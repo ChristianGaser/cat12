@@ -9,7 +9,7 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS(V,V0,Ym,Ya,YMF,op
 %        vertices, faces, GM thickness (th1), and the transformation to
 %        map to nifti space (vmat) and back (vmati).
 % Psurf = name of surface files
-% EC    = Euler characteristics
+% EC    = Euler characteristic
 % defect_size = size of topology defects
 % V     = spm_vol-structure of internally interpolated image
 % V0    = spm_vol-structure of original image
@@ -51,7 +51,7 @@ cstime = clock;
   global vmat vmati mati
   
   % surface evaluation paramter 
-  res = struct('euler_characteristic',nan,'defect_size_promile',nan,'lh',struct(),'rh',struct()); 
+  res = struct('euler_characteristic',nan,'defect_size',nan,'lh',struct(),'rh',struct()); 
 
 %#ok<*AGROW>
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
@@ -678,7 +678,7 @@ cstime = clock;
         end
         fprintf('%5.0fs\n',etime(clock,stime)); 
         
-        % estimate Euler characteristics: EC = #vertices + #faces - #edges
+        % estimate Euler characteristic: EC = #vertices + #faces - #edges
         EC0 = size(CS.vertices,1) + size(CS.faces,1) - size(spm_mesh_edges(CS),1);
         EC  = EC + abs(EC0);
         
@@ -745,7 +745,7 @@ cstime = clock;
       defect_size0   = defect_size0   + sum(sdefects > 0) / length(sdefects) * 100; % percent
       defect_area0   = defect_area0   + sum(sdefects > 0) / length(sdefects) .* ...
         sum(cat_surf_fun('area',CS)) / opt.interpV / 100; clear defects; % cm2
-      % estimate Euler characteristics: EC = #vertices + #faces - #edges
+      % estimate Euler characteristic: EC = #vertices + #faces - #edges
       EC0            = (EC0-2) + ( size(CS.vertices,1) + size(CS.faces,1) - size(spm_mesh_edges(CS),1) - 2) + 2;
       EC             = EC + abs(EC0 - 2) + 2; % -2 is the correction for the sphere
       defect_size    = defect_size   + defect_size0;
@@ -1004,7 +1004,7 @@ cstime = clock;
     fprintf('%5.0fs\n',etime(clock,stime)); 
     
     if opt.verb>1 & ~useprior
-      cat_io_cprintf( 'g5', sprintf('    Euler char. / def. number / def. size: '));
+      cat_io_cprintf( 'g5', sprintf('    Euler number / defect number / defect size: '));
       cat_io_cprintf( color( rate(  EC0 - 2        , 0 , 2 * 50 * (1+9*iscerebellum)) ) , sprintf('%0.0f / '   , EC0 ) );
       cat_io_cprintf( color( rate(  defect_number0 , 0 , 2 * 50 * (1+9*iscerebellum)) ) , sprintf('%0.0f / '   , defect_number0 ) );
       cat_io_cprintf( color( rate(  defect_size0   , 0 , 2 * 5  * (1+9*iscerebellum)) ) , sprintf('%0.2f%%%% ' , defect_size0 ) );
@@ -1219,7 +1219,7 @@ cstime = clock;
     %   the white surface is may effected by aging, e.g. by WMHs.
     % - However, for both intensity and position some (average) maps would be also interesting. 
     %   Especially, some Kappa similar measure that describes the differences to the Ym or Ypp would be nice.
-    % - What does the Euler chararteristic say?  Wouldn't the defect number more useful for users? 
+    % - What does the Euler charateristic say?  Wouldn't the defect number more useful for users? 
     if any(~cellfun('isempty',strfind(opt.surf,'cb'))), cbtxt = 'cerebral '; else cbtxt = ''; end
     fprintf('Final %ssurface processing results: \n', cbtxt);
       
@@ -1238,7 +1238,7 @@ cstime = clock;
         cat_io_cprintf( color( rate(  mean([SIw,SIp]) , 0 , 20 ) ) , sprintf('%0.2f%%%% (%0.2f mm%s)\n'  , mean([SIw,SIp]) , mean([SIwa,SIpa]) , char(178) ) );
       end
       
-      fprintf('  Euler char. / def. number / def. size: ');
+      fprintf('  Euler number / defect number / defect size: ');
       cat_io_cprintf( color( rate(  EC - 2        , 0 , 100 * (1+9*iscerebellum)) ) , sprintf('%0.1f / '   , EC ) );
       cat_io_cprintf( color( rate(  defect_number , 0 , 100 * (1+9*iscerebellum)) ) , sprintf('%0.1f / '   , defect_number ) );
       cat_io_cprintf( color( rate(  defect_size   , 0 ,  10 * (1+9*iscerebellum)) ) , sprintf('%0.2f%%%% ' , defect_size ) );
