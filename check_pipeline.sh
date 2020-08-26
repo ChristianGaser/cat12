@@ -285,9 +285,9 @@ run_pipeline ()
     large=`grep "\-large" ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh`
     # call "-large" option only if available for that release
     if [ -z "$large" ]; then
-      ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi] 
-    else
       ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh -large ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi]
+    else
+      ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi] 
     fi
   fi
   

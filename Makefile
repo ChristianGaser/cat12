@@ -29,7 +29,7 @@ ZIPFILE=cat12_r${REVISION}.zip
 
 # prepare txt file for deployed versions
 copy_longmode:
-	-@cp -R cat_long_mainShoot.m cat_long_mainShoot.txt
+	-@cp -R cat_long_main.m cat_long_main.txt
 
 # install
 install: copy_longmode
