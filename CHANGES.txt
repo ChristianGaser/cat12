@@ -1,5 +1,22 @@
 ------------------------------------------------------------------------
-r1703 | gaser | 2020-08-26 17:53:26
+r1704 | gaser | 2020-08-26 18:21:01
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+D       cat_long_main.txt
+M       check_pipeline.sh
+M       html/cat.html
+
+(1) Fixed:   Corrected copying of long. batch files.
+(2) Fixed:   Corrected shell script for longitudinal batch.
+(3) Removed: Removed cat_long_main.txt, which is now copied from 
+             cat_long_main.m
+
+
+------------------------------------------------------------------------
+r1703 | gaser | 2020-08-26 17:59:33 +0200 (Mi, 26 Aug 2020) | 28 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -26,6 +43,7 @@ M       tbx_cfg_cat.m
 (7) Changed: Temporarily removed cat_simple from GUI because iT is not working yet.
 (8) Fixed:   Corrected use of positive Jacobian determinant in 
              cat_main_registration*.m.
+
 
 
 ------------------------------------------------------------------------
