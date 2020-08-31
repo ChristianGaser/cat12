@@ -14,7 +14,7 @@ function tools = cat_conf_tools(expert)
   data_xml.name     = '';
   data_xml.tag      = 'data_xml';
   data_xml.filter   = 'xml';
-  data_xml.ufilter  = '^cat_.*';
+  data_xml.ufilter  = '^cat_.*\.xml$';
   data_xml.val      = {{''}};
   data_xml.num      = [0 Inf];
   data_xml.help     = {''};
@@ -1870,7 +1870,7 @@ function calcvol = cat_stat_TIV_GUI
   data_xml.name = 'XML files';
   data_xml.tag  = 'data_xml';
   data_xml.filter = 'xml';
-  data_xml.ufilter = '^cat_.*';
+  data_xml.ufilter = '^cat_.*\.xml$';
   data_xml.num  = [1 Inf];
   data_xml.help   = {...
   'Select xml-files that are saved during segmentation in the report folder.'};
@@ -1894,7 +1894,7 @@ function calcroi = cat_roi_fun_GUI(outdir)
   roi_xml.name          = 'XML files';
   roi_xml.tag           = 'roi_xml';
   roi_xml.filter        = 'xml';
-  roi_xml.ufilter       = '^catROI.*';
+  roi_xml.ufilter       = '^catROI.*\.xml$';
   roi_xml.num           = [1 Inf];
   roi_xml.help          = {'These are the xml-files that are saved in the label folder.'};
 

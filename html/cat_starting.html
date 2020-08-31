@@ -30,10 +30,10 @@
       <h4>VBM data</h4>
       <ul>
         <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data using defaults (use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.long');">Segment Longitudinal Data</a> for longitudinal data).</li>
-        <li>Estimate <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.calcvol');">total intracranial volume (TIV)</a> to correct for different brain size and volume.</li>
+        <li>Estimate <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.calcvol');">total intracranial volume (TIV)</a> to correct for different brain sizes and volumes.</li>
         <li>Check the data quality with <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_cov');">Sample Homogeneity</a> for VBM data  (optionally consider TIV and age as nuisance variable).</li>
         <li><a class="function" href="matlab:spm_jobman('interactive','','spm.spatial.smooth');">Smooth</a> data (recommended start value 6-8mm<sup>1</sup>).</li>
-        <li>Build <a class="function" href="matlab:spm_jobman('interactive','cat_stat_factorial_design.m');">2nd-level Model</a> and check for design orthogonality and sample homogeneity:</li>
+        <li>Specify the <a class="function" href="matlab:spm_jobman('interactive','cat_stat_factorial_design.m');">2nd-level Model</a> and check for design orthogonality and sample homogeneity:</li>
         <ul>
           <li>Use "Full factorial" for cross-sectional data.</li>
           <li>Use "Flexible factorial" for longitudinal data.</li>
@@ -62,7 +62,7 @@
           <li>It is not necessary to use any threshold masking.</li>
           <li>If you find a considerable correlation between a nuisance parameter and any other parameter of interest it is advisable to use global scaling with that parameter. For more information, refer to <a href="cat_orthogonality.html">Orthogonality</a>.</li>
         </ul>
-        <li><a class="function" href="matlab:cat_stat_spm;">Estimate</a> surface model and finally call <a class="function" href="matlab:[hReg xSPM SPM] = cat_spm_results_ui('Setup');">Results</a>.</li>
+        <li><a class="function" href="matlab:cat_stat_spm;">Estimate the</a> surface model for (merged) hemispheres and finally call <a class="function" href="matlab:[hReg xSPM SPM] = cat_spm_results_ui('Setup');">Results</a>.</li>
         <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x_surf');">Transform and Threshold SPM-maps</a> to (log-scaled) p-maps or correlation maps.</li>
         <li>Optionally, you can try <a class="function" href="matlab:if exist(fullfile(spm('dir'),'toolbox','TFCE')),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">Threshold-Free Cluster Enhancement</a> (TFCE) with the SPM.mat file of a previously estimated statistical design.</li>
         <li>Optionally <a class="function" href="matlab:y=cat_surf_results;">Surface Overlay</a> for both hemispheres. Select the results (preferably saved as log-p maps with "Transform SPM-maps" or the TFCE_log maps with the different methods for multiple comparison correction) for the merged hemispheres to display rendering views of your results.</li>
@@ -72,9 +72,9 @@
       <h4>Additional options</h4>
       <p>Additional parameters and options are displayed in the <a class="function" href="matlab:cat12('expert');">CAT12 expert mode</a>. Please note that this mode is for experienced users only.</p>
       <h4>Errors during preprocessing</h4>
-      <p>Please use the <a class="function" href="matlab:cat_io_senderrormail;">Report Error</a> function if any errors during preprocessing occurred. You first have to select the "err" directory, which is located in the folder of the failed record and finally the specified zip-file should be attached manually in the mail.</p>
+      <p>Please use the <a class="function" href="matlab:cat_io_senderrormail;">Report Error</a> function if any errors during preprocessing occurred. You first have to select the "err" directory, which is located in the folder of the failed record, and finally, the specified zip-file should be attached manually in the mail.</p>
       <h4><sup>1</sup>Note to filter sizes for Gaussian smoothing</h4>
-      <p>Due to the high accuracy of the spatial registration approaches used in CAT12 you can also try to use smaller filter sizes of only a few millimeter. However, for very small filter sizes or even no filtering you have to apply a non-parametric permutation test such as the <a class="function" href="matlab:if exist(fullfile(spm('dir'),'toolbox','TFCE')),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">TFCE-statistics</a>. </br>
+      <p>Due to the high accuracy of the spatial registration approaches used in CAT12, you can also try to use smaller filter sizes of only a few millimeter. However, for very small filter sizes or even no filtering, you have to apply a non-parametric permutation test such as the <a class="function" href="matlab:if exist(fullfile(spm('dir'),'toolbox','TFCE')),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">TFCE-statistics</a>. </br>
       Please also note that for the analysis of cortical folding measures such as gyrification or cortical complexity the filter sizes have to be larger (i.e. in the range of 15-25mm). This is due to the underlying nature of this measure that reflects contributions from both sulci as well as gyri. Therefore, the filter size should exceed the distance between a gyral crown and a sulcal fundus.</p>
     </div>  
   

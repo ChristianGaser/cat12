@@ -72,101 +72,105 @@ else
 end
 
 if rnew > r
-    sts = n;
-    msg = sprintf('         A new version of CAT12 is available on:\n');
-    msg = [msg sprintf('   %s\n',url)];
-    msg = [msg sprintf('        (Your version: %d - New version: %d)\n',r,rnew)];
-    if ~nargout, fprintf(msg); else varargout = {sts, msg}; end
+  sts = n;
+  msg = sprintf('         A new version of CAT12 is available on:\n');
+  msg = [msg sprintf('   %s\n',url)];
+  msg = [msg sprintf('        (Your version: %d - New version: %d)\n',r,rnew)];
+  if ~nargout, fprintf(msg); else varargout = {sts, msg}; end
 else
-    sts = 0;
-    msg = sprintf('Your version of CAT12 is up to date.');
-    if ~nargout, fprintf([blanks(9) msg '\n']);
-    else varargout = {sts, msg}; end
-    return
+  sts = 0;
+  msg = sprintf('Your version of CAT12 is up to date.');
+  if ~nargout, fprintf([blanks(9) msg '\n']);
+  else varargout = {sts, msg}; end
+  return
 end
 
 if update
-    overwrite = spm_input(sprintf('Update to r%d',rnew),1,'yes|no',[1 0],1);
-    d0 = spm('Dir');
-    d = fullfile(spm('Dir'),'toolbox'); 
-    
-    if overwrite
-      try
-        % list mex-files and delete these files to prevent that old
-        % compiled files are used
-        mexfiles = dir(fullfile(d,'cat12','*.mex*'));
-        for i=1:length(mexfiles)
-          name = fullfile(d,'cat12',mexfiles(i).name);
-          spm_unlink(name);
-        end
-        
-        % delete old atlas files
-        atlasfiles = dir(fullfile(d,'cat12','atlases_surfaces','*.*'));
-        for i=1:length(atlasfiles)
-          name = fullfile(d,'cat12','atlases_surfaces',atlasfiles(i).name);
-          spm_unlink(name);
-        end
-
-        % delete old atlas files with 32k meshes
-        atlasfiles = dir(fullfile(d,'cat12','atlases_surfaces_32k','*.*'));
-        for i=1:length(atlasfiles)
-          name = fullfile(d,'cat12','atlases_surfaces_32k',atlasfiles(i).name);
-          spm_unlink(name);
-        end
-
-        % delete old surface template files
-        templatefiles = dir(fullfile(d,'cat12','templates_surfaces','*.*'));
-        for i=1:length(templatefiles)
-          name = fullfile(d,'cat12','templates_surfaces',templatefiles(i).name);
-          spm_unlink(name);
-        end
-
-        % delete old surface template files with 32k meshes
-        templatefiles = dir(fullfile(d,'cat12','templates_surfaces_32k','*.*'));
-        for i=1:length(templatefiles)
-          name = fullfile(d,'cat12','templates_surfaces_32k',templatefiles(i).name);
-          spm_unlink(name);
-        end
-
-        % delete old volume template files 
-        templatefiles = dir(fullfile(d,'cat12','templates_volumes','*.*'));
-        for i=1:length(templatefiles)
-          name = fullfile(d,'cat12','templates_volumes',templatefiles(i).name);
-          spm_unlink(name);
-        end
-
-        lastwarn('');
-        delete(get(0,'Children')); spm('clean'); evalc('spm_rmpath'); drawnow
-        m = '          Download and install CAT12...\n';
-        if ~nargout, fprintf(m); else varargout = {sts, [msg m]}; end
-        s = unzip([url sprintf('cat12_r%d.zip',rnew)], d);
-        m = sprintf('         Success: %d files have been updated.\n',numel(s));
-        if ~nargout, fprintf(m); else varargout = {sts, [msg m]}; end
-        addpath(d0);
-        rehash
-        rehash toolboxcache;
-        toolbox_path_cache
-        eval(['spm fmri;clear cat_version;spm_cat12']);
-      catch
-        le = lasterror;
-        switch le.identifier
-            case 'MATLAB:checkfilename:urlwriteError'
-                fprintf('          Update failed: cannot download update file.\n');
-            otherwise
-                fprintf('\n%s\n',le.message);
-        end
+  overwrite = spm_input(sprintf('Update to r%d',rnew),1,'yes|no',[1 0],1);
+  d0 = spm('Dir');
+  d = fullfile(spm('Dir'),'toolbox'); 
+  
+  if overwrite
+    try
+      % list mex-files and delete these files to prevent that old
+      % compiled files are used
+      mexfiles = dir(fullfile(d,'cat12','*.mex*'));
+      for i=1:length(mexfiles)
+        name = fullfile(d,'cat12',mexfiles(i).name);
+        spm_unlink(name);
       end
       
-      [warnmsg, msgid] = lastwarn;
-      switch msgid
-        case ''
-        case 'MATLAB:extractArchive:unableToCreate'
-            fprintf('          Update failed: check folder permission.\n');
-        case 'MATLAB:extractArchive:unableToOverwrite'
-            fprintf('          Update failed: check file permissions.\n');
-        otherwise
-            fprintf('          Update failed: %s.\n',warnmsg);
+      % delete old atlas files
+      atlasfiles = dir(fullfile(d,'cat12','atlases_surfaces','*.*'));
+      for i=1:length(atlasfiles)
+        name = fullfile(d,'cat12','atlases_surfaces',atlasfiles(i).name);
+        spm_unlink(name);
       end
-      
+
+      % delete old atlas files with 32k meshes
+      atlasfiles = dir(fullfile(d,'cat12','atlases_surfaces_32k','*.*'));
+      for i=1:length(atlasfiles)
+        name = fullfile(d,'cat12','atlases_surfaces_32k',atlasfiles(i).name);
+        spm_unlink(name);
+      end
+
+      % delete old surface template files
+      templatefiles = dir(fullfile(d,'cat12','templates_surfaces','*.*'));
+      for i=1:length(templatefiles)
+        name = fullfile(d,'cat12','templates_surfaces',templatefiles(i).name);
+        spm_unlink(name);
+      end
+
+      % delete old surface template files with 32k meshes
+      templatefiles = dir(fullfile(d,'cat12','templates_surfaces_32k','*.*'));
+      for i=1:length(templatefiles)
+        name = fullfile(d,'cat12','templates_surfaces_32k',templatefiles(i).name);
+        spm_unlink(name);
+      end
+
+      % delete old volume template files 
+      templatefiles = dir(fullfile(d,'cat12','templates_volumes','*.*'));
+      for i=1:length(templatefiles)
+        name = fullfile(d,'cat12','templates_volumes',templatefiles(i).name);
+        spm_unlink(name);
+      end
+
+      lastwarn('');
+      delete(get(0,'Children')); spm('clean'); evalc('spm_rmpath'); drawnow
+      m = '          Download and install CAT12...\n';
+      if ~nargout, fprintf(m); else varargout = {sts, [msg m]}; end
+      s = unzip([url sprintf('cat12_r%d.zip',rnew)], d);
+      m = sprintf('         Success: %d files have been updated.\n',numel(s));
+      if ~nargout, fprintf(m); else varargout = {sts, [msg m]}; end
+      addpath(d0);
+      rehash
+      rehash toolboxcache;
+      toolbox_path_cache
+      eval(['spm fmri;clear cat_version;spm_cat12']);
+    catch
+      le = lasterror;
+      switch le.identifier
+          case 'MATLAB:checkfilename:urlwriteError'
+              fprintf('          Update failed: cannot download update file.\n');
+          otherwise
+              fprintf('\n%s\n',le.message);
+      end
     end
+    
+    [warnmsg, msgid] = lastwarn;
+    switch msgid
+      case ''
+          % open version information if difference between release numbers 
+          % is large enough
+          if rnew > r+20
+            web(fullfile(spm('Dir'),'toolbox','cat12','html','cat_versions.html'));
+          end
+      case 'MATLAB:extractArchive:unableToCreate'
+          fprintf('          Update failed: check folder permission.\n');
+      case 'MATLAB:extractArchive:unableToOverwrite'
+          fprintf('          Update failed: check file permissions.\n');
+      otherwise
+          fprintf('          Update failed: %s.\n',warnmsg);
+    end      
+  end
 end
