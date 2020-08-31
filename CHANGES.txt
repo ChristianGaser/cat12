@@ -1,5 +1,43 @@
 ------------------------------------------------------------------------
-r1704 | gaser | 2020-08-26 18:21:01
+r1705 | gaser | 2020-08-31 22:48:59
+
+Changed paths:
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_amap.mexa64
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+MM      cat_long_main.m
+M       cat_ornlm.mexa64
+M       cat_sanlm.mexa64
+M       cat_stat_TIV.m
+M       cat_update.m
+M       cat_vbdist.mexa64
+M       cat_vol_downcut.mexa64
+M       cat_vol_eidist.mexa64
+M       cat_vol_genus0.mexa64
+M       cat_vol_gradient3.mexa64
+M       cat_vol_interp3f.mexa64
+M       cat_vol_laplace3.mexa64
+M       cat_vol_laplace3R.mexa64
+M       cat_vol_localstat.mexa64
+M       cat_vol_median3.mexa64
+M       cat_vol_median3c.mexa64
+M       cat_vol_pbtp.mexa64
+M       cat_vol_simgrow.mexa64
+M       html/cat.html
+M       html/cat.txt
+M       html/cat_starting.html
+M       html/cat_versions.html
+
+(1) Fixed:   Recompiled Linux mex-files with Ubuntu 17.10.
+(2) Changed: Updated help text.
+(3) Changed: Print version information after update if release number was older.
+(4) Changed: Updated filter for xml-file selection.
+------------------------------------------------------------------------
+r1704 | gaser | 2020-08-26 18:21:43 +0200 (Mi, 26 Aug 2020) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +51,7 @@ M       html/cat.html
 (2) Fixed:   Corrected shell script for longitudinal batch.
 (3) Removed: Removed cat_long_main.txt, which is now copied from 
              cat_long_main.m
+
 
 
 ------------------------------------------------------------------------
