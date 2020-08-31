@@ -53,7 +53,7 @@ install3: copy_longmode
 # print available commands
 help:
 	-@echo Available commands:
-	-@echo install zip scp scp_manual doc update cp_binaries archive check_pipeline checklist precompile
+	-@echo install zip scp scp_manual scp_precompile doc update cp_binaries archive check_pipeline checklist precompile
 
 #make html documentation
 doc:
@@ -94,7 +94,7 @@ scp: html zip
 
 # scp manual
 scp_manual:
-	-@echo scp CAT12-Manual.pdf to http://${STARGET_HOST}/cat12
+	-@echo scp CAT12-Manual.pdf to http://${STARGET}
 	-@scp -P 2222 CAT12-Manual.pdf ${STARGET}
 
 # scp deployed versions

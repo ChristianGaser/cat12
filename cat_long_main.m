@@ -1,7 +1,7 @@
 %-----------------------------------------------------------------------
 % Job for longitudinal batch
 % Christian Gaser
-% $Id: cat_long_main.m 1689 2020-08-14 13:30:29Z gaser $
+% $Id$
 %-----------------------------------------------------------------------
 
 % global variables don't work properly in deployed mode, thus we have to use

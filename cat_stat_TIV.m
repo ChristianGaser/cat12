@@ -11,7 +11,7 @@ end
 fid = fopen(p.calcvol_name,'w');
 
 if fid < 0
-	error('No write access: check file permissions or disk space.');
+  error('No write access: check file permissions or disk space.');
 end
 
 if p.calcvol_TIV
@@ -50,8 +50,8 @@ end
 spm_progress_bar('Clear');
 
 if fclose(fid)==0
-	fprintf('\nValues saved in %s.\n',p.calcvol_name);
+  fprintf('\nValues saved in %s.\n',p.calcvol_name);
     if nargout == 1
-	    varargout{1}.calcvol = calcvol;
+      varargout{1}.calcvol = calcvol;
     end
 end
