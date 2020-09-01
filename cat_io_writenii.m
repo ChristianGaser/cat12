@@ -212,7 +212,11 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
         [wT,w] = spm_diffeo('push', Y, transform.warped.y, transform.warped.odim(1:3) );
         wT = wT ./ max(eps,w);
       else
-        wT = spm_diffeo('pull', Y, transform.warped.yi ); 
+        try
+          wT = spm_diffeo('pull', Y, transform.warped.yi ); 
+        else
+          wT = spm_diffeo('samp', Y, transform.warped.yi ); 
+        end
         spm_smooth(wT,wT,transform.warped.fs);
       end
     elseif labelmap==1

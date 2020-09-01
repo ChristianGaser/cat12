@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1705 | gaser | 2020-08-31 22:48:59
+r1706 | gaser | 2020-09-01 21:47:32
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_writenii.m
+
+Fixed:   Catched call to spm_diffeo('pull') for older SPM12 versions.
+------------------------------------------------------------------------
+r1705 | gaser | 2020-08-31 22:49:54 +0200 (Mo, 31 Aug 2020) | 36 lines
 
 Changed paths:
 M       CAT12-Manual.pdf
@@ -36,6 +44,7 @@ M       html/cat_versions.html
 (2) Changed: Updated help text.
 (3) Changed: Print version information after update if release number was older.
 (4) Changed: Updated filter for xml-file selection.
+
 ------------------------------------------------------------------------
 r1704 | gaser | 2020-08-26 18:21:43 +0200 (Mi, 26 Aug 2020) | 15 lines
 
