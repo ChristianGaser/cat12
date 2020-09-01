@@ -1,11 +1,21 @@
 ------------------------------------------------------------------------
-r1706 | gaser | 2020-09-01 21:47:32
+r1707 | gaser | 2020-09-01 21:56:21
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_writenii.m
+M       cat_main_roi.m
+
+Fixed:   Catched call to spm_diffeo('pull') for older SPM12 versions.
+------------------------------------------------------------------------
+r1706 | gaser | 2020-09-01 21:48:12 +0200 (Di, 01 Sep 2020) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_io_writenii.m
 
 Fixed:   Catched call to spm_diffeo('pull') for older SPM12 versions.
+
 ------------------------------------------------------------------------
 r1705 | gaser | 2020-08-31 22:49:54 +0200 (Mo, 31 Aug 2020) | 36 lines
 

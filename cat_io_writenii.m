@@ -214,7 +214,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
       else
         try
           wT = spm_diffeo('pull', Y, transform.warped.yi ); 
-        else
+        catch
           wT = spm_diffeo('samp', Y, transform.warped.yi ); 
         end
         spm_smooth(wT,wT,transform.warped.fs);
@@ -228,7 +228,11 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
         if push
           wTi = spm_diffeo('push', single(Y==yi), transform.warped.y, transform.warped.odim(1:3) ); 
         else
-          wTi = spm_diffeo('pull', single(Y==yi), transform.warped.yi ); 
+          try
+            wTi = spm_diffeo('pull', single(Y==yi), transform.warped.yi ); 
+          catch
+            wTi = spm_diffeo('samp', single(Y==yi), transform.warped.yi ); 
+          end
           wTi = spm_smooth(wTi,wTi,transform.warped.fs);
         end
         wT(:,:,:,yi) = uint8(wTi * 100); 
@@ -244,7 +248,11 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
         [wTM,w] = spm_diffeo('push', YM, transform.warped.y, transform.warped.odim(1:3) );
         wT = wT ./ max(eps,w);
       else
-        wTM = spm_diffeo('pull', YM, transform.warped.yi ); 
+        try
+          wTM = spm_diffeo('pull', YM, transform.warped.yi ); 
+        catch
+          wTM = spm_diffeo('samp', YM, transform.warped.yi ); 
+        end
         spm_smooth(wTM,wTM,transform.warped.fs);
       end
       wT  = wT .* (wTM>YMth);
@@ -287,7 +295,11 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
       if push 
         wT = spm_diffeo('push', Y, transform.warped.y, transform.warped.odim(1:3) );
       else
-        wT = spm_diffeo('pull', Y, transform.warped.yi );
+        try
+          wT = spm_diffeo('pull', Y, transform.warped.yi );
+        catch
+          wT = spm_diffeo('samp', Y, transform.warped.yi );
+        end
         wT = wT .* transform.warped.w;
         spm_smooth(wT,wT,transform.warped.fs);
       end
@@ -297,7 +309,11 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
           [wTM,w] = spm_diffeo('push', YM, transform.warped.y, transform.warped.odim(1:3)); 
           wT = wT ./ max(eps,w);
         else      
-          wTM = spm_diffeo('pull', YM, transform.warped.yi ); 
+          try
+            wTM = spm_diffeo('pull', YM, transform.warped.yi ); 
+          catch
+            wTM = spm_diffeo('samp', YM, transform.warped.yi ); 
+          end
           spm_smooth(wTM,wWT,transform.warped.fs);
         end      
         wT = wT .* (wTM>YMth);

@@ -307,7 +307,11 @@ function wYv = cat_vol_roi_map2atlas(Yv,warped,mod,usepull)
     wYv = cell(1,numel(Yv));
     for i=1:numel(Yv)
       if usepull
-        wYv{i} = spm_diffeo('pull', single(Yv{i})/255, warped.yi ); % normal
+        try
+          wYv{i} = spm_diffeo('pull', single(Yv{i})/255, warped.yi ); % normal
+        catch
+          wYv{i} = spm_diffeo('samp', single(Yv{i})/255, warped.yi ); % normal
+        end
         spm_smooth(wYv{i},wYv{i},warped.fs); 
         if mod,  wYv{i} = wYv{i} .* warped.w; end
       else
@@ -318,7 +322,11 @@ function wYv = cat_vol_roi_map2atlas(Yv,warped,mod,usepull)
     end
   else
     if usepull == 1
-      wYv = spm_diffeo('pull', Yv, warped.yi ); % cirular ? 
+      try
+        wYv = spm_diffeo('pull', Yv, warped.yi ); % cirular ? 
+      catch
+        wYv = spm_diffeo('samp', Yv, warped.yi ); % cirular ? 
+      end
       spm_smooth(wYv,wYv,warped.fs); 
       if mod,  wYv = wYv .* warped.w; end
     else
