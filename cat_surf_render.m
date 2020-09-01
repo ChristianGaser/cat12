@@ -440,7 +440,7 @@ switch lower(action)
             c = uimenu(cmenu, 'Label', 'Meshes');
 
             sinfo1 = cat_surf_info( H.filename ); 
-            if strcmp(sinfo1.texture,'defects'), set(c,'Enable','off');  end
+            if strcmp(sinfo1(1).texture,'defects'), set(c,'Enable','off');  end
               if ~isempty(strfind(fileparts(sinfo1(1).Pmesh),'_32k'))
                 str32k = '_32k';
               else

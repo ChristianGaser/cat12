@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1707 | gaser | 2020-09-01 21:56:21
+r1708 | gaser | 2020-09-01 22:31:20
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_render.m
+
+Fixed:   Structure sinfo1 has not only one entry in cat_surf_render.m 
+         (Thanks to Ningkai Wang for pointing to that error).
+------------------------------------------------------------------------
+r1707 | gaser | 2020-09-01 21:56:29 +0200 (Di, 01 Sep 2020) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +16,7 @@ M       cat_io_writenii.m
 M       cat_main_roi.m
 
 Fixed:   Catched call to spm_diffeo('pull') for older SPM12 versions.
+
 ------------------------------------------------------------------------
 r1706 | gaser | 2020-09-01 21:48:12 +0200 (Di, 01 Sep 2020) | 6 lines
 
