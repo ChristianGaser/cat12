@@ -702,7 +702,7 @@ function cat_run_job1639(job,tpm,subj)
           end
           
          
-          if ~ppe.affreg.skullstripped 
+          if isfield(ppe.affreg,'skullstripped') & ~ppe.affreg.skullstripped 
             %% affreg with brainmask
             if debug 
               [Affine,Ybi,Ymi,Ym0] = cat_run_job_APRGs(Ym,Ybg,VF,Pb,Pbt,Affine,vx_vol,obj,job); %#ok<ASGLU>
