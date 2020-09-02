@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1708 | gaser | 2020-09-01 22:31:20
+r1709 | gaser | 2020-09-02 12:52:51
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main_reportfig.m
+M       cat_run_job1639.m
+
+Fixed:   Try to catch some errors in cat_run_job1639.m and cat_main_reportfig.m
+------------------------------------------------------------------------
+r1708 | gaser | 2020-09-01 22:32:02 +0200 (Di, 01 Sep 2020) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +16,7 @@ M       cat_surf_render.m
 
 Fixed:   Structure sinfo1 has not only one entry in cat_surf_render.m 
          (Thanks to Ningkai Wang for pointing to that error).
+
 ------------------------------------------------------------------------
 r1707 | gaser | 2020-09-01 21:56:29 +0200 (Di, 01 Sep 2020) | 7 lines
 

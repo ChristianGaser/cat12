@@ -83,7 +83,10 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   fonts  = listfonts; 
   pfonts = {'Verdana','Arial','Helvetica','Tebuchet MS','Tahoma','Geneva','Microsoft Sans Serif'};
   for pfi = 1:numel(pfonts)
-    ffonti = find(cellfun('isempty',strfind(fonts,pfonts{pfi},'ForceCellOutput',1))==0,1,'first'); 
+    ffonti = [];
+    try
+      ffonti = find(cellfun('isempty',strfind(fonts,pfonts{pfi},'ForceCellOutput',1))==0,1,'first'); 
+    end
     if ~isempty( ffonti )
       fontname  = fonts{ffonti};
       break
