@@ -29,15 +29,15 @@ function varargout = compile(comp,test,verb)
     mexcmd = 'mkoctfile --mex';
   else
   
-		fprintf('-----------------------------------------------------------------------------------\n');
-		fprintf('Please check that for new mex-files functions such as mxCreateNumericArray has the \n');
-		fprintf('right data type for the variable dims (const mwSize*). Otherwise compilation with \n');
-		fprintf('Matlab >= R2017a will be not successful!\n');
-		fprintf('-----------------------------------------------------------------------------------\n\n');
-		
-		if strcmp(mexext,'mexmaci64') && verLessThan('matlab','9.2')
-			warning('WARNING: Matlab version should be at least R2017a for compilation under Mac.');
-		end
+    fprintf('-----------------------------------------------------------------------------------\n');
+    fprintf('Please check that for new mex-files functions such as mxCreateNumericArray has the \n');
+    fprintf('right data type for the variable dims (const mwSize*). Otherwise compilation with \n');
+    fprintf('Matlab >= R2017a will be not successful!\n');
+    fprintf('-----------------------------------------------------------------------------------\n\n');
+    
+    if strcmp(mexext,'mexmaci64') && verLessThan('matlab','9.2')
+      warning('WARNING: Matlab version should be at least R2017a for compilation under Mac.');
+    end
 
     mexcmd = 'mex';
   end
@@ -51,7 +51,6 @@ function varargout = compile(comp,test,verb)
   if ~exist('verb','var'); verb=2; end
   
   expert = cat_get_defaults('extopts.expertgui');
-%  catdir = fullfile(spm('dir'),'toolbox','cat12'); 
   olddir = pwd;
   catdir = olddir;
     
@@ -212,33 +211,33 @@ function varargout = compile(comp,test,verb)
   %% test c-functions
   if test==1
   
-		% testdata 
-		% empty image with a NaN voxel
-		d0  = single(rand(10,10,10)); d0(5,5,5) = NaN;
-		% simple segment image for distance and filter tests
-		d1  = zeros(10,10,10,'single'); d1(3:8,:,:)=1; d1(9:10,:,:)=2; d1(5,5,5) = NaN;      
-		d2  = zeros(10,10,10,'single'); d2(3,:,:)=0.8; d2(4:7,:,:)=1; 
-					d2(8,:,:)=1.2; d2(9:10,:,:)=2; d2(5,5,5) = NaN;      
-		% more complex segment image for distance and filter tests
-		d3  = zeros(10,10,10,'single'); d3(3:8,:,:)=1; d3(9:10,:,:)=2; 
-					d3(3,:,:)=0.25; d3(8,:,:)=1.75; d3(5,5,5) = NaN;   
-		d4  = zeros(10,10,10,'single'); d4(3,:,:)=0.2; d4(4:8,:,:)=1; d4(9,:,:)=1.2; 
-					d4(10,:,:)=2; d4(2:7,5,:) = 0; d4(6:9,[1:2,8:10],:) = 2; d4(8,8,:) = 1;
-		d5  = d4; d5(2:3,6:7,:)  = 0.5;
-		%%
-		d6  = zeros(13,13,10,'single'); d6(3,:,:)=0.2; d6(4:13,:,:)=1; d6(14,:,:)=1.2; d6(4,6:8,:)=0.5; 
-					d6(15,:,:)=2; d6(2:5,7,:) = 0.1; d6(5:10,7,:) = 0.8; d6(10:end-4,7,:) = 0.3; 
-					d6(6:end-1,[1:4,end-3:end],:) = 2; d6(13,10,:) = 1; d6(6:12,10,:) = 1.8; d6(2:3,8:9,:)  = 0.7;
-		if (verb>2), ds('d2','',1,d6,Ycsfdi/3*2,Ywmdi/3*2,Ygmti/2,5); colormap jet; end
-		d6(2:3,6:7,:)  = 0.5;
-		%% ground truth distance map for the d1 map
-		dc  = zeros(10,10,10,'single'); for si=3:8; dc(si,:,:)=si-2.5; end; dc(5,5,5) = NaN; % csf distance
-		dw  = zeros(10,10,10,'single'); for si=3:8; dw(si,:,:)=8.5-si; end; dw(5,5,5) = NaN; % wm distance
-		dcube10 = zeros(10,10,10,'single'); dcube10(2:end-1,2:end-1,2:end-1) = 1;
-		dcube   = zeros(12,12,12,'single'); dcube(4:end-3,4:end-3,4:end-3) = 1; d1(6,6,6) = NaN;
-		dcubetr = dcube; 
-		dcubetr(2,5:7,5) = 1; dcubetr(3,[5,7],5) = 1; % handle
-		dcubetr(end-4,end-4:end-3,5) = 0; dcubetr(end-3,end-4,5) = 0; dcubetr(6,1:end,5) = 0; % hole
+    % testdata 
+    % empty image with a NaN voxel
+    d0  = single(rand(10,10,10)); d0(5,5,5) = NaN;
+    % simple segment image for distance and filter tests
+    d1  = zeros(10,10,10,'single'); d1(3:8,:,:)=1; d1(9:10,:,:)=2; d1(5,5,5) = NaN;      
+    d2  = zeros(10,10,10,'single'); d2(3,:,:)=0.8; d2(4:7,:,:)=1; 
+          d2(8,:,:)=1.2; d2(9:10,:,:)=2; d2(5,5,5) = NaN;      
+    % more complex segment image for distance and filter tests
+    d3  = zeros(10,10,10,'single'); d3(3:8,:,:)=1; d3(9:10,:,:)=2; 
+          d3(3,:,:)=0.25; d3(8,:,:)=1.75; d3(5,5,5) = NaN;   
+    d4  = zeros(10,10,10,'single'); d4(3,:,:)=0.2; d4(4:8,:,:)=1; d4(9,:,:)=1.2; 
+          d4(10,:,:)=2; d4(2:7,5,:) = 0; d4(6:9,[1:2,8:10],:) = 2; d4(8,8,:) = 1;
+    d5  = d4; d5(2:3,6:7,:)  = 0.5;
+    %%
+    d6  = zeros(13,13,10,'single'); d6(3,:,:)=0.2; d6(4:13,:,:)=1; d6(14,:,:)=1.2; d6(4,6:8,:)=0.5; 
+          d6(15,:,:)=2; d6(2:5,7,:) = 0.1; d6(5:10,7,:) = 0.8; d6(10:end-4,7,:) = 0.3; 
+          d6(6:end-1,[1:4,end-3:end],:) = 2; d6(13,10,:) = 1; d6(6:12,10,:) = 1.8; d6(2:3,8:9,:)  = 0.7;
+    if (verb>2), ds('d2','',1,d6,Ycsfdi/3*2,Ywmdi/3*2,Ygmti/2,5); colormap jet; end
+    d6(2:3,6:7,:)  = 0.5;
+    %% ground truth distance map for the d1 map
+    dc  = zeros(10,10,10,'single'); for si=3:8; dc(si,:,:)=si-2.5; end; dc(5,5,5) = NaN; % csf distance
+    dw  = zeros(10,10,10,'single'); for si=3:8; dw(si,:,:)=8.5-si; end; dw(5,5,5) = NaN; % wm distance
+    dcube10 = zeros(10,10,10,'single'); dcube10(2:end-1,2:end-1,2:end-1) = 1;
+    dcube   = zeros(12,12,12,'single'); dcube(4:end-3,4:end-3,4:end-3) = 1; d1(6,6,6) = NaN;
+    dcubetr = dcube; 
+    dcubetr(2,5:7,5) = 1; dcubetr(3,[5,7],5) = 1; % handle
+    dcubetr(end-4,end-4:end-3,5) = 0; dcubetr(end-3,end-4,5) = 0; dcubetr(6,1:end,5) = 0; % hole
 
     ntests = 16;             % number of tests
     ni = 0;                  % counter
