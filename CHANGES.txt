@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1709 | gaser | 2020-09-02 12:52:51
+r1710 | gaser | 2020-09-03 10:58:33
+
+Changed paths:
+M       CHANGES.txt
+M       cat_run.m
+
+Fixed:   Windows user names with spaces cause trouble with parallel processing 
+         in cat_run.m. Thanks to Brendan Balken for providing a solution for 
+         that.
+------------------------------------------------------------------------
+r1709 | gaser | 2020-09-02 12:53:33 +0200 (Mi, 02 Sep 2020) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +17,7 @@ M       cat_main_reportfig.m
 M       cat_run_job1639.m
 
 Fixed:   Try to catch some errors in cat_run_job1639.m and cat_main_reportfig.m
+
 ------------------------------------------------------------------------
 r1708 | gaser | 2020-09-01 22:32:02 +0200 (Di, 01 Sep 2020) | 7 lines
 
