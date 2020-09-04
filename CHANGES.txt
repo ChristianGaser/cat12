@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1711 | gaser | 2020-09-03 17:45:24
+r1712 | gaser | 2020-09-04 19:44:17
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_main_reportstr.m
+M       cat_plot_boxplot.m
+M       html/cat.html
+
+Fixed: Replaced strange pragma, that caused issues in cat_main_reportstr.m
+       and to be on the safe side also in cat_plot_boxplot.m.
+------------------------------------------------------------------------
+r1711 | gaser | 2020-09-03 17:46:07 +0200 (Do, 03 Sep 2020) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +19,7 @@ M       Makefile
 M       compile.m
 
 Changed: Added compile.m to the distribution.
+
 ------------------------------------------------------------------------
 r1710 | gaser | 2020-09-03 10:59:16 +0200 (Do, 03 Sep 2020) | 8 lines
 
