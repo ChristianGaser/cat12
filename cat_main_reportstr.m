@@ -53,9 +53,7 @@ function str = cat_main_reportstr(job,res,qa)
   catv = qa.software.revision_cat; isbeta = strfind(lower(catv),'beta'); 
   if ~isempty(isbeta), catv = [catv(1:isbeta-1) '\color[rgb]{0.8 0 0}' catv(isbeta:isbeta+3 ) '\color[rgb]{0.8 0 0}' catv(isbeta+4:end)]; end
 
-%#####
 % red version in case of old version?
-%#####
   % 1 line: Matlab, SPM12, CAT12 version number and GUI and experimental mode 
   str{1} = [str{1} struct('name', 'Version: OS / Matlab / SPM12 / CAT12:','value',...
     sprintf('%s / %s / %s / %s (%s)',qa.software.system,qa.software.version_matlab,...
@@ -364,13 +362,11 @@ function str = cat_main_reportstr(job,res,qa)
   str{2} = [str{2} struct('name','\bfProcessing time:','value',sprintf('%02.0f:%02.0f min', ...
     floor(round(etime(clock,res.stime))/60),mod(round(etime(clock,res.stime)),60)))]; 
 
-  %% Warnings
-%#######
+%% Warnings
 % key changes? 
 %  - use backup pipeline (with #?)
 %  - use AMAP/SPM/mixed ?
 %  - add skull-stripping, background, ... settings? 
-%#######
 	str{2} = [str{2} struct('name', '','value','')]; % empty line
   wname  = {'note','warning','alert'}; 
   wcolor = [0 0 1; 1 0.5 0; 0.8 0 0]; 

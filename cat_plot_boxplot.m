@@ -990,7 +990,7 @@ if nargout>3
 end
 
 end
-%################################################################
+%---------------------------------------------
 function  out=fixed_point(t,N,I,a2)
 % this implements the function t-zeta*gamma^[l](t)
 l=7;
@@ -1005,7 +1005,7 @@ end
 
 
 
-%##############################################################
+%---------------------------------------------
 function out = idct1d(data)
 
 % computes the inverse discrete cosine transform
@@ -1023,7 +1023,7 @@ out(2:2:nrows) = data(nrows:-1:nrows/2+1);
 %      A. K. Jain, "Fundamentals of Digital Image
 %      Processing", pp. 150-153.
 end
-%##############################################################
+%---------------------------------------------
 
 function data=dct1d(data)
 % computes the discrete cosine transform of the column vector data
