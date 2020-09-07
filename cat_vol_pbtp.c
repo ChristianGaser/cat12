@@ -27,11 +27,11 @@
 #include <stdlib.h>
 
 struct opt_type {
-	int   CSFD;													/* use CSFD */
-	int   PVE;													/* 0, 1=fast, 2=exact */
-	float LB, HB, LLB, HLB, LHB, HHB;  	/* boundary */
-	int   sL[3];
-	} opt;
+  int   CSFD;                         /* use CSFD */
+  int   PVE;                          /* 0, 1=fast, 2=exact */
+  float LB, HB, LLB, HLB, LHB, HHB;   /* boundary */
+  int   sL[3];
+  } opt;
 
 float min(float a, float b) {
   if (a<b) return a; else return b; 
@@ -43,12 +43,15 @@ float max(float a, float b) {
 
 /* get all values of the voxels which are in WMD-range (children of this voxel) */
 float pmax(const float GMT[], const float RPM[], const float SEG[], const float ND[], const float WMD, const float SEGI, const int sA) {
-  float T[27]; for (int i=0;i<27;i++) T[i]=-1; 
+  float T[27];  
   float n=0.0, maximum=WMD; 
+  int i;
+  
+  for (i=0;i<27;i++) T[i]=-1;
 
   /* the pure maximum */
   /* (GMT[i]<1e15) && (maximum < GMT[i]) && ((RPM[i]-ND[i]*1.25)<=WMD) && ((RPM[i]-ND[i]*0.5)>WMD) && (SEGI)>=SEG[i] && SEG[i]>1 && SEGI>1.66) */
-  for (int i=0;i<=sA;i++) {
+  for (i=0;i<=sA;i++) {
     if (  ( GMT[i] < 1e15 ) && ( maximum < GMT[i] ) &&                  /* thickness/WMD of neighbors should be larger */
           ( SEG[i] >= 1.0 ) && ( SEGI>1.2 && SEGI<=2.75 ) &&           /* projection range */
           ( ( ( RPM[i] - ND[i] * 1.2 ) <= WMD ) ) &&                    /* upper boundary - maximum distance */
@@ -60,7 +63,7 @@ float pmax(const float GMT[], const float RPM[], const float SEG[], const float 
   
   /* the mean of the highest values*/
   float maximum2=maximum; float m2n=0; 
-  for (int i=0;i<=sA;i++) {
+  for (i=0;i<=sA;i++) {
     if ( ( GMT[i] < 1e15 ) && ( (maximum - 1) < GMT[i] ) && 
          ( SEG[i] >= 1.0 ) && ( SEGI>1.2 && SEGI<=2.75 ) && 
          ( ( (RPM[i] - ND[i] * 1.2 ) <= WMD ) ) && 
@@ -117,8 +120,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   const int   sN  = sizeof(NI)/4;  
   float       DN[sN],DI[sN],GMTN[sN],WMDN[sN],SEGN[sN],DNm;
   
-  float 	    du, dv, dw, dnu, dnv, dnw, d, dcf, WMu, WMv, WMw, GMu, GMv, GMw, SEGl, SEGu, tmpfloat;
-  int         ni,u,v,w,nu,nv,nw, tmpint, WMC=0, CSFC=0;
+  float       du, dv, dw, dnu, dnv, dnw, d, dcf, WMu, WMv, WMw, GMu, GMv, GMw, SEGl, SEGu, tmpfloat;
+  int         i,n,ni,u,v,w,nu,nv,nw, tmpint, WMC=0, CSFC=0;
     
   /* main volumes - actual without memory optimization ... */
   plhs[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
@@ -136,39 +139,39 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   float*CSFD = (float *)mxGetPr(prhs[2]);
   
   /*if ( nrhs>1) {
-		tmpint   = (int)mxGetScalar(mxGetField(prhs[1],1,"CSFD"));  printf("X=%d", tmpint);	if ( tmpint!=NULL && (tmpint>=0 && tmpint<=1) ) opt.CSFD = tmpint;   else opt.CSFD 	= 1;
-		tmpint   = (int)mxGetScalar(mxGetField(prhs[1],1,"PVE"));   printf("X=%d", tmpint);	if ( tmpint!=NULL && (tmpint>=0 && tmpint<=2) ) opt.PVE  = tmpint; 	 else opt.PVE		= 2;
-		tmpfloat = (float)mxGetScalar(mxGetField(prhs[1],1,"LB"));  printf("X=%d", tmpfloat);	if ( tmpfloat!=NULL ) 													opt.LB   = tmpfloat; else opt.LB  	= 1.5;
-		tmpfloat = (float)mxGetScalar(mxGetField(prhs[1],1,"HB"));  printf("X=%d", tmpfloat);	if ( tmpfloat!=NULL ) 													opt.HB   = tmpfloat; else opt.HB 		= 2.5;
-	} 
-	else */{ opt.CSFD = 1;opt.PVE = 2;opt.LB = 1.5;opt.HB	= 2.5; }
-	opt.LLB=floor(opt.LB), opt.HLB=ceil(opt.LB), opt.LHB=floor(opt.HB), opt.HHB=ceil(opt.HB);
+    tmpint   = (int)mxGetScalar(mxGetField(prhs[1],1,"CSFD"));  printf("X=%d", tmpint); if ( tmpint!=NULL && (tmpint>=0 && tmpint<=1) ) opt.CSFD = tmpint;   else opt.CSFD  = 1;
+    tmpint   = (int)mxGetScalar(mxGetField(prhs[1],1,"PVE"));   printf("X=%d", tmpint); if ( tmpint!=NULL && (tmpint>=0 && tmpint<=2) ) opt.PVE  = tmpint;   else opt.PVE   = 2;
+    tmpfloat = (float)mxGetScalar(mxGetField(prhs[1],1,"LB"));  printf("X=%d", tmpfloat); if ( tmpfloat!=NULL )                           opt.LB   = tmpfloat; else opt.LB    = 1.5;
+    tmpfloat = (float)mxGetScalar(mxGetField(prhs[1],1,"HB"));  printf("X=%d", tmpfloat); if ( tmpfloat!=NULL )                           opt.HB   = tmpfloat; else opt.HB    = 2.5;
+  } 
+  else */{ opt.CSFD = 1;opt.PVE = 2;opt.LB = 1.5;opt.HB = 2.5; }
+  opt.LLB=floor(opt.LB), opt.HLB=ceil(opt.LB), opt.LHB=floor(opt.HB), opt.HHB=ceil(opt.HB);
   
   /* output variables */
   float        *GMT  = (float *)mxGetPr(plhs[0]);
   float        *RPM  = (float *)mxGetPr(plhs[1]);
   
   /* intitialisiation */
-  for (int i=0;i<nL;i++) {
-  	GMT[i] = WMD[i];
+  for (i=0;i<nL;i++) {
+    GMT[i] = WMD[i];
     RPM[i] = WMD[i];
-		/* proof distance input */
+    /* proof distance input */
     if ( SEG[i]>=opt.HB ) WMC++;
     if ( SEG[i]<=opt.LB ) CSFC++;
   }
-	if (WMC==0)  mexErrMsgTxt("ERROR: no WM voxel\n");
-	if (CSFC==0) opt.CSFD = 0;
+  if (WMC==0)  mexErrMsgTxt("ERROR: no WM voxel\n");
+  if (CSFC==0) opt.CSFD = 0;
 
   
   
 /* thickness calcuation
  ============================================================================= */
-  for (int i=0;i<nL;i++) {
+  for (i=0;i<nL;i++) {
     if (SEG[i]>opt.LLB && SEG[i]<opt.HHB) {
       ind2sub(i,&u,&v,&w,nL,xy,x);
       
       /* read neighbor values */
-      for (int n=0;n<sN;n++) {
+      for (n=0;n<sN;n++) {
         ni = i + NI[n];
         ind2sub(ni,&nu,&nv,&nw,nL,xy,x);
         if ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1)) ni=i;
@@ -181,12 +184,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     }
   }
   
-  for (int i=nL-1;i>=0;i--) {
+  for (i=nL-1;i>=0;i--) {
     if (SEG[i]>opt.LLB && SEG[i]<opt.HHB) {
       ind2sub(i,&u,&v,&w,nL,xy,x);
       
       /* read neighbor values */
-      for (int n=0;n<sN;n++) {
+      for (n=0;n<sN;n++) {
         ni = i - NI[n];
         ind2sub(ni,&nu,&nv,&nw,nL,xy,x);
         if ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1)) ni=i;
@@ -199,7 +202,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     }
   }
   
-  for (int i=0;i<nL;i++) if (SEG[i]<opt.LB || SEG[i]>opt.HB) GMT[i]=0; 
+  for (i=0;i<nL;i++) if (SEG[i]<opt.LB || SEG[i]>opt.HB) GMT[i]=0; 
 
  
   
@@ -207,34 +210,34 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
 /* final setings...
  ============================================================================= */
-	float CSFDc = 0, GMTi, CSFDi; /* 0.125 */
-	for (int i=0;i<nL;i++) { 
-		/* GMT[i] = min(CSFD[i] + WMD[i],GMT[i]); */
-		if (SEG[i]>=opt.LB & SEG[i]<=opt.LB) {
-			GMTi   = CSFD[i] + WMD[i];	
-			CSFDi  = GMT[i]  - WMD[i];
-		
-			if ( CSFD[i]>CSFDi )	CSFD[i] = CSFDi; 					
-			else               		GMT[i]  = GMTi;
-		}
-	}
+  float CSFDc = 0, GMTi, CSFDi; /* 0.125 */
+  for (i=0;i<nL;i++) { 
+    /* GMT[i] = min(CSFD[i] + WMD[i],GMT[i]); */
+    if (SEG[i]>=opt.LB & SEG[i]<=opt.LB) {
+      GMTi   = CSFD[i] + WMD[i];  
+      CSFDi  = GMT[i]  - WMD[i];
+    
+      if ( CSFD[i]>CSFDi )  CSFD[i] = CSFDi;          
+      else                  GMT[i]  = GMTi;
+    }
+  }
 
  
 /* estimate RPM
  ============================================================================= */
-	for (int i=0;i<nL;i++) {
-		if ( SEG[i]>=opt.HB ) 	
+  for (i=0;i<nL;i++) {
+    if ( SEG[i]>=opt.HB )   
       RPM[i]=1.0; 
-		else {
-			if ( SEG[i]<=opt.LB || GMT[i]==0.0 ) 
+    else {
+      if ( SEG[i]<=opt.LB || GMT[i]==0.0 ) 
         RPM[i]=0.0;
-			else {
-				RPM[i] = (GMT[i] - WMD[i]) / GMT[i];
-				if (RPM[i]>1.0) RPM[i]=1.0;
-				if (RPM[i]<0.0) RPM[i]=0.0;	
-			}
-		} 
-	}
+      else {
+        RPM[i] = (GMT[i] - WMD[i]) / GMT[i];
+        if (RPM[i]>1.0) RPM[i]=1.0;
+        if (RPM[i]<0.0) RPM[i]=0.0; 
+      }
+    } 
+  }
   
 }
 
