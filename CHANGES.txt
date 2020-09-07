@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1712 | gaser | 2020-09-04 19:44:17
+r1713 | gaser | 2020-09-07 14:55:34
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat12.m
+M       cat_spm_results_ui.m
+M       cat_stat_check_SPM.m
+M       html/cat.html
+
+(1) Fixed:   Changed Units from Point to Pixel in some functions to get rid
+             of display issues with Linux.
+(2) Changed: Updated Makefile.
+------------------------------------------------------------------------
+r1712 | gaser | 2020-09-04 19:45:05 +0200 (Fr, 04 Sep 2020) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +25,7 @@ M       html/cat.html
 
 Fixed: Replaced strange pragma, that caused issues in cat_main_reportstr.m
        and to be on the safe side also in cat_plot_boxplot.m.
+
 ------------------------------------------------------------------------
 r1711 | gaser | 2020-09-03 17:46:07 +0200 (Do, 03 Sep 2020) | 7 lines
 

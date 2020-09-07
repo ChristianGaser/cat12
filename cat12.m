@@ -161,7 +161,7 @@ switch expert
 end
 
 % This creates the 'background' image
-handles.ma = axes('parent',handles.CAT,'units','points','position',[1 1 sz]);
+handles.ma = axes('parent',handles.CAT,'units','pixel','position',[1 1 sz]);
 imagesc(cat_bg,'parent',handles.ma); 
 axis('off'); 
 text(sz(1)/20,sc*80,'Computational Anatomy Toolbox','Color',[1 1 1],'Fontsize',FS+5,'Fontweight','bold');
