@@ -394,7 +394,7 @@ xs = struct('Measure',  ['abs. value of cosine of angle between ',...
                 'white - orthogonal (cos=0)';...
                 'gray  - not orthogonal or colinear'}});
 
-set(hAx,'Units','points');
+set(hAx,'Units','Pixel');
 AxPos = get(hAx,'Position');
 set(hAx,'YLim',[0,AxPos(4)])
 
