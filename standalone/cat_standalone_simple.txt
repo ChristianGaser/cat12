@@ -19,12 +19,13 @@ matlabbatch{1}.spm.tools.cat.cat_simple.fwhm_vol = 6;
 % define here volume atlases
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.neuromorphometrics = 1;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.lpba40 = 0;
-matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.cobra = 0;
+matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.cobra = 1;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.hammers = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.ibsr = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.aal3 = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.mori = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.anatomy = 0;
+matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.julichbrain = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.Schaefer2018_100Parcels_17Networks_order = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.Schaefer2018_200Parcels_17Networks_order = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.Schaefer2018_400Parcels_17Networks_order = 0;

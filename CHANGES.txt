@@ -1,5 +1,50 @@
 ------------------------------------------------------------------------
-r1714 | gaser | 2020-09-07 15:55:10
+r1715 | gaser | 2020-09-08 17:50:12
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_defaults.m
+M       cat_io_report.m
+M       cat_long_shoot_defaults.m
+M       cat_main_reportfig.m
+M       cat_main_write.m
+M       cat_run.m
+M       cat_vol_ctype.m
+M       cat_vol_defs.m
+A       development/cat_vol_multiply.m
+A       development/y_colin27_t1_tal_hires.nii
+A       development/y_mni_icbm152_t1_tal_nlin_asym_09c.nii
+M       html/cat.html
+M       html/cat_licences.html
+M       html/cat_methods_RBM.html
+D       html/images/CAT_surf_atlas_neuromorphometics.png
+        > moved to html/images/CAT_surf_atlas_neuromorphometrics.png
+A  +    html/images/CAT_surf_atlas_neuromorphometrics.png
+        > moved from html/images/CAT_surf_atlas_neuromorphometics.png
+M       standalone/cat_standalone.sh
+M       standalone/cat_standalone_segment.txt
+M       standalone/cat_standalone_segment_long.txt
+M       standalone/cat_standalone_simple.txt
+M       templates_volumes/anatomy.txt
+A       templates_volumes/julichbrain.csv
+A       templates_volumes/julichbrain.nii
+A       templates_volumes/julichbrain.txt
+
+(1) Changed: Replaced flip-command by flipud to ensure compatibility to older
+             Matlab version < R2013
+(2) Fixed:   Added msiing identity function to cat_vol_defs.m.
+(3) Added:   Added new JulichBrain Atlas v2.0 (thanks to Felix Hoffstaedter to
+             provide a modified version of that atlas).
+(4) Changed: Updated atlas information in online help and cat_defaults.m
+(5) Changed: Set Cobra atlas as default in cat_defaults.m.
+(6) Fixed:   Maximum value is checked for writing native atlases to prevent
+             cutting of high values for uint16 data.
+(7) Changed: Added webloc file for downloading MCR v93 files and updated
+             help functions in cat_standalone.sh. 
+------------------------------------------------------------------------
+r1714 | gaser | 2020-09-07 15:55:54 +0200 (Mo, 07 Sep 2020) | 26 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -26,6 +71,7 @@ M       cat_vol_simgrow.mexa64
 M       html/cat.html
 
 Changed: Recompiled mex-files for Linux with older Ubuntu 14.10.
+
 ------------------------------------------------------------------------
 r1713 | gaser | 2020-09-07 14:56:16 +0200 (Mo, 07 Sep 2020) | 13 lines
 

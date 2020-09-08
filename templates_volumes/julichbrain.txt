@@ -1,0 +1,30 @@
+JulichBrain atlas (v2.0):
+--------------------------------------------------------------------------------
+Whole-brain parcellation of the Julich-Brain Cytoarchitectonic Atlas (v2.0)
+
+JulichBrain_icbm152asym2009c.nii
+
+CAT12 was used to segment themni_icbm152_t1_tal_nlin_asym_09c.nii and to estimate 
+the normalization parameter to project the maximum probability maps to IXI550 space. 
+
+If you use these atlases, please cite the references below.
+
+
+Websites:    
+A) https://kg.ebrains.eu/search/instances/Dataset/3fde2768-e845-4fc3-a425-61e2c1fb6db7
+
+References:
+1) Amunts K, Mohlberg H, Bludau S, Zilles K (2020). Julich-Brain – A 3D probabilistic 
+atlas of human brain’s cytoarchitecture. Science 369, 988-99
+
+2) Eickhoff SB, Stephan KE, Mohlberg H, Grefkes C, Fink GR, Amunts K, Zilles K. A 
+new SPM toolbox for combining probabilistic cytoarchitectonic maps and functional 
+imaging data. NeuroImage 25(4), 1325-1335, 2005
+
+3) Evans AC, Janke AL, Collins DL, Baillet S (2012). Brain templates and atlases. 
+Neuroimage, 62(2):911-22.
+
+
+
+--------------------------------------------------------------------------------
+$Id: julichbrain.txt 1453 2019-04-23 20:18:53Z gaser $

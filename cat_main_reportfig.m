@@ -752,7 +752,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 
   
   % new colorscale
-  cmap(1:60,:) = gray(60); cmap(61:120,:) = flip(pink(60),1); cmap(121:120+surfcolors,:) = jet(surfcolors); 
+  cmap(1:60,:) = gray(60); cmap(61:120,:) = flipud(pink(60)); cmap(121:120+surfcolors,:) = jet(surfcolors); 
   colormap(fg,cmap); %caxis([0,numel(cmap)]); 
 
   WMfactor0 = single(WMth) * 8/6; 

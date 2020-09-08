@@ -6,17 +6,22 @@
 # run main
 ########################################################
 
+cwd=`dirname $0`
+
+if [ ! -n "$SPMROOT" ]; then
+  SPMROOT=`dirname ${cwd}`
+fi
+
 # get cat12 dir
 ARCH=`uname`
 if [ "$ARCH" == "Darwin" ]; then
-  cat12_dir="~/spm/standalone/spm12.app/Contents/MacOS/spm12/toolbox/cat12" 
+  cat12_dir="${SPMROOT}/spm12.app/Contents/MacOS/spm12/toolbox/cat12" 
 else
   cat12_dir="your_folder/spm12/toolbox/cat12" 
 fi
 
 main ()
 {
-  cwd=`dirname $0`
   parse_args ${1+"$@"}
   check_files
   run_cat
@@ -207,8 +212,8 @@ run_cat ()
 
     # check wether absolute or relative names were given
     if [ ! -f ${ARRAY[$i]} ];  then
-      if [ -f ${pwd}/${ARRAY[$i]} ]; then
-        FILE=${pwd}/${ARRAY[$i]}
+      if [ -f ${PWD}/${ARRAY[$i]} ]; then
+        FILE=${PWD}/${ARRAY[$i]}
       fi
     else
       FILE=${ARRAY[$i]}
@@ -274,39 +279,39 @@ PURPOSE:
    Command line call of (CAT12) batch files for SPM12 standalone installation
 
 EXAMPLE
-   cat_standalone.sh -s ~/spm/standalone/ -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment.txt sTRIO0001.nii
+   cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment.txt sTRIO0001.nii
    Preprocess (segment) the single file sTRIO0001.nii using the default CAT12 preprocessing batch. 
-   SPM12 standalone version is located in ~/spm/standalone and Matlab Compiler Runtime in
+   SPM12 standalone version is located in $SPMROOT and Matlab Compiler Runtime in
    /Applications/MATLAB/MATLAB_Runtime/v93/.
 
-   cat_standalone.sh -s ~/spm/standalone/ -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment.txt sTRIO0001.nii -a1 "${cat12_dir}/templates_volumes/TPM_Age11.5.nii"
+   cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment.txt sTRIO0001.nii -a1 "${cat12_dir}/templates_volumes/TPM_Age11.5.nii"
    Preprocess (segment) the single file sTRIO0001.nii using the default CAT12 preprocessing batch, but use the children TPM provided with CAT12. 
-   SPM12 standalone version is located in ~/spm/standalone and Matlab Compiler Runtime in
+   SPM12 standalone version is located in $SPMROOT and Matlab Compiler Runtime in
    /Applications/MATLAB/MATLAB_Runtime/v93/.
 
-   cat_standalone.sh -s ~/spm/standalone/ -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment_long.txt sTRIO000*.nii -a1 "2"
+   cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment_long.txt sTRIO000*.nii -a1 "2"
    Preprocess (segment) the files sTRIO000*.nii with the longitudinal pipeline optimized for detecting aging/developmental effects. 
    In order to choose the longitudinal model optimized for detecting small changes due to plasticity/learning change the a1 parameter to "1".
-   SPM12 standalone version is located in ~/spm/standalone and Matlab Compiler Runtime in
+   SPM12 standalone version is located in $SPMROOT and Matlab Compiler Runtime in
    /Applications/MATLAB/MATLAB_Runtime/v93/.
 
-   cat_standalone.sh -s ~/spm/standalone/ -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment_long.txt sTRIO000*.nii -a1 "1" -a2 "${cat12_dir}/templates_volumes/TPM_Age11.5.nii"
+   cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment_long.txt sTRIO000*.nii -a1 "1" -a2 "${cat12_dir}/templates_volumes/TPM_Age11.5.nii"
    Preprocess (segment) the files sTRIO000*.nii with the longitudinal pipeline optimized for detecting plasticity/learning effects and use the 
    children TPM provided with CAT12.
-   SPM12 standalone version is located in ~/spm/standalone and Matlab Compiler Runtime in
+   SPM12 standalone version is located in $SPMROOT and Matlab Compiler Runtime in
    /Applications/MATLAB/MATLAB_Runtime/v93/.
 
-   cat_standalone.sh -s ~/spm/standalone/ -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_simple.txt sTRIO0001.nii
+   cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_simple.txt sTRIO0001.nii
    Process the single file sTRIO0001.nii using the simple processing batch. 
 
-   cat_standalone.sh -s ~/spm/standalone/ -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_resample.txt -a1 "12" -a2 "1" lh.thickness.sTRIO0001
+   cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_resample.txt -a1 "12" -a2 "1" lh.thickness.sTRIO0001
    Resample and smooth the single thickness file lh.thickness.sTRIO0001 with 12mm and save the resampled mesh as 32k mesh from HCP. 
    Only the left surface file has to be defined.
 
-   cat_standalone.sh -s ~/spm/standalone/ -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_smooth.txt -a1 "[6 6 6]" -a2 "'s6'" sTRIO*nii
+   cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_smooth.txt -a1 "[6 6 6]" -a2 "'s6'" sTRIO*nii
    Smooth the volume files sTRIO*nii with 6mm and prepend the string "s6" to smoothed files.
 
-   cat_parallelize.sh -p 8 -l /tmp -c "cat_standalone.sh  -s ~/spm/standalone/ -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment.txt" sTRIO*.nii
+   cat_parallelize.sh -p 8 -l /tmp -c "cat_standalone.sh  -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment.txt" sTRIO*.nii
    Parallelize CAT12 preprocessing by splitting all sTRIO*.nii files into 8 jobs 
    (processes) and save log file in /tmp folder. 
 

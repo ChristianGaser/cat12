@@ -72,6 +72,16 @@ dm  = size(Nii.dat);
 bb  = [-vx.*(o-1) ; vx.*(dm(1:3)-o)];
 
 %_______________________________________________________________________
+function Def = identity(d,M)
+[y1,y2]   = ndgrid(single(1:d(1)),single(1:d(2)));
+Def       = zeros([d 3],'single');
+for y3=1:d(3)
+    Def(:,:,y3,1) = y1*M(1,1) + y2*M(1,2) + (y3*M(1,3) + M(1,4));
+    Def(:,:,y3,2) = y1*M(2,1) + y2*M(2,2) + (y3*M(2,3) + M(2,4));
+    Def(:,:,y3,3) = y1*M(3,1) + y2*M(3,2) + (y3*M(3,3) + M(3,4));
+end
+
+%_______________________________________________________________________
 function [Def,mat] = get_comp(field,job)
 % Return the composition of two deformation fields.
 
