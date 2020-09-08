@@ -64,7 +64,7 @@ else
   d.sched     = d.sched/d.sched(end) * 32;  % 32 as gener offset to have low-frequency deformations
   maxoil      = 8;                          % Maximum number of time steps for integration
   d.eul_its   = round((0:(nits-1))*(maxoil-0.5001)/(nits-1)+1); % Start with fewer steps
-  d.eul_its   = flip(d.eul_its);
+  d.eul_its   = flipud(d.eul_its);
   d.rparam    = [1e-4 0.001 0.2 0.05 0.2];  % Regularisation parameters for deformation (just the defaults)
   d.sparam    = [0 0 0.0000001];  % Regularisation parameters for blurring - strongly reduced as far as it create incorrect results in the individual cases
   d.smits     = 1;                % Minimum smoothing iterations (turn it off will produce an error at the end of the Shooting iteration)
