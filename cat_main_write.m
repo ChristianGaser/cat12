@@ -251,14 +251,28 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
       else
         Yy = double(trans.warped.y);
       end
-      Ylai = cat_vol_ctype(spm_sample_vol(Vlai,Yy(:,:,:,1),Yy(:,:,:,2),Yy(:,:,:,3),0));
+      
+      Ylai = spm_sample_vol(Vlai,Yy(:,:,:,1),Yy(:,:,:,2),Yy(:,:,:,3),0);
+      % check data range
+      mx = max(Ylai(:));
+      if mx > intmax('uint32')
+        type = 'uint64';
+      elseif mx > intmax('uint16')
+        type = 'uint32';
+      elseif mx > intmax('uint8')
+        type = 'uint16';
+      else
+        type = 'uint8';
+      end
+      
+      Ylai = cat_vol_ctype(Ylai,type);
       Ylai = reshape(Ylai(:),trans.native.Vi.dim); 
       if ~debug, clear Yy; end
 
-      % write map (mri as tissue subforder and mri_atals as ROI subfolder)
+      % write map (mri as tissue subfolder and mri_atlas as ROI subfolder)
       if isempty(mrifolder), amrifolder = ''; else, amrifolder = 'mri_atlas'; end
       cat_io_writenii(VT0,Ylai,amrifolder,[atlas '_'],[prefix ' ' atlas ' original'],...
-        'uint8',[0,1],job.output.atlas,trans);
+        type,[0,1],job.output.atlas,trans);
       if ~debug, clear Vlai Ylai; end
     end
   end

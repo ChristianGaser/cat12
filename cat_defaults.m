@@ -280,12 +280,13 @@ if isdeployed, cat.extopts.expertgui = 1; end
 cat.extopts.atlas       = { ... 
   fullfile(spm('dir'),'toolbox','cat12','templates_volumes','neuromorphometrics.nii')  0      {'csf','gm'}        1; ... % atlas based on 35 subjects
   fullfile(spm('dir'),'toolbox','cat12','templates_volumes','lpba40.nii')              0      {'gm'}              0; ... % atlas based on 40 subjects
-  fullfile(spm('dir'),'toolbox','cat12','templates_volumes','cobra.nii')               0      {'gm','wm'}         0; ... % hippocampus-amygdala-cerebellum, 5 subjects, 0.6 mm voxel size 
+  fullfile(spm('dir'),'toolbox','cat12','templates_volumes','cobra.nii')               0      {'gm','wm'}         1; ... % hippocampus-amygdala-cerebellum, 5 subjects, 0.6 mm voxel size 
   fullfile(spm('dir'),'toolbox','cat12','templates_volumes','hammers.nii')             0      {'csf','gm','wm'}   0; ... % atlas based on 20 subjects
   fullfile(spm('dir'),'toolbox','cat12','templates_volumes','ibsr.nii')                1      {'csf','gm'}        0; ... % less regions, 18 subjects, low T1 image quality
   fullfile(spm('dir'),'toolbox','cat12','templates_volumes','aal3.nii')                1      {'gm'}              0; ... % many regions, but only labeled on one subject 
   fullfile(spm('dir'),'toolbox','cat12','templates_volumes','mori.nii')                1      {'gm','wm'}         0; ... % only one subject, but with WM regions
   fullfile(spm('dir'),'toolbox','cat12','templates_volumes','anatomy.nii')             1      {'gm','wm'}         0; ... % ROIs requires further work >> use Anatomy toolbox
+  fullfile(spm('dir'),'toolbox','cat12','templates_volumes','julichbrain.nii')         1      {'gm'}              0; ... % 
   fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Schaefer2018_100Parcels_17Networks_order.nii') 1 {'gm'} 0; ... % atlas based on rsfMRI data from 1489 subjects
   fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Schaefer2018_200Parcels_17Networks_order.nii') 1 {'gm'} 0; ... % atlas based on rsfMRI data from 1489 subjects
   fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Schaefer2018_400Parcels_17Networks_order.nii') 1 {'gm'} 0; ... % atlas based on rsfMRI data from 1489 subjects

@@ -403,7 +403,7 @@ function cat_io_report(job,qa,subj,createerr)
         bd   = [find(ch>0.01,1,'first'),mth];
         ylims{1} = [min(y(round(numel(y)*0.1):end)),max(y(round(numel(y)*0.1):end)) * 4/3];
         xlims{1} = x(bd) + [0,(4/3-1)*diff(x([find(ch>0.02,1,'first'),mth]))]; M = x>=xlims{1}(1) & x<=xlims{1}(2);
-        hdata{1} = [x(M) flip(x(M)); max(eps,min(ylims{1}(2),y(M))) zeros(1,sum(M)); [x(M) flip(x(M))]];
+        hdata{1} = [x(M) flipud(x(M)); max(eps,min(ylims{1}(2),y(M))) zeros(1,sum(M)); [x(M) flipud(x(M))]];
         hhist(1) = fill(hdata{1}(1,:),hdata{1}(2,:),hdata{1}(3,:),'EdgeColor',[0.0 0.0 1.0],'LineWidth',1);
         if createerr==11, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
         %caxis(xlims{1} .* [1,1.5*(2*volcolors+surfcolors)/volcolors]) 
@@ -454,7 +454,7 @@ function cat_io_report(job,qa,subj,createerr)
           bd  = [find(ch>0.01,1,'first'),mth]; 
           ylims{2} = [min(y(round(numel(y)*0.1):end)),max(y(round(numel(y)*0.1):end)) * 4/3]; 
           xlims{2} = x(bd) + [0,(4/3-1)*diff(x([find(ch>0.02,1,'first'),mth]))]; M = x>=xlims{2}(1) & x<=xlims{2}(2);
-          hdata{2} = [x(M) flip(x(M)); max(eps,min(ylims{2}(2),y(M))) zeros(1,sum(M)); [x(M) flip(x(M))]];
+          hdata{2} = [x(M) flipud(x(M)); max(eps,min(ylims{2}(2),y(M))) zeros(1,sum(M)); [x(M) flipud(x(M))]];
           hhist(2) = fill(hdata{2}(1,:),hdata{2}(2,:),hdata{2}(3,:),'EdgeColor',[0.0 0.0 1.0],'LineWidth',1);
           %caxis(xlims{2} .* [1,1.5*(2*volcolors+surfcolors)/volcolors]) 
           caxis(xlims{2} + [0,((2*2*volcolors+surfcolors)/volcolors)*diff(x([find(ch>0.02,1,'first'),mth]))]); %; .* [1,1.5*(2*volcolors+surfcolors)/volcolors]) 
@@ -515,7 +515,7 @@ function cat_io_report(job,qa,subj,createerr)
           if createerr==31, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
           xlims{3} = [0 4]; 
           ylims{3} = [ch(1) ch(end)] .* [0 4/3];  M = x <= xlims{3}(2);
-          hdata{3} = [x(M) flip(x(M)); max(eps,min(ylims{3}(2),y(M))) zeros(1,sum(M)); [x(M) flip(x(M))]];
+          hdata{3} = [x(M) flipud(x(M)); max(eps,min(ylims{3}(2),y(M))) zeros(1,sum(M)); [x(M) flipud(x(M))]];
           hhist(3) = fill(hdata{3}(1,:),hdata{3}(2,:),hdata{3}(3,:),'EdgeColor',[0.0 0.0 1.0],'LineWidth',1);
           caxis(xlims{3} .* [1,1.5*(2*volcolors+surfcolors)/volcolors]) 
           ylim(ylims{3}); xlim(xlims{3}); box on; grid on; 

@@ -6,7 +6,7 @@ function Y=cat_vol_ctype(Y,type)
 % [u]int[8|16], single, double, and char. Default round type is 'uint8'. 
 % Y has to be a matrix or cell. 
 %
-% This function is only writen for our private use, mostly to convert 
+% This function is only written for our private use, mostly to convert 
 % single to uint8. I did not check for special behavior, for extremly 
 % high values or special rounding issues, or converting to larger 
 % classes etc.!

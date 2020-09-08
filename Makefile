@@ -100,9 +100,9 @@ scp_manual:
 # scp deployed versions
 scp_precompile:
 	-@echo scp_precompile
-	-@for i in Linux Mac; do \
+	-@for i in Linux Mac Win; do \
 	    mkdir -p MCR_$${i} ;\
-	    ln -s ${PRECOMPILED}/MCR_$${i}/*spm12* ${PRECOMPILED}/MCR_$${i}/readme.txt MCR_$${i}/ ;\
+	    ln -s ${PRECOMPILED}/MCR_$${i}/*spm12* ${PRECOMPILED}/MCR_$${i}/readme.txt ${PRECOMPILED}/MCR_$${i}/MCR_v93.webloc MCR_$${i}/ ;\
 	    cp -r standalone MCR_$${i}/ ;\
 	    zip cat12_latest_R2017b_MCR_$${i}.zip -r MCR_$${i} ;\
 	  done
@@ -168,7 +168,7 @@ precompile:
 	-@echo    cd spm12/config
 	-@echo    spm_make_standalone
 	-@echo    "Ubuntu 14.10: mv  /Users/gaser/spm/standalone/spm12.ctf /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Linux/"
-	-@echo    "Windows 10: mv  /Users/gaser/spm/standalone/spm12.* /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Win/"
+	-@echo    "Windows 10: mv  /Users/gaser/spm/standalone/spm12.exe /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Win/"
 	-@echo    "Mac OS: rm -rf /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Mac/spm12.app; mv /Users/gaser/spm/standalone/spm12.app /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Mac/"
 	-@echo    
 

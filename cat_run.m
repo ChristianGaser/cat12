@@ -897,7 +897,7 @@ function vout = run_job(job)
 %           log files. 
 % ######################################################################
   surfcolors = 128;
-  cmap(1:60,:) = gray(60); cmap(61:120,:) = flip(pink(60),1); cmap(121:120+surfcolors,:) = jet(surfcolors);  
+  cmap(1:60,:) = gray(60); cmap(61:120,:) = flipud(pink(60)); cmap(121:120+surfcolors,:) = jet(surfcolors);  
   colormap(cmap)
   
   if isfield(job,'nproc') && job.nproc>0 
