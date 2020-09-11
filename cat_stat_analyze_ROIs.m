@@ -227,7 +227,7 @@ X = SPM.xX.X;
 %-Apply global scaling
 %--------------------------------------------------------------------------
 for i=1:size(Y,1)
-	Y(i,:) = Y(i,:)*SPM.xGX.gSF(i);
+  Y(i,:) = Y(i,:)*SPM.xGX.gSF(i);
 end
 
 % compare correlation coefficients after Fisher z-transformation
@@ -536,7 +536,7 @@ corr{n_corr+1} = 'Do not display';
 ind_show = [];
 
 for c=1:n_corr
-  if ~isempty(ind_corr{c})
+  if ~isempty(ind_corr{c}) | ~isempty(ind_corr_inv{c})
     ind_show = [ind_show c];
   end
 end
@@ -595,7 +595,7 @@ else % write label volume with thresholded p-values
 
   % go through all corrections and save label image if sign. results were found
   for c=1:n_corr 
-    if ~isempty(ind_corr{c})
+    if ~isempty(ind_corr{c}) | ~isempty(ind_corr_inv{c})
       V.fname = fullfile(cwd,['logP' corr_short{c} output_name '.nii']);
       V.dt(1) = 16;
       if ~found_inv, data{c}(data{c} < 0) = 0; end
@@ -624,17 +624,19 @@ else % write label volume with thresholded p-values
     OV.reference_range = [0.2 1.0];                        % intensity range for reference image
     OV.opacity = Inf;                                      % transparency value for overlay (<1)
     OV.cmap    = jet;                                      % colormap for overlay
-    OV.range   = [-log10(alpha) ceil(max(data{show_results}(isfinite(data{show_results}))))];
+    mx = ceil(max(data{show_results}(isfinite(data{show_results}))));
+    OV.range   = [-log10(alpha) mx];
     if found_inv &   ~isempty(ind_corr_inv{show_results})
-      OV.range   = [-ceil(max(data{show_results}(isfinite(data{show_results})))) ceil(max(data{show_results}(isfinite(data{show_results}))))];
+      mx = ceil(max(abs(data{show_results}(isfinite(data{show_results})))));
+      OV.range   = [-mx mx];
     end
     OV.name = fullfile(cwd,['logP' corr_short{show_results} output_name '.nii']);
     OV.save = 'png';
-    OV.atlas = 'cat12_neuromorphometrics';
+    OV.atlas = 'none';
     OV.xy = [4 6];
     slices_str = spm_input('Select Slices','+1','m',{'-30:4:60','Estimate slices with local maxima'},{char('-30:4:60'),''});
     OV.slices_str = slices_str{1};
-    OV.transform = char('axial');
+    OV.transform = char('axial')
     cat_vol_slice_overlay(OV);
     fprintf('You can again call the result file %s using Slice Overlay in CAT12 with more options to select different slices and orientations.\n',OV.name);
   end

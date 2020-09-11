@@ -347,8 +347,8 @@ if ~repeated_anova
     for i=1:size(ind_ortho,2)
         for j=1:size(ind_ortho,2)
             if bC(ind_ortho(i),ind_ortho(i)) & i>j
-                h = rectangle('Position', [ind_ortho(i)-0.5 ind_ortho(j)-0.5 1 1]);
-                set(h,'EdgeColor','r');
+                rectangle('Position', [ind_ortho(i)-0.5 ind_ortho(j)-0.5 1 1],...
+                  'EdgeColor','r');
                 fprintf('Orthogonality between %s and %s:\t %g\n',xX.name{ind_ortho(i)},...
                     xX.name{ind_ortho(j)},O(ind_ortho(i),ind_ortho(j)));
             end
