@@ -233,7 +233,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
           catch
             wTi = spm_diffeo('samp', single(Y==yi), transform.warped.yi ); 
           end
-          wTi = spm_smooth(wTi,wTi,transform.warped.fs);
+          spm_smooth(wTi,wTi,transform.warped.fs);
         end
         wT(:,:,:,yi) = uint8(wTi * 100); 
       end
