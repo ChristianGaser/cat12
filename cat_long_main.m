@@ -74,13 +74,13 @@ mbi = mbi + 1; mb_catavg = mbi;
 matlabbatch{mbi}.spm.tools.cat.estwrite.data(1)             = cfg_dep('Longitudinal Registration: Midpoint Average', substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','avg', '()',{':'}));
 matlabbatch{mbi}.spm.tools.cat.estwrite.nproc               = 0;
 if exist('opts','var') && ~isempty(opts)
-	matlabbatch{mbi}.spm.tools.cat.estwrite.opts              = opts;
+  matlabbatch{mbi}.spm.tools.cat.estwrite.opts              = opts;
 end
 if exist('extopts','var') && ~isempty(extopts)
-	matlabbatch{mbi}.spm.tools.cat.estwrite.extopts           = extopts;
+  matlabbatch{mbi}.spm.tools.cat.estwrite.extopts           = extopts;
 end
 if exist('output','var') && ~isempty(output)
-	matlabbatch{mbi}.spm.tools.cat.estwrite.output            = output;
+  matlabbatch{mbi}.spm.tools.cat.estwrite.output            = output;
 end
 % surface estimation
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.surface      = surfaces;
@@ -121,13 +121,13 @@ mbi = mbi + 1; mb_cat = mbi;
 matlabbatch{mbi}.spm.tools.cat.estwrite.data(1)             = cfg_dep('Longitudinal Rigid Registration: Realigned images', substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','rimg', '()',{':'}));
 matlabbatch{mbi}.spm.tools.cat.estwrite.nproc               = 0;
 if exist('opts','var') && ~isempty(opts)
-	matlabbatch{mbi}.spm.tools.cat.estwrite.opts              = opts;
+  matlabbatch{mbi}.spm.tools.cat.estwrite.opts              = opts;
 end
 if exist('extopts','var') && ~isempty(extopts)
-	matlabbatch{mbi}.spm.tools.cat.estwrite.extopts           = extopts;
+  matlabbatch{mbi}.spm.tools.cat.estwrite.extopts           = extopts;
 end
 if exist('output','var') && ~isempty(output)
-	matlabbatch{mbi}.spm.tools.cat.estwrite.output            = output;
+  matlabbatch{mbi}.spm.tools.cat.estwrite.output            = output;
 end
 % surface estimation
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.surface      = surfaces;

@@ -1,5 +1,26 @@
 ------------------------------------------------------------------------
-r1715 | gaser | 2020-09-08 17:50:12
+r1716 | gaser | 2020-09-11 22:21:17
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_io_writenii.m
+M       cat_long_main.m
+M       cat_stat_analyze_ROIs.m
+M       cat_stat_check_SPM.m
+M       html/cat.html
+M       html/cat_methods_RBM.html
+
+(1) Fixed:  Corrected link to julichbrain-files in htlm documentation.
+(2) Fixed:  Corrected call of rectangle command (thanks to James Ford for
+            pointing to that issue) in cat_stat_check_SPM.m.
+(3) Fixed:  Corrected handling of ROI results that only has inverse effects in
+            cat_stat_analyze_ROIs.m
+(4) Fixed:  Removed output argument for calling of spm_smooth in 
+            cat_io_writenii.m.
+            
+------------------------------------------------------------------------
+r1715 | gaser | 2020-09-08 17:51:01 +0200 (Di, 08 Sep 2020) | 43 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -43,6 +64,7 @@ A       templates_volumes/julichbrain.txt
              cutting of high values for uint16 data.
 (7) Changed: Added webloc file for downloading MCR v93 files and updated
              help functions in cat_standalone.sh. 
+
 ------------------------------------------------------------------------
 r1714 | gaser | 2020-09-07 15:55:54 +0200 (Mo, 07 Sep 2020) | 26 lines
 
