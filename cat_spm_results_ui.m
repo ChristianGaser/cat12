@@ -1062,9 +1062,14 @@ switch lower(Action), case 'setup'                         %-Set up results
         hC1  = uimenu(hC,'Label','Label using');
         
         list = spm_atlas('List','installed');
+        if use_tfce
+          clist = 'tfce_list';
+        else
+          clist = 'spm_list';
+        end
         for i=1:numel(list)
             uimenu(hC1,'Label',list(i).name,...
-                'Callback',sprintf('call_list(''label'',''%s''); cat_spm_results_ui(''spm_list_cleanup'');',list(i).name));
+                'Callback',sprintf('%s(''label'',''%s''); cat_spm_results_ui(''spm_list_cleanup'');',clist,list(i).name));
         end
         if isempty(list), set(hC1,'Enable','off'); end
         

@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1716 | gaser | 2020-09-11 22:21:17
+r1717 | gaser | 2020-09-14 13:05:39
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_spm_results_ui.m
+MM      development/cat_vol_multiply.m
+ M      development/y_colin27_t1_tal_hires.nii
+ M      development/y_mni_icbm152_t1_tal_nlin_asym_09c.nii
+M       html/cat.html
+ M      templates_volumes/julichbrain.csv
+ M      templates_volumes/julichbrain.nii
+MM      templates_volumes/julichbrain.txt
+
+Fixed:  Corrected call to tfce_list and spm_list in cat_spm_results_ui.m.
+------------------------------------------------------------------------
+r1716 | gaser | 2020-09-11 22:22:01 +0200 (Fr, 11 Sep 2020) | 19 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -19,6 +35,7 @@ M       html/cat_methods_RBM.html
 (4) Fixed:  Removed output argument for calling of spm_smooth in 
             cat_io_writenii.m.
             
+
 ------------------------------------------------------------------------
 r1715 | gaser | 2020-09-08 17:51:01 +0200 (Di, 08 Sep 2020) | 43 lines
 
