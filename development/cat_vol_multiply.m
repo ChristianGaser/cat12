@@ -7,7 +7,7 @@ function out = cat_vol_multiply(job)
 %__________________________________________________________________________
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
-% $Id: cat_vol_multiply.m 3915 2010-06-02 17:09:10Z guillaume $
+% $Id$
 
 out.files  = cell(size(job.data));
 
