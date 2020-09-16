@@ -1393,7 +1393,7 @@ end
 function cat_surf_saveICO(S,Tpbt,Pcs,subdir,Pm,mat,writeTfs,writeSI,writeL4,writeInt)
 % _________________________________________________________________________
 % Save surface data for debugging:
-% Creates and save the white and pial surfaces based on the displacement by
+% Creates and saves the white and pial surfaces based on the displacement by
 % the half thickness along the surface normals and use the inner and outer
 % surfaces to create the layer4 surface.
 % Saves also the thickness file (PBT by default).

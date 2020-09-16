@@ -844,6 +844,20 @@ if job.extopts.print
   if ~exist('Psurf','var'), Psurf = ''; end
   cat_main_reportfig(Ymi,Yp0,Yl1,Psurf,job,qa,res,str);
 end
+
+% remove preview surfaces and potential fast folder
+if any( job.output.surface == [ 5 6 ] )
+  for i=1:numel(Psurf)
+    delete(Psurf(i).Pcentral)
+    delete(Psurf(i).Ppbt)
+    delete(Psurf(i).Pthick)
+  end
+  Pfast = fullfile(fileparts(Psurf(1).Pcentral),'fast');
+  if exist(Pfast,'dir')
+    rmdir(Pfast,'s')
+  end
+end
+
 % final command line report
 cat_main_reportcmd(job,res,qa);
 %%

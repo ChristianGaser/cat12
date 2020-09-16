@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1718 | gaser | 2020-09-16 15:58:56
+r1719 | gaser | 2020-09-16 17:45:15
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main1639.m
+M       cat_main_reportfig.m
+M       cat_surf_createCS.m
+M       cat_surf_fun.m
+
+(1) Changed: Preveiw surfaces and surf/fast folder are now deleted after report.
+(2) Changed: Commented out call to saveico in cat_surf_createCS for fast track.
+------------------------------------------------------------------------
+r1718 | gaser | 2020-09-16 15:59:35 +0200 (Mi, 16 Sep 2020) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +23,7 @@ M       html/cat_statistics.html
 (1) Changed: Added conversion to z-image to cat_stat_spm2x.m
 (2) Fixed:   Changed criteria to compare voxel sizes in cat_long_createTPM.m to
              prevent rounding issues. 
+
 ------------------------------------------------------------------------
 r1717 | gaser | 2020-09-14 13:06:18 +0200 (Mo, 14 Sep 2020) | 14 lines
 
