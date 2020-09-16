@@ -705,7 +705,11 @@ cstime = clock;
         catch
           facevertexcdata1 = cat_surf_fun('isocolors',Yth1i,CS,Smat.matlabIBB_mm); 
         end
-        cat_surf_fun('saveico',CS,facevertexcdata1,Pcentral,'fast',Ymfs,Smat.matlabIBB_mm);
+        
+% ##########          
+% CG20200916 this should not be called for preview surfaces          
+% ##########          
+        % cat_surf_fun('saveico',CS,facevertexcdata1,Pcentral,'fast',Ymfs,Smat.matlabIBB_mm);
         res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',CS,facevertexcdata1,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
   
         %%
