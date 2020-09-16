@@ -150,9 +150,9 @@ function out = cat_long_createTPM(job)
     Ytpm  = clsnorm(Ytpm);
 
 
-    % load SPM TPM this required normalized data with 1.5 mm 
-    Vdtpm = spm_vol( job.defTPM ); vx_vold = sqrt(sum(Vdtpm(1).mat(1:3,1:3).^2));
-    if all(vx_vol == vx_vold)
+    % load SPM TPM with 1.5 mm 
+    Vdtpm = spm_vol( job.defTPM ); 
+    if sum(sum((Vtemp.mat-Vdtpm(1).mat).^2)) < 1e-6
       Ydtpm = spm_load_priors(Vdtpm); for ci=1:6, Ydtpm{ci} = single(Ydtpm{ci}); end
     else
       cat_io_cprintf('warn','Image resolutions differs from SPM TPM resolution. Cannot mix the images.\n'); 
@@ -233,7 +233,8 @@ function out = cat_long_createTPM(job)
         Ytpmts = max( Ytpmts , job.minprob * job.sweight(si));
 
         % mix individual and SPM default TPM 
-        if all(vx_vol == vx_vold) && job.defTPMmix>0
+        
+        if sum(sum((Vtemp.mat-Vdtpm(1).mat).^2)) < 1e-6 && job.defTPMmix>0
           Ytpmts = Ytpmts.*(1-job.defTPMmix) + (job.defTPMmix).*Ydtpm{ci}; 
         end
 
