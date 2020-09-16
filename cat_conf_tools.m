@@ -1384,8 +1384,8 @@ function [T2x,T2x_surf,F2x,F2x_surf] = cat_stat_T2x_GUI
   sel               = cfg_menu;
   sel.name          = 'Convert t value to';
   sel.tag           = 'sel';
-  sel.labels        = {'p','-log(p)','correlation coefficient cc','apply thresholds without conversion'};
-  sel.values        = {1,2,3,5};
+  sel.labels        = {'p','-log(p)','correlation coefficient cc','apply thresholds without conversion|standard Normal (z-score) distribution'};
+  sel.values        = {1,2,3,5,6};
   sel.val           = {2};
   sel.help          = {'Select conversion of t-value'};
 
@@ -1525,7 +1525,7 @@ function [T2x,T2x_surf,F2x,F2x_surf] = cat_stat_T2x_GUI
   T2x.prog = @cat_stat_spm2x;
   T2x.vout = @vout_stat_spm2x;
   T2x.help = {
-    'This function transforms t-maps to P, -log(P), r or d-maps.'
+    'This function transforms t-maps to P, -log(P), r, or z-maps.'
     'The following formulas are used:'
     '--------------------------------'
     'correlation coefficient:'
@@ -1536,7 +1536,7 @@ function [T2x,T2x_surf,F2x,F2x_surf] = cat_stat_T2x_GUI
     'p = 1-spm_Tcdf'
     'log p-value'
     '-log10(1-P) = -log(1-spm_Tcdf)'
-    'For the last case of log transformation this means that a p-value of p=0.99 (0.01) is transformed to a value of 2.'
+    'For the latter case of log transformation this means that a p-value of p=0.99 (0.01) is transformed to a value of 2.'
     'Examples:'
     'p-value  -log10(1-P)'
     '0.1      1'
@@ -1551,6 +1551,7 @@ function [T2x,T2x_surf,F2x,F2x_surf] = cat_stat_T2x_GUI
     '              logP - log p-value'
     '              R    - correlation coefficient'
     '              T    - t-value'
+    '              Z    - z-value'
     '   Contrast:  name used in the contrast manager with replaced none valid'
     '              strings'
     '   Pheight:   p    - uncorrected p-value in % (p<0.05 will coded with "p5")'
