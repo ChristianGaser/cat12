@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1717 | gaser | 2020-09-14 13:05:39
+r1718 | gaser | 2020-09-16 15:58:56
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_long_createTPM.m
+M       cat_stat_spm2x.m
+M       html/cat_statistics.html
+
+(1) Changed: Added conversion to z-image to cat_stat_spm2x.m
+(2) Fixed:   Changed criteria to compare voxel sizes in cat_long_createTPM.m to
+             prevent rounding issues. 
+------------------------------------------------------------------------
+r1717 | gaser | 2020-09-14 13:06:18 +0200 (Mo, 14 Sep 2020) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14,6 +27,7 @@ M       html/cat.html
 MM      templates_volumes/julichbrain.txt
 
 Fixed:  Corrected call to tfce_list and spm_list in cat_spm_results_ui.m.
+
 ------------------------------------------------------------------------
 r1716 | gaser | 2020-09-11 22:22:01 +0200 (Fr, 11 Sep 2020) | 19 lines
 
