@@ -682,7 +682,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 % ##########          
 % RD202007 show thickness histogram (of each side) ?          
 % ##########          
-          if any( job.output.surface == [4 5] ); fst = ' \color[rgb]{1 0 0}preview!'; else, fst = ''; end
+          if any( job.output.surface == [5 6] ); fst = ' \color[rgb]{1 0 0}preview!'; else, fst = ''; end
           colormap(fg,cmap);  set(hSD{1}.colourbar,'visible','off'); 
           cc{4} = axes('Position',[0.63 0.02 0.3 0.01],'Parent',fg); image((121:1:120+surfcolors),'Parent',cc{4});
           set(cc{4},'XTick',1:(surfcolors-1)/6:surfcolors,'XTickLabel',...
