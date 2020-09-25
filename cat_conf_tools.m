@@ -1940,7 +1940,7 @@ function calcroi = cat_roi_fun_GUI(outdir)
 
   calcroi               = cfg_exbranch;
   calcroi.tag           = 'calcroi';
-  calcroi.name          = 'Estimate volumes inside ROI';
+  calcroi.name          = 'Estimate means/volumes inside ROI';
   calcroi.val           = {roi_xml,point,outdir,calcroi_name}; 
   %calcroi.val   = {roi_xml,usefolder,point,outdir,calcroi_name}; % usefolder is never used
   calcroi.prog          = @(job)cat_roi_fun('exportSample',job);

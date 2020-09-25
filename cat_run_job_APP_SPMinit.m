@@ -11,8 +11,8 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
 %  ------------------------------------------------------------
 
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
-
   
+  if exist('rng','file') == 2, rng('default'); rng(0); else, rand('state',0); randn('state',0); end
   
   V = spm_vol(job.channel(n).vols{job.subj});
   vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));

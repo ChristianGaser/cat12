@@ -614,11 +614,11 @@ function varargout = cat_vol_qa(action,varargin)
         QAS.SPMpreprocessing.Affine_translation  = hAffine(1:3);
         QAS.SPMpreprocessing.Affine_rotation     = hAffine(4:6);
         QAS.SPMpreprocessing.Affine_scaling      = hAffine(7:9);
-        QAS.SPMpreprocessing.Affine_shering      = hAffine(10:12);
+        QAS.SPMpreprocessing.Affine_shearing     = hAffine(10:12);
         QAS.SPMpreprocessing.Affine0_translation = hAffine0(1:3);
         QAS.SPMpreprocessing.Affine0_rotation    = hAffine0(4:6);
         QAS.SPMpreprocessing.Affine0_scaling     = hAffine0(7:9);
-        QAS.SPMpreprocessing.Affine0_shering     = hAffine0(10:12);
+        QAS.SPMpreprocessing.Affine0_shearing    = hAffine0(10:12);
       end
 % ##############
 % RD202008: create warning when Affine0 & Affine varies strongly ?

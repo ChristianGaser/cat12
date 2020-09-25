@@ -1,5 +1,35 @@
 ------------------------------------------------------------------------
-r1720 | gaser | 2020-09-21 11:06:07
+r1721 | gaser | 2020-09-25 22:29:57
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.sh
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       cat_parallelize.m
+M       cat_run_job.m
+M       cat_run_job_APP_SPMinit.m
+M       cat_spm_affreg.m
+M       cat_stat_analyze_ROIs.m
+M       cat_surf_info.m
+M       cat_surf_parameters.m
+M       cat_update.m
+M       cat_vol_approx.m
+M       cat_vol_qa.m
+M       html/cat.html
+
+(1) Changed: Added seed for random number generator to many files to ensure
+             consistency and reliability of segmentations.
+(2) Changed: Supress warning in cat_update.m.
+(3) Fixed:   Changed handling of texture and dataname field in cat_surf_info
+             that failed for some files.
+(4) Changed: Added check for fopen status in cat_parallelize that prevents
+             error messages if a new batch is opened before the parallel batch
+             is finished.
+(5) Changed: Check for full path if necessary in at12.sh
+------------------------------------------------------------------------
+r1720 | gaser | 2020-09-21 11:06:51 +0200 (Mo, 21 Sep 2020) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +38,7 @@ M       Makefile
 M       html/cat.html
 
 Changed: Renamed RC2 to final CAT12.7.
+
 ------------------------------------------------------------------------
 r1719 | gaser | 2020-09-16 17:45:20 +0200 (Mi, 16 Sep 2020) | 10 lines
 

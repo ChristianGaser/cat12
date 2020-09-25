@@ -770,8 +770,6 @@ for i=1:n_data
   [path2, ID] = fileparts(roi_names{i});
   ind = strfind(ID,'_');
   ID = ID(ind(1)+1:end);
-
-  atlases = fieldnames(xml);
   
   measures = fieldnames(xml.(atlas).data);
   ROInames = xml.(atlas).names;

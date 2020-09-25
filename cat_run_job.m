@@ -27,6 +27,8 @@ function cat_run_job(job,tpm,subj)
     job.extopts.histth = [0.96 0.9999]; % histogram thresholds
     job.extopts.input  = 0; % 0 - auto (default), 1-with skull (normal), 2-skull-stripped, 3-high BG
 
+    if exist('rng','file') == 2, rng('default'); rng(0); else, rand('state',0); randn('state',0); end
+    
     % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
     dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
     
