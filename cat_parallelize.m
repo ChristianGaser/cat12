@@ -302,6 +302,10 @@ function varargout = cat_parallelize(job,func,datafield)
           for i=1:job.nproc
             % get FID and read the processing output 
             FID = fopen(log_name{i},'r'); 
+            if FID < 0
+              printf('Warning: Log file %s could not be opened. Please check file permissions or do not call any other batches until this process is finished!\n',log_name{i})
+              continue
+            end
             txt = textscan(FID,'%s','Delimiter','\n');
             txt = txt{1}; 
             fclose(FID);

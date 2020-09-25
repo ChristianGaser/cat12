@@ -311,6 +311,14 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     sinfo(i).dataname  = cat_io_strrep(sinfo(i).posside,{sinfo(i).name,'template.','resampled.','resampled_32k.'},''); 
     if ~isempty(sinfo(i).dataname) && sinfo(i).dataname(end)=='.', sinfo(i).dataname(end)=[]; end
     
+    % if texture is empty use dataname, otherwise texture is more reliable and should
+    % be used instead of dataname 
+    if isempty(sinfo(i).texture)
+      sinfo(i).texture = sinfo(i).dataname;
+    else
+      sinfo(i).dataname = sinfo(i).texture;
+    end
+    
     % ROI
     sinfo(i).roi = ~isempty(strfind(sinfo(i).posside,'.ROI'));
     

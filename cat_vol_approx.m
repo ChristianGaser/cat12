@@ -58,6 +58,8 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
   def.hull = 1;
   opt = cat_io_checkinopt(opt,def);
   opt.lfO = min(10,max(0.0001,opt.lfO));
+
+  if exist('rng','file') == 2, rng('default'); rng(0); else, rand('state',0); randn('state',0); end
   
   T(isnan(T) | isinf(T))=0; 
   maxT = max([ eps; T(T(:)~=0 & T(:)<inf & ~isnan(T(:))) ]);
