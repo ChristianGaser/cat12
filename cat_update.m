@@ -136,6 +136,7 @@ if update
       end
 
       lastwarn('');
+      warning off
       delete(get(0,'Children')); spm('clean'); evalc('spm_rmpath'); drawnow
       m = '          Download and install CAT12...\n';
       if ~nargout, fprintf(m); else varargout = {sts, [msg m]}; end
@@ -147,6 +148,7 @@ if update
       rehash toolboxcache;
       toolbox_path_cache
       eval(['spm fmri;clear cat_version;spm_cat12']);
+      warning on
     catch
       le = lasterror;
       switch le.identifier

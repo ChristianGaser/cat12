@@ -94,7 +94,8 @@ end;
 % Generate points to sample from, adding some jitter in order to
 % make the cost function smoother.
 % ---------------------------------------------------------------
-rand('state',0); % want the results to be consistant.
+% want the results to be consistant.
+if exist('rng','file') == 2, rng('default'); rng(0); else, rand('state',0); randn('state',0); end
 dg   = VG(1).dim(1:3);
 df   = VF(1).dim(1:3);
 

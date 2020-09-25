@@ -36,9 +36,7 @@ function varargout = cat_surf_parameters(job)
     error('Not enough parameters.');
   end
 
-  try
-    if cat_io_matlabversion>20161, rng(0); else, randn('state',0); rand('state',0); end
-  end
+  if exist('rng','file') == 2, rng('default'); rng(0); else, rand('state',0); randn('state',0); end
   
   % default structure
   def.fsavgDir    = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
