@@ -246,6 +246,7 @@ function popupTFCEToolbox_Callback(hObject, eventdata, handles)
 if get(hObject,'Value') == 2
     if exist(fullfile(spm('dir'),'toolbox','TFCE'))
         % call TFCE toolbox 
+        spm_jobman('interactive','','spm.tools.tfce_estimate');
         spm_TFCE;
     else % install TFCE toolbox
         cat_install_tfce(1);

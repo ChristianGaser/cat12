@@ -485,9 +485,9 @@ for i=sort(unique(hemi_code))'
       for j=1:length(ind)
         data{c}(data0 == ID_sel(indP(ind(j)))) = -log10(Pcorr_sel{c}(indP(ind(j))));
         if found_inv
-          fprintf('%9g\t%9s\t%9g\t%9g\t%s\n',Pcorr_sel{c}(indP(ind(j))),'',statval_sel(indP(ind(j))),Ze_sel(indP(ind(j))),N_sel{indP(ind(j))}(:,2:end));
+          fprintf('%9f\t%9s\t%9f\t%9f\t%s\n',Pcorr_sel{c}(indP(ind(j))),'',statval_sel(indP(ind(j))),Ze_sel(indP(ind(j))),N_sel{indP(ind(j))}(:,2:end));
         else
-          fprintf('%9g\t%9g\t%9g\t%s\n',Pcorr_sel{c}(indP(ind(j))),statval_sel(indP(ind(j))),Ze_sel(indP(ind(j))),N_sel{indP(ind(j))}(:,2:end));
+          fprintf('%9f\t%9f\t%9f\t%s\n',Pcorr_sel{c}(indP(ind(j))),statval_sel(indP(ind(j))),Ze_sel(indP(ind(j))),N_sel{indP(ind(j))}(:,2:end));
         end
       end
     end
@@ -507,7 +507,7 @@ for i=sort(unique(hemi_code))'
       if ~isempty(ind), fprintf('%s\n',repmat('-',[1,90])); end
       for j=1:length(ind_inv)
         data{c}(data0 == ID_sel(indP_inv(ind_inv(j)))) = log10(Pcorr_inv_sel{c}(indP_inv(ind_inv(j))));
-        fprintf('%9g\t%9s\t%9g\t%9g\t%s\n',Pcorr_inv_sel{c}(indP_inv(ind_inv(j))),'inverse',statval_sel(indP_inv(ind_inv(j))),Ze_sel(indP_inv(ind_inv(j))),N_sel{indP_inv(ind_inv(j))}(:,2:end));
+        fprintf('%9f\t%9s\t%9f\t%9f\t%s\n',Pcorr_inv_sel{c}(indP_inv(ind_inv(j))),'inverse',statval_sel(indP_inv(ind_inv(j))),Ze_sel(indP_inv(ind_inv(j))),N_sel{indP_inv(ind_inv(j))}(:,2:end));
       end
     end
 
@@ -636,7 +636,7 @@ else % write label volume with thresholded p-values
     OV.xy = [4 6];
     slices_str = spm_input('Select Slices','+1','m',{'-30:4:60','Estimate slices with local maxima'},{char('-30:4:60'),''});
     OV.slices_str = slices_str{1};
-    OV.transform = char('axial')
+    OV.transform = char('axial');
     cat_vol_slice_overlay(OV);
     fprintf('You can again call the result file %s using Slice Overlay in CAT12 with more options to select different slices and orientations.\n',OV.name);
   end

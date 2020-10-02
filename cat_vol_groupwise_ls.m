@@ -732,12 +732,27 @@ bias_fwhm = 60;
 bias_reg = 1e-6;
 bias_lmreg = 1e-6;
 for i=1:numel(param)
+  % correct if minimum is < 0 and 99% of values are > 0
+  [tmp,th0] = cat_stat_histth(vol(:,:,:,i),[0.99 1]);
+  if th0(1)>0 & min(min(min(vol(:,:,:,i)))) < 0
+    vol(:,:,:,i) = tmp;
+  end
   vol(:,:,:,i) = bias_correction(mu,vol(:,:,:,i),[],pyramid(1),bias_nits,bias_fwhm,bias_reg,bias_lmreg);
 end
+clear tmp
 
-% correct if minimum is < 0
-min_vol = min(vol(:));
-if min_vol < 0, vol = vol - min_vol; end
+% correct in non-zero areas if minimum is still < 0
+for i=1:numel(param)
+  tmp_vol = vol(:,:,:,i);
+  min_vol = min(tmp_vol(:));
+  if min_vol < 0
+    ind0 = tmp_vol == 0;
+    tmp_vol = tmp_vol - min_vol;
+    tmp_vol(ind0) = 0;
+    vol(:,:,:,i) = tmp_vol;
+  end
+end
+clear tmp_vol
 
 if need_wimg
     for i=1:numel(param)
