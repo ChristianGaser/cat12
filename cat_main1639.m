@@ -317,7 +317,7 @@ if ~isfield(res,'spmpp')
       [Yl1,Ycls,YMF] = cat_vol_partvol1639(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
       fprintf('%5.0fs\n',etime(clock,stime));
       if isfield(res,'Ylesion') && sum(res.Ylesion(:)==0) && job.extopts.SLC==1
-        cat_io_addwarning([mfilename ':SLC_noExpDef'],'SLC is set for manual lesions corection but no lesions were found!',1,[1 1]); 
+        cat_io_addwarning([mfilename ':SLC_noExpDef'],'SLC is set for manual lesion corection but no lesions were found!',1,[1 1]); 
       end
     end
   else

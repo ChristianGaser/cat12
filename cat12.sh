@@ -177,10 +177,12 @@ check_files ()
 modifiy_defaults ()
 {
 
+  pwd=$PWD
+
   # argument empty?
   if [ ! "${defaults}" == "" ]; then
       # check wether absolute or relative names were given
-      if [ ! -f ${defaults} -a -f ${pwd}/${defaults} ]; then
+      if [ -f ${pwd}/${defaults} ]; then
           defaults=${pwd}/${defaults}
       fi
 
@@ -222,7 +224,11 @@ modifiy_defaults ()
   fi
   
   if [ ! -z "$tpm" ]; then
-    echo "cat.opts.tpm = ${tpm};" >> ${defaults_tmp}
+    # check wether absolute or relative tpm was given
+    if [ -f ${pwd}/${tpm} ]; then
+        tpm=${pwd}/${tpm}
+    fi
+    echo "cat.opts.tpm = {'${tpm}'};" >> ${defaults_tmp}
   fi
 
   if [ ! -z "$add_to_defaults" ]; then

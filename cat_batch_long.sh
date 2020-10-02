@@ -186,7 +186,7 @@ run_batch ()
     # argument empty?
     if [ ! "${defaults_file}" == "" ]; then
         # check wether absolute or relative names were given
-        if [ ! -f ${defaults_file} -a -f ${pwd}/${defaults_file} ]; then
+        if [ -f ${pwd}/${defaults_file} ]; then
             defaults_file=${pwd}/${defaults_file}
         fi
     
