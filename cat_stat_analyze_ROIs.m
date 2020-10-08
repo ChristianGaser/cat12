@@ -419,7 +419,14 @@ for i=sort(unique(hemi_code))'
 
   % select surface atlas for each hemisphere
   if mesh_detected
-    atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',...
+    Pinfo = cat_surf_info(SPM.xY.P{1},1);
+    if Pinfo(1).nvertices == 64984
+      str32k = '_32k';
+    else
+      str32k = '';
+    end
+    
+    atlas_name = fullfile(spm('dir'),'toolbox','cat12',['atlases_surfaces' str32k],...
         [hemistr{i} '.' atlas '.freesurfer.annot']);
     [vertices, rdata0, colortable, rcsv0] = cat_io_FreeSurfer('read_annotation',atlas_name);
     data0 = round(rdata0);
