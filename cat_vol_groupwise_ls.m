@@ -731,28 +731,48 @@ bias_nits = 8;
 bias_fwhm = 60;
 bias_reg = 1e-6;
 bias_lmreg = 1e-6;
+use_new_release = 1;
 for i=1:numel(param)
-  % correct if minimum is < 0 and 99% of values are > 0
-  [tmp,th0] = cat_stat_histth(vol(:,:,:,i),[0.99 1]);
-  if th0(1)>0 & min(min(min(vol(:,:,:,i)))) < 0
-    vol(:,:,:,i) = tmp;
+  if use_new_release
+    tmp_vol = vol(:,:,:,i);
+    min_vol = min(tmp_vol(:));
+    % correct neg. values, but keep zero values if size exceeds 0.1% of whole image
+    if min_vol < 0
+      ind0 = tmp_vol == 0;
+      tmp_vol = tmp_vol - min_vol;
+      % if > 0.1% of values are zero then set these areas back to zero
+      if 100*sum(ind0(:))/numel(tmp_vol) > 0.1
+        tmp_vol(ind0) = 0;
+      end
+      vol(:,:,:,i) = tmp_vol;
+    end
   end
   vol(:,:,:,i) = bias_correction(mu,vol(:,:,:,i),[],pyramid(1),bias_nits,bias_fwhm,bias_reg,bias_lmreg);
 end
-clear tmp
 
-% correct in non-zero areas if minimum is still < 0
-for i=1:numel(param)
-  tmp_vol = vol(:,:,:,i);
-  min_vol = min(tmp_vol(:));
+if use_new_release
+  % correct in non-zero areas if minimum is still < 0
+  % but now use global criteria whether images is < 0
+  min_vol = min(vol(:));
+  % correct neg. values, but keep zero values if size exceeds 0.1% of whole image
   if min_vol < 0
-    ind0 = tmp_vol == 0;
-    tmp_vol = tmp_vol - min_vol;
-    tmp_vol(ind0) = 0;
-    vol(:,:,:,i) = tmp_vol;
+    for i=1:numel(param)
+      tmp_vol = vol(:,:,:,i);
+      ind0 = tmp_vol == 0;
+      tmp_vol = tmp_vol - min_vol;
+      % if > 0.1% of values are zero then set these areas back to zero
+      if 100*sum(ind0(:))/numel(tmp_vol) > 0.1
+        tmp_vol(ind0) = 0;
+      end
+      vol(:,:,:,i) = tmp_vol;
+    end
   end
+  clear tmp_vol
+else
+  % correct if minimum is < 0
+  min_vol = min(vol(:));
+  if min_vol < 0, vol = vol - min_vol; end
 end
-clear tmp_vol
 
 if need_wimg
     for i=1:numel(param)
@@ -773,8 +793,8 @@ if need_wimg
 end
 
 if need_avg
-    % use weighted median for rigid registration and mean for non-linear registration
-    if all(isfinite(w_settings(i,:)))
+    % use weighted median/mean for rigid registration and mean for non-linear registration
+    if all(isfinite(w_settings(i,:))) % rigid registration
         vol_mean   = mean(vol,4);
         % use median for > 2 images, otherwise use min
         if numel(param) > 2
@@ -796,7 +816,7 @@ if need_avg
         % weighted scaling w.r.t. local std
         mu = vol_std.*vol_median + (1-vol_std).*vol_mean;
 
-    else
+    else % non-linear registration
         mu = mean(vol,4);
     end
     
