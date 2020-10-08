@@ -462,7 +462,7 @@ switch lower(action)
       [pth{1}, nm1, ext1] = spm_fileparts(H.S{1}.name(1,:));
                     
       % read meshes
-      H.S{1}.info = cat_surf_info(H.S{1}.name, 1);          
+      H.S{1}.info = cat_surf_info(H.S{1}.name, 1);
       H.S{2}.info = H.S{1}.info;            
       H.S{1}.info(1).side = 'lh';
       H.S{2}.info(1).side = 'rh';
@@ -609,7 +609,7 @@ switch lower(action)
                {@select_cursor, 2}, ...
                {@select_cursor, 3}, ...
                {@select_cursor, 4}, ...
-               {@select_cursor, 6}};
+               {@select_cursor, 7}};
         
         set(H.cursor,'String', str, 'UserData', tmp);
       end
@@ -1624,7 +1624,7 @@ if H.isvol(sel)
          {@select_cursor, 2}, ...
          {@select_cursor, 3}, ...
          {@select_cursor, 4}, ...
-         {@select_cursor, 6}};
+         {@select_cursor, 7}};
 else
   str = {'Data Cursor', 'Disable data cursor', 'Atlas regions: All Atlases', ...
     'Atlas regions: Desikan-Killiany DK40', 'Atlas regions: Destrieux 2009', ...
@@ -2486,6 +2486,20 @@ end
 
 col = colormap;
 imwrite(img,col,fullfile(newpth,filename));
+fprintf('Image %s saved.\n',filename);
+
+% write dataplot window
+if isfield(H, 'dataplot')
+  filename = ['plot_' filename];
+  pos = round(getpixelposition(H.dataplot)); 
+  
+  % increase position to also include labels
+  pos = round(pos.*[0.925 0.925 1.25 1.25]);
+  hh = getframe(H.figure,pos);
+  img_plot = frame2im(hh);
+  imwrite(img_plot,col,fullfile(newpth,filename));
+  fprintf('Dataplot %s saved.\n',filename);
+end
 
 %==========================================================================
 function slider_clim_min(hObject, evt)
@@ -2952,7 +2966,7 @@ if plot_mean
       end
     end
   end
-    
+  
   % go through neg. effects if no node was found
   if ~isempty(indn) & isempty(found_node)
     
@@ -3007,7 +3021,6 @@ end
 
 % always one mesh
 ind = 1;
-
 [y, cbeta, CI] = get_cluster_data(H, XYZ, ind);
 
 % if no cluster was selected set data to zero
@@ -3032,6 +3045,8 @@ nm = H.S{1}.info(1).ff;
 if length(nm) > 4
   if strcmp(nm(length(nm) - 4:length(nm) - 3), '_0')
     Ic = str2double(nm(length(nm) - 3:length(nm)));
+  elseif isfield(H,'Ic')
+    Ic = H.Ic;
   end
 else
   if isfield(H,'Ic')
@@ -3121,9 +3136,10 @@ else
       plot(xx_array,polyval(P,xx_array),'Color',col(i,:),'LineWidth',2);
     end
     hold off
-    fprintf('Red: 1st group');
-    if numel(ind_X==2), fprintf('\tBlue: 2nd group'); end
-    fprintf('\n');
+    
+    if numel(ind_X)==2
+      fprintf('Red: 1st group\tBlue: 2nd group\n'); 
+    end
     
     xlim(H.dataplot,'auto')
     ylim(H.dataplot,'auto')
