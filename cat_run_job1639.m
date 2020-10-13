@@ -530,7 +530,7 @@ function cat_run_job1639(job,tpm,subj)
 
             warning off
             try 
-              [Affine0, affscale]  = spm_affreg(VG1, VF1, aflags, eye(4)); Affine = Affine0; 
+              [Affine0, affscale]  = spm_affreg(VG1, VF1, aflags, eye(4)); Affine = Affine0;
             catch
               affscale = 0; 
             end
@@ -574,7 +574,7 @@ function cat_run_job1639(job,tpm,subj)
               spm_chi2_plot('Init','Affine registration','Mean squared difference','Iteration');
             end
             warning off
-            [Affine1,affscale1] = spm_affreg(VG1, VF1, aflags, Affine, affscale);  
+            [Affine1,affscale1] = spm_affreg(VG1, VF1, aflags, Affine, affscale);
             warning on
             if ~any(any(isnan(Affine1(1:3,:)))) && affscale1>0.5 && affscale1<3, Affine = Affine1; end
           end
@@ -677,16 +677,39 @@ function cat_run_job1639(job,tpm,subj)
             %% only one TPM (old approach); 
             spm_plot_convergence('Init','Fine affine registration','Mean squared difference','Iteration');
             warning off 
-            Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg,80); 
+            
+            Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg,80);
+            scl1 = abs(det(Affine1(1:3,1:3)));
+            scl2 = abs(det(Affine2(1:3,1:3)));
+
             if any(any(isnan(Affine2(1:3,:))))
               Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*4,obj.tpm,Affine ,job.opts.affreg,80);
               if any(any(isnan(Affine2(1:3,:)))) 
                 Affine2 = Affine; 
               end
+            else
+              % check for > 10% larger scaling 
+              if scl1 > 1.1*scl2
+                fprintf('\First fine affine registration failed.\nUse affine registration from previous step.\n');
+                Affine2 = Affine1;
+                scl2 = scl1;
+              end
             end
-            Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,       obj.tpm,Affine2,job.opts.affreg,80);
+            Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,obj.tpm,Affine2,job.opts.affreg,80);
+
+            if ~any(any(isnan(Affine3(1:3,:))))
+              scl3 = abs(det(Affine3(1:3,1:3)));
+              % check for > 5% larger scaling 
+              if scl2 > 1.05*scl3 
+                fprintf('\nFinal fine affine registration failed.\nUse fine affine registration from previous step.\n');
+                Affine = Affine2;
+              else
+                Affine = Affine3;
+              end
+            else % Affine3 failed, use Affine2
+              Affine = Affine2;
+            end
             warning on  
-            if ~any(any(isnan(Affine3(1:3,:)))), Affine = Affine3; end
           else
             Affine2 = Affine1; 
             Affine3 = Affine1; 

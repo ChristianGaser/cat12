@@ -66,6 +66,7 @@ if numel(prec)       ==1, prec       = repmat(prec,1,numel(Nii));       end
 for i=1:numel(Nii)
   g = spm_global(spm_vol(Nii(i).dat.fname));
   Nii(i).dat.scl_slope = 100/g*Nii(i).dat.scl_slope;
+  Nii(i).dat.scl_inter = 100/g*Nii(i).dat.scl_inter;
 end
 
 % Determine noise estimates when unknown
@@ -266,7 +267,7 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
             %-----------------------------------------------------------------------
             [mu,ss,nvox,D] = compute_mean(pyramid(level), param, ord);
             % for i=1:numel(param), fprintf('  %12.5g %12.5g %12.5g', prec(i)*ss(i), param(i).eb, param(i).ev); end; fprintf('  0\n');
-            
+
             if (level == 1) && (iter == 1)
             
               % reduce bounding box at final resolution level
@@ -735,42 +736,40 @@ use_new_release = 1;
 for i=1:numel(param)
   if use_new_release
     tmp_vol = vol(:,:,:,i);
-    min_vol = min(tmp_vol(:));
-    % correct neg. values, but keep zero values if size exceeds 0.1% of whole image
-    if min_vol < 0
-      ind0 = tmp_vol == 0;
-      tmp_vol = tmp_vol - min_vol;
-      % if > 0.1% of values are zero then set these areas back to zero
-      if 100*sum(ind0(:))/numel(tmp_vol) > 0.1
-        tmp_vol(ind0) = 0;
-      end
-      vol(:,:,:,i) = tmp_vol;
+    ind0 = tmp_vol == 0;
+      
+    [tmp_vol th99] = cat_stat_histth(tmp_vol,[0.99 0.999]);
+    tmp_vol = tmp_vol - th99(1);
+
+    % if > 0.5% of values are zero then set these areas back to zero
+    if 100*sum(ind0(:))/numel(tmp_vol) > 0.5
+      tmp_vol(ind0) = 0;
     end
+    vol(:,:,:,i) = tmp_vol;
   end
   vol(:,:,:,i) = bias_correction(mu,vol(:,:,:,i),[],pyramid(1),bias_nits,bias_fwhm,bias_reg,bias_lmreg);
 end
 
+% correct if minimum is < 0
+min_vol = min(vol(:))
 if use_new_release
-  % correct in non-zero areas if minimum is still < 0
-  % but now use global criteria whether images is < 0
-  min_vol = min(vol(:));
-  % correct neg. values, but keep zero values if size exceeds 0.1% of whole image
   if min_vol < 0
     for i=1:numel(param)
       tmp_vol = vol(:,:,:,i);
       ind0 = tmp_vol == 0;
+      
       tmp_vol = tmp_vol - min_vol;
-      % if > 0.1% of values are zero then set these areas back to zero
-      if 100*sum(ind0(:))/numel(tmp_vol) > 0.1
+      
+      % if > 0.5% of values are zero then set these areas back to zero
+      if 100*sum(ind0(:))/numel(tmp_vol) > 0.5
         tmp_vol(ind0) = 0;
       end
+
       vol(:,:,:,i) = tmp_vol;
+      
     end
   end
-  clear tmp_vol
 else
-  % correct if minimum is < 0
-  min_vol = min(vol(:));
   if min_vol < 0, vol = vol - min_vol; end
 end
 

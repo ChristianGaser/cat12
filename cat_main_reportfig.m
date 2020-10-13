@@ -493,7 +493,6 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     if isfield( st.vols{id}, 'mesh'), st = rmfield( st.vols{id} ,'mesh'); end
   end
   if job.extopts.expertgui>0 - showTPMsurf
-    %Phull = {fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','bh.hull.cat.gii')};
     Phull = {cat_surf_create_TPM_hull_surface(res.tpm)};
     for id=1
       try spm_orthviews('AddContext',id); end % need the context menu for mesh handling
