@@ -583,7 +583,6 @@ function cat_io_report(job,qa,subj,createerr)
   showTPMsurf = 1; % ... also in default mode 
   if job.extopts.expertgui>0 - showTPMsurf
     try
-      %Phull = {fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','bh.hull.cat.gii')};
       Phull = {cat_surf_create_TPM_hull_surface(job.opts.tpm)};
       for id=1
         spm_orthviews('AddContext',id); % need the context menu for mesh handling

@@ -62,12 +62,12 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm)
   Yb   = exp(tpm.dat{1}) + exp(tpm.dat{2}) + exp(tpm.dat{3});
   Sh   = isosurface(Yb,0.5);
   % create head surface based on 5 classes with average probability threshold
-	Yhd = exp(tpm.dat{1}) + exp(tpm.dat{2}) + exp(tpm.dat{3}) + exp(tpm.dat{4}) + exp(tpm.dat{5});
-	Yhd = cat_vol_morph(Yhd>0.5,'l',[1 0.5]);
-	Yhd = ~cat_vol_morph(~Yhd,'l',[1 0.5]);
-	Shd = isosurface(Yhd,0.5);
-	Sh.faces    = [Sh.faces; Shd.faces + size(Sh.vertices,1)];
-	Sh.vertices = [Sh.vertices; Shd.vertices];
+  Yhd = exp(tpm.dat{1}) + exp(tpm.dat{2}) + exp(tpm.dat{3}) + exp(tpm.dat{4}) + exp(tpm.dat{5});
+  Yhd = cat_vol_morph(Yhd>0.5,'l',[1 0.5]);
+  Yhd = ~cat_vol_morph(~Yhd,'l',[1 0.5]);
+  Shd = isosurface(Yhd,0.5);
+  Sh.faces    = [Sh.faces; Shd.faces + size(Sh.vertices,1)];
+  Sh.vertices = [Sh.vertices; Shd.vertices];
   Sh  = reducepatch(Sh,0.2);
       
     
@@ -76,5 +76,13 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm)
   Sh.vertices = (vmat*[Sh.vertices' ; ones(1,size(Sh.vertices,1))])'; 
   mati = spm_imatrix(tpm.V(1).mat); 
   if mati(7)<0, Sh.faces = [Sh.faces(:,1) Sh.faces(:,3) Sh.faces(:,2)]; end
-  save(gifti(struct('faces',Sh.faces,'vertices',Sh.vertices)),Phull);   
+  try
+    save(gifti(struct('faces',Sh.faces,'vertices',Sh.vertices)),Phull);   
+  catch
+    if exist(Phull)
+      fprintf('Warning: Could not update %s with newer version. Please change write permissions.\n',Phull);
+    else
+      error('Could not save %s. Please change write permissions.\n',Phull);
+    end
+  end
 end

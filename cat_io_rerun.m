@@ -1,7 +1,7 @@
 function run = cat_io_rerun(files,filedates,verb)
 %cat_io_rerun(f1,fd). Test if a file f1 is newer than another file/date fd.  
 % This function is used to estimated if a file is newer than another given 
-% file or date. For instance file is the result of anther file that was 
+% file or date. For instance file is the result of another file that was 
 % changed in the meantime, it has to be reprocessed. 
 %
 %  run = cat_io_rerun(files,filedates)
