@@ -782,16 +782,19 @@ function cat_run_job(job,tpm,subj)
             % first we start with the given affine registration and affreg parameter (e.g. mni) and a very low resolution
             % RD202007: also here different maskings could be tested - however, it looks quite stable now 
             [Affine2,ppe.spm_maff8.ll(1)] = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg,80); 
+            scl1 = abs(det(Affine1(1:3,1:3)));
+            scl2 = abs(det(Affine2(1:3,1:3)));
             
-            if 1 % new approach with multiple tests
+            %CG202010: disabled, because it's not working yet
+            if 0 % new approach with multiple tests
               ppe.spm_maff8.ll_help = ['ll(1) with affreg result, ll(2) without spm_affreg init, ' ...
                 'll(3) without spm_affreg and with opts.affreg=none; only test further cases if ll(i)<0.9'];   
               if ppe.spm_maff8.ll(1)<0.9
-                % if there was no high overlap than we try if maff8 support better results without affreg initialization 
+                % if there was no high overlap than we try if maff8 supports better results without affreg initialization 
                 [Affine2o,ppe.spm_maff8.ll(2)] = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,eye(4),job.opts.affreg,80); 
                 Affine2 = Affine2o; 
                 if ppe.spm_maff8.ll(2)<0.9
-                  % especially for very small heads the mni definiton is not good 
+                  % especially for very small heads the mni definition is not good 
                   % we start here with the maff8 that is more robust to varying contrasts
                   [Affine2n,ppe.spm_maff8.ll(3)] = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,eye(4),'none',80); 
                   if ppe.spm_maff8.ll(3) > ppe.spm_maff8.ll(2)
@@ -813,10 +816,29 @@ function cat_run_job(job,tpm,subj)
               if any(any(isnan(Affine2(1:3,:)))) 
                 Affine2 = Affine; 
               end
+            else
+              % check for > 10% larger scaling 
+              if scl1 > 1.1*scl2
+                fprintf('\First fine affine registration failed.\nUse affine registration from previous step.\n');
+                Affine2 = Affine1;
+                scl2 = scl1;
+              end
             end
             % after this initial step we do some refined registration with less smoothing 
             [Affine3,ppe.spm_maff8.ll(4)]  = spm_maff8(obj.image(1),obj.samp,obj.fwhm,obj.tpm,Affine2,job.opts.affreg,80);
-            if ~any(any(isnan(Affine3(1:3,:)))), Affine = Affine3; else, Affine = Affine2; end
+
+            if ~any(any(isnan(Affine3(1:3,:))))
+              scl3 = abs(det(Affine3(1:3,1:3)));
+              % check for > 5% larger scaling 
+              if scl2 > 1.05*scl3 
+                fprintf('\nFinal fine affine registration failed.\nUse fine affine registration from previous step.\n');
+                Affine = Affine2;
+              else
+                Affine = Affine3;
+              end
+            else
+              Affine = Affine2;
+            end
 
             % turn warning on 
             if wo, warning('ON','MATLAB:RandStream:ActivatingLegacyGenerators'); end
