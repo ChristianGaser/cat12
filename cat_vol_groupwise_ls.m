@@ -751,7 +751,7 @@ for i=1:numel(param)
 end
 
 % correct if minimum is < 0
-min_vol = min(vol(:))
+min_vol = min(vol(:));
 if use_new_release
   if min_vol < 0
     for i=1:numel(param)

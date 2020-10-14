@@ -16,6 +16,7 @@ proc_dir=$PWD
 bg_flag=" -fg -p 1"
 bg_flag_long=" -fg"
 bg=0
+large=""
 postprocess_only=0
 volumes_only=0
 scp_target="dbm.neuro.uni-jena.de:/volume1/web/check_pipeline/"
@@ -285,9 +286,9 @@ run_pipeline ()
     large=`grep "\-large" ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh`
     # call "-large" option only if available for that release
     if [ -z "$large" ]; then
-      ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh -large ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi]
-    else
       ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi] 
+    else
+      ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh -large ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi]
     fi
   fi
   
