@@ -42,7 +42,7 @@ if sel == 1
   for i = 1:size(dirs,1)
     folder = deblank(dirs(i,:));
     if ~isempty(strfind(folder,'check_r'))
-      files = spm_select('FPListRec',[folder '/long'],'^mw.*p1.*\.nii$');
+      files = spm_select('FPListRec',[folder '/long'],'^mwmwp1.*\.nii$');
       if size(files,1) >= 2
         j = j + 1;        
         job.data_vol{j} = files;
