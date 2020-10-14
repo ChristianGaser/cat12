@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1724 | gaser | 2020-10-13 15:32:49
+r1725 | gaser | 2020-10-14 09:52:36
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_run_newcatch.m
+M       cat_vol_groupwise_ls.m
+M       check_pipeline.sh
+M       check_pipeline_homogeneity.m
+M       html/cat.html
+
+(1) Changed: Added warning if new experimental pipeline is used to 
+             cat_run_newcatch.m
+(2) Changed: Changed selection filter for only recognizing newer longitudinal
+             data in check_pipeline_homogeneity.m
+(3) Fixed:   Corrected recognition of "large" flag in check_pipeline.sh.
+
+------------------------------------------------------------------------
+r1724 | gaser | 2020-10-13 15:34:13 +0200 (Di, 13 Okt 2020) | 26 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -25,6 +43,7 @@ M       html/cat.html
 (4) Fixed:   Corrected typo in cat_parallelize.m.
 (5) Fixed:   Data with large offset (scl_inter) were not correctly globally
              scaled in cat_vol_groupwise_ls.m
+
 
 ------------------------------------------------------------------------
 r1723 | gaser | 2020-10-08 10:17:19 +0200 (Do, 08 Okt 2020) | 17 lines
