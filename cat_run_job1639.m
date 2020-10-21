@@ -690,7 +690,7 @@ function cat_run_job1639(job,tpm,subj)
             else
               % check for > 10% larger scaling 
               if scl1 > 1.1*scl2
-                fprintf('\First fine affine registration failed.\nUse affine registration from previous step.\n');
+                fprintf('\nFirst fine affine registration failed.\nUse affine registration from previous step.\n');
                 Affine2 = Affine1;
                 scl2 = scl1;
               end

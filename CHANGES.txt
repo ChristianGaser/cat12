@@ -1,5 +1,77 @@
 ------------------------------------------------------------------------
-r1725 | gaser | 2020-10-14 09:52:36
+r1726 | gaser | 2020-10-21 15:11:09
+
+Changed paths:
+ M      Amap.c
+ M      Bayes.c
+ M      BayesMex.c
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+ M      Kmeans.c
+ M      KmeansMex.c
+M       Makefile
+ M      MrfPrior.c
+ M      Pve.c
+ M      WarpPriors.c
+ M      cat_amap.c
+M       cat_conf_ROI.m
+M       cat_conf_long.m
+M       cat_long_main.m
+M       cat_long_multi_run.m
+M       cat_plot_boxplot.m
+M       cat_run_job.m
+M       cat_run_job1639.m
+M       cat_stat_analyze_ROIs.m
+D       cat_stat_results.m
+        > moved to development/cat_stat_results.m
+M       cat_stat_spm.m
+M       cat_surf_results.m
+ M      cat_vbdist.c
+ M      cat_vol_ROIval.c
+ M      cat_vol_downcut.c
+ M      cat_vol_eidist.c
+ M      cat_vol_eikonal3.c
+ M      cat_vol_genus0.c
+ M      cat_vol_gradient3.c
+ M      cat_vol_laplace3.c
+ M      cat_vol_localstat.c
+ M      cat_vol_median3.c
+ M      cat_vol_median3c.c
+M       cat_vol_pbt.m
+M       cat_vol_pbt2.m
+ M      cat_vol_pbtp.c
+ M      cat_vol_pbtp2.c
+M       cat_vol_set_com.m
+A  +    development/cat_stat_results.m
+        > moved from cat_stat_results.m
+ M      genus0.c
+M       html/cat.html
+M       html/cat.txt
+M       html/cat_methods_LP.html
+ M      optimizer3d.c
+ M      sanlm_float.c
+M       standalone/cat_standalone.sh
+A       standalone/cat_standalone_tfce.txt
+M       templates_volumes/cobra.txt
+
+(1) Changed: Added TFCE batch to standalone scripts.
+(2) Moved:   Moved cat_stat_results.m to development folder.
+(3) Changed: Do not accept analysis of diff-files in cat_stat_analyze_ROIs.m
+(4) Changed: Do not call for inverse effects for F-test 
+             in cat_stat_analyze_ROIs.m
+(5) Changed: Print warning if output voxel size is changed and use defaul voxel
+             size for longitudinal pipeline.
+(6) Changed: Prepared longitudinal pipeline to save both longitudinal models.
+(7) Changed: Added cleaning of folder and correction of file permissions to 
+             Makefile (thanks to Dimitri Papadopoulos for pointing to that 
+             issue).
+(8) Fixed:   Corrected many typos in help text.
+(9) Fixed:   Saving of empty dataplot png-file in cat_surf_results.m is now
+             prevented.
+
+------------------------------------------------------------------------
+r1725 | gaser | 2020-10-14 09:53:20 +0200 (Mi, 14 Okt 2020) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +87,7 @@ M       html/cat.html
 (2) Changed: Changed selection filter for only recognizing newer longitudinal
              data in check_pipeline_homogeneity.m
 (3) Fixed:   Corrected recognition of "large" flag in check_pipeline.sh.
+
 
 ------------------------------------------------------------------------
 r1724 | gaser | 2020-10-13 15:34:13 +0200 (Di, 13 Okt 2020) | 26 lines

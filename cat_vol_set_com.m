@@ -4,7 +4,7 @@ function cat_vol_set_com(vargin)
 
 
 if nargin == 1
-	P = char(vargin.data);
+  P = char(vargin.data);
 else
   P = spm_select(Inf,'image','Select images to filter');
 end
