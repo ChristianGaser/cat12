@@ -374,7 +374,7 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
     Ygmt1 = cat_vol_median3(Ygmt1,Ygmt1>0,Ygmt1>0);
     Ygmt2 = cat_vol_median3(Ygmt2,Ygmt2>0,Ygmt2>0); 
     
-    % estimation of Ypp for further GM filtering without sulcul blurring
+    % estimation of Ypp for further GM filtering without sulcal blurring
     Ygmt  = min(cat(4,Ygmt1,Ygmt2),[],4);
     YM    = Ymf>=1.5 & Ymf<2.5; Ypp = zeros(size(Ymf),'single'); Ypp(Ymf>=2.5)=1;
     Ypp(YM) = min(Ycsfd(YM),Ygmt(YM) - Ywmd(YM)) ./ (Ygmt(YM) + eps); Ypp(Ypp>2) = 0;

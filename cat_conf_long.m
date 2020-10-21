@@ -101,6 +101,10 @@ longmodel.tag    = 'longmodel';
 longmodel.name   = 'Longitudinal Model';
 longmodel.labels = {'Optimized for detecting small changes (i.e. plasticity/learning effects','Optimized for detecting large changes (i.e. aging/developmental effects)'};
 longmodel.values = {1 2};
+if expert & 0
+  longmodel.labels{3} = 'Save both longitudinal models'; 
+  longmodel.values{3} = 3;
+end
 longmodel.val    = {1};
 longmodel.help = {
 'The longitudinal pre-processing in CAT12 has been developed and optimized to detect subtle effects over shorter periods of time (e.g. brain plasticity or training effects after a few weeks or even shorter periods of time) and is less sensitive to detect larger changes over longer periods of time (e.g. ageing or developmental effects). To detect larger effects, we also offer a model that additionally takes into account deformations between time points. The use of deformations between the time points makes it possible to estimate and detect larger changes, while subtle effects over shorter periods of time in the range of weeks or a few months can be better detected with the model for small changes.'

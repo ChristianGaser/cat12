@@ -2489,7 +2489,7 @@ imwrite(img,col,fullfile(newpth,filename));
 fprintf('Image %s saved.\n',filename);
 
 % write dataplot window
-if isfield(H, 'dataplot')
+if isfield(H, 'dataplot') & strcmpi(get(H.dataplot,'Visible'),'on')
   filename = ['plot_' filename];
   pos = round(getpixelposition(H.dataplot)); 
   
