@@ -27,6 +27,13 @@ FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
 
 ZIPFILE=cat12_r${REVISION}.zip
 
+# remove .DS_Store files and correct file permissions
+clean:
+	-@find . -type f -name .DS_Store -exec rm {} \;
+	-@chmod -R a+r .
+	-@find . -type f \( -name "*.c" -o -name "*.c??" -o -name "*.m" -o -name "*.gii" -o -name "*.nii" -o -name "*.txt" -o -name "*.html" -o -name "*.annot" \) -exec chmod a-x {} \;
+# 	-@svn propset svn:executable OFF *.c *.c?? *.m */*.gii */*.nii *.txt *.html */*.c */*.c?? */*.m */*.annot */*.txt */*.html
+
 # prepare txt file for deployed versions
 copy_longmode:
 	-@cp -R cat_long_main.m cat_long_main.txt
@@ -53,7 +60,7 @@ install3: copy_longmode
 # print available commands
 help:
 	-@echo Available commands:
-	-@echo install zip scp scp_manual scp_precompile doc update cp_binaries archive check_pipeline checklist precompile
+	-@echo clean install zip scp scp_manual scp_precompile doc update cp_binaries archive check_pipeline checklist precompile
 
 #make html documentation
 doc:
@@ -78,7 +85,7 @@ update: doc copy_longmode
 	-@perl -p -i -e "s/${OLDVERSION}/${NEWVERSION}/g" spm_cat12.m
 
 # zip release
-zip: update
+zip: update clean
 	-@echo zip
 	-@test ! -d cat12 || rm -r cat12
 	-@mkdir cat12

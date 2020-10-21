@@ -44,7 +44,7 @@ function hRes = cat_stat_results
   hRes.FlineAx      = get(hRes.Fline,'parent');
   hRes.Flabels      = [ hRes.FgraphAx( hRes.FgraphAxPos(:,1) == 0.65); hRes.FgraphAx( hRes.FgraphAxPos(:,1) == 0.02)]; 
   
-  % make nice contrast box that is a bit larger than the orinal boxes
+  % make nice contrast box that is a bit larger than the original boxes
   hRes.Fcons        = hRes.FgraphAx( hRes.FgraphAxPos(:,1) == 0.65 & hRes.FgraphAxPos(:,2) > 0.6 ) ;  
   for axi = 1:numel( hRes.Fcons ), l = get( hRes.Fcons(axi) , 'ylim'); set(hRes.Fcons(axi) , 'box','on','ylim', round(l) + [-0.015 0.015]); end
   

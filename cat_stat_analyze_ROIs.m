@@ -51,7 +51,6 @@ if compare_two_samples
   end
 end
 
-% not yet ready to use
 % threshold for p-values
 spm_clf('Interactive');
 
@@ -88,7 +87,8 @@ if ~mesh_detected
   prepend = fname{1};
   % check whether prepending pattern is not based on GM/WM
   if isempty(strfind(prepend,'mwp')) & isempty(strfind(prepend,'m0wp'))
-    fprintf('\nWARNING: ROI analysis is only supported for VBM of GM/WM/CSF. No ROI values for DBM will be estimated.\n',prepend);
+    fprintf('\nWARNING: ROI analysis is only supported for VBM of GM/WM/CSF. No ROI values for DBM will be estimated.\n');
+    return
   end
 end
 
@@ -97,6 +97,12 @@ roi_files_found = 0;
 % get names of ROI xml files using saved filename in SPM.mat
 for i=1:numel(P)
   [pth,nam,ext] = fileparts(P{i});
+  
+  % check whether data is a difference-file
+  if ~isempty(strfind(nam,'diff_'))
+    fprintf('Diff-files cannot be used for ROI-estimation, because the link to the original (separate) files will be broken.\n');
+    return
+  end
   
   % check whether a label subfolder exists and replace the name with "label"
   if strcmp(pth(end-length(subfolder)+1:end),subfolder)
@@ -323,9 +329,9 @@ dataBeta   = cell(length(ind_con));
 % uncorrected p-values
 Pcorr{1}     = p;
 
-% check for inverse effects and ask whether these should be also displayed
+% check for inverse effects in T-test and ask whether these should be also displayed
 ind_inv = find((1-p) < alpha);
-if ~isempty(ind_inv)
+if ~isempty(ind_inv) & strcmp(SPM.xCon(Ic).STAT,'T')
   found_inv = 1;
   Pcorr_inv  = cell(size(corr));
   Pcorr_inv{1} = 1 - p;
@@ -640,8 +646,10 @@ else % write label volume with thresholded p-values
     OV.name = fullfile(cwd,['logP' corr_short{show_results} output_name '.nii']);
     OV.save = 'png';
     OV.atlas = 'none';
-    OV.xy = [4 6];
     slices_str = spm_input('Select Slices','+1','m',{'-30:4:60','Estimate slices with local maxima'},{char('-30:4:60'),''});
+    if ~isempty(slices_str{1})
+      OV.xy = [4 6];
+    end
     OV.slices_str = slices_str{1};
     OV.transform = char('axial');
     cat_vol_slice_overlay(OV);

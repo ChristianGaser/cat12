@@ -311,6 +311,9 @@ EXAMPLE
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_smooth.txt -a1 "[6 6 6]" -a2 "'s6'" sTRIO*nii
    Smooth the volume files sTRIO*nii with 6mm and prepend the string "s6" to smoothed files.
 
+   cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_tfce.txt -a1 "2" -a2 "20000" SPM.mat
+   Call estimation of TFCE statistics for the given SPM.mat file for contrast number 2 with 20000 permutations.
+
    cat_parallelize.sh -p 8 -l /tmp -c "cat_standalone.sh  -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment.txt" sTRIO*.nii
    Parallelize CAT12 preprocessing by splitting all sTRIO*.nii files into 8 jobs 
    (processes) and save log file in /tmp folder. 

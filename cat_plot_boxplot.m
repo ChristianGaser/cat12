@@ -179,16 +179,16 @@ def.switch      = 0;          % switch between columns and rows of data
 
 % use predefined styles
 if isfield(opt,'style')
-	switch opt.style
-		case 0 % use defaults for boxplot
-		case 1
-			def.violin = 1; def.showdata = 2; def.ygrid = 1; def.gridline = ':';
-		case 2
-			def.violin = 2; def.showdata = 2; def.ygrid = 1; def.gridline = ':';
-		case 3
-			def.violin = 1; def.showdata = 1; def.vertical = 0; def.fill = 0.5; 
-			def.median = 1; def.boxwidth = 2.75; def.ygrid = 1; def.gridline = ':';
-	end
+  switch opt.style
+    case 0 % use defaults for boxplot
+    case 1
+      def.violin = 1; def.showdata = 2; def.ygrid = 1; def.gridline = ':';
+    case 2
+      def.violin = 2; def.showdata = 2; def.ygrid = 1; def.gridline = ':';
+    case 3
+      def.violin = 1; def.showdata = 1; def.vertical = 0; def.fill = 0.5; 
+      def.median = 1; def.boxwidth = 2.75; def.ygrid = 1; def.gridline = ':';
+  end
 end
 
 opt             = cat_io_checkinopt(opt,def);

@@ -368,7 +368,7 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ywmdc] = cat_vol_pbt2(Ymf,opt)
     Ygmt1 = cat_vol_median3(Ygmt1,YM,Ygmt1>0,0.2);
     Ygmt2 = cat_vol_median3(Ygmt2,YM,Ygmt2>0,0.2);
     
-    %% estimation of Ypp for further GM filtering without sulcul blurring
+    %% estimation of Ypp for further GM filtering without sulcal blurring
     if update_WMD
       [Ygmt,Yi] = min(cat(4,Ygmt1,Ygmt2),[],4);
       Ywmdc   = (Ywmd.*(Yi==1) + (Yi==2).*(Ygmt2 - Ycsfd)); 
