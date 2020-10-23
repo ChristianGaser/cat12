@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1726 | gaser | 2020-10-21 15:11:09
+r1727 | gaser | 2020-10-23 14:24:18
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_main.m
+M       cat_stat_spm.m
+
+Fixed: Resolved issues with longitudinal model for large changes over time from
+       release r1725 and resulted in distorted segmentations.
+------------------------------------------------------------------------
+r1726 | gaser | 2020-10-21 15:11:56 +0200 (Mi, 21 Okt 2020) | 70 lines
 
 Changed paths:
  M      Amap.c
@@ -69,6 +79,7 @@ M       templates_volumes/cobra.txt
 (8) Fixed:   Corrected many typos in help text.
 (9) Fixed:   Saving of empty dataplot png-file in cat_surf_results.m is now
              prevented.
+
 
 ------------------------------------------------------------------------
 r1725 | gaser | 2020-10-14 09:53:20 +0200 (Mi, 14 Okt 2020) | 16 lines
