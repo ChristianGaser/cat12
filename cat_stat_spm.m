@@ -12,6 +12,7 @@ if nargin == 0
 elseif exist('SPM','var') && isfield(SPM,'spmmat')
   P = char(SPM.spmmat); spmmat = SPM.spmmat;
 end
+
 if exist('P','var')
   for i=1:size(P,1)
     swd = spm_file(P(i,:),'fpath');

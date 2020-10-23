@@ -106,7 +106,7 @@ matlabbatch{mbi}.spm.tools.cat.estwrite.output.warps        = [0 0];
 % segmenation are relatively small. 
 mbi = mbi + 1; mb_tpm = mbi;
 matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.files(1) = cfg_dep('CAT12: Segmentation (current release): rp1 affine Image', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','rpa', '()',{':'}));
-matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.fstrength = 2;
+matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.fstrength = 3;
 matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.writeBM = 0;
 matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.verb = 1;
 
@@ -162,8 +162,7 @@ matlabbatch{mbi}.spm.tools.cat.tools.avg_img.data(1)  = cfg_dep('CAT12: Segmenta
 matlabbatch{mbi}.spm.tools.cat.tools.avg_img.output   = '';
 matlabbatch{mbi}.spm.tools.cat.tools.avg_img.outdir   = {''};
 
-% expect larger chnages over time due to age or development
-if longmodel>1
+if longmodel==2
 % 6) creating time point specific deformation 
 % -----------------------------------------------------------------------
 % To reduce longitudinal changes of moving structures between time points 
@@ -237,13 +236,10 @@ end
 mbi = mbi + 1; 
 matlabbatch{mbi}.spm.tools.cat.tools.defs.field1(1)       = cfg_dep('Image Average: Average Image: ', substruct('.','val', '{}',{mb_avgdef}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','files'));
 for ci = 1:2 + single(write_CSF) % fill image sets
-  if longmodel==1 % small changes
+  if longmodel==1
     matlabbatch{mbi}.spm.tools.cat.tools.defs.images(ci)  = cfg_dep(sprintf('CAT12: Segmentation (current release): p%d Image',ci), substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{ci}, '.','p', '()',{':'}));
-  elseif longmodel==2 % large changes
+  else
     matlabbatch{mbi}.spm.tools.cat.tools.defs.images(ci)  = cfg_dep('Apply deformations (many subjects): All Output Files', substruct('.','val', '{}',{mb_aGS(ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','vfiles'));
-  else % save for both longmodels
-    matlabbatch{mbi}.spm.tools.cat.tools.defs.images(ci)  = cfg_dep(sprintf('CAT12: Segmentation (current release): p%d Image',ci), substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{ci}, '.','p', '()',{':'}));
-    matlabbatch{mbi}.spm.tools.cat.tools.defs.images(ci+2+single(write_CSF))  = cfg_dep('Apply deformations (many subjects): All Output Files', substruct('.','val', '{}',{mb_aGS(ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','vfiles'));
   end
 end
 matlabbatch{mbi}.spm.tools.cat.tools.defs.interp          = 1;
@@ -315,16 +311,13 @@ if delete_temp
   end
 %}
   matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Longitudinal TPM creation: Longitudinal TPMs',                     substruct('.','val', '{}',{mb_tpm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),   substruct('.','tpm', '()',{':'})); c = c+1;
-  if longmodel>1
+  if longmodel==2
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Run Shooting (create Templates): Template (0)',                  substruct('.','val', '{}',{mb_GS}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),    substruct('.','template', '()',{':'})); c = c+1;
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Run Shooting (create Templates): Velocity Fields',               substruct('.','val', '{}',{mb_GS}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),    substruct('.','vel', '()',{':'})); c = c+1;
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Run Shooting (create Templates): Deformation Fields',            substruct('.','val', '{}',{mb_GS}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),    substruct('.','def', '()',{':'})); c = c+1; 
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Run Shooting (create Templates): Jacobian Fields',               substruct('.','val', '{}',{mb_GS}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),    substruct('.','jac', '()',{':'})); c = c+1;
-    % remove intermediate steps
-    if longmodel==2
-      for ci = 1:2 + single(write_CSF)
-        matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Apply deformations (many subjects): All Output Files',         substruct('.','val', '{}',{mb_aGS(ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','vfiles')); c = c+1;
-      end
+    for ci = 1:2 + single(write_CSF)
+      matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Apply deformations (many subjects): All Output Files',         substruct('.','val', '{}',{mb_aGS(ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','vfiles')); c = c+1;
     end
   end
   % final command of this batch 
