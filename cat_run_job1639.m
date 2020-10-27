@@ -214,7 +214,7 @@ function cat_run_job1639(job,tpm,subj)
         
        
         % always create the n*.nii image because of the real masking of the
-        % T1 data for spm_preproc8 that include rewriting the image!
+        % T1 data for spm_preproc8 that includes rewriting the image!
         for n=1:numel(job.channel) 
           [pp,ff,ee] = spm_fileparts(job.channel(n).vols{subj}); 
           ofname  = fullfile(pp,[ff ee]); 
