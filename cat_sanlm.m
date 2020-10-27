@@ -1,10 +1,11 @@
-function cat_sanlm(in, v, f)
-% FORMAT cat_sanlm(in, v, f)
+function cat_sanlm(in, v, f, rician)
+% FORMAT cat_sanlm(in, v, f, rician)
 % 
 % Spatial Adaptive Non Local Means Denoising Filter
 %
 % v - size of search volume (M in paper)
 % f - size of neighborhood (d in paper)
+% rician - use rician noise distribution
 %
 % *                          Details on SANLM filter                        
 % ***************************************************************************
@@ -31,6 +32,6 @@ cd(pth);
 mex -O cat_sanlm.c sanlm_float.c 
 cd(p_path);
 
-cat_sanlm(in, v, f);
+cat_sanlm(in, v, f, rician);
 
 return

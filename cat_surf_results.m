@@ -589,6 +589,7 @@ switch lower(action)
         set(H.fix, 'Visible', 'on');
       end
       
+      H.Pvol_sel = H.Pvol{1};
       display_results_all;
       
       H.SPM_found = 1;
@@ -1276,6 +1277,11 @@ end
 if ~H.disable_cbar
   H = show_colorbar(H);
 end
+
+if isfield(H,'Pvol_sel')
+  update_slice_overlay(H);
+end
+
 if nargout, Ho = H; end
 
 %-----------------------------------------------------------------------
@@ -1319,6 +1325,7 @@ end
 if ~H.disable_cbar
   H = show_colorbar(H);
 end
+H.cmap = col;
 if nargout, Ho = H; end
 
 %-----------------------------------------------------------------------
@@ -1605,6 +1612,10 @@ end
 
 % enable/disable atlas widget
 if H.isvol(sel)
+  H.Pvol_sel = H.Pvol{sel};
+  if isfield(H,'Pvol_sel')
+    update_slice_overlay(H);
+  end
   set(H.atlas, 'Enable', 'off');
 else
   set(H.atlas, 'Enable', 'on');
@@ -1648,6 +1659,58 @@ axis(H.nam, 'off')
 text(0.5, 0.5, spm_str_manip(H.S{1}.name, 'k60d'), 'Parent', H.nam, 'Interpreter', 'none', ...
   'FontSize', H.FS, 'HorizontalAlignment', 'center');
 if nargout, Ho = H; end
+
+%-----------------------------------------------------------------------
+function update_slice_overlay(H,file_save)
+%-----------------------------------------------------------------------
+
+return
+if ~isfield(H,'Pvol_sel'), return; end
+
+% display image as overlay
+OV.reference_image = fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_T1_IXI555_MNI152_GS.nii');
+
+if H.show_transp
+  OV.opacity = 0.6;                                      
+  OV.reference_range = [0.2 1.6];                        
+else
+  OV.opacity = Inf;                                      
+  OV.reference_range = [0.2 1.0];                        
+end
+
+% clipping if defined
+if ~isempty(H.clip)
+  OV.func = sprintf('i1(i1>%g & i1<%g)=NaN;',H.clip(2),H.clip(3));
+end
+
+if isfield(H,'cmap')
+  if size(H.cmap,2) == 3
+    OV.cmap    = H.cmap;                                      
+  else
+    OV.cmap = jet;
+  end
+else
+  OV.cmap = jet;
+end
+OV.overview = []; % don't show slice overviev
+
+if ~isempty(H.clip)
+  OV.range   = [H.clip(3) H.clim(3)];
+else
+  OV.range   = H.clim(2:3);
+end
+
+OV.name = H.Pvol_sel;
+if nargin < 2
+  OV.save = 'none';
+else
+  OV.save = file_save;
+end
+OV.atlas = 'none';
+OV.slices_str = '-30:4:60';
+OV.xy = [4 6];
+OV.transform = char('axial');
+cat_vol_slice_overlay(OV);
 
 %-----------------------------------------------------------------------
 function Ho = select_surf(surf)
@@ -1807,6 +1870,10 @@ for ind = 1:5
   col = getappdata(H.patch(ind), 'col');
   d = getappdata(H.patch(ind), 'data');
   H = updateTexture(H, ind, d, col, H.show_transp);
+end
+
+if isfield(H,'Pvol_sel')
+  update_slice_overlay(H);
 end
 
 % only show threshold popup if log-name was found and minimal value > 0 is < 1
@@ -2326,9 +2393,10 @@ for i = 1:n
   end
 end
 
-P0 = cell(n,1);
 H.isvol = zeros(n,1);
-H.logP = zeros(n,1);
+H.logP  = zeros(n,1);
+H.Pvol  = cell(n,1);
+P0      = cell(n,1);
 
 % check for volumes
 for i = 1:n
@@ -2359,6 +2427,7 @@ for i = 1:n
     save(gifti(M), Pout, 'Base64Binary');
     P0{i} = Pout; 
     H.isvol(i) = 1;
+    H.Pvol{i} = Pvol;
     
     % print warning if no SPM.mat file was found
     if ~exist(fullfile(pp, 'SPM.mat'), 'file')
@@ -2488,6 +2557,8 @@ col = colormap;
 imwrite(img,col,fullfile(newpth,filename));
 fprintf('Image %s saved.\n',filename);
 
+update_slice_overlay(H,fullfile(newpth,['slices_' filename]))
+
 % write dataplot window
 if isfield(H, 'dataplot') & strcmpi(get(H.dataplot,'Visible'),'on')
   filename = ['plot_' filename];
@@ -2527,6 +2598,10 @@ end
 
 H.clim = [true val c(3)];
 
+if isfield(H,'Pvol_sel')
+  update_slice_overlay(H);
+end
+
 %==========================================================================
 function slider_clim_max(hObject, evt)
 global H
@@ -2553,6 +2628,10 @@ end
 
 H.clim = [true c(2) val];
 
+if isfield(H,'Pvol_sel')
+  update_slice_overlay(H);
+end
+
 %==========================================================================
 function checkbox_inv(obj, event_obj)
 global H
@@ -2569,6 +2648,11 @@ end
 
 if ~H.disable_cbar
   H = show_colorbar(H);
+end
+
+if isfield(H,'Pvol_sel')
+  H.cmap = flipud(col);
+  update_slice_overlay(H);
 end
 
 %==========================================================================
@@ -2632,6 +2716,11 @@ end
 if ~H.disable_cbar
   H = show_colorbar(H);
 end
+
+if isfield(H,'Pvol_sel')
+  update_slice_overlay(H);
+end
+
 if nargout, Ho = H; end
 
 %==========================================================================
@@ -2644,6 +2733,10 @@ for ind = 1:5
   col = getappdata(H.patch(ind), 'col');
   d = getappdata(H.patch(ind), 'data');
   H = updateTexture(H, ind, d, col, H.show_transp);
+end
+
+if isfield(H,'Pvol_sel')
+  update_slice_overlay(H);
 end
 
 % update colorbar

@@ -60,10 +60,13 @@ OV.labels.format = '%3.1f';
 OV.xy = [3 5];
 
 % save result as png/jpg/pdf/tif
-% comment this out for interactive selection or use '' for not 
+% comment this out for interactive selection or use 'none' for not 
 % saving any file or use just file extension (png/jpg/pdf/tif) to automatically
 % estimate filename to save
 OV.save = 'png';
+
+% Remove comment if you don't wish slice labels
+OV.overview = [];
 
 % Remove comment if you don't wish slice labels
 %OV.labels = [];
