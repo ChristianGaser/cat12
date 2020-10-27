@@ -1,5 +1,29 @@
 ------------------------------------------------------------------------
-r1727 | gaser | 2020-10-23 14:24:18
+r1728 | gaser | 2020-10-27 14:09:29
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_run_job1639.m
+M       cat_sanlm.m
+M       cat_surf_map_atlas.m
+M       cat_surf_results.m
+M       cat_vol_slice_overlay.m
+M       cat_vol_slice_overlay_ui.m
+M       html/cat.html
+MM      standalone/cat_standalone_tfce.txt
+
+(1) Changed: Extended cat_vol_slice_overlay.m by new option to control slice
+             overview and removed some smaller inconsistencies.
+(2) Changed: Updated cat_vol_slice_overlay_ui.m to consider new options.
+(3) Changed: Added experimental support for cat_surf_results to display slice
+             overlay for volume data.
+(4) Fixed:   Added missing input parameter to cat_sanlm.m.
+(5) Fixed:   Calling cat_surf_map_atlas.m with input arguments was crashing.
+             Furthermore, mapped annot files are now saved in label instead
+             than surf folder (Thanks to Francois Tadel for pointing to this). 
+------------------------------------------------------------------------
+r1727 | gaser | 2020-10-23 14:25:02 +0200 (Fr, 23 Okt 2020) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +32,7 @@ M       cat_stat_spm.m
 
 Fixed: Resolved issues with longitudinal model for large changes over time from
        release r1725 and resulted in distorted segmentations.
+
 ------------------------------------------------------------------------
 r1726 | gaser | 2020-10-21 15:11:56 +0200 (Mi, 21 Okt 2020) | 70 lines
 

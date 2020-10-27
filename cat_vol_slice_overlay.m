@@ -65,6 +65,10 @@ if isfield(OV, 'labels')
     SO.labels = OV.labels;
 end
 
+if isfield(OV, 'overview')
+    SO.overview = OV.overview;
+end
+
 if isfield(OV, 'cbar')
     SO.cbar = OV.cbar;
 else
@@ -215,55 +219,60 @@ ref_vol = 64 * (ref_vol - SO.img(1).range(1)) / (SO.img(1).range(2) - SO.img(1).
 vx = sqrt(sum(V.mat(1:3, 1:3).^2));
 Orig = round(V.mat \ [0 0 0 1]');
 
-h0 = figure(11);
-clf
-axes('Position', [0 0 1 1]);
-
-hold on
-dim = SO.img(1).vol.dim(1:3);
-switch lower(OV.transform)
-    case 'sagittal'
-        ref_img = ref_vol(:, :, Orig(3))';
-        slices_vx = SO.slices / vx(1) + Orig(1);
-        image(fliplr(ref_img))
-        for i = slices_vx
-            h = line([i i], [1 dim(2)]);
-            set(h, 'Color', 'r')
-        end
-    case 'coronal'
-        ref_img = squeeze(ref_vol(Orig(1), :, :))';
-        slices_vx = SO.slices / vx(2) + Orig(2);
-        image(ref_img)
-        for i = slices_vx
-            h = line([i i], [1 dim(3)]);
-            set(h, 'Color', 'r')
-        end
-    case 'axial'
-        ref_img = squeeze(ref_vol(Orig(1), :, :))';
-        slices_vx = SO.slices / vx(3) + Orig(3);
-        image(ref_img)
-        for i = slices_vx
-            h = line([1 dim(2)], [i i]);
-            set(h, 'Color', 'r')
-        end
-end
-
 % get position of graphic figure
 pos1 = get(spm_figure('FindWin', 'Graphics'), 'Position');
 
 screensize = get(0, 'screensize');
-set(h0, 'Position', [10, 10, 2 * size(ref_img, 2), 2 * size(ref_img, 1)], ...
-    'MenuBar', 'none', ...
-    'Resize', 'off', ...
-    'PaperType', 'A4', ...
-    'PaperUnits', 'normalized', ...
-    'NumberTitle', 'off', ...
-    'Name', 'Slices', ...
-    'PaperPositionMode', 'auto');
 
-hold off
-axis off xy image
-colormap(gray)
+if ~isfield(SO,'overview')
+
+    h0 = figure(11);
+    clf
+    axes('Position', [0 0 1 1]);
+    
+    hold on
+    dim = SO.img(1).vol.dim(1:3);
+    switch lower(OV.transform)
+        case 'sagittal'
+            ref_img = ref_vol(:, :, Orig(3))';
+            slices_vx = SO.slices / vx(1) + Orig(1);
+            image(fliplr(ref_img))
+            for i = slices_vx
+                h = line([i i], [1 dim(2)]);
+                set(h, 'Color', 'r')
+            end
+        case 'coronal'
+            ref_img = squeeze(ref_vol(Orig(1), :, :))';
+            slices_vx = SO.slices / vx(2) + Orig(2);
+            image(ref_img)
+            for i = slices_vx
+                h = line([i i], [1 dim(3)]);
+                set(h, 'Color', 'r')
+            end
+        case 'axial'
+            ref_img = squeeze(ref_vol(Orig(1), :, :))';
+            slices_vx = SO.slices / vx(3) + Orig(3);
+            image(ref_img)
+            for i = slices_vx
+                h = line([1 dim(2)], [i i]);
+                set(h, 'Color', 'r')
+            end
+    end
+
+    set(h0, 'Position', [10, 10, 2 * size(ref_img, 2), 2 * size(ref_img, 1)], ...
+        'MenuBar', 'none', ...
+        'Resize', 'off', ...
+        'PaperType', 'A4', ...
+        'PaperUnits', 'normalized', ...
+        'NumberTitle', 'off', ...
+        'Name', 'Slices', ...
+        'PaperPositionMode', 'auto');
+    
+    hold off
+    axis off xy image
+    colormap(gray)
+
+end
 
 SO.xslices = xy(:, 1);
 switch lower(OV.transform)
@@ -345,11 +354,11 @@ if isfield(OV, 'atlas')
       xA = spm_atlas('load',atlas_name);
     end
 else
-	list = spm_atlas('List','installed');
-	atlas_labels{1} = 'None';
-	for i=1:numel(list)
-	  atlas_labels{i+1} = list(i).name;
-	end
+  list = spm_atlas('List','installed');
+  atlas_labels{1} = 'None';
+  for i=1:numel(list)
+    atlas_labels{i+1} = list(i).name;
+  end
     atlas = spm_input('Select atlas?', '1', 'm', atlas_labels);
     atlas_name = atlas_labels{atlas};
     if atlas > 1
@@ -361,91 +370,91 @@ end
 
 % atlas labeling
 if ~isempty(xA)
-	[mx, mn, XYZ, vol] = volmaxmin(SO.img(2).vol);
-	
-	% threshold map and restrict coordinates
-	if SO.img(2).range(1) >= 0
-		Q = find(vol >= SO.img(2).range(1));
-		XYZ = XYZ(:, Q);
-		vol = vol(Q);
-	end
-	M = SO.img(2).vol.mat;
-	XYZmm = M(1:3, :) * [XYZ; ones(1, size(XYZ, 2))];
-	
-	% apply func that is defined for "i1"
-	i1 = vol;
+  [mx, mn, XYZ, vol] = volmaxmin(SO.img(2).vol);
+  
+  % threshold map and restrict coordinates
+  if SO.img(2).range(1) >= 0
+    Q = find(vol >= SO.img(2).range(1));
+    XYZ = XYZ(:, Q);
+    vol = vol(Q);
+  end
+  M = SO.img(2).vol.mat;
+  XYZmm = M(1:3, :) * [XYZ; ones(1, size(XYZ, 2))];
+  
+  % apply func that is defined for "i1"
+  i1 = vol;
     eval(SO.img(2).func)
-	
-	% remove NaN values
-	Q = find(isfinite(i1));
-	XYZ = XYZ(:, Q);
-	i1 = i1(Q);
-	
-	% find clusters
+  
+  % remove NaN values
+  Q = find(isfinite(i1));
+  XYZ = XYZ(:, Q);
+  i1 = i1(Q);
+  
+  % find clusters
     A = spm_clusters(XYZ);
     
-	labk   = cell(max(A)+2,1);
-	Pl     = cell(max(A)+2,1);
-	Zj     = cell(max(A)+2,1);
-	maxZ   = zeros(max(A)+2,1);
-	XYZmmj = cell(max(A)+2,1);
-	Q      = [];
-	
-	for k = 1:min(max(A))
-		j = find(A == k);
-		Q = [Q j];
-		
-		[labk{k}, Pl{k}]  = spm_atlas('query',xA,XYZmm(:,j));
-		Zj{k} = i1(j);
-		XYZmmj{k} = XYZmm(:,j);
-		maxZ(k) = sign(Zj{k}(1))*max(abs(Zj{k}));
-	end
+  labk   = cell(max(A)+2,1);
+  Pl     = cell(max(A)+2,1);
+  Zj     = cell(max(A)+2,1);
+  maxZ   = zeros(max(A)+2,1);
+  XYZmmj = cell(max(A)+2,1);
+  Q      = [];
+  
+  for k = 1:min(max(A))
+    j = find(A == k);
+    Q = [Q j];
+    
+    [labk{k}, Pl{k}]  = spm_atlas('query',xA,XYZmm(:,j));
+    Zj{k} = i1(j);
+    XYZmmj{k} = XYZmm(:,j);
+    maxZ(k) = sign(Zj{k}(1))*max(abs(Zj{k}));
+  end
 
-	% sort T/F values and print from max to min values
-	[tmp, maxsort] = sort(maxZ,'descend');
+  % sort T/F values and print from max to min values
+  [tmp, maxsort] = sort(maxZ,'descend');
 
-	% use ascending order for neg. values
-	indneg = find(tmp<0);
-	maxsort(indneg) = flipud(maxsort(indneg));
+  % use ascending order for neg. values
+  indneg = find(tmp<0);
+  maxsort(indneg) = flipud(maxsort(indneg));
 
-	if ~isempty(maxsort)
-		found_neg = 0;
-		found_pos = 0;
-		for l=1:length(maxsort)
-			j = maxsort(l); 
-			[tmp, indZ] = max(abs(Zj{j}));
-		
-			if ~isempty(indZ)
-				if maxZ(j) < 0,  found_neg = found_neg + 1; end
-				if maxZ(j) >= 0, found_pos = found_pos + 1; end
-				
-				% print header if the first pos./neg. result was found
-				if found_pos == 1
-					fprintf('\n______________________________________________________');
-					fprintf('\n%s: Positive effects\n%s',SO.img(2).vol.fname,atlas_name);
-					fprintf('\n______________________________________________________\n\n');
-					fprintf('%5s\t%7s\t%15s\t%s\n\n','Value','   Size','    xyz [mm]   ','Overlap of atlas region');
-				end
-				if found_neg == 1
-					fprintf('\n______________________________________________________');
-					fprintf('\n%s: Negative effects\n%s',SO.img(2).vol.fname,atlas_name);
-					fprintf('\n______________________________________________________\n\n');
-					fprintf('%5s\t%7s\t%15s\t%s\n\n','Value','   Size','    xyz [mm]   ','Overlap of atlas region');
-				end
-				
-				fprintf('%7.2f\t%7d\t%4.0f %4.0f %4.0f',maxZ(j),length(Zj{j}),XYZmmj{j}(:,indZ));
-				for m=1:numel(labk{j})
-					if Pl{j}(m) >= 1,
-						if m==1, fprintf('\t%3.0f%%\t%s\n',Pl{j}(m),labk{j}{m});
-						else     fprintf('%7s\t%7s\t%15s\t%3.0f%%\t%s\n','       ','       ','               ',...
-							Pl{j}(m),labk{j}{m});
-						end
-					end
-				end
-			end
-		end
-	end
-	fprintf('\n');
+  if ~isempty(maxsort)
+    found_neg = 0;
+    found_pos = 0;
+    for l=1:length(maxsort)
+      j = maxsort(l); 
+      [tmp, indZ] = max(abs(Zj{j}));
+    
+      if ~isempty(indZ)
+        if maxZ(j) < 0,  found_neg = found_neg + 1; end
+        if maxZ(j) >= 0, found_pos = found_pos + 1; end
+        
+        % print header if the first pos./neg. result was found
+        if found_pos == 1
+          fprintf('\n______________________________________________________');
+          fprintf('\n%s: Positive effects\n%s',SO.img(2).vol.fname,atlas_name);
+          fprintf('\n______________________________________________________\n\n');
+          fprintf('%5s\t%7s\t%15s\t%s\n\n','Value','   Size','    xyz [mm]   ','Overlap of atlas region');
+        end
+        if found_neg == 1
+          fprintf('\n______________________________________________________');
+          fprintf('\n%s: Negative effects\n%s',SO.img(2).vol.fname,atlas_name);
+          fprintf('\n______________________________________________________\n\n');
+          fprintf('%5s\t%7s\t%15s\t%s\n\n','Value','   Size','    xyz [mm]   ','Overlap of atlas region');
+        end
+        
+        fprintf('%7.2f\t%7d\t%4.0f %4.0f %4.0f',maxZ(j),length(Zj{j}),XYZmmj{j}(:,indZ));
+        for m=1:numel(labk{j})
+          if Pl{j}(m) >= 1,
+            if m==1, fprintf('\t%3.0f%%\t%s\n',Pl{j}(m),labk{j}{m});
+            else     fprintf('%7s\t%7s\t%15s\t%3.0f%%\t%s\n','       ','       ','               ',...
+              Pl{j}(m),labk{j}{m});
+            end
+          end
+        end
+      end
+    end
+  end
+  fprintf('\n');
 end
 
 auto_savename = 0;
@@ -491,10 +500,10 @@ if ~strcmp(image_ext, 'none')
         end
     end
     
-		% jpg needs full name to be accepted
-		if strcmp(image_ext, 'jpg')
-				image_ext = 'jpeg';
-		end
+    % jpg needs full name to be accepted
+    if strcmp(image_ext, 'jpg')
+        image_ext = 'jpeg';
+    end
 
     % and print
     H = findobj(get(SO.figure, 'Children'), 'flat', 'Type', 'axes');
@@ -508,14 +517,16 @@ if ~strcmp(image_ext, 'none')
     imwrite(tmp(4:sz(1),1:sz(2)-1,:),imaname);
     fprintf('Image %s saved.\n', imaname);
     
-    if n_slice > 0
-        imaname = [pt2 lower(OV.transform) '_' replace_strings(OV.slices_str(ind, :)) '.' image_ext];
-    else
-        imaname = [pt2 lower(OV.transform) '.' image_ext];
+    if ~isfield(SO,'overview')
+        if n_slice > 0
+            imaname = [pt2 lower(OV.transform) '_' replace_strings(OV.slices_str(ind, :)) '.' image_ext];
+        else
+            imaname = [pt2 lower(OV.transform) '.' image_ext];
+        end
+        
+        saveas(h0, imaname, image_ext);
+        fprintf('Image %s saved.\n', imaname);
     end
-    
-    saveas(h0, imaname, image_ext);
-    fprintf('Image %s saved.\n', imaname);
 end
 
 
