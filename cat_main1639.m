@@ -769,11 +769,25 @@ if ~debug, clear wYp0 wYcls wYv trans Yp0; end
 
 %  estimate brain tissue volumes and TIV
 qa.subjectmeasures.vol_abs_CGW = [
-  prod(vx_vol)/1000/255 .* sum(Ycls{3}(:)), ... CSF
-  prod(vx_vol)/1000/255 .* sum(Ycls{1}(:)), ... GM 
-  prod(vx_vol)/1000/255 .* sum(Ycls{2}(:)) 0 0]; % ... WM WMHs SL
-if numel(Ycls)>6, qa.subjectmeasures.vol_abs_CGW(4) = prod(vx_vol)/1000/255 .* sum(Ycls{7}(:)); end % WMHs 
-if numel(Ycls)>7, qa.subjectmeasures.vol_abs_CGW(5) = prod(vx_vol)/1000/255 .* sum(Ycls{8}(:)); end % SL
+  prod(vx_vol)/1000/255 .* sum(Ycls{3}(:)),      ... CSF
+  prod(vx_vol)/1000/255 .* sum(Ycls{1}(:)),      ... GM 
+  prod(vx_vol)/1000/255 .* sum(Ycls{2}(:)) 0 0];   % WM WMHs SL
+qa.subjectmeasures.vol_abs_WMH = 0;                % RD202011: just for internal use (cat_report) but ok if people see it  
+qa.subjectmeasures.vol_rel_WMH = 0;  
+% stroke lesions
+if numel(Ycls)>7, qa.subjectmeasures.vol_abs_CGW(5) = prod(vx_vol)/1000/255 .* sum(Ycls{8}(:)); end 
+% set WMHs
+if numel(Ycls)>6 && numel(Ycls{7})>0
+  qa.subjectmeasures.vol_abs_WMH = prod(vx_vol)/1000/255 .* sum(Ycls{7}(:));
+  if job.extopts.WMHC > 2       % extra class
+    qa.subjectmeasures.vol_abs_CGW(4) = prod(vx_vol)/1000/255 .* sum(Ycls{7}(:));
+  elseif job.extopts.WMHC == 2  % count as WM
+    qa.subjectmeasures.vol_abs_CGW(2) = qa.subjectmeasures.vol_abs_CGW(2) + prod(vx_vol)/1000/255 .* sum(Ycls{7}(:));
+  else                          % count as GM
+    qa.subjectmeasures.vol_abs_CGW(1) = qa.subjectmeasures.vol_abs_CGW(1) + prod(vx_vol)/1000/255 .* sum(Ycls{7}(:));
+  end
+  qa.subjectmeasures.vol_rel_WMH = qa.subjectmeasures.vol_abs_WMH ./ sum(qa.subjectmeasures.vol_abs_CGW);
+end
 if job.output.surface && isfield(S,'lh') && isfield(S,'rh')
   qa.subjectmeasures.surf_TSA    =  sum( cat_surf_fun('area',S.lh) )/100 + sum( cat_surf_fun('area',S.lh) )/100; 
 end
@@ -860,7 +874,35 @@ end
 
 % final command line report
 cat_main_reportcmd(job,res,qa);
-%%
+
+%% cleanup preview surfaces
+delete_surf_preview(Psurf,job);
+return
+function delete_surf_preview(Psurf,job)
+  % cleanup preview surfaces and directory
+  if job.output.surface == 5 
+    % delete files that where possibly created in cat_surf_createCS(2)
+    ffields = fieldnames(Psurf); 
+    for si = 1:numel( Psurf )
+      for fi = 1:numel( ffields )
+        if exist( Psurf(si).(ffields{fi}) , 'file' )
+          delete( Psurf(si).(ffields{fi}) ); 
+        end
+      end
+    end
+    
+    % remove the directory 
+    % (but only if it is empty (maybe used by parallel processes)
+    pp        = spm_fileparts( Psurf(1).Pcentral ); 
+    [pp1,pp2] = spm_fileparts( pp );  
+    dcontent  = dir( pp ); 
+    if exist( pp , 'dir' ) &&  strcmp(pp2,'surf_preview') && ...
+      numel( dcontent( [dcontent.isdir] == 0) ) == 0
+      try
+        rmdir( pp , 's');
+      end
+    end
+  end
 return
 function [Ysrc,Ycls,Yy,res] = cat_main_resspmres(Ysrc,Ycls,Yy,res)
 %% cat_main_resspmres

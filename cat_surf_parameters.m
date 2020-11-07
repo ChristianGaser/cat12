@@ -99,7 +99,11 @@ function varargout = cat_surf_parameters(job)
   spm_progress_bar('Init',size(P,1),'Processed surfaces','Surfaces Completed');
   
   % just a counter for the progress bar
-  sides     = {'l','r'};
+  if cat_get_defaults('extopts.expertgui')<2
+    sides     = {'l','r'};
+  else
+    sides     = {'l','r','c'};
+  end
   measuresn = (job.GI>0) + (job.FD>0) + (job.SD>0) + ...
               (job.area>0) + (job.gmv>0) + any(job.tGI>0) + (job.lGI>0) + ...
               ( ( isnumeric(job.GIL) && job.GIL ) || ( isstruct(job.GIL) && job.GIL.GIL ) ) + ...
@@ -119,8 +123,11 @@ function varargout = cat_surf_parameters(job)
         %% file names
         if si == 1 % lh
           Pname = deblank(P(i,:));
-        else % rh
+        elseif si == 2 % rh
           Pname = cat_surf_rename(deblank(P(i,:)),'side','rh');
+          Pname = Pname{1};
+        else 
+          Pname = cat_surf_rename(deblank(P(i,:)),'side','cb');
           Pname = Pname{1};
         end
         [pp,ff,ex] = spm_fileparts(Pname);

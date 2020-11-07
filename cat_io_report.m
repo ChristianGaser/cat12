@@ -383,7 +383,7 @@ function cat_io_report(job,qa,subj,createerr)
       Ysrcs    = single(Ysrc+0); spm_smooth(Ysrcs,Ysrcs,repmat(0.2,1,3));
       haxis(1) = axes('Position',[pos(1,1:2) + [pos(1,3)*0.58 0],pos(1,3)*0.38,pos(1,4)*0.35] ); 
       [y,x]    = hist(Ysrcs(:),hlevel); y = y ./ max(y)*100; %clear Ysrcs;
-      if exist(Pp0,'file'), Pp0data = dir(Pp0); Pp0data = etime(clock,datevec(Pp0data.datenum))/3600 < lasthours; else Pp0data = 0; end
+      if exist(Pp0,'file'), Pp0data = dir(Pp0); Pp0data = etime(clock,datevec(Pp0data.datenum))/3600 < lasthours; else, Pp0data = 0; end
 %%
       if createerr==10, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
       ch  = cumsum(y)/sum(y); 
@@ -395,7 +395,7 @@ function cat_io_report(job,qa,subj,createerr)
         mth  = find(ch>0.95,1,'first');
       end
       %spm_orthviews('window',hho,[x(find(ch>0.02,1,'first')) x(mth) + (mlt-1)*diff(x([find(ch>0.02,1,'first'),mth]))]); hold on;
-      spm_orthviews('Zoom',130);
+      spm_orthviews('Zoom');
       spm_orthviews('Reposition',[0 0 0]); 
       spm_orthviews('Redraw');
       % colorbar
@@ -446,7 +446,7 @@ function cat_io_report(job,qa,subj,createerr)
           mth = find(ch>0.95,1,'first');
         end
         spm_orthviews('window',hhm,[x(find(ch>0.02,1,'first')) x(mth) + (mlt-1)*diff(x([find(ch>0.02,1,'first'),mth]))]); hold on;
-        spm_orthviews('Zoom',130); % redraw Yo
+        spm_orthviews('Zoom'); % redraw Yo
         clear Yms;
         try
           % colorbar
@@ -486,37 +486,50 @@ function cat_io_report(job,qa,subj,createerr)
       try
         %%
         if isfield(cat_err_res.init,'Yp0')
-          Yp0s           = single(cat_vol_resize(cat_err_res.init.Yp0,'dereduceBrain',cat_err_res.init.BB)) / 255 * 3; 
-          Vp0            = rmfield(spm_vol(Pn),'private');
-          Vp0.dt         = [16 0]; 
-          Vp0.dat        = Yp0s;
-          Vp0.dim        = size(Yp0s);
-          Vp0.pinfo      = repmat([1;0],1,size(Yp0s,3));
+          Vp0     = spm_vol(Pn); 
+          Yp0     = single(cat_vol_resize(cat_err_res.init.Yp0,'dereduceBrain',cat_err_res.init.BB));
+          if isa(cat_err_res.init.Yp0,'uint8')
+            if max( Yp0(:)) == round(255/5*3)
+              Yp0 = Yp0 / 255 * 5;
+            elseif max( Yp0(:)) > 100
+              Yp0 = Yp0 / 255 * 5;
+            end 
+          end
         else
-          Vp0  = spm_vol(Pp0);  
-          Yp0s = spm_read_vols(spm_vol(Pp0)); spm_smooth(Yp0s,Yp0s,repmat(0.5,1,3));
+          % here we load the Yp0 that is only code with WM == 3
+          Vp0     = spm_vol(Pp0);  
+          Yp0     = spm_read_vols(spm_vol(Pp0)); 
         end
-        hhp0 = spm_orthviews('Image',Vp0,pos(3,:));
+        
+        
+        % create V structure that include the image
+        Vp0       = rmfield(Vp0,'private');
+        Vp0.dt    = [2 0]; 
+        Vp0.dat   = cat_vol_ctype(Yp0 / 5 * 255);
+        Vp0.dim   = size(Yp0);
+        Vp0.pinfo = repmat([5/255;0],1,size(Yp0,3));
+        hhp0      = spm_orthviews('Image',Vp0,pos(3,:));
+        
         if createerr==30, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
         spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize,'FontWeight','Bold');
-        if 0 isfield(cat_err_res.init,'Yp0')
-          spm_orthviews('window',hhp0,[0,255/5*3]);
-        else
-          spm_orthviews('window',hhp0,[0,6]);
-        end
-        haxis(3) = axes('Position',[pos(3,1:2) + [pos(3,3)*0.58 0.01],pos(1,3)*0.38,pos(1,4)*0.35]  );
-        [y,x] = hist(Yp0s(:),0:1/30:4); clear Yms; y = y ./ max(y)*100;
-        y = min(y,max(y(2:end))); % ignore background
-        ch = cumsum(y)/sum(y); 
-        %spm_orthviews('window',hhp0,[x(find(ch>0.02,1,'first')),x(find(ch>0.90,1,'first'))*mlt]); hold on;
-        %%
+        spm_orthviews('window',hhp0,[0,6]);
+        spm_orthviews('Zoom'); 
+        
+        
+        % smooth version for histogram
+        Yp0s  = Yp0; 
+        spm_smooth(Yp0s,Yp0s,repmat(0.5,1,3));
+        [y,x] = hist(Yp0s(:),0:1/30:6); clear Yms; y = y ./ max(y)*100; clear Yp0s; 
+        y     = min(y,max(y(2:end))); % ignore background
+       
         try
           % colorbar
           if createerr==31, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
+          haxis(3) = axes('Position',[pos(3,1:2) + [pos(3,3)*0.58 0.01],pos(1,3)*0.38,pos(1,4)*0.35]  );
           xlims{3} = [0 4]; 
-          ylims{3} = [ch(1) ch(end)] .* [0 4/3];  M = x <= xlims{3}(2);
-          hdata{3} = [x(M) flipud(x(M)); max(eps,min(ylims{3}(2),y(M))) zeros(1,sum(M)); [x(M) flipud(x(M))]];
-          hhist(3) = fill(hdata{3}(1,:),hdata{3}(2,:),hdata{3}(3,:),'EdgeColor',[0.0 0.0 1.0],'LineWidth',1);
+          ylims{3} = [min(y) max(y)] .* [0 4/3];  M = x <= xlims{3}(2);
+          hdata{3} = [x(M) flip(x(M));  max(eps,min(ylims{3}(2),y(M))) zeros(1,sum(M));  [x(M) flip(x(M))]];
+          hhist(3) = fill( hdata{3}(1,:) , hdata{3}(2,:) , hdata{3}(3,:), 'EdgeColor',[0.0 0.0 1.0], 'LineWidth',1);
           caxis(xlims{3} .* [1,1.5*(2*volcolors+surfcolors)/volcolors]) 
           ylim(ylims{3}); xlim(xlims{3}); box on; grid on; 
           set(gca,'XTick',0:1:4,'XTickLabel',{'BG','CSF','GM','WM','(WMH)'});
@@ -575,6 +588,8 @@ function cat_io_report(job,qa,subj,createerr)
     createerrtxt = [createerrtxt; {'Error:cat_io_report:Fig','Error in CAT report figure creation!'}]; 
     cat_io_cprintf('err','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});
   end
+  spm_orthviews('Zoom'); 
+  %spm_orthviews('BB'); % update BB to avoid problems with different resolution 
   
   
   %% TPM overlay with brain/head and head/background surfaces
@@ -703,19 +718,22 @@ function cat_io_report(job,qa,subj,createerr)
 
   try
     cmap = gray(60); colormap(cmap); 
+    if exist('hho' ,'var'), spm_orthviews('window',hho ,[0,3/4]); end
+    if exist('hhm' ,'var'), spm_orthviews('window',hhm ,[0,3/4]); end
+    if exist('hhp0','var'), spm_orthviews('window',hhp0,[0,4]);   end
 
     % update histograms - switch from color to gray
-    if exist('hhist','var');
-      if hhist(1)>0 && haxis(1)>0, set(hhist(1),'cdata',(hdata{1}(3,:)' - min(hdata{1}(3,:))) / diff([min(hdata{1}(3,:)),max(hdata{1}(3,:))])*60*4/5); caxis(haxis(1),[1,60]); end
+    if exist('hhist','var')
+      %%
+      if hhist(1)>0 && haxis(1)>0, set(hhist(1),'cdata',(hdata{1}(3,:)' - min(hdata{1}(3,:))) / diff([min(hdata{1}(3,:)),max(hdata{1}(3,:))])); caxis(haxis(1),[0 1]); end
       if createerr==9, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
-      if hhist(2)>0 && haxis(2)>0, set(hhist(2),'cdata',(hdata{2}(3,:)' - min(hdata{2}(3,:))) / diff([min(hdata{2}(3,:)),max(hdata{2}(3,:))])*60*4/5); caxis(haxis(2),[1,60]); end
-      if hhist(3)>0 && haxis(3)>0, set(hhist(3),'cdata',(hdata{3}(3,:)' - min(hdata{3}(3,:))) / diff([min(hdata{3}(3,:)),max(hdata{3}(3,:))])*60*4/5); caxis(haxis(3),[1,60]); end
+      if hhist(2)>0 && haxis(2)>0, set(hhist(2),'cdata',(hdata{2}(3,:)' - min(hdata{2}(3,:))) / diff([min(hdata{2}(3,:)),max(hdata{2}(3,:))])); caxis(haxis(2),[0 1]); end
+      if hhist(3)>0 && haxis(3)>0, set(hhist(3),'cdata',(hdata{3}(3,:)' - min(hdata{3}(3,:))) / diff([min(hdata{3}(3,:)),max(hdata{3}(3,:))])); caxis(haxis(3),[0 1]); end
     end
   catch
     createerrtxt = [createerrtxt; {'Error:cat_io_report','Error in changing colormap.'}]; 
     cat_io_cprintf('err','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});
   end
-
   %warning on;  %#ok<WNON>
 
   if job.extopts.expertgui>0 - showTPMsurf && exist('hM','var') && ...
