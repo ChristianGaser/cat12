@@ -51,11 +51,11 @@ nproc.val     = {numcores};
 nproc.num     = [1 1];
 nproc.hidden  = numcores <= 1 || isdeployed;
 nproc.help    = {
-    'To use multi-threading, the CAT12 segmentation job with several subjects can be split into separate processes running in the background. If you do not want to run any processes in the background, set this value to 0.'
+    'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be split into separate processes that run in the background. If you do not want to run processes in the background then set this value to 0.'
     ''
-    'Keep in mind that each process requires about 1.5..2GB of RAM, which should be taken into account when selecting the appropriate number of processes.'
+    'Keep in mind that each process needs about 1.5..2GB of RAM, which should be considered to choose the appropriate  number of processes.'
     ''
-    'Please also note that additional modules can now be used because in batch, as the processes are checked every minute.'
+    'Please further note that additional modules in the batch can now be used because the processes are checked every minute.'
   };
 
 %_______________________________________________________________________
@@ -67,7 +67,7 @@ data.filter   = 'image';
 data.ufilter  = '.*';
 data.num      = [0 Inf];
 data.help     = {
-  'Select high-resolution raw data (e.g. T1 images) for segmentation. This assumes that there is a scan for each subject. Note that multi-spectral processing (if there are two or more registered images with different contrasts) is not implemented for this method.'};
+  'Select highres raw data (e.g. T1 images) for segmentation. This assumes that there is one scan for each subject. Note that multi-spectral (when there are two or more registered images of different contrasts) processing is not implemented for this method.'};
 data.preview  = @(f) spm_check_registration(char(f));
 
 data_wmh          = cfg_files;
@@ -102,9 +102,9 @@ useprior.num      = [0 1];
 useprior.val      = {''};
 useprior.hidden   = true; % allways hidden 
 useprior.help     = {
-  'Please note that this option is only available for longitudinal data and is automatically set internally to the average image of all time points. Therefore, please do not edit this option!'
+  'Please note that this option is only intended for longitudinal data and is internally automatically set to the average image of all time points. Thus, please do not edit this option!'
   ''
-  'The average image is used as a first estimate for affine transformation, segmentation and surface extraction. The idea is that by initializing with the average image we can reduce random variations and improve the robustness and sensitivity of the entire longitudinal pipeline. In addition, the speed of surface extraction it significantly increased.'
+  'The average image is used as a first estimate for affine transformation, segmentation and surface extraction. The idea is that by initializing with the average image we can reduce random variations and improve the robustness and sensitivity of the entire longitudinal pipeline. Furthermore, it significantly increases the speed of the surface extraction.'
   ''
 };
 
@@ -148,13 +148,13 @@ estwrite.val    = {data data_wmh nproc useprior opts extopts output};
 estwrite.prog   = @cat_run;
 estwrite.vout   = @vout;
 estwrite.help   = {
-'This toolbox is an extension to the standard segmentation in SPM12, but uses a completely different segmentation approach.'
+'This toolbox is an extension to the default segmentation in SPM12, but uses a completely different segmentation approach.'
 ''
-'The segmentation approach is based on an Adaptive Maximum A Posterior (MAP) technique without a priori information about tissue probabilities. This means that the Tissue Probability Maps (TPM) are not constantly used in the sense of the classical Unified Segmentation approach (Ashburner et. al. 2005), but only for spatial registration. The following AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modeled as slowly varying spatial functions (Rajapakse et al. 1997). This take into account not only for intensity inhomogeneities, but also other local variations of intensity.'
+'The segmentation approach is based on an Adaptive Maximum A Posterior (MAP) technique without the need for a priori information about tissue probabilities. That is, the Tissue Probability Maps (TPM) are not used constantly in the sense of the classical Unified Segmentation approach (Ashburner et. al. 2005), but just for spatial normalization. The following AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modeled as slowly varying spatial functions (Rajapakse et al. 1997). This not only accounts for intensity inhomogeneities but also for other local variations of intensity.'
 ''
-'In addition, the segmentation approach uses a Partial Volume Estimation (PVE) with a simplified mixed model of no more than two tissue types (Tohka et al. 2004). We start with an initial segmentation into three pure classes: gray matter (GM), white matter (WM), and cerebrospinal fluid (CSF) based on the AMAP estimation described above. The initial segmentation is followed by a PVE of two additional mixed classes: GM-WM and GM-CSF. This results in an estimation of the amount (or fraction) of each pure tissue type present in each voxel (since individual voxels, given their size, are likeli to contain more than one tissue type), providing a more accurate segmentation.'
+'Additionally, the segmentation approach uses a Partial Volume Estimation (PVE) with a simplified mixed model of at most two tissue types (Tohka et al. 2004). We start with an initial segmentation into three pure classes: gray matter (GM), white matter (WM), and cerebrospinal fluid (CSF) based on the above described AMAP estimation. The initial segmentation is followed by a PVE of two additional mixed classes: GM-WM and GM-CSF. This results in an estimation of the amount (or fraction) of each pure tissue type present in every voxel (as single voxels - given by their size - probably contain more than one tissue type) and thus provides a more accurate segmentation.'
 ''
-'Another important extension to the SPM12 segmentation is the integration of the Dartel or Geodesic Shooting registration into the toolbox through an already existing Dartel/Shooting template in MNI space. This template was derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org) and provides the different Dartel or Shooting iterations. Thus, for the majority of studies, the creation of sample-specific templates is no longer necessary and is mainly recommended for pediatric data.'};
+'Another important extension to the SPM12 segmentation is the integration of the Dartel or Geodesic Shooting registration into the toolbox by an already existing Dartel/Shooting template in MNI space. This template was derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org) and provides the several Dartel or Shooting iterations. Thus, for the majority of studies the creation of sample-specific templates is not necessary anymore and is mainly recommended for children data.'};
 
 %------------------------------------------------------------------------
 % CAT surface processing with existing SPM segmentation 
@@ -228,7 +228,7 @@ cat.name   = 'CAT12';
 cat.tag    = 'cat';
 
 % your version - cat.values = {estwrite estwrite1445 estwrite1173plus estwrite1173 long long1173 long1445 catsimple catsimple_long estwrite_spm tools stools stoolsexp};
-if exist('cat_conf_catsimple','file') & expert > 1 % currently not working, only for testing
+if exist('cat_conf_catsimple','file')
   [catsimple,catsimple_long] = cat_conf_catsimple(expert);
   catsimple_long.hidden = expert<2;
   if load_previous
@@ -251,37 +251,37 @@ function dep = vout(job)
 opts  = job.output;
 
 if isfield(opts.GM,'warped') && isfield(opts.GM,'native')
-  tissue(1).warped = [opts.GM.warped     (opts.GM.mod==1)     (opts.GM.mod==2)       ];
+  tissue(1).warped = [opts.GM.warped  (opts.GM.mod==1)        (opts.GM.mod==2)       ];
   tissue(1).native = [opts.GM.native  (opts.GM.dartel==1)     (opts.GM.dartel==2)    ];
-  tissue(2).warped = [opts.WM.warped     (opts.WM.mod==1)     (opts.WM.mod==2)       ];
+  tissue(2).warped = [opts.WM.warped  (opts.WM.mod==1)        (opts.WM.mod==2)       ];
   tissue(2).native = [opts.WM.native  (opts.WM.dartel==1)     (opts.WM.dartel==2)    ];
 elseif ~isfield(opts.GM,'native')
   if isfield(opts.GM,'warped')
-    tissue(1).warped = [opts.GM.warped   (opts.GM.mod==1)     (opts.GM.mod==2)       ];
-    tissue(2).warped = [opts.WM.warped   (opts.WM.mod==1)     (opts.WM.mod==2)       ];
+    tissue(1).warped = [opts.GM.warped  (opts.GM.mod==1)        (opts.GM.mod==2)       ];
+    tissue(2).warped = [opts.WM.warped  (opts.WM.mod==1)        (opts.WM.mod==2)       ];
   else
-    tissue(1).warped = [0                (opts.GM.mod==1)     (opts.GM.mod==2)       ];
-    tissue(2).warped = [0                (opts.WM.mod==1)     (opts.WM.mod==2)       ];
+    tissue(1).warped = [0               (opts.GM.mod==1)        (opts.GM.mod==2)       ];
+    tissue(2).warped = [0               (opts.WM.mod==1)        (opts.WM.mod==2)       ];
    end
 else
-  tissue(1).warped = [0                  (opts.GM.mod==1)     (opts.GM.mod==2)       ];
+  tissue(1).warped = [0               (opts.GM.mod==1)        (opts.GM.mod==2)       ];
   tissue(1).native = [opts.GM.native  (opts.GM.dartel==1)     (opts.GM.dartel==2)    ];
-  tissue(2).warped = [0                  (opts.WM.mod==1)     (opts.WM.mod==2)       ];
+  tissue(2).warped = [0               (opts.WM.mod==1)        (opts.WM.mod==2)       ];
   tissue(2).native = [opts.WM.native  (opts.WM.dartel==1)     (opts.WM.dartel==2)    ];
 end
 
 if isfield(opts,'CSF')
-  tissue(3).warped = [opts.CSF.warped   (opts.CSF.mod==1)     (opts.CSF.mod==2)      ];
+  tissue(3).warped = [opts.CSF.warped (opts.CSF.mod==1)       (opts.CSF.mod==2)      ];
   if isfield(opts.CSF,'native')
-    tissue(3).native = [opts.CSF.native (opts.CSF.dartel==1)  (opts.CSF.dartel==2)   ];
+    tissue(3).native = [opts.CSF.native (opts.CSF.dartel==1)    (opts.CSF.dartel==2)   ];
   end
 end
 
 if isfield(opts,'TPMC')
   for i=4:6
-    tissue(i).warped = [opts.TPMC.warped (opts.TPMC.mod==1)    (opts.TPMC.mod==2)      ];
+    tissue(i).warped = [opts.TPMC.warped (opts.TPMC.mod==1)       (opts.TPMC.mod==2)      ];
     if isfield(opts.TPMC,'native')
-      tissue(i).native = [opts.CSF.native (opts.CSF.dartel==1) (opts.TPMC.dartel==2)   ];
+      tissue(i).native = [opts.CSF.native (opts.CSF.dartel==1)    (opts.TPMC.dartel==2)   ];
     end
   end
 end
@@ -350,13 +350,7 @@ if isfield(opts,'surface')
       measureoutput{3} = {'intlayer4','defects'};
     end
   end
-
-  % surface ROIs
-  cdep(end+1)          = cfg_dep;
-  cdep(end).sname      = 'sROI XML File';
-  cdep(end).src_output = substruct('.','sroi','()',{':'});
-  cdep(end).tgt_spec   = cfg_findspec({{'filter','xml','strtype','e'}});
-
+  
   sides = {'lh','rh'}; 
   sidenames = {'Left','Right'};
   if any( job.output.surface == [ 2 6 8 ] )
@@ -404,17 +398,16 @@ end
 
 % XML label
 if isfield(opts,'ROImenu') && isfield(opts.ROImenu,'atlases')
-  if isfield(opts.ROImenu.atlases,'ownatlas')
-    atlases = rmfield(opts.ROImenu.atlases,'ownatlas');
-    ownatlas = ~isempty( opts.ROImenu.atlases.ownatlas);
-  else
-    atlases = opts.ROImenu.atlases;
-    ownatlas = false;
+  % sometimes this does not work...
+  try
+    is_ROI = any(cell2mat(struct2cell(opts.ROImenu.atlases(1:end-1))));
+  catch
+    is_ROI = ~isempty(struct2cell(opts.ROImenu.atlases));
   end
-  if any(cell2mat(struct2cell(atlases))) || ownatlas
+  if is_ROI
     cdep(end+1)          = cfg_dep;
     cdep(end).sname      = 'ROI XML File';
-    cdep(end).src_output = substruct('.','roi','()',{':'});
+    cdep(end).src_output = substruct('()',{1}, '.','catroi','()',{'1'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','xml','strtype','e'}});
   end
 end

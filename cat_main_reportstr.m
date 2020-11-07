@@ -313,27 +313,59 @@ function str = cat_main_reportstr(job,res,qa)
 
   % header
   str{3} = struct('name', '\bfVolumes:','value',sprintf('%5s %5s %5s ','CSF','GM','WM')); 
-  if job.extopts.WMHC>1, str{3}(end).value = [str{3}(end).value sprintf('%5s ','WMH')]; end
+  if job.extopts.WMHC>2, str{3}(end).value = [str{3}(end).value sprintf('%5s ','WMH')]; end
   if job.extopts.SLC>0,  str{3}(end).value = [str{3}(end).value sprintf('%5s ','SL')];  end
 
   % absolute volumes
-  str{3} = [str{3} struct('name', ' Absolute volume:','value',sprintf('%5.0f %5.0f %5.0f ', ...
-          qa.subjectmeasures.vol_abs_CGW(1:3)))];
-  if job.extopts.WMHC>1,  str{3}(end).value = [str{3}(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_abs_CGW(4))]; end 
+  if job.extopts.WMHC<=2 && (qa.subjectmeasures.vol_rel_WMH>0.01 || ...
+    qa.subjectmeasures.vol_rel_WMH/qa.subjectmeasures.vol_rel_CGW(3)>0.02)
+    if job.extopts.WMHC == 2
+      str{3} = [str{3} struct('name', ' Absolute volume:','value',...
+        sprintf('%5.0f %5.0f {\\bf\\color[rgb]{1 0 1}%5.0f} ', qa.subjectmeasures.vol_abs_CGW(1:3)))];
+    else
+      str{3} = [str{3} struct('name', ' Absolute volume:','value',...
+        sprintf('{%5.0f \\bf\\color[rgb]{1 0 1}%5.0f} %5.0f', qa.subjectmeasures.vol_abs_CGW(1:3)))];
+    end      
+  else
+    str{3} = [str{3} struct('name', ' Absolute volume:','value',...
+      sprintf('%5.0f %5.0f %5.0f ', qa.subjectmeasures.vol_abs_CGW(1:3)))];
+  end
+  if job.extopts.WMHC>2,  str{3}(end).value = [str{3}(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_abs_CGW(4))]; end 
   if job.extopts.SLC>0,   str{3}(end).value = [str{3}(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_abs_CGW(5))]; end
   str{3}(end).value = [str{3}(end).value 'cm' native2unicode(179, 'latin1')];
 
   % relative volumes
-  str{3} = [str{3} struct('name', ' Relative volume:','value',sprintf('%5.1f %5.1f %5.1f ', ...
-          qa.subjectmeasures.vol_rel_CGW(1:3)*100))];
-  if job.extopts.WMHC>1,  str{3}(end).value = [str{3}(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_rel_CGW(4)*100)]; end 
+  if job.extopts.WMHC<=2 && (qa.subjectmeasures.vol_rel_WMH>0.01 || ...
+    qa.subjectmeasures.vol_rel_WMH/qa.subjectmeasures.vol_rel_CGW(3)>0.02)
+    if job.extopts.WMHC == 2
+      str{3} = [str{3} struct('name', ' Relative volume:','value',...
+        sprintf('%5.1f %5.1f {\\bf\\color[rgb]{1 0 1}%5.0f} ', qa.subjectmeasures.vol_rel_CGW(1:3)*100))];
+    else
+      str{3} = [str{3} struct('name', ' Relative volume:','value',...
+        sprintf('{%5.1f \\bf\\color[rgb]{1 0 1}%5.0f} %5.1f ', qa.subjectmeasures.vol_rel_CGW(1:3)*100))];
+    end
+  else
+    str{3} = [str{3} struct('name', ' Relative volume:','value',...
+      sprintf('%5.1f %5.1f %5.1f ', qa.subjectmeasures.vol_rel_CGW(1:3)*100))];
+  end
+  if job.extopts.WMHC>2,  str{3}(end).value = [str{3}(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_rel_CGW(4)*100)]; end 
   if job.extopts.SLC>0,   str{3}(end).value = [str{3}(end).value sprintf('%5.1f ',qa.subjectmeasures.vol_rel_CGW(5)*100)]; end
   str{3}(end).value = [str{3}(end).value '%'];
 
-  % warning if many WMH were found but no correction is active 
-  if job.extopts.WMHC<2 && (qa.subjectmeasures.vol_rel_CGW(4)>0.01 || ...
-     qa.subjectmeasures.vol_rel_CGW(4)/qa.subjectmeasures.vol_rel_CGW(3)>0.02)
-    str{3}(end).value = [str{3}(end).value sprintf('\\bf\\color[rgb]{1 0 1} WMHs!')];  
+  % warning if many WMH were found and not handled as extra class 
+  if job.extopts.WMHC<=2 && (qa.subjectmeasures.vol_rel_WMH>0.01 || ...
+     qa.subjectmeasures.vol_rel_WMH/qa.subjectmeasures.vol_rel_CGW(3)>0.02)
+    if job.extopts.WMHC == 2
+      str{3}(end-1).value = [str{3}(end-1).value sprintf('\\color[rgb]{1 0 1} (WM inc. %0.0fcm%s WMHs)', ...
+        qa.subjectmeasures.vol_abs_WMH,native2unicode(179, 'latin1'))];  
+      str{3}(end).value   = [str{3}(end).value   sprintf('\\color[rgb]{1 0 1} (WM inc. %0.1f%% WMHs)', qa.subjectmeasures.vol_rel_WMH)];  
+      %str{3}(end).value = [str{3}(end).value sprintf('\\bf\\color[rgb]{1 0 1} WMHs %0.1f%% > WM!', qa.subjectmeasures.vol_rel_WMH * 100)];  
+    else
+      str{3}(end-1).value = [str{3}(end-1).value sprintf('\\color[rgb]{1 0 1} (GM inc. %0.0fcm%s WMHs)', ...
+        qa.subjectmeasures.vol_abs_WMH,native2unicode(179, 'latin1'))];   
+      str{3}(end).value   = [str{3}(end).value sprintf('\\color[rgb]{1 0 1} (GM inc. %0.1f%% WMHs)', qa.subjectmeasures.vol_rel_WMH * 100)];  
+      %str{3}(end).value = [str{3}(end).value sprintf('\\bf\\color[rgb]{1 0 1} WMHs %0.1f%% > GM!', qa.subjectmeasures.vol_rel_WMH * 100)];  
+    end
   end
   
   str{3} = [str{3} struct('name', ' TIV:','value', sprintf(['%0.0f cm' native2unicode(179, 'latin1')],qa.subjectmeasures.vol_TIV))];  
@@ -348,6 +380,13 @@ function str = cat_main_reportstr(job,res,qa)
   if isfield(qa.subjectmeasures,'dist_thickness') && ~isempty(qa.subjectmeasures.dist_thickness)
     str{3} = [str{3} struct('name', ['\bf' thstr ':'],'value',sprintf('%5.2f%s%5.2f mm', ...
            qa.subjectmeasures.dist_thickness{1}(1),native2unicode(177, 'latin1'),qa.subjectmeasures.dist_thickness{1}(2)))];
+         
+    % we warn only if WMHC is off ... without WMHC you have not thresholds!
+    %if job.extopts.WMHC==0 && (qa.subjectmeasures.vol_rel_WMH>0.01*3 || ... % 3 times higher treshold 
+    %     qa.subjectmeasures.vol_rel_WMH/qa.subjectmeasures.vol_rel_CGW(3)>0.02*3)
+    %  str{3}(end).value   = [str{3}(end).value   sprintf('\\color[rgb]{1 0 1} (may biased by WMHs!)')]; 
+    %end
+         
     if isfield(qa.subjectmeasures,'dist_gyruswidth') && ~isnan(qa.subjectmeasures.dist_gyruswidth{1}(1))
       str{3} = [str{3} struct('name', '\bfGyruswidth:','value',sprintf('%5.2f%s%5.2f mm', ...
              qa.subjectmeasures.dist_gyruswidth{1}(1),native2unicode(177, 'latin1'),qa.subjectmeasures.dist_gyruswidth{1}(2)))];

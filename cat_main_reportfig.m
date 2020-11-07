@@ -148,15 +148,17 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   else
     yticklabelp0 = {' BG',' HD',' BG',' CSF',' GM',' WM',' WMHs',' ',' Vessels/Dura->CSF'};
   end
-  if job.extopts.WMHC<2 
-    if qa.subjectmeasures.vol_rel_CGW(4)>0.03 || ...
-       qa.subjectmeasures.vol_rel_CGW(4)/qa.subjectmeasures.vol_rel_CGW(3)>0.05
-      yticklabelp0{end-2} = ' \color[rgb]{1,0,1}uncorrected WMHs = GM!';
+  if job.extopts.WMHC<1
+    yticklabelp0{end-2} = ' \color[rgb]{1,0,1}no WMHC!';
+  elseif job.extopts.WMHC<2 
+    if qa.subjectmeasures.vol_abs_WMH>0.01 || ...
+       qa.subjectmeasures.vol_abs_WMH / qa.subjectmeasures.vol_rel_CGW(3)>0.02
+      yticklabelp0{end-2} = ' \color[rgb]{1,0,1}uncorrected WMHs=GM!';
     else
       yticklabelp0{end-2} = ' no/small WMHs';
     end
   elseif job.extopts.WMHC==2 
-    yticklabelp0{end-2} = ' \color[rgb]{1,0,1}WMHs > WM';
+    yticklabelp0{end-2} = ' \color[rgb]{1,0,1}WMHs->WM';
   end
 
   colormap(fg,cmap);
@@ -396,8 +398,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         V2.dat(Ychange & Ym>1.66/3) = 60/30; 
         
         % WMHs
-        if job.extopts.WMHC > 1 || (qa.subjectmeasures.vol_rel_CGW(4)>0.01 || ...
-          qa.subjectmeasures.vol_rel_CGW(4)/qa.subjectmeasures.vol_rel_CGW(3)>0.02)
+        if job.extopts.WMHC > 1 || (qa.subjectmeasures.vol_rel_WMH>0.01 || ...
+          qa.subjectmeasures.vol_rel_WMH/qa.subjectmeasures.vol_rel_WMH>0.02)
           V2.dat(NS(Yl1,LAB.HI)) = 52/30;
         end
         
@@ -414,10 +416,14 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         
         % colormap of WMHs
         g29 = gray(39); g29(1:7,:) = []; g29(end-3:end,:) = [];
-        if job.extopts.WMHC < 2
-          if qa.subjectmeasures.vol_rel_CGW(4)>0.03 || ...
-            qa.subjectmeasures.vol_rel_CGW(4)/qa.subjectmeasures.vol_rel_CGW(3)>0.05
-            wmhc9 = cat_io_colormaps('magenta',9);
+        if job.extopts.WMHC > 0 && job.extopts.WMHC < 2
+          if qa.subjectmeasures.vol_rel_WMH>0.01 || ...
+            qa.subjectmeasures.vol_rel_WMH/qa.subjectmeasures.vol_rel_WMH>0.02
+            if job.extopts.WMHC == 2
+              wmhc9 = cat_io_colormaps('magenta',9);
+            else
+              wmhc9 = cat_io_colormaps('magentadk',9);
+            end
           else
             wmhc9 = gray(20); wmhc9(1:10,:) = []; wmhc9(end,:) = []; 
             wmhc9 = flipud(wmhc9);

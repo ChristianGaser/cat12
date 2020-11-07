@@ -853,8 +853,12 @@ function cat_run_job(job,tpm,subj)
           %[Vmsk,Yb] = cat_vol_imcalc([VFa;obj.tpm.V(5)],Pbt,'i2',struct('interp',3,'verb',0));  
           ds('d2sm','',1,Ym,Ym.*(Yb>0.5),round(size(Yb,3)*0.6))
         end
-
-
+        
+        
+        %% test for flipping 
+        %fliptest = 1; % 1 - test x>1, 2 - test for shearing 
+        %[ppe.affreg.flipped, ppe.affreg.flippedval,stime] = cat_vol_testflipping(obj,Affine,fliptest,stime,0);
+   
         if ~ppe.affreg.skullstripped 
           %% affreg with brainmask
           if debug 

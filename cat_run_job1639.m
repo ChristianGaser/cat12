@@ -714,6 +714,11 @@ function cat_run_job1639(job,tpm,subj)
             Affine2 = Affine1; 
             Affine3 = Affine1; 
           end
+          
+          %% test for flipping 
+          %fliptest = 2; 
+          %[ppe.affreg.flipped, ppe.affreg.flippedval,stime] = cat_vol_testflipping(obj,Affine,fliptest,stime);
+          
           if 0
             %% visual control for development and debugging
             VFa = VF; VFa.mat = Affine * VF.mat; %Fa.mat = res0(2).Affine * VF.mat;
@@ -725,7 +730,7 @@ function cat_run_job1639(job,tpm,subj)
           end
           
          
-          if isfield(ppe.affreg,'skullstripped') & ~ppe.affreg.skullstripped 
+          if isfield(ppe.affreg,'skullstripped') && ~ppe.affreg.skullstripped 
             %% affreg with brainmask
             if debug 
               [Affine,Ybi,Ymi,Ym0] = cat_run_job_APRGs(Ym,Ybg,VF,Pb,Pbt,Affine,vx_vol,obj,job); %#ok<ASGLU>

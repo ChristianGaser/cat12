@@ -88,6 +88,7 @@ function varargout = cat_io_addwarning(id,mess,level,nline,data,usebox)
     if ~isnumeric(level)
       error('cat_io_addwarning:levelnum','Level must be numeric'); 
     end
+    level = max(0,min(2,level));
     
     cat_err_res.cat_warnings(end+1) = struct('identifier',id,'message',mess,'level',level,'data',{data});
     
