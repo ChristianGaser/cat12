@@ -767,7 +767,7 @@ wmhc.help   = {
   ' 1) Temporary (internal) correction as WM for spatial normalization and estimation of cortical thickness. '
   ' 2) Permanent correction to WM. ' 
 };
-if expert>1
+if expert
   wmhc.help   = [wmhc.help; {
      ' 3) Handling as separate class. '
      ''
@@ -780,11 +780,16 @@ if expert>1
     'set WMH as own class (3)' ...
   };
 else
-  wmhc.values = {0 1 2};
+  %wmhc.help   = [wmhc.help; {
+  %   ' 3) Handling as separate class. '
+  %   ''
+  %}];
+  wmhc.values = {0 1 2}; ... 3
   wmhc.labels = { ...
     'no WMH correction' ...
     'set WMH temporary as WM' ... 
     'set WMH as WM' ...
+    ... 'set WMH as own class' ...
   };
 end
 

@@ -396,8 +396,8 @@ function output = cat_simple(job)
           cfg_dep(sprintf('Extract additional surface parameters: Left %s',measures{mi,1}), ...
           substruct('.','val', '{}',{surf_mbi}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
           substruct('()',{1}, '.',measures{mi,2}, '()',{':'}));
+        matlabbatch{mbi}.spm.tools.cat.stools.surf2roi.rdata = rfiles;
         if expert>1
-          matlabbatch{mbi}.spm.tools.cat.stools.surf2roi.rdata = rfiles;
           matlabbatch{mbi}.spm.tools.cat.stools.surf2roi.nproc = 0;
         end
       end
@@ -417,7 +417,7 @@ function output = cat_simple(job)
   matlabbatch{mbi}.spm.tools.cat.tools.calcvol.data_xml(1)    = cfg_dep(...
     sprintf('%s CAT Report',estwrite),...
     substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
-    substruct('.','catreport', '()',{':'})); 
+    substruct('.','catxml', '()',{':'})); 
   matlabbatch{mbi}.spm.tools.cat.tools.calcvol.calcvol_TIV    = 0;
   matlabbatch{mbi}.spm.tools.cat.tools.calcvol.calcvol_name   = fullfile(mdir,sprintf('TIV_%s_N%d.txt',mydata,nsub)); 
 
@@ -427,7 +427,7 @@ function output = cat_simple(job)
   matlabbatch{mbi}.spm.tools.cat.tools.iqr.data_xml           = cfg_dep(...
     sprintf('%s CAT Report',estwrite),...
     substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
-    substruct('.','catreport', '()',{':'})); 
+    substruct('.','catxml', '()',{':'})); 
   matlabbatch{mbi}.spm.tools.cat.tools.iqr.iqr_name           = fullfile(mdir,sprintf('IQR_%s_N%d.txt',mydata,nsub)); 
   
   

@@ -53,6 +53,8 @@ function [C,XML] = cat_io_colormaps(Cname,ncolors)
     % vbm-output
     % GMT output
     % ...
+    case 'magentadk'
+      C = [0.95 0.95 0.95; 0.7 0.2 0.7];
     case 'magenta'
       C = [0.95 0.95 0.95; 1.0 0.4 1.0];
     case 'orange'
