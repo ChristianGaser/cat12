@@ -151,9 +151,9 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   % ### This can not be reached because the mask field is removed by SPM! ###
   if isfield(res,'msk') 
     Ybg = ~res.msk.dat; 
-    P4  = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc<T3th(2))  .* (Ybg==0) + single(P(:,:,:,4)) .* (Ybg<1) ); % remove air in head
-    P5  = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc>=T3th(2)) .* (Ybg==0) + single(P(:,:,:,5)) .* (Ybg<1) ); % remove air in head
-    P6  = cat_vol_ctype( single(sum(P(:,:,:,4:5),4)) .* (Ybg==1) + single(P(:,:,:,6)) .* (Ybg>0) ); % add objects/artifacts to background
+    P4  = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc<T3th(2))  .* (Ybg<0.5) + single(P(:,:,:,4)) .* (Ybg<0.5) ); % remove air in head
+    P5  = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc>=T3th(2)) .* (Ybg<0.5) + single(P(:,:,:,5)) .* (Ybg<0.5) ); % remove air in head
+    P6  = cat_vol_ctype( single(sum(P(:,:,:,4:5),4)) .* (Ybg>0.5) + single(P(:,:,:,6)) .* (Ybg>0.5) ); % add objects/artifacts to background
     P(:,:,:,4) = P4;
     P(:,:,:,5) = P5;
     P(:,:,:,6) = P6;
@@ -189,10 +189,32 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   Yb0 = (Ym0 > min(0.5,max(0.25, job.extopts.gcutstr))); clear Ym0
   Yb0 = cat_vol_morph(cat_vol_morph(Yb0,'lo'),'c');
 
+  
+  
+% RD202010: In some images SPM select the image BG and brain tisssue as class 4  
+%{
+  volcls4 = sum(sum(sum( single(P(:,:,:,4)>64) .* (Yb>0.5) ))) .* prod(vx_vol)/1000; 
+  volcls5 = sum(sum(sum( single(P(:,:,:,5)>64) .* (Yb>0.5 & (Ysrc>=mean(T3th(1:2)) & Ysrc<T3th(3) + diff(T3th(2:3))) ) ))) .* prod(vx_vol)/1000; 
+  volcls6 = sum(sum(sum( single(P(:,:,:,6)>64) .* (Yb>0.5 & (Ysrc>=mean(T3th(1:2)) & Ysrc<T3th(3) + diff(T3th(2:3))) ) ))) .* prod(vx_vol)/1000; 
+  scls = setdiff( unique( [ 4*(volcls4>10) 5*(volcls5>10) 6*(volcls6>10) ] ) , 0); 
+  if volcls4 > 10 || volcls5 > 10 || volcls6 > 10
+    PN{1} = cat_vol_ctype( single(P(:,:,:,1)) + single(sum(P(:,:,:,scls),4)) .* (Yb>0.5) .* ...
+           (Ysrc>=mean(T3th(1:2)) & Ysrc<mean(T3th(2:3))) ); % GM
+    PN{2} = cat_vol_ctype( single(P(:,:,:,2)) + single(sum(P(:,:,:,scls),4)) .* (Yb>0.5) .* ...
+           (Ysrc>=mean(T3th(2:3)) & Ysrc<T3th(3) + 0.25*diff(T3th(2:3)))  ); % WM ... be carefull with blood vessels and tumors
+    PN{3} = cat_vol_ctype( single(P(:,:,:,3)) + single(sum(P(:,:,:,scls),4)) .* (Yb>0.5) .* ...
+           (Ysrc< mean(T3th(1:2))) ); % CSF
+    PN{4} = cat_vol_ctype( single( P(:,:,:,4) ) .* (Ysrc<T3th(3) + 0.25*diff(T3th(2:3))) .* (Yb<0.5) );
+    PN{5} = cat_vol_ctype( single( P(:,:,:,5) ) .* (Ysrc<T3th(3) + 0.25*diff(T3th(2:3))) .* (Yb<0.5) );
+    PN{6} = cat_vol_ctype( single( P(:,:,:,6) ) .* (Ysrc<T3th(3) + 0.25*diff(T3th(2:3))) .* (Yb<0.5) );
+    %%
+    for pi=1:6, P(:,:,:,pi) = PN{pi}; end
+    clear PN pi; 
+  end 
+%}
 
-  
-  
-%%
+
+
   stime2 = cat_io_cmd('  Update probability maps','g5','',job.extopts.verb-1,stime2);
   if ~(any(sign(diff(T3th))==-1))
     %% Update probability maps
@@ -207,18 +229,31 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
         Ybgr = cat_vol_morph(cat_vol_morph(cat_vol_morph(Ybgr>128,'d') & Ysrcr<Ybgrth,'lo',1),'lc',1);
         Ybg  = cat_vol_resize(cat_vol_smooth3X(Ybgr,1),'dereduceV',resT2); 
         clear Ysrcr Ybgr; 
+% RD202010 bad SPM background
+%{
+      elseif sum(sum(sum(P(:,:,:,6)>8 & Ysrc<cat_stat_nanmean(T3th(1:2)))))>10000
+        Ybg = cat_vol_smooth3X( single(P(:,:,:,6)) * 240 ,2); 
+        [Ybgr,Ysrcr,resT2] = cat_vol_resize({Ybg,Ysrc},'reduceV',vx_vol,2,32); 
+        Ybgrth = max(cat_stat_nanmean(Ysrcr(Ybgr(:)>128)) + 2*std(Ysrcr(Ybgr(:)>128)),T3th(1));
+        Ybgr = cat_vol_morph(cat_vol_morph(cat_vol_morph(Ybgr>128,'d') & Ysrcr<Ybgrth,'lo',1),'lc',1);
+        Ybg  = cat_vol_resize(cat_vol_smooth3X(Ybgr,1),'dereduceV',resT2); 
+        clear Ysrcr Ybgr;
+%}
       else
         Ybg = ~Yb;
       end
     end
-    P4   = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc<T3th(2))  .* (Ybg==0) + single(P(:,:,:,4)) .* (Ybg<1) ); % remove air in head
-    P5   = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc>=T3th(2)) .* (Ybg==0) + single(P(:,:,:,5)) .* (Ybg<1) ); % remove air in head
-    P6   = cat_vol_ctype( single(sum(P(:,:,:,4:5),4)) .* (Ybg==1) + single(P(:,:,:,6)) .* (Ybg>0) ); % add objects/artifacts to background
+    %%
+    P4   = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc<T3th(2))  .* (Ybg<0.5) + single(P(:,:,:,4)) .* (Ybg<0.5) ); % remove air in head
+    P5   = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc>=T3th(2)) .* (Ybg<0.5) + single(P(:,:,:,5)) .* (Ybg<0.5) ); % remove air in head
+    P6   = cat_vol_ctype( single(sum(P(:,:,:,4:5),4)) .* (Ybg>0.5) + single(P(:,:,:,6)) .* (Ybg>0.5) ); % add objects/artifacts to background
     P(:,:,:,4) = P4;
     P(:,:,:,5) = P5;
     P(:,:,:,6) = P6;
     clear P4 P5 P6;
-
+    
+    sP = (sum(single(P),4)+eps)/255;
+    for k1=1:size(P,4), P(:,:,:,k1) = cat_vol_ctype(single(P(:,:,:,k1))./sP); end
     
     %% correct probability maps to 100% 
     sumP = cat_vol_ctype(255 - sum(P(:,:,:,1:6),4));

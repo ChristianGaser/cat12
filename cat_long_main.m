@@ -73,6 +73,7 @@ matlabbatch{mbi}.spm.tools.cat.tools.series.data            = '<UNDEFINED>';
 mbi = mbi + 1; mb_catavg = mbi;
 matlabbatch{mbi}.spm.tools.cat.estwrite.data(1)             = cfg_dep('Longitudinal Registration: Midpoint Average', substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','avg', '()',{':'}));
 matlabbatch{mbi}.spm.tools.cat.estwrite.nproc               = 0;
+matlabbatch{mbi}.spm.tools.cat.estwrite.opts.ngaus          = [1 1 2 3 4 8]; 
 if exist('opts','var') && ~isempty(opts)
   matlabbatch{mbi}.spm.tools.cat.estwrite.opts              = opts;
 end
@@ -111,6 +112,19 @@ matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.writeBM = 0;
 matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.verb = 1;
 
 
+
+if job.bstr > 0
+  mbi = mbi + 1; mb_tpbc = mbi;
+  matlabbatch{mbi}.spm.tools.cat.tools.longBiasCorr.images(1)  = cfg_dep('Longitudinal Rigid Registration: Realigned images', substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','rimg', '()',{':'}));
+  matlabbatch{mbi}.spm.tools.cat.tools.longBiasCorr.segment(1) = cfg_dep('CAT12: Segmentation (current release): Native Label Image', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','label', '()',{':'}));
+  matlabbatch{mbi}.spm.tools.cat.tools.longBiasCorr.str        = job.bstr; 
+  matlabbatch{mbi}.spm.tools.cat.tools.longBiasCorr.prefix     = 'm'; 
+end
+
+
+
+
+
 % 4) cat12 segmentation of realigned images with prior from step 2  
 % -----------------------------------------------------------------------
 % In this step each time point is estimated separatelly but uses the prior
@@ -118,7 +132,11 @@ matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.verb = 1;
 % surface from step 2)
 mbi = mbi + 1; mb_cat = mbi;
 % use average image as prior for affine transformation and surface extraction
-matlabbatch{mbi}.spm.tools.cat.estwrite.data(1)             = cfg_dep('Longitudinal Rigid Registration: Realigned images', substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','rimg', '()',{':'}));
+if job.bstr > 0
+  matlabbatch{mbi}.spm.tools.cat.estwrite.data(1)           = cfg_dep('Segment: Longitudinal Bias Corrected', substruct('.','val', '{}',{mb_tpbc}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','bc', '()',{':'}));
+else
+  matlabbatch{mbi}.spm.tools.cat.estwrite.data(1)           = cfg_dep('Longitudinal Rigid Registration: Realigned images', substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','rimg', '()',{':'}));
+end
 matlabbatch{mbi}.spm.tools.cat.estwrite.nproc               = 0;
 if exist('opts','var') && ~isempty(opts)
   matlabbatch{mbi}.spm.tools.cat.estwrite.opts              = opts;
@@ -285,9 +303,12 @@ if delete_temp
   if exist('ROImenu','var') && ~isempty(ROImenu)
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): ROI XML File',            substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','catroi', '()',{':'})); c = c+1;
   end
+  if job.bstr > 0 && ~isempty( matlabbatch{mb_tpbc}.spm.tools.cat.tools.longBiasCorr.prefix )
+    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Segment: Longitudinal Bias Corrected',                           substruct('.','val', '{}',{mb_tpbc}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','bc', '()',{':'}));
+  end
   % surfaces
   if surfaces
-    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): sROI XML File',           substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','sroi', '()',{':'})); c = c+1;
+    %matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): ROI XML File',            substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','catroi', '()',{':'})); c = c+1;
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Left Central Surface',    substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','lhcentral', '()',{':'})); c = c+1;
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Left Sphere Surface',     substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','lhsphere', '()',{':'})); c = c+1;
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Left Spherereg Surface',  substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','lhspherereg', '()',{':'})); c = c+1;

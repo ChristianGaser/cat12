@@ -47,6 +47,7 @@ function varargout = cat_io_cmd(str,style,strlength,verb,stime)
   
   timax = 100; 
   ti    = 0; 
+  varargout{1} = clock; 
   
   while ti<timax
   ti = ti + 1;
