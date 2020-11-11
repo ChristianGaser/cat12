@@ -63,7 +63,7 @@ function out = cat_long_createTPM(job)
   def.ssize        = [ 0.5  1    2    4    8    ];  % we use multipe smoothing levels to softly include also larger changes ...
   def.sweight      = [ 0.30 0.25 0.20 0.15 0.10 ];  % ... but with lower weighting 
   def.scsize       = [ 1 1 1 2 2 2 ];               % moreover we use a class specific filter size factor to suport smoother head classes
-  def.minprob      = 0.002;                         % this value could be between 0.02 and 0.1
+  def.minprob      = 0.001;                         % this value could be between 0.02 and 0.1
   def.fast         = 1;                             % CAT vs. SPM smoothing 
   def.median       = 1;                             % use median filter (values from 0 to 1) 
   def.sanlm        = 0;                             % use sanlm filter (0|1)
@@ -160,25 +160,26 @@ function out = cat_long_createTPM(job)
     spm_progress_bar('Init',numel(job.files),'TPM creation','Volumes Completed');% have to reset it
     spm_progress_bar('Set',fi-0.2); 
 
+    
     % complete background
     Ys      = sum( cell2num(Ytpm) , 4);
     Ytpm{6} = Ytpm{6} + (1-Ys);
     Ytpm{6}(isnan(Ys)) = 1; 
     Ytpm{5} = Ytpm{5}.^2; % use exp. to reduce low skull-intensities  
     Ytpm{6} = single(real(Ytpm{6}.^(1/2))); % use exp. to reduce low skull-intensities  
+    %% creat brainmask
+    Yb = sum( cell2num(Ytpm(1:3)) , 4);
+    Yb = max(Yb, cat_vol_smooth3X(single(cat_vol_morph(Yb>0.1,'lc',1)),1)); 
     % avoid boundary problems for CAT report skull surface by setting the 
     % edge to background or to the SPM TPM value
     bd   = 2; 
     Ybgb = true(size(Ytpm{1})); Ybgb(bd+1:end-bd,bd+1:end-bd,bd+1:end-bd) = false;
-    Ybgb = Ybgb | cat_vol_morph(isnan(Ys),'d',2); % more problems close to NaN regions  
+    Ybgb = Ybgb | cat_vol_morph(isnan(Ys) & ~Yb,'d',2); % more problems close to NaN regions  
     Ybgb = smooth3(Ybgb); 
-    for ci=1:5, Ytpm{ci} = Ytpm{ci} .* (1-Ybgb); end 
-    Ytpm{6} = max(Ytpm{6},Ybgb);
+    for ci=1:5, Ytpm{ci}(isnan(Ytpm{ci})) = 0; Ytpm{ci} = Ytpm{ci} .* (1-Ybgb); end 
+    Ytpm{6}(isnan(Ytpm{ci})) = 0; Ytpm{6} = max(Ytpm{6},Ybgb);
     Ytpm  = clsnorm(Ytpm);
 
-    % creat brainmask
-    Yb = sum( cell2num(Ytpm(1:3)) , 4);
-    Yb = max(Yb, cat_vol_smooth3X(single(cat_vol_morph(Yb>0.1,'lc',1)),1)); 
     spm_progress_bar('Set',fi-0.8); 
 
 
@@ -244,6 +245,7 @@ function out = cat_long_createTPM(job)
         else
           Ytpmts = Ytpmts .* (1-Yb); 
         end
+        %Ytpmts = min(1,max(Ytpmts,job.minprob)); 
 
         % combine the different smoothing levels
         if si==1
@@ -254,9 +256,9 @@ function out = cat_long_createTPM(job)
       end
       spm_progress_bar('Set',fi-0.8 + (0.7 * si / numel(job.ssize))); 
     end
-    for ci=1:3,  Ytpms{ci} =  max( Ytpms{ci} .* (1 - Ybgb) , job.minprob .* Yb ); end
-    for ci=4:5,  Ytpms{ci} =  max( Ytpms{ci} .* (1 - Ybgb) , job.minprob .* (1-Yb) ); end
-    Ytpms{6} = max(Ytpms{6},Ybgb - job.minprob * 5 ); 
+    for ci=1:3,  Ytpms{ci} =  max( Ytpms{ci} .* (1 - Ybgb) , job.minprob); end % .* Yb ); end
+    for ci=4:5,  Ytpms{ci} =  max( Ytpms{ci} .* (1 - Ybgb) , job.minprob); end % .* (1-Yb) ); end
+    Ytpms{6} = max(Ytpms{6},job.minprob); %Ybgb - job.minprob * 5 ); 
     Ytpms = clsnorm(Ytpms);
     clear Ytpmts; 
 
@@ -265,10 +267,13 @@ function out = cat_long_createTPM(job)
 
     %% write result TPM
     out.tpm{fi} = fullfile(pp,[job.prefixTPM ff ee ',1']);
+    for li=1:numel(Ytpms)
+      out.tpmtiss{fi}{li} = fullfile(pp,[job.prefixTPM ff ee sprintf(',%d',li)]);
+    end
     
     Ndef      = nifti;
     Ndef.dat  = file_array(fullfile(pp,[job.prefixTPM ff ee]),[size(Ytpms{1}),numel(Ytpms)],...
-                [spm_type('uint8') spm_platform('bigend')],0,1/255,0);
+                [spm_type('float32') spm_platform('bigend')],0,1,0);
     Ndef.mat  = Vtemp(1).mat;
     Ndef.mat0 = Vtemp(1).mat;
     Ndef.descrip = sprintf(['individual TPM for longitudinal processing in CAT ' ...

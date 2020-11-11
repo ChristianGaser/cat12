@@ -588,6 +588,12 @@ function cat_run_job(job,tpm,subj)
               useprior        = 0;
             end
             clear catxml; 
+            
+            
+            % RD202010: The AVG contain much more backgrounds that can
+            %           cause a lot of trouble if not modelled !
+            obj.lkp(obj.lkp == 6) = []; 
+            obj.lkp = [ obj.lkp 6*ones(1,8) ]; 
           else
             useprior          = 0;
           end

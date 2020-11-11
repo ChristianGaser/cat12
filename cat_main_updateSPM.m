@@ -203,9 +203,9 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Y
     % ### This can not be reached because the mask field is removed by SPM! ###
     if isfield(res,'msk') 
       Ybg = ~res.msk.dat; 
-      P4  = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc<T3th(2))  .* (Ybg==0) + single(P(:,:,:,4)) .* (Ybg<1) ); % remove air in head
-      P5  = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc>=T3th(2)) .* (Ybg==0) + single(P(:,:,:,5)) .* (Ybg<1) ); % remove air in head
-      P6  = cat_vol_ctype( single(sum(P(:,:,:,4:5),4)) .* (Ybg==1) + single(P(:,:,:,6)) .* (Ybg>0) ); % add objects/artifacts to background
+      P4  = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc<T3th(2))  .* (Ybg<0.5) + single(P(:,:,:,4)) .* (Ybg<0.5) ); % remove air in head
+      P5  = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc>=T3th(2)) .* (Ybg<0.5) + single(P(:,:,:,5)) .* (Ybg<0.5) ); % remove air in head
+      P6  = cat_vol_ctype( single(sum(P(:,:,:,4:5),4)) .* (Ybg>0.5) + single(P(:,:,:,6)) .* (Ybg>0.5) ); % add objects/artifacts to background
       P(:,:,:,4) = P4;
       P(:,:,:,5) = P5;
       P(:,:,:,6) = P6;
@@ -261,14 +261,22 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Y
           Ybgr = cat_vol_morph(cat_vol_morph(cat_vol_morph(Ybgr>128,'d') & Ysrcr<Ybgrth,'lo',1),'lc',1);
           Ybg  = cat_vol_resize(cat_vol_smooth3X(Ybgr,1),'dereduceV',resT2); 
           clear Ysrcr Ybgr; 
+        elseif sum(sum(sum(P(:,:,:,6)>8 & Ysrc<cat_stat_nanmean(T3th(1:2)))))>10000
+          % RD202010 bad SPM background
+          Ybg = cat_vol_smooth3X( single(P(:,:,:,6)) * 240 ,2); 
+          [Ybgr,Ysrcr,resT2] = cat_vol_resize({Ybg,Ysrc},'reduceV',vx_vol,2,32); 
+          Ybgrth = max(cat_stat_nanmean(Ysrcr(Ybgr(:)>128)) + 2*std(Ysrcr(Ybgr(:)>128)),T3th(1));
+          Ybgr = cat_vol_morph(cat_vol_morph(cat_vol_morph(Ybgr>128,'d') & Ysrcr<Ybgrth,'lo',1),'lc',1);
+          Ybg  = cat_vol_resize(cat_vol_smooth3X(Ybgr,1),'dereduceV',resT2); 
+          clear Ysrcr Ybgr; 
         else
           Ybg = P(:,:,:,6); %~Yb;
         end
       end
       if ~res.ppe.affreg.highBG
-        P4   = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc<T3th(2))  .* (Ybg==0) + single(P(:,:,:,4)) .* (Ybg<1) ); % remove air in head
-        P5   = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc>=T3th(2)) .* (Ybg==0) + single(P(:,:,:,5)) .* (Ybg<1) ); % remove air in head
-        P6   = cat_vol_ctype( single(sum(P(:,:,:,4:5),4)) .* (Ybg==1) + single(P(:,:,:,6)) .* (Ybg>0) ); % add objects/artifacts to background
+        P4   = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc<T3th(2))  .* (Ybg<0.5) + single(P(:,:,:,4)) .* (Ybg<0.5) ); % remove air in head
+        P5   = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc>=T3th(2)) .* (Ybg<0.5) + single(P(:,:,:,5)) .* (Ybg<0.5) ); % remove air in head
+        P6   = cat_vol_ctype( single(sum(P(:,:,:,4:5),4)) .* (Ybg>0.5) + single(P(:,:,:,6)) .* (Ybg>0.5) ); % add objects/artifacts to background
         P(:,:,:,4) = P4;
         P(:,:,:,5) = P5;
         P(:,:,:,6) = P6;
@@ -344,6 +352,9 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Y
     end
     clear Ybb;
 
+    sP = (sum(single(P),4)+eps)/255;
+    for k1=1:size(P,4), P(:,:,:,k1) = cat_vol_ctype(single(P(:,:,:,k1))./sP); end
+    
 
 
 

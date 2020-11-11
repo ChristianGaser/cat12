@@ -139,6 +139,7 @@ function tools = cat_conf_tools(expert)
   realign                     = cat_vol_series_align_GUI(data);
   shootlong                   = cat_conf_shoot(expert); 
   sanlm                       = cat_vol_sanlm_GUI(data,intlim,spm_type,prefix,suffix,expert);
+  biascorrlong                = cat_conf_longBiasCorr(data,expert,prefix);
   %urqio                       = cat_vol_urqio_GUI; % this cause problems
   iqr                         = cat_stat_IQR_GUI(data_xml);
   %qa                         = cat_vol_qa_GUI(data);
@@ -172,6 +173,7 @@ function tools = cat_conf_tools(expert)
     ...
     realign, ...                          cat.pre.long.?          % hidden
     shootlong,...                         cat.pre.long.?          % hidden
+    biascorrlong,...                      cat.pre.long.?          % hidden
     createTPMlong, ...                    cat.pre.long.createTPM  % hidden
     ...
     createTPM, ...                        
@@ -562,6 +564,48 @@ function iqr = cat_stat_IQR_GUI(data_xml)
   iqr.val   = {data_xml,iqr_name};
   iqr.prog  = @cat_stat_IQR;
   iqr.help  = {'This function reads weighted overall image quality from saved xml-files.' ''};
+return
+
+function longBiasCorr = cat_conf_longBiasCorr(data,expert,prefix)
+% -------------------------------------------------------------------------
+% Longitudinal bias correction by using the average segmentation.
+% See cat_long_biascorr.
+%
+% RD202010: First tests showed clear improvements of the timepoints but the
+%           whole pipeline seams to be less affected.
+%           Hence, corrections are maybe more relevant for plasticity
+%           studies or in case of artifacts.
+% -------------------------------------------------------------------------
+
+  images        = data;
+  images.tag    = 'images';
+  images.name   = 'Realigned images of one subject';
+  images.num    = [1 inf];
+  
+  segment       = data; 
+  segment.tag   = 'segment';
+  segment.num   = [1 1];
+  segment.name  = 'Average tissue segmentation of one subject';
+
+  bstr                 = cfg_menu;
+  bstr.tag             = 'str';
+  bstr.name            = 'Strength of correction';
+  bstr.labels          = {'no correction','small','medium','strong','very strong'};
+  bstr.values          = {0,0.25,0.5,0.75,1.0};
+  bstr.val             = {0.5};
+  bstr.help            = {
+    'Strength of bias correction.'
+    ''
+    };
+
+  longBiasCorr        = cfg_exbranch;
+  longBiasCorr.tag    = 'longBiasCorr';
+  longBiasCorr.name   = 'Longitudinal Bias Correction';
+  longBiasCorr.val    = {images,segment,bstr,prefix};
+  longBiasCorr.prog   = @cat_long_biascorr;
+  longBiasCorr.vout   = @vout_cat_conf_longBiasCorr;
+  longBiasCorr.hidden = expert<0; 
+  longBiasCorr.help   = {'Bias correction based on the segmentation of the average map.' ''};
 return
 
 function qa = cat_vol_qa_GUI(data) %#ok<DEFNU>
@@ -2395,7 +2439,18 @@ function dep = vfiles_createTPMlong(varargin)
   dep.sname      = 'Longitudinal TPMs';
   dep.src_output = substruct('.','tpm','()',{':'});
   dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+
+  dep            = cfg_dep;
+  dep.sname      = 'Longitudinal TPMs Tissues';
+  dep.src_output = substruct('.','tpmtiss','()',{':'},'()',{':'});
+  dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});  
 return;
+function dep = vout_cat_conf_longBiasCorr(varargin)
+  dep            = cfg_dep;
+  dep.sname      = 'Longitudinal Bias Corrected';
+  dep.src_output = substruct('.','bc','()',{':'});
+  dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+return
 %_______________________________________________________________________
 function dep = vfiles_resize(varargin)
   dep            = cfg_dep;

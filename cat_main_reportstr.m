@@ -339,10 +339,10 @@ function str = cat_main_reportstr(job,res,qa)
     qa.subjectmeasures.vol_rel_WMH/qa.subjectmeasures.vol_rel_CGW(3)>0.02)
     if job.extopts.WMHC == 2
       str{3} = [str{3} struct('name', ' Relative volume:','value',...
-        sprintf('%5.1f %5.1f {\\bf\\color[rgb]{1 0 1}%5.0f} ', qa.subjectmeasures.vol_rel_CGW(1:3)*100))];
+        sprintf('%5.1f %5.1f {\\bf\\color[rgb]{1 0 1}%5.1f} ', qa.subjectmeasures.vol_rel_CGW(1:3)*100))];
     else
       str{3} = [str{3} struct('name', ' Relative volume:','value',...
-        sprintf('{%5.1f \\bf\\color[rgb]{1 0 1}%5.0f} %5.1f ', qa.subjectmeasures.vol_rel_CGW(1:3)*100))];
+        sprintf('{%5.1f \\bf\\color[rgb]{1 0 1}%5.1f} %5.1f ', qa.subjectmeasures.vol_rel_CGW(1:3)*100))];
     end
   else
     str{3} = [str{3} struct('name', ' Relative volume:','value',...
