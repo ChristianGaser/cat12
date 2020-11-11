@@ -661,6 +661,7 @@ function job = update_job(job)
   %   biasfwhm = [30.32  42.65  60  84.39 118.71)] for "10^(5/6 + biasstr/3)?  .. allows lower fields 
   if isfield(job.opts,'biasacc') && job.opts.biasacc > 0
     job.opts.acc      = job.opts.biasacc;
+    job.opts.biasstr  = job.opts.biasacc;
     job.opts.biasreg	= min(  10 , max(  0 , 10^-(job.opts.biasstr*2 + 2) ));
     job.opts.biasfwhm	= min( inf , max( 30 , 30 + 60*(1-job.opts.biasstr) ));  
   elseif job.opts.biasstr > 0 % update biasreg and biasfwhm only if biasreg>0

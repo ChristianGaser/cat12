@@ -1,5 +1,28 @@
 ------------------------------------------------------------------------
-r1729 | dahnke | 2020-11-07 11:37:23
+r1730 | dahnke | 2020-11-11 15:17:56
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_long.m
+M       cat_conf_tools.m
+M       cat_io_cmd.m
+A       cat_long_biascorr.m
+M       cat_long_createTPM.m
+M       cat_long_main.m
+M       cat_main_reportstr.m
+M       cat_main_updateSPM.m
+M       cat_main_updateSPM1639.m
+M       cat_run.m
+M       cat_run_job.m
+
+(1) Fixed:    Corrected issue in case of bad SPM backgrounds.
+(2) Fixed:    Corrected bug in setting SPM bias correction in longitudinal case.
+(3) Fixed:    Corrected bug with NaNs and minimum probability in cat_long_createTPM.
+(4) Fixed:    Corrected number of digits in relative volume in case of WMHs.
+(5) New:      Beta version of a longitudinal bias correction. 
+
+------------------------------------------------------------------------
+r1729 | dahnke | 2020-11-07 11:39:47 +0100 (Sat, 07 Nov 2020) | 30 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -29,6 +52,7 @@ M       tbx_cfg_cat.m
 (3) Fixed:     Corrected dependencies in cat_simple. 
 (4) Changed:   Removed files in surface preview pipeline. 
 (5) Fixed.     Corrected tissue values in cat_report in case of WMHs & WMHC<2.
+
 
 ------------------------------------------------------------------------
 r1728 | gaser | 2020-10-27 14:10:21 +0100 (Tue, 27 Oct 2020) | 22 lines
