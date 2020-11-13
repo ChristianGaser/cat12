@@ -89,7 +89,7 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
     
     % add WMHC class if there is an extra class (WMHC==3)
     if job.extopts.WMHC == 3   
-      FA{ai,3} = unique( [FA{ai,3} {'wmh'}] ); %#ok<AGROW>
+      FA{fai-1,3} = unique( [FA{fai-1,3} {'wmh'}] ); %#ok<AGROW>
     end
   end
 
@@ -188,7 +188,7 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
       %% this does not work in case of trimmed atlases set do not include the full brain 
       %  * keep in mind that cobra is 
       %    - only defined for some regions 
-      %    - has a smaller boundary box resulting in smaller global atlas space values and distortions close to the boudary (timmed ~= not trimmed) 
+      %    - has a smaller boundary box resulting in smaller global atlas space values and distortions close to the boudary (timmed?~= not trimmed) 
       %  * mori is WM atlas and not all GM voxels were aligned to a region  
       GMi = find(cellfun('isempty',strfind(FA{ai,3},'gm'))==0);
       fprintf('\n%8s %8s %8s | %8s | %8s %8s %8s %8s %8s %8s\n','GM','WM','CSF','sum(RGM)','R1','R2','R3','R4','R5','R6') %* prod(vx_vol) 

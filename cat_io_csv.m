@@ -12,8 +12,8 @@ function varargout = cat_io_csv(filename,varargin)
 %   C                   = cell with chars and numbers {'Hallo' 'Welt'; 1 2.3}
 %   sheet               = '' - NOT WORKING YET
 %   pos                 = 'A3:B4' - position of the Data
-%   opt.delimiter       = ';'
-%      .komma           = ',' 
+%   opt.delimiter       = ','
+%      .komma           = '.' 
 %      .linedelimiter   = '\n' 
 %      .format          = '%0.4f'
 %
@@ -33,8 +33,8 @@ function varargout = cat_io_csv(filename,varargin)
 % ______________________________________________________________________
 
   if nargout>0, action='r'; else action='w'; end
-  if ~exist('filename','var'),    
-    filename = spm_select([0 1],'xml','Select *.csv files',{},pwd,'.*.csv');
+  if ~exist('filename','var') || isempty(filename)    
+    filename = spm_select([0 1],'csv','Select *.csv files',{},pwd,'.*');
     if isempty(filename)
       if nargout>0, varargout{1}=cell(); end
       return;

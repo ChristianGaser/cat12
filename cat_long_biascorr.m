@@ -12,12 +12,19 @@ function out = cat_long_biascorr(job)
 % Robert Dahnke
 % $Id: cat_simple.m 1729 2020-11-07 10:39:47Z dahnke $
 
-% ToDo: Integration and Test of WMHs.
+% ToDo:
+%  * Integration and Test of WMHs.
+%  * Stong correction (str = 0.75) caused GM overestimation and adaption of 
+%    filter thresholds and smoothin is required. 
+%  * Iterative correction with low to high filter size
 
 % RD202010: First tests showed clear improvements of the timepoints but the
 %           whole pipeline seams to be less affected.
 %           Hence, corrections are maybe more relevant for plasticity
 %           studies or in case of artifacts.
+%           Strong correction (str = 0.75) caused GM overestimation,
+%           whereas low correction (str = 0.25) seemed to be much better.
+
 
   def.images  = {};
   def.segment = {};

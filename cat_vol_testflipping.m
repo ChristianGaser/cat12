@@ -11,7 +11,7 @@ function [flipped,flippedval,stime] = cat_vol_testflipping(varargin)
 %  
 % _________________________________________________________________________
 % Robert Dahnke
-% $Id: cat_simple.m 1678 2020-08-04 13:27:50Z gaser $
+% $Id$
 
   if nargin == 1; 
     %job    = varargin; 
