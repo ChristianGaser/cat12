@@ -708,7 +708,7 @@ cstime = clock;
           facevertexcdata1 = cat_surf_fun('isocolors',Yth1i,CS,Smat.matlabIBB_mm); 
         end
         
-        % if cerebellum that print result else not
+        % if cerebellum then print result else not
         if iscerebellum
           cat_surf_fun('saveico',CS,facevertexcdata1,Pcentral,'',Ymfs,Smat.matlabIBB_mm)
         else
@@ -1017,7 +1017,7 @@ cstime = clock;
     fprintf('%5.0fs\n',etime(clock,stime)); 
     
     if opt.verb>1 && ~useprior
-      cat_io_cprintf( 'g5', sprintf('    Euler char. / def. number / def. size: '));
+      cat_io_cprintf( 'g5', sprintf('    Euler number / defect number / defect size: '));
       cat_io_cprintf( color( rate(  EC0 - 2        , 0 , 2 * 50 * (1+9*iscerebellum)) ) , sprintf('%0.0f / '   , EC0 ) );
       cat_io_cprintf( color( rate(  defect_number0 , 0 , 2 * 50 * (1+9*iscerebellum)) ) , sprintf('%0.0f / '   , defect_number0 ) );
       cat_io_cprintf( color( rate(  defect_size0   , 0 , 2 * 5  * (1+9*iscerebellum)) ) , sprintf('%0.2f%%%% ' , defect_size0 ) );
@@ -1251,7 +1251,7 @@ cstime = clock;
         cat_io_cprintf( color( rate(  mean([SIw,SIp]) , 0 , 20 ) ) , sprintf('%0.2f%%%% (%0.2f mm%s)\n'  , mean([SIw,SIp]) , mean([SIwa,SIpa]) , char(178) ) );
       end
       
-      fprintf('  Euler char. / def. number / def. size: ');
+      fprintf('  Euler number / defect number / defect size: ');
       cat_io_cprintf( color( rate(  EC - 2        , 0 , 100 * (1+9*iscerebellum)) ) , sprintf('%0.1f / '   , EC ) );
       cat_io_cprintf( color( rate(  defect_number , 0 , 100 * (1+9*iscerebellum)) ) , sprintf('%0.1f / '   , defect_number ) );
       cat_io_cprintf( color( rate(  defect_size   , 0 ,  10 * (1+9*iscerebellum)) ) , sprintf('%0.2f%%%% ' , defect_size ) );

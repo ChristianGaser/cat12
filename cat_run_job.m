@@ -590,7 +590,7 @@ function cat_run_job(job,tpm,subj)
             clear catxml; 
             
             
-            % RD202010: The AVG contain much more backgrounds that can
+            % RD202010: The AVG contains much more background that can
             %           cause a lot of trouble if not modelled !
             obj.lkp(obj.lkp == 6) = []; 
             obj.lkp = [ obj.lkp 6*ones(1,8) ]; 

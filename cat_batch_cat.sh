@@ -239,7 +239,7 @@ run_vbm ()
     spm12=`dirname $spm12`
 
     if [ "${LOGDIR}" == "" ]; then
-        LOGDIR=`dirname ${ARRAY[0]}`
+        LOGDIR=`dirname "${ARRAY[0]}"`
     fi
     
     export MATLABPATH=$spm12
@@ -250,8 +250,8 @@ run_vbm ()
     # argument empty?
     if [ ! "${defaults_file}" == "" ]; then
         # check wether absolute or relative names were given
-        if [ -f ${pwd}/${defaults_file} ]; then
-            defaults_file=${pwd}/${defaults_file}
+        if [ -f "${pwd}/${defaults_file}" ]; then
+            defaults_file="${pwd}/${defaults_file}"
         fi
 
         # check whether defaults file exist
@@ -269,13 +269,13 @@ run_vbm ()
 
         # check wether absolute or relative names were given
         if [ ! -f ${ARRAY[$i]} ];  then
-            if [ -f ${pwd}/${ARRAY[$i]} ]; then
-                FILE=${pwd}/${ARRAY[$i]}
+            if [ -f "${pwd}/${ARRAY[$i]}" ]; then
+                FILE="${pwd}/${ARRAY[$i]}"
             fi
         else
             FILE=${ARRAY[$i]}
         fi
-        
+
         if [ -z "${ARG_LIST[$count]}" ]; then
             ARG_LIST[$count]="$FILE"
         else
@@ -283,12 +283,12 @@ run_vbm ()
         fi
 
         echo ${FILE} >> ${TMP}${count}
-        FDIR=$(dirname $FILE)
+        FDIR=$(dirname "$FILE")
         ((i++))
     done
     
-    vbmlog=${LOGDIR}/cat_${HOSTNAME}_${time}
-    
+    vbmlog="${LOGDIR}/cat_${HOSTNAME}_${time}"
+
     i=0
     while [ "$i" -lt "$NUMBER_OF_JOBS" ]; do
         if [ ! "${ARG_LIST[$i]}" == "" ]; then
@@ -312,36 +312,36 @@ run_vbm ()
             echo Calculate
             for F in ${ARG_LIST[$i]}; do echo $F; done
             # File Output
-            echo ---------------------------------- >> ${vbmlog}_${j}.log
-            date                                    >> ${vbmlog}_${j}.log
-            echo ---------------------------------- >> ${vbmlog}_${j}.log
-            echo                                    >> ${vbmlog}_${j}.log
-            echo Calling string of this batch:      >> ${vbmlog}_${j}.log
-            echo "  $0 $paras"                      >> ${vbmlog}_${j}.log
-            echo                                    >> ${vbmlog}_${j}.log
-            echo MATLAB command of this batch:      >> ${vbmlog}_${j}.log
-            echo "  $COMMAND"                       >> ${vbmlog}_${j}.log
-            echo                                    >> ${vbmlog}_${j}.log
-            echo Shell command of this batch:       >> ${vbmlog}_${j}.log
-            echo "  $SHCOMMAND"                     >> ${vbmlog}_${j}.log
-            echo                                    >> ${vbmlog}_${j}.log
+            echo ---------------------------------- >> "${vbmlog}_${j}.log"
+            date                                    >> "${vbmlog}_${j}.log"
+            echo ---------------------------------- >> "${vbmlog}_${j}.log"
+            echo                                    >> "${vbmlog}_${j}.log"
+            echo Calling string of this batch:      >> "${vbmlog}_${j}.log"
+            echo "  $0 $paras"                      >> "${vbmlog}_${j}.log"
+            echo                                    >> "${vbmlog}_${j}.log"
+            echo MATLAB command of this batch:      >> "${vbmlog}_${j}.log"
+            echo "  $COMMAND"                       >> "${vbmlog}_${j}.log"
+            echo                                    >> "${vbmlog}_${j}.log"
+            echo Shell command of this batch:       >> "${vbmlog}_${j}.log"
+            echo "  $SHCOMMAND"                     >> "${vbmlog}_${j}.log"
+            echo                                    >> "${vbmlog}_${j}.log"
             
             if [ -z "$shellcommand" ]; then
               # do nohup in background or not
               if [ -z "$fg" ]; then
-                nohup nice -n $nicelevel ${matlab} -nodisplay "$nojvm" -nosplash -r "$COMMAND" >> ${vbmlog}_${j}.log 2>&1 &
+                nohup nice -n $nicelevel ${matlab} -nodisplay "$nojvm" -nosplash -r "$COMMAND" >> "${vbmlog}_${j}.log" 2>&1 &
               else
-                nohup nice -n $nicelevel ${matlab} -nodisplay "$nojvm" -nosplash -r "$COMMAND" >> ${vbmlog}_${j}.log 2>&1
+                nohup nice -n $nicelevel ${matlab} -nodisplay "$nojvm" -nosplash -r "$COMMAND" >> "${vbmlog}_${j}.log" 2>&1
               fi
             else
               # do nohup in background or not
               if [ -z "$fg" ]; then
-                nohup nice -n $nicelevel $SHCOMMAND >> ${vbmlog}_${j}.log 2>&1 &
+                nohup nice -n $nicelevel $SHCOMMAND >> "${vbmlog}_${j}.log" 2>&1 &
               else
-                nohup nice -n $nicelevel $SHCOMMAND >> ${vbmlog}_${j}.log 2>&1
+                nohup nice -n $nicelevel $SHCOMMAND >> "${vbmlog}_${j}.log" 2>&1
               fi
             fi
-            echo Check ${vbmlog}_${j}.log for logging information
+            echo Check "${vbmlog}_${j}.log" for logging information
             echo
         fi
         ((i++))
