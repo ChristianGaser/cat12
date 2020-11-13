@@ -19,7 +19,7 @@ add_to_defaults=
 defaults_tmp=/tmp/defaults$$.m
 
 # add full path if necessary
-if [ -d ${PWD}/${cat12_dir} ]; then
+if [ -d "${PWD}/${cat12_dir}" ]; then
   cat12_dir=${PWD}/`echo $cat12_dir | sed -e 's/\.\///g'`
 fi
 

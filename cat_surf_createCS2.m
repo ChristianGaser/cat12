@@ -1633,7 +1633,7 @@ fprintf('SR2: V=%d, SD(CT)=%0.20f\n',size(CS.vertices,1),std(facevertexcdata(:))
     % display some evaluation 
     if opt.verb>1
       fprintf('%5.0fs\n',etime(clock,stime)); 
-      fprintf('    Euler char. / def. number / def. size: ');
+      fprintf('    Euler number / defect number / defect size: ');
       cat_io_cprintf( color( rate(  EC0 - 2        , 0 , 100 * (1+4*iscerebellum)) ) , sprintf('%0.0f / '   , EC0 ) );
       cat_io_cprintf( color( rate(  defect_number0 , 0 , 100 * (1+4*iscerebellum)) ) , sprintf('%0.0f / '   , defect_number0 ) );
       cat_io_cprintf( color( rate(  defect_size0   , 0 ,  10 * (1+4*iscerebellum)) ) , sprintf('%0.2f%%%% ' , defect_size0 ) );
@@ -1871,7 +1871,7 @@ fprintf('SR2: V=%d, SD(CT)=%0.20f\n',size(CS.vertices,1),std(facevertexcdata(:))
     %   the white surface is may effected by aging, e.g., by WMHs.
     % - However, for both intensity and position some (average) maps would be also interesting. 
     %   Especially, some Kappa similar measure that describes the differences to the Ym or Ypp would be nice.
-    % - What does the Euler chararteristic say?  Wouldn't the defect number more useful for users? 
+    % - What does the Euler characteristic say?  Wouldn't the defect number more useful for users? 
     if any(~cellfun('isempty',strfind(opt.surf,'cb'))), cbtxt = 'cerebral '; else cbtxt = ''; end
     fprintf('Final %ssurface processing results: \n', cbtxt);
       
@@ -1890,7 +1890,7 @@ fprintf('SR2: V=%d, SD(CT)=%0.20f\n',size(CS.vertices,1),std(facevertexcdata(:))
         cat_io_cprintf( color( rate(  mean([SIw,SIp]) , 0 , 20 ) ) , sprintf('%0.2f%%%% (%0.2f mm%s)\n'  , mean([SIw,SIp]) , mean([SIwa,SIpa]) , char(178) ) );
       end
       
-      fprintf('  Euler char. / def. number / def. size: ');
+      fprintf('  Euler number / defect number / defect size: ');
       cat_io_cprintf( color( rate(  EC - 2        , 0 , 100 * (1+9*iscerebellum)) ) , sprintf('%0.1f / '   , EC ) );
       cat_io_cprintf( color( rate(  defect_number , 0 , 100 * (1+9*iscerebellum)) ) , sprintf('%0.1f / '   , defect_number ) );
       cat_io_cprintf( color( rate(  defect_size   , 0 , 10  * (1+9*iscerebellum)) ) , sprintf('%0.2f%%%% ' , defect_size ) );

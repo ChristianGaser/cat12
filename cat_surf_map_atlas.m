@@ -31,22 +31,34 @@ for k = 1:size(hemi,1)
     for j = 1:na
       fs_annot  = cat_surf_rename(deblank(atlas_files(j,:)),'side',hemi(k,:));
       tmp       = cat_surf_info(fs_annot);
-      
-      % get new annot name and save that file in label instead of surf folder
+            
+      % get new annot name
       annot_tmp = cat_surf_rename(central,'dataname',tmp.dataname,'ee','.annot');
-      [pth0,nam0,ext] = spm_fileparts(annot_tmp{1});
-      [pth1,nam1]     = spm_fileparts(pth0);
-      if strcmp(nam1,'surf')
-        annot = fullfile(pth1,'label',[nam0 ext]);
-      else
-        annot = annot_tmp{1};
-      end
 
-      cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "NULL" "%s" "%s"',...
-        fs_central,fs_sphere,spherereg{1},fs_annot{1},annot);
+      pth0 = spm_fileparts(annot_tmp{1});
+
+      % temporarily save annot file as txt file 
+      annot_txt = cat_surf_rename(annot_tmp{1},'ee','.txt');
+      [vertices, label, colortable] = cat_io_FreeSurfer('read_annotation',fs_annot{1});
+      fs_annot_txt = fullfile(pth0,[hemi(k,:) '.' tmp.dataname '.txt']);
+      fp = fopen(fs_annot_txt,'w');
+      if fp
+        fprintf(fp,'%d\n',label);
+        fclose(fp);
+      else
+        error('Cannot write %s. Please check file permissions.\n',fs_annot_txt);
+      end
+        
+      cmd = sprintf('CAT_ResampleSurf -label "%s" "%s" "%s" "NULL" "%s" "%s"',...
+        fs_central,fs_sphere,spherereg{1},fs_annot_txt,annot_txt{1});
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS);
+      delete(fs_annot_txt)
       if ~ST
-        fprintf('Save %s\n',annot);
+        fprintf('Save %s\n',annot_tmp{1});
+        label = load(annot_txt{1});
+        vertices = ((1:numel(label))-1)';
+        cat_io_FreeSurfer('write_annotation',annot_tmp{1}, vertices, label, colortable);
+        delete(annot_txt{1})
       end
     end
   

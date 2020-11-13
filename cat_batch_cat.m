@@ -10,8 +10,8 @@ function cat_batch_cat(namefile,cat_defaults)
  %#ok<*TRYNC>
  
 if nargin < 1
-	fprintf('Syntax: cat_batch_cat(namefile,cat_defaults)\n');
-	return
+  fprintf('Syntax: cat_batch_cat(namefile,cat_defaults)\n');
+  return
 end
 
 [t,pid] = system('echo $$');
@@ -44,22 +44,35 @@ end
 % check whether namefile is a cell of filenames, a nifti filename,
 % or a text file with filenames
 if iscell(namefile)
-  names = namefile;
+  names0 = namefile;
   is_filelist = 1;
 elseif strcmp(ext,'.nii') | strcmp(ext,'.img')
-  names = cellstr(namefile);
+  names0 = cellstr(namefile);
   is_filelist = 1;
 else % or use list of names in text file
-	fid = fopen(namefile,'r');
-	names = textscan(fid,'%s');
-	names = names{:};
-	fclose(fid);
+  fid = fopen(namefile,'r');
+  names0 = textscan(fid,'%s');
+  names0 = names0{:};
+  fclose(fid);
   is_filelist = 0;
 end
 
-n = length(names);
+n = length(names0);
 
 if n == 0, error(sprintf('No file found in %s.\n',namefile)); end %#ok<SPERR>
+
+i = 1;
+while i <= n
+  % if no .nii or .img was found assume that the filenames contains spaces and is therefore divided into
+  % different cells
+  if isempty(strfind(names0{i},'.nii')) && isempty(strfind(names0{i},'.img')) && i<length(names0)
+    names{i} = [names0{i} ' ' names0{i+1}];
+    i = i+1;
+  else
+    names{i} = names0{i};
+  end
+  i = i+1;
+end
 
 matlabbatch{1}.spm.tools.cat.estwrite = cat;
 matlabbatch{1}.spm.tools.cat.estwrite.data = cellstr(names);

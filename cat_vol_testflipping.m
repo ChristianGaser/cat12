@@ -1,8 +1,8 @@
 function [flipped,flippedval,stime] = cat_vol_testflipping(varargin)
 %cat_vol_testflipping. Test input image for LR flipping. 
-% Side flipping of images can happen by accident by converting images types
-% (eg. mnc2nii in minc-tools) or by realiging images. Most brains of larger
-% animals show a light positive rotation (i.e. against the clock) that can 
+% Side flipping of images can accidently occurring by converting images types
+% (eg. mnc2nii in minc-tools) or by realigning images. Most brains of larger
+% animals show a slight positive rotation (i.e. against the clock) that can 
 % be seen quite good on the top view of both hemishpheres. The left hemi-
 % sphere is a bit smaller in frontal regions but its occipital lob is a bit
 % longer or moves a bit more to the right. Moreover the 

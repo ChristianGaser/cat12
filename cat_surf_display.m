@@ -88,13 +88,21 @@ function varargout = cat_surf_display(varargin)
   job = cat_io_checkinopt(job,def);
   
   %% ... need further development 
-  sinfo = cat_surf_info(job.data,job.readsurf,job.usefsaverage); 
+  sinfo = cat_surf_info(job.data,job.readsurf,job.usefsaverage);
 
   if job.verb
     spm('FnBanner',mfilename,SVNid); 
   end
-
+  
   for i=1:numel(job.data)
+  
+    % correct display of annotation files only work in developer mode 
+    if strcmp(sinfo(i).ee,'.annot')
+      expert = 2;
+    else
+      expert = job.expert;
+    end
+    
     if job.usefsaverage
     
       if ~isempty(strfind(fileparts(sinfo(i).Pmesh),'_32k'))
@@ -147,20 +155,20 @@ function varargout = cat_surf_display(varargin)
       fprintf('Display %s\n',spm_file(job.data{i},'link','cat_surf_display(''%s'')'));
     end
 
-    if job.expert>1
+    if expert>1
       fprintf('Developer display mode!\n');
     end
 
     if ~isempty(Pdata) && ~all(strcmp(Pmesh,Pdata)) 
       % only gifti surface without texture
       if isfield(job,'parent')
-        if job.expert<2
+        if expert<2
           h = cat_surf_render('disp',Pmesh,'Pcdata',Pdata,'parent',job.parent);
         else
           h = cat_surf_render2('disp',Pmesh,'Pcdata',Pdata,'parent',job.parent);
         end
       else
-        if job.expert<2
+        if expert<2
           try
             h = cat_surf_render('disp',Pmesh,'Pcdata',Pdata);
           catch
@@ -173,13 +181,13 @@ function varargout = cat_surf_display(varargin)
     else
       % only gifti surface without texture
       if isfield(job,'parent')
-        if job.expert<2
+        if expert<2
           h = cat_surf_render(Pmesh,'parent',job.parent);
         else
           h = cat_surf_render2(Pmesh,'parent',job.parent);
         end
       else
-        if job.expert<2
+        if expert<2
           h = cat_surf_render(Pmesh);
         else
           h = cat_surf_render2(Pmesh);
@@ -201,7 +209,7 @@ function varargout = cat_surf_display(varargin)
       
    % try   
     %% textur handling
-      if job.expert<2 
+      if expert<2 
         cat_surf_render('ColourBar',h.axis,'on');
       else
         cat_surf_render2('ColourBar',h.axis,'on');
@@ -237,7 +245,7 @@ function varargout = cat_surf_display(varargin)
         cmap = cmap(randperm(size(cmap,1)),:); % random 
         cmap = reshape(repmat(cmap',2,1),3,size(cmap,1)*2)'; 
        
-        if job.expert<2
+        if expert<2
           cat_surf_render('ColourMap',h.axis,cmap);
         else
           cat_surf_render2('ColourMap',h.axis,cmap);
@@ -246,13 +254,13 @@ function varargout = cat_surf_display(varargin)
         continue
       else
         if isempty(job.colormap)
-          if job.expert<2
+          if expert<2
             h = cat_surf_render('ColourMap',h.axis,jet(256)); 
           else
             h = cat_surf_render2('ColourMap',h.axis,jet(256)); 
           end
         else
-          if job.expert<2
+          if expert<2
             h = cat_surf_render('ColourMap',h.axis,eval(job.colormap));
           else
             h = cat_surf_render2('ColourMap',h.axis,eval(job.colormap));
@@ -270,7 +278,7 @@ function varargout = cat_surf_display(varargin)
             elseif strfind(sinfo(i).posside,'-Icsf.ROI'), clim = [1.33/3 1.33/3] .* [0.8 1.2];  % higher 1/3 because of a lot of GM/CSF PVE
             else,                                         clim = cat_vol_iscaling(h.cdata);
             end
-            if job.expert<2
+            if expert<2
               cat_surf_render('clim',h.axis,clim);
             else
               cat_surf_render2('clim',h.axis,clim);
@@ -286,14 +294,14 @@ function varargout = cat_surf_display(varargin)
               clim = cat_vol_iscaling(h.cdata);
               if clim(1)<0
                 clim = [-max(abs(clim)) max(abs(clim))];
-                if job.expert<2
+                if expert<2
                   cat_surf_render('clim',h.axis,clim);
                 else
                   cat_surf_render2('ColourMap',h.axis,cat_io_colormaps('BWR',128));
                   cat_surf_render2('clim',h.axis,clim);
                 end
               else
-                if job.expert<2
+                if expert<2
                   cat_surf_render('clim',h.axis,clim);
                 else
                   cat_surf_render2('ColourMap',h.axis,cat_io_colormaps('hotinv',128)); 
@@ -304,7 +312,7 @@ function varargout = cat_surf_display(varargin)
             end
         end    
       else
-        if job.expert<2
+        if expert<2
           cat_surf_render('clim',h.axis,job.caxis);
         else
           cat_surf_render2('clim',h.axis,job.caxis);
