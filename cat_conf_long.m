@@ -140,6 +140,17 @@ delete_temp.help = {
 ''
 };
 
+longTPM        = cfg_menu;
+longTPM.tag    = 'longTPM';
+longTPM.name   = 'Use longitudinal TPM from avg image';
+longTPM.labels = {'No','Yes'};
+longTPM.values = {0 1};
+longTPM.val    = {1};
+longTPM.hidden = expert<1; 
+longTPM.help = {
+'Use longitudinal TPM from average image.'
+};
+
 %------------------------------------------------------------------------
 extopts = cat_conf_extopts(expert);
 opts    = cat_conf_opts(expert);
@@ -230,7 +241,7 @@ else
     
   delete_temp.hidden = expert<1;
   
-  long.val  = {datalong,longmodel,bstr,nproc,opts,extopts,output,ROI,modulate,dartel,delete_temp};
+  long.val  = {datalong,longmodel,bstr,nproc,opts,extopts,output,ROI,longTPM,modulate,dartel,delete_temp};
   
 % does not yet work! 
 %  long.vout = @vout_long;

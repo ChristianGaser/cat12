@@ -245,7 +245,7 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,Yy,tpm,job,res,vx_vol,stime2)
 
   
   % do segmentation and rep
-  evalc(['prob = cat_amap1639(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
+  evalc(['prob = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
     'job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);']);
   clear Ymib Yp0b;
  

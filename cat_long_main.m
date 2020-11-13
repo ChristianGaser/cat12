@@ -16,6 +16,7 @@ try
   ROImenu     = job.ROImenu;
   longmodel   = job.longmodel;
   surfaces    = job.output.surface;
+  longTPM     = job.longTPM;
   if isfield(job,'delete_temp')  
     delete_temp = job.delete_temp;
   else
@@ -26,6 +27,7 @@ catch
   modulate = 1;
   delete_temp = 1;
   surfaces    = cat_get_defaults('output.surfaces'); 
+  longTPM     = 1;
 end
 
 write_CSF = cat_get_defaults('output.CSF.mod') > 0;
@@ -105,12 +107,13 @@ matlabbatch{mbi}.spm.tools.cat.estwrite.output.warps        = [0 0];
 % the Unified segmentation that also compensates for slight structural 
 % changes between the time points.  However the effects on the final AMAP
 % segmenation are relatively small. 
-mbi = mbi + 1; mb_tpm = mbi;
-matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.files(1) = cfg_dep('CAT12: Segmentation (current release): rp1 affine Image', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','rpa', '()',{':'}));
-matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.fstrength = 3;
-matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.writeBM = 0;
-matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.verb = 1;
-
+if longTPM
+  mbi = mbi + 1; mb_tpm = mbi;
+  matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.files(1) = cfg_dep('CAT12: Segmentation (current release): rp1 affine Image', substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','rpa', '()',{':'}));
+  matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.fstrength = 3;
+  matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.writeBM = 0;
+  matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.verb = 1;
+end
 
 
 if job.bstr > 0
@@ -164,7 +167,9 @@ end
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.bias.warped  = 0;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.warps        = [1 0];
 matlabbatch{mbi}.spm.tools.cat.estwrite.useprior(1)         = cfg_dep('Longitudinal Registration: Midpoint Average', substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','avg', '()',{':'}));
-matlabbatch{mbi}.spm.tools.cat.estwrite.opts.tpm            = cfg_dep('Longitudinal TPM creation: Longitudinal TPMs', substruct('.','val', '{}',{mb_tpm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tpm', '()',{':'}));
+if longTPM
+  matlabbatch{mbi}.spm.tools.cat.estwrite.opts.tpm            = cfg_dep('Longitudinal TPM creation: Longitudinal TPMs', substruct('.','val', '{}',{mb_tpm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tpm', '()',{':'}));
+end
 
 % 5) averaging deformations
 % -----------------------------------------------------------------------
@@ -331,7 +336,9 @@ if delete_temp
     end
   end
 %}
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Longitudinal TPM creation: Longitudinal TPMs',                     substruct('.','val', '{}',{mb_tpm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),   substruct('.','tpm', '()',{':'})); c = c+1;
+  if longTPM
+    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Longitudinal TPM creation: Longitudinal TPMs',                     substruct('.','val', '{}',{mb_tpm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),   substruct('.','tpm', '()',{':'})); c = c+1;
+  end
   if longmodel==2
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Run Shooting (create Templates): Template (0)',                  substruct('.','val', '{}',{mb_GS}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),    substruct('.','template', '()',{':'})); c = c+1;
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Run Shooting (create Templates): Velocity Fields',               substruct('.','val', '{}',{mb_GS}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),    substruct('.','vel', '()',{':'})); c = c+1;
