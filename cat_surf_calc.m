@@ -55,7 +55,7 @@ function varargout = cat_surf_calc(job)
     end
   end
   
-  if ~isempty(job.outdir{1}), outdir = job.outdir{1}; else outdir=sinfo.pp; end  
+  if ~isempty(job.outdir{1}), outdir = job.outdir{1}; else, outdir=''; end  
   ee = sinfo.ee; if job.assuregifti, ee = '.gii'; end
   
   job.dataname = strrep(job.dataname,'.gii',''); % remove .gii extension
