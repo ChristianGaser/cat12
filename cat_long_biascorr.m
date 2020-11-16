@@ -10,7 +10,7 @@ function out = cat_long_biascorr(job)
 %              (if it is empty then it is defined by job.str)
 % _________________________________________________________________________
 % Robert Dahnke
-% $Id: cat_simple.m 1729 2020-11-07 10:39:47Z dahnke $
+% $Id$
 
 % ToDo:
 %  * Integration and Test of WMHs.
