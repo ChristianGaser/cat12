@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1733 | gaser | 2020-11-16 15:15:58
+r1734 | gaser | 2020-11-19 13:06:47
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_conf_long.m
+M       cat_surf_surf2roi.m
+M       html/cat.html
+
+(1) Changed: Experimental long. bias correction was moved to developer mode.
+(2) Fixed:   Extraction ROI-based surface values for Schaefer atlases resulted 
+             in NaNs because label definition was not corrected (thanks to 
+             Thomas Zeffiro amd Felix Hoffstaedter for pointing to that issue). 
+------------------------------------------------------------------------
+r1733 | gaser | 2020-11-16 15:16:43 +0100 (Mo, 16 Nov 2020) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +24,7 @@ M       html/cat.html
 
 Fixed: cat_surf_map_atlas should now run also under Windows. CAT_ResampleSurf
        had difficulties in reading txt-files.
+
 ------------------------------------------------------------------------
 r1732 | dahnke | 2020-11-13 21:41:29 +0100 (Fr, 13 Nov 2020) | 12 lines
 
