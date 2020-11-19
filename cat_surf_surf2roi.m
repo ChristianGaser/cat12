@@ -147,10 +147,10 @@ function varargout = cat_surf_surf2roi(job)
           clear ccsv; 
           switch rinfo.ee
             case '.annot'
-              catROI{si}.(rinfo.dataname).ids(1:2:size(rrcsv,1)*2-2,1)   = cell2mat(rrcsv(2:end,1));
-              catROI{si}.(rinfo.dataname).ids(2:2:size(rrcsv,1)*2-2,1)   = cell2mat(lrcsv(2:end,1));
-              catROI{si}.(rinfo.dataname).names(1:2:size(rrcsv,1)*2-2,1) = rrcsv(2:end,2);
-              catROI{si}.(rinfo.dataname).names(2:2:size(rrcsv,1)*2-2,1) = lrcsv(2:end,2);
+              catROI{si}.(rinfo.dataname).ids(1:2:size(lrcsv,1)*2-2,1)   = cell2mat(lrcsv(2:end,1));
+              catROI{si}.(rinfo.dataname).ids(2:2:size(rrcsv,1)*2-2,1)   = cell2mat(rrcsv(2:end,1));
+              catROI{si}.(rinfo.dataname).names(1:2:size(lrcsv,1)*2-2,1) = lrcsv(2:end,2);
+              catROI{si}.(rinfo.dataname).names(2:2:size(rrcsv,1)*2-2,1) = rrcsv(2:end,2);
               for roii=1:2:numel(catROI{si}.(rinfo.dataname).ids)-1
                 catROI{si}.(rinfo.dataname).names{roii,1}   = ['l' catROI{si}.(rinfo.dataname).names{roii}];
                 catROI{si}.(rinfo.dataname).names{roii+1,1} = ['r' catROI{si}.(rinfo.dataname).names{roii+1}];
@@ -173,6 +173,7 @@ function varargout = cat_surf_surf2roi(job)
                 case {'min','max'},           nanfunc = ''; 
                 case {'mean','median','std'}, nanfunc = 'cat_stat_nan';
               end
+              
               for roii=1:numel(catROI{si}.(rinfo.dataname).ids)
                 switch catROI{si}.(rinfo.dataname).names{roii}(1)
                   case 'l', catROI{si}.(rinfo.dataname).data.(fieldname)(roii,1) = ...

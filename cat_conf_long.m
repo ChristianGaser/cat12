@@ -121,7 +121,7 @@ bstr.name            = 'Strength of final longitudinal bias correction';
 bstr.labels          = {'no correction','light','medium','strong'}; %,'heavy'};
 bstr.values          = {0,0.25,0.5,0.75}; %,1.0
 bstr.val             = {0};
-bstr.hidden          = expert<1; 
+bstr.hidden          = expert<2; 
 bstr.help            = {
   'Strength of final longitudinal bias correction that utilize the average segmentation for further subtile corrections. Test also higher SPM bias correction that also incooperates the information from the average by using the longTPM. Use weaker corrections if the points in time are far apart or if the imgages are less affected by inhomogeneities. Only use stong corrections in case of severe inhomogeneities or artefacts and check the results! '
   'This correction was introduced in CAT12.7 (2020/10) and is still under test! So use it carefully! '
