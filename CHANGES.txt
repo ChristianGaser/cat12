@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1734 | gaser | 2020-11-19 13:06:47
+r1735 | gaser | 2020-11-23 10:32:44
+
+Changed paths:
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+A       development/y_MNI152NLin6Asym_T1w.nii
+M       html/cat.html
+
+(1) Added:   Added deformation field for atlases based on MNI152NLin6Asym_T1w.
+(2) Changed: Precompiled packages are now also versioned to better support 
+             docker and singularity containers.
+------------------------------------------------------------------------
+r1734 | gaser | 2020-11-19 13:07:31 +0100 (Do, 19 Nov 2020) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +27,7 @@ M       html/cat.html
 (2) Fixed:   Extraction ROI-based surface values for Schaefer atlases resulted 
              in NaNs because label definition was not corrected (thanks to 
              Thomas Zeffiro amd Felix Hoffstaedter for pointing to that issue). 
+
 ------------------------------------------------------------------------
 r1733 | gaser | 2020-11-16 15:16:43 +0100 (Mo, 16 Nov 2020) | 9 lines
 

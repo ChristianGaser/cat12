@@ -111,9 +111,12 @@ scp_precompile:
 	    mkdir -p MCR_$${i} ;\
 	    ln -s ${PRECOMPILED}/MCR_$${i}/*spm12* ${PRECOMPILED}/MCR_$${i}/readme.txt ${PRECOMPILED}/MCR_$${i}/MCR_v93.webloc MCR_$${i}/ ;\
 	    cp -r standalone MCR_$${i}/ ;\
-	    zip cat12_latest_R2017b_MCR_$${i}.zip -r MCR_$${i} ;\
+	    zip cat12_r${REVISION}_R2017b_MCR_$${i}.zip -r MCR_$${i} ;\
 	  done
-	-@scp -P 2222 cat12_latest_R2017b_MCR* ${STARGET}
+	-@scp -P 2222 cat12_r${REVISION}_R2017b_MCR* ${STARGET}
+	-@for i in Linux Mac Win; do \
+	    bash -c "ssh -p 2222 ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/cat12_r${REVISION}_R2017b_MCR_$${i}.zip ${STARGET_FOLDER}/cat12_latest_R2017b_MCR_$${i}.zip"
+	  done
 	-@rm -r cat12_latest_R2017b_MCR* MCR_*
 
 # copy binaries after cross-compiling
