@@ -496,7 +496,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     end
 
     
-    sinfo(i).catxml = fullfile(pp,['cat_' sinfo(i).name '*.xml']);
+    sinfo(i).catxml = fullfile(strrep(pp,'surf','report'),['cat_' sinfo(i).name '.xml']);
     if ~exist(sinfo(i).catxml,'file'), sinfo(i).catxml = ''; end 
     
     if nargout>1

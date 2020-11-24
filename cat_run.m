@@ -1282,7 +1282,7 @@ function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
   end
 
   lazy = 0;
-lazy = 1; FNok = 0; return  
+
   [pp,ff] = spm_fileparts(job.data{subj}); 
   catxml  = fullfile(pp,reportfolder,['cat_' ff '.xml']);
   
