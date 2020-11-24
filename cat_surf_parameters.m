@@ -130,6 +130,10 @@ function varargout = cat_surf_parameters(job)
           Pname = cat_surf_rename(deblank(P(i,:)),'side','cb');
           Pname = Pname{1};
         end
+        if ~exist(Pname,'file') && sides{si}=='c'
+          continue
+        end
+        
         [pp,ff,ex] = spm_fileparts(Pname);
         name       = [ff ex];
         Pname2     = fullfile( pp , strrep([ff ex],'central','central2') );    % temporary surface with noise for failed save sulcal depth estimation 

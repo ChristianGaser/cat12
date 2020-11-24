@@ -142,7 +142,7 @@ function vout = cat_surf_resamp(varargin)
     
     name0 = [ff(3:end) ex];          % remove leading hemisphere information
     name0 = strrep(name0,'.gii',''); % remove .gii extension
-    hemistr = {'lh','rh'}; %,'cb'};
+    hemistr = {'lh','rh','cb'};
     exist_hemi = [];
     
     if ~isempty(strfind(name0,'white')) || ~isempty(strfind(name0,'inner')) || ...
@@ -194,7 +194,9 @@ function vout = cat_surf_resamp(varargin)
         Pvalue0 = fullfile(pp,name);
 
         % check that file exists
-        %if ~exist(Pvalue0,'file'), continue; end
+        if ~exist(Pvalue0,'file') && hemistr{j}(1)=='c'
+          continue
+        end
 
         exist_hemi = [exist_hemi j]; 
 
