@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1737 | gaser | 2020-11-25 11:49:44
+r1738 | gaser | 2020-11-25 17:13:48
+
+Changed paths:
+M       CHANGES.txt
+M       Makefile
+M       cat_spm_results_ui.m
+
+(1) Changed: Updated cat_spm_results_ui.m to work with both, CAT12 and TFCE.
+(2) Changed: Makefile now copies cat_spm_results_ui.m to tfce folder if updated.
+------------------------------------------------------------------------
+r1737 | gaser | 2020-11-25 11:50:09 +0100 (Mi, 25 Nov 2020) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +19,7 @@ M       cat_plot_boxplot.m
 
 Fixed: cat12.sh and cat_batch_cat.m had issues with multiples files if length of 
        filenames differed.
+
 ------------------------------------------------------------------------
 r1736 | dahnke | 2020-11-24 13:48:41 +0100 (Di, 24 Nov 2020) | 13 lines
 

@@ -72,7 +72,7 @@ doc:
 	-@perl -p -i -e "s/matlab:web\(\'//g" cat12-html/*.html
 	-@cp cat12-html/cat.html cat12-html/index.html
 
-# update version numners
+# update version numbers
 update: doc copy_longmode
 	-@svn update
 	-@echo '% Computational Anatomy Toolbox' > Contents.m
@@ -82,6 +82,7 @@ update: doc copy_longmode
 	-@echo '% Computational Anatomy Toolbox' > INSTALL.txt
 	-@echo '% Version ' ${REVISION} ${NEWVERSION} ${DATE} >> INSTALL.txt
 	-@cat INSTALL_info.txt >> INSTALL.txt
+	-@cp cat_spm_results_ui.m ../tfce8/
 	-@perl -p -i -e "s/${OLDVERSION}/${NEWVERSION}/g" spm_cat12.m
 
 # zip release
