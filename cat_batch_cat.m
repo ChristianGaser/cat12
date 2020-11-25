@@ -66,10 +66,10 @@ while i <= n
   % if no .nii or .img was found assume that the filenames contains spaces and is therefore divided into
   % different cells
   if isempty(strfind(names0{i},'.nii')) && isempty(strfind(names0{i},'.img')) && i<length(names0)
-    names{i} = [names0{i} ' ' names0{i+1}];
+    names{i,1} = [deblank(names0{i}) ' ' deblank(names0{i+1})];
     i = i+1;
   else
-    names{i} = names0{i};
+    names{i,1} = deblank(names0{i});
   end
   i = i+1;
 end
