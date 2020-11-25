@@ -165,7 +165,7 @@ def.boxwidth    = 0.8;
 def.box         = 1;
 def.outliers    = 1;
 def.violin      = 0;  
-def.fontsize    = []; % empty = default font size
+def.fontsize    = [];         % empty = default font size
 def.showdata    = 0;  
 def.median      = 2;          % show median: 0 - no; 1 - line; 2 - with different fill colors 
 def.edgecolor   = 'none';     % edgecolor of boxes
@@ -359,7 +359,7 @@ if opt.violin
     if iscell(data), col = data{i}(:);
     else col = data(:,i); end
     % estimate # of mesh points w.r.t. data size
-    n2 = max(n2,ceil(log2(numel(col)))); 
+    n2 = max(n2,ceil(log2(numel(col))));
   end
   F = zeros(2^n2,nc);
   U = zeros(2^n2,nc);
@@ -379,7 +379,7 @@ for i=1:nc
   % estimate kernel density for violin plot
   if opt.violin
     try
-    [tmp, f, u] = kde(col,2^n2);
+      [tmp, f, u] = kde(col,2^n2);
     catch
       fprintf('WARNING: Creating violin plot failed.\n');
       opt.violin = 0;
