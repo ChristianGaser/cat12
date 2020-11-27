@@ -4,8 +4,8 @@ Whole-brain parcellation of the Julich-Brain Cytoarchitectonic Atlas (v2.0)
 
 JulichBrain_icbm152asym2009c.nii
 
-CAT12 was used to segment themni_icbm152_t1_tal_nlin_asym_09c.nii and to estimate 
-the normalization parameter to project the maximum probability maps to IXI550 space. 
+CAT12 was used to segment icbm152_t1_tal_nlin_asym_09c.nii and to estimate 
+the normalization parameters to project the maximum probability maps to IXI550 space. 
 
 If you use these atlases, please cite the references below.
 

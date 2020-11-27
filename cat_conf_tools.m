@@ -1097,7 +1097,8 @@ function headtrimming = cat_vol_headtrimming_GUI(intlim,spm_type,prefix,suffix,e
   mask.val              = {1};
   mask.help             = {'Use source image for trimming and final masking (e.g. for skull-stripping in longitudinal pipeline).'};
 
-  
+  % don't change data type
+  spm_type.val         = {0};
   % --- main ---
   headtrimming         = cfg_exbranch;
   headtrimming.tag     = 'datatrimming';

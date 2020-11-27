@@ -215,7 +215,7 @@ else
   %------------------------------------------------------------------------
   dartel        = cfg_menu;
   dartel.tag    = 'dartel';
-  dartel.name   = 'DARTEL export of average image';
+  dartel.name   = 'DARTEL export';
   if expert
     dartel.labels = {'No','Rigid (SPM12 default)','Affine','Both'};
     dartel.values = {0 1 2 3};
@@ -227,7 +227,7 @@ else
   dartel.help   = {
   'This option is to export data into a form that can be used with DARTEL. The SPM default is to only apply rigid body transformation. However, a more appropriate option is to apply affine transformation, because the additional scaling of the images requires less deformations to non-linearly register brains to the template.'
   ''
-  'Please note, that this option is only useful if you intend to create a customized DARTEl template for your longittudinal data. The DARTEL exported segmentations is saved for the the average image of all time points for one subject and can be used in order to create a customized template with the DARTEL toolbox. The resulting flow fields can be finally applied to the respective native segmentations (e.g. p1/p2 images) to obtain normalized segmentations according to the newly created DARTEL template.'
+  'Please note, that this option is only useful if you intend to create a customized DARTEl template for your longittudinal data. The DARTEL exported segmentations is saved for the average image of all time points for one subject (and also for the data of all time points) and can be used in order to create a customized template with the DARTEL toolbox. The resulting flow fields can be finally applied to the respective native segmentations (e.g. p1/p2 images) to obtain normalized segmentations according to the newly created DARTEL template.'
   ''
   };
   

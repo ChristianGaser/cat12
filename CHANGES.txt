@@ -1,5 +1,47 @@
 ------------------------------------------------------------------------
-r1738 | gaser | 2020-11-25 17:13:48
+r1739 | gaser | 2020-11-27 11:25:51
+
+Changed paths:
+D       Anatomy2Dartel.txt
+M       CHANGES.txt
+M       cat_conf_ROI.m
+M       cat_conf_long.m
+M       cat_conf_tools.m
+M       cat_defaults.m
+M       cat_long_main.m
+M       cat_surf_fun.m
+D       cat_vol_atlas.m
+        > moved to development/cat_vol_atlas.m
+A       development/Anatomy2CAT12.m
+A  +    development/cat_vol_atlas.m
+        > moved from cat_vol_atlas.m
+M       html/cat_instruction_templates.html
+M       html/cat_licences.html
+M       html/cat_methods_QA.html
+M       html/cat_methods_RBM.html
+D       templates_volumes/anatomy.csv
+        > moved to templates_volumes_not_distributed/anatomy.csv
+D       templates_volumes/anatomy.nii
+        > moved to templates_volumes_not_distributed/anatomy.nii
+D       templates_volumes/anatomy.txt
+        > moved to templates_volumes_not_distributed/anatomy.txt
+M       templates_volumes/julichbrain.txt
+A       templates_volumes_not_distributed
+A  +    templates_volumes_not_distributed/anatomy.csv
+        > moved from templates_volumes/anatomy.csv
+A  +    templates_volumes_not_distributed/anatomy.nii
+        > moved from templates_volumes/anatomy.nii
+A  +    templates_volumes_not_distributed/anatomy.txt
+        > moved from templates_volumes/anatomy.txt
+
+(1) Changed: Replaced old Anatomy atlas with newest version 3.
+(2) Changed: Updated atlas information.
+(3) Changed: Replaced old Anatomy2Dartel.txt by Anatomy2CAT12.m.
+(4) Changed: Reformatted cat_long_main.m.
+(5) Chnaged: Set default filetpye for head trimming to "same".
+(6) Changed: Moved old anatomy atlas to templates_volumes_not_distributed.
+------------------------------------------------------------------------
+r1738 | gaser | 2020-11-25 17:14:31 +0100 (Mi, 25 Nov 2020) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +50,7 @@ M       cat_spm_results_ui.m
 
 (1) Changed: Updated cat_spm_results_ui.m to work with both, CAT12 and TFCE.
 (2) Changed: Makefile now copies cat_spm_results_ui.m to tfce folder if updated.
+
 ------------------------------------------------------------------------
 r1737 | gaser | 2020-11-25 11:50:09 +0100 (Mi, 25 Nov 2020) | 9 lines
 
