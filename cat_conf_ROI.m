@@ -182,10 +182,16 @@ for ali=1:numel(atlaslist)
         '    Oishi et al. Atlas-based whole brain white matter analysis using large deformation diffeomorphic metric mapping: application to normal elderly and Alzheimer''s disease participants. 2009'
         ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
   end
-  if any(~cellfun('isempty',strfind(atlaslist(ali),'anatomy')))
+  if any(~cellfun('isempty',strfind(atlaslist(ali),'anatomy3')))
     ROI.help = [ROI.help; strrep({
-        '(MAI) Anatomy (44 GM/WM ROIs in 10 post-mortem subjects, 2014):'
+        '(MAI) Anatomy (93 GM/WM ROIs in 10 post-mortem subjects, 2014):'
         '    Eickhoff SB, Stephan KE, Mohlberg H, Grefkes C, Fink GR, Amunts K, Zilles K. A new SPM toolbox for combining probabilistic cytoarchitectonic maps and functional imaging data. NeuroImage 25(4), 1325-1335, 2005'
+        ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
+  end
+  if any(~cellfun('isempty',strfind(atlaslist(ali),'julichbrain')))
+    ROI.help = [ROI.help; strrep({
+        '(MAI) Whole-brain parcellation of the Julich-Brain Cytoarchitectonic Atlas (v2.0):'
+        '    Amunts K, Mohlberg H, Bludau S, Zilles K (2020). Julich-Brain – A 3D probabilistic atlas of human brains cytoarchitecture. Science 369, 988-99'
         ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
   end
   if any(~cellfun('isempty',strfind(atlaslist(ali),'Schaefer2018_200Parcels_17Networks_order')))

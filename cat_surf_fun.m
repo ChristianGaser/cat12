@@ -1205,7 +1205,7 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
   %% Evaluation of local intensities
   %  Here we have to use the Layer 4 rather than the central surface.
   %  All values will depend on age!
-  if exist('Ym','var')
+  if exist('Ym','var') && exist('VI','var') && exist('VO','var')
     warning off MATLAB:subscripting:noSubscriptsSpecified  
     II = cat_surf_isocolors2(Ym,VI,mat);  
     IO = cat_surf_isocolors2(Ym,VO,mat); 
