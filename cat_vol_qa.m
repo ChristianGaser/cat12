@@ -604,7 +604,7 @@ function varargout = cat_vol_qa(action,varargin)
         %QAS.parameter.cat_pp      = 
         %QAS.parameter.output      = opt.job.output;
         if exist('res','var')
-          rf = {'Affine','Affine0','lkp','mn','vr'}; % important SPM preprocessing variables
+          rf = {'Affine','Affine0','lkp','mn','vr','ll'}; % important SPM preprocessing variables
           for rfi=1:numel(rf)
             if isfield(res,rf{rfi}), QAS.SPMpreprocessing.(rf{rfi}) = res.(rf{rfi}); end
           end

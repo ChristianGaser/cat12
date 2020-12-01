@@ -317,8 +317,8 @@ function str = cat_main_reportstr(job,res,qa)
   if job.extopts.SLC>0,  str{3}(end).value = [str{3}(end).value sprintf('%5s ','SL')];  end
 
   % absolute volumes
-  if job.extopts.WMHC<=2 && (qa.subjectmeasures.vol_rel_WMH>0.01 || ...
-    qa.subjectmeasures.vol_rel_WMH/qa.subjectmeasures.vol_rel_CGW(3)>0.02)
+  if job.extopts.WMHC<=2 && isfield(qa,'subjectmeasure') && isfield(qa.subjectmeasures,'vol_rel_WMH') && ...
+    ( (qa.subjectmeasures.vol_rel_WMH>0.01 || qa.subjectmeasures.vol_rel_WMH/qa.subjectmeasures.vol_rel_CGW(3)>0.02) )
     if job.extopts.WMHC == 2
       str{3} = [str{3} struct('name', ' Absolute volume:','value',...
         sprintf('%5.0f %5.0f {\\bf\\color[rgb]{1 0 1}%5.0f} ', qa.subjectmeasures.vol_abs_CGW(1:3)))];
@@ -335,8 +335,8 @@ function str = cat_main_reportstr(job,res,qa)
   str{3}(end).value = [str{3}(end).value 'cm' native2unicode(179, 'latin1')];
 
   % relative volumes
-  if job.extopts.WMHC<=2 && (qa.subjectmeasures.vol_rel_WMH>0.01 || ...
-    qa.subjectmeasures.vol_rel_WMH/qa.subjectmeasures.vol_rel_CGW(3)>0.02)
+  if job.extopts.WMHC<=2 && isfield(qa,'subjectmeasure') && isfield(qa.subjectmeasures,'vol_rel_WMH') && ...
+    ( (qa.subjectmeasures.vol_rel_WMH>0.01 || qa.subjectmeasures.vol_rel_WMH/qa.subjectmeasures.vol_rel_CGW(3)>0.02) )
     if job.extopts.WMHC == 2
       str{3} = [str{3} struct('name', ' Relative volume:','value',...
         sprintf('%5.1f %5.1f {\\bf\\color[rgb]{1 0 1}%5.1f} ', qa.subjectmeasures.vol_rel_CGW(1:3)*100))];
@@ -353,8 +353,8 @@ function str = cat_main_reportstr(job,res,qa)
   str{3}(end).value = [str{3}(end).value '%'];
 
   % warning if many WMH were found and not handled as extra class 
-  if job.extopts.WMHC<=2 && (qa.subjectmeasures.vol_rel_WMH>0.01 || ...
-     qa.subjectmeasures.vol_rel_WMH/qa.subjectmeasures.vol_rel_CGW(3)>0.02)
+  if job.extopts.WMHC<=2 && isfield(qa,'subjectmeasure') && isfield(qa.subjectmeasures,'vol_rel_WMH') && ...
+    ( (qa.subjectmeasures.vol_rel_WMH>0.01 || qa.subjectmeasures.vol_rel_WMH/qa.subjectmeasures.vol_rel_CGW(3)>0.02) )
     if job.extopts.WMHC == 2
       str{3}(end-1).value = [str{3}(end-1).value sprintf('\\color[rgb]{1 0 1} (WM inc. %0.0fcm%s WMHs)', ...
         qa.subjectmeasures.vol_abs_WMH,native2unicode(179, 'latin1'))];  

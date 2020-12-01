@@ -925,19 +925,56 @@ function cat_run_job(job,tpm,subj)
         try 
           % inital estimate
           stime = cat_io_cmd('SPM preprocessing 1 (estimate 2):','','',job.extopts.verb-1,stime);
-          obj.tol = job.opts.tol;  
-          if job.opts.redspmres==0 
-            warning off; % turn off "Warning: Using 'state' to set RANDN's internal state causes RAND ..."
-            res = cat_spm_preproc8(obj);
-            warning on; 
-          else
+          obj.tol = job.opts.tol; 
+          
+          % RD202012:  Missclassification of GM as CSF and BG as tissue:
+          %  We observed problems with high-quality data (e.g. AVGs) and
+          %  interpolated low resolution data (single_subT1=Collins), 
+          %  where (low-intensity) GM was missclassified as CSF but also 
+          %  miss-classification of background. The problems where caused
+          %  by the US (or better the way we use it here) and higher
+          %  accurancy (increased number of minimum iterations in 
+          %  cat_spm_preproc8) was essential. Nevertheless, this some
+          %  cases produce still severe errors at 3 mm sample size but 
+          %  not for other resolution (eg. 4, 6, 2 mm). In addiation, the
+          %  log-likelihood became NaN in such cases. Hence, I added a 
+          %  little loop her to test other resultions for samp. We keep
+          %  the output here quit simple to avoid confussion. samp is a
+          %  rarely used expert parameter and other resolutions are only 
+          %  used as backup and the effects should be not to strong for 
+          %  normal data without strong bias. 
+
+          % sampling resolution definition
+          if      round(obj.samp) == 3, samp = [obj.samp 4 2]; 
+          elseif  round(obj.samp) == 2, samp = [obj.samp 3 4]; 
+          else,                         samp = [obj.samp 3 2]; 
+          end 
+
+          if job.opts.redspmres 
             image1 = obj.image; 
             [obj.image,redspmres]  = cat_vol_resize(obj.image,'interpv',1);
+          end
+          
+          % run loop until you get a non NaN
+          % #### additional threshhold is maybe also helpful ####
+          warning off; % turn off "Warning: Using 'state' to set RANDN's internal state causes RAND ..."
+          for sampi = 1:numel(samp)
+            obj.samp = samp(sampi); 
             res = cat_spm_preproc8(obj);
+            if any(~isnan(res.ll))
+              break
+            else
+              stime = cat_io_cmd(sprintf('SPM preprocessing 1 (estimate %d):',...
+                2 + sampi),'caution','',job.extopts.verb-1,stime);
+            end
+          end
+          warning on; 
+          
+          if job.opts.redspmres
             res.image1 = image1; 
             clear reduce; 
           end
-
+          
           % unknown BG detection problems in INDI_NHa > manual setting
           if ppe.affreg.skullstripped, res.mn(end) = 0; end 
 
