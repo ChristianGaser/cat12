@@ -311,7 +311,7 @@ if isfield(obj,'wp')
 else
     wp = ones(1,Kb)/Kb;
 end
-for iter=1:30
+for iter=1:60 % RD202012: increased from 30 
 
     % Load the warped prior probability images into the buffer
     %------------------------------------------------------------
@@ -448,7 +448,7 @@ for iter=1:30
                 if subit>1 || iter>1
                     spm_plot_convergence('Set',ll);
                 end
-                if subit>1 && ll-oll<tol1*nm
+                if subit>2 && ll-oll<tol1*nm % RD202012: increased to minimum iteration - default was subit>1 
                     % Improvement is small, so go to next step
                     break;
                 end
@@ -507,7 +507,7 @@ for iter=1:30
                 if subit>1 || iter>1
                     spm_plot_convergence('Set',ll);
                 end
-                if subit>1 && ll-oll<tol1*nm
+                if subit>2 && ll-oll<tol1*nm % RD202012: increased to minimum iteration - default was subit>1 
                     % Improvement is small, so go to next step
                     break;
                 end
@@ -521,7 +521,7 @@ for iter=1:30
             end
         end
  
-        if iter1 > 1 && ~((ll-ooll)>2*tol1*nm), break; end
+        if iter1 > 2 && ~((ll-ooll)>2*tol1*nm), break; end % RD202012: increased to minimum iteration - default was subit>1 
         ooll = ll;
 
 
@@ -644,7 +644,7 @@ for iter=1:30
                     clear oldT
                 end
             end
-            if subit > 1 && ~(ll-oll>tol1*nm)
+            if subit > 2 && ~(ll-oll>tol1*nm) % RD202012: increased to minimum iteration - default was subit>1 
                 % Improvement is only small, so go to next step
                 break;
             end
@@ -880,7 +880,7 @@ for iter=1:30
         oll = ll;
     end
 
-    if iter>9 && ~((ll-ooll)>2*tol1*nm)
+    if iter>19 && ~((ll-ooll)>2*tol1*nm) % RD202012: increased to minimum iteration - default was iter>9
         % Finished
         break
     end
