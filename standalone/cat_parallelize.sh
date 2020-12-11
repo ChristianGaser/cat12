@@ -6,8 +6,6 @@ version='cat_parallelize.sh $Id$'
 # global parameters
 ########################################################
 
-COMMAND=""
-TEST=""
 CPUINFO=/proc/cpuinfo
 ARCH=`uname`
 LOGDIR=$PWD
@@ -35,8 +33,7 @@ parse_args ()
 {
   local optname optarg
   count=0
-  while [ $# -gt 0 ]
-  do
+  while [ $# -gt 0 ]; do
     optname="`echo $1 | sed 's,=.*,,'`"
     optarg="$2"
     case "$1" in
@@ -87,7 +84,7 @@ exit_if_empty ()
   shift
   val="$*"
 
-  if [ -z "$val" ]
+  if [ ! -n "$val" ]
   then
     echo ERROR: "No argument given with \"$desc\" command line argument!" >&2
     exit 1
@@ -100,7 +97,7 @@ exit_if_empty ()
 
 check_files ()
 {
-  if [ -z "$COMMAND" ];
+  if [ ! -n "$COMMAND" ];
   then
     echo "$FUNCNAME ERROR - no command defined."
       help
@@ -139,30 +136,20 @@ check_files ()
 
 get_no_of_cpus () {
 
-  if [ -z "$NUMBER_OF_JOBS" ];
-  then
-    if [ "$ARCH" == "Linux" ]
-    then
-      NUMBER_OF_JOBS=`grep ^processor $CPUINFO | wc -l`
-
-    elif [ "$ARCH" == "Darwin" ]
-    then
-      NUMBER_OF_JOBS=`sysctl -a hw | grep -w logicalcpu | awk '{ print $2 }'`
-
-    elif [ "$ARCH" == "FreeBSD" ]
-    then
-      NUMBER_OF_JOBS=`sysctl hw.ncpu | awk '{ print $2 }'`
-
+  if [ ! -n "$NUMBER_OF_JOBS" ]; then
+    if [ "$ARCH" == "Linux" ]; then
+      NUMBER_OF_PROC=`grep ^processor $CPUINFO | wc -l`
+    elif [ "$ARCH" == "Darwin" ]; then
+      NUMBER_OF_PROC=`sysctl -a hw | grep -w logicalcpu | awk '{ print $2 }'`
+    elif [ "$ARCH" == "FreeBSD" ]; then
+      NUMBER_OF_PROC=`sysctl hw.ncpu | awk '{ print $2 }'`
     else
-      NUMBER_OF_JOBS=`grep ^processor $CPUINFO | wc -l`
-
+      NUMBER_OF_PROC=`grep ^processor $CPUINFO | wc -l`
     fi
-    echo "Found $NUMBER_OF_JOBS processors."
-
-    if [ -z "$NUMBER_OF_JOBS" ]
-    then
-        echo "$FUNCNAME ERROR - number of CPUs not obtained. Use -p to define number of processes."
-        exit 1
+  
+    if [ ! -n "$NUMBER_OF_PROC" ]; then
+      echo "$FUNCNAME ERROR - number of CPUs not obtained. Use -p to define number of processes."
+      exit 1
     fi
   fi
 }
@@ -177,10 +164,9 @@ parallelize ()
   BLOCK=$((10000* $SIZE_OF_ARRAY / $NUMBER_OF_JOBS ))
 
   i=0
-  while [ "$i" -lt "$SIZE_OF_ARRAY" ]
-  do
+  while [ "$i" -lt "$SIZE_OF_ARRAY" ]; do
     count=$((10000* $i / $BLOCK ))
-    if [ -z "${ARG_LIST[$count]}" ]; then
+    if [ ! -n "${ARG_LIST[$count]}" ]; then
       ARG_LIST[$count]="${ARRAY[$i]}"
     else
       ARG_LIST[$count]="${ARG_LIST[$count]} ${ARRAY[$i]}"
@@ -190,22 +176,21 @@ parallelize ()
 
   time=`date "+%Y%b%d_%H%M"`
   log=${LOGDIR}/parallelize_${HOSTNAME}_${time}.log
-  if [ "${TEST}" == "" ]; then
+  if [ ! -n "${TEST}" ]; then
     echo Check $log for logging information
     echo > $log
     echo
   fi
     
   i=0
-  while [ "$i" -lt "$NUMBER_OF_JOBS" ]
-  do
+  while [ "$i" -lt "$NUMBER_OF_JOBS" ]; do
     if [ ! "${ARG_LIST[$i]}" == "" ]; then
       j=$(($i+1))
       echo job ${j}/"$NUMBER_OF_JOBS":
       echo $COMMAND ${ARG_LIST[$i]}
-      if [ "${TEST}" == "" ]; then
-          echo job ${j}/"$NUMBER_OF_JOBS": $COMMAND ${ARG_LIST[$i]} >> $log
-          nohup bash -c "for k in ${ARG_LIST[$i]}; do $COMMAND \$k; done" >> $log 2>&1 &
+      if [ ! -n "${TEST}" ]; then
+        echo job ${j}/"$NUMBER_OF_JOBS": $COMMAND ${ARG_LIST[$i]} >> $log
+        nohup bash -c "for k in ${ARG_LIST[$i]}; do $COMMAND \$k; done" >> $log 2>&1 &
       fi
     fi
     ((i++))
@@ -222,12 +207,13 @@ help ()
 cat <<__EOM__
 
 USAGE:
-  cat_parallelize.sh [-p number_of_processes] [-l log_folder] [-t] -c command_to_parallelize filename|filepattern
+  cat_parallelize.sh filenames|filepattern [-p number_of_processes] [-l log_folder] [-t] -c command_to_parallelize 
   
-   -p   number of parallel jobs (=number of processors)
-   -c   command that should be parallelized
-   -t   do not call command, but print files to be processed
-   -l   directory where log-file will be saved
+  -p  <NUMBER>| --processes <NUMBER>    number of parallel jobs (=number of processors)
+                                        (default $NUMBER_OF_JOBS)
+  -c  <STRING>| --command <STRING>      shell command to call other shell scripts
+  -t          | --test                  do not call command, but print files to be processed
+  -l  <FILE>  | --logdir                directory for log-file (default $LOGDIR)
 
    Only one filename or pattern is allowed. This can be either a single file or a pattern
    with wildcards to process multiple files. Optionally you can set number of processes,

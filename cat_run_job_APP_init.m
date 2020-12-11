@@ -86,7 +86,7 @@ function [Ym,Yt,Ybg,WMth,bias,Tth,pior] = cat_run_job_APP_init(Ysrco,vx_vol,opt)
     % have to find the average intensity of the background create a mask.
     Ymr   = cat_vol_resize(Ysrc,'reduceV',vx_vol,3,32,'meanm'); 
     Ymsk  = false(size(Ymr)); Ymsk(3:end-2,3:end-2,3:end-2) = true;
-    [HBGth,HBGsd] = kmeans3D(Ymr(Ymsk(:)),3); HBGsd = min(0.05, HBGsd);
+    [HBGth,HBGsd] = cat_stat_kmeans(Ymr(Ymsk(:)),3); HBGsd = min(0.05, HBGsd);
     HBGth = HBGth(2); HBGsd = HBGsd(2); % use averge BG intensity
     Ybg   = Yg<0.1 & Ysrc>(HBGth - 2*HBGsd) & Ysrc<(HBGth + 2*HBGsd); 
     [Ybg,resT2] = cat_vol_resize(Ybg,'reduceV',vx_vol,2,32,'meanm'); 
@@ -96,7 +96,7 @@ function [Ym,Yt,Ybg,WMth,bias,Tth,pior] = cat_run_job_APP_init(Ysrco,vx_vol,opt)
     %% estimate WM threshold
     Yw0   = Yg<0.2 & Ysrc>cat_stat_nanmean(  Ysrc(Yg(:)<0.3 & Ybgi(:))) & Ybgi; 
     Yw0   = cat_vol_morph(smooth3(Yw0)>0.5,'ldo'); 
-    WMth2 = kmeans3D(Ysrc(Yw0(:)),1); 
+    WMth2 = cat_stat_kmeans(Ysrc(Yw0(:)),1); 
     Ym    = (Ysrc - BGth) ./ (WMth2 - BGth);
     Ybgc  = Ybg;
   else
@@ -306,7 +306,7 @@ function [Ym,Yt,Ybg,WMth,bias,Tth,pior] = cat_run_job_APP_init(Ysrco,vx_vol,opt)
   %% prepare intensity normalization by brain tissues
   [Ymr,Ytr,resT2] = cat_vol_resize({Ym,Yt},'reduceV',vx_vol,2,32,'meanm'); 
   Yb0r = cat_vol_morph(cat_vol_morph(Ytr>0.1,'dd',6,resT2.vx_volr),'ldc',10,resT2.vx_volr) & Ymr<1.2; 
-  T3th = kmeans3D(Ymr(Yb0r(:)),5); T3th = T3th(1:2:5);
+  T3th = cat_stat_kmeans(Ymr(Yb0r(:)),5); T3th = T3th(1:2:5);
   clear Ymr Ytr Yb0r;
 
   
@@ -403,16 +403,16 @@ function [Ym,Yt,Ybg,WMth,bias,Tth,pior] = cat_run_job_APP_init(Ysrco,vx_vol,opt)
   %% intensity normalization
   [Ymr,Ytr,resT2] = cat_vol_resize({Ym,Yt},'reduceV',resT3.vx_volr,2,32,'meanm'); 
   Yb0r = cat_vol_morph(cat_vol_morph(Ytr>0.1,'dd',6,resT2.vx_volr),'ldc',10,resT2.vx_volr) & Ymr<1.2; 
-  T3th = kmeans3D(Ymr(Yb0r(:)),5); T3th = T3th(1:2:5);
+  T3th = cat_stat_kmeans(Ymr(Yb0r(:)),5); T3th = T3th(1:2:5);
   T3th2 = T3th; 
   if 1 % highBG
-    T3thc = kmeans3D(Ymr(Yb0r(:) & ...
+    T3thc = cat_stat_kmeans(Ymr(Yb0r(:) & ...
       Ymr(:)<cat_stat_nansum(T3th(1:2).*[0.8 0.2]) ),3); % close to minimum
     T3th2(1) = T3thc(1); T3th(1) = T3thc(1); 
-    T3th2(2) = kmeans3D(Ymr(Yb0r(:) & ...
+    T3th2(2) = cat_stat_kmeans(Ymr(Yb0r(:) & ...
       Ymr(:)<cat_stat_nansum(T3th(2:3).*[0.8 0.2]) & ...
       Ymr(:)>cat_stat_nansum(T3th(1:2).*[0.8 0.2]) ),1);
-    T3th2(3) = kmeans3D(Ymr(Yb0r(:) & ...
+    T3th2(3) = cat_stat_kmeans(Ymr(Yb0r(:) & ...
       Ymr(:)>cat_stat_nansum(T3th(2:3).*[0.5 0.5]) & ...
       Ymr(:)<(T3th(3) + diff(T3th(2:3))) ),1);
   end

@@ -103,7 +103,7 @@ function [P,res,stime2] = cat_main_kamap1585(Ysrc,Ycls,Yy,tpm,job,res,vx_vol,sti
   Ym = Ysrc; Ym(~cat_vol_morph(Yb,'e',3)) = nan; 
   [Ymic,th] = cat_stat_histth(Ym,0.98); 
   Ym(isnan(Ym) | Ym>(th(2) + diff(th)*2)) = 0;
-  [T3th,T3sd,T3md] = kmeans3D(Ymic((Ym(:)>0)),5); clear Ymic;  %#ok<ASGLU>
+  [T3th,T3sd,T3md] = cat_stat_kmeans(Ymic((Ym(:)>0)),5); clear Ymic;  %#ok<ASGLU>
   if T3md(end)<0.08, T3th(end)=T3th(end-1); end
   Ym = (Ysrc - th(1)) ./ (T3th(end) - th(1)); 
   Tth.T3thx  = [T3th(1)-diff(T3th(1:2:3)) T3th(1:2:5) T3th(5)+diff(T3th(3:2:5))];
@@ -122,9 +122,9 @@ function [P,res,stime2] = cat_main_kamap1585(Ysrc,Ycls,Yy,tpm,job,res,vx_vol,sti
   
   %%
   Ymsk = cat_vol_morph(Yb & Ymi>0.45 & Ymi<0.95,'do',1); 
-  tx = kmeans3D(Ysrc(Ymsk(:)),1); T3th(3) = mean(tx);
+  tx = cat_stat_kmeans(Ysrc(Ymsk(:)),1); T3th(3) = mean(tx);
   Ymsk = cat_vol_morph(Yb & Ymi>0.9 & Ymi<1.1,'do',1.5); 
-  tx = kmeans3D(Ysrc(Ymsk(:)),1); T3th(5) = mean(tx);
+  tx = cat_stat_kmeans(Ysrc(Ymsk(:)),1); T3th(5) = mean(tx);
   Tth.T3thx  = [T3th(1)-diff(T3th(1:2:3)) T3th(1:2:5) T3th(5)+diff(T3th(3:2:5))];
   Ymi = cat_main_gintnormi(Ysrc/3,Tth);
  
@@ -163,15 +163,15 @@ function [P,res,stime2] = cat_main_kamap1585(Ysrc,Ycls,Yy,tpm,job,res,vx_vol,sti
   
   
   %% intensity normalisation
-  [T3th,T3sd,T3md] = kmeans3D(Ymi(Yb(:)),5);  %#ok<ASGLU>
+  [T3th,T3sd,T3md] = cat_stat_kmeans(Ymi(Yb(:)),5);  %#ok<ASGLU>
   Tth.T3thx  = [T3th(1)-diff(T3th(1:2:3)) T3th(1:2:5) T3th(5)+diff(T3th(3:2:5))];
   Tth.T3th   = 0:1/3:4/3;
   Ymi2 = cat_main_gintnormi(Ymi/3,Tth) .* Yb;
   %%
   Ymsk = cat_vol_morph(Yb & Ymi2>0.45 & Ymi2<0.95,'do',1); 
-  tx = kmeans3D(Ymi2(Ymsk(:)),1); T3th(3) = mean(tx);
+  tx = cat_stat_kmeans(Ymi2(Ymsk(:)),1); T3th(3) = mean(tx);
   Ymsk = cat_vol_morph(Yb & Ymi2>0.9 & Ymi2<1.1,'do',1.5); 
-  tx = kmeans3D(Ymi2(Ymsk(:)),1); T3th(5) = mean(tx);
+  tx = cat_stat_kmeans(Ymi2(Ymsk(:)),1); T3th(5) = mean(tx);
   clear Ymi2;
   
   Tth.T3thx  = [T3th(1)-diff(T3th(1:2:3)) T3th(1:2:5) T3th(5)+diff(T3th(3:2:5))];
@@ -270,7 +270,7 @@ function [P,res,stime2] = cat_main_kamap1585(Ysrc,Ycls,Yy,tpm,job,res,vx_vol,sti
   % update SPM segmentation information 
   for i=1:3
     [res.mn(res.lkp==i),tmp,res.mg(res.lkp==i)] = ...
-      kmeans3D(Ysrc(P(:,:,:,i)>64),sum(res.lkp==i)); %#ok<ASGLU>
+      cat_stat_kmeans(Ysrc(P(:,:,:,i)>64),sum(res.lkp==i)); %#ok<ASGLU>
   end
 
 end

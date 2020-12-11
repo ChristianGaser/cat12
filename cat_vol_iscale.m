@@ -428,7 +428,7 @@ function [TI,varargout] = cat_vol_iscale(T,action,vx_vol,varargin)
 
           
           % peak tissue values
-          %  tp2=kmeans3D(T(B(:)>0),3,100,tp1(1:3));
+          %  tp2=cat_stat_kmeans(T(B(:)>0),3,100,tp1(1:3));
           WMr    = Br & Tr>mean(tp1(2:3)) & Tr<tp1(4);              
           tp2(3) = peak(Tr(WMr(:)));
           

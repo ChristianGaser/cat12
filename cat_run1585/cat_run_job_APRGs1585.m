@@ -41,11 +41,11 @@ function [Affine2,Yb,Ymi,Ym0] = cat_run_job_APRGs1585(Ysrc,Ybg,VF,Pb,Pbt,Affine,
   vx_vol    = rV.vx_volr;
   
   %% estimate tissue thresholds for intensity normalization 
-  bgth = kmeans3D(Ysrc(Ybg)); 
-  T5th = kmeans3D( cat_stat_histth(Ysrc(Yb0>0.5) ,0.95),5); 
+  bgth = cat_stat_kmeans(Ysrc(Ybg)); 
+  T5th = cat_stat_kmeans( cat_stat_histth(Ysrc(Yb0>0.5) ,0.95),5); 
   T3th = T5th([1 3 5]); % use more agressive scaling to avoid skull-stripping 
   if 0 % WMHs?
-    Txth = kmeans3D(Ysrc(Yb0>0.5 & ...
+    Txth = cat_stat_kmeans(Ysrc(Yb0>0.5 & ...
       Ysrc>nansum(T3th(1:2:3) .* [0.9 0.1]) & ...
       Ysrc<nansum(T3th(1:2:3) .* [0.1 0.9])),5); T3th(2) = mean(Txth(3:4)); 
   end
@@ -160,7 +160,7 @@ function [Affine2,Yb,Ymi,Ym0] = cat_run_job_APRGs1585(Ysrc,Ybg,VF,Pb,Pbt,Affine,
     %        for noise (median) and smoothness (Laplace) an finally 
     %        threshholded 
     Ybd  = cat_vbdist(single(smooth3(Yb)>0.5),~Ybg,vx_vol);
-    mnhd = kmeans3D( Ybd( cat_vol_morph(Ybg,'d') & Ybd<10 ) ); 
+    mnhd = cat_stat_kmeans( Ybd( cat_vol_morph(Ybg,'d') & Ybd<10 ) ); 
     Ybgd = cat_vbdist(single(Ybg | Ybd>mnhd*2),~Yb,vx_vol);
     Ymx  = Ybgd./(Ybd+Ybgd);
     %
@@ -191,7 +191,7 @@ function [Affine2,Yb,Ymi,Ym0] = cat_run_job_APRGs1585(Ysrc,Ybg,VF,Pb,Pbt,Affine,
   %        for noise (median) and smoothness (Laplace) an finally 
   %        threshholded 
   Ybd  = cat_vbdist(single(smooth3(Yb)>0.5),~Ybg,vx_vol);
-  mnhd = kmeans3D( Ybd( cat_vol_morph(Ybg,'d') & Ybd<10 ) ); 
+  mnhd = cat_stat_kmeans( Ybd( cat_vol_morph(Ybg,'d') & Ybd<10 ) ); 
   Ybgd = cat_vbdist(single(Ybg | Ybd>mnhd),~Yb,vx_vol);
   Ymx  = Ybgd./(Ybd+Ybgd);
     
