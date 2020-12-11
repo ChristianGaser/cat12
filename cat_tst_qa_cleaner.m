@@ -282,7 +282,7 @@ function varargout = cat_tst_qa_cleaner(data,opt)
         
         hx = hist(d,0.5:1:5.5);
         peaks = sum(hx>(max(hx)/5))*3;
-        [thx,sdx] = kmeans3D(d,peaks); sdx = sdx./thx;
+        [thx,sdx] = cat_stat_kmeans(d,peaks); sdx = sdx./thx;
         for i=1:peaks
           if sum(d<thx(i))/numel(d) < 0.3
             thx(1) = cat_stat_nanmean(thx(1:2));
@@ -301,7 +301,7 @@ function varargout = cat_tst_qa_cleaner(data,opt)
         hx = hist(d,0.5:1:5.5); 
         %for i=1:1, hx(2:end-1) = cat_stat_nanmean(cat(1,hx(1:end-2),hx(2:end-1),hx(3:end)),1); end
         peaks = sum(hx>(max(hx)/5))*3;
-        [thx,sdx] = kmeans3D(d,peaks); sdx = sdx./thx;
+        [thx,sdx] = cat_stat_kmeans(d,peaks); sdx = sdx./thx;
         for i=1:peaks
           %if numel(thx)>i && sum(d<thx(i))/numel(d) < 0.05
           %  thx(1) = []; sdx(1) = [];
@@ -311,7 +311,7 @@ function varargout = cat_tst_qa_cleaner(data,opt)
           end
         end
         sdx(1) = cat_stat_nanstd(d(d<thx(1)));
-        [thx,sdx] = kmeans3D(d(d<=(max([min(d),thx(1)+sdx(1)]))),3); thx=thx(2); sdx=sdx(2);  %sdx = sdx./thx;
+        [thx,sdx] = cat_stat_kmeans(d(d<=(max([min(d),thx(1)+sdx(1)]))),3); thx=thx(2); sdx=sdx(2);  %sdx = sdx./thx;
         sd    = min(1/3,max(1/6,sdx(1))) / (opt.grads/2) * opt.cf; % 0.5 = 1% BWP noise*16
         th(1) = thx(1) - sdx(1) + 2*sd(1);
         for i = 2:opt.grads-1

@@ -1343,7 +1343,7 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
           warning('Tclasses has to be between 2 and 7.');
           Pcentral = min(7,max(3,Pcentral)); 
         end
-        [mn,sd] = kmeans3D(T,Pcentral);
+        [mn,sd] = cat_stat_kmeans(T,Pcentral);
         if verb
           fprintf('    Thickness mean (%d class(es)):       ',Pcentral)
           fprintf('%7.4f',mn); fprintf('\n'); 

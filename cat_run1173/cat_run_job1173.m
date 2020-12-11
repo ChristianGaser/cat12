@@ -1028,7 +1028,7 @@ function cat_run_job1173(job,tpm,subj)
               VFa.mat = Affine0 * VF.mat;
             end
             [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0)); 
-            %[Ysrcr,Ybr] = cat_vol_resize({Ysrc,Yb},'reduceV',vx_vol,2,32,'meanm'); Tth0 = kmeans3D(Ysrcr(Ybr(:)>0.5),3);
+            %[Ysrcr,Ybr] = cat_vol_resize({Ysrc,Yb},'reduceV',vx_vol,2,32,'meanm'); Tth0 = cat_stat_kmeans(Ysrcr(Ybr(:)>0.5),3);
             %Ym = Ysrc/Tth0(3); %cat_stat_nanmean(Ysrc(Ysrc(:)>cat_stat_nanmean(Ysrc(:)))); 
             if ~exist('WMth','var'), WMth = cat_stat_nanmean(Ysrc(Yb(:)>0.5 & Ysrc(:)>mean(Ysrc(Yb(:)>0.5)))); end
             AC = round(inv(Affine * VF.mat) * [ 0; 0; 0; 1]);

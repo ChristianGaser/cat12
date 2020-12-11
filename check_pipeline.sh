@@ -7,16 +7,12 @@
 ########################################################
 version='check_pipeline.sh $Id$'
 
-release=""
-spm12_dir=""
 spm12_tmp=/tmp/spm12_$$
 calc_tmp=/tmp/calc$$
-list_long=""
 proc_dir=$PWD
 bg_flag=" -fg -p 1"
 bg_flag_long=" -fg"
 bg=0
-large=""
 postprocess_only=0
 volumes_only=0
 scp_target="dbm.neuro.uni-jena.de:/volume1/web/check_pipeline/"
@@ -59,69 +55,69 @@ parse_args ()
     optname="`echo $1 | sed 's,=.*,,'`"
     optarg="`echo $2 | sed 's,^[^=]*=,,'`"
     case "$1" in
-        --release* | -r*)
-            exit_if_empty "$optname" "$optarg"
-            release=$optarg
-            shift
-            ;;
-        --spm* | -s*)
-            exit_if_empty "$optname" "$optarg"
-            spm12_dir=$optarg
-            shift
-            ;;
-        --dir* | -d*)
-            exit_if_empty "$optname" "$optarg"
-            proc_dir=$optarg
-            shift
-            ;;
-        --file* | -f*)
-            exit_if_empty "$optname" "$optarg"
-            listfile=$optarg
-            shift
-            list=$(< $listfile);
-            for F in $list; do
-              ARRAY[$count]=$F
-              ((count++))
-            done
-            ;;
-        --long* | -l*)
-            exit_if_empty "$optname" "$optarg"
-            listfile=$optarg
-            shift
-            list_long=$(< $listfile);
-            for F in $list_long; do
-              ARRAY_LONG[$count_long]=$F
-              ((count_long++))
-            done
-            ;;
-        --bg* | -b*)
-            exit_if_empty "$optname" "$optarg"
-            bg_flag=" -p "$optarg
-            bg_flag_long=""
-            bg=1
-            shift
-            ;;
-        --post* | -p*)
-            exit_if_empty "$optname" "$optarg"
-            postprocess_only=$optarg
-            shift
-            ;;
-        --vol* | -v*)
-            exit_if_empty "$optname" "$optarg"
-            volumes_only=1
-            ;;
-        -h | --help | -v | --version | -V)
-            help
-            exit 1
-            ;;
-        -*)
-            echo "`basename $0`: ERROR: Unrecognized option \"$1\"" >&2
-            ;;
-        *)
-            ARRAY[$count]=$1
+      --release* | -r*)
+          exit_if_empty "$optname" "$optarg"
+          release=$optarg
+          shift
+          ;;
+      --spm* | -s*)
+          exit_if_empty "$optname" "$optarg"
+          spm12_dir=$optarg
+          shift
+          ;;
+      --dir* | -d*)
+          exit_if_empty "$optname" "$optarg"
+          proc_dir=$optarg
+          shift
+          ;;
+      --file* | -f*)
+          exit_if_empty "$optname" "$optarg"
+          listfile=$optarg
+          shift
+          list=$(< $listfile);
+          for F in $list; do
+            ARRAY[$count]=$F
             ((count++))
-            ;;
-    esac
+          done
+          ;;
+      --long* | -l*)
+          exit_if_empty "$optname" "$optarg"
+          listfile=$optarg
+          shift
+          list_long=$(< $listfile);
+          for F in $list_long; do
+            ARRAY_LONG[$count_long]=$F
+            ((count_long++))
+          done
+          ;;
+      --bg* | -b*)
+          exit_if_empty "$optname" "$optarg"
+          bg_flag=" -p "$optarg
+          bg_flag_long=""
+          bg=1
+          shift
+          ;;
+      --post* | -p*)
+          exit_if_empty "$optname" "$optarg"
+          postprocess_only=$optarg
+          shift
+          ;;
+      --no-surf* | -ns*)
+          exit_if_empty "$optname" "$optarg"
+          volumes_only=1
+          ;;
+      -h | --help | -v | --version | -V)
+          help
+          exit 1
+          ;;
+      -*)
+          echo "`basename $0`: ERROR: Unrecognized option \"$1\"" >&2
+          ;;
+      *)
+          ARRAY[$count]=$1
+          ((count++))
+          ;;
+      esac
     shift
   done
     
@@ -134,7 +130,7 @@ parse_args ()
 copy_files ()
 {
   
-  if [ -z "$spm12_dir" ]; then
+  if [ ! -n "$spm12_dir" ]; then
     echo "SPM12 directory is undefined!"
   fi
 
@@ -157,8 +153,7 @@ copy_files ()
 
   if [ "$SIZE_OF_ARRAY" -gt 0 ]; then
 
-    mkdir $calc_tmp
-  
+    mkdir -p $calc_tmp
     cd $calc_tmp
     
     i=0
@@ -217,7 +212,7 @@ exit_if_empty ()
   shift
   val="$*"
 
-  if [ -z "$val" ]
+  if [ ! -n "$val" ]
   then
     echo ERROR: "No argument given with \"$desc\" command line argument!" >&2
     exit 1
@@ -238,7 +233,7 @@ get_release ()
   # copy current spm12 installation to tmp folder
   cp -r $spm12_dir $spm12_tmp
   
-  if [ -z "$release" ]; then
+  if [ ! -n "$release" ]; then
     echo "Use current release."
   else
     # remove old cat12 folder
@@ -254,7 +249,13 @@ get_release ()
       rm $cat12_tmp
     fi
   fi
-  
+
+  # allow execution of mexmaci64 file on MAC
+  if [ "$ARCH" == "Darwin" ]; then
+    echo "Please login as admin to allow execution of mex files on MAC OS"
+    sudo xattr -r -d com.apple.quarantine $spm12_tmp
+    sudo find $spm12_tmp -name \*.mexmaci64 -exec spctl --add {} \;  
+  fi
 }
 
 ########################################################
@@ -285,10 +286,10 @@ run_pipeline ()
   if [ "$SIZE_OF_ARRAY_LONG" -gt 0 ]; then
     large=`grep "\-large" ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh`
     # call "-large" option only if available for that release
-    if [ -z "$large" ]; then
-      ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi] 
-    else
+    if [ -n "$large" ]; then
       ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh -large ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi]
+    else
+      ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi] 
     fi
   fi
   
@@ -301,7 +302,7 @@ run_pipeline ()
 postprocess ()
 {
 
-  # if postprocess_only > 0 we assume that this is the pid
+  # if postprocess_only > 0 we assume that this is a pid
   if [ $postprocess_only -gt 0 ]; then
     pid="$postprocess_only"
     if [ -d /tmp/calc${pid} ]; then
@@ -332,10 +333,10 @@ postprocess ()
     rm ${calc_tmp}/long/*/*avg* 2>/dev/null
     
     tmp=`ls ${calc_tmp2}/report/cat_*xml 2>/dev/null`
-    if [ ! -z "$tmp" ]; then
+    if [ -n "$tmp" ]; then
       for i in ${calc_tmp2}/report/cat_*xml; do
         revision_cat=`grep revision_cat ${i}| cut -f2 -d">"|cut -f1 -d"<"`
-        if [ -z "$revision_cat" ]; then
+        if [ ! -n "$revision_cat" ]; then
           revision_cat=`grep version_cat ${i}| cut -f2 -d">"|cut -f1 -d"<"`
         fi
         label=${calc_tmp2}/label/catROI_`basename $i| sed -e 's/cat_//g'`
@@ -346,13 +347,13 @@ postprocess ()
         echo Finalize $subj with revision $revision_cat
         
         # get current csv files from dbm server
-        scp -q -P 2222 ${scp_target}/${subj}*csv .
+        scp -q -P $PORT ${scp_target}/${subj}*csv .
   
         # grep for vol_TIV and vol_abs_CGW and update csv file
         # check first for keywords and print next 5 lines
         vol_TIV=`grep -A5 "<vol_abs_CGW" $report |grep vol_TIV |cut -f2 -d">"|cut -f1 -d"<"`
         vol_CGW=`grep "<vol_abs_CGW" $report | sed -e 's/\ /,/g'|cut -f2 -d"["|cut -f1 -d"]"|cut -f1-4 -d','`
-        if [ ! -z "$vol_TIV" ] && [ ! -z "$vol_CGW" ]; then
+        if [ -n "$vol_TIV" ] && [ -n "$vol_CGW" ]; then
           # add entry to csv file and sort and only keep unique lines
           echo "${revision_cat},${vol_TIV},${vol_CGW}" >> ${subj}_vol.csv
           cat ${subj}_vol.csv |sort -r|uniq > tmp$$
@@ -362,7 +363,7 @@ postprocess ()
         # grep for Vgm and update csv file
         # check first for keyword neuromorphometrics and print next 200 lines
         Vgm=`grep -A200 "<neuromorphometrics" $label |grep Vgm | sed -e 's/;/,/g'|cut -f2 -d"["|cut -f1 -d"]"`
-        if [ ! -z "$Vgm" ]; then
+        if [ -n "$Vgm" ]; then
           # add entry to csv file and sort and only keep unique lines
           echo "${revision_cat},${Vgm}" >> ${subj}_Vgm.csv
           cat ${subj}_Vgm.csv |sort -r|uniq > tmp$$
@@ -372,7 +373,7 @@ postprocess ()
         # grep for Vcsf and update csv file
         # check first for keyword neuromorphometrics and print next 200 lines
         Vcsf=`grep -A200 "<neuromorphometrics" $label |grep Vcsf | sed -e 's/;/,/g'|cut -f2 -d"["|cut -f1 -d"]"`
-        if [ ! -z "$Vcsf" ]; then
+        if [ -n "$Vcsf" ]; then
           # add entry to csv file and sort and only keep unique lines
           echo "${revision_cat},${Vcsf}" >> ${subj}_Vcsf.csv
           cat ${subj}_Vcsf.csv |sort -r|uniq > tmp$$
@@ -383,7 +384,7 @@ postprocess ()
         # check first for keyword neuromorphometrics and print next 200 lines
         thickness=`grep -A200 "<aparc_DK40" $labels |grep thickness | sed -e 's/\ /,/g' -e 's/;/,/g'|cut -f2 -d"["|cut -f1 -d"]"`
         thickness=`grep -A200 "<aparc_DK40" $labels |grep thickness | sed -e 's/;/,/g' -e 's/;/,/g'|cut -f2 -d"["|cut -f1 -d"]"`
-        if [ ! -z "$thickness" ]; then
+        if [ -n "$thickness" ]; then
           # add entry to csv file and sort and only keep unique lines
           echo "${revision_cat},${thickness}" >> ${subj}_thickness.csv
           cat ${subj}_thickness.csv |sort -r|uniq > tmp$$
@@ -391,14 +392,14 @@ postprocess ()
         fi
   
         # scp updated csv files to dbm server
-        scp -q -P 2222 *.csv ${scp_target}
+        scp -q -P $PORT *.csv ${scp_target}
   
       done
     fi
   done
      
   # rename tmp-folder and zip and scp them
-  if [ ! -z "$revision_cat" ]; then
+  if [ -n "$revision_cat" ]; then
     if [ ! $postprocess_only -lt 0 ]; then
       if [ -d ${proc_dir}/check_r${revision_cat} ]; then
         mv ${calc_tmp}/*/ ${proc_dir}/check_r${revision_cat}/
@@ -408,7 +409,7 @@ postprocess ()
     fi
     
     # prepare renderview if tool is found and surface processing is enabled
-    if [ ! -z `which render_surf.sh` ] && [ $volumes_only -eq 0 ]; then
+    if [ -n `which render_surf.sh` ] && [ $volumes_only -eq 0 ]; then
       mkdir -p ${proc_dir}/check_r${revision_cat}/surf
       ln -s ${proc_dir}/check_r${revision_cat}/long/surf/* ${proc_dir}/check_r${revision_cat}/surf/ >/dev/null 2>&1
       render_surf.sh -range 0 6 ${proc_dir}/check_r${revision_cat}/surf
@@ -430,9 +431,9 @@ postprocess ()
       fi
       
       zip -q ${proc_dir}/check_r${revision_cat}.zip -r ${proc_dir}/check_r${revision_cat}
-      scp -q -P 2222 ${proc_dir}/check_r${revision_cat}.zip $scp_target
+      scp -q -P $PORT ${proc_dir}/check_r${revision_cat}.zip $scp_target
     fi
-    scp -q -P 2222 ${proc_dir}/check_r${revision_cat}*.png $scp_target
+    scp -q -P $PORT ${proc_dir}/check_r${revision_cat}*.png $scp_target
   fi
   
 }
@@ -446,15 +447,15 @@ help ()
 cat <<__EOM__
 
 USAGE:
-  check_pipeline.sh -s spm12_folder [-p process_id] [-r cat12_zip_file] [-d proc_folder] [-b number_of_processes] [-v] [-f file_list | filenames]
+  check_pipeline.sh -s spm12_folder [-p process_id] [-r cat12_zip_file] [-d proc_folder] [-b number_of_processes] [-ns] [-f file_list | filenames]
   
-   -r   zip-file of CAT12 release that will be used for checking. If no zip-file is given, then the current CAT12 release will be used.
-   -s   folder of spm12 installation
-   -d   folder for writing processed files and results (default $proc_folder)
-   -f   list with file names for checking
-   -p   post-process given pid
-   -b   run check_pipeline.sh in the background
-   -v   run check_pipeline.sh without surface processing
+   --release <FILE|URL> | -r <FILE|URL> zip-file of CAT12 release that will be used for checking. If no zip-file is given, then the current CAT12 release will be used.
+   --spm <DIR>          | -s <DIR>      folder of spm12 installation
+   --dir <DIR>          | -d <DIR>      folder for writing processed files and results (default $proc_folder)
+   --file <FILE>        | -f <FILE>     list with file names for checking
+   --post <STRING>      | -p <STRING>   post-process given pid
+   --bg                 | -b            run check_pipeline.sh in the background
+   --no-surf            | -ns           run check_pipeline.sh without surface processing
 
    All given files will be processed using either the current CAT12 version or the defined CAT12 release with the "-r" flag.
    For the latter case the zip-file can be defined as local file or as url-address. During processing temporary folder are 

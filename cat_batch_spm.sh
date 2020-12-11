@@ -6,10 +6,12 @@
 # global parameters
 ########################################################
 
+cwd=$(dirname "$0")
 matlab=matlab     # you can use other matlab versions by changing the matlab parameter
 display=0         # use nodisplay option for matlab or not
 LOGDIR=$PWD
-nojvm=""
+spm12=$(dirname "$cwd")
+spm12=$(dirname "$spm12")
 
 ########################################################
 # run main
@@ -38,43 +40,42 @@ parse_args ()
     exit 1
   fi
 
-  while [ $# -gt 0 ]
-  do
-	optname="`echo $1 | sed 's,=.*,,'`"
-	optarg="`echo $2 | sed 's,^[^=]*=,,'`"
-	case "$1" in
-        --matlab* | -m*)
-			exit_if_empty "$optname" "$optarg"
-			matlab=$optarg
-			shift
-			;;
-		--display* | -d*)
-			display=1
-			;;
-        --nojvm | -nojvm)
-            exit_if_empty "$optname" "$optarg"
-            nojvm=" -nojvm "
-            ;;
-        --logdir* | -l*)
-            exit_if_empty "$optname" "$optarg"
-            LOGDIR=$optarg
-            if [ ! -d $LOGDIR ] 
-            then
-              mkdir -p $LOGDIR
-            fi
-            shift
-            ;;
-		-h | --help | -v | --version | -V)
-			help
-			exit 1
-			;;
-		-*)
-			echo "`basename $0`: ERROR: Unrecognized option \"$1\"" >&2
-			;;
-		*)
-			file="$1"
-			;;
-	esac
+  while [ $# -gt 0 ]; do
+    optname="`echo $1 | sed 's,=.*,,'`"
+    optarg="`echo $2 | sed 's,^[^=]*=,,'`"
+    case "$1" in
+      --matlab* | -m*)
+        exit_if_empty "$optname" "$optarg"
+        matlab=$optarg
+        shift
+        ;;
+      --display* | -d*)
+        display=1
+        ;;
+      --nojvm | -nj*)
+        exit_if_empty "$optname" "$optarg"
+        nojvm=" -nojvm "
+        ;;
+      --logdir* | -l*)
+        exit_if_empty "$optname" "$optarg"
+        LOGDIR=$optarg
+        if [ ! -d $LOGDIR ] 
+        then
+          mkdir -p $LOGDIR
+        fi
+        shift
+        ;;
+      -h | --help | -v | --version | -V)
+        help
+        exit 1
+        ;;
+      -*)
+        echo "`basename $0`: ERROR: Unrecognized option \"$1\"" >&2
+        ;;
+      *)
+        file="$1"
+        ;;
+    esac
     shift
   done
 
@@ -92,10 +93,9 @@ exit_if_empty ()
   shift
   val="$*"
 
-  if [ -z "$val" ]
-  then
-	echo 'ERROR: No argument given with \"$desc\" command line argument!' >&2
-	exit 1
+  if [ ! -n "$val" ]; then
+    echo 'ERROR: No argument given with \"$desc\" command line argument!' >&2
+    exit 1
   fi
 }
 
@@ -105,61 +105,57 @@ exit_if_empty ()
 
 run_batch ()
 {
-	cwd=`dirname $0`
-	pwd=$PWD
-	
-	# we have to go into toolbox folder to find matlab files
-	cd $cwd
+  pwd=$PWD
+  
+  # we have to go into toolbox folder to find matlab files
+  cd $cwd
 
-    spm12=`dirname $cwd`
-    spm12=`dirname $spm12`
-
-    if [ "${LOGDIR}" == "" ]; then
-        LOGDIR=`dirname ${ARRAY[0]}`
-    fi
+  if [ ! -n "${LOGDIR}" ]; then
+    LOGDIR=$(dirname "${ARRAY[0]}")
+  fi
 
   # add current folder to matlabfile if file was not found
-	if [ ! -f $file ]; then
-	  file=${pwd}/$file
-	fi
+  if [ ! -f $file ]; then
+    file=${pwd}/$file
+  fi
 
-	if [ ! -f $file ]; then
-		echo File $file does not exist.
-		exit 0
-	fi
+  if [ ! -f $file ]; then
+    echo File $file does not exist.
+    exit 0
+  fi
 
-	dname=`dirname $file`
-	file=`basename $file`
-	
-	if [ ! `echo $file | cut -f2 -d'.'` == "m" ]; then
-		echo File $file is not a matlab script.
-		exit 0
-	fi
+  dname=$(dirname "$file")
+  file=$(basename "$file")
+  
+  if [ ! `echo "$file" | cut -f2 -d'.'` == "m" ]; then
+    echo File "$file" is not a matlab script.
+    exit 0
+  fi
 
-	export MATLABPATH=$spm12:$dname
-	
-	time=`date "+%Y%b%d_%H%M"`
+  export MATLABPATH=$spm12:$dname
+  
+  time=`date "+%Y%b%d_%H%M"`
     spmlog=${LOGDIR}/spm_${HOSTNAME}_${time}.log
-	echo Check $spmlog for logging information
-	echo
-		
-	file=`echo $file| sed -e 's/\.m//g'`
+  echo Check $spmlog for logging information
+  echo
+    
+  file=`echo $file| sed -e 's/\.m//g'`
 
-	X="cat_batch_spm('${file}')"
-	echo Running $file
-	echo > $spmlog
-	echo ---------------------------------- >> $spmlog
-	date >> $spmlog
-	echo ---------------------------------- >> $spmlog
-	echo >> $spmlog
-	echo $0 $file >> $spmlog
-	echo >> $spmlog
-	if [ $display == 0 ]; then
-		nohup ${matlab} -nodisplay "$nojvm" -nosplash -r $X >> $spmlog 2>&1 &
-	else
-		nohup ${matlab} -nosplash -r $X >> $spmlog 2>&1 &
-	fi
-	exit 0
+  X="cat_batch_spm('${file}')"
+  echo Running $file
+  echo > $spmlog
+  echo ---------------------------------- >> $spmlog
+  date >> $spmlog
+  echo ---------------------------------- >> $spmlog
+  echo >> $spmlog
+  echo $0 $file >> $spmlog
+  echo >> $spmlog
+  if [ $display == 0 ]; then
+    nohup ${matlab} -nodisplay "$nojvm" -nosplash -r $X >> $spmlog 2>&1 &
+  else
+    nohup ${matlab} -nosplash -r $X >> $spmlog 2>&1 &
+  fi
+  exit 0
 }
 
 ########################################################
@@ -186,9 +182,10 @@ cat <<__EOM__
 USAGE:
    cat_batch_spm.sh batchfile.m [-d] [-m matlabcommand]
    
-   -d      use display option in matlab in case that batch file needs graphical output
-   -m      matlab command
-   -nojvm  supress call of jvm using the -nojvm flag
+  -m  <FILE>  | --matlab <FILE>         matlab command (matlab version) (default $matlab)
+  -d  <FILE>  | --display <FILE>        use display option in matlab in case that batch file needs graphical output
+  -l  <FILE>  | --logdir                directory for log-file (default $LOGDIR)
+  -nj         | --nojvm                 supress call of jvm using the -nojvm flag
 
    Only one batch filename is allowed. Optionally you can set the matlab command 
    with the "-m" option. As default no display is used (via the -nodisplay option 

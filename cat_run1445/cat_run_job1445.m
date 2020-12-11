@@ -817,7 +817,7 @@ function [Ym,Yt,Ybg,WMth] = APPmini(obj,VF)
   % images also the background), i.e. highest intensity is may head,
   % blood vessels or WM or CSF in T1/PD
   Yt   = cat_vol_morph(Ym>cat_stat_nanmean(Ym(Ym(:)>0.1)),'l',[100 1000])>0.5;
-  WMth = kmeans3D( Ysrc(Yt(:)) , 1); 
+  WMth = cat_stat_kmeans( Ysrc(Yt(:)) , 1); 
   
   % rescale Ym and roughly estimate the background (not in MP2Rage/MT/R1)
   Ym   = Ysrc ./ WMth;

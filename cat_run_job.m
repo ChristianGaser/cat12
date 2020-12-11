@@ -933,15 +933,15 @@ function cat_run_job(job,tpm,subj)
           %  where (low-intensity) GM was missclassified as CSF but also 
           %  miss-classification of background. The problems where caused
           %  by the US (or better the way we use it here) and higher
-          %  accurancy (increased number of minimum iterations in 
-          %  cat_spm_preproc8) was essential. Nevertheless, this some
-          %  cases produce still severe errors at 3 mm sample size but 
-          %  not for other resolution (eg. 4, 6, 2 mm). In addiation, the
+          %  accuracy (increased number of minimum iterations in 
+          %  cat_spm_preproc8) was essential. Nevertheless, some
+          %  cases still cause severe errors at 3 mm sample size but 
+          %  not for other resolutions (eg. 4, 6, 2 mm). In addition, the
           %  log-likelihood became NaN in such cases. Hence, I added a 
-          %  little loop her to test other resultions for samp. We keep
-          %  the output here quit simple to avoid confussion. samp is a
+          %  little loop her to test other resolutions for samp. We keep
+          %  the output here quit simple to avoid confusion. samp is a
           %  rarely used expert parameter and other resolutions are only 
-          %  used as backup and the effects should be not to strong for 
+          %  used as backup and the effects should be not too strong for 
           %  normal data without strong bias. 
 
           % sampling resolution definition
@@ -956,7 +956,7 @@ function cat_run_job(job,tpm,subj)
           end
           
           % run loop until you get a non NaN
-          % #### additional threshhold is maybe also helpful ####
+          % #### additional threshold is maybe also helpful ####
           warning off; % turn off "Warning: Using 'state' to set RANDN's internal state causes RAND ..."
           for sampi = 1:numel(samp)
             obj.samp = samp(sampi); 
@@ -1109,7 +1109,7 @@ function [Ym,Yt,Ybg,WMth] = APPmini(obj,VF,histth)
   % images also the background), i.e. highest intensity is may head,
   % blood vessels or WM or CSF in T1/PD
   Yt   = cat_vol_morph(Ym>cat_stat_nanmean(Ym(Ym(:)>0.1)),'l',[100 1000])>0.5;
-  WMth = kmeans3D( Ysrc(Yt(:)) , 1); 
+  WMth = cat_stat_kmeans( Ysrc(Yt(:)) , 1); 
   
   % rescale Ym and roughly estimate the background (not in MP2Rage/MT/R1)
   Ym   = Ysrc ./ WMth;
