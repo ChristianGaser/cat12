@@ -19,7 +19,7 @@ STARGET_HTDOCS=${STARGET_HOST}:/volume1/web/
 STARGET_FOLDER=/volume1/web/cat12
 STARGET=${STARGET_HOST}:${STARGET_FOLDER}
 
-MATLAB_FILES=Contents.* cat_*.m spm_cat12.m tbx_cfg_cat.m sliderPanel.m slice_overlay.m kmeans3D.m cat_run* compile.m
+MATLAB_FILES=Contents.* cat_*.m spm_cat12.m tbx_cfg_cat.m sliderPanel.m slice_overlay.m cat_run* compile.m
 C_FILES=Amap.[ch] ornlm_float.c sanlm_float.c MrfPrior.c Pve.c Kmeans.c cat_*.c* cat_*.mex* vollib.c genus0.[ch] tricases.h spm_diffeo_old.mex*
 MISC_FILES=CAT12-Manual.pdf CHANGES.txt INSTALL.txt standalone templates_volumes html templates_surfaces templates_surfaces_32k atlases_surfaces atlases_surfaces_32k cat12.* CAT.* distribute_to_server.sh cat_*.sh  cat_long_main*txt
 
@@ -96,14 +96,14 @@ zip: update clean
 # scp release
 scp: html zip
 	-@echo scp to http://${STARGET_HOST}/cat12/${ZIPFILE}
-	-@scp -P 2222 CHANGES.txt CAT12-Manual.pdf ${ZIPFILE} ${STARGET}
-	-@scp -r -P 2222 cat12-html ${STARGET_HTDOCS}/
-	-@bash -c "ssh -p 2222 ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${ZIPFILE} ${STARGET_FOLDER}/cat12_latest.zip"
+	-@scp -P $PORT CHANGES.txt CAT12-Manual.pdf ${ZIPFILE} ${STARGET}
+	-@scp -r -P $PORT cat12-html ${STARGET_HTDOCS}/
+	-@bash -c "ssh -p $PORT ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${ZIPFILE} ${STARGET_FOLDER}/cat12_latest.zip"
 
 # scp manual
 scp_manual:
 	-@echo scp CAT12-Manual.pdf to http://${STARGET}
-	-@scp -P 2222 CAT12-Manual.pdf ${STARGET}
+	-@scp -P $PORT CAT12-Manual.pdf ${STARGET}
 
 # scp deployed versions
 scp_precompile:
@@ -114,9 +114,9 @@ scp_precompile:
 	    cp -r standalone MCR_$${i}/ ;\
 	    zip cat12_r${REVISION}_R2017b_MCR_$${i}.zip -r MCR_$${i} ;\
 	  done
-	-@scp -P 2222 cat12_r${REVISION}_R2017b_MCR* ${STARGET}
+	-@scp -P $PORT cat12_r${REVISION}_R2017b_MCR* ${STARGET}
 	-@for i in Linux Mac Win; do \
-	    bash -c "ssh -p 2222 ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/cat12_r${REVISION}_R2017b_MCR_$${i}.zip ${STARGET_FOLDER}/cat12_latest_R2017b_MCR_$${i}.zip"
+	    bash -c "ssh -p $PORT ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/cat12_r${REVISION}_R2017b_MCR_$${i}.zip ${STARGET_FOLDER}/cat12_latest_R2017b_MCR_$${i}.zip"
 	  done
 	-@rm -r cat12_latest_R2017b_MCR* MCR_*
 

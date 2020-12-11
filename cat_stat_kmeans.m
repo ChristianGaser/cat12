@@ -1,7 +1,7 @@
-function [mu,su,nu] = kmeans3D(y,k)
+function [mu,su,nu] = cat_stat_kmeans(y,k)
 % K-means clustering
 %_______________________________________________________________________
-% FORMAT [mu,su,nu] = kmeans3D(y,k)
+% FORMAT [mu,su,nu] = cat_stat_kmeans(y,k)
 % 
 %  y  .. data 
 %  k  .. Number of components
@@ -16,7 +16,7 @@ function [mu,su,nu] = kmeans3D(y,k)
 % Christian Gaser & Robert Dahnke
 % $Id$
 
-if nargin<1, help kmeans3D; return; end
+if nargin<1, help cat_stat_kmeans; return; end
 if nargin<2, k=1; end
 
 k = max(1,k); 
@@ -44,6 +44,7 @@ nu = ones(size(mu));
 
 d = zeros(k,length(y));
 for loops = 1:1000,  
+
   for j=1:k,
     d(j,:) = (y-mu(j)).^2;
   end
@@ -55,9 +56,13 @@ for loops = 1:1000,
    % Recompute centres
    for j=1:k,
      mu(j) = mean(y(i==j));
-     su(j) = std(y(i==j));
-     nu(j) = sum(i==j)./numel(y(:));
    end
    last_i=i;
   end
 end  
+
+% Compute variances and mixing proportions
+for j=1:k,
+   su(j) = std(y(i==j));
+   nu(j) = sum(i==j)./numel(y(:));
+end

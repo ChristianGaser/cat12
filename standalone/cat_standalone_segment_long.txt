@@ -73,7 +73,7 @@ matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.mrf = 1;
 % Strength of skull-stripping: 0 - SPM approach; eps to 1  - gcut; 2 - new APRG approach; -1 - no skull-stripping (already skull-stripped); default = 2
 %matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.gcutstr = 2;
 
-% voxel size for normalized data (EXPERIMENTAL: inf - use Tempate values)
+% voxel size for normalized data (EXPERIMENTAL: inf - use Template values)
 matlabbatch{1}.spm.tools.cat.long.extopts.vox = 1.5;
 
 % resolution handling: 'native','fixed','best', 'optimal'
@@ -94,7 +94,7 @@ matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.hammers = 0;
 matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.ibsr = 0;
 matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.aal3 = 0;
 matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.mori = 0;
-matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.anatomy = 0;
+matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.anatomy3 = 0;
 matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.julichbrain = 0;
 matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.Schaefer2018_100Parcels_17Networks_order = 0;
 matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.Schaefer2018_200Parcels_17Networks_order = 0;
@@ -102,6 +102,7 @@ matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.Schaefer2018_400Parcels_17Netw
 matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.Schaefer2018_600Parcels_17Networks_order = 0;
 matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.ownatlas = {''};
 
+matlabbatch{1}.spm.tools.cat.long.longTPM = 1;
 matlabbatch{1}.spm.tools.cat.long.modulate = 1;
 matlabbatch{1}.spm.tools.cat.long.dartel = 0;
 matlabbatch{1}.spm.tools.cat.long.delete_temp = 1;
