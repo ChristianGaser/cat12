@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1741 | gaser | 2020-12-11 14:32:54
+r1742 | gaser | 2020-12-30 13:54:03
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main1639.m
+M       cat_main_roi.m
+M       cat_stat_spm2x.m
+M       cat_vol_defs.m
+
+(1) Changed: Prepared cat_vol_defs.m for external call and output variable.
+(2) Fixed:   Solved issues in cat_stat_spm2x.m if no extent threshold was 
+             exceeded. 
+(3) Fixed:   Removed some typos.
+------------------------------------------------------------------------
+r1741 | gaser | 2020-12-11 14:51:55 +0100 (Fr, 11 Dez 2020) | 55 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -54,6 +68,7 @@ A       templates_volumes_not_distributed/aparc_a2009s.nii
 (4) Changed: Renamed kmeans3D.m to cat_vol_kmeans.m and changed all calls in
              functions. 
 (5) Changed: Updated cat_vol_kmeans.m to increase computation speed.
+
 
 ------------------------------------------------------------------------
 r1740 | dahnke | 2020-12-01 12:47:53 +0100 (Di, 01 Dez 2020) | 13 lines
