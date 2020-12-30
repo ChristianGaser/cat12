@@ -306,7 +306,8 @@ for i=1:size(P,1)
   Z    = Z(:,Qh);
   XYZ    = XYZ(:,Qh);
   if isempty(Qh)
-    fprintf('No voxels survive height threshold u=%0.2g\n',u);
+    fprintf('No voxels survived height threshold u=%0.2g\n',u);
+    Qe = [];
   end
   
   %-Extent threshold
@@ -367,10 +368,10 @@ for i=1:size(P,1)
       xA = spm_atlas('load',atlas_name);
     end
 
+    Qe = [];
     if noniso
       fprintf('Use local RPV values to correct for non-stationary of smoothness.\n');
 
-      Qe     = [];
       warning('off','MATLAB:subscripting:noSubscriptsSpecified');
       if isfield(SPM.xVol,'G') % mesh detected?
         [N2,Z2,XYZ2,A2,L2]  = cat_surf_max(abs(Z),XYZ,gifti(SPM.xVol.G));
@@ -423,7 +424,6 @@ for i=1:size(P,1)
         end
       end
     else
-      Qe     = [];
       for i2 = 1:min(max(A))
         j = find(A == i2);
         if length(j) >= k
@@ -472,7 +472,7 @@ for i=1:size(P,1)
   end    
 
   if isempty(Qe) || isempty(Qh)
-    t2x  = inf;  
+    t2x  = Inf;  
   else
     if T2x % T-Test
     switch sel
