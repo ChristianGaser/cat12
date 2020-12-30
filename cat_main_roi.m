@@ -19,17 +19,17 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
 %   
 %  job        .. cat preprocessing job
 %   .extopts 
-%    .verb    .. display progress
-%    .atlas   ..
+%   .verb     .. display progress
+%   .atlas    ..
 %   .output
-%    .atlases .. setting what atlas has to be used
+%   .atlases  .. setting what atlas has to be used
 %
 %  trans      .. cat preprocessing registration structure
 %    ...
 %
 %  Ycls       .. tissue segmentation as cell structure 
 %  Yp0        .. label map with CSF = 1, GM = 2, and WM = 3
-%  opt        .. paramter structure
+%  opt        .. parameter structure
 %   .type     .. mapping type 
 %                  1 - native space (default)
 %                  2 - atlas space (push - faster but less acurate)

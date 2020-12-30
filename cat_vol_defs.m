@@ -1,6 +1,9 @@
-function cat_vol_defs(job)
+function vol = cat_vol_defs(job)
 % Apply deformations to images. In contrast to spm_deformations images are saved
 % in the original directory.
+% FORMAT vol = spm_deformations(job)
+% job - a job created via cat_conf_tools.m
+% vol - cell of deformed output volumes
 %_______________________________________________________________________
 % Christian Gaser
 % $Id$
@@ -23,18 +26,25 @@ PI     = job.images;
 interp = job.interp;
 
 if interp < 0 && job.modulate
-  warning('Modulation in combination with categorical interpolation is not meaningful!.');
+  warning('Modulation in combination with categorical interpolation is not meaningful and possible. Disable modulation.');
+  job.modulate = 0;
 end
 
 for i=1:numel(PU),
 
-  [pth,nam,ext] = spm_fileparts(PU{i});
-  PU{i} = fullfile(pth,[nam ext]);
-
-  if isfield(job,'vox') & isfield(job,'bb')
-    [Def,mat] = get_comp(PU{i},job);
+  % external call with PU as deformation field
+  if ismatrix(PU{i}) & isfield(job,'mat')
+    Def = PU{i};
+    mat = job.mat;
   else
-    [Def,mat] = get_comp(PU{i});
+    [pth,nam,ext] = spm_fileparts(PU{i});
+    PU{i} = fullfile(pth,[nam ext]);
+  
+    if isfield(job,'vox') & isfield(job,'bb')
+      [Def,mat] = get_comp(PU{i},job);
+    else
+      [Def,mat] = get_comp(PU{i});
+    end
   end
    
   for m=1:numel(PI)
@@ -44,7 +54,12 @@ for i=1:numel(PU),
     else % many subjects
       PIi = char(PI{m}{i}); 
     end
-    PIri = apply_def(Def,mat,PIi,interp,job.modulate);
+    
+    if nargout == 1
+      [PIri, vol] = apply_def(Def,mat,PIi,interp,job.modulate);
+    else
+      PIri = apply_def(Def,mat,PIi,interp,job.modulate);
+    end
     
     if job.verb
       fprintf('Display resampled %s\n',spm_file(PIri,'link','spm_image(''Display'',''%s'')'));
@@ -111,12 +126,15 @@ if nargin > 1
 end
 
 %_______________________________________________________________________
-function out = apply_def(Def,mat,filenames,interp0,modulate)
+function [out, wvol] = apply_def(Def,mat,filenames,interp0,modulate)
 % Warp an image or series of images according to a deformation field
 
 interp = [interp0*[1 1 1], 0 0 0];
+dim    = size(Def);
+dim    = dim(1:3);
+if nargout == 2, wvol = cell(size(filenames,1),1); end
 
-for i=1:size(filenames,1),
+for i=1:size(filenames,1)
 
     % Generate headers etc for output images
     %----------------------------------------------------------------------
@@ -162,8 +180,6 @@ for i=1:size(filenames,1),
         end
     end
 
-    dim            = size(Def);
-    dim            = dim(1:3);
     NO.dat.dim     = [dim NI.dat.dim(4:end)];
     NO.dat.offset  = 0; % For situations where input .nii images have an extension.
     NO.mat         = mat;
@@ -205,6 +221,7 @@ for i=1:size(filenames,1),
     
     end
     
+    if nargout == 2, wvol{i} = zeros([dim NI.dat.dim(4:end)]); end
     for j=j_range
 
         M0 = NI.mat;
@@ -248,7 +265,8 @@ for i=1:size(filenames,1),
                 if modulate
                   f1 = f1.*double(dt);
                 end
-                NO.dat(:,:,:,j,k,l) = f1;
+                NO.dat(:,:,:,j,k,l)  = f1;
+                if nargout == 2, wvol{i}(:,:,:,j,k,l) = f1; end
             end
         end
     end
