@@ -227,7 +227,12 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       if isfield(res,'spmpp')
         VT0x = spm_vol(res.image(1).fname); 
       else
-        VT0x = spm_vol(VT.fname);
+        if exist(VT.fname,'file')
+          VT0x = spm_vol(VT.fname);
+        else
+          VT0x = VT0; 
+          VT0x.fname = spm_file(VTOx.fname,'prefix','x'); 
+        end
       end
     end
     

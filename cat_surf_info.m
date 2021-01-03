@@ -474,7 +474,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
 
     
     if sinfo(i).exist && readsurf
-      if isfield(S,'vertices'), 
+      if isfield(S,'vertices') 
         sinfo(i).nvertices = size(S.vertices,1);
       else
         if ~isempty(sinfo(i).Pmesh) && exist(sinfo(i).Pmesh,'file')
@@ -483,9 +483,9 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
           if isfield(S2,'vertices'), S.vertices = S2.vertices; else S.vertices = []; end
           if isfield(S2,'faces'),    S.faces    = S2.faces;    else S.faces = []; end
         end
-        if isfield(S,'vertices'),
+        if isfield(S,'vertices')
           sinfo(i).nvertices = size(S.vertices,1);
-        elseif isfield(S,'cdata'),
+        elseif isfield(S,'cdata')
           sinfo(i).nvertices = size(S.cdata,1);
         else 
           sinfo(i).nvertices = nan;
@@ -495,8 +495,9 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
       if isfield(S,'cdata'),    sinfo(i).ncdata    = size(S.cdata,1); end
     end
 
-    
-    sinfo(i).catxml = fullfile(strrep(pp,'surf','report'),['cat_' sinfo(i).name '.xml']);
+    [ppx,ffx] = spm_fileparts(pp); 
+    sinfo(i).catxml = fullfile(ppx,strrep(ffx,'surf','report'),['cat_' sinfo(i).name '.xml']);
+    if ~exist(sinfo(i).catxml,'file'), fullfile(pp,['cat_' sinfo(i).name '.xml']); end 
     if ~exist(sinfo(i).catxml,'file'), sinfo(i).catxml = ''; end 
     
     if nargout>1

@@ -456,7 +456,9 @@ switch lower(action)
       try
         Y = spm_data_read(spm_data_hdr_read(H.S{1}.name));
       catch
-        error('No data in surfaces found or surfaces have different mesh structure (32k vs. 164k).');
+        cat_io_cprintf('err','No data in surfaces found or surfaces have different mesh structure (32k vs. 164k).');
+        if nargout, varargout{1} = []; end
+        return
       end
                   
       [pth{1}, nm1, ext1] = spm_fileparts(H.S{1}.name(1,:));
@@ -1121,6 +1123,14 @@ switch lower(action)
   %======================================================================
   case 'batch'
     job = varargin{1};
+    
+    if any(1 - cellfun(@exist,job.cdata)) 
+      if size(job.cdata,1)==1,  cat_io_cprintf('err', 'Input file does not exist!\n'); 
+      else,                     cat_io_cprintf('err', 'Input files do not exist!\n');
+      end
+      if nargout, varargout{1}.png = {''}; end
+      return
+    end
     
     % create window
     select_data([],[],char(job.cdata));
@@ -2543,7 +2553,8 @@ end
 % keep background color
 set(H.figure, 'InvertHardcopy', 'off', 'PaperPositionMode', 'auto');
 
-pos = round(getpixelposition(H.panel(1))); 
+% RD20201224: posc to correct margin of the figure [r t l b]
+pos = round(getpixelposition(H.panel(1))); posc = [70 70 70 0]; pos = [pos(1) + posc(1), pos(2) + posc(4), pos(3) - posc(1) - posc(3), pos(4) - posc(2) - posc(4)];
 hh = getframe(H.figure,pos);
 
 img = frame2im(hh);

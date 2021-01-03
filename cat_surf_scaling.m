@@ -58,7 +58,9 @@ function rn = cat_surf_scaling(job)
   warning('off','MATLAB:subscripting:noSubscriptsSpecified');
   S = export(gifti( job.file ), 'patch');
 
-  if job.norm == 12 % affine 
+  if job.norm == 0
+    r = 60; 
+  elseif job.norm == 12 % affine 
     % RD20200211 - get XML information for affine normalization? 
     if strcmp(pp(end-3:end),'surf')
       reportdir = [pp(1:end-4) strrep(pp(end-3:end),'surf','report')]; 
