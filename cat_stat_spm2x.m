@@ -450,6 +450,7 @@ for i=1:size(P,1)
 
   else
     k = 0;
+    Qe     = [];
     p_extent_str = 'NoVox'; 
   end % (if ~isempty(XYZ))
 

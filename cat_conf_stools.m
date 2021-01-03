@@ -1794,6 +1794,16 @@ lGI.help   = {
   'The function is only for internal comparisons and requires modification in cat_surf_resamp and other functions.' 
 };
 
+FS_HOME         = cfg_files;
+FS_HOME.tag     = 'FS_HOME';
+FS_HOME.name    = 'FreeSurfer home directory';
+FS_HOME.filter  = 'dir';
+FS_HOME.ufilter = '';
+FS_HOME.num     = [0 1];
+FS_HOME.hidden  = expert<2;
+FS_HOME.help    = {'Select the FreeSurfer home directory.'};
+
+
 
 % surface area 
 area        = cfg_menu;
@@ -1902,6 +1912,7 @@ surfextract.val  = {data_surf_extract, ...
   tGI, ... expert
   lGI, GIL, ... developer
   surfaces, norm, ... expert
+  FS_HOME, ...
   nproc, ... 
   lazy}; % expert 
 surfextract.prog = @cat_surf_parameters;

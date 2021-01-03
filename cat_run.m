@@ -1294,9 +1294,12 @@ function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
     FNopts      = fieldnames(job.opts); 
     FNextopts   = fieldnames(job.extopts);
     FNok        = 1; 
-    FNextopts   = setxor(FNextopts,{'LAB','lazy','mrf','atlas','NCstr','resval'});
-   
-   
+    FNextopts   = setxor(FNextopts,{'LAB','lazy','mrf','NCstr','resval','ignoreErrors'});
+    if job.extopts.lazy > 0 % ingnore paths that can change when copied 
+      FNopts    = setxor(FNopts,{'tpm'});
+      FNextopts = setxor(FNextopts,{'brainmask','T1','cat12atlas','darteltpm','darteltpms','shootingtpm','shootingtpms','atlas','satlas'});
+    end
+    
     %% check opts
     if isempty(FNopts) || isempty(FNextopts) || ...
        ~isfield(xml.parameter,'opts') || ~isfield(xml.parameter,'extopts')
