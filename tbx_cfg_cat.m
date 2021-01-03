@@ -635,7 +635,7 @@ for i=1:numel(tissue)
     end
 end
 
-if job.output.rmat
+if isfield(job.output,'rmat') && job.output.rmat
   cdep(end+1)          = cfg_dep;
   cdep(end).sname      = sprintf('Affine forward transformation',i);
   cdep(end).src_output = substruct('.','tiss','()',{i},'.','ta','()',{':'});

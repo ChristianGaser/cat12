@@ -2257,7 +2257,7 @@ set(obj,'Checked','on');
 function myHist(obj,evt,H)
 objTextures = findobj(get(findobj(get(get(obj,'parent'),'parent'),'Label','Textures'),'Children'),'Checked','on');
 if isfield( H , 'textures')
-  currentTexture = cellfun('isempty',strfind( H.textures(:,1) , objTextures.Label ))==0; 
+  currentTexture = cellfun('isempty',strfind( H.textures(:,1) , objTextures.Label ))==0  &  cellfun('length',H.textures(:,1)) ==  length(objTextures.Label); 
   cg_hist2d( struct( 'P' , H.textures{currentTexture,2}.fname ))
 else
   cg_hist2d(  H.cdata );
