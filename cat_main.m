@@ -453,13 +453,8 @@ if ~isfield(res,'spmpp')
   %  -------------------------------------------------------------------
   LAB  = job.extopts.LAB;
   Yp0 = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
-  Ywmhrel = single(Ycls{1})/255 .* NS(Yl1,23); 
   qa.software.version_segment   = strrep(mfilename,'cat_main','');                            % if cat_main# save the # revision number 
   if isfield(res,'spmpp') && res.spmpp, qa.software.version_segment = 'SPM'; end                           % if SPM segmentation is used as input
-  qa.subjectmeasures.WMH_abs    = sum(Ywmhrel(:));                                            % absolute WMH volume without PVE
-  qa.subjectmeasures.WMH_rel    = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(0.5/3*255));   % relative WMH volume to TIV without PVE
-  qa.subjectmeasures.WMH_WM_rel = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(2.5/3*255));   % relative WMH volume to WM without PVE
-  qa.subjectmeasures.WMH_abs    = prod(vx_vol)/1000 * qa.subjectmeasures.WMH_abs;             % absolute WMH volume without PVE in cm^3
   [cat_err_res.init.Yp0,cat_err_res.init.BB] = cat_vol_resize(Yp0,'reduceBrain',vx_vol,2,Yp0>0.5); 
   clear Ywmhrel Yp0
   
@@ -545,11 +540,6 @@ if ~isfield(res,'spmpp')
     
   else
     Yp0b = cat_vol_ctype(single(Ycls{1})*2/5 + single(Ycls{2})*3/5 + single(Ycls{3})*1/5,'uint8');
-  
-    if qa.subjectmeasures.WMH_rel>3 || qa.subjectmeasures.WMH_WM_rel>5 % #% of the TIV or the WM are affected
-      cat_io_addwarning('cat_main:uncorrectedWMH',...
-        sprintf('Uncorrected WM lesions greater (%2.2f%%%%%%%% of the WM)!',qa.subjectmeasures.WMH_rel),1);
-    end
   end
   
   % update error report structure
@@ -821,7 +811,7 @@ qa.subjectmeasures.vol_rel_WMH = 0;
 % stroke lesions
 if numel(Ycls)>7, qa.subjectmeasures.vol_abs_CGW(5) = prod(vx_vol)/1000/255 .* sum(Ycls{8}(:)); end 
 % set WMHs
-if numel(Ycls)>6 && numel(Ycls{7})>0
+if numel(Ycls)>6 && numel(Ycls{6})>0
   qa.subjectmeasures.vol_abs_WMH = prod(vx_vol)/1000/255 .* sum(Ycls{7}(:));
   if job.extopts.WMHC > 2       % extra class
     qa.subjectmeasures.vol_abs_CGW(4) = prod(vx_vol)/1000/255 .* sum(Ycls{7}(:));
@@ -857,7 +847,7 @@ if isfield(res,'spmpp') && res.spmpp, namspm = 'c1'; else, namspm = ''; end
 qa    = cat_vol_qa('cat12',Yp0,VT0.fname,Ym,res,job.extopts.species, ...
           struct('write_csv',0,'write_xml',1,'method','cat12','job',job,'qa',qa,'prefix',['cat_' namspm]));
 clear Yp0;
-
+    
 % surface data update
 if job.output.surface
   if exist('S','var')
@@ -882,8 +872,16 @@ if job.output.surface
     ... 'subjectratings',qam.subjectmeasures, ... not ready
     'subjectmeasures',qa.subjectmeasures,'ppe',res.ppe),'write+'); % here we have to use the write+!
 end  
+
 fprintf('%5.0fs\n',etime(clock,stime));
 clear Yth1;
+
+if qa.subjectmeasures.vol_rel_WMH>0.01
+  cat_io_addwarning([mfilename ':uncorrectedWMHs'],...
+    sprintf('Uncorrected WM lesions greater (%2.2f%%%%%%%% of the TIV, %2.2f%%%%%%%% of the WM)!',...
+    qa.subjectmeasures.vol_rel_WMH * 100, ...
+    qa.subjectmeasures.vol_abs_WMH / qa.subjectmeasures.vol_abs_CGW(3) * 100),1);
+end
 
 
 
@@ -1077,12 +1075,6 @@ function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,inv_weighting] = cat_main_SPM
   job.extopts.SLC  = 0;
   
   NS = @(Ys,s) Ys==s | Ys==s+1;  % for side independent atlas labels
-  
-  % QA WMH values required by cat_vol_qa later
-  qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE
-  qa.subjectmeasures.WMH_rel    = nan;  % relative WMH volume to TIV without PVE
-  qa.subjectmeasures.WMH_WM_rel = nan;  % relative WMH volume to WM without PVE
-  qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE in cm^3
   
   % load SPM segments
   %[pp,ff,ee] = spm_fileparts(res.image0(1).fname);
