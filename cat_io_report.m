@@ -400,10 +400,11 @@ function cat_io_report(job,qa,subj,createerr)
       spm_orthviews('Redraw');
       % colorbar
       try 
+        %%
         bd   = [find(ch>0.01,1,'first'),mth];
         ylims{1} = [min(y(round(numel(y)*0.1):end)),max(y(round(numel(y)*0.1):end)) * 4/3];
         xlims{1} = x(bd) + [0,(4/3-1)*diff(x([find(ch>0.02,1,'first'),mth]))]; M = x>=xlims{1}(1) & x<=xlims{1}(2);
-        hdata{1} = [x(M) flipud(x(M)); max(eps,min(ylims{1}(2),y(M))) zeros(1,sum(M)); [x(M) flipud(x(M))]];
+        hdata{1} = [x(M) fliplr(x(M)); max(eps,min(ylims{1}(2),y(M))) zeros(1,sum(M)); [x(M) fliplr(x(M))]];
         hhist(1) = fill(hdata{1}(1,:),hdata{1}(2,:),hdata{1}(3,:),'EdgeColor',[0.0 0.0 1.0],'LineWidth',1);
         if createerr==11, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
         %caxis(xlims{1} .* [1,1.5*(2*volcolors+surfcolors)/volcolors]) 
@@ -454,7 +455,7 @@ function cat_io_report(job,qa,subj,createerr)
           bd  = [find(ch>0.01,1,'first'),mth]; 
           ylims{2} = [min(y(round(numel(y)*0.1):end)),max(y(round(numel(y)*0.1):end)) * 4/3]; 
           xlims{2} = x(bd) + [0,(4/3-1)*diff(x([find(ch>0.02,1,'first'),mth]))]; M = x>=xlims{2}(1) & x<=xlims{2}(2);
-          hdata{2} = [x(M) flipud(x(M)); max(eps,min(ylims{2}(2),y(M))) zeros(1,sum(M)); [x(M) flipud(x(M))]];
+          hdata{2} = [x(M) fliplr(x(M)); max(eps,min(ylims{2}(2),y(M))) zeros(1,sum(M)); [x(M) fliplr(x(M))]];
           hhist(2) = fill(hdata{2}(1,:),hdata{2}(2,:),hdata{2}(3,:),'EdgeColor',[0.0 0.0 1.0],'LineWidth',1);
           %caxis(xlims{2} .* [1,1.5*(2*volcolors+surfcolors)/volcolors]) 
           caxis(xlims{2} + [0,((2*2*volcolors+surfcolors)/volcolors)*diff(x([find(ch>0.02,1,'first'),mth]))]); %; .* [1,1.5*(2*volcolors+surfcolors)/volcolors]) 
@@ -485,7 +486,7 @@ function cat_io_report(job,qa,subj,createerr)
     if Pp0data || (isfield(cat_err_res,'init') && isfield(cat_err_res.init,'Yp0'))
       try
         %%
-        if isfield(cat_err_res.init,'Yp0')
+        if isfield(cat_err_res.init,'Yp0') && exist(Pn,'file')
           Vp0     = spm_vol(Pn); 
           Yp0     = single(cat_vol_resize(cat_err_res.init.Yp0,'dereduceBrain',cat_err_res.init.BB));
           if isa(cat_err_res.init.Yp0,'uint8')
@@ -523,12 +524,12 @@ function cat_io_report(job,qa,subj,createerr)
         y     = min(y,max(y(2:end))); % ignore background
        
         try
-          % colorbar
+          %% colorbar
           if createerr==31, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
           haxis(3) = axes('Position',[pos(3,1:2) + [pos(3,3)*0.58 0.01],pos(1,3)*0.38,pos(1,4)*0.35]  );
           xlims{3} = [0 4]; 
           ylims{3} = [min(y) max(y)] .* [0 4/3];  M = x <= xlims{3}(2);
-          hdata{3} = [x(M) flip(x(M));  max(eps,min(ylims{3}(2),y(M))) zeros(1,sum(M));  [x(M) flip(x(M))]];
+          hdata{3} = [x(M) fliplr(x(M));  max(eps,min(ylims{3}(2),y(M))) zeros(1,sum(M));  [x(M) fliplr(x(M))]];
           hhist(3) = fill( hdata{3}(1,:) , hdata{3}(2,:) , hdata{3}(3,:), 'EdgeColor',[0.0 0.0 1.0], 'LineWidth',1);
           caxis(xlims{3} .* [1,1.5*(2*volcolors+surfcolors)/volcolors]) 
           ylim(ylims{3}); xlim(xlims{3}); box on; grid on; 
@@ -717,18 +718,25 @@ function cat_io_report(job,qa,subj,createerr)
   end
 
   try
-    cmap = gray(60); colormap(cmap); 
-    if exist('hho' ,'var'), spm_orthviews('window',hho ,[0,3/4]); end
+    %% %cmap = gray(60); colormap(cmap); 
+    % RD202101: This part would has to be replaced completelly with a
+    %           dynamic peak estimation and setting for the original image
+    cmap(1:volcolors,:) = gray(volcolors); 
+    cmap(volcolors+1:2*volcolors,:) = flipud(pink(volcolors)); 
+    cmap(volcolors*2+1:volcolors*2+surfcolors,:) = jet(surfcolors); 
+    colormap(fg,cmap); %caxis([0,numel(cmap)]); 
+  
+    %if exist('hho' ,'var'), spm_orthviews('window',hho ,[0,6]); end % not fixed ! ... 
     if exist('hhm' ,'var'), spm_orthviews('window',hhm ,[0,3/4]); end
     if exist('hhp0','var'), spm_orthviews('window',hhp0,[0,4]);   end
 
     % update histograms - switch from color to gray
     if exist('hhist','var')
       %%
-      if hhist(1)>0 && haxis(1)>0, set(hhist(1),'cdata',(hdata{1}(3,:)' - min(hdata{1}(3,:))) / diff([min(hdata{1}(3,:)),max(hdata{1}(3,:))])); caxis(haxis(1),[0 1]); end
+      if hhist(1)>0 && haxis(1)>0, set(hhist(1),'cdata',(hdata{1}(3,:)' - min(hdata{1}(3,:))) / diff([min(hdata{1}(3,:)),max(hdata{1}(3,:))]) ); caxis(haxis(1),[0 4]); end
       if createerr==9, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
-      if hhist(2)>0 && haxis(2)>0, set(hhist(2),'cdata',(hdata{2}(3,:)' - min(hdata{2}(3,:))) / diff([min(hdata{2}(3,:)),max(hdata{2}(3,:))])); caxis(haxis(2),[0 1]); end
-      if hhist(3)>0 && haxis(3)>0, set(hhist(3),'cdata',(hdata{3}(3,:)' - min(hdata{3}(3,:))) / diff([min(hdata{3}(3,:)),max(hdata{3}(3,:))])); caxis(haxis(3),[0 1]); end
+      if hhist(2)>0 && haxis(2)>0, set(hhist(2),'cdata',(hdata{2}(3,:)' - min(hdata{2}(3,:))) / diff([min(hdata{2}(3,:)),max(hdata{2}(3,:))])); caxis(haxis(2),[0 4]); end
+      if hhist(3)>0 && haxis(3)>0, set(hhist(3),'cdata',(hdata{3}(3,:)' - min(hdata{3}(3,:))) / diff([min(hdata{3}(3,:)),max(hdata{3}(3,:))])); caxis(haxis(3),[0 4]); end
     end
   catch
     createerrtxt = [createerrtxt; {'Error:cat_io_report','Error in changing colormap.'}]; 

@@ -36,6 +36,7 @@
         <li><a href="#PVE">Partial Volume Segmentation</a></li>
         <li><a href="#SS">Skull-Stripping and Cleanup</a></li>
         <li><a href="#Dartel">Spatial Normalization</a></li>
+        <li><a href="#WMHC">White Matter Hyperintensity Correction</a></li>
       </ol>
       
       
@@ -120,6 +121,15 @@
             These templates were derived from 555 healthy control subjects of the IXI-database <a href="matlab:web('http://www.brain-development.org','-browser');">(http://www.brain-development.org)</a> and are available in the MNI space for six different iteration steps of the Dartel and Geodesic Shooting normalization. 
             Therefore, the creation of sample-specific Dartel and Geodesic Shooting templates is no longer necessary for most studies.
             For studies investigating children data, I still recommend creating a customized Dartel or Geodesic Shooting template. However, it should be noted that this option requires a representative sample with a sufficient number of subjects.
+        </li>
+        
+        
+        <li>
+          <h4 id="WMHC">White Matter Hyperintensity Correction</h4> 
+          <p>
+            The greater dependence of AMAP PVE segmentation on image intensities required detection and handling of <i>White Matter Hyperintensities</i> (WMHs, <a href="matlab:web('https://dx.doi.org/10.13140/RG.2.2.26753.20326','-browser');">Dahnke et al. 2019)</a>.
+            A atlas-region-growing strategy is used to detect WMHs and assign them to the GM (like in VBM8, default), the WM (like SPM8), or as a separate class. 
+            For details see <a href="cat_methods_WMHC.html">WMHC</a>.
         </li>
         
       </ol>
