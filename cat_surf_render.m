@@ -1358,6 +1358,9 @@ else
 end
 set(H.patch, 'FaceVertexAlphaData', V);
 if all(V)
+    % ensure that Fa is between 0..1
+    Fa = min([1.0 Fa]);
+    Fa = max([0.0 Fa]);
     set(H.patch, 'FaceAlpha', Fa);
 else
     set(H.patch, 'FaceAlpha', 'interp');

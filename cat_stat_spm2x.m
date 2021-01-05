@@ -592,7 +592,7 @@ for i=1:size(P,1)
             for m=1:numel(labk{j})
               if Pl{j}(m) >= 1
                 if m==1, fprintf('\t%3.0f%%\t%s\n',Pl{j}(m),labk{j}{m});
-                else   fprintf('%7s\t%7s\t%15s\t%3.0f%%\t%s\n','     ','     ','         ',...
+                else   fprintf('%7s\t%7s\t%15s\t%3.0f%%\t%s\n','       ','       ','               ',...
                   Pl{j}(m),labk{j}{m});
                 end
               end
