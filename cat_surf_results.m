@@ -2981,6 +2981,11 @@ switch H.cursor_mode
       spm('alert!', 'No SPM.mat file found. Please check that you have not moved your files or your result file was moved from the folder where the SPM.mat is stored.', 1);
     end
     
+    if SPM_found && ~exist(SPM.xY.VY(1).fname)
+      SPM_found = 0;
+      spm('alert!', 'No data found. Please check that you have not moved your files.', 1);
+    end
+
     if SPM_found
       set(dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', ...
         'DisplayStyle', 'datatip', 'Updatefcn', {@myDataCursorCluster});
