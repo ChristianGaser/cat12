@@ -1,5 +1,36 @@
 ------------------------------------------------------------------------
-r1743 | dahnke | 2021-01-03 12:15:03
+r1744 | dahnke | 2021-01-05 13:09:13
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_report.m
+M       cat_main.m
+M       cat_main1639.m
+M       cat_main_reportstr.m
+M       cat_vol_partvol.m
+M       cat_vol_partvol1639.m
+M       html/cat_FAQ.html
+M       html/cat_methods.html
+M       html/cat_methods_VBM.html
+A       html/cat_methods_WMHC.html
+A       html/cat_methods_WMHC0.html
+A       html/cat_methods_WMHC1.html
+A       html/cat_methods_WMHC2.html
+A       html/cat_methods_WMHC3.html
+A       html/images/catreportj_OAS1_0031_MR1_mpr_n4_anon_sbj_111_WMHC0.jpg
+A       html/images/catreportj_OAS1_0031_MR1_mpr_n4_anon_sbj_111_WMHC1.jpg
+A       html/images/catreportj_OAS1_0031_MR1_mpr_n4_anon_sbj_111_WMHC2.jpg
+A       html/images/catreportj_OAS1_0031_MR1_mpr_n4_anon_sbj_111_WMHC3.jpg
+!       templates_surfaces_32k/lh.central.freesurfer.gii
+!       templates_surfaces_32k/lh.sphere.freesurfer.gii
+!       templates_surfaces_32k/rh.central.freesurfer.gii
+!       templates_surfaces_32k/rh.sphere.freesurfer.gii
+
+(1)  Fixed:  Removed old WMH variables in cat_main and update WMHC help.
+(2)  Fixed:  Corrected histogram error in cat_io_report.
+
+------------------------------------------------------------------------
+r1743 | dahnke | 2021-01-03 12:15:14 +0100 (Sun, 03 Jan 2021) | 38 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -36,6 +67,7 @@ M       tbx_cfg_cat.m
 (9)  Fixed:   Tiny changes in cat_surf_scaling.
 (10) Fixed:   Corrected lazy settings in cat_run.
 (11) Fixed:   Corrected skull-stripping problems in cat_main_clean_gwc.
+
 
 
 ------------------------------------------------------------------------
