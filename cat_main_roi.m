@@ -32,7 +32,7 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
 %  opt        .. parameter structure
 %   .type     .. mapping type 
 %                  1 - native space (default)
-%                  2 - atlas space (push - faster but less acurate)
+%                  2 - atlas space (push - faster but less accurate)
 %                  3 - atlas space (inv+pull - slower but more accurate)
 %   .write    .. write debugging output 
 %                  0 - no debugging (default)

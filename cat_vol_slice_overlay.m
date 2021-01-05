@@ -391,7 +391,7 @@ if ~isempty(xA)
   i1 = i1(Q);
   
   % find clusters
-    A = spm_clusters(XYZ);
+  A = spm_clusters(XYZ);
     
   labk   = cell(max(A)+2,1);
   Pl     = cell(max(A)+2,1);
@@ -433,13 +433,13 @@ if ~isempty(xA)
           fprintf('\n______________________________________________________');
           fprintf('\n%s: Positive effects\n%s',SO.img(2).vol.fname,atlas_name);
           fprintf('\n______________________________________________________\n\n');
-          fprintf('%5s\t%7s\t%15s\t%s\n\n','Value','   Size','    xyz [mm]   ','Overlap of atlas region');
+          fprintf('%7s\t%7s\t%15s\t%s\n\n','Value','   Size','    xyz [mm]   ','Overlap of atlas region');
         end
         if found_neg == 1
           fprintf('\n______________________________________________________');
           fprintf('\n%s: Negative effects\n%s',SO.img(2).vol.fname,atlas_name);
           fprintf('\n______________________________________________________\n\n');
-          fprintf('%5s\t%7s\t%15s\t%s\n\n','Value','   Size','    xyz [mm]   ','Overlap of atlas region');
+          fprintf('%7s\t%7s\t%15s\t%s\n\n','Value','   Size','    xyz [mm]   ','Overlap of atlas region');
         end
         
         fprintf('%7.2f\t%7d\t%4.0f %4.0f %4.0f',maxZ(j),length(Zj{j}),XYZmmj{j}(:,indZ));
