@@ -732,42 +732,37 @@ bias_nits = 8;
 bias_fwhm = 60;
 bias_reg = 1e-6;
 bias_lmreg = 1e-6;
-use_new_release = 1;
 for i=1:numel(param)
-  if use_new_release
-    tmp_vol = vol(:,:,:,i);
-    ind0 = tmp_vol == 0;
-      
-    [tmp_vol th99] = cat_stat_histth(tmp_vol,[0.99 0.999]);
-    tmp_vol = tmp_vol - th99(1);
+  tmp_vol = vol(:,:,:,i);
+  ind0 = tmp_vol == 0;
+    
+  [tmp_vol th99] = cat_stat_histth(tmp_vol,[0.99 0.999]);
+  tmp_vol = tmp_vol - th99(1);
 
-    % if > 0.5% of values are zero then set these areas back to zero
-    if 100*sum(ind0(:))/numel(tmp_vol) > 0.5
-      tmp_vol(ind0) = 0;
-    end
-    vol(:,:,:,i) = tmp_vol;
+  % if > 0.5% of values are zero then set these areas back to zero
+  if 100*sum(ind0(:))/numel(tmp_vol) > 0.5
+    tmp_vol(ind0) = 0;
   end
+  vol(:,:,:,i) = tmp_vol;
   vol(:,:,:,i) = bias_correction(mu,vol(:,:,:,i),[],pyramid(1),bias_nits,bias_fwhm,bias_reg,bias_lmreg);
 end
 
 % correct if minimum is < 0
 min_vol = min(vol(:));
-if use_new_release
-  if min_vol < 0
-    for i=1:numel(param)
-      tmp_vol = vol(:,:,:,i);
-      ind0 = tmp_vol == 0;
-      
-      tmp_vol = tmp_vol - min_vol;
-      
-      % if > 0.5% of values are zero then set these areas back to zero
-      if 100*sum(ind0(:))/numel(tmp_vol) > 0.5
-        tmp_vol(ind0) = 0;
-      end
-
-      vol(:,:,:,i) = tmp_vol;
-      
+if min_vol < 0
+  for i=1:numel(param)
+    tmp_vol = vol(:,:,:,i);
+    ind0 = tmp_vol == 0;
+    
+    tmp_vol = tmp_vol - min_vol;
+    
+    % if > 0.5% of values are zero then set these areas back to zero
+    if 100*sum(ind0(:))/numel(tmp_vol) > 0.5
+      tmp_vol(ind0) = 0;
     end
+
+    vol(:,:,:,i) = tmp_vol;
+    
   end
 else
   if min_vol < 0, vol = vol - min_vol; end
