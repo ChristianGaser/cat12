@@ -1,5 +1,93 @@
 ------------------------------------------------------------------------
-r1746 | gaser | 2021-01-08 01:34:03
+r1747 | gaser | 2021-01-08 16:57:08
+
+Changed paths:
+M       CHANGES.txt
+D       aal.csv
+        > moved to templates_volumes_not_distributed/aal.csv
+D       aal.nii
+        > moved to templates_volumes_not_distributed/aal.nii
+D       aal.txt
+        > moved to templates_volumes_not_distributed/aal.txt
+M       cat_conf_ROI.m
+M       cat_defaults.m
+M       development/Anatomy2CAT12.m
+A       templates_MNI152NLin2009cAsym/Schaefer2018_100Parcels_17Networks_order.csv
+M       templates_MNI152NLin2009cAsym/Schaefer2018_100Parcels_17Networks_order.nii
+A       templates_MNI152NLin2009cAsym/Schaefer2018_200Parcels_17Networks_order.csv
+M       templates_MNI152NLin2009cAsym/Schaefer2018_200Parcels_17Networks_order.nii
+A       templates_MNI152NLin2009cAsym/Schaefer2018_400Parcels_17Networks_order.csv
+M       templates_MNI152NLin2009cAsym/Schaefer2018_400Parcels_17Networks_order.nii
+A       templates_MNI152NLin2009cAsym/Schaefer2018_600Parcels_17Networks_order.csv
+M       templates_MNI152NLin2009cAsym/Schaefer2018_600Parcels_17Networks_order.nii
+M       templates_MNI152NLin2009cAsym/Template_T1_IXI555_MNI152_GS.nii
+A       templates_MNI152NLin2009cAsym/aal3.csv
+A       templates_MNI152NLin2009cAsym/aal3.txt
+A       templates_MNI152NLin2009cAsym/anatomy3.csv
+A       templates_MNI152NLin2009cAsym/anatomy3.nii
+A       templates_MNI152NLin2009cAsym/anatomy3.txt
+D       templates_MNI152NLin2009cAsym/catlog_main_20210106_163921_log01.txt
+D       templates_MNI152NLin2009cAsym/catlog_main_20210106_163921_log02.txt
+D       templates_MNI152NLin2009cAsym/catlog_main_20210106_163921_log03.txt
+D       templates_MNI152NLin2009cAsym/catlog_main_20210106_163921_log04.txt
+D       templates_MNI152NLin2009cAsym/catlog_main_20210106_163921_log05.txt
+D       templates_MNI152NLin2009cAsym/catlog_main_20210106_163921_log06.txt
+A       templates_MNI152NLin2009cAsym/cobra.csv
+A       templates_MNI152NLin2009cAsym/cobra.nii
+A       templates_MNI152NLin2009cAsym/cobra.txt
+A       templates_MNI152NLin2009cAsym/hammers.csv
+A       templates_MNI152NLin2009cAsym/hammers.nii
+A       templates_MNI152NLin2009cAsym/hammers.txt
+A       templates_MNI152NLin2009cAsym/ibsr.csv
+A       templates_MNI152NLin2009cAsym/ibsr.nii
+A       templates_MNI152NLin2009cAsym/ibsr.txt
+A       templates_MNI152NLin2009cAsym/julichbrain.csv
+M       templates_MNI152NLin2009cAsym/julichbrain.nii
+A       templates_MNI152NLin2009cAsym/julichbrain.txt
+A       templates_MNI152NLin2009cAsym/lpba40.csv
+A       templates_MNI152NLin2009cAsym/lpba40.nii
+A       templates_MNI152NLin2009cAsym/lpba40.txt
+A       templates_MNI152NLin2009cAsym/mori.csv
+A       templates_MNI152NLin2009cAsym/mori.nii
+A       templates_MNI152NLin2009cAsym/mori.txt
+A       templates_MNI152NLin2009cAsym/neuromorphometrics.csv
+M       templates_MNI152NLin2009cAsym/neuromorphometrics.nii
+A       templates_MNI152NLin2009cAsym/neuromorphometrics.txt
+A       templates_MNI152NLin2009cAsym/schaefer.txt
+A       templates_external/MNIColin27.nii
+D       templates_external/old_template
+D       templates_external/old_template/y_MNI152NLin6Asym_T1w.nii
+        > moved to templates_external/y_MNI152NLin6Asym_to_IXI550Dartel.nii
+D       templates_external/old_template/y_colin27_t1_tal_hires.nii
+        > moved to templates_external/y_MNIColin27_to_IXI550Dartel.nii
+D       templates_external/old_template/y_mni_icbm152_t1_tal_nlin_asym_09c.nii
+        > moved to templates_external/y_MNI152NLin2009cAsym_to_IXI550Dartel.nii
+A  +    templates_external/y_MNI152NLin2009cAsym_to_IXI550Dartel.nii
+        > moved from templates_external/old_template/y_mni_icbm152_t1_tal_nlin_asym_09c.nii
+A  +    templates_external/y_MNI152NLin6Asym_to_IXI550Dartel.nii
+        > moved from templates_external/old_template/y_MNI152NLin6Asym_T1w.nii
+A       templates_external/y_MNI152NLin6Asym_to_MNI152NLin2009cAsym.nii
+A  +    templates_external/y_MNIColin27_to_IXI550Dartel.nii
+        > moved from templates_external/old_template/y_colin27_t1_tal_hires.nii
+A       templates_external/y_MNIColin27_to_MNI152NLin2009cAsym.nii
+A       templates_volumes/anatomy3.csv
+A       templates_volumes/anatomy3.nii
+A       templates_volumes/anatomy3.txt
+A  +    templates_volumes_not_distributed/aal.csv
+        > moved from aal.csv
+A  +    templates_volumes_not_distributed/aal.nii
+        > moved from aal.nii
+A  +    templates_volumes_not_distributed/aal.txt
+        > moved from aal.txt
+
+(1) Changed: Updated Anatomy2CAT12 to tramsform Anatomy3 atlas to CAT12.
+(2) Changed: Updated description for atlas csv-files.
+(3) Changed: Finished transforming all atlases to new MNI152NLin2009cAsym 
+             space. in templates_MNI152NLin2009cAsym.
+(4) Changed: Added and updatd templates and deformation fields to other spaces 
+             in templates_external.
+------------------------------------------------------------------------
+r1746 | gaser | 2021-01-08 01:34:59 +0100 (Fr, 08 Jan 2021) | 87 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -87,6 +175,7 @@ M       templates_volumes/neuromorphometrics.txt
 (10) Added:  Started to switch to new MNI152NLin2009cAsym space and prepared
              templates_MNI152NLin2009cAsym and templates_external and added 
              deformation fields to other spaces.
+
 ------------------------------------------------------------------------
 r1745 | gaser | 2021-01-05 17:58:48 +0100 (Di, 05 Jan 2021) | 17 lines
 
