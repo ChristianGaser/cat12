@@ -96,14 +96,14 @@ zip: update clean
 # scp release
 scp: html zip
 	-@echo scp to http://${STARGET_HOST}/cat12/${ZIPFILE}
-	-@scp -P $PORT CHANGES.txt CAT12-Manual.pdf ${ZIPFILE} ${STARGET}
-	-@scp -r -P $PORT cat12-html ${STARGET_HTDOCS}/
-	-@bash -c "ssh -p $PORT ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${ZIPFILE} ${STARGET_FOLDER}/cat12_latest.zip"
+	-@scp -P ${PORT} CHANGES.txt CAT12-Manual.pdf ${ZIPFILE} ${STARGET}
+	-@scp -r -P ${PORT} cat12-html ${STARGET_HTDOCS}/
+	-@bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${ZIPFILE} ${STARGET_FOLDER}/cat12_latest.zip"
 
 # scp manual
 scp_manual:
 	-@echo scp CAT12-Manual.pdf to http://${STARGET}
-	-@scp -P $PORT CAT12-Manual.pdf ${STARGET}
+	-@scp -P ${PORT} CAT12-Manual.pdf ${STARGET}
 
 # scp deployed versions
 scp_precompile:
@@ -114,9 +114,9 @@ scp_precompile:
 	    cp -r standalone MCR_$${i}/ ;\
 	    zip cat12_r${REVISION}_R2017b_MCR_$${i}.zip -r MCR_$${i} ;\
 	  done
-	-@scp -P $PORT cat12_r${REVISION}_R2017b_MCR* ${STARGET}
+	-@scp -P ${PORT} cat12_r${REVISION}_R2017b_MCR* ${STARGET}
 	-@for i in Linux Mac Win; do \
-	    bash -c "ssh -p $PORT ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/cat12_r${REVISION}_R2017b_MCR_$${i}.zip ${STARGET_FOLDER}/cat12_latest_R2017b_MCR_$${i}.zip"
+	    bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/cat12_r${REVISION}_R2017b_MCR_$${i}.zip ${STARGET_FOLDER}/cat12_latest_R2017b_MCR_$${i}.zip"
 	  done
 	-@rm -r cat12_latest_R2017b_MCR* MCR_*
 
