@@ -900,6 +900,21 @@ app.help   = [app.help;{''}];
 
 %------------------------------------------------------------------------
 
+setCOM        = cfg_menu;
+setCOM.tag    = 'setCOM';
+setCOM.name   = 'Use center-of-mass to set origin';
+setCOM.help   = { ...
+    ''
+    'Use center-of-mass to roughly correct for differences in the position between image and template. This will internally correct the origin. '
+    ''
+    'If affine registration fails you can try to disable this option and/or set the origin manually. '
+  };
+setCOM.def    = @(val)cat_get_defaults('extopts.setCOM', val{:});
+setCOM.labels = {'No','Yes'};
+setCOM.values = {0 1};
+
+%------------------------------------------------------------------------
+
 new_release        = cfg_menu;
 new_release.tag    = 'new_release';
 new_release.name   = 'New release functions';
@@ -1022,7 +1037,7 @@ close_parahipp.help    = {
 segmentation        = cfg_branch;
 segmentation.tag    = 'segmentation';
 segmentation.name   = 'Segmentation Options';
-segmentation.val    = {app,NCstr,spm_kamap,LASstr,gcutstr,cleanupstr,BVCstr,wmhc,slc,mrf,restype}; % WMHCstr,
+segmentation.val    = {app,setCOM,NCstr,spm_kamap,LASstr,gcutstr,cleanupstr,BVCstr,wmhc,slc,mrf,restype}; % WMHCstr,
 segmentation.hidden = expert<1; 
 segmentation.help   = {'CAT12 parameter to control the tissue classification.';''};
 
@@ -1055,7 +1070,7 @@ if ~spm
   if expert>0 % expert options
     extopts.val   = {segmentation,registration,vox,surface,admin}; 
   else
-    extopts.val   = {app,spm_kamap,LASstr,gcutstr,wmhc,registration,vox,restype,ignoreErrors}; 
+    extopts.val   = {app,setCOM,spm_kamap,LASstr,gcutstr,wmhc,registration,vox,restype,ignoreErrors}; 
   end
 else
   % SPM based surface processing and thickness estimation

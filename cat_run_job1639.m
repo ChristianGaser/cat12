@@ -344,7 +344,6 @@ function cat_run_job1639(job,tpm,subj)
           %  As far as SPM finally also gives us a nice initial segmentation 
           %  why not use it for a improved maximum based correction?!
           %  ------------------------------------------------------------
-   % 20181222       if ~strcmp(job.extopts.species,'human'), job.extopts.APP = 5; end
           if (job.extopts.APP==1 || job.extopts.APP==2) 
              job.subj = subj;
              [Ym,Ybg,WMth] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,...
@@ -379,7 +378,6 @@ function cat_run_job1639(job,tpm,subj)
         
         %% Initial affine registration.
         %  -----------------------------------------------------------------
-        Affine  = eye(4);
         [pp,ff] = spm_fileparts(job.channel(1).vols{subj});
         Pbt     = fullfile(pp,mrifolder,['brainmask_' ff '.nii']);
         Pb      = char(job.extopts.brainmask);
@@ -495,10 +493,19 @@ function cat_run_job1639(job,tpm,subj)
           end
 
           %% prepare affine parameter 
-          aflags     = struct('sep',obj.samp,'regtype','subj','WG',[],'WF',[],'globnorm',1); 
+          aflags     = struct('sep',obj.samp,'regtype','mni','WG',[],'WF',[],'globnorm',1); 
           aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
           aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
 
+          % correct origin using COM and invert translation and use it as starting value
+          if job.extopts.setCOM
+            fprintf('\n');
+            Affine_com  = cat_vol_set_com(VF1);
+            Affine_com(1:3,4) = -Affine_com(1:3,4);
+          else
+            Affine_com = eye(4);
+          end
+          
           % use affine transformation of given (average) data for longitudinal mode
           if isfield(job,'useprior') && ~isempty(job.useprior)
             priorname = job.useprior{1};
@@ -530,13 +537,13 @@ function cat_run_job1639(job,tpm,subj)
 
             warning off
             try 
-              [Affine0, affscale]  = spm_affreg(VG1, VF1, aflags, eye(4)); Affine = Affine0;
+              [Affine0, affscale]  = spm_affreg(VG1, VF1, aflags, Affine_com); Affine = Affine0;
             catch
               affscale = 0; 
             end
             if affscale>3 || affscale<0.5
               stime  = cat_io_cmd('Coarse affine registration failed. Try fine affine registration.','','',1,stime);
-              Affine = eye(4); 
+              Affine = Affine_com; 
             end
             warning on
           end

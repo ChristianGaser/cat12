@@ -166,7 +166,7 @@ output.val{surf}.values = {0 1};
 
 
 long = cfg_exbranch;
-long.name = 'CAT12: Segment longitudinal data (current release)';
+long.name = 'CAT12: Segment longitudinal data';
 long.tag  = 'long';
 if newapproach % new way - not working
   

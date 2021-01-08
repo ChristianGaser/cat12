@@ -111,28 +111,32 @@ useprior.help     = {
 %% ------------------------------------------------------------------------
 tools       = cat_conf_tools(expert);     % volume tools
 stools      = cat_conf_stools(expert);    % surface tools
-stoolsexp   = cat_conf_stoolsexp;       % surface expert tools
+stoolsexp   = cat_conf_stoolsexp;         % surface expert tools
 stoolsexp.hidden = expert<2;
 extopts     = cat_conf_extopts(expert);
 opts        = cat_conf_opts(expert); 
-%[output,output_spm,output1173,output1445,output1585] = cat_conf_output(expert); 
-[output,output_spm,output1173,output1445] = cat_conf_output(expert); 
+%[output,output_spm,output1173,output1445] = cat_conf_output(expert); 
+[output,output_spm] = cat_conf_output(expert); 
 long        = cat_conf_long;
 
 %------------------------------------------------------------------------
 % additional segmentation versions
 try
-  long1173                      = cat_conf_long1173;
-  long1445                      = cat_conf_long1445;
-  extopts1173                   = cat_conf_extopts1173(expert);   
-  extopts1173plus               = cat_conf_extopts1173plus(expert);   
-  extopts1445                   = cat_conf_extopts1445(expert);   
- %extopts1585                   = cat_conf_extopts1585(expert);   
-  opts1173                      = cat_conf_opts1173(expert); 
-  opts1173plus                  = cat_conf_opts1173plus(expert); 
-  opts1445                      = cat_conf_opts1445(expert); 
- %opts1585                      = cat_conf_opts1585(expert); 
-  load_previous = 1;
+  if 0
+    long1173                      = cat_conf_long1173;
+    long1445                      = cat_conf_long1445;
+    extopts1173                   = cat_conf_extopts1173(expert);   
+    extopts1173plus               = cat_conf_extopts1173plus(expert);   
+    extopts1445                   = cat_conf_extopts1445(expert);   
+   %extopts1585                   = cat_conf_extopts1585(expert);   
+    opts1173                      = cat_conf_opts1173(expert); 
+    opts1173plus                  = cat_conf_opts1173plus(expert); 
+    opts1445                      = cat_conf_opts1445(expert); 
+   %opts1585                      = cat_conf_opts1585(expert); 
+    load_previous = 1;
+  else
+    load_previous = 0;
+  end  
 catch
   fprintf('\nWarning: Loading of older CAT12 segmentation versions was not successful and will be skipped.\n');
   load_previous = 0;
@@ -141,7 +145,7 @@ end
 %% ------------------------------------------------------------------------
 estwrite        = cfg_exbranch;
 estwrite.tag    = 'estwrite';
-estwrite.name   = 'CAT12: Segmentation (current release)';
+estwrite.name   = 'CAT12: Segmentation';
 %NEW NAME?: [catv,catr,catd] = cat_version;
 %           estwrite.name    = sprintf('CAT12.6plus: Segmentation %s (%s/%s)',catr,catd(1:4),catd(6:7));
 estwrite.val    = {data data_wmh nproc useprior opts extopts output};

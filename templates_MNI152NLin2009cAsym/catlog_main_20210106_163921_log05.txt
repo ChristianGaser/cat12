@@ -1,0 +1,85 @@
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2017 The MathWorks, Inc.
+                   R2017b (9.3.0.713579) 64-bit (maci64)
+                             September 14, 2017
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+CAT parallel processing with MATLAB PID: 42714
+
+------------------------------------------------------------------------
+CAT12.7 r1745: 1/3:        ./IBSR_nifti_stripped/IBSR_03/IBSR_03_ana.nii
+------------------------------------------------------------------------
+SANLM denoising (medium):                                            14s
+Internal resampling (0.94x0.94x1.50mm > 0.94x0.94x1.00mm):            3s
+APP: Rough bias correction:                                       
+  Initialize                                                          7s
+  Estimate background                                                 4s
+  Initial correction                                                 10s
+  Refine background                                                   4s
+  Final correction                                                    8s
+  Final scaling                                                       8s
+                                                                     46s
+Affine registration                                               
+    * - SPM12: spm_affreg  ---------------------------------------------
+
+        There is not enough overlap in the images
+        to obtain a solution.
+         
+        Please check that your header information is OK.
+        The Check Reg utility will show you the initial
+        alignment between the images, which must be
+        within about 4cm and about 15 degrees in order
+        for SPM to find the optimal solution.
+
+        -----------------------------------------  16:41:24 - 06/01/2021
+
+    9s
+Coarse affine registration failed. Try fine affine registration.      0s
+Affine registration                                               
+    * - SPM12: spm_affreg  ---------------------------------------------
+
+        There is not enough overlap in the images
+        to obtain a solution.
+         
+        Please check that your header information is OK.
+        The Check Reg utility will show you the initial
+        alignment between the images, which must be
+        within about 4cm and about 15 degrees in order
+        for SPM to find the optimal solution.
+
+        -----------------------------------------  16:41:32 - 06/01/2021
+
+
+------------------------------------------------------------------------
+CAT Preprocessing error for IBSR_03_ana:
+------------------------------------------------------------------------
+insufficient image overlap
+------------------------------------------------------------------------
+  465 - error_message
+  172 - spm_affreg
+  577 - cat_run_job1639
+   34 - cat_run_newcatch
+  866 - run_job
+  455 - cat_run
+------------------------------------------------------------------------
+
+Print 'Graphics' figure to: 
+  /Users/gaser/Downloads/IBSR_nifti_stripped/IBSR_03/report/catreport_IBSR_03_ana.pdf
+
+------------------------------------------------------------------------
+CAT12.7 r1745: 2/3:        ./IBSR_nifti_stripped/IBSR_06/IBSR_06_ana.nii
+------------------------------------------------------------------------
+SANLM denoising (medium):                                            14s
+Internal resampling (0.94x0.94x1.50mm > 0.94x0.94x1.00mm):            3s
+APP: Rough bias correction:                                       
+  Initialize                                                          7s
+  Estimate background                                                 3s
+  Initial correction                                                 11s
+  Refine background                                                   4s
+  Final correction                                                   10s
+  Final scaling                                                       7s
+                                                                  

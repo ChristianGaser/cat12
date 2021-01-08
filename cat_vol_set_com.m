@@ -1,23 +1,43 @@
-function cat_vol_set_com(vargin)
+function Affine = cat_vol_set_com(V)
 % use center-of-mass (COM) to roughly correct for differences in the
 % position between image and template
+% ______________________________________________________________________
+% FORMAT:  Affine = cat_vol_set_com(varargin)
+%
+% V      - mapped images or filenames 
+% Affine - affine transformation to roughly correct origin 
+% 
+% If no output filed is defined the estimated transformation is applied 
+% to the images
+% ______________________________________________________________________
+% Christian Gaser
+% $Id$
 
 
 if nargin == 1
-  P = char(vargin.data);
+  if isstruct(V)
+    V = V;
+  else
+    P = char(V);
+    V = spm_vol(P);
+  end
 else
   P = spm_select(Inf,'image','Select images to filter');
+  V = spm_vol(P);
 end
-V = spm_vol(P);
-n = size(P,1);
+n = numel(V);
 
 % pre-estimated COM of MNI template
 com_reference = [0 -20 -15];
 
 for i=1:n
-  fprintf('Correct center-of-mass for %s\n',V(i).fname);
+  fprintf('Correct center-of-mass: %s',spm_str_manip(V(i).fname,'k41'));
   Affine = eye(4);
-  vol = spm_read_vols(V(i));
+  if isfield(V(i),'dat')
+    vol(:,:,:) = V(i).dat(:,:,:);
+  else
+    vol = spm_read_vols(V(i));
+  end
   avg = mean(vol(:));
   avg = mean(vol(vol>avg));
   
@@ -28,5 +48,8 @@ for i=1:n
 
   M = spm_get_space(V(i).fname);
   Affine(1:3,4) = (com - com_reference)';
-  spm_get_space(V(i).fname,Affine\M);
+  if nargin < 1
+    spm_get_space(V(i).fname,Affine\M);
+    fprintf('\n');
+  end
 end
