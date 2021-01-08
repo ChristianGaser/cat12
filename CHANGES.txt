@@ -1,5 +1,94 @@
 ------------------------------------------------------------------------
-r1745 | gaser | 2021-01-05 17:58:04
+r1746 | gaser | 2021-01-08 01:34:03
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_conf_extopts.m
+M       cat_conf_long.m
+M       cat_defaults.m
+M       cat_run_job.m
+M       cat_run_job1639.m
+A       cat_vol_createMPM.m
+M       cat_vol_groupwise_ls.m
+M       cat_vol_set_com.m
+A       development/correct_tpm2one.m
+D       development/y_MNI152NLin6Asym_T1w.nii
+        > moved to templates_external/old_template/y_MNI152NLin6Asym_T1w.nii
+D       development/y_colin27_t1_tal_hires.nii
+        > moved to templates_external/old_template/y_colin27_t1_tal_hires.nii
+D       development/y_mni_icbm152_t1_tal_nlin_asym_09c.nii
+        > moved to templates_external/old_template/y_mni_icbm152_t1_tal_nlin_asym_09c.nii
+ M      html/cat_methods_WMHC.html
+ M      html/cat_methods_WMHC0.html
+ M      html/cat_methods_WMHC1.html
+ M      html/cat_methods_WMHC2.html
+ M      html/cat_methods_WMHC3.html
+ M      html/images/catreportj_OAS1_0031_MR1_mpr_n4_anon_sbj_111_WMHC0.jpg
+ M      html/images/catreportj_OAS1_0031_MR1_mpr_n4_anon_sbj_111_WMHC1.jpg
+ M      html/images/catreportj_OAS1_0031_MR1_mpr_n4_anon_sbj_111_WMHC2.jpg
+ M      html/images/catreportj_OAS1_0031_MR1_mpr_n4_anon_sbj_111_WMHC3.jpg
+D       internal/cat_vol_atlas.m
+M       tbx_cfg_cat.m
+A       templates_MNI152NLin2009cAsym
+A       templates_MNI152NLin2009cAsym/Schaefer2018_100Parcels_17Networks_order.nii
+A       templates_MNI152NLin2009cAsym/Schaefer2018_200Parcels_17Networks_order.nii
+A       templates_MNI152NLin2009cAsym/Schaefer2018_400Parcels_17Networks_order.nii
+A       templates_MNI152NLin2009cAsym/Schaefer2018_600Parcels_17Networks_order.nii
+A       templates_MNI152NLin2009cAsym/TPM_Age11.5.nii
+A       templates_MNI152NLin2009cAsym/Template_0_IXI555_MNI152_GS.nii
+A       templates_MNI152NLin2009cAsym/Template_1_IXI555_MNI152.nii
+A       templates_MNI152NLin2009cAsym/Template_1_IXI555_MNI152_GS.nii
+A       templates_MNI152NLin2009cAsym/Template_2_IXI555_MNI152.nii
+A       templates_MNI152NLin2009cAsym/Template_2_IXI555_MNI152_GS.nii
+A       templates_MNI152NLin2009cAsym/Template_3_IXI555_MNI152.nii
+A       templates_MNI152NLin2009cAsym/Template_3_IXI555_MNI152_GS.nii
+A       templates_MNI152NLin2009cAsym/Template_4_IXI555_MNI152.nii
+A       templates_MNI152NLin2009cAsym/Template_4_IXI555_MNI152_GS.nii
+A       templates_MNI152NLin2009cAsym/Template_5_IXI555_MNI152.nii
+A       templates_MNI152NLin2009cAsym/Template_6_IXI555_MNI152.nii
+A       templates_MNI152NLin2009cAsym/Template_T1_IXI555_MNI152_GS.nii
+A       templates_MNI152NLin2009cAsym/aal3.nii
+A       templates_MNI152NLin2009cAsym/brainmask.nii
+A       templates_MNI152NLin2009cAsym/cat.nii
+A       templates_MNI152NLin2009cAsym/cat_strokelesions_ATLAS303.nii
+A       templates_MNI152NLin2009cAsym/cat_wmh.nii
+A       templates_MNI152NLin2009cAsym/cat_wmh_miccai2017.nii
+A       templates_MNI152NLin2009cAsym/catlog_main_20210106_163921_log01.txt
+A       templates_MNI152NLin2009cAsym/catlog_main_20210106_163921_log02.txt
+A       templates_MNI152NLin2009cAsym/catlog_main_20210106_163921_log03.txt
+A       templates_MNI152NLin2009cAsym/catlog_main_20210106_163921_log04.txt
+A       templates_MNI152NLin2009cAsym/catlog_main_20210106_163921_log05.txt
+A       templates_MNI152NLin2009cAsym/catlog_main_20210106_163921_log06.txt
+A       templates_MNI152NLin2009cAsym/julichbrain.nii
+A       templates_MNI152NLin2009cAsym/neuromorphometrics.nii
+A       templates_external
+A       templates_external/old_template
+A  +    templates_external/old_template/y_MNI152NLin6Asym_T1w.nii
+        > moved from development/y_MNI152NLin6Asym_T1w.nii
+A  +    templates_external/old_template/y_colin27_t1_tal_hires.nii
+        > moved from development/y_colin27_t1_tal_hires.nii
+A  +    templates_external/old_template/y_mni_icbm152_t1_tal_nlin_asym_09c.nii
+        > moved from development/y_mni_icbm152_t1_tal_nlin_asym_09c.nii
+M       templates_volumes/neuromorphometrics.txt
+
+(1) Changed: Updated atlas information.
+(2) Changed: Started to remove old CAT12 versions from the GUI.
+(3) Changed: Updated cat_vol_set_com.m to return affine tramsformation.
+(4) Changed: Removed new_release field from cat_vol_groupwise_ls.m
+(5) Changed: Added automatically setting of origin to cat_run_job* to get
+             a reliable starting value for affine registration.
+(6) Changed: Added extopts.setCOM field to cat_defaults and cat_conf_extopts.
+(7) Deleted: Removed old cat_vol_atlas.m from folder "internal".
+(8) Added:   Added tool to create maximum probabilty maps from labels and 
+             existing deformation fields.
+(9) Added:   Created tool to correct last class in TPMs and GS-templates
+             correct_tpm2one.m
+(10) Added:  Started to switch to new MNI152NLin2009cAsym space and prepared
+             templates_MNI152NLin2009cAsym and templates_external and added 
+             deformation fields to other spaces.
+------------------------------------------------------------------------
+r1745 | gaser | 2021-01-05 17:58:48 +0100 (Di, 05 Jan 2021) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -17,6 +106,7 @@ M       html/cat_methods_WMHC2.html
              and cat_stat_spm2x.m.
 (3) Changed: Output warning if data were removed in cat_surf_results.m.
 (4) Fixed:   Correction of data range in cat_surf_render.m.
+
 ------------------------------------------------------------------------
 r1744 | dahnke | 2021-01-05 13:11:35 +0100 (Di, 05 Jan 2021) | 29 lines
 

@@ -225,6 +225,7 @@ optimal:
 cat.extopts.species      = 'human';  
 % Affine PreProcessing (APP) with rough bias correction and brain extraction for special anatomies (nonhuman/neonates) 
 cat.extopts.APP          = 1070;  % 0 - none; 1070 - default; [1 - light; 2 - full; 1144 - update of 1070, 5 - animal (no affreg)]
+cat.extopts.setCOM       = 1;     % 0 - none; 1 - use center-of-mass to estimate origin as starting value for affine registration
 cat.extopts.vox          = 1.5;   % voxel size for normalized data (EXPERIMENTAL:  inf - use Tempate values)
 cat.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_1_IXI555_MNI152.nii')};     % Indicate first Dartel template (Template_1)
 cat.extopts.shootingtpm  = {fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_0_IXI555_MNI152_GS.nii')};  % Indicate first Shooting template (Template 0) - not working
