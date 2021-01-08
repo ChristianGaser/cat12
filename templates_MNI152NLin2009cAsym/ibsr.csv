@@ -1,0 +1,34 @@
+ROIid;ROIabbr;ROIname
+0;bBG;Background
+2;lCbrWM;Left Cerebral White Matter
+3;lCbrGM;Left Cerebral Cortex
+4;lLatVen;Left Lateral Ventricle
+5;lInfLatVen;Left Inf Lat Vent
+7;lCbeWM;Left Cerebellum White Matter
+8;lCbeGM;Left Cerebellum Cortex
+10;lThaPro;Left Thalamus Proper
+11;lCau;Left Caudate
+12;lPut;Left Putamen
+13;lPal;Left Pallidum
+14;b3thVen;Bothside 3rd Ventricle
+15;b4thVen;Bothside 4th Ventricle
+16;bBst;Bothside Brain Stem
+17;lHip;Left Hippocampus
+18;lAmy;Left Amygdala
+24;bCSF;Bothside CSF
+26;lAcc;Left Accumbens area
+28;lVenDC;Left Ventral Diencephalon
+41;rCbrWM;Right Cerebral White Matter
+42;rCbrGM;Right Cerebral Cortex
+43;rLatVen;Right Lateral Ventricle
+44;rInfLatVen;Right Inf Lat Vent
+46;rCbeWM;Right Cerebellum White Matter
+47;rCbeGM;Right Cerebellum Cortex
+49;rThaPro;Right Thalamus Proper
+50;rCau;Right Caudate
+51;rPut;Right Putamen
+52;rPal;Right Pallidum
+53;rHip;Right Hippocampus
+54;rAmy;Right Amygdala
+58;rAcc;Right Accumbens area
+60;rVenDC;Right Ventral Diencephalon

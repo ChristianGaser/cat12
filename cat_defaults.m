@@ -283,7 +283,7 @@ cat.extopts.atlas       = { ...
   fullfile(spm('dir'),'toolbox','cat12','templates_volumes','lpba40.nii')              0      {'gm'}              0; ... % atlas based on 40 subjects
   fullfile(spm('dir'),'toolbox','cat12','templates_volumes','cobra.nii')               0      {'gm','wm'}         1; ... % hippocampus-amygdala-cerebellum, 5 subjects, 0.6 mm voxel size 
   fullfile(spm('dir'),'toolbox','cat12','templates_volumes','hammers.nii')             0      {'csf','gm','wm'}   0; ... % atlas based on 20 subjects
-  fullfile(spm('dir'),'toolbox','cat12','templates_volumes','ibsr.nii')                1      {'csf','gm'}        0; ... % less regions, 18 subjects, low T1 image quality
+  fullfile(spm('dir'),'toolbox','cat12','templates_volumes','ibsr.nii')                1      {'csf','gm'}        0; ... % less regions, 18 subjects, low-res T1 image quality
   fullfile(spm('dir'),'toolbox','cat12','templates_volumes','aal3.nii')                1      {'gm'}              0; ... % many regions, but only labeled on one subject 
   fullfile(spm('dir'),'toolbox','cat12','templates_volumes','mori.nii')                1      {'gm','wm'}         0; ... % only one subject, but with WM regions
   fullfile(spm('dir'),'toolbox','cat12','templates_volumes','anatomy3.nii')            1      {'gm','wm'}         0; ... % 93 regions, 10 subjects

@@ -1,0 +1,69 @@
+ROIid;ROIabbr;ROIname
+0;BG;Background
+1;lHip;Left Hippocampus
+2;rHip;Right Hippocampus
+3;lAmy;Left Amygdala
+4;rAmy;Right Amygdala
+5;lAntMedTeLo;Left Anterior Medial Temporal Lobe
+6;rAntMedTeLo;Right Anterior Medial Temporal Lobe
+7;lAntLatTeLo;Left Anterior Lateral Temporal Lobe
+8;rAntLatTeLo;Right Anterior Lateral Temporal Lobe
+9;lAmb+ParHipGy;Left Ambient and Parahippocampus Gyri
+10;rAmb+ParHipGy;Right Ambient and Parahippocampus Gyri
+11;lSupTemGy;Left Superior Temporal Gyrus
+12;rSupTemGy;Right Superior Temporal Gyrus
+13;lInfMidTemGy;Left Inferior and Middle Temporal Gyri
+14;rInfMidTemGy;Right Inferior and Middle Temporal Gyri
+15;lFusGy;Left Fusiform Gyrus
+16;rFusGy;Right Fusiform Gyrus
+17;lCbe;Left Cerebellum
+18;rCbe;Right Cerebellum
+19;bBst;Bothside Brainstem
+20;lIns;Left Insula
+21;rIns;Right Insula
+22;lLatOcLo;Left Lateral Remainder of Occipital Lobe
+23;rLatOcLo;Right Lateral Remainder of Occipital Lobe
+24;lAntCinGy;Left Anterior Cingulate Gyrus
+25;rAntCinGy;Right Anterior Cingulate Gyrus
+26;lPosCinGy;Left Posterior Cingulate Gyrus
+27;rPosCinGy;Right Posterior Cingulate Gyrus
+28;lMidFroGy;Left Middle Frontal Gyrus
+29;rMidFroGy;Right Middle Frontal Gyrus
+30;lPosTeLo;Left Posterior Temporal Lobe
+31;rPosTeLo;Right Posterior Temporal Lobe
+32;lInfLatPaLo;Left Inferior Lateral Pariatal Lobe
+33;rInfLatPaLo;Right Inferior Lateral Pariatal Lobe
+34;lCauNuc;Left Caudate Nucleus
+35;rCauNuc;Right Caudate Nucleus
+36;lAccNuc;Left Accumbens Nucleus
+37;rAccNuc;Right Accumbens Nucleus
+38;lPut;Left Putamen
+39;rPut;Right Putamen
+40;lTha;Left Thalamus
+41;rTha;Right Thalamus
+42;lPal;Left Pallidum
+43;rPal;Right Pallidum
+44;bCC;Bothside Corpus Callosum
+45;lLatVen;Left Lateral Ventricle (without Temporal Horn)
+46;rLatVen;Right Lateral Ventricle (without Temporal Horn)
+47;lLatTemVen;Left Lateral Ventricle Temporal Horn
+48;rLatTemVen;Right Lateral Ventricle Temporal Horn
+49;b3thVen;Bothside Third Ventricle
+50;lPrcGy;Left Precentral Gyrus
+51;rPrcGy;Right Precentral Gyrus
+52;lStrGy;Left Straight Gyrus
+53;rStrGy;Right Straight Gyrus
+54;lAntOrbGy;Left Anterior Orbito Gyrus
+55;rAntOrbGy;Right Anterior Orbito Gyrus
+56;lInfFroGy;Left Inferior Frontal Gyrus
+57;rInfFroGy;Right Inferior Frontal Gyrus
+58;lSupFroGy;Left Superior Frontal Gyrus
+59;rSupFroGy;Right Superior Frontal Gyrus
+60;lPoCGy;Left Postcentral Gyrus
+61;rPoCGy;Right Postcentral Gyrus
+62;lSupParGy;Left Superior Parietal Gyrus
+63;rSupParGy;Right Superior Parietal Gyrus
+64;lLinGy;Left Lingual Gyrus
+65;rLinGy;Right Lingual Gyrus
+66;lCun;Left Cuneus
+67;rCun;Right Cuneus
