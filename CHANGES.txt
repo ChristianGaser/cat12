@@ -1,5 +1,25 @@
 ------------------------------------------------------------------------
-r1749 | gaser | 2021-01-11 22:12:04
+r1750 | gaser | 2021-01-11 23:42:17
+
+Changed paths:
+M       CHANGES.txt
+MM      cat_vol_createMPM.m
+M       html/cat_versions.html
+A       templates_surfaces/lh.central.Template_T1.gii
+D       templates_surfaces/mesh.central.Template_T1_IXI555_MNI152_GS.gii
+D       templates_surfaces/mesh.inflated.freesurfer.gii
+A       templates_surfaces/rh.central.Template_T1.gii
+A       templates_surfaces_32k/lh.central.Template_T1.gii
+D       templates_surfaces_32k/mesh.central.Template_T1_IXI555_MNI152_GS.gii
+D       templates_surfaces_32k/mesh.inflated.freesurfer.gii
+A       templates_surfaces_32k/rh.central.Template_T1.gii
+
+(1) Changed: Updated new version information in html pages.
+(2) Changed: Removed some surface mesh templates whoch are not needed anymore.
+(3) Added:   Added new surface T1 templates.
+
+------------------------------------------------------------------------
+r1749 | gaser | 2021-01-11 22:15:04 +0100 (Mo, 11 Jan 2021) | 76 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -76,6 +96,7 @@ M       templates_external/y_MNIColin27_to_MNI152NLin2009cAsym.nii
 (4) Fixed:   Corrected atlases in MNI152NLin2009cAsym (cobra/lpba40/ibsr in 
              progress).
 (5) Fixed:   cat_vol_defs can now correctly deal with 4D data.
+
 ------------------------------------------------------------------------
 r1748 | gaser | 2021-01-08 17:19:26 +0100 (Fr, 08 Jan 2021) | 11 lines
 

@@ -46,7 +46,14 @@
               <li>spm12/toolbox/FieldMap/T1.nii -> templates_MNI152NLin2009cAsym/T1.nii</li>
             </ul>
             <li>The volumetric and atlases are now defined with 1mm spatial resolution, except for the Cobra atlas, which is defined with 0.6mm resolution. </li>
-            <li>The bounding box of the Dartel and Geodesic Shooting templates has been changed, resulting in a slightly different images size of the spatially registered images (i.e. modulated normalized segmentations). Threfore, older preprocessed data should not (and cannot) be mixed with the new processed data.</li>
+            <li>The bounding box of the Dartel and Geodesic Shooting templates has been changed, resulting in a slightly different images size of the spatially registered images (i.e. modulated normalized segmentations). Therefore, older preprocessed data should not (and cannot) be mixed with the new processed data.</li>
+            <li>Transformed T1 Dartel/GS surface templates to the new MNI152NLin2009cAsym space:</li>
+            <ul>
+              <li>templates_surfaces/lh.central.Template_T1_IXI555_MNI152_GS.gii  -> templates_surfaces/lh.central.Template_T1.gii </li>
+              <li>templates_surfaces/rh.central.Template_T1_IXI555_MNI152_GS.gii  -> templates_surfaces/rh.central.Template_T1.gii </li>
+              <li>templates_surfaces_32k/lh.central.Template_T1_IXI555_MNI152_GS.gii  -> templates_surfaces_32k/lh.central.Template_T1.gii </li>
+              <li>templates_surfaces_32k/rh.central.Template_T1_IXI555_MNI152_GS.gii  -> templates_surfaces_32k/rh.central.Template_T1.gii </li>
+            </ul>
           </ul>
         </ul>
         <ul>
