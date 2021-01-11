@@ -11,7 +11,7 @@ function cat_vol_create_MPM(Label, Deform, vox)
 % some of the subfunctions are modified versions from spm_deformations.m
 %__________________________________________________________________________
 % Christian Gaser
-% $Id: cat_vol_create_MPM.m 7384 2018-07-31 13:36:15Z gaser $
+% $Id$
 
 threshold  = 0.1; % threshold for average probability to exclude non-brain areas
 refine     = 1;   % always use refinement with slight smoothing and median filtering
