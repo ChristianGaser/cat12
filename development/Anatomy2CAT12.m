@@ -11,7 +11,7 @@ n_structures = numel(JuBrain.Namen);
 % flip hemisphere coding
 JuBrain.lr = 2 - JuBrain.lr;
 
-fid = fopen('Anatomy3.csv','w');
+fid = fopen('anatomy3.csv','w');
 fprintf(fid,'ROIid;ROIabbr;ROIname;ROIoname\n');
 
 % code left/right hemispheres
@@ -36,15 +36,22 @@ for i=1:n_structures
 end
 fclose(fid);
 
-return
-
-% not needed with new template anymore...
-matlabbatch{1}.spm.tools.cat.tools.defs.field1 = {'/Users/gaser/matlab/cat12/development/y_mni_icbm152_t1_tal_nlin_asym_09c.nii,1'};
-matlabbatch{1}.spm.tools.cat.tools.defs.images = {'Anatomy3.nii,1'};
-matlabbatch{1}.spm.tools.cat.tools.defs.bb = [NaN NaN NaN
-                                              NaN NaN NaN];
-matlabbatch{1}.spm.tools.cat.tools.defs.vox = [1 1 1];
-matlabbatch{1}.spm.tools.cat.tools.defs.interp = -1;
-matlabbatch{1}.spm.tools.cat.tools.defs.modulate = 0;
+matlabbatch{1}.spm.util.imcalc.input = {
+                                        '/Users/gaser/matlab/cat12/templates_MNI152NLin2009cAsym/aal3.nii,1'
+                                        './Anatomy3_refined,1'
+                                        };
+matlabbatch{1}.spm.util.imcalc.output = 'anatomy3.nii';
+matlabbatch{1}.spm.util.imcalc.outdir = {''};
+matlabbatch{1}.spm.util.imcalc.expression = 'i2';
+matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
+matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
+matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+matlabbatch{1}.spm.util.imcalc.options.interp = 0;
+matlabbatch{1}.spm.util.imcalc.options.dtype = 2;
 
 spm_jobman('run',matlabbatch)
+
+V = spm_vol('anatomy3.nii');
+vol = round(spm_read_vols(V));
+V.pinfo(1) = 1;
+spm_write_vol(V,vol);

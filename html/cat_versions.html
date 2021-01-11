@@ -30,6 +30,36 @@
       <p>
         </br>Preprocessing should remain unaffected until the next minor version number. New processing of your data is not necessary if the minor version number of CAT12 remains unchanged.
       </p>
+    <!-- 
+      <h2>Changes in version CAT12.8 (17xx)</h2>      
+      <p>
+        <ul>
+          <li>Changes in preprocessing pipeline (which affects your results compared to CAT12.7)</li>
+          <ul>
+            <li>Volumetric templates, atlases, and TPMs are now transformed to MNI152NLin2009cAsym space to better match existing standards. The templates_volume folder is now renamed to ''templates_MNI152NLin2009cAsym'' to indicate the template space used. The Dartel and Geodesic Shooting templates are renamed or relocated:</li>
+            <ul>
+              <li>templates_volumes/Template_0_IXI555_MNI152_GS.nii -> templates_MNI152NLin2009cAsym/Template_0_GS.nii</li>
+              <li>templates_volumes/Template_1_IXI555_MNI152.nii -> templates_MNI152NLin2009cAsym/Template_1_Dartel.nii</li>
+              <li>spm12/TPM/TPM.nii -> spm12/toolbox/cat12/templates_MNI152NLin2009cAsym/TPM.nii</li>
+              <li>templates_volumes/TPM_Age11.5.nii -> templates_MNI152NLin2009cAsym/TPM_Age11.5.nii</li>
+              <li>templates_volumes/Template_T1_IXI555_MNI152_GS.nii -> templates_MNI152NLin2009cAsym/Template_T1.nii</li>
+              <li>spm12/toolbox/FieldMap/T1.nii -> templates_MNI152NLin2009cAsym/T1.nii</li>
+            </ul>
+            <li>The volumetric and atlases are now defined with 1mm spatial resolution, except for the Cobra atlas, which is defined with 0.6mm resolution. </li>
+            <li>The bounding box of the Dartel and Geodesic Shooting templates has been changed, resulting in a slightly different images size of the spatially registered images (i.e. modulated normalized segmentations). Threfore, older preprocessed data should not (and cannot) be mixed with the new processed data.</li>
+          </ul>
+        </ul>
+        <ul>
+          <li>Important new features</li>
+          <ul>
+            <li>New GUI</li>
+            <li>Text</li>
+          </ul>
+        </ul> 
+      </p>
+    -->
+
+
       <h2>Changes in version CAT12.7 (1700)</h2>      
       <p>
         <ul>
