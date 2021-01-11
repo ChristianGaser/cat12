@@ -138,17 +138,11 @@ for i=1:size(filenames,1)
 
     % Generate headers etc for output images
     %----------------------------------------------------------------------
-    [pth,nam,ext,num] = spm_fileparts(deblank(filenames(i,:)));  %#ok<ASGLU>
+    [pth,nam,ext] = spm_fileparts(deblank(filenames(i,:)));  %#ok<ASGLU>
     NI = nifti(fullfile(pth,[nam ext]));
     j_range = 1:size(NI.dat,4);
     k_range = 1:size(NI.dat,5);
     l_range = 1:size(NI.dat,6);
-    if ~isempty(num),
-        num = sscanf(num,',%d');
-        if numel(num)>=1, j_range = num(1); end
-        if numel(num)>=2, k_range = num(2); end
-        if numel(num)>=3, l_range = num(3); end
-    end
 
     NO = NI;
     ext = '.nii'; 

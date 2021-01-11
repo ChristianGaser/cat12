@@ -1,0 +1,32 @@
+% Template_?_Dartel.nii
+% ---------------------------------
+% Dartel templates with 6 iteration steps
+% 
+% This Dartel template was derived from 555 subjects from the IXI database:
+% http://brain-development.org/ixi-dataset/
+%
+% The Dartel toolbox was used to create the template and finally images
+% were transformed to MNI152NLin2009cAsym space.
+%
+%
+% Template_?_GS.nii
+% ---------------------------------
+% Geodesic shooting templates with 5 iteration steps
+% 
+% This Geodesic Shooting template was derived from 555 subjects from the IXI 
+% database:
+% http://brain-development.org/ixi-dataset/
+%
+% The Geodesic Shooting toolbox was used to create the template and finally 
+% images were transformed to MNI152NLin2009cAsym space.
+%
+%
+% Template_T1.nii 
+% ---------------------------------
+% MNI152NLin2009cAsym T1 
+% 
+% This is the MNI152NLin2009cAsym T1 template that can be used to overlay
+% CAT12 results.
+%
+--------------------------------------------------------------------------------
+$Id: templates.man 1699 2020-08-24 07:58:11Z gaser $
