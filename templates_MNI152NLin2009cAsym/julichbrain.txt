@@ -1,8 +1,9 @@
-JulichBrain atlas (v2.0):
+JulichBrain atlas (v2.2):
 --------------------------------------------------------------------------------
-Whole-brain parcellation of the Julich-Brain Cytoarchitectonic Atlas (v2.0)
+Whole-brain parcellation of the Julich-Brain Cytoarchitectonic Atlas (v2.2)
 
-JulichBrain_icbm152asym2009c.nii
+The atlas was slightly modified and remaining holes were filled with the median value.
+Furthermore, the left and right hemisphere coding was changed.
 
 If you use these atlases, please cite the references below.
 

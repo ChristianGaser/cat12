@@ -13,8 +13,8 @@ function cat_vol_create_MPM(Label, Deform, vox)
 % Christian Gaser
 % $Id: cat_vol_create_MPM.m 7384 2018-07-31 13:36:15Z gaser $
 
-threshold  = 0.5;
-refine     = 1;
+threshold  = 0.1; % threshold for average probability to exclude non-brain areas
+refine     = 1;   % always use refinement with slight smoothing and median filtering
 
 if nargin < 1
   Label  = spm_select(Inf,'image','Select native label maps');

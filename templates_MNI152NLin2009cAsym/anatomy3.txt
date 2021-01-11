@@ -2,7 +2,7 @@ Anatomy atlas v3:
 --------------------------------------------------------------------------------
 Combining probabilistic cytoarchitectonic maps and functional imaging data.
 
-The atlas was slightly modified and remaining holes were filled with median value.
+The atlas was slightly modified and remaining holes were filled with the median value.
 Furthermore, the left and right hemisphere coding was changed.
 
 Please have also a look for the anatomy toolbox of Simon Eickhoff (Version 3.0, 
