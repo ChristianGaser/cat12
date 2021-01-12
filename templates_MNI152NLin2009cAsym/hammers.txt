@@ -39,4 +39,4 @@ of interest. Neuroimage 2008 Apr 1;40(2):672-684.
 (for region names #50-67 and access to protocols: www.brain-development.org)
 
 --------------------------------------------------------------------------------
-$Id: hammers.txt 1533 2019-12-12 22:29:44Z gaser $
+$Id$

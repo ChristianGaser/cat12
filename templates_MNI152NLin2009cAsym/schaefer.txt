@@ -18,4 +18,4 @@ Local-Global Parcellation of the Human Cerebral Cortex From Intrinsic Functional
 Connectivity MRI, Cerebral Cortex
 
 --------------------------------------------------------------------------------
-$Id: schaefer.txt 1699 2020-08-24 07:58:11Z gaser $
+$Id$
