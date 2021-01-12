@@ -33,4 +33,4 @@ is affected by a lesion or where exactly is the fMRI activation site) or automat
 segmentation. All images have 181x217x181 / 1x1x1 mm dimensions. See the Atlas 
 Look-up Table here (2). For more information please follow this link (3).
 --------------------------------------------------------------------------------
-$Id: mori.txt 1697 2020-08-20 14:08:04Z gaser $
+$Id$
