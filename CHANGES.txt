@@ -1,5 +1,87 @@
 ------------------------------------------------------------------------
-r1750 | gaser | 2021-01-11 23:42:17
+r1751 | gaser | 2021-01-12 07:58:04
+
+Changed paths:
+M       CHANGES.txt
+ M      development/JulichBrain2CAT12.m
+ M      development/Template_0_GS1mm.nii
+ M      development/Template_1_GS1mm.nii
+ M      development/Template_2_GS1mm.nii
+ M      development/Template_3_GS1mm.nii
+ M      development/Template_4_GS1mm.nii
+ M      development/correct_tpm2one.m
+ M      templates_MNI152NLin2009cAsym/Schaefer2018_100Parcels_17Networks_order.csv
+ M      templates_MNI152NLin2009cAsym/Schaefer2018_100Parcels_17Networks_order.nii
+ M      templates_MNI152NLin2009cAsym/Schaefer2018_200Parcels_17Networks_order.csv
+ M      templates_MNI152NLin2009cAsym/Schaefer2018_200Parcels_17Networks_order.nii
+ M      templates_MNI152NLin2009cAsym/Schaefer2018_400Parcels_17Networks_order.csv
+ M      templates_MNI152NLin2009cAsym/Schaefer2018_400Parcels_17Networks_order.nii
+ M      templates_MNI152NLin2009cAsym/Schaefer2018_600Parcels_17Networks_order.csv
+ M      templates_MNI152NLin2009cAsym/Schaefer2018_600Parcels_17Networks_order.nii
+ M      templates_MNI152NLin2009cAsym/T1.nii
+ M      templates_MNI152NLin2009cAsym/TPM.nii
+ M      templates_MNI152NLin2009cAsym/TPM_Age11.5.nii
+ M      templates_MNI152NLin2009cAsym/Template_0_GS.nii
+ M      templates_MNI152NLin2009cAsym/Template_1_Dartel.nii
+ M      templates_MNI152NLin2009cAsym/Template_1_GS.nii
+ M      templates_MNI152NLin2009cAsym/Template_2_Dartel.nii
+ M      templates_MNI152NLin2009cAsym/Template_2_GS.nii
+ M      templates_MNI152NLin2009cAsym/Template_3_Dartel.nii
+ M      templates_MNI152NLin2009cAsym/Template_3_GS.nii
+ M      templates_MNI152NLin2009cAsym/Template_4_Dartel.nii
+ M      templates_MNI152NLin2009cAsym/Template_4_GS.nii
+ M      templates_MNI152NLin2009cAsym/Template_5_Dartel.nii
+ M      templates_MNI152NLin2009cAsym/Template_6_Dartel.nii
+ M      templates_MNI152NLin2009cAsym/Template_T1.nii
+ M      templates_MNI152NLin2009cAsym/aal3.csv
+ M      templates_MNI152NLin2009cAsym/aal3.nii
+MM      templates_MNI152NLin2009cAsym/aal3.txt
+ M      templates_MNI152NLin2009cAsym/anatomy3.csv
+ M      templates_MNI152NLin2009cAsym/anatomy3.nii
+MM      templates_MNI152NLin2009cAsym/anatomy3.txt
+ M      templates_MNI152NLin2009cAsym/brainmask.nii
+ M      templates_MNI152NLin2009cAsym/cat.nii
+ M      templates_MNI152NLin2009cAsym/cat_strokelesions_ATLAS303.nii
+ M      templates_MNI152NLin2009cAsym/cat_wmh.nii
+ M      templates_MNI152NLin2009cAsym/cat_wmh_miccai2017.nii
+ M      templates_MNI152NLin2009cAsym/cobra.csv
+ M      templates_MNI152NLin2009cAsym/cobra.nii
+MM      templates_MNI152NLin2009cAsym/cobra.txt
+ M      templates_MNI152NLin2009cAsym/hammers.csv
+ M      templates_MNI152NLin2009cAsym/hammers.nii
+MM      templates_MNI152NLin2009cAsym/hammers.txt
+ M      templates_MNI152NLin2009cAsym/ibsr.csv
+ M      templates_MNI152NLin2009cAsym/ibsr.nii
+MM      templates_MNI152NLin2009cAsym/ibsr.txt
+ M      templates_MNI152NLin2009cAsym/julichbrain.csv
+ M      templates_MNI152NLin2009cAsym/julichbrain.nii
+MM      templates_MNI152NLin2009cAsym/julichbrain.txt
+ M      templates_MNI152NLin2009cAsym/lpba40.csv
+ M      templates_MNI152NLin2009cAsym/lpba40.nii
+MM      templates_MNI152NLin2009cAsym/lpba40.txt
+ M      templates_MNI152NLin2009cAsym/mori.csv
+ M      templates_MNI152NLin2009cAsym/mori.nii
+MM      templates_MNI152NLin2009cAsym/mori.txt
+ M      templates_MNI152NLin2009cAsym/neuromorphometrics.csv
+ M      templates_MNI152NLin2009cAsym/neuromorphometrics.nii
+MM      templates_MNI152NLin2009cAsym/neuromorphometrics.txt
+MM      templates_MNI152NLin2009cAsym/schaefer.txt
+MM      templates_MNI152NLin2009cAsym/templates.man
+ M      templates_external/MNI152NLin2009cAsym.nii
+ M      templates_external/MNI152NLin6Asym.nii
+ M      templates_external/MNIColin27.nii
+ M      templates_external/y_IXI555Dartel_to_MNI152NLin2009cAsym.nii
+ M      templates_external/y_MNI152NLin6Asym_to_MNI152NLin2009cAsym.nii
+ M      templates_external/y_MNIColin27_to_MNI152NLin2009cAsym.nii
+A       templates_surfaces/lh.thickness.Template_T1
+A       templates_surfaces/rh.thickness.Template_T1
+A       templates_surfaces_32k/lh.thickness.Template_T1
+A       templates_surfaces_32k/rh.thickness.Template_T1
+
+Added: Added thickness values to new surface T1 templates.
+
+------------------------------------------------------------------------
+r1750 | gaser | 2021-01-11 23:43:04 +0100 (Mo, 11 Jan 2021) | 18 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -17,6 +99,7 @@ A       templates_surfaces_32k/rh.central.Template_T1.gii
 (1) Changed: Updated new version information in html pages.
 (2) Changed: Removed some surface mesh templates whoch are not needed anymore.
 (3) Added:   Added new surface T1 templates.
+
 
 ------------------------------------------------------------------------
 r1749 | gaser | 2021-01-11 22:15:04 +0100 (Mo, 11 Jan 2021) | 76 lines

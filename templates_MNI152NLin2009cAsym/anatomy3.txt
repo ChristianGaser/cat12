@@ -134,4 +134,4 @@ The JuBrain Anatomy Toolbox also include the Thalamic Connectivity atlas by Behr
 Behrens TE et al., (2003) Nat Neurosci. 6(7):750-7. http://www.fmrib.ox.ac.uk/connect/
 
 --------------------------------------------------------------------------------
-$Id: anatomy3.txt 1715 2020-09-08 15:51:01Z gaser $
+$Id$
