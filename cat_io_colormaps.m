@@ -67,6 +67,10 @@ function [C,XML] = cat_io_colormaps(Cname,ncolors)
       C = BCGWHwov;
     case 'BCGWHn'
       C = BCGWHn;
+    case 'BCGWHn2';
+      C = BCGWHnov;
+    case 'BCGWHgov'
+      C = BCGWHgov;
     case 'BCGWHnov'
       C = BCGWHnov;
     case 'BCGWHcheckcov'
@@ -189,6 +193,44 @@ function C=BCGWHcheckcov
     0.5616    0.2591    0.5976
     0.5278    0.2217    0.5773
     0.4941    0.1843    0.5569
+  ]; 
+end
+function C=BCGWHgov
+C = [
+         0.95    0.95      0.95
+         0.5    0.5        0.95
+         0    0.5         1
+         0    1         0.5
+         0.5    1.0000         0
+    0.4000    0.4000         0
+    0.8000         0         0
+    0.9000    0.4314    0.4627
+    1.0000    0.8627    0.9255
+    1.0000    0.4314    0.9627
+    1.0000         0    1.0000
+    ...0.7882         0    1.0000
+    1              1    1.0000
+    0.7882         0    1.0000
+  ];
+end
+function C=BCGWHnov
+C = [
+         0         0         0
+    ...0.0174    0.4980    0.7403
+    ...0.8084    0.9216    1.0000
+    ...0.6784    0.9216    1.0000
+         0.0    0.05        .5
+         0.0    0.4         1  % CSF
+         0.0    0.7        0.1 %
+         0    0.9500         0 % GM
+    1.0000    1.0000         0 % 
+    0.8000         0         0 % WM
+    0.9000    0.4314    0.4627
+    1.0000    0.8627    0.9255
+    1.0000    0.4314    0.9627
+    1.0000         1    1.0000
+    0.7882         1    1.0000
+    1              1    1.0000
   ];
 end
 function C=BCGWHn
@@ -255,7 +297,7 @@ function C=BCGWHn
     0.9608    0.9216    0.9216
   ]; 
 end
-function C=BCGWHnov
+function C=BCGWHnov_old
   C = [
     0.0392    0.1412    0.4157
     0.0349    0.2366    0.4806

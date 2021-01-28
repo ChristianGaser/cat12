@@ -1,0 +1,99 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link rel="stylesheet" type="text/css" href="spm.css" />
+    <link rel="stylesheet" type="text/css" href="../spm.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  
+  <body>
+    <div id="header" style="background: black url('images/contact.jpg') right;">
+      <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
+      <p>
+          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
+          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');">Department of Neurology</a> | 
+          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');">Department of Psychiatry</a> | 
+          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
+      </p>
+      <div id="breadcrumbs">
+        <a href="cat.html">CAT</a> > <a href="cat_methods.html">Methods</a> > <a href="cat_methods_VBM.html">Voxel-based Preprocessing Methods</a> > <a href="cat_methods_affreg.html">Affine registration</a>
+      </div>
+    </div>
+      
+    <div id="content">
+      <h2>Affine registration:</h2>
+      <p>
+        The affine registration is one of the first steps in the preprocessing and strongly influence the whole pipeline. 
+        Although it sounds quite simple, we observe again and again different problems that often cause "Bad tissue contrast" error messages. 
+        To stabilize it, we introduced the <a href=""><i>Affine Preprocessing</i> (APP)</a>, that includes a fast bias correction, intensity normalization, brain/head extraction. 
+        In addition, we combined different affine registration methods that are further working from a rough to a fine scale.
+        Nevertheless, the best affine registration strategy is still an issue and we have therefore integrated two further parameters to control the (i) <i>Affine registration strategy</i> and (ii) to modify the registration itself. 
+      </p><br><p> 
+	      The <i>Affine registration strategy</i> allows to control select different selected settings, e.g., to reset the center of mass (COM), control the TPM-based registration and also the masking. 
+	      Using the COM normal helps to have a closer initialization of the AC but in most cases the results are quite similar. 
+	      In theory the TPM-based registration represents the best way to support the initial <i>Unified Segmentation</i> <a href="">(Ashburner et al., 2005)</i> but it is often biased by head tissues for subjects that differ stronger from the average adult, e.g., children and elderly, what we try to catch automatically but can be controlled here.  
+        In addition, it is possible to define a mask to avoid critical regions but also speed up the processing, where we use the head estimated from the APP function that can be turned off here. 
+        Fig. <a></a> and <a></a> show a young and old subject of your test database.
+      </p>
+      <!-- CAT reports -->      
+	    <div>
+        <p class="img" style="width: 90%;" id="Fig1">
+          <a href="cat_methods_AsetCOM0.html">  <img src="images/catreportj_BUSS_2002_1YO_t1_setCOM0.jpg"   width=19.5% height=auto alt="CAT preprocessing report with setCOM=0"   ></a>
+          <a href="cat_methods_AsetCOM1.html">  <img src="images/catreportj_BUSS_2002_1YO_t1_setCOM1.jpg"   width=19.5% height=auto alt="CAT preprocessing report with setCOM=1"   ></a>
+          <a href="cat_methods_AsetCOM10.html"> <img src="images/catreportj_BUSS_2002_1YO_t1_setCOM10.jpg"  width=19.5% height=auto alt="CAT preprocessing report with setCOM=10"  ></a>
+          <a href="cat_methods_AsetCOM11.html"> <img src="images/catreportj_BUSS_2002_1YO_t1_setCOM11.jpg"  width=19.5% height=auto alt="CAT preprocessing report with setCOM=11"  ></a>
+          <a href="cat_methods_AsetCOM120.html"><img src="images/catreportj_BUSS_2002_1YO_t1_setCOM120.jpg" width=19.5% height=auto alt="CAT preprocessing report with setCOM=120" ></a>
+        <br><br>
+            Fig. 1: Shown are the preprocessing with/without COM setting, without TPM and with TPM registration and without masking, where only the setting that force the TPM registration result in an in-optimal overlay of the brain tissues. Nevertheless, segmentation and surfaces looks quite similar because CAT focuses on a more independent segmentation and routine. Differences can be seen by the corrected GM voxels (red). 
+        </p>
+      </div>
+      <br>  
+      <!-- CAT reports -->      
+	    <div>
+        <p class="img" style="width: 90%;" id="Fig1">
+          <a href="cat_methods_BsetCOM0.html">  <img src="images/catreportj_M017_setCOM0.jpg"   width=19.5% height=auto alt="CAT preprocessing report with setCOM=0"   ></a>
+          <a href="cat_methods_BsetCOM1.html">  <img src="images/catreportj_M017_setCOM1.jpg"   width=19.5% height=auto alt="CAT preprocessing report with setCOM=1"   ></a>
+          <a href="cat_methods_BsetCOM10.html"> <img src="images/catreportj_M017_setCOM10.jpg"  width=19.5% height=auto alt="CAT preprocessing report with setCOM=10"  ></a>
+          <a href="cat_methods_BsetCOM11.html"> <img src="images/catreportj_M017_setCOM11.jpg"  width=19.5% height=auto alt="CAT preprocessing report with setCOM=11"  ></a>
+          <a href="cat_methods_BsetCOM120.html"><img src="images/catreportj_M017_setCOM120.jpg" width=19.5% height=auto alt="CAT preprocessing report with setCOM=120" ></a>
+        <br><br>
+            Fig. 1: Shown are the preprocessing with/without COM setting, without TPM and with TPM registration and without masking, where only the setting that force the TPM registration result in an in-optimal overlay of the brain tissues. Nevertheless, segmentation and surfaces looks quite similar because CAT focuses on a more independent segmentation and routine. Differences can be seen by the corrected GM voxels (red). 
+        </p>
+      </div>
+      <br>  
+      <p>
+        The <i>Final affine scaling</i> allow to add a general correction factor to adjust the general scaling to increase/decrease the scaling of the TPM, to improve the brain masking but also change the probabilities of the brain tissues. 
+        A smaller scaling of the TPM will result in a harder brain masking and probably reduce problems with blood meninges (e.g., in older subjects), whereas in younger subjects the skull is much thinner the TPM maybe fits good for the skull but not for the brain and an enlargement is required.  
+			</p>
+			      
+        
+	    <!-- CAT reports -->      
+	    <div>
+        <p class="img" style="width: 90%;" id="Fig2">
+          <a href="cat_methods_affmod-10.html"><img src="images/catreportj_4397-tfl_affmod-10.jpg" width=24.5% height=auto alt="CAT preprocessing report with affmod=-10" ></a>
+          <a href="cat_methods_affmod+10.html"><img src="images/catreportj_4397-tfl_affmod+10.jpg" width=24.5% height=auto alt="CAT preprocessing report with affmod=+10" ></a>
+          <a href="cat_methods_affmod-10.html"><img src="images/catreportj_M017_affmod-10.jpg" width=24.5% height=auto alt="CAT preprocessing report with affmod=-10" ></a>
+          <a href="cat_methods_affmod+10.html"><img src="images/catreportj_M017_affmod+10.jpg" width=24.5% height=auto alt="CAT preprocessing report with affmod=+10" ></a>
+        <br><br>
+            Fig. 2: Adjusting of the <i>Final affine scaling</i> parameter allows to generally correct for a to large or small mapping of the TPM, e.g., in very young (top) or very old subjects (right). The original image with the outline of the skull and brain ...
+            The left image shows an extreme under-correction (84%)of the correct middle case where large cortical areas very miss-labeled as head. 
+            The whereas the right image shows an extreme over-correction (115%), where 120% cause and. 
+        </p>
+      </div>
+     	    
+	    
+	    <!-- Cite -->
+	    <h3>References:</h3>
+	    <ul>
+		    <li>
+			  </li>
+			</ul>
+              
+    </div>
+    <div id="content"><a href="cat_methods_VBM.html">< Voxel-based Preprocessing Methods</a></div>  
+    <div id="footer">
+      <p>Copyright (C) Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
+    </div>
+  </body>
+</html>

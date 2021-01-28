@@ -94,7 +94,7 @@ function str = cat_main_reportstr(job,res,qa)
         str{1} = [str{1} struct('name','Optimized Shooting Registration to:',...
                           'value',strrep(spm_str_manip(job.extopts.shootingtpm{1},'k40d'),'_','\_'))];
       else
-        str{1} = [str{1} struct('name', sprintf('Optimized Shooting Registration (regstr:%s) to :',sprintf('%g ',job.extopts.regstr)),...
+        str{1} = [str{1} struct('name', sprintf('Optimized Shooting Registration (regstr:%s) to:',sprintf('%g',job.extopts.regstr)),...
                           'value',[cp{1} strrep(spm_str_manip(job.extopts.shootingtpm{1},'k40d'),'_','\_')])];
       end
     end
@@ -108,38 +108,52 @@ function str = cat_main_reportstr(job,res,qa)
     affstr = job.opts.affreg; 
   end
   str{1} = [str{1} struct('name', 'affreg:','value',sprintf('%s{%s}',cp{1},affstr))];
+  
   % 1 line 2: APP
-
   if job.extopts.APP == catdef.extopts.APP, cp{1} = npara; else, cp{1} = cpara; end
   APPstr = {'none','light','full','','','animal'}; APPstr{1071} = 'default'; APPstr{1145} = 'default2'; 
   str{1}(end).name  = [str{1}(end).name(1:end-1) ' / APP ']; 
   str{1}(end).value = [str{1}(end).value sprintf(' / %s{%s}',cp{1},APPstr{job.extopts.APP+1})];
 
+  % 1 line 3: COM
+  if isfield(job.extopts,'setCOM') && job.extopts.setCOM == catdef.extopts.setCOM, cp{1} = npara; else, cp{1} = cpara; end
+  COMstr = {'noCOM','COM'}; COMstr{10} = 'noTPM'; COMstr{11} = 'fTPM'; COMstr{120} = 'noMSK';
+  str{1}(end).name  = [str{1}(end).name(1:end-1) ' / setCOM ']; 
+  str{1}(end).value = [str{1}(end).value sprintf(' / %s{%s}',cp{1},COMstr{job.extopts.setCOM})];
+
+  % display only abnormal values
+  if isfield(job.extopts,'affmod') && any(job.extopts.affmod ~= 0),
+    str{1}(end).name  = [str{1}(end).name(1:end-1) ' / affmod']; 
+    str{1}(end).value = [str{1}(end).value sprintf(' / %s{%s}',cpara,sprintf('%+0.0f ',job.extopts.affmod))];
+  end
+  
+  
 % #####
 % one new super SPM parameter?
 % #####
   % 1 line 3: biasstr / biasreg+biasfwhm
+  str{1}(end+1) = struct('name', '','value','');
   if job.opts.biasacc>0
     if job.opts.biasacc == catdef.opts.biasstr, cp{1} = npara; else, cp{1} = cpara; end % yes, catdef.opts.biasstr!
     biasacc = {'ultralight','light','medium','strong','heavy'};
-    str{1}(end).name  = [str{1}(end).name(1:end-1) ' / biasstr '];  
-    str{1}(end).value = [str{1}(end).value sprintf(' / %s{%s}',cp{1},biasacc{round(job.opts.biasacc*4)+1})];
-    if job.extopts.expertgui % add the value
-      str{1}(end).value = [str{1}(end).value sprintf('(%0.2f;breg:%0.0e;bfwhm:%0.0f)',job.opts.biasacc,job.opts.biasreg,job.opts.biasfwhm)]; 
+    str{1}(end).name  = [str{1}(end).name(1:end-1) 'biasstr '];  
+    str{1}(end).value = [str{1}(end).value sprintf('%s{%s}',cp{1},biasacc{round(job.opts.biasacc*4)+1})];
+    if job.extopts.expertgui % add the value ... too long ... 
+      str{1}(end).value = [str{1}(end).value sprintf('(%0.2f,reg:%0.0e;fwhm:%0.0f)',job.opts.biasacc,job.opts.biasreg,job.opts.biasfwhm)]; 
     end
   elseif job.opts.biasstr>0
     if job.opts.biasstr == catdef.opts.biasstr, cp{1} = npara; else, cp{1} = cpara; end
     biasstr = {'ultralight','light','medium','strong','heavy'};
-    str{1}(end).name  = [str{1}(end).name(1:end-1) ' / biasstr '];  
-    str{1}(end).value = [str{1}(end).value sprintf(' / %s{%s}',cp{1},biasstr{round(job.opts.biasstr*4)+1})];
-    if job.extopts.expertgui % add the value
-      str{1}(end).value = [str{1}(end).value sprintf('(%0.2f;breg:%0.0e;bfwhm:%0.0f)',job.opts.biasstr,job.opts.biasreg,job.opts.biasfwhm)]; 
+    str{1}(end).name  = [str{1}(end).name(1:end-1) 'biasstr '];  
+    str{1}(end).value = [str{1}(end).value sprintf('%s{%s}',cp{1},biasstr{round(job.opts.biasstr*4)+1})];
+    if job.extopts.expertgui % add the value,job.opts.biasstr
+      str{1}(end).value = [str{1}(end).value sprintf('(%0.2f,reg:%0.0e;fwhm:%0.0f)',job.opts.biasacc,job.opts.biasreg,job.opts.biasfwhm)]; 
     end
   else
     if job.opts.biasreg  == catdef.opts.biasreg,  cp{1} = npara; else, cp{1} = cpara; end
     if job.opts.biasfwhm == catdef.opts.biasfwhm, cp{2} = npara; else, cp{2} = cpara; end
-    str{1}(end).name  = [str{1}(end).name(1:end-1) ' / biasreg / biasfwhm'];
-    str{1}(end).value = [str{1}(end).value sprintf(' / %s{%0.0e} / %s{%0.2f}',cp{1},job.opts.biasreg,cp{2},job.opts.biasfwhm)]; 
+    str{1}(end).name  = [str{1}(end).name(1:end-1) 'biasreg / biasfwhm'];
+    str{1}(end).value = [str{1}(end).value sprintf('%s{%0.0e} / %s{%0.2f}',cp{1},job.opts.biasreg,cp{2},job.opts.biasfwhm)]; 
   end
   % 1 line 3: SPM segmentation accuracy with samp and tol
   if isfield(job.opts,'acc') && job.opts.acc>0
@@ -147,12 +161,12 @@ function str = cat_main_reportstr(job,res,qa)
     if job.opts.acc == catdef.opts.acc, cp{3} = npara; else, cp{3} = cpara; end
     if job.extopts.expertgui==0
       accstr = {'ultra low','low','std','high','ultra high'};
-      str{1}(end).name  = [str{1}(end).name(1:end-1) ' / accuracy '];  
+      str{1}(end).name  = [str{1}(end).name(1:end-1) ' / accuracy: '];  
       str{1}(end).value = [str{1}(end).value sprintf(' / %s{%s}',co,accstr{round(job.opts.acc*4)+1})];
     else % add the value
       if job.opts.samp == catdef.opts.samp, cp{1} = npara; else, cp{1} = cpara; end
       if job.opts.tol  == catdef.opts.tol,  cp{2} = npara; else, cp{2} = cpara; end
-      str{1}(end).name  = [str{1}(end).name(1:end-1) ' / acc (samp/tol) '];  
+      str{1}(end).name  = [str{1}(end).name(1:end-1) ' / acc (samp/tol): '];  
       str{1}(end).value = [str{1}(end).value sprintf('%s|%0.2f} (%s{%0.2f}/%s{%0.0e})',cp{3},job.opts.acc,cp{1},job.opts.samp,cp{2},job.opts.tol)]; 
     end
   else
@@ -160,8 +174,8 @@ function str = cat_main_reportstr(job,res,qa)
       %str{1} = [str{1} struct('name', '','value','')];
       if job.opts.samp == catdef.opts.samp, cp{1} = npara; else, cp{1} = cpara; end
       if job.opts.tol  == catdef.opts.tol,  cp{2} = npara; else, cp{2} = cpara; end
-      str{1}(end).name  = [str{1}(end).name(1:end-1) '/ samp / tol '];
-      str{1}(end).value = [str{1}(end).value sprintf('/ %s{%0.2f} / %s{%0.0e}',cp{1},job.opts.samp,cp{2},job.opts.tol)]; 
+      str{1}(end).name  = [str{1}(end).name(1:end-1) ' / samp / tol: '];
+      str{1}(end).value = [str{1}(end).value sprintf(' / %s{%0.2f} / %s{%0.0e}',cp{1},job.opts.samp,cp{2},job.opts.tol)]; 
     end
   end
 
@@ -270,14 +284,14 @@ function str = cat_main_reportstr(job,res,qa)
     sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR))))];
   if isfield(qa.qualitymeasures,'SurfaceEulerNumber') && ~isempty(qa.qualitymeasures.SurfaceEulerNumber)
     if job.extopts.expertgui
-      str{2} = [str{2} struct('name',' Mean surface Euler number:','value',marks2str(qa.qualityratings.SurfaceEulerNumber,...
-                sprintf('%g', qa.qualitymeasures.SurfaceEulerNumber)))]; 
-              
       if isfield(qa.qualitymeasures,'SurfaceDefectNumber') && ~isempty(qa.qualitymeasures.SurfaceDefectNumber) 
-        str{2}(end).name  = [str{2}(end).name(1:end-8)  ' / defect number:'];
-        str{2}(end).value = [str{2}(end).value ' / ' marks2str(qa.qualityratings.SurfaceDefectNumber,...
-                sprintf('%0.2f', qa.qualitymeasures.SurfaceDefectNumber)) ];
-      end
+        str{2} = [str{2} struct('name',' Surface Euler / defect number:','value',marks2str(qa.qualityratings.SurfaceEulerNumber,...
+                sprintf('%g / %0.2f', qa.qualitymeasures.SurfaceEulerNumber, qa.qualitymeasures.SurfaceDefectNumber)))]; 
+      else
+        str{2} = [str{2} struct('name',' Surface Euler number:','value',marks2str(qa.qualityratings.SurfaceEulerNumber,...
+                sprintf('%g', qa.qualitymeasures.SurfaceEulerNumber)))]; 
+      end        
+      
             
     else
       str{2} = [str{2} struct('name',' Mean surface Euler number:','value',sprintf('%g', qa.qualitymeasures.SurfaceEulerNumber))]; 
@@ -286,7 +300,7 @@ function str = cat_main_reportstr(job,res,qa)
   
   if isfield(qa.qualitymeasures,'SurfaceDefectArea') && ~isempty(qa.qualitymeasures.SurfaceDefectArea) && ~any(job.output.surface == [5 6])
     if job.extopts.expertgui
-      str{2} = [str{2} struct('name',' Mean topology defects size:','value',marks2str(qa.qualityratings.SurfaceDefectArea,...
+      str{2} = [str{2} struct('name',' Defect area:','value',marks2str(qa.qualityratings.SurfaceDefectArea,...
                 sprintf('%0.2f%%', qa.qualitymeasures.SurfaceDefectArea)))];
 
       if isfield(qa.qualitymeasures,'SurfaceSelfIntersections') && ~isempty(qa.qualitymeasures.SurfaceSelfIntersections)
@@ -296,7 +310,7 @@ function str = cat_main_reportstr(job,res,qa)
       end
    
     else
-      str{2} = [str{2} struct('name',' Mean size of topology defects:','value',sprintf('%0.2f%%', qa.qualitymeasures.SurfaceDefectArea))];
+      str{2} = [str{2} struct('name',' Defect area:','value',sprintf('%0.2f%%', qa.qualitymeasures.SurfaceDefectArea))];
     end
     
   end
@@ -370,17 +384,21 @@ function str = cat_main_reportstr(job,res,qa)
   
   str{3} = [str{3} struct('name', ' TIV:','value', sprintf(['%0.0f cm' native2unicode(179, 'latin1')],qa.subjectmeasures.vol_TIV))];  
   if isfield(qa.subjectmeasures,'surf_TSA') && job.extopts.expertgui>1
-    str{3}(end).name  = [str{3}(end).name  ' / TSA:']; 
+    str{3}(end).name  = [str{3}(end).name(1:end-1)  ' / TSA:']; 
     str{3}(end).value = [str{3}(end).value sprintf(' / %0.0f cm%s' ,qa.subjectmeasures.surf_TSA,char(178))];  
   end
 
   % Surface measures - Thickness, (Curvature, Depth, ...)
   %if cellfun('isempty',strfind({Psurf(:).Pcentral},'ch.')), thstr = 'Cerebral Thickness'; else thstr = 'Thickness'; end
-  thstr = 'Thickness';
   if isfield(qa.subjectmeasures,'dist_thickness') && ~isempty(qa.subjectmeasures.dist_thickness)
-    str{3} = [str{3} struct('name', ['\bf' thstr ':'],'value',sprintf('%5.2f%s%5.2f mm', ...
-           qa.subjectmeasures.dist_thickness{1}(1),native2unicode(177, 'latin1'),qa.subjectmeasures.dist_thickness{1}(2)))];
-         
+    if job.extopts.expertgui > 1 && isfield(qa.subjectmeasures,'dist_thickness_kmeans')
+      str{3} = [str{3} struct('name', '\bfThickness\sf(kmeans):','value',sprintf('%5.2f%s%4.2f mm (%5.2f%s%4.2f mm)', ...
+       qa.subjectmeasures.dist_thickness{1}(1),native2unicode(177, 'latin1'),qa.subjectmeasures.dist_thickness{1}(2), ...
+       qa.subjectmeasures.dist_thickness_kmeans(1),native2unicode(177, 'latin1'),qa.subjectmeasures.dist_thickness_kmeans(2)))];
+    else
+      str{3} = [str{3} struct('name', '\bfThickness:','value',sprintf('%5.2f%s%4.2f mm', ...
+       qa.subjectmeasures.dist_thickness{1}(1),native2unicode(177, 'latin1'),qa.subjectmeasures.dist_thickness{1}(2)))];
+    end
     % we warn only if WMHC is off ... without WMHC you have not thresholds!
     %if job.extopts.WMHC==0 && (qa.subjectmeasures.vol_rel_WMH>0.01*3 || ... % 3 times higher treshold 
     %     qa.subjectmeasures.vol_rel_WMH/qa.subjectmeasures.vol_rel_CGW(3)>0.02*3)
@@ -388,11 +406,11 @@ function str = cat_main_reportstr(job,res,qa)
     %end
          
     if isfield(qa.subjectmeasures,'dist_gyruswidth') && ~isnan(qa.subjectmeasures.dist_gyruswidth{1}(1))
-      str{3} = [str{3} struct('name', '\bfGyruswidth:','value',sprintf('%5.2f%s%5.2f mm', ...
+      str{3} = [str{3} struct('name', '\bfGyruswidth:','value',sprintf('%5.2f%s%4.2f mm', ...
              qa.subjectmeasures.dist_gyruswidth{1}(1),native2unicode(177, 'latin1'),qa.subjectmeasures.dist_gyruswidth{1}(2)))];
     end
     if isfield(qa.subjectmeasures,'dist_sulcuswidth') && ~isnan(qa.subjectmeasures.dist_sulcuswidth{1}(1))
-      str{3} = [str{3} struct('name', '\bfSulcuswidth:','value',sprintf('%5.2f%s%5.2f mm', ...
+      str{3} = [str{3} struct('name', '\bfSulcuswidth:','value',sprintf('%5.2f%s%4.2f mm', ...
              qa.subjectmeasures.dist_sulcuswidth{1}(1),native2unicode(177, 'latin1'),qa.subjectmeasures.dist_sulcuswidth{1}(2)))];
     end
   end
@@ -419,7 +437,7 @@ function str = cat_main_reportstr(job,res,qa)
         for wmi=2:wn
           msg = [msg ', ' strrep( warn(wmi).identifier,'_','\_') ];
 % linebreak may cause other problems ...          
-          if numel(msg)>valnl, msg = [msg '\\n']; valnl = valnl + 80; end 
+          if numel(msg)>valnl && wmi<wn, msg = [msg '\n']; valnl = valnl + 80; end 
         end
         
         if wn~=1, wnamepl='s'; else, wnamepl=''; end

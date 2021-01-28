@@ -501,6 +501,7 @@ function job = update_job(job)
   
   def.extopts.new_release = 0;
   def.extopts.lazy        = 0;
+  def.extopts.affmod      = 0; 
   def.opts.fwhm           = 1; % ############################## why is this set to 1 and not 0? 
   def.nproc               = 0; 
   def.getPID              = 2; % 0 - nothing (old), 1 - get PIDs, 2 - supervise PIDs 

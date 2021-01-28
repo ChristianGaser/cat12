@@ -653,7 +653,7 @@ function cat_run_job1639(job,tpm,subj)
             obj.image.pinfo = repmat([1;0],1,size(Ymc,3));
 
             % mask the background
-            if exist('Ybg','var')
+            if exist('Ybg','var') && job.extopts.setCOM ~= 120 % setCOM == 120 - useCOM,useMaffreg,noMask
               obj.msk       = VF; 
               obj.msk.pinfo = repmat([255;0],1,size(Ybg,3));
               obj.msk.dt    = [spm_type('uint8') spm_platform('bigend')];
@@ -670,11 +670,13 @@ function cat_run_job1639(job,tpm,subj)
         %  This may not work for non human data (or very small brains).
         %  This part should be an external (coop?) function?
         if useprior
-          stime = cat_io_cmd('SPM preprocessing 1 (use prior):','','',1,stime); 
+          stime = cat_io_cmd('SPM preprocessing 1 (estimate 1 - use prior):','','',1,stime); 
+        elseif job.extopts.setCOM == 10 % no maffreg
+          stime = cat_io_cmd('SPM preprocessing 1 (estimate 1 - use no TPM registration):','','',1,stime); 
         else
-          stime = cat_io_cmd('SPM preprocessing 1 (estimate 1):','','',1,stime); 
+          stime = cat_io_cmd('SPM preprocessing 1 (estimate 1 - TPM registration):','','',1,stime); 
         end
-        if ~isempty(job.opts.affreg) && strcmp('human',job.extopts.species) && ~useprior 
+        if ~isempty(job.opts.affreg) && strcmp('human',job.extopts.species) && ~useprior && job.extopts.setCOM ~= 10 % setcom == 10 - never use
           if numel(job.opts.tpm)>1
             %% merging of multiple TPMs
             obj2 = obj; obj2.image.dat(:,:,:) = max(0.0,Ym);
@@ -696,7 +698,7 @@ function cat_run_job1639(job,tpm,subj)
               end
             else
               % check for > 10% larger scaling 
-              if scl1 > 1.1*scl2
+              if scl1 > 1.1*scl2 && job.extopts.setCOM ~= 11 % setcom == 11 - use always 
                 fprintf('\n  First fine affine registration failed.\n  Use affine registration from previous step.                ');
                 Affine2 = Affine1;
                 scl2 = scl1;
@@ -707,7 +709,7 @@ function cat_run_job1639(job,tpm,subj)
             if ~any(any(isnan(Affine3(1:3,:))))
               scl3 = abs(det(Affine3(1:3,1:3)));
               % check for > 5% larger scaling 
-              if scl2 > 1.05*scl3 
+              if scl2 > 1.05*scl3 && job.extopts.setCOM ~= 11 % setcom == 11 - use always
                 fprintf('\n  Final fine affine registration failed.\n  Use fine affine registration from previous step.                ');
                 Affine = Affine2;
               else
@@ -728,12 +730,12 @@ function cat_run_job1639(job,tpm,subj)
           
           if 0
             %% visual control for development and debugging
-            VFa = VF; VFa.mat = Affine * VF.mat; %Fa.mat = res0(2).Affine * VF.mat;
+            VFa = VF; VFa.mat = AffineMod * VF.mat; %Fa.mat = res0(2).Affine * VF.mat;
             if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
             [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1));  
             %[Vmsk,Yb] = cat_vol_imcalc([VFa;obj.tpm.V(1:3)],Pbt,'i2 + i3 + i4',struct('interp',3,'verb',0));  
             %[Vmsk,Yb] = cat_vol_imcalc([VFa;obj.tpm.V(5)],Pbt,'i2',struct('interp',3,'verb',0));  
-            ds('d2sm','',1,Ym,Ym.*(Yb>0.5),round(size(Yb,3)*0.6))
+            ds('d2sm','',1,Ym,Ym*0.5 + 0.5*Ym.*(Yb>0.5),round(size(Yb,3)*0.6))
           end
           
          
@@ -782,9 +784,26 @@ function cat_run_job1639(job,tpm,subj)
         end
         
         % adpation parameter for affine registration? 0.98 and 1.02?
-        %imat = spm_imatrix(Affine2); imat(7:9)=imat(7:9)*1.02; Affine2 = spm_matrix(imat); 
-        
-        obj.Affine = Affine;
+        if isfield(job.extopts,'affmod') && any(job.extopts.affmod)
+          AffineUnmod = Affine; 
+          if numel(job.extopts.affmod)>6, job.extopts.affmod = job.extopts.affmod(1:6); end % remove too many
+          if numel(job.extopts.affmod)<3, job.extopts.affmod(end+1:3) = job.extopts.affmod(1); end % isotropic
+          if numel(job.extopts.affmod)<6, job.extopts.affmod(end+1:6) = 0; end % add translation
+          fprintf('\n  Modify affine regitration (S=[%+3d%+3d%+3d], T=[%+3d%+3d%+3d])',job.extopts.affmod);
+          sf   = (100 - job.extopts.affmod(1:3)) / 100;  
+          imat = spm_imatrix(Affine); 
+          COMc = [eye(4,3), [ 0; -24 / mean(imat(7:9)); -12 / mean(imat(7:9)); 1]  ]; 
+          imat = spm_imatrix(Affine * COMc); 
+          imat(1:3) = imat(1:3) - job.extopts.affmod(4:6); 
+          imat(7:9) = imat(7:9) .* sf;  
+          AffineMod = spm_matrix(imat) / COMc; 
+          
+          res.AffineUnmod = AffineUnmod; 
+          res.AffineMod   = AffineMod;
+        else
+          AffineMod = Affine;
+        end 
+        obj.Affine  = AffineMod;
         cat_err_res.obj = obj; 
       
         
@@ -950,6 +969,10 @@ function cat_run_job1639(job,tpm,subj)
     res.catlog  = catlog; 
     res.Affine0 = res.Affine; 
     res.image0  = spm_vol(job.channel(1).vols0{subj}); 
+    if isfield(job.extopts,'affmod') && any(job.extopts.affmod)
+      res.AffineUnmod = AffineUnmod; 
+      res.AffineMod   = AffineMod;
+    end
     if exist('Ylesion','var'), res.Ylesion = Ylesion; else res.Ylesion = false(size(res.image.dim)); end; clear Ylesion;
     if exist('redspmres','var'); res.redspmres = redspmres; res.image1 = image1; end
     job.subj = subj; 

@@ -206,9 +206,15 @@ table {
   /*
   background-color: #ffeda0;
   */
-  font: small 'Lucida Grande', Verdana, Arial, Sans-Serif;
+  font: 'Lucida Grande', Verdana, Arial, Sans-Serif;
+  font-size: 0.9em; 
   border-collapse: collapse;
   border: none;
+}
+
+table ul {
+	margin-left: -20px; 
+	padding-left: -20px;	
 }
 
 thead {
@@ -261,3 +267,16 @@ p.img {
   color: #666; 
 }
 
+p.code {
+  text-align: left;
+  width: 90%;
+  font-size: 0.9em; 
+  font: Monaco, Lucida Console, Courier, New Courier;
+  position: relative;
+  display: block;
+  margin-top: 10px;
+  margin-bottom: -10px;
+  margin-left: auto;
+  margin-right: auto;
+  color: #222; 
+}

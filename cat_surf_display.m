@@ -155,7 +155,7 @@ function varargout = cat_surf_display(varargin)
       fprintf('Display %s\n',spm_file(job.data{i},'link','cat_surf_display(''%s'')'));
     end
 
-    if expert>1
+    if expert>1 && ~isfield(job,'parent')
       fprintf('Developer display mode!\n');
     end
 

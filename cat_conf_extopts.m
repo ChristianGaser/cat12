@@ -471,8 +471,8 @@ if expert
   % low contrast cases it is maybe better to avoid the AMAP completely (4).
   % Although, there is a routine to identify problematic AMAP cases this is
   % quite new and may not working. 
-  ignoreErrors.labels = {'Interrupt on errors','Ignore errors (continue with the next subject)','Ignore errors (use backup functions - IN DEVELOPMENT)',...
-    'Ignore errors (always use backup functions)','Ignore errors (always use backup functions without AMAP)'};
+  ignoreErrors.labels = {'Interrupt on errors (0)','Ignore errors (continue with the next subject, 1)','Ignore errors (use backup functions - IN DEVELOPMENT, 2)',...
+    'Ignore errors (always use backup functions, 3)','Ignore errors (always use backup functions without AMAP, 4)'};
   ignoreErrors.values = {0 1 2 3 4};
   ignoreErrors.help   = [ignoreErrors.help {'The last two options were designed to test the backup funnction with/without AMAP (experimental!)'}];
 else
@@ -909,10 +909,70 @@ setCOM.help   = { ...
     ''
     'If affine registration fails you can try to disable this option and/or set the origin manually. '
   };
-setCOM.def    = @(val)cat_get_defaults('extopts.setCOM', val{:});
-setCOM.labels = {'No','Yes'};
-setCOM.values = {0 1};
+setCOM.def    = @(val) cat_get_defaults('extopts.setCOM', val{:});
+if expert 
+  % RD202101:  I am not sure how useful these options are and miss currently some good test cases.
+  %            In most cases the results are quite similar but forcing TPM registration seams to have the largest effect.
+  %            I would rename the GUI entry to 'Affine Registration Strategy' but this would be more confusion now.
+  setCOM.labels = {
+    'No (0)', ...
+    'Yes (1)', ...
+    'Yes (no TPM registration, 10)', ... 10 - automatic works quite well 
+    'Yes (force TPM registration, 11)', ... 11 - head-bias in children 
+    'Yes (TPM registration without head masking, 120)', ... 120 - probably only slower 
+    ... 'Yes (test TPM, use dilated head mask)', ... only for new pipeline
+    };
+  setCOM.values = {0 1 10 11 120}; % the value codes the operation but it has to be a string to support a leading 0 ... we do not need that yet  
+  setCOM.help   = [setCOM.help; {
+    ''
+   ['CAT first applies a classical (stepwise) affine registration of the optimized T1 image to a single T1 image via "spm_affreg", followed by another (step-wise) TPM-based registration via "spm_maff8" (labeled as "SPM preprocessing 1 (estimate 1)"). ' ...
+    'Although the TPM-based registration is more advanced and pretty good in most cases, we observed severe problems in younger/older subjects, where the correct initial affine registration was replaced by an inaccurate solution that was often biased by the head. ' ...
+    'Thus, we have implemented different tests to detect and ignore possible incorrect results that can controlled here directy (no/force TPM registration). ' ]
+    ''
+    'In addition, we observed that a head mask often improves and mosty fasten SPM preprocessing that is used by default but can be switch off here (TPM registration without head masking). '
+    ''}];
+else
+  setCOM.labels = {'No','Yes'};
+  setCOM.values = {0 1};
+end
 
+%------------------------------------------------------------------------
+
+
+% RD202101: This works quite well and support good control by users in single cases or groups.
+%           A menu is maybe to rough
+if expert
+  affmod         = cfg_entry;
+  affmod.strtype = 'r';
+  affmod.val     = {};
+  affmod.num     = [1,inf];
+else
+  affmod        = cfg_menu;
+  affmod.labels = {'Decrease by 10%','Decrease by 5%','no adaption','increase by 5%','incarease by 10%'};
+  affmod.values = { -10 , -5 , 0 , 5 , 10 };
+end
+affmod.val      = { 0 };
+affmod.tag      = 'affmod';
+affmod.name     = 'Modify Affine Scaling';
+affmod.help     = { 
+   ['If the affine registration is inaccurate the intial tissue classification of the "Unified Segmentation will be not optimal. ' ...
+    'Although multiple routines such as scull-stripping, cleanup, and non-linear registration catch a lot of problems some cases amy still suffer (mostly vissible as bad skull-stripping). ' ...
+    'In problematic cases (eg. outlier in the covariance analysis) you can check the brain outline of the original image in the CAT report. ' ...
+    'If it appears to be too small/large, you can addapt the scaling here. ' ...
+    'If the outline is to small and runs within the brain (e.g. in children) and parts of are missing (blue regions in the label image in the CAT report) than increase this parameter. ' ...
+    'If the outline is to large and runs some where beyond the brain (e.g. in elderly) and unremoved meninges are vissible as GM than decrease this parameter. ']
+    ''
+    }; 
+  % 'The correction can also help to adjust for too soft (desrease template size) or too hard skull-stripping (increase template size). ']
+if expert
+  affmod.help = [affmod.help; {
+   ['Use one value for isotropic scaling, otherwise specify x y and z scaling: [Sx Sy Sz]. ' ...
+    'Moreover, you can specify a final translation: [Tx Ty Tz], i.e. you have to enter a 1x6 matrix with 3 percentual values for the scaling and 3 mm vlaues, e.g., [ 0 0 -10, 0 0 -1] to correct only the z-axis scaling and position. ']
+    ''
+    'Use negative/postive values to indicate percentual reductions/increasements of the TPM, e.g., an 10% decrease/incease of the TPM size is definfed by the value -10/10 that result in a scaling factor of (0.92/1.10). ' 
+    ''
+    ''}];
+end
 %------------------------------------------------------------------------
 
 new_release        = cfg_menu;
@@ -928,29 +988,6 @@ new_release.hidden = expert<2;
 
 %------------------------------------------------------------------------
   
-
-% different Affine registations ... not implemented yet
-%{
-spm_affreg        = cfg_menu;
-spm_affreg.tag    = 'spm_affreg'; 
-spm_affreg.name   = 'Affine registration approach';
-spm_affreg.help   = { ...
-    'The affine registion is highly important for the whole pipeline. Failures result in low overlap to the TPM that troubles the Unified Segmenation and all following steps. Therefore, CAT uses different routines to obtain the best solution. However, this can fail especial in atypical subjects (very young/old) and we deside that it is maybe usefull to test the steps separately. Brain or head masks can imrove the results in some but also lead to problems in other cases.'
-    ''
-    '  The affreg routine process a affine registration based the orignal input (T1) image and a similar weighted scan . '
-    '  The maffreg routine use'
-  };
-%spm_affreg.def    = @(val)cat_get_defaults('extopts.spm_affreg', val{:}); 
-spm_affreg.labels = {
-  'no affine registration' ... 
-  'only affreg' ...
-  'only maffreg' ...
-  'affreg + maffreg' ...
-  'affreg + maffreg supervised' ...
-  };
-spm_affreg.values = {0 1 2 3 4};
-spm_affreg.val    = 3;
-%}
 
 % AMAP rather than SPM segmentation 
 spm_kamap        = cfg_menu;
@@ -1037,7 +1074,7 @@ close_parahipp.help    = {
 segmentation        = cfg_branch;
 segmentation.tag    = 'segmentation';
 segmentation.name   = 'Segmentation Options';
-segmentation.val    = {app,setCOM,NCstr,spm_kamap,LASstr,gcutstr,cleanupstr,BVCstr,wmhc,slc,mrf,restype}; % WMHCstr,
+segmentation.val    = {app,setCOM,affmod,NCstr,spm_kamap,LASstr,gcutstr,cleanupstr,BVCstr,wmhc,slc,mrf,restype}; % WMHCstr,
 segmentation.hidden = expert<1; 
 segmentation.help   = {'CAT12 parameter to control the tissue classification.';''};
 
@@ -1070,7 +1107,7 @@ if ~spm
   if expert>0 % expert options
     extopts.val   = {segmentation,registration,vox,surface,admin}; 
   else
-    extopts.val   = {app,setCOM,spm_kamap,LASstr,gcutstr,wmhc,registration,vox,restype,ignoreErrors}; 
+    extopts.val   = {app,setCOM,affmod,spm_kamap,LASstr,gcutstr,wmhc,registration,vox,restype,ignoreErrors}; 
   end
 else
   % SPM based surface processing and thickness estimation

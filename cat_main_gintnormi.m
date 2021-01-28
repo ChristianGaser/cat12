@@ -27,9 +27,15 @@ function Ysrc = cat_main_gintnormi(Ym,Tth)
 % ______________________________________________________________________
 % $Id$
 
-  T3th  = Tth.T3thx; 
-  T3thx = Tth.T3th; 
-
+  if 0
+    T3th  = Tth.T3thx; 
+    T3thx = Tth.T3th; 
+  else
+    % use interpolation to avoid steps in the histogram
+    T3th  = interp1(Tth.T3thx,1:0.1:numel(Tth.T3thx),'spline');
+    T3thx = interp1(Tth.T3th ,1:0.1:numel(Tth.T3th) ,'spline');
+  end
+  
   if all(T3th==T3thx), Ysrc = Ym; return; end
   
   [T3th,si] = sort(T3th);

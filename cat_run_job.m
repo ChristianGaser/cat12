@@ -25,6 +25,8 @@ function cat_run_job(job,tpm,subj)
 
     job.test_warnings  = 0; % just for tests
     job.extopts.histth = [0.96 0.9999]; % histogram thresholds
+    % use "lower" first histth to deal with diffent low intensity BGs that 
+    % is corrected in case of highBG data
     job.extopts.input  = 0; % 0 - auto (default), 1-with skull (normal), 2-skull-stripped, 3-high BG
 
     if exist('rng','file') == 2, rng('default'); rng(0); else, rand('state',0); randn('state',0); end
@@ -226,7 +228,7 @@ function cat_run_job(job,tpm,subj)
         
        
         % always create the n*.nii image because of the real masking of the
-        % T1 data for spm_preproc8 that include rewriting the image!
+        % T1 data for spm_preproc8 that includes rewriting the image!
         for n=1:numel(job.channel) 
           [pp,ff,ee] = spm_fileparts(job.channel(n).vols{subj}); 
           ofname  = fullfile(pp,[ff ee]); 
@@ -442,12 +444,13 @@ function cat_run_job(job,tpm,subj)
         
         %% Initial affine registration.
         %  -----------------------------------------------------------------
+        Affine  = eye(4); 
         [pp,ff] = spm_fileparts(job.channel(1).vols{subj});
         Pbt     = fullfile(pp,mrifolder,['brainmask_' ff '.nii']);
         Pb      = char(job.extopts.brainmask);
         Pt1     = char(job.extopts.T1);
         
-        if ~isempty(job.opts.affreg)      
+        if ~isempty(job.opts.affreg)  
           % first affine registration (with APP)
           
           % load template and remove the skull if the image is skull-stripped
@@ -538,13 +541,16 @@ function cat_run_job(job,tpm,subj)
               stime = cat_io_cmd('Affine registration','','',1,stime); 
             end
 
+            % write data to VF
+            VF.dt         = [spm_type('UINT8') spm_platform('bigend')];
+            VF.dat(:,:,:) = cat_vol_ctype(Ym * 200,'uint8'); 
+            VF.pinfo      = repmat([1;0],1,size(Ym,3));
+if 0 % new           
             % use further data limitation and remove background for affreg 
             [Ym2,ths]     = cat_stat_histth(Ym,job.extopts.histth);
             Ym2           = (Ym2 - ths(1)) ./ diff(ths) .* (1 - Ybg); 
-            % write data to VF
-            VF.dt         = [spm_type('UINT8') spm_platform('bigend')];
             VF.dat(:,:,:) = cat_vol_ctype(Ym2 * 200,'uint8'); 
-            VF.pinfo      = repmat([1;0],1,size(Ym,3));
+end
             clear WI ths; 
 
             % smoothing
@@ -564,7 +570,7 @@ function cat_run_job(job,tpm,subj)
           end
 
           %% prepare affine parameter 
-          aflags     = struct('sep',obj.samp,'regtype','subj','WG',[],'WF',[],'globnorm',1); 
+          aflags     = struct('sep',obj.samp,'regtype','subj','WG',[],'WF',[],'globnorm',1); % job.opts.affreg
           aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
           aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
 
@@ -578,14 +584,14 @@ function cat_run_job(job,tpm,subj)
           end
 
           % use affine transformation of given (average) data for longitudinal mode
-          if isfield(job,'useprior') && ~isempty(job.useprior)
+          if isfield(job,'useprior') && ~isempty(job.useprior)   
             priorname = job.useprior{1};
             [pp,ff,ee,ex] = spm_fileparts(priorname);  %#ok<ASGLU>
             catxml = fullfile(pp,reportfolder,['cat_' ff '.xml']);
 
             % check that file exists and get affine transformation
             if exist(catxml,'file') 
-              cat_io_cmd(sprintf('Use affine transformation from "%s"',ff),'','',1,stime); 
+              cat_io_cmd(sprintf('  Use affine transformation from "%s"',ff),'','',1,stime); 
               xml             = cat_io_xml(catxml);
               Affine          = xml.SPMpreprocessing.Affine;
               useprior        = 1; 
@@ -606,7 +612,7 @@ function cat_run_job(job,tpm,subj)
             useprior          = 0;
           end
           
-          if strcmp('human',job.extopts.species) && ~useprior
+          if strcmp('human',job.extopts.species) && ~useprior && ~ppe.affreg.highBG 
             % affine registration
             try
               spm_plot_convergence('Init','Coarse affine registration','Mean squared difference','Iteration');
@@ -622,10 +628,13 @@ function cat_run_job(job,tpm,subj)
             % RD202007: Unimportant information if maff8 works 
             if job.extopts.expertgui 
               if affscale>3 || affscale<0.5
-                stime  = cat_io_cmd('Coarse affine registration failed. Try fine affine registration.','','',1,stime);
+                stime  = cat_io_cmd('  Coarse affine registration failed. Try fine affine registration.','','',1,stime);
                 Affine = Affine_com; 
               end
             end
+          elseif strcmp('human',job.extopts.species) && ~useprior && ppe.affreg.highBG 
+            Affine  = Affine_com; 
+            Affine1 = Affine; 
           end
 
           
@@ -640,7 +649,7 @@ function cat_run_job(job,tpm,subj)
           %    ds('l2','',vx_vol,Ym,Yb,Ym,Yp0,90)
           
           % fine affine registration 
-          if strcmp('human',job.extopts.species) && ~useprior 
+          if strcmp('human',job.extopts.species) && ~useprior && ~ppe.affreg.highBG
             aflags.sep = obj.samp/2; 
             aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
             aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
@@ -648,6 +657,7 @@ function cat_run_job(job,tpm,subj)
             stime = cat_io_cmd('Affine registration','','',1,stime); 
             if job.extopts.APP>0
               VF.dt         = [spm_type('UINT8') spm_platform('bigend')];
+              VF.pinfo(1:2,:) = VF.pinfo(1:2,:)/spm_global(VF);
               VF.pinfo      = repmat([1;0],1,size(Ym,3));
               VF.dat(:,:,:) = cat_vol_ctype(Ym*200); 
             end
@@ -665,6 +675,7 @@ function cat_run_job(job,tpm,subj)
           clear VG1 VF1
          
         else
+          Affine = eye(4);
           VF = spm_vol(obj.image(1));
           [Ym,Yt,Ybg,WMth] = APPmini(obj,VF,job.extopts.histth); %#ok<ASGLU>
           %[Ym,Yt,Ybg,WMth] = cat_run_job_APP_init1070(single(obj.image.private.dat(:,:,:)),vx_vol,job.extopts.verb); %#ok<ASGLU>
@@ -702,7 +713,7 @@ function cat_run_job(job,tpm,subj)
         %% APP for spm_maff8
         %  optimize intensity range
         %  we have to rewrite the image, because SPM reads it again 
-        if 1 %job.extopts.APP>0
+        if job.extopts.APP>0
             % WM threshold
             Ysrc = single(obj.image.private.dat(:,:,:)); 
             Ysrc(isnan(Ysrc) | isinf(Ysrc)) = min(Ysrc(:));
@@ -743,17 +754,24 @@ function cat_run_job(job,tpm,subj)
             % Masking causes general problems in SPM US with Christian's 
             % thickness phantom (brain PVE voxels were aligned to class 5) 
             % that required further correction in cat_main_updateSPM. 
-            if exist('Ybg','var')
-              Ymsk          = cat_vol_morph( ~Ybg ,'dd',15,vx_vol) & ...        % remove voxels far from head
-                              ~( Ybg & rand(size(Ybg))>0.5) & ...               % have a noisy corona
-                              ~( cat_vol_grad( Ysrc , vx_vol)==0  &  Ysrc==0 ); % remove voxel that are 0 and have no gradient
-              Ybge          = cat_vol_morph(Ybg,'de',10,vx_vol) | ...           % define background for cat_main_updateSPM
-                              ( cat_vol_grad( Ysrc , vx_vol)==0  &  Ysrc==0 );  % RD202006: set value arbitrary to 10 mm 
-              obj.msk       = VF; 
+            if exist('Ybg','var') && job.extopts.setCOM ~= 120
+              if job.extopts.setCOM > 120
+                Ymsk          = cat_vol_morph( ~Ybg ,'dd',15,vx_vol) & ...        % remove voxels far from head
+                                ~( Ybg & rand(size(Ybg))>0.5) & ...               % have a noisy corona
+                                ~( cat_vol_grad( Ysrc , vx_vol)==0  &  Ysrc==0 ); % remove voxel that are 0 and have no gradient
+                Ybge          = cat_vol_morph(Ybg,'de',10,vx_vol) | ...           % define background for cat_main_updateSPM
+                                ( cat_vol_grad( Ysrc , vx_vol)==0  &  Ysrc==0 );  % RD202006: set value arbitrary to 10 mm 
+              end
+              obj.msk       = VF;
               obj.msk.pinfo = repmat([255;0],1,size(Ybg,3));
               obj.msk.dt    = [spm_type('uint8') spm_platform('bigend')];
-              obj.msk.dat   = uint8( Ymsk );  % RD202006 background corona to have save background values
-              obj.msk       = spm_smoothto8bit(obj.msk,0.1); 
+              switch job.extopts.setCOM
+                % case 120 no msk at all
+                case 122,  obj.msk.dat = uint8( Ybge );  % RD202006 background corona to have save background values
+                case 123,  obj.msk.dat = uint8( Ymsk );  % RD202006 background random msk to have save background values
+                otherwise, obj.msk.dat = uint8( ~Ybg );  % ~?case 121
+              end
+              obj.msk       = spm_smoothto8bit(obj.msk,0); 
             % else??? mask not required or zero mask?   
             end            
             %clear Ysrc; 
@@ -776,11 +794,13 @@ function cat_run_job(job,tpm,subj)
         %  This may not work for non human data (or very small brains).
         %  This part should be an external (coop?) function?
         if useprior
-          stime = cat_io_cmd('SPM preprocessing 1 (use prior):','','',1,stime); 
+          stime = cat_io_cmd('SPM preprocessing 1 (estimate 1 - use prior):','','',1,stime); 
+        elseif job.extopts.setCOM == 10 % no maffreg
+          stime = cat_io_cmd('SPM preprocessing 1 (estimate 1 - skip TPM registration):','','',1,stime); 
         else
-          stime = cat_io_cmd('SPM preprocessing 1 (estimate 1):','','',1,stime); 
+          stime = cat_io_cmd('SPM preprocessing 1 (estimate 1 - TPM registration):','','',1,stime); 
         end
-        if ~isempty(job.opts.affreg) && strcmp('human',job.extopts.species) && ~useprior 
+        if ~isempty(job.opts.affreg) && strcmp('human',job.extopts.species) && ~useprior && job.extopts.setCOM ~= 10 % setcom == 10 - never use
           % turn rand warning off
           wo = warning('QUERY','MATLAB:RandStream:ActivatingLegacyGenerators'); wo = strfind( wo.state , 'on');
           if wo, warning('OFF','MATLAB:RandStream:ActivatingLegacyGenerators'); end
@@ -791,7 +811,7 @@ function cat_run_job(job,tpm,subj)
             [Affine,obj.tpm,res0] = cat_run_job_multiTPM(job,obj2,Affine,ppe.affreg.skullstripped,1); %#ok<ASGLU>
           elseif strcmp(job.extopts.species,'human')
             %% only one TPM (old approach); 
-            spm_plot_convergence('Init','Fine affine registration','Mean squared difference','Iteration');
+            spm_plot_convergence('Init','affine registration to TPM','Mean squared difference','Iteration');
 
             % first we start with the given affine registration and affreg parameter (e.g. mni) and a very low resolution
             % RD202007: also here different maskings could be tested - however, it looks quite stable now 
@@ -812,7 +832,7 @@ function cat_run_job(job,tpm,subj)
                   % we start here with the maff8 that is more robust to varying contrasts
                   [Affine2n,ppe.spm_maff8.ll(3)] = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,eye(4),'none',80); 
                   if ppe.spm_maff8.ll(3) > ppe.spm_maff8.ll(2)
-                    cat_io_addwarning([mfilename ':spm_maff8'],'Use affreg=none due to better results.',1,[1 2],ppe.spm_maff8);
+                    cat_io_addwarning([mfilename ':spm_maff8n'],'Use affreg=none due to better results.',1,[1 2],ppe.spm_maff8);
                     job.opts.affreg = 'none'; % in this case we have to update the affreg parameter
                     Affine2 = Affine2n;
                   else
@@ -826,34 +846,40 @@ function cat_run_job(job,tpm,subj)
             
             % if nan than retry with less smoothing
             if any(any(isnan(Affine2(1:3,:))))
-              Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*4,obj.tpm,Affine ,job.opts.affreg,80);
+              [Affine2,ppe.spm_maff8.ll(end+1)] = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*4,obj.tpm,Affine ,job.opts.affreg,80);
               if any(any(isnan(Affine2(1:3,:)))) 
                 Affine2 = Affine; 
               end
             else
               % check for > 10% larger scaling 
-              if scl1 > 1.1*scl2
-                fprintf('\nFirst fine affine registration failed.\nUse affine registration from previous step.\n');
+              if scl1 > 1.1*scl2 && job.extopts.setCOM ~= 11 % setcom == 11 - use always 
+                cat_io_addwarning([mfilename ':spm_maff8i'], ...
+                 ['Inital affine registration to TPM failed, try fine.'], 1,[1 2],ppe.spm_maff8.ll(end));
                 Affine2 = Affine1;
                 scl2 = scl1;
               end
-            end
-            % after this initial step we do some refined registration with less smoothing 
-            [Affine3,ppe.spm_maff8.ll(4)]  = spm_maff8(obj.image(1),obj.samp,obj.fwhm,obj.tpm,Affine2,job.opts.affreg,80);
+              
+              % after this initial step we do some refined registration with less smoothing 
+              [Affine3,ppe.spm_maff8.ll(end+1)]  = spm_maff8(obj.image(1),obj.samp,obj.fwhm,obj.tpm,Affine2,job.opts.affreg,80);
 
-            if ~any(any(isnan(Affine3(1:3,:))))
-              scl3 = abs(det(Affine3(1:3,1:3)));
-              % check for > 5% larger scaling 
-              if scl2 > 1.05*scl3 
-                fprintf('\nFinal fine affine registration failed.\nUse fine affine registration from previous step.\n');
+              if ~any(any(isnan(Affine3(1:3,:))))
+                scl3 = abs(det(Affine3(1:3,1:3)));
+                % check for > 5% larger scaling 
+                if scl2 > 1.05*scl3 && job.extopts.setCOM ~= 11 % setcom == 11 - use always 
+                  cat_io_addwarning([mfilename ':spm_maff8f'], ...
+                   ['Final affine registration to TPM failed.\\n' ...
+                    'Use affine registration from previous sucessful step.'], 1,[1 2],ppe.spm_maff8.ll(end));
+                  Affine2 = Affine1;
+                  %scl2 = scl1;
+                  Affine = Affine2;
+                else
+                  Affine = Affine3;
+                end
+              else % Affine3 failed (NaN), use Affine2
                 Affine = Affine2;
-              else
-                Affine = Affine3;
               end
-            else
-              Affine = Affine2;
             end
-
+            
             % turn warning on 
             if wo, warning('ON','MATLAB:RandStream:ActivatingLegacyGenerators'); end
           end
@@ -919,10 +945,26 @@ function cat_run_job(job,tpm,subj)
         end
         
         % adpation parameter for affine registration? 0.98 and 1.02?
-        %imat = spm_imatrix(Affine2); imat(7:9)=imat(7:9)*1.02; Affine2 = spm_matrix(imat); 
-        
-
-        obj.Affine = Affine;
+        if isfield(job.extopts,'affmod') && any(job.extopts.affmod)
+          stime = cat_io_cmd('  Modify affine regitration:','','',1,stime); 
+          AffineUnmod = Affine; 
+          if numel(job.extopts.affmod)>6, job.extopts.affmod = job.extopts.affmod(1:6); end % remove too many
+          if numel(job.extopts.affmod)<3, job.extopts.affmod(end+1:3) = job.extopts.affmod(1); end % isotropic
+          if numel(job.extopts.affmod)<6, job.extopts.affmod(end+1:6) = 0; end % add translation
+          sf   = (100 - job.extopts.affmod(1:3)) / 100;  
+          imat = spm_imatrix(Affine); 
+          COMc = [eye(4,3), [ 0; -24 / mean(imat(7:9)); -12 / mean(imat(7:9)); 1]  ]; 
+          imat = spm_imatrix(Affine * COMc); 
+          imat(1:3) = imat(1:3) + job.extopts.affmod(4:6); 
+          imat(7:9) = imat(7:9) .* sf;  
+          AffineMod = spm_matrix(imat) / COMc; 
+          
+          res.AffineUnmod = AffineUnmod; 
+          res.AffineMod   = AffineMod;
+        else
+          AffineMod = Affine;
+        end 
+        obj.Affine  = AffineMod;
         cat_err_res.obj = obj; 
       
         
@@ -1068,7 +1110,11 @@ function cat_run_job(job,tpm,subj)
     res.ppe     = ppe; 
     res.stime   = stime0;
     res.catlog  = catlog; 
-    res.Affine0 = res.Affine; 
+    res.Affine0 = res.Affine; %AffineMod; 
+    if isfield(job.extopts,'affmod') && any(job.extopts.affmod)
+      res.AffineUnmod = AffineUnmod; 
+      res.AffineMod   = AffineMod;
+    end
     if exist('Ybge','var')
       % If the background was estimated we want to save it to improve the 
       % SPM segmentation in regions outside the TPM volume. 

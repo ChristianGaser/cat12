@@ -551,7 +551,7 @@ function varargout=cat_vol_resize(T,operation,varargin)
       end
       if numel(res)==1, res(2:3)=res; end
       if numel(res)==2, res=[res(1),res]; end
-      if ~exist('method','var'), interp='linear'; end
+      if ~exist('interp','var'), interp='linear'; end
       
       T      = single(T{1});
       resV   = sqrt(sum(V.mat(1:3,1:3).^2)); %);round( %*100)/100;
