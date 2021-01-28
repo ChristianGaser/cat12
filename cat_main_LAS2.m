@@ -811,9 +811,9 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
  end
   
   % final scaling of GM and CSF (not required for WM)
-  Ylab{1} = Ylab{1} .* T3th(2) / cat_stat_nanmedian( Ylab{1}(Ygm(:)>0.5)); 
-  Ylab{3} = Ylab{3} .* T3th(1) / cat_stat_nanmedian( Ylab{3}(Ycm(:)>0.5)); 
-  %Ylab{6} = Ylab{6} .* cat_stat_nanmedian( Ysrc(Ynb(:)>0.5)) / cat_stat_nanmedian( Ylab{6}(Ynb(:)>0.5)); 
+  Ylab{1} = Ylab{1} .* T3th(2) / cat_stat_kmeans( Ylab{1}(Ygm(:)>0.5), 1); 
+  Ylab{3} = Ylab{3} .* T3th(1) / cat_stat_kmeans( Ylab{3}(Ycm(:)>0.5), 1); 
+  Ylab{6} = Ylab{6} .* cat_stat_kmeans( Ysrc(Ynb(:)>0.5) , 1) / cat_stat_kmeans( Ylab{6}(Ynb(:)>0.5) , 1); 
   
   %% restore original resolution
   if exist('resT0','var')

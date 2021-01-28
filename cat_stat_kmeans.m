@@ -1,10 +1,13 @@
-function [mu,su,nu] = cat_stat_kmeans(y,k)
+function [mu,su,nu] = cat_stat_kmeans(y,k,s)
 % K-means clustering
 %_______________________________________________________________________
-% FORMAT [mu,su,nu] = cat_stat_kmeans(y,k)
+% FORMAT [mu,su,nu] = cat_stat_kmeans(y,k[,s])
 % 
 %  y  .. data 
 %  k  .. Number of components
+%  s  .. select peak (s>0 & s<=k) to have some side peaks just for
+%        stabilization, s==0 select maximum peak
+% 
 %
 %  mu .. vector of class means 
 %  su .. vector of class std 
@@ -21,6 +24,8 @@ if nargin<2, k=1; end
 
 k = max(1,k); 
 
+dt = class(y); 
+y = double(y); 
 y = y(:)';
 y(isnan(y))=[]; % remove NaNs 
 if numel(y)<=0
@@ -43,9 +48,9 @@ su = zeros(size(mu));
 nu = ones(size(mu));
 
 d = zeros(k,length(y));
-for loops = 1:1000,  
+for loops = 1:1000  
 
-  for j=1:k,
+  for j=1:k
     d(j,:) = (y-mu(j)).^2;
   end
   [tmp,i] = min(d); clear tmp %#ok<ASGLU>
@@ -54,7 +59,7 @@ for loops = 1:1000,
     break;
   else
    % Recompute centres
-   for j=1:k,
+   for j=1:k
      mu(j) = mean(y(i==j));
    end
    last_i=i;
@@ -62,7 +67,32 @@ for loops = 1:1000,
 end  
 
 % Compute variances and mixing proportions
-for j=1:k,
-   su(j) = std(y(i==j));
-   nu(j) = sum(i==j)./numel(y(:));
+for j=1:k
+  if isempty(y(i==j))
+    su(j) = std(d(j,:));
+    nu(j) = sum(std(d(j,:)))./numel(y(:));
+  else
+    su(j) = std(y(i==j));
+    nu(j) = sum(i==j)./numel(y(:));
+  end
 end
+
+if exist('s','var')
+  if s>k 
+    error('s has to be >=0 and <=k.'); 
+  end 
+  if s==0 
+    [tmp,s] = max(nu); %#ok<ASGLU> % select maximum
+  end
+  mu = mu(s);
+  su = su(s);
+  nu = nu(s); 
+end
+  
+if strcmp(dt,'double') %#ok<STISA>
+  feval(dt,mu); 
+  feval(dt,su); 
+  feval(dt,nu); 
+end
+    
+    

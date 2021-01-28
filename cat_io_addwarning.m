@@ -124,7 +124,7 @@ function varargout = cat_io_addwarning(id,mess,level,nline,data,usebox)
     if nline2(2) == 1 
       fprintf('\n'); 
     elseif nline2(2) == 2
-      fprintf('\n'); cat_io_cmd(' ','')
+      fprintf('\n'); cat_io_cmd(' ','');
     end
   end
   

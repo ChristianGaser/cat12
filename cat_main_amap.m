@@ -1,4 +1,4 @@
-function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
+function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Ycls,job,res)
 % ______________________________________________________________________
 %
 % AMAP segmentation:
@@ -6,16 +6,16 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
 % a low level of iterations and no further bias correction, because
 % some images get tile artifacts. 
 %
-% [prob,indx,indy,indz] = cat_main_amap(Ymi,Yp0o,Yb,Yb0,Ycls,job,res)
+% [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
 %
 % prob .. new AMAP segmenation (4D)
 % ind* .. index elements to asign a subvolume
 % Ymi  .. local intensity normalized source image
 % Yb   .. brain mask
-% Yb0  .. origina brain mask 
 % Ycls .. SPM segmentation 
 % job  .. SPM/CAT parameter structure
 % res  .. SPM segmentation structure
+% th   .. AMAP treshholds
 % ______________________________________________________________________
 %
 % Robert Dahnke, Christian Gaser 
@@ -64,13 +64,15 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
             Yp0(:,:,i) = Yp0(:,:,i) + cat_vol_ctype((maxind == k1) .* (maxi~=0) * k1ind(k1) .* Yb(:,:,i)); 
           end
       end
-
+      if ~debug, clear maxi maxind Kb k1 cls2; end
+  
+      
       %% correct missing parts by using the intensity normalized map or the old Yp0 label map
 % ########## NEW ###########
 % RD202008: this may not working correctly 
-defineMissingParts = 1;
+defineMissingParts = 0;
 if defineMissingParts
-      if job.extopts.ignoreErrors < 2
+      if job.extopts.ignoreErrors < 3
         Yp0o = min(3,max(1,uint8(max(Yb,min(3,round(Ymi*3)))))); 
       else
         Yp0o = min(3,max(1,single(Ycls{3})/255*3 + single(Ycls{1})/255*2 + single(Ycls{2})/255));
@@ -80,6 +82,7 @@ end
 % ########## NEW ###########
 
       if ~debug, clear maxi maxind Kb k1 cls2 Yp0o; end
+      
     else
       % more direct method ... a little bit more WM, less CSF
       Yp0 = uint8(max(Yb,min(3,round(Ymi*3)))); Yp0(~Yb) = 0;
@@ -112,7 +115,8 @@ end
 
     % remove non-brain tissue with a smooth mask and set values inside the
     % brain at least to CSF to avoid wholes for images with CSF==BG.
-    if job.extopts.LASstr>0 && job.extopts.ignoreErrors < 2
+    if job.extopts.LASstr>0 && job.extopts.ignoreErrors < 3 && ...
+      ~isfield(job.extopts,'inv_weighting') && ~job.extopts.inv_weighting
       Ywmstd = cat_vol_localstat(single(Ymib),Yp0b==3,1,4); 
       CSFnoise(1) = cat_stat_nanmean(Ywmstd(Ywmstd(:)>0))/mean(vx_vol); 
       Ywmstd = cat_vol_localstat(cat_vol_resize(single(Ymib),'reduceV',vx_vol,vx_vol*2,16,'meanm'),...
@@ -123,13 +127,11 @@ end
       Ycsf = Ycsf + cat_vol_smooth3X(randn(size(Ycsf)),1.0) * max(0.005,min(0.2,CSFnoise(2)*1)); % high-frequency noise
       Ymib = max(Ycsf*0.8 .* cat_vol_smooth3X(Ycsf>0,2),Ymib); 
       clear Ycsf; 
-      % Yb is needed for surface reconstruction
-    %     if ~job.output.surface, clear Yb; end
     end
 
 
     % adaptive mrf noise 
-    if (job.extopts.mrf>=1 || job.extopts.mrf<0) %&& job.extopts.ignoreErrors < 2
+    if (job.extopts.mrf>=1 || job.extopts.mrf<0) %&& job.extopts.ignoreErrors < 3
       % estimate noise
       [Yw,Yg] = cat_vol_resize({Ymi.*(Ycls{1}>240),Ymi.*(Ycls{2}>240)},'reduceV',vx_vol,3,32,'meanm');
       Yn = max(cat(4,cat_vol_localstat(Yw,Yw>0,2,4),cat_vol_localstat(Yg,Yg>0,2,4)),[],4);
@@ -147,7 +149,7 @@ end
     Ymib = double(Ymib); n_iters = 50; sub = round(32/min(vx_vol));   %#ok<NASGU>
     n_classes = 3; pve = 5; bias_fwhm = 0; init_kmeans = 0;           %#ok<NASGU>
     if job.extopts.mrf~=0, iters_icm = 50; else, iters_icm = 0; end   %#ok<NASGU>
-    if job.extopts.ignoreErrors > 1
+    if job.extopts.ignoreErrors > 2
       % init_kmeans = 0; % k-means was not stable working (e.g. HR075T2) 
       %                  % and it is better to use also here the previous intensity scaling  
       %
@@ -161,7 +163,7 @@ end
     end
 
     % remove noisy background for kmeans
-    if init_kmeans && job.extopts.ignoreErrors<2, Ymib(Ymib<0.1) = 0; end %#ok<NASGU>
+    if init_kmeans && job.extopts.ignoreErrors < 3, Ymib(Ymib<0.1) = 0; end %#ok<NASGU>
 
     % do segmentation  
     amapres = evalc(['prob = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
@@ -243,7 +245,7 @@ end
     % areas where GM from Amap > GM from SPM12. This will result in a brainmask where GM areas
     % hopefully are all included and not cut 
     if job.extopts.gcutstr>0 && ~isfield(job.extopts,'inv_weighting') && ~job.extopts.inv_weighting
-      Yb0(indx,indy,indz) = Yb0(indx,indy,indz) | ((prob(:,:,:,1) > 0) & Yb(indx,indy,indz)); % & ~Ycls{1}(indx,indy,indz));
+      %Yb0(indx,indy,indz) = Yb0(indx,indy,indz) | ((prob(:,:,:,1) > 0) & Yb(indx,indy,indz)); % & ~Ycls{1}(indx,indy,indz));
       for i=1:3
         prob(:,:,:,i) = prob(:,:,:,i).*uint8(Yb(indx,indy,indz));
       end

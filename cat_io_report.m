@@ -727,7 +727,7 @@ function cat_io_report(job,qa,subj,createerr)
     colormap(fg,cmap); %caxis([0,numel(cmap)]); 
   
     %if exist('hho' ,'var'), spm_orthviews('window',hho ,[0,6]); end % not fixed ! ... 
-    if exist('hhm' ,'var'), spm_orthviews('window',hhm ,[0,3/4]); end
+    %if exist('hhm' ,'var'), spm_orthviews('window',hhm ,[0,3/4]); end
     if exist('hhp0','var'), spm_orthviews('window',hhp0,[0,4]);   end
 
     % update histograms - switch from color to gray

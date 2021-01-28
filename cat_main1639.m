@@ -14,6 +14,10 @@ function Ycls = cat_main1639(res,tpm,job)
 
 %#ok<*ASGLU>
 
+
+update_intnorm = job.extopts.new_release;  % RD202101: temporar parameter to control the additional intensity normalization 
+ 
+
 % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
 dbs = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
 
@@ -36,7 +40,7 @@ stime2 = cat_io_cmd('  Write Segmentation','g5','',job.extopts.verb-1);
 
 %% CAT vs. SPMpp Pipeline
 if ~isfield(res,'spmpp')
-  %% Update SPM results in case of reduced SPM preprocessing resultion 
+  %% Update SPM results in case of reduced SPM preprocessing resolution 
   %  -------------------------------------------------------------------
   if isfield(res,'redspmres')
     [Ysrc,Ycls,Yy,res] = cat_main_resspmres(Ysrc,Ycls,Yy,res);
@@ -113,6 +117,15 @@ if ~isfield(res,'spmpp')
     [Ym,Yb,T3th,Tth,job.inv_weighting,noise] = cat_main_gintnorm1639(Ysrc,Ycls,Yb,vx_vol,res,Yy,job.extopts);
   end
   job.extopts.inv_weighting = job.inv_weighting;
+  
+  % RD202101: additional intensity correction 
+  if 0 && update_intnorm 
+    [Ym,tmp,Tthm] = cat_main_update_intnorm(Ym,Ym,Yb,Ycls,job);
+    res.ppe.tths.uintnorm0postgintnorm.Tthm  = Tthm; 
+    clear tmp Tthm;
+  end
+
+  
   
   % update in inverse case ... required for LAS
   % 
@@ -298,6 +311,16 @@ if ~isfield(res,'spmpp')
   end
   
   
+  % RD202101: additional intensity correction 
+  if update_intnorm 
+    [Ym,Ymi,Tthm,Tthmi] = cat_main_update_intnorm(Ym,Ymi,Yb,Ycls,job);
+    res.ppe.tths.uintnorm1postlas.Tthm  = Tthm; 
+    res.ppe.tths.uintnorm1postlas.Tthmi = Tthmi; 
+    clear Tthm Tthmi;
+  end
+  
+  
+  
   
   %% Partitioning: 
   %  --------------------------------------------------------------------- 
@@ -401,6 +424,16 @@ if ~isfield(res,'spmpp')
   %    ind* .. index elements to asign a subvolume
   %  -------------------------------------------------------------------
   [prob,indx,indy,indz] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res);
+  
+   
+  % RD202101: Update image intensity normalization based on the the AMAP
+  %           segmentation but not the AMAP thresholds
+  if update_intnorm 
+    [Ym,Ymi,Tthm,Tthmi] = cat_main_update_intnorm(Ym,Ymi,Yb,prob,job,0,indx,indy,indz);
+    res.ppe.tths.uintnorm2postamap.Tthm  = Tthm; 
+    res.ppe.tths.uintnorm2postamap.Tthmi = Tthmi; 
+    clear Tthm Tthmi; 
+  end
   
   
   
@@ -592,7 +625,7 @@ end
   end
   
   % call Dartel/Shooting registration 
-  if job.extopts.new_release % ... there is an error
+  if job.extopts.new_release && 0 % ... there is an error
     [trans,res.ppe.reg] = cat_main_registration2(job,res,Yclsd,Yy,tpm.M,Ylesions);
   else
     [trans,res.ppe.reg] = cat_main_registration(job,res,Yclsd,Yy,tpm.M,Ylesions);
@@ -809,26 +842,39 @@ if job.output.surface
   if exist('S','var')
     if isfield(S,'lh') && isfield(S.lh,'th1'), th=S.lh.th1; else, th=[]; end
     if isfield(S,'rh') && isfield(S.rh,'th1'), th=[th; S.rh.th1]; end
-    qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
+    qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; 
+    
     if job.extopts.expertgui>1
-      if isfield(S,'lh') && isfield(S.lh,'th2'), th=S.lh.th2; else, th=[]; end 
-      if isfield(S,'rh') && isfield(S.lh,'th2'), th=[th; S.rh.th2]; end
-      qa.subjectmeasures.dist_gyruswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
-      if isfield(S,'lh') && isfield(S.lh,'th3'), th=S.lh.th3; else, th=[]; end 
-      if isfield(S,'rh') && isfield(S.lh,'th3'), th=[th; S.rh.th3]; end
-      qa.subjectmeasures.dist_sulcuswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
+      if isfield(S,'lh') && isfield(S.lh,'th2'), th2=S.lh.th2; else, th2=[]; end 
+      if isfield(S,'rh') && isfield(S.lh,'th2'), th2=[th2; S.rh.th2]; end
+      qa.subjectmeasures.dist_gyruswidth{1} = [cat_stat_nanmean(th2(:)) cat_stat_nanstd(th2(:))]; 
+      if isfield(S,'lh') && isfield(S.lh,'th3'), th2=S.lh.th3; else, th2=[]; end 
+      if isfield(S,'rh') && isfield(S.lh,'th3'), th2=[th2; S.rh.th3]; end
+      qa.subjectmeasures.dist_sulcuswidth{1} = [cat_stat_nanmean(th2(:)) cat_stat_nanstd(th2(:))];
     end
   elseif exist('Yth1','var')
     qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(Yth1(Yth1(:)>1)) cat_stat_nanstd(Yth1(Yth1(:)>1))];
+    th = Yth1(Yth1(:)>1); 
     % gyrus- and sulcus-width? 
   end
+  %% Thickness peaks 
+  %  Estimation of kmean peaks to describe the thickess in a better way than
+  %  by using only mean and std that are both biased strongly by outliers.
+  [thm ,ths, thh ] = cat_stat_kmeans( th , 1 );  % one anatomical average peak
+  [thma,thsa,thha] = cat_stat_kmeans( th( abs( th - thm ) < ths * 2 ) , 3 ); % 3 anatomical peaks
+  [thme,thse,thhe] = cat_stat_kmeans( th( (th < thma(1) - 2*thsa(1) ) |  (th > thma(end) + 2*thsa(end) )) , 2 ); % 3 anatomical peaks
+  qa.subjectmeasures.dist_thickness_kmeans        = [thm'  ths'  thh' ]; 
+  qa.subjectmeasures.dist_thickness_kmeans_inner3 = [thma' thsa' thha']; 
+  qa.subjectmeasures.dist_thickness_kmeans_outer2 = [thme' thse' thhe']; 
+  if ~debug, clear th;  end
   
-  %qam = cat_stat_marks('eval',job.cati,qa,'cat12'); % ... not ready
+  %% qam = cat_stat_marks('eval',job.cati,qa,'cat12'); % ... not ready
   cat_io_xml(fullfile(pth,res.reportfolder,['cat_' namspm nam '.xml']),struct(...
     ... 'subjectratings',qam.subjectmeasures, ... not ready
     'subjectmeasures',qa.subjectmeasures,'ppe',res.ppe),'write+'); % here we have to use the write+!
 end  
 fprintf('%5.0fs\n',etime(clock,stime));
+clear Yth1;
 
 % WMHC warning
 if qa.subjectmeasures.vol_rel_WMH>0.01
@@ -838,7 +884,6 @@ if qa.subjectmeasures.vol_rel_WMH>0.01
     qa.subjectmeasures.vol_abs_WMH / qa.subjectmeasures.vol_abs_CGW(3) * 100),1);
 end
 
-clear Yth1;
 
 
 
@@ -858,19 +903,6 @@ if job.extopts.print
   cat_main_reportfig(Ymi,Yp0,Yl1,Psurf,job,qa,res,str);
 end
 
-% remove preview surfaces and potential fast folder
-if any( job.output.surface == [ 5 6 ] )
-  for i=1:numel(Psurf)
-    delete(Psurf(i).Pcentral)
-    delete(Psurf(i).Ppbt)
-    delete(Psurf(i).Pthick)
-  end
-  Pfast = fullfile(fileparts(Psurf(1).Pcentral),'fast');
-  if exist(Pfast,'dir')
-    rmdir(Pfast,'s')
-  end
-end
-
 % final command line report
 cat_main_reportcmd(job,res,qa);
 
@@ -878,9 +910,14 @@ cat_main_reportcmd(job,res,qa);
 delete_surf_preview(Psurf,job);
 return
 function delete_surf_preview(Psurf,job)
-  % cleanup preview surfaces and directory
-  if job.output.surface == 5 
+  % cleanup preview surfaces and directory (but only for non-experts)
+  if any( job.output.surface == [ 5 6 ] ) && job.extopts.expertgui<1
     % delete files that where possibly created in cat_surf_createCS(2)
+ 
+% RD202101: not all files are listed ... further lh.*.preview.* files: 
+%           - intlayer4, intpial, intwhite
+%           - layer4, pial, white
+
     ffields = fieldnames(Psurf); 
     for si = 1:numel( Psurf )
       for fi = 1:numel( ffields )
@@ -899,6 +936,13 @@ function delete_surf_preview(Psurf,job)
       numel( dcontent( [dcontent.isdir] == 0) ) == 0
       try
         rmdir( pp , 's');
+      end
+    end
+    % check also for an empty surf directory
+    if exist( pp , 'dir' ) &&  strcmp(pp2,'surf') && ...
+      numel( dcontent( [dcontent.isdir] == 0) ) == 0
+      try
+        rmdir( fullfile(pp,'surf') , 's');
       end
     end
   end
@@ -1127,7 +1171,7 @@ function [Ymix,job,surf,WMT,stime] = cat_main_surf_preppara(Ymi,Yp0,job,vx_vol)
   if job.output.surface>4 && job.output.surface~=9 
     try
       if strcmp(job.extopts.species,'human')
-        job.extopts.pbtres = max(0.8,min([((min(vx_vol)^3)/2)^(1/3) 1.0]));
+        job.extopts.pbtres = 0.8; %max(0.8,min([((min(vx_vol)^3)/2)^(1/3) 1.0]));
       else
         job.extopts.pbtres = max(0.4,min([((min(vx_vol)^3)/2)^(1/3) 1.0]));
       end

@@ -22,11 +22,11 @@
     </div>
       
     <div id="content">
-      <h2>Preprocessing warnings:</h2>
+      <h2>Preprocessing warnings <b style="color:#DD0000">(IN DEVELOPMENT):</b></h2>
       <p>
-	      CAT uses 3 levels of warnings ( <i style="color:#0000FF">note</i>, <i style="color:#AA00FF">warning</i>, and <i style="color:#DD0000">alert</i> ) to inform about major events in the preprocessing.  All warnings will be printed fully on the command line and in the LOG-file in the report preprocessing direcory.  On the report only their number is listed and only the identifier of serious warnings (level 1 and 2) were displayed.  Warnings are save in the XML-file <i>cat_*.xml</i> in the report preprocessing directory.  The warning level or identifier can be used as confound in the (quality control) analysis to handle outlier.  
+	      CAT uses 3 levels of warnings ( <i style="color:#0000FF">note</i>, <i style="color:#FF7700">warning</i>, and <i style="color:#DD0000">alert</i> ) to inform about major events in the preprocessing. Notes have normally only very light effects and can be ignored, whereas warnings and alerts describe atypical processing with more obvious effects that can / should be considered, in particular if the results are outlier in the covariance analysis. 
 	    </p>
-	    <table id="table">
+			<table id="table">
 		    <hd id="thead">
 			     <td><b>Name</b></td><td><b>Level</b></td><td><b>Comment</b></td>
         </hd>
@@ -42,7 +42,7 @@
 						</ul>
 					</td>
 				</tr>
-		    <tr style="color:#AA00FF"> 
+		    <tr style="color:#FF7700"> <!-- violet: AA00FF, orange: FF9900 -->
 			    <td style="vertical-align: top;">warning</td><td style="vertical-align: top;">1</td><td>
 				    <ul>
 					    <li>regular but atypical processing stream with skipped functions to process special input that <b> probably have effects</b> on preprocessing results and <b><u>could/should be considered</u></b>
@@ -62,10 +62,36 @@
 						</ul>
 					</td>
 				</tr>
-			</table>	      
+			</table>	
+		</p><br><p>
+			All warnings will be printed fully on the command line (<a href="#Fig1">Fig. 1</a>) and in the LOG-file in the report preprocessing directory. 	
+			<div>	
+				<p class="code" style="width: 90%; color:#FF7700" id="Fig1">
+    ------------------------------------------------------------------------<br>
+     WARNING 01:  cat_run_job:ignoreErrors<br>
+     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Run pipeline with backup functions (IN DEVELOPMENT).<br>
+    ------------------------------------------------------------------------<br>
+    		<p>
+	    	<p class="img" id="Fig1">
+				  Fig. 1: CAT result reports with different warnings (A) and the CAT error report (B). 
+      	<p>
+	    </div>
+		</p><br><p>
+			In contrast to a real severe error (<a href="#Fig2">Fig. 2</a> right), a warning just represent an abnormal processing, e.g., in case of well known errors or bad values.  On the CAT report (<a href="#Fig2">Fig. 2</a> left) only their number is listed and only the identifier of serious warnings (level 1 and 2) were displayed.  Warnings are save in the XML-file <i>cat_*.xml</i> in the report preprocessing directory (see <a href="#xml">Warning structure</a>).  The warning level or identifier may be used as confound in the (quality control) analysis to handle outlier.   
+			<div>
+        <p class="img" style="width: 90%;" id="Fig2">
+          <a href="cat_methods_WMHC0.html"><img src="images/catreportj_OAS1_0031_MR1_mpr_n4_anon_sbj_111_WMHC0.jpg" width=33.5% height=auto alt="CAT preprocessing report with WMHC=0" ></a>
+          <a href="cat_methods_WMHC0.html"><img src="images/catreportj_OAS1_0031_MR1_mpr_n4_anon_sbj_111_WMHC0.jpg" width=33.5% height=auto alt="CAT preprocessing report with WMHC=0" ></a>
+        <br><br>
+            Fig. 2: CAT result reports with different warnings (A) and the CAT error report (B). 
+        </p>
+      </div>
 	      
-	    <h4>Warning structure</h4>
-	    <p>All warnings were saved as structure with identifier, message, level, and additional data in the XML-file, e.g.:</p>
+	      
+	      
+	      
+	    <h3 id="xml">Warning structure</h3>
+	    <p>All warnings were saved in the XML-file as structure with identifier, message, level, and additional data, e.g.:</p>
 	    
 	     <div style="text-indent:10px;"><i style="color:#999999">&lt;software&gt;</i></div>
 	     <div style="text-indent:20px;"><i style="color:#999999">&lt;cat_warnings&gt;</i></div>
@@ -79,9 +105,20 @@
        <div style="text-indent:10px;"><i style="color:#999999">&lt;software&gt;</i></div>
               
        <p>
-	       You can load xml files in MATLAB as structure by using the <a class="function" href="matlab:cat_io_xml">cat_io_xml</a> function to access the field <i>software.cat_warnings</i>.
-	     </p> 
-    </div>
+	       You can load XML-files in MATLAB as structure by using the <a class="function" href="matlab:cat_io_xml">cat_io_xml</a> function to access the field <i>software.cat_warnings</i>.
+	     </p>
+	     
+	     
+	     
+	     <h3>List of Warnings</h3> 
+			 <div>	
+					<p class="code" style="width: 90%; color:#FF7700" id="Fig1">
+						<table style="color:#0000FF;">
+							<tr style="vertical-align: top;"><td>WARNING #:</td><td>cat_run_newcatch:newPipeline<br>Run new pipeline with backup function (IN DEVELOPMENT).</td></tr>
+							<tr style="vertical-align: top;"><td>WARNING #:</td><td>cat_run_job:ignoreErrors<br>Run pipeline with backup functions (IN DEVELOPMENT).</td></tr>
+						</table>
+					</p>
+	    </div>
     <div id="content"><a href="cat_methods.html">< Methods</a></div>  
     <div id="footer">
       <p>Copyright (C) Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>

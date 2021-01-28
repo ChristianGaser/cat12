@@ -14,7 +14,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
 % only give large GM areas like the basal ganlia, that have often a to high
 % intensity. 
 %
-%   [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] =
+%   [Ym,Yb,T3th3,Tth,inv_weighting,noise] =
 %     cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,extopts)
 %
 %   Ym      .. intensity normalized image
@@ -87,8 +87,8 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
       error('cat_main_gintnorm:runbackup','Test backup function.');
     end
     
-    clsint  = @(x) cat_stat_nanmedian(Ysrc(Ycls{x} > 128)); 
-    %clsint  = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5; % better for ADNI ??? 
+    %clsint  = @(x) cat_stat_nanmedian(Ysrc(Ycls{x} > 128)); 
+    clsint  = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5; % better for ADNI ??? 
     clsints = @(x,y) [round( res.mn(res.lkp==x) * 10^5)/10^5; res.mg(res.lkp==x-((y==0)*8))']; 
 
     vxv    = 1/cat_stat_nanmean(vx_vol);
@@ -145,8 +145,11 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
         BGminl = BGmin - 8 * diff( [BGmin T3th3(1)] ); % compensate  BGminl*0.1+0.9*T3th3(1) the minimum is close to CSF here
         BGcon  = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3))]);
       else
-        BGminl = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),cat_stat_nanmedian(Ysrc(Ycls{end}(:)>128))]);
-        BGcon  = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),cat_stat_nanmedian(Ysrc(Ysrc(:)>BGminl & Ycls{end}(:)>128))]);
+        %BGminl = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),cat_stat_nanmedian(Ysrc(Ycls{end}(:)>128))]);
+%       BGminl = BGmin - 8 * diff( [BGmin T3th3(1)] );
+        BGminl = BGmin; 
+        %BGcon  = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),cat_stat_nanmedian(Ysrc(Ysrc(:)>BGminl & Ycls{end}(:)>128))]);
+        BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),median(Ysrc(Ycls{end}(:)>128))]);
       end
       %T3th3 = [max( min(res.mn(res.lkp==3 & res.mg'>0.3/sum(res.lkp==3)))*.05 + .95*max(res.mn(res.lkp==2 & res.mg'>0.3/sum(res.lkp==2))) , ...
       %              min(res.mn(res.lkp==3 & res.mg'>0.3/sum(res.lkp==3)))) ...
@@ -433,14 +436,19 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
       gth   = max(0.06,min(0.3,noise*6));
       %Ybm   = cat_vol_morph(Ycls{6}>240 & Ysrc<min(T3th),'lc'); 
       BGmin = min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))); 
-      %BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),cat_stat_nanmedian(Ysrc(Ycls{end}(:)>128))]);
+      BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),cat_stat_nanmedian(Ysrc(Ycls{end}(:)>128))]);
       if isfield(res,'ppe') && isfield(res.ppe,'affreg') && isfield(res.ppe.affreg,'highBG') && ~res.ppe.affreg.highBG
-        BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),cat_stat_nanmedian(Ysrc(Ysrc(:)>BGminl & Ycls{end}(:)>128))]);
+        BGcon = max([BGmin,T3th3(1) - cat_stat_nanmean(abs(diff(T3th3)))]);
       end
-      BMth  = max(BGmin,mean([BGcon,T3th(1)])); % - diff(T3th(1:2)))); %max(0.01,cat_stat_nanmedian(Ysrc(Ybm(:))));
+      %BMth  = max(BGmin,mean([BGcon,T3th(1)])); % - diff(T3th(1:2)))); %max(0.01,cat_stat_nanmedian(Ysrc(Ybm(:))));
+      BMth  = max(BGmin,min(BGcon,T3th(1) - diff(T3th(1:2)))); %max(0.01,cat_stat_nanmedian(Ysrc(Ybm(:))));
       Ywm   = (Ycls{2}>128  & Yg<gth) | ((Ym-Ydiv*2)>(1-0.05*cat_stat_nanmean(vx_vol)) & Yb2); % intensity | structure (neonate contast problem)
-      Ycm   = smooth3((Ycls{3}>240 | Ym<0.4) & Yg<gth*3 & Yb & ~Ywm & Ycls{1}<8 & Ysrc>BMth & Ym<0.7)>0.5; % important to avoid PVE!
-
+      if isfield(res,'ppe') && isfield(res.ppe,'affreg') && isfield(res.ppe.affreg,'highBG') && res.ppe.affreg.highBG
+        Ycm   = smooth3((Ycls{3}>240 | Ym<0.4) & Yg<gth*3 & Yb & ~Ywm & Ycls{1}<8 & Ym<0.7)>0.5; % important to avoid PVE!
+      else
+        Ycm   = smooth3((Ycls{3}>240 | Ym<0.4) & Yg<gth*3 & Yb & ~Ywm & Ycls{1}<8 & Ysrc>BMth & Ym<0.7)>0.5; % important to avoid PVE!
+      end
+      
       % If SPM get totaly wrong maps due to bad image orientations our 
       % segment were incorrect too (or empty) and peak estimation fail.
       % I try to use the kmeans, but in WM it is affected by WMHs, in 
@@ -452,7 +460,11 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
       WMth   = cat_stat_nanmedian(Ysrcr(Ywm(:))); % cat_stat_kmeans(Ysrc(Ycls{2}(:)>192 & Yg(:)<gth),1); % GM/WM WM  
       CSFth  = cat_stat_nanmedian(Ysrcr(Ycm(:))); % cat_stat_kmeans(Ysrc(Ycls{3}(:)>64 & Yg(:)>gth & Yb(:)),2); % CSF CSF/GM
         %  0.05 <<<<< BMth + 4*cat_stat_nanstd(Ysrc(Ybm(:)))
-      Ybg    = cat_vol_morph(Yg<0.10 & Yb & Ysrc<WMth*(1-0.03*cat_stat_nanmean(vx_vol)) & Ysrc>CSFth*1.5 & Ycls{3}<64,'o',2);
+      if isfield(res,'ppe') && isfield(res.ppe,'affreg') && isfield(res.ppe.affreg,'highBG') && res.ppe.affreg.highBG
+        Ybg  = cat_vol_morph(Ycls{6}>128 & ~Yb,'o',2); 
+      else
+        Ybg  = cat_vol_morph(Yg<0.10 & Yb & Ysrc<WMth*(1-0.03*cat_stat_nanmean(vx_vol)) & Ysrc>CSFth*1.5 & Ycls{3}<64,'o',2);
+      end
       Ygm    = ~Ybg & Yg<0.4 & Ysrc<min(clsint(2)*0.8+clsint(1)*0.2,WMth+0.5*diff([CSFth,WMth])) & Yg<gth*2 & Ycls{1}>32 & ~Ywm & Ycls{2}<64 & ...
         Ysrc>(CSFth+0.1*diff([CSFth,WMth])) & ~Ywm & ~Ycm & Yb & abs(Ydiv)<0.2; 
       %Ygm   = Ygm | (Ycls{1}>64 & Ybg & ~Ywm);
@@ -480,9 +492,10 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
       %  -----------------------------------------------------------------
       T3th3 = T3th_cls;
       if isfield(res,'ppe') && isfield(res.ppe,'affreg') && isfield(res.ppe.affreg,'highBG') && res.ppe.affreg.highBG
-        BMCSFth = BMth*0.9 + 0.1*T3th3(1);
-        T3thx = [3/5, 3/5, 4/5, 1:5];
-      else
+        BMth    = min(Ysrc(Yb(:)))*0.99 + 0.01*T3th3(1);
+        BMCSFth = BMth*0.5 + 0.5*(T3th3(1)); % - mean(abs(diff(T3th(:)))));
+        T3thx   = [2/5, 3/5, 4/5, 1.1, 2.2, 3:5];
+      else 
         BMCSFth = min(BGth,mean([BMth,T3th3(1)]));
         T3thx   = [0,0.02,0.05,1:5];
       end
@@ -692,7 +705,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
      
       % T3th, T3thx - keep it simple and avoid inversion
       if isfield(res,'ppe') && isfield(res.ppe,'affreg') && isfield(res.ppe.affreg,'highBG') && res.ppe.affreg.highBG
-        BGth = round( clsintv(6) / max([clsintv(3) clsintv(1) clsintv(2)]) * 6 ) / 2;
+        BGth = round( clsint(6) / max([clsintv(3) clsintv(1) clsintv(2)]) * 6 ) / 2;
       else
         BGth = 0.05; 
       end
