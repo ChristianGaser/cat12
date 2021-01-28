@@ -132,7 +132,8 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
   
   % additional affine registration of the GM segment
   % only if not the prior is used
-  if dreg.affreg && ( ~isfield(job,'useprior') || isempty(job.useprior) || ~exist(char(job.useprior),'file') )
+  % RD202101 - this cause problems (e.g. BUSS_2020)
+  if 0 % dreg.affreg && ( ~isfield(job,'useprior') || isempty(job.useprior) || ~exist(char(job.useprior),'file') )
     % Create maffreg obj structure similar to cat_run_job but only for the 
     % GM segment.
     obj.image         = res.image; 
@@ -235,9 +236,10 @@ function [trans,reg,Affine] = cat_main_registration(job,res,Ycls,Yy,tpmM,Ylesion
         % to 0.5:0.5:2.5 mm.
         % default = 12 | 22, expert = 11:13 | 21:23
         % -----------------------------------------------------------------
-          case {11,12,13,14,15,16,17} 
+          case {10,11,12,13,14,15,16,17} 
             % independent of the TR and therefore can include interpolation
             reg(regstri).opt.rres     = 1.0 + 0.5 * (job.extopts.regstr(regstri) - 11); 
+            highres                   = min(highres, reg(regstri).opt.rres);
             reg(regstri).opt.stepsize = 0.5; 
             reg(regstri).opt.ll1th    = 0.005 * reg(regstri).opt.rres;                 % smaller better/slower
             reg(regstri).opt.ll3th    = 0.010 * reg(regstri).opt.rres;                 % smaller better/slower 

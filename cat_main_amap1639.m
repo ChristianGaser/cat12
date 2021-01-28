@@ -1,4 +1,4 @@
-function [prob,indx,indy,indz] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res)
+function [prob,indx,indy,indz,th] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res)
 % ______________________________________________________________________
 %
 % AMAP segmentation:
@@ -16,6 +16,7 @@ function [prob,indx,indy,indz] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res)
 % Ycls .. SPM segmentation 
 % job  .. SPM/CAT parameter structure
 % res  .. SPM segmentation structure
+% th   .. AMAP treshholds
 % ______________________________________________________________________
 %
 % Robert Dahnke, Christian Gaser 

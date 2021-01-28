@@ -253,6 +253,7 @@ cat.extopts.add_parahipp   = 0.1; % increase values in the parahippocampal area 
 
 % visualisation, print, developing, and debugging options
 cat.extopts.colormap     = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
+cat.extopts.report.color = [];    % report colorsetting invert fontcolor if dark:  [] - use figure color; 0.95 - light gray; [0.1 0.15 0.2] - dark blue  
 cat.extopts.verb         = 2;     % verbose output:        1 - default; 2 - details; 3 - write debugging files 
 cat.extopts.ignoreErrors = 1;     % catch errors:          0 - stop with error (default); 1 - catch preprocessing errors and proceed with next subject (requires MATLAB 2008 or higher); 
                                   %                        2 - catch preprocessing errors and try backup function if this also fails then proceed with the next subject (requires MATLAB 2008 or higher)

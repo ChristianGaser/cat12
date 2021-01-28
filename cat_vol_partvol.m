@@ -103,7 +103,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
 
   try 
-    if job.extopts.ignoreErrors > 1 
+    if job.extopts.ignoreErrors > 2 
       Yg      = cat_vol_grad(Ym,vx_vol) ./ max(eps,Ym);
       gth     = max(0.05,min( 1/3 , cat_stat_nanmean( Yg( cat_vol_morph( smooth3( Ycls{2}>240 )>0.5 ,'e') )) * 1.5 )); 
       clsintg = @(x) cat_stat_nanmedian(Ym(Ycls{x}>128 & Yg<gth)); 
