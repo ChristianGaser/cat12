@@ -23,24 +23,24 @@ end
 prec   = noise.^(-2);
 
 if isfield(job.reg,'nonlin')
-	tim = job.reg.nonlin.times(:);
-	if all(isfinite(tim))
-		if numel(tim) ~= N,
-				error('Incompatible numbers of times and scans.');
-		end
-		if any(abs(diff(tim)) > 50),
-				error('Time differences should be in years.');
-		end;
-		wparam0   = job.reg.nonlin.wparam;
-		
-		midtim = median(tim);
-		tim    = tim - midtim;
-		w_settings = kron(wparam0,1./(abs(tim)+1/365));
-		s_settings = round(3*abs(tim)+2);
-	else % use default regularization if tim is set to NAN
-		w_settings = job.reg.nonlin.wparam;
-		s_settings = 6;
-	end
+  tim = job.reg.nonlin.times(:);
+  if all(isfinite(tim))
+    if numel(tim) ~= N,
+        error('Incompatible numbers of times and scans.');
+    end
+    if any(abs(diff(tim)) > 50),
+        error('Time differences should be in years.');
+    end;
+    wparam0   = job.reg.nonlin.wparam;
+    
+    midtim = median(tim);
+    tim    = tim - midtim;
+    w_settings = kron(wparam0,1./(abs(tim)+1/365));
+    s_settings = round(3*abs(tim)+2);
+  else % use default regularization if tim is set to NAN
+    w_settings = job.reg.nonlin.wparam;
+    s_settings = 6;
+  end
 else
   w_settings = [Inf Inf Inf Inf Inf];
   s_settings = Inf;

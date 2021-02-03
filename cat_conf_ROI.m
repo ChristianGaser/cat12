@@ -1,4 +1,4 @@
-function [ROI,sROI] = cat_conf_ROI(expert)
+function [ROI,sROI,ROIsum] = cat_conf_ROI(expert)
 %_______________________________________________________________________
 % wrapper for calling CAT ROI options
 %_______________________________________________________________________
@@ -14,13 +14,6 @@ if nargin == 0
     expert = 0; 
   end
 end
-
-%% ------------------------------------------------------------------------
-% Parameter to choose between different ways to extract data by ROIs.
-% Inactive due to missing implementation and evaluation of the optimized 
-% space ROI analysis. 
-% RD 20160112
-%------------------------------------------------------------------------
 
 noROI        = cfg_branch;
 noROI.tag    = 'noROI';
@@ -309,3 +302,165 @@ sROI.help   = {
 ''
 'There are different atlas maps available: '
 }; 
+
+%-------------------------------------------------------------
+% summarize in ROI 
+
+% get atlas information again for all atlases (use expert flag)
+expert = 1;
+exatlas  = cat_get_defaults('extopts.atlas'); 
+matlas = {}; mai = 1; atlaslist = {}; 
+for ai = 1:size(exatlas,1)
+  if exatlas{ai,2}<=expert && exist(exatlas{ai,1},'file')
+    [pp,ff]  = spm_fileparts(exatlas{ai,1}); 
+
+    % if output.atlases.ff does not exist then set it by the default file value
+    if isempty(cat_get_defaults(['output.atlases.' ff]))
+      cat_get_defaults(['output.atlases.' ff], exatlas{ai,4})
+    end
+    atlaslist{end+1,1} = ff; 
+
+    license = {'' ' (no commercial use)' ' (free academic use)'}; 
+    if size(exatlas,2)>4
+      lic = exatlas{ai,5}; 
+    else
+      switch ff
+        case 'hammers', lic = 2; 
+        case 'lpba40' , lic = 1; 
+        otherwise,      lic = 0; 
+      end
+    end
+    
+    matlas{mai}        = cfg_menu;
+    matlas{mai}.tag    = ff;
+    matlas{mai}.name   = [ff license{lic+1}]; 
+    matlas{mai}.labels = {'No','Yes'};
+    matlas{mai}.values = {0 1};
+    matlas{mai}.def    = eval(sprintf('@(val) cat_get_defaults(''output.atlases.%s'', val{:});',ff)); 
+    txtfile = fullfile(pp,[ff '.txt']);
+    if exist(txtfile,'file')
+      fid = fopen(txtfile,'r');
+      txt = textscan(fid,'%s','delimiter','\n');
+      fclose(fid);
+      matlas{mai}.help   = [{ 
+        'Processing flag of this atlas map.'
+        ''
+        }
+        txt{1}];
+    else
+      matlas{mai}.help   = {
+        'Processing flag of this atlas map.'
+        ''
+        ['No atlas readme text file "' txtfile '"!']
+      };
+    end
+    mai = mai+1; 
+  else
+    [pp,ff]  = spm_fileparts(exatlas{ai,1})
+    
+    if ~isempty(cat_get_defaults(['output.atlases.' ff]))
+      cat_get_defaults(['output.atlases.' ff],'rmfield');
+    end
+  end
+end
+
+atlases.val     = [matlas,{ownatlas}];
+atlases.help    = {'ROI atlas maps.'};
+
+field           = cfg_files;
+field.tag       = 'field';
+field.name      = 'Deformation Fields';
+field.filter    = 'image';
+field.ufilter   = '^y_.*\.nii$';
+field.num       = [1 Inf];
+field.help      = {[
+  'Select deformation fields for all subjects.' ...
+  'Use the "y_*.nii" to project data from subject to template space, and the "iy_*.nii" to map data from template to individual space.' ...
+  'Both deformation maps can be created in the CAT preprocessing by setting the "Deformation Field" flag to forward or inverse.' ... 
+]};
+
+field1          = cfg_files;
+field1.tag      = 'field1';
+field1.name     = 'Deformation Field';
+field1.filter   = 'image';
+field1.ufilter  = '^y_.*\.nii$';
+field1.num      = [1 1];
+field1.help     = {[
+  'Select the deformation field of one subject.' ...
+  'Use the "y_*.nii" to project data from subject to template space, and the "iy_*.nii" to map data from template to individual space.' ...
+  'Both deformation maps can be created in the CAT preprocessing by setting the "Deformation Field" flag to forward or inverse.' ... 
+]};
+
+images1         = cfg_files;
+images1.tag     = 'images';
+images1.name    = 'Images';
+images1.help    = {[
+  'Select co-registered files for ROI estimation. Note that there should be the same number of images as there are ' ...
+  'deformation fields, such that each flow field relates to one image. The images can be also given as 4D data (e.g. rsfMRI data).' ...
+]};
+images1.filter  = 'image';
+images1.ufilter = '.*';
+images1.num     = [1 Inf];
+
+images          = cfg_repeat;
+images.tag      = 'images';
+images.name     = 'Images';
+images.help     = {'ROI estimation can be done for multiple images of one subject. At this point, you are choosing how many images for each flow field exist.'};
+images.values   = {images1 };
+images.num      = [1 Inf];
+
+cfun            = cfg_entry;
+cfun.tag        = 'cfun';
+cfun.name       = 'Customized function';
+cfun.strtype    = 's';
+cfun.num        = [0 Inf];
+cfun.val        = {'@median'};
+cfun.help       = {'Here, you can define your own function to summarize data as function handle (e.g. @median).'};
+
+fun             = cfg_menu;
+fun.name        = 'Predefined functions';
+fun.tag         = 'fun';
+fun.labels      = {'Volume (in ml)','Mean','Standard Deviation'};
+fun.values      = {'volume','@mean','@std'};
+fun.val         = {'@mean'};
+fun.help        = {'Select predfined function to summarize data within a ROI.'};
+
+fhandle         = cfg_choice;
+fhandle.tag     = 'fhandle';
+fhandle.name    = 'Function to summarize?';
+fhandle.val     = {fun};
+fhandle.values  = {fun cfun};
+fhandle.help    = {'Select either a predefined function or define your own function handle to summarize data within a ROI.'};
+
+% update help text
+images1.help    = {'Select co-registered files for ROI estimation for this subject. The images can be also given as 4D data (e.g. rsfMRI data).'};
+
+ManyImages      = cfg_exbranch;
+ManyImages.tag  = 'ManyImages';
+ManyImages.name = 'Summarise data for many images of one subject';
+ManyImages.val  = {field1,images1,atlases,fhandle};
+ManyImages.help = {'Summarise data within a region of interest (ROI) of multiple images for one subject.'};
+
+ManySubj        = cfg_exbranch;
+ManySubj.tag    = 'ManySubj';
+ManySubj.name   = 'Summarise data for many subjects';
+ManySubj.val    = {field,images,atlases,fhandle};
+ManySubj.help   = {'Summarise data within a region of interest (ROI) for many subjects with one or more images each.'};
+
+Method          = cfg_choice;
+Method.tag      = 'Method';
+Method.name     = 'Select method?';
+Method.values   = {ManyImages ManySubj};
+Method.val      = {ManyImages};
+Method.help     = {'Select method.'};
+
+ROIsum          = cfg_exbranch;
+ROIsum.tag      = 'ROIsum';
+ROIsum.name     = 'Summarise 3D/4D data within a ROI';
+ROIsum.val      = {Method};
+ROIsum.prog     = @cat_vol_ROI_summarize;
+ROIsum.help     = {[
+  'This is an utility to summarise co-registered volume data within a region of interest (ROI). ' ...
+  'This can be used in order to estimate ROI information for other modalities (i.e. DTI, fMRI) which can be also given as 4D data.' ...
+]};
+
