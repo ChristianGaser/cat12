@@ -1,9 +1,9 @@
 function vol = cat_vol_defs(job)
 % Apply deformations to images. In contrast to spm_deformations images are saved
 % in the original directory.
-% FORMAT vol = spm_deformations(job)
+% FORMAT vol = cat_vol_defs(job)
 % job - a job created via cat_conf_tools.m
-% vol - cell of deformed output volumes
+% vol - cell of deformed output volumes (deformed images are only returned, but not saved as file)
 %_______________________________________________________________________
 % Christian Gaser
 % $Id$
@@ -12,9 +12,9 @@ function vol = cat_vol_defs(job)
 
 many_images = 0;
 
-try
+if isfield(job,'field')
   PU = job.field;
-catch
+else
   PU = job.field1;
   many_images = 1;
 end
@@ -30,10 +30,14 @@ if interp < 0 && job.modulate
   job.modulate = 0;
 end
 
-for i=1:numel(PU),
+if nargout == 1
+  vol = cell(numel(PU),numel(PI));
+end
+
+for i=1:numel(PU)
 
   % external call with PU as deformation field
-  if ismatrix(PU{i}) & isfield(job,'mat')
+  if isnumeric(PU{i}) & isfield(job,'mat')
     Def = PU{i};
     mat = job.mat;
   else
@@ -46,7 +50,7 @@ for i=1:numel(PU),
       [Def,mat] = get_comp(PU{i});
     end
   end
-   
+  
   for m=1:numel(PI)
     
     if many_images % many images
@@ -56,12 +60,12 @@ for i=1:numel(PU),
     end
     
     if nargout == 1
-      [PIri, vol] = apply_def(Def,mat,PIi,interp,job.modulate);
+      [PIri, vol{i,m}] = apply_def(Def,mat,PIi,interp,job.modulate,job.verb);
     else
-      PIri = apply_def(Def,mat,PIi,interp,job.modulate);
+      PIri = apply_def(Def,mat,PIi,interp,job.modulate,job.verb);
     end
     
-    if job.verb
+    if job.verb & ~isempty(PIri)
       fprintf('Display resampled %s\n',spm_file(PIri,'link','spm_image(''Display'',''%s'')'));
     end
   end
@@ -126,13 +130,16 @@ if nargin > 1
 end
 
 %_______________________________________________________________________
-function [out, wvol] = apply_def(Def,mat,filenames,interp0,modulate)
+function [out, wvol] = apply_def(Def,mat,filenames,interp0,modulate,verb)
 % Warp an image or series of images according to a deformation field
 
 interp = [interp0*[1 1 1], 0 0 0];
 dim    = size(Def);
 dim    = dim(1:3);
-if nargout == 2, wvol = cell(size(filenames,1),1); end
+if nargout == 2
+    wvol = cell(size(filenames,1),1); 
+    out = '';
+end
 
 for i=1:size(filenames,1)
 
@@ -143,60 +150,62 @@ for i=1:size(filenames,1)
     j_range = 1:size(NI.dat,4);
     k_range = 1:size(NI.dat,5);
     l_range = 1:size(NI.dat,6);
-
-    NO = NI;
-    ext = '.nii'; 
-
-    % use float for modulated images
-    if modulate
-        NO.dat.scl_slope = 1.0;
-        NO.dat.scl_inter = 0.0;
-        NO.dat.dtype     = 'float32-le';
+    
+    if nargout < 2
+      NO = NI;
+      ext = '.nii'; 
+      
+      % use float for modulated images
+      if modulate
+          NO.dat.scl_slope = 1.0;
+          NO.dat.scl_inter = 0.0;
+          NO.dat.dtype     = 'float32-le';
+      end
+      
+      % set slope to 1 for categorical interpolation
+      if interp0 < 0
+          NO.dat.scl_slope = 1.0;
+          NO.dat.scl_inter = 0.0;
+          
+          % select data type w.r.t. maximum value
+          f0  = single(NI.dat(:,:,:,:,:,:));
+          max_val = max(f0(:)); clear f0
+          if max_val < 2^8
+            NO.dat.dtype   = 'uint8-le';
+            if verb, fprintf('Set data type to uint8\n'); end
+          elseif max_val < 2^16
+            NO.dat.dtype   = 'uint16-le';
+            if verb, fprintf('Set data type to uint16\n'); end
+          else 
+            NO.dat.dtype   = 'float32-le';
+            if verb, fprintf('Set data type to float32\n'); end
+          end
+      end
+  
+      NO.dat.dim     = [dim NI.dat.dim(4:end)];
+      NO.dat.offset  = 0; % For situations where input .nii images have an extension.
+      NO.mat         = mat;
+      NO.mat0        = mat;
+      NO.mat_intent  = 'Aligned';
+      NO.mat0_intent = 'Aligned';
+  
+      switch modulate
+      case 0
+          NO.dat.fname = fullfile(pth,['w',nam,ext]);
+          NO.descrip   = sprintf('Warped');
+      case 1
+          NO.dat.fname = fullfile(pth,['mw',nam,ext]);
+          NO.descrip   = sprintf('Warped & Jac scaled');
+      case 2
+          NO.dat.fname = fullfile(pth,['m0w',nam,ext]);
+          NO.descrip   = sprintf('Warped & Jac scaled (nonlinear only)');
+      end
+      out = NO.dat.fname; 
+      
+      NO.extras      = [];
+      create(NO);
     end
     
-    % set slope to 1 for categorical interpolation
-    if interp0 < 0
-        NO.dat.scl_slope = 1.0;
-        NO.dat.scl_inter = 0.0;
-        
-        % select data type w.r.t. maximum value
-        f0  = single(NI.dat(:,:,:,:,:,:));
-        max_val = max(f0(:)); clear f0
-        if max_val < 2^8
-          NO.dat.dtype   = 'uint8-le';
-          fprintf('Set data type to uint8\n.')
-        elseif max_val < 2^16
-          NO.dat.dtype   = 'uint16-le';
-          fprintf('Set data type to uint16\n.')
-        else 
-          NO.dat.dtype   = 'float32-le';
-          fprintf('Set data type to float32\n.')
-        end
-    end
-
-    NO.dat.dim     = [dim NI.dat.dim(4:end)];
-    NO.dat.offset  = 0; % For situations where input .nii images have an extension.
-    NO.mat         = mat;
-    NO.mat0        = mat;
-    NO.mat_intent  = 'Aligned';
-    NO.mat0_intent = 'Aligned';
-
-    switch modulate
-    case 0
-        NO.dat.fname = fullfile(pth,['w',nam,ext]);
-        NO.descrip   = sprintf('Warped');
-    case 1
-        NO.dat.fname = fullfile(pth,['mw',nam,ext]);
-        NO.descrip   = sprintf('Warped & Jac scaled');
-    case 2
-        NO.dat.fname = fullfile(pth,['m0w',nam,ext]);
-        NO.descrip   = sprintf('Warped & Jac scaled (nonlinear only)');
-    end
-    out = NO.dat.fname; 
-    
-    NO.extras      = [];
-    create(NO);
-
     if modulate
       dt = spm_diffeo('def2det',Def)/det(mat(1:3,1:3));
       dt(:,:,[1 end]) = NaN;
@@ -259,8 +268,12 @@ for i=1:size(filenames,1)
                 if modulate
                   f1 = f1.*double(dt);
                 end
-                NO.dat(:,:,:,j,k,l)  = f1;
-                if nargout == 2, wvol{i}(:,:,:,j,k,l) = f1; end
+                
+                if nargout < 2
+                  NO.dat(:,:,:,j,k,l) = f1;
+                else
+                  wvol{i}(:,:,:,j,k,l) = f1; 
+                end
             end
         end
     end
