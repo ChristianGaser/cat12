@@ -639,6 +639,7 @@ if 1
   Phull = cat_surf_create_TPM_hull_surface(res.tpm);
   try, spm_orthviews('AddContext',idi); end % need the context menu for mesh handling
   try
+    warning('off','MATLAB:subscripting:noSubscriptsSpecified');
     spm_ov_mesh('display',idi,{Phull});
     ov_mesh = 1;
   catch
@@ -650,6 +651,7 @@ if 1
   if ov_mesh
     
     % load mesh
+    warning('off','MATLAB:subscripting:noSubscriptsSpecified');
     spm_ov_mesh('display',idi,Phull); 
 
     % apply registration (AC transformation) for all hull objects
@@ -670,6 +672,7 @@ if 1
       UD.style = repmat({'b--'},1,numel(Phull));
     end
     set(hM,'UserData',UD); clear hM
+    warning('off','MATLAB:subscripting:noSubscriptsSpecified');
     spm_ov_mesh('redraw',idi); 
     try spm_orthviews('redraw',idi); end
 
@@ -704,6 +707,7 @@ if 1
       for ix=1:nPsurf
         % load mesh
         if ov_mesh
+          warning('off','MATLAB:subscripting:noSubscriptsSpecified');
           if any(idi==ids)
             spm_ov_mesh('display',idi,Psurf2(ix).Pcentral);
           else
@@ -729,6 +733,7 @@ if 1
       UD.width = [repmat(0.5,1,numel(UD.width) - nPsurf)  repmat(0.5,1,nPsurf)]; 
       UD.style = [repmat({'b--'},1,numel(UD.width) - nPsurf) repmat({'k-'},1,nPsurf)];
       set(hM,'UserData',UD); clear UD hM
+      warning('off','MATLAB:subscripting:noSubscriptsSpecified');
       if ov_mesh, try, spm_ov_mesh('redraw',idi); end; end
 
       % layer legend
@@ -970,6 +975,7 @@ if 1
   WMfactor1 = 8/6; 
   
   % update the colormap in the SPM orthview windows
+  warning('off','MATLAB:subscripting:noSubscriptsSpecified');
   if exist('hho' ,'var'), try, spm_orthviews('window',hho ,[0 WMfactor0]); set(cc{1},'YTick',ytick * 4/3 - 20); end; end
   if exist('hhm' ,'var'), try, spm_orthviews('window',hhm ,[0 WMfactor1]); set(cc{2},'YTick',ytick * 4/3 - 20); end; end
   if exist('hhp0','var'), try, spm_orthviews('window',hhp0,[0 WMfactor1]); end; end
@@ -986,6 +992,7 @@ if 1
         UD.style = [repmat({'r--'},1,numel(UD.width) - nPsurf) repmat({'k-'},1,nPsurf)];
         set(hM,'UserData',UD);
         set(cclp,'Color', [1 0 0]);
+        warning('off','MATLAB:subscripting:noSubscriptsSpecified');
         try,spm_ov_mesh('redraw',idi);end
       end
     end
