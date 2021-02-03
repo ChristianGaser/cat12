@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1753 | gaser | 2021-02-03 18:13:37
+r1754 | gaser | 2021-02-03 19:03:11
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_ROI.m
+M       cat_main_reportfig.m
+
+(1) Fixed:   Atlases in cat_vol_ROI_summarize batch were not correctly 
+             recognized if only defined in expert mode.
+(2) Changed: Switch off some annoying warnings in cat_main_reportfig.m
+
+------------------------------------------------------------------------
+r1753 | gaser | 2021-02-03 18:15:39 +0100 (Mi, 03 Feb 2021) | 46 lines
 
 Changed paths:
 M       Amap.c
@@ -46,6 +58,7 @@ MM      templates_volumes/anatomy3.txt
 (5) Changed: Added option to use cutomized colormaps to cat_surf_results.m.
 (6) Changed: Moved cat_io_3Dto4D.m to development folder
 (7) Changed: Updated help text and made some cosmetic changes to code.
+
 ------------------------------------------------------------------------
 r1752 | dahnke | 2021-01-28 16:52:32 +0100 (Do, 28 Jan 2021) | 57 lines
 

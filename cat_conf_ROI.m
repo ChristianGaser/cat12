@@ -305,67 +305,7 @@ sROI.help   = {
 
 %-------------------------------------------------------------
 % summarize in ROI 
-
-% get atlas information again for all atlases (use expert flag)
-expert = 1;
-exatlas  = cat_get_defaults('extopts.atlas'); 
-matlas = {}; mai = 1; atlaslist = {}; 
-for ai = 1:size(exatlas,1)
-  if exatlas{ai,2}<=expert && exist(exatlas{ai,1},'file')
-    [pp,ff]  = spm_fileparts(exatlas{ai,1}); 
-
-    % if output.atlases.ff does not exist then set it by the default file value
-    if isempty(cat_get_defaults(['output.atlases.' ff]))
-      cat_get_defaults(['output.atlases.' ff], exatlas{ai,4})
-    end
-    atlaslist{end+1,1} = ff; 
-
-    license = {'' ' (no commercial use)' ' (free academic use)'}; 
-    if size(exatlas,2)>4
-      lic = exatlas{ai,5}; 
-    else
-      switch ff
-        case 'hammers', lic = 2; 
-        case 'lpba40' , lic = 1; 
-        otherwise,      lic = 0; 
-      end
-    end
-    
-    matlas{mai}        = cfg_menu;
-    matlas{mai}.tag    = ff;
-    matlas{mai}.name   = [ff license{lic+1}]; 
-    matlas{mai}.labels = {'No','Yes'};
-    matlas{mai}.values = {0 1};
-    matlas{mai}.def    = eval(sprintf('@(val) cat_get_defaults(''output.atlases.%s'', val{:});',ff)); 
-    txtfile = fullfile(pp,[ff '.txt']);
-    if exist(txtfile,'file')
-      fid = fopen(txtfile,'r');
-      txt = textscan(fid,'%s','delimiter','\n');
-      fclose(fid);
-      matlas{mai}.help   = [{ 
-        'Processing flag of this atlas map.'
-        ''
-        }
-        txt{1}];
-    else
-      matlas{mai}.help   = {
-        'Processing flag of this atlas map.'
-        ''
-        ['No atlas readme text file "' txtfile '"!']
-      };
-    end
-    mai = mai+1; 
-  else
-    [pp,ff]  = spm_fileparts(exatlas{ai,1})
-    
-    if ~isempty(cat_get_defaults(['output.atlases.' ff]))
-      cat_get_defaults(['output.atlases.' ff],'rmfield');
-    end
-  end
-end
-
-atlases.val     = [matlas,{ownatlas}];
-atlases.help    = {'ROI atlas maps.'};
+atlases.help    = {'ROI atlas maps. In order to obtain more atlases you have to switch to expert mode.'};
 
 field           = cfg_files;
 field.tag       = 'field';
