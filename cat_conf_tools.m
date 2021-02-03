@@ -134,6 +134,7 @@ function tools = cat_conf_tools(expert)
   calcvol                     = cat_stat_TIV_GUI;
   spmtype                     = cat_io_volctype_GUI(data,intlim,spm_type,prefix,suffix,expert,lazy);
   calcroi                     = cat_roi_fun_GUI(outdir);
+  [ROI,sROI,ROIsum]           = cat_conf_ROI(expert);
   resize                      = cat_conf_vol_resize(data,prefix,expert,outdir);
   avg_img                     = cat_vol_average_GUI(data,outdir);
   realign                     = cat_vol_series_align_GUI(data);
@@ -159,6 +160,7 @@ function tools = cat_conf_tools(expert)
     ...
     calcvol, ...                          cat.stat.pre
     calcroi, ...                          cat.stat.pre
+    ROIsum, ...
     iqr, ....                             cat.stat.pre
     ...
     T2x, F2x, T2x_surf, F2x_surf, ...     cat.stat.models?
@@ -189,6 +191,7 @@ function tools = cat_conf_tools(expert)
   %end
 return
 
+%_______________________________________________________________________
 function resize = cat_conf_vol_resize(data,prefix,expert,outdir)
 % -------------------------------------------------------------------------
 % Simple function to resize and scale images. 
@@ -274,6 +277,7 @@ function resize = cat_conf_vol_resize(data,prefix,expert,outdir)
   resize.help     = {'Interpolation of images.' ''};
 return
 
+%_______________________________________________________________________
 function shootlong = cat_conf_shoot(expert)
 % -------------------------------------------------------------------------
 % This is slightly modified version of the original Shooting that allows to 
@@ -310,6 +314,7 @@ function shootlong = cat_conf_shoot(expert)
   
 return
 
+%_______________________________________________________________________
 function createTPM = cat_conf_createTPM(data,expert,name,outdir)
 % -------------------------------------------------------------------------
 % Batch to create own templates based on a Shooting template or a CAT pre-
@@ -475,7 +480,7 @@ function createTPM = cat_conf_createTPM(data,expert,name,outdir)
       ''};
 return
 
-
+%_______________________________________________________________________
 function createTPMlong = cat_conf_createTPMlong(data)
 % -------------------------------------------------------------------------
 % This is a special version of the cat_vol_createTPM batch only for the
@@ -548,6 +553,7 @@ function createTPMlong = cat_conf_createTPMlong(data)
       ''};
 return
 
+%_______________________________________________________________________
 function iqr = cat_stat_IQR_GUI(data_xml)
 %  ------------------------------------------------------------------------
   iqr_name         = cfg_entry;
@@ -566,6 +572,7 @@ function iqr = cat_stat_IQR_GUI(data_xml)
   iqr.help  = {'This function reads weighted overall image quality from saved xml-files.' ''};
 return
 
+%_______________________________________________________________________
 function longBiasCorr = cat_conf_longBiasCorr(data,expert,prefix)
 % -------------------------------------------------------------------------
 % Longitudinal bias correction by using the average segmentation.
@@ -608,6 +615,7 @@ function longBiasCorr = cat_conf_longBiasCorr(data,expert,prefix)
   longBiasCorr.help   = {'Bias correction based on the segmentation of the average map.' ''};
 return
 
+%_______________________________________________________________________
 function qa = cat_vol_qa_GUI(data) %#ok<DEFNU>
   % update input
   data.help = {'Select images for quality control.'};
@@ -622,8 +630,8 @@ function qa = cat_vol_qa_GUI(data) %#ok<DEFNU>
   qa.help   = {'CAT Quality Control of T1 images. '};
 return
   
+%_______________________________________________________________________
 function sanlm = cat_vol_sanlm_GUI(data,intlim,spm_type,prefix,suffix,expert)
-%% ------------------------------------------------------------------------
 
   % --- update input variables ---
   data.help         = {'Select images for filtering.'};
@@ -915,6 +923,7 @@ function sanlm = cat_vol_sanlm_GUI(data,intlim,spm_type,prefix,suffix,expert)
 
 return
 
+%_______________________________________________________________________
 function spmtype = cat_io_volctype_GUI(data,  intlim,  spm_type,prefix,suffix,expert,lazy)
   % update variables 
   data.help           = {'Select images for data type conversion';''};
@@ -959,6 +968,7 @@ function spmtype = cat_io_volctype_GUI(data,  intlim,  spm_type,prefix,suffix,ex
   };
 return
 
+%_______________________________________________________________________
 function headtrimming = cat_vol_headtrimming_GUI(intlim,spm_type,prefix,suffix,expert)
 
   suffix.hidden         = expert<1; 
@@ -1113,8 +1123,8 @@ function headtrimming = cat_vol_headtrimming_GUI(intlim,spm_type,prefix,suffix,e
   };
 return
 
+%_______________________________________________________________________
 function maskimg = cat_vol_maskimage_GUI(data,prefix)
-%------------------------------------------------------------------------
  
   % update input variables
   data.name       = 'Select images';
@@ -1165,19 +1175,19 @@ function maskimg = cat_vol_maskimage_GUI(data,prefix)
 
 return
 
+%_______________________________________________________________________
 function [defs,defs2] = cat_vol_defs_GUI()
-  %------------------------------------------------------------------------
 
   field           = cfg_files;
   field.tag       = 'field';
-  field.name      = 'Deformation Field';
+  field.name      = 'Deformation Fields';
   field.filter    = 'image';
   field.ufilter   = '^(i)?y_.*\.nii$';
   field.num       = [1 Inf];
   field.help      = {[
-    'Deformations can be thought of as vector fields. These can be represented by three-volume images.' ...
+    'Select deformation fields for all subjects.' ...
     'Use the "y_*.nii" to project data from subject to template space, and the "iy_*.nii" to map data from template to individual space.' ...
-    'Both deformation maps can be created in the CAT preprocessing by setting the "Deformation Field" flag (no written by default).' ... 
+    'Both deformation maps can be created in the CAT preprocessing by setting the "Deformation Field" flag to forward or inverse.' ... 
   ]};
 
   field1          = cfg_files;
@@ -1187,9 +1197,9 @@ function [defs,defs2] = cat_vol_defs_GUI()
   field1.ufilter  = '^(i)?y_.*\.nii$';
   field1.num      = [1 1];
   field1.help     = {[
-    'Deformations can be thought of as vector fields. These can be represented by three-volume images.' ...
+    'Select the deformation field of one subject.' ...
     'Use the "y_*.nii" to project data from subject to template space, and the "iy_*.nii" to map data from template to individual space.' ...
-    'Both deformation maps can be created in the CAT preprocessing by setting the "Deformation Field" flag (no written by default).' ... 
+    'Both deformation maps can be created in the CAT preprocessing by setting the "Deformation Field" flag to forward or inverse.' ... 
   ]};
 
   images1         = cfg_files;
@@ -1203,8 +1213,8 @@ function [defs,defs2] = cat_vol_defs_GUI()
   images          = cfg_repeat;
   images.tag      = 'images';
   images.name     = 'Images';
-  images.help     = {'The flow field deformations can be applied to multiple images. At this point, you are choosing how many images each flow field should be applied to.'};
-  images.values   = {images1 };
+  images.help     = {'The flow field deformations can be applied to multiple images. At this point, you choose how many images each flow field should be applied to.'};
+  images.values   = {images1};
   images.num      = [1 Inf];
 
   interp          = cfg_menu;
@@ -1236,8 +1246,8 @@ function [defs,defs2] = cat_vol_defs_GUI()
     '% Correction   Interpretation'
     '% ----------   --------------'
     '% nothing      absolute volume'
-    '% globals 	    relative volume after correcting for total GM or TIV (multiplicative effects)'
-    '% AnCova 	    relative volume that can not be explained by total GM or TIV (additive effects)'
+    '% globals      relative volume after correcting for total GM or TIV (multiplicative effects)'
+    '% AnCova       relative volume that can not be explained by total GM or TIV (additive effects)'
     ''
     'Modulated images can be optionally saved by correcting for non-linear warping only. Volume changes due to affine normalisation will be not considered and this equals the use of default modulation and globally scaling data according to the inverse scaling factor due to affine normalisation. I recommend this option if your hypothesis is about effects of relative volumes which are corrected for different brain sizes. This is a widely used hypothesis and should fit to most data. The idea behind this option is that scaling of affine normalisation is indeed a multiplicative (gain) effect and we rather apply this correction to our data and not to our statistical model. These modulated images are indicated by "m0" instead of "m". '
     ''
@@ -1259,13 +1269,14 @@ function [defs,defs2] = cat_vol_defs_GUI()
   vox.num         = [1 3];
   vox.val         = {[NaN NaN NaN]};
 
+  images1.help    = {'Select images to be warped for this subject.'};
   defs            = cfg_exbranch;
   defs.tag        = 'defs';
   defs.name       = 'Apply deformations (many images)';
   defs.val        = {field1,images1,bb,vox,interp,modulate};
   defs.prog       = @cat_vol_defs;
   defs.vfiles     = @vfiles_defs;
-  defs.help       = {'This is a utility for applying a deformation field of one subject to many images.'};
+  defs.help       = {'This is an utility for applying a deformation field of one subject to many images.'};
 
   defs2           = cfg_exbranch;
   defs2.tag       = 'defs2';
@@ -1273,9 +1284,10 @@ function [defs,defs2] = cat_vol_defs_GUI()
   defs2.val       = {field,images,bb,vox,interp,modulate};
   defs2.prog      = @cat_vol_defs;
   defs2.vfiles    = @vfiles_defs2;
-  defs2.help      = {'This is a utility for applying deformation fields of many subjects to images.'};
+  defs2.help      = {'This is an utility for applying deformation fields of many subjects to images.'};
 return
 
+%_______________________________________________________________________
 function realign  = cat_vol_series_align_GUI(data)
   
   data.help       = {
@@ -1416,6 +1428,7 @@ function realign  = cat_vol_series_align_GUI(data)
 
 return
 
+%_______________________________________________________________________
 function [T2x,T2x_surf,F2x,F2x_surf] = cat_stat_T2x_GUI
 
   data_T2x          = cfg_files;
@@ -2252,7 +2265,6 @@ end
 
 return;
 %_______________________________________________________________________
-
 function vf = vfiles_defs2(job)
 
   PU = job.field;
@@ -2402,6 +2414,7 @@ function cdep = vfiles_headtrimming(job)
   end
 
 return;
+
 %_______________________________________________________________________
 function dep = vfiles_volctype(varargin)
  % job.returnOnlyFilename = 1; 
@@ -2412,6 +2425,7 @@ function dep = vfiles_volctype(varargin)
   dep.src_output = substruct('.','files','()',{':'});
   dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 return;
+
 %_______________________________________________________________________
 function dep = vfiles_createTPM(varargin)
   dep(1)              = cfg_dep;
@@ -2434,6 +2448,7 @@ function dep = vfiles_createTPM(varargin)
   dep(end).src_output = substruct('.','brainmask','()',{':'});
   dep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 return;
+
 %_______________________________________________________________________
 function dep = vfiles_createTPMlong(varargin)
   dep            = cfg_dep;
@@ -2446,12 +2461,15 @@ function dep = vfiles_createTPMlong(varargin)
   dep.src_output = substruct('.','tpmtiss','()',{':'},'()',{':'});
   dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});  
 return;
+
+%_______________________________________________________________________
 function dep = vout_cat_conf_longBiasCorr(varargin)
   dep            = cfg_dep;
   dep.sname      = 'Longitudinal Bias Corrected';
   dep.src_output = substruct('.','bc','()',{':'});
   dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 return
+
 %_______________________________________________________________________
 function dep = vfiles_resize(varargin)
   dep            = cfg_dep;

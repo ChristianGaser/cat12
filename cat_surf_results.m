@@ -33,6 +33,11 @@ function varargout = cat_surf_results(action, varargin)
 %  Select overlay colormap.
 %  1 - jet, 2 - hot, 3 - hsv, 4 - cold-hot
 %
+%  * cat_surf_results('colormap','customized',cmap)
+%  use customized overlay colormap.
+%  cmap can be a nx3 variable with the colormap values
+% or a function that creates a colormap (e.g. jet)
+%
 %  * cat_surf_results('invcolormap',[0..1])
 %  Default (0) or inverts colormap (1). Toggles without input.
 %  
@@ -255,11 +260,12 @@ switch lower(action)
       'ToolTipString', 'Threshold', ...
       'Interruptible', 'on', 'Enable', 'off');
     
-    str = {'Colormap', 'jet', 'hot', 'hsv', 'cold-hot'};
+    str = {'Colormap', 'jet', 'hot', 'hsv', 'cold-hot', 'customized'};
     tmp = {{@select_cmap, 1}, ...
            {@select_cmap, 2}, ...
            {@select_cmap, 3}, ...
-           {@select_cmap, 4}};
+           {@select_cmap, 4}, ...
+           {@select_cmap, 5}};
     
     % colormap
     H.cmap = uicontrol(H.panel(2), ...
@@ -771,15 +777,20 @@ switch lower(action)
     else
       cm = varargin{1}; 
       switch cm
-      case {1,2,3,4},  cmap = cm; 
-      case 'jet',      cmap = 1; 
-      case 'hot',      cmap = 2; 
-      case 'hsv',      cmap = 3; 
-      case 'cold-hot', cmap = 4; 
+      case {1,2,3,4,5}, cmap = cm; 
+      case 'jet',       cmap = 1; 
+      case 'hot',       cmap = 2; 
+      case 'hsv',       cmap = 3; 
+      case 'cold-hot',  cmap = 4; 
+      case 'customized',cmap = 5; 
       otherwise
         error('Unknown colormap\n');
       end      
-      select_cmap(cmap);
+      if nargin==3
+        select_cmap(cmap,varargin{2});
+      else
+        select_cmap(cmap);
+      end
     end
     
     
@@ -1311,7 +1322,7 @@ end
 
 
 %-----------------------------------------------------------------------
-function Ho = select_cmap(cmap)
+function Ho = select_cmap(cmap,cust_cmap)
 %-----------------------------------------------------------------------
 global H
 
@@ -1324,6 +1335,34 @@ switch cmap
     col = hsv(256);
   case 4
     col = [1 - hot(128); (hot(128))];
+  case 5
+    col = [];
+    while size(col,2)~=3
+      if nargin == 1
+        tmp = inputdlg('Colormap','Input');
+      else
+        tmp{1} = cust_cmap;
+      end
+      % if a variable is given set is as global
+      try, eval(['global ' char(tmp{1})]); end
+      
+      try
+        % is it a variable?
+        col = eval(tmp{1});
+        %  or a function?
+        if isempty(col)
+          col = feval(tmp{1});
+        end
+        % get sure that min/max is between 0..1
+        mn = min(col(:));
+        mx = max(col(:));
+        if mx > 1 | mn<0
+          col = (col-mn)/(mx-mn);
+        end
+      catch
+        fprintf('Wrong input. You have to define a colormap as variable with size nx3.\n')
+      end
+    end
 end
 
 for ind = 1:5

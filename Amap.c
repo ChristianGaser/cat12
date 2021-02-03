@@ -69,7 +69,7 @@ static void GetMeansVariances(double *src, unsigned char *label, int n_classes, 
   
 
   /* loop over neighborhoods of the grid points */
-  for(k=-sub; k<=sub; k++) for(l=-sub; l<=sub; l++) for(m=-sub; m<=sub; m++) 
+  for(k=-sub; k<=sub; k++) for(l=-sub; l<=sub; l++) for(m=-sub; m<=sub; m++) {
     for(z = 0; z < niz; z++) {
       zsub = z*sub + k;
       if ((zsub >= 0) && (zsub < dims[2])) {
@@ -99,7 +99,7 @@ static void GetMeansVariances(double *src, unsigned char *label, int n_classes, 
         }
       }
     }
-
+  }
 
   /* find means and standard deviations */
   for(i = 0; i < n_classes; i++) {
@@ -226,7 +226,7 @@ void ComputeInitialPveLabel(double *src, unsigned char *label, unsigned char *pr
     for(y = 1; y < dims[1]-1; y++) {
       y_dims=y*dims[0];
       for(x = 1; x < dims[0]-1; x++)  {
-	  
+    
         index = x + y_dims + z_area;
         label_value = (int)label[index];
         if (label_value == 0) continue;
@@ -301,7 +301,7 @@ void ComputeMrfProbability(double *mrf_probability, double *exponent, unsigned c
   for(label1 = 0; label1 < n_classes; label1++)
     exponent[label1] = 0;
   
-  for(i = -1; i < 2; i++) for(j = -1; j < 2; j++) for(k = -1; k < 2; k++) 
+  for(i = -1; i < 2; i++) for(j = -1; j < 2; j++) for(k = -1; k < 2; k++) {
     if( i != 0 || j != 0 || k != 0 ) {
            
       label2 = label[(x+i)+dims[0]*(y+j)+dims[0]*dims[1]*(z+k)];
@@ -318,7 +318,8 @@ void ComputeMrfProbability(double *mrf_probability, double *exponent, unsigned c
         exponent[label1-1] += (double)similarity_value/distance;             
       }
     }   
-
+  }
+  
   for(label1 = 0; label1 < n_classes; label1++)
     mrf_probability[label1] = exp(-(beta*exponent[label1])); 
   
@@ -352,7 +353,7 @@ void ICM(unsigned char *prob, unsigned char *label, int n_classes, int *dims, do
       for(y = 1; y < dims[1]-1; y++) {
         y_dims=y*dims[0];
         for(x = 1; x < dims[0]-1; x++)  {
-	  
+    
           index = x + y_dims + z_area;
           if(label[index] == 0) continue;
           
@@ -442,7 +443,7 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
        to allow masked smoothing */
     if(bias_fwhm > 0.0) {
       for(j = 0; j < vol; j++) {
-        if(label[index] == 0.0) bias[j] = 0.0;
+        if(label[index] == 0) bias[j] = 0.0;
         else bias[j] = 0.001;
       }
     }
@@ -453,7 +454,7 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
       for(y = 1; y < dims[1]-1; y++) {
         y_dims=y*dims[0];
         for(x = 1; x < dims[0]-1; x++)  {
-	  
+    
           index = x + y_dims + z_area;
           label_value = (int) label[index];
           if (label_value < 1) continue;
@@ -496,7 +497,7 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
               xBG = i;
             }
           }
-          	  
+              
           /* scale p-values to a sum of 1 */
           if (psum > TINY) {
             for(i = 0; i < n_classes; i++) pvalue[i] /= psum;

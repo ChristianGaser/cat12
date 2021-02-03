@@ -61,7 +61,7 @@ if nargin>=7 && any(isfinite(bb(:)))
     if ~isfinite(vx), vx = abs(prod(vx1))^(1/3); end
     bb(1,:) = vx*round(bb(1,:)/vx);
     bb(2,:) = vx*round(bb(2,:)/vx);
-    odim    = abs(round((bb(2,1:3)-bb(1,1:3))/vx))+1;
+    odim    = abs(round((bb(2,1:3)-bb(1,1:3))./vx))+1;
 
     mm  = [[bb(1,1) bb(1,2) bb(1,3)
             bb(2,1) bb(1,2) bb(1,3)

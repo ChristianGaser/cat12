@@ -1,4 +1,4 @@
-function cat_vol_create_MPM(Label, Deform, vox)
+function cat_vol_create_MPM(Label, Deform, vox, thresholds)
 % Create Maximum Probability Map (Label) of labels in native space and deformation 
 % fields
 %
@@ -13,7 +13,6 @@ function cat_vol_create_MPM(Label, Deform, vox)
 % Christian Gaser
 % $Id$
 
-threshold  = 0.1; % threshold for average probability to exclude non-brain areas
 refine     = 1;   % always use refinement with slight smoothing and median filtering
 
 if nargin < 1
@@ -30,6 +29,11 @@ end
 % voxel size
 if nargin < 3 & ~isempty(Deform)
   vox = spm_input('Voxel size','1','r',[NaN NaN NaN],[1,3]);
+end
+
+% thresholds for average probability to exclude non-brain areas
+if nargin < 4
+  thresholds = spm_input('Threshold(s)','2','r',[0.1:0.1:0.5]);
 end
 
 % check whether only one value was defined
@@ -62,6 +66,21 @@ else
   V = Vlabel;
 end
 
+% set data type w.r.t. maximum value
+max_val = max(datarange);
+if max_val < 2^8
+  data_type   = 'uint8';
+  fprintf('Set data type to uint8\n.')
+elseif max_val < 2^16
+  data_type   = 'uint16';
+  fprintf('Set data type to uint16\n.')
+else 
+  data_type   = 'float32';
+  fprintf('Set data type to float32\n.')
+end
+
+[tmp, name] = spm_str_manip(spm_str_manip(Label,'t'),'C');
+
 watlas = zeros([V(1).dim(1:3) n_structures],'single');
 
 for i=1:n_subjects
@@ -86,52 +105,43 @@ fprintf('\n');
 if refine
   for j=1:n_structures;
     tmp = cat_vol_median3c(single(watlas(:,:,:,j)));
-    spm_smooth(tmp,tmp,1);
+    spm_smooth(tmp,tmp,2);
     watlas(:,:,:,j) = tmp;
   end
 end
 
-[tmp, max_atlas] = max(watlas,[],4);
+[max_atlas, index_atlas_orig] = max(watlas,[],4);
 avg_atlas = sum(watlas,4)/n_subjects;
-max_atlas(find(tmp<1 | isnan(tmp) | avg_atlas<threshold)) = 0;
 
-max_atlas0 = max_atlas;
-
-for j=1:n_structures;
-  max_atlas(find(max_atlas0 == j)) = datarange(j);
+for i=1:numel(thresholds)
+  threshold = thresholds(i);
+  
+  index_atlas = index_atlas_orig;
+  index_atlas(find(max_atlas<1 | isnan(max_atlas) | avg_atlas<threshold)) = 0;
+  
+  index_atlas0 = index_atlas;
+  
+  for j=1:n_structures;
+    index_atlas(find(index_atlas0 == j)) = datarange(j);
+  end
+  
+  % replace remaining holes with median value
+  holes = index_atlas > 0;
+  holes = (cat_vol_morph(holes,'c') - holes) > 0;
+  tmp = cat_vol_median3c(single(index_atlas));
+  index_atlas(holes) = double(tmp(holes));
+  
+  Vo = struct('fname',['MPM_th' num2str(threshold) '_' name.s strrep(name.e,',1','')],...
+              'dim',size(index_atlas),...
+              'dt',[spm_type(data_type)  spm_platform('bigend')],...
+              'pinfo',[1 0 352]',...
+              'mat',V(1).mat,...
+              'n',V(1).n,...
+              'descrip',['n=' num2str(n_subjects)]);
+  Vo = spm_create_vol(Vo);
+  spm_write_vol(Vo, index_atlas);
+  fprintf('%s saved.\n',Vo.fname);
 end
-
-% replace remaining holes with median value
-holes = max_atlas > 0;
-holes = (cat_vol_morph(holes,'c') - holes) > 0;
-tmp = cat_vol_median3c(single(max_atlas));
-max_atlas(holes) = double(tmp(holes));
-
-% set data type w.r.t. maximum value
-max_val = max(datarange);
-if max_val < 2^8
-  data_type   = 'uint8';
-  fprintf('Set data type to uint8\n.')
-elseif max_val < 2^16
-  data_type   = 'uint16';
-  fprintf('Set data type to uint16\n.')
-else 
-  data_type   = 'float32';
-  fprintf('Set data type to float32\n.')
-end
-
-[tmp, name] = spm_str_manip(spm_str_manip(Label,'t'),'C');
-
-Vo = struct('fname',['MPM_' name.s strrep(name.e,',1','')],...
-            'dim',size(max_atlas),...
-            'dt',[spm_type(data_type)  spm_platform('bigend')],...
-            'pinfo',[1 0 352]',...
-            'mat',V(1).mat,...
-            'n',V(1).n,...
-            'descrip','Shooting atlas');
-Vo = spm_create_vol(Vo);
-spm_write_vol(Vo, max_atlas);
-fprintf('%s saved.\n',Vo.fname);
 
 %_______________________________________________________________________
 function [Def,mat,vx,bb] = get_def(field)

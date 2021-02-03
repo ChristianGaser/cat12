@@ -135,7 +135,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       rmn[id] = NAN;
   }
   
-  /* sandard deviation */
+  /* standard deviation */
   for (i=0;i<n;i++) {
     if (id>=0 & rn[Ya[i]]>0) {
       rstd[id]+=powf(Yv[i]-rmn[Ya[i]-1],2);
