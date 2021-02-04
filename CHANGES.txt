@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1755 | gaser | 2021-02-04 21:28:29
+r1756 | gaser | 2021-02-04 22:22:23
+
+Changed paths:
+M       CHANGES.txt
+M       cat_vol_createMPM.m
+M       templates_MNI152NLin2009cAsym/ibsr.nii
+M       templates_MNI152NLin2009cAsym/lpba40.nii
+A       templates_surfaces/mesh.central.Template_T1_IXI555_MNI152_GS.gii
+A       templates_surfaces_32k/mesh.central.Template_T1_IXI555_MNI152_GS.gii
+
+(1) Added:   Added again mesh.central.Template_T1_IXI555_MNI152_GS.gii which
+             is necessary for displaying results.
+(2) Changed: Updated output format for cat_vol_createMPM.m.
+------------------------------------------------------------------------
+r1755 | gaser | 2021-02-04 21:29:16 +0100 (Do, 04 Feb 2021) | 19 lines
 
 Changed paths:
 M       CAT12-Manual.pdf
@@ -18,6 +32,7 @@ M       cat_surf_surf2roi.m
 
 (1) Changed: Updated help text.
 (2) Changed: Updated CAT12 manual.
+
 
 ------------------------------------------------------------------------
 r1754 | gaser | 2021-02-03 19:03:44 +0100 (Mi, 03 Feb 2021) | 10 lines
