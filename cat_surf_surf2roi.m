@@ -123,7 +123,7 @@ function varargout = cat_surf_surf2roi(job)
         if all(~cell2mat(strfind({'central','hull','sphere','sphere.reg','resampledBySurf2roi'},sinfo.dataname)))
           
           if size(lrdata,1) > 150000
-            type = '160k';
+            type = '164k';
           else
             type = '32k';
           end
@@ -191,7 +191,7 @@ function varargout = cat_surf_surf2roi(job)
               xmlname{si} = fullfile(strrep(sinfo.pp,[filesep surffolder],''),labelfolder,['catROIs_' sinfo.name '.xml']);
               cat_io_xml(xmlname{si},catROI{si},'write+'); 
               
-              % delete temporary resampled files
+              % delete temporarily resampled files
               if exist(char(cat_surf_rename(sinfo,'dataname',[sinfo.dataname '.resampledBySurf2roi'],'ee','')),'file')
                 delete(char(cat_surf_rename(sinfo,'dataname',[sinfo.dataname '.resampledBySurf2roi'],'ee','')));
               end
@@ -214,9 +214,9 @@ function varargout = cat_surf_surf2roi(job)
 end
 
 function resamp = get_resampled_values(P,debug,type)
-  if ~exist('type','var'), type = '160k'; end
+  if ~exist('type','var'), type = '164k'; end
   switch type
-    case '160k', fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
+    case '164k', fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
     case '32k',  fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k');
   end   
   P = deblank(char(P));

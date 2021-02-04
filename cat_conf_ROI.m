@@ -227,7 +227,7 @@ for ai = 1:size(exatlas,1)
       if strcmp(spm_str_manip(pp,'t'),'atlases_surfaces_32k')
         addname = ' (32k)';
       elseif strcmp(spm_str_manip(pp,'t'),'atlases_surfaces')
-        addname = ' (160k)';
+        addname = ' (164k)';
       else
         addname = '';
       end
@@ -273,7 +273,7 @@ ownsatlas          = ownatlas;
 ownsatlas.filter   = '';
 ownsatlas.ufilter  = '.*'; 
 ownsatlas.help     = { 
-  'Select FreeSurfer surface annotation files (*.annot), FreeSurfer CURV-files, or GIFTI surfaces with positve integer with 32k or 160k faces. ';
+  'Select FreeSurfer surface annotation files (*.annot), FreeSurfer CURV-files, or GIFTI surfaces with positve integer with 32k or 164k faces. ';
   ''};
 
 satlases          = cfg_branch;
@@ -313,11 +313,11 @@ field.name      = 'Deformation Fields';
 field.filter    = 'image';
 field.ufilter   = '^y_.*\.nii$';
 field.num       = [1 Inf];
-field.help      = {[
-  'Select deformation fields for all subjects.' ...
-  'Use the "y_*.nii" to project data from subject to template space, and the "iy_*.nii" to map data from template to individual space.' ...
-  'Both deformation maps can be created in the CAT preprocessing by setting the "Deformation Field" flag to forward or inverse.' ... 
-]};
+field.help      = {
+  'Select deformation fields for all subjects.'
+  'Use the "y_*.nii" to project data from subject to template space, and the "iy_*.nii" to map data from template to individual space.'
+  'Both deformation maps can be created in the CAT preprocessing by setting the "Deformation Field" flag to forward or inverse.' 
+};
 
 field1          = cfg_files;
 field1.tag      = 'field1';
@@ -325,19 +325,19 @@ field1.name     = 'Deformation Field';
 field1.filter   = 'image';
 field1.ufilter  = '^y_.*\.nii$';
 field1.num      = [1 1];
-field1.help     = {[
-  'Select the deformation field of one subject.' ...
-  'Use the "y_*.nii" to project data from subject to template space, and the "iy_*.nii" to map data from template to individual space.' ...
-  'Both deformation maps can be created in the CAT preprocessing by setting the "Deformation Field" flag to forward or inverse.' ... 
-]};
+field1.help     = {
+  'Select the deformation field of one subject.'
+  'Use the "y_*.nii" to project data from subject to template space, and the "iy_*.nii" to map data from template to individual space.'
+  'Both deformation maps can be created in the CAT preprocessing by setting the "Deformation Field" flag to forward or inverse.' 
+};
 
 images1         = cfg_files;
 images1.tag     = 'images';
 images1.name    = 'Images';
-images1.help    = {[
-  'Select co-registered files for ROI estimation. Note that there should be the same number of images as there are ' ...
-  'deformation fields, such that each flow field relates to one image. The images can be also given as 4D data (e.g. rsfMRI data).' ...
-]};
+images1.help    = {
+  'Select co-registered files for ROI estimation. Note that there should be the same number of images as there are '
+  'deformation fields, such that each flow field relates to one image. The images can be also given as 4D data (e.g. rsfMRI data).'
+};
 images1.filter  = 'image';
 images1.ufilter = '.*';
 images1.num     = [1 Inf];
@@ -355,7 +355,19 @@ cfun.name       = 'Customized function';
 cfun.strtype    = 's';
 cfun.num        = [0 Inf];
 cfun.val        = {'@median'};
-cfun.help       = {'Here, you can define your own function to summarize data as function handle (e.g. @median).'};
+cfun.help       = {
+  'Here, you can define your own function to summarize data as function handle. This also allows to use external functions.'
+  'Examples: '
+  'Calculate median:'
+  '@median'
+  ''
+  'Calculate absolute amplitude between 10-90% percentile:'
+  '@(x) abs(diff(spm_percentile(x,[10 90])))'
+  ''
+  'Get mean inbetween 10-90% percentile'
+  '@(x) mean(x>spm_percentile(x,10) & x<spm_percentile(x,90)'
+  ''
+};
 
 fun             = cfg_menu;
 fun.name        = 'Predefined functions';
@@ -399,8 +411,8 @@ ROIsum.tag      = 'ROIsum';
 ROIsum.name     = 'Summarise 3D/4D data within a ROI';
 ROIsum.val      = {Method};
 ROIsum.prog     = @cat_vol_ROI_summarize;
-ROIsum.help     = {[
-  'This is an utility to summarise co-registered volume data within a region of interest (ROI). ' ...
-  'This can be used in order to estimate ROI information for other modalities (i.e. DTI, fMRI) which can be also given as 4D data.' ...
-]};
+ROIsum.help     = {
+  'This is an utility to summarise co-registered volume data within a region of interest (ROI). '
+  'This can be used in order to estimate ROI information for other modalities (i.e. DTI, fMRI) which can be also given as 4D data.'
+};
 
