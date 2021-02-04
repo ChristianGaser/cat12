@@ -599,7 +599,7 @@ if expert && 0 % this is not ready now
   cdata.filter  = 'any';
   cdata.ufilter = 'lh.(?!cent|pial|white|sphe|defe|hull|pbt).*';
   cdata.num     = [1 Inf];
-  cdata.help    = {'Surface data sample. Both sides will be processed'};
+  cdata.help    = {'Surface data files. Both sides will be processed'};
 else % only smoothed/resampled
   cdata         = cfg_files;
   cdata.tag     = 'cdata';
@@ -607,17 +607,17 @@ else % only smoothed/resampled
   cdata.filter  = 'any';
   cdata.ufilter = '^lh.(?!cent|pial|white|sphe|defe|hull|pbt).*';
   cdata.num     = [1 Inf];
-  cdata.help    = {'Surface data sample. Both sides will be processed'};
+  cdata.help    = {'Surface data files. Both sides will be processed'};
 end
 
 cdata_sample         = cfg_repeat;
 cdata_sample.tag     = 'cdata_sub.';
-cdata_sample.name    = 'Surface Data Sample';
+cdata_sample.name    = 'Surface Data';
 cdata_sample.values  = {cdata};
 cdata_sample.num     = [1 Inf];
 cdata_sample.help = {[...
-  'Specify data for each sample (i.e. thickness, gyrification, ...). ' ...
-  'All samples must have the same size and same order. ' ...
+  'Specify data for each measure (i.e. thickness, gyrification, ...). ' ...
+  'All measures must have the same size and same order. ' ...
   ''
 ]};
 

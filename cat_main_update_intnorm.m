@@ -23,7 +23,7 @@ function [Ym2,Ymi2,Tthm,Tthmi] = cat_main_update_intnorm(Ym,Ymi,Yb,Ycls,job,verb
 %               (1x3 cell with 1x2 matrix with mean and std given by AMAP)
 % _________________________________________________________________________
 % Robert Dahnke, Structural Brain Mapping Group, University Jena, 202101
-% $Id: cat_main_amap.m 1694 2020-08-19 13:42:00Z dahnke $ 
+% $Id$ 
 
 %
 % ToDo: Test with PD/T2/FLAIR/MP2
