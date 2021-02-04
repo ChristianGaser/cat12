@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1756 | gaser | 2021-02-04 22:22:23
+r1757 | gaser | 2021-02-05 00:11:34
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_stat_spm2x.m
+M       cat_surf_results.m
+
+(1) Fixed: Log-p scaled threshold for P<0.05 was slightly uncorrect.  
+(2) Fixed: Thresholding the results in cat_surf_results.m was slightly 
+           uncorrect. Thanks to Pravesh Parekh for pointing to that error.
+
+------------------------------------------------------------------------
+r1756 | gaser | 2021-02-04 22:23:11 +0100 (Do, 04 Feb 2021) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +25,7 @@ A       templates_surfaces_32k/mesh.central.Template_T1_IXI555_MNI152_GS.gii
 (1) Added:   Added again mesh.central.Template_T1_IXI555_MNI152_GS.gii which
              is necessary for displaying results.
 (2) Changed: Updated output format for cat_vol_createMPM.m.
+
 ------------------------------------------------------------------------
 r1755 | gaser | 2021-02-04 21:29:16 +0100 (Do, 04 Feb 2021) | 19 lines
 
