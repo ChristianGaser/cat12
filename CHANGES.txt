@@ -1,5 +1,26 @@
 ------------------------------------------------------------------------
-r1754 | gaser | 2021-02-03 19:03:11
+r1755 | gaser | 2021-02-04 21:28:29
+
+Changed paths:
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       cat_conf_ROI.m
+M       cat_conf_extopts.m
+M       cat_conf_stools.m
+MM      cat_main_update_intnorm.m
+M       cat_surf_fun.m
+M       cat_surf_surf2roi.m
+ M      html/cat_methods_affreg.html
+ M      templates_surfaces/lh.thickness.Template_T1
+ M      templates_surfaces/rh.thickness.Template_T1
+ M      templates_surfaces_32k/lh.thickness.Template_T1
+ M      templates_surfaces_32k/rh.thickness.Template_T1
+
+(1) Changed: Updated help text.
+(2) Changed: Updated CAT12 manual.
+
+------------------------------------------------------------------------
+r1754 | gaser | 2021-02-03 19:03:44 +0100 (Mi, 03 Feb 2021) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +30,7 @@ M       cat_main_reportfig.m
 (1) Fixed:   Atlases in cat_vol_ROI_summarize batch were not correctly 
              recognized if only defined in expert mode.
 (2) Changed: Switch off some annoying warnings in cat_main_reportfig.m
+
 
 ------------------------------------------------------------------------
 r1753 | gaser | 2021-02-03 18:15:39 +0100 (Mi, 03 Feb 2021) | 46 lines

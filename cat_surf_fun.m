@@ -1628,7 +1628,7 @@ function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt)
 % _________________________________________________________________________
 % Correction of self-intersection (S) by iterative use of the 
 % CAT_selfintersect function of Rachel Yotter / Christian Gaser.
-% For typical 160k surfaces 60 to 90s are required per iteration and at
+% For typical 164k surfaces 60 to 90s are required per iteration and at
 % least 5 iterations are required for reasonable quality (accuracy 1/2^4
 % with aobut 0.25% SIs). 
 %
