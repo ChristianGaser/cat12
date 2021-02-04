@@ -34,7 +34,7 @@ OV.name = char(fullfile(spm('dir'),'tpm','TPM.nii,1'),...
 % The log-scaled values are calculated by -log10(1-p):
 % p-value       -log10(1-P)
 %  0.1           1
-%  0.05          1.3
+%  0.05          1.30103 (-log10(0.05))
 %  0.01          2
 %  0.001         3
 %  0.0001        4
@@ -45,7 +45,7 @@ OV.name = char(fullfile(spm('dir'),'tpm','TPM.nii,1'),...
 OV.range   =[[0.5 1]; [0.5 1]];
 
 % OV.func can be used to set the image to defined values (e.g. NaN) for the given range
-%OV.func = 'i1(i1>-1.3 & i1<1.3)=NaN;';
+%OV.func = 'i1(i1>log10(0.05) & i1<-log10(0.05))=NaN;';
 
 % selection of slices and orientations
 % if OV.slices_str is an empty string then slices with local maxima are estimated automatically

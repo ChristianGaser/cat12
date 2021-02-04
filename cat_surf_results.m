@@ -2035,9 +2035,9 @@ if H.n_surf == 1
       if clip(3) >= 1.3 && clip(3) <= 1.4
         XTick_step = ceil((clim(3) - clim(2)) / 5);
         if clip(2) <= - 1.3 && clip(2) >= - 1.4
-          XTick = [(round(clim(2)) - 0.3):XTick_step: - 1.3 0 1.3:XTick_step:(round(clim(3)) + 0.3)];
+          XTick = [(round(clim(2)) - 0.30103):XTick_step: - 1.30103 0 1.30103:XTick_step:(round(clim(3)) + 0.30103)];
         else
-          XTick = [0 1.3:XTick_step:(round(clim(3)) + 0.3)];
+          XTick = [0 1.30103:XTick_step:(round(clim(3)) + 0.30103)];
         end
       else
         mn = floor(min(XTick));
