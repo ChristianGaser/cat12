@@ -51,7 +51,7 @@ function out = cat_stat_spm2x(job)
 % Examples:
 % p-value -log10(1-P)
 % 0.1   1
-% 0.05    1.3
+% 0.05    1.30103 (-log10(0.05))
 % 0.01    2
 % 0.001   3
 % 0.0001  4
@@ -402,7 +402,7 @@ for i=1:size(P,1)
         k_noniso = IV*LKC/v2r;
 
         % find corresponding cluster in spm_clusters if cluster exceeds threshold
-        if k_noniso >= k
+        if k_noniso > k
           ind2 = find(A2==i2);
           for l = 1:min([max(A) max(A2)])
             j = find(A == l);
@@ -426,7 +426,7 @@ for i=1:size(P,1)
     else
       for i2 = 1:min(max(A))
         j = find(A == i2);
-        if length(j) >= k
+        if length(j) > k
           Qe = [Qe j];
           
           % save atlas measures for 3D data

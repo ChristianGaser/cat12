@@ -55,7 +55,7 @@ function varargout = cat_surf_results(action, varargin)
 %
 %  * cat_surf_results('threshold',[0..4]);
 %  Define statistical threshold. 
-%  0 - none, 1.3 - 0.05, 2 - 0.01, 3 - 0.001
+%  0 - none, -log10(0.05) - 0.05, 2 - 0.01, 3 - 0.001
 %
 %  * cat_surf_results('transparency');
 %  Disable transparency. 
@@ -246,7 +246,7 @@ switch lower(action)
     
     str = {'Threshold', 'No threshold', 'P<0.05', 'P<0.01', 'P<0.001'};
     tmp = {{@select_thresh, 0}, ...
-           {@select_thresh, 1.3}, ...
+           {@select_thresh, -log10(0.05)}, ...
            {@select_thresh, 2}, ...
            {@select_thresh, 3}};
     
@@ -1415,8 +1415,8 @@ for ind = [1 3]
     d = d0(indsurf, :);
     
     % apply thresholds
-    dp = d >= thresh(2); indp = find(dp);
-    dn = d <= thresh(1); indn = find(dn);
+    dp = d > thresh(2); indp = find(dp);
+    dn = d < thresh(1); indn = find(dn);
     
     % go through pos. effects
     if ~isempty(indp)
@@ -3093,8 +3093,8 @@ if plot_mean
   d = getappdata(H.patch(ind), 'data');
   
   % apply thresholds
-  dp = d >= thresh(2); indp = find(dp);
-  dn = d <= thresh(1); indn = find(dn);
+  dp = d > thresh(2); indp = find(dp);
+  dn = d < thresh(1); indn = find(dn);
   
   % go through pos. effects
   if ~isempty(indp)

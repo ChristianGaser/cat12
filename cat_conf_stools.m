@@ -2035,7 +2035,7 @@ threshold             = cfg_menu;
 threshold.name        = 'Threshold';
 threshold.tag         = 'threshold';
 threshold.labels      = {'No threshold', 'P<0.05', 'P<0.01', 'P<0.001'};
-threshold.values      = {0,1.3,2,3};
+threshold.values      = {0,-log10(0.05),2,3};
 threshold.val         = {0};
 threshold.help        = {'Define the threshold of statistical maps.' ''};
 
