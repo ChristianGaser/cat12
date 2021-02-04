@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1757 | gaser | 2021-02-05 00:11:34
+r1758 | gaser | 2021-02-05 00:26:34
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_surf_results.m
+M       cat_vol_slice_overlay_ui.m
+ M      templates_surfaces/mesh.central.Template_T1_IXI555_MNI152_GS.gii
+ M      templates_surfaces_32k/mesh.central.Template_T1_IXI555_MNI152_GS.gii
+
+Fixed: Log-p scaled threshold for P<0.05 was slightly uncorrect.
+
+------------------------------------------------------------------------
+r1757 | gaser | 2021-02-05 00:12:18 +0100 (Fr, 05 Feb 2021) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +23,7 @@ M       cat_surf_results.m
 (1) Fixed: Log-p scaled threshold for P<0.05 was slightly uncorrect.  
 (2) Fixed: Thresholding the results in cat_surf_results.m was slightly 
            uncorrect. Thanks to Pravesh Parekh for pointing to that error.
+
 
 ------------------------------------------------------------------------
 r1756 | gaser | 2021-02-04 22:23:11 +0100 (Do, 04 Feb 2021) | 12 lines
