@@ -277,8 +277,8 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,Yy,tpm,job,res,vx_vol,stime2)
   
   % update SPM segmentation information 
   for i=1:3
-    [res.mn(res.lkp==i),tmp,res.mg(res.lkp==i)] = ...
-      cat_stat_kmeans(Ysrc(P(:,:,:,i)>64),sum(res.lkp==i)); %#ok<ASGLU>
+    [ res.mn(res.lkp==i), tmp, res.mg(res.lkp==i) ] = ...
+      cat_stat_kmeans(Ysrc(P(:,:,:,i)>64), sum(res.lkp==i) ); %#ok<ASGLU>
   end
 
 end

@@ -11,7 +11,7 @@ function [mu,su,nu] = cat_stat_kmeans(y,k,s)
 %
 %  mu .. vector of class means 
 %  su .. vector of class std 
-%  nu .. vector of class number of voxel
+%  nu .. vector of class percentage of values
 %
 % modified version of
 % spm_kmeans1.m 1143 2008-02-07 19:33:33Z spm $
@@ -31,7 +31,7 @@ y(isnan(y))=[]; % remove NaNs
 if numel(y)<=0
   mu = nan(1,k);
   su = mu; 
-  nu = mu; 
+  nu = mu;
   return; 
 end
 
@@ -70,11 +70,21 @@ end
 for j=1:k
   if isempty(y(i==j))
     su(j) = std(d(j,:));
-    nu(j) = sum(std(d(j,:)))./numel(y(:));
   else
     su(j) = std(y(i==j));
-    nu(j) = sum(i==j)./numel(y(:));
   end
+end
+
+bd = nan(k,2); 
+for j=1:k
+  % lower boundary 
+  if j==1, bd(j,1) = -inf; end
+  if j>1,  bd(j,1) = mean( [ mu(j-1) + su(j-1) , mu(j) - su(j) ] ); end
+  % upper boudnary  
+  if j<k,  bd(j,2) = mean( [ mu(j) + su(j) , mu(j+1) - su(j+1) ] ); end
+  if j==k, bd(j,2) = inf; end
+  % proposion of elements
+  nu(j) = sum( y>bd(j,1) & y<=bd(j,2) )/numel(y);  
 end
 
 if exist('s','var')

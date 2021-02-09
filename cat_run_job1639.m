@@ -605,6 +605,8 @@ function cat_run_job1639(job,tpm,subj)
         %  these regions later. 
         %  We further discussed to use a separate mask images but finally desided
         %  to keep this as simple as possible using no additional options!
+        %  Moreover, we have to test here anyway to create warnings in case
+        %  of inoptimal settings (e.g. no SLC but possible large lesions).
         obj.image0 = spm_vol(job.channel(1).vols0{subj});
         Ysrc0      = spm_read_vols(obj.image0); 
         Ylesion    = single(Ysrc0==0); clear Ysrc0; 
@@ -613,14 +615,25 @@ function cat_run_job1639(job,tpm,subj)
           mat      = obj.image0.mat \ obj.image.mat;
           Ylesion  = smooth3(Ylesion); 
           Ylesionr = zeros(obj.image.dim,'single'); 
-          for i=1:obj.image.dim(3),
+          for i=1:obj.image.dim(3)
             Ylesionr(:,:,i) = single(spm_slice_vol(Ylesion,mat*spm_matrix([0 0 i]),obj.image.dim(1:2),[1,NaN]));
           end
           Ylesion = Ylesionr>0.5; clear Ylesionr;
         end
         if exist('Ybg','var'), Ylesion(Ybg)=0; end % denoising in background
-        
-        
+        if sum(Ylesion(:))/1000 > 1
+          fprintf('%5.0fs\n',etime(clock,stime)); stime = []; 
+          if ~job.extopts.SLC
+            % this could be critical and we use a warning for >1 cm3 and an alert in case of >10 cm3
+            cat_io_addwarning([mfilename ':StrokeLesionButNoCorrection'],sprintf( ...
+             ['There are %0.2f mm%s of zeros within the brain but Stroke Lesion \\\\n', ...
+              'Correction (SLC) inactive (availabe in the expert mode). '], ...
+              sum(Ylesion(:))/1000,native2unicode(179, 'latin1')),1 + (sum(Ylesion(:))/1000 > 10),[0 1]);  
+            clear Ylesion; 
+          else
+            cat_io_cprintf('note',sprintf('SLC: Found masked region of %0.2f cm%s. \n', sum(Ylesion(:))/1000,native2unicode(179, 'latin1'))); 
+          end
+        end
         
         %% APP for spm_maff8
         %  optimize intensity range

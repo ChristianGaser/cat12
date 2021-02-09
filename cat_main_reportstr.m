@@ -116,7 +116,7 @@ function str = cat_main_reportstr(job,res,qa)
   str{1}(end).value = [str{1}(end).value sprintf(' / %s{%s}',cp{1},APPstr{job.extopts.APP+1})];
 
   % 1 line 3: COM
-  if isfield(job.extopts,'setCOM') && job.extopts.setCOM == catdef.extopts.setCOM, cp{1} = npara; else, cp{1} = cpara; end
+  if isfield(job.extopts,'setCOM') && isfield(catdef.extopts,'setCOM') && job.extopts.setCOM == catdef.extopts.setCOM, cp{1} = npara; else, cp{1} = cpara; end
   COMstr = {'noCOM','COM'}; COMstr{10} = 'noTPM'; COMstr{11} = 'fTPM'; COMstr{120} = 'noMSK';
   str{1}(end).name  = [str{1}(end).name(1:end-1) ' / setCOM ']; 
   str{1}(end).value = [str{1}(end).value sprintf(' / %s{%s}',cp{1},COMstr{job.extopts.setCOM})];
@@ -392,11 +392,11 @@ function str = cat_main_reportstr(job,res,qa)
   %if cellfun('isempty',strfind({Psurf(:).Pcentral},'ch.')), thstr = 'Cerebral Thickness'; else thstr = 'Thickness'; end
   if isfield(qa.subjectmeasures,'dist_thickness') && ~isempty(qa.subjectmeasures.dist_thickness)
     if job.extopts.expertgui > 1 && isfield(qa.subjectmeasures,'dist_thickness_kmeans')
-      str{3} = [str{3} struct('name', '\bfThickness\sf(kmeans):','value',sprintf('%5.2f%s%4.2f mm (%5.2f%s%4.2f mm)', ...
+      str{3} = [str{3} struct('name', '\bfThickness \rm(kmeans):','value',sprintf('%4.2f%s%4.2f mm (%4.2f%s%4.2f mm)', ...
        qa.subjectmeasures.dist_thickness{1}(1),native2unicode(177, 'latin1'),qa.subjectmeasures.dist_thickness{1}(2), ...
-       qa.subjectmeasures.dist_thickness_kmeans(1),native2unicode(177, 'latin1'),qa.subjectmeasures.dist_thickness_kmeans(2)))];
+       qa.subjectmeasures.dist_thickness_kmeans_inner3(2,1),native2unicode(177, 'latin1'),qa.subjectmeasures.dist_thickness_kmeans_inner3(2,2)))];
     else
-      str{3} = [str{3} struct('name', '\bfThickness:','value',sprintf('%5.2f%s%4.2f mm', ...
+      str{3} = [str{3} struct('name', '\bfThickness:','value',sprintf('%4.2f%s%4.2f mm', ...
        qa.subjectmeasures.dist_thickness{1}(1),native2unicode(177, 'latin1'),qa.subjectmeasures.dist_thickness{1}(2)))];
     end
     % we warn only if WMHC is off ... without WMHC you have not thresholds!
