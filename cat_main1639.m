@@ -224,19 +224,10 @@ if ~isfield(res,'spmpp')
       job2.extopts.reg.affreg  = 0;      % new affine registration
       res2.do_dartel           = 1;      % use dartel
     end
-    if job.extopts.new_release && 0 
-      % improvements for large ventricles ... not working now (RD201911)
-      if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
-        [trans,res.ppe.reginitp] = cat_main_registration2(job2,res2,Ycls(1:2),Yy,tpm.M,res.Ylesion); 
-      else
-        [trans,res.ppe.reginitp] = cat_main_registration2(job2,res2,Ycls(1:2),Yy,tpm.M); 
-      end
+    if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
+      [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,res.Ylesion); 
     else
-      if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
-        [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M,res.Ylesion); 
-      else
-        [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M); 
-      end
+      [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy); 
     end
     Yy2  = trans.warped.y;
     if ~debug, clear trans job2 res2; end
@@ -602,36 +593,33 @@ end
 %% ---------------------------------------------------------------------
 %  Spatial Registration with Dartel or Shooting
 %  ---------------------------------------------------------------------
-  Yclsd = Ycls(1:3); % use only GM and WM for deformation
-  if job.extopts.WMHC>0 && numel(Ycls)>6
-    Yclsd{2} = cat_vol_ctype(min(255,single(Ycls{2}) + single(Ycls{7}))); % set WMHs as WM in some cases
-  end
-  
-  if job.extopts.SLC && isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
-    % lesion detection in the original space with the original data
-    LSstr   = 0.5; 
-    Yvt     = cat_vol_morph( NS(Yl1,job.extopts.LAB.VT),'do',4,vx_vol);      % open to get lesions close to the ventricle
-    Yvt     = cat_vol_morph( Yvt ,'dd',4,vx_vol);                            % add some voxels for smoothness
-    res.Ylesion = cat_vol_ctype( single(res.Ylesion) .* (1 - (Yvt & Ym>0.9 & Ym<1.1) ));
-    if ~debug, clear Yvt Ybgvt Ybgn;  end      
-    % add lesion of automatic lesion estimation? - in development
-    if job.extopts.WMHC>3
-      res.Ylesion = cat_vol_ctype( single(res.Ylesion) + ...
-        255* smooth3( Ym<1.5/3 & cat_vol_morph(NS(Yl1,job.extopts.LAB.LE),'dd',4*(1-LSstr))) ); 
+  if res.do_dartel
+    Yclsd = Ycls(1:3); % use only GM and WM for deformation
+    if job.extopts.WMHC>0 && numel(Ycls)>6
+      Yclsd{2} = cat_vol_ctype(min(255,single(Ycls{2}) + single(Ycls{7}))); % set WMHs as WM in some cases
     end
-    Ylesions = cat_vol_smooth3X(single(res.Ylesion)/255,4); % final smoothing to have soft boundaries
-  else
-    Ylesions = zeros(size(Ym),'single'); 
-  end
+
+    if job.extopts.SLC && isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
+      % lesion detection in the original space with the original data
+      LSstr   = 0.5; 
+      Yvt     = cat_vol_morph( NS(Yl1,job.extopts.LAB.VT),'do',4,vx_vol);      % open to get lesions close to the ventricle
+      Yvt     = cat_vol_morph( Yvt ,'dd',4,vx_vol);                            % add some voxels for smoothness
+      res.Ylesion = cat_vol_ctype( single(res.Ylesion) .* (1 - (Yvt & Ym>0.9 & Ym<1.1) ));
+      if ~debug, clear Yvt Ybgvt Ybgn;  end      
+      % add lesion of automatic lesion estimation? - in development
+      if job.extopts.WMHC>3
+        res.Ylesion = cat_vol_ctype( single(res.Ylesion) + ...
+          255* smooth3( Ym<1.5/3 & cat_vol_morph(NS(Yl1,job.extopts.LAB.LE),'dd',4*(1-LSstr))) ); 
+      end
+      Ylesions = cat_vol_smooth3X(single(res.Ylesion)/255,4); % final smoothing to have soft boundaries
+    else
+      Ylesions = zeros(size(Ym),'single'); 
+    end
   
-  % call Dartel/Shooting registration 
-  if job.extopts.new_release && 0 % ... there is an error
-    [trans,res.ppe.reg] = cat_main_registration2(job,res,Yclsd,Yy,tpm.M,Ylesions);
+    % call Dartel/Shooting registration  
+    [trans,res.ppe.reg] = cat_main_registration(job,res,Yclsd,Yy,Ylesions);
+    clear Yclsd Ylesions;
   else
-    [trans,res.ppe.reg] = cat_main_registration(job,res,Yclsd,Yy,tpm.M,Ylesions);
-  end
-  clear Yclsd Ylesions;
-  if ~res.do_dartel
     if job.extopts.regstr == 0
       fprintf('Dartel registration is not required.\n');
     else

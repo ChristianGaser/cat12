@@ -717,12 +717,14 @@ function job = update_job(job)
   clear sampval tolval;
   
   %% set Dartel/Shooting templates
-  if isfield(job.extopts,'dartel')
-    job.extopts.darteltpm   = job.extopts.dartel.darteltpm;
-    job.extopts.regstr      = 0; 
-  elseif isfield(job.extopts,'shooting')
-    job.extopts.shootingtpm = job.extopts.shooting.shootingtpm;
-    job.extopts.regstr      = job.extopts.shooting.regstr; 
+  if isfield(job.extopts,'regmethod') 
+    if isfield(job.extopts.regmethod,'dartel')
+      job.extopts.darteltpm   = job.extopts.regmethod.dartel.darteltpm;
+      job.extopts.regstr      = 0; 
+    elseif isfield(job.extopts.regmethod,'shooting')
+      job.extopts.shootingtpm = job.extopts.regmethod.shooting.shootingtpm;
+      job.extopts.regstr      = job.extopts.regmethod.shooting.regstr; 
+    end
   end
   
   % find and check the Dartel templates
