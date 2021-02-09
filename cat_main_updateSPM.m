@@ -546,9 +546,9 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Y
     res2.do_dartel            = 1;      % use dartel
   end
   if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
-    [trans,res.ppe.reginitp,res.Affine] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M,res.Ylesion); 
+    [trans,res.ppe.reginitp,res.Affine] = cat_main_registration(job2,res2,Ycls(1:2),Yy,res.Ylesion); 
   else
-    [trans,res.ppe.reginitp,res.Affine] = cat_main_registration(job2,res2,Ycls(1:2),Yy,tpm.M); 
+    [trans,res.ppe.reginitp,res.Affine] = cat_main_registration(job2,res2,Ycls(1:2),Yy); 
   end
   Yy2  = trans.warped.y;
  

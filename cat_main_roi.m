@@ -128,7 +128,7 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
     transw.odim = VA(ai).dim;                 % size of the boundary box of the atlas we have to render the tissues
     transw.M1   = VA(ai).mat;                 % boundary box position 
     % adapt y for the atlas resolution (for loop) and for the new position (matit) 
-    mati        = spm_imatrix( trans.affine.mat - VA(ai).mat) ; 
+    mati        = trans.affine.mat(13:15) - VA(ai).mat(13:15); 
     vdim        = spm_imatrix( VA(ai).mat ); % trans.affine.mat ); 
     matit       = mati(1:3) ./ vdim(7:9); 
     for i=1:3, transw.y(:,:,:,i) = transw.y(:,:,:,i) .* job.extopts.vox ./ VAvx_vol(ai,i);  end

@@ -707,7 +707,15 @@ end
           Ylesion = Ylesionr>0.5; clear Ylesionr;
         end
         if exist('Ybg','var'), Ylesion(Ybg)=0; end % denoising in background
-        
+        if ~job.extopts.SLC && sum(Ylesion(:))/1000>1
+          % this could be critical and we use a warning for >1 cm3 and an alert in case of >10 cm3
+          cat_io_addwarning([mfilename ':StrokeLesionButNoCorrection'],sprintf( ...
+           ['There are %0.2f mm%s of zeros within the brain but Stroke Lesion \\\\n', ...
+            'Correction (SLC) inactive (availabe in the expert mode). \\\\n'], ...
+            sum(Ylesion(:))/1000,native2unicode(179, 'latin1')),1 + (sum(Ylesion(:))/1000>10),[0 1]);   
+        else
+          cat_io_cprintf('note',sprintf('SLC: Found masked region of %0.2f cm%s. \n', sum(Ylesion(:))/1000,native2unicode(179, 'latin1'))); 
+        end
         
         
         %% APP for spm_maff8
