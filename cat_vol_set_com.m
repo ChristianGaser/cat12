@@ -31,7 +31,7 @@ n = numel(V);
 com_reference = [0 -20 -15];
 
 for i=1:n
-  fprintf('Correct center-of-mass: %s',spm_str_manip(V(i).fname,'k41'));
+  fprintf('Correct center-of-mass                                            ');
   Affine = eye(4);
   if isfield(V(i),'dat')
     vol(:,:,:) = V(i).dat(:,:,:);

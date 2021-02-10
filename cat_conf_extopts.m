@@ -186,7 +186,6 @@ elseif expert==1
     'Optimized Shooting - soft (13)'
   };
   regstr.values = {4 5 eps 0.5 1.0 11 12 13}; % special case 0 = 0.5 due to Dartel default seting
-  regstr.name   = 'Method';
   regstr.help = [regstr.help; { ...
     'The strength of the optimized Shooting registration depends on the stopping criteria (controlled by the "extopts.regstr" parameter) and by the final registration resolution that can be given by the template (fast,standard,fine), as fixed value (hard,medium,soft), or (iii) by the output resolution (vox).   In general the template resolution is the best choice to allow an adaptive normalization depending on the individual anatomy with some control of the calculation time. Fixed resolution allows to roughly define the degree of normalization for all images with 2.0 mm for smoother and 1.0 mm for stronger deformations.  For special cases the registration resolution can also be set by the output resolution controlled by the "extopts.vox" parameter. '
     ''
@@ -207,7 +206,6 @@ else
   regstr         = cfg_entry;
   regstr.strtype = 'r';
   regstr.num     = [1 inf];
-  regstr.name   = 'Spatial registration';
   regstr.help    = [regstr.help; { ...
     '"Default Shooting" runs the original Shooting approach for existing templates and takes about 10 minutes per subject for 1.5 mm templates and about 1 hour for 1.0 mm. '
     'The "Optimized Shooting" approach uses lower spatial resolutions in the first iterations and an adaptive stopping criteria that allows faster processing of about 6 minutes for 1.5 mm and 15 minutes for 1.0 mm. '
@@ -248,6 +246,7 @@ if cat_get_defaults('extopts.regstr')>0
 else
   regstr.val    = {0.5};
 end
+regstr.name   = 'Method';
 
 %---------------------------------------------------------------------
 
@@ -798,6 +797,7 @@ LASstr.help    = {
   'Additionally to WM-inhomogeneities, GM intensity can vary across different regions such as the motor cortex, the basal ganglia, or the occipital lobe. These changes have an anatomical background (e.g. iron content, myelinization), but are dependent on the MR-protocol and often lead to underestimation of GM at higher intensities and overestimation of CSF at lower intensities. Therefore, a local intensity transformation of all tissue classes is used to reduce these effects in the image. This local adaptive segmentation (LAS) is applied before the final AMAP segmentation.'
   ''
 };
+LAS.hidden = expert<1;
 
 
 %------------------------------------------------------------------------
@@ -945,6 +945,7 @@ if expert
      }];
 end
 app.help   = [app.help;{''}];
+app.hidden = expert<1;
 
 %------------------------------------------------------------------------
 
@@ -1122,7 +1123,7 @@ close_parahipp.help    = {
 segmentation        = cfg_branch;
 segmentation.tag    = 'segmentation';
 segmentation.name   = 'Segmentation Options';
-segmentation.val    = {app,setCOM,affmod,NCstr,spm_kamap,LASstr,gcutstr,cleanupstr,BVCstr,wmhc,slc,mrf,restype}; % WMHCstr,
+segmentation.val    = {restype,setCOM,app,affmod,NCstr,spm_kamap,LASstr,gcutstr,cleanupstr,BVCstr,wmhc,slc,mrf}; % WMHCstr,
 segmentation.hidden = expert<1; 
 segmentation.help   = {'CAT12 parameter to control the tissue classification.';''};
 
@@ -1155,7 +1156,7 @@ if ~spm
   if expert  % expert/developer options
     extopts.val   = {segmentation,registration,surface,admin}; 
   else
-    extopts.val   = {app,setCOM,affmod,spm_kamap,LASstr,gcutstr,wmhc,registration,vox,restype,ignoreErrors}; 
+    extopts.val   = {restype,setCOM,app,affmod,spm_kamap,LASstr,gcutstr,wmhc,registration,vox,ignoreErrors}; 
   end
 else
   % SPM based surface processing and thickness estimation

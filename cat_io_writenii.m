@@ -40,7 +40,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
   % file name
   [cv,cr]      = cat_version;
   if ~exist('pre','var'),  pre  = ''; end
-  if ~exist('desc','var'), desc = sprintf('%sR%s',cv,cr); end
+  if ~exist('desc','var'), desc = sprintf('%sR%s ',cv,cr); end
   if exist('transform','var') && isfield(transform,'warped')
     if isfield(transform.warped,'push'), push = transform.warped.push; else, push = 0; end
     if ~isfield(transform.warped,'w') && ~isfield(transform.warped,'yi'), push = 1; end 
