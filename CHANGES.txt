@@ -1,5 +1,51 @@
 ------------------------------------------------------------------------
-r1760 | gaser | 2021-02-10 10:47:26
+r1761 | gaser | 2021-02-11 00:44:01
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_output.m
+M       cat_io_writenii.m
+M       cat_main_reportfig.m
+M       cat_main_write.m
+M       cat_vol_set_com.m
+M       templates_MNI152NLin2009cAsym/Schaefer2018_100Parcels_17Networks_order.nii
+M       templates_MNI152NLin2009cAsym/Schaefer2018_200Parcels_17Networks_order.nii
+M       templates_MNI152NLin2009cAsym/Schaefer2018_400Parcels_17Networks_order.nii
+M       templates_MNI152NLin2009cAsym/Schaefer2018_600Parcels_17Networks_order.nii
+M       templates_MNI152NLin2009cAsym/Template_0_GS.nii
+M       templates_MNI152NLin2009cAsym/Template_1_Dartel.nii
+M       templates_MNI152NLin2009cAsym/Template_1_GS.nii
+M       templates_MNI152NLin2009cAsym/Template_2_Dartel.nii
+M       templates_MNI152NLin2009cAsym/Template_2_GS.nii
+M       templates_MNI152NLin2009cAsym/Template_3_Dartel.nii
+M       templates_MNI152NLin2009cAsym/Template_3_GS.nii
+M       templates_MNI152NLin2009cAsym/Template_4_Dartel.nii
+M       templates_MNI152NLin2009cAsym/Template_4_GS.nii
+M       templates_MNI152NLin2009cAsym/Template_5_Dartel.nii
+M       templates_MNI152NLin2009cAsym/Template_6_Dartel.nii
+M       templates_MNI152NLin2009cAsym/aal3.nii
+M       templates_MNI152NLin2009cAsym/brainmask.nii
+M       templates_MNI152NLin2009cAsym/cat.nii
+M       templates_MNI152NLin2009cAsym/cat_strokelesions_ATLAS303.nii
+M       templates_MNI152NLin2009cAsym/cat_wmh.nii
+M       templates_MNI152NLin2009cAsym/cat_wmh_miccai2017.nii
+M       templates_MNI152NLin2009cAsym/hammers.nii
+M       templates_MNI152NLin2009cAsym/mori.nii
+M       templates_MNI152NLin2009cAsym/neuromorphometrics.nii
+M       templates_external/y_IXI555Dartel_to_MNI152NLin2009cAsym.nii
+M       templates_external/y_MNI152NLin6Asym_to_MNI152NLin2009cAsym.nii
+M       templates_external/y_MNIColin27_to_MNI152NLin2009cAsym.nii
+
+(1) Changed: Updated Templates and atlases in templates_MNI152NLin2009cAsym
+             with new bounding box.
+(2) Changed: Set output in report to new surface display with multiple views.
+(3) Fixed:   Corrected some typos
+(4) Fixed:   Corrected field name for spatial registration in cat_conf_extopts.m
+(5) Fixed:   Added spaces between strings to descrip-field for saving normalized 
+             images.
+------------------------------------------------------------------------
+r1760 | gaser | 2021-02-10 10:48:13 +0100 (Mi, 10 Feb 2021) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +61,7 @@ M       html/cat.html
 
 (1) Fixed: Corrected help text in cat_conf_extopts.m that caused errors.
 (2) Fixed: Corected typos in help text.
+
 ------------------------------------------------------------------------
 r1759 | dahnke | 2021-02-09 14:31:22 +0100 (Di, 09 Feb 2021) | 29 lines
 

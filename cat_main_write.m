@@ -13,7 +13,7 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
 % $Id$
 
   [cv,cr] = cat_version;
-  prefix  = sprintf('%sR%s',cv,cr); 
+  prefix  = sprintf('%sR%s ',cv,cr); 
 
   % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end

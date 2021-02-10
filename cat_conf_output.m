@@ -276,7 +276,7 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
   wmh.name      = 'White matter hyperintensities (WMHs)';
   wmh.val       = {native warped modulated dartel};
   wmh.hidden    = expert<1;
-  wmh.help      = {'WARNING: Please note that the detection of WM hyperintensies (WMHs) is still under development and does not have the same accuracy as approaches that additionally consider FLAIR images (e.g. Lesion Segmentation Toolbox)!'
+  wmh.help      = {'WARNING: Please note that the detection of WM hyperintensities (WMHs) is still under development and does not have the same accuracy as approaches that additionally consider FLAIR images (e.g. Lesion Segmentation Toolbox)!'
   'Options to save WMH images, if WMHC==3: p7*.img, wp7*.img and m[0]wp7*.img.'
   ''
   };
