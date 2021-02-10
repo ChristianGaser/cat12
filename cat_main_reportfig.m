@@ -44,8 +44,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   
   def.extopts.report.useoverlay   = 2;  % different p0 overlays, described below in the Yp0 print settings
                                         % (0 - no, 1 - red mask, 2 - blue BG, red BVs, WMHs [default] ... )
-  def.extopts.report.type         = job.extopts.expertgui; % we try the new mode for experts
-                                        % (1 - Yo,Ym,Yp0,CS-top, 2 - Yo,Yp0,CS-left-right-top) 
+  def.extopts.report.type         = 2;  % (1 - Yo,Ym,Yp0,CS-top, 2 - Yo,Yp0,CS-left-right-top) 
   def.extopts.report.color        = cat_get_defaults('extopts.report.color'); 
                                         % background gray level that focus on: white, black, gray
                                         % [] - current figure, 0.95 - light gray
