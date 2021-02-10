@@ -83,7 +83,7 @@ for j=1:k
   % upper boudnary  
   if j<k,  bd(j,2) = mean( [ mu(j) + su(j) , mu(j+1) - su(j+1) ] ); end
   if j==k, bd(j,2) = inf; end
-  % proposion of elements
+  % proportion of elements
   nu(j) = sum( y>bd(j,1) & y<=bd(j,2) )/numel(y);  
 end
 

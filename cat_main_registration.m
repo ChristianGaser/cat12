@@ -161,13 +161,13 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
 % additional affine registration of the GM segment (or the brainmask) ?
 % only if not the prior (long-pipeline) is used
 % RD202101 - this (GM registration) cause problems (e.g. BUSS_2020)
-% - We need to rething if a final registration would be usefull because we 
+% - We need to rethink if a final registration would be useful because we 
 %   now have a much better (or even final) brainmask as well as a (first)
 %   segmentation.
 % - GM registration would be better for unusal affine GM analysis and would 
 %   reduce the costs of a typical GM focused deformation but it does not
 %   fit to previous definitions rising different issues.
-%   But an update of with new brain mask may be interesting, but the method
+%   But an update with new brain mask might be interesting, but the method
 %   has to be choosen well - maybe the affreg of the brainmasks? or with T1
 %   or the (smoothed) p0 Segmentation. maffreg will allways try to balance 
 %   the different classes (what we probably not want)
@@ -200,7 +200,7 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
   
 
   % Helping function(s):
-  % BB2dim estimate the new size of an image given by the old and new
+  % BB2dim estimates the new size of an image given by the old and new
   % boudnary box (oldbb/newbb), image resolution (oldres/newres), and the
   % size of the old image. MNI space has always a 0-slice resulting in odd
   % dimensions.
@@ -222,7 +222,7 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
           if job.extopts.bb > 1 
             % dynamic boundary based on the human SPM TPM that requires a
             % similar lower limit (they just extend the BB to cover the
-            % full head but do not extend below so strong the cerbellum)
+            % full head but do not extend below so strong the cerebellum)
             b     = job.extopts.bb; 
             resbb = [-72 -110 -72; -72 -72 103] + [ -b -b  0 ; b b b*2]; 
           else
