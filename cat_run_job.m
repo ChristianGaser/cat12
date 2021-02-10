@@ -691,7 +691,7 @@ end
         %  Zero values can also occure by poor data scaling or processing in the 
         %  background but also by other (large) CSF regions and we have to remove  
         %  these regions later. 
-        %  We further discussed to use a separate mask images but finally desided
+        %  We further discussed to use a separate mask images but finally decided
         %  to keep this as simple as possible using no additional options!
         obj.image0 = spm_vol(job.channel(1).vols0{subj});
         Ysrc0      = spm_read_vols(obj.image0); 
@@ -711,7 +711,7 @@ end
           % this could be critical and we use a warning for >1 cm3 and an alert in case of >10 cm3
           cat_io_addwarning([mfilename ':StrokeLesionButNoCorrection'],sprintf( ...
            ['There are %0.2f mm%s of zeros within the brain but Stroke Lesion \\\\n', ...
-            'Correction (SLC) inactive (availabe in the expert mode). \\\\n'], ...
+            'Correction (SLC) inactive (available in the expert mode). \\\\n'], ...
             sum(Ylesion(:))/1000,native2unicode(179, 'latin1')),1 + (sum(Ylesion(:))/1000>10),[0 1]);   
         else
           cat_io_cprintf('note',sprintf('SLC: Found masked region of %0.2f cm%s. \n', sum(Ylesion(:))/1000,native2unicode(179, 'latin1'))); 
