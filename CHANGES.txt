@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1763 | gaser | 2021-02-11 09:27:14
+r1764 | gaser | 2021-02-11 11:15:08
+
+Changed paths:
+M       CHANGES.txt
+M       cat_vol_createMPM.m
+
+Changed: Updated cat_vol_createMPM.m to preserve all label values even if some
+         are below defined threshold.
+------------------------------------------------------------------------
+r1763 | gaser | 2021-02-11 09:27:45 +0100 (Do, 11 Feb 2021) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +18,7 @@ RM      cat_vol_ROI_summarize.m
 M       html/cat.html
 
 Changed: Updated help text.
+
 ------------------------------------------------------------------------
 r1762 | gaser | 2021-02-11 01:14:55 +0100 (Do, 11 Feb 2021) | 12 lines
 
