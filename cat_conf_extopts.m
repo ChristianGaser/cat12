@@ -997,7 +997,7 @@ if expert
   affmod.num     = [1,inf];
 else
   affmod        = cfg_menu;
-  affmod.labels = {'Decrease by 10%','Decrease by 5%','no adaption','increase by 5%','incarease by 10%'};
+  affmod.labels = {'Decrease by 10%','Decrease by 5%','No Adaption','Increase by 5%','Increase by 10%'};
   affmod.values = { -10 , -5 , 0 , 5 , 10 };
 end
 affmod.val      = { 0 };
