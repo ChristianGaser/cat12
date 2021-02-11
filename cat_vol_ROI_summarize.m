@@ -28,7 +28,7 @@ function Y = cat_vol_ROI_summarize(job)
 %              'fhandle','@median');
 % Y = cat_vol_ROI_summarize(opt)
 %__________________________________________________________________________
-%  $Id: cat_vol_ROI_summarize.m 1531 2019-12-05 16:07:30Z gaser $
+%  $Id$
 
 if nargin == 0
   atlas_file = cellstr(spm_select([1 Inf],'image','Select atlas file(s)',{},...
