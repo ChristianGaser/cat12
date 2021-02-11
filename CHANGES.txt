@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1761 | gaser | 2021-02-11 00:44:01
+r1762 | gaser | 2021-02-11 01:11:35
+
+Changed paths:
+M       CHANGES.txt
+MM      cat_vol_ROI_summarize.m
+M       development/Template_0_GS1mm.nii
+M       development/Template_1_GS1mm.nii
+M       development/Template_2_GS1mm.nii
+M       development/Template_3_GS1mm.nii
+M       development/Template_4_GS1mm.nii
+
+Changed: Updated 1mm GS-Templates in development folder to new bounding box.
+
+------------------------------------------------------------------------
+r1761 | gaser | 2021-02-11 00:47:37 +0100 (Do, 11 Feb 2021) | 44 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -44,6 +58,7 @@ M       templates_external/y_MNIColin27_to_MNI152NLin2009cAsym.nii
 (4) Fixed:   Corrected field name for spatial registration in cat_conf_extopts.m
 (5) Fixed:   Added spaces between strings to descrip-field for saving normalized 
              images.
+
 ------------------------------------------------------------------------
 r1760 | gaser | 2021-02-10 10:48:13 +0100 (Mi, 10 Feb 2021) | 15 lines
 
