@@ -4,7 +4,9 @@ LPBA40 atlas:
 CAT12 was used to segment the T1 data and to estimate the normalization 
 parameters to transform the maximum probability maps to MNI152NLin2009cAsym space. 
 
-The atlas was slightly modified and remaining holes were filled with median value.
+The atlas was slightly modified and remaining holes were filled with median value
+and a threshold of 0.5 was finally used for average probability that was optimized 
+using the native labels.
 
 The LONI Probabilistic Brain Atlas (LPBA40) is a series of maps of brain anatomic regions. These maps were produced from a set of whole-head MRI of 40 human volunteers. Each MRI was manually delineated to identify a set of 56 structures in the brain, most of which are within the cortex. These delineations were then transformed into a common atlas space to produce a set of coregistered anatomical labels. The original MRI data were also transformed into the atlas space. 
 

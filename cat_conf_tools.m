@@ -980,7 +980,7 @@ function headtrimming = cat_vol_headtrimming_GUI(intlim,spm_type,prefix,suffix,e
   intlim1.name          = 'Global intensity limitation for masking';
   intlim1.val           = {90};
   intlim1.hidden        = expert<1; 
-  intlim1.help          = {'General intensity limitation to remove strong outliers by using 90% of the original histogram values. To high values will include background noise and do not allow trimming, whereas to low values will cut objects with low values (e.g. by image inhomogeneities). ' ''};
+  intlim1.help          = {'General intensity limitation to remove strong outliers by using 90% of the original histogram values. Too high values will include background noise and do not allow trimming, whereas to low values will cut objects with low values (e.g. by image inhomogeneities). ' ''};
 
   prefix.val            = {'trimmed_'};
 

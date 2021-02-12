@@ -31,6 +31,8 @@ ZIPFILE=cat12_r${REVISION}.zip
 clean:
 	-@find . -type f -name .DS_Store -exec rm {} \;
 	-@chmod -R a+r .
+	-@chmod -R o-w .
+	-@find . -type f \( -name "*.sh" -o -name "*.mex*" \) -exec chmod a+x {} \;
 	-@find . -type f \( -name "*.c" -o -name "*.c??" -o -name "*.m" -o -name "*.gii" -o -name "*.nii" -o -name "*.txt" -o -name "*.html" -o -name "*.annot" \) -exec chmod a-x {} \;
 # 	-@svn propset svn:executable OFF *.c *.c?? *.m */*.gii */*.nii *.txt *.html */*.c */*.c?? */*.m */*.annot */*.txt */*.html
 
@@ -108,6 +110,10 @@ scp_manual:
 # scp deployed versions
 scp_precompile:
 	-@echo scp_precompile
+	-@find ${PRECOMPILED} -type f -name .DS_Store -exec rm {} \;
+	-@chmod -R a+r ${PRECOMPILED}
+	-@chmod -R go-w ${PRECOMPILED}
+	-@find ${PRECOMPILED} -type f \( -name "*.sh" -o -name "spm12" \) -exec chmod a+x {} \;
 	-@for i in Linux Mac Win; do \
 	    mkdir -p MCR_$${i} ;\
 	    ln -s ${PRECOMPILED}/MCR_$${i}/*spm12* ${PRECOMPILED}/MCR_$${i}/readme.txt ${PRECOMPILED}/MCR_$${i}/MCR_v93.webloc MCR_$${i}/ ;\
