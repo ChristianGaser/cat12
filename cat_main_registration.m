@@ -109,7 +109,6 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
   % initialize output
   Affine        = dres.Affine;
   trans         = struct();
-  reg           = struct();
   
   
   % ########################
@@ -129,6 +128,7 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
     dreg        = def; 
   end
   dres.Affine0  = dres.Affine; 
+  if ~isfield(dres,'Yymat'), dres.Yymat = dres.tpm(1).mat; end % use matrix for input deformation Yy   
   % ########################
   
   
@@ -149,7 +149,7 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
   % this is just for me to create different templates and can be removed in a final version
   if numel(job.extopts.vox)>1 || numel(job.extopts.regstr)>1 || (isfield(job,'export') && job.export)
     job.extopts.multigreg = 1;
-    export                = job.export;  % write files in sub-directories for tests
+    export                = 1;  % write files in sub-directories for tests
   else
     job.extopts.multigreg = 0;
     export                = 0; 
@@ -210,21 +210,22 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
                     
   % boundary box settings:    0 - Template, 1 - TPM, +[1x1] - SPM MNI + #; -[1x1] - (TMP>0.1) + #; [2x3] - own BB       
   % boundary box definition:  to write a correct x=-1 output image, we have to be sure that the x value of the bb is negative
+  Vtmp   = spm_vol(job.extopts.templates{1});
   if dres.bb(1)<dres.bb(2), bbt=dres.bb(1); dres.bb(1)=dres.bb(2); dres.bb(2)=bbt; clear bbt; end
   if isfield( job.extopts , 'bb' ) 
     if numel( job.extopts.bb ) == 1 
       switch job.extopts.bb 
+        case 0 % Template
+          resbb = spm_get_bbox( Vtmp );
         case 1 % TPM
           resbb = dres.bb;
-        case 0 % Template
-          resbb = spm_get_bbox( dres.tmp2{1}(1) );
         otherwise
           if job.extopts.bb > 1 
             % dynamic boundary based on the human SPM TPM that requires a
             % similar lower limit (they just extend the BB to cover the
             % full head but do not extend below so strong the cerebellum)
             b     = job.extopts.bb; 
-            resbb = [-72 -110 -72; -72 -72 103] + [ -b -b  0 ; b b b*2]; 
+            resbb = [-72 -108 -72; 72 72 72] + [ -b -b  0 ; b b b*2]; 
           else
             % it is possible to use the template to create an dynamic 
             % automatic mapping
@@ -233,7 +234,7 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
             %Ytmp  = 
             %tmpbb = 
 % #########################################################################        
-            tmpbb = [-72 -110 -72; -72 -72 103]; 
+            tmpbb = [-72 -108 -72; 72 72 72]; 
             resbb = tmpbb + [ -b -b -b ; b b b]; 
           end
       end
@@ -246,17 +247,17 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
   else
     resbb = dres.bb; 
   end
-  
+
   
  
-  Vtmp   = spm_vol(job.extopts.templates{1});
+  reg    = struct([]);
   % this is the main loop for different parameter
   for regstri = numel(job.extopts.regstr):-1:1
     for voxi = numel(job.extopts.vox):-1:1
       % set registration parameter
-      [reg,res,job] = regsetup(dreg,dres,job,regstri,voxi);
+      [reg,res,job] = regsetup(dreg,reg,dres,job,regstri,voxi);
       
-      tpmM   = res.tpm(1).mat; 
+      %tpmM   = res.tpm(1).mat; 
       tmpM   = Vtmp(1).mat; 
   
       % resolutions:
@@ -278,7 +279,7 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
       imat = spm_imatrix(eye(4)); imat(1:3) = imat(1:3) + imat(7:9).*(tdim - (newres/tmpres*odim))/2; imat(7:9) = imat(7:9) * newres/tmpres; Mad  = spm_matrix(imat);
       
       % affine and rigid parameters for registration 
-      [M3,R]          = spm_get_closest_affine( affind(rgrid( idim ) ,M0) , affind(Yy,tpmM) , single(Ycls{1})/255); clear M3; % here the TPM space is used
+      [M3,R]          = spm_get_closest_affine( affind(rgrid( idim ) ,M0) , affind(Yy,dres.Yymat) , single(Ycls{1})/255); clear M3; 
       Mrigid          = M0\inv(R)*M1;                                                          % transformation from subject to registration space (rigid)
       Maffine         = M0\inv(res.Affine)*M1;                                                 % individual to registration space (affine)
       mat0a           = res.Affine\M1;                                                         % mat0 for affine output
@@ -324,7 +325,7 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
           
           % Export
           if export
-            write_nii(Ycls,job,trans,reg.testfolder,reg(regstri));
+            write_nii(Ycls,job,trans,reg(regstri).testfolder,reg(regstri));
           end
         end
       catch
@@ -375,7 +376,7 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
         fs              = newres / 2; w = w - bg; spm_smooth(w,w,fs); w = bg + w; % spm smoothing boudary problem where values outside are 0 
        
         % affine and rigid parameters
-        [M3,R]          = spm_get_closest_affine( affind(rgrid( idim ) ,M0) , affind(Yy,tpmM) , single(Ycls{1})/255); clear M3; 
+        [M3,R]          = spm_get_closest_affine( affind(rgrid( idim ) ,M0) , affind(Yy,dres.Yymat), single(Ycls{1})/255); clear M3; 
         Mrigid          = M0\inv(R)*M1;                                        % transformation from subject to registration space
         Maffine         = M0\inv(res.Affine)*M1;                               % individual to registration space
         mat0r           = R\M1;                                                % mat0 for rigid ouput
@@ -395,7 +396,7 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
         
         % export for tests
         if export
-          write_nii(Ycls,job,trans,sprintf('US_tr%3.1f_or%3.1f',tpmres,job.extopts.vox(1))); ping
+          write_nii(Ycls,job,trans,sprintf('US_tr%3.1f_or%3.1f',tpmres,job.extopts.vox(1)));
         end
       end
     end
@@ -439,6 +440,7 @@ function [trans,reg] = run_Shooting(Ycls,Ylesion,job,reg,res,trans,Maffinerigid,
 
   M0     = res.image.mat; 
   M1     = trans.rigid.mat;
+  M1t    = tmpM;
   imat   = spm_imatrix(tmpM); imat(7:9) = imat(7:9) * regres/tmpres; M1r = spm_matrix(imat); 
   
   
@@ -474,7 +476,7 @@ function [trans,reg] = run_Shooting(Ycls,Ylesion,job,reg,res,trans,Maffinerigid,
     vx3rr = ones(4,8); vx3rr([5,13,21,29]) = rdims(ri,1); vx3rr([10,14,26,30]) = rdims(ri,2); vx3rr([19,23,27,31]) = rdims(ri,3); % registration image
     vxtpm = tmpM\mmtmp; % registration image
     Mads{ri} = (tmpM\mmtmp)/vx3rr;
-    if reg.regra
+    if reg(regstri).regra
       if ri==1, mat0reg = res.Affine\M1rr * vx2rr/vxtpm; end 
       Mrregs{ri} = M0\inv(res.Affine)*M1rr*vx2rr/vx3rr;  
     else
@@ -517,7 +519,7 @@ function [trans,reg] = run_Shooting(Ycls,Ylesion,job,reg,res,trans,Maffinerigid,
 % shooting parameter ... again ????
 % ######################################################################### 
   sd = spm_shoot_defaults;           % load shooting defaults
-  if reg.fast, reg(regstri).opt.nits = min(reg(regstri).opt.nits,5*reg.fast); end  % at least 5 iterations to use each tempalte
+  if reg(regstri).fast, reg(regstri).opt.nits = min(reg(regstri).opt.nits,5*reg(regstri).fast); end  % at least 5 iterations to use each tempalte
   if (job.extopts.regstr(regstri)>0 || regres~=tmpres) && job.extopts.regstr(regstri)~=4 
     %% need finer schedule for coarse to fine for ll3 adaptive threshold
     nits       = reg(regstri).opt.nits;        % default was 24  
@@ -862,9 +864,9 @@ function [trans,reg] = run_Shooting(Ycls,Ylesion,job,reg,res,trans,Maffinerigid,
     end
 
     % avoid unneccessary iteration
-    if job.extopts.regstr(regstri)>0 && job.extopts.regstr(regstri)~=4 && wit==0 && ~hydro && ll(1)<0.075 && ...
+    if job.extopts.regstr(regstri)>0 && job.extopts.regstr(regstri)~=4 && wit==0 && ~hydro && ll(1)/numel(u)<0.075 && ...
         ( ti>1 || (ti==1 && ll(1)/numel(u)<1 && ll(1)/max(eps,llo(1))<1 && ll(1)/max(eps,llo(1))>(1-0.01) )) && ...
-        ( ll(1)/numel(u)<1 && ll(1)/max(eps,llo(1))<1 && ll(1)/max(eps,llo(1))>(1-reg(regstri).opt.ll1th) )
+        ( ll(1)/numel(u)<1 && ll(1)/max(eps,llo(1))<1 && ll(1)/max(eps,llo(1))>(1-reg(regstri).opt.ll1th) ) && tmpl_no(it)>1
       it = max(it+1,find([tmpl_no,nits]>tmpl_no(it),1,'first')); 
       reg(regstri).ll(ti,1:4) = [ll(1)/numel(dt) ll(2)/numel(dt) (ll(1)+ll(2))/numel(dt) ll(2)]; 
       reg(regstri).dtc(ti) = mean(abs(dt(:)-1)); 
@@ -907,17 +909,25 @@ function [trans,reg] = run_Shooting(Ycls,Ylesion,job,reg,res,trans,Maffinerigid,
   yi  = spm_diffeo('invdef', y  , idim, Maffinerigid * inv(M1r\M1), inv(M1r\M1)); %#ok<MINV>
   yi2 = spm_diffeo('invdef', yi , odim, eye(4), eye(4)); 
   w   = max( eps , abs(spm_diffeo('def2det', yi2 ) ) ); 
-
-  
   % avoid boundary effects that are not good for the global measurements 
   % use half registration resolution to define the amout of smoothing to reduce registration artefacts
-  vxd = M1(1)./M1r(1); 
-  msk = cat_vol_morph( isnan( yi2(:,:,:,1)) ,'d',2/vxd); w( msk ) = NaN; 
-  wa  = cat_vol_approx(w,'nn',1,4); bg = cat_stat_nanmean( wa(msk(:)) ); 
-  msk = cat_vol_smooth3X(msk,1/vxd); w( isnan(w) ) = wa( isnan(w) ); 
-  w   = wa .* msk + (1-msk) .* w; clear msk wa; 
-  fs  = newres / 2; w = w - bg; spm_smooth(w,w,fs); w = bg + w; % spm smoothing boudary problem
-
+  if 1
+    vxd = M1(1)./M1r(1); 
+    %msk = cat_vol_morph( isnan( yi2(:,:,:,1)) ,'d',2/vxd); w( msk ) = NaN; 
+    msk = true(size(w)); msk(3:end-2,3:end-2,3:end-2) = false; w( msk ) = NaN; 
+    wa  = cat_vol_approx(w,'nn',1,4); bg = cat_stat_nanmean( wa(msk(:)) ); 
+    msk = cat_vol_smooth3X(msk,1/vxd); w( isnan(w) ) = wa( isnan(w) ); 
+    w   = wa .* msk + (1-msk) .* w; clear msk wa; 
+    fs  = newres / 2; w = w - bg; spm_smooth(w,w,fs); w = bg + w; % spm smoothing boudary problem
+  end
+ 
+ % yi  = spm_diffeo('invdef', y  , idim, Maffinerigid * inv(M1r\M1t), inv(M1r\M1)); %#ok<MINV>
+ % yi2 = spm_diffeo('invdef', yi , odim, eye(4), eye(4)); 
+  
+  
+  
+  
+  
   % yi2 for fast high quality output
   trans.warped = struct('y',yi,'yi',yi2,'w',w,'odim',odim,'M0',M0,'M1',M1,'M2',inv(Maffinerigid),'dartel',2,'fs',fs);
 
@@ -926,11 +936,11 @@ function [trans,reg] = run_Shooting(Ycls,Ylesion,job,reg,res,trans,Maffinerigid,
     uo  = zeros([odim 3],'single');
     for k1=1:3
       for i=1:odim
-        uo(:,:,i,k1)  = single(spm_slice_vol(u(:,:,:,k1),(M1r\M1)*spm_matrix([0 0 i]),odim(1:2),[1,NaN]));
+        uo(:,:,i,k1)  = single(spm_slice_vol(u(:,:,:,k1),(M1r\M1t)*spm_matrix([0 0 i]),odim(1:2),[1,NaN]));
       end
     end
     uo(~isfinite(uo)) = eps;
-    trans.jc = struct('u',uo,'odim',odim,'dt2',w); 
+    trans.jc = struct('u',uo*0,'odim',odim,'dt2',w); 
   end 
 
   
@@ -979,8 +989,8 @@ function [trans,reg] = run_Dartel(Ycls,Ylesion,job,reg,res,trans,Mad,Maffinerigi
   lmreg = 0.01;       % LM regularization
   cyc   = 3;          % cycles
   its   = 3;          % relaxation iterations (inner iteration)
-  n1    = reg.clsn;   % use GM/WM for dartel
-  if reg.fast, its = min(3,max(1,min(its,reg.fast))); end % subiteration
+  n1    = reg(regstri).clsn;   % use GM/WM for dartel
+  if reg(regstri).fast, its = min(3,max(1,min(its,reg(regstri).fast))); end % subiteration
 
   % rparam .. regularization parameters: mu, lambda, id
   % K      .. time steps
@@ -1127,7 +1137,7 @@ function [trans,reg] = run_Dartel(Ycls,Ylesion,job,reg,res,trans,Mad,Maffinerigi
 end
 %=======================================================================
 %################################# NEED CLEANUP
-function [reg,res,job] = regsetup(reg,res,job,regstri,voxi)
+function [reg,res,job] = regsetup(dreg,reg,res,job,regstri,voxi)
 % Definition of the registration parameters reg of the i-th registration 
 % regstri.
 
@@ -1148,24 +1158,27 @@ function [reg,res,job] = regsetup(reg,res,job,regstri,voxi)
   end
   res.tmp2 = cell(1,numel(job.extopts.templates)); 
   Vtmp = spm_vol(job.extopts.templates{1}); tmpM = Vtmp(1).mat; 
-  n1   = max(min(2,numel(Vtmp)),numel(Vtmp)-1);  % use GM and WM for shooting
+  n1   = max(min(2,numel(Vtmp)),numel(Vtmp)-1);         % use GM and WM for shooting
 
 
   % registration main parameter
-  lowres                     = 2.5;                   % lowest resolution .. best between 2 and 3 mm 
-  tpmres                     = abs(tpmM(1));          % TPM resolution 
-  tempres                    = abs(tmpM(1));          % template resolution 
-  reg(regstri).opt.nits      = reg.nits;              % registration iteration (shooting default = 24)
-  reg(regstri).opt.vxreg     = tpmres;                % regularisation parameter that original depend on the template resolution
-  reg(regstri).opt.rres      = tempres;               % final registration resolution 
+  lowres                     = 2.5;                     % lowest resolution .. best between 2 and 3 mm 
+  tpmres                     = abs(tpmM(1));            % TPM resolution 
+  tempres                    = abs(tmpM(1));            % template resolution 
+  reg(regstri).opt.nits      = dreg.nits;               % registration iteration (shooting default = 24)
+  reg(regstri).opt.vxreg     = tpmres;                  % regularisation parameter that original depend on the template resolution
+  reg(regstri).opt.rres      = tempres;                 % final registration resolution 
   reg(regstri).opt.stepsize  = (lowres - reg(regstri).opt.rres)/4;  % stepsize of reduction 
   reg(regstri).opt.resfac    = (lowres : -reg(regstri).opt.stepsize : reg(regstri).opt.rres) / reg(regstri).opt.rres; % reduction factor 
-  reg(regstri).opt.ll1th     = reg.opt.ll1th;                 % smaller better/slower
-  reg(regstri).opt.ll3th     = reg.opt.ll3th;                 % smaller better/slower 
+  reg(regstri).opt.ll1th     = dreg.opt.ll1th;  % smaller better/slower
+  reg(regstri).opt.ll3th     = dreg.opt.ll3th;  % smaller better/slower 
   reg(regstri).opt.regstr    = job.extopts.regstr;   
-  reg.fast                   = reg.iterlim;                  % limit iterations per template level to test if processing work in principle 
+  reg(regstri).fast          = dreg.iterlim;             % limit iterations per template level to test if processing work in principle 
+  reg(regstri).clsn          = dreg.clsn;
+  reg(regstri).fast          = dreg.fast;
+  reg(regstri).regra         = dreg.regra;
   
-
+  
   if job.extopts.regstr(regstri)==0
   % Dartel
     res.do_dartel            = 1; 
@@ -1291,14 +1304,14 @@ function [reg,res,job] = regsetup(reg,res,job,regstri,voxi)
   newres   = job.extopts.vox(voxi); 
   regres   = reg(regstri).opt.rres;
   if job.extopts.regstr(regstri)==0
-    reg.testfolder = sprintf('Dartel_%s_rr%0.1f_default',tempff,newres);
+    reg(regstri).testfolder = sprintf('Dartel_%s_rr%0.1f_default',tempff,newres);
   elseif job.extopts.regstr(regstri)==4
-    reg.testfolder = sprintf('Shooting_%s_rr%0.1f_or%0.1f_default',tempff,regres,newres);
+    reg(regstri).testfolder = sprintf('Shooting_%s_rr%0.1f_or%0.1f_default',tempff,regres,newres);
   else 
     if reg(regstri).opt.stepsize>10^-3 
-      reg.testfolder = sprintf('Shooting_%s_tr%0.1f_rr%0.1f-%0.1f_or%0.1f_regstr%0.1f%s',tempff,tempres,tempres2([1,5]),newres,job.extopts.regstr(regstri));
+      reg(regstri).testfolder = sprintf('Shooting_%s_tr%0.1f_rr%0.1f-%0.1f_or%0.1f_regstr%0.1f%s',tempff,tempres,tempres2([1,5]),newres,job.extopts.regstr(regstri));
     else
-      reg.testfolder = sprintf('Shooting_%s_tr%0.1f_rr%0.1f_or%0.1f_regstr%0.1f%s',tempff,tempres,regres,newres,job.extopts.regstr(regstri));
+      reg(regstri).testfolder = sprintf('Shooting_%s_tr%0.1f_rr%0.1f_or%0.1f_regstr%0.1f%s',tempff,tempres,regres,newres,job.extopts.regstr(regstri));
     end
   end
 end

@@ -717,8 +717,11 @@ cstime = clock;
         
 % ##########          
 % CG20200916 this should not be called for preview surfaces          
-% ##########          
-        % cat_surf_fun('saveico',CS,facevertexcdata1,Pcentral,'fast',Ymfs,Smat.matlabIBB_mm);
+% RD20210115 this is required to have the inner and outer surfaces on the report 
+% ##########  
+        if cat_get_defaults('extopts.expertgui')
+          cat_surf_fun('saveico',CS,facevertexcdata1,Pcentral,'fast',Ymfs,Smat.matlabIBB_mm);
+        end
         res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',CS,facevertexcdata1,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
   
         %%

@@ -118,46 +118,24 @@ if expert > 1 % developer
   bb          = cfg_entry;
   bb.strtype  = 'r';
   bb.num      = [inf inf];
-else % expert
-  bb          = cfg_menu;
-  bb.labels   = {
-    'Template boundary box (0)'
-    'TPM boundary box (1)'
-    'SPM boundary box (16)'
-    'MNI 12 mm (12)'
-    'MNI  9 mm (9)'
-    'MNI  6 mm (6)'
-    };
-  bb.values   = {0,1,16,12,9,6}; 
-end
-bb.tag        = 'bb';
-bb.name       = 'Bounding box';
-bb.def        = @(val)cat_get_defaults('extopts.bb', val{:});
-bb.help       = {
- 'The bounding box describes the dimenson of the volume to be written starting from the anterior commissure in mm.  It should include the entire brain (or head in the case of the Boundary Box of the SPM TPM) and additional space for smoothing the image.  The MNI 9-mm boundary box is optimized for CATs MNI152NLin2009cAsym template and supports filter cores up to 10 mm.  Although this box support 12 mm filter sizes theoretically, slight interference could occur at the edges and larger boxes are recommended for safety. '
- 'Additionally, it is possible to use the boundary box of the TPM or the template for special (animal) templates with strongly different boundary boxes. '
-  ''
-  };
-if expert==2
-  bb.help = [ bb.help ; {
+  bb.tag      = 'bb';
+  bb.name     = 'Bounding box';
+  bb.val      = 0; 
+  bb.help     = {
+    'The bounding box describes the dimenson of the volume to be written starting from the anterior commissure in mm.  It should include the entire brain (or head in the case of the Boundary Box of the SPM TPM) and additional space for smoothing the image.  The MNI 9-mm boundary box is optimized for CATs MNI152NLin2009cAsym template and supports filter cores up to 10 mm.  Although this box support 12 mm filter sizes theoretically, slight interference could occur at the edges and larger boxes are recommended for safety. '
+    'Additionally, it is possible to use the boundary box of the TPM or the template for special (animal) templates with strongly different boundary boxes. '
+    ''
     'The boundary box or its id (BBid see table below) has to be entered. '
     ''
-    }]; 
-end
-if expert % OPTIMIZED FOR THE SPM BATCH GUI THAT ALLOW NOT TEXT SETTINGS OR MONOSPACE ... 
-  bb.help = [ bb.help ; {
-    '  NAME         BBID        BOUNDARY BOX                          SIZE §             FILESIZE $   '
+    '  NAME         BBID        BOUNDARY BOX                          SIZE ?             FILESIZE $   '
     '  TMP BB            0        boundary box of the template (maybe too small for smoothing!)         '
     '  TPM BB            1        boundary box of the TPM                                               ' 
     '  MNI SPM          16      [ -90  -126  -72;  90  90  108 ]      [121x145x121]      4.2 MB (100%)'
-    '  MNI 12 mm      12      [ -86  -122  -72;  86  86  100 ]      [115x139x115]      3.7 MB ( 87%)'
-    '  MNI  9 mm        9        [ -83  -119  -72;  83  83    94 ]      [111x135x111]      3.2 MB ( 78%)'
-    '  MNI  6 mm        6        [ -80  -116  -72;  80  80    88 ]      [109x129x109]      3.0 MB ( 72%)'
-    '  § - for 1.5 mm; $ - for 1.5 mm uint8'
+    '  MNI CAT          12      [ -84  -120  -72;  84  84    96 ]      [113x139x113]      3.8 MB ( 84%)'
+    '  ? - for 1.5 mm; $ - for 1.5 mm uint8'
     ''
-  }];
+  };
 end
-
 
 %---------------------------------------------------------------------
 
@@ -297,7 +275,7 @@ else
   if expert==2
     registration.val  = {T1 brainmask cat12atlas darteltpm shootingtpm regstr bb vox}; 
   else
-    registration.val  = {method bb vox}; 
+    registration.val  = {method vox}; % bb 
   end
 end
 registration.help   = {

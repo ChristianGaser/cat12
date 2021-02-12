@@ -620,13 +620,18 @@ function cat_run_job1639(job,tpm,subj)
           end
           Ylesion = Ylesionr>0.5; clear Ylesionr;
         end
-        if exist('Ybg','var'), Ylesion(Ybg)=0; end % denoising in background
+        % use brainmask
+        VFa = VF; VFa.mat = Affine * VF.mat; %Fa.mat = res0(2).Affine * VF.mat;
+        if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
+        [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1)); clear Vmsk;  %#ok<ASGLU>
+        Ylesion = Ylesion & Yb>0.9; clear Yb; 
+        % check settings
         if sum(Ylesion(:))/1000 > 1
           fprintf('%5.0fs\n',etime(clock,stime)); stime = []; 
           if ~job.extopts.SLC
             % this could be critical and we use a warning for >1 cm3 and an alert in case of >10 cm3
             cat_io_addwarning([mfilename ':StrokeLesionButNoCorrection'],sprintf( ...
-             ['There are %0.2f mm%s of zeros within the brain but Stroke Lesion \\\\n', ...
+             ['There are %0.2f cm%s of zeros within the brain but Stroke Lesion \\\\n', ...
               'Correction (SLC) inactive (available in the expert mode). '], ...
               sum(Ylesion(:))/1000,native2unicode(179, 'latin1')),1 + (sum(Ylesion(:))/1000 > 10),[0 1]);  
             clear Ylesion; 
