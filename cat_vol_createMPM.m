@@ -119,15 +119,7 @@ for i=1:numel(thresholds)
   
   for j=1:n_structures;
     ind = find(index_atlas0 == j);
-    if ~isempty(ind)
-      index_atlas(ind) = datarange(j);
-    else
-      % even if values were below threshold all label values should be
-      % preserved!
-      fprintf('Although areas with label value %d were below threshold of %g, these areas were added to label map.\n',datarange(j),threshold);
-      ind = find(index_atlas_orig == j);
-      index_atlas(ind) = datarange(j);
-    end
+    index_atlas(ind) = datarange(j);
   end
   
   % replace remaining holes with median value
