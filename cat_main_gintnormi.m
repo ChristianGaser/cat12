@@ -27,13 +27,25 @@ function Ysrc = cat_main_gintnormi(Ym,Tth)
 % ______________________________________________________________________
 % $Id$
 
+
+  % RD202102: There should be no inversion but in the test-retest of
+  %           Buchert sanon-102748-00003-00001-1 it happend.
+  Tth.T3th = sort(Tth.T3th); 
+    
   if 0
+    % RD2020: old version without interolation is a bit inoptimal for the histogram 
     T3th  = Tth.T3thx; 
     T3thx = Tth.T3th; 
   else
     % use interpolation to avoid steps in the histogram
-    T3th  = interp1(Tth.T3thx,1:0.1:numel(Tth.T3thx),'spline');
-    T3thx = interp1(Tth.T3th ,1:0.1:numel(Tth.T3th) ,'spline');
+    % makima is better but not available in oder MATLABs :/
+    %try 
+    %  T3th  = interp1(Tth.T3thx,1:0.1:numel(Tth.T3thx),'makima');
+    %  T3thx = interp1(Tth.T3th ,1:0.1:numel(Tth.T3th) ,'makima');
+    %catch
+      T3th  = interp1(Tth.T3thx,1:0.1:numel(Tth.T3thx),'spline');
+      T3thx = interp1(Tth.T3th ,1:0.1:numel(Tth.T3th) ,'spline');
+    %end 
   end
   
   if all(T3th==T3thx), Ysrc = Ym; return; end
@@ -43,7 +55,7 @@ function Ysrc = cat_main_gintnormi(Ym,Tth)
   
   isc=1;
   Ym = Ym*3;
-  Ysrc = Ym; % warum nochmal mal 3??? 
+  Ysrc = Ym; 
   for i=2:numel(T3th)
     M = Ym>T3th(i-1) & Ym<=T3th(i);
     Ysrc(M(:)) = T3thx(i-1) + (Ym(M(:)) - T3th(i-1))/diff(T3th(i-1:i))*diff(T3thx(i-1:i));

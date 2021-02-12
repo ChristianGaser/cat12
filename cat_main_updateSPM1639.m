@@ -26,6 +26,8 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   
   d = res.image(1).dim(1:3);
 
+  % some reports
+  for i=1:size(P,4), Pt = P(:,:,:,i); res.ppe.SPMvols0(i) = cat_stat_nansum(single(Pt(:)))/255 .* prod(vx_vol) / 1000; end; clear Pt; 
   
   stime2 = cat_io_cmd('  Update Segmentation','g5','',job.extopts.verb-1,stime2); 
   
@@ -38,7 +40,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   for z=1:d(3)
     YbA(:,:,z) = spm_sample_vol(Vb,double(Yy(:,:,z,1)),double(Yy(:,:,z,2)),double(Yy(:,:,z,3)),1); 
   end
-  if round(max(YbA(:))/Vb.pinfo(1)), YbA=YbA>0.1*Vb.pinfo(1); else YbA=YbA>0.1; end
+  if round(max(YbA(:))/Vb.pinfo(1)), YbA=YbA>0.1*Vb.pinfo(1); else, YbA=YbA>0.1; end
   % add some distance around brainmask (important for bias!)
   YbA = YbA | cat_vol_morph(YbA & sum(P(:,:,:,1:2),4)>4 ,'dd',2.4,vx_vol);
   
@@ -183,7 +185,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   
   
   %% save brainmask using SPM12 segmentations for later use
-  if ~exist('Ym0','var'),
+  if ~exist('Ym0','var')
     Ym0 = single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255;
   end
   Yb0 = (Ym0 > min(0.5,max(0.25, job.extopts.gcutstr))); clear Ym0
@@ -322,7 +324,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   % Used spm_mrf help and tested the probability TPM map for Q without good results.         
   nmrf_its = 0; % 10 iterations better to get full probability in thin GM areas 
   spm_progress_bar('init',nmrf_its,['MRF: Working on ' nam],'Iterations completed');
-  if isfield(res,'mg'), Kb = max(res.lkp); else Kb = size(res.intensity(1).lik,2); end
+  if isfield(res,'mg'), Kb = max(res.lkp); else, Kb = size(res.intensity(1).lik,2); end
   G   = ones([Kb,1],'single');
   vx2 = single(sum(res.image(1).mat(1:3,1:3).^2));
   % P = zeros([d(1:3),Kb],'uint8');
@@ -336,7 +338,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
       Q(:,:,:,di) = reshape(vol,d);
     end
   end
-  for iter=1:nmrf_its,
+  for iter=1:nmrf_its
       P = spm_mrf(P,single(P),G,vx2); % spm_mrf(P,Q,G,vx2);
       spm_progress_bar('set',iter);
   end
@@ -368,6 +370,25 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   stime2 = cat_io_cmd(' ','g5','',job.extopts.verb-1,stime2); 
   fprintf('%5.0fs\n',etime(clock,stime));
 
+  
+  % some reports 
+  for i=1:numel(Ycls), res.ppe.SPMvols1(i) = cat_stat_nansum(single(Ycls{i}(:)))/255 .* prod(vx_vol) / 1000; end
+  
+  % display  some values for developers
+  if job.extopts.expertgui > 1
+    if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap 
+       cat_io_cprintf('blue',sprintf('    SPM  volumes (CGW = TIV in mm%s): %6.2f + %6.2f + %6.2f = %4.0f\n',...
+        native2unicode(179, 'latin1'),res.ppe.SPMvols0([3 1 2]),sum(res.ppe.SPMvols0(1:3))));    
+       cat_io_cprintf('blue',sprintf('    AMAP volumes (CGW = TIV in mm%s): %6.2f + %6.2f + %6.2f = %4.0f\n',...
+        native2unicode(179, 'latin1'),res.ppe.SPMvols1([3 1 2]),sum(res.ppe.SPMvols1(1:3))));    
+    else
+      cat_io_cprintf('blue',sprintf('    SPM volumes pre  (CGW = TIV in mm%s):  %6.2f + %6.2f + %6.2f = %4.0f\n',...
+        native2unicode(179, 'latin1'),res.ppe.SPMvols0([3 1 2]),sum(res.ppe.SPMvols0(1:3)))); 
+      cat_io_cprintf('blue',sprintf('    SPM volumes post (CGW = TIV in mm%s):  %6.2f + %6.2f + %6.2f = %4.0f\n',...
+        native2unicode(179, 'latin1'),res.ppe.SPMvols1([3 1 2]),sum(res.ppe.SPMvols1(1:3)))); 
+    end
+  end
+  
 
 
 end

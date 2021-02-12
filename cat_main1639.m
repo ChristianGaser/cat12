@@ -207,8 +207,9 @@ if ~isfield(res,'spmpp')
 
     res2 = res; 
     job2 = job;
-    job2.extopts.verb       = debug;  % do not display process (people would may get confused) 
-    job2.extopts.vox        = abs(res.tpm(1).mat(1));  % TPM resolution to replace old Yy  
+    job2.extopts.bb           = res.bb; 
+    job2.extopts.verb         = debug;  % do not display process (people would may get confused) 
+    job2.extopts.vox          = abs(res.tpm(1).mat(1));  % TPM resolution to replace old Yy  
     if job.extopts.regstr>0
       job2.extopts.regstr     = 15;     % low resolution 
       job2.extopts.reg.nits   = 16;     % less iterations
@@ -224,13 +225,9 @@ if ~isfield(res,'spmpp')
       job2.extopts.reg.affreg  = 0;      % new affine registration
       res2.do_dartel           = 1;      % use dartel
     end
-    if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
-      [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,res.Ylesion); 
-    else
-      [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy); 
-    end
+    [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,res.Ylesion); 
     Yy2  = trans.warped.y;
-    if ~debug, clear trans job2 res2; end
+    if ~debug, clear job2 res2; end
 
     % Shooting did not include areas outside of the boundary box
     %
@@ -613,7 +610,7 @@ end
       end
       Ylesions = cat_vol_smooth3X(single(res.Ylesion)/255,4); % final smoothing to have soft boundaries
     else
-      Ylesions = zeros(size(Ym),'single'); 
+      Ylesions = [];  
     end
   
     % call Dartel/Shooting registration  
@@ -1008,15 +1005,7 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
   end
 
   % Sort out bounding box etc
-  [bb1,vx1] = spm_get_bbox(tpm.V(1), 'old');
-  bb = job.extopts.bb;
-  vx = job.extopts.vox(1);
-  bb(~isfinite(bb)) = bb1(~isfinite(bb));
-  if ~isfinite(vx), vx = abs(prod(vx1))^(1/3); end; 
-  bb(1,:) = vx.*round(bb(1,:)./vx);
-  bb(2,:) = vx.*round(bb(2,:)./vx);
-  res.bb = bb; 
-  clear vx vx1 bb1   
+  res.bb = spm_get_bbox(tpm.V(1)); 
 
 
   if numel(res.image) > 1

@@ -117,9 +117,9 @@ function str = cat_main_reportstr(job,res,qa)
 
   % 1 line 3: COM
   if isfield(job.extopts,'setCOM') && isfield(catdef.extopts,'setCOM') && job.extopts.setCOM == catdef.extopts.setCOM, cp{1} = npara; else, cp{1} = cpara; end
-  COMstr = {'noCOM','COM'}; COMstr{10} = 'noTPM'; COMstr{11} = 'fTPM'; COMstr{120} = 'noMSK';
+  COMstr = {'noCOM','COM'}; COMstr{10+1} = 'noTPM'; COMstr{11+1} = 'fTPM'; COMstr{120+1} = 'noMSK';
   str{1}(end).name  = [str{1}(end).name(1:end-1) ' / setCOM ']; 
-  str{1}(end).value = [str{1}(end).value sprintf(' / %s{%s}',cp{1},COMstr{job.extopts.setCOM})];
+  str{1}(end).value = [str{1}(end).value sprintf(' / %s{%s}',cp{1},COMstr{job.extopts.setCOM+1})];
 
   % display only abnormal values
   if isfield(job.extopts,'affmod') && any(job.extopts.affmod ~= 0),

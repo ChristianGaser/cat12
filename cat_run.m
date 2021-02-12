@@ -804,20 +804,8 @@ function job = update_job(job)
   end
   
   
-  % set boundary box by Template properties if box inf
-  if job.extopts.regstr(1)==0
-    Vd       = spm_vol([job.extopts.darteltpm{1} ',1']);
-  else
-    Vd       = spm_vol([job.extopts.shootingtpm{1} ',1']);
-  end
-  [bb,vox] = spm_get_bbox(Vd, 'old');  
-  if bb(1)>bb(2), bbt=bb(1); bb(1)=bb(2); bb(2)=bbt; clear bbt; end
-  % Removed BB defintion in GUI and default file in november 2011, because
-  % it did not work (need changes in Dartel/Shooting processing) and is not required yet.
-  %if job.extopts.bb(1)>job.extopts.bb(2), bbt=job.extopts.bb(1); job.extopts.bb(1)=job.extopts.bb(2); job.extopts.bb(2)=bbt; clear bbt; end
-  %job.extopts.bb(isinf(job.extopts.bb))=nan; 
-  %job.extopts.bb  = [ min(bb(1,1:3) , job.extopts.bb(1,1:3) ) ; max(bb(2,1:3) , job.extopts.bb(2,1:3) ) ];
-  job.extopts.bb = bb; 
+  % set boundary box by Template properties 
+  if ~isfield(job.extopts,'bb'), job.extopts.bb = 0; end
   
   job.extopts.vox( isinf(job.extopts.vox) | isnan(job.extopts.vox) ) = []; 
   if isempty( job.extopts.vox ),  job.extopts.vox = cat_get_defaults('extopts.vox'); end 
