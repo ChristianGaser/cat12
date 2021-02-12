@@ -15,26 +15,27 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Y
   
   res.AffineSPM = res.Affine;
   
-  try
-    clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
+  clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
 
+  [pth,nam] = spm_fileparts(res.image0(1).fname); %#ok<ASGLU> % original   
+
+  % voxel size parameter
+  vx_vol  = sqrt(sum(res.image(1).mat(1:3,1:3).^2));    % voxel size of the processed image
+  vx_volp = prod(vx_vol)/1000;
+
+  d = res.image(1).dim(1:3);
+
+  % some reports
+  for i=1:size(P,4), res.ppe.SPMvols0(i) = cat_stat_nansum(single(P(:,:,:,i)))/255 .* prod(vx_vol) / 1000; end
+
+   
+  try
     if job.extopts.ignoreErrors > 2 % && ~( ( clsint(3) < clsint(1) ) &&  ( clsint(1) < clsint(2) ) ) % ~T1
       error('cat_main_updateSPM:runbackup','Test backup function.');
     end
     
-    
-    [pth,nam] = spm_fileparts(res.image0(1).fname); %#ok<ASGLU> % original   
-
-    % voxel size parameter
-    vx_vol  = sqrt(sum(res.image(1).mat(1:3,1:3).^2));    % voxel size of the processed image
-    vx_volp = prod(vx_vol)/1000;
-
-    d = res.image(1).dim(1:3);
-
-
-    stime2 = cat_io_cmd('  Update segmentation','g5','',job.extopts.verb-1,stime2); 
-
-
+    stime2 = cat_io_cmd('  Update segmentation','g5','',job.extopts.verb-1,stime2);
+  
     % Create brain mask based on the the TPM classes
     % cleanup with brain mask - required for ngaus [1 1 2 4 3 2] and R1/MP2Rage like data 
     YbA = zeros(d,'single');
@@ -568,6 +569,24 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Y
   stime2 = cat_io_cmd(' ','g5','',job.extopts.verb-1,stime2); 
   fprintf('%5.0fs\n',etime(clock,stime));
  
+  
+  % some reports 
+  for i=1:numel(Ycls), res.ppe.SPMvols1(i) = cat_stat_nansum(single(Ycls{i}(:)))/255 .* prod(vx_vol) / 1000; end
+  
+  % display  some values for developers
+  if job.extopts.expertgui > 1
+    if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap 
+       cat_io_cprintf('blue',sprintf('    SPM  volumes (CGW = TIV in mm%s): %6.2f + %6.2f + %6.2f = %4.0f\n',...
+        native2unicode(179, 'latin1'),res.ppe.SPMvols0([3 1 2]),sum(res.ppe.SPMvols0(1:3))));    
+       cat_io_cprintf('blue',sprintf('    AMAP volumes (CGW = TIV in mm%s): %6.2f + %6.2f + %6.2f = %4.0f\n',...
+        native2unicode(179, 'latin1'),res.ppe.SPMvols1([3 1 2]),sum(res.ppe.SPMvols1(1:3))));    
+    else
+      cat_io_cprintf('blue',sprintf('    SPM volumes pre  (CGW = TIV in mm%s):  %6.2f + %6.2f + %6.2f = %4.0f\n',...
+        native2unicode(179, 'latin1'),res.ppe.SPMvols0([3 1 2]),sum(res.ppe.SPMvols0(1:3)))); 
+      cat_io_cprintf('blue',sprintf('    SPM volumes post (CGW = TIV in mm%s):  %6.2f + %6.2f + %6.2f = %4.0f\n',...
+        native2unicode(179, 'latin1'),res.ppe.SPMvols1([3 1 2]),sum(res.ppe.SPMvols1(1:3)))); 
+    end
+  end
   
   
 end

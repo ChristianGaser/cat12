@@ -1040,15 +1040,7 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
   end
 
   % Sort out bounding box etc
-  [bb1,vx1] = spm_get_bbox(tpm.V(1), 'old');
-  bb = job.extopts.bb;
-  vx = job.extopts.vox(1);
-  bb(~isfinite(bb)) = bb1(~isfinite(bb));
-  if ~isfinite(vx), vx = abs(prod(vx1))^(1/3); end; 
-  bb(1,:) = vx.*round(bb(1,:)./vx);
-  bb(2,:) = vx.*round(bb(2,:)./vx);
-  res.bb = bb; 
-  clear vx vx1 bb1   
+  res.bb = spm_get_bbox(tpm.V(1)); 
 
 
   if numel(res.image) > 1

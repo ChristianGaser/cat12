@@ -309,11 +309,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     case 'affine'
       dispmat = res.Affine; 
       warning('off','MATLAB:tex')
-      try spm_orthviews('BB', job.extopts.bb*0.95 ); end
+      try spm_orthviews('BB', res.bb*0.95 ); end
     case 'rigid'
       % this does not work so good... AC has a little offset ...
       aff = spm_imatrix(res.Affine);  scale = aff(7:9); 
-      try spm_orthviews('BB', job.extopts.bb ./ mean(scale)); end
+      try spm_orthviews('BB', res.bb ./ mean(scale)); end
       dispmat = R; 
   end
  
