@@ -493,7 +493,7 @@ function cat_run_job1639(job,tpm,subj)
           end
 
           %% prepare affine parameter 
-          aflags     = struct('sep',obj.samp,'regtype','mni','WG',[],'WF',[],'globnorm',1); 
+          aflags     = struct('sep',obj.samp,'regtype','subj','WG',[],'WF',[],'globnorm',1);
           aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
           aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
 
