@@ -32,8 +32,8 @@ function Ysrc = cat_main_gintnormi(Ym,Tth)
   %           Buchert sanon-102748-00003-00001-1 it happend.
   Tth.T3th = sort(Tth.T3th); 
     
-  if 0
-    % RD2020: old version without interolation is a bit inoptimal for the histogram 
+  if 1
+    % RD2020: old version without interpolation is a bit inoptimal for the histogram 
     T3th  = Tth.T3thx; 
     T3thx = Tth.T3th; 
   else
