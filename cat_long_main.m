@@ -138,7 +138,7 @@ end
 
 % 4) cat12 segmentation of realigned images with prior from step 2  
 % -----------------------------------------------------------------------
-% In this step each time point is estimated separatelly but uses the prior
+% In this step each time point is estimated separately but uses the prior
 % from the SAVG - the TPM from step 3 for segmentation (and the individual 
 % surface from step 2)
 mbi = mbi + 1; mb_cat = mbi;

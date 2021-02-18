@@ -167,7 +167,7 @@ function out = cat_long_createTPM(job)
     Ytpm{6}(isnan(Ys)) = 1; 
     Ytpm{5} = Ytpm{5}.^2; % use exp. to reduce low skull-intensities  
     Ytpm{6} = single(real(Ytpm{6}.^(1/2))); % use exp. to reduce low skull-intensities  
-    %% creat brainmask
+    %% create brainmask
     Yb = sum( cell2num(Ytpm(1:3)) , 4);
     Yb = max(Yb, cat_vol_smooth3X(single(cat_vol_morph(Yb>0.1,'lc',1)),1)); 
     % avoid boundary problems for CAT report skull surface by setting the 
