@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1767 | gaser | 2021-02-14 23:39:57
+r1768 | gaser | 2021-02-18 01:23:45
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_xml.m
+M       cat_long_createTPM.m
+M       cat_long_main.m
+M       cat_main.m
+M       cat_main1639.m
+M       cat_main_updateSPM1639.m
+M       html/cat.html
+
+(1) Fixed: Corrected many typos.
+(2) Fixed: Added check whether file exists for deleting surface preview.
+------------------------------------------------------------------------
+r1767 | gaser | 2021-02-14 23:40:42 +0100 (So, 14 Feb 2021) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +27,7 @@ M       html/cat.html
 (1) Changed: Set affine regularization in cat_run_job1639.m back to 'subj'.
 (2) Changed: Force to use old threshold estimation strategy in 
              cat_main_gintnormi.m.
+
 ------------------------------------------------------------------------
 r1766 | dahnke | 2021-02-12 12:42:56 +0100 (Fr, 12 Feb 2021) | 27 lines
 

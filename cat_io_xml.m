@@ -1138,7 +1138,7 @@ end
         parent.appendChild(node);
       elseif (nItem>1) % use  <TagName>...<\TagName> <TagName>...<\TagName> notation
         array2DOMnode(xml, parent, s, TagName, Pref ); % recursive call
-      else % otherwise save each struct separatelly
+      else % otherwise save each struct separately
         fields = fieldnames(s);
         node = xml.createElement(TagName);
         for i=1:length(fields) % add field by field to the node

@@ -193,7 +193,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
 
   
   
-% RD202010: In some images SPM select the image BG and brain tisssue as class 4  
+% RD202010: In some images SPM selects the image BG and brain tisssue as class 4  
 %{
   volcls4 = sum(sum(sum( single(P(:,:,:,4)>64) .* (Yb>0.5) ))) .* prod(vx_vol)/1000; 
   volcls5 = sum(sum(sum( single(P(:,:,:,5)>64) .* (Yb>0.5 & (Ysrc>=mean(T3th(1:2)) & Ysrc<T3th(3) + diff(T3th(2:3))) ) ))) .* prod(vx_vol)/1000; 
