@@ -321,7 +321,7 @@ if ~isfield(res,'spmpp')
       [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
       fprintf('%5.0fs\n',etime(clock,stime));
       if isfield(res,'Ylesion') && sum(res.Ylesion(:)==0) && job.extopts.SLC==1
-        cat_io_addwarning('cat_main_SLC_noExpDef','SLC is set for manual lesions corection but no lesions were found!',1,[1 1]); 
+        cat_io_addwarning('cat_main_SLC_noExpDef','SLC is set for manual lesions correction but no lesions were found!',1,[1 1]); 
       end
     end
   else
@@ -927,8 +927,11 @@ end
 cat_main_reportcmd(job,res,qa);
 %%
 %% cleanup fast
-delete_surf_preview(Psurf,job);
+if exist(Psurf,'file')
+  delete_surf_preview(Psurf,job);
+end
 return
+
 function delete_surf_preview(Psurf,job)
   % cleanup preview surfaces and directory (but only for non-experts)
   if any( job.output.surface == [ 5 6 ] ) && job.extopts.expertgui<1
