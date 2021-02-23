@@ -320,7 +320,7 @@ function cat_io_report(job,qa,subj,createerr)
     % check colormap name
     cm = job.extopts.colormap; 
 
-    % SPM_orthviews seams to allow only 60 values
+    % SPM_orthviews seems to allow only 60 values
     % It further requires a modified colormaps with lower values that the
     % colorscale and small adaption for the values. 
     hlevel     = 240; 

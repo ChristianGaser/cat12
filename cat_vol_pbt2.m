@@ -331,7 +331,7 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ywmdc] = cat_vol_pbt2(Ymf,opt)
     % Error handling 
     % For some unkown reasons the sulcus reconstruction of cat_vol_pbtp failed in some cases (not directly reproducable).      
     % Reprocessing is solving this problem, but further investigation of cat_vol_pbtp.cpp would be good (RD 20190811).
-    % Maybe it depends on the initialization of the regions, e.g., using Ymf without rounding and incorrect boundary seams to increase the problems.  
+    % Maybe it depends on the initialization of the regions, e.g., using Ymf without rounding and incorrect boundary seems to increase the problems.  
     % Now use cat_vol_pbtp2.cpp (RD20200111).
     mask   = @(Y) Y(:)>0 & Y(:)<1000000; 
     rerun = 0; rerunlim = 3; 
@@ -414,7 +414,7 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ywmdc] = cat_vol_pbt2(Ymf,opt)
     % Error handling 
     % For some unkown reasons the sulcus reconstruction of cat_vol_pbtp failed in some cases (not directly reproducable).      
     % Reprocessing is solving this problem, but further investigation of cat_vol_pbtp.cpp would be good (RD 20190811).
-    % Maybe it depends on the initialization of the regions, e.g., using Ymf without rounding and incorrect boundary seams to increase the problems.  
+    % Maybe it depends on the initialization of the regions, e.g., using Ymf without rounding and incorrect boundary seems to increase the problems.  
     % Now use cat_vol_pbtp2.cpp (RD20200111).
     mask   = @(Y) Y(:)>0 & Y(:)<1000000; 
     rerun = 0; rerunlim = 3; 

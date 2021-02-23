@@ -982,7 +982,7 @@ function cat_run_job1639(job,tpm,subj)
             
     %% call main processing
     res.tpm     = obj.tpm.V;
-    res.ppe     = ppe; 
+    if exist('ppe'), res.ppe     = ppe; end
     res.stime   = stime0;
     res.catlog  = catlog; 
     res.Affine0 = res.Affine; 

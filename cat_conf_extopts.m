@@ -939,7 +939,7 @@ setCOM.help   = { ...
 setCOM.def    = @(val) cat_get_defaults('extopts.setCOM', val{:});
 if expert 
   % RD202101:  I am not sure how useful these options are and miss currently some good test cases.
-  %            In most cases the results are quite similar but forcing TPM registration seams to have the largest effect.
+  %            In most cases the results are quite similar but forcing TPM registration seems to have the largest effect.
   %            I would rename the GUI entry to 'Affine Registration Strategy' but this would be more confusion now.
   setCOM.labels = {
     'No (0)', ...

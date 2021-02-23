@@ -547,7 +547,7 @@ function createTPMlong = cat_conf_createTPMlong(data)
     'Create individual TPMs for longitudinal preprocessing. This is a special version of the cat_vol_createTPM batch only for the longitudinal preprocessing without further GUI interaction and well defined input. '
    ['There has to be 6 tissue classes images (GM,WM,CSF,HD1,HD2,BG) that can be in the native space, the affine or a non-linear normalized space.  ' ...
     'However, the affine normalized or a soft non-linear normalized space is expected to give the best result (see options in cat_main_registration).  ' ...
-    'A resolution of 1.5 mm seams to be quite optimal as far as we have to smooth anyway.  ' ...
+    'A resolution of 1.5 mm seems to be quite optimal as far as we have to smooth anyway.  ' ...
     'The images will be filtered in different ways to allow soft meanderings of anatomical structures.  ' ...
     'WMHs should probably be corrected to WM (WMHC=2) in the average preprocessing.' ]
       ''};
@@ -579,7 +579,7 @@ function longBiasCorr = cat_conf_longBiasCorr(data,expert,prefix)
 % See cat_long_biascorr.
 %
 % RD202010: First tests showed clear improvements of the timepoints but the
-%           whole pipeline seams to be less affected.
+%           whole pipeline seems to be less affected.
 %           Hence, corrections are maybe more relevant for plasticity
 %           studies or in case of artifacts.
 % -------------------------------------------------------------------------
@@ -2384,7 +2384,7 @@ function cdep = vfiles_headtrimming(job)
     cdep(end).src_output = substruct('.','image_selector','.','otherimages'); 
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     % subject-wise ... 
-    % the substruct seams to be correct, but it does not work, 
+    % the substruct seems to be correct, but it does not work, 
     % probably because each cdep entry has to be unique  
     % RD201810
     %{
