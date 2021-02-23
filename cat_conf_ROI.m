@@ -335,7 +335,7 @@ images1         = cfg_files;
 images1.tag     = 'images';
 images1.name    = 'Images';
 images1.help    = {
-  'Select co-registered files for ROI estimation. Note that there should be the same number of images as there are '
+  'Select co-registered files for ROI estimation. It is important that this image is in the same space and co-registered to  the T1-weighted image. Note that there should be the same number of images as there are '
   'deformation fields, such that each flow field relates to one image. The images can be also given as 4D data (e.g. rsfMRI data).'
 };
 images1.filter  = 'image';

@@ -635,7 +635,7 @@ function [trans,reg] = run_Shooting(Ycls,Ylesion,job,reg,res,trans,Maffinerigid,
 %  ------------------------------------------------------------------------
 %  Update schedule to have again stronger deformations to improve the 
 %  addaption to the new template and resolution. 
-%  This seams to help especially in worse cases with large ventricles.
+%  This seems to help especially in worse cases with large ventricles.
 %  ------------------------------------------------------------------------
           if it > 1 
             % at least the number of iterations for this template but maximal 4 

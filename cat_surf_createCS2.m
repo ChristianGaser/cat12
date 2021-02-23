@@ -86,7 +86,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   def.reduce_mesh         = 1;  % 0 - surface creation on PBT resolution, no mesh-reduction (very slow) 
                                 % 1 - optimal resolution depending on final mesh resolution, no mesh-reduction 
                                 % 2 - internal resolution, no mesh-reduction (slow for highres data) 
-                                % 3/4 - SPM/MATLAB reduce on initial surface - there seams to be a bug in the c-function that kills matlab 
+                                % 3/4 - SPM/MATLAB reduce on initial surface - there seems to be a bug in the c-function that kills matlab 
                                 % 5/6 - SPM/MATALB reduce on initial and final surface   
                                 % 7 - call matlab reduce in external matlab
   def.outputpp.native     = 0;  % output of Ypp map for cortical orientation in EEG/MEG 
@@ -817,7 +817,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
       end
 
       if 1
-        %% thickness depending cortical scaling - this seams to work but need further tests (RD201911)
+        %% thickness depending cortical scaling - this seems to work but need further tests (RD201911)
         Yth1i  = cat_vol_localstat(Yth1i,Yth1i>0,2,2);
         Yts    = cat_vol_approx(Yth1i,2);  
         Yts    = 1 + max(-0.5,min(0.5,(Yts - mean(Yth1i(:))) / (2 * mean(Yth1i(:)))  )); 
@@ -1300,7 +1300,7 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
     %  and a specific masking of the Insula (relative small triangles in a
     %  specific area on one/all of the main cortical surfaces or flipping) 
     %  is possible useful.
-    %  ... seams that this is working and it takes only a few seconds!
+    %  ... seems that this is working and it takes only a few seconds!
     %  --------------------------------------------------------------------
     % refinement - important for sulci .. here we need a lot of details with a similar resolution as the Insula 
     if opt.reduce_mesh > 4 % superinterpolation 

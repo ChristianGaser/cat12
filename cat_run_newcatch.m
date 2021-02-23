@@ -17,7 +17,7 @@ function cat_run_newcatch(job,tpm,subj)
       % new pipeline that also include a warning because it still under test
       cat_run_job(job,tpm,subj); % the cat_run_job1070 is only called by older functions
     else
-      % RD202008: current version 1678+ is not stable and the 1639 seams to
+      % RD202008: current version 1678+ is not stable and the 1639 seems to
       %           have the best result 
       cat_run_job1639(job,tpm,subj);
     end
@@ -29,7 +29,7 @@ function cat_run_newcatch(job,tpm,subj)
       % new pipeline that also include a warning because it still under test
       cat_run_job(job,tpm,subj); % the cat_run_job1070 is only called by older functions
     else
-      % RD202008: current version 1678+ is not stable and the 1639 seams to
+      % RD202008: current version 1678+ is not stable and the 1639 seems to
       %           have the best result 
       cat_run_job1639(job,tpm,subj);
     end

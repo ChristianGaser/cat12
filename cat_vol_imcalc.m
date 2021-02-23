@@ -7,7 +7,7 @@ function varargout = cat_vol_imcalc(Vi,Vo,f,flags,varargin)
 %__________________________________________________________________________
 %
 % Perform algebraic functions on images
-% FORMAT Vo = spm_imcalc(Vi, Vo, f [,flags [,extra_vars...]])
+% FORMAT [Vo, Yo] = spm_imcalc(Vi, Vo, f [,flags [,extra_vars...]])
 % Vi            - struct array (from spm_vol) of images to work on
 %                 or a char array of input image filenames
 % Vo (input)    - struct array (from spm_vol) containing information on
@@ -31,6 +31,7 @@ function varargout = cat_vol_imcalc(Vi,Vo,f,flags,varargin)
 %
 % Vo (output)   - spm_vol structure of output image volume after
 %                 modifications for writing
+% Yo            - output image 
 %__________________________________________________________________________
 %
 % spm_imcalc performs user-specified algebraic manipulations on a set of

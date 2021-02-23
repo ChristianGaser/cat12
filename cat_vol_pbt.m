@@ -330,7 +330,7 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
     % Error handling 
     % For some unkown reasons the sulcus reconstruction of cat_vol_pbtp failed in some cases (not directly reproducable).      
     % Reprocessing is solving this problem, but further investigation of cat_vol_pbtp.cpp would be good (RD 20190811).
-    % Maybe it depends on the initialization of the regions, e.g., using Ymf without rounding and incorrect boundary seams to increase the problems.  
+    % Maybe it depends on the initialization of the regions, e.g., using Ymf without rounding and incorrect boundary seems to increase the problems.  
     mask   = @(Y) Y(:)>0 & Y(:)<1000000; 
     rerun = 0; rerunlim = 3; 
     while rerun <= rerunlim && isnan( mean( Ygmt1(mask(Ygmt1))) ) || mean( Ygmt1(mask(Ygmt1)))>100
@@ -404,7 +404,7 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
     % Error handling 
     % For some unkown reasons the sulcus reconstruction of cat_vol_pbtp failed in some cases (not directly reproducable).      
     % Reprocessing is solving this problem, but further investigation of cat_vol_pbtp.cpp would be good (RD 20190811).
-    % Maybe it depends on the initialization of the regions, e.g., using Ymf without rounding and incorrect boundary seams to increase the problems.  
+    % Maybe it depends on the initialization of the regions, e.g., using Ymf without rounding and incorrect boundary seems to increase the problems.  
     mask   = @(Y) Y(:)>0 & Y(:)<1000000; 
     rerun = 0; rerunlim = 3; 
     while rerun <= rerunlim && isnan( mean( Ygmt(mask(Ygmt))) ) || mean( Ygmt(mask(Ygmt)))>100

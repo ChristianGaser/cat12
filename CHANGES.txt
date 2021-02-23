@@ -1,5 +1,39 @@
 ------------------------------------------------------------------------
-r1768 | gaser | 2021-02-18 01:23:45
+r1769 | gaser | 2021-02-23 21:02:42
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_ROI.m
+M       cat_conf_extopts.m
+M       cat_conf_tools.m
+M       cat_io_report.m
+M       cat_long_biascorr.m
+M       cat_long_createTPM.m
+M       cat_main.m
+M       cat_main1639.m
+M       cat_main_amap.m
+M       cat_main_registration.m
+M       cat_run_job.m
+M       cat_run_job1639.m
+M       cat_run_newcatch.m
+M       cat_spm_results_ui.m
+M       cat_surf_createCS2.m
+M       cat_surf_info.m
+M       cat_vol_imcalc.m
+M       cat_vol_pbt.m
+M       cat_vol_pbt2.m
+
+(1) Changed: Updated help text.
+(2) Changed: Updated cat_long_createTPM.m to allow loading of TPMs with 
+             different bounding box and voxel size.
+(3) Fixed:   Updated cat_surf_info to correctly obtain underlying surface for 
+             analysis data.
+(4) Fixed:   Use of SPM12 segmentation for surface extraction is now again 
+             working.
+(5) Fixed:   Corrected many typos.
+
+------------------------------------------------------------------------
+r1768 | gaser | 2021-02-18 01:24:32 +0100 (Do, 18 Feb 2021) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +47,7 @@ M       html/cat.html
 
 (1) Fixed: Corrected many typos.
 (2) Fixed: Added check whether file exists for deleting surface preview.
+
 ------------------------------------------------------------------------
 r1767 | gaser | 2021-02-14 23:40:42 +0100 (So, 14 Feb 2021) | 12 lines
 

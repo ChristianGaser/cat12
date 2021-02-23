@@ -15,7 +15,7 @@ function Ycls = cat_main(res,tpm,job)
 %#ok<*ASGLU>
 
 
-update_intnorm = job.extopts.new_release;  % RD202101: temporar parameter to control the additional intensity normalization 
+update_intnorm = job.extopts.new_release;  % RD202101: temporary parameter to control the additional intensity normalization 
 
 
 % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
@@ -591,7 +591,8 @@ else
 %  ------------------------------------------------------------------------
   [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,job.extopts.inv_weighting] = ...
     cat_main_SPMpp(Ysrc,Ycls,Yy,job,res);
-  
+  job.inv_weighting = job.extopts.inv_weighting;
+  job.useprior = '';
   fprintf('%5.0fs',etime(clock,stime)); 
 end
 
@@ -927,7 +928,7 @@ end
 cat_main_reportcmd(job,res,qa);
 %%
 %% cleanup fast
-if exist(Psurf,'file')
+try
   delete_surf_preview(Psurf,job);
 end
 return
@@ -1105,6 +1106,12 @@ function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,inv_weighting] = cat_main_SPM
   
   NS = @(Ys,s) Ys==s | Ys==s+1;  % for side independent atlas labels
   
+% QA WMH values required by cat_vol_qa later
+  qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE
+  qa.subjectmeasures.WMH_rel    = nan;  % relative WMH volume to TIV without PVE
+  qa.subjectmeasures.WMH_WM_rel = nan;  % relative WMH volume to WM without PVE
+  qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE in cm^3
+
   % load SPM segments
   %[pp,ff,ee] = spm_fileparts(res.image0(1).fname);
   %Ycls{1} = uint8(spm_read_vols(spm_vol(fullfile(pp,['c1' ff ee])))*255); 

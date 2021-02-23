@@ -19,7 +19,7 @@ function out = cat_long_biascorr(job)
 %  * Iterative correction with low to high filter size
 
 % RD202010: First tests showed clear improvements of the timepoints but the
-%           whole pipeline seams to be less affected.
+%           whole pipeline seems to be less affected.
 %           Hence, corrections are maybe more relevant for plasticity
 %           studies or in case of artifacts.
 %           Strong correction (str = 0.75) caused GM overestimation,
