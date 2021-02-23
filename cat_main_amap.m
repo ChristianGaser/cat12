@@ -154,7 +154,7 @@ end
       %                  % and it is better to use also here the previous intensity scaling  
       %
       % clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5; % SPM peak definition  
-      % pve = 6 - (clsint(1)<clsint(2)); % seams to be more stable in HR075T2 ...
+      % pve = 6 - (clsint(1)<clsint(2)); % seems to be more stable in HR075T2 ...
       %                                  % but I will try the pve5 again after Christians comments  
       %
       % we need more iterations and also some bias correction here because LAS is missing

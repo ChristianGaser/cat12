@@ -281,52 +281,69 @@ switch lower(Action), case 'setup'                         %-Set up results
     %-Get thresholded xSPM data and parameters of design
     %======================================================================
     if nargin > 1
-        if use_tfce
-            [SPM,xSPM] = tfce_getSPM(varargin{2});
-        else
-            [SPM,xSPM] = spm_getSPM(varargin{2});
-        end
+      if use_tfce
+        [SPM,xSPM] = tfce_getSPM(varargin{2});
+      else
+        [SPM,xSPM] = spm_getSPM(varargin{2});
+      end
     else
         if exist(fullfile(spm('dir'),'toolbox','TFCE'),'dir')
-            [spmmatfile, sts] = spm_select(1,'^SPM\.mat$','Select SPM.mat');
-            swd = spm_file(spmmatfile,'fpath');
-            warning off
-            load(fullfile(swd,'SPM.mat'),'SPM','xSPM');
-            warning on
-        
-            [Ic,xCon] = spm_conman(SPM,'T&F',Inf,'    Select contrast(s)...');
-            SPM.Ic = Ic; SPM.xCon = xCon;
-            SPM.swd = swd;
+          [spmmatfile, sts] = spm_select(1,'^SPM\.mat$','Select SPM.mat');
+          swd = spm_file(spmmatfile,'fpath');
+          warning off
+          load(fullfile(swd,'SPM.mat'),'SPM','xSPM');
+          warning on
 
-            % check for existing TFCE results for this contrast
-            if numel(Ic)==1 & exist(fullfile(swd,sprintf('%s_log_p_%04d.nii',xCon(Ic).STAT,Ic))) || ...
-                              exist(fullfile(swd,sprintf('%s_log_p_%04d.gii',xCon(Ic).STAT,Ic)))
-                stat_str = {'TFCE',xCon(Ic).STAT};
-                statType = spm_input('Type of statistic',1,'m',...
-                    sprintf('TFCE (non-parametric)|%s (non-parametric)|%s (SPM parametric)',...
-                    xCon(Ic).STAT,xCon(Ic).STAT),[],1);
-                if statType < 3
-                    use_tfce = 1;
-                    SPM.statType = stat_str{statType};
-                    [SPM,xSPM] = tfce_getSPM(SPM);
-                    xSPM.statType = stat_str{statType};
+          [Ic,xCon] = spm_conman(SPM,'T&F',Inf,'    Select contrast(s)...');
+          xCon(Ic).Vspm = spm_data_hdr_read(xCon(Ic).Vspm.fname);
+          SPM.Ic = Ic; SPM.xCon = xCon;
+          SPM.swd = swd;
+
+          % data or analysis moved or data are on a different computer?
+          if ischar(SPM.xVol.G)
+            if ~exist(SPM.xVol.G,'file')
+              [pp2,ff2,xx2] = spm_fileparts(SPM.xVol.G);
+              if ~isempty(strfind(ff2,'.central.freesurfer')) | ~isempty(strfind(ff2,'.central.Template_T1_IXI555_MNI152_GS'))
+                if strfind(pp2,'templates_surfaces_32k')
+                  SPM.xVol.G = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k',[ff2 xx2])
                 else
-                    use_tfce = 0;
-                    [SPM,xSPM] = spm_getSPM(SPM);
-                    xSPM.statType = xCon(Ic).STAT;
+                  SPM.xVol.G = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[ff2 xx2]);
                 end
-            else
-                use_tfce = 0;
-                [SPM,xSPM] = spm_getSPM(SPM);
-                xSPM.statType = xCon(Ic).STAT;
+              end
+              % modified SPM.mat hast to be saved
+              save(fullfile(swd,'SPM.mat'),'SPM','-v7.3');
             end
-        else
-            if nargin > 1
-                [SPM,xSPM] = spm_getSPM(varargin{2});
+          end
+                    
+          % check for existing TFCE results for this contrast
+          if numel(Ic)==1 & exist(fullfile(swd,sprintf('%s_log_p_%04d.nii',xCon(Ic).STAT,Ic))) || ...
+                            exist(fullfile(swd,sprintf('%s_log_p_%04d.gii',xCon(Ic).STAT,Ic)))
+            stat_str = {'TFCE',xCon(Ic).STAT};
+            statType = spm_input('Type of statistic',1,'m',...
+                sprintf('TFCE (non-parametric)|%s (non-parametric)|%s (SPM parametric)',...
+                xCon(Ic).STAT,xCon(Ic).STAT),[],1);
+            if statType < 3
+              use_tfce = 1;
+              SPM.statType = stat_str{statType};
+              [SPM,xSPM] = tfce_getSPM(SPM);
+              xSPM.statType = stat_str{statType};
             else
-                [SPM,xSPM] = spm_getSPM;
-            end  
-        end
+              use_tfce = 0;
+              [SPM,xSPM] = spm_getSPM(SPM);
+              xSPM.statType = xCon(Ic).STAT;
+            end
+          else
+            use_tfce = 0;
+            [SPM,xSPM] = spm_getSPM(SPM);
+            xSPM.statType = xCon(Ic).STAT;
+          end
+      else
+        if nargin > 1
+          [SPM,xSPM] = spm_getSPM(varargin{2});
+        else
+          [SPM,xSPM] = spm_getSPM;
+        end  
+      end
     end
  
     if isempty(xSPM) 

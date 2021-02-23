@@ -9,7 +9,7 @@ function out = cat_long_createTPM(job)
 % be in the native space, the affine or a non-linear normalized space.
 % However, the affine normalized or a soft non-linear normalized space is 
 % expected to give the best result (see options in cat_main_registration).
-% A resolution of 1.5 mm seams to be quite optimal as far as we have to 
+% A resolution of 1.5 mm seems to be quite optimal as far as we have to 
 % smooth anyway.  The images will be filtered in different ways to allow 
 % soft meanderings of anatomical structures.  WMHs should probably be 
 % corrected to WM (WMHC=2) in the average preprocessing.  
@@ -152,10 +152,11 @@ function out = cat_long_createTPM(job)
 
     % load SPM TPM with 1.5 mm 
     Vdtpm = spm_vol( job.defTPM ); 
-    if sum(sum((Vtemp.mat-Vdtpm(1).mat).^2)) < 1e-6
+    if (sum(sum((Vtemp.mat-Vdtpm(1).mat).^2)) < 1e-6) && (Vtemp.dim == Vdtpm(1).dim)
       Ydtpm = spm_load_priors(Vdtpm); for ci=1:6, Ydtpm{ci} = single(Ydtpm{ci}); end
     else
-      cat_io_cprintf('warn','Image resolutions differs from SPM TPM resolution. Cannot mix the images.\n'); 
+      Ydtpm = cat_vol_load_priors(Vdtpm, Vtemp); for ci=1:6, Ydtpm{ci} = single(Ydtpm{ci}); end
+      cat_io_cprintf('warn','Image resolutions differs from SPM TPM resolution. Cannot mix the images.\n');
     end
     spm_progress_bar('Init',numel(job.files),'TPM creation','Volumes Completed');% have to reset it
     spm_progress_bar('Set',fi-0.2); 
@@ -311,3 +312,50 @@ function out = cat_long_createTPM(job)
   end  
   spm_progress_bar('Clear');  
   
+function b0 = cat_vol_load_priors(B,Vo)
+% Loads the tissue probability maps for segmentation
+% FORMAT b0 = cat_vol_load_priors(B,Vo)
+% B  - structures of image volume information (or filenames)
+% b0 - a cell array of tissue probabilities
+%__________________________________________________________________________
+% Copyright (C) 2005-2011 Wellcome Trust Centre for Neuroimaging
+
+% John Ashburner
+% $Id$
+
+if nargin < 2
+  Vo = B(1);
+end
+
+% deg = 3;
+lm = 0;
+if ~isstruct(B), B  = spm_vol(B); end
+Kb = length(B);
+b0 = cell(Kb,1);
+for k1=1:(Kb)
+    b0{k1} = zeros(Vo.dim(1:3));
+end
+
+spm_progress_bar('Init',Vo.dim(3),'Loading priors','Planes loaded');
+for i=1:Vo.dim(3)
+    M0         = spm_matrix([0 0 -i 0 0 0 1 1 1]);
+    s          = zeros(Vo.dim(1:2));
+    M = inv(M0 * inv(Vo.mat) * B(1).mat);
+    for k1=1:Kb
+        tmp           = spm_slice_vol(B(k1),M,Vo.dim(1:2),0)*(1-lm*2)+lm;
+        b0{k1}(:,:,i) = max(min(tmp,1),0);
+        s             = s + tmp;
+    end
+    t = s>1;
+    if any(any(t))
+        for k1=1:Kb
+            tmp           = b0{k1}(:,:,i);
+            tmp(t)        = tmp(t)./s(t);
+            b0{k1}(:,:,i) = tmp;
+        end
+    end
+    s(t) = 1;
+    b0{Kb+1}(:,:,i) = max(min(1-s,1),0);
+    spm_progress_bar('Set',i);
+end
+spm_progress_bar('Clear');
