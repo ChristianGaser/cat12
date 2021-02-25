@@ -60,7 +60,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   % reduction of image resolution removes spatial segmentation information. 
   if job.opts.redspmres==0 % already done in case of redspmres
     if max(vx_vol)<1.5 && mean(vx_vol)<1.3
-      % RD202102: resizing adds maybe to much blurring that can trouble other functions
+      % RD202102: resizing adds maybe too much blurring that can trouble other functions
       %for i=1:size(P,4), [Pc1(:,:,:,i),RR] = cat_vol_resize(P(:,:,:,i),'reduceV',vx_vol,job.extopts.uhrlim,32); end %#ok<AGROW>
       for i=1:size(P,4), [Pc1(:,:,:,i),BB] = cat_vol_resize(P(:,:,:,i),'reduceBrain',vx_vol,4,YbA); end %#ok<AGROW>
       Pc1 = cat_main_clean_gwc1639(Pc1,max(1,min(2,job.extopts.cleanupstr*2)));
@@ -211,7 +211,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
 
   
   
-% RD202010: In some images SPM select the image BG and brain tisssue as class 4  
+% RD202010: In some images SPM selects the image BG and brain tisssue as class 4  
 %{
   volcls4 = sum(sum(sum( single(P(:,:,:,4)>64) .* (Yb>0.5) ))) .* prod(vx_vol)/1000; 
   volcls5 = sum(sum(sum( single(P(:,:,:,5)>64) .* (Yb>0.5 & (Ysrc>=mean(T3th(1:2)) & Ysrc<T3th(3) + diff(T3th(2:3))) ) ))) .* prod(vx_vol)/1000; 
