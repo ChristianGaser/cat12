@@ -66,7 +66,7 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
       </p>
          
       <ul>
-        <li><a href="#volrois">List of volume-based atlas maps (located in templates_volumes)</a></li>
+        <li><a href="#volrois">List of volume-based atlas maps (located in templates_MNI152NLin2009cAsym)</a></li>
         <ul>
           <li><a href="#Neuromorphometrics">Neuromorphometrics</a></li>
           <li><a href="#LPBA">LPBA40</a></li>
@@ -91,7 +91,7 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
 
       <h3 id="volrois">List of volume-based atlas maps in CAT12</h3>
       <p>
-        We prepared different atlas maps for the CAT12 IXI555 space that are stored in the <em>templates_volumes</em> directory. 
+        We prepared different atlas maps for the CAT12 IXI555 space that are stored in the <em>templates_MNI152NLin2009cAsym</em> directory. 
         For each atlas you can find a CSV file with the ROI IDs, short and full names. 
         The txt-file contains further information, terms of use, and the name of the original publications and websites. 
         If original T1 maps and subject label maps were available we used CAT to preprocess the data and map them to common space. 
@@ -101,21 +101,21 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
         <!--
         Further atlas options can be found in the <i>cg_cat_defauls-file</i>.
         <a class="function" href="matlab:cat_vol_display_label(struct('data',{{
-          fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_T1_IXI555_MNI152_GS.nii'); 
-          fullfile(spm('dir'),'toolbox','cat12','templates_volumes','neuromorphometrics.nii');
-          fullfile(spm('dir'),'toolbox','cat12','templates_volumes','lpba40.nii');
-          fullfile(spm('dir'),'toolbox','cat12','templates_volumes','hammers.nii'); 
-          fullfile(spm('dir'),'toolbox','cat12','templates_volumes','ibsr.nii'); 
-          fullfile(spm('dir'),'toolbox','cat12','templates_volumes','mori.nii'); 
-          fullfile(spm('dir'),'toolbox','cat12','templates_volumes','aal.nii');}} ) )">Display all six volumetric atlas maps.</a> 
+          fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); 
+          fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','neuromorphometrics.nii');
+          fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','lpba40.nii');
+          fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','hammers.nii'); 
+          fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','ibsr.nii'); 
+          fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','mori.nii'); 
+          fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','aal.nii');}} ) )">Display all six volumetric atlas maps.</a> 
           -->
       </p>
       
       <a class="function" href="matlab:cat_vol_display_label(struct('data',{{
-          fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_T1_IXI555_MNI152_GS.nii'); 
-          fullfile(spm('dir'),'toolbox','cat12','templates_volumes','neuromorphometrics.nii');
-          fullfile(spm('dir'),'toolbox','cat12','templates_volumes','lpba40.nii');
-          fullfile(spm('dir'),'toolbox','cat12','templates_volumes','hammers.nii');}} ) )">Display all three volumetric atlas maps.</a> 
+          fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); 
+          fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','neuromorphometrics.nii');
+          fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','lpba40.nii');
+          fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','hammers.nii');}} ) )">Display all three volumetric atlas maps.</a> 
       </p>
  
       <ul>
@@ -129,9 +129,9 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
             <!--These references should be included in all workshop and final publications.-->
           </p><p>
             Display Neuromorphometrics atlas as 
-            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_T1_IXI555_MNI152_GS.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_volumes','neuromorphometrics.nii')}}))">volume map</a>.
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','neuromorphometrics.nii')}}))">volume map</a>.
           </p>
-          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_volumes','neuromorphometrics.txt'));">here</a>.
+          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','neuromorphometrics.txt'));">here</a>.
           <p style="text-align:center;"><img src="images/CAT_surf_atlas_neuromorphometrics.png" width=90% height=auto alt="Neuromorphometrics (2012)" ><p>
         </li>
         <br />
@@ -147,9 +147,9 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
             These delineations were then transformed into a common atlas space to produce a set of coregistered anatomical labels. 
             The original MRI data were also transformed into the atlas space.
           </p><p>
-            Display LPBA40 atlas as <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_T1_IXI555_MNI152_GS.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_volumes','lpba40.nii')}}))">volume map</a>.
+            Display LPBA40 atlas as <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','lpba40.nii')}}))">volume map</a>.
           </p>
-          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_volumes','lpba40.txt'));">here</a>.
+          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','lpba40.txt'));">here</a>.
           <p style="text-align:center;"><img src="images/CAT_surf_atlas_lpba40.png" width=90% height=auto alt="LPBA40 (Shattuck et al. 2008)" ><p>
         </li>
         <br />
@@ -162,9 +162,9 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
             This atlas, based on Alexander Hammers' brain atlas based on 20 subjects, made available for the Euripides project, Nov 2009 <a href="#Hammers2003">(Hammers et al. 2003</a>,<a href="#Gousias2008">Gousias et al. 2008)</a>. 
           </p><p>
             Display Hammers atlas as 
-            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_T1_IXI555_MNI152_GS.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_volumes','hammers.nii')}}))">volume map</a>.
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','hammers.nii')}}))">volume map</a>.
           </p>
-          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_volumes','hammers.txt'));">here</a>.
+          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','hammers.txt'));">here</a>.
           <p style="text-align:center;"><img src="images/CAT_surf_atlas_hammers.png" width=90% height=auto alt="Hammers (Hammers et al. 2003)" ><p>
         </li>
         <br />
@@ -177,9 +177,9 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
           </p>
           <p>
             Display the Cobra atlas as 
-            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_T1_IXI555_MNI152_GS.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_volumes','cobra.nii')}}))">volume map</a>. 
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','cobra.nii')}}))">volume map</a>. 
           </p>
-          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_volumes','cobra.txt'));">here</a>.
+          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','cobra.txt'));">here</a>.
         </li>
 
         <li>
@@ -189,9 +189,9 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
           </p>
           <p>
             Display IBSR atlas as 
-            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_T1_IXI555_MNI152_GS.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_volumes','ibsr.nii')}}))">volume map</a>. 
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','ibsr.nii')}}))">volume map</a>. 
           </p>
-          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_volumes','ibsr.txt'));">here</a>.
+          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','ibsr.txt'));">here</a>.
         </li>
         </ br>
         
@@ -202,8 +202,8 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
           </p>
           <p>
             Display Mori atlas as
-            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_T1_IXI555_MNI152_GS.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_volumes','mori.nii')}}))">volume map</a>.
-          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_volumes','mori.txt'));">here</a>.
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','mori.nii')}}))">volume map</a>.
+          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','mori.txt'));">here</a>.
         </li>
         
         
@@ -213,9 +213,9 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
             Parcellation aligned on Collins brain <a href="#Collins1998">(Collins et al. 1998,</a><a href="#Tzourio2002">Tzourio-Mazoyer et al. 2002)</a>.
           </p>
           <p>            
-            Display AAL3 atlas as <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_T1_IXI555_MNI152_GS.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_volumes','aal3.nii')}}))">volume map</a>
+            Display AAL3 atlas as <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','aal3.nii')}}))">volume map</a>
           </p>
-          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_volumes','aal3.txt'));">here</a>.
+          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','aal3.txt'));">here</a>.
         </li>
 
         <li>
@@ -227,8 +227,8 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
           </p>
           <p>
             Display Anatomy atlas as
-            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_T1_IXI555_MNI152_GS.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_volumes','anatomy3.nii')}}))">volume map</a>.
-          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_volumes','anatomy3.txt'));">here</a>.
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','anatomy3.nii')}}))">volume map</a>.
+          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','anatomy3.txt'));">here</a>.
         </li>
 
         <li>
@@ -239,8 +239,8 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
           </p>
           <p>
             Display Anatomy atlas as
-            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_T1_IXI555_MNI152_GS.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_volumes','julichbrain.nii')}}))">volume map</a>.
-          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_volumes','julichbrain.txt'));">here</a>.
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','julichbrain.nii')}}))">volume map</a>.
+          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','julichbrain.txt'));">here</a>.
         </li>
 
         <li>
@@ -250,9 +250,9 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
           </p>
           <p>
             Display the Schaefer atlas with 200 parcellations and 17 networks as 
-            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_T1_IXI555_MNI152_GS.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Schaefer2018_200Parcels_17Networks_order.nii')}}))">volume map</a>. 
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Schaefer2018_200Parcels_17Networks_order.nii')}}))">volume map</a>. 
           </p>
-          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_volumes','schaefer.txt'));">here</a>.
+          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','schaefer.txt'));">here</a>.
         </li>
         </ br>
 

@@ -1717,7 +1717,7 @@ return
 if ~isfield(H,'Pvol_sel'), return; end
 
 % display image as overlay
-OV.reference_image = fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_T1_IXI555_MNI152_GS.nii');
+OV.reference_image = cat_get_defaults('extopts.shootingT1');
 
 if H.show_transp
   OV.opacity = 0.6;                                      
@@ -1778,7 +1778,7 @@ for ind = 1:2
       [H.S{ind}.info(1).side '.inflated.freesurfer.gii']);
     case 3
       H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], ...
-      [H.S{ind}.info(1).side '.central.Template_T1_IXI555_MNI152_GS.gii']);
+      [H.S{ind}.info(1).side '.central.' cat_get_defaults('extopts.shootingsurf') '.gii']);
     case 4
       H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], ...
       [H.S{ind}.info(1).side '.patch.freesurfer.gii']);
@@ -2453,11 +2453,11 @@ for i = 1:n
     % names for template and thickness file and output 
     Pvol = deblank(P(i,:));
     [pp,ff,ee] = spm_fileparts(Pvol);
-    Pmesh_lh  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','lh.central.Template_T1_IXI555_MNI152_GS.gii');
-    Pthick_lh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','lh.thickness.Template_T1_IXI555_MNI152_GS');
+    Pmesh_lh  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k',['lh.central.' cat_get_defaults('extopts.shootingsurf') '.gii']);
+    Pthick_lh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k',['lh.thickness.' cat_get_defaults('extopts.shootingsurf')]);
     Pout_lh   = fullfile(pp,['lh.',ff '.gii']);
-    Pmesh_rh  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','rh.central.Template_T1_IXI555_MNI152_GS.gii');
-    Pthick_rh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','rh.thickness.Template_T1_IXI555_MNI152_GS');
+    Pmesh_rh  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k',['rh.central.' cat_get_defaults('extopts.shootingsurf') '.gii']);
+    Pthick_rh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k',['rh.thickness.' cat_get_defaults('extopts.shootingsurf')]);
     Pout_rh   = fullfile(pp,['rh.',ff '.gii']);
     Pout      = fullfile(pp,['mesh.',ff '.resampled_32k.gii']);
         

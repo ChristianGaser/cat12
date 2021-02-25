@@ -21,7 +21,7 @@ global SO
 
 if nargin == 0
     
-    imgs = spm_select(2, 'image', 'Select additional overlay image', {fullfile(spm('dir'), 'toolbox', 'cat12', 'templates_volumes/Template_T1_IXI555_MNI152_GS.nii')});
+    imgs = spm_select(2, 'image', 'Select additional overlay image', {cat_get_defaults('extopts.shootingT1')});
     if isempty(imgs)
       return;
     end

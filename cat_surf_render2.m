@@ -628,7 +628,7 @@ switch lower(action)
           vafiles = vatlas(:,1); safiles = satlas(:,1); 
           for ai = 1:size(vatlas,1)
             vafiles{ai} = fullfile(spm('Dir'),'toolbox','cat12',['atlases_surfaces' str32k],...
-              sprintf('%s.%s.Template_T1_IXI555_MNI152_GS',sinfo1(1).side,vatlas{ai,2}));
+              sprintf('%s.%s.%s',sinfo1(1).side,vatlas{ai,2},cat_get_defaults('extopts.shootingsurf')));
           end
           for ai = 1:size(satlas,1)
             safiles{ai} = fullfile(spm('Dir'),'toolbox','cat12',['atlases_surfaces' str32k],...
@@ -774,7 +774,7 @@ switch lower(action)
                   fullfile(sinfo1(i).pp,[sinfo1(1).side '.hull.resampled.' sinfo1(i).name '.gii']);
                   fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1(i).side '.central.freesurfer.gii']);
                   fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1(i).side '.inflated.freesurfer.gii']);
-                  fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1(i).side '.central.Template_T1_IXI555_MNI152_GS.gii']);
+                  fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1(i).side '.central.' cat_get_defaults('extopts.shootingsurf') '.gii']);
                   fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1(i).side '.sphere.freesurfer.gii']); 
                   '';
                 }];

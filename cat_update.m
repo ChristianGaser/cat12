@@ -135,6 +135,12 @@ if update
         spm_unlink(name);
       end
 
+      templatefiles = dir(fullfile(cat_get_defaults('extopts.pth_templates'),'*.*'));
+      for i=1:length(templatefiles)
+        name = fullfile(d,'cat12','templates_volumes',templatefiles(i).name);
+        spm_unlink(name);
+      end
+
       lastwarn('');
       warning off
       delete(get(0,'Children')); spm('clean'); evalc('spm_rmpath'); drawnow

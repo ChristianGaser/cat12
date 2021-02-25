@@ -22,7 +22,7 @@ function Y = cat_vol_ROI_summarize(job)
 %__________________________________________________________________________
 %
 % Example:
-% opt = struct('atlases',{fullfile(spm('dir'),'toolbox','cat12','templates_volumes','cobra.nii')},...
+% opt = struct('atlases',{fullfile(cat_get_defaults('extopts.pth_templates'),','cobra.nii')},...
 %              'field1',{spm_select('FPList','mri','^y_.*nii')},...
 %              'images',{spm_select('FPList','mri','^p1_.*nii')},...
 %              'fhandle','@median');
@@ -32,7 +32,7 @@ function Y = cat_vol_ROI_summarize(job)
 
 if nargin == 0
   atlas_file = cellstr(spm_select([1 Inf],'image','Select atlas file(s)',{},...
-    fullfile(spm('dir'),'toolbox','cat12','templates_volumes')));
+    cat_get_defaults('extopts.pth_templates')));
   def_file = cellstr(spm_select(1,'image','Select forward deformation field',{},'','^y_.*\.nii$'));
   value_file = cellstr(spm_select([1 Inf],'image','Select co-registered files for ROI estimation'));
   
@@ -73,7 +73,7 @@ if isfield(job,'Method')
   for ai=1:numel(AN)
     if ~iscell(job.atlases.(AN{ai}))
       if job.atlases.(AN{ai})
-        atlas_file{fai} = fullfile(spm('dir'),'toolbox','cat12','templates_volumes',[AN{ai} '.nii']);
+        atlas_file{fai} = fullfile(cat_get_defaults('extopts.pth_templates'),',[AN{ai} '.nii']);
         fai = fai+1;
       end
     elseif ~isempty(char(job.atlases.(AN{ai})))

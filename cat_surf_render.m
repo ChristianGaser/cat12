@@ -451,7 +451,7 @@ switch lower(action)
                 H.meshs = [ H.meshs , { 
                     fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1(i).side '.central.freesurfer.gii']);
                     fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1(i).side '.inflated.freesurfer.gii']);
-                    fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1(i).side '.central.Template_T1_IXI555_MNI152_GS.gii']);
+                    fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1(i).side '.central.' cat_get_defaults('extopts.shootingsurf') '.gii']);
                     '';
                   }];
               end
