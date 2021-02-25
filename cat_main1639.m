@@ -15,7 +15,7 @@ function Ycls = cat_main1639(res,tpm,job)
 %#ok<*ASGLU>
 
 
-update_intnorm = 0; %job.extopts.new_release;  % RD202101: temporar parameter to control the additional intensity normalization 
+update_intnorm = 0; %job.extopts.new_release;  % RD202101: temporary parameter to control the additional intensity normalization 
  
 
 % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
@@ -362,7 +362,7 @@ if ~isfield(res,'spmpp')
       [Yl1,Ycls,YMF] = cat_vol_partvol1639(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
       fprintf('%5.0fs\n',etime(clock,stime));
       if isfield(res,'Ylesion') && sum(res.Ylesion(:)==0) && job.extopts.SLC==1
-        cat_io_addwarning([mfilename ':SLC_noExpDef'],'SLC is set for manual lesion corection but no lesions were found!',1,[1 1]); 
+        cat_io_addwarning([mfilename ':SLC_noExpDef'],'SLC is set for manual lesion correction but no lesions were found!',1,[1 1]); 
       end
     end
   else
@@ -625,7 +625,8 @@ else
 %  ------------------------------------------------------------------------
   [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,job.extopts.inv_weighting] = ...
     cat_main_SPMpp(Ysrc,Ycls,Yy,job,res);
-  
+  job.inv_weighting = job.extopts.inv_weighting;
+  job.useprior = '';  
   fprintf('%5.0fs',etime(clock,stime)); 
 end
 
@@ -936,7 +937,9 @@ end
 cat_main_reportcmd(job,res,qa);
 
 %% cleanup preview surfaces
-delete_surf_preview(Psurf,job);
+try
+  delete_surf_preview(Psurf,job);
+end
 return
 function delete_surf_preview(Psurf,job)
   % cleanup preview surfaces and directory (but only for non-experts)
@@ -1098,7 +1101,8 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
   d = VT.dim(1:3);
 
 return
-function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa] = cat_main_SPMpp(Ysrc,Ycls,Yy,job,res)
+
+function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,inv_weighting] = cat_main_SPMpp(Ysrc,Ycls,Yy,job,res)
 %% SPM segmentation input  
 %  ------------------------------------------------------------------------
 %  Here, DARTEL and PBT processing is prepared. 
@@ -1111,11 +1115,11 @@ function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa] = cat_main_SPMpp(Ysrc,Ycls,Y
   
   NS                  = @(Ys,s) Ys==s | Ys==s+1;                % for side independent atlas labels
     
-  % load SPM segments
-  %[pp,ff,ee] = spm_fileparts(res.image0(1).fname);
-  %Ycls{1} = uint8(spm_read_vols(spm_vol(fullfile(pp,['c1' ff ee])))*255); 
-  %Ycls{2} = uint8(spm_read_vols(spm_vol(fullfile(pp,['c2' ff ee])))*255); 
-  %Ycls{3} = uint8(spm_read_vols(spm_vol(fullfile(pp,['c3' ff ee])))*255); 
+  % QA WMH values required by cat_vol_qa later
+  qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE
+  qa.subjectmeasures.WMH_rel    = nan;  % relative WMH volume to TIV without PVE
+  qa.subjectmeasures.WMH_WM_rel = nan;  % relative WMH volume to WM without PVE
+  qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE in cm^3
 
   % create (resized) label map and brainmask
   Yp0  = single(Ycls{3})/5 + single(Ycls{1})/5*2 + single(Ycls{2})/5*3;
@@ -1151,6 +1155,7 @@ function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa] = cat_main_SPMpp(Ysrc,Ycls,Y
   Yl1 = reshape(Yl1,size(Ym)); [D,I] = cat_vbdist(single(Yl1>0)); Yl1 = Yl1(I);   
   YMF = NS(Yl1,job.extopts.LAB.VT) | NS(Yl1,job.extopts.LAB.BG) | NS(Yl1,job.extopts.LAB.BG);  
 return
+
 function [Ymix,job,surf,WMT,stime] = cat_main_surf_preppara(Ymi,Yp0,Yp0spm,job,vx_vol)
 %  ------------------------------------------------------------------------
 %  Prepare some variables for the surface processing.
