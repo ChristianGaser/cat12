@@ -156,9 +156,8 @@ cat.extopts.SLC          = 0;    % Stroke lesion correction (SLC):            0 
                                  %                                            2 - automatic lesion detection (in development)
 cat.extopts.mrf          = 1;    % MRF weighting:                             0 to 1; <1 - weighting, 1 - auto; default 1
 
-% resolution options
+% resolution option
 cat.extopts.restype      = 'optimal';    % resolution handling: 'native','fixed','best', 'optimal'
-cat.extopts.resval       = [1.0 0.10];   % resolution value and its tolerance range for the 'fixed' and 'best' restype
 
 % check for multiple cores is different for octave
 if strcmpi(spm_check_version,'octave')
@@ -233,16 +232,16 @@ if 1
   cat.extopts.darteltpm     = {fullfile(cat.extopts.pth_templates,'Template_1_IXI555_MNI152.nii')};     % Indicate first Dartel template (Template_1)
   cat.extopts.shootingtpm   = {fullfile(cat.extopts.pth_templates,'Template_0_IXI555_MNI152_GS.nii')};  % Indicate first Shooting template (Template 0) - not working
   cat.extopts.shootingT1    = {fullfile(cat.extopts.pth_templates,'Template_T1_IXI555_MNI152_GS.nii')}; % Average T1 for result overlays
-  cat.extopts.brainmask     = {fullfile(cat.extopts.pth_templates,'brainmask.nii')};                    % Brainmask for affine registration
-  cat.extopts.T1            = {fullfile(cat.extopts.pth_templates,'T1.nii')};                           % T1 for affine registration
+  cat.extopts.brainmask     = {fullfile(spm('Dir'),'toolbox','FieldMap','brainmask.nii')};              % Brainmask for affine registration
+  cat.extopts.T1            = {fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii')};                     % T1 for affine registration
 else % prepared for the new template...
   cat.extopts.shootingsurf  = 'Template_T1';                                                            % Shooting surface name 
   cat.extopts.pth_templates = fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym');   % Templates and atlases folder for volumes
   cat.extopts.darteltpm     = {fullfile(cat.extopts.pth_templates,'Template_1_Dartel.nii')};            % Indicate first Dartel template (Template_1)
   cat.extopts.shootingtpm   = {fullfile(cat.extopts.pth_templates,'Template_0_GS.nii')};                % Indicate first Shooting template (Template 0) - not working
   cat.extopts.shootingT1    = {fullfile(cat.extopts.pth_templates,'Template_T1.nii')};                  % Average T1 for result overlays
-  cat.extopts.brainmask     = {fullfile(spm('Dir'),'toolbox','FieldMap','brainmask.nii')};              % Brainmask for affine registration
-  cat.extopts.T1            = {fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii')};                     % T1 for affine registration
+  cat.extopts.brainmask     = {fullfile(cat.extopts.pth_templates,'brainmask.nii')};                    % Brainmask for affine registration
+  cat.extopts.T1            = {fullfile(cat.extopts.pth_templates,'T1.nii')};                           % T1 for affine registration
 end
 cat.extopts.cat12atlas    = {fullfile(cat.extopts.pth_templates,'cat.nii')};                          % CAT atlas with major regions for VBM, SBM & ROIs
 
