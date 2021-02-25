@@ -1,7 +1,9 @@
 function varargout=cat_vol_resize(T,operation,varargin)
 % ______________________________________________________________________
 % 
-%   varargout=cat_vol_resize(T,operation,varargin)
+%   varargout = cat_vol_resize(T,operation,varargin)
+% 
+%   T .. image or cell of images
 %
 % Examples:
 %
@@ -13,7 +15,8 @@ function varargout=cat_vol_resize(T,operation,varargin)
 %   TV = cat_vol_resize(TV,'dereduceV',resT);
 %
 % - Removing/readding of background:
-%   [Tr,BB] = cat_vol_resize(T ,'reduceBrain'  ,vx_vol,10);      
+%   [Tr,BB] = cat_vol_resize(T ,'reduceBrain',vx_vol,10[,Yb]);      
+%    T      = cat_vol_resize(Tr,'reduceBrain',vx_vol,BB);
 %    T      = cat_vol_resize(Tr,'dereduceBrain',BB);
 %
 % - Interpolation for low slice resolution to obtain an more isotropic resolution

@@ -425,7 +425,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
     
     % control variables 
     % only if there is a lot of CSF and not too much noise
-    extopts.WMHCstr = min( 1, max( 0, extopts.WMHCstr )); 
+    extopts.WMHCstr = min( 1, max( 0, extopts.WMHCstr ./ max(1,mean(vx_vol)) )); % adaptiv for resolution
     csfvol  = max(eps,min(1.0, (vols  - 0.05) * 10 ));                     % relative CSF volume weighting
     WMHCstr = max(eps,min(1.0, extopts.WMHCstr .* csfvol ));               % normalized WMHCstr 
     wmhvols = 40 - 30 * (1 - extopts.WMHCstr);                             % absolute WMH volume threshold

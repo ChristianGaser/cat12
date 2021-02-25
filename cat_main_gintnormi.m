@@ -43,9 +43,13 @@ function Ysrc = cat_main_gintnormi(Ym,Tth)
     %  T3th  = interp1(Tth.T3thx,1:0.1:numel(Tth.T3thx),'makima');
     %  T3thx = interp1(Tth.T3th ,1:0.1:numel(Tth.T3th) ,'makima');
     %catch
+    if 1 % lowcontrast
+      T3th  = interp1(Tth.T3thx,1:0.1:numel(Tth.T3thx),'linear');
+      T3thx = interp1(Tth.T3th ,1:0.1:numel(Tth.T3th) ,'linear');
+    else
       T3th  = interp1(Tth.T3thx,1:0.1:numel(Tth.T3thx),'spline');
       T3thx = interp1(Tth.T3th ,1:0.1:numel(Tth.T3th) ,'spline');
-    %end 
+    end 
   end
   
   if all(T3th==T3thx), Ysrc = Ym; return; end
