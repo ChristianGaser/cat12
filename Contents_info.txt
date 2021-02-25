@@ -145,24 +145,26 @@
 %   cat_conf_tools.m                 - wrapper for calling CAT12 utilities
 %   tbx_cfg_cat.m
 %
-% Templates/atlases volumes
-%   Template_?_IXI555_MNI152_GS.nii  - Geodesic Shooting template of 555 subjects from IXI database
-%                                      in MNI152 space provided for 6 different iteration steps
-%   Template_T1_IXI555_MNI152_GS.nii - average of 555 T1 images of IXI database in MNI152 space after 
+% Templates/Atlases volumes
+%   Template_?_GS.nii                - Geodesic Shooting template of 555 subjects from IXI database
+%                                      in MNI152NLin2009cAsym space provided for 6 different iteration steps
+%   Template_T1.nii                  - average of 555 T1 images of IXI database in MNI152 space after 
 %                                      Geodesic Shooting
 %   aal3.*                           - AAL3 atlas
-%   anatomy.*                        - Anatomy atlas
+%   anatomy2.*                       - Anatomy2 atlas
+%   cobra.*                          - CoBra atlas
 %   hammers.*                        - Hammers atlas
 %   ibsr.*                           - IBSR atlas
+%   julichbrain.*                    _ JulichBrain atlas
 %   mori.*                           - Mori atlas
 %   neuromorphometrics.*             - Neuromorphometrics atlas
-%   l1A.nii                          - subcortical partitions
+%   lpba40.nii                       - LPBA40 atlas
 %   brainmask.nii                    - brainmask
 %   cat12.nii                        - partitions for hemispheres, subcortical structures and vessels
 %
 % Templates/Atlases surfaces
 %   fsavg.index2D_256x128.txt        - index file for transformation from surface to 2d image
-%   ?h.central.Template_T1_IXI555_MNI152_GS.gii
+%   ?h.central.Template_T1.gii
 %                                    - central surface of Dartel average brain for result mapping
 %   ?h.central.freesurfer.gii        - central surface of freesurfer fsaverage
 %   ?h.inflated.freesurfer.gii       - inflated surface of freesurfer fsaverage

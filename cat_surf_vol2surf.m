@@ -107,7 +107,7 @@ function out = cat_surf_vol2surf(varargin)
       fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
       str_resamp = '.resampled';
     end
-    job.data_mesh_lh = {fullfile(fsavgDir, 'lh.central.Template_T1_IXI555_MNI152_GS.gii')};
+    job.data_mesh_lh = {fullfile(fsavgDir, ['lh.central.' cat_get_defaults('extopts.shootingsurf') '.gii'])};
   else
     fsavgDir = fileparts( job.data_mesh_lh{1} ); 
   end
@@ -190,7 +190,7 @@ function out = cat_surf_vol2surf(varargin)
   end
   if job.cerebellum 
     if job.merge_hemi
-      error('cat_surf_vol2surf:cbmesh_notprepared','Combination of job.cerebellum & job.merge_hemi is not prepared.')
+      error('cat_surf_vol2surf:cbmesh_notprepared','Combination of job.cerebellum & job.merge_hemi is not yet prepared.')
     else
       side  = [side  {'data_mesh_lc','data_mesh_rc'}];
       sside = [sside {'sinfo_lc','sinfo_rc'}];

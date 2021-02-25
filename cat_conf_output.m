@@ -110,21 +110,21 @@ function [output,output_spm,output1173,output1445] = cat_conf_output(expert)
   ''
   };
 
-	native.def  = @(val)cat_get_defaults('output.bias.native', val{:});
-	warped.def  = @(val)cat_get_defaults('output.bias.warped', val{:});
-	dartel.def  = @(val)cat_get_defaults('output.bias.dartel', val{:});
-	bias        = cfg_branch;
-	bias.tag    = 'bias';
-	bias.name   = 'Bias, noise and global intensity corrected T1 image';
-	if expert
-		bias.val    = {native warped dartel};
-	else
-		bias.val    = {warped};
-	end
-	bias.help   = {
-		'This is the option to save a bias, noise, and global intensity corrected version of the original T1 image. MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity of the image (bias). These artifacts, although not usually a problem for visual inspection, can impede automated processing of the images. The bias corrected version should have more uniform intensities within the different types of tissues and can be saved in native space and/or normalised. Noise is corrected by an adaptive non-local mean (NLM) filter (Manjon 2008, Medical Image Analysis 12).'
-	''
-	};
+  native.def  = @(val)cat_get_defaults('output.bias.native', val{:});
+  warped.def  = @(val)cat_get_defaults('output.bias.warped', val{:});
+  dartel.def  = @(val)cat_get_defaults('output.bias.dartel', val{:});
+  bias        = cfg_branch;
+  bias.tag    = 'bias';
+  bias.name   = 'Bias, noise and global intensity corrected T1 image';
+  if expert
+    bias.val    = {native warped dartel};
+  else
+    bias.val    = {warped};
+  end
+  bias.help   = {
+    'This is the option to save a bias, noise, and global intensity corrected version of the original T1 image. MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity of the image (bias). These artifacts, although not usually a problem for visual inspection, can impede automated processing of the images. The bias corrected version should have more uniform intensities within the different types of tissues and can be saved in native space and/or normalised. Noise is corrected by an adaptive non-local mean (NLM) filter (Manjon 2008, Medical Image Analysis 12).'
+  ''
+  };
 
   native.def  = @(val)cat_get_defaults('output.las.native', val{:});
   warped.def  = @(val)cat_get_defaults('output.las.warped', val{:});
@@ -435,7 +435,7 @@ if 0
   end
 end
   
-	output_spm            = output; 
+  output_spm            = output; 
   output_spm.val        = {ROI surface grey_spm white_spm csf_spm label labelnative jacobianwarped warps}; 
 
 return

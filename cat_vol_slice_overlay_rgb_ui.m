@@ -11,9 +11,9 @@ global SO
 % ---------------------------------------------------------------------------------------
 % image array of max. 3 images
 % ---------------------------------------------------------------------------------------
-name = char(fullfile(spm('dir'),'toolbox','cat12','templates_volumes/cobra.nii'),...
-            fullfile(spm('dir'),'toolbox','cat12','templates_volumes/mori.nii'),...
-            fullfile(spm('dir'),'toolbox','cat12','templates_volumes/cat.nii'));
+name = char(fullfile(cat_get_defaults('extopts.pth_templates'),'cobra.nii'),...
+            fullfile(cat_get_defaults('extopts.pth_templates'),'mori.nii'),...
+            fullfile(cat_get_defaults('extopts.pth_templates'),'cat.nii'));
 
 range = [0 1]; % this should be adapted to the image range
 logP = 0;      % option to use log-scaled colorbars if the input is a log-transformed p-map
@@ -21,7 +21,7 @@ logP = 0;      % option to use log-scaled colorbars if the input is a log-transf
 % ---------------------------------------------------------------------------------------
 % underlying image
 % ---------------------------------------------------------------------------------------
-SO.img(1).vol = spm_vol(fullfile(spm('dir'),'toolbox','cat12','templates_volumes/Template_T1_IXI555_MNI152_GS.nii'));
+SO.img(1).vol = spm_vol(cat_get_defaults('extopts.shootingT1'));
 SO.img(1).prop = 1;
 SO.img(1).cmap = gray;
 SO.img(1).range = [0.2 1];  % image range have to be adapted

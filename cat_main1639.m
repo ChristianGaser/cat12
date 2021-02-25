@@ -678,7 +678,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
     if job.extopts.collcorr >= 20
       surf = unique(surf); 
       if 0 %any( ~cellfun('isempty', strfind(surf,'cb') ))  % ... I want to avoid this if possible - it also seem to be worse to use it 
-        VT1 = spm_vol(fullfile(fileparts(job.extopts.templates{end}),'Template_T1_IXI555_MNI152_GS.nii')); 
+        VT1 = spm_vol(cat_get_defaults('extopts.shootingT1')); 
         fac = abs(tpm.V(1).mat(1)) / abs(VT1.mat(1));
         YT  = single(spm_sample_vol(VT1,double(smooth3(Yy(:,:,:,1))*fac),double(smooth3(Yy(:,:,:,2))*fac),double(smooth3(Yy(:,:,:,3))*fac),2));
         YT  = reshape(YT,size(Yy(:,:,:,1))); clear Yyi; 

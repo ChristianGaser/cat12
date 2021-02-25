@@ -31,8 +31,8 @@
 % ignored if data during smoothing (masked smoothing) and in the statistical
 % analysis.
 %
-% ?h.central.Template_T1_IXI555_MNI152_GS.gii
-% ?h.thickness.Template_T1_IXI555_MNI152_GS
+% ?h.central.Template_T1_GS.gii
+% ?h.thickness.Template_T1_GS
 % ---------------------------------
 % Surfaces and thickness values based on average of 550 subjects from IXI 
 % database

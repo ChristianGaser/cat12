@@ -81,14 +81,14 @@ end
 function Pdummy = create_dummy_volume(type)
   switch type
     case '.nii'
-      Pvol   = fullfile(spm('dir'),'toolbox','cat12','templates_volumes','cat.nii');
+      Pvol   = fullfile(cat_get_defaults('extopts.pth_templates'),'cat.nii');
       Pdummy = fullfile(spm('dir'),'toolbox','cat12','cattest','batchdummy.nii');
       if ~exist( fileparts(Pdummy) , 'dir')
         mkdir( fileparts(Pdummy) ); 
       end
       copyfile(Pvol,Pdummy);
     case {'.xml','.csv','.txt',''}
-      Pvol   = fullfile(spm('dir'),'toolbox','cat12','templates_volumes','mori.csv');
+      Pvol   = fullfile(cat_get_defaults('extopts.pth_templates'),'mori.csv');
       Pdummy = fullfile(spm('dir'),'toolbox','cat12','cattest',['batchdummy' type]);
       if ~exist( fileparts(Pdummy) , 'dir')
         mkdir( fileparts(Pdummy) ); 
