@@ -277,6 +277,8 @@ cstime = clock;
       Pcentral   = fullfile(pp,surffolder,sprintf('%s.central.preview.%s.gii',opt.surf{si},ff));          % central
       Ppbt       = fullfile(pp,surffolder,sprintf('%s.pbt.preview.%s',opt.surf{si},ff));                  % PBT thickness / GM depth
       Pthick     = fullfile(pp,surffolder,sprintf('%s.thickness.preview.%s',opt.surf{si},ff));            % FS thickness / GM depth
+      Ppial      = fullfile(pp,surffolder,sprintf('%s.pial.preview.%s.gii',opt.surf{si},ff));            % FS thickness / GM depth
+      Pwhite     = fullfile(pp,surffolder,sprintf('%s.white.preview.%s.gii',opt.surf{si},ff));            % FS thickness / GM depth
     end
     
     % use surface of given (average) data as prior for longitudinal mode
@@ -667,13 +669,6 @@ cstime = clock;
         % distance between linked surfaces 
         %Tlink = @(S1,S2) sum( [ sum( abs( S1.vertices(:,1:2) - S2.vertices(:,1:2) ).^2 , 2 ).^0.5  abs(S1.vertices(:,3) - S2.vertices(:,3)) ].^2 , 2 ).^0.5;
                 
-        % save datastructure
-        S.(opt.surf{si}) = struct('faces',CS.faces,'vertices',CS.vertices,'th1',facevertexcdata);
-        if opt.WMT > 1
-          setfield(S.(opt.surf{si}),'th2',nan(size(facevertexcdata)));
-          setfield(S.(opt.surf{si}),'th3',nan(size(facevertexcdata)));
-        end
-        
         if ~debug
           delete(Vpp.fname);
           delete(Vpp1.fname);
@@ -697,6 +692,12 @@ cstime = clock;
           copyfile(Ppbt,Pthick,'f');
         end
         
+        % save datastructure
+        S.(opt.surf{si}) = struct('faces',CS.faces,'vertices',CS.vertices,'th1',facevertexcdata);
+        if opt.WMT > 1
+          setfield(S.(opt.surf{si}),'th2',nan(size(facevertexcdata)));
+          setfield(S.(opt.surf{si}),'th3',nan(size(facevertexcdata)));
+        end
         
         %% intensity based evaluation
         CS = gifti(Pcentral);
@@ -715,15 +716,14 @@ cstime = clock;
           txt = evalc('cat_surf_fun(''saveico'',CS,facevertexcdata1,Pcentral,'''',Ymfs,Smat.matlabIBB_mm)');
         end
         
-% ##########          
-% CG20200916 this should not be called for preview surfaces          
-% RD20210115 this is required to have the inner and outer surfaces on the report 
-% ##########  
-        if cat_get_defaults('extopts.expertgui')
-          cat_surf_fun('saveico',CS,facevertexcdata1,Pcentral,'fast',Ymfs,Smat.matlabIBB_mm);
-        end
         res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',CS,facevertexcdata1,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
   
+        % create white and central surfaces
+        if cat_get_defaults('extopts.expertgui')
+          cat_surf_fun('white',Pcentral);
+          cat_surf_fun('pial',Pcentral);
+        end
+
         %%
         clear CS
         continue
@@ -1074,25 +1074,12 @@ cstime = clock;
       res.(opt.surf{si}).createCS_resampled = cat_surf_fun('evalCS',CSr,CSr.cdata,Ymfs,Yppi,Pcentralr);
       clear CSr CS1
     end
-    if ~isfield( res.(opt.surf{si}),'createCS_final')
-      res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',CS1,cat_io_FreeSurfer('read_surf_data',Ppbt),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2,cat_get_defaults('extopts.expertgui')>1);
-    else 
-      fprintf('\n'); 
-    end
-    %clear Yppi; 
+     %clear Yppi; 
     
     % visualize a side
     % csp=patch(CS); view(3), camlight, lighting phong, axis equal off; set(csp,'facecolor','interp','edgecolor','none')
     
-    % create output structure
-    warning off MATLAB:subscripting:noSubscriptsSpecified
-    S.(opt.surf{si}) = struct('faces',CS.faces,'vertices',CS.vertices,'th1',facevertexcdata);
-    if opt.WMT > 1
-      S.(opt.surf{si}) = setfield(S.(opt.surf{si}),'th2',facevertexcdata2);
-      S.(opt.surf{si}) = setfield(S.(opt.surf{si}),'th3',facevertexcdata3);
-    end
-    clear Yth1i
-
+    
     % estimate Freesurfer thickness measure Tfs using mean(Tnear1,Tnear2)
     if opt.thick_measure == 1
       % not ready yet
@@ -1113,7 +1100,21 @@ cstime = clock;
       copyfile(Ppbt,Pthick,'f');
     end
     
-    
+    if ~isfield( res.(opt.surf{si}),'createCS_final')
+      res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',CS1,cat_io_FreeSurfer('read_surf_data',Ppbt),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2,cat_get_defaults('extopts.expertgui')>1);
+    else 
+      fprintf('\n'); 
+    end
+      
+    % create output structure
+    warning off MATLAB:subscripting:noSubscriptsSpecified
+    S.(opt.surf{si}) = struct('faces',CS.faces,'vertices',CS.vertices,'th1',facevertexcdata);
+    if opt.WMT > 1
+      S.(opt.surf{si}) = setfield(S.(opt.surf{si}),'th2',facevertexcdata2);
+      S.(opt.surf{si}) = setfield(S.(opt.surf{si}),'th3',facevertexcdata3);
+    end
+    clear Yth1i
+   
     %% average final values
     FNres = fieldnames( res.(opt.surf{si}).createCS_final );
     for fnr = 1:numel(FNres)

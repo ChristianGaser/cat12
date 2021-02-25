@@ -1,4 +1,4 @@
-function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,tpm,job,res,stime,stime2)
+function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,tpm,job,res,stime,stime2)
 % ______________________________________________________________________
 %  Update SPM preprocessing. 
 %  Subfunction of cat_main.

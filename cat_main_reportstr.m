@@ -69,8 +69,10 @@ function str = cat_main_reportstr(job,res,qa)
   end  
   % write experimental flag
   if str{1}(end).value(end)==')'
-    if job.extopts.experimental, str{1}(end).value = [str{1}(end).value(1:end-1) '\bf\color[rgb]{0 0.2 1}x\color[rgb]{0 0 0})']; end  
+    if job.extopts.new_release,  str{1}(end).value = [str{1}(end).value(1:end-1) '\bf\color[rgb]{0 0.2 1}n\color[rgb]{0 0 0}\sf)']; end  
+    if job.extopts.experimental, str{1}(end).value = [str{1}(end).value(1:end-1) '\bf\color[rgb]{0 0.2 1}x\color[rgb]{0 0 0}\sf)']; end  
   else
+    if job.extopts.new_release,  str{1}(end).value = [str{1}(end).value(1:end-1) '\bf\color[rgb]{0 0.2 1}n\color[rgb]{0 0 0}']; end  
     if job.extopts.experimental, str{1}(end).value = [str{1}(end).value '\bf\color[rgb]{0 0.2 1}x']; end  
   end
   if job.extopts.ignoreErrors > 2, str{1}(end).value = [str{1}(end).value '    \bf\color[rgb]{0.8 0 0}Ignore Errors!']; end  
@@ -392,9 +394,11 @@ function str = cat_main_reportstr(job,res,qa)
   %if cellfun('isempty',strfind({Psurf(:).Pcentral},'ch.')), thstr = 'Cerebral Thickness'; else thstr = 'Thickness'; end
   if isfield(qa.subjectmeasures,'dist_thickness') && ~isempty(qa.subjectmeasures.dist_thickness)
     if job.extopts.expertgui > 1 && isfield(qa.subjectmeasures,'dist_thickness_kmeans')
+      [tmp,kmax] = max( qa.subjectmeasures.dist_thickness_kmeans_inner3(:,3) ); clear tmp; %#ok<ASGLU>
       str{3} = [str{3} struct('name', '\bfThickness \rm(kmeans):','value',sprintf('%4.2f%s%4.2f mm (%4.2f%s%4.2f mm)', ...
        qa.subjectmeasures.dist_thickness{1}(1),native2unicode(177, 'latin1'),qa.subjectmeasures.dist_thickness{1}(2), ...
-       qa.subjectmeasures.dist_thickness_kmeans_inner3(2,1),native2unicode(177, 'latin1'),qa.subjectmeasures.dist_thickness_kmeans_inner3(2,2)))];
+       qa.subjectmeasures.dist_thickness_kmeans_inner3(kmax,1),native2unicode(177, 'latin1'),...
+       qa.subjectmeasures.dist_thickness_kmeans_inner3(kmax,2)))];
     else
       str{3} = [str{3} struct('name', '\bfThickness:','value',sprintf('%4.2f%s%4.2f mm', ...
        qa.subjectmeasures.dist_thickness{1}(1),native2unicode(177, 'latin1'),qa.subjectmeasures.dist_thickness{1}(2)))];
