@@ -16,7 +16,7 @@ function cat_vol_slice_overlay_ui
 % Christian Gaser
 % $Id$
 
-OV.reference_image = fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_T1_IXI555_MNI152_GS.nii');
+OV.reference_image = cat_get_defaults('extopts.shootingT1');
 OV.reference_range = [0.2 1.0];                        % intensity range for reference image
 OV.opacity = Inf;                                      % transparence value for overlay (<1)
 OV.cmap    = jet;                                      % colormap for overlay

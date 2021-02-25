@@ -11,7 +11,7 @@ atlas_dir = fullfile(spm_dir,'atlas');
 [ST, RS] = mkdir(atlas_dir);
 
 if ST
-  [csv_files, n] = cat_vol_findfiles(fullfile(spm_dir,'toolbox','cat12','templates_volumes'), '*.csv');
+  [csv_files, n] = cat_vol_findfiles(cat_get_defaults('extopts.pth_templates'), '*.csv');
   for i = 1:n
     csv_file = deblank(csv_files{i});
     csv = cat_io_csv(csv_file,'','',struct('delimiter',';'));

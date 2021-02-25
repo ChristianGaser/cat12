@@ -42,7 +42,7 @@ end
 
 % check that folder exist and number of vertices fits
 job.surftype = 2; 
-surftype = {'freesurfer','Template_T1_IXI555_MNI152_GS'};
+surftype = {'freesurfer',cat_get_defaults('extopts.shootingsurf')};
 if exist(fsavgDir,'dir') == 7 && (SPM.xY.VY(1).dim(1) == 163842 || SPM.xY.VY(1).dim(1) == 327684 || ...
     SPM.xY.VY(1).dim(1) == 655368) || SPM.xY.VY(1).dim(1) == 32492 || SPM.xY.VY(1).dim(1) == 64984
   

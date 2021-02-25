@@ -89,12 +89,12 @@ ownatlas.help         = {
     'the abbreviation of the ROI "ROIabbr" (using leading l/r/b to indicate the hemisphere) ' ...
     'and the full name of the ROI "ROIname".  ' ...
     'The GM, WM, and CSF values will be extracted for all regions. '], ...
-    fullfile( spm('dir'), 'toolbox', 'cat12', 'templates_volumes') ); 
+    cat_get_defaults('extopts.pth_templates') ); 
   ''};
 ownatlas.filter       = 'image';
 ownatlas.ufilter      = '.*';
 ownatlas.val{1}       = {''};
-ownatlas.dir          = fullfile(spm('dir'),'toolbox','cat12','template_volumes');
+ownatlas.dir          = cat_get_defaults('extopts.pth_templates');
 ownatlas.num          = [0 Inf];
 
 atlases          = cfg_branch;
@@ -117,7 +117,7 @@ end
 ROI.values = {noROI atlases};
 ROI.help   = {
 'Export of ROI data of volume to a xml-files. '
-'For further information see atlas specific text files in "templates_volumes" CAT12 subdir. '
+['For further information see atlas specific text files in "' cat_get_defaults('extopts.pth_templates') '" CAT12 subdir. ']
 ''
 'For thickness estimation the projection-based thickness (PBT) [Dahnke:2012] is used that average cortical thickness for each GM voxel. '
 ''
@@ -296,7 +296,7 @@ end
 sROI.values = {nosROI satlases};
 sROI.help   = {
 'Export of ROI data of volume to a xml-files. '
-'For further information see atlas specific text files in "templates_volumes" CAT12 subdir. '
+['For further information see atlas specific text files in "' cat_get_defaults('extopts.pth_templates') '" CAT12 subdir. ']
 ''
 'For thickness estimation the projection-based thickness (PBT) [Dahnke:2012] is used that averages cortical thickness for each GM voxel. '
 ''
