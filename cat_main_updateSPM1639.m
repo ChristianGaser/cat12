@@ -26,9 +26,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   
   d = res.image(1).dim(1:3);
 
-  % some reports
-  for i=1:size(P,4), Pt = P(:,:,:,i); res.ppe.SPMvols0(i) = cat_stat_nansum(single(Pt(:)))/255 .* prod(vx_vol) / 1000; end; clear Pt; 
-  
+ 
   stime2 = cat_io_cmd('  Update Segmentation','g5','',job.extopts.verb-1,stime2); 
   
 
@@ -55,7 +53,6 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
     P(:,:,:,4) = cat_vol_ctype(single(P(:,:,:,4)) + single(P(:,:,:,i)) .* single(~YbA)); 
     P(:,:,:,i) = cat_vol_ctype(single(P(:,:,:,i)) .* single(YbA)); 
   end
-  clear YbA;
   
   
   % Cleanup for high resolution data
@@ -63,13 +60,21 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   % reduction of image resolution removes spatial segmentation information. 
   if job.opts.redspmres==0 % already done in case of redspmres
     if max(vx_vol)<1.5 && mean(vx_vol)<1.3
-      for i=1:size(P,4), [Pc1(:,:,:,i),RR] = cat_vol_resize(P(:,:,:,i),'reduceV',vx_vol,job.extopts.uhrlim,32); end %#ok<AGROW>
-      Pc1 = cat_main_clean_gwc1639(Pc1,1);
-      for i=1:size(P,4), P(:,:,:,i)   = cat_vol_resize(Pc1(:,:,:,i),'dereduceV',RR); end 
+      % RD202102: resizing adds maybe to much blurring that can trouble other functions
+      %for i=1:size(P,4), [Pc1(:,:,:,i),RR] = cat_vol_resize(P(:,:,:,i),'reduceV',vx_vol,job.extopts.uhrlim,32); end %#ok<AGROW>
+      for i=1:size(P,4), [Pc1(:,:,:,i),BB] = cat_vol_resize(P(:,:,:,i),'reduceBrain',vx_vol,4,YbA); end %#ok<AGROW>
+      Pc1 = cat_main_clean_gwc1639(Pc1,max(1,min(2,job.extopts.cleanupstr*2)));
+      for i=1:size(P,4), P(:,:,:,i)   = cat_vol_resize(Pc1(:,:,:,i),'dereduceBrain',BB); end 
+      %for i=1:size(P,4), P(:,:,:,i)   = cat_vol_resize(Pc1(:,:,:,i),'dereduceV',RR); end 
       clear Pc1 Pc2;
     end
   end
-
+  clear YbA;
+  
+  
+  % some reports
+  for i=1:size(P,4), Pt = P(:,:,:,i); res.ppe.SPMvols0(i) = cat_stat_nansum(single(Pt(:)))/255 .* prod(vx_vol) / 1000; end; clear Pt; 
+  
   
   % garantee probability 
   sP = (sum(single(P),4)+eps)/255;
@@ -181,6 +186,19 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   end
 
   
+  % RD202101: cleanup+ remove small unconnected components
+  %{
+    Pgm = P(:,:,:,1); 
+    Ybb = cat_vol_ctype(cat_vol_morph(Yb,'de',4,vx_vol)); 
+    Ym  = Pgm>192; Ygc = cat_vol_morph(Ym | Ybb,'l',[inf,27])>0; Pgm(Ym(:)) = Pgm(Ym(:)) .* cat_vol_ctype(Ygc(Ym(:))); 
+    Ym  = Pgm>128; Ygc = cat_vol_morph(Ym | Ybb,'l',[inf,27])>0; Pgm(Ym(:)) = Pgm(Ym(:)) .* cat_vol_ctype(Ygc(Ym(:))); 
+    Ym  = Pgm> 64; Ygc = cat_vol_morph(Ym | Ybb,'l',[inf,27])>0; Pgm(Ym(:)) = Pgm(Ym(:)) .* cat_vol_ctype(Ygc(Ym(:))); 
+    Ym  = Pgm>  8; Ygc = cat_vol_morph(Ym | Ybb,'l',[inf,27])>0; Pgm(Ym(:)) = Pgm(Ym(:)) .* cat_vol_ctype(Ygc(Ym(:))); 
+    Ygc = cat_vol_morph(Pgm> 64,'l',[inf,27])>0; Pgm = Pgm .* cat_vol_ctype(Ygc | Ybb); 
+    P(:,:,:,2) = P(:,:,:,2) + ( (P(:,:,:,1) - Pgm) .* cat_vol_ctype(Ysrc>T3th(2))); % add to WM
+    P(:,:,:,3) = P(:,:,:,3) + ( (P(:,:,:,1) - Pgm) .* cat_vol_ctype(Ysrc<T3th(2))); % add to CSF
+    P(:,:,:,1) = Pgm; 
+  %} 
   
   
   
@@ -193,7 +211,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
 
   
   
-% RD202010: In some images SPM selects the image BG and brain tisssue as class 4  
+% RD202010: In some images SPM select the image BG and brain tisssue as class 4  
 %{
   volcls4 = sum(sum(sum( single(P(:,:,:,4)>64) .* (Yb>0.5) ))) .* prod(vx_vol)/1000; 
   volcls5 = sum(sum(sum( single(P(:,:,:,5)>64) .* (Yb>0.5 & (Ysrc>=mean(T3th(1:2)) & Ysrc<T3th(3) + diff(T3th(2:3))) ) ))) .* prod(vx_vol)/1000; 
@@ -280,7 +298,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
     Ywm = single(P(:,:,:,2)>128 & Yg<0.3 & Ydiv<0.03); Ywm(Ybb<128 | (P(:,:,:,1)>128 & abs(Ysrc/T3th(3)-2/3)<1/3) | Ydiv>0.03) = nan;
     [Ywm1,YD] = cat_vol_downcut(Ywm,1-Ysrc/T3th(3),0.02); Yb(isnan(Yb))=0; Ywm(YD<300)=1; Ywm(isnan(Ywm))=0; clear Ywm1 YD; %#ok<ASGLU>
     Ywmc = uint8(smooth3(Ywm)>0.7);
-    Ygmc = uint8(cat_vol_morph(Ywmc,'d',2) & ~Ywmc & Ydiv>0 & Yb & cat_vol_smooth3X(Yb,8)<0.9);
+    Ygmc = uint8(cat_vol_morph(Ywmc,'d',2) & ~Ywmc & Ydiv>0 & Yb & cat_vol_smooth3X(Yb,8)<0.9 & Ysrc>mean(T3th(1:2)));
     P(:,:,:,[1,3:6]) = P(:,:,:,[1,3:6]) .* repmat(1-Ywmc,[1,1,1,5]);
     P(:,:,:,2:6)     = P(:,:,:,2:6)     .* repmat(1-Ygmc,[1,1,1,5]);
     P(:,:,:,1)       = max(P(:,:,:,1),255*Ygmc);
@@ -376,15 +394,17 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   
   % display  some values for developers
   if job.extopts.expertgui > 1
+    cat_io_cprintf('blue',sprintf('    SPM  volumes (CGW=TIV; in mm%s):      %6.2f + %6.2f + %6.2f = %4.0f\n',...
+      native2unicode(179, 'latin1'),res.ppe.SPMvols0([3 1 2]),sum(res.ppe.SPMvols0(1:3))));    
     if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap 
-       cat_io_cprintf('blue',sprintf('    SPM  volumes (CGW = TIV in mm%s): %6.2f + %6.2f + %6.2f = %4.0f\n',...
+      cat_io_cprintf('blue',sprintf('    SPM  volumes (CGW=TIV; in mm%s):      %6.2f + %6.2f + %6.2f = %4.0f\n',...
         native2unicode(179, 'latin1'),res.ppe.SPMvols0([3 1 2]),sum(res.ppe.SPMvols0(1:3))));    
-       cat_io_cprintf('blue',sprintf('    AMAP volumes (CGW = TIV in mm%s): %6.2f + %6.2f + %6.2f = %4.0f\n',...
+      cat_io_cprintf('blue',sprintf('    AMAP volumes (CGW=TIV; in mm%s):      %6.2f + %6.2f + %6.2f = %4.0f\n',...
         native2unicode(179, 'latin1'),res.ppe.SPMvols1([3 1 2]),sum(res.ppe.SPMvols1(1:3))));    
     else
-      cat_io_cprintf('blue',sprintf('    SPM volumes pre  (CGW = TIV in mm%s):  %6.2f + %6.2f + %6.2f = %4.0f\n',...
+      cat_io_cprintf('blue',sprintf('    SPM volumes pre  (CGW=TIV; in mm%s):  %6.2f + %6.2f + %6.2f = %4.0f\n',...
         native2unicode(179, 'latin1'),res.ppe.SPMvols0([3 1 2]),sum(res.ppe.SPMvols0(1:3)))); 
-      cat_io_cprintf('blue',sprintf('    SPM volumes post (CGW = TIV in mm%s):  %6.2f + %6.2f + %6.2f = %4.0f\n',...
+      cat_io_cprintf('blue',sprintf('    SPM volumes post (CGW=TIV; in mm%s):  %6.2f + %6.2f + %6.2f = %4.0f\n',...
         native2unicode(179, 'latin1'),res.ppe.SPMvols1([3 1 2]),sum(res.ppe.SPMvols1(1:3)))); 
     end
   end

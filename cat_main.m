@@ -15,7 +15,7 @@ function Ycls = cat_main(res,tpm,job)
 %#ok<*ASGLU>
 
 
-update_intnorm = job.extopts.new_release;  % RD202101: temporary parameter to control the additional intensity normalization 
+update_intnorm = job.extopts.new_release;  % RD202101: temporar parameter to control the additional intensity normalization 
 
 
 % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
@@ -73,7 +73,7 @@ if ~isfield(res,'spmpp')
   %  RD202006: add ignoreErrors backup
   %  RD202101: small difference to 1639
   %  -------------------------------------------------------------------
-  [Ysrc,Ycls,Yb,Yb0,Yy,job,res,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,tpm,job,res,stime,stime2);
+  [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,tpm,job,res,stime,stime2);
   %[Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,Yy,tpm,job,res,stime,stime2);
     clear P; 
   
@@ -175,7 +175,7 @@ if ~isfield(res,'spmpp')
   
 
   %% prepared for improved partitioning - RD20170320, RD20180416
-  %%{
+  %{
   %  Update the initial SPM normalization by a fast version of Shooting 
   %  to improve the skull-stripping, the partitioning and LAS.
   %  We need stong deformations in the ventricle for the partitioning 
@@ -242,6 +242,15 @@ if ~isfield(res,'spmpp')
   %            > added final intensity correction based on the AMAP
 %  Ymo = Ym;
   if job.extopts.LASstr>0 && job.extopts.ignoreErrors < 3 && ~job.extopts.inv_weighting
+    % ################
+    % RD202102:   extension of LAS
+    if job.extopts.new_release
+      stime = cat_io_cmd(sprintf('Local adaptive segmentation (addon)',job.extopts.LASstr));
+      [Ym,Ysrc,Ycls,Ycm] = cat_main_correctmyelination(Ym,Ysrc,Ycls,Yb,vx_vol,T3th,job.extopts.LASstr);
+      fprintf('%5.0fs\n',etime(clock,stime));
+    end
+    % ################
+    
     if job.extopts.LASstr>1 
       extoptsLAS2 = job.extopts;
       extoptsLAS2.LASstr = extoptsLAS2.LASstr-1; 
@@ -253,7 +262,19 @@ if ~isfield(res,'spmpp')
 [Ymi,Ymt,Ycls] = cat_main_LAS21639(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth);
       clear Ymt; % use original global scaled ... 
     end
-    %
+    % ###########
+    % RD202102:   update Ymi since the LAS correction is currently not local engough
+    if job.extopts.new_release
+      Yp0  = single(Ycls{3})/255/3 + single(Ycls{1})/255*2/3 + single(Ycls{2})/255;
+      Ysdg = cat_vol_localstat(Ymi,Yb,round(3/mean(vx_vol)),4);  
+      Ysdw = cat_vol_localstat(Ymi,Yp0>2.8/3,round(3/mean(vx_vol)),4);
+      Ymi  = Ymi - ((max(0,Ysdg - 4*job.extopts.LASstr * mean(Ysdw(Yp0>2.5/3)))) .* Ycm .* ((Ymi - (max(0,Ysdg - 2*mean(Ysdw(Yp0>2.5/3)))))>2.1/3));
+      clear Yp0; 
+    end
+    % ###########
+    % fprintf('%5.0fs\n',etime(clock,stime));
+
+    
     % ### indlcude this in cat_main_LAS? ###
     %
     if job.extopts.NCstr~=0 
@@ -277,11 +298,14 @@ if ~isfield(res,'spmpp')
       Ymis = cat_vol_median3(Ymi,Ymi>0 & Ymi<0.4,Ymi<0.4); Ymi = Ymi.*max(0.1,Ymi>0.4) + Ymis.*min(0.9,Ymi<=0.4);
       Ymis = cat_vol_median3(Ym,Ym>0 & Ym<0.4,Ym<0.4); Ym = Ym.*max(0.1,Ym>0.4) + Ymis.*min(0.9,Ym<=0.4);
       
-      cat_io_cmd(' ','','',job.extopts.verb,stimen); 
+      %cat_io_cmd(' ','','',job.extopts.verb,stimen); 
       clear Ymis stimen;
+    else
+      stimen = stime; 
     end    
     
-    fprintf('%5.0fs\n',etime(clock,stime));
+    cat_io_cmd(' ','','',job.extopts.verb,stimen); clear stimenc
+    fprintf('%5.0fs\n',etime(clock,stime)); 
   else
     % just a node because it is the result of the inverse contrast warning
     cat_io_addwarning('cat_main:skipLAS','Skip LAS due to image contrast. Use global normalization.',0,[0 1]);
@@ -321,7 +345,7 @@ if ~isfield(res,'spmpp')
       [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
       fprintf('%5.0fs\n',etime(clock,stime));
       if isfield(res,'Ylesion') && sum(res.Ylesion(:)==0) && job.extopts.SLC==1
-        cat_io_addwarning('cat_main_SLC_noExpDef','SLC is set for manual lesions correction but no lesions were found!',1,[1 1]); 
+        cat_io_addwarning('cat_main_SLC_noExpDef','SLC is set for manual lesions corection but no lesions were found!',1,[1 1]); 
       end
     end
   else
@@ -591,8 +615,7 @@ else
 %  ------------------------------------------------------------------------
   [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,job.extopts.inv_weighting] = ...
     cat_main_SPMpp(Ysrc,Ycls,Yy,job,res);
-  job.inv_weighting = job.extopts.inv_weighting;
-  job.useprior = '';
+  
   fprintf('%5.0fs',etime(clock,stime)); 
 end
 
@@ -802,7 +825,7 @@ if job.output.ROI
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
   cat_main_roi(job,trans,Ycls,Yp0); 
 end
-if ~debug, clear wYp0 wYcls wYv trans Yp0; end
+if ~debug, clear wYp0 wYcls wYv Yp0; end
 
 
 
@@ -928,11 +951,8 @@ end
 cat_main_reportcmd(job,res,qa);
 %%
 %% cleanup fast
-try
-  delete_surf_preview(Psurf,job);
-end
+delete_surf_preview(Psurf,job);
 return
-
 function delete_surf_preview(Psurf,job)
   % cleanup preview surfaces and directory (but only for non-experts)
   if any( job.output.surface == [ 5 6 ] ) && job.extopts.expertgui<1
@@ -1070,7 +1090,7 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
   end
   
   % Update templates for LAS
-  if res.do_dartel<2
+  if res.do_dartel<2 && job.extopts.regstr(1) == 0
     job.extopts.templates = job.extopts.darteltpms; 
   else
     job.extopts.templates = job.extopts.shootingtpms; 
@@ -1106,12 +1126,6 @@ function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,inv_weighting] = cat_main_SPM
   
   NS = @(Ys,s) Ys==s | Ys==s+1;  % for side independent atlas labels
   
-% QA WMH values required by cat_vol_qa later
-  qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE
-  qa.subjectmeasures.WMH_rel    = nan;  % relative WMH volume to TIV without PVE
-  qa.subjectmeasures.WMH_WM_rel = nan;  % relative WMH volume to WM without PVE
-  qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE in cm^3
-
   % load SPM segments
   %[pp,ff,ee] = spm_fileparts(res.image0(1).fname);
   %Ycls{1} = uint8(spm_read_vols(spm_vol(fullfile(pp,['c1' ff ee])))*255); 

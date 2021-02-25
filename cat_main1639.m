@@ -15,7 +15,7 @@ function Ycls = cat_main1639(res,tpm,job)
 %#ok<*ASGLU>
 
 
-update_intnorm = job.extopts.new_release;  % RD202101: temporary parameter to control the additional intensity normalization 
+update_intnorm = 0; %job.extopts.new_release;  % RD202101: temporar parameter to control the additional intensity normalization 
  
 
 % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
@@ -72,7 +72,7 @@ if ~isfield(res,'spmpp')
   %  starting point of the refined CAT preprocessing.
   %  -------------------------------------------------------------------
   [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,Yy,tpm,job,res,stime,stime2);
-  
+  Yp0spm = (single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255);
   
   
   %% Check the previous preprocessing in debug mode ###
@@ -86,7 +86,7 @@ if ~isfield(res,'spmpp')
   %  -------------------------------------------------------------------
   if debug;;
     Ym   = Ysrc / T3th(3); %#ok<NASGU> % only WM scaling
-    Yp0  = (single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255)/3; %#ok<NASGU> % label map
+    Yp0  = (single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255)/3; % label map
   end
   
   
@@ -202,7 +202,7 @@ if ~isfield(res,'spmpp')
   %  
   %  #### move fast shooting to the cat_main_updateSPM function ####
   % 
-  if job.extopts.WMHC || job.extopts.SLC
+  if 1 % job.extopts.WMHC || job.extopts.SLC
     stime = cat_io_cmd(sprintf('Fast registration'),'','',job.extopts.verb); 
 
     res2 = res; 
@@ -246,26 +246,58 @@ if ~isfield(res,'spmpp')
 
 
   %% Local Intensity Correction 
-  Ymo = Ym;
+  Ymo  = Ym;
   if job.extopts.LASstr>0
     if job.extopts.LASstr>1 
       extoptsLAS2 = job.extopts;
       extoptsLAS2.LASstr = extoptsLAS2.LASstr-1; 
       stime = cat_io_cmd(sprintf('Local adaptive segmentation 2 (LASstr=%0.2f)',extoptsLAS2.LASstr));
-      [Ymi,Ym,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extoptsLAS2); % use Yclsi after cat_vol_partvol
     else
       stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
+    end
+    
+    % ################
+    % RD202102:   extension of LAS
+    if job.extopts.new_release
+      stime   = cat_io_cmd('\n  LAS myelination correction','g5','',job.extopts.verb); fprintf('\n');
+      vx_volo = sqrt(sum(res.image0(1).mat(1:3,1:3).^2));
+      [Ym,Ysrc,Ycls,Ycm,glcor,tmp] = cat_main_correctmyelination(Ym,Ysrc,Ycls,Yb,vx_vol,vx_volo,T3th,job.extopts.LASstr,Yy,job.extopts.cat12atlas);
+      %try 
+        %res.ppe.LASMC = tmp; 
+      %end
+      cat_io_cmd(' ',' ','',job.extopts.verb);  fprintf('%5.0fs',etime(clock,stime));
+    end
+    % ################
+    
+    if job.extopts.LASstr>1 
+      [Ymi,Ym,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,vx_volextoptsLAS2); % use Yclsi after cat_vol_partvol
+    else
       [Ymi,Ym,Ycls] = cat_main_LAS21639(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
     end
-    fprintf('%5.0fs\n',etime(clock,stime));
+    
+    % ###########
+    % RD202102:   update Ymi since the LAS correction is currently not local engough
+    if job.extopts.new_release
+      %Yp0  = single(Ycls{3})/255/3 + single(Ycls{1})/255*2/3 + single(Ycls{2})/255;
+      %Ysdg = cat_vol_localstat(Ymi,Yb,round(3/mean(vx_vol)),4);  
+      %Ysdw = cat_vol_localstat(Ymi,Yp0>2.8/3,round(3/mean(vx_vol)),4);
+      %Ycor  = max(0,min(1,Ysdg - (2.5-job.extopts.LASstr) * mean(Ysdw(Yp0>2.5/3))) .* Ycm .* max(0,min(3,glcor))); 
+      Ycor  = Ycm; 
+      Ycor  = Ycor + min(0,max(0,Ymi - 2/3) - Ycor);                       % correct overcorrections
+      Ycor  = Ycor * (0.3 + 0.5 * job.extopts.LASstr);                     % correct only 90% to keep some real noise; use this function for fine tuning of the LASstr
+      Ymi   = max( min( Ymi , 2/3 ) , Ymi - Ycor );
+      clear Yp0; 
+    end
+    % ###########
+    % fprintf('%5.0fs\n',etime(clock,stime));
 
-    %
+    
     % ### indlcude this in cat_main_LAS? ###
     %
     if job.extopts.NCstr~=0 
       % noise correction of the local normalized image Ymi, whereas only small changes are expected in Ym by the WM bias correction
-      stime = cat_io_cmd(sprintf('  SANLM denoising after LAS (%s)',...
-        NCstr.labels{find(cell2mat(NCstr.values)==job.extopts.NCstr,1,'first')}),'g5');
+      stimen = cat_io_cmd(sprintf('  SANLM denoising after LAS (%s)',...
+        NCstr.labels{find(cell2mat(NCstr.values)==job.extopts.NCstr,1,'first')}),'g5',1,stime);
       
       [Ymis,Ymior,BB]  = cat_vol_resize({Ymi,Ymo},'reduceBrain',vx_vol,round(2/mean(vx_vol)),Yb);
       Ymis = cat_vol_sanlm(struct('data',res.image0.fname,'verb',0,'NCstr',job.extopts.NCstr),res.image,1,Ymis);
@@ -284,9 +316,11 @@ if ~isfield(res,'spmpp')
       Ymis = cat_vol_median3(Ym,Ym>0 & Ym<0.4,Ym<0.4); Ym = Ym.*max(0.1,Ym>0.4) + Ymis.*min(0.9,Ym<=0.4);
       
       clear Ymis;
+    else
+      stimen = stime; 
     end    
     
-    cat_io_cmd(' ','','',job.extopts.verb,stime); 
+    cat_io_cmd(' ','','',job.extopts.verb,stimen); clear stimenc
     fprintf('%5.0fs\n',etime(clock,stime));
   else
     Ymi = Ym; 
@@ -328,7 +362,7 @@ if ~isfield(res,'spmpp')
       [Yl1,Ycls,YMF] = cat_vol_partvol1639(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
       fprintf('%5.0fs\n',etime(clock,stime));
       if isfield(res,'Ylesion') && sum(res.Ylesion(:)==0) && job.extopts.SLC==1
-        cat_io_addwarning([mfilename ':SLC_noExpDef'],'SLC is set for manual lesion correction but no lesions were found!',1,[1 1]); 
+        cat_io_addwarning([mfilename ':SLC_noExpDef'],'SLC is set for manual lesion corection but no lesions were found!',1,[1 1]); 
       end
     end
   else
@@ -435,8 +469,13 @@ if ~isfield(res,'spmpp')
   %     Yp0o  = zeros(d,'single'); Yp0o(indx,indy,indz) = Yp0ox; 
   %     Yp0   = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
   %  -------------------------------------------------------------------
+  if job.extopts.expertgui>1 && job.extopts.verb
+    for i=1:size(prob,4), pr = prob(:,:,:,i); ppe.AMAPvols(i) = cat_stat_nansum(single(pr(:)))/255 .* prod(vx_vol) / 1000; end; clear pr
+    cat_io_cprintf('blue',sprintf('    AMAP volumes (CGW=TIV; in mm%s):      %6.2f + %6.2f + %6.2f = %4.0f\n',...
+      native2unicode(179, 'latin1'),ppe.AMAPvols([3 1 2]),sum(ppe.AMAPvols(1:3))));    
+  end
   if job.extopts.cleanupstr>0
-     
+    % display voluminas
     if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap
       prob = cat_main_clean_gwc1639(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol)),1); % new cleanup
     elseif job.extopts.cleanupstr < 2 % use cleanupstr==2 to use only the old cleanup
@@ -450,6 +489,11 @@ if ~isfield(res,'spmpp')
     else
       for i=1:3, Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i); end
       Yp0b = Yb(indx,indy,indz); 
+    end
+    if job.extopts.expertgui>1 && job.extopts.verb
+      for i=1:numel(Ycls), ppe.Finalvols(i) = cat_stat_nansum(single(Ycls{i}(:)))/255 .* prod(vx_vol) / 1000; end; 
+      cat_io_cprintf('blue',sprintf('    Final volumes (CGW=TIV; in mm%s):     %6.2f + %6.2f + %6.2f = %4.0f\n',...
+        native2unicode(179, 'latin1'),ppe.Finalvols([3 1 2]),sum(ppe.Finalvols(1:3))));   
     end
   else
     for i=1:3, Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i); end
@@ -581,8 +625,7 @@ else
 %  ------------------------------------------------------------------------
   [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,job.extopts.inv_weighting] = ...
     cat_main_SPMpp(Ysrc,Ycls,Yy,job,res);
-  job.inv_weighting = job.extopts.inv_weighting;
-  job.useprior = '';
+  
   fprintf('%5.0fs',etime(clock,stime)); 
 end
 
@@ -653,7 +696,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
   
   % prepare some parameter
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*5/255; 
-  [Ymix,job,surf,WMT] = cat_main_surf_preppara(Ymi,Yp0,job,vx_vol);
+  [Ymix,job,surf,WMT] = cat_main_surf_preppara(Ymi,Yp0,Yp0spm,job,vx_vol);
   
   if job.extopts.pbtres==99 
   % development block with manual settings
@@ -769,7 +812,7 @@ if job.output.ROI
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
   cat_main_roi(job,trans,Ycls,Yp0); 
 end
-if ~debug, clear wYp0 wYcls wYv trans Yp0; end
+if ~debug, clear wYp0 wYcls wYv Yp0; end
 
 
 
@@ -839,7 +882,7 @@ if job.output.surface
       qa.subjectmeasures.dist_sulcuswidth{1} = [cat_stat_nanmean(th2(:)) cat_stat_nanstd(th2(:))];
     end
   elseif exist('Yth1','var')
-    qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(Yth1(Yth1(:)>1)) cat_stat_nanstd(Yth1(Yth1(:)>1))];
+    qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(Yth1(Yth1(:)>mean(vx_vol)/2)) cat_stat_nanstd(Yth1(Yth1(:)>mean(vx_vol)/2))];
     th = Yth1(Yth1(:)>1); 
     % gyrus- and sulcus-width? 
   end
@@ -893,11 +936,8 @@ end
 cat_main_reportcmd(job,res,qa);
 
 %% cleanup preview surfaces
-try
-  delete_surf_preview(Psurf,job);
-end
+delete_surf_preview(Psurf,job);
 return
-
 function delete_surf_preview(Psurf,job)
   % cleanup preview surfaces and directory (but only for non-experts)
   if any( job.output.surface == [ 5 6 ] ) && job.extopts.expertgui<1
@@ -1035,7 +1075,7 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
   end
   
   % Update templates for LAS
-  if res.do_dartel<2
+  if res.do_dartel<2 && job.extopts.regstr(1) == 0
     job.extopts.templates = job.extopts.darteltpms; 
   else
     job.extopts.templates = job.extopts.shootingtpms; 
@@ -1058,8 +1098,7 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
   d = VT.dim(1:3);
 
 return
-
-function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,inv_weighting] = cat_main_SPMpp(Ysrc,Ycls,Yy,job,res)
+function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa] = cat_main_SPMpp(Ysrc,Ycls,Yy,job,res)
 %% SPM segmentation input  
 %  ------------------------------------------------------------------------
 %  Here, DARTEL and PBT processing is prepared. 
@@ -1072,12 +1111,6 @@ function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,inv_weighting] = cat_main_SPM
   
   NS                  = @(Ys,s) Ys==s | Ys==s+1;                % for side independent atlas labels
     
-  % QA WMH values required by cat_vol_qa later
-  qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE
-  qa.subjectmeasures.WMH_rel    = nan;  % relative WMH volume to TIV without PVE
-  qa.subjectmeasures.WMH_WM_rel = nan;  % relative WMH volume to WM without PVE
-  qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE in cm^3
-
   % load SPM segments
   %[pp,ff,ee] = spm_fileparts(res.image0(1).fname);
   %Ycls{1} = uint8(spm_read_vols(spm_vol(fullfile(pp,['c1' ff ee])))*255); 
@@ -1118,7 +1151,7 @@ function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,inv_weighting] = cat_main_SPM
   Yl1 = reshape(Yl1,size(Ym)); [D,I] = cat_vbdist(single(Yl1>0)); Yl1 = Yl1(I);   
   YMF = NS(Yl1,job.extopts.LAB.VT) | NS(Yl1,job.extopts.LAB.BG) | NS(Yl1,job.extopts.LAB.BG);  
 return
-function [Ymix,job,surf,WMT,stime] = cat_main_surf_preppara(Ymi,Yp0,job,vx_vol)
+function [Ymix,job,surf,WMT,stime] = cat_main_surf_preppara(Ymi,Yp0,Yp0spm,job,vx_vol)
 %  ------------------------------------------------------------------------
 %  Prepare some variables for the surface processing.
 %  ------------------------------------------------------------------------
@@ -1172,6 +1205,12 @@ function [Ymix,job,surf,WMT,stime] = cat_main_surf_preppara(Ymi,Yp0,job,vx_vol)
   if 1
     Ymix = Ymi .* (Yp0>0.5); % | (cat_vol_morph(Yp0>0.5,'d') & Ymi<2/3)); %% using the Ymi map
   else
-    Ymix = Yp0/3; %#ok<UNRCH> % use only the segmentation map (only for tests!)
+    %mix  = [1/3 1/3 1/3]; % net so 
+    mix  = [1/2 1/2 0]; 
+    %mix  = [1/4 3/4 0];  
+    Ymix = mix(1) * (Ymi .* (Yp0>0.5)) + ...
+           mix(2) * (Yp0spm/3 .* (Yp0>0.5)) + ...
+           mix(3) * Yp0/3; 
+         % use only the segmentation map (only for tests!)
   end
 return

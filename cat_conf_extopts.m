@@ -120,7 +120,7 @@ if expert > 1 % developer
   bb.num      = [inf inf];
   bb.tag      = 'bb';
   bb.name     = 'Bounding box';
-  bb.val      = 0; 
+  bb.val      = {0}; 
   bb.help     = {
     'The bounding box describes the dimenson of the volume to be written starting from the anterior commissure in mm.  It should include the entire brain (or head in the case of the Boundary Box of the SPM TPM) and additional space for smoothing the image.  The MNI 9-mm boundary box is optimized for CATs MNI152NLin2009cAsym template and supports filter cores up to 10 mm.  Although this box support 12 mm filter sizes theoretically, slight interference could occur at the edges and larger boxes are recommended for safety. '
     'Additionally, it is possible to use the boundary box of the TPM or the template for special (animal) templates with strongly different boundary boxes. '

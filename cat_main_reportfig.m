@@ -611,7 +611,29 @@ if 1
   if ~debug, clear Yp0; end
   
   
- 
+  %{
+  if job.extopts.expertgui>1
+    %%
+    ppe_seg{2} = {'CSF', 'GM', 'WM', 'TIV'; 
+      sprintf('%0.0f',res.ppe.SPMvols0(1)),  sprintf('%0.0f',res.ppe.SPMvols0(2)),  sprintf('%0.0f',res.ppe.SPMvols0(3)),  sprintf('%0.0f',sum(res.ppe.SPMvols0(1:3)),'%0.0f'); 
+      sprintf('%0.0f',res.ppe.SPMvols1(1)),  sprintf('%0.0f',res.ppe.SPMvols1(2)),  sprintf('%0.0f',res.ppe.SPMvols1(3)),  sprintf('%0.0f',sum(res.ppe.SPMvols1(1:3)),'%0.0f'); 
+      '','','','';
+      'DT','DT''','ll2','ll1';
+      res.ppe.reg.dt, res.ppe.reg.rmsgdt, res.ppe.reg.ll(end,2), res.ppe.reg.ll(end,1); 
+    };
+    for idi = 2 
+      ppeax{idi} = axes('Position',[st.vols{p0id}.ax{3}.ax.Position(1)+0.03 st.vols{p0id}.ax{1}.ax.Position(2) 0.2 0.1],'Parent',fg); axis off; 
+      for i = 1:size(ppe_seg{idi},1)
+        for j = 1:size(ppe_seg{idi}{i},2)
+         % lg{idi+1} = text( j*0.25, 1 - i*0.1 , ppe_seg{idi}{i,j}, 'Parent', ppeax{idi}); %, ...
+         %   'FontName', fontname, 'Fontsize', fontsize-2, 'Color', fontcolor);
+        end
+      end
+    end
+    %,0,stxt,'Parent',ppepos{idi},'FontName',fontname,'Fontsize',fontsize-2,'color',fontcolor,'Interpreter','none','Parent',ax);
+  end
+  %}
+  
   
   %  ----------------------------------------------------------------------
   %  TPM overlay with brain/head and head/background surfaces
@@ -834,7 +856,7 @@ end
           hCS{4} = subplot('Position',[0.02 0.01 0.30 0.17],'Parent',fg,'visible','off'); PCS{4} = Psurf(id1).Pthick; sview{4} = 'r';
           hCS{5} = subplot('Position',[0.68 0.01 0.30 0.17],'Parent',fg,'visible','off'); PCS{5} = Psurf(id2).Pthick; sview{5} = 'l';
           renderer = get(fg,'Renderer');
-
+ 
           % only add contours if OpenGL is found (to prevent crashing on clusters)
           i=1; hSD{i} = cat_surf_display(struct('data',PCS{i},'readsurf',0,'expert',2,...
             'multisurf',1,'view',sview{i},'menu',0,'parent',hCS{i},'verb',0,'caxis',[0 6],'imgprint',struct('do',0))); 
@@ -847,6 +869,7 @@ end
             fprintf('Surface display suppressed due to OpenGL issues.\n');
 % print message box
           end
+          %  try,     for i=1:numel(hCS), cat_surf_render2('clim',hCS{i}.axis,[0 6]); end ; end
           
           % rigid reorientation + isotropic scaling
           imat = spm_imatrix(res.Affine); Rigid = spm_matrix([imat(1:6) ones(1,3)*mean(imat(7:9)) 0 0 0]); clear imat;
@@ -857,30 +880,67 @@ end
             end
           end
           for i = 1:numel(hSD), colormap(fg,cmap);  set(hSD{i}{1}.colourbar,'visible','off'); end
-          
+
+          % To do: filter thickness values on the surface ...
+try
           % colormap
+          side  = hSD{1}{1}.cdata; 
           if any( job.output.surface == [5 6] ); fst = ' \color[rgb]{1 0 0}preview!'; else, fst = ''; end
-          cc{4} = axes('Position',[0.36 0.018 0.28 0.007],'Parent',fg); image((121:1:120+surfcolors),'Parent',cc{4});
-          set(cc{4},'XTick',1:(surfcolors-1)/6:surfcolors,'xcolor',fontcolor,'ycolor',fontcolor,'XTickLabel',...
-            {'0','1','2','3','4','5',[repmat(' ',1,10*(1-isempty(fst))) '6 mm' fst]},...
-            'YTickLabel','','YTick',[],'TickLength',[0.01 0],'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal');
-           
+          
           % histogram 
           cc{5} = axes('Position',[0.36 0.0245 0.28 0.030],'Parent',fg,'visible','off', 'tag','cat_surf_results_hist', ...
             'xcolor',fontcolor,'ycolor',fontcolor); 
-          side  = hSD{1}{1}.cdata; 
-          [d,h] = hist( side(~isinf(side(:)) & ~isnan(side(:)) &  side(:)<6 & side(:)>0) , 0.1:boxwidth:6);
-          d = d./numel(side);
-          d = d./max(d);
+          % boxes
+          [d,h] = hist( side(~isinf(side(:)) & ~isnan(side(:)) &  side(:)<6 & side(:)>0) , boxwidth/2:boxwidth:6-boxwidth/2); %h = h + boxwidth/2; 
+          dmax  = max(d) * 1.2; % 15% extra for the line plot (use thickness phantom to set this value)
+          d = d / dmax;
+          % histogram line
+          [dl,hl] = hist( side(~isinf(side(:)) & ~isnan(side(:)) &  side(:)<6 & side(:)>0) , 0.02:0.02:6); hl = hl + 0.02/2; 
+          dl = smooth(dl,2); 
+          dl = dl / (dmax/10); % 10 times smaller boxes
+          % boxplot values
+          q0 = median(side); q1 = median(side(side<q0)); q2 = median(side(side>q0)); 
+          
           
           % print histogram
           hold(cc{5},'on');  
           jetsc = jet(numel(h)); 
           for bi = 1:numel(d);
+            outlier0 = h(bi) < q0 - 3*(q0-q1)  &  d(bi)>0.01  &  d(bi)>0.9*d(min(numel(d),bi+1)); 
+            outlier1 = h(bi) > q0 + 3*(q2-q0)  &  d(bi)>0.01  &  d(bi)>0.9*d(max(1,bi-1));
             b(bi) = bar(cc{5},h(bi),d(bi),boxwidth); 
-            set(b(bi),'Facecolor',jetsc(bi,:),'Edgecolor',fontcolor); 
+            if outlier0 || outlier1
+              set(b(bi),'Facecolor',jetsc(bi,:),'Edgecolor',[1 0 0]); 
+            else          
+              set(b(bi),'Facecolor',jetsc(bi,:),'Edgecolor',fontcolor); 
+            end
           end
+          line(cc{5},hl,dl,'color',mean([fontcolor;[0.9 0.3 0.3]])); 
+          outlier0 = hl < q0 - 3*(q0-q1); 
+          outlier1 = hl > q0 + 3*(q2-q0);
+          if ~isempty(outlier0), line(cc{5},hl( outlier0 ),dl( outlier0 ),'color',[1 0 0 ]); end
+          if ~isempty(outlier1), line(cc{5},hl( outlier1 ),dl( outlier1 ),'color',[1 0 0 ]); end
           xlim([0,6]); ylim([0 1]);
+          
+          
+          %% print colormap and boxplot on top of the bar/line histogramm to avoid that the line run into it 
+          cc{4} = axes('Position',[0.36 0.018 0.28 0.007],'Parent',fg); xlim([1 surfcolors]); 
+          image((121:1:120+surfcolors),'Parent',cc{4}); hold on; 
+         
+          set(cc{4},'XTick',1:(surfcolors-1)/6:surfcolors,'xcolor',fontcolor,'ycolor',fontcolor,'XTickLabel',...
+            {'0','1','2','3','4','5',[repmat(' ',1,10 + 10*(1-isempty(fst))) '6 mm' fst]},...
+            'YTickLabel','','YTick',[],'TickLength',[0.01 0],'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal'); 
+          
+          % boxplot
+          line(cc{4},(surfcolors-1)/6 * [q0 - 1.5*(q0-q1) q1 ], [ 1 1] , 'Color',[0 0 0],'LineWidth',0.75); 
+          line(cc{4},(surfcolors-1)/6 * [q2 q0 + 1.5*(q2-q0) ], [ 1 1] , 'Color',[0 0 0],'LineWidth',0.75); 
+          fill(cc{4},(surfcolors-1)/6 * [q1 q2 q2 q1], [ 0.8 0.8 1.2 1.2],[1 1 1],'LineWidth',0.5,'FaceAlpha',0.7); 
+          line(cc{4},(surfcolors-1)/6 * repmat(mean(side),1,2), [ 0.6 1.4 ] , 'Color',[0 0 0],'LineWidth',0.75); 
+          line(cc{4},(surfcolors-1)/6 * repmat(q0,1,2), [ 0.6 1.4 ] , 'Color',[1 0 0],'LineWidth',1.5); 
+          hold off; 
+           
+end      
+          
          
         end        
       else
@@ -943,6 +1003,7 @@ if 1
   for hti = 1:numel(ccl),   try, set(ccl{hti}  ,'FontName',fontname,'Fontsize',get(ccl{hti}  ,'Fontsize')*spm_figure_scale/0.8); end; end
   if job.extopts.report.useoverlay > 1 
     set(st.vols{p0id}.blobs{1}.cbar,'FontName',fontname,'Fontsize',get(st.vols{p0id}.blobs{1}.cbar,'Fontsize')*spm_figure_scale/0.8);
+    cbar = st.vols{p0id}.blobs{1}.cbar;
     st.vols{p0id}.blobs{1} = rmfield(st.vols{p0id}.blobs{1},'cbar'); % remove handle to avoid position updates
   end
   
@@ -955,9 +1016,9 @@ if 1
     fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);
   end
 end
-
-
-if 1
+if job.extopts.report.useoverlay > 1 
+  st.vols{p0id}.blobs{1} = cbar; % add it again to avoid other problems
+end
   %  ----------------------------------------------------------------------
   %  reset colormap to the simple SPM like gray60 colormap
   %  ----------------------------------------------------------------------
@@ -980,23 +1041,23 @@ if 1
   if exist('hhp0','var'), try, spm_orthviews('window',hhp0,[0 WMfactor1]); end; end
   clear WMfactor0 WMfactor1; 
   
-  %% change line style of TPM surf (from b-- to r--
+  %% change line style of TPM surf (from b-- to r--)
   if ov_mesh && exist('Psurf','var') && ~isempty(Psurf)
-    for idi = 1
-      if isfield(st.vols{idi},'ax') 
+    for idi = 1 %:numel(st.vols{idi})
+      if isfield(st.vols{idi},'ax') && idi==1
         hM = findobj(st.vols{idi}.ax{1}.cm,'Label','Mesh');
         UD = get(hM,'UserData');
-        if any(idi==ids); nPsurf = numel(Psurf2); else, nPsurf = numel(Psurf); end
-        UD.width = [repmat(0.5,1,numel(UD.width) - nPsurf)  repmat(0.5,1,nPsurf)]; 
-        UD.style = [repmat({'r--'},1,numel(UD.width) - nPsurf) repmat({'k-'},1,nPsurf)];
+        %if any(idi==ids); nPsurf = numel(Psurf2); else, nPsurf = numel(Psurf); end
+        %UD.width = [repmat(0.5,1,numel(UD.width) - nPsurf)  repmat(0.5,1,nPsurf)]; 
+        UD.style{1} = 'r--'; % = [repmat({'r--'},1,numel(UD.width) - nPsurf) repmat({'k-'},1,nPsurf)];
         set(hM,'UserData',UD);
-        set(cclp,'Color', [1 0 0]);
+        set(cclp,'Color', [1 0 0]); % overlay legend
         warning('off','MATLAB:subscripting:noSubscriptsSpecified');
-        try,spm_ov_mesh('redraw',idi);end
       end
+      try,spm_ov_mesh('redraw',idi);end
     end
   end  
   
   warning('off','MATLAB:subscripting:noSubscriptsSpecified'); % jep off
-end
+
 end

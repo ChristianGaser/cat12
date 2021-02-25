@@ -443,7 +443,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
 
       % control variables 
       % only if there is a lot of CSF and not too much noise
-      extopts.WMHCstr = min( 1, max( 0, extopts.WMHCstr )); 
+      extopts.WMHCstr = min( 1, max( 0, extopts.WMHCstr ./ max(1,mean(vx_vol)) )); % adaptiv for resolution
       csfvol  = max(eps,min(1.0, (vols  - 0.05) * 10 ));                     % relative CSF volume weighting
       if extopts.ignoreErrors > 2 || extopts.inv_weighting  % only small correction in the backup/inverse pipeline
         WMHCstr = eps; 

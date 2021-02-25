@@ -546,6 +546,8 @@ function cat_run_job1639(job,tpm,subj)
               Affine = Affine_com; 
             end
             warning on
+          else
+            Affine = eye(4); 
           end
 
           
