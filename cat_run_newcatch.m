@@ -27,9 +27,9 @@ function cat_run_newcatch(job,tpm,subj)
   try
     if job.extopts.ignoreErrors>1
       % new pipeline that also include a warning because it still under test
-      cat_run_job(job,tpm,subj); % the cat_run_job1070 is only called by older functions
+      cat_run_job(job,tpm,subj);
     else
-      % RD202008: current version 1678+ is not stable and the 1639 seems to
+      % RD202008: current versions are not that stable and the 1639 seems to
       %           have the best result 
       cat_run_job1639(job,tpm,subj);
     end

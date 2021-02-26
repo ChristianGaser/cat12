@@ -1796,7 +1796,6 @@ fprintf('SR2: V=%d, SD(CT)=%0.20f\n',size(CS.vertices,1),std(facevertexcdata(:))
     if exist(Vpp1.fname ,'file'), delete(Vpp1.fname); end
     if exist(Vpp.fname,'file') && ~opt.outputpp.native, delete(Vpp.fname); end
     if opt.verb > 2 && exist(Pdefects0,'file'), delete(Pdefects0); end
-    if opt.extract_pial_white && exist(Vyp0s.fname,'file'), delete(Vyp0s.fname); end
     clear CS
 
     % processing time per side for manual tests

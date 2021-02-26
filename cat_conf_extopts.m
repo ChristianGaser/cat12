@@ -550,7 +550,7 @@ resnative.help   = {
 resbest        = cfg_entry;
 resbest.tag    = 'best';
 resbest.name   = 'Best native resolution';
-resbest.def    = {[1.0 0.1]};
+resbest.val    = {[1.0 0.1]};
 resbest.num    = [1 2];
 resbest.help   = {
     'Preprocessing with the best (minimal) voxel dimension of the native image. The first parameters defines the lowest spatial resolution for every dimension, while the second defines a tolerance range to avoid tiny interpolations for almost correct resolutions. '
@@ -585,19 +585,21 @@ resfixed.help   = {
 resopt        = cfg_entry;
 resopt.tag    = 'optimal';
 resopt.name   = 'Optimal resolution';
-resopt.def    = {[1.0 0.3]};
+resopt.val    = {[1.0 0.3]};
 resopt.num    = [1 2];
 resopt.help   = {
-    'Preprocessing with an "optimal" voxel dimension that utilize the median and the volume of the voxel size for special handling of anisotropic images.  In many cases, untypically high slice-resolution (e.g. 0.5 mm for 1.5 Tesla) comes along with higher slice-thickness and increased image interferences.  Our tests showed that a simple interpolation to the best voxel resolution not only resulted in much longer calculation times but also in a worste segmenation (and surface reconstruction) compared to the fixed option with e.g. 1 mm.  Hence, this option tries to incooperate the voxel volume and its isotropy to balance the internal resolution.  E.g., an image with 0.5x0.5x1.5 mm will resampled at a resolution of 0.7x0.7x0.7 mm. ' 
+    'Preprocessing with an "optimal" voxel dimension that utilize the median and the volume of the voxel size for special handling of anisotropic images.  In many cases, untypically high slice-resolution (e.g. 0.5 mm for 1.5 Tesla) comes along with higher slice-thickness and increased image interferences.  Our tests showed that a simple interpolation to the best voxel resolution not only resulted in much longer calculation times but also in a poor segmenation (and surface reconstruction) compared to the fixed option with e.g. 1 mm.  Hence, this option tries to incooperate the voxel volume and its anisotropy to balance the internal resolution.  E.g., an image with 0.5x0.5x1.5 mm will resampled at a resolution of 0.9x0.9x0.9 mm. ' 
     'The first parameters defines the lowest spatial resolution, while the second defines a tolerance range to avoid tiny interpolations for almost correct resolutions. '
     ''
     'Examples:'
     '  Parameters    native resolution       internal resolution'
     '  [1.00 0.10]    0.95 1.05 1.25     >     0.95 1.05 1.00'
-    '  [1.00 0.10]    0.80 0.80 1.00     >     0.80 0.80 0.80'
+    '  [1.00 0.30]    0.95 1.05 1.25     >     0.95 1.05 1.25'
+    '  [1.00 0.10]    0.80 0.80 1.00     >     0.80 0.80 1.00'
     '  [1.00 0.10]    0.50 0.50 2.00     >     1.00 1.00 1.00'
-    '  [1.00 0.10]    0.50 0.50 1.50     >     0.70 0.70 0.70'
-    '  [1.00 0.10]    0.80 1.00 1.00     >     1.00 1.00 1.00'
+    '  [1.00 0.10]    0.50 0.50 1.50     >     0.90 0.90 0.90'
+    '  [1.00 0.10]    0.80 1.00 1.00     >     1.00 1.00 1.00'    
+    '  [1.00 0.30]    0.80 1.00 1.00     >     0.80 1.00 1.00'
     ''
   };
 
@@ -1000,6 +1002,8 @@ if expert
     ''
     ''}];
 end
+affmod.hidden = expert < 1;
+
 %------------------------------------------------------------------------
 
 new_release        = cfg_menu;
