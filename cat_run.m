@@ -853,23 +853,7 @@ function vout = run_job(job)
     % Error management with try-catch blocks
     % See also cat_run_newcatch.
     % __________________________________________________________________
-    if cat_io_matlabversion>20072 
-      cat_run_newcatch(job,tpm,subj); 
-    else
-      if job.extopts.APP == 1070
-        cat_io_addwarning('cat_run:call_cat_run_job1070','Call old version of cat_run_job.',1,[0 1])
-        cat_run_job1070(job,tpm,subj); 
-      else 
-        if job.extopts.ignoreErrors>1
-          cat_io_addwarning('cat_run_newcatch:newPipeline','Run new pipeline with backup function (IN DEVELOPMENT).',1,[0 1]); 
-          cat_run_job(job,tpm,subj); % the cat_run_job1070 is only called by older functions
-        else
-          % RD202008: current version 1678+ is not stable and the 1639 seems to
-          %           serve the best result 
-          cat_run_job1639(job,tpm,subj);
-        end
-      end
-    end
+    cat_run_newcatch(job,tpm,subj); 
   end
 
   % use an extend colormap that also include 

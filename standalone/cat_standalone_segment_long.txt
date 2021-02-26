@@ -23,9 +23,9 @@ matlabbatch{1}.spm.tools.cat.long.longmodel = '<UNDEFINED>';
 % Remove comments and edit entry if you would like to change the Dartel/Shooting approach
 % Otherwise the default value from cat_defaults.m is used.
 % entry for choosing shooting approach
-matlabbatch{1}.spm.tools.cat.long.extopts.registration.shooting.shootingtpm = {fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_0_IXI555_MNI152_GS.nii')};
+matlabbatch{1}.spm.tools.cat.long.extopts.registration.shooting.shootingtpm = {fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_0_GS.nii')};
 % entry for choosing dartel approach
-%matlabbatch{1}.spm.tools.cat.long.extopts.registration.dartel.darteltpm = {fullfile(spm('dir'),'toolbox','cat12','templates_volumes','Template_1_IXI555_MNI152.nii')};
+%matlabbatch{1}.spm.tools.cat.long.extopts.registration.dartel.darteltpm = {fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_1_Dartel.nii')};
 % Strength of Shooting registration: 0 - Dartel, eps (fast), 0.5 (default) to 1 (accurate) optimized Shooting, 4 - default Shooting; default 0.5
 matlabbatch{1}.spm.tools.cat.long.extopts.registration.shooting.regstr = 0.5;
 
@@ -59,7 +59,7 @@ matlabbatch{1}.spm.tools.cat.long.extopts.admin.print = 2;
 matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.NCstr = -Inf;
 matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.cleanupstr = 0.5;
 matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.BVCstr = 0.5;
-matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.WMHC = 1;
+matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.WMHC = 2;
 matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.SLC = 0;
 matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.mrf = 1;
 
@@ -77,7 +77,10 @@ matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.mrf = 1;
 matlabbatch{1}.spm.tools.cat.long.extopts.vox = 1.5;
 
 % resolution handling: 'native','fixed','best', 'optimal'
-%matlabbatch{1}.spm.tools.cat.long.extopts.restypes.segmentation.optimal = [1 0.1];
+%matlabbatch{1}.spm.tools.cat.long.extopts.restypes.segmentation.optimal = [1 0.3];
+
+% use center-of-mass approach for estimating origin
+matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.setCOM = 1;
 
 % surface and thickness creation:   0 - no (default), 1 - lh+rh, 2 - lh+rh+cerebellum, 
 % 3 - lh, 4 - rh, 5 - lh+rh (fast, no registration, only for quick quality check and not for analysis),
@@ -102,7 +105,14 @@ matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.Schaefer2018_400Parcels_17Netw
 matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.Schaefer2018_600Parcels_17Networks_order = 0;
 matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.ownatlas = {''};
 
+% create and use longitudinal TPM to get more stable segmentations
 matlabbatch{1}.spm.tools.cat.long.longTPM = 1;
+
+% apply modulation
 matlabbatch{1}.spm.tools.cat.long.modulate = 1;
+
+% save dartel export
 matlabbatch{1}.spm.tools.cat.long.dartel = 0;
+
+% delete temporary files
 matlabbatch{1}.spm.tools.cat.long.delete_temp = 1;

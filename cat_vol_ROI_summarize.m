@@ -73,7 +73,7 @@ if isfield(job,'Method')
   for ai=1:numel(AN)
     if ~iscell(job.atlases.(AN{ai}))
       if job.atlases.(AN{ai})
-        atlas_file{fai} = fullfile(cat_get_defaults('extopts.pth_templates'),',[AN{ai} '.nii']);
+        atlas_file{fai} = fullfile(cat_get_defaults('extopts.pth_templates'),[AN{ai} '.nii']);
         fai = fai+1;
       end
     elseif ~isempty(char(job.atlases.(AN{ai})))
@@ -128,7 +128,6 @@ csv_arr = cell(n_atlas,n_def);
 for ai = 1:n_atlas
 
   atlas = round(spm_read_vols(spm_vol(atlas_file{ai})));
-  [pp,atlas_name] = spm_fileparts(atlas_file{ai});
   csv = get_atlas_csv(atlas_file{ai},atlas);
   
   % remove unnecessary columns and transpose to have ROI estimates 
