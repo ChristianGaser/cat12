@@ -597,7 +597,7 @@ switch lower(action)
         set(H.fix, 'Visible', 'on');
       end
       
-      H.Pvol_sel = H.Pvol{1};
+      H.Pvol_sel = H.S{1}.name;
       display_results_all;
       
       H.SPM_found = 1;
@@ -1717,7 +1717,7 @@ return
 if ~isfield(H,'Pvol_sel'), return; end
 
 % display image as overlay
-OV.reference_image = cat_get_defaults('extopts.shootingT1');
+OV.reference_image = char(cat_get_defaults('extopts.shootingT1'));
 
 if H.show_transp
   OV.opacity = 0.6;                                      

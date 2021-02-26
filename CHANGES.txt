@@ -1,5 +1,28 @@
 ------------------------------------------------------------------------
-r1773 | gaser | 2021-02-26 22:50:09
+r1774 | gaser | 2021-02-27 00:50:23
+
+Changed paths:
+M       CHANGES.txt
+M       cat_spm_results_ui.m
+M       cat_stat_analyze_ROIs.m
+M       cat_surf_results.m
+M       cat_surf_vol2surf.m
+M       cat_vol_ROI_summarize.m
+M       cat_vol_slice_overlay.m
+M       cat_vol_slice_overlay_ui.m
+M       check_pipeline/batch_surface_pipeline.m
+M       check_pipeline/batch_volume_pipeline.m
+D       templates_MNI152NLin2009cAsym/TPM.nii
+
+(1) Chamged: Added check for bounding box to ensure that new template is not
+             used for overlaying results or mapping volumes to surfaces with
+             old data from previous versions that are not compatible anymore.
+(2) Fixed:   Added conversion to char for checking for extopts.shootingT1.
+ 
+             
+
+------------------------------------------------------------------------
+r1773 | gaser | 2021-02-26 22:51:15 +0100 (Fr, 26 Feb 2021) | 153 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -153,6 +176,7 @@ D       templates_surfaces_32k/rh.thickness.Template_T1_IXI555_MNI152_GS
              existing.
 (9) Fixed:   Corrected wrong definitions for interpolations in 
              cat_conf_extopts.m
+
 ------------------------------------------------------------------------
 r1772 | gaser | 2021-02-26 00:41:54 +0100 (Fr, 26 Feb 2021) | 17 lines
 
