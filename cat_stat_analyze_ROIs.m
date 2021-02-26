@@ -633,7 +633,7 @@ else % write label volume with thresholded p-values
   % display ROI results for label image
   if show_results
     % display image as overlay
-    OV.reference_image = cat_get_defaults('extopts.shootingT1');
+    OV.reference_image = char(cat_get_defaults('extopts.shootingT1'));
     OV.reference_range = [0.2 1.0];                        % intensity range for reference image
     OV.opacity = Inf;                                      % transparency value for overlay (<1)
     OV.cmap    = jet;                                      % colormap for overlay

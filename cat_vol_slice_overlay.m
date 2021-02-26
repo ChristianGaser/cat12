@@ -21,7 +21,7 @@ global SO
 
 if nargin == 0
     
-    imgs = spm_select(2, 'image', 'Select additional overlay image', {cat_get_defaults('extopts.shootingT1')});
+    imgs = spm_select(2, 'image', 'Select additional overlay image', cat_get_defaults('extopts.shootingT1'));
     if isempty(imgs)
       return;
     end
@@ -158,6 +158,7 @@ SO.img(2).vol = spm_vol(img);
 SO.img(2).hold = 0; % use NN interpolation
 SO.img(2).prop = OV.opacity; % transparent overlay
 SO.img(2).cmap = OV.cmap; % colormap
+
 if ~isfield(OV, 'func')
     SO.img(2).func = 'i1(i1==0)=NaN;';
 else
@@ -529,6 +530,12 @@ if ~strcmp(image_ext, 'none')
     end
 end
 
+% check whether bounding box is from previous version that is not compatible
+% with new template
+BB = spm_get_bbox(SO.img(2).vol);
+if sum(sum(BB-[-90 -126 -72;90 90 108])) == 0
+  fprintf('WARNING: Check that %s is really compatible to new template in MNI152NLin2009cAsym template space. If not, you should use the old T1-template from CAT12.7 or older for overlay.\n',SO.img(2).vol.fname);
+end
 
 % --------------------------------------------------------------------------
 function xy = get_xy(n)

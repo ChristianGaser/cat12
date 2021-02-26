@@ -1,6 +1,6 @@
 function batch_surface_pipeline
 
-pth=pwd;
+pth = pwd;
 
 spm_jobman('initcfg');
 
