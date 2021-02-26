@@ -52,7 +52,7 @@ matlabbatch{4}.spm.tools.cat.tools.F2x.atlas = 'Neuromorphometrics';
 spm_jobman('run',matlabbatch);
 %__________________________________________________________________________
 
-OV.reference_image = cat_get_defaults('extopts.shootingT1');
+OV.reference_image = char(cat_get_defaults('extopts.shootingT1'));
 OV.reference_range = [0.2 1.0];                         % intensity range for reference image
 OV.opacity = Inf;                                      % transparence value for overlay (<1)
 OV.cmap    = jet;                                      % colormap for overlay
