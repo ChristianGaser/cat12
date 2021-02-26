@@ -5,13 +5,12 @@
 
 % data field, that will be dynamically replaced by cat_standalone.sh
 matlabbatch{1}.spm.tools.cat.cat_simple.data = '<UNDEFINED>';         
-
-% Used CAT12 version
-% current options: 'estwrite' (actual release), 'estwrite1445' (12.5 r1445), 'estwrite1173' (12.1 r1173)
 matlabbatch{1}.spm.tools.cat.cat_simple.catversion = 'estwrite';      
 
 % template for initial affine registration/segmentation; 'adult','children'
 matlabbatch{1}.spm.tools.cat.cat_simple.tpm = 'adults';               
+
+matlabbatch{1}.spm.tools.cat.cat_simple.registration.regmethod.shooting.shootingtpm = {fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_0_GS.nii')};
 
 % smoothing filter size for volumes
 matlabbatch{1}.spm.tools.cat.cat_simple.fwhm_vol = 6;                 

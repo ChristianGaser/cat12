@@ -268,7 +268,8 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     sinfo(i).resampled_32k = ~isempty(strfind(sinfo(i).posside,'.resampled_32k'));
     % template
     sinfo(i).template  = ~isempty(strfind(lower(sinfo(i).ff),'.template')); 
-    if sinfo(i).template,  sinfo(i).resampled = 1; end
+    % CG20210226: This caused crashes in cat_surf_surf2roi.m for some files
+%    if sinfo(i).template,  sinfo(i).resampled = 1; end
     
 
     % name / texture

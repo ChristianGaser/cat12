@@ -1,5 +1,160 @@
 ------------------------------------------------------------------------
-r1772 | gaser | 2021-02-26 00:40:47
+r1773 | gaser | 2021-02-26 22:50:09
+
+Changed paths:
+M       CHANGES.txt
+M       Makefile
+M       cat12.m
+M       cat_batch_cat.m
+M       cat_conf_catsimple.m
+M       cat_conf_extopts.m
+M       cat_conf_output.m
+M       cat_defaults.m
+M       cat_long_main.m
+M       cat_main_LAS.m
+M       cat_main_LAS2.m
+M       cat_main_LAS21639.m
+MM      cat_main_correctmyelination.m
+M       cat_main_reportstr.m
+M       cat_run.m
+D       cat_run1173
+D       cat_run1173/cat_conf_ROI1173.m
+D       cat_run1173/cat_conf_extopts1173.m
+D       cat_run1173/cat_conf_long1173.m
+D       cat_run1173/cat_conf_opts1173.m
+D       cat_run1173/cat_defaults1173.m
+D       cat_run1173/cat_get_defaults1173.m
+D       cat_run1173/cat_long_main1173.m
+D       cat_run1173/cat_long_multi_run1173.m
+D       cat_run1173/cat_main1173.m
+D       cat_run1173/cat_main_LAS1173.m
+D       cat_run1173/cat_main_gcut1173.m
+D       cat_run1173/cat_main_registration1173.m
+D       cat_run1173/cat_run1173.m
+D       cat_run1173/cat_run_job10701173.m
+D       cat_run1173/cat_run_job1173.m
+D       cat_run1173/cat_run_job_APP_SPM1173.m
+D       cat_run1173/cat_run_job_APP_final.m
+D       cat_run1173/cat_run_job_APP_init10701173.m
+D       cat_run1173/cat_run_newcatch1173.m
+D       cat_run1173/cat_surf_createCS1173.m
+D       cat_run1173/cat_tst_qa1173.m
+D       cat_run1173/cat_vol_isarnlm.m
+D       cat_run1173/cat_vol_partvol1173.m
+D       cat_run1173/cat_vol_sanlm1173.m
+D       cat_run1173plus
+D       cat_run1173plus/cat_conf_extopts1173plus.m
+D       cat_run1173plus/cat_conf_long1173plus.m
+D       cat_run1173plus/cat_conf_opts1173plus.m
+D       cat_run1173plus/cat_defaults1173plus.m
+D       cat_run1173plus/cat_get_defaults1173plus.m
+D       cat_run1173plus/cat_main1173plus.m
+D       cat_run1173plus/cat_run1173plus.m
+D       cat_run1173plus/cat_run_job10701173plus.m
+D       cat_run1173plus/cat_run_job1173plus.m
+D       cat_run1173plus/cat_run_newcatch1173plus.m
+D       cat_run1445
+D       cat_run1445/cat_conf_ROI1445.m
+D       cat_run1445/cat_conf_extopts1445.m
+D       cat_run1445/cat_conf_long1445.m
+D       cat_run1445/cat_conf_opts1445.m
+D       cat_run1445/cat_defaults1445.m
+D       cat_run1445/cat_get_defaults1445.m
+D       cat_run1445/cat_long_main1445.m
+D       cat_run1445/cat_long_multi_run1445.m
+D       cat_run1445/cat_main1445.m
+D       cat_run1445/cat_main_LAS1445.m
+D       cat_run1445/cat_main_gcut1445.m
+D       cat_run1445/cat_main_registration1445.m
+D       cat_run1445/cat_run1445.m
+D       cat_run1445/cat_run_job10701445.m
+D       cat_run1445/cat_run_job1445.m
+D       cat_run1445/cat_run_job_APP_init10701445.m
+D       cat_run1445/cat_run_newcatch1445.m
+D       cat_run1445/cat_surf_createCS1445.m
+D       cat_run1445/cat_vol_partvol1445.m
+D       cat_run1445/cat_vol_sanlm1445.m
+D       cat_run1585
+D       cat_run1585/cat_conf_ROI1585.m
+D       cat_run1585/cat_conf_extopts1585.m
+D       cat_run1585/cat_conf_long1585.m
+D       cat_run1585/cat_conf_opts1585.m
+D       cat_run1585/cat_defaults1585.m
+D       cat_run1585/cat_get_defaults1585.m
+D       cat_run1585/cat_main1585.m
+D       cat_run1585/cat_main_APRG1585.m
+D       cat_run1585/cat_main_LAS1585.m
+D       cat_run1585/cat_main_amap1585.m
+D       cat_run1585/cat_main_kamap1585.m
+D       cat_run1585/cat_main_registration1585.m
+D       cat_run1585/cat_main_updateSPM1585.m
+D       cat_run1585/cat_main_updateWMHs1585.m
+D       cat_run1585/cat_run1585.m
+D       cat_run1585/cat_run_job10701585.m
+D       cat_run1585/cat_run_job1585.m
+D       cat_run1585/cat_run_job_APP_SPMfinal1585.m
+D       cat_run1585/cat_run_job_APP_SPMinit1585.m
+D       cat_run1585/cat_run_job_APP_final1585.m
+D       cat_run1585/cat_run_job_APP_init10701585.m
+D       cat_run1585/cat_run_job_APP_init1585.m
+D       cat_run1585/cat_run_job_APRGs1585.m
+D       cat_run1585/cat_run_newcatch1585.m
+D       cat_run1585/cat_surf_createCS1585.m
+D       cat_run1585/cat_surf_createCS21585.m
+D       cat_run1585/cat_vol_approx1585.m
+D       cat_run1585/cat_vol_pbt1585.m
+D       cat_run_job1070.m
+M       cat_run_newcatch.m
+M       cat_simple.m
+M       cat_surf_createCS2.m
+M       cat_surf_info.m
+M       cat_vol_ROI_summarize.m
+M       standalone/cat_standalone_segment.txt
+M       standalone/cat_standalone_segment_long.txt
+M       standalone/cat_standalone_simple.txt
+M       tbx_cfg_cat.m
+A       templates_MNI152NLin2009cAsym/cat_1mm.nii
+D       templates_surfaces/lc.central.Template_T1_IXI555_MNI152_GS.gii
+D       templates_surfaces/lc.thickness.Template_T1_IXI555_MNI152_GS
+M       templates_surfaces/lh.central.Template_T1.gii
+D       templates_surfaces/lh.central.Template_T1_IXI555_MNI152_GS.gii
+M       templates_surfaces/lh.thickness.Template_T1
+D       templates_surfaces/lh.thickness.Template_T1_IXI555_MNI152_GS
+A       templates_surfaces/mesh.central.Template_T1.gii
+D       templates_surfaces/mesh.central.Template_T1_IXI555_MNI152_GS.gii
+D       templates_surfaces/rc.central.Template_T1_IXI555_MNI152_GS.gii
+D       templates_surfaces/rc.thickness.Template_T1_IXI555_MNI152_GS
+M       templates_surfaces/rh.central.Template_T1.gii
+D       templates_surfaces/rh.central.Template_T1_IXI555_MNI152_GS.gii
+M       templates_surfaces/rh.thickness.Template_T1
+D       templates_surfaces/rh.thickness.Template_T1_IXI555_MNI152_GS
+M       templates_surfaces_32k/lh.central.Template_T1.gii
+D       templates_surfaces_32k/lh.central.Template_T1_IXI555_MNI152_GS.gii
+M       templates_surfaces_32k/lh.thickness.Template_T1
+D       templates_surfaces_32k/lh.thickness.Template_T1_IXI555_MNI152_GS
+A       templates_surfaces_32k/mesh.central.Template_T1.gii
+D       templates_surfaces_32k/mesh.central.Template_T1_IXI555_MNI152_GS.gii
+M       templates_surfaces_32k/rh.central.Template_T1.gii
+D       templates_surfaces_32k/rh.central.Template_T1_IXI555_MNI152_GS.gii
+M       templates_surfaces_32k/rh.thickness.Template_T1
+D       templates_surfaces_32k/rh.thickness.Template_T1_IXI555_MNI152_GS
+
+(1) Changed: Changed CAT12 to new template and talas space MNI152NLin2009cAsym. 
+(2) Chamged: Removed old templates_volumes folder.
+(3) Changed: Changed defaults to WMHC=2 to always correct WMHs to WM.
+(4) Changed: Removed folders with previous versions that arenot supported 
+             anymore.
+(5) Changed: Updated standalone and catc_batch_* scripts to consider new 
+             changes.
+(6) Changed: Removed cat_run_job1070.m that was only needed for ancient Matlab 
+             versions.
+(7) Fixed:   Corrected typo in cat_vol_ROI_summarize.m that caused errors.
+(8) Fixed:   Removed call of Vyp0s in cat_surf_createCS2.m that was not 
+             existing.
+(9) Fixed:   Corrected wrong definitions for interpolations in 
+             cat_conf_extopts.m
+------------------------------------------------------------------------
+r1772 | gaser | 2021-02-26 00:41:54 +0100 (Fr, 26 Feb 2021) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -16,6 +171,7 @@ M       cat_run.m
 (3) Changed: Changed resval to [1 0.3] for optimal interpolation to prevent
              unnecessary interpolytion.
 (4) Fixed:   Paths of T1 and brainmask were corrected in cat_defaults.m.
+
 
 ------------------------------------------------------------------------
 r1771 | dahnke | 2021-02-25 17:27:50 +0100 (Do, 25 Feb 2021) | 29 lines

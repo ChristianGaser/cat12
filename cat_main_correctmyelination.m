@@ -24,7 +24,7 @@ function [Ym2,Ysrc2,Ycls,Ycor,glcor,cf] = cat_main_correctmyelination(Ym,Ysrc,Yc
 % Called only from cat_main[#]. 
 % _________________________________________________________________________
 % Robert Dahnke
-% $Id: cat_run_job.m 1760 2021-02-10 09:48:13Z gaser $
+% $Id$
 
 %
 % TODO: 

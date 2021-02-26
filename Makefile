@@ -21,7 +21,7 @@ STARGET=${STARGET_HOST}:${STARGET_FOLDER}
 
 MATLAB_FILES=Contents.* cat_*.m spm_cat12.m tbx_cfg_cat.m sliderPanel.m slice_overlay.m cat_run* compile.m
 C_FILES=Amap.[ch] ornlm_float.c sanlm_float.c MrfPrior.c Pve.c Kmeans.c cat_*.c* cat_*.mex* vollib.c genus0.[ch] tricases.h spm_diffeo_old.mex*
-MISC_FILES=CAT12-Manual.pdf CHANGES.txt INSTALL.txt standalone templates_volumes html templates_surfaces templates_surfaces_32k atlases_surfaces atlases_surfaces_32k cat12.* CAT.* distribute_to_server.sh cat_*.sh  cat_long_main*txt
+MISC_FILES=CAT12-Manual.pdf CHANGES.txt INSTALL.txt standalone templates_MNI152NLin2009cAsym html templates_surfaces templates_surfaces_32k atlases_surfaces atlases_surfaces_32k cat12.* CAT.* distribute_to_server.sh cat_*.sh  cat_long_main*txt
 
 FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
 

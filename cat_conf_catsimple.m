@@ -315,7 +315,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
 
 %% Parameter
 %  ------------------------------------------------------------------------
-	[catver.rel, catver.ver, catver.dat] = cat_version;
+  [catver.rel, catver.ver, catver.dat] = cat_version;
 
   % CAT preprocessing version 
   catversion          = cfg_menu;
@@ -326,17 +326,9 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   catch
     dstr              = catver.dat;
   end 
-  catversion.labels   = {'CAT12.6 (2019/03)',sprintf('%s r%s (%s) - actual release',catver.rel,catver.ver,dstr)};
-  catversion.values   = {'estwrite1445','estwrite'};
-  if expert
-    catversion.labels = [{'CAT12.3 (2018/12)'}  catversion.labels(1:end)];
-    catversion.values = [{'estwrite1173plus'}   catversion.values(1:end)];
-  end
+  catversion.labels   = {sprintf('%s r%s (%s) - actual release',catver.rel,catver.ver,dstr)};
+  catversion.values   = {'estwrite'};
   catversion.val      = {'estwrite'};
-  if expert>1
-    catversion.labels = [{'CAT12.1 (2017/09)'}  catversion.labels(1:end)];
-    catversion.values = [{'estwrite1173'}   catversion.values(1:end)];
-  end
   catversion.help     = {[
     'To expand previously processed datasets select the same version of CAT preprocessing that was used before. ' ...
     'Do not mix different versions!' ...
@@ -452,10 +444,10 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   catsimple.name    = 'CAT12 Simple Preprocessing'; 
 
   if expert
-    catsimple.val   = {data catversion tpm extopts.val{2} vROI fwhm_vol surface};
+    catsimple.val   = {data tpm extopts.val{2} vROI fwhm_vol surface};
     catsimple.val   = [catsimple.val {ignoreErrors}];
   else
-    catsimple.val   = {data catversion tpm extopts.val{4} vROI fwhm_vol surface};
+    catsimple.val   = {data tpm extopts.val{4} vROI fwhm_vol surface};
   end
   if expert > 1 % further mods do not work right now!
     catsimple.val   = [catsimple.val(1) {mods} catsimple.val(2:end)];
@@ -488,7 +480,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   catsimplelong       = cfg_exbranch;
   catsimplelong.tag   = 'cat_simple_long';
   catsimplelong.name  = 'CAT12 Simple Longitudinal Preprocessing';
-  catsimplelong.val   = {datalong catversion tpm extopts.val{4} vROI fwhm_vol surface}; 
+  catsimplelong.val   = {datalong tpm extopts.val{4} vROI fwhm_vol surface}; 
   if expert
     catsimplelong.val = [catsimplelong.val {ignoreErrors}];
   end
@@ -567,20 +559,20 @@ function dep = vout_catsimple(job)
     end
     for mi = 1:numel(measures)
       if strcmp(measures{mi},'thickness')
-				for si = 1:numel(ssmooth1)
-					dep(end+1)          = cfg_dep; %#ok<AGROW>
-					dep(end).sname      = sprintf('%dmm smoothed %s',ssmooth1(si),measures{mi});
-					dep(end).src_output = substruct('.',sprintf('s%d%s',ssmooth1(si),measures{mi}),'()',{':'});
-					dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-				end
+        for si = 1:numel(ssmooth1)
+          dep(end+1)          = cfg_dep; %#ok<AGROW>
+          dep(end).sname      = sprintf('%dmm smoothed %s',ssmooth1(si),measures{mi});
+          dep(end).src_output = substruct('.',sprintf('s%d%s',ssmooth1(si),measures{mi}),'()',{':'});
+          dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+        end
       else
-				for si = 1:numel(ssmooth2)
-					dep(end+1)          = cfg_dep; %#ok<AGROW>
-					dep(end).sname      = sprintf('%dmm smoothed %s',ssmooth2(si),measures{mi});
-					dep(end).src_output = substruct('.',sprintf('s%d%s',ssmooth2(si),measures{mi}),'()',{':'});
-					dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-				end
-			end
+        for si = 1:numel(ssmooth2)
+          dep(end+1)          = cfg_dep; %#ok<AGROW>
+          dep(end).sname      = sprintf('%dmm smoothed %s',ssmooth2(si),measures{mi});
+          dep(end).src_output = substruct('.',sprintf('s%d%s',ssmooth2(si),measures{mi}),'()',{':'});
+          dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+        end
+      end
     end
   end
   

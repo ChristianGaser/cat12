@@ -509,7 +509,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   
   %% local intensity modification of the original image
   % --------------------------------------------------------------------
-  stime = cat_io_cmd('  Intensity transformation','g5','',verb,stime); dispc=dispc+1;
+  stime = cat_io_cmd('  Intensity transformation\n','g5','',verb,stime); dispc=dispc+1;
   Yml = zeros(size(Ysrc)); 
   Yml = Yml + ( (Ysrc>=Ylab{2}                ) .* (3 + (Ysrc-Ylab{2}) ./ max(eps,Ylab{2}-Ylab{3})) );
   Yml = Yml + ( (Ysrc>=Ylab{1} & Ysrc<Ylab{2} ) .* (2 + (Ysrc-Ylab{1}) ./ max(eps,Ylab{2}-Ylab{1})) );

@@ -309,10 +309,10 @@ for ci = 1:2 + single(write_CSF) % fill image sets
                                                                       substruct('.','vfiles'));
   end
 end
-matlabbatch{mbi}.spm.tools.cat.tools.defs.interp          = 1;
-matlabbatch{mbi}.spm.tools.cat.tools.defs.bb  = [NaN NaN NaN
-                                                 NaN NaN NaN];
-matlabbatch{mbi}.spm.tools.cat.tools.defs.vox = [NaN NaN NaN];
+matlabbatch{mbi}.spm.tools.cat.tools.defs.interp = 1;
+matlabbatch{mbi}.spm.tools.cat.tools.defs.bb     = [NaN NaN NaN
+                                                    NaN NaN NaN];
+matlabbatch{mbi}.spm.tools.cat.tools.defs.vox    = [NaN NaN NaN];
 if modulate, matlabbatch{mbi}.spm.tools.cat.tools.defs.modulate = modulate; end  % modulation option for applying deformations
 
 
