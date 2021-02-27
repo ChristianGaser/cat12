@@ -31,11 +31,11 @@
 % ignored if data during smoothing (masked smoothing) and in the statistical
 % analysis.
 %
-% ?h.central.Template_T1_GS.gii
-% ?h.thickness.Template_T1_GS
+% ?h.central.Template_T1.gii
+% ?h.thickness.Template_T1
 % ---------------------------------
-% Surfaces and thickness values based on average of 550 subjects from IXI 
-% database
+% Surfaces and thickness values based on average of MNI152NLin2009cAsym 
+% template (processed with collcorr=24).
 % These data should be only used to map results from 3D space (e.g. VBM or
 % fMRI results of the statistical analysis) to the template space after 
 % spherical registration.

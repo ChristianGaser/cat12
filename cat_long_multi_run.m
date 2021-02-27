@@ -8,7 +8,7 @@ warning off;
 
 if isdeployed, job.nproc = 0; end
 
-if job.extopts.vox ~= 1.5
+if isfield(job.extopts,'vox') && job.extopts.vox ~= 1.5
   job.extopts.vox = 1.5;
   fprintf('\n---------------------------------------------------------------------------\n');
   fprintf('Warning: No change of output voxel size possible for longitudinal pipeline!\n');
