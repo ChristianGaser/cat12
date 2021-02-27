@@ -328,7 +328,7 @@ function Psgi = cat_surf_SGI_laplacian(sinfo,opt)
   
   
   if 0
-    %% interal display
+    %% internal display
     if opt.GIL==1 || opt.GIL==4, cat_surf_display(Psigi); end
     if opt.GIL==2 || opt.GIL==4, cat_surf_display(Psogi); end
     if opt.GIL==3 || opt.GIL==4, cat_surf_display(Psggi); end
