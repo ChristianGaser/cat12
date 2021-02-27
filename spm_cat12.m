@@ -135,7 +135,7 @@ switch lower(deffile)
     mycat.extopts.T1           = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_T1.nii'])};         % T1 for affine registration
     mycat.extopts.sanlm        = 3;                                     % ISARNLM for stronger corrections
     mycat.extopts.restype      = 'best';        
-    mycat.extopts.resval       = [0.50 0.30];                           % higher interal resolution 
+    mycat.extopts.resval       = [0.50 0.30];                           % higher internal resolution 
     %mycat.extopts.APP          = 1070;                                  % less affine registration, but full corrections (by SPM)
     mycat.extopts.vox          = 0.50;                                  % voxel size for normalized data 
     mycat.extopts.bb           = [[-inf -inf -inf];[inf inf inf]];      % template default

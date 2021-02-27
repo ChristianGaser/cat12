@@ -144,7 +144,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   rate   = @(x,best,worst) min(6,max(1, max(0,x-best) ./ (worst-best) * 5 + 1));
    
   
-  % some interal overview for developers
+  % some internal overview for developers
   if opt.verb>2
     fprintf('\nSurface reconstruction:              %s\n',....
       sprintf('%s',char( cellfun(@(x) [x ' '],opt.surf,'UniformOutput',0) )')); 
@@ -691,7 +691,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
     if ~debug, clear Ymsk; end
     
     %  Write Ypp for final deformation
-    %  Ytt has the interal resolution (e.g. <1 mm) and is only used temparary 
+    %  Ytt has the internal resolution (e.g. <1 mm) and is only used temparary 
     %  Write Yppi file with 1 mm resolution for the final deformation, 
     %  because CAT_DeformSurf achieved better results using that resolution
     Yppt = cat_vol_resize(Yppi,'deinterp',resI);                        % back to original resolution

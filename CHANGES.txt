@@ -1,5 +1,42 @@
 ------------------------------------------------------------------------
-r1774 | gaser | 2021-02-27 00:50:23
+r1775 | gaser | 2021-02-27 21:07:33
+
+Changed paths:
+M       CHANGES.txt
+M       cat_batch_cat.m
+M       cat_conf_extopts.m
+M       cat_long_multi_run.m
+M       cat_surf_createCS2.m
+M       cat_surf_gyrification.m
+M       spm_cat12.m
+M       standalone/cat_standalone.sh
+D       templates_surfaces/lc.central.freesurfer.gii
+D       templates_surfaces/lc.sphere.freesurfer.gii
+M       templates_surfaces/lh.central.Template_T1.gii
+M       templates_surfaces/lh.thickness.Template_T1
+M       templates_surfaces/mesh.central.Template_T1.gii
+D       templates_surfaces/rc.central.freesurfer.gii
+D       templates_surfaces/rc.sphere.freesurfer.gii
+M       templates_surfaces/rh.central.Template_T1.gii
+M       templates_surfaces/rh.thickness.Template_T1
+M       templates_surfaces/templates_surfaces.man
+M       templates_surfaces_32k/lh.central.Template_T1.gii
+M       templates_surfaces_32k/lh.thickness.Template_T1
+M       templates_surfaces_32k/mesh.central.Template_T1.gii
+M       templates_surfaces_32k/rh.central.Template_T1.gii
+M       templates_surfaces_32k/rh.thickness.Template_T1
+M       templates_surfaces_32k/templates_surfaces_32k.man
+
+(1) Chamged: Updated Template_T1 surfaces and thickness values using 
+             collcorr=24.
+(2) Changed: Removed old cerebellar surfaces in templates_surfaces.
+(3) Changed: Updated template descriptions in templates_surfaces*.
+(4) Changed: Updatd help text for cat_standalone.sh.
+(5) Changed: Added "vox" to fields that should be removed in cat_batch_cat
+             to suppress warnings.
+(6) Fixed:   Added check for extopts.vox field in cat_long_multi_run.m.
+------------------------------------------------------------------------
+r1774 | gaser | 2021-02-27 00:51:11 +0100 (Sa, 27 Feb 2021) | 21 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -20,6 +57,7 @@ D       templates_MNI152NLin2009cAsym/TPM.nii
 (2) Fixed:   Added conversion to char for checking for extopts.shootingT1.
  
              
+
 
 ------------------------------------------------------------------------
 r1773 | gaser | 2021-02-26 22:51:15 +0100 (Fr, 26 Feb 2021) | 153 lines

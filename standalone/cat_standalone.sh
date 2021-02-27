@@ -265,6 +265,12 @@ run_cat ()
 
 help ()
 {
+
+  # do not use a single dot
+  if [ "$SPMROOT" == "." ]; then
+    SPMROOT="SPMROOT"
+  fi
+
 cat <<__EOM__
 
 USAGE:
