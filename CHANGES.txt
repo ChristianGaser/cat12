@@ -1,5 +1,25 @@
 ------------------------------------------------------------------------
-r1775 | gaser | 2021-02-27 21:07:33
+r1776 | gaser | 2021-02-28 15:00:00
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_main1639.m
+M       cat_main_LAS.m
+M       cat_main_LAS2.m
+M       cat_main_LAS21639.m
+M       cat_main_reportstr.m
+M       html/cat_versions.html
+ M      templates_MNI152NLin2009cAsym/cat_1mm.nii
+A       templates_surfaces/cb.central.Template_T1.gii
+A       templates_surfaces/cb.thickness.Template_T1
+
+(1) Chamged: Changed list of default options for internal interpolation because
+             "native" seems to better more appropriate than "best native".
+(2) Changed: Updated version information.
+(3) Changed: Updated LAS formatted output for command line report.
+------------------------------------------------------------------------
+r1775 | gaser | 2021-02-27 21:08:33 +0100 (Sa, 27 Feb 2021) | 35 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -35,6 +55,7 @@ M       templates_surfaces_32k/templates_surfaces_32k.man
 (5) Changed: Added "vox" to fields that should be removed in cat_batch_cat
              to suppress warnings.
 (6) Fixed:   Added check for extopts.vox field in cat_long_multi_run.m.
+
 ------------------------------------------------------------------------
 r1774 | gaser | 2021-02-27 00:51:11 +0100 (Sa, 27 Feb 2021) | 21 lines
 
