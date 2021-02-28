@@ -249,7 +249,9 @@ function str = cat_main_reportstr(job,res,qa)
     str{1} = [str{1} struct('name', 'Initial Segmentation / WMH Correction / Int. Res.:',...
       'value',sprintf('%s{%s} / %s{%s} / %s{%s}',cp{1},kamapstr{job.extopts.spm_kamap+1}, cp{2},wmhcstr{job.extopts.WMHC+1}, cp{5},restype))];
   end
-  str{1}(end).value = [str{1}(end).value sprintf('(%s{%0.2f %0.2f})',npara, job.extopts.restypes.(restype))];
+  if ~strcmp(restype, 'native')
+    str{1}(end).value = [str{1}(end).value sprintf('(%s{%0.2f %0.2f})',npara, job.extopts.restypes.(restype))];
+  end
 
   % line 8: resolution parameter
   % RD202007:  I am sure if a colorrating works here - it is just to much.

@@ -297,7 +297,7 @@ if ~isfield(res,'spmpp')
     if job.extopts.NCstr~=0 
       % noise correction of the local normalized image Ymi, whereas only small changes are expected in Ym by the WM bias correction
       stimen = cat_io_cmd(sprintf('  SANLM denoising after LAS (%s)',...
-        NCstr.labels{find(cell2mat(NCstr.values)==job.extopts.NCstr,1,'first')}),'g5',1,stime);
+        NCstr.labels{find(cell2mat(NCstr.values)==job.extopts.NCstr,1,'first')}),'g5','',1,stime);
       
       [Ymis,Ymior,BB]  = cat_vol_resize({Ymi,Ymo},'reduceBrain',vx_vol,round(2/mean(vx_vol)),Yb);
       Ymis = cat_vol_sanlm(struct('data',res.image0.fname,'verb',0,'NCstr',job.extopts.NCstr),res.image,1,Ymis);
