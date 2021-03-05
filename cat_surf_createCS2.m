@@ -52,7 +52,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   cstime = clock; 
   
   
-  % set debuging variable
+  % set debugging variable
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
 
   
@@ -874,7 +874,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
         Ycbhd = Ycbhd/max(Ycbhd(Ycbhd<1000)); 
         Ycbc  = cat_vol_smooth3X(Yppi + Ymfs/3 + (Ycbhd*0.8) ,2)>2; 
         Ycbc  = cat_vol_smooth3X( cat_vol_morph( cat_vol_morph( cat_vol_morph( Ycbc ,'o',1) ,'l',[2 0.2]), 'lc',2),2) >0.5;
-        %% more over we can use the Laplace filter for subtile openen and closing
+        %% moreover we can use the Laplace filter for subtile openen and closing
         if debug, tic; end
         Yltw  = (Yppi>0.6 | cat_vol_morph(Yppi>0.9,'dc',1) | Ycbc)/2 + Ycbc/2; 
         Yltw  = cat_vol_laplace3R(single(Yltw),Yltw>0 & Yltw<1,0.01);
@@ -914,7 +914,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
                    ( (cth>=0).*(Ycbcd<cth)  | (cth<0).*(Ycbcd>-cth) ); 
         if ~debug, clear Ylt Ycbcd; end
         if 0
-          % this is to complex ...
+          % this is too complex ...
           Ycbm = Ycbpp>0.99 | ...
                  Ycbth(1,0.95,2.5,0.0) | ...
                  Ycbth(1,0.9,2.1,1/3) | ...
@@ -1073,7 +1073,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
       %  ##########
       %  * Both the SPM as well as the MATLAB function crashed my MATLAB
       %    multiple times (unreproducible and fatal).
-      %    However, I have no idea why this happen and if it only on my system
+      %    However, I have no idea why this happens and if its only on my system
       %    or how I could avoid or catch it because it is not just a simple error. 
       %    > This also happens if I only use double.
       %    > It also happens on the server. 
@@ -1108,7 +1108,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
 
 
       % Create a smooth surface for the topology correction. 
-      % It don't has to be perfect because it will replaced completelly!
+      % It don't has to be perfect because it will replaced completely!
       for li = 2.^(0:2 - (opt.fast>0)) 
         cmds = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none  0  1  -1  .1 ' ...   
                        'avg  %0.3f  %0.3f .2  .1  2  0 "0.5"  "0.5"  n 0  0  0 %d %g  0.0 0'], ...          
@@ -1242,7 +1242,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
       %% Topology correction and surface refinement
       %  --------------------------------------------------------------------
       %  This topology correction creates a completely new surface based on  
-      %  spherical hormonic functions resulting in a relative unbalanced
+      %  spherical harmonic functions resulting in a relative unbalanced
       %  local resolution (i.e., oversampled in the insula) that is corrected
       %  in the next block.  However, this also means the resolution of the
       %  input surface don't have to be super high (see above). 
@@ -1251,7 +1251,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
 
       % spherical surface mapping 1 of the uncorrected surface for topology correction
       % We do not need so much smoothing as for the final surface but the
-      % cerebellum needs maybe more due to servere topology defects.
+      % cerebellum needs maybe more due to severe topology defects.
       cmd = sprintf('CAT_Surf2Sphere "%s" "%s" %d',Praw,Psphere0,...
         5 + round( sqrt( size(CS.faces,1) / 10000 * (1 + 3*iscerebellum) ) )); 
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
@@ -1275,17 +1275,17 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
 
       % topology correction and surface refinement
       % Higher -n will result in larger but still unbalanced meshes and the 
-      % refine_lenght parameter is more important to obtain nice meshes.
+      % refine_length parameter is more important to obtain nice meshes.
       if opt.verb>3, fprintf('\n'); end
       cmd = sprintf('CAT_FixTopology -lim %d -bw %d -n %d -refine_length %g "%s" "%s" "%s"',...
-      ...  512,1024, 81920, opt.vdist ,Praw,Psphere0,Pcentral);
-        256 / (1 + iscerebellum),1024 / (1 + iscerebellum), 81920 * (1 + 0*3*iscerebellum), opt.vdist ,Praw,Psphere0,Pcentral); % avoid to long processing in cerebellum
+        256 / (1 + iscerebellum),1024 / (1 + iscerebellum), 81920 * (1 + 0*4*iscerebellum), opt.vdist ,Praw,Psphere0,Pcentral); % avoid too long processing in cerebellum
       ...  512 * (1 + iscerebellum),1024 * (1 + iscerebellum), 81920 * (1 + 0*3*iscerebellum), opt.vdist ,Praw,Psphere0,Pcentral);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
-CS = loadSurf(Pcentral); 
-facevertexcdata = cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm); 
-fprintf('TC: V=%d, MN(CT)=%0.20f, SD(CT)=%0.20f\n',size(CS.vertices,1),mean(facevertexcdata(:)),std(facevertexcdata(:)));    
-res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
+      
+      CS = loadSurf(Pcentral); 
+      facevertexcdata = cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm); 
+      fprintf('TC: V=%d, MN(CT)=%0.20f, SD(CT)=%0.20f\n',size(CS.vertices,1),mean(facevertexcdata(:)),std(facevertexcdata(:)));    
+      res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
     end
 
   
@@ -1361,7 +1361,7 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
     CS = loadSurf(Pcentral);
     facevertexcdata = cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm); 
     cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
-fprintf('SR1: V=%d, MN(CT)=%0.20f, SD(CT)=%0.20f\n',size(CS.vertices,1),mean(facevertexcdata(:)),std(facevertexcdata(:)));    
+    if opt.verb > 2, fprintf('SR1: V=%d, MN(CT)=%0.20f, SD(CT)=%0.20f\n',size(CS.vertices,1),mean(facevertexcdata(:)),std(facevertexcdata(:))); end
 res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
 
     
@@ -1413,7 +1413,7 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
     res.(opt.surf{si}).createCS_2_refine = cat_surf_fun('evalCS' ,CS,cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm),...
       Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2,opt.collcorr==0 && cat_get_defaults('extopts.expertgui')>1);
     res.(opt.surf{si}).createCS_final    = res.(opt.surf{si}).createCS_2_refine; 
-fprintf('SR2: V=%d, SD(CT)=%0.20f\n',size(CS.vertices,1),std(facevertexcdata(:)));    
+    if opt.verb > 2, fprintf('SR2: V=%d, SD(CT)=%0.20f\n',size(CS.vertices,1),std(facevertexcdata(:))); end
     
     
     
@@ -1607,31 +1607,31 @@ fprintf('SR2: V=%d, SD(CT)=%0.20f\n',size(CS.vertices,1),std(facevertexcdata(:))
     
     
     
-    %% spherical surface mapping and registration of the final corrected surface
-    %  use more iterations for higher surfaces (sqrt due to surface area)
-    %  no extra rule for the cerebellum here because it is has the correct topology. 
-    stime = cat_io_cmd('  Spherical mapping with areal smoothing','g5','',opt.verb,stime); 
-    cmd = sprintf('CAT_Surf2Sphere "%s" "%s" %d',Pcentral,Psphere,...
-      5 + round( sqrt( size(CS.faces,1) / 10000 ) + 1 )); % 300k with value 10
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
-    
-    % spherical registration to fsaverage template
-    stime = cat_io_cmd('  Spherical registration','g5','',opt.verb,stime);
-    if opt.vdist>2 % low quality 
-      cmd = sprintf(['CAT_WarpSurf -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s" ' ...
-        '-size 256 128 -loop 1 -steps 1 -runs 2'],...
-        Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
-    else
-      cmd = sprintf('CAT_WarpSurf -steps 2 -avg -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"', ...
-        Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
+    % skip that part if a prior image is defined
+    if ~useprior
+      %% spherical surface mapping and registration of the final corrected surface
+      %  use more iterations for higher surfaces (sqrt due to surface area)
+      %  no extra rule for the cerebellum here because it is has the correct topology. 
+      stime = cat_io_cmd('  Spherical mapping with areal smoothing','g5','',opt.verb,stime); 
+      cmd = sprintf('CAT_Surf2Sphere "%s" "%s" %d',Pcentral,Psphere,...
+        5 + round( sqrt( size(CS.faces,1) / 10000 ) + 1 )); % 300k with value 10
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
+      
+      % spherical registration to fsaverage template
+      stime = cat_io_cmd('  Spherical registration','g5','',opt.verb,stime);
+      if opt.vdist>2 % low quality 
+        cmd = sprintf(['CAT_WarpSurf -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s" ' ...
+          '-size 256 128 -loop 1 -steps 1 -runs 2'],...
+          Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
+      else
+        cmd = sprintf('CAT_WarpSurf -steps 2 -avg -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"', ...
+          Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
+      end
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
     end
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
     
-    % setting of thickness values to zero for masked area (by the inverse transformation)
-    % does not work properly for all data and is moreover part of cat_surf_resample ...
-
     % display some evaluation 
-    if opt.verb>1
+    if opt.verb>1 & ~useprior
       fprintf('%5.0fs\n',etime(clock,stime)); 
       fprintf('    Euler number / defect number / defect size: ');
       cat_io_cprintf( color( rate(  EC0 - 2        , 0 , 100 * (1+4*iscerebellum)) ) , sprintf('%0.0f / '   , EC0 ) );

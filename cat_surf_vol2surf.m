@@ -275,7 +275,7 @@ function out = cat_surf_vol2surf(varargin)
     for vi=1:numel(data_vol)
       % check whether bounding box is from previous version that is not compatible
       % with new template
-      BB = spm_get_bbox(spm_vol(data_vol{vi});
+      BB = spm_get_bbox(spm_vol(data_vol{vi}));
       if sum(sum(BB-[-90 -126 -72;90 90 108])) == 0
         fprintf('WARNING: File %s is not compatible to new template because a new MNI152NLin2009cAsym template space is used, which is not compatibe!\n',data_vol{vi});
       end
