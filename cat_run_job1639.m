@@ -497,15 +497,6 @@ function cat_run_job1639(job,tpm,subj)
           aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
           aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
 
-          % correct origin using COM and invert translation and use it as starting value
-          if job.extopts.setCOM
-            fprintf('\n');
-            Affine_com  = cat_vol_set_com(VF1);
-            Affine_com(1:3,4) = -Affine_com(1:3,4);
-          else
-            Affine_com = eye(4);
-          end
-          
           % use affine transformation of given (average) data for longitudinal mode
           if isfield(job,'useprior') && ~isempty(job.useprior)
             priorname = job.useprior{1};
@@ -525,6 +516,15 @@ function cat_run_job1639(job,tpm,subj)
             end
           else
             useprior = 0;
+          end
+          
+          % correct origin using COM and invert translation and use it as starting value
+          if job.extopts.setCOM & ~useprior
+            fprintf('\n');
+            Affine_com  = cat_vol_set_com(VF1);
+            Affine_com(1:3,4) = -Affine_com(1:3,4);
+          else
+            Affine_com = eye(4);
           end
           
           if strcmp('human',job.extopts.species) && ~useprior

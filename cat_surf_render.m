@@ -130,6 +130,17 @@ switch lower(action)
         if ~isfield(M,'vertices')
             try
                 MM = M;
+                try
+                  name = MM.private.metadata(1).value;
+                  
+                  % try to replace path to cat12 and correct template name to new template
+                  if ~exist(name,'File')
+                    [pt,nm,xt] = fileparts(name);
+                     nm = strrep(nm,'Template_T1_IXI555_MNI152_GS','Template_T1');                     
+                     [pt2,nm2,xt2] = fileparts(pt);
+                     MM.private.metadata(1).value = fullfile(spm('dir'),'toolbox','cat12',nm2,[nm xt]);
+                  end
+                end
                 M  = gifti(MM.private.metadata(1).value);
                 try, M.cdata = MM.cdata(); end
             catch
@@ -245,8 +256,8 @@ switch lower(action)
                     else
                         Mt.cdata = cat_io_FreeSurfer('read_surf_data',O.pcdata{mi});
                     end
-                    M.cdata = [M.cdata;Mt.cdata];
-                    labelmapclim = [min(M.cdata),max(M.cdata)];
+                    M.cdata = [M.cdata; Mt.cdata];
+                    labelmapclim = [min(double(M.cdata)),max(double(M.cdata))];
                 end
                 if size(M.vertices,1)~=numel(M.cdata); 
                   warning('cat_surf_render:multisurfcdata',...
