@@ -152,11 +152,10 @@ function out = cat_long_createTPM(job)
 
     % load SPM TPM with 1.5 mm 
     Vdtpm = spm_vol( job.defTPM ); 
-    if (sum(sum((Vtemp.mat-Vdtpm(1).mat).^2)) < 1e-6) && (Vtemp.dim == Vdtpm(1).dim)
+    if (sum(sum((Vtemp.mat-Vdtpm(1).mat).^2)) < 1e-6) & (Vtemp.dim == Vdtpm(1).dim)
       Ydtpm = spm_load_priors(Vdtpm); for ci=1:6, Ydtpm{ci} = single(Ydtpm{ci}); end
     else
       Ydtpm = cat_vol_load_priors(Vdtpm, Vtemp); for ci=1:6, Ydtpm{ci} = single(Ydtpm{ci}); end
-      cat_io_cprintf('warn','Image resolutions differs from SPM TPM resolution. Cannot mix the images.\n');
     end
     spm_progress_bar('Init',numel(job.files),'TPM creation','Volumes Completed');% have to reset it
     spm_progress_bar('Set',fi-0.2); 
