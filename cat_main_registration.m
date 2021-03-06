@@ -268,7 +268,11 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
       % image dimension 
       idim = res.image(1).dim(1:3);                                                            % (interpolated) input image resolution
       tdim = res.tmp2{1}(1).dim;                                                               % registration template image size
-      odim = BB2dim(res.bb,resbb,res.tmp2{1}(1).dim,tmpres,newres);                            % output image size
+      if any( res.bb ~= resbb )
+        odim = BB2dim(res.bb,resbb,res.tmp2{1}(1).dim,tmpres,newres);                          % output image size
+      else
+        odim = BB2dim(res.bb,resbb,res.tpm(1).dim,tmpres,newres);                              % output image size
+      end
       
       % mat matrices for different spaces
       % M0 for the individual volume

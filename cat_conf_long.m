@@ -152,7 +152,20 @@ longTPM.help = {
 };
 
 %------------------------------------------------------------------------
-extopts = cat_conf_extopts(expert);
+
+% boundary box
+bb          = cfg_entry;
+bb.strtype  = 'r';
+bb.num      = [inf inf];
+bb.tag      = 'bb';
+bb.name     = 'Bounding box';
+bb.val      = {0}; 
+%bb.hidden   = true;
+
+
+%------------------------------------------------------------------------
+extopts = cat_conf_extopts(expert); 
+extopts.val = [ extopts.val {bb} ];
 opts    = cat_conf_opts(expert);
 output  = cat_conf_output(expert); 
 %------------------------------------------------------------------------

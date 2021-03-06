@@ -274,6 +274,33 @@ function cat_run_job1639(job,tpm,subj)
           % not automatic detection in animals
           ppe.affreg.skullstripped = ppe.affreg.skullstripped && strcmp(job.extopts.species,'human');
           
+          %% high intensity background (MP2Rage)
+          % RD202008: improved object detection with gradient
+          [YF,R]= cat_vol_resize(YF,'reduceV',vx_vol,2,32,'meanm');
+          YFm   = cat_stat_histth(YF,[0.95 0.95],struct('scale',[0 1])); 
+          Yg    = cat_vol_grad(YFm,R.vx_volr); 
+          gth   = max(0.05,min(0.2,median(Yg(Yg(:)>median(Yg(Yg(:)>0.1)))))); % object edge threshold
+          YOB   = abs(YFm)>0.1 & Yg>gth;                                   % high intensity object edges 
+          YOB   = cat_vol_morph(YOB,'ldc',8/mean(R.vx_volr));                 % full object
+          % image pricture frame to test for high intensity background in case of defaced data
+          hd    = max(3,round(0.03 * size(YF))); 
+          YCO   = true(size(YF)); YCO(hd(1):end-hd(1)+1,hd(2):end-hd(2)+1,hd(3):end-hd(3)+1) = false; 
+          % background  
+          if sum(YOB(:)>0)<numel(YOB)*0.9 && sum(YOB(:)>0)>numel(YOB)*0.1  % if there is a meanful background
+            YBG = ~cat_vol_morph(YOB,'lc',2/mean(R.vx_volr));                 % close noisy background
+          else
+            YBG = ~cat_vol_morph(YOB,'lc',2/mean(R.vx_volr));  
+            msg = [mfilename 'Detection of background failed.']; 
+            cat_io_addwarning('cat_run_job:failedBGD',msg,1,[0 1]);
+          end
+          ppe.affreg.highBGpara = [ ...
+            cat_stat_nanmedian( YFm( YBG(:) > 1/3 )) ... normal background
+            cat_stat_nanmedian( YFm( YCO(:) > 1/3 )) ... pricture frame background 
+            cat_stat_nanstd( YFm(YBG(:)) > 1/3)]; % I am not sure if we should use the std, because inverted images are maybe quite similar
+          ppe.affreg.highBG     = ...
+            ppe.affreg.highBGpara(1) > 1/5 || ...
+            ppe.affreg.highBGpara(2) > 1/5; 
+          
           
           %% Interpolation
           %  -----------------------------------------------------------------
@@ -470,8 +497,12 @@ function cat_run_job1639(job,tpm,subj)
         
             if ~debug, clear Yt; end
 
-            stime = cat_io_cmd('Affine registration','','',1,stime); 
-
+            if job.extopts.setCOM && ~( isfield(job,'useprior') && ~isempty(job.useprior) ) && ~ppe.affreg.highBG
+              
+            else
+              stime = cat_io_cmd('Affine registration','','',1,stime); 
+            end
+            
             % write data to VF
             VF.dt         = [spm_type('UINT8') spm_platform('bigend')];
             VF.dat(:,:,:) = cat_vol_ctype(Ym * 200,'uint8'); 
@@ -484,8 +515,12 @@ function cat_run_job1639(job,tpm,subj)
             VG1   = spm_smoothto8bit(VG,resa);
 
           else
-            % standard approach with static resa value and no VG smoothing
-            stime = cat_io_cmd('Coarse affine registration'); 
+            % standard approach (no APP) with static resa value and no VG smoothing
+            if job.extopts.setCOM && ~( isfield(job,'useprior') && ~isempty(job.useprior) ) && ~ppe.affreg.highBG
+              stime = clock; 
+            else
+              stime = cat_io_cmd('Coarse affine registration');
+            end
             resa  = 8;
             VF1   = spm_smoothto8bit(VF,resa);
             VG1   = VG; 
@@ -515,41 +550,39 @@ function cat_run_job1639(job,tpm,subj)
               useprior = 0;
             end
           else
+            Affine   = eye(4); 
             useprior = 0;
-          end
           
-          % correct origin using COM and invert translation and use it as starting value
-          if job.extopts.setCOM & ~useprior
-            fprintf('\n');
-            Affine_com  = cat_vol_set_com(VF1);
-            Affine_com(1:3,4) = -Affine_com(1:3,4);
-          else
-            Affine_com = eye(4);
-          end
-          
-          if strcmp('human',job.extopts.species) && ~useprior
-            % affine registration
-            try
-              spm_plot_convergence('Init','Coarse affine registration','Mean squared difference','Iteration');
-            catch
-              spm_chi2_plot('Init','Coarse affine registration','Mean squared difference','Iteration');
+            % correct origin using COM and invert translation and use it as starting value
+            if job.extopts.setCOM && ~ppe.affreg.highBG 
+              fprintf('\n');
+              Affine_com  = cat_vol_set_com(VF1);
+              Affine_com(1:3,4) = -Affine_com(1:3,4);
+            else
+              Affine_com = eye(4);
             end
 
-            warning off
-            try 
-              [Affine0, affscale]  = spm_affreg(VG1, VF1, aflags, Affine_com); Affine = Affine0;
-            catch
-              affscale = 0; 
-            end
-            if affscale>3 || affscale<0.5
-              stime  = cat_io_cmd('Coarse affine registration failed. Try fine affine registration.','','',1,stime);
-              Affine = Affine_com; 
-            end
-            warning on
-          else
-            Affine = eye(4); 
-          end
+            if strcmp('human',job.extopts.species) && ~ppe.affreg.highBG 
+              % affine registration
+              try
+                spm_plot_convergence('Init','Coarse affine registration','Mean squared difference','Iteration');
+              catch
+                spm_chi2_plot('Init','Coarse affine registration','Mean squared difference','Iteration');
+              end
 
+              warning off
+              try 
+                [Affine0, affscale]  = spm_affreg(VG1, VF1, aflags, Affine_com); Affine = Affine0;
+              catch
+                affscale = 0; 
+              end
+              if affscale>3 || affscale<0.5
+                cat_io_cmd('Coarse affine registration failed. Try fine affine registration.','','',1,stime);
+                Affine = Affine_com; 
+              end
+              warning on
+            end
+          end
           
           %% APP step 2 - brainmasking and second tissue separated bias correction  
           %  ---------------------------------------------------------
@@ -563,7 +596,7 @@ function cat_run_job1639(job,tpm,subj)
           
           
           % fine affine registration 
-          if strcmp('human',job.extopts.species) && ~useprior 
+          if strcmp('human',job.extopts.species) && ~useprior && ~ppe.affreg.highBG 
             aflags.sep = obj.samp/2; 
             aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
             aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
@@ -586,6 +619,8 @@ function cat_run_job1639(job,tpm,subj)
             [Affine1,affscale1] = spm_affreg(VG1, VF1, aflags, Affine, affscale);
             warning on
             if ~any(any(isnan(Affine1(1:3,:)))) && affscale1>0.5 && affscale1<3, Affine = Affine1; end
+          else
+            Affine1 = Affine; 
           end
           clear VG1 VF1
          
@@ -719,7 +754,8 @@ function cat_run_job1639(job,tpm,subj)
             else
               % check for > 10% larger scaling 
               if scl1 > 1.1*scl2 && job.extopts.setCOM ~= 11 % setcom == 11 - use always 
-                fprintf('\n  First fine affine registration failed.\n  Use affine registration from previous step.                ');
+                stime = cat_io_cmd('  First fine affine registration failed.Use previous registration.','warn','',1,stime);
+                %fprintf('\n  First fine affine registration failed.\n  Use affine registration from previous step.                ');
                 Affine2 = Affine1;
                 scl2 = scl1;
               end
@@ -730,7 +766,8 @@ function cat_run_job1639(job,tpm,subj)
               scl3 = abs(det(Affine3(1:3,1:3)));
               % check for > 5% larger scaling 
               if scl2 > 1.05*scl3 && job.extopts.setCOM ~= 11 % setcom == 11 - use always
-                fprintf('\n  Final fine affine registration failed.\n  Use fine affine registration from previous step.                ');
+                stime = cat_io_cmd('  Final fine affine registration failed.Use previous registration.','warn','',1,stime);
+                %fprintf('\n  Final fine affine registration failed.\n  Use fine affine registration from previous step.                ');
                 Affine = Affine2;
               else
                 Affine = Affine3;
@@ -984,7 +1021,7 @@ function cat_run_job1639(job,tpm,subj)
             
     %% call main processing
     res.tpm     = obj.tpm.V;
-    if exist('ppe'), res.ppe     = ppe; end
+    if exist('ppe','var'), res.ppe     = ppe; end
     res.stime   = stime0;
     res.catlog  = catlog; 
     res.Affine0 = res.Affine; 

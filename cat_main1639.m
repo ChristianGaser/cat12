@@ -203,7 +203,7 @@ if ~isfield(res,'spmpp')
   %  #### move fast shooting to the cat_main_updateSPM function ####
   % 
   if 1 % job.extopts.WMHC || job.extopts.SLC
-    stime = cat_io_cmd(sprintf('Fast registration'),'','',job.extopts.verb); 
+    if ~debug, stime = cat_io_cmd(sprintf('Fast Optimized Shooting registration'),'','',job.extopts.verb); end
 
     res2 = res; 
     job2 = job;
@@ -265,7 +265,7 @@ if ~isfield(res,'spmpp')
       %try 
         %res.ppe.LASMC = tmp; 
       %end
-      cat_io_cmd(' ',' ','',job.extopts.verb);  fprintf('%5.0fs',etime(clock,stime));
+      cat_io_cmd(' ',' ','',job.extopts.verb); fprintf('%5.0fs',etime(clock,stime));
     end
     % ################
     
@@ -274,6 +274,7 @@ if ~isfield(res,'spmpp')
     else
       [Ymi,Ym,Ycls] = cat_main_LAS21639(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
     end
+    stime = clock; % not really correct but better than before
     
     % ###########
     % RD202102:   update Ymi since the LAS correction is currently not local engough
@@ -750,13 +751,13 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
       %%
       [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size, qa.createCS] = ...
         cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,struct('pbtmethod','pbt2x',...
-        'interpV',job.extopts.pbtres,'extract_pial_white',job.extopts.collcorr, ...
+        'interpV',job.extopts.pbtres,'collcorr',job.extopts.collcorr, ...
         'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
         'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior)); 
     end
   end
   
-  % thickness map
+  %% thickness map
   if numel(fieldnames(S))==0 && isempty(Psurf), clear S Psurf; end
   if isfield(job.output,'ct')
     cat_io_writenii(VT0,Yth1,res.mrifolder,'ct','cortical thickness map','uint16',...

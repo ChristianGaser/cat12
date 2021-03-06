@@ -776,7 +776,6 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
   %% local intensity modification of the original image
   % --------------------------------------------------------------------
   cat_io_cmd('  Intensity transformation','g5','',verb,stime); 
-  fprintf('\n')
   Yml = zeros(size(Ysrc)); 
   Yml = Yml + ( (Ysrc>=Ylab{2}                ) .* (3 + (Ysrc - Ylab{2}) ./ max(eps,Ylab{2} - Ylab{3})) );
   Yml = Yml + ( (Ysrc>=Ylab{1} & Ysrc<Ylab{2} ) .* (2 + (Ysrc - Ylab{1}) ./ max(eps,Ylab{2} - Ylab{1})) );
