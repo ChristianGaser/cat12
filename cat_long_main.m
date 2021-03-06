@@ -77,16 +77,24 @@ matlabbatch{mbi}.spm.tools.cat.estwrite.data(1)             = cfg_dep('Longitudi
                                                                       substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','avg', '()',{':'}));
 matlabbatch{mbi}.spm.tools.cat.estwrite.nproc               = 0;
-matlabbatch{mbi}.spm.tools.cat.estwrite.opts.ngaus          = [1 1 2 3 4 8]; 
 if exist('opts','var') && ~isempty(opts)
   matlabbatch{mbi}.spm.tools.cat.estwrite.opts              = opts;
 end
+% matlabbatch{mbi}.spm.tools.cat.estwrite.opts.ngaus          = [1 1 2 3 4 2]; 
 if exist('extopts','var') && ~isempty(extopts)
   matlabbatch{mbi}.spm.tools.cat.estwrite.extopts           = extopts;
+  
 end
 if exist('output','var') && ~isempty(output)
   matlabbatch{mbi}.spm.tools.cat.estwrite.output            = output;
 end
+% RD202102: differentiation between user levels not tested yet !
+  if isfield(extopts,'bb')
+    matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.bb              = 1; % use TPM output BB 
+  else
+    matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.bb              = 1;    
+    matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.registration.bb = 1; % use TPM output BB 
+  end
 % surface estimation
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.surface      = surfaces;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.ROImenu.noROI= struct([]);
@@ -309,10 +317,10 @@ for ci = 1:2 + single(write_CSF) % fill image sets
                                                                       substruct('.','vfiles'));
   end
 end
-matlabbatch{mbi}.spm.tools.cat.tools.defs.interp = 1;
-matlabbatch{mbi}.spm.tools.cat.tools.defs.bb     = [NaN NaN NaN
-                                                    NaN NaN NaN];
-matlabbatch{mbi}.spm.tools.cat.tools.defs.vox    = [NaN NaN NaN];
+matlabbatch{mbi}.spm.tools.cat.tools.defs.interp          = 1;
+matlabbatch{mbi}.spm.tools.cat.tools.defs.bb  = [NaN NaN NaN
+                                                 NaN NaN NaN];
+matlabbatch{mbi}.spm.tools.cat.tools.defs.vox = [NaN NaN NaN];
 if modulate, matlabbatch{mbi}.spm.tools.cat.tools.defs.modulate = modulate; end  % modulation option for applying deformations
 
 

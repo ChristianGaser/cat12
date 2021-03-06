@@ -64,9 +64,10 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
       %for i=1:size(P,4), [Pc1(:,:,:,i),RR] = cat_vol_resize(P(:,:,:,i),'reduceV',vx_vol,job.extopts.uhrlim,32); end %#ok<AGROW>
       for i=1:size(P,4), [Pc1(:,:,:,i),BB] = cat_vol_resize(P(:,:,:,i),'reduceBrain',vx_vol,4,YbA); end %#ok<AGROW>
       Pc1 = cat_main_clean_gwc1639(Pc1,max(1,min(2,job.extopts.cleanupstr*2)));
-      for i=1:size(P,4), P(:,:,:,i)   = cat_vol_resize(Pc1(:,:,:,i),'dereduceBrain',BB); end 
+      Ybb = ones(size(YbA),'uint8'); Ybb(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = uint8(1); 
+      for i=1:size(P,4), P(:,:,:,i) = Ybb.*P(:,:,:,i) + cat_vol_resize(Pc1(:,:,:,i),'dereduceBrain',BB); end 
       %for i=1:size(P,4), P(:,:,:,i)   = cat_vol_resize(Pc1(:,:,:,i),'dereduceV',RR); end 
-      clear Pc1 Pc2;
+      clear Pc1 Pc2 Ybb;
     end
   end
   clear YbA;
@@ -394,8 +395,9 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   
   % display  some values for developers
   if job.extopts.expertgui > 1
-    cat_io_cprintf('blue',sprintf('    SPM  volumes (CGW=TIV; in mm%s):      %6.2f + %6.2f + %6.2f = %4.0f\n',...
-      native2unicode(179, 'latin1'),res.ppe.SPMvols0([3 1 2]),sum(res.ppe.SPMvols0(1:3))));    
+    % ... I want to add the intesities later
+    %cat_io_cprintf('blue',sprintf('    SPM  volumes (CGW=TIV; in mm%s):      %6.2f + %6.2f + %6.2f = %4.0f\n',...
+    %  native2unicode(179, 'latin1'),res.ppe.SPMvols0([3 1 2]),sum(res.ppe.SPMvols0(1:3))));    
     if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap 
       cat_io_cprintf('blue',sprintf('    SPM  volumes (CGW=TIV; in mm%s):      %6.2f + %6.2f + %6.2f = %4.0f\n',...
         native2unicode(179, 'latin1'),res.ppe.SPMvols0([3 1 2]),sum(res.ppe.SPMvols0(1:3))));    

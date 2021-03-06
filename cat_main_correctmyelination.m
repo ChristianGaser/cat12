@@ -140,7 +140,7 @@ function [Ym2,Ysrc2,Ycls,Ycor,glcor,cf] = cat_main_correctmyelination(Ym,Ysrc,Yc
   % correction factor based on the volumina and thickness values and on the size of the amount of higher GM PVE values
   clsvol     = zeros(1,3); for i=1:3, clsvol(i) = sum(single(Ycls{i}(:))/255); end %  * prod(vx_vol)/1000
   [mn,sd,nm] = cat_stat_kmeans(Ymb(Yp0b(:)>1.8/3 & Yct(:)),4);                       %#ok<ASGLU> % 4 classes [GM,HGM,LWM,WM] were we focus on the myelinated GM (LWM)  
-  glcor      = min(1,max(0,( ( nm(3)/sd(3) ) / ( nm(4)/sd(4) ) - 0.1 ) * 2)) / prod(vx_volo);    % lower rate for low res
+  glcor      = min(1,max(0,( ( nm(3)/sd(3) ) / ( nm(4)/sd(4) ) - 0.1 ) * 2)) / mean(vx_volo);    % lower rate for low res -  prod was not engough correction at 2 mm
   glcor      = min(1,glcor * mean( vx_vol ./ vx_volo ) * clsvol(2)/clsvol(1)) * 3;               % lower correction in case of interpolation 
   if ~debug, clear clsvol mn sd nm; end
   
@@ -169,11 +169,12 @@ function [Ym2,Ysrc2,Ycls,Ycor,glcor,cf] = cat_main_correctmyelination(Ym,Ysrc,Yc
   if ~debug, clear Yct; end
   
   % Ycm  .. first correction map (range 0-1) + 
-  Ycm   = max(0,min(1,(smooth3(Ymb<0.98 & Ymb>2.2/3 & Ycdmm<2.5) + max(0,Ymb - 2/3)) .* 3 .* Yct2 .* (1 - Ywmp) .* min(2,max(0,2.5 - Ycdmm)) .* (( max(0,Ywmt - Ygmt + 1)) | Ycdmm<3) .* max(0,3 - Ygmt))); 
+  Ycm   = max(0,min(1,(smooth3(Ymb<0.98 & Ymb>2.2/3 & Ycdmm<2.5) + max(0,Ymb - 2/3)) .* 3 .*  Yct2 .* (1 - Ywmp) .* ...
+           min(2,max(0,2.5 - Ycdmm)) .* (( max(0,Ywmt - Ygmt + 1)) | Ycdmm<3) .* max(0,3 - Ygmt) .* max(0,min(1, (Ywmt-2)/2)))); 
   Ycm   = Ycm * 0.9 * LASmyostr.^0.2;  
   
   % Ycma .. artefact map (range 0-1)
-  Yma   = max(0,min(1,3 * max(0,Ymb - 2/3) .* max(0,1.5 - min(0,Ycdmm-1)) .* Yct2 .*  (1 - Ywmp))); 
+  Yma   = max(0,min(1,3 * max(0,Ymb - 2/3) .* max(0,1.5 - min(0,Ycdmm-1)) .* Yct2 .* (1 - Ywmp) .* max(0,min(1, (Ywmt-2)/2)) )); 
   Yma   = Yma * 0.9 * LASartstr.^0.2;  
   
   % global limitation of the correction 

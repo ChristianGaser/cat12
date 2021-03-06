@@ -62,7 +62,7 @@ function out = cat_long_createTPM(job)
   % private settings not prepared for GUI
   def.ssize        = [ 0.5  1    2    4    8    ];  % we use multipe smoothing levels to softly include also larger changes ...
   def.sweight      = [ 0.30 0.25 0.20 0.15 0.10 ];  % ... but with lower weighting 
-  def.scsize       = [ 1 1 1 2 2 2 ];               % moreover we use a class specific filter size factor to suport smoother head classes
+  def.scsize       = [ 1 1 1 1 1 1 ];               % moreover we use a class specific filter size factor to suport smoother head classes
   def.minprob      = 0.001;                         % this value could be between 0.02 and 0.1
   def.fast         = 1;                             % CAT vs. SPM smoothing 
   def.median       = 1;                             % use median filter (values from 0 to 1) 
@@ -93,12 +93,12 @@ function out = cat_long_createTPM(job)
   elseif job.fstrength == 3 % medium changes in aging (default)            
     job.localsmooth  = 1;      
     job.median       = 1;
-    job.smoothness   = 1;                            
+    job.smoothness   = 2;                            
     job.defTPMmix    = 0.05;       
   elseif job.fstrength == 4 % soft TPM for strong changes in development
     def.localsmooth  = 1;      
     job.median       = 1;
-    job.smoothness   = 4;                             
+    job.smoothness   = 2;                             
     job.defTPMmix    = 0.1;                  
   end
   
@@ -152,10 +152,11 @@ function out = cat_long_createTPM(job)
 
     % load SPM TPM with 1.5 mm 
     Vdtpm = spm_vol( job.defTPM ); 
-    if (sum(sum((Vtemp.mat-Vdtpm(1).mat).^2)) < 1e-6) & (Vtemp.dim == Vdtpm(1).dim)
+    if all(Vtemp.dim == Vdtpm(1).dim) %&& (sum(sum((Vtemp.mat-Vdtpm(1).mat).^2)) < 1e-6)
       Ydtpm = spm_load_priors(Vdtpm); for ci=1:6, Ydtpm{ci} = single(Ydtpm{ci}); end
     else
       Ydtpm = cat_vol_load_priors(Vdtpm, Vtemp); for ci=1:6, Ydtpm{ci} = single(Ydtpm{ci}); end
+      cat_io_cprintf('warn','\n  Image resolutions differs from SPM TPM resolution. Cannot mix the images.\n');
     end
     spm_progress_bar('Init',numel(job.files),'TPM creation','Volumes Completed');% have to reset it
     spm_progress_bar('Set',fi-0.2); 
@@ -172,8 +173,8 @@ function out = cat_long_createTPM(job)
     Yb = max(Yb, cat_vol_smooth3X(single(cat_vol_morph(Yb>0.1,'lc',1)),1)); 
     % avoid boundary problems for CAT report skull surface by setting the 
     % edge to background or to the SPM TPM value
-    bd   = 2; 
-    Ybgb = true(size(Ytpm{1})); Ybgb(bd+1:end-bd,bd+1:end-bd,bd+1:end-bd) = false;
+    bd   = 1; 
+    Ybgb = true(size(Ytpm{1})) & sum( cell2num(Ytpm(1:5)) , 4)<0.5; Ybgb(bd+1:end-bd,bd+1:end-bd,bd+1:end-bd) = false;
     Ybgb = Ybgb | cat_vol_morph(isnan(Ys) & ~Yb,'d',2); % more problems close to NaN regions  
     Ybgb = smooth3(Ybgb); 
     for ci=1:5, Ytpm{ci}(isnan(Ytpm{ci})) = 0; Ytpm{ci} = Ytpm{ci} .* (1-Ybgb); end 
@@ -232,10 +233,10 @@ function out = cat_long_createTPM(job)
 
         % define minimum prob of each class 
         Ytpmts = max( Ytpmts , job.minprob * job.sweight(si));
+        Ytpmts = Ytpmts ./ max(Ytpmts(:)); 
 
         % mix individual and SPM default TPM 
-        
-        if sum(sum((Vtemp.mat-Vdtpm(1).mat).^2)) < 1e-6 && job.defTPMmix>0
+        if job.defTPMmix>0 %&& sum(sum((Vtemp.mat-Vdtpm(1).mat).^2)) < 1e-6 
           Ytpmts = Ytpmts.*(1-job.defTPMmix) + (job.defTPMmix).*Ydtpm{ci}; 
         end
 

@@ -114,28 +114,28 @@ T1.help    = {
 %---------------------------------------------------------------------
 
 % boundary box
-if expert > 1 % developer
-  bb          = cfg_entry;
-  bb.strtype  = 'r';
-  bb.num      = [inf inf];
-  bb.tag      = 'bb';
-  bb.name     = 'Bounding box';
-  bb.val      = {0}; 
-  bb.help     = {
-    'The bounding box describes the dimenson of the volume to be written starting from the anterior commissure in mm.  It should include the entire brain (or head in the case of the Boundary Box of the SPM TPM) and additional space for smoothing the image.  The MNI 9-mm boundary box is optimized for CATs MNI152NLin2009cAsym template and supports filter cores up to 10 mm.  Although this box support 12 mm filter sizes theoretically, slight interference could occur at the edges and larger boxes are recommended for safety. '
-    'Additionally, it is possible to use the boundary box of the TPM or the template for special (animal) templates with strongly different boundary boxes. '
-    ''
-    'The boundary box or its id (BBid see table below) has to be entered. '
-    ''
-    '  NAME         BBID        BOUNDARY BOX                          SIZE ?             FILESIZE $   '
-    '  TMP BB            0        boundary box of the template (maybe too small for smoothing!)         '
-    '  TPM BB            1        boundary box of the TPM                                               ' 
-    '  MNI SPM          16      [ -90  -126  -72;  90  90  108 ]      [121x145x121]      4.2 MB (100%)'
-    '  MNI CAT          12      [ -84  -120  -72;  84  84    96 ]      [113x139x113]      3.8 MB ( 84%)'
-    '  ? - for 1.5 mm; $ - for 1.5 mm uint8'
-    ''
-  };
-end
+bb          = cfg_entry;
+bb.strtype  = 'r';
+bb.num      = [inf inf];
+bb.tag      = 'bb';
+bb.name     = 'Bounding box';
+bb.val      = {0}; 
+bb.hidden   = expert < 1;
+bb.help     = {
+  'The bounding box describes the dimenson of the volume to be written starting from the anterior commissure in mm.  It should include the entire brain (or head in the case of the Boundary Box of the SPM TPM) and additional space for smoothing the image.  The MNI 9-mm boundary box is optimized for CATs MNI152NLin2009cAsym template and supports filter cores up to 10 mm.  Although this box support 12 mm filter sizes theoretically, slight interference could occur at the edges and larger boxes are recommended for safety. '
+  'Additionally, it is possible to use the boundary box of the TPM or the template for special (animal) templates with strongly different boundary boxes. '
+  ''
+  'The boundary box or its id (BBid see table below) has to be entered. '
+  ''
+  '  NAME         BBID        BOUNDARY BOX                          SIZE ?             FILESIZE $   '
+  '  TMP BB            0        boundary box of the template (maybe too small for smoothing!)         '
+  '  TPM BB            1        boundary box of the TPM                                               ' 
+  '  MNI SPM          16      [ -90  -126  -72;  90  90  108 ]      [121x145x121]      4.2 MB (100%)'
+  '  MNI CAT          12      [ -84  -120  -72;  84  84    96 ]      [113x139x113]      3.8 MB ( 84%)'
+  '  ? - for 1.5 mm; $ - for 1.5 mm uint8'
+  ''
+};
+
 
 %---------------------------------------------------------------------
 
@@ -275,7 +275,7 @@ else
   if expert==2
     registration.val  = {T1 brainmask cat12atlas darteltpm shootingtpm regstr bb vox}; 
   else
-    registration.val  = {method vox}; % bb 
+    registration.val  = {method vox bb}; 
   end
 end
 registration.help   = {
@@ -330,6 +330,7 @@ pbtlas.help    = {
 };
 
 % currently only for developer
+% ################## RD: 202102: need better help ###################
 collcorr         = cfg_menu;
 collcorr.tag     = 'collcorr';
 collcorr.name    = 'Correction for surface collisions';
@@ -337,10 +338,14 @@ if expert
   collcorr.labels  = {...
     'No (createCS1; 0)',...
     'No (createCS2; 20)',...
-    'PBT Self-Intersect (createCS2; 23)',... 
-    'PBT + CAT Self-Intersect on Surface Normals (createCS2; 25)',... 
+    'PBT Self-Intersect without optimization (createCS1;  3)',... 
+    'PBT Self-Intersect without optimization (createCS2; 23)',... 
+  ...  'PBT Self-Intersect without optimization (createCS1;  4)',... 
+  ...  'PBT Self-Intersect without optimization (createCS2; 24)',... 
+  ...  'PBT + CAT Self-Intersect on Surface Normals (createCS1;  5)',... 
+  ...  'PBT + CAT Self-Intersect on Surface Normals (createCS2; 25)',... 
   };
-  collcorr.values  = {0 20 23 25};
+  collcorr.values  = {0 20 3 23 }; %4 24 5 25};
 end
 collcorr.help    = {
   ['The creation of the white and pial surface by adding/removing half thickness from the central surface requires further optimization to avoid self-intersections of the surfaces.  ' ...
@@ -351,17 +356,19 @@ collcorr.help    = {
 };
 if expert>1
   collcorr.labels  = {...
-    'No (createCS; 0)',...
-    'CAT Selfintersect surface deformation approach (createCS; 1)',... not working
+    'No (createCS1; 0)',...
+    'CAT Selfintersect surface deformation approach (createCS1; 1)',... not working
+    'PBT self-intersect without optimization (createCS1; 3)',... 
+    'PBT self-intersect with optimization (createCS1; 4)',... 
+    'PBT + CAT self-intersect (createCS1; 5)',... 
     'No (createCS2; 20)',...
     'CAT self-intersect surface deformation approach (createCS2; 21)',... 
     'CAT self-intersect surface normal approach (createCS2; 22)',... 
     'PBT self-intersect without optimization (createCS2; 23)',... 
     'PBT self-intersect with optimization (createCS2; 24)',... 
-    'PBT + CAT Selfintersect (createCS2; 25)',... 
-    ...'Delaunay Approach with Intensity Optimization (createCS2; 26)', ... not working at all
+    'PBT + CAT self-intersect (createCS2; 25)',... 
     };
-  collcorr.values  = {0 1 20 21 22 23 24 25};
+  collcorr.values  = {0 1 3 4 5 20 21 22 23 24 25};
   collcorr.help    = [collcorr.help 
     { ...
    ['There is also an older surface deformation approach (collcorr = 1 | 21) that currently stops too early and results in underestimation of the cortical thickness. ' ...
@@ -550,7 +557,7 @@ resnative.help   = {
 resbest        = cfg_entry;
 resbest.tag    = 'best';
 resbest.name   = 'Best native resolution';
-resbest.val    = {[1.0 0.1]};
+resbest.def    = @(val)cat_get_defaults('extopts.resval', val{:});
 resbest.num    = [1 2];
 resbest.help   = {
     'Preprocessing with the best (minimal) voxel dimension of the native image. The first parameters defines the lowest spatial resolution for every dimension, while the second defines a tolerance range to avoid tiny interpolations for almost correct resolutions. '
@@ -585,7 +592,7 @@ resfixed.help   = {
 resopt        = cfg_entry;
 resopt.tag    = 'optimal';
 resopt.name   = 'Optimal resolution';
-resopt.val    = {[1.0 0.3]};
+resopt.def    = @(val)cat_get_defaults('extopts.resval', val{:});
 resopt.num    = [1 2];
 resopt.help   = {
     'Preprocessing with an "optimal" voxel dimension that utilize the median and the volume of the voxel size for special handling of anisotropic images.  In many cases, untypically high slice-resolution (e.g. 0.5 mm for 1.5 Tesla) comes along with higher slice-thickness and increased image interferences.  Our tests showed that a simple interpolation to the best voxel resolution not only resulted in much longer calculation times but also in a poor segmenation (and surface reconstruction) compared to the fixed option with e.g. 1 mm.  Hence, this option tries to incooperate the voxel volume and its anisotropy to balance the internal resolution.  E.g., an image with 0.5x0.5x1.5 mm will resampled at a resolution of 0.9x0.9x0.9 mm. ' 
@@ -1136,10 +1143,10 @@ if ~spm
   if expert  % expert/developer options
     extopts.val   = {segmentation,registration,surface,admin}; 
   else
-    extopts.val   = {restype,setCOM,app,affmod,spm_kamap,LASstr,gcutstr,wmhc,registration,vox,ignoreErrors}; 
+    extopts.val   = {restype,setCOM,app,affmod,spm_kamap,LASstr,gcutstr,wmhc,registration,vox,bb,ignoreErrors}; 
   end
 else
   % SPM based surface processing and thickness estimation
-  extopts.val   = {registration,vox,surface,admin}; 
+  extopts.val   = {registration,vox,bb,surface,admin}; % bb is hidden
 end
 extopts.help  = {'Using the extended options you can adjust special parameters or the strength of different corrections ("0" means no correction and "0.5" is the default value that works best for a large variety of data).'};
