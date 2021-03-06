@@ -158,6 +158,7 @@ cat.extopts.mrf          = 1;    % MRF weighting:                             0 
 
 % resolution option
 cat.extopts.restype      = 'optimal';    % resolution handling: 'native','fixed','best', 'optimal'
+cat.extopts.resval       = [1.0 0.30];   % resolution value and its tolerance range for the 'fixed' and 'best' restype
 
 % check for multiple cores is different for octave
 if strcmpi(spm_check_version,'octave')

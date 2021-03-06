@@ -287,7 +287,7 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
                 clear msk
             
                 % correct mat information and dimensions
-                mati  = spm_imatrix(pyramid(level).mat); 
+                mati  = spm_imatrix(pyramid(level).mat); matio = mati; 
                 mati(1:3) = mati(1:3) + mati(7:9).*(redB.BB(1:2:end) - 1);
                 pyramid(level).mat = spm_matrix(mati);
                 pyramid(level).d = redB.sizeTr;
@@ -328,6 +328,24 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
                   use_brainmask = 0;
                 end
 
+                % re-estimate mu using new dimensions
+                if use_brainmask
+                  [brainmask,redB] = cat_vol_resize(brainmask,'reduceBrain',vx_vol, 25 ,brainmask>0.5); % area around brainmask should cover full head 20-30 mm
+                  clear msk
+                   
+                  % correct mat information and dimensions
+                  mati  = matio; 
+                  mati(1:3) = mati(1:3) + mati(7:9).*(redB.BB(1:2:end) - 1);
+                  pyramid(level).mat = spm_matrix(mati);
+                  pyramid(level).d   = redB.sizeTr;
+                  
+                  % update some size-dependent parameters
+                  M_avg     = pyramid(level).mat;
+                  d         = pyramid(level).d;
+  
+                  [mu,ss,nvox,D] = compute_mean(pyramid(level), param, ord);
+                end
+                
                 clear Ym
                 spm_plot_convergence('Clear');
                 spm_plot_convergence('Init',['Optimising (level ' num2str(level) ') with brainmask'],'Objective Function','Step');

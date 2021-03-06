@@ -187,6 +187,30 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
         min([0 0 3 0],[job.output.TPMC.native job.output.TPMC.warped ...
         job.output.TPMC.mod job.output.TPMC.dartel]),trans);
     end
+    
+    %% correction ridig/affine transformed backgound 
+    reg = {'affine','rigid'};
+    for ri = 1:numel(reg)
+      [pp,ff] = spm_fileparts(VT0.fname); 
+      for clsi=1:6
+        Pbg{clsi}  = fullfile(pp,mrifolder,sprintf('rp%d%s_%s.nii',clsi,ff,reg{ri}));
+        Pbgexist(clsi) = exist(Pbg{clsi},'file')>0; 
+        if Pbgexist
+          Vclsa(clsi)       = spm_vol(Pbg{clsi}); 
+          Yclsa(:,:,:,clsi) = single(spm_read_vols(Vclsa(clsi))); 
+        end
+      end
+      if sum(Pbgexist)==6
+        % we cannot use labclose and therefore need all classes that should
+        % typically used for TPM creation
+        Ysum = sum(Yclsa,4); 
+        Ybg = Yclsa(:,:,:,6) + (1 - cat_vol_morph(Ysum>=1,'c')); 
+        spm_write_vol(Vclsa(6),Ybg); 
+      elseif sum(Pbgexist)>0
+        cat_io_cprintf('warn','\nBackground correction of the %s output cannot take place because not all TPM classes have been written.\n',reg{ri}); 
+      end
+      clear Pbg vclsa Yclsa Ysum Ybg
+    end
   end
   %clear cls clsi fn Ycls; % we need these maps later for the ROIs
 
