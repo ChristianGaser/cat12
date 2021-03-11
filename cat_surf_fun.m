@@ -2020,8 +2020,8 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
         YI = max(-1, min(1, ( GWth - YI ) * max(0.02,0.4 .* max(0.5,1 - i / opt.iteropt / 2) ) ));
         YO = max(-1, min(1, ( YO - CGth ) * max(0.02,0.4 .* max(0.5,1 - i / opt.iteropt / 2) ) ));
       else
-        GWth = 0.98;
-        CGth = 0.02;
+        GWth = 0.99;
+        CGth = 0.01;
         
         % position model based on the Ypp
         YI = cat_surf_isocolors2(Ypp,VI,opt.mat); 
@@ -2055,7 +2055,7 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
       YI    = YI .* ( Twc==0 & ...
         abs( GWth - YI ) > abs( GWth - YIC )  & ...
         cat_surf_edgeangle( Vg , VIg ) < opt.alphaYpp & ...
-        ( YppIC > YppI | YppI>0.98) & (YppIC<0.98 | YIC<2.9) & YIC<2.95 ); % 0.98 & 2.9
+        ( YppIC > YppI | YppI>GWth) & (YppIC<GWth | YIC<2.9) & YIC<2.95 ); % 0.98 & 2.9
       clear YppIC YIC YppI VIg; 
       
       % test new outer surface position
@@ -2066,11 +2066,11 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
         YO  = YO .* YppOC .* ( Tpc==0 & ...
           abs( YO - CGth ) > abs( YOC - CGth ) & ...
           cat_surf_edgeangle( Vg , VOg ) < opt.alphaYpp & ...
-          YppOC < YppO & YppOC>0.02 & YOC>1.50); % 0.01 & 1.5 
+          YppOC < YppO & YppOC>CGth & YOC>1.50); % 0.01 & 1.5 
       else
         YO  = YO .* (0.5+0.5*YppOC) .* ( Tpc==0 & ...
           cat_surf_edgeangle( Vg , VOg ) < opt.alphaYpp & ...
-          YppOC>0.02 );
+          YppOC>CGth );
       end
       clear YppOC YOC YppO VOg; 
       
@@ -2228,7 +2228,7 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
     SIO = SI;
   end
   
-  fprintf('\n');
+  if opt.verb, fprintf('\n'); end
   if flipped, S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); end
   
 end 
@@ -2809,7 +2809,7 @@ opt.model=0;
       YO    = cat_surf_isocolors2(Y,VO);  
       YppO  = cat_surf_isocolors2(Ypp,VO);  
      
-      if opt.model == 1, fprintf('\n'); end
+      if opt.model == 1 && opt.verb, fprintf('\n'); end
       if opt.verb, fprintf('  YIC: %0.2f%s%0.2f, YOC: %0.2f%s%0.2f',mean(YI),native2unicode(177, 'latin1'),std(YI),mean(YO),native2unicode(177, 'latin1'),std(YO)); end 
 
       WMth  = 3; YI   = max( -TICP , max(-1, min(0.5, YI - ((WMth/2 + Yl4/2) )  ))  ) / (slowdown);
@@ -2896,7 +2896,7 @@ opt.model=0;
   end
   
   % export cortical surfaces
-  if opt.write, cat_surf_saveICO(SN,TN,mat,Pcs,sprintf('post_collcorr_%0.0fk',round( size(S.faces,1)/1000 / 10) * 10 ),0); else fprintf('\n'); end
+  if opt.write, cat_surf_saveICO(SN,TN,mat,Pcs,sprintf('post_collcorr_%0.0fk',round( size(S.faces,1)/1000 / 10) * 10 ),0); elseif opt.verb, fprintf('\n'); end
   
   
   %% flip back

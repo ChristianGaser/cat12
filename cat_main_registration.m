@@ -257,32 +257,34 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
       % set registration parameter
       [reg,res,job] = regsetup(dreg,reg,dres,job,regstri,voxi);
       
-      %tpmM   = res.tpm(1).mat; 
+      tpmM   = res.tpm(1).mat; 
       tmpM   = Vtmp(1).mat; 
   
       % resolutions:
       tmpres = abs(tmpM(1));                                                                   % template resolution 
+     %tpmres = abs(tpmM(1));                                                                   % TPM resolution 
      %regres = reg(regstri).opt.rres; if isinf(regres), regres = tmpres; end                   % registration resolution
       newres = job.extopts.vox(voxi); if isinf(newres), newres = tmpres; end                   % output resolution
 
       % image dimension 
       idim = res.image(1).dim(1:3);                                                            % (interpolated) input image resolution
       tdim = res.tmp2{1}(1).dim;                                                               % registration template image size
-      if any( res.bb ~= resbb )
-        odim = BB2dim(res.bb,resbb,res.tmp2{1}(1).dim,tmpres,newres);                          % output image size
-      else
-        odim = BB2dim(res.bb,resbb,res.tpm(1).dim,tmpres,newres);                              % output image size
-      end
+      odim = BB2dim(res.bb,resbb,res.tpm(1).dim,tmpres,newres);                                % res.bb~TPM, resbb~dynamic, 
       
       % mat matrices for different spaces
       % M0 for the individual volume
       % M1* for the different normalized spaces
       % Mad for the Dartel template with different BB as the TPM
-      M0   = res.image.mat;                                                                    
-      imat = spm_imatrix(tmpM);   imat(1:3) = imat(1:3) + imat(7:9).*(tdim - (newres/tmpres*odim))/2; imat(7:9) = imat(7:9) * newres/tmpres; M1   = spm_matrix(imat); 
+      M0   = res.image.mat;          
+      if isfield( job.extopts , 'bb' )  &&  numel( job.extopts.bb ) == 1  && job.extopts.bb == 1
+        M1 = tpmM;
+      else
+        imat = spm_imatrix(tmpM); imat(1:3) = imat(1:3) + imat(7:9).*(tdim - (newres/tmpres*odim))/2; imat(7:9) = imat(7:9) * newres/tmpres; M1   = spm_matrix(imat);
+      end
       imat = spm_imatrix(eye(4)); imat(1:3) = imat(1:3) + imat(7:9).*(tdim - (newres/tmpres*odim))/2; imat(7:9) = imat(7:9) * newres/tmpres; Mad  = spm_matrix(imat);
       
       % affine and rigid parameters for registration 
+      % if the rigid output is incorrect but affine is good than the Yy caused the problem (and probably another call of this function) 
       [M3,R]          = spm_get_closest_affine( affind(rgrid( idim ) ,M0) , affind(Yy,dres.Yymat) , single(Ycls{1})/255); clear M3; 
       Mrigid          = M0\inv(R)*M1;                                                          % transformation from subject to registration space (rigid)
       Maffine         = M0\inv(res.Affine)*M1;                                                 % individual to registration space (affine)
@@ -326,11 +328,32 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
           if job.extopts.verb>1 || export
             report(job,reg,regstri);
           end
-          
-          % Export
-          if export
-            write_nii(Ycls,job,trans,reg(regstri).testfolder,reg(regstri));
+        else
+          %% define warping variables based on previous deformation
+          % estimate the inverse transformation 
+          yid             = spm_diffeo('invdef', Yy , odim, inv(tpmM\M1), M1\res.Affine*M0); 
+          yi              = spm_diffeo('invdef', yid, idim, inv(M1\res.Affine*M0), eye(4)); clear yid; 
+          yi2             = spm_diffeo('invdef', yi , odim, eye(4), eye(4)); 
+          w               = max( eps , abs(spm_diffeo('def2det', yi2 ) ) ); 
+          % Adaption to avoid boundary effects by correcting the voxel close
+          % to the image boundary that are effected by the interpolation of
+          % the field. 
+          msk             = cat_vol_morph( isnan( yi2(:,:,:,1)) ,'d',3); w( msk ) = NaN; 
+          wa              = cat_vol_approx(w,'nn',1,4); bg = cat_stat_nanmean( wa(msk(:)) ); 
+          msk             = cat_vol_smooth3X(msk,2); w( isnan(w) ) = wa( isnan(w) ); 
+          w               = wa .* msk + (1-msk) .* w; clear msk wa; 
+          % use half registration resolution to define the amout of smoothing to reduce registration artefacts
+          fs              = newres / 2; w = w - bg; spm_smooth(w,w,fs); w = bg + w; % spm smoothing boudary problem where values outside are 0 
+          M2              = inv(Maffine);                                        % warped - if we use the US than we may have to use rigid
+        
+          trans.warped    = struct('y',yi ,'yi',yi2,'w',w,'odim',odim,'M0',M0,'M1',M1,'M2',M2,'dartel',res.do_dartel,'fs',fs);  % nicer version with interpolation
+          if job.output.jacobian.warped
+            trans.jc      = struct('odim',odim,'dt2',w); 
           end
+        end
+        % Export
+        if export
+          write_nii(Ycls,job,trans,reg(regstri).testfolder,reg(regstri));
         end
       catch
 %% ------------------------------------------------------------------------
@@ -357,6 +380,7 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
         idim   = res.image(1).dim(1:3);                                               % (interpolated) input image size
         tdim   = res.tpm(1).dim;                                                      % tpm/tmp size 
         odim   = BB2dim(res.bb,resbb,res.tmp2{1}(1).dim,tpmres,newres);               % output size 
+% bug ...
         
         % mat matrices for different spaces
         % - here M1 == M1t
@@ -851,7 +875,7 @@ function [trans,reg] = run_Shooting(Ycls,Ylesion,job,reg,res,trans,Maffinerigid,
 
     % save iteration parameter for later analysis
     if it==1 || (tmpl_no(it)~=tmpl_no(it-1)) 
-      reg(regstri).ll(ti,1:4)  = [ll(1)/numel(dt) ll(2)/numel(dt) (ll(1)+ll(2))/numel(dt) ll(2)]; 
+      reg(regstri).ll(ti,1:4)  = [ll(1)/numel(u) ll(2)/numel(u) (ll(1)+ll(2))/numel(u) ll(2)]; 
       dtx = dt; 
       dtx(dtx>eps & dtx<1)     = 1./dtx(dtx>eps & dtx<1); 
       reg(regstri).dtc(ti)     = mean(abs(dtx(:)-1)); 
@@ -910,9 +934,14 @@ function [trans,reg] = run_Shooting(Ycls,Ylesion,job,reg,res,trans,Maffinerigid,
   % thus we use the def2det function of the inverted deformations to obtain the old and 
   % in my view a more appropriate jacobian determinant 
   % The 2nd reason to use the old modulation is compatibility with cat_vol_defs.m
-  yi  = spm_diffeo('invdef', y  , idim, Maffinerigid * inv(M1r\M1), inv(M1r\M1)); %#ok<MINV>
-  yi2 = spm_diffeo('invdef', yi , odim, eye(4), eye(4)); 
-  w   = max( eps , abs(spm_diffeo('def2det', yi2 ) ) ); 
+  if 1
+    yi  = spm_diffeo('invdef', y  , idim, Maffinerigid * inv(M1r\M1), inv(M1r\M1)); %#ok<MINV>
+    yi2 = spm_diffeo('invdef', yi , odim, eye(4), eye(4)); 
+  else
+    yi  = spm_diffeo('invdef', y  , idim, Maffinerigid * inv(M1r(1)\M1(1)), inv(M1r\M1) ); %#ok<MINV>
+    yi2 = spm_diffeo('invdef', yi , odim, eye(4), eye(4)); 
+  end
+  w   = max( eps , abs(spm_diffeo('def2det', yi2 ) ) );
   % avoid boundary effects that are not good for the global measurements 
   % use half registration resolution to define the amout of smoothing to reduce registration artefacts
   if 1

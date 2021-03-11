@@ -189,6 +189,47 @@ cstime = clock;
   end
   if ~debug, clear Ysroi Ymfs Yctd Ybv Ymfs; end
   
+  
+  
+  if 1
+    %% CS2: Amygdala Hippocampus smoothing 
+    %  We use a median filter to remove the nice details of the hippocampus
+    %  that will cause topology errors and self-intersections. 
+    %  Currently, I have no CAT ROI for Amygdala - but it would be more 
+    %  robust to filter (simple smoothing) this region strongly because 
+    %  the "random" details especially in good data introduce more variance.
+    %  (RD 201912)
+    
+    Ymsk = ~(NS(Ya,opt.LAB.PH) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.BS) );
+    Ymsk = Ymf>0 & cat_vol_morph( NS(Ya,opt.LAB.HC) , 'dd' , 3 , vx_vol ) & Ymsk; 
+    Ymf  = cat_vol_median3( Ymf , Ymsk ); 
+    Ymf  = cat_vol_median3( Ymf , Ymsk ); 
+    if ~debug, clear Ymsk; end
+
+    % further cleanup
+    Ymsk = ~(NS(Ya,opt.LAB.PH) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.BS) );
+    Ymsk = Ymf>0 & NS(Ya,opt.LAB.HC) & Ymsk; 
+    Ymsk = smooth3(Ymsk); 
+    Ymf  = min(Ymf,3-Ymsk); 
+    if ~debug, clear Ymsk; end
+  end
+  
+  
+  
+  if 0
+    %% CS2: Sharpening
+    %  This function works quite good in the cerebellum and it allows to
+    %  stabilize thin structures avoiding thickness overestimations if it 
+    %  used moderatly.  Abuse can increase problems by local artefacts or 
+    %  unwanted details that finally cause strong local unterestimation. 
+    %  (RD 201911)
+    
+    gmv = sum(round(Ymf(:))==2) / sum(round(Ymf(:))==3); gmvm = max(0,min(1,1 / gmv)); 
+    for i=1:gmv, Ymf = Ymf.*(gmvm) +  (1 - gmvm).*max(1,min(3, Ymf - smooth3(cat_vol_median3(Ymf,Ymf>1,Ymf>1) - Ymf) )); end  
+  end
+  
+  
+  
   %% sharpening of thin structures (gyri and sulci)
   % WARNING: this will change cortical thickness!
   if ~opt.SPM && opt.sharpenCB
@@ -383,6 +424,8 @@ cstime = clock;
     else
       [Yth1i,Yppi] = cat_vol_pbt(Ymfs,struct('method',opt.pbtmethod,'resV',opt.interpV,'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1],'pbtlas',opt.pbtlas)); % avoid underestimated thickness in gyri
     end  
+    
+
     %%
     Yth1i(Yth1i>10)=0; Yppi(isnan(Yppi))=0;  
     [D,I] = cat_vbdist(Yth1i,Ysidei); Yth1i = Yth1i(I); clear D I Ysidei;   % add further values around the cortex
@@ -590,7 +633,13 @@ cstime = clock;
         fprintf(txt); 
         fprintf('%s %4.0fs\n',repmat(' ',1,66),etime(clock,stime)); 
       end
-        
+
+      if 0
+facevertexcdata = cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm); 
+fprintf('\nRAW: V=%d, MN(CT)=%0.20f, SD(CT)=%0.20f\n',size(CS.vertices,1),mean(facevertexcdata(:)),std(facevertexcdata(:)));    
+res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
+      end
+
       % correct the number of vertices depending on the number of major objects
       if opt.reduceCS>0 
         CS = reducepatch(CS,opt.reduceCS * scale_cerebellum); % adaption for cerebellum
@@ -862,8 +911,8 @@ cstime = clock;
 
     % final correction of cortical thickness using pial and WM surface
     %% Collision correction by Delaunay triangularization
-    if opt.collcorr > 1 
-      stime = cat_io_cmd('  Correction of surface collisions:','g5','',opt.verb,stime); 
+    if opt.collcorr > 1 && opt.collcorr < 20
+      stime = cat_io_cmd('  Reduction of surface collisions:','g5','',opt.verb,stime); 
 
       % final correction of central surface in highly folded areas with high mean curvature
       cmd = sprintf('CAT_Central2Pial -equivolume -weight 1 "%s" "%s" "%s" 0',Pcentral,Ppbt,Player4);
@@ -873,31 +922,32 @@ cstime = clock;
  
       
       %% call collision correction
+      verblc = 2; % verbose level 
       if debug, if exist('CSO','var'), CS = CSO; facevertexcdata = facevertexcdatao; else, CSO = CS; facevertexcdatao = facevertexcdata; end; stime2 = clock; else, stime2 = [];  end
       if opt.collcorr == 2
-        [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionRY',CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',opt.verb>1,'mat',Smat.matlabIBB_mm,'accuracy',1/2^6));
+        [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionRY',CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',opt.verb>verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^6));
       elseif opt.collcorr == 3 || opt.collcorr == 4
-        [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,Yl4,struct('optimize',opt.collcorr - 3,'verb',opt.verb>1,'mat',Smat.matlabIBB_mm));
+        [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,Yl4,struct('optimize',opt.collcorr - 3,'verb',opt.verb>verblc,'mat',Smat.matlabIBB_mm));
       elseif opt.collcorr == 5
-        [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,Yl4,struct('optimize',4,'verb',opt.verb>1,'mat',Smat.matlabIBB_mm));
+        [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,Yl4,struct('optimize',4,'verb',opt.verb>verblc,'mat',Smat.matlabIBB_mm));
         fprintf('\b\b');
-        [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionRY',CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',opt.verb>1,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3));
+        [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionRY',CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',opt.verb>verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3));
       end
       if ~debug, clear Yl4; end
       
-      % saveSurf(CS,Pcentral); 
+      saveSurf(CS,Pcentral); %save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Pcentral);    
       cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
       
       % evaluate and save results
-      if opt.verb > 2, cat_io_cmd(' ','g5','',opt.verb);  end
+      if opt.verb > verblc, cat_io_cmd(' ','g5','',opt.verb);  end
       fprintf('%5.0fs',etime(clock,min([stime2;stime],[],1))); if ~debug, stime = []; end
       % final result ... test for self-intersections only in developer mode? 
       if 0 %opt.surf_measures > 2  ||  opt.verb > 2
         cat_surf_fun('saveico',CS,facevertexcdata,Pcentral,sprintf('createCS_3_collcorr_%0.2fmm_vdist%0.2fmm',opt.interpV,opt.vdist),Ymfs,Smat.matlabIBB_mm); 
         res.(opt.surf{si}).createCS_3_collcorr = cat_surf_fun('evalCS' ,CS,facevertexcdata,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-1,cat_get_defaults('extopts.expertgui')>1);
         res.(opt.surf{si}).createCS_final      = res.(opt.surf{si}).createCS_3_collcorr; 
-      %else
-      %  fprintf('\n');
+      else
+        fprintf('\n');
       end
       
       updateThickness = 0;

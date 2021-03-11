@@ -1,4 +1,4 @@
-function [Ym2,Ysrc2,Ycls,Ycor,glcor,cf] = cat_main_correctmyelination(Ym,Ysrc,Ycls,Yb,vx_vol,vx_volo,T3th,LASstr,Yy,cat12atlas)
+function [Ym2,Ysrc2,Ycls,Ycor,glcor,cf] = cat_main_correctmyelination(Ym,Ysrc,Ycls,Yb,vx_vol,vx_volo,T3th,LASstr,Yy,cat12atlas,tpm)
 %cat_main_correctmyelination. Correction of GM myelination/artefacts.
 % _________________________________________________________________________
 % This function perform high frequency correction in the GM ribbon. We
@@ -79,8 +79,9 @@ function [Ym2,Ysrc2,Ycls,Ycor,glcor,cf] = cat_main_correctmyelination(Ym,Ysrc,Yc
           pause(rand(1))
         end
       end
-      YA   = cat_vol_ctype(round(spm_sample_vol(VA,...
-        double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0)));
+      YA = cat_vol_ctype( cat_vol_sample(tpm(1),VA,Yy,0) ); 
+      %YA   = cat_vol_ctype(round(spm_sample_vol(VA,...
+      %  double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0)));
     else
       YA = Yy; 
     end

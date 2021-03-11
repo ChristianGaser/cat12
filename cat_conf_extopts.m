@@ -119,10 +119,10 @@ bb.strtype  = 'r';
 bb.num      = [inf inf];
 bb.tag      = 'bb';
 bb.name     = 'Bounding box';
-bb.val      = {0}; 
+bb.val      = {12}; 
 bb.hidden   = expert < 1;
 bb.help     = {
-  'The bounding box describes the dimenson of the volume to be written starting from the anterior commissure in mm.  It should include the entire brain (or head in the case of the Boundary Box of the SPM TPM) and additional space for smoothing the image.  The MNI 9-mm boundary box is optimized for CATs MNI152NLin2009cAsym template and supports filter cores up to 10 mm.  Although this box support 12 mm filter sizes theoretically, slight interference could occur at the edges and larger boxes are recommended for safety. '
+  'The bounding box describes the dimensions of the volume to be written starting from the anterior commissure in mm.  It should include the entire brain (or head in the case of the Boundary Box of the SPM TPM) and additional space for smoothing the image.  The MNI 9-mm boundary box is optimized for CATs MNI152NLin2009cAsym template and supports filter cores up to 10 mm.  Although this box support 12 mm filter sizes theoretically, slight interference could occur at the edges and larger boxes are recommended for safety. '
   'Additionally, it is possible to use the boundary box of the TPM or the template for special (animal) templates with strongly different boundary boxes. '
   ''
   'The boundary box or its id (BBid see table below) has to be entered. '
@@ -430,15 +430,19 @@ end
 % I expect that 300k surfaces support best quality in relation to processing
 % time, because surface reconstruction times are dominated by the registration
 % that depends on the mesh resolution of the individual and template brain. 
-% However a fast and a refined accurate version could be interesting.
-% The fast version could be interesting for fast clinical processing but needs also low mesh average surfaces.  
+% However, a fast and a refined accurate version could be interesting.
+% The fast version could be interesting for fast clinical processing but needs 
+% also low mesh average surfaces.  
 % The more accurate version could be useful for high quality surface rendering.
-
+% RD202103: The current version was slower than the CS1 and the values were updated.
+% In detail the value is the square of the refinement distance but for surface creation by 
+% the volume-resolution, a general limit of 1.5 mm exist, where lower resolution (e.g. 2 mm) 
+% can cause problems in thin structures. 
 vdist         = cfg_menu;
 vdist.tag     = 'vdist';
 vdist.name    = 'Mesh resolution';
-vdist.labels  = {'low','optimal','fine'};
-vdist.values  = {27/3 4/3 1/6};   % this is the square of the refinement distance 
+vdist.labels  = {'low','optimal','fine','extra fine'};
+vdist.values  = {4 2 1 1/6};   
 vdist.def     = @(val)cat_get_defaults('extopts.vdist', val{:});
 vdist.hidden  = expert<2; 
 vdist.help    = {
@@ -449,11 +453,12 @@ vdist.help    = {
   ''
   '  minimal:    maximal vertex distance 4.24 mm > ~100k faces'
   '  optimal:    maximal vertex distance 1.61 mm > ~300k faces'
-  '  super-fine: maximal vertex distance 0.57 mm > ~900k faces'
+  '  fine:       maximal vertex distance 1.00 mm > ~600k faces'
+  '  extra fine: maximal vertex distance 0.57 mm > ~900k faces'
   ''
   'Experimental development parameter that only works for the "createCS2" options of "Correct for surface collisions" (added in CAT12.7, 201909)!'
   ''
-};
+}; % ######## final UPDATE required #########
 
 %------------------------------------------------------------------------
 % special expert and developer options 

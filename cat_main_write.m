@@ -276,7 +276,8 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
         Yy = double(trans.warped.y);
       end
       
-      Ylai = spm_sample_vol(Vlai,Yy(:,:,:,1),Yy(:,:,:,2),Yy(:,:,:,3),0);
+      Ylai = cat_vol_sample(res.tpm(1),Vlai,Yy,0);
+      
       % check data range
       mx = max(Ylai(:));
       if mx > intmax('uint32')
