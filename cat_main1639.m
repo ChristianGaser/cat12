@@ -37,7 +37,6 @@ stime2 = cat_io_cmd('  Write Segmentation','g5','',job.extopts.verb-1);
 [Ysrc,Ycls,Yy] = cat_spm_preproc_write8(res,zeros(max(res.lkp),4),zeros(1,2),[0 0],0,0);
 
 
-
 %% CAT vs. SPMpp Pipeline
 if ~isfield(res,'spmpp')
   %% Update SPM results in case of reduced SPM preprocessing resolution 
@@ -202,12 +201,13 @@ if ~isfield(res,'spmpp')
   %  
   %  #### move fast shooting to the cat_main_updateSPM function ####
   % 
+  %  RD20210307: Update of the Yy to the TMP but with the BB of the TPM.
   if 1 % job.extopts.WMHC || job.extopts.SLC
     if ~debug, stime = cat_io_cmd(sprintf('Fast Optimized Shooting registration'),'','',job.extopts.verb); end
 
     res2 = res; 
     job2 = job;
-    job2.extopts.bb           = res.bb; 
+    job2.extopts.bb           = 1; % registration to TPM space
     job2.extopts.verb         = debug;  % do not display process (people would may get confused) 
     job2.extopts.vox          = abs(res.tpm(1).mat(1));  % TPM resolution to replace old Yy  
     if job.extopts.regstr>0
@@ -225,8 +225,9 @@ if ~isfield(res,'spmpp')
       job2.extopts.reg.affreg  = 0;      % new affine registration
       res2.do_dartel           = 1;      % use dartel
     end
-    [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,res.Ylesion); 
-    Yy2  = trans.warped.y;
+    [trans1,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,res.Ylesion); 
+ YyO = Yy; 
+    Yy2  = trans1.warped.y;
     if ~debug, clear job2 res2; end
 
     % Shooting did not include areas outside of the boundary box
@@ -239,7 +240,7 @@ if ~isfield(res,'spmpp')
       Yy2(:,:,:,k1) = cat_vol_approx(Yy2(:,:,:,k1),'nn',vx_vol,3); 
     end
     Yy = Yy2; 
-    clear Yy2; 
+    clear Yy2 trans1; 
     if ~debug, fprintf('%5.0fs\n',etime(clock,stime)); end
   end
   
@@ -261,11 +262,11 @@ if ~isfield(res,'spmpp')
     if job.extopts.new_release
       stime   = cat_io_cmd('\n  LAS myelination correction','g5','',job.extopts.verb); fprintf('\n');
       vx_volo = sqrt(sum(res.image0(1).mat(1:3,1:3).^2));
-      [Ym,Ysrc,Ycls,Ycm,glcor,tmp] = cat_main_correctmyelination(Ym,Ysrc,Ycls,Yb,vx_vol,vx_volo,T3th,job.extopts.LASstr,Yy,job.extopts.cat12atlas);
+      [Ym,Ysrc,Ycls,Ycm,glcor,tmp] = cat_main_correctmyelination(Ym,Ysrc,Ycls,Yb,vx_vol,vx_volo,T3th,job.extopts.LASstr,Yy,job.extopts.cat12atlas,res.tpm);
+      cat_io_cmd(' ',' ','',job.extopts.verb); fprintf('%5.0fs',etime(clock,stime));
       %try 
         %res.ppe.LASMC = tmp; 
       %end
-      cat_io_cmd(' ',' ','',job.extopts.verb); fprintf('%5.0fs',etime(clock,stime));
     end
     % ################
     
@@ -279,10 +280,6 @@ if ~isfield(res,'spmpp')
     % ###########
     % RD202102:   update Ymi since the LAS correction is currently not local engough
     if job.extopts.new_release
-      %Yp0  = single(Ycls{3})/255/3 + single(Ycls{1})/255*2/3 + single(Ycls{2})/255;
-      %Ysdg = cat_vol_localstat(Ymi,Yb,round(3/mean(vx_vol)),4);  
-      %Ysdw = cat_vol_localstat(Ymi,Yp0>2.8/3,round(3/mean(vx_vol)),4);
-      %Ycor  = max(0,min(1,Ysdg - (2.5-job.extopts.LASstr) * mean(Ysdw(Yp0>2.5/3))) .* Ycm .* max(0,min(3,glcor))); 
       Ycor  = Ycm; 
       Ycor  = Ycor + min(0,max(0,Ymi - 2/3) - Ycor);                       % correct overcorrections
       Ycor  = Ycor * (0.3 + 0.5 * job.extopts.LASstr);                     % correct only 90% to keep some real noise; use this function for fine tuning of the LASstr
@@ -663,11 +660,18 @@ end
     [trans,res.ppe.reg] = cat_main_registration(job,res,Yclsd,Yy,Ylesions);
     clear Yclsd Ylesions;
   else
+    %% call Dartel/Shooting registration  
+    % Also it is not required we need to get the trans structure for the
+    % affine/rigid output
     if job.extopts.regstr == 0
       fprintf('Dartel registration is not required.\n');
     else
       fprintf('Shooting registration is not required.\n');
     end
+    
+    job2 = job;
+    job2.extopts.verb   = debug;  % do not display process (people would may get confused) 
+    [trans,res.ppe.reg] = cat_main_registration(job2,res,Ycls,Yy);
   end
  
   
@@ -720,6 +724,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
   else
   %% default surface reconstruction 
   %  sum(Yth1(Yth1(:)>median(Yth1(Yth1(:)>0))*2 ))./sum(Yth1(Yth1(:)>0)) > 0.1 > error
+    tic
     if job.extopts.collcorr >= 20
       surf = unique(surf); 
       if 0 %any( ~cellfun('isempty', strfind(surf,'cb') ))  % ... I want to avoid this if possible - it also seem to be worse to use it 
@@ -730,7 +735,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
       else
         YT  = [];
       end
-      %% further GUI fields ...
+      % further GUI fields ...
       if ~isfield(job.extopts,'vdist'),           job.extopts.vdist           = 0;  end
       if ~isfield(job.extopts,'scale_cortex'),    job.extopts.scale_cortex    = cat_get_defaults('extopts.scale_cortex'); end
       if ~isfield(job.extopts,'add_parahipp'),    job.extopts.add_parahipp    = cat_get_defaults('extopts.add_parahipp'); end
@@ -739,22 +744,21 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
       if ~isfield(job.extopts,'reduce_mesh'),     job.extopts.reduce_mesh     = 1; end % cat_get_defaults('extopts.reduce_mesh'); end
       %if ~isfield(job.output,'pp'),               job.output.pp               = struct('native',0,'warped',0,'dartel',0);  end % this is now in defaults and not required here 
       if ~isfield(job.output,'surf_measures'),    job.output.surf_measures    = 1; end % developer
-      
       [Yth1, S, Psurf, qa.subjectmeasures.EC_abs, qa.subjectmeasures.defect_size, qa.createCS] = ...
         cat_surf_createCS2(VT,VT0,Ymix,Yl1,YMF,YT,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
         'vdist',job.extopts.vdist,'outputpp',job.output.pp,'surf_measures',job.output.surf_measures, ...
         'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'collcorr',job.extopts.collcorr - 20,...
         'scale_cortex', job.extopts.scale_cortex, 'add_parahipp', job.extopts.add_parahipp, 'close_parahipp', job.extopts.close_parahipp,  ....
         'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
-        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior));  
+        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior)); 
     else
-      %%
       [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size, qa.createCS] = ...
         cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,struct('pbtmethod','pbt2x',...
         'interpV',job.extopts.pbtres,'collcorr',job.extopts.collcorr, ...
         'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
-        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior)); 
+        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior));
     end
+    toc
   end
   
   %% thickness map
@@ -1152,7 +1156,7 @@ function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,inv_weighting] = cat_main_SPM
   % load atlas map and prepare filling mask YMF
   % compared to CAT default processing, we have here the DARTEL mapping, but no individual refinement 
   Vl1 = spm_vol(job.extopts.cat12atlas{1});
-  Yl1 = cat_vol_ctype(spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
+  Yl1 = cat_vol_ctype( cat_vol_sample(res.tpm(1),Vl1{1},Yy,0)); % spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
   Yl1 = reshape(Yl1,size(Ym)); [D,I] = cat_vbdist(single(Yl1>0)); Yl1 = Yl1(I);   
   YMF = NS(Yl1,job.extopts.LAB.VT) | NS(Yl1,job.extopts.LAB.BG) | NS(Yl1,job.extopts.LAB.BG);  
 return

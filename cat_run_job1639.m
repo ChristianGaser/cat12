@@ -457,7 +457,8 @@ function cat_run_job1639(job,tpm,subj)
           VF.pinfo(1:2,:) = VF.pinfo(1:2,:)/spm_global(VF);
           VG.pinfo(1:2,:) = VG.pinfo(1:2,:)/spm_global(VG);
 
-          % APP step 1 rough bias correction 
+          % APP step 1 rough bias correction and preparation of the affine 
+          % registration
           % --------------------------------------------------------------
           % Already for the rough initial affine registration a simple  
           % bias corrected and intensity scaled image is required, because
@@ -555,7 +556,7 @@ function cat_run_job1639(job,tpm,subj)
           
             % correct origin using COM and invert translation and use it as starting value
             if job.extopts.setCOM && ~ppe.affreg.highBG 
-              fprintf('\n');
+              fprintf('%5.0fs\n',etime(clock,stime));   
               Affine_com  = cat_vol_set_com(VF1);
               Affine_com(1:3,4) = -Affine_com(1:3,4);
             else

@@ -965,7 +965,7 @@ switch lower(action)
         % only limited version ...
         % clrmp = {'hot' 'jet' 'gray' 'hsv' 'bone' 'copper' 'pink' 'white' ...
         %          'flag' 'lines' 'colorcube' 'prism' 'cool' 'autumn' 'spring' 'winter' 'summer'};
-        clrmp = {'jet' 'hsv' 'hot' 'winter' 'summer' 'pink' 'gray'};          
+        clrmp = {'jet' 'turbo' 'hsv' 'hot' 'winter' 'summer' 'pink' 'gray'};          
         uimenu(c, 'Label','Colorbar','Checked','off', 'Callback', {@myColourbar, H});
         uimenu(c, 'Label','Invert Colormap','Checked','off', 'Callback', {@myInvColourmap, H});
         for i=1:numel(clrmp)
@@ -2284,6 +2284,7 @@ set(obj,'Checked',toggle(get(obj,'Checked')));
 
 %==========================================================================
 function myColourmap(obj,evt,H,varargin)
+range  = getappdata(H.patch(1), 'clim'); 
 inv = strcmp(get(findobj(get(obj,'parent'),'Label','Invert Colormap'),'Checked'),'on');
 if ~isempty(varargin)
   switch varargin{1}
@@ -2309,6 +2310,8 @@ else
     case {'CAThot','CAThotinv','CATcold','CATcoldinv'}
       catcm = get(obj,'Label'); catcm(1:3) = [];
       cm = cat_io_colormaps(catcm,256); 
+    case 'turbo'
+      cm = cat_io_colormaps('turbo',256); 
     case 'CATtissues'
       cm = cat_io_colormaps('BCGWHw',256);
     case 'CATcold&hot'
@@ -2325,7 +2328,9 @@ end
 set(setdiff(get(get(obj,'parent'),'children'),...
   [findobj(get(obj,'parent'),'Label','Colorbar'),...
    findobj(get(obj,'parent'),'Label','Invert Colormap')]),'Checked','off');
-%if isfield(H,'colourbar'),cat_surf_render2('Clim',H,H.colourbar.Limits); end
+
+% update colorrange
+cat_surf_render2('Clim',H,range(2:3));
 set(obj,'Checked','on');
 
 %==========================================================================

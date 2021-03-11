@@ -805,7 +805,7 @@ function job = update_job(job)
   
   
   % set boundary box by Template properties 
-  if ~isfield(job.extopts,'bb'), job.extopts.bb = 0; end
+  if ~isfield(job.extopts,'bb'), job.extopts.bb = 12; end
   
   job.extopts.vox( isinf(job.extopts.vox) | isnan(job.extopts.vox) ) = []; 
   if isempty( job.extopts.vox ),  job.extopts.vox = cat_get_defaults('extopts.vox'); end 
