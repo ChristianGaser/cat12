@@ -89,12 +89,11 @@ if exist('output','var') && ~isempty(output)
   matlabbatch{mbi}.spm.tools.cat.estwrite.output            = output;
 end
 % RD202102: differentiation between user levels not tested yet !
-  if isfield(extopts,'bb')
-    matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.bb              = 1; % use TPM output BB 
-  else
-    matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.bb              = 1;    
-    matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.registration.bb = 1; % use TPM output BB 
-  end
+if isfield(extopts,'bb')
+  matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.bb              = 1; % use TPM output BB 
+elseif isfield(extopts,'registration') && isfield(extopts.registration,'bb')
+  matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.registration.bb = 1; % use TPM output BB 
+end
 % surface estimation
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.surface      = surfaces;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.ROImenu.noROI= struct([]);

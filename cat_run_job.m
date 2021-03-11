@@ -981,7 +981,7 @@ end
         warning off 
         try 
           % inital estimate
-          stime = cat_io_cmd('SPM preprocessing 1 (estimate 2):','','',job.extopts.verb-1,stime);
+          stime = cat_io_cmd('SPM preprocessing 1 (estimate 2 - Unified segmentation):','','',job.extopts.verb-1,stime);
           obj.tol = job.opts.tol; 
           
           % RD202012:  Missclassification of GM as CSF and BG as tissue:
@@ -1021,8 +1021,8 @@ end
             if any(~isnan(res.ll))
               break
             else
-              stime = cat_io_cmd(sprintf('SPM preprocessing 1 (estimate %d):',...
-                2 + sampi),'caution','',job.extopts.verb-1,stime);
+              stime = cat_io_cmd(sprintf('SPM preprocessing 1 (estimate %d - Unified segmentation %d):',...
+                2 + sampi,sampi + 1),'caution','',job.extopts.verb-1,stime);
             end
           end
           warning on; 

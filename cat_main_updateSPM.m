@@ -38,12 +38,13 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
   
     % Create brain mask based on the the TPM classes
     % cleanup with brain mask - required for ngaus [1 1 2 4 3 2] and R1/MP2Rage like data 
-    YbA = zeros(d,'single');
+   % YbA = zeros(d,'single');
     Vb = tpm.V(1); Vb.pinfo(3) = 0; Vb.dt=16; 
     Vb.dat = single(exp(tpm.dat{1}) + exp(tpm.dat{2}) + exp(tpm.dat{3})); 
-    for z=1:d(3)
-      YbA(:,:,z) = spm_sample_vol(Vb,double(Yy(:,:,z,1)),double(Yy(:,:,z,2)),double(Yy(:,:,z,3)),1); 
-    end
+    YbA = cat_vol_sample(res.tpm(1),Vb,Yy,1);
+   %for z=1:d(3)
+   %   YbA(:,:,z) = spm_sample_vol(Vb,double(Yy(:,:,z,1)),double(Yy(:,:,z,2)),double(Yy(:,:,z,3)),1); 
+   % end
     if round(max(YbA(:))/Vb.pinfo(1)), YbA=YbA>0.1*Vb.pinfo(1); else, YbA=YbA>0.1; end
     % add some distance around brainmask (important for bias!)
     YbA = YbA | cat_vol_morph(YbA & sum(P(:,:,:,1:2),4)>4 ,'dd',2.4,vx_vol);

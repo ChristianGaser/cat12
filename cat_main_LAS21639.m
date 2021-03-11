@@ -198,16 +198,13 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
         pause(rand(1))
       end
     end
-    Yl1  = cat_vol_ctype(round(spm_sample_vol(Vl1A,...
-      double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0)));
-    Yl1  = reshape(Yl1,dsize);
-    
-    
+    Yl1 = cat_vol_ctype( cat_vol_sample(res.tpm(1),Vl1A,Yy,0) );
+   
+  
     % load WM of the Dartel/Shooting Template for WMHs - use uint8 to save memory 
     % Ywtpm .. WM template map
     Vtemplate = spm_vol(extopts.templates{end}); 
-    Ywtpm  = cat_vol_ctype(spm_sample_vol(Vtemplate(2),...
-      double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0)*255,'uint8');
+    Ywtpm  = cat_vol_ctype( cat_vol_sample(res.tpm(1),Vtemplate(2),Yy,1) * 255,'uint8');
     if debug==0, clear Yy; end
     Ywtpm  = single(reshape(Ywtpm,dsize)); 
     spm_smooth(Ywtpm,Ywtpm,2*vxv); 

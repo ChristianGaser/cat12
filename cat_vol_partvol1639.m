@@ -117,16 +117,13 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
   if verb, fprintf('\n'); end
   stime = cat_io_cmd('  Atlas -> subject space','g5','',verb); dispc=1;
   % CAT atlas
-  VA = spm_vol(PA{1});
-  YA = cat_vol_ctype(spm_sample_vol(VA,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
-  YA = reshape(YA,size(Ym));
+  YA = cat_vol_ctype( cat_vol_sample(Vtpm(1),PA{1},Yy,0) );
   
   
   % template map
-  Yp0A = single(spm_sample_vol(Vtpm(1),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),1))*2 + ...
-         single(spm_sample_vol(Vtpm(2),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),1))*3 + ...
-         single(spm_sample_vol(Vtpm(3),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),1))*1;
-  Yp0A = reshape(Yp0A,size(Ym)); 
+  Yp0A = single( cat_vol_sample(Vtpm(1),Vtpm(1),Yy,1) )*2 + ...
+         single( cat_vol_sample(Vtpm(1),Vtpm(2),Yy,1) )*3 + ...
+         single( cat_vol_sample(Vtpm(1),Vtpm(3),Yy,1) )*1;
   
   
   % WMH atlas
@@ -137,9 +134,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
     case 3, PwmhA = strrep(PA{1},'cat.nii','cat_wmh_miccai2017.nii');
   end
   if exist(PwmhA,'file') && ~strcmp(PwmhA,PA{1}) 
-    VwmhA = spm_vol(PwmhA);
-    YwmhA = spm_sample_vol(VwmhA,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0);
-    YwmhA = reshape(YwmhA,size(Ym));
+    YwmhA = cat_vol_ctype( cat_vol_sample(Vtpm(1),PwmhA,Yy,0) );
   else
     YwmhA = max(0,min(1,Yp0A-2)); 
   end
@@ -152,9 +147,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
   % Stroke lesion atlas
   PslA = strrep(PA{1},'cat.nii','cat_strokelesions_ATLAS303.nii');
   if exist(PslA,'file') && ~strcmp(PslA,PA{1}) 
-    VslA = spm_vol(PslA);
-    YslA = spm_sample_vol(VslA,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0);
-    YslA = reshape(YslA,size(Ym));
+    YslA = cat_vol_ctype( cat_vol_sample(Vtpm(1),PslA,Yy,0) );
     YslA = YslA./max(YslA(:)); 
   else
     YslA = max(0,min(1,Yp0A-2)); 
