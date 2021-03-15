@@ -870,7 +870,7 @@ function [AV,AF] = cat_surf_area(S)
     AV = cat_surf_F2V(S,AF);
   elseif method == 2
     %%
-    AF = spm_mesh_area(S,1);
+    AF = spm_mesh_area(S,true);
     AV = cat_surf_F2V(S,AF);
   else
     %% edge points
@@ -893,9 +893,9 @@ function [AV,AF] = cat_surf_area(S)
     SR32.faces = S.faces; SR32.vertices = [V3 V23 V123];
     
     %% outer circle point
-    AF3 = [ abs(spm_mesh_area(SR11,1))' + abs(spm_mesh_area(SR12,1))' , ...
-            abs(spm_mesh_area(SR21,1))' + abs(spm_mesh_area(SR22,1))' , ...
-            abs(spm_mesh_area(SR31,1))' + abs(spm_mesh_area(SR32,1))'];
+    AF3 = [ abs(spm_mesh_area(SR11,true))' + abs(spm_mesh_area(SR12,true))' , ...
+            abs(spm_mesh_area(SR21,true))' + abs(spm_mesh_area(SR22,true))' , ...
+            abs(spm_mesh_area(SR31,true))' + abs(spm_mesh_area(SR32,true))'];
     
      AF = sum( AF3( S.faces ) , 2); 
      AV = cat_surf_F2V(S,AF); 

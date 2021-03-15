@@ -98,7 +98,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     otherwise,                fontsize = 9.5;
   end
   % the size of the figure is adapted to screen size but we must also update the font size
-  spm_figure_scale = get(fg,'Position'); spm_figure_scale = spm_figure_scale(4)/1000; 
+  PaperSize = get(fg,'PaperSize');
+  spm_figure_scale = get(fg,'Position'); spm_figure_scale = spm_figure_scale(4)*PaperSize(2)/1000; 
   fontsize = fontsize * spm_figure_scale; 
 
   % get axis
@@ -789,7 +790,7 @@ end
           try
             id1  = find( ~cellfun('isempty',strfind({Psurf(:).Pcentral},'lh.')) ,1, 'first'); 
             spm_figure('Focus','Graphics'); 
-            % this is strange but a 3:4 box property result in a larger brain scaling 
+            % this is strange but a 3:4 box property results in a larger brain scaling 
             hCS = subplot('Position',[0.52 0.037*(~sidehist) 0.42 0.31+0.02*sidehist],'visible','off'); 
             renderer = get(fg,'Renderer');
 
