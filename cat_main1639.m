@@ -946,6 +946,7 @@ try
   delete_surf_preview(Psurf,job);
 end
 return
+
 function delete_surf_preview(Psurf,job)
   % cleanup preview surfaces and directory (but only for non-experts)
   if any( job.output.surface == [ 5 6 ] ) && job.extopts.expertgui<1

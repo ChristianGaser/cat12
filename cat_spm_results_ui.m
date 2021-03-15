@@ -300,7 +300,7 @@ switch lower(Action), case 'setup'                         %-Set up results
           SPM.swd = swd;
 
           % data or analysis moved or data are on a different computer?
-          if ischar(SPM.xVol.G)
+          if isfield(SPM.xVol,'G') && ischar(SPM.xVol.G)
             if ~exist(SPM.xVol.G,'file')
               [pp2,ff2,xx2] = spm_fileparts(SPM.xVol.G);
               if ~isempty(strfind(ff2,'.central.freesurfer')) | ~isempty(strfind(ff2,['.central.' cat_get_defaults('extopts.shootingsurf')]))
