@@ -40,9 +40,14 @@ else
   fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
 end
 
-% check that folder exist and number of vertices fits
+% select underlying surface and prefer shooting template
 job.surftype = 2; 
 surftype = {'freesurfer',cat_get_defaults('extopts.shootingsurf')};
+if ~exist(fullfile(fsavgDir, ['lh.central.' surftype{job.surftype} '.gii']))
+  job.surftype = 1; 
+end
+
+% check that folder exist and number of vertices fits
 if exist(fsavgDir,'dir') == 7 && (SPM.xY.VY(1).dim(1) == 163842 || SPM.xY.VY(1).dim(1) == 327684 || ...
     SPM.xY.VY(1).dim(1) == 655368) || SPM.xY.VY(1).dim(1) == 32492 || SPM.xY.VY(1).dim(1) == 64984
   

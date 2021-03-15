@@ -433,7 +433,9 @@ cstime = clock;
     Yth1t = cat_vol_resize(Yth1t,'dereduceBrain',BB);                       % adding background
     Yth1  = max(Yth1,Yth1t .* Yside);                                       % save on main image
     clear Yth1t;
-    %fprintf('%5.0fs\n',etime(clock,stime)); 
+    if ~useprior
+      fprintf('%5.0fs\n',etime(clock,stime)); 
+    end
     
     if opt.vol
       S = struct(); Psurf = '';

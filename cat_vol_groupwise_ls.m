@@ -304,8 +304,8 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
               if use_brainmask
                 fprintf('Use initial brainmask for final resolution level.\n');
                 
-                PG = fullfile(cat_get_defaults('extopts.pth_templates'),'T1.nii');
-                PB = fullfile(cat_get_defaults('extopts.pth_templates'),'brainmask.nii');
+                PG = cat_get_defaults('extopts.T1');
+                PB = cat_get_defaults('extopts.brainmask');
 
                 [pth,nam]   = fileparts(Nii(1).dat.fname);
                 nam         = fullfile(pth,['avg_' nam '.nii']);
