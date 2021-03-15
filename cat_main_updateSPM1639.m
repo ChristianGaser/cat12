@@ -396,7 +396,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   
   % display  some values for developers
   if job.extopts.expertgui > 1
-    % ... I want to add the intesities later
+    % ... I want to add the intensities later
     %cat_io_cprintf('blue',sprintf('    SPM  volumes (CGW=TIV; in mm%s):      %6.2f + %6.2f + %6.2f = %4.0f\n',...
     %  native2unicode(179, 'latin1'),res.ppe.SPMvols0([3 1 2]),sum(res.ppe.SPMvols0(1:3))));    
     if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap 

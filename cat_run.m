@@ -352,7 +352,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
             
             
             %% update status
-            %  if this tast was not printed before  ( catSIDlast(i) < catSID(i) )  and 
+            %  if this test was not printed before  ( catSIDlast(i) < catSID(i) )  and 
             %  if one subject was successfully or with error processed ( any(cattime>0) || ~isempty(caterr) )
             %fprintf('    %d - %d %d %d %d\n',i,catSIDlast(i), catSID(i), any(cattime>0), ~isempty(caterr) ); 
             if ( catSIDlast(i) < catSID(i) )  &&  ( any(cattime>0) || ~isempty(caterr) )

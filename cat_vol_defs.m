@@ -253,12 +253,8 @@ for i=1:size(filenames,1)
                     end
                     f1   = zeros(dim(1:3),class(f0));
                     p1   = zeros(size(f1),'single');
-                    filt = [0.125 0.75 0.125];
                     for u=U'
                         g0       = single(f0==u);
-                        g0       = convn(g0,reshape(filt,[3,1,1]),'same');
-                        g0       = convn(g0,reshape(filt,[1,3,1]),'same');
-                        g0       = convn(g0,reshape(filt,[1,1,3]),'same');
                         tmp      = spm_diffeo('bsplins',g0,Y,[abs(interp(1:3)) interp(4:end)]);
                         msk1     = (tmp>p1);
                         p1(msk1) = tmp(msk1);
