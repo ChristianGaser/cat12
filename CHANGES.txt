@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1780 | gaser | 2021-03-15 15:55:24
+r1781 | gaser | 2021-03-15 23:00:43
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main_reportfig.m
+M       cat_surf_fun.m
+
+(1) Changed: Corrected estimation of window size in cat_main_reportfig.m if
+             units are "normalized" in new spm12 version.
+(2) Changed: Corrected 2nd argument for calls of spm_mesh_area to consider
+             new SPM12 version.
+
+------------------------------------------------------------------------
+r1780 | gaser | 2021-03-15 15:56:14 +0100 (Mo, 15 Mär 2021) | 23 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -23,6 +36,7 @@ M       html/cat_methods_RBM.html
 (4) Fixed:   Links to T1 and brainmask in cat_vol_groupwise_ls.m were wrong.
 (5) Fixed:   Corrected wrong name for HCP meshes in cat_methods_RBM.html.
 (6) Fixed:   Corrected typos...
+
 ------------------------------------------------------------------------
 r1779 | dahnke | 2021-03-11 19:39:36 +0100 (Do, 11 Mär 2021) | 42 lines
 
