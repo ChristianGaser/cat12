@@ -74,7 +74,7 @@ cstime = clock;
   def.sharpenCB = 0; % in development
   def.thick_measure      = 1; % Tfs: Freesurfer method using mean(Tnear1,Tnear2)
   def.thick_limit        = 5; % 5mm upper limit for thickness (same limit as used in Freesurfer)
-  def.collcorr           = 3; % Estimate pial and white matter surface (in development and very slow!)
+  def.SRP                = 3; % Estimate pial and white matter surface (in development and very slow!)
   def.new_release        = 0; % developer flag to test new functionality for new release (currently not used)
   def.pbtlas             = 0;
   def.interpV            = 0.5;
@@ -90,7 +90,7 @@ cstime = clock;
   opt.surf       = cat_io_strrep(opt.surf,{'sfst','fst','v'},'');
 
   % check for self-intersections during surface refinement with CAT_SurfDeform
-  if opt.collcorr == 1
+  if opt.SRP == 1
     force_no_selfintersections = 1;
   else
     force_no_selfintersections = 0;
@@ -433,7 +433,7 @@ cstime = clock;
     Yth1t = cat_vol_resize(Yth1t,'dereduceBrain',BB);                       % adding background
     Yth1  = max(Yth1,Yth1t .* Yside);                                       % save on main image
     clear Yth1t;
-    if ~useprior
+    if 0 %~useprior
       fprintf('%5.0fs\n',etime(clock,stime)); 
     end
     
@@ -530,13 +530,8 @@ cstime = clock;
     
     % scale Yppt so that backgrounds remains 0 and WM 1, but cortical band is 
     % now in the range of 0.1..0.9
-    if opt.collcorr == 1
-      indi = find((Yppt>0) & (Yppt<0.99999));
-      Yppt(indi) = 0.1 + (0.8*Yppt(indi));
-    end
-    Vpp  = cat_io_writenii(V,Yppt,'',sprintf('%s.pp',opt.surf{si}),'percentage position map','uint8',[0,1/255],[1 0 0 0]);
-    
-    Vpp1 = Vpp; 
+    Vpp           = cat_io_writenii(V,Yppt,'',sprintf('%s.pp',opt.surf{si}),'percentage position map','uint8',[0,1/255],[1 0 0 0]);
+    Vpp1          = Vpp; 
     Vpp1.fname    = fullfile(pp,mrifolder,sprintf('%s.pp1%s.nii',opt.surf{si},ff));
     vmat2         = spm_imatrix(Vpp1.mat);
     Vpp1.dim(1:3) = round(Vpp1.dim .* abs(vmat2(7:9)*(1 + iscerebellum)));   % use double resolution in case of cerebellum
@@ -682,6 +677,14 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
                         Vpp.fname,Pcentral,Pcentral,th,th);
         [ST, RS] = cat_system(cmds); cat_check_system_output(ST,RS,opt.verb-2);
       
+        % correction for surface collision of the IS and OS
+        if opt.SRP
+          % final correction of central surface in highly folded areas with high mean curvature
+          cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
+          stime = cat_io_cmd(sprintf('  Correction of surface collisions:'),'g5','',opt.verb-1,stime); 
+          [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,Yl4,struct('optimize',opt.SRP==2,'verb',opt.verb>1,'mat',Smat.matlabIBB_mm));
+        end
+
         % load surf and project thickness
         CS = gifti(Pcentral);
         % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
@@ -911,119 +914,44 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
     end
 
-    % final correction of cortical thickness using pial and WM surface
+    if opt.SRP
     %% Collision correction by Delaunay triangularization
-    if opt.collcorr > 1 && opt.collcorr < 20
-      stime = cat_io_cmd('  Reduction of surface collisions:','g5','',opt.verb,stime); 
-
-      % final correction of central surface in highly folded areas with high mean curvature
-      cmd = sprintf('CAT_Central2Pial -equivolume -weight 1 "%s" "%s" "%s" 0',Pcentral,Ppbt,Player4);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
-      Sl4 = loadSurf(Player4);
-      Yl4 = cat_surf_fun('isocolors',Ymf,Sl4,Smat.matlabi_mm); delete(Player4), clear Sl4; 
- 
-      
-      %% call collision correction
-      verblc = 2; % verbose level 
-      if debug, if exist('CSO','var'), CS = CSO; facevertexcdata = facevertexcdatao; else, CSO = CS; facevertexcdatao = facevertexcdata; end; stime2 = clock; else, stime2 = [];  end
-      if opt.collcorr == 2
-        [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionRY',CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',opt.verb>verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^6));
-      elseif opt.collcorr == 3 || opt.collcorr == 4
-        [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,Yl4,struct('optimize',opt.collcorr - 3,'verb',opt.verb>verblc,'mat',Smat.matlabIBB_mm));
-      elseif opt.collcorr == 5
-        [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,Yl4,struct('optimize',4,'verb',opt.verb>verblc,'mat',Smat.matlabIBB_mm));
-        fprintf('\b\b');
-        [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionRY',CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',opt.verb>verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3));
+    %  --------------------------------------------------------------------
+    %  New self-intersection correction that uses different detections of
+    %  self-intersections (SIDs; RY vs. PBT) with/without further optimization. 
+    %  It does not fully avoid self-intersections because some are already 
+    %  in the CS and some other required strong changes that result in worse
+    %  thickness results.
+     
+      if opt.SRP == 1
+        stime = cat_io_cmd('  Reduction of surface collisions:','g5','',opt.verb,stime); 
+      else
+        stime = cat_io_cmd('  Reduction of surface collisions with optimization:','g5','',opt.verb,stime); 
       end
-      if ~debug, clear Yl4; end
+      verblc = 1; % verbose level 
+      if debug, if exist('CSO','var'), CS = CSO; facevertexcdata = facevertexcdatao; else, CSO = CS; facevertexcdatao = facevertexcdata; end; stime2 = clock; else, stime2 = [];  end
+      if debug, saveSurf(CS,Pcentral); cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata); tic; end
       
-      saveSurf(CS,Pcentral); %save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Pcentral);    
-      cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
+      % call collision correction
+      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,struct('optimize',opt.SRP==2,'verb',opt.verb>verblc,'mat',Smat.matlabIBB_mm)); fprintf('\b\b');
+      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',opt.verb>verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3));
+      if debug, toc; end
       
       % evaluate and save results
       if opt.verb > verblc, cat_io_cmd(' ','g5','',opt.verb);  end
       fprintf('%5.0fs',etime(clock,min([stime2;stime],[],1))); if ~debug, stime = []; end
+      saveSurf(CS,Pcentral); cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
       % final result ... test for self-intersections only in developer mode? 
-      if 0 %opt.surf_measures > 2  ||  opt.verb > 2
+      if debug % opt.surf_measures > 2  ||  opt.verb > 2
         cat_surf_fun('saveico',CS,facevertexcdata,Pcentral,sprintf('createCS_3_collcorr_%0.2fmm_vdist%0.2fmm',opt.interpV,opt.vdist),Ymfs,Smat.matlabIBB_mm); 
+        fprintf('\n');
         res.(opt.surf{si}).createCS_3_collcorr = cat_surf_fun('evalCS' ,CS,facevertexcdata,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-1,cat_get_defaults('extopts.expertgui')>1);
         res.(opt.surf{si}).createCS_final      = res.(opt.surf{si}).createCS_3_collcorr; 
       else
         fprintf('\n');
       end
       
-      updateThickness = 0;
-      
-      clear Yl4 CSO; 
-      
-    elseif opt.collcorr == 1 && ~opt.fast
-  
-      % estimation of pial surface
-      th2 = 0.1; % GM/CSF border
-      cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .2 ' ...
-                     'avg -0.05 0.05 .1 .1 5 0 "%g" "%g" n 0 0 0 300 0.001 0.0 %d'], ...
-                     Vpp.fname,Pcentral,Ppial,th2,th2,force_no_selfintersections);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
-
-      % if deformation stopped earlier call CAT_Central2Pial to get closer to the pial surface
-      if ~isempty(strfind(RS,'Stopped after'))
-        stime = cat_io_cmd('  Estimation of pial surface','g5','',opt.verb,stime);
-        cmd = sprintf(['CAT_Central2Pial -check_intersect "%s" "%s" "%s" 0.3'], ...
-                       Pcentral,Ppbt,Ppial);
-        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
-        
-        cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .2 ' ...
-                     'avg -0.05 0.05 .1 .1 5 0 "%g" "%g" n 0 0 0 300 0.001 0.0 %d'], ...
-                     Vpp.fname,Ppial,Ppial,th2,th2,force_no_selfintersections);
-        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
-      end
-
-      stime = cat_io_cmd('  Correction of pial surface in highly folded areas','g5','',opt.verb,stime);
-      cmd = sprintf(['CAT_Central2Pial -equivolume -weight 0.5 "%s" "%s" "%s" 0'], ...
-                       Ppial,Ppbt,Ppial);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
-
-      % estimation of white matter surface
-      th2 = 0.9; % GM/WM border
-      cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .2 ' ...
-                     'avg -0.05 0.05 .1 .1 5 0 "%g" "%g" n 0 0 0 300 0.001 0.0 %d'], ...
-                     Vpp.fname,Pcentral,Pwhite,th2,th2,force_no_selfintersections);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
-
-      % if deformation stopped earlier call CAT_Central2Pial to get closer to the white matter surface
-      if ~isempty(strfind(RS,'Stopped after'))
-        stime = cat_io_cmd('  Estimation of white matter surface','g5','',opt.verb,stime);
-        cmd = sprintf(['CAT_Central2Pial -check_intersect "%s" "%s" "%s" -0.3'], ...
-                       Pcentral,Ppbt,Pwhite);
-        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
-        
-        cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .2 ' ...
-                     'avg -0.05 0.05 .1 .1 5 0 "%g" "%g" n 0 0 0 300 0.001 0.0 %d'], ...
-                     Vpp.fname,Pwhite,Pwhite,th2,th2,force_no_selfintersections);
-        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
-      end
-
-      stime = cat_io_cmd('  Correction of white matter surface in highly folded areas','g5','',opt.verb,stime);
-      cmd = sprintf(['CAT_Central2Pial -equivolume -weight 0.5 "%s" "%s" "%s" 0'], ...
-                       Pwhite,Ppbt,Pwhite);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
-
-      % update central surface as average between white and pial surface
-      cmd = sprintf(['CAT_AverageSurfaces -avg "%s" "%s" "%s"'], ...
-                       Pcentral,Pwhite,Ppial);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
-      
-      updateThickness = 1;
-      if updateThickness % more testing necessary to also correct thickness
-        % correction of cortical thickness
-        cmd = sprintf('CAT_Hausdorff  "%s" "%s" "%s"',Pwhite,Ppial,Ppbt);
-        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
-      end
-      
-      saveiconame = 'extract_pial_white';
-    else
-      updateThickness = 0;
-      saveiconame = 'default';
+      if ~debug, clear CSO; end
     end
     
     %% just a shortcut for manual tests 
@@ -1032,18 +960,18 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
     CS = gifti(Pcentral);
     % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
     warning off MATLAB:subscripting:noSubscriptsSpecified
-    if updateThickness
-      facevertexcdata1 = cat_io_FreeSurfer('read_surf_data',Ppbt);
-    else
-      facevertexcdata1 = cat_surf_fun('isocolors',Yth1i,CS,Smat.matlabIBB_mm); 
-    end
     if writedebug
+      if opt.SRP 
+        facevertexcdata1 = cat_io_FreeSurfer('read_surf_data',Ppbt);
+      else
+        facevertexcdata1 = cat_surf_fun('isocolors',Yth1i,CS,Smat.matlabIBB_mm); 
+      end
       fprintf('%5.0fs',etime(clock,stime)); 
       cat_surf_fun('saveico',CS,facevertexcdata1,Pcentral,saveiconame,Ymfs);
+      res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',CS,facevertexcdata1,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2,cat_get_defaults('extopts.expertgui')>1);
     else
       %fprintf('\n');
     end
-    res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',CS,facevertexcdata1,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2,cat_get_defaults('extopts.expertgui')>1);
     
     % skip that part if a prior image is defined
     if ~useprior
@@ -1197,7 +1125,7 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
     end
     
     if ~isfield( res.(opt.surf{si}),'createCS_final')
-      res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',CS1,cat_io_FreeSurfer('read_surf_data',Ppbt),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2,cat_get_defaults('extopts.expertgui')>1);
+      res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',CS,cat_io_FreeSurfer('read_surf_data',Ppbt),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2,cat_get_defaults('extopts.expertgui')>1);
     else 
       fprintf('\n'); 
     end

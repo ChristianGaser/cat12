@@ -233,16 +233,16 @@ function str = cat_main_reportstr(job,res,qa)
   if job.extopts.spm_kamap == catdef.extopts.spm_kamap,  cp{1} = npara; else, cp{1} = cpara; end 
   if job.extopts.WMHC      == catdef.extopts.WMHC,       cp{2} = npara; else, cp{2} = cpara; end 
   if job.extopts.SLC       == catdef.extopts.SLC,        cp{3} = npara; else, cp{3} = cpara; end 
-  if job.extopts.collcorr  == catdef.extopts.collcorr,   cp{4} = npara; else, cp{4} = cpara; end 
+  if job.extopts.SRP       == catdef.extopts.SRP,        cp{4} = npara; else, cp{4} = cpara; end 
   restype = char(fieldnames(job.extopts.restypes));
   if strcmp(restype, catdef.extopts.restype), cp{5} = npara; else, cp{5} = cpara; end 
 % ############
 % WMHC in case of SPM segmentation is SPM
 % ############
   if job.extopts.expertgui
-    str{1} = [str{1} struct('name', 'KAMAP / WMHC / SLC / collcorr / restype:','value',...
+    str{1} = [str{1} struct('name', 'KAMAP / WMHC / SLC / SRP / restype:','value',...
            sprintf('%s{%d} / %s{%d} / %s{%d} / %s{%d} / %s{%s}',...
-          cp{1},job.extopts.spm_kamap, cp{2},job.extopts.WMHC, cp{3},job.extopts.SLC, cp{4},job.extopts.collcorr, cp{5},restype))];
+          cp{1},job.extopts.spm_kamap, cp{2},job.extopts.WMHC, cp{3},job.extopts.SLC, cp{4},job.extopts.SRP, cp{5},restype))];
   else
     kamapstr  = {'SPM US','','KAMAP'};  
     wmhcstr   = {'none (WMH=GM)','temporary (WMH=GM)','(WMH=WM)','own class'};

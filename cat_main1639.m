@@ -724,8 +724,8 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
   else
   %% default surface reconstruction 
   %  sum(Yth1(Yth1(:)>median(Yth1(Yth1(:)>0))*2 ))./sum(Yth1(Yth1(:)>0)) > 0.1 > error
-    tic
-    if job.extopts.collcorr >= 20
+    if debug, tic; end
+    if job.extopts.SRP >= 20
       surf = unique(surf); 
       if 0 %any( ~cellfun('isempty', strfind(surf,'cb') ))  % ... I want to avoid this if possible - it also seem to be worse to use it 
         VT1 = spm_vol(cat_get_defaults('extopts.shootingT1')); 
@@ -747,18 +747,18 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
       [Yth1, S, Psurf, qa.subjectmeasures.EC_abs, qa.subjectmeasures.defect_size, qa.createCS] = ...
         cat_surf_createCS2(VT,VT0,Ymix,Yl1,YMF,YT,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
         'vdist',job.extopts.vdist,'outputpp',job.output.pp,'surf_measures',job.output.surf_measures, ...
-        'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'collcorr',job.extopts.collcorr - 20,...
+        'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'SRP',mod(job.extopts.SRP,10),...
         'scale_cortex', job.extopts.scale_cortex, 'add_parahipp', job.extopts.add_parahipp, 'close_parahipp', job.extopts.close_parahipp,  ....
         'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
         'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior)); 
     else
       [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size, qa.createCS] = ...
         cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,struct('pbtmethod','pbt2x',...
-        'interpV',job.extopts.pbtres,'collcorr',job.extopts.collcorr, ...
+        'interpV',job.extopts.pbtres,'SRP',mod(job.extopts.SRP,10), ...
         'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
         'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior));
     end
-    toc
+    if debug, toc; end
   end
   
   %% thickness map

@@ -74,7 +74,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   def.sharpenCB           = 1;                                % sharpening function for the cerebellum (in development, RD2017-2019)
   def.thick_measure       = 1;                                % 0-PBT; 1-Tfs (Freesurfer method using mean(TnearIS,TnearOS))
   def.thick_limit         = 5;                                % 5mm upper limit for thickness (same limit as used in Freesurfer)
-  def.collcorr            = 3;                                % correction of surface collisions: 0 - none; 1 - CG (extract_pial_white); 2 - CAT_SI, 3 - PBT, 4 - PBT+, 5 - PBT+ & CAT_SI 
+  def.SRP                 = 3;                                % correction of surface collisions: 0 - none; 1 - SI, 2 - SIC with optimization
   def.surf_measures       = 1;                                % 0 - none, 1 - only thickness, 2 - expert maps (myelin,defects), 3 - developer (WMT,CSFT, ...),
                                                               % 4 - debug output, 5 - debug extended (more substeps and mex output)
   %def.WMT                 = 0;                                % pbt-based WM/CSF width/depth/thickness estimation 
@@ -85,8 +85,8 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   def.reduce_mesh         = 1;  % 0 - surface creation on PBT resolution, no mesh-reduction (very slow) 
                                 % 1 - optimal resolution depending on final mesh resolution, no mesh-reduction 
                                 % 2 - internal resolution, no mesh-reduction (slow for highres data) 
-                                % 3/4 - SPM/MATLAB reduce on initial surface - there seems to be a bug in the c-function that kills matlab 
-                                % 5/6 - SPM/MATALB reduce on initial and final surface   
+                                % 3/4 - SPM/MATLAB reduce on initial surface            - there seems to be a bug in the c-function that kills matlab 
+                                % 5/6 - SPM/MATALB reduce on initial and final surface  - there seems to be a bug in the c-function that kills matlab    
                                 % 7 - call matlab reduce in external matlab
   def.outputpp.native     = 0;  % output of Ypp map for cortical orientation in EEG/MEG 
   def.outputpp.warped     = 0;
@@ -99,16 +99,13 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   opt.vol                 = any(~cellfun('isempty',strfind(opt.surf,'v')));   % only volume-based thickness estimation  
   opt.surf                = cat_io_strrep(opt.surf,{'sfst','fst','v'},'');    % after definition of the 'fast' and 'vol' varialbe we simplify 'surf'
   opt.interpV             = max(0.1,min([opt.interpV,1.5]));                  % general limitation of the PBT resolution
-  opt.extract_pial_white          = opt.collcorr==1;                          % estimate pial and white matter surface (in development and very slow!)
-  opt.force_no_selfintersections  = opt.extract_pial_white;                   % exact estimation requires this setting
-
+ 
   if any(~cellfun('isempty',strfind(opt.surf,'sfst')))
-    opt.vdist    = 27/3; 
+    opt.vdist    = 4; 
     opt.pbtres   = 0.8;
   end
   if opt.fast
-    opt.vdist    = 27/3; 
-    %opt.collcorr = 3;
+    opt.vdist    = 2; 
   end
   
   % isosurface threshold
@@ -152,7 +149,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
     fprintf('  lower face limit:                  %g\n',opt.reduceCS);
     fprintf('  maximal vertex distance:           %0.3f mm\n',opt.vdist);
     fprintf('  optimization stepsize:             %0.3f mm\n',opt.surfaccuracy);
-    fprintf('  collcorr / reduce_mesh:            %d / %d',20 + opt.collcorr,opt.reduce_mesh);
+    fprintf('  SRP / reduce_mesh:                 %d / %d',20 + opt.SRP,opt.reduce_mesh);
   end  
   
   
@@ -246,54 +243,17 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   if ~debug, clear Ysroi Ymfs Yctd Ybv Ymfs; end
 
   
-  
-  if 0
-    %% Blood vessel correction 
-    %  It would be much faster to do the blood vessel correction on the 
-    %  internal rather the interpolated resolution (see below)
-    %  (not tested now RD201912)
-    
-    if opt.verb>1, stime = cat_io_cmd('  Blood vessel correction'); end
-    Ylt = (1 - (Ymf<1.9) + cat_vol_morph(cat_vol_morph(Ymf>2.2,'lo'),'d'))/2; 
-    Ylt = cat_vol_laplace3R(single(Ylt),Ylt>0 & Ylt<1,0.001);
-
-    % update Ywm distance map
-    Ymskc = (Ylt<0.8 & Ymf>2) | Ymf<=1.5;
-    Ymskc = smooth3(Ymskc); 
-
-    % apply correction and filter modified area
-    Ymf  = Ymf.*(1-Ymskc) + Ymskc.*max(1,min(Ymf, 4.2 - cat_vol_smooth3X(Ymf,1))); 
-    Ymf  = min(Ymf,cat_vol_median3(Ymf,Ymskc>0));
-
-    if ~debug, clear Ylt Ymskc; end
-    if opt.verb>1, fprintf('%5.0fs\n',etime(clock,stime)); end
-  end
+  % complete atlas map 
+  [D,I] = cat_vbdist(single(Ya>0)); Ya = Ya(I); clear D;  
   
   
+  % Further blood vessel correction (not tested yet) 
+  Ymf = blood_vessel_correction(Ymf,Ya,0); % last var = doit
   
   
-  if 1
-    %% Amygdala Hippocampus smoothing 
-    %  We use a median filter to remove the nice details of the hippocampus
-    %  that will cause topology errors and self-intersections. 
-    %  Currently, I have no CAT ROI for Amygdala - but it would be more 
-    %  robust to filter (simple smoothing) this region strongly because 
-    %  the "random" details especially in good data introduce more variance.
-    %  (RD 201912)
-    
-    Ymsk = ~(NS(Ya,opt.LAB.PH) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.BS) );
-    Ymsk = Ymf>0 & cat_vol_morph( NS(Ya,opt.LAB.HC) , 'dd' , 3 , vx_vol ) & Ymsk; 
-    Ymf  = cat_vol_median3( Ymf , Ymsk ); 
-    Ymf  = cat_vol_median3( Ymf , Ymsk ); 
-    if ~debug, clear Ymsk; end
-
-    % further cleanup
-    Ymsk = ~(NS(Ya,opt.LAB.PH) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.BS) );
-    Ymsk = Ymf>0 & NS(Ya,opt.LAB.HC) & Ymsk; 
-    Ymsk = smooth3(Ymsk); 
-    Ymf  = min(Ymf,3-Ymsk); 
-    if ~debug, clear Ymsk; end
-  end
+  % cleanup and smoothing of the hippocampus amygdala to remove high
+  % frequency structures that we cannot preocess yet
+  Ymf = hippocampus_amygdala_cleanup(Ymf,Ya,vx_vol,1); % last var = doit
   
   
   
@@ -310,91 +270,12 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   end
   
   
-  
-  
-  %% Sharpening of thin structures in the cerebellum (gyri and sulci)
-  %  Processing of the cerebellum needs a complete updated with a simplified
-  %  reconstruction rather than the maximum level of detail. However, the 
-  %  main branches are quite similare and their is a lot of variance in 
-  %  aging and between MR protocols. 
-  %  (RD 2015-201912)
+  % Sharpening of thin structures in the cerebellum (gyri and sulci)
   if ~opt.SPM && opt.sharpenCB && any(~cellfun('isempty',strfind(opt.surf,'cb')))
-    if opt.verb>2, fprintf('\n'); stime = cat_io_cmd('  Sharpen cerebellum'); end
-    %Ytemplate = Ytemplate * 3; 
-    
-    Ywmd = cat_vbdist(single(Ymf>2.5),Ymf>1,vx_vol);
-
-    %% normalized Ym divergence
-    Ydiv = cat_vol_div(max(2,Ymf)); %Ydivl  = cat_vol_div(Ymf,vx_vol); 
-    Ydc  = cat_vol_localstat(abs(Ydiv),Ymf>0,1,3);
-    Ydc  = cat_vol_localstat(Ydc,Ymf>0,1,1);
-    Ydiv = Ydiv ./ Ydc; clear Ydc;
-    Ydiv( abs(Ydiv) > 1.5 ) = 0;
-    
-    %% normalized Ytemplate divergence
-    if ~isempty(Ytemplate)
-      Ydivt = cat_vol_div(max(2,Ytemplate));
-      Ydct  = cat_vol_localstat(abs(Ydivt),Ytemplate>0,1,3);
-      Ydct  = cat_vol_localstat(Ydct,Ymf>0,1,1);
-      Ydivt = Ydivt ./ Ydct; clear Ydct;
-      Ydivt( abs(Ydivt) > 1.5 ) = 0;
-    else
-      Ytemplate = Ymf; 
-      Ydivt     = Ydiv; 
-    end
-    
-    %% bias-correction based
-    % WM 
-    Ycsfd = cat_vbdist(single(Ymf<1.8),Ymf>1,vx_vol);
-    Ymsk = ((cat_vol_morph(NS(Ya,opt.LAB.CB),'e',3) | YMF) & ( (Ym-Ydiv).*(Ytemplate/3-Ydivt) )>2/3 ) |  ...
-           (NS(Ya,opt.LAB.PH) & ( Ymf>2.2 | (Ymf>2 & Ydiv<-0.01) ) ) | ...                  % hippocampal gyri
-           (NS(Ya,opt.LAB.CT) & ( Ymf>2.2 | (Ymf>2 & Ydiv<-0.01 & ...
-              Ycsfd>cat_stat_nanmean(Ycsfd(Ycsfd(:)>0 & Ycsfd(:)<100)) )*1.0) );            % distant gyri and sulci in the cerebrum
-    Yi   = cat_vol_localstat(Ymf,Ymsk,1,3);
-    % GM
-    Ymsk = (NS(Ya,opt.LAB.CB) & ( Ymf>1.9 & Ymf<2.2 & Ycsfd>0 & Ydiv>-0.05) ) | ...         % sulci and gyri in the cerebellum 
-           (NS(Ya,opt.LAB.PH) & ( Ymf>1.3 & Ymf<2.2 & Ycsfd>0 ) ) | ...                     % hippocampal gyri
-           (NS(Ya,opt.LAB.CT) & ( Ymf>1.3 & Ymf<2.2 & Ycsfd>0 & ...
-              Ywmd>cat_stat_nanmean(Ywmd(Ywmd(:)>0 & Ywmd(:)<100))*0.2 ) );                 % distant gyri and sulci in the cerebrum
-    Yi   = Yi + cat_vol_localstat(Ymf,Yi==0 & Ymsk,1,1)/2*3;%& ( cat_vol_morph(Yi==0,'e') & Ymf>2.2)
-    Yi   = cat_vol_localstat(Yi,Yi>0,1,3);
-    Yi   = cat_vol_localstat(Yi,Yi>0,1,1); 
-    if ~debug, clear Ywmd Ymsk; end
-    % CSF - instable and not required
-    Ywi = cat_vol_approx(Yi,'nn',1,1,struct('lfO',2)); clear Yi
-    
-    %% only cerebellum
-    Ycb = cat_vol_smooth3X( NS(Ya,opt.LAB.CB) , 2 ); 
-    Ywi = 3*ones(size(Ywi),'single').*(1-Ycb) + Ycb.*Ywi; clear Ycb 
-    Ymf = Ymf./Ywi * 3; 
-    
-    % denoising result
-    Ycb = Ymf .* NS(Ya,opt.LAB.CB); cat_sanlm(Ycb,3,1); Ymf(NS(Ya,opt.LAB.CB)) = Ycb(NS(Ya,opt.LAB.CB)); clear Ycb
-    
-    
-    %% sharpening (RD 201912)
-    Ycb = (NS(Ya,opt.LAB.CB)>0.5) .* max(0,min(1,min(2,max(-1,(Ymf/3).^2 - 0.1*Ydiv) .* max(-1,Ytemplate/3 - 0.02*Ydivt - 0.03*Ydiv )*3 - 1)/3 + 2/3)); 
-    if ~debug, clear Ydiv; end
-    for i=1:3, Ycb = max(0,min(1, Ycb - smooth3(cat_vol_median3(Ycb,Ycb>0,Ycb>0) - Ycb) )); end
-    Ycb = min(1,Ycb); 
-    cat_sanlm(Ycb,3,1); 
-    
-    %% final mixing
-    Ymsk = cat_vol_smooth3X(NS(Ya,opt.LAB.CB) & Ycb<1.9/3,0.5); 
-    Ycb  = Ycb.*(1-Ymsk) + Ymsk.*Ymf/3;
-    Ycs  = NS(Ya,opt.LAB.CB) .* cat_vol_smooth3X( NS(Ya,opt.LAB.CB) , 4 ); 
-    Ymf  = Ymf.*(1-Ycs) + Ycs.*Ycb*3; clear Ycs 
-    
-    if ~debug, clear Ywi Yi Ycb; end
-    if ~debug, clear Ymsk; end
-    if opt.verb>2, fprintf('%5.0fs\n',etime(clock,stime)); end
+    Ymf = sharpen_cerebellum(Ym,Ymf,Ytemplate,Ya,vx_vol,opt.verb);
   end
-  if ~debug, clear Ydiv Ycsfd; end
+
   
-  
-  
-  % complete atlas map 
-  [D,I] = cat_vbdist(single(Ya>0)); Ya = Ya(I); clear D;  
   
   
   % use sum of EC's and defect sizes for all surfaces, thus set values initially to 0
@@ -633,15 +514,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
     %  because CAT_DeformSurf achieved better results using that resolution
     Yppt = cat_vol_resize(Yppi,'deinterp',resI);                        % back to original resolution
     Yppt = cat_vol_resize(Yppt,'dereduceBrain',BB);                     % adding of background
-
-    % scale Yppt so that backgrounds remains 0 and WM 1, but cortical band is now in the range of 0.1..0.9
-    if opt.extract_pial_white
-      % mask hemispheres and regions
-      indi = find((Yppt>0) & (Yppt<0.99999));
-      Yppt(indi) = 0.1 + (0.8*Yppt(indi));
-      clear indi
-    end
-    Ypp = max(Ypp,Yppt .* Yside); 
+    Ypp  = max(Ypp,Yppt .* Yside); 
     
     % this is the map that we want to keep in the original image resolution
     Vpp  = cat_io_writenii(V0,Ypp,'mri',sprintf('%s.pp',opt.surf{si}) ,'percentage position map','uint8',[0,1/255],...
@@ -753,7 +626,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
         Yppisc = scale_cortex * Yppi;
       end
 
-      if 0
+      if iscerebellum
         %% thickness depending cortical scaling - this seems to work but need further tests (RD201911)
         %  RD202103 ... this changes a lot !
         Yth1i  = cat_vol_localstat(Yth1i,Yth1i>0,2,2);
@@ -1030,10 +903,22 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
         % remove bad faces 
         CS = correctReducePatch(CS);
       end
-      saveSurf(CS,Praw);
-
+      
       % remove unconnected meshes
+      saveSurf(CS,Praw);
       cmd = sprintf('CAT_SeparatePolygon "%s" "%s" -1',Praw,Praw); 
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
+
+      CS = loadSurf(Praw);
+      facevertexcdata = cat_surf_fun('isocolors',Yth1i,CS,Smat.matlabIBB_mm); 
+      cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
+
+      cmds = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none  0  1  -1  .1 ' ...   
+                     'avg  %0.3f  %0.3f .2  .1  5  0 "0.5"  "0.5"  n 0  0  0 %d %g  0.0 0'], ...          
+                      Vpp1.fname,Praw,Praw,-0.1, 0.1, 50, 0.01); % moveth(8/li, opt.surfaccuracy*2/li * (1+(opt.fast>0)) ) );
+      [ST, RS] = cat_system(cmds); cat_check_system_output(ST,RS,opt.verb-3);
+
+      cmd = sprintf('CAT_Central2Pial -equivolume -weight 0.7 "%s" "%s" "%s" 0',Praw,Ppbt,Praw);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
 
       % refine super-large faces with adaption for cerebellum and fast option
@@ -1046,18 +931,17 @@ fprintf('\nRAW: V=%d, MN(CT)=%0.20f, SD(CT)=%0.20f\n',size(CS.vertices,1),mean(f
 res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
       end
 
-      %% Create a smooth surface for the topology correction. 
+      % Create a smooth surface for the topology correction. 
       % It don't has to be perfect because it will replaced completely!
-%tic
       cmds = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none  0  1  -1  .1 ' ...   
                      'avg  %0.3f  %0.3f .2  .1  5  0 "0.5"  "0.5"  n 0  0  0 %d %g  0.0 0'], ...          
-                      Vpp1.fname,Praw,Praw,-0.1, 0.1, 30, 0.002); % moveth(8/li, opt.surfaccuracy*2/li * (1+(opt.fast>0)) ) );
+                      Vpp1.fname,Praw,Praw,-0.1, 0.1, 50, 0.01); % moveth(8/li, opt.surfaccuracy*2/li * (1+(opt.fast>0)) ) );
       [ST, RS] = cat_system(cmds); cat_check_system_output(ST,RS,opt.verb-3);
-%toc
+
       % load surf and map thickness
       CS = loadSurf(Praw);
       facevertexcdata = cat_surf_fun('isocolors',Yth1i,CS,Smat.matlabIBB_mm); 
-    %  res.(opt.surf{si}).createCS_init = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,1);
+      %res.(opt.surf{si}).createCS_init = cat_surf_fun('evalCS',CSE,cat_surf_fun('isocolors',CSE,Yth1i,Smat.matlabIBB_mm),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,1);
       %%
 %fprintf('IS: V=%d, MN(CT)=%0.20f, SD(CT)=%0.20f\n',size(CS.vertices,1),mean(facevertexcdata(:)),std(facevertexcdata(:)));    
 %res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
@@ -1072,9 +956,9 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
       %  for visual analysis. 
       %  --------------------------------------------------------------------
         if exist('Ywdt','var')
-          [res,EC,stime] = fastCSexport(Ymfs,Yppi,Yth1i,Ywdt,Ycdt,Vpp1,Vpp, EC, CS,facevertexcdata, opt,Smat, si, Ppbt,Praw,Pcentral,Player4,Pthick,Pgwwg,Psw, debug, stime);
+          [res,EC,stime] = fastCSexport(Ymfs,Yppi,Yth1i,Ywdt,Ycdt,Vpp1,Vpp, EC, CS,facevertexcdata, opt,res,Smat, si, Ppbt,Praw,Pcentral,Player4,Pthick,Pgwwg,Psw, debug, stime);
         else
-          [res,EC,stime] = fastCSexport(Ymfs,Yppi,Yth1i,[],[],Vpp1,Vpp, EC, CS,facevertexcdata, opt,Smat, si, Ppbt,Praw,Pcentral,Player4,Pthick,Pgwwg,Psw, debug, stime);
+          [res,EC,stime] = fastCSexport(Ymfs,Yppi,Yth1i,[]  ,[]  ,Vpp1,Vpp, EC, CS,facevertexcdata, opt,res,Smat, si, Ppbt,Praw,Pcentral,Player4,Pthick,Pgwwg,Psw, debug, stime);
         end
         continue
       end
@@ -1171,12 +1055,10 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
     end
     
     % surface refinement (this time even before reduction)
-    for li = 2.^(0:1)
-      cmds = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none  0  1  -1  .1 ' ...           
-                     'avg  -0.1  0.1 .2  .1  %d  0 "0.5"  "0.5"  n 0  0  0 %d  %0.2f  0.0 0'], ...    
-                      Vpp1.fname,Pcentral,Pcentral,1/li,moveth(0.4/li,opt.surfaccuracy * 4/li));
-      [ST, RS] = cat_system(cmds); cat_check_system_output(ST,RS,opt.verb-3); % hier ging was schief
-    end
+    cmds = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none  0  1  -1  .1 ' ...           
+                    'avg  -0.1  0.1 .2  .1  5  0 "0.5"  "0.5"  n 0  0  0 %d  %g  0.0 0'], ...    
+                    Vpp1.fname,Pcentral,Pcentral,30,0.01); 
+    [ST, RS] = cat_system(cmds); cat_check_system_output(ST,RS,opt.verb-3); % hier ging was schief
     
     % reduce - as far as the Insula/Amygdala is not so heavily folded compared to sulci this region is first reduced 
     CS = loadSurf(Pcentral); 
@@ -1206,12 +1088,10 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
     end
 
     % surface defomation for relaxation after reduction and refinement
-    for li = 2.^(1:2)
-      cmds = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none  0  1  -1  .1 ' ...           
-                     'avg  -0.1  0.1 .2  .1  %d  0 "0.5"  "0.5"  n 0  0  0 %d  %0.2f  0.0 0'], ...    
-                      Vpp1.fname,Pcentral,Pcentral,1/li,moveth(0.4/li,opt.surfaccuracy*4/li));
-      [ST, RS] = cat_system(cmds); cat_check_system_output(ST,RS,opt.verb-3);
-    end 
+    cmds = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none  0  1  -1  .1 ' ...           
+                    'avg  -0.1  0.1 .2  .1  5  0 "0.5"  "0.5"  n 0  0  0 %d  %g  0.0 0'], ...    
+                     Vpp1.fname,Pcentral,Pcentral,50,0.01);
+    [ST, RS] = cat_system(cmds); cat_check_system_output(ST,RS,opt.verb-3);
     % read final surface and map thickness data
     CS = loadSurf(Pcentral);
     facevertexcdata = cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm); 
@@ -1220,11 +1100,11 @@ if 0
     if opt.verb > 2, fprintf('SR1: V=%d, MN(CT)=%0.20f, SD(CT)=%0.20f\n',size(CS.vertices,1),mean(facevertexcdata(:)),std(facevertexcdata(:))); end
     res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
 end
+  
     
     
     
-    
-    %% final correction of central surface in highly folded areas 
+    % final correction of central surface in highly folded areas 
     %  with high mean curvature with weight of 0.7 and further refinement
     %  of the mesh and its vertices based on the position map 
     cmd = sprintf('CAT_Central2Pial -equivolume -weight 0.7 "%s" "%s" "%s" 0',Pcentral,Ppbt,Pcentral);
@@ -1237,8 +1117,8 @@ end
     % surface refinement by surface deformation based on the PP map
     %for li = 2.^(0:1)
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
-                     'avg -0.1 0.1 .2 .1 %d 0 "0.5" "0.5" n 0 0 0 %d %0.2f 0.0 %d'], ...
-                     Vpp1.fname,Pcentral,Pcentral,5,100,0.005,opt.collcorr==1); %1/li,moveth(0.2,opt.surfaccuracy * 2/li),any(opt.collcorr==[1,5])); 
+                     'avg -0.1 0.1 .2 .1 %d 0 "0.5" "0.5" n 0 0 0 %d %0.2f 0.0 0'], ...
+                     Vpp1.fname,Pcentral,Pcentral,5,50,0.01); 
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
     %end
     
@@ -1247,12 +1127,10 @@ end
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
 
     % final surface refinement
-   % for li = 2.^(0:1)
-      cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
-                     'avg -0.1 0.1 .5 .1 %d 0 "0.5" "0.5" n 0 0 0 %d %0.2f 0.0 %d'], ...
-                     Vpp1.fname,Pcentral,Pcentral,5,150,0.002,opt.collcorr==1); %1/li,moveth(0.1/li,opt.surfaccuracy * 2/li),any(opt.collcorr==[1,5])); 
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
-  %  end
+    cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
+                   'avg -0.1 0.1 .5 .1 %d 0 "0.5" "0.5" n 0 0 0 %d %0.2f 0.0 0'], ...
+                   Vpp1.fname,Pcentral,Pcentral,5,100,0.005); 
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
 
     % read final surface and map thickness data
     CS = loadSurf(Pcentral);
@@ -1268,73 +1146,51 @@ end
     end
 if 0 
     res.(opt.surf{si}).createCS_2_refine = cat_surf_fun('evalCS' ,CS,cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm),...
-      Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2,opt.collcorr==0 && cat_get_defaults('extopts.expertgui')>1);
+      Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2,opt.SRP==0 && cat_get_defaults('extopts.expertgui')>1);
     res.(opt.surf{si}).createCS_final    = res.(opt.surf{si}).createCS_2_refine; 
     if opt.verb > 2, fprintf('SR2: V=%d, SD(CT)=%0.20f\n',size(CS.vertices,1),std(facevertexcdata(:))); end
 end    
     
-    
-    %% Collision correction by Delaunay triangularization
-    if opt.collcorr == 1
-    %  Approach from createCS1 that uses the CAT c-functions to avoid self-
-    %  itersections that is not able to fully perform the development of the 
-    %  central to the white/pial surface causing thickness underestimation.
-      [CS,facevertexcdata,stime] = collcorr_cg(Vpp1,  opt,  Pcentral,Ppial,Pwhite,Ppbt , stime);
-      
-    elseif opt.collcorr > 1  
-    % New self-intersection correction that uses different detections of
-    % self-intersections (SIDs; RY vs. PBT) with/without further optimization. 
-    % It does not fully avoid self-intersections because some are already 
-    % in the CS and some other required strong changes that result in worse
-    % thickness results.
-    %
-    % collcorr:
-    %   2: Rachel's SID that is accurate but slow (45s/iteration/side) 
-    %   3: PBT SID that is faster (5s/iteration/side) but less accurate
-    %   4: PBT SID + optimization 
-    %   5: PBT SID + optimization + fast Rachel's SID  
-    %
-    
-      stime = cat_io_cmd('  Reduction of surface collisions:','g5','',opt.verb,stime); 
 
-      % final correction of central surface in highly folded areas with high mean curvature
-      cmd = sprintf('CAT_Central2Pial -equivolume -weight 1 "%s" "%s" "%s" 0',Pcentral,Ppbt,Player4);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
-      Sl4 = loadSurf(Player4);
-      Yl4 = cat_surf_fun('isocolors',Ymf,Sl4,Smat.matlabi_mm); delete(Player4), clear Sl4; 
-      
-      
-      %% call collision correction
+
+    if opt.SRP
+    %% Collision correction by Delaunay triangularization
+    %  --------------------------------------------------------------------
+    %  New self-intersection correction that uses different detections of
+    %  self-intersections (SIDs; RY vs. PBT) with/without further optimization. 
+    %  It does not fully avoid self-intersections because some are already 
+    %  in the CS and some other required strong changes that result in worse
+    %  thickness results.
+     
+      if opt.SRP == 1
+        stime = cat_io_cmd('  Reduction of surface collisions:','g5','',opt.verb,stime); 
+      else
+        stime = cat_io_cmd('  Reduction of surface collisions with optimization:','g5','',opt.verb,stime); 
+      end
       verblc = 1; % verbose level 
       if debug, if exist('CSO','var'), CS = CSO; facevertexcdata = facevertexcdatao; else, CSO = CS; facevertexcdatao = facevertexcdata; end; stime2 = clock; else, stime2 = [];  end
-      if opt.collcorr == 2
-        [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionRY',CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',opt.verb>verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^6));
-      elseif opt.collcorr == 3 || opt.collcorr == 4
-        [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,Yl4,struct('optimize',opt.collcorr - 3,'verb',opt.verb>verblc,'mat',Smat.matlabIBB_mm));
-      elseif opt.collcorr == 5
-        [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,Yl4,struct('optimize',4,'verb',opt.verb>verblc,'mat',Smat.matlabIBB_mm));
-        fprintf('\b\b');
-        [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionRY',CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',opt.verb>verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3));
-      end
-      if ~debug, clear Yl4; end
-      saveSurf(CS,Pcentral);
-      cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
+      if debug, saveSurf(CS,Pcentral); cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata); tic; end
       
+      % call collision correction
+      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,struct('optimize',opt.SRP==2,'verb',opt.verb>verblc,'mat',Smat.matlabIBB_mm)); fprintf('\b\b');
+      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',opt.verb>verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3)); 
+      if debug, toc; end
       
       % evaluate and save results
       if opt.verb > verblc, cat_io_cmd(' ','g5','',opt.verb);  end
       fprintf('%5.0fs',etime(clock,min([stime2;stime],[],1))); if ~debug, stime = []; end
+      saveSurf(CS,Pcentral); cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
       % final result ... test for self-intersections only in developer mode? 
-      if 0 % opt.surf_measures > 2  ||  opt.verb > 2
+      if debug % opt.surf_measures > 2  ||  opt.verb > 2
         cat_surf_fun('saveico',CS,facevertexcdata,Pcentral,sprintf('createCS_3_collcorr_%0.2fmm_vdist%0.2fmm',opt.interpV,opt.vdist),Ymfs,Smat.matlabIBB_mm); 
+        fprintf('\n');
         res.(opt.surf{si}).createCS_3_collcorr = cat_surf_fun('evalCS' ,CS,facevertexcdata,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-1,cat_get_defaults('extopts.expertgui')>1);
         res.(opt.surf{si}).createCS_final      = res.(opt.surf{si}).createCS_3_collcorr; 
       else
         fprintf('\n');
       end
       
-      clear Yl4 CSO; 
-
+      if ~debug, clear CSO; end
     end
 
     
@@ -1533,7 +1389,6 @@ end
     if opt.thick_measure == 1
       % not ready yet
       if 0
-%      if opt.extract_pial_white && ~opt.fast % use white and pial surfaces
         cmd = sprintf('CAT_SurfDistance -mean "%s" "%s" "%s"',Pwhite,Ppial,Pthick);
         [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
       else % use central surface and thickness
@@ -1977,7 +1832,7 @@ function [CS,facevertexcdata,stime] = collcorr_cg(Vpp1,  opt,  Pcentral,Ppial,Pw
     fprintf('\n'); 
   end
 end
-function [res,EC,stime] = fastCSexport(Ymfs,Yppi,Yth1i,Ywdt,Ycdt,Vpp1,Vpp, EC, CS,facevertexcdata,opt,Smat, si, Ppbt,Praw,Pcentral,Player4,Pthick,Pgwwg,Psw, debug, stime)
+function [res,EC,stime] = fastCSexport(Ymfs,Yppi,Yth1i,Ywdt,Ycdt,Vpp1,Vpp, EC, CS,facevertexcdata,opt,res,Smat, si, Ppbt,Praw,Pcentral,Player4,Pthick,Pgwwg,Psw, debug, stime)
 %% Fast processing without topology correction and spherical registration
 %  --------------------------------------------------------------------
 %  The one and only fast option that is equal to the init surface but 
@@ -1986,19 +1841,15 @@ function [res,EC,stime] = fastCSexport(Ymfs,Yppi,Yth1i,Ywdt,Ycdt,Vpp1,Vpp, EC, C
 %  --------------------------------------------------------------------
 
   % correction for surface collision of the IS and OS
-  if opt.collcorr > 1      
+  if opt.SRP
     % final correction of central surface in highly folded areas with high mean curvature
     cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
-    cmd = sprintf('CAT_Central2Pial -equivolume -weight 1 "%s" "%s" "%s" 0',Praw,Ppbt,Player4);
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
-    Sl4 = loadSurf(Player4);
-    Yl4 = cat_surf_fun('isocolors',Ymf,Sl4.vertices,Smat.matlabi_mm); delete(Player4), clear Sl4; 
-
-    stime = cat_io_cmd(sprintf('  Correction of surface collisions:'),'g5','',opt.verb-1,stime); 
-    [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,Yl4,struct('optimize',opt.collcorr - 3,'verb',opt.verb>1,'mat',Smat.matlabIBB_mm));
-    collcorrstr = '_collcorr'; 
-  else
-    collcorrstr = '';
+    if opt.SRP==1
+      stime = cat_io_cmd(sprintf('  Correction of surface collisions:'),'g5','',opt.verb-1,stime); 
+    else
+      stime = cat_io_cmd(sprintf('  Correction of surface collisions with optimization:'),'g5','',opt.verb-1,stime); 
+    end
+    [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,Yl4,struct('optimize',opt.SRP==2,'verb',opt.verb>1,'mat',Smat.matlabIBB_mm));
   end
 
   % save final data and data structure
@@ -2007,9 +1858,10 @@ function [res,EC,stime] = fastCSexport(Ymfs,Yppi,Yth1i,Ywdt,Ycdt,Vpp1,Vpp, EC, C
   S.(opt.surf{si}) = struct('faces',CS.faces,'vertices',CS.vertices,'th1',facevertexcdata);
 
   % create white and central surfaces
+  % RD202103: bug in CB export
   cat_surf_fun('white',Pcentral);
   cat_surf_fun('pial',Pcentral);
-
+  
   %% evaluate and save results
   fprintf('%5.0fs',etime(clock,stime)); stime = [];        
   if 0 % opt.surf_measures > 3 % final result
@@ -2077,9 +1929,158 @@ function [res,EC,stime] = fastCSexport(Ymfs,Yppi,Yth1i,Ywdt,Ycdt,Vpp1,Vpp, EC, C
 
   fprintf('%5.0fs\n',etime(clock,stime)); 
 end
-%=======================================================================
+%==========================================================================
+function Ymf = hippocampus_amygdala_cleanup(Ymf,Ya,vx_vol,doit)
+%% Amygdala hippocampus smoothing. 
+%  We use a median filter to remove the nice details of the hippocampus
+%  that will cause topology errors and self-intersections. 
+%  Currently, I have no CAT ROI for Amygdala - but it would be more 
+%  robust to filter (simple smoothing) this region strongly because 
+%  the "random" details especially in good data introduce more variance.
+%  (RD 201912)
+%
+%    Ymf = hippocampus_amygdala_cleanup(Ymf,Ya[,doit])
+% 
+%    Ymf  .. intensity normalized (WM=3,GM=2,CSF=1) filled and 
+%            skull-stripped image
+%    Ya   .. CAT atlas map
+%    doit .. do it (default = 1) 
+   
+  if ~exist('doit','var'), doit = 1; end
+  
+  if doit
+    % remove side definition 
+    NS   = @(Ys,s) Ys==s | Ys==s+1; 
+    LAB  = cat_get_defaults('extopts.LAB');  
+   
+    % strong cleanup by median filter
+    Ymsk = ~(NS(Ya,LAB.PH) | NS(Ya,LAB.ON) | NS(Ya,LAB.BS) );
+    Ymsk = Ymf>0 & cat_vol_morph( NS(Ya,LAB.HC) , 'dd' , 3 , vx_vol ) & Ymsk; 
+    Ymf  = cat_vol_median3( Ymf , Ymsk ); 
+    Ymf  = cat_vol_median3( Ymf , Ymsk ); 
+
+    % further cleanup by smoothing
+    Ymsk = ~(NS(Ya,LAB.PH) | NS(Ya,LAB.ON) | NS(Ya,LAB.BS) );
+    Ymsk = Ymf>0 & NS(Ya,LAB.HC) & Ymsk; 
+    Ymsk = smooth3(Ymsk); 
+    Ymf  = min(Ymf,3-Ymsk); 
+  end
+end
+%==========================================================================
+function Ymf = blood_vessel_correction(Ymf,Ya,doit)
+%% Blood vessel correction 
+%  It would be much faster to do the blood vessel correction on the 
+%  internal rather the interpolated resolution (see below)
+%  (not tested now RD201912)
+
+  if ~exist('doit','var'), doit = 1; end
+
+  if doit
+    NS   = @(Ys,s) Ys==s | Ys==s+1; 
+    LAB  = cat_get_defaults('extopts.LAB');  
+
+    Ylt  = (1 - (Ymf<1.9) + cat_vol_morph(cat_vol_morph(Ymf>2.2,'lo'),'d'))/2; 
+    Ylt  = cat_vol_laplace3R(single(Ylt),Ylt>0 & Ylt<1,0.001);
+
+    % update Ywm distance map
+    Ymsk = (Ylt<0.8 & Ymf>2) | Ymf<=1.5;
+    Ymsk = Ymsk & NS(Ya,LAB.CT);
+    Ymsk = smooth3(Ymsk); 
+
+    % apply correction and filter modified area
+    Ymf  = Ymf.*(1-Ymsk) + Ymsk.*max(1,min(Ymf, 4.2 - cat_vol_smooth3X(Ymf,1))); 
+    Ymf  = min(Ymf,cat_vol_median3(Ymf,Ymsk>0));
+  end
+end
+%==========================================================================
+function Ymf = sharpen_cerebellum(Ym,Ymf,Ytemplate,Ya,vx_vol,verb,doit)
+%% Sharpening of thin structures in the cerebellum (gyri and sulci)
+%  Processing of the cerebellum needs a complete updated with a simplified
+%  reconstruction rather than the maximum level of detail. However, the 
+%  main branches are quite similare and their is a lot of variance in 
+%  aging and between MR protocols. 
+%  (RD 2015-201912)  
+
+  dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
+  
+  if ~exist('doit','var'), doit = 1; end
+  if ~exist('verb','var'), verb = 0; end
+  
+  if doit
+    if verb>2, fprintf('\n'); stime = cat_io_cmd('  Sharpen cerebellum'); end
+    %Ytemplate = Ytemplate * 3; 
+    
+    LAB  = cat_get_defaults('extopts.LAB');  
+    NS   = @(Ys,s) Ys==s | Ys==s+1; 
+    Ywmd = cat_vbdist(single(Ymf>2.5),Ymf>1,vx_vol);
+
+    %% normalized Ym divergence
+    Ydiv = cat_vol_div(max(2,Ymf)); %Ydivl  = cat_vol_div(Ymf,vx_vol); 
+    Ydc  = cat_vol_localstat(abs(Ydiv),Ymf>0,1,3);
+    Ydc  = cat_vol_localstat(Ydc,Ymf>0,1,1);
+    Ydiv = Ydiv ./ Ydc; clear Ydc;
+    Ydiv( abs(Ydiv) > 1.5 ) = 0;
+    
+    %% normalized Ytemplate divergence
+    if ~isempty(Ytemplate)
+      Ydivt = cat_vol_div(max(2,Ytemplate));
+      Ydct  = cat_vol_localstat(abs(Ydivt),Ytemplate>0,1,3);
+      Ydct  = cat_vol_localstat(Ydct,Ymf>0,1,1);
+      Ydivt = Ydivt ./ Ydct; clear Ydct;
+      Ydivt( abs(Ydivt) > 1.5 ) = 0;
+    else
+      Ytemplate = Ymf; 
+      Ydivt     = Ydiv; 
+    end
+    
+    %% bias-correction based
+    % WM 
+    Ycsfd = cat_vbdist(single(Ymf<1.8),Ymf>1,vx_vol);
+    Ymsk = ((cat_vol_morph(NS(Ya,LAB.CB),'e',3) | Ymf) & ( (Ym-Ydiv).*(Ytemplate/3-Ydivt) )>2/3 ) |  ...
+           (NS(Ya,LAB.PH) & ( Ymf>2.2 | (Ymf>2 & Ydiv<-0.01) ) ) | ...                  % hippocampal gyri
+           (NS(Ya,LAB.CT) & ( Ymf>2.2 | (Ymf>2 & Ydiv<-0.01 & ...
+              Ycsfd>cat_stat_nanmean(Ycsfd(Ycsfd(:)>0 & Ycsfd(:)<100)) )*1.0) );            % distant gyri and sulci in the cerebrum
+    Yi   = cat_vol_localstat(Ymf,Ymsk,1,3);
+    % GM
+    Ymsk = (NS(Ya,LAB.CB) & ( Ymf>1.9 & Ymf<2.2 & Ycsfd>0 & Ydiv>-0.05) ) | ...         % sulci and gyri in the cerebellum 
+           (NS(Ya,LAB.PH) & ( Ymf>1.3 & Ymf<2.2 & Ycsfd>0 ) ) | ...                     % hippocampal gyri
+           (NS(Ya,LAB.CT) & ( Ymf>1.3 & Ymf<2.2 & Ycsfd>0 & ...
+              Ywmd>cat_stat_nanmean(Ywmd(Ywmd(:)>0 & Ywmd(:)<100))*0.2 ) );                 % distant gyri and sulci in the cerebrum
+    Yi   = Yi + cat_vol_localstat(Ymf,Yi==0 & Ymsk,1,1)/2*3;%& ( cat_vol_morph(Yi==0,'e') & Ymf>2.2)
+    Yi   = cat_vol_localstat(Yi,Yi>0,1,3);
+    Yi   = cat_vol_localstat(Yi,Yi>0,1,1); 
+    if ~debug, clear Ywmd Ymsk Ycsfd; end
+    % CSF - instable and not required
+    Ywi = cat_vol_approx(Yi,'nn',1,1,struct('lfO',2)); clear Yi
+    
+    %% only cerebellum
+    Ycb = cat_vol_smooth3X( NS(Ya,LAB.CB) , 2 ); 
+    Ywi = 3*ones(size(Ywi),'single').*(1-Ycb) + Ycb.*Ywi; clear Ycb 
+    Ymf = Ymf./Ywi * 3; 
+    
+    % denoising result
+    Ycb = Ymf .* NS(Ya,LAB.CB); cat_sanlm(Ycb,3,1); Ymf(NS(Ya,LAB.CB)) = Ycb(NS(Ya,LAB.CB)); clear Ycb
+    
+    
+    %% sharpening (RD 201912)
+    Ycb = (NS(Ya,LAB.CB)>0.5) .* max(0,min(1,min(2,max(-1,(Ymf/3).^2 - 0.1*Ydiv) .* max(-1,Ytemplate/3 - 0.02*Ydivt - 0.03*Ydiv )*3 - 1)/3 + 2/3)); 
+    if ~debug, clear Ydiv; end
+    for i=1:3, Ycb = max(0,min(1, Ycb - smooth3(cat_vol_median3(Ycb,Ycb>0,Ycb>0) - Ycb) )); end
+    Ycb = min(1,Ycb); 
+    cat_sanlm(Ycb,3,1); 
+    
+    %% final mixing
+    Ymsk = cat_vol_smooth3X(NS(Ya,LAB.CB) & Ycb<1.9/3,0.5); 
+    Ycb  = Ycb.*(1-Ymsk) + Ymsk.*Ymf/3;
+    Ycs  = NS(Ya,LAB.CB) .* cat_vol_smooth3X( NS(Ya,LAB.CB) , 4 ); 
+    Ymf  = Ymf.*(1-Ycs) + Ycs.*Ycb*3; clear Ycs 
+    
+    if verb>2, fprintf('%5.0fs\n',etime(clock,stime)); end
+  end
+end
+%==========================================================================
 function cdata = estimateWMdepthgradient(CS,cdata)
-% ______________________________________________________________________
+% _________________________________________________________________________
 % Estimates the maximum local gradient of a surface. 
 % Major use is the WM depth that grows with increasing sulcal depth. 
 % It measures the amount of WM behind the cortex, but more relevant is
@@ -2087,7 +2088,7 @@ function cdata = estimateWMdepthgradient(CS,cdata)
 % The width of the street next to a house gives not the connectivity of
 % this house, but the width of the entrance does!
 % This measure can be improved by further information of sulcal depth.
-% ______________________________________________________________________
+% _________________________________________________________________________
 
   %%
   SV  = CS.vertices;                                                          % Surface Vertices 
