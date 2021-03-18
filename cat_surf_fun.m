@@ -1663,8 +1663,8 @@ function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt)
   opt          = cat_io_checkinopt(opt,def); 
   opt.iterfull = find( 1 ./ opt.redterm.^(1:100)  < opt.accuracy , 1); % + 2 maximum number of iterations
   
-  sf           = round( sqrt( size(S.faces,1) / 50000) ) * 1; % smoothing iterations depend on mesh size ### empirical value 
-  M            = spm_mesh_smooth(S);                          % for spm_smoothing matrix
+  sf           = round( sqrt( size(S.faces,1) / 50000) ) / 2;  % smoothing iterations depend on mesh size ### empirical value 
+  M            = spm_mesh_smooth(S);                           % for spm_smoothing matrix
 
   % filenames
   [pp,ff,ee]   = spm_fileparts(opt.Pcs);
@@ -1765,14 +1765,12 @@ function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt)
     VICS = smoothsurf(VIC,2); VIC = VIC.*(1-Tsw) + Tsw.*VICS;
     clear VOCS VICS Tsw;
     
-    for is=1
-      VOCS = smoothsurf(VOC,1); VOC(Tpc>0,:) = VOC(Tpc>0,:).*(1-VOCSf) + VOCSf.*VOCS(Tpc>0,:);
-      VICS = smoothsurf(VIC,1); VIC(Twc>0,:) = VIC(Twc>0,:).*(1-VICSf) + VICSf.*VICS(Twc>0,:);
-      clear VOCS VICS Tsw;
-    end
-    
+    VOCS = smoothsurf(VOC,1); VOC(Tpc>0,:) = VOC(Tpc>0,:).*(1-VOCSf) + VOCSf.*VOCS(Tpc>0,:);
+    VICS = smoothsurf(VIC,1); VIC(Twc>0,:) = VIC(Twc>0,:).*(1-VICSf) + VICSf.*VICS(Twc>0,:);
+    clear VOCS VICS Tsw;
+       
     % update thickness and central surface position
-    Tn  = sum( (VIC - VOC).^2 , 2) .^ 0.5;
+    Tn    = double( max(0.01,sum( (VIC - VOC).^2 , 2) .^ 0.5 ));
     Tvxw  = Tn/2; 
     Tvxp  = Tn/2; 
     S.vertices = mean(cat(3,VIC,VOC),3); 
@@ -1854,7 +1852,7 @@ function V = cat_surf_smooth(M,V,s,mode)
   end
 end
 
-function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
+function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
 % _________________________________________________________________________
 % This function utilize the percentage position map Ypp map of the 
 % projection-based thickness to detect and correct self-intersections (SI)
@@ -1885,30 +1883,31 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
   if ~exist('opt','var'), opt = struct(); end
 
   % defaults
-  def.redterm  = 2; 
+  def.redterm  = 2;       % reduction term of the iteration, e.g. 2 = half resolution every iteration
   def.verb     = 1;       % display information 
   def.debug    = 2;       % save results 
-  def.relvert  = 0.01;    % percentual error of vertices with self-intersections (1.00 = 1%)  
-  def.accuracy = 1/2^3;  % smallest used step-size (the value should not be to small   ... 0.00625
+  def.accuracy = 1/2^3;   % smallest used step-size (the value should not be to small 
                           % because there should also be a gab between the structures and a reasonalbe running time) 
-  def.optimize = 1;       % use position/intensity values for optimization  
-  def.optmod   = 2;       % optimization mode (0 - Ypp, 1 - Ym, 2 - Ypp & Ym)
+  def.optimize = 1;       % use percentage position values for optimization  
   def.mat      = [];
-  %def.interpBB = struct('BB',[],'interpV',1);
   opt          = cat_io_checkinopt(opt,def); 
   opt.iteropt  = find( 1 ./ opt.redterm.^(1:100)  < opt.accuracy , 1); 
   opt.iterfull = round( opt.iteropt * (1 + opt.optimize) ); 
   
-  sf           = round( sqrt( size(S.faces,1) / 50000) ); %2;  % ### empirical value 
-  M            = spm_mesh_smooth(S);                           % for spm_smoothing matrix
+  sf           = round( sqrt( size(S.faces,1) / 50000) );  % ### empirical value optimized on Collins and Thicknessphantom 
+  M            = spm_mesh_smooth(S);                       % for spm_smoothing matrix
 
-
-
-  % inner and outer thickness seen from the central surface
-  Tw = T / 2; 
-  Tp = T / 2;
+  % to have values beside the boundaries
+  if 1
+    %% Ypp2 = Y - 1.5; Ypp2(Ypp2<0) = Ypp2(Ypp2<0)/3; Ypp2(Ypp2>1) = (Ypp2(Ypp2>1) - 1) / 3 + 1; 
+    Yg   = cat_vol_grad(Ypp); mnYg = mean(Yg(Ypp(:)>0 & Ypp(:)<1)); clear Yg; 
+    Ypp2 = Y - 1.5; Ypp2(Ypp2<0) = Ypp2(Ypp2<0) * mnYg; Ypp2(Ypp2>1) = (Ypp2(Ypp2>1) - 1) * mnYg  + 1; 
+    Ymsk = (Y>1.5 & Y<2.5) | (Ypp>0.001 & Ypp<0.999); Ypp2(Ymsk) = Ypp(Ymsk); 
+    Ymsk = Y>2.5 | Ypp>=1; Ypp2(Ymsk) = max(Ypp(Ymsk),Ypp2(Ymsk)); 
+    Ypp = Ypp2; clear Ypp2; 
+  end
   
-  % detection and correction for flipped faces to have always the same normal direction
+% detection and correction for flipped faces to have always the same normal direction
   flipped = cat_surf_checkNormalDir(S); %,T,Y,opt.interpBB);
   if flipped, S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); end
 
@@ -1916,39 +1915,21 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
     spm_mesh_smooth(M,double(V(:,1)),s) , ...
     spm_mesh_smooth(M,double(V(:,2)),s) , ...
     spm_mesh_smooth(M,double(V(:,3)),s) ];
-  
-  if opt.optimize && opt.optmod
-    % use smoothed layer4 values only once to avoid re-estimation 
-    Yl4 = single(spm_mesh_smooth(M,double(Yl4),sf/4 * 50));
-  end
-  
-  Tn  = T; meshnorm = 1; 
-  if meshnorm
-    N   = spm_mesh_normals(S);
-    
-  else
-    %%
-    V   = cat_surf_mat(S.vertices,opt.mat,1); 
-    N   = isonormals(1-Ypp,V); %[V(:,2),V(:,1),V(:,3)]);
-    % normalize
-    Ns  = sum(N.^2,2).^.5;
-    N   = N ./ repmat(Ns,1,3); %clear Ns; 
-    N   = cat_surf_mat(N,opt.mat .* [[ones(3,3) zeros(3,1)];zeros(1,3) 1],0); 
-    
-    %%
-    %NS  = spm_mesh_normals(S);
-   % N(Ns<0.2) = NS(Ns<0.2);  
-    
-  end
-  N   = smoothsurf(N,sf * 2); 
-  Ns  = sum(N.^2,2).^.5;
-  N   = N ./ repmat(Ns,1,3); %clear Ns; 
-  
-  i   = 0; final = 0; 
-  SIO = 1; 
  
+  % inner and outer thickness seen from the central surface
+  Tw = T / 2; 
+  Tp = T / 2;
+  
+  Tn  = T; 
+  N   = spm_mesh_normals(S);
+  N   = smoothsurf(N,sf); % ### empirical value optimized on Collins and Thicknessphantom 
+  Ns  = sum(N.^2,2).^.5;
+  N   = N ./ repmat(Ns,1,3); 
+  clear Ns; 
+  
+  i   = 0; final = 0; SIO = 1; 
   if opt.verb, fprintf('\n'); end
-  while i < opt.iterfull * 2
+  while i < opt.iterfull  
     i = i + 1;
    
     % In theory the search/correction size would be half each time (0.5 0.25 0.125 ... 2^i)
@@ -1970,7 +1951,6 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
     % crossed an anatomical border and have an self intersection
     opt.alphaYpp = 20; % max(5 , min(30, 15 / T ))';
     selfp = ( spm_mesh_smooth( M , double( cat_surf_edgeangle( Vg , VOg )) ,1 ) > opt.alphaYpp ); % | (T>2 & angle( VIg , VOg ) > opt.alphaYpp*2 ); 
-    %selfc = ( spm_mesh_smooth( M , double( angle( Vg , N   )) ,1 ) > opt.alphaYpp ); % | (T>2 & angle( VIg , VOg ) > opt.alphaYpp*2 ); 
     selfw = ( spm_mesh_smooth( M , double( cat_surf_edgeangle( Vg , VIg )) ,1 ) > opt.alphaYpp );
     
     % correction scheme that based on the original thickness
@@ -1980,7 +1960,7 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
     %   1     1      1
     %   0     1      1
     % 
-    if i==1 || final % ||  corrsize <= opt.accuracy || i > opt.iterfull;  % at the beginning with have no old information, at the end we only want to reduce thickness 
+    if i==1 || final % at the beginning with have no old information, at the end we only want to reduce thickness 
       Twc = T/2 .* corrsize .* selfw;
       Tpc = T/2 .* corrsize .* selfp;
     else
@@ -1988,69 +1968,39 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
       Tpc = T/2 .* corrsize .* ( (selfp | selfpo) - 2 .* ( selfpo & ~selfp ) );
     end
     
-    % optimization by local intensities
-    if opt.optimize && i<opt.iteropt*3 %&& ~(corrsize <= opt.accuracy || final || i > opt.iterfull)  %
-      
-      if opt.optmod == 3
-        % intensity model based on the Ym
-        YI = cat_surf_isocolors2(Y,VI,opt.mat);
-        YO = cat_surf_isocolors2(Y,VO,opt.mat);
+    if opt.optimize && i<opt.iteropt * 3
+    %% Optimization by local intensities for early iterations by the Ypp. 
+    %  Although 1 and 0 represent the theoretical optimal boudary values 
+    %  they are bias by image resampling and should not be used. The also 
+    %  effects the thickness results and very optimal values result in
+    %  overestimation of thickness. 
+    %  I also tried a model based on the Ym but this was worse especially 
+    %  due to the blurred sulci. 
+      coristr = max(0.05, 1 - i / opt.iteropt  )/2; % factor
+     
+      GWth = 1;
+      CGth = 0;
 
-        if opt.verb, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),native2unicode(177, 'latin1'),std(YI),mean(YO),native2unicode(177, 'latin1'),std(YO)); end 
-      
-        % to fast corrections can jump gyri/sulci 
-        GWth = 3 * 0.5 + 0.5 * Yl4; 
-        CGth = 1 * 0.7 + 0.3 * Yl4;
+      YI = cat_surf_isocolors2(Ypp,VI,opt.mat); 
+      YO = cat_surf_isocolors2(Ypp,VO,opt.mat);  
 
-        % correction value 
-        YI = max(-1, min(1, ( GWth - YI ) * max(0.02,0.8 .* max(0.5,1 - i / opt.iteropt) ) ));
-        YO = max(-1, min(1, ( YO - CGth ) * max(0.02,0.8 .* max(0.5,1 - i / opt.iteropt) ) ));
-      elseif opt.optmod == 2
-        % intensity model based on the Ym
-        YI = cat_surf_isocolors2(Ypp,VI,opt.mat); YI = cat_surf_isocolors2(Y,VI,opt.mat) + YI - (YI>eps) .* 0.95; 
-        YO = cat_surf_isocolors2(Ypp,VO,opt.mat); YO = cat_surf_isocolors2(Y,VO,opt.mat) + YO - (YO>eps) .* 0.05;  
+      if 1 || opt.verb>1, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),native2unicode(177, 'latin1'),std(YI),mean(YO),native2unicode(177, 'latin1'),std(YO)); end 
 
-        if opt.verb, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),native2unicode(177, 'latin1'),std(YI),mean(YO),native2unicode(177, 'latin1'),std(YO)); end 
+      % correction value 
+      YI = max(-1, min(1, ( GWth - YI ) * coristr ));
+      YO = max(-1, min(1, ( YO - CGth ) * coristr ));
       
-        % to fast corrections can jump gyri/sulci 
-        GWth = 3 * 0.5 + 0.5 * Yl4; 
-        CGth = 1 * 0.7 + 0.3 * Yl4;
-
-        % correction value 
-        YI = max(-1, min(1, ( GWth - YI ) * max(0.02,0.4 .* max(0.5,1 - i / opt.iteropt / 2) ) ));
-        YO = max(-1, min(1, ( YO - CGth ) * max(0.02,0.4 .* max(0.5,1 - i / opt.iteropt / 2) ) ));
-      else
-        GWth = 0.99;
-        CGth = 0.01;
-        
-        % position model based on the Ypp
-        YI = cat_surf_isocolors2(Ypp,VI,opt.mat); 
-        YO = cat_surf_isocolors2(Ypp,VO,opt.mat);  
-
-        if 1+opt.verb>1, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),native2unicode(177, 'latin1'),std(YI),mean(YO),native2unicode(177, 'latin1'),std(YO)); end 
-
-        % correction value 0.01, 0.02
-        YI = max(-1, min(1, ( GWth - YI ) * max(0.02,0.2 .* (1 - i / opt.iteropt / 2 )) ));
-        YO = max(-1, min(1, ( YO - CGth ) * max(0.02,0.2 .* (1 - i / opt.iteropt / 2 )) ));
-      end  
-      
-      % test new inner surface position
-      VIC   = S.vertices + N .* repmat( Tw - (Twc - YI) ,1,3);    % inner surface
-      VOC   = S.vertices - N .* repmat( Tp - (Tpc - YO) ,1,3);    % outer surface 
-      
-      if opt.optmod == 3
-        YIC   = cat_surf_isocolors2(Y,VIC,opt.mat);
-        YOC   = cat_surf_isocolors2(Y,VOC,opt.mat);  
-      elseif opt.optmod == 2   
-        YIC = cat_surf_isocolors2(Ypp,VIC,opt.mat); YIC = cat_surf_isocolors2(Y,VIC,opt.mat) + YIC - (YIC>eps) .* 0.95; 
-        YOC = cat_surf_isocolors2(Ypp,VOC,opt.mat); YOC = cat_surf_isocolors2(Y,VOC,opt.mat) + YOC - (YOC>eps) .* 0.05;  
-      else
-        YIC   = cat_surf_isocolors2(Ypp,VIC,opt.mat);
-        YOC   = cat_surf_isocolors2(Ypp,VOC,opt.mat);  
-      end
-      
-      YppI  = cat_surf_isocolors2(Ypp,VI,opt.mat);
+      % test new inner surface position .. balance corrections in both
+      % directions to keep the thickness
+      VIC   = S.vertices + N .* repmat( Tw - (Twc - YI) + (Tpc - YO) ,1,3);    % inner surface 
+      VOC   = S.vertices - N .* repmat( Tp - (Tpc - YO) + (Twc - YI) ,1,3);    % outer surface  
+    
+      % get values
+      YIC   = cat_surf_isocolors2(Ypp,VIC,opt.mat);
+      YppI  = cat_surf_isocolors2(Ypp,VI ,opt.mat);
       YppIC = cat_surf_isocolors2(Ypp,VIC,opt.mat);  
+      
+      % 
       VIg   = cat_surf_volgrad(VIC,N,Ypp,opt.mat);
       YI    = YI .* ( Twc==0 & ...
         abs( GWth - YI ) > abs( GWth - YIC )  & ...
@@ -2059,11 +2009,12 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
       clear YppIC YIC YppI VIg; 
       
       % test new outer surface position
-      YppO  = cat_surf_isocolors2(Ypp,VO,opt.mat);  
       YppOC = cat_surf_isocolors2(Ypp,VOC,opt.mat);  
       VOg   = cat_surf_volgrad(VOC,N,Ypp,opt.mat);
-      if opt.optmod 
-        YO  = YO .* YppOC .* ( Tpc==0 & ...
+      if 0 
+        YOC   = cat_surf_isocolors2(Ypp,VOC,opt.mat);  
+        YppO  = cat_surf_isocolors2(Ypp,VO ,opt.mat);  
+        YO    = YO .* YppOC .* ( Tpc==0 & ...
           abs( YO - CGth ) > abs( YOC - CGth ) & ...
           cat_surf_edgeangle( Vg , VOg ) < opt.alphaYpp & ...
           YppOC < YppO & YppOC>CGth & YOC>1.50); % 0.01 & 1.5 
@@ -2075,31 +2026,25 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
       clear YppOC YOC YppO VOg; 
       
       if opt.verb>1, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),native2unicode(177, 'latin1'),std(YI),mean(YO),native2unicode(177, 'latin1'),std(YO)); end
-      % YO = YO ./ max(0.8,TN/mean(TN(:))); % less correction if thicker than the average - this does not work!  
       
-      % smooth data 
-      YO = single(spm_mesh_smooth(M,double(YO), sf )) * sf/2; 
-      YI = single(spm_mesh_smooth(M,double(YI), sf )) * sf/2; 
-    
       % add to other correction map
       Tpc = Tpc - YO; clear YO; 
       Twc = Twc - YI; clear YI; 
     end
 
-    % das hilft hier tatsaechlich
-    sulciGyriWidth = 0.05; % war 0.2 aber sulci zu breit
+    % define minimal sulcal/gyral gap
+    sulciGyriWidth = 0.05; 
     Twc(Twc>0) = Twc(Twc>0) + sulciGyriWidth * 2;
     Tpc(Tpc>0) = Tpc(Tpc>0) + sulciGyriWidth;
     
-    % correction in specified areas that also include a general
-    % smoothness constrains of the cortical thickness
     % correction in specified areas that also include a general
     % smoothness constrains of the cortical thickness
     Twc = single(spm_mesh_smooth(M,double(Twc) , sf)) * sf;  Tw = max(eps,Tw - Twc);  
     Tws = single(spm_mesh_smooth(M,double(Tw)  , sf/2));     Tw(Twc~=0) = Tws(Twc~=0);  clear Tws;
     Tpc = single(spm_mesh_smooth(M,double(Tpc) , sf)) * sf;  Tp = max(eps,Tp - Tpc);  
     Tps = single(spm_mesh_smooth(M,double(Tp)  , sf/2));     Tp(Tpc~=0) = Tps(Tpc~=0);  clear Tps;
-        
+     
+    % for the next iteration (used above)
     selfwo = selfw;
     selfpo = selfp;
     
@@ -2108,7 +2053,7 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
     VIC = S.vertices + N .* repmat(Tw,1,3); 
     
     % edge flip
-    if 1 % this has a large effect
+    if 1 % this has a large effects a
       sm   = sf; % smoothness - 1 is not enougth
       fa   = 60; % error angle (worst case is 180 )
       E    = spm_mesh_edges(S);
@@ -2135,47 +2080,43 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
       VTPO = zeros(size(T),'single'); 
       VTPI = zeros(size(T),'single');
     end
-    
-   % adaptive smoothing
-  %  Tpc = abs(Tpc); Twc = abs(Twc);
-    Tf  = max(1,min(5,Tn)); inorm = ( opt.iteropt*3 - i ) / (opt.iteropt*3); 
+  
+    % adaptive smoothing
+    Tf  = max(1,min(6,Tn)); inorm = ( opt.iteropt*3 - i ) / (opt.iteropt*3); 
     Tpc = Tpc./max(Tpc(:)); Tpc = single(spm_mesh_smooth(M,double(Tpc) , 1 )) * 1/2 .* Tf; VOCSf = max(0,min(1,repmat(0.2 .* inorm .* abs(Tpc(Tpc>0 | VTPO(:,1)>0)),1,3))); 
     Twc = Twc./max(Twc(:)); Twc = single(spm_mesh_smooth(M,double(Twc) , 1 )) * 2/2 .* Tf; VICSf = max(0,min(1,repmat(0.8 .* inorm .* abs(Twc(Twc>0 | VTPI(:,1)>0)),1,3)));
-
-    for is = 1
-      VOCS = smoothsurf(VOC,1); VOC(Tpc>0 | VTPO(:,1)>0,:) = VOC(Tpc>0 | VTPO(:,1)>0,:).*(1-VOCSf) + VOCSf.*VOCS(Tpc>0 | VTPO(:,1)>0,:);
-      VICS = smoothsurf(VIC,1); VIC(Twc>0 | VTPI(:,1)>0,:) = VIC(Twc>0 | VTPI(:,1)>0,:).*(1-VICSf) + VICSf.*VICS(Twc>0 | VTPI(:,1)>0,:);
-    end
+ 
+    VOCS = smoothsurf(VOC,sf/2); VOC(Tpc>0 | VTPO(:,1)>0,:) = VOC(Tpc>0 | VTPO(:,1)>0,:).*(1-VOCSf) + VOCSf.*VOCS(Tpc>0 | VTPO(:,1)>0,:);
+    VICS = smoothsurf(VIC,sf/2); VIC(Twc>0 | VTPI(:,1)>0,:) = VIC(Twc>0 | VTPI(:,1)>0,:).*(1-VICSf) + VICSf.*VICS(Twc>0 | VTPI(:,1)>0,:);
     clear VTPI VTPO
 
-    % extra thickenss smoothing
-    if opt.optimize
+    % extra smoothing that reduce self-intersections but a bit worse values 
+    % RD202103: I just keep it as the idea of further smoothing
+    if 0
       Sa   = cat_surf_fun('area',S); 
-      Tsw  = repmat( max(0,min(1,max( (Tn-3)/6 , (Tn ./ (Sa * 4) - 3) / 6) )) ,1,3) * 0.5; % * min(1,0.02 / opt.iterfull); 
+      Tsw  = repmat( max(0,min(1,max( (Tn-3)/6 , (Tn ./ (Sa * 4) - 3) / 6) )) ,1,3) * 0.5; 
       VOCS = smoothsurf(VOC,sf); VOC = VOC.*(1-Tsw) + Tsw.*VOCS;
       VICS = smoothsurf(VIC,sf); VIC = VIC.*(1-Tsw) + Tsw.*VICS;
-    end
     
-    % full smooting 
-    if opt.optimize  
+      % full smooting 
       VOCSf = repmat(Tf * 0.02 / opt.iterfull,1,3);  VOCS = smoothsurf(VOC,sf/2); VOC = VOC.*(1-VOCSf) + VOCSf.*VOCS; clear VOCSf;
       VICSf = repmat(Tf * 0.05 / opt.iterfull,1,3);  VICS = smoothsurf(VIC,sf/2); VIC = VIC.*(1-VICSf) + VICSf.*VICS; clear VICSf;
     end
     clear VICS VOCS 
     
-    % outlier smoothing 
-    VOC = cat_surf_smooth(M,VOC,sf,1);
-    VIC = cat_surf_smooth(M,VIC,sf,1);
+    % surface smoothing 
+    VOC = cat_surf_smooth(M,VOC,sf/2,1);
+    VIC = cat_surf_smooth(M,VIC,sf/2,1);
     
-    % remove outlier
-    VOCc = spm_mesh_curvature( struct('vertices',VOC,'faces',S.faces) ); 
-    VICc = spm_mesh_curvature( struct('vertices',VIC,'faces',S.faces) ); 
-    
-    if mod(i,5)==0 || final
+    % remove outlier ... this has NO effect 
+    % RD202103: I just keep it as the idea of outlier smoothing
+    if 0 % mod(i,5)==0 || final
+      VOCc = spm_mesh_curvature( struct('vertices',VOC,'faces',S.faces) ); 
+      VICc = spm_mesh_curvature( struct('vertices',VIC,'faces',S.faces) ); 
       Tn   = max(0.01,sum( (VIC - VOC).^2 , 2) .^ 0.5 );
       Tns  = spm_mesh_smooth(M,Tn,sf/2);
       Tnss = spm_mesh_smooth(M,Tn,sf/2 * 5);
-      Tnm  = abs( Tns - T )>0.5/(final+1) & (VOCc>60 & VICc>60); clear Tns;  
+      Tnm  = abs( Tns - T )>0.5/(final+1) & (VOCc>60 & VICc>60) & ( Tn > mean(Tn) - min(1,max(2,2*std(Tn))) ) & Tn>1 & Tn>Tnss * 0.75; clear Tns;  
       Tn( Tnm ) = Tnss( Tnm ); clear Tnss; 
       VIC( Tnm ,:)  = S.vertices( Tnm ,:) + N( Tnm ,:) .* repmat( Tn( Tnm )/2 ,1,3);    % inner surface
       VOC( Tnm ,:)  = S.vertices( Tnm ,:) - N( Tnm ,:) .* repmat( Tn( Tnm )/2 ,1,3);    % outer surface 
@@ -2183,30 +2124,17 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
     end
     
     % final new thickness
-    Tn  = max(0.01,sum( (VIC - VOC).^2 , 2) .^ 0.5 ); % -  0.0002 * ((i<opt.iterfull*2) + 2*(opt.optimize | i<opt.iterfull)); %single(spm_mesh_smooth(M, double(,1))); %* (Tpc>0 | Twc>0)
+    Tn  = max(0.01,sum( (VIC - VOC).^2 , 2) .^ 0.5 ); 
     Tw  = Tn/2; 
     Tp  = Tn/2; 
     S.vertices = mean(cat(3,VIC,VOC),3); 
 
     % update normals
-    if corrsize<=0.25
-      if meshnorm
-        N   = spm_mesh_normals(S);
-      else
-        V   = cat_surf_mat(S.vertices,opt.mat,1); 
-        N   = isonormals(1-Ypp,V); %[V(:,2),V(:,1),V(:,3)]);
-        % normalize
-        Ns  = sum(N.^2,2).^.5;
-        N   = N ./ repmat(Ns,1,3); %clear Ns; 
-        N   = cat_surf_mat(N,opt.mat .* [[ones(3,3) zeros(3,1)];zeros(1,3) 1],0); 
-
-        %NS  = spm_mesh_normals(S);
-        %N(Ns<0.2) = NS(Ns<0.2);  
-      end
-      N   = smoothsurf(N,sf * 2); 
-      Ns  = sum(N.^2,2).^.5;
-      N   = N ./ repmat(Ns,1,3); %clear Ns; 
-    end
+    N   = spm_mesh_normals(S);
+    N   = smoothsurf(N,sf); 
+    Ns  = sum(N.^2,2).^.5;
+    N   = N ./ repmat(Ns,1,3); 
+    clear Ns; 
     
     SI = (sum(selfw>0)/2 + sum(selfp>0)/2) / numel(selfw) * 100; 
     % iteration
@@ -2216,7 +2144,6 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,Yl4,opt)
         '    Step %2d (SS=%02.0f%%%%, SI=%5.2f%%%%, T=%4.2f%s%4.2f)',...
         i,corrsize*100, SI, mean(Tn),native2unicode(177, 'latin1'),std(Tn)));  
       fprintf('\n')
-      %fprintf(sprintf('%s',repmat('\b',1,73*2)));
     end
     if  ((sum(selfw>0)/2 + sum(selfp>0)/2) / numel(selfw) * 100  <  opt.accuracy) || (i>opt.iterfull && SI<0.1 && abs(SI - SIO)<0.005) % if changes are below a specified relative level
       if final < 4 && (sum(selfw>0)/2 + sum(selfp>0)/2)>0 && i>opt.iterfull  && abs(SI - SIO)>0.005                      % do some additional iterations if required

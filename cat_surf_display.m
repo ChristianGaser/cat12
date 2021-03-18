@@ -288,6 +288,9 @@ function varargout = cat_surf_display(varargin)
           case {'central'}
             % default curvature
             set(h.patch,'AmbientStrength',0.2,'DiffuseStrength',0.8,'SpecularStrength',0.1)
+          case {'thickness','pbt'}
+            h = cat_surf_render('ColourMap',h.axis,jet(128)); 
+            cat_surf_render('clim',h.axis,[0.5 5]);
           otherwise
             % no texture name
             if ~isempty(h.cdata)

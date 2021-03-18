@@ -238,7 +238,7 @@ cat.extopts.cat12atlas    = {fullfile(cat.extopts.pth_templates,'cat.nii')};    
 
 % surface options
 cat.extopts.pbtres         = 0.5; % internal resolution for thickness estimation in mm (default 0.5) 
-cat.extopts.collcorr       = 0;   % correction of surface collisions (experimental, not yet working properly!): 0 - none; 1 - Deformation; 20 - none2; 21 - Deformation; 22 - CAT_SI; 23 - PBT; 24 - PBT opt. 
+cat.extopts.SRP            = 10;  % surface recontruction pipeline & self-intersection correction: 0/1 - CS1 without/with/with-optimized SIC; 20/21/22 - CS2 without/with/with-optimized SIC;
 cat.extopts.reduce_mesh    = 1;   % optimize surface sampling: 0 - PBT res. (slow); 1 - optimal res. (default); 2 - internal res.; 3 - SPM init; 4 - MATLAB init; 5 - SPM full; 6 - MATLAB full; 7 - MATLAB full ext.;
 cat.extopts.vdist          = 2;   % mesh resolution (experimental, do not change!)
 cat.extopts.pbtlas         = 0;   % reduce myelination effects (experimental, not yet working properly!)
