@@ -318,8 +318,8 @@ function str = cat_main_reportstr(job,res,qa)
   
   if job.extopts.expertgui && isfield(qa.qualityratings,'SurfaceIntensityRMSE')
       str{2} = [str{2} struct('name',' Surface intensity / position RMSE:','value',[ marks2str( qa.qualityratings.SurfaceIntensityRMSE ,...
-        sprintf('%0.2f', qa.qualitymeasures.SurfaceIntensityRMSE)) ' / ' ...
-        marks2str( qa.qualityratings.SurfacePositionRMSE ,sprintf('%0.2f', qa.qualitymeasures.SurfacePositionRMSE) ) ] ) ];
+        sprintf('%0.3f', qa.qualitymeasures.SurfaceIntensityRMSE)) ' / ' ...
+        marks2str( qa.qualityratings.SurfacePositionRMSE ,sprintf('%0.3f', qa.qualitymeasures.SurfacePositionRMSE) ) ] ) ];
   end
 
   % Subject Measures

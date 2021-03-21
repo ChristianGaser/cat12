@@ -240,17 +240,19 @@ if ~isfield(res,'spmpp')
   %  RD202101: There are multiple differnces by intensity scaling that are
   %            handeled by the AMAP but still affect the surface pipeline 
   %            > added final intensity correction based on the AMAP
-%  Ymo = Ym;
+  %  RD202102: Extension of LAS to correct protocoll depending differences
+  %            of cortical GM intensities due to myelination before and 
+  %            after the general call of the LAS function.
+  %            > add this later to the LAS function inclusive the denoising
+  %            > this may also work for T2/PD maps 
   if job.extopts.LASstr>0 && job.extopts.ignoreErrors < 3 && ~job.extopts.inv_weighting
-    % ################
-    % RD202102:   extension of LAS
-    if job.extopts.new_release
-      stime = cat_io_cmd(sprintf('Local adaptive segmentation (addon)',job.extopts.LASstr));
-      [Ym,Ysrc,Ycls,Ycm] = cat_main_correctmyelination(Ym,Ysrc,Ycls,Yb,vx_vol,T3th,job.extopts.LASstr);
-      fprintf('%5.0fs\n',etime(clock,stime));
-    end
-    % ################
+    % RD202102: Extension of LAS to correct protocoll depending differences
+    %           of cortical GM intensities due to myelination.   
+    stime = cat_io_cmd(sprintf('Local adaptive segmentation (addon)',job.extopts.LASstr));
+    [Ym,Ysrc,Ycls,Ycm] = cat_main_correctmyelination(Ym,Ysrc,Ycls,Yb,vx_vol,T3th,job.extopts.LASstr);
+    fprintf('%5.0fs\n',etime(clock,stime));
     
+    % LAS main call 
     if job.extopts.LASstr>1 
       extoptsLAS2 = job.extopts;
       extoptsLAS2.LASstr = extoptsLAS2.LASstr-1; 
@@ -259,24 +261,19 @@ if ~isfield(res,'spmpp')
     else
       stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
 %      [Ymi,Ymt,Ycls] = cat_main_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth);
-[Ymi,Ymt,Ycls] = cat_main_LAS21639(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth);
+      [Ymi,Ymt,Ycls] = cat_main_LAS21639(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth);
       clear Ymt; % use original global scaled ... 
     end
-    % ###########
+    
     % RD202102:   update Ymi since the LAS correction is currently not local engough
-    if job.extopts.new_release
-      Yp0  = single(Ycls{3})/255/3 + single(Ycls{1})/255*2/3 + single(Ycls{2})/255;
-      Ysdg = cat_vol_localstat(Ymi,Yb,round(3/mean(vx_vol)),4);  
-      Ysdw = cat_vol_localstat(Ymi,Yp0>2.8/3,round(3/mean(vx_vol)),4);
-      Ymi  = Ymi - ((max(0,Ysdg - 4*job.extopts.LASstr * mean(Ysdw(Yp0>2.5/3)))) .* Ycm .* ((Ymi - (max(0,Ysdg - 2*mean(Ysdw(Yp0>2.5/3)))))>2.1/3));
-      clear Yp0; 
-    end
-    % ###########
-    % fprintf('%5.0fs\n',etime(clock,stime));
-
+    Yp0  = single(Ycls{3})/255/3 + single(Ycls{1})/255*2/3 + single(Ycls{2})/255;
+    Ysdg = cat_vol_localstat(Ymi,Yb,round(3/mean(vx_vol)),4);  
+    Ysdw = cat_vol_localstat(Ymi,Yp0>2.8/3,round(3/mean(vx_vol)),4);
+    Ymi  = Ymi - ((max(0,Ysdg - 4*job.extopts.LASstr * mean(Ysdw(Yp0>2.5/3)))) .* Ycm .* ((Ymi - (max(0,Ysdg - 2*mean(Ysdw(Yp0>2.5/3)))))>2.1/3));
+    clear Yp0; 
+  
     
     % ### indlcude this in cat_main_LAS? ###
-    %
     if job.extopts.NCstr~=0 
       % noise correction of the local normalized image Ymi, whereas only small changes are expected in Ym by the WM bias correction
       stimen = cat_io_cmd(sprintf('  SANLM denoising after LAS (%s)',...
@@ -921,7 +918,7 @@ end
 fprintf('%5.0fs\n',etime(clock,stime));
 clear Yth1;
 
-if qa.subjectmeasures.vol_rel_WMH>0.01
+if qa.subjectmeasures.vol_rel_WMH>0.01 && job.extopts.WMHC<2
   cat_io_addwarning([mfilename ':uncorrectedWMHs'],...
     sprintf('Uncorrected WM lesions greater (%2.2f%%%%%%%% of the TIV, %2.2f%%%%%%%% of the WM)!',...
     qa.subjectmeasures.vol_rel_WMH * 100, ...

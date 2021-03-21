@@ -224,19 +224,20 @@ function [Ym2,Ysrc2,Ycls,Ycor,glcor,cf] = cat_main_correctmyelination(Ym,Ysrc,Yc
   cf = abs( sum(Ygm(:)) - sum(Ygmo(:)) ) / sum(Ygmo(:)); 
   
   % display changes
-  if cat_get_defaults('extopts.verb') > 1 
+  if cat_get_defaults('extopts.verb') > 2 
     if cf>0.04 || glcor>0.8
-      cat_io_cprintf('warn'   ,sprintf('    Myelination correction of %0.2f%%%% of the GM volume (strength=%0.2f)! \n', cf*100, glcor/3));  
+      cat_io_cprintf('warn'   ,sprintf('\n    Myelination correction of %0.2f%%%% of the GM volume (strength=%0.2f)! ', cf*100, glcor/3));  
     elseif cf>0.02 || glcor>0.4
-      cat_io_cprintf('note'   ,sprintf('    Myelination correction of %0.2f%%%% of the GM volume (strength=%0.2f). \n', cf*100, glcor/3));  
+      cat_io_cprintf('note'   ,sprintf('\n    Myelination correction of %0.2f%%%% of the GM volume (strength=%0.2f). ', cf*100, glcor/3));  
     else
-      cat_io_cprintf([0 0 0.5],sprintf('    Myelination correction of %0.2f%%%% of the GM volume (strength=%0.2f). \n', cf*100, glcor/3));  
+      cat_io_cprintf([0 0 0.5],sprintf('\n    Myelination correction of %0.2f%%%% of the GM volume (strength=%0.2f). ', cf*100, glcor/3));  
     end
-  end  
   
-  % display voluminas
-  for i=1:numel(Ycls), ppe.LASvols(i) = cat_stat_nansum(single(Ycls{i}(:)))/255 .* prod(vx_vol) / 1000; end
-  cat_io_cprintf('blue',sprintf('    LAS  volumes (CGW=TIV; in mm%s):      %6.2f + %6.2f + %6.2f = %4.0f\n',...
-        native2unicode(179, 'latin1'),ppe.LASvols([3 1 2]),sum(ppe.LASvols(1:3))));    
+    % display voluminas
+    for i=1:numel(Ycls), ppe.LASvols(i) = cat_stat_nansum(single(Ycls{i}(:)))/255 .* prod(vx_vol) / 1000; end
+    cat_io_cprintf('blue',sprintf('\n    LAS  volumes (CGW=TIV; in mm%s):     %7.2f +%7.2f +%7.2f = %4.0f\n',...
+          native2unicode(179, 'latin1'),ppe.LASvols([3 1 2]),sum(ppe.LASvols(1:3))));   
 
+    cat_io_cmd(' ',' ','',job.extopts.verb);
+  end
 end
