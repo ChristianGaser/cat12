@@ -568,22 +568,25 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
     %  --------------------------------------------------------------------
     if opt.verb==1, fprintf('%s %4.0fs\n',repmat(' ',1,66),etime(clock,stimet)); end
     nosurfopt = iscerebellum; 
-    if opt.verb>1 
-      stime = clock;
-      switch sprintf('%d%d',nosurfopt,opt.reduce_mesh==1 || opt.reduce_mesh==2)
-        case '00'
-          cat_io_cprintf('g5',sprintf('  Create topo-opt. HR surface   '));
-        case '01'
-          cat_io_cprintf('g5',sprintf('  Create topo/res-opt. surface  '));
-        case '10'
-          cat_io_cprintf('g5',sprintf('  Create intial HR surface      '));
-        case '11'
-          cat_io_cprintf('g5',sprintf('  Create res-opt. surface       '));
-      end  
+    if ~useprior 
+      if opt.verb>1 
+        stime = clock;
+        switch sprintf('%d%d',nosurfopt,opt.reduce_mesh==1 || opt.reduce_mesh==2)
+          case '00'
+            cat_io_cprintf('g5',sprintf('  Create topo-opt. HR surface   '));
+          case '01'
+            cat_io_cprintf('g5',sprintf('  Create topo/res-opt. surface  '));
+          case '10'
+            cat_io_cprintf('g5',sprintf('  Create intial HR surface      '));
+          case '11'
+            cat_io_cprintf('g5',sprintf('  Create res-opt. surface       '));
+        end  
+      else
+        stime = cat_io_cmd('  Create initial surface','g5','',opt.verb); %if opt.verb>2, fprintf('\n'); end
+      end
     else
-      stime = cat_io_cmd('  Create initial surface','g5','',opt.verb); %if opt.verb>2, fprintf('\n'); end
+      stime = cat_io_cmd('  Load and refine subject average surface','g5','',opt.verb); %if opt.verb>2, fprintf('\n'); end
     end
-    
     % surface coordinate transformation matrix
     matI              = spm_imatrix(V.mat); 
     matI(7:9)         = sign( matI(7:9))   .* repmat( opt.interpV , 1 , 3); 
@@ -865,7 +868,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
       defect_size0   = sum(vdefects > 0) / length(vdefects) * 100; % percent
       defect_area0   = sum(vdefects > 0) / length(vdefects) .* ...
         sum(cat_surf_fun('area',CS)) / opt.interpV / 100; % cm2
-      if opt.verb>1
+      if debug % opt.verb>1 && ~useprior
         cat_io_cprintf('g5',sprintf('( SC/EC/DN/DS = %0.2f/',scale_cortex));
         cat_io_cprintf( color( rate( abs( EC0 - 2 ) , 0 ,100 * (1+9*iscerebellum) )) ,sprintf('%d/',EC0));
         cat_io_cprintf( color( rate( defect_number0 , 0 ,100 * (1+9*iscerebellum) )) ,sprintf('%d/',defect_number0));
@@ -1042,14 +1045,14 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
     %  ... seems that this is working and it takes only a few seconds!
     %  --------------------------------------------------------------------
     % refinement - important for sulci .. here we need a lot of details with a similar resolution as the Insula 
-    if opt.reduce_mesh > 4 % superinterpolation 
-      stime = cat_io_cmd('  Surface optimization and refinement:','g5','',opt.verb,stime); 
-      meshres = 0.8; % this will create a super resolution that has to be reduced or will result in long processing times 
-    else
-      stime = cat_io_cmd('  Surface refinement:','g5','',opt.verb,stime); 
-      meshres = opt.vdist;
-    end
-    if ~useprior
+    if ~useprior 
+      if opt.reduce_mesh > 4 % superinterpolation 
+        stime = cat_io_cmd('  Surface optimization and refinement:','g5','',opt.verb,stime); 
+        meshres = 0.8; % this will create a super resolution that has to be reduced or will result in long processing times 
+      else
+        stime = cat_io_cmd('  Surface refinement:','g5','',opt.verb,stime); 
+        meshres = opt.vdist;
+      end
       cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Pcentral,Pcentral, meshres ); 
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
     end
@@ -1057,10 +1060,11 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
     % surface refinement (this time even before reduction)
     cmds = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none  0  1  -1  .1 ' ...           
                     'avg  -0.1  0.1 .2  .1  5  0 "0.5"  "0.5"  n 0  0  0 %d  %g  0.0 0'], ...    
-                    Vpp1.fname,Pcentral,Pcentral,30,0.01); 
+                    Vpp1.fname,Pcentral,Pcentral,50,0.01); 
     [ST, RS] = cat_system(cmds); cat_check_system_output(ST,RS,opt.verb-3); % hier ging was schief
     
-    % reduce - as far as the Insula/Amygdala is not so heavily folded compared to sulci this region is first reduced 
+    % Because the Insula/Amygdala is not so heavily folded compared to
+    % sulci it is reduced first what helps to avoid self-interesections
     CS = loadSurf(Pcentral); 
     if opt.reduce_mesh > 4
       rfaces =  min( max( 81920 , opt.reduceCS/2 ) , 81920 * 4 );
@@ -1096,13 +1100,7 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
     CS = loadSurf(Pcentral);
     facevertexcdata = cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm); 
     cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
-if 0    
-    if opt.verb > 2, fprintf('SR1: V=%d, MN(CT)=%0.20f, SD(CT)=%0.20f\n',size(CS.vertices,1),mean(facevertexcdata(:)),std(facevertexcdata(:))); end
-    res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
-end
-  
-    
-    
+
     
     % final correction of central surface in highly folded areas 
     %  with high mean curvature with weight of 0.7 and further refinement
@@ -1111,25 +1109,27 @@ end
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
 
     % we need some refinement because some vertices are too large to be deformed with high accuracy
-    cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 1',Pcentral,Pcentral,opt.vdist); % adaption for cerebellum
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
-
-    % surface refinement by surface deformation based on the PP map
-    %for li = 2.^(0:1)
-      cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
-                     'avg -0.1 0.1 .2 .1 %d 0 "0.5" "0.5" n 0 0 0 %d %0.2f 0.0 0'], ...
-                     Vpp1.fname,Pcentral,Pcentral,5,50,0.01); 
+    if ~useprior
+      cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 1',Pcentral,Pcentral,opt.vdist); % adaption for cerebellum
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
-    %end
+    end
+    
+    % surface refinement by surface deformation based on the PP map
+    cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
+                   'avg -0.1 0.1 .2 .1 %d 0 "0.5" "0.5" n 0 0 0 %d %0.2f 0.0 0'], ...
+                   Vpp1.fname,Pcentral,Pcentral,5,100,0.01); 
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
     
     % need some more refinement because some vertices are distorted after CAT_DeformSurf
-    cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 1',Pcentral,Pcentral,opt.vdist); % adaption for cerebellum
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
-
+    if ~useprior
+      cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 1',Pcentral,Pcentral,opt.vdist); % adaption for cerebellum
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
+    end
+    
     % final surface refinement
     cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
                    'avg -0.1 0.1 .5 .1 %d 0 "0.5" "0.5" n 0 0 0 %d %0.2f 0.0 0'], ...
-                   Vpp1.fname,Pcentral,Pcentral,5,100,0.005); 
+                   Vpp1.fname,Pcentral,Pcentral,5,100,0.01); 
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
 
     % read final surface and map thickness data
@@ -1167,17 +1167,18 @@ end
       else
         stime = cat_io_cmd('  Reduction of surface collisions with optimization:','g5','',opt.verb,stime); 
       end
-      verblc = 1; % verbose level 
+      verblc = 0; % verbose level 
       if debug, if exist('CSO','var'), CS = CSO; facevertexcdata = facevertexcdatao; else, CSO = CS; facevertexcdatao = facevertexcdata; end; stime2 = clock; else, stime2 = [];  end
       if debug, saveSurf(CS,Pcentral); cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata); tic; end
       
       % call collision correction
-      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,struct('optimize',opt.SRP==2,'verb',opt.verb>verblc,'mat',Smat.matlabIBB_mm)); fprintf('\b\b');
-      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',opt.verb>verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3)); 
+      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,struct('optimize',opt.SRP==2,'verb',verblc,'mat',Smat.matlabIBB_mm)); 
+      if verblc, fprintf('\b\b'); end
+      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3)); 
       if debug, toc; end
       
       % evaluate and save results
-      if opt.verb > verblc, cat_io_cmd(' ','g5','',opt.verb);  end
+      if verblc, cat_io_cmd(' ','g5','',opt.verb);  end
       fprintf('%5.0fs',etime(clock,min([stime2;stime],[],1))); if ~debug, stime = []; end
       saveSurf(CS,Pcentral); cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
       % final result ... test for self-intersections only in developer mode? 
@@ -1218,7 +1219,7 @@ end
     
     
     % map defects to the final surface 
-    if opt.surf_measures > 1
+    if opt.surf_measures > 1 && ~useprior
       %%
       CSraw   = loadSurf(Praw); 
       
@@ -1272,19 +1273,13 @@ end
       
       % spherical registration to fsaverage template
       stime = cat_io_cmd('  Spherical registration','g5','',opt.verb,stime);
-      if opt.vdist>2 % low quality 
-        cmd = sprintf(['CAT_WarpSurf -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s" ' ...
-          '-size 256 128 -loop 1 -steps 1 -runs 2'],...
-          Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
-      else
-        cmd = sprintf('CAT_WarpSurf -steps 2 -avg -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"', ...
-          Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
-      end
+      cmd = sprintf('CAT_WarpSurf -steps 2 -avg -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"', ...
+        Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
     end
     
     % display some evaluation 
-    if opt.verb>1 && ~useprior
+    if 0 % opt.verb>2 && ~useprior
       fprintf('%5.0fs\n',etime(clock,stime)); 
       fprintf('    Euler number / defect number / defect size: ');
       cat_io_cprintf( color( rate(  EC0 - 2        , 0 , 100 * (1+4*iscerebellum)) ) , sprintf('%0.0f / '   , EC0 ) );
@@ -1543,11 +1538,13 @@ end
         cat_io_cprintf( color( rate(  mean([SIw,SIp]) , 0 , 20 ) ) , sprintf('%0.2f%%%% (%0.2f mm%s)\n'  , mean([SIw,SIp]) , mean([SIwa,SIpa]) , char(178) ) );
       end
       
-      fprintf('  Euler number / defect number / defect size: ');
-      cat_io_cprintf( color( rate(  EC - 2        , 0 , 100 * (1+9*iscerebellum)) ) , sprintf('%0.1f / '   , EC ) );
-      cat_io_cprintf( color( rate(  defect_number , 0 , 100 * (1+9*iscerebellum)) ) , sprintf('%0.1f / '   , defect_number ) );
-      cat_io_cprintf( color( rate(  defect_size   , 0 , 10  * (1+9*iscerebellum)) ) , sprintf('%0.2f%%%% ' , defect_size ) );
-      fprintf('\n');
+      if ~useprior
+        fprintf('  Euler number / defect number / defect size: ');
+        cat_io_cprintf( color( rate(  EC - 2        , 0 , 100 * (1+9*iscerebellum)) ) , sprintf('%0.1f / '   , EC ) );
+        cat_io_cprintf( color( rate(  defect_number , 0 , 100 * (1+9*iscerebellum)) ) , sprintf('%0.1f / '   , defect_number ) );
+        cat_io_cprintf( color( rate(  defect_size   , 0 , 10  * (1+9*iscerebellum)) ) , sprintf('%0.2f%%%% ' , defect_size ) );
+        fprintf('\n');
+      end
     else
       fprintf('  Average thickness:                     %0.4f %s %0.4f mm\n' , mean(mnth), native2unicode(177, 'latin1'), mean(sdth));
       %fprintf('  Surface intensity / position RMSE:     %0.4f & %0.4f\n'      , mean(sdRMSE_Ym) ,mean(sdRMSE_Ypp) );

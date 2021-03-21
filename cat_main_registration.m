@@ -648,12 +648,12 @@ function [trans,reg] = run_Shooting(Ycls,Ylesion,job,reg,res,trans,Maffinerigid,
           %Yven = Yven ./ max(Yven(:)); 
         end
 
-        if sum(Yven(:))/sum(Yb(:))>0.1 % large ventricle
+        if sum(Yven(:))/sum(Yb(:))>0.2 % ############# large ventricle warning definition #################
           hydro = 1; 
           if job.extopts.verb && ti==1
             %cat_io_cprintf([0 0 1], '  == Very large ventricles detected. Use seperate class and adapt schedule. == \n');  
             cat_io_addwarning([mfilename ':Hydrocephalus'],sprintf( ...
-              'Very large ventricles detected (%0.2f%% of TIV). Use seperate class and adapt schedule. \\\\n', ...
+              'Very large ventricles detected (%0.2f%%%% of TIV). Use seperate class and adapt schedule. \\\\n', ...
               sum(Yven(:))/sum(Yb(:))>0.1),1,[0 1]);   
           end
         
@@ -1087,7 +1087,7 @@ function [trans,reg] = run_Dartel(Ycls,Ylesion,job,reg,res,trans,Mad,Maffinerigi
     end 
 
     [y0, dt] = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[1 0], 6); clear y0; 
-    reg(regstri).ll(it+1,:)    =  reg(regstri).lldf(it0,:); 
+    reg(regstri).ll(it+1,:)    =  reg(regstri).lldf(it0,:) * prod(dt)/prod(size(u(:,:,:,1))); 
     reg(regstri).dtc(it+1)     =  mean(abs(dt(:)-1)); 
     reg(regstri).rmsdtc(it+1)  =  mean((dt(:)-1).^2).^0.5;
     dtg = cat_vol_grad(single(dt)); 

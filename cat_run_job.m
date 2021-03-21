@@ -583,6 +583,7 @@ end
             % check that file exists and get affine transformation
             if exist(catxml,'file') 
               cat_io_cmd(sprintf('  Use affine transformation from "%s"',ff),'','',1,stime); 
+              stime           = cat_io_cmd(' ',' ','',job.extopts.verb); 
               xml             = cat_io_xml(catxml);
               Affine          = xml.SPMpreprocessing.Affine;
               useprior        = 1; 

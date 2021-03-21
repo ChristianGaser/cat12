@@ -159,13 +159,29 @@ bb.strtype  = 'r';
 bb.num      = [inf inf];
 bb.tag      = 'bb';
 bb.name     = 'Bounding box';
-bb.val      = {0}; 
-%bb.hidden   = true;
+bb.val      = {12}; 
+bb.hidden   = expert < 1;
+bb.help     = {
+  'The bounding box describes the dimensions of the volume to be written starting from the anterior commissure in mm.  It should include the entire brain (or head in the case of the Boundary Box of the SPM TPM) and additional space for smoothing the image.  The MNI 9-mm boundary box is optimized for CATs MNI152NLin2009cAsym template and supports filter cores up to 10 mm.  Although this box support 12 mm filter sizes theoretically, slight interference could occur at the edges and larger boxes are recommended for safety. '
+  'Additionally, it is possible to use the boundary box of the TPM or the template for special (animal) templates with strongly different boundary boxes. '
+  ''
+  'The boundary box or its id (BBid see table below) has to be entered. '
+  ''
+  '  NAME         BBID        BOUNDARY BOX                          SIZE ?             FILESIZE $   '
+  '  TMP BB            0        boundary box of the template (maybe too small for smoothing!)         '
+  '  TPM BB            1        boundary box of the TPM                                               ' 
+  '  MNI SPM          16      [ -90  -126  -72;  90  90  108 ]      [121x145x121]      4.2 MB (100%)'
+  '  MNI CAT          12      [ -84  -120  -72;  84  84    96 ]      [113x139x113]      3.8 MB ( 84%)'
+  '  ? - for 1.5 mm; $ - for 1.5 mm uint8'
+  ''
+};
 
 
 %------------------------------------------------------------------------
 extopts = cat_conf_extopts(expert); 
-extopts.val = [ extopts.val {bb} ];
+if ~expert
+  extopts.val = [ extopts.val {bb} ];
+end
 opts    = cat_conf_opts(expert);
 output  = cat_conf_output(expert); 
 %------------------------------------------------------------------------

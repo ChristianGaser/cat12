@@ -366,15 +366,15 @@ SRP.help    = {
   ['CAT uses the projection-based thickness approach (PBT; Dahnke et al., 2012) to reconstruct the central surface.  ' ...
    'In 2020, we extensively revised the surface reconcontruction pipeline (SRP), resulting in a new reconstuction scheme (CS2) that support better control of the mesh resolution and runtime.  ' ... 
    'Both pipelines provide high-precision reconstruction of the central surface and estimation of cortical thickness, which allows estimation of the cortical layer by transforming the surface points along the surface normals.  ' ...
-   'In particular, this allows the estimation of white and pial areas by addition/subtraction of half thickness.   ' ...
+   'In particular, this allows the estimation of white and pial areas by addition/subtraction of half thickness.  ' ...
    'Because the surface normals are modeled quite simply, the interface suffers locally from self-intersections (SIs), especially in highly convoluted regions with high GM but low CSF/WM fractions as in young subjects.  ' ...
-   'Although these overlaps are usually not a problem in structural analyses, SIs are still inoptimal and unaesthetic.   ' ... 
+   'Although these overlaps are usually not a problem in structural analyses, SIs are still inoptimal and unaesthetic.  ' ... 
    'We have therefore developed a fast self-cutting correction (SIC) to provide accurate inner and outer surfaces.  ' ...
    'The SIC reduces SIs below 1% of the total area, which are also almost invisible and can be neglected.  '] 
    ''
 };
-SRP.hidden  = expert<2; 
-SRP.def     = @(val)cat_get_defaults('extopts.collcorr', val{:});
+%SRP.hidden  = expert<1; 
+SRP.def     = @(val)cat_get_defaults('extopts.SRP', val{:});
 
 
 
@@ -408,7 +408,7 @@ elseif expert > 1
   reduce_mesh.values  = {0 1 2 3 5 4 6};
 end
 reduce_mesh.def     = @(val)cat_get_defaults('extopts.reduce_mesh', val{:});
-reduce_mesh.hidden  = expert<2;
+reduce_mesh.hidden  = expert<1;
 reduce_mesh.help    = {
   ['Limitation of the surface resolution is essential for fast processing and acurate and equaly distributed meshes. ' ...
    'Mesh resolution depends in general on the voxel resolution used for surface creation and can be modified afterwards by refinment and reduction. ' ...
@@ -454,7 +454,7 @@ vdist.name    = 'Mesh resolution';
 vdist.labels  = {'low (4)','optimal (2)','fine (1)','extra fine (0.5)'};
 vdist.values  = {4 2 1 0.5};   
 vdist.def     = @(val)cat_get_defaults('extopts.vdist', val{:});
-vdist.hidden  = expert<2; 
+vdist.hidden  = expert<1; 
 vdist.help    = {
  ['Higher mesh resolution may support indipendent measuresments but also increase the chance of self-intersections. ' ...
   'For each level, the mesh resolution (number of elements) is doubled and accuracy is increased slightly (by the square root). ' ...
@@ -1161,7 +1161,7 @@ if ~spm
   if expert  % expert/developer options
     extopts.val   = {segmentation,registration,surface,admin}; 
   else
-    extopts.val   = {restype,setCOM,app,affmod,spm_kamap,LASstr,gcutstr,wmhc,registration,vox,bb,ignoreErrors}; 
+    extopts.val   = {restype,setCOM,app,affmod,spm_kamap,LASstr,gcutstr,wmhc,registration,vox,bb,SRP,ignoreErrors}; 
   end
 else
   % SPM based surface processing and thickness estimation

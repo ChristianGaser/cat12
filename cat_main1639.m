@@ -247,7 +247,12 @@ if ~isfield(res,'spmpp')
 
 
   %% Local Intensity Correction 
-  Ymo  = Ym;
+  %  RD202102: Extension of LAS to correct protocoll depending differences
+  %            of cortical GM intensities due to myelination before and 
+  %            after the general call of the LAS function.
+  %            > add this later to the LAS function inclusive the denoising
+  %            > this may also work for T2/PD maps 
+  Ymo = Ym;
   if job.extopts.LASstr>0
     if job.extopts.LASstr>1 
       extoptsLAS2 = job.extopts;
@@ -257,19 +262,14 @@ if ~isfield(res,'spmpp')
       stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
     end
     
-    % ################
-    % RD202102:   extension of LAS
-    if job.extopts.new_release
-      stime   = cat_io_cmd('\n  LAS myelination correction','g5','',job.extopts.verb); fprintf('\n');
-      vx_volo = sqrt(sum(res.image0(1).mat(1:3,1:3).^2));
-      [Ym,Ysrc,Ycls,Ycm,glcor,tmp] = cat_main_correctmyelination(Ym,Ysrc,Ycls,Yb,vx_vol,vx_volo,T3th,job.extopts.LASstr,Yy,job.extopts.cat12atlas,res.tpm);
-      cat_io_cmd(' ',' ','',job.extopts.verb); fprintf('%5.0fs',etime(clock,stime));
-      %try 
-        %res.ppe.LASMC = tmp; 
-      %end
-    end
-    % ################
+    % RD202102: Extension of LAS to correct protocoll depending differences
+    %           of cortical GM intensities due to myelination.   
+    stime   = cat_io_cmd('\n  LAS myelination correction','g5','',job.extopts.verb); 
+    vx_volo = sqrt(sum(res.image0(1).mat(1:3,1:3).^2));
+    [Ym,Ysrc,Ycls,Ycm,glcor,tmp] = cat_main_correctmyelination(Ym,Ysrc,Ycls,Yb,vx_vol,vx_volo,T3th,job.extopts.LASstr,Yy,job.extopts.cat12atlas,res.tpm);
+    fprintf('%5.0fs',etime(clock,stime));
     
+    % main call of LAS
     if job.extopts.LASstr>1 
       [Ymi,Ym,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,vx_volextoptsLAS2); % use Yclsi after cat_vol_partvol
     else
@@ -277,17 +277,12 @@ if ~isfield(res,'spmpp')
     end
     stime = clock; % not really correct but better than before
     
-    % ###########
-    % RD202102:   update Ymi since the LAS correction is currently not local engough
-    if job.extopts.new_release
-      Ycor  = Ycm; 
-      Ycor  = Ycor + min(0,max(0,Ymi - 2/3) - Ycor);                       % correct overcorrections
-      Ycor  = Ycor * (0.3 + 0.5 * job.extopts.LASstr);                     % correct only 90% to keep some real noise; use this function for fine tuning of the LASstr
-      Ymi   = max( min( Ymi , 2/3 ) , Ymi - Ycor );
-      clear Yp0; 
-    end
-    % ###########
-    % fprintf('%5.0fs\n',etime(clock,stime));
+    % RD202102:   Update Ymi since the LAS correction is currently not local engough
+    Ycor  = Ycm; 
+    Ycor  = Ycor + min(0,max(0,Ymi - 2/3) - Ycor);                       % correct overcorrections
+    Ycor  = Ycor * (0.3 + 0.5 * job.extopts.LASstr);                     % correct only 90% to keep some real noise; use this function for fine tuning of the LASstr
+    Ymi   = max( min( Ymi , 2/3 ) , Ymi - Ycor );
+    clear Yp0; 
 
     
     % ### indlcude this in cat_main_LAS? ###
@@ -912,7 +907,7 @@ fprintf('%5.0fs\n',etime(clock,stime));
 clear Yth1;
 
 % WMHC warning
-if qa.subjectmeasures.vol_rel_WMH>0.01
+if qa.subjectmeasures.vol_rel_WMH>0.01 && job.extopts.WMHC<2
   cat_io_addwarning([mfilename ':uncorrectedWMHs'],...
     sprintf('Uncorrected WM lesions greater (%2.2f%%%%%%%% of the TIV, %2.2f%%%%%%%% of the WM)!',...
     qa.subjectmeasures.vol_rel_WMH * 100, ...

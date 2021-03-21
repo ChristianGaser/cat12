@@ -507,7 +507,7 @@ cstime = clock;
     end
     
     if debug, Yppio=Yppi; end
-    fprintf('%5.0fs\n',etime(clock,stime));
+    if ~useprior, fprintf('%5.0fs\n',etime(clock,stime)); end
     
     %% Replace isolated voxels and holes in Ypp by its median value
     
@@ -928,17 +928,18 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
       else
         stime = cat_io_cmd('  Reduction of surface collisions with optimization:','g5','',opt.verb,stime); 
       end
-      verblc = 1; % verbose level 
+      verblc = opt.verb > (4 - debug); % verbose level 
       if debug, if exist('CSO','var'), CS = CSO; facevertexcdata = facevertexcdatao; else, CSO = CS; facevertexcdatao = facevertexcdata; end; stime2 = clock; else, stime2 = [];  end
       if debug, saveSurf(CS,Pcentral); cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata); tic; end
       
       % call collision correction
-      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,struct('optimize',opt.SRP==2,'verb',opt.verb>verblc,'mat',Smat.matlabIBB_mm)); fprintf('\b\b');
-      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',opt.verb>verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3));
+      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,struct('optimize',opt.SRP==2,'verb',verblc,'mat',Smat.matlabIBB_mm)); 
+      if verblc, fprintf('\b\b'); end
+      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3));
       if debug, toc; end
       
       % evaluate and save results
-      if opt.verb > verblc, cat_io_cmd(' ','g5','',opt.verb);  end
+      if verblc, cat_io_cmd(' ','g5','',opt.verb);  end
       fprintf('%5.0fs',etime(clock,min([stime2;stime],[],1))); if ~debug, stime = []; end
       saveSurf(CS,Pcentral); cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
       % final result ... test for self-intersections only in developer mode? 
@@ -1043,7 +1044,7 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
     end
     fprintf('%5.0fs\n',etime(clock,stime)); 
     
-    if opt.verb>1 && ~useprior
+    if 0 %opt.verb>1 && ~useprior
       cat_io_cprintf( 'g5', sprintf('    Euler number / defect number / defect size: '));
       cat_io_cprintf( color( rate(  EC0 - 2        , 0 , 2 * 50 * (1+9*iscerebellum)) ) , sprintf('%0.0f / '   , EC0 ) );
       cat_io_cprintf( color( rate(  defect_number0 , 0 , 2 * 50 * (1+9*iscerebellum)) ) , sprintf('%0.0f / '   , defect_number0 ) );

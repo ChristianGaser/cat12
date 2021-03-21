@@ -1984,7 +1984,7 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
       YI = cat_surf_isocolors2(Ypp,VI,opt.mat); 
       YO = cat_surf_isocolors2(Ypp,VO,opt.mat);  
 
-      if 1 || opt.verb>1, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),native2unicode(177, 'latin1'),std(YI),mean(YO),native2unicode(177, 'latin1'),std(YO)); end 
+      if opt.verb>1, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),native2unicode(177, 'latin1'),std(YI),mean(YO),native2unicode(177, 'latin1'),std(YO)); end 
 
       % correction value 
       YI = max(-1, min(1, ( GWth - YI ) * coristr ));
