@@ -542,7 +542,8 @@ function cat_run_job1639(job,tpm,subj)
             % check that file exists and get affine transformation
             if exist(catxml,'file')
               fprintf('\nUse affine transformation from %s\n',priorname);
-              xml = cat_io_xml(catxml);
+              stime    = cat_io_cmd(' ',' ','',job.extopts.verb); 
+              xml      = cat_io_xml(catxml);
               Affine   = xml.SPMpreprocessing.Affine;
               affscale = 1;
               useprior = 1;
@@ -767,8 +768,7 @@ function cat_run_job1639(job,tpm,subj)
               scl3 = abs(det(Affine3(1:3,1:3)));
               % check for > 5% larger scaling 
               if scl2 > 1.05*scl3 && job.extopts.setCOM ~= 11 % setcom == 11 - use always
-                stime = cat_io_cmd('  Final fine affine registration failed. Use previous registration.','warn','',1,stime);
-                %fprintf('\n  Final fine affine registration failed.\n  Use fine affine registration from previous step.                ');
+                stime = cat_io_cmd(' Final fine affine registration failed. Use previous registration.','warn','',1,stime); % text is a char too long
                 Affine = Affine2;
               else
                 Affine = Affine3;

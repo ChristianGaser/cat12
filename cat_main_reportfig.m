@@ -883,7 +883,7 @@ end
           for i = 1:numel(hSD), colormap(fg,cmap);  set(hSD{i}{1}.colourbar,'visible','off'); end
 
           % To do: filter thickness values on the surface ...
-try
+
           % colormap
           side  = hSD{1}{1}.cdata; 
           if any( job.output.surface == [5 6] ); fst = ' \color[rgb]{1 0 0}preview!'; else, fst = ''; end
@@ -940,7 +940,7 @@ try
           line(cc{4},(surfcolors-1)/6 * repmat(q0,1,2), [ 0.6 1.4 ] , 'Color',[1 0 0],'LineWidth',1.5); 
           hold off; 
            
-end      
+     
           
          
         end        

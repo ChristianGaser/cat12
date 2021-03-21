@@ -1,5 +1,36 @@
 ------------------------------------------------------------------------
-r1782 | dahnke | 2021-03-18 18:49:53
+r1783 | dahnke | 2021-03-21 10:21:33
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_long.m
+M       cat_long_main.m
+M       cat_main.m
+M       cat_main1639.m
+M       cat_main_correctmyelination.m
+M       cat_main_registration.m
+M       cat_main_reportfig.m
+M       cat_main_reportstr.m
+M       cat_main_updateSPM.m
+M       cat_main_updateSPM1639.m
+M       cat_run_job.m
+M       cat_run_job1639.m
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       cat_surf_fun.m
+
+(1) Fixed:    Corrected bug in longitudinal surface processing in cat_surf_createCS2.
+(2) Changed:  Corrected tiny (command line output) bugs in cat_conf_extopts, 
+              cat_main_correctmyelination, cat_main_registration, cat_main_reportstr,
+              cat_main_reportfig, cat_main_updateSPM(1639), cat_run_job(1639), 
+              cat_surf_createCS(2), cat_surf_fun.
+(3) Changed:  Removed new_realease setting from LAS myelination correction blocks in
+              cat_main(1639).
+(4) Changed:  Updated BB field in cat_conf_long and cat_long_main.
+
+------------------------------------------------------------------------
+r1782 | dahnke | 2021-03-18 18:50:42 +0100 (Thu, 18 Mar 2021) | 26 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -25,6 +56,7 @@ M       cat_vol_pbt.m
 (3) Changed:   Enhanced range of Ypp to support reconstruction of white and
                pial surfaces.
 (4) Changed:   Added thickness/pbt settings in cat_surf_display.
+
 
 ------------------------------------------------------------------------
 r1781 | gaser | 2021-03-15 23:01:33 +0100 (Mon, 15 Mar 2021) | 11 lines
