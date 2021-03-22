@@ -315,6 +315,12 @@ SO.area.units = 'pixels';
 
 slice_overlay
 
+% remove remaining gray colored border
+ax = get(SO.figure,'Children');
+for i = 1:numel(ax)
+  set(ax(i),'YColor',[0 0 0])
+end
+
 % change labels of colorbar for log-scale
 H = gca;
 if (SO.cbar == 2) & logP
@@ -344,7 +350,7 @@ if (SO.cbar == 2) & logP
     
 end
 
-set(H, 'FontSize', 0.8 * get(H, 'FontSize'))
+set(H, 'FontSize', 0.8 * get(H, 'FontSize'),'YColor',[1 1 1])
 
 % select atlas for labeling
 if isfield(OV, 'atlas')
@@ -560,6 +566,7 @@ end
 
 % remove duplicates
 xy = unique(xy, 'rows');
+xy = [[n 1];xy];
 return
 
 % --------------------------------------------------------------------------

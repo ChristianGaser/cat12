@@ -233,8 +233,8 @@ FS = cat_get_defaults('extopts.fontsize');
 
 pos = struct(...
     'fig',    [10  10  1.3*ws(3) 1.1*ws(3)],... % figure
-    'cbar',   [0.045 0.950 0.700 0.020],... % colorbar for correlation matrix
-    'corr',   [-0.02 0.050 0.825 0.825],... % correlation matrix
+    'cbar',   [0.045 0.050 0.700 0.020],... % colorbar for correlation matrix
+    'corr',   [-0.02 0.100 0.825 0.825],... % correlation matrix
     'scat',   [0.050 0.050 0.700 0.825],... % scatter plot
     'close',  [0.775 0.925 0.200 0.050],... % close button
     'show',   [0.775 0.875 0.200 0.050],... % button to show worst cases
@@ -466,7 +466,7 @@ if job.verb
 
   % add colorbar
   H.cbar = axes('Position',pos.cbar,'Parent',H.figure);
-  image(H.cbar); 
+  try, image(H.cbar); end
   set(get(H.cbar,'children'),'HitTest','off','Interruptible','off');
   set(H.cbar,'Ytick',[],'YTickLabel',''); 
 
@@ -561,7 +561,7 @@ if job.verb
 
   H.text = uicontrol(H.figure,...
           'Units','normalized','position',pos.text,...
-          'String','Click in image to display slices',...
+          'String',{'','Click in image to display slices'},...
           'Style','text','HorizontalAlignment','center',...
           'ToolTipString','Select slice for display',...
           'FontSize',FS-2);
@@ -750,7 +750,7 @@ return
 %-----------------------------------------------------------------------
 function show_matrix(data, order)
 %-----------------------------------------------------------------------
-global H FS pos sorted YpY isscatter mesh_detected
+global H FS filename pos sorted YpY isscatter mesh_detected ind_sorted_display
 
 % get sorting order
 sorted = order;
@@ -761,37 +761,11 @@ cla(H.ax);
 set(H.ax,'Color',[0.8 0.8 0.8]);
 
 H.ax = axes('Position',pos.corr,'Parent',H.figure);
-
-% scale data to min..max
-mn = min(data(:));
-mx = max(data(data~=1));
-data_scaled = (data - mn)/(mx - mn);
-
-% show only lower left triangle
-ind_tril = find(tril(ones(size(data))));
-ima = zeros(size(data));
-ima(ind_tril) = data_scaled(ind_tril);
-image(64*ima)
-set(gca,'XTickLabel','','YTickLabel','');
-axis image
-
-if sorted
-  xlabel('<----- Best ---      File Order      --- Worst ------>  ','FontSize',FS-1,'FontWeight','Bold');
-  ylabel('<----- Worst ---      File Order      --- Best ------>  ','FontSize',FS-1,'FontWeight','Bold');
-  title('Sorted Sample Correlation Matrix  ','FontSize',FS+1,'FontWeight','Bold');
-else
-  xlabel('<----- First ---      File Order      --- Last ------>  ','FontSize',FS-1,'FontWeight','Bold');
-  ylabel('<----- Last ---      File Order      --- First ------>  ','FontSize',FS-1,'FontWeight','Bold');
-  title('Sample Correlation Matrix  ','FontSize',FS+1,'FontWeight','Bold');
-end
-
-H.cbar = axes('Position',pos.cbar,'Parent',H.figure);
-image((1:64));
-
-% display YTick with 5 values (limit accuracy for floating numbers)
-set(H.cbar,'YTickLabel','','XTickLabel','','XTick',linspace(1,64,5), 'XTickLabel',...
-  round(100*linspace(min(YpY(:)),max(YpY(YpY~=1)),5))/100,'TickLength',[0 0]);
-
+names = char(filename.m(:));
+if sorted, names = names(ind_sorted_display,:); end
+cat_plot_cov(data,struct('ax',H.ax,'pos_cbar',pos.cbar,'name',names,'fontsize',FS))
+t = title('Sample Correlation');
+set(t,'Fontsize',FS+2)
 cmap = [jet(64); gray(64)];
 colormap(cmap)
 

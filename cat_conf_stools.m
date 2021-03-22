@@ -770,8 +770,8 @@ sample_cov.help       = {...
 
 c         = cfg_entry;
 c.tag     = 'c';
-c.name    = 'Vector';
-c.help    = {'Vector of nuisance values'};
+c.name    = 'Vector/Matrix';
+c.help    = {'Vector or matrix of nuisance values'};
 c.strtype = 'r';
 c.num     = [Inf Inf];
 
@@ -781,7 +781,7 @@ nuisance.name    = 'Nuisance variable';
 nuisance.values  = {c};
 nuisance.num     = [0 Inf];
 nuisance.help    = {...
-'This option allows for the specification of nuisance effects to be removed from the data. A potential nuisance parameter can be age. In this case the variance explained by age will be removed prior to the calculation of the correlation.'};
+'This option allows for the specification of nuisance effects to be removed from the data. A potential nuisance parameter can be TIV if you check segmented data with the default modulation. In this case the variance explained by TIV will be removed prior to the calculation of the correlation. Another meaningful nuisance effect is age. This parameter should be defined for all samples as one variable and may also contain several columns.'};
 
 check_mesh_cov      = cfg_exbranch;
 check_mesh_cov.tag  = 'check_mesh_cov';

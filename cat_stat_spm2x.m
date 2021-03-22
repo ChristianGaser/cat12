@@ -15,12 +15,12 @@ function out = cat_stat_spm2x(job)
 %   sqrt(t^2 + df)
 %
 % ---------------------------------------------
-% p-value
+% p-value:
 %
 % p = 1-spm_Tcdf
 %
 % ---------------------------------------------
-% log p-value
+% log p-value:
 %
 % -log10(1-P) = -log(1-spm_Tcdf)
 %
@@ -29,19 +29,19 @@ function out = cat_stat_spm2x(job)
 % ---------------------------------------------
 %
 % ---------------------------------------------
-% coefficient of determination R2
+% coefficient of determination R2:
 %
 %          1
 % R2 = 1 - ------------------
 %     1 + F*(p-1)/n-p)
 %
 % ---------------------------------------------
-% p-value
+% p-value:
 %
 % p = 1-spm_Fcdf
 %
 % ---------------------------------------------
-% log p-value
+% log p-value:
 %
 % -log10(1-P) = -log(1-spm_Fcdf)
 %
@@ -64,7 +64,7 @@ function out = cat_stat_spm2x(job)
 % Naming convention of the transformed files:
 % Type_Contrast_Pheight_Pextent_K_Neg
 %
-% Type:    P  - p-value
+% Type:  P  - p-value
 %        logP - log p-value
 %        R  - correlation coefficient
 %        D  - effect size
@@ -76,8 +76,8 @@ function out = cat_stat_spm2x(job)
 %        strings
 %  
 % Pheight:   p  - uncorrected p-value in % (p<0.05 will coded with "p5")
-%        pFWE - p-value with FWE correction in %
-%        pFDR - p-value with FDR correction in %
+%          pFWE - p-value with FWE correction in %
+%          pFDR - p-value with FDR correction in %
 %        
 % Pextent:   pk  - uncorr. extent p-value in % (p<0.05 coded with "p5")
 %        pkFWE - extent p-value with FWE correction in %
