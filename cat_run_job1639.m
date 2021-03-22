@@ -557,8 +557,8 @@ function cat_run_job1639(job,tpm,subj)
           
             % correct origin using COM and invert translation and use it as starting value
             if job.extopts.setCOM && ~ppe.affreg.highBG 
-              fprintf('%5.0fs\n',etime(clock,stime));   
-              Affine_com  = cat_vol_set_com(VF1);
+              fprintf('%5.0fs\n',etime(clock,stime)); stime = clock;  
+              Affine_com        = cat_vol_set_com(VF1);
               Affine_com(1:3,4) = -Affine_com(1:3,4);
             else
               Affine_com = eye(4);
@@ -756,7 +756,7 @@ function cat_run_job1639(job,tpm,subj)
             else
               % check for > 10% larger scaling 
               if scl1 > 1.1*scl2 && job.extopts.setCOM ~= 11 % setcom == 11 - use always 
-                stime = cat_io_cmd('  First fine affine registration failed. Use previous registration.','warn','',1,stime);
+                stime = cat_io_cmd(' First fine affine registration failed. Use previous registration.','warn','',1,stime); % text is one char too long
                 %fprintf('\n  First fine affine registration failed.\n  Use affine registration from previous step.                ');
                 Affine2 = Affine1;
                 scl2 = scl1;
@@ -768,7 +768,7 @@ function cat_run_job1639(job,tpm,subj)
               scl3 = abs(det(Affine3(1:3,1:3)));
               % check for > 5% larger scaling 
               if scl2 > 1.05*scl3 && job.extopts.setCOM ~= 11 % setcom == 11 - use always
-                stime = cat_io_cmd(' Final fine affine registration failed. Use previous registration.','warn','',1,stime); % text is a char too long
+                stime = cat_io_cmd(' Final fine affine registration failed. Use previous registration.','warn','',1,stime); % text is one char too long
                 Affine = Affine2;
               else
                 Affine = Affine3;

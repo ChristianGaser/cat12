@@ -1804,7 +1804,7 @@ function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt)
     end
   end
   
-  fprintf('\n');
+  if opt.verb, fprintf('\n'); end
   % final settings: back to world thickness in mm 
   if flipped, S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); end
 end

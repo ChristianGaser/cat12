@@ -604,9 +604,9 @@ end
           end
           
           % correct origin using COM and invert translation and use it as starting value
-          if job.extopts.setCOM & ~useprior
-            fprintf('\n');
-            Affine_com  = cat_vol_set_com(VF1);
+          if job.extopts.setCOM && ~useprior
+            fprintf('\n'); stime = clock;  
+            Affine_com        = cat_vol_set_com(VF1);
             Affine_com(1:3,4) = -Affine_com(1:3,4);
           else
             Affine_com = eye(4);
