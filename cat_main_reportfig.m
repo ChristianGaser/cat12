@@ -715,7 +715,7 @@ if 1
     
     Psurf2 = Psurf;
     % phite/pial surface in segmentation view number 2 or 3
-    if job.extopts.expertgui==2 && exist(Psurf2(1).Pwhite,'file') && exist(Psurf2(1).Ppial,'file'), ids = 1:p0id; else, ids = []; end
+    if exist(Psurf2(1).Pwhite,'file') && exist(Psurf2(1).Ppial,'file'), ids = 1:p0id; else, ids = []; end % job.extopts.expertgui==2 && 
     for ix=1:numel(Psurf2) 
       Psurf2(end+1).Pcentral = Psurf2(ix).Pwhite; 
       Psurf2(end+1).Pcentral = Psurf2(ix).Ppial; 
@@ -897,7 +897,7 @@ end
           d = d / dmax;
           % histogram line
           [dl,hl] = hist( side(~isinf(side(:)) & ~isnan(side(:)) &  side(:)<6 & side(:)>0) , 0.02:0.02:6); hl = hl + 0.02/2; 
-          dl = smooth(dl,2); 
+          try dl = smooth(dl,2); catch, dl = (dl + [0 dl(1:end-1)] + [dl(2:end) 0])/3; end % smooth requires Curve Fitting Toolbox
           dl = dl / (dmax/10); % 10 times smaller boxes
           % boxplot values
           q0 = median(side); q1 = median(side(side<q0)); q2 = median(side(side>q0)); 
