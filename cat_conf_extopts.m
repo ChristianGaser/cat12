@@ -342,7 +342,7 @@ if ~expert
     'CS1 without SIC',...
     'CS2 with SIC',... 
   };
-  SRP.values  = {10 20 12 22}; 
+  SRP.values  = {10 22}; 
 elseif expert == 1
   SRP.labels  = {...
     'CS1 without SIC (10)',...
@@ -373,7 +373,6 @@ SRP.help    = {
    'The SIC reduces SIs below 1% of the total area, which are also almost invisible and can be neglected.  '] 
    ''
 };
-%SRP.hidden  = expert<1; 
 SRP.def     = @(val)cat_get_defaults('extopts.SRP', val{:});
 
 
@@ -436,23 +435,20 @@ reduce_mesh.help    = {
 
 
 
-% This is just an developer parameter (maybe for experts later) 
-% I expect that 300k surfaces support best quality in relation to processing
-% time, because surface reconstruction times are dominated by the registration
+% Expert parameter to controll the number of mesh elements and processing
+% time. 200k surfaces support good quality in relation to processing time, 
+% because surface reconstruction times are dominated by the registration
 % that depends on the mesh resolution of the individual and template brain. 
-% However, a fast and a refined accurate version could be interesting.
-% The fast version could be interesting for fast clinical processing but needs 
-% also low mesh average surfaces.  
-% The more accurate version could be useful for high quality surface rendering.
-% RD202103: The current version was slower than the CS1 and the values were updated.
-% In detail the value is the square of the refinement distance but for surface creation by 
-% the volume-resolution, a general limit of 1.5 mm exist, where lower resolution (e.g. 2 mm) 
-% can cause problems in thin structures. 
+% A fast version with 100k was tested but showed different problems and is 
+% relative slow (70% of the default) and at the end to risky for the low benifit.
+% The parameter is the square of the refinement distance but for surface 
+% creation by the volume-resolution, a general limit of 1.5 mm exist, where
+% lower resolution (e.g. 2 mm) can cause problems in thin structures. 
 vdist         = cfg_menu;
 vdist.tag     = 'vdist';
 vdist.name    = 'Mesh resolution';
-vdist.labels  = {'low (4)','optimal (2)','fine (1)','extra fine (0.5)'};
-vdist.values  = {4 2 1 0.5};   
+vdist.labels  = {'optimal (2)','fine (1)','extra fine (0.5)'};
+vdist.values  = {2 1 0.5};   
 vdist.def     = @(val)cat_get_defaults('extopts.vdist', val{:});
 vdist.hidden  = expert<1; 
 vdist.help    = {
@@ -464,14 +460,13 @@ vdist.help    = {
   ''
   '  Setting     distance limit between vertices     number faces'      
   '  ------------------------------------------------------------'
-  '  minimal:                  2.00 mm                     ~120k'
   '  optimal:                  1.41 mm                     ~200k'
   '  fine:                     1.00 mm                     ~400k'
   '  extra fine:               0.71 mm                     ~800k'
   ''
-  'Experimental development parameter that only works for the "createCS2" options of "Correct for surface collisions" (added in CAT12.7, 201909)!'
+  'Experimental parameter that only works for "SRP>=20" (CAT12.8, 202003)!'
   ''
-}; % ######## final UPDATE required #########
+};
 
 %------------------------------------------------------------------------
 % special expert and developer options 

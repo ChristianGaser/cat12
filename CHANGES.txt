@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1783 | dahnke | 2021-03-21 10:21:33
+r1784 | dahnke | 2021-03-22 08:36:10
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_main_reportfig.m
+M       cat_run_job.m
+M       cat_run_job1639.m
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       cat_surf_fun.m
+
+(1) Fixed:    Removed multiple tiny bugs. 
+------------------------------------------------------------------------
+r1783 | dahnke | 2021-03-21 10:22:25 +0100 (Sun, 21 Mar 2021) | 29 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -28,6 +42,7 @@ M       cat_surf_fun.m
 (3) Changed:  Removed new_realease setting from LAS myelination correction blocks in
               cat_main(1639).
 (4) Changed:  Updated BB field in cat_conf_long and cat_long_main.
+
 
 ------------------------------------------------------------------------
 r1782 | dahnke | 2021-03-18 18:50:42 +0100 (Thu, 18 Mar 2021) | 26 lines
