@@ -233,7 +233,7 @@ function str = cat_main_reportstr(job,res,qa)
   if job.extopts.spm_kamap == catdef.extopts.spm_kamap,  cp{1} = npara; else, cp{1} = cpara; end 
   if job.extopts.WMHC      == catdef.extopts.WMHC,       cp{2} = npara; else, cp{2} = cpara; end 
   if job.extopts.SLC       == catdef.extopts.SLC,        cp{3} = npara; else, cp{3} = cpara; end 
-  if job.extopts.SRP       == catdef.extopts.SRP,        cp{4} = npara; else, cp{4} = cpara; end 
+  if isfield(job.extopts,'SRP') && job.extopts.SRP == catdef.extopts.SRP, cp{4} = npara; else, cp{4} = cpara; end 
   restype = char(fieldnames(job.extopts.restypes));
   if strcmp(restype, catdef.extopts.restype), cp{5} = npara; else, cp{5} = cpara; end 
 % ############

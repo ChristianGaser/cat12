@@ -22,8 +22,8 @@ OV.opacity = Inf;                                      % transparence value for 
 OV.cmap    = jet;                                      % colormap for overlay
 
 % name of files
-OV.name = char(fullfile(spm('dir'),'tpm','TPM.nii,1'),...
-               fullfile(spm('dir'),'tpm','labels_Neuromorphometrics.nii'));
+OV.name = char(fullfile(cat_get_defaults('extopts.pth_templates'),'Template_4_GS.nii,1'),...
+               fullfile(cat_get_defaults('extopts.pth_templates'),'neuromorphometrics.nii'));
                 
 % range for each file
 % Use range 0..0 if you want to autoscale range.
@@ -42,7 +42,7 @@ OV.name = char(fullfile(spm('dir'),'tpm','TPM.nii,1'),...
 % Number of fields in range should be the same as number of files (see above)
 % or give one field, which is valid for all.
 % Be careful: intensities below the lower range are not shown!
-OV.range   =[[0.5 1]; [0.5 1]];
+OV.range   =[[0 1]; [0 136]];
 
 % OV.func can be used to set the image to defined values (e.g. NaN) for the given range
 %OV.func = 'i1(i1>log10(0.05) & i1<-log10(0.05))=NaN;';
@@ -57,7 +57,7 @@ OV.labels.format = '%3.1f';
 
 % define number of columns and rows
 % comment this out for interactive selection
-OV.xy = [3 5];
+%OV.xy = [3 5];
 
 % save result as png/jpg/pdf/tif
 % comment this out for interactive selection or use 'none' for not 
@@ -65,14 +65,14 @@ OV.xy = [3 5];
 % estimate filename to save
 OV.save = 'png';
 
-% Remove comment if you don't wish slice labels
+% Remove comment if you don't wish cut overview
 OV.overview = [];
 
 % Remove comment if you don't wish slice labels
-%OV.labels = [];
+OV.labels = [];
 
 % Remove comment if you don't wish colorbar
-%OV.cbar = [];
+OV.cbar = [];
 
 % define atlas for labeling
 % comment this out for interactive selection
