@@ -121,29 +121,30 @@ function tools = cat_conf_tools(expert)
 
 % get subbatches
 % -------------------------------------------------------------------------
-  [T2x,T2x_surf,F2x,F2x_surf] = cat_stat_T2x_GUI;
-  [check_cov, check_cov2]     = cat_stat_check_cov_GUI(data_xml,outdir,fname,save,expert);
-  [defs,defs2]                = cat_vol_defs_GUI;
+  [T2x,T2x_surf,F2x,F2x_surf] = conf_T2x;
+  [check_cov, check_cov2]     = conf_check_cov(data_xml,outdir,fname,save,expert);
+  [defs,defs2]                = conf_vol_defs;
   nonlin_coreg                = cat_conf_nonlin_coreg;
-  createTPM                   = cat_conf_createTPM(data_vol,expert,suffix,outdir); 
-  createTPMlong               = cat_conf_createTPMlong(data_vol);
-  headtrimming                = cat_vol_headtrimming_GUI(intlim,spm_type,prefix,suffix,expert);
-  check_SPM                   = cat_stat_check_SPM_GUI(outdir,fname,save,expert); 
-  showslice                   = cat_stat_showslice_all_GUI(data_vol);
-  maskimg                     = cat_vol_maskimage_GUI(data,prefix);
-  calcvol                     = cat_stat_TIV_GUI;
-  spmtype                     = cat_io_volctype_GUI(data,intlim,spm_type,prefix,suffix,expert,lazy);
-  calcroi                     = cat_roi_fun_GUI(outdir);
+  createTPM                   = conf_createTPM(data_vol,expert,suffix,outdir); 
+  createTPMlong               = conf_createTPMlong(data_vol);
+  headtrimming                = conf_vol_headtrimming(intlim,spm_type,prefix,suffix,expert);
+  check_SPM                   = conf_stat_check_SPM(outdir,fname,save,expert); 
+  showslice                   = conf_stat_showslice_all(data_vol);
+  maskimg                     = conf_vol_maskimage(data,prefix);
+  calcvol                     = conf_stat_TIV;
+  spmtype                     = conf_io_volctype(data,intlim,spm_type,prefix,suffix,expert,lazy);
+  calcroi                     = conf_roi_fun(outdir);
   [ROI,sROI,ROIsum]           = cat_conf_ROI(expert);
-  resize                      = cat_conf_vol_resize(data,prefix,expert,outdir);
-  avg_img                     = cat_vol_average_GUI(data,outdir);
-  realign                     = cat_vol_series_align_GUI(data);
-  shootlong                   = cat_conf_shoot(expert); 
-  sanlm                       = cat_vol_sanlm_GUI(data,intlim,spm_type,prefix,suffix,expert);
-  biascorrlong                = cat_conf_longBiasCorr(data,expert,prefix);
-  %urqio                       = cat_vol_urqio_GUI; % this cause problems
-  iqr                         = cat_stat_IQR_GUI(data_xml);
-  %qa                         = cat_vol_qa_GUI(data);
+  resize                      = conf_vol_resize(data,prefix,expert,outdir);
+  avg_img                     = conf_vol_average(data,outdir);
+  realign                     = conf_vol_series_align(data);
+  shootlong                   = conf_shoot(expert); 
+  sanlm                       = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,expert);
+  biascorrlong                = conf_longBiasCorr(data,expert,prefix);
+  data2mat                    = conf_io_data2mat(data,outdir);
+  %urqio                       = conf_vol_urqio; % this cause problems
+  iqr                         = conf_stat_IQR(data_xml);
+  %qa                         = conf_vol_qa(data);
   
   
 % create main batch 
@@ -160,7 +161,7 @@ function tools = cat_conf_tools(expert)
     ...
     calcvol, ...                          cat.stat.pre
     calcroi, ...                          cat.stat.pre
-    ROIsum, ...
+      ROIsum, ...
     iqr, ....                             cat.stat.pre
     ...
     T2x, F2x, T2x_surf, F2x_surf, ...     cat.stat.models?
@@ -183,6 +184,7 @@ function tools = cat_conf_tools(expert)
     defs, ...                             cat.pre.vtools.
     defs2, ...                            cat.pre.vtools.
     avg_img, ...                          cat.pre.vtoolsexp.
+    data2mat, ...                         cat.pre.vtools.
     };
   
   %RD202005: the cause problems at Christians installation ... check it 
@@ -192,7 +194,7 @@ function tools = cat_conf_tools(expert)
 return
 
 %_______________________________________________________________________
-function resize = cat_conf_vol_resize(data,prefix,expert,outdir)
+function resize = conf_vol_resize(data,prefix,expert,outdir)
 % -------------------------------------------------------------------------
 % Simple function to resize and scale images. 
 % 
@@ -271,14 +273,14 @@ function resize = cat_conf_vol_resize(data,prefix,expert,outdir)
   resize.name     = 'Resize images';
   resize.val      = {data,restype,method,prefix,outdir};
   resize.prog     = @cat_vol_resize;
-  resize.vfiles   = @vfiles_resize;
-  resize.vout     = @vfiles_resize;
+  resize.vfiles   = @vout_resize;
+  resize.vout     = @vout_resize;
   %resize.hidden   = expert<2; 
   resize.help     = {'Interpolation of images.' ''};
 return
 
 %_______________________________________________________________________
-function shootlong = cat_conf_shoot(expert)
+function shootlong = conf_shoot(expert)
 % -------------------------------------------------------------------------
 % This is slightly modified version of the original Shooting that allows to 
 % specify another default file. It is required to remove slight movements of
@@ -315,7 +317,7 @@ function shootlong = cat_conf_shoot(expert)
 return
 
 %_______________________________________________________________________
-function createTPM = cat_conf_createTPM(data,expert,name,outdir)
+function createTPM = conf_createTPM(data,expert,name,outdir)
 % -------------------------------------------------------------------------
 % Batch to create own templates based on a Shooting template or a CAT pre-
 % processing
@@ -467,8 +469,8 @@ function createTPM = cat_conf_createTPM(data,expert,name,outdir)
   createTPM.name   = 'TPM creation';
   createTPM.val    = {files, opt, write};
   createTPM.prog   = @cat_vol_createTPM;
-  createTPM.vfiles = @vfiles_createTPM;
-  createTPM.vout   = @vfiles_createTPM;
+  createTPM.vfiles = @vout_createTPM;
+  createTPM.vout   = @vout_createTPM;
   createTPM.hidden = expert<2;
   createTPM.help   = {
     'Create individual TPMs for preprocessing by using Dartel/Shooting templates. ' 
@@ -481,7 +483,7 @@ function createTPM = cat_conf_createTPM(data,expert,name,outdir)
 return
 
 %_______________________________________________________________________
-function createTPMlong = cat_conf_createTPMlong(data)
+function createTPMlong = conf_createTPMlong(data)
 % -------------------------------------------------------------------------
 % This is a special version of the cat_vol_createTPM batch only for the
 % longitudinal preprocessing without further GUI interaction and well
@@ -540,8 +542,8 @@ function createTPMlong = cat_conf_createTPMlong(data)
   createTPMlong.name   = 'Longitudinal TPM creation';
   createTPMlong.val    = {data,fstrength,writeBM,verb};
   createTPMlong.prog   = @cat_long_createTPM;
-  createTPMlong.vfiles = @vfiles_createTPMlong;
-  createTPMlong.vout   = @vfiles_createTPMlong;
+  createTPMlong.vfiles = @vout_createTPMlong;
+  createTPMlong.vout   = @vout_createTPMlong;
   createTPMlong.hidden = true; 
   createTPMlong.help   = {
     'Create individual TPMs for longitudinal preprocessing. This is a special version of the cat_vol_createTPM batch only for the longitudinal preprocessing without further GUI interaction and well defined input. '
@@ -554,7 +556,7 @@ function createTPMlong = cat_conf_createTPMlong(data)
 return
 
 %_______________________________________________________________________
-function iqr = cat_stat_IQR_GUI(data_xml)
+function iqr = conf_stat_IQR(data_xml)
 %  ------------------------------------------------------------------------
   iqr_name         = cfg_entry;
   iqr_name.tag     = 'iqr_name';
@@ -573,7 +575,7 @@ function iqr = cat_stat_IQR_GUI(data_xml)
 return
 
 %_______________________________________________________________________
-function longBiasCorr = cat_conf_longBiasCorr(data,expert,prefix)
+function longBiasCorr = conf_longBiasCorr(data,expert,prefix)
 % -------------------------------------------------------------------------
 % Longitudinal bias correction by using the average segmentation.
 % See cat_long_biascorr.
@@ -610,13 +612,13 @@ function longBiasCorr = cat_conf_longBiasCorr(data,expert,prefix)
   longBiasCorr.name   = 'Longitudinal Bias Correction';
   longBiasCorr.val    = {images,segment,bstr,prefix};
   longBiasCorr.prog   = @cat_long_biascorr;
-  longBiasCorr.vout   = @vout_cat_conf_longBiasCorr;
+  longBiasCorr.vout   = @vout_conf_longBiasCorr;
   longBiasCorr.hidden = expert<0; 
   longBiasCorr.help   = {'Bias correction based on the segmentation of the average map.' ''};
 return
 
 %_______________________________________________________________________
-function qa = cat_vol_qa_GUI(data) %#ok<DEFNU>
+function qa = conf_vol_qa(data) %#ok<DEFNU>
   % update input
   data.help = {'Select images for quality control.'};
 
@@ -626,12 +628,12 @@ function qa = cat_vol_qa_GUI(data) %#ok<DEFNU>
   qa.name   = 'CAT quality control';
   qa.val    = {data};
   qa.prog   = @cat_vol_qa;
-  qa.vfiles = @vfiles_qa;
+  qa.vfiles = @vout_qa;
   qa.help   = {'CAT Quality Control of T1 images. '};
 return
   
 %_______________________________________________________________________
-function sanlm = cat_vol_sanlm_GUI(data,intlim,spm_type,prefix,suffix,expert)
+function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,expert)
 
   % --- update input variables ---
   data.help         = {'Select images for filtering.'};
@@ -912,7 +914,7 @@ function sanlm = cat_vol_sanlm_GUI(data,intlim,spm_type,prefix,suffix,expert)
   
   sanlm.val             = {data spm_type prefix suffix intlim addnoise rician replaceNANandINF nlmfilter};
   sanlm.prog            = @cat_vol_sanlm;
-  sanlm.vout            = @vfiles_sanlm;
+  sanlm.vout            = @vout_sanlm;
   sanlm.help            = {
     'This function applies an spatial adaptive (sub-resolution) non-local means denoising filter to the data. This filter will remove noise while preserving edges. The filter strength is automatically estimated based on the standard deviation of the noise. '
     ''
@@ -924,7 +926,7 @@ function sanlm = cat_vol_sanlm_GUI(data,intlim,spm_type,prefix,suffix,expert)
 return
 
 %_______________________________________________________________________
-function spmtype = cat_io_volctype_GUI(data,  intlim,  spm_type,prefix,suffix,expert,lazy)
+function spmtype = conf_io_volctype(data,  intlim,  spm_type,prefix,suffix,expert,lazy)
   % update variables 
   data.help           = {'Select images for data type conversion';''};
   
@@ -960,7 +962,7 @@ function spmtype = cat_io_volctype_GUI(data,  intlim,  spm_type,prefix,suffix,ex
   spmtype.name        = 'Image data type converter'; 
   spmtype.val         = {data spm_type prefix suffix intlim intscale lazy};
   spmtype.prog        = @cat_io_volctype;
-  spmtype.vout        = @vfiles_volctype;
+  spmtype.vout        = @vout_volctype;
   spmtype.help        = {
     'Convert the image data type to reduce disk-space.'
     'Uses 99.99% of the main intensity histogram to avoid problems due to outliers. Although the internal scaling supports a relative high accuracy for the limited number of bits, special values such as NAN and INF will be lost!'
@@ -969,7 +971,7 @@ function spmtype = cat_io_volctype_GUI(data,  intlim,  spm_type,prefix,suffix,ex
 return
 
 %_______________________________________________________________________
-function headtrimming = cat_vol_headtrimming_GUI(intlim,spm_type,prefix,suffix,expert)
+function headtrimming = conf_vol_headtrimming(intlim,spm_type,prefix,suffix,expert)
 
   suffix.hidden         = expert<1; 
   intlim.hidden         = expert<1; 
@@ -1115,7 +1117,7 @@ function headtrimming = cat_vol_headtrimming_GUI(intlim,spm_type,prefix,suffix,e
   headtrimming.name    = 'Image data trimming'; 
   headtrimming.val     = {timages prefix mask suffix intlim1 pth avg open addvox spm_type intlim};
   headtrimming.prog    = @cat_vol_headtrimming;
-  headtrimming.vout    = @vfiles_headtrimming;
+  headtrimming.vout    = @vout_headtrimming;
   headtrimming.help    = {
     'Remove air around the head and convert the image data type to save disk-space but also to reduce memory-space and load/save times. Corresponding images have to have the same image dimenions. '
     'Uses 99.99% of the main intensity histogram to avoid problems due to outliers. Although the internal scaling supports a relative high accuracy for the limited number of bits, special values such as NAN and INF will be lost!'
@@ -1124,7 +1126,7 @@ function headtrimming = cat_vol_headtrimming_GUI(intlim,spm_type,prefix,suffix,e
 return
 
 %_______________________________________________________________________
-function maskimg = cat_vol_maskimage_GUI(data,prefix)
+function maskimg = conf_vol_maskimage(data,prefix)
  
   % update input variables
   data.name       = 'Select images';
@@ -1166,7 +1168,7 @@ function maskimg = cat_vol_maskimage_GUI(data,prefix)
   maskimg.name    = 'Manual image (lesion) masking'; 
   maskimg.val     = {data mask bmask recalc prefix};
   maskimg.prog    = @cat_vol_maskimage;
-  maskimg.vout    = @vfiles_maskimg;
+  maskimg.vout    = @vout_maskimg;
   maskimg.help    = {
     'Mask images to avoid segmentation and registration errors in brain lesion. The number of mask images has to be equal to the number of the original images. Voxels inside the lesion mask(s) and outside the brainmask(s) will be set to zero. '
     'If you have multiple lesion masks than add them with the original images, eg. "images = {sub01.nii; sub02.nii; sub01.nii}" and "mask = {sub01_lesion1.nii; sub02_lesion1.nii; sub01_lesion2.nii}". Alternatively, you can choose only one original image and a various number of mask files.'
@@ -1176,7 +1178,7 @@ function maskimg = cat_vol_maskimage_GUI(data,prefix)
 return
 
 %_______________________________________________________________________
-function [defs,defs2] = cat_vol_defs_GUI()
+function [defs,defs2] = conf_vol_defs()
 
   field           = cfg_files;
   field.tag       = 'field';
@@ -1275,7 +1277,7 @@ function [defs,defs2] = cat_vol_defs_GUI()
   defs.name       = 'Apply deformations (many images)';
   defs.val        = {field1,images1,bb,vox,interp,modulate};
   defs.prog       = @cat_vol_defs;
-  defs.vfiles     = @vfiles_defs;
+  defs.vfiles     = @vout_defs;
   defs.help       = {'This is an utility for applying a deformation field of one subject to many images.'};
 
   defs2           = cfg_exbranch;
@@ -1283,12 +1285,12 @@ function [defs,defs2] = cat_vol_defs_GUI()
   defs2.name      = 'Apply deformations (many subjects)';
   defs2.val       = {field,images,bb,vox,interp,modulate};
   defs2.prog      = @cat_vol_defs;
-  defs2.vfiles    = @vfiles_defs2;
+  defs2.vfiles    = @vout_defs2;
   defs2.help      = {'This is an utility for applying deformation fields of many subjects to images.'};
 return
 
 %_______________________________________________________________________
-function realign  = cat_vol_series_align_GUI(data)
+function realign  = conf_vol_series_align(data)
   
   data.help       = {
   'Select all images for this subject'};
@@ -1429,7 +1431,7 @@ function realign  = cat_vol_series_align_GUI(data)
 return
 
 %_______________________________________________________________________
-function [T2x,T2x_surf,F2x,F2x_surf] = cat_stat_T2x_GUI
+function [T2x,T2x_surf,F2x,F2x_surf] = conf_T2x
 
   data_T2x          = cfg_files;
   data_T2x.tag      = 'data_T2x';
@@ -1442,8 +1444,8 @@ function [T2x,T2x_surf,F2x,F2x_surf] = cat_stat_T2x_GUI
   sel               = cfg_menu;
   sel.name          = 'Convert t value to';
   sel.tag           = 'sel';
-  sel.labels        = {'p','-log(p)','correlation coefficient cc','apply thresholds without conversion|standard Normal (z-score) distribution'};
-  sel.values        = {1,2,3,5,6};
+  sel.labels        = {'p','-log(p)','correlation coefficient cc','standard Normal (z-score) distribution','apply thresholds without conversion'};
+  sel.values        = {1,2,3,6,5};
   sel.val           = {2};
   sel.help          = {'Select conversion of t-value'};
 
@@ -1587,13 +1589,13 @@ function [T2x,T2x_surf,F2x,F2x_surf] = cat_stat_T2x_GUI
     'The following formulas are used:'
     '--------------------------------'
     'correlation coefficient:'
-    '          t'
-    'r = ------------------'
-    '      sqrt(t^2 + df)'
-    'p-value'
-    'p = 1-spm_Tcdf'
-    'log p-value'
-    '-log10(1-P) = -log(1-spm_Tcdf)'
+    '            t'
+    '  r = ------------------'
+    '        sqrt(t^2 + df)'
+    'p-value:'
+    '  p = 1-spm_Tcdf'
+    'log p-value:'
+    '  -log10(1-P) = -log(1-spm_Tcdf)'
     'For the latter case of log transformation this means that a p-value of p=0.99 (0.01) is transformed to a value of 2.'
     'Examples:'
     'p-value  -log10(1-P)'
@@ -1686,13 +1688,13 @@ function [T2x,T2x_surf,F2x,F2x_surf] = cat_stat_T2x_GUI
     'The following formulas are used:'
     '--------------------------------'
     'coefficient of determination R2:'
-    '             1'
-    'R2 = ------------------'
-    '      1 + F*(p-1)/n-p)'
+    '               1'
+    '  R2 = ------------------'
+    '        1 + F*(p-1)/n-p)'
     'p-value:'
-    'p = 1-spm_Fcdf'
+    '  p = 1-spm_Fcdf'
     'log p-value:'
-    '-log10(1-P) = -log(1-spm_Fcdf)'
+    '  -log10(1-P) = -log(1-spm_Fcdf)'
     'For the last case of log transformation this means that a p-value of p=0.99 (0.01) is transformed to a value of 2.'
     'Examples:'
     'p-value  -log10(1-P)'
@@ -1731,7 +1733,7 @@ function [T2x,T2x_surf,F2x,F2x_surf] = cat_stat_T2x_GUI
 return
 
 %_______________________________________________________________________
-function showslice = cat_stat_showslice_all_GUI(data_vol)
+function showslice = conf_stat_showslice_all(data_vol)
   data_vol.help = {'Select all images. Images have to be in the same orientation with same voxel size and dimension (e.g. normalized images)'};
 
   scale           = cfg_menu;
@@ -1766,7 +1768,7 @@ function showslice = cat_stat_showslice_all_GUI(data_vol)
   showslice.help  = {'This function displays a selected slice for all images and indicates the respective filenames which is useful to check image quality for a large number of files in a circumscribed region (slice).'};
 
 %_______________________________________________________________________
-function [check_cov, check_cov2] = cat_stat_check_cov_GUI(data_xml,outdir,fname,save,expert) 
+function [check_cov, check_cov2] = conf_check_cov(data_xml,outdir,fname,save,expert) 
  
   % --- update input data ---
   data_xml.name     = 'Quality measures (optional)';
@@ -1775,17 +1777,17 @@ function [check_cov, check_cov2] = cat_stat_check_cov_GUI(data_xml,outdir,fname,
   % --- further data ---
   c                 = cfg_entry;
   c.tag             = 'c';
-  c.name            = 'Vector';
-  c.help            = {'Vector of nuisance values'};
+  c.name            = 'Vector/Matrix';
+  c.help            = {'Vector or matrix of nuisance values'};
   c.strtype         = 'r';
-  c.num             = [Inf 1];
+  c.num             = [Inf Inf];
 
   nuisance          = cfg_repeat;
   nuisance.tag      = 'nuisance';
   nuisance.name     = 'Nuisance variable';
   nuisance.values   = {c};
   nuisance.num      = [0 Inf];
-  nuisance.help     = {'This option allows for the specification of nuisance effects to be removed from the data. A potential nuisance parameter can be TIV if you check segmented data with the default modulation. In this case the variance explained by TIV will be removed prior to the calculation of the correlation. Another meaningful nuisance effect is age.'};
+  nuisance.help     = {'This option allows for the specification of nuisance effects to be removed from the data. A potential nuisance parameter can be TIV if you check segmented data with the default modulation. In this case the variance explained by TIV will be removed prior to the calculation of the correlation. Another meaningful nuisance effect is age. This parameter should be defined for all samples as one variable and may also contain several columns.'};
 
   gap               = cfg_entry;
   gap.tag           = 'gap';
@@ -1834,7 +1836,7 @@ function [check_cov, check_cov2] = cat_stat_check_cov_GUI(data_xml,outdir,fname,
   check_cov2.prog   = @cat_stat_check_cov2;
 
 %_______________________________________________________________________
-function check_SPM = cat_stat_check_SPM_GUI(outdir,fname,save,expert) 
+function check_SPM = conf_stat_check_SPM(outdir,fname,save,expert) 
 
   outdir.hidden               = expert<2;
   fname.hidden                = expert<2; 
@@ -1904,7 +1906,7 @@ function check_SPM = cat_stat_check_SPM_GUI(outdir,fname,save,expert)
   check_SPM.help              = {'Use design matrix saved in SPM.mat to check for sample homogeneity of the used data and for orthogonality of parameters.'};
 
 %_______________________________________________________________________
-function calcvol = cat_stat_TIV_GUI
+function calcvol = conf_stat_TIV
   calcvol_name         = cfg_entry;
   calcvol_name.tag     = 'calcvol_name';
   calcvol_name.name    = 'Output file';
@@ -1948,7 +1950,7 @@ function calcvol = cat_stat_TIV_GUI
   };
 
 %_______________________________________________________________________
-function calcroi = cat_roi_fun_GUI(outdir)   
+function calcroi = conf_roi_fun(outdir)   
   roi_xml               = cfg_files;
   roi_xml.name          = 'XML files';
   roi_xml.tag           = 'roi_xml';
@@ -2008,7 +2010,7 @@ function calcroi = cat_roi_fun_GUI(outdir)
   };
 
 %_______________________________________________________________________
-function urqio = cat_vol_urqio_GUI
+function urqio = conf_vol_urqio
 %  ------------------------------------------------------------------------
 %  Ultra-High Resolution Quantitative Image Optimization
 %  ------------------------------------------------------------------------
@@ -2201,7 +2203,7 @@ function urqio = cat_vol_urqio_GUI
   urqio.name  = 'Ultra-High Resolution Quantitative Image Optimization';
   urqio.val   = {data opts output};
   urqio.prog  = @cat_vol_urqio;
-  %urqio.vout  = @vfiles_urqio;
+  %urqio.vout  = @vout_urqio;
   urqio.help  = {
     'Additional correction of high resolution PD, R1, and R2s weighted images that includes another bias correction, intensity normalization, and blood vessel correction step. '
     ''
@@ -2209,7 +2211,7 @@ function urqio = cat_vol_urqio_GUI
   };
 
 %_______________________________________________________________________
-function avg_img = cat_vol_average_GUI(data,outdir)
+function avg_img = conf_vol_average(data,outdir)
 % image average
 % -------------------------------------------------------------------------
 
@@ -2241,7 +2243,104 @@ function avg_img = cat_vol_average_GUI(data,outdir)
   avg_img.vout    = @vout_avg;
 
 %_______________________________________________________________________
-function vf = vfiles_defs(job)
+function data2mat = conf_io_data2mat(data,outdir)
+% -------------------------------------------------------------------------
+% Batch to save Matlab mat files of surface or resampled volume data for use
+% with machine learning tools
+
+  resolution         = cfg_entry;
+  resolution.tag     = 'resolution';
+  resolution.name    = 'Spatial resolution for resampling';
+  resolution.strtype = 'r';
+  resolution.num     = [1 1];
+  resolution.val     = {4};
+  resolution.help    = {
+    'Volume data can be saved with a lower spation resolution which is especially helpful with further use with machine learning tools.'
+    'Recommended resampling values are 3-8mm. For BrainAGE we obtained bes prediction accuracy with values of 4 or 8mm.'
+  };
+
+  c                  = cfg_entry;
+  c.tag              = 'c';
+  c.name             = 'Vector/Matrix';
+  c.help             = {'Vector or matrix of nuisance values'};
+  c.strtype          = 'r';
+  c.num              = [Inf Inf];
+
+  nuisance           = cfg_repeat;
+  nuisance.tag       = 'nuisance';
+  nuisance.name      = 'Nuisance variable';
+  nuisance.values    = {c};
+  nuisance.num       = [0 Inf];
+  nuisance.help      = {'This option allows for the specification of nuisance effects to be removed from the data. A potential nuisance parameter can be TIV if you check segmented data with the default modulation. In this case the variance explained by TIV will be removed from the data. Another meaningful nuisance effect is age. This parameter should be defined for all samples as one variable and may also contain several columns.'};
+
+  mask = data; 
+  mask.tag           = 'mask';
+  mask.name          = 'Select brain mask image';
+  mask.def           = @(val) cat_get_defaults('extopts.brainmask', val{:});
+  mask.help          = {'Select additionally mask image to exclude non-brain areas.';''};
+  mask.num           = [0 1];
+
+  data.name          = 'Sample volume data';
+  data.tag           = 'data';
+  data.filter        = 'image';
+  data.num           = [1 Inf];
+  data.help          = {'Select spatially registered data. They must all have the same image dimensions, orientation, voxel size etc. Furthermore, it is recommended to use smoothed files with further use with machine learning tools.'};
+
+  sample             = cfg_repeat;
+  sample.tag         = 'sample';
+  sample.name        = 'Data';
+  sample.values      = {data};
+  sample.num         = [1 Inf];
+  sample.help        = {'Specify data for each sample. If you specify different samples a label variable will be also saved that decodes the samples.'};
+
+  vol_data           = cfg_exbranch;
+  vol_data.tag       = 'vol_data';
+  vol_data.name      = 'Volume data';
+  vol_data.val       = {sample,mask,resolution};
+  vol_data.help      = {''};
+  
+  data.name          = 'Sample surface data';
+  data.filter        = 'mesh';
+  data.help          = {'Select resampled and smoothed surface data. They must all have the same mesh size (32k or 164k).'};
+
+  sample.values      = {data};
+  surf_data          = cfg_exbranch;
+  surf_data.tag      = 'surf_data';
+  surf_data.name     = 'Surface data';
+  surf_data.val      = {sample};
+  surf_data.help     = {''};
+  
+  data_type          = cfg_choice;
+  data_type.tag      = 'data_type';
+  data_type.name     = 'Select data type';
+  data_type.values   = {vol_data surf_data};
+  data_type.val      = {vol_data};
+  data_type.help     = {'Choose between volume and surface data.'};
+  
+  fname              = cfg_entry; 
+  fname.name         = 'Filename';
+  fname.tag          = 'fname';
+  fname.val          = {'Data.mat'}; 
+  fname.help         = {'Filename to save data matrix.'};
+
+  data2mat           = cfg_exbranch;
+  data2mat.tag       = 'data2mat';
+  data2mat.name      = 'Save volume or surface data as mat-file';
+  data2mat.val       = {data_type,nuisance,fname,outdir};
+  data2mat.prog      = @cat_io_data2mat;
+  data2mat.vout      = @vout_io_data2mat;
+  data2mat.help      = {
+    'Save spatially registered volume or resampled surface data as Matlab data matrix for further use with machine learning tools.'
+    'Volume data can be optionally masked to remove non-brain areas.'
+    'A mat-file will be saved with the following parameters:'
+    '  Y     - data matrix with size number of subjects x number of voxels/vertices'
+    '  label - label of samples'
+    '  ind   - index for volume or surface data inside mask'
+    '  dim   - dimension of original data'
+  };
+
+%_______________________________________________________________________
+function vf = vout_defs(job)
 
 PU = job.field1;
 PI = job.images;
@@ -2265,7 +2364,7 @@ end
 
 return;
 %_______________________________________________________________________
-function vf = vfiles_defs2(job)
+function vf = vout_defs2(job)
 
   PU = job.field;
   PI = job.images;
@@ -2289,7 +2388,7 @@ function vf = vfiles_defs2(job)
 
 return;
 %_______________________________________________________________________
-function cdep = vfiles_urqio(job)
+function cdep = vout_urqio(job)
   %%
   cdep = cfg_dep;
   if job.output.r1
@@ -2334,7 +2433,7 @@ function cdep = vfiles_urqio(job)
 %%
 return;
 %_______________________________________________________________________
-function dep = vfiles_sanlm(varargin)
+function dep = vout_sanlm(varargin)
   %job.returnOnlyFilename = 1; 
   %vf = cat_vol_sanlm(job); 
   
@@ -2344,7 +2443,7 @@ function dep = vfiles_sanlm(varargin)
   dep(1).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 return;
 %_______________________________________________________________________
-function dep = vfiles_maskimg(varargin)
+function dep = vout_maskimg(varargin)
   %job.returnOnlyFilename = 1; 
   %vf = cat_vol_maskimage(job); 
   
@@ -2354,7 +2453,7 @@ function dep = vfiles_maskimg(varargin)
   dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 return;
 %_______________________________________________________________________
-function cdep = vfiles_headtrimming(job)
+function cdep = vout_headtrimming(job)
   job.returnOnlyFilename = 1; 
   %vf = cat_vol_headtrimming(job); 
   vf = job; 
@@ -2416,7 +2515,7 @@ function cdep = vfiles_headtrimming(job)
 return;
 
 %_______________________________________________________________________
-function dep = vfiles_volctype(varargin)
+function dep = vout_volctype(varargin)
  % job.returnOnlyFilename = 1; 
  % vf = cat_io_volctype(job);
     
@@ -2427,7 +2526,7 @@ function dep = vfiles_volctype(varargin)
 return;
 
 %_______________________________________________________________________
-function dep = vfiles_createTPM(varargin)
+function dep = vout_createTPM(varargin)
   dep(1)              = cfg_dep;
   dep(1).sname        = 'TPM';
   dep(1).src_output   = substruct('.','tpm','()',{':'});
@@ -2450,7 +2549,7 @@ function dep = vfiles_createTPM(varargin)
 return;
 
 %_______________________________________________________________________
-function dep = vfiles_createTPMlong(varargin)
+function dep = vout_createTPMlong(varargin)
   dep            = cfg_dep;
   dep.sname      = 'Longitudinal TPMs';
   dep.src_output = substruct('.','tpm','()',{':'});
@@ -2463,7 +2562,7 @@ function dep = vfiles_createTPMlong(varargin)
 return;
 
 %_______________________________________________________________________
-function dep = vout_cat_conf_longBiasCorr(varargin)
+function dep = vout_conf_longBiasCorr(varargin)
   dep            = cfg_dep;
   dep.sname      = 'Longitudinal Bias Corrected';
   dep.src_output = substruct('.','bc','()',{':'});
@@ -2471,14 +2570,14 @@ function dep = vout_cat_conf_longBiasCorr(varargin)
 return
 
 %_______________________________________________________________________
-function dep = vfiles_resize(varargin)
+function dep = vout_resize(varargin)
   dep            = cfg_dep;
   dep.sname      = 'Resized';
   dep.src_output = substruct('.','res','()',{':'});
   dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 return;
 %_______________________________________________________________________
-function vf = vfiles_qa(job)
+function vf = vout_qa(job)
   s  = cellstr(char(job.data)); vf = s; 
   for i=1:numel(s),
       [pth,nam,ext,num] = spm_fileparts(s{i});
@@ -2505,6 +2604,15 @@ function dep = vout_stat_TIV(varargin)
   dep.src_output = substruct('.','calcvol','()',{':'});
   dep.tgt_spec   = cfg_findspec({{'strtype','e','strtype','r'}});
 return
+
+%_______________________________________________________________________
+function dep = vout_io_data2mat(varargin)
+    
+  dep            = cfg_dep;
+  dep.sname      = 'Saved mat-file';
+  dep.src_output = substruct('.','fname','()',{':'});
+  dep.tgt_spec   = cfg_findspec({{'strtype','e','strtype','r'}});
+return;
 
 %------------------------------------------------------------------------
 function cdep = vout_realign(job)
