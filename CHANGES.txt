@@ -1,5 +1,22 @@
 ------------------------------------------------------------------------
-r1785 | gaser | 2021-03-22 22:52:52
+r1786 | gaser | 2021-03-24 22:07:37
+
+Changed paths:
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_io_colormaps.m
+M       cat_main.m
+M       cat_main1639.m
+M       cat_main_APRG.m
+M       cat_main_correctmyelination.m
+
+(1) Changed: Parameters restype and resval from cat_defaults are now added as
+             selection in cat_conf_extopts.m which were previously hard-coded.
+(2) Changed: Updated help text.
+
+------------------------------------------------------------------------
+r1785 | gaser | 2021-03-22 22:53:43 +0100 (Mo, 22 Mär 2021) | 33 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -33,6 +50,7 @@ A       templates_MNI152NLin2009cAsym/mTemplate_T1.nii
 (9) Fixed:   Added check whether extopts.SRP is defined in cat_main_reportstr.m.
 (10)Fixed:   Got finally rid of colored border if colorbar was added in
              cat_vol_slice_overlay.m
+
 ------------------------------------------------------------------------
 r1784 | dahnke | 2021-03-22 08:37:04 +0100 (Mo, 22 Mär 2021) | 12 lines
 

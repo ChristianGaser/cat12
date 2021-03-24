@@ -293,7 +293,7 @@ end
   %  However, by setting the value to 1 we can also use a surface to find the 
   %  optimal value, which is currently not stable enough.
   %  RD202008: In the original version we final fix this to the average 
-  %            because the selection was not robust engough.
+  %            because the selection was not robust enough.
   if cutstr==0; cutstr = 0.5; end % V2
   cutstrs   = linspace(0.05,0.95,4); % 0.05,0.35,0.65,0.95]; 
   cutstrval = nan(1,4); 
