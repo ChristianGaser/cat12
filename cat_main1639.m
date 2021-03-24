@@ -277,7 +277,7 @@ if ~isfield(res,'spmpp')
     end
     stime = clock; % not really correct but better than before
     
-    % RD202102:   Update Ymi since the LAS correction is currently not local engough
+    % RD202102:   Update Ymi since the LAS correction is currently not local enough
     Ycor  = Ycm; 
     Ycor  = Ycor + min(0,max(0,Ymi - 2/3) - Ycor);                       % correct overcorrections
     Ycor  = Ycor * (0.3 + 0.5 * job.extopts.LASstr);                     % correct only 90% to keep some real noise; use this function for fine tuning of the LASstr
