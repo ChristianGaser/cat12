@@ -265,7 +265,7 @@ if ~isfield(res,'spmpp')
       clear Ymt; % use original global scaled ... 
     end
     
-    % RD202102:   update Ymi since the LAS correction is currently not local engough
+    % RD202102:   update Ymi since the LAS correction is currently not local enough
     Yp0  = single(Ycls{3})/255/3 + single(Ycls{1})/255*2/3 + single(Ycls{2})/255;
     Ysdg = cat_vol_localstat(Ymi,Yb,round(3/mean(vx_vol)),4);  
     Ysdw = cat_vol_localstat(Ymi,Yp0>2.8/3,round(3/mean(vx_vol)),4);

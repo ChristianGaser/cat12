@@ -20,7 +20,7 @@ function [C,XML] = cat_io_colormaps(Cname,ncolors)
       error('MATLAB:cat_io_colormaps','Need at least one Color');
     elseif ncolors>2^12
       error('MATLAB:cat_io_colormaps', ...
-       'Wow, why do you want to create a rainbow???. Please use less colors or chagne me.\n');
+       'Wow, why do you want to create a rainbow???. Please use less colors or change me.\n');
     end
   end
   

@@ -643,11 +643,23 @@ if ~expert
     'Fixed 0.8 mm'
     'Native'
   };
-  restype.values = {struct('optimal', [1.0 0.3]) ...
+  restype.values = {struct('optimal', cat_get_defaults('extopts.resval')) ...
                     struct('fixed',   [1.0 0.1]) ...
                     struct('fixed',   [0.8 0.1]) ...
                     struct('native',  [])};
-  restype.val    = {struct('optimal', [1.0 0.3])};
+  restype.val    = {struct(cat_get_defaults('extopts.restype'), cat_get_defaults('extopts.resval'))};
+  
+  % add default value to selection if not yet included
+  found = 0;
+  for i=1:numel(restype.values)
+    if isfield(restype.values{i},cat_get_defaults('extopts.restype'))
+      if restype.values{i}.(cat_get_defaults('extopts.restype')) == cat_get_defaults('extopts.resval')
+        found = 1;
+      end
+    end
+  end  
+  if ~found, restype.values{end+1} = restype.val{1}; end
+  
   restype.help   = {
     'The default "optimal" image resolution offers a good trade-off between optimal quality and preprocessing time and memory demands. This interpolation prefers an isotropic voxel size controlled by the median voxel size and a volume term that penalizes highly anisotropic voxels. Standard structural data with a voxel resolution around 1 mm or even data with high in-plane resolution and large slice thickness (e.g. 0.5x0.5x1.5 mm) will benefit from this setting. If you have higher native resolutions the highres option "Fixed 0.8 mm" will sometimes offer slightly better preprocessing quality with an increase of preprocessing time and memory demands. In case of even higher resolutions and high signal-to-noise ratio (e.g. for 7 T data) the "native" option will process the data on the original native resolution.  '
     ''
