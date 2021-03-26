@@ -799,19 +799,39 @@ end
               hSD = cat_surf_display(struct('data',Psurf(id1).Pthick,'readsurf',0,'expert',2,...
                 'multisurf',1,'view','s','menu',0,...
                 'parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
+
+
+              % rigid reorientation + isotropic scaling
+              imat = spm_imatrix(res.Affine); Rigid = spm_matrix([imat(1:6) ones(1,3)*mean(imat(7:9)) 0 0 0]); clear imat;
+              for ppi = 1:numel(hSD{1}.patch)
+                V = (Rigid * ([hSD{1}.patch(ppi).Vertices, ones(size(hSD{1}.patch(ppi).Vertices,1),1)])' )'; 
+                V(:,4) = []; hSD{1}.patch(ppi).Vertices = V;
+              end
+
+              % remove old colormap and add own 
+              colormap(fg,cmap);  set(hSD{1}.colourbar,'visible','off');
             else
-              fprintf('Surface display suppressed due to OpenGL issues.\n');
+              %%
+              for i = 1:numel(Psurf)
+                if i == 1 
+                  id1 = find( ~cellfun('isempty',strfind({Psurf(:).Pcentral},'lh.')) ,1, 'first'); 
+                  CS = gifti( Psurf(id1).Pcentral ); 
+                  T  = cat_io_FreeSurfer('read_surf_data',Psurf(id1).Pthick ); 
+                  CS.cdata = T;
+                else 
+                  id1 = find( ~cellfun('isempty',strfind({Psurf(:).Pcentral},'rh.')) ,1, 'first'); 
+                  S  = gifti( Psurf(id1).Pcentral ); 
+                  T  = cat_io_FreeSurfer('read_surf_data',Psurf(id1).Pthick ); 
+                  CS.faces    = [ CS.faces; S.faces + size(CS.vertices,1) ]; 
+                  CS.vertices = [ CS.vertices; S.vertices ];
+                  CS.cdata    = [ CS.cdata; T ];
+                  clear S; 
+                end
+              end
+              CS = export(CS,'patch');
+              hSD{i} = cat_surf_renderv(CS,[],struct('rot','t','interp',1,'h',hCS));
             end
             
-            % rigid reorientation + isotropic scaling
-            imat = spm_imatrix(res.Affine); Rigid = spm_matrix([imat(1:6) ones(1,3)*mean(imat(7:9)) 0 0 0]); clear imat;
-            for ppi = 1:numel(hSD{1}.patch)
-              V = (Rigid * ([hSD{1}.patch(ppi).Vertices, ones(size(hSD{1}.patch(ppi).Vertices,1),1)])' )'; 
-              V(:,4) = []; hSD{1}.patch(ppi).Vertices = V;
-            end
-            
-            % remove old colormap and add own 
-            colormap(fg,cmap);  set(hSD{1}.colourbar,'visible','off');
             if any( job.output.surface == [5 6] ); fst = ' \color[rgb]{1 0 0}preview!'; else, fst = ''; end
             if ~sidehist
               cc{4} = axes('Position',[0.58 0.022 0.3 0.007],'Parent',fg); image((121:1:120+surfcolors),'Parent',cc{4});
@@ -859,30 +879,104 @@ end
           renderer = get(fg,'Renderer');
  
           % only add contours if OpenGL is found (to prevent crashing on clusters)
-          i=1; hSD{i} = cat_surf_display(struct('data',PCS{i},'readsurf',0,'expert',2,...
-            'multisurf',1,'view',sview{i},'menu',0,'parent',hCS{i},'verb',0,'caxis',[0 6],'imgprint',struct('do',0))); 
-          if strcmpi(renderer,'opengl')
+          if 0 %strcmpi(renderer,'opengl')
+            i=1; hSD{i} = cat_surf_display(struct('data',PCS{i},'readsurf',0,'expert',2,...
+              'multisurf',1,'view',sview{i},'menu',0,'parent',hCS{i},'verb',0,'caxis',[0 6],'imgprint',struct('do',0))); 
+          
             for i = 2:numel(hCS)
               hSD{i} = cat_surf_display(struct('data',PCS{i},'readsurf',0,'expert',2,...
                 'multisurf',0,'view',sview{i},'menu',0,'parent',hCS{i},'verb',0,'caxis',[0 6],'imgprint',struct('do',0))); 
             end
+            
+            % rigid reorientation + isotropic scaling
+            imat = spm_imatrix(res.Affine); Rigid = spm_matrix([imat(1:6) ones(1,3)*mean(imat(7:9)) 0 0 0]); clear imat;
+            for i = 1:numel(hSD)
+              for ppi = 1:numel(hSD{i}{1}.patch)
+                V = (Rigid * ([hSD{i}{1}.patch(ppi).Vertices, ones(size(hSD{i}{1}.patch(ppi).Vertices,1),1)])' )'; 
+                V(:,4) = []; hSD{i}{1}.patch(ppi).Vertices = V;
+              end
+            end
+            for i = 1:numel(hSD), colormap(fg,cmap);  set(hSD{i}{1}.colourbar,'visible','off'); end
+
           else
-            fprintf('Surface display suppressed due to OpenGL issues.\n');
+            try 
+              if 1
+                % just the first draft
+                for i = 1:numel(Psurf)
+                  if i == 1 
+                    id1 = find( ~cellfun('isempty',strfind({Psurf(:).Pcentral},'lh.')) ,1, 'first'); 
+                    CS = gifti( Psurf(id1).Pcentral ); 
+                    T  = cat_io_FreeSurfer('read_surf_data',Psurf(id1).Pthick ); 
+                    CS.cdata = T;
+                    CSl = CS; 
+                  else 
+                    id1 = find( ~cellfun('isempty',strfind({Psurf(:).Pcentral},'rh.')) ,1, 'first'); 
+                    S  = gifti( Psurf(id1).Pcentral ); 
+                    T  = cat_io_FreeSurfer('read_surf_data',Psurf(id1).Pthick ); 
+                    CS.faces    = [ CS.faces; S.faces + size(CS.vertices,1) ]; 
+                    CS.vertices = [ CS.vertices; S.vertices ];
+                    CS.cdata    = [ CS.cdata; T ];
+                    CSr = S; CSr.cdata = T; 
+                    clear S; 
+                  end
+                end
+                CS  = export(CS,'patch');
+                CSl = export(CSl,'patch');
+                CSr = export(CSr,'patch');
+              else
+                % ###### this is not working yet #######
+                % the idea is to refine the surface to quaranty a minimum 
+                % resolution but the thickness data mapping is not working
+                % yet ...
+                side = {'lh.','rh.'}; 
+                for si=1:2
+                  id1 = find( ~cellfun('isempty',strfind({Psurf(:).Pcentral},side{si})) ,1, 'first'); 
+                  % quaranty 1 mm mesh resolution
+                  Pcentral = sprintf('%s.gii',tempname);    
+                  CSo = gifti(Psurf(id1).Pcentral);
+                  cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 0',Psurf(id1).Pcentral,Pcentral,1);
+                  [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+                  CSx = gifti(Pcentral);
+                  CSx = export(CSx,'patch');
+                  delete(Pcentral); 
+                  T   = cat_io_FreeSurfer('read_surf_data',Psurf(id1).Pthick ); 
+                  CSx.cdata = cat_surf_fun('cdatamapping',CSx,CSo,T,struct('scale',1));
+                  if si==1, CSl = CSx; else, CSr = CSx; end 
+                end
+                CS.faces    = [ CSl.faces;    CSr.faces + size(CSl.vertices,1) ]; 
+                CS.vertices = [ CSl.vertices; CSr.vertices ];
+                CS.cdata    = [ CSl.cdata;	  CSr.cdata ];
+              end
+              
+              %%
+              imat = spm_imatrix(res.Affine); Rigid = spm_matrix([imat(1:6) ones(1,3)*mean(imat(7:9)) 0 0 0]); clear imat;
+              V = (Rigid * ([CS.vertices, ones(size(CS.vertices,1),1)])' )'; V(:,4) = []; CS.vertices = V;
+              V = (Rigid * ([CSl.vertices, ones(size(CSl.vertices,1),1)])' )'; V(:,4) = []; CSl.vertices = V;
+              V = (Rigid * ([CSr.vertices, ones(size(CSr.vertices,1),1)])' )'; V(:,4) = []; CSr.vertices = V;
+
+              colormap(fg,cmap); 
+% The interpolation value controls quality and speed, the normal report + 
+% surface-rendering takes about 70s, whereas this renderer takes 60 to 160s.  
+% round(interp) controls the main mesh interpolation level with equal
+% Subdivision of one face by 4 faces, but the value set also the sampling
+% size of the rendering images and a value of 1.4 means 1.4 more pixel in 
+% each dimension. Values of 1.0 - 1.4 are quite fast (but not fine enough 
+% for standard zoom-in) and 2.4 (120s) suits better.   
+interp = 2.45; 
+              hSD{1}{1} = cat_surf_renderv(CS ,[],struct('view',sview{1},'mat',spm_imatrix(res.Affine),'h',hCS{1},'interp',interp)); 
+              cat_surf_renderv(CSl,[],struct('view',sview{2},'mat',spm_imatrix(res.Affine),'h',hCS{2},'interp',interp*0.9));
+              cat_surf_renderv(CSr,[],struct('view',sview{3},'mat',spm_imatrix(res.Affine),'h',hCS{3},'interp',interp*0.9));
+              cat_surf_renderv(CSl,[],struct('view',sview{4},'mat',spm_imatrix(res.Affine),'h',hCS{4},'interp',interp*0.9));
+              cat_surf_renderv(CSr,[],struct('view',sview{5},'mat',spm_imatrix(res.Affine),'h',hCS{5},'interp',interp*0.9));
+
+            catch
+              cat_io_cprintf('err','Error in non OpenGL surface rendering.\n');
 % print message box
-          end
-          %  try,     for i=1:numel(hCS), cat_surf_render2('clim',hCS{i}.axis,[0 6]); end ; end
-          
-          % rigid reorientation + isotropic scaling
-          imat = spm_imatrix(res.Affine); Rigid = spm_matrix([imat(1:6) ones(1,3)*mean(imat(7:9)) 0 0 0]); clear imat;
-          for i = 1:numel(hSD)
-            for ppi = 1:numel(hSD{i}{1}.patch)
-              V = (Rigid * ([hSD{i}{1}.patch(ppi).Vertices, ones(size(hSD{i}{1}.patch(ppi).Vertices,1),1)])' )'; 
-              V(:,4) = []; hSD{i}{1}.patch(ppi).Vertices = V;
             end
           end
-          for i = 1:numel(hSD), colormap(fg,cmap);  set(hSD{i}{1}.colourbar,'visible','off'); end
-
-          % To do: filter thickness values on the surface ...
+          
+          
+          %% To do: filter thickness values on the surface ...
 
           % colormap
           side  = hSD{1}{1}.cdata; 
