@@ -747,7 +747,6 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
           end
         end
         clear Ycbhd Ycbpp
-        %%
 
 
         %%
@@ -863,6 +862,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
         cat_io_cprintf('g5',' )');
         fprintf(repmat(' ',1,max(0,14 - numel(sprintf('%d/%d/%0.2f%%%% )',EC0,defect_number0,defect_size0))))); 
       end
+      
 
       % translate to mm coordinates
       CS = cat_surf_fun('smat',CS,Smat.matlabIBB_mm);   
@@ -894,6 +894,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
         CS = correctReducePatch(CS);
       end
       
+      
       % remove unconnected meshes
       saveSurf(CS,Praw);
       cmd = sprintf('CAT_SeparatePolygon "%s" "%s" -1',Praw,Praw); 
@@ -915,12 +916,6 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
       cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Praw,Praw,3 / ( 1 + (opt.fast==1)) ); % only deformation for fast pipeline
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
 
-      if 0
-facevertexcdata = cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm); 
-fprintf('\nRAW: V=%d, MN(CT)=%0.20f, SD(CT)=%0.20f\n',size(CS.vertices,1),mean(facevertexcdata(:)),std(facevertexcdata(:)));    
-res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
-      end
-
       % Create a smooth surface for the topology correction. 
       % It don't has to be perfect because it will replaced completely!
       cmds = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none  0  1  -1  .1 ' ...   
@@ -931,37 +926,35 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
       % load surf and map thickness
       CS = loadSurf(Praw);
       facevertexcdata = cat_surf_fun('isocolors',Yth1i,CS,Smat.matlabIBB_mm); 
-      %res.(opt.surf{si}).createCS_init = cat_surf_fun('evalCS',CSE,cat_surf_fun('isocolors',CSE,Yth1i,Smat.matlabIBB_mm),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,1);
-      %%
-%fprintf('IS: V=%d, MN(CT)=%0.20f, SD(CT)=%0.20f\n',size(CS.vertices,1),mean(facevertexcdata(:)),std(facevertexcdata(:)));    
-%res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
-
-
+      
 
       if opt.fast
-      %% Fast processing without topology correction and spherical registration
+      %  Fast processing without topology correction and spherical registration
       %  --------------------------------------------------------------------
       %  The one and only fast option that is equal to the init surface but 
       %  with collision correction. For fast surface and thickness outputs 
       %  for visual analysis. 
       %  --------------------------------------------------------------------
         if exist('Ywdt','var')
-          [res,EC,S,stime] = fastCSexport(Ymfs,Yppi,Yth1i,Ywdt,Ycdt,Vpp1,Vpp, EC, S,CS,facevertexcdata, opt,res,Smat, si, Ppbt,Pcentral,Pthick,Pgwwg,Psw, debug, stime);
+          [res,EC,S,stime] = fastCSexport(Ymfs,Yppi,Yth1i,Ywdt,Ycdt,Vpp1,Vpp, EC, S,CS,facevertexcdata, iscerebellum,opt,res,Smat, si, Ppbt,Pcentral,Pthick,Pgwwg,Psw, debug, stime);
         else
-          [res,EC,S,stime] = fastCSexport(Ymfs,Yppi,Yth1i,[]  ,[]  ,Vpp1,Vpp, EC, S,CS,facevertexcdata, opt,res,Smat, si, Ppbt,Pcentral,Pthick,Pgwwg,Psw, debug, stime);
+          [res,EC,S,stime] = fastCSexport(Ymfs,Yppi,Yth1i,[]  ,[]  ,Vpp1,Vpp, EC, S,CS,facevertexcdata, iscerebellum,opt,res,Smat, si, Ppbt,Pcentral,Pthick,Pgwwg,Psw, debug, stime);
         end
         continue
       end
+      
+      
       % evaluate and save results
       if isempty(stime), stime = clock; end
       fprintf('%5.0fs',etime(clock,stime)); stime = []; 
-      if 0 %opt.surf_measures > 4 % just a substep
+      res.(opt.surf{si}).createCS_init = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,debug);
+      if debug 
+        % save surface for further evaluation 
         cat_surf_fun('saveico',CS,cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm),Pcentral,sprintf('createCS_1_init_pbtres%0.2fmm_vdist%0.2fmm',opt.interpV,opt.vdist),Ymfs,Smat.matlabIBB_mm); 
       else
         fprintf('\n'); 
       end
-      res.(opt.surf{si}).createCS_init = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
-
+      
 
 
 
@@ -1081,7 +1074,7 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
     % surface defomation for relaxation after reduction and refinement
     cmds = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none  0  1  -1  .1 ' ...           
                     'avg  -0.1  0.1 .2  .1  5  0 "0.5"  "0.5"  n 0  0  0 %d  %g  0.0 0'], ...    
-                     Vpp1.fname,Pcentral,Pcentral,50,0.01);
+                     Vpp1.fname,Pcentral,Pcentral,100,0.01);
     [ST, RS] = cat_system(cmds); cat_check_system_output(ST,RS,opt.verb-3);
     % read final surface and map thickness data
     CS = loadSurf(Pcentral);
@@ -1116,7 +1109,7 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
     % final surface refinement
     cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
                    'avg -0.1 0.1 .5 .1 %d 0 "0.5" "0.5" n 0 0 0 %d %0.2f 0.0 0'], ...
-                   Vpp1.fname,Pcentral,Pcentral,5,100,0.01); 
+                   Vpp1.fname,Pcentral,Pcentral,5,200,0.005); 
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
 
     % read final surface and map thickness data
@@ -1264,90 +1257,14 @@ end
         Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
     end
-    
-    % display some evaluation 
-    if 0 % opt.verb>2 && ~useprior
-      fprintf('%5.0fs\n',etime(clock,stime)); 
-      fprintf('    Euler number / defect number / defect size: ');
-      cat_io_cprintf( color( rate(  EC0 - 2        , 0 , 100 * (1+4*iscerebellum)) ) , sprintf('%0.0f / '   , EC0 ) );
-      cat_io_cprintf( color( rate(  defect_number0 , 0 , 100 * (1+4*iscerebellum)) ) , sprintf('%0.0f / '   , defect_number0 ) );
-      cat_io_cprintf( color( rate(  defect_size0   , 0 ,  10 * (1+4*iscerebellum)) ) , sprintf('%0.2f%%%% ' , defect_size0 ) );
-      fprintf('\n');
-    else
-      fprintf('%5.0fs\n',etime(clock,stime)); 
-    end
-    
-    % evaluate and save results
-    if opt.surf_measures > 4 
-    % This part is not highly relevant for the individual surface reconstruction 
-    % but it can help to test and optimize the spatial registration. 
-      
-      % filenames for resmapling
-      Presamp   = fullfile(pp,surffolder,sprintf('%s.tmp.resampled.%s'    ,opt.surf{si},ff));  
-      Ppbtr     = fullfile(pp,surffolder,sprintf('%s.pbt.resampled.%s'    ,opt.surf{si},ff));  
-      Ppbtr_gii = [Ppbtr '.gii'];
-      
-      % resample values using warped sphere 
-      cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavgsph,Presamp,Ppbt,Ppbtr);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
-      
-      if 0 
-        % resample surface using warped sphere with better surface quality (using Spherical harmonics)
-        % ###
-        % deactivated because the resampling of the surface alone leads to displacements of the textures (RD20190927)!
-        % ###
-        cmd = sprintf('CAT_ResampleSphericalSurfSPH -n 327680 "%s" "%s" "%s"',Pcentral,Pspherereg,Presamp);
-        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
+    fprintf('%5.0fs\n',etime(clock,stime)); 
 
-        % resample surface according to freesurfer sphere
-        cmd = sprintf('CAT_ResampleSurf "%s" NULL "%s" "%s"',Presamp,Pfsavgsph,Presamp);
-        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3); 
-      end
-      
-      % add values to resampled surf and save as gifti
-      cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Presamp,Ppbtr,Ppbtr_gii); 
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3); 
-      if exist(Ppbtr,'file'), delete(Ppbtr); end
-
-      %% remove path from metadata to allow that files can be moved (pathname is fixed in metadata) 
-      [pp2,ff2,ex2] = spm_fileparts(Ppbtr_gii); 
-      g = gifti(Ppbtr_gii);
-      g.private.metadata = struct('name','SurfaceID','value',[ff2 ex2]);
-      save(g, Ppbtr_gii, 'Base64Binary');
-      
-      %% intensity based evaluation
-      if 0
-        CSr = loadSurf(Ppbtr_gii); 
-        CSr = struct('vertices',CSr.vertices,'faces',CSr.faces,'cdata',CSr.cdata);
-        cat_surf_fun('saveico',CSr,CSr.cdata,Pcentralr,sprintf('createCS_4_resampled_pbtres%0.2fmm_vdist%0.2fmm',opt.interpV,opt.vdist),Ymfs,Smat.matlabIBB_mm); 
-        res.(opt.surf{si}).createCS_resampled = cat_surf_fun('evalCS',CSr,CSr.cdata,Ymfs,Yppi,Pcentralr,Smat.matlabIBB_mm);
-        clear CSr
-      end
-    end
-    res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',loadSurf(Pcentral),cat_io_FreeSurfer('read_surf_data',Pthick),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,debug,cat_get_defaults('extopts.expertgui')>1);
     
     
-    %% average final values
-    FNres = fieldnames( res.(opt.surf{si}).createCS_final );
-    for fnr = 1:numel(FNres)
-      if ~isfield(res,'final') || ~isfield(res.final,FNres{fnr})
-        res.final.(FNres{fnr}) = res.(opt.surf{si}).createCS_final.(FNres{fnr}) / numel(opt.surf);
-      else
-        res.final.(FNres{fnr}) = res.final.(FNres{fnr}) + res.(opt.surf{si}).createCS_final.(FNres{fnr}) / numel(opt.surf);
-      end
-    end
-    if isfield(res.(opt.surf{si}),'createCS_resampled') 
-      FNres = fieldnames( res.(opt.surf{si}).createCS_resampled );
-      for fnr = 1:numel(FNres)
-        if isfield(res.(opt.surf{si}),'createCS_resampled') 
-          if ~isfield(res,'createCS_resampled') || ~isfield(res.createCS_resampled,FNres{fnr}) 
-            res.resampled.(FNres{fnr}) = res.(opt.surf{si}).createCS_resampled.(FNres{fnr}) / numel(opt.surf);
-          else
-            res.resampled.(FNres{fnr}) = res.resampled.(FNres{fnr}) + res.(opt.surf{si}).createCS_resampled.(FNres{fnr}) / numel(opt.surf);
-          end
-        end
-      end
-    end
+    if debug
+    % Evaluation of a white/pial surface created with the normalized mesh  
+      create_resampled_white_pial_surfaces(opt,Pcentral,Pspherereg,Pfsavgsph,Ppbt);
+    end  
     
     
     % create white and central surfaces
@@ -1385,6 +1302,31 @@ end
     end
     
     
+    % final surface evaluation 
+    res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',loadSurf(Pcentral),cat_io_FreeSurfer('read_surf_data',Pthick),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,debug,cat_get_defaults('extopts.expertgui')>1);
+    
+    
+    % average final values
+    FNres = fieldnames( res.(opt.surf{si}).createCS_final );
+    for fnr = 1:numel(FNres)
+      if ~isfield(res,'final') || ~isfield(res.final,FNres{fnr})
+        res.final.(FNres{fnr}) = res.(opt.surf{si}).createCS_final.(FNres{fnr}) / numel(opt.surf);
+      else
+        res.final.(FNres{fnr}) = res.final.(FNres{fnr}) + res.(opt.surf{si}).createCS_final.(FNres{fnr}) / numel(opt.surf);
+      end
+    end
+    if isfield(res.(opt.surf{si}),'createCS_resampled') 
+      FNres = fieldnames( res.(opt.surf{si}).createCS_resampled );
+      for fnr = 1:numel(FNres)
+        if isfield(res.(opt.surf{si}),'createCS_resampled') 
+          if ~isfield(res,'createCS_resampled') || ~isfield(res.createCS_resampled,FNres{fnr}) 
+            res.resampled.(FNres{fnr}) = res.(opt.surf{si}).createCS_resampled.(FNres{fnr}) / numel(opt.surf);
+          else
+            res.resampled.(FNres{fnr}) = res.resampled.(FNres{fnr}) + res.(opt.surf{si}).createCS_resampled.(FNres{fnr}) / numel(opt.surf);
+          end
+        end
+      end
+    end
     
     
     %% WM and CSF thickness
@@ -1434,9 +1376,8 @@ end
 
     % processing time per side for manual tests
     if si == numel(opt.surf) && si == 1
-      fprintf('\n');
       cat_io_cmd('  ','g5','',opt.verb);
-      fprintf('%5ds',round(etime(clock,cstime)));
+      fprintf('%5ds\n',round(etime(clock,cstime)));
     end
   end  
   
@@ -1736,7 +1677,7 @@ function [cdata,i] = correctWMdepth(CS,cdata,iter,lengthfactor)
   end
   
 end
-function [res,EC,S,stime] = fastCSexport(Ymfs,Yppi,Yth1i,Ywdt,Ycdt,Vpp1,Vpp, EC, S,CS,facevertexcdata,opt,res,Smat, si, Ppbt,Pcentral,Pthick,Pgwwg,Psw, debug, stime)
+function [res,EC,S,stime] = fastCSexport(Ymfs,Yppi,Yth1i,Ywdt,Ycdt,Vpp1,Vpp, EC, S,CS,facevertexcdata,iscerebellum,opt,res,Smat, si, Ppbt,Pcentral,Pthick,Pgwwg,Psw, debug, stime)
 %% Fast processing without topology correction and spherical registration
 %  --------------------------------------------------------------------
 %  The one and only fast option that is equal to the init surface but 
@@ -1823,7 +1764,7 @@ function [res,EC,S,stime] = fastCSexport(Ymfs,Yppi,Yth1i,Ywdt,Ycdt,Vpp1,Vpp, EC,
 
   
   % estimate FreeSurfer thickness measure Tfs using mean(Tnear1,Tnear2)
-  if opt.thick_measure == 1
+  if opt.thick_measure == 1 && ~iscerebellum % RD202103: there is some problem in the cerebellum and it takes for ever
     stime = cat_io_cmd('  Tfs thickness estimation:','g5','',opt.verb,stime);
     cmd = sprintf('CAT_SurfDistance -mean -thickness "%s" "%s" "%s"',Ppbt,Pcentral,Pthick);
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
@@ -1836,7 +1777,7 @@ function [res,EC,S,stime] = fastCSexport(Ymfs,Yppi,Yth1i,Ywdt,Ycdt,Vpp1,Vpp, EC,
     copyfile(Ppbt,Pthick,'f');
   end
   res.(opt.surf{si}).createCS_final      = cat_surf_fun('evalCS',CS,facevertexcdata,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
-  fprintf('%5.0fs\n',etime(clock,stime)); 
+  if ~isempty(stime), fprintf('%5.0fs\n',etime(clock,stime)); end
 end
 %==========================================================================
 function Ymf = hippocampus_amygdala_cleanup(Ymf,Ya,vx_vol,doit)
@@ -1986,6 +1927,56 @@ function Ymf = sharpen_cerebellum(Ym,Ymf,Ytemplate,Ya,vx_vol,verb,doit)
     
     if verb>2, fprintf('%5.0fs\n',etime(clock,stime)); end
   end
+end
+function create_resampled_white_pial_surfaces(opt,Pcentral,Pspherereg,Pfsavgsph,Ppbt)
+
+% evaluate and save results
+  
+% This part is not highly relevant for the individual surface reconstruction 
+% but it can help to test and optimize the spatial registration. 
+
+  % filenames for resmapling
+  Presamp   = fullfile(pp,surffolder,sprintf('%s.tmp.resampled.%s'    ,opt.surf{si},ff));  
+  Ppbtr     = fullfile(pp,surffolder,sprintf('%s.pbt.resampled.%s'    ,opt.surf{si},ff));  
+  Ppbtr_gii = [Ppbtr '.gii'];
+
+  % resample values using warped sphere 
+  cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavgsph,Presamp,Ppbt,Ppbtr);
+  [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
+
+  if 0 
+    % resample surface using warped sphere with better surface quality (using Spherical harmonics)
+    % ###
+    % deactivated because the resampling of the surface alone leads to displacements of the textures (RD20190927)!
+    % ###
+    cmd = sprintf('CAT_ResampleSphericalSurfSPH -n 327680 "%s" "%s" "%s"',Pcentral,Pspherereg,Presamp);
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
+
+    % resample surface according to freesurfer sphere
+    cmd = sprintf('CAT_ResampleSurf "%s" NULL "%s" "%s"',Presamp,Pfsavgsph,Presamp);
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3); 
+  end
+
+  % add values to resampled surf and save as gifti
+  cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Presamp,Ppbtr,Ppbtr_gii); 
+  [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3); 
+  if exist(Ppbtr,'file'), delete(Ppbtr); end
+
+  %% remove path from metadata to allow that files can be moved (pathname is fixed in metadata) 
+  [pp2,ff2,ex2] = spm_fileparts(Ppbtr_gii); 
+  g = gifti(Ppbtr_gii);
+  g.private.metadata = struct('name','SurfaceID','value',[ff2 ex2]);
+  save(g, Ppbtr_gii, 'Base64Binary');
+
+  %% intensity based evaluation
+  if 0
+    CSr = loadSurf(Ppbtr_gii); 
+    CSr = struct('vertices',CSr.vertices,'faces',CSr.faces,'cdata',CSr.cdata);
+    cat_surf_fun('saveico',CSr,CSr.cdata,Pcentralr,sprintf('createCS_4_resampled_pbtres%0.2fmm_vdist%0.2fmm',opt.interpV,opt.vdist),Ymfs,Smat.matlabIBB_mm); 
+    res.(opt.surf{si}).createCS_resampled = cat_surf_fun('evalCS',CSr,CSr.cdata,Ymfs,Yppi,Pcentralr,Smat.matlabIBB_mm);
+    clear CSr
+  end
+
 end
 %==========================================================================
 function cdata = estimateWMdepthgradient(CS,cdata)

@@ -99,8 +99,13 @@ function varargout = cat_surf_fun(action,S,varargin)
     case 'area'
        % simple area estimation of S 
        if nargin<2, help cat_surf_fun>cat_surf_area; return; end
-       varargout{1} = cat_surf_area(S);
-    
+       switch nargout
+         case 1
+           varargout{1} = cat_surf_area(S);
+         case 2
+           [varargout{1},varargout{2}] = cat_surf_area(S);
+       end
+           
     case {'smoothcdata','smoothtexture'}
       % use CAT smoothing rather than spm_mesh_smooth 
       % differences? 
@@ -148,6 +153,7 @@ function varargout = cat_surf_fun(action,S,varargin)
     case 'meshinterp'
       %S=cat_surf_meshinterp(S,interp,method,distth)  
       varargout{1} = cat_surf_meshinterp(S,varargin{:});  
+      
     case {'inner','outer','white','pial','innervar','outervar','whitevar','pialvar'}
     % create different cortical surfaces
       if nargin<2, help cat_surf_fun>cat_surf_GMboundarySurface; return; end
@@ -3035,10 +3041,15 @@ function S=cat_surf_meshinterp(S,interp,method,distth)
         F4 = [nV + NF, nV + 2*nF + NF, nV +   nF + NF];
 
         % colors
-        if     CT==2, C=[C;nanmean(C(F(:,1),:),C(F(:,2),:));nanmean(C(F(:,2),:),C(F(:,3),:));nanmean(C(F(:,3),:),C(F(:,1),:))]; %#ok<AGROW>
-        elseif CT==1, C=repmat(C,4,1);
+        if CT==2, 
+          C = [C; 
+                cat_stat_nanmean([C(F(:,1),:),C(F(:,2),:)],2);
+                cat_stat_nanmean([C(F(:,2),:),C(F(:,3),:)],2);
+                cat_stat_nanmean([C(F(:,3),:),C(F(:,1),:)],2)]; 
+        else %if CT==1,
+          C = repmat(C,6,1);
         end
-        
+           
         V = [V;V1;V2;V3];  clear V1 V2 V3;    %#ok<AGROW>
         F = [F1;F2;F3;F4]; clear F1 F2 F3 F4; 
 
@@ -3091,16 +3102,17 @@ end
 
 function [V,F,C]=reduce_points(V,F,C)
   try
-    [V,~,j]  = unique(V, 'rows'); 
+    [V,i,j]  = unique(V, 'rows'); 
   catch %#ok<CTCH>
     V=single(V);
-    [V,~,j]  = unique(V, 'rows'); 
+    [V,i,j]  = unique(V, 'rows'); 
   end
+  if exist('C','var'), C=C(i); end    
   j(end+1) = nan;
   F(isnan(F)) = length(j);
-  if size(F,1)==1, F = j(F)'; if exist('C','var'), C=j(C)'; end    
-  else             F = j(F);  if exist('C','var'), C=j(C);  end    
-  end
+  if size(F,1)==1, F = j(F)'; 
+  else             F = j(F);
+  end 
 end
 
 function cdata2 = cat_surf_surf2vol2surf(S,S2,cdata,res)
