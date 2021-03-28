@@ -36,7 +36,7 @@ function varargout = cat_io_data2mat(opt)
 % cat_io_data2mat(struct('data',files,'fname','Data.mat','outdir','test'));
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: cat_io_data2mat.m 4 2018-10-17 08:57:46Z gaser $
+% $Id$
 
 if ~exist('opt','var') || (~isfield(opt,'data_type') && ~isfield(opt,'data') )
   error('No data defined.');
