@@ -1041,7 +1041,7 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
       facevertexcdata3 = max(eps,facevertexcdata3 - facevertexcdata/2); 
       cat_io_FreeSurfer('write_surf_data',Psw,facevertexcdata3);
     end
-    fprintf('%5.0fs\n',etime(clock,stime)); 
+    if ~useprior, fprintf('%5.0fs\n',etime(clock,stime)); end
     
     if 0 %opt.verb>1 && ~useprior
       cat_io_cprintf( 'g5', sprintf('    Euler number / defect number / defect size: '));

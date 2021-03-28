@@ -11,7 +11,7 @@ function cat_plot_cov(data,opt)
 %
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: cat_plot_cov.m 1703 2020-08-26 15:59:33Z gaser $
+% $Id$
 
 % sample size
 [m,n] = size(data);
