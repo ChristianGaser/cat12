@@ -271,13 +271,13 @@ USAGE:
   -l        | --large          use longitudinal model for detecting large changes (e.g. ageing or development)
   -nj       | --nojvm          supress call of jvm using the -nojvm flag
 
-  Only one batch filename is allowed. Optionally you can set the matlab command 
-  with the "-m" option. As default no display is used (via the -nodisplay option 
-  in matlab). However sometimes the batch file needs a graphical output and the 
-  display should be enabled with the option "-d".
+  Processing is omly supported for one subject.
+  Optionally you can set the matlab command with the "-m" option. As default no display
+  is used (via the -nodisplay option in matlab). However sometimes the batch file needs
+  a graphical output and the display should be enabled with the option "-d".
 
 PURPOSE:
-  Command line call of SPM12 batch files
+  Command line call of longitudinal segmentation pipeline
 
 EXAMPLE
   cat_batch_long.sh all_files*.nii -m /Volumes/UltraMax/MATLAB_R2010b.app/bin/matlab

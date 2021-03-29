@@ -77,7 +77,7 @@ try
   spm_jobman('run',matlabbatch);
 catch %#ok<CTCH> % catch with lasterror is necessary for old matlab versions
   caterr = lasterror;  %#ok<LERR>
-  sprintf('\n%s\nCAT Preprocessing error: %s:\n%s\n', repmat('-',1,72),caterr.identifier,caterr.message,repmat('-',1,72));
+  fprintf('\n%s\nCAT Preprocessing error: %s:\n%s\n', repmat('-',1,72),caterr.identifier,caterr.message,repmat('-',1,72));
   for si=1:numel(caterr.stack), cat_io_cprintf('err',sprintf('%5d - %s\n',caterr.stack(si).line,caterr.stack(si).name)); end;
   cat_io_cprintf('err',sprintf('%s\\n',repmat('-',1,72)));  
   error('Batch failed.');
