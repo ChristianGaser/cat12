@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1788 | gaser | 2021-03-28 16:41:31
+r1789 | gaser | 2021-03-29 11:31:40
+
+Changed paths:
+M       CHANGES.txt
+M       cat_batch_long.m
+M       cat_batch_long.sh
+M       cat_conf_extopts.m
+
+(1) Changed: Updated help text.
+(2) Fixed:   Corrected typo in cat_batch_long.m that pevented to show error 
+             messages.
+
+------------------------------------------------------------------------
+r1788 | gaser | 2021-03-28 16:42:17 +0200 (So, 28 Mär 2021) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +26,7 @@ M       html/cat.html
 
 (1) Fixed:   Added check for useprior to etime command in cat_surf_createCS.m.
 (2) Fixed:   Replace old Template surface name in cat_surf_info.m.
+
 
 ------------------------------------------------------------------------
 r1787 | dahnke | 2021-03-26 12:41:28 +0100 (Fr, 26 Mär 2021) | 13 lines
