@@ -1298,6 +1298,9 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
     save(gifti(struct('faces',CS.faces,'vertices',VI)),Pwhite,'Base64Binary');
     save(gifti(struct('faces',CS.faces,'vertices',VO)),Ppial,'Base64Binary');
 
+    %cmd = sprintf('CAT_SurfDistance -mean "%s" "%s" "%s"',Pwhite,Ppial,Pthick);
+    %[ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS);
+    
     % write self intersection maps
     cmd = sprintf('CAT_SelfIntersect "%s" "%s"',Pwhite,Pselfw); 
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
@@ -1363,7 +1366,7 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
       
     res.thickness_mn_sd_md_mx = [mean(T),std(T),median(T),max(T)];
     if verb
-      fprintf('    Thickness values:                    %0.4f%s%0.4f (md=%0.4f,mx=%0.4f)\n',...
+      fprintf('    Surface thickness values:            %0.4f%s%0.4f (md=%0.4f,mx=%0.4f)\n',...
         res.thickness_mn_sd_md_mx(1),native2unicode(177, 'latin1'),res.thickness_mn_sd_md_mx(2:end)); 
     end
   end
@@ -1665,11 +1668,12 @@ function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt)
   def.accuracy = 0.0625; % smallest used stepsize (the value should not be to small because there
                          % should also be a gab between the structures and a reasonable running time) 
   %def.interpBB = struct('BB',[],'interpV',1);
+  def.ta       = 0.99; 
   def.mat      = []; 
   opt          = cat_io_checkinopt(opt,def); 
   opt.iterfull = find( 1 ./ opt.redterm.^(1:100)  < opt.accuracy , 1); % + 2 maximum number of iterations
   
-  sf           = round( sqrt( size(S.faces,1) / 50000) ) / 2;  % smoothing iterations depend on mesh size ### empirical value 
+  sf           = round( sqrt( size(S.faces,1) / 50000) ) / 2 * 0.25;  % smoothing iterations depend on mesh size ### empirical value 
   M            = spm_mesh_smooth(S);                           % for spm_smoothing matrix
 
   % filenames
@@ -1692,7 +1696,17 @@ function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt)
     spm_mesh_smooth(M,double(V(:,1)),s) , ...
     spm_mesh_smooth(M,double(V(:,2)),s) , ...
     spm_mesh_smooth(M,double(V(:,3)),s) ];
-  
+   
+  if opt.ta
+    %% do not correct in regions with extremly high thickness 
+    A   = cat_surf_fun('area',S); 
+    TA  = T ./ A; 
+    TAs = spm_mesh_smooth(M,double(TA),80 * sf);
+    TAs = min(1,max(0, TAs - mean(TAs(:) + 2 * std(TAs(:))) ./ 2 * std(TAs(:))));  
+    TAs = 1 - TAs*opt.ta; 
+    clear A TA; 
+  end 
+ 
   Tn = T; 
   N    = spm_mesh_normals(S); 
   i    = 0; final = 0; 
@@ -1728,6 +1742,11 @@ function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt)
     selfp = cat_io_FreeSurfer('read_surf_data',Pselfp)>0; 
     
     
+    if opt.ta > 0
+      selfw = selfw .* TAs; 
+      selfp = selfp .* TAs; 
+    end
+    
     % correction scheme that based on the original thickness
     % selfo self direction
     %   0     0      0
@@ -1747,10 +1766,10 @@ function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt)
     
     % correction in specified areas that also include a general
     % smoothness constrains of the cortical thickness
-    Twc = single(spm_mesh_smooth(M,double(Twc) , sf)) * sf;  Tvxw = max(eps,Tvxw - Twc); 
-    Tws = single(spm_mesh_smooth(M,double(Tvxw)  , sf/2));     Tvxw(Twc~=0) = Tws(Twc~=0);  clear Tws;
-    Tpc = single(spm_mesh_smooth(M,double(Tpc) , sf)) * sf;  Tvxp = max(eps,Tvxp - Tpc);  
-    Tps = single(spm_mesh_smooth(M,double(Tvxp)  , sf/2));     Tvxp(Tpc~=0) = Tps(Tpc~=0);  clear Tps;
+    Twc = single(spm_mesh_smooth(M,double(Twc)  , sf)) * sf;  Tvxw = max(eps,Tvxw - Twc); 
+    Tws = single(spm_mesh_smooth(M,double(Tvxw) , sf/2));     Tvxw(Twc~=0) = Tws(Twc~=0);  clear Tws;
+    Tpc = single(spm_mesh_smooth(M,double(Tpc)  , sf)) * sf;  Tvxp = max(eps,Tvxp - Tpc);  
+    Tps = single(spm_mesh_smooth(M,double(Tvxp) , sf/2));     Tvxp(Tpc~=0) = Tps(Tpc~=0);  clear Tps;
     
     % save for next iteration
     selfwo = selfw;
@@ -1760,21 +1779,22 @@ function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt)
     VOC = S.vertices - N .* repmat(Tvxp,1,3); 
     VIC = S.vertices + N .* repmat(Tvxw,1,3); 
  
-    % adaptive smoothing
-    Tpc = Tpc./max(Tpc(:)); Tpc = single(spm_mesh_smooth(M,double(Tpc) , 1)); VOCSf = repmat(0.2 .* Tpc(Tpc>0),1,3); 
-    Twc = Twc./max(Twc(:)); Twc = single(spm_mesh_smooth(M,double(Twc) , 1)); VICSf = repmat(0.5 .* Twc(Twc>0),1,3);
+    if 1
+      % extra thickenss smoothing
+      Sa   = cat_surf_fun('area',S); 
+      Tsw  = repmat( max(0,min(1,max( (Tn-3)/6 , (Tn ./ (Sa * 4) - 3) / 6) )) ,1,3); clear Sa;
+      VOCS = smoothsurf(VOC,2); VOC = VOC.*(1-Tsw) + Tsw.*VOCS;
+      VICS = smoothsurf(VIC,2); VIC = VIC.*(1-Tsw) + Tsw.*VICS;
+      clear VOCS VICS Tsw;
 
-    % extra thickenss smoothing
-    Sa   = cat_surf_fun('area',S); 
-    Tsw  = repmat( max(0,min(1,max( (Tn-3)/6 , (Tn ./ (Sa * 4) - 3) / 6) )) ,1,3); clear Sa;
-    VOCS = smoothsurf(VOC,2); VOC = VOC.*(1-Tsw) + Tsw.*VOCS;
-    VICS = smoothsurf(VIC,2); VIC = VIC.*(1-Tsw) + Tsw.*VICS;
-    clear VOCS VICS Tsw;
+      % adaptive smoothing
+      Tpc  = Tpc./max(Tpc(:)); Tpc = single(spm_mesh_smooth(M,double(Tpc) , 1)); VOCSf = repmat(0.2 .* Tpc(Tpc>0),1,3); 
+      Twc  = Twc./max(Twc(:)); Twc = single(spm_mesh_smooth(M,double(Twc) , 1)); VICSf = repmat(0.5 .* Twc(Twc>0),1,3);
+      VOCS = smoothsurf(VOC,1); VOC(Tpc>0,:) = VOC(Tpc>0,:).*(1-VOCSf) + VOCSf.*VOCS(Tpc>0,:);
+      VICS = smoothsurf(VIC,1); VIC(Twc>0,:) = VIC(Twc>0,:).*(1-VICSf) + VICSf.*VICS(Twc>0,:);
+      clear VOCS VICS Tsw;
+    end
     
-    VOCS = smoothsurf(VOC,1); VOC(Tpc>0,:) = VOC(Tpc>0,:).*(1-VOCSf) + VOCSf.*VOCS(Tpc>0,:);
-    VICS = smoothsurf(VIC,1); VIC(Twc>0,:) = VIC(Twc>0,:).*(1-VICSf) + VICSf.*VICS(Twc>0,:);
-    clear VOCS VICS Tsw;
-       
     % update thickness and central surface position
     Tn    = double( max(0.01,sum( (VIC - VOC).^2 , 2) .^ 0.5 ));
     Tvxw  = Tn/2; 
@@ -1896,6 +1916,7 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
                           % because there should also be a gab between the structures and a reasonalbe running time) 
   def.optimize = 1;       % use percentage position values for optimization  
   def.mat      = [];
+  def.ta       = 1; 
   opt          = cat_io_checkinopt(opt,def); 
   opt.iteropt  = find( 1 ./ opt.redterm.^(1:100)  < opt.accuracy , 1); 
   opt.iterfull = round( opt.iteropt * (1 + opt.optimize) ); 
@@ -1903,21 +1924,12 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
   sf           = round( sqrt( size(S.faces,1) / 50000) );  % ### empirical value optimized on Collins and Thicknessphantom 
   M            = spm_mesh_smooth(S);                       % for spm_smoothing matrix
 
-  % to have values beside the boundaries
-  if 1
-    %% Ypp2 = Y - 1.5; Ypp2(Ypp2<0) = Ypp2(Ypp2<0)/3; Ypp2(Ypp2>1) = (Ypp2(Ypp2>1) - 1) / 3 + 1; 
-    Yg   = cat_vol_grad(Ypp); mnYg = mean(Yg(Ypp(:)>0 & Ypp(:)<1)); clear Yg; 
-    Ypp2 = Y - 1.5; Ypp2(Ypp2<0) = Ypp2(Ypp2<0) * mnYg; Ypp2(Ypp2>1) = (Ypp2(Ypp2>1) - 1) * mnYg  + 1; 
-    Ymsk = (Y>1.5 & Y<2.5) | (Ypp>0.001 & Ypp<0.999); Ypp2(Ymsk) = Ypp(Ymsk); 
-    Ymsk = Y>2.5 | Ypp>=1; Ypp2(Ymsk) = max(Ypp(Ymsk),Ypp2(Ymsk)); 
-    Ypp = Ypp2; clear Ypp2; 
-  end
-  
-% detection and correction for flipped faces to have always the same normal direction
-  flipped = cat_surf_checkNormalDir(S); %,T,Y,opt.interpBB);
+  % detection and correction for flipped faces to have always the same normal direction
+  flipped = cat_surf_checkNormalDir(S); 
   if flipped, S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); end
 
-  smoothsurf = @(V,s) [ ...         % simple surface smoothing 
+  % simple surface smoothing ... finaly not required anymore
+  smoothsurf = @(V,s) [ ...         
     spm_mesh_smooth(M,double(V(:,1)),s) , ...
     spm_mesh_smooth(M,double(V(:,2)),s) , ...
     spm_mesh_smooth(M,double(V(:,3)),s) ];
@@ -1928,20 +1940,42 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
   
   Tn  = T; 
   N   = spm_mesh_normals(S);
-  N   = smoothsurf(N,sf); % ### empirical value optimized on Collins and Thicknessphantom 
-  Ns  = sum(N.^2,2).^.5;
-  N   = N ./ repmat(Ns,1,3); 
-  clear Ns; 
+  if 0 % ### empirical value optimized on Collins and Thicknessphantom ... RD20210403: not required 
+    N   = smoothsurf(N,sf); 
+    Ns  = sum(N.^2,2).^.5;
+    N   = N ./ repmat(Ns,1,3); 
+    clear Ns; 
+  end
+  
+  % curvature
+  C = spm_mesh_curvature(S);
+  C = spm_mesh_smooth(M,C,1);
+  C = C .* (T/2.5); 
+  
+  % do not correct in regions with extremly high thickness ... 
+  % RD20210403: this is still not fully working
+  if opt.ta>0
+    %%
+    A   = cat_surf_fun('area',S); 
+    TA  = T ./ A; 
+    TAs = spm_mesh_smooth(M,double(TA),80 * sf);
+    TAs = min(1,max(0, TAs - mean(TAs(:) + 2 * std(TAs(:))) ./ 2 * std(TAs(:))));  
+    TAs = 1 - TAs * opt.ta; 
+    clear A TA; 
+  else 
+    TAs = ones(size(T),'single'); 
+  end
   
   i   = 0; final = 0; SIO = 1; 
   if opt.verb, fprintf('\n'); end
-  while i < opt.iterfull  
+  while i < opt.iterfull / 4 % more iterations improve the int and especialy the pos and SI values but increase also the thdiff value  
     i = i + 1;
    
     % In theory the search/correction size would be half each time (0.5 0.25 0.125 ... 2^i)
     % but due to the smoothing a slower sloop is used (1.8^i). 
     % The changes are limited by opt.accuracy for anatomical (min sulcus-width) and runtime reasons.
     % If optimization is used than the test starts again but with higher accuracy ( 0.125 ). 
+    % Smaller values support better int/pos values but more intersections.
     corrsize  = max( opt.accuracy , 1 ./ opt.redterm.^(i+2) );
    
     % outer and inner boundary
@@ -1956,8 +1990,8 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
     % if the gradients point in totally other directions that we had 
     % crossed an anatomical border and have an self intersection
     opt.alphaYpp = 20; % max(5 , min(30, 15 / T ))';
-    selfp = ( spm_mesh_smooth( M , double( cat_surf_edgeangle( Vg , VOg )) ,1 ) > opt.alphaYpp ); % | (T>2 & angle( VIg , VOg ) > opt.alphaYpp*2 ); 
-    selfw = ( spm_mesh_smooth( M , double( cat_surf_edgeangle( Vg , VIg )) ,1 ) > opt.alphaYpp );
+    selfp = ( spm_mesh_smooth( M , double( cat_surf_edgeangle( Vg , VOg )) , 1 ) > opt.alphaYpp ); % | (T>2 & angle( VIg , VOg ) > opt.alphaYpp*2 ); 
+    selfw = ( spm_mesh_smooth( M , double( cat_surf_edgeangle( Vg , VIg )) , 1 ) > opt.alphaYpp );
     
     % correction scheme that based on the original thickness
     % selfo self direction
@@ -1974,6 +2008,9 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
       Tpc = T/2 .* corrsize .* ( (selfp | selfpo) - 2 .* ( selfpo & ~selfp ) );
     end
     
+    selfw = selfw .* TAs; 
+    selfp = selfp .* TAs; 
+    
     if opt.optimize && i<opt.iteropt * 3
     %% Optimization by local intensities for early iterations by the Ypp. 
     %  Although 1 and 0 represent the theoretical optimal boudary values 
@@ -1982,7 +2019,7 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
     %  overestimation of thickness. 
     %  I also tried a model based on the Ym but this was worse especially 
     %  due to the blurred sulci. 
-      coristr = max(0.05, 1 - i / opt.iteropt  )/2; % factor
+      coristr = max(0.5, 1 - i / opt.iteropt  ) / 2; % factor
      
       GWth = 1;
       CGth = 0;
@@ -1993,8 +2030,8 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
       if opt.verb>1, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),native2unicode(177, 'latin1'),std(YI),mean(YO),native2unicode(177, 'latin1'),std(YO)); end 
 
       % correction value 
-      YI = max(-1, min(1, ( GWth - YI ) * coristr ));
-      YO = max(-1, min(1, ( YO - CGth ) * coristr ));
+      YI = max(-1, min(1, ( GWth - YI ) * coristr .* (1-C)   )) .* TAs;
+      YO = max(-1, min(1, ( YO - CGth ) * coristr .* (C+1)/2 )) .* TAs;
       
       % test new inner surface position .. balance corrections in both
       % directions to keep the thickness
@@ -2018,17 +2055,23 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
       YppOC = cat_surf_isocolors2(Ypp,VOC,opt.mat);  
       VOg   = cat_surf_volgrad(VOC,N,Ypp,opt.mat);
       if 0 
+% ###################        
+        % RD20210403: This is worse for int/pos (-0.001/-0.010) but helps
+        %             to reduce ISs (-4%) while thdiff a bit worse (+0.002). 
+        %             If Rachels SIC is also used than 0 is better ...
         YOC   = cat_surf_isocolors2(Ypp,VOC,opt.mat);  
         YppO  = cat_surf_isocolors2(Ypp,VO ,opt.mat);  
         YO    = YO .* YppOC .* ( Tpc==0 & ...
           abs( YO - CGth ) > abs( YOC - CGth ) & ...
           cat_surf_edgeangle( Vg , VOg ) < opt.alphaYpp & ...
           YppOC < YppO & YppOC>CGth & YOC>1.50); % 0.01 & 1.5 
-      else
-        YO  = YO .* (0.5+0.5*YppOC) .* ( Tpc==0 & ...
+      elseif 0
+        YO  = YO .* (0.5 + 0.5*YppOC) .* ( Tpc==0 & ...
           cat_surf_edgeangle( Vg , VOg ) < opt.alphaYpp & ...
           YppOC>CGth );
       end
+      YI = YI .* TAs;
+      YO = YO .* TAs; 
       clear YppOC YOC YppO VOg; 
       
       if opt.verb>1, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),native2unicode(177, 'latin1'),std(YI),mean(YO),native2unicode(177, 'latin1'),std(YO)); end
@@ -2039,9 +2082,16 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
     end
 
     % define minimal sulcal/gyral gap
-    sulciGyriWidth = 0.05; 
-    Twc(Twc>0) = Twc(Twc>0) + sulciGyriWidth * 2;
-    Tpc(Tpc>0) = Tpc(Tpc>0) + sulciGyriWidth;
+    % RD20200403: The idea was good but it is not realy helping for the ISs
+    %             but lead to strong thickness changes (-0.05). 
+    if 0
+      sulciGyriWidth = 0.0; 
+      Twc(Twc>0) = Twc(Twc>0) + sulciGyriWidth * 2;
+      Tpc(Tpc>0) = Tpc(Tpc>0) + sulciGyriWidth;
+    end
+    
+    Tpc = Tpc .* TAs;
+    Twc = Twc .* TAs;
     
     % correction in specified areas that also include a general
     % smoothness constrains of the cortical thickness
@@ -2059,7 +2109,7 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
     VIC = S.vertices + N .* repmat(Tw,1,3); 
     
     % edge flip
-    if 1 % this has a large effects a
+    if 1 % this has a huge positive effects 
       sm   = sf; % smoothness - 1 is not enougth
       fa   = 60; % error angle (worst case is 180 )
       E    = spm_mesh_edges(S);
@@ -2087,47 +2137,58 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
       VTPI = zeros(size(T),'single');
     end
   
-    % adaptive smoothing
-    Tf  = max(1,min(6,Tn)); inorm = ( opt.iteropt*3 - i ) / (opt.iteropt*3); 
-    Tpc = Tpc./max(Tpc(:)); Tpc = single(spm_mesh_smooth(M,double(Tpc) , 1 )) * 1/2 .* Tf; VOCSf = max(0,min(1,repmat(0.2 .* inorm .* abs(Tpc(Tpc>0 | VTPO(:,1)>0)),1,3))); 
-    Twc = Twc./max(Twc(:)); Twc = single(spm_mesh_smooth(M,double(Twc) , 1 )) * 2/2 .* Tf; VICSf = max(0,min(1,repmat(0.8 .* inorm .* abs(Twc(Twc>0 | VTPI(:,1)>0)),1,3)));
- 
-    VOCS = smoothsurf(VOC,sf/2); VOC(Tpc>0 | VTPO(:,1)>0,:) = VOC(Tpc>0 | VTPO(:,1)>0,:).*(1-VOCSf) + VOCSf.*VOCS(Tpc>0 | VTPO(:,1)>0,:);
-    VICS = smoothsurf(VIC,sf/2); VIC(Twc>0 | VTPI(:,1)>0,:) = VIC(Twc>0 | VTPI(:,1)>0,:).*(1-VICSf) + VICSf.*VICS(Twc>0 | VTPI(:,1)>0,:);
-    clear VTPI VTPO
+    
+    
+    % RD20210403: smoothing block that is not realy necessary anymore
+    if 0 
+      % adaptive smoothing
+      if 0
+        Tf  = max(1,min(6,Tn)); inorm = ( opt.iteropt*3 - i ) / (opt.iteropt*3); 
+        Tpc = Tpc./max(Tpc(:)); Tpc = single(spm_mesh_smooth(M,double(Tpc) , 1 )) * 1/2 .* Tf .* (1-TAs/2); VOCSf = max(0,min(1,repmat(0.2 .* inorm .* abs(Tpc(Tpc>0 | VTPO(:,1)>0)),1,3))); 
+        Twc = Twc./max(Twc(:)); Twc = single(spm_mesh_smooth(M,double(Twc) , 1 )) * 2/2 .* Tf .* (1-TAs/2); VICSf = max(0,min(1,repmat(0.8 .* inorm .* abs(Twc(Twc>0 | VTPI(:,1)>0)),1,3)));
 
-    % extra smoothing that reduce self-intersections but a bit worse values 
-    % RD202103: I just keep it as the idea of further smoothing
-    if 0
-      Sa   = cat_surf_fun('area',S); 
-      Tsw  = repmat( max(0,min(1,max( (Tn-3)/6 , (Tn ./ (Sa * 4) - 3) / 6) )) ,1,3) * 0.5; 
-      VOCS = smoothsurf(VOC,sf); VOC = VOC.*(1-Tsw) + Tsw.*VOCS;
-      VICS = smoothsurf(VIC,sf); VIC = VIC.*(1-Tsw) + Tsw.*VICS;
-    
-      % full smooting 
-      VOCSf = repmat(Tf * 0.02 / opt.iterfull,1,3);  VOCS = smoothsurf(VOC,sf/2); VOC = VOC.*(1-VOCSf) + VOCSf.*VOCS; clear VOCSf;
-      VICSf = repmat(Tf * 0.05 / opt.iterfull,1,3);  VICS = smoothsurf(VIC,sf/2); VIC = VIC.*(1-VICSf) + VICSf.*VICS; clear VICSf;
+        VOCS = smoothsurf(VOC,sf/2 * 0.0125); VOC(Tpc>0 | VTPO(:,1)>0,:) = VOC(Tpc>0 | VTPO(:,1)>0,:).*(1-VOCSf) + VOCSf.*VOCS(Tpc>0 | VTPO(:,1)>0,:);
+        VICS = smoothsurf(VIC,sf/2 * 0.0125); VIC(Twc>0 | VTPI(:,1)>0,:) = VIC(Twc>0 | VTPI(:,1)>0,:).*(1-VICSf) + VICSf.*VICS(Twc>0 | VTPI(:,1)>0,:);
+        clear VTPI VTPO
+      end
+
+      % extra smoothing that reduce self-intersections but a bit worse values 
+      % RD202103: I just keep it as the idea of further smoothing
+      if 0
+        Sa   = cat_surf_fun('area',S); 
+        Tsw  = repmat( max(0,min(1,max( (Tn-3)/6 , (Tn ./ (Sa * 4) - 3) / 6) )) ,1,3) * 0.5; 
+        VOCS = smoothsurf(VOC,sf); VOC = VOC.*(1-Tsw) + Tsw.*VOCS;
+        VICS = smoothsurf(VIC,sf); VIC = VIC.*(1-Tsw) + Tsw.*VICS;
+
+        % full smooting 
+        VOCSf = repmat(Tf * 0.02 / opt.iterfull,1,3);  VOCS = smoothsurf(VOC,sf/2); VOC = VOC.*(1-VOCSf) + VOCSf.*VOCS; clear VOCSf;
+        VICSf = repmat(Tf * 0.05 / opt.iterfull,1,3);  VICS = smoothsurf(VIC,sf/2); VIC = VIC.*(1-VICSf) + VICSf.*VICS; clear VICSf;
+      end
+      clear VICS VOCS 
+
+      % surface smoothing 
+      if 0 
+        VOC = cat_surf_smooth(M,VOC,sf/2 * 0.25,1);
+        VIC = cat_surf_smooth(M,VIC,sf/2 * 0.25,1);
+      end
+
+      % remove outlier ... this has NO effect 
+      % RD202103: I just keep it as the idea of outlier smoothing
+      if 0 % mod(i,5)==0 || final
+        VOCc = spm_mesh_curvature( struct('vertices',VOC,'faces',S.faces) ); 
+        VICc = spm_mesh_curvature( struct('vertices',VIC,'faces',S.faces) ); 
+        Tn   = max(0.01,sum( (VIC - VOC).^2 , 2) .^ 0.5 );
+        Tns  = spm_mesh_smooth(M,Tn,sf/2);
+        Tnss = spm_mesh_smooth(M,Tn,sf/2 * 5);
+        Tnm  = abs( Tns - T )>0.5/(final+1) & (VOCc>60 & VICc>60) & ( Tn > mean(Tn) - min(1,max(2,2*std(Tn))) ) & Tn>1 & Tn>Tnss * 0.75; clear Tns;  
+        Tn( Tnm ) = Tnss( Tnm ); clear Tnss; 
+        VIC( Tnm ,:)  = S.vertices( Tnm ,:) + N( Tnm ,:) .* repmat( Tn( Tnm )/2 ,1,3);    % inner surface
+        VOC( Tnm ,:)  = S.vertices( Tnm ,:) - N( Tnm ,:) .* repmat( Tn( Tnm )/2 ,1,3);    % outer surface 
+        clear Tnm; 
+      end
     end
-    clear VICS VOCS 
     
-    % surface smoothing 
-    VOC = cat_surf_smooth(M,VOC,sf/2,1);
-    VIC = cat_surf_smooth(M,VIC,sf/2,1);
     
-    % remove outlier ... this has NO effect 
-    % RD202103: I just keep it as the idea of outlier smoothing
-    if 0 % mod(i,5)==0 || final
-      VOCc = spm_mesh_curvature( struct('vertices',VOC,'faces',S.faces) ); 
-      VICc = spm_mesh_curvature( struct('vertices',VIC,'faces',S.faces) ); 
-      Tn   = max(0.01,sum( (VIC - VOC).^2 , 2) .^ 0.5 );
-      Tns  = spm_mesh_smooth(M,Tn,sf/2);
-      Tnss = spm_mesh_smooth(M,Tn,sf/2 * 5);
-      Tnm  = abs( Tns - T )>0.5/(final+1) & (VOCc>60 & VICc>60) & ( Tn > mean(Tn) - min(1,max(2,2*std(Tn))) ) & Tn>1 & Tn>Tnss * 0.75; clear Tns;  
-      Tn( Tnm ) = Tnss( Tnm ); clear Tnss; 
-      VIC( Tnm ,:)  = S.vertices( Tnm ,:) + N( Tnm ,:) .* repmat( Tn( Tnm )/2 ,1,3);    % inner surface
-      VOC( Tnm ,:)  = S.vertices( Tnm ,:) - N( Tnm ,:) .* repmat( Tn( Tnm )/2 ,1,3);    % outer surface 
-      clear Tnm; 
-    end
     
     % final new thickness
     Tn  = max(0.01,sum( (VIC - VOC).^2 , 2) .^ 0.5 ); 
@@ -2135,12 +2196,14 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
     Tp  = Tn/2; 
     S.vertices = mean(cat(3,VIC,VOC),3); 
 
-    % update normals
+    % update normals 
     N   = spm_mesh_normals(S);
-    N   = smoothsurf(N,sf); 
-    Ns  = sum(N.^2,2).^.5;
-    N   = N ./ repmat(Ns,1,3); 
-    clear Ns; 
+    if 0 % RD20210401: lightly better int/pos but much more intersections 
+      N   = smoothsurf(N,sf); 
+      Ns  = sum(N.^2,2).^.5;
+      N   = N ./ repmat(Ns,1,3); 
+    end
+    clear Ns;
     
     SI = (sum(selfw>0)/2 + sum(selfp>0)/2) / numel(selfw) * 100; 
     % iteration

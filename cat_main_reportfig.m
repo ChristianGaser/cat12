@@ -879,7 +879,7 @@ end
           renderer = get(fg,'Renderer');
  
           % only add contours if OpenGL is found (to prevent crashing on clusters)
-          if 0 %strcmpi(renderer,'opengl')
+          if strcmpi(renderer,'opengl')
             i=1; hSD{i} = cat_surf_display(struct('data',PCS{i},'readsurf',0,'expert',2,...
               'multisurf',1,'view',sview{i},'menu',0,'parent',hCS{i},'verb',0,'caxis',[0 6],'imgprint',struct('do',0))); 
           

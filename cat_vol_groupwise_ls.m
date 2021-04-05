@@ -334,11 +334,11 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
                   clear msk
                    
                   % correct mat information and dimensions
-                  mati  = matio; 
+                  mati  = spm_imatrix(pyramid(level).mat); matio = mati; 
                   mati(1:3) = mati(1:3) + mati(7:9).*(redB.BB(1:2:end) - 1);
                   pyramid(level).mat = spm_matrix(mati);
-                  pyramid(level).d   = redB.sizeTr;
-                  
+                  pyramid(level).d = redB.sizeTr;
+
                   % update some size-dependent parameters
                   M_avg     = pyramid(level).mat;
                   d         = pyramid(level).d;
@@ -805,7 +805,7 @@ if need_wimg
 end
 
 if need_avg
-    % use weighted median/mean for rigid registration and mean for non-linear registration
+    %% use weighted median/mean for rigid registration and mean for non-linear registration
     if all(isfinite(w_settings(i,:))) % rigid registration
         vol_mean   = mean(vol,4);
         % use median for > 2 images, otherwise use min

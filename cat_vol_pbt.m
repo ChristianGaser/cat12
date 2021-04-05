@@ -437,21 +437,6 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
   end
   
   
-  %% extend Ypp to create values for white and pial surface mapping
-  %  extimate distance and thickness beyond the GM boundary
-  %  keep in mind that this is only to have a well defined CSF/GM boundary at 0 and GM/WM boudnary at 1
-  YM    = Ymf>=1.5 & Ymf<2.5; [Ygmd,YgmdI] = cat_vbdist(single(YM)); 
-  Ygmtx = Ygmt(YgmdI); 
-  YM = min(1,max(0,3 - Ymf)); YM(Ygmd>4) = nan; Ywmdi  = cat_vol_eidist(YM,ones(size(YM),'single'),[1 1 1],1,1,0,opt.debug);
-  YM = min(1,max(0,Ymf - 1)); YM(Ygmd>4) = nan; Ycsfdi = cat_vol_eidist(YM,ones(size(YM),'single'),[1 1 1],1,1,0,opt.debug);
-   
-  % update Ypp
-  Yppx = Ypp;
-  YM   = Ywmdi>0  & Ypp==1; Yppx(YM) = min( 2,1 + Ywmdi(YM)  ./ Ygmtx(YM)); 
-  YM   = Ycsfdi>0 & Ypp==0; Yppx(YM) = max(-1,0 - Ycsfdi(YM) ./ Ygmtx(YM)); 
-  YM   = (Yppx > -1 & Ycsfdi>1 & Ygmd<4) | (Ywmd>1 & Yppx < 2 & Ygmd<4); Yppxs = Yppx + (Yppx>-1); Yppxs = cat_vol_localstat(Yppxs,Yppxs>0,1,1); Yppx(YM) = Yppxs(YM)-1; 
-  Ypp  = Yppx;  
-
   
   
   %% Estimation of a mixed percentual possion map Ypp.
@@ -467,7 +452,28 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
 
   YM  = (Ygmt<=opt.resV & Ywmd<=opt.resV & Ygmt>0); Ypp(YM) = (Ymf(YM)-1)/2 - 0.2; % correction of voxel with thickness below voxel resolution
   Ypp(isnan(Ypp)) = 0; 
-  Ypp(Ypp<0) = 0; 
+  Ypp = min(2,max(-1,Ypp)); 
+  
+  if 1
+    % extend Ypp to create values for white and pial surface mapping
+    %  extimate distance and thickness beyond the GM boundary
+    %  keep in mind that this is only to have a well defined CSF/GM boundary at 0 and GM/WM boudnary at 1
+    Ypp(Ypp==0)=-1;
+    YM = Ymf>=1.5 & Ymf<2.5; [Ygmd,YgmdI] = cat_vbdist(single(YM)); 
+    Ygmtx = Ygmt(YgmdI); 
+    YM = min(1,max(0,3 - Ymf)); YM(Ygmd>4) = nan; Ywmdi  = cat_vol_eidist(YM,ones(size(YM),'single'),[1 1 1],1,1,0,opt.debug);
+    YM = min(1,max(0,Ymf - 1)); YM(Ygmd>4) = nan; Ycsfdi = cat_vol_eidist(YM,ones(size(YM),'single'),[1 1 1],1,1,0,opt.debug);
+    YM = isnan(Ywmdi) & Ygmd>4 & Ypp>=1; Ywmdi(YM) = Ygmd(YM); 
+
+    % update Ypp
+    Yppx = Ypp;
+    YM   = Ywmdi>0  & Ypp>=1;  Yppx(YM) = min( 2,1 + Ywmdi(YM)  ./ Ygmtx(YM)); 
+    YM   = Ycsfdi>0 & Ypp==-1; Yppx(YM) = max(-1,0 - Ycsfdi(YM) ./ Ygmtx(YM)); 
+    YM   = (Yppx > -1 & Ycsfdi>1 & Ygmd<4) | (Ywmd>1 & Yppx < 2 & Ygmd<4); 
+    Yppxs = Yppx + (Yppx>-1); Yppxs = cat_vol_localstat(Yppxs,Yppxs>0,1,1); 
+    Yppx(YM) = Yppxs(YM)-1; 
+    Ypp  = Yppx;  
+  end
   
   %% Final corrections for position map with removing of non brain objects.
   % ds('d2','',1,Ymf/3,Ywmd/3,Ygmt/5,Ypp,70)

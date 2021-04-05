@@ -94,8 +94,9 @@ function [Ym2,Ysrc2,Ycls,Ycor,glcor,cf] = cat_main_correctmyelination(Ym,Ysrc,Yc
     % extend atlas for all voxels within the brainmask
     [D,I] = cat_vbdist(single(YA>0),Ybb); YA = YA(I); clear D I;  %#ok<ASGLU>
     % get some cortical ROIs to perform the corrections
-    Yct   = NS(YA,LAB.CT) & ~cat_vol_morph( NS(YA,LAB.VT) | NS(YA,LAB.LE) , 'd' ,4/mean(vx_vol)); 
-    Yb2   = NS(YA,LAB.CT) & ~cat_vol_morph( NS(YA,LAB.VT) | NS(YA,LAB.LE) | NS(YA,LAB.BG) | NS(YA,LAB.TH), 'd' ,4/mean(vx_vol)); 
+    TIV   = sum(Yb(:)/prod(vx_vol)); 
+    Yct   = NS(YA,LAB.CT) & ~cat_vol_morph( NS(YA,LAB.VT) | NS(YA,LAB.LE) | NS(YA,LAB.HC) | NS(YA,LAB.PH) | NS(YA,LAB.BG) , 'dd' ,0.08 * TIV^(1/3) / mean(vx_vol)); 
+    Yb2   = NS(YA,LAB.CT) & ~cat_vol_morph( NS(YA,LAB.VT) | NS(YA,LAB.LE) | NS(YA,LAB.HC) | NS(YA,LAB.PH) | NS(YA,LAB.BG) | NS(YA,LAB.TH), 'dd' ,0.08 * TIV^(1/3) / mean(vx_vol)); 
   else
   % otherwise
     Yct  = true(size(Yvt));
@@ -166,7 +167,7 @@ function [Ym2,Ysrc2,Ycls,Ycor,glcor,cf] = cat_main_correctmyelination(Ym,Ysrc,Yc
   
   
   %% Yct  .. cortical region
-  Yct2  = Yct .* max(0,min(1,2.5 - Ycdmm)); spm_smooth(Yct2,Yct2,2./vx_vol); 
+  Yct2  = cat_vol_smooth3X(Yct,2) .* max(0,min(1,2.5 - Ycdmm)); spm_smooth(Yct2,Yct2,2./vx_vol); 
   if ~debug, clear Yct; end
   
   % Ycm  .. first correction map (range 0-1) + 
