@@ -41,10 +41,12 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
 %           YMF = filling mask for ventricle and subcortical structures
 %
 % ______________________________________________________________________
-% Structural Brain Mapping Group, University Jena, Germany
-% Robert Dahnke
-% 2013/05
 %
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 % ______________________________________________________________________

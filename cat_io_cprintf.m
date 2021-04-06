@@ -139,6 +139,14 @@ function count = cat_io_cprintf(style,format,varargin)
 
 % Programmed and Copyright by Yair M. Altman: altmany(at)gmail.com
 % $Revision$  $Date$
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
+% $Id$
   
   global cprintferror; 
   if isempty(cprintferror), cprintferror=0; end

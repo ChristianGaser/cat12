@@ -21,8 +21,13 @@ function [mainbatch,perror] = cat_tst_cattest(job)
 %
 %  Examples:
 %    cat_tst_cattest(struct('datalevel','basic','paralevel',1,'userlevel',0))
-%  _____________________________________________________________________
-%  Robert Dahnke
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 %  $Id$
 
  
@@ -68,7 +73,7 @@ function [mainbatch,perror] = cat_tst_cattest(job)
 %  	 *) Help Skripts, e.g. Volume vs. Surface Smoothing
 %
 %  Large extensions
-%  V2:    statistical functions >> required futher data 
+%  V2:    statistical functions >> required further data 
 %          - we can add some further low res images
 %          - we can link some sources that allow fast and simple access
 %            and have good quality (IXI, OASIS)
@@ -399,17 +404,7 @@ function [mainbatch,perror] = cat_tst_cattest(job)
       end
       
       % cat subdirs
-      if cat_get_defaults('extopts.subfolders')
-        mridir    = 'mri';
-        surfdir   = 'surf';
-        roidir    = 'label';
-        reportdir = 'report';
-      else
-        mridir    = '';
-        surfdir   = '';
-        roidir    = '';
-        reportdir = '';
-      end  
+      [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders;
 
       % add batch dir & get batches 
       addpath(job.batchdir); 

@@ -10,8 +10,13 @@ function MODIFIEDSTR = cat_io_strrep(ORIGSTR,OLDSUBSTR,NEWSUBSTR)
 % new_claimB = cat_io_strrep(claim,{'good','bad'},{'great','acceptable'})
 %
 % See also strrep, strfind, regexprep.
-% _______________________________________________________________________
-% Robert Dahnke
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
   if nargin==0, help cat_io_strrep; return; end

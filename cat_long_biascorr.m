@@ -8,8 +8,13 @@ function out = cat_long_biascorr(job)
 %   .prefix .. filename prefix (default 'm')
 %   .fs     .. filter size in mm (2=strong, 4=default, 8=soft correction)
 %              (if it is empty then it is defined by job.str)
-% _________________________________________________________________________
-% Robert Dahnke
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 % ToDo:

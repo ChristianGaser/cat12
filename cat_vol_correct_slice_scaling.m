@@ -29,10 +29,12 @@ function cat_vol_correct_slice_scaling(varargin)
 %   job.ub          .. upper intensity boundary
 %
 % ______________________________________________________________________
-% Robert Dahnke 
-% Structural Brain Mapping Group
-% University Jena
 %
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 % ______________________________________________________________________
 

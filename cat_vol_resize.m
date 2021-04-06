@@ -23,9 +23,11 @@ function varargout=cat_vol_resize(T,operation,varargin)
 %   [Tr,aniso] = cat_vol_resize(T ,'aniso2iso',vx_vol,method);         
 %   TV         = cat_vol_resize(Tr,'iso2aniso',aniso,method);  
 % ______________________________________________________________________
-% Robert Dahnke
-% Structural Brain Mapping Group
-% University Jena
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
 % ______________________________________________________________________
 % $Id$ 
   

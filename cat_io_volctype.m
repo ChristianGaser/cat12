@@ -6,9 +6,10 @@ function out = cat_io_volctype(varargin)
 % int8/16 is rather used than uint8/16. 
 % ______________________________________________________________________
 %
-% Robert Dahnke 
-% Structural Brain Mapping Group
-% University Jena
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
 % ______________________________________________________________________
 % $Id$
 

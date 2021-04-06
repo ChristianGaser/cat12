@@ -51,6 +51,13 @@ function varargout = cat_surf_render(action,varargin)
 % See spm_XYZreg for more information.
 %__________________________________________________________________________
 % Copyright (C) 2010-2011 Wellcome Trust Centre for Neuroimaging
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 
 % based on spm_mesh_render.m
 % $Id$

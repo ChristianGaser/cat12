@@ -16,7 +16,11 @@ function varargout = cat_surf_surf2roi(job)
 %   job.avg     .. parameter what averaging is use for each ROI
 %                  struct('mean',1,'std',1,'min',0,'max',0,'median',1);  
 % ______________________________________________________________________
-% Robert Dahnke
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
 % ______________________________________________________________________
 % $Id$ 
 
@@ -63,16 +67,7 @@ function varargout = cat_surf_surf2roi(job)
   end
   
   spm_progress_bar('Init',numel(job.rdata) * sum(cellfun('length',job.cdata)),'Atlases','Atlases Completed');
-  
-  %% write results
-  if cat_get_defaults('extopts.subfolders')
-    surffolder  = 'surf';
-    labelfolder = 'label';
-  else
-    surffolder  = '';
-    labelfolder = '';
-  end 
-  
+    
   %% ROI evaluation
   FN = fieldnames(job.avg);
   
@@ -116,6 +111,7 @@ function varargout = cat_surf_surf2roi(job)
     
     %% process the cdata files of each subject
     for si=1:numel(job.cdata{1}) % for each subject
+      [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(job.cdata{1}{si});
       for ti=1:numel(job.cdata)  % for each texture
       
         % check for kind of surface

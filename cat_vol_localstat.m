@@ -11,6 +11,11 @@
 %  nb   (double)  .. neigbhour distance (1 .. 10)
 %  stat (double)  .. 1-mean, 2-min, 3-max, 4-std 
 %                    5-peak1, 6-peak2, 7-peak3, 8-median
-%  ________________________________________________________________________
-%  Robert Dahnke 2012/01
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 %  $Id$

@@ -24,9 +24,10 @@ function varargout = cat_vol_headtrimming(job)
 %
 % ______________________________________________________________________
 %
-% Robert Dahnke 
-% Structural Brain Mapping Group
-% University Jena
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
 % ______________________________________________________________________
 % $Id$
 

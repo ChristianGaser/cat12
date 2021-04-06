@@ -8,7 +8,12 @@ function varargout = cat_vol_reduceRes(varargin)
 % 
 % job.data = cell of filename, use GUI if empty
 % ______________________________________________________________________
-% Robert Dahnke
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
   if nargin == 0 

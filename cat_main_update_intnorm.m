@@ -21,8 +21,13 @@ function [Ym2,Ymi2,Tthm,Tthmi] = cat_main_update_intnorm(Ym,Ymi,Yb,Ycls,job,verb
 %   verb     .. display some details (only for tests/development)
 %   AMAPths  .. do not estimate peaks and just use the given 
 %               (1x3 cell with 1x2 matrix with mean and std given by AMAP)
-% _________________________________________________________________________
-% Robert Dahnke, Structural Brain Mapping Group, University Jena, 202101
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$ 
 
 %

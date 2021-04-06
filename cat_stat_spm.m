@@ -3,8 +3,13 @@ function varargout = cat_stat_spm(SPM)
 % spm_spm is used to estimate the model and the mesh of the 1st file in the model 
 % is replaced by the fsaverage brain because this mesh is used for overlaying
 % results.
-%__________________________________________________________________________
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 if nargin == 0

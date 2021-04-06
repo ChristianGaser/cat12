@@ -32,10 +32,12 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
 % - RD202005: This function needs a full update with full description
 %             and a full test design. 
 % ______________________________________________________________________
-% Robert Dahnke
-% Structural Brain Mapping Group
-% University Jena
 %
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
   if nargin==0, help cat_vol_approx; return; end

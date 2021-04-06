@@ -41,8 +41,13 @@ function rn = cat_surf_scaling(job)
 %    if we use the cerbellum?
 %    > So it is maybe better to use left and right but nothing more for
 %      scaling?
-% _________________________________________________________________________
-% Robert Dahnke 202004
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 

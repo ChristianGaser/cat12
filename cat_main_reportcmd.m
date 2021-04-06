@@ -1,16 +1,16 @@
 function cat_main_reportcmd(job,res,qa)
 % ______________________________________________________________________
 % 
-%   Display conclusion of CAT preprocessing in the command window and 
-%   cleanup of some figures. 
+%   Display report of CAT preprocessing in the command window and 
+%   cleanup some figures. 
 %
 %   cat_main_reportcom(job,res,qa)
 % ______________________________________________________________________
 %
-%   Robert Dahnke (robert.dahnke@uni-jena.de)
-%   Structural Brain Mapping Group (http://dbm.neuro.uni-jena.de/)
-%   Department of Neurology
-%   University Jena
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
 % ______________________________________________________________________
 % $Id$
 
@@ -24,6 +24,25 @@ function cat_main_reportcmd(job,res,qa)
   grades    = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
   mark2grad = @(mark) grades{min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3)))};
   
+  % definition of subfolders
+  [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(VT0.fname,job);
+
+  mrifolder = fullfile(pth,mrifolder);
+  [stat, val] = fileattrib(mrifolder);
+  if stat, mrifolder = val.Name; end
+
+  reportfolder = fullfile(pth,reportfolder);
+  [stat, val] = fileattrib(reportfolder);
+  if stat, reportfolder = val.Name; end
+
+  surffolder = fullfile(pth,surffolder);
+  [stat, val] = fileattrib(surffolder);
+  if stat, surffolder = val.Name; end
+
+  labelfolder = fullfile(pth,labelfolder);
+  [stat, val] = fileattrib(labelfolder);
+  if stat, labelfolder = val.Name; end
+
   fprintf('\n%s',repmat('-',1,72));
   fprintf(1,'\nCAT preprocessing takes %0.0f minute(s) and %0.0f second(s).\n', ...
     floor(round(etime(clock,res.stime))/60),mod(round(etime(clock,res.stime)),60));
@@ -32,24 +51,17 @@ function cat_main_reportcmd(job,res,qa)
 
   % print subfolders
   if job.extopts.subfolders
-    fprintf('Segmentations are saved in %s%s%s\n',pth,filesep,'mri');
-    fprintf('Reports are saved in %s%s%s\n',pth,filesep,'report');
+    fprintf('Segmentations are saved in %s\n',mrifolder);
+    fprintf('Reports are saved in %s\n',reportfolder);
     if job.output.ROI
-      fprintf('Labels are saved in %s%s%s\n',pth,filesep,'label');
+      fprintf('Labels are saved in %s\n',labelfolder);
     end
     if job.output.surface && exist('Psurf','var') && ~isempty(Psurf)
-      fprintf('Surface measurements are saved in %s%s%s\n',pth,filesep,'surf');
+      fprintf('Surface measurements are saved in %s\n',surffolder);
     end
   end
 
   fprintf('%s\n\n',repmat('-',1,72));
-
-  % definition of subfolders
-  if job.extopts.subfolders
-    reportfolder  = 'report';
-  else
-    reportfolder  = '';
-  end
   
   % finish diary entry of "../report/cmdln_*.txt"
   % read diary and add the command-line output to the *.xml and *.mat file
@@ -59,7 +71,7 @@ function cat_main_reportcmd(job,res,qa)
     txt = fread(fid,200000,'uint8=>char');
     fclose(fid); 
     txt2 = textscan(txt,'%s','Delimiter',''); 
-    cat_io_xml(fullfile(pth,reportfolder,['cat_' nam '.xml']),struct(...
+    cat_io_xml(fullfile(reportfolder,['cat_' nam '.xml']),struct(...
       'catlog',txt2),'write+'); % here we have to use the write+!
   end    
   

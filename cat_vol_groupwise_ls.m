@@ -33,6 +33,13 @@ function out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s
 % John Ashburner
 % spm_groupwise_ls.m 6844 2016-07-28 20:02:34Z john $
 %
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id cat_vol_groupwise_ls.m $
 
 % Get handles to NIfTI data

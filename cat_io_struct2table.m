@@ -1,4 +1,13 @@
 function [TH2,T]=cat_io_struct2table(S,F)
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
+% $Id$
+
   if ~exist('F','var') || isempty(F) || (ischar(F) && F=='*') || ...
     (iscell(F) && ~all(cellfun('isempty',strfind(F,'*'))))
     F = get_fieldnames(S);

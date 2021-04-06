@@ -61,6 +61,11 @@
 %    ds('x2','',1,A,D,D,I,round(size(A,3)/3));
 %
 %  See also cat_vbdist, compile, ds.
-%  ________________________________________________________________________
-%  Robert Dahnke 2010/01
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 %  $Id$

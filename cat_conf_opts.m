@@ -1,7 +1,13 @@
 function opts = cat_conf_opts(expert)
 % Configuration file for CAT SPM options
 %
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 %#ok<*AGROW>
 

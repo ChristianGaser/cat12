@@ -5,6 +5,12 @@ function cat_run_newcatch(job,tpm,subj)
 %
 % See also cat_run_newcatch.
 % ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Revision$  $Date$
 
   global cat_err_res;
@@ -46,11 +52,7 @@ function cat_run_newcatch(job,tpm,subj)
       caterr = addCause(caterr,adderr);
     end
     
-    if job.extopts.subfolders
-      mrifolder = 'mri';
-    else
-      mrifolder = '';
-    end
+    mrifolder = cat_io_subfolders(job.channel(1).vols{subj},job);
 
     cat_io_cprintf('err',sprintf('\n%s\nCAT Preprocessing error for %s:\n%s\n%s\n%s\n', ...
       repmat('-',1,72),nam,repmat('-',1,72),caterr.message,repmat('-',1,72)));  

@@ -29,13 +29,13 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
 %       - correction of the point removement (half stream-stepsize)
 %       - parfor
 %       * size options for D
-% _________________________________________________________________________
-% 
-%   Robert Dahnke (robert.dahnke@uni-jena.de)
-%   Center of Neuroimaging 
-%   Department of Psychiatry and Psychotherapy 
-%   University hospital Jena
-% _________________________________________________________________________
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$ 
 
 

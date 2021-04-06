@@ -90,6 +90,12 @@ function varargout = cat_vol_imcalc(Vi,Vo,f,flags,varargin)
 % John Ashburner & Andrew Holmes
 % Id: spm_imcalc.m 6043 2014-06-13 14:31:48Z volkmar 
 % ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$ 
 
 SVNid = '$Rev$';

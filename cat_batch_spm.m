@@ -1,6 +1,12 @@
 function cat_batch_spm(batchname)
 % wrapper for using spm8 batch mode (see cat_batch_cat12.sh)
-%_______________________________________________________________________
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 if nargin < 1

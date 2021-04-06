@@ -1,7 +1,13 @@
 function out = cat_vol_nonlin_coreg_multi_run(job)
 % Call cat_vol_nonlin_coreg for multiple subjects
 %
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 global vox reg bb

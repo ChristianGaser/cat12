@@ -18,7 +18,12 @@ function varargout = cat_run(job)
 % based on John Ashburners version of
 % spm_preproc8_run.m 2281 2008-10-01 12:52:50Z john $
 % ______________________________________________________________________
-% Christian Gaser
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 %#ok<*AGROW,*STRIFCND,*STRCL1,*ASGLU,*STREMP>
@@ -46,6 +51,33 @@ if cat_get_defaults('extopts.send_info')
 end
 %}
 
+if isfield(job.output,'BIDS')
+  if isfield(job.output.BIDS,'BIDSyes')
+    BIDSfolder = job.output.BIDS.BIDSyes.BIDSfolder;
+    
+    % get path of first data set and find "sub-" BIDS part
+    name1 = spm_file(job.data{1},'fpath');
+    ind = min(strfind(name1,'sub-'));
+ 
+    if ~isempty(ind)
+      length_name = length(name1);
+      
+      % Shorten path until "sub-" indicator is found and add additional
+      % relative paths to get BIDSfolder relative to "sub-" directories.
+      % This is necessary because there might be additional session 
+      % folders and more
+      while length_name > ind
+        name1 = spm_file(name1,'fpath');
+        BIDSfolder = ['..' filesep BIDSfolder];
+        length_name = length(name1);
+      end
+    end
+    
+    % we need this in job.extopts for cat_io_subfolders
+    job.extopts.BIDSfolder = BIDSfolder;
+  end
+end
+
 if ( isfield(job.extopts,'lazy') && job.extopts.lazy && ~isfield(job,'process_index') ) || ...
    ( isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.extopts.admin.lazy && ~isfield(job,'process_index') )
   jobl      = update_job(job);
@@ -53,7 +85,7 @@ if ( isfield(job.extopts,'lazy') && job.extopts.lazy && ~isfield(job,'process_in
   job.data  = remove_already_processed(jobl); 
   if numel(job.data)==0 
   % If everything is ready (no new subject or subject that requires 
-  % reprocessing) then we need no parrallel jobs.
+  % reprocessing) then we need no parallel jobs.
     job.nproc = 0; 
   end
 end
@@ -184,7 +216,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
         test = inf; 
         if ~strcmpi(spm_check_version,'octave') && usejava('jvm') && feature('ShowFigureWindows') && usejava('awt')
           edit(log_name{i});
-      end
+        end
       end
     end
 
@@ -360,11 +392,10 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
               catSIDlast(i) = catSID(i);
               
               [pp,ff,ee] = spm_fileparts(jobs(i).data{catSID(i)}); 
-              if job.extopts.subfolders
-                catlog = fullfile(pp,'report',['catlog_' ff '.txt']); 
-              else
-                catlog = fullfile(pp,['catlog_' ff '.txt']); 
-              end
+              
+              [mrifolder, reportfolder] = cat_io_subfolders(jobs(i).data{catSID(i)},job);
+              catlog = fullfile(pp,reportfolder,['catlog_' ff '.txt']); 
+
               if exist(catlog,'file')
                 catlogt = ['<a href="matlab:edit(''' catlog ''');">' ...
                   spm_str_manip( catlog , 'k60') ': </a>'];
@@ -510,7 +541,7 @@ function job = update_job(job)
   if isfield(job.output,'ROImenu') % expert/developer GUI that allows control each atlas map 
     if isfield(job.output.ROImenu,'atlases')
       %% image output
-      try, atlases = rmfield(job.output.ROImenu.atlases,'ownatlas'); end
+      try atlases = rmfield(job.output.ROImenu.atlases,'ownatlas'); end
       def.output.atlases = atlases;
       def.output.ROI     = any(cell2mat(struct2cell(atlases))) || ~isempty( job.output.ROImenu.atlases.ownatlas ); 
       
@@ -842,7 +873,6 @@ return;
 
 %_______________________________________________________________________
 function vout = run_job(job)
-  vout   = vout_job(job);
 
   % load tpm priors 
   tpm = char(cat(1,job.tissue(:).tpm));
@@ -853,10 +883,22 @@ function vout = run_job(job)
     % Error management with try-catch blocks
     % See also cat_run_newcatch.
     % __________________________________________________________________
-    cat_run_newcatch(job,tpm,subj); 
+    [pth,nam,ext] = spm_fileparts(job.channel(1).vols{subj});
+    
+    % uncompress nii.gz files and change file name for job
+    if strcmp(ext,'.gz')
+      fname = gunzip(job.channel(1).vols{subj});
+      job.channel(1).vols{subj} = char(fname);
+      fprintf('Uncompress %s\n',job.channel(1).vols{subj});
+      cat_run_newcatch(job,tpm,subj); 
+      spm_unlink(char(fname));
+    else
+      cat_run_newcatch(job,tpm,subj); 
+    end
+    
   end
 
-  % use an extend colormap that also include 
+  % use an extended colormap that also include 
 % ######################################################################
 % RD202007: In case of multiple subjects ...
 %           It should work to use additional colors, but it would also 
@@ -880,6 +922,9 @@ function vout = run_job(job)
     fprintf('\n%s',repmat('_',1,72));
     fprintf('\nCAT12 Segmentation job finished.\n');
   end
+
+  vout   = vout_job(job);
+
 return
 %_______________________________________________________________________
 
@@ -908,30 +953,23 @@ catlog      = {};
 catxml      = {};
 jacobian    = {};
 
-if job.extopts.subfolders
-  roifolder    = 'label';
-  surffolder   = 'surf';
-  mrifolder    = 'mri';
-  reportfolder = 'report';
-else
-  roifolder    = '';
-  surffolder   = '';
-  mrifolder    = '';
-  reportfolder = '';
-end
-
+mrifolder    = cell(n,1);
+reportfolder = cell(n,1);
+surffolder   = cell(n,1);
+labelfolder  = cell(n,1);
 for j=1:n
     [parts{j,:}] = spm_fileparts(job.channel(1).vols{j});
+    [mrifolder{j}, reportfolder{j}, surffolder{j}, labelfolder{j}] = cat_io_subfolders(job.channel(1).vols{j},job);
 end
 
 % CAT report XML file
 % ----------------------------------------------------------------------
 catroi = cell(0,1);
 for j=1:n
-    catxml{j,1}       = fullfile(parts{j,1},reportfolder,['cat_',parts{j,2},'.xml']);
-    catlog{j,1}       = fullfile(parts{j,1},reportfolder,['catlog_',parts{j,2},'.txt']);
-    catreportpdf{j,1} = fullfile(parts{j,1},reportfolder,['catreport_',parts{j,2},'.pdf']);
-    catreportjpg{j,1} = fullfile(parts{j,1},reportfolder,['catreportj_',parts{j,2},'.jpg']);
+    catxml{j,1}       = fullfile(parts{j,1},reportfolder{j},['cat_',parts{j,2},'.xml']);
+    catlog{j,1}       = fullfile(parts{j,1},reportfolder{j},['catlog_',parts{j,2},'.txt']);
+    catreportpdf{j,1} = fullfile(parts{j,1},reportfolder{j},['catreport_',parts{j,2},'.pdf']);
+    catreportjpg{j,1} = fullfile(parts{j,1},reportfolder{j},['catreportj_',parts{j,2},'.jpg']);
 end
 
 
@@ -990,7 +1028,7 @@ for si = 1:numel(sides)
         if ~isempty( surfaceoutput{soi} ) && job.output.surface
           eval( sprintf('%s%s = cell(n,1);' , sides{si} , surfaceoutput_str ) ); 
           for j = 1:n
-            eval( sprintf('%s%s{j} = fullfile(  parts{j,1} , surffolder , ''%s.%s.%s.gii'' ); ' , ...
+            eval( sprintf('%s%s{j} = fullfile(  parts{j,1} , surffolder{j} , ''%s.%s.%s.gii'' ); ' , ...
               sides{si} , surfaceoutput_str , ...
               sides{si} , surfaceoutput{soi}{soii} , parts{j,2} ) ); 
             voutsfields{end+1} = sprintf('%s%s',  sides{si} , surfaceoutput_str );
@@ -1007,7 +1045,7 @@ for si = 1:numel(sides)
         if ~isempty( measureoutput{soi} ) && job.output.surface
           eval( sprintf('%s%s = cell(n,1);' , sides{si} , measureoutput{soi}{soii} ) ); 
           for j = 1:n
-            eval( sprintf('%s%s{j} = fullfile( parts{j,1} , surffolder , ''%s.%s.%s'' ); ' , ...
+            eval( sprintf('%s%s{j} = fullfile( parts{j,1} , surffolder{j} , ''%s.%s.%s'' ); ' , ...
               sides{si} , measureoutput{soi}{soii} , ...
               sides{si} , measureoutput{soi}{soii} , parts{j,2} ) ); 
             voutsfields{end+1} = sprintf('%s%s',  sides{si} , measureoutput{soi}{soii} );
@@ -1024,7 +1062,7 @@ end
 if job.output.ROI
     catroi = cell(n,1);
     for j=1:n
-        catroi{j,1} = fullfile(parts{j,1},roifolder,['catROI_',parts{j,2},'.xml']);
+        catroi{j,1} = fullfile(parts{j,1},labelfolder{j},['catROI_',parts{j,2},'.xml']);
     end
 end
 
@@ -1033,28 +1071,28 @@ end
 if job.output.bias.native
     biascorr = cell(n,1);
     for j=1:n
-        biascorr{j} = fullfile(parts{j,1},mrifolder,['m',parts{j,2},'.nii']);
+        biascorr{j} = fullfile(parts{j,1},mrifolder{j},['m',parts{j,2},'.nii']);
     end
 end
 
 if job.output.bias.warped
     wbiascorr = cell(n,1);
     for j=1:n
-        wbiascorr{j} = fullfile(parts{j,1},mrifolder,['wm',parts{j,2},'.nii']);
+        wbiascorr{j} = fullfile(parts{j,1},mrifolder{j},['wm',parts{j,2},'.nii']);
     end
 end
 
 if job.output.bias.dartel==1
     rbiascorr = cell(n,1);
     for j=1:n
-        rbiascorr{j} = fullfile(parts{j,1},mrifolder,['rm',parts{j,2},'_rigid.nii']);
+        rbiascorr{j} = fullfile(parts{j,1},mrifolder{j},['rm',parts{j,2},'_rigid.nii']);
     end
 end
 
 if job.output.bias.dartel==2
     abiascorr = cell(n,1);
     for j=1:n
-        abiascorr{j} = fullfile(parts{j,1},mrifolder,['rm',parts{j,2},'_affine.nii']);
+        abiascorr{j} = fullfile(parts{j,1},mrifolder{j},['rm',parts{j,2},'_affine.nii']);
     end
 end
 
@@ -1063,28 +1101,28 @@ end
 if job.output.las.native
     ibiascorr = cell(n,1);
     for j=1:n
-        ibiascorr{j} = fullfile(parts{j,1},mrifolder,['mi',parts{j,2},'.nii']);
+        ibiascorr{j} = fullfile(parts{j,1},mrifolder{j},['mi',parts{j,2},'.nii']);
     end
 end
 
 if job.output.las.warped
     wibiascorr = cell(n,1);
     for j=1:n
-        wibiascorr{j} = fullfile(parts{j,1},mrifolder,['wmi',parts{j,2},'.nii']);
+        wibiascorr{j} = fullfile(parts{j,1},mrifolder{j},['wmi',parts{j,2},'.nii']);
     end
 end
 
 if job.output.las.dartel==1
     ribiascorr = cell(n,1);
     for j=1:n
-        ribiascorr{j} = fullfile(parts{j,1},mrifolder,['rmi',parts{j,2},'_rigid.nii']);
+        ribiascorr{j} = fullfile(parts{j,1},mrifolder{j},['rmi',parts{j,2},'_rigid.nii']);
     end
 end
 
 if job.output.las.dartel==2
     aibiascorr = cell(n,1);
     for j=1:n
-        aibiascorr{j} = fullfile(parts{j,1},mrifolder,['rmi',parts{j,2},'_affine.nii']);
+        aibiascorr{j} = fullfile(parts{j,1},mrifolder{j},['rmi',parts{j,2},'_affine.nii']);
     end
 end
 
@@ -1094,28 +1132,28 @@ end
 if job.output.label.native
     label = cell(n,1);
     for j=1:n
-        label{j} = fullfile(parts{j,1},mrifolder,['p0',parts{j,2},'.nii']);
+        label{j} = fullfile(parts{j,1},mrifolder{j},['p0',parts{j,2},'.nii']);
     end
 end
 
 if job.output.label.warped
     wlabel = cell(n,1);
     for j=1:n
-        wlabel{j} = fullfile(parts{j,1},mrifolder,['wp0',parts{j,2},'.nii']);
+        wlabel{j} = fullfile(parts{j,1},mrifolder{j},['wp0',parts{j,2},'.nii']);
     end
 end
 
 if job.output.label.dartel==1
     rlabel = cell(n,1);
     for j=1:n
-        rlabel{j} = fullfile(parts{j,1},mrifolder,['rp0',parts{j,2},'_rigid.nii']);
+        rlabel{j} = fullfile(parts{j,1},mrifolder{j},['rp0',parts{j,2},'_rigid.nii']);
     end
 end
 
 if job.output.label.dartel==2
     alabel = cell(n,1);
     for j=1:n
-        alabel{j} = fullfile(parts{j,1},mrifolder,['rp0',parts{j,2},'_affine.nii']);
+        alabel{j} = fullfile(parts{j,1},mrifolder{j},['rp0',parts{j,2},'_affine.nii']);
     end
 end
 
@@ -1127,37 +1165,37 @@ for i=1:numel(job.tissue)
     if job.tissue(i).native(1)
         tiss(i).p = cell(n,1);
         for j=1:n
-            tiss(i).p{j} = fullfile(parts{j,1},mrifolder,['p',num2str(i),parts{j,2},'.nii']);
+            tiss(i).p{j} = fullfile(parts{j,1},mrifolder{j},['p',num2str(i),parts{j,2},'.nii']);
         end
     end
     if job.tissue(i).native(2)
         tiss(i).rp = cell(n,1);
         for j=1:n
-            tiss(i).rp{j} = fullfile(parts{j,1},mrifolder,['rp',num2str(i),parts{j,2},'_rigid.nii']);
+            tiss(i).rp{j} = fullfile(parts{j,1},mrifolder{j},['rp',num2str(i),parts{j,2},'_rigid.nii']);
         end
     end
     if job.tissue(i).native(3)
         tiss(i).rpa = cell(n,1);
         for j=1:n
-            tiss(i).rpa{j} = fullfile(parts{j,1},mrifolder,['rp',num2str(i),parts{j,2},'_affine.nii']);
+            tiss(i).rpa{j} = fullfile(parts{j,1},mrifolder{j},['rp',num2str(i),parts{j,2},'_affine.nii']);
         end
     end
     if job.tissue(i).warped(1)
         tiss(i).wp = cell(n,1);
         for j=1:n
-            tiss(i).wp{j} = fullfile(parts{j,1},mrifolder,['wp',num2str(i),parts{j,2},'.nii']);
+            tiss(i).wp{j} = fullfile(parts{j,1},mrifolder{j},['wp',num2str(i),parts{j,2},'.nii']);
         end
     end
     if job.tissue(i).warped(2)
         tiss(i).mwp = cell(n,1);
         for j=1:n
-            tiss(i).mwp{j} = fullfile(parts{j,1},mrifolder,['mwp',num2str(i),parts{j,2},'.nii']);
+            tiss(i).mwp{j} = fullfile(parts{j,1},mrifolder{j},['mwp',num2str(i),parts{j,2},'.nii']);
         end
     end
     if job.tissue(i).warped(3)
         tiss(i).m0wp = cell(n,1);
         for j=1:n
-            tiss(i).m0wp{j} = fullfile(parts{j,1},mrifolder,['m0wp',num2str(i),parts{j,2},'.nii']);
+            tiss(i).m0wp{j} = fullfile(parts{j,1},mrifolder{j},['m0wp',num2str(i),parts{j,2},'.nii']);
         end
     end
 end
@@ -1168,7 +1206,7 @@ end
 if job.output.warps(1)
     fordef = cell(n,1);
     for j=1:n
-        fordef{j} = fullfile(parts{j,1},mrifolder,['y_',parts{j,2},'.nii']);
+        fordef{j} = fullfile(parts{j,1},mrifolder{j},['y_',parts{j,2},'.nii']);
     end
 else
     fordef = {};
@@ -1177,7 +1215,7 @@ end
 if job.output.warps(2)
     invdef = cell(n,1);
     for j=1:n
-        invdef{j} = fullfile(parts{j,1},mrifolder,['iy_',parts{j,2},'.nii']);
+        invdef{j} = fullfile(parts{j,1},mrifolder{j},['iy_',parts{j,2},'.nii']);
     end
 else
     invdef = {};
@@ -1189,17 +1227,17 @@ end
 if job.output.jacobian.warped
     jacobian = cell(n,1);
     for j=1:n
-        jacobian{j} = fullfile(parts{j,1},mrifolder,['wj_',parts{j,2},'.nii']);
+        jacobian{j} = fullfile(parts{j,1},mrifolder{j},['wj_',parts{j,2},'.nii']);
     end
 end
 
 % affine/ridid tranformation matrices 
 % ----------------------------------------------------------------------
 if job.output.rmat
-  ta  = {fullfile(parts{j,1},mrifolder,['t_' ,parts{j,2},'_affine_reorient.mat'])};
-  ita = {fullfile(parts{j,1},mrifolder,['it_',parts{j,2},'_affine_reorient.mat'])};
-  tr  = {fullfile(parts{j,1},mrifolder,['t_' ,parts{j,2},'_rigid_reorient.mat'])};
-  itr = {fullfile(parts{j,1},mrifolder,['it_',parts{j,2},'_rigid_reorient.mat'])};
+  ta  = {fullfile(parts{j,1},mrifolder{j},['t_' ,parts{j,2},'_affine_reorient.mat'])};
+  ita = {fullfile(parts{j,1},mrifolder{j},['it_',parts{j,2},'_affine_reorient.mat'])};
+  tr  = {fullfile(parts{j,1},mrifolder{j},['t_' ,parts{j,2},'_rigid_reorient.mat'])};
+  itr = {fullfile(parts{j,1},mrifolder{j},['it_',parts{j,2},'_rigid_reorient.mat'])};
 else
   ta  = {}; 
   ita = {};
@@ -1246,15 +1284,7 @@ return
 
 %=======================================================================
 function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
-  if job.extopts.subfolders
-    roifolder    = 'label';
-    surffolder   = 'surf';
-    reportfolder = 'report';
-  else
-    roifolder    = '';
-    surffolder   = '';
-    reportfolder = '';
-  end
+  [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(job.data{subj},job);
 
   lazy = 0;
 
@@ -1384,7 +1414,7 @@ function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
     end
     
     % rois
-    if job.output.ROI && ~exist(fullfile(pp,roifolder,['catROI_' ff '.xml']),'file')  % miss ROI xml
+    if job.output.ROI && ~exist(fullfile(pp,labelfolder,['catROI_' ff '.xml']),'file')  % miss ROI xml
       return
     end
       

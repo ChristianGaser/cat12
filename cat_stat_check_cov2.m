@@ -17,8 +17,13 @@ function varargout = cat_stat_check_cov2(job)
 %   [.gap]       .. gap between slices (in case of volume input)
 %  varargout     ..
 %
-% _________________________________________________________________________
-% Christian Gaser & Robert Dahnke
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 %#ok<*AGROW,*ASGLU,*TRYNC,*MINcscc.data.V,*INUSD,*INUSL,*MINV>

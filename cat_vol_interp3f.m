@@ -50,4 +50,11 @@
 %  See also compile.
 %  ________________________________________________________________________
 %  <a href="www.brian-amberg.de/">Brian Amberg, 2008</a> 
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 %  $Id$

@@ -10,7 +10,12 @@ function [PO,sinfo] = cat_surf_rename(P,varargin)
 %   Check the help for cat_surf_info for information about fields that 
 %   can be renamed.
 % ______________________________________________________________________
-% Robert Dahnke
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 % Todo: update sinfo! also for other fields!

@@ -1,10 +1,14 @@
 function stoolsexp = cat_conf_stoolsexp
 %_______________________________________________________________________
 % wrapper for calling CAT surface utilities
-%_______________________________________________________________________
-% Robert Dahnke and Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
-%_______________________________________________________________________
 
 
 

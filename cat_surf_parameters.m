@@ -24,8 +24,13 @@ function varargout = cat_surf_parameters(job)
 %    .surfaces  .. further cortical surfaces
 %     .IS       .. create inner surface (default 0)
 %     .OS       .. create outer surface (default 0)
-%_______________________________________________________________________
-% Christian Gaser & Robert Dahnke
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
   SVNid = '$Rev$';

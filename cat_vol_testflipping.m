@@ -9,8 +9,13 @@ function [flipped,flippedval,stime] = cat_vol_testflipping(varargin)
 %
 %  isflipped = cat_vol_testflipping(obj,Affine,method,stime,verb)
 %  
-% _________________________________________________________________________
-% Robert Dahnke
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
   if nargin == 1; 

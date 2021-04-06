@@ -20,10 +20,12 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
 % QM: res + noise + bias + contrast
 % QS: vol 
 % ______________________________________________________________________
-% Robert Dahnke 2013_05
-% Structural Brain Mapping Group
-% University Jena
-%  
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 %#ok<*NASGU,*STRNU>

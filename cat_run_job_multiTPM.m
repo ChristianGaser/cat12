@@ -28,10 +28,12 @@ function [Affine,tpm,res] = cat_run_job_multiTPM(job,obj,Affine,skullstripped,ms
 % utilize the TPM based affine registration spm_maffreg of SPM and the 
 % unified segmentation. 
 % ______________________________________________________________________
-% Robert Dahnke 
-% Structural Brain Mapping Group
-% University Jena
 %
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 % ______________________________________________________________________
 
@@ -184,7 +186,7 @@ function [Affine,tpm,res] = cat_run_job_multiTPM(job,obj,Affine,skullstripped,ms
     catch
       mAffine{i} = Affine; 
     end
-    % futher checks and corrections??
+    % further checks and corrections??
     
     
     % call Unified Segmentation

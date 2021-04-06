@@ -10,11 +10,16 @@ function d = cat_long_shoot_defaults
 % according to taste.  Some of them will influence the speed/accuracy
 % tradeoff, whereas others are various regularisation settings
 % (registration and template blurring)...
-
 %_______________________________________________________________________
 % Copyright (C) Wellcome Trust Centre for Neuroimaging (2009)
-
 % John Ashburner
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 

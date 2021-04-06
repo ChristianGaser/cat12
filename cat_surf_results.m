@@ -63,8 +63,13 @@ function varargout = cat_surf_results(action, varargin)
 %  * cat_surf_results('hide_neg',[,0..1]); 
 %  Hide negative results (1) or show everything (0). Toggles without input.
 %
-%_______________________________________________________________________
-% Christian Gaser & Robert Dahnke (batch-mode)
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 global H y x

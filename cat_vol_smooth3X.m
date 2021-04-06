@@ -1,6 +1,12 @@
 function S=cat_vol_smooth3X(S,s,filter) 
 % S=cat_vol_smooth3X(S,s,filter) 
-% _________________________________________________________________________
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % TODO - vx_vol!!!!!!!
 %      - filter strength is also influcenced by the downsampling!!!
   if ~exist('s','var'), s=1; end

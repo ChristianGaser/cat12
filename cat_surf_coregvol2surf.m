@@ -1,4 +1,11 @@
-%-----------------------------------------------------------------------
+% Nonlinear coregistration batch
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % Job saved on 29-Nov-2017 20:46:02 by cfg_util (rev $Rev$)
 % spm SPM - SPM12 (7219)
 % cfg_basicio BasicIO - Unknown

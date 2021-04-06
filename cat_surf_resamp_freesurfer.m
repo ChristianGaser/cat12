@@ -1,8 +1,13 @@
 function cat_surf_resamp_freesurfer(vargin)
 %cat_surf_resamp_freesurfer to resample parameters to template
 % space and smooth it.
-%_______________________________________________________________________
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
   
   rev = '$Rev$';

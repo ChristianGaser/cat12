@@ -1,7 +1,15 @@
 function I=cat_vol_nanmean3(I,s,iterations)
 % _________________________________________________________________________
 % smooth image with nans
-% _________________________________________________________________________
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
+% $Id$
+
   if ~isa('I','single'), I = single(I); end; 
   if ~exist('s','var'), s=1; end
   if ~exist('iterations','var'), iterations=1; end

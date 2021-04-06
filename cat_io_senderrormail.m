@@ -4,7 +4,12 @@ function cat_io_senderrormail(job)
 % As input a set of directories is required. 
 % It extract XML and PDF files of failed preprocessings.
 % ______________________________________________________________________
-% Robert Dahnke 
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Revision$  $Date$
 
 %#ok<*TRYNC>

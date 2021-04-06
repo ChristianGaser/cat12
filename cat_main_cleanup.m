@@ -5,7 +5,15 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
 %  First we need to describe our region of interest. Blood vessels and 
 %  menignes occure in the sulci and next to the skull. Therefore we 
 %  use the brainmask and the label map to identify special regions.
-%  -----------------------------------------------------------------
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
+% $Id$
+
   dbs   = dbstatus; debug = 0; 
   for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,'cat_main_cleanup'); debug = 1; break; end; end
 

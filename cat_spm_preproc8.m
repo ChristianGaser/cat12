@@ -69,8 +69,14 @@ function results = cat_spm_preproc8(obj)
 % NeuroImage 26(3):839-851 (2005).
 %_______________________________________________________________________
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
-
 % John Ashburner
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 % RD20200301: The wp_reg parameter was changed in SPM12 R7771 to 100 but 

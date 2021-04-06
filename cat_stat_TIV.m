@@ -1,8 +1,13 @@
 function varargout = cat_stat_TIV(p)
 %cat_stat_TIV to read total intracranial volume (TIV) from xml-files
 %
-%_______________________________________________________________________
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 if ~p.calcvol_TIV

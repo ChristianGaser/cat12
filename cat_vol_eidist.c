@@ -48,11 +48,13 @@
  *   ds('x2','',1,A,D,D,I,25)
  *
  * see also compile.m
- * _____________________________________________________________________
- * Robert Dahnke 
- * Structural Brain Mapping Group
- * University Jena
+ * ______________________________________________________________________
  *
+ * Christian Gaser, Robert Dahnke
+ * Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+ * Departments of Neurology and Psychiatry
+ * Jena University Hospital
+ * ______________________________________________________________________
  * $Id$ 
  */
 

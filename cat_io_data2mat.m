@@ -34,8 +34,13 @@ function varargout = cat_io_data2mat(opt)
 % and save Data.mat in subfolder test
 % files = spm_select('FPListRec',pwd,'^s12.mesh.thickness.resampled_32k.*\.gii$');
 % cat_io_data2mat(struct('data',files,'fname','Data.mat','outdir','test'));
-%_______________________________________________________________________
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 if ~exist('opt','var') || (~isfield(opt,'data_type') && ~isfield(opt,'data') )

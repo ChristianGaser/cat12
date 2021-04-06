@@ -1,7 +1,13 @@
 function out = cat_long_multi_run(job)
 % Call cat_long_main for multiple subjects
 %
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 warning off;
@@ -81,21 +87,11 @@ jobs = repmat({m_job_name}, 1, numel(job.subj));
 
 inputs = cell(1, numel(job.subj));
 
-if cat_get_defaults('extopts.subfolders')
-  mrifolder    = 'mri';
-  surffolder   = 'surf';
-  labelfolder  = 'label';
-  reportfolder = 'report';
-else
-  mrifolder    = '';
-  surffolder   = ''; 
-  labelfolder  = '';
-  reportfolder = ''; 
-end
-
 out.surf = cell(''); out.thick = cell(''); out.mwp1 = cell('');
 out.catreport = cell(''); out.catroi = cell('');
+
 for i=1:numel(job.subj)
+  [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(job.subj(i).mov{1},job);
   out.sess(i).warps = cell(1,1);
   [pth,nam,ext,num] = spm_fileparts(job.subj(i).mov{1});
   out.sess(i).warps{1} = fullfile(pth,mrifolder,['avg_y_', nam, ext, num]);

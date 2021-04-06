@@ -8,7 +8,12 @@ function vout = cat_surf_resamp(varargin)
 % job.fwhm_surf .. filter size in mm
 % job.verb      .. display command line progress
 % ______________________________________________________________________
-% Christian Gaser
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 %#ok<*AGROW,*STREMP>

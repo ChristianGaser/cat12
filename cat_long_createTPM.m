@@ -26,7 +26,7 @@ function out = cat_long_createTPM(job)
 %    .writeBM      .. save brainmask image (default=1);
 %    .verb         .. be verbose
 %
-%   (futher expert parameters)
+%   (further expert parameters)
 %    .ssize        .. smoothing strength for levels 
 %                     (default: [ 0.5  1    2    4    8    ])
 %    .sweight      .. weight of the smoothing levels
@@ -44,8 +44,13 @@ function out = cat_long_createTPM(job)
 %
 % See cat_vol_createTPM.
 %
-% _________________________________________________________________________
-% Robert Dahnke 
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 
@@ -67,7 +72,7 @@ function out = cat_long_createTPM(job)
   def.fast         = 1;                             % CAT vs. SPM smoothing 
   def.median       = 1;                             % use median filter (values from 0 to 1) 
   def.sanlm        = 0;                             % use sanlm filter (0|1)
-  def.localsmooth  = 1;                             % use futher local smoothing within the tissue class (values from 0 to 1) 
+  def.localsmooth  = 1;                             % use further local smoothing within the tissue class (values from 0 to 1) 
   def.defTPM       = fullfile(spm('dir'),'tpm','TPM.nii'); % SPM TPM
   def.defTPMmix    = 0.05;                          % percentual use of the SPM TPM 
   def.fstrength    = 0; 

@@ -11,6 +11,11 @@
 %  R (logical) .. range for distance calculation (to speedup processing)
 %
 %  See also bwdist, cat_vol_eidist, compile.
-%  ________________________________________________________________________
-%  Robert Dahnke 2010/01
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 %  $Id$

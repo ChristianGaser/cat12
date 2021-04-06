@@ -1,3 +1,13 @@
+/* ______________________________________________________________________
+ *
+ * Christian Gaser, Robert Dahnke
+ * Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+ * Departments of Neurology and Psychiatry
+ * Jena University Hospital
+ * ______________________________________________________________________
+ * $Id$
+ */
+
 #include "mex.h"
 #include "math.h"
 #include "stdio.h"

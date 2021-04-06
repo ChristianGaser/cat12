@@ -1,8 +1,13 @@
 function cat_stat_IQR(p)
 %cat_stat_IQR to read weighted overall image quality (IQR) from xml-files
 %
-%_______________________________________________________________________
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 fid = fopen(p.iqr_name,'w');

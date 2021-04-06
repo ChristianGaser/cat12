@@ -4,8 +4,13 @@ function Yg = cat_vol_grad(Ym,vx_vol,noabs)
 %
 % Yg = cat_vol_grad(Ym,vx_vol,noabs)
 %
-% ----------------------------------------------------------------------
-% Robert Dahnke
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
   if ~exist('vx_vol','var'), vx_vol=ones(1,3); end

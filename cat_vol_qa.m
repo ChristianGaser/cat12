@@ -62,9 +62,12 @@ function varargout = cat_vol_qa(action,varargin)
 %   opt.prefix     = prefix of xml output file (default cat_*.xml) 
 %
 % ______________________________________________________________________
-% Robert Dahnke 
-% Structural Brain Mapping Group
-% University Jena
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 %
 % $Id$
 % ______________________________________________________________________
@@ -80,13 +83,7 @@ function varargout = cat_vol_qa(action,varargin)
   QAR = struct(); 
   if nargout>0, varargout = cell(1,nargout); end
 
-  if cat_get_defaults('extopts.subfolders')
-    mrifolder = 'mri';
-    reportfolder = 'report';
-  else
-    mrifolder = '';
-    reportfolder = '';
-  end
+  [mrifolder, reportfolder] = cat_io_subfolders(varargin{4}.catlog,varargin{6}.job);
    
   % no input and setting of default options
   if nargin==0, action='p0'; end 
