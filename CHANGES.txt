@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1791 | gaser | 2021-04-06 11:14:54
+r1792 | gaser | 2021-04-06 15:07:52
+
+Changed paths:
+M       CHANGES.txt
+A       cat_io_subfolders.m
+M       cat_surf_createCS2.m
+
+(1) Fixed:   Added missing cat_io_subfolder.m.
+(2) Fixed:   Variable etime was not defined for usepior flag in 
+             cat_surf_createCS2.m
+
+------------------------------------------------------------------------
+r1791 | gaser | 2021-04-06 11:15:54 +0200 (Di, 06 Apr 2021) | 280 lines
 
 Changed paths:
 M       Amap.c
@@ -280,6 +292,7 @@ M       vollib.c
 (2) Changed: Updated and cleaned cat_batch_cat.m.
 (3) Changed: Added/edited header in all files to provide copyright information.
 (4) Changed: Added support for nii.gz files for core segmentation.
+
 ------------------------------------------------------------------------
 r1790 | dahnke | 2021-04-05 20:40:34 +0200 (Mo, 05 Apr 2021) | 28 lines
 
