@@ -1348,7 +1348,7 @@ if opt.SRP==3, facevertexcdata = Tfs; end
         Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
     end
-    fprintf('%5.0fs\n',etime(clock,stime)); 
+    if ~useprior, fprintf('%5.0fs\n',etime(clock,stime)); end
 
     
     
