@@ -8,8 +8,13 @@ function [Ym,Yt,Ybg,WMth,bias,Tth,pior] = cat_run_job_APP_init(Ysrco,vx_vol,opt)
 %  be seen in overfitting of the subcortical structures.
 %  However, this filtering will overcorrect head tissue with
 %  a typical intensity around GM.
-%  _____________________________________________________________________
-%  Robert Dahnke
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 %  $Id$
 
   if ~exist('opt','var'); opt = struct(); end
@@ -219,7 +224,7 @@ function [Ym,Yt,Ybg,WMth,bias,Tth,pior] = cat_run_job_APP_init(Ysrco,vx_vol,opt)
   %%
   if ~highBG
     Ywi2 = ( Ym .* Yt) ./ max(eps,Yt);
-    % it would be nice to use futher regions, but as far as we did not know
+    % it would be nice to use further regions, but as far as we did not know
     % their average intensity in relation to the bias field it not so easy
     if ~zeroBG
       Ybg2 = Ybg(:) & Yg(:)<(cat_stat_nanmean(Yg(Ybg(:))) + 2*(cat_stat_nanstd(Yg(Ybg(:))))); 

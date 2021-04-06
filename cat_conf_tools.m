@@ -2,8 +2,13 @@ function tools = cat_conf_tools(expert)
 % wrapper for calling CAT utilities
 % 
 % tools = cat_conf_tools(expert)
-%_______________________________________________________________________
-% Christian Gaser & Robert Dahnke
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 % multi use fields

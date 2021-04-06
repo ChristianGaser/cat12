@@ -79,8 +79,13 @@ function out = cat_vol_sanlm(varargin)
 % to 1.0x1.0x1.5 mm, whereas a 0.8x0.8x0.4 mm images is reduced to 
 % 0.8x0.8x0.8 mm and a 1x1x1 mm dataset is not reduced at all. 
 %
-%_______________________________________________________________________
+% ______________________________________________________________________
+%
 % Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
     % this function adds noise to the data to stabilize processing and we

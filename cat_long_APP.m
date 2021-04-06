@@ -26,7 +26,12 @@ function [Ym,Yb,WMth,Affine] = cat_long_APP(PF,PG,PB,opt)
 % Display result
 %   ds('l2','',vx_vol,Ym,Yb,Yp0,Ym,160)
 % ______________________________________________________________________
-% Robert Dahnke
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 %#ok<*WNOFF,*WNON>

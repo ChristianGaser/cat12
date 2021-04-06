@@ -17,6 +17,14 @@ function varargout = cat_surf_load(files,sides,data)
 %  avg    .. use average mesh 
 %              1-FreeSurfer, 2-Shooting 
 %  type?  .. central, pial, white, hull
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
+% $Id$
 
 %#ok<*AGROW>
 

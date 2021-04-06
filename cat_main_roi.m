@@ -41,10 +41,10 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
 %
 % ______________________________________________________________________
 %
-%   Robert Dahnke (robert.dahnke@uni-jena.de)
-%   Structural Brain Mapping Group (http://dbm.neuro.uni-jena.de/)
-%   Department of Neurology
-%   University Jena
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
 % ______________________________________________________________________
 % $Id$
   
@@ -59,11 +59,7 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
   % in case of SPM input segmentation we have to add the name here to have a clearly different naming of the CAT output 
   if isfield(job,'spmpp'), nam = ['c1' nam]; end
   % definition of subfolders
-  if job.extopts.subfolders
-    labelfolder   = 'label';
-  else
-    labelfolder   = '';
-  end
+  [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(trans.native.Vo.fname,job);
 
   % voxel size of the processed image
   vx_vol = sqrt( sum( trans.native.Vi.mat(1:3,1:3).^2 ) ); 

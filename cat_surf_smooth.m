@@ -10,7 +10,12 @@ function varargout = cat_surf_smooth(varargin)
 % job.nproc .. parallel jobs
 % job.assuregifti .. creaty only gifti data (mesh and texture); def==0
 % ______________________________________________________________________
-% Robert Dahnke
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 % further private job options

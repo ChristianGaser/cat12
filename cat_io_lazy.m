@@ -21,8 +21,13 @@ function run = cat_io_rerun(files,filedates)
 %  3) Is this function younger than one year?
 %     cat_io_lazy(which('cat_io_lazy'),clock - [1 0 0 0 0 0]) 
 %
-% _________________________________________________________________________
-% Robert Dahnke
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
   files = cellstr(files);

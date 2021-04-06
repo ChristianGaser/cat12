@@ -122,8 +122,14 @@ function varargout = cat_spm_results_ui(varargin)
 % body of the code.
 %__________________________________________________________________________
 % Copyright (C) 1996-2018 Wellcome Trust Centre for Neuroimaging
- 
 % Karl Friston & Andrew Holmes
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
  
  

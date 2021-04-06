@@ -15,8 +15,13 @@ function cat_stat_check_SPM(job)
 % .adjust_data         - adjust data using design matrix
 % .check_cov           - check sample homogeneity using covariance
 % .check_ortho         - check for design orthogonality
-%_______________________________________________________________________
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 if nargin == 0

@@ -11,8 +11,13 @@ function [S,Stype,removed] = cat_io_checkdepfiles(S,usedummy)
 %   S = cat_io_checkdepfiles(S);
 %
 %   [S,Stype] = cat_io_checkdepfiles(S,usedummy)
-% _________________________________________________________________________
-% Robert Dahnke
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 

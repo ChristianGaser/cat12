@@ -25,6 +25,13 @@ function varargout = cat_get_defaults(defstr, varargin)
 
 % based on Volkmar Glauches version of
 % spm_get_defaults
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 global cat;

@@ -63,7 +63,12 @@ function out = cat_surf_vol2surf(varargin)
 %                       this option is intended for high-resolution  
 %                       (f)MRI data only.
 % ______________________________________________________________________
-% Robert Dahnke, Christian Gaser
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
  
   spm_clf('Interactive'); 

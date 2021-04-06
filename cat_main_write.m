@@ -5,10 +5,10 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
 %   cat_warnings = cat_main_write(Ym,Ycls,Yp0b,job,trans,cat_warnings)
 % ______________________________________________________________________
 %
-%   Robert Dahnke (robert.dahnke@uni-jena.de)
-%   Structural Brain Mapping Group (http://dbm.neuro.uni-jena.de/)
-%   Department of Neurology
-%   University Jena
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
 % ______________________________________________________________________
 % $Id$
 
@@ -29,11 +29,7 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
   tc = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)]; 
 
   % definition of subfolders
-  if job.extopts.subfolders
-    mrifolder     = 'mri';
-  else
-    mrifolder     = '';
-  end
+  mrifolder = cat_io_subfolders(VT0.fname,job);
   
   if isfield(trans,'warped') && isfield(trans.warped,'push') && trans.warped.push
     stime = cat_io_cmd('Write result maps (with push)');

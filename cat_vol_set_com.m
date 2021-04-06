@@ -10,7 +10,12 @@ function Affine = cat_vol_set_com(V)
 % If no output filed is defined the estimated transformation is applied 
 % to the images
 % ______________________________________________________________________
-% Christian Gaser
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 

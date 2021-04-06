@@ -18,10 +18,6 @@ function varargout = cat12(varargin)
 %     action = 'select' 
 %     action = 'mypath/cat_defaults_mydefaults'
 %
-% ______________________________________________________________________
-% Christian Gaser, Robert Dahnke
-% $Id$
-
 % CAT12 M-file for cat12.fig
 %      CAT12, by itself, creates a new CAT12 or raises the existing
 %      singleton*.
@@ -42,15 +38,18 @@ function varargout = cat12(varargin)
 %      instance to run (singleton)".
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
-
-% Edit the above title to modify the response to help cat12
-
-% Last Modified by GUIDE v2.5 23-Jan-2018 22:36:22
-
 % Turn off gifti data warning in gifti/subsref (line 45)
 %   Warning: A value of class "int32" was indexed with no subscripts specified. 
 %            Currently the result of this operation is the indexed value itself, 
 %            but in a future release, it will be an error. 
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
+% $Id$
 
 %#ok<*NASGU,*INUSD,*DEFNU>
 

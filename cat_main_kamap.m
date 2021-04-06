@@ -18,9 +18,10 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,Yy,tpm,job,res,vx_vol,stime2)
 %   stime2  .. just a time stamp
 % ______________________________________________________________________
 %
-% Robert Dahnke, Christian Gaser 
-% Structural Brain Mapping Group
-% University Jena 
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
 % ______________________________________________________________________
 % $Id$ 
 

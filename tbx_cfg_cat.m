@@ -59,12 +59,12 @@ nproc.help    = {
 data          = cfg_files;
 data.tag      = 'data';
 data.name     = 'Volumes';
-data.filter   = 'image';
+data.filter   = '.*\.(nii|nii.gz)$';
 data.ufilter  = '.*';
 data.num      = [0 Inf];
 data.help     = {
-  'Select highres raw data (e.g. T1 images) for segmentation. This assumes that there is one scan for each subject. Note that multi-spectral (when there are two or more registered images of different contrasts) processing is not implemented for this method.'};
-data.preview  = @(f) spm_check_registration(char(f));
+  'Select highres raw data (e.g. T1 images) for segmentation. This assumes that there is one scan for each subject. Note that multi-spectral (when there are two or more registered images of different contrasts) processing is not implemented for this method. Nifti files and compressed nifti files are supported.'};
+%data.preview  = @(f) spm_check_registration(char(f));
 
 data_wmh          = cfg_files;
 data_wmh.tag      = 'data_wmh';
@@ -105,14 +105,14 @@ useprior.help     = {
 };
 
 %% ------------------------------------------------------------------------
-tools       = cat_conf_tools(expert);     % volume tools
-stools      = cat_conf_stools(expert);    % surface tools
-stoolsexp   = cat_conf_stoolsexp;         % surface expert tools
-stoolsexp.hidden = expert<2;
-extopts     = cat_conf_extopts(expert);
-opts        = cat_conf_opts(expert); 
+tools               = cat_conf_tools(expert);     % volume tools
+stools              = cat_conf_stools(expert);    % surface tools
+stoolsexp           = cat_conf_stoolsexp;         % surface expert tools
+stoolsexp.hidden    = expert<2;
+extopts             = cat_conf_extopts(expert);
+opts                = cat_conf_opts(expert); 
 [output,output_spm] = cat_conf_output(expert); 
-long        = cat_conf_long;
+long                = cat_conf_long;
 
 %% ------------------------------------------------------------------------
 estwrite        = cfg_exbranch;

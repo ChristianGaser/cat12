@@ -2,8 +2,13 @@ function varargout = cat_install_tfce(install)
 % 
 % This function will connect to the SBM server and install
 % the TFCE toolbox
-%_______________________________________________________________________
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 if nargin == 0

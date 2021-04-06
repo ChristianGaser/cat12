@@ -2,7 +2,15 @@
 % Job saved on 12-Feb-2018 11:14:32 by cfg_util (rev $Rev$)
 % spm SPM - SPM12 (7219)
 % cfg_basicio BasicIO - Unknown
-%-----------------------------------------------------------------------
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
+% $Id$
+
 matlabbatch{1}.spm.stats.factorial_design.dir = '<UNDEFINED>';
 matlabbatch{1}.spm.stats.factorial_design.des.t1.scans = '<UNDEFINED>';
 matlabbatch{1}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});

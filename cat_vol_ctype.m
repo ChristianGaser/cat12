@@ -12,10 +12,11 @@ function Y=cat_vol_ctype(Y,type)
 % classes etc.!
 % ______________________________________________________________________
 %
-% Robert Dahnke 
-% Structural Brain Mapping Group
-% University Jena
-%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 % ______________________________________________________________________
  

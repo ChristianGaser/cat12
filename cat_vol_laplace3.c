@@ -11,11 +11,13 @@
  * TH   = threshold to control the number of iterations
  *        maximum change of an element after iteration
  *
- * ________________________________________________________________________
- * Robert Dahnke
- * Center of Neuroimaging 
- * University Jena
+ * ______________________________________________________________________
  *
+ * Christian Gaser, Robert Dahnke
+ * Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+ * Departments of Neurology and Psychiatry
+ * Jena University Hospital
+ * ______________________________________________________________________
  * $Id$ 
  */
 

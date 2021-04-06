@@ -2,7 +2,14 @@
 % Job for longitudinal batch
 % Christian Gaser
 % $Id$
-%-----------------------------------------------------------------------
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
+% $Id$ 
 
 % global variables don't work properly in deployed mode, thus we have to use
 % setappdat/getappdata

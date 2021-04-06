@@ -4,7 +4,13 @@ function cat_batch_cat(namefile,cat_defaults)
 % namefile      - array of file names or text file with file names
 % cat_defaults  - use this default file instead of cat_defaults.m
 %
-%_______________________________________________________________________
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
  %#ok<*TRYNC>
@@ -13,6 +19,8 @@ if nargin < 1
   fprintf('Syntax: cat_batch_cat(namefile,cat_defaults)\n');
   return
 end
+
+addpath(fileparts(which(mfilename)))
 
 [t,pid] = system('echo $$');
 fprintf('cat_batch_cat: \n  PID = %s\n\n',pid);
@@ -77,45 +85,10 @@ end
 matlabbatch{1}.spm.tools.cat.estwrite = cat;
 matlabbatch{1}.spm.tools.cat.estwrite.data = cellstr(names);
 
-% remove extopts fields
-extopts_fields = char('NCstr','BVCstr','regstr','WMHC','WMHCstr','mrf','INV','restype','resval','species','darteltpm','shootingtpm',...
-            'cat12atlas','brainmask','T1','pbtres','close_parahipp','scale_cortex','add_parahipp','colormap','verb','ignoreErrors',...
-            'expertgui','subfolders','experimental','atlas','LAB','print','cleanupstr','SLC','spm_kamap','fontsize','satlas',...
-            'send_info','pbtlas','thick_measure','thick_limit','collcorr','nproc','gifti_dat','reduce_mesh','vdist','setCOM',...
-            'shootingsurf','pth_templates','shootingT1','report','vox');
-for i=1:size(extopts_fields,1)
-  try
-    matlabbatch{1}.spm.tools.cat.estwrite.extopts = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.extopts,deblank(extopts_fields(i,:)));
-  end
-end
-
-% remove output fields
-output_fields = char('atlas','te','pc','WMH','ROI','TPMC','label','CSF','WM','GM','las','bias','ct','SL','jacobian','atlases','pp');
-for i=1:size(output_fields,1)
-  try
-    matlabbatch{1}.spm.tools.cat.estwrite.output = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output,deblank(output_fields(i,:)));
-  end
-end
-
-% remove opts fields
-opts_fields = char('ngaus','warpreg','biasreg','biasfwhm','samp','redspmres','tol','accstr','biasstr');
-for i=1:size(opts_fields,1)
-  try
-    matlabbatch{1}.spm.tools.cat.estwrite.opts = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.opts,deblank(opts_fields(i,:)));
-  end
-end
-
-tmp_fields  = char('mod','native','warped','dartel');
-tmp_map = char('GM','WM','CSF','bias','las','WMH','label','jacobian','ct','SL');
-for i=1:size(tmp_map,1)
-  for j=1:size(tmp_fields,1)  
-    if isfield(matlabbatch{1}.spm.tools.cat.estwrite.output,(deblank(tmp_map(i,:))))
-      if isfield(matlabbatch{1}.spm.tools.cat.estwrite.output.(deblank(tmp_map(i,:))),deblank(tmp_fields(j,:)))
-        matlabbatch{1}.spm.tools.cat.estwrite.output.(deblank(tmp_map(i,:))) = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output.(deblank(tmp_map(i,:))),deblank(tmp_fields(j,:)));
-      end
-    end
-  end
-end
+% remove fields to suppress warnings
+matlabbatch{1}.spm.tools.cat.estwrite = rmfield(matlabbatch{1}.spm.tools.cat.estwrite,'extopts');
+matlabbatch{1}.spm.tools.cat.estwrite = rmfield(matlabbatch{1}.spm.tools.cat.estwrite,'output');
+matlabbatch{1}.spm.tools.cat.estwrite = rmfield(matlabbatch{1}.spm.tools.cat.estwrite,'opts');
 
 % deselect multi-threading for batch
 matlabbatch{1}.spm.tools.cat.estwrite.nproc = 0;

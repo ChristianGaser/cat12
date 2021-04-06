@@ -1,5 +1,10 @@
-/*
- * Christian Gaser
+/* ______________________________________________________________________
+ *
+ * Christian Gaser, Robert Dahnke
+ * Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+ * Departments of Neurology and Psychiatry
+ * Jena University Hospital
+ * ______________________________________________________________________
  * $Id$ 
  *
  * This code is a substantially modified version of spm_conv_vol.c 

@@ -10,6 +10,11 @@
 %          maximum change of an element after iteration
 %
 %  See also cat_vol_laplace3, compile.
-%  ________________________________________________________________________
-%  Robert Dahnke 2009/02
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 %  $Id$

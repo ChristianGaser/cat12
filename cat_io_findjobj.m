@@ -146,6 +146,14 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
 
 % Programmed and Copyright by Yair M. Altman: altmany(at)gmail.com
 % $Revision$  $Date$
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
+% $Id$
 
     % Ensure Java AWT is enabled
     error(javachk('awt'));

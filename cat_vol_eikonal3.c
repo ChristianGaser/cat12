@@ -8,10 +8,14 @@
  *  O      (single) object
  *  F      (single) speed map
  * 
- * _____________________________________________________________________________
- * Robert Dahnke 2010_01
- * Structural Brain Mapping Group
- * University Jena
+ * ______________________________________________________________________
+ *
+ * Christian Gaser, Robert Dahnke
+ * Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+ * Departments of Neurology and Psychiatry
+ * Jena University Hospital
+ * ______________________________________________________________________
+ * $Id$
  */
 
 #include "mex.h"   

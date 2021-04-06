@@ -26,8 +26,14 @@ function varargout = cat_spm_preproc_run(job,action)
 % See also spm_preproc8.m amd spm_preproc_write8.m
 %__________________________________________________________________________
 % Copyright (C) 2008-2015 Wellcome Trust Centre for Neuroimaging
-
 % John Ashburner
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 

@@ -9,8 +9,13 @@ function cat_vol_create_MPM(Label, Deform, vox, thresholds)
 % vox     - voxel size (use NaNs to use voxel size of deformation fields)
 %
 % some of the subfunctions are modified versions from spm_deformations.m
-%__________________________________________________________________________
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 refine     = 1;   % always use refinement with slight smoothing and median filtering

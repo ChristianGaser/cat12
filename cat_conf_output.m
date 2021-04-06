@@ -1,9 +1,13 @@
 function [output,output_spm] = cat_conf_output(expert)
 %function [output,output_spm] = cat_conf_output(expert)
 % writing options for data
-%_______________________________________________________________________
+% ______________________________________________________________________
 %
-% Christian Gaser
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 %
 %#ok<*AGROW>
@@ -15,6 +19,47 @@ function [output,output_spm] = cat_conf_output(expert)
       expert = 0; 
     end
   end
+
+  %------------------------------------------------------------------------
+
+  % get default BIDS folder
+  try
+    bids_folder = cat_get_defaults('extopts.bids_folder');
+  catch
+    bids_folder = fullfile('..','..','derivatives',cat_version);
+  end
+  
+  BIDSfolder         = cfg_entry;
+  BIDSfolder.tag     = 'BIDSfolder';
+  BIDSfolder.name    = 'Relative BIDS folder';
+  BIDSfolder.strtype = 's';
+  BIDSfolder.num     = [1 Inf];
+  BIDSfolder.val     = {bids_folder};
+  BIDSfolder.help    = {'This is the BIDS path relative to the participant level directory (i.e. sub-*). Please note that only relative, but no absolute paths can be defined here.'};
+
+  BIDSyes       = cfg_branch;
+  BIDSyes.tag   = 'BIDSyes';
+  BIDSyes.name  = 'Yes';
+  BIDSyes.val   = {BIDSfolder};
+  BIDSyes.help  = {'Use BIDS directory structure for saving data'};
+  
+  BIDSno        = cfg_const;
+  BIDSno.tag    = 'BIDSno';
+  BIDSno.name   = 'No';
+  BIDSno.val    = {1};
+  BIDSno.help   = {'Use CAT12 default directories for saving data'};
+  
+  BIDS          = cfg_choice;
+  BIDS.tag      = 'BIDS';
+  BIDS.name     = 'Use BIDS directory structure?';
+  BIDS.values   = {BIDSyes BIDSno};
+  if cat_get_defaults('extopts.bids')
+    BIDS.val      = {BIDSyes};
+  else
+    BIDS.val      = {BIDSno};
+  end
+  BIDS.help     = {'Select prefered output structure to save data.'};
+
 
   %------------------------------------------------------------------------
 
@@ -378,7 +423,7 @@ function [output,output_spm] = cat_conf_output(expert)
   output      = cfg_branch;
   output.tag  = 'output';
   output.name = 'Writing options';
-  output.val  = {surface surf_measures ROI grey white csf gmt pp wmh sl tpmc atlas label labelnative bias las jacobianwarped warps rmat}; 
+  output.val  = {BIDS surface surf_measures ROI grey white csf gmt pp wmh sl tpmc atlas label labelnative bias las jacobianwarped warps rmat}; 
   output.help = {
   'There are a number of options about what kind of data you like save. The routine can be used for saving images of tissue classes, as well as bias corrected images. The native space option will save a tissue class image (p*) that is in alignment with the original image. You can also save spatially normalised versions - both with (m[0]wp*) and without (wp*) modulation. In the cat toolbox, the voxel size of the spatially normalised versions is 1.5 x 1.5 x 1.5mm as default. The saved images of the tissue classes can directly be used for doing voxel-based morphometry (both un-modulated and modulated). All you need to do is smooth them and do the stats (which means no more questions on the mailing list about how to do "optimized VBM"). Please note that many less-common options are only available in expert mode (e.g. CSF, labels, atlas maps).'
   ''
@@ -404,7 +449,7 @@ function [output,output_spm] = cat_conf_output(expert)
   };
   
   output_spm            = output; 
-  output_spm.val        = {ROI surface grey_spm white_spm csf_spm label labelnative jacobianwarped warps}; 
+  output_spm.val        = {BIDS surface ROI grey_spm white_spm csf_spm label labelnative jacobianwarped warps}; 
 
 return
 %------------------------------------------------------------------------

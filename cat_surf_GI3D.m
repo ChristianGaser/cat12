@@ -29,7 +29,14 @@ function [S,SH] = cat_surf_GI3D(S,D,R,opt)
 %
 %   S.GI          = Gyrifcation Index for points (S.area / S.Harea)
 %   S.SL          = streamlength between S.vertices and S.Hvertices
-% =========================================================================
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
+% $Id$
 
   % pinterpol  = (2^opt.interpol)-(2^opt.interpol-1)*(opt.interpol>0);
   % if ~isfield(opt,'gridres'), opt.gridres = [1,1,1]; end

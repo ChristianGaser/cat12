@@ -18,9 +18,10 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Ycls,job,res)
 % th   .. AMAP treshholds
 % ______________________________________________________________________
 %
-% Robert Dahnke, Christian Gaser 
-% Structural Brain Mapping Group
-% University Jena 
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
 % ______________________________________________________________________
 % $Id$ 
 

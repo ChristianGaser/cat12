@@ -9,6 +9,12 @@ function varargout=cat_io_img2nii(img,c,verb)
 %  verb .. display something (default=1)
 % 
 % ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Revision$  $Date$
   if ~exist('img','var') || isempty(img)
     img = spm_select(Inf  ,'img','Select img files'); 

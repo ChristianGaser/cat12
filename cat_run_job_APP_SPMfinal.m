@@ -4,8 +4,13 @@ function  [Ymc,Ymi] = cat_run_job_APP_SPMfinal(Po,vout,vx_vol,verb,fstr)
 %  
 %  [Ymc,Ymi] = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,fwhm)
 %
-%  _____________________________________________________________________
-%  Robert Dahnke
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 %  $Id$
 
 

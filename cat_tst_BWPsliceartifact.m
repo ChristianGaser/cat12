@@ -2,10 +2,18 @@
 %  ---------------------------------------------------------------------
 %  Use image without bias for better testing, as far as this correction
 %  will also reduce the main inhomogeneity and not only the slice artifact.
-
-
+%
 % this function adds noise to the data to stabilize processing and we
 % have to define a specific random pattern to get the same results each time
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
+% $Id$
+
 if exist('rng','file') == 2, rng('default'); rng(0); else, rand('state',0); randn('state',0); end
 
 

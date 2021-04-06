@@ -32,7 +32,12 @@ function cat_io_report(job,qa,subj,createerr)
 %       40-41   .. display error of cortical surfaces / colorbar
 %
 % ______________________________________________________________________
-% Robert Dahnke 
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Revision$  $Date$
   
 %#ok<*AGROW>
@@ -62,17 +67,7 @@ function cat_io_report(job,qa,subj,createerr)
   % --------------------------------------------------------------------  
   try
     % preprocessing subdirectories
-    if job.extopts.subfolders
-      mrifolder    = 'mri'; 
-      reportfolder = 'report';
-      surffolder   = 'surf';
-    else
-      mrifolder    = '';
-      reportfolder = '';
-      surffolder   = '';
-    end
-    
-    
+    [mrifolder, reportfolder, surffolder] = cat_io_subfolders(job.data{subj},job);
     
     % setting template files
     [pp,ff] = spm_fileparts(job.data{subj});

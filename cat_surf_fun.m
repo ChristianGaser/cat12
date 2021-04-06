@@ -62,8 +62,13 @@ function varargout = cat_surf_fun(action,S,varargin)
 %    <a href="matlab:help cat_surf_fun>cat_surf_createEdgemap;">cdatamappingtst</a> 
 %
 % See also spm_mesh_* functions.
-% _________________________________________________________________________
-% Robert Dahnke, 2016-2019
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$ 
 
 % See also spm_mesh_area, spm_mesh_borders,
@@ -1506,13 +1511,14 @@ function cat_surf_saveICO(S,Tpbt,Pcs,subdir,Pm,mat,writeTfs,writeSI,writeL4,writ
     % volume filenames for spm_orthview
     sinfo = cat_surf_info(Pcentral);
     
+    [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(sinfo.name);
     if cat_get_defaults('extopts.subfolders')
-      Pm = fullfile(spm_str_manip(pp,'h'),'mri',['m' sinfo.name '.nii']); 
+      Pm = fullfile(spm_str_manip(pp,'h'),mrifolder,['m' sinfo.name '.nii']); 
     else
       Pm = fullfile(pp,['m' sinfo.name '.nii']); 
     end
     if ~exist(Pm,'file')
-      Pm = fullfile(spm_str_manip(pp,'hh'),'mri',['m' sinfo.name '.nii']); 
+      Pm = fullfile(spm_str_manip(pp,'hh'),mrifolder,['m' sinfo.name '.nii']); 
     end
     if ~exist(Pm,'file')
       Pm = fullfile(spm_str_manip(pp,'h'),[sinfo.name '.nii']); 
@@ -1552,13 +1558,14 @@ function cat_surf_saveICO(S,Tpbt,Pcs,subdir,Pm,mat,writeTfs,writeSI,writeL4,writ
     % volume filenames for spm_orthview
     sinfo = cat_surf_info(Pcentral);
     
+    [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(sinfo.name);
     if cat_get_defaults('extopts.subfolders')
-      Pm = fullfile(spm_str_manip(pp,'h'),'mri',['m' sinfo.name '.nii']); 
+      Pm = fullfile(spm_str_manip(pp,'h'),mrifolder,['m' sinfo.name '.nii']); 
     else
       Pm = fullfile(pp,['m' sinfo.name '.nii']); 
     end
     if ~exist(Pm,'file')
-      Pm = fullfile(spm_str_manip(pp,'hh'),'mri',['m' sinfo.name '.nii']); 
+      Pm = fullfile(spm_str_manip(pp,'hh'),mrifolder,['m' sinfo.name '.nii']); 
     end
     if ~exist(Pm,'file')
       Pm = fullfile(spm_str_manip(pp,'h'),[sinfo.name '.nii']); 

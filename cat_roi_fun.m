@@ -32,7 +32,12 @@ function varargout = cat_roi_fun(action,varargin)
 %      .data         = d x 1 structure of measures (field-name = measure-name)
 %       .([SUBMEASURE_]MEASURE) = r x 1 numerical matrix
 % ______________________________________________________________________
-% Robert Dahnke 2016
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
   switch action

@@ -12,6 +12,11 @@
 %  Bn (logical) .. 3D matrix that mark voxel that are used as neighbors 
 % 
 %  See also cat_vol_median3, compile.
-%  ________________________________________________________________________
-%  Robert Dahnke, 2012/01 
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 %  $Id$

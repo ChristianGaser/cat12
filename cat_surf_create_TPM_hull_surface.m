@@ -9,11 +9,13 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm)
 % 
 %   tpm   .. TPM-filename, TPM-header, SPM-TPM-structure 
 %   Phull .. filename of the surface file 
-% _________________________________________________________________________
-% Robert Dahnke 
-% Structural Brain Mapping Group
-% University Jena
-% _________________________________________________________________________
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$ 
 
 

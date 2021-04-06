@@ -32,7 +32,12 @@ function varargout = cat_surf_display(varargin)
 %  - Use another scaling of the intensities
 %   cat_surf_display(struct('caxis',[0 10]))
 % ______________________________________________________________________
-% Robert Dahnke
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
   SVNid = '$Rev$';

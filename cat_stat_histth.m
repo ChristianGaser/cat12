@@ -42,6 +42,12 @@ function varargout = cat_stat_histth(src,percent,opt)
 %   s=10; b = rand(s,s,s);  cat_stat_histth(b,0.9,5);
 %   s=10; b = rand(s,s,s);  cat_stat_histth(b,[0.8,0.999],5);
 % ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 

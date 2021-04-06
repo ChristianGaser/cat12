@@ -125,7 +125,13 @@ function [out,s] = cat_plot_boxplot(data,opt)
 % modified by Christian Gaser (christian.gaser@uni-jena.de) and
 % Robert Dahnke (robert.dahnke@uni-jena.de)
 % original version was written for octave by Alberto Terruzzi
-% _________________________________________________________________________
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 if nargin==0, help cat_plot_boxplot; return; end

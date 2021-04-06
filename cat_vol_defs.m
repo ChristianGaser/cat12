@@ -4,8 +4,13 @@ function vol = cat_vol_defs(job)
 % FORMAT vol = cat_vol_defs(job)
 % job - a job created via cat_conf_tools.m
 % vol - cell of deformed output volumes (deformed images are only returned, but not saved as file)
-%_______________________________________________________________________
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 %
 % based on spm_deformations.m

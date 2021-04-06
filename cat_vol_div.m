@@ -11,8 +11,13 @@ function Ydiv = cat_vol_div(Ym,vx_vol,vx_volr)
 %   vx_volr   .. lower voxel resolution for faster processing 
 %                and smoother results
 %
-% ----------------------------------------------------------------------
-% Robert Dahnke
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
   if nargin==0, help cat_vol_div; return; end

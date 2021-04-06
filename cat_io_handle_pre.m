@@ -1,5 +1,14 @@
 function FO = cat_io_handle_pre(F,pre,addpre,existfile)
 % Remove all known cat prefix typs from a filename (and check if this file exist). 
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
+% $Id$
+
   if nargin<4, existfile = 1; end
   if nargin<3, addpre    = 0; end
 

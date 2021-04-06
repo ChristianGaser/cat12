@@ -27,8 +27,13 @@ function varargout = cat_stat_check_cov(job)
 %   struct('data_vol',{{ files }} ,'gap',3,'c',[],'data_xml',{{}});
 %
 % See also cat_stat_check_cov2
-%_______________________________________________________________________
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 if cat_get_defaults('extopts.expertgui')>2

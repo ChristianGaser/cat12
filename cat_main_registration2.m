@@ -80,10 +80,10 @@ function [trans,reg,Affine] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesio
 %
 % ______________________________________________________________________
 %
-%   Robert Dahnke (robert.dahnke@uni-jena.de)
-%   Structural Brain Mapping Group (http://dbm.neuro.uni-jena.de/)
-%   Department of Neurology
-%   University Jena
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
 % ______________________________________________________________________
 % $Id$
 
@@ -231,7 +231,7 @@ function [trans,reg,Affine] = cat_main_registration2(job,res,Ycls,Yy,tpmM,Ylesio
         reg(regstri).opt.stepsize  =  max( abs( diff( reg(regstri).opt.resfac ) ) );  
         reg(regstri).opt.resfac    =  reg(regstri).opt.resfac  / reg(regstri).opt.resfac(end);  
       else
-        % futher test cases
+        % further test cases
         highres = 1.0; % 0.5
         switch job.extopts.regstr(regstri)
         % -----------------------------------------------------------------
@@ -1148,8 +1148,9 @@ end
         % Report
         if (job.extopts.verb>1  && ~dreg.fast) || export
 
-          %% preparte output directory
-          if job.extopts.subfolders, mrifolder = 'mri'; else mrifolder = ''; end
+          %% prepare output directory
+          mrifolder = cat_io_subfolders(VT0.fname,job);
+
           [pth,nam] = spm_fileparts(VT0.fname); 
           [temppp,tempff] = spm_fileparts(job.extopts.templates{1});  %#ok<ASGLU>
           if job.extopts.regstr(regstri)==0

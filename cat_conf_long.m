@@ -1,7 +1,13 @@
 function varargout = cat_conf_long(varargin)
 % Configuration file for longitudinal data
 %
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 newapproach = 0; 
@@ -260,20 +266,21 @@ else
   ''
   };
   
-  % extract only the ROI and sROI menu
-  FN = cell(1,numel(output.val));  for fni=1:numel(output.val), FN{fni} = output.val{fni}.tag; end
-%  sROI = output.val{ find(cellfun('isempty',strfind(FN,'sROImenu'))==0,1) }; 
-  ROI  = output.val{ setdiff( find(cellfun('isempty',strfind(FN,'ROImenu'))==0) , ...
+  % extract only the surface, ROI, sROI, and BIDS menu
+  FN      = cell(1,numel(output.val));  for fni=1:numel(output.val), FN{fni} = output.val{fni}.tag; end
+  ROI     = output.val{ setdiff( find(cellfun('isempty',strfind(FN,'ROImenu'))==0) , ...
                      find(cellfun('isempty',strfind(FN,'sROImenu'))==0,1) ) }; 
+  BIDS    = output.val{find(cellfun('isempty',strfind(FN,'BIDS'))==0)};
+  surface = output.val{find(cellfun('isempty',strfind(FN,'surface'))==0)};
+
+  output.val = {BIDS,surface};
   
-  output.val(2:end) = [];
-    
   delete_temp.hidden = expert<1;
   
   long.val  = {datalong,longmodel,bstr,nproc,opts,extopts,output,ROI,longTPM,modulate,dartel,delete_temp};
   
 % does not yet work! 
-%  long.vout = @vout_long;
+% long.vout = @vout_long;
 end
 long.prog = @cat_long_multi_run;
 
@@ -355,13 +362,7 @@ end
 function [dep,out,inputs] = vout_long2(job)
     inputs = cell(1, numel(job.subj));
 
-    if cat_get_defaults('extopts.subfolders')
-      mrifolder  = 'mri';
-      surffolder = 'surf';
-    else
-      mrifolder  = '';
-      surffolder = ''; 
-    end
+    [mrifolder, reportfolder, surffolder] = cat_io_subfolders(job.subj(1).mov,job);
     
     for i=1:numel(job.subj),
       %%

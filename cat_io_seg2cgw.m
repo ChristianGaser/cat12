@@ -7,10 +7,12 @@ function [c,g,w]=cat_io_seg2cgw(seg)
 % seg:      p0 tissue segment image (0=BG,1=CSF,2=GM,3=WM)
 % [c,g,w]:  tissue class map with values from 0 to 1
 % ______________________________________________________________________
-% Robert Dahnke
-% Structural Brain Mapping Group
-% University Jena
 %
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
   %if isa(char), fseg=seg; hseg=spm_vol(seg); seg=spm_read_vols(hseg); end

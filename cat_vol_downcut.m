@@ -22,6 +22,11 @@
 %                      (default [0.1 10])
 %  
 %  See also cat_vol_simgrow, compile.
-%  ________________________________________________________________________
-%  Robert Dahnke, 2010/10 
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 %  $Id$

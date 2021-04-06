@@ -29,10 +29,12 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
 %   
 %
 % ______________________________________________________________________
-% Robert Dahnke, Christian Gaser
-% Structural Brain Mapping Group
-% University Jena
 %
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 %
 %#ok<*WNOFF,*WNON,*ASGLU>

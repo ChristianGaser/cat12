@@ -80,9 +80,14 @@ function [CVA] = cat_stat_cva_ui(action,varargin)
 % 3(3):167-174.
 %__________________________________________________________________________
 % Copyright (C) 2008-2014 Wellcome Trust Centre for Neuroimaging
-
+% ______________________________________________________________________
 %
-% $Id$
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
+ $Id$
 %
 % modified version of
 % Karl Friston

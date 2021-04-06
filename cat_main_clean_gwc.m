@@ -14,8 +14,13 @@ function P = cat_main_clean_gwc(P,level,new)
 %  P     .. 4D uint8 matrix of tissue classes GM, WM, and CSF
 %  level .. controls strength of corrections (values=[1,2]; default=1)
 %  new   .. use new additional cleanup (default=0)
-%__________________________________________________________________________
+% ______________________________________________________________________
+%
 % Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 if nargin<2, level  = 1; end

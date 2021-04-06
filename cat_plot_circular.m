@@ -61,7 +61,13 @@ function h = cat_plot_circular(data, opt)
 % Author: Oleg Komarov (oleg.komarov@hotmail.it)
 % Tested on R2013a Win7 64 and Vista 32
 % 15 jun 2013 - Created
-% _________________________________________________________________________
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 % Number of color shades/buckets (large N simply creates many perceptually indifferent color shades)

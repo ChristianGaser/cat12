@@ -9,11 +9,13 @@
  *        maximum change of an element after iteration
  *
  * TODO: change of L1 and L2 by pointer
- * _____________________________________________________________________
- * Robert Dahnke 
- * Structural Brain Mapping Group
- * University Jena
+ * ______________________________________________________________________
  *
+ * Christian Gaser, Robert Dahnke
+ * Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+ * Departments of Neurology and Psychiatry
+ * Jena University Hospital
+ * ______________________________________________________________________
  * $Id$ 
  */
 

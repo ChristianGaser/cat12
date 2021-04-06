@@ -8,8 +8,13 @@ function out = cat_vol_avg(job)
 % job.outdir    - output directory
 %
 % out           - output name
-%_______________________________________________________________________
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 %
 
