@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1792 | gaser | 2021-04-06 15:07:52
+r1793 | gaser | 2021-04-07 01:29:32
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_biascorr.m
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+
+(1) Fixed:   Corrected wrong path for useprior in cat_surf_createCS.m and
+             cat_surf_createCS2.m.
+(2) Changed: Updated help text.
+
+------------------------------------------------------------------------
+r1792 | gaser | 2021-04-06 15:08:16 +0200 (Di, 06 Apr 2021) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +22,7 @@ M       cat_surf_createCS2.m
 (1) Fixed:   Added missing cat_io_subfolder.m.
 (2) Fixed:   Variable etime was not defined for usepior flag in 
              cat_surf_createCS2.m
+
 
 ------------------------------------------------------------------------
 r1791 | gaser | 2021-04-06 11:15:54 +0200 (Di, 06 Apr 2021) | 280 lines
