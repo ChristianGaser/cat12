@@ -333,9 +333,9 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
       
       % try to copy surface files from prior to indivudal surface data 
       useprior = 1;
-      useprior = useprior & copyfile(fullfile(pp_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff0)),Pcentral,'f');
-      useprior = useprior & copyfile(fullfile(pp_surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff0)),Psphere,'f');
-      useprior = useprior & copyfile(fullfile(pp_surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff0)),Pspherereg,'f');
+      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff0)),Pcentral,'f');
+      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff0)),Psphere,'f');
+      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff0)),Pspherereg,'f');
       if ~useprior
         fprintf('\n');
         cat_io_addwarning('cat_surf_createCS:noPiorSurface', ...
