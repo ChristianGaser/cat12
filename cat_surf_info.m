@@ -41,7 +41,12 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
 %   smoothed  .. smoothing size
 %   Phull     .. convex hull mesh
 % ______________________________________________________________________
-% Robert Dahnke
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 %#ok<*RGXP1>

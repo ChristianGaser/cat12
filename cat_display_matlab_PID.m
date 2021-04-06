@@ -6,10 +6,10 @@ function varagout = cat_display_matlab_PID
 % (Windows) MATLAB instace.
 % ______________________________________________________________________
 %
-%   Robert Dahnke - robert.dahnke@uni-jena.de
-%   Center of Neuroimaging 
-%   Department of Psychiatry and Psychotherapy 
-%   University Hostpital Jena
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
 % ______________________________________________________________________
 % $Id$
 

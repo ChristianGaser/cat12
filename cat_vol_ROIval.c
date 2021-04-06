@@ -2,11 +2,13 @@
  * _____________________________________________________________________
  * Estimation of mean, standard deviation, minimum, maximum, sum, number
  * and median (not yet implemented) of Yv in a ROI described by Ya.
- * _____________________________________________________________________
- * Robert Dahnke 
- * Structural Brain Mapping Group
- * University Jena
+ * ______________________________________________________________________
  *
+ * Christian Gaser, Robert Dahnke
+ * Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+ * Departments of Neurology and Psychiatry
+ * Jena University Hospital
+ * ______________________________________________________________________
  * $Id$ 
  */
 

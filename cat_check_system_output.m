@@ -8,8 +8,13 @@ function varargout = cat_check_system_output(status,result,debugON,trerr)
 % debugON        .. display result
 % trerr          .. trough an error message (default), else just display 
 %                   error
-%_______________________________________________________________________
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
   if ~exist('debugON','var'), debugON=0; end

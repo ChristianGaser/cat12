@@ -1,8 +1,12 @@
 % Computational Anatomy Toolbox
-% Version 1787 (CAT12.7) 2021-03-26
-% __________________________________________________________________________
-% Copyright (C) Christian Gaser christian.gaser@uni-jena.de
+% Version 1789 (CAT12.7) 2021-03-29
+% ______________________________________________________________________
 %
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 % ==========================================================================
 % Description

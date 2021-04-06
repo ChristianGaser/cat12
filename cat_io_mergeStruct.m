@@ -9,7 +9,13 @@ function S=cat_io_mergeStruct(S,SN,ri)
 %   unexpected behaviour. Updating of structures is a complex topic with 
 %   many subcases and here only a simple alignment is used!
 %
-% _________________________________________________________________________
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
   % check input

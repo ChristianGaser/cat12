@@ -12,6 +12,11 @@
 %  dd   (1x2 double) .. general growing limits in SEG 
 %
 %  See also cat_vol_downcut.
-%  ________________________________________________________________________
-%  Robert Dahnke 2010/01
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 %  $Id$

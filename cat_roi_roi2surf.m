@@ -10,7 +10,12 @@ function varargout = cat_roi_roi2surf(job)
 %   job.vars .. set of fieldnames
 %
 % ______________________________________________________________________
-% Robert Dahnke
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
   
   if nargin == 1

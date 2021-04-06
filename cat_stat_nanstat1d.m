@@ -2,11 +2,13 @@ function x=cat_stat_nanstat1d(x,action)
 % ----------------------------------------------------------------------
 % replace nan* functions of the stat toolbox for the 1d case 
 % use double, because mean error for large single arrays.
-% ----------------------------------------------------------------------
-% Robert Dahnke 
-% Structural Brain Mapping Group
-% University Jena 
-% ----------------------------------------------------------------------
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
   x=double(x(:)); x(isnan(x) | isinf(x))=[];

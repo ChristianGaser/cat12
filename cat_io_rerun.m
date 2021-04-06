@@ -21,8 +21,13 @@ function run = cat_io_rerun(files,filedates,verb)
 %  3) Is this function younger than one year?
 %     cat_io_rerun(which('cat_io_rerun'),clock - [1 0 0 0 0 0]) 
 %
-% _________________________________________________________________________
-% Robert Dahnke
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
   if ~exist('verb','var'), verb = 0; end

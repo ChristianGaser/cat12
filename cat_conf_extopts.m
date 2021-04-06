@@ -1,7 +1,13 @@
 function extopts = cat_conf_extopts(expert,spm)
 % Configuration file for extended CAT options
 %
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 %#ok<*AGROW>
 
@@ -822,7 +828,7 @@ else
 end
 LASmyostr.def     = @(val)cat_get_defaults('extopts.LASstr', val{:});
 LASmyostr.help    = {
-  'Additional more local myelination correction of LAS that based on the assumption of an equally thick cortex. '
+  'Add more local myelination correction of LAS based on the assumption of an equally thick cortex. '
   ''
   'IN DEVELOPMENT'
 };

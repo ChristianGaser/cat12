@@ -27,7 +27,13 @@ function Y = cat_vol_ROI_summarize(job)
 %              'images',{spm_select('FPList','mri','^p1_.*nii')},...
 %              'fhandle','@median');
 % Y = cat_vol_ROI_summarize(opt)
-%__________________________________________________________________________
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 %  $Id$
 
 if nargin == 0

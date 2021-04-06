@@ -5,7 +5,12 @@ function [ST, RS] = cat_system(varargin)
 % calls. Thus, we have to cd into that folder and call the command
 % from this folder.
 % ______________________________________________________________________
-% Christian Gaser
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 rev = '$Rev$';

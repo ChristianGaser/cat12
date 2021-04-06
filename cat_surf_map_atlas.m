@@ -4,7 +4,13 @@ function cat_surf_map_atlas(central_files, atlas_files)
 %
 % central - array of file names for left central surface
 % atlas   - array of file names for Freesurfer annot atlas files
-%_______________________________________________________________________
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 

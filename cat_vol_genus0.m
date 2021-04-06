@@ -1,5 +1,5 @@
 %CAT_VOL_GENUS0 Topology adjusted isosurface extractor.
-%  Toplogy optimized marching cubes surface creation for an existing volume 
+%  Topology optimized marching cubes surface creation for an existing volume 
 %  Y and a treshold th.  Also outputs the topology adjusted volume Yc.
 %
 %  [Yc,faces,vertices] = cat_vol_genus0(Y,th[,notadjust]);
@@ -14,5 +14,11 @@
 %  To avoid output use the MATLAB EVALC function. 
 %
 %  See also ISOSURFACE, EVALC, compile.
-%  ________________________________________________________________________
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 %  $Id$

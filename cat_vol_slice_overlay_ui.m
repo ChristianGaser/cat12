@@ -12,8 +12,13 @@ function cat_vol_slice_overlay_ui
 %            comment this out for interactive selection or use '' for not 
 %            saving any file or use just file extension (png/jpg/pdf/tif) to 
 %            automatically estimate filename to save
-%__________________________________________________________________________
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 OV.reference_image = char(cat_get_defaults('extopts.shootingT1'));

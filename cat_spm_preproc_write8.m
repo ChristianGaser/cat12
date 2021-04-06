@@ -6,8 +6,13 @@ function [Ym,Ycls,y] = cat_spm_preproc_write8(res,tc,bf,df,mrf,cleanup,bb,vx,Ycl
 %
 % modified version of
 % John Ashburner
-% $Id$
+% ______________________________________________________________________
 %
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 % Prior adjustment factor.

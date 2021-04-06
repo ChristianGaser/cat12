@@ -9,6 +9,12 @@ function cat_io_remat(P1,Pn)
 %  Pn = goal images for P1.mat (n images) 
 % 
 % ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Revision$  $Date$
 
   if ~exist('P1','var') || isempty(P1)

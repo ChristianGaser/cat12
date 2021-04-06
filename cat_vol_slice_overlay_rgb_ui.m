@@ -1,9 +1,13 @@
 function cat_vol_slice_overlay_rgb_ui
 % Wrapper to cat_vol_slice_overlay for overlaying
 % 3 different images to a RGB overlay
-%__________________________________________________________________________
-% Christian Gaser
-% $Id$
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 
 clear global SO
 global SO

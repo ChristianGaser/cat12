@@ -4,7 +4,13 @@ function cat_batch_long(namefile,output_surface,large_changes,cat_defaults)
 % namefile       - array of file names
 % output_surface - enable surface estimation
 % cat_defaults   - use this default file instead of cat_defaults.m
-%_______________________________________________________________________
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 if nargin < 1

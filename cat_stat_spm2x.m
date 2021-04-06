@@ -86,8 +86,13 @@ function out = cat_stat_spm2x(job)
 %
 % Neg:     image also shows thresholded inverse effects (e.g. neg. 
 %        values) 
-%_______________________________________________________________________
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 if nargin > 0

@@ -33,10 +33,10 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm1639(Ysrc,Ycls
 %   res     .. SPM segmentation structure
 % ______________________________________________________________________
 %
-%   Robert Dahnke (robert.dahnke@uni-jena.de)
-%   Structural Brain Mapping Group (http://dbm.neuro.uni-jena.de/)
-%   Department of Neurology
-%   University Jena
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
 % ______________________________________________________________________
 % $Id$
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
@@ -77,12 +77,6 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm1639(Ysrc,Ycls
 
   vxv    = 1/cat_stat_nanmean(vx_vol);
   res.mn = round(res.mn*10^5)/10^5; 
-  
-  if cat_get_defaults('extopts.subfolders')
-    reportfolder  = 'report';
-  else
-    reportfolder  = '';
-  end
   
   %% initial thresholds and intensity scaling
   T3th3 = [clsint(3) clsint(1) clsint(2)];
@@ -408,6 +402,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm1639(Ysrc,Ycls
   clear Ynw Ync;
  
   if debug==2
+    [mrifolder, reportfolder] = cat_io_subfolders(res.image0(1).fname,struct('extopts',extopts));
     [pth,nam] = spm_fileparts(res.image0(1).fname);
     tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',1,'gintnorm00'));
     save(tmpmat,'Ysrc','Ycls','Yb','vx_vol','res','T3th','T3thx','Yg','Ym','noise');

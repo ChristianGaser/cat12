@@ -25,12 +25,13 @@ function varargout = cat_io_csv(filename,varargin)
 % TODO:
 %   * adding of sheets to save different cells in one file
 % ______________________________________________________________________
-% Robert Dahnke 
-% Structural Brain Mapping Group
-% University Jena 
 %
-% $Id$
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
 % ______________________________________________________________________
+% $Id$
 
   if nargout>0, action='r'; else action='w'; end
   if ~exist('filename','var') || isempty(filename)    

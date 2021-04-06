@@ -8,8 +8,13 @@ function [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init1070(Ysrco,vx_vol,verb)
 %  be seen in overfitting of the subcortical structures.
 %  However, this filtering will overcorrect head tissue with
 %  a typical intensity around GM.
-%  _____________________________________________________________________
-%  Robert Dahnke
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 %  $Id$
 
 

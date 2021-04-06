@@ -8,8 +8,13 @@ function cat_stat_diff(P,rel,glob)
 % P     - filenames for image 1/2
 % rel   - compute relative difference rather than absolute (1 for relative)
 % glob  - normalize global mean of images
-%__________________________________________________________________________
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 global SWD

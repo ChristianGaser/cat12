@@ -8,7 +8,11 @@ function Ycls = cat_main1639(res,tpm,job)
 % spm_preproc_write8.m 2531 2008-12-05 18:59:26Z john $
 %
 % ______________________________________________________________________
-% Christian Gaser
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
 % ______________________________________________________________________
 % $Id$
 
@@ -293,7 +297,7 @@ if ~isfield(res,'spmpp')
       clear Yp0; 
     end
     
-    % ### indlcude this in cat_main_LAS? ###
+    % ### include this in cat_main_LAS? ###
     %
     if job.extopts.NCstr~=0 
       % noise correction of the local normalized image Ymi, whereas only small changes are expected in Ym by the WM bias correction
@@ -413,7 +417,7 @@ if ~isfield(res,'spmpp')
   %  -------------------------------------------------------------------
   %  For skull-stripping gcut is used in general, but a simple and very 
   %  old function is still available as backup solution.
-  %  Futhermore, both parts prepare the initial segmentation map for the 
+  %  Furthermore, both parts prepare the initial segmentation map for the 
   %  AMAP function.
   %  -------------------------------------------------------------------
   if job.extopts.gcutstr>0 && job.extopts.gcutstr<=1
@@ -776,21 +780,22 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
     
     %% estimate surface ROI estimates for thickness
     [pp,ff]   = spm_fileparts(VT.fname);
-    if cat_get_defaults('extopts.subfolders')
-      surffolder = 'surf';
-      pp = spm_str_manip(pp,'h'); % remove 'mri' in pathname that already exists
-    else
-      surffolder = '';
-    end
-    if ff(1)=='n'
-      if (exist(fullfile(pp,[ff(2:end) '.nii']), 'file')) || (exist(fullfile(pp,[ff(2:end) '.img']), 'file'))
-        ff = ff(2:end);
-      end
-    end
+    [stat, val] = fileattrib(pp);
+    if stat, pp = val.Name; end
 
+    [mrifolder, reportfolder, surffolder] = cat_io_subfolders(VT.fname);
+
+    if cat_get_defaults('extopts.subfolders') && strcmp(mrifolder,'mri')
+      pp = spm_str_manip(pp,'h'); % remove 'mri' in pathname that already exists
+    end
+    surffolder = fullfile(pp,surffolder);
+
+    % get original filename without 'n'
+    [pp0,ff]   = spm_fileparts(VT0.fname);
+    
     Psatlas_lh   = job.extopts.satlas(  [job.extopts.satlas{:,4}]>0 , 2);
     Pthick_lh    = cell(1,1);
-    Pthick_lh{1} = fullfile(pp,surffolder,sprintf('lh.thickness.%s',ff));
+    Pthick_lh{1} = fullfile(surffolder,sprintf('lh.thickness.%s',ff));
     
     cat_surf_surf2roi(struct('cdata',{{Pthick_lh}},'rdata',{Psatlas_lh}));
   end
@@ -1024,6 +1029,7 @@ function [Ysrc,Ycls,Yy,res] = cat_main_resspmres(Ysrc,Ycls,Yy,res)
   res.image = res.image1; 
     res  = rmfield(res,'image1');
 return
+
 function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
 %% Update parameter
 %  ---------------------------------------------------------------------
@@ -1052,13 +1058,7 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
 
 
   % definition of subfolders - add to res variable?
-  if job.extopts.subfolders
-    res.mrifolder     = 'mri';
-    res.reportfolder  = 'report';
-  else
-    res.mrifolder     = '';
-    res.reportfolder  = '';
-  end
+  [res.mrifolder, res.reportfolder] = cat_io_subfolders(res.image(1).fname,job);
 
   % Sort out bounding box etc
   res.bb = spm_get_bbox(tpm.V(1)); 

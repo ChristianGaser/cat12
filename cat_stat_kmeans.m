@@ -15,8 +15,13 @@ function [mu,su,nu] = cat_stat_kmeans(y,k,s)
 %
 % modified version of
 % spm_kmeans1.m 1143 2008-02-07 19:33:33Z spm $
-%_______________________________________________________________________
-% Christian Gaser & Robert Dahnke
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 if nargin<1, help cat_stat_kmeans; return; end

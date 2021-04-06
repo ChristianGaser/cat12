@@ -1,8 +1,12 @@
 function year = cat_io_matlabversion(varargin)
 % return Matlab version year
-%_______________________________________________________________________
+% ______________________________________________________________________
 %
-%_______________________________________________________________________
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 

@@ -13,8 +13,13 @@ function varargout = cat_update(update)
 % This function will connect to the SBM server, compare the
 % version number of the updates with the one of the CAT12 installation 
 % currently in the MATLAB path and will display the result.
-%_______________________________________________________________________
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 rev = '$Rev$';

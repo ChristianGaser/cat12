@@ -12,11 +12,13 @@
  *  Bi     (logical)  3d matrix that mark voxel that should be filtered
  *  Bn     (logical)  3d matrix that mark voxel that are used as neighbors 
  *
- * ________________________________________________________________________
- * Robert Dahnke 2011_01
- * Center of Neuroimaging 
- * University Jena
+ * ______________________________________________________________________
  *
+ * Christian Gaser, Robert Dahnke
+ * Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+ * Departments of Neurology and Psychiatry
+ * Jena University Hospital
+ * ______________________________________________________________________
  * $Id$ 
  */
 

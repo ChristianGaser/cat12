@@ -17,11 +17,13 @@ function out = cat_stat_nanmean(in, dim)
 % Example 2 - special test call of example 1:
 %   cat_stat_nanstd('test')
 %
-% ----------------------------------------------------------------------
-% Robert Dahnke 
-% Structural Brain Mapping Group
-% University Jena 
-% ----------------------------------------------------------------------
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
   if nargin < 1

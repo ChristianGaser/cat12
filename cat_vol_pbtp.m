@@ -16,6 +16,11 @@
 %   .PVE              .. use PVE information (0=none,1=fast,2=exact)
 %
 %  See also cat_vbdist, cat_vol_eidist, compile.
-%  ________________________________________________________________________
-%  Robert Dahnke 2009/11, 2011/12
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 %  $Id$

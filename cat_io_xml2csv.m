@@ -15,10 +15,12 @@ function cat_io_xml2csv(PD,FN,filename)
 %                  {'qa.SM.vol_rel_CGW'});
 %
 % ______________________________________________________________________
-% Robert Dahnke
-% Structural Brain Mapping Group
-% University Jena
 %
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 %
 %#ok<*WNOFF,*WNON,*ASGLU>

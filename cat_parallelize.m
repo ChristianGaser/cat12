@@ -33,7 +33,12 @@ function varargout = cat_parallelize(job,func,datafield)
 %
 %   ... main code
 % ______________________________________________________________________
+%
 % Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 %#ok<*STRIFCND,*STREMP,*STRCL1> % MATLAB contains function 

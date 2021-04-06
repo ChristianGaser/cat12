@@ -65,7 +65,13 @@ function varargout = cat_surf_render2(action,varargin)
 % See spm_XYZreg for more information.
 %__________________________________________________________________________
 % Copyright (C) 2010-2011 Wellcome Trust Centre for Neuroimaging
-
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % based on spm_mesh_render.m
 % $Id$
 
@@ -684,8 +690,9 @@ switch lower(action)
           %   >> auwahl von csv-files 
         try
           % volume/surface-based atlas data
+          [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(sinfo1(1).fname);
           if cat_get_defaults('extopts.subfolders')
-            labeldir = strrep(sinfo1(1).pp,[filesep 'surf'],[filesep 'label']);
+            labeldir = strrep(sinfo1(1).pp,[filesep surffolder],[filesep labelfolder]);
           else
             labeldir = sinfo1(1).pp;
           end
@@ -837,8 +844,9 @@ switch lower(action)
         % -----------------------------------------------------------------
         c = uimenu(cmenu, 'Label','Volume', 'Interruptible','off'); %, 'Callback',{@myImageSections, H});
         % -- image ---
+        [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(sinfo1(1).fname);
         if cat_get_defaults('extopts.subfolders')
-          labeldir = strrep(sinfo1(1).pp,[filesep 'surf'],[filesep 'mri']);
+          labeldir = strrep(sinfo1(1).pp,[filesep surfolder],[filesep mrifolder]);
         else
           labeldir = sinfo1(1).pp;
         end

@@ -9,8 +9,13 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
 % such as GM volume, thickness, or curvature. 
 % The DEP output should only contain useful sets of the most important 
 % statistical files with smoohted and unsmoothed data. 
-% _________________________________________________________________________
-% Robert Dahnke
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 
@@ -24,7 +29,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
 % * Subfunction in some other conf batch ? 
 %   > Maybe tbx_cfg_cat?
 %
-% * Futher references?
+% * Further references?
 %   > No the link to the CAT paper is enough
 %   > Update cite!
 %   > simple cites by high numbers (use char):

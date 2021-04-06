@@ -1,7 +1,12 @@
 function output = cat_simple(job)
 % Configuration file for simplyfied preprocessing jobs
-% _________________________________________________________________________
-% Robert Dahnke
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 
@@ -423,28 +428,22 @@ function output = cat_simple(job)
   
   %% create output
   %  ----------------------------------------------------------------------
-  if cat_get_defaults('extopts.subfolders')
-    roifolder  = 'label';
-    mrifolder  = 'mri';
-    surffolder = 'surf';
-    repfolder  = 'report';
-  else
-    roifolder  = '';
-    mrifolder  = '';
-    surffolder = '';
-    repfolder  = 'report';
-  end
+  mrifolder    = cell(numel(job.data),1);
+  surffolder   = cell(numel(job.data),1);
+  reportfolder = cell(numel(job.data),1);
+  labelfolder  = cell(numel(job.data),1);
   
   % unsmoothed segmentations
   for fi = 1:numel(job.data)
-    output.mwp1{fi} = spm_file(job.data,'prefix',fullfile(mrifolder,'mwp1'));
-    output.mwp2{fi} = spm_file(job.data,'prefix',fullfile(mrifolder,'mwp2'));
+    [mrifolder{fi}, reportfolder{fi}, surffolder{fi}, labelfolder{fi}] = cat_io_subfolders(job.data{j},job);
+    output.mwp1{fi} = spm_file(job.data,'prefix',fullfile(mrifolder{fi},'mwp1'));
+    output.mwp2{fi} = spm_file(job.data,'prefix',fullfile(mrifolder{fi},'mwp2'));
   end
   
   if proc_surf && exist('measures','var')
     for mi = 1:size(measures,1)
       for fi = 1:numel(job.data)
-        output.measures{mi,1}{fi} = spm_file(job.data,'prefix',fullfile(surffolder,sprintf('mesh.%s.',measures{mi,1})),'ext','.gii');
+        output.measures{mi,1}{fi} = spm_file(job.data,'prefix',fullfile(surffolder{fi},sprintf('mesh.%s.',measures{mi,1})),'ext','.gii');
       end
     end
   end
@@ -452,8 +451,8 @@ function output = cat_simple(job)
   % smoothed data
   for si = 1:numel(vsmooth)
     for fi = 1:numel(job.data)
-      output.(sprintf('s%dmwp1',vsmooth(si))){fi} = spm_file(job.data,'prefix',fullfile(mrifolder,sprintf('s%dmwp1',vsmooth(si))));
-      output.(sprintf('s%dmwp2',vsmooth(si))){fi} = spm_file(job.data,'prefix',fullfile(mrifolder,sprintf('s%dmwp2',vsmooth(si))));
+      output.(sprintf('s%dmwp1',vsmooth(si))){fi} = spm_file(job.data,'prefix',fullfile(mrifolder{fi},sprintf('s%dmwp1',vsmooth(si))));
+      output.(sprintf('s%dmwp2',vsmooth(si))){fi} = spm_file(job.data,'prefix',fullfile(mrifolder{fi},sprintf('s%dmwp2',vsmooth(si))));
     end
   end
   
@@ -463,14 +462,14 @@ function output = cat_simple(job)
         for si = 1:numel(ssmooth1)
           for fi = 1:numel(job.data)
             output.(sprintf('s%d%s',ssmooth1(si),measures{mi,1})){fi} = ...
-              spm_file(job.data,'prefix',fullfile(surffolder,sprintf('s%dmm.mesh.%s.',ssmooth1(si),measures{mi,1})),'ext','.gii');
+              spm_file(job.data,'prefix',fullfile(surffolder{fi},sprintf('s%dmm.mesh.%s.',ssmooth1(si),measures{mi,1})),'ext','.gii');
           end
         end
       else
         for si = 1:numel(ssmooth2)
           for fi = 1:numel(job.data)
             output.(sprintf('s%d%s',ssmooth2(si),measures{mi,1})){fi} = ...
-              spm_file(job.data,'prefix',fullfile(surffolder,sprintf('s%dmm.mesh.%s.',ssmooth2(si),measures{mi,1})),'ext','.gii');
+              spm_file(job.data,'prefix',fullfile(surffolder{fi},sprintf('s%dmm.mesh.%s.',ssmooth2(si),measures{mi,1})),'ext','.gii');
           end
         end
       end
@@ -479,11 +478,11 @@ function output = cat_simple(job)
   
   % xml data
   for fi = 1:numel(job.data)
-    output.catroi{fi} = spm_file(job.data,'prefix',fullfile(roifolder,'catROI_'),'ext','.xml');
+    output.catroi{fi} = spm_file(job.data,'prefix',fullfile(labelfolder{fi},'catROI_'),'ext','.xml');
   end
   
   for fi = 1:numel(job.data)
-    output.catxml{fi} = spm_file(job.data,'prefix',fullfile(repfolder,'cat_'),'ext','.xml');
+    output.catxml{fi} = spm_file(job.data,'prefix',fullfile(reportfolder{fi},'cat_'),'ext','.xml');
   end
     
   spm_jobman('initcfg'); % reinitialize

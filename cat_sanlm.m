@@ -18,8 +18,13 @@ function cat_sanlm(in, v, f, rician)
 % *                                                                         *
 % ***************************************************************************/
 %
+% ______________________________________________________________________
 %
-% Christian Gaser
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 rev = '$Rev$';

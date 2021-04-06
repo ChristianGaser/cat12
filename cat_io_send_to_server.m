@@ -8,10 +8,10 @@ function cat_io_send_to_server(urlinfo)
 %   urlinfo      .. piwik status information
 % ______________________________________________________________________
 %
-%   Christian Gaser (christian.gaser@uni-jena.de)
-%   Structural Brain Mapping Group (http://www.neuro.uni-jena.de/)
-%   Department of Neurology
-%   University Jena
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
 % ______________________________________________________________________
 % $Id$
   

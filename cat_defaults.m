@@ -6,7 +6,13 @@ function cat_defaults
 % This file is intended to be customised for the site.
 %
 % Care must be taken when modifying this file
-%_______________________________________________________________________
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 clear global cat; 
@@ -160,6 +166,10 @@ cat.extopts.mrf          = 1;    % MRF weighting:                             0 
 cat.extopts.restype      = 'optimal';    % resolution handling: 'native','fixed','best', 'optimal'
 cat.extopts.resval       = [1.0 0.30];   % resolution value and its tolerance range for the 'fixed' and 'best' restype
 
+% use BIDS data structure
+cat.extopts.bids         = 0; % 0 - use CAT12 default directory structure; 1 - use BIDS directory structure for saving data  
+[cat_ver cat_rel] = cat_version;
+cat.extopts.bids_folder  = fullfile('..','derivatives',[cat_ver '_' cat_rel]); % default relative BIDS path for saving data
 % check for multiple cores is different for octave
 if strcmpi(spm_check_version,'octave')
   cat.extopts.nproc      = nproc;
@@ -184,13 +194,13 @@ best:
 
     Examples:
       Parameters    native resolution       internal resolution
-      [1.00 0.10]    0.95 1.05 1.25     >     0.95 1.00 1.00
+      [1.00 0.10]    0.95 1.05 1.25     >     0.95 1.05 1.00
       [1.00 0.10]    0.45 0.45 1.50     >     0.45 0.45 1.00
       [0.75 0.10]    0.45 0.45 1.50     >     0.45 0.45 0.75  
       [0.75 0.10]    0.45 0.45 0.80     >     0.45 0.45 0.80  
       [0.50 0.10]    0.45 0.45 0.80     >     0.45 0.45 0.50  
       [0.50 0.30]    0.50 0.50 1.50     >     0.50 0.50 0.50
-      [0.50 0.30]    1.50 1.50 3.00     >     1.00 0.00 1.00 % here the internal minimum of 1.0 mm is important. 
+      [0.50 0.30]    1.50 1.50 3.00     >     1.50 1.50 1.50
       [0.00 0.10]    0.45 0.45 1.50     >     0.45 0.45 0.45  
 
 fixed:
@@ -214,9 +224,11 @@ optimal:
       Parameters     native resolution       internal resolution
       [1.00 0.10]     0.50 0.50 0.90     >     0.50 0.50 0.60
       [1.00 0.10]     0.50 0.50 1.00     >     0.70 0.70 0.70
-      [1.00 0.10]     0.80 0.80 1.00     >     1.00 1.00 1.00
+      [1.00 0.30]     0.50 0.50 1.00     >     0.50 0.50 0.70
+      [1.00 0.10]     0.80 0.80 1.00     >     0.80 0.80 1.00
       [1.00 0.10]     0.45 0.45 1.70     >     0.90 0.90 0.90
       [1.00 0.10]     0.95 1.05 1.25     >     0.95 1.05 1.00
+      [1.00 0.30]     0.95 1.05 1.25     >     0.95 1.05 1.25
 %}
 
 
@@ -239,7 +251,8 @@ cat.extopts.cat12atlas    = {fullfile(cat.extopts.pth_templates,'cat.nii')};    
 % surface options
 cat.extopts.pbtres         = 0.5; % internal resolution for thickness estimation in mm (default 0.5) 
 cat.extopts.SRP            = 10;  % surface recontruction pipeline & self-intersection correction: 0/1 - CS1 without/with/with-optimized SIC; 20/21/22 - CS2 without/with/with-optimized SIC;
-cat.extopts.reduce_mesh    = 1;   % optimize surface sampling: 0 - PBT res. (slow); 1 - optimal res. (default); 2 - internal res.; 3 - SPM init; 4 - MATLAB init; 5 - SPM full; 6 - MATLAB full; 7 - MATLAB full ext.;
+cat.extopts.reduce_mesh    = 1;   % optimize surface sampling: 0 - PBT res. (slow); 1 - optimal res. (default); 2 - internal res.; 3 - SPM init; 4 - MATLAB init; 5 - SPM full; 
+                                  % 6 - MATLAB full; 7 - MATLAB full ext.;
 cat.extopts.vdist          = 2;   % mesh resolution (experimental, do not change!)
 cat.extopts.pbtlas         = 0;   % reduce myelination effects (experimental, not yet working properly!)
 cat.extopts.thick_measure  = 1;   % distance method for estimating thickness:  1 - Tfs: Freesurfer method using mean(Tnear1,Tnear2) (default in 12.7+); 0 - Tlink: linked distance (used before 12.7)
@@ -257,13 +270,14 @@ cat.extopts.add_parahipp   = 0.1; % increase values in the parahippocampal area 
 % visualisation, print, developing, and debugging options
 cat.extopts.colormap     = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
 cat.extopts.report.color = [];    % report color setting invert fontcolor if dark:  [] - use figure color; 0.95 - light gray; [0.1 0.15 0.2] - dark blue  
-cat.extopts.verb         = 2;     % verbose output:        1 - default; 2 - details; 3 - write debugging files 
-cat.extopts.ignoreErrors = 1;     % catch errors:          0 - stop with error (default); 1 - catch preprocessing errors and proceed with next subject (requires MATLAB 2008 or higher); 
-                                  %                        2 - catch preprocessing errors and try backup function if this also fails then proceed with the next subject (requires MATLAB 2008 or higher)
+cat.extopts.verb         = 2;     % verbose output: 1 - default; 2 - details; 3 - write debugging files 
+cat.extopts.ignoreErrors = 1;     % catch errors:   0 - stop with error (default); 1 - catch preprocessing errors and proceed with next subject (requires MATLAB 2008 or higher); 
+                                  %                 2 - catch preprocessing errors and try backup function if this also fails then proceed with the next subject (requires MATLAB 2008 or higher)
 cat.extopts.expertgui    = 0;     % control of user GUI:   0 - common user modus with simple GUI; 1 - expert modus with extended GUI; 2 - developer modus with full GUI
-cat.extopts.subfolders   = 1;     % use subfolders such as mri, surf, report, and label to organize your data
+cat.extopts.subfolders   = 1;     % use subfolders such as mri, surf, report, and label to organize your data (this option is ignored if BIDS structure is found in your data)
 cat.extopts.experimental = 0;     % experimental functions: 0 - default, 1 - call experimental unsafe functions
-cat.extopts.print        = 2;     % display and print out pdf-file of results: 0 - off, 1 - volume only (use this to avoid problems on servers that do not support openGL), 2 - volume and surface (default)
+cat.extopts.print        = 2;     % display and print out pdf-file of results: 0 - off, 1 - volume only (use this to avoid problems on servers that do not support openGL), 
+                                  % 2 - volume and surface (default)
 cat.extopts.fontsize     = get(0,'defaultuicontrolFontSize'); % default font size for GUI; 
 %cat.extopts.fontsize     = spm('FontSizes',7); % set default font size for GUI manually; increase value for larger fonts or set it to 
 cat.extopts.send_info    = 1;     % send Matlab and CAT12 version to SBM server for internal statistics only. If you don't want to send this 

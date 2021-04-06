@@ -8,8 +8,13 @@ function y = cat_stat_polynomial(x,p)
 %__________________________________________________________________________
 %
 % cat_stat_polynomial orthogonalizes a polynomial function of order p
-%__________________________________________________________________________
-% Christian Gaser 
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$ 
 
 if nargin < 2, p = 1; end

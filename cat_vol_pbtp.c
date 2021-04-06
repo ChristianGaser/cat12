@@ -16,10 +16,14 @@
  * TODO:
  *  - eikonal distance for subsegmentation (region growing)
  *  - own labeling (
- * _____________________________________________________________________________
- * Robert Dahnke 2009_11
- * Center of Neuroimaging 
- * University Jena
+ * ______________________________________________________________________
+ *
+ * Christian Gaser, Robert Dahnke
+ * Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+ * Departments of Neurology and Psychiatry
+ * Jena University Hospital
+ * ______________________________________________________________________
+ * $Id$
  */
 
 #include "mex.h"   

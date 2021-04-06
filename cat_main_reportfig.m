@@ -26,10 +26,10 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 %   See also cat_main_reportstr and cat_main_reportcmd.
 % ______________________________________________________________________
 %
-%   Robert Dahnke (robert.dahnke@uni-jena.de)
-%   Structural Brain Mapping Group (http://dbm.neuro.uni-jena.de/)
-%   Department of Neurology
-%   University Jena
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
 % ______________________________________________________________________
 % $Id$
   
@@ -71,11 +71,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   if isfield(res,'spmpp'), nam = ['c1' nam]; end % no changes in VT0!
    
   % definition of subfolders
-  if job.extopts.subfolders
-    reportfolder  = 'report';
-  else
-    reportfolder  = '';
-  end
+  [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(VT0.fname,job);
   
   nprog = ( isfield(job,'printPID') && job.printPID ) || ... PID field
           ( isempty(findobj('type','Figure','Tag','CAT') ) && ... no menus
@@ -1057,8 +1053,13 @@ if 1
   job.imgprint.dpi    = 300;
   job.imgprint.fdpi   = @(x) ['-r' num2str(x)];
   job.imgprint.ftype  = @(x) ['-d' num2str(x)];
-  job.imgprint.fname  = fullfile(pth,reportfolder,['catreport_'  nam '.' job.imgprint.type]); 
-  job.imgprint.fnamej = fullfile(pth,reportfolder,['catreportj_' nam '.jpg']);
+  
+  pth_reportfolder = fullfile(pth,reportfolder);
+  [stat, val] = fileattrib(pth_reportfolder);
+  if stat, pth_reportfolder = val.Name; end
+  
+  job.imgprint.fname  = fullfile(pth_reportfolder,['catreport_'  nam '.' job.imgprint.type]); 
+  job.imgprint.fnamej = fullfile(pth_reportfolder,['catreportj_' nam '.jpg']);
 
   % save old settings of the SPM figure
   fgold.PaperPositionMode = get(fg,'PaperPositionMode');

@@ -9,8 +9,13 @@ function cat_plot_cov(data,opt)
 %   .pos_cbar - position of colorbar
 %   .ctick    - number of tick labels for colorbar
 %
-%_______________________________________________________________________
-% Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 % sample size

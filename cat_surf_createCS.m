@@ -34,9 +34,11 @@ function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS(V,V0,Ym,Ya,YMF,op
 % lead to strong error in the topology correction. Higher resolution 
 % also helps to reduce artifacts.
 % ______________________________________________________________________
-% Robert Dahnke 
-% Structural Brain Mapping Group
-% University Jena
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
 % ______________________________________________________________________
 % $Id$ 
 
@@ -108,32 +110,25 @@ cstime = clock;
   % correction for 'n' prefix for noise corrected and/or interpolated files
   [pp,ff]   = spm_fileparts(V.fname);
 
-  if cat_get_defaults('extopts.subfolders')
+  [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(V0.fname);
+  
+  % change surffolder name if subfolders are forced and surffolder has
+  % default name "surf" (i.e. for non-BIDS structure)
+  if cat_get_defaults('extopts.subfolders') && strcmp(surffolder,'surf')
     if strcmp(opt.pbtmethod,'pbt3')
-      surffolder = sprintf('surf_%s_%0.2f',opt.pbtmethod,opt.interpV);
+      surffolder = sprintf('%s_%s_%0.2f',surffolder,opt.pbtmethod,opt.interpV);
     elseif strcmp(opt.pbtmethod,'pbt2xf')
       opt.pbtmethod = 'pbt2x';
-      surffolder = sprintf('surf_%s_%0.2f',opt.pbtmethod,opt.interpV);
+      surffolder = sprintf('%s_%s_%0.2f',surffolder,opt.pbtmethod,opt.interpV);
     elseif opt.fast == 1
-      surffolder = 'surf_preview';
-    else
-      surffolder = 'surf';
+      surffolder = [ surffolder '_preview'];
     end
-    mrifolder = 'mri';
-    reportfolder = 'report';
     pp = spm_str_manip(pp,'h'); % remove 'mri' in pathname that already exists
     if ~exist(fullfile(pp,surffolder),'dir'), mkdir(fullfile(pp,surffolder)); end
-  else
-    surffolder = '';
-    mrifolder = '';
-    reportfolder = '';
   end
-
-  if ff(1)=='n'
-    if (exist(fullfile(pp,[ff(2:end) '.nii']), 'file')) || (exist(fullfile(pp,[ff(2:end) '.img']), 'file'))
-      ff = ff(2:end);
-    end
-  end
+  
+  % get original filename without 'n'
+  [pp0,ff] = spm_fileparts(V0.fname);
 
   % function to estimate the number of interactions of the surface deformation: d=distance in mm and a=accuracy 
   QMC    = cat_io_colormaps('marks+',17);
@@ -288,40 +283,45 @@ cstime = clock;
   defect_area   = 0; 
   defect_number = 0; 
 
+  % correct '../' parts in directory for BIDS structure
+  pp_surffolder = fullfile(pp,surffolder);
+  [stat, val] = fileattrib(pp_surffolder);
+  if stat, pp_surffolder = val.Name; end
+    
   for si=1:numel(opt.surf)
    
     % surface filenames
     Pm         = fullfile(pp,mrifolder, sprintf('m%s',ff));    % raw
-    Praw       = fullfile(pp,surffolder,sprintf('%s.central.nofix.%s.gii',opt.surf{si},ff));    % raw
-    Psphere0   = fullfile(pp,surffolder,sprintf('%s.sphere.nofix.%s.gii',opt.surf{si},ff));     % sphere.nofix
-    Pcentral   = fullfile(pp,surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff));          % central
-    Pcentralr  = fullfile(pp,surffolder,sprintf('%s.central.resampled.%s.gii',opt.surf{si},ff));% central
-    Player4    = fullfile(pp,surffolder,sprintf('%s.layer4.%s.gii',opt.surf{si},ff));           % layer4
-    Ppial      = fullfile(pp,surffolder,sprintf('%s.pial.%s.gii',opt.surf{si},ff));             % pial (GM/CSF)
-    Pwhite     = fullfile(pp,surffolder,sprintf('%s.white.%s.gii',opt.surf{si},ff));            % white (WM/GM)
-    Pthick     = fullfile(pp,surffolder,sprintf('%s.thickness.%s',opt.surf{si},ff));            % FS thickness / GM depth
-    Ppbt       = fullfile(pp,surffolder,sprintf('%s.pbt.%s',opt.surf{si},ff));                  % PBT thickness / GM depth
-    Pmask      = fullfile(pp,surffolder,sprintf('%s.mask.%s',opt.surf{si},ff));                 % mask
-    Ptemp      = fullfile(pp,surffolder,sprintf('%s.temp.%s',opt.surf{si},ff));                 % temporary file
-    Pgwo       = fullfile(pp,surffolder,sprintf('%s.depthWMo.%s',opt.surf{si},ff));             % gyrus width / GWM depth / gyral span
-    Pgw        = fullfile(pp,surffolder,sprintf('%s.depthGWM.%s',opt.surf{si},ff));             % gyrus width / GWM depth / gyral span
-    Pgww       = fullfile(pp,surffolder,sprintf('%s.depthWM.%s',opt.surf{si},ff));              % gyrus witdh of the WM / WM depth
-    Pgwwg      = fullfile(pp,surffolder,sprintf('%s.depthWMg.%s',opt.surf{si},ff));             % gyrus witdh of the WM / WM depth
-    Psw        = fullfile(pp,surffolder,sprintf('%s.depthCSF.%s',opt.surf{si},ff));             % sulcus width / CSF depth / sulcal span
-    Pdefects0  = fullfile(pp,surffolder,sprintf('%s.defects.%s',opt.surf{si},ff));              % defects temporary file
-    Pdefects   = fullfile(pp,surffolder,sprintf('%s.defects.%s.gii',opt.surf{si},ff));          % defects
-    Psphere    = fullfile(pp,surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff));           % sphere
-    Pspherereg = fullfile(pp,surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff));       % sphere.reg
+    Praw       = fullfile(pp_surffolder,sprintf('%s.central.nofix.%s.gii',opt.surf{si},ff));    % raw
+    Psphere0   = fullfile(pp_surffolder,sprintf('%s.sphere.nofix.%s.gii',opt.surf{si},ff));     % sphere.nofix
+    Pcentral   = fullfile(pp_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff));          % central
+    Pcentralr  = fullfile(pp_surffolder,sprintf('%s.central.resampled.%s.gii',opt.surf{si},ff));% central
+    Player4    = fullfile(pp_surffolder,sprintf('%s.layer4.%s.gii',opt.surf{si},ff));           % layer4
+    Ppial      = fullfile(pp_surffolder,sprintf('%s.pial.%s.gii',opt.surf{si},ff));             % pial (GM/CSF)
+    Pwhite     = fullfile(pp_surffolder,sprintf('%s.white.%s.gii',opt.surf{si},ff));            % white (WM/GM)
+    Pthick     = fullfile(pp_surffolder,sprintf('%s.thickness.%s',opt.surf{si},ff));            % FS thickness / GM depth
+    Ppbt       = fullfile(pp_surffolder,sprintf('%s.pbt.%s',opt.surf{si},ff));                  % PBT thickness / GM depth
+    Pmask      = fullfile(pp_surffolder,sprintf('%s.mask.%s',opt.surf{si},ff));                 % mask
+    Ptemp      = fullfile(pp_surffolder,sprintf('%s.temp.%s',opt.surf{si},ff));                 % temporary file
+    Pgwo       = fullfile(pp_surffolder,sprintf('%s.depthWMo.%s',opt.surf{si},ff));             % gyrus width / GWM depth / gyral span
+    Pgw        = fullfile(pp_surffolder,sprintf('%s.depthGWM.%s',opt.surf{si},ff));             % gyrus width / GWM depth / gyral span
+    Pgww       = fullfile(pp_surffolder,sprintf('%s.depthWM.%s',opt.surf{si},ff));              % gyrus witdh of the WM / WM depth
+    Pgwwg      = fullfile(pp_surffolder,sprintf('%s.depthWMg.%s',opt.surf{si},ff));             % gyrus witdh of the WM / WM depth
+    Psw        = fullfile(pp_surffolder,sprintf('%s.depthCSF.%s',opt.surf{si},ff));             % sulcus width / CSF depth / sulcal span
+    Pdefects0  = fullfile(pp_surffolder,sprintf('%s.defects.%s',opt.surf{si},ff));              % defects temporary file
+    Pdefects   = fullfile(pp_surffolder,sprintf('%s.defects.%s.gii',opt.surf{si},ff));          % defects
+    Psphere    = fullfile(pp_surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff));           % sphere
+    Pspherereg = fullfile(pp_surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff));       % sphere.reg
     Pfsavg     = fullfile(opt.fsavgDir, sprintf('%s.central.freesurfer.gii',opt.surf{si}));     % fsaverage central
     Pfsavgsph  = fullfile(opt.fsavgDir, sprintf('%s.sphere.freesurfer.gii',opt.surf{si}));      % fsaverage sphere    
     Pfsavgmask = fullfile(opt.fsavgDir, sprintf('%s.mask',opt.surf{si}));                       % fsaverage mask    
     
     if opt.fast == 1 % no registration
-      Pcentral   = fullfile(pp,surffolder,sprintf('%s.central.preview.%s.gii',opt.surf{si},ff));          % central
-      Ppbt       = fullfile(pp,surffolder,sprintf('%s.pbt.preview.%s',opt.surf{si},ff));                  % PBT thickness / GM depth
-      Pthick     = fullfile(pp,surffolder,sprintf('%s.thickness.preview.%s',opt.surf{si},ff));            % FS thickness / GM depth
-      Ppial      = fullfile(pp,surffolder,sprintf('%s.pial.preview.%s.gii',opt.surf{si},ff));            % FS thickness / GM depth
-      Pwhite     = fullfile(pp,surffolder,sprintf('%s.white.preview.%s.gii',opt.surf{si},ff));            % FS thickness / GM depth
+      Pcentral   = fullfile(pp_surffolder,sprintf('%s.central.preview.%s.gii',opt.surf{si},ff));          % central
+      Ppbt       = fullfile(pp_surffolder,sprintf('%s.pbt.preview.%s',opt.surf{si},ff));                  % PBT thickness / GM depth
+      Pthick     = fullfile(pp_surffolder,sprintf('%s.thickness.preview.%s',opt.surf{si},ff));            % FS thickness / GM depth
+      Ppial      = fullfile(pp_surffolder,sprintf('%s.pial.preview.%s.gii',opt.surf{si},ff));            % FS thickness / GM depth
+      Pwhite     = fullfile(pp_surffolder,sprintf('%s.white.preview.%s.gii',opt.surf{si},ff));            % FS thickness / GM depth
     end
     
     % use surface of given (average) data as prior for longitudinal mode
@@ -338,14 +338,12 @@ cstime = clock;
         break
       end
       [pp0,ff0] = spm_fileparts(priorname);
-      %if ~isempty( surffolder ), pp0 = [pp0(1:end-7) strrep(pp0(end-6:end),[filesep 'report'])]; end 
-      %ff0 = strrep(ff0,'cat_',''); 
 
       % try to copy surface files from prior to indivudal surface data 
       useprior = 1;
-      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff0)),Pcentral,'f');
-      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff0)),Psphere,'f');
-      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff0)),Pspherereg,'f');
+      useprior = useprior & copyfile(fullfile(pp_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff0)),Pcentral,'f');
+      useprior = useprior & copyfile(fullfile(pp_surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff0)),Psphere,'f');
+      useprior = useprior & copyfile(fullfile(pp_surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff0)),Pspherereg,'f');
       if ~useprior
         fprintf('\n');
         cat_io_addwarning('cat_surf_createCS:noPiorSurface', ...
@@ -1055,9 +1053,9 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
     % This part is not highly relevant for the individual surface reconstruction 
     % but it can help to test and optimize the spatial registration. 
     
-      % filenames for resmapling
-      Presamp   = fullfile(pp,surffolder,sprintf('%s.tmp.resampled.%s'    ,opt.surf{si},ff));  
-      Ppbtr     = fullfile(pp,surffolder,sprintf('%s.pbt.resampled.%s'    ,opt.surf{si},ff));  
+      % filenames for resampling
+      Presamp   = fullfile(pp_surffolder,sprintf('%s.tmp.resampled.%s'    ,opt.surf{si},ff));  
+      Ppbtr     = fullfile(pp_surffolder,sprintf('%s.pbt.resampled.%s'    ,opt.surf{si},ff));  
       Ppbtr_gii = [Ppbtr '.gii'];
       
       % resample values using warped sphere 
@@ -1117,9 +1115,9 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
       end
       
       % apply upper thickness limit
-			facevertexcdata = cat_io_FreeSurfer('read_surf_data',Pthick);  
-			facevertexcdata(facevertexcdata > opt.thick_limit) = opt.thick_limit;
-			cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);  
+      facevertexcdata = cat_io_FreeSurfer('read_surf_data',Pthick);  
+      facevertexcdata(facevertexcdata > opt.thick_limit) = opt.thick_limit;
+      cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);  
     else % otherwise simply copy ?h.pbt.* to ?h.thickness.*
       copyfile(Ppbt,Pthick,'f');
     end
@@ -1218,8 +1216,8 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
     defect_size   = defect_size / numel(opt.surf);
     defect_number = defect_number / numel(opt.surf);
   else % obtain surface information from xml report file
-    [pp,ff,ee,ex] = spm_fileparts(priorname);  %#ok<ASGLU>
-    catxml = fullfile(pp,reportfolder,['cat_' ff '.xml']);
+    [pp0,ff0] = spm_fileparts(priorname);  %#ok<ASGLU>
+    catxml = fullfile(pp,reportfolder,['cat_' ff0 '.xml']);
     xml = cat_io_xml(catxml);
     EC = xml.qualitymeasures.SurfaceEulerNumber;
     defect_size = xml.subjectmeasures.defect_size;

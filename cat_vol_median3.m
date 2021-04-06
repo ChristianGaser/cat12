@@ -22,6 +22,11 @@
 %  of the median application implementation leads to wrong results. 
 % 
 %  See also cat_vol_median3c, compile.
-%  ________________________________________________________________________
-%  Robert Dahnke, 2011/01 
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 %  $Id$

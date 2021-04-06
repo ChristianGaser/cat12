@@ -13,7 +13,12 @@ function varargout = cat_surf_calc(job)
 %                     'mean(S)' for dmtx==1 
 % job.dmtx       .. use data matrix
 % ______________________________________________________________________
-% Robert Dahnke
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
   if strcmp(job,'selftest')

@@ -9,7 +9,14 @@ function [vbmSTC,Ystc,stctype] = cat_stat_calc_stc(Yp0,VT0,trans,te,res)
 %       or be previous preprocessing errors)
 % Stronger changes are expected in with growing distance from the core
 % of the WM. 
-% ----------------------------------------------------------------------
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
+% $Id$
 
   opt.tpm = 1;
 
@@ -89,11 +96,7 @@ function [vbmSTC,Ystc,stctype] = cat_stat_calc_stc(Yp0,VT0,trans,te,res)
   spm_smooth(Ystc,Ystc,8);  % we are only interessed on larger changes
 
   if strcmp(stctype(1:4),'temp')
-    if cat_get_defaults('extopts.subfolders')
-      mrifolder = 'mri';
-    else
-      mrifolder = '';
-    end
+    mrifolder = cat_io_subfolders(VT0.fname);
     cat_io_writenii(VT0,Ystc,mrifolder,'te', ...
       ['group expectation map (matching of template after normalization) - ' stctype], ...
       'uint8',[0,1/255],min([1 0 0 0],cell2mat(struct2cell(te)')),trans);

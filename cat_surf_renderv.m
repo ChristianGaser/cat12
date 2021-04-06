@@ -20,9 +20,14 @@ function varargout = cat_surf_renderv(S,facevertexcdata,opt)
 %   .h              .. figure/axis handle
 % 
 % See cat_main_reportfig for example use.
-% _________________________________________________________________________
-% Robert Dahnke, 202103
-% $Id: cat_surf_createCS.m 1784 2021-03-22 07:37:04Z dahnke $ 
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
+% $Id$ 
 
 
   dbs = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end

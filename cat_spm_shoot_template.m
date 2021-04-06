@@ -14,8 +14,14 @@ function out = cat_spm_shoot_template(job)
 % and a series of Template images.
 %_______________________________________________________________________
 % Copyright (C) Wellcome Trust Centre for Neuroimaging (2009)
-
 % John Ashburner
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
 %_______________________________________________________________________

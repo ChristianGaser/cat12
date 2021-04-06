@@ -1,10 +1,14 @@
 function [ROI,sROI,ROIsum] = cat_conf_ROI(expert)
 %_______________________________________________________________________
 % wrapper for calling CAT ROI options
-%_______________________________________________________________________
-% Robert Dahnke and Christian Gaser
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
-%_______________________________________________________________________
 
 
 if nargin == 0

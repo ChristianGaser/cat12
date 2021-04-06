@@ -6,7 +6,13 @@ function [C,XML] = cat_io_colormaps(Cname,ncolors)
 %
 %   Cname   = ['marks' | 'marks+' | 'BCGWHw' | 'BGWHn'];
 %   ncolors =
-% _________________________________________________________________________
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
   
   % number of colors:

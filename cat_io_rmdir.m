@@ -7,8 +7,13 @@ function cat_io_rmdir(dirs)
 % cat_io_rmdir(dirs)
 %  
 % dirs = char or cellstr of directories
-% _________________________________________________________________________
-% Robert Dahnke
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
 % $Id$
 
   dirs    = cellstr(dirs); 

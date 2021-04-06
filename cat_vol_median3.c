@@ -23,11 +23,13 @@
  * of the median application implementation leads to wrong results. 
  *
  * TODO: check all input elements... 
- * _____________________________________________________________________________
- * Robert Dahnke 
- * Center of Neuroimaging 
- * University Jena
+ * ______________________________________________________________________
  *
+ * Christian Gaser, Robert Dahnke
+ * Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+ * Departments of Neurology and Psychiatry
+ * Jena University Hospital
+ * ______________________________________________________________________
  * $Id$ 
  */
 

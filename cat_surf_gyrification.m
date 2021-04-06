@@ -18,9 +18,11 @@ function PSgi = cat_surf_gyrification(PS,opt)
 %   PS   .. individual central surface file
 %   opt  .. structure with different option 
 % ______________________________________________________________________
-% Robert Dahnke 
-% Structural Brain Mapping Group
-% University Jena
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
 % ______________________________________________________________________
 % $Id$ 
 

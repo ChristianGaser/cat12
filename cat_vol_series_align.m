@@ -2,13 +2,19 @@ function out = cat_vol_series_align(job)
 % Longitudinal rigid registration of image series
 % FORMAT out = cat_vol_series_align(job)
 %_______________________________________________________________________
-% Copyright (C) 2012 Wellcome Trust Centre for Neuroimaging
 %
 % modified version of
 % John Ashburner
 % spm_series_align.m 5044 2012-11-09 13:40:35Z john
 %
-% $Id cat_vol_series_align.m $
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
+% $Id$
 
 N = numel(job.data);
 
