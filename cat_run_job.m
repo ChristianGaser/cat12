@@ -333,8 +333,8 @@ function cat_run_job(job,tpm,subj)
           cat_stat_nanmedian( YFm( YCO(:) > 1/3 )) ... pricture frame background 
           cat_stat_nanstd( YFm(YBG(:)) > 1/3)]; % I am not sure if we should use the std, because inverted images are maybe quite similar
         ppe.affreg.highBG     = ...
-          ppe.affreg.highBGpara(1) > 1/3 || ...
-          ppe.affreg.highBGpara(2) > 1/3; 
+          ppe.affreg.highBGpara(1) > 1/5 || ...
+          ppe.affreg.highBGpara(2) > 1/5; 
         
         if ~debug, clear YFC YBG YOB YCO YCO2 F0vol F0std numo numi hd; end 
         
@@ -518,7 +518,7 @@ function cat_run_job(job,tpm,subj)
         % large head intensities can disturb the whole process.
         % --------------------------------------------------------------
         % ds('l2','',vx_vol,Ym, Yt + 2*Ybg,obj.image.private.dat(:,:,:)/WMth,Ym,60)
-        if job.extopts.APP == 1070 || job.extopts.APP == 1144
+        if (job.extopts.APP == 1070 || job.extopts.APP == 1144) && ~ppe.affreg.highBG
           stime = cat_io_cmd('APP: Rough bias correction'); 
           try
             Ysrc  = single(obj.image.private.dat(:,:,:)); 
@@ -572,14 +572,16 @@ end
           VF1   = spm_smoothto8bit(VF,resa); %#ok<NASGU>
           VG1   = spm_smoothto8bit(VG,resa); %#ok<NASGU>
 
-        else
-          % standard approach with static resa value and no VG smoothing
-          if ~isfield(job,'useprior') || isempty(job.useprior)
-            stime = cat_io_cmd('Coarse affine registration'); 
-          end
+        elseif job.extopts.setCOM && ~( isfield(job,'useprior') && ~isempty(job.useprior) ) && ~ppe.affreg.highBG
+          % standard approach (no APP) with static resa value and no VG smoothing
+          stime = cat_io_cmd('Coarse affine registration');
           resa  = 8;
-          VF1   = spm_smoothto8bit(VF,resa); %#ok<NASGU>
-          VG1   = VG;                        %#ok<NASGU>
+          VF1   = spm_smoothto8bit(VF,resa);
+          VG1   = VG; 
+          [Ym,Yt,Ybg,WMth] = APPmini(obj,VF,job.extopts.histth);
+        else
+          stime = cat_io_cmd('Skip initial affine registration due to high-intensity background','','',1);  
+          VF = spm_vol(obj.image(1));
           [Ym,Yt,Ybg,WMth] = APPmini(obj,VF,job.extopts.histth);
         end
 
@@ -618,7 +620,7 @@ end
         end
         
         % correct origin using COM and invert translation and use it as starting value
-        if job.extopts.setCOM && ~useprior
+        if job.extopts.setCOM && ~useprior && ~ppe.affreg.highBG
           fprintf('\n'); stime = clock;  
           Affine_com        = cat_vol_set_com(VF1);
           Affine_com(1:3,4) = -Affine_com(1:3,4);
@@ -721,14 +723,18 @@ end
         Ylesion = Ylesionr>0.5; clear Ylesionr;
       end
       if exist('Ybg','var'), Ylesion(Ybg)=0; end % denoising in background
-      if ~job.extopts.SLC && sum(Ylesion(:))/1000>1
-        % this could be critical and we use a warning for >1 cm3 and an alert in case of >10 cm3
-        cat_io_addwarning([mfilename ':StrokeLesionButNoCorrection'],sprintf( ...
-         ['There are %0.2f mm%s of zeros within the brain but Stroke Lesion \\\\n', ...
-          'Correction (SLC) inactive (available in the expert mode). \\\\n'], ...
-          sum(Ylesion(:))/1000,native2unicode(179, 'latin1')),1 + (sum(Ylesion(:))/1000>10),[0 1]);   
-      else
-        cat_io_cprintf('note',sprintf('SLC: Found masked region of %0.2f cm%s. \n', sum(Ylesion(:))/1000,native2unicode(179, 'latin1'))); 
+      if sum(Ylesion(:))/1000 > 1
+        fprintf('%5.0fs\n',etime(clock,stime)); stime = []; 
+        if ~job.extopts.SLC
+          % this could be critical and we use a warning for >1 cm3 and an alert in case of >10 cm3
+          cat_io_addwarning([mfilename ':StrokeLesionButNoCorrection'],sprintf( ...
+           ['There are %0.2f cm%s of zeros within the brain but Stroke Lesion \\\\n', ...
+            'Correction (SLC) inactive (available in the expert mode). '], ...
+            sum(Ylesion(:))/1000,native2unicode(179, 'latin1')),1 + (sum(Ylesion(:))/1000 > 10),[0 1]);  
+          clear Ylesion; 
+        else
+          cat_io_cprintf('note',sprintf('SLC: Found masked region of %0.2f cm%s. \n', sum(Ylesion(:))/1000,native2unicode(179, 'latin1'))); 
+        end
       end
       
       
