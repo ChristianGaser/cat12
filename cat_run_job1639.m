@@ -479,7 +479,7 @@ function cat_run_job1639(job,tpm,subj)
         % large head intensities can disturb the whole process.
         % --------------------------------------------------------------
         % ds('l2','',vx_vol,Ym, Yt + 2*Ybg,obj.image.private.dat(:,:,:)/WMth,Ym,60)
-        if job.extopts.APP == 1070 || job.extopts.APP == 1144
+        if (job.extopts.APP == 1070 || job.extopts.APP == 1144) && ~ppe.affreg.highBG 
           stime = cat_io_cmd('APP: Rough bias correction'); 
           try
             Ysrc  = single(obj.image.private.dat(:,:,:)); 
@@ -529,17 +529,17 @@ function cat_run_job1639(job,tpm,subj)
           VF1   = spm_smoothto8bit(VF,resa);
           VG1   = spm_smoothto8bit(VG,resa);
 
-        else
+        elseif job.extopts.setCOM && ~( isfield(job,'useprior') && ~isempty(job.useprior) ) && ~ppe.affreg.highBG
           % standard approach (no APP) with static resa value and no VG smoothing
-          if job.extopts.setCOM && ~( isfield(job,'useprior') && ~isempty(job.useprior) ) && ~ppe.affreg.highBG
-            stime = clock; 
-          else
-            stime = cat_io_cmd('Coarse affine registration');
-          end
+          stime = cat_io_cmd('Coarse affine registration');
           resa  = 8;
           VF1   = spm_smoothto8bit(VF,resa);
           VG1   = VG; 
           [Ym,Yt,Ybg,WMth] = APPmini(obj,VF);
+        else
+          stime = cat_io_cmd('Skip initial affine registration due to high-intensity background','','',1);  
+          VF = spm_vol(obj.image(1));
+          [Ym,Yt,Ybg,WMth] = APPmini(obj,VF); %#ok<ASGLU>
         end
 
         %% prepare affine parameter 

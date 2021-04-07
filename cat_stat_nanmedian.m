@@ -4,6 +4,8 @@ function out = cat_stat_nanmedian(in, dim)
 % MATLAB nanmedian of the statistic toolbox. Process input as double
 % due to errors in large single arrays and set data class of "out" 
 % to the data class of "in" at the end of the processing,
+% Use dim==0 to evalutate in(:) in case of dimension selection 
+% (e.g., in(:,:,:,2) ).
 %
 % out = cat_stat_nanmedian(in,dim)
 %
@@ -17,6 +19,7 @@ function out = cat_stat_nanmedian(in, dim)
 % Example 2 - special test call of example 1:
 %   cat_stat_nanmedian('test')
 %
+% See also cat_stat_nansum, cat_stat_nanstd, cat_stat_nanmean.
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -50,6 +53,11 @@ function out = cat_stat_nanmedian(in, dim)
       dim = 3; 
     end;
   end;
+    
+  if dim == 0 
+    in  = in(:); 
+    dim = 1; 
+  end
   
   sz  = size(in);
 

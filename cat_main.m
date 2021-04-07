@@ -318,7 +318,7 @@ if ~isfield(res,'spmpp')
       Ymis = cat_vol_median3(Ym,Ym>0 & Ym<0.4,Ym<0.4); Ym = Ym.*max(0.1,Ym>0.4) + Ymis.*min(0.9,Ym<=0.4);
       
       %cat_io_cmd(' ','','',job.extopts.verb,stimen); 
-      clear Ymis stimen;
+      clear Ymis;
     else
       stimen = stime; 
     end    
@@ -1080,7 +1080,7 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
 
 
   % definition of subfolders - add to res variable?
-  [res.mrifolder, rres.eportfolder] = cat_io_subfolders(res.image(1).fname,job);
+  [res.mrifolder, res.reportfolder] = cat_io_subfolders(res.image(1).fname,job);
 
   % Sort out bounding box etc
   res.bb = spm_get_bbox(tpm.V(1)); 
