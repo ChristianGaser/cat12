@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1793 | gaser | 2021-04-07 01:29:32
+r1794 | gaser | 2021-04-07 17:10:51
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+R       cat_io_subfolders.m
+M       html/cat.html
+
+Fixed: Resolved issue svn with cat_io_subfolders.m 
+------------------------------------------------------------------------
+r1793 | gaser | 2021-04-07 01:30:18 +0200 (Mi, 07 Apr 2021) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +20,7 @@ M       cat_surf_createCS2.m
 (1) Fixed:   Corrected wrong path for useprior in cat_surf_createCS.m and
              cat_surf_createCS2.m.
 (2) Changed: Updated help text.
+
 
 ------------------------------------------------------------------------
 r1792 | gaser | 2021-04-06 15:08:16 +0200 (Di, 06 Apr 2021) | 10 lines
