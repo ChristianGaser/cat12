@@ -23,10 +23,10 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
   vx_vol  = sqrt(sum(res.image(1).mat(1:3,1:3).^2));    % voxel size of the processed image
   vx_volp = prod(vx_vol)/1000;
 
-  d = res.image(1).dim(1:3);
+  %d = res.image(1).dim(1:3);
 
   % some reports
-  for i=1:size(P,4), res.ppe.SPMvols0(i) = cat_stat_nansum(single(P(:,:,:,i)))/255 .* prod(vx_vol) / 1000; end
+  for i=1:size(P,4), res.ppe.SPMvols0(i) = cat_stat_nansum(single(P(:,:,:,i)),0)/255 .* prod(vx_vol) / 1000; end
 
    
   try
