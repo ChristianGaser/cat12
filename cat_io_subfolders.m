@@ -15,7 +15,7 @@ function [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
-% $Id: cat_io_subfolders.m 1786 2021-03-24 21:08:28Z gaser $
+% $Id$
   
   if nargin > 1 && isfield(job,'extopts') && isfield(job.extopts,'subfolders')
     subfolders = job.extopts.subfolders;
