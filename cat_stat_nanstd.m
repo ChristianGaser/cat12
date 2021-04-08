@@ -4,7 +4,7 @@ function out = cat_stat_nanstd(in, dim)
 % std() or MATLAB nanstd of the statistic toolbox. Process input 
 % as double due to errors in large single arrays and set data class 
 % of "out" to the data class of "in" at the end of the processing.
-% Use dim==0 to evalutate in(:) in case of dimension selection 
+% Use dim==0 to evaluate in(:) in case of dimension selection 
 % (e.g., in(:,:,:,2) ).
 %
 % out = cat_stat_nanstd(in,dim)
