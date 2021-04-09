@@ -1777,7 +1777,7 @@ function [check_cov, check_cov2] = conf_check_cov(data_xml,outdir,fname,save,exp
  
   % --- update input data ---
   data_xml.name     = 'Quality measures (optional)';
-  data_xml.help     = {'Select optional the quality measures that are saved during segmentation as xml-files in the report folder. This additionally allows to analyze image quality parameters such as noise, and bias. Please note, that the order of the xml-files should be the same as the other data files.'};
+  data_xml.help     = {'Select optional the quality measures that are saved during segmentation as xml-files in the report folder. This additionally allows to analyze image quality parameters such as noise, bias, and weighted overall image quality. Please note, that the order of the xml-files should be the same as the other data files.'};
   
   % --- further data ---
   c                 = cfg_entry;
@@ -1829,7 +1829,8 @@ function [check_cov, check_cov2] = conf_check_cov(data_xml,outdir,fname,save,exp
   check_cov.help    = {
     'In order to identify images with poor image quality or even artefacts you can use this function. Images have to be in the same orientation with same voxel size and dimension (e.g. normalized images without smoothing). The idea of this tool is to check the correlation of all files across the sample.'
     ''
-    'The correlation is calculated between all images and the mean for each image is plotted using a spmmat and the indicated filenames. The smaller the mean correlation the more deviant is this image from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order.'
+    'The correlation is calculated between all images and the mean for each image is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this image from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order.'
+    'If you have loaded quality measures, you can also display the ratio between weighted overall image quality (IQR) and mean correlation. These two are the most important measures for assessing image quality.'
   };
 
 

@@ -32,44 +32,44 @@ function varargout = cat_stat_check_cov2(job)
 % ------------------------------------------------------------------------- 
 % Extra development
 %
-%	- (X) CAT version & parameter control
+% - (X) CAT version & parameter control
 %       - Show cat-version in datatip 
 %         > required version management update in cat_tst_qa
 %       - Use CAT version number as nuisance variable 
 %         > ask Christian .. maybe as flag
-%	- (X) Create CAT segmentation parameter as nuisance variable:
+% - (X) Create CAT segmentation parameter as nuisance variable:
 %       n-dimensional distance of biasstr, APP, GCUT+cleanup, LASstr, regstr?
 %
 % ------------------------------------------------------------------------- 
 %
 % Development: 
-%	- (5) Load surfaces in graphic window or close to it (sorted). 
-%	- (5) Data trashing 
+% - (5) Load surfaces in graphic window or close to it (sorted). 
+% - (5) Data trashing 
 %       - message window if no images were selected
 % - (5) Colorbar: 
 %       - Define Colorbar (min-max, auto=sd-factor), (+-)-buttons?
 %       - Auto/fixed colorbar in scatterplot > redraw function?
 %       - sample / protocol / global scaling ...
 %       > scatter plot update function
-%	- (4) Use resampled surface if possible (faster) 
+% - (4) Use resampled surface if possible (faster) 
 %       - if more than one > which one? > fastest & less smoothed
-% - (1) Autotrash > groups with percentual number of files ?	
+% - (1) Autotrash > groups with percentual number of files ?  
 % - (1) add LEFT/RIGHT, COLUMN/ROW legend to surface slice print
 %
 % ------------------------------------------------------------------------- 
 %
 % Possible extensions:
 % - (2) Options button with a submenu to set default display options and behavior 
-%   		- open original vs. normalized volumes / surfaces
-%     	- affine registered volumes
+%       - open original vs. normalized volumes / surfaces
+%       - affine registered volumes
 %       - use global scale for processing / visualization (initial parameter)
 %       - display datatip variables 
 %       - choose colormap
 %       - choose window colors
 % - (0) Icons for (sorted) Matrixplot, Maha Dist, Worst MNC Cases, 
 %       (Sub)Boxplots (MNC, QA, nuisance) ?
-%	- (1) overlay with half transparency for 1-2 SD
-% - (1) Data viewing GUI	
+% - (1) overlay with half transparency for 1-2 SD
+% - (1) Data viewing GUI  
 %       - open all similar objects in scatter plot? - Use colored edges?
 %       - (5) show load progress in case of surface display 
 %             > not so easy > cat_surf_render!
@@ -80,48 +80,48 @@ function varargout = cat_stat_check_cov2(job)
 % - (1) try to get all figure handles even in case of additional surface 
 %       figures (and not try to close figure 2:26)
 % - (1) error message if all scans of a group are missing 
-%	- (1) mark critical selections, e.g of protokol/sample (red background) with redraw
-%	- (0) more space for the title of the boxplot (in case of complex group paths)
+% - (1) mark critical selections, e.g of protokol/sample (red background) with redraw
+% - (0) more space for the title of the boxplot (in case of complex group paths)
 %
 % ------------------------------------------------------------------------- 
 % 
 % Rejected ideas:
 % - Use ROI-files to check regions? 
-% 	> This would be a separate call of Checkcov that is not required yet.
+%   > This would be a separate call of Checkcov that is not required yet.
 %
 % - Longitudinal mode?
-% 	> Too complex right now due to manifold data structure and varying
-%    	number of scans.
+%   > Too complex right now due to manifold data structure and varying
+%     number of scans.
 %
 % - Use multiple datatips? 
-% 	> Multiple datatips would be nice to view and (de)exclude multiple  
+%   > Multiple datatips would be nice to view and (de)exclude multiple  
 %     objects but will have unclear behavior for the slice window. 
-% 	> Deselection is not intuitive! The required number variates (many for
+%   > Deselection is not intuitive! The required number variates (many for
 %     delete, less for view).
-% 	> This would be elaborate and confusing and it is easier to use only 
+%   > This would be elaborate and confusing and it is easier to use only 
 %     one at all!
 %
 % - Save/load functions (buttons) for the selection list?
-% 	> This requires  a strong interaction between the disk data and virtual
+%   > This requires  a strong interaction between the disk data and virtual
 %     data structure. 
-% 	> Elaborative and not really important.  
+%   > Elaborative and not really important.  
 %
 % - Boxplot dependency for ?Data selection?, i.e. show only data visible
 %   in matrix/scatter plot?
-% 	> No, because this generally removes the samples and this is not required. 
+%   > No, because this generally removes the samples and this is not required. 
 %
-% - Use of a table with parameters (MNC, IQR, PIQR, MD, nuisance, autotrash, 
+% - Use of a table with parameters (MNC, IQR, PIQR, IQRratio, nuisance, autotrash, 
 %   tissue volume, cat_pp_version, cat_pp_para, Euler, ...) in an extra 
 %   figure or the SPM Graphics window?
-% 	> No, this is not required and elaborative, because Checkcov is a graphic
+%   > No, this is not required and elaborative, because Checkcov is a graphic
 %     tool that already combines such information in abstract figures 
-%     (covar matrix, Mahanalobis distance).
+%     (covar matrix, IQRratio).
 %
 % - Show autotrash in datatip
-% 	> No, because it depend on further autotrash options
+%   > No, because it depend on further autotrash options
 %
 % - Display additional data (IQR,MNC, ?) in/close to sliceplot
-% 	> No, the data was added to the datatip. Overall there is not enough 
+%   > No, the data was added to the datatip. Overall there is not enough 
 %     space for this, requiring an additional figure ...
 %
 % ------------------------------------------------------------------------- 
@@ -148,7 +148,7 @@ function varargout = cat_stat_check_cov2(job)
 % ------------------------------------------------------------------------- 
 %  cscc .. cat_stat_check_cov (cscc) data structure as short unique global 
 %          variable that nobody else use
-%    .H             	.. object/button/image/axis handles
+%    .H               .. object/button/image/axis handles
 %      .mesh_detected .. volume vs. surface mode (=1)
 %      .isscatter     .. Covariance matrix vs. Mahanalobis plot (=1)
 %      .isxml         .. CAT XML are availabl
@@ -173,10 +173,10 @@ function varargout = cat_stat_check_cov2(job)
 %      .img_alpa    ..
 %      *Vchanged       .. modified volume header for 4D-structures
 %      *Vchanged_names .. modified volume header for 4D-structures
-%      .X           .. data structure for Mahalobis distance
-%      .X2          .. data structure for Mahalobis distance
-%      .MD          .. data structure for Mahalobis distance
-%      .MD2         .. data structure for Mahalobis distance
+%      .X           .. data structure for Norm. Ratio IQR/mean correlation
+%      .X2          .. data structure for Norm. Ratio IQR/mean correlation
+%      .IQRratio    .. data structure for Norm. Ratio IQR/mean correlation
+%      .IQRratio    .. data structure for Norm. Ratio IQR/mean correlation
 %    .files         .. CAT preprocessing files 
 %      .data        .. normalized input files of cat_stat_check_cov
 %                      (e.g. wmp1, thickness, curv, ...)
@@ -291,9 +291,9 @@ function varargout = cat_stat_check_cov2(job)
     'close',          [0.775 0.935 0.100 0.040],... % close button
     'help',           [0.875 0.935 0.100 0.040],... % help button
     ...
-    'sort',           [0.772 0.880 0.110 0.050],... % list to use ordered matrix or Maha-distance 
+    'sort',           [0.772 0.880 0.110 0.050],... % list to use ordered matrix or IQRratio 
     'boxp',           [0.872 0.880 0.110 0.050],... % list to display different variables as boxplot
-    'samp',           [0.772 0.615 0.110 0.055],... % list to use ordered matrix or Maha-distance 
+    'samp',           [0.772 0.615 0.110 0.055],... % list to use ordered matrix or IQRratio 
     'prot',           [0.872 0.615 0.110 0.055],... % list to display different variables as boxplot
     'showtrash',      [0.776 0.610 0.110 0.025],... % colorbar fix/auto option
     ...
@@ -1097,7 +1097,7 @@ function create_figures(job,slices)
     
     % manual control of output
     showEQM      = cscc.job.expertgui; % other QM (noise,bias,res)
-    showPIQR     = cscc.job.expertgui; % PIQR and MD2 plot
+    showPIQR     = cscc.job.expertgui; % PIQR and IQRratio2 plot
     
     % add QM header and IQR
     if showEQM || ( size(cscc.data.QM,2)>6 && cscc.H.mesh_detected )
@@ -1135,35 +1135,29 @@ function create_figures(job,slices)
     end
     
     
-    % estimate Mahalanobis distance between mean corr. and weighted overall quality
+    % estimate ratio between weighted overall quality (IQR) and mean corr. 
     cscc.data.X = [cscc.data.mean_cov, cscc.data.QM(:,4)];
-    cscc.data.X(isnan(cscc.data.X)) = 0;  % mean correlation and IQR
-    S   = cov(cscc.data.X);
-    mu  = mean(cscc.data.X);
-    Xmu = cscc.data.X - repmat(mu,[length(cscc.data.X),1]); 
-    cscc.data.MD = diag(Xmu * inv(S) * Xmu');
+    cscc.data.X(isnan(cscc.data.X)) = 0; 
+    cscc.data.IQRratio = (cscc.data.X(:,2)/std(cscc.data.X(:,2)))./(cscc.data.X(:,1)/std(cscc.data.X(:,1)));
 
     % if PIQR is used than we need further variables (similar to IQR)
     if showPIQR
       cscc.data.X2  = [cscc.data.mean_cov, cscc.data.QM(:,5)]; 
       cscc.data.X2(isnan(cscc.data.X2)) = 0; 
-      S2   = cov(cscc.data.X2);
-      mu2  = mean(cscc.data.X2);
-      Xmu2 = cscc.data.X2 - repmat(mu2,[length(cscc.data.X2),1]); 
-      cscc.data.MD2 = diag(Xmu2 * inv(S2) * Xmu2');
+      cscc.data.IQRratio2 = (cscc.data.X2(:,2)/std(cscc.data.X2(:,2)))./(cscc.data.X2(:,1)/std(cscc.data.X2(:,1)));
     end  
 
     % add PIQR
     if showPIQR 
-      str = [str,{'Mahalanobis distances:'}]; %tmp = [ tmp , {{@sprintf,''}}]; 
-      tmp = [ tmp , { {@show_boxplot, cscc.data.MD , 'Mahalanobis distance with IQR   ', 2 } } ]; 
+      str = [str,{'Norm. Ratio IQR/mean correlation:'}]; %tmp = [ tmp , {{@sprintf,''}}]; 
+      tmp = [ tmp , { {@show_boxplot, cscc.data.IQRratio , 'Norm. Ratio IQR/mean correlation   ', 2 } } ]; 
       str = [ str , { '    with IQR' } ];
-      tmp = [ tmp , { {@show_boxplot, cscc.data.MD , 'Mahalanobis distance with IQR   ', 2 } } ];  
+      tmp = [ tmp , { {@show_boxplot, cscc.data.IQRratio , 'Norm. Ratio IQR/mean correlation   ', 2 } } ];  
       str = [ str , { '    with PIQR' } ];
-      tmp = [ tmp , { {@show_boxplot, cscc.data.MD2, 'Mahalanobis distance with PIQR  ', 2 } } ];  
+      tmp = [ tmp , { {@show_boxplot, cscc.data.IQRratio2, 'Norm. Ratio PIQR/mean correlation  ', 2 } } ];  
     else
-      str = [ str , { 'Mahalanobis distance' } ];
-      tmp = [ tmp , { {@show_boxplot, cscc.data.MD, 'Mahalanobis distance  ', 2 } } ];  
+      str = [ str , { 'Norm. Ratio IQR/mean correlation' } ];
+      tmp = [ tmp , { {@show_boxplot, cscc.data.IQRratio, 'Norm. Ratio IQR/mean correlation  ', 2 } } ];  
     end
     
   end
@@ -1203,15 +1197,15 @@ function create_figures(job,slices)
     str  = { 'Plot',...
              'Corr. matrix order by selected files', ...
              'Corr. matrix sorted by mean corr.', ...
-             'Mahalanobis distance'};
+             'Norm. Ratio IQR/mean correlation'};
     tmp  = { {@show_matrix, cscc.data.YpY, 0},...
              {@show_matrix, cscc.data.YpY(cscc.data.ind_sorted,cscc.data.ind_sorted), 1},...
-             {@show_mahalanobis, cscc.data.X, cscc.data.MD, 1}};
+             {@show_IQRratio, cscc.data.X, cscc.data.IQRratio, 1}};
     if showPIQR
       str{4} = [ str{4} ' (IQR)'];
-      str = char([cellstr(str),{'Mahalanobis distance PIQR'}]);
+      str = char([cellstr(str),{'Norm. Ratio PIQR/mean correlation'}]);
       tmp = [ tmp , ...
-             {{@show_mahalanobis, cscc.data.X2, cscc.data.MD2, 2}}]; 
+             {{@show_IQRratio, cscc.data.X2, cscc.data.IQRratio2, 2}}]; 
     end
   else
     str  = { 'Plot',...
@@ -1454,11 +1448,11 @@ function create_figures(job,slices)
     'string','VIEW','Style','Pushbutton','Enable','off'); 
 
   if isfield(cscc.data,'QM')
-		cscc.H.trashui.autotrash = uicontrol(cscc.H.figure,...
-			'Units','normalized','position',cscc.pos.autotrash,'callback',@autotrash,...
-			'string','AUTO','FontSize',cscc.display.FS(cscc.display.FSi),...
-			'ToolTipString','Automatic exclusion','ForegroundColor',[0 0.8 0],...
-			'Style','Pushbutton','Enable',onoff{(size(cscc.data.QM,2)<4) + 1}); 
+    cscc.H.trashui.autotrash = uicontrol(cscc.H.figure,...
+      'Units','normalized','position',cscc.pos.autotrash,'callback',@autotrash,...
+      'string','AUTO','FontSize',cscc.display.FS(cscc.display.FSi),...
+      'ToolTipString','Automatic exclusion','ForegroundColor',[0 0.8 0],...
+      'Style','Pushbutton','Enable',onoff{(size(cscc.data.QM,2)<4) + 1}); 
   end
 
   % == second row ==
@@ -2190,8 +2184,8 @@ function autotrash(obj, event_obj)
       trash
     end
     
-    % sort by MD
-    [ss,si] = sort(cscc.data.MD(at.del),'descend'); 
+    % sort by IQRratio
+    [ss,si] = sort(cscc.data.IQRratio(at.del),'descend'); 
     at.del = at.del(si);
     
     cscc.select.trashlist  = [cscc.select.trashlist, at.del];
@@ -2227,7 +2221,7 @@ return
 function trash(obj, event_obj) 
 %-----------------------------------------------------------------------
 % Puts a record on the trash list and marks it with a red cross in the 
-% Mahalanobis plot.
+% Ratio IQR/mean correlation plot.
 %-----------------------------------------------------------------------
   global cscc 
   
@@ -2285,7 +2279,7 @@ return
 function trashrow(obj, event_obj) 
 %-----------------------------------------------------------------------
 % Puts a record on the trash list and marks it with a red cross in the 
-% Mahalanobis plot.
+% Ratio IQR/mean correlation plot.
 %-----------------------------------------------------------------------
   global cscc
   
@@ -2325,7 +2319,7 @@ return
 function detrash(obj, event_obj)
 %-----------------------------------------------------------------------
 % Removes a record from trash list and restores the old look like in the 
-% Mahalanobis plot.
+% Ratio IQR/mean correlation plot.
 %-----------------------------------------------------------------------
   global cscc 
   
@@ -2374,7 +2368,7 @@ return
 function detrashrow(obj, event_obj)
 %-----------------------------------------------------------------------
 % Removes a record from trash list and restores the old look like in the 
-% Mahalanobis plot.
+% Ratio IQR/mean correlation plot.
 %-----------------------------------------------------------------------
   global cscc 
 
@@ -2641,7 +2635,7 @@ function emptytrash(obj, event_obj)
     trash(fi).dir        = pp;
     trash(fi).fname      = cscc.files.org{cscc.select.trashlist(fi)}; 
     trash(fi).MNC        = cscc.data.mean_cov(cscc.select.trashlist(fi));
-    trash(fi).MD         = cscc.data.MD(cscc.select.trashlist(fi));
+    trash(fi).IQRratio   = cscc.data.IQRratio(cscc.select.trashlist(fi));
     try
       trash(fi).IQR      = cscc.data.QM(cscc.select.trashlist(fi),4);
       trash(fi).PIQR     = cscc.data.QM(cscc.select.trashlist(fi),5);
@@ -2724,19 +2718,19 @@ function emptytrash(obj, event_obj)
     '%  ------------------------------------------------------------------'
     '%  Structure with the name of the removed scan, its mean covariance '
     '%  (MNC), image quality rating (IQR), the protocol image qualtiy '
-    '%  rating (PIQR), Mahanalobis distance and file to file lists one ' 
+    '%  rating (PIQR), IQRratio and file to file lists one ' 
     '%  of the orinal files and one of the trashed files.'
     '%  ------------------------------------------------------------------'
   };
 
   % add a data structur that include major information especial the filelists
   for fi=1:numel(cscc.select.trashlist)
-    script{end+1} = sprintf('scan(%d).fname = ''%s'';',fi,trash(fi).fname);
-    script{end+1} = sprintf('scan(%d).MNC   = %0.4f;' ,fi,trash(fi).MNC  );
-    script{end+1} = sprintf('scan(%d).IQR   = %0.2f;' ,fi,trash(fi).IQR  );
-    script{end+1} = sprintf('scan(%d).PIQR  = %0.2f;' ,fi,trash(fi).PIQR );
-    script{end+1} = sprintf('scan(%d).MD    = %0.2f;' ,fi,trash(fi).MD   );
-    script{end+1} = sprintf('scan(%d).files = {',fi);
+    script{end+1} = sprintf('scan(%d).fname    = ''%s'';',fi,trash(fi).fname);
+    script{end+1} = sprintf('scan(%d).MNC      = %0.4f;' ,fi,trash(fi).MNC  );
+    script{end+1} = sprintf('scan(%d).IQR      = %0.2f;' ,fi,trash(fi).IQR  );
+    script{end+1} = sprintf('scan(%d).PIQR     = %0.2f;' ,fi,trash(fi).PIQR );
+    script{end+1} = sprintf('scan(%d).IQRratio = %0.2f;' ,fi,trash(fi).IQRratio   );
+    script{end+1} = sprintf('scan(%d).files    = {',fi);
     for fii=1:numel(trash(fi).sim_files)
       if testtrash
         script{end+1} = sprintf('  ''%s'';',cat_io_strrep(trash(fi).sim_files{fii},...
@@ -3142,9 +3136,8 @@ function check_worst_data(obj, event_obj)
     case 'Size of topology defects (TDS)', name = 'TDS';
     case 'Mean correlation',               name = 'MNC'; 
     case 'Protocol-based IQR (PIQR)',      name = 'PIQR'; 
-    case 'Mahalanobis distance',           name = 'MD';
-    case 'Mahalanobis distance (IQR)',     name = 'MD IQR';
-    case 'Mahalanobis distance (PIQR)',    name = 'MD PIQR';
+    case 'Norm. Ratio IQR/mean correlation', name = 'IQRratio';
+    case 'Norm. Ratio PIQR/mean correlation',name = 'PIQRratio';
   end
   if ~cscc.H.showtrash.Value
     data = setdiff(data,cscc.select.trashlist);
@@ -3602,7 +3595,7 @@ return
 %}
 
 %-----------------------------------------------------------------------
-function show_mahalanobis(X,MD,scata)
+function show_IQRratio(X,IQRratio,scata)
 %-----------------------------------------------------------------------
   global cscc
     
@@ -3710,15 +3703,15 @@ function show_mahalanobis(X,MD,scata)
     %cscc.data.X(isnan(cscc.data.X)) = 0;  
     %S  = cov(cscc.data.X); 
    % mu = mean(cscc.data.X);
-   % cscc.data.MD = (cscc.data.X-repmat(mu,[size(cscc.data.X,1),1]))*inv(S)*(cscc.data.X-repmat(mu,[numel(cscc.data.X),1]))';
-   % cscc.data.MD = diag(cscc.data.MD);
+   % cscc.data.IQRratio = (cscc.data.X-repmat(mu,[size(cscc.data.X,1),1]))*inv(S)*(cscc.data.X-repmat(mu,[numel(cscc.data.X),1]))';
+   % cscc.data.IQRratio = diag(cscc.data.IQRratio);
    
     % because we use a splitted colormap we have to set the color values explicitely
-    MDs  = min(63,max(0,64*MD/10)); %(round(max(cscc.data.MD)/6)*6);
-    C    = zeros(numel(MD),3);
+    IQRratios = 63*(IQRratio-min(IQRratio))/(max(IQRratio)-min(IQRratio));
+    C    = zeros(numel(IQRratio),3);
     cmap = [jet(64); gray(64)];
-    for i=1:numel(MD)
-      C(i,:) = cmap(round(MDs(i) )+1,:);
+    for i=1:numel(IQRratio)
+      C(i,:) = cmap(round(IQRratios(i))+1,:);
     end
 
     hold(cscc.H.scat(cscc.H.scata),'on')
@@ -3776,14 +3769,14 @@ function show_mahalanobis(X,MD,scata)
     '<----- Worst ---      Weighted overall image quality rating     --- Best ------>  ',...
     'FontSize',cscc.display.FS(cscc.display.FSi),'FontWeight','Bold');
   title(cscc.H.scat(cscc.H.scata),...
-    '<--- Smallest -- Mahalanobis distance (Color) -- Largest ---->  ','FontSize',...
+    '<--- Smallest -- Norm. Ratio IQR/mean correlation (Color) -- Largest ---->  ','FontSize',...
     cscc.display.FS(cscc.display.FSi+2),'FontWeight','Bold');
 
 
   % update colorbar 
   cticks = 7;
   mn     = 0; 
-  mx     = 10; %round(max(cscc.data.MD)/6)*6;
+  mx     = 10; %round(max(cscc.data.IQRratio)/6)*6;
   ticks  = linspace(mn,mx,cticks);
   set(cscc.H.cbar,'XTick',1:63/(numel(ticks)-1):64,...
     'XTickLabel',cellstr(num2str(ticks','%0.2f'))); 
@@ -4081,9 +4074,8 @@ function show_boxplot(data_boxp, name_boxp, quality_order, obj)
     case 'Size of topology defects (TDS)', name = 'TDS';
     case 'Mean correlation',               name = 'MNC'; 
     case 'Protocol-based IQR (PIQR)',      name = 'PIQR'; 
-    case 'Mahalanobis distance',           name = 'MD';
-    case 'Mahalanobis distance (IQR)',     name = 'MD-IQR';
-    case 'Mahalanobis distance (PIQR)',    name = 'MD-PIQR';
+    case 'Norm. Ratio IQR/mean correlation', name = 'IQRratio';
+    case 'Norm. Ratio PIQR/mean correlation',name = 'PIQRratio';
     otherwise,                             name = ''; 
   end
   
@@ -4117,11 +4109,11 @@ function show_boxplot(data_boxp, name_boxp, quality_order, obj)
         datap{i} = data_boxp(ind);
         if ii==1, data{i} = datap{i}; end
 
-				if length(ind)<10
-					allow_violin = 0; 
+        if length(ind)<10
+          allow_violin = 0; 
           cscc.H.show_violin = 0;
-				end
-				
+        end
+        
         if cscc.datagroups.n_samples == 1
           xcscc.pos{i} = (i-1)+2*(0:length(ind)-1)/(length(ind)-1);
         else
@@ -4145,12 +4137,12 @@ function show_boxplot(data_boxp, name_boxp, quality_order, obj)
 
 % allow violin plot onl if samples are all large enough
 if allow_violin
-	cscc.H.plotbox = uicontrol(cscc.H.graphics,...
-			'string','Violinplot','Units','normalized',...
-			'position',cscc.pos.plotbox,'callback',@checkbox_plot,...
-			'Style','CheckBox','HorizontalAlignment','center',...
-			'ToolTipString','Switch to Violinplot','value',cscc.H.show_violin,...
-			'Interruptible','on','Visible','on','FontSize',cscc.display.FS(cscc.display.FSi));
+  cscc.H.plotbox = uicontrol(cscc.H.graphics,...
+      'string','Violinplot','Units','normalized',...
+      'position',cscc.pos.plotbox,'callback',@checkbox_plot,...
+      'Style','CheckBox','HorizontalAlignment','center',...
+      'ToolTipString','Switch to Violinplot','value',cscc.H.show_violin,...
+      'Interruptible','on','Visible','on','FontSize',cscc.display.FS(cscc.display.FSi));
 end
 
   %% create boxplot
@@ -4198,17 +4190,17 @@ end
       text(xcscc.pos, ylim_max,'High rating (good quality) ------>  ','Color',[0 0.8 0],'Rotation',...
           90,'HorizontalAlignment','right','FontSize',cscc.display.FS(9),'FontWeight','Bold')
     elseif quality_order < 0 
-			if strfind(name_boxp,'Mahalanobis')
-				text(xpos, ylim_max,'Largest distance to sample ------>  ','Color','red','Rotation',...
-						90,'HorizontalAlignment','right','FontSize',FS,'FontWeight','Bold')
-				text(xpos, ylim_min,'<----- Smallest distance to sample  ','Color','green','Rotation',...
-						90,'HorizontalAlignment','left','FontSize',FS,'FontWeight','Bold')
-			else
-				text(xpos, ylim_max,'Low rating (poor quality) ------>  ','Color','red','Rotation',...
-						90,'HorizontalAlignment','right','FontSize',FS,'FontWeight','Bold')
-				text(xpos, ylim_min,'<----- High rating (good quality)  ','Color','green','Rotation',...
-						90,'HorizontalAlignment','left','FontSize',FS,'FontWeight','Bold')
-			end
+      if strfind(name_boxp,'Ratio')
+        text(xpos, ylim_max,'Low rating (poor quality) ------>  ','Color','red','Rotation',...
+            90,'HorizontalAlignment','right','FontSize',FS,'FontWeight','Bold')
+        text(xpos, ylim_min,'<----- High rating (good quality)  ','Color','green','Rotation',...
+            90,'HorizontalAlignment','left','FontSize',FS,'FontWeight','Bold')
+      else
+        text(xpos, ylim_max,'Low rating (poor quality) ------>  ','Color','red','Rotation',...
+            90,'HorizontalAlignment','right','FontSize',FS,'FontWeight','Bold')
+        text(xpos, ylim_min,'<----- High rating (good quality)  ','Color','green','Rotation',...
+            90,'HorizontalAlignment','left','FontSize',FS,'FontWeight','Bold')
+      end
     end
     text(xcscc.pos, (ylim_max+ylim_min)/2,sprintf('%s',name_boxp),'Color','black','Rotation',...
           90,'HorizontalAlignment','center','FontSize',cscc.display.FS(9),'FontWeight','Bold')
@@ -4427,7 +4419,7 @@ function txt = myupdatefcn(obj, event_obj)
         txt{2} = sprintf('%s (P=%0.2f)',txt{2},...
           cscc.datagroups.protocols(cscc.datagroups.protocol(cscc.pos.x)));
       end
-      txt{2} = sprintf('%s; MD=%0.2f' ,txt{2},cscc.data.MD(cscc.pos.x));
+      txt{2} = sprintf('%s; IQRratio=%0.2f' ,txt{2},cscc.data.IQRratio(cscc.pos.x));
      
       set(cscc.H.slice,'Position',cscc.pos.slice .* [1 1 1 0.5],'Visible','on');
 
@@ -4475,8 +4467,8 @@ function txt = myupdatefcn(obj, event_obj)
 
       % text info for data cursor window
       if isfield(cscc.data,'QM') & size(cscc.data.QM,2)>=4
-        QMtxtx = sprintf('; IQR=%5.2f; MD=%5.2f',cscc.data.QM(x,4),cscc.data.MD(x));
-        QMtxty = sprintf('; IQR=%5.2f; MD=%5.2f',cscc.data.QM(y,4),cscc.data.MD(y));
+        QMtxtx = sprintf('; IQR=%5.2f; IQRratio=%5.2f',cscc.data.QM(x,4),cscc.data.IQRratio(x));
+        QMtxty = sprintf('; IQR=%5.2f; IQRratio=%5.2f',cscc.data.QM(y,4),cscc.data.IQRratio(y));
       end
       nuisx = ''; nuisy = ''; 
 

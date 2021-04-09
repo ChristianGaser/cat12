@@ -46,7 +46,7 @@ if cat_get_defaults('extopts.expertgui')>2
 end
 
 global alphaval filename H YpY YpYsorted  data_array data_array_diff pos ind_sorted ind_sorted_display mean_cov FS X mesh_detected ...
-mn_data mx_data V Vchanged sample isxml sorted isscatter MD show_name bplot names_changed img img_alpha show_violin
+mn_data mx_data V Vchanged sample isxml sorted isscatter IQRratio show_name bplot names_changed img img_alpha show_violin
 
 % show data by fileorder
 sorted = 0;
@@ -142,10 +142,10 @@ if ~isempty(xml_files)
   
   if mesh_detected
     QM = ones(n_subjects,5);
-    QM_names = char('Noise','Bias','Weighted overall image quality','Euler number','Size of topology defects');
+    QM_names = char('Noise','Bias','Weighted overall image quality (IQR)','Euler number','Size of topology defects');
   else
     QM = ones(n_subjects,3);
-    QM_names = char('Noise','Bias','Weighted overall image quality');
+    QM_names = char('Noise','Bias','Weighted overall image quality (IQR)');
   end
   
   spm_progress_bar('Init',n_subjects,'Load xml-files','subjects completed')
@@ -507,14 +507,11 @@ if job.verb
   % create popoup menu 
   if isxml
 
-    % estimate Mahalanobis distance between mean corr. and weighted overall quality
-    X = [mean_cov, QM(:,3)]; % mean correlation and IQR
-    S = cov(X);
-    mu = mean(X);
-    MD = (X-repmat(mu,[length(X),1]))*inv(S)*(X-repmat(mu,[length(X),1]))';
-    MD = diag(MD);
+    % estimate ratio between weighted overall quality (IQR) and mean corr. 
+    X = [mean_cov, QM(:,3)];
+    IQRratio = (X(:,2)/std(X(:,2)))./(X(:,1)/std(X(:,1)));
 
-    str  = { 'Boxplot...','Mean correlation',QM_names,'Mahalanobis distance'};
+    str  = { 'Boxplot...','Mean correlation',QM_names,'Norm. Ratio IQR/Mean Correlation'};
 
     if size(QM,2) == 5
       tmp  = { {@show_boxplot, mean_cov, 'Mean correlation  ', 1},...
@@ -523,13 +520,13 @@ if job.verb
                {@show_boxplot, QM(:,3), QM_names(3,:), -1},...
                {@show_boxplot, QM(:,4), QM_names(4,:), -1},...
                {@show_boxplot, QM(:,5), QM_names(5,:), -1},...
-               {@show_boxplot, MD, 'Mahalanobis distance  ', -1} };
+               {@show_boxplot, IQRratio, 'Norm. Ratio IQR/Mean Correlation  ', -1} };
     else
       tmp  = { {@show_boxplot, mean_cov, 'Mean correlation  ', 1},...
                {@show_boxplot, QM(:,1), QM_names(1,:), -1},...
                {@show_boxplot, QM(:,2), QM_names(2,:), -1},...
                {@show_boxplot, QM(:,3), QM_names(3,:), -1},...
-               {@show_boxplot, MD, 'Mahalanobis distance  ', -1} };
+               {@show_boxplot, IQRratio, 'Norm. Ratio IQR/Mean Correlation  ', -1} };
     end
 
   else
@@ -546,10 +543,10 @@ if job.verb
           'Interruptible','on','Visible','on');
 
   if isxml
-    str  = { 'Image...','Mean Correlation: Order by selected filenames','Mean Correlation: Sorted by mean correlation','Mahalanobis distance'};
+    str  = { 'Image...','Mean Correlation: Order by selected filenames','Mean Correlation: Sorted by mean correlation','Norm. Ratio IQR/Mean Correlation'};
     tmp  = { {@show_matrix, YpY, 0},...
              {@show_matrix, YpYsorted, 1},...
-             {@show_mahalanobis, X} };
+             {@show_IQRratio, X} };
   else
     str  = { 'Correlation matrix...','Order by selected filename','Sorted by mean correlation'};
     tmp  = { {@show_matrix, YpY, 0},...
@@ -704,9 +701,9 @@ function checkbox_plot(obj, event_obj)
 return
 
 %-----------------------------------------------------------------------
-function show_mahalanobis(X)
+function show_IQRratio(X)
 %-----------------------------------------------------------------------
-global H FS pos isscatter ind_sorted_display MD
+global H FS pos isscatter ind_sorted_display IQRratio
 
 % clear larger area and set background color to update labels and title
 H.ax = axes('Position',[-.1 -.1 1.1 1.1],'Parent',H.figure);
@@ -717,34 +714,32 @@ H.ax = axes('Position',pos.scat,'Parent',H.figure);
 
 cmap = [jet(64); gray(64)];
 
-S = cov(X);
-mu = mean(X);
-MD = (X-repmat(mu,[length(X),1]))*inv(S)*(X-repmat(mu,[length(X),1]))';
-MD = diag(MD);
+% estimate ratio between weighted overall quality (IQR) and mean corr. 
+IQRratio = (X(:,2)/std(X(:,2)))./(X(:,1)/std(X(:,1)));
 
 % because we use a splitted colormap we have to set the color
 % values explicitely
-MD2 = 63*MD/max(MD);
-C = zeros(length(MD),3);
-for i=1:length(MD)
-  C(i,:) = cmap(round(MD2(i))+1,:);
+IQRratio_scaled = 63*(IQRratio-min(IQRratio))/(max(IQRratio)-min(IQRratio));
+C = zeros(length(IQRratio),3);
+for i=1:length(IQRratio)
+  C(i,:) = cmap(round(IQRratio_scaled(i))+1,:);
 end
 scatter(X(:,1),X(:,2),30,C,'o','Linewidth',2);
 
 xlabel('<----- Worst ---      Mean correlation      --- Best ------>  ','FontSize',FS-1,'FontWeight','Bold');
-ylabel('<----- Best ---      Weighted overall image quality      --- Worst ------>  ','FontSize',FS-1,'FontWeight','Bold');
-title('<--- Smallest -- Mahalanobis distance -- Largest ---->  ','FontSize',FS+1,'FontWeight','Bold');
+ylabel('<----- Best ---      Weighted overall image quality (IQR)      --- Worst ------>  ','FontSize',FS-1,'FontWeight','Bold');
+title('<--- Smallest -- Norm. Ratio IQR/Mean Correlation -- Largest ---->  ','FontSize',FS+1,'FontWeight','Bold');
 
 % add colorbar
-H.cbar = axes('Position',pos.cbar,'Parent',H.figure);
+H.cbar = axes('Position',pos.cbar+[0 0.9 0 0],'Parent',H.figure);
 image((1:64));
 
 % display YTick with 5 values (limit accuracy for floating numbers)
 set(H.cbar,'YTickLabel','','XTickLabel','','XTick',linspace(1,64,5), 'XTickLabel',...
-  round(100*linspace(min(MD),max(MD),5))/100,'TickLength',[0 0]);
+  round(100*linspace(min(IQRratio),max(IQRratio),5))/100,'TickLength',[0 0]);
 
 % update index of worst files
-[tmp, ind_sorted_display] = sort(MD,'ascend');
+[tmp, ind_sorted_display] = sort(IQRratio,'ascend');
 
 colormap(cmap)
 
@@ -886,17 +881,10 @@ if (length(data_boxp) > 2)
     text(xpos, ylim_max,'High rating (good quality) ------>  ','Color','green','Rotation',...
         90,'HorizontalAlignment','right','FontSize',FS,'FontWeight','Bold')
   else
-    if strfind(name_boxp,'Mahalanobis')
-      text(xpos, ylim_max,'Largest distance to sample ------>  ','Color','red','Rotation',...
-          90,'HorizontalAlignment','right','FontSize',FS,'FontWeight','Bold')
-      text(xpos, ylim_min,'<----- Smallest distance to sample  ','Color','green','Rotation',...
-          90,'HorizontalAlignment','left','FontSize',FS,'FontWeight','Bold')
-    else
       text(xpos, ylim_max,'Low rating (poor quality) ------>  ','Color','red','Rotation',...
           90,'HorizontalAlignment','right','FontSize',FS,'FontWeight','Bold')
-      text(xpos, ylim_min,'<----- High rating (good quality)  ','Color','green','Rotation',...
+      text(xpos, ylim_min,'<----- High rating (good quality) ','Color','green','Rotation',...
           90,'HorizontalAlignment','left','FontSize',FS,'FontWeight','Bold')
-    end
   end
   text(xpos, (ylim_max+ylim_min)/2,sprintf('%s',name_boxp),'Color','black','Rotation',...
         90,'HorizontalAlignment','center','FontSize',FS,'FontWeight','Bold')
@@ -1083,7 +1071,7 @@ if isscatter
   txt = {sprintf('%s',filename.m{pos.x})};
 
   % text info for textbox
-  txt2 = {sprintf('%s',spm_file(filename.m{pos.x},'short25')),[],'Difference to Sample Mean (red: - green: +)'};
+  txt2 = {[],sprintf('%s',spm_file(filename.m{pos.x},'short25')),[],'Difference to Sample Mean','(red: - green: +)'};
 
   set(H.text,'String',txt2,'FontSize',FS-2);
   axes('Position',pos.slice);
@@ -1123,14 +1111,14 @@ else
 
   % text info for textbox
   if mesh_detected
-    txt2 = {sprintf('Correlation: %3.3f',YpY(x,y)),[],'right (1st row) and left (2nd row) hemisphere',['Left: ',...
+    txt2 = {[],sprintf('Correlation: %3.3f',YpY(x,y)),[],'right (1st row) and left (2nd row) hemisphere',['Left: ',...
       spm_file(filename.m{x},'short25') '     Right: ',spm_file(filename.m{y},'short25')],...
-      [],'Difference to Sample Mean (red: - green: +)'};
+      [],'Difference to Sample Mean', '(red: - green: +)'};
   else
-    txt2 = {sprintf('Correlation: %3.3f',YpY(x,y)),[],['Top: ',...
+    txt2 = {[],sprintf('Correlation: %3.3f',YpY(x,y)),['Top: ',...
       spm_file(filename.m{x},'short25')],['Bottom: ',spm_file(filename.m{y},'short25')],...
       [],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm'],...
-      'Difference to Sample Mean (red: - green: +)'};
+      'Difference to Sample Mean', '(red: - green: +)'};
   end      
 
   set(H.text,'String',txt2,'FontSize',FS-2);
