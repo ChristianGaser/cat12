@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1798 | gaser | 2021-04-09 12:46:22
+r1799 | gaser | 2021-04-09 13:01:45
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+
+Fixed: Typo in cat12.m caused crash.
+------------------------------------------------------------------------
+r1798 | gaser | 2021-04-09 12:46:29 +0200 (Fr, 09 Apr 2021) | 18 lines
 
 Changed paths:
 M       CAT12-Manual.pdf
@@ -17,6 +25,7 @@ M       spm_cat12.m
 (2) Changed: Replaced Mahalanobis distance for quqlity check by ratio bezween
              IQR and mean correlation.
 (3) Changed: Changed version to CAT12.8-Beta and updated version information.
+
 
 ------------------------------------------------------------------------
 r1797 | gaser | 2021-04-09 11:33:35 +0200 (Fr, 09 Apr 2021) | 17 lines
