@@ -1,5 +1,24 @@
 ------------------------------------------------------------------------
-r1796 | gaser | 2021-04-08 11:13:33
+r1797 | gaser | 2021-04-09 11:32:50
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+M       cat_conf_ROI.m
+M       cat_conf_extopts.m
+M       cat_conf_opts.m
+M       cat_conf_tools.m
+RM +    cat_io_subfolders.m
+M       cat_roi_fun.m
+M       cat_stat_cva_ui.m
+M       html/cat.html
+
+(1) Changed: Updated help text.
+(2) Changed: Added/removed some functions to CAT12 GUI.
+(3) Changed: Set default value for myelin correction to 0.
+------------------------------------------------------------------------
+r1796 | gaser | 2021-04-08 11:14:18 +0200 (Do, 08 Apr 2021) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14,6 +33,7 @@ M       html/cat.html
 
 (1) Fixed:   Corrected typos.
 (2) Changed: Added tool for saving volume or surface data as mat-file to GUI.
+
 
 ------------------------------------------------------------------------
 r1795 | dahnke | 2021-04-07 20:59:26 +0200 (Mi, 07 Apr 2021) | 16 lines

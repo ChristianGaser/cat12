@@ -72,7 +72,7 @@ ngaus.help    = {
 
 biasacc         = cfg_menu;
 biasacc.tag     = 'biasacc';
-biasacc.name    = 'Power of SPM Inhomogeneity Correction';
+biasacc.name    = 'Strength of SPM Inhomogeneity Correction';
 biasacc.def     = @(val)cat_get_defaults('opts.biasstr', val{:});
 biasacc.labels  = {'light','medium','strong','heavy'};
 biasacc.values  = {0.25 0.50 0.75 1.00};

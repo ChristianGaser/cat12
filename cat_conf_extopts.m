@@ -813,7 +813,7 @@ LASstr.help    = {
   'Additionally to WM-inhomogeneities, GM intensity can vary across different regions such as the motor cortex, the basal ganglia, or the occipital lobe. These changes have an anatomical background (e.g. iron content, myelinization), but are dependent on the MR-protocol and often lead to underestimation of GM at higher intensities and overestimation of CSF at lower intensities. Therefore, a local intensity transformation of all tissue classes is used to reduce these effects in the image. This local adaptive segmentation (LAS) is applied before the final AMAP segmentation.'
   ''
 };
-%LASstr.hidden = expert<1;
+LASstr.hidden = expert<1;
 
 
 LASmyostr         = cfg_menu;
@@ -826,7 +826,7 @@ else
   LASmyostr.labels  = {'none (0)','ultralight (eps)','light (0.25)','medium (0.50)','strong (0.75)','heavy (1.00)'};
   LASmyostr.values  = {0 eps 0.25 0.50 0.75 1.00};
 end
-LASmyostr.def     = @(val)cat_get_defaults('extopts.LASstr', val{:});
+LASmyostr.val     = {0};
 LASmyostr.help    = {
   'Add more local myelination correction of LAS based on the assumption of an equally thick cortex. '
   ''
