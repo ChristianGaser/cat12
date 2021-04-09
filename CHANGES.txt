@@ -1,5 +1,25 @@
 ------------------------------------------------------------------------
-r1797 | gaser | 2021-04-09 11:32:50
+r1798 | gaser | 2021-04-09 12:46:22
+
+Changed paths:
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_conf_tools.m
+M       cat_stat_check_cov.m
+M       cat_stat_check_cov2.m
+M       html/cat.html
+M       html/cat_versions.html
+M       spm_cat12.m
+
+(1) Changed: Updated CAT12 manual.
+(2) Changed: Replaced Mahalanobis distance for quqlity check by ratio bezween
+             IQR and mean correlation.
+(3) Changed: Changed version to CAT12.8-Beta and updated version information.
+
+------------------------------------------------------------------------
+r1797 | gaser | 2021-04-09 11:33:35 +0200 (Fr, 09 Apr 2021) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -17,6 +37,7 @@ M       html/cat.html
 (1) Changed: Updated help text.
 (2) Changed: Added/removed some functions to CAT12 GUI.
 (3) Changed: Set default value for myelin correction to 0.
+
 ------------------------------------------------------------------------
 r1796 | gaser | 2021-04-08 11:14:18 +0200 (Do, 08 Apr 2021) | 15 lines
 
