@@ -195,9 +195,7 @@ function mcsvtab = cat_roi_exportSample(job)
           end
 
         end
- 
       end
-
     end    
   end
 end

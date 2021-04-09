@@ -87,7 +87,7 @@ function [CVA] = cat_stat_cva_ui(action,varargin)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
- $Id$
+% $Id$
 %
 % modified version of
 % Karl Friston
