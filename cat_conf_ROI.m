@@ -417,6 +417,7 @@ ROIsum.val      = {Method};
 ROIsum.prog     = @cat_vol_ROI_summarize;
 ROIsum.help     = {
   'This is an utility to summarise co-registered volume data within a region of interest (ROI). '
-  'This can be used in order to estimate ROI information for other modalities (i.e. DTI, fMRI) which can be also given as 4D data.'
+  'This tool can be used in order to estimate ROI information for other modalities (i.e. DTI, (rs)fMRI) which can be also defined as 4D data.'
+  'In contrast to the tool "Estimate means/volumes inside ROI", any atlas can be used here even after preprocessing and several summarize functions are available.'
 };
 

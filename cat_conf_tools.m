@@ -1962,7 +1962,7 @@ function calcroi = conf_roi_fun(outdir)
   roi_xml.filter        = 'xml';
   roi_xml.ufilter       = '^catROI.*\.xml$';
   roi_xml.num           = [1 Inf];
-  roi_xml.help          = {'These are the xml-files that are saved in the label folder.'};
+  roi_xml.help          = {'These are the xml-files that are saved in the label folder after CAT12 segmentation.'};
 
   % NOT USED
   %{
@@ -2010,7 +2010,7 @@ function calcroi = conf_roi_fun(outdir)
   %calcroi.val   = {roi_xml,usefolder,point,outdir,calcroi_name}; % usefolder is never used
   calcroi.prog          = @(job)cat_roi_fun('exportSample',job);
   calcroi.help          = {
-    'This function reads values inside a ROI from different atlases and saves either the mean volume values in mL (e.g. GM volume) or the mean surface values (e.g. thickness) for all data in a csv-file. '
+    'This function reads values inside a ROI from different atlases (that were selected for CAT12 segmentation) and saves either the mean volume values in mL (e.g. GM volume) or the mean surface values (e.g. thickness) for all data in a csv-file. During preprocessing '
     'Missed values are replaced by NaN.'
   };
 
