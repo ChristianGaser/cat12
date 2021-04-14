@@ -174,7 +174,8 @@ function cat_run_newcatch(job,tpm,subj)
       end      
       str_err = str_err(2:end); % remove first "|"
       [CATrel, CATver] = cat_version;
-      urlinfo = sprintf('%s%s%s%s%s%s%s%s%s%s%s%s',CATrel,'%2F',computer,'%2F','errors','%2F',CATver,'%2F',caterr_id,'%2F',caterr_message_str,str_err);
+      urlinfo = sprintf('%s/%s/%s/%s/%s/%s/%s',CATrel,computer,'errors',['r' CATver],caterr_id,caterr_message_str,str_err);
+%      urlinfo = sprintf('%s%s%s%s%s%s%s%s%s%s%s%s',CATrel,'%2F',computer,'%2F','errors','%2F',CATver,'%2F',caterr_id,'%2F',caterr_message_str,str_err);
       cat_io_send_to_server(urlinfo);
     end
 

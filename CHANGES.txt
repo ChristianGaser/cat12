@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1800 | gaser | 2021-04-14 16:12:38
+r1801 | gaser | 2021-04-14 16:47:00
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_run_newcatch.m
+M       html/cat.html
+
+Fixed: Corrected error messages for Piwik.
+
+------------------------------------------------------------------------
+r1800 | gaser | 2021-04-14 16:13:23 +0200 (Mi, 14 Apr 2021) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +22,7 @@ M       html/cat.html
 (1) Changed: Added field "TotalUsers" to Piwik information to obtain a relaible
              count of overall users.
 (2) Changed: Added release number to error messages for Piwik.
+
 ------------------------------------------------------------------------
 r1799 | gaser | 2021-04-09 13:01:51 +0200 (Fr, 09 Apr 2021) | 6 lines
 
