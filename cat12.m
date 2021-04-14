@@ -1310,6 +1310,8 @@ function call_server(varargin)
 if cat_get_defaults('extopts.send_info')
   urlinfo = sprintf('%s%s%s','Start','%2F',version('-release'));
   cat_io_send_to_server(urlinfo);
+  urlinfo = sprintf('%s%s%s','TotalUsers','%2F',computer);
+  cat_io_send_to_server(urlinfo);
 end
 
 % check for new CAT12 version
