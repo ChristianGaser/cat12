@@ -148,8 +148,8 @@ function cat_run_newcatch(job,tpm,subj)
       ... file reading/writing messages
       '** failed to open'
       'Access is denied.'
-      'Cant open file'
-      'Cant create file mapping. ' 
+      'Cannot open file'
+      'Cannot create file mapping. ' 
       'Cannot create output file '
       'cp: cannot create regular file'
       'File too small'
@@ -173,7 +173,8 @@ function cat_run_newcatch(job,tpm,subj)
         str_err = [str_err '|' caterr.stack(si).name ':' num2str(caterr.stack(si).line)];
       end      
       str_err = str_err(2:end); % remove first "|"
-      urlinfo = sprintf('%s%s%s%s%s%s%s%s%s%s',cat_version,'%2F',computer,'%2F','errors','%2F',caterr_id,'%2F',caterr_message_str,str_err);
+      [CATrel, CATver] = cat_version;
+      urlinfo = sprintf('%s%s%s%s%s%s%s%s%s%s%s%s',CATrel,'%2F',computer,'%2F','errors','%2F',CATver,'%2F',caterr_id,'%2F',caterr_message_str,str_err);
       cat_io_send_to_server(urlinfo);
     end
 
