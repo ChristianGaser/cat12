@@ -118,6 +118,7 @@ end
 
 % 3D data
 if ~spm_mesh_detect(V{1}(1))
+  % this is probably not the most elegant way but used here for compatibility with my BrainAGE tools...
   % 1mm reference fields
   V0.mat = [1 0 0 -90; 0 1 0 -126; 0 0 1 -72; 0 0 0 1];
   V0.dim = [181 217 181];
