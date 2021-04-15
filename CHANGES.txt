@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1803 | gaser | 2021-04-15 22:24:26
+r1804 | gaser | 2021-04-15 22:40:48
+
+Changed paths:
+M       CHANGES.txt
+MM      cat_conf_factorial.m
+
+Fixed:  Fixed output field in cat_conf_factorial.m to not break subsequent batch
+        with orthogonlity check.
+------------------------------------------------------------------------
+r1803 | gaser | 2021-04-15 22:24:33 +0200 (Do, 15 Apr 2021) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +18,7 @@ M       cat_surf_results.m
 M       html/cat.html
 
 Changed: Some minor changes to cat_surf_results.m and cat_conf_factorial.m
+
 ------------------------------------------------------------------------
 r1802 | gaser | 2021-04-15 21:03:25 +0200 (Do, 15 Apr 2021) | 16 lines
 

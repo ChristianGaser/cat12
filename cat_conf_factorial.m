@@ -12,7 +12,7 @@ function factorial_design = cat_conf_factorial(expert)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
-% $Id: cat_conf_factorial.m 1800 2021-04-14 14:13:23Z gaser $
+% $Id$
 
 if nargin == 0
   expert = cat_get_defaults('extopts.expertgui');
@@ -1130,7 +1130,7 @@ function out = cat_run_factorial_design(job)
 % Input:
 % job    - harvested job data structure (see matlabbatch help)
 % Output:
-% out    - struct variable containing the path of the saved SPM.mat
+% out    - struct variable containing the name of the saved SPM.mat
 %_________________________________________________________________________
 
 % copy values from "global scaling" to "global calculation"
@@ -1220,6 +1220,9 @@ if voxel_covariate
   % be used anymore
   save(fullfile(SPM.swd,'vSPM.mat'),'SPM','-v7.3');
   delete(fullfile(SPM.swd,'SPM.mat'))
+  
+  % update output field with new name
+  out.spmmat{1} = fullfile(SPM.swd,'vSPM.mat');
   
   % delete beta_ and spm?_ files for voxel-wise covariate because these
   % files were estimated using spm_spm and are not valid
