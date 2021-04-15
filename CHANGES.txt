@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1802 | gaser | 2021-04-15 21:03:17
+r1803 | gaser | 2021-04-15 22:24:26
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_factorial.m
+M       cat_surf_results.m
+M       html/cat.html
+
+Changed: Some minor changes to cat_surf_results.m and cat_conf_factorial.m
+------------------------------------------------------------------------
+r1802 | gaser | 2021-04-15 21:03:25 +0200 (Do, 15 Apr 2021) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -16,6 +27,7 @@ M       tbx_cfg_cat.m
              available for cross-sectional and longitudinal data. 
 (2) Changed: Some smaller changes to cat_stat_spm.m and cat_io_data2mat.m.
 (3) Changed: Updated basic design that is called from CAT12 GUI. 
+
 ------------------------------------------------------------------------
 r1801 | gaser | 2021-04-14 16:47:05 +0200 (Mi, 14 Apr 2021) | 9 lines
 

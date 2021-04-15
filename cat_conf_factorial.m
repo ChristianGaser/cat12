@@ -1193,7 +1193,7 @@ if voxel_covariate
   
   load(out.spmmat{1});
   SPM.xC(nc+1).P = cellstr(job.des.fd.voxel_cov.files);
-  SPM.xC(nc+1).VC = spm_vol(char(job.des.fd.voxel_cov.files));
+  SPM.xC(nc+1).VC = spm_data_hdr_read(char(job.des.fd.voxel_cov.files));
 
   % save user defined global scalings
   try
