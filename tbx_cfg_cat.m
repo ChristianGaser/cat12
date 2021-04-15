@@ -113,6 +113,7 @@ extopts             = cat_conf_extopts(expert);
 opts                = cat_conf_opts(expert); 
 [output,output_spm] = cat_conf_output(expert); 
 long                = cat_conf_long;
+factorial_design    = cat_conf_factorial(expert);
 
 %% ------------------------------------------------------------------------
 estwrite        = cfg_exbranch;
@@ -155,9 +156,9 @@ cat.tag    = 'cat';
 if exist('cat_conf_catsimple','file')
   [catsimple,catsimple_long] = cat_conf_catsimple(expert);
   catsimple_long.hidden = expert<2;
-  cat.values = {estwrite long catsimple catsimple_long estwrite_spm tools stools stoolsexp};
+  cat.values = {estwrite long catsimple catsimple_long estwrite_spm tools stools stoolsexp factorial_design};
 else
-  cat.values = {estwrite long estwrite_spm tools stools stoolsexp};
+  cat.values = {estwrite long estwrite_spm tools stools stoolsexp factorial_design};
 end
 %------------------------------------------------------------------------
 

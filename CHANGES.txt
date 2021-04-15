@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1801 | gaser | 2021-04-14 16:47:00
+r1802 | gaser | 2021-04-15 21:03:17
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+A       cat_conf_factorial.m
+M       cat_io_data2mat.m
+M       cat_stat_factorial_design.m
+M       cat_stat_spm.m
+M       html/cat.html
+M       tbx_cfg_cat.m
+
+(1) Added:   Added new batch for factorial designs for VBM that skips many
+             options that are not needed for VBM. There are two models 
+             available for cross-sectional and longitudinal data. 
+(2) Changed: Some smaller changes to cat_stat_spm.m and cat_io_data2mat.m.
+(3) Changed: Updated basic design that is called from CAT12 GUI. 
+------------------------------------------------------------------------
+r1801 | gaser | 2021-04-14 16:47:05 +0200 (Mi, 14 Apr 2021) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +26,7 @@ M       cat_run_newcatch.m
 M       html/cat.html
 
 Fixed: Corrected error messages for Piwik.
+
 
 ------------------------------------------------------------------------
 r1800 | gaser | 2021-04-14 16:13:23 +0200 (Mi, 14 Apr 2021) | 11 lines

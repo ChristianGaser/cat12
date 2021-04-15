@@ -16,6 +16,8 @@ if nargin == 0
   P = spm_select([1 Inf],'^SPM\.mat$','Select SPM.mat file(s)');
 elseif exist('SPM','var') && isfield(SPM,'spmmat')
   P = char(SPM.spmmat); spmmat = SPM.spmmat;
+elseif ischar(SPM)
+  P = SPM;
 end
 
 if exist('P','var')
@@ -35,8 +37,8 @@ if ~isfield(SPM,'xY')
   error(sprintf('SPM.mat was not correctly saved. Please check that you have set the following flag in spm_defaults:\ndefaults.mat.format = ''-v7.3'''));
 end
 
-global defaults
-defaults.mat.format     = '-v7.3'; % options: '-mat', '-v6', '-v7.0', '-v7.3'
+% older formats don't support large files
+spm_get_defaults('mat.format','-v7.3');
 
 % check for 32k meshes
 if SPM.xY.VY(1).dim(1) == 32492 || SPM.xY.VY(1).dim(1) == 64984
