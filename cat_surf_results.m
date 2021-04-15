@@ -1754,7 +1754,7 @@ else
   OV.range   = H.clim(2:3);
 end
 
-OV.name = H.Pvol_sel;
+OV.name = char(H.Pvol);
 if nargin < 2
   OV.save = 'none';
 else
