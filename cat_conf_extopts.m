@@ -1193,7 +1193,7 @@ if ~spm
   if expert  % expert/developer options
     extopts.val   = {segmentation,registration,surface,admin}; 
   else
-    extopts.val   = {restype,setCOM,app,affmod,spm_kamap,LASstr,gcutstr,wmhc,registration,vox,bb,SRP,ignoreErrors}; 
+    extopts.val   = {restype,setCOM,app,affmod,spm_kamap,LASstr,LASmyostr,gcutstr,wmhc,registration,vox,bb,SRP,ignoreErrors}; 
   end
 else
   % SPM based surface processing and thickness estimation

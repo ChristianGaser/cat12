@@ -2261,7 +2261,7 @@ function data2mat = conf_io_data2mat(data,outdir)
   resolution.num     = [1 1];
   resolution.val     = {4};
   resolution.help    = {
-    'Volume data can be saved with a lower spation resolution which is especially helpful with further use with machine learning tools.'
+    'Volume data can be saved with a lower spation resolution which is especially helpful with further use with machine learning tools such as relevance/support vector approaches or Gaussian Process models. Spatial structure of the data is not considered.'
     'Recommended resampling values are 3-8mm. For BrainAGE we obtained bes prediction accuracy with values of 4 or 8mm.'
   };
 
