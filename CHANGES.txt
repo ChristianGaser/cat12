@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1804 | gaser | 2021-04-15 22:40:48
+r1805 | gaser | 2021-04-16 16:26:11
+
+Changed paths:
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_surf_info.m
+M       cat_surf_parameters.m
+
+(1) Changed: Added option to additionally transform sulcal depth with 
+             sqrt-function (which was available as default in older 
+             versions).
+(2) Changed: Update CAT12 manual.
+------------------------------------------------------------------------
+r1804 | gaser | 2021-04-15 22:40:54 +0200 (Do, 15 Apr 2021) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +21,7 @@ MM      cat_conf_factorial.m
 
 Fixed:  Fixed output field in cat_conf_factorial.m to not break subsequent batch
         with orthogonlity check.
+
 ------------------------------------------------------------------------
 r1803 | gaser | 2021-04-15 22:24:33 +0200 (Do, 15 Apr 2021) | 9 lines
 

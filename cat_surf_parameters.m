@@ -148,6 +148,7 @@ function varargout = cat_surf_parameters(job)
         PGI     = {fullfile(pp,strrep(ff,'central','gyrification'));       % MNI approach
                    fullfile(pp,strrep(ff,'central','gyrification2'))};     % new approach (slower and probably not better) - just for developer tests
         PSD     = {fullfile(pp,strrep(ff,'central','depth'))};
+        PSDsqrt = {fullfile(pp,strrep(ff,'central','sqrtdepth'))};
         PFD     = fullfile(pp,strrep(ff,'central','fractaldimension'));
         Parea   = fullfile(pp,strrep(ff,'central','area'));                
         Pgmv{1} = fullfile(pp,strrep(ff,'central','gmv'));                 % RD202005: need projection based version for tests
@@ -310,17 +311,24 @@ function varargout = cat_surf_parameters(job)
 
         if job.SD
         %% sulcus depth
-          SDi = 1; % default sulcal depth ... the LGI or eidist would provide slighly different SD that acount for WM 
+          % optionally transform SD with sqrt
+          if job.SD == 2
+            option = ' -sqrt ';
+            PSD = PSDsqrt;
+          else
+            option = '';
+          end
+          SDi = 1; % default sulcal depth ... the LGI or eidist would provide slightly different SD that accounts for WM 
           if ~cat_io_rerun(PSD{SDi},Pname) && job.lazy  
             if job.verb, fprintf('%sexist - Display %s\n',nstr,spm_file(PSD{SDi},'link','cat_surf_display(''%s'')')); end
           else
             stime = clock; 
-            cmd = sprintf('CAT_SulcusDepth "%s" "%s" "%s"',Pname,Psphere,PSD{SDi}); %-sqrt
+            cmd = sprintf('CAT_SulcusDepth %s "%s" "%s" "%s"',option,Pname,Psphere,PSD{SDi})
             try
               [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug*0,job.trerr*0);
             catch
               % catch block that was required for some simulated datasets
-              % and can probabely removed in future (RD 202002)
+              % and can probably removed in future (RD 202002)
               S = gifti( Pname );
 
               S.vertices = S.vertices + 0.1 * (rand(size(S.vertices))-0.5); 
@@ -332,7 +340,7 @@ function varargout = cat_surf_parameters(job)
               clear MHS; 
 
               save( gifti(struct('faces',S.faces,'vertices',S.vertices)),Pname2,'Base64Binary'); clear S; 
-              cmd = sprintf('CAT_SulcusDepth "%s" "%s" "%s"',Pname2,Psphere,PSD{SDi}); %-sqrt
+              cmd = sprintf('CAT_SulcusDepth %s "%s" "%s" "%s"',option,Pname2,Psphere,PSD{SDi});
               delete(Pname2); 
 
               [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug,job.trerr);
