@@ -1,6 +1,7 @@
 function varargout = cat_io_data2mat(opt)
 % Save spatially registered volume or resampled surface data as Matlab data matrix for further 
-% use with machine learning tools.
+% use with machine learning tools such as relevance/support vector approaches or Gaussian Process
+% models. Spatial structure of the data is not considered. 
 % Volume data will be optionally masked to remove non-brain areas
 % 
 % FORMAT cat_io_data2mat(opt)

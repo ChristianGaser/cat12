@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1805 | gaser | 2021-04-16 16:26:11
+r1806 | gaser | 2021-04-16 21:01:18
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_extopts.m
+M       cat_conf_tools.m
+M       cat_io_data2mat.m
+M       html/cat.html
+
+(1) Fixed:   Corrected handling of LASmyostr parameter.
+(2) Changed: Updated help text.
+------------------------------------------------------------------------
+r1805 | gaser | 2021-04-16 16:27:00 +0200 (Fr, 16 Apr 2021) | 12 lines
 
 Changed paths:
 M       CAT12-Manual.pdf
@@ -12,6 +25,7 @@ M       cat_surf_parameters.m
              sqrt-function (which was available as default in older 
              versions).
 (2) Changed: Update CAT12 manual.
+
 ------------------------------------------------------------------------
 r1804 | gaser | 2021-04-15 22:40:54 +0200 (Do, 15 Apr 2021) | 7 lines
 
