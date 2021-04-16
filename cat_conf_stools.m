@@ -1754,11 +1754,11 @@ SD.val    = {1};
 SD.help   = {
   'Extract sulcus depth based on the euclidean distance between the central surface and its convex hull.'
   ''
-  ...'Transformation with sqrt-function is used to render the data more normally distributed.'
-  ...''
+  'In addition, sulcal depth can be transformed with sqrt-function to render the data more normally distributed, which is the recommended option for further statistical analysis.'
+  ''
 };
-SD.labels = {'No','Yes'};
-SD.values = {0,1};
+SD.labels = {'No','Yes','Transformed with sqrt'};
+SD.values = {0,1,2};
 
 
 % affine normalized measures
