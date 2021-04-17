@@ -180,8 +180,8 @@ function vout = cat_surf_resamp(varargin)
           Pfwhm = [strrep(Pcentral(1:k(2)-1),surfacefield,[pname str_resamp]) Pcentral(k(2):end)];
         end
         if job.merge_hemi
-          Pcentral = [strrep(Pcentral(1:3),'lh.','mesh.') Pcentral(4:end)]; 
           Pfwhm    = [strrep(Pfwhm(1:3)   ,'lh.','mesh.') Pcentral(4:end)]; 
+          %Pcentral = [strrep(Pcentral(1:3),'lh.','mesh.') Pcentral(4:end)]; 
         end
         
         
