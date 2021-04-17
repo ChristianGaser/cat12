@@ -371,7 +371,7 @@ if 1
       wstr = 'T1';
     end
     T1txt = ['*.nii (Original ' wstr ')']; 
-    if ~debug, clear Yo; end
+    %if ~debug, clear Yo; end
 
     VT0x.mat = dispmat * VT0x.mat; 
     try
@@ -594,18 +594,20 @@ if 1
     spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontName',fontname,'FontSize',fontsize-1,'color',fontcolor,'FontWeight','Bold');
   end
   if job.extopts.report.useoverlay > 1 
-  % make SPM colorbar invisible (cannot delete it because SPM orthviews need it later)  
+  %% make SPM colorbar invisible (cannot delete it because SPM orthviews need it later)  
     set(st.vols{p0id}.blobs{1}.cbar,'Position', [st.vols{p0id}.ax{3}.ax.Position(1) st.vols{p0id}.ax{1}.ax.Position(2) 0.01 0.13] ); 
     warning('off','MATLAB:warn_r14_stucture_assignment');
     set(st.vols{p0id}.blobs{1}.cbar,'YTick', ytickp0/30,'XTick', [],'YTickLabel', yticklabelp0,'XTickLabel', {},'TickLength',[0 0]);
     set(st.vols{p0id}.blobs{1}.cbar,'YAxisLocation', 'right','FontSize', fontsize-2,'FontName',fontname,'xcolor',fontcolor,'ycolor',fontcolor); 
+    set(st.vols{p0id}.blobs{1}.cbar,'NextPlot','add'); % avoid replacing of labels
+    set(st.vols{p0id}.blobs{1}.cbar,'HitTest','off'); % avoid replacing of labels
   else
     cc{p0id} = axes('Position',[st.vols{p0id}.ax{3}.ax.Position(1) st.vols{p0id}.ax{1}.ax.Position(2) 0.01 0.13],'Parent',fg);
     image((60:-1:1)','Parent',cc{p0id});
     set(cc{p0id},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
       'FontName',fontname,'FontSize',fontsize-2,'color',fontcolor,'YAxisLocation','right','xcolor',fontcolor,'ycolor',fontcolor);
   end
-  if ~debug, clear Yp0; end
+  %if ~debug, clear Yp0; end
   
   
   %{
@@ -645,7 +647,7 @@ if 1
   %             for the warning (or res.FIELD created there). 
   
   % just remove old things in debugging mode
-  if debug 
+  if 1 %debug 
     warning('off','MATLAB:subscripting:noSubscriptsSpecified')
     for idi = 1:numel(st.vols)
       if isfield( st.vols{idi}, 'mesh'), st.vols{idi} = rmfield( st.vols{idi} ,'mesh'); end
@@ -764,7 +766,7 @@ if 1
     end
     
     % remove menu
-    if ~debug, spm_orthviews('RemoveContext',idi); end 
+    %if ~debug, spm_orthviews('RemoveContext',idi); end 
   end
 end  
 
@@ -993,7 +995,7 @@ interp = 2.45;
           q0 = median(side); q1 = median(side(side<q0)); q2 = median(side(side>q0)); 
           
           
-          % print histogram
+          %% print histogram
           hold(cc{5},'on');  
           jetsc = jet(numel(h)); 
           for bi = 1:numel(d);
@@ -1099,8 +1101,10 @@ if 1
   for hti = 1:numel(ccl),   try, set(ccl{hti}  ,'FontName',fontname,'Fontsize',get(ccl{hti}  ,'Fontsize')*spm_figure_scale/0.8); end; end
   if job.extopts.report.useoverlay > 1 
     set(st.vols{p0id}.blobs{1}.cbar,'FontName',fontname,'Fontsize',get(st.vols{p0id}.blobs{1}.cbar,'Fontsize')*spm_figure_scale/0.8);
-    cbar = st.vols{p0id}.blobs{1}.cbar;
-    st.vols{p0id}.blobs{1} = rmfield(st.vols{p0id}.blobs{1},'cbar'); % remove handle to avoid position updates
+    % I create a copy of the colorbar that is not changed by SPM and remove
+    % the old one that is redrawn by SPM otherwise.
+    st.vols{p0id}.blobs1cbar = copyobj(st.vols{p0id}.blobs{1}.cbar,fg);
+    st.vols{p0id}.blobs{1} = rmfield(st.vols{p0id}.blobs{1},'cbar'); 
   end
   
   % restore old SPM figure settings
@@ -1111,9 +1115,6 @@ if 1
   try
     fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);
   end
-end
-if job.extopts.report.useoverlay > 1 
-  st.vols{p0id}.blobs{1} = cbar; % add it again to avoid other problems
 end
   %  ----------------------------------------------------------------------
   %  reset colormap to the simple SPM like gray60 colormap
@@ -1139,21 +1140,11 @@ end
   
   %% change line style of TPM surf (from b-- to r--)
   if ov_mesh && exist('Psurf','var') && ~isempty(Psurf)
-    for idi = 1 %:numel(st.vols{idi})
-      if isfield(st.vols{idi},'ax') && idi==1
-        hM = findobj(st.vols{idi}.ax{1}.cm,'Label','Mesh');
-        UD = get(hM,'UserData');
-        %if any(idi==ids); nPsurf = numel(Psurf2); else, nPsurf = numel(Psurf); end
-        %UD.width = [repmat(0.5,1,numel(UD.width) - nPsurf)  repmat(0.5,1,nPsurf)]; 
-        UD.style{1} = 'r--'; % = [repmat({'r--'},1,numel(UD.width) - nPsurf) repmat({'k-'},1,nPsurf)];
-        set(hM,'UserData',UD);
-        set(cclp,'Color', [1 0 0]); % overlay legend
-        warning('off','MATLAB:subscripting:noSubscriptsSpecified');
-      end
-      try,spm_ov_mesh('redraw',idi);end
-    end
+    hM = findobj(st.vols{1}.ax{1}.cm,'Label','Mesh');
+    UD = get(hM,'UserData');
+    UD.style{1} = 'r--'; 
+    set(hM,'UserData',UD);
+    set(cclp,'Color', [1 0 0]); % overlay legend
+    try,spm_ov_mesh('redraw',1);end
   end  
-  
-  warning('off','MATLAB:subscripting:noSubscriptsSpecified'); % jep off
-
 end
