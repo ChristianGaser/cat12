@@ -1306,100 +1306,102 @@ function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
     end
     
     %% check opts
-    if isempty(FNopts) || isempty(FNextopts) || ...
-       ~isfield(xml.parameter,'opts') || ~isfield(xml.parameter,'extopts')
-      return
-    end
-    for fni=1:numel(FNopts)
-      if ~isfield(xml.parameter.opts,FNopts{fni})
-        FNok = 2; break
+    if job.extopts.lazy < 2 % check paraemter only if lazy=1 to avoid parameter checks e.g. due to version changes
+      if isempty(FNopts) || isempty(FNextopts) || ...
+         ~isfield(xml.parameter,'opts') || ~isfield(xml.parameter,'extopts')
+        return
       end
-      if ischar(xml.parameter.opts.(FNopts{fni}))
-        if ischar(job.opts.(FNopts{fni}))
-          if ~strcmp(xml.parameter.opts.(FNopts{fni}),job.opts.(FNopts{fni}))
-            FNok = 3; break
+      for fni=1:numel(FNopts)
+        if ~isfield(xml.parameter.opts,FNopts{fni})
+          FNok = 2; break
+        end
+        if ischar(xml.parameter.opts.(FNopts{fni}))
+          if ischar(job.opts.(FNopts{fni}))
+            if ~strcmp(xml.parameter.opts.(FNopts{fni}),job.opts.(FNopts{fni}))
+              FNok = 3; break
+            end
+          else
+            if ~strcmp(xml.parameter.opts.(FNopts{fni}),job.opts.(FNopts{fni}){1})
+              FNok = 4; break
+            end
           end
         else
-          if ~strcmp(xml.parameter.opts.(FNopts{fni}),job.opts.(FNopts{fni}){1})
-            FNok = 4; break
-          end
-        end
-      else
-        if isnumeric(job.opts.(FNopts{fni}))
-          if strcmp(FNopts{fni},'ngaus') && numel(xml.parameter.opts.(FNopts{fni}))==4
-            % nothing to do (skull-stripped case)
-          else
-            if xml.parameter.opts.(FNopts{fni}) ~= job.opts.(FNopts{fni})
+          if isnumeric(job.opts.(FNopts{fni}))
+            if strcmp(FNopts{fni},'ngaus') && numel(xml.parameter.opts.(FNopts{fni}))==4
+              % nothing to do (skull-stripped case)
+            else
+              if xml.parameter.opts.(FNopts{fni}) ~= job.opts.(FNopts{fni})
+                FNok = 5; break
+              end
+            end
+          elseif ischar(job.opts.(FNopts{fni}))
+            if ~strcmp(xml.parameter.opts.(FNopts{fni}),job.opts.(FNopts{fni})) 
               FNok = 5; break
             end
           end
-        elseif ischar(job.opts.(FNopts{fni}))
-          if ~strcmp(xml.parameter.opts.(FNopts{fni}),job.opts.(FNopts{fni})) 
-            FNok = 5; break
-          end
         end
       end
-    end
-    if FNok~=1 % different opts
-      return
-    end
-
-    %% check extopts
-    for fni=1:numel(FNextopts)
-      if ~isfield(xml.parameter.extopts,FNextopts{fni})
-        FNok = 6; break
+      if FNok~=1 % different opts
+        return
       end
-      if ischar(xml.parameter.extopts.(FNextopts{fni}))
-        if ischar(job.extopts.(FNextopts{fni}))
-          if ~strcmp(xml.parameter.extopts.(FNextopts{fni}),job.extopts.(FNextopts{fni}))
-            FNok = 7; break
+
+      %% check extopts
+      for fni=1:numel(FNextopts)
+        if ~isfield(xml.parameter.extopts,FNextopts{fni})
+          FNok = 6; break
+        end
+        if ischar(xml.parameter.extopts.(FNextopts{fni}))
+          if ischar(job.extopts.(FNextopts{fni}))
+            if ~strcmp(xml.parameter.extopts.(FNextopts{fni}),job.extopts.(FNextopts{fni}))
+              FNok = 7; break
+            end
+          else
+            if ~strcmp(xml.parameter.extopts.(FNextopts{fni}),job.extopts.(FNextopts{fni}){1})
+              FNok = 8; break
+            end
+          end
+        elseif iscell(xml.parameter.extopts.(FNextopts{fni}))
+          if numel(xml.parameter.extopts.(FNextopts{fni}))~=numel(job.extopts.(FNextopts{fni}))
+            FNok = 9; break
+          end
+          for fnic = 1:numel(xml.parameter.extopts.(FNextopts{fni}))
+            if iscell(xml.parameter.extopts.(FNextopts{fni}){fnic})
+              for fnicc = 1:numel(xml.parameter.extopts.(FNextopts{fni}){fnic})
+                if xml.parameter.extopts.(FNextopts{fni}){fnic}{fnicc} ~= job.extopts.(FNextopts{fni}){fnic}{fnicc}
+                  FNok = 10; break
+                end
+              end
+              if FNok==10; break; end
+            else
+              try
+                if any(xml.parameter.extopts.(FNextopts{fni}){fnic} ~= job.extopts.(FNextopts{fni}){fnic})
+                  FNok = 11; break
+                end
+              catch
+                  FNok = 11;
+              end
+              if FNok==11; break; end
+            end
+            if FNok==11 || FNok==10; break; end
+          end
+        elseif isstruct(xml.parameter.extopts.(FNextopts{fni}))
+          FNX = fieldnames(xml.parameter.extopts.(FNextopts{fni}));
+          for fnic = 1:numel(FNX)
+            if any(xml.parameter.extopts.(FNextopts{fni}).(FNX{fnic}) ~= job.extopts.(FNextopts{fni}).(FNX{fnic}))
+              FNok = 12; break
+            end
+            if FNok==12; break; end
           end
         else
-          if ~strcmp(xml.parameter.extopts.(FNextopts{fni}),job.extopts.(FNextopts{fni}){1})
-            FNok = 8; break
-          end
+          % this did not work anymore due to the GUI subfields :/
+          %if any(xml.parameter.extopts.(FNextopts{fni}) ~= job.extopts.(FNextopts{fni}))
+          %  FNok = 13; break
+          %end
         end
-      elseif iscell(xml.parameter.extopts.(FNextopts{fni}))
-        if numel(xml.parameter.extopts.(FNextopts{fni}))~=numel(job.extopts.(FNextopts{fni}))
-          FNok = 9; break
-        end
-        for fnic = 1:numel(xml.parameter.extopts.(FNextopts{fni}))
-          if iscell(xml.parameter.extopts.(FNextopts{fni}){fnic})
-            for fnicc = 1:numel(xml.parameter.extopts.(FNextopts{fni}){fnic})
-              if xml.parameter.extopts.(FNextopts{fni}){fnic}{fnicc} ~= job.extopts.(FNextopts{fni}){fnic}{fnicc}
-                FNok = 10; break
-              end
-            end
-            if FNok==10; break; end
-          else
-            try
-              if any(xml.parameter.extopts.(FNextopts{fni}){fnic} ~= job.extopts.(FNextopts{fni}){fnic})
-                FNok = 11; break
-              end
-            catch
-                FNok = 11;
-            end
-            if FNok==11; break; end
-          end
-          if FNok==11 || FNok==10; break; end
-        end
-      elseif isstruct(xml.parameter.extopts.(FNextopts{fni}))
-        FNX = fieldnames(xml.parameter.extopts.(FNextopts{fni}));
-        for fnic = 1:numel(FNX)
-          if any(xml.parameter.extopts.(FNextopts{fni}).(FNX{fnic}) ~= job.extopts.(FNextopts{fni}).(FNX{fnic}))
-            FNok = 12; break
-          end
-          if FNok==12; break; end
-        end
-      else
-        % this did not work anymore due to the GUI subfields :/
-        %if any(xml.parameter.extopts.(FNextopts{fni}) ~= job.extopts.(FNextopts{fni}))
-        %  FNok = 13; break
-        %end
       end
-    end
-    if FNok~=1 % different extopts
-      return
+      if FNok~=1 % different extopts
+        return
+      end
     end
     
 

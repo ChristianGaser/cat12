@@ -249,14 +249,14 @@ if ~isfield(res,'spmpp')
   end
   
 
-
+  Ymo = Ym; if debug, Yclso = Ycls; Ysrco = Ysrc; end
   %% Local Intensity Correction 
   %  RD202102: Extension of LAS to correct protocoll depending differences
   %            of cortical GM intensities due to myelination before and 
   %            after the general call of the LAS function.
   %            > add this later to the LAS function inclusive the denoising
   %            > this may also work for T2/PD maps 
-  Ymo = Ym; if debug, Yclso = Ycls; Ysrco = Ysrc; end
+  if debug, Ym = Ymo; Ycls = Yclso; Ysrc = Ysrco; end 
   if job.extopts.LASstr>0
     if job.extopts.LASstr>1 
       extoptsLAS2 = job.extopts;
@@ -271,30 +271,35 @@ if ~isfield(res,'spmpp')
     if isfield(job.extopts,'LASmyostr') 
       LASmyostr = job.extopts.LASmyostr; 
     else
-      LASmyostr = job.extopts.LASstr; 
+      LASmyostr = 0; % job.extopts.LASstr; 
     end
 
     if LASmyostr
-      stime2  = cat_io_cmd('\n  LAS myelination correction','g5','',job.extopts.verb); 
+      if isfield(job.extopts,'LASmyostr') 
+        stime2  = cat_io_cmd(sprintf('\n  LAS myelination correction (LASmyostr=%0.2f)',LASmyostr),'g5','',job.extopts.verb); 
+      else
+        stime2  = cat_io_cmd('\n  LAS myelination correction','g5','',job.extopts.verb); 
+      end
       vx_volo = sqrt(sum(res.image0(1).mat(1:3,1:3).^2));
-      [Ym,Ysrc,Ycls,Ycm,glcor,tmp] = cat_main_correctmyelination(Ym,Ysrc,Ycls,Yb,vx_vol,vx_volo,T3th,LASmyostr,Yy,job.extopts.cat12atlas,res.tpm);
-      fprintf('%5.0fs',etime(clock,stime2));
+      % It is better to avoid updating of the Ym and Ysrc here because some
+      % of the problems depend on inhomogenities that can be corrected by 
+      % LAS and a final correct at the end.
+      [Ymx,Ysrcx,Ycls,Ycor,glcor,tmp] = cat_main_correctmyelination(Ym,Ysrc,Ycls,Yb,vx_vol,vx_volo,T3th,LASmyostr,Yy,job.extopts.cat12atlas,res.tpm);
+      fprintf('%6.0fs',etime(clock,stime2)); clear Ymx Ysrcx;
     end
     
     % main call of LAS
     if job.extopts.LASstr>1 
-      [Ymi,Ym,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,vx_volextoptsLAS2); % use Yclsi after cat_vol_partvol
+      [Ymi,Ym,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extoptsLAS2); % use Yclsi after cat_vol_partvol
     else
-      [Ymi,Ym,Ycls] = cat_main_LAS21639(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
+      [Ymi,Ym,Ycls] = cat_main_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
+      %[Ymi,Ym,Ycls] = cat_main_LAS21639(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
     end
     stime2 = clock; % not really correct but better than before
     
-    % RD202102:   update Ymi since the LAS correction is currently not local enough
-    if LASmyostr
-      Ycor  = Ycm; 
-      Ycor  = Ycor + min(0,max(0,Ymi - 2/3) - Ycor);                       % correct overcorrections
-      Ycor  = Ycor * (0.3 + 0.5 * job.extopts.LASstr);                     % correct only 90% to keep some real noise; use this function for fine tuning of the LASstr
-      Ymi   = max( min( Ymi , 2/3 ) , Ymi - Ycor );
+    % RD202102:   update Ymi since the LAS correction is currently not local enough in case of artefacts 
+    if LASmyostr 
+      Ymi = max( min( Ymi , min( 2.5 , Ymi )*0.25 + 0.75*( 2.5 - 0.5 * LASmyostr) / 3 ) , Ymi - Ycor / 3 );
       clear Yp0; 
     end
     

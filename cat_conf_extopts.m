@@ -481,11 +481,11 @@ vdist.help    = {
 lazy         = cfg_menu;
 lazy.tag     = 'lazy';
 lazy.name    = 'Lazy processing';
-lazy.labels  = {'Yes','No'};
-lazy.values  = {1,0};
+lazy.labels  = {'Yes - check only output','Yes - check parameter and output','No'};
+lazy.values  = {2,1,0};
 lazy.val     = {0};
 lazy.help    = {
-    'Do not process data if the result already exists. '
+    'Do not process data if the result already exists (and were created with the same parameters). '
 };
 
 experimental        = cfg_menu;
@@ -829,9 +829,14 @@ end
 LASmyostr.val     = {0};
 LASmyostr.help    = {
   'Add more local myelination correction of LAS based on the assumption of an equally thick cortex. '
+  'Because myelintion increases with age this will interact with aging and atrophy in degenerative diseases but you can use surface-based myelination maps. '
   ''
   'IN DEVELOPMENT'
 };
+% RD202104: 
+%  Ideally, the myelination should be used to classify the L4 (VanEssen) but
+%  for a sample resolution of about 1 mm the thickness estimation becomes 
+%  more instable (depending on the metric).
 LASmyostr.hidden = expert<1;
 
 
