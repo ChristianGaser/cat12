@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1806 | gaser | 2021-04-16 21:01:18
+r1807 | gaser | 2021-04-17 13:50:12
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_main.m
+M       cat_main1639.m
+M       html/cat.html
+
+Fixed:  Fixed use of LASmyostr parameter in cat_main.m and cat_main1639.m
+------------------------------------------------------------------------
+r1806 | gaser | 2021-04-16 21:01:26 +0200 (Fr, 16 Apr 2021) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +22,7 @@ M       html/cat.html
 
 (1) Fixed:   Corrected handling of LASmyostr parameter.
 (2) Changed: Updated help text.
+
 ------------------------------------------------------------------------
 r1805 | gaser | 2021-04-16 16:27:00 +0200 (Fr, 16 Apr 2021) | 12 lines
 

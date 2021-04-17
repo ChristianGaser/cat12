@@ -268,7 +268,7 @@ if ~isfield(res,'spmpp')
     if LASmyostr
       stime2  = cat_io_cmd('\n  LAS myelination correction','g5','',job.extopts.verb); 
       vx_volo = sqrt(sum(res.image0(1).mat(1:3,1:3).^2));
-      [Ym,Ysrc,Ycls,Ycm,glcor,tmp] = cat_main_correctmyelination(Ym,Ysrc,Ycls,Yb,vx_vol,vx_volo,T3th,job.extopts.LASstr,Yy,job.extopts.cat12atlas,res.tpm);
+      [Ym,Ysrc,Ycls,Ycm,glcor,tmp] = cat_main_correctmyelination(Ym,Ysrc,Ycls,Yb,vx_vol,vx_volo,T3th,LASmyostr,Yy,job.extopts.cat12atlas,res.tpm);
       fprintf('%5.0fs',etime(clock,stime2));
     end
     
