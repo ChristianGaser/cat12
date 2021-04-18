@@ -275,11 +275,7 @@ if ~isfield(res,'spmpp')
     end
 
     if LASmyostr
-      if isfield(job.extopts,'LASmyostr') 
-        stime2  = cat_io_cmd(sprintf('\n  LAS myelination correction (LASmyostr=%0.2f)',LASmyostr),'g5','',job.extopts.verb); 
-      else
-        stime2  = cat_io_cmd('\n  LAS myelination correction','g5','',job.extopts.verb); 
-      end
+      stime2  = cat_io_cmd(sprintf('\n  LAS myelination correction (LASmyostr=%0.2f)',LASmyostr),'g5','',job.extopts.verb); 
       vx_volo = sqrt(sum(res.image0(1).mat(1:3,1:3).^2));
       % It is better to avoid updating of the Ym and Ysrc here because some
       % of the problems depend on inhomogenities that can be corrected by 

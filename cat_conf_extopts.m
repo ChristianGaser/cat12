@@ -829,7 +829,7 @@ end
 LASmyostr.val     = {0};
 LASmyostr.help    = {
   'Add more local myelination correction of LAS based on the assumption of an equally thick cortex. '
-  'Because myelintion increases with age this will interact with aging and atrophy in degenerative diseases but you can use surface-based myelination maps. '
+  'Please, note that because myelination increases with age this will interact with aging and atrophy in degenerative diseases. '
   ''
   'IN DEVELOPMENT'
 };
