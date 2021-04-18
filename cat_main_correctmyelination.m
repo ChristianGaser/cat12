@@ -167,7 +167,7 @@ function [Ym2,Ysrc2,Ycls,Ycor,glcor,cf] = cat_main_correctmyelination(Ym,Ysrc,Yc
   % correction factor based on the volumina and thickness values and on the size of the amount of higher GM PVE values
   clsvol     = zeros(1,3); for i=1:3, clsvol(i) = sum(single(Ycls{i}(:))/255); end %  * prod(vx_vol)/1000
   [mn,sd,nm] = cat_stat_kmeans(Ymb(Yp0b(:)>1.8/3 & Yct(:)),4);                       %#ok<ASGLU> % 4 classes [GM,HGM,LWM,WM] were we focus on the myelinated GM (LWM)  
-  glcor      = min(1,max(0,( ( nm(3)/sd(3) ) / ( nm(4)/sd(4) ) - 0.1 ) * 2)) / mean(vx_volo);    % lower rate for low res -  prod was not engough correction at 2 mm
+  glcor      = min(1,max(0,( ( nm(3)/sd(3) ) / ( nm(4)/sd(4) ) - 0.1 ) * 2)) / mean(vx_volo);    % lower rate for low res -  prod was not enough correction at 2 mm
   glcor      = min(1,glcor * mean( vx_vol ./ vx_volo ) * clsvol(2)/clsvol(1)) * 3;               % lower correction in case of interpolation 
   if ~debug, clear clsvol mn sd nm; end
   

@@ -1306,7 +1306,7 @@ function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
     end
     
     %% check opts
-    if job.extopts.lazy < 2 % check paraemter only if lazy=1 to avoid parameter checks e.g. due to version changes
+    if job.extopts.lazy < 2 % check parameter only if lazy=1 to avoid parameter checks e.g. due to version changes
       if isempty(FNopts) || isempty(FNextopts) || ...
          ~isfield(xml.parameter,'opts') || ~isfield(xml.parameter,'extopts')
         return
