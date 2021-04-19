@@ -59,9 +59,9 @@ nproc.help    = {
 data          = cfg_files;
 data.tag      = 'data';
 data.name     = 'Volumes';
-data.filter   = '.*\.(nii|nii.gz)$';
+data.filter   = '.*\.(img|nii|nii.gz)$';
 data.ufilter  = '.*';
-data.num      = [0 Inf];
+data.num      = [1 Inf];
 data.help     = {
   'Select highres raw data (e.g. T1 images) for segmentation. This assumes that there is one scan for each subject. Note that multi-spectral (when there are two or more registered images of different contrasts) processing is not implemented for this method. Nifti files and compressed nifti files are supported.'};
 %data.preview  = @(f) spm_check_registration(char(f));

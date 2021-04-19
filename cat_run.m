@@ -272,7 +272,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
       %  This is a "simple" while loop that check if the processes still 
       %  exist and extract information from the log-files, which subject 
       %  was (successfully) processed. 
-      %  Finally, a report could be generated and exportet in future that 
+      %  Finally, a report could be generated and exported in future that 
       %  e.g. count errors give some suggestions 
       %  ------------------------------------------------------------------
       if job.getPID>1
@@ -295,6 +295,10 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
           for i=1:job.nproc
             % get FID
             FID = fopen(log_name{i},'r'); 
+            if FID < 0
+              fprintf('File % was probably deleted which prevents controlling processes.',log_name{i});
+              continue
+            end
             txt = textscan(FID,'%s','Delimiter','\n');
             txt = txt{1}; 
             fclose(FID);
@@ -461,8 +465,6 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
      ... sprintf('  Processed with IQR warning:% 8d volume(s)\n',1) ...
      ... sprintf('  Processed with PQR warning:% 8d volume(s)\n',1) ...
      sprintf('  Processed with error:  % 8d volume(s)\n\n',err.aff + err.vbm + err.sbm) ...
-             'In case of warnings and errors please check the correct position\n' ...
-             'of the AC by using the SPM display function.\n' ...
     ]);   
     fprintf('_______________________________________________________________\n');
     

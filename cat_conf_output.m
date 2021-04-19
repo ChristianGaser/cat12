@@ -26,7 +26,7 @@ function [output,output_spm] = cat_conf_output(expert)
   try
     bids_folder = cat_get_defaults('extopts.bids_folder');
   catch
-    bids_folder = fullfile('..','..','derivatives',cat_version);
+    bids_folder = fullfile('..','derivatives',cat_version);
   end
   
   BIDSfolder         = cfg_entry;
@@ -41,13 +41,13 @@ function [output,output_spm] = cat_conf_output(expert)
   BIDSyes.tag   = 'BIDSyes';
   BIDSyes.name  = 'Yes';
   BIDSyes.val   = {BIDSfolder};
-  BIDSyes.help  = {'Use BIDS directory structure for saving data'};
+  BIDSyes.help  = {'Use BIDS directory structure for storing data'};
   
   BIDSno        = cfg_const;
   BIDSno.tag    = 'BIDSno';
   BIDSno.name   = 'No';
   BIDSno.val    = {1};
-  BIDSno.help   = {'Use CAT12 default directories for saving data'};
+  BIDSno.help   = {'Use CAT12 default directories for storing data'};
   
   BIDS          = cfg_choice;
   BIDS.tag      = 'BIDS';
