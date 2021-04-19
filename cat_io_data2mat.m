@@ -21,6 +21,7 @@ function varargout = cat_io_data2mat(opt)
 % label      - label of samples 
 % ind        - index for volume or surface data inside mask
 % dim        - dimension of original data
+% V          - structure array containing data information of surface or resampled volume
 %
 % Examples:
 % Select recursively all 8mm smoothed gray matter segments from folder1
@@ -121,21 +122,21 @@ end
 if ~spm_mesh_detect(V{1}(1))
   % this is probably not the most elegant way but used here for compatibility with my BrainAGE tools...
   % 1mm reference fields
-  V0.mat = [1 0 0 -90; 0 1 0 -126; 0 0 1 -72; 0 0 0 1];
-  V0.dim = [181 217 181];
+  Vres.mat = [1 0 0 -90; 0 1 0 -126; 0 0 1 -72; 0 0 0 1];
+  Vres.dim = [181 217 181];
   
   if ~isempty(brainmask)
     Vm  = spm_vol(brainmask);
   end
   
-  V0.dim = round(V0.dim/resolution);
-  V0.mat(1:3,1:3) = resolution*V0.mat(1:3,1:3);
-  V0.mat(1:3,4) = V0.mat(1:3,4) - [resolution resolution resolution]';
-  dim = V0.dim(1:3);
+  Vres.dim = round(Vres.dim/resolution);
+  Vres.mat(1:3,1:3) = resolution*Vres.mat(1:3,1:3);
+  Vres.mat(1:3,4) = Vres.mat(1:3,4) - [resolution resolution resolution]';
+  dim = Vres.dim(1:3);
 
 else
   % check that mesh contains data
-  if isfield(V{1}(1),'private') & ~isfield(V{1}(1).private,'cdata')
+  if isfield(V{1}(1),'private') && ~isfield(V{1}(1).private,'cdata')
     if ~isfield(V{1}(1),'cdata')
       error('No data found in mesh')
     end
@@ -194,20 +195,20 @@ C = zeros(n_all_subjects);
 
 % 3D data
 if ~spm_mesh_detect(V{1}(1))
-  spm_progress_bar('Init',V0.dim(3),'reading...','planes completed');
+  spm_progress_bar('Init',Vres.dim(3),'reading...','planes completed');
   ind = [];
-  for sl=1:V0.dim(3)
+  for sl=1:Vres.dim(3)
     % read mask
     M = spm_matrix([0 0 sl 0 0 0 1 1 1]);
     if ~isempty(brainmask)
     
-      Mm  = V0.mat\Vm.mat\M;
-      mask_slice = spm_slice_vol(Vm,Mm,V0.dim(1:2),1);
+      Mm  = Vres.mat\Vm.mat\M;
+      mask_slice = spm_slice_vol(Vm,Mm,Vres.dim(1:2),1);
       ind0 = find(mask_slice > 0.5);
     else
-      ind0 = find(ones(V0.dim(1:2)));
+      ind0 = find(ones(Vres.dim(1:2)));
     end
-    M1  = V0.mat\V{1}(1).mat\M;
+    M1  = Vres.mat\V{1}(1).mat\M;
     
     ind = [ind; ind0];
     clear mask_slice
@@ -219,7 +220,7 @@ if ~spm_mesh_detect(V{1}(1))
         y = zeros(n_subjects(j), length(ind0));
           for i = 1:n_subjects(j)
               try
-                d = spm_slice_vol(V{j}(i),M1,V0.dim(1:2),1);
+                d = spm_slice_vol(V{j}(i),M1,Vres.dim(1:2),1);
               catch
                 fprintf('File %s could not be read\n',V{j}(i).fname);
                 return
@@ -262,8 +263,16 @@ if ~isempty(confounds)
   Y = Y - confounds*beta;
 end
 
-save(fname,'Y','label','dim','ind');
-fprintf('Save data (Y,label,dim,ind) in %s.\n',fname);
+% save surface or resampled volume structure
+if spm_mesh_detect(V{1}(1))
+  V = V{1}(1).private;
+  V = rmfield(V,'cdata');
+else
+  V = Vres;
+end
+
+save(fname,'Y','label','dim','V','ind');
+fprintf('Save data (Y,label,V,dim,ind) in %s.\n',fname);
 
 if nargout == 1
   varargout{1}.fname = fname;
