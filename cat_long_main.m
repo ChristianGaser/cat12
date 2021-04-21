@@ -22,6 +22,7 @@ try
   dartel      = job.dartel;
   ROImenu     = job.ROImenu;
   longmodel   = job.longmodel;
+  useprior    = job.enablepriors;
   surfaces    = job.output.surface;
   longTPM     = job.longTPM;
   if isfield(job,'delete_temp')  
@@ -30,11 +31,16 @@ try
     delete_temp = 1;
   end
 catch
-  dartel = 0;
-  modulate = 1;
+  dartel      = 0;
+  modulate    = 1;
   delete_temp = 1;
+  useprior    = 1;
   surfaces    = cat_get_defaults('output.surfaces'); 
   longTPM     = 1;
+end
+
+if ~useprior & longTPM
+  longTPM = 0;
 end
 
 write_CSF = cat_get_defaults('output.CSF.mod') > 0;
@@ -167,34 +173,46 @@ else
                                                                       substruct('.','rimg', '()',{':'}));
 end
 matlabbatch{mbi}.spm.tools.cat.estwrite.nproc               = 0;
+
 if exist('opts','var') && ~isempty(opts)
   matlabbatch{mbi}.spm.tools.cat.estwrite.opts              = opts;
 end
+
 if exist('extopts','var') && ~isempty(extopts)
   matlabbatch{mbi}.spm.tools.cat.estwrite.extopts           = extopts;
 end
+
 if exist('output','var') && ~isempty(output)
   matlabbatch{mbi}.spm.tools.cat.estwrite.output            = output;
 end
+
 % surface estimation
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.surface      = surfaces;
+
 if exist('ROImenu','var') && ~isempty(ROImenu)
   matlabbatch{mbi}.spm.tools.cat.estwrite.output.ROImenu    = ROImenu;
 end
+
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.GM.native    = 1;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.GM.dartel    = dartel;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.GM.mod       = 0;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.WM.native    = 1;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.WM.dartel    = dartel;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.WM.mod       = 0;
+
 if write_CSF
   matlabbatch{mbi}.spm.tools.cat.estwrite.output.CSF.native = 1; % also write CSF?
 end
+
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.bias.warped  = 0;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.warps        = [1 0];
-matlabbatch{mbi}.spm.tools.cat.estwrite.useprior(1)         = cfg_dep('Longitudinal Registration: Midpoint Average',...
+
+if useprior
+  matlabbatch{mbi}.spm.tools.cat.estwrite.useprior(1)         = cfg_dep('Longitudinal Registration: Midpoint Average',...
                                                                       substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','avg', '()',{':'}));
+end
+
 if longTPM
   matlabbatch{mbi}.spm.tools.cat.estwrite.opts.tpm            = cfg_dep('Longitudinal TPM creation: Longitudinal TPMs',...
                                                                       substruct('.','val', '{}',{mb_tpm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
@@ -323,6 +341,7 @@ for ci = 1:2 + single(write_CSF) % fill image sets
                                                                       substruct('.','vfiles'));
   end
 end
+
 matlabbatch{mbi}.spm.tools.cat.tools.defs.interp          = 1;
 matlabbatch{mbi}.spm.tools.cat.tools.defs.bb  = [NaN NaN NaN
                                                  NaN NaN NaN];
@@ -352,6 +371,7 @@ matlabbatch{mbi}.spm.tools.cat.tools.defs.vox = [NaN NaN NaN];
 if delete_temp
   mbi = mbi + 1; 
   c = 1;
+  
   % time point specific preprocessing data
   for ci = 1:2 + single(write_CSF)
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep(sprintf('CAT12: Segmentation (current release): p%d Image',ci),...
@@ -379,6 +399,7 @@ if delete_temp
                                                                       substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','tiss', '()',{2}, '.','rpa', '()',{':'})); c = c+1;
   end
+  
   matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): rp3 affine Image',...
                                                                       substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','tiss', '()',{3}, '.','rpa', '()',{':'})); c = c+1;  
@@ -396,11 +417,13 @@ if delete_temp
                                                                       substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','catroi', '()',{':'})); c = c+1;
   end
+  
   if job.bstr > 0 && ~isempty( matlabbatch{mb_tpbc}.spm.tools.cat.tools.longBiasCorr.prefix )
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Segment: Longitudinal Bias Corrected',...
                                                                       substruct('.','val', '{}',{mb_tpbc}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','bc', '()',{':'}));
   end
+  
   % surfaces
   if surfaces
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Left Central Surface',...
@@ -441,6 +464,7 @@ if delete_temp
                                                                       substruct('.','val', '{}',{mb_tpm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','tpm', '()',{':'})); c = c+1;
   end
+  
   if longmodel==2
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Run Shooting (create Templates): Template (0)',...
                                                                       substruct('.','val', '{}',{mb_GS}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
@@ -460,6 +484,7 @@ if delete_temp
                                                                       substruct('.','vfiles')); c = c+1;
     end
   end
+  
   % final command of this batch 
   matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.delete  = false;
 end

@@ -66,7 +66,7 @@ parse_args ()
         defaults=$optarg
         shift
         ;;
-      --large* | -l*)
+      --large* | -large*)
         exit_if_empty "$optname" "$optarg"
         large_changes=1
         ;;
@@ -269,13 +269,13 @@ USAGE:
   cat_batch_long.sh filenames|filepattern [-d default_file] [-m matlabcommand] 
                       [-log logdir] [-ns] [-l] [-nj] 
   
-  -m <FILE> | --matlab  <FILE> matlab command (default $matlab)
-  -d <FILE> | --default <FILE> optional default file (default ${cat12_dir}/cat_defaults.m)
-  -l <FILE> | --logdir         directory for log-file (default $LOGDIR)
-  -fg       | --fg             do not run matlab process in background
-  -ns       | --no-surf        disable surface and thickness estimation
-  -l        | --large          use longitudinal model for detecting large changes (e.g. ageing or development)
-  -nj       | --nojvm          supress call of jvm using the -nojvm flag
+  -m <FILE>   | --matlab  <FILE> matlab command (default $matlab)
+  -d <FILE>   | --default <FILE> optional default file (default ${cat12_dir}/cat_defaults.m)
+  -log <FILE> | --logdir         directory for log-file (default $LOGDIR)
+  -fg         | --fg             do not run matlab process in background
+  -ns         | --no-surf        disable surface and thickness estimation
+  -large      | --large          use longitudinal model for detecting large changes (e.g. ageing or development)
+  -nj         | --nojvm          supress call of jvm using the -nojvm flag
 
   Processing is omly supported for one subject.
   Optionally you can set the matlab command with the "-m" option. As default no display

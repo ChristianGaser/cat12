@@ -1,5 +1,30 @@
 ------------------------------------------------------------------------
-r1810 | gaser | 2021-04-19 18:48:32
+r1811 | gaser | 2021-04-21 17:13:24
+
+Changed paths:
+M       CHANGES.txt
+M       Makefile
+M       cat_batch_long.sh
+M       cat_conf_extopts.m
+M       cat_conf_long.m
+M       cat_long_main.m
+M       cat_long_multi_run.m
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       cat_update.m
+M       templates_MNI152NLin2009cAsym/anatomy3.csv
+
+(1) Changed: Updated targets in Makefile.
+(2) Changed: Added "enablepriors" flag to longitudinal pipeline in expert mode
+             to optionally disable use of priors.             
+(3) Changed: Updated help text.
+(4) Changed: Updated flags in cat_batch_long.sh.
+(5) Fixed:   Corrected BIDS paths in cat_surf_createCS*.m.
+(6) Fixed:   Corrected anatomy3.csv because left and right hemisphere had the 
+             same IDs (thanks to Michael Firbank for pointing to that issue).
+
+------------------------------------------------------------------------
+r1810 | gaser | 2021-04-19 18:49:20 +0200 (Mo, 19 Apr 2021) | 15 lines
 
 Changed paths:
 M       CAT12-Manual.pdf
@@ -15,6 +40,7 @@ M       tbx_cfg_cat.m
 (3) Changed: Added check that log-files were not deleted in cat_run.m.
 (4) Changed: Added structure array to cat_io_data2mat.m to save surface
              or resampled volume structure.
+
 ------------------------------------------------------------------------
 r1809 | gaser | 2021-04-18 11:25:21 +0200 (So, 18 Apr 2021) | 9 lines
 
