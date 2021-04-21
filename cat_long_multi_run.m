@@ -29,7 +29,9 @@ modulate    = job.modulate;
 dartel      = job.dartel;
 ROImenu     = job.ROImenu;
 longmodel   = job.longmodel;
+useprior    = job.enablepriors;
 surfaces    = job.output.surface;
+longTPM     = job.longTPM;
 
 setappdata(0,'job',job);
 

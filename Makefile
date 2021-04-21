@@ -9,7 +9,6 @@ DATE=`svn info |grep 'Last Changed Date: '|sed -e 's/Last Changed Date: //g'|cut
 
 TARGET=/Users/gaser/spm/spm12/toolbox/cat12
 TARGET2=/Volumes/UltraMax/spm12/toolbox/cat12
-TARGET3=paris.biomag.uni-jena.de:/home/gaser/spm12/toolbox/cat12
 
 PRECOMPILED=/Users/gaser/install/Matlab/Matlab_R2017b
 CAT12=/Users/gaser/matlab/cat12
@@ -18,6 +17,10 @@ STARGET_HOST=141.35.69.218
 STARGET_HTDOCS=${STARGET_HOST}:/volume1/web/
 STARGET_FOLDER=/volume1/web/cat12
 STARGET=${STARGET_HOST}:${STARGET_FOLDER}
+
+STARGET3_HOST=paris.biomag.uni-jena.de
+STARGET3_FOLDER=/home/gaser/spm12/toolbox/cat12
+STARGET3=${STARGET3_HOST}:${STARGET3_FOLDER}
 
 MATLAB_FILES=Contents.* cat_*.m spm_cat12.m tbx_cfg_cat.m sliderPanel.m slice_overlay.m cat_run* compile.m
 C_FILES=Amap.[ch] ornlm_float.c sanlm_float.c MrfPrior.c Pve.c Kmeans.c cat_*.c* cat_*.mex* vollib.c genus0.[ch] tricases.h spm_diffeo_old.mex*
@@ -48,15 +51,16 @@ install: copy_longmode
 
 #install on UltraMax
 install2: copy_longmode
-	-@echo install2
+	-@echo install on ${TARGET2}
 	-@test ! -d ${TARGET2} || rm -rf ${TARGET2}/*
 	-@mkdir -p ${TARGET2}
 	-@cp -R ${FILES} ${TARGET2}/
 
 #install on paris
 install3: copy_longmode
-	-@echo install3
-	-@scp -r ${FILES} ${TARGET3}/
+	-@echo install on ${STARGET3}
+	-@bash -c "ssh ${STARGET3_HOST} 'test ! -d ${STARGET3_FOLDER} || rm -rf ${STARGET3_FOLDER}/*'"
+	-@scp -r ${FILES} ${STARGET3}/
 
 # print available commands
 help:
