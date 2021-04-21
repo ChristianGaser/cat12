@@ -333,9 +333,9 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
       
       % try to copy surface files from prior to indivudal surface data 
       useprior = 1;
-      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff0)),Pcentral,'f');
-      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff0)),Psphere,'f');
-      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff0)),Pspherereg,'f');
+      useprior = useprior & copyfile(fullfile(pp_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff0)),Pcentral,'f');
+      useprior = useprior & copyfile(fullfile(pp_surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff0)),Psphere,'f');
+      useprior = useprior & copyfile(fullfile(pp_surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff0)),Pspherereg,'f');
       if ~useprior
         fprintf('\n');
         cat_io_addwarning('cat_surf_createCS:noPiorSurface', ...
@@ -1354,7 +1354,7 @@ if opt.SRP==3, facevertexcdata = Tfs; end
     
     if debug
     % Evaluation of a white/pial surface created with the normalized mesh  
-      create_resampled_white_pial_surfaces(opt,Pcentral,Pspherereg,Pfsavgsph,Ppbt,pp,ff,surffolder,si);
+      create_resampled_white_pial_surfaces(opt,Pcentral,Pspherereg,Pfsavgsph,Ppbt,pp,ff,pp_surffolder,si);
     end  
     
     
@@ -1591,6 +1591,7 @@ if opt.SRP==3, facevertexcdata = Tfs; end
   end
 end
 
+%=======================================================================
 function varargout = cat_vol_genus0opt(Yo,th,limit,debug)
 % cat_vol_genus0opt: Voxel-based topology optimization and surface creation 
 %   The correction of large defects is often not optimal and this function
@@ -1648,16 +1649,19 @@ function varargout = cat_vol_genus0opt(Yo,th,limit,debug)
   if nargout>1, varargout{2} = S; end
 end
 
+%=======================================================================
 function saveSurf(CS,P)
   save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),P,'Base64Binary');
 end
 
+%=======================================================================
 function CS1 = loadSurf(P)
   CS = gifti(P);
   CS1.vertices = CS.vertices; CS1.faces = CS.faces; 
   if isfield(CS,'cdata'), CS1.cdata = CS.cdata; end
 end
 
+%=======================================================================
 function CS = correctReducePatch(CS)
   % remove bad faces 
   badv = find( sum( spm_mesh_neighbours(CS)>0,2) == 2); 
@@ -1667,6 +1671,7 @@ function CS = correctReducePatch(CS)
   CS.vertices(badv,:) = []; 
 end
 
+%=======================================================================
 function [Ywdt,Ycdt,stime] =  cat_surf_createCS2wdcd(Ya,Ym,Ywd,Ycd,stime)
 %% gyrus width / WM depth
 %  For the WM depth estimation it is better to use the L4 boundary and
@@ -1768,6 +1773,8 @@ function [cdata,i] = correctWMdepth(CS,cdata,iter,lengthfactor)
   end
   
 end
+
+%=======================================================================
 function [res,EC,S,stime] = fastCSexport(Ymfs,Yppi,Yth1i,Ywdt,Ycdt,Vpp1,Vpp, EC, S,CS,facevertexcdata,iscerebellum,opt,res,Smat, si, Ppbt,Pcentral,Pthick,Pgwwg,Psw, debug, stime)
 %% Fast processing without topology correction and spherical registration
 %  --------------------------------------------------------------------
@@ -1870,6 +1877,7 @@ function [res,EC,S,stime] = fastCSexport(Ymfs,Yppi,Yth1i,Ywdt,Ycdt,Vpp1,Vpp, EC,
   res.(opt.surf{si}).createCS_final      = cat_surf_fun('evalCS',CS,facevertexcdata,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
   if ~isempty(stime), fprintf('%5.0fs\n',etime(clock,stime)); end
 end
+
 %==========================================================================
 function Ymf = hippocampus_amygdala_cleanup(Ymf,Ya,vx_vol,doit)
 %% Amygdala hippocampus smoothing. 
@@ -1907,6 +1915,7 @@ function Ymf = hippocampus_amygdala_cleanup(Ymf,Ya,vx_vol,doit)
     Ymf  = min(Ymf,3-Ymsk); 
   end
 end
+
 %==========================================================================
 function Ymf = blood_vessel_correction(Ymf,Ya,doit)
 %% Blood vessel correction 
@@ -1933,6 +1942,7 @@ function Ymf = blood_vessel_correction(Ymf,Ya,doit)
     Ymf  = min(Ymf,cat_vol_median3(Ymf,Ymsk>0));
   end
 end
+
 %==========================================================================
 function Ymf = sharpen_cerebellum(Ym,Ymf,Ytemplate,Ya,vx_vol,verb,doit)
 %% Sharpening of thin structures in the cerebellum (gyri and sulci)
@@ -2019,6 +2029,8 @@ function Ymf = sharpen_cerebellum(Ym,Ymf,Ytemplate,Ya,vx_vol,verb,doit)
     if verb>2, fprintf('%5.0fs\n',etime(clock,stime)); end
   end
 end
+
+%=======================================================================
 function create_resampled_white_pial_surfaces(opt,Pcentral,Pspherereg,Pfsavgsph,Ppbt,pp,ff,surffolder,si)
 
 % evaluate and save results
@@ -2027,8 +2039,8 @@ function create_resampled_white_pial_surfaces(opt,Pcentral,Pspherereg,Pfsavgsph,
 % but it can help to test and optimize the spatial registration. 
   
   % filenames for resmapling
-  Presamp   = fullfile(pp_surffolder,sprintf('%s.tmp.resampled.%s'    ,opt.surf{si},ff));  
-  Ppbtr     = fullfile(pp_surffolder,sprintf('%s.pbt.resampled.%s'    ,opt.surf{si},ff));  
+  Presamp   = fullfile(surffolder,sprintf('%s.tmp.resampled.%s'    ,opt.surf{si},ff));  
+  Ppbtr     = fullfile(surffolder,sprintf('%s.pbt.resampled.%s'    ,opt.surf{si},ff));  
   Ppbtr_gii = [Ppbtr '.gii'];
 
   % resample values using warped sphere 
@@ -2069,6 +2081,7 @@ function create_resampled_white_pial_surfaces(opt,Pcentral,Pspherereg,Pfsavgsph,
   end
 
 end
+
 %==========================================================================
 function cdata = estimateWMdepthgradient(CS,cdata)
 % _________________________________________________________________________

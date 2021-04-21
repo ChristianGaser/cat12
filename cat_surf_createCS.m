@@ -341,9 +341,9 @@ cstime = clock;
 
       % try to copy surface files from prior to indivudal surface data 
       useprior = 1;
-      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff0)),Pcentral,'f');
-      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff0)),Psphere,'f');
-      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff0)),Pspherereg,'f');
+      useprior = useprior & copyfile(fullfile(pp_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff0)),Pcentral,'f');
+      useprior = useprior & copyfile(fullfile(pp_surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff0)),Psphere,'f');
+      useprior = useprior & copyfile(fullfile(pp_surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff0)),Pspherereg,'f');
       if ~useprior
         fprintf('\n');
         cat_io_addwarning('cat_surf_createCS:noPiorSurface', ...
@@ -1308,6 +1308,7 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
   end
 end
 
+%=======================================================================
 function varargout = cat_vol_genus0opt(Yo,th,limit,debug)
 % cat_vol_genus0opt: Voxel-based topology optimization and surface creation 
 %   The correction of large defects is often not optimal and this function
@@ -1404,10 +1405,12 @@ function [cdata,i] = correctWMdepth(CS,cdata,iter,lengthfactor)
   
 end
 
+%=======================================================================
 function saveSurf(CS,P)
   save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),P,'Base64Binary');
 end
 
+%=======================================================================
 function CS1 = loadSurf(P)
   CS = gifti(P);
   CS1.vertices = CS.vertices; CS1.faces = CS.faces; 

@@ -134,6 +134,18 @@ bstr.help            = {
   ''
 };
 
+enablepriors          = cfg_menu;
+enablepriors.tag      = 'enablepriors';
+enablepriors.name     = 'Use priors for longitudinal data';
+enablepriors.labels   = {'No','Yes'};
+enablepriors.values   = {0 1};
+enablepriors.val      = {1};
+enablepriors.hidden   = expert<1;
+enablepriors.help     = {
+  'The average image is used as a first estimate for affine transformation, segmentation and surface extraction. The idea is that by initializing with the average image we can reduce random variations and improve the robustness and sensitivity of the entire longitudinal pipeline. Furthermore, it significantly increases the speed of the surface extraction.'
+  ''
+};
+
 %------------------------------------------------------------------------
 delete_temp        = cfg_menu;
 delete_temp.tag    = 'delete_temp';
@@ -277,7 +289,7 @@ else
   
   delete_temp.hidden = expert<1;
   
-  long.val  = {datalong,longmodel,bstr,nproc,opts,extopts,output,ROI,longTPM,modulate,dartel,delete_temp};
+  long.val  = {datalong,longmodel,enablepriors,bstr,nproc,opts,extopts,output,ROI,longTPM,modulate,dartel,delete_temp};
   
 % does not yet work! 
 % long.vout = @vout_long;
