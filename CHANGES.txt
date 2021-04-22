@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1812 | gaser | 2021-04-23 00:13:02
+r1813 | gaser | 2021-04-23 01:03:25
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_check_cov.m
+
+Fixed:  Corrected some minor bugs in cat_stat_check_cov.m.
+------------------------------------------------------------------------
+r1812 | gaser | 2021-04-23 00:13:50 +0200 (Fr, 23 Apr 2021) | 26 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -25,6 +33,7 @@ M       html/cat.html
 (5) Changed: Changed defaults for SRP and writing deformations.
 (6) Fixed:   Use stamdard Pmesh from cat_surf_info in cat_stat_spm2x.m for 
              getting mesh structure.
+
 
 ------------------------------------------------------------------------
 r1811 | gaser | 2021-04-21 17:14:12 +0200 (Mi, 21 Apr 2021) | 23 lines
