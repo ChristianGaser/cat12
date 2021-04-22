@@ -34,12 +34,12 @@ function varargout = cat_surf_render2(action,varargin)
 % AX       - axis handle or structure returned by cat_surf_render2('Disp',...)
 % MODE     - {['on'],'off'}
 %
-% FORMAT H = vbm_mesh_render('Clim',AX,[mn mx])
-% AX       - axis handle or structure given by vbm_mesh_render('Disp',...)
+% FORMAT H = cat_surf_render2('Clim',AX,[mn mx])
+% AX       - axis handle or structure given by cat_surf_render2('Disp',...)
 % mn mx    - min/max of range
 %
-% FORMAT H = vbm_mesh_render('Clip',AX,[mn mx])
-% AX       - axis handle or structure given by vbm_mesh_render('Disp',...)
+% FORMAT H = cat_surf_render2('Clip',AX,[mn mx])
+% AX       - axis handle or structure given by cat_surf_render2('Disp',...)
 % mn mx    - min/max of clipping range
 %
 % FORMAT H = cat_surf_render2('ColourMap',AX,MAP)
@@ -916,7 +916,7 @@ switch lower(action)
         
         % ???
         uimenu(cmenu, 'Label','Overlay...', 'Interruptible','off', 'Callback',{@myOverlay, H});
-        
+        ind_finite = (isfinite(H.cdata));
         %%
         for i=1:numel(H.patch)
           sV(i) = size(H.patch(i).Vertices,1);
@@ -933,10 +933,10 @@ switch lower(action)
         uimenu(c1, 'Label', sprintf('Euler Number:     %s'    ,sprintf('%d ',EC)),    'Interruptible','off');
         if isfield(H,'cdata')
           uimenu(c1, 'Tag','SurfDataMenu1','Interruptible','off','Label',sprintf('Data: %s\n',''),'Separator','on'); 
-          uimenu(c1, 'Tag','SurfDataMenu2','Interruptible','off','Label',sprintf('  median:           %0.4f\n',median(H.cdata)),'Separator','on'); 
+          uimenu(c1, 'Tag','SurfDataMenu2','Interruptible','off','Label',sprintf('  median:           %0.4f\n',median(H.cdata(ind_finite))),'Separator','on'); 
           uimenu(c1, 'Tag','SurfDataMenu3','Interruptible','off','Label',sprintf('  mean %s std:     %0.4f %s %0.4f\n',...
-            char(177),mean(H.cdata),char(177),std(H.cdata))); 
-          uimenu(c1, 'Tag','SurfDataMenu4','Interruptible','off','Label',sprintf('  min / max:       %0.4f / %0.4f',min(H.cdata),max(H.cdata))); 
+            char(177),mean(H.cdata(ind_finite)),char(177),std(H.cdata(ind_finite)))); 
+          uimenu(c1, 'Tag','SurfDataMenu4','Interruptible','off','Label',sprintf('  min / max:       %0.4f / %0.4f',min(H.cdata(ind_finite)),max(H.cdata(ind_finite)))); 
         end
         if exist('cg_hist2d','file')
           uimenu(c1, 'Label', 'Histogram',    'Interruptible','off','Separator','on','Callback',{@myHist, H});

@@ -45,21 +45,21 @@ if cat_get_defaults('extopts.expertgui')>2
   return
 end
 
-global alphaval filename H YpY YpYsorted  data_array data_array_diff pos ind_sorted ind_sorted_display mean_cov FS X mesh_detected ...
-mn_data mx_data V Vchanged sample isxml sorted isscatter IQRratio show_name bplot names_changed img img_alpha show_violin
+clearvars -GLOBAL H;       % clear old
+global H
 
 % show data by fileorder
-sorted = 0;
+H.sorted = 0;
 
 if nargin == 0
   error('No argument given.');
 end
 
-sample = [];
-G      = [];
+H.sample   = [];
+G          = [];
 n_subjects = 0;
-names_changed = 0;
-alphaval = 0.5;
+H.alphaval = 0.5;
+H.names_changed = 0;
 
 % check for global scaling
 if isfield(job,'gSF')
@@ -74,20 +74,20 @@ if ~isfield(job,'verb')
 end
 
 if isfield(job,'show_violin')
-  show_violin = job.show_violin;
+  H.show_violin = job.show_violin;
 else
-  show_violin = 0;
+  H.show_violin = 0;
 end
 
 if isfield(job,'show_name')
-  show_name = job.show_name;
+  H.show_name = job.show_name;
 else
-  show_name = 0;
+  H.show_name = 0;
 end
 
 % read filenames for each sample and indicate sample parameter
 if isfield(job,'data_vol')
-  mesh_detected = 0;
+  H.mesh_detected = 0;
   n_samples = numel(job.data_vol);
   for i=1:n_samples
     
@@ -100,22 +100,24 @@ if isfield(job,'data_vol')
     V0 = spm_data_hdr_read(char(job.data_vol{i}));
     n_subjects = n_subjects + length(V0);
       
-    if i==1, V = V0;
-    else,    V = [V; V0]; end
+    if i==1, H.V = V0;
+    else,    H.V = [H.V; V0]; end
 
-    sample = [sample, i*ones(1,length(V0))];
+    H.sample = [H.sample, i*ones(1,length(V0))];
   end
   sep = job.gap;
 else
-  mesh_detected = 1;
+  H.mesh_detected = 1;
   n_samples = numel(job.data_surf);
+  sinfo = cat_surf_info(char(job.data_surf{1}(1)));
+  H.Pmesh = gifti(sinfo.Pmesh);
   for i=1:n_samples
     V0 = spm_data_hdr_read(char(job.data_surf{i}));
     n_subjects = n_subjects + length(V0);
       
-    if i==1, V = V0;
-    else,    V = [V; V0]; end
-    sample = [sample, i*ones(1,size(job.data_surf{i},1))];
+    if i==1, H.V = V0;
+    else,    H.V = [H.V; V0]; end
+    H.sample = [H.sample, i*ones(1,size(job.data_surf{i},1))];
   end
 end
     
@@ -126,7 +128,7 @@ if ~isempty(job.c)
 end
 
 if isempty(char(job.data_xml))
-  isxml = 0;
+  H.isxml = 0;
   QM_names = '';
   xml_files = [];
 else
@@ -135,12 +137,12 @@ end
 
 if ~isempty(xml_files)
 
-  isxml = 1;
+  H.isxml = 1;
   if size(xml_files,1) ~= n_subjects
     error('XML-files must have the same number as sample size');
   end
   
-  if mesh_detected
+  if H.mesh_detected
     QM = ones(n_subjects,5);
     QM_names = char('Noise','Bias','Weighted overall image quality (IQR)','Euler number','Size of topology defects');
   else
@@ -152,22 +154,22 @@ if ~isempty(xml_files)
   for i=1:n_subjects
     % get basename for xml- and data files
     [pth, xml_name] = fileparts(deblank(xml_files(i,:)));
-    [pth, data_name] = fileparts(V(i).fname);
+    [pth, data_name] = fileparts(H.V(i).fname);
     
     % remove leading 'cat_'
     xml_name = xml_name(5:end);
     
     % check for filenames
     if isempty(strfind(data_name,xml_name))
-      fprintf('Please check file names because of deviating subject names:\n%s vs. %s\n',V(i).fname,xml_files(i,:));
+      fprintf('Please check file names because of deviating subject names:\n%s vs. %s\n',H.V(i).fname,xml_files(i,:));
     end
     
     xml = cat_io_xml(deblank(xml_files(i,:)));
     if ~isfield(xml,'qualityratings') && ~isfield(xml,'QAM')
-      fprintf('Quality rating is not saved for %s. Report file %s is incomplete.\nPlease repeat preprocessing amd check for potential errors in the ''err'' folder.\n',V(i).fname,xml_files(i,:));    
+      fprintf('Quality rating is not saved for %s. Report file %s is incomplete.\nPlease repeat preprocessing amd check for potential errors in the ''err'' folder.\n',H.V(i).fname,xml_files(i,:));    
       return
     end
-    if mesh_detected
+    if H.mesh_detected
       if isfield(xml.qualityratings,'NCR')
       % check for newer available surface measures
         if isfield(xml.subjectmeasures,'EC_abs')
@@ -190,21 +192,24 @@ if ~isempty(xml_files)
   spm_progress_bar('Clear');
   
   % remove last two columns if EC_abs and defect_size are not defined
-  if mesh_detected & all(isnan(QM(:,4))) & all(isnan(QM(:,5)))
+  if H.mesh_detected & all(isnan(QM(:,4))) & all(isnan(QM(:,5)))
     QM = QM(:,1:3);
   end
   
 end
 
-[pth,nam] = spm_fileparts(V(1).fname);
+[pth,nam] = spm_fileparts(H.V(1).fname);
 
-if mesh_detected
+if H.mesh_detected
   % load surface texture data
-  Y = spm_data_read(V)';
+  H.data = single(spm_data_read(H.V));
+  Y = H.data';
+  
+  H.range_data98 =  cat_vol_iscaling(Y,[0.02 0.98]);
   
   % optional global scaling
   if is_gSF
-    for i=1:numel(V)
+    for i=1:numel(H.V)
       Y(:,2) = Y(:,2)*gSF(i);
     end
   end
@@ -213,13 +218,13 @@ if mesh_detected
   
 else
   % voxelsize and origin
-  vx =  sqrt(sum(V(1).mat(1:3,1:3).^2));
-  Orig = V(1).mat\[0 0 0 1]';
+  vx =  sqrt(sum(H.V(1).mat(1:3,1:3).^2));
+  Orig = H.V(1).mat\[0 0 0 1]';
 
-  if length(V)>1 && any(any(diff(cat(1,V.dim),1,1),1))
+  if length(H.V)>1 && any(any(diff(cat(1,H.V.dim),1,1),1))
     error('images don''t all have same dimensions')
   end
-  if max(max(max(abs(diff(cat(3,V.mat),1,3))))) > 1e-8
+  if max(max(max(abs(diff(cat(3,H.V.mat),1,3))))) > 1e-8
     error('images don''t all have same orientation & voxel size')
   end
 end
@@ -234,9 +239,9 @@ end
 
 % positions & font size
 ws = spm('Winsize','Graphics');
-FS = cat_get_defaults('extopts.fontsize');
+H.FS = cat_get_defaults('extopts.fontsize');
 
-pos = struct(...
+H.pos = struct(...
     'fig',    [10  10  1.3*ws(3) 1.1*ws(3)],... % figure
     'cbar',   [0.045 0.050 0.700 0.020],... % colorbar for correlation matrix
     'corr',   [-0.02 0.100 0.825 0.825],... % correlation matrix
@@ -252,10 +257,8 @@ pos = struct(...
     'sslider',[0.775 0.010 0.200 0.040],... % slider for z-slice   
     'plotbox',[0.875 0.735 0.200 0.050]);   % switch between boxplot and violin plot 
 
-if mesh_detected
-  % rescue unscaled data min/max
-  mn_data = min(Y(:));
-  mx_data = max(Y(:));
+if H.mesh_detected
+
   Y = Y - repmat(mean(Y,2), [1 size(Y,2)]);
 
   % remove nuisance and add mean again (otherwise correlations are quite small and misleading)
@@ -264,41 +267,39 @@ if mesh_detected
     Y = Y - G*(pinv(G)*Y) + Ymean;
   end
 
-  data_array = Y';
-  YpY = (Y*Y')/n_subjects;
+  H.YpY = (Y*Y')/n_subjects;
 
   % calculate residual mean square of mean adjusted Y
   Y = Y - repmat(mean(Y,1), [n_subjects 1]);
-  data_array_diff = Y';
   
-  MSE = sum(Y.*Y,2);
+%  MSE = sum(Y.*Y,2);
 
   clear Y
 else
   % consider image aspect ratio
-  pos.slice = [0.775 0.050 0.20 0.40*V(1).dim(2)/V(1).dim(1)];
+  H.pos.slice = [0.775 0.050 0.20 0.40*H.V(1).dim(2)/H.V(1).dim(1)];
 
-  slices = 1:sep:V(1).dim(3);
+  slices = 1:sep:H.V(1).dim(3);
 
-  dimx = length(1:sep:V(1).dim(1));
-  dimy = length(1:sep:V(1).dim(2));
+  dimx = length(1:sep:H.V(1).dim(1));
+  dimy = length(1:sep:H.V(1).dim(2));
   Y = zeros(n_subjects, prod(dimx*dimy));
-  YpY = zeros(n_subjects);
-  MSE = zeros(n_subjects,1);
-  data_array = zeros([V(1).dim(1:2) n_subjects]);
+  H.YpY = zeros(n_subjects);
+%  MSE = zeros(n_subjects,1);
+  H.data = zeros([H.V(1).dim(1:2) n_subjects],'single');
 
   %-Start progress plot
   %-----------------------------------------------------------------------
-  spm_progress_bar('Init',V(1).dim(3),'Check correlation','planes completed')
+  spm_progress_bar('Init',H.V(1).dim(3),'Check correlation','planes completed')
 
   for j=slices
 
     M  = spm_matrix([0 0 j 0 0 0 sep sep sep]);
 
     for i = 1:n_subjects
-      img = spm_slice_vol(V(i),M,[dimx dimy],[1 0]);
-      img(isnan(img)) = 0;
-      Y(i,:) = img(:);
+      H.img = spm_slice_vol(H.V(i),M,[dimx dimy],[1 0]);
+      H.img(isnan(img)) = 0;
+      Y(i,:) = H.img(:);
       if is_gSF
         Y(i,:) = Y(i,:)*gSF(i);
       end
@@ -309,32 +310,32 @@ else
 
     % remove nuisance and add mean again (otherwise correlations are quite small and misleading)
     if ~isempty(G) 
-      [indinf,tmp] = find(isinf(G) | isnan(G));
-      if ~isempty(indinf)
-        fprintf('Nuisance parameter for %s is Inf or NaN.\n',V(indinf).fname);
+      [ind_inf,tmp] = find(isinf(G) | isnan(G));
+      if ~isempty(ind_inf)
+        fprintf('Nuisance parameter for %s is Inf or NaN.\n',H.V(ind_inf).fname);
         return
       end
       Ymean = repmat(mean(Y), [n_subjects 1]);
       Y = Y - G*(pinv(G)*Y) + Ymean;
     end
-    YpY = YpY + (Y*Y')/n_subjects;
+    H.YpY = H.YpY + (Y*Y')/n_subjects;
 
     % calculate residual mean square of mean adjusted Y
     Y = Y - repmat(mean(Y,1), [n_subjects 1]);
     
-    MSE = MSE + sum(Y.*Y,2);
+    %MSE = MSE + sum(Y.*Y,2);
 
     spm_progress_bar('Set',j);  
 
   end
 
   % correct filenames for 4D data
-  if strcmp(V(1).fname, V(2).fname)
-    names_changed = 1;
-    Vchanged = V;
+  if strcmp(H.V(1).fname, H.V(2).fname)
+    H.names_changed = 1;
+    H.Vchanged = H.V;
     for i=1:n_subjects
-      [pth,nam,ext] = spm_fileparts(V(i).fname);
-      V(i).fname = fullfile(pth, [nam sprintf('%04d',i) ext]);
+      [pth,nam,ext] = spm_fileparts(H.V(i).fname);
+      H.V(i).fname = fullfile(pth, [nam sprintf('%04d',i) ext]);
     end
   end
   
@@ -343,22 +344,22 @@ else
 end
 
 % normalize YpY
-d      = sqrt(diag(YpY)); % sqrt first to avoid under/overflow
-dd     = d*d';
-YpY    = YpY./(dd+eps);
-t      = find(abs(YpY) > 1); 
-YpY(t) = YpY(t)./abs(YpY(t));
-YpY(1:n_subjects+1:end) = sign(diag(YpY));
+d        = sqrt(diag(H.YpY)); % sqrt first to avoid under/overflow
+dd       = d*d';
+H.YpY    = H.YpY./(dd+eps);
+t        = find(abs(H.YpY) > 1); 
+H.YpY(t) = H.YpY(t)./abs(H.YpY(t));
+H.YpY(1:n_subjects+1:end) = sign(diag(H.YpY));
 
 % extract mean correlation for each data set
-mean_cov = zeros(n_subjects,1);
+H.mean_cov = zeros(n_subjects,1);
 for i=1:n_subjects
   % extract row for each subject
-  cov0 = YpY(i,:);
+  cov0 = H.YpY(i,:);
 
   % remove cov with its own
   cov0(i) = [];
-  mean_cov(i) = mean(cov0);
+  H.mean_cov(i) = mean(cov0);
 end
 
 if job.verb, fprintf('\n'); end
@@ -368,7 +369,7 @@ fname_s   = cell(n_samples,1);
 fname_e   = cell(n_samples,1);
 
 for i=1:n_samples
-  [tmp, fname_tmp{i}] = spm_str_manip(char(V(sample == i).fname),'C');
+  [tmp, fname_tmp{i}] = spm_str_manip(char(H.V(H.sample == i).fname),'C');
   fname_m = [fname_m; fname_tmp{i}.m];
   fname_s{i} = fname_tmp{i}.s;
   if job.verb
@@ -376,12 +377,12 @@ for i=1:n_samples
   end
 end
 
-filename = struct('s',{fname_s},'e',{fname_e},'m',{fname_m});
+H.filename = struct('s',{fname_s},'e',{fname_e},'m',{fname_m});
 
 % print suspecious files with high cov
 % use slightly higher threshold for (smoothed) mesh data
-YpY_tmp = YpY - triu(YpY);
-if mesh_detected
+YpY_tmp = H.YpY - triu(H.YpY);
+if H.mesh_detected
   [indx, indy] = find(YpY_tmp>0.950 & YpY_tmp < (1-eps));
 else
   [indx, indy] = find(YpY_tmp>0.925);
@@ -396,9 +397,9 @@ if ~isempty(indx) && job.verb
       % exclude diagonal
       if indx(i) ~= indy(i)
         if n_samples > 1
-          fprintf('%s (sample %d) and %s (sample %d): %g\n',filename.m{indx(i)},sample(indx(i)),filename.m{indy(i)},sample(indy(i)),YpY(indx(i),indy(i)));
+          fprintf('%s (sample %d) and %s (sample %d): %g\n',H.filename.m{indx(i)},H.sample(indx(i)),H.filename.m{indy(i)},H.sample(indy(i)),H.YpY(indx(i),indy(i)));
         else
-          fprintf('%s and %s: %g\n',filename.m{indx(i)},filename.m{indy(i)},YpY(indx(i),indy(i)));
+          fprintf('%s and %s: %g\n',H.filename.m{indx(i)},H.filename.m{indy(i)},H.YpY(indx(i),indy(i)));
         end
       end
     end
@@ -414,36 +415,36 @@ if ~isempty(indx) && job.verb
   fprintf('\nWARNING: Data of these subjects are identical!\n');
   for i = 1:length(indx)
     if n_samples > 1
-      fprintf('%s (sample %d) and %s (sample %d)\n',filename.m{indx(i)},sample(indx(i)),filename.m{indy(i)},sample(indy(i)));
+      fprintf('%s (sample %d) and %s (sample %d)\n',H.filename.m{indx(i)},H.sample(indx(i)),H.filename.m{indy(i)},H.sample(indy(i)));
     else
-      fprintf('%s and %s\n',filename.m{indx(i)},filename.m{indy(i)});
+      fprintf('%s and %s\n',H.filename.m{indx(i)},H.filename.m{indy(i)});
     end
   end
 end
 
 % sort data
-[mean_cov_sorted, ind_sorted] = sort(mean_cov,'descend');
-YpYsorted = YpY(ind_sorted,ind_sorted);
+[H.mean_cov_sorted, H.ind_sorted] = sort(H.mean_cov,'descend');
+H.YpYsorted = H.YpY(H.ind_sorted,H.ind_sorted);
 
-ind_sorted_display = ind_sorted;
+H.ind_sorted_display = H.ind_sorted;
 
-threshold_cov = mean(mean_cov) - 2*std(mean_cov);
-n_thresholded = min(find(mean_cov_sorted < threshold_cov));
+threshold_cov = mean(H.mean_cov) - 2*std(H.mean_cov);
+n_thresholded = min(find(H.mean_cov_sorted < threshold_cov));
 
 if ~isempty(n_thresholded) && job.verb
   fprintf('\nThese data have a mean correlation below 2 standard deviations.\n');
   fprintf('This does not necessarily mean that you have to exclude these data. However, these data have to be carefully checked:\n');
   for i=n_thresholded:n_subjects
-    fprintf('%s: %3.3f\n',V(ind_sorted(i)).fname,mean_cov_sorted(i));
+    fprintf('%s: %3.3f\n',H.V(H.ind_sorted(i)).fname,H.mean_cov_sorted(i));
   end
 end
 
 if nargout>0
-  varargout{1} = struct('table',{[cellstr([{V.fname}]'),num2cell(mean_cov)]},...
-                        'covmat',YpY,...
-                        'sorttable',{[cellstr([{V(ind_sorted).fname}]'),num2cell(mean_cov_sorted)]},...
-                        'sortcovmat',YpYsorted, ...
-                        'cov',mean_cov,...
+  varargout{1} = struct('table',{[cellstr([{H.V.fname}]'),num2cell(H.mean_cov)]},...
+                        'covmat',H.YpY,...
+                        'sorttable',{[cellstr([{H.V(H.ind_sorted).fname}]'),num2cell(H.mean_cov_sorted)]},...
+                        'sortcovmat',H.YpYsorted, ...
+                        'cov',H.mean_cov,...
                         'threshold_cov',threshold_cov);
 end
 
@@ -454,12 +455,12 @@ if job.verb
 
   set(H.figure,...
      'MenuBar','none',...
-     'Position',pos.fig,...
-  ...   'DefaultTextFontSize',FS,...
-  ...   'DefaultUicontrolFontSize',FS,...
+     'Position',H.pos.fig,...
+  ...   'DefaultTextFontSize',H.FS,...
+  ...   'DefaultUicontrolFontSize',H.FS,...
      'NumberTitle','off');
 
-  if mesh_detected
+  if H.mesh_detected
     set(H.figure,'Name','Click in image to display surfaces');
   else
     set(H.figure,'Name','Click in image to display slices');
@@ -470,13 +471,13 @@ if job.verb
   try set(cm,'NewDataCursorOnClick',false); end
 
   % add colorbar
-  H.cbar = axes('Position',pos.cbar,'Parent',H.figure);
+  H.cbar = axes('Position',H.pos.cbar,'Parent',H.figure);
   try, image(H.cbar); end
   set(get(H.cbar,'children'),'HitTest','off','Interruptible','off');
   set(H.cbar,'Ytick',[],'YTickLabel',''); 
 
-  isscatter = 0;
-  show_matrix(YpY, sorted);
+  H.isscatter = 0;
+  show_matrix(H.YpY, H.sorted);
 
   % create two colormaps
   cmap = [jet(64); gray(64)];
@@ -484,12 +485,12 @@ if job.verb
 
   % display YTick with 5 values (limit accuracy for floating numbers)
   set(H.cbar,'YTickLabel','','XTickLabel','','XTick',linspace(1,64,5), 'XTickLabel',...
-    round(100*linspace(min(YpY(:)),max(YpY(YpY~=1)),5))/100,'TickLength',[0 0]);
+    round(100*linspace(min(H.YpY(:)),max(H.YpY(H.YpY~=1)),5))/100,'TickLength',[0 0]);
 
   % add button for closing all windows
   H.close = uicontrol(H.figure,...
           'string','Close','Units','normalized',...
-          'position',pos.close,...
+          'position',H.pos.close,...
           'Style','Pushbutton','HorizontalAlignment','center',...
           'callback','for i=2:26, try close(i); end; end;',...
           'ToolTipString','Close windows',...
@@ -498,96 +499,96 @@ if job.verb
   % check button
   H.show = uicontrol(H.figure,...
           'string','Check most deviating data','Units','normalized',...
-          'position',pos.show,...
+          'position',H.pos.show,...
           'Style','Pushbutton','HorizontalAlignment','center',...
           'callback',@check_worst_data,...
           'ToolTipString','Display most deviating files',...
           'Interruptible','on','Enable','on');
 
   % create popoup menu 
-  if isxml
+  if H.isxml
 
     % estimate ratio between weighted overall quality (IQR) and mean corr. 
-    X = [mean_cov, QM(:,3)];
-    IQRratio = (X(:,2)/std(X(:,2)))./(X(:,1)/std(X(:,1)));
+    H.X = [H.mean_cov, QM(:,3)];
+    H.IQRratio = (H.X(:,2)/std(H.X(:,2)))./(H.X(:,1)/std(H.X(:,1)));
 
     str  = { 'Boxplot...','Mean correlation',QM_names,'Norm. Ratio IQR/Mean Correlation'};
 
     if size(QM,2) == 5
-      tmp  = { {@show_boxplot, mean_cov, 'Mean correlation  ', 1},...
+      tmp  = { {@show_boxplot, H.mean_cov, 'Mean correlation  ', 1},...
                {@show_boxplot, QM(:,1), QM_names(1,:), -1},...
                {@show_boxplot, QM(:,2), QM_names(2,:), -1},...
                {@show_boxplot, QM(:,3), QM_names(3,:), -1},...
                {@show_boxplot, QM(:,4), QM_names(4,:), -1},...
                {@show_boxplot, QM(:,5), QM_names(5,:), -1},...
-               {@show_boxplot, IQRratio, 'Norm. Ratio IQR/Mean Correlation  ', -1} };
+               {@show_boxplot, H.IQRratio, 'Norm. Ratio IQR/Mean Correlation  ', -1} };
     else
-      tmp  = { {@show_boxplot, mean_cov, 'Mean correlation  ', 1},...
+      tmp  = { {@show_boxplot, H.mean_cov, 'Mean correlation  ', 1},...
                {@show_boxplot, QM(:,1), QM_names(1,:), -1},...
                {@show_boxplot, QM(:,2), QM_names(2,:), -1},...
                {@show_boxplot, QM(:,3), QM_names(3,:), -1},...
-               {@show_boxplot, IQRratio, 'Norm. Ratio IQR/Mean Correlation  ', -1} };
+               {@show_boxplot, H.IQRratio, 'Norm. Ratio IQR/Mean Correlation  ', -1} };
     end
 
   else
     str  = { 'Boxplot...','Mean correlation'};
-    tmp  = { {@show_boxplot, mean_cov, 'Mean correlation  ', 1} };
+    tmp  = { {@show_boxplot, H.mean_cov, 'Mean correlation  ', 1} };
   end
 
   H.boxp = uicontrol(H.figure,...
           'string',str,'Units','normalized',...
-          'position',pos.boxp,'UserData',tmp,...
+          'position',H.pos.boxp,'UserData',tmp,...
           'Style','PopUp','HorizontalAlignment','center',...
           'callback','spm(''PopUpCB'',gcbo)',...
           'ToolTipString','Display boxplot',...
           'Interruptible','on','Visible','on');
 
-  if isxml
+  if H.isxml
     str  = { 'Image...','Mean Correlation: Order by selected filenames','Mean Correlation: Sorted by mean correlation','Norm. Ratio IQR/Mean Correlation'};
-    tmp  = { {@show_matrix, YpY, 0},...
-             {@show_matrix, YpYsorted, 1},...
-             {@show_IQRratio, X} };
+    tmp  = { {@show_matrix, H.YpY, 0},...
+             {@show_matrix, H.YpYsorted, 1},...
+             {@show_IQRratio, H.X} };
   else
     str  = { 'Correlation matrix...','Order by selected filename','Sorted by mean correlation'};
-    tmp  = { {@show_matrix, YpY, 0},...
-             {@show_matrix, YpYsorted, 1} };
+    tmp  = { {@show_matrix, H.YpY, 0},...
+             {@show_matrix, H.YpYsorted, 1} };
   end
 
   H.sort = uicontrol(H.figure,...
           'string',str,'Units','normalized',...
-          'position',pos.sort,'UserData',tmp,...
+          'position',H.pos.sort,'UserData',tmp,...
           'Style','PopUp','HorizontalAlignment','center',...
           'callback','spm(''PopUpCB'',gcbo)',...
           'ToolTipString','Sort matrix',...
           'Interruptible','on','Visible','on');
 
   H.text = uicontrol(H.figure,...
-          'Units','normalized','position',pos.text,...
+          'Units','normalized','position',H.pos.text,...
           'String',{'','Click in image to display slices'},...
           'Style','text','HorizontalAlignment','center',...
           'ToolTipString','Select slice for display',...
-          'FontSize',FS-2);
+          'FontSize',H.FS-2);
 
-  H.alpha = uicontrol(H.figure,...
-          'Units','normalized','position',pos.aslider,...
+  % add slider and opacity control only for volume data
+  if ~H.mesh_detected
+    H.alpha = uicontrol(H.figure,...
+          'Units','normalized','position',H.pos.aslider,...
           'Min',0,'Max',1,...
           'Style','slider','HorizontalAlignment','center',...
           'callback',@update_alpha,'Value',0.5,...
           'ToolTipString','Change Opacity of pos. (green colors) and neg. (red colors) differences to sample mean',...
           'SliderStep',[0.01 0.1],'Visible','off');
 
-  H.alpha_txt = uicontrol(H.figure,...
+    H.alpha_txt = uicontrol(H.figure,...
           'Units','normalized','HorizontalAlignment','center',...
           'Style','text','BackgroundColor',[0.8 0.8 0.8],...
-          'Position',[pos.aslider(1) pos.aslider(2)-0.005 0.2 0.02],...
+          'Position',[H.pos.aslider(1) H.pos.aslider(2)-0.005 0.2 0.02],...
           'String','Overlay Opacity of Differences to Sample Mean',...
-          'FontSize',FS-2,'Visible','off');
+          'FontSize',H.FS-2,'Visible','off');
 
-  % add slider only for volume data
-  if ~mesh_detected
     H.mm = uicontrol(H.figure,...
-          'Units','normalized','position',pos.sslider,...
-          'Min',(1 - Orig(3))*vx(3),'Max',(V(1).dim(3) - Orig(3))*vx(3),...
+          'Units','normalized','position',H.pos.sslider,...
+          'Min',(1 - Orig(3))*vx(3),'Max',(H.V(1).dim(3) - Orig(3))*vx(3),...
           'Style','slider','HorizontalAlignment','center',...
           'callback',@update_slices_array,...
           'ToolTipString','Select slice for display',...
@@ -596,13 +597,13 @@ if job.verb
     H.mm_txt = uicontrol(H.figure,...
           'Units','normalized','HorizontalAlignment','center',...
           'Style','text','BackgroundColor',[0.8 0.8 0.8],...
-          'Position',[pos.sslider(1) pos.sslider(2)-0.005 0.2 0.02],...
-          'String','Slice [mm]','Visible','off','FontSize',FS-2);
+          'Position',[H.pos.sslider(1) H.pos.sslider(2)-0.005 0.2 0.02],...
+          'String','Slice [mm]','Visible','off','FontSize',H.FS-2);
 
     update_slices_array;
   end
 
-  show_boxplot(mean_cov,'Mean correlation  ',1);
+  show_boxplot(H.mean_cov,'Mean correlation  ',1);
 
   if isfield(job,'save') && job.save
     %% filenames
@@ -642,23 +643,24 @@ function check_worst_data(obj, event_obj)
 % window. A specification of the data range would rather than the x worst 
 % images would be useful. 
 %-----------------------------------------------------------------------
-global V ind_sorted_display mesh_detected mn_data mx_data H
+global H
 
 if isempty(spm_figure('FindWin','Interactive')), spm('createintwin'); end
 
-n = length(V);
+n = length(H.V);
 number = min([n 24]);
 number = spm_input('How many files ?',1,'e',number);
 number = min([number 24]);
-number = min([number length(V)]);
+number = min([number length(H.V)]);
   
-list = char(V(ind_sorted_display(n:-1:1)).fname);
+ind_sorted_decreased = H.ind_sorted_display(n:-1:1);
+list = char(H.V(ind_sorted_decreased).fname);
 list2 = list(1:number,:);
 
-if mesh_detected
+if H.mesh_detected
   % display single meshes and correct colorscale of colorbar
   for i=1:number
-    h = cat_surf_render('Disp',deblank(list2(i,:)));
+    h = cat_surf_render2(struct('vertices',H.Pmesh.vertices,'faces',H.Pmesh.faces,'cdata',H.data(:,ind_sorted_decreased(i))));
     
     % shift each figure slightly
     if i==1
@@ -670,9 +672,9 @@ if mesh_detected
     % remove menubar and toolbar, use filename as title
     set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_file(list2(i,:),'short50'),...
          'NumberTitle','off','Position',pos);
-    cat_surf_render('ColourMap',h.axis,jet);
-    cat_surf_render('ColourBar',h.axis,'on');
-    cat_surf_render('CLim',h,[mn_data mx_data]);
+    cat_surf_render2('ColourMap',h,jet);
+    cat_surf_render2('ColourBar',h,'on');
+    cat_surf_render2('CLim',h,H.range_data98);
   end
 else
   spm_check_registration(list2);
@@ -684,9 +686,9 @@ return
 %-----------------------------------------------------------------------
 function checkbox_names(obj, event_obj)
 %-----------------------------------------------------------------------
-global H show_name data_boxp name_boxp quality_order
+global H
 
-  show_name = get(H.fnambox,'Value');
+  H.show_name = get(H.fnambox,'Value');
   show_boxplot;
   
 return
@@ -694,91 +696,100 @@ return
 %-----------------------------------------------------------------------
 function checkbox_plot(obj, event_obj)
 %-----------------------------------------------------------------------
-  global H show_violin
+  global H
   
-  show_violin = get(H.plotbox,'Value');
+  H.show_violin = get(H.plotbox,'Value');
   show_boxplot;
 return
 
 %-----------------------------------------------------------------------
 function show_IQRratio(X)
 %-----------------------------------------------------------------------
-global H FS pos isscatter ind_sorted_display IQRratio
+global H
+
+% close second render window which is not needed here
+if isfield(H,'hy') && isgraphics(H.hy.figure)
+  close(H.hy.figure)
+end
 
 % clear larger area and set background color to update labels and title
 H.ax = axes('Position',[-.1 -.1 1.1 1.1],'Parent',H.figure);
 cla(H.ax);
 set(H.ax,'Color',[0.8 0.8 0.8]);
 
-H.ax = axes('Position',pos.scat,'Parent',H.figure);
+H.ax = axes('Position',H.pos.scat,'Parent',H.figure);
 
 cmap = [jet(64); gray(64)];
 
 % estimate ratio between weighted overall quality (IQR) and mean corr. 
-IQRratio = (X(:,2)/std(X(:,2)))./(X(:,1)/std(X(:,1)));
+H.IQRratio = (X(:,2)/std(X(:,2)))./(X(:,1)/std(X(:,1)));
 
 % because we use a splitted colormap we have to set the color
 % values explicitely
-IQRratio_scaled = 63*(IQRratio-min(IQRratio))/(max(IQRratio)-min(IQRratio));
-C = zeros(length(IQRratio),3);
-for i=1:length(IQRratio)
+IQRratio_scaled = 63*(H.IQRratio-min(H.IQRratio))/(max(H.IQRratio)-min(H.IQRratio));
+C = zeros(length(H.IQRratio),3);
+for i=1:length(H.IQRratio)
   C(i,:) = cmap(round(IQRratio_scaled(i))+1,:);
 end
 scatter(X(:,1),X(:,2),30,C,'o','Linewidth',2);
 
-xlabel('<----- Worst ---      Mean correlation      --- Best ------>  ','FontSize',FS-1,'FontWeight','Bold');
-ylabel('<----- Best ---      Weighted overall image quality (IQR)      --- Worst ------>  ','FontSize',FS-1,'FontWeight','Bold');
-title('<--- Smallest -- Norm. Ratio IQR/Mean Correlation -- Largest ---->  ','FontSize',FS+1,'FontWeight','Bold');
+xlabel('<----- Worst ---      Mean correlation      --- Best ------>  ','FontSize',H.FS-1,'FontWeight','Bold');
+ylabel('<----- Best ---      Weighted overall image quality (IQR)      --- Worst ------>  ','FontSize',H.FS-1,'FontWeight','Bold');
+title('<--- Smallest -- Norm. Ratio IQR/Mean Correlation -- Largest ---->  ','FontSize',H.FS+1,'FontWeight','Bold');
 
 % add colorbar
-H.cbar = axes('Position',pos.cbar+[0 0.9 0 0],'Parent',H.figure);
+H.cbar = axes('Position',H.pos.cbar+[0 0.9 0 0],'Parent',H.figure);
 image((1:64));
 
 % display YTick with 5 values (limit accuracy for floating numbers)
 set(H.cbar,'YTickLabel','','XTickLabel','','XTick',linspace(1,64,5), 'XTickLabel',...
-  round(100*linspace(min(IQRratio),max(IQRratio),5))/100,'TickLength',[0 0]);
+  round(100*linspace(min(H.IQRratio),max(H.IQRratio),5))/100,'TickLength',[0 0]);
 
 % update index of worst files
-[tmp, ind_sorted_display] = sort(IQRratio,'ascend');
+[tmp, H.ind_sorted_display] = sort(H.IQRratio,'ascend');
 
 colormap(cmap)
 
-isscatter = 1;
+H.isscatter = 1;
 
 return
 
 %-----------------------------------------------------------------------
 function show_matrix(data, order)
 %-----------------------------------------------------------------------
-global H FS filename pos sorted YpY isscatter mesh_detected ind_sorted_display
+global H
 
 % get sorting order
-sorted = order;
+H.sorted = order;
 
 % clear larger area and set background color to update labels and title
 H.ax = axes('Position',[-.1 -.1 1.1 1.1],'Parent',H.figure);
 cla(H.ax);
 set(H.ax,'Color',[0.8 0.8 0.8]);
 
-H.ax = axes('Position',pos.corr,'Parent',H.figure);
-names = char(filename.m(:));
-if sorted, names = names(ind_sorted_display,:); end
-cat_plot_cov(data,struct('ax',H.ax,'pos_cbar',pos.cbar,'name',names,'fontsize',FS))
+H.ax = axes('Position',H.pos.corr,'Parent',H.figure);
+names = spm_file(char(H.filename.m(:)),'short40');
+group = H.sample;
+if H.sorted
+  names = names(H.ind_sorted_display,:);
+  group = group(H.ind_sorted_display);
+end
+cat_plot_cov(data,struct('ax',H.ax,'pos_cbar',H.pos.cbar,'name',names,'fontsize',H.FS,'group',group))
 t = title('Sample Correlation');
-set(t,'Fontsize',FS+2)
+set(t,'Fontsize',H.FS+2)
 cmap = [jet(64); gray(64)];
 colormap(cmap)
 
-isscatter = 0;
+H.isscatter = 0;
 
 % remove sliders and text
 try
-  if ~mesh_detected
+  if ~H.mesh_detected
     set(H.mm,'Visible','off'); 
     set(H.mm_txt,'Visible','off');
+    set(H.alpha,'Visible','off');
+    set(H.alpha_txt,'Visible','off');
   end
-  set(H.alpha,'Visible','off');
-  set(H.alpha_txt,'Visible','off');
 end
 
 return
@@ -786,7 +797,7 @@ return
 %-----------------------------------------------------------------------
 function show_boxplot(data_boxp, name_boxp, quality_order)
 %-----------------------------------------------------------------------
-global H pos filename FS sample ind_sorted_display show_name bp show_violin
+global H
 
 if nargin == 0
   data_boxp = bp.data;
@@ -798,7 +809,7 @@ H.Fgraph = spm_figure('GetWin','Graphics');
 spm_figure('Clear',H.Fgraph);
 set(H.Fgraph,'Renderer','OpenGL');
 
-n_samples = max(sample);
+n_samples = max(H.sample);
 
 xpos = cell(1,n_samples);
 data = cell(1,n_samples);
@@ -806,10 +817,10 @@ data = cell(1,n_samples);
 hold on
 allow_violin = 1;
 for i=1:n_samples
-  ind = find(sample == i);
+  ind = find(H.sample == i);
   if length(ind)<10
     allow_violin = 0; 
-    show_violin = 0;
+    H.show_violin = 0;
   end
   data{i} = data_boxp(ind);
   
@@ -820,8 +831,8 @@ for i=1:n_samples
   end
 
   for j=1:length(ind)
-    if show_name
-      text(xpos{i}(j),data{i}(j),filename.m{ind(j)},'FontSize',FS-2,'HorizontalAlignment','center')
+    if H.show_name
+      text(xpos{i}(j),data{i}(j),H.filename.m{ind(j)},'FontSize',H.FS-2,'HorizontalAlignment','center')
     else
       plot(xpos{i}(j),data{i}(j),'k.');
     end
@@ -830,24 +841,30 @@ end
 
 H.fnambox = uicontrol(H.figure,...
     'string','Show filenames','Units','normalized',...
-    'position',pos.fnambox,'callback',@checkbox_names,...
+    'position',H.pos.fnambox,'callback',@checkbox_names,...
     'Style','CheckBox','HorizontalAlignment','center',...
-    'ToolTipString','Show filenames in boxplot','value',show_name,...
+    'ToolTipString','Show filenames in boxplot','value',H.show_name,...
     'BackgroundColor',[0.8 0.8 0.8],...
-    'Interruptible','on','Visible','on','FontSize',FS-2);
+    'Interruptible','on','Visible','on','FontSize',H.FS-2);
 
 % allow violin plot onl if samples are all large enough
 if allow_violin
   H.plotbox = uicontrol(H.figure,...
     'string','Violinplot','Units','normalized',...
-    'position',pos.plotbox,'callback',@checkbox_plot,...
+    'position',H.pos.plotbox,'callback',@checkbox_plot,...
     'Style','CheckBox','HorizontalAlignment','center',...
-    'ToolTipString','Switch to Violinplot','value',show_violin,...
+    'ToolTipString','Switch to Violinplot','value',H.show_violin,...
     'BackgroundColor',[0.8 0.8 0.8],...
-    'Interruptible','on','Visible','on','FontSize',FS-2);
+    'Interruptible','on','Visible','on','FontSize',H.FS-2);
 end
 
-opt = struct('groupnum',0,'ygrid',0,'violin',2*show_violin,'median',2,'groupcolor',jet(n_samples));
+% colormap for samples
+if exist('lines')
+  cm = lines(n_samples);
+else
+  cm = jet(n_samples);
+end
+opt = struct('groupnum',0,'ygrid',0,'violin',2*H.show_violin,'median',2,'groupcolor',cm);
 ylim_add = 0.075;
 
 cat_plot_boxplot(data,opt);
@@ -862,14 +879,14 @@ end
 
 % add colored labels and title
 if n_samples > 1
-  [tmp,  tmp2] = spm_str_manip(char(filename.s),'C');
+  [tmp,  tmp2] = spm_str_manip(char(H.filename.s),'C');
   title_str = sprintf('Boxplot: %s  \n%s ',name_boxp, strrep(tmp,tmp2.s,''));
   fprintf('\nCommon filename: %s\n',tmp);
 else
-  title_str = sprintf('Boxplot: %s  \nCommon filename: %s*',name_boxp,spm_file(char(filename.s),'short25'));
+  title_str = sprintf('Boxplot: %s  \nCommon filename: %s*',name_boxp,spm_file(char(H.filename.s),'short25'));
 end
-title(title_str,'FontSize',FS-1,'FontWeight','Bold');
-xlabel('<----- First ---      File Order      --- Last ------>  ','FontSize',FS+1,...
+title(title_str,'FontSize',H.FS-1,'FontWeight','Bold');
+xlabel('<----- First ---      File Order      --- Last ------>  ','FontSize',H.FS+1,...
     'FontWeight','Bold');
 
 xpos = -0.40 - n_samples*0.1;
@@ -877,26 +894,26 @@ xpos = -0.40 - n_samples*0.1;
 if (length(data_boxp) > 2)
   if quality_order > 0
     text(xpos, ylim_min,'<----- Low rating (poor quality)  ','Color','red','Rotation',...
-        90,'HorizontalAlignment','left','FontSize',FS,'FontWeight','Bold')
+        90,'HorizontalAlignment','left','FontSize',H.FS,'FontWeight','Bold')
     text(xpos, ylim_max,'High rating (good quality) ------>  ','Color','green','Rotation',...
-        90,'HorizontalAlignment','right','FontSize',FS,'FontWeight','Bold')
+        90,'HorizontalAlignment','right','FontSize',H.FS,'FontWeight','Bold')
   else
       text(xpos, ylim_max,'Low rating (poor quality) ------>  ','Color','red','Rotation',...
-          90,'HorizontalAlignment','right','FontSize',FS,'FontWeight','Bold')
+          90,'HorizontalAlignment','right','FontSize',H.FS,'FontWeight','Bold')
       text(xpos, ylim_min,'<----- High rating (good quality) ','Color','green','Rotation',...
-          90,'HorizontalAlignment','left','FontSize',FS,'FontWeight','Bold')
+          90,'HorizontalAlignment','left','FontSize',H.FS,'FontWeight','Bold')
   end
   text(xpos, (ylim_max+ylim_min)/2,sprintf('%s',name_boxp),'Color','black','Rotation',...
-        90,'HorizontalAlignment','center','FontSize',FS,'FontWeight','Bold')
+        90,'HorizontalAlignment','center','FontSize',H.FS,'FontWeight','Bold')
 end
 
 hold off
 
 % estimate sorted index new for displaying worst files
 if quality_order > 0
-  [tmp, ind_sorted_display] = sort(data_boxp,'descend');
+  [tmp, H.ind_sorted_display] = sort(data_boxp,'descend');
 else
-  [tmp, ind_sorted_display] = sort(data_boxp,'ascend');
+  [tmp, H.ind_sorted_display] = sort(data_boxp,'ascend');
   
 end
 
@@ -907,31 +924,31 @@ return
 %-----------------------------------------------------------------------
 function update_alpha(obj, event_obj)
 %-----------------------------------------------------------------------
-global alphaval H mesh_detected img img_alpha
+global H
 
 if isfield(H,'alpha')
-  alphaval = get(H.alpha,'Value');
+  H.alphaval = get(H.alpha,'Value');
 else
-  alphaval = 0.5;
+  H.alphaval = 0.5;
 end
 
 % display image with 2nd colorbar (gray)
-image(65 + img);
-if ~mesh_detected, axis image; end
+image(65 + H.img);
+if ~H.mesh_detected, axis image; end
 set(gca,'XTickLabel','','YTickLabel','','TickLength',[0 0]);
 
 % prepare alpha overlays for red and green colors
-if alphaval > 0
+if H.alphaval > 0
   % get 2%/98% ranges of difference image
-  range = cat_vol_iscaling(img_alpha(:),[0.02 0.98]);
+  range = cat_vol_iscaling(H.img_alpha(:),[0.02 0.98]);
 
   hold on
-  alpha_g = cat(3, zeros(size(img_alpha)), alphaval*ones(size(img_alpha)), zeros(size(img_alpha)));
-  alpha_r = cat(3, alphaval*ones(size(img_alpha)), zeros(size(img_alpha)), zeros(size(img_alpha)));
-  hg = image(alpha_g); set(hg, 'AlphaData', img_alpha.*(img_alpha>range(2)),'AlphaDataMapping','scaled')
-  if ~mesh_detected, axis image; end
-  hr = image(alpha_r); set(hr, 'AlphaData',-img_alpha.*(img_alpha<range(1)),'AlphaDataMapping','scaled')
-  if ~mesh_detected, axis image; end
+  alpha_g = cat(3, zeros(size(H.img_alpha)), H.alphaval*ones(size(H.img_alpha)), zeros(size(H.img_alpha)));
+  alpha_r = cat(3, H.alphaval*ones(size(H.img_alpha)), zeros(size(H.img_alpha)), zeros(size(H.img_alpha)));
+  hg = image(alpha_g); set(hg, 'AlphaData', H.img_alpha.*(H.img_alpha>range(2)),'AlphaDataMapping','scaled')
+  if ~H.mesh_detected, axis image; end
+  hr = image(alpha_r); set(hr, 'AlphaData',-H.img_alpha.*(H.img_alpha<range(1)),'AlphaDataMapping','scaled')
+  if ~H.mesh_detected, axis image; end
   hold off
 end
 
@@ -940,7 +957,7 @@ return
 %-----------------------------------------------------------------------
 function update_slices_array(obj, event_obj)
 %-----------------------------------------------------------------------
-global alphaval V Vchanged filename data_array data_array_diff H YpY pos sorted ind_sorted isscatter names_changed FS img_alpha img
+global H
 
 if isfield(H,'mm')
   slice_mm = get(H.mm,'Value');
@@ -948,10 +965,10 @@ else
   slice_mm = 0;
 end
 
-if names_changed
-  P = Vchanged;
+if H.names_changed
+  P = H.Vchanged;
 else
-  P = V;
+  P = H.V;
 end
 
 vx   =  sqrt(sum(P(1).mat(1:3,1:3).^2));
@@ -964,89 +981,89 @@ if (sl>P(1).dim(3)) || (sl<1)
 end
 
 M  = spm_matrix([0 0 sl]);
-data_array_diff = data_array;
+H.data_diff = H.data;
 
-for i = 1:length(V)
-  img = spm_slice_vol(P(i),M,P(1).dim(1:2),[1 0]);
-  img(isnan(img)) = 0;
+for i = 1:length(H.V)
+  H.img = single(spm_slice_vol(P(i),M,P(1).dim(1:2),[1 0]));
+  H.img(isnan(H.img)) = 0;
   
   % rescue unscaled data
-  data_array_diff(:,:,i) = img;
+  H.data_diff(:,:,i) = H.img;
 
   % scale image according to mean
-  data_array(:,:,i) = img/mean(img(img ~= 0));
+  H.data(:,:,i) = H.img/mean(H.img(H.img ~= 0));
 end
 
 % calculate individual difference to mean image
-for i=1:size(data_array_diff,3)
-  data_array_diff(:,:,i) = data_array_diff(:,:,i) - mean(data_array_diff,3);
+for i=1:size(H.data_diff,3)
+  H.data_diff(:,:,i) = H.data_diff(:,:,i) - mean(H.data_diff,3);
 end
 
 % enhance contrast and scale image to 0..64
-mn = min(data_array(:));
-mx = max(data_array(:));
-data_array = 64*((data_array - mn)/(mx-mn));
+mn = min(H.data(:));
+mx = max(H.data(:));
+H.data = 64*((H.data - mn)/(mx-mn));
 
-if sorted
-  if isfield(pos,'x')
-    x = ind_sorted(pos.x);
-    if ~isscatter
-      y = ind_sorted(pos.y);
+if H.sorted
+  if isfield(H.pos,'x')
+    x = H.ind_sorted(H.pos.x);
+    if ~H.isscatter
+      y = H.ind_sorted(H.pos.y);
     end
   end
 else
-  if isfield(pos,'x')
-    x = pos.x;
-    if ~isscatter
-      y = pos.y;
+  if isfield(H.pos,'x')
+    x = H.pos.x;
+    if ~H.isscatter
+      y = H.pos.y;
     end
   end
 end
 
 % check whether mouse position is defined
-if isfield(pos,'x')
-  if isscatter
-    img       = data_array(:,:,x)';
-    img_alpha = data_array_diff(:,:,x)';
+if isfield(H.pos,'x')
+  if H.isscatter
+    H.img       = H.data(:,:,x)';
+    H.img_alpha = H.data_diff(:,:,x)';
   else
-    img       = [data_array(:,:,y) data_array(:,:,x)]';
-    img_alpha = [data_array_diff(:,:,y) data_array_diff(:,:,x)]';
+    H.img       = [H.data(:,:,y) H.data(:,:,x)]';
+    H.img_alpha = [H.data_diff(:,:,y) H.data_diff(:,:,x)]';
   end
   
   % correct orientation
-  img = rot90(img,2);
-  img_alpha = rot90(img_alpha,2);
+  H.img = rot90(H.img,2);
+  H.img_alpha = rot90(H.img_alpha,2);
   
   % use gray scale colormap for values > 64
-  axes('Position',pos.slice);
-  image(65 + img);
+  axes('Position',H.pos.slice);
+  image(65 + H.img);
   axis image
   set(gca,'XTickLabel','','YTickLabel','');
   
   % prepare alpha overlays for red and green colors
-  if alphaval > 0
+  if H.alphaval > 0
     % get 2%/98% ranges of difference image
-    range = cat_vol_iscaling(img_alpha(:),[0.02 0.98]);
+    range = cat_vol_iscaling(H.img_alpha(:),[0.02 0.98]);
 
     hold on
-    alpha_g = cat(3, zeros(size(img_alpha)), alphaval*ones(size(img_alpha)), zeros(size(img_alpha)));
-    alpha_r = cat(3, alphaval*ones(size(img_alpha)), zeros(size(img_alpha)), zeros(size(img_alpha)));
-    hg = image(alpha_g); set(hg, 'AlphaData', img_alpha.*(img_alpha>range(2)),'AlphaDataMapping','scaled')
+    alpha_g = cat(3, zeros(size(H.img_alpha)), H.alphaval*ones(size(H.img_alpha)), zeros(size(H.img_alpha)));
+    alpha_r = cat(3, H.alphaval*ones(size(H.img_alpha)), zeros(size(H.img_alpha)), zeros(size(H.img_alpha)));
+    hg = image(alpha_g); set(hg, 'AlphaData', H.img_alpha.*(H.img_alpha>range(2)),'AlphaDataMapping','scaled')
     axis image
-    hr = image(alpha_r); set(hr, 'AlphaData',-img_alpha.*(img_alpha<range(1)),'AlphaDataMapping','scaled')
+    hr = image(alpha_r); set(hr, 'AlphaData',-H.img_alpha.*(H.img_alpha<range(1)),'AlphaDataMapping','scaled')
     axis image
     hold off
   end
   
-  if isscatter
-    txt = {sprintf('%s',spm_file(filename.m{x},'short25')),[],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
+  if H.isscatter
+    txt = {sprintf('%s',spm_file(H.filename.m{x},'short25')),[],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
   else
-    txt = {sprintf('Correlation: %3.3f',YpY(x,y)),[],['Top: ',spm_file(filename.m{x},'short25')],...
-      ['Bottom: ',spm_file(filename.m{y},'short25')],[],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
+    txt = {sprintf('Correlation: %3.3f',H.YpY(x,y)),[],['Top: ',spm_file(H.filename.m{x},'short25')],...
+      ['Bottom: ',spm_file(H.filename.m{y},'short25')],[],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
   end
-  set(H.text,'String',txt,'FontSize',FS-2);
+  set(H.text,'String',txt,'FontSize',H.FS-2);
   set(H.mm_txt,'String',[num2str(round(get(H.mm,'Value'))),' mm'],...
-      'FontSize',FS-2);
+      'FontSize',H.FS-2);
 end
 
 return
@@ -1054,221 +1071,147 @@ return
 %-----------------------------------------------------------------------
 function txt = myupdatefcn(obj, event_obj)
 %-----------------------------------------------------------------------
-global alphaval filename sample H X YpY data_array data_array_diff pos mesh_detected ind_sorted sorted isscatter img img_alpha FS
+global H
 
-set(H.alpha,'Visible','on');
-set(H.alpha_txt,'Visible','on');
+if ~H.mesh_detected
+  set(H.alpha,'Visible','on');
+  set(H.alpha_txt,'Visible','on');
+end
 
 pos_mouse = get(event_obj, 'Position');
 
-if isscatter
-  pos.x = find(X(:,1) == pos_mouse(1));
-  if isempty(pos.x)
-    pos.x = find(X(:,2) == pos_mouse(2));
+if H.isscatter
+  H.pos.x = find(H.X(:,1) == pos_mouse(1));
+  if isempty(H.pos.x)
+    H.pos.x = find(H.X(:,2) == pos_mouse(2));
   end
 
   % text info for data cursor window
-  txt = {sprintf('%s',filename.m{pos.x})};
+  txt = {sprintf('%s',H.filename.m{H.pos.x})};
 
   % text info for textbox
-  txt2 = {[],sprintf('%s',spm_file(filename.m{pos.x},'short25')),[],'Difference to Sample Mean','(red: - green: +)'};
+  txt2 = {[],sprintf('%s',spm_file(H.filename.m{H.pos.x},'short25')),[],'Difference to Sample Mean','(red: - green: +)'};
 
-  set(H.text,'String',txt2,'FontSize',FS-2);
-  axes('Position',pos.slice);
+  set(H.text,'String',txt2,'FontSize',H.FS-2);
 
-  x = pos.x;
+  if ~H.mesh_detected
+    axes('Position',H.pos.slice);
+  end
+  x = H.pos.x;
 else
   % check for valid mouse position
-  if pos_mouse(1) > pos_mouse(2) || pos_mouse(1)>length(sample) || pos_mouse(2)>length(sample)
+  if pos_mouse(1) > pos_mouse(2) || pos_mouse(1)>length(H.sample) || pos_mouse(2)>length(H.sample)
     txt = {''};
     return
   end
 
   % save position of mouse
-  pos.x = pos_mouse(1);
-  pos.y = pos_mouse(2);
+  H.pos.x = pos_mouse(1);
+  H.pos.y = pos_mouse(2);
 
-  if sorted
-    if isfield(pos,'x')
-      x = ind_sorted(pos.x);
-      y = ind_sorted(pos.y);
+  if H.sorted
+    if isfield(H.pos,'x')
+      x = H.ind_sorted(H.pos.x);
+      y = H.ind_sorted(H.pos.y);
     end
   else
-    if isfield(pos,'x')
-      x = pos.x;
-      y = pos.y;
+    if isfield(H.pos,'x')
+      x = H.pos.x;
+      y = H.pos.y;
     end
   end
 
   % text info for data cursor window
-  if mesh_detected
-    txt = {sprintf('Correlation: %3.3f',YpY(x,y)),['Left: ',filename.m{x}],...
-      ['Right: ',filename.m{y}]};
+  if H.mesh_detected
+    txt = {sprintf('Correlation: %3.3f',H.YpY(x,y)),['Left: ',H.filename.m{x}],...
+      ['Right: ',H.filename.m{y}]};
   else
-    txt = {sprintf('Correlation: %3.3f',YpY(x,y)),['Top: ',filename.m{x}],...
-      ['Bottom: ',filename.m{y}]};
+    txt = {sprintf('Correlation: %3.3f',H.YpY(x,y)),['Top: ',H.filename.m{x}],...
+      ['Bottom: ',H.filename.m{y}]};
   end
 
   % text info for textbox
-  if mesh_detected
-    txt2 = {[],sprintf('Correlation: %3.3f',YpY(x,y)),[],'right (1st row) and left (2nd row) hemisphere',['Left: ',...
-      spm_file(filename.m{x},'short25') '     Right: ',spm_file(filename.m{y},'short25')],...
+  if H.mesh_detected
+    txt2 = {[],sprintf('Correlation: %3.3f',H.YpY(x,y)),[],'right (1st row) and left (2nd row) hemisphere',['Left: ',...
+      spm_file(H.filename.m{x},'short25') '     Right: ',spm_file(H.filename.m{y},'short25')],...
       [],'Difference to Sample Mean', '(red: - green: +)'};
   else
-    txt2 = {[],sprintf('Correlation: %3.3f',YpY(x,y)),['Top: ',...
-      spm_file(filename.m{x},'short25')],['Bottom: ',spm_file(filename.m{y},'short25')],...
+    txt2 = {[],sprintf('Correlation: %3.3f',H.YpY(x,y)),['Top: ',...
+      spm_file(H.filename.m{x},'short25')],['Bottom: ',spm_file(H.filename.m{y},'short25')],...
       [],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm'],...
       'Difference to Sample Mean', '(red: - green: +)'};
   end      
 
-  set(H.text,'String',txt2,'FontSize',FS-2);
-  axes('Position',pos.slice);
-end
+  set(H.text,'String',txt2,'FontSize',H.FS-2);
   
-if mesh_detected 
-  % use indexed 2D-sheet to display surface data as image
-  % check surface size to use indexed 2D map
-  if (length(data_array(:,x)) == 163842)
-    ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','fsavg.index2D_256x128.txt'));
-    if isscatter
-      img = reshape(data_array(ind,x),[256,128]);
-    else
-      img = [reshape(data_array(ind,x),[256,128]) reshape(data_array(ind,y),[256,128])];
-    end
-    img = circshift(img,128);
-    % alpha overlay
-    if isscatter
-      img_alpha = reshape(data_array_diff(ind,x),[256,128]);
-    else
-      img_alpha = [reshape(data_array_diff(ind,x),[256,128]) reshape(data_array_diff(ind,y),[256,128])];
-    end
-    img_alpha = circshift(img_alpha,128);
-  elseif (length(data_array(:,x)) == 327684)
-    ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','fsavg.index2D_256x128.txt'));
-    data_array_x_lh = data_array(1:163842,x);
-    data_array_x_rh = data_array(163843:end,x);
-    if isscatter
-      img_lh = reshape(data_array_x_lh(ind),[256,128]);
-      img_rh = reshape(data_array_x_rh(ind),[256,128]);
-    else
-      data_array_y_lh = data_array(1:163842,y);
-      data_array_y_rh = data_array(163843:end,y);
-      img_lh = [reshape(data_array_x_lh(ind),[256,128]) reshape(data_array_y_lh(ind),[256,128])];
-      img_rh = [reshape(data_array_x_rh(ind),[256,128]) reshape(data_array_y_rh(ind),[256,128])];
-    end
-    img = [circshift(img_lh,128); img_rh];
-    % alpha overlay
-    data_array_x_lh = data_array_diff(1:163842,x);
-    data_array_x_rh = data_array_diff(163843:end,x);
-    if isscatter
-      img_lh = reshape(data_array_x_lh(ind),[256,128]);
-      img_rh = reshape(data_array_x_rh(ind),[256,128]);
-    else
-      data_array_y_lh = data_array_diff(1:163842,y);
-      data_array_y_rh = data_array_diff(163843:end,y);
-      img_lh = [reshape(data_array_x_lh(ind),[256,128]) reshape(data_array_y_lh(ind),[256,128])];
-      img_rh = [reshape(data_array_x_rh(ind),[256,128]) reshape(data_array_y_rh(ind),[256,128])];
-    end
-    img_alpha = [circshift(img_lh,128); img_rh];
-  elseif (length(data_array(:,x)) == 32492)
-    ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','fsavg.index2D_256x128.txt'));
-    if isscatter
-      img = reshape(data_array(ind,x),[256,128]);
-    else
-      img = [reshape(data_array(ind,x),[256,128]) reshape(data_array(ind,y),[256,128])];
-    end
-    img = circshift(img,128);
-    % alpha overlay
-    if isscatter
-      img_alpha = reshape(data_array_diff(ind,x),[256,128]);
-    else
-      img_alpha = [reshape(data_array_diff(ind,x),[256,128]) reshape(data_array_diff(ind,y),[256,128])];
-    end
-    img_alpha = circshift(img_alpha,128);
-  elseif (length(data_array(:,x)) == 64984)
-    ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','fsavg.index2D_256x128.txt'));
-    data_array_x_lh = data_array(1:32492,x);
-    data_array_x_rh = data_array(32493:end,x);
-    if isscatter
-      img_lh = reshape(data_array_x_lh(ind),[256,128]);
-      img_rh = reshape(data_array_x_rh(ind),[256,128]);
-    else
-      data_array_y_lh = data_array(1:32492,y);
-      data_array_y_rh = data_array(32493:end,y);
-      img_lh = [reshape(data_array_x_lh(ind),[256,128]) reshape(data_array_y_lh(ind),[256,128])];
-      img_rh = [reshape(data_array_x_rh(ind),[256,128]) reshape(data_array_y_rh(ind),[256,128])];
-    end
-    img = [circshift(img_lh,96); circshift(img_rh,96)];
-    % alpha overlay
-    data_array_x_lh = data_array_diff(1:32492,x);
-    data_array_x_rh = data_array_diff(32493:end,x);
-    if isscatter
-      img_lh = reshape(data_array_x_lh(ind),[256,128]);
-      img_rh = reshape(data_array_x_rh(ind),[256,128]);
-    else
-      data_array_y_lh = data_array_diff(1:32492,y);
-      data_array_y_rh = data_array_diff(32493:end,y);
-      img_lh = [reshape(data_array_x_lh(ind),[256,128]) reshape(data_array_y_lh(ind),[256,128])];
-      img_rh = [reshape(data_array_x_rh(ind),[256,128]) reshape(data_array_y_rh(ind),[256,128])];
-    end
-    img_alpha = [circshift(img_lh,96); circshift(img_rh,96)];
-  else
-    if isscatter
-      img = data_array(:,x)';
-      % alpha overlay
-      img_alpha = data_array_diff(:,x)';
-    else
-      img = [data_array(:,y) data_array(:,x)]';
-      % alpha overlay
-      img_alpha = [data_array_diff(:,y) data_array_diff(:,x)]';
-    end
+  if ~H.mesh_detected
+    axes('Position',H.pos.slice);
   end
+end
 
-  % scale img to 0..64
-  mn = min(data_array(:));
-  mx = max(data_array(:));
-  img = 64*((img - mn)/(mx-mn));
+% show two render views for meshes
+if H.mesh_detected 
+  if isfield(H,'hx') && isgraphics(H.hx.figure)
+    H.hx = cat_surf_render2('Overlay',H.hx,H.data(:,x));
+  else
+    H.hx = cat_surf_render2(struct('vertices',H.Pmesh.vertices,'faces',H.Pmesh.faces,'cdata',H.data(:,x)));
+    H.hx = cat_surf_render2('Colourbar',H.hx);
+  end
+  H.hx = cat_surf_render2('clim',H.hx,H.range_data98);
+  pos_Hy = get(H.hx.figure,'Position');
+  pos_Hy = pos_Hy + [pos_Hy(3)+30 0 0 0];
+  set(H.hx.figure,'Menubar','none','Toolbar','none','NumberTitle','off','Name',sprintf('Sample %d: %s',H.sample(x),H.filename.m{x}))
+  figure(H.hx.figure)
+  
+  if ~H.isscatter % don't show that for scatter plot
+    if isfield(H,'hy') && isgraphics(H.hy.figure)
+      H.hy = cat_surf_render2('Overlay',H.hy,H.data(:,y));
+    else
+      H.hy = cat_surf_render2(struct('vertices',H.Pmesh.vertices,'faces',H.Pmesh.faces,'cdata',H.data(:,y)));
+      H.hy = cat_surf_render2('Colourbar',H.hy);
+      set(H.hy.figure,'Position',pos_Hy);  
+    end
+    H.hy = cat_surf_render2('clim',H.hy,H.range_data98);
+    set(H.hy.figure,'Menubar','none','Toolbar','none','NumberTitle','off','Name',sprintf('Sample %d: %s',H.sample(y),H.filename.m{y}));  
+    figure(H.hy.figure)
+  end
 else
   % add slider for colume data
   set(H.mm,'Visible','on');
   set(H.mm_txt,'Visible','on');
-  if isscatter
-    img = data_array(:,:,x)';
+  if H.isscatter
+    H.img = H.data(:,:,x)';
     % alpha overlay
-    img_alpha = data_array_diff(:,:,x)';
+    H.img_alpha = H.data_diff(:,:,x)';
   else
-    img = [data_array(:,:,y) data_array(:,:,x)]';
+    H.img = [H.data(:,:,y) H.data(:,:,x)]';
     % alpha overlay
-    img_alpha = [data_array_diff(:,:,y) data_array_diff(:,:,x)]';
+    H.img_alpha = [H.data_diff(:,:,y) H.data_diff(:,:,x)]';
   end
-end
+  
+  % correct orientation
+  H.img = rot90(H.img,2);
+  H.img_alpha = rot90(H.img_alpha,2);
 
-% correct orientation
-img = rot90(img,2);
-img_alpha = rot90(img_alpha,2);
+  % display image with 2nd colorbar (gray)
+  image(65 + H.img);
+  if ~H.mesh_detected, axis image; end
+  set(gca,'XTickLabel','','YTickLabel','','TickLength',[0 0]);
 
-% display image with 2nd colorbar (gray)
-image(65 + img);
-if ~mesh_detected, axis image; end
-set(gca,'XTickLabel','','YTickLabel','','TickLength',[0 0]);
+  % prepare alpha overlays for red and green colors
+  if H.alphaval > 0
+    % get 2%/98% ranges of difference image
+    range = cat_vol_iscaling(H.img_alpha(:),[0.02 0.98]);
 
-% prepare alpha overlays for red and green colors
-if alphaval > 0
-  % get 2%/98% ranges of difference image
-  range = cat_vol_iscaling(img_alpha(:),[0.02 0.98]);
-
-  hold on
-  alpha_g = cat(3, zeros(size(img_alpha)), alphaval*ones(size(img_alpha)), zeros(size(img_alpha)));
-  alpha_r   = cat(3, alphaval*ones(size(img_alpha)), zeros(size(img_alpha)), zeros(size(img_alpha)));
-  hg = image(alpha_g); set(hg, 'AlphaData', img_alpha.*(img_alpha>range(2)),'AlphaDataMapping','scaled')
-  if ~mesh_detected, axis image; end
-  hr = image(alpha_r); set(hr, 'AlphaData',-img_alpha.*(img_alpha<range(1)),'AlphaDataMapping','scaled')
-  if ~mesh_detected, axis image; end
-  hold off
-end
-
-if mesh_detected
-  xlabel('2D surface maps');
+    hold on
+    alpha_g = cat(3, zeros(size(H.img_alpha)), H.alphaval*ones(size(H.img_alpha)), zeros(size(H.img_alpha)));
+    alpha_r   = cat(3, H.alphaval*ones(size(H.img_alpha)), zeros(size(H.img_alpha)), zeros(size(H.img_alpha)));
+    hg = image(alpha_g); set(hg, 'AlphaData', H.img_alpha.*(H.img_alpha>range(2)),'AlphaDataMapping','scaled')
+    if ~H.mesh_detected, axis image; end
+    hr = image(alpha_r); set(hr, 'AlphaData',-H.img_alpha.*(H.img_alpha<range(1)),'AlphaDataMapping','scaled')
+    if ~H.mesh_detected, axis image; end
+    hold off
+  end
 end
 
 return
