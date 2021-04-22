@@ -654,7 +654,8 @@ number = min([number 24]);
 number = min([number length(H.V)]);
   
 ind_sorted_decreased = H.ind_sorted_display(n:-1:1);
-list = char(H.V(ind_sorted_decreased).fname);
+list = char(H.filename.m{ind_sorted_decreased});
+sample = H.sample(ind_sorted_decreased);
 list2 = list(1:number,:);
 
 if H.mesh_detected
@@ -670,7 +671,7 @@ if H.mesh_detected
     end
     
     % remove menubar and toolbar, use filename as title
-    set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_file(list2(i,:),'short50'),...
+    set(h.figure,'MenuBar','none','Toolbar','none','Name',sprintf('Sample %d: %s',sample(i),list2(i,:)),...
          'NumberTitle','off','Position',pos);
     cat_surf_render2('ColourMap',h,jet);
     cat_surf_render2('ColourBar',h,'on');
@@ -800,9 +801,9 @@ function show_boxplot(data_boxp, name_boxp, quality_order)
 global H
 
 if nargin == 0
-  data_boxp = bp.data;
-  name_boxp = bp.name;
-  quality_order = bp.order;
+  data_boxp = H.bp.data;
+  name_boxp = H.bp.name;
+  quality_order = H.bp.order;
 end
 
 H.Fgraph = spm_figure('GetWin','Graphics');
@@ -917,7 +918,7 @@ else
   
 end
 
-bp = struct('data',data_boxp,'name',name_boxp,'order',quality_order);
+H.bp = struct('data',data_boxp,'name',name_boxp,'order',quality_order);
 
 return
 
