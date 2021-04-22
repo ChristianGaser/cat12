@@ -128,7 +128,7 @@ cat.output.jacobian.warped = 0;
 
 % deformations
 % order is [forward inverse]
-cat.output.warps      = [0 0];
+cat.output.warps      = [1 0];
 
 % transformations
 % order is affine rigid (both forward and inverse)
@@ -250,7 +250,7 @@ cat.extopts.cat12atlas    = {fullfile(cat.extopts.pth_templates,'cat.nii')};    
 
 % surface options
 cat.extopts.pbtres         = 0.5; % internal resolution for thickness estimation in mm (default 0.5) 
-cat.extopts.SRP            = 10;  % surface recontruction pipeline & self-intersection correction: 0/1 - CS1 without/with/with-optimized SIC; 20/21/22 - CS2 without/with/with-optimized SIC;
+cat.extopts.SRP            = 22;  % surface recontruction pipeline & self-intersection correction: 0/1 - CS1 without/with/with-optimized SIC; 20/21/22 - CS2 without/with/with-optimized SIC;
 cat.extopts.reduce_mesh    = 1;   % optimize surface sampling: 0 - PBT res. (slow); 1 - optimal res. (default); 2 - internal res.; 3 - SPM init; 4 - MATLAB init; 5 - SPM full; 
                                   % 6 - MATLAB full; 7 - MATLAB full ext.;
 cat.extopts.vdist          = 2;   % mesh resolution (experimental, do not change!)

@@ -20,12 +20,12 @@ function varargout = cat_surf_render(action,varargin)
 % AX       - axis handle or structure returned by cat_surf_render('Disp',...)
 % MODE     - {['on'],'off'}
 %
-% FORMAT H = vbm_mesh_render('Clim',AX,[mn mx])
-% AX       - axis handle or structure given by vbm_mesh_render('Disp',...)
+% FORMAT H = cat_surf_render('Clim',AX,[mn mx])
+% AX       - axis handle or structure given by cat_surf_render('Disp',...)
 % mn mx    - min/max of range
 %
-% FORMAT H = vbm_mesh_render('Clip',AX,[mn mx])
-% AX       - axis handle or structure given by vbm_mesh_render('Disp',...)
+% FORMAT H = cat_surf_render('Clip',AX,[mn mx])
+% AX       - axis handle or structure given by cat_surf_render('Disp',...)
 % mn mx    - min/max of clipping range
 %
 % FORMAT H = cat_surf_render('ColourMap',AX,MAP)

@@ -1,5 +1,33 @@
 ------------------------------------------------------------------------
-r1811 | gaser | 2021-04-21 17:13:24
+r1812 | gaser | 2021-04-23 00:13:02
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+M       cat_defaults.m
+M       cat_parallelize.m
+M       cat_plot_cov.m
+M       cat_stat_check_cov.m
+M       cat_stat_spm2x.m
+M       cat_surf_render.m
+M       cat_surf_render2.m
+M       cat_surf_results.m
+M       html/cat.html
+
+(1) Changed: Added surface renderings to cat_stat_check_cov.m and cleaned
+             global parameters
+(2) Changed: Some slight changes to cat_surf_results for better data checking.             
+(3) Changed: Exclude NaNs if surface information is estimated in 
+             cat_surf_render2.m.
+(4) Changed: Added flag for group to code samples in cat_plot_cov.m and 
+             optimized output of filenames in plot.
+(5) Changed: Changed defaults for SRP and writing deformations.
+(6) Fixed:   Use stamdard Pmesh from cat_surf_info in cat_stat_spm2x.m for 
+             getting mesh structure.
+
+------------------------------------------------------------------------
+r1811 | gaser | 2021-04-21 17:14:12 +0200 (Mi, 21 Apr 2021) | 23 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -22,6 +50,7 @@ M       templates_MNI152NLin2009cAsym/anatomy3.csv
 (5) Fixed:   Corrected BIDS paths in cat_surf_createCS*.m.
 (6) Fixed:   Corrected anatomy3.csv because left and right hemisphere had the 
              same IDs (thanks to Michael Firbank for pointing to that issue).
+
 
 ------------------------------------------------------------------------
 r1810 | gaser | 2021-04-19 18:49:20 +0200 (Mo, 19 Apr 2021) | 15 lines

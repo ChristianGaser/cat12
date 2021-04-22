@@ -350,6 +350,10 @@ for i=1:size(P,1)
     %-Calculate extent threshold filtering
     %-------------------------------------------------------------------
     if  isfield(SPM.xVol,'G') % mesh detected?
+      if ~exist(SPM.xVol.G,'file')
+        sinfo = cat_surf_info(Vspm.fname);
+        SPM.xVol.G = sinfo.Pmesh;
+      end
       T = false(SPM.xVol.DIM');
       T(XYZ(1,:)) = true;
       warning('off','MATLAB:subscripting:noSubscriptsSpecified');
