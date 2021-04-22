@@ -151,7 +151,7 @@ switch lower(action)
     % figure 1 with result window
     H.pos{1} = struct( ...
       'fig',  [10 10 round(2.6*WS(3)) WS(3)], ... % figure
-      'cbar', [0.400 -0.150 0.200 0.300; 0.440 0.025 0.120 0.120]);% colorbar
+      'cbar', [0.400 -0.125 0.200 0.300; 0.440 0.025 0.120 0.120]);% colorbar
     
     % figure 2 with GUI
     H.pos{2} = struct(...
@@ -1244,7 +1244,7 @@ global H
 H.thresh_value = thresh;
 H.clip = [true -thresh thresh];
 
-if H.logP(H.results_sel) & (H.S{1}.thresh < 1)
+if H.logP(H.results_sel) & (H.S{1}.thresh < -log10(0.05))
   set(H.thresh, 'Enable', 'on');
   if min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0 & H.n_surf == 1
     set(H.hide_neg, 'Enable', 'on');
@@ -1649,8 +1649,9 @@ end
 % update file information and colorbar
 checkbox_info;
 
-% only show threshold popup if log-name was found and minimal value > 0 is < 1
-if H.logP(H.results_sel) & (H.S{1}.thresh < 1)
+% only show threshold popup if log-name was found and minimal value > 0 is
+% < -log10(0.05)
+if H.logP(H.results_sel) & (H.S{1}.thresh < -log10(0.05))
   set(H.thresh, 'Enable', 'on');
 else
   set(H.thresh, 'Enable', 'off');
@@ -1930,8 +1931,8 @@ if isfield(H,'Pvol_sel')
   update_slice_overlay(H);
 end
 
-% only show threshold popup if log-name was found and minimal value > 0 is < 1
-if H.logP(H.results_sel) & (H.S{1}.thresh < 1)
+% only show threshold popup if log-name was found and minimal value > 0 is < -log10(0.05)
+if H.logP(H.results_sel) & (H.S{1}.thresh < -log10(0.05))
   set(H.thresh, 'Enable', 'on');
 end
 

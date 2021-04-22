@@ -242,7 +242,7 @@ function varargout = cat_parallelize(job,func,datafield)
     else
       %% conclusion without filelist
       spm_clf('Interactive'); 
-      spm_progress_bar('Init', sum( numel(job_data) ) ,'CAT-Preprocessing','Cases Started/Processed');      
+      spm_progress_bar('Init', sum( numel(job_data) ) ,'Processing','Jobs Started/Processed');      
       
       fprintf('\nStarted %d jobs with the following PIDs:\n',job.nproc);
       for i=1:job.nproc

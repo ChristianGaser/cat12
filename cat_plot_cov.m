@@ -5,6 +5,8 @@ function cat_plot_cov(data,opt)
 % opt
 %   .ax       - currect axes
 %   .name     - tick labels
+%   .group    - group coding (1..k) for different samples (indicated with
+%               different colors)
 %   .color    - background color
 %   .pos_cbar - position of colorbar
 %   .ctick    - number of tick labels for colorbar
@@ -33,6 +35,13 @@ else
   ax = gca;
 end
 
+% get group for coloring names for different samples
+if isfield(opt,'group')
+  group = opt.group;
+else
+  group = ones(n,1);
+end
+
 % get position of axes
 pos0 = get(ax,'Position');
 
@@ -54,7 +63,7 @@ end
 if isfield(opt,'pos_cbar')
   pos = opt.pos_cbar;
 else
-  pos = [pos0(1)+shift*pos0(3) 0.950 (1-2*shift)*pos0(3) 0.025*pos0(4)];
+  pos = [pos0(1) 0.950 pos0(3) 0.025*pos0(4)];
 end
 
 % number of tick labels for colorbar
@@ -64,8 +73,8 @@ else
   ctick = 5;
 end
 
-% estimate shift of rotated tick labels depending on sample size
-shift = max(0.08,1/(13 - 45/n));
+shift = min(max(0.08,1/(13 - 45/n)),0.4);
+shift = pos0(3)/(0.0692*n+8.871);
 
 % scale data to min..max
 mn = min(data(:));
@@ -90,7 +99,7 @@ set(H.cbar,'YTickLabel','','XTickLabel','','XTick',linspace(1,64,ctick), 'XTickL
   round(100*linspace(min(data(:)),max(data(data~=1)),ctick))/100,'TickLength',[0 0]);
 
 % axes of rotated tick labels
-pos = [pos0(1)+shift*pos0(3) pos0(2)+pos0(4)/2 (1-2*shift)*pos0(3) pos0(4)/2];
+pos = [pos0(1)+shift pos0(2)+pos0(4)/1.8 pos0(3)-2*shift pos0(4)/2];
 ax = axes('Position',pos,'Parent',gcf,'Color',col);
 
 % position of tick labels
@@ -99,8 +108,15 @@ pos_text = linspace(0,1,n);
 % limit ticks to maximum of 50
 gap = round(n/min(n,50));
 
+% colormap for groups
+if exist('lines')
+  cm = lines(max(group));
+else
+  cm = jet(max(group));
+end
+
 for i=1:gap:n
-  t = text(pos_text(i),0.15,spm_file(name(i,:),'short25'),'parent',ax);
+  t = text(pos_text(i),0.15,name(i,:),'parent',ax,'interpreter','none','Color',0.8*cm(group(i),:));
   set(t,'Units','normalized','VerticalAlignment','middle','HorizontalAlignment','left','Rotation',90);
   if isfield(opt,'fontsize')
     set(t,'FontSize',opt.fontsize);
