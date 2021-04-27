@@ -341,13 +341,14 @@ cstime = clock;
 
       % try to copy surface files from prior to indivudal surface data 
       useprior = 1;
-      useprior = useprior & copyfile(fullfile(pp_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff0)),Pcentral,'f');
-      useprior = useprior & copyfile(fullfile(pp_surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff0)),Psphere,'f');
-      useprior = useprior & copyfile(fullfile(pp_surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff0)),Pspherereg,'f');
+      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff0)),Pcentral,'f');
+      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff0)),Psphere,'f');
+      useprior = useprior & copyfile(fullfile(pp0,surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff0)),Pspherereg,'f');
+      
       if ~useprior
-        fprintf('\n');
-        cat_io_addwarning('cat_surf_createCS:noPiorSurface', ...
-          fprintf('Surface files for %s not found. \\\\nMove on with individual surface extraction.',fullfile(pp0,ff0)));
+        warn_str = sprintf('Surface files for %s not found. Move on with individual surface extraction.\n',fullfile(pp0,ff0));
+        fprintf('\nWARNING: %s',warn_str);
+        cat_io_addwarning('cat_surf_createCS:noPiorSurface', warn_str);
       else
         fprintf('\nUse existing surface from %s as prior and thus skip many processing steps.\n',fullfile(pp0,ff0));
       end      
@@ -1217,7 +1218,7 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
     defect_number = defect_number / numel(opt.surf);
   else % obtain surface information from xml report file
     [pp0,ff0] = spm_fileparts(priorname);  %#ok<ASGLU>
-    catxml = fullfile(pp0,reportfolder,['cat_' ff0 '.xml']);
+    catxml = fullfile(pp,reportfolder,['cat_' ff0 '.xml']);
     xml = cat_io_xml(catxml);
     EC = xml.qualitymeasures.SurfaceEulerNumber;
     defect_size = xml.subjectmeasures.defect_size;

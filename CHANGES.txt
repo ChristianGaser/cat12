@@ -1,11 +1,35 @@
 ------------------------------------------------------------------------
-r1813 | gaser | 2021-04-23 01:03:25
+r1814 | gaser | 2021-04-27 12:49:51
+
+Changed paths:
+M       CHANGES.txt
+M       Makefile
+M       cat_conf_long.m
+M       cat_conf_output.m
+M       cat_defaults.m
+M       cat_run_job.m
+M       cat_run_job1639.m
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       cat_vol_partvol.m
+M       cat_vol_partvol1639.m
+M       html/cat.html
+
+(1) Changed: Disabled use of BIDS folder for longitudinal batch.
+(2) Changed: Removed BIDS option from defaults.
+(3) Fixed:   Also recognize lesion mask with Inf and NaN fpr SLC option.
+(4) Fixed:   YslA had wrong data format in cat_vol_partvol*m.
+(5) Fixed:   Path for useprior option was wrong in cat_surf_createCS*m.
+
+------------------------------------------------------------------------
+r1813 | gaser | 2021-04-23 01:03:43 +0200 (Fr, 23 Apr 2021) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_stat_check_cov.m
 
 Fixed:  Corrected some minor bugs in cat_stat_check_cov.m.
+
 ------------------------------------------------------------------------
 r1812 | gaser | 2021-04-23 00:13:50 +0200 (Fr, 23 Apr 2021) | 26 lines
 

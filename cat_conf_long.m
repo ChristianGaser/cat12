@@ -283,6 +283,7 @@ else
   ROI     = output.val{ setdiff( find(cellfun('isempty',strfind(FN,'ROImenu'))==0) , ...
                      find(cellfun('isempty',strfind(FN,'sROImenu'))==0,1) ) }; 
   BIDS    = output.val{find(cellfun('isempty',strfind(FN,'BIDS'))==0)};
+  BIDS.hidden = true;
   surface = output.val{find(cellfun('isempty',strfind(FN,'surface'))==0)};
 
   output.val = {BIDS,surface};

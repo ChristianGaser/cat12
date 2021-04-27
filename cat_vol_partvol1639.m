@@ -221,7 +221,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
     Ydti     = cat_vol_resize(Ydti  ,'reduceV',vx_vol,vx_res,64);
   end
   Yp0A       = cat_vol_resize(Yp0A  ,'reduceV',vx_vol,vx_res,64);
-  YslA       = cat_vol_resize(YslA  ,'reduceV',vx_vol,vx_res,64);
+  YslA       = single(cat_vol_resize(YslA  ,'reduceV',vx_vol,vx_res,64));
   YwmhA      = cat_vol_resize(YwmhA ,'reduceV',vx_vol,vx_res,64); 
   if exist('Yflair','var')
     Yflair   = cat_vol_resize(Yflair,'reduceV',vx_vol,vx_res,64); 
