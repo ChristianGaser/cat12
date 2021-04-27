@@ -711,7 +711,7 @@ end
       %  to keep this as simple as possible using no additional options!
       obj.image0 = spm_vol(job.channel(1).vols0{subj});
       Ysrc0      = spm_read_vols(obj.image0); 
-      Ylesion    = single(Ysrc0==0); clear Ysrc0; 
+      Ylesion    = single(Ysrc0==0 | isnan(Ysrc0) | isinf(Ysrc0)); clear Ysrc0; 
       Ylesion(smooth3(Ylesion)<0.5)=0; % general denoising 
       if any( obj.image0.dim ~= obj.image.dim )
         mat      = obj.image0.mat \ obj.image.mat;

@@ -99,7 +99,7 @@ zip: update clean
 	-@zip ${ZIPFILE} -rm cat12
 
 # scp release
-scp: html zip
+scp: doc zip
 	-@echo scp to http://${STARGET_HOST}/cat12/${ZIPFILE}
 	-@scp -P ${PORT} CHANGES.txt CAT12-Manual.pdf ${ZIPFILE} ${STARGET}
 	-@scp -r -P ${PORT} cat12-html ${STARGET_HTDOCS}/

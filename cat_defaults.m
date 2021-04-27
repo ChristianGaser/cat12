@@ -167,9 +167,9 @@ cat.extopts.restype      = 'optimal';    % resolution handling: 'native','fixed'
 cat.extopts.resval       = [1.0 0.30];   % resolution value and its tolerance range for the 'fixed' and 'best' restype
 
 % use BIDS data structure
-cat.extopts.bids         = 0; % 0 - use CAT12 default directory structure; 1 - use BIDS directory structure for saving data  
 [cat_ver cat_rel] = cat_version;
 cat.extopts.bids_folder  = fullfile('..','derivatives',[cat_ver '_' cat_rel]); % default relative BIDS path for saving data
+
 % check for multiple cores is different for octave
 if strcmpi(spm_check_version,'octave')
   cat.extopts.nproc      = nproc;
