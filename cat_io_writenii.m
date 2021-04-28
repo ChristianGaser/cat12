@@ -4,7 +4,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
 % spmtype for a specific range. Add the prefix pre and the description 
 % desc to V. 
 %
-%   VO = cat_io_write_nii(Y,V[,pre,desc,spmtype,range,write,addpre,transform,YM,YMth])
+%   VO = cat_io_write_nii(Y,V [folder,pre,desc,spmtype,range,write,addpre,transform,YM,YMth])
 %
 %   Y       = input volume
 %   V       = input volume structure
