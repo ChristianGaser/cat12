@@ -30,7 +30,7 @@ function [prob,indx,indy,indz,th] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res)
   % this function adds noise to the data to stabilize processing and we
   % have to define a specific random pattern to get the same results each time
   if exist('rng','file') == 2, rng('default'); rng(0); else, rand('state',0); randn('state',0); end
-
+  if ~isfield(job.extopts,'AMAPframing'), job.extopts.AMAPframing = 0; end
 
   % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
   dbs  = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
@@ -40,6 +40,18 @@ function [prob,indx,indy,indz,th] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res)
   rf     = 10^4; Ymib = round(Ymib*rf)/rf;
   d      = size(Ymi); 
   vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
+  
+  % use framing
+  %{
+    sz = size(Yb); 
+    [indx, indy, indz] = ind2sub(sz,find(Yb>0));
+    tx = [min(indx) szx - max(indx)];
+    ty = [min(indx) szy - max(indx)];
+    tz = [min(indx) szz - max(indx)];
+    tb = min( [ tx ty tz ]; 
+  %}
+  framing.tissue = 4; 
+  framing.pve    = 1; 
   
   %  prepare data for segmentation
   if 1
@@ -66,6 +78,10 @@ function [prob,indx,indy,indz,th] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res)
   % use index to speed up and save memory
   sz = size(Yb);
   [indx, indy, indz] = ind2sub(sz,find(Yb>0));
+  if job.extopts.AMAPframing
+    bx   = (framing.tissue + framing.pve) * 3 * job.extopts.AMAPframing + 2;
+    indx = [min(indx) max(indx)] + [-bx bx]; indy = [min(indy) max(indy)] + [-bx bx]; indz = [min(indz) max(indz)] + [-bx bx];
+  end
   indx = max((min(indx) - 1),1):min((max(indx) + 1),sz(1));
   indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
   indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
@@ -74,8 +90,7 @@ function [prob,indx,indy,indz,th] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res)
   % set Yp0b and source inside outside Yb to 0
   Yp0b = Yp0(indx,indy,indz);
   Ymib = Ymib(indx,indy,indz); 
-
-
+  
   % remove non-brain tissue with a smooth mask and set values inside the
   % brain at least to CSF to avoid wholes for images with CSF==BG.
   if job.extopts.LASstr>0 
@@ -105,11 +120,62 @@ function [prob,indx,indy,indz,th] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res)
   % display something
   stime = cat_io_cmd(sprintf('Amap using initial SPM12 segmentations (MRF filter strength %0.2f)',job.extopts.mrf));       
 
-  % Amap parameters  - default sub=16 caused errors with highres data!
-  % don't use bias_fwhm, because the Amap bias correction is not that efficient and also changes
+  
   % intensity values
-  Ymib = double(Ymib); n_iters = 10; sub = round(64/mean(vx_vol));   %#ok<NASGU>
-  n_classes = 3; pve = 5; bias_fwhm = 0; init_kmeans = 0;           %#ok<NASGU>
+  Ymib = abs(double(Ymib)); 
+  
+  if job.extopts.AMAPframing
+    Ybb  = Yb0(indx,indy,indz)>0; 
+    Ybb  = cat_vol_morph(Ybb,'d',3); 
+    pn   = max(double(Yp0b(:))) * 0.015; 
+    pnx  = max(double(Yp0b(:))) * 0.015; 
+    Yn   = randn(size(Yp0b)); 
+    ex   = framing.tissue; 
+    ep   = framing.pve; 
+    BBe  = ~Ybb; BBe (2      :end-1         , 2      :end-1         , 3   :end-2        ) = false; 
+    BBww = ~Ybb; BBww(ex*1   :end+1-ex*1    , ex*1   :end+1-ex*1    , ex*1:end+1-ex*1   ) = false; 
+    BBgw = ~Ybb; BBgw(ex*1+0 :end+1-ex*1-0  , ex*1+ep:end+1-ex*1-ep , ex*1:end+1-ex*1-ep) = false; BBgw(BBww) = false; 
+    BBgg = ~Ybb; BBgg(ex*2   :end+1-ex*2    , ex*2   :end+1-ex*2    , ex*2:end+1-ex*2   ) = false; BBgg(BBww | BBgw) = false; 
+    BBgc = ~Ybb; BBgc(ex*2+0 :end+1-ex*2-0  , ex*2+ep:end+1-ex*2-ep , ex*2:end+1-ex*2-ep) = false; BBgc(BBww | BBgw | BBgg) = false; 
+    BBcc = ~Ybb; BBcc(ex*3   :end+1-ex*3    , ex*3   :end+1-ex*3    , ex*3:end+1-ex*3   ) = false; BBcc(BBww | BBgw | BBgg | BBgc) = false; 
+    BBcb = ~Ybb; BBcb(ex*3+0 :end+1-ex*3-0  , ex*3+ep:end+1-ex*3-ep , ex*3:end+1-ex*3-ep) = false; BBcb(BBww | BBgw | BBgg | BBgc | BBcc) = false; 
+    % extra values + extra noise
+    % all peaks have an offset of 0.05 that produce better results
+    Ymib(BBcb) = 0.55/3 + pnx * Yn(BBcb); Yp0b(BBcb) = 0; 
+    Ymib(BBcc) = 1.05/3 + pnx * Yn(BBcc); Yp0b(BBcc) = 1; 
+    Ymib(BBgc) = 1.55/3 + pnx * Yn(BBgc); Yp0b(BBgc) = 1; 
+    Ymib(BBgg) = 2.05/3 + pnx * Yn(BBgg); Yp0b(BBgg) = 2; 
+    Ymib(BBgw) = 2.75/3 + pnx * Yn(BBgw); Yp0b(BBgw) = 2; 
+    Ymib(BBww) = 3.05/3 + pnx * Yn(BBww); Yp0b(BBww) = 3; 
+    Ymib(BBe ) = 3.55/3 + pnx * Yn(BBe ); Yp0b(BBe ) = 0; 
+    clear BBww BBgw BBgg BBgc BBcc BBcb BBe; 
+    
+    % add noise 
+    addnoise = 0; 
+    if addnoise == 2
+      % we add noise only in save regions
+      WMe = cat_vol_morph( Yp0b==3 , 'e' , 1 )>0; 
+      CMe = cat_vol_morph( Yp0b==1 , 'e' , 1 )>0; 
+      Ymib( WMe ) = Ymib( WMe ) + pn * Yn( WMe ); 
+      Ymib( CMe ) = Ymib( CMe ) + pn * Yn( CMe ); 
+    elseif addnoise == 1
+      % add noise
+      Ymib = Ymib + pn * Yn;
+    end
+    Ymib = abs(Ymib); 
+  end
+  
+  % Amap parameters  
+  % - sub       .. size of sub-elementes is linked to the anatomy and needs adaption for voxel size 
+  %                in additition, test showed that 32 is quite optimal, whereas higher values >64 are worse 
+  % - n_iters   .. for highly optimized data is about 10 iterations
+  % - bias_fwhm .. the bias correction should be inactive 
+  if job.extopts.AMAPframing
+    n_iters = 10; sub = round(64/min(vx_vol));   %#ok<NASGU>
+  else
+    n_iters = 50; sub = round(64/min(vx_vol));   %#ok<NASGU>
+  end  
+  n_classes = 3;  pve = 5; bias_fwhm = 0; init_kmeans = 0;           %#ok<NASGU>
   if job.extopts.mrf~=0, iters_icm = 50; else iters_icm = 0; end    %#ok<NASGU>
 
   % remove noisy background for kmeans
@@ -126,6 +192,10 @@ function [prob,indx,indy,indz,th] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res)
   th{2}   = cell2mat(textscan(amapres{12},'%f*%f')); 
   th{3}   = cell2mat(textscan(amapres{13},'%f*%f')); 
   
+  if job.extopts.AMAPframing
+    for i=1:3, prob(:,:,:,i) = prob(:,:,:,i) .* uint8(Ybb); end
+  end
+  clear Ybb;
   
   if job.extopts.verb>1 
     fprintf('    AMAP peaks: [CSF,GM,WM] = [%0.2f%s%0.2f,%0.2f%s%0.2f,%0.2f%s%0.2f]\n',...
@@ -146,7 +216,7 @@ function [prob,indx,indy,indz,th] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res)
   if job.extopts.gcutstr>0 && ~job.inv_weighting
     Yb0(indx,indy,indz) = Yb0(indx,indy,indz) | ((prob(:,:,:,1) > 0) & Yb(indx,indy,indz)); % & ~Ycls{1}(indx,indy,indz));
     for i=1:3
-      prob(:,:,:,i) = prob(:,:,:,i).*uint8(Yb0(indx,indy,indz));
+      prob(:,:,:,i) = prob(:,:,:,i) .* uint8(Yb0(indx,indy,indz));
     end
   end
   

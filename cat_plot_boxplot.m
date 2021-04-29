@@ -136,6 +136,12 @@ function [out,s] = cat_plot_boxplot(data,opt)
 
 if nargin==0, help cat_plot_boxplot; return; end
 
+% batch mode
+if isstruct(data)
+  out = cat_stat_boxplot_batch(data);
+  return
+end
+
 % default parameter
 if ~exist('opt','var'), opt = struct(''); end
 
@@ -1060,6 +1066,189 @@ while flag==0
 end
 end
 
+function fh = cat_stat_boxplot_batch(job)
+%
+% TODO
+% * andere inputs?
+%   - volume? 
+%     . volume
+%     . intensity of non 0/nan?
+%   - surfaces 
+%     . area
+%     . values?
+%   - atlas label data?
+%
+% * Data
+%   D:
+%     . XML-files
+%     . Name
+%   E: 
+%     + color
+%     + ylim
+%     + subgroup
+%   
+% * output:
+%   * Table output:
+%     - ouptut table: none | figure | command line | text ouput of table
+%     - output of [mean, median, min, max, std]
+%     - see vbm script
+%
+
+  if isfield(job,'set'), job.data = job.set; end
+  job.extopts.edgecolor = 'none'; 
+  job.output.dpi = 300; 
+  
+  %% load XML data
+  xml = cell(1,numel(job.data)); 
+  for gi = 1:numel(job.data)
+    files = cellstr(char(job.data(gi).files)); 
+    xml{gi} = cat_io_xml( files );
+  end
+  
+  %%
+  fh = cell(1,numel(job.xmlfields)); data = fh; 
+  for vi = 1:numel( job.xmlfields )
+    % error handling 
+   
+    % extract the current datafield to a common use data structure
+    % that is used for cat_plot_boxplot
+    for gi = 1:numel(job.data)
+      for fi = 1:numel( job.data(gi).files )
+        try 
+          if isfield(  job.xmlfields{vi} , 'xmlfields' )
+            fname = job.xmlfields{vi}.xmlfields; 
+            eval( sprintf( 'data{vi}{gi}(fi) = double([xml{gi}(fi).%s]);' , job.xmlfields{vi}.xmlfields ) );
+          else
+            fname = job.xmlfields{vi};
+            eval( sprintf( 'data{vi}{gi}(fi) = double([xml{gi}(fi).%s]);' , job.xmlfields{vi} ) );
+          end
+        catch
+          eval( sprintf( 'data{vi}{gi}(fi) = nan;'  ) );
+        end
+      end
+    end
+    fname = strrep(fname,'_',' ');
+    
+    % create the parameter structure for cat_plot_boxplot
+    jobpara = cat_io_checkinopt( job.opts , job.extopts ); 
+        
+    % get general groupcolor field before the group-wise settings
+    if isfield( jobpara , 'colorset' )
+      eval(sprintf('jobpara.groupcolor = %s(%d);', jobpara.colorset , numel(job.data))); 
+    end
+    % group-wise settings of the name and color of each group/box
+    for gi = 1:numel(job.data)
+      if ~isempty( job.data(gi).setname )  
+        jobpara.names{gi} = job.data(gi).setname;  
+      else
+        jobpara.names{gi} = sprintf('%d',gi);
+      end
+      if ~isempty( job.data(gi).setcolor )
+        jobpara.groupcolor(gi,:) = job.data(gi).setcolor; 
+      end
+    end
+     
+    % specific title and ylabel for predefined CAT XML fields  
+    keysets = {'qualitymeasures.','qualityratings.','subjectmeasures.'}; 
+    if ~isempty( strfind( keysets , fname ) )
+      point = find( fname=='.' ); 
+      if numel(jobpara.title)>0  && jobpara.title(1)=='+' 
+        jobpara.title = [upper(fname(1)) fname(2:point-1) ' ' upper(fname(point+1)) fname(point+2:end) jobpara.title ' ' jobpara.title(2:end)];
+      else
+        jobpara.title = [upper(fname(1)) fname(2:point-1) ' ' upper(fname(point+1)) fname(point+2:end) jobpara.title];
+      end
+      %  jobpara = setval(jobpara,vi,'title', [upper(fname(1)) fname(2:point-1) ' ' upper(fname(point+1)) fname(point+2:end) ]);
+      jobpara = setval(jobpara,vi,'yname', fname(point+1:end) );
+    end
+    if isfield(jobpara,'FS'), jobpara.FS = jobpara.FS; end 
+  %  jobpara = setval(jobpara,vi,'xlabel' );
+  
+    if isfield( job.data(gi) , 'subset')
+      jobpara.subsets(gi) = job.data(gi).subset; 
+    end
+        
+    % create figure
+    fh{vi} = figure(1033 + vi);
+    if isfield(jobpara,'fsize')
+      fh{vi}.PaperPosition(3:4) = jobpara.fsize; 
+      fh{vi}.Position(3:4) = round(jobpara.fsize * 60); %[560 420]/2; 
+    else
+      fh{vi}.Position(3:4) = [560 420]/2; 
+    end
+    if isfield( jobpara , 'title') && ~isempty( jobpara.title )
+      fh{vi}.Name = jobpara.title;
+    end
+    if ~jobpara.menubar
+      fh{vi}.ToolBar = 'none';
+      fh{vi}.MenuBar = 'none';
+    end
+    
+    
+    % call cat_plot_boxplot
+    cat_plot_boxplot( data{vi} ,jobpara ); 
+    ax = gca;
+    
+    
+    % further settings 
+    if isfield( jobpara , 'title') && ~isempty( jobpara.title )
+      ax.Title.String = jobpara.title;
+    end
+    if isfield( jobpara , 'yname') && ~isempty( jobpara.yname )
+      ax.YLabel.String    = jobpara.yname;
+    end
+    if isfield( jobpara , 'xlabel') && ~isempty( jobpara.xlabel )
+      ax.XLabel.String    = jobpara.xlabel;
+    end
+    if ~isempty( jobpara.FS )       
+      ax.FontSize         = jobpara.FS;    
+      ax.YLabel.FontSize  = jobpara.FS*1.2;
+      ax.XLabel.FontSize  = jobpara.FS*1.2;
+    end
+    box on;
+    
+    
+    %% save images
+    if isempty( job.output.outdir{1} ), outdir = pwd; else, outdir = job.output.outdir{1}; end
+    pdir  = fullfile( outdir, job.output.subdir); 
+    if ~exist(pdir,'dir'), mkdir(pdir); end
+    types = {'fig','png','jpeg','pdf','epsc'};
+    fh{vi}.PaperPosition(3:4) = fh{vi}.PaperPosition(3:4) * 2; % don't know why ... 
+    for ti = 1:numel(types)
+      if strfind( job.output.type , types{ti}  )
+        if strcmp( job.output.type , 'fig'  )
+          savefig(fh{vi},  fullfile(pdir, [job.output.name fname '.' types{ti} ] ) );
+        else
+          try
+            print(fh{vi}, ['-d' types{ti}], sprintf('-r%d',job.output.dpi), ...
+              fullfile(pdir, [types{ti} '_' job.output.name fname '.' types{ti} ] ) );
+          end
+        end
+      end
+    end
+    fh{vi}.PaperPosition(3:4) = fh{vi}.PaperPosition(3:4) / 2; 
+
+    if job.output.close, close( fh{vi} ); end
+  end
+
+end
+function S = setval( S , i , fname , val )
+  if isfield( S , fname ) 
+    if iscell( S.(fname) ) && numel( S.(fname) )>=i 
+      if ~isempty( S.(fname){vi} )
+        val = S.(fname){i};
+        S = rmfield( S.(fname){i} ); 
+      end
+      S.(fname) = val;
+        
+    else
+      if isempty( S.(fname) )
+        S.(fname) = val;
+      end
+    end
+  else
+    S.(fname) = val; 
+  end
+end
 
 
 
