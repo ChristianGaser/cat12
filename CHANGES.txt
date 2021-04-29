@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1815 | gaser | 2021-04-28 15:48:40
+r1816 | gaser | 2021-04-29 17:02:50
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main_amap.m
+M       cat_main_amap1639.m
+M       cat_surf_createCS2.m
+
+(1) Changed: Changed default parameters for Amap to 10 iterations and block 
+             size of 64/mean(voxelsize).
+(2) Fixed:   Euler characteristic and defect size were not correct for 
+             longitudinal batch.
+
+------------------------------------------------------------------------
+r1815 | gaser | 2021-04-28 15:49:25 +0200 (Mi, 28 Apr 2021) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +26,7 @@ M       tbx_cfg_cat.m
              nonlinear registration is called if no normalized data are saved. 
 (2) Fixed:   Corrected image filter in tbx_cfg_cat.m that caused issues with old
              batches.
+
 
 ------------------------------------------------------------------------
 r1814 | gaser | 2021-04-27 12:50:38 +0200 (Di, 27 Apr 2021) | 21 lines
