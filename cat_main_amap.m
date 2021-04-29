@@ -147,7 +147,7 @@ end
     % don't use bias_fwhm, because the Amap bias correction is not that efficient and also changes
     % intensity values 
     % RD202006 the bias_fwhm paraemter (and/or other) cause also MATLAB crashes in the ignoreError pipeline 
-    Ymib = double(Ymib); n_iters = 50; sub = round(32/min(vx_vol));   %#ok<NASGU>
+    Ymib = double(Ymib); n_iters = 10; sub = round(64/mean(vx_vol));   %#ok<NASGU>
     n_classes = 3; pve = 5; bias_fwhm = 0; init_kmeans = 0;           %#ok<NASGU>
     if job.extopts.mrf~=0, iters_icm = 50; else, iters_icm = 0; end   %#ok<NASGU>
     if job.extopts.ignoreErrors > 2
