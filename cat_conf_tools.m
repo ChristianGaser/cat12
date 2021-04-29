@@ -33,6 +33,15 @@ function tools = cat_conf_tools(expert)
   outdir.help       = {'Select a directory where files are written.'};
   outdir.val{1}     = {''};
 
+  subdir            = cfg_entry;
+  subdir.tag        = 'subdir';
+  subdir.name       = 'Additional output directory';
+  subdir.strtype    = 's';
+  subdir.num        = [0 Inf];
+  subdir.val        = {'EVA_volmod'};
+  subdir.help       = {
+    'The directory is created within the choosen output directory. If no name is given no subdirecty is created. ' ''};
+
   data              = cfg_files; 
   data.tag          = 'data';
   data.name         = 'Volumes';
@@ -147,6 +156,8 @@ function tools = cat_conf_tools(expert)
   sanlm                       = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,expert);
   biascorrlong                = conf_longBiasCorr(data,expert,prefix);
   data2mat                    = conf_io_data2mat(data,outdir);
+  boxplot                     = conf_io_boxplot(outdir,subdir,prefix,expert);
+  getCSVXML                   = cat_cfg_getCSVXML(outdir,expert);
   %urqio                       = conf_vol_urqio; % this cause problems
   iqr                         = conf_stat_IQR(data_xml);
   %qa                         = conf_vol_qa(data);
@@ -190,12 +201,370 @@ function tools = cat_conf_tools(expert)
     defs2, ...                            cat.pre.vtools.
     avg_img, ...                          cat.pre.vtoolsexp.
     data2mat, ...                         cat.pre.vtools.
+    ...
+    boxplot, ...                          cat.stat.eval ... print of XML data by the boxplot function and saving as images  
+    getCSVXML, ...                        cat.stat.eval ... read out of XML/CSV data and export as batch dependency 
+    ...                                   
     };
   
   %RD202005: the cause problems at Christians installation ... check it 
   %if expert 
   %  tools.values = [tools.values,{urqio}]; 
   %end
+return
+
+%_______________________________________________________________________
+function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
+% -------------------------------------------------------------------------
+% Batch to read out of XML/CSV data and export as batch dependency/file.
+% 
+% RD202104
+% -------------------------------------------------------------------------
+
+  % n-files, e.g. XML for direct extraction or nii/gii as selector
+  files               = cfg_files;
+  files.num           = [1 Inf];
+  files.tag           = 'files';
+  files.name          = 'Subjects';
+  files.filter        = 'any';
+  files.help          = {'Select XML/NIFTI/GIFTI images of the subject that should be found in the CSV file. '};
+  
+  % 0..1-file ... maybe n later
+  csvfile             = cfg_files;
+  csvfile.num         = [0 1];
+  csvfile.tag         = 'csvfile';
+  csvfile.name        = 'CSV file';
+  csvfile.filter      = 'any';
+  csvfile.val         = {''};
+  csvfile.help        = {
+   ['Select one CSV file that contains further information. The first line has to be the header with the name of the variables. ' ...
+    'The first row has to include an identifier for the selected subjects files give above, e.g. the subject ID, the filename, or path if the filename is not unique. ' ...
+    'E.g., a file IXI_IOP_493 can be idenfiefied by the subject ID 493 given in the IXI CSV table. ' ...
+    'However, filenames in BIDS are not suited for identification and you has to specify the "CSV subject ID in the filename" parameter to select the directory entry that include the ID. ']
+    ''
+    };
+ 
+  csvid               = cfg_entry;
+  csvid.tag           = 'csvIDfd';
+  csvid.name          = 'CSV subject ID in the filename';
+  csvid.strtype       = 'w';
+  csvid.num           = [1 inf]; 
+  csvid.val           = {0}; 
+  csvid.help          = {
+   ['Because the filename (=0) does not allways defines the subject ID you can select another directory of the file path. ' ...
+    'E.g., for the file ".../myProject/GROUP/SUB01/TP01/T1w/001.nii" you have to define the 3rd ancestor (=3), ' ...
+    'whereas ".../myProject/GROUP/SUB01/TP01/T1w/report/catxml_001.xml" would require the 4th ancestor (=4). ']
+    ''
+    };
+  
+  % set of variables names for extraction ... preselection TIV IQR ...
+  % the variables were extracted and a depency for each created
+  % The CSV selection is a bit more tricky. 
+  fields              = cfg_entry;
+  fields.tag          = 'fields';
+  fields.name         = 'Fieldnames';
+  fields.strtype      = 's+';
+  fields.num          = [1 inf]; 
+  fields.help         = {
+   ['Enter the fieldnames (XML) or columns names (CSV) you want to get here. ' ...
+    'The fieldnames where used to create the depency object and will be converted to variables. ' ...
+    'The CSV columns should be useable as variable otherwise you have to rename them in the file. '] 
+    ''
+   ['E.g. the catxml contain the TIV in the subfield "subjectmeasures.vol_TIV" that will create the depency variable "subjectmeasures_vol_TIV". ' ...
+    'To extract one value of a matrix or cell field use the matlab specification, e.g., to extract the GM value from "subjectmeasures.vol_CGW" use "subjectmeasures.vol_CGW(2)"' ...
+    'For the CSV file the rows has to be select by using the same name, but will be converted into a variable a field "sex(1=m,2=f)" will result in "sex_1m_2f". ']
+    ''
+    'Enter one field per row (what creates a cellstr), e.g.:'
+    '  AGE'                           
+    '  SEX_ID_(1=m,2=f)'             
+    '  subjectmeasures.vol_TIV'       
+    '  subjectmeasures.vol_abs_CGW(2)'
+    ''
+    };
+  
+  
+  
+  
+    
+  % quality measures (expert)
+  QMfield               = cfg_menu;
+  QMfield.tag           = 'xmlfields';
+  QMfield.name          = 'Image quality';
+  QMfield.labels        = {
+    'Noise Contrast Ratio (NCR)'
+    'Inhomogeny Contrast Ratio (ICR)'
+    'Resolution RMSE (resRMS)'
+    'Minimum tissue contrast'
+    };
+  QMfield.values        = {
+    'qualitymeasures.NCR'
+    'qualitymeasures.ICR'
+    'qualitymeasures.res_RMS'
+    'qualitymeasures.contrast'
+    };
+  QMfield.val           = {'qualitymeasures.NCR'};
+  QMfield.help          = {'CAT preprocessing image quality measures (not normalized).' ''};
+  
+  
+  % quality ratings 
+  QRfield               = cfg_menu;
+  QRfield.tag           = 'xmlfields';
+  QRfield.name          = 'Image quality ratings';
+  QRfield.labels        = {
+    'Image Quality Rating (IQR)'
+    'Noise Contrast Ratio (NCR)'
+    'Inhomogeny Contrast Ratio (ICR)'
+    'Resolution RMSE (resRMS)'
+    'Minimum tissue contrast'
+    };
+  QRfield.values        = {
+    'qualitratings.IQR'
+    'qualitratings.NCR'
+    'qualitratings.ICR'
+    'qualitratings.res_RMS'
+    'qualitratings.contrast'
+    };
+  QRfield.val           = {'qualitratings.NCR'};
+  QRfield.help          = {'CAT preprocessing image quality ratings (normalized marks).' ''};
+  
+  
+  % surface measures
+  SMfield               = cfg_menu;
+  SMfield.tag           = 'xmlfields';
+  SMfield.name          = 'Surface quality';
+  SMfield.labels        = {
+    ... 'Surface Euler number'
+    'Surface defect area'
+    'Surface defect number'
+    'Surface intensity RMSE'
+    'Surface position RMSE'
+    'Surface self-intersections'
+    };
+  SMfield.values        = {
+    ... 'qualitymeasures.SurfaceEulerNumber'
+    'qualitymeasures.SurfaceDefectArea'
+    'qualitymeasures.SurfaceDefectNumber'
+    'qualitymeasures.SurfaceIntensityRMSE'
+    'qualitymeasures.SurfacePositionRMSE'
+    'qualitymeasures.SurfaceSelfIntersections'
+    };
+  SMfield.val           = {'qualitymeasures.SurfaceDefectArea'};
+  SMfield.help          = {'CAT preprocessing surface quality measures (not normalized). ' ''};
+  
+  
+  % segmenation measures
+  USMfield               = cfg_menu;
+  USMfield.tag           = 'xmlfields';
+  USMfield.name          = 'Unified segmentation validation measures';
+  USMfield.labels        = {
+    'SPM log-likelyhood'
+    'SPM tissue peak 1 (def. GM)'
+    'SPM tissue peak 2 (def. WM)'
+    'SPM tissue peak 3 (def. CSF1)'
+    'SPM tissue peak 4 (def. CSF2)'
+    'SPM tissue volume 1 (GM)'
+    'SPM tissue volume 2 (WM)'
+    'SPM tissue volume 3 (CSF)'
+    'SPM tissue volume 4 (HD1)'
+    'SPM tissue volume 5 (HD2)'
+    'SPM tissue volume 6 (BG)'
+    ...'CAT skull-stripping parameter'
+    ...'CAT high BG parameter'
+    };
+  USMfield.values        = {
+    'SPMpreprocessing.ll'
+    'SPMpreprocessing.mn(1)'
+    'SPMpreprocessing.mn(2)'
+    'SPMpreprocessing.mn(3)'
+    'SPMpreprocessing.mn(4)'
+    'ppe.SPMvols0(1)'
+    'ppe.SPMvols0(2)'
+    'ppe.SPMvols0(3)'
+    'ppe.SPMvols0(4)'
+    'ppe.SPMvols0(5)'
+    'ppe.SPMvols0(6)'
+    ...'ppe.skullstrippedpara'
+    ...'ppe.highBGpara'
+    ...reg.ll
+    ...reg.dt, rmsdt
+    };
+  USMfield.val           = {'SPMpreprocessing.ll'};
+  USMfield.help          = {'SPM preprocessing measures for evaluation of the preprocessing. The tissue peaks depend on the defined number of SPM peaks within a class (default=[1 1 2 3 4 2]). The volumes depend on the TPM that are by default GM, MW, CSF, HD1 (hard tissue), HD2 (soft tissue), backgroun (BG). ' ''};
+  USMfield.hidden        = expert<2; 
+  
+  
+  % individual measures
+  IMfield               = cfg_menu;
+  IMfield.tag           = 'xmlfields';
+  IMfield.name          = 'Morphometric measures';
+  IMfield.labels        = {
+    'Total Intracranial Volume (TIV)'
+    'Total Surface Area (TSA)'
+    'Mean cortical thickness'
+    'Cortical thickness standard deviation'
+    'Relative CSF volume'
+    'Relative GM  volume'
+    'Relative WM  volume'
+    'Relative WMH volume'
+    'Absolute CSF volume'
+    'Absolute GM  volume'
+    'Absolute WM  volume'
+    'Absolute WMH volume'
+    };
+  IMfield.values        = {
+    'subjectmeasures.vol_TIV'
+    'subjectmeasures.surf_TSA'
+    'subjectmeasures.dist_thickness{1}(1)'
+    'subjectmeasures.dist_thickness{1}(2)'
+    'subjectmeasures.vol_rel_CGW(1)'
+    'subjectmeasures.vol_rel_CGW(2)'
+    'subjectmeasures.vol_rel_CGW(3)'
+    'subjectmeasures.vol_rel_CGW(4)'
+    'subjectmeasures.vol_abs_CGW(1)'
+    'subjectmeasures.vol_abs_CGW(2)'
+    'subjectmeasures.vol_abs_CGW(3)'
+    'subjectmeasures.vol_abs_CGW(4)'
+    ...'ppe.reg.rmsdt'
+    ...'ppe.reg.rmsdtc'
+    };
+  IMfield.val           = {'subjectmeasures.vol_TIV'};
+  IMfield.help          = {'Global morphometric measures. ' ''};
+  
+  
+  % individual measures
+  PDfield               = cfg_menu;
+  PDfield.tag           = 'xmlfields';
+  PDfield.name          = 'Predefined XML fields';
+  PDfield.labels        = {
+    'Total Intracranial Volume (TIV)'
+    'Total Surface Area (TSA)'
+    ...
+    'Image Quality Rating (IQR)'
+    'Noise Contrast Ratio (NCR)'
+    'Inhomogeny Contrast Ratio (ICR)'
+    'Resolution RMSE (resRMS)'
+    'Minimum tissue contrast'
+    ...
+    'Surface defect area'
+    'Surface defect number'
+    };
+  PDfield.values        = {
+    'subjectmeasures.vol_TIV'
+    'subjectmeasures.surf_TSA'
+    ...
+    'qualitratings.IQR'
+    'qualitratings.NCR'
+    'qualitratings.ICR'
+    'qualitratings.res_RMS'
+    'qualitratings.contrast'
+    ...
+    'qualitymeasures.SurfaceDefectArea'
+    'qualitymeasures.SurfaceDefectNumber'
+    };
+  PDfield.val           = {'subjectmeasures.vol_TIV'};
+  PDfield.help          = {'Predefined XML fields. ' ''};
+  
+  % - groupname     ... %  opt.names       = [];            % array of group names
+  setname               = cfg_entry;
+  setname.tag           = 'setname';
+  setname.name          = 'Name';
+  setname.help          = {'Name of the dataset that replaces the number of the set. ' ''}; 
+  setname.strtype       = 's';
+  setname.num           = [0 Inf];
+  setname.val           = {''};
+ 
+  % - title 
+  ftitle              = setname; 
+  ftitle.name         = 'title';
+  ftitle.tag          = 'Plot title';
+  ftitle.help         = {'Name of figure' ''};
+  ftitle.val          = {''};
+  % - yname (measure/scala)
+  fname               = setname; 
+  fname.name          = 'name';
+  fname.tag           = 'Measure name';
+  fname.help          = {'Name of the measure ploted at the y-axis. ' ''};
+  %
+  fspec               = setname; 
+  fspec.name          = 'name';
+  fspec.tag           = 'Measure name';
+  fspec.help          = {'Name of the measure ploted at the y-axis. ' ''};
+  %  opt.ylim        = [-inf inf];    % y-axis scaling
+  ylim                = cfg_entry;
+  ylim.tag            = 'ylim';
+  ylim.name           = 'y-axis limits';
+  ylim.help           = {'Limitation of x-axis. '}; 
+  ylim.strtype        = 'r';
+  ylim.num            = [1 2];
+  ylim.val            = {[-inf inf]}; 
+  %  opt.subsets     = false(1,numel(data)); 
+  
+  xmlfield0           = cfg_exbranch;
+  xmlfield0.tag       = 'xmlfields';
+  xmlfield0.name      = 'Data field (complex)';
+  xmlfield0.val       = { ftitle  , fname , fspec , ylim}; 
+  xmlfield0.help      = {'Specify set properties such as name or color' ''};
+  
+  
+  xmlfield            = cfg_entry;
+  xmlfield.tag        = 'xmlfields';
+  xmlfield.name       = 'Data field (simple)';
+  xmlfield.help       = { 
+   ['Specify field for data extraction that result in one value per file, e.g., ' ...
+    'measures.vol_rel_CGW(1) to extract the first (CSF) volume value. '] ''};
+  xmlfield.strtype    = 's';
+  xmlfield.num        = [1 Inf];
+  xmlfield.def        = @(val) 'subjectmeasures.vol_TIV';
+  
+  xmlfields           = cfg_repeat;
+  xmlfields.tag       = 'xmlfields';
+  xmlfields.name      = 'XML-fields';
+  if expert>1
+    xmlfields.values  = {xmlfield,xmlfield0,PDfield,USMfield,QMfield,QRfield,SMfield,IMfield};
+  else
+    xmlfields.values  = {xmlfield,xmlfield0,PDfield};
+  end
+  xmlfields.val       = {};
+  xmlfields.num       = [1 Inf];
+  xmlfields.forcestruct;
+  xmlfields.help      = {'Specify manually grouped XML files.'};
+  
+  % ------
+  
+  csvdelkom           = cfg_menu;
+  csvdelkom.tag       = 'seg';
+  csvdelkom.name      = 'CSV delimiter and komma';
+  csvdelkom.labels    = {',.',';,',';.',' ,',' .'}; % ... space/tab? ' ,',' .' 
+  csvdelkom.values    = {',.',';,',';.',' ,',' .'};
+  csvdelkom.val       = {',.'}; 
+  csvdelkom.help      = {'Delimiter and komma in the CSV file. '};
+
+  write               = cfg_entry;
+  write.tag           = 'fname';
+  write.name          = 'Write outputs file name';
+  write.strtype       = 's';
+  write.val           = {''};
+  write.num           = [0 inf];
+  write.help          = {
+   ['Write outputs in multiple TXT files and add the number of subjects and the name of the variable, ' ...
+    'e.g. "IXI" with "555" subjects and "subjectmeasures.vol_TIV" will result in "IXI555_subjectmeasures_vol_TIV". ' ...
+    'Do not write anything when empty. ']
+    ''
+    };
+
+  getCSVXML           = cfg_exbranch;
+  getCSVXML.tag       = 'getCSVXML';
+  getCSVXML.name      = 'XML/CSV readout';
+  getCSVXML.val       = {files csvfile csvdelkom csvid xmlfields fields outdir write};
+  getCSVXML.prog      = @cat_stat_getCSVXMLfield;
+  getCSVXML.vout      = @vout_stat_getCSVXML;
+  getCSVXML.hidden    = expert<1;
+  getCSVXML.help      = {
+    'Batch to extract XML and CSV entries for a set of (processed) files.  For example, the IXI dataset came with a CSV file containing information about "IXI_ID;SEX_ID;HEIGHT;WEIGHT;...;AGE" for all subjects.  You can now use this batch to extract informations for a subset of files.  You need to select the processed files (e.g. the "catxml_*.xml" or "lh.thickness.*.gii" files) and the IXI.csv file.  You also need to select the delimiter type of the CSV file and specify how to distinguish the part of the filename that contains the subject ID (this must be the first column in the CSV file) and the fieldnames (e.g. "SEX_ID" or "AGE"). '
+    'You can write the results into a text file or you can use the DEPENDENCY function of the SPM batches by choosing the column-wise output vectors. '
+    ''
+    'Problems can occure if the ID is not fully unique, i.e. if a ID (e.g. 1) is part of another ID (e.g. 101). '
+    };
 return
 
 %_______________________________________________________________________
@@ -2215,7 +2584,633 @@ function urqio = conf_vol_urqio
     ''
     'WARNING: This tool is in development and was just tested on a small set of subjects!'
   };
+function boxplot = conf_io_boxplot(outdir,subdir,name,expert)
 
+  files                 = cfg_files;
+  files.tag             = 'files';
+  files.name            = 'Files';
+  files.help            = {'files.' ''};
+  files.filter          = 'any';
+  files.ufilter         = '.*.xml';
+  files.num             = [3 Inf];
+  
+  % - groupname     ... %  opt.names       = [];            % array of group names
+  setname               = cfg_entry;
+  setname.tag           = 'setname';
+  setname.name          = 'Name';
+  setname.help          = {'Name of the dataset that replaces the number of the set. ' ''}; 
+  setname.strtype       = 's';
+  setname.num           = [0 Inf];
+  setname.val           = {''};
+ 
+  % - groupcolor    ... %  has to be generated later
+  setcolor              = cfg_entry;
+  setcolor.tag          = 'setcolor';
+  setcolor.name         = 'Color';
+  setcolor.strtype      = 'r';
+  setcolor.num          = [0 Inf];
+  setcolor.help         = {
+   ['Color of the dataset that replaces the default color definied by the color table below. ' ...
+    'The color has to be defined as 3x1 RGB value between 0 and 1, e.g. [0 0.5 0] for dark green. '] ''}; 
+  setcolor.val          = {''};
+  
+  % - groupcolor    ... %  has to be generated later
+  color                 = cfg_menu;
+  color.tag             = 'setcolor';
+  color.name            = 'Color';
+  color.labels          = { ...
+    'colormap'
+    'red (light)';    'red';    'red (dark)'; 
+    'orange (light)'; 'orange'; 'orange (dark)'; 
+    'yellow (light)'; 'yellow'; 'yellow (dark)'; 
+    'green (light)';  'green';  'green (dark)'; 
+    'cyan (light)';   'cyan';   'cyan (dark)'; 
+    'blue (light)';   'blue';   'blue (dark)';
+    'violet (light)'; 'violet'; 'violet (dark)';
+    'gray (light)';   'gray';   'gray (dark)';
+    };
+  color.values          = {
+    ''; 
+    [1   1/3 1/3]; [1   0   0  ]; [2/3 0   0  ]; % red
+    [1   2/3 1/3]; [1   1/2 0  ]; [2/3 1/3 0  ]; % orange
+    [1   1   1/3]; [1   1   0  ]; [2/3 2/3 0  ]; % yellow
+    [1/3 1   1/3]; [0   1   0  ]; [0   2/3 0  ]; % green
+    [1/3 1   1  ]; [0   1   1  ]; [0   2/3 2/3]; % cyan
+    [1/3 1/3 1  ]; [0   0   1  ]; [0   0   2/3]; % blue
+    [1   1/3 1  ]; [1   0   1  ]; [2/3 0   2/3]; % violet
+    [3/4 3/4 3/4]; [1/2 1/2 1/2]; [1/4 1/4 1/4]; % gray
+    };
+  color.val             = {''};
+  color.help            = {
+    'Color of the dataset that replaces the default color definied by the colormap below. ' ''}; 
+  
+  % subset .. was not working
+  %{
+  subset                = cfg_menu;
+  subset.tag            = 'subset';
+  subset.name           = 'Subset';
+  subset.labels         = {'W','G'};
+  subset.values         = {0 1};
+  subset.def            = @(val) 0;
+  subset.help           = {'Subset G with gray background' ''};
+  %}
+  
+  % as structure with subfields
+  datasetxml            = cfg_exbranch;
+  datasetxml.tag        = 'data';
+  datasetxml.name       = 'Dataset';
+  datasetxml.val        = { files , setname, color};
+  datasetxml.help       = {'Specify major properties of a dataset with predfined colors.' ''};
+  
+  datasetxml2            = cfg_exbranch;
+  datasetxml2.tag        = 'data';
+  datasetxml2.name       = 'Dataset (color definition)';
+  datasetxml2.val        = { files , setname, setcolor}; 
+  datasetxml2.help       = {'Specify major properties of a dataset with own color definition.' ''};
+  
+  datasets              = cfg_repeat;
+  datasets.tag          = 'data';
+  datasets.name         = 'Datasets';
+  datasets.values       = {datasetxml datasetxml2};
+  datasets.val          = {};
+  datasets.num          = [1 Inf];
+  datasets.help         = {'Specify manually grouped XML files their name and color. '};
+
+  
+  % or as xmlparagroup where all xml-files are selected and then internally differentiated 
+  % - xmlfiles 
+  % - XML grouping parameter(s) (eg. software.version, parameter.extopts.collcorr ) ... 
+  % ... the idea is nice but what if multiple parameter change? 
+  % ... it is more easy, clearer and saver to force manual grouping or may focus on some elements 
+  %     Computer + SPM + CAT revision
+  
+  
+  
+  % ---
+  
+  % quality measures (expert)
+  QMfield               = cfg_menu;
+  QMfield.tag           = 'xmlfields';
+  QMfield.name          = 'Image quality';
+  QMfield.labels        = {
+    'Noise Contrast Ratio (NCR)'
+    'Inhomogeny Contrast Ratio (ICR)'
+    'Resolution RMSE (resRMS)'
+    'Minimum tissue contrast'
+    };
+  QMfield.values        = {
+    'qualitymeasures.NCR'
+    'qualitymeasures.ICR'
+    'qualitymeasures.res_RMS'
+    'qualitymeasures.contrast'
+    };
+  QMfield.val           = {'qualitymeasures.NCR'};
+  QMfield.help          = {'CAT preprocessing image quality measures (not normalized).' ''};
+  
+  
+  % quality ratings 
+  QRfield               = cfg_menu;
+  QRfield.tag           = 'xmlfields';
+  QRfield.name          = 'Image quality ratings';
+  QRfield.labels        = {
+    'Noise Contrast Ratio (NCR)'
+    'Inhomogeny Contrast Ratio (ICR)'
+    'Resolution RMSE (resRMS)'
+    'Minimum tissue contrast'
+    };
+  QRfield.values        = {
+    'qualitratings.NCR'
+    'qualitratings.ICR'
+    'qualitratings.res_RMS'
+    'qualitratings.contrast'
+    };
+  QRfield.val           = {'qualitratings.NCR'};
+  QRfield.help          = {'CAT preprocessing image quality ratings (normalized marks).' ''};
+  
+  
+  % surface measures
+  SMfield               = cfg_menu;
+  SMfield.tag           = 'xmlfields';
+  SMfield.name          = 'Surface quality';
+  SMfield.labels        = {
+    ... 'Surface Euler number'
+    'Surface defect area'
+    'Surface defect number'
+    'Surface intensity RMSE'
+    'Surface position RMSE'
+    'Surface self-intersections'
+    };
+  SMfield.values        = {
+    ... 'qualitymeasures.SurfaceEulerNumber'
+    'qualitymeasures.SurfaceDefectArea'
+    'qualitymeasures.SurfaceDefectNumber'
+    'qualitymeasures.SurfaceIntensityRMSE'
+    'qualitymeasures.SurfacePositionRMSE'
+    'qualitymeasures.SurfaceSelfIntersections'
+    };
+  SMfield.val           = {'qualitymeasures.SurfaceDefectArea'};
+  SMfield.help          = {'CAT preprocessing surface quality measures (not normalized). ' ''};
+  
+  
+  % segmenation measures
+  USMfield               = cfg_menu;
+  USMfield.tag           = 'xmlfields';
+  USMfield.name          = 'Unified segmentation validation measures';
+  USMfield.labels        = {
+    'SPM log-likelyhood'
+    'SPM tissue peak 1 (def. GM)'
+    'SPM tissue peak 2 (def. WM)'
+    'SPM tissue peak 3 (def. CSF1)'
+    'SPM tissue peak 4 (def. CSF2)'
+    'SPM tissue volume 1 (GM)'
+    'SPM tissue volume 2 (WM)'
+    'SPM tissue volume 3 (CSF)'
+    'SPM tissue volume 4 (HD1)'
+    'SPM tissue volume 5 (HD2)'
+    'SPM tissue volume 6 (BG)'
+    ...'CAT skull-stripping parameter'
+    ...'CAT high BG parameter'
+    };
+  USMfield.values        = {
+    'SPMpreprocessing.ll'
+    'SPMpreprocessing.mn(1)'
+    'SPMpreprocessing.mn(2)'
+    'SPMpreprocessing.mn(3)'
+    'SPMpreprocessing.mn(4)'
+    'ppe.SPMvols0(1)'
+    'ppe.SPMvols0(2)'
+    'ppe.SPMvols0(3)'
+    'ppe.SPMvols0(4)'
+    'ppe.SPMvols0(5)'
+    'ppe.SPMvols0(6)'
+    ...'ppe.skullstrippedpara'
+    ...'ppe.highBGpara'
+    ...reg.ll
+    ...reg.dt, rmsdt
+    };
+  USMfield.val           = {'SPMpreprocessing.ll'};
+  USMfield.help          = {'SPM preprocessing measures for evaluation of the preprocessing. The tissue peaks depend on the defined number of SPM peaks within a class (default=[1 1 2 3 4 2]). The volumes depend on the TPM that are by default GM, MW, CSF, HD1 (hard tissue), HD2 (soft tissue), backgroun (BG). ' ''};
+  USMfield.hidden        = expert<2; 
+  
+  
+  % individual measures
+  IMfield               = cfg_menu;
+  IMfield.tag           = 'xmlfields';
+  IMfield.name          = 'Morphometric measures';
+  IMfield.labels        = {
+    'Total Intracranial Volume (TIV)'
+    'Total Surface Area (TSA)'
+    'Mean cortical thickness'
+    'Cortical thickness standard deviation'
+    'Relative CSF volume'
+    'Relative GM  volume'
+    'Relative WM  volume'
+    'Relative WMH volume'
+    'Absolute CSF volume'
+    'Absolute GM  volume'
+    'Absolute WM  volume'
+    'Absolute WMH volume'
+    };
+  IMfield.values        = {
+    'subjectmeasures.vol_TIV'
+    'subjectmeasures.surf_TSA'
+    'subjectmeasures.dist_thickness{1}(1)'
+    'subjectmeasures.dist_thickness{1}(2)'
+    'subjectmeasures.vol_rel_CGW(1)'
+    'subjectmeasures.vol_rel_CGW(2)'
+    'subjectmeasures.vol_rel_CGW(3)'
+    'subjectmeasures.vol_rel_CGW(4)'
+    'subjectmeasures.vol_abs_CGW(1)'
+    'subjectmeasures.vol_abs_CGW(2)'
+    'subjectmeasures.vol_abs_CGW(3)'
+    'subjectmeasures.vol_abs_CGW(4)'
+    ...'ppe.reg.rmsdt'
+    ...'ppe.reg.rmsdtc'
+    };
+  IMfield.val           = {'subjectmeasures.vol_TIV'};
+  IMfield.help          = {'Global morphometric measures. ' ''};
+  
+  
+  % - title 
+  ftitle              = setname; 
+  ftitle.name         = 'title';
+  ftitle.tag          = 'Plot title';
+  ftitle.help         = {'Name of figure' ''};
+  ftitle.val          = {''};
+  % - yname (measure/scala)
+  fname             = setname; 
+  fname.name          = 'name';
+  fname.tag           = 'Measure name';
+  fname.help          = {'Name of the measure ploted at the y-axis. ' ''};
+  %
+  fspec               = setname; 
+  fspec.name          = 'name';
+  fspec.tag           = 'Measure name';
+  fspec.help          = {'Name of the measure ploted at the y-axis. ' ''};
+  %  opt.ylim        = [-inf inf];    % y-axis scaling
+  ylim                = cfg_entry;
+  ylim.tag            = 'ylim';
+  ylim.name           = 'y-axis limits';
+  ylim.help           = {'Limitation of x-axis. '}; 
+  ylim.strtype        = 'r';
+  ylim.num            = [1 2];
+  ylim.val            = {[-inf inf]}; 
+  %  opt.subsets     = false(1,numel(data)); 
+  
+  xmlfield0           = cfg_exbranch;
+  xmlfield0.tag       = 'xmlfields';
+  xmlfield0.name      = 'Data field (complex)';
+  xmlfield0.val       = { ftitle  , fname , fspec , ylim}; 
+  xmlfield0.help      = {'Specify set properties such as name or color' ''};
+  
+  
+  xmlfield            = cfg_entry;
+  xmlfield.tag        = 'xmlfields';
+  xmlfield.name       = 'Data field (simple)';
+  xmlfield.help       = { 
+   ['Specify field for data extraction that result in one value per file, e.g., ' ...
+    'measures.vol_rel_CGW(1) to extract the first (CSF) volume value. '] ''};
+  xmlfield.strtype    = 's';
+  xmlfield.num        = [1 Inf];
+  xmlfield.def        = @(val) 'subjectmeasures.vol_TIV';
+  
+  xmlfields           = cfg_repeat;
+  xmlfields.tag       = 'xmlfields';
+  xmlfields.name      = 'XML-fields';
+  if expert
+    xmlfields.values  = {xmlfield,xmlfield0,USMfield,QMfield,QRfield,SMfield,IMfield};
+  else
+    xmlfields.values  = {xmlfield,xmlfield0,QRfield,SMfield,IMfield};
+  end
+  xmlfields.val       = {};
+  xmlfields.num       = [1 Inf];
+  xmlfields.forcestruct;
+  xmlfields.help      = {'Specify manually grouped XML files.'};
+  
+  % ------
+  
+  
+  % main figure title and xlabel (ylabel is defined by the fieldselector)
+  title               = cfg_entry;
+  title.tag           = 'title';
+  title.name          = 'Title';
+  title.help          = {'Title of the plot append to the field specific title definition.'
+    'If the first char is a + than the title is added to automatic generated titles. ' 
+    ''}; 
+  title.strtype       = 's';
+  title.num           = [0 inf];
+  title.val           = {''};
+  
+  xlabel              = name;
+  xlabel.tag          = 'xlabel';
+  xlabel.name         = 'Xlabel';
+  xlabel.val          = {'groups'};
+  xlabel.help         = {'General group name, e.g., methods, versions, parameter A. ' ''};
+  
+            
+  %  opt.style       = 0;             % violin-plot: 0 - box plot; 1 - violin plot; 2 - violin + thin box plot 
+  %  opt.violin      = 0;             % violin-plot: 0 - box plot; 1 - violin plot; 2 - violin + thin box plot 
+  style               = cfg_menu;
+  style.tag           = 'style';
+  style.name          = 'Plotting Style';
+  style.labels        = {'Box-plot','Violin-lot','Violin-box-lot','Density-plot'};
+  style.values        = {0 1 2 3};
+  style.def           = @(val) 0;
+  style.help          = {'Type of data plot.' ''};
+  
+  % colorset    - menu? jet, hsv, ...
+  colorset            = cfg_menu;
+  colorset.tag        = 'colorset';
+  colorset.name       = 'Colorset';
+  colorset.labels     = {'Parula','Jet','HSV','Hot','Cool','Spring','Summer','Autumn','Winter','Lines','Prism'};
+  colorset.values     = {'parula','jet','hsv','hot','cool','spring','summer','autumn','winter','lines','prism'};
+  colorset.def        = @(val) 'jet';
+  colorset.help       = {'Default colors of the boxes.' ''};
+  
+  
+  % figformat   - 
+  fsize               = cfg_entry;
+  fsize.tag           = 'fsize';
+  fsize.name          = 'Figure size in cm';
+  fsize.help          = {
+    'Define height/size of the figure. Using only one value only defines the heigh. '
+    'Default matlab figure is [9.8778 7.4083] cm. ' 
+    }; 
+  fsize.strtype       = 'r';
+  fsize.num           = [1 2];
+  fsize.val           = {[4.5 3.6]}; 
+  
+  %  opt.notched     = 0;             % thinner at median [0 1] with 1=0.5
+  notched             = cfg_menu;
+  notched.tag         = 'notched';
+  notched.name        = 'Notched boxes';
+  notched.labels      = {'No','Yes'};
+  notched.values      = {0 1};
+  notched.def         = @(val) 0;
+  notched.help        = {'Notched boxes taht are thinner at the median.' ''};
+
+  %  opt.symbol      = '+o';          % outlier symbols
+  symbol              = cfg_entry;
+  symbol.tag          = 'symbol';
+  symbol.name         = 'Outlier symbols';
+  symbol.help         = {'Notched boxes taht are thinner at the median.' ''};
+  symbol.strtype      = 's';
+  symbol.num          = [1 2];
+  symbol.val          = {'+o'}; 
+  
+  %  opt.maxwhisker  = 1.5;           % 
+  maxwhisker          = cfg_entry;
+  maxwhisker.tag      = 'maxwhisker';
+  maxwhisker.name     = 'Maximum whisker';
+  maxwhisker.help     = {' '}; 
+  maxwhisker.strtype  = 'r';
+  maxwhisker.num      = [1 1];
+  maxwhisker.val      = {1.5}; 
+  
+%  opt.sort        = 0;             % no sorting
+%                  = 1;             % sort groups (ascending)
+%                  = 2;             % sort groups (descending)[inactive]
+%                  = [index];       % or by a index matrix
+  sortdata            = cfg_menu;
+  sortdata.tag        = 'sort';
+  sortdata.name       = 'Sort groups';
+  sortdata.labels     = {'No','Ascending','Descending'};
+  sortdata.values     = {0 1 2};
+  sortdata.def        = @(val) 0;
+  sortdata.help       = {'' ''};
+
+%  opt.fill        = 1;             % filling of boxes: 0 - no filling; 0.5 - half-filled boxes; 1 - filled boxes
+  fill                = cfg_menu;
+  fill.tag            = 'fill';
+  fill.name           = 'Plot box';
+  fill.labels         = {'No filling','half-filling','full-filling'};
+  fill.values         = {0 0.5 1};
+  fill.def            = @(val) 1;
+  fill.help           = {'Filling of boxes: 0 - no filling; 0.5 - half-filled boxes; 1 - filled boxes' ''};
+  fill.hidden         = expert<1; 
+  
+  menubar             = cfg_menu;
+  menubar.tag         = 'menubar';
+  menubar.name        = 'Display MATLAB menu bars';
+  menubar.labels      = {'No','Yes'};
+  menubar.values      = {0 1};
+  menubar.def         = @(val) 0;
+  menubar.help        = {'Print number of elements of each group in the groupname' ''};
+
+  close               = cfg_menu;
+  close.tag           = 'close';
+  close.name          = 'Close figures';
+  close.labels        = {'No','Yes'};
+  close.values        = {0 1};
+  close.def           = @(val) 0;
+  close.help          = {'Close figures after export. ' ''};
+
+  
+%  opt.groupnum    = 1;             % add number of elements
+  groupnum            = cfg_menu;
+  groupnum.tag        = 'fill';
+  groupnum.name       = 'Number group elements';
+  groupnum.labels     = {'No','Yes'};
+  groupnum.values     = {0 1};
+  groupnum.def        = @(val) 1;
+  groupnum.help       = {'Print number of elements of each group in the groupname' ''};
+  groupnum.hidden     = expert<1; 
+
+% [opt.groupmin    = 5;]            % minimum number of non-nan-elements in a group [inactive]
+
+%  opt.ygrid       = 1;             % activate y-grid-lines
+  ygrid               = cfg_menu;
+  ygrid.tag           = 'ygrid';
+  ygrid.name          = 'Plot y-grid lines';
+  ygrid.labels        = {'No','Yes'};
+  ygrid.values        = {0 1};
+  ygrid.def           = @(val) 1;
+  ygrid.help          = {'Plot y-grid-lines' ''};
+  ygrid.hidden        = expert<1; 
+  
+%  opt.gridline    = '-';           % grid line-style
+
+
+%  opt.box         = 1;             % plot box
+  box                 = cfg_menu;
+  box.tag             = 'box';
+  box.name            = 'Plot box';
+  box.labels          = {'No','Yes'};
+  box.values          = {0 1};
+  box.def             = @(val) 1;
+  box.help            = {'' ''};
+
+%  opt.outliers    = 1;             % plot outliers
+  outliers            = cfg_menu;
+  outliers.tag        = 'outliers';
+  outliers.name       = 'Plot outliers';
+  outliers.labels     = {'No','Yes'};
+  outliers.values     = {0 1};
+  outliers.def        = @(val) 1;
+  outliers.help       = {'' ''};
+  outliers.hidden     = expert<1; 
+  
+%  opt.boxwidth    = 0.8;           % width of box
+  boxwidth            = cfg_entry;
+  boxwidth.tag        = 'boxwidth';
+  boxwidth.name       = 'Boxwidth'; 
+  boxwidth.help       = {'Main width of the boxes. ' ''}; 
+  boxwidth.strtype    = 'r';
+  boxwidth.num        = [1 1];
+  boxwidth.val        = {0.8}; 
+  boxwidth.hidden     = expert<1; 
+  
+%  opt.groupcolor  = [R G B];       % matrix with (group)-bar-color(s) 
+%                                     use jet(numel(data)) 
+%                                     or other color functions
+  groupcolormap               = cfg_menu;
+  groupcolormap.tag           = 'groupcolormap';
+  groupcolormap.name          = 'Colormap';
+  groupcolormap.labels        = {'jet','hsv','warm','cold'};
+  groupcolormap.values        = {'jet','hsv','warm','cold'};
+  groupcolormap.def           = @(val) 1;
+  groupcolormap.help          = {'' ''};
+
+  % colormapdef
+  colormapdef            = cfg_entry;
+  colormapdef.tag        = 'colormapdef';
+  colormapdef.name       = 'Own colormap'; 
+  colormapdef.help       = {'Definition of a own colormap.' ''}; 
+  colormapdef.strtype    = 'r';
+  colormapdef.num        = [inf 3];
+  colormapdef.val        = {jet(10)};
+  
+%  opt.symbolcolor = 'r';           % color of symbols
+  symbolcolor               = cfg_menu;
+  symbolcolor.tag           = 'symbolcolor';
+  symbolcolor.name          = 'Outlier color';
+  symbolcolor.labels        = {'red','green','blue','black','magenta','cyan','yellow'};
+  symbolcolor.values        = {'r','g','b','n','m','c','y'};
+  symbolcolor.val           = {'r'};
+  symbolcolor.help          = {'Color of outlier symbols.' ''};
+
+
+%  opt.showdata    = 0;             % show data points: 0 - no; 1 - as points; 2 - as short lines (barcode plot)
+  showdata               = cfg_menu;
+  showdata.tag           = 'showdata';
+  showdata.name          = 'Show datapoints';
+  showdata.labels        = {'No','Points','Bars'};
+  showdata.values        = {0 1 2};
+  showdata.def           = @(val) 0;
+  showdata.help          = {'Show data points as points or as short lines (barcode plot).' ''};
+
+%  opt.median      = 2;             % show median: 0 - no; 1 - line; 2 - with different fill colors 
+  median               = cfg_menu;
+  median.tag           = 'median';
+  median.name          = 'Median style';
+  median.labels        = {'No','Line','Brightend'};
+  median.values        = {0 1 2};
+  median.def           = @(val) 2;
+  median.help          = {'Show median as line or with different fill colors. ' ''};
+  
+%  opt.edgecolor   = 'none';        % edge color of box 
+  boxedgecolor         = cfg_menu;
+  boxedgecolor.tag     = 'edgecolor';
+  boxedgecolor.name    = 'Use edgecolor for boxes';
+  boxedgecolor.labels  = {'No','Yes'};
+  boxedgecolor.values  = {'none','-n'};
+  boxedgecolor.val     = {'none'};
+  boxedgecolor.help    = {'Show median as line or with different fill colors. ' ''};
+
+%  opt.trans       = 0.25;          % transparency of the boxes
+
+%  opt.sat         = 0.50;          % saturation of the boxes
+
+  % opt.hflip = 0; 
+  hflip               = cfg_menu;
+  hflip.tag           = 'hflip';
+  hflip.name          = 'Flip data';
+  hflip.labels        = {'No','Yes'};
+  hflip.values        = {0 1};
+  hflip.def           = @(val) 0;
+  hflip.help          = {'Flip data orientation.' ''};
+  
+  % opt.vertical    = 1;  % boxplot orientation 
+  vertical            = cfg_menu;
+  vertical.tag        = 'vertical';
+  vertical.name       = 'Box orientation';
+  vertical.labels     = {'Horizontal','Vertical'};
+  vertical.values     = {0 1};
+  vertical.def        = @(val) 1;
+  vertical.help       = {'Boxplot orientation. ' ''};
+
+  % fontsize
+  fontsize            = cfg_entry;
+  fontsize.tag        = 'FS';
+  fontsize.name       = 'Fontsize';
+  fontsize.help       = {'Main font size of the figure. ' ''}; 
+  fontsize.strtype    = 'r';
+  fontsize.num        = [1 1];
+  fontsize.val        = {10}; 
+  
+  % main parameter structure passed to cat_plot_boxplot
+  opts           = cfg_exbranch;
+  opts.tag       = 'opts';
+  opts.name      = 'Options';
+  opts.val       = { title, xlabel , ...
+    ygrid, style , colorset , hflip , vertical , fsize, fontsize}; 
+  % boxedgecolor
+  opts.help      = {'Specify the thickness of specific ROIs.' ''};
+ 
+  extopts          = opts;
+  extopts.tag      = 'extopts';
+  extopts.name     = 'Extended options';
+  extopts.val      = {
+    showdata, sortdata, ...
+    maxwhisker, symbol, symbolcolor, ...
+    median, notched, boxwidth , boxedgecolor, fill, ...
+    menubar, ...
+  };
+  
+%     * figure size
+%     * plot table 
+% E
+  
+  % ------
+  type                = cfg_menu;
+  type.tag            = 'type';
+  type.name           = 'Export data type';
+  type.labels         = {'none','fig','png','epsc','fig + png','fig + png + epsc'};
+  type.values         = {'','fig','png','epsc','fig png','fig png epsc'};
+  type.def            = @(val) 'fig png epsc';
+  type.help           = {'Type of output files.' ''};
+
+  name.tag            = 'name';
+  name.name           = 'Prefix';
+  name.help           = {'Additional prefix'}; 
+  name.val            = {''};
+  
+  subdir.val          = {'CAT_boxplot'};
+
+  % dpi
+  
+  output              = cfg_exbranch;
+  output.tag          = 'output';
+  output.name         = 'Output'; 
+  output.val          = {outdir,subdir,name,type,close}; 
+  output.help         = {''};
+  
+  % -----
+  boxplot             = cfg_exbranch;
+  boxplot.tag         = 'boxplot';
+  boxplot.name        = 'XML boxplot';
+  if expert
+    boxplot.val       = {datasets,xmlfields,opts,extopts,output};
+  else
+    boxplot.val       = {datasets,xmlfields,opts,output};
+  end
+  boxplot.prog        = @cat_plot_boxplot;
+  boxplot.hidden      = expert<1; 
+  %boxplot.vout        = @vout_io_boxplot;
+  boxplot.help        = {''};
+  
+return
+ 
 %_______________________________________________________________________
 function avg_img = conf_vol_average(data,outdir)
 % image average
@@ -2673,4 +3668,24 @@ function dep = vout_stat_spm2x_surf(job)
   dep.sname      = 'Transform & Threshold spm surfaces';
   dep.src_output = substruct('.','Pname');
   dep.tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+return
+
+%------------------------------------------------------------------------
+function dep = vout_stat_getCSVXML(job)
+  dep = cfg_dep;
+
+  job.dep = 1; 
+  if isempty( job.files )
+    out = cat_stat_getCSVXMLfield(job); 
+
+    FN = fieldnames(out);
+    if iscell(job.fields)
+      for fni = 1:numel(FN)
+        dep(end + (fni>1))  = cfg_dep; 
+        dep(end).sname      = sprintf('%s',FN{fni});
+        dep(end).src_output = substruct('.',FN{fni},'()',{':'});
+        dep(end).tgt_spec   = cfg_findspec({}); %{{'filter',,'strtype','e'}});
+      end
+    end
+  end
 return

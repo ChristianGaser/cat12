@@ -39,7 +39,7 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
 
   % bias, noise and global corrected without masking for subject space and with masking for other spaces 
   cat_io_writenii(VT0,Ym,mrifolder,'m', ...Dartel
-    [prefix ' bias and noise corrected, global intensity normalized'],'uint16',[0,0.0001], ... 
+    [prefix 'bias and noise corrected, global intensity normalized'],'uint16',[0,0.0001], ... 
     min([1 0 2],[job.output.bias.native job.output.bias.warped job.output.bias.dartel]),trans);
   cat_io_writenii(VT0,Ym.*(Yp0>0.1),mrifolder,'m', ... 
     [prefix 'bias and noise corrected, global intensity normalized (masked due to normalization)'],'uint16',[0,0.0001], ...
@@ -245,34 +245,11 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
       fafi = find(cellfun('isempty',strfind(FAF(:,1),[AN{ai} '.']))==0);
       if ~isempty(fafi) && job.output.atlases.(AN{ai}), FA(fai,:) = FAF(fafi,:); fai = fai+1; end %#ok<AGROW>
     end
-    
+  
     for ai=1:size(FA,1)
       [px,atlas] = fileparts(FA{ai,1});  %#ok<ASGLU>
-
-      % map atlas in native space
       Vlai = spm_vol(FA{ai,1});
-      if any( Vlai.dim ~= trans.warped.odim )
-        % interpolation
-        Vlai = spm_vol(FA{ai,1});
-        yn = numel(trans.warped.y); 
-        p  = ones([4,yn/3],'single'); 
-        p(1,:) = trans.warped.y(1:yn/3);
-        p(2,:) = trans.warped.y(yn/3+1:yn/3*2);
-        p(3,:) = trans.warped.y(yn/3*2+1:yn);
-        amat   = Vlai.mat \ trans.warped.M1; 
-        p      = amat(1:3,:) * p;
-
-        Yy = zeros([res.image(1).dim(1:3),3],'single'); 
-        Yy(1:yn/3)        = p(1,:);
-        Yy(yn/3+1:yn/3*2) = p(2,:);
-        Yy(yn/3*2+1:yn)   = p(3,:);
-
-        Yy = double(Yy); 
-      else
-        Yy = double(trans.warped.y);
-      end
-      
-      Ylai = cat_vol_sample(res.tpm(1),Vlai,Yy,0);
+      Ylai = cat_vol_sample(spm_vol([job.extopts.templates{1} ',1']),Vlai,trans.warped.y,0);
       
       % check data range
       mx = max(Ylai(:));
