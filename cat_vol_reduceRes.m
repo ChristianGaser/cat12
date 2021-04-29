@@ -2,7 +2,7 @@ function varargout = cat_vol_reduceRes(varargin)
 % ______________________________________________________________________
 % Reduction of the image resolution by merging of voxels with the name
 % "lowresR#x#x#_*.nii with * for the original file name, and # for the 
-% degree of reduction, with #=2 for the half resolutino.
+% degree of reduction, with #=2 for the half resolution.
 %
 % V = cat_vol_reduceRes(job)
 % 
