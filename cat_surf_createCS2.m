@@ -57,7 +57,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   % set debugging variable
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
   S = struct();
-  
+
   % set defaults
   if ~exist('opt','var'), opt = struct(); end                 % create variable if not exist
   vx_vol        = sqrt(sum(V.mat(1:3,1:3).^2));               % further interpolation based on internal resolution 
@@ -1244,7 +1244,7 @@ if opt.SRP==3, facevertexcdata = Tfs; end
         res.(opt.surf{si}).createCS_final      = res.(opt.surf{si}).createCS_3_collcorr; 
         
         
-        %% thickness differnce due to Kollision correction 
+        %% thickness difference due to collision correction 
         cmd = sprintf('CAT_SurfDistance -mean -thickness "%s" "%s" "%s"',Ppbt,Pcentral,Pthick);
         [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS);
         Tfs1 = cat_io_FreeSurfer('read_surf_data',Pthick); 
@@ -1506,10 +1506,21 @@ if opt.SRP==3, facevertexcdata = Tfs; end
     end
   end
 
-  EC            = EC / numel(opt.surf);
-  defect_area   = defect_area / numel(opt.surf);
-  defect_size   = defect_size / numel(opt.surf);
-  defect_number = defect_number / numel(opt.surf);
+  % skip that part if a prior image is defined
+  if ~useprior
+    EC            = EC / numel(opt.surf);
+    defect_area   = defect_area / numel(opt.surf);
+    defect_size   = defect_size / numel(opt.surf);
+    defect_number = defect_number / numel(opt.surf);
+  else % obtain surface information from xml report file
+    [pp0,ff0] = spm_fileparts(priorname);  %#ok<ASGLU>
+    catxml = fullfile(pp,reportfolder,['cat_' ff0 '.xml']);
+    xml = cat_io_xml(catxml);
+    EC = xml.qualitymeasures.SurfaceEulerNumber;
+    defect_size = xml.subjectmeasures.defect_size;
+    defect_area = xml.qualitymeasures.SurfaceDefectArea;
+    defects = xml.qualitymeasures.SurfaceDefectNumber;
+  end
   
   % final res structure
   res.Smat        = Smat; 
