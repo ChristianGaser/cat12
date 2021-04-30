@@ -1514,7 +1514,7 @@ if opt.SRP==3, facevertexcdata = Tfs; end
     defect_number = defect_number / numel(opt.surf);
   else % obtain surface information from xml report file
     [pp0,ff0] = spm_fileparts(priorname);  %#ok<ASGLU>
-    catxml = fullfile(pp,reportfolder,['cat_' ff0 '.xml']);
+    catxml = fullfile(pp0,reportfolder,['cat_' ff0 '.xml']);
     xml = cat_io_xml(catxml);
     EC = xml.qualitymeasures.SurfaceEulerNumber;
     defect_size = xml.subjectmeasures.defect_size;
