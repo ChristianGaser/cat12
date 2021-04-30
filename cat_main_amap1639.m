@@ -140,7 +140,7 @@ function [prob,indx,indy,indz,th] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res)
     BBcc = ~Ybb; BBcc(ex*3   :end+1-ex*3    , ex*3   :end+1-ex*3    , ex*3:end+1-ex*3   ) = false; BBcc(BBww | BBgw | BBgg | BBgc) = false; 
     BBcb = ~Ybb; BBcb(ex*3+0 :end+1-ex*3-0  , ex*3+ep:end+1-ex*3-ep , ex*3:end+1-ex*3-ep) = false; BBcb(BBww | BBgw | BBgg | BBgc | BBcc) = false; 
     % extra values + extra noise
-    % all peaks have an offset of 0.05 that produce better results
+    % all peaks have an offset of 0.05 that produces better results
     Ymib(BBcb) = 0.55/3 + pnx * Yn(BBcb); Yp0b(BBcb) = 0; 
     Ymib(BBcc) = 1.05/3 + pnx * Yn(BBcc); Yp0b(BBcc) = 1; 
     Ymib(BBgc) = 1.55/3 + pnx * Yn(BBgc); Yp0b(BBgc) = 1; 
@@ -170,11 +170,7 @@ function [prob,indx,indy,indz,th] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res)
   %                in additition, test showed that 32 is quite optimal, whereas higher values >64 are worse 
   % - n_iters   .. for highly optimized data is about 10 iterations
   % - bias_fwhm .. the bias correction should be inactive 
-  if job.extopts.AMAPframing
-    n_iters = 10; sub = round(64/min(vx_vol));   %#ok<NASGU>
-  else
-    n_iters = 50; sub = round(64/min(vx_vol));   %#ok<NASGU>
-  end  
+  n_iters = 10; sub = round(64/mean(vx_vol));   %#ok<NASGU>
   n_classes = 3;  pve = 5; bias_fwhm = 0; init_kmeans = 0;           %#ok<NASGU>
   if job.extopts.mrf~=0, iters_icm = 50; else iters_icm = 0; end    %#ok<NASGU>
 
