@@ -9,12 +9,12 @@ function out = cat_stat_getCSVXMLfield(job)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
-% $Id: cat_main_amap1639.m 1791 2021-04-06 09:15:54Z gaser $ 
+% $Id$ 
 
 
 %#ok<*ASGLU,*AGROW>
 
-  SVNid = '$Rev: 1729 $';
+  SVNid = '$Rev$';
   
   def.files     = {};   % n-files, e.g. XML for direct extraction or nii/gii as selector
   def.csvfile   = {''}; % 0..1-file ... maybe n later
