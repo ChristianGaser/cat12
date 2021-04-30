@@ -1069,15 +1069,21 @@ globals2.name    = 'Global scaling';
 globals2.val     = {g_omit};
 globals2.values  = {g_omit g_yes};
 globals2.help    = {
-                   'This option is to correct structural (VBM) data by TIV using global scaling.'
+                   'This option is to correct/normalize structural (VBM) data by TIV using global scaling.'
                    ''
 }';
 
 voxel_cov         = cfg_branch;
 voxel_cov.tag     = 'voxel_cov';
-voxel_cov.name    = 'Voxel-wise covariate';
+voxel_cov.name    = 'Voxel-wise covariate (experimental!)';
 voxel_cov.val     = {cov iCFI iCC2 globals2};
-voxel_cov.help    = {'This option allows for the specification of a voxel-wise covariate (e.g. use GM to investigate or model the confounding effect for functional data)'};
+voxel_cov.help    = {
+    'This experimental option allows the specification of a voxel-wise covariate. This can be used (depending on the contrast defined) to (1) remove the confounding effect of structural data (e.g. GM) on functional data or (2) investigate the relationship (regression) between functional and structural data.'
+    ''
+    'In addition, an interaction can be modeled to examine whether the regression between functional and structural data differs between two groups.'
+    ''
+    'Please note that the saved vSPM.mat file can only be analyzed with the TFCE toolbox.'
+    };
 
 %--------------------------------------------------------------------------
 % des Design
