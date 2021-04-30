@@ -184,7 +184,7 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
         job.output.TPMC.mod job.output.TPMC.dartel]),trans);
     end
     
-    %% correction ridig/affine transformed backgound 
+    %% correction of ridigly/affine transformed backgound 
     reg = {'affine','rigid'};
     for ri = 1:numel(reg)
       [pp,ff] = spm_fileparts(VT0.fname); 
@@ -203,7 +203,7 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
         Ybg = Yclsa(:,:,:,6) + (1 - cat_vol_morph(Ysum>=1,'c')); 
         spm_write_vol(Vclsa(6),Ybg); 
       elseif sum(Pbgexist)>0
-        cat_io_cprintf('warn','\nBackground correction of the %s output cannot take place because not all TPM classes have been written.\n',reg{ri}); 
+        cat_io_cprintf('warn','\nBackground correction of the %s output cannot be done because not all TPM classes have been written.\n',reg{ri}); 
       end
       clear Pbg vclsa Yclsa Ysum Ybg
     end
@@ -267,9 +267,9 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
       Ylai = reshape(Ylai(:),trans.native.Vi.dim); 
       if ~debug, clear Yy; end
 
-      % write map (mri as tissue subfolder and mri_atlas as ROI subfolder)
-      if isempty(mrifolder), amrifolder = ''; else, amrifolder = 'mri_atlas'; end
-      cat_io_writenii(VT0,Ylai,amrifolder,[atlas '_'],[prefix ' ' atlas ' original'],...
+      % write map (mri as tissue and ROI subfolder)
+%      if isempty(mrifolder), amrifolder = ''; else, amrifolder = 'mri_atlas'; end
+      cat_io_writenii(VT0,Ylai,mrifolder,[atlas '_'],[prefix ' ' atlas ' original'],...
         type,[0,1],job.output.atlas,trans);
       if ~debug, clear Vlai Ylai; end
     end

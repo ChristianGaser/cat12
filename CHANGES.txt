@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1818 | gaser | 2021-04-30 18:35:57
+r1819 | gaser | 2021-04-30 22:00:55
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main1639.m
+M       cat_main_write.m
+M       cat_stat_check_cov.m
+MM      cat_stat_getCSVXMLfield.m
+
+(1) Fixed:   Corrected index error in cat_stat_check_cov.m.
+(2) Changed: Use job.extopts.AMAPframing by default.
+(3) Changed: Save individual atlas maps now always in mri and not mri_atlas.
+
+------------------------------------------------------------------------
+r1818 | gaser | 2021-04-30 18:36:42 +0200 (Fr, 30 Apr 2021) | 22 lines
 
 Changed paths:
 M       CAT12-Manual.pdf
@@ -22,6 +36,7 @@ M       html/cat_versions.html
 (4) Changed: Updated help text for new basic models function.
 (4) Fixed:   Corrected path for xml-file for longitudinal batch in 
              cat_surf_createCS*m.
+
 ------------------------------------------------------------------------
 r1817 | dahnke | 2021-04-29 17:11:43 +0200 (Do, 29 Apr 2021) | 18 lines
 

@@ -298,7 +298,7 @@ else
 
     for i = 1:n_subjects
       H.img = spm_slice_vol(H.V(i),M,[dimx dimy],[1 0]);
-      H.img(isnan(img)) = 0;
+      H.img(isnan(H.img)) = 0;
       Y(i,:) = H.img(:);
       if is_gSF
         Y(i,:) = Y(i,:)*gSF(i);

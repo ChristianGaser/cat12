@@ -452,7 +452,7 @@ if ~isfield(res,'spmpp')
   %    prob .. new AMAP segmenation (4D)
   %    ind* .. index elements to asign a subvolume
   %  -------------------------------------------------------------------
-  job.extopts.AMAPframing = job.extopts.new_release; % ######################################### update this later #########
+  job.extopts.AMAPframing = 1;
   [prob,indx,indy,indz] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res);
   
    
