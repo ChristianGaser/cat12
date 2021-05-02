@@ -1,5 +1,33 @@
 ------------------------------------------------------------------------
-r1819 | gaser | 2021-04-30 22:00:55
+r1820 | gaser | 2021-05-03 00:26:38
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_extopts.m
+M       cat_conf_output.m
+M       cat_io_writenii.m
+M       cat_long_multi_run.m
+M       cat_main_write.m
+M       cat_stat_check_cov.m
+M       cat_vol_slice_overlay.m
+M       html/cat.html
+M       templates_MNI152NLin2009cAsym/templates.man
+
+(1) Changed: Updated options and help text for atlas maps.
+(2) Changed: Renamed saved cat atlas to cat_* to have consistent atlas names
+             if saved in native space.
+(3) Changed: Hide SRP GUI for default users.
+(4) Fixed:   For deplyed version the file cat_long_main.m might be read-only. 
+             Therefore, this file should be replaced after installation (thanks 
+             to Dimitri Papadopoulos for pointing to that issue).
+(5) Fixed:   Comparisons for threshold in cat_vol_slice_overlay were corrected 
+             to ">" instead of ">=" (thanks to Pravesh Parekh for pointing to 
+             that issue).
+(6) Fixed:   Corrected list of filenames in cat_stat_check_cov.m
+
+------------------------------------------------------------------------
+r1819 | gaser | 2021-04-30 22:01:02 +0200 (Fr, 30 Apr 2021) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +39,7 @@ MM      cat_stat_getCSVXMLfield.m
 (1) Fixed:   Corrected index error in cat_stat_check_cov.m.
 (2) Changed: Use job.extopts.AMAPframing by default.
 (3) Changed: Save individual atlas maps now always in mri and not mri_atlas.
+
 
 ------------------------------------------------------------------------
 r1818 | gaser | 2021-04-30 18:36:42 +0200 (Fr, 30 Apr 2021) | 22 lines

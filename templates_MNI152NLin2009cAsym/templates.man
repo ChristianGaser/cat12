@@ -23,10 +23,18 @@
 %
 % Template_T1.nii 
 % ---------------------------------
-% MNI152NLin2009cAsym T1 
+% T1 in MNI152NLin2009cAsym space
 % 
 % This is the MNI152NLin2009cAsym T1 template that can be used to overlay
 % CAT12 results.
+%
+% cat.nii 
+% ---------------------------------
+% This is the CAT atlas where major anatomical structures are used for 
+% partitioning or for atlas based processing. Odd numbers code the left, even 
+% numbers the right hemisphere. In order to create this atlas several atlases 
+% such as AAL, Broadman, IXI, and Hammers atlas and the IBASPM toolbox
+% (http://www.thomaskoenig.ch/Lester/ibaspm.htmAnatomy) were used.
 %
 --------------------------------------------------------------------------------
 $Id$

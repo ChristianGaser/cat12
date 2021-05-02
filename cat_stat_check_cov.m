@@ -372,6 +372,7 @@ for i=1:n_samples
   [tmp, fname_tmp{i}] = spm_str_manip(char(H.V(H.sample == i).fname),'C');
   fname_m = [fname_m; fname_tmp{i}.m];
   fname_s{i} = fname_tmp{i}.s;
+  fname_e{i} = fname_tmp{i}.e;
   if job.verb
     fprintf('Compressed filenames sample %d: %s  \n',i,tmp);
   end
@@ -654,7 +655,7 @@ number = min([number 24]);
 number = min([number length(H.V)]);
   
 ind_sorted_decreased = H.ind_sorted_display(n:-1:1);
-list = char(H.filename.m{ind_sorted_decreased});
+list = char(H.V(ind_sorted_decreased).fname);
 sample = H.sample(ind_sorted_decreased);
 list2 = list(1:number,:);
 

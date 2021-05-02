@@ -168,15 +168,15 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
         YMR = false(size(Yn));
         for i=1:4, YMR = YMR | (Yn>(i-1/rf) & Yn<(i+1/rf)); end
         Yn(YMR)     = Ynr(YMR); clear YMR Ynr;
-        delete(Vn.fname); % remove it, otherwise it will have the wrong filesize (correct readable, but still to big)
+        delete(Vn.fname); % remove it, otherwise it will have the wrong filesize (correct readable, but still too big)
         Vn = spm_write_vol(Vn,double(Yn));
       elseif labelmap
         [Vn,Yn] = cat_vol_imcalc(Vn,Vo,'i1',struct('interp',0,'verb',0));
-        delete(Vn.fname); % remove it, otherwise it will have the wrong filesize (correct readable, but still to big)
+        delete(Vn.fname); % remove it, otherwise it will have the wrong filesize (correct readable, but still too big)
         Vn = spm_write_vol(Vn,double(Yn));
       else
         [Vn,Yn] = cat_vol_imcalc(Vn,Vo,'i1',struct('interp',6,'verb',0));
-        delete(Vn.fname); % remove it, otherwise it will have the wrong filesize (correct readable, but still to big)
+        delete(Vn.fname); % remove it, otherwise it will have the wrong filesize (correct readable, but still too big)
         Vn = spm_write_vol(Vn,double(Yn));
       end
     end
