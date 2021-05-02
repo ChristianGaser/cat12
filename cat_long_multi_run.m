@@ -78,10 +78,25 @@ job_name = fullfile(spm('dir'),'toolbox','cat12','cat_long_main.txt');
 % matlab files will be always pre-compiled, but we need the original matlab file untouched
 m_job_name = strrep(job_name,'.txt','.m');
 if isdeployed
-  [status, mesg] = copyfile(job_name,m_job_name,'f');
-  if ~status
-    error(mesg);
+  txt_fileid = fopen(job_name,'r');
+  txt_contents = fread(txt_fileid);
+  fclose(txt_fileid);
+
+  m_fileid = fopen(m_job_name,'r');
+  m_contents = fread(m_fileid);
+  fclose(m_fileid);
+  
+  % check whether length of txt- and m-file differs or content differs and only then the txt-file will be copied
+  % this allows to pre-install the m-file on systems where this file is read-only
+  if (length(txt_contents) == length(m_contents) && any(txt_contents ~= m_contents)) || (length(txt_contents) ~= length(m_contents)
+    [status, mesg] = copyfile(job_name,m_job_name,'f');
+    if ~status
+      fprintf(mesg);
+      fprintf('\nIf you do not have write permissions, the administrator should copy the %s file to %s after installing the precompiled version. This prevents overwriting the read-only file.\n',job_name,m_job_name);
+      return
+    end
   end
+  
 end
 
 % mirror jobs for all subjects

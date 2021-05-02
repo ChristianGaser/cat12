@@ -344,11 +344,13 @@ function [output,output_spm] = cat_conf_output(expert)
   atlas         = cfg_branch;
   atlas.tag     = 'atlas';
   atlas.name    = 'Atlas label maps';
-  atlas.val     = {native warped dartel};
+  atlas.val     = {native};
   atlas.hidden  = expert<1;
   atlas.help    = {
-    'WARNING: The functions that create these maps are still under development! This is the option to save an atlas map with major structures (a1*). Odd numbers code the left, even numbers the right hemisphere. Furthermore, AAL and Broadman atlas maps were created based on maps from MRIcron that where adapted to the other VBM maps. Other maps are used from the IBASPM toolbox.  http://www.thomaskoenig.ch/Lester/ibaspm.htmAnatomy toolbox:Alexander Hammers brain atlas from the Euripides project:   www.brain-development.org  Hammers A, Allom R, Koepp MJ, Free SL, Myers R, Lemieux L, Mitchell   TN, Brooks DJ, Duncan JS. Three-dimensional maximum probability atlas   of the human brain, with particular reference to the temporal lobe.   Hum Brain Mapp 2003, 19: 224-247.'
-  ''
+    'This option saves the selected atlas maps from the "Process Volume ROIs" dialog in native space. The name of the atlas is prepended to the file name.'
+    ''
+    'In addition the cat atlas map with major structures is saved.'
+    ''
   };
 
   % cortical thickness maps

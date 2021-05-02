@@ -57,7 +57,7 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
   cat_io_writenii(VT0,Yp0,mrifolder,'p0',[prefix ' label map'],'uint8',[0,5/255],job.output.label,trans);
   
   % partitioning
-  cat_io_writenii(VT0,Yl1,mrifolder,'a0','brain atlas map for major structures and sides',...
+  cat_io_writenii(VT0,Yl1,mrifolder,'cat_','brain atlas map for major structures and sides',...
     'uint8',[0,1],job.output.atlas,trans);
 
   % class maps 1-3
