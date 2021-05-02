@@ -125,7 +125,7 @@ else
         SO.img(2).vol = spm_vol(OV.name);
         [mx, mn, XYZ, img2] = volmaxmin(SO.img(2).vol);
         % threshold map and restrict coordinates
-        Q = find(img2 >= range(1) & img2 <= range(2));
+        Q = find(img2 > range(1) & img2 < range(2));
         XYZ = XYZ(:, Q);
         img2 = img2(Q);
         
@@ -191,7 +191,7 @@ if isempty(SO.slices)
     [mx, mn, XYZ, vol] = volmaxmin(SO.img(2).vol);
     
     % threshold map and restrict coordinates
-    Q = find(vol >= SO.img(2).range(1));
+    Q = find(vol > SO.img(2).range(1));
     XYZ = XYZ(:, Q);
     vol = vol(Q);
     
@@ -386,7 +386,7 @@ if ~isempty(xA)
   
   % threshold map and restrict coordinates
   if SO.img(2).range(1) >= 0
-    Q = find(vol >= SO.img(2).range(1));
+    Q = find(vol > SO.img(2).range(1));
     XYZ = XYZ(:, Q);
     vol = vol(Q);
   end
@@ -686,7 +686,7 @@ for i = 1:nimgs
         if ~define_slices
             [mx, mn, XYZ, img] = volmaxmin(SO.img(i).vol);
             % threshold map and restrict coordinates
-            Q = find(img >= SO.img(i).range(1) & img <= SO.img(i).range(2));
+            Q = find(img > SO.img(i).range(1) & img < SO.img(i).range(2));
             XYZ = XYZ(:, Q);
             img = img(Q);
             
