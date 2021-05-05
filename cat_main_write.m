@@ -267,8 +267,9 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
       Ylai = reshape(Ylai(:),trans.native.Vi.dim); 
       if ~debug, clear Yy; end
 
-      % write map (mri as tissue and ROI subfolder)
-%      if isempty(mrifolder), amrifolder = ''; else, amrifolder = 'mri_atlas'; end
+      % write map (mri as tissue and ROI subfolder) and copy atlas csv file
+      [pp,ff] = spm_fileparts(VT0.fname);
+      copyfile(fullfile(cat_get_defaults('extopts.pth_templates'),[atlas '.csv']),fullfile(pp,mrifolder,[atlas '_' ff '.csv']));
       cat_io_writenii(VT0,Ylai,mrifolder,[atlas '_'],[prefix ' ' atlas ' original'],...
         type,[0,1],job.output.atlas,trans);
       if ~debug, clear Vlai Ylai; end

@@ -1,5 +1,30 @@
 ------------------------------------------------------------------------
-r1820 | gaser | 2021-05-03 00:26:38
+r1821 | gaser | 2021-05-05 11:26:16
+
+Changed paths:
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_output.m
+M       cat_main_write.m
+M       cat_surf_parameters.m
+M       cat_vol_slice_overlay.m
+M       cat_vol_slice_overlay_ui.m
+M       html/cat.html
+M       html/cat_versions.html
+
+(1) Changed: Updated atlas text in version information.
+(2) Changed: Added masked template as example to cat_vol_slice_overlay_ui.m and
+             added examples for font size and use of subfolders for naming 
+             saved image files.
+(3) Changed: If an atlas map is saved in native space the corresponding csv-file
+             is now also saved.
+(4) Changed: Added options to save atlas maps in developer mode.
+(5) Changed: Corrected use of thresholds (gt vs ge) for log-scaled p-values in
+             cat_vol_slice_overlay.m and added options for font size and use of
+             subfolders for getting filename to save images.
+------------------------------------------------------------------------
+r1820 | gaser | 2021-05-03 00:27:25 +0200 (Mo, 03 Mai 2021) | 26 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -25,6 +50,7 @@ M       templates_MNI152NLin2009cAsym/templates.man
              to ">" instead of ">=" (thanks to Pravesh Parekh for pointing to 
              that issue).
 (6) Fixed:   Corrected list of filenames in cat_stat_check_cov.m
+
 
 ------------------------------------------------------------------------
 r1819 | gaser | 2021-04-30 22:01:02 +0200 (Fr, 30 Apr 2021) | 12 lines

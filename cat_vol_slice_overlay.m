@@ -1,6 +1,6 @@
 function cat_vol_slice_overlay(OV)
 % Extension/wrapper to slice_overlay
-% Call help for slice_overlay for any help
+% Call help for slice_overlay for any additional help
 % 
 % Additional fields to slice_overlay:
 % OV.xy    - define number of columns and rows
@@ -12,6 +12,11 @@ function cat_vol_slice_overlay(OV)
 %            comment this out for interactive selection or use '' for not 
 %            saving any file or use just file extension (png/jpg/pdf/tif) to 
 %            automatically estimate filename to save
+% OV.name_subfolder
+%          - if result is saved as image use up to 2 subfolders to add their 
+%            names to the filename (default 1)
+%
+% see cat_vol_slice_overlay_ui.m for an example
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -26,58 +31,67 @@ global SO
 
 if nargin == 0
     
-    imgs = spm_select(2, 'image', 'Select additional overlay image', cat_get_defaults('extopts.shootingT1'));
-    if isempty(imgs)
-      return;
-    end
-    OV = pr_basic_ui(imgs, 0);
-    
-    % set options
-    OV.opacity = 1;
-    OV.reference_image = deblank(imgs(1, :));
-    OV.reference_range = OV.img(1).range;
-    OV.name = imgs(2:end, :);
-    OV.cmap = OV.img(2).cmap;
-    OV.range = OV.img(2).range;
-    OV.slices_str = '';
+  imgs = spm_select(2, 'image', 'Select additional overlay image', cat_get_defaults('extopts.shootingT1'));
+  if isempty(imgs)
+    return;
+  end
+  OV = pr_basic_ui(imgs, 0);
+  
+  % set options
+  OV.opacity = 1;
+  OV.reference_image = deblank(imgs(1, :));
+  OV.reference_range = OV.img(1).range;
+  OV.name = imgs(2:end, :);
+  OV.cmap = OV.img(2).cmap;
+  OV.range = OV.img(2).range;
+  OV.slices_str = '';
     
 end
 
 spm_figure('GetWin','Graphics');
-FS = spm('FontSizes');
+
+% get fontsize
+if isfield(OV,'FS')
+  FS = OV.FS;
+else
+  FS = 0.08;
+end
 
 % check filename whether log. scaling was used
 OV.logP = zeros(size(OV.name, 1));
 for i = 1:size(OV.name, 1)
-    if ~isempty(strfind(OV.name(i, :), 'logP')) || ~isempty(strfind(OV.name(i, :), 'log_'))
-        OV.logP(i) = 1;
-    end
+  if ~isempty(strfind(OV.name(i, :), 'logP')) || ~isempty(strfind(OV.name(i, :), 'log_'))
+    OV.logP(i) = 1;
+  end
 end
 
 % check fields of OV structure
 fieldnames = char('reference_image', 'reference_range', ...
-    'opacity', 'cmap', 'name', 'range', 'logP', 'slices_str', 'transform');
+  'opacity', 'cmap', 'name', 'range', 'logP', 'slices_str', 'transform');
 for i = 1:size(fieldnames, 1)
-    str = deblank(fieldnames(i, :));
-    if ~isfield(OV, str)
-        error([str ' not defined']);
-    end
+  str = deblank(fieldnames(i, :));
+  if ~isfield(OV, str)
+    error([str ' not defined']);
+  end
 end
 
 cmap_bivariate = [1 - (hot); hot]; % colormap if range(1) < 0
 
 if isfield(OV, 'labels')
-    SO.labels = OV.labels;
+  SO.labels = OV.labels;
+  if ~isempty(SO.labels)
+    SO.labels.size = FS*0.65;
+  end
 end
 
 if isfield(OV, 'overview')
-    SO.overview = OV.overview;
+  SO.overview = OV.overview;
 end
 
 if isfield(OV, 'cbar')
-    SO.cbar = OV.cbar;
+  SO.cbar = OV.cbar;
 else
-    SO.cbar = 2; % colorbar
+  SO.cbar = 2; % colorbar
 end
 
 n = size(OV.name, 1);
@@ -86,24 +100,33 @@ str = deblank(OV.name(1, :));
 for i = 2:n, str = [str '|' deblank(OV.name(i, :))]; end
 
 if n > 1
-    sel = spm_input('Select image', 1, 'm', str);
+  sel = spm_input('Select image', 1, 'm', str);
 else
-    sel = 1;
+  sel = 1;
 end
 
 nm = deblank(OV.name(sel, :));
 
 % if only one argument is given assume that parameters are the same for all files
 if size(OV.range, 1) > 1
-    range = OV.range(sel, :);
+  range = OV.range(sel, :);
 else
-    range = OV.range;
+  range = OV.range;
 end
 
 if size(OV.logP, 1) > 1
-    logP = OV.logP(sel);
+  logP = OV.logP(sel);
 else
-    logP = OV.logP;
+  logP = OV.logP;
+end
+
+% for log-scaled p-values we should rather use gt/lt than ge/le for comparison with threshold
+if logP
+  comp_thresh1 = @(a,b) gt(a,b);
+  comp_thresh2 = @(a,b) lt(a,b);
+else
+  comp_thresh1 = @(a,b) ge(a,b);
+  comp_thresh2 = @(a,b) le(a,b);
 end
 
 [path tmp] = spm_fileparts(nm);
@@ -111,40 +134,40 @@ img = nm;
 
 n_slice = size(OV.slices_str, 1);
 if n_slice > 0
-    for i = 1:n_slice
-        try
-            slices{i} = eval(OV.slices_str(i, :));
-        catch
-            slices{i} = [];
-        end
-    end
+  for i = 1:n_slice
+      try
+          slices{i} = eval(OV.slices_str(i, :));
+      catch
+          slices{i} = [];
+      end
+  end
 else
-    if isfield(OV,'slices')
-        slices{1} = OV.slices;
-    else
-        SO.img(2).vol = spm_vol(OV.name);
-        [mx, mn, XYZ, img2] = volmaxmin(SO.img(2).vol);
-        % threshold map and restrict coordinates
-        Q = find(img2 > range(1) & img2 < range(2));
-        XYZ = XYZ(:, Q);
-        img2 = img2(Q);
-        
-        M = SO.img(2).vol.mat;
-        XYZmm = M(1:3, :) * [XYZ; ones(1, size(XYZ, 2))];
-        
-        XYZ_unique = get_xyz_unique(XYZ, XYZmm, img2);
-        orientn = find(strcmpi(OV.transform, {'sagittal', 'coronal', 'axial'}));
-        slices{1} = XYZ_unique{orientn};
-    end
+  if isfield(OV,'slices')
+    slices{1} = OV.slices;
+  else
+    SO.img(2).vol = spm_vol(OV.name);
+    [mx, mn, XYZ, img2] = volmaxmin(SO.img(2).vol);
+    % threshold map and restrict coordinates
+    Q = find(comp_thresh1(img2,range(1)) & comp_thresh2(img2,range(2)));
+    XYZ = XYZ(:, Q);
+    img2 = img2(Q);
+    
+    M = SO.img(2).vol.mat;
+    XYZmm = M(1:3, :) * [XYZ; ones(1, size(XYZ, 2))];
+    
+    XYZ_unique = get_xyz_unique(XYZ, XYZmm, img2);
+    orientn = find(strcmpi(OV.transform, {'sagittal', 'coronal', 'axial'}));
+    slices{1} = XYZ_unique{orientn};
+  end
 end
 
 sl_name = [];
 for i = 1:size(OV.transform, 1)
-    if n_slice > 0
-        sl_name = strvcat(sl_name, [OV.transform(i, :) ': ' OV.slices_str(i, :)]);
-    else
-        sl_name = strvcat(sl_name, OV.transform(i, :));
-    end
+  if n_slice > 0
+    sl_name = strvcat(sl_name, [OV.transform(i, :) ': ' OV.slices_str(i, :)]);
+  else
+    sl_name = strvcat(sl_name, OV.transform(i, :));
+  end
 end
 
 str_select = deblank(sl_name(1, :));
@@ -165,42 +188,42 @@ SO.img(2).prop = OV.opacity; % transparent overlay
 SO.img(2).cmap = OV.cmap; % colormap
 
 if ~isfield(OV, 'func')
-    SO.img(2).func = 'i1(i1==0)=NaN;';
+  SO.img(2).func = 'i1(i1==0)=NaN;';
 else
-    SO.img(2).func = OV.func;
+  SO.img(2).func = OV.func;
 end
 
 if ~isfield(OV, 'range')
-    [mx mn] = volmaxmin(OV.img(2).vol);
-    SO.img(2).range = spm_input('Intensity range for colormap', '+1', 'e', [mn mx], 2)';
+  [mx mn] = volmaxmin(OV.img(2).vol);
+  SO.img(2).range = spm_input('Intensity range for colormap', '+1', 'e', [mn mx], 2)';
 else
-    SO.img(2).range = range;
+  SO.img(2).range = range;
 end
 
 if range(1) >= 0
-    SO.img(2).outofrange = {0, size(SO.img(2).cmap, 1)};
+  SO.img(2).outofrange = {0, size(SO.img(2).cmap, 1)};
 else
-    SO.img(2).outofrange = {1, 1};
-    SO.img(2).cmap = cmap_bivariate;
+  SO.img(2).outofrange = {1, 1};
+  SO.img(2).cmap = cmap_bivariate;
 end
 
 SO.transform = OV.transform;
 SO.slices = slices;
 
 if isempty(SO.slices)
-    [mx, mn, XYZ, vol] = volmaxmin(SO.img(2).vol);
-    
-    % threshold map and restrict coordinates
-    Q = find(vol > SO.img(2).range(1));
-    XYZ = XYZ(:, Q);
-    vol = vol(Q);
-    
-    M = SO.img(2).vol.mat;
-    XYZmm = M(1:3, :) * [XYZ; ones(1, size(XYZ, 2))];
-    orientn = strcmpi(SO.transform, {'sagittal', 'coronal', 'axial'});
-    
-    XYZ_unique = get_xyz_unique(XYZ, XYZmm, vol);
-    SO.slices = XYZ_unique{orientn};
+  [mx, mn, XYZ, vol] = volmaxmin(SO.img(2).vol);
+  
+  % threshold map and restrict coordinates
+  Q = find(comp_thresh1(vol,SO.img(2).range(1)));
+  XYZ = XYZ(:, Q);
+  vol = vol(Q);
+  
+  M = SO.img(2).vol.mat;
+  XYZmm = M(1:3, :) * [XYZ; ones(1, size(XYZ, 2))];
+  orientn = strcmpi(SO.transform, {'sagittal', 'coronal', 'axial'});
+  
+  XYZ_unique = get_xyz_unique(XYZ, XYZmm, vol);
+  SO.slices = XYZ_unique{orientn};
 end
 
 n_images = length(SO.slices) + length(SO.cbar);
@@ -212,10 +235,10 @@ str = deblank(xy_name(1, :));
 for i = 2:n, str = [str '|' deblank(xy_name(i, :))]; end
 
 if ~isfield(OV, 'xy')
-    indxy = spm_input('Select number of columns/rows', '+1', 'm', str);
-    xy = xy(indxy, :);
+  indxy = spm_input('Select number of columns/rows', '+1', 'm', str);
+  xy = xy(indxy, :);
 else
-    xy = OV.xy;
+  xy = OV.xy;
 end
 
 % prepare overview of slices
@@ -232,62 +255,62 @@ screensize = get(0, 'screensize');
 
 if ~isfield(SO,'overview')
 
-    h0 = figure(11);
-    clf
-    axes('Position', [0 0 1 1]);
-    
-    hold on
-    dim = SO.img(1).vol.dim(1:3);
-    switch lower(OV.transform)
-        case 'sagittal'
-            ref_img = ref_vol(:, :, Orig(3))';
-            slices_vx = SO.slices / vx(1) + Orig(1);
-            image(fliplr(ref_img))
-            for i = slices_vx
-                h = line([i i], [1 dim(2)]);
-                set(h, 'Color', 'r')
-            end
-        case 'coronal'
-            ref_img = squeeze(ref_vol(Orig(1), :, :))';
-            slices_vx = SO.slices / vx(2) + Orig(2);
-            image(ref_img)
-            for i = slices_vx
-                h = line([i i], [1 dim(3)]);
-                set(h, 'Color', 'r')
-            end
-        case 'axial'
-            ref_img = squeeze(ref_vol(Orig(1), :, :))';
-            slices_vx = SO.slices / vx(3) + Orig(3);
-            image(ref_img)
-            for i = slices_vx
-                h = line([1 dim(2)], [i i]);
-                set(h, 'Color', 'r')
-            end
-    end
+  h0 = figure(11);
+  clf
+  axes('Position', [0 0 1 1]);
+  
+  hold on
+  dim = SO.img(1).vol.dim(1:3);
+  switch lower(OV.transform)
+    case 'sagittal'
+      ref_img = ref_vol(:, :, Orig(3))';
+      slices_vx = SO.slices / vx(1) + Orig(1);
+      image(fliplr(ref_img))
+      for i = slices_vx
+        h = line([i i], [1 dim(2)]);
+        set(h, 'Color', 'r')
+      end
+    case 'coronal'
+      ref_img = squeeze(ref_vol(Orig(1), :, :))';
+      slices_vx = SO.slices / vx(2) + Orig(2);
+      image(ref_img)
+      for i = slices_vx
+        h = line([i i], [1 dim(3)]);
+        set(h, 'Color', 'r')
+      end
+    case 'axial'
+      ref_img = squeeze(ref_vol(Orig(1), :, :))';
+      slices_vx = SO.slices / vx(3) + Orig(3);
+      image(ref_img)
+      for i = slices_vx
+        h = line([1 dim(2)], [i i]);
+        set(h, 'Color', 'r')
+      end
+  end
 
-    set(h0, 'Position', [10, 10, 2 * size(ref_img, 2), 2 * size(ref_img, 1)], ...
-        'MenuBar', 'none', ...
-        'Resize', 'off', ...
-        'PaperType', 'A4', ...
-        'PaperUnits', 'normalized', ...
-        'NumberTitle', 'off', ...
-        'Name', 'Slices', ...
-        'PaperPositionMode', 'auto');
-    
-    hold off
-    axis off xy image
-    colormap(gray)
+  set(h0, 'Position', [10, 10, 2 * size(ref_img, 2), 2 * size(ref_img, 1)], ...
+      'MenuBar', 'none', ...
+      'Resize', 'off', ...
+      'PaperType', 'A4', ...
+      'PaperUnits', 'normalized', ...
+      'NumberTitle', 'off', ...
+      'Name', 'Slices', ...
+      'PaperPositionMode', 'auto');
+  
+  hold off
+  axis off xy image
+  colormap(gray)
 
 end
 
 SO.xslices = xy(:, 1);
 switch lower(OV.transform)
-    case 'sagittal'
-        dim = xy .* SO.img(1).vol.dim(2:3);
-    case 'coronal'
-        dim = xy .* SO.img(1).vol.dim([1 3]);
-    case 'axial'
-        dim = xy .* SO.img(1).vol.dim(1:2);
+  case 'sagittal'
+    dim = xy .* SO.img(1).vol.dim(2:3);
+  case 'coronal'
+    dim = xy .* SO.img(1).vol.dim([1 3]);
+  case 'axial'
+    dim = xy .* SO.img(1).vol.dim(1:2);
 end
 
 % use double size
@@ -296,9 +319,9 @@ dim = 2 * dim;
 scale = screensize(3:4) ./ dim;
 % scale image only if its larger than screensize
 if min(scale) < 1
-    fig_size = min(scale) * dim * 0.975;
+  fig_size = min(scale) * dim * 0.975;
 else
-    fig_size = dim;
+  fig_size = dim;
 end
 
 [pt, nm] = spm_fileparts(img);
@@ -323,48 +346,67 @@ slice_overlay
 % remove remaining gray colored border
 ax = get(SO.figure,'Children');
 for i = 1:numel(ax)
-  set(ax(i),'YColor',[0 0 0])
+  set(ax(i),'YColor',[0 0 0],'XColor',[0 0 0]);
 end
 
 % change labels of colorbar for log-scale
 H = gca;
 if (SO.cbar == 2) & logP
-    YTick = get(H, 'YTick');
-    mn = floor(min(YTick));
-    mx = ceil(max(YTick));
-    
-    % only allow integer values
-    values = floor(mn:mx);
-    pos = get(get(gca, 'YLabel'), 'position');
-    pos(1) = 2.5;
-    
-    set(H, 'YTick', values);
-    YTick = get(H, 'YTick');
-    
-    YTickLabel = [];
-    for i = 1:length(YTick)
-        % also handle neg. log p-values
-        val = 10^(-abs(YTick(i)))*sign(YTick(i));
-        YTickLabel = char(YTickLabel, (sprintf(['%9.' num2str(abs(YTick(i))) 'f '], val)));
-    end
-    
-    % skip first empty entry
-    set(H, 'YTickLabel', YTickLabel(2:end,:))
-    
-    set(get(gca, 'YLabel'), 'string', 'p-value', 'position', pos, 'FontSize', FS(14))
-    
+
+  YTick = get(H, 'YTick');
+
+  mn = floor(min(YTick));
+  mx = ceil(max(YTick));
+  
+  % only allow integer values
+  values = floor(mn:mx);
+  pos = get(get(gca, 'YLabel'), 'position');
+  pos(1) = 2.5;
+  
+  set(H, 'YTick', values);
+  YTick = get(H, 'YTick');
+  
+  YTickLabel = [];
+  for i = 1:length(YTick)
+    % also handle neg. log p-values
+    val = 10^(-abs(YTick(i)))*sign(YTick(i));
+    YTickLabel = char(YTickLabel, (sprintf(['%9.' num2str(abs(YTick(i))) 'f '], val)));
+  end
+  
+  % skip first empty entry
+  set(H, 'YTickLabel', YTickLabel(2:end,:))
+  
+  set(get(gca, 'YLabel'), 'string', 'p-value', 'position', pos)
+  
 end
 
-set(H, 'FontSize', 0.8 * get(H, 'FontSize'),'YColor',[1 1 1])
+set(H, 'FontSize', FS, 'YColor', [1 1 1])
+set(get(H, 'YLabel'), 'FontUnits', 'normalized', 'FontSize', 1.5*FS, 'Color', [1 1 1])
+
+% we have to get rid off that annoying axis and simply draw a black box 
+posc = get(H,'Position');
+posc(3) = 0.04*posc(3);
+a=axes(...
+      'Parent',SO.figure,...
+      'XTick',[],...
+      'XTickLabel',[],...
+      'YTick',[],...
+      'YTickLabel',[],...
+      'Units', 'pixels',...
+      'YColor',[0 0 0],...
+      'Color',[0 0 0],...
+      'Box', 'off',...
+      'Position',posc...
+      );
 
 % select atlas for labeling
 if isfield(OV, 'atlas')
-    atlas_name = OV.atlas;
-    if strcmp(lower(atlas_name),'none') | isempty(atlas_name)
-      xA = [];
-    else
-      xA = spm_atlas('load',atlas_name);
-    end
+  atlas_name = OV.atlas;
+  if strcmp(lower(atlas_name),'none') | isempty(atlas_name)
+    xA = [];
+  else
+    xA = spm_atlas('load',atlas_name);
+  end
 else
   list = spm_atlas('List','installed');
   atlas_labels{1} = 'None';
@@ -374,9 +416,9 @@ else
     atlas = spm_input('Select atlas?', '1', 'm', atlas_labels);
     atlas_name = atlas_labels{atlas};
     if atlas > 1
-        xA = spm_atlas('load',atlas_name);
+      xA = spm_atlas('load',atlas_name);
     else
-        xA = [];
+      xA = [];
     end
 end
 
@@ -386,7 +428,7 @@ if ~isempty(xA)
   
   % threshold map and restrict coordinates
   if SO.img(2).range(1) >= 0
-    Q = find(vol > SO.img(2).range(1));
+    Q = find(comp_thresh1(vol,SO.img(2).range(1)));
     XYZ = XYZ(:, Q);
     vol = vol(Q);
   end
@@ -472,73 +514,95 @@ end
 auto_savename = 0;
 % save image
 if ~isfield(OV, 'save')
-    image_ext = spm_input('Save image file?', '+1', 'none|png|jpg|pdf|tif', char('none', 'png', 'jpg', 'pdf', 'tiff'), 2);
+  image_ext = spm_input('Save image file?', '+1', 'none|png|jpg|pdf|tif', char('none', 'png', 'jpg', 'pdf', 'tiff'), 2);
 else
-    if isempty(OV.save)
-        image_ext = spm_input('Save image file?', '+1', 'none|png|jpg|pdf|tif', char('none', 'png', 'jpg', 'pdf', 'tiff'), 2);
+  if isempty(OV.save)
+    image_ext = spm_input('Save image file?', '+1', 'none|png|jpg|pdf|tif', char('none', 'png', 'jpg', 'pdf', 'tiff'), 2);
+  else
+    [pp, nn, ee] = spm_fileparts(OV.save);
+    if ~isempty(ee)
+      image_ext = ee(2:end);
     else
-        [pp, nn, ee] = spm_fileparts(OV.save);
-        if ~isempty(ee)
-            image_ext = ee(2:end);
-        else
-            % if only the extension is given then automatically estimate filename for saving
-            image_ext = OV.save;
-            auto_savename = 1;
-        end
+      % if only the extension is given then automatically estimate filename for saving
+      image_ext = OV.save;
+      auto_savename = 1;
     end
+  end
 end
 
 if ~strcmp(image_ext, 'none')
     
-    [pt, nm] = spm_fileparts(img);
-    if isempty(pt)
-        pt2 = '';
+  [pt, nm] = spm_fileparts(img);
+  if isempty(pt)
+    pt1 = '';
+  else
+    [tmp,nm2] = spm_fileparts(pt);
+    if isempty(nm2)
+      pt1 = [pt '_']; 
     else
-        [tmp,nm2] = spm_fileparts(pt);
-        if isempty(nm2)
-            pt2 = [pt '_']; 
-        else
-            pt2 = [nm2 '_']; 
-        end
+      pt1 = [nm2 '_']; 
     end
     
-    if ~isfield(OV, 'save')
-        imaname = spm_input('Filename', '+1', 's', [pt2 nm '_' lower(OV.transform) '.' image_ext]);
+    [tmp,nm3] = spm_fileparts(spm_fileparts(pt));
+    if isempty(nm3)
+      pt2 = [pt1 '_']; 
     else
-        if auto_savename
-            imaname = [pt2 nm '_' lower(OV.transform) '.' image_ext];
-        else
-            imaname = OV.save;
-        end
+      pt2 = [nm3 '_']; 
     end
+  end
+  
+  if ~isfield(OV, 'save')
+      imaname = spm_input('Filename', '+1', 's', [pt1 nm '_' lower(OV.transform) '.' image_ext]);
+  else
+    if auto_savename
     
-    % jpg needs full name to be accepted
-    if strcmp(image_ext, 'jpg')
-        image_ext = 'jpeg';
+      % use up to 2 subfolders for getting filename
+      if isfield(OV,'name_subfolder')
+        % subfolder should be 0..2
+        subfolder = max(min(OV.name_subfolder,3),0);
+      else
+        subfolder = 1;
+      end
+      
+      % use up to 2 subfolders for getting filename
+      switch subfolder
+        case 0, pt1 = '';
+        case 2, pt1 = [pt2 pt1]; 
+      end
+      
+      imaname = [pt1 nm '_' lower(OV.transform) '.' image_ext];
+    else
+      imaname = OV.save;
     end
+  end
+  
+  % jpg needs full name to be accepted
+  if strcmp(image_ext, 'jpg')
+    image_ext = 'jpeg';
+  end
 
-    % and print
-    H = findobj(get(SO.figure, 'Children'), 'flat', 'Type', 'axes');
-    set(H, 'Units', 'normalized')
-    
-    saveas(SO.figure, imaname, image_ext);
-    
-    % read image, remove white border and save it again
-    tmp = imread(imaname);
-    sz = size(tmp);
-    imwrite(tmp(4:sz(1),1:sz(2)-1,:),imaname);
-    fprintf('Image %s saved.\n', imaname);
-    
-    if ~isfield(SO,'overview')
-        if n_slice > 0
-            imaname = [pt2 lower(OV.transform) '_' replace_strings(OV.slices_str(ind, :)) '.' image_ext];
-        else
-            imaname = [pt2 lower(OV.transform) '.' image_ext];
-        end
-        
-        saveas(h0, imaname, image_ext);
-        fprintf('Image %s saved.\n', imaname);
+  % and print
+  H = findobj(get(SO.figure, 'Children'), 'flat', 'Type', 'axes');
+  set(H, 'Units', 'normalized')
+  
+  saveas(SO.figure, imaname, image_ext);
+  
+  % read image, remove white border and save it again
+  tmp = imread(imaname);
+  sz = size(tmp);
+  imwrite(tmp(4:sz(1),1:sz(2)-1,:),imaname);
+  fprintf('Image %s saved.\n', imaname);
+  
+  if ~isfield(SO,'overview')
+    if n_slice > 0
+      imaname = [lower(OV.transform) '_' replace_strings(OV.slices_str(ind, :)) '.' image_ext];
+    else
+      imaname = [lower(OV.transform) '.' image_ext];
     end
+    
+    saveas(h0, imaname, image_ext);
+    fprintf('Image %s saved.\n', imaname);
+  end
 end
 
 % check whether bounding box is from previous version that is not compatible
@@ -556,17 +620,17 @@ if n > 8, x = nn:round(n / nn); else x = 1:n; end
 xy = [];
 for i = 1:length(x)
     y = round(n / x(i));
-    % check whether y is to small
-    while y * x(i) < n, y = y + 1; end
-    if i > 2
-        if y * x(i - 1) < n, xy = [xy; [x(i) y]]; end
-    else xy = [xy; [x(i) y]]; end
+  % check whether y is to small
+  while y * x(i) < n, y = y + 1; end
+  if i > 2
+    if y * x(i - 1) < n, xy = [xy; [x(i) y]]; end
+  else xy = [xy; [x(i) y]]; end
 end
 
 % change order of x and y
 for i = 1:size(xy, 2)
-    yx = [xy(i, 2) xy(i, 1)];
-    xy = [xy; yx];
+  yx = [xy(i, 2) xy(i, 1)];
+  xy = [xy; yx];
 end
 
 % remove duplicates
@@ -589,29 +653,29 @@ return
 function [mx, mn, XYZ, img] = volmaxmin(vol)
 
 if nargout > 2
-    XYZ = [];
+  XYZ = [];
 end
 if nargout > 3
-    img = [];
+  img = [];
 end
 
 mx = -Inf; mn = Inf;
 for i = 1:vol.dim(3)
-    tmp = spm_slice_vol(vol, spm_matrix([0 0 i]), vol.dim(1:2), [0 NaN]);
-    tmp1 = tmp(find(isfinite(tmp(:)) & (tmp(:) ~= 0)));
-    if ~isempty(tmp1)
-        if nargout > 2
-            [Qc Qr] = find(isfinite(tmp) & (tmp ~= 0));
-            if size(Qc, 1)
-                XYZ = [XYZ; [Qc Qr i * ones(size(Qc))]];
-                if nargout > 3
-                    img = [img; tmp1];
-                end
-            end
+  tmp = spm_slice_vol(vol, spm_matrix([0 0 i]), vol.dim(1:2), [0 NaN]);
+  tmp1 = tmp(find(isfinite(tmp(:)) & (tmp(:) ~= 0)));
+  if ~isempty(tmp1)
+    if nargout > 2
+      [Qc Qr] = find(isfinite(tmp) & (tmp ~= 0));
+      if size(Qc, 1)
+        XYZ = [XYZ; [Qc Qr i * ones(size(Qc))]];
+        if nargout > 3
+          img = [img; tmp1];
         end
-        mx = max([mx; tmp1]);
-        mn = min([mn; tmp1]);
+      end
     end
+    mx = max([mx; tmp1]);
+    mn = min([mn; tmp1]);
+  end
 end
 
 if nargout > 2
@@ -634,16 +698,16 @@ function SO = pr_basic_ui(imgs, dispf)
 % $Id$
 
 if nargin < 1
-    imgs = '';
+  imgs = '';
 end
 if isempty(imgs)
-    imgs = spm_select(Inf, 'image', 'Image(s) to display');
+  imgs = spm_select(Inf, 'image', 'Image(s) to display');
 end
 if ischar(imgs)
-    imgs = cellstr(imgs);
+  imgs = cellstr(imgs);
 end
 if nargin < 2
-    dispf = 1;
+  dispf = 1;
 end
 
 clear global SO
@@ -660,45 +724,43 @@ nchars = 20;
 imgns = spm_str_manip(imgs, ['rck' num2str(nchars)]);
 
 SO.transform = deblank(spm_input('Image orientation', '+1', ['Axial|' ...
-    ' Coronal|Sagittal'], strvcat('axial', 'coronal', 'sagittal'), ...
-    1));
+    ' Coronal|Sagittal'], strvcat('axial', 'coronal', 'sagittal'), 1));
 orientn = find(strcmpi(SO.transform, {'sagittal', 'coronal', 'axial'}));
 
 % identify image types
 SO.cbar = [];
 XYZ_unique = cell(3, 1);
 for i = 1:nimgs
-    SO.img(i).vol = spm_vol(imgs{i});
-    if i == 1
-        SO.img(i).cmap = gray;
-        [mx, mn] = volmaxmin(SO.img(i).vol);
-        SO.img(i).range = [0.15 * mx 0.9 * mx];
-    else
-        [mx, mn] = volmaxmin(SO.img(i).vol);
-        
-        SO.img(i).func = 'i1(i1==0)=NaN;';
-        SO.img(i).prop = Inf;
-        SO.cbar = [SO.cbar i];
-        SO.img(i).cmap = return_cmap('Colormap:', 'jet');
-        SO.img(i).range = spm_input('Img val range for colormap', '+1', 'e', [mn mx], 2)';
-        
-        define_slices = spm_input('Slices', '+1', 'm', 'Estimate slices with local maxima|Define slices', [0 1], 1);
-        if ~define_slices
-            [mx, mn, XYZ, img] = volmaxmin(SO.img(i).vol);
-            % threshold map and restrict coordinates
-            Q = find(img > SO.img(i).range(1) & img < SO.img(i).range(2));
-            XYZ = XYZ(:, Q);
-            img = img(Q);
-            
-            M = SO.img(i).vol.mat;
-            XYZmm = M(1:3, :) * [XYZ; ones(1, size(XYZ, 2))];
-            
-            XYZ_unique = get_xyz_unique(XYZ, XYZmm, img);
-        end
-        
+  SO.img(i).vol = spm_vol(imgs{i});
+  if i == 1
+    SO.img(i).cmap = gray;
+    [mx, mn] = volmaxmin(SO.img(i).vol);
+    SO.img(i).range = [0.15 * mx 0.9 * mx];
+  else
+    [mx, mn] = volmaxmin(SO.img(i).vol);
+    
+    SO.img(i).func = 'i1(i1==0)=NaN;';
+    SO.img(i).prop = Inf;
+    SO.cbar = [SO.cbar i];
+    SO.img(i).cmap = return_cmap('Colormap:', 'jet');
+    SO.img(i).range = spm_input('Img val range for colormap', '+1', 'e', [mn mx], 2)';
+    
+    define_slices = spm_input('Slices', '+1', 'm', 'Estimate slices with local maxima|Define slices', [0 1], 1);
+    if ~define_slices
+      [mx, mn, XYZ, img] = volmaxmin(SO.img(i).vol);
+      % threshold map and restrict coordinates
+      Q = find(img > SO.img(i).range(1) & img < SO.img(i).range(2));
+      XYZ = XYZ(:, Q);
+      img = img(Q);
+      
+      M = SO.img(i).vol.mat;
+      XYZmm = M(1:3, :) * [XYZ; ones(1, size(XYZ, 2))];
+      
+      XYZ_unique = get_xyz_unique(XYZ, XYZmm, img);
     end
+    
+  end
 end
-
 
 % slices for display
 ts = [0 0 0 pi / 2 0 -pi / 2 -1 1 1; ...
@@ -724,7 +786,7 @@ return
 function cmap = return_cmap(prompt, defmapn)
 cmap = [];
 while isempty(cmap)
-    cmap = slice_overlay('getcmap', spm_input(prompt, '+1', 's', defmapn));
+  cmap = slice_overlay('getcmap', spm_input(prompt, '+1', 's', defmapn));
 end
 return
 
@@ -736,15 +798,15 @@ xyz_array = [];
 % cluster map
 A = spm_clusters(XYZ);
 for j = 1:max(A)
-    ind = find(A == j);
-    xyz = XYZmm(:, ind);
-    xyz_array = [xyz_array xyz(:, img(ind) == max(img(ind)))];
+  ind = find(A == j);
+  xyz = XYZmm(:, ind);
+  xyz_array = [xyz_array xyz(:, img(ind) == max(img(ind)))];
 end
 
 % only keep unique coordinates
 XYZ_unique = cell(3, 1);
 for j = 1:3
-    XYZ_unique{j} = unique(xyz_array(j, :));
+  XYZ_unique{j} = unique(xyz_array(j, :));
 end
 
 return
