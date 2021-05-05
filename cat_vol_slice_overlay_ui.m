@@ -21,7 +21,10 @@ function cat_vol_slice_overlay_ui
 % ______________________________________________________________________
 % $Id$
 
+% use default T1 from Shooting or its masked version
 OV.reference_image = char(cat_get_defaults('extopts.shootingT1'));
+%OV.reference_image = fullfile(cat_get_defaults('extopts.pth_templates'),'mTemplate_T1.nii');
+
 OV.reference_range = [0.2 1.0];                        % intensity range for reference image
 OV.opacity = Inf;                                      % transparence value for overlay (<1)
 OV.cmap    = jet;                                      % colormap for overlay
@@ -70,6 +73,9 @@ OV.labels.format = '%3.1f';
 % estimate filename to save
 OV.save = 'png';
 
+% if result is saved as image use up to 2 subfolders to add their names to the filename (default 1)
+OV.name_subfolder = 2;
+
 % Remove comment if you don't wish cut overview
 OV.overview = [];
 
@@ -78,6 +84,9 @@ OV.labels = [];
 
 % Remove comment if you don't wish colorbar
 OV.cbar = [];
+
+% Normalized font size
+OV.FS = 0.08;
 
 % define atlas for labeling
 % comment this out for interactive selection

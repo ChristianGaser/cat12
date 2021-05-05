@@ -323,7 +323,7 @@ function varargout = cat_surf_parameters(job)
             if job.verb, fprintf('%sexist - Display %s\n',nstr,spm_file(PSD{SDi},'link','cat_surf_display(''%s'')')); end
           else
             stime = clock; 
-            cmd = sprintf('CAT_SulcusDepth %s "%s" "%s" "%s"',option,Pname,Psphere,PSD{SDi})
+            cmd = sprintf('CAT_SulcusDepth %s "%s" "%s" "%s"',option,Pname,Psphere,PSD{SDi});
             try
               [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug*0,job.trerr*0);
             catch

@@ -344,7 +344,11 @@ function [output,output_spm] = cat_conf_output(expert)
   atlas         = cfg_branch;
   atlas.tag     = 'atlas';
   atlas.name    = 'Atlas label maps';
-  atlas.val     = {native};
+  if expert < 2
+    atlas.val     = {native};
+  else
+    atlas.val     = {native warped dartel};
+  end
   atlas.hidden  = expert<1;
   atlas.help    = {
     'This option saves the selected atlas maps from the "Process Volume ROIs" dialog in native space. The name of the atlas is prepended to the file name.'
