@@ -315,6 +315,8 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
       Pcentral   = fullfile(pp_surffolder,sprintf('%s.central.preview.%s.gii',opt.surf{si},ff));          % central
       Ppbt       = fullfile(pp_surffolder,sprintf('%s.pbt.preview.%s',opt.surf{si},ff));                  % PBT thickness / GM depth
       Pthick     = fullfile(pp_surffolder,sprintf('%s.thickness.preview.%s',opt.surf{si},ff));            % FS thickness / GM depth
+      Ppial      = fullfile(pp_surffolder,sprintf('%s.pial.preview.%s.gii',opt.surf{si},ff));             % FS thickness / GM depth
+      Pwhite     = fullfile(pp_surffolder,sprintf('%s.white.preview.%s.gii',opt.surf{si},ff));            % FS thickness / GM depth
     end
     
     % use surface of given (average) data as prior for longitudinal mode
