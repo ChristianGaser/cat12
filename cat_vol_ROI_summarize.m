@@ -1,5 +1,8 @@
 function Y = cat_vol_ROI_summarize(job)
-% Summarise data within a Region of Interest
+% Summarise data within a Region of Interest and save csv file with summarized data
+% for each subject if no output of Y is defined. Otherwise return cell structure
+% of ROI values.
+%
 % FORMAT Y = cat_vol_ROI_summarize(job)
 %
 % job fields:
@@ -202,19 +205,20 @@ for ai = 1:n_atlas
   end
 end
 
-% write csv-file in folder of deformation file and use its name
-for ai = 1:n_atlas
-  [pp,atlas_name] = spm_fileparts(atlas_file{ai});
-  
-  for di=1:n_def
-    [pp,def_name] = spm_fileparts(def_file{di});
-    % get output name from deformation field and add atlas name
-    def_name = strrep(def_name,'y_','');
-    out_file = fullfile(pp,[atlas_name '_' def_name '.csv']);
-    fprintf('ROI estimation %s saved.\n',out_file);
-    cat_io_csv(out_file,csv_arr{ai,di},'','',struct('format','%g'));
-  end
-  
+% write csv-file in folder of deformation file and use its name if no output of Y is defined
+if nargout == 0
+  for ai = 1:n_atlas
+    [pp,atlas_name] = spm_fileparts(atlas_file{ai});
+    
+    for di=1:n_def
+      [pp,def_name] = spm_fileparts(def_file{di});
+      % get output name from deformation field and add atlas name
+      def_name = strrep(def_name,'y_','');
+      out_file = fullfile(pp,[atlas_name '_' def_name '.csv']);
+      fprintf('ROI estimation %s saved.\n',out_file);
+      cat_io_csv(out_file,csv_arr{ai,di},'','',struct('format','%g'));
+    end
+  end  
 end
 
 %=======================================================================

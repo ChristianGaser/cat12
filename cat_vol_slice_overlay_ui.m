@@ -23,7 +23,6 @@ function cat_vol_slice_overlay_ui
 
 % use default T1 from Shooting or its masked version
 OV.reference_image = char(cat_get_defaults('extopts.shootingT1'));
-%OV.reference_image = fullfile(cat_get_defaults('extopts.pth_templates'),'mTemplate_T1.nii');
 
 OV.reference_range = [0.2 1.0];                        % intensity range for reference image
 OV.opacity = Inf;                                      % transparence value for overlay (<1)

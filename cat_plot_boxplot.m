@@ -685,7 +685,7 @@ for i=1:qn
   
   if all( cellfun(@all,cellfun(@isnan,data,'uniformOutput',false) ))
     hold off; 
-    text(numel(data)/2 + 1/2,0.5,'No (non-NaN) data!','color',[0.8 0 0],'FontWeight','Bold','HorizontalAlignment','center','FontSize',opt.FS*1.2);
+    text(numel(data)/2 + 1/2,0.5,'No (non-NaN) data!','color',[0.8 0 0],'FontWeight','Bold','HorizontalAlignment','center');
     opt.ygrid = 0; 
     hold on;
   end

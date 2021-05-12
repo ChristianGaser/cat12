@@ -1,5 +1,40 @@
 ------------------------------------------------------------------------
-r1823 | gaser | 2021-05-12 17:32:26
+r1824 | gaser | 2021-05-12 17:47:25
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_factorial.m
+M       cat_conf_stools.m
+M       cat_defaults.m
+M       cat_long_multi_run.m
+M       cat_plot_boxplot.m
+M       cat_stat_check_cov.m
+M       cat_stat_spm.m
+M       cat_surf_createCS2.m
+M       cat_surf_resamp_freesurfer.m
+M       cat_surf_results.m
+M       cat_vol_ROI_summarize.m
+M       cat_vol_createMPM.m
+M       cat_vol_slice_overlay.m
+M       cat_vol_slice_overlay_ui.m
+
+(1) Changed: Updated cat_vol_slice_overlay to support deviating thresholds of
+             log-scaled p-values.
+(2) Changed: Added optional masking to cat_vol_create_MPM.m and changed 
+             thresholds and median apporach and added support for writing 4D 
+             probability maps.
+(3) Changed: Some small modifications to cat_surf_results.m 
+(4) Changed: Changed underling surface type in cat_stat_spm.m
+(5) Fixed:   Added missing bracket to cat_long_multi_run.m             
+(6) Fixed:   Corrected wrong call for fontsize in cat_plot_boxplot.m
+(7) Fixed:   Estimation of data range for meshes in cat_stat_check_cov.m was
+             not working.             
+(8) Fixed:   Create folder if necessary for cat_surf_resamp_freesurfer.m
+(9) Changed: Renamed mTemplate_T1.nii to Template_T1_masked.nii and changed
+             links in scripts to that file.
+
+------------------------------------------------------------------------
+r1823 | gaser | 2021-05-12 17:32:40 +0200 (Mi, 12 Mai 2021) | 60 lines
 
 Changed paths:
 M       CAT12-Manual.pdf
@@ -59,6 +94,7 @@ M       templates_MNI152NLin2009cAsym/templates.man
 (7) Changed: Some small modifications to scripts for creating anatomy and 
              julichbrain atlas.
 (8) Fixed:   Call of shell scripts from relative path is now working.
+
 
 ------------------------------------------------------------------------
 r1822 | dahnke | 2021-05-12 16:58:19 +0200 (Mi, 12 Mai 2021) | 11 lines

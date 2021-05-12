@@ -79,7 +79,7 @@ warning off MATLAB:subscripting:noSubscriptsSpecified
 
 %-Input parameters
 %--------------------------------------------------------------------------
-if ~nargin, action = 'Disp'; end
+if ~nargin, clearvars -global H; action = 'Disp'; end
 
 if ~ischar(action)
   varargin = {action varargin{:}};
@@ -2041,9 +2041,9 @@ if H.n_surf == 1
       if clip(3) >= 1.3 && clip(3) <= 1.4
         XTick_step = ceil((clim(3) - clim(2)) / 5);
         if clip(2) <= - 1.3 && clip(2) >= - 1.4
-          XTick = [(round(clim(2)) - 0.30103):XTick_step: - 1.30103 0 1.30103:XTick_step:(round(clim(3)) + 0.30103)];
+          XTick = [(round(clim(2))+log10(0.05)+1):XTick_step:log10(0.05) 0 -log10(0.05):XTick_step:(round(clim(3))-log10(0.05)-1)];
         else
-          XTick = [0 1.30103:XTick_step:(round(clim(3)) + 0.30103)];
+          XTick = [0 -log10(0.05):XTick_step:(round(clim(3))-log10(0.05)-1)];
         end
       else
         mn = floor(min(XTick));

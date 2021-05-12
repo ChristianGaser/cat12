@@ -48,10 +48,10 @@ else
 end
 
 % select underlying surface and prefer shooting template
-job.surftype = 2; 
+job.surftype = 1; 
 surftype = {'freesurfer',cat_get_defaults('extopts.shootingsurf')};
 if ~exist(fullfile(fsavgDir, ['lh.central.' surftype{job.surftype} '.gii']))
-  job.surftype = 1; 
+  job.surftype = 2; 
 end
 
 % check that folder exist and number of vertices fits
