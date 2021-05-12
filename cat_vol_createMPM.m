@@ -1,4 +1,4 @@
-function cat_vol_create_MPM(Label, Deform, vox, thresholds)
+function cat_vol_create_MPM(Label, Deform, vox, thresholds, mask)
 % Create Maximum Probability Map (Label) of labels in native space and deformation 
 % fields
 %
@@ -7,6 +7,7 @@ function cat_vol_create_MPM(Label, Deform, vox, thresholds)
 % Deform  - char array of filenames of deformation fields (leave empty if labels
 %           are already normalized and no deformations are needed)
 % vox     - voxel size (use NaNs to use voxel size of deformation fields)
+% mask    - optional mask image for final masking
 %
 % some of the subfunctions are modified versions from spm_deformations.m
 % ______________________________________________________________________
@@ -18,7 +19,7 @@ function cat_vol_create_MPM(Label, Deform, vox, thresholds)
 % ______________________________________________________________________
 % $Id$
 
-refine     = 1;   % always use refinement with slight smoothing and median filtering
+refine = 1;   % always use refinement with slight smoothing and median filtering
 
 if nargin < 1
   Label  = spm_select(Inf,'image','Select native label maps');
@@ -38,7 +39,18 @@ end
 
 % thresholds for average probability to exclude non-brain areas
 if nargin < 4
-  thresholds = spm_input('Threshold(s)','+1','r',[0.1:0.1:0.5]);
+  thresholds = spm_input('Threshold(s)','+1','r',0.5);
+end
+
+% optional masking
+if nargin < 5
+  mask  = spm_select([0 1],'image','Select optional mask image',{fullfile(cat_get_defaults('extopts.pth_templates'),'brainmask_T1.nii')});
+  Vmask = spm_vol(mask);
+end
+
+% give warning if brainmask is used in cobination with several thresholds
+if ~isempty(mask) && numel(thresholds) > 1
+  fprintf('Please keep in mind, that use of brainmask will result in very similar results using different thresholds. If you intend to try different thresholds disable use of an additional brainmask\n');
 end
 
 % check whether only one value was defined
@@ -96,7 +108,8 @@ for i=1:n_subjects
     else
       dat = double(round(vol)==datarange(j));
     end
-    dat(isnan(dat)) = 0;
+    dat(isnan(dat) | dat < 0) = 0.0;
+    dat(dat > 1) = 1.0;
     watlas(:,:,:,j) = watlas(:,:,:,j) + single(dat);
   end
 end
@@ -105,20 +118,33 @@ fprintf('\n');
 % apply median filtering to each label and slight smoothing
 if refine
   for j=1:n_structures;
-    tmp = cat_vol_median3c(single(watlas(:,:,:,j)));
+    tmp = cat_vol_median3(single(watlas(:,:,:,j)));
     spm_smooth(tmp,tmp,2);
     watlas(:,:,:,j) = tmp;
   end
 end
 
+watlas    = watlas/n_subjects;
+avg_atlas = sum(watlas,4);
 [max_atlas, index_atlas_orig] = max(watlas,[],4);
-avg_atlas = sum(watlas,4)/n_subjects;
+
+% write 4D atlas of all probability maps
+PM4d_name = ['PM_' name.s strrep(name.e,',1','')];
+N4d      = nifti;
+N4d.dat  = file_array( PM4d_name ,size(watlas),...
+            [spm_type('uint8') spm_platform('bigend')],0,1/255,0);
+N4d.mat  = V(1).mat;
+N4d.mat0 = V(1).mat;
+N4d.descrip = [strrep(name.e,',1','') 'n=' num2str(n_subjects)];
+create(N4d);
+N4d.dat(:,:,:,:,:) = watlas;
+fprintf('%s saved.\n',PM4d_name);
 
 for i=1:numel(thresholds)
   threshold = thresholds(i);
   
   index_atlas = index_atlas_orig;
-  index_atlas(find(max_atlas<1 | isnan(max_atlas) | avg_atlas<threshold)) = 0;
+  index_atlas(find(max_atlas<0.01 | isnan(max_atlas) | avg_atlas<threshold)) = 0;
   
   index_atlas0 = index_atlas;
   
@@ -143,6 +169,14 @@ for i=1:numel(thresholds)
   Vo = spm_create_vol(Vo);
   spm_write_vol(Vo, index_atlas);
   fprintf('%s saved.\n',Vo.fname);
+  
+  if ~isempty(mask)
+    Vom = Vo; 
+    Vom.fname = ['MPM_th' sprintf('%0.2f',threshold) '_masked_' name.s strrep(name.e,',1','')]; 
+    cat_vol_imcalc([Vo; Vmask],Vom,'i1.*(i2>0.5)',struct('verb',0,'type',spm_type(data_type)));
+    fprintf('%s saved.\n',Vom.fname);
+  end
+  
 end
 
 %_______________________________________________________________________

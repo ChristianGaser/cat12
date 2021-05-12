@@ -198,7 +198,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   % surface output and evaluation paramter 
   Psurf = struct(); 
   res   = struct('euler_characteristic',nan,'defect_size',nan,'lh',struct(),'rh',struct()); 
-  % initialize WM/CSF thickness/weidth/depth maps
+  % initialize WM/CSF thickness/width/depth maps
   Yth   = zeros(size(Ymf),'single'); 
   Ypp   = -ones(size(Ymf),'single'); 
   if opt.surf_measures > 3 

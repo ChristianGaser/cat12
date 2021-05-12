@@ -243,7 +243,7 @@ cat.extopts.shootingsurf  = 'Template_T1';                                      
 cat.extopts.pth_templates = fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym');   % Templates and atlases folder for volumes
 cat.extopts.darteltpm     = {fullfile(cat.extopts.pth_templates,'Template_1_Dartel.nii')};            % Indicate first Dartel template (Template_1)
 cat.extopts.shootingtpm   = {fullfile(cat.extopts.pth_templates,'Template_0_GS.nii')};                % Indicate first Shooting template (Template 0) - not working
-cat.extopts.shootingT1    = {fullfile(cat.extopts.pth_templates,'mTemplate_T1.nii')};                 % Average T1 for result overlays, choose Template_T1.nii for non-masked T1
+cat.extopts.shootingT1    = {fullfile(cat.extopts.pth_templates,'Template_T1_masked.nii')};           % T1 for result overlay, choose Template_T1.nii for non-masked T1
 cat.extopts.brainmask     = {fullfile(cat.extopts.pth_templates,'brainmask.nii')};                    % Brainmask for affine registration
 cat.extopts.T1            = {fullfile(cat.extopts.pth_templates,'T1.nii')};                           % T1 for affine registration
 cat.extopts.cat12atlas    = {fullfile(cat.extopts.pth_templates,'cat.nii')};                          % CAT atlas with major regions for VBM, SBM & ROIs
@@ -299,13 +299,13 @@ if isdeployed, cat.extopts.expertgui = 1; end
 cat.extopts.atlas       = { ... 
   fullfile(cat.extopts.pth_templates,'neuromorphometrics.nii')  0      {'csf','gm'}        1; ... % atlas based on 35 subjects
   fullfile(cat.extopts.pth_templates,'lpba40.nii')              0      {'gm'}              0; ... % atlas based on 40 subjects
-  fullfile(cat.extopts.pth_templates,'cobra.nii')               0      {'gm','wm'}         1; ... % hippocampus-amygdala-cerebellum, 5 subjects, 0.6 mm voxel size 
-  fullfile(cat.extopts.pth_templates,'hammers.nii')             0      {'csf','gm','wm'}   0; ... % atlas based on 20 subjects
+  fullfile(cat.extopts.pth_templates,'cobra.nii')               0      {'gm','wm'}         1; ... % hippocampus-amygdala-cerebellum-subcort, 5 subjects, 0.6 mm voxel size 
+  fullfile(cat.extopts.pth_templates,'hammers.nii')             0      {'csf','gm','wm'}   0; ... % atlas based on 30 subjects with 95 regions
   fullfile(cat.extopts.pth_templates,'ibsr.nii')                1      {'csf','gm'}        0; ... % less regions, 18 subjects, low-res T1 image quality
   fullfile(cat.extopts.pth_templates,'aal3.nii')                1      {'gm'}              0; ... % many regions, but only labeled on one subject 
   fullfile(cat.extopts.pth_templates,'mori.nii')                1      {'gm','wm'}         0; ... % only one subject, but with WM regions
   fullfile(cat.extopts.pth_templates,'anatomy3.nii')            1      {'gm','wm'}         0; ... % 93 regions, 10 subjects
-  fullfile(cat.extopts.pth_templates,'julichbrain.nii')         1      {'gm'}              0; ... % 
+  fullfile(cat.extopts.pth_templates,'julichbrain.nii')         1      {'gm'}              0; ... % many regions, 10 subjects
   fullfile(cat.extopts.pth_templates,'Schaefer2018_100Parcels_17Networks_order.nii') 1 {'gm'} 0; ... % atlas based on rsfMRI data from 1489 subjects
   fullfile(cat.extopts.pth_templates,'Schaefer2018_200Parcels_17Networks_order.nii') 1 {'gm'} 0; ... % atlas based on rsfMRI data from 1489 subjects
   fullfile(cat.extopts.pth_templates,'Schaefer2018_400Parcels_17Networks_order.nii') 1 {'gm'} 0; ... % atlas based on rsfMRI data from 1489 subjects

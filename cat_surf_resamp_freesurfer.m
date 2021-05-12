@@ -34,6 +34,10 @@ function cat_surf_resamp_freesurfer(vargin)
 
   hemi_str = char('lh','rh');
   
+  if ~exist(outdir)
+    mkdir(outdir)
+  end
+  
   % use external dat-file if defined to increase processing speed and keep SPM.mat file small
   % because the cdata field is not saved with full data in SPM.mat
   if cat_get_defaults('extopts.gifti_dat')

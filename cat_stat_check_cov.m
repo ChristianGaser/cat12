@@ -205,7 +205,7 @@ if H.mesh_detected
   H.data = single(spm_data_read(H.V));
   Y = H.data';
   
-  H.range_data98 =  cat_vol_iscaling(Y,[0.02 0.98]);
+  H.range_data98 =  cat_vol_iscaling(Y(:),[0.02 0.98]);
   
   % optional global scaling
   if is_gSF

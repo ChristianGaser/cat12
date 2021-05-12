@@ -1194,6 +1194,7 @@ end
 
 % call SPM factorial design
 out = spm_run_factorial_design(job);
+
 if voxel_covariate
   cat_stat_spm(out.spmmat{1});
   
@@ -1242,5 +1243,7 @@ if voxel_covariate
 else
   % remove old vSPM.mat if exist
   swd = fileparts(out.spmmat{1});
-  delete(fullfile(swd,'vSPM.mat'));
+  if exist(fullfile(swd,'vSPM.mat'))
+    delete(fullfile(swd,'vSPM.mat'));
+  end
 end

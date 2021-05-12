@@ -88,7 +88,7 @@ if isdeployed
   
   % check whether length of txt- and m-file differs or content differs and only then the txt-file will be copied
   % this allows to pre-install the m-file on systems where this file is read-only
-  if (length(txt_contents) == length(m_contents) && any(txt_contents ~= m_contents)) || (length(txt_contents) ~= length(m_contents)
+  if (length(txt_contents) == length(m_contents) && any(txt_contents ~= m_contents)) || (length(txt_contents) ~= length(m_contents))
     [status, mesg] = copyfile(job_name,m_job_name,'f');
     if ~status
       fprintf(mesg);
