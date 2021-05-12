@@ -72,8 +72,8 @@ end
 fclose(fid);
 
 matlabbatch{1}.spm.util.imcalc.input = {
-                                        '/Users/gaser/matlab/cat12/templates_MNI152NLin2009cAsym/aal3.nii,1'
-                                        './julichbrain_refined,1'
+                                        fullfile(cat_get_defaults('extopts.pth_templates'),'aal3.nii')
+                                        'julichbrain_refined.nii,1'
                                         };
 matlabbatch{1}.spm.util.imcalc.output = 'julichbrain.nii';
 matlabbatch{1}.spm.util.imcalc.outdir = {''};

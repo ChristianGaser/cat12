@@ -37,8 +37,8 @@ end
 fclose(fid);
 
 matlabbatch{1}.spm.util.imcalc.input = {
-                                        '/Users/gaser/matlab/cat12/templates_MNI152NLin2009cAsym/aal3.nii,1'
-                                        './Anatomy3_refined,1'
+                                        fullfile(cat_get_defaults('extopts.pth_templates'),'aal3.nii')
+                                        'Anatomy3_refined.nii'
                                         };
 matlabbatch{1}.spm.util.imcalc.output = 'anatomy3.nii';
 matlabbatch{1}.spm.util.imcalc.outdir = {''};

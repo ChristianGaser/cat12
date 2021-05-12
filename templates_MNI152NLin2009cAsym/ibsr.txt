@@ -2,12 +2,9 @@ IBSR atlas:
 --------------------------------------------------------------------------------
 This atlas is based on the IBSR V2.0 dataset.
 
-CAT12 was used to segment the T1 data and to estimate the normalization 
-parameters to transform the maximum probability maps to MNI152NLin2009cAsym space. 
+CAT12 was used to segment the T1 data and to estimate the registration parameters to transform the probability maps to MNI152NLin2009cAsym space. 
 
-The atlas was slightly modified and remaining holes were filled with median value
-and a threshold of 0.1 was finally used for average probability that was optimized 
-using the native labels.
+The resulting maximum probability map was slightly modified: (1) remaining holes were filled with median value, (2) an additionally mask with brainmask_T1.nii was applied to remove non-brain areas.
 
 If you use these atlases, please have a look for the IBSR terms below. 
 

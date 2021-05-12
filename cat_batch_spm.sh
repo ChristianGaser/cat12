@@ -138,6 +138,11 @@ run_batch ()
     exit 0
   fi
 
+  # we have to add current path if cat_batch_cat.sh was called from relative path
+  if [ -d ${pwd}/${spm12} ]; then
+    spm12=${pwd}/${spm12}
+  fi
+
   export MATLABPATH=$spm12:$dname
   
   time=`date "+%Y%b%d_%H%M"`

@@ -1,8 +1,7 @@
 AAL (AUTOMATED ANATOMICAL LABELING) atlas:
 --------------------------------------------------------------------------------
 
-CAT12 was used to segment T1 data (Collins brain) and to estimate the normalization 
-parameters to transform the maximum probability maps to MNI152NLin2009cAsym space. 
+CAT12 was used to segment T1 data (Collins brain) and to estimate the normalization parameters to transform the maximum probability maps to MNI152NLin2009cAsym space. 
 
 If you use these atlases, please cite the references below.
 

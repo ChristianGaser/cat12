@@ -1,10 +1,8 @@
 Mori atlas:
 --------------------------------------------------------------------------------
-This atlas based on the "Slicer3:Mori_Atlas_labels_JHU-MNI_SS_Type-II" atlas (A)
-of Version 2010-05. 
+This atlas based on the "Slicer3:Mori_Atlas_labels_JHU-MNI_SS_Type-II" atlas (A) of Version 2010-05. 
 
-CAT12 was used to estimate the normalization parameters to transform the 
-maximum probability maps to MNI152NLin2009cAsym space. 
+CAT12 was used to estimate the normalization parameters to transform the maximum probability maps to MNI152NLin2009cAsym space. 
 
 If you use these atlases, please cite the references below.
 

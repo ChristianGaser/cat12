@@ -4,8 +4,7 @@ Local-Global Intrinsic Functional Connectivity Parcellation by Schaefer et al.
 CAT12 was used to segment MNI152NLin6Asym_T1w.nii and to estimate the normalization 
 parameters to transform the maximum probability maps to MNI152NLin2009cAsym space. 
 
-These atlases are available for different numbers of parcellations (100, 200, 400, 600) 
-and are based on resting state data from 1489 subjects.
+These atlases are available for different numbers of parcellations (100, 200, 400, 600) and are based on resting state data from 1489 subjects.
 
 If you use these atlases, please cite the references below.
 

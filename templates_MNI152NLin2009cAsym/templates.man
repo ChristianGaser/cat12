@@ -28,6 +28,10 @@
 % This is the MNI152NLin2009cAsym T1 template that can be used to overlay
 % CAT12 results.
 %
+% Template_T1_masked.nii 
+% ---------------------------------
+% Masked T1 in MNI152NLin2009cAsym space
+%
 % cat.nii 
 % ---------------------------------
 % This is the CAT atlas where major anatomical structures are used for 
@@ -35,6 +39,24 @@
 % numbers the right hemisphere. In order to create this atlas several atlases 
 % such as AAL, Broadman, IXI, and Hammers atlas and the IBASPM toolbox
 % (http://www.thomaskoenig.ch/Lester/ibaspm.htmAnatomy) were used.
+%
+%
+% brainmask.nii
+% ------------------------------
+% Image derived from average_305_mask_1mm.mnc, which was originally
+% supplied  by  Alan  Evans,  MNI,  Canada (ICBM, NIH P-20 project,
+% Principal  Investigator  John  Mazziotta).   The  original  image
+% contained ones and zeros, where ones represented voxels that were
+% part of the brain.  It was subsequently  smoothed  using  an  8mm
+% FWHM  Gaussian.   This  volume  can be used to weight the spatial
+% normalisation so that the final solution  is  not  influenced  by
+% voxels outside the brain.
+%
+% brainmask_T1.nii
+% ------------------------------
+% Brainmask derived from segmentation of Template_T1.nii and thresholding
+% the label image to obtain a brainmask for masking registered images in 
+% MNI152NLin2009cAsym space.
 %
 --------------------------------------------------------------------------------
 $Id$
