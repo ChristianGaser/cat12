@@ -355,11 +355,21 @@ if (SO.cbar == 2) & logP
 
   YTick = get(H, 'YTick');
 
-  mn = floor(min(YTick));
-  mx = ceil(max(YTick));
-  
-  % only allow integer values
-  values = floor(mn:mx);
+  if abs(OV.range(1)) >= 1.3 && abs(OV.range(1)) <= 1.4
+    YTick_step = ceil((OV.range(2) - OV.range(1)) / 5);
+    if OV.range(1) <= - 1.3 && OV.range(1) >= - 1.4
+      values = [(round(OV.range(1))+log10(0.05)+1):YTick_step:log10(0.05) 0 -log10(0.05):YTick_step:(round(OV.range(2))-log10(0.05)-1)];
+    else
+      values = [0 -log10(0.05):YTick_step:(round(OV.range(2)) + 0.30103)];
+    end
+  else
+    mn = floor(min(YTick));
+    mx = ceil(max(YTick));
+
+    % only allow integer values
+    values = floor(mn:mx);
+  end
+     
   pos = get(get(gca, 'YLabel'), 'position');
   pos(1) = 2.5;
   
@@ -368,9 +378,13 @@ if (SO.cbar == 2) & logP
   
   YTickLabel = [];
   for i = 1:length(YTick)
-    % also handle neg. log p-values
-    val = 10^(-abs(YTick(i)))*sign(YTick(i));
-    YTickLabel = char(YTickLabel, (sprintf(['%9.' num2str(abs(YTick(i))) 'f '], val)));
+    if YTick(i) > 0
+      YTickLabel = char(YTickLabel, remove_zeros(sprintf('%.g', 10^(-YTick(i)))));
+    elseif YTick(i) < 0
+      YTickLabel = char(YTickLabel, remove_zeros(sprintf('-%.g', 10^(YTick(i)))));
+    else
+      YTickLabel = char(YTickLabel, '');
+    end
   end
   
   % skip first empty entry
@@ -811,3 +825,16 @@ end
 
 return
 
+%==========================================================================
+function s = remove_zeros(s)
+
+pos = length(s);
+while pos > 1
+  if strcmp(s(pos), '0')
+    s(pos) = '';
+    pos = pos - 1;
+  else break
+  end
+end
+
+return
