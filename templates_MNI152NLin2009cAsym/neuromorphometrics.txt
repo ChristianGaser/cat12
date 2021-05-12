@@ -1,11 +1,11 @@
 MICCAI 2012 Grand Challenge and Workshop on Multi-Atlas Labeling:
 --------------------------------------------------------------------------------
 
-CAT12 was used to estimate the normalization parameters to transform the 
-maximum probability maps to MNI152NLin2009cAsym space. 
-Furthermore, the atlas labels were dilated to ensure that gray matter areas are covered.
+CAT12 was used to segment the T1 data and to estimate the registration parameters to transform the probability maps to MNI152NLin2009cAsym space. 
+
+The resulting maximum probability map was slightly modified: (1) remaining holes were filled with median value, (2) an additionally mask with brainmask_T1.nii was applied to remove non-brain areas.
  
-Maximum probability tissue labels derived from the ''MICCAI 2012 Grand Challenge and Workshop on Multi-Atlas Labeling'' (http://www.neuromorphometrics.com/2012_MICCAI_Challenge_Data.html). These data were released under the Creative Commons Attribution-NonCommercial (CC BY-NC) with no end date. Users should credit the MRI scans as originating from the OASIS project (http://www.oasis-brains.org/) and the labeled data as "provided by Neuromorphometrics, Inc. (http://Neuromorphometrics.com/) under academic subscription".  These references should be included in all workshop and final publications.
+Labels in native space were derived from the ''MICCAI 2012 Grand Challenge and Workshop on Multi-Atlas Labeling'' (http://www.neuromorphometrics.com/2012_MICCAI_Challenge_Data.html). These data of 35 subjects were released under the Creative Commons Attribution-NonCommercial (CC BY-NC) with no end date. Users should credit the MRI scans as originating from the OASIS project (http://www.oasis-brains.org/) and the labeled data as "provided by Neuromorphometrics, Inc. (http://Neuromorphometrics.com/) under academic subscription".  These references should be included in all workshop and final publications.
 
 
 Websites:    

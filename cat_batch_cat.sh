@@ -349,6 +349,11 @@ run_cat12 ()
     LOGDIR=$(dirname "${ARRAY[0]}")
   fi
   
+  # we have to add current path if cat_batch_cat.sh was called from relative path
+  if [ -d ${pwd}/${spm12} ]; then
+    spm12=${pwd}/${spm12}
+  fi
+  
   export MATLABPATH=${spm12}
 
   SIZE_OF_ARRAY="${#ARRAY[@]}"
