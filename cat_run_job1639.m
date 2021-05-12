@@ -409,6 +409,13 @@ function cat_run_job1639(job,tpm,subj)
       obj.samp     = job.opts.samp;              
       obj.tol      = job.opts.tol;
       obj.lkp      = [];
+      if ~strcmp('human',job.extopts.species) 
+        % RD202105: There are multiple problems in primates and increased 
+        %           accuracy is maybe better (eg. 0.5 - 0.66) 
+        scannorm   = 0.7; %prod(obj.image.dims .* vx_vol).^(1/3) / 20; % variance from typical field fo view to normalized parameter 
+        obj.samp   = obj.samp * scannorm; % normalize by voxel size 
+        obj.fwhm   = obj.fwhm * scannorm; 
+      end
       if all(isfinite(cat(1,job.tissue.ngaus))),
         for k=1:numel(job.tissue),
           obj.lkp = [obj.lkp ones(1,job.tissue(k).ngaus)*k];
@@ -578,7 +585,7 @@ function cat_run_job1639(job,tpm,subj)
             Affine_com = eye(4);
           end
 
-          if strcmp('human',job.extopts.species) && ~ppe.affreg.highBG 
+          if ~ppe.affreg.highBG ... strcmp('human',job.extopts.species) && 
             % affine registration
             try
               spm_plot_convergence('Init','Coarse affine registration','Mean squared difference','Iteration');
@@ -612,7 +619,7 @@ function cat_run_job1639(job,tpm,subj)
         
         
         % fine affine registration 
-        if strcmp('human',job.extopts.species) && ~useprior && ~ppe.affreg.highBG 
+        if ~useprior && ~ppe.affreg.highBG ... strcmp('human',job.extopts.species) && 
           aflags.sep = obj.samp/2; 
           aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
           aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
@@ -677,9 +684,10 @@ function cat_run_job1639(job,tpm,subj)
       VFa = VF; VFa.mat = Affine * VF.mat; %Fa.mat = res0(2).Affine * VF.mat;
       if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
       [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1)); clear Vmsk;  %#ok<ASGLU>
-      Ylesion = Ylesion & Yb>0.9; clear Yb; 
-      % check settings
-      if sum(Ylesion(:))/1000 > 1
+      Ylesion = Ylesion & ~cat_vol_morph(Yb<0.9,'dd',5); clear Yb; 
+      % check settings 
+      % RD202105: in primates the data, template and affreg is often inoptimal so we skip this test  
+      if sum(Ylesion(:))/1000 > 1 && strcmp('human',job.extopts.species)
         fprintf('%5.0fs\n',etime(clock,stime)); stime = []; 
         if ~job.extopts.SLC
           % this could be critical and we use a warning for >1 cm3 and an alert in case of >10 cm3
@@ -747,13 +755,13 @@ function cat_run_job1639(job,tpm,subj)
       else
         stime = cat_io_cmd('SPM preprocessing 1 (estimate 1 - TPM registration):','','',1,stime); 
       end
-      if ~isempty(job.opts.affreg) && strcmp('human',job.extopts.species) && ~useprior && job.extopts.setCOM ~= 10 % setcom == 10 - never use
+      if ~isempty(job.opts.affreg) && ~useprior && job.extopts.setCOM ~= 10 % setcom == 10 - never use ... && strcmp('human',job.extopts.species)
         if numel(job.opts.tpm)>1
           %% merging of multiple TPMs
           obj2 = obj; obj2.image.dat(:,:,:) = max(0.0,Ym);
           [Affine,obj.tpm,res0] = cat_run_job_multiTPM(job,obj2,Affine,ppe.affreg.skullstripped,1); %#ok<ASGLU>
           Affine3 = Affine; 
-        elseif strcmp(job.extopts.species,'human')
+        elseif 1 %if strcmp(job.extopts.species,'human')
           %% only one TPM (old approach); 
           spm_plot_convergence('Init','Fine affine registration','Mean squared difference','Iteration');
           warning off 
@@ -1049,7 +1057,12 @@ function cat_run_job1639(job,tpm,subj)
   if exist('Ylesion','var'), res.Ylesion = Ylesion; else res.Ylesion = false(size(res.image.dim)); end; clear Ylesion;
   if exist('redspmres','var'); res.redspmres = redspmres; res.image1 = image1; end
   job.subj = subj; 
-  cat_main1639(res,obj.tpm,job);
+  % call new pipeline in case of inverse images (PD/T2/FLAIR) 
+  if exist('Tth','var') && all( diff(Tth)>0 ) 
+    cat_main1639(res,obj.tpm,job);
+  else
+    cat_main1639(res,obj.tpm,job);
+  end
   
   % delete denoised/interpolated image
   [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});

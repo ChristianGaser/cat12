@@ -83,8 +83,13 @@ function varargout = cat_vol_qa(action,varargin)
   QAR = struct(); 
   if nargout>0, varargout = cell(1,nargout); end
 
-  [mrifolder, reportfolder] = cat_io_subfolders(varargin{4}.catlog,varargin{6}.job);
-   
+  try
+    [mrifolder, reportfolder] = cat_io_subfolders(varargin{4}.catlog,varargin{6}.job);
+  catch
+    mrifolder    = 'mri'; 
+    reportfolder = 'report'; 
+  end
+  
   % no input and setting of default options
   if nargin==0, action='p0'; end 
   if isstruct(action)
