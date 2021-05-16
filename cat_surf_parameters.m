@@ -147,8 +147,14 @@ function varargout = cat_surf_parameters(job)
         % - measures without normalization 
         PGI     = {fullfile(pp,strrep(ff,'central','gyrification'));       % MNI approach
                    fullfile(pp,strrep(ff,'central','gyrification2'))};     % new approach (slower and probably not better) - just for developer tests
-        PSD     = {fullfile(pp,strrep(ff,'central','depth'))};
-        PSDsqrt = {fullfile(pp,strrep(ff,'central','sqrtdepth'))};
+        % also consider pial surfaces for sulcal depth
+        if ~isempty(strfind(ff,'pial'))
+          PSD     = {fullfile(pp,strrep(ff,'pial','sulc'))};
+          PSDsqrt = {fullfile(pp,strrep(ff,'pial','sqrtsulc'))};
+        else
+          PSD     = {fullfile(pp,strrep(ff,'central','depth'))};
+          PSDsqrt = {fullfile(pp,strrep(ff,'central','sqrtdepth'))};
+        end
         PFD     = fullfile(pp,strrep(ff,'central','fractaldimension'));
         Parea   = fullfile(pp,strrep(ff,'central','area'));                
         Pgmv{1} = fullfile(pp,strrep(ff,'central','gmv'));                 % RD202005: need projection based version for tests

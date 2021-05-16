@@ -466,10 +466,14 @@ switch lower(action)
       
       try
         Y = spm_data_read(spm_data_hdr_read(H.S{1}.name));
+        all_zero = 0;
       catch
-        cat_io_cprintf('err','No data in surfaces found or surfaces have different mesh structure (32k vs. 164k).');
+        cat_io_cprintf('err','No data in surfaces found or surfaces have different mesh structure (32k vs. 164k).\n');
         if nargout, varargout{1} = []; end
-        return
+        G = gifti(H.S{1}.name);
+        Y = zeros(size(G.vertices,1),1);
+        all_zero = 1;
+%        return
       end
                   
       [pth{1}, nm1, ext1] = spm_fileparts(H.S{1}.name(1,:));
@@ -543,9 +547,13 @@ switch lower(action)
       
       H.view = 1;
       H.show_transp = 1;
-      H.disable_cbar = 0;
       H.white_bgk = 0;
       H.show_info = 0;
+      if all_zero
+        H.disable_cbar = 1;
+      else
+        H.disable_cbar = 0;
+      end
       
       % result selection or RGB overlay if more than one result was loaded
       if H.n_surf > 1
@@ -638,12 +646,17 @@ switch lower(action)
       
       set(H.save,   'Enable', 'on');
       set(H.mview,  'Enable', 'on');
-      set(H.nocbar, 'Enable', 'on');
+      if ~all_zero
+        set(H.nocbar, 'Enable', 'on');
+        set(H.cmap,   'Enable', 'on');
+        set(H.inv,    'Enable', 'on');
+        set(H.transp, 'Enable', 'on');
+      else
+        set(H.slider_min, 'Visible','off');
+        set(H.slider_max, 'Visible','off');
+      end
       set(H.bkg,    'Enable', 'on');
-      set(H.transp, 'Enable', 'on');
       set(H.info,   'Enable', 'on');
-      set(H.cmap,   'Enable', 'on');
-      set(H.inv,    'Enable', 'on');
       if isfield(H,'scaling') &&  isvalid(H.scaling)
         set(H.scaling, 'Enable', 'on');
       end
