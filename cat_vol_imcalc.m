@@ -7,7 +7,7 @@ function varargout = cat_vol_imcalc(Vi,Vo,f,flags,varargin)
 %__________________________________________________________________________
 %
 % Perform algebraic functions on images
-% FORMAT [Vo, Yo] = spm_imcalc(Vi, Vo, f [,flags [,extra_vars...]])
+% FORMAT [Vo, Yo] = cat_vol_imcalc(Vi, Vo, f [,flags [,extra_vars...]])
 % Vi            - struct array (from spm_vol) of images to work on
 %                 or a char array of input image filenames
 % Vo (input)    - struct array (from spm_vol) containing information on
@@ -34,7 +34,7 @@ function varargout = cat_vol_imcalc(Vi,Vo,f,flags,varargin)
 % Yo            - output image 
 %__________________________________________________________________________
 %
-% spm_imcalc performs user-specified algebraic manipulations on a set of
+% cat_vol_imcalc performs user-specified algebraic manipulations on a set of
 % images, with the result being written out as an image. 
 % The images specified in Vi, are referred to as i1, i2, i3,...  in the
 % expression to be evaluated, unless the dmtx flag is setm in which
@@ -81,7 +81,7 @@ function varargout = cat_vol_imcalc(Vi,Vo,f,flags,varargin)
 % data-matrix version, the weighted sum can be computed using:
 %       Vi = spm_vol(spm_select(inf,'image'));
 %       Vo = 'output.img'
-%       Q  = spm_imcalc(Vi,Vo,'c*X',{1},c)
+%       Q  = cat_vol_imcalc(Vi,Vo,'c*X',{1},c)
 % Here we've pre-specified the expression and passed the vector c as an
 % additional variable (you'll be prompted to select the n images).
 %__________________________________________________________________________

@@ -206,6 +206,7 @@ xml = convert(xmltree(deblank(roi_names{1})));
 
 % get selected atlas and measure
 [sel_atlas, sel_measure, atlas, measure] = get_atlas_measure(xml);
+
 % get names IDs and values of selected atlas and measure inside ROIs
 [ROInames ROIids ROIvalues] = get_ROI_measure(roi_names, atlas, measure);
 
@@ -285,6 +286,20 @@ n_structures = size(Y,2);
 % for huge effects p-value of 0 has to be corrected
 p(p==0) = eps;
 
+% if information available in csv file whether this measure is
+% allowed for these structures load that column otherwise allow all
+if ~mesh_detected
+  csv = cat_io_csv(fullfile(cat_get_defaults('extopts.pth_templates'),[atlas '.csv']),'','',struct('delimiter',';'));
+  ind_tmp = find(strcmp(csv(1,:),measure)==1);
+  if ~isempty(ind_tmp)
+    defined_measure = cell2mat(csv(2:end,ind_tmp)) == 1;
+  else
+    defined_measure = ones(n_structures,1) == 1;
+  end
+else
+  defined_measure = ones(n_structures,1) == 1;
+end
+
 % equivalent z-value 
 Ze = spm_invNcdf(1 - p);
 
@@ -294,10 +309,20 @@ else
   statstr = 'F';
 end
 
-% use "1" for left, "2" for right hemisphere and "3" for structures in both hemispheres
+% use "1" for left, "2" for right hemisphere and "3" for structures in both
+% hemispheres and "4" for unknown
 hemi_code = zeros(n_structures,1);
 
 for i=1:n_structures
+  % replace hemisphere names at the beginning of the name by abbreviation
+  ROInames{i} = strrep(ROInames{i},'Left ','l');
+  ROInames{i} = strrep(ROInames{i},'Right ','r');
+  % replace hemisphere indicators at end of the name by abbreviation at
+  % the beginning
+  switch deblank(ROInames{i}(:,end))
+    case 'L',  ROInames{i} = ['l' deblank(ROInames{i}(:,1:end-1))];
+    case 'R',  ROInames{i} = ['r' deblank(ROInames{i}(:,1:end-1))];
+  end
   switch ROInames{i}(:,1)
     case 'l',  hemi_code(i) = 1;
     case 'r',  hemi_code(i) = 2;
@@ -312,15 +337,14 @@ if length(unique(hemi_code)) == 1
   end
 end
 
-hemistr = {'lh','rh','both','unknown'};
+hemistr = {'left hemisphere','right hemisphere','both','unknown'};
+hemiabbr = {'lh','rh','both','unknown'};
 
 n_hemis = max(hemi_code);
 
 % divide p-values and names into left and right hemisphere data
-ind_all = [];
 for i=1:n_hemis
-  hemi_ind{i} = find(hemi_code == i);
-  ind_all = [ind_all; hemi_ind{i}];
+  hemi_ind{i} = find(hemi_code == i & defined_measure);
 end
 
 % prepare corrections for multiple comparisons
@@ -336,7 +360,7 @@ Pcorr{1}     = p;
 
 % check for inverse effects in T-test and ask whether these should be also displayed
 ind_inv = find((1-p) < alpha);
-if ~isempty(ind_inv) & strcmp(SPM.xCon(Ic).STAT,'T')
+if ~isempty(ind_inv) && strcmp(SPM.xCon(Ic).STAT,'T')
   found_inv = 1;
   Pcorr_inv  = cell(size(corr));
   Pcorr_inv{1} = 1 - p;
@@ -345,39 +369,29 @@ else
 end
 
 % apply FDR correction
-Pcorr{2} = spm_P_FDR(p);
+Pcorr{2} = ones(size(p));
+Pcorr{2}(defined_measure) = spm_P_FDR(p(defined_measure));
 if found_inv
-  Pcorr_inv{2} = spm_P_FDR(1 - p);
+  Pcorr_inv{2} = ones(size(p));
+  Pcorr_inv{2}(defined_measure) = spm_P_FDR(1 - p(defined_measure));
 end
 
 % apply Holm-Bonferroni correction: correct lowest P by n, second lowest by n-1...
 if n_corr > 2
-  [Psort0, indP0] = sort(p);
-  n = length(Psort0);
+  p_tissue = p(defined_measure);
+  [Psort0, indP0] = sort(p_tissue);
+  HBcorr = length(Psort0):-1:1;
+  p_tissue = p_tissue.*HBcorr(indP0);
   Pcorr{3} = ones(size(p));
-  for k=1:n
-    Pval = p(indP0(k))*(n+1-k);
-    if Pval<alpha
-      Pcorr{3}(indP0(k)) = Pval;
-    else
-      % stop here if corrected p-value exceeds alpha
-      break
-    end
-  end
-  if found_inv
-    [Psort0, indP0] = sort(1 - p);
-    n = length(Psort0);
-    Pcorr_inv{3} = ones(size(p));
-    for k=1:n
-      Pval = (1 - p(indP0(k)))*(n+1-k);
-      if Pval<alpha
-        Pcorr_inv{3}(indP0(k)) = Pval;
-      else
-        % stop here if corrected p-value exceeds alpha
-        break
-      end
-    end
+  Pcorr{3}(defined_measure) = p_tissue;
 
+  if found_inv
+    p_tissue = 1 - p(defined_measure);
+    [Psort0, indP0] = sort(p_tissue);
+    HBcorr = length(Psort0):-1:1;
+    p_tissue = p_tissue.*HBcorr(indP0);
+    Pcorr_inv{3} = ones(size(p));
+    Pcorr_inv{3}(defined_measure) = p_tissue;
   end
 end
 
@@ -406,6 +420,8 @@ else
   found_inv = 0;
 end
 
+overlay_results = true;
+
 % go through left and right hemisphere and structures in both hemispheres
 for i=sort(unique(hemi_code))'
 
@@ -414,7 +430,8 @@ for i=sort(unique(hemi_code))'
   B_sel  = Beta(:,hemi_ind{i});
   Ze_sel = Ze(hemi_ind{i});
   statval_sel = statval(hemi_ind{i});
-
+  hemi_code_sel = hemi_code(hemi_ind{i});
+  
   for c=1:n_corr
     Pcorr_sel{c} = Pcorr{c}(hemi_ind{i});
     if found_inv
@@ -438,7 +455,7 @@ for i=sort(unique(hemi_code))'
     end
     
     atlas_name = fullfile(spm('dir'),'toolbox','cat12',['atlases_surfaces' str32k],...
-        [hemistr{i} '.' atlas '.freesurfer.annot']);
+        [hemiabbr{i} '.' atlas '.freesurfer.annot']);
     [vertices, rdata0, colortable, rcsv0] = cat_io_FreeSurfer('read_annotation',atlas_name);
     data0 = round(rdata0);
 
@@ -458,6 +475,19 @@ for i=sort(unique(hemi_code))'
       V = spm_vol(fullfile(cat_get_defaults('extopts.pth_templates'),[atlas '.nii']));
       data0 = round(spm_data_read(V));
       atlas_loaded = 1;
+            
+      % get number of ROIs and exclude background with ID==0
+      sz_csv = size(csv,1)-1;
+      if csv{2,1} == 0
+        sz_csv = sz_csv - 1;
+      end
+      
+      % compare number of ROIs between xml-file and atlas information in
+      % csv file and disable overlay of results if numbers differ
+      if sz_csv ~= numel(ROIids>0)
+        overlay_results = false;
+        fprintf('Overlay of ROIs was disabled because number of regions differ (probably due to use of older atlases): %d vs %d\n',sz_csv, numel(ROIids>0));
+      end
   
       if write_beta
         for k=1:length(ind_con)
@@ -478,7 +508,6 @@ for i=sort(unique(hemi_code))'
   if write_beta
     for k=1:length(ind_con)
       for j=1:length(ID_sel)
-      tmp=B_sel(ind_con(k),j);
         dataBeta{k}(data0 == ID_sel(j)) = B_sel(ind_con(k),j);
       end
     end
@@ -502,10 +531,18 @@ for i=sort(unique(hemi_code))'
       end
       for j=1:length(ind)
         data{c}(data0 == ID_sel(indP(ind(j)))) = -log10(Pcorr_sel{c}(indP(ind(j))));
-        if found_inv
-          fprintf('%9f\t%9s\t%9f\t%9f\t%s\n',Pcorr_sel{c}(indP(ind(j))),'',statval_sel(indP(ind(j))),Ze_sel(indP(ind(j))),N_sel{indP(ind(j))}(:,2:end));
+        
+        % get name of ROI and exclude first hemi-indicator if necessary
+        if hemi_code_sel(indP(ind(j))) == 4
+          rname = N_sel{indP(ind(j))};
         else
-          fprintf('%9f\t%9f\t%9f\t%s\n',Pcorr_sel{c}(indP(ind(j))),statval_sel(indP(ind(j))),Ze_sel(indP(ind(j))),N_sel{indP(ind(j))}(:,2:end));
+          rname = N_sel{indP(ind(j))}(:,2:end);
+        end
+        
+        if found_inv
+          fprintf('%9f\t%9s\t%9f\t%9f\t%s\n',Pcorr_sel{c}(indP(ind(j))),'',statval_sel(indP(ind(j))),Ze_sel(indP(ind(j))),rname);
+        else
+          fprintf('%9f\t%9f\t%9f\t%s\n',Pcorr_sel{c}(indP(ind(j))),statval_sel(indP(ind(j))),Ze_sel(indP(ind(j))),rname);
         end
       end
     end
@@ -532,12 +569,12 @@ for i=sort(unique(hemi_code))'
     % write label surface with thresholded p-values
     if mesh_detected
       % save P-alues as float32
-      filename1 = [hemistr{i} '.logP' corr_short{c} output_name '.gii'];
+      filename1 = fullfile(cwd,[hemiabbr{i} '.logP' corr_short{c} output_name '.gii']);
       save(gifti(struct('cdata',data{c})),filename1);
 
       if write_beta
         for k=1:length(ind_con)
-          filename2 = sprintf('%s.beta%d_%s.gii',hemistr{i},ind_con(k),atlas_name);
+          filename2 = sprintf('%s.beta%d_%s.gii',hemiabbr{i},ind_con(k),atlas_name);
           save(gifti(struct('cdata',dataBeta{k})),filename2);
           fprintf('\Beta image saved as %s.',filename2);
         end
@@ -560,8 +597,8 @@ for c=1:n_corr
 end
 
 % display ROI results
-if nargin < 3
-  if ~isempty(ind_show)
+if nargin < 3 
+  if ~isempty(ind_show) && overlay_results
     show_results = spm_input('Display ROI results?','+1','m',corr([ind_show n_corr+1]),[ind_show 0]);
   else
     show_results = 0;
@@ -573,8 +610,8 @@ if mesh_detected
 
   for c=1:n_corr
     % name for combined hemispheres
-    name_lh   = ['lh.logP'   corr_short{c} output_name '.gii'];
-    name_rh   = ['rh.logP'   corr_short{c} output_name '.gii'];
+    name_lh   = fullfile(cwd,['lh.logP'   corr_short{c} output_name '.gii']);
+    name_rh   = fullfile(cwd,['rh.logP'   corr_short{c} output_name '.gii']);
     name_mesh = fullfile(cwd,['mesh.logP' corr_short{c} output_name '.gii']);
   
     % combine left and right 
@@ -583,7 +620,7 @@ if mesh_detected
     if ~found_inv, M.cdata(M.cdata < 0) = 0; end
     M.private.metadata = struct('name','SurfaceID','value',name_mesh);
     
-    if ~isempty(find(M.cdata~=0))
+    if ~isempty(find(M.cdata~=0)) && overlay_results
       save(gifti(M), name_mesh, 'Base64Binary');
         fprintf('\nLabel file with thresholded logP values (%s) was saved as %s.',corr{c},name_mesh);
     end
@@ -617,7 +654,7 @@ else % write label volume with thresholded p-values
       V.fname = fullfile(cwd,['logP' corr_short{c} output_name '.nii']);
       V.dt(1) = 16;
       if ~found_inv, data{c}(data{c} < 0) = 0; end
-      if ~isempty(find(data{c}~=0))
+      if ~isempty(find(data{c}~=0)) && overlay_results
         spm_write_vol(V,data{c});
         fprintf('\nLabel file with thresholded logP values (%s) was saved as %s.',corr{c},V.fname);
       end
@@ -728,16 +765,17 @@ else
 end
 
 %_______________________________________________________________________
-function [sel_atlas, sel_measure, atlas, measure] = get_atlas_measure(xml)
+function [sel_atlas, sel_measure, atlas, measure, measures] = get_atlas_measure(xml)
 % get selected atlas and measure
 %
-% FORMAT [sel_atlas, sel_measure, atlas, measure] = get_atlas_measure(xml);
+% FORMAT [sel_atlas, sel_measure, atlas, measure, measures] = get_atlas_measure(xml);
 % xml    - xml structure
 %
 % sel_atlas    - index of selected atlas
 % sel_measure  - index of selected measure
 % atlas        - name of selected atlas
 % measure      - name of selected measure
+% measures     - names of useful measures
 
 atlases = fieldnames(xml);
 n_atlases = numel(atlases);
@@ -762,10 +800,10 @@ n_measures = numel(useful_measures);
 % select a measure
 sel_measure = spm_input('Select measure','+1','m',useful_measures);
 measure = useful_measures{sel_measure};
+measures = useful_measures;
 
 % remove spaces
 measure = deblank(measure);
-
 %_______________________________________________________________________
 function [ROInames ROIids ROIvalues] = get_ROI_measure(roi_names, atlas, measure)
 % get names, IDs and values inside ROI for a selected atlas
