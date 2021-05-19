@@ -1,5 +1,24 @@
 ------------------------------------------------------------------------
-r1826 | gaser | 2021-05-17 17:37:19
+r1827 | gaser | 2021-05-19 15:55:16
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_batch_cat.sh
+M       cat_surf_results.m
+M       cat_vol_createMPM.m
+M       cat_vol_slice_overlay.m
+M       html/cat.html
+
+(1) Changed: Added field to define labels that should be excluded from atlas
+             in cat_vol_createMPM.m
+(2) Changed: Changed tick-labels for log-scaled colorbars and removed white 
+             borders in cat_vol_slice_overlay.m
+(3) Changed: Changed tick-labels for log-scaled colorbars in cat_surf_results.m.
+(4) Changed: Some small modifications in cat_batch_cat.sh and Makefile.
+------------------------------------------------------------------------
+r1826 | gaser | 2021-05-17 17:38:07 +0200 (Mo, 17 Mai 2021) | 22 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -21,6 +40,7 @@ M       templates_MNI152NLin2009cAsym/neuromorphometrics.csv
              updated cat_defaults.
 (2) Changed: cat_stat_analyze_ROIs now only analyses ROIs for specific tissue 
              types if defined.
+
 
 ------------------------------------------------------------------------
 r1825 | gaser | 2021-05-16 23:48:54 +0200 (So, 16 Mai 2021) | 16 lines
