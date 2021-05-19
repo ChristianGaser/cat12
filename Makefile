@@ -109,6 +109,7 @@ scp: doc zip
 scp_manual:
 	-@echo scp CAT12-Manual.pdf to http://${STARGET}
 	-@scp -P ${PORT} CAT12-Manual.pdf ${STARGET}
+	-@scp -r -P ${PORT} cat12-html ${STARGET_HTDOCS}/
 
 # scp deployed versions
 scp_precompile:
@@ -170,7 +171,7 @@ checklist:
 	-@echo    cat12_all.m in /Volumes/UltraMax/validate_skullstripping_withT12
 	-@echo    calc_kappa_c0_SPM12_T12.m
 	-@echo    
-	-@echo 7. Check Windows + Linux
+	-@echo 7. Check Windows 10 + Ubuntu 17.10
 	-@echo    VirtualBox.app
 	-@echo    CAT12 GUI Segment
 	-@echo    
@@ -186,7 +187,7 @@ precompile:
 	-@echo    spm fmri
 	-@echo    cd spm12/config
 	-@echo    spm_make_standalone
-	-@echo    "Ubuntu 14.10: mv  /Users/gaser/spm/standalone/spm12.ctf /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Linux/"
+	-@echo    "Ubuntu 17.10: mv  /Users/gaser/spm/standalone/spm12.ctf /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Linux/"
 	-@echo    "Windows 10: mv  /Users/gaser/spm/standalone/spm12.[ce][tx][fe] /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Win/"
 	-@echo    "Mac OS: rm -rf /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Mac/spm12.app; mv /Users/gaser/spm/standalone/spm12.app /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Mac/"
 	-@echo    

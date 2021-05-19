@@ -501,9 +501,8 @@ cat <<__EOM__
 
 USAGE:
  cat_batch_cat.sh filenames|filepattern [-m matlab_command] [-d default_file] [-l log_folder] 
-                    [-p number_of_processes] [-p number_of_processes] [-tpm TPM-file] 
-                    [-ns] [-nm] [-rp] [-no output_pattern] [-n nicelevel] 
-                    [-s shell_command -f files_for_shell] [-c matlab_command] 
+                    [-p number_of_processes] [-tpm TPM-file] [-ns] [-nm] [-rp] [-no output_pattern]
+                    [-n nicelevel] [-s shell_command -f files_for_shell] [-c matlab_command] 
                     [-a add_to_defaults] [-t] [-fg] [-noj]
  
   -m  <FILE>  | --matlab <FILE>         matlab command (matlab version) (default $matlab)

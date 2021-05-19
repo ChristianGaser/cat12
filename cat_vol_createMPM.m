@@ -1,4 +1,4 @@
-function cat_vol_create_MPM(Label, Deform, vox, thresholds, mask)
+function cat_vol_createMPM(Label, Deform, vox, thresholds, mask, exclude_labels)
 % Create Maximum Probability Map (Label) of labels in native space and deformation 
 % fields
 %
@@ -8,6 +8,8 @@ function cat_vol_create_MPM(Label, Deform, vox, thresholds, mask)
 %           are already normalized and no deformations are needed)
 % vox     - voxel size (use NaNs to use voxel size of deformation fields)
 % mask    - optional mask image for final masking
+% exclude_labels - optionally exclude labels from atlas (e.g.
+%           neuromorphometrics)
 %
 % some of the subfunctions are modified versions from spm_deformations.m
 % ______________________________________________________________________
@@ -33,7 +35,7 @@ if nargin < 2
 end
 
 % voxel size
-if nargin < 3 & ~isempty(Deform)
+if nargin < 3 && ~isempty(Deform)
   vox = spm_input('Voxel size',1,'r',[NaN NaN NaN],[1,3]);
 end
 
@@ -45,16 +47,21 @@ end
 % optional masking
 if nargin < 5
   mask  = spm_select([0 1],'image','Select optional mask image',{fullfile(cat_get_defaults('extopts.pth_templates'),'brainmask_T1.nii')});
-  Vmask = spm_vol(mask);
 end
+Vmask = spm_vol(mask);
 
 % give warning if brainmask is used in cobination with several thresholds
 if ~isempty(mask) && numel(thresholds) > 1
   fprintf('Please keep in mind, that use of brainmask will result in very similar results using different thresholds. If you intend to try different thresholds disable use of an additional brainmask\n');
 end
 
+% thresholds for average probability to exclude non-brain areas
+if nargin < 6
+  exclude_labels = str2num(spm_input('Exclude labels (e.g. neuromorphometrics)','+1','s'));
+end
+
 % check whether only one value was defined
-if size(vox,1) ==1 & size(vox,2) == 1
+if size(vox,1) ==1 && size(vox,2) == 1
   vox = [vox vox vox];
 end
 
@@ -64,8 +71,11 @@ if size(vox,1) > size(vox,2)
 end
 
 % find all unique values in structures
-structures = round(spm_read_vols(Vlabel(1)));
+structures = round(spm_read_vols(Vlabel(end)));
 datarange = sort(unique(structures(structures>0)));
+for i=1:numel(exclude_labels)
+  datarange(datarange == exclude_labels(i)) = [];  
+end
 n_structures = numel(datarange);
 
 if ~isempty(Deform)
@@ -99,10 +109,10 @@ watlas = zeros([V(1).dim(1:3) n_structures],'single');
 for i=1:n_subjects
   fprintf('.');
   if ~isempty(Deform)
-    [Def,mat] = get_comp(Vdeform(i).fname,vox);    
+    Def = get_comp(Vdeform(i).fname,vox);    
   end
   vol = spm_read_vols(Vlabel(i));
-  for j=1:n_structures;
+  for j=1:n_structures
     if ~isempty(Deform)
       dat = apply_def(Def,double(round(vol)==datarange(j)),3,Vlabel(i).mat);
     else
@@ -117,7 +127,7 @@ fprintf('\n');
 
 % apply median filtering to each label and slight smoothing
 if refine
-  for j=1:n_structures;
+  for j=1:n_structures
     tmp = cat_vol_median3(single(watlas(:,:,:,j)));
     spm_smooth(tmp,tmp,2);
     watlas(:,:,:,j) = tmp;
@@ -144,12 +154,12 @@ for i=1:numel(thresholds)
   threshold = thresholds(i);
   
   index_atlas = index_atlas_orig;
-  index_atlas(find(max_atlas<0.01 | isnan(max_atlas) | avg_atlas<threshold)) = 0;
+  index_atlas(max_atlas<0.01 | isnan(max_atlas) | avg_atlas<threshold) = 0;
   
   index_atlas0 = index_atlas;
   
-  for j=1:n_structures;
-    ind = find(index_atlas0 == j);
+  for j=1:n_structures
+    ind = index_atlas0 == j;
     index_atlas(ind) = datarange(j);
   end
   
