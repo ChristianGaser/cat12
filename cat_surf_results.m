@@ -2075,9 +2075,21 @@ if H.n_surf == 1
     XTickLabel = [];
     for i = 1:length(XTick)
       if XTick(i) > 0
-        XTickLabel = char(XTickLabel, remove_zeros(sprintf('%.g', 10^(-XTick(i)))));
+        if XTick(i) > 7
+          % use 1E-x notation
+          XTickLabel = char(XTickLabel, remove_zeros(sprintf('%g', 10^(-XTick(i)))));
+        else
+          % use 0.000x notation
+          XTickLabel = char(XTickLabel, remove_zeros(sprintf('%3.7f', 10^(-XTick(i)))));
+        end
       elseif XTick(i) < 0
-        XTickLabel = char(XTickLabel, remove_zeros(sprintf('-%.g', 10^(XTick(i)))));
+        if XTick(i) < -7
+          % use 1E-x notation
+          XTickLabel = char(XTickLabel, remove_zeros(sprintf('-%g', 10^(XTick(i)))));
+        else
+          % use 0.000x notation
+          XTickLabel = char(XTickLabel, remove_zeros(sprintf('-%3.7f', 10^(XTick(i)))));
+        end
       else
         XTickLabel = char(XTickLabel, '');
       end

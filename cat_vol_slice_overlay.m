@@ -241,12 +241,7 @@ else
   xy = OV.xy;
 end
 
-% prepare overview of slices
-V = SO.img(1).vol;
-ref_vol = spm_read_vols(V);
-ref_vol = 64 * (ref_vol - SO.img(1).range(1)) / (SO.img(1).range(2) - SO.img(1).range(1));
-vx = sqrt(sum(V.mat(1:3, 1:3).^2));
-Orig = round(V.mat \ [0 0 0 1]');
+
 
 % get position of graphic figure
 pos1 = get(spm_figure('FindWin', 'Graphics'), 'Position');
@@ -254,9 +249,14 @@ pos1 = get(spm_figure('FindWin', 'Graphics'), 'Position');
 screensize = get(0, 'screensize');
 
 if ~isfield(SO,'overview')
-
-  h0 = figure(11);
-  clf
+  % prepare overview of slices
+  V = SO.img(1).vol;
+  ref_vol = spm_read_vols(V);
+  ref_vol = 64 * (ref_vol - SO.img(1).range(1)) / (SO.img(1).range(2) - SO.img(1).range(1));
+  vx = sqrt(sum(V.mat(1:3, 1:3).^2));
+  Orig = round(V.mat \ [0 0 0 1]');
+  
+  h0 = figure(11); clf
   axes('Position', [0 0 1 1]);
   
   hold on
@@ -379,9 +379,21 @@ if (SO.cbar == 2) & logP
   YTickLabel = [];
   for i = 1:length(YTick)
     if YTick(i) > 0
-      YTickLabel = char(YTickLabel, remove_zeros(sprintf('%.g', 10^(-YTick(i)))));
+      if YTick(i) > 7
+        % use 1E-x notation
+        YTickLabel = char(YTickLabel, remove_zeros(sprintf('%g', 10^(-YTick(i)))));
+      else
+        % use 0.000x notation
+        YTickLabel = char(YTickLabel, remove_zeros(sprintf('%3.7f', 10^(-YTick(i)))));
+      end
     elseif YTick(i) < 0
-      YTickLabel = char(YTickLabel, remove_zeros(sprintf('-%.g', 10^(YTick(i)))));
+      if YTick(i) < -7
+        % use 1E-x notation
+        YTickLabel = char(YTickLabel, remove_zeros(sprintf('-%g', 10^(YTick(i)))));
+      else
+        % use 0.000x notation
+        YTickLabel = char(YTickLabel, remove_zeros(sprintf('-%3.7f', 10^(YTick(i)))));
+      end
     else
       YTickLabel = char(YTickLabel, '');
     end
@@ -397,9 +409,10 @@ end
 set(H, 'FontSize', FS, 'YColor', [1 1 1])
 set(get(H, 'YLabel'), 'FontUnits', 'normalized', 'FontSize', 1.5*FS, 'Color', [1 1 1])
 
-% we have to get rid off that annoying axis and simply draw a black box 
+% we have to get rid off that annoying axis and simply draw a black box
+% with 1 pixel width
 posc = get(H,'Position');
-posc(3) = 0.04*posc(3);
+posc(3) = 1;
 a=axes(...
       'Parent',SO.figure,...
       'XTick',[],...
@@ -410,8 +423,7 @@ a=axes(...
       'YColor',[0 0 0],...
       'Color',[0 0 0],...
       'Box', 'off',...
-      'Position',posc...
-      );
+      'Position',posc);
 
 % select atlas for labeling
 if isfield(OV, 'atlas')
@@ -583,8 +595,11 @@ if ~strcmp(image_ext, 'none')
         case 0, pt1 = '';
         case 2, pt1 = [pt2 pt1]; 
       end
-      
-      imaname = [pt1 nm '_' lower(OV.transform) '.' image_ext];
+      if numel(slices) == 1
+        imaname = [pt1 nm '_' lower(OV.transform) num2str(slices) '.' image_ext];
+      else
+        imaname = [pt1 nm '_' lower(OV.transform) '.' image_ext];
+      end
     else
       imaname = OV.save;
     end
@@ -604,7 +619,21 @@ if ~strcmp(image_ext, 'none')
   % read image, remove white border and save it again
   tmp = imread(imaname);
   sz = size(tmp);
-  imwrite(tmp(4:sz(1),1:sz(2)-1,:),imaname);
+  wborderx = 1;
+  wbordery = sz(2);
+  % we search for a white border inside a width of 4 pixels using
+  % effect size. A line would be indicated by large mean and very low std
+  for k=1:4
+    if mean(double(tmp(k,:,1)))./(eps+std(double(tmp(k,:,1)))) > 25 
+      wborderx = wborderx + 1;
+    end
+    if mean(double(tmp(:,sz(2)-k+1,1)))./(eps+std(double(tmp(:,sz(2)-k+1,1)))) > 25 
+      wbordery = wbordery - 1;
+    end
+  end
+  
+  % save the image without borders
+  imwrite(tmp(wborderx:sz(1),1:wbordery,:),imaname);
   fprintf('Image %s saved.\n', imaname);
   
   if ~isfield(SO,'overview')
