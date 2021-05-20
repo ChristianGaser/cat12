@@ -1,5 +1,27 @@
 ------------------------------------------------------------------------
-r1827 | gaser | 2021-05-19 15:55:16
+r1828 | gaser | 2021-05-20 22:52:28
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_batch_cat.sh
+M       cat_conf_extopts.m
+M       cat_conf_stools.m
+M       cat_defaults.m
+M       cat_long_main.m
+M       cat_surf_map_atlas.m
+MM      development/Atlas_ROI_tissue.m
+M       html/cat.html
+M       tbx_cfg_cat.m
+M       templates_MNI152NLin2009cAsym/neuromorphometrics.nii
+
+(1) Changed: Added parameter bb to cat_defaults for easier use.
+(2) Changed: Updated help text.
+(3) Changed: Updated printout for log-file in cat_batch_cat.sh.
+(4) Fixed:   Corrected default setttings in cat_conf_long.m if job is not 
+             available.
+------------------------------------------------------------------------
+r1827 | gaser | 2021-05-19 15:56:05 +0200 (Mi, 19 Mai 2021) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -17,6 +39,7 @@ M       html/cat.html
              borders in cat_vol_slice_overlay.m
 (3) Changed: Changed tick-labels for log-scaled colorbars in cat_surf_results.m.
 (4) Changed: Some small modifications in cat_batch_cat.sh and Makefile.
+
 ------------------------------------------------------------------------
 r1826 | gaser | 2021-05-17 17:38:07 +0200 (Mo, 17 Mai 2021) | 22 lines
 

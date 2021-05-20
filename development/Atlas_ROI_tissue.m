@@ -8,7 +8,7 @@ function Atlas_ROI_tissue
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
-% $Id: Atlas_ROI_tissue.m 1824 2021-05-12 15:47:31Z gaser $
+% $Id$
 
 % get all available atlases
 pth = cat_get_defaults('extopts.pth_templates');
