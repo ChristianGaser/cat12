@@ -1016,7 +1016,7 @@ data_surf_sub_lh.filter  = 'gifti';
 data_surf_sub_lh.ufilter = '^lh.central.(?!nofix).*';
 data_surf_sub_lh.num     = [1 Inf];
 data_surf_sub_lh.help    = {
-  'Select left subject surface files (do not select the *.nofix.* surface).'
+  'Select left subject surface files.'
   'Right side will be automatically processed.'
   };
  
