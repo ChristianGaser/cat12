@@ -17,12 +17,12 @@ fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
 atlasDir  = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces');
 
 if nargin < 1
-  central_files = spm_select([1 Inf],'^lh.central.(?!nofix).*','Select left central surfaces');
+  central_files = spm_select([1 Inf],'^lh.central.(?!nofix).*','Select left central surfaces. Right side will be automatically processed.');
 end
 nc = size(central_files,1);
 
 if nargin < 2
-  atlas_files = spm_select([1 Inf],'^lh.*\.annot$','Select left Freesurfer atlas labels',{},atlasDir);
+  atlas_files = spm_select([1 Inf],'^lh.*\.annot$','Select left Freesurfer atlas labels. Right side will be automatically processed.',{},atlasDir);
 end
 na = size(atlas_files,1);
 

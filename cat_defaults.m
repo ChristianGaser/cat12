@@ -239,6 +239,7 @@ cat.extopts.species       = 'human';
 cat.extopts.APP           = 1070;  % 0 - none; 1070 - default; [1 - light; 2 - full; 1144 - update of 1070, 5 - animal (no affreg)]
 cat.extopts.setCOM        = 1;     % 0 - none; 1 - use center-of-mass to estimate origin as starting value for affine registration
 cat.extopts.vox           = 1.5;   % voxel size for normalized data (EXPERIMENTAL:  inf - use Tempate values)
+cat.extopts.bb            = 12;    % boundary box: 12 - [-84 -120 -72;84 84 96]; 16 - [-90 -126 -72;90 90 108]
 cat.extopts.shootingsurf  = 'Template_T1';                                                            % Shooting surface name 
 cat.extopts.pth_templates = fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym');   % Templates and atlases folder for volumes
 cat.extopts.darteltpm     = {fullfile(cat.extopts.pth_templates,'Template_1_Dartel.nii')};            % Indicate first Dartel template (Template_1)

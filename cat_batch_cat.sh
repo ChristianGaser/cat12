@@ -448,9 +448,11 @@ run_cat12 ()
       echo MATLAB command of this batch:   >> "${vbmlog}_${j}.log"
       echo " $COMMAND"            >> "${vbmlog}_${j}.log"
       echo                  >> "${vbmlog}_${j}.log"
-      echo Shell command of this batch:    >> "${vbmlog}_${j}.log"
-      echo " $SHCOMMAND"           >> "${vbmlog}_${j}.log"
-      echo                  >> "${vbmlog}_${j}.log"
+      if [ -n "$shellcommand" ]; then
+        echo Shell command of this batch:    >> "${vbmlog}_${j}.log"
+        echo " $SHCOMMAND"           >> "${vbmlog}_${j}.log"
+        echo                  >> "${vbmlog}_${j}.log"
+      fi
       
       if [ ! -n "$shellcommand" ]; then
         # do nohup in background or not

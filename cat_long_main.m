@@ -25,18 +25,21 @@ try
   useprior    = job.enablepriors;
   surfaces    = job.output.surface;
   longTPM     = job.longTPM;
+  bstr        = job.bstr;
   if isfield(job,'delete_temp')  
     delete_temp = job.delete_temp;
   else
     delete_temp = 1;
   end
 catch
+  longmodel   = 2;
   dartel      = 0;
   modulate    = 1;
   delete_temp = 1;
   useprior    = 1;
-  surfaces    = cat_get_defaults('output.surfaces'); 
+  surfaces    = cat_get_defaults('output.surface'); 
   longTPM     = 1;
+  bstr        = 0;
 end
 
 if ~useprior & longTPM
@@ -99,9 +102,9 @@ if exist('extopts','var') && ~isempty(extopts)
   
 end
 % RD202102: differentiation between user levels not tested yet !
-if isfield(extopts,'bb')
+if exist('extopts','var') && isfield(extopts,'bb')
   matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.bb              = 1; % use TPM output BB 
-elseif isfield(extopts,'registration') && isfield(extopts.registration,'bb')
+elseif exist('extopts','var') &&  isfield(extopts,'registration') && isfield(extopts.registration,'bb')
   matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.registration.bb = 1; % use TPM output BB 
 end
 if exist('output','var') && ~isempty(output)
@@ -140,7 +143,7 @@ if longTPM
 end
 
 
-if job.bstr > 0
+if bstr > 0
   mbi = mbi + 1; mb_tpbc = mbi;
   matlabbatch{mbi}.spm.tools.cat.tools.longBiasCorr.images(1)  = cfg_dep('Longitudinal Rigid Registration: Realigned images',...
                                                                       substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
@@ -163,7 +166,7 @@ end
 % surface from step 2)
 mbi = mbi + 1; mb_cat = mbi;
 % use average image as prior for affine transformation and surface extraction
-if job.bstr > 0
+if bstr > 0
   matlabbatch{mbi}.spm.tools.cat.estwrite.data(1)           = cfg_dep('Segment: Longitudinal Bias Corrected',...
                                                                       substruct('.','val', '{}',{mb_tpbc}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','bc', '()',{':'}));
@@ -418,7 +421,7 @@ if delete_temp
                                                                       substruct('.','catroi', '()',{':'})); c = c+1;
   end
   
-  if job.bstr > 0 && ~isempty( matlabbatch{mb_tpbc}.spm.tools.cat.tools.longBiasCorr.prefix )
+  if bstr > 0 && ~isempty( matlabbatch{mb_tpbc}.spm.tools.cat.tools.longBiasCorr.prefix )
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Segment: Longitudinal Bias Corrected',...
                                                                       substruct('.','val', '{}',{mb_tpbc}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','bc', '()',{':'}));
