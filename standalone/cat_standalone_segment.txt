@@ -6,18 +6,18 @@
 % first undefined data field, that will be dynamically replaced by cat_standalone.sh
 matlabbatch{1}.spm.tools.cat.estwrite.data = '<UNDEFINED>';
 
-% Remove comments if you would like to change TPM by using additional arguments in cat_standalone.sh 
-% or change this field manually by editing the "<UNDEFINED" field
+% Entry for choosing TPM
+% Remove comments and edit entry if you would like to change the parameter.
 % Otherwise the default value from cat_defaults.m is used.
-% 1st parameter field, that will be dynamically replaced by cat_standalone.sh
+% Or use 1st parameter field, that will be dynamically replaced by cat_standalone.sh
 %matlabbatch{1}.spm.tools.cat.estwrite.opts.tpm = '<UNDEFINED>';
 
-% Remove comments and edit entry if you would like to change the Dartel/Shooting approach
+% Entry for choosing shooting template
+% Remove comments and edit entry if you would like to change the parameter.
 % Otherwise the default value from cat_defaults.m is used.
-% entry for choosing shooting approach
-%matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.regmethod.shooting.shootingtpm = {fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_0_GS.nii')};
-% entry for choosing dartel approach
-%matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.regmethod.dartel.darteltpm = {fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_1_Dartel.nii')};
+% Or use 2nd parameter field, that will be dynamically replaced by cat_standalone.sh
+%matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.regmethod.shooting.shootingtpm = '<UNDEFINED>';
+
 % Strength of Shooting registration: 0 - Dartel, eps (fast), 0.5 (default) to 1 (accurate) optimized Shooting, 4 - default Shooting; default 0.5
 %matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.regmethod.shooting.regstr = 0.5;
 

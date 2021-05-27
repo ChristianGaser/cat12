@@ -1,5 +1,11 @@
 #! /bin/bash
-
+# ______________________________________________________________________
+#
+# Christian Gaser, Robert Dahnke
+# Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+# Departments of Neurology and Psychiatry
+# Jena University Hospital
+# ______________________________________________________________________
 # $Id$
 
 ########################################################
@@ -201,10 +207,10 @@ run_cat ()
 
   # extract parameter name of optional argument(s) (additional occurances of "<UNDEFINED>")
   if [ -n "$ARG1" ]; then # ARG1 defined?
-    param1=`grep -m 2 "<UNDEFINED>" $BATCHFILE | tail -n 1 | cut -f1 -d'='`
+    param1=`grep -m 2 "<UNDEFINED>" $BATCHFILE | tail -n 1 | cut -f1 -d'=' | sed -e 's,%,,'`
     # extract parameter name of optional argument (3rd occurance of "<UNDEFINED>")
     if [ -n "$ARG2" ]; then # ARG2 defined?
-      param2=`grep -m 3 "<UNDEFINED>" $BATCHFILE | tail -n 1 | cut -f1 -d'='`
+      param2=`grep -m 3 "<UNDEFINED>" $BATCHFILE | tail -n 1 | cut -f1 -d'=' | sed -e 's,%,,'`
     fi
   fi
   
@@ -281,8 +287,8 @@ USAGE:
    -s <DIR>    | --spm <DIR>     SPM12 folder of standalone version (can be also defined by SPMROOT)
    -m <DIR>    | --mcr <DIR>     Matlab Compiler Runtime (MCR) folder (can be also defined by MCRROOT)
    -b <FILE>   | --batch <FILE>  batch file to execute
-   -a1 <STRING>| --arg1 <STRING> 1st additional argument 
-   -a2 <STRING>| --arg2 <STRING> 2nd additional argument 
+   -a1 <STRING>| --arg1 <STRING> 1st additional argument (otherwise use defaults)
+   -a2 <STRING>| --arg2 <STRING> 2nd additional argument (otherwise use defaults)
    -a <FILE>   | --add  <FILE>   add option to default file
 
    The first occurance of the parameter "<UNDEFINED>" in the batch file will be replaced by the
@@ -294,45 +300,99 @@ USAGE:
    
    You can also define one or two optional arguments to change other parameters that are indicated by "<UNDEFINED>"
    in the batch file. Please take care of the order of the "<UNDEFINED>" fields in the batch file!
+   If no additional arguments are defined the default values are used.
+   
    If you use a computer cluster it is recommended to use the batch files to only process one data set 
    and use a job or queue tool to call the (single) jobs on the cluster.
    
 PURPOSE:
    Command line call of (CAT12) batch files for SPM12 standalone installation
 
-EXAMPLE
+EXAMPLES
+   ---------------------------------------------------------------------------------------------------------------------------------
+   Segmentation
+     -a1 TPM
+     -a2 Shooting template
+   ---------------------------------------------------------------------------------------------------------------------------------
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment.txt sTRIO0001.nii
    Preprocess (segment) the single file sTRIO0001.nii using the default CAT12 preprocessing batch. 
    SPM12 standalone version is located in $SPMROOT and Matlab Compiler Runtime in
    /Applications/MATLAB/MATLAB_Runtime/v93/.
 
-   cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment.txt sTRIO0001.nii -a1 "${cat12_dir}/templates_volumes/TPM_Age11.5.nii"
-   Preprocess (segment) the single file sTRIO0001.nii using the default CAT12 preprocessing batch, but use the children TPM provided with CAT12. 
+   cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment.txt sTRIO0001.nii -a1 "${cat12_dir}/templates_MNI152NLin2009cAsym/TPM_Age11.5.nii" -a2 "${cat12_dir}/templates_MNI152NLin2009cAsym/Template_0_GS1mm.nii"
+   Preprocess (segment) the single file sTRIO0001.nii using the default CAT12 preprocessing batch, but use the children TPM provided with CAT12
+   and a 1mm Shooting template (not provided with CAT12). 
 
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment.txt sTRIO0001.nii -a "cat.extopts.WMHC = 3;"
    Preprocess (segment) the single file sTRIO0001.nii using the default CAT12 preprocessing batch, but handle WMHs as separate class
 
+   ---------------------------------------------------------------------------------------------------------------------------------
+   Longitudinal Segmentation
+     -a1 longitudinal model (1 - aging/developmental; 2 - plasticity/learning)
+     -a2 TPM
+   ---------------------------------------------------------------------------------------------------------------------------------
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment_long.txt sTRIO000*.nii -a1 "2"
    Preprocess (segment) the files sTRIO000*.nii with the longitudinal pipeline optimized for detecting aging/developmental effects. 
    In order to choose the longitudinal model optimized for detecting small changes due to plasticity/learning change the a1 parameter to "1".
 
-   cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment_long.txt sTRIO000*.nii -a1 "1" -a2 "${cat12_dir}/templates_volumes/TPM_Age11.5.nii"
+   cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment_long.txt sTRIO000*.nii -a1 "1" -a2 "${cat12_dir}/templates_MNI152NLin2009cAsym/TPM_Age11.5.nii"
    Preprocess (segment) the files sTRIO000*.nii with the longitudinal pipeline optimized for detecting plasticity/learning effects and use the 
    children TPM provided with CAT12.
 
+   ---------------------------------------------------------------------------------------------------------------------------------
+   Segmentation (Simple Mode)
+   ---------------------------------------------------------------------------------------------------------------------------------
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_simple.txt sTRIO0001.nii
    Process the single file sTRIO0001.nii using the simple processing batch. 
 
+   ---------------------------------------------------------------------------------------------------------------------------------
+   Resample & Smooth Surfaces
+     -a1 smoothing filter size surface values
+     -a2 use 32k mesh from HCP (or 164k mesh from Freesurfer)
+   ---------------------------------------------------------------------------------------------------------------------------------
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_resample.txt -a1 "12" -a2 "1" lh.thickness.sTRIO0001
    Resample and smooth the single thickness file lh.thickness.sTRIO0001 with 12mm and save the resampled mesh as 32k mesh from HCP. 
    Only the left surface file has to be defined.
 
+   ---------------------------------------------------------------------------------------------------------------------------------
+   Smoothing
+     -a1 smoothing filter size
+     -a2 prepending string for smoothed file (e.g. 's6')
+   ---------------------------------------------------------------------------------------------------------------------------------
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_smooth.txt -a1 "[6 6 6]" -a2 "'s6'" sTRIO*nii
-   Smooth the volume files sTRIO*nii with 6mm and prepend the string "s6" to smoothed files.
+   Smooth the volume files sTRIO*nii with 6mm and prepend the string "s6" to the smoothed files.
 
+   ---------------------------------------------------------------------------------------------------------------------------------
+   Dicom Import
+     -a1 directory structure
+     -a2 output directory
+   ---------------------------------------------------------------------------------------------------------------------------------
+   cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_dicom2nii.txt -a1 "'patid_date'" -a2 "{'converted'}" *.dcm
+   Import DICOM files *.dcm and save converted nifti files in directory "converted" with structure ./<PatientID>/<StudyDate-StudyTime>/<ProtocollName>
+   Other options for directory structure are:
+     'flat'       No directory hierarchy
+     'series'     ./<ProtocollName>
+     'patid_date' ./<PatientID>/<StudyDate-StudyTime>/<ProtocollName>
+     'patid'      ./<PatientID>/<ProtocollName>
+     'date_time'  ./<StudyDate-StudyTime>/<ProtocollName>
+
+   ---------------------------------------------------------------------------------------------------------------------------------
+   De-Facing
+   ---------------------------------------------------------------------------------------------------------------------------------
+   cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_deface.txt sTRIO*.nii
+   Apply de-facing to sTRIO*.nii and save the files prefixed by "anon_".
+
+   ---------------------------------------------------------------------------------------------------------------------------------
+   TFCE Statistical Estimation
+     -a1 contrast number
+     -a2 number of permutations
+   ---------------------------------------------------------------------------------------------------------------------------------
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_tfce.txt -a1 "2" -a2 "20000" SPM.mat
    Call estimation of TFCE statistics for the given SPM.mat file for contrast number 2 with 20000 permutations.
 
+   ---------------------------------------------------------------------------------------------------------------------------------
+   Parallelization
+   ---------------------------------------------------------------------------------------------------------------------------------
    cat_parallelize.sh -p 8 -l /tmp -c "cat_standalone.sh  -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_segment.txt" sTRIO*.nii
    Parallelize CAT12 preprocessing by splitting all sTRIO*.nii files into 8 jobs 
    (processes) and save log file in /tmp folder. 
@@ -343,8 +403,7 @@ INPUT:
    nifti files or surface data
 
 OUTPUT:
-   segmented images and optionally surfaces according to settings in cat_standalone_segment.txt or
-   cat_standalone_simple.txt.
+   processed images and optionally surfaces according to settings in cat_standalone_*.txt
 
 USED FUNCTIONS:
    cat_standalone_segment.txt
@@ -357,6 +416,7 @@ USED FUNCTIONS:
    MATLAB Compiler Runtime R2017b (Version 9.3)
 
 This script was written by Christian Gaser (christian.gaser@uni-jena.de).
+This is ${version}.
 
 __EOM__
 }

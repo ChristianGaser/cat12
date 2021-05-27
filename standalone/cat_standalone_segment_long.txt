@@ -6,17 +6,18 @@
 % first undefined data field, that will be dynamically replaced by cat_standalone.sh
 matlabbatch{1}.spm.tools.cat.long.datalong.subjects = '<UNDEFINED>';
 
-% Remove comments if you would like to change the longitusinal model by using additional arguments in cat_standalone.sh 
-% or change this field manually by editing the "UNDEFINED" field
-% 1st parameter field, that will be dynamically replaced by cat_standalone.sh
+% Entry for choosing longitudinal model
+% Remove comments and edit entry if you would like to change the parameter.
+% Otherwise the default value from cat_defaults.m is used.
+% Or use 1st parameter field, that will be dynamically replaced by cat_standalone.sh
 % (1) small changes (i.e. plasticity/learning effects)
 % (2) large changes (i.e. aging/developmental effects)
-matlabbatch{1}.spm.tools.cat.long.longmodel = '<UNDEFINED>';
+%matlabbatch{1}.spm.tools.cat.long.longmodel = '<UNDEFINED>';
 
-% Remove comments if you would like to change TPM by using additional arguments in cat_standalone.sh 
-% or change this field manually by editing the "UNDEFINED" field
+% Entry for choosing TPM
+% Remove comments and edit entry if you would like to change the parameter.
 % Otherwise the default value from cat_defaults.m is used.
-% 2nd parameter field, that will be dynamically replaced by cat_standalone.sh
+% Or use 2nd parameter field, that will be dynamically replaced by cat_standalone.sh
 %matlabbatch{1}.spm.tools.cat.long.opts.tpm = '<UNDEFINED>';
 
 % use priors for longitudinal data
