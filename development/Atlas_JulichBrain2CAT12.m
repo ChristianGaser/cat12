@@ -1,4 +1,13 @@
-function JulichBrain2CAT12
+function Atlas_JulichBrain2CAT12
+% Convert JulichBrain atlas to CAT12 atlas
+%_______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
+% $Id$
 
 Vlh = spm_vol(spm_select(1,'image','Select lh image',{},pwd,'JulichBrain_MPMAtlas_l_N10_nlin2Stdicbm152asym2009c'));
 Vrh = spm_vol(spm_select(1,'image','Select rh image',{},pwd,'JulichBrain_MPMAtlas_r_N10_nlin2Stdicbm152asym2009c'));

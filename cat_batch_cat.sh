@@ -502,10 +502,10 @@ get_no_of_cpus
 cat <<__EOM__
 
 USAGE:
- cat_batch_cat.sh filenames|filepattern [-m matlab_command] [-d default_file] [-l log_folder] 
+ cat_batch_cat.sh [-m matlab_command] [-d default_file] [-l log_folder] 
                     [-p number_of_processes] [-tpm TPM-file] [-ns] [-nm] [-rp] [-no output_pattern]
                     [-n nicelevel] [-s shell_command -f files_for_shell] [-c matlab_command] 
-                    [-a add_to_defaults] [-t] [-fg] [-noj]
+                    [-a add_to_defaults] [-t] [-fg] [-noj] filenames|filepattern 
  
   -m  <FILE>  | --matlab <FILE>         matlab command (matlab version) (default $matlab)
   -d  <FILE>  | --defaults <FILE>       optional default file (default ${cat12_dir}/cat_defaults.m)
@@ -538,7 +538,7 @@ EXAMPLE
  cat_batch_cat.sh ${spm12}/canonical/single_subj_T1.nii
    This command will process only the single file single_subj_T1.nii. 
  
- cat_batch_cat.sh ${spm12}/canonical/single_subj_T1.nii -d your_cat_defaults_file.m
+ cat_batch_cat.sh -d your_cat_defaults_file.m ${spm12}/canonical/single_subj_T1.nii 
    This command will process only the single file single_subj_T1.nii. The defaults defined
    in your_cat_defaults_file.m is used instead of cat_defaults.m.
 
@@ -547,23 +547,23 @@ EXAMPLE
    are the files avg152PD.nii, avg152T1.nii, and avg152T2.nii and $NUMBER_OF_JOBS parallel
    jobs are used.
 
- cat_batch_cat.sh ${spm12}/canonical/*152*.nii -no "mri/mwp1"
+ cat_batch_cat.sh -no "mri/mwp1" ${spm12}/canonical/*152*.nii 
    Using wildcards all files containing the term "152" are processed. In this case these 
    are the files avg152PD.nii, avg152T1.nii, and avg152T2.nii and $NUMBER_OF_JOBS parallel
    jobs are used. If processed files "mwp1*" in the subfolder "mri" are
    found the processing will be skipped.
 
- cat_batch_cat.sh ${spm12}/canonical/*152*.nii -p 2 -m /usr/local/bin/matlab7
+ cat_batch_cat.sh -p 2 -m /usr/local/bin/matlab7 ${spm12}/canonical/*152*.nii
    Using wildcards all files containing the term "152" are processed. In this case these 
    are the files avg152PD.nii, avg152T1.nii, and avg152T2.nii and 2 parallel jobs
    jobs are used. As matlab-command /usr/local/bin/matlab7 is used.
  
- cat_batch_cat.sh ${spm12}/canonical/single_subj_T1.nii -ns -nm -rp -a "cat.extopts.WMHC = 3;"
+ cat_batch_cat.sh -ns -nm -rp -a "cat.extopts.WMHC = 3;" ${spm12}/canonical/single_subj_T1.nii
    This command will process only the single file single_subj_T1.nii with the defaults in cat_defaults.m and
    the additional option for handling WMHs as separate class. No surfaces and modulated and warped segmentations
    are estimated. Only the affine registered segmentations are saved.
  
- cat_batch_cat.sh ${spm12}/canonical/single_subj_T1.nii -tpm ${cat12_dir}/templates_volumes/TPM_Age11.5.nii
+ cat_batch_cat.sh -tpm ${cat12_dir}/templates_MNI152NLin2009cAsymumes/TPM_Age11.5.nii ${spm12}/canonical/single_subj_T1.nii
    This command will process only the single file single_subj_T1.nii with the defaults in cat_defaults.m
    and the children template that is provided with cat12.
 

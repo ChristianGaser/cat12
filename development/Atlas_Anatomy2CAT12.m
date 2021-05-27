@@ -1,4 +1,13 @@
-function Anatomy2CAT12
+function Atlas_Anatomy2CAT12
+% Convert Anatomy3 atlas to CAT12 atlas
+%_______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
+% $Id$
 
 load JuBrain_Data_public_v30.mat
 

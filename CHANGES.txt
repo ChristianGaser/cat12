@@ -1,5 +1,53 @@
 ------------------------------------------------------------------------
-r1828 | gaser | 2021-05-20 22:52:28
+r1829 | gaser | 2021-05-27 11:39:29
+
+Changed paths:
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       cat_batch_cat.sh
+M       cat_conf_factorial.m
+M       cat_run.m
+M       cat_surf_createCS2.m
+M       cat_surf_info.m
+M       cat_update.m
+M       cat_vol_slice_overlay.m
+M       cat_vol_slice_overlay_ui.m
+D       development/Anatomy2CAT12.m
+        > moved to development/Atlas_Anatomy2CAT12.m
+A  +    development/Atlas_Anatomy2CAT12.m
+        > moved from development/Anatomy2CAT12.m
+A  +    development/Atlas_JulichBrain2CAT12.m
+        > moved from development/JulichBrain2CAT12.m
+A       development/Atlas_correct_scaling.m
+A  +    development/Atlas_summarize_MPM.m
+        > moved from development/ROI_summarize_MPM.m
+D       development/JulichBrain2CAT12.m
+        > moved to development/Atlas_JulichBrain2CAT12.m
+D       development/ROI_summarize_MPM.m
+        > moved to development/Atlas_summarize_MPM.m
+M       html/cat_starting.html
+M       slice_overlay.m
+M       templates_MNI152NLin2009cAsym/cobra.nii
+M       templates_MNI152NLin2009cAsym/hammers.nii
+M       templates_MNI152NLin2009cAsym/ibsr.nii
+M       templates_MNI152NLin2009cAsym/lpba40.nii
+M       templates_MNI152NLin2009cAsym/neuromorphometrics.nii
+
+(1) Changed: Updated scaling factors for atlases.
+(2) Changed: Some minor formatting to slice_overlay.m.
+(3) Changed: Updated quick start guide.
+(4) Changed: Renamed all atlas-related functions in development.
+(5) Changed: Added option for voxel-wise covariate to flexible factorial design.
+(6) Changed: Updated examples in cat_vol_slice_overlay_ui.m
+(7) Changed: Changed order of commands in example in cat_batch_cat.sh.
+(8) Changed: Updated handling of log-scaled maps in cat_vol_slice_overlay.m and
+             added dialog with predefiend thresholds.
+
+(9) Added:   Atlas_correct_scaling.m to correct scaling factor of atlases.
+(10) Fixed:  Corrected default template folder in cat_update.m.
+(11) Fixed:  Corrected template folder for 32k meshes in cat_surf_info.m
+------------------------------------------------------------------------
+r1828 | gaser | 2021-05-20 22:53:18 +0200 (Do, 20 Mai 2021) | 20 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -20,6 +68,7 @@ M       templates_MNI152NLin2009cAsym/neuromorphometrics.nii
 (3) Changed: Updated printout for log-file in cat_batch_cat.sh.
 (4) Fixed:   Corrected default setttings in cat_conf_long.m if job is not 
              available.
+
 ------------------------------------------------------------------------
 r1827 | gaser | 2021-05-19 15:56:05 +0200 (Mi, 19 Mai 2021) | 17 lines
 
