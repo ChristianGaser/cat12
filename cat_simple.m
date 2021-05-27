@@ -157,6 +157,8 @@ function output = cat_simple(job)
     matlabbatch{mbi}.spm.tools.cat.(job.catversion).extopts.registration = job.registration; 
     matlabbatch{mbi}.spm.tools.cat.(job.catversion).extopts.admin.ignoreErrors = job.ignoreErrors; 
   end
+
+  matlabbatch{mbi}.spm.tools.cat.(job.catversion).extopts.bb = cat_get_defaults('extopts.bb');
   
   if isfield(job,'atlases')
     if long
@@ -399,7 +401,7 @@ function output = cat_simple(job)
   
   % estimate TIV & CGW
   % -----------------------------------------------------------------------
-  % * I am not sure if this is useful here because it is befor any removal
+  % * I am not sure if this is useful here because it is before any removal
   %   of files
   % * this estimation should be replaced in future by a more general script
   % -----------------------------------------------------------------------
@@ -435,7 +437,7 @@ function output = cat_simple(job)
   
   % unsmoothed segmentations
   for fi = 1:numel(job.data)
-    [mrifolder{fi}, reportfolder{fi}, surffolder{fi}, labelfolder{fi}] = cat_io_subfolders(job.data{j},job);
+    [mrifolder{fi}, reportfolder{fi}, surffolder{fi}, labelfolder{fi}] = cat_io_subfolders(job.data{fi},job);
     output.mwp1{fi} = spm_file(job.data,'prefix',fullfile(mrifolder{fi},'mwp1'));
     output.mwp2{fi} = spm_file(job.data,'prefix',fullfile(mrifolder{fi},'mwp2'));
   end

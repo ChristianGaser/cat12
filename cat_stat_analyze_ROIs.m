@@ -286,13 +286,18 @@ n_structures = size(Y,2);
 % for huge effects p-value of 0 has to be corrected
 p(p==0) = eps;
 
-% if information available in csv file whether this measure is
+% if information is available in csv file whether this measure is
 % allowed for these structures load that column otherwise allow all
 if ~mesh_detected
   csv = cat_io_csv(fullfile(cat_get_defaults('extopts.pth_templates'),[atlas '.csv']),'','',struct('delimiter',';'));
   ind_tmp = find(strcmp(csv(1,:),measure)==1);
   if ~isempty(ind_tmp)
     defined_measure = cell2mat(csv(2:end,ind_tmp)) == 1;
+    % if number of structures in csv-file differs from data in xml-file set
+    % defined_measure to ones
+    if size(defined_measure,1) ~= n_structures
+      defined_measure = ones(n_structures,1) == 1;
+    end
   else
     defined_measure = ones(n_structures,1) == 1;
   end
@@ -486,6 +491,7 @@ for i=sort(unique(hemi_code))'
       % csv file and disable overlay of results if numbers differ
       if sz_csv ~= numel(ROIids>0)
         overlay_results = false;
+        show_results = 0;
         fprintf('Overlay of ROIs was disabled because number of regions differ (probably due to use of older atlases): %d vs %d\n',sz_csv, numel(ROIids>0));
       end
   

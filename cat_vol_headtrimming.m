@@ -191,25 +191,55 @@ function varargout = cat_vol_headtrimming(job)
       end
       Y = Y ./ max(1,min(numel(V,job.avg)));
     else
-      Y = single(spm_read_vols(V(di))); 
+      Y = single(spm_read_vols(V(1))); 
     end
 
     % create mask
     if job.mask, Ymask = Y > 0; end 
     
-    % intensity normalization 
+    % categorical data have data type uint8 or int16
+    % and typically < 1000 different values
+    categorical = 0;
+    if V(1).dt(1) == 2 || V(1).dt(1) == 4
+      h = hist(Y(:),1:max(Y(:)));
+      n_values = numel(unique(h));
+      if n_values < 1000
+        categorical = 1;
+      end
+    end
+        
+    % skip most of steps that are only needed for non-categorical data
+    if categorical
+      Yb = Y;
+    else
+      % intensity normalization 
+      [Y,hth] = cat_stat_histth(smooth3(Y),job.range1,0); 
+      Y = (Y - hth(1)) ./ abs(diff(hth));
+
+      % masking
+      Yb = zeros(size(Y),'single'); 
+      Yb(2:end-1,2:end-1,2:end-1) = Y(2:end-1,2:end-1,2:end-1);
+      Yb = smooth3(Yb)>job.pth; 
+      Yb = cat_vol_morph(Yb,'do',job.open,vx_vol); 
+      Yb = cat_vol_morph(Yb,'l',[10 0.1]); 
+    end
+
     vx_vol  = sqrt(sum(V(1).mat(1:3,1:3).^2)); 
-    [Y,hth] = cat_stat_histth(smooth3(Y),job.range1,0); 
-    Y = (Y - hth(1)) ./ abs(diff(hth));
+    [Yt,redB] = cat_vol_resize(Y,'reduceBrain',vx_vol,job.addvox,Yb);  %#ok<ASGLU>
     
-    % masking
-    Yb = zeros(size(Y),'single'); 
-    Yb(2:end-1,2:end-1,2:end-1) = Y(2:end-1,2:end-1,2:end-1);
-    Yb = smooth3(Yb)>job.pth; 
-    Yb = cat_vol_morph(Yb,'do',job.open,vx_vol); 
-    Yb = cat_vol_morph(Yb,'l',[10 0.1]); 
-    [Yt,redB] = cat_vol_resize(Y,'reduceBrain',vx_vol,job.addvox,Yb); clear Yt Y;  %#ok<ASGLU>
+    % prefer odd or even x-size such as found in original data to prevent shifting issues
+    % at midline
+    if ~mod(redB.sizeTr(1),2) ~= ~mod(redB.sizeT(1),2)
+      % and add x-shifted image to increase bounding box by 1 voxel
+      if ~mod(redB.BB(1),2)
+        Yb(1:end-1,:,:) = Yb(1:end-1,:,:) + Yb(2:end,:,:);
+      else
+        Yb(2:end,:,:) = Yb(2:end,:,:) + Yb(1:end-1,:,:);
+      end
+      [Yt,redB] = cat_vol_resize(Y,'reduceBrain',vx_vol,job.addvox,Yb); %#ok<ASGLU>
+    end
     
+    clear Yt Y;
     % prepare update of AC orientation
     mati  = spm_imatrix(V(1).mat); mati(1:3) = mati(1:3) + mati(7:9).*(redB.BB(1:2:end) - 1);
     
@@ -236,7 +266,7 @@ function varargout = cat_vol_headtrimming(job)
       Vo(di) = spm_vol(P{1}); 
       Yo = single(spm_read_vols(Vo(di)));
 
-      % applay mask
+      % apply mask
       if job.mask, Yo = Yo.*Ymask; end
 
       Yo = cat_vol_resize(Yo,'reduceBrain',vx_vol,job.addvox,Yb); 
