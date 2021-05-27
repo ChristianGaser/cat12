@@ -347,7 +347,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                 if isempty(caterrcode)
                   switch char(catfct{ei-2}{3})
                     % most relevant functions to identify the error 
-                    case {'cat_surf_createCS','cat_main','cat_run'}
+                    case {'cat_surf_createCS2','cat_surf_createCS','cat_main','cat_run'}
                       caterrcode = sprintf('%s:%d',char(catfct{ei-2}{3}),double(catfct{ei-2}{1}));
                   end
                 end

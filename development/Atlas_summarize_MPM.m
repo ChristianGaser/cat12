@@ -1,5 +1,13 @@
-function ROI_summarize_all(sel)
-% tool to select the best threshold for the MPM atlases by comparing volumes of gray matter inside the labels
+function Atlas_summarize_MPM(sel)
+% Tool to select the best threshold for the MPM atlases by comparing volumes of gray matter inside the labels
+%_______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
+% $Id$
 
 if nargin == 0
   sel = spm_input('Which Atlas?', 1, 'm',{'LPBA40','Cobra','IBSR2','Neuromorphometrics','Hammers'});
@@ -72,16 +80,16 @@ for si=1:n_subjects
     ref_val(ri) = prod(vx_vol)*sum(value(label==structures(ri)))/1000;
   end
   
-  Y  = cat_vol_ROI_summarize(struct('atlases',{atlas_file},'field1',{{def_file{si}}},'images',{{value_file{si}}},'fhandle','volume'));
+  Y = cat_vol_ROI_summarize(struct('atlases',{atlas_file},'field1',{{def_file{si}}},'images',{{value_file{si}}},'fhandle','volume'));
   
   ind = (ref_val ~= 0);
 
   for ai=1:n_atlas
     [pp,atlas_name] = spm_fileparts(atlas_file{ai});
     if calc_relative_error
-        perc_err = 100*mean((Y{ai,1}(ind)-ref_val(ind))./ref_val(ind));
+      perc_err = 100*mean((Y{ai,1}(ind)-ref_val(ind))./ref_val(ind));
     else
-        perc_err = mean((Y{ai,1}(ind)-ref_val(ind)));
+      perc_err = mean((Y{ai,1}(ind)-ref_val(ind)));
     end
     mean_Y = mean(Y{ai,1}(ind)./ref_val(ind));
     fprintf('%3.6f\t%3.6f\t%s\n',perc_err,mean_Y,atlas_name);

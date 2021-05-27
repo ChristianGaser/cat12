@@ -31,14 +31,14 @@
       <ul>
         <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data using defaults (use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.long');">Segment Longitudinal Data</a> for longitudinal data).</li>
         <li>Get total intracranial volume<a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.calcvol');"> (TIV)</a> to correct for different brain sizes and volumes.</li>
-        <li>Check the data quality with <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_cov');">Sample Homogeneity</a> for VBM data  (optionally consider TIV and age as nuisance variable).</li>
+        <li>Check the data quality with <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_cov');">Sample Homogeneity</a> for VBM data  (optionally consider TIV and age as nuisance variables).</li>
         <li><a class="function" href="matlab:spm_jobman('interactive','','spm.spatial.smooth');">Smooth</a> data (recommended start value 6-8mm<sup>1</sup>).</li>
         <li>Specify the <a class="function" href="matlab:spm_jobman('interactive','cat_stat_factorial_design.m');">2nd-level Model</a> and check for design orthogonality and sample homogeneity:</li>
         <ul>
           <li>Use "Full factorial" for cross-sectional data.</li>
           <li>Use "Flexible factorial" for longitudinal data.</li>
           <li>Use TIV as covariate (confound) to correct different brain sizes and select centering with overall mean.</li>
-          <li>Select threshold masking with an absolute value of 0.1. This threshold can ultimately be increased to 0.2 or even 0.25.</li>
+          <li>Select threshold masking with an absolute value of 0.1. This threshold can ultimately be increased to 0.2 or even 0.25 if you still notice non-brain areas in your analysis.</li>
           <li>If you find a considerable correlation between TIV and any other parameter of interest it is advisable to use global scaling with TIV. For more information, refer to <a href="cat_orthogonality.html">Orthogonality</a>.</li>
         </ul>
         <li><a class="function" href="matlab:spm_jobman('interactive','','spm.stats.fmri_est');">Estimate</a> the model and finally call <a class="function" href="matlab:[hReg xSPM SPM] = cat_spm_results_ui('Setup');">Results</a>.</li>

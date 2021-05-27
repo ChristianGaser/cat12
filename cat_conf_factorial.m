@@ -1088,8 +1088,9 @@ voxel_cov.help    = {
 %--------------------------------------------------------------------------
 % des Design
 %--------------------------------------------------------------------------
-% add voxel-wise covariates to full factorial design
-fd.val     = {genericf generic1f con voxel_cov};
+% add voxel-wise covariates to full and flexible factorial designs
+fd.val{end+1}     = voxel_cov;
+fblock.val{end+1} = voxel_cov;
 
 des         = cfg_choice;
 des.tag     = 'des';
@@ -1142,39 +1143,54 @@ function out = cat_run_factorial_design(job)
 % copy values from "global scaling" to "global calculation"
 job.globalc = job.globals;
 
-% check for voxel-wise covariate
 voxel_covariate = false;
 if isfield(job.des,'fd')
-  if ~isempty(char(job.des.fd.voxel_cov.files))
-    voxel_covariate = true;
-    
-    % number of covriate scans
-    m = numel(job.des.fd.voxel_cov.files);
-    
-    % get number of scans
-    n = 0;
-    for i=1:numel(job.des.fd.icell)
-      n = n + numel(job.des.fd.icell(i).scans);
+  fname = 'fd';
+else
+  fname = 'fblock';
+end
+
+% check for voxel-wise covariate
+if ~isempty(char(job.des.(fname).voxel_cov.files))
+  voxel_covariate = true;
+  
+  % number of covriate scans
+  m = numel(job.des.(fname).voxel_cov.files);
+  
+  % get number of scans
+  n = 0;
+  if isfield(job.des,'fd')
+    for i=1:numel(job.des.(fname).icell)
+      n = n + numel(job.des.(fname).icell(i).scans);
     end
-    
-    if m~=n
-      error('Number of covariate files (m=%d) differs from number of files (n=%d)',m,n);
+  else  
+    for i=1:numel(job.des.(fname).fsuball.fsubject)
+      n = n + numel(job.des.(fname).fsuball.fsubject(i).scans);
     end
-    
-    % get global means for covariate
-    gm = zeros(numel(job.des.fd.voxel_cov.files),1);
-    for i=1:n
-      dat = spm_data_read(spm_data_hdr_read(job.des.fd.voxel_cov.files{i}));
-      gm(i) = mean(dat(isfinite(dat) & dat ~= 0));
-    end    
-    
-    % add dummy covariate with global mean values to define design
-    nc = numel(job.cov);
-    job.cov(nc+1).c = gm - mean(gm);
-    job.cov(nc+1).cname = 'voxel-wise covariate';
-    job.cov(nc+1).iCFI = job.des.fd.voxel_cov.iCFI;  
-    job.cov(nc+1).iCC = job.des.fd.voxel_cov.iCC;
   end
+  
+  if m~=n
+    error('Number of covariate files (m=%d) differs from number of files (n=%d)',m,n);
+  end
+  
+  % get global means for covariate
+  gm = zeros(numel(job.des.(fname).voxel_cov.files),1);
+  for i=1:n
+    dat = spm_data_read(spm_data_hdr_read(job.des.(fname).voxel_cov.files{i}));
+    ind_dat = isfinite(dat) & dat ~= 0;
+    if any(ind_dat)
+      gm(i) = mean(dat(ind_dat));
+    else
+      gm(i) = 0;
+    end
+  end    
+  
+  % add dummy covariate with global mean values to define design
+  nc = numel(job.cov);
+  job.cov(nc+1).c = gm - mean(gm);
+  job.cov(nc+1).cname = 'voxel-wise covariate';
+  job.cov(nc+1).iCFI = job.des.(fname).voxel_cov.iCFI;  
+  job.cov(nc+1).iCC = job.des.(fname).voxel_cov.iCC;
 end
 
 % if global scaling is selected set resp. fields for global normalisation
@@ -1199,15 +1215,14 @@ if voxel_covariate
   cat_stat_spm(out.spmmat{1});
   
   load(out.spmmat{1});
-  SPM.xC(nc+1).P = cellstr(job.des.fd.voxel_cov.files);
-  SPM.xC(nc+1).VC = spm_data_hdr_read(char(job.des.fd.voxel_cov.files));
-
+  SPM.xC(nc+1).P = cellstr(job.des.(fname).voxel_cov.files);
+  SPM.xC(nc+1).VC = spm_data_hdr_read(char(job.des.(fname).voxel_cov.files));
   % save user defined global scalings
   try
-    gSF = job.des.fd.voxel_cov.globals.g_user.global_uval;
+    gSF = job.des.(fname).voxel_cov.globals.g_user.global_uval;
     SPM.xC(nc+1).gSF = gSF;
   end
-  
+    
   % contrast should be defined right after model creation
   [Ic0,xCon] = spm_conman(SPM,'T',Inf,...
         '  Select contrast(s)...',' ',1);

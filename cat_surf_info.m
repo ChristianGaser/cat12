@@ -444,7 +444,12 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
           sinfo(i).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k',...
             [sinfo(i).side '.central.freesurfer.gii']);
         else
-          sinfo(i).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',...
+          if sinfo(1).resampled_32k
+            str_32k = '_32k';
+          else
+            str_32k = '';
+          end
+          sinfo(i).Pmesh = fullfile(spm('dir'),'toolbox','cat12',['templates_surfaces' str_32k],...
             [sinfo(i).side '.central.freesurfer.gii']);
         end
       end

@@ -12,6 +12,7 @@ function cat_vol_slice_overlay(OV)
 %            comment this out for interactive selection or use '' for not 
 %            saving any file or use just file extension (png/jpg/pdf/tif) to 
 %            automatically estimate filename to save
+% OV.FS    - normalized font size
 % OV.name_subfolder
 %          - if result is saved as image use up to 2 subfolders to add their 
 %            names to the filename (default 1)
@@ -38,7 +39,7 @@ if nargin == 0
   OV = pr_basic_ui(imgs, 0);
   
   % set options
-  OV.opacity = 1;
+  OV.opacity = Inf;
   OV.reference_image = deblank(imgs(1, :));
   OV.reference_range = OV.img(1).range;
   OV.name = imgs(2:end, :);
@@ -120,16 +121,14 @@ else
   logP = OV.logP;
 end
 
-% for log-scaled p-values we should rather use gt/lt than ge/le for comparison with threshold
+% for log-scaled p-values we should rather use gt than ge for comparison with threshold
 if logP
-  comp_thresh1 = @(a,b) gt(a,b);
-  comp_thresh2 = @(a,b) lt(a,b);
+  compare_to_threshold = @(a,b) gt(a,b);
 else
-  comp_thresh1 = @(a,b) ge(a,b);
-  comp_thresh2 = @(a,b) le(a,b);
+  compare_to_threshold = @(a,b) ge(a,b);
 end
 
-[path tmp] = spm_fileparts(nm);
+[path, tmp] = spm_fileparts(nm);
 img = nm;
 
 n_slice = size(OV.slices_str, 1);
@@ -148,7 +147,7 @@ else
     SO.img(2).vol = spm_vol(OV.name);
     [mx, mn, XYZ, img2] = volmaxmin(SO.img(2).vol);
     % threshold map and restrict coordinates
-    Q = find(comp_thresh1(img2,range(1)) & comp_thresh2(img2,range(2)));
+    Q = find(compare_to_threshold(img2,range(1)) & le(img2,range(2)));
     XYZ = XYZ(:, Q);
     img2 = img2(Q);
     
@@ -156,7 +155,7 @@ else
     XYZmm = M(1:3, :) * [XYZ; ones(1, size(XYZ, 2))];
     
     XYZ_unique = get_xyz_unique(XYZ, XYZmm, img2);
-    orientn = find(strcmpi(OV.transform, {'sagittal', 'coronal', 'axial'}));
+    orientn = strcmpi(OV.transform, {'sagittal', 'coronal', 'axial'});
     slices{1} = XYZ_unique{orientn};
   end
 end
@@ -194,7 +193,7 @@ else
 end
 
 if ~isfield(OV, 'range')
-  [mx mn] = volmaxmin(OV.img(2).vol);
+  [mx, mn] = volmaxmin(OV.img(2).vol);
   SO.img(2).range = spm_input('Intensity range for colormap', '+1', 'e', [mn mx], 2)';
 else
   SO.img(2).range = range;
@@ -214,7 +213,7 @@ if isempty(SO.slices)
   [mx, mn, XYZ, vol] = volmaxmin(SO.img(2).vol);
   
   % threshold map and restrict coordinates
-  Q = find(comp_thresh1(vol,SO.img(2).range(1)));
+  Q = find(compare_to_threshold(vol,SO.img(2).range(1)));
   XYZ = XYZ(:, Q);
   vol = vol(Q);
   
@@ -355,12 +354,13 @@ if (SO.cbar == 2) & logP
 
   YTick = get(H, 'YTick');
 
-  if abs(OV.range(1)) >= 1.3 && abs(OV.range(1)) <= 1.4
+  % check whether lower threshold is P<0.05 and change values for YTick
+  if abs(OV.range(1)) >= 1.3 && abs(OV.range(1)) <= 1.32
     YTick_step = ceil((OV.range(2) - OV.range(1)) / 5);
-    if OV.range(1) <= - 1.3 && OV.range(1) >= - 1.4
+    if OV.range(1) <= - 1.3 && OV.range(1) >= - 1.32
       values = [(round(OV.range(1))+log10(0.05)+1):YTick_step:log10(0.05) 0 -log10(0.05):YTick_step:(round(OV.range(2))-log10(0.05)-1)];
     else
-      values = [0 -log10(0.05):YTick_step:(round(OV.range(2)) + 0.30103)];
+      values = [-log10(0.05):YTick_step:(round(OV.range(2)) - log10(0.05) - 1)];
     end
   else
     mn = floor(min(YTick));
@@ -376,32 +376,31 @@ if (SO.cbar == 2) & logP
   set(H, 'YTick', values);
   YTick = get(H, 'YTick');
   
-  YTickLabel = [];
+  YTickLabel = cell(length(YTick),1);
   for i = 1:length(YTick)
     if YTick(i) > 0
       if YTick(i) > 7
         % use 1E-x notation
-        YTickLabel = char(YTickLabel, remove_zeros(sprintf('%g', 10^(-YTick(i)))));
+        YTickLabel{i} = sprintf('%g', 10^(-YTick(i)));
       else
         % use 0.000x notation
-        YTickLabel = char(YTickLabel, remove_zeros(sprintf('%3.7f', 10^(-YTick(i)))));
+        YTickLabel{i} = remove_zeros(sprintf('%3.7f', 10^(-YTick(i))));
       end
     elseif YTick(i) < 0
       if YTick(i) < -7
         % use 1E-x notation
-        YTickLabel = char(YTickLabel, remove_zeros(sprintf('-%g', 10^(YTick(i)))));
+        YTickLabel{i} = sprintf('-%g', 10^(YTick(i)));
       else
         % use 0.000x notation
-        YTickLabel = char(YTickLabel, remove_zeros(sprintf('-%3.7f', 10^(YTick(i)))));
+        YTickLabel{i} = remove_zeros(sprintf('-%3.7f', 10^(YTick(i))));
       end
     else
-      YTickLabel = char(YTickLabel, '');
+      YTickLabel{i} = '';
     end
   end
   
-  % skip first empty entry
-  set(H, 'YTickLabel', YTickLabel(2:end,:))
-  
+  % update YTickLabel
+  set(H, 'YTickLabel', YTickLabel,'YAxisLocation','left')
   set(get(gca, 'YLabel'), 'string', 'p-value', 'position', pos)
   
 end
@@ -428,7 +427,7 @@ a=axes(...
 % select atlas for labeling
 if isfield(OV, 'atlas')
   atlas_name = OV.atlas;
-  if strcmp(lower(atlas_name),'none') | isempty(atlas_name)
+  if strcmpi(atlas_name,'none') || isempty(atlas_name)
     xA = [];
   else
     xA = spm_atlas('load',atlas_name);
@@ -454,7 +453,7 @@ if ~isempty(xA)
   
   % threshold map and restrict coordinates
   if SO.img(2).range(1) >= 0
-    Q = find(comp_thresh1(vol,SO.img(2).range(1)));
+    Q = find(compare_to_threshold(vol,SO.img(2).range(1)));
     XYZ = XYZ(:, Q);
     vol = vol(Q);
   end
@@ -677,8 +676,8 @@ for i = 1:size(xy, 2)
 end
 
 % remove duplicates
-xy = unique(xy, 'rows');
 xy = [[n 1];xy];
+xy = unique(xy, 'rows');
 return
 
 % --------------------------------------------------------------------------
@@ -705,7 +704,7 @@ end
 mx = -Inf; mn = Inf;
 for i = 1:vol.dim(3)
   tmp = spm_slice_vol(vol, spm_matrix([0 0 i]), vol.dim(1:2), [0 NaN]);
-  tmp1 = tmp(find(isfinite(tmp(:)) & (tmp(:) ~= 0)));
+  tmp1 = tmp(isfinite(tmp(:)) & (tmp(:) ~= 0));
   if ~isempty(tmp1)
     if nargout > 2
       [Qc Qr] = find(isfinite(tmp) & (tmp ~= 0));
@@ -769,6 +768,7 @@ imgns = spm_str_manip(imgs, ['rck' num2str(nchars)]);
 SO.transform = deblank(spm_input('Image orientation', '+1', ['Axial|' ...
     ' Coronal|Sagittal'], strvcat('axial', 'coronal', 'sagittal'), 1));
 orientn = find(strcmpi(SO.transform, {'sagittal', 'coronal', 'axial'}));
+spm_figure('GetWin','Interactive');
 
 % identify image types
 SO.cbar = [];
@@ -780,19 +780,34 @@ for i = 1:nimgs
     [mx, mn] = volmaxmin(SO.img(i).vol);
     SO.img(i).range = [0.15 * mx 0.9 * mx];
   else
-    [mx, mn] = volmaxmin(SO.img(i).vol);
+    [mx, mn, XYZ, img] = volmaxmin(SO.img(i).vol);
+    if ~isempty(strfind(SO.img(i).vol.fname, 'logP')) || ~isempty(strfind(SO.img(i).vol.fname, 'log_'))
+      logP = 1;
+    else
+      logP = 0;
+    end
     
     SO.img(i).func = 'i1(i1==0)=NaN;';
     SO.img(i).prop = Inf;
     SO.cbar = [SO.cbar i];
     SO.img(i).cmap = return_cmap('Colormap:', 'jet');
-    SO.img(i).range = spm_input('Img val range for colormap', '+1', 'e', [mn mx], 2)';
-    
+    if logP
+      % only ask for threshold if images is probably not thresholded 
+      if mn < -log10(0.05)
+        thresh = spm_input('Threshold P','+1','b','0.05|0.01|0.001',[0.05 0.01 0.001],1);
+        mn = -log10(thresh);
+        % use slightly larger maximum value to ensure that YTickLabel fits
+        if thresh == 0.05
+          mx = floor(mx) + 0.3011;
+        end
+      end
+    end
+    SO.img(i).range = spm_input('Image range for colormap', '+1', 'e', [mn mx], 2)';
     define_slices = spm_input('Slices', '+1', 'm', 'Estimate slices with local maxima|Define slices', [0 1], 1);
+    
     if ~define_slices
-      [mx, mn, XYZ, img] = volmaxmin(SO.img(i).vol);
       % threshold map and restrict coordinates
-      Q = find(img > SO.img(i).range(1) & img < SO.img(i).range(2));
+      Q = find(compare_to_threshold(img,range(1)) & le(img,range(2)));
       XYZ = XYZ(:, Q);
       img = img(Q);
       
@@ -857,6 +872,7 @@ return
 %==========================================================================
 function s = remove_zeros(s)
 
+s = deblank(s);
 pos = length(s);
 while pos > 1
   if strcmp(s(pos), '0')
