@@ -5,12 +5,15 @@
 
 % data field, that will be dynamically replaced by cat_standalone.sh
 matlabbatch{1}.spm.tools.cat.cat_simple.data = '<UNDEFINED>';         
-matlabbatch{1}.spm.tools.cat.cat_simple.catversion = 'estwrite';      
 
 % template for initial affine registration/segmentation; 'adult','children'
 matlabbatch{1}.spm.tools.cat.cat_simple.tpm = 'adults';               
 
 matlabbatch{1}.spm.tools.cat.cat_simple.registration.regmethod.shooting.shootingtpm = {fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_0_GS.nii')};
+
+% voxel size and bounding box
+matlabbatch{1}.spm.tools.cat.cat_simple.registration.vox = 1.5;
+matlabbatch{1}.spm.tools.cat.cat_simple.registration.bb = 12;
 
 % smoothing filter size for volumes
 matlabbatch{1}.spm.tools.cat.cat_simple.fwhm_vol = 6;                 
@@ -23,7 +26,7 @@ matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.hammers = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.ibsr = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.aal3 = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.mori = 0;
-matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.anatomy = 0;
+matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.anatomy3 = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.julichbrain = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.Schaefer2018_100Parcels_17Networks_order = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.Schaefer2018_200Parcels_17Networks_order = 0;
@@ -53,4 +56,3 @@ matlabbatch{1}.spm.tools.cat.cat_simple.surface.yes.fwhm_surf2 = 20;
 % matlabbatch{1}.spm.tools.cat.cat_simple.surface.no = 1;
 
 % disable parallel processing
-matlabbatch{1}.spm.tools.cat.cat_simple.nproc = 0;
