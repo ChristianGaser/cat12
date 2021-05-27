@@ -15,11 +15,17 @@ matlabbatch{1}.spm.tools.cat.estwrite.data = '<UNDEFINED>';
 % Remove comments and edit entry if you would like to change the Dartel/Shooting approach
 % Otherwise the default value from cat_defaults.m is used.
 % entry for choosing shooting approach
-%matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.shooting.shootingtpm = {fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_0_GS.nii')};
+%matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.regmethod.shooting.shootingtpm = {fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_0_GS.nii')};
 % entry for choosing dartel approach
-%matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.dartel.darteltpm = {fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_1_Dartel.nii')};
+%matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.regmethod.dartel.darteltpm = {fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_1_Dartel.nii')};
 % Strength of Shooting registration: 0 - Dartel, eps (fast), 0.5 (default) to 1 (accurate) optimized Shooting, 4 - default Shooting; default 0.5
-%matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.shooting.regstr = 0.5;
+%matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.regmethod.shooting.regstr = 0.5;
+
+% voxel size for normalized data (EXPERIMENTAL: inf - use Tempate values)
+matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.vox = 1.5;
+
+% additional bounding box
+matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.bb = 12;
 
 % Affine regularisation (SPM12 default = mni) - '';'mni';'eastern';'subj';'none';'rigid'
 matlabbatch{1}.spm.tools.cat.estwrite.opts.affreg = 'mni';    
@@ -46,9 +52,6 @@ matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.gcutstr = 2;
 % Strength of the cleanup process: 0 to 1; default 0.5
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.cleanupstr = 0.5;
 
-% voxel size for normalized data (EXPERIMENTAL: inf - use Tempate values)
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.vox = 1.5;      
-
 % resolution handling: 'native','fixed','best', 'optimal'
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.restypes.optimal = [1 0.3];
 
@@ -71,11 +74,12 @@ matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.SLC = 0;
 
 % surface options
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.pbtres = 0.5;
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.pbtlas = 0;
+matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.pbtmethod = 'pbt2x';
+matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.reduce_mesh = 1;
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.scale_cortex = 0.7;
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.add_parahipp = 0.1;
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.close_parahipp = 0;
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.collcorr = 0;
+matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.SRP = 22;
 
 % set this to 1 for skipping preprocessing if already processed data exist
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.admin.lazy = 0;
@@ -95,6 +99,9 @@ matlabbatch{1}.spm.tools.cat.estwrite.extopts.admin.print = 2;
 % 9 - thickness only (for ROI analysis, experimental!)
 % +10 to estimate WM and CSF width/depth/thickness (experimental!)
 matlabbatch{1}.spm.tools.cat.estwrite.output.surface = 1;       
+
+% BIDS output
+matlabbatch{1}.spm.tools.cat.estwrite.output.BIDS.BIDSno = 1;
                                                             
 % define here volume atlases
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.neuromorphometrics = 1;
@@ -150,7 +157,6 @@ matlabbatch{1}.spm.tools.cat.estwrite.output.TPMC.dartel = 0;
 
 % atlas maps (for evaluation)
 matlabbatch{1}.spm.tools.cat.estwrite.output.atlas.native = 0;
-matlabbatch{1}.spm.tools.cat.estwrite.output.atlas.dartel = 0;
 
 % label 
 % background=0, CSF=1, GM=2, WM=3, WMH=4 (if opt.extopts.WMHC==3), SL=1.5 (if opt.extopts.SLC>0)
@@ -172,5 +178,5 @@ matlabbatch{1}.spm.tools.cat.estwrite.output.las.dartel = 0;
 matlabbatch{1}.spm.tools.cat.estwrite.output.jacobianwarped = 0;
 
 % deformations, order is [forward inverse]
-matlabbatch{1}.spm.tools.cat.estwrite.output.warps = [0 0];
+matlabbatch{1}.spm.tools.cat.estwrite.output.warps = [1 0];
 

@@ -1,5 +1,25 @@
 ------------------------------------------------------------------------
-r1829 | gaser | 2021-05-27 11:39:29
+r1830 | gaser | 2021-05-27 18:14:33
+
+Changed paths:
+M       CHANGES.txt
+M       Makefile
+M       cat_simple.m
+M       cat_stat_analyze_ROIs.m
+M       cat_surf_results.m
+M       cat_vol_headtrimming.m
+M       standalone/cat_standalone_segment.txt
+M       standalone/cat_standalone_segment_long.txt
+M       standalone/cat_standalone_simple.txt
+
+(1) Changed: Updated standalone tools to new release.
+(2) Changed: Prepared head trimming tool for categorical data (e.g. atlases).
+(3) Changed: Updated cat_simple to new release.
+(4) Changed: Updated checklist in Makefile.
+(5) Fixed:   Added check for number of structures in csv atlas file and xml data
+             file.
+------------------------------------------------------------------------
+r1829 | gaser | 2021-05-27 11:40:22 +0200 (Do, 27 Mai 2021) | 46 lines
 
 Changed paths:
 M       CAT12-Manual.pdf
@@ -46,6 +66,7 @@ M       templates_MNI152NLin2009cAsym/neuromorphometrics.nii
 (9) Added:   Atlas_correct_scaling.m to correct scaling factor of atlases.
 (10) Fixed:  Corrected default template folder in cat_update.m.
 (11) Fixed:  Corrected template folder for 32k meshes in cat_surf_info.m
+
 ------------------------------------------------------------------------
 r1828 | gaser | 2021-05-20 22:53:18 +0200 (Do, 20 Mai 2021) | 20 lines
 

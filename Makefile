@@ -142,7 +142,7 @@ checklist:
 	-@echo    
 	-@echo Checklist for testing CAT12 in order to release
 	-@echo -----------------------------------------------
-	-@echo 1. Check Test data
+	-@echo 1. Check Test Data
 	-@echo    "cd  ~/matlab/vbm8/test/maci64 && calc_all.sh"
 	-@echo    mv surf surf_rXXXX
 	-@echo    render_surf.sh surf_rXXXX -range 0 6
@@ -163,21 +163,23 @@ checklist:
 	-@echo    "cat12('expert')"
 	-@echo    CAT12 GUI Segment
 	-@echo    
-	-@echo 5. Check Previous Release
-	-@echo    "cat12('expert')"
-	-@echo    CAT12 GUI Segment CAT12.X
+	-@echo 5. Check Simple Preprocessing
+	-@echo    SPM->Tools->CAT12->CAT12 Simple Preprocessing
 	-@echo    
-	-@echo 6. Check Skull-Stripping
+	-@echo 6. Check Precompiled Versions
+	-@echo    /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Mac/standalone/cat_standalone.sh 
+	-@echo    
+	-@echo 7. Check Skull-Stripping
 	-@echo    cat12_all.m in /Volumes/UltraMax/validate_skullstripping_withT12
 	-@echo    calc_kappa_c0_SPM12_T12.m
 	-@echo    
-	-@echo 7. Check Windows 10 + Ubuntu 17.10
+	-@echo 8. Check Windows 10 + Ubuntu 17.10
 	-@echo    VirtualBox.app
 	-@echo    CAT12 GUI Segment
 	-@echo    
-	-@echo 8. Check old SPM12 version on UltraMax
+	-@echo 9. Check old SPM12 version on UltraMax
 	-@echo    
-	-@echo 9. Check thickness phantom 
+	-@echo 10.Check thickness phantom 
 
 # print help for precompiling
 precompile:

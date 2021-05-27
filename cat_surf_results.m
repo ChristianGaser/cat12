@@ -96,8 +96,9 @@ switch lower(action)
   case 'disp'
     
     % remove any existing data
-    if exist('H','var') && isfield(H,'S')
-       H = rmfield(H,'S');
+    if exist('H','var')
+      if isfield(H,'S'), H = rmfield(H,'S'); end
+      if isfield(H,'pos'), H = rmfield(H,'pos'); end
     end
 
     % set start values

@@ -13,21 +13,26 @@ matlabbatch{1}.spm.tools.cat.long.datalong.subjects = '<UNDEFINED>';
 % (2) large changes (i.e. aging/developmental effects)
 matlabbatch{1}.spm.tools.cat.long.longmodel = '<UNDEFINED>';
 
-
 % Remove comments if you would like to change TPM by using additional arguments in cat_standalone.sh 
 % or change this field manually by editing the "UNDEFINED" field
 % Otherwise the default value from cat_defaults.m is used.
 % 2nd parameter field, that will be dynamically replaced by cat_standalone.sh
 %matlabbatch{1}.spm.tools.cat.long.opts.tpm = '<UNDEFINED>';
 
+% use priors for longitudinal data
+matlabbatch{1}.spm.tools.cat.long.enablepriors = 1;
+
 % Remove comments and edit entry if you would like to change the Dartel/Shooting approach
 % Otherwise the default value from cat_defaults.m is used.
 % entry for choosing shooting approach
-matlabbatch{1}.spm.tools.cat.long.extopts.registration.shooting.shootingtpm = {fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_0_GS.nii')};
+%matlabbatch{1}.spm.tools.cat.long.extopts.registration.regmethod.shooting.shootingtpm = {fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_0_GS.nii')};
 % entry for choosing dartel approach
-%matlabbatch{1}.spm.tools.cat.long.extopts.registration.dartel.darteltpm = {fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_1_Dartel.nii')};
+%matlabbatch{1}.spm.tools.cat.long.extopts.registration.regmethod.dartel.darteltpm = {fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_1_Dartel.nii')};
 % Strength of Shooting registration: 0 - Dartel, eps (fast), 0.5 (default) to 1 (accurate) optimized Shooting, 4 - default Shooting; default 0.5
-matlabbatch{1}.spm.tools.cat.long.extopts.registration.shooting.regstr = 0.5;
+%matlabbatch{1}.spm.tools.cat.long.extopts.registration.regmethod.shooting.regstr = 0.5;
+
+% additional bounding box
+matlabbatch{1}.spm.tools.cat.long.extopts.registration.bb = 12;
 
 % Affine regularisation (SPM12 default = mni) - '';'mni';'eastern';'subj';'none';'rigid'
 matlabbatch{1}.spm.tools.cat.long.opts.affreg = 'mni';
@@ -40,15 +45,17 @@ matlabbatch{1}.spm.tools.cat.long.opts.biasstr = 0.5;
 
 matlabbatch{1}.spm.tools.cat.long.opts.accstr = 0.5;
 matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.spm_kamap = 0;
+
+% surface options
 matlabbatch{1}.spm.tools.cat.long.extopts.surface.pbtres = 0.5;
 matlabbatch{1}.spm.tools.cat.long.extopts.surface.pbtmethod = 'pbt2x';
-matlabbatch{1}.spm.tools.cat.long.extopts.surface.pbtlas = 0;
-matlabbatch{1}.spm.tools.cat.long.extopts.surface.collcorr = 0;
+matlabbatch{1}.spm.tools.cat.long.extopts.surface.SRP = 22;
 matlabbatch{1}.spm.tools.cat.long.extopts.surface.reduce_mesh = 1;
 matlabbatch{1}.spm.tools.cat.long.extopts.surface.vdist = 1.33333333333333;
 matlabbatch{1}.spm.tools.cat.long.extopts.surface.scale_cortex = 0.7;
 matlabbatch{1}.spm.tools.cat.long.extopts.surface.add_parahipp = 0.1;
 matlabbatch{1}.spm.tools.cat.long.extopts.surface.close_parahipp = 0;
+
 matlabbatch{1}.spm.tools.cat.long.extopts.admin.experimental = 0;
 matlabbatch{1}.spm.tools.cat.long.extopts.admin.new_release = 0;
 matlabbatch{1}.spm.tools.cat.long.extopts.admin.lazy = 0;
@@ -65,19 +72,19 @@ matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.mrf = 1;
 
 % Affine PreProcessing (APP) with rough bias correction and brain extraction for special anatomies (nonhuman/neonates) 
 % 0 - none; 1070 - default; [1 - light; 2 - full; 1144 - update of 1070, 5 - animal (no affreg)]
-%matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.APP = 1070;
+matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.APP = 1070;
 
 % Strength of the local adaption: 0 to 1; default 0.5
-%matlabbatch{1}.spm.tools.cat.long.extopts.LASstr = 0.5;
+matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.LASstr = 0.5;
 
 % Strength of skull-stripping: 0 - SPM approach; eps to 1  - gcut; 2 - new APRG approach; -1 - no skull-stripping (already skull-stripped); default = 2
-%matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.gcutstr = 2;
+matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.gcutstr = 2;
 
 % voxel size for normalized data (EXPERIMENTAL: inf - use Template values)
-matlabbatch{1}.spm.tools.cat.long.extopts.vox = 1.5;
+matlabbatch{1}.spm.tools.cat.long.extopts.registration.vox = 1.5;
 
 % resolution handling: 'native','fixed','best', 'optimal'
-%matlabbatch{1}.spm.tools.cat.long.extopts.restypes.segmentation.optimal = [1 0.3];
+matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.restypes.optimal = [1 0.3];
 
 % use center-of-mass approach for estimating origin
 matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.setCOM = 1;
@@ -88,6 +95,9 @@ matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.setCOM = 1;
 % 9 - thickness only (for ROI analysis, experimental!)
 % +10 to estimate WM and CSF width/depth/thickness (experimental!)
 matlabbatch{1}.spm.tools.cat.long.output.surface = 1;
+
+% BIDS output
+matlabbatch{1}.spm.tools.cat.long.output.BIDS.BIDSno = 1;
 
 % define here volume atlases
 matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.neuromorphometrics = 1;
