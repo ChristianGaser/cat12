@@ -2,7 +2,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
 % ______________________________________________________________________
 % Surface creation and thickness estimation.
 %
-% [Yth1,S,Psurf,EC]=cat_surf_createCS(V,V0,Ym,Ya,YMF,Ytemplate,opt)
+% [Yth1,S,Psurf,EC]=cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytemplate,opt)
 %
 % Yth1   .. thickness map
 % S      .. structure with surfaces, like the left hemisphere, that contains
@@ -322,7 +322,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
       % check that no fast option was used
       if opt.fast
         fprintf('\n');
-        cat_io_addwarning('cat_surf_createCS:noPiorSurfaceWithFastReconstruction', ...
+        cat_io_addwarning('cat_surf_createCS2:noPiorSurfaceWithFastReconstruction', ...
           'You cannot combine use of prior surfaces and fast option.');        
         break
       end
@@ -337,7 +337,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
       if ~useprior
         warn_str = sprintf('Surface files for %s not found. Move on with individual surface extraction.\n',fullfile(pp0,ff0));
         fprintf('\nWARNING: %s',warn_str);
-        cat_io_addwarning('cat_surf_createCS:noPiorSurface', warn_str);
+        cat_io_addwarning('cat_surf_createCS2:noPiorSurface', warn_str);
       else
         fprintf('\nUse existing surface from %s as prior and thus skip many processing steps.\n',fullfile(pp0,ff0));
       end      

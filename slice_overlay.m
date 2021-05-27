@@ -171,7 +171,7 @@ switch action
   if isempty(varargin{1})
     % Fetch from workspace
     errstr = sprintf(['Cannot find SPM variables in the workspace\n'...
-		      'Please run SPM results GUI']);
+          'Please run SPM results GUI']);
     V = spm('ver')
     switch V(4:end)
      case '99'
@@ -323,18 +323,18 @@ if SO.refreshf
     end
     axpos = [r*axlen(X)+startc(X) (panels(Y)-c)*axlen(Y)+startc(Y) axlen'];
     axisd(i) = axes(...
-	'Parent',figno,...
-	'XTick',[],...
-	'XTickLabel',[],...
-	'YTick',[],...
-	'YTickLabel',[],...
-	'Box','on',...
-	'XLim',[1 vdims(X)],...
-	'YLim',[1 vdims(Y)],...
-	'Units', 'pixels',...
-	'Position',axpos,...
-	'Tag','slice overlay panel',...
-	'UserData',u);
+  'Parent',figno,...
+  'XTick',[],...
+  'XTickLabel',[],...
+  'YTick',[],...
+  'YTickLabel',[],...
+  'Box','on',...
+  'XLim',[1 vdims(X)],...
+  'YLim',[1 vdims(Y)],...
+  'Units', 'pixels',...
+  'Position',axpos,...
+  'Tag','slice overlay panel',...
+  'UserData',u);
     r = r+1;
     if r >= panels(X)
       r = 0;
@@ -349,8 +349,8 @@ if is_there(SO,'labels')
   if iscell(labels.format)
     if length(labels.format)~=vdims(Z)
       error(...
-	  sprintf('Oh dear, expecting %d labels, but found %d',...
-		  vdims(Z), length(labels.contents)));
+    sprintf('Oh dear, expecting %d labels, but found %d',...
+      vdims(Z), length(labels.contents)));
     end
   else
     % format string for mm from AC labelling
@@ -399,7 +399,7 @@ for i = 1:nslices
       V = thisimg.vol;
     end
     i1 = spm_sample_vol(V,vixyz(X,:),vixyz(Y,:),vixyz(Z,:), ...
-			 [thisimg.hold thisimg.background]);
+       [thisimg.hold thisimg.background]);
     if is_there(thisimg, 'func')
       eval(thisimg.func);
     end
@@ -407,11 +407,11 @@ for i = 1:nslices
     i1 = reshape(i1, vdims(1:2))';
     % rescale to colormap
     [csdata badvals]= scaletocmap(...
-	i1,...
-	thisimg.range(1),...
-	thisimg.range(2),...
-	cmaps{j},...
-	lrn(j,:));
+      i1,...
+      thisimg.range(1),...
+      thisimg.range(2),...
+      cmaps{j},...
+      lrn(j,:));
     % take indices from colormap to make true colour image
     iimg = reshape(cmaps{j}(csdata(:),:),pandims);
     tmp = repmat(logical(~badvals),[1 1 3]);
@@ -425,18 +425,18 @@ for i = 1:nslices
   img(img>1) = 1;
   
   image('Parent', axisd(i),...
-	'ButtonDownFcn', SO.callback,...
-	'CData',img);
+    'ButtonDownFcn', SO.callback,...
+    'CData',img);
   if is_there(SO,'labels')
     text('Parent',axisd(i),...
-	 'Color', labels.colour,...
-	 'FontUnits', 'normalized',...
-	 'VerticalAlignment','bottom',...
-	 'HorizontalAlignment','left',...
-	 'Position', [1 1],...
-	 'FontSize',labels.size,...
-	 'ButtonDownFcn', SO.callback,...
-	 'String', labels.format{i});
+     'Color', labels.colour,...
+     'FontUnits', 'normalized',...
+     'VerticalAlignment','bottom',...
+     'HorizontalAlignment','left',...
+     'Position', [1 1],...
+     'FontSize',labels.size,...
+     'ButtonDownFcn', SO.callback,...
+     'String', labels.format{i});
   end
 end
 for i = (nslices+1):npanels
@@ -466,8 +466,8 @@ for i = 1:cbars
       'Position',[p(1)+pc(1)-cw/2,p(2)+pc(2)-ch/2,cw,ch]...
       );
   ih = image('Parent', a,...
-	'YData', axlims(idxs),...     
-	'CData', reshape(cbari.cmap,[cml,1,3]));
+    'YData', axlims(idxs),...     
+    'CData', reshape(cbari.cmap,[cml,1,3]));
 
 end
 
@@ -503,7 +503,7 @@ end
 if strcmp(get(SO.figure, 'Tag'),'Graphics')
   % position figure nicely for SPM
   defstruct = struct('position', [0 0 1 0.92], 'units', 'normalized', ...
-		     'valign', 'top');
+         'valign', 'top');
   SO = set_def(SO, 'area', defstruct);
   SO.area = set_def(SO.area, 'position', defstruct.position); 
   SO.area = set_def(SO.area, 'units', defstruct.units); 
@@ -531,7 +531,7 @@ if ~is_there(SO,'slicedef' | ~is_there(SO, 'slices'))
   D = V.dim(1:3);
   T = SO.transform * V.mat;
   vcorners = [1 1 1; D(1) 1 1; 1 D(2) 1; D(1:2) 1; ...
-	     1 1 D(3); D(1) 1 D(3); 1 D(2:3) ; D(1:3)]';
+       1 1 D(3); D(1) 1 D(3); 1 D(2:3) ; D(1:3)]';
   corners = T * [vcorners; ones(1,8)];
   SC = sort(corners');
   vxsz = sqrt(sum(T(1:3,1:3).^2));
@@ -613,9 +613,9 @@ for i = 1:length(SO.img)
   if ~is_there(SO.img(i),'cmap')
     if SO.img(i).prop == Inf; % split map
       if SO.range(1)<SO.range(2)
-	SO.img(i).cmap = getcmap('hot');
+  SO.img(i).cmap = getcmap('hot');
       else
-	SO.img(i).cmap = getcmap('winter');
+  SO.img(i).cmap = getcmap('winter');
       end
     else                  % true colour
       SO.img(i).cmap = getcmap('actc');
@@ -625,10 +625,10 @@ for i = 1:length(SO.img)
     % this can be complex, and depends on split/true colour
     if SO.img(i).prop == Inf % split colour
       if xor(SO.img(i).range(1) < SO.img(i).range(2), ...
-	     SO.img(i).range(2) < 0)
-	SO.img(i).outofrange = {[0],size(SO.img(i).cmap,1)};
+       SO.img(i).range(2) < 0)
+        SO.img(i).outofrange = {[0],size(SO.img(i).cmap,1)};
       else
-	SO.img(imgno).outofrange={[1], [0]};
+        SO.img(imgno).outofrange={[1], [0]};
       end
     else            % true colour
       SO.img(i).outofrange = {1,size(SO.img(i).cmap,1)};
@@ -740,8 +740,8 @@ else
       tmp = spm_slice_vol(vol,spm_matrix([0 0 i]),vol.dim(1:2),[0 NaN]);
       tmp = tmp(find(finite(tmp(:))));
       if ~isempty(tmp)
-	mx = max([mx; tmp]);
-	mn = min([mn; tmp]);
+        mx = max([mx; tmp]);
+        mn = min([mn; tmp]);
       end
     end
 end
@@ -762,8 +762,8 @@ if ~isempty(acmapname)
       [p f e] = fileparts(acmapname);
       acmat = fullfile(p, [f '.mat']);
       if exist(acmat, 'file')
-	s = struct2cell(load(acmat));
-	cmap = s{1};
+        s = struct2cell(load(acmat));
+        cmap = s{1};
       end
     end
   end
@@ -811,7 +811,7 @@ for i = 1:nimgs
     vol = I.vol.imgdata;
   end
   vals(i,:) = spm_sample_vol(vol, XYZ(X,:), XYZ(Y,:),XYZ(Z,:),[holdlist(i) ...
-		    I.background]);
+        I.background]);
 end  
 return
 
@@ -848,19 +848,19 @@ set(H,'Units','normalized')
 err = 0;
 try, eval([printstr ' ' filename]), catch, err=1; end
 if err
-	errstr = lasterr;
-	tmp = [find(abs(errstr)==10),length(errstr)+1];
-	str = {errstr(1:tmp(1)-1)};
-	for i = 1:length(tmp)-1
-		if tmp(i)+1 < tmp(i+1) 
-			str = [str, {errstr(tmp(i)+1:tmp(i+1)-1)}];
-		end
-	end
-	str = {str{:},	'','- print command is:',['    ',printstr ' ' filename],...
-			'','- current directory is:',['    ',pwd],...
-			'','            * nothing has been printed *'};
-	for i=1:length(str)
-	  disp(str{i});end
+  errstr = lasterr;
+  tmp = [find(abs(errstr)==10),length(errstr)+1];
+  str = {errstr(1:tmp(1)-1)};
+  for i = 1:length(tmp)-1
+    if tmp(i)+1 < tmp(i+1) 
+      str = [str, {errstr(tmp(i)+1:tmp(i+1)-1)}];
+    end
+  end
+  str = {str{:},  '','- print command is:',['    ',printstr ' ' filename],...
+      '','- current directory is:',['    ',pwd],...
+      '','            * nothing has been printed *'};
+  for i=1:length(str)
+    disp(str{i});end
 end
 
 set(H,{'Units'},un)
