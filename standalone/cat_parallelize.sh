@@ -1,10 +1,17 @@
-#! /bin/sh
-
-version='cat_parallelize.sh $Id$'
+#! /bin/bash
+# ______________________________________________________________________
+#
+# Christian Gaser, Robert Dahnke
+# Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+# Departments of Neurology and Psychiatry
+# Jena University Hospital
+# ______________________________________________________________________
+# $Id$
 
 ########################################################
 # global parameters
 ########################################################
+version='cat_parallelize.sh $Id$'
 
 CPUINFO=/proc/cpuinfo
 ARCH=`uname`

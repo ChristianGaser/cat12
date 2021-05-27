@@ -11,6 +11,7 @@
 ########################################################
 # global parameters
 ########################################################
+version='cat_batch_cat.sh $Id$'
 
 matlab=matlab # you can use other matlab versions by changing the matlab parameter
 cwd=$(dirname "$0")
@@ -588,6 +589,7 @@ SETTINGS
  matlab command: $matlab
   
 This script was written by Christian Gaser (christian.gaser@uni-jena.de).
+This is ${version}.
 
 __EOM__
 }
