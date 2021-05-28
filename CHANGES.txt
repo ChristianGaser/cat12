@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1832 | gaser | 2021-05-28 12:35:50
+r1833 | gaser | 2021-05-28 13:03:12
+
+Changed paths:
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       cat_vol_display_label.m
+M       html/cat.html
+M       html/cat_methods_RBM.html
+M       html/cat_versions.html
+MM      standalone/cat_standalone_deface.txt
+MM      standalone/cat_standalone_dicom2nii.txt
+
+(1) Changed: Updated CAT12 manual and version information.
+(2) Fixed:   Corrected references in cat_methods_RBM.html.
+(3) Fixed:   Corrected prepended name of atlases in cat_vol_display_label.m.
+
+------------------------------------------------------------------------
+r1832 | gaser | 2021-05-28 12:37:07 +0200 (Fr, 28 Mai 2021) | 26 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -25,6 +43,7 @@ A       templates_external/y_MNI152NLin2009cSym_to_MNI152NLin2009cAsym.nii
 (3) Added:   Added new atlas of thalamic nuclei. 
 (4) Added:   Added MNI152NLin2009cSym.nii and its deformation field to 
              templates_external.
+
 
 ------------------------------------------------------------------------
 r1831 | gaser | 2021-05-28 00:50:12 +0200 (Fr, 28 Mai 2021) | 18 lines
