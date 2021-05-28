@@ -16,7 +16,6 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
   res.AffineSPM = res.Affine;
   
   clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
-  clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
 
   [pth,nam] = spm_fileparts(res.image0(1).fname); %#ok<ASGLU> % original   
 
