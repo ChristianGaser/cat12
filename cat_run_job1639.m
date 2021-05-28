@@ -709,17 +709,17 @@ function cat_run_job1639(job,tpm,subj)
           Ysrc = single(obj.image.private.dat(:,:,:)); 
           Ysrc(isnan(Ysrc) | isinf(Ysrc)) = min(Ysrc(:));
           
-intscale = 1;  % 0 - none, 1 - only if neg. values, 2 - allways         
-if ( intscale==1 && min(Ysrc(:))<0 ) || intscale == 2
-  if ppe.affreg.highBG  
-    job.extopts.histth(1) = 0.9999; 
-  end
-  [Ysrc,intths] = cat_stat_histth(Ysrc,job.extopts.histth);
-  Ysrc = (Ysrc - intths(1)) / diff(intths) ;
-  isiscaled = 1;
-else
-  isiscaled = 0; 
-end
+          intscale = 1;  % 0 - none, 1 - only if neg. values, 2 - allways         
+          if ( intscale==1 && min(Ysrc(:))<0 ) || intscale == 2
+            if ppe.affreg.highBG  
+              job.extopts.histth(1) = 0.9999; 
+            end
+            [Ysrc,intths] = cat_stat_histth(Ysrc,job.extopts.histth);
+            Ysrc = (Ysrc - intths(1)) / diff(intths) ;
+            isiscaled = 1;
+          else
+            isiscaled = 0; 
+          end
 
           if job.extopts.APP==1070 || job.extopts.APP==1144 
             % APPinit is just a simple bias correction for affreg and should
