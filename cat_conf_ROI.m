@@ -192,6 +192,12 @@ for ali=1:numel(atlaslist)
         '    Amunts K, Mohlberg H, Bludau S, Zilles K (2020). Julich-Brain – A 3D probabilistic atlas of human brains cytoarchitecture. Science 369, 988-99'
         ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
   end
+  if any(~cellfun('isempty',strfind(atlaslist(ali),'thalamus')))
+    ROI.help = [ROI.help; strrep({
+        '(MAI) Atlas of human thalamic nuclei:'
+        '    Najdenovska E, Alemán-Gómez Y, Battistella G, Descoteaux M, Hagmann P, Jacquemont S, Maeder P, Thiran JP, Fornari E, Bach Cuadra M. In-vivo probabilistic atlas of human thalamic nuclei based on diffusion- weighted magnetic resonance imaging. Sci Data. 2018 Nov 27;5:180270.'
+        ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
+  end
   if any(~cellfun('isempty',strfind(atlaslist(ali),'Schaefer2018_200Parcels_17Networks_order')))
     ROI.help = [ROI.help; strrep({
         '(MAI) Local-Global Intrinsic Functional Connectivity Parcellation by Schaefer et al.:'

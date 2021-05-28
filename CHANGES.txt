@@ -1,5 +1,33 @@
 ------------------------------------------------------------------------
-r1831 | gaser | 2021-05-28 00:49:23
+r1832 | gaser | 2021-05-28 12:35:50
+
+Changed paths:
+M       CHANGES.txt
+M       Contents_info.txt
+M       cat_conf_ROI.m
+M       cat_defaults.m
+M       cat_run.m
+MM      development/Atlas_correct_scaling.m
+M       html/cat_licences.html
+M       html/cat_methods_RBM.html
+M       standalone/cat_standalone.sh
+M       standalone/cat_standalone_segment.txt
+M       standalone/cat_standalone_segment_long.txt
+M       standalone/cat_standalone_simple.txt
+A       templates_MNI152NLin2009cAsym/thalamus.csv
+A       templates_MNI152NLin2009cAsym/thalamus.nii
+A       templates_MNI152NLin2009cAsym/thalamus.txt
+A       templates_external/MNI152NLin2009cSym.nii
+A       templates_external/y_MNI152NLin2009cSym_to_MNI152NLin2009cAsym.nii
+
+(1) Changed: Changed default atlases in cat_defaults.m.
+(2) Fixed:   Added missing check for shooting template to cat_run.m.
+(3) Added:   Added new atlas of thalamic nuclei. 
+(4) Added:   Added MNI152NLin2009cSym.nii and its deformation field to 
+             templates_external.
+
+------------------------------------------------------------------------
+r1831 | gaser | 2021-05-28 00:50:12 +0200 (Fr, 28 Mai 2021) | 18 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -17,6 +45,7 @@ M       standalone/cat_standalone_tfce.txt
 (1) Changed: Updated standalone tools to easier use additional arguments. 
 (2) Changed: Updated help text and examples for standalone tools. 
 (3) Added:   Added standalone tools for dicom import and de-facing.
+
 
 ------------------------------------------------------------------------
 r1830 | gaser | 2021-05-27 18:15:21 +0200 (Do, 27 Mai 2021) | 18 lines

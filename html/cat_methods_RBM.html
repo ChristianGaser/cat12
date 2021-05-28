@@ -73,6 +73,7 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
           <li><a href="#Hammers">Hammers</a></li>
           <li><a href="#Cobra">Cobra</li>
           <li><a href="#IBSR">IBSR</li>
+          <li><a href="#Thalamus">Thalamus</li>
           <li><a href="#Mori">Mori</li>
           <li><a href="#AAL3">AAL3</li>
           <li><a href="#Anatomy">Anatomy3</li>
@@ -198,7 +199,7 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
         <li>
           <h5 id="Mori">Mori</h5>
           <p>
-            This atlas based on the <a href="matlab:web('http://wiki.slicer.org/slicerWiki/index.php/Slicer3:Mori-Atlas_labels','-browser');">"Slicer3:Mori_Atlas_labels_JHU-MNI_SS_Type-II"</a> atlas of Version 2010-05 <a href="Oishi20xx">(Oishi et al. 20xx)</a>. 
+            This atlas based on the <a href="matlab:web('http://wiki.slicer.org/slicerWiki/index.php/Slicer3:Mori-Atlas_labels','-browser');">"Slicer3:Mori_Atlas_labels_JHU-MNI_SS_Type-II"</a> atlas of Version 2010-05 <a href="#Oishi">(Oishi et al. 2009)</a>. 
           </p>
           <p>
             Display Mori atlas as
@@ -206,6 +207,16 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
           You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','mori.txt'));">here</a>.
         </li>
         
+        <li>
+          <h5 id="Thalamus">Thalamus</h5>
+          <p>
+            This atlas based on the <a href="matlab:web('https://wp.unil.ch/mial/probabilistic-atlas-of-thalamic-nuclei/','-browser');">"atlas of human thalamic nuclei"</a> <a href="#Najdenovska">(Najdenovska et al. 2018)</a>. 
+          </p>
+          <p>
+            Display Thalamus atlas as
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','thalamus.nii')}}))">volume map</a>.
+          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','thalamus.txt'));">here</a>.
+        </li>
         
         <li>
           <h5 id="AAL3">AAL (Automated Anatomical Labeling) version 3</h5>
@@ -483,7 +494,15 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
           <p>
             Oishi K, Faria A, Jiang H, Li X, Akhter K, Zhang J, Hsu JT, Miller MI, van Zijl PC, Albert M, Lyketsos CG, Woods R, Toga AW, Pike GB, Rosa-Neto P, Evans A, Mazziotta J, Mori S. </br>
             Atlas-based whole brain white matter analysis using large deformation diffeomorphic metric mapping: application to normal elderly and Alzheimer's disease participants. </br>
-            <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2009.01.002','-browser')">Neuroimage. 2009 46(2):486-99.</a>
+            <a href="matlab:web('https://doi.org/10.1038/sdata.2018.270','-browser')">Neuroimage. 2009 46(2):486-99.</a>
+          </p>
+        </li>
+        <li>
+          <b id="Najdenovska">Najdenovska et al. 2018</b>
+          <p>
+            Najdenovska E, Alemán-Gómez Y, Battistella G, Descoteaux M, Hagmann P, Jacquemont S, Maeder P, Thiran JP, Fornari E, Bach Cuadra M. </br>
+            In-vivo probabilistic atlas of human thalamic nuclei based on diffusion- weighted magnetic resonance imaging. </br>
+            <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2009.01.002','-browser')">Sci Data. 2018 Nov 27;5:180270.</a>
           </p>
         </li>
         <li>
