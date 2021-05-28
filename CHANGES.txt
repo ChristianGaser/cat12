@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1835 | gaser | 2021-05-29 01:06:19
+r1836 | gaser | 2021-05-29 01:21:07
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main_updateSPM.m
+M       cat_run_job1639.m
+
+Changed: Some smaller changes in formatting.
+------------------------------------------------------------------------
+r1835 | gaser | 2021-05-29 01:07:21 +0200 (Sa, 29 Mai 2021) | 25 lines
 
 Changed paths:
 M       CAT12-Manual.pdf
@@ -25,6 +34,7 @@ MM      templates_MNI152NLin2009cAsym/thalamus.txt
 (2) Added:   New standalone tool for abovementioned function.
 (3) Changed: Added automatically search for xml-files for cat_stat_check_cov.m.
 (4) Changed: Updated CAT12 manual and version information.
+
 ------------------------------------------------------------------------
 r1834 | dahnke | 2021-05-28 16:45:20 +0200 (Fr, 28 Mai 2021) | 39 lines
 
