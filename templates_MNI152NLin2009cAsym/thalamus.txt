@@ -38,4 +38,4 @@ Related references:
 [2] VS Fonov, AC Evans, RC McKinstry, CR Almli and DL Collins, Unbiased nonlinear average age-appropriate brain templates from birth to adulthood, NeuroImage, Volume 47, Supplement 1, July 2009, Page S102 Organization for Human Brain Mapping 2009 Annual Meeting, DOI: http://dx.doi.org/10.1016/S1053-8119(09)70884-5
 
 --------------------------------------------------------------------------------
-$Id: thalamus.txt 1823 2021-05-12 15:32:40Z gaser $
+$Id$
