@@ -91,7 +91,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   else
     CMth = min( [  clsint(1) - diff([clsint(1),WMth]) , clsint(3) ]);
   end
-  T3th = [ CMth , clsint(1) , WMth];
+  T3th = double([ CMth , clsint(1) , WMth]);
 
 
   %% Some error handling

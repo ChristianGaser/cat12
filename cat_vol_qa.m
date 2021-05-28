@@ -611,16 +611,20 @@ function varargout = cat_vol_qa(action,varargin)
             if isfield(res,rf{rfi}), QAS.SPMpreprocessing.(rf{rfi}) = res.(rf{rfi}); end
           end
         end
-        hAffine  = spm_imatrix(QAS.SPMpreprocessing.Affine ); 
-        hAffine0 = spm_imatrix(QAS.SPMpreprocessing.Affine0); 
-        QAS.SPMpreprocessing.Affine_translation  = hAffine(1:3);
-        QAS.SPMpreprocessing.Affine_rotation     = hAffine(4:6);
-        QAS.SPMpreprocessing.Affine_scaling      = hAffine(7:9);
-        QAS.SPMpreprocessing.Affine_shearing     = hAffine(10:12);
-        QAS.SPMpreprocessing.Affine0_translation = hAffine0(1:3);
-        QAS.SPMpreprocessing.Affine0_rotation    = hAffine0(4:6);
-        QAS.SPMpreprocessing.Affine0_scaling     = hAffine0(7:9);
-        QAS.SPMpreprocessing.Affine0_shearing    = hAffine0(10:12);
+        if isfield(QAS.SPMpreprocessing,'Affine')
+          hAffine  = spm_imatrix(QAS.SPMpreprocessing.Affine ); 
+          QAS.SPMpreprocessing.Affine_translation  = hAffine(1:3);
+          QAS.SPMpreprocessing.Affine_rotation     = hAffine(4:6);
+          QAS.SPMpreprocessing.Affine_scaling      = hAffine(7:9);
+          QAS.SPMpreprocessing.Affine_shearing     = hAffine(10:12);
+        end
+        if isfield(QAS.SPMpreprocessing,'Affine0')
+          hAffine0 = spm_imatrix(QAS.SPMpreprocessing.Affine0); 
+          QAS.SPMpreprocessing.Affine0_translation = hAffine0(1:3);
+          QAS.SPMpreprocessing.Affine0_rotation    = hAffine0(4:6);
+          QAS.SPMpreprocessing.Affine0_scaling     = hAffine0(7:9);
+          QAS.SPMpreprocessing.Affine0_shearing    = hAffine0(10:12);
+        end
       end
 % ##############
 % RD202008: create warning when Affine0 & Affine varies strongly ?

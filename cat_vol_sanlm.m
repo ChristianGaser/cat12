@@ -262,8 +262,8 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
       end
       
       % histogram limit
-      src = cat_stat_histth(src,job.intlim); 
-      
+      [src,srcth] = cat_stat_histth(src,job.intlim); 
+       
       % use intensity normalisation because cat_sanlm did not filter values below ~0.01 
       th  = max( cat_stat_nanmean( src(src(:)>cat_stat_nanmean(src(src(:)>0))) ) , ...
                  abs(cat_stat_nanmean( src(src(:)<abs(cat_stat_nanmean(src(src(:)<0)))))) );
@@ -332,7 +332,9 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
       % the real noise filter
       if im==1, srco = src; end
       src = (src / th) * 100; 
+      src = (src - srcth(1)); % avoid negative values!
       cat_sanlm(src,3,1,job.rician);
+      src = src + srcth(1);  % reset negative values 
       src = (src / 100) * th; 
       if job.verb>1 && (nargin>3 || NCstrr>0) && im<1+job.miter
         if job.verb>1 && (nargin>3 || NCstrr>0), cat_io_cprintf('g5',sprintf('  %5.0fs\n',etime(clock,stime))); end

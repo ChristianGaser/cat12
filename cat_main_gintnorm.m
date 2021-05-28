@@ -557,8 +557,8 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
       if extopts.ignoreErrors > 2
         cat_io_addwarning([mfilename ':runGeneral'], ...
           'IgnoreErrors: Run generalized function.',3,[1 0]);
-      else
-        if exist('BGth','var') && exist('T3th3','var')
+      elseif isfield(extopts,'inv_weighting') && extopts.inv_weighting==0 % if not already active
+        if exist('BGth','var') && exist('T3th3','var') 
           cat_io_addwarning([mfilename ':InverseContrast'],...
             sprintf(['No T1 contrast detected. Run generalized function. \\\\n' ...
                '  (BG=%0.2f, CSF=%0.2f, GM=%0.2f, WM=%0.2f)'],BGth,T3th3(1:3)),1,[1 0]);
@@ -697,16 +697,47 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
       if ~exist('T3th3','var') || any(isnan(T3th3))
         T3th3 = [clsintv(3) clsintv(1) clsintv(2)];
       end
-     
+      
       % T3th, T3thx - keep it simple and avoid inversion
       if isfield(res,'ppe') && isfield(res.ppe,'affreg') && isfield(res.ppe.affreg,'highBG') && res.ppe.affreg.highBG
         BGth = round( clsint(6) / max([clsintv(3) clsintv(1) clsintv(2)]) * 6 ) / 2;
       else
-        BGth = 0.05; 
+        BGth = 0.1; 
       end
-      if ~exist('T3th','var') || ~exist('T3thx','var') || any(isnan(T3th3))
-        T3th  = [min(Ysrc(:)) sort( [ clsint(6) clsintv(3) clsintv(1) clsintv(2) clsint(5) ] ) max(Ysrc(:)) ];
-        T3thx = [0,sort([BGth,1,2,3]),3.5,4];        
+%% ##################
+%  RD20200428:
+%  Peak estimation needs further improvement (for the PD/T2 processing)
+%  Noisy data and PVE lead no biased WM and CSF peaks that are to close to 
+%  the GM values and cause GM volume/thickness underestimation.
+%  ##################
+      minYsrc = min(Ysrc(:)); 
+      if 1%~exist('T3th','var') || ~exist('T3thx','var') || any(isnan(T3th3))
+        if 0
+          T3th  = [min(Ysrc(:)) sort( [ clsint(6) clsintv(3) clsintv(1) clsintv(2) clsint(5) ] ) max(Ysrc(:)) ];
+        else
+          order = [1 2 3 4 6];
+          clsn  = [5 2 5 1 1];
+          T3th4 = zeros(1,5);
+          for i = 1:5
+            % try to use lower resolution to reduce noise
+            Yclsr = Ycls{ order(i) }>255 | cat_vol_morph( Ycls{ order(i) }>128 , 'e' ); 
+            [Ysrcr,Yclsr] = cat_vol_resize({(Ysrc .* Yclsr) - minYsrc,single(Yclsr)},'reduceV',vx_vol,2.1,16,'meanm'); 
+            try
+              [Tmn,Tsd,Tn] = cat_stat_kmeans( Ysrcr(Yclsr(:)>0.9)  + minYsrc , clsn( i ) );
+              T3th4(i) = Tmn(Tn==max(Tn));
+            catch
+              try
+                [Tmn,Tsd,Tn] = cat_stat_kmeans( Ysrc(Ycls{order(i)}(:)>128) , clsn( i ) );
+                T3th4(i) = Tmn(Tn==max(Tn));
+              catch
+                T3th4(i) = clsintv(order(i)); 
+              end
+            end
+          end
+          T3th4(4) = min(T3th4(4:5)); T3th4(5) = []; 
+          T3th  = [min(Ysrc(:)) sort( T3th4 ) max(Ysrc(:)) ];
+        end
+        T3thx = [0,sort([BGth,1,2,3]),4];        
       end
       
       % noise
@@ -728,7 +759,8 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
   
       
       % Ym 
-      Ym = Ysrc + 0; 
+      Ym = Ysrc - minYsrc;
+      Tth.T3th = Tth.T3th - minYsrc; 
       for i=2:numel(T3th)
         M = Ysrc>T3th(i-1) & Ysrc<=T3th(i);
         Ym(M(:)) = T3thx(i-1) + (Ysrc(M(:)) - T3th(i-1))/diff(T3th(i-1:i))*diff(T3thx(i-1:i));
@@ -737,6 +769,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
       Ym(M(:)) = numel(T3th)/6 + (Ysrc(M(:)) - T3th(i))/diff(T3th(end-1:end))*diff(T3thx(i-1:i));    
       Ym = Ym / 3; 
       clear M
+      Tth.T3th = Tth.T3th + minYsrc; 
       
       inv_weighting = ~(T3th3(1)<T3th3(2) && T3th3(2)<T3th3(3)); % ~T1 
       
