@@ -383,6 +383,15 @@ EXAMPLES
    Apply de-facing to sTRIO*.nii and save the files prefixed by "anon_".
 
    -----------------------------------------------------------------------------------------------
+   Estimate and Save Quality Measures
+     -a1 csv output filename
+     -a2 enable global scaling with TIV (only for volumes meaningful)
+   -----------------------------------------------------------------------------------------------
+   cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b ${cwd}/cat_standalone_get_quality.txt -a1 "'Quality_mesures.csv'" -a2 "1" mwp1sTRIO*nii
+   Estimate mean z-scores using global scaling with TIV for the files mwp1sTRIO*nii and save quality measures
+   in Quality_mesures.csv for external analysis.
+   
+   -----------------------------------------------------------------------------------------------
    TFCE Statistical Estimation
      -a1 contrast number
      -a2 number of permutations

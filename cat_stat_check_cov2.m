@@ -151,7 +151,7 @@ function varargout = cat_stat_check_cov2(job)
 %    .H               .. object/button/image/axis handles
 %      .mesh_detected .. volume vs. surface mode (=1)
 %      .isscatter     .. Covariance matrix vs. Mahanalobis plot (=1)
-%      .isxml         .. CAT XML are availabl
+%      .isxml         .. CAT XML are available
 %      .sorted        .. sorted Covariance matrix?
 %      .show_name     .. show names in boxplot
 %      .inorm         .. normalize image intensity (for display) ???
