@@ -347,7 +347,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                 if isempty(caterrcode)
                   switch char(catfct{ei-2}{3})
                     % most relevant functions to identify the error 
-                    case {'cat_surf_createCS2','cat_surf_createCS','cat_main','cat_run'}
+                    case {'cat_surf_createCS','cat_surf_createCS2','cat_main','cat_run'}
                       caterrcode = sprintf('%s:%d',char(catfct{ei-2}{3}),double(catfct{ei-2}{1}));
                   end
                 end
@@ -757,6 +757,14 @@ function job = update_job(job)
     elseif isfield(job.extopts.regmethod,'shooting')
       job.extopts.shootingtpm = job.extopts.regmethod.shooting.shootingtpm;
       job.extopts.regstr      = job.extopts.regmethod.shooting.regstr; 
+    end
+  else
+    if isfield(job.extopts,'dartel')
+      job.extopts.darteltpm   = job.extopts.dartel.darteltpm;
+      job.extopts.regstr      = 0; 
+    elseif isfield(job.extopts,'shooting')
+      job.extopts.shootingtpm = job.extopts.shooting.shootingtpm;
+      job.extopts.regstr      = job.extopts.shooting.regstr; 
     end
   end
   
