@@ -1,5 +1,5 @@
 % Computational Anatomy Toolbox
-% Version 1827 (CAT12.8-Beta) 2021-05-19
+% Version 1832 (CAT12.8-Beta) 2021-05-28
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -163,13 +163,13 @@
 %   ibsr.*                           - IBSR atlas
 %   julichbrain.*                    _ JulichBrain atlas
 %   mori.*                           - Mori atlas
+%   thalamus.*                       - Thalamic Nuclei atlas
 %   neuromorphometrics.*             - Neuromorphometrics atlas
 %   lpba40.nii                       - LPBA40 atlas
 %   brainmask.nii                    - brainmask
 %   cat12.nii                        - partitions for hemispheres, subcortical structures and vessels
 %
 % Templates/Atlases surfaces
-%   fsavg.index2D_256x128.txt        - index file for transformation from surface to 2d image
 %   ?h.central.Template_T1.gii
 %                                    - central surface of Dartel average brain for result mapping
 %   ?h.central.freesurfer.gii        - central surface of freesurfer fsaverage

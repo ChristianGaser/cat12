@@ -1,7 +1,7 @@
 % batch file of importing DICOM data for SPM12 standalone installation
 %
 %_______________________________________________________________________
-% $Id: cat_standalone_dicom2nii.txt 1522 2019-11-21 21:04:20Z gaser $
+% $Id$
 
 % data field, that will be dynamically replaced by cat_standalone.sh
 matlabbatch{1}.spm.util.import.dicom.data = '<UNDEFINED>';
