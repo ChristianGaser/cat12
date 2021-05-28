@@ -24,7 +24,7 @@ function varargout = cat_stat_check_cov(job)
 %  .threshold_cov    .. lower threshold for covariance (mean - 4*std)
 %
 % Example: 
-%   struct('data_vol',{{ files }} ,'gap',3,'c',[],'data_xml',{{}});
+%   cat_stat_check_cov(struct('data_vol',{{ files }} ,'gap',3,'c',[],'data_xml',{{}}));
 %
 % See also cat_stat_check_cov2
 % ______________________________________________________________________
@@ -133,11 +133,54 @@ if isempty(char(job.data_xml))
   xml_files = [];
 else
   xml_files = char(job.data_xml);
+  H.isxml = 1;
 end
 
-if ~isempty(xml_files)
+pth = spm_fileparts(H.V(1).fname);
+report_folder = fullfile(spm_fileparts(pth),'report');
+subfolder = 1;
+% check whether report subfolder exists
+if ~exist(report_folder,'dir')
+  report_folder = pth;
+  subfolder = 0;
+end
 
-  H.isxml = 1;
+% search xml report files if not defined
+H.found_xml = 0;
+if ~H.isxml
+  xml_files = spm_select('List',report_folder,'^cat_.*\.xml$');
+  if ~isempty(xml_files)
+
+    % find part of xml-filename in data files to get the prepending string
+    % (e.g. mwp1)
+    i = 1; j = 1;
+    while i <= n_subjects
+      while j <= size(xml_files,1)
+        % remove "cat_" and ".xml" from name
+        fname = deblank(xml_files(j,:));
+        fname = fname(5:end-4);
+
+        % and find that string in data filename
+        ind = strfind(H.V(i).fname,fname);
+        if ~isempty(ind)
+          [pth, prep_str] = spm_fileparts(H.V(1).fname(1:ind-1));
+          H.isxml = 1;
+          H.found_xml = 1;
+          fprintf('Corresponding xml-files were found.\n')
+          i = n_subjects;
+          j = size(xml_files,1);
+          break
+        else
+          j = j + 1;
+        end
+      end
+      i = i + 1;
+    end
+  end  
+end
+
+if H.isxml
+
   if size(xml_files,1) ~= n_subjects
     error('XML-files must have the same number as sample size');
   end
@@ -152,19 +195,40 @@ if ~isempty(xml_files)
   
   spm_progress_bar('Init',n_subjects,'Load xml-files','subjects completed')
   for i=1:n_subjects
-    % get basename for xml- and data files
-    [pth, xml_name] = fileparts(deblank(xml_files(i,:)));
+    % get basename for data files
     [pth, data_name] = fileparts(H.V(i).fname);
     
-    % remove leading 'cat_'
-    xml_name = xml_name(5:end);
+    % use xml-file if found by name
+    if H.found_xml
+      % get report folder
+      if subfolder
+        report_folder = fullfile(spm_fileparts(pth),'report');
+      else
+        report_folder = pth;
+      end
+
+      % remove prep_str from name and use report folder and xml extension
+      if H.mesh_detected
+        % for meshes we aso have to remove the additional "." from name
+        tmp_str = strrep(data_name,prep_str,'');
+        xml_file = fullfile(report_folder,['cat_' tmp_str(2:end) '.xml']);
+      else
+        xml_file = fullfile(report_folder,['cat_' strrep(data_name,prep_str,'') '.xml']);
+      end
+    else
     
-    % check for filenames
-    if isempty(strfind(data_name,xml_name))
-      fprintf('Please check file names because of deviating subject names:\n%s vs. %s\n',H.V(i).fname,xml_files(i,:));
+      [pth, xml_name] = fileparts(deblank(xml_files(i,:)));
+      % remove leading 'cat_'
+      xml_name = xml_name(5:end);
+
+      % check for filenames
+      if isempty(strfind(data_name,xml_name))
+        fprintf('Please check file names because of deviating subject names:\n%s vs. %s\n',H.V(i).fname,xml_files(i,:));
+      end
+      xml_file = deblank(xml_files(i,:));
     end
     
-    xml = cat_io_xml(deblank(xml_files(i,:)));
+    xml = cat_io_xml(xml_file);
     if ~isfield(xml,'qualityratings') && ~isfield(xml,'QAM')
       fprintf('Quality rating is not saved for %s. Report file %s is incomplete.\nPlease repeat preprocessing amd check for potential errors in the ''err'' folder.\n',H.V(i).fname,xml_files(i,:));    
       return

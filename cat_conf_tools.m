@@ -137,6 +137,7 @@ function tools = cat_conf_tools(expert)
 % -------------------------------------------------------------------------
   [T2x,T2x_surf,F2x,F2x_surf] = conf_T2x;
   [check_cov, check_cov2]     = conf_check_cov(data_xml,outdir,fname,save,expert);
+  quality_measures            = conf_quality_measures;
   [defs,defs2]                = conf_vol_defs;
   nonlin_coreg                = cat_conf_nonlin_coreg;
   createTPM                   = conf_createTPM(data_vol,expert,suffix,outdir); 
@@ -173,6 +174,7 @@ function tools = cat_conf_tools(expert)
     ... qa, ...                           cat.stat.pre
     check_cov, ...                        cat.stat.pre
     check_cov2, ...                       cat.stat.pre
+    quality_measures, ...                     cat.stat.pre
     check_SPM, ...                        cat.stat.pre
     ...
     calcvol, ...                          cat.stat.pre
@@ -2142,11 +2144,68 @@ function showslice = conf_stat_showslice_all(data_vol)
   showslice.help  = {'This function displays a selected slice for all images and indicates the respective filenames which is useful to check image quality for a large number of files in a circumscribed region (slice).'};
 
 %_______________________________________________________________________
+function quality_measures = conf_quality_measures
+  
+  data          = cfg_files;
+  data.name     = 'Sample data';
+  data.tag      = 'data';
+  data.filter   = {'image','mesh'};
+  data.num      = [1 Inf];
+  data.help     = {'These are the (spatially registered or resampled) data. They must all have the same data dimension, orientation, voxel or mesh size etc. Furthermore, it is recommended to use unsmoothed files.'};
+
+  globals        = cfg_menu;
+  globals.tag    = 'globals';
+  globals.name   = 'Global scaling with TIV';
+  globals.labels = {'Yes', 'No'};
+  globals.values = {1 0};
+  globals.val    = {0};
+  globals.help    = {
+    'This option is to correct mean z-scores for TIV by global scaling. It is only meaningful for VBM data.'
+    ''
+  };
+
+  csv_name         = cfg_entry;
+  csv_name.tag     = 'csv_name';
+  csv_name.name    = 'Output csv file';
+  csv_name.strtype = 's';
+  csv_name.num     = [1 Inf];
+  csv_name.val     = {'Quality_measures.csv'};
+  csv_name.help    = {
+    'The output file is written to current working directory unless a valid full pathname is given. The following parameters are saved:'
+    '  Mean z-score - low values indicate more similarity/homogeneity to sample'
+    '  Weighted overall image quality (IQR) - low values mean better image quality before preprocessing'
+    '  Normalized product of IQR and Mean z-score - low values point to good image quality before preprocessing and large homogeneity to sample after preprocessing'
+    '  Euler Number (for surfaces only) - lower numbers point to better quality of surface extraction'
+    '  Size of topology defects (for surfaces only) - smaller size points to better quality of surface extraction'
+    ''
+    };
+
+  quality_measures         = cfg_exbranch;
+  quality_measures.tag     = 'quality_measures';
+  quality_measures.name    = 'Save quality parameters of large samples for external analysis';
+  quality_measures.val     = {data,globals,csv_name};
+  quality_measures.prog    = @cat_stat_quality_measures;
+  quality_measures.help    = {
+    'In order to identify data with poor image quality or even artefacts you can use this function. In contrast to the Check Homogeneity tool this function can be also applied to very large samples, but provides no graphical output.'
+    'The saved quality parameters in the csv-file can be then used with external analysis tools. The following parameters are saved:'
+    '  Mean z-score - low values indicate more similarity/homogeneity to sample'
+    '  Weighted overall image quality (IQR) - low values mean better image quality before preprocessing'
+    '  Normalized product of IQR and Mean z-score - low values point to good image quality before preprocessing and large homogeneity to sample after preprocessing'
+    '  Euler Number (for surfaces only) - lower numbers point to better quality of surface extraction'
+    '  Size of topology defects (for surfaces only) - smaller size points to better quality of surface extraction'
+    ''
+  };
+
+%_______________________________________________________________________
 function [check_cov, check_cov2] = conf_check_cov(data_xml,outdir,fname,save,expert) 
  
   % --- update input data ---
-  data_xml.name     = 'Quality measures (optional)';
-  data_xml.help     = {'Select optional the quality measures that are saved during segmentation as xml-files in the report folder. This additionally allows to analyze image quality parameters such as noise, bias, and weighted overall image quality. Please note, that the order of the xml-files should be the same as the other data files.'};
+  data_xml.name     = 'Quality measures (leave emtpy for autom. search)';
+  data_xml.help     = {
+    'Select optional the quality measures that are saved during segmentation as xml-files in the report folder. This additionally allows to analyze image quality parameters such as noise, bias, and weighted overall image quality.'
+    'Please note, that the order of the xml-files should be the same as the other data files.'
+    'Leave empty for automatically search for these xml-files.'
+    };
   
   % --- further data ---
   c                 = cfg_entry;
