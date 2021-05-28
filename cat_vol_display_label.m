@@ -130,7 +130,7 @@ function cat_vol_display_label(job)
   % only one label for all maps :/
   if size(job.data,1)<=2
     [pp,dsp] = fileparts(V(i).fname);
-    dsp = spm_atlas('Load',['dartel_' dsp]);
+    dsp = spm_atlas('Load',['cat12_' dsp]);
     for ii=1:numel(st.vols)
       if ~isempty(st.vols{ii})
         st.vols{ii}.display = dsp;
