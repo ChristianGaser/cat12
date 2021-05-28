@@ -40,9 +40,18 @@ stime  = cat_io_cmd('SPM preprocessing 2 (write)'); if job.extopts.verb>1, fprin
 stime2 = cat_io_cmd('  Write Segmentation','g5','',job.extopts.verb-1);
 [Ysrc,Ycls,Yy] = cat_spm_preproc_write8(res,zeros(max(res.lkp),4),zeros(1,2),[0 0],0,0);
 
-
 %% CAT vs. SPMpp Pipeline
 if ~isfield(res,'spmpp')
+  %%
+  if isfield(res,'isiscaled') && res.isiscaled
+    % reset data
+    Ysrc          = Ysrc          * diff(res.intths) + res.intths(1); 
+    res.image.dat = res.image.dat * diff(res.intths) + res.intths(1); 
+    res.mn        = res.mn        * diff(res.intths) + res.intths(1); 
+    res.Tth       = res.Tth       * diff(res.intths) + res.intths(1); 
+  end
+
+  
   %% Update SPM results in case of reduced SPM preprocessing resolution 
   %  -------------------------------------------------------------------
   if isfield(res,'redspmres')
@@ -75,7 +84,6 @@ if ~isfield(res,'spmpp')
   %  starting point of the refined CAT preprocessing.
   %  -------------------------------------------------------------------
   [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,Yy,tpm,job,res,stime,stime2);
-  Yp0spm = (single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255);
   
   
   %% Check the previous preprocessing in debug mode ###
@@ -88,7 +96,7 @@ if ~isfield(res,'spmpp')
   %  allows up to 20 colors
   %  -------------------------------------------------------------------
   if debug;;
-    Ym   = Ysrc / T3th(3); %#ok<NASGU> % only WM scaling
+    Ym   = (Ysrc - T3th(1)) / abs( diff(T3th(1:2:3)))*2/3 + 1/3; %#ok<NASGU> % only WM scaling
     Yp0  = (single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255)/3; % label map
   end
   
@@ -108,8 +116,17 @@ if ~isfield(res,'spmpp')
   %  peaks of WM (maximum-based), GM, and CSF. 
   %  ---------------------------------------------------------------------
   stime = cat_io_cmd('Global intensity correction');
-  if any( min(vx_vol*2,1.4)./vx_vol >= 2 )
+  if 0 %any( min(vx_vol*2,1.4)./vx_vol >= 2 )
     % guaranty average (lower) resolution with >0.7 mm
+    % RD202006: This solution is not working when cat_main_gintnorm
+    %           optimize the image (e.g. bias correction). Just calling
+    %               Ym  = cat_main_gintnorm(Ysrc,Tth);  
+    %           would not include the bias correction but also may use 
+    %           inacurate peaks that were estimated on slighly different 
+    %           image. So it is more save to turn it off because running 
+    %           the default case also in highres data only increase time
+    %           and memory demands. 
+    %           Possible test subject: ADHD200/ADHD200_HC_BEJ_1050345_T1_SD000000-RS00.nii    
     [Ysrcr,resGI] = cat_vol_resize(Ysrc       ,'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm');
     Ybr   = cat_vol_resize(single(Yb) ,'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm')>0.5;
     Yclsr = cell(size(Ycls)); for i=1:6, Yclsr{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,min(vx_vol*2,1.4),32); end
@@ -119,7 +136,9 @@ if ~isfield(res,'spmpp')
   else
     [Ym,Yb,T3th,Tth,job.inv_weighting,noise] = cat_main_gintnorm1639(Ysrc,Ycls,Yb,vx_vol,res,Yy,job.extopts);
   end
-  job.extopts.inv_weighting = job.inv_weighting;
+  job.extopts.inv_weighting  = job.inv_weighting;
+  res.ppe.tths.gintnorm.T3th = T3th; 
+  res.ppe.tths.gintnorm.Tth  = Tth; 
   
   % RD202101: additional intensity correction 
   if 0 && update_intnorm 
@@ -712,7 +731,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
   
   % prepare some parameter
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*5/255; 
-  [Ymix,job,surf,WMT] = cat_main_surf_preppara(Ymi,Yp0,Yp0spm,job,vx_vol);
+  [Ymix,job,surf,WMT] = cat_main_surf_preppara(Ymi,Yp0,job,vx_vol);
   
   if job.extopts.pbtres==99 
   % development block with manual settings
@@ -1168,7 +1187,7 @@ function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,inv_weighting] = cat_main_SPM
   YMF = NS(Yl1,job.extopts.LAB.VT) | NS(Yl1,job.extopts.LAB.BG) | NS(Yl1,job.extopts.LAB.BG);  
 return
 
-function [Ymix,job,surf,WMT,stime] = cat_main_surf_preppara(Ymi,Yp0,Yp0spm,job,vx_vol)
+function [Ymix,job,surf,WMT,stime] = cat_main_surf_preppara(Ymi,Yp0,job,vx_vol)
 %  ------------------------------------------------------------------------
 %  Prepare some variables for the surface processing.
 %  ------------------------------------------------------------------------

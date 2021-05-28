@@ -366,7 +366,7 @@ function cat_run_job(job,tpm,subj)
         % prepare header of resampled volume
         Vi        = spm_vol(job.channel(n).vols{subj}); 
         vx_vol    = sqrt(sum(Vi.mat(1:3,1:3).^2));
-        vx_vol    = round(vx_vol*10^2)/10^2; % avoid small differences 
+        %vx_vol    = round(vx_vol*10^2)/10^2; % avoid small differences 
 
         % we have to look for the name of the field due to the GUI job struct generation! 
         restype   = char(fieldnames(job.extopts.restypes));

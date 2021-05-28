@@ -1,4 +1,5 @@
 function clim = cat_vol_iscaling(cdata,plim)
+% clim = cat_vol_iscaling(cdata,plim). Intensity scaling. 
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke

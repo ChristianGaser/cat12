@@ -1,4 +1,4 @@
-function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Ycls,job,res)
+function [prob,indx,indy,indz,th,Yrep] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
 % ______________________________________________________________________
 %
 % AMAP segmentation:
@@ -50,6 +50,9 @@ function [prob,indx,indy,indz,th] = cat_main_amap(Ymi,Yb,Ycls,job,res)
     d      = size(Ymi); 
     vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
 
+    framing.tissue = 4; 
+    framing.pve    = 1; 
+  
     %  prepare data for segmentation
     if 1 
       %% classic approach, consider the WMH!
@@ -104,6 +107,10 @@ end
     % use index to speed up and save memory
     sz = size(Yb);
     [indx, indy, indz] = ind2sub(sz,find(Yb>0));
+    if job.extopts.AMAPframing
+      bx   = (framing.tissue + framing.pve) * 3 * job.extopts.AMAPframing + 2;
+      indx = [min(indx) max(indx)] + [-bx bx]; indy = [min(indy) max(indy)] + [-bx bx]; indz = [min(indz) max(indz)] + [-bx bx];
+    end
     indx = max((min(indx) - 1),1):min((max(indx) + 1),sz(1));
     indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
     indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
@@ -143,16 +150,81 @@ end
     % display something
     stime = cat_io_cmd(sprintf('Amap using initial SPM12 segmentations (MRF filter strength %0.2f)',job.extopts.mrf));       
 
+    %% intensity values
+    Ymib = abs(double(Ymib)); 
+  
+    if job.extopts.AMAPframing
+      Ymib = double(Ymi(indx,indy,indz)) .* double(Yb(indx,indy,indz));  
+      Yp0b = uint8(Yp0(indx,indy,indz)) .* uint8(Yb(indx,indy,indz));
+      %%
+      if ~job.extopts.inv_weighting
+        tvals = [0 1 2 3];
+      else 
+       % [x,xy] = max( res.mg(:) .* (res.lkp(:) == 3) ); 
+       % [x,xi] = sort([ mean(res.mn(res.lkp(:) == 1)) mean(res.mn(res.lkp(:) == 2)) mean(res.mn( xy )) ]);
+        tvals = [0 cat_stat_kmeans(Ymib(Yp0b==1)) cat_stat_kmeans(Ymib(Yp0b==2)) cat_stat_kmeans(Ymib(Yp0b==3)) ];
+      end
+     %% 
+      Ybb  = Yb0(indx,indy,indz)>0; 
+      Ybb  = cat_vol_morph(Ybb,'d',3); 
+      pn   = max(double(Yp0b(:))) * 0.015; 
+      pnx  = max(double(Yp0b(:))) * 0.015; 
+      Yn   = randn(size(Yp0b)); 
+      ex   = framing.tissue; 
+      ep   = framing.pve; 
+      BBe  = ~Ybb; BBe (2      :end-1         , 2      :end-1         , 3      :end-2        ) = false; 
+      BBww = ~Ybb; BBww(ex*1   :end+1-ex*1    , ex*1   :end+1-ex*1    , ex*1   :end+1-ex*1   ) = false; 
+      BBgw = ~Ybb; BBgw(ex*1+0 :end+1-ex*1-0  , ex*1+ep:end+1-ex*1-ep , ex*1+ep:end+1-ex*1-ep) = false; BBgw(BBww) = false; 
+      BBgg = ~Ybb; BBgg(ex*2   :end+1-ex*2    , ex*2   :end+1-ex*2    , ex*2   :end+1-ex*2   ) = false; BBgg(BBww | BBgw) = false; 
+      BBgc = ~Ybb; BBgc(ex*2+0 :end+1-ex*2-0  , ex*2+ep:end+1-ex*2-ep , ex*2+ep:end+1-ex*2-ep) = false; BBgc(BBww | BBgw | BBgg) = false; 
+      BBcc = ~Ybb; BBcc(ex*3   :end+1-ex*3    , ex*3   :end+1-ex*3    , ex*3   :end+1-ex*3   ) = false; BBcc(BBww | BBgw | BBgg | BBgc) = false; 
+      BBcb = ~Ybb; BBcb(ex*3+0 :end+1-ex*3-0  , ex*3+ep:end+1-ex*3-ep , ex*3+ep:end+1-ex*3-ep) = false; BBcb(BBww | BBgw | BBgg | BBgc | BBcc) = false; 
+      % extra values + extra noise
+      % all peaks have an offset of 0.05 that produces better results
+      if ~job.extopts.inv_weighting
+        Ymib(BBcb) = 0.55/3 + pnx * Yn(BBcb); Yp0b(BBcb) = 0;  
+        Ymib(BBcc) = 1.05/3 + pnx * Yn(BBcc); Yp0b(BBcc) = 1; 
+        Ymib(BBgc) = 1.55/3 + pnx * Yn(BBgc); Yp0b(BBgc) = 2; 
+        Ymib(BBgg) = 2.05/3 + pnx * Yn(BBgg); Yp0b(BBgg) = 2;
+        Ymib(BBgw) = 2.75/3 + pnx * Yn(BBgw); Yp0b(BBgw) = 3;
+        Ymib(BBww) = 3.05/3 + pnx * Yn(BBww); Yp0b(BBww) = 3;
+        Ymib(BBe ) = 3.55/3 + pnx * Yn(BBe ); Yp0b(BBe ) = 0;
+      else
+        Ymib(BBcb) = tvals(1)/2        + pnx * Yn(BBcb); Yp0b(BBcb) = 0;  
+        Ymib(BBcc) = tvals(2) + 0.05/3 + pnx * Yn(BBcc); Yp0b(BBcc) = 1; 
+        Ymib(BBgc) = mean(tvals(2:3))  + pnx * Yn(BBgc); Yp0b(BBgc) = 2; 
+        Ymib(BBgg) = tvals(3) + 0.05/3 + pnx * Yn(BBgg); Yp0b(BBgg) = 2;
+        Ymib(BBgw) = mean(tvals(3:4))  + pnx * Yn(BBgw); Yp0b(BBgw) = 3;
+        Ymib(BBww) = tvals(4) + 0.05/3 + pnx * Yn(BBww); Yp0b(BBww) = 3;
+        %Ymib(BBe ) = tvals(1) + 0.55/3 + pnx * Yn(BBe ); Yp0b(BBe ) = 0;
+      end
+      clear BBww BBgw BBgg BBgc BBcc BBcb BBe; 
+
+      %% add noise 
+      addnoise = 0; 
+      if addnoise == 2
+        % we add noise only in save regions
+        WMe = cat_vol_morph( Yp0b==3 , 'e' , 1 )>0; 
+        CMe = cat_vol_morph( Yp0b==1 , 'e' , 1 )>0; 
+        Ymib( WMe ) = Ymib( WMe ) + pn * Yn( WMe ); 
+        Ymib( CMe ) = Ymib( CMe ) + pn * Yn( CMe ); 
+      elseif addnoise == 1
+        % add noise
+        Ymib = Ymib + pn * Yn;
+      end
+      Ymib = abs(Ymib); 
+    end
+    
     % Amap parameters  - default sub=16 caused errors with highres data!
     % don't use bias_fwhm, because the Amap bias correction is not that efficient and also changes
     % intensity values 
     % RD202006 the bias_fwhm paraemter (and/or other) cause also MATLAB crashes in the ignoreError pipeline 
     % RD202104 sub has to be large because the AMAP bias corrections seams to be in-optimal and caused bad threshold 
     % RD202104 Ymib should only include positive values
-    Ymib = abs(double(Ymib)); n_iters = 10; sub = round(64/mean(vx_vol));   %#ok<NASGU>
-    n_classes = 3; pve = 5; bias_fwhm = 0; init_kmeans = 0;           %#ok<NASGU>
-    if job.extopts.mrf~=0, iters_icm = 50; else, iters_icm = 0; end   %#ok<NASGU>
-    if job.extopts.ignoreErrors > 2
+    n_iters = 10; sub = round(64/mean(vx_vol));   %#ok<NASGU>
+    n_classes = 3;  pve = 5; bias_fwhm = 0; init_kmeans = 0;           %#ok<NASGU>
+    if job.extopts.mrf~=0, iters_icm = 50; else iters_icm = 0; end    %#ok<NASGU>
+    if 0 %job.extopts.ignoreErrors > 2 || job.extopts.inv_weighting
       % init_kmeans = 0; % k-means was not stable working (e.g. HR075T2) 
       %                  % and it is better to use also here the previous intensity scaling  
       %
@@ -165,21 +237,25 @@ end
       % bias_fwhm = 60; % using bias_fwhm=60 caused MATLAB errors so we only use more iterations 
     end
 
+
     % remove noisy background for kmeans
     if init_kmeans && job.extopts.ignoreErrors < 3, Ymib(Ymib<0.1) = 0; end %#ok<NASGU>
 
-    % do segmentation  
+    %% do segmentation  
     amapres = evalc(['prob = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
       'job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);']);
     fprintf('%5.0fs\n',etime(clock,stime));
 
-    % analyse segmentation ... the input Ym is normalized an the tissue peaks should be around [1/3 2/3 3/3]
+    %% analyse segmentation ... the input Ym is normalized an the tissue peaks should be around [1/3 2/3 3/3]
     amapres = textscan(amapres,'%s'); amapres = amapres{1}; 
     th{1}   = cell2mat(textscan(amapres{11},'%f*%f')); 
     th{2}   = cell2mat(textscan(amapres{12},'%f*%f')); 
     th{3}   = cell2mat(textscan(amapres{13},'%f*%f')); 
 
-   
+    if job.extopts.AMAPframing
+      for i=1:3, prob(:,:,:,i) = prob(:,:,:,i) .* uint8(Ybb); end
+    end
+    clear Ybb;
     
 
     if job.extopts.verb>1 
@@ -208,13 +284,15 @@ end
       % because the intensity normalization unsed before was probably incorrect 
       con = [ abs(diff([th{1}(1) th{2}(1)])) , abs(diff([th{1}(1) th{3}(1)])) , abs(diff([th{2}(1) th{3}(1)]))];
       if any( con < 0.15 )
-        error('cat_main_amap:lowCon',sprintf(['AMAP estimated quite low tissue contrast that point to problems \\\\\\\\n' ...
-                                      'in the preprocessing before the AMAP segmentation or inadequate input. \\\\\\\\n' ...
-                                      '  [con(c1,c2),con(c1,c3),con(c2,c3)] = [%0.2f,%0.2f,%0.2f] '],con)); % need sprintf!
+        %% We only create an servere warning here but go one with processing 
+        cat_io_addwarning([mfilename ':lowTissueContrast'],sprintf( ...
+          ['AMAP estimated quite low tissue contrast that point to problems \\\\n' ...
+           'in the preprocessing before the AMAP segmentation or inadequate input \\\\n' ...
+           '  [con(c1,c2),con(c1,c3),con(c2,c3)] = [%0.2f,%0.2f,%0.2f] '],con),1 + (min(con) < 0.1),[0 1]);
       end
     end
     
-    if job.extopts.ignoreErrors > 1 && isfield(job.extopts,'inv_weighting') && job.extopts.inv_weighting
+    if isfield(job.extopts,'inv_weighting') && job.extopts.inv_weighting % job.extopts.ignoreErrors > 1 &&
       cat_io_addwarning('cat_main_amap:mixSPMAMAP','Mix SPM and AMAP segmentation. Use SPM in case of strong differences.',1,[0 1]) 
       
       % RD202006: catching of problems in low quality data - in development 
@@ -227,16 +305,20 @@ end
       Yp0s = (single(probs(:,:,:,1)) + single(probs(:,:,:,2))*2 + single( probs(:,:,:,3))*3)/255/3;
       Yp0  = (single(prob(:,:,:,1)) + single(prob(:,:,:,2))*2 + single(prob(:,:,:,3))*3)/255/3;
       if ( sum(abs(Yp0s(:) - Yp0(:))>0.4) / sum(Yp0(:)>0.5) ) > 0.02
-        Yrep = min(1, abs(Yp0s - Yp0) * 3); %uint8( abs(Yp0s - Yp0) > 0.3  &  Yp0s>0.1); 
+        Yrep = min(1, abs(Yp0s - Yp0) * 3); % * 1 = low correction (less SPM) uint8( abs(Yp0s - Yp0) > 0.3  &  Yp0s>0.1); 
         prob2 = prob; 
         for i=1:3, prob2(:,:,:,i) = cat_vol_ctype( single(prob(:,:,:,i)) .* (1-Yrep) + Yrep .* single(probs(:,:,:,i)) ); end
-        Yp0c = (single(prob2(:,:,:,1)) + single(prob2(:,:,:,2))*2 + single(prob2(:,:,:,3))*3)/255/3;
+        %Yp0c = (single(prob2(:,:,:,1)) + single(prob2(:,:,:,2))*2 + single(prob2(:,:,:,3))*3)/255/3;
+      else
+        Yrep = false(size(Ymib)); 
       end
       %% separation just for tests/debugging
       if ( sum(abs(Yp0s(:) - Yp0(:))>0.4) / sum(Yp0(:)>0.5) ) > 0.02
         prob = prob2; 
       end
       clear Yp0 Yp0s Yp0c probs prob2
+    else
+      Yrep = false(size(Ymib)); 
     end
 
     % reorder probability maps according to spm order
@@ -248,9 +330,9 @@ end
     % areas where GM from Amap > GM from SPM12. This will result in a brainmask where GM areas
     % hopefully are all included and not cut 
     if job.extopts.gcutstr>0 && ~isfield(job.extopts,'inv_weighting') && ~job.extopts.inv_weighting
-      %Yb0(indx,indy,indz) = Yb0(indx,indy,indz) | ((prob(:,:,:,1) > 0) & Yb(indx,indy,indz)); % & ~Ycls{1}(indx,indy,indz));
+      Yb0(indx,indy,indz) = Yb0(indx,indy,indz) | ((prob(:,:,:,1) > 0) & Yb(indx,indy,indz)); % & ~Ycls{1}(indx,indy,indz));
       for i=1:3
-        prob(:,:,:,i) = prob(:,:,:,i).*uint8(Yb(indx,indy,indz));
+        prob(:,:,:,i) = prob(:,:,:,i).*uint8(Yb0(indx,indy,indz));
       end
     end
 
@@ -283,5 +365,7 @@ end
     indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
     indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
     prob = prob(indx,indy,indz,:);
+    
+    Yrep = false(size(Ymib)); 
   end
 end

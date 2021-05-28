@@ -104,6 +104,8 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
   % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
 
+  
+  
   try 
     if job.extopts.ignoreErrors > 2 
       Yg      = cat_vol_grad(Ym,vx_vol) ./ max(eps,Ym);
@@ -171,31 +173,35 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
     else
       YslA = max(0,min(1,Yp0A-2)); 
     end
-    clear Yy;
+    % clear Yy; % is needed in the backup routine
 
 
     % use addition FLAIR images
-    if exist('job','var') && isfield(job,'data_wmh') && ~isempty(job.data_wmh) && numel(job.data_wmh)>=job.subj
-      %%
-      [pp,ff,ee] = spm_fileparts(job.data_wmh{job.subj}); 
-      Pflair = fullfile(pp,[ff ee]); 
-      if ~isempty(Pflair) && exist(Pflair,'file')
-        stime = cat_io_cmd('  FLAIR corregistration','g5','',verb,stime); dispc=dispc+1;
+    if exist('job','var') && isfield(job,'data_wmh') && ~isempty(job.data_wmh) &&  ~isempty(job.data_wmh{1}) 
+      if isfield(job,'subj') && numel(job.data_wmh)>=job.subj
+        %%
+        [pp,ff,ee] = spm_fileparts(job.data_wmh{job.subj}); 
+        Pflair = fullfile(pp,[ff ee]); 
+        if ~isempty(Pflair) && exist(Pflair,'file')
+          stime = cat_io_cmd('  FLAIR corregistration','g5','',verb,stime); dispc=dispc+1;
 
-        % coreg
-        Vflair = spm_vol(job.data_wmh{job.subj}); 
-        Vm     = spm_vol(job.data{job.subj}); 
-        evalc('R = spm_coreg(Vm,Vflair,struct(''graphics'',0));'); 
-        R      = spm_matrix(R);  %#ok<NODEF>
+          % coreg
+          Vflair = spm_vol(job.data_wmh{job.subj}); 
+          Vm     = spm_vol(job.data{job.subj}); 
+          evalc('R = spm_coreg(Vm,Vflair,struct(''graphics'',0));'); 
+          R      = spm_matrix(R);  %#ok<NODEF>
 
-        % load
-        Vflair.dat   = cat_vol_sanlm(struct('verb',0),Vflair,1,spm_read_vols(Vflair));
-        Vflair.pinfo = repmat([1;0],1,size(Vflair.dat,3));
-        Vflair.dt(1) = 16;
-        Yflair = zeros(Vm.dim,'single');
-        for i=1:Vm.dim(3)
-          Yflair(:,:,i) = single( spm_slice_vol(Vflair, R \ Vflair.mat \ Vm.mat  * spm_matrix([0 0 i]) ,Vm.dim(1:2),[1,NaN])); 
-        end    
+          % load
+          Vflair.dat   = cat_vol_sanlm(struct('verb',0),Vflair,1,spm_read_vols(Vflair));
+          Vflair.pinfo = repmat([1;0],1,size(Vflair.dat,3));
+          Vflair.dt(1) = 16;
+          Yflair = zeros(Vm.dim,'single');
+          for i=1:Vm.dim(3)
+            Yflair(:,:,i) = single( spm_slice_vol(Vflair, R \ Vflair.mat \ Vm.mat  * spm_matrix([0 0 i]) ,Vm.dim(1:2),[1,NaN])); 
+          end    
+        end
+      else
+        cat_io_cprintf('err','Miss job.subj field in cat_vol_partvol to process FLAIR data'); 
       end
     end
 
@@ -204,6 +210,9 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
     if ~debug; clear Yy; end
 
     Yp0  = (single(Ycls{1})*2/255 + single(Ycls{2})*3/255 + single(Ycls{3})/255) .* Yb; 
+    if isfield(job.extopts,'inv_weighting') && job.extopts.inv_weighting
+      Ym = Yp0/3;
+    end
 
     % work on average resolution
     Ym0 = Ym; 

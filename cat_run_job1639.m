@@ -28,8 +28,8 @@ function cat_run_job1639(job,tpm,subj)
 
 %#ok<*WNOFF,*WNON>
 
-  job.test_warnings = 0; % just for tests
-
+  job.test_warnings  = 0; % just for tests
+  job.extopts.histth = [0.96 0.9999]; % histogram thresholds
   % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
   
@@ -328,7 +328,7 @@ function cat_run_job1639(job,tpm,subj)
         % prepare header of resampled volume
         Vi        = spm_vol(job.channel(n).vols{subj}); 
         vx_vol    = sqrt(sum(Vi.mat(1:3,1:3).^2));
-        vx_vol    = round(vx_vol*10^2)/10^2; % avoid small differences 
+      %  vx_vol    = round(vx_vol*10^2)/10^2; % avoid small differences 
 
         % we have to look for the name of the field due to the GUI job struct generation! 
         restype   = char(fieldnames(job.extopts.restypes));
@@ -708,6 +708,18 @@ function cat_run_job1639(job,tpm,subj)
           % WM threshold
           Ysrc = single(obj.image.private.dat(:,:,:)); 
           Ysrc(isnan(Ysrc) | isinf(Ysrc)) = min(Ysrc(:));
+          
+intscale = 1;  % 0 - none, 1 - only if neg. values, 2 - allways         
+if ( intscale==1 && min(Ysrc(:))<0 ) || intscale == 2
+  if ppe.affreg.highBG  
+    job.extopts.histth(1) = 0.9999; 
+  end
+  [Ysrc,intths] = cat_stat_histth(Ysrc,job.extopts.histth);
+  Ysrc = (Ysrc - intths(1)) / diff(intths) ;
+  isiscaled = 1;
+else
+  isiscaled = 0; 
+end
 
           if job.extopts.APP==1070 || job.extopts.APP==1144 
             % APPinit is just a simple bias correction for affreg and should
@@ -740,6 +752,8 @@ function cat_run_job1639(job,tpm,subj)
             obj.msk       = spm_smoothto8bit(obj.msk,0.1); 
           end            
           clear Ysrc; 
+      else
+        intscale = 0; 
       end
 
       
@@ -931,6 +945,15 @@ function cat_run_job1639(job,tpm,subj)
         for sampi = 1:numel(samp)
           obj.samp = samp(sampi); 
           res = cat_spm_preproc8(obj);
+     
+          res.isiscaled = isiscaled; 
+          res.intths    = intths;
+if 0 %isiscaled
+  % reset data
+  res.image.dat = res.image.dat * diff(intths) + intths(1); 
+  res.mn        = res.mn        * diff(intths) + intths(1); 
+end
+
           if any(~isnan(res.ll))
             break
           else
@@ -961,14 +984,24 @@ function cat_run_job1639(job,tpm,subj)
         end
         
         suc = 0;
-        while obj.tol<1
-          obj.tol = obj.tol * 10;
+        % try higher accuracy
+        while obj.tol>10e-9 && suc == 0
+          obj.tol = obj.tol / 10;
           try
             res = cat_spm_preproc8(obj);
             suc = 1;
           end
         end
-        
+        if suc == 0  
+          % try lower accuracy
+          while obj.tol<1 && suc == 0
+            obj.tol = obj.tol * 10;
+            try
+              res = cat_spm_preproc8(obj);
+              suc = 1;
+            end
+          end
+        end
         if any( (vx_vol ~= vx_voli) ) || ~strcmp(job.extopts.species,'human')
           [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});
           delete(fullfile(pp,[ff,ee]));
@@ -1015,7 +1048,7 @@ function cat_run_job1639(job,tpm,subj)
       % inactive preprocessing of inverse images (PD/T2) ... just try
       if 0 % any(diff(Tth(1:3))<=0)
         error('cat_run_job:BadImageProperties', ...
-        ['CAT12 is designed to work only on highres T1 images. \n' ...
+        ['CAT12 was designed to work only on highres T1 images. \n' ...
          'T2/PD preprocessing can be forced on your own risk by setting \n' ...
          '''cat12.extopts.INV=1'' in the cat_default file. If this was a highres \n' ...
          'T1 image then the initial segmentation might be failed, probably \n' ...
@@ -1057,9 +1090,20 @@ function cat_run_job1639(job,tpm,subj)
   if exist('Ylesion','var'), res.Ylesion = Ylesion; else res.Ylesion = false(size(res.image.dim)); end; clear Ylesion;
   if exist('redspmres','var'); res.redspmres = redspmres; res.image1 = image1; end
   job.subj = subj; 
+  
   % call new pipeline in case of inverse images (PD/T2/FLAIR) 
-  if exist('Tth','var') && all( diff(Tth)>0 ) 
-    cat_main1639(res,obj.tpm,job);
+  if exist('Tth','var') && ( any(diff(Tth(1:3))<=0) || job.test_warnings )
+    % update SPM processing ?
+    % use stronger bias correction ?
+    
+    % warning/error because we use the new pipeline 
+    job.extopts.inv_weighting = 1; 
+    cat_io_addwarning([mfilename ':nonT1contrast'],sprintf( ...
+      ['A non-T1 contrast was detected and the NEW EXPERIMENTAL \\\\n' ...
+       'PIPELINE is used! If it is was a high-resolution T1 image, \\\\n' ...
+       'the initial segmentation might have failed, probably due \\\\n' ...
+       'to alignment problems (please check the image orientation).']),1,[0 1],Tth);
+    cat_main(res,obj.tpm,job);
   else
     cat_main1639(res,obj.tpm,job);
   end
