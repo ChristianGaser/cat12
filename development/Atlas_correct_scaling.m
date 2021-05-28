@@ -7,7 +7,7 @@ function Atlas_correct_scaling
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
-% $Id: Atlas_correct_scaling.m 1828 2021-05-20 20:53:18Z gaser $
+% $Id$
 
 csv_file = spm_select('FPList',cat_get_defaults('extopts.pth_templates'),'.csv');
 

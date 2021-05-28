@@ -300,9 +300,10 @@ if isdeployed, cat.extopts.expertgui = 1; end
 cat.extopts.atlas       = { ... 
   fullfile(cat.extopts.pth_templates,'neuromorphometrics.nii')  0  {'csf','gm','wm'}   1; ... % atlas based on 35 subjects
   fullfile(cat.extopts.pth_templates,'lpba40.nii')              0  {'gm','wm'}         0; ... % atlas based on 40 subjects
-  fullfile(cat.extopts.pth_templates,'cobra.nii')               0  {'gm','wm'}         1; ... % hippocampus-amygdala-cerebellum-subcort, 5 subjects, 0.6 mm voxel size 
+  fullfile(cat.extopts.pth_templates,'cobra.nii')               0  {'gm','wm'}         1; ... % hippocampus-amygdala-cerebellum-subcortex, 5 subjects, 0.6 mm voxel size 
   fullfile(cat.extopts.pth_templates,'hammers.nii')             0  {'csf','gm','wm'}   0; ... % atlas based on 30 subjects with 95 regions
-  fullfile(cat.extopts.pth_templates,'ibsr.nii')                1  {'csf','gm','wm'}   0; ... % less regions, 18 subjects, low-res T1 image quality
+  fullfile(cat.extopts.pth_templates,'thalamus.nii')            0  {'gm'}              0; ... % thalamic nuclei based on DTI from 70 subjects with 14 regions
+  fullfile(cat.extopts.pth_templates,'ibsr.nii')                0  {'csf','gm','wm'}   0; ... % less regions, 18 subjects, low-res T1 image quality
   fullfile(cat.extopts.pth_templates,'aal3.nii')                1  {'gm'}              0; ... % many regions, but only labeled on one subject 
   fullfile(cat.extopts.pth_templates,'mori.nii')                1  {'gm','wm'}         0; ... % only one subject, but with WM regions
   fullfile(cat.extopts.pth_templates,'anatomy3.nii')            1  {'gm','wm'}         0; ... % 93 regions, 10 subjects
