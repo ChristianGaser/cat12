@@ -16,6 +16,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
   res.AffineSPM = res.Affine;
   
   clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
+  clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
 
   [pth,nam] = spm_fileparts(res.image0(1).fname); %#ok<ASGLU> % original   
 
@@ -88,8 +89,39 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
       P(:,:,:,3) = P(:,:,:,3) + uint8( P5c ); 
       P(:,:,:,5) = P(:,:,:,5) - uint8( P5w + P5c );
       clear P5w P5c
+      
+      if isfield(job.extopts,'inv_weighting') && job.extopts.inv_weighting
+        % RD202105:  Cleanup for CSF artefacts between GM and WM (PD/T2 BWP data)
+        %            there should be no CSF noise close to the WM 
+        Ywd  = cat_vol_morph( P(:,:,:,2)>128 , 'd');
+        Ycc  = P(:,:,:,3)>0 & smooth3(single(P(:,:,:,3)/255) < 0.5) & Ywd; 
+        P(:,:,:,1) = P(:,:,:,1) + P(:,:,:,3) .* uint8( Ycc & abs(Ysrc-clsint(1))<=abs(Ysrc-clsint(2)) & ...
+          abs(Ysrc-clsint(1))<=abs(Ysrc-clsint(3)) & abs(Ysrc-clsint(2))<=abs(Ysrc-clsint(3)) ); 
+        P(:,:,:,2) = P(:,:,:,2) + P(:,:,:,3) .* uint8( Ycc & abs(Ysrc-clsint(1))> abs(Ysrc-clsint(2)) & ...
+          abs(Ysrc-clsint(1))<=abs(Ysrc-clsint(3)) & abs(Ysrc-clsint(2))<=abs(Ysrc-clsint(3)) );  
+        P(:,:,:,3) = P(:,:,:,3) - P(:,:,:,3) .* uint8( Ycc ); 
+        clear Ywd Ycc; 
+        % RD20215:  Cleanup for CSF artefacts between GM and WM (PD/T2 BWP data)
+        %           there should be no head tissue inside the brain that can be explained by brain values
+        tth = [clsint(1) clsint(2) clsint(3)]; 
+        Ycc = cat_vol_morph(YbA,'e',3) & sum( P(:,:,:,4:6) , 4 ) & ...
+          Ysrc>(min(tth) - mean( abs(diff(tth))) ) & Ysrc<(max(tth) + mean( abs(diff(tth)) ));
+        [Ytmp,Yct] = min( cat( 4 , abs(Ysrc - tth(1)) ,  abs(Ysrc - tth(2)) ,  abs(Ysrc - tth(3)) ) , [], 4); clear Ytmp
+        P(:,:,:,1) = P(:,:,:,1) + P(:,:,:,5) .* uint8( Ycc & Yct==1 );
+        P(:,:,:,2) = P(:,:,:,2) + P(:,:,:,5) .* uint8( Ycc & Yct==2 );  
+        P(:,:,:,3) = P(:,:,:,3) + P(:,:,:,5) .* uint8( Ycc & Yct==3 );  
+        P(:,:,:,5) = P(:,:,:,5) - P(:,:,:,5) .* uint8( Ycc ); 
+        clear Ycc tth Yct; 
+      end
     end
 
+    % clear WM segment
+    Ywm = P(:,:,:,2) > 128; 
+    Ybe = YbA & ~cat_vol_morph(YbA,'de',8/mean(vx_vol)); 
+    Ywm = cat_vol_morph(Ywm,'l',[100 0.1 ]);
+    P(:,:,:,5) = P(:,:,:,5) + P(:,:,:,2) .* uint8( Ybe & ~Ywm ) / 2; 
+    P(:,:,:,2) = P(:,:,:,2) - P(:,:,:,2) .* uint8( Ybe & ~Ywm ) / 2;  
+    clear Ywm be; 
 
     %% transfer tissue outside the brain mask to head  ... 
     % RD 201807: I am not sure if this is a good idea. Please test this with children! 
@@ -120,8 +152,9 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
       end
     end
 
+    
 
-    % guarantee probability 
+    %% guarantee probability 
     sP = (sum(single(P),4)+eps)/255;
     for k1=1:size(P,4), P(:,:,:,k1) = cat_vol_ctype(single(P(:,:,:,k1))./sP); end
     clear sP;
@@ -224,6 +257,43 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
     stime2 = cat_io_cmd('  Update skull-stripping','g5','',job.extopts.verb-1,stime2); 
     if size(P,4)==4 % skull-stripped
       [Yb,Ybb,Yg,Ydiv,P] = cat_main_updateSPM_skullstriped(Ysrc,P,res,vx_vol,T3th);
+    elseif isfield(job.extopts,'inv_weighting') && job.extopts.inv_weighting
+      %% estimate gradient (edge) and divergence maps
+      if ~exist('Ym0','var')
+        Ym0 = single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255;
+      end
+      Ym0 = cat_vol_smooth3X(Ym0,4/mean(vx_vol)); 
+      Yb  = Ym0 > min(0.5,max(0.25, job.extopts.gcutstr)); clear Ym0
+      Yb  = cat_vol_morph(cat_vol_morph(Yb,'lo'),'c');
+      
+      %% create brain level set map (from cat_main_APRG)
+      Yc   = single(P(:,:,:,3))/255;
+      
+      %  Ym .. combination of brain tissue and CSF that is further corrected
+      %        for noise (median) and smoothness (Laplace) and finally 
+      %        threshholded 
+      Ym  = min(1,Yc + single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255 + Yb);
+      Ym  = cat_vol_median3(Ym,Ym>0 & Ym<1);  % remove noise 
+      % region-growing 
+      Ym2 = Ym; Ym2(Ym2==0)=nan;
+      [Ym2,YD] = cat_vol_downcut(single(Ym2>0.99),Ym2,0.01); clear Ym2; %#ok<ASGLU>
+      Ym(YD>400/mean(vx_vol))=0; clear YD; 
+      Ym(cat_vol_morph(Ym>0.95,'ldc',1)) = 1; 
+      Ym(cat_vol_morph(Yb,'e') & Ym<0.9 & Yc<0.25) = 0;
+      Ym  = Ym .* cat_vol_morph(Ym>0.5,'ldo',2);  % remove extensions (BV, eye)
+      Ym = cat_vol_laplace3R(Ym,Ym>0.1 & Ym<0.9,0.2); % smooth mask
+      Ym = cat_vol_laplace3R(Ym,Ym<0.25,0.2); 
+      Ym(cat_vol_morph(Yb,'e') & Ym<0.9 & Yc<0.25) = 0;
+
+      cutstr = min(0.5,max(0.25, job.extopts.gcutstr)); 
+      Ybb  = cat_vol_ctype( max(0,min(1,(Ym - cutstr)/(1-cutstr))) * 256); 
+      
+      %%
+      [Ysrcb,BB] = cat_vol_resize({Ysrc},'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yb);
+      Yg   = cat_vol_grad(Ysrcb/T3th(3),vx_vol);
+      Ydiv = cat_vol_div(Ysrcb/T3th(3),vx_vol);
+      Yg   = cat_vol_resize(Yg   ,'dereduceBrain',BB);
+      Ydiv = cat_vol_resize(Ydiv ,'dereduceBrain',BB);
     elseif job.extopts.gcutstr==0 
       [Yb,Ybb,Yg,Ydiv] = cat_main_updateSPM_gcut0(Ysrc,P,vx_vol,T3th);
     elseif job.extopts.gcutstr==2
@@ -242,8 +312,9 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
     if ~exist('Ym0','var')
       Ym0 = single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255;
     end
+    Ym0 = cat_vol_smooth3X(Ym0,4/mean(vx_vol)); 
     Yb0 = (Ym0 > min(0.5,max(0.25, job.extopts.gcutstr))); clear Ym0
-    Yb0 = cat_vol_morph(cat_vol_morph(Yb0,'lo'),'c');
+    Yb0 = cat_vol_morph(cat_vol_morph(Yb0,'ldo',1),'c',3);
 
 
 
@@ -439,7 +510,8 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
 
     % initial definition for threshold function 
     Ycls = cell(1,size(P,4)); 
-    Yb0  = cat_vol_morph( cat_vol_morph( smooth3( sum(P(:,:,:,1:3),4))>192 , 'do' ,3,vx_vol) , 'lc' , 2,vx_vol);  
+    Yb0  = cat_vol_smooth3X( sum(P(:,:,:,1:3),4), 4/mean(vx_vol)) > 128; 
+    Yb0  = cat_vol_morph( cat_vol_morph( Yb0 , 'do' ,3,vx_vol) , 'lc' , 2,vx_vol);  
     for k1 = 1:size(P,4)
       if k1<4
         Ycls{k1} = P(:,:,:,k1) .* uint8(Yb0);
@@ -466,6 +538,11 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
         cat_io_cprintf('warn','\n  Skull-stripped input - refine original mask                                 ')
         [Yb,Ybb,Yg,Ydiv,P] = cat_main_updateSPM_skullstriped(Ysrc,P,res,vx_vol,T3th); %#ok<ASGLU>
         clear Ybb Yg Ydiv 
+      elseif isfield(job.extopts,'inv_weighting') && job.extopts.inv_weighting
+        Ym0 = single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255;
+        Ym0 = cat_vol_smooth3X(Ym0,4/mean(vx_vol)); 
+        Yb  = Ym0 > min(0.5,max(0.25, job.extopts.gcutstr)); clear Ym0
+        Yb  = cat_vol_morph(cat_vol_morph(Yb,'lo'),'c');
       else
         try
           Yb = cat_main_APRG(Ysrc,P,res,double(T3th)); 
@@ -530,6 +607,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
 
   res2 = res; 
   job2 = job;
+  job2.extopts.bb             = 1; 
   job2.extopts.verb           = 0;      % do not display process (people would may get confused) 
   job2.extopts.vox            = abs(res.tpm(1).mat(1));  % TPM resolution to replace old Yy  
   if job.extopts.regstr>0

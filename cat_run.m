@@ -456,16 +456,19 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
         end
       end
     end
+    err.missed = sum( numel(job_data) ) - (err.warn0 + err.aff + err.vbm + err.sbm);
     
     %% final report
     fprintf('_______________________________________________________________\n');
     fprintf(['Conclusion: \n' ...
-     sprintf('  Processed successfully:% 8d volume(s)\n',err.warn0) ...
+     sprintf('  Processed successfully:% 8d volume(s)\n',err.warn0)]);
      ... sprintf('  Processed with warning:% 8d volume(s)\n',1) ...
      ... sprintf('  Processed with IQR warning:% 8d volume(s)\n',1) ...
      ... sprintf('  Processed with PQR warning:% 8d volume(s)\n',1) ...
-     sprintf('  Processed with error:  % 8d volume(s)\n\n',err.aff + err.vbm + err.sbm) ...
-    ]);   
+    if (err.aff + err.vbm + err.sbm) > 0, col = 'error'; else, col = ''; end
+    cat_io_cprintf(col, sprintf('  Processed with error:  % 8d volume(s)\n',err.aff + err.vbm + err.sbm ));
+    if err.missed > 0, col = 'error'; else, col = ''; end
+    cat_io_cprintf(col, sprintf('  Unprocessed data:      % 8d volume(s)\n\n',err.missed ));
     fprintf('_______________________________________________________________\n');
     
   else

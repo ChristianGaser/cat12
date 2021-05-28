@@ -846,7 +846,7 @@ switch lower(action)
         % -- image ---
         [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(sinfo1(1).fname);
         if cat_get_defaults('extopts.subfolders')
-          labeldir = strrep(sinfo1(1).pp,[filesep surfolder],[filesep mrifolder]);
+          labeldir = strrep(sinfo1(1).pp,[filesep surffolder],[filesep mrifolder]);
         else
           labeldir = sinfo1(1).pp;
         end

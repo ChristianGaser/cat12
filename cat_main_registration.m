@@ -204,7 +204,7 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
   % boudnary box (oldbb/newbb), image resolution (oldres/newres), and the
   % size of the old image. MNI space has always a 0-slice resulting in odd
   % dimensions.
-  BB2dim = @(oldbb,newbb,olddims,oldres,newres) floor( ( olddims * oldres - sum( ( abs(oldbb) - abs(newbb) ) ) ) / newres / 2 ) * 2 + 1;
+  BB2dim = @(oldbb,newbb,olddims,oldres,newres) floor( ( olddims * oldres - sum( ( abs(oldbb) - abs(newbb) ) ) ) / oldres * (1.5/newres) / 2 ) * 2 + 1;
          
   
                     
@@ -265,7 +265,7 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
      %tpmres = abs(tpmM(1));                                                                   % TPM resolution 
      %regres = reg(regstri).opt.rres; if isinf(regres), regres = tmpres; end                   % registration resolution
       newres = job.extopts.vox(voxi); if isinf(newres), newres = tmpres; end                   % output resolution
-
+         
       % image dimension 
       idim = res.image(1).dim(1:3);                                                            % (interpolated) input image resolution
       tdim = res.tmp2{1}(1).dim;                                                               % registration template image size
@@ -300,8 +300,9 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
       if debug && export
         % template creation
         fn = {'GM','WM','CSF'}; clsi=1; 
-        cat_io_writenii(trans.native.Vo,single(Ycls{clsi})/255,fullfile(mrifolder,'debug'),sprintf('p%d',clsi),...
+        cat_io_writenii(trans.native.Vo,single(Ycls{clsi})/255,fullfile(mrifolder,sprintf('debug_%0.2fmm',newres)),sprintf('p%d',clsi),...
           sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],[0 0 0 3],trans);
+        %continue
       end 
       
       % rigid vs. affine input in registration: 
@@ -313,7 +314,7 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
         TAR          = R;
       end
 
-
+%%
       
       try 
         %  main functions
@@ -1459,8 +1460,9 @@ function write_nii(Ycls,job,trans,testfolder,reg)
   end
   
   % tissue ouptut
-  fn = {'GM','WM','CSF'};
-  for clsi = 1 %:numel(Ycls)
+  exportcls = 1; %numel(Ycls); 
+  fn = {'GM','WM','CSF','HD1','HD2','BG'};
+  for clsi = 1:exportcls
     if ~isempty(Ycls{clsi})
       cat_io_writenii(trans.native.Vo,single(Ycls{clsi})/255,fullfile(mrifolder,testfolder),sprintf('p%d',clsi),...
         sprintf('%s tissue map',fn{clsi}),'uint8' ,[0,1/255],[0 0 0 3],trans);

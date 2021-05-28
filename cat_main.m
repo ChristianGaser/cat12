@@ -19,7 +19,7 @@ function Ycls = cat_main(res,tpm,job)
 %#ok<*ASGLU>
 
 
-update_intnorm = job.extopts.new_release;  % RD202101: temporary parameter to control the additional intensity normalization 
+update_intnorm = 1; %job.extopts.new_release;  % RD202101: temporary parameter to control the additional intensity normalization 
 
 
 % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
@@ -79,7 +79,7 @@ if ~isfield(res,'spmpp')
   %  -------------------------------------------------------------------
   [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ysrc,P,Yy,tpm,job,res,stime,stime2);
   %[Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,Yy,tpm,job,res,stime,stime2);
-    clear P; 
+  clear P; 
   
   
   
@@ -129,8 +129,7 @@ if ~isfield(res,'spmpp')
     [Ysrcr,resGI] = cat_vol_resize(Ysrc      , 'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm');
     Ybr           = cat_vol_resize(single(Yb), 'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm')>0.5;
     Yclsr = cell(size(Ycls)); for i=1:6, Yclsr{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,min(vx_vol*2,1.4),32); end
-%[Ymr,T3th,Tth,job.inv_weighting,noise] = cat_main_gintnorm1639(Ysrcr,Yclsr,Ybr,resGI.vx_volr,res,job.extopts);
-    [Ymr,Yb2,T3th,Tth,job.inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,job.extopts);
+    [Ymr,T3th,Tth,job.inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,job.extopts);
     clear Ymr Ybr Ysrcr Yclsr; 
     Ym = cat_main_gintnorm(Ysrc,Tth); 
   else
@@ -250,14 +249,14 @@ if ~isfield(res,'spmpp')
   %            > add this later to the LAS function inclusive the denoising
   %            > this may also work for T2/PD maps 
   if job.extopts.LASstr>0 && job.extopts.ignoreErrors < 3 && ~job.extopts.inv_weighting
-    if job.extopts.LASstr>1 
+    if job.extopts.LASstr>1 || job.extopts.inv_weighting
       extoptsLAS2 = job.extopts;
-      extoptsLAS2.LASstr = extoptsLAS2.LASstr-1; 
-      stime = cat_io_cmd(sprintf('Local adaptive segmentation 2 (LASstr=%0.2f)',extoptsLAS2.LASstr));
+      extoptsLAS2.LASstr = mod(extoptsLAS2.LASstr,1); 
+      stime = cat_io_cmd(sprintf('Simplified Local adaptive segmentation (LASstr=%0.2f)',extoptsLAS2.LASstr));
     else
       stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
     end
-    
+
     % RD202102: Extension of LAS to correct protocoll depending differences
     %           of cortical GM intensities due to myelination.   
     if isfield(job.extopts,'LASmyostr') 
@@ -265,71 +264,68 @@ if ~isfield(res,'spmpp')
     else
       LASmyostr = job.extopts.LASstr; 
     end
-    if LASmyostr
-      stime2  = cat_io_cmd('\n  LAS myelination correction','g5','',job.extopts.verb); 
+    % LASmyostr = min(1,LASmyostr + 0.5*job.extopts.inv_weighting); % force correction in case of inverse data?
+    if LASmyostr 
+      stime2  = cat_io_cmd(sprintf('\n  LAS myelination correction (LASmyostr=%0.2f)',LASmyostr),'g5','',job.extopts.verb); 
       vx_volo = sqrt(sum(res.image0(1).mat(1:3,1:3).^2));
-      [Ym,Ysrc,Ycls,Ycm,glcor,tmp] = cat_main_correctmyelination(Ym,Ysrc,Ycls,Yb,vx_vol,vx_volo,T3th,LASmyostr,Yy,job.extopts.cat12atlas,res.tpm);
-      fprintf('%5.0fs',etime(clock,stime2));
+      % It is better to avoid updating of the Ym and Ysrc here because some
+      % of the problems depend on inhomogenities that can be corrected by 
+      % LAS and a final correct at the end.
+      [Ymx,Ysrcx,Ycls,Ycor,glcor,tmp] = cat_main_correctmyelination(Ym,Ysrc,Ycls,Yb,vx_vol,vx_volo,T3th,LASmyostr,Yy,job.extopts.cat12atlas,res.tpm);
+      fprintf('%6.0fs\n',etime(clock,stime2)); clear Ymx Ysrcx;
     end
-    
+
     % LAS main call 
-    if job.extopts.LASstr>1 
-      extoptsLAS2 = job.extopts;
-      extoptsLAS2.LASstr = extoptsLAS2.LASstr-1; 
-      stime = cat_io_cmd(sprintf('Local adaptive segmentation 2 (LASstr=%0.2f)',extoptsLAS2.LASstr));
-      [Ymi,Ym,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extoptsLAS2); % use Yclsi after cat_vol_partvol
+    if job.extopts.LASstr>1 || job.extopts.inv_weighting
+      [Ymi,Ymt,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extoptsLAS2); % use Yclsi after cat_vol_partvol
     else
-      stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
-%      [Ymi,Ymt,Ycls] = cat_main_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth);
-      [Ymi,Ymt,Ycls] = cat_main_LAS21639(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth);
-      clear Ymt; % use original global scaled ... 
+      [Ymi,Ymt,Ycls] = cat_main_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth);
     end
+    clear Ymt; % use original global scaled ... 
     stime2 = clock; % not really correct but better than before
-    
-    % RD202102:   update Ymi since the LAS correction is currently not local enough
-    if LASmyostr
-      Yp0  = single(Ycls{3})/255/3 + single(Ycls{1})/255*2/3 + single(Ycls{2})/255;
-      Ysdg = cat_vol_localstat(Ymi,Yb,round(3/mean(vx_vol)),4);  
-      Ysdw = cat_vol_localstat(Ymi,Yp0>2.8/3,round(3/mean(vx_vol)),4);
-      Ymi  = Ymi - ((max(0,Ysdg - 4*job.extopts.LASstr * mean(Ysdw(Yp0>2.5/3)))) .* Ycm .* ((Ymi - (max(0,Ysdg - 2*mean(Ysdw(Yp0>2.5/3)))))>2.1/3));
+
+    % RD202102:   update Ymi since the LAS correction is currently not local enough in case of artefacts 
+    if LASmyostr 
+      Ymi = max( min( Ymi , min( 2.5 , Ymi )*0.25 + 0.75*( 2.5 - 0.5 * LASmyostr) / 3 ) , Ymi - Ycor / 3 );
       clear Yp0; 
     end
-    
-    % ### indlcude this in cat_main_LAS? ###
-    if job.extopts.NCstr~=0 
-      % noise correction of the local normalized image Ymi, whereas only small changes are expected in Ym by the WM bias correction
-      stimen = cat_io_cmd(sprintf('  SANLM denoising after LAS (%s)',...
-        NCstr.labels{find(cell2mat(NCstr.values)==job.extopts.NCstr,1,'first')}),'g5','',1,stime2);
-      
-      [Ymis,Ymior,BB]  = cat_vol_resize({Ymi,Ym},'reduceBrain',vx_vol,round(2/mean(vx_vol)),Yb);
-      Ymis = cat_vol_sanlm(struct('data',res.image0.fname,'verb',0,'NCstr',job.extopts.NCstr),res.image,1,Ymis);
-      
-      Yc = abs(Ymis - Ymior); Yc = Yc * 6 * min(2,max(0,abs(job.extopts.NCstr))); 
-      spm_smooth(Yc,Yc,2./vx_vol); Yc = max(0,min(1,Yc)); clear Ymior; 
-      % mix original and noise corrected image and go back to original resolution
-      Ybr = Yb(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6));
-      Ymi(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
-        Ymi(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
-        (1-Yc) .* Ymi(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* Ybr + ...
-        Yc .* Ymis .* Ybr;
-
-      % extreme background denoising to remove wholes?
-      Ymis = cat_vol_median3(Ymi,Ymi>0 & Ymi<0.4,Ymi<0.4); Ymi = Ymi.*max(0.1,Ymi>0.4) + Ymis.*min(0.9,Ymi<=0.4);
-      Ymis = cat_vol_median3(Ym,Ym>0 & Ym<0.4,Ym<0.4); Ym = Ym.*max(0.1,Ym>0.4) + Ymis.*min(0.9,Ym<=0.4);
-      
-      %cat_io_cmd(' ','','',job.extopts.verb,stimen); 
-      clear Ymis;
-    else
-      stimen = stime; 
-    end    
-    
-    cat_io_cmd(' ','','',job.extopts.verb,stimen); clear stimenc
-    fprintf('%5.0fs\n',etime(clock,stime)); 
   else
     % just a node because it is the result of the inverse contrast warning
     cat_io_addwarning('cat_main:skipLAS','Skip LAS due to image contrast. Use global normalization.',0,[0 1]);
     Ymi = Ym; 
   end
+
+  % ### indlcude this in cat_main_LAS? ###
+  if job.extopts.NCstr~=0 
+    % noise correction of the local normalized image Ymi, whereas only small changes are expected in Ym by the WM bias correction
+    stimen = cat_io_cmd(sprintf('  SANLM denoising after LAS (%s)',...
+      NCstr.labels{find(cell2mat(NCstr.values)==job.extopts.NCstr,1,'first')}),'g5','',1,stime2);
+
+    [Ymis,Ymior,BB]  = cat_vol_resize({Ymi,Ym},'reduceBrain',vx_vol,round(2/mean(vx_vol)),Yb);
+    Ymis = cat_vol_sanlm(struct('data',res.image0.fname,'verb',0,'NCstr',job.extopts.NCstr),res.image,1,Ymis);
+
+    Yc = abs(Ymis - Ymior); Yc = Yc * 6 * min(2,max(0,abs(job.extopts.NCstr))); 
+    spm_smooth(Yc,Yc,2./vx_vol); Yc = max(0,min(1,Yc)); clear Ymior; 
+    % mix original and noise corrected image and go back to original resolution
+    Ybr = Yb(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6));
+    Ymi(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
+      Ymi(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
+      (1-Yc) .* Ymi(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* Ybr + ...
+      Yc .* Ymis .* Ybr;
+
+    % extreme background denoising to remove wholes?
+    Ymis = cat_vol_median3(Ymi,Ymi>0 & Ymi<0.4,Ymi<0.4); Ymi = Ymi.*max(0.1,Ymi>0.4) + Ymis.*min(0.9,Ymi<=0.4);
+    Ymis = cat_vol_median3(Ym,Ym>0 & Ym<0.4,Ym<0.4); Ym = Ym.*max(0.1,Ym>0.4) + Ymis.*min(0.9,Ym<=0.4);
+
+    %cat_io_cmd(' ','','',job.extopts.verb,stimen); 
+    clear Ymis;
+  else
+    stimen = stime; 
+  end    
+
+  cat_io_cmd(' ','','',job.extopts.verb,stimen); clear stimenc
+  fprintf('%5.0fs\n',etime(clock,stime)); 
+  
   if ~debug; clear Ysrc ; end
   
   
@@ -388,7 +384,7 @@ if ~isfield(res,'spmpp')
   %  Of course we only want to do this for highres T1 data!
   %  ---------------------------------------------------------------------
   NS = @(Ys,s) Ys==s | Ys==s+1; 
-  if job.extopts.BVCstr 
+  if job.extopts.BVCstr && ~job.extopts.inv_weighting
     if all(vx_vol<2) % ~job.extopts.inv_weighting &&
       stime = cat_io_cmd(sprintf('Blood vessel correction (BVCstr=%0.2f)',job.extopts.BVCstr));
       try 
@@ -468,7 +464,8 @@ if ~isfield(res,'spmpp')
   %            ignoreError < 4.
   %  RD202101: There are differences by using only the new brainmask
   %  -------------------------------------------------------------------
-  [prob,indx,indy,indz,ath] = cat_main_amap(Ymi,Yb,Ycls,job,res);
+  job.extopts.AMAPframing   = 1;
+  [prob,indx,indy,indz,ath] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res);
   %[prob,indx,indy,indz,ath] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res);
   
   % RD202101: Update image intensity normalization based on the the AMAP
@@ -498,7 +495,7 @@ if ~isfield(res,'spmpp')
     prob = cat_main_clean_gwc(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol)),xCleanup);
     
     % newer additional cleanup (cleanupstr == 4 to use only the cat_main_clean_gwc for tests)
-    if job.extopts.cleanupstr < 3 
+    if job.extopts.cleanupstr < 3 && ~job.extopts.inv_weighting
       [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1(indx,indy,indz),... 
         Ym(indx,indy,indz),job.extopts,job.extopts.inv_weighting,vx_vol,indx,indy,indz); % new cleanup
     else
@@ -510,6 +507,12 @@ if ~isfield(res,'spmpp')
     Yp0b = Yb(indx,indy,indz); 
   end
   clear prob
+  % mix Ymi with Yp0 map in case of AMAP mixing strategy (for non-T1 data) ... not working 
+  if 0 %sum(Yrep(:))>0 && ~job.inv_weighting
+    Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = Yp0b/3; 
+    Yre = zeros(d,'single'); Yre(indx,indy,indz) = Yrep; 
+    Ymi = Ymi .* (1-Yre) + Yre .* Yp0; clear Yre Yrep; 
+  end
 
 
 
