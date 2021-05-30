@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1837 | gaser | 2021-05-30 02:41:20
+r1838 | gaser | 2021-05-30 22:55:43
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_ROI.m
+M       cat_conf_tools.m
+M       standalone/cat_standalone.sh
+A       standalone/cat_standalone_get_ROI_values.m
+
+(1) Added:   Added new standalone batch script for saving ROI values.
+(2) Changed  Updated help text for cat_standalone.sh.
+
+
+------------------------------------------------------------------------
+r1837 | gaser | 2021-05-30 02:42:09 +0200 (So, 30 Mai 2021) | 51 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -51,6 +65,7 @@ D       standalone/cat_standalone_tfce.txt
 (4) Fixed:   Corrected call of quality saving tool in cat12.m.
 (5) Added:   Added new standalone batch script for segmentation of Enigma data
              that also includes defacing.
+
 ------------------------------------------------------------------------
 r1836 | gaser | 2021-05-29 01:21:13 +0200 (Sa, 29 Mai 2021) | 7 lines
 
