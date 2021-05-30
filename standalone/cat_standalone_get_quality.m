@@ -1,7 +1,7 @@
 % batch file of volume smoothing for SPM12 standalone installation
 %
 %_______________________________________________________________________
-% $Id: cat_standalone_get_quality.txt 1831 2021-05-27 22:50:12Z gaser $
+% $Id$
 
 % data field, that will be dynamically replaced by cat_standalone.sh
 matlabbatch{1}.spm.tools.cat.tools.quality_measures.data = '<UNDEFINED>';
@@ -10,10 +10,10 @@ matlabbatch{1}.spm.tools.cat.tools.quality_measures.data = '<UNDEFINED>';
 % Remove comments and edit entry if you would like to change the parameter.
 % Otherwise the default value from cat_defaults.m is used.
 % Or use 1st parameter field, that will be dynamically replaced by cat_standalone.sh
-%matlabbatch{1}.spm.tools.cat.tools.quality_measures.csv_name = 'Quality_measures.csv';
+%matlabbatch{1}.spm.tools.cat.tools.quality_measures.csv_name = '<UNDEFINED>';
 
 % Entry for enabling global scaling with TIV
 % Remove comments and edit entry if you would like to change the parameter.
 % Otherwise the default value from cat_defaults.m is used.
 % Or use 1st parameter field, that will be dynamically replaced by cat_standalone.sh
-%matlabbatch{1}.spm.tools.cat.tools.quality_measures.globals = 0;
+%matlabbatch{1}.spm.tools.cat.tools.quality_measures.globals = '<UNDEFINED>';

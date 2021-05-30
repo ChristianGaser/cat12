@@ -4,7 +4,15 @@
 % $Id$
 
 % first undefined data field, that will be dynamically replaced by cat_standalone.sh
-matlabbatch{1}.spm.tools.cat.long.datalong.subjects = '<UNDEFINED>';
+% The different definitions of the subjects-field are necessary to be compatible 
+% with CAT12 longitudinal batch (using "{}") and cat_standalone where the field
+% '<UNDEFINED>' is necessary. The clear command prevents error due to different
+% datatypes and the comented out part for cat_standalone will be removed in the
+% shell script and the last definition of subjects is finally used. Looks weird,
+% but only works in that way.
+matlabbatch{1}.spm.tools.cat.long.datalong.subjects = {};
+clear matlabbatch
+%matlabbatch{1}.spm.tools.cat.long.datalong.subjects = '<UNDEFINED>';
 
 % Entry for choosing longitudinal model
 % Remove comments and edit entry if you would like to change the parameter.

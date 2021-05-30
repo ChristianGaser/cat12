@@ -1,5 +1,58 @@
 ------------------------------------------------------------------------
-r1836 | gaser | 2021-05-29 01:21:07
+r1837 | gaser | 2021-05-30 02:41:20
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+MM      cat_stat_quality_measures.m
+M       standalone/cat_standalone.sh
+A  +    standalone/cat_standalone_deface.m
+        > moved from standalone/cat_standalone_deface.txt
+D       standalone/cat_standalone_deface.txt
+        > moved to standalone/cat_standalone_deface.m
+A  +    standalone/cat_standalone_dicom2nii.m
+        > moved from standalone/cat_standalone_dicom2nii.txt
+D       standalone/cat_standalone_dicom2nii.txt
+        > moved to standalone/cat_standalone_dicom2nii.m
+A  +    standalone/cat_standalone_get_quality.m
+        > moved from standalone/cat_standalone_get_quality.txt
+D       standalone/cat_standalone_get_quality.txt
+        > moved to standalone/cat_standalone_get_quality.m
+A  +    standalone/cat_standalone_resample.m
+        > moved from standalone/cat_standalone_resample.txt
+D       standalone/cat_standalone_resample.txt
+        > moved to standalone/cat_standalone_resample.m
+A  +    standalone/cat_standalone_segment.m
+        > moved from standalone/cat_standalone_segment.txt
+D       standalone/cat_standalone_segment.txt
+        > moved to standalone/cat_standalone_segment.m
+A       standalone/cat_standalone_segment_enigma.m
+A  +    standalone/cat_standalone_segment_long.m
+        > moved from standalone/cat_standalone_segment_long.txt
+D       standalone/cat_standalone_segment_long.txt
+        > moved to standalone/cat_standalone_segment_long.m
+A  +    standalone/cat_standalone_simple.m
+        > moved from standalone/cat_standalone_simple.txt
+D       standalone/cat_standalone_simple.txt
+        > moved to standalone/cat_standalone_simple.m
+A  +    standalone/cat_standalone_smooth.m
+        > moved from standalone/cat_standalone_smooth.txt
+D       standalone/cat_standalone_smooth.txt
+        > moved to standalone/cat_standalone_smooth.m
+A  +    standalone/cat_standalone_tfce.m
+        > moved from standalone/cat_standalone_tfce.txt
+D       standalone/cat_standalone_tfce.txt
+        > moved to standalone/cat_standalone_tfce.m
+
+(1) Changed: Renamed standalone txt scripts to matlab files for easier use as
+             common batch file.
+(2) Changed: Updated help text for cat_standalone.sh.
+(3) Fixed:   Corrected parameters in cat_standalone_get_quality.m
+(4) Fixed:   Corrected call of quality saving tool in cat12.m.
+(5) Added:   Added new standalone batch script for segmentation of Enigma data
+             that also includes defacing.
+------------------------------------------------------------------------
+r1836 | gaser | 2021-05-29 01:21:13 +0200 (Sa, 29 Mai 2021) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +60,7 @@ M       cat_main_updateSPM.m
 M       cat_run_job1639.m
 
 Changed: Some smaller changes in formatting.
+
 ------------------------------------------------------------------------
 r1835 | gaser | 2021-05-29 01:07:21 +0200 (Sa, 29 Mai 2021) | 25 lines
 
