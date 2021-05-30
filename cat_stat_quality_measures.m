@@ -23,7 +23,7 @@ function cat_stat_quality_measures(job)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
-% $Id: cat_stat_quality_measures.m 1824 2021-05-12 15:47:31Z gaser $
+% $Id$
 
 n_subjects = 0;
 sample   = [];
