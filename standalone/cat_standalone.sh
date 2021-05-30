@@ -410,11 +410,22 @@ EXAMPLES
      -a2 enable global scaling with TIV (only for volumes meaningful)
    -----------------------------------------------------------------------------------------------
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
-       -b ${cwd}/cat_standalone_get_quality.m \ 
-       -a1 "'Quality_mesures.csv'" -a2 "1" mwp1sTRIO*nii
+       -b ${cwd}/cat_standalone_get_quality.m mwp1sTRIO*nii \ 
+       -a1 "'Quality_mesures.csv'" -a2 "1"
    Estimate mean z-scores using global scaling with TIV for the files mwp1sTRIO*nii and save quality 
    measures in Quality_mesures.csv for external analysis.
    
+   -----------------------------------------------------------------------------------------------
+   Estimate mean/volume inside ROI
+     -a1 output-file string
+   -----------------------------------------------------------------------------------------------
+   cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
+       -b ${cwd}/cat_standalone_get_ROI_values.m catROI_*.xml \ 
+       -a1 "'ROI'" 
+    Save mean volume values in mL (e.g. GM volume) or the mean surface values (e.g. thickness) for 
+    all data catROI_*.xml in a csv-file. The csv-file is named "ROI_" followed by the atlas name
+    and the name of the measure (e.g. Vgm).
+
    -----------------------------------------------------------------------------------------------
    TFCE Statistical Estimation
      -a1 contrast number

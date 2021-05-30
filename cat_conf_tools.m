@@ -2434,12 +2434,12 @@ function calcroi = conf_roi_fun(outdir)
 
   calcroi               = cfg_exbranch;
   calcroi.tag           = 'calcroi';
-  calcroi.name          = 'Estimate means/volumes inside ROI';
+  calcroi.name          = 'Estimate mean/volume inside ROI';
   calcroi.val           = {roi_xml,point,outdir,calcroi_name}; 
   %calcroi.val   = {roi_xml,usefolder,point,outdir,calcroi_name}; % usefolder is never used
   calcroi.prog          = @(job)cat_roi_fun('exportSample',job);
   calcroi.help          = {
-    'This function reads values inside a ROI from different atlases (that were selected for CAT12 segmentation) and saves either the mean volume values in mL (e.g. GM volume) or the mean surface values (e.g. thickness) for all data in a csv-file. During preprocessing '
+    'This function reads values inside a ROI from different atlases (that were selected for CAT12 segmentation) and saves either the mean volume values in mL (e.g. GM volume) or the mean surface values (e.g. thickness) for all data in a csv-file. '
     'Missed values are replaced by NaN.'
   };
 
