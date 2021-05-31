@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1838 | gaser | 2021-05-30 22:55:43
+r1839 | gaser | 2021-05-31 16:08:32
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_run_job1639.m
+M       html/cat.html
+
+(1) Changed: Updated Makefile part for scp of precompiled version.
+(2) Fixed:   Removed some changes from r1834 in cat_run_job1639.m that caused 
+             issues for longitudinal data.
+------------------------------------------------------------------------
+r1838 | gaser | 2021-05-30 22:56:34 +0200 (So, 30 Mai 2021) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +23,7 @@ A       standalone/cat_standalone_get_ROI_values.m
 
 (1) Added:   Added new standalone batch script for saving ROI values.
 (2) Changed  Updated help text for cat_standalone.sh.
+
 
 
 ------------------------------------------------------------------------
