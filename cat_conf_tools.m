@@ -1022,7 +1022,7 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,expert)
 
   suffix.val        = {''};
   suffix.help       = {
-    'Specify the string to be appended to the filenames of the filtered image file(s). Default suffix is ''''.  Use "PARA" to add input parameters, e.g. "sanlm_*_NC#.##_RN#_RD#_RIA#.##_SR#_FSR#_RNI#_OL#.##_iterm#_iter#.nii" with NC=NCstr, RN=Rician noise, RD=resolution dependency, RIA=relative intensity adaption, SR=sub-resolutions, FSR=force sub-resolution, RNI=replace NAN and INF, and OL=outlier correction.'
+    'Specify the string to be appended to the filenames of the filtered image file(s). Default suffix is ''''.  Use "PARA" to add input parameters, e.g. "sanlm_*_NC#.##_RN#_RD#_RIA#.##_SR#_FSR#_RNI#_OL#.##_iterm#_iter#.nii" with NC=NCstr, RN=Rician noise, RD=resolution dependency, RIA=relative intensity adaptation, SR=sub-resolutions, FSR=force sub-resolution, RNI=replace NAN and INF, and OL=outlier correction.'
     ''
   };
   
@@ -1060,7 +1060,7 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,expert)
   NCstr.hidden    = expert<1;
   NCstr.help      = {
    ['Strength of the spatial adaptive (sub-resolution) non-local means (SANLM) noise correction. Please note that the filter strength is automatically estimated. Change this parameter only for specific conditions. ' ...
-    'Typical values are: none (0), classic (1), light (2), medium (3|-inf), strong (4), heavy (5). The "classic" option use the ordinal SANLM filter without further adaptions. The "light" option uses the half filter strength of "medium" cases. The "strong" option use 8-times of the "medium" filter strength. Sub-resolution filtering is only used in case of high image resolution below 0.8 mm or in case of the "heavy" option. ' ...
+    'Typical values are: none (0), classic (1), light (2), medium (3|-inf), strong (4), heavy (5). The "classic" option use the ordinal SANLM filter without further adaptations. The "light" option uses the half filter strength of "medium" cases. The "strong" option use 8-times of the "medium" filter strength. Sub-resolution filtering is only used in case of high image resolution below 0.8 mm or in case of the "heavy" option. ' ...
     'For the global modified scheme use smaller values (>0) for less denoising, higher values (<=1) for stronger denoising, and "inf" for an automatic estimated threshold. Negative values control the local adaptive scheme, with the default "-inf"|"-1", that successfully tested on a variety of scans. Use higher values (>-1,<0) for less filtering and lower values "<-1" for stronger filtering. The value 0 will turn off any noise correction.']
     ''
   };
@@ -1131,12 +1131,12 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,expert)
 
   relativeIntensityAdaption             = cfg_entry;
   relativeIntensityAdaption.tag         = 'relativeIntensityAdaption';
-  relativeIntensityAdaption.name        = 'Strength of relative intensity adaption';
+  relativeIntensityAdaption.name        = 'Strength of relative intensity adaptation';
   relativeIntensityAdaption.strtype     = 'r';
   relativeIntensityAdaption.num         = [1 1];
   relativeIntensityAdaption.val         = {1};
   relativeIntensityAdaption.help        = {
-    'Strength of relative intensity adaption, with 0 for no adaption and 1 for full adaption. The SANLM filter is often very successful in the background and removed nearly all noise. However, routines such as the SPM Unified Segmentation expect Gaussian distribution in all regions and is troubled by regions with too low variance. Hence, a relative limitation of SANLM correction is added here that is based on the bias reduced image intensity. '
+    'Strength of relative intensity adaptation, with 0 for no adaptation and 1 for full adaptation. The SANLM filter is often very successful in the background and removed nearly all noise. However, routines such as the SPM Unified Segmentation expect Gaussian distribution in all regions and is troubled by regions with too low variance. Hence, a relative limitation of SANLM correction is added here that is based on the bias reduced image intensity. '
     ''
   };
 
@@ -1236,7 +1236,7 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,expert)
   nlm_default.name      = 'Classic SANLM filter';
   nlm_default.val       = {};
   nlm_default.help      = {
-      'Classical SANLM filter without further adaptions, i.e. strong filtering on the full resolution.' 
+      'Classical SANLM filter without further adaptations, i.e. strong filtering on the full resolution.' 
   }; 
 
   nlm_optimized         = cfg_branch;

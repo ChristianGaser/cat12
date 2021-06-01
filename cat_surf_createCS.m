@@ -639,7 +639,7 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
 
       % correct the number of vertices depending on the number of major objects
       if opt.reduceCS>0 
-        CS = reducepatch(CS,opt.reduceCS * scale_cerebellum); % adaption for cerebellum
+        CS = reducepatch(CS,opt.reduceCS * scale_cerebellum); % adaptation for cerebellum
         if opt.verb>2     
           stime = cat_io_cmd(sprintf('  Reduce surface to %d faces:',size(CS.faces,1)),'g5','',opt.verb);
         elseif opt.verb>0
@@ -789,9 +789,9 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
         % after reducepatch many triangles have very large area which causes isses for resampling
         % RefineMesh adds triangles in those areas
         if opt.fast
-          cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 0',Praw,Praw,4 * opt.vdist / scale_cerebellum); % adaption for cerebellum
+          cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 0',Praw,Praw,4 * opt.vdist / scale_cerebellum); % adaptation for cerebellum
         else  
-          cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 0',Praw,Praw,2 * opt.vdist / scale_cerebellum); % adaption for cerebellum
+          cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 0',Praw,Praw,2 * opt.vdist / scale_cerebellum); % adaptation for cerebellum
         end
         [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
       
@@ -854,9 +854,9 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
     
       % we need some refinement because some vertices are too large to be deformed with high accuracy
       if opt.fast
-        cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 0',Pcentral,Pcentral,4 * opt.vdist / scale_cerebellum); % adaption for cerebellum
+        cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 0',Pcentral,Pcentral,4 * opt.vdist / scale_cerebellum); % adaptation for cerebellum
       else
-        cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 1',Pcentral,Pcentral,2 * opt.vdist / scale_cerebellum); % adaption for cerebellum
+        cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 1',Pcentral,Pcentral,2 * opt.vdist / scale_cerebellum); % adaptation for cerebellum
       end
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
     end
@@ -879,9 +879,9 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('
     if ~useprior
       % need some more refinement because some vertices are distorted after CAT_DeformSurf
       if opt.fast
-        cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 0',Pcentral,Pcentral,4 * opt.vdist / scale_cerebellum); % adaption for cerebellum
+        cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 0',Pcentral,Pcentral,4 * opt.vdist / scale_cerebellum); % adaptation for cerebellum
       else
-        cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 1',Pcentral,Pcentral,1.6 * opt.vdist / scale_cerebellum); % adaption for cerebellum
+        cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 1',Pcentral,Pcentral,1.6 * opt.vdist / scale_cerebellum); % adaptation for cerebellum
       end
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
     end

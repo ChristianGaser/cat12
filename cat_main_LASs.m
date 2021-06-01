@@ -158,9 +158,9 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
     Yclsr = cell(size(Ycls)); for i=1:6, Yclsr{i} = cat_vol_resize(Ycls{i},'reduceBrain',vx_vol,BB.BB); end
     
 
-    % adaption of the LASstr depending on average basal values ... not in T2/PD/FLAIR because of unknown variation 
+    % adaptation of the LASstr depending on average basal values ... not in T2/PD/FLAIR because of unknown variation 
     % LASmod  = min(2,max(0,cat_stat_kmeans((Ymr( NS(Yl1,LAB.BG) & Ygr<0.1 & Ydivr>-0.05  & Yclsr{1}>4)) - 2/3) * 8));
-    % LASstr  = min(1,max(0.05,LASstr * LASmod)); clear LASmod                 % adaption by local BG variation
+    % LASstr  = min(1,max(0.05,LASstr * LASmod)); clear LASmod                 % adaptation by local BG variation
     LASfs   = 2 / max(0.05,LASstr);                                          % smoothing filter strength 
     
 
@@ -362,7 +362,7 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
 
 
     %% CSF & BG
-    % no adaption yet
+    % no adaptation yet
     Yi = Ysrc ./ max(eps,Ylab{2}) .* (smooth3(Ycm)>.6) .* (Yp0>0);
     Yi = cat_vol_noPVE(Yi,vx_vol,2,3,2);
     if ~debug, clear Yhdm; end

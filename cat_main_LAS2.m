@@ -218,7 +218,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
     % apply boundary box for brain mask
     Yl1    = cat_vol_resize(Yl1  ,'reduceBrain',vx_vol,round(4/mean(vx_vol)),BB.BB);
     Ywtpm  = cat_vol_resize(Ywtpm,'reduceBrain',vx_vol,round(4/mean(vx_vol)),BB.BB);
-    % The correction of image resolution is not required because of the adaption of the Yy?
+    % The correction of image resolution is not required because of the adaptation of the Yy?
     
     
     % do not reduce LASstr 
@@ -228,8 +228,8 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
   end
   
   
-  % adaption of the LASstr depending on average basal values 
-  LASstr  = min(1,max(0.01,LASstr * LASmod));   % adaption by local BG variation
+  % adaptation of the LASstr depending on average basal values 
+  LASstr  = min(1,max(0.01,LASstr * LASmod));   % adaptation by local BG variation
   LASfs   = 1 / max(0.01,LASstr);               % smoothing filter strength 
   LASi    = min(8,round(LASfs));                % smoothing iteration (limited)
    
@@ -856,7 +856,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
   
   
   
-  %% interpolate maps if an resolution adaption was applied
+  %% interpolate maps if an resolution adaptation was applied
   if exist('resT0','var')
     Ywm = cat_vol_resize( single(Ywm) , 'dereduceV' , resT0 )>0.5;
     Ygm = cat_vol_resize( single(Ygm) , 'dereduceV' , resT0 )>0.5;

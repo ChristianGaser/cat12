@@ -166,7 +166,7 @@ function [prob,indx,indy,indz,th] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res)
   end
   
   % Amap parameters  
-  % - sub       .. size of sub-elementes is linked to the anatomy and needs adaption for voxel size 
+  % - sub       .. size of sub-elementes is linked to the anatomy and needs adaptation for voxel size 
   %                in additition, test showed that 32 is quite optimal, whereas higher values >64 are worse 
   % - n_iters   .. for highly optimized data is about 10 iterations
   % - bias_fwhm .. the bias correction should be inactive 

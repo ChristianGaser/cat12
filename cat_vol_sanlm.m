@@ -416,7 +416,7 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
                 NCsi = NCs ./ max(eps,NCi); 
                 mNCs = cat_stat_nanmean( NCsi(src(:)>th/2 & NCsi(:)>0 )) * ...
                           job.relativeFilterStengthLimit * ...
-                          max(1,min(4,4 - job.relativeIntensityAdaption*2)); % lower boundary for strong adaption
+                          max(1,min(4,4 - job.relativeIntensityAdaption*2)); % lower boundary for strong adaptation
                 NCsi = min( NCsi , mNCs ) .* NCi; 
                 
                 % Finally, both images were mixed
@@ -448,7 +448,7 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
             if ~debug, clear NCs; end
             
         elseif NCstr(NCstri)==1
-        % no adaption (original filter)
+        % no adaptation (original filter)
             src2   = src; 
         
         elseif NCstr(NCstri)>0
@@ -469,7 +469,7 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
         
         %% add noise
         if job.addnoise
-          % Small adaption for inhomogeneity to avoid too much noise in
+          % Small adaptation for inhomogeneity to avoid too much noise in
           % regions with low signal intensity.
           sth  = cat_vol_smooth3X(log10(2 + 8*src/th),4/mean(vx_vol)) * th; 
           
