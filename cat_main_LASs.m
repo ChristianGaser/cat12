@@ -169,10 +169,10 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
     %  highly myelinated GM regions. Using allow to avoid overcorrections.
     fastppi = 1; % 1 mm: 15 vs. 40 seconds ... it thing fast is ok here 20161014 
     if fastppi
-      [Ygmt,Ypp] = cat_vol_pbt( (Yp0 + (Ymr*3 .* (Yp0>0)))/2 , ...
+      [Ygmt,Ypp] = cat_vol_pbt( Yp0 , ... (Yp0 + (Ymr*3 .* (Yp0>0)))/2 , ...
         struct('resV',vx_vol,'verb',0,'dmethod','vbdist','method','pbt2x') );
     else
-      [Ygmt,Ypp] = cat_vol_pbt( (Yp0 + (Ymr*3 .* (Yp0>0)))/2 , ...
+      [Ygmt,Ypp] = cat_vol_pbt( Yp0 , ... (Yp0 + (Ymr*3 .* (Yp0>0)))/2 , ...
         struct('resV',vx_vol,'verb',0) ); 
     end
     Ygmtroi = Ygmt>0 & Ygmt<6 & NS(Yl1,LAB.CT); 
@@ -386,6 +386,21 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
     %}
     Ysrcbc  = Ysrc ./ Ylab{2}; 
     Ylab{6} = min( cat_stat_kmeans( Ysrcbc( Ycls{6}(:)>128 ) ) , cat_stat_kmeans( Ysrcbc( Ycls{4}(:)>128 ) ) ) .* Ylab{2};
+     if mean(Ylab{3}(:)) < mean(Ylab{1}(:)) 
+      Ylab{6} = min(Ylab{6},Ylab{1}*0.9); 
+    else
+      Ylab{6} = max(Ylab{6},Ylab{1}/0.9); 
+    end
+    if mean(Ylab{3}(:)) < mean(Ylab{2}(:))
+      Ylab{6} = min(Ylab{6},Ylab{2}*0.9); 
+    else
+      Ylab{6} = max(Ylab{6},Ylab{2}/0.9); 
+    end
+    if mean(Ylab{3}(:)) < mean(Ylab{2}(:))
+      Ylab{6} = min(Ylab{6},Ylab{3}*0.9); 
+    else
+      Ylab{6} = max(Ylab{6},Ylab{3}/0.9); 
+    end
     clear Ynba Yca; 
     
     %% back to original resolution
