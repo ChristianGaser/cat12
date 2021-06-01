@@ -243,7 +243,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
   job = update_job(job);
   varargout{1} = vout_job(job);
   
-njobs = cellfun(@numel,{jobs.data});
+  njobs = cellfun(@numel,{jobs.data});
   
   if job.getPID
     if any(PID==0) 

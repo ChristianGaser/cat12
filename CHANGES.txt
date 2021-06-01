@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1840 | dahnke | 2021-06-01 09:01:15
+r1841 | gaser | 2021-06-01 12:03:05
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat12.m
+M       cat_run.m
+M       html/cat.html
+M       standalone/cat_standalone.sh
+MM      standalone/cat_standalone_get_ROI_values.m
+MM      standalone/cat_standalone_segment_enigma.m
+
+(1) Changed: Added BIDS writing to subfolder that is named by cat12 version for
+             cat_standalone_segment_enigma.m.
+(2) Changed: Some small edits to help text.
+(3) Changed: Updated scp for deployed versions in Makefile.
+------------------------------------------------------------------------
+r1840 | dahnke | 2021-06-01 09:02:08 +0200 (Tue, 01 Jun 2021) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +31,7 @@ M       cat_run.m
              exclusively by cat_main.
 (3) Fixed:   Corrected problems in progress report and conclusion in cat_run. 
              
+
 ------------------------------------------------------------------------
 r1839 | gaser | 2021-05-31 16:09:32 +0200 (Mon, 31 May 2021) | 11 lines
 
