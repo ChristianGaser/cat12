@@ -368,7 +368,8 @@ EXAMPLES
        -b ${cwd}/cat_standalone_resample.m lh.thickness.sTRIO0001 \ 
        -a1 "12" -a2 "1" 
    Resample and smooth the single thickness file lh.thickness.sTRIO0001 with 12mm and save the 
-   resampled mesh as 32k mesh from HCP. Only the left surface file has to be defined.
+   resampled mesh as 32k mesh (HCP conform mesh). Only the left surface file has to be defined.
+   The right hemisphere is processed automatically.
 
    -----------------------------------------------------------------------------------------------
    Smoothing
@@ -405,15 +406,16 @@ EXAMPLES
    Apply de-facing to sTRIO*.nii and save the files prefixed by "anon_".
 
    -----------------------------------------------------------------------------------------------
-   Estimate and Save Quality Measures
+   Estimate and Save Quality Measures for Volumes or Surfaces
      -a1 csv output filename
      -a2 enable global scaling with TIV (only for volumes meaningful)
    -----------------------------------------------------------------------------------------------
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
        -b ${cwd}/cat_standalone_get_quality.m mwp1sTRIO*nii \ 
-       -a1 "'Quality_mesures.csv'" -a2 "1"
+       -a1 "'Quality_measures.csv'" -a2 "1"
    Estimate mean z-scores using global scaling with TIV for the files mwp1sTRIO*nii and save quality 
-   measures in Quality_mesures.csv for external analysis.
+   measures in Quality_measures.csv for external analysis. Processing of surface meshes is also
+   supported.
    
    -----------------------------------------------------------------------------------------------
    Estimate mean/volume inside ROI

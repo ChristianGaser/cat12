@@ -117,10 +117,11 @@ scp_precompile:
 	-@find ${PRECOMPILED} -type f -name .DS_Store -exec rm {} \;
 	-@chmod -R a+r,go-w ${PRECOMPILED}
 	-@find ${PRECOMPILED} -type f \( -name "*.sh" -o -name "spm12" \) -exec chmod a+x {} \;
-	-@for i in Linux Mac; do \
+	-@for i in Linux Mac Win; do \
 	   mkdir -p ${NEWVERSION}_r${REVISION}_R2017b_MCR_$${i} ;\
 	   ln -s ${PRECOMPILED}/MCR_$${i}/*spm12* ${PRECOMPILED}/MCR_$${i}/readme.txt ${PRECOMPILED}/MCR_$${i}/MCR_v93.webloc ${NEWVERSION}_r${REVISION}_R2017b_MCR_$${i}/ ;\
 	   cp -r standalone ${NEWVERSION}_r${REVISION}_R2017b_MCR_$${i}/ ;\
+	   cp -r standalone ${PRECOMPILED}/MCR_$${i}/ ;\
 	   zip ${NEWVERSION}_r${REVISION}_R2017b_MCR_$${i}.zip -r ${NEWVERSION}_r${REVISION}_R2017b_MCR_$${i} ; \
 	   scp -P ${PORT} ${NEWVERSION}_r${REVISION}_R2017b_MCR_$${i}.zip  ${STARGET}; \
 	   bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${NEWVERSION}_r${REVISION}_R2017b_MCR_$${i}.zip ${STARGET_FOLDER}/cat12_latest_R2017b_MCR_$${i}.zip"; \
