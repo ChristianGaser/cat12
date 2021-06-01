@@ -243,7 +243,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
   job = update_job(job);
   varargout{1} = vout_job(job);
   
-  
+njobs = cellfun(@numel,{jobs.data});
   
   if job.getPID
     if any(PID==0) 
@@ -276,7 +276,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
       %  e.g. count errors give some suggestions 
       %  ------------------------------------------------------------------
       if job.getPID>1
-        cat_io_cprintf('warn',sprintf('\nKilling of this process will not kill the parallel processes!\n'));
+        cat_io_cprintf('warn',sprintf('\nKilling of this process will not kill the parallel processes! \n'));  
         fprintf('_______________________________________________________________\n');
         fprintf('Completed volumes (see catlog files for details!):\n');
         
@@ -296,7 +296,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
             % get FID
             FID = fopen(log_name{i},'r'); 
             if FID < 0
-              fprintf('File % was probably deleted which prevents controlling processes.',log_name{i});
+              fprintf('File %s was probably deleted. Process monitoring inactive.',log_name{i});
               continue
             end
             txt = textscan(FID,'%s','Delimiter','\n');
@@ -305,6 +305,9 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
             
             % search for the _previous_ start entry "CAT12.# r####: 1/14:   ./MRData/*.nii" 
             catis   = find(cellfun('isempty',strfind(txt,sprintf('%s r%s: ',catv,catr)))==0,2,'last'); 
+            if isempty(catis)
+              catis   = find(cellfun('isempty',strfind(txt,sprintf('%s r',catv)))==0,2,'last');
+            end
             catie   = find(cellfun('isempty',strfind(txt,'CAT preprocessing takes'))==0,1,'last');
             if ~isempty(catis) && ( numel(catis)>2 ||  ~isempty(catie) )
               if catis(end)<catie(1)
@@ -338,7 +341,11 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
             %% search for preprocessing errors (and differentiate them)
             cati = find(cellfun('isempty',strfind(txt,'CAT Preprocessing error'))==0,1,'last');
             catl = find(cellfun('isempty',strfind(txt,'-----------------------'))==0);
-            if ~isempty(cati) && numel(catis)>2 && catie>catis(1) &&  catie<catis(2)
+            if ~isempty(cati) && cati>catis(end) %&&  catie<catis(2)
+              cathd = textscan( txt{catis(1)} ,'%s%s%s','Delimiter',':');
+              cathd = textscan( char(cathd{2}) ,'%d','Delimiter','/');
+              catSID(i) = cathd{1}(1);
+              
               caterr  = textscan( txt{cati+2} ,'%s','Delimiter','\n');
               caterr  = char(caterr{1});
               caterrcode = ''; 
@@ -356,6 +363,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
               caterr     = '';
               caterrcode = ''; 
             end
+            % RD20200
             %
             % We need some simple error codes that helps the user (check origin)
             % but also us (because they may only send us this line). Hence,
@@ -391,13 +399,14 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
             %  if this test was not printed before  ( catSIDlast(i) < catSID(i) )  and 
             %  if one subject was successfully or with error processed ( any(cattime>0) || ~isempty(caterr) )
             %fprintf('    %d - %d %d %d %d\n',i,catSIDlast(i), catSID(i), any(cattime>0), ~isempty(caterr) ); 
-            if ( catSIDlast(i) < catSID(i) )  &&  ( any(cattime>0) || ~isempty(caterr) )
+            if ( ( catSIDlast(i) < catSID(i) )  &&  ( any(cattime>0) || ~isempty(caterr) ) ) || ...
+               ( ( catSIDlast(i) < catSID(i) )  &&  ( ~isempty(cati) && cati>catis ) )
               cid = cid + 1; 
               catSIDlast(i) = catSID(i);
               
-              [pp,ff,ee] = spm_fileparts(jobs(i).data{catSID(i)}); 
-              
-              [mrifolder, reportfolder] = cat_io_subfolders(jobs(i).data{catSID(i)},job);
+              [pp,ff,ee] = spm_fileparts(jobs(i).data{max(1,catSID(i))}); 
+
+              [mrifolder, reportfolder] = cat_io_subfolders(jobs(i).data{max(1,catSID(i))},job);
               catlog = fullfile(pp,reportfolder,['catlog_' ff '.txt']); 
 
               if exist(catlog,'file')
@@ -431,7 +440,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                 end
                 %}
                 otherwise   
-                  err.txt   = errtxt;
+                  err.txt   = caterr;
                   err.color = [1 0 0];
                   err.vbm   = err.vbm + 1;
               end
@@ -460,15 +469,16 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     
     %% final report
     fprintf('_______________________________________________________________\n');
-    fprintf(['Conclusion: \n' ...
-     sprintf('  Processed successfully:% 8d volume(s)\n',err.warn0)]);
+    fprintf('Conclusion: \n'); 
+    if sum( numel(job_data) ) == err.warn0, col = [0 0.5 0]; else, col = ''; end
+    cat_io_cprintf(col, sprintf('  Processed successfully:% 8d volume(s)\n',err.warn0));
      ... sprintf('  Processed with warning:% 8d volume(s)\n',1) ...
      ... sprintf('  Processed with IQR warning:% 8d volume(s)\n',1) ...
      ... sprintf('  Processed with PQR warning:% 8d volume(s)\n',1) ...
     if (err.aff + err.vbm + err.sbm) > 0, col = 'error'; else, col = ''; end
     cat_io_cprintf(col, sprintf('  Processed with error:  % 8d volume(s)\n',err.aff + err.vbm + err.sbm ));
-    if err.missed > 0, col = 'error'; else, col = ''; end
-    cat_io_cprintf(col, sprintf('  Unprocessed data:      % 8d volume(s)\n\n',err.missed ));
+    if err.missed > 0, col = 'blue'; else, col = ''; end
+    cat_io_cprintf(col, sprintf('  Unknown/Unprocessed:   % 8d volume(s)\n\n',err.missed ));
     fprintf('_______________________________________________________________\n');
     
   else
