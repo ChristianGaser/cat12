@@ -573,7 +573,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
       
       Ysrc    = cat_stat_histth(Ysrc,extopts.histth); % remove outlier
       clsints = @(x,y) [round( res.mn(res.lkp==x) * 10^5)/10^5; res.mg(res.lkp==x-((y==0)*8))']; % SPM peak definition  
-      clsint  = @(x) cat_stat_nanmedian(Ysrc(Ycls{x}>128));                                      % median within the tissue label 
+      clsint  = @(x) cat_stat_kmeans(Ysrc(cat_vol_morph(Ycls{x}>128,'e') | Ycls{x}>250));                                      % median within the tissue label 
       clsintv = [clsint(1) clsint(2) clsint(3)];
       for i=1:3, if isnan(clsintv(i)), clsintv(i) = clsints(i); end; end % use median if possible
       
