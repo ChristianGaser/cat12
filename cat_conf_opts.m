@@ -165,7 +165,7 @@ biasreg.help   = {
 % biasfwhm:
 %------------------------------------------------------------------------
 % Test on the BWP and real data demonstrate that 60 mm works best for most
-% datasets. Only 7 Tesla data need further adaption, larger filter size is
+% datasets. Only 7 Tesla data need further adaptation, larger filter size is
 % normaly not required (RD 2017-03)!
 %  - 30-40 mm: low filter size for very strong fields (e.g. 7 or 3 Tesla data)
 %  - 50-60 mm: medium filter size works best for >95% of the data, and do not overfit in case of low bias 
@@ -184,7 +184,7 @@ else
 end
 biasfwhm.def    = @(val)cat_get_defaults('opts.biasfwhm', val{:});
 biasfwhm.help   = {
-  'FWHM of Gaussian smoothness of bias.  This parameter is controlled by the biasreg parameter if biasstr>0.  Test on the BWP and real data showed that 50 to 60 mm works best for nearly all datasets and only some 7 Tesla scans require further adaption! '
+  'FWHM of Gaussian smoothness of bias.  This parameter is controlled by the biasreg parameter if biasstr>0.  Test on the BWP and real data showed that 50 to 60 mm works best for nearly all datasets and only some 7 Tesla scans require further adaptation! '
   '  30-40 mm:  low filter size for very strong fields (e.g. 7 or 3 Tesla data) '
   '  50-60 mm:  medium filter size works best for >95% of the data, and do not overfit in case of low bias '
   '  70-90 mm:  high filter size in case of low bias data '

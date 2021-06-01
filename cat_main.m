@@ -341,7 +341,7 @@ if ~isfield(res,'spmpp')
   
   %% Partitioning: 
   %  --------------------------------------------------------------------- 
-  %  For most of the following adaptions further knowledge of special 
+  %  For most of the following adaptations further knowledge of special 
   %  regions is helpfull. Also Ymi is maybe still a little bit inhomogen 
   %  the alignment should work. Only strong inhomogenities can cause 
   %  problems, especially for the blood vessel detection. 

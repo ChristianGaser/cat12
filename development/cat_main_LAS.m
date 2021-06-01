@@ -145,9 +145,9 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   if ~debug, clear Yy; end
   
   
-  %% adaption of the LASstr depending on average basal values 
+  %% adaptation of the LASstr depending on average basal values 
   LASmod = min(2,max(0,mean((Ym( NS(Yl1,LAB.BG) & Yg<0.1 & Ydiv>-0.05  & Yclsr{1}>4)) - 2/3) * 8));
-  LASstr  = min(1,max(0.05,LASstr * LASmod)); clear LASmod                 % adaption by local BG variation
+  LASstr  = min(1,max(0.05,LASstr * LASmod)); clear LASmod                 % adaptation by local BG variation
   LASfs   = 1 / max(0.05,LASstr);                                          % smoothing filter strength 
   LASi    = min(8,round(LASfs));                                           % smoothing interation (limited)
    

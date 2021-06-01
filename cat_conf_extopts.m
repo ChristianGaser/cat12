@@ -332,7 +332,7 @@ pbtlas.labels  = {'No','Yes'};
 pbtlas.values  = {0 1};
 pbtlas.def     = @(val)cat_get_defaults('extopts.pbtlas', val{:});
 pbtlas.help    = {
-  'Apply correction for cortical myelination by local intensity adaption to improve the description of the GM/WM boundary (added in CAT12.7).'
+  'Apply correction for cortical myelination by local intensity adaptation to improve the description of the GM/WM boundary (added in CAT12.7).'
   'Experimental parameter, not yet working properly!'
   ''
 };
@@ -762,7 +762,7 @@ NCstr.tag    = 'NCstr';
 NCstr.name   = 'Strength of Noise Corrections';
 if expert
   NCstr.help    = {
-    'Strength of the spatial adaptive (sub-resolution) non local means (SANLM) noise correction. Please note that the filter strength is automatically estimated. Change this parameter only for specific conditions. Typical values are: none (0), classic (1), light (2), medium (3|-inf), and strong (4). The "classic" option use the ordinal SANLM filter without further adaptions. The "light" option applies half of the filter strength of the adaptive "medium" cases, whereas the "strong" option uses the full filter strength, force sub-resolution filtering and applies an additional iteration. Sub-resolution filtering is only used in case of high image resolution below 0.8 mm or in case of the "strong" option. '
+    'Strength of the spatial adaptive (sub-resolution) non local means (SANLM) noise correction. Please note that the filter strength is automatically estimated. Change this parameter only for specific conditions. Typical values are: none (0), classic (1), light (2), medium (3|-inf), and strong (4). The "classic" option use the ordinal SANLM filter without further adaptations. The "light" option applies half of the filter strength of the adaptive "medium" cases, whereas the "strong" option uses the full filter strength, force sub-resolution filtering and applies an additional iteration. Sub-resolution filtering is only used in case of high image resolution below 0.8 mm or in case of the "strong" option. '
     ''
   };
   NCstr.labels = {'none (0)','classic (1)','light (2)','medium (3|-inf)','strong (4)'};
@@ -771,7 +771,7 @@ else
   NCstr.labels = {'none','light','medium','strong'};
   NCstr.values = {0 2 -inf 4};
   NCstr.help   = {
-    'Strength of the (sub-resolution) spatial adaptive  non local means (SANLM) noise correction. Please note that the filter strength is automatically estimated. Change this parameter only for specific conditions. The "light" option applies only half of the filter strength of the adaptive "medium" cases and no sub-resolution filtering. The "medium" case use the full adaptive filter strength and sub-resolution filtering in case of high image resolution below 0.8 mm. The "strong" option uses the full filter strength without adaption, forces the sub-resolution filtering and applies an additional iteration. All cases used an anatomical depending filter strength adaption, i.e. full (adaptive) filter strength for 1 mm data and no filtering for 2.5 mm data. '
+    'Strength of the (sub-resolution) spatial adaptive  non local means (SANLM) noise correction. Please note that the filter strength is automatically estimated. Change this parameter only for specific conditions. The "light" option applies only half of the filter strength of the adaptive "medium" cases and no sub-resolution filtering. The "medium" case use the full adaptive filter strength and sub-resolution filtering in case of high image resolution below 0.8 mm. The "strong" option uses the full filter strength without adaptation, forces the sub-resolution filtering and applies an additional iteration. All cases used an anatomical depending filter strength adaptation, i.e. full (adaptive) filter strength for 1 mm data and no filtering for 2.5 mm data. '
     ''
   };
 end

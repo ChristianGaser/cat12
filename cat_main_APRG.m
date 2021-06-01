@@ -111,7 +111,7 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th,cutstr)
 
   %% initial brain mask by region-growing
 % ########## 
-% RD2020007: Todo: further adaption for T2/PD/MP2Rage and skull-stripped
+% RD2020007: Todo: further adaptation for T2/PD/MP2Rage and skull-stripped
 % ##########
   %  as CSF/GM+GM+WM without blood vessels (Yg<0.5) 
   Yb   = min(1,single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255 + Ycg/2); 
@@ -148,7 +148,7 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th,cutstr)
 %% GM-CSF region
 % Yh is the region that we exclude 
 if cutstr == 0
-  %% RD202007: This is the original version without further adaptions/corrections
+  %% RD202007: This is the original version without further adaptations/corrections
   Yb2  = single(cat_vol_morph(Yb,'de',1.9,vx_vol)); 
   if T3th(1) < T3th(3)
     Yh   = (Yb2<0.5) & (Ysrc<sum(T3th(1:2).*[0.9 0.1]) | sum(P(:,:,:,4:6),4)>250 | ...
