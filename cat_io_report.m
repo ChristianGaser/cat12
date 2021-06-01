@@ -317,7 +317,7 @@ function cat_io_report(job,qa,subj,createerr)
 
     % SPM_orthviews seems to allow only 60 values
     % It further requires a modified colormaps with lower values that the
-    % colorscale and small adaption for the values. 
+    % colorscale and small adaptation for the values. 
     hlevel     = 240; 
     volcolors  = 60;  % spm standard 
     surfcolors = 128; 

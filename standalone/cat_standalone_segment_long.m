@@ -83,7 +83,7 @@ matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.mrf = 1;
 % 0 - none; 1070 - default; [1 - light; 2 - full; 1144 - update of 1070, 5 - animal (no affreg)]
 matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.APP = 1070;
 
-% Strength of the local adaption: 0 to 1; default 0.5
+% Strength of the local adaptation: 0 to 1; default 0.5
 matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.LASstr = 0.5;
 
 % Strength of skull-stripping: 0 - SPM approach; eps to 1  - gcut; 2 - new APRG approach; -1 - no skull-stripping (already skull-stripped); default = 2

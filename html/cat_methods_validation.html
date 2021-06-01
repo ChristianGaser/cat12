@@ -110,7 +110,7 @@
       <!-- Parameter tests -->  
       <h3 id="ResultsPara">Parameter tests</h3>
         <p>
-          Parameter settings were tested with CAT12 Revision 1109<sup>+</sup>.  The control parameters are designed to allow small adaptions for user specific protocols, e.g. if the default settings are not satisfying, but the changes are also limited to avoid complete fails.  Hence, adaptions cannot compensate for severe problems with specific protocols or subjects.  The effects depend on the protocol and the subject anatomy and may be characterized by only small changes for most data.  Before you change parameters, please check the for severe artefacts in your data and set the origin.  If you have challenging data that cannot processed successfully, or observe severe errors/problems please e-mail us. 
+          Parameter settings were tested with CAT12 Revision 1109<sup>+</sup>.  The control parameters are designed to allow small adaptations for user specific protocols, e.g. if the default settings are not satisfying, but the changes are also limited to avoid complete fails.  Hence, adaptations cannot compensate for severe problems with specific protocols or subjects.  The effects depend on the protocol and the subject anatomy and may be characterized by only small changes for most data.  Before you change parameters, please check the for severe artefacts in your data and set the origin.  If you have challenging data that cannot processed successfully, or observe severe errors/problems please e-mail us. 
         </p><p>
           This part is still under construction and the results are partially incomplete!    
         </p>
@@ -119,7 +119,7 @@
         <!-- default SPM parameter -->  
         <h4 id="ResultsParaSPM">SPM parameters</h4> 
           <p>
-            The SPM default user parameters allow the adaptions in cases of failed affine realignment or insufficient inhomogeneity correction. 
+            The SPM default user parameters allow the adaptations in cases of failed affine realignment or insufficient inhomogeneity correction. 
             <ol>
               <li>
                 The affine registration is controlled by the <b><i>affreg</i></b> parameter with setting <i>MNI</i> (aff<sub>m*</sub>; default), <i>eastern</i> (aff<sub>e</sub>), <i>subject</i> (aff<sub>s</sub>), and <i>none</i> (aff<sub>n</sub>).
@@ -134,7 +134,7 @@
             The SPM expert user parameters include further SPM parameter that are controlled by other parameters or showed only little or unsystematically effects on the CAT segmentation and are therefore only available in the expert GUI:
             <ol>
               <li>
-                The bias field smoothness <b><i>biasfwhm</i></b> and bias field regularisation <b><i>biasreg</i></b> allows the adaption of the bias field correction with <i>bf<sub>30</sub></i>/<i>br<sub>0</sub></i> for strong correction to <i>bf<sub>inf</sub></i>/<i>br<sub>0.1</sub></i> for less corrections and are simultaneously controlled by <i>biasstr</i> parameter defined above and only used if <i>biasstr</i> = 0.
+                The bias field smoothness <b><i>biasfwhm</i></b> and bias field regularisation <b><i>biasreg</i></b> allows the adaptation of the bias field correction with <i>bf<sub>30</sub></i>/<i>br<sub>0</sub></i> for strong correction to <i>bf<sub>inf</sub></i>/<i>br<sub>0.1</sub></i> for less corrections and are simultaneously controlled by <i>biasstr</i> parameter defined above and only used if <i>biasstr</i> = 0.
               </li><li> 
                 The sampling resolution <b><i>samp</i></b> controls the initial resolution of the Unified Segmentation were higher resolution (e.g. <i>sr<sub>1.0</sub></i>) should lead to improved results by higher processing time. However, the much lower default resolution <i>sr<sub>3.0</sub></i> allow similar good results.
               </li><li> 

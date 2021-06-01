@@ -7,7 +7,7 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
 %  normalized space (where also the VBM is done and that is defined 
 %  by extopts.vox, and (3) in the atlas space.
 %  Estimation in normalized space is more direct and avoids further
-%  transformations or individual adaptions. The way over the subject space
+%  transformations or individual adaptations. The way over the subject space
 %  has the advantage that individual anatomical refinements are possible, 
 %  but this has to be done and evaluated for each atlas and it is not so 
 %  simple at the end. Another thing (that came up later) was the evaluation

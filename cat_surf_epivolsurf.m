@@ -19,7 +19,7 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
 %      ATTENTION matlab-stream function only works with double!
 % _________________________________________________________________________
 % TODO: - optimization of memory and data structure
-%       * adaption for GI-algorithm
+%       * adaptation for GI-algorithm
 %       - layer calculation (7)
 %       - surface- vs. voxel-based 
 %       - comments
@@ -75,8 +75,8 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
     opt.streamopt(1)  = 0.1;                                               % point distance 0.05
     opt.streamopt(2)  = 1/opt.streamopt(1)*10000;                          % max number of points in a stream 
   end
-  opt.streamopt(1) = opt.streamopt(1) / opt.res;                           % need adaption for voxelresolution
-  %opt.streamopt(2) = round(opt.streamopt(2) / opt.res);                   % do not need an adaption for max number of point!                    
+  opt.streamopt(1) = opt.streamopt(1) / opt.res;                           % need adaptation for voxelresolution
+  %opt.streamopt(2) = round(opt.streamopt(2) / opt.res);                   % do not need an adaptation for max number of point!                    
   
   pinterpol = 2^opt.interpol;
   nadd = (pinterpol-1)*(opt.interpol>0);

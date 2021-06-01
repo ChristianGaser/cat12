@@ -19,7 +19,7 @@ function out = cat_long_biascorr(job)
 
 % ToDo:
 %  * Integration and Test of WMHs.
-%  * Strong correction (str = 0.75) caused GM overestimation and adaption of 
+%  * Strong correction (str = 0.75) caused GM overestimation and adaptation of 
 %    filter thresholds and smoothin is required. 
 %  * Iterative correction with low to high filter size
 

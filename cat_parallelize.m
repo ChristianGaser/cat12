@@ -328,7 +328,7 @@ function varargout = cat_parallelize(job,func,datafield)
             
             
             %% search for the start/end entries of a subject, e.g. "CAT12.# r####: 1/14:   ./MRData/*.nii" 
-            %  This is the dirty part that is expected to need adaption for 
+            %  This is the dirty part that is expected to need adaptation for 
             %  each new routine that utilize cat_parallelize and has a new
             %  unique job and log structure. 
             %  If this process failed, we have no progress information but

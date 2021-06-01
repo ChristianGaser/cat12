@@ -131,7 +131,7 @@ function [Ym2,Ysrc2,Ycls,Ycor,glcor,cf] = cat_main_correctmyelination(Ym,Ysrc,Yc
   Ywd    = max(0,cat_vbdist(max(0,min(1,Ybb .* Ymb .* 3 - 2)),Yct) - 0.5); Ywd(Ywd>10^10) = 0;      % WM distance 
   Ygmt   = cat_vol_pbtp(Yp0b*3,Ywd,Ycd) .* mean(vx_vol);                                            % GM thickness
   
-  %  We need dynamic adaption to handle different brain sizes in human
+  %  We need dynamic adaptation to handle different brain sizes in human
   %  but also non human data. 
   %  Denoising of the thickness estimate based on our expectations that 
   %  thickness in normally distributed but also linked to the TIV
@@ -176,7 +176,7 @@ function [Ym2,Ysrc2,Ycls,Ycor,glcor,cf] = cat_main_correctmyelination(Ym,Ysrc,Yc
   %% combine measures
   %  ----------------------------------------------------------------------
 % ######### this part need improvments and better explaination 
-% ######### mark points were that allow easy modification/adaptions
+% ######### mark points were that allow easy modification/adaptations
 
   % Ywmp .. WM region and its PVE that should not or only partially be alterated 
   Ydiv  = cat_vol_div(Ywdi); 

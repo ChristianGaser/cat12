@@ -308,7 +308,7 @@ yo  = sc*30;          % y-offset of button field from bottom
 yd  = sc*30;          % y-distance between buttons
 to  = sc*[-10 0 20 0];% offset for correcting text fields
 bo  = [to(1) -0.15*yd*sc to(3) -0.4*yd*sc]; % offset for correcting background box
-tg  = [tw*1.5,tw*1.5];    % resolution adaption for menu panels
+tg  = [tw*1.5,tw*1.5];    % resolution adaptation for menu panels
 
 if ismac
     if cat_io_matlabversion>20110

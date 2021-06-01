@@ -482,7 +482,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
       %%
       YwmhL    = cat_vol_morph( smooth3((Yp0A + YwmhA)>1.9 & Ym>1.7 & Ym<2.2 & ~Ybgth & ~Ycenter & ...
                  cat_vol_morph( YwmhA>0 ,'dd',8) & YA==LAB.CT & ... % use Ywmh atlas
-                 ~cat_vol_morph(Yvt2>1.6 & Yvt2<3 & Ym<1.8 ,'dd',3,vx_vol))>0.5,'do',4-3*WMHCstr,vx_vol); % age adaption
+                 ~cat_vol_morph(Yvt2>1.6 & Yvt2<3 & Ym<1.8 ,'dd',3,vx_vol))>0.5,'do',4-3*WMHCstr,vx_vol); % age adaptation
                %%
       Ycortex1(cat_vol_morph(YwmhL,'dd',3) & Ycortex1==2) = 0; Ycortex1(YwmhL) = 1; 
       Ycortex2 = cat_vol_laplace3R(Ycortex1,Ycortex1==1.5,0.005);

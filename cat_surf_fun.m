@@ -1220,7 +1220,7 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
     warning off MATLAB:subscripting:noSubscriptsSpecified  
     II = cat_surf_isocolors2(Ym,VI,mat);  
     IO = cat_surf_isocolors2(Ym,VO,mat); 
-    % local adaption for GM intensity changes by myelination 
+    % local adaptation for GM intensity changes by myelination 
     IIs = single(spm_mesh_smooth(M,double(II),round(100 * sqrt(size(CS.faces,1)/180000)))); 
     IOs = single(spm_mesh_smooth(M,double(II),round(100 * sqrt(size(CS.faces,1)/180000)))); 
     % normalization
@@ -3271,13 +3271,13 @@ function [Yp,Yt,vmat1,vmat1i] = cat_surf_surf2vol(S,Y,T,type,opt)
   %% transformation for create CS
   if 0 ~isempty(opt.interpBB.mati) && ~isempty(opt.interpBB.BB)
     S.vertices = S.vertices - repmat( opt.interpBB.BB([3,1,5]) - 1,size(S.vertices,1),1);            % correction for boundary box 
-    S.vertices = S.vertices ./ repmat(abs(opt.interpBB.interpV ./ opt.interpBB.mati([8,7,9])),size(S.vertices,1),1);   % resolution adaption
+    S.vertices = S.vertices ./ repmat(abs(opt.interpBB.interpV ./ opt.interpBB.mati([8,7,9])),size(S.vertices,1),1);   % resolution adaptation
 
     vmat1 = [0 0 0];
 
     if ~strcmpi(type,'val')
       Sr.vertices = Sr.vertices - repmat( opt.interpBB.BB([3,1,5]) - 1,size(Sr.vertices,1),1);            % correction for boundary box 
-      Sr.vertices = Sr.vertices ./ repmat(abs(opt.interpBB.interpV ./ opt.interpBB.mati([8,7,9])),size(Sr.vertices,1),1);   % resolution adaption
+      Sr.vertices = Sr.vertices ./ repmat(abs(opt.interpBB.interpV ./ opt.interpBB.mati([8,7,9])),size(Sr.vertices,1),1);   % resolution adaptation
     end
   elseif ~isempty(opt.mat)
     S = cat_surf_mat(S,opt.mat,1);

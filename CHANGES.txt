@@ -1,5 +1,42 @@
 ------------------------------------------------------------------------
-r1841 | gaser | 2021-06-01 12:03:05
+r1842 | gaser | 2021-06-01 16:41:06
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_conf_extopts.m
+M       cat_conf_opts.m
+M       cat_conf_tools.m
+M       cat_defaults.m
+M       cat_io_report.m
+M       cat_long_biascorr.m
+M       cat_main.m
+M       cat_main1639.m
+M       cat_main_APRG.m
+M       cat_main_LAS.m
+M       cat_main_LAS2.m
+M       cat_main_LAS21639.m
+M       cat_main_LASs.m
+M       cat_main_amap1639.m
+M       cat_main_correctmyelination.m
+M       cat_main_roi.m
+M       cat_parallelize.m
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       cat_surf_epivolsurf.m
+M       cat_surf_fun.m
+M       cat_vol_partvol.m
+M       cat_vol_partvol1639.m
+M       cat_vol_sanlm.m
+M       development/cat_main_LAS.m
+M       html/cat_methods_validation.html
+M       standalone/cat_standalone_segment.m
+M       standalone/cat_standalone_segment_enigma.m
+M       standalone/cat_standalone_segment_long.m
+
+Changed: Corrected consistent typo in many files.
+------------------------------------------------------------------------
+r1841 | gaser | 2021-06-01 12:03:38 +0200 (Tue, 01 Jun 2021) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -16,6 +53,7 @@ MM      standalone/cat_standalone_segment_enigma.m
              cat_standalone_segment_enigma.m.
 (2) Changed: Some small edits to help text.
 (3) Changed: Updated scp for deployed versions in Makefile.
+
 ------------------------------------------------------------------------
 r1840 | dahnke | 2021-06-01 09:02:08 +0200 (Tue, 01 Jun 2021) | 13 lines
 

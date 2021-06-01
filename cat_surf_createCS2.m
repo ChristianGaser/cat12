@@ -129,7 +129,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   % processing times for higher quality levels. Otherwise, we can simple 
   % avoid changes here ... so we can define this parameter utilizing the 
   % vdist parameter by simply divide it by 100.
-  %def.surfaccuracy        = 0.01; % no adaption here otherwise processing time will not simply double 
+  %def.surfaccuracy        = 0.01; % no adaptation here otherwise processing time will not simply double 
   def.surfaccuracy = 0.1; %opt.vdist / 100; 
   def.reduceCS     = (300000 * sqrt(4/3 * 2) ) ./ opt.vdist; % to test ... fprintf('%g ',300000 * sqrt(1.3*2) ./ (( [4 2 1.3 1 0.5] * 2).^0.5))
   opt              = cat_io_updateStruct(def,opt);
@@ -687,7 +687,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
         Yts    = cat_vol_approx(Yth1i,2);  
         Yts    = 1 + max(-0.5,min(0.5,(Yts - mean(Yth1i(:))) / (2 * mean(Yth1i(:)))  )); 
         if exist('mask_parahipp_smoothed','var')
-          Yts    = Yts .* (1-mask_parahipp_smoothed) + mask_parahipp_smoothed;  % no thickness adaption in the hippocampus! 
+          Yts    = Yts .* (1-mask_parahipp_smoothed) + mask_parahipp_smoothed;  % no thickness adaptation in the hippocampus! 
         end
         Yppisc = max(0.55 .* (Yppi>=1),min(1.5, Yppisc .* Yts )); % factor 1 is Ypp at 0.5 > limit 0.55 and 1.5 
         scale_cortex = scale_cortex * median( Yts(:) );
@@ -711,7 +711,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
       % #####
       %   I am not sure if the topologoy correction is optimal.
       %   Moreover, a correction should also change the Yppi to avoid self-intersections. 
-      %   Maybe a smooth adaption similar to "mask_parahipp_smoothed" can be used here. 
+      %   Maybe a smooth adaptation similar to "mask_parahipp_smoothed" can be used here. 
       %   However, this is quite complex and I miss the time go on ... 
       %   RD201911
       % #####
@@ -977,7 +977,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
       cmd = sprintf('CAT_Central2Pial -equivolume -weight 0.7 "%s" "%s" "%s" 0',Praw,Ppbt,Praw);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
 
-      % refine super-large faces with adaption for cerebellum and fast option
+      % refine super-large faces with adaptation for cerebellum and fast option
       cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Praw,Praw,3 / ( 1 + (opt.fast==1)) ); % only deformation for fast pipeline
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
 
@@ -1154,7 +1154,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
 
     % we need some refinement because some vertices are too large to be deformed with high accuracy
     if ~useprior
-      cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 1',Pcentral,Pcentral,opt.vdist); % adaption for cerebellum
+      cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 1',Pcentral,Pcentral,opt.vdist); % adaptation for cerebellum
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
     end
     
@@ -1166,7 +1166,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
     
     % need some more refinement because some vertices are distorted after CAT_DeformSurf
     if ~useprior
-      cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 1',Pcentral,Pcentral,opt.vdist); % adaption for cerebellum
+      cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 1',Pcentral,Pcentral,opt.vdist); % adaptation for cerebellum
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
     end
     
