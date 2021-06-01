@@ -2,7 +2,7 @@
 % modified parameters for ENIGMA
 %
 %_______________________________________________________________________
-% $Id: cat_standalone_segment_enigma.m 1832 2021-05-28 10:37:07Z gaser $
+% $Id$
 
 % first undefined data field, that will be dynamically replaced by cat_standalone.sh
 matlabbatch{1}.spm.tools.cat.estwrite.data = '<UNDEFINED>';
@@ -102,7 +102,7 @@ matlabbatch{1}.spm.tools.cat.estwrite.extopts.admin.print = 2;
 matlabbatch{1}.spm.tools.cat.estwrite.output.surface = 1;       
 
 % BIDS output
-matlabbatch{1}.spm.tools.cat.estwrite.output.BIDS.BIDSno = 1;
+matlabbatch{1}.spm.tools.cat.estwrite.output.BIDS.BIDSyes.BIDSfolder = cat_version;
                                                             
 % define here volume atlases
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.neuromorphometrics = 1;
