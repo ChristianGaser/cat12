@@ -21,6 +21,7 @@ function Ycls = cat_main(res,tpm,job)
 
 update_intnorm = 1; %job.extopts.new_release;  % RD202101: temporary parameter to control the additional intensity normalization 
 
+if ~isfield(job.extopts,'histth'), job.extopts.histth = [0.96 0.9999]; end  % RD20200501: created in cat_run_job but not in cat_run_job1639
 
 % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
 dbs = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
