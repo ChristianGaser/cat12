@@ -179,12 +179,12 @@ if ~H.isxml
   end  
 end
 
-if H.isxml
-
-  if size(xml_files,1) ~= n_subjects
-    error('XML-files must have the same number as sample size');
+if H.isxml & size(xml_files,1) ~= n_subjects
+    fprintf('WARNING: XML-files must have the same number as sample size. XML-files will be not used.\n');
+    H.isxml = 0;
   end
   
+if H.isxml
   if H.mesh_detected
     QM = ones(n_subjects,5);
     QM_names = char('Noise','Bias','Weighted overall image quality (IQR)','Euler number','Size of topology defects');
