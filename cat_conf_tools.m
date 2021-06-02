@@ -3006,13 +3006,13 @@ function boxplot = conf_io_boxplot(outdir,subdir,name,expert)
   notched.labels      = {'No','Yes'};
   notched.values      = {0 1};
   notched.def         = @(val) 0;
-  notched.help        = {'Notched boxes taht are thinner at the median.' ''};
+  notched.help        = {'Notched boxes that are thinner at the median.' ''};
 
   %  opt.symbol      = '+o';          % outlier symbols
   symbol              = cfg_entry;
   symbol.tag          = 'symbol';
   symbol.name         = 'Outlier symbols';
-  symbol.help         = {'Notched boxes taht are thinner at the median.' ''};
+  symbol.help         = {'Notched boxes that are thinner at the median.' ''};
   symbol.strtype      = 's';
   symbol.num          = [1 2];
   symbol.val          = {'+o'}; 

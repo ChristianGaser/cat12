@@ -839,12 +839,13 @@ interp.help    = {
 sample         = cfg_menu;
 sample.tag     = 'sample';
 sample.name    = 'Sampling Function';
-sample.labels  = {'Mean','Weighted mean','Maximum','Minimum','Absolute maximum','Multi-values'};
-sample.values  = {{'avg'},{'weighted_avg'},{'max'},{'min'},{'maxabs'},{'multi'}};
+sample.labels  = {'Mean','Median','Weighted mean','Maximum','Minimum','Absolute maximum','Multi-values'};
+sample.values  = {{'avg'},{'median'},{'weighted_avg'},{'max'},{'min'},{'maxabs'},{'multi'}};
 sample.val     = {{'maxabs'}};
 sample.help    = {
   'Sampling function to combine the values of the grid along the surface normals.'
   ' Mean:          Use average for mapping along normals.'
+  ' Median:        Use median for mapping along normals.'
   ' Weighted mean: Use weighted average with gaussian kernel for mapping along normals. The kernel is so defined that values at the boundary are weighted with 50% while center is weighted with 100% (useful for (r)fMRI data.'
   ' Maximum:       Use maximum value for mapping along normals.'
   ' Minimum:       Use minimum value for mapping along normals.'

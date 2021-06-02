@@ -1,5 +1,25 @@
 ------------------------------------------------------------------------
-r1843 | dahnke | 2021-06-02 18:24:31
+r1844 | gaser | 2021-06-03 01:40:50
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_factorial.m
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       cat_stat_check_cov.m
+M       check_pipeline_homogeneity.m
+M       html/cat.html
+
+(1) Changed: Added option for release check to check_pipeline_homogeneity.m.
+(2) Changed: New median mapping function for mapping volume data to surface.
+(3) Changed: Recompiled surface code.
+(3) Fixed:   Corrected check for size check between xml-files and data in
+             cat_stat_check_cov.m.
+(4) Fixed:   Corrected estimation of mean values for dummy covariate in
+             cat_conf_factorial.m.
+------------------------------------------------------------------------
+r1843 | dahnke | 2021-06-02 18:24:44 +0200 (Wed, 02 Jun 2021) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +33,7 @@ M       cat_surf_vx2surf.m
 (2) Fixed:   Correct typo in cat_surf_vx2surf.m.
 (3) Deleted: Removed obsolete cat_main_LAS21639 (with old comment in cat_main1639)  
              and cat_main_registration2.
+
 
 ------------------------------------------------------------------------
 r1842 | gaser | 2021-06-01 16:41:58 +0200 (Tue, 01 Jun 2021) | 35 lines
