@@ -1082,7 +1082,7 @@ voxel_cov.help    = {
     ''
     'In addition, an interaction can be modeled to examine whether the regression between functional and structural data differs between two groups.'
     ''
-    'Please note that the saved vSPM.mat file can only be analyzed with the TFCE toolbox.'
+    'Please note that the saved vSPM.mat file can only be analyzed with the TFCE r221 or newer toolbox.'
     };
 
 %--------------------------------------------------------------------------
@@ -1178,7 +1178,7 @@ if ~isempty(char(job.des.(fname).voxel_cov.files))
   for i=1:n
     dat = spm_data_read(spm_data_hdr_read(job.des.(fname).voxel_cov.files{i}));
     ind_dat = isfinite(dat) & dat ~= 0;
-    if any(ind_dat)
+    if any(ind_dat(:))
       gm(i) = mean(dat(ind_dat));
     else
       gm(i) = 0;
@@ -1254,7 +1254,7 @@ if voxel_covariate
   delete(fullfile(SPM.swd,sprintf('spm*_%04d.*',Ic0)));
   
   % print warning
-  spm('alert!',sprintf('SPM12 cannot handle such designs with voxel-wise covariate.\nYou must now call the TFCE toolbox for statistical analysis.'));
+  spm('alert!',sprintf('SPM12 cannot handle such designs with voxel-wise covariate.\nYou must now call the TFCE r221 or newer for statistical analysis.'));
 else
   % remove old vSPM.mat if exist
   swd = fileparts(out.spmmat{1});
