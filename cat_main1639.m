@@ -308,7 +308,6 @@ if ~isfield(res,'spmpp')
       [Ymi,Ym,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extoptsLAS2); % use Yclsi after cat_vol_partvol
     else
       [Ymi,Ym,Ycls] = cat_main_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
-      %[Ymi,Ym,Ycls] = cat_main_LAS21639(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
     end
     stime2 = clock; % not really correct but better than before
     
