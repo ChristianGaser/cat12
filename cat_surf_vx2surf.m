@@ -223,7 +223,7 @@ function out = cat_surf_vx2surf(job)
         end
         Vm = Vp0; 
       else
-        cat_io_printf('warn',sprintf('Cannot find ROI file "%s". Continue with next subject. ', ...
+        cat_io_cprintf('warn',sprintf('Cannot find ROI file "%s". Continue with next subject. ', ...
           job.measures{mi}.(measure).rimage{fi})); 
         Ym = 0;
       end
