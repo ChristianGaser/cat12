@@ -1,4 +1,4 @@
-function Phull = cat_surf_create_TPM_hull_surface(tpm)
+function Phull = cat_surf_create_TPM_hull_surface(tpm,human)
 % _________________________________________________________________________
 % Creates a surface of the brain and headmask and save the data in one file
 % named as "bh.headbrain.$TPM-filename$.gii" in the cat surface directory.
@@ -43,12 +43,18 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm)
       end
     end
   end
+  if ~exist('human','var')
+    human = 1;
+  end
 
   
   % define filename
   [pp,Pname,ee] = spm_fileparts(Ptpm); Pname = strrep([Pname ee],'.nii',''); 
-  Phull = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',sprintf('bh.headbrain.%s.gii',Pname));
-  
+  if human
+    Phull = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',sprintf('bh.headbrain.%s.gii',Pname));
+  else
+    Phull = fullfile(spm('dir'),'toolbox','cat12','templates_animals_surfaces',sprintf('bh.headbrain.%s.gii',Pname));
+  end
   
   % nothing to do - just return filename 
   if ~cat_io_rerun(Phull,Ptpm), return; end

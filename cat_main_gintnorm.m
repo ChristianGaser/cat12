@@ -574,8 +574,8 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
       Ysrc    = cat_stat_histth(Ysrc,extopts.histth); % remove outlier
       clsints = @(x,y) [round( res.mn(res.lkp==x) * 10^5)/10^5; res.mg(res.lkp==x-((y==0)*8))']; % SPM peak definition  
       clsint  = @(x) cat_stat_kmeans(Ysrc(cat_vol_morph(Ycls{x}>128,'e') | Ycls{x}>250));                                      % median within the tissue label 
-      clsintv = [clsint(1) clsint(2) clsint(3)];
-      for i=1:3, if isnan(clsintv(i)), clsintv(i) = clsints(i); end; end % use median if possible
+      clsintv = [clsint(1) clsint(2) clsint(3) clsint(4) clsint(5) clsint(6)];
+      for i=1:6, if isnan(clsintv(i)), clsintv(i) = sum(prod(clsints(i,1))); end; end % use median if possible
       
       bc = 1; 
       if bc
@@ -608,11 +608,10 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
         Ywmh = (Ygmp - single(Ycls{1})/255) .* cat_vol_morph(Ywmh>0.2,'d',2,vx_vol);               % also smaller WMHs around the large ones
         Ywmh(smooth3(Ywmh)<0.3) = 0;                                                               % remove small dots
         clsintg2  = @(x) cat_stat_nanmedian(Ysrcs(Ycls{x}>128 & Yg<gth*2 & ~Ywmh));                % awoid WMH areas
-        for i=1:3
+        for i=1:6
           clsintv(i) = clsintg2(i);  
-          if isnan(clsintv(i)), clsintv(i) = clsintf(i); end
           if isnan(clsintv(i)), clsintv(i) = clsint(i);  end
-          if isnan(clsintv(i)), clsintv(i) = clsints(i); end
+          if isnan(clsintv(i)), clsintv(i) = sum(prod(clsints(i,1))); end
         end
           
         
