@@ -656,7 +656,7 @@ if 1
   
   % test mesh display
   idi   = 1; 
-  Phull = cat_surf_create_TPM_hull_surface(res.tpm);
+  Phull = cat_surf_create_TPM_hull_surface(res.tpm,strcmp(job.extopts.species,'human'));
   try, spm_orthviews('AddContext',idi); end % need the context menu for mesh handling
   try
     warning('off','MATLAB:subscripting:noSubscriptsSpecified');

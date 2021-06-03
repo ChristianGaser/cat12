@@ -1,5 +1,34 @@
 ------------------------------------------------------------------------
-r1845 | dahnke | 2021-06-03 14:29:32
+r1846 | dahnke | 2021-06-03 16:40:10
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main_gintnorm.m
+M       cat_main_reportfig.m
+M       cat_surf_create_TPM_hull_surface.m
+A       internal/cat_vol_gbdist.m
+A  +    templates_animals_surfaces/bh.headbrain.ape_greater_TPM.gii
+        > moved from templates_surfaces/bh.headbrain.ape_greater_TPM.gii
+A  +    templates_animals_surfaces/bh.headbrain.chimpanzee_TPM.gii
+        > moved from templates_surfaces/bh.headbrain.chimpanzee_TPM.gii
+A  +    templates_animals_surfaces/bh.headbrain.monkey_oldworld_TPM.gii
+        > moved from templates_surfaces/bh.headbrain.monkey_oldworld_TPM.gii
+D       templates_surfaces/bh.headbrain.ape_greater_TPM.gii
+        > moved to templates_animals_surfaces/bh.headbrain.ape_greater_TPM.gii
+D       templates_surfaces/bh.headbrain.chimpanzee_TPM.gii
+        > moved to templates_animals_surfaces/bh.headbrain.chimpanzee_TPM.gii
+D       templates_surfaces/bh.headbrain.monkey_oldworld_TPM.gii
+        > moved to templates_animals_surfaces/bh.headbrain.monkey_oldworld_TPM.gii
+
+(1) Changed: Moved animal TPM template surface to animal directory and corrected
+             handling in cat_main_reportfig and cat_surf_create_TPM_hull_surface.
+(2) Changed: Corrected tiny bug in cat_main_gintnorm.             
+(3) New:     Added alternative voxel-based distance function cat_vol_gbdist that
+             estimated the distance to a isosurface of a volume by using a graph-
+             based nearest neighbor search, allow also to consider PVE values.                
+              
+------------------------------------------------------------------------
+r1845 | dahnke | 2021-06-03 14:29:43 +0200 (Thu, 03 Jun 2021) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +44,7 @@ A       templates_surfaces_32k/mesh.inflated.freesurfer.gii
 (1) Deleted:  Removed old unused internal functions. 
 (2) New:      Added some general surfaces. 
 (3) New:      Added missing? cat_vol_sample function. 
+
 
 ------------------------------------------------------------------------
 r1844 | gaser | 2021-06-03 01:40:58 +0200 (Thu, 03 Jun 2021) | 18 lines
