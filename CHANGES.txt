@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1846 | dahnke | 2021-06-03 16:40:10
+r1847 | dahnke | 2021-06-05 12:59:06
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_colormaps.m
+M       cat_main_reportcmd.m
+M       cat_run.m
+M       html/cat_methods_VBM.html
+A       html/images/cat_SLC_msk_c0009s0010t01A.png
+
+(1) Changed: Added Stroke Lesion Correction (SLC) HTML help page. 
+(2) Changed: Improved CAT preprocessing progress report in cat_main_reportcmd
+             and cat_run.  
+(3) Changed: Updated comments in cat_io_colormap. 
+
+------------------------------------------------------------------------
+r1846 | dahnke | 2021-06-03 16:41:00 +0200 (Thu, 03 Jun 2021) | 27 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -27,6 +43,7 @@ D       templates_surfaces/bh.headbrain.monkey_oldworld_TPM.gii
              estimated the distance to a isosurface of a volume by using a graph-
              based nearest neighbor search, allow also to consider PVE values.                
               
+
 ------------------------------------------------------------------------
 r1845 | dahnke | 2021-06-03 14:29:43 +0200 (Thu, 03 Jun 2021) | 16 lines
 

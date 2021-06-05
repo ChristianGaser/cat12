@@ -4,7 +4,7 @@ function [C,XML] = cat_io_colormaps(Cname,ncolors)
 %
 %   [C,XML] = cat_io_colormaps(Cname,ncolors)
 %
-%   Cname   = ['marks' | 'marks+' | 'BCGWHw' | 'BGWHn'];
+%   Cname   = ['marks' | 'marks+' | 'turbo' | 'BCGWHw' | 'BGWHn'];
 %   ncolors =
 % ______________________________________________________________________
 %
