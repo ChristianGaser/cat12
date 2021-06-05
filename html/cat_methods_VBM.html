@@ -36,7 +36,8 @@
         <li><a href="#PVE">Partial Volume Segmentation</a></li>
         <li><a href="#SS">Skull-Stripping and Cleanup</a></li>
         <li><a href="#Dartel">Spatial Normalization</a></li>
-        <li><a href="#WMHC">White Matter Hyperintensity Correction</a></li>
+        <li><a href="#WMHC">White Matter Hyperintensity Correction (WMHC)</a></li>
+        <li><a href="#SLC">Stroke Lesion Correction (SLC)</a></li>
       </ol>
       
       
@@ -125,11 +126,27 @@
         
         
         <li>
-          <h4 id="WMHC">White Matter Hyperintensity Correction</h4> 
+          <h4 id="WMHC">White Matter Hyperintensity Correction (WMHC)</h4> 
           <p>
             The greater dependency of AMAP PVE segmentation on image intensities requires detection and handling of <i>White Matter Hyperintensities</i> (WMHs, <a href="matlab:web('https://dx.doi.org/10.13140/RG.2.2.26753.20326','-browser');">Dahnke et al. 2019)</a>.
             An atlas-region-growing strategy is used to detect WMHs and assign them to GM (like in VBM8, default), WM, or as a separate class. 
             For details see <a href="cat_methods_WMHC.html">WMHC</a>.
+        </li>
+        
+ 				<li>
+          <h4 id="SLC">Stroke Lesion Correction (SLC)</h4> 
+          <p>
+            To avoid improper volumetric deformations in stroke lesions, CAT allows to suppress strong (high-frequent) deformation in the Dartel/Shooting registration schemes (<a href="#Fig1">Figure 1</a>). 
+			      The lesions have to be set to zero (e.g., by using the  <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.maskimg');">Manual image (lesion) masking</a> batch) and the SLC flag has to be activate in the <a class="function" href="matlab:cat('expert');">expert mode</a> of CAT.
+	  		    The functions are still in development and a customized surface registration has not yet been implemented. 
+					<div>
+						<p class="img" style="width: 90%;" id="Fig1">
+							<img src="images/cat_SLC_msk_c0009s0010t01A.png" width=100% height=auto alt="CAT stroke lesion correction/handling" ></a>
+						<br><br>
+								Figure 1: Shown is the gray matter segmentation of subject <i>SLC_msk_c0009s0010t01</i> from the <a href="http://fcon_1000.projects.nitrc.org/indi/retro/atlas.html">ATLAS</a> database without (left) and with <i>Stroke Lesion Correction</i> (SLC; right).  
+						</p>
+					</div>
+
         </li>
         
       </ol>
