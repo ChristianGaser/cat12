@@ -364,33 +364,41 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
 %  This uses the old deformation that was in general done by the Unified
 %  Segmentation. 
 %  ------------------------------------------------------------------------
-    
+       
         cat_io_addwarning('cat_main_registration:regError',...
           'Registration problem due to given input segmentation. \\nUse previous registration.',2,[1 1]);
         res.Affine = res.Affine0; 
         
-        if ~exist('res','var'), res = dres; end
+        % set registration parameter
+        [reg,res,job] = regsetup(dreg,reg,dres,job,regstri,voxi);
+
         tpmM   = res.tpm(1).mat; 
+        tmpM   = Vtmp(1).mat; 
         
         % resolutions
         % - in this case tpmres == tmpres
-        tpmres = abs(tpmM(1));                                                        % template resolution 
-        newres = job.extopts.vox(voxi); if isinf(newres), newres = tpmres; end        % output resolution
+        tmpres = abs(tmpM(1));                                                        % template resolution 
+        %tpmres = abs(tpmM(1));     
+        newres = job.extopts.vox(voxi); if isinf(newres), newres = tmpres; end        % output resolution
  
         % image size/dimension 
         idim   = res.image(1).dim(1:3);                                               % (interpolated) input image size
-        tdim   = res.tpm(1).dim;                                                      % tpm/tmp size 
-        odim   = BB2dim(res.bb,resbb,res.tmp2{1}(1).dim,tpmres,newres);               % output size 
-% bug ...
+        sdim   = res.tpm(1).dim;                                                  % registration template image size
+        tdim   = res.tmp2{1}(1).dim;                                                  % registration template image size
+        odim   = BB2dim(res.bb,resbb,res.tpm(1).dim,tmpres,newres);                   % res.bb~TPM, resbb~dynamic, 
         
         % mat matrices for different spaces
         % - here M1 == M1t
-        imat   = spm_imatrix(tpmM); imat(1:3) = imat(1:3) + imat(7:9).*(tdim - (newres/tpmres*odim))/2; imat(7:9) = imat(7:9) * newres/tpmres; 
-        M1     = spm_matrix(imat);                                                    % warped matrix
         M0     = res.image.mat;                                                       % for (interpolated) individual volume
+        if isfield( job.extopts , 'bb' )  &&  numel( job.extopts.bb ) == 1  && job.extopts.bb == 1
+          M1   = tpmM;
+        else
+          imat = spm_imatrix(tmpM); imat(1:3) = imat(1:3) + imat(7:9).*(tdim - (newres/tmpres*odim))/2; imat(7:9) = imat(7:9) * newres/tmpres; 
+          M1   = spm_matrix(imat);
+        end
         
         % estimate the inverse transformation 
-        yid             = spm_diffeo('invdef', Yy , odim, inv(tpmM\M1), M1\res.Affine*M0); 
+        yid             = spm_diffeo('invdef', Yy , sdim, inv(tpmM\M1), M1\res.Affine*M0); 
         yi              = spm_diffeo('invdef', yid, idim, inv(M1\res.Affine*M0), eye(4)); clear yid; 
         yi2             = spm_diffeo('invdef', yi , odim, eye(4), eye(4)); 
         w               = max( eps , abs(spm_diffeo('def2det', yi2 ) ) ); 
@@ -402,7 +410,8 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
         msk             = cat_vol_smooth3X(msk,2); w( isnan(w) ) = wa( isnan(w) ); 
         w               = wa .* msk + (1-msk) .* w; clear msk wa; 
         % use half registration resolution to define the amout of smoothing to reduce registration artefacts
-        fs              = newres / 2; w = w - bg; spm_smooth(w,w,fs); w = bg + w; % spm smoothing boudary problem where values outside are 0 
+        msk             = true(size(w)); msk(3:end-2,3:end-2,3:end-2) = false;
+        fs              = newres / 2; w(msk) = bg; w = log(w); spm_smooth(w,w,fs); w = exp(w); % spm smoothing boudary problem where values outside are 0 
        
         % affine and rigid parameters
         [M3,R]          = spm_get_closest_affine( affind(rgrid( idim ) ,M0) , affind(Yy,dres.Yymat), single(Ycls{1})/255); clear M3; 
@@ -415,8 +424,8 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
         % final structure
         if isfield(res,'imagesc'); trans.native.Vo = res.imagec(1); else, trans.native.Vo = res.image0(1); end
         trans.native.Vi = res.image(1);
-        trans.affine    = struct('odim',odim,'mat',M1,'mat0',mat0a,'M',Maffine);    % structure for cat_io_writenii
-        trans.rigid     = struct('odim',odim,'mat',M1,'mat0',mat0r,'M',Mrigid);     % structure for cat_io_writenii
+        trans.affine    = struct('odim',odim,'mat',M1,'mat0',mat0a,'M',Maffine,'A',res.Affine);    % structure for cat_io_writenii
+        trans.rigid     = struct('odim',odim,'mat',M1,'mat0',mat0r,'M',Mrigid ,'R',R);             % structure for cat_io_writenii
        %trans.warped    = struct('y',yid,               'odim',odim,'M0',M0,'M1',M1,'M2',M2,'dartel',res.do_dartel);          % simple version with push artefacts for tests 
         trans.warped    = struct('y',yi ,'yi',yi2,'w',w,'odim',odim,'M0',M0,'M1',M1,'M2',M2,'dartel',res.do_dartel,'fs',fs);  % nicer version with interpolation
         if job.output.jacobian.warped
@@ -425,7 +434,7 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
         
         % export for tests
         if export
-          write_nii(Ycls,job,trans,sprintf('US_tr%3.1f_or%3.1f',tpmres,job.extopts.vox(1)));
+          write_nii(Ycls,job,trans,sprintf('US_tr%3.1f_or%3.1f',tmpres,job.extopts.vox(1)));
         end
       end
     end
@@ -1088,7 +1097,7 @@ function [trans,reg] = run_Dartel(Ycls,Ylesion,job,reg,res,trans,Mad,Maffinerigi
     end 
 
     [y0, dt] = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[1 0], 6); clear y0; 
-    reg(regstri).ll(it+1,:)    =  reg(regstri).lldf(it0,:) * prod(dt)/prod(size(u(:,:,:,1))); 
+    reg(regstri).ll(it+1,:)    =  reg(regstri).lldf(it0,:) * numel(dt)/numel(u(:,:,:,1)); 
     reg(regstri).dtc(it+1)     =  mean(abs(dt(:)-1)); 
     reg(regstri).rmsdtc(it+1)  =  mean((dt(:)-1).^2).^0.5;
     dtg = cat_vol_grad(single(dt)); 

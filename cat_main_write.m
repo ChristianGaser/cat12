@@ -220,7 +220,7 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
       dt = dt(I); dt = dt .* ((1-D) + D); dt(isnan(dt))=1; 
       %dt = 1/max(eps,dt); 
       clear y0 D I
-    else %dartel
+    else % dartel
       [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);  %#ok<ASGLU>
       clear y0
     end

@@ -19,7 +19,7 @@ function varargout = cat_vol_gbdist(I,M,bth,side,interp,BP,IVR,IMinf)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
-% $Id: cat_surf_epivolsurf.m 1842 2021-06-01 14:41:58Z gaser $ 
+% $Id$ 
 
 
   def.bth     = 0.5; 

@@ -1932,8 +1932,11 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
   M            = spm_mesh_smooth(S);                       % for spm_smoothing matrix
 
   % detection and correction for flipped faces to have always the same normal direction
-  flipped = cat_surf_checkNormalDir(S) && isfield(S,mati); 
-  if flipped, S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); end
+  flipped = cat_surf_checkNormalDir(S); 
+  if flipped
+    S.faces   = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; 
+    if isfield( S , 'mati' ), S.mati(7) = - S.mati(7); end
+  end
 
   % simple surface smoothing ... finaly not required anymore
   smoothsurf = @(V,s) [ ...         
@@ -2232,8 +2235,10 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
   end
   
   if opt.verb, fprintf('\n'); end
-  if flipped, S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); end
-  
+  if flipped
+    S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; 
+    if isfield(S , 'mati' ), S.mati(7) = - S.mati(7); end
+  end
 end 
 function [Sve,Svde] = cat_surf_disterr(S,T,mat,Yp0,tol)
 

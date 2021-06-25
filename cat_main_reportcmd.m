@@ -70,8 +70,8 @@ function cat_main_reportcmd(job,res,qa)
     cat_io_cprintf(col, sprintf('GM volume (GMV):             %5.2f%%%% (%5.2f / %5.2f ml)\n',...
       qa.subjectmeasures.vol_rel_CGW(2) , qa.subjectmeasures.vol_abs_CGW(2) , qa.subjectmeasures.vol_TIV ));
     if isfield(qa.subjectmeasures,'dist_thickness')
-      cat_io_cprintf(col, sprintf('GM thickness (GMT):          %5.2f ? %4.2f mm\n',...
-         qa.subjectmeasures.dist_thickness{1}) );
+      cat_io_cprintf(col, sprintf('GM thickness (GMT):          %5.2f %s %4.2f mm\n',...
+         qa.subjectmeasures.dist_thickness{1}(1), native2unicode(177, 'latin1'), qa.subjectmeasures.dist_thickness{1}(2) ) );
     end
   end
   
