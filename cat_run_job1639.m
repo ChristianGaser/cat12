@@ -172,52 +172,41 @@ function cat_run_job1639(job,tpm,subj)
       %            Tested again NLM and Boeseflug interpolation and there
       %            are many artefacts and simple spline interpolation is 
       %            more save. 
+      %  RD202107: Print warning for reslimit/2 and alert for reslimit.  
       %  -----------------------------------------------------------------
       for n=1:numel(job.channel) 
         V = spm_vol(job.channel(n).vols{subj});
         vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
 
         % maximum [ slice-thickness , volume^3 , anisotropy ]
-        reslimits = [5 3 8]; 
-       
+        reslimits    = [5 4 8];
+        
         % too thin slices
-        if any( vx_vol > reslimits(1) ) || job.test_warnings
+        if any( vx_vol > reslimits(1)/2 ) || job.test_warnings
           mid = [mfilename 'cat_run_job:TooLowResolution']; 
           msg = sprintf(['Voxel resolution should be better than %d mm in any dimension for \\\\n' ...
             'reliable preprocessing! This image has a resolution of %0.2fx%0.2fx%0.2f mm%s. '], ... 
             reslimits(1),vx_vol,native2unicode(179, 'latin1'));
-          if job.extopts.ignoreErrors < 2
-            error(mid,msg); %#ok<SPERR>
-          else
-            cat_io_addwarning(mid,msg,2,[0 1],vx_vol);
-          end
+          cat_io_addwarning(mid,msg,1 + any( vx_vol > reslimits(1) ) ,[0 1],vx_vol);
         end
         
         % too small voxel volume (smaller than 3x3x3 mm3)
-        if prod(vx_vol) > reslimits(2)^3 || job.test_warnings
+        if prod(vx_vol) > (reslimits(2)/2)^3 || job.test_warnings
           mid = [mfilename 'cat_run_job:TooLargeVoxelVolume']; 
           msg = sprintf(['Voxel volume should be smaller than %d mm%s (around %dx%dx%d mm%s) for \\\\n' ...
                   'reliable preprocessing! This image has a voxel volume of %0.2f mm%s. '], ...
                   reslimits(2)^3,native2unicode(179, 'latin1'),reslimits(2),reslimits(2),reslimits(2),...
                   native2unicode(179, 'latin1'),prod(vx_vol),native2unicode(179, 'latin1'));
-          if job.extopts.ignoreErrors < 2
-            error(mid,msg); %#ok<SPERR>
-          else
-            cat_io_addwarning(mid,msg,2,[0 1],vx_vol);
-          end
+          cat_io_addwarning(mid,msg,1 + (prod(vx_vol) > reslimits(2)^3),[0 1],vx_vol);
         end
         
         % anisotropy
-        if max(vx_vol) / min(vx_vol) > reslimits(3) || job.test_warnings
+        if max(vx_vol) / min(vx_vol) > reslimits(3)/2 || job.test_warnings
           mid = [mfilename 'cat_run_job:TooStrongAnisotropy'];
           msg = sprintf(['Voxel anisotropy (max(vx_size)/min(vx_size)) should be smaller than %d for \\\\n' ...
                   'reliable preprocessing! This image has a resolution %0.2fx%0.2fx%0.2f mm%s \\\\nand a anisotropy of %0.2f. '], ...
                   reslimits(3),vx_vol,native2unicode(179, 'latin1'),max(vx_vol)/min(vx_vol));
-          if job.extopts.ignoreErrors < 2
-            error(mid,msg);  %#ok<SPERR>
-          else
-            cat_io_addwarning(mid,msg,2,[0 1],vx_vol);
-          end
+          cat_io_addwarning(mid,msg,1 + (max(vx_vol) / min(vx_vol) > reslimits(3)/3),[0 1],vx_vol);
         end
       end
       

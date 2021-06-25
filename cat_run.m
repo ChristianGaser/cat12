@@ -525,7 +525,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                   cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('rGMV=%s',strrep(catrgmv{1},'%','%%')));  
                 end
                 if job.extopts.expertgui > 0 && ~strcmp(catgmt{1},'unknown')
-                  cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('rGMT=%s',strrep(catgmt{1},'%','%%')));  
+                  cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('GMT=%s',strrep(catgmt{1},'%','%%')));  
                 end
                 
                 % warnings
