@@ -161,7 +161,7 @@ function tools = cat_conf_tools(expert)
   getCSVXML                   = cat_cfg_getCSVXML(outdir,expert);
   %urqio                       = conf_vol_urqio; % this cause problems
   iqr                         = conf_stat_IQR(data_xml);
-  %qa                         = conf_vol_qa(data);
+  qa                          = conf_vol_qa(expert,outdir);
   
   
 % create main batch 
@@ -172,6 +172,7 @@ function tools = cat_conf_tools(expert)
   tools.values = { ...
     showslice, ...                        cat.stat.pre 
     ... qa, ...                           cat.stat.pre
+    qa, ...                               
     check_cov, ...                        cat.stat.pre
     check_cov2, ...                       cat.stat.pre
     quality_measures, ...                     cat.stat.pre
@@ -180,7 +181,7 @@ function tools = cat_conf_tools(expert)
     calcvol, ...                          cat.stat.pre
     calcroi, ...                          cat.stat.pre
       ROIsum, ...
-    iqr, ....                             cat.stat.pre
+    iqr, ...                              cat.stat.pre
     ...
     T2x, F2x, T2x_surf, F2x_surf, ...     cat.stat.models?
     ...
@@ -994,18 +995,133 @@ function longBiasCorr = conf_longBiasCorr(data,expert,prefix)
 return
 
 %_______________________________________________________________________
-function qa = conf_vol_qa(data) %#ok<DEFNU>
+function qa = conf_vol_qa(expert,outdir) 
+% Batch for estimation of image quality by a given input segmentation. 
+% There was the idea of a relative common batch that allows to use a wide
+% set of maps to allow personal adaptions, e.g., to measure in background
+% regions or to use atlas maps for region-specific results. However, this 
+% becomes quite complex and would focus on experts that have so specific 
+% knowledge that they better write there own code. 
+% So I try to keep it simple here to support our image quality measures 
+% also for other tissue segmentation, e.g. by SPM, FSL, FreeSurfer.  
+
   % update input
-  data.help = {'Select images for quality control.'};
+  data            = cfg_files;
+  data.tag        = 'images';
+  data.name       = 'Images';
+  data.help       = {'Select images that should be evaluated.'};
+  data.filter     = 'image';
+  data.ufilter    = '.*';
+  data.num        = [1 Inf];  
+  
+  catlab          = data; 
+  catlab.ufilter  = '^p0.*';
+  catlab.tag      = 'catp0'; 
+  catlab.name     = 'Default with CAT label map';
+  catlab.help     = {['Select CAT label map with brain tissues (p0*.nii).  Also label maps created by other tissue segmentations can be used, ' ...
+    'as long the following labeling is used: CSF=1, GM=2, and WM=3 with intermediate PVE values (e.g., 2.32 for 68% GM and 32% WM.  ']};
+  
+  catsegp         = data; 
+  catsegp.ufilter = '^p1.*';
+  catsegp.tag     = 'catp1'; 
+  catsegp.name    = 'Default with CAT segment maps';
+  catsegp.help    = {'Select corresponing CAT GM tissue segments of the selected images above (p1*.nii).  The WM and CSF maps were selected automatically.  ' ''};
+  
+  spmsegc         = data; 
+  spmsegc.ufilter = '^c1.*';
+  spmsegc.tag     = 'spmc1'; 
+  spmsegc.name    = 'Default with SPM segment maps';
+  spmsegc.help    = {'Select corresponing individual SPM GM tissue segments of the selected images above (c1*.nii).  The WM and CSF maps were selected automatically. ' ''};
+
+  gm              = data; 
+  gm.tag          = 'gm'; 
+  gm.name         = 'GM segment';
+  gm.help         = {'Select images with GM segmentation. ' ''};
+  wm              = data; 
+  wm.tag          = 'wm'; 
+  wm.name         = 'WM segment';
+  wm.help         = {'Select images with WM segmentation. ' ''};
+  cm              = data; 
+  cm.tag          = 'cm'; 
+  cm.name         = 'CSF segment';
+  cm.help         = {'Select images with CSF segmentation. ' ''};
+  seg             = cfg_exbranch; 
+  seg.tag         = 'seg';
+  seg.name        = 'Brain tissue segmentation';
+  seg.help        = {'Select tissue segments of other segmentations' ''}; 
+  
+% FSL segment maps  
+
+% FS label map
+
+  model           = cfg_choice; 
+  model.tag       = 'model';
+  model.name      = 'Segmentation';
+  model.values    = {catlab,catsegp,spmsegc,seg}; 
+  model.val       = {catlab}; 
+  model.help      = {[ ...
+    'Select a input segmentation for the estimation of the quality measures. ' ...
+    'The default model is developed for typcial structural T1/T2/PD-based images with a given brain tissue classification. ']}; 
+   
+  
+  % main options
+  % -----------------------------------------------------------------------
+  prefix          = cfg_entry;
+  prefix.tag      = 'prefix';
+  prefix.name     = 'Filename prefix';
+  prefix.strtype  = 's';
+  prefix.num      = [0 Inf];
+  prefix.val      = {'qc_'};
+  prefix.help     = {'Specify the string to be prepended to the filenames of the XML file(s). ' ''};
+
+  
+% Definition of own XML subfield to extend the CAT-XML file 
+%{
+  fdname          = cfg_entry; 
+  fdname.tag      = 'fdname';
+  fdname.name     = 'XML-fieldname';
+  fdname.strtype  = 's';
+  fdname.num      = [0 Inf];
+  fdname.val      = {'qc'};
+  fdname.help     = {
+    'Specify the field name in the "quality_measure" subfield that will include the quality measurements and ratings. ' ''}; 
+  
+  update          = cfg_menu;
+  update.tag      = 'fdupdate';
+  update.name     = 'Update result';
+  update.labels   = {'No' 'Yes'};
+  update.values   = {0 1};
+  update.val      = {1}; 
+  update.hidden   = ~expert; 
+  update.help     = {['Update (replace) an existing datafield. ' ...
+    'Otherwise, the data and time of this estimation process are added to the new fieldname. '];''};
+%}
+  
+  verb            = cfg_menu;
+  verb.tag        = 'verb';
+  verb.name       = 'Print results';
+  verb.labels     = {'0' '1'};
+  verb.values     = {0 1};
+  verb.val        = {1}; 
+  verb.help       = {'Print progress and results. ';''};
+
+  outdir.val{1}   = {'report'}; 
+  
+  opts            = cfg_branch;
+  opts.tag        = 'opts';
+  opts.name       = 'Options';
+  opts.val        = {outdir, prefix, verb }; % fdname, update,
+  opts.help       = {'Basic options. ' ''};
 
   % main
-  qa        = cfg_exbranch;
-  qa.tag    = 'qa';
-  qa.name   = 'CAT quality control';
-  qa.val    = {data};
-  qa.prog   = @cat_vol_qa;
-  qa.vfiles = @vout_qa;
-  qa.help   = {'CAT Quality Control of T1 images. '};
+  qa              = cfg_exbranch;
+  qa.tag          = 'iqe';
+  qa.name         = 'Image quality estimation';
+  qa.val          = {data, model, opts};
+  qa.prog         = @cat_vol_qa; 
+  qa.vfiles       = @vout_qa; % XML files + values
+  qa.hidden       = expert<2;
+  qa.help         = {'Image quality estimation based on a set of images and a given set of input segmentation defined by different models. '};
 return
   
 %_______________________________________________________________________

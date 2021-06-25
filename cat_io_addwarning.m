@@ -20,6 +20,8 @@ function varargout = cat_io_addwarning(id,mess,level,nline,data,usebox)
 %            0 - note    - only relevant for experts/developer
 %            1 - caution - uncitical aspectes that could be checked
 %            2 - alert   - severe problems that should be checked
+%            3 - warning - real matlab warning (full report)
+%            4 - error   - real matlab error   (stops processing)
 %   nline .. new line [before after] warning or by the following codes
 %            1 - add new line in command line output before message
 %            2 - add new line in command line output also after meassage
@@ -118,8 +120,12 @@ function varargout = cat_io_addwarning(id,mess,level,nline,data,usebox)
       cat_io_cmd(sprintf([box(usebox).s box(usebox).i 'NOTE %02d:     ' id '\n' box(usebox).i '             ' warnstr box(usebox).e ],numel(cat_io_addwarning(0))),'note');
     elseif level==1
       cat_io_cmd(sprintf([box(usebox).s box(usebox).i 'WARNING %02d:  ' id '\n' box(usebox).i '             ' warnstr box(usebox).e ],numel(cat_io_addwarning(1))),'warning');
-    else
+    elseif level==2
       cat_io_cmd(sprintf([box(usebox+1).s box(usebox+1).i 'ALERT %02d:    ' id '\n' box(usebox+1).i '             ' warnstr box(usebox+1).e ],numel(cat_io_addwarning(2))),'error');
+    elseif level==3
+      warning(id,warnstr)
+    else
+      error(id,warnstr)
     end
     if nline2(2) == 1 
       fprintf('\n'); 
