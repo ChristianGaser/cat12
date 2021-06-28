@@ -1,4 +1,4 @@
-function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
+function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion,Yp0,Ym,Ymi,Yl1)
 % ______________________________________________________________________
 %  Spatial registration function of cat_main preprocessing that include
 %  the SPM DARTEL and (optimized) SHOOTING registration approaches. 
@@ -44,7 +44,7 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
 %        23 .. soft deformations
 %
 %  Structure:
-%    [trans,reg] = cat_main_registration(job,res,Ycls,Yy,Ylesion)
+%    [trans,reg] = cat_main_registration(job,res,Ycls,Yy[,Ylesion,Ym,Ymi,Yl1])
 %   
 %    trans .. output variable that is used in cat_main and cat_io_writenii
 %    reg   .. output variable that include the summarize of the deformation
@@ -54,6 +54,7 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
 %    Ycls  .. tissue classification that is used for deformation
 %    Yy    .. old initial SPM deformation 
 %    Ylesion  .. template files
+%    [Ym,Yp0,Ymi,Yl1] .. additional maps in case of multiple resistrations 
 % ______________________________________________________________________
 %
 %  The TR is expected to be between 1.0 and 1.5 mm. Higher resolution are 
@@ -132,11 +133,6 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
   % ########################
   
   
-  % limit number of classes
-  if dreg.clsn>0 && numel(Ycls)>dreg.clsn, Ycls(dreg.clsn + 1:end) = []; end
-      
-  
-  
   % error in parallel processing - can't find shooting files (2016/12)
   % switch to shooting directory
   if ~exist('spm_shoot_defaults','file') || ~exist('spm_shoot_update','file') 
@@ -156,6 +152,11 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
   end
 
   
+  % limit number of classes
+  if ~( export && numel( job.extopts.vox ) > 1 )
+    if dreg.clsn>0 && numel(Ycls)>dreg.clsn, Ycls(dreg.clsn + 1:end) = []; end
+  end    
+ 
   
 % #################### THIS SHOULD BE EVALUATED IN FUTURE #################  
 % additional affine registration of the GM segment (or the brainmask) ?
@@ -297,11 +298,13 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
       trans.affine    = struct('odim',odim,'mat',M1,'mat0',mat0a,'M',Maffine,'A',res.Affine);  % structure for cat_io_writenii
       trans.rigid     = struct('odim',odim,'mat',M1,'mat0',mat0r,'M',Mrigid ,'R',R);           % structure for cat_io_writenii
       
-      if debug && export
+      if export && debug
         % template creation
-        fn = {'GM','WM','CSF'}; clsi=1; 
-        cat_io_writenii(trans.native.Vo,single(Ycls{clsi})/255,fullfile(mrifolder,sprintf('debug_%0.2fmm',newres)),sprintf('p%d',clsi),...
-          sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],[0 0 0 3],trans);
+        fn = {'GM'}; %,'WM','CSF','HD1','HD2','BG'}; 
+        for clsi = 1:numel(fn)
+          cat_io_writenii(trans.native.Vo,single(Ycls{clsi})/255,fullfile(mrifolder,'debug'),sprintf('p%d',clsi),...
+            sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],[0 0 0 3],trans);
+        end
         %continue
       end 
       
@@ -352,9 +355,15 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
             trans.jc      = struct('odim',odim,'dt2',w); 
           end
         end
-        % Export
-        if export
+        % export for tests
+        if export && debug
           write_nii(Ycls,job,trans,reg(regstri).testfolder,reg(regstri));
+        end
+        if numel( job.extopts.vox ) > 1 % job.extopts.experimental && 
+          % full export
+          job2 = job; 
+          job2.extopts.mrifolder = fullfile('mri',reg(regstri).testfolder);
+          cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job2,res,trans);
         end
       catch
 %% ------------------------------------------------------------------------
@@ -433,8 +442,13 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion)
         end
         
         % export for tests
-        if export
+        if export && debug
           write_nii(Ycls,job,trans,sprintf('US_tr%3.1f_or%3.1f',tmpres,job.extopts.vox(1)));
+        elseif numel( job.extopts.vox ) > 1
+          % full export
+          job2 = job; 
+          job2.extopts.mrifolder = fullfile('mri',reg(regstri).testfolder);
+          cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job2,res,trans);
         end
       end
     end
@@ -1469,9 +1483,8 @@ function write_nii(Ycls,job,trans,testfolder,reg)
   end
   
   % tissue ouptut
-  exportcls = 1; %numel(Ycls); 
-  fn = {'GM','WM','CSF','HD1','HD2','BG'};
-  for clsi = 1:exportcls
+  fn = {'GM'}; %,'WM','CSF','HD1','HD2','BG'};
+  for clsi = 1:numel(fn) 
     if ~isempty(Ycls{clsi})
       cat_io_writenii(trans.native.Vo,single(Ycls{clsi})/255,fullfile(mrifolder,testfolder),sprintf('p%d',clsi),...
         sprintf('%s tissue map',fn{clsi}),'uint8' ,[0,1/255],[0 0 0 3],trans);
@@ -1484,7 +1497,7 @@ function write_nii(Ycls,job,trans,testfolder,reg)
 
   if job.output.jacobian.warped
   %% write jacobian determinant
-    if isfield(trans.jc,'dt2'); % % shooting
+    if isfield(trans.jc,'dt2') % % shooting
       dt2 = trans.jc.dt2; 
       dx = 10; % smaller values are more accurate, but large look better; 
       [D,I] = cat_vbdist(single(~(isnan(dt2) | dt2<0 | dt2>100) )); D=min(1,D/min(dx,max(D(:)))); 

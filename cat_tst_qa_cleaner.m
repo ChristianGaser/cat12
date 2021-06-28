@@ -122,7 +122,7 @@ function varargout = cat_tst_qa_cleaner(data,opt)
     for di=1:numel(xml)
       opt.site(di,1) = xml(di).qualityratings.res_RMS; 
       data(di,1)     = xml(di).qualityratings.NCR; 
-    end,
+    end
   end
   
 
@@ -135,7 +135,7 @@ function varargout = cat_tst_qa_cleaner(data,opt)
   % concider 80% of the data.
   %  -------------------------------------------------------------------
   if isfield(opt,'site')
-    if numel(opt.site)~=numel(data),
+    if numel(opt.site)~=numel(data)
       error('cat_tst_qa_cleaner:numelsitedata','Numer of elements in data and opt.site have to be equal.\n');
     end
     opt.site = round(opt.site*opt.siterf)/opt.siterf; 
@@ -171,7 +171,7 @@ function varargout = cat_tst_qa_cleaner(data,opt)
     %  -----------------------------------------------------------------
     if exist('data','var') && ~(iscell(data) && strcmp(data{1},'test'))
       d = data; 
-      if numel(d)==0, 
+      if numel(d)==0 
         if nargout>=1, varargout{1} = nan; end
         if nargout>=2, varargout{2} = nan(1,opt.grads); end
         if nargout>=3, varargout{3} = nan(1,2); end
@@ -282,8 +282,9 @@ function varargout = cat_tst_qa_cleaner(data,opt)
         % * use the std give by one BWP noise level (0.5) to describe the 
         %   variance the passed interval.
         
-        hx = hist(d,0.5:1:5.5);
-        peaks = sum(hx>(max(hx)/5))*3;
+        %H = histogram(d,0.5:1:5.5);
+        H.Values = hist(d,0.5:1:5.5); 
+        peaks = sum(H.Values>(max(H.Values)/5))*3;
         [thx,sdx] = cat_stat_kmeans(d,peaks); sdx = sdx./thx;
         for i=1:peaks
           if sum(d<thx(i))/numel(d) < 0.3
@@ -300,9 +301,10 @@ function varargout = cat_tst_qa_cleaner(data,opt)
         % similar to case 1, but with std optimization based on the data 
         % ... surprisingly the simple model 1 works better
         
-        hx = hist(d,0.5:1:5.5); 
+        %H = histogram(d,0.5:1:5.5); 
+        H.Values = hist(d,0.5:1:5.5); 
         %for i=1:1, hx(2:end-1) = cat_stat_nanmean(cat(1,hx(1:end-2),hx(2:end-1),hx(3:end)),1); end
-        peaks = sum(hx>(max(hx)/5))*3;
+        peaks = sum(H.Values>(max(H.Values)/5))*3;
         [thx,sdx] = cat_stat_kmeans(d,peaks); sdx = sdx./thx;
         for i=1:peaks
           %if numel(thx)>i && sum(d<thx(i))/numel(d) < 0.05
@@ -340,13 +342,14 @@ function varargout = cat_tst_qa_cleaner(data,opt)
       set(f,'color','w')
     elseif opt.figure==3
       f = findobj('type','figure','name','qa_cleaner_test');
-      if isempty(f), figure('name','qa_cleaner_test'); else figure(f(1)); clf(f(1)); end
+      if isempty(f), figure('name','qa_cleaner_test'); else, figure(f(1)); clf(f(1)); end
     end
     box on;
     
     %figure
     ss = 0.05; 
     [h,r]  = hist(d,0.5:ss:10.5); 
+    %H =  histogram(d,0.5:ss:10.5); h = H.Values; r = H.BinEdges;
     for i=1:opt.smooth, h(2:end-1) = cat_stat_nanmean(cat(1,h(1:end-2),h(2:end-1),h(3:end)),1); end
     sh = 1; %sum(h);
     
@@ -457,7 +460,7 @@ function varargout = cat_tst_qa_cleaner(data,opt)
     set(axF,'YTick',[],'XTickLabel',{},'XTick',6,'XColor',color(QMC,6),'Color','none','XTicklabel','F','TickLength',[0 0],'Fontsize',FS,'Fontweight','bold');
     hold off; 
     
-    if isfield(opt,'site') && numel(sites>1);
+    if isfield(opt,'site') && numel(sites)>1
       title(sprintf('Histogram (cf=%0.2f) - global treshold for multisite output (n=%d)',opt.cf,numel(sites)),'Fontsize',FS);
     else
       title(sprintf('Histogram (cf=%0.2f)',opt.cf),'Fontsize',FS);
@@ -467,7 +470,7 @@ function varargout = cat_tst_qa_cleaner(data,opt)
   end
   %%
   MarkColor = cat_io_colormaps('marks+',40); 
-  if isfield(opt,'site') && numel(sites)>1, globcorr = ' (global corrected)'; else globcorr = ''; end
+  if isfield(opt,'site') && numel(sites)>1, globcorr = ' (global corrected)'; else, globcorr = ''; end
   if exist('P','var')
     files = P(data<=markths2(:,3)); 
     fprintf('PASSED%s: %0.2f%%\n',globcorr,numel(files)/numel(data)*100)

@@ -249,7 +249,6 @@ if ~isfield(res,'spmpp')
       res2.do_dartel           = 1;      % use dartel
     end
     [trans1,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,res.Ylesion); 
- YyO = Yy; 
     Yy2  = trans1.warped.y;
     if ~debug, clear job2 res2; end
 
@@ -684,8 +683,13 @@ end
       Ylesions = [];  
     end
   
-    % call Dartel/Shooting registration  
-    [trans,res.ppe.reg] = cat_main_registration(job,res,Yclsd,Yy,Ylesions);
+    % call Dartel/Shooting registration 
+    if numel( job.extopts.vox ) > 1
+      Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; %job.export = 1; 
+      [trans,res.ppe.reg] = cat_main_registration(job,res,Ycls,Yy,Ylesions,Yp0,Ym,Ymi,Yl1); clear Yp0; 
+    else
+      [trans,res.ppe.reg] = cat_main_registration(job,res,Yclsd,Yy,Ylesions);
+    end
     clear Yclsd Ylesions;
   else
     %% call Dartel/Shooting registration  

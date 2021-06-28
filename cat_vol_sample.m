@@ -20,7 +20,7 @@ function YA = cat_vol_sample(PT,PA,Yy,hold)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
-% $Id: cat_vol_partvol.m 1842 2021-06-01 14:41:58Z gaser $
+% $Id$
 
   if ~exist('hold','var'), hold = 1; end
 

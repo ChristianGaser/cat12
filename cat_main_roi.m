@@ -127,9 +127,10 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
     mati        = trans.affine.mat(13:15) - VA(ai).mat(13:15); 
     vdim        = spm_imatrix( VA(ai).mat ); % trans.affine.mat ); 
     matit       = mati(1:3) ./ vdim(7:9); 
-    for i=1:3, transw.y(:,:,:,i) = transw.y(:,:,:,i) .* job.extopts.vox ./ VAvx_vol(ai,i);  end
+    % use vox(1) because vox can have multiple values in development mode
+    for i=1:3, transw.y(:,:,:,i) = transw.y(:,:,:,i) .* job.extopts.vox(1) ./ VAvx_vol(ai,i);  end 
     transw.y    = cat(4,transw.y(:,:,:,1) + matit(1), transw.y(:,:,:,2) + matit(2), transw.y(:,:,:,3) + matit(3) );
-    transw.ViVt = prod(vx_vol) ./ job.extopts.vox^3;
+    transw.ViVt = prod(vx_vol) ./ job.extopts.vox(1)^3;
     
     if opt.type == 3
       % Modulation using spm_diffeo and push introduces aliasing artefacts,
@@ -141,7 +142,7 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
       % avoid boundary effects that are not good for the global measurements 
       transw.w(:,:,[1 end]) = NaN; transw.w(:,[1 end],:) = NaN; transw.w([1 end],:,:) = NaN;
       % filter the resampled data to reduce interpolation artefacts 
-      transw.fs = transw.fs .* job.extopts.vox ./ VAvx_vol(ai,i);
+      transw.fs = transw.fs .* job.extopts.vox(1) ./ VAvx_vol(ai,i);
       spm_smooth(transw.w,transw.w,transw.fs); % filter determinant to reduce interpolation artefacts 
       clear maxw;
     end
@@ -151,7 +152,7 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
       wYp0    = cat_vol_roi_map2atlas(Yp0 ,transw,0,opt.type==3);
       wYcls   = cat_vol_roi_map2atlas(Ycls,transw,1,opt.type==3);
       wYa     = cat_vol_roi_load_atlas(FA{ai,1});
-      vx_volw = repmat(job.extopts.vox,1,3);
+      vx_volw = repmat(job.extopts.vox(1),1,3);
     else
       wYa = cat_vol_roi_load_atlas(FA{ai,1}, transw);
     end

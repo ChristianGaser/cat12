@@ -118,7 +118,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
     Ywm = P(:,:,:,2) > 128; 
     Ybe = YbA & ~cat_vol_morph(YbA,'de',8/mean(vx_vol)); 
     Ywm = cat_vol_morph(Ywm,'l',[100 0.1 ]);
-    P(:,:,:,5) = P(:,:,:,5) + P(:,:,:,2) .* uint8( Ybe & ~Ywm ) / 2; 
+    P(:,:,:,min(size(P,4),5)) = P(:,:,:,min(size(P,4),5)) + P(:,:,:,2) .* uint8( Ybe & ~Ywm ) / 2; 
     P(:,:,:,2) = P(:,:,:,2) - P(:,:,:,2) .* uint8( Ybe & ~Ywm ) / 2;  
     clear Ywm be; 
 

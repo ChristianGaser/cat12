@@ -332,8 +332,18 @@ function varargout = cat_vol_qa(action,varargin)
           end
   
           Yp0 = single(spm_read_vols(spm_vol(Pp0{fi})));
+          Yp0(isnan(Yp0) | isinf(Yp0)) = 0; 
           if ~isempty(Pm{fi}) && exist(Pm{fi},'file')
             Ym  = single(spm_read_vols(spm_vol(Pm{fi})));
+            Ym(isnan(Yp0) | isinf(Yp0)) = 0; 
+          elseif 1
+            Ym  = single(spm_read_vols(spm_vol(Po{fi})));
+            Ym(isnan(Yp0) | isinf(Yp0)) = 0; 
+            Yw  = Yp0>2.95 | cat_vol_morph( Yp0>2 , 'e'); 
+            Yb  = cat_vol_approx( Ym .* Yw + Yw .* min(Ym(:)) ) - min(Ym(:)); 
+            %Yb  = Yb / mean(Ym(Yw(:)));
+            Ym  = Ym ./ max(eps,Yb); 
+            
           else
             error('cat_vol_qa:noYm','No corrected image.');
           end
@@ -341,6 +351,10 @@ function varargout = cat_vol_qa(action,varargin)
           res.image = spm_vol(Pp0{fi}); 
           [QASfi,QAMfi] = cat_vol_qa('cat12',Yp0,Vo,Ym,res,species,opt);
 
+          if isnan(QASfi.qualitymeasures.NCR)
+            fprintf('');
+          end
+          
      
           QAS = cat_io_updateStruct(QAS,QASfi,0,fi);
           QAR = cat_io_updateStruct(QAR,QAMfi,0,fi);
@@ -358,12 +372,12 @@ function varargout = cat_vol_qa(action,varargin)
           % print the results for each scan 
           if opt.verb>1 
             if opt.orgval 
-              cat_io_cprintf(opt.MarkColor(max(1,round( mqamatm(fi,:)/9.5 * ...
+              cat_io_cprintf(opt.MarkColor(max(1,floor( mqamatm(fi,:)/9.5 * ...
                 size(opt.MarkColor,1))),:),sprintf(Tline,fi,...
                 QAS(fi).filedata.fnames, ... spm_str_manip(QAS(fi).filedata.file,['f' num2str(opt.snspace(1) - 14)]),...
                 qamat(fi,:),max(1,min(6,mqamatm(fi)))));
             else
-              cat_io_cprintf(opt.MarkColor(max(1,round( mqamatm(fi,:)/9.5 * ...
+              cat_io_cprintf(opt.MarkColor(max(1,floor( mqamatm(fi,:)/9.5 * ...
                 size(opt.MarkColor,1))),:),sprintf(Tline,fi,...
                 QAS(fi).filedata.fnames, ... spm_str_manip(QAS(fi).filedata.file,['f' num2str(opt.snspace(1) - 14)]),...
                 qamatm(fi,:),max(1,min(6,mqamatm(fi)))));
@@ -674,7 +688,15 @@ function varargout = cat_vol_qa(action,varargin)
         warning('cat_vol_qa:badSegmentation',...
           sprintf('Bad %s segmentation (C=%0.0f,G=%0.0f,W=%0.0f).',species,subvol)) %#ok<SPWRN>
       end
-      
+      if ~isfield(QAS,'subjectmeasures')
+        %% in case of external/batch calls
+        QAS.subjectmeasures.vol_TIV = sum(Yp0(:)>0) ./ prod(vx_vol) / 1000;
+        for i = 1:3
+          QAS.subjectmeasures.vol_abs_CGW(i) = sum( Yp0toC(Yp0(:),i)) ./ prod(vx_vol) / 1000; 
+          QAS.subjectmeasures.vol_rel_CGW(i) = QAS.subjectmeasures.vol_abs_CGW(i) ./ ...
+                                               QAS.subjectmeasures.vol_TIV; 
+        end
+      end
 
       %%  estimate QA
       %  ---------------------------------------------------------------
@@ -845,7 +867,7 @@ function varargout = cat_vol_qa(action,varargin)
       if 1
         NCww = sum(Ywn(:)>0) * prod(vx_vol);
         NCwc = sum(Ycn(:)>0) * prod(vx_vol);
-        [Yos2,YM2] = cat_vol_resize({Ywn,Ywn>0},'reduceV',vx_vol,3,16,'meanm');
+        [Yos2,YM2,R] = cat_vol_resize({Ywn,Ywn>0},'reduceV',vx_vol,3,16,'meanm');
         signal_intensity = abs( diff( [min(BGth,CSFth) , max(GMth,WMth)] )); 
         NCRw = estimateNoiseLevel(Yos2,YM2>0.5,nb,rms) / signal_intensity / contrast  ; 
       else     
@@ -854,13 +876,14 @@ function varargout = cat_vol_qa(action,varargin)
         NCww = sum(Ywmn(:)) * prod(vx_vol);
         NCwc = sum(Ycm(:)) * prod(vx_vol);
         signal_intensity = abs( diff( [min(BGth,CSFth) , max(GMth,WMth)] )); 
-        [Yos2,YM2] = cat_vol_resize({Ywn,Ywmn},'reduceV',vx_vol,max(3 * min(vx_vol) ,3),16,'meanm');
+        [Yos2,YM2,R] = cat_vol_resize({Ywn,Ywmn},'reduceV',vx_vol,max(3 * min(vx_vol) ,3),16,'meanm');
         YM2 = cat_vol_morph(YM2,'o'); % we have to be sure that there are neigbors otherwise the variance is underestimated 
         NCRw = estimateNoiseLevel(Yos2,YM2>0.5,nb,rms) / signal_intensity / contrast  ; 
         if isnan(NCRw)
           NCRw = estimateNoiseLevel(Ywn,Ywmn,nb,rms) / signal_intensity / contrast  ; 
         end
       end
+      NCRw = NCRw * (1 + log(28 - prod(R.vx_red)))/(1 + log(28 - 1)); % compensate voxel averageing 
       if BGth<-0.1 && WMth<3, NCRw=NCRw/3; end% MT weighting
       clear Yos0 Yos1 Yos2 YM0 YM1 YM2;
         
@@ -961,7 +984,10 @@ function noise = estimateNoiseLevel(Ym,YM,r,rms,vx_vol)
     rms = 1;
   end
   
-  Ysd   = cat_vol_localstat(single(Ym),YM,r,4);
-  noise = cat_stat_nanstat1d(Ysd(YM).^rms,'median').^(1/rms); 
+  Ysd   = cat_vol_localstat(single(Ym),YM,r  ,4);
+  Ysd2  = cat_vol_localstat(single(Ym),YM,r+1,4); % RD20210617: more stable for sub-voxel resolutions ?
+  Ysd   = Ysd * mod(r,1) + (1-mod(r,1)) * Ysd2;   % RD20210617: more stable for sub-voxel resolutions ?
+  %noise = cat_stat_nanstat1d(Ysd(YM).^rms,'median').^(1/rms); % RD20210617: 
+  noise = cat_stat_kmeans(Ysd(YM),1); % RD20210617: more robust ? 
 end
 %=======================================================================

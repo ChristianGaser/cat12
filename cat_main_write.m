@@ -26,10 +26,16 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
   if isfield(res,'spmpp'), nam = ['c1' nam]; VT0.fname = fullfile(pth,[nam,ee,ie]); end
 
   %d = VT.dim(1:3); % RD 20190328
-  tc = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)]; 
+  tc = cell2mat( struct2cell([job.output.GM;job.output.WM;job.output.CSF;job.output.TPMC]) ); % [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)]; 
 
   % definition of subfolders
-  mrifolder = cat_io_subfolders(VT0.fname,job);
+  if isfield(job.extopts,'mrifolder')
+    %[pp,ff,ee] = spm_fileparts(VT0.fname); 
+    %mrifolder = cat_io_subfolders(fullfile(pp,'mri',job.extopts.mrifolder,[ff ee]),job);
+    mrifolder = job.extopts.mrifolder;
+  else
+    mrifolder = cat_io_subfolders(VT0.fname,job);
+  end
   
   if isfield(trans,'warped') && isfield(trans.warped,'push') && trans.warped.push
     stime = cat_io_cmd('Write result maps (with push)');
@@ -110,11 +116,11 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
   % The strong normalization of the T1 data can directly be used as tissue
   % segmentation. The Ymi images is scaled to get similar maps for each 
   % tissue class, with good visible differences in the sulci.
-  job.output.intsegments = job.extopts.experimental && job.extopts.expertGUI==2;
+  job.output.intsegments = job.extopts.experimental && job.extopts.expertgui==2;
   if job.output.intsegments
     if (any(tc(:)) || job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting) 
 
-      % intensity scaled tissue maps
+      %% intensity scaled tissue maps
       Yclsi = cell(1,3);
       for clsi=1:3
         clsid = [2 3 1];
@@ -171,7 +177,7 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
   % ----------------------------------------------------------------------
 
 
-  % classe maps 4-6 (for full TPM/template creation, e.g. for apes)
+  % class maps 4-6 (for full TPM/template creation, e.g. for apes)
   if any(cell2mat(struct2cell(job.output.TPMC)'))
     for clsi=4:6
       cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
