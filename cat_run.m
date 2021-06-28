@@ -508,7 +508,12 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                 end
                 kcol = [0.5 0.5 0.5]; % color for comma
                 if job.extopts.expertgui > 0 
-                  cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('TIV=%4.0f',str2double(catrgmv{3})));  
+                  try 
+                    cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('TIV=%4.0fcm%s',...
+                      str2double(catrgmv{3}),'3'));  
+                  catch
+                    disp('E');
+                  end
                 end
                 
                 

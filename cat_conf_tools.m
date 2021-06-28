@@ -639,8 +639,14 @@ function resize = conf_vol_resize(data,prefix,expert,outdir)
   end
     
   % imcalc interpolation field
-  imcalc          = spm_cfg_imcalc;
-  method          = imcalc.val{6}.val{3}; 
+  imcalc            = spm_cfg_imcalc;
+  method            = imcalc.val{6}.val{3}; 
+  method.labels{9}  = 'Downsample (hard)';
+  method.values{9}  = 2; 
+  method.labels{10} = 'Downsample (medium)';
+  method.values{10} = 3; 
+  method.labels{11} = 'Downsample (soft)';
+  method.values{11} = 4; 
   clear imcalc
   
   prefix.val      = {'r'}; 

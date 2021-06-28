@@ -2,7 +2,8 @@
 % reinterpolated phantoms
 
 BWPpaths = {
-  '/Volumes/MyBook/MRData/vbm_tst/+RAW/BWP_Collins/T1/BWP_HC_Collins_t1_pn0_rf00000.nii'; 
+  ...'/Volumes/MyBook/MRData/vbm_tst/+RAW/BWP_Collins/T1/BWP_HC_Collins_t1_pn0_rf00000.nii'; 
+  '/Volumes/WD4TBE2/MRData/202105_QA/+ratings/p0phantom_1.0mm_normal_cor.nii';
 };
 
 resolutions  = single(1.25:0.25:3);
@@ -44,11 +45,11 @@ for ph = 1:numel(BWPpaths)
         [Rx,Ry,Rz] = meshgrid(1:res.(resnames{rni})(ri,2):size(img,2), ...
                               1:res.(resnames{rni})(ri,1):size(img,1), ...
                               1:res.(resnames{rni})(ri,3):size(img,3));                            
-        imgr = vbm_vol_interp3f(img,Rx,Ry,Rz,'cubic');
+        imgr = cat_vol_interp3f(img,Rx,Ry,Rz,'cubic');
         [Rx,Ry,Rz] = meshgrid(1:1/res.(resnames{rni})(ri,2):size(imgr,2), ...
                               1:1/res.(resnames{rni})(ri,1):size(imgr,1), ...
                               1:1/res.(resnames{rni})(ri,3):size(imgr,3));     
-        imgit = vbm_vol_interp3f(imgr,Rx,Ry,Rz,'cubic');     
+        imgit = cat_vol_interp3f(imgr,Rx,Ry,Rz,'cubic');     
       else
         % the offset is necessary for even cases of the reduction 
         % (to have similar smoothing for all images)
@@ -57,11 +58,11 @@ for ph = 1:numel(BWPpaths)
         [Rx,Ry,Rz] = meshgrid(0.5 + os:res.(resnames{rni})(ri,2):size(img,2) + 0.5 + os, ...
                               0.5 + os:res.(resnames{rni})(ri,1):size(img,1) + 0.5 + os, ...
                               0.5 + os:res.(resnames{rni})(ri,3):size(img,3) + 0.5 + os);                            
-        imgr = vbm_vol_interp3f(img,Rx,Ry,Rz,'cubic');
+        imgr = cat_vol_interp3f(img,Rx,Ry,Rz,'cubic');
         [Rx,Ry,Rz] = meshgrid(1-os/res.(resnames{rni})(ri,2):1/res.(resnames{rni})(ri,2):size(imgr,2), ...
                               1-os/res.(resnames{rni})(ri,1):1/res.(resnames{rni})(ri,1):size(imgr,1), ...
                               1-os/res.(resnames{rni})(ri,3):1/res.(resnames{rni})(ri,3):size(imgr,3));     
-        imgit = vbm_vol_interp3f(imgr,Rx,Ry,Rz,'cubic');     
+        imgit = cat_vol_interp3f(imgr,Rx,Ry,Rz,'cubic');     
       end
       
       imgi  = zeros(size(img),'single');
@@ -77,7 +78,7 @@ for ph = 1:numel(BWPpaths)
       
       %spm_write_vol(hdrr,imgr);
      % vbm_io_writenii(hdrr,imgr)
-      vbm_io_writenii(hdri,imgi)
+      cat_io_writenii(hdri,imgi)
      % spm_write_vol(hdri,imgi);
       clear imgr imgi imgit;
     end
