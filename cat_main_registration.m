@@ -54,7 +54,7 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion,Yp0
 %    Ycls  .. tissue classification that is used for deformation
 %    Yy    .. old initial SPM deformation 
 %    Ylesion  .. template files
-%    [Ym,Yp0,Ymi,Yl1] .. additional maps in case of multiple resistrations 
+%    [Ym,Yp0,Ymi,Yl1] .. additional maps in case of multiple registrations 
 % ______________________________________________________________________
 %
 %  The TR is expected to be between 1.0 and 1.5 mm. Higher resolution are 
