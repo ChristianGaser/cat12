@@ -592,7 +592,7 @@ if ~strcmp(image_ext, 'none')
       % use up to 2 subfolders for getting filename
       switch subfolder
         case 0, pt1 = '';
-        case 2, pt1 = [pt2 pt1]; 
+        case 2, try, pt1 = [pt2 pt1]; end 
       end
       if numel(slices) == 1
         imaname = [pt1 nm '_' lower(OV.transform) num2str(slices) '.' image_ext];

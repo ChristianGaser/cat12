@@ -1008,7 +1008,7 @@ interp = 2.45;
               set(b(bi),'Facecolor',jetsc(bi,:),'Edgecolor',fontcolor); 
             end
           end
-          line(cc{5},hl,dl,'color',mean([fontcolor;[0.9 0.3 0.3]])); 
+          try, line(cc{5},hl,dl,'color',mean([fontcolor;[0.9 0.3 0.3]])); end
           outlier0 = hl < q0 - 3*(q0-q1); 
           outlier1 = hl > q0 + 3*(q2-q0);
           if ~isempty(outlier0), line(cc{5},hl( outlier0 ),dl( outlier0 ),'color',[1 0 0 ]); end
@@ -1077,10 +1077,14 @@ if 1
   try, spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontName',fontname,'FontSize',(fontsize-1)/spm_figure_scale*0.8,'FontWeight','Bold'); end
   for hti = 1:numel(htext), try, set(htext(hti),'FontName',fontname,'Fontsize',get(htext(hti),'Fontsize')/spm_figure_scale*0.8); end; end
   for hti = 1:numel(cc),    try, set(cc{hti}   ,'FontName',fontname,'Fontsize',get(cc{hti}   ,'Fontsize')/spm_figure_scale*0.8); end; end
-  for hti = 1:numel(lg),    try, set(lg{hti}   ,'FontName',fontname,'Fontsize',get(lg{hti}   ,'Fontsize')/spm_figure_scale*0.8); end; end
   for hti = 1:numel(ccl),   try, set(ccl{hti}  ,'FontName',fontname,'Fontsize',get(ccl{hti}  ,'Fontsize')/spm_figure_scale*0.8); end; end
+  if exist('lg') % sometimes lg does not exist of anything fails before
+    for hti = 1:numel(lg),    try, set(lg{hti}   ,'FontName',fontname,'Fontsize',get(lg{hti}   ,'Fontsize')/spm_figure_scale*0.8); end; end
+  end
   if job.extopts.report.useoverlay > 1
-    set(st.vols{p0id}.blobs{1}.cbar,'FontName',fontname,'Fontsize',get(st.vols{p0id}.blobs{1}.cbar,'Fontsize')/spm_figure_scale*0.8); 
+    try
+      set(st.vols{p0id}.blobs{1}.cbar,'FontName',fontname,'Fontsize',get(st.vols{p0id}.blobs{1}.cbar,'Fontsize')/spm_figure_scale*0.8); 
+    end
   end
   warning('off','MATLAB:hg:patch:RGBColorDataNotSupported');
   
@@ -1097,8 +1101,10 @@ if 1
   try, spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontName',fontname,'FontSize',fontsize-1,'FontWeight','Bold'); end
   for hti = 1:numel(htext), try, set(htext(hti),'FontName',fontname,'Fontsize',get(htext(hti),'Fontsize')*spm_figure_scale/0.8); end; end
   for hti = 1:numel(cc),    try, set(cc{hti}   ,'FontName',fontname,'Fontsize',get(cc{hti}   ,'Fontsize')*spm_figure_scale/0.8); end; end
-  for hti = 1:numel(lg),    try, set(lg{hti}   ,'FontName',fontname,'Fontsize',get(lg{hti}   ,'Fontsize')*spm_figure_scale/0.8); end; end
   for hti = 1:numel(ccl),   try, set(ccl{hti}  ,'FontName',fontname,'Fontsize',get(ccl{hti}  ,'Fontsize')*spm_figure_scale/0.8); end; end
+  if exist('lg') % sometimes lg does not exist of anything fails before
+    for hti = 1:numel(lg),    try, set(lg{hti}   ,'FontName',fontname,'Fontsize',get(lg{hti}   ,'Fontsize')*spm_figure_scale/0.8); end; end
+  end
   if job.extopts.report.useoverlay > 1 
     set(st.vols{p0id}.blobs{1}.cbar,'FontName',fontname,'Fontsize',get(st.vols{p0id}.blobs{1}.cbar,'Fontsize')*spm_figure_scale/0.8);
     % I create a copy of the colorbar that is not changed by SPM and remove

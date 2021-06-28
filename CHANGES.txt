@@ -1,5 +1,22 @@
 ------------------------------------------------------------------------
-r1851 | rdahnke | 2021-06-28 14:44:01
+r1852 | gaser | 2021-06-28 23:47:15
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main1639.m
+M       cat_main_registration.m
+M       cat_main_reportfig.m
+M       cat_run_job1639.m
+M       cat_vol_slice_overlay.m
+ M      templates_animals/chimpanzee_atlas_davi.csv
+ M      templates_animals/chimpanzee_atlas_davi.txt
+
+(1) Fixed: Added try/catch to cat_vol_slice_overlay.m to handle subfolders.
+(2) Fixed: Added try/catch to ct_run_job1639.m to use older SPM12 versions.
+(3) Fixed: Tried to remove some sources of errors in cat_main_reportfig.m.
+(4) Fixed: Removed error in cat_main1639.m if SPM segmentation is used.
+------------------------------------------------------------------------
+r1851 | dahnke | 2021-06-28 14:44:14 +0200 (Mo, 28 Jun 2021) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +25,7 @@ M       cat_vol_resize.m
 
 (1) Changed:  Corrected parameter definions and updated help in resize batch 
               with changes in cat_conf_tools and cat_vol_resize.
+
 ------------------------------------------------------------------------
 r1850 | dahnke | 2021-06-28 11:59:10 +0200 (Mo, 28 Jun 2021) | 52 lines
 

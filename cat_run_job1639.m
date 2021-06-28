@@ -755,12 +755,20 @@ function cat_run_job1639(job,tpm,subj)
           spm_plot_convergence('Init','Fine affine registration','Mean squared difference','Iteration');
           warning off 
           
-          Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg,80);
+          try
+            Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg,80);
+          catch
+            Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg);
+          end
           scl1 = abs(det(Affine1(1:3,1:3)));
           scl2 = abs(det(Affine2(1:3,1:3)));
 
           if any(any(isnan(Affine2(1:3,:))))
-            Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*4,obj.tpm,Affine ,job.opts.affreg,80);
+            try
+              Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*4,obj.tpm,Affine ,job.opts.affreg,80);
+            catch
+              Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*4,obj.tpm,Affine ,job.opts.affreg);
+            end
             if any(any(isnan(Affine2(1:3,:)))) 
               Affine2 = Affine; 
             end
@@ -773,7 +781,11 @@ function cat_run_job1639(job,tpm,subj)
               scl2 = scl1;
             end
           end
-          Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,obj.tpm,Affine2,job.opts.affreg,80);
+          try
+            Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,obj.tpm,Affine2,job.opts.affreg,80);
+          catch
+            Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,obj.tpm,Affine2,job.opts.affreg);
+          end
 
           if ~any(any(isnan(Affine3(1:3,:))))
             scl3 = abs(det(Affine3(1:3,1:3)));
