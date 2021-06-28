@@ -79,18 +79,25 @@ function varargout=cat_vol_resize(T,operation,varargin)
           
           if isfield(job,'restype') && isfield(job.restype,'scale') && all( (job.restype.scale)==1 )
           % call main function
-            if ~isempty(job.restype.Pref) && ~isempty(job.restype.Pref{1}) 
+          
+            if ~isempty(job.restype.Pref) && ~isempty(job.restype.Pref{1})
+              % adapt to given image
               Vref = spm_vol(char(job.restype.Pref));
-              [Y,res] = cat_vol_resize(Y,'interphdr',V,job.restype.res,job.interp,Vref);
-            else
-              % job.interp = -1; % RD202008: not working yet - has a displacement
-              switch job.interp
-                case {2,3,4}
-                  spm_smooth(Y, Y, (job.restype.res ./ sqrt(sum(V.mat(1:3,1:3).^2))) / 2); %2^(job.interp-2) );
-                  [Y,res] = cat_vol_resize(Y,'interphdr',V,job.restype.res,job.interp); 
-                otherwise
-                  [Y,res] = cat_vol_resize(Y,'interphdr',V,job.restype.res,job.interp); 
+              
+              % use smoothing for denoising in case of 
+              if abs( job.interp ) >= 1000
+                spm_smooth(Y, Y, max(0,(sqrt(sum(Vref.mat(1:3,1:3).^2)) ./ sqrt(sum(V.mat(1:3,1:3).^2)) ) - 1) / 4 * 2^floor(abs(job.interp)/1000 - 1) );
               end
+              
+              [Y,res] = cat_vol_resize(Y,'interphdr',V,job.restype.res,rem(job.interp,1000),Vref);
+            else
+              % use defined resolution
+            
+              if abs( job.interp ) >= 1000
+                spm_smooth(Y, Y, max(0,(job.restype.res ./ sqrt(sum(V.mat(1:3,1:3).^2))) - 1 ) / 4 * 2^floor(abs(job.interp)/1000 - 1) );
+              end
+              
+              [Y,res] = cat_vol_resize(Y,'interphdr',V,job.restype.res,rem(job.interp,1000));
             end
             Vo = res.hdrN; Vo.fname = fnameres;
           
