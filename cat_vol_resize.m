@@ -84,35 +84,10 @@ function varargout=cat_vol_resize(T,operation,varargin)
               [Y,res] = cat_vol_resize(Y,'interphdr',V,job.restype.res,job.interp,Vref);
             else
               % job.interp = -1; % RD202008: not working yet - has a displacement
-              switch 1 %job.interp
-                case -1
-                % this cases is for a PVE based volume reduction and does not work yet
-                  [Yx,res ] = cat_vol_resize(Y ,'interphdr',V,job.restype.res,job.interp); 
-                  
-                  % volume average interpolation
-                  if any( res.resN > res.resO )
-                    %
-                    resf = ceil(res.resN ./ res.resO); 
-                    V2 = V; % V2mat = spm_imatrix(V2.mat); V2mat(1:3) = V2mat(1:3) - sign(V2mat(7:9))./resf;  V2.mat = spm_matrix(V2mat);
-                   
-                    [Yt,res2] = cat_vol_resize(Y ,'interphdr',V2,job.restype.res ./ resf,2);
-                    [Yt,res2] = cat_vol_resize(Yt,'reduceV'  ,res.resN, res.resN .* resf,2,'meanm');
-                    if 0
-                      Y = Yt; res = res2; 
-                    else
-                      Y = Yx; 
-                      Y(1:min([size(Y,1),size(Yt,1)]),...
-                        1:min([size(Y,2),size(Yt,2)]),...
-                        1:min([size(Y,3),size(Yt,3)])) = ...
-                        Yt(1:min([size(Y,1),size(Yt,1)]),...
-                          1:min([size(Y,2),size(Yt,2)]),...
-                          1:min([size(Y,3),size(Yt,3)]));
-                    end
-                  else
-                    Y = Yx; 
-                  end
-                 
-                  
+              switch job.interp
+                case {2,3,4}
+                  spm_smooth(Y, Y, (job.restype.res ./ sqrt(sum(V.mat(1:3,1:3).^2))) / 2); %2^(job.interp-2) );
+                  [Y,res] = cat_vol_resize(Y,'interphdr',V,job.restype.res,job.interp); 
                 otherwise
                   [Y,res] = cat_vol_resize(Y,'interphdr',V,job.restype.res,job.interp); 
               end
@@ -692,7 +667,26 @@ function varargout=cat_vol_resize(T,operation,varargin)
         T = TI; clear TI; 
       else
         % simple 3D case
+        if isfield(Vt,'private'), Vt = rmfield(Vt,'private'); end
+        if isfield(Vi,'private'), Vi = rmfield(Vi,'private'); end
+        if isfield(V,'pinfo')
+          Vt.pinfo = repmat([1;0],1,size(T,3));
+          Vi.pinfo = repmat([1;0],1,size(T,3));
+        else
+          Vt.pinfo = repmat([Vt.pinfo(1);0],1,size(T,3));
+          Vi.pinfo = repmat([Vt.pinfo(1);0],1,size(T,3));
+        end
+        dt = spm_type(Vt.dt(1)); 
+        dt = cat_io_strrep(dt,{'float32','float44'},{'single','double'}); 
+        eval(sprintf('T = %s(T);', dt ));
+        Vt.dat(:,:,:) = T(:,:,:); 
+        Vi.dat(:,:,:) = T(:,:,:); 
+        
         [Vo,T] = cat_vol_imcalc(Vt,Vi,'i1',struct('interp',interp,'verb',0));
+        
+        Vo.pinfo = V.pinfo; 
+        if isfield(Vo,'dat'), Vo = rmfield(Vo,'dat'); end
+        
         if nonan
           [D,I] = cat_vbdist( single(~isnan(T)) ); T = T(I); clear I D; 
         end

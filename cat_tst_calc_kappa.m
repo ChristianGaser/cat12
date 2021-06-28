@@ -73,12 +73,12 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
 % second input - ground truth
   V = spm_vol(P);
   n = numel(V);   % number of test cases
-  if ~exist('Pref','var') || isempty(Pref) || isempty(Pref{1})
+  if ~exist('Pref','var') || isempty(Pref) || (iscell(Pref) && isempty(Pref{1}))
     Pref = spm_select([1 n],'image','Select reference mask');
     Vref = spm_vol(Pref); 
   else
     Pref = cellstr(Pref);
-    if size(Pref,1)<size(Pref,2), Pref=Pref'; end; 
+    if size(Pref,1)<size(Pref,2), Pref=Pref'; end 
     Vref = spm_vol(char(Pref));
   end
   if isempty(V) || isempty(Vref), return; end 

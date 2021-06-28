@@ -672,7 +672,12 @@ end
     end
   
     % call Dartel/Shooting registration  
-    [trans,res.ppe.reg] = cat_main_registration(job,res,Yclsd,Yy,Ylesions);
+    if numel( job.extopts.vox ) > 1
+      Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; %job.export = 1; 
+      [trans,res.ppe.reg] = cat_main_registration(job,res,Ycls,Yy,Ylesions,Yp0,Ym,Ymi,Yl1); clear Yp0; 
+    else
+      [trans,res.ppe.reg] = cat_main_registration(job,res,Yclsd,Yy,Ylesions);
+    end
     clear Yclsd Ylesions;
   else
     if job.extopts.regstr == 0
