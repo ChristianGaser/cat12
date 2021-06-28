@@ -1186,7 +1186,7 @@ function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,inv_weighting] = cat_main_SPM
   % load atlas map and prepare filling mask YMF
   % compared to CAT default processing, we have here the DARTEL mapping, but no individual refinement 
   Vl1 = spm_vol(job.extopts.cat12atlas{1});
-  Yl1 = cat_vol_ctype( cat_vol_sample(res.tpm(1),Vl1{1},Yy,0)); % spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
+  Yl1 = cat_vol_ctype( cat_vol_sample(res.tpm(1),Vl1,Yy,0)); % spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
   Yl1 = reshape(Yl1,size(Ym)); [D,I] = cat_vbdist(single(Yl1>0)); Yl1 = Yl1(I);   
   YMF = NS(Yl1,job.extopts.LAB.VT) | NS(Yl1,job.extopts.LAB.BG) | NS(Yl1,job.extopts.LAB.BG);  
 return
