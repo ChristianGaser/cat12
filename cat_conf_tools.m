@@ -654,7 +654,7 @@ function resize = conf_vol_resize(data,prefix,expert,outdir)
     method.values{10} = -2005; 
     method.labels{11} = 'Downsample 5th Degree Sinc (soft)';
     method.values{11} = -3005; 
-    restype.help      = [ restype.help; {'If image dimensions are downsampled, prior Gaussian filtering allows denoising.  The FWHM can be defined as the ratio of the new to the original voxel size:'; ' vx_vol_org ./ vx_vol_org - 1'; 'E.g. an image of 0.2x0.2x0.5 mm downsampled to 0.5x0.5x0.5 mm supports smoothing with FWHM=[3 3 0], which reduces noise along the downsampled axis.  The levels are available for coarse individual adjustments (hard: FWHM/4; medium: FWHM/2; soft: FWHM). ' ''}];  
+    restype.help      = [ restype.help; {'If image dimensions are downsampled, prior Gaussian filtering allows denoising.  The FWHM can be defined as the ratio of the new to the original voxel size:'; ' vx_vol_org ./ vx_vol_org - 1'; 'E.g. an image of 0.2x0.2x0.5 mm downsampled to 0.5x0.5x0.5 mm supports smoothing with FWHM=[3 3 0], which reduces noise along the downsampled axis.  The levels are available for coarse individual adjustments (hard: FWHM/4; medium: FWHM/2; soft: FWHM). '}];  
   end
   clear imcalc
   
