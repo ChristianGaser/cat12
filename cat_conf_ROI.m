@@ -418,7 +418,7 @@ Method.help     = {'Select method.'};
 
 ROIsum          = cfg_exbranch;
 ROIsum.tag      = 'ROIsum';
-ROIsum.name     = 'Summarise 3D/4D data within a ROI';
+ROIsum.name     = 'Summarise 3D/4D volume data within a ROI';
 ROIsum.val      = {Method};
 ROIsum.prog     = @cat_vol_ROI_summarize;
 ROIsum.help     = {
