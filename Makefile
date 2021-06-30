@@ -189,8 +189,8 @@ precompile:
 	-@echo    spm fmri
 	-@echo    cd spm12/config
 	-@echo    spm_make_standalone
-	-@echo    "Ubuntu 19.10: mv  /Users/gaser/spm/standalone/spm12.ctf /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Linux/"
-	-@echo    "Windows 10: mv  /Users/gaser/spm/standalone/spm12.[ce][tx][fe] /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Win/"
+	-@echo    "Ubuntu 19.10: mv /Users/gaser/spm/standalone/spm12.ctf /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Linux/"
+	-@echo    "Windows 10: mv /Users/gaser/spm/standalone/spm12.[ce][tx][fe] /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Win/"
 	-@echo    "Mac OS: rm -rf /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Mac/spm12.app; mv /Users/gaser/spm/standalone/spm12.app /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Mac/"
 	-@echo    
 

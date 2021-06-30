@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1853 | gaser | 2021-06-29 14:24:05
+r1854 | gaser | 2021-06-30 12:20:58
+
+Changed paths:
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_spm_results_ui.m
+M       html/cat.html
+
+(1) Changed: Updated CAT12 manual.
+(2) Fixed:   Corrected path if results are called from another folder in 
+             cat_spm_results_ui.m.
+------------------------------------------------------------------------
+r1853 | gaser | 2021-06-29 14:24:57 +0200 (Tue, 29 Jun 2021) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +27,7 @@ M       html/cat_versions.html
 (1) Changed: Added interactive links to version information.
 (2) Fixed:   Corrected links to atlases in html-files.
 (3) Fixed:   Corrected braces for help text in cat_conf_tools.m.
+
 
 ------------------------------------------------------------------------
 r1852 | gaser | 2021-06-28 23:47:22 +0200 (Mon, 28 Jun 2021) | 15 lines
