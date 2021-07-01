@@ -385,15 +385,22 @@ function cat_run_job(job,tpm,subj)
         if any( (vx_vol ~= vx_voli) )  
           stime = cat_io_cmd(sprintf('Internal resampling (%4.2fx%4.2fx%4.2fmm > %4.2fx%4.2fx%4.2fmm)',vx_vol,vx_voli));
          
-          imat      = spm_imatrix(Vi.mat); 
-          Vi.dim    = round(Vi.dim .* vx_vol./vx_voli);
-          imat(7:9) = vx_voli .* sign(imat(7:9));
-          Vi.mat    = spm_matrix(imat);
-
-          Vn = spm_vol(job.channel(n).vols{subj}); 
-          cat_vol_imcalc(Vn,Vi,'i1',struct('interp',2,'verb',0,'mask',-1));
+          if 0
+            imat      = spm_imatrix(Vi.mat); 
+            Vi.dim    = round(Vi.dim .* vx_vol./vx_voli);
+            imat(7:9) = vx_voli .* sign(imat(7:9));
+            Vi.mat    = spm_matrix(imat); clear imat; 
+            Vn        = spm_vol(job.channel(n).vols{subj}); 
+            cat_vol_imcalc(Vn,Vi,'i1',struct('interp',2,'verb',0,'mask',-1));
+          else
+            jobr.data   = Vi.fname; 
+            jobr.interp = -2005; % spline with smoothing in case of downsampling
+            jobr.verb   = 0; 
+            jobr.prefix = ''; 
+            cat_vol_resize(jobr); 
+          end
           vx_vol = vx_voli;
-        
+          
           fprintf('%5.0fs\n',etime(clock,stime));     
         else
           vx_vol = sqrt(sum(Vi.mat(1:3,1:3).^2));
