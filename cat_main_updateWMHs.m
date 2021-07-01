@@ -95,13 +95,13 @@ function Ycls = cat_main_updateWMHs(Ym,Ycls,Yy,tpm,job,res,trans)
 
   end
 
-  
-  if job.extopts.WMHC<2 && numel(Ycls)>6
-    Ycls{1} = Ycls{1} + Ycls{7}; % WMH as GM
-  elseif job.extopts.WMHC==2
-    Ycls{2} = Ycls{2} + Ycls{7}; % WMH as WM 
-  elseif job.extopts.WMHC>=3
-    Ycls{2} = Ycls{2} + Ycls{7}; % WMH as own class
+  if numel(Ycls)>6 && ~isempty(Ycls{7})
+    if job.extopts.WMHC<2 
+      Ycls{1} = Ycls{1} + Ycls{7}; % WMH as GM
+    elseif job.extopts.WMHC==2
+      Ycls{2} = Ycls{2} + Ycls{7}; % WMH as WM 
+    elseif job.extopts.WMHC>=3
+      Ycls{2} = Ycls{2} + Ycls{7}; % WMH as own class
+    end
   end
-
 end

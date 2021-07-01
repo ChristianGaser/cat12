@@ -144,7 +144,8 @@ function vout = cat_surf_resamp(varargin)
     stime = clock; 
     [pp,ff,ex]   = spm_fileparts(deblank(P(i,:))); ffex = [ff ex]; 
     if any([strfind(ffex,'.sphere.'),strfind(ffex,'.central.'),strfind(ffex,'.resampled_tmp'),...
-        strfind(ffex,'.resampled'),strfind(ffex(end-3:end),'.mat'),strfind(ff,'.area.tmp.'),strfind(ex,'.mat'),strfind(ex,'.m')])
+        strfind(ffex,'.resampled'),strfind(ff,'.area.tmp.'),strfind(ffex(end-3:end),'.mat'),...
+        strfind(ffex(end-3:end),'.mat'),strfind(ffex(end-1:end),'.m')])
       if job.verb
         cat_io_cprintf('note',sprintf('%s NOTE - Cannot process "%s"!\n',pstr,deblank(P(i,:))));
         listpp.note = listpp.note + 1; 

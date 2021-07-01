@@ -1,5 +1,37 @@
 ------------------------------------------------------------------------
-r1854 | gaser | 2021-06-30 12:20:58
+r1855 | dahnke | 2021-07-01 15:55:53
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_io_volctype.m
+M       cat_main.m
+M       cat_main1639.m
+M       cat_main_amap.m
+M       cat_main_reportstr.m
+M       cat_main_roi.m
+M       cat_main_updateWMHs.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_job1639.m
+M       cat_surf_resamp.m
+M       cat_vol_ctype.m
+M       cat_vol_resize.m
+
+(1) Changed: Improved error output in cat_run.
+(2) Fixed:   Corrected bugs in resize batch (cat_vol_resize).
+(3) Fixed:   Corrected bugs in CAT preprocessing with SPM input maps in 
+             in cat_run_job[1639], cat_main[1639], spm_main_reportstr, and
+             cat_main_updateWMHs.
+(4) Fixed:   Corrected problem in exporting own atlas ROIs in cat_main_roi.
+(5) Fixed:   Corrected resize batch menu in cat_conf_tools.
+(6) Fixed:   Corrected bugs in cat_vol_resize.       
+(7) Fixed:   Corrected bug in file handling in cat_surf_resamp.
+(8) Fixed:   Corrected problems in cat_io_volctype.        
+(9) Changed: Specified segmentation mixing alert message in cat_main_amap.            
+             
+------------------------------------------------------------------------
+r1854 | gaser | 2021-06-30 12:21:50 +0200 (Wed, 30 Jun 2021) | 12 lines
 
 Changed paths:
 M       CAT12-Manual.pdf
@@ -12,6 +44,7 @@ M       html/cat.html
 (1) Changed: Updated CAT12 manual.
 (2) Fixed:   Corrected path if results are called from another folder in 
              cat_spm_results_ui.m.
+
 ------------------------------------------------------------------------
 r1853 | gaser | 2021-06-29 14:24:57 +0200 (Tue, 29 Jun 2021) | 14 lines
 

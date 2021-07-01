@@ -648,11 +648,9 @@ else
 %  We simply use the SPM segmentation as it is without further modelling of
 %  a PVE or other refinements. 
 %  ------------------------------------------------------------------------
-  [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,job.extopts.inv_weighting] = ...
+  [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,job] = ...
     cat_main_SPMpp(Ysrc,Ycls,Yy,job,res);
-  job.inv_weighting = job.extopts.inv_weighting;
-  job.useprior = '';  
-  fprintf('%5.0fs',etime(clock,stime)); 
+  fprintf('%5.0fs\n',etime(clock,stime)); 
 end
 
 
@@ -1137,18 +1135,15 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
 
 return
 
-function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,inv_weighting] = cat_main_SPMpp(Ysrc,Ycls,Yy,job,res)
+function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,job] = cat_main_SPMpp(Ysrc,Ycls,Yy,job,res)
 %% SPM segmentation input  
 %  ------------------------------------------------------------------------
 %  Here, DARTEL and PBT processing is prepared. 
 %  We simply use the SPM segmentation as it is, without further modelling 
 %  of the partial volume effect or other refinements. 
 %  ------------------------------------------------------------------------
-
-  job.extopts.WMHC = 0;
-  job.extopts.SLC  = 0;
   
-  NS                  = @(Ys,s) Ys==s | Ys==s+1;                % for side independent atlas labels
+  NS = @(Ys,s) Ys==s | Ys==s+1;         % for side independent atlas labels
     
   % QA WMH values required by cat_vol_qa later
   qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE
@@ -1168,7 +1163,12 @@ function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,inv_weighting] = cat_main_SPM
   T3th = [ min([  clsint(1) - diff([clsint(1),WMth]) ,clsint(3)]) , clsint(2) , WMth];
   clear Ysrc
   
-  inv_weighting = T3th(3)<T3th(2);
+  job.extopts.WMHC          = 0;
+  job.extopts.SLC           = 0;
+  job.extopts.LASmyostr     = 0; 
+  job.extopts.inv_weighting = T3th(3)<T3th(2);
+  job.inv_weighting         = T3th(3)<T3th(2);
+  job.useprior              = '';
   
   % the intensity normalized images are here represented by the segmentation 
   Ym   = Yp0/255*5/3;

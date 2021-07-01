@@ -102,6 +102,7 @@ function cat_run_job1639(job,tpm,subj)
         repmat(' ',1,70 - length(str) - length(str2)),str2,...
         repmat('-',1,72));
   clear r str str2
+    
   
   %  -----------------------------------------------------------------
   %  separation of full CAT preprocessing and SPM segmentation
@@ -111,7 +112,7 @@ function cat_run_job1639(job,tpm,subj)
   if exist(fullfile(pp,['c1' ff(3:end) ee]),'file') && ...
      exist(fullfile(pp,['c2' ff(3:end) ee]),'file') && ...
      exist(fullfile(pp,['c3' ff(3:end) ee]),'file') && ...
-     exist(fullfile(pp,[ff(3:end) '_seg8.mat']),'file');
+     exist(fullfile(pp,[ff(3:end) '_seg8.mat']),'file')
      
       job.data{subj}          = fullfile(pp,[ff ee]); 
       job.channel.vols{subj}  = fullfile(pp,[ff ee]); 
@@ -131,10 +132,10 @@ function cat_run_job1639(job,tpm,subj)
       obj.lkp      = [];
       spm_check_orientations(obj.image);
       
-      if all(isfinite(cat(1,job.tissue.ngaus))),
-          for k=1:numel(job.tissue),
+      if all(isfinite(cat(1,job.tissue.ngaus)))
+          for k=1:numel(job.tissue)
               obj.lkp = [obj.lkp ones(1,job.tissue(k).ngaus)*k];
-          end;
+          end
       end
       
       obj.reg      = job.opts.warpreg;
@@ -333,6 +334,7 @@ function cat_run_job1639(job,tpm,subj)
             best_vx  = max( min(vx_vol) ,job.extopts.restypes.(restype)(1)); 
             vx_voli  = min(vx_vol ,best_vx ./ ((vx_vol > (best_vx + job.extopts.restypes.(restype)(2)))+eps));
           case 'optimal'
+            %%
             aniso   = @(vx_vol) (max(vx_vol) / min(vx_vol)^(1/3))^(1/3);                                              % penetration factor
             volres  = @(vx_vol) repmat( round( aniso(vx_vol) * prod(vx_vol)^(1/3) * 10)/10 , 1 , 3);                  % volume resolution
             optresi = @(vx_vol) min( job.extopts.restypes.(restype)(1) , max( median(vx_vol) , volres(vx_vol) ) );    % optimal resolution 
@@ -347,13 +349,39 @@ function cat_run_job1639(job,tpm,subj)
         if any( (vx_vol ~= vx_voli) )  
           stime = cat_io_cmd(sprintf('Internal resampling (%4.2fx%4.2fx%4.2fmm > %4.2fx%4.2fx%4.2fmm)',vx_vol,vx_voli));
          
-          imat      = spm_imatrix(Vi.mat); 
-          Vi.dim    = round(Vi.dim .* vx_vol./vx_voli);
-          imat(7:9) = vx_voli .* sign(imat(7:9));
-          Vi.mat    = spm_matrix(imat);
+          if 1
+            imat      = spm_imatrix(Vi.mat); 
+            Vi.dim    = round(Vi.dim .* vx_vol./vx_voli);
+            imat(7:9) = vx_voli .* sign(imat(7:9));
+            Vi.mat    = spm_matrix(imat); clear imat; 
+            Vn        = spm_vol(job.channel(n).vols{subj}); 
+            cat_vol_imcalc(Vn,Vi,'i1',struct('interp',2,'verb',0,'mask',-1));
+          else
+            %% Small improvement for CAT12.9 that uses the cat_vol_resize function rather than the simple interpolation. 
+            %  However, postive effects only in case of strong reductions >2, ie. it is nearly useless.  
+            jobr              = struct(); 
+            jobr.data         = {Vi.fname}; 
+            jobr.interp       = -3005; % spline with smoothing in case of downsampling;  default without smoothing -5; 
+            jobr.verb         = debug; 
+            jobr.lazy         = 0; 
+            jobr.prefix       = ''; 
+            jobr.restype.res  = vx_voli; % use other resolution for test  
+            Pr = cat_vol_resize(jobr); 
 
-          Vn = spm_vol(job.channel(n).vols{subj}); 
-          cat_vol_imcalc(Vn,Vi,'i1',struct('interp',2,'verb',0,'mask',-1));
+            if 0
+              % test reinterpolation and estimate the RMSE
+              jobr.data         = Pr.res;
+              jobr              = rmfield(jobr,'restype'); 
+              jobr.restype.Pref = {V.fname};  
+              jobr.prefix       = 'I'; 
+              Pre = cat_vol_resize(jobr); 
+              disp('.'); 
+
+              Yo = spm_read_vols(V);
+              Yr = spm_read_vols(spm_vol(Pre.res{1}));
+              fprintf('%16.8f\n',sqrt( mean((Yo(:) - Yr(:)).^2)));
+            end            
+          end
           vx_vol = vx_voli;
         
           fprintf('%5.0fs\n',etime(clock,stime));     
@@ -405,10 +433,10 @@ function cat_run_job1639(job,tpm,subj)
         obj.samp   = obj.samp * scannorm; % normalize by voxel size 
         obj.fwhm   = obj.fwhm * scannorm; 
       end
-      if all(isfinite(cat(1,job.tissue.ngaus))),
-        for k=1:numel(job.tissue),
+      if all(isfinite(cat(1,job.tissue.ngaus)))
+        for k=1:numel(job.tissue)
           obj.lkp = [obj.lkp ones(1,job.tissue(k).ngaus)*k];
-        end;
+        end
       end
       spm_check_orientations(obj.image);
       cat_err_res.obj = obj; 
