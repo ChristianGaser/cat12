@@ -641,20 +641,14 @@ function resize = conf_vol_resize(data,prefix,expert,outdir)
   % imcalc interpolation field
   imcalc            = spm_cfg_imcalc;
   method            = imcalc.val{6}.val{3}; 
-  if 1 % extended version with filtering
-    method.labels{9}  = 'Downsample Trilinear (hard)';
-    method.values{9}  = -1001; 
-    method.labels{10} = 'Downsample Trilinear (medium)';
-    method.values{10} = -2001; 
-    method.labels{11} = 'Downsample Trilinear (soft)';
-    method.values{11} = -3001; 
-    method.labels{9}  = 'Downsample 5th Degree Sinc (hard)';
-    method.values{9}  = -1005; 
-    method.labels{10} = 'Downsample 5th Degree Sinc (medium)';
+  if expert>1 
+  % extended version with additional filtering filtering
+  % there are different levels available (FWHM size) but I want to keep it simple
+    method.labels{9}  = 'Trilinear (with smooth downsampling)';
+    method.values{9}  = -2001; 
+    method.labels{10} = '5th Degree Sinc (with light smooth downsampling)';
     method.values{10} = -2005; 
-    method.labels{11} = 'Downsample 5th Degree Sinc (soft)';
-    method.values{11} = -3005; 
-    restype.help      = [ restype.help; {'If image dimensions are downsampled, prior Gaussian filtering allows denoising.  The FWHM can be defined as the ratio of the new to the original voxel size:'; ' vx_vol_org ./ vx_vol_org - 1'; 'E.g. an image of 0.2x0.2x0.5 mm downsampled to 0.5x0.5x0.5 mm supports smoothing with FWHM=[3 3 0], which reduces noise along the downsampled axis.  The levels are available for coarse individual adjustments (hard: FWHM/4; medium: FWHM/2; soft: FWHM). '}];  
+    method.help      = [ method.help'; { '    Trilinear / 5th Degree Sinc (with smooth downsampling)';  '    - If image dimensions are downsampled, prior Gaussian filtering allows denoising and simulation of the partial volume effect.  The FWHM can be defined as the ratio of the new to the original voxel size:   vx_vol_org ./ vx_vol_org - 1.  E.g. an image of 0.2x0.2x0.5 mm downsampled to 0.5x0.5x0.5 mm supports smoothing with FWHM=[3 3 0], which reduces noise along the downsampled axis. '; ''}];  
   end
   clear imcalc
   
@@ -667,7 +661,6 @@ function resize = conf_vol_resize(data,prefix,expert,outdir)
   resize.prog     = @cat_vol_resize;
   resize.vfiles   = @vout_resize;
   resize.vout     = @vout_resize;
-  %resize.hidden   = expert<2; 
   resize.help     = {'Interpolation of images.' ''};
 return
 

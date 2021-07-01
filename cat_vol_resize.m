@@ -38,9 +38,9 @@ function varargout=cat_vol_resize(T,operation,varargin)
       job = T; 
       
       % set defaults
-      def.restype.res     = 0; 
-      def.restype.Pref    = {''}; 
-      def.restype.scale   = 1; 
+    %  def.restype.res     = 0; 
+    %  def.restype.Pref    = {''}; 
+    %  def.restype.scale   = 1; 
       def.interp          = 2; 
       def.prefix          = 'r';
       def.outdir          = ''; 
@@ -77,27 +77,31 @@ function varargout=cat_vol_resize(T,operation,varargin)
             Y  = spm_read_vols(V); 
           end
           
-          if isfield(job,'restype') && isfield(job.restype,'scale') && all( (job.restype.scale)==1 )
+          if isfield(job,'restype') && (isfield(job.restype,'Pref') || isfield(job.restype,'res')) %&& all( (job.restype.scale)==1 )
           % call main function
           
-            if ~isempty(job.restype.Pref) && ~isempty(job.restype.Pref{1})
+            if isfield(job.restype,'Pref') && ~isempty(job.restype.Pref) && ~isempty(job.restype.Pref{1})
               % adapt to given image
               Vref = spm_vol(char(job.restype.Pref));
               
               % use smoothing for denoising in case of 
               if abs( job.interp ) >= 1000
-                spm_smooth(Y, Y, max(0,(sqrt(sum(Vref.mat(1:3,1:3).^2)) ./ sqrt(sum(V.mat(1:3,1:3).^2)) ) - 1) / 4 * 2^floor(abs(job.interp)/1000 - 1) );
+                fs = max(0,(sqrt(sum(Vref.mat(1:3,1:3).^2)) ./ sqrt(sum(V.mat(1:3,1:3).^2)) ) - 1) / 2^floor(abs(job.interp)/1000 - 1);
+                spm_smooth(Y, Y, fs );
               end
               
-              [Y,res] = cat_vol_resize(Y,'interphdr',V,job.restype.res,rem(job.interp,1000),Vref);
-            else
+              [Y,res] = cat_vol_resize(Y,'interphdr',V,sqrt(sum(Vref.mat(1:3,1:3)^2)),rem(job.interp,1000),Vref);
+            elseif isfield(job.restype,'res') && ~isempty(job.restype.res) 
               % use defined resolution
             
               if abs( job.interp ) >= 1000
-                spm_smooth(Y, Y, max(0,(job.restype.res ./ sqrt(sum(V.mat(1:3,1:3).^2))) - 1 ) / 4 * 2^floor(abs(job.interp)/1000 - 1) );
+                fs = max(0,(job.restype.res ./ sqrt(sum(V.mat(1:3,1:3).^2))) - 1 ) / 2^floor(abs(job.interp)/1000 - 1); 
+                spm_smooth(Y, Y, fs );
               end
               
               [Y,res] = cat_vol_resize(Y,'interphdr',V,job.restype.res,rem(job.interp,1000));
+            else
+              error('Undefined setting.');            
             end
             Vo = res.hdrN; Vo.fname = fnameres;
           
@@ -125,7 +129,7 @@ function varargout=cat_vol_resize(T,operation,varargin)
           
           if isfield(Vo,'private'), Vo = rmfield(Vo,'private'); end
           
-          if strcmp(job.data{fi},fnameres) && exist(fnameres,'file'), delete(fnameres); end
+          if exist(fnameres,'file'), delete(fnameres); end %strcmp(job.data{fi},fnameres) && 
           if exist('dims','var') && dims>3
             Ndef      = nifti;
             Ndef.dat  = file_array(fnameres,size(Y),V.dt,0,V.pinfo(1),0);
@@ -684,7 +688,7 @@ function varargout=cat_vol_resize(T,operation,varargin)
           Vi.pinfo = repmat([Vt.pinfo(1);0],1,size(T,3));
         end
         dt = spm_type(Vt.dt(1)); 
-        dt = cat_io_strrep(dt,{'float32','float44'},{'single','double'}); 
+        dt = cat_io_strrep(dt,{'float32','float64'},{'single','double'}); 
         eval(sprintf('T = %s(T);', dt ));
         Vt.dat(:,:,:) = T(:,:,:); 
         Vi.dat(:,:,:) = T(:,:,:); 

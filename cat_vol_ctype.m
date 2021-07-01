@@ -1,6 +1,6 @@
 function Y=cat_vol_ctype(Y,type)
 % ______________________________________________________________________
-% Y=cat_vol_conv(Y[,type])
+% Y=cat_vol_ctype(Y[,type])
 %
 % Convert datatype with checking of min/max, nan, and rounding for 
 % [u]int[8|16], single, double, and char. Default round type is 'uint8'. 

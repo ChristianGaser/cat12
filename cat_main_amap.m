@@ -293,8 +293,6 @@ end
     end
     
     if isfield(job.extopts,'inv_weighting') && job.extopts.inv_weighting % job.extopts.ignoreErrors > 1 &&
-      cat_io_addwarning('cat_main_amap:mixSPMAMAP','Mix SPM and AMAP segmentation. Use SPM in case of strong differences.',1,[0 1]) 
-      
       % RD202006: catching of problems in low quality data - in development 
       probs = prob; 
       ap = [3 1 2]; if numel(Ycls)==7, ap(4)=7; end
@@ -302,12 +300,16 @@ end
       % WMHC
       probs(:,:,:,2) = sum( probs(:,:,:,2:2:end) ,4); 
       
-      Yp0s = (single(probs(:,:,:,1)) + single(probs(:,:,:,2))*2 + single( probs(:,:,:,3))*3)/255/3;
-      Yp0  = (single(prob(:,:,:,1)) + single(prob(:,:,:,2))*2 + single(prob(:,:,:,3))*3)/255/3;
+      Yp0s = (single(probs(:,:,:,1)) + single(probs(:,:,:,2))*2 + single( probs(:,:,:,3))*3)/255/3; % SPM  segmentation 
+      Yp0  = (single(prob(:,:,:,1))  + single(prob(:,:,:,2))*2  + single(prob(:,:,:,3))*3)/255/3;     % AMAP segmentation
       if ( sum(abs(Yp0s(:) - Yp0(:))>0.4) / sum(Yp0(:)>0.5) ) > 0.02
         Yrep = min(1, abs(Yp0s - Yp0) * 3); % * 1 = low correction (less SPM) uint8( abs(Yp0s - Yp0) > 0.3  &  Yp0s>0.1); 
         prob2 = prob; 
         for i=1:3, prob2(:,:,:,i) = cat_vol_ctype( single(prob(:,:,:,i)) .* (1-Yrep) + Yrep .* single(probs(:,:,:,i)) ); end
+      
+        rep = mean(Yrep(Yp0(:)))*100; 
+        cat_io_addwarning('cat_main_amap:mixSPMAMAP',sprintf( 'Mix SPM and AMAP segmentation. Use SPM in case of strong differences (%0.2f%%).',rep),1,[0 1]) 
+      
         %Yp0c = (single(prob2(:,:,:,1)) + single(prob2(:,:,:,2))*2 + single(prob2(:,:,:,3))*3)/255/3;
       else
         Yrep = false(size(Ymib)); 

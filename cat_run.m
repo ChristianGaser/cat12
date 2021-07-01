@@ -384,7 +384,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
             %% search for preprocessing errors (and differentiate them)
             cati = find(cellfun('isempty',strfind(txt,'CAT Preprocessing error'))==0,1,'last');
             catl = find(cellfun('isempty',strfind(txt,'-----------------------'))==0);
-            if ~isempty(cati) && cati>catis(end) %&&  catie<catis(2)
+            if ~isempty(cati) && ~isempty(catis) && cati>catis(end)
               cathd = textscan( txt{catis(1)} ,'%s%s%s','Delimiter',':');
               cathd = textscan( char(cathd{2}) ,'%d','Delimiter','/');
               catSID(i) = cathd{1}(1);
@@ -392,15 +392,24 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
               caterr  = textscan( txt{cati+2} ,'%s','Delimiter','\n');
               caterr  = char(caterr{1});
               caterrcode = ''; 
-              for ei = 4:(catl(find(catl>cati,1,'first')+2) - cati)
-                catfct{ei-2}  = textscan( txt{cati+ei} ,'%d%s%s','Delimiter',' ');
-                if isempty(caterrcode)
-                  switch char(catfct{ei-2}{3})
-                    % most relevant functions to identify the error 
-                    case {'cat_surf_createCS','cat_surf_createCS2','cat_main','cat_run'}
-                      caterrcode = sprintf('%s:%d',char(catfct{ei-2}{3}),double(catfct{ei-2}{1}));
+              
+              if job.extopts.expertgui
+                % error message with nested functions 
+                for ei = (catl(find(catl>cati,1,'first')+2) - cati - 1):-1:4
+                  catfct{ei-2} = textscan( txt{cati+ei} ,'%d%s%s','Delimiter',' ');
+                  if ~isempty(catfct{ei-2})
+                    if isempty(caterrcode)
+                      caterrcode   = sprintf('%s:%d',char(catfct{ei-2}{3}),double(catfct{ei-2}{1}));
+                    else
+                      caterrcode   = [caterrcode '>' sprintf('%s:%d',char(catfct{ei-2}{3}),double(catfct{ei-2}{1}))];
+                    end
                   end
                 end
+              else
+                % only last file and error message
+                ei         = (catl(find(catl>cati,1,'first')+2) - cati - 1);
+                catfct{1}  = textscan( txt{cati+ei} ,'%d%s%s','Delimiter',' ');
+                caterrcode = sprintf('%s:%d',char(catfct{1}{3}),double(catfct{1}{1}));
               end
             else
               caterr     = '';
@@ -485,7 +494,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
               
               if exist(catlog,'file')
                 catlogt = ['<a href="matlab:edit(''' catlog ''');">' ...
-                  spm_str_manip( catlog , sprintf('k%d',70 - numel(idx)) ) ': </a>'];
+                  spm_str_manip( [catlog repmat(' ',1,100)] , sprintf('k%d',70 - numel(idx)) ) ': </a>'];
               else
                 catlogt = spm_str_manip( fullfile(pp,[ff ee]), 'k60'); 
               end

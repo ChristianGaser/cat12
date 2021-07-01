@@ -360,9 +360,8 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA,vx_vox)
     % remove empty rows and prepare structure names
     if size(csv,2)>2, csv(:,3:end)=[]; end
     for ri=size(csv,1):-1:1
-      if isempty(csv{ri,1}) || isempty(csv{ri,2}) 
-        csv(ri,:)=[];
-      elseif csv{ri,1}==0
+      if isempty(csv{ri,1}) || isempty(csv{ri,2}) || ...
+        ~isnumeric(csv{ri,1}) || any(csv{ri,1}==0)
         csv(ri,:)=[];
       end       
     end

@@ -4,6 +4,19 @@ function out = cat_io_volctype(varargin)
 % In example most tissue classifications can saved as uint8 or uint16 
 % rather than double or single. If the image contains negative values
 % int8/16 is rather used than uint8/16. 
+%
+%   out = cat_io_volctype(job)
+%
+%   job
+%    .verb     .. be verbose (default=1)
+%    .lazy     .. do not reprocess files (default=0); 
+%    .prefix   .. prefix with the keyword PARA that is replaced by the 
+%                 nifti datatype (spm_input if undefined)
+%    .suffix   .. suffix with the keyword PARA that is replaced by the 
+%                 nifti datatype (default='')
+%    .intscale .. scaling type of the data 
+%                 (0: no, 1: 0..1, 0..2^8-1, 2: 0..2^16-1)
+%    .ctype    .. nifti data type (see spm_type)
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -22,12 +35,12 @@ function out = cat_io_volctype(varargin)
   else
       job = varargin{1};
   end
-  def.force               = 1; 
   def.verb                = 1;
-  def.lazy                = 1; 
+  def.lazy                = 0; 
   def.suffix              = '';
   def.intscale            = 0; 
   def.returnOnlyFilename  = 0; 
+  %def.ctype               = 16; ... this is defined later
   job = cat_io_checkinopt(job,def); 
 
   if ~isfield(job,'data') || isempty(job.data)
@@ -110,7 +123,7 @@ function out = cat_io_volctype(varargin)
   spm_clf('Interactive'); 
   spm_progress_bar('Init',numel(job.data),'SANLM-Filtering','Volumes Complete');
   for si=1:numel(job.data)
-    if cat_io_rerun( out.files{si} , job.data{si} )
+    if job.lazy==0 || cat_io_rerun( out.files{si} , job.data{si} )
       V = spm_vol(strrep(job.data{si},',1',''));
       Y = spm_read_vols(V); 
 
@@ -158,7 +171,11 @@ function out = cat_io_volctype(varargin)
 
       if job.intscale
         Y = ( Y - min(Y(:)) ) / diff([min(Y(:)),max(Y(:))]);
-        if job.intscale==2
+        
+        % check some cases where the scaling can lead to problems
+        % RD20210701: this part needs correction
+        %{
+        if job.intscale==2 % RD20210701 ????
           if any( ctype == [ 256 512 768 2 4 8] ) %  all integer types
             error('cat_io_volctype:improperDatatype','Selected datatype does not provide selected intensity range.');
           else
@@ -177,6 +194,7 @@ function out = cat_io_volctype(varargin)
             Y = Y * (2^16 - 1);
           end
         end
+        %}
       end
 
 
@@ -194,11 +212,13 @@ function out = cat_io_volctype(varargin)
         %Y(:,:,:,3) = Y(:,:,:,3) + Y(:,:,:,4);
         N.dat(:,:,:,:) = Y(:,:,:,:);
       else
-        V(1).fname    = fullfile(pp,[job.prefix ff job.suffix ee]);
-        V(1).descrip  = descrip; 
-        V = rmfield(V,'private');
-        if exist(V(1).fname,'file'), delete(V(1).fname); end % delete required in case of smaller file size!
-        spm_write_vol(V,Y);
+        Vo = V; 
+        Vo(1).fname    = fullfile(pp,[job.prefix ff job.suffix ee]);
+        Vo(1).descrip  = descrip;
+        Vo(1).dt       = [ctype spm_platform('bigend')]; 
+        Vo = rmfield(Vo,'private');
+        if exist(Vo(1).fname,'file'), delete(Vo(1).fname); end % delete required in case of smaller file size!
+        spm_write_vol(Vo,Y);
       end
       spm_progress_bar('Set',si);
     end
