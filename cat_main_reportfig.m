@@ -380,15 +380,18 @@ if 1
       spm_orthviews('window',hho,[0 single(WMth)*cmmax]); 
     end
     %%
-    cc{1} = axes('Position',[st.vols{1}.ax{3}.ax.Position(1) st.vols{1}.ax{1}.ax.Position(2) 0.01 0.13],'Parent',fg);     
-    image((60:-1:1)','Parent',cc{1});
-
-    if job.extopts.inv_weighting
-      set(cc{1},'YTick',ytick,'YTickLabel',fliplr(yticklabeli),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-        'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal','YAxisLocation','right','xcolor',fontcolor,'ycolor',fontcolor);
-    else  
-      set(cc{1},'YTick',ytick,'YTickLabel',fliplr(yticklabelo),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-        'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal','YAxisLocation','right','xcolor',fontcolor,'ycolor',fontcolor);
+    
+    try % sometimes creation of axes fails for unknown reasons
+      cc{1} = axes('Position',[st.vols{1}.ax{3}.ax.Position(1) st.vols{1}.ax{1}.ax.Position(2) 0.01 0.13],'Parent',fg);     
+      image((60:-1:1)','Parent',cc{1});
+  
+      if job.extopts.inv_weighting
+        set(cc{1},'YTick',ytick,'YTickLabel',fliplr(yticklabeli),'XTickLabel','','XTick',[],'TickLength',[0 0],...
+          'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal','YAxisLocation','right','xcolor',fontcolor,'ycolor',fontcolor);
+      else  
+        set(cc{1},'YTick',ytick,'YTickLabel',fliplr(yticklabelo),'XTickLabel','','XTick',[],'TickLength',[0 0],...
+          'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal','YAxisLocation','right','xcolor',fontcolor,'ycolor',fontcolor);
+      end
     end
   else
     cat_io_cprintf('warn','WARNING: Can''t display original file "%s"!\n',VT.fname); 

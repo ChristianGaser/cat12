@@ -1696,7 +1696,7 @@ function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt)
   
   % detection and correction for flipped faces to have always the same normal direction
   flipped = cat_surf_checkNormalDir(S); %,T,Y,opt.interpBB);
-  if flipped, S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); end
+  if flipped & isfield(S,'mati'), S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); end
 
   % simple surface smoothing
   smoothsurf = @(V,s) [ ...        
@@ -1839,7 +1839,7 @@ function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt)
   
   if opt.verb, fprintf('\n'); end
   % final settings: back to world thickness in mm 
-  if flipped, S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); end
+  if flipped & isfield(S,'mati'), S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); end
 end
 
 function flipped = cat_surf_checkNormalDir(S)

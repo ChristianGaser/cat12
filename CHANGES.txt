@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1855 | dahnke | 2021-07-01 15:55:53
+r1856 | gaser | 2021-07-01 22:31:03
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_main_reportfig.m
+M       cat_surf_createCS2.m
+M       cat_surf_fun.m
+M       html/cat.html
+
+(1) Fixed: Corrected bug in surface collission code in cat_surf_fun.m.
+(2) Fixed: Added try/end code to cat_main_reportfig.m because sometimes creation
+           of axes failed.
+------------------------------------------------------------------------
+r1855 | dahnke | 2021-07-01 15:56:52 +0200 (Thu, 01 Jul 2021) | 30 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -30,6 +44,7 @@ M       cat_vol_resize.m
 (8) Fixed:   Corrected problems in cat_io_volctype.        
 (9) Changed: Specified segmentation mixing alert message in cat_main_amap.            
              
+
 ------------------------------------------------------------------------
 r1854 | gaser | 2021-06-30 12:21:50 +0200 (Wed, 30 Jun 2021) | 12 lines
 
