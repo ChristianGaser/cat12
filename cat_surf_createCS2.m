@@ -1273,7 +1273,7 @@ end
         CS = loadSurf(Pcentral);
       end
     
-if opt.SRP==3, facevertexcdata = Tfs; end
+      if opt.SRP==3, facevertexcdata = Tfs; end
       
       % call collision correction
       [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,struct('optimize',opt.SRP>=2,'verb',verblc,'mat',Smat.matlabIBB_mm)); 
