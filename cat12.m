@@ -1314,14 +1314,6 @@ if cat_get_defaults('extopts.send_info')
   cat_io_send_to_server(urlinfo);
   urlinfo = sprintf('%s%s%s','TotalUsers','%2F',computer);
   cat_io_send_to_server(urlinfo);
-  
-  % access count
-  try
-    urlread('http://www.neuro.uni-jena.de/cat12/counter.html','Timeout',2);
-  catch
-    urlread('http://www.neuro.uni-jena.de/cat12/counter.html');
-  end
-
 end
 
 % check for new CAT12 version

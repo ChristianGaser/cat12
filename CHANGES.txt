@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1856 | gaser | 2021-07-01 22:31:03
+r1857 | gaser | 2021-07-05 12:58:57
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+M       html/cat.html
+
+(1) Changed: Removed call to counter.html from cat12.m.
+(1) Fixed:   Added *.freesurfer.gii files again to templates_surfaces
+
+------------------------------------------------------------------------
+r1856 | gaser | 2021-07-01 22:31:09 +0200 (Thu, 01 Jul 2021) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +24,7 @@ M       html/cat.html
 (1) Fixed: Corrected bug in surface collission code in cat_surf_fun.m.
 (2) Fixed: Added try/end code to cat_main_reportfig.m because sometimes creation
            of axes failed.
+
 ------------------------------------------------------------------------
 r1855 | dahnke | 2021-07-01 15:56:52 +0200 (Thu, 01 Jul 2021) | 30 lines
 
