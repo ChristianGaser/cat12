@@ -847,6 +847,7 @@ end
 %  to be done and evaluated for each atlas. 
 %  ---------------------------------------------------------------------
 if job.output.ROI  
+  %%
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
   cat_main_roi(job,trans,Ycls,Yp0); 
 end
@@ -991,7 +992,8 @@ function delete_surf_preview(Psurf,job)
     ffields = fieldnames(Psurf); 
     for si = 1:numel( Psurf )
       for fi = 1:numel( ffields )
-        if exist( Psurf(si).(ffields{fi}) , 'file' )
+        [pp1,pp2] = spm_fileparts( spm_fileparts( Psurf(si).(ffields{fi}) ) );  
+        if exist( Psurf(si).(ffields{fi}) , 'file' ) && strcmp(pp2,'surf_preview') 
           delete( Psurf(si).(ffields{fi}) ); 
         end
       end
@@ -1002,7 +1004,7 @@ function delete_surf_preview(Psurf,job)
     pp        = spm_fileparts( Psurf(1).Pcentral ); 
     [pp1,pp2] = spm_fileparts( pp );  
     dcontent  = dir( pp ); 
-    if exist( pp , 'dir' ) &&  strcmp(pp2,'surf_preview') && ...
+    if exist( pp , 'dir' ) && strcmp(pp2,'surf_preview') && ...
       numel( dcontent( [dcontent.isdir] == 0) ) == 0
       try
         rmdir( pp , 's');

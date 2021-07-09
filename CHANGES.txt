@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1858 | dahnke | 2021-07-09 12:43:28
+r1859 | dahnke | 2021-07-09 16:08:46
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_main1639.m
+M       cat_main_roi.m
+
+(1) Fixed:   Corrected bug in ROI export that removed the first 
+             region as header in cat_main_roi.
+(2) Fixed:   Corrected unmeant deletion of FreeSurfer average files  
+             in case of preview surfaces in cat_main[1639].            
+------------------------------------------------------------------------
+r1858 | dahnke | 2021-07-09 12:44:07 +0200 (Fri, 09 Jul 2021) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +22,7 @@ M       cat_stat_getCSVXMLfield.m
 
 (1) Changed:  Updated configuration of XML/CSV batch in cat_conf_tools
               and cat_stat_getCSVXMLfield.              
+
 ------------------------------------------------------------------------
 r1857 | gaser | 2021-07-05 12:59:44 +0200 (Mon, 05 Jul 2021) | 10 lines
 

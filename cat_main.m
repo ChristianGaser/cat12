@@ -996,7 +996,8 @@ function delete_surf_preview(Psurf,job)
     ffields = fieldnames(Psurf); 
     for si = 1:numel( Psurf )
       for fi = 1:numel( ffields )
-        if exist( Psurf(si).(ffields{fi}) , 'file' )
+        [pp1,pp2] = spm_fileparts( spm_fileparts( Psurf(si).(ffields{fi}) ) );  
+        if exist( Psurf(si).(ffields{fi}) , 'file' ) && strcmp(pp2,'surf_preview') 
           delete( Psurf(si).(ffields{fi}) ); 
         end
       end
