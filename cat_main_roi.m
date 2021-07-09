@@ -357,11 +357,11 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA,vx_vox)
         cellstr([repmat('ROI',numel(IDs),1) num2str(IDs,'%03d')])];
     end
     
-    % remove empty rows and prepare structure names
+    % remove empty rows, text lines and prepare structure names 
     if size(csv,2)>2, csv(:,3:end)=[]; end
     for ri=size(csv,1):-1:1
-      if isempty(csv{ri,1}) || isempty(csv{ri,2}) || ...
-        ~isnumeric(csv{ri,1}) || any(csv{ri,1}==0)
+      if isempty(csv{ri,1}) || isempty(csv{ri,2}) ||  ...
+         any(csv{ri,1}==0) || (ri>2 && ~isnumeric(csv{ri,1}))
         csv(ri,:)=[];
       end       
     end
@@ -377,17 +377,19 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA,vx_vox)
     switch name(1)
       case 'V' % volume
         csv{1,end+1} = [name tissue{ti}];  %#ok<AGROW>
-        for ri=2:size(csv,1)
-          switch lower(tissue{ti})
-            case 'csf',    Ymm = single(Yv{3}) .* single(Ya==csv{ri,1});
-            case 'gm',     Ymm = single(Yv{1}) .* single(Ya==csv{ri,1});
-            case 'wm',     Ymm = single(Yv{2}) .* single(Ya==csv{ri,1});
-            case 'wmh',    Ymm = single(Yv{7}) .* single(Ya==csv{ri,1}); 
-            case 'brain',  Ymm = single(Yv{1} + Yv{2} + Yv{3} + Yv{7}) .* single(Ya==csv{ri,1});
-            case 'tissue', Ymm = single(        Yv{2} + Yv{3} + Yv{7}) .* single(Ya==csv{ri,1});
-            case '',       Ymm = single(Ya==csv{ri,1});
+        for ri=1:size(csv,1)
+          if isnumeric(csv{ri,1})
+            switch lower(tissue{ti})
+              case 'csf',    Ymm = single(Yv{3}) .* single(Ya==csv{ri,1});
+              case 'gm',     Ymm = single(Yv{1}) .* single(Ya==csv{ri,1});
+              case 'wm',     Ymm = single(Yv{2}) .* single(Ya==csv{ri,1});
+              case 'wmh',    Ymm = single(Yv{7}) .* single(Ya==csv{ri,1}); 
+              case 'brain',  Ymm = single(Yv{1} + Yv{2} + Yv{3} + Yv{7}) .* single(Ya==csv{ri,1});
+              case 'tissue', Ymm = single(        Yv{2} + Yv{3} + Yv{7}) .* single(Ya==csv{ri,1});
+              case '',       Ymm = single(Ya==csv{ri,1});
+            end
+            csv{ri,end} = 1/1000 * cat_stat_nansum(Ymm(:)) .* prod(vx_vox);
           end
-          csv{ri,end} = 1/1000 * cat_stat_nansum(Ymm(:)) .* prod(vx_vox);
         end
       otherwise % 
         csv{1,end+1} = strrep([name tissue{ti}],'Tgm','ct');  %#ok<AGROW>
@@ -400,10 +402,11 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA,vx_vox)
           case 'tissue', Ymm = Yp0>1.5;
           case '',       Ymm = true(size(Yp0));
         end
-        for ri=2:size(csv,1)
-          csv{ri,end} = cat_stat_nanmean(Yv(Ya(:)==csv{ri,1} & Ymm(:)));
+        for ri=1:size(csv,1)
+          if isnumeric(csv{ri,1})
+            csv{ri,end} = cat_stat_nanmean(Yv(Ya(:)==csv{ri,1} & Ymm(:)));
+          end
         end
     end
   end
-  
 return
