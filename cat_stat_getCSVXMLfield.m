@@ -72,19 +72,28 @@ function out = cat_stat_getCSVXMLfield(job)
       %else
       %  pp1 = 'report'; 
       %end
+      Pnii = job.files; 
+      Pxml = {};
 
-
-      error('cat_stat_getCSVXMLfield:badFileType','ERROR: Unsupportet file type "%s"',ee);
+      %error('cat_stat_getCSVXMLfield:badFileType','ERROR: Unsupportet file type "%s"',ee);
     otherwise
       error('cat_stat_getCSVXMLfield:badFileType','ERROR: Unsupportet file type "%s"',ee);
   end
   % check XML files
-  for fi = 1:numel(Pxml)   
-    if ~exist(Pxml{fi},'file')
-      cat_io_cprintf('warn','  ERROR: Cannot find input %d: "%s".',fi,Pxml{fi})
+  if exist('Pxml','var') && ~isempty(Pxml)
+    for fi = 1:numel(Pxml)   
+      if ~exist(Pxml{fi},'file')
+        cat_io_cprintf('warn','  ERROR: Cannot find input %d: "%s".',fi,Pxml{fi})
+      end
+    end
+  elseif exist('Pnii','var') && ~isempty(Pnii)
+    for fi = 1:numel(Pnii)   
+      if ~exist(Pnii{fi},'file')
+        cat_io_cprintf('warn','  ERROR: Cannot find input %d: "%s".',fi,Pnii{fi})
+      end
     end
   end
-  
+    
   
   % create useful fieldnames
   replaceset = {
@@ -124,15 +133,25 @@ function out = cat_stat_getCSVXMLfield(job)
       fprintf('Found %d CSV fields:  ',numel(csvsvars)); 
       for fni=1:numel(csvsvars), cat_io_cprintf('b','%s  ',csvsvars{fni}); end
       fprintf('\n');
+      if isempty(csvvars)
+        fprintf('The CSV has the following fields (If it looks strange, check the deliminator):\n  '); 
+        for fni=1:numel(csvvars), cat_io_cprintf('b','%s  ',csvvars{fni}); end
+        fprintf('\n');
+      end
     end
+    nsubs = max([numel(Pxml),numel(Pnii)]); 
     for fi = 1:numel(csvsvars)
-      for si = 1:numel(Pxml)
+      for si = 1:nsubs
         %%
-        pp = Pxml{si}; ff='';
-        for pi = 0:job.csvIDfd(1)
+        if exist('Pxml','var') && ~isempty(Pxml)
+          pp = Pxml{si}; ff=''; P{si} = Pxml{si}; 
+        elseif exist('Pnii','var') && ~isempty(Pnii)
+          pp = Pnii{si}; ff=''; P{si} = Pnii{si}; 
+        end
+        for pi = 0:job.idselector.csvIDfd(1)
           [pp,ff0] = spm_fileparts(pp);
-          if  job.csvIDfd(1)==pi || pi>job.csvIDfd(2)
-            if diff(job.csvIDfd)
+          if  job.csvIDfd(1)==pi || pi>job.idselector.csvIDfd(2)
+            if diff(job.idselector.csvIDfd)
               ff = [ff0 filesep ff];   
             else
               ff = ff0; 
@@ -140,6 +159,18 @@ function out = cat_stat_getCSVXMLfield(job)
           end
         end
         [pp,ff,ee] = spm_fileparts(ff); 
+        
+        
+        pp  = cat_io_strrep(ff,num2cell(job.idselector.fileseps),repmat({filesep},size(job.idselector.fileseps))); 
+        pps = textscan(pp,'%s','Delimiter',filesep); 
+        if numel(job.idselector.filesel)>1
+          ff  = pps{1}{job.idselector.filesel(1):job.idselector.filesel(2)};
+        elseif numel(job.idselector.filesel)==1        
+          ff  = pps{1}{job.idselector.filesel(1)};
+        end
+        
+        
+        
         %%
         ids = []; idsl = [];
         for sii = 1:numel(csvids)
@@ -149,24 +180,22 @@ function out = cat_stat_getCSVXMLfield(job)
         end
         % remove double entries by bad ids (eg. the id="1" can also be found in "101" 
         ids( idsl < max(idsl))  = [];
-        %idsl( idsl < max(idsl)) = [];
+        % idsl( idsl < max(idsl)) = [];
         if isempty(ids)
-          cat_io_cprintf('err',sprintf('Cannot find data for "%s".\n',Pxml{si}));
+          cat_io_cprintf('err',sprintf('Cannot find data for "%s".\n',P{si}));
           out.(csvsvars{fi}){si,1} = nan; 
         elseif numel(ids)>1
-          %%
           if numel( unique( [csv{ids + 1,1}] ) )==1
-            cat_io_cprintf('warn',sprintf('      Found multiple possible entries for subject "%s". Take the first entry. Check your csv file! \n',Pxml{si}));
+            cat_io_cprintf('warn',sprintf('      Found multiple possible entries for subject "%s". Take the first entry. Check your csv file! \n',P{si}));
             out.(csvsvars{fi}){si,1} = csv{ids + 1,csvsvari(fi)}; 
           else
-            cat_io_cprintf('warn',sprintf('      Found multiple possible entries for subject "%s". Check file!\n',Pxml{si}));
+            cat_io_cprintf('warn',sprintf('      Found multiple possible entries (index=[ %s]) for subject in "%s". Check file!\n',sprintf('%d ',ids),P{si}));
             out.(csvsvars{fi}){si,1} = nan; 
           end
-          %csvidslmin = abs(length(ff) - csvidsl);
         else
           out.(csvsvars{fi}){si,1} = csv{ids + 1,csvsvari(fi)}; 
         end
-        if fi == 1, out.ids{si,1} = ids; end
+        if fi == 1, out.ids{si,1} = csv{ids + 1}; end
         
       end    
       if  isnumeric( out.(csvsvars{fi}){1} )
@@ -236,6 +265,11 @@ function out = cat_stat_getCSVXMLfield(job)
     end
     for fni=1:numel(missed), cat_io_cprintf('r','%s ',missed{fni}); end
     fprintf('\n');
+
+    fprintf('Further %d XML fields: ',numel(xmlvars)); 
+    for fni=1:numel(csvvars), cat_io_cprintf('b','%s  ',csvvars{fni}); end
+    fprintf('\n');
+
   end
   
   
@@ -249,66 +283,78 @@ function out = cat_stat_getCSVXMLfield(job)
     FN   = fieldnames(out); 
     
     if isempty(job.outdir), job.outdir = pwd; end
-    if job.verb, fprintf('  Write %d files to ',numel(FN)+1); cat_io_cprintf('b',sprintf('%s',job.outdir)); end
-    
     Pcsv = fullfile(job.outdir,sprintf('%s%d.csv',job.fname,numel(job.files))); 
-    csv  = cell(numel(job.files),numel(FN)); 
-  
+    Ptxt = cell(numel(FN),1); 
+    scsv  = cell(numel(job.files),numel(FN)); 
+    
     for fni = 1:numel(FN)
-      P = fullfile(job.outdir,sprintf('%s%d_%s.txt',job.fname,numel(job.files),FN{fni})); 
+      Ptxt{fni} = fullfile(job.outdir,sprintf('%s%d_%s.txt',job.fname,numel(job.files),FN{fni})); 
       
-      h = fopen(P,'w'); 
-      csv{1,fni} = FN{fni};
+      h = fopen(Ptxt{fni},'w'); 
+      scsv{1,fni} = FN{fni};
       if iscell(out.(FN{fni})) 
         for si = 1:numel(out.(FN{fni}))
           if iscell(out.(FN{fni}){si})
             for cii = 1:numel(out.(FN{fni}{si}))
               if ischar(out.(FN{fni}){si})
                 fprintf(h,'%s,',out.(FN{fni}){si});
-                csv{si+1,li} = [csv{si+1,li} sprintf('%s,',out.(FN{fni}){si})];
+                scsv{si+1,li} = [scsv{si+1,li} sprintf('%s,',out.(FN{fni}){si})];
               elseif out.(FN{fni}){si} == round(out.(FN{fni}){si})
                 fprintf(h,'%d,',out.(FN{fni}){si});
-                csv{si+1,li} = [csv{si+1,li} sprintf('%d,',out.(FN{fni}){si})];
+                scsv{si+1,li} = [scsv{si+1,li} sprintf('%d,',out.(FN{fni}){si})];
               else
                 fprintf(h,'%f,',out.(FN{fni}){si});
-                csv{si+1,li} = [csv{si+1,li} sprintf('%f,',out.(FN{fni}){si})];
+                scsv{si+1,li} = [scsv{si+1,li} sprintf('%f,',out.(FN{fni}){si})];
               end
             end
             fprintf(h,'\n');
           elseif ischar(out.(FN{fni}){si})
             fprintf(h,'%s\n',out.(FN{fni}){si});
-            csv{si+1,fni} = sprintf('%s',out.(FN{fni}){si});
+            scsv{si+1,fni} = sprintf('%s',out.(FN{fni}){si});
           elseif out.(FN{fni}){si} == round(out.(FN{fni}){si})
             fprintf(h,'%d\n',out.(FN{fni}){si});
-            csv{si+1,fni} = sprintf('%f',out.(FN{fni}){si});
+            scsv{si+1,fni} = sprintf('%d',out.(FN{fni}){si});
           else            
             fprintf(h,'%f\n',out.(FN{fni}){si});
-            csv{si+1,fni} = sprintf('%f',out.(FN{fni}){si});
+            scsv{si+1,fni} = sprintf('%f',out.(FN{fni}){si});
           end
         end
       elseif ischar(out.(FN{fni}))
         fprintf(h,'%s\n',out.(FN{fni}));
         for si = 1:numel(out.(FN{fni}))
-          csv{si+1,fni} = sprintf('%s',out.(FN{fni})(si));
+          scsv{si+1,fni} = sprintf('%s',out.(FN{fni})(si));
         end
       elseif out.(FN{fni}) == round(out.(FN{fni}))
         fprintf(h,'%d\n',out.(FN{fni}));
         for si = 1:numel(out.(FN{fni}))
-          csv{si+1,fni} = sprintf('%d',out.(FN{fni})(si));
+          scsv{si+1,fni} = sprintf('%d',out.(FN{fni})(si));
         end
       else
         fprintf(h,'%f\n',out.(FN{fni}));
         for si = 1:numel(out.(FN{fni}))
-          csv{si+1,fni} = sprintf('%f',out.(FN{fni})(si));
+          scsv{si+1,fni} = sprintf('%f',out.(FN{fni})(si));
         end
       end
       fclose(h); 
     end
     
+    if job.verb
+      fprintf('  Write %d files to ',numel(FN)); cat_io_cprintf('b',sprintf('%s',job.outdir)); fprintf(':\n'); 
+      for fni = 1:numel(Ptxt)
+        fprintf('    %s\n',spm_file( Ptxt{fni} ,'link',sprintf('open(''%s'')',Ptxt{fni})));    
+      end
+    end
+    
+    if 1% job.verb > 1
+      fprintf('\n'); 
+      disp(scsv)
+    end
+    
     % write CSV filef
-    cat_io_csv(Pcsv,csv,struct('delimiter',job.seg(1),'komma',job.seg(2)));  
+    cat_io_csv(Pcsv,scsv,struct('delimiter',job.seg(1),'komma',job.seg(2)));  
+ 
   end
   
-  if job.verb, fprintf('\nDone\n'); end  
+  if job.verb, fprintf('Done\n'); end  
 end
   
