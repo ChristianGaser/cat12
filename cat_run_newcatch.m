@@ -219,9 +219,22 @@ function cat_run_newcatch(job,tpm,subj)
     else
       reportfolder = '';
     end
+    
+    % create mail report for serial processing
+    if ~isfield(job,'process_index')
+      promptMessage = sprintf('Do you want to send error message?');
+      button = questdlg(promptMessage, 'Error message', 'Yes', 'No', 'Yes');
+      if strcmpi(button, 'Yes')
+        catfile = fullfile(pth,reportfolder,['cat_' nam '.xml']);
+        logfile = fullfile(pth,reportfolder,['catlog_' nam '.txt']);
+        cat_io_senderrormail(catfile,logfile);
+      end
+    end
+    
     % create an error directory with errortype subdirectory for all failed datasets
     % copy the cat*.xml and catreport_*pdf 
     % create a symbolic link of the original file
+    
     if job.extopts.subfolders
       %%
       errfolder    = 'err';

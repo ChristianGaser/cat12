@@ -590,6 +590,16 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     if (err.aff + err.vbm + err.sbm) > 0, col = 'error'; else, col = ''; end
     if (err.aff + err.vbm + err.sbm )> 0
       cat_io_cprintf(col, sprintf('  Processed with error:  % 8d volume(s)\n',err.aff + err.vbm + err.sbm ));
+ 
+      % create mail report
+      promptMessage = sprintf('Do you want to send error message?');
+      button = questdlg(promptMessage, 'Error message', 'Yes', 'No', 'Yes');
+      if strcmpi(button, 'Yes')
+        xmlfile = fullfile(pp,reportfolder,['cat_' ff '.xml']);
+        logfile = fullfile(pp,reportfolder,['catlog_' ff '.txt']);
+        err_txt = sprintf('Processed %d of %d with errors.',numel(job_data),err.aff + err.vbm + err.sbm);
+        cat_io_senderrormail(xmlfile,logfile,err_txt);
+      end
     end
     if err.missed > 0
       col = 'blue'; %else, col = ''; end
