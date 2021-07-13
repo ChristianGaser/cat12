@@ -198,6 +198,9 @@ if H.isxml
     % get basename for data files
     [pth, data_name] = fileparts(H.V(i).fname);
     
+    % remove ending for rigid or affine transformed files
+    data_name = strrep(data_name,'_affine','');
+    data_name = strrep(data_name,'_rigid','');
     % use xml-file if found by name
     if H.found_xml
       % get report folder

@@ -32,8 +32,8 @@ function vout = cat_surf_resamp(varargin)
   % This results in a more complex input with another cell level, internal 
   % representation and final output as cell of cellstr.
   if nargin == 1
-  	% complex developer input of different structures to handle dependencies differently
-  	% here we have to build the classical input structure
+    % complex developer input of different structures to handle dependencies differently
+    % here we have to build the classical input structure
     if isfield(varargin{1},'sample')
       if ~isfield(varargin{1},'data_surf')
         varargin{1}.data_surf = {};
@@ -299,14 +299,14 @@ function vout = cat_surf_resamp(varargin)
 
         if job.fwhm_surf > 0
 
-					%% smooth resampled values
-					% don't use mask for cerebellum
-					if strcmp(hemi,'lc') || strcmp(hemi,'rc')
-						cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue);
-					else
-						cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue,Pmask);
-					end
-					[ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr);
+          %% smooth resampled values
+          % don't use mask for cerebellum
+          if strcmp(hemi,'lc') || strcmp(hemi,'rc')
+            cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue);
+          else
+            cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue,Pmask);
+          end
+          [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr);
           %%
           if err
             cat_io_cprintf('err',sprintf('%sERROR - Smoothing & resampling of "%s" failed!\n',Presamp)); 

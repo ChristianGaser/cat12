@@ -28,27 +28,10 @@ function cat_stat_quality_measures(job)
 n_subjects = 0;
 sample   = [];
 
-% read filenames for each sample and indicate sample parameter
-n_samples = numel(job.data);
-for i=1:n_samples
-  
-  if size(job.data{i},1) == 1 % 4D data
-    [pth,nam,ext] = spm_fileparts(char(job.data{i}));
-    % remove ",1" at the end
-    job.data{i} = fullfile(pth,[nam ext]);
-  end
-  
-  V0 = spm_data_hdr_read(char(job.data{i}));
-  if i==1
-    mesh_detected = spm_mesh_detect(char(job.data{i}));
-  end
-  n_subjects = n_subjects + length(V0);
-    
-  if i==1, V = V0;
-  else,    V = [V; V0]; end
-
-  sample = [sample, i*ones(1,length(V0))];
-end
+% read header
+n_subjects = numel(job.data);
+V = spm_data_hdr_read(char(job.data));
+mesh_detected = spm_mesh_detect(char(job.data{1}));
 
 isxml = 0;
 pth = spm_fileparts(V(1).fname);
@@ -63,7 +46,7 @@ end
 % search xml report files
 xml_files = spm_select('List',report_folder,'^cat_.*\.xml$');
 if ~isempty(xml_files)
-  
+  fprintf('Search xml-files\n');
   % find part of xml-filename in data files to get the prepending string
   % (e.g. mwp1)
   i = 1; j = 1;
@@ -117,6 +100,10 @@ if isxml
     % get basename for data files
     [pth, data_name] = fileparts(V(i).fname);
     
+    % remove ending for rigid or affine transformed files
+    data_name = strrep(data_name,'_affine','');
+    data_name = strrep(data_name,'_rigid','');
+
     % get report folder
     if subfolder
       report_folder = fullfile(spm_fileparts(pth),'report');
@@ -126,7 +113,7 @@ if isxml
     
     % remove prep_str from name and use report folder and xml extension
     if mesh_detected
-      % for meshes we aso have to remove the additional "." from name
+      % for meshes we also have to remove the additional "." from name
       tmp_str = strrep(data_name,prep_str,'');
       xml_file = fullfile(report_folder,['cat_' tmp_str(2:end) '.xml']);
     else
@@ -175,7 +162,7 @@ if isxml
   spm_progress_bar('Clear');
   
   % remove last two columns if EC_abs and defect_size are not defined
-  if mesh_detected & all(isnan(QM(:,4))) & all(isnan(QM(:,5)))
+  if mesh_detected && all(isnan(QM(:,4))) && all(isnan(QM(:,5)))
     QM = QM(:,1:3);
   end
   
@@ -200,7 +187,7 @@ if is_gSF
   fprintf('Use global scaling with TIV\n');
 end
 
-Ymean = 0;
+Ymean = 0.0;
 fprintf('Load data ');
 for i = 1:n_subjects
   fprintf('.');
