@@ -414,21 +414,21 @@ if Hc.y_found
   % adjust raw data
   if Hc.adjust
 
-		% define subject effects and potential covariates
-		G_columns = [SPM.xX.iB SPM.xX.iC];
-		
-		% only consider nuisance parameters and parameters where
-		% contrast is defined
-		for i=1:n_effects
-			G_columns(find(G_columns==ind_X(i))) = [];
-		end
-		
-		% remove nuisance effects from data
-		if ~isempty(G_columns)
-			G = SPM.xX.X(:,G_columns);
-			G = G - mean(G);
-			y = y - G*(pinv(G)*y);
-		end
+    % define subject effects and potential covariates
+    G_columns = [SPM.xX.iB SPM.xX.iC];
+    
+    % only consider nuisance parameters and parameters where
+    % contrast is defined
+    for i=1:n_effects
+      G_columns(find(G_columns==ind_X(i))) = [];
+    end
+    
+    % remove nuisance effects from data
+    if ~isempty(G_columns)
+      G = SPM.xX.X(:,G_columns);
+      G = G - mean(G);
+      y = y - G*(pinv(G)*y);
+    end
   end
   
   % use mean inside cluster
@@ -439,23 +439,23 @@ if Hc.y_found
   % estimate group means for correction for repeated anovas or interaction designs
   % expect that subject factors are 2nd colum, group 3rd column, time 4th column
   if Hc.adjust & (repeated_anova | ((n_groups > 1) & covariate))
-		mean_group = zeros(n_groups,1);
-		count_times = 1;
-		for i=1:n_groups
-			ind_group = find(SPM.xX.I(:,3) == i);
-			if repeated_anova
-			  % find subjects effects in that group
-				ind_subj = unique(SPM.xX.I(ind_group,2));
-				n_subj_group = numel(ind_subj);
-				n_times = max(SPM.xX.I(ind_group,4));
-				mean_group(i) = sum(beta(SPM.xX.iH(count_times:(count_times+n_times-1))))/n_times + ...
-				  sum(beta(SPM.xX.iB(ind_subj)))/n_subj_group;
-				count_times = count_times + n_times;
-			else
-				mean_group(i) = beta(SPM.xX.iH(i));
-			end
-			y(ind_group,:) = y(ind_group,:) - mean(y(ind_group,:)) + mean_group(i);
-		end
+    mean_group = zeros(n_groups,1);
+    count_times = 1;
+    for i=1:n_groups
+      ind_group = find(SPM.xX.I(:,3) == i);
+      if repeated_anova
+        % find subjects effects in that group
+        ind_subj = unique(SPM.xX.I(ind_group,2));
+        n_subj_group = numel(ind_subj);
+        n_times = max(SPM.xX.I(ind_group,4));
+        mean_group(i) = sum(beta(SPM.xX.iH(count_times:(count_times+n_times-1))))/n_times + ...
+          sum(beta(SPM.xX.iB(ind_subj)))/n_subj_group;
+        count_times = count_times + n_times;
+      else
+        mean_group(i) = beta(SPM.xX.iH(i));
+      end
+      y(ind_group,:) = y(ind_group,:) - mean(y(ind_group,:)) + mean_group(i);
+    end
   end
   
   yy = cell(n_effects,1);
