@@ -1011,12 +1011,14 @@ interp = 2.45;
               set(b(bi),'Facecolor',jetsc(bi,:),'Edgecolor',fontcolor); 
             end
           end
-          try, line(cc{5},hl,dl,'color',mean([fontcolor;[0.9 0.3 0.3]])); end
-          outlier0 = hl < q0 - 3*(q0-q1); 
-          outlier1 = hl > q0 + 3*(q2-q0);
-          if ~isempty(outlier0), line(cc{5},hl( outlier0 ),dl( outlier0 ),'color',[1 0 0 ]); end
-          if ~isempty(outlier1), line(cc{5},hl( outlier1 ),dl( outlier1 ),'color',[1 0 0 ]); end
-          xlim([0,6]); ylim([0 1]);
+          try
+            line(cc{5},hl,dl,'color',mean([fontcolor;[0.9 0.3 0.3]]));
+            outlier0 = hl < q0 - 3*(q0-q1); 
+            outlier1 = hl > q0 + 3*(q2-q0);
+            if ~isempty(outlier0), line(cc{5},hl( outlier0 ),dl( outlier0 ),'color',[1 0 0 ]); end
+            if ~isempty(outlier1), line(cc{5},hl( outlier1 ),dl( outlier1 ),'color',[1 0 0 ]); end
+            xlim([0,6]); ylim([0 1]);
+          end
           
           
           %% print colormap and boxplot on top of the bar/line histogramm to avoid that the line run into it 
