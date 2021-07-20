@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1861 | gaser | 2021-07-13 09:42:46
+r1862 | gaser | 2021-07-20 09:22:53
+
+Changed paths:
+M       CHANGES.txt
+M       Makefile
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       cat_stat_check_cov.m
+M       cat_stat_quality_measures.m
+
+(1) Changed: Speed up calculation of SD and z-score in 
+             cat_stat_quality_measures.m
+(2) Changed: Added further check that xml-files exist in cat_stat_check_cov.m
+             and cat_stat_quality_measures.m.
+(3) Changed: Updated help text for sample homogeneity check.
+(4) Changed: Changed version in Makefile to CAT12.8.
+
+------------------------------------------------------------------------
+r1861 | gaser | 2021-07-13 09:43:37 +0200 (Tue, 13 Jul 2021) | 20 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -19,6 +37,7 @@ M       html/cat.html
              is now handled automatically.
 (4) Fixed:   Corrected handling of rigid or affine transformed data in 
              cat_stat_check_cov.m and cat_stat_quality_measures.m.
+
 
 ------------------------------------------------------------------------
 r1860 | gaser | 2021-07-11 21:53:45 +0200 (Sun, 11 Jul 2021) | 15 lines
