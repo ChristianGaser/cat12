@@ -13,7 +13,7 @@ function varargout = cat_stat_check_cov(job)
 %  .data_surf        .. surface files
 %  .gap              .. gap between slices (default=3)
 %  .c                .. confounds
-%  .data_xml         .. further xml QC data
+%  .data_xml         .. optional xml QC data
 %  .verb             .. print figures
 %
 % varargout          .. output structure 
@@ -179,8 +179,8 @@ if ~H.isxml
   end  
 end
 
-if H.isxml & size(xml_files,1) ~= n_subjects
-    fprintf('WARNING: XML-files must have the same number as sample size. XML-files will be not used.\n');
+if H.isxml & (size(xml_files,1) <= n_subjects)
+    fprintf('WARNING: Less XML-files than data sets found. XML-files will be not used.\n');
     H.isxml = 0;
   end
   
@@ -231,7 +231,14 @@ if H.isxml
       xml_file = deblank(xml_files(i,:));
     end
     
-    xml = cat_io_xml(xml_file);
+    if exist(xml_file,'file')
+      xml = cat_io_xml(xml_file);
+    else
+      fprintf('File %s not found. Skip use of xml-files for quality measures.\n',xml_file);
+      H.isxml = 0;
+      H.found_xml = 0;
+      break
+    end
     if ~isfield(xml,'qualityratings') && ~isfield(xml,'QAM')
       fprintf('Quality rating is not saved for %s. Report file %s is incomplete.\nPlease repeat preprocessing amd check for potential errors in the ''err'' folder.\n',H.V(i).fname,xml_files(i,:));    
       return

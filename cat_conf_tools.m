@@ -2364,7 +2364,7 @@ function [check_cov, check_cov2] = conf_check_cov(data_xml,outdir,fname,save,exp
   % --- update input data ---
   data_xml.name     = 'Quality measures (leave emtpy for autom. search)';
   data_xml.help     = {
-    'Select optional the quality measures that are saved during segmentation as xml-files in the report folder. This additionally allows to analyze image quality parameters such as noise, bias, and weighted overall image quality.'
+    'Select optional the quality measures that are saved during segmentation as xml-files in the report folder. This allows to additionally analyze image quality parameters such as noise, bias, and weighted overall image quality.'
     'Please note, that the order of the xml-files should be the same as the other data files.'
     'Leave empty for automatically search for these xml-files.'
     };
