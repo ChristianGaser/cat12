@@ -395,15 +395,19 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
               
               if job.extopts.expertgui
                 % error message with nested functions 
-                for ei = (catl(find(catl>cati,1,'first')+2) - cati - 1):-1:4
-                  catfct{ei-2} = textscan( txt{cati+ei} ,'%d%s%s','Delimiter',' ');
-                  if ~isempty(catfct{ei-2})
-                    if isempty(caterrcode)
-                      caterrcode   = sprintf('%s:%d',char(catfct{ei-2}{3}),double(catfct{ei-2}{1}));
-                    else
-                      caterrcode   = [caterrcode '>' sprintf('%s:%d',char(catfct{ei-2}{3}),double(catfct{ei-2}{1}))];
+                try 
+                  for ei = (catl(find(catl>cati,1,'first')+2) - cati - 1):-1:4
+                    catfct{ei-2} = textscan( txt{cati+ei} ,'%d%s%s','Delimiter',' ');
+                    if ~isempty(catfct{ei-2})
+                      if isempty(caterrcode)
+                        caterrcode   = sprintf('%s:%d',char(catfct{ei-2}{3}),double(catfct{ei-2}{1}));
+                      else
+                        caterrcode   = [caterrcode '>' sprintf('%s:%d',char(catfct{ei-2}{3}),double(catfct{ei-2}{1}))];
+                      end
                     end
                   end
+                catch
+                  cat_io_cprintf('err','Unknown error in job supervision.\n')
                 end
               else
                 % only last file and error message
