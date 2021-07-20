@@ -1343,6 +1343,7 @@ end
     % map defects to the final surface 
     if opt.surf_measures > 1 && ~useprior
       %%
+try      
       CSraw   = loadSurf(Praw); 
       
       Yvdef   = cat_surf_fun('surf2vol',struct('vertices',CSraw0.vertices,'faces',CSraw.faces),Ymfs>1.1,(vdefects)>0,'val',struct('mat',Smat.matlabIBB_mm,'verb',0));
@@ -1363,6 +1364,9 @@ end
       defects = cat_surf_fun('isocolors',Ydefn,CS.vertices,Smat.matlabIBB_mm,'nearest'); 
       cat_io_FreeSurfer('write_surf_data',Pdefects,defects);
       clear defects Ydef Ydefn;
+catch
+      disp('error');
+end
     end
     clear Yvxdef;
     

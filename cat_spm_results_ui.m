@@ -300,8 +300,10 @@ switch lower(Action), case 'setup'                         %-Set up results
         load(fullfile(swd,'SPM.mat'),'SPM','xSPM');
         warning on
 
-        [Ic,xCon] = spm_conman(SPM,'T&F',Inf,'    Select contrast(s)...');
-        xCon(Ic).Vspm = spm_data_hdr_read(fullfile(SPM.swd,xCon(Ic).Vspm.fname));
+        [Ic,xCon] = spm_conman(SPM,'T&F',Inf,'    Select contrast(s)...','',1);
+        if ~isempty(xCon(Ic).Vspm)
+          xCon(Ic).Vspm = spm_data_hdr_read(fullfile(SPM.swd,xCon(Ic).Vspm.fname));
+        end
         SPM.Ic = Ic; SPM.xCon = xCon;
         SPM.swd = swd;
 

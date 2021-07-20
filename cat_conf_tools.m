@@ -11,6 +11,8 @@ function tools = cat_conf_tools(expert)
 % ______________________________________________________________________
 % $Id$
 
+  if ~exist('expert','file'), expert = 1; end
+  
 % multi use fields
 % -----------------------------------------------------------------------
 
@@ -239,7 +241,7 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   csvfile.name        = 'CSV file';
   csvfile.filter      = 'any';
   csvfile.ufilter     = '.*csv';
-  csvfile.val         = {''};
+  csvfile.val         = {{''}};
   csvfile.help        = {
    ['Select one CSV file that contains further information, e.g. age or sex.  The first line has to be the header with the name of the variables.  ' ...
     'The first row has to include an unique identifier for the selected subjects files give above, e.g. the subject ID, the filename, or path if the filename is not unique. ' ...
@@ -254,14 +256,15 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   % The CSV selection is a bit more tricky. 
   fields              = cfg_entry;
   fields.tag          = 'fields';
-  fields.name         = 'Fieldnames';
+  fields.name         = 'XML and CSV fieldnames';
   fields.strtype      = 's+';
   fields.num          = [0 inf]; 
-  fields.val          = {{''}};
+  fields.val          = {{'ALLCSV'}};
   fields.help         = {
    ['Enter the fieldnames (XML) or columns names (CSV) you want to get here. ' ...
     'The fieldnames where used to create the depency object and will be converted to variables. ' ...
-    'The CSV columns should be useable as variable otherwise you have to rename them in the file. '] 
+    'The CSV columns should be useable as variable otherwise you have to rename them in the file. ' ...
+    'You can use ALLCSV to create variables of all CSV header fields. ' ] 
     ''
    ['E.g. the catxml contain the TIV in the subfield "subjectmeasures.vol_TIV" that will create the depency variable "subjectmeasures_vol_TIV". ' ...
     'To extract one value of a matrix or cell field use the matlab specification, e.g., to extract the GM value from "subjectmeasures.vol_CGW" use "subjectmeasures.vol_CGW(2)"' ...
@@ -272,6 +275,7 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
     '  SEX_ID_(1=m,2=f)'             
     '  subjectmeasures.vol_TIV'       
     '  subjectmeasures.vol_abs_CGW(2)'
+    '  ALLCSV'
     ''
     };
   
@@ -508,7 +512,7 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   
   xmlfields           = cfg_repeat;
   xmlfields.tag       = 'xmlfields';
-  xmlfields.name      = 'XML-fields';
+  xmlfields.name      = 'XML fields';
   if expert>1
     xmlfields.values  = {xmlfield,xmlfield0,PDfield,USMfield,QMfield,QRfield,SMfield,IMfield};
   else
@@ -545,10 +549,10 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   
   csvid               = cfg_entry;
   csvid.tag           = 'csvIDfd';
-  csvid.name          = 'Path/filename selector';
+  csvid.name          = 'Subpath selector';
   csvid.strtype       = 'w';
   csvid.num           = [0 inf]; 
-  %csvid.val           = {}; 
+  csvid.val           = {[]}; 
   csvid.help          = {
    ['Because the filename (=0 or []) does not allways defines the subject ID you can select another directory of the file path. ' ...
     'E.g., for the file ".../myProject/GROUP/SUB01/TP01/T1w/001.nii" you have to define the 3rd ancestor (=-3), ' ...
@@ -558,11 +562,11 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   
   filesel             = cfg_entry;
   filesel.tag         = 'filesel';
-  filesel.name        = 'Filepart';
+  filesel.name        = 'Filepart selector';
   filesel.help        = {'Limitation of x-axis. '}; 
   filesel.strtype     = 'w';
   filesel.num         = [0 inf];
-  %filesel.val         = {}; 
+  filesel.val         = {[]}; 
   filesel.help        = {'Specify a part of the filename, e.g. by 1 to select "IXI002" from "IXI002-Guys-0815-T1.nii". No intput uses the full filename. Two inputs can ' };
   
   fileseps            = cfg_entry;
@@ -575,6 +579,34 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
    'Seperators used within the filename. E.g. to select "IXI002" from "IXI002-Guys-0815-T1.nii" by defining also the ID filename selector with "1". '
     };
   
+  % path filename varialbes ? 
+  % pathsel + filesel + name
+  % filenameselector    
+  name            = cfg_entry;
+  name.tag        = 'name';
+  name.name       = 'Field / variable name';
+  name.strtype    = 's';
+  name.val        = {};
+  name.num        = [1 inf];
+  name.help       = {
+   'Select a unique name for the variable / field.'};
+  
+  fnamefield          = cfg_exbranch;
+  fnamefield.tag      = 'fnamefields';
+  fnamefield.name     = 'Filename field';
+  fnamefield.val      = {csvid filesel fileseps name};
+  fnamefield.help     = {'' ''};
+  
+  fnamefields         = cfg_repeat;
+  fnamefields.tag     = 'fnamefields';
+  fnamefields.name    = 'Filename fields';
+  fnamefields.values  = {fnamefield}; 
+  fnamefields.val     = {};
+  fnamefields.num     = [0 Inf];
+  fnamefields.forcestruct;
+  fnamefields.help    = {'Selectors to define the subject ID by a given path/filename, e.g., the IXI filename also include a site ID and weighting: "IXI002-Guys-0815-T1.nii'};
+  
+  % ############ improve help
   idselector          = cfg_exbranch;
   idselector.tag      = 'idselector';
   idselector.name     = 'ID filename selector';
@@ -596,15 +628,23 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   getCSVXML           = cfg_exbranch;
   getCSVXML.tag       = 'getCSVXML';
   getCSVXML.name      = 'XML/CSV readout';
-  getCSVXML.val       = {files csvfile csvdelkom xmlfields fields idselector outdir write verb};
+  getCSVXML.val       = {files csvfile csvdelkom xmlfields fields fnamefields idselector outdir write verb};
   getCSVXML.prog      = @cat_stat_getCSVXMLfield;
   getCSVXML.vout      = @vout_stat_getCSVXML;
   getCSVXML.hidden    = expert<1;
   getCSVXML.help      = {
-    'Batch to extract XML and CSV entries for a set of (processed) files.  For example, the IXI dataset came with a CSV file containing information about "IXI_ID;SEX_ID;HEIGHT;WEIGHT;...;AGE" for all subjects.  You can now use this batch to extract informations for a subset of files.  You need to select the processed files (e.g. the "catxml_*.xml" or "lh.thickness.*.gii" files) and the IXI.csv file.  You also need to select the delimiter type of the CSV file and specify how to distinguish the part of the filename that contains the subject ID (this must be the first column in the CSV file) and the fieldnames (e.g. "SEX_ID" or "AGE"). '
+    'This batch allows to extract XML and CSV entries and filename-parts for a given list of a subset of (processed) files to use the in statistical models.  ' 
+    '' % XML block
+   ['The XML extraction of the CAT*.xml allows for instance to extract informations from the CAT prepcrocessing, such as global volumes, image quality ratings or preprocessing setting, ' ...
+    'You need to select the processed files that define the used subjects, e.g. the "catxml_*.xml" or the "lh.thickness.*.gii" files or the original images. ' ...
+    'Moreover, specific atlas regions can be extracted from CAT atlas XML files. '] % is this useful ? Use a predefined batch for it, eg. by automaticly analyse the CSV atlas files
+    '' % CSV block
+   ['Many databases use CSV files to store information such as "IXI_ID; SEX_ID; HEIGHT; WEIGHT; ...; AGE" for the IXI dataset.  ' ...
+    'You also need to select the delimiter type of the CSV file and specify how to distinguish the part of the filename that contains the subject ID (this must be the first column in the CSV file) and the fieldnames (e.g. "SEX_ID" or "AGE").']
+    '' % FILE selector block ?
     'You can write the results into a text file or you can use the DEPENDENCY function of the SPM batches by choosing the column-wise output vectors. '
     ''
-    'Problems can occure if the ID is not fully unique, i.e. if a ID (e.g. 1) is part of another ID (e.g. 101). '
+    'Problems can occure if the ID is not fully unique, i.e. if a ID (e.g. 1) is part of another ID (e.g. 101), or if an ID is used multiple times. '
     };
 return
 
