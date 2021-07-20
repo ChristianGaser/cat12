@@ -572,20 +572,22 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
   
   % Add head tissue if it is available. 
   if cat_stat_nanmean(Ym(Ygwc))>0.1 && cat_stat_nanmean(Ysrc(Ycls{6}(:)>128))>T3th(1)
-    % definion of head tissue
-    Ygwh = Ycls{6}>128 & ~Ygwc & ~Ygwg & Yg<0.5 & abs(Ydiv)<0.1 & ...
-      Ysrc>min( res.mn(res.lkp==6) * 0.5 ) & Ysrc<max( res.mn(res.lkp==6) * 1.5 ); 
-    % remove outlier such as defaced areas in high intensity background ... let's start wit 2 std ...
-    Ygwhn = Ysrc < ( cat_stat_nanmedian( Ysrc(Ygwh(:)) )  - 2 * cat_stat_nanstd( Ysrc(Ygwh(:)) )  ) | ...
-            Ysrc > ( cat_stat_nanmedian( Ysrc(Ygwh(:)) )  + 2 * cat_stat_nanstd( Ysrc(Ygwh(:)) )  ); 
-    Ygwh( Ygwhn ) = false; clear Ygwhn
-    %% go to low resolution
-    [Ygi,resTB] = cat_vol_resize(Ysrc .* Ygwh * T3th(3)/mean(Ysrc(Ygwh(:))),'reduceV',vx_vol,mres,32,'meanm');
-    % additional approximation
-    Ygi = cat_vol_approx(Ygi,'nh',resTB.vx_volr,2); Ygi = cat_vol_smooth3X(Ygi,2 * LASfs);
-    Ygi = Ygwh .* max(eps,cat_vol_resize(Ygi,'dereduceV',resTB)); 
-    Yi(Yi==0) = Ygi(Yi==0); 
-    if debug==0; clear Ygwh; end
+    try % no skull-stripped
+      % definion of head tissue
+      Ygwh = Ycls{6}>128 & ~Ygwc & ~Ygwg & Yg<0.5 & abs(Ydiv)<0.1 & ...
+        Ysrc>min( res.mn(res.lkp==6) * 0.5 ) & Ysrc<max( res.mn(res.lkp==6) * 1.5 ); 
+      % remove outlier such as defaced areas in high intensity background ... let's start wit 2 std ...
+      Ygwhn = Ysrc < ( cat_stat_nanmedian( Ysrc(Ygwh(:)) )  - 2 * cat_stat_nanstd( Ysrc(Ygwh(:)) )  ) | ...
+              Ysrc > ( cat_stat_nanmedian( Ysrc(Ygwh(:)) )  + 2 * cat_stat_nanstd( Ysrc(Ygwh(:)) )  ); 
+      Ygwh( Ygwhn ) = false; clear Ygwhn
+      %% go to low resolution
+      [Ygi,resTB] = cat_vol_resize(Ysrc .* Ygwh * T3th(3)/mean(Ysrc(Ygwh(:))),'reduceV',vx_vol,mres,32,'meanm');
+      % additional approximation
+      Ygi = cat_vol_approx(Ygi,'nh',resTB.vx_volr,2); Ygi = cat_vol_smooth3X(Ygi,2 * LASfs);
+      Ygi = Ygwh .* max(eps,cat_vol_resize(Ygi,'dereduceV',resTB)); 
+      Yi(Yi==0) = Ygi(Yi==0); 
+      if debug==0; clear Ygwh; end
+    end
   end
   if debug==0, clear Ygwg Ygwc; end
   

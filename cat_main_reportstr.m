@@ -448,7 +448,7 @@ function str = cat_main_reportstr(job,res,qa)
         for wmi=2:wn
           msg = [msg ', ' strrep( warn(wmi).identifier,'_','\_') ];
 % linebreak may cause other problems ...          
-          if numel(msg)>valnl && wmi<wn, msg = [msg '\n']; valnl = valnl + 80; end 
+          %if numel(msg)>valnl && wmi<wn, msg = [msg '\\n']; valnl = valnl + 80; end 
         end
         
         if wn~=1, wnamepl='s'; else, wnamepl=''; end
