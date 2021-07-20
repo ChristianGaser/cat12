@@ -799,7 +799,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
   end
   
   if job.output.sROI && all(job.output.surface~=[5 6]) % no fast without registration
-    cat_io_cmd('  Surface ROI estimation');  
+    stime2 = cat_io_cmd('  Surface ROI estimation');  
     
     %% estimate surface ROI estimates for thickness
     [pp,ff]   = spm_fileparts(VT.fname);
@@ -821,7 +821,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
     Pthick_lh{1} = fullfile(surffolder,sprintf('lh.thickness.%s',ff));
     
     cat_surf_surf2roi(struct('cdata',{{Pthick_lh}},'rdata',{Psatlas_lh}));
-    fprintf('%5.0fs\n',etime(clock,stime));
+    fprintf('%5.0fs\n',etime(clock,stime2));
   end
   
   cat_io_cmd('Surface and thickness estimation takes');  
