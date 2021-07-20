@@ -72,7 +72,7 @@ if ~isempty(xml_files)
   end
 end
 
-% check for global scaling
+% check for global scaling with TIV
 if job.globals
   if mesh_detected
     is_gSF = false;
@@ -126,7 +126,13 @@ if isxml
       break
     end
     
-    xml = cat_io_xml(xml_file);
+    if exist(xml_file,'file')
+      xml = cat_io_xml(xml_file);
+    else
+      fprintf('File %s not found. Skip use of xml-files for quality measures.\n',xml_file);
+      isxml = 0;
+      break
+    end
     
     % get TIV
     if is_gSF && isfield(xml,'subjectmeasures') && isfield(xml.subjectmeasures,'vol_TIV')
@@ -188,6 +194,8 @@ if is_gSF
 end
 
 Ymean = 0.0;
+Yss   = 0.0; % sum of squares
+
 fprintf('Load data ');
 for i = 1:n_subjects
   fprintf('.');
@@ -201,24 +209,12 @@ for i = 1:n_subjects
     return
   end
   Ymean = Ymean + tmp(:);
+  Yss   = Yss + tmp(:).^2;
 end
 
-% get mean
+% get mean and SD
 Ymean = Ymean/n_subjects;
-
-Ysd = 0;
-for i = 1:n_subjects
-  fprintf('.');
-  tmp = spm_data_read(V(i));
-  tmp(isnan(tmp)) = 0;
-  if is_gSF
-    tmp = tmp*gSF(i)/mean(gSF);
-  end
-  Ysd = Ysd + (tmp(:) - Ymean).^2;
-end
-
-% get std
-Ysd = sqrt(Ysd/n_subjects);
+Ysd   = sqrt(1.0/(n_subjects-1)*(Yss - n_subjects*Ymean.*Ymean));
 
 % only consider non-zero areas
 ind = Ysd ~= 0;
