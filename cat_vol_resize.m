@@ -2,7 +2,10 @@ function varargout=cat_vol_resize(T,operation,varargin)
 % ______________________________________________________________________
 % 
 %   varargout = cat_vol_resize(T,operation,varargin)
-% 
+%
+%   varargout = cat_vol_resize(job) 
+%
+%
 %   T .. image or cell of images
 %
 % Examples:

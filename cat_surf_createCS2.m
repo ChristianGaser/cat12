@@ -370,11 +370,21 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
     
     % check for cerebellar processing  
     iscerebellum = strcmp(opt.surf{si},'cb');
-    if ~iscerebellum, mask_parahipp = NS(Ya,opt.LAB.PH) | NS(Ya,opt.LAB.HC); end
-    
+    if ~iscerebellum 
+      % RD202107:  Use atlas and Shooting template information to close the
+      %            hippocampal gyrus but open the hippocampal region.
+      mask_parahipp = NS(Ya,opt.LAB.PH) | NS(Ya,opt.LAB.HC) | NS(Ya,opt.LAB.VT); 
+      if isempty(Ytemplate)
+        VT = NS(Ya,opt.LAB.PH) | NS(Ya,opt.LAB.HC); % this does not work but also should not create problems
+      else
+        VT = Ytemplate .* NS(Ya,opt.LAB.PH) | NS(Ya,opt.LAB.HC);
+      end
+      HC = NS(Ya,opt.LAB.HC); 
+    end
+   
     % removing background (smoothing to remove artifacts)
     switch opt.surf{si}
-      case {'lh','rh'},  [Ymfs,Ysidei,mask_parahipp,BB] = cat_vol_resize({Ymfs,Yside,mask_parahipp},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
+      case {'lh','rh'},  [Ymfs,Ysidei,mask_parahipp,VT,HC,BB] = cat_vol_resize({Ymfs,Yside,mask_parahipp,VT,HC},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
       case {'cb'},       [Ymfs,Ysidei,BB] = cat_vol_resize({Ymfs,Yside},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
     end
     
@@ -385,7 +395,9 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
     
     if ~iscerebellum
       % get dilated mask of gyrus parahippocampalis and hippocampus of both sides
-      mask_parahipp = smooth3( cat_vol_morph(mask_parahipp,'dd',6) );
+      %mask_parahipp = smooth3( cat_vol_morph(mask_parahipp,'dd',2/opt.interpV) );
+      VT = cat_vol_resize(VT,'interp',V,opt.interpV); 
+      HC = cat_vol_resize(HC,'interp',V,opt.interpV); 
       mask_parahipp = cat_vol_resize(mask_parahipp,'interp',V,opt.interpV)>0.5;          % interpolate volume
     end 
     
@@ -457,8 +469,16 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
       if opt.verb>1, fprintf('%5.0fs\n',etime(clock,stime)); end
     end
     
-    
-
+    if opt.close_parahipp && ~iscerebellum
+      %% RD202107:  Additional close of parahippocampus for the WM.
+      %             Dynamic closing size.
+      tmp = Ymfs>2.5 | (Ymfs/2 .* VT)>1.0; 
+      tmp(smooth3(tmp)<0.3) = 0; 
+      tmp = cat_vol_morph(tmp,'lab'); % remove small dots 
+      tmp = cat_vol_morph(tmp,'close',round(1/opt.interpV)); % close wholes
+      Ymfs(mask_parahipp) = max(Ymfs(mask_parahipp),2.6 * tmp(mask_parahipp) .* (1-HC(mask_parahipp))); 
+      if ~debug, clear tmp; end 
+    end
     
     
     %% pbt calculation
@@ -669,9 +689,9 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
 
         % optionally apply closing inside mask for parahippocampal gyrus to get rid 
         % of the holes that lead to large cuts in gyri after topology correction
-        if opt.close_parahipp
-          tmp = cat_vol_morph(Yppisc,'labclose',1);
-          Yppisc(mask_parahipp) = tmp(mask_parahipp); 
+        if opt.close_parahipp && ~iscerebellum
+          tmp = cat_vol_morph(Yppisc .* (mask_parahipp | (Ymfs/2 .* VT)>1)  ,'close',round(1/opt.interpV)); 
+          Yppisc(mask_parahipp) = tmp(mask_parahipp) .* (1-HC(mask_parahipp)); 
           if ~debug, clear tmp; end 
         end
         clear mask_parahipp; 
@@ -835,6 +855,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
           rf = min(1.5,max(0.75,opt.vdist)); % because I use V
           VI = V; VI.mat = spm_matrix(matI); 
 
+                  
           %{
           Yppiscr = Yppisc;  
           if 0
@@ -1343,30 +1364,31 @@ end
     % map defects to the final surface 
     if opt.surf_measures > 1 && ~useprior
       %%
-try      
-      CSraw   = loadSurf(Praw); 
-      
-      Yvdef   = cat_surf_fun('surf2vol',struct('vertices',CSraw0.vertices,'faces',CSraw.faces),Ymfs>1.1,(vdefects)>0,'val',struct('mat',Smat.matlabIBB_mm,'verb',0));
-      Ysdef   = cat_surf_fun('surf2vol',struct('vertices',CSraw.vertices ,'faces',CSraw.faces),Ymfs>1.1,(sdefects)>0,'val',struct('mat',Smat.matlabIBB_mm,'verb',0));
-      
-      Yvdef(isnan(Yvdef)) = 0;
-      Ysdef(isnan(Ysdef)) = 0;
+      try      
+        CSraw   = loadSurf(Praw); 
 
-      %%
-      Ydef = Yvdef + Ysdef; clear Ysdef; 
-      [Ydef,ndef] = spm_bwlabel(double(Ydef)); 
-      Ydefn = Ydef; 
-      for i=1:ndef
-        Ydefn(Ydef==i) = sum(Ydef(:)==i) / sum(Ydef(:)>0); 
+        Yvdef   = cat_surf_fun('surf2vol',struct('vertices',CSraw0.vertices,'faces',CSraw.faces),Ymfs>1.1,(vdefects)>0,'val',struct('mat',Smat.matlabIBB_mm,'verb',0));
+        Ysdef   = cat_surf_fun('surf2vol',struct('vertices',CSraw.vertices ,'faces',CSraw.faces),Ymfs>1.1,(sdefects)>0,'val',struct('mat',Smat.matlabIBB_mm,'verb',0));
+      
+   
+        Yvdef(isnan(Yvdef)) = 0;
+        Ysdef(isnan(Ysdef)) = 0;
+
+        %%
+        Ydef = Yvdef + Ysdef; clear Ysdef; 
+        [Ydef,ndef] = spm_bwlabel(double(Ydef)); 
+        Ydefn = Ydef; 
+        for i=1:ndef
+          Ydefn(Ydef==i) = sum(Ydef(:)==i) / sum(Ydef(:)>0); 
+        end
+
+        %%
+        defects = cat_surf_fun('isocolors',Ydefn,CS.vertices,Smat.matlabIBB_mm,'nearest'); 
+        cat_io_FreeSurfer('write_surf_data',Pdefects,defects);
+        clear defects Ydef Ydefn;
+      catch
+        disp('error');
       end
-        
-      %%
-      defects = cat_surf_fun('isocolors',Ydefn,CS.vertices,Smat.matlabIBB_mm,'nearest'); 
-      cat_io_FreeSurfer('write_surf_data',Pdefects,defects);
-      clear defects Ydef Ydefn;
-catch
-      disp('error');
-end
     end
     clear Yvxdef;
     
@@ -1877,6 +1899,7 @@ function [res,EC,S,stime] = fastCSexport(Ymfs,Yppi,Yth1i,Ywdt,Ycdt,Vpp1,Vpp, EC,
   fprintf('%5.0fs',etime(clock,stime)); stime = [];        
   res.(opt.surf{si}).createCS_1_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
   if debug % final result
+    collcorrstr = '';
     cat_surf_fun('saveico',CS,cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm),Pcentral,...
       sprintf('createCS_1_initfast%s_pbtres%0.2fmm_vdist%0.2fmm',collcorrstr,opt.interpV,opt.vdist),Ymfs,Smat.matlabIBB_mm); 
   else

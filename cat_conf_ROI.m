@@ -120,8 +120,8 @@ else
 end
 ROI.values = {noROI atlases};
 ROI.help   = {
-'Export of ROI data of volume to a xml-files. '
-['For further information see atlas specific text files in "' cat_get_defaults('extopts.pth_templates') '" CAT12 subdir. ']
+'Export of ROI data of volume to a xml-files. For further information see atlas specific text files in'
+['  "' cat_get_defaults('extopts.pth_templates') '" CAT12 subdir. ']
 ''
 'For thickness estimation the projection-based thickness (PBT) [Dahnke:2012] is used that average cortical thickness for each GM voxel. '
 ''
