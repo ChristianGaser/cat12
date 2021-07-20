@@ -109,7 +109,7 @@ if isfield(job,'data_vol')
 else
   H.mesh_detected = 1;
   n_samples = numel(job.data_surf);
-  sinfo = cat_surf_info(char(job.data_surf{1}(1)));
+  sinfo = cat_surf_info(char(job.data_surf{1}(1,:)));
   H.Pmesh = gifti(sinfo.Pmesh);
   for i=1:n_samples
     V0 = spm_data_hdr_read(char(job.data_surf{i}));
