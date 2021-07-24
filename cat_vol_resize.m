@@ -538,6 +538,7 @@ function varargout=cat_vol_resize(T,operation,varargin)
       if numel(varargin)>0, V      = varargin{1}; end
       if numel(varargin)>1, res    = varargin{2}; end
       if numel(varargin)>2, interp = varargin{3}; end
+      if numel(varargin)>3, smooth = varargin{4}; end
        
       if ~exist('V','var') || isempty(V),
         V.mat=[1 0 0 1;0 1 0 1; 0 0 1 1; 0 0 0 1]; 
@@ -562,6 +563,27 @@ function varargout=cat_vol_resize(T,operation,varargin)
                             single(res(1) / resV(1) : res(1)/resV(1) : size(T,1)),...
                             single(res(3) / resV(3) : res(3)/resV(3) : size(T,3))); 
 
+        % use smoothing in case of resolution downsampling as partial volume effect                 
+        if exist('smooth','var') && any( res ./ resV ) > 1
+          if ndims(T)>3
+            for d4i = 1:size(T,4)
+              if ndims(T)>4
+                for d5i = 1:size(T,5)
+                  Ts = TI(:,:,:,d4i,d5i); 
+                  spm_smooth(Ts,Ts, (res(2)/resV(2)) / 2 * smooth); 
+                  TI(:,:,:,d4i,d5i) = Ts; clear Ts; 
+                end
+              else
+                Ts = TI(:,:,:,d4i); 
+                spm_smooth(Ts,Ts, (res(2)/resV(2)) / 2 * smooth); 
+                TI(:,:,:,d4i) = Ts; clear Ts; 
+              end
+            end
+          else
+            spm_smooth(T,T, (res(2)/resV(2)) / 2 * smooth); 
+          end 
+        end
+                          
         %% T = spm_sample_vol(T,Dx,Dy,Dz,method);
         if ndims(T)>3
           dims = size(T); 
