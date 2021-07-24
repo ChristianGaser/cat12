@@ -694,7 +694,6 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
           Yppisc(mask_parahipp) = tmp(mask_parahipp) .* (1-HC(mask_parahipp)); 
           if ~debug, clear tmp; end 
         end
-        clear mask_parahipp; 
       else
         scale_cortex = 0.7;
         Yppisc = scale_cortex * Yppi;
@@ -873,34 +872,40 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
             clear Yvxcorr
           end
   %}
-          Yppiscr = cat_vol_genus0opt(Yppisc,th_initial,15 * (1-iscerebellum),debug);
+       
 
-          if ~opt.fast
-            % optimized downsampling to avoid blurring of thin gyri/sulci 
-            if 0
-              Yppi_mn  = cat_vol_localstat( Yppi , Ymfs>0 , 1 , 2); 
-              Yppi_mx  = cat_vol_localstat( Yppi , Ymfs>0 , 1 , 3); 
-
-              Yppi_mn  = smooth3(Yppi_mn); 
-              Yppi_mx  = smooth3(Yppi_mx); 
-            end
+          if 1 %~opt.fast
+            %% Optimized downsampling to avoid blurring of thin gyri/sulci 
+            %  We create two maps, one for the thin gyral (Yppi_od) and one 
+            %  for thin sulcal regions (Yppi_cd) that are defined as the 
+            %  areas that disappiere by using an opening opteration. 
+            %  This operion simulate in some way the meandering of the layer 4. 
+            %  RD20210722: Refined binary maps to continues model due to problems in the parahippocampal gyrus.
             
-            d = max(1,rf / opt.interpV / 2) * 1.5; 
+            % first we do a voxelbased topology correction for the intial 
+            % surface treshhold on the original resolution 
+            Yppisc = cat_vol_genus0opt(Yppi,th_initial,10 * (1-iscerebellum),debug);
+
+          
+            %% then we estimate the regions that probably disappear when 
+            % we change the resolution 
+            d = max(1,rf / opt.interpV / 2) * 2; %1.5; 
             distmorph = 1; if distmorph, dm = 'd'; else, dm = ''; end
-            Yppi_o  = cat_vol_morph(Yppiscr>0.5,[dm 'o'], d ); % rf / opt.interpV - 1 
-            Yppi_c  = cat_vol_morph(Yppiscr<0.5,[dm 'o'], d ); 
+            Yppi_o  = cat_vol_morph(Yppisc>0.5,[dm 'o'], d ); % rf / opt.interpV - 1 
+            Yppi_c  = cat_vol_morph(Yppisc<0.5,[dm 'o'], d ); 
 
-            Yppi_o2 = cat_vol_morph(Yppiscr>0.5,[dm 'o'], d*2 ); % rf / opt.interpV - 1 
-            Yppi_c2 = cat_vol_morph(Yppiscr<0.5,[dm 'o'], d*2 ); 
+            Yppi_o2 = cat_vol_morph(Yppisc>0.5,[dm 'o'], d*2 ); % rf / opt.interpV - 1 
+            Yppi_c2 = cat_vol_morph(Yppisc<0.5,[dm 'o'], d*2 ); 
 
-            Yppi_od = cat_vol_morph(Yppiscr>0.5 & ~Yppi_o & ~cat_vol_morph(Yppiscr<0.5 & ~Yppi_c2,[dm 'd'],d),[dm 'd'], d ); % (rf / opt.interpV - 1)/3 
-            Yppi_cd = cat_vol_morph(Yppiscr<0.5 & ~Yppi_c & ~cat_vol_morph(Yppiscr>0.5 & ~Yppi_o2,[dm 'd'],d),[dm 'd'], d ); 
-            if ~debug,  clear Yppi_c Yppi_c2 Yppi_o Yppi_o2; end 
+            Yppi_od = cat_vol_morph(Yppisc>0.5 & ~Yppi_o & ~cat_vol_morph(Yppisc<0.5 & ~Yppi_c2,[dm 'd'],d),[dm 'd'], d ); % (rf / opt.interpV - 1)/3 
+            Yppi_cd = cat_vol_morph(Yppisc<0.5 & ~Yppi_c & ~cat_vol_morph(Yppisc>0.5 & ~Yppi_o2,[dm 'd'],d),[dm 'd'], d ); 
+            if ~debug,  clear Yppi_c Yppi_c2 Yppi_o Yppi_o2 ; end 
 
             Yppi_od = smooth3(Yppi_od)>0.5; 
             Yppi_cd = smooth3(Yppi_cd)>0.5; 
 
-            %%
+            
+            %% create
             if exist('Yppi_mx','var')
               Yppi_gyri  = Yppi_mn>0.1 & Yppi_od & ~Yppi_cd;
               Yppi_sulci = Yppi_mx<0.9 & Yppi_cd & ~Yppi_od;
@@ -915,15 +920,31 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
 
             if ~debug, clear Yppi_od Yppi_cd Yppiscrc Yppiscmn Yppiscmx; end
 
-            Yppiscr  = min( ~(Yppi_sulci & ~Yppi_gyri) , max( Yppisc , Yppi_gyri & ~Yppi_sulci)); 
+            % open to remove noisi dots
+            Yppi_gyri  = smooth3(Yppi_gyri)>0.5; 
+            Yppi_sulci = smooth3(Yppi_sulci)>0.5; 
 
-            if ~debug, clear Yppi_gyri Yppi_sulci; end 
+            % smoothing to create a softer, better fitting pattern
+            Yppi_gyri  = cat_vol_smooth3X(Yppi_gyri ,1.2)*0.5 + 0.5*cat_vol_smooth3X(Yppi_gyri ,0.6); 
+            Yppi_sulci = cat_vol_smooth3X(Yppi_sulci,1.2)*0.5 + 0.5*cat_vol_smooth3X(Yppi_sulci,0.6); 
+
+            % closing of gyri is more important than opening 
+            Yppi_gyri  = Yppi_gyri  * 1.2; 
+            Yppi_sulci = Yppi_sulci * 1.2; 
+
+            % refine the Yppiscr (use for surface creation but not optimization) 
+            % by thickenning of thin gyris and opening of thin gyris  
+            Yppiscr  = min(0.5 + 0.5*Yppisc, Yppi);  
+            Yppiscr  = max(0,min(1, Yppiscr + max(0,Yppi_gyri - Yppi_sulci) - max(0, Yppi_sulci - Yppi_gyri) )); 
+
+            if ~debug, clear Yppi_gyri Yppi_sulci Yppisc; end 
           else
             Yppiscr = Yppi;
           end
-
+          clear mask_parahipp; 
+      
           if ~debug, clear Yppigyri Yppislci; end
-          [Yppiscr,resL] = cat_vol_resize(Yppiscr,'interp',VI,rf);
+          [Yppiscr,resL] = cat_vol_resize(Yppiscr,'interp',VI,rf,1);
           %evalc(sprintf('clear CS; [Yppi05c,CS.faces,CS.vertices] = cat_vol_genus0(Yppiscr,0.5,1);')); % no_adjustment
           [Yppi05c,CS] = cat_vol_genus0opt(Yppiscr,th_initial,5 * (1-iscerebellum),debug);
           [Yvxdef,defect_number0] = spm_bwlabel( double(abs(Yppi05c - (Yppiscr>0.5))>0) ); clear Yppi05c;

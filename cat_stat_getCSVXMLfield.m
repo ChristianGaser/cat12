@@ -359,6 +359,8 @@ function out = cat_stat_getCSVXMLfield(job)
   end
   
   
+    
+  
   
   %% write output files
   if ~isempty(job.fname) 
@@ -375,11 +377,28 @@ function out = cat_stat_getCSVXMLfield(job)
       h = fopen(Ptxt{fni},'w'); 
       scsv{1,fni} = FN{fni};
       if iscell(out.(FN{fni})) 
+        if ischar(out.(FN{fni}){1})
+          %% convert ordinary values into integer and save the coding as well as the original values seperatly
+          out.([FN{fni} 'o']) = out.(FN{fni});
+          [out.([FN{fni} '_org']), out.([FN{fni} '_code']), out2.(FN{fni}) ] = unique(out.(FN{fni}));
+          Ptxto{fni} = fullfile(job.outdir,sprintf('%s%d_%s_original.txt',job.fname,numel(job.files),FN{fni})); 
+          Ptxtc{fni} = fullfile(job.outdir,sprintf('%s%d_%s_coding.txt'  ,job.fname,numel(job.files),FN{fni})); 
+          hc = fopen(Ptxtc{fni},'w'); 
+          ho = fopen(Ptxto{fni},'w'); 
+          fprintf(hc,'Coding of "%s":\n',FN{fni}); 
+          for cii = 1:numel(out.([FN{fni} '_org']))
+            fprintf(hc,'%d: %s\n', out.([FN{fni} '_code'])(cii), out.([FN{fni} '_org']){cii});
+          end
+          fclose(hc); 
+          
+        end
         for si = 1:numel(out.(FN{fni}))
           if iscell(out.(FN{fni}){si})
             for cii = 1:numel(out.(FN{fni}{si}))
               if ischar(out.(FN{fni}){si})
-                fprintf(h,'%s,',out.(FN{fni}){si});
+                fprintf(h,'%d,',out2.(FN{fni}){si});
+                scsv{si+1,li} = [scsv{si+1,li} sprintf('%d,',out2.(FN{fni}){si})];
+                fprintf(ho,'%s,',out.([FN{fni} 'o']){si});
                 scsv{si+1,li} = [scsv{si+1,li} sprintf('%s,',out.(FN{fni}){si})];
               elseif out.(FN{fni}){si} == round(out.(FN{fni}){si})
                 fprintf(h,'%d,',out.(FN{fni}){si});
@@ -418,6 +437,10 @@ function out = cat_stat_getCSVXMLfield(job)
         end
       end
       fclose(h); 
+      if ischar(out.(FN{fni}){1})
+        fclose(ho); 
+      end
+      out = rmfield(out,FN{fni}); out.(FN{fni}) = out2.(FN{fni}); 
     end
     
     if job.verb
