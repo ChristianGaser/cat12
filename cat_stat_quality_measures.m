@@ -26,15 +26,20 @@ function cat_stat_quality_measures(job)
 % $Id$
 
 n_subjects = 0;
-sample   = [];
+sample     = [];
 
 % read header
 n_subjects = numel(job.data);
-V = spm_data_hdr_read(char(job.data));
 mesh_detected = spm_mesh_detect(char(job.data{1}));
 
-isxml = 0;
-pth = spm_fileparts(V(1).fname);
+% use faster nifti function for reading data
+if mesh_detected
+  V = spm_data_hdr_read(char(job.data));
+else
+  V = nifti(char(job.data));
+end
+
+pth = spm_fileparts(job.data{1});
 report_folder = fullfile(spm_fileparts(pth),'report');
 subfolder = 1;
 % check whether report subfolder exists
@@ -57,9 +62,9 @@ if ~isempty(xml_files)
       fname = fname(5:end-4);
       
       % and find that string in data filename
-      ind = strfind(V(i).fname,fname);
+      ind = strfind(job.data{i},fname);
       if ~isempty(ind)
-        [pth, prep_str] = spm_fileparts(V(1).fname(1:ind-1));
+        [pth, prep_str] = spm_fileparts(job.data{1}(1:ind-1));
         isxml = 1;
         i = n_subjects;
         j = size(xml_files,1);
@@ -72,6 +77,7 @@ if ~isempty(xml_files)
   end
 end
 
+isxml = 0
 % check for global scaling with TIV
 if job.globals
   if mesh_detected
@@ -98,7 +104,7 @@ if isxml
   for i=1:n_subjects
     
     % get basename for data files
-    [pth, data_name] = fileparts(V(i).fname);
+    [pth, data_name] = fileparts(job.data{i});
     
     % remove ending for rigid or affine transformed files
     data_name = strrep(data_name,'_affine','');
@@ -142,7 +148,7 @@ if isxml
     end
     
     if ~isfield(xml,'qualityratings') && ~isfield(xml,'QAM')
-      fprintf('Quality rating is not saved for %s. Report file %s is incomplete.\nPlease repeat preprocessing amd check for potential errors in the ''err'' folder.\n',V(i).fname,xml_files(i,:));    
+      fprintf('Quality rating is not saved for %s. Report file %s is incomplete.\nPlease repeat preprocessing amd check for potential errors in the ''err'' folder.\n',job.data{i},xml_files(i,:));    
       return
     end
     if mesh_detected
@@ -174,14 +180,14 @@ if isxml
   
 end
 
-[pth,nam] = spm_fileparts(V(1).fname);
+[pth,nam] = spm_fileparts(job.data{1});
 
 if ~mesh_detected  
   % voxelsize and origin
   vx =  sqrt(sum(V(1).mat(1:3,1:3).^2));
   Orig = V(1).mat\[0 0 0 1]';
 
-  if length(V)>1 && any(any(diff(cat(1,V.dim),1,1),1))
+  if length(V)>1 && any(any(diff(cat(1,V.dat.dim),1,1),1))
     error('images don''t all have same dimensions')
   end
   if max(max(max(abs(diff(cat(3,V.mat),1,3))))) > 1e-8
@@ -199,13 +205,17 @@ Yss   = 0.0; % sum of squares
 fprintf('Load data ');
 for i = 1:n_subjects
   fprintf('.');
-  tmp = spm_data_read(V(i));
+  if mesh_detected
+    tmp = spm_data_read(V(i));
+  else
+    tmp(:,:,:) = V(i).dat(:,:,:);
+  end
   tmp(isnan(tmp)) = 0;
   if is_gSF
     tmp = tmp*gSF(i)/mean(gSF);
   end
   if i>1 && numel(Ymean) ~= numel(tmp)
-    fprintf('\n\nERROR: File %s has different data size: %d vs. %d\n\n',V(i).fname,numel(Ymean),numel(tmp));
+    fprintf('\n\nERROR: File %s has different data size: %d vs. %d\n\n',job.data{i},numel(Ymean),numel(tmp));
     return
   end
   Ymean = Ymean + tmp(:);
@@ -214,26 +224,67 @@ end
 
 % get mean and SD
 Ymean = Ymean/n_subjects;
-Ysd   = sqrt(1.0/(n_subjects-1)*(Yss - n_subjects*Ymean.*Ymean));
+
+% we have sometimes issues with number precision
+Yvar   = 1.0/(n_subjects-1)*(Yss - n_subjects*Ymean.*Ymean);
+Yvar(Yvar<0) = 0;
+Ystd   = sqrt(Yvar);
 
 % only consider non-zero areas
-ind = Ysd ~= 0;
+ind = Ystd ~= 0;
+
+% prepare glassbrain
+Ytmp = zeros(size(tmp));
+d1 = squeeze(sum(Ytmp,1));
+d2 = squeeze(sum(Ytmp,2));
+d3 = squeeze(sum(Ytmp,3));
 
 mean_zscore = zeros(n_subjects,1);
 for i = 1:n_subjects
   fprintf('.');
-  tmp = spm_data_read(V(i));
+  if mesh_detected
+    tmp = spm_data_read(V(i));
+  else
+    tmp(:,:,:) = V(i).dat(:,:,:);
+  end
   tmp(isnan(tmp)) = 0;
   if is_gSF
     tmp = tmp*gSF(i)/mean(gSF);
   end
   % calculate z-score  
-  zscore = ((tmp(ind) - Ymean(ind)).^2)./Ysd(ind);
+  zscore = ((tmp(ind) - Ymean(ind)).^2)./Ystd(ind);
+
+  % calculate glassbrain with emphasized z-score
+  Ytmp(ind) = zscore.^5;
+  Ytmp = reshape(Ytmp,size(tmp));
+  d1 = d1 + squeeze(sum(Ytmp,1));
+  d2 = d2 + squeeze(sum(Ytmp,2));
+  d3 = d3 + squeeze(sum(Ytmp,3));
   
   % and use mean of z-score as overall measure
   mean_zscore(i) = mean(zscore);
 end
 fprintf('\n');
+
+% not yet finished
+if 0
+  mx = max([d1(:); d2(:); d3(:)]);
+  
+  figure(11)
+  colormap(hot(64))
+  subplot(2,2,1)
+  imagesc(rot90(d1),[0 mx])
+  axis off image
+  
+  subplot(2,2,2)
+  imagesc(rot90(d2),[0 mx])
+  axis off image
+  
+  subplot(2,2,3)
+  imagesc(d3,[0 mx])
+  axis off image
+
+end
 
 if isxml
   % estimate product between weighted overall quality (IQR) and mean z-score
@@ -244,6 +295,9 @@ if isxml
     Topo_defects = QM(:,5);
   end
 end
+
+figure
+cat_plot_boxplot(mean_zscore,struct('style',2));
 
 fid = fopen(job.csv_name,'w');
 
@@ -263,7 +317,7 @@ else
   fprintf(fid,'\n');
 end
 for i = 1:n_subjects
-  [pth, data_name] = fileparts(V(i).fname);
+  [pth, data_name] = fileparts(job.data{i});
   fprintf(fid,'%s;%s;%g',pth,data_name,mean_zscore(i));
   if isxml
     fprintf(fid,';%g;%g',IQR(i),IQRratio(i));

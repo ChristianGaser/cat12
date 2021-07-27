@@ -307,8 +307,8 @@ end
         prob2 = prob; 
         for i=1:3, prob2(:,:,:,i) = cat_vol_ctype( single(prob(:,:,:,i)) .* (1-Yrep) + Yrep .* single(probs(:,:,:,i)) ); end
       
-        rep = mean(Yrep(Yp0(:)))*100; 
-        cat_io_addwarning('cat_main_amap:mixSPMAMAP',sprintf( 'Mix SPM and AMAP segmentation. Use SPM in case of strong differences (%0.2f%%).',rep),1,[0 1]) 
+        %rep = mean(Yrep(Yp0(:)))*100; 
+        %cat_io_addwarning('cat_main_amap:mixSPMAMAP',sprintf( 'Mix SPM and AMAP segmentation. Use SPM in case of strong differences (%0.2f%%).',rep),1,[0 1]) 
       
         %Yp0c = (single(prob2(:,:,:,1)) + single(prob2(:,:,:,2))*2 + single(prob2(:,:,:,3))*3)/255/3;
       else
