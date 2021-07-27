@@ -393,10 +393,11 @@ function cat_run_job(job,tpm,subj)
             Vn        = spm_vol(job.channel(n).vols{subj}); 
             cat_vol_imcalc(Vn,Vi,'i1',struct('interp',2,'verb',0,'mask',-1));
           else
-            jobr.data   = Vi.fname; 
+            jobr.data   = {Vi.fname}; 
             jobr.interp = -2005; % spline with smoothing in case of downsampling
             jobr.verb   = 0; 
             jobr.prefix = ''; 
+            jobr.restype.res  = vx_voli; % use other resolution for test  
             cat_vol_resize(jobr); 
           end
           vx_vol = vx_voli;
