@@ -757,7 +757,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
     if debug, tic; end
     if job.extopts.SRP >= 20
       surf = unique(surf); 
-      % RD202107: Load Shooting template to correct severe defects in the
+      %% RD202107: Load Shooting template to correct severe defects in the
       %           parahippocampla gyrus. Previously also used to stabilize 
       %           the cerebellum but it introduce some Shooting problems.
       if job.extopts.close_parahipp  %any( ~cellfun('isempty', strfind(surf,'cb') ))  % ... I want to avoid this if possible - it also seem to be worse to use it 
@@ -777,6 +777,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
       if ~isfield(job.extopts,'reduce_mesh'),     job.extopts.reduce_mesh     = 1; end % cat_get_defaults('extopts.reduce_mesh'); end
       %if ~isfield(job.output,'pp'),               job.output.pp               = struct('native',0,'warped',0,'dartel',0);  end % this is now in defaults and not required here 
       if ~isfield(job.output,'surf_measures'),    job.output.surf_measures    = 1; end % developer
+      %
       [Yth1, S, Psurf, qa.subjectmeasures.EC_abs, qa.subjectmeasures.defect_size, qa.createCS] = ...
         cat_surf_createCS2(VT,VT0,Ymix,Yl1,YMF,YT,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
         'vdist',job.extopts.vdist,'outputpp',job.output.pp,'surf_measures',job.output.surf_measures, ...
@@ -785,6 +786,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
         'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
         'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior)); 
     else
+      %%
       [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size, qa.createCS] = ...
         cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,struct('pbtmethod','pbt2x',...
         'interpV',job.extopts.pbtres,'SRP',mod(job.extopts.SRP,10), ...
