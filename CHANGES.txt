@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1866 | dahnke | 2021-07-27 09:28:56
+r1867 | gaser | 2021-07-27 13:22:01
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_main_amap.m
+M       cat_run_job.m
+M       cat_stat_quality_measures.m
+M       html/cat.html
+M       spm_cat12.m
+
+(1) Changed: Replaced volume reading functions in cat_stat_quality_measures.m
+             by faster nifti functions.
+(2) Fixed:   Corrected bugs in backup pipeline.
+
+------------------------------------------------------------------------
+r1866 | dahnke | 2021-07-27 09:29:56 +0200 (Tue, 27 Jul 2021) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +29,7 @@ M       cat_vol_headtrimming.m
              in cat_surf_createCS.
 (2) Fixed:   Corrected small bugs in cat_conf_tools and cat_vol_headtrimming. 
 (3) Changed: Debugging blocks in cat_main1639 to test surface reconstruction.
+
 
 ------------------------------------------------------------------------
 r1865 | dahnke | 2021-07-24 13:06:23 +0200 (Sat, 24 Jul 2021) | 15 lines
