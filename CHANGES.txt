@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1865 | dahnke | 2021-07-24 13:05:33
+r1866 | dahnke | 2021-07-27 09:28:56
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_main1639.m
+M       cat_surf_createCS2.m
+M       cat_vol_headtrimming.m
+
+(1) Fixed:   Corrected problems with CSF holes in the reconstruction of the   
+             parahippocampal gyrus in the default surface creation pipeline 
+             in cat_surf_createCS.
+(2) Fixed:   Corrected small bugs in cat_conf_tools and cat_vol_headtrimming. 
+(3) Changed: Debugging blocks in cat_main1639 to test surface reconstruction.
+
+------------------------------------------------------------------------
+r1865 | dahnke | 2021-07-24 13:06:23 +0200 (Sat, 24 Jul 2021) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +31,7 @@ M       cat_vol_resize.m
 (3) Changed: Added recoding setting to code variables (eg. scan site) in 
              cat_stat_getCSVXMLfields.
              
+
 ------------------------------------------------------------------------
 r1864 | dahnke | 2021-07-20 16:41:40 +0200 (Tue, 20 Jul 2021) | 16 lines
 

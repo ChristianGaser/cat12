@@ -244,6 +244,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   % cleanup and smoothing of the hippocampus amygdala to remove high
   % frequency structures that we cannot preocess yet
   Ymf = hippocampus_amygdala_cleanup(Ymf,Ya,vx_vol,1); % last var = doit
+    
   
   
   
@@ -889,7 +890,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
           
             %% then we estimate the regions that probably disappear when 
             % we change the resolution 
-            d = max(1,rf / opt.interpV / 2) * 2; %1.5; 
+            d = max(1,rf / opt.interpV / 2) * 3; %1.5; 
             distmorph = 1; if distmorph, dm = 'd'; else, dm = ''; end
             Yppi_o  = cat_vol_morph(Yppisc>0.5,[dm 'o'], d ); % rf / opt.interpV - 1 
             Yppi_c  = cat_vol_morph(Yppisc<0.5,[dm 'o'], d ); 
@@ -944,9 +945,11 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
           clear mask_parahipp; 
       
           if ~debug, clear Yppigyri Yppislci; end
+          %%
           [Yppiscr,resL] = cat_vol_resize(Yppiscr,'interp',VI,rf,1);
           %evalc(sprintf('clear CS; [Yppi05c,CS.faces,CS.vertices] = cat_vol_genus0(Yppiscr,0.5,1);')); % no_adjustment
           [Yppi05c,CS] = cat_vol_genus0opt(Yppiscr,th_initial,5 * (1-iscerebellum),debug);
+          %%
           [Yvxdef,defect_number0] = spm_bwlabel( double(abs(Yppi05c - (Yppiscr>0.5))>0) ); clear Yppi05c;
           Yvxdef = cat_vol_resize(cat_vol_morph(Yvxdef,'d'),'deinterp',resL); % #### this is not ideal and need refinement ###  
           if ~debug, clear Yppiscr; end
@@ -2012,15 +2015,40 @@ function Ymf = hippocampus_amygdala_cleanup(Ymf,Ya,vx_vol,doit)
     NS   = @(Ys,s) Ys==s | Ys==s+1; 
     LAB  = cat_get_defaults('extopts.LAB');  
    
-    % strong cleanup by median filter
-    Ymsk = ~(NS(Ya,LAB.PH) | NS(Ya,LAB.ON) | NS(Ya,LAB.BS) );
-    Ymsk = Ymf>0 & cat_vol_morph( NS(Ya,LAB.HC) , 'dd' , 3 , vx_vol ) & Ymsk; 
+    %% RD202107: Close CSF wholes in the parahippocampal gyrus
+    %            This could be part of cat_vol_partvol to improve the 
+    %            detection of the lower arms of the ventricles 
+    Ysv  = NS(Ya,LAB.PH) & Ymf<1.8 & Ymf>0.5; 
+    Ysv(smooth3(Ysv)<0.5) = 0; 
+    Ysv  = cat_vol_morph( Ysv , 'do' , 1.4 , vx_vol);
+    Ysvd = cat_vol_morph( Ysv , 'dd' , 5   , vx_vol); 
+    Ysvc = cat_vol_morph( (Ysvd & Ymf>2) | Ysv, 'lc', 2 , vx_vol); 
+    Ysvc = smooth3(Ysvc);
+    Ymf  = max( Ymf , Ysvc * 3);  
+    
+    %% RD202107: try close parahippocampal gyrus 
+    %            by increasing the intensity of GM-WM structures before 
+    %            we filter in the hippo-campus
+    %            This may cause other severe defects!
+    Ymsk = ~(NS(Ya,LAB.ON) | NS(Ya,LAB.BS) );
+    Ymsk = Ymf>2.2 & cat_vol_morph( NS(Ya,LAB.HC) |  NS(Ya,LAB.PH), 'dd' , 3 , vx_vol ) & Ymsk; 
+    Ymsk(smooth3(Ymsk)<0.7) = 0; 
+    Ymsk = cat_vol_morph( Ymsk , 'dc' , 1.5 , vx_vol ); 
+    % only one structure per side ?
+    Yphg = cat_vol_morph( Ymsk & mod(Ya,2)==0, 'l' ) | cat_vol_morph( Ymsk & mod(Ya,2)==1, 'l' ); 
+    % final corretion
+    str  = 0.5; % higher values = stronger correction)
+    Ymf  = ( (Ymf./3) .^ (1 - str * Yphg)) * 3; 
+    
+    %% strong cleanup by median filter
+    Ymsk = NS(Ya,LAB.PH) | NS(Ya,LAB.ON) | NS(Ya,LAB.BS);
+    Ymsk = Ymf>0 & cat_vol_morph( NS(Ya,LAB.HC) , 'dd' , 3 , vx_vol ) & ~Ymsk & ~Yphg; 
     Ymf  = cat_vol_median3( Ymf , Ymsk ); 
     Ymf  = cat_vol_median3( Ymf , Ymsk ); 
 
     % further cleanup by smoothing
-    Ymsk = ~(NS(Ya,LAB.PH) | NS(Ya,LAB.ON) | NS(Ya,LAB.BS) );
-    Ymsk = Ymf>0 & NS(Ya,LAB.HC) & Ymsk; 
+    Ymsk = NS(Ya,LAB.PH) | NS(Ya,LAB.ON) | NS(Ya,LAB.BS);
+    Ymsk = Ymf>0 & NS(Ya,LAB.HC) & ~Ymsk & ~Yphg; 
     Ymsk = smooth3(Ymsk); 
     Ymf  = min(Ymf,3-Ymsk); 
   end

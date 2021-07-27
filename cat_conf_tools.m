@@ -11,7 +11,7 @@ function tools = cat_conf_tools(expert)
 % ______________________________________________________________________
 % $Id$
 
-  if ~exist('expert','file'), expert = 1; end
+  if ~exist('expert','var'), expert = 1; end
   
 % multi use fields
 % -----------------------------------------------------------------------
