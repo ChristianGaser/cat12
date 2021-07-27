@@ -209,6 +209,7 @@ function varargout = cat_vol_headtrimming(job)
     end
         
     % skip most of steps that are only needed for non-categorical data
+    vx_vol  = sqrt(sum(V(1).mat(1:3,1:3).^2)); 
     if categorical
       Yb = Y;
     else
@@ -224,7 +225,6 @@ function varargout = cat_vol_headtrimming(job)
       Yb = cat_vol_morph(Yb,'l',[10 0.1]); 
     end
 
-    vx_vol  = sqrt(sum(V(1).mat(1:3,1:3).^2)); 
     [Yt,redB] = cat_vol_resize(Y,'reduceBrain',vx_vol,job.addvox,Yb);  %#ok<ASGLU>
     
     % prefer odd or even x-size such as found in original data to prevent shifting issues
