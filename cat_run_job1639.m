@@ -857,12 +857,13 @@ function cat_run_job1639(job,tpm,subj)
             [Affine,Ybi] = cat_run_job_APRGs(Ym,Ybg,VF,Pb,Pbt,Affine,vx_vol,obj,job);
           end
         end
-      
+    
         if ppe.affreg.skullstripped || job.extopts.gcutstr<0
           %% update number of SPM gaussian classes 
           Ybg = 1 - spm_read_vols(obj.tpm.V(1)) - spm_read_vols(obj.tpm.V(2)) - spm_read_vols(obj.tpm.V(3));
+          noCSF = job.extopts.gcutstr == -2; 
           if 1
-            for k=1:3
+            for k=1:3 - noCSF
               obj.tpm.dat{k}     = spm_read_vols(obj.tpm.V(k));
               obj.tpm.V(k).dt(1) = 64;
               obj.tpm.V(k).dat   = double(obj.tpm.dat{k});
@@ -870,21 +871,25 @@ function cat_run_job1639(job,tpm,subj)
             end
           end
 
-          obj.tpm.V(4).dat = Ybg;
-          obj.tpm.dat{4}   = Ybg; 
-          obj.tpm.V(4).pinfo = repmat([1;0],1,size(Ybg,3));
-          obj.tpm.V(4).dt(1) = 64;
-          obj.tpm.dat(5:6) = []; 
-          obj.tpm.V(5:6)   = []; 
-          obj.tpm.bg1(4)   = obj.tpm.bg1(6);
-          obj.tpm.bg2(4)   = obj.tpm.bg1(6);
-          obj.tpm.bg1(5:6) = [];
-          obj.tpm.bg2(5:6) = [];
+          obj.tpm.V(4 - noCSF).dat = Ybg;
+          obj.tpm.dat{4 - noCSF}   = Ybg; 
+          obj.tpm.V(4 - noCSF).pinfo = repmat([1;0],1,size(Ybg,3));
+          obj.tpm.V(4 - noCSF).dt(1) = 64;
+          obj.tpm.dat(5 - noCSF:6) = []; 
+          obj.tpm.V(5 - noCSF:6)   = []; 
+          obj.tpm.bg1(4 - noCSF)   = obj.tpm.bg1(6);
+          obj.tpm.bg2(4 - noCSF)   = obj.tpm.bg1(6);
+          obj.tpm.bg1(5 - noCSF:6) = [];
+          obj.tpm.bg2(5 - noCSF:6) = [];
           %obj.tpm.V = rmfield(obj.tpm.V,'private');
           
           % tryed 3 peaks per class, but BG detection error require manual 
           % correction (set 0) that is simple with only one class  
-          job.opts.ngaus = [([job.tissue(1:3).ngaus])';1]; % 3*ones(4,1);1; 
+          if noCSF
+            job.opts.ngaus = ([job.tissue(1:3).ngaus])'; 
+          else
+            job.opts.ngaus = [([job.tissue(1:3).ngaus])';1]; % 3*ones(4,1);1; 
+          end
           obj.lkp        = [];
           for k=1:numel(job.opts.ngaus)
             job.tissue(k).ngaus = job.opts.ngaus(k);

@@ -453,7 +453,7 @@ if ~isfield(res,'spmpp')
       job.extopts.gcutstr = 99;
     end
   end
-  % correct mask for skull-stripped images
+  % correct mask for skull-stripped images (but not ex-vivo brains, where CSF=BG)  
   if max(res.lkp) == 4 %skullstripped
     Yb = Yb .* (spm_read_vols(res.image(1)) > 0);
   end

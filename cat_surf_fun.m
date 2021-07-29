@@ -88,6 +88,9 @@ function varargout = cat_surf_fun(action,S,varargin)
       if nargin<2, help cat_surf_fun>cat_surf_normals; return; end
       varargout{1} = cat_surf_normals(S); 
     
+    case 'localsurfsmooth'   
+      varargout{1} = cat_surf_localsurfsmooth(S,varargin{:});
+    
     case 'angle'
       varargout{1} = cat_surf_edgeangle(S,varargin{1});
       
@@ -308,6 +311,23 @@ function varargout = cat_surf_fun(action,S,varargin)
     
 end
 
+function CS = cat_surf_localsurfsmooth(CS,C,s)
+% local surface filter for a surface CS that is filters vertices with the 
+% amount defined by C (0 no fitlering, 1 full filtering) and s as number
+% of iteration.
+
+  if ~exist('s','var'), s = 1; end
+
+  M = spm_mesh_smooth(CS);
+  Cst = sort(C); 
+  
+  for i=1:s
+    Ci  = min(1,max(0,C - (s - i) * Cst(round(numel(C)*0.999)))); 
+    CSV = cat_surf_smooth(M,CS.vertices,1);
+    CS.vertices = CS.vertices .* repmat(1 - Ci,1,3) + CSV .* repmat(Ci,1,3);
+  end
+  
+end
 
 function S = cat_surf_reduce(S,red)
   Ptemp = tempname; 
@@ -1855,9 +1875,9 @@ function V = cat_surf_smooth(M,V,s,mode)
   if ~exist('mode','var'), mode = 0; end
 
   smoothsurf = @(V,s) [ ...         % simple surface smoothing 
-    spm_mesh_smooth(M,V(:,1),s) , ...
-    spm_mesh_smooth(M,V(:,2),s) , ...
-    spm_mesh_smooth(M,V(:,3),s) ];
+    cat_mesh_smooth(M,V(:,1),s) , ...
+    cat_mesh_smooth(M,V(:,2),s) , ...
+    cat_mesh_smooth(M,V(:,3),s) ];
   
   if isa(V,'single')
     singleV = 1;
