@@ -57,7 +57,7 @@ function [Ym2,Ymi2,Tthm,Tthmi] = cat_main_update_intnorm(Ym,Ymi,Yb,Ycls,job,verb
   
   % The AMAP gives us a 4D-matrix, whereas SPM/cat_main uses a cell
   % structure with each tissue class.
-  if ndims(Ycls)==4
+  if ndims(Ycls)==4 || ndims(Ycls)==3
     prob = Ycls; clear Ycls;  
     for i = 1:3
       Ycls{i} = zeros(size(Ym),'uint8'); 

@@ -50,8 +50,9 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
     YbA = YbA | cat_vol_morph(YbA & sum(P(:,:,:,1:2),4)>4 ,'dd',2.4,vx_vol);
 
 
-    if size(P,4)<4
-      P(:,:,:,4) = 1 - sum(P,4); 
+    if size(P,4)==3
+      % create background class that is required later
+      P(:,:,:,4) = 1 - cat_vol_morph( sum(P(:,:,:,1:2),4) , 'ldc' , 10 ); 
     end
 
     %% correction of CSF-GM-WM PVE voxels that were miss aligned to skull
@@ -254,7 +255,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
     %  Update Skull-Stripping 1
     %  ----------------------------------------------------------------------
     stime2 = cat_io_cmd('  Update skull-stripping','g5','',job.extopts.verb-1,stime2); 
-    if size(P,4)==4 % skull-stripped
+    if size(P,4)==4 || size(P,4)==3 % skull-stripped
       [Yb,Ybb,Yg,Ydiv,P] = cat_main_updateSPM_skullstriped(Ysrc,P,res,vx_vol,T3th);
     elseif isfield(job.extopts,'inv_weighting') && job.extopts.inv_weighting
       %% estimate gradient (edge) and divergence maps
@@ -533,7 +534,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
     
     % Yb - skull-stripping
     if ~exist('Yb','var')
-      if size(P,4)==4 
+      if size(P,4)==4 || size(P,4)==3
         cat_io_cprintf('warn','\n  Skull-stripped input - refine original mask                                 ')
         [Yb,Ybb,Yg,Ydiv,P] = cat_main_updateSPM_skullstriped(Ysrc,P,res,vx_vol,T3th); %#ok<ASGLU>
         clear Ybb Yg Ydiv 
