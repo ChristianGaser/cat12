@@ -45,7 +45,8 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   
   
   if size(P,4)<4
-    P(:,:,:,4) = 1 - sum(P,4); 
+    % create background class that is required later
+    P(:,:,:,4) = 1 - cat_vol_morph( sum(P(:,:,:,1:2),4) , 'ldc' , 10 ); 
   end
   
   % transfer tissue outside the brain mask to head  ... 
@@ -177,7 +178,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   %  Update Skull-Stripping 1
   %  ----------------------------------------------------------------------
   stime2 = cat_io_cmd('  Update Skull-Stripping','g5','',job.extopts.verb-1,stime2); 
-  if size(P,4)==4 % skull-stripped
+  if size(P,4)==4 || size(P,4)==3 % skull-stripped
     [Yb,Ybb,Yg,Ydiv,P] = cat_main_updateSPM_skullstriped(Ysrc,P,res,vx_vol,T3th);
   elseif job.extopts.gcutstr==0 
     [Yb,Ybb,Yg,Ydiv] = cat_main_updateSPM_gcut0(Ysrc,P,vx_vol,T3th);
@@ -241,7 +242,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   if ~(any(sign(diff(T3th))==-1))
     %% Update probability maps
     % background vs. head - important for noisy backgrounds such as in MT weighting
-    if size(P,4)==4 % skull-stripped
+    if size(P,4)==4 || size(P,4)==3 % skull-stripped
       Ybg = ~Yb;
     else
       if sum(sum(sum(P(:,:,:,6)>240 & Ysrc<cat_stat_nanmean(T3th(1:2)))))>10000

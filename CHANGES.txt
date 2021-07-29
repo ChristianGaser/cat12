@@ -1,5 +1,31 @@
 ------------------------------------------------------------------------
-r1867 | gaser | 2021-07-27 13:22:01
+r1868 | dahnke | 2021-07-29 17:20:39
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_main.m
+M       cat_main1639.m
+M       cat_main_reportstr.m
+M       cat_main_updateSPM.m
+M       cat_main_updateSPM1639.m
+M       cat_main_update_intnorm.m
+M       cat_run_job.m
+M       cat_run_job1639.m
+M       cat_surf_createCS2.m
+M       cat_surf_fun.m
+
+(1) Fixed:   Corrected problems with CSF holes in the reconstruction of the   
+             parahippocampal gyrus in the default surface creation pipeline 
+             in cat_surf_createCS. Added subfunction for local surface smoothing
+             in cat_surf_fun.
+(2) Fixed:   Corrected small bugs in cat_conf_tools and cat_vol_headtrimming. 
+(3) Changed: Debugging blocks in cat_main1639 to test surface reconstruction.
+(4) Changed: Added new skull-stripping mode for post-mortem data with CSF=BG
+             that need 3 rather than 4 classes with changes in cat_conf_extopts
+             and cat_run_job[1639], cat_main[1639]. 
+------------------------------------------------------------------------
+r1867 | gaser | 2021-07-27 13:22:08 +0200 (Tue, 27 Jul 2021) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +39,7 @@ M       spm_cat12.m
 (1) Changed: Replaced volume reading functions in cat_stat_quality_measures.m
              by faster nifti functions.
 (2) Fixed:   Corrected bugs in backup pipeline.
+
 
 ------------------------------------------------------------------------
 r1866 | dahnke | 2021-07-27 09:29:56 +0200 (Tue, 27 Jul 2021) | 14 lines

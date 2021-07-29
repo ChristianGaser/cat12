@@ -243,7 +243,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   
   % cleanup and smoothing of the hippocampus amygdala to remove high
   % frequency structures that we cannot preocess yet
-  Ymf = hippocampus_amygdala_cleanup(Ymf,Ya,vx_vol,1); % last var = doit
+  Ymf = hippocampus_amygdala_cleanup(Ymf,Ya,vx_vol,opt.close_parahipp,1); % last var = doit
     
   
   
@@ -1170,6 +1170,45 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
     end
     saveSurf(CS,Pcentral); 
 
+%% 
+if 1
+    % EXPERIMENTAL 
+    % ------------------------------------------------------------------
+    % RD202107: Local surface smoothing of problematic areas (e.g. areas 
+    %           from topology correction) that are defined by highly
+    %           resampled areas: 
+    %              (1./abs(C)).^(1./A)
+    %           3 iterations are used to smooth high sampled structures
+    %           that often cause self-intersections and often represent 
+    %           corrected topological defects with inaccurate geometry, 
+    %           e.g., cuts in the parahippocamplal or superior temploral 
+    %           gyri. Although this works in principle the correction of 
+    %           cuts is still not optimal.
+    % ------------------------------------------------------------------
+    for csxi = 3:-1:1
+      M   = spm_mesh_smooth(CS); 
+      A   = cat_surf_fun('area',CS);
+      C   = spm_mesh_curvature(CS);
+      OL  = spm_mesh_smooth(M, double( max(0.01,min(4,1./abs(C))) .^ max(0.01,min(10,1 ./ max(eps,A))) ) ,40); % 
+      CS  = cat_surf_fun('localsurfsmooth',CS,log(max(0,( (OL-100*csxi)/100))),100); 
+
+      if csxi > 1
+        % 
+        saveSurf(CS,Pcentral);
+        cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
+                       'avg -0.1 0.1 .2 .1 %d 0 "0.5" "0.5" n 0 0 0 %d %0.2f 0.0 0'], ... pial=1/3, quantil=0.4167
+                       Vpp.fname,Pcentral,Pcentral,1,10,0.01); 
+        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
+        CSo = loadSurf(Pcentral);
+        OLc = min(1,max(0,OL - 100)); 
+        CS.vertices = CS.vertices .* repmat(1 - OLc,1,3) + CSo.vertices .* repmat(OLc,1,3); 
+      end
+    end
+    clear M A C OL OLc CSox; 
+    % ------------------------------------------------------------------
+    
+end
+    
     if ~useprior
        % remove unconnected meshes
       cmd = sprintf('CAT_SeparatePolygon "%s" "%s" -1',Pcentral,Pcentral); 
@@ -1321,12 +1360,22 @@ end
       if opt.SRP==3, facevertexcdata = Tfs; end
       
       % call collision correction
-      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,struct('optimize',opt.SRP>=2,'verb',verblc,'mat',Smat.matlabIBB_mm)); 
+      [CSC,facevertexcdataC] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,struct('optimize',opt.SRP>=2,'verb',verblc,'mat',Smat.matlabIBB_mm)); 
       if verblc, fprintf('\b\b'); end
-      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3)); 
+      [CSC,facevertexcdataC] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3)); 
       %if debug, toc; end
       
-      % evaluate and save results
+      % RD202107: do not correct in to problematic regions that suffer from to fine sampling
+      M   = spm_mesh_smooth(CS); 
+      A   = cat_surf_fun('area',CS);
+      C   = spm_mesh_curvature(CS);
+      OL  = cat_mesh_smooth(M, double( max(0.01,min(4,1./abs(C))) .^ max(0.01,min(10,1 ./ max(eps,A))) ) ,40);
+      OLc = min(1,max(0,OL - 100)); clear M A C OL;
+      CS.vertices = CS.vertices .* repmat(1 - OLc,1,3) + CSC.vertices .* repmat(OLc,1,3); 
+      facevertexcdata = facevertexcdata .* (1-OLc) + facevertexcdataC .* OLc;  
+      clear OLc;
+      
+      %% evaluate and save results
       if verblc, cat_io_cmd(' ','g5','',opt.verb);  end
       fprintf('%5.0fs',etime(clock,min([stime2;stime],[],1))); if ~debug, stime = []; end
       saveSurf(CS,Pcentral); cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
@@ -1992,7 +2041,7 @@ function [res,EC,S,stime] = fastCSexport(Ymfs,Yppi,Yth1i,Ywdt,Ycdt,Vpp1,Vpp, EC,
 end
 
 %==========================================================================
-function Ymf = hippocampus_amygdala_cleanup(Ymf,Ya,vx_vol,doit)
+function Ymf = hippocampus_amygdala_cleanup(Ymf,Ya,vx_vol,close_parahipp,doit)
 %% Amygdala hippocampus smoothing. 
 %  We use a median filter to remove the nice details of the hippocampus
 %  that will cause topology errors and self-intersections. 
@@ -2000,6 +2049,7 @@ function Ymf = hippocampus_amygdala_cleanup(Ymf,Ya,vx_vol,doit)
 %  robust to filter (simple smoothing) this region strongly because 
 %  the "random" details especially in good data introduce more variance.
 %  (RD 201912)
+%  RD202107: Added closing of the parahippocampal gyrus. 
 %
 %    Ymf = hippocampus_amygdala_cleanup(Ymf,Ya[,doit])
 % 
@@ -2015,33 +2065,74 @@ function Ymf = hippocampus_amygdala_cleanup(Ymf,Ya,vx_vol,doit)
     NS   = @(Ys,s) Ys==s | Ys==s+1; 
     LAB  = cat_get_defaults('extopts.LAB');  
    
+     
     %% RD202107: Close CSF wholes in the parahippocampal gyrus
     %            This could be part of cat_vol_partvol to improve the 
     %            detection of the lower arms of the ventricles 
-    Ysv  = NS(Ya,LAB.PH) & Ymf<1.8 & Ymf>0.5; 
+if 0  % I am not sure if this is a anatomical correct setting
+    Ysv  = NS(Ya,LAB.PH) & Ymf<1.9 & Ymf>0.5; 
     Ysv(smooth3(Ysv)<0.5) = 0; 
     Ysv  = cat_vol_morph( Ysv , 'do' , 1.4 , vx_vol);
     Ysvd = cat_vol_morph( Ysv , 'dd' , 5   , vx_vol); 
-    Ysvc = cat_vol_morph( (Ysvd & Ymf>2) | Ysv, 'lc', 2 , vx_vol); 
+    Ysvc = cat_vol_morph( (Ysvd & Ymf>2) | Ysv , 'lc', 2 , vx_vol);
     Ysvc = smooth3(Ysvc);
-    Ymf  = max( Ymf , Ysvc * 3);  
+    Ymf  = max( Ymf , Ysvc * 3); 
+    clear Ysv Ysvc Ysvd; 
+end
+
+
     
-    %% RD202107: try close parahippocampal gyrus 
-    %            by increasing the intensity of GM-WM structures before 
-    %            we filter in the hippo-campus
-    %            This may cause other severe defects!
-    Ymsk = ~(NS(Ya,LAB.ON) | NS(Ya,LAB.BS) );
-    Ymsk = Ymf>2.2 & cat_vol_morph( NS(Ya,LAB.HC) |  NS(Ya,LAB.PH), 'dd' , 3 , vx_vol ) & Ymsk; 
-    Ymsk(smooth3(Ymsk)<0.7) = 0; 
-    Ymsk = cat_vol_morph( Ymsk , 'dc' , 1.5 , vx_vol ); 
-    % only one structure per side ?
-    Yphg = cat_vol_morph( Ymsk & mod(Ya,2)==0, 'l' ) | cat_vol_morph( Ymsk & mod(Ya,2)==1, 'l' ); 
-    % final corretion
-    str  = 0.5; % higher values = stronger correction)
-    Ymf  = ( (Ymf./3) .^ (1 - str * Yphg)) * 3; 
+    %% RD202107: closing jof parahippocampal gyri
+    %  --------------------------------------------------------------------
+    %  We are mostly interested in closing of holes in deep parahippocampal 
+    %  regions. Hence, we will limit our operations by an enlargements of
+    %  other structures (like sulcal depth).
+    %  Try close parahippocampal gyrus by increasing the intensity of 
+    %  GM-WM structures before we filter in the hippocampus.
+    %  --------------------------------------------------------------------
+    if close_parahipp
+      % Limitation by sulcal depth like map.
+      dd   = 1; % this parameter shoulb depend on brain size to work in primates too
+      Yphn = cat_vol_morph( NS(Ya,LAB.BS) | NS(Ya,LAB.CB) | NS(Ya,LAB.ON) | Ymf==0,'dd',dd * 8, vx_vol) | ... 
+             cat_vol_morph( NS(Ya,LAB.HC),'de',3);  % initial definition with extensiion (~ sulcal depth)
+      Yphn = cat_vol_smooth3X(Yphn,2)>0.5;          % soften boundaries
+      Yphn = cat_vol_morph( Yphn , 'dc' , 4);       % close some regions
+
+      % mask by "obvious" structures           
+      Ymsk = Ymf>2.1 & cat_vol_morph( NS(Ya,LAB.HC) |  NS(Ya,LAB.PH), 'dd' , 3 , vx_vol ) & ~Yphn; 
+      Ymsk(smooth3(Ymsk)<0.5) = 0; 
+      Ymsk = cat_vol_morph( Ymsk , 'dc' , 1.5 , vx_vol ); 
+
+      % we need a wider region close to the hippocampus and parahippocampal gyrus
+      Yg   = cat_vol_grad(Ymf);
+      Ydiv = cat_vol_div(Ymf);
+      Yphi = cat_vol_morph( NS(Ya,LAB.HC), 'dd' , 5 , vx_vol ) & cat_vol_morph( NS(Ya,LAB.PH), 'dd' , 5 , vx_vol ) & ~Yphn; 
+      Yphx =  ( Yphi | cat_vol_morph( NS(Ya,LAB.PH), 'dd' , 2 , vx_vol )) & -Ydiv>(2-Ymf-Yg/3) & ~Yphn; clear Yphi; 
+      Yphx = cat_vol_morph( Yphx & mod(Ya,2)==0, 'l' ) | cat_vol_morph( Yphx & mod(Ya,2)==1, 'l' );
+      Yphx = cat_vol_morph( Yphx , 'dc' , 1 , vx_vol ); 
+      clear Yphs Ydiv Yg
+
+      % only one structure per side and only close to the hippocampus and parahippocampal gyrus and closer to the ventricle 
+      % (closing of the deep parahippocampal gyrus)
+      Yphg = cat_vol_morph( (Ymsk | Yphx ) & mod(Ya,2)==0, 'l' ) | cat_vol_morph( (Ymsk | Yphx ) & mod(Ya,2)==1, 'l' ); 
+      Yphg = Yphg & ~Yphn & cat_vol_morph(NS(Ya,LAB.HC) | NS(Ya,LAB.PH) , 'dd', 3 );
+
+      % to avoid that our hard changes effect surrounding areas we keep only the inner part in this region 
+      Yphs = cat_vol_morph( cat_vol_morph(Yphg | NS(Ya,LAB.HC) | NS(Ya,LAB.PH),'dc',10) ,'de',2,vx_vol); % we start with the 5 mm of the Yphi!
+      Yphg = Yphg & Yphs; 
+
+      % final corretion
+      str  = 0.5; % higher values = stronger correction)
+      Ymf  = ( (Ymf./3) .^ (1 - str * smooth3(Yphg))) * 3; 
+      Ymf  = max( Ymf , min(3,smooth3(Yphg * 4)) );
+    else
+      Yphg = false(size(Ymf)); 
+    end
     
-    %% strong cleanup by median filter
-    Ymsk = NS(Ya,LAB.PH) | NS(Ya,LAB.ON) | NS(Ya,LAB.BS);
+    
+    
+    %% strong cleanup by median filter within the hippocampus
+    Ymsk = cat_vol_morph( NS(Ya,LAB.PH) | NS(Ya,LAB.ON) | NS(Ya,LAB.BS) , 'dd', 2 );
     Ymsk = Ymf>0 & cat_vol_morph( NS(Ya,LAB.HC) , 'dd' , 3 , vx_vol ) & ~Ymsk & ~Yphg; 
     Ymf  = cat_vol_median3( Ymf , Ymsk ); 
     Ymf  = cat_vol_median3( Ymf , Ymsk ); 
