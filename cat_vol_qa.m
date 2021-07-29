@@ -919,12 +919,11 @@ function varargout = cat_vol_qa(action,varargin)
 
       
       %% Bias/Inhomogeneity (original image with smoothed WM segment)
-      Yosm = cat_vol_resize(Ywb,'reduceV',vx_vol,3,32,'meanm');      % resolution and noise reduction
-      for si=1:max(1,min(3,round(QAS.qualitymeasures.NCR*4))), mth = min(Yosm(:)) + 1; Yosm = cat_vol_localstat(Yosm + mth,Yosm~=0,1,1) - mth; end 
+      Yosm = cat_vol_resize(Ywb,'reduceV',vx_vol,3,32,'meanm'); Yosmm = Yosm~=0;      % resolution and noise reduction
+      for si=1:max(1,min(3,round(QAS.qualitymeasures.NCR*4))), mth = min(Yosm(:)) + 1; Yosm = cat_vol_localstat(Yosm + mth,Yosmm,1,1) - mth; end 
       QAS.qualitymeasures.ICR  = cat_stat_nanstd(Yosm(Yosm(:)>0)) / signal_intensity / contrast;
       %QAS.qualitymeasures.CIR  = 1 / QAS.qualitymeasures.ICR;
 
-      
   
       %% marks
       QAR = cat_stat_marks('eval',1,QAS);

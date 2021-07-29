@@ -1369,7 +1369,7 @@ end
       M   = spm_mesh_smooth(CS); 
       A   = cat_surf_fun('area',CS);
       C   = spm_mesh_curvature(CS);
-      OL  = cat_mesh_smooth(M, double( max(0.01,min(4,1./abs(C))) .^ max(0.01,min(10,1 ./ max(eps,A))) ) ,40);
+      OL  = spm_mesh_smooth(M, double( max(0.01,min(4,1./abs(C))) .^ max(0.01,min(10,1 ./ max(eps,A))) ) ,40);
       OLc = min(1,max(0,OL - 100)); clear M A C OL;
       CS.vertices = CS.vertices .* repmat(1 - OLc,1,3) + CSC.vertices .* repmat(OLc,1,3); 
       facevertexcdata = facevertexcdata .* (1-OLc) + facevertexcdataC .* OLc;  
