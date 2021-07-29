@@ -937,7 +937,7 @@ function [AV,AF] = cat_surf_area(S)
      %   https://en.wikipedia.org/wiki/Circumscribed_circle
   end
    %%
-%   AV = cat_mesh_smooth(S,AV,5); 
+%   AV = spm_mesh_smooth(S,AV,5); 
 
 end
 
@@ -1875,9 +1875,9 @@ function V = cat_surf_smooth(M,V,s,mode)
   if ~exist('mode','var'), mode = 0; end
 
   smoothsurf = @(V,s) [ ...         % simple surface smoothing 
-    cat_mesh_smooth(M,V(:,1),s) , ...
-    cat_mesh_smooth(M,V(:,2),s) , ...
-    cat_mesh_smooth(M,V(:,3),s) ];
+    spm_mesh_smooth(M,V(:,1),s) , ...
+    spm_mesh_smooth(M,V(:,2),s) , ...
+    spm_mesh_smooth(M,V(:,3),s) ];
   
   if isa(V,'single')
     singleV = 1;
