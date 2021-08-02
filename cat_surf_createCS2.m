@@ -84,6 +84,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   def.add_parahipp        = cat_get_defaults('extopts.add_parahipp');
   def.scale_cortex        = cat_get_defaults('extopts.scale_cortex');
   def.close_parahipp      = cat_get_defaults('extopts.close_parahipp');
+  def.localsmooth         = 0;  % 0 - no smoothing, 1 - smoothing areas with high change of self-intersections (~ high curvature*thickness*sampling) 
   def.reduce_mesh         = 1;  % 0 - surface creation on PBT resolution, no mesh-reduction (very slow) 
                                 % 1 - optimal resolution depending on final mesh resolution, no mesh-reduction 
                                 % 2 - internal resolution, no mesh-reduction (slow for highres data) 
@@ -93,7 +94,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   def.outputpp.native     = 0;  % output of Ypp map for cortical orientation in EEG/MEG 
   def.outputpp.warped     = 0;
   def.outputpp.dartel     = 0;
-  
+    
   % options that rely on other options
   opt                     = cat_io_updateStruct(def,opt); clear def; 
   opt.fast                = any(~cellfun('isempty',strfind(opt.surf,'sfst'))) + ...
@@ -1170,9 +1171,8 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
     end
     saveSurf(CS,Pcentral); 
 
-%% 
-if 1
-    % EXPERIMENTAL 
+
+    %% EXPERIMENTAL 
     % ------------------------------------------------------------------
     % RD202107: Local surface smoothing of problematic areas (e.g. areas 
     %           from topology correction) that are defined by highly
@@ -1185,30 +1185,32 @@ if 1
     %           gyri. Although this works in principle the correction of 
     %           cuts is still not optimal.
     % ------------------------------------------------------------------
-    for csxi = 3:-1:1
-      M   = spm_mesh_smooth(CS); 
-      A   = cat_surf_fun('area',CS);
-      C   = spm_mesh_curvature(CS);
-      OL  = spm_mesh_smooth(M, double( max(0.01,min(4,1./abs(C))) .^ max(0.01,min(10,1 ./ max(eps,A))) ) ,40); % 
-      CS  = cat_surf_fun('localsurfsmooth',CS,log(max(0,( (OL-100*csxi)/100))),100); 
+    if opt.localsmooth
+      for csxi = 3:-1:1
+        M   = spm_mesh_smooth(CS); 
+        A   = cat_surf_fun('area',CS);
+        C   = spm_mesh_curvature(CS);
+        OL  = spm_mesh_smooth(M, double( max(0.01,min(4,1./abs(C))) .^ max(0.01,min(10,1 ./ max(eps,A))) ) ,40); % 
+        CS  = cat_surf_fun('localsurfsmooth',CS,log(max(0,( (OL-100*csxi)/100))),100); 
 
-      if csxi > 1
-        % 
-        saveSurf(CS,Pcentral);
-        cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
-                       'avg -0.1 0.1 .2 .1 %d 0 "0.5" "0.5" n 0 0 0 %d %0.2f 0.0 0'], ... pial=1/3, quantil=0.4167
-                       Vpp.fname,Pcentral,Pcentral,1,10,0.01); 
-        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
-        CSo = loadSurf(Pcentral);
-        OLc = min(1,max(0,OL - 100)); 
-        CS.vertices = CS.vertices .* repmat(1 - OLc,1,3) + CSo.vertices .* repmat(OLc,1,3); 
+        if csxi > 1
+          % 
+          saveSurf(CS,Pcentral);
+          cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
+                         'avg -0.1 0.1 .2 .1 %d 0 "0.5" "0.5" n 0 0 0 %d %0.2f 0.0 0'], ... pial=1/3, quantil=0.4167
+                         Vpp.fname,Pcentral,Pcentral,1,10,0.01); 
+          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
+          CSc = loadSurf(Pcentral);
+          OLc = min(1,max(0,OL - 100)); 
+          CS.vertices = CS.vertices .* repmat(1 - OLc,1,3) + CSc.vertices .* repmat(OLc,1,3); 
+        end
       end
+      clear M A C OL CSox CSc OLc; 
     end
-    clear M A C OL OLc CSox; 
     % ------------------------------------------------------------------
     
-end
-    
+
+    %% 
     if ~useprior
        % remove unconnected meshes
       cmd = sprintf('CAT_SeparatePolygon "%s" "%s" -1',Pcentral,Pcentral); 
@@ -1359,21 +1361,25 @@ end
     
       if opt.SRP==3, facevertexcdata = Tfs; end
       
-      % call collision correction
-      [CSC,facevertexcdataC] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,struct('optimize',opt.SRP>=2,'verb',verblc,'mat',Smat.matlabIBB_mm)); 
+      %% RD202107: do not correct in to problematic regions that suffer from to fine sampling
+      if opt.localsmooth
+        for ix = 1:2 % two main interations
+          M   = spm_mesh_smooth(CS); 
+          A   = cat_surf_fun('area',CS);
+          C   = spm_mesh_curvature(CS);
+          OL  = cat_mesh_smooth(M, double( max(0.01,min(4,1./abs(C))) .^ max(0.01,min(10,1 ./ max(eps,A))) ) ,40);
+          for i = 1:5, CS = cat_surf_fun('localsurfsmooth',CS,log(max(0,( (OL-100*csxi)/100))),10); end % more subiterations
+          clear M A C OL;
+        end
+      end
+
+      %% call collision correction
+      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,struct('optimize',opt.SRP>=2,'verb',verblc,'mat',Smat.matlabIBB_mm)); 
       if verblc, fprintf('\b\b'); end
-      [CSC,facevertexcdataC] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3)); 
+      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3)); 
       %if debug, toc; end
       
-      % RD202107: do not correct in to problematic regions that suffer from to fine sampling
-      M   = spm_mesh_smooth(CS); 
-      A   = cat_surf_fun('area',CS);
-      C   = spm_mesh_curvature(CS);
-      OL  = spm_mesh_smooth(M, double( max(0.01,min(4,1./abs(C))) .^ max(0.01,min(10,1 ./ max(eps,A))) ) ,40);
-      OLc = min(1,max(0,OL - 100)); clear M A C OL;
-      CS.vertices = CS.vertices .* repmat(1 - OLc,1,3) + CSC.vertices .* repmat(OLc,1,3); 
-      facevertexcdata = facevertexcdata .* (1-OLc) + facevertexcdataC .* OLc;  
-      clear OLc;
+      
       
       %% evaluate and save results
       if verblc, cat_io_cmd(' ','g5','',opt.verb);  end
@@ -1381,7 +1387,7 @@ end
       saveSurf(CS,Pcentral); cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
       
       % final result ... test for self-intersections only in developer mode? 
-      if debug % opt.surf_measures > 2  ||  opt.verb > 2
+      if 1 %debug % opt.surf_measures > 2  ||  opt.verb > 2
         cat_surf_fun('saveico',CS,facevertexcdata,Pcentral,sprintf('createCS_3_collcorr_%0.2fmm_vdist%0.2fmm',opt.interpV,opt.vdist),Ymfs,Smat.matlabIBB_mm); 
         %fprintf('\n');
         res.(opt.surf{si}).createCS_3_collcorr = cat_surf_fun('evalCS' ,CS,facevertexcdata,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-1,cat_get_defaults('extopts.expertgui')>1);
@@ -2066,19 +2072,25 @@ function Ymf = hippocampus_amygdala_cleanup(Ymf,Ya,vx_vol,close_parahipp,doit)
     LAB  = cat_get_defaults('extopts.LAB');  
    
      
-    %% RD202107: Close CSF wholes in the parahippocampal gyrus
-    %            This could be part of cat_vol_partvol to improve the 
-    %            detection of the lower arms of the ventricles 
-if 0  % I am not sure if this is a anatomical correct setting
-    Ysv  = NS(Ya,LAB.PH) & Ymf<1.9 & Ymf>0.5; 
-    Ysv(smooth3(Ysv)<0.5) = 0; 
-    Ysv  = cat_vol_morph( Ysv , 'do' , 1.4 , vx_vol);
-    Ysvd = cat_vol_morph( Ysv , 'dd' , 5   , vx_vol); 
-    Ysvc = cat_vol_morph( (Ysvd & Ymf>2) | Ysv , 'lc', 2 , vx_vol);
-    Ysvc = smooth3(Ysvc);
-    Ymf  = max( Ymf , Ysvc * 3); 
-    clear Ysv Ysvc Ysvd; 
-end
+    %% RD202107: Close CSF region between hippocampus and amygdala
+    %  --------------------------------------------------------------------
+    %  This could be part of cat_vol_partvol to improve the improve the 
+    %  detection of the lower arms of the ventricles.  The region has 
+    %  slightly increased variance, but much less than the topology problems
+    %  parahippocampal region.  Nevertheless, the cuts in some brains that 
+    %  trigger the variance are much deeper than we would generally expect
+    %  (e.g. FSaverage) and therefore closing seems appropriate.
+    %  --------------------------------------------------------------------
+    if 1  
+      Ysv  = NS(Ya,LAB.PH) & Ymf<1.9 & Ymf>0.5; 
+      Ysv(smooth3(Ysv)<0.5) = 0; 
+      Ysv  = cat_vol_morph( Ysv , 'do' , 1.4 , vx_vol);
+      Ysvd = cat_vol_morph( Ysv , 'dd' , 5   , vx_vol); 
+      Ysvc = cat_vol_morph( (Ysvd & Ymf>2) | Ysv , 'lc', 2 , vx_vol);
+      Ysvc = smooth3(Ysvc);
+      Ymf  = max( Ymf , Ysvc * 3); 
+      clear Ysv Ysvc Ysvd; 
+    end
 
 
     
