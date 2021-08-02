@@ -258,7 +258,7 @@ cat.extopts.vdist          = 2;   % mesh resolution (experimental, do not change
 cat.extopts.pbtlas         = 0;   % reduce myelination effects (experimental, not yet working properly!)
 cat.extopts.thick_measure  = 1;   % distance method for estimating thickness:  1 - Tfs: Freesurfer method using mean(Tnear1,Tnear2) (default in 12.7+); 0 - Tlink: linked distance (used before 12.7)
 cat.extopts.thick_limit    = 5;   % upper limit for Tfs thickness measure similar to Freesurfer (only valid if cat.extopts.thick_measure is set to "1"
-cat.extopts.close_parahipp = 0;   % optionally apply closing inside mask for parahippocampal gyrus to get rid of the holes that lead to large
+cat.extopts.close_parahipp = 1;   % optionally apply closing inside mask for parahippocampal gyrus to get rid of deep holes that lead to large
                                   % cuts in gyri after topology correction. However, this may also lead to poorer quality of topology 
                                   % correction for other data and should be only used if large cuts in the parahippocampal areas occur
 cat.extopts.scale_cortex   = 0.7; % scale intensity values for cortex to start with initial surface that is closer to GM/WM border to prevent that gyri/sulci are glued 
