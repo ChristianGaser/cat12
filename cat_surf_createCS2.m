@@ -84,7 +84,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   def.add_parahipp        = cat_get_defaults('extopts.add_parahipp');
   def.scale_cortex        = cat_get_defaults('extopts.scale_cortex');
   def.close_parahipp      = cat_get_defaults('extopts.close_parahipp');
-  def.localsmooth         = 0;  % 0 - no smoothing, 1 - smoothing areas with high change of self-intersections (~ high curvature*thickness*sampling) 
+  def.localsmooth         = 1;  % 0 - no smoothing, 1 - smoothing areas with high change of self-intersections (~ high curvature*thickness*sampling) 
   def.reduce_mesh         = 1;  % 0 - surface creation on PBT resolution, no mesh-reduction (very slow) 
                                 % 1 - optimal resolution depending on final mesh resolution, no mesh-reduction 
                                 % 2 - internal resolution, no mesh-reduction (slow for highres data) 
@@ -1367,7 +1367,7 @@ end
           M   = spm_mesh_smooth(CS); 
           A   = cat_surf_fun('area',CS);
           C   = spm_mesh_curvature(CS);
-          OL  = cat_mesh_smooth(M, double( max(0.01,min(4,1./abs(C))) .^ max(0.01,min(10,1 ./ max(eps,A))) ) ,40);
+          OL  = spm_mesh_smooth(M, double( max(0.01,min(4,1./abs(C))) .^ max(0.01,min(10,1 ./ max(eps,A))) ) ,40);
           for i = 1:5, CS = cat_surf_fun('localsurfsmooth',CS,log(max(0,( (OL-100*csxi)/100))),10); end % more subiterations
           clear M A C OL;
         end
@@ -1387,7 +1387,7 @@ end
       saveSurf(CS,Pcentral); cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
       
       % final result ... test for self-intersections only in developer mode? 
-      if 1 %debug % opt.surf_measures > 2  ||  opt.verb > 2
+      if debug % opt.surf_measures > 2  ||  opt.verb > 2
         cat_surf_fun('saveico',CS,facevertexcdata,Pcentral,sprintf('createCS_3_collcorr_%0.2fmm_vdist%0.2fmm',opt.interpV,opt.vdist),Ymfs,Smat.matlabIBB_mm); 
         %fprintf('\n');
         res.(opt.surf{si}).createCS_3_collcorr = cat_surf_fun('evalCS' ,CS,facevertexcdata,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-1,cat_get_defaults('extopts.expertgui')>1);
