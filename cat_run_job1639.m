@@ -79,17 +79,18 @@ function cat_run_job1639(job,tpm,subj)
   % create subject-wise diary file with the command-line output
   [pp,ff,ee,ex] = spm_fileparts(job.data{subj});  %#ok<ASGLU>
   catlog = fullfile(pth,reportfolder,['catlog_' ff '.txt']);
-  if exist(catlog,'file'), delete(catlog); end % write every time a new file, turn this of to have an additional log file
+  if exist(catlog,'file'), delete(catlog); end % write every time a new file, turn this off to have an additional log file
   
   % check if not another diary is already written that is not the default- or catlog-file. 
   if ~strcmpi(spm_check_version,'octave')
     olddiary = spm_str_manip( get(0,'DiaryFile') , 't');
-    usediary = ~isempty(strfind( olddiary , 'diary' )) | ~isempty(strfind( olddiary , 'catlog_' )); 
+    usediary = ~isempty(strfind( olddiary , 'diary' )) || ~isempty(strfind( olddiary , 'catlog_' )); 
+    usediary = usediary && exist(catlog,'file');
     if usediary
       diary(catlog); 
       diary on; 
     else  
-      cat_io_cprintf('warn',sprintf('External diary log is writen to "%s".\n',get(0,'DiaryFile'))); 
+      cat_io_cprintf('warn',sprintf('External diary log is written to "%s".\n',get(0,'DiaryFile'))); 
     end
   end
   
