@@ -599,6 +599,8 @@ ind_show = [];
 for c=1:n_corr
   if ~isempty(ind_corr{c}) | ~isempty(ind_corr_inv{c})
     ind_show = [ind_show c];
+  else
+    fprintf('No results found for %s threshold of P<%g.\n',corr{c},alpha);
   end
 end
 
