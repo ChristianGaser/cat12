@@ -596,19 +596,21 @@ if 1
     spm_orthviews('Reposition',[-25 0 0]); 
     spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontName',fontname,'FontSize',fontsize-1,'color',fontcolor,'FontWeight','Bold');
   end
-  if job.extopts.report.useoverlay > 1 
-  %% make SPM colorbar invisible (cannot delete it because SPM orthviews need it later)  
-    set(st.vols{p0id}.blobs{1}.cbar,'Position', [st.vols{p0id}.ax{3}.ax.Position(1) st.vols{p0id}.ax{1}.ax.Position(2) 0.01 0.13] ); 
-    warning('off','MATLAB:warn_r14_stucture_assignment');
-    set(st.vols{p0id}.blobs{1}.cbar,'YTick', ytickp0/30,'XTick', [],'YTickLabel', yticklabelp0,'XTickLabel', {},'TickLength',[0 0]);
-    set(st.vols{p0id}.blobs{1}.cbar,'YAxisLocation', 'right','FontSize', fontsize-2,'FontName',fontname,'xcolor',fontcolor,'ycolor',fontcolor); 
-    set(st.vols{p0id}.blobs{1}.cbar,'NextPlot','add'); % avoid replacing of labels
-    set(st.vols{p0id}.blobs{1}.cbar,'HitTest','off'); % avoid replacing of labels
-  else
-    cc{p0id} = axes('Position',[st.vols{p0id}.ax{3}.ax.Position(1) st.vols{p0id}.ax{1}.ax.Position(2) 0.01 0.13],'Parent',fg);
-    image((60:-1:1)','Parent',cc{p0id});
-    set(cc{p0id},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-      'FontName',fontname,'FontSize',fontsize-2,'color',fontcolor,'YAxisLocation','right','xcolor',fontcolor,'ycolor',fontcolor);
+  try
+    if job.extopts.report.useoverlay > 1 
+    %% make SPM colorbar invisible (cannot delete it because SPM orthviews needs it later)  
+      set(st.vols{p0id}.blobs{1}.cbar,'Position', [st.vols{p0id}.ax{3}.ax.Position(1) st.vols{p0id}.ax{1}.ax.Position(2) 0.01 0.13] ); 
+      warning('off','MATLAB:warn_r14_stucture_assignment');
+      set(st.vols{p0id}.blobs{1}.cbar,'YTick', ytickp0/30,'XTick', [],'YTickLabel', yticklabelp0,'XTickLabel', {},'TickLength',[0 0]);
+      set(st.vols{p0id}.blobs{1}.cbar,'YAxisLocation', 'right','FontSize', fontsize-2,'FontName',fontname,'xcolor',fontcolor,'ycolor',fontcolor); 
+      set(st.vols{p0id}.blobs{1}.cbar,'NextPlot','add'); % avoid replacing of labels
+      set(st.vols{p0id}.blobs{1}.cbar,'HitTest','off'); % avoid replacing of labels
+    else
+      cc{p0id} = axes('Position',[st.vols{p0id}.ax{3}.ax.Position(1) st.vols{p0id}.ax{1}.ax.Position(2) 0.01 0.13],'Parent',fg);
+      image((60:-1:1)','Parent',cc{p0id});
+      set(cc{p0id},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
+        'FontName',fontname,'FontSize',fontsize-2,'color',fontcolor,'YAxisLocation','right','xcolor',fontcolor,'ycolor',fontcolor);
+    end
   end
   %if ~debug, clear Yp0; end
   
@@ -700,10 +702,12 @@ if 1
     try spm_orthviews('redraw',idi); end
 
     %% TPM overlay legend
-    ccl{1} = axes('Position',[st.vols{1}.ax{3}.ax.Position(1) st.vols{1}.ax{3}.ax.Position(2)-0.04 0.017 0.02],'Parent',fg);
-    cclp   = plot(ccl{1},([0 0.4;0.6 1])',[0 0; 0 0],UD.style{1}(1:2)); 
-    lg{1}  = text(1.2,0,'Brain/skull TPM overlay','Parent',ccl{1},'FontName',fontname,'Fontsize',fontsize-2,'color',fontcolor);
-    set(cclp,'LineWidth',0.75); axis(ccl{1},'off')
+    try
+      ccl{1} = axes('Position',[st.vols{1}.ax{3}.ax.Position(1) st.vols{1}.ax{3}.ax.Position(2)-0.04 0.017 0.02],'Parent',fg);
+      cclp   = plot(ccl{1},([0 0.4;0.6 1])',[0 0; 0 0],UD.style{1}(1:2)); 
+      lg{1}  = text(1.2,0,'Brain/skull TPM overlay','Parent',ccl{1},'FontName',fontname,'Fontsize',fontsize-2,'color',fontcolor);
+      set(cclp,'LineWidth',0.75); axis(ccl{1},'off')
+    end
   end
 
   
@@ -1082,9 +1086,11 @@ if 1
   try, spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontName',fontname,'FontSize',(fontsize-1)/spm_figure_scale*0.8,'FontWeight','Bold'); end
   for hti = 1:numel(htext), try, set(htext(hti),'FontName',fontname,'Fontsize',get(htext(hti),'Fontsize')/spm_figure_scale*0.8); end; end
   for hti = 1:numel(cc),    try, set(cc{hti}   ,'FontName',fontname,'Fontsize',get(cc{hti}   ,'Fontsize')/spm_figure_scale*0.8); end; end
-  for hti = 1:numel(ccl),   try, set(ccl{hti}  ,'FontName',fontname,'Fontsize',get(ccl{hti}  ,'Fontsize')/spm_figure_scale*0.8); end; end
+  if exist('ccl') % sometimes lg does not exist of anything fails before
+    for hti = 1:numel(ccl), try, set(ccl{hti}  ,'FontName',fontname,'Fontsize',get(ccl{hti}  ,'Fontsize')/spm_figure_scale*0.8); end; end
+  end
   if exist('lg') % sometimes lg does not exist of anything fails before
-    for hti = 1:numel(lg),    try, set(lg{hti}   ,'FontName',fontname,'Fontsize',get(lg{hti}   ,'Fontsize')/spm_figure_scale*0.8); end; end
+    for hti = 1:numel(lg), try, set(lg{hti}   ,'FontName',fontname,'Fontsize',get(lg{hti}   ,'Fontsize')/spm_figure_scale*0.8); end; end
   end
   if job.extopts.report.useoverlay > 1
     try
