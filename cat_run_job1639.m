@@ -85,7 +85,6 @@ function cat_run_job1639(job,tpm,subj)
   if ~strcmpi(spm_check_version,'octave')
     olddiary = spm_str_manip( get(0,'DiaryFile') , 't');
     usediary = ~isempty(strfind( olddiary , 'diary' )) || ~isempty(strfind( olddiary , 'catlog_' )); 
-    usediary = usediary && exist(catlog,'file');
     if usediary
       diary(catlog); 
       diary on; 

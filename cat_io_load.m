@@ -8,7 +8,7 @@ function x = cat_io_load(file)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
-% $Id: cat_io_load.m 1791 2021-04-06 09:15:54Z gaser $
+% $Id$
 
 if ~nargin
     [file,sts] = spm_select(1,'^.*\.txt$');
