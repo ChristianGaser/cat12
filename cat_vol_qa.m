@@ -84,7 +84,11 @@ function varargout = cat_vol_qa(action,varargin)
   if nargout>0, varargout = cell(1,nargout); end
 
   try
-    [mrifolder, reportfolder] = cat_io_subfolders(varargin{4}.catlog,varargin{6}.job);
+    if strcmp(action,'cat12err')
+      [mrifolder, reportfolder] = cat_io_subfolders(varargin{1}.job.data,varargin{1}.job);
+    else
+      [mrifolder, reportfolder] = cat_io_subfolders(varargin{4}.catlog,varargin{6}.job);
+    end
   catch
     mrifolder    = 'mri'; 
     reportfolder = 'report'; 

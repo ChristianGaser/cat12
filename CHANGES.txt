@@ -1,5 +1,25 @@
 ------------------------------------------------------------------------
-r1872 | gaser | 2021-08-20 17:52:09
+r1873 | gaser | 2021-08-26 08:57:52
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_io_handle_pre.m
+M       cat_io_subfolders.m
+M       cat_main1639.m
+M       cat_main_reportfig.m
+M       cat_run_newcatch.m
+M       cat_surf_createCS2.m
+M       cat_surf_surf2roi.m
+M       cat_vol_qa.m
+M       html/cat.html
+
+(1) Changed: Tried to remove annoying warning with spm_orthviews under Windows 
+             systems.
+(2) Changed: Added errfolder to cat_io_subfolder.m.
+(3) Fixed:   Corrected writing of BIDS structure.
+------------------------------------------------------------------------
+r1872 | gaser | 2021-08-20 17:52:58 +0200 (Fri, 20 Aug 2021) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -16,6 +36,7 @@ M       html/cat.html
              preprocessing in cat_run_job1639.m.
 (3) Fixed:   Added more try/catch commands to cat_main_reportfig.m because
              of unclear crashes.
+
 
 ------------------------------------------------------------------------
 r1871 | dahnke | 2021-08-03 17:03:02 +0200 (Tue, 03 Aug 2021) | 6 lines

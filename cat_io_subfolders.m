@@ -1,8 +1,8 @@
-function [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(fname,job)
+function [mrifolder, reportfolder, surffolder, labelfolder, errfolder] = cat_io_subfolders(fname,job)
 % ______________________________________________________________________
 % Prepare subfolder names, optionally with BIDS structure
 %
-% FORMAT [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(fname,job)
+% FORMAT [mrifolder, reportfolder, surffolder, labelfolder, errfolder] = cat_io_subfolders(fname,job)
 % fname - filename (can be also empty)
 % job   - optional job structure from cat_run.m
 %
@@ -40,11 +40,13 @@ function [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(
     mrifolder    = 'mri';
     surffolder   = 'surf';
     reportfolder = 'report';
+    errfolder    = 'err';
   else
     labelfolder  = '';
     mrifolder    = '';
     surffolder   = '';
     reportfolder = '';
+    errfolder    = '';
   end
 
   % check whether sub-name is found and "anat" and "ses-" subfolder
@@ -69,6 +71,7 @@ function [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(
       mrifolder    = sub_ses_anat;
       surffolder   = sub_ses_anat;
       reportfolder = sub_ses_anat;
+      errfolder = sub_ses_anat;
     end
     
     % combine with BIDS folder structure 
@@ -76,6 +79,7 @@ function [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(
     mrifolder    = fullfile(BIDSfolder,mrifolder);
     surffolder   = fullfile(BIDSfolder,surffolder);
     reportfolder = fullfile(BIDSfolder,reportfolder);
+    errfolder    = fullfile(BIDSfolder,errfolder);
 
   % if BIDS structure was found but not defined leave subfolder names empty
   elseif ~isempty(sub_ses_anat)
@@ -83,6 +87,7 @@ function [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(
     mrifolder    = '';
     surffolder   = '';
     reportfolder = '';
+    errfolder    = '';
   end
   
 end

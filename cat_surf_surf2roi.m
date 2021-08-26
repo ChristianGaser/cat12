@@ -111,7 +111,7 @@ function varargout = cat_surf_surf2roi(job)
     
     %% process the cdata files of each subject
     for si=1:numel(job.cdata{1}) % for each subject
-      [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(job.cdata{1}{si});
+      [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(job.cdata{1}{si},job.job);
       for ti=1:numel(job.cdata)  % for each texture
       
         % check for kind of surface
@@ -185,7 +185,7 @@ function varargout = cat_surf_surf2roi(job)
               end
               
               % write xml data
-              xmlname{si} = fullfile(strrep(sinfo.pp,[filesep surffolder],''),labelfolder,['catROIs_' sinfo.name '.xml']);
+              xmlname{si} = fullfile(labelfolder,['catROIs_' sinfo.name '.xml']);
               cat_io_xml(xmlname{si},catROI{si},'write+'); 
               
               % delete temporarily resampled files
