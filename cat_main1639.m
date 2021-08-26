@@ -18,7 +18,6 @@ function Ycls = cat_main1639(res,tpm,job)
 
 %#ok<*ASGLU>
 
-
 update_intnorm = 0; %job.extopts.new_release;  % RD202101: temporary parameter to control the additional intensity normalization 
  
 
@@ -748,7 +747,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
           cat_surf_createCS(VT,VT0,Ymix,Yl1,Yp0/3,YMF,struct('pbtmethod',pbtmethod,...
           'interpV',sres(sresi),'Affine',res.Affine,'surf',{surf},...
           'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,...
-          'useprior',job.useprior)); 
+          'useprior',job.useprior),job); 
       end
     end
   else
@@ -784,14 +783,14 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
         'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'SRP',mod(job.extopts.SRP,10),...
         'scale_cortex', job.extopts.scale_cortex, 'add_parahipp', job.extopts.add_parahipp, 'close_parahipp', job.extopts.close_parahipp,  ....
         'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
-        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior)); 
+        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior),job); 
     else
       %%
       [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size, qa.createCS] = ...
         cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,struct('pbtmethod','pbt2x',...
         'interpV',job.extopts.pbtres,'SRP',mod(job.extopts.SRP,10), ...
         'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
-        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior));
+        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior),job);
     end
     if debug, toc; end
   end
@@ -825,7 +824,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
     Pthick_lh    = cell(1,1);
     Pthick_lh{1} = fullfile(surffolder,sprintf('lh.thickness.%s',ff));
     
-    cat_surf_surf2roi(struct('cdata',{{Pthick_lh}},'rdata',{Psatlas_lh}));
+    cat_surf_surf2roi(struct('cdata',{{Pthick_lh}},'rdata',{Psatlas_lh},'job',job));
     fprintf('%5.0fs\n',etime(clock,stime2));
   end
   

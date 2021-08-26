@@ -305,8 +305,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   switch disptype
     case 'affine'
       dispmat = res.Affine; 
-      warning('off','MATLAB:tex')
+      warning('off')
       try spm_orthviews('BB', res.bb*0.95 ); end
+      warning('on')
     case 'rigid'
       % this does not work so good... AC has a little offset ...
       aff = spm_imatrix(res.Affine);  scale = aff(7:9); 

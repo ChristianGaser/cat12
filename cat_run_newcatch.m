@@ -52,7 +52,7 @@ function cat_run_newcatch(job,tpm,subj)
       caterr = addCause(caterr,adderr);
     end
     
-    mrifolder = cat_io_subfolders(job.channel(1).vols{subj},job);
+    [mrifolder, reportfolder, surffolder, labelfolder, errfolder] = cat_io_subfolders(job.channel(1).vols{subj},job);
 
     cat_io_cprintf('err',sprintf('\n%s\nCAT Preprocessing error for %s:\n%s\n%s\n%s\n', ...
       repmat('-',1,72),nam,repmat('-',1,72),caterr.message,repmat('-',1,72)));  
@@ -208,18 +208,12 @@ function cat_run_newcatch(job,tpm,subj)
     cat_io_report(job,qa,subj)
     
     % delete noise corrected image
-    if exist(fullfile(pth,mrifolder,['n' nam ext]),'file')
+    if exist(fullfile(mrifolder,['n' nam ext]),'file')
       try %#ok<TRYNC>
-        delete(fullfile(pth,mrifolder,['n' nam ext]));
+        delete(fullfile(mrifolder,['n' nam ext]));
       end
     end
-    
-    if job.extopts.subfolders
-      reportfolder = 'report';
-    else
-      reportfolder = '';
-    end
-    
+        
     % create mail report for serial processing
     if ~isfield(job,'process_index')
       promptMessage = sprintf('Do you want to send error message?');
@@ -237,8 +231,6 @@ function cat_run_newcatch(job,tpm,subj)
     
     if job.extopts.subfolders
       %%
-      errfolder    = 'err';
-      [ppe,ffe]    = spm_fileparts(caterr.stack(1).file); 
       suberrfolder = sprintf('%s.line%d.%s',ffe,caterr.stack(1).line,caterr.identifier); 
       suberrfolder = char(regexp(strrep(suberrfolder,':','.'),'[A-Za-z0-9_.\- ]','match'))'; % remove bad chars
       suberrfolder = strrep(suberrfolder,' ','_');
