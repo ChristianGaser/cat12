@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1874 | gaser | 2021-08-26 10:59:48
+r1875 | gaser | 2021-08-27 10:24:30
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_stat_check_cov.m
+M       cat_surf_createCS2.m
+M       cat_surf_surf2roi.m
+M       cat_vol_series_align.m
+M       html/cat.html
+
+(1) Fixed: Again corrected BIDS handling in cat_surf_surf2roi.m and 
+           cat_surf_createCS2.m.
+(2) Fixed: Corrected number of xml-files in cat_stat_check_cov.m.
+------------------------------------------------------------------------
+r1874 | gaser | 2021-08-26 11:00:39 +0200 (Thu, 26 Aug 2021) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +24,7 @@ M       cat_run_job1639.m
 M       html/cat.html
 
 Fixed: Corrected bug in writing catlog file.
+
 ------------------------------------------------------------------------
 r1873 | gaser | 2021-08-26 08:58:44 +0200 (Thu, 26 Aug 2021) | 18 lines
 

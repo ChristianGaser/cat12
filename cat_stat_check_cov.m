@@ -179,7 +179,7 @@ if ~H.isxml
   end  
 end
 
-if H.isxml & (size(xml_files,1) <= n_subjects)
+if H.isxml && (size(xml_files,1) < n_subjects)
     fprintf('WARNING: Less XML-files than data sets found. XML-files will be not used.\n');
     H.isxml = 0;
   end
