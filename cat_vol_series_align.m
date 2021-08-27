@@ -19,11 +19,11 @@ function out = cat_vol_series_align(job)
 N = numel(job.data);
 
 if numel(job.noise)==1
-    noise = repmat(job.noise,[N,1]);
+  noise = repmat(job.noise,[N,1]);
 elseif numel(job.noise) ~= N
-    error('Incompatible numbers of noise estimates and scans.');
+  error('Incompatible numbers of noise estimates and scans.');
 else
-    noise = job.noise(:);
+  noise = job.noise(:);
 end
 
 prec   = noise.^(-2);
