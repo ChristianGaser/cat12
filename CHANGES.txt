@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1876 | gaser | 2021-09-01 16:07:57
+r1877 | gaser | 2021-09-01 16:23:51
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_multi_run.m
+
+Fixed: Removed debugging code from cat_long_multi_run.m
+------------------------------------------------------------------------
+r1876 | gaser | 2021-09-01 16:08:49 +0200 (Wed, 01 Sep 2021) | 19 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -19,6 +27,7 @@ M       html/cat.html
              measures in report file were not availble.
 (3) Fixed:   Added one more try/catch to cat_main_reportfig.m to prevent errors
              on windows systems.
+
 ------------------------------------------------------------------------
 r1875 | gaser | 2021-08-27 10:25:20 +0200 (Fri, 27 Aug 2021) | 13 lines
 
