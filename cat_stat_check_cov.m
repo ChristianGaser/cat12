@@ -268,6 +268,7 @@ if H.isxml
   % remove last two columns if EC_abs and defect_size are not defined
   if H.mesh_detected & all(isnan(QM(:,4))) & all(isnan(QM(:,5)))
     QM = QM(:,1:3);
+    QM_names = QM_names(1:3,:);
   end
   
 end
