@@ -1,5 +1,26 @@
 ------------------------------------------------------------------------
-r1875 | gaser | 2021-08-27 10:24:30
+r1876 | gaser | 2021-09-01 16:07:57
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_long.m
+M       cat_io_subfolders.m
+M       cat_long_multi_run.m
+M       cat_main_reportfig.m
+M       cat_run.m
+M       cat_stat_check_cov.m
+M       cat_surf_createCS2.m
+M       html/cat.html
+
+(1) Changed: Added BIDS support and support for nii.gz files to longitudinal 
+             pipeline.
+(2) Fixed:   Corrected bug in cat_stat_check_cov.m that were caused if surface 
+             measures in report file were not availble.
+(3) Fixed:   Added one more try/catch to cat_main_reportfig.m to prevent errors
+             on windows systems.
+------------------------------------------------------------------------
+r1875 | gaser | 2021-08-27 10:25:20 +0200 (Fri, 27 Aug 2021) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +34,7 @@ M       html/cat.html
 (1) Fixed: Again corrected BIDS handling in cat_surf_surf2roi.m and 
            cat_surf_createCS2.m.
 (2) Fixed: Corrected number of xml-files in cat_stat_check_cov.m.
+
 ------------------------------------------------------------------------
 r1874 | gaser | 2021-08-26 11:00:39 +0200 (Thu, 26 Aug 2021) | 9 lines
 

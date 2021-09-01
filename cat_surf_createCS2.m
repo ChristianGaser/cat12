@@ -170,7 +170,11 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   
   % correct '../' parts in directory for BIDS structure
   [stat, val] = fileattrib(fullfile(pp0,surffolder));
-  if stat, pp0_surffolder = val.Name; end
+  if stat
+    pp0_surffolder = val.Name;
+  else
+    pp0_folder = fullfile(pp0,surffolder);
+  end
 
   if ~exist(fullfile(pp0_surffolder),'dir'), mkdir(fullfile(pp0_surffolder)); end
 
@@ -321,20 +325,28 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
           'You cannot combine use of prior surfaces and fast option.');        
         break
       end
-      [pp0,ff0] = spm_fileparts(priorname);
+      [pp1,ff1] = spm_fileparts(priorname);
+      % correct '../' parts in directory for BIDS structure
+      [stat, val] = fileattrib(fullfile(pp1,surffolder));
+      if stat
+        pp1_surffolder = val.Name;
+      else
+        pp1_folder = fullfile(pp1,surffolder);
+      end
       
       % try to copy surface files from prior to indivudal surface data 
       useprior = 1;
-      useprior = useprior & copyfile(fullfile(pp0_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff0)),Pcentral,'f');
-      useprior = useprior & copyfile(fullfile(pp0_surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff0)),Psphere,'f');
-      useprior = useprior & copyfile(fullfile(pp0_surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff0)),Pspherereg,'f');
+      useprior = useprior & copyfile(fullfile(pp1_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff1)),Pcentral,'f');
+      useprior = useprior & copyfile(fullfile(pp1_surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff1)),Psphere,'f');
+      useprior = useprior & copyfile(fullfile(pp1_surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff1)),Pspherereg,'f');
       
       if ~useprior
-        warn_str = sprintf('Surface files for %s not found. Move on with individual surface extraction.\n',fullfile(pp0,ff0));
+fullfile(pp1_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff1))
+        warn_str = sprintf('Surface files for %s not found. Move on with individual surface extraction.\n',pp1_surffolder);
         fprintf('\nWARNING: %s',warn_str);
         cat_io_addwarning('cat_surf_createCS2:noPiorSurface', warn_str);
       else
-        fprintf('\nUse existing surface from %s as prior and thus skip many processing steps.\n',fullfile(pp0,ff0));
+        fprintf('\nUse existing surface from %s as prior and thus skip many processing steps.\n',pp1_surffolder);
       end      
     else
       useprior = 0;

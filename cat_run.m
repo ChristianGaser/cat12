@@ -59,7 +59,15 @@ if isfield(job.output,'BIDS')
     name1 = spm_file(job.data{1},'fpath');
     ind = min(strfind(name1,'sub-'));
  
+    if ~isempty(strfind(job.data{1},BIDSfolder))
+      BIDSfolder = '';
+      ind = [];
+    end
+    
     if ~isempty(ind)
+      % remove leading ".." for real BIDS structure
+      BIDSfolder = strrep(BIDSfolder,['..' filesep],'');
+      
       length_name = length(name1);
       
       % Shorten path until "sub-" indicator is found and add additional

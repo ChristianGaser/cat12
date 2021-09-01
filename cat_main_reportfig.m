@@ -1035,11 +1035,14 @@ interp = 2.45;
             'YTickLabel','','YTick',[],'TickLength',[0.01 0],'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal'); 
           
           % boxplot
-          line(cc{4},(surfcolors-1)/6 * [q0 - 1.5*(q0-q1) q1 ], [ 1 1] , 'Color',[0 0 0],'LineWidth',0.75); 
-          line(cc{4},(surfcolors-1)/6 * [q2 q0 + 1.5*(q2-q0) ], [ 1 1] , 'Color',[0 0 0],'LineWidth',0.75); 
-          fill(cc{4},(surfcolors-1)/6 * [q1 q2 q2 q1], [ 0.8 0.8 1.2 1.2],[1 1 1],'LineWidth',0.5,'FaceAlpha',0.7); 
-          line(cc{4},(surfcolors-1)/6 * repmat(mean(side),1,2), [ 0.6 1.4 ] , 'Color',[0 0 0],'LineWidth',0.75); 
-          line(cc{4},(surfcolors-1)/6 * repmat(q0,1,2), [ 0.6 1.4 ] , 'Color',[1 0 0],'LineWidth',1.5); 
+          % sometimes it's crashing on windows systems for no reason...
+          try
+            line(cc{4},(surfcolors-1)/6 * [(q0 - 1.5*(q0-q1)) q1 ], [ 1 1] , 'Color',[0 0 0],'LineWidth',0.75); 
+            line(cc{4},(surfcolors-1)/6 * [q2 (q0 + 1.5*(q2-q0)) ], [ 1 1] , 'Color',[0 0 0],'LineWidth',0.75); 
+            fill(cc{4},(surfcolors-1)/6 * [q1 q2 q2 q1], [ 0.8 0.8 1.2 1.2],[1 1 1],'LineWidth',0.5,'FaceAlpha',0.7); 
+            line(cc{4},(surfcolors-1)/6 * repmat(mean(side),1,2), [ 0.6 1.4 ] , 'Color',[0 0 0],'LineWidth',0.75); 
+            line(cc{4},(surfcolors-1)/6 * repmat(q0,1,2), [ 0.6 1.4 ] , 'Color',[1 0 0],'LineWidth',1.5); 
+          end
           hold off; 
            
      
