@@ -61,7 +61,7 @@ nproc.help    = {
 data              = cfg_files;
 data.tag          = 'data';
 data.name         = 'Volumes';
-data.filter       = 'image';
+data.filter       = {'image','.*\.(nii.gz)$'};
 data.ufilter      = '.*';
 data.num          = [1 Inf];
 data.help         = {'Select the same number and order of subjects for each time point. '};
@@ -283,7 +283,6 @@ else
   ROI     = output.val{ setdiff( find(cellfun('isempty',strfind(FN,'ROImenu'))==0) , ...
                      find(cellfun('isempty',strfind(FN,'sROImenu'))==0,1) ) }; 
   BIDS    = output.val{find(cellfun('isempty',strfind(FN,'BIDS'))==0)};
-  BIDS.hidden = true;
   surface = output.val{find(cellfun('isempty',strfind(FN,'surface'))==0)};
 
   output.val = {BIDS,surface};
