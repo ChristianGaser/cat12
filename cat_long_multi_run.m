@@ -251,8 +251,6 @@ else
   spm_jobman('run',jobs,inputs{:}); 
 end
 
-exist('is_copied','var')
-
 for i=1:numel(job.data)
   [pth,nam,ext] = spm_fileparts(job.data{i});
   if exist('is_copied','var') && is_copied(i)
