@@ -255,7 +255,7 @@ for i=1:numel(job.data)
   [pth,nam,ext] = spm_fileparts(job.data{i});
   if exist('is_copied','var') && is_copied(i)
     spm_unlink(fullfile(pth,[nam ext]));
-    if is_copied(c) == 2
+    if is_copied(i) == 2
       fprintf('Remove copied file %s\n',fullfile(pth,[nam ext]));
     else
       fprintf('Remove unzipped file %s\n',fullfile(pth,[nam ext]));
