@@ -1,11 +1,20 @@
 ------------------------------------------------------------------------
-r1877 | gaser | 2021-09-01 16:23:51
+r1878 | gaser | 2021-09-01 16:37:08
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_multi_run.m
+
+Fixed: Removed wrong indexing in cat_long_multi_run.m
+------------------------------------------------------------------------
+r1877 | gaser | 2021-09-01 16:23:58 +0200 (Wed, 01 Sep 2021) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_long_multi_run.m
 
 Fixed: Removed debugging code from cat_long_multi_run.m
+
 ------------------------------------------------------------------------
 r1876 | gaser | 2021-09-01 16:08:49 +0200 (Wed, 01 Sep 2021) | 19 lines
 
