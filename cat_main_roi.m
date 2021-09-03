@@ -85,7 +85,11 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
     
     % add WMHC class if there is an extra class (WMHC==3)
     if job.extopts.WMHC == 3   
-      FA{fai-1,3} = unique( [FA{fai-1,3} {'wmh'}] ); %#ok<AGROW>
+      if fai-1 > 0
+        FA{fai-1,3} = unique( [FA{fai-1,3} {'wmh'}] ); %#ok<AGROW>
+      else
+        cat_io_cprintf('warn',sprintf('    Indexing faild. Could not consider WMHs! \n')); 
+      end
     end
   end
 
