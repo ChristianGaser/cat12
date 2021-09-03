@@ -582,9 +582,15 @@ function cat_run_job1639(job,tpm,subj)
             fprintf('\nUse affine transformation from %s\n',priorname);
             stime    = cat_io_cmd(' ',' ','',job.extopts.verb); 
             xml      = cat_io_xml(catxml);
-            Affine   = xml.SPMpreprocessing.Affine;
-            affscale = 1;
-            useprior = 1;
+            % sometimes xml file does not contain affine transformation
+            if ~isfield(xml,'SPMpreprocessing')
+              cat_io_cprintf('warn',sprintf('WARNING: File %s does not contain successful affine transformation. Use individual affine transformation\n',catxml));
+              useprior = 0;
+            else
+              Affine   = xml.SPMpreprocessing.Affine;
+              affscale = 1;
+              useprior = 1;
+            end
           else
             cat_io_cprintf('warn',sprintf('WARNING: File %s not found. Use individual affine transformation\n',catxml));
             useprior = 0;
@@ -1090,15 +1096,17 @@ function cat_run_job1639(job,tpm,subj)
           
   %% call main processing
   res.tpm     = obj.tpm.V;
-  if exist('ppe','var'), res.ppe     = ppe; end
   res.stime   = stime0;
   res.catlog  = catlog; 
   res.Affine0 = res.Affine; 
   res.image0  = spm_vol(job.channel(1).vols0{subj}); 
+  if exist('ppe','var'), res.ppe = ppe; end
+  
   if isfield(job.extopts,'affmod') && any(job.extopts.affmod)
     res.AffineUnmod = AffineUnmod; 
     res.AffineMod   = AffineMod;
   end
+  
   if exist('Ylesion','var'), res.Ylesion = Ylesion; else res.Ylesion = false(size(res.image.dim)); end; clear Ylesion;
   if exist('redspmres','var'); res.redspmres = redspmres; res.image1 = image1; end
   job.subj = subj; 
