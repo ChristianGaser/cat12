@@ -332,7 +332,11 @@ if ~isfield(res,'spmpp')
   
   % RD202101: additional intensity correction 
   if update_intnorm 
-    [Ym,Ymi,Tthm,Tthmi] = cat_main_update_intnorm(Ym,Ymi,Yb,Ycls,job);
+    try
+      [Ym,Ymi,Tthm,Tthmi] = cat_main_update_intnorm(Ym,Ymi,Yb,Ycls,job);
+    catch
+      cat_io_cprintf('warn','Update of intensities failed!\n');
+    end
     res.ppe.tths.uintnorm1postlas.Tthm  = Tthm; 
     res.ppe.tths.uintnorm1postlas.Tthmi = Tthmi;
     clear Tthm Tthmi; 

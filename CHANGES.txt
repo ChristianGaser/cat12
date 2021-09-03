@@ -1,11 +1,30 @@
 ------------------------------------------------------------------------
-r1878 | gaser | 2021-09-01 16:37:08
+r1879 | gaser | 2021-09-03 10:23:43
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_main.m
+M       cat_main_reportfig.m
+M       cat_main_roi.m
+M       cat_run_job1639.m
+M       html/cat.html
+
+(1) Fixed: Added check that affine transformation was successfully saved in
+           in xml-file for use of priors in longitudinal pipeline.
+(2) Fixed: Added check that index to FA variable is correct in cat_main_roi.m.
+(3) Fixed: Again added new checks that some variables exist in 
+           cat_main_reportfig.m.
+(4) Fixed: Added check that intensity update in cat_main.m was successful.
+------------------------------------------------------------------------
+r1878 | gaser | 2021-09-01 16:37:14 +0200 (Wed, 01 Sep 2021) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_long_multi_run.m
 
 Fixed: Removed wrong indexing in cat_long_multi_run.m
+
 ------------------------------------------------------------------------
 r1877 | gaser | 2021-09-01 16:23:58 +0200 (Wed, 01 Sep 2021) | 6 lines
 

@@ -961,14 +961,16 @@ end
               V = (Rigid * ([CSr.vertices, ones(size(CSr.vertices,1),1)])' )'; V(:,4) = []; CSr.vertices = V;
 
               colormap(fg,cmap); 
-% The interpolation value controls quality and speed, the normal report + 
-% surface-rendering takes about 70s, whereas this renderer takes 60 to 160s.  
-% round(interp) controls the main mesh interpolation level with equal
-% Subdivision of one face by 4 faces, but the value set also the sampling
-% size of the rendering images and a value of 1.4 means 1.4 more pixel in 
-% each dimension. Values of 1.0 - 1.4 are quite fast (but not fine enough 
-% for standard zoom-in) and 2.4 (120s) suits better.   
-interp = 2.45; 
+              
+              % The interpolation value controls quality and speed, the normal report + 
+              % surface-rendering takes about 70s, whereas this renderer takes 60 to 160s.  
+              % round(interp) controls the main mesh interpolation level with equal
+              % subdivision of one face by 4 faces, but the value also sets the sampling
+              % size of the rendering images and a value of 1.4 means 1.4 more pixel in 
+              % each dimension. Values of 1.0 - 1.4 are quite fast (but not fine enough 
+              % for standard zoom-in) and 2.4 (120s) suits better.   
+              interp = 2.45; 
+              
               hSD{1}{1} = cat_surf_renderv(CS ,[],struct('view',sview{1},'mat',spm_imatrix(res.Affine),'h',hCS{1},'interp',interp)); 
               cat_surf_renderv(CSl,[],struct('view',sview{2},'mat',spm_imatrix(res.Affine),'h',hCS{2},'interp',interp*0.9));
               cat_surf_renderv(CSr,[],struct('view',sview{3},'mat',spm_imatrix(res.Affine),'h',hCS{3},'interp',interp*0.9));
@@ -977,12 +979,14 @@ interp = 2.45;
 
             catch
               cat_io_cprintf('err','Error in non OpenGL surface rendering.\n');
-% print message box
             end
           end
           
           
           %% To do: filter thickness values on the surface ...
+          
+          % sometimes hSD is not defined here because of mysterious errors on windows systems
+          if ~exist(hSD,'var'), return; end
 
           % colormap
           side  = hSD{1}{1}.cdata; 
@@ -1116,7 +1120,7 @@ if 1
   try, spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontName',fontname,'FontSize',fontsize-1,'FontWeight','Bold'); end
   for hti = 1:numel(htext), try, set(htext(hti),'FontName',fontname,'Fontsize',get(htext(hti),'Fontsize')*spm_figure_scale/0.8); end; end
   for hti = 1:numel(cc),    try, set(cc{hti}   ,'FontName',fontname,'Fontsize',get(cc{hti}   ,'Fontsize')*spm_figure_scale/0.8); end; end
-  for hti = 1:numel(ccl),   try, set(ccl{hti}  ,'FontName',fontname,'Fontsize',get(ccl{hti}  ,'Fontsize')*spm_figure_scale/0.8); end; end
+  try, for hti = 1:numel(ccl),   try, set(ccl{hti}  ,'FontName',fontname,'Fontsize',get(ccl{hti}  ,'Fontsize')*spm_figure_scale/0.8); end; end end
   if exist('lg') % sometimes lg does not exist of anything fails before
     for hti = 1:numel(lg),    try, set(lg{hti}   ,'FontName',fontname,'Fontsize',get(lg{hti}   ,'Fontsize')*spm_figure_scale/0.8); end; end
   end
