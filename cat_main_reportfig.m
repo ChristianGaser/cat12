@@ -986,7 +986,7 @@ end
           %% To do: filter thickness values on the surface ...
           
           % sometimes hSD is not defined here because of mysterious errors on windows systems
-          if ~exist(hSD,'var'), return; end
+          if ~exist('hSD','var'), return; end
 
           % colormap
           side  = hSD{1}{1}.cdata; 
@@ -1034,9 +1034,9 @@ end
           cc{4} = axes('Position',[0.36 0.018 0.28 0.007],'Parent',fg); xlim([1 surfcolors]); 
           image((121:1:120+surfcolors),'Parent',cc{4}); hold on; 
          
-          set(cc{4},'XTick',1:(surfcolors-1)/6:surfcolors,'xcolor',fontcolor,'ycolor',fontcolor,'XTickLabel',...
+          try, set(cc{4},'XTick',1:(surfcolors-1)/6:surfcolors,'xcolor',fontcolor,'ycolor',fontcolor,'XTickLabel',...
             {'0','1','2','3','4','5',[repmat(' ',1,10 + 10*(1-isempty(fst))) '6 mm' fst]},...
-            'YTickLabel','','YTick',[],'TickLength',[0.01 0],'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal'); 
+            'YTickLabel','','YTick',[],'TickLength',[0.01 0],'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal'); end
           
           % boxplot
           % sometimes it's crashing on windows systems for no reason...
@@ -1120,7 +1120,7 @@ if 1
   try, spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontName',fontname,'FontSize',fontsize-1,'FontWeight','Bold'); end
   for hti = 1:numel(htext), try, set(htext(hti),'FontName',fontname,'Fontsize',get(htext(hti),'Fontsize')*spm_figure_scale/0.8); end; end
   for hti = 1:numel(cc),    try, set(cc{hti}   ,'FontName',fontname,'Fontsize',get(cc{hti}   ,'Fontsize')*spm_figure_scale/0.8); end; end
-  try, for hti = 1:numel(ccl),   try, set(ccl{hti}  ,'FontName',fontname,'Fontsize',get(ccl{hti}  ,'Fontsize')*spm_figure_scale/0.8); end; end end
+  try, for hti = 1:numel(ccl),   set(ccl{hti}  ,'FontName',fontname,'Fontsize',get(ccl{hti}  ,'Fontsize')*spm_figure_scale/0.8); end; end;
   if exist('lg') % sometimes lg does not exist of anything fails before
     for hti = 1:numel(lg),    try, set(lg{hti}   ,'FontName',fontname,'Fontsize',get(lg{hti}   ,'Fontsize')*spm_figure_scale/0.8); end; end
   end

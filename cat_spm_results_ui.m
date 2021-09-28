@@ -324,8 +324,8 @@ switch lower(Action), case 'setup'                         %-Set up results
         end
 
         % check for existing TFCE results for this contrast
-        if numel(Ic)==1 & exist(fullfile(swd,sprintf('%s_log_p_%04d.nii',xCon(Ic).STAT,Ic))) || ...
-                          exist(fullfile(swd,sprintf('%s_log_p_%04d.gii',xCon(Ic).STAT,Ic)))
+        if numel(Ic)==1 && (exist(fullfile(swd,sprintf('%s_log_p_%04d.nii',xCon(Ic).STAT,Ic))) || ...
+                          exist(fullfile(swd,sprintf('%s_log_p_%04d.gii',xCon(Ic).STAT,Ic))))
           stat_str = {'TFCE',xCon(Ic).STAT};
           statType = spm_input('Type of statistic',1,'m',...
               sprintf('TFCE (non-parametric)|%s (non-parametric)|%s (SPM parametric)',...
@@ -1113,6 +1113,18 @@ switch lower(Action), case 'setup'                         %-Set up results
         hC1  = uimenu(hC,'Label','Label using');
         
         list = spm_atlas('List','installed');
+        
+        [csv_files, n_csv] = cat_vol_findfiles(cat_get_defaults('extopts.pth_templates'), '*.csv');
+        if numel(list) < n_csv
+          disp('Install CAT12 atlases');
+          try
+            cat_install_atlases;
+          catch
+            disp('Writing error during atlas installation: Please check file permissions.');
+          end
+          list = spm_atlas('List','installed');
+        end
+        
         if use_tfce
           clist = 'tfce_list';
         else
@@ -1123,11 +1135,7 @@ switch lower(Action), case 'setup'                         %-Set up results
                 'Callback',sprintf('%s(''label'',''%s''); cat_spm_results_ui(''spm_list_cleanup'');',clist,list(i).name));
         end
         if isempty(list), set(hC1,'Enable','off'); end
-        
-        %hC2  = uimenu(hC,'Label','Download Atlas...',...
-        %    'Separator','on',...
-        %    'Callback','spm_atlas(''install'');');
-        
+                
         varargout = {hC};
     
 
