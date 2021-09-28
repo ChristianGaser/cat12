@@ -92,7 +92,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
   %'qualitymeasures'  'MPC'                   'linear'    [  0.11   0.33]  'mean preprocessing change map - difference between optimal T1 and p0'
   %'qualitymeasures'  'MJD'                   'linear'    [  0.05   0.15]  'mean Jacobian determinant'
   %'qualitymeasures'  'STC'                   'linear'    [  0.05   0.15]   'difference between template and label'
-   'qualitymeasures'  'SurfaceEulerNumber'    'linear'    [     2    100]  'average number of Euler defects of created surfaces'
+   'qualitymeasures'  'SurfaceEulerNumber'    'linear'    [     2    100]  'average Euler number (characteristic)'
    'qualitymeasures'  'SurfaceDefectArea'     'linear'    [     0     20]  'average area of topological defects'
    'qualitymeasures'  'SurfaceDefectNumber'   'linear'    [     0    100]  'average number of defects'
    'qualitymeasures'  'SurfaceIntensityRMSE'  'linear'    [  0.05    0.3]  'RMSE of the expected boundary intensity Ym of the IS, OS, and CS'

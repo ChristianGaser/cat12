@@ -845,7 +845,7 @@ tm         = cfg_choice;
 tm.tag     = 'tm';
 tm.name    = 'Threshold masking';
 tm.val     = {tm_none};
-tm.help    = {'Images are thresholded at a given value and only voxels at which all images exceed the threshold are included.'};
+tm.help    = {'This option is intended for volume data. Images are thresholded at a given value and only voxels at which all images exceed the threshold are included. This is the recommended method for analyzing VBM data to ensure that only the intended tissue map is analyzed. '};
 tm.values  = {tm_none tma tmr};
 
 %--------------------------------------------------------------------------
@@ -893,7 +893,7 @@ masking.tag     = 'masking';
 masking.name    = 'Masking';
 masking.val     = {tm im em};
 masking.help    = {
-                   'The mask specifies the voxels within the image volume which are to be assessed. SPM supports three methods of masking (1) Threshold, (2) Implicit and (3) Explicit. The volume analysed is the intersection of all masks.'
+                   'This option is intended for volume data. The mask specifies the voxels within the image volume which are to be assessed. SPM supports three methods of masking (1) Threshold, (2) Implicit and (3) Explicit. The volume analysed is the intersection of all masks.'
 }';
 
 %--------------------------------------------------------------------------

@@ -173,7 +173,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   if stat
     pp0_surffolder = val.Name;
   else
-    pp0_folder = fullfile(pp0,surffolder);
+    pp0_surffolder = fullfile(pp0,surffolder);
   end
 
   if ~exist(fullfile(pp0_surffolder),'dir'), mkdir(fullfile(pp0_surffolder)); end
