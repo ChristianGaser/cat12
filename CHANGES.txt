@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1880 | gaser | 2021-09-28 14:03:46
+r1881 | gaser | 2021-09-29 16:08:13
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_tools.m
+M       cat_run_job_APRGs.m
+M       cat_run_newcatch.m
+M       html/cat.html
+
+(1) Changed: Updated error output for piwik to better indicated CAT release 
+             number.            
+(2) Fixed:   Use try/catch to also consider older versions of spm_maff8.m from
+             previous SPM12 updates.
+
+------------------------------------------------------------------------
+r1880 | gaser | 2021-09-28 14:04:36 +0200 (Di, 28 Sep 2021) | 27 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -26,6 +42,7 @@ M       html/cat.html
              try commands to catch mysterious errors o windows systems in
              cat_surf_createCS2.m
 (7) Fixed:   Updated cat_install_atlases to correctly find ROI names.
+
 
 ------------------------------------------------------------------------
 r1879 | gaser | 2021-09-03 10:24:31 +0200 (Fr, 03 Sep 2021) | 16 lines
