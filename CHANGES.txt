@@ -1,5 +1,22 @@
 ------------------------------------------------------------------------
-r1881 | gaser | 2021-09-29 16:08:13
+r1881 | gaser | 2021-09-30 12:23:56
+
+Changed paths:
+M       CHANGES.txt
+M       cat_run_job_APRGs.m
+M       cat_stat_analyze_ROIs.m
+M       cat_surf_results.m
+M       templates_MNI152NLin2009cAsym/aal3.csv
+
+(1) Changed: Added some new command line options to cat_surf_results.m and also
+             implemented a new flat design for ROI display.         
+(2) Changed: Added option for new flat design for ROI display to 
+             cat_stat_analyze_ROIs.m
+(3) Fixed:   Corrected label for rIFGoperc which was doubled (value 6). Thanks
+             to Peter Mondrup Rasmussen for pointing to that.
+
+------------------------------------------------------------------------
+r1881 | gaser | 2021-09-29 16:09:02 +0200 (Mi, 29 Sep 2021) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +30,7 @@ M       html/cat.html
              number.            
 (2) Fixed:   Use try/catch to also consider older versions of spm_maff8.m from
              previous SPM12 updates.
+
 
 ------------------------------------------------------------------------
 r1880 | gaser | 2021-09-28 14:04:36 +0200 (Di, 28 Sep 2021) | 27 lines
