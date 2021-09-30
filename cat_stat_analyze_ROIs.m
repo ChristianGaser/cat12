@@ -647,6 +647,20 @@ if mesh_detected
   if show_results
     name_mesh = fullfile(cwd,['mesh.logP' corr_short{show_results} output_name '.gii']);
     cat_surf_results('Disp',name_mesh);
+    ROI_mode = spm_input('Use new customized ROI display?','+1','b','yes|no',[1,0],1);
+    if ROI_mode
+      cat_surf_results('texture', 3); % no texture
+      boder_mode = 0;
+      if strcmp(atlas,'aparc_DK40')
+        border_mode = 1;
+      elseif strcmp(atlas,'aparc_a2009s')
+        border_mode = 2;
+      elseif strcmp(atlas,'aparc_HCP_MMP1')
+        border_mode = 3;
+      end
+      cat_surf_results('surface', 2); % inflated surface
+      if border_mode, cat_surf_results('border', border_mode); end
+    end
   end
 
 else % write label volume with thresholded p-values
