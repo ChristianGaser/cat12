@@ -5,8 +5,8 @@ ROIid;ROIabbr;ROIname;ROIcolor
 4;rSFG;Right Superior frontal gyrus-dorsolateral;0 117 115
 5;lMFG;Left Middle frontal gyrus;191 23 23
 6;rMFG;Right Middle frontal gyrus;191 23 23
-6;rIFGoperc;Right Inferior frontal gyrus-opercular part;198 198 2
 7;lIFGoperc;Left Inferior frontal gyrus-opercular part;198 198 2
+8;rIFGoperc;Right Inferior frontal gyrus-opercular part;198 198 2
 9;lIFGtriang;Left Inferior frontal gyrus-triangular part;149 203 203
 10;rIFGtriang;Right Inferior frontal gyrus-triangular part;149 203 203
 11;lIFGorb;Left IFG pars orbitalis;102 102 102
