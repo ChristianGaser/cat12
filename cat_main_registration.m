@@ -240,7 +240,11 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion,Yp0
           end
       end
     elseif numel( job.extopts.bb ) == 6
-      resbb = reshape( job.extopts.bb(:) , 2 , 3) ; % own
+      if any( isinf( job.extopts.bb ) )
+        resbb = spm_get_bbox( Vtmp );
+      else
+        resbb = reshape( job.extopts.bb(:) , 2 , 3) ; % own
+      end
     else
       error('BB has to be a 2x3 matrix.'); 
     end

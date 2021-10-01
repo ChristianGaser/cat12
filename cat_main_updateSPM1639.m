@@ -44,9 +44,12 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   YbA = YbA | cat_vol_morph(YbA & sum(P(:,:,:,1:2),4)>4 ,'dd',2.4,vx_vol);
   
   
-  if size(P,4)<4
+  if size(P,4)==3
     % create background class that is required later
-    P(:,:,:,4) = 1 - cat_vol_morph( sum(P(:,:,:,1:2),4) , 'ldc' , 10 ); 
+    Yb = cat_vol_morph( smooth3( sum(P(:,:,:,1:2),4) ) > 192 , 'ldc' , 5 , vx_vol ); 
+    Yb = cat_vol_morph( Yb , 'ldo' ); 
+    for i=1:3, P(:,:,:,i) = P(:,:,:,i) .* cat_vol_ctype(Yb); end 
+    P(:,:,:,4) = cat_vol_ctype((1 - Yb) * 255); 
   end
   
   % transfer tissue outside the brain mask to head  ... 

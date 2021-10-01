@@ -25,7 +25,7 @@ function cat_main_reportcmd(job,res,qa)
   colorgmt  = @(GMC,m) GMC(max(1,min(size(GMC,1),round(((m-0.5)*10)+1))),:);
   mark2rps  = @(mark) min(100,max(0,105 - mark*10)) + isnan(mark).*mark;
   grades    = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
-  mark2grad = @(mark) grades{min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3)))};
+  mark2grad = @(mark) grades{max(min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3))))};
   
   % definition of subfolders
   [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(VT0.fname,job);

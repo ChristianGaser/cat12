@@ -53,7 +53,10 @@ function tools = cat_conf_tools(expert)
   data.help         = {''};
 
   
-  % do not process, if result already exists
+  % Do not process, if result already exists and is younger than the
+  % original image, i.e., if the original was changed then it will be 
+  % processed again. The function is quite helpful to develop and test
+  % SPM batches and avoid reprocessing of slow steps.
   lazy         = cfg_menu;
   lazy.tag     = 'lazy';
   lazy.name    = 'Lazy processing';
@@ -144,7 +147,7 @@ function tools = cat_conf_tools(expert)
   nonlin_coreg                = cat_conf_nonlin_coreg;
   createTPM                   = conf_createTPM(data_vol,expert,suffix,outdir); 
   createTPMlong               = conf_createTPMlong(data_vol);
-  headtrimming                = conf_vol_headtrimming(intlim,spm_type,prefix,suffix,expert);
+  headtrimming                = conf_vol_headtrimming(intlim,spm_type,prefix,suffix,lazy,expert);
   check_SPM                   = conf_stat_check_SPM(outdir,fname,save,expert); 
   showslice                   = conf_stat_showslice_all(data_vol);
   maskimg                     = conf_vol_maskimage(data,prefix);
@@ -156,7 +159,7 @@ function tools = cat_conf_tools(expert)
   avg_img                     = conf_vol_average(data,outdir);
   realign                     = conf_vol_series_align(data);
   shootlong                   = conf_shoot(expert); 
-  sanlm                       = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,expert);
+  sanlm                       = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert);
   biascorrlong                = conf_longBiasCorr(data,expert,prefix);
   data2mat                    = conf_io_data2mat(data,outdir);
   boxplot                     = conf_io_boxplot(outdir,subdir,prefix,expert);
@@ -730,8 +733,11 @@ function resize = conf_vol_resize(data,prefix,expert,outdir)
   end
   clear imcalc
   
-  prefix.val      = {'r'}; 
-  
+  prefix.val      = {'r'};
+  prefix.help     = {
+    'Use "auto" to add resolution automaticly, e.g., "r0.8_*.nii" for final resolution or "rx0.5_*.nii" for the scaling parameter. '
+    'If you want the original resolution use 0 in the resolution setting (autoprefix "rorg_") or 1 in the scaling setting. ' 
+    };
   resize          = cfg_exbranch;
   resize.tag      = 'resize';
   resize.name     = 'Resize images';
@@ -1211,7 +1217,7 @@ function qa = conf_vol_qa(expert,outdir)
 return
   
 %_______________________________________________________________________
-function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,expert)
+function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
 
   % --- update input variables ---
   data.help         = {'Select images for filtering.'};
@@ -1453,7 +1459,7 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,expert)
   nlm_expert.tag      = 'expert';
   nlm_expert.name     = 'Optimized filter (expert options)';
   nlm_expert.hidden   = expert<0;
-  nlm_expert.val      = {NCstr iter iterm outlier relativeIntensityAdaption relativeIntensityAdaptionTH relativeFilterStengthLimit resolutionDependency resolutionDependencyRange resolutionReduction};
+  nlm_expert.val      = {NCstr iter iterm outlier relativeIntensityAdaption relativeIntensityAdaptionTH relativeFilterStengthLimit resolutionDependency resolutionDependencyRange resolutionReduction lazy};
   nlm_expert.help     = {
       'Optimized SANLM filter with all parameters.' 
   }; 
@@ -1549,10 +1555,11 @@ function spmtype = conf_io_volctype(data,  intlim,  spm_type,prefix,suffix,exper
 return
 
 %_______________________________________________________________________
-function headtrimming = conf_vol_headtrimming(intlim,spm_type,prefix,suffix,expert)
+function headtrimming = conf_vol_headtrimming(intlim,spm_type,prefix,suffix,lazy,expert)
 
   suffix.hidden         = expert<1; 
   intlim.hidden         = expert<1; 
+  lazy.hidden           = expert<1;
   
   % update input variables
   intlim1               = intlim;
@@ -1687,13 +1694,14 @@ function headtrimming = conf_vol_headtrimming(intlim,spm_type,prefix,suffix,expe
   mask.val              = {1};
   mask.help             = {'Use source image for trimming and final masking (e.g. for skull-stripping in longitudinal pipeline).'};
 
+
   % don't change data type
   spm_type.val         = {0};
   % --- main ---
   headtrimming         = cfg_exbranch;
   headtrimming.tag     = 'datatrimming';
   headtrimming.name    = 'Image data trimming'; 
-  headtrimming.val     = {timages prefix mask suffix intlim1 pth avg open addvox spm_type intlim};
+  headtrimming.val     = {timages prefix mask suffix intlim1 pth avg open addvox spm_type intlim lazy};
   headtrimming.prog    = @cat_vol_headtrimming;
   headtrimming.vout    = @vout_headtrimming;
   headtrimming.help    = {

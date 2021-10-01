@@ -210,22 +210,22 @@ function varargout = cat_surf_fun(action,S,varargin)
     case 'collisioncorrection'
     % Delaunay-based correction of surface self-intersections - not working  
       if nargin<2, help cat_surf_fun>show_orthview; return; end
-      [varargout{1},varargout{2},varargout{3}] = cat_surf_collision_correction(S,varargin{:});
+      [varargout{1},varargout{2}] = cat_surf_collision_correction(S,varargin{:});
 
     case 'collisioncorrectionry'
     % CAT_SelfIntersect-based correction of surface self-intersections   
       if nargin<2, help cat_surf_fun>show_orthview; return; end
-      [varargout{1},varargout{2}] = cat_surf_collision_correction_ry(S,varargin{:});
+      [varargout{1},varargout{2},varargout{3}] = cat_surf_collision_correction_ry(S,varargin{:});
     
     case 'collisioncorrectionpbt'
     % correction of self-intersections based on the PBT PP map
       if nargin<2, help cat_surf_fun>show_orthview; return; end
-      [varargout{1},varargout{2}] = cat_surf_collision_correction_pbt(S,varargin{:});
+      [varargout{1},varargout{2},varargout{3}] = cat_surf_collision_correction_pbt(S,varargin{:});
     
     case 'vdist'
     % ?
       if nargin<2, help cat_surf_fun>show_orthview; return; end
-      [varargout{1},varargout{2}] = cat_surf_vdist(S,varargin);
+      [varargout{1},varargout{2},varargout{3}] = cat_surf_vdist(S,varargin);
     
     case 'surf2vol'
     % Render surface (data) into volume space. See also spm_mesh_to_grid. 
@@ -322,7 +322,7 @@ function CS = cat_surf_localsurfsmooth(CS,C,s)
   Cst = sort(C); 
   
   for i=1:s
-    Ci  = min(1,max(0,C - (s - i) * Cst(round(numel(C)*0.999)))); 
+    Ci  = min(1,max(0,C - (s - i) * Cst(round(numel(C)*0.99)))); 
     CSV = cat_surf_smooth(M,CS.vertices,1);
     CS.vertices = CS.vertices .* repmat(1 - Ci,1,3) + CSV .* repmat(Ci,1,3);
   end
@@ -1160,16 +1160,20 @@ function [SH,V] = cat_surf_core(S,opt)
   SH.vertices = SH.vertices + repmat(min(S.vertices),size(SH.vertices,1),1) - 5;
 end
 
-function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
+function res = cat_surf_evalCS(CS,Tpbt,Tfs,Ym,Ypp,Pcentral,mat,verb,estSI)
 % _________________________________________________________________________
 % cat_surf_evalCS in cat_surf_fun print out some values to characterize a
 % cortical surface.
 %
-%   res = cat_surf_fun('evalCS',CS[,T,Ym,Yppt])
-%   res = cat_surf_evalCS(CS[,T,Ym,Yppt])
+%   res = cat_surf_fun('evalCS',CS[,Tpbt,Tfs,Ym,Yppt])
+%   res = cat_surf_evalCS(CS[,Tpbt,Tfs,Ym,Yppt])
 %    
 %   CS        .. central surface in world space (mm)
-%   T         .. cortical thickness in world space (mm)
+%   Tpbt      .. cortical thickness (PBT) in world space (mm)
+%                can be empty (if so than Tfs will be used for generation 
+%                of the white/pial surface
+%   Tfs       .. cortical thickness (FreeSurfer) in world space (mm) 
+%                can be empty
 %   Ym        .. intensity normalized file with BG=0, CSF=1/3, GM=2/3, and WM=1
 %   Ypp       .. percent position map 
 %   Pcentral  .. number of classes for further thickness evaluation or a
@@ -1191,14 +1195,21 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
   
   if ~exist('verb','var'),  verb  = 1; end
   if ~exist('estSI','var'), estSI = 0; end
+
+  if isempty(Tpbt)
+    isemptyTpbt = 1;
+    Tpbt = Tfs; 
+  else
+    isemptyTpbt = 0; 
+  end
   
   M  = spm_mesh_smooth(CS);    % smoothing matrix
-  if exist('T','var') % thickness in voxel space 
+  if exist('Tpbt','var') % thickness in voxel space 
     try
       N  = spm_mesh_normals(CS);
     
-      VI = CS.vertices + N .* repmat(T / 2 ,1,3); % white surface
-      VO = CS.vertices - N .* repmat(T / 2 ,1,3); % pial surface
+      VI = CS.vertices + N .* repmat(Tpbt / 2 ,1,3); % white surface
+      VO = CS.vertices - N .* repmat(Tpbt / 2 ,1,3); % pial surface
     end
   end
   
@@ -1210,7 +1221,7 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
   
     if ~isempty(mat); 
       save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Pcentralx,'Base64Binary');
-      cat_io_FreeSurfer('write_surf_data',Ppbtx,T);  
+      cat_io_FreeSurfer('write_surf_data',Ppbtx,Tpbt);  
       cmd = sprintf('CAT_Central2Pial -equivolume -weight 1 "%s" "%s" "%s" 0', ...
                      Pcentralx,Ppbtx,Player4x);
       try
@@ -1257,7 +1268,7 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
     % divide by 2 because of the CSF-GM (1-2) and the GM-WM area (2-3) 
     % and to obtain a similar scaling as for the Ypp (also two segments and
     % we do not dived)
-    II = II / 2; IO = IO / 2; IC = IC / 2;
+    II = II / 2; IO = IO / 2; if uL4, IC = IC / 2; end
     % output
     if verb
       fprintf('    Local intensity RMSE (lower=better): ')
@@ -1361,11 +1372,11 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
   
   
   %% thickness analysis
-  if exist('T','var')
-    if exist('Tclasses','var') && ~isempty(Pcentral)
+  if exist('Tpbt','var') || exist('Tfs','var')
+    if 0 %exist('Tclasses','var') && ~isempty(Pcentral)
       if ischar(Pcentral)
         if strfind(Pcentral,'dilated1.5-2.5mm')
-          T = cat_stat_histth(T,0.95);
+          Tpbt = cat_stat_histth(Tpbt,0.95);
           Pcentral = 3;
         else
           Pcentral = 0;
@@ -1377,7 +1388,7 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
           warning('Tclasses has to be between 2 and 7.');
           Pcentral = min(7,max(3,Pcentral)); 
         end
-        [mn,sd] = cat_stat_kmeans(T,Pcentral);
+        [mn,sd] = cat_stat_kmeans(Tpbt,Pcentral);
         if verb
           fprintf('    Thickness mean (%d class(es)):       ',Pcentral)
           fprintf('%7.4f',mn); fprintf('\n'); 
@@ -1388,11 +1399,32 @@ function res = cat_surf_evalCS(CS,T,Ym,Ypp,Pcentral,mat,verb,estSI)
         res.thickness_std_nclasses  = sd;
       end
     end
-      
-    res.thickness_mn_sd_md_mx = [mean(T),std(T),median(T),max(T)];
+    
+    % fully named thickness variable
+    if ~isemptyTpbt
+      res.pbtthickness_mn_sd_md_mx = [mean(Tpbt),std(Tpbt),median(Tpbt),max(Tpbt)];
+    else
+      res.pbtthickness_mn_sd_md_mx = nan(1,4);
+    end
+    if ~isempty(Tfs)
+      res.fsthickness_mn_sd_md_mx = [mean(Tfs),std(Tfs),median(Tfs),max(Tfs)];
+    else
+      res.fsthickness_mn_sd_md_mx = nan(1,4); 
+    end
+    % general thickness value 
+    if isempty(Tfs) && ~isemptyTpbt
+      res.thickness_mn_sd_md_mx = res.pbtthickness_mn_sd_md_mx;
+    elseif ~isempty(Tfs) && isemptyTpbt
+      res.thickness_mn_sd_md_mx = res.fsthickness_mn_sd_md_mx;
+    else
+      res.thickness_mn_sd_md_mx = nan(1,4);
+    end
+    
     if verb
-      fprintf('    Surface thickness values:            %0.4f%s%0.4f (md=%0.4f,mx=%0.4f)\n',...
-        res.thickness_mn_sd_md_mx(1),native2unicode(177, 'latin1'),res.thickness_mn_sd_md_mx(2:end)); 
+      fprintf('    Surface PBT thickness values:        %0.4f%s%0.4f (md=%0.4f,mx=%0.4f)\n',...
+        res.pbtthickness_mn_sd_md_mx(1),native2unicode(177, 'latin1'),res.pbtthickness_mn_sd_md_mx(2:end)); 
+      fprintf('    Surface FS  thickness values:        %0.4f%s%0.4f (md=%0.4f,mx=%0.4f)\n',...
+        res.fsthickness_mn_sd_md_mx(1),native2unicode(177, 'latin1'),res.fsthickness_mn_sd_md_mx(2:end)); 
     end
   end
   
@@ -1605,7 +1637,7 @@ function cat_surf_saveICO(S,Tpbt,Pcs,subdir,Pm,mat,writeTfs,writeSI,writeL4,writ
   
   if 0
     if ndims(Pm)==3, Ym=Pm; else, Ym=spm_read_vols(spm_vol(Pm)); end
-    res = cat_surf_evalCS(S,Tpbt,Ym,Ypp,Tclasses)
+    res = cat_surf_evalCS(S,Tpbt,[],Ym,Ypp,Tclasses)
   end
 end
 
@@ -1652,15 +1684,17 @@ function Sg = cat_surf_volgrad(varargin)
   if exist('mat','var')
     Si1 = cat_surf_isocolors2(Y,V1,mat);
     Si2 = cat_surf_isocolors2(Y,V2,mat);
+    vx_vol = sqrt(sum(mat(1:3,1:3).^2));
   else
     Si1 = cat_surf_isocolors2(Y,V1);
     Si2 = cat_surf_isocolors2(Y,V2);
+    vx_vol = [1 1 1];
   end
-  
-  Sg  = Si1 - Si2; 
+ 
+  Sg  = (Si1 - Si2) ./ repmat( mean(vx_vol), size(Si1,1), 1 ) * 2; 
 end
 
-function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt) 
+function [S,Tn,SI] = cat_surf_collision_correction_ry(S,T,Y,opt) 
 % _________________________________________________________________________
 % Correction of self-intersection (S) by iterative use of the 
 % CAT_selfintersect function of Rachel Yotter / Christian Gaser.
@@ -1716,7 +1750,7 @@ function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt)
   
   % detection and correction for flipped faces to have always the same normal direction
   flipped = cat_surf_checkNormalDir(S); %,T,Y,opt.interpBB);
-  if flipped & isfield(S,'mati'), S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); end
+  if flipped && isfield(S,'mati'), S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); end
 
   % simple surface smoothing
   smoothsurf = @(V,s) [ ...        
@@ -1738,8 +1772,8 @@ function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt)
   N    = spm_mesh_normals(S); 
   i    = 0; final = 0; 
   
-  if opt.verb, fprintf('\n'); end
-  while i < opt.iterfull
+  if opt.verb, fprintf('\n'); end; SI = 90; SIO=100; 
+  while i < opt.iterfull || (SI>5 && SI<SIO*0.8)
     i = i + 1;
    
     % In theory the search/correction size would be half each time (0.5 0.25 0.125 ... 2^i)
@@ -1747,7 +1781,7 @@ function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt)
     % The changes are limited by opt.accuracy for anatomical (min sulcus-width) and runtime reasons.
     % If optimization is used than the test starts again but with higher accuracy ( 0.125 ). 
     if opt.mod
-      corrsize = max( opt.accuracy , 1 ./ opt.redterm.^(i+1) );
+      corrsize = max( opt.accuracy/2 , 1 ./ opt.redterm.^(i+1) );
     else
       corrsize = opt.accuracy;
     end
@@ -1841,6 +1875,8 @@ function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt)
     
     % iteration
     if corrsize <= opt.accuracy, final = final + 1; end
+    SIO = SI; 
+    SI  = (sum(selfw>0)/2 + sum(selfp>0)/2) / numel(selfw) * 100; 
     if opt.verb
       cat_io_cprintf('g5',sprintf( ...
         '    Step %2d (SS=%02.0f%%%%, SI=%5.2f%%%%, T=%4.2f%s%4.2f)\n',...
@@ -1859,7 +1895,7 @@ function [S,Tn] = cat_surf_collision_correction_ry(S,T,Y,opt)
   
   if opt.verb, fprintf('\n'); end
   % final settings: back to world thickness in mm 
-  if flipped & isfield(S,'mati'), S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); end
+  if flipped && isfield(S,'mati'), S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); end
 end
 
 function flipped = cat_surf_checkNormalDir(S)
@@ -1905,7 +1941,7 @@ function V = cat_surf_smooth(M,V,s,mode)
   end
 end
 
-function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
+function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
 % _________________________________________________________________________
 % This function utilize the percentage position map Ypp map of the 
 % projection-based thickness to detect and correct self-intersections (SI)
@@ -1996,9 +2032,9 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
     TAs = ones(size(T),'single'); 
   end
   
-  i   = 0; final = 0; SIO = 1; 
+  i   = 0; final = 0; SIO = 1; SI = 90; SIO2 = 100; 
   if opt.verb, fprintf('\n'); end
-  while i < opt.iterfull / 4 % more iterations improve the int and especialy the pos and SI values but increase also the thdiff value  
+  while (i < opt.iterfull / 4) || (SI>1 && SI<SIO2*0.9) % more iterations improve the int and especialy the pos and SI values but increase also the thdiff value  
     i = i + 1;
    
     % In theory the search/correction size would be half each time (0.5 0.25 0.125 ... 2^i)
@@ -2006,7 +2042,7 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
     % The changes are limited by opt.accuracy for anatomical (min sulcus-width) and runtime reasons.
     % If optimization is used than the test starts again but with higher accuracy ( 0.125 ). 
     % Smaller values support better int/pos values but more intersections.
-    corrsize  = max( opt.accuracy , 1 ./ opt.redterm.^(i+2) );
+    corrsize  = max( opt.accuracy/2 , 1 ./ opt.redterm.^(i+2) );
    
     % outer and inner boundary
     VO = S.vertices - N .* repmat(Tp,1,3);
@@ -2251,7 +2287,8 @@ function [S,Tn] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
         break
       end
     end
-    SIO = SI;
+    SIO2 = SIO; 
+    SIO  = SI;
   end
   
   if opt.verb, fprintf('\n'); end

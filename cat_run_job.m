@@ -123,7 +123,7 @@ function cat_run_job(job,tpm,subj)
   if exist(fullfile(pp,['c1' ff(3:end) ee]),'file') && ...
      exist(fullfile(pp,['c2' ff(3:end) ee]),'file') && ...
      exist(fullfile(pp,['c3' ff(3:end) ee]),'file') && ...
-     exist(fullfile(pp,[ff(3:end) '_seg8.mat']),'file')
+     exist(fullfile(pp,[ff(3:end) '_seg8.mat']),'file') && strcmp(ff(1:2),'c1')
      
       job.data{subj}          = fullfile(pp,[ff ee]); 
       job.channel.vols{subj}  = fullfile(pp,[ff ee]); 
@@ -134,25 +134,45 @@ function cat_run_job(job,tpm,subj)
         images = char(images,job.channel(n).vols{subj});
       end
 
-      [cv,cr]      = cat_version;
       obj.image    = spm_vol(images);
-      obj.image.descrip = sprintf('%sR%s < %s',cv,cr,obj.image.descrip); % add CAT version 
       obj.fwhm     = job.opts.fwhm;
       obj.biasreg  = cat(1,job.opts.biasreg);
       obj.biasfwhm = cat(1,job.opts.biasfwhm);
       obj.tol      = job.opts.tol;
-      obj.tpm      = tpm;
       obj.lkp      = [];
+      obj.reg      = job.opts.warpreg;
+      obj.samp     = job.opts.samp;              
       spm_check_orientations(obj.image);
-      
+
       if all(isfinite(cat(1,job.tissue.ngaus)))
           for k=1:numel(job.tissue)
               obj.lkp = [obj.lkp ones(1,job.tissue(k).ngaus)*k];
           end
       end
+
+      Pseg8 = fullfile(pp,[ff(3:end) '_seg8.mat']); 
+      if ~exist(Pseg8,'file')
+        error('cat_run_job1639:SPMpp_MissSeg8mat','Can''t find "%s" file!',Pseg8);
+      end
+      res = load(Pseg8);
+
+      % load tpm priors 
+      tpm = spm_load_priors8(res.tpm);
+      obj.lkp = res.lkp; 
+      obj.tpm = tpm; 
       
-      obj.reg      = job.opts.warpreg;
-      obj.samp     = job.opts.samp;              
+      % Special cases with different class numbers in case of SPM input
+      if max(obj.lkp)==6
+      % default cases
+      elseif max(obj.lkp)==3
+        cat_io_addwarning('SPMpp_PostMortem','Detected only 3 classes that are interpretated as GM, WM, and CSF/background.',0,[0 1])
+      elseif max(obj.lkp)==4 
+        cat_io_addwarning('SPMpp_SkullStripped','Detected only 4 classes that are interpretated as GM, WM, CSF, and background',0,[0 1])
+      else
+        cat_io_addwarning('SPMpp_AtypicalClsNumber',sprintf('Atypical number of input classes (max(lkp)=%d).',max(obj.lkp)),2,[0 1])
+      end
+      
+      
       cfname  = fullfile(pp,[ff ee]);
       ofname  = fullfile(pp,[ff(3:end) ee]); 
       nfname  = fullfile(pp,mrifolder,['n' ff '.nii']); 
@@ -161,7 +181,7 @@ function cat_run_job(job,tpm,subj)
       Ysrc0    = single(spm_read_vols(obj.image)); 
       Ylesion  = single(isnan(Ysrc0) | isinf(Ysrc0) | Ysrc0==0); clear Ysrc0;
       
-      res = load(fullfile(pp,[ff(3:end) '_seg8.mat']));
+     
       job.channel(1).vols{subj}  = [nfname ex];
       job.channel(1).vols0{subj} = [ofname ex];
       res.image  = spm_vol([nfname ex]);
