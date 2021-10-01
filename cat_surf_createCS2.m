@@ -60,6 +60,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
 
   % set defaults
   if ~exist('opt','var'), opt = struct(); end                 % create variable if not exist
+  if ~exist('job','var'), job = get_cat_defaults; end         % get variable if not exist
   vx_vol        = sqrt(sum(V.mat(1:3,1:3).^2));               % further interpolation based on internal resolution 
   def.verb      = cat_get_defaults('extopts.expertgui');      % 0-none, 1-minimal, 2-default, 3-details, 4-debug
   def.surf      = {'lh','rh'};                                % surface reconstruction setting with {'lh','rh','rc','lc'} and
@@ -1063,7 +1064,7 @@ fullfile(pp1_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff1))
       % evaluate and save results
       if isempty(stime), stime = clock; end
       fprintf('%5.0fs',etime(clock,stime)); stime = []; if debug, fprintf('\n'); end
-      res.(opt.surf{si}).createCS_init = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,debug);
+      res.(opt.surf{si}).createCS_init = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),[],Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,debug);
       if debug 
         % save surface for further evaluation 
         cat_surf_fun('saveico',CS,cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm),Pcentral,sprintf('createCS_1_init_pbtres%0.2fmm_vdist%0.2fmm',opt.interpV,opt.vdist),Ymfs,Smat.matlabIBB_mm); 
@@ -1122,7 +1123,7 @@ fullfile(pp1_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff1))
       CS = loadSurf(Pcentral); 
       facevertexcdata = cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm); 
       %fprintf('TC: V=%d, MN(CT)=%0.20f, SD(CT)=%0.20f\n',size(CS.vertices,1),mean(facevertexcdata(:)),std(facevertexcdata(:)));    
-      res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
+      res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),[],Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
     end
 
   
@@ -1210,7 +1211,7 @@ fullfile(pp1_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff1))
           CS.vertices = CS.vertices .* repmat(1 - OLc,1,3) + CSc.vertices .* repmat(OLc,1,3); 
         end
       end
-      clear M A C OL CSox CSc OLc; 
+      if ~debug, clear M A C OL CSox CSc OLc; end
     end
     % ------------------------------------------------------------------
     
@@ -1279,14 +1280,16 @@ fullfile(pp1_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff1))
     else
       fprintf('\n'); 
     end
-if 0 
-    res.(opt.surf{si}).createCS_2_refine = cat_surf_fun('evalCS' ,CS,cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm),...
+    
+if 0
+    res.(opt.surf{si}).createCS_2_refine = cat_surf_fun('evalCS' ,CS,cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm),[],...
       Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2,opt.SRP==0 && cat_get_defaults('extopts.expertgui')>1);
     res.(opt.surf{si}).createCS_final    = res.(opt.surf{si}).createCS_2_refine; 
     if opt.verb > 2, fprintf('SR2: V=%d, SD(CT)=%0.20f\n',size(CS.vertices,1),std(facevertexcdata(:))); end
 end
     
-if opt.SRP>1
+if opt.SRP
+  %%
     cmd = sprintf('CAT_SurfDistance -mean -thickness "%s" "%s" "%s"',Ppbt,Pcentral,Pthick);
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS);
     Tfs0 = cat_io_FreeSurfer('read_surf_data',Pthick); 
@@ -1332,7 +1335,7 @@ if opt.SRP>2 % SRP23
     CS.faces    = WS.faces; 
    
     % eval
-    res.(opt.surf{si}).createCS_2_refine = cat_surf_fun('evalCS' ,CS,Tfs,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-1,cat_get_defaults('extopts.expertgui')>1);
+    res.(opt.surf{si}).createCS_2_refine = cat_surf_fun('evalCS' ,CS,[],Tfs,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-1,cat_get_defaults('extopts.expertgui')>1);
     cat_surf_fun('saveico',CS,Tfs,Pcentral,sprintf('createCS_3_collcorr_%0.2fmm_vdist%0.2fmm',opt.interpV,opt.vdist),Ymfs,Smat.matlabIBB_mm); 
 
 end    
@@ -1379,9 +1382,15 @@ end
       end
 
       %% call collision correction
-      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,struct('optimize',opt.SRP>=2,'verb',verblc,'mat',Smat.matlabIBB_mm)); 
-      if verblc, fprintf('\b\b'); end
-      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3)); 
+      %  RD202108: Use further iterations if self-intersections are still very high.  
+      %            (test data was an high resolution ex-vivo chimp PD image that had still strong SIs after first correction) 
+      SIOs = 100; SIs = 80; maxiter = 2; iter = 0; 
+      while SIs>5 && SIs<SIOs*0.9 && iter<maxiter
+        SIOs = SIs; iter = iter + 1; 
+        [CS,facevertexcdata,SIs] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,struct('optimize',iter<2 && opt.SRP>=2,'verb',verblc,'mat',Smat.matlabIBB_mm,'vx_vol',vx_vol)); 
+        if verblc, fprintf('\b\b'); end
+        [CS,facevertexcdata,SIs] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3)); 
+      end
       %if debug, toc; end
       
       
@@ -1395,7 +1404,7 @@ end
       if 0 % opt.surf_measures > 2  ||  opt.verb > 2
         cat_surf_fun('saveico',CS,facevertexcdata,Pcentral,sprintf('createCS_3_collcorr_%0.2fmm_vdist%0.2fmm',opt.interpV,opt.vdist),Ymfs,Smat.matlabIBB_mm); 
         %fprintf('\n');
-        res.(opt.surf{si}).createCS_3_collcorr = cat_surf_fun('evalCS' ,CS,facevertexcdata,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-1,cat_get_defaults('extopts.expertgui')>1);
+        res.(opt.surf{si}).createCS_3_collcorr = cat_surf_fun('evalCS' ,CS,[],facevertexcdata,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-1,cat_get_defaults('extopts.expertgui')>1);
         res.(opt.surf{si}).createCS_final      = res.(opt.surf{si}).createCS_3_collcorr; 
         
         
@@ -1548,13 +1557,18 @@ end
       facevertexcdata = cat_io_FreeSurfer('read_surf_data',Pthick);  
       facevertexcdata(facevertexcdata > opt.thick_limit) = opt.thick_limit;
       cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);  
+      
+      % final surface evaluation 
+      res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',loadSurf(Pcentral),cat_io_FreeSurfer('read_surf_data',Ppbt),facevertexcdata,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,debug,cat_get_defaults('extopts.expertgui')>1);
     else % otherwise simply copy ?h.pbt.* to ?h.thickness.*
       copyfile(Ppbt,Pthick,'f');
+  
+      % final surface evaluation 
+      res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',loadSurf(Pcentral),cat_io_FreeSurfer('read_surf_data',Ppbt),[],Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,debug,cat_get_defaults('extopts.expertgui')>1);
+    
     end
     
     
-    % final surface evaluation 
-    res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',loadSurf(Pcentral),cat_io_FreeSurfer('read_surf_data',Ppbt),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,debug,cat_get_defaults('extopts.expertgui')>1);
     
     
     % average final values
@@ -1638,8 +1652,13 @@ end
   SIw = []; SIp = []; SIwa = []; SIpa = []; 
   for si=1:numel(opt.surf)
     if any(strcmp(opt.surf{si},{'lh','rh'}))
-      mnth        = [ mnth  res.(opt.surf{si}).createCS_final.thickness_mn_sd_md_mx(1) ]; 
-      sdth        = [ sdth  res.(opt.surf{si}).createCS_final.thickness_mn_sd_md_mx(2) ]; 
+      if isfield(res.(opt.surf{si}).createCS_final,'fsthickness_mn_sd_md_mx')
+        mnth      = [ mnth  res.(opt.surf{si}).createCS_final.fsthickness_mn_sd_md_mx(1) ]; 
+        sdth      = [ sdth  res.(opt.surf{si}).createCS_final.fsthickness_mn_sd_md_mx(2) ]; 
+      else
+        mnth      = [ mnth  res.(opt.surf{si}).createCS_final.thickness_mn_sd_md_mx(1) ];
+        sdth      = [ sdth  res.(opt.surf{si}).createCS_final.thickness_mn_sd_md_mx(2) ]; 
+      end
       mnRMSE_Ym   = [ mnRMSE_Ym   mean([...
         res.(opt.surf{si}).createCS_final.RMSE_Ym_layer4 ...
         res.(opt.surf{si}).createCS_final.RMSE_Ym_white ...
@@ -1712,10 +1731,14 @@ end
       
     if cat_get_defaults('extopts.expertgui')
     % color output currently only for expert ...
-      fprintf('  Average thickness:                          ');
+      if isfield(res.(opt.surf{si}).createCS_final,'fsthickness_mn_sd_md_mx')
+        fprintf('  Average thickness (FS):                     ');
+      else
+        fprintf('  Average thickness (PBT):                    ');
+      end
       cat_io_cprintf( color( rate( abs( mean(mnth) - 2.5 ) , 0 , 2.0 )) , sprintf('%0.4f'  , mean(mnth) ) );  fprintf(' %s ',native2unicode(177, 'latin1'));
       cat_io_cprintf( color( rate( abs( mean(sdth) - 0.5 ) , 0 , 1.0 )) , sprintf('%0.4f mm\n', mean(sdth) ) );
-  
+
       fprintf('  Surface intensity / position RMSE:          ');
       cat_io_cprintf( color( rate( mean(mnRMSE_Ym)  , 0.05 , 0.3 ) ) , sprintf('%0.4f / ', mean(mnRMSE_Ym) ) );
       cat_io_cprintf( color( rate( mean(mnRMSE_Ypp) , 0.05 , 0.3 ) ) , sprintf('%0.4f\n', mean(mnRMSE_Ypp) ) );
@@ -1970,7 +1993,6 @@ function [res,EC,S,stime] = fastCSexport(Ymfs,Yppi,Yth1i,Ywdt,Ycdt,Vpp1,Vpp, EC,
   % save final data and data structure
   saveSurf(CS,Pcentral);
   cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
-  S.(opt.surf{si}) = struct('faces',CS.faces,'vertices',CS.vertices,'th1',facevertexcdata);
   
   % create white and central surfaces
   % RD202103: bug in CB export
@@ -1980,7 +2002,7 @@ function [res,EC,S,stime] = fastCSexport(Ymfs,Yppi,Yth1i,Ywdt,Ycdt,Vpp1,Vpp, EC,
   
   % evaluate and save results
   fprintf('%5.0fs',etime(clock,stime)); stime = [];        
-  res.(opt.surf{si}).createCS_1_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
+  res.(opt.surf{si}).createCS_1_initfast = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),facevertexcdata,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
   if debug % final result
     collcorrstr = '';
     cat_surf_fun('saveico',CS,cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm),Pcentral,...
@@ -2040,13 +2062,16 @@ function [res,EC,S,stime] = fastCSexport(Ymfs,Yppi,Yth1i,Ywdt,Ycdt,Vpp1,Vpp, EC,
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-3);
 
     % apply upper thickness limit
-    facevertexcdata = cat_io_FreeSurfer('read_surf_data',Pthick);  
-    facevertexcdata(facevertexcdata > opt.thick_limit) = opt.thick_limit;
-    cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);  
+    facevertexcdatafs = cat_io_FreeSurfer('read_surf_data',Pthick);  
+    facevertexcdatafs(facevertexcdatafs > opt.thick_limit) = opt.thick_limit;
+    cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdatafs);  
+    S.(opt.surf{si}) = struct('faces',CS.faces,'vertices',CS.vertices,'th1',facevertexcdatafs);
   else % otherwise simply copy ?h.pbt.* to ?h.thickness.*
     copyfile(Ppbt,Pthick,'f');
+    S.(opt.surf{si}) = struct('faces',CS.faces,'vertices',CS.vertices,'th1',facevertexcdata);
+    facevertexcdatafs = []; 
   end
-  res.(opt.surf{si}).createCS_final      = cat_surf_fun('evalCS',CS,facevertexcdata,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
+  res.(opt.surf{si}).createCS_final      = cat_surf_fun('evalCS',CS,facevertexcdata,facevertexcdatafs,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2);
   if ~isempty(stime), fprintf('%5.0fs\n',etime(clock,stime)); end
 end
 
@@ -2321,7 +2346,7 @@ function create_resampled_white_pial_surfaces(opt,Pcentral,Pspherereg,Pfsavgsph,
     CSr = loadSurf(Ppbtr_gii); 
     CSr = struct('vertices',CSr.vertices,'faces',CSr.faces,'cdata',CSr.cdata);
     cat_surf_fun('saveico',CSr,CSr.cdata,Pcentralr,sprintf('createCS_4_resampled_pbtres%0.2fmm_vdist%0.2fmm',opt.interpV,opt.vdist),Ymfs,Smat.matlabIBB_mm); 
-    res.(opt.surf{si}).createCS_resampled = cat_surf_fun('evalCS',CSr,CSr.cdata,Ymfs,Yppi,Pcentralr,Smat.matlabIBB_mm);
+    res.(opt.surf{si}).createCS_resampled = cat_surf_fun('evalCS',CSr,CSr.cdata,[],Ymfs,Yppi,Pcentralr,Smat.matlabIBB_mm);
     clear CSr
   end
 

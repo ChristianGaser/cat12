@@ -86,6 +86,12 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
   end
   
   nn=n; n=double(n); n(1)=round(n(1)); 
+  switch action
+    case {'l'}
+      nv = ceil(nn(1) ./ mean(vx_vol)); 
+    otherwise
+      nv = ceil(nn ./ vx_vol); % used to enlarge images for closing
+  end
   switch lower(action)
     case {'l' 'lcc' 'lco' 'labcclose' 'labcopen' ...
               'lc' 'lo' 'labclose' 'labopen' ...
@@ -148,11 +154,11 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
         % we need to enlarge the image to avoid closing by the region that 
         % is not in the image
         sz = size(vol);
-        vol2 = zeros(sz(1)+(2*n),sz(2)+(2*n),sz(3)+(2*n),'uint8');
-        vol2(n+1:sz(1)+n,n+1:sz(2)+n,n+1:sz(3)+n) = uint8(vol);
+        vol2 = zeros(sz(1)+(2*nv(1)),sz(2)+(2*nv(2)),sz(3)+(2*nv(3)),'uint8');
+        vol2(nv(1)+1:sz(1)+nv(1),nv(2)+1:sz(2)+nv(2),nv(3)+1:sz(3)+nv(3)) = uint8(vol);
         vol2=cat_vol_morph(vol2,'cdilate',n,vx_vol); 
         vol2=cat_vol_morph(vol2,'cerode' ,n,vx_vol); 
-        vol = vol2(n+1:sz(1)+n,n+1:sz(2)+n,n+1:sz(3)+n)>0;
+        vol = vol2(nv(1)+1:sz(1)+nv(1),nv(2)+1:sz(2)+nv(2),nv(3)+1:sz(3)+nv(3))>0;
       elseif test==2
         % remove the background volume that is outside the dilation region
         [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,1,vol>0); 
@@ -161,11 +167,11 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
         % the image boundary and final close the region between object and
         % image boundary.
         sz = size(vol);
-        vol2 = zeros(sz(1)+(2*n),sz(2)+(2*n),sz(3)+(2*n),'uint8');
-        vol2(n+1:sz(1)+n,n+1:sz(2)+n,n+1:sz(3)+n) = uint8(vol);
+        vol2 = zeros(sz(1)+(2*nv(1)),sz(2)+(2*nv(2)),sz(3)+(2*nv(3)),'uint8');
+        vol2(nv(1)+1:sz(1)+nv(1),nv(2)+1:sz(2)+nv(2),nv(3)+1:sz(3)+nv(3)) = uint8(vol);
         vol2=cat_vol_morph(vol2,'cdilate',n,vx_vol); 
         vol2=cat_vol_morph(vol2,'cerode' ,n,vx_vol); 
-        vol = vol2(n+1:sz(1)+n,n+1:sz(2)+n,n+1:sz(3)+n)>0;
+        vol = vol2(nv(1)+1:sz(1)+nv(1),nv(2)+1:sz(2)+nv(2),nv(3)+1:sz(3)+nv(3))>0;
         
         % add background
         vol = cat_vol_resize(vol,'dereduceBrain',BB);  
@@ -231,7 +237,7 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
     % are bad represented for lower resolutions and lead to unaccurate 
     % results.
     case {'distdilate' 'dd'}
-      [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,n+1,vol>0); 
+      [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,n + 1,vol>0); 
       
       if n>5 %|| (sum(vol(:)>0)/numel(vol))>0.8
         % faster for large distances and smaller objects 
@@ -253,11 +259,11 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
       vol = ~cat_vol_morph(~vol,'distdilate',nn,vx_vol); 
 
     case {'distclose' 'dc'}
-      [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,n+1,vol>0); 
+      [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,n + 1,vol>0); 
      
       sz   = size(vol);
-      vol2 = zeros(sz(1)+(2*n),sz(2)+(2*n),sz(3)+(2*n),'single');
-      vol2(n+1:sz(1)+n,n+1:sz(2)+n,n+1:sz(3)+n) = single(vol);
+      vol2 = zeros(sz(1)+(2*nv(1)),sz(2)+(2*nv(2)),sz(3)+(2*nv(3)),'single');
+      vol2(nv(1)+1:sz(1)+nv(1),nv(2)+1:sz(2)+nv(2),nv(3)+1:sz(3)+nv(3)) = single(vol);
       if n>5
         
         %nn = nn*1.41; n=round(nn);  
@@ -268,7 +274,7 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
         vol2 = cat_vol_morph(vol2,'distdilate',nn,vx_vol); 
         vol2 = cat_vol_morph(vol2,'disterode' ,nn,vx_vol);       
       end
-      vol  = vol | vol2(n+1:sz(1)+n,n+1:sz(2)+n,n+1:sz(3)+n);
+      vol  = vol | vol2(nv(1)+1:sz(1)+nv(1),nv(2)+1:sz(2)+nv(2),nv(3)+1:sz(3)+nv(3));
 
       % add background
       vol = cat_vol_resize(vol,'dereduceBrain',BB);  

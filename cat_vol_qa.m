@@ -859,7 +859,7 @@ function varargout = cat_vol_qa(action,varargin)
       %   and take care of overoptimisation with values strongly >1/3
       %   of the relative contrast
       contrast = min(abs(diff(QAS.qualitymeasures.tissue_mn(3:4)))) ./ abs(diff([min([CSFth,BGth]),max([WMth,GMth])])); % default contrast
-      contrast = contrast + min(0,13/36 - contrast)*1.2;                      % avoid overoptimsization
+      contrast = contrast + min(0,13/36 - contrast) * 1.2;                    % avoid overoptimsization
       QAS.qualitymeasures.contrast  = contrast * (max([WMth,GMth])); 
       QAS.qualitymeasures.contrastr = contrast;
 
@@ -917,7 +917,7 @@ function varargout = cat_vol_qa(action,varargin)
       NCwc = min(wcth,max(0,NCwc-wcth)); NCww = min(wcth,NCww) - NCwc; % use CSF if possible
       if NCwc<3*wcth && NCww<10*wcth, NCRc = min(NCRc,NCRw); end
       QAS.qualitymeasures.NCR = (NCRw*NCww + NCRc*NCwc)/(NCww+NCwc);
-      QAS.qualitymeasures.NCR = QAS.qualitymeasures.NCR * (prod(resr.vx_volo*res))^0.4 * 5/4; %* 7.5; %15;
+      QAS.qualitymeasures.NCR = QAS.qualitymeasures.NCR * abs(prod(resr.vx_volo*res))^0.4 * 5/4; %* 7.5; %15;
       %QAS.qualitymeasures.CNR = 1 / QAS.qualitymeasures.NCR;  
 %fprintf('NCRw: %8.3f, NCRc: %8.3f, NCRf: %8.3f\n',NCRw,NCRc,(NCRw*NCww + NCRc*NCwc)/(NCww+NCwc));
 

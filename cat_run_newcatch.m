@@ -227,24 +227,26 @@ function cat_run_newcatch(job,tpm,subj)
     % create a symbolic link of the original file
     
     if job.extopts.subfolders
-      %%
-      suberrfolder = sprintf('%s.line%d.%s',ffe,caterr.stack(1).line,caterr.identifier); 
-      suberrfolder = char(regexp(strrep(suberrfolder,':','.'),'[A-Za-z0-9_.\- ]','match'))'; % remove bad chars
-      suberrfolder = strrep(suberrfolder,' ','_');
-      if ~exist(fullfile(pth,errfolder,suberrfolder),'dir'), mkdir(fullfile(pth,errfolder,suberrfolder)); end
-      catfile = fullfile(pth,reportfolder,['cat_' nam '.xml']);
-      logfile = fullfile(pth,reportfolder,['catlog_' nam '.txt']);
-      repfile = fullfile(pth,reportfolder,['catreport_' nam '.pdf']);
-      rejfile = fullfile(pth,reportfolder,['catreport_' nam '.jpg']);
-      if exist(catfile,'file'), copyfile(catfile,fullfile(pth,errfolder,suberrfolder),'f'); end
-      if exist(logfile,'file'), copyfile(logfile,fullfile(pth,errfolder,suberrfolder),'f'); end
-      if exist(repfile,'file'), copyfile(repfile,fullfile(pth,errfolder,suberrfolder),'f'); end
-      if exist(rejfile,'file'), copyfile(rejfile,fullfile(pth,errfolder,suberrfolder),'f'); end
-      if ismac || isunix
-        [ST, RS] = system(sprintf('ln -s -F "%s" "%s"',...
-          fullfile(pth,[nam ext]),fullfile(pth,errfolder,suberrfolder,[nam ext])));
-          cat_check_system_output(ST,RS,job.extopts.verb>2);
-      end  
+      try
+        [ppe,ffe]    = spm_fileparts(caterr.stack(1).file); 
+        suberrfolder = sprintf('%s.line%d.%s',ffe,caterr.stack(1).line,caterr.identifier); 
+        suberrfolder = char(regexp(strrep(suberrfolder,':','.'),'[A-Za-z0-9_.\- ]','match'))'; % remove bad chars
+        suberrfolder = strrep(suberrfolder,' ','_');
+        if ~exist(fullfile(pth,errfolder,suberrfolder),'dir'), mkdir(fullfile(pth,errfolder,suberrfolder)); end
+        catfile = fullfile(pth,reportfolder,['cat_' nam '.xml']);
+        logfile = fullfile(pth,reportfolder,['catlog_' nam '.txt']);
+        repfile = fullfile(pth,reportfolder,['catreport_' nam '.pdf']);
+        rejfile = fullfile(pth,reportfolder,['catreport_' nam '.jpg']);
+        if exist(catfile,'file'), copyfile(catfile,fullfile(pth,errfolder,suberrfolder),'f'); end
+        if exist(logfile,'file'), copyfile(logfile,fullfile(pth,errfolder,suberrfolder),'f'); end
+        if exist(repfile,'file'), copyfile(repfile,fullfile(pth,errfolder,suberrfolder),'f'); end
+        if exist(rejfile,'file'), copyfile(rejfile,fullfile(pth,errfolder,suberrfolder),'f'); end
+        if ismac || isunix
+          [ST, RS] = system(sprintf('ln -s -F "%s" "%s"',...
+            fullfile(pth,[nam ext]),fullfile(pth,errfolder,suberrfolder,[nam ext])));
+            cat_check_system_output(ST,RS,job.extopts.verb>2);
+        end
+      end
     end
     
     %% rethrow error 

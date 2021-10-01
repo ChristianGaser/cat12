@@ -262,7 +262,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
   mark2rps  = @(mark) min(100,max(0,105 - mark*10)) + isnan(mark).*mark;
   rps2mark  = @(rps) min(10.5,max(0.5,10.5 - rps / 10)) + isnan(rps).*rps;
   grades    = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
-  mark2grad = @(mark) grades{min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3)))};
+  mark2grad = @(mark) grades{max(1,min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3))))};
   
   allcatalerts   = 0;
   allcatwarnings = 0; 
@@ -1491,7 +1491,11 @@ function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
             if strcmp(FNopts{fni},'ngaus') && numel(xml.parameter.opts.(FNopts{fni}))==4
               % nothing to do (skull-stripped case)
             else
-              if xml.parameter.opts.(FNopts{fni}) ~= job.opts.(FNopts{fni})
+              try
+                if xml.parameter.opts.(FNopts{fni}) ~= job.opts.(FNopts{fni})
+                  FNok = 5; break
+                end
+              catch
                 FNok = 5; break
               end
             end

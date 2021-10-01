@@ -120,7 +120,16 @@ function out = cat_vol_sanlm(varargin)
     def.fred                        = 0;         % force reduce
     def.iter                        = 0;         % additional inner iterations on the reduced resolution
     def.miter                       = 0;         % additional main iterations of the full filter
-    varargin{1} = cat_io_checkinopt(varargin{1},def);
+    def.lazy                        = 1;         % avoid reprocessing if file exist 
+    job = varargin; 
+    if isfield(job{1},'nlmfilter')
+      subfield = fieldnames(job{1}.nlmfilter); 
+      FN = fieldnames(job{1}.nlmfilter.(subfield{1})); 
+      for fni = 1:numel(FN)
+        job{1}.(FN{fni}) = job{1}.nlmfilter.(subfield{1}).(FN{fni}); 
+      end
+    end
+    job{1} = cat_io_checkinopt(job{1},def);
     
     % special cases of the CAT GUI
     if isfield(varargin{1},'nlmfilter') 
@@ -137,9 +146,9 @@ function out = cat_vol_sanlm(varargin)
     end 
     
     if nargin <= 1 && isstruct(varargin{1}) % job structure input
-        out.files = cat_vol_sanlm_file(varargin{1});
+        out.files = cat_vol_sanlm_file(job{1});
     else % image input
-        out = cat_vol_sanlm_filter(varargin{:});
+        out = cat_vol_sanlm_filter(job{:});
     end
 
 end
@@ -221,7 +230,9 @@ function varargout = cat_vol_sanlm_file(job)
     spm_progress_bar('Init',numel(job.data),'SANLM-Filtering','Volumes Complete');
 
     for i = 1:numel(job.data)
+      if ~job.lazy || cat_io_rerun( job.data{1} , varargout{1}{i} )
         cat_vol_sanlm_filter(job,V,i);
+      end
     end
 
     if isfield(job,'process_index') && job.verb, fprintf('Done\n'); end
@@ -250,7 +261,7 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
       src = single(src);
     end
         
-    for im=1:1+job.miter;   
+    for im=1:1+job.miter  
       % prevent NaN and INF
       if job.replaceNANandINF
         src(isnan(src)) = 0;

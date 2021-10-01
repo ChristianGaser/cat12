@@ -58,6 +58,7 @@ function varargout = cat_vol_headtrimming(job)
   def.range1  = 90;                   % internal scaling for masking
   def.returnOnlyFilename  = 0;        % 
   def.process_index = 1;              %
+  def.lazy    = 1; 
   job = cat_io_checkinopt(job,def);
 
   
@@ -182,102 +183,107 @@ function varargout = cat_vol_headtrimming(job)
   for si = 1:numel(job.images)
     if job.verb, fprintf('%58s: ',spm_str_manip(job.images{si}{1},'ra57')); end
     
-    %% estimate trimming parameter
-    V = spm_vol(char(job.images{si}));
-    Y = zeros(V(1).dim,'single');
-    if job.avg
-      for di = 1:max(1,min(numel(V,job.avg)))
-        Y = Y + single(spm_read_vols(V(di))); 
-      end
-      Y = Y ./ max(1,min(numel(V,job.avg)));
-    else
-      Y = single(spm_read_vols(V(1))); 
-    end
-
-    % create mask
-    if job.mask, Ymask = Y > 0; end 
-    
-    % categorical data have data type uint8 or int16
-    % and typically < 1000 different values
-    categorical = 0;
-    if V(1).dt(1) == 2 || V(1).dt(1) == 4
-      h = hist(Y(:),1:max(Y(:)));
-      n_values = numel(unique(h));
-      if n_values < 1000
-        categorical = 1;
-      end
-    end
-        
-    % skip most of steps that are only needed for non-categorical data
-    vx_vol  = sqrt(sum(V(1).mat(1:3,1:3).^2)); 
-    if categorical
-      Yb = Y;
-    else
-      % intensity normalization 
-      [Y,hth] = cat_stat_histth(smooth3(Y),job.range1,0); 
-      Y = (Y - hth(1)) ./ abs(diff(hth));
-
-      % masking
-      Yb = zeros(size(Y),'single'); 
-      Yb(2:end-1,2:end-1,2:end-1) = Y(2:end-1,2:end-1,2:end-1);
-      Yb = smooth3(Yb)>job.pth; 
-      Yb = cat_vol_morph(Yb,'do',job.open,vx_vol); 
-      Yb = cat_vol_morph(Yb,'l',[10 0.1]); 
-    end
-
-    [Yt,redB] = cat_vol_resize(Y,'reduceBrain',vx_vol,job.addvox,Yb);  %#ok<ASGLU>
-    
-    % prefer odd or even x-size such as found in original data to prevent shifting issues
-    % at midline
-    if ~mod(redB.sizeTr(1),2) ~= ~mod(redB.sizeT(1),2)
-      % and add x-shifted image to increase bounding box by 1 voxel
-      if ~mod(redB.BB(1),2)
-        Yb(1:end-1,:,:) = Yb(1:end-1,:,:) + Yb(2:end,:,:);
+    if ~job.lazy || any( cat_io_rerun( job.images{si}, job.images2{si} ) )
+      %% estimate trimming parameter
+      V = spm_vol(char(job.images{si}));
+      Y = zeros(V(1).dim,'single');
+      if job.avg
+        for di = 1:max(1,min(numel(V,job.avg)))
+          Y = Y + single(spm_read_vols(V(di))); 
+        end
+        Y = Y ./ max(1,min(numel(V,job.avg)));
       else
-        Yb(2:end,:,:) = Yb(2:end,:,:) + Yb(1:end-1,:,:);
+        Y = single(spm_read_vols(V(1))); 
       end
-      [Yt,redB] = cat_vol_resize(Y,'reduceBrain',vx_vol,job.addvox,Yb); %#ok<ASGLU>
-    end
-    
-    clear Yt Y;
-    % prepare update of AC orientation
-    mati  = spm_imatrix(V(1).mat); mati(1:3) = mati(1:3) + mati(7:9).*(redB.BB(1:2:end) - 1);
-    
-    
-    %% trimming
-    Vo = V; 
-    for di = 1:numel(V)
-      % optimize tissue intensity range if 0<range<100 or for changed datatype 
-      if (job.range>0 && job.range<100) || ...
-         (~isempty(job.ctype) && ( ...
-         ( isnumeric(job.ctype) && job.ctype>0) || ...
-         ( ischar(job.ctype) && ~strcmp(job.ctype,'native') ))) 
-         
-        job2 = struct('data',job.images{si}{di},'verb',0,'ctype',job.ctype,...
-                      'range',job.range,'prefix',job.prefix,'suffix',job.suffix);
-        P = cat_io_volctype(job2);
+
+      % create mask
+      if job.mask, Ymask = Y > 0; end 
+
+      % categorical data have data type uint8 or int16
+      % and typically < 1000 different values
+      categorical = 0;
+      if V(1).dt(1) == 2 || V(1).dt(1) == 4
+        h = hist(Y(:),1:max(Y(:)));
+        n_values = numel(unique(h));
+        if n_values < 1000
+          categorical = 1;
+        end
+      end
+
+      % skip most of steps that are only needed for non-categorical data
+      vx_vol  = sqrt(sum(V(1).mat(1:3,1:3).^2)); 
+      if categorical
+        Yb = Y;
       else
-        copyfile(job.images1{si}{di},job.images2{si}{di});
-        P = job.images2{si}(di);
+        % intensity normalization 
+        [Y,hth] = cat_stat_histth(smooth3(Y),job.range1,0); 
+        Y = (Y - hth(1)) ./ abs(diff(hth));
+
+        % masking
+        Yb = zeros(size(Y),'single'); 
+        Yb(2:end-1,2:end-1,2:end-1) = Y(2:end-1,2:end-1,2:end-1);
+        Yb = smooth3(Yb)>job.pth; 
+        Yb = cat_vol_morph(Yb,'do',job.open,vx_vol); 
+        Yb = cat_vol_morph(Yb,'l',[10 0.1]); 
       end
-      spm_progress_bar('Set',si + di/numel(V));
+
+      [Yt,redB] = cat_vol_resize(Y,'reduceBrain',vx_vol,job.addvox,Yb);  %#ok<ASGLU>
+
+      % prefer odd or even x-size such as found in original data to prevent shifting issues
+      % at midline
+      if ~mod(redB.sizeTr(1),2) ~= ~mod(redB.sizeT(1),2)
+        % and add x-shifted image to increase bounding box by 1 voxel
+        if ~mod(redB.BB(1),2)
+          Yb(1:end-1,:,:) = Yb(1:end-1,:,:) + Yb(2:end,:,:);
+        else
+          Yb(2:end,:,:) = Yb(2:end,:,:) + Yb(1:end-1,:,:);
+        end
+        [Yt,redB] = cat_vol_resize(Y,'reduceBrain',vx_vol,job.addvox,Yb); %#ok<ASGLU>
+      end
+
+      clear Yt Y;
+      % prepare update of AC orientation
+      mati  = spm_imatrix(V(1).mat); mati(1:3) = mati(1:3) + mati(7:9).*(redB.BB(1:2:end) - 1);
+
+
+      %% trimming
+      Vo = V; 
+      for di = 1:numel(V)
+        % optimize tissue intensity range if 0<range<100 or for changed datatype 
+        if (job.range>0 && job.range<100) || ...
+           (~isempty(job.ctype) && ( ...
+           ( isnumeric(job.ctype) && job.ctype>0) || ...
+           ( ischar(job.ctype) && ~strcmp(job.ctype,'native') ))) 
+
+          job2 = struct('data',job.images{si}{di},'verb',0,'ctype',job.ctype,...
+                        'range',job.range,'prefix',job.prefix,'suffix',job.suffix);
+          P = cat_io_volctype(job2);
+        else
+          copyfile(job.images1{si}{di},job.images2{si}{di});
+          P = job.images2{si}(di);
+        end
+        spm_progress_bar('Set',si + di/numel(V));
+
+        % create ouput
+        Vo(di) = spm_vol(P{1}); 
+        Yo = single(spm_read_vols(Vo(di)));
+
+        % apply mask
+        if job.mask, Yo = Yo.*Ymask; end
+
+        Yo = cat_vol_resize(Yo,'reduceBrain',vx_vol,job.addvox,Yb); 
+        Vo(di).mat = spm_matrix(mati);
+        Vo(di).dim = redB.sizeTr;
+        if exist(Vo(di).fname,'file'), delete(Vo(di).fname); end % delete required in case of smaller file size!
+        spm_write_vol(Vo(di),Yo);
+      end
     
-      % create ouput
-      Vo(di) = spm_vol(P{1}); 
-      Yo = single(spm_read_vols(Vo(di)));
-
-      % apply mask
-      if job.mask, Yo = Yo.*Ymask; end
-
-      Yo = cat_vol_resize(Yo,'reduceBrain',vx_vol,job.addvox,Yb); 
-      Vo(di).mat = spm_matrix(mati);
-      Vo(di).dim = redB.sizeTr;
-      if exist(Vo(di).fname,'file'), delete(Vo(di).fname); end % delete required in case of smaller file size!
-      spm_write_vol(Vo(di),Yo);
+    
+      %% be verbose
+      if job.verb, fprintf('saved %5.2f%%\n',100 - 100*((prod(redB.sizeTr) ./ prod(redB.sizeT)))); end
+    else
+      if job.verb, fprintf('exist\n'); end
     end
-    
-    %% be verbose
-    if job.verb, fprintf('saved %5.2f%%\n',100 - 100*((prod(redB.sizeTr) ./ prod(redB.sizeT)))); end
     spm_progress_bar('Set',si);
   end
   spm_progress_bar('Clear');
