@@ -116,7 +116,7 @@ if ~isfield(res,'spmpp')
   %  RD202006: add ignoreErrors backup
   %  ---------------------------------------------------------------------
   stime = cat_io_cmd('Global intensity correction');
-  if 0 % any( min(vx_vol*2,1.4)./vx_vol >= 2 ) && job.extopts.ignoreErros<2 % 1639
+  if all(vx_vol < 0.4 ) %&& job.extopts.ignoreErros<2 % 1639
     % guaranty average (lower) resolution with >0.7 mm
     % RD202006: This solution is not working when cat_main_gintnorm
     %           optimize the image (e.g. bias correction). Just calling
@@ -127,10 +127,10 @@ if ~isfield(res,'spmpp')
     %           the default case also in highres data only increase time
     %           and memory demands. 
     %           Possible test subject: ADHD200/ADHD200_HC_BEJ_1050345_T1_SD000000-RS00.nii        
-    [Ysrcr,resGI] = cat_vol_resize(Ysrc      , 'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm');
-    Ybr           = cat_vol_resize(single(Yb), 'reduceV', vx_vol, min(vx_vol*2, 1.4), 32, 'meanm')>0.5;
-    Yclsr = cell(size(Ycls)); for i=1:6, Yclsr{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,min(vx_vol*2,1.4),32); end
-    [Ymr,T3th,Tth,job.inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,job.extopts);
+    [Ysrcr,resGI] = cat_vol_resize(Ysrc      , 'reduceV', vx_vol, 0.6, 32, 'meanm');
+    Ybr           = cat_vol_resize(single(Yb), 'reduceV', vx_vol, 0.6, 32, 'meanm')>0.5;
+    Yclsr = cell(size(Ycls)); for i=1:6, Yclsr{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,0.6,32); end
+    [Ymr,T3th,Tth,job.inv_weighting,noise] = cat_main_gintnorm(Ysrcr,Yclsr,Ybr,resGI.vx_volr,res,job.extopts);
     clear Ymr Ybr Ysrcr Yclsr; 
     Ym = cat_main_gintnorm(Ysrc,Tth); 
   else
@@ -496,8 +496,9 @@ if ~isfield(res,'spmpp')
   if job.extopts.cleanupstr>0
     % classical cleanup with extended version close to the skull in case of
     % the AMAP segmentation (not so good for BUSS_2002)
-    xCleanup = (isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap ) | (job.extopts.cleanupstr > 2);
-    prob = cat_main_clean_gwc(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol)),xCleanup);
+    res.xCleanup = (isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap ) | (job.extopts.cleanupstr > 2);
+    res.xCleanup = max(res.xCleanup, 3 * ( isfield(job.extopts,'inv_weighting') && job.extopts.inv_weighting )); 
+    prob = cat_main_clean_gwc(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol)),res.xCleanup);
     
     % newer additional cleanup (cleanupstr == 4 to use only the cat_main_clean_gwc for tests)
     if job.extopts.cleanupstr < 3 && ~job.extopts.inv_weighting
@@ -694,7 +695,7 @@ end
 %% update WMHs 
 %  ---------------------------------------------------------------------
   Ycls = cat_main_updateWMHs(Ym,Ycls,Yy,tpm,job,res,trans);
-
+  if ~debug, clear Yy tpm; end
 
 
 %% write results
@@ -759,7 +760,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
   %% default surface reconstruction 
   %  sum(Yth1(Yth1(:)>median(Yth1(Yth1(:)>0))*2 ))./sum(Yth1(Yth1(:)>0)) > 0.1 > error
     if job.extopts.SRP >= 20
-      surf = unique(surf); 
+      surf = unique(surf,'stable'); 
       if 0 %any( ~cellfun('isempty', strfind(surf,'cb') ))  % ... I want to avoid this if possible - it also seem to be worse to use it 
         VT1 = spm_vol(cat_get_defaults('extopts.shootingT1')); 
         fac = abs(tpm.V(1).mat(1)) / abs(VT1.mat(1));
@@ -784,14 +785,14 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
         'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'SRP',mod(job.extopts.SRP,10),...
         'scale_cortex', job.extopts.scale_cortex, 'add_parahipp', job.extopts.add_parahipp, 'close_parahipp', job.extopts.close_parahipp,  ....
         'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
-        'inv_weighting',job.extopts.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior));  
+        'inv_weighting',job.extopts.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior),job);  
     else
       %%
       [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size, qa.createCS] = ...
         cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,struct('pbtmethod','pbt2x',...
         'interpV',job.extopts.pbtres,'extract_pial_white',mod(job.extopts.SRP,10), ...
         'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
-        'inv_weighting',job.extopts.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior)); 
+        'inv_weighting',job.extopts.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior),job); 
     end
   end
   
@@ -1145,7 +1146,7 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
 
 return
 
-function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,job] = cat_main_SPMpp(Ysrc,Ycls,Yy,job,res)
+function [Ycls,Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,job] = cat_main_SPMpp(Ysrc,Ycls,Yy,job,res)
 %% SPM segmentation input  
 %  ------------------------------------------------------------------------
 %  Here, DARTEL and PBT processing is prepared. 
@@ -1161,7 +1162,38 @@ function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,job] = cat_main_SPMpp(Ysrc,Yc
   qa.subjectmeasures.WMH_WM_rel = nan;  % relative WMH volume to WM without PVE
   qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE in cm^3
 
-  % create (resized) label map and brainmask
+  vx_vol  = sqrt(sum(res.image(1).mat(1:3,1:3).^2));  
+
+  %% Update Ycls: cleanup on original data
+  Yb = Ycls{1} + Ycls{2} + Ycls{3}; 
+  for i=1:numel(Ycls)
+    [Pc(:,:,:,i),BB] = cat_vol_resize(Ycls{i},'reduceBrain',repmat(job.opts.redspmres,1,3),2,Yb); %#ok<AGROW>
+  end 
+  Pc = cat_main_clean_gwc(Pc,round(1./mean(vx_vol)),2);
+  for i=1:3, Ycls{i} = cat_vol_resize(Pc(:,:,:,i),'dereduceBrain',BB); end; clear Pc Yb; 
+ 
+  %% Update Ycls: cleanup on original data
+  if numel(Ycls)==3
+    % in post-mortem data there is no CSF and CSF==BG
+    Yb     = Ycls{1} + Ycls{2}; 
+    [Yb,R] = cat_vol_resize(single(Yb),'reduceV',vx_vol,1,32,'meanm');     % use lower resolution to save time 
+    Yb     = cat_vol_morph(Yb>128,'ldo',3,R.vx_volr);                      % do some cleanup 
+    Yb     = cat_vol_morph(Yb,'ldc',8,R.vx_volr);                          % close mask (even large ventricles)
+    Yb     = cat_vol_morph(Yb,'dd',1,R.vx_volr);                           % add 1 mm to have some CSF around the brain and simpliefy PVEs
+    Yb     = cat_vol_resize(smooth3(Yb),'dereduceV',R)>0.5;                % reinterpolate image and add some space around it
+    
+    Ycls{3} = cat_vol_ctype(single(Ycls{3}) .* Yb); 
+    Ycls{4} = cat_vol_ctype(255 * (1-Yb));
+  else
+    Yb = Ycls{1} + Ycls{2} + Ycls{3}; 
+  end
+  for i=1:numel(Ycls)
+    [Pc(:,:,:,i),BB] = cat_vol_resize(Ycls{i},'reduceBrain',repmat(job.opts.redspmres,1,3),2,Yb);
+  end 
+  Pc = cat_main_clean_gwc(Pc,round(1./mean(vx_vol)),2);
+  for i=1:3, Ycls{i} = cat_vol_resize(Pc(:,:,:,i),'dereduceBrain',BB); end; clear Pc Yb; 
+  
+  %% create (resized) label map and brainmask
   Yp0  = single(Ycls{3})/5 + single(Ycls{1})/5*2 + single(Ycls{2})/5*3;
   Yb   = Yp0>0.5;
   
@@ -1179,7 +1211,7 @@ function [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,job] = cat_main_SPMpp(Ysrc,Yc
   job.extopts.inv_weighting = T3th(3)<T3th(2);
   job.inv_weighting         = T3th(3)<T3th(2);
   job.useprior              = '';
-
+  
   % the intensity normalized images are here represented by the segmentation 
   Ym   = Yp0/255*5/3;
   Ymi  = Yp0/255*5/3; 

@@ -51,6 +51,42 @@ function varargout=cat_vol_resize(T,operation,varargin)
       def.lazy            = 0;
       job                 = cat_io_checkinopt(job,def); 
       
+      if strcmp( job.prefix , 'auto' )
+        if isfield(job,'restype') && (isfield(job.restype,'Pref') || isfield(job.restype,'res'))
+          if isfield(job.restype,'Pref') && ~isempty(job.restype.Pref) && ~isempty(job.restype.Pref{1})
+            job.prefix = 'rimg_'; 
+          elseif isfield(job.restype,'res') && ~isempty(job.restype.res)
+            if numel(job.restype.res)==1
+              if job.restype.res == 0
+                job.prefix = 'rorg_';
+              else
+                job.prefix = sprintf('r%0.2f_',job.restype.res);
+              end
+            elseif numel(job.restype.res)==3
+              job.prefix = sprintf('r%0.2fx%0.2fx%0.2f_',job.restype.res); 
+            end
+          end
+        elseif isfield(job,'restype') && isfield(job.restype,'scale') 
+          if any( job.restype.scale~=1 )
+            % handle scaling 
+            if  numel(job.restype.scale)==3
+              job.prefix = sprintf('rx%0.2fx%0.2fx%0.2f_',job.restype.scale);  
+            elseif  numel(job.restype.scale)==1
+              if job.restype.scale == 1
+                job.prefix = 'rorg_';
+              else
+                job.prefix = sprintf('rx%0.2f_',repmat( job.restype.scale(1) , 1 , 3));
+              end
+            else
+              job.prefix = sprintf('rx%0.2f_',job.restype.scale(1));  
+            end
+          else
+            job.prefix = 'rorg_';
+          end
+        end
+      end
+
+      
       for fi = 1:numel(job.data)
         stimef      = clock;
         fnameres    = spm_file(job.data{fi},'prefix',job.prefix); 
@@ -102,7 +138,12 @@ function varargout=cat_vol_resize(T,operation,varargin)
                 spm_smooth(Y, Y, fs );
               end
               
-              [Y,res] = cat_vol_resize(Y,'interphdr',V,job.restype.res,rem(job.interp,1000));
+              if all(job.restype.res == 0)
+                vx_vol = sqrt(sum(V.mat(1:3,1:3).^2)); 
+                res = struct('hdrO',V,'hdrN',V,'sizeO',size(Y),'sizeN',size(Y),'resO',vx_vol,'resN',vx_vol); 
+              else
+                [Y,res] = cat_vol_resize(Y,'interphdr',V,job.restype.res,rem(job.interp,1000));
+              end
             else
               error('Undefined setting.');            
             end
@@ -129,7 +170,7 @@ function varargout=cat_vol_resize(T,operation,varargin)
           else
             error('Undefined setting.');            
           end
-          
+                    
           if isfield(Vo,'private'), Vo = rmfield(Vo,'private'); end
           
           if exist(fnameres,'file'), delete(fnameres); end %strcmp(job.data{fi},fnameres) && 

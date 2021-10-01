@@ -256,8 +256,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   warning('off','MATLAB:tex')
 
   % print header
-  hd = text(0,0.99,  ['Segmentation: ' spm_str_manip(res.image0(1).fname,'k80d') '       '],...
-    'FontName',fontname,'FontSize',fontsize+1,'color',fontcolor,'FontWeight','Bold','Interpreter','none','Parent',ax);
+  npara  = '\color[rgb]{0  0   0}'; 
+  cpara  = '\color[rgb]{0  0   1}'; 
+  if isfield(res,'spmpp') && res.spmpp, SPMCATstr = [cpara 'SPM-']; else, SPMCATstr = 'CAT-'; end
+  hd = text(0,0.99,  [SPMCATstr 'Segmentation: ' npara strrep( strrep( spm_str_manip(res.image0(1).fname,'k80d'),'\','\\'), '_','\_') '       '],...
+    'FontName',fontname,'FontSize',fontsize+1,'color',fontcolor,'FontWeight','Bold','Interpreter','tex','Parent',ax);
 
   % replace tex color settings 
   if mean(fontcolor)>0.5
@@ -662,7 +665,8 @@ if 1
   
   % test mesh display
   idi   = 1; 
-  Phull = cat_surf_create_TPM_hull_surface(res.tpm,strcmp(job.extopts.species,'human'));
+  Phull = cat_surf_create_TPM_hull_surface(res.tpm,strcmp(job.extopts.species,'human'),min( job.extopts.gcutstr , ...
+    ~isfield(res,'spmpp') && ~(isfield(res,'spmpp') && res.spmpp) )>0 );
   try, spm_orthviews('AddContext',idi); end % need the context menu for mesh handling
   try
     warning('off','MATLAB:subscripting:noSubscriptsSpecified');

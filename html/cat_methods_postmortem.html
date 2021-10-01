@@ -1,0 +1,81 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link rel="stylesheet" type="text/css" href="spm.css" />
+    <link rel="stylesheet" type="text/css" href="../spm.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  
+  <body>
+    <div id="header" style="background: black url('images/contact.jpg') right;">
+      <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
+      <p>
+          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
+          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');">Department of Neurology</a> | 
+          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');">Department of Psychiatry</a> | 
+          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
+      </p>
+      <div id="breadcrumbs">
+        <a href="cat.html">CAT</a> > <a href="cat_methods.html">Methods</a> > <a href="cat_methods_postmortem.html">Preprocessing of post-mortem data</a>
+      </div>
+    </div>
+      
+    <div id="content">
+      <h2>Preprocessing of post-mortem data:</h2>
+      <p>
+	      The processing of ultra-high resolution PD-weighted post-mortem data (<a href="Edlow2019">Edlow et al., 2019</a>) with up to 0.2 mm was tested in the CAT12.8 revision 1880.
+	      We have prepared two main methods for processing such images in expert mode: (i) using the standard CAT pipeline or (ii) using SPM for segmentation, which benefits greatly from the higher resolution, followed by the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite_spm');">CAT SPM preprocessing batch</a>. 
+	      In both scenarios, we propose to adjust some parameters, namely bias correction, skull stripping, processing accuracy and surface reconstruction parameters, to take advantage of the full resolution (<a class="function" href="matlab:cat12('developer');">start CAT12 in developer mode</a>, <a class="function" href="matlab:open(fullfile(spm('dir'),'toolbox','cat12','batches','cat12_postmortem.m'));">edit</a> / <a class="function" href="matlab:spm_jobman('interactive',fullfile(spm('dir'),'toolbox','cat12','batches','cat12_postmortem.m'));">load SPM/CAT post-mortem batch</a>). 
+	      CAT is generally optimised for T1-weighted images, while PD/T2-weighted images run on a more general pipeline, e.g. without specific routines such as <i>local adaptive segmentation</i> (LAS).
+	    </p><p> 
+		    The down-sampling was original included to support faster tests but in can also help to improvement the SNR (see Figure <a href="#Fig1">1</a>) that can help to model the brain and correct inhomogeneities (see Figure <a href="#Fig2">2A</a> and <a href="#Fig2">2B</a>).
+		    Moreover, it helped limited the data-range of the input data to help the tissue segmentation. 
+		    We also tried to adopt the number of gaussians per tissue class that do not allow clear suggestions.
+	      However, due to the lack of test data we were only able to test some general aspects and suggest testing further settings or requested additional support. 
+	    </p>
+      
+      <!-- image 1 -->
+      <div>
+	        
+        <p style="text-align:justify; width: 90%" class="img" style=";" id="Fig1" align="center">
+          <img src="images/cat_methods_downsampling.jpg" width=100% height=auto alt="Classical and optimized down-sampling of images" >
+        	<br><br>
+	      	<b>Fig. 1:</b> Reducing the image resolution allows optimising the signal-to-noise ratio by local averaging similar to the partial-volume-effect. Compared to the classical downsampling (B) of the original image (A) the lower amount of noise can improve the image preprocessing. 
+
+The reduction of image resolution allows optimization of the signal-to-noise ration by local averaging without blurring the image. Although the simple classic down-sampling (B) of the original image (A) generally looks firmer it still suffers by the original noise that troubles the preprocessing, whereas the optimized reduction (C) is more balanced. 
+        </p>
+      </div>
+            
+      <!-- image 1 - maybe you have to add also one image with 0.2 mm -->
+      <div>
+        <p style="text-align:justify; width: 90%;" class="img" id="Fig2" align="center">
+          <img src="images/cat_methods_postmortem.jpg" width=100% height=auto alt="CAT preprocessing of post-mortem data" >
+        <br><br>
+            <b>Fig. 2:</b> Results of CAT12 preprocessing (A,B) and CAT12 preprocessing based on SPM12 tissue maps (C,D) for a post-mortem PD-weighted image shown in Figure <a href="#Fig1">1</a>.  Downsampling to 0.8 mm improves the signal-to-noise ratio, contributes to better correction of image inhomogeneity (see occipital lobe).  SPM12 segmentation benefits greatly from the higher resolution (<=0.5 mm; C), which allows to capture tiny structures modelled as partial volume effects by CAT-AMAP segmentation, even at lower resolution (B).  Due to the very limited amount of images and the rare applications, the processing of ultra-high resolution post-mortem data is still at a rather early stage of development.
+      </div>
+      
+     	    
+	    
+	    <!-- Cite -->
+	    <h3>References:</h3>
+	    <ul>
+		  	<li id="Edlow2019">
+			  	Edlow, B.L., Mareyam, A., Horn, A., Polimeni, J.R., Witzel, T., Tisdall, M.D., Augustinack, J.C., Stockmann, J.P., Diamond, B.R., Stevens, A., Tirrell, L.S., Folkerth, R.D., Wald, L.L., Fischl, B.R., van der Kouwe, A., 2019. <i>7 Tesla MRI of the ex vivo human brain at 100 micron resolution.</i> Sci. Data 6, 1-10. <a>doi:10.1038/s41597-019-0254-8</a> 
+			 	</br>
+			    Data: <a>https://kottke.org/19/07/the-highest-resolution-mri-scan-of-a-human-brain</a>	
+			  </li>
+		  <!--
+	      <li>
+			    Dahnke, R., Ziegler, G., and Gaser, C. (2019). Detection of White Matter Hyperintensities in T1 without FLAIR. Presented at the Human Brain Mapping Conference, Rome. DOI: <a href="matlab:web('https://dx.doi.org/10.13140/RG.2.2.26753.20326','-browser');">10.13140/RG.2.2.26753.20326</a>
+			  </li>
+			-->
+      </ul>
+	            
+    </div>
+    <div id="content"><a href="cat_methods.html">< Methods</a></div>  
+    <div id="footer">
+      <p>Copyright (C) Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
+    </div>
+  </body>
+</html>

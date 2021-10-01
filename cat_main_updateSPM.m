@@ -51,8 +51,22 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
 
 
     if size(P,4)==3
-      % create background class that is required later
-      P(:,:,:,4) = 1 - cat_vol_morph( sum(P(:,:,:,1:2),4) , 'ldc' , 10 ); 
+      %% Skull-stripping of post mortem data (RD202108). 
+      %  Here we only have 3 classes. GM, WM and a combined CSF/background 
+      %  class and we use the GM/WM block to create a rough brain mask that
+      %  is used to artificially seperate between "CSF" and background to  
+      %  obtain some useful CSF volume values and avoid preprocessing 
+      %  problems by other structures. 
+      Yb = smooth3( sum(P(:,:,:,1:2),4) ) > 64;        % initial mask 
+      Yb = cat_vol_morph( Yb , 'ldo' ,   2 , vx_vol );  % (light) opening to remove menignes and (large) unconnected components
+      Yb = cat_vol_morph( Yb , 'dc'  ,  10 , vx_vol );  % major closing to include internal CSF
+      Yb = cat_vol_morph( Yb , 'ldo' ,   5 , vx_vol );  % final opening to remove further menignes
+      Yb = cat_vol_morph( Yb , 'dd'  ,   2 , vx_vol );  % add one mm to avoid to hard skull-strippings that could trouble thickness estimation  
+      Yb = cat_vol_ctype(Yb);                           % convert to uint8 like P  
+     %%
+      for i=1:3, P(:,:,:,i) = P(:,:,:,i) .* Yb; end     % apply masking for major tissues ...
+      P(:,:,:,4) = cat_vol_ctype((1 - Yb) * 255);       % ... and create a new background class
+      Yb = Yb>0.5;                                      % convert to logical 
     end
 
     %% correction of CSF-GM-WM PVE voxels that were miss aligned to skull
@@ -129,8 +143,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
       P(:,:,:,4) = cat_vol_ctype(single(P(:,:,:,4)) + single(P(:,:,:,i)) .* single(~YbA)); 
       P(:,:,:,i) = cat_vol_ctype(single(P(:,:,:,i)) .* single(YbA)); 
     end
-    clear YbA;
-
+    
 
     % RD202006: Correct background (from cat_run_job)
     % RD202007: The noisy zeros background in resliced data (e.g. long avg)
@@ -140,17 +153,23 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
       for i=1:size(P,4)-1, P(:,:,:,i) = P(:,:,:,i) .* cat_vol_ctype(1 - res.bge); end
     end
 
+    %%
     % Cleanup for high resolution data
     % Although the old cleanup is very slow for high resolution data, the   
     % reduction of image resolution removes spatial segmentation information. 
+    % RD202008: This operation has to be done in high-resolution and it is 
+    %           maybe better to avoid the older gcw cleaning step the is
+    %           very very slow. 
     if job.opts.redspmres==0 % already done in case of redspmres
       if max(vx_vol)<1.5 && mean(vx_vol)<1.3
-        for i=1:size(P,4), [Pc1(:,:,:,i),RR] = cat_vol_resize(P(:,:,:,i),'reduceV',vx_vol,job.extopts.uhrlim,32); end %#ok<AGROW>
-        Pc1 = cat_main_clean_gwc(Pc1,1);
-        for i=1:size(P,4), P(:,:,:,i)   = cat_vol_resize(Pc1(:,:,:,i),'dereduceV',RR); end 
-        clear Pc1 Pc2;
+        for i=1:size(P,4), [Pc1(:,:,:,i),BB] = cat_vol_resize(P(:,:,:,i),'reduceBrain',vx_vol,4,YbA); end %#ok<AGROW>
+        Pc1 = cat_main_clean_gwc(Pc1,max(1,min(2,job.extopts.cleanupstr*2)) / mean(vx_vol));
+        Ybb = ones(size(YbA),'uint8'); Ybb(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = uint8(1); 
+        for i=1:size(P,4), P(:,:,:,i) = Ybb.*P(:,:,:,i) + cat_vol_resize(Pc1(:,:,:,i),'dereduceBrain',BB); end 
+        clear Pc1 Ybb;
       end
     end
+    clear YbA;
 
     
 
@@ -324,7 +343,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
     if all(sign(diff(T3th))>0)
       %% Update probability maps
       % background vs. head - important for noisy backgrounds such as in MT weighting
-      if size(P,4)==4 % skull-stripped
+      if size(P,4)==4 || size(P,4)==3 % skull-stripped
         Ybg = ~Yb;
       else
         if sum(sum(sum(P(:,:,:,6)>240 & Ysrc<cat_stat_nanmean(T3th(1:2)))))>10000

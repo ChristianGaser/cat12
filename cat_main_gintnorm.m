@@ -126,7 +126,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
 %           function to separate CSF from WM in the SPM segmentation in 
 %           a future release (CAT12.8?) if you have more test and valiation 
 %           data.
-    if T3th3(1)>T3th3(3) && T3th3(2)>T3th3(3) && T3th3(1)>T3th3(2) % inverse (T2 / PD)
+    if T3th3(1)>T3th3(3) || T3th3(2)>T3th3(3) || T3th3(1)>T3th3(2) % inverse (T2 / PD)
       % RD202006: WM < GM < CSF      
       % Use backup funtion in case of inverse contrast.
       error('cat_main_gintnorm:runbackup','Run PD/T2 processing.');
@@ -673,7 +673,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
           Ybge = cat_vol_localstat(Ysrc,Ybge,2,1) / cat_stat_nanmean(Ysrc(Ybge(:)>0));
         end
         %% final correction map with correction for double counts
-        Yi   =  Ywmi/clsintv(2) + Ygmi/clsintv(1) + Ycmi/cat_stat_nanmean(Ycmi(Ycmi(:)>0)) + single(Ybge); % and also the eroded background  
+        Yi   =  Ywmi/clsintv(2) + Ygmi/clsintv(1) + Ycmi/cat_stat_nanmean([clsintv(3),cat_stat_nanmean(Ycmi(Ycmi(:)>0))]) + single(Ybge); % and also the eroded background  
         if ~debug, clear Ygmi Ywmi Ycmi Ybge; end 
         Yim  =  Ycm &  Ygm &  Ywm; Yi(Yim) = Yi(Yim) ./ ( Ywm(Yim) + Ycm(Yim) + Ywm(Yim));
         Yim  =  Ycm &  Ygm & ~Ywm; Yi(Yim) = Yi(Yim) ./ ( Ycm(Yim) + Ygm(Yim));
@@ -688,7 +688,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
         end
         %% correction 
         %  ds('d2sm','a',1,Ysrc/clsint(3),Ysrc ./ Yi / clsint(3),140)
-        Ysrc = Ysrc ./ Yiw; 
+        Ysrc = Ysrc ./ max(eps,Yiw); 
       end
       
       
@@ -715,12 +715,18 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
           T3th  = [min(Ysrc(:)) sort( [ clsint(6) clsintv(3) clsintv(1) clsintv(2) clsint(5) ] ) max(Ysrc(:)) ];
         else
           order = [1 2 3 4 6];
-          clsn  = [5 2 5 1 1];
+          if extopts.gcutstr == -2
+            clsn  = [1 1 1 1 1];
+          else
+            clsn  = [5 2 5 1 1]; % RD202108: only useful for T1?
+          end
           T3th4 = zeros(1,5);
           for i = 1:5
             % try to use lower resolution to reduce noise
-            Yclsr = Ycls{ order(i) }>255 | cat_vol_morph( Ycls{ order(i) }>128 , 'e' ); 
-            [Ysrcr,Yclsr] = cat_vol_resize({(Ysrc .* Yclsr) - minYsrc,single(Yclsr)},'reduceV',vx_vol,2.1,16,'meanm'); 
+            Yclsr = Ycls{ order(i) }>255 | cat_vol_morph( Ycls{ order(i) }>192 , 'e' ); 
+            %[Ysrcr,Yclsr] = cat_vol_resize({(Ysrc .* Yclsr) -
+            %minYsrc,single(Yclsr)},'reduceV',vx_vol,1.1,16,'meanm'); %
+            %RD202108 cause problems in PD ex-vivo
             try
               [Tmn,Tsd,Tn] = cat_stat_kmeans( Ysrcr(Yclsr(:)>0.9)  + minYsrc , clsn( i ) );
               T3th4(i) = Tmn(Tn==max(Tn));
@@ -739,7 +745,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
         T3thx = [0,sort([BGth,1,2,3]),4];        
       end
       
-      % noise
+      %% noise
       if ~exist('noise','var')
         Ynw   = cat_vol_localstat(Ysrc,Ycls{3}>128,2,4);
         Ync   = cat_vol_localstat(Ysrc,Ycls{2}>128,2,4); 
@@ -749,6 +755,10 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
       
 % RD202006: Add contrast-rating to control WMHC and AMAP (CAT12.8?)
 
+      if extopts.gcutstr == -2
+        % ex-vivo CSF~BG
+        T3thx(3) = 0.2; 
+      end
 
       % Tth
       if ~exist('Tth','var')
@@ -757,7 +767,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
       end
   
       
-      % Ym 
+      %% Ym 
       Ym = Ysrc - minYsrc;
       Tth.T3th = Tth.T3th - minYsrc; 
       for i=2:numel(T3th)

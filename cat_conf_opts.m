@@ -298,9 +298,9 @@ tol.help    = { ...
 tol.def    = @(val)cat_get_defaults('opts.tol', val{:}); 
 tol.labels = {'average (default)' 'high (slow)' 'ultra high (very slow)'};
 tol.values = {1e-4 1e-8 1e-16};
-if 0 %expert
-  tol.labels = [{'ultra low (superfast)' 'low (fast)'} tol.labels];
-  tol.values = [{1e-1 1e-2} tol.values];
+if expert>1 % developer
+  tol.labels = [{'ultra low (superfast)' 'low (fast)'} tol.labels {'insane'}];
+  tol.values = [{1e-1 1e-2} tol.values {1e-32}];
 end
 
 % single parameter 

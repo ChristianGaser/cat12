@@ -4,7 +4,7 @@ function run = cat_io_rerun(files,filedates,verb)
 % file or date. For instance file is the result of another file that was 
 % changed in the meantime, it has to be reprocessed. 
 %
-%  run = cat_io_rerun(files,filedates)
+%  run = cat_io_rerun(files,filedates,verb)
 % 
 %  run      .. logical vector with the number of given files
 %              cell if directories or wildcards are used
@@ -12,10 +12,10 @@ function run = cat_io_rerun(files,filedates,verb)
 %  filedat  .. filenames (cellstr or char) or datetimes or datenum
 %
 % Examples: 
-%  1) Is the working directory younger than the SPM dir?
+%  1) Is the working directory younger/newer than the SPM dir?
 %     cat_io_rerun(pwd,spm('dir'); 
 %
-%  2) Is the working directory younger than one month?
+%  2) Is the working directory younger/newer than one month?
 %     cat_io_rerun(pwd,clock - [0 1 0 0 0 0]) 
 %   
 %  3) Is this function younger than one year?
@@ -47,11 +47,23 @@ function run = cat_io_rerun(files,filedates,verb)
     end
   end
   
-  run = ones(size(files)); 
+  run = ones(size(files));
+  exf = ones(size(files)); 
   for fi = 1:numel(files)
     [pp,ff,ee] = spm_fileparts(files{fi}); files{fi} = fullfile(pp,[ff ee]); % remove additional dimensions ",1" 
     if ~exist(files{fi},'file')
-      run(fi) = 1; 
+      if numel(files)>1
+        run{fi} = 1; 
+        if verb
+          fprintf(' Input file 2-%02d does not exist: %40s\n',fi,spm_str_manip( files{fi}, 'a40'));
+        end
+      else
+        run(fi) = 1; 
+        if verb
+          fprintf(' Input file 2 does not exist: %43s\n',spm_str_manip( files{fi}, 'a43'));
+        end
+      end
+      exf = 0; 
     else 
       fdata = dir(files{fi});
       if numel(fdata)>1
@@ -63,24 +75,48 @@ function run = cat_io_rerun(files,filedates,verb)
         if exist(filedates{fi},'file')
           fdata2 = dir(filedates{fi});
           if verb
-            fprintf('Input 1: %50s: %s\n',fdata.name,datestr(fdata.datenum)); 
-            fprintf('Input 2: %50s: %s\n',fdata2.name,datestr(fdata2.datenum));
+            if numel(files)==1
+              fprintf(' Input file 1: %50s: %s\n',spm_str_manip( fdata.name , 'a50'),datestr(fdata.datenum) ); 
+              fprintf(' Input file 2: %50s: %s\n',spm_str_manip( fdata2.name, 'a50'),datestr(fdata2.datenum));
+            else
+              if fi == 1
+                fprintf(' Input file 1:     %50s: %s\n',   spm_str_manip( fdata.name ,'a50'),datestr(fdata.datenum) ); 
+              end
+              fprintf(' Input file 2-%02d: %50s: %s\n',fi,spm_str_manip( fdata2.name,'a50'),datestr(fdata2.datenum));
+            end
           end
           if numel(fdata)>1
-            run{fi} = [fdata(:).datenum] < fdata2.datenum;
+            run{fi} = [fdata(:).datenum] > fdata2.datenum;
           else
-            run(fi) = fdata.datenum < fdata2.datenum;
+            run(fi) = fdata.datenum > fdata2.datenum;
           end
         end
       elseif ~isempty(filedates) && isdatetime( filedates(fi,:) )
         if numel(fdata)>1
-          run{fi} = [fdata(:).datenum] < datenum( filedates(fi,:) );
+          run{fi} = [fdata(:).datenum] > datenum( filedates(fi,:) );
         else
-          run(fi) = fdata.datenum < datenum( filedates(fi,:) );
+          run(fi) = fdata.datenum > datenum( filedates(fi,:) );
         end
       else
-        run(fi) = 1;
+        if numel(fdata)>1
+          run{fi} = 1; 
+        else
+          run(fi) = 1;
+        end
       end
+    end
+  end
+  if verb 
+    if (iscell(run) && any(cell2mat(run))) || ( ismatrix(run) && any(run) )
+      if all(exf)
+        cat_io_cprintf([0.5 0.0 0.0],' Reprocessing is required. \n'); 
+      elseif all(exf==0) && numel(files)>1
+        cat_io_cprintf([0.5 0.0 0.0],' (Re)processing is required. \n'); 
+      else
+        cat_io_cprintf([0.5 0.0 0.0],' Processing is required. \n');
+      end
+    else
+      cat_io_cprintf([0.0 0.5 0.0],' Reprocessing is NOT required. \n'); 
     end
   end
 end
