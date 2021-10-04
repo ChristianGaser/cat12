@@ -753,9 +753,16 @@ function varargout=cat_vol_resize(T,operation,varargin)
           Vt.pinfo = repmat([Vt.pinfo(1);0],1,size(T,3));
           Vi.pinfo = repmat([Vt.pinfo(1);0],1,size(T,3));
         end
+        % update datatype
         dt = spm_type(Vt.dt(1)); 
         dt = cat_io_strrep(dt,{'float32','float64'},{'single','double'}); 
-        eval(sprintf('T = %s(T);', dt ));
+        if any(~cellfun('isempty',strfind({'single','double'},dt)))
+          eval(sprintf('T = %s(T);', dt ));
+        else
+          Vt.dt(1) = spm_type('float32'); 
+          T  = single(T); 
+        end
+        % setup images
         Vt.dat(:,:,:) = T(:,:,:); 
         Vi.dat(:,:,:) = T(:,:,:); 
         
