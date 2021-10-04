@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1883 | dahnke | 2021-10-01 15:00:42
+r1884 | dahnke | 2021-10-04 13:26:07
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main1639.m
+M       cat_vol_resize.m
+
+(1) Fixed:      Corrected bug with uint8 data in cat_vol_resize and resize batch.
+(2) Fixed:      Corrected calls of cat_main_gintnorm in cat_main1639. 
+
+------------------------------------------------------------------------
+r1883 | dahnke | 2021-10-01 15:02:31 +0200 (Fri, 01 Oct 2021) | 83 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -82,6 +93,7 @@ PD-weighted ultra-high-resolution data for the SPM and CAT preprocessing.
               cat_surf_create_TPM_hull_surface 
 (20) Fixed:   Corrected incorrect use of exist in surface render in cat_main_reportfig.
 (21) New:     Added post-mortem batch batch/cat12_postmortem.m
+
 
 ------------------------------------------------------------------------
 r1882 | gaser | 2021-09-30 12:24:45 +0200 (Thu, 30 Sep 2021) | 15 lines
