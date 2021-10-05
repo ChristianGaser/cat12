@@ -75,6 +75,7 @@ function varargout = cat_surf_parameters(job)
   def.surfaces.OS = 0; % create outer surface
   
   job = cat_io_checkinopt(job,def);
+  job.FS_HOME = char(job.FS_HOME); 
   if isfield(job,'tGI')
     if any(isinf(job.tGI)), job.tGI(isinf(job.tGI)) = -1; end
     job.tGI = unique(job.tGI);
@@ -256,7 +257,7 @@ function varargout = cat_surf_parameters(job)
             if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(Parea,'link','cat_surf_display(''%s'')')); end
           end
 
-          if nargout==1, varargout{1}.([sides{si} 'Parea' ]){1} = Parea; end
+          if nargout==1, varargout{1}.([sides{si} 'Parea' ]){i} = Parea; end
           measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
         end
 
@@ -412,7 +413,7 @@ function varargout = cat_surf_parameters(job)
           else
             stime = clock; 
 
-            if ~cat_io_rerun(PlGI,Pxname) && job.lazy  
+            if ~cat_io_rerun(PlGI,Pxname) && job.lazy 
               % check for old unremoved temporar data
               Ppialfs  = fullfile(pp,strrep(ff,'central','pialfs')); 
               [lpp,lff,lee] = spm_fileparts(Ppialfs);  
@@ -425,7 +426,7 @@ function varargout = cat_surf_parameters(job)
                 rmdir(tmpdir);
               end
 
-              if nargout==1, varargout{1}.([sides{si} 'PlGI'  ]){1} = PlGI; end
+              if nargout==1, varargout{1}.([sides{si} 'PlGI'  ]){i} = PlGI; end
               if job.verb, fprintf('%sexist - Display %s\n',nstr,spm_file(PlGI,'link','cat_surf_display(''%s'')')); end
             else   
               Ppial = cat_surf_fun('pial',Pxname,Ppbt);
@@ -507,7 +508,7 @@ function varargout = cat_surf_parameters(job)
               %% dispaly something
               if exist(job.FS_HOME,'dir')
                 if exist(PlGI,'file')
-                  if nargout==1, varargout{1}.([sides{si} 'PlGI'  ]){1} = PlGI; end
+                  if nargout==1, varargout{1}.([sides{si} 'PlGI'  ]){i} = PlGI; end
                   if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(PlGI,'link','cat_surf_display(''%s'')')); end
                 else
                   cat_io_cprintf('err',sprintf('%sERROR - no output %s\n',nstr,PlGI)); 

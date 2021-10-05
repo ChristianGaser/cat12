@@ -52,7 +52,7 @@ function varargout = cat_surf_surf2roi(job)
     
   % split job and data into separate processes to save computation time
   if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
-    cat_parallelize(job,mfilename,'cat_surf_surf2roi');
+    cat_parallelize(job,mfilename,'cdata'); %,'cat_surf_surf2roi');
     return
   elseif isfield(job,'printPID') && job.printPID 
     cat_display_matlab_PID
@@ -118,17 +118,40 @@ function varargout = cat_surf_surf2roi(job)
         sinfo = cat_surf_info(job.cdata{ti}{si},0);
         
         if all(~cell2mat(strfind({'central','hull','sphere','sphere.reg','resampledBySurf2roi'},sinfo.dataname)))
-          
+          %%
           if size(lrdata,1) > 150000
             type = '164k';
           else
             type = '32k';
           end
           
+          % RD202108: resampled data but without given filename information
+          if size(lrdata,1) == 163842 
+            sinfo.resmapled = 1; 
+          elseif size(lrdata,1) == 32492
+            sinfo.resampled_32k = 1; 
+          end
+          
+          % RD202108: data without structured filename
+          if isempty(sinfo.name)
+            sinfo.name = sinfo.ff;
+          end
+          
           % load surface cdata 
-          if job.resamp && sinfo.resampled==0 % do temporary resampling
+          if job.resamp && (sinfo.resampled==0 && sinfo.resampled_32k==0) % do temporary resampling
             lCS = get_resampled_values(job.cdata{ti}{si},job.debug,type);
             rCS = get_resampled_values(cat_surf_rename(sinfo,'side','rh'),job.debug,type); 
+          elseif strcmp(sinfo.side,'mesh')
+            switch sinfo.ee
+              case '.gii'
+                CS  = gifti(job.cdata{ti}{si});
+                CS  = export(CS,'patch');
+                CS  = CS.facevertexcdata;
+              otherwise
+                CS = cat_io_FreeSurfer('read_surf_data',job.cdata{ti}{si});
+            end
+            lCS.cdata = CS(1:32492);
+            rCS.cdata = CS(32492:end); 
           else
             switch sinfo.ee
               case '.gii'
@@ -166,6 +189,8 @@ function varargout = cat_surf_surf2roi(job)
               else
                 fieldname = sprintf('%s_%s',FN{ai},sinfo.dataname);
               end
+              fieldname = cat_io_strrep(fieldname,num2cell(char([33:47,124:1024])),'_');
+              fieldname = cat_io_strrep(fieldname,'__','_');
               switch FN{ai}
                 case {'min','max'},           nanfunc = ''; 
                 case {'mean','median','std'}, nanfunc = 'cat_stat_nan';
