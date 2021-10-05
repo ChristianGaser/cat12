@@ -53,6 +53,7 @@ function vout = cat_surf_resamp(varargin)
     
     % classical simple input structure
     if iscell(varargin{1}.data_surf)
+      %%
       P = ''; 
       for i = 1:numel(varargin{1}.data_surf)
         if iscell(varargin{1}.data_surf)
@@ -168,6 +169,7 @@ function vout = cat_surf_resamp(varargin)
    
     % define output name for lazy option
     surfacefield = 'central'; 
+    %%
     if job.lazy
       for j=1:length(hemistr)
         hemi = hemistr{j};
@@ -180,11 +182,13 @@ function vout = cat_surf_resamp(varargin)
         else
           Pfwhm = [strrep(Pcentral(1:k(2)-1),surfacefield,[pname str_resamp]) Pcentral(k(2):end)];
         end
+
         if job.merge_hemi
-          Pfwhm    = [strrep(Pfwhm(1:3)   ,'lh.','mesh.') Pcentral(4:end)]; 
+          k = strfind(Pfwhm,'.');
+          Pfwhm    = [strrep(Pfwhm(1:k(2)),'.lh.','.mesh.') Pfwhm(k(2)+1:end)]; 
           %Pcentral = [strrep(Pcentral(1:3),'lh.','mesh.') Pcentral(4:end)]; 
         end
-        
+        Pfwhm = strrep(Pfwhm,surfacefield,[pname str_resamp]);
         
         if j==1
           Psdata{i} = fullfile(pp,Pfwhm);
@@ -196,7 +200,7 @@ function vout = cat_surf_resamp(varargin)
         end
       end
     end
-    
+    %%
     if ~job.lazy || (job.merge_hemi && cat_io_rerun(Psdata{i},P(i,:)) ) || ...
         (~job.merge_hemi && cat_io_rerun(lPsdata{i},P(i,:)) && cat_io_rerun(rPsdata{i},P(i,:)) ) 
 

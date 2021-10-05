@@ -285,7 +285,7 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
     
   % quality measures (expert)
   QMfield               = cfg_menu;
-  QMfield.tag           = 'xmlfields';
+  QMfield.tag           = 'xmlfieldsQualityMeasures';
   QMfield.name          = 'Image quality';
   QMfield.labels        = {
     'Noise Contrast Ratio (NCR)'
@@ -305,7 +305,7 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   
   % quality ratings 
   QRfield               = cfg_menu;
-  QRfield.tag           = 'xmlfields';
+  QRfield.tag           = 'xmlfieldsQualityRating';
   QRfield.name          = 'Image quality ratings';
   QRfield.labels        = {
     'Image Quality Rating (IQR)'
@@ -315,19 +315,19 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
     'Minimum tissue contrast'
     };
   QRfield.values        = {
-    'qualitratings.IQR'
-    'qualitratings.NCR'
-    'qualitratings.ICR'
-    'qualitratings.res_RMS'
-    'qualitratings.contrast'
+    'qualityratings.IQR'
+    'qualityratings.NCR'
+    'qualityratings.ICR'
+    'qualityratings.res_RMS'
+    'qualityratings.contrast'
     };
-  QRfield.val           = {'qualitratings.NCR'};
+  QRfield.val           = {'qualityratings.IQR'};
   QRfield.help          = {'CAT preprocessing image quality ratings (normalized marks).' ''};
   
   
   % surface measures
   SMfield               = cfg_menu;
-  SMfield.tag           = 'xmlfields';
+  SMfield.tag           = 'xmlfieldsSurfMeasure';
   SMfield.name          = 'Surface quality';
   SMfield.labels        = {
     ... 'Surface Euler number'
@@ -351,7 +351,7 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   
   % segmenation measures
   USMfield               = cfg_menu;
-  USMfield.tag           = 'xmlfields';
+  USMfield.tag           = 'xmlfieldsSPMmeasures';
   USMfield.name          = 'Unified segmentation validation measures';
   USMfield.labels        = {
     'SPM log-likelyhood'
@@ -392,7 +392,7 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   
   % individual measures
   IMfield               = cfg_menu;
-  IMfield.tag           = 'xmlfields';
+  IMfield.tag           = 'xmlfieldsMorphMeasures';
   IMfield.name          = 'Morphometric measures';
   IMfield.labels        = {
     'Total Intracranial Volume (TIV)'
@@ -430,7 +430,7 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   
   % individual measures
   PDfield               = cfg_menu;
-  PDfield.tag           = 'xmlfields';
+  PDfield.tag           = 'xmlfieldsQualityMeasures';
   PDfield.name          = 'Predefined XML fields';
   PDfield.labels        = {
     'Total Intracranial Volume (TIV)'
@@ -497,15 +497,15 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   %  opt.subsets     = false(1,numel(data)); 
   
   xmlfield0           = cfg_exbranch;
-  xmlfield0.tag       = 'xmlfields';
-  xmlfield0.name      = 'Data field (complex)';
+  xmlfield0.tag       = 'xmlfieldsFull';
+  xmlfield0.name      = 'Data field (full)';
   xmlfield0.val       = { ftitle  , fname , fspec , ylim}; 
   xmlfield0.help      = {'Specify set properties such as name or color' ''};
   
   
   xmlfield            = cfg_entry;
-  xmlfield.tag        = 'xmlfields';
-  xmlfield.name       = 'Data field (simple)';
+  xmlfield.tag        = 'xmlfieldsSimple';
+  xmlfield.name       = 'Data field';
   xmlfield.help       = { 
    ['Specify field for data extraction that result in one value per file, e.g., ' ...
     'measures.vol_rel_CGW(1) to extract the first (CSF) volume value. '] ''};
@@ -523,7 +523,7 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   end
   xmlfields.val       = {};
   xmlfields.num       = [0 Inf];
-  xmlfields.forcestruct;
+  xmlfields.forcestruct = 1;
   xmlfields.help      = {'Specify manually grouped XML files.'};
   
   % ------
@@ -606,7 +606,7 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   fnamefields.values  = {fnamefield}; 
   fnamefields.val     = {};
   fnamefields.num     = [0 Inf];
-  fnamefields.forcestruct;
+  %fnamefields.forcestruct = 0;
   fnamefields.help    = {'Selectors to define the subject ID by a given path/filename, e.g., the IXI filename also include a site ID and weighting: "IXI002-Guys-0815-T1.nii'};
   
   % ############ improve help

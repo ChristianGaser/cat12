@@ -614,7 +614,7 @@ for i=1:size(P,1)
   end
 
   % only write and display files if some voxels survived thresholds
-  if ~isempty(Qh) && ~isempty(Qe)
+  if ~isempty(Qh) && ~isempty(Qe) || 1 % RD202108: it is important to export even empty results to keep the dependencies
     %-Reconstruct (filtered) image from XYZ & T/Z pointlist
     %-----------------------------------------------------------------------
     Y    = zeros(Vspm.dim);
