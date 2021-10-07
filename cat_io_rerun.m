@@ -29,9 +29,17 @@ function run = cat_io_rerun(files,filedates,verb)
 % Jena University Hospital
 % ______________________________________________________________________
 % $Id$
-
+  
   if ~exist('verb','var'), verb = 0; end
   files = cellstr(files);
+
+  % only use that function in developer mode because it's simply too dangerous if files
+  % are not processed if already existing and parameter changed
+  if cat_get_defaults('extopts.expertgui') < 2
+    run = ones(size(files));
+    return
+  end
+  
   if iscellstr(filedates) || ischar(filedates)
     filedates = cellstr(filedates);
     if numel(filedates) == 1

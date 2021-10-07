@@ -29,7 +29,13 @@ end
 if ispc
   CATDir = [CATDir '.w32'];
 elseif ismac
-  CATDir = [CATDir '.maci64'];
+  [stat, output] = system('uname -v');
+  % try to recognize new Apple arm64 processor
+  if ~stat && ~isempty(strfind(output,'ARM64')) && FALSE
+    CATDir = [CATDir '.maca64'];
+  else
+    CATDir = [CATDir '.maci64'];
+  end
 elseif isunix
   CATDir = [CATDir '.glnx86'];
 end  
