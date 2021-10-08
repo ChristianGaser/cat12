@@ -1,5 +1,5 @@
 %-----------------------------------------------------------------------
-% Job saved on 05-Aug-2021 10:59:09 by cfg_util (rev $Rev: 7345 $)
+% Job saved on 05-Aug-2021 10:59:09 by cfg_util (rev $Rev$)
 % spm SPM - SPM12 (7771)
 % cfg_basicio BasicIO - Unknown
 %-----------------------------------------------------------------------
@@ -98,7 +98,7 @@
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 %-----------------------------------------------------------------------
-% $Id: $
+% $Id$
 
 
 % Todo: 

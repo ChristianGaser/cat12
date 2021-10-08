@@ -1,5 +1,128 @@
 ------------------------------------------------------------------------
-r1886 | gaser | 2021-10-07 16:53:08
+r1887 | gaser | 2021-10-08 11:58:21
+
+Changed paths:
+A       CAT.glnx86
+A       CAT.glnx86/CAT_3dVol2Surf
+A       CAT.glnx86/CAT_AddValuesToSurf
+A       CAT.glnx86/CAT_AverageSurfaces
+A       CAT.glnx86/CAT_BlurSurfHK
+A       CAT.glnx86/CAT_Central2Pial
+A       CAT.glnx86/CAT_DeformSurf
+A       CAT.glnx86/CAT_DumpCurv
+A       CAT.glnx86/CAT_DumpSurfArea
+A       CAT.glnx86/CAT_DumpSurfaceRatio
+A       CAT.glnx86/CAT_FixTopology
+A       CAT.glnx86/CAT_FractalDimension
+A       CAT.glnx86/CAT_Hausdorff
+A       CAT.glnx86/CAT_Isometize
+A       CAT.glnx86/CAT_MarkDefects
+A       CAT.glnx86/CAT_RefineMesh
+A       CAT.glnx86/CAT_ResampleSphericalSurf
+A       CAT.glnx86/CAT_ResampleSphericalSurfSPH
+A       CAT.glnx86/CAT_ResampleSurf
+A       CAT.glnx86/CAT_SelfIntersect
+A       CAT.glnx86/CAT_SeparatePolygon
+A       CAT.glnx86/CAT_SmoothConvexity
+A       CAT.glnx86/CAT_SulcusDepth
+A       CAT.glnx86/CAT_Surf2Sphere
+A       CAT.glnx86/CAT_Surf2Vol
+A       CAT.glnx86/CAT_SurfDistance
+A       CAT.glnx86/CAT_WarpSurf
+A       CAT.maca64
+A       CAT.maca64/CAT_3dVol2Surf
+A       CAT.maca64/CAT_AddValuesToSurf
+A       CAT.maca64/CAT_AverageSurfaces
+A       CAT.maca64/CAT_BlurSurfHK
+A       CAT.maca64/CAT_Central2Pial
+A       CAT.maca64/CAT_DeformSurf
+A       CAT.maca64/CAT_DumpCurv
+A       CAT.maca64/CAT_DumpSurfArea
+A       CAT.maca64/CAT_DumpSurfaceRatio
+A       CAT.maca64/CAT_FixTopology
+A       CAT.maca64/CAT_FractalDimension
+A       CAT.maca64/CAT_Hausdorff
+A       CAT.maca64/CAT_Isometize
+A       CAT.maca64/CAT_MarkDefects
+A       CAT.maca64/CAT_RefineMesh
+A       CAT.maca64/CAT_ResampleSphericalSurf
+A       CAT.maca64/CAT_ResampleSphericalSurfSPH
+A       CAT.maca64/CAT_ResampleSurf
+A       CAT.maca64/CAT_SelfIntersect
+A       CAT.maca64/CAT_SeparatePolygon
+A       CAT.maca64/CAT_SmoothConvexity
+A       CAT.maca64/CAT_SulcusDepth
+A       CAT.maca64/CAT_Surf2Sphere
+A       CAT.maca64/CAT_Surf2Vol
+A       CAT.maca64/CAT_SurfDistance
+A       CAT.maca64/CAT_WarpSurf
+A       CAT.maci64
+A       CAT.maci64/CAT_3dVol2Surf
+A       CAT.maci64/CAT_AddValuesToSurf
+A       CAT.maci64/CAT_AverageSurfaces
+A       CAT.maci64/CAT_BlurSurfHK
+A       CAT.maci64/CAT_Central2Pial
+A       CAT.maci64/CAT_DeformSurf
+A       CAT.maci64/CAT_DumpCurv
+A       CAT.maci64/CAT_DumpSurfArea
+A       CAT.maci64/CAT_DumpSurfaceRatio
+A       CAT.maci64/CAT_FixTopology
+A       CAT.maci64/CAT_FractalDimension
+A       CAT.maci64/CAT_Hausdorff
+A       CAT.maci64/CAT_Isometize
+A       CAT.maci64/CAT_MarkDefects
+A       CAT.maci64/CAT_RefineMesh
+A       CAT.maci64/CAT_ResampleSphericalSurf
+A       CAT.maci64/CAT_ResampleSphericalSurfSPH
+A       CAT.maci64/CAT_ResampleSurf
+A       CAT.maci64/CAT_SelfIntersect
+A       CAT.maci64/CAT_SeparatePolygon
+A       CAT.maci64/CAT_SmoothConvexity
+A       CAT.maci64/CAT_SulcusDepth
+A       CAT.maci64/CAT_Surf2Sphere
+A       CAT.maci64/CAT_Surf2Vol
+A       CAT.maci64/CAT_SurfDistance
+A       CAT.maci64/CAT_WarpSurf
+A       CAT.w32
+A       CAT.w32/CAT_3dVol2Surf.exe
+A       CAT.w32/CAT_AddValuesToSurf.exe
+A       CAT.w32/CAT_AverageSurfaces.exe
+A       CAT.w32/CAT_BlurSurfHK.exe
+A       CAT.w32/CAT_Central2Pial.exe
+A       CAT.w32/CAT_DeformSurf.exe
+A       CAT.w32/CAT_DumpCurv.exe
+A       CAT.w32/CAT_DumpSurfArea.exe
+A       CAT.w32/CAT_DumpSurfaceRatio.exe
+A       CAT.w32/CAT_FixTopology.exe
+A       CAT.w32/CAT_FractalDimension.exe
+A       CAT.w32/CAT_Hausdorff.exe
+A       CAT.w32/CAT_Isometize.exe
+A       CAT.w32/CAT_MarkDefects.exe
+A       CAT.w32/CAT_RefineMesh.exe
+A       CAT.w32/CAT_ResampleSphericalSurf.exe
+A       CAT.w32/CAT_ResampleSphericalSurfSPH.exe
+A       CAT.w32/CAT_ResampleSurf.exe
+A       CAT.w32/CAT_SelfIntersect.exe
+A       CAT.w32/CAT_SeparatePolygon.exe
+A       CAT.w32/CAT_SmoothConvexity.exe
+A       CAT.w32/CAT_SulcusDepth.exe
+A       CAT.w32/CAT_Surf2Sphere.exe
+A       CAT.w32/CAT_Surf2Vol.exe
+A       CAT.w32/CAT_SurfDistance.exe
+A       CAT.w32/CAT_WarpSurf.exe
+M       CHANGES.txt
+M       Contents.m
+MM      batches/cat12_postmortem.m
+M       cat_system.m
+M       html/cat.html
+ M      html/cat_methods_postmortem.html
+ M      html/images/cat_methods_downsampling.jpg
+ M      html/images/cat_methods_postmortem.jpg
+
+(1) Changed: Added support of new Apple Silicon processors to cat_system.m 
+             and added new binaries for surface tools.
+------------------------------------------------------------------------
+r1886 | gaser | 2021-10-07 16:55:42 +0200 (Thu, 07 Oct 2021) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +134,7 @@ M       html/cat.html
 (1) Changed: Added recognition of new Apple Silicon processors to cat_system.m 
 (2) Fixed:   Corrected bug in cat_vol_sanlm/cat_io_rerun that always skipped 
              SANLM filter in the last r1885 version.
+
 ------------------------------------------------------------------------
 r1885 | dahnke | 2021-10-05 12:14:25 +0200 (Tue, 05 Oct 2021) | 17 lines
 
