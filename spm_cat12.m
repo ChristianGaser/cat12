@@ -111,7 +111,7 @@ switch lower(deffile)
       %case {'newworldmonkeys','newworldmonkey'},  species = 'monkey_newworld'; speciesdisp = ' (newworld monkeys)';
       %case {'mammals','mammal'},                  species = 'mammal';          speciesdisp = ' (mammal)';
       case {'chimpanzees','chimpanzee'},          species = 'chimpanzee';      speciesdisp = ' (chimpanzee)';
-      case {'macaque','macaques'},    					  species = 'macaque';         speciesdisp = ' (macaque)';
+      case {'macaque','macaques'},                species = 'macaque';         speciesdisp = ' (macaque)';
       case {'baboons','baboon'},                  species = 'baboon';          speciesdisp = ' (baboon)';
       case {'dogs','dog'},                        species = 'dog';             speciesdisp = ' (dogs)';
       otherwise
@@ -245,6 +245,24 @@ spm_help('!Disp',url,'',Fgraph,'Computational Anatomy Toolbox for SPM12');
 [ST, RS] = cat_system('CAT_3dVol2Surf');
 % because status will not give 0 for help output we have to check whether we can find the
 % keyword "Usage" in output
+
+% for mac we need to enable execution because of Apple Gatekeeper
+if ismac && ST == 137
+  [ST, RS] = system('spctl --status');
+  if ~isempty(strfind(RS,'enabled'))
+    cat_io_cmd(sprintf('\nThe following commands will be executed as administrator to allow execution of CAT12 binaries and mex-files.\n Please now type admin password to call sudo\n'),'warning');
+    cmd = ['sudo xattr -r -d com.apple.quarantine ' catdir];
+    [ST, RS] = system(cmd); fprintf([cmd '\n']);
+    cmd = ['sudo find ' catdir ' -name *.mexmac* -exec spctl --add {} \;'];
+    [ST, RS] = system(cmd); fprintf([cmd '\n']);
+    cmd = ['sudo chmod a+x ' catdir '/CAT.mac*/CAT*'];
+    [ST, RS] = system(cmd); fprintf([cmd '\n']);
+    cmd = ['sudo find ' catdir ' -name *.mexmac* -exec xattr -d com.apple.quarantine {} \;'];
+    [ST, RS] = system(cmd); fprintf([cmd '\n']);
+    [ST, RS] = cat_system('CAT_3dVol2Surf');
+  end
+end
+
 if isempty(strfind(RS,'Usage'));
   if ispc
     [ST, RS] = system('systeminfo.exe');
@@ -257,6 +275,7 @@ if isempty(strfind(RS,'Usage'));
     [ST, RS] = system('spctl --status');
     if ~isempty(strfind(RS,'enabled'))
       fprintf('\n\nPlease disable Gatekeeper on MAC OS!\n');
+      web('https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)#Troubleshooting');
     end
   end
   fprintf('\n\nFor future support of your system please send this message to christian.gaser@uni-jena.de\n\n');

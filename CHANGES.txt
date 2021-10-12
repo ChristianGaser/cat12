@@ -1,5 +1,38 @@
 ------------------------------------------------------------------------
-r1887 | gaser | 2021-10-08 11:58:21
+r1888 | gaser | 2021-10-12 15:49:16
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_check_system_output.m
+M       cat_conf_stools.m
+M       cat_io_FreeSurfer.m
+M       cat_long_multi_run.m
+M       cat_main.m
+M       cat_main1639.m
+M       cat_main_LAS.m
+M       cat_main_LAS2.m
+M       cat_main_reportfig.m
+M       cat_run_job.m
+M       cat_run_job1639.m
+M       cat_surf_createCS2.m
+M       cat_surf_results.m
+M       html/cat.html
+M       spm_cat12.m
+
+(1) Changed: Added call to sudo command from spm_cat12 if execution issues for 
+             mac systems occur due to Apple gatekeeper.
+(2) Changed: Slightly changed values fpr volume to surface mapping to ensure
+             that all values are considered in the cortex.
+(3) Changed: Reformatedd cat_io_Freesurfer and added one more file check. 
+(4) Fixed:   Parameter "Affine" was sometimes not created in cat_run_job1639.m. 
+(5) Fixed:   Added some more parameter checks to cat_main_reportfig.m. 
+(6) Fixed:   Corrected progress output in cat_main_LAS.m, cat_main_LAS2.m,
+             cat_main.m and cat_main1639.m.
+(7) Fixed:   Corrected handling of BIDS structure in longitudinal data. 
+
+------------------------------------------------------------------------
+r1887 | gaser | 2021-10-08 11:59:30 +0200 (Fri, 08 Oct 2021) | 121 lines
 
 Changed paths:
 A       CAT.glnx86
@@ -121,6 +154,7 @@ M       html/cat.html
 
 (1) Changed: Added support of new Apple Silicon processors to cat_system.m 
              and added new binaries for surface tools.
+
 ------------------------------------------------------------------------
 r1886 | gaser | 2021-10-07 16:55:42 +0200 (Thu, 07 Oct 2021) | 11 lines
 
