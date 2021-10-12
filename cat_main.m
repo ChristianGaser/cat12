@@ -140,7 +140,6 @@ if ~isfield(res,'spmpp')
   job.extopts.inv_weighting = job.inv_weighting;
   res.ppe.tths.gintnorm.T3th = T3th; 
   res.ppe.tths.gintnorm.Tth  = Tth; 
-  fprintf('%5.0fs\n',etime(clock,stime));
 
   % RD202101: additional intensity correction 
   if 0 && update_intnorm 

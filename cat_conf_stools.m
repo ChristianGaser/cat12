@@ -870,9 +870,9 @@ abs_startpoint.help    = {
   'Absolute position of the start point of the grid along the surface normals in mm according to the surface. Give negative value for a start point outside of the surface (CSF direction, outwards). '
 };
 rel_startpoint = abs_startpoint;
-rel_startpoint.val     = {-0.5};
+rel_startpoint.val     = {-0.6};
 rel_startpoint.help    = {
-  'Relative position of the start point of the grid along the surface normals according to a tissue class. A value of "-0.5" begins at the GM/CSF border and even lower values define a start point outside of the tissue class (CSF direction, outwards). A value of "0" means that the central surface is used as starting point and "0.5" is related to the GM/WM border.'
+  'Relative position of the start point of the grid along the surface normals according to a tissue class. A value of "-0.5" begins at the GM/CSF border and even lower values define a start point outside of the tissue class (CSF direction, outwards) which is the default to ensure that all values are mapped. A value of "0" means that the central surface is used as starting point and "0.5" is related to the GM/WM border.'
 };
 
 % steps
@@ -898,9 +898,9 @@ abs_endpoint.help    = {
   'Absolute position of the end point of the grid along the surface normals (pointing inwards) in mm according to the surface. '
 };
 rel_endpoint = abs_endpoint;
-rel_endpoint.val     = {0.5};
+rel_endpoint.val     = {0.6};
 rel_endpoint.help    = {
-  'Relative position of the end point of the grid along the surface normals (pointing inwards) according to a tissue class. A value of "0.5" ends at the GM/WM border and values > 0.5 define an end point outside of the tissue class (WM direction, inwards). A value of "0" ends at the central surface.'
+  'Relative position of the end point of the grid along the surface normals (pointing inwards) according to a tissue class. A value of "0.5" ends at the GM/WM border and values > 0.5 define an end point outside of the tissue class (WM direction, inwards) which is the default to ensure that all values are mapped. A value of "0" ends at the central surface.'
 };
 
 % tissue class

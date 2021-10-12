@@ -83,6 +83,7 @@ if isfield(job,'datalong')
       for ti = 1:numel(job.subj)
 
         BIDSfolder = job.output.BIDS.BIDSyes.BIDSfolder;
+        
         % get path of first data set and find "sub-" BIDS part
         name1 = spm_file(job.data{c},'fpath');
         ind = min(strfind(name1,'sub-'));
@@ -140,8 +141,11 @@ if isfield(job,'datalong')
       end
     
     else
-      BIDSfolder = '';
-      job.extopts.BIDSfolder = BIDSfolder;
+      job.output  = rmfield(job.output,'BIDS');
+      if isfield(job.extopts,'BIDSfolder'), job.extopts = rmfield(job.extopts,'BIDSfolder'); end
+      output = job.output;
+      extopts = job.extopts;
+
     end
   end
   
