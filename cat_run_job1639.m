@@ -601,12 +601,13 @@ function cat_run_job1639(job,tpm,subj)
           
           % check that file exists and get affine transformation
           if exist(catxml,'file')
-            fprintf('\nUse affine transformation from %s\n',priorname);
+            fprintf('\nUse affine transformation from:\n%s\n',priorname);
             stime    = cat_io_cmd(' ',' ','',job.extopts.verb); 
             xml      = cat_io_xml(catxml);
             % sometimes xml file does not contain affine transformation
             if ~isfield(xml,'SPMpreprocessing')
               cat_io_cprintf('warn',sprintf('WARNING: File %s does not contain successful affine transformation. Use individual affine transformation\n',catxml));
+              Affine   = eye(4); 
               useprior = 0;
             else
               Affine   = xml.SPMpreprocessing.Affine;

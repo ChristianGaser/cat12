@@ -347,7 +347,7 @@ fullfile(pp1_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff1))
         fprintf('\nWARNING: %s',warn_str);
         cat_io_addwarning('cat_surf_createCS2:noPiorSurface', warn_str);
       else
-        fprintf('\nUse existing surface from %s as prior and thus skip many processing steps.\n',pp1_surffolder);
+        fprintf('\nUse existing surface as prior and thus skip many processing steps:\n%s\n',pp1_surffolder);
       end      
     else
       useprior = 0;
@@ -664,6 +664,7 @@ fullfile(pp1_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff1))
     if ~useprior 
       stime = cat_io_cmd('  Create initial surface','g5','',opt.verb); %if opt.verb>2, fprintf('\n'); end
     else
+      fprintf('\n');
       stime = cat_io_cmd('  Load and refine subject average surface','g5','',opt.verb); %if opt.verb>2, fprintf('\n'); end
     end
     % surface coordinate transformation matrix

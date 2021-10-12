@@ -29,7 +29,11 @@ function varargout = cat_check_system_output(status,result,debugON,trerr)
      ~isempty(strfind(result,'Segmentation fault'))
     if nargout>0, varargout{1} = true; end
     if trerr
-      error('CAT:system_error',result); 
+      try
+        error('CAT:system_error',sprintf(result)); 
+      catch
+        fprintf('%s',sprintf(result)); 
+      end
     else
       cat_io_cprintf('warn','CAT:system_error:%s',sprintf(result)); 
     end

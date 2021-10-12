@@ -321,7 +321,6 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   
   
   
-if 1
   %  ----------------------------------------------------------------------
   %  Yo - original image in original space
   %  ----------------------------------------------------------------------
@@ -682,7 +681,7 @@ if 1
     
     % load mesh
     warning('off','MATLAB:subscripting:noSubscriptsSpecified');
-    spm_ov_mesh('display',idi,Phull); 
+    try, spm_ov_mesh('display', idi, Phull); end
 
     % apply registration (AC transformation) for all hull objects
     V = (dispmat * inv(res.Affine) * ([st.vols{idi}.mesh.meshes(1).vertices,...
@@ -721,7 +720,7 @@ if 1
   %  central / inner-outer surface overlay
   %  ----------------------------------------------------------------------
   if exist('Psurf','var') && ~isempty(Psurf) && ov_mesh
-    % ... clearup this part of code when finished ...
+    % ... cleanup this part of code when finished ...
     
     Psurf2 = Psurf;
     % phite/pial surface in segmentation view number 2 or 3
@@ -780,7 +779,6 @@ if 1
     % remove menu
     %if ~debug, spm_orthviews('RemoveContext',idi); end 
   end
-end  
 
 
 
@@ -902,8 +900,10 @@ end
             imat = spm_imatrix(res.Affine); Rigid = spm_matrix([imat(1:6) ones(1,3)*mean(imat(7:9)) 0 0 0]); clear imat;
             for i = 1:numel(hSD)
               for ppi = 1:numel(hSD{i}{1}.patch)
-                V = (Rigid * ([hSD{i}{1}.patch(ppi).Vertices, ones(size(hSD{i}{1}.patch(ppi).Vertices,1),1)])' )'; 
-                V(:,4) = []; hSD{i}{1}.patch(ppi).Vertices = V;
+                try
+                  V = (Rigid * ([hSD{i}{1}.patch(ppi).Vertices, ones(size(hSD{i}{1}.patch(ppi).Vertices,1),1)])' )'; 
+                  V(:,4) = []; hSD{i}{1}.patch(ppi).Vertices = V;
+                end
               end
             end
             for i = 1:numel(hSD), colormap(fg,cmap);  set(hSD{i}{1}.colourbar,'visible','off'); end
@@ -1097,7 +1097,9 @@ if 1
       'FontName',fontname,'FontSize',(fontsize-1)/spm_figure_scale*0.8,'FontWeight','Bold'); end
   try, spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontName',fontname,'FontSize',(fontsize-1)/spm_figure_scale*0.8,'FontWeight','Bold'); end
   for hti = 1:numel(htext), try, set(htext(hti),'FontName',fontname,'Fontsize',get(htext(hti),'Fontsize')/spm_figure_scale*0.8); end; end
-  for hti = 1:numel(cc),    try, set(cc{hti}   ,'FontName',fontname,'Fontsize',get(cc{hti}   ,'Fontsize')/spm_figure_scale*0.8); end; end
+  if exist('cc') % sometimes cc does not exist of anything fails before
+    for hti = 1:numel(cc),   try, set(cc{hti}  , 'FontName', fontname, 'Fontsize', get(cc{hti}  , 'Fontsize')/spm_figure_scale*0.8); end; end
+  end
   if exist('ccl') % sometimes lg does not exist of anything fails before
     for hti = 1:numel(ccl), try, set(ccl{hti}  ,'FontName',fontname,'Fontsize',get(ccl{hti}  ,'Fontsize')/spm_figure_scale*0.8); end; end
   end
