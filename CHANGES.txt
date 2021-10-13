@@ -1,5 +1,42 @@
 ------------------------------------------------------------------------
-r1891 | gaser | 2021-10-13 19:08:41
+r1892 | gaser | 2021-10-13 19:15:30
+
+Changed paths:
+M       CAT.glnx86/CAT_3dVol2Surf
+M       CAT.maci64/CAT_3dVol2Surf
+M       CAT.w32/CAT_3dVol2Surf.exe
+M       CAT.w32/CAT_AddValuesToSurf.exe
+M       CAT.w32/CAT_AverageSurfaces.exe
+M       CAT.w32/CAT_BlurSurfHK.exe
+M       CAT.w32/CAT_Central2Pial.exe
+M       CAT.w32/CAT_DeformSurf.exe
+M       CAT.w32/CAT_DumpCurv.exe
+M       CAT.w32/CAT_DumpSurfArea.exe
+M       CAT.w32/CAT_DumpSurfaceRatio.exe
+M       CAT.w32/CAT_FixTopology.exe
+M       CAT.w32/CAT_FractalDimension.exe
+M       CAT.w32/CAT_Hausdorff.exe
+M       CAT.w32/CAT_Isometize.exe
+M       CAT.w32/CAT_MarkDefects.exe
+M       CAT.w32/CAT_RefineMesh.exe
+M       CAT.w32/CAT_ResampleSphericalSurf.exe
+M       CAT.w32/CAT_ResampleSphericalSurfSPH.exe
+M       CAT.w32/CAT_ResampleSurf.exe
+M       CAT.w32/CAT_SelfIntersect.exe
+M       CAT.w32/CAT_SeparatePolygon.exe
+M       CAT.w32/CAT_SmoothConvexity.exe
+M       CAT.w32/CAT_SulcusDepth.exe
+M       CAT.w32/CAT_Surf2Sphere.exe
+M       CAT.w32/CAT_Surf2Vol.exe
+M       CAT.w32/CAT_SurfDistance.exe
+M       CAT.w32/CAT_WarpSurf.exe
+M       CHANGES.txt
+ M      cp_binaries.sh
+
+(1) Changed: Updated binaries.
+
+------------------------------------------------------------------------
+r1891 | gaser | 2021-10-13 19:09:04 +0200 (Mi, 13 Okt 2021) | 87 lines
 
 Changed paths:
 A       CAT.glnx86
@@ -86,6 +123,7 @@ A       CAT.w32/CAT_WarpSurf.exe
 M       CHANGES.txt
 
 (1) Changed: Added missing binaries.
+
 
 ------------------------------------------------------------------------
 r1890 | gaser | 2021-10-13 19:06:57 +0200 (Mi, 13 Okt 2021) | 96 lines
