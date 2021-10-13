@@ -1,5 +1,94 @@
 ------------------------------------------------------------------------
-r1890 | gaser | 2021-10-13 19:06:45
+r1891 | gaser | 2021-10-13 19:08:41
+
+Changed paths:
+A       CAT.glnx86
+A       CAT.glnx86/CAT_3dVol2Surf
+A       CAT.glnx86/CAT_AddValuesToSurf
+A       CAT.glnx86/CAT_AverageSurfaces
+A       CAT.glnx86/CAT_BlurSurfHK
+A       CAT.glnx86/CAT_Central2Pial
+A       CAT.glnx86/CAT_DeformSurf
+A       CAT.glnx86/CAT_DumpCurv
+A       CAT.glnx86/CAT_DumpSurfArea
+A       CAT.glnx86/CAT_DumpSurfaceRatio
+A       CAT.glnx86/CAT_FixTopology
+A       CAT.glnx86/CAT_FractalDimension
+A       CAT.glnx86/CAT_Hausdorff
+A       CAT.glnx86/CAT_Isometize
+A       CAT.glnx86/CAT_MarkDefects
+A       CAT.glnx86/CAT_RefineMesh
+A       CAT.glnx86/CAT_ResampleSphericalSurf
+A       CAT.glnx86/CAT_ResampleSphericalSurfSPH
+A       CAT.glnx86/CAT_ResampleSurf
+A       CAT.glnx86/CAT_SelfIntersect
+A       CAT.glnx86/CAT_SeparatePolygon
+A       CAT.glnx86/CAT_SmoothConvexity
+A       CAT.glnx86/CAT_SulcusDepth
+A       CAT.glnx86/CAT_Surf2Sphere
+A       CAT.glnx86/CAT_Surf2Vol
+A       CAT.glnx86/CAT_SurfDistance
+A       CAT.glnx86/CAT_WarpSurf
+A       CAT.maci64
+A       CAT.maci64/CAT_3dVol2Surf
+A       CAT.maci64/CAT_AddValuesToSurf
+A       CAT.maci64/CAT_AverageSurfaces
+A       CAT.maci64/CAT_BlurSurfHK
+A       CAT.maci64/CAT_Central2Pial
+A       CAT.maci64/CAT_DeformSurf
+A       CAT.maci64/CAT_DumpCurv
+A       CAT.maci64/CAT_DumpSurfArea
+A       CAT.maci64/CAT_DumpSurfaceRatio
+A       CAT.maci64/CAT_FixTopology
+A       CAT.maci64/CAT_FractalDimension
+A       CAT.maci64/CAT_Hausdorff
+A       CAT.maci64/CAT_Isometize
+A       CAT.maci64/CAT_MarkDefects
+A       CAT.maci64/CAT_RefineMesh
+A       CAT.maci64/CAT_ResampleSphericalSurf
+A       CAT.maci64/CAT_ResampleSphericalSurfSPH
+A       CAT.maci64/CAT_ResampleSurf
+A       CAT.maci64/CAT_SelfIntersect
+A       CAT.maci64/CAT_SeparatePolygon
+A       CAT.maci64/CAT_SmoothConvexity
+A       CAT.maci64/CAT_SulcusDepth
+A       CAT.maci64/CAT_Surf2Sphere
+A       CAT.maci64/CAT_Surf2Vol
+A       CAT.maci64/CAT_SurfDistance
+A       CAT.maci64/CAT_WarpSurf
+A       CAT.w32
+A       CAT.w32/CAT_3dVol2Surf.exe
+A       CAT.w32/CAT_AddValuesToSurf.exe
+A       CAT.w32/CAT_AverageSurfaces.exe
+A       CAT.w32/CAT_BlurSurfHK.exe
+A       CAT.w32/CAT_Central2Pial.exe
+A       CAT.w32/CAT_DeformSurf.exe
+A       CAT.w32/CAT_DumpCurv.exe
+A       CAT.w32/CAT_DumpSurfArea.exe
+A       CAT.w32/CAT_DumpSurfaceRatio.exe
+A       CAT.w32/CAT_FixTopology.exe
+A       CAT.w32/CAT_FractalDimension.exe
+A       CAT.w32/CAT_Hausdorff.exe
+A       CAT.w32/CAT_Isometize.exe
+A       CAT.w32/CAT_MarkDefects.exe
+A       CAT.w32/CAT_RefineMesh.exe
+A       CAT.w32/CAT_ResampleSphericalSurf.exe
+A       CAT.w32/CAT_ResampleSphericalSurfSPH.exe
+A       CAT.w32/CAT_ResampleSurf.exe
+A       CAT.w32/CAT_SelfIntersect.exe
+A       CAT.w32/CAT_SeparatePolygon.exe
+A       CAT.w32/CAT_SmoothConvexity.exe
+A       CAT.w32/CAT_SulcusDepth.exe
+A       CAT.w32/CAT_Surf2Sphere.exe
+A       CAT.w32/CAT_Surf2Vol.exe
+A       CAT.w32/CAT_SurfDistance.exe
+A       CAT.w32/CAT_WarpSurf.exe
+M       CHANGES.txt
+
+(1) Changed: Added missing binaries.
+
+------------------------------------------------------------------------
+r1890 | gaser | 2021-10-13 19:06:57 +0200 (Mi, 13 Okt 2021) | 96 lines
 
 Changed paths:
 D       CAT.glnx86
@@ -95,6 +184,7 @@ A       cp_binaries.sh
 (3) Fixed:   Added check for toolbox_path_cache command to cat_update.m and
              cat_install_tfce.m.
 (4) Fixed:   Corrected handling of missing job variable in cat_surf_createCS2.m.
+
 
 ------------------------------------------------------------------------
 r1889 | gaser | 2021-10-13 16:53:31 +0200 (Mi, 13 Okt 2021) | 119 lines
