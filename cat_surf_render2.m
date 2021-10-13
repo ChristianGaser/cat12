@@ -277,8 +277,10 @@ switch lower(action)
             %if strcmp(sinfo(1).texture,'defects'), 
               S.faces = S.faces(:,[2,1,3]); 
             end
-            labelmap = jet; 
-            
+            % use original colormap from annot file otherwise use jet
+            if ~strcmp(sinfo(pi).ee,'.annot')
+              labelmap = jet; 
+            end
             
             
             % Patch
@@ -446,11 +448,11 @@ switch lower(action)
         if numel(labelnam)>0
           %%
           H = cat_surf_render2('ColorBar',H.axis,'on'); 
-          labelnam2 = labelnam; for lni=1:numel(labelnam2),labelnam2{lni} = [' ' labelnam2{lni} ' ']; end
+          labelnam2 = [{''} labelnam]; for lni=1:numel(labelnam2),labelnam2{lni} = [' ' labelnam2{lni} ' ']; end
 
           labellength = min(100,max(cellfun('length',labelnam2))); 
           ss = max(1,round(diff(labelmapclim+1)/60)); 
-          ytick = labelmapclim(1)-0.5:ss:labelmapclim(2)+0.5;
+          ytick = labelmapclim(1):ss:labelmapclim(2);
           
           set(H.colourbar,'ytick',ytick,'yticklabel',labelnam2(1:ss:end),...
             'Position',[max(0.75,0.98-0.008*labellength) 0.05 0.02 0.9]);
