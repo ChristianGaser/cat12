@@ -4,7 +4,7 @@ rm ~/work/c/CAT/build-*/Progs/*.o
 
 # check for new arm64
 if [ `uname -m` == "arm64" ]; then
-	cd ../CAT.maca64
+	cd CAT.maca64
 else
 	cd CAT.glnx86
 	for i in CAT*; do cp ~/work/c/CAT/build-x86_64-pc-linux/Progs/${i} .; done
