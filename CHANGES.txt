@@ -1,5 +1,126 @@
 ------------------------------------------------------------------------
-r1888 | gaser | 2021-10-12 15:49:16
+r1889 | gaser | 2021-10-13 16:52:47
+
+Changed paths:
+ M      CAT.glnx86/CAT_3dVol2Surf
+ M      CAT.glnx86/CAT_AddValuesToSurf
+ M      CAT.glnx86/CAT_AverageSurfaces
+ M      CAT.glnx86/CAT_BlurSurfHK
+ M      CAT.glnx86/CAT_Central2Pial
+ M      CAT.glnx86/CAT_DeformSurf
+ M      CAT.glnx86/CAT_DumpCurv
+ M      CAT.glnx86/CAT_DumpSurfArea
+ M      CAT.glnx86/CAT_DumpSurfaceRatio
+ M      CAT.glnx86/CAT_FixTopology
+ M      CAT.glnx86/CAT_FractalDimension
+ M      CAT.glnx86/CAT_Hausdorff
+ M      CAT.glnx86/CAT_Isometize
+ M      CAT.glnx86/CAT_MarkDefects
+ M      CAT.glnx86/CAT_RefineMesh
+ M      CAT.glnx86/CAT_ResampleSphericalSurf
+ M      CAT.glnx86/CAT_ResampleSphericalSurfSPH
+ M      CAT.glnx86/CAT_ResampleSurf
+ M      CAT.glnx86/CAT_SelfIntersect
+ M      CAT.glnx86/CAT_SeparatePolygon
+ M      CAT.glnx86/CAT_SmoothConvexity
+ M      CAT.glnx86/CAT_SulcusDepth
+ M      CAT.glnx86/CAT_Surf2Sphere
+ M      CAT.glnx86/CAT_Surf2Vol
+ M      CAT.glnx86/CAT_SurfDistance
+ M      CAT.glnx86/CAT_WarpSurf
+MM      CAT.maca64/CAT_3dVol2Surf
+MM      CAT.maca64/CAT_AddValuesToSurf
+MM      CAT.maca64/CAT_AverageSurfaces
+MM      CAT.maca64/CAT_BlurSurfHK
+MM      CAT.maca64/CAT_Central2Pial
+MM      CAT.maca64/CAT_DeformSurf
+MM      CAT.maca64/CAT_DumpCurv
+MM      CAT.maca64/CAT_DumpSurfArea
+MM      CAT.maca64/CAT_DumpSurfaceRatio
+MM      CAT.maca64/CAT_FixTopology
+MM      CAT.maca64/CAT_FractalDimension
+MM      CAT.maca64/CAT_Hausdorff
+MM      CAT.maca64/CAT_Isometize
+MM      CAT.maca64/CAT_MarkDefects
+MM      CAT.maca64/CAT_RefineMesh
+MM      CAT.maca64/CAT_ResampleSphericalSurf
+MM      CAT.maca64/CAT_ResampleSphericalSurfSPH
+MM      CAT.maca64/CAT_ResampleSurf
+MM      CAT.maca64/CAT_SelfIntersect
+MM      CAT.maca64/CAT_SeparatePolygon
+MM      CAT.maca64/CAT_SmoothConvexity
+MM      CAT.maca64/CAT_SulcusDepth
+MM      CAT.maca64/CAT_Surf2Sphere
+MM      CAT.maca64/CAT_Surf2Vol
+MM      CAT.maca64/CAT_SurfDistance
+MM      CAT.maca64/CAT_WarpSurf
+ M      CAT.maci64/CAT_3dVol2Surf
+ M      CAT.maci64/CAT_AddValuesToSurf
+ M      CAT.maci64/CAT_AverageSurfaces
+ M      CAT.maci64/CAT_BlurSurfHK
+ M      CAT.maci64/CAT_Central2Pial
+ M      CAT.maci64/CAT_DeformSurf
+ M      CAT.maci64/CAT_DumpCurv
+ M      CAT.maci64/CAT_DumpSurfArea
+ M      CAT.maci64/CAT_DumpSurfaceRatio
+ M      CAT.maci64/CAT_FixTopology
+ M      CAT.maci64/CAT_FractalDimension
+ M      CAT.maci64/CAT_Hausdorff
+ M      CAT.maci64/CAT_Isometize
+ M      CAT.maci64/CAT_MarkDefects
+ M      CAT.maci64/CAT_RefineMesh
+ M      CAT.maci64/CAT_ResampleSphericalSurf
+ M      CAT.maci64/CAT_ResampleSphericalSurfSPH
+ M      CAT.maci64/CAT_ResampleSurf
+ M      CAT.maci64/CAT_SelfIntersect
+ M      CAT.maci64/CAT_SeparatePolygon
+ M      CAT.maci64/CAT_SmoothConvexity
+ M      CAT.maci64/CAT_SulcusDepth
+ M      CAT.maci64/CAT_Surf2Sphere
+ M      CAT.maci64/CAT_Surf2Vol
+ M      CAT.maci64/CAT_SurfDistance
+ M      CAT.maci64/CAT_WarpSurf
+ M      CAT.w32/CAT_3dVol2Surf.exe
+ M      CAT.w32/CAT_AddValuesToSurf.exe
+ M      CAT.w32/CAT_AverageSurfaces.exe
+ M      CAT.w32/CAT_BlurSurfHK.exe
+ M      CAT.w32/CAT_Central2Pial.exe
+ M      CAT.w32/CAT_DeformSurf.exe
+ M      CAT.w32/CAT_DumpCurv.exe
+ M      CAT.w32/CAT_DumpSurfArea.exe
+ M      CAT.w32/CAT_DumpSurfaceRatio.exe
+ M      CAT.w32/CAT_FixTopology.exe
+ M      CAT.w32/CAT_FractalDimension.exe
+ M      CAT.w32/CAT_Hausdorff.exe
+ M      CAT.w32/CAT_Isometize.exe
+ M      CAT.w32/CAT_MarkDefects.exe
+ M      CAT.w32/CAT_RefineMesh.exe
+ M      CAT.w32/CAT_ResampleSphericalSurf.exe
+ M      CAT.w32/CAT_ResampleSphericalSurfSPH.exe
+ M      CAT.w32/CAT_ResampleSurf.exe
+ M      CAT.w32/CAT_SelfIntersect.exe
+ M      CAT.w32/CAT_SeparatePolygon.exe
+ M      CAT.w32/CAT_SmoothConvexity.exe
+ M      CAT.w32/CAT_SulcusDepth.exe
+ M      CAT.w32/CAT_Surf2Sphere.exe
+ M      CAT.w32/CAT_Surf2Vol.exe
+ M      CAT.w32/CAT_SurfDistance.exe
+ M      CAT.w32/CAT_WarpSurf.exe
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_tools.m
+M       cat_long_main.m
+M       cat_surf_render2.m
+M       html/cat.html
+M       tbx_cfg_cat.m
+
+(1) Fixed:   Corrected recognition of ROI use in tbx_cfg_cat.m 
+(2) Fixed:   Corrected use of original labelmaps in cat_surf_render2.m. 
+(3) Fixed:   Corrected YTickLabels in cat_surf_render2.m for annot files.
+(4) Fixed:   Corrected deletion of temporary files in longitudinal pipeline.
+
+------------------------------------------------------------------------
+r1888 | gaser | 2021-10-12 15:49:25 +0200 (Tue, 12 Oct 2021) | 31 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -30,6 +151,7 @@ M       spm_cat12.m
 (6) Fixed:   Corrected progress output in cat_main_LAS.m, cat_main_LAS2.m,
              cat_main.m and cat_main1639.m.
 (7) Fixed:   Corrected handling of BIDS structure in longitudinal data. 
+
 
 ------------------------------------------------------------------------
 r1887 | gaser | 2021-10-08 11:59:30 +0200 (Fri, 08 Oct 2021) | 121 lines
