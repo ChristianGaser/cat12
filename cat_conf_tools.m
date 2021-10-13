@@ -735,7 +735,7 @@ function resize = conf_vol_resize(data,prefix,expert,outdir)
   
   prefix.val      = {'r'};
   prefix.help     = {
-    'Use "auto" to add resolution automaticly, e.g., "r0.8_*.nii" for final resolution or "rx0.5_*.nii" for the scaling parameter. '
+    'Use "auto" to add resolution automatically, e.g., "r0.8_*.nii" for final resolution or "rx0.5_*.nii" for the scaling parameter. '
     'If you want the original resolution use 0 in the resolution setting (autoprefix "rorg_") or 1 in the scaling setting. ' 
     };
   resize          = cfg_exbranch;
