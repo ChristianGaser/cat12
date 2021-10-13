@@ -60,7 +60,6 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
 
   % set defaults
   if ~exist('opt','var'), opt = struct(); end                 % create variable if not exist
-  if ~exist('job','var'), job = get_cat_defaults; end         % get variable if not exist
   vx_vol        = sqrt(sum(V.mat(1:3,1:3).^2));               % further interpolation based on internal resolution 
   def.verb      = cat_get_defaults('extopts.expertgui');      % 0-none, 1-minimal, 2-default, 3-details, 4-debug
   def.surf      = {'lh','rh'};                                % surface reconstruction setting with {'lh','rh','rc','lc'} and
@@ -156,7 +155,11 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
     fprintf('  SRP / reduce_mesh:                 %d / %d',20 + opt.SRP,opt.reduce_mesh);
   end  
   
-  [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(V0.fname,job);
+  if exist('job','var')
+    [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(V0.fname,job);
+  else
+    [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(V0.fname);
+  end
   
   % get original filename without 'n'
   [pp0,ff] = spm_fileparts(V0.fname);
