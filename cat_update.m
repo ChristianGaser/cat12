@@ -157,7 +157,7 @@ if update
       addpath(d0);
       rehash
       rehash toolboxcache;
-      toolbox_path_cache
+      if exist('toolbox_path_cache','file'), toolbox_path_cache; end
       eval(['spm fmri;clear cat_version;spm_cat12']);
       warning on
     catch

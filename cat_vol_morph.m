@@ -30,10 +30,10 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
 % Actions:
 %   Morphological operations with 26-neighborhood 
 %   (cube/chessboard distance):
-%    - c  | dilate 
-%    - c  | erode  
+%    - d  | dilate 
+%    - e  | erode  
 %    - c  | close  
-%    - c  | open   
+%    - o  | open   
 %
 %   Morphological operations with 26-neighborhood 
 %   (cube/chessboard distance):
