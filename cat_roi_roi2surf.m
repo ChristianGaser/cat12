@@ -67,7 +67,7 @@ function varargout = cat_roi_roi2surf(job)
       fprintf('process "%s":\n',job.rdata{rfi});
     end
     
-    %% first we need to load the RIO tables in a similar style 
+    %% first we need to load the ROI tables in a similar style 
     clear xml;
     switch ee
       case '.csv'
