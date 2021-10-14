@@ -51,7 +51,7 @@ function varargout = cat_surf_results(action, varargin)
 %  * cat_surf_results('showfilename',[0..1]); 
 %  Show (1) or not show (0) surface name in figure. Toggles without input.
 %
-%  * cat_surf_results('clim',[val]);
+%  * cat_surf_results('clim',[mn mx]);
 %  Define clim to define view range. 
 %
 %  * cat_surf_results('clip',[mn mx]);
@@ -822,29 +822,37 @@ switch lower(action)
   %======================================================================
   case 'clim'
     if isempty(varargin), varargin{1} = gca; end
-    H = getHandles(varargin{1});
-    if length(varargin) == 1
-      c = getappdata(H.patch, 'clim');
-      if ~isempty(c), c = c(2:3); end
-      varargout = {c};
-      return;
-    else
-      if strcmp(varargin{2}, 'on') || isempty(varargin{2}) || any(~isfinite(varargin{2}))
-        setappdata(H.patch, 'clim', [false NaN NaN]);
+    if isobject(varargin{1})
+      H = getHandles(varargin{1});
+      if length(varargin) == 1
+        c = getappdata(H.patch, 'clim');
+        if ~isempty(c), c = c(2:3); end
+        varargout = {c};
+        return;
       else
-        setappdata(H.patch, 'clim', [true varargin{2}]);
+        if strcmp(varargin{2}, 'on') || isempty(varargin{2}) || any(~isfinite(varargin{2}))
+          setappdata(H.patch, 'clim', [false NaN NaN]);
+        else
+          setappdata(H.patch, 'clim', [true varargin{2}]);
+        end
+        d = getappdata(H.patch, 'data');
+        H = updateTexture(H, d);
+
       end
-      d = getappdata(H.patch, 'data');
-      H = updateTexture(H, d);
-      
     end
     
-    if nargin > 1 && isnumeric(varargin{2}) && numel(varargin{2}) == 2
-      caxis(H.axis, varargin{2});
+    if nargin > 1 && isnumeric(varargin{1}) && numel(varargin{1}) == 2
+      caxis(H.axis, varargin{1});
+      H.clim = [true varargin{1}];
     else
       caxis(H.axis, [min(d), max(d)])
+      H.clim = [true [min(d), max(d)]];
     end
-    
+
+    for ind = 1:5
+      setappdata(H.patch(ind), 'clim',H.clim);
+      H = updateTexture(H, ind);
+    end
     
   %-CLip
   %======================================================================
