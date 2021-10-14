@@ -90,8 +90,8 @@ function varargout = cat_surf_surf2roi(job)
         clear vertices colortable;
       case 'gii'
         % gifti and csv-files
-        rrdata = gifti(job.rdata{ri});
-        lrdata = gifti(char(cat_surf_rename(rinfo,'side','rh'))); 
+        lrdata = gifti(job.rdata{ri});
+        rrdata = gifti(char(cat_surf_rename(rinfo,'side','rh'))); 
         
         rdatacsv = cat_vol_findfiles(strrep(rinfo.pp,'atlases_surfaces',pth_templates),[rinfo.dataname '*.csv']);
         if ~isempty(rdatacsv{1})
@@ -118,17 +118,13 @@ function varargout = cat_surf_surf2roi(job)
         sinfo = cat_surf_info(job.cdata{ti}{si},0);
         
         if all(~cell2mat(strfind({'central','hull','sphere','sphere.reg','resampledBySurf2roi'},sinfo.dataname)))
-          %%
-          if size(lrdata,1) > 150000
-            type = '164k';
-          else
-            type = '32k';
-          end
           
           % RD202108: resampled data but without given filename information
           if size(lrdata,1) == 163842 
+            type = '164k';
             sinfo.resmapled = 1; 
           elseif size(lrdata,1) == 32492
+            type = '32k';
             sinfo.resampled_32k = 1; 
           end
           

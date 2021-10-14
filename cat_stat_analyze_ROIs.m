@@ -630,7 +630,7 @@ if mesh_detected
     
     if ~isempty(find(M.cdata~=0)) && overlay_results
       save(gifti(M), name_mesh, 'Base64Binary');
-        fprintf('\nLabel file with thresholded logP values (%s) was saved as %s.',corr{c},name_mesh);
+      fprintf('\nLabel file with thresholded logP values (%s) was saved as %s.',corr{c},name_mesh);
     end
     spm_unlink(name_lh);
     spm_unlink(name_rh);
@@ -650,7 +650,7 @@ if mesh_detected
     ROI_mode = spm_input('Use new customized ROI display?','+1','b','yes|no',[1,0],1);
     if ROI_mode
       cat_surf_results('texture', 3); % no texture
-      boder_mode = 0;
+      border_mode = 0;
       if strcmp(atlas,'aparc_DK40')
         border_mode = 1;
       elseif strcmp(atlas,'aparc_a2009s')
