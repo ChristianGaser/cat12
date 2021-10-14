@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1894 | gaser | 2021-10-15 01:45:06
+r1894 | gaser | 2021-10-15 01:48:53
+
+Changed paths:
+M       CHANGES.txt
+
+(1) Added:   Added new function cat_roi_values2surf.m to map ROI values to
+             surface file.
+(2) Changed: Simplified some code in cat_surf_surf2roi.m.
+(3) Fixed:   Corrected call of 'clim' in cat_surf_results.m
+(4) Fixed:   Corrected typo in cat_stat_analyze_ROIs.m
+
+------------------------------------------------------------------------
+r1894 | gaser | 2021-10-15 01:45:55 +0200 (Fr, 15 Okt 2021) | 93 lines
 
 Changed paths:
  M      CAT.glnx86/CAT_3dVol2Surf
@@ -92,6 +104,7 @@ M       cat_surf_surf2roi.m
 (2) Changed: Simplified some code in cat_surf_surf2roi.m.
 (3) Fixed:   Corrected call of 'clim' in cat_surf_results.m
 (4) Fixed:   Corrected typo in cat_stat_analyze_ROIs.m
+
 
 ------------------------------------------------------------------------
 r1893 | gaser | 2021-10-13 19:20:43 +0200 (Mi, 13 Okt 2021) | 10 lines
