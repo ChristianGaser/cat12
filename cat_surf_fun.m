@@ -1259,7 +1259,7 @@ function res = cat_surf_evalCS(CS,Tpbt,Tfs,Ym,Ypp,Pcentral,mat,verb,estSI)
     IO  = IO./(IOs/mean(IOs)) - 1.5; clear IOs;
     % 
     
-    if uL4
+    if uL4 && exist('L4','var')
       ML  = spm_mesh_smooth(L4);    % smoothing matrix
       IC  = cat_surf_isocolors2(Ym,L4,mat);  
       ICs = single(spm_mesh_smooth(ML,double(IC),round(100 * sqrt(size(CS.faces,1)/180000)))); 
