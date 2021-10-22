@@ -802,12 +802,21 @@ for i = 1:nimgs
         end
       end
     end
+        
     SO.img(i).range = spm_input('Image range for colormap', '+1', 'e', [mn mx], 2)';
     define_slices = spm_input('Slices', '+1', 'm', 'Estimate slices with local maxima|Define slices', [0 1], 1);
     
     if ~define_slices
+
+      % for log-scaled p-values we should rather use gt than ge for comparison with threshold
+      if logP
+        compare_to_threshold = @(a,b) gt(a,b);
+      else
+        compare_to_threshold = @(a,b) ge(a,b);
+      end
+    
       % threshold map and restrict coordinates
-      Q = find(compare_to_threshold(img,range(1)) & le(img,range(2)));
+      Q = find(compare_to_threshold(img,SO.img(i).range(1)) & le(img,SO.img(i).range(2)));
       XYZ = XYZ(:, Q);
       img = img(Q);
       
