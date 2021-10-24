@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1896 | gaser | 2021-10-22 15:40:41
+r1897 | dahnke | 2021-10-24 10:50:29
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main_LAS2.m
+M       cat_main_updateSPM.m
+M       cat_main_updateSPM1639.m
+M       ds.m
+
+(1) Fixed:      Corrected bug in LAS2 in case of empty background class. 
+(2) Fixed:      Corrected bug in longitudinal processing of single timepoints
+                with empty backgrounds in cat_main_updateSPM[1639].
+                
+
+
+
+
+------------------------------------------------------------------------
+r1896 | gaser | 2021-10-22 15:42:07 +0200 (Fri, 22 Oct 2021) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +33,7 @@ M       compile.m
              changes for compatibility.
 (4) Fixed:   Corrected typo in cat12.m and made some smaller changes for 
              compatibility. 
+
 
 ------------------------------------------------------------------------
 r1895 | gaser | 2021-10-15 01:49:00 +0200 (Fri, 15 Oct 2021) | 10 lines
