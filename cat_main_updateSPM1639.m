@@ -241,6 +241,52 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
 
 
 
+
+  %% RD202110: Background correction in longitidunal mode
+  %  We observed some problems in the SPM background segmentation for
+  %  longidutidnal processing that detected the volume of the boundary box 
+  %  whereas the real background was miss-aligned to class 5 that caused 
+  %  further problems in the LAS function that were solved too. Although 
+  %  it would be possible to adapt the SPM segmentation, eg. by adapting 
+  %  the number of gaussians per class, we decided that it is simpler and 
+  %  maybe saver to add further test in the longitudinal case, where the 
+  %  TPM should be close to the segmentation outcome.  
+  if (isfield(job,'useprior') && ~isempty(job.useprior) ) && ... 
+     (isfield(res,'ppe') && ~res.ppe.affreg.highBG)
+    % sum of all TPM classes without background
+    Vall = tpm.V(end); Vall.pinfo(3) = 0; Vall.dt=16; 
+    Vall.dat = zeros(size(tpm.dat{1})); for k1 = 1:numel(tpm.dat)-1, Vall.dat = Vall.dat + single(exp(tpm.dat{k1})); end 
+    Yall = cat_vol_sample(res.tpm(1),Vall,Yy,1);
+
+    % backgound class
+    Ybg = 1 - Yall; clear Yall Vall; 
+
+    % estimate error and do correction 
+    rmse = @(x,y) mean( (x(:) - y(:)).^2 ).^0.5; 
+    if rmse(Ybg,single(P(:,:,:,end))/255) > 0.3 % just some threshold 
+      % setup new background
+      Ynbg = Ybg>0.5 | P(:,:,:,end)>128;
+      Ynbg = cat_vol_morph(Ynbg,'dc',5,vx_vol); 
+      Ynbg = uint8( 255 .* smooth3(Ynbg) ); 
+      
+      % correct classes
+      for k1 = 1:size(P,4)-1, P(:,:,:,k1) = P(:,:,:,k1) .* (255 - Ynbg); end
+      P(:,:,:,end) = max( Ynbg , P(:,:,:,end) ); 
+      clear Ynbg; 
+      
+      % normalize all classes
+      sP = (sum(single(P),4)+eps)/255;
+      for k1=1:size(P,4), P(:,:,:,k1) = cat_vol_ctype(single(P(:,:,:,k1))./sP); end
+      clear sP; 
+    
+      cat_io_addwarning('cat_main_updateSPM:ReplacedBadLongBackground','Detected and corrected inadequate background \\nsegmentation in longitudinal mode.',0,[1 2]);
+    end
+    clear Ybg; 
+  end
+
+  
+  
+  
   stime2 = cat_io_cmd('  Update probability maps','g5','',job.extopts.verb-1,stime2);
   if ~(any(sign(diff(T3th))==-1))
     %% Update probability maps

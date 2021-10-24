@@ -812,8 +812,17 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
   % final scaling of GM and CSF (not required for WM)
   Ylab{1} = Ylab{1} .* T3th(2) / cat_stat_kmeans( Ylab{1}(Ygm(:)>0.5), 1); 
   Ylab{3} = Ylab{3} .* T3th(1) / cat_stat_kmeans( Ylab{3}(Ycm(:)>0.5), 1); 
-  Ylab{6} = Ylab{6} .* cat_stat_kmeans( Ysrc(Ynb(:)>0.5) , 1) / cat_stat_kmeans( Ylab{6}(Ynb(:)>0.5) , 1); 
   
+  % RD202110: corrected cases with incorrect background region Ynb
+  if sum(Ynb(:)>0.5)>0
+    Ynb   = smooth3( Ycls{6})>128 & Yg<0.3; 
+  end
+  if sum(Ynb(:)>0.5)>0
+    Ylab{6} = Ylab{6} .* cat_stat_kmeans( Ysrc(Ynb(:)>0.5) , 1) / max(eps,cat_stat_kmeans( Ylab{6}(Ynb(:)>0.5) , 1)); 
+  else
+    Ylab{6} = min(Ysrc(:)); 
+  end
+ 
   %% restore original resolution
   if exist('resT0','var')
     Ycls = Yclso2; clear Yclso2; 
@@ -873,6 +882,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
   Yncm = ~Ygm & ~Ywm & ((Yml/3)>1/6 | Ycls{3}>128) & (Yml/3)<0.5 & Yb2;
   if debug==0, clear Ywm Ygm; end
   
+  % cleanup outer GM that was mislabeled as WM 
   Yp0     = single( Ycls{1} )/255*2 + single( Ycls{2} )/255*3 + single( Ycls{3} )/255;  % recreate label map
   Ycls{2} = cat_vol_ctype(single(Ycls{2}) + (Ynwm & ~Yngm & Yp0>=1.5)*256 - (Yngm & ~Ynwm & Yp0>=2)*256,'uint8');
   Ycls{1} = cat_vol_ctype(single(Ycls{1}) - (Ynwm & ~Yngm & Yp0>=1.5)*256 + (Yngm & ~Ynwm & Yp0>=2)*256,'uint8');
