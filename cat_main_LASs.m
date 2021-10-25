@@ -25,7 +25,7 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
 % ______________________________________________________________________
 %
 %   [Yml,Ymg,Yclsu] = ...
-%     cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vol,extopts,Tth)
+%     cat_main_LASs(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vol,extopts,Tth)
 %
 %   Yml     .. local intensity correct image
 %   Ymg     .. global intensity correct image
