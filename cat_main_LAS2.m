@@ -20,7 +20,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
 % ______________________________________________________________________
 %
 %   [Yml,Ymg,Ycls,Ycls2,T3th] = ...
-%     cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vol,extopts,Tth) 
+%     cat_main_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vol,extopts,Tth) 
 %
 %   Yml     .. local  intensity normalized image
 %   Ymg     .. global intensity normalized image

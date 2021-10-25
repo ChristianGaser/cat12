@@ -512,20 +512,20 @@ if ~isempty(xA)
           fprintf('\n______________________________________________________');
           fprintf('\n%s: Positive effects\n%s',SO.img(2).vol.fname,atlas_name);
           fprintf('\n______________________________________________________\n\n');
-          fprintf('%7s\t%7s\t%15s\t%s\n\n','Value','   Size','    xyz [mm]   ','Overlap of atlas region');
+          fprintf('%7s\t%12s\t%15s\t%s\n\n','Value','Cluster-Size','    xyz [mm]   ','Overlap of atlas region');
         end
         if found_neg == 1
           fprintf('\n______________________________________________________');
           fprintf('\n%s: Negative effects\n%s',SO.img(2).vol.fname,atlas_name);
           fprintf('\n______________________________________________________\n\n');
-          fprintf('%7s\t%7s\t%15s\t%s\n\n','Value','   Size','    xyz [mm]   ','Overlap of atlas region');
+          fprintf('%7s\t%12s\t%15s\t%s\n\n','Value','Cluster-Size','    xyz [mm]   ','Overlap of atlas region');
         end
         
-        fprintf('%7.2f\t%7d\t%4.0f %4.0f %4.0f',maxZ(j),length(Zj{j}),XYZmmj{j}(:,indZ));
+        fprintf('%7.2f\t%12d\t%4.0f %4.0f %4.0f',maxZ(j),length(Zj{j}),XYZmmj{j}(:,indZ));
         for m=1:numel(labk{j})
           if Pl{j}(m) >= 1,
             if m==1, fprintf('\t%3.0f%%\t%s\n',Pl{j}(m),labk{j}{m});
-            else     fprintf('%7s\t%7s\t%15s\t%3.0f%%\t%s\n','       ','       ','               ',...
+            else     fprintf('%7s\t%12s\t%15s\t%3.0f%%\t%s\n','       ','       ','               ',...
               Pl{j}(m),labk{j}{m});
             end
           end
