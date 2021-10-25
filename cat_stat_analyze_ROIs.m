@@ -129,6 +129,7 @@ for i=1:numel(P)
     case 0
       fprintf('Label file %s not found in %s. Please check whether you have extracted ROI-based surface values or have moved your data.\n',sname,pth_label);
       roi_files_found = 0;
+      break
     case 1
       roi_names{i} = files{1};
       roi_files_found = roi_files_found + 1;
@@ -156,7 +157,7 @@ fprintf('\n')
 
 % select files interactively if no xml files were found
 if roi_files_found ~= n
-  roi_names0 = cellstr(spm_select(n ,'xml','Select xml files in the same order of your SPM design.',{},'',pattern));
+  roi_names0 = cellstr(spm_select(n ,'xml','Select xml files from label folder in the same order of your SPM design.',{},'',pattern));
   roi_names = roi_names0;
   
   roi_files_found = 0;

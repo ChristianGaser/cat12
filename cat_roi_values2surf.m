@@ -8,7 +8,7 @@ function cat_roi_values2surf(atlas_name, values, surfname);
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
-% $Id: cat_roi_values2surf.m 1864 2021-07-20 14:41:40Z dahnke $
+% $Id$
 
 if nargin == 0
   atlas_name = spm_select(1,'^lh.*\.annot$','Select left atlas file for value mapping',{},fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces_32k'));
