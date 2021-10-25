@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1897 | dahnke | 2021-10-24 10:50:29
+r1898 | gaser | 2021-10-25 09:12:42
+
+Changed paths:
+M       CHANGES.txt
+MM      cat_roi_values2surf.m
+M       cat_stat_analyze_ROIs.m
+M       cat_stat_confplot_spm.m
+
+(1) Changed: Added check for F-contrasts for effects of interest to 
+             cat_stat_confplot_spm.m to prevent plotting of raw data for 
+             that case.
+(2) Changed: Added a break if no xml-files were found to save time in 
+             cat_stat_analyze_ROIs.m.  
+
+------------------------------------------------------------------------
+r1897 | dahnke | 2021-10-24 10:51:16 +0200 (Sun, 24 Oct 2021) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +27,7 @@ M       ds.m
 (2) Fixed:      Corrected bug in longitudinal processing of single timepoints
                 with empty backgrounds in cat_main_updateSPM[1639].
                 
+
 
 
 
