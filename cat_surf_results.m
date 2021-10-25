@@ -1463,8 +1463,8 @@ for ind = [1 3]
       fprintf('\n%s', spm_str_manip(H.S{round(ind / 2)}.info(indsurf).fname, 'k50d'));
       fprintf('\n______________________________________________________\n\n');
       
-      if H.logP(H.results_sel), fprintf('%7s\t%8s\t%s\n', 'P-value', 'Size', 'Overlap of atlas region');
-      else, fprintf('%7s\t%8s\t%s\n', 'Value  ', 'Size', 'Overlap of atlas region'); end
+      if H.logP(H.results_sel), fprintf('%7s\t%16s\t%s\n', 'P-value', 'Cluster-Size', 'Overlap of atlas region');
+      else, fprintf('%7s\t%16s\t%s\n', 'Value  ', 'Cluster-Size', 'Overlap of atlas region'); end
       
       for i = 1:max(C)
         N = find(C == i);
@@ -1472,8 +1472,8 @@ for ind = [1 3]
         
         dmax = d(indp); dmax = max(dmax(N));
         
-        if H.logP(H.results_sel), fprintf('\n%1.5f\t%8d', 10^(-dmax), k);
-        else, fprintf('\n%6.1f\t%8d', dmax, k); end
+        if H.logP(H.results_sel), fprintf('\n%1.5f\t%16d', 10^(-dmax), k);
+        else, fprintf('\n%6.1f\t%16d', dmax, k); end
         
         Nrdata = rdata2(N);
         roi_size = zeros(size(rcsv, 1) - 1, 1);
@@ -1490,7 +1490,7 @@ for ind = [1 3]
         for j = 1:length(jj)
           if roi_size(jj(j)) > 1
             if j == 1, fprintf('\t%3.0f%s\t%s\n', roi_size(jj(j)), '%', rcsv{jj(j) + 1, 2});
-            else, fprintf('%7s\t%8s\t%3.0f%s\t%s\n', '       ', '        ', ...
+            else, fprintf('%7s\t%16s\t%3.0f%s\t%s\n', '       ', '        ', ...
                 roi_size(jj(j)), '%', rcsv{jj(j) + 1, 2});
             end
           end
@@ -1510,16 +1510,16 @@ for ind = [1 3]
       fprintf('\n%s', spm_str_manip(H.S{round(ind / 2)}.info(indsurf).fname, 'k50d'));
       fprintf('\n______________________________________________________\n\n');
       
-      if H.logP(H.results_sel), fprintf('%7s\t%8s\t%s\n', 'P-value', 'Size', 'Overlap of atlas region');
-      else, fprintf('%7s\t%8s\t%s\n', 'Value  ', 'Size', 'Overlap of atlas region'); end
+      if H.logP(H.results_sel), fprintf('%7s\t%16s\t%s\n', 'P-value', 'Cluster-Size', 'Overlap of atlas region');
+      else, fprintf('%7s\t%16s\t%s\n', 'Value  ', 'Cluster-Size', 'Overlap of atlas region'); end
       
       for i = 1:max(C)
         N = find(C == i);
         k = length(N);
         
         dmin = d(indn); dmin = min(dmin(N));
-        if H.logP(H.results_sel), fprintf('\n%1.5f\t%8d', 10^(dmin), k);
-        else, fprintf('\n%6.1f\t%8d', -dmin, k); end
+        if H.logP(H.results_sel), fprintf('\n%1.5f\t%16d', 10^(dmin), k);
+        else, fprintf('\n%6.1f\t%16d', -dmin, k); end
         
         Nrdata = rdata2(N);
         roi_size = zeros(size(rcsv, 1) - 1, 1);
@@ -1535,7 +1535,7 @@ for ind = [1 3]
         for j = 1:length(jj)
           if roi_size(jj(j)) > 1
             if j == 1, fprintf('\t%3.0f%s\t%s\n', roi_size(jj(j)), '%', rcsv{jj(j) + 1, 2});
-            else, fprintf('%7s\t%8s\t%3.0f%s\t%s\n', '       ', '        ', ...
+            else, fprintf('%7s\t%16s\t%3.0f%s\t%s\n', '       ', '        ', ...
                 roi_size(jj(j)), '%', rcsv{jj(j) + 1, 2});
             end
           end
@@ -3029,7 +3029,7 @@ switch H.cursor_mode
     clearDataCursorPlot(H);
   case {1, 2, 3, 4}
     clearDataCursorPlot(H);
-    set(dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', ...
+    set(dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', 'Interpreter', 'none', ...
       'DisplayStyle', 'datatip', 'Updatefcn', {@myDataCursorAtlas, H});
   case {5, 6}
     
@@ -3080,7 +3080,7 @@ switch H.cursor_mode
     end
 
     if SPM_found
-      set(dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', ...
+      set(dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', 'Interpreter', 'none', ...
         'DisplayStyle', 'datatip', 'Updatefcn', {@myDataCursorCluster});
       if H.predicted > -2
         fprintf('The values are available at the MATLAB command line as variable ''y''\n');
@@ -3563,7 +3563,7 @@ if H.cursor_mode > 1
   rdata_pos = H.rdata{sel_atlas}(node, ind);
   
   if rdata_pos == 0
-    txt={''};
+    txt = {''};
     return
   end
   
@@ -3590,7 +3590,7 @@ else
     
     rdata_pos = H.rdata{sel_atlas}(node, ind);
     if rdata_pos == 0
-      txt={''};
+      txt = {''};
       return
     end
 
@@ -3603,7 +3603,7 @@ else
       end
     end
   end
-  txt=txt(2:4);
+  txt = txt(2:4);
 end
 
 %==========================================================================

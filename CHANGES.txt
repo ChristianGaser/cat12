@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1898 | gaser | 2021-10-25 09:12:42
+r1899 | gaser | 2021-10-25 10:17:00
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main_LAS2.m
+M       cat_main_LASs.m
+M       cat_stat_spm2x.m
+M       cat_surf_results.m
+M       cat_vol_slice_overlay.m
+
+(1) Changed: Replaced "Size" by "Cluster-Size" in some functions to better
+             describe that parameter.
+(2) Changed: Set text interpreter to "none" in cat_surf_results.m for data tips.
+(3) Fixed:   Corrected some typos.
+
+------------------------------------------------------------------------
+r1898 | gaser | 2021-10-25 09:12:48 +0200 (Mon, 25 Oct 2021) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +28,7 @@ M       cat_stat_confplot_spm.m
              that case.
 (2) Changed: Added a break if no xml-files were found to save time in 
              cat_stat_analyze_ROIs.m.  
+
 
 ------------------------------------------------------------------------
 r1897 | dahnke | 2021-10-24 10:51:16 +0200 (Sun, 24 Oct 2021) | 16 lines
