@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1899 | gaser | 2021-10-25 10:17:00
+r1900 | gaser | 2021-10-25 11:13:11
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_confplot_spm.m
+
+Fixed: Restricted plots of covariates in cat_stat_confplot_spm.m.
+------------------------------------------------------------------------
+r1899 | gaser | 2021-10-25 10:17:10 +0200 (Mon, 25 Oct 2021) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +21,7 @@ M       cat_vol_slice_overlay.m
              describe that parameter.
 (2) Changed: Set text interpreter to "none" in cat_surf_results.m for data tips.
 (3) Fixed:   Corrected some typos.
+
 
 ------------------------------------------------------------------------
 r1898 | gaser | 2021-10-25 09:12:48 +0200 (Mon, 25 Oct 2021) | 13 lines

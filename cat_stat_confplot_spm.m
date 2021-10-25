@@ -128,6 +128,14 @@ catch
   try close(Hc.h12); end
 end
 
+% determine which contrast
+%---------------------------------------------------------------
+%if ~exist('Ic','var')
+  Ic = spm_input('Which contrast?','!+1','m',{SPM.xCon.name});
+%end
+
+xCon = SPM.xCon(Ic);
+
 F_contrast_multiple_rows = 0;
 
 % for F-contrasts if rank is 1 we can use the first row
@@ -140,24 +148,21 @@ if strcmp(xCon.STAT,'F')
 end
 
 % some F-contrasts such as eoi are not yet supported to plot raw data
-if F_contrast_multiple_rows && size(c0,1) > 1 && all(all(c0 == eye(size(c0,1))))
-  fprintf('For some F-contrasts (i.e. effects of interest) no plot of raw data is possible!\n');
-  Hc.y_found = 0;
-  try close(Hc.h12); end
+if F_contrast_multiple_rows 
+  c0 = xCon.c;
+  c0 = c0(any(c0'),:);
+
+  if size(c0,1) > 1 && all(all(c0 == eye(size(c0,1))))
+    fprintf('\nFor some F-contrasts (i.e. effects of interest) no plot of raw data is possible!\n');
+    Hc.y_found = 0;
+    try close(Hc.h12); end
+  end
 end
 
 ResMS  = spm_get_data(SPM.VResMS,XYZ);
 ResMS  = mean(ResMS,2);
 Bcov   = ResMS*SPM.xX.Bcov;
 Bcov   = Bcov;
-
-% determine which contrast
-%---------------------------------------------------------------
-if ~exist('Ic','var')
-  Ic = spm_input('Which contrast?','!+1','m',{SPM.xCon.name});
-end
-
-xCon = SPM.xCon(Ic);
 
 TITLE = {Cplot XYZstr};
 
@@ -517,7 +522,8 @@ if Hc.y_found
   title_name = 'raw data ';
   if Hc.adjust, title_name = ['adjusted ' title_name]; end
 
-  if covariate && exist('H')
+  % don't plot for multiple covariates because the plot might not be correct
+  if covariate && numel(SPM.xX.iC) < 2
 
     % previous plot must be deleted
     clf
@@ -527,13 +533,13 @@ if Hc.y_found
     if exist('x','var') && numel(x)==size(X,1)
       xx_array = [min(x) max(x)]; 
       for i=1:n_effects
-        xx{i} = X(H.SPM{1}.xX.I(:,3)==i);
+        xx{i} = X(SPM.xX.I(:,3)==i);
       end
       x0 = x;
     else
       xx_array = [min(X(X~=0)) max(X(X~=0))]; 
       for i=1:n_effects
-        xx{i} = X(H.SPM{1}.xX.I(:,3)==i,i);
+        xx{i} = X(SPM.xX.I(:,3)==i,i);
       end
       x0 = sum(X,2);
     end
