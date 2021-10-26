@@ -303,7 +303,7 @@ function varargout = cat_surf_parameters(job)
                 cat_io_FreeSurfer('write_surf_data',PGI{GIi},curv ); clear curv;
               else % MNI
                 cmd = sprintf('CAT_DumpCurv "%s" "%s" 0 0 1',Pname,PGI{GIi});
-                [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug,job.trerr);
+                cat_system(cmd,job.debug,job.trerr);
               end
               if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(PGI{GIi},'link','cat_surf_display(''%s'')')); end
             end
@@ -332,7 +332,7 @@ function varargout = cat_surf_parameters(job)
             stime = clock; 
             cmd = sprintf('CAT_SulcusDepth %s "%s" "%s" "%s"',option,Pname,Psphere,PSD{SDi});
             try
-              [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug*0,job.trerr*0);
+              cat_system(cmd,job.debug*0,job.trerr*0);
             catch
               % catch block that was required for some simulated datasets
               % and can probably removed in future (RD 202002)
@@ -350,7 +350,7 @@ function varargout = cat_surf_parameters(job)
               cmd = sprintf('CAT_SulcusDepth %s "%s" "%s" "%s"',option,Pname2,Psphere,PSD{SDi});
               delete(Pname2); 
 
-              [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug,job.trerr);
+              cat_system(cmd,job.debug,job.trerr);
             end
             if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(PSD{SDi},'link','cat_surf_display(''%s'')')); end
           end
@@ -368,7 +368,7 @@ function varargout = cat_surf_parameters(job)
           else
             stime = clock; 
             cmd = sprintf('CAT_FractalDimension -sphere "%s" -nosmooth "%s" "%s" "%s"',Psphere,Pname,Psphere,PFD);
-            [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug,job.trerr);
+            cat_system(cmd,job.debug,job.trerr);
             if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(PFD,'link','cat_surf_display(''%s'')')); end
           end
           if nargout==1, varargout{1}.([sides{si} 'PFD']){i} = PFD; end  
@@ -387,7 +387,7 @@ function varargout = cat_surf_parameters(job)
               else
                 stime = clock; 
                 cmd = sprintf('CAT_DumpSurfaceRatio "%s" "%s" %d -no_normalization %d',Pxname,PtGI{ti,1},job.tGI( ti ),job.tGI( ti )<0); 
-                [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug,job.trerr);
+                cat_system(cmd,job.debug,job.trerr);
                 if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(PtGI{ti,1},'link','cat_surf_display(''%s'')')); end
               end
               if nargout==1, varargout{1}.([sides{si} 'P' PtGI{ti,2} ]){i} = PtGI{ti,1}; end

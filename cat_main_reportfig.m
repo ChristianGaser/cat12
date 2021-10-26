@@ -945,7 +945,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
                   Pcentral = sprintf('%s.gii',tempname);    
                   CSo = gifti(Psurf(id1).Pcentral);
                   cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 0',Psurf(id1).Pcentral,Pcentral,1);
-                  [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+                  cat_system(cmd,0);
                   CSx = gifti(Pcentral);
                   CSx = export(CSx,'patch');
                   delete(Pcentral); 

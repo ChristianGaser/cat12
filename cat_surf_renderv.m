@@ -101,7 +101,7 @@ function varargout = cat_surf_renderv(S,facevertexcdata,opt)
     Pcentral = sprintf('%s.gii',tempname);        
     save(gifti(struct('faces',Sx.faces,'vertices',Sx.vertices)),Pcentral);    
     cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f 0',Pcentral,Pcentral,1); 
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+    cat_system(cmd,0);
     Sx = gifti(Pcentral);
     delete(Pcentral); 
     Sx.facevertexcdata = cat_surf_fun('surf2surf',Sxo,Sx,Sxo.facevertexcdata); % ... not working 

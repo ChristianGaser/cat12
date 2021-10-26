@@ -1,9 +1,14 @@
-function [ST, RS] = cat_system(varargin)
+function varargout = cat_system(cmd,verb,trerr)
 % ______________________________________________________________________
 % CAT12 wrapper for system calls
 % This is necessary because windows does not allow spaces in system
 % calls. Thus, we have to cd into that folder and call the command
 % from this folder.
+%
+% cat_system(cmd,debugON,trerr)
+% cmd       .. system call;
+% verb.     .. verbosity
+% trerr     .. trough an error message (default), else just display error
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -18,12 +23,14 @@ rev = '$Rev$';
 if nargin == 0
   error('Argument is missing');
 end
+if nargin < 3 trerr = 1; end
+if nargin < 2 verb = 0; end
 
 CATDir = fullfile(spm('dir'),'toolbox','cat12','CAT');
 
 % replace spaces in directory name
 if ~ispc
-  CATDir      = strrep(CATDir,' ','\ ');
+  CATDir = strrep(CATDir,' ','\ ');
 end
 
 if ispc
@@ -43,11 +50,58 @@ end
 if ispc
   olddir = pwd;
   cd(CATDir);
-  [ST, RS] = system(varargin{1});
+  [ST, RS] = system(cmd);
   cd(olddir);
 else
-  cmd = fullfile(CATDir,varargin{1});
+  cmd = fullfile(CATDir,cmd);
   warning off % this is to prevent warnings by calling cat12 from the shell script
   [ST, RS] = system(cmd);
   warning on
 end
+
+if nargout > 0
+  varargout{1} = cat_check_system_output(ST,RS,verb,trerr);
+else
+  cat_check_system_output(ST,RS,verb,trerr);
+end
+
+% for mac we need to enable execution because of Apple Gatekeeper
+if ismac && ST == 137
+  [ST2, RS2] = system('spctl --status');
+  if ~isempty(strfind(RS2,'enabled'))
+    cat_io_cmd(sprintf('\nThe following commands will be executed as administrator to allow execution of CAT12 binaries and mex-files.\n Please now type admin password to call sudo\n'),'warning');
+    cmd = ['sudo xattr -r -d com.apple.quarantine ' catdir];
+    system(cmd); fprintf([cmd '\n']);
+    cmd = ['sudo find ' catdir ' -name *.mexmac* -exec spctl --add {} \;'];
+    system(cmd); fprintf([cmd '\n']);
+    cmd = ['sudo chmod a+x ' catdir '/CAT.mac*/CAT*'];
+    system(cmd); fprintf([cmd '\n']);
+    cmd = ['sudo find ' catdir ' -name *.mexmac* -exec xattr -d com.apple.quarantine {} \;'];
+    system(cmd); fprintf([cmd '\n']);
+    ST = system(fullfile(CATDir,'CAT_3dVol2Surf'));
+  end
+end
+
+if ST > 1
+  if ispc
+    [ST, RS] = system('systeminfo.exe');
+  else
+    [ST, RS] = system('uname -a');
+  end
+  str = sprintf('\nWARNING: Surface processing will not work because\n(1) CAT binaries are not compatible to your system or\n(2) File permissions are not correct (for unix use chmod a+x) or\n(3) Antivirus software in Windwos or Gatekeeper in MAC OS is blocking to execute binaries\nSystem: %s\n',RS);
+  cat_io_cmd(str,'warning');
+  helpdlg(str,'Error Using Surface Tools');
+  
+  % check Gatekeeper on MAC OS
+  if ismac
+    [ST, RS] = system('spctl --status');
+    if ~isempty(strfind(RS,'enabled'))
+      str = 'Please disable Gatekeeper on MAC OS!';
+      fprintf('\n\n%s\n',str);
+      helpdlg(str,'Gatekeeper error');
+      web('https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)#Troubleshooting');
+    end
+  end
+  fprintf('\n\nFor future support of your system please send this message to christian.gaser@uni-jena.de\n\n');
+end
+

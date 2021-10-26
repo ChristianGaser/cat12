@@ -288,15 +288,14 @@ function vout = cat_surf_resamp(varargin)
           ncdata = cat_surf_fun('useEdgemap',cdata,edgemap); 
           cat_io_FreeSurfer('write_surf_data',Pvalue,ncdata); 
           cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,Pvalue0,Pvalue);
-          [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
+          err = cat_system(cmd,job.debug,def.trerr); if err, continue; end
           cat_io_FreeSurfer('write_surf_data',Pvalue,ncdata); 
           clear Si clear Si edgemap; 
 
         else
           %% resample values using warped sphere 
           cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,Pvalue0,Pvalue);
-          [ST, RS] = cat_system(cmd); 
-          evalc('err = cat_check_system_output(ST,RS,job.debug,def.trerr);');
+          evalc('err = cat_system(cmd,job.debug,def.trerr);');
           %%
           if err, continue; end
         end
@@ -310,7 +309,7 @@ function vout = cat_surf_resamp(varargin)
           else
             cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue,Pmask);
           end
-          [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr);
+          err = cat_system(cmd,job.debug,def.trerr);
           %%
           if err
             cat_io_cprintf('err',sprintf('%sERROR - Smoothing & resampling of "%s" failed!\n',Presamp)); 
@@ -321,7 +320,7 @@ function vout = cat_surf_resamp(varargin)
 
         %% add values to resampled surf and save as gifti
         cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Presamp,Pfwhm,Pfwhm_gii);
-        [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr);% if err, continue; end
+        err = cat_system(cmd,job.debug,def.trerr);% if err, continue; end
 
         if exist(Pfwhm_gii,'file'), Psname = Pfwhm_gii; end
 

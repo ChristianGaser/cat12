@@ -333,7 +333,7 @@ function out = cat_surf_vol2surf(varargin)
 
         cmd = sprintf('CAT_3dVol2Surf %s %s "%s" "%s" "%s"',...
           mappingstr, addstr,job.(sside{si})(vi).Pmesh, P.vol{vi}, Pout{si});
-        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
+        cat_system(cmd,job.debug);
         
         if job.verb && ~job.merge_hemi
           fprintf('Display %s\n',spm_file(P.data{vi,si},'link','cat_surf_display(''%s'')'));
@@ -430,7 +430,7 @@ function out = cat_surf_vol2surf(varargin)
         
         cmd = sprintf('CAT_3dVol2Surf %s %s "%s" "%s" "%s"',...
           mappingstr, addstr, job.(sside{si})(vi).Pmesh, P.vol{vi}, P.data{vi,si});
-        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
+        cat_system(cmd,job.debug);
         
         if job.gifti==1
           P.data{vi,si} = char(cat_io_FreeSurfer('fs2gii',struct('data',job.(sside{si})(vi).Pmesh,'cdata',P.data{vi,si},'delete',0)));

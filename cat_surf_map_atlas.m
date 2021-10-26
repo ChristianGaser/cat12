@@ -57,7 +57,7 @@ for k = 1:size(hemi,1)
         
       cmd = sprintf('CAT_ResampleSurf -label "%s" "%s" "%s" "NULL" "%s" "%s"',...
         fs_central,fs_sphere,spherereg{1},fs_annot_txt,annot_txt{1});
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS);
+      cat_system(cmd);
       delete(fs_annot_txt)
       if ~ST
         fprintf('Save %s\n',annot_tmp{1});
