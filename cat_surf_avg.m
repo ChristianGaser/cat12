@@ -92,10 +92,10 @@ function varargout = cat_surf_avg(varargin)
           if ~exist(Presamp,'file')
             %try
               cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,FSavgsphere{si},Presamp);
-              [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+              cat_system(cmd,opt.debug);
             %catch
             %  cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,FSavgfname{si},Presamp);
-            %  [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+            %  cat_system(cmd,opt.debug);
             %end
           end
 
@@ -127,17 +127,17 @@ function varargout = cat_surf_avg(varargin)
           save(gifti(struct('faces',S.faces,'vertices',...
             Savg.(side{si}).vertices)),filename{si,smi});
           cmd = sprintf('CAT_BlurSurfHK "%s" "%s" %d',filename{si,smi},filename{si,smi},job.meshsmooth(smi));
-          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+          cat_system(cmd,0);
         else
           save(gifti(struct('faces',FSavg.(side{si}).faces,'vertices',...
             [-Savg.(side{si}).vertices(:,1),FSavg.(side{si}).vertices(:,2:3)])),filename{si,smi});
           cmd = sprintf('CAT_BlurSurfHK "%s" "%s" %d',filename{si,smi},filename{si,smi},job.meshsmooth(smi));
-          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+          cat_system(cmd,0);
           
           save(gifti(struct('vertices',Savg.(side{si}).vertices,'faces',...
             [FSavg.(side{si}).faces(:,2),FSavg.(side{si}).faces(:,1),FSavg.(side{si}).faces(:,3)])),filename{si+1,smi});
           cmd = sprintf('CAT_BlurSurfHK "%s" "%s" %d',filename{si+1,smi},filename{si+1,smi},job.meshsmooth(smi));
-          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+          cat_system(cmd,0);
         end
         nfi = nfi + 1; spm_progress_bar('Set',nfi);
       end

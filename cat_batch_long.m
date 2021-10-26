@@ -51,7 +51,7 @@ else
   else
     fprintf('Use defaults in %s.\n',cat_defaults);
     [pp, name] = spm_fileparts(cat_defaults);
-    clear cat_defaults
+%    clear cat_defaults
     oldpath = pwd;
     cd(pp)
     eval(name);

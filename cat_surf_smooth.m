@@ -94,7 +94,7 @@ function varargout = cat_surf_smooth(varargin)
         if job.catblur
           [PS,PC]  =  cat_io_FreeSurfer('gii2fs',Pdata{i});
           cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',sinfo(i).Pmesh,Psdata{i},fwhm,PC{1}); % load mesh separate anyway
-          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
+          cat_system(cmd,job.debug);
         else % spm mesh data smoothing
           T = gifti(Pdata{i});
           if sinfo(i).resampled % resampled (with mesh data)
@@ -111,7 +111,7 @@ function varargout = cat_surf_smooth(varargin)
         % smoothing of FreeSurfer data
         if job.catblur
           cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',sinfo(i).Pmesh,Psdata{i},fwhm,Pdata{i});
-          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
+          cat_system(cmd,job.debug);
         else % spm mesh data smoothing
            M = gifti(sinfo(i).Pmesh); 
            T = gifti(cat_io_FreeSurfer('read_surf_data',Pdata{i}));
@@ -124,7 +124,7 @@ function varargout = cat_surf_smooth(varargin)
       if job.catblur
         if sinfo(i).statready || strcmp(sinfo(i).ee,'.gii')
           cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Pdata{i},Psdata{i},Psdata{i});
-          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug,def.trerr);
+          cat_system(cmd,job.debug,def.trerr);
         end
       
         % remove temporary FreeSurfer data

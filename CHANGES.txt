@@ -1,11 +1,46 @@
 ------------------------------------------------------------------------
-r1900 | gaser | 2021-10-25 11:13:11
+r1901 | gaser | 2021-10-26 12:25:02
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_batch_long.m
+M       cat_check_system_output.m
+M       cat_main_reportfig.m
+M       cat_surf_avg.m
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       cat_surf_flipsides.m
+M       cat_surf_fun.m
+M       cat_surf_gyrification.m
+M       cat_surf_map_atlas.m
+M       cat_surf_parameters.m
+M       cat_surf_renderv.m
+M       cat_surf_resamp.m
+M       cat_surf_resamp_freesurfer.m
+M       cat_surf_results.m
+M       cat_surf_smooth.m
+M       cat_surf_surf2roi.m
+M       cat_surf_vol2surf.m
+M       cat_system.m
+M       check_pipeline.sh
+M       html/cat.html
+M       spm_cat12.m
+
+(1) Changed: Integrated cat_check_system_output.m into cat_system.m to make
+             system calls easier.
+(2) Changed: Added check whether binaries can be executed to cat_system.m.
+(3) Changed: Changed check for render view in check_pipeline.sh.
+(4) Fixed:   Removed clearing of cat_defaults in cat_batch_long.m.
+------------------------------------------------------------------------
+r1900 | gaser | 2021-10-25 11:13:19 +0200 (Mon, 25 Oct 2021) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_stat_confplot_spm.m
 
 Fixed: Restricted plots of covariates in cat_stat_confplot_spm.m.
+
 ------------------------------------------------------------------------
 r1899 | gaser | 2021-10-25 10:17:10 +0200 (Mon, 25 Oct 2021) | 14 lines
 

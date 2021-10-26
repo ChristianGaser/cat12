@@ -613,7 +613,7 @@ function varargout = cat_surf_GMboundarySurface(type,varargin)
     Ptype  = cat_io_strrep(Praw,'central',type);
     
     cmd = sprintf('CAT_Central2Pial "%s" "%s" "%s" %0.2f',Praw,Pthick,Ptype,direction); 
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,1);
+    cat_system(cmd,1);
 
     if strcmp(ee,'')
       Ptype = cat_io_FreeSurfer('gii2fs',Ptype); 
@@ -636,7 +636,7 @@ function varargout = cat_surf_GMboundarySurface(type,varargin)
     Ptype  = strrep(Praw,'central',type);
    
     cmd = sprintf('CAT_Central2Pial "%s" "%s" %0.2f',Praw,Pthick,direction); 
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,1);
+    cat_system(cmd,1);
     
     % load surface 
     varargout{1} = gifti(Ptype); 
@@ -983,7 +983,7 @@ function A = cat_surf_smoothtexture(S,A,smooth,Amax)
   
   % smooth textures
   cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',Pmesh,Parea,smooth,Parea);
-  [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,debug);
+  cat_system(cmd,debug);
   
   % load smoothed textures
   A  = cat_io_FreeSurfer('read_surf_data',Parea);
@@ -1225,7 +1225,7 @@ function res = cat_surf_evalCS(CS,Tpbt,Tfs,Ym,Ypp,Pcentral,mat,verb,estSI)
       cmd = sprintf('CAT_Central2Pial -equivolume -weight 1 "%s" "%s" "%s" 0', ...
                      Pcentralx,Ppbtx,Player4x);
       try
-        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+        cat_system(cmd,0);
         L4 = gifti(Player4x);
         uL4 = 1; 
         delete(Player4x);
@@ -1335,13 +1335,13 @@ function res = cat_surf_evalCS(CS,Tpbt,Tfs,Ym,Ypp,Pcentral,mat,verb,estSI)
     save(gifti(struct('faces',CS.faces,'vertices',VO)),Ppial,'Base64Binary');
 
     %cmd = sprintf('CAT_SurfDistance -mean "%s" "%s" "%s"',Pwhite,Ppial,Pthick);
-    %[ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS);
+    %cat_system(cmd);
     
     % write self intersection maps
     cmd = sprintf('CAT_SelfIntersect "%s" "%s"',Pwhite,Pselfw); 
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+    cat_system(cmd,0);
     cmd = sprintf('CAT_SelfIntersect "%s" "%s"',Ppial,Pselfp); 
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+    cat_system(cmd,0);
     
     selfw = cat_io_FreeSurfer('read_surf_data',Pselfw);
     selfp = cat_io_FreeSurfer('read_surf_data',Pselfp);
@@ -1538,16 +1538,16 @@ function cat_surf_saveICO(S,Tpbt,Pcs,subdir,Pm,mat,writeTfs,writeSI,writeL4,writ
   % write self intersection maps
   if writeSI
     cmd = sprintf('CAT_SelfIntersect "%s" "%s"',Pwhite,Pselfw); 
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+    cat_system(cmd,0);
     cmd = sprintf('CAT_SelfIntersect "%s" "%s"',Ppial,Pselfp); 
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+    cat_system(cmd,0);
   end
   
   % save thickness
   cat_io_FreeSurfer('write_surf_data',Ppbt,Tpbt);
   if exist('writeTfs','var') && ~isempty(writeTfs) && writeTfs
     cmd = sprintf('CAT_SurfDistance -mean "%s" "%s" "%s"',Pwhite,Ppial,Pthick);
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+    cat_system(cmd,opt.verb-2);
     fprintf('Display thickness: %s\n',spm_file(Pthick ,'link','cat_surf_display(''%s'')'));
   end
   
@@ -1555,7 +1555,7 @@ function cat_surf_saveICO(S,Tpbt,Pcs,subdir,Pm,mat,writeTfs,writeSI,writeL4,writ
   if writeL4
     cmd = sprintf('CAT_Central2Pial -equivolume -weight 1 "%s" "%s" "%s" 0', ...
                      Pcentral,Ppbt,Player4);
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+    cat_system(cmd,0);
   end
   
   % save intensities
@@ -1583,12 +1583,12 @@ function cat_surf_saveICO(S,Tpbt,Pcs,subdir,Pm,mat,writeTfs,writeSI,writeL4,writ
   if ~isnumeric( Pm ) && exist(Pm,'file')
     % use the file data ... slow????
     cmd = sprintf('CAT_3dVol2Surf -linear -steps 1 -start 0 -end 1 "%s" "%s" "%s"',Pwhite , Pm, PintIS);
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+    cat_system(cmd,0);
     cmd = sprintf('CAT_3dVol2Surf -linear -steps 1 -start 0 -end 0 "%s" "%s" "%s"',Ppial  , Pm, PintOS);
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+    cat_system(cmd,0);
     if writeL4
       cmd = sprintf('CAT_3dVol2Surf -linear -steps 1 -start 0 -end 0 "%s" "%s" "%s"',Player4, Pm, PintL4);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+      cat_system(cmd,0);
     end
   elseif ndims(Pm)==3
     int = cat_surf_isocolors2(Pm,VO,mat); cat_io_FreeSurfer('write_surf_data',PintOS,int);
@@ -1795,9 +1795,9 @@ function [S,Tn,SI] = cat_surf_collision_correction_ry(S,T,Y,opt)
 
     % call self-intersection function 
     cmd = sprintf('CAT_SelfIntersect "%s" "%s"',Pwhite,Pselfw); 
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+    cat_system(cmd,0);
     cmd = sprintf('CAT_SelfIntersect "%s" "%s"',Ppial,Pselfp); 
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
+    cat_system(cmd,0);
 
     selfw = cat_io_FreeSurfer('read_surf_data',Pselfw)>0; 
     selfp = cat_io_FreeSurfer('read_surf_data',Pselfp)>0; 
@@ -3324,7 +3324,7 @@ function [Yp,Yt,vmat1,vmat1i] = cat_surf_surf2vol(S,Y,T,type,opt)
     Praw = [tempname '.gii'];
     save(gifti(struct('vertices',S.vertices,'faces',S.faces)),Praw); 
     cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Praw,Praw,opt.refine .* mean(vx_vol)); 
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+    cat_system(cmd,opt.debug);
     Sr = gifti(Praw);
     delete(Praw);
   end
@@ -3638,7 +3638,7 @@ function [V,vmat,vmati] = cat_surf_surf2vol_old(S,opt)
     save(gifti(struct('vertices',S.vertices,'faces',S.faces)),Praw); 
 
     cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Praw,Praw,opt.refine .* opt.interpBB.interpV); 
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+    cat_system(cmd,opt.debug);
 
     So = S; S = gifti(Praw);
     delete(Praw);

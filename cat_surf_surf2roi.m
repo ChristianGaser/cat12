@@ -262,7 +262,7 @@ function resamp = get_resampled_values(P,debug,type)
         
     % resample values using warped sphere 
     cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,P,Pvalue);
-    [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,debug,0);
+    err = cat_system(cmd,debug,0);
     delete(Presamp);
 
   end
