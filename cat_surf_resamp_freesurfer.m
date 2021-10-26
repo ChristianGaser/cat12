@@ -89,15 +89,15 @@ function cat_surf_resamp_freesurfer(vargin)
   
       % resample values using warped sphere 
       cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Psmoothwm,Pspherereg,Pfsavg,Presamp,Pmeasure,Pvalue);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+      cat_system(cmd,opt.debug);
     
       % smooth resampled values
       cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,fwhm_surf,Pvalue,Pmask);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+      cat_system(cmd,opt.debug);
   
       % add values to resampled surf and save as gifti
       cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Presamp,Pfwhm,[Pfwhm '.gii']);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+      cat_system(cmd,opt.debug);
     
       % remove path from metadata to allow that files can be moved (pathname is fixed in metadata) 
       [pp2,ff2,ex2]   = spm_fileparts([Pfwhm '.gii']);

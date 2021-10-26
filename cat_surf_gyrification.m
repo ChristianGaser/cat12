@@ -374,7 +374,7 @@ function A = cat_surf_smootharea(S,SA,smooth,Amax)
   
   % smooth textures
   cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',Pmesh,Parea,smooth,Parea);
-  [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,debug);
+  cat_system(cmd,debug);
   
   % load smoothed textures
   A  = cat_io_FreeSurfer('read_surf_data',Parea);
@@ -427,7 +427,7 @@ function Psgi = cat_surf_SGI_inflate(sinfo,opt)
   
   % spherical mapping of the hull
   cmd = sprintf('CAT_Surf2Sphere "%s" "%s" %d',sinfo.Pmesh,Pinflate,opt.inflate);
-  [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+  cat_system(cmd,opt.debug);
 
   % load surfaces
   Scs = gifti(sinfo.Pmesh);
@@ -446,7 +446,7 @@ function Psgi = cat_surf_SGI_inflate(sinfo,opt)
   % smoothing 
   if opt.smooth>0
     cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',sinfo.Pmesh,Psgi,opt.smooth,Psgi);
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+    cat_system(cmd,opt.debug);
     cat_surf_display(Psgi); 
   end
   
@@ -471,7 +471,7 @@ function Psgigii = cat_surf_GI_average(sinfo,opt)
 
   % resample hull surface in subject space
   cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s"',sinfo.Pmesh,sinfo.Psphere,opt.Pfsavgsph,Pcentral);
-  [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug,opt.trerr); 
+  cat_system(cmd,opt.debug,opt.trerr); 
   
   % load surfaces
   Scs = gifti(Pcentral);
@@ -493,19 +493,19 @@ function Psgigii = cat_surf_GI_average(sinfo,opt)
   
   %% resample hull surface in subject space ... 
   %cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',opt.Pfsavg,opt.Pfsavgsph,sinfo.Pmesh,sinfo.Psphere,Psgi,Psgi);
-  %[ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug,opt.trerr); 
+  %cat_system(cmd,opt.debug,opt.trerr); 
   
   %% smoothing
   if opt.smooth>0
     %cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',Pcentral,Ptmp,opt.smooth,Psgi);
-    %[ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+    %cat_system(cmd,opt.debug);
     %cat_surf_display(Psgi)
     
     %%
     cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',Pcentral,Ptmp,opt.smooth,Psgi);
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+    cat_system(cmd,opt.debug);
     cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Pcentral,Ptmp,[Ptmp '.gii']);
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+    cat_system(cmd,opt.debug);
     cat_surf_display([Ptmp '.gii'])
   end
   
@@ -538,25 +538,25 @@ function Psgi = cat_surf_SGI_hullmapping(sinfo,opt)
   
   % remove some unconnected meshes
   cmd = sprintf('CAT_SeparatePolygon "%s" "%s" -1',Phull,Phull); 
-  [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+  cat_system(cmd,opt.debug);
 
   % surface refinement by simple smoothing
   cmd = sprintf('CAT_BlurSurfHK "%s" "%s" %0.2f',Phull,Phull,5);
-  [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+  cat_system(cmd,opt.debug);
 
   % spherical mapping of the hull
   cmd = sprintf('CAT_Surf2Sphere "%s" "%s" 5',Phull,Phullsphere);
-  [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+  cat_system(cmd,opt.debug);
   Phullsphere  = Phull;
   
   % spherical registration to central surface ... -type 0
   cmd = sprintf('CAT_WarpSurf -norot -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',...
     Phull,Phullsphere,sinfo.Pmesh,sinfo.Psphere,Phullspherereg);
-  [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+  cat_system(cmd,opt.debug);
 
   % resample hull surface in subject space
   cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s"',Phull,Phullspherereg,sinfo.Psphere,PhullR);
-  [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug,opt.trerr); 
+  cat_system(cmd,opt.debug,opt.trerr); 
   
   %% load surfaces
   Scs = gifti(sinfo.Pmesh);
@@ -575,7 +575,7 @@ function Psgi = cat_surf_SGI_hullmapping(sinfo,opt)
   % smoothing 
   if opt.smooth>0
     cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',sinfo.Pmesh,Psgi,opt.smooth,Psgi);
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+    cat_system(cmd,opt.debug);
     cat_surf_display(Psgi)
   end
   

@@ -118,7 +118,7 @@ function Prdata = cat_surf_flipsides(job)
       % registration 
       cmd = sprintf('CAT_WarpSurf -type 0 -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',...
         Pflipcentral{si},Pflipsphere{si},Pcentral{~(si-1)+1},Psphere{~(si-1)+1},Preg{~(si-1)+1});
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
+      cat_system(cmd,job.debug);
     end
   end
   
@@ -157,7 +157,7 @@ function Prdata = cat_surf_flipsides(job)
 
         cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',...
           fullfile(pp,[ff 'tmp']),Preg{~(si-1)+1},Psphere{si},Prmesh{di},job.cdata{di},Prdata{di});
-        [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug); 
+        err = cat_system(cmd,job.debug); 
 
         if err
           cat_io_cprintf('err','Case "%s" did not work.\n',job.cdata{di}); 
@@ -196,7 +196,7 @@ function Prdata = cat_surf_flipsides(job)
       % registration 
       cmd = sprintf('CAT_WarpSurf -type 0 -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',...
         Pflipcentral{si},Pflipsphere{si},Pcentral{~(si-1)+1},Psphere{~(si-1)+1},Preg{~(si-1)+1});
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+      cat_system(cmd,opt.debug);
     
       end
     %}

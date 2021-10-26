@@ -415,11 +415,12 @@ postprocess ()
     fi
     
     # prepare renderview if tool is found and surface processing is enabled
-    if [ -n `which render_surf.sh` ] && [ $volumes_only -eq 0 ]; then
+    if ([ ! -z `which render_surf.sh` ] && [ ! -z `which CAT_View` ]) && [ $volumes_only -eq 0 ]; then
       mkdir -p ${proc_dir}/check_r${revision_cat}/surf
       ln -s ${proc_dir}/check_r${revision_cat}/long/surf/* ${proc_dir}/check_r${revision_cat}/surf/ >/dev/null 2>&1
       render_surf.sh -range 0 6 ${proc_dir}/check_r${revision_cat}/surf
       mv check_r${revision_cat}*.png ${proc_dir}/ >/dev/null 2>&1
+      scp -q -P $PORT ${proc_dir}/check_r${revision_cat}*.png $scp_target
     else
       echo "You need render_surf.sh and image_matrix.sh for preparing render view."
     fi
@@ -439,7 +440,6 @@ postprocess ()
       zip -q ${proc_dir}/check_r${revision_cat}.zip -r ${proc_dir}/check_r${revision_cat}
       scp -q -P $PORT ${proc_dir}/check_r${revision_cat}.zip $scp_target
     fi
-    scp -q -P $PORT ${proc_dir}/check_r${revision_cat}*.png $scp_target
   fi
   
 }
