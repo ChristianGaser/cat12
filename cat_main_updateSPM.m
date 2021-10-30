@@ -366,7 +366,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
         Ynbg = uint8( 255 .* smooth3(Ynbg) ); 
 
         % correct classes
-        for k1 = 1:size(P,4)-1, P(:,:,:,k1) = P(:,:,:,k1) .* (255 - Ynbg); end
+        for k1 = 1:size(P,4)-1, P(:,:,:,k1) = P(:,:,:,k1) - min(P(:,:,:,k1),Ynbg); end
         P(:,:,:,end) = max( Ynbg , P(:,:,:,end) ); 
         clear Ynbg; 
 
@@ -375,7 +375,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
         for k1=1:size(P,4), P(:,:,:,k1) = cat_vol_ctype(single(P(:,:,:,k1))./sP); end
         clear sP; 
 
-        cat_io_addwarning('cat_main_updateSPM:ReplacedBadLongBackground','Detected and corrected inadequate background \\nsegmentation in longitudinal mode.',0,[1 2]);
+        cat_io_addwarning('cat_main_updateSPM:ReplacedLongBackground','Detected and corrected inadequate background \\nsegmentation in longitudinal mode.',0,[1 2]);
       end
       clear Ybg; 
     end

@@ -116,7 +116,7 @@ if ~isfield(res,'spmpp')
   %  RD202006: add ignoreErrors backup
   %  ---------------------------------------------------------------------
   stime = cat_io_cmd('Global intensity correction');
-  if all(vx_vol < 0.4 ) %&& job.extopts.ignoreErros<2 % 1639
+  if all(vx_vol < 0.4 ) && strcmp(job.extopts.species,'human')%&& job.extopts.ignoreErros<2 % 1639
     % guaranty average (lower) resolution with >0.7 mm
     % RD202006: This solution is not working when cat_main_gintnorm
     %           optimize the image (e.g. bias correction). Just calling

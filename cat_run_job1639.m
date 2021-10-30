@@ -979,7 +979,9 @@ function cat_run_job1639(job,tpm,subj)
 
         % sampling resolution definition
         if      round(obj.samp) == 3, samp = [obj.samp 4 2]; 
-        elseif  round(obj.samp) == 2, samp = [obj.samp 3 4]; 
+        elseif  round(obj.samp) == 2, samp = [obj.samp 3 4];
+        elseif  ~strcmp(job.extopts.species,'human')
+                                      samp = [obj.samp obj.samp*2 obj.samp/2];
         else,                         samp = [obj.samp 3 2]; 
         end 
 
@@ -993,13 +995,21 @@ function cat_run_job1639(job,tpm,subj)
         warning off; % turn off "Warning: Using 'state' to set RANDN's internal state causes RAND ..."
         for sampi = 1:numel(samp)
           obj.samp = samp(sampi); 
-          res = cat_spm_preproc8(obj);
-          if any(~isnan(res.ll))
-            break
-          else
+          try 
+            res = cat_spm_preproc8(obj);
+            if any(~isnan(res.ll))
+              break
+            else
+              stime = cat_io_cmd(sprintf('SPM preprocessing 1 (estimate %d):',...
+                2 + sampi),'caution','',job.extopts.verb-1,stime);
+            end
+          catch  
             stime = cat_io_cmd(sprintf('SPM preprocessing 1 (estimate %d):',...
-              2 + sampi),'caution','',job.extopts.verb-1,stime);
+                2 + sampi),'caution','',job.extopts.verb-1,stime);
           end
+        end
+        if ~exist('res','var')
+          cat_io_printf('SPM preprocessing with default settings failed. Run backup settings. \n'); 
         end
         warning on; 
         
@@ -1012,7 +1022,18 @@ function cat_run_job1639(job,tpm,subj)
         if ppe.affreg.skullstripped, res.mn(end) = 0; end 
 
       catch
-        tmp = obj.image.dat; 
+        %%
+        cat_io_addwarning([mfilename ':ignoreErrors'],'Run backup function (IN DEVELOPMENT).',1,[1 1]); 
+        
+        if isfield(obj.image,'dat')
+          tmp = obj.image.dat; 
+        else
+          tmp = spm_read_vols(obj.image); 
+          dt2 = obj.image.dt(1); 
+          dts = cat_io_strrep(spm_type(dt2),{'float32','float64'},{'single','double'}); 
+          obj.image.dat = eval(sprintf('%s(tmp);',dts)); 
+          obj.image.pinfo = repmat([1;0],1,size(tmp,3));
+        end
         if exist('Ybi','var')
           obj.image.dat = obj.image.dat .* (cat_vbdist(single(Ybi>0.5))<10);
         else
@@ -1061,9 +1082,18 @@ function cat_run_job1639(job,tpm,subj)
             V.dim,[mati(1:3),mati(4:6),mati(7:9),]));
         end
         
-        res.image.dat = tmp;
-        obj.image.dat = tmp; 
-        clear tmp;
+        %% set internal image
+        if ~exist('dt2','var')
+          %tmp = obj.image.dat;
+          dt2 = obj.image.dt(1); 
+          dts = cat_io_strrep(spm_type(dt2),{'float32','float64'},{'single','double'}); 
+        end
+        obj.image.dat   = eval(sprintf('%s(tmp);',dts)); 
+        obj.image.pinfo = repmat([1;0],1,size(tmp,3));
+        obj.image.dt(1) = dt2; 
+        res.image.dat   = eval(sprintf('%s(tmp);',dts)); 
+        res.image.pinfo = repmat([1;0],1,size(tmp,3));
+        res.image.dt(1) = dt2; 
       end
       warning on 
       fprintf('%5.0fs\n',etime(clock,stime));   
@@ -1109,7 +1139,7 @@ function cat_run_job1639(job,tpm,subj)
       end
   end
   
-  % updated tpm information for skull-stripped data should be available for cat_main
+  %% updated tpm information for skull-stripped data should be available for cat_main
   if isfield(obj.tpm,'bg1') && exist('ppe','var') && ( ppe.affreg.skullstripped || job.extopts.gcutstr<0 )
     fname = res.tpm(1).fname;
     res.tpm       = obj.tpm;
@@ -1117,7 +1147,7 @@ function cat_run_job1639(job,tpm,subj)
   end
   spm_progress_bar('Clear');
           
-  %% call main processing
+  % call main processing
   res.tpm     = obj.tpm.V;
   res.stime   = stime0;
   res.catlog  = catlog; 
@@ -1153,7 +1183,7 @@ function cat_run_job1639(job,tpm,subj)
   
   % delete denoised/interpolated image
   [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});
-  if exist(fullfile(pp,[ff,ee]),'file'); 
+  if exist(fullfile(pp,[ff,ee]),'file') 
     delete(fullfile(pp,[ff,ee]));
   end
   %%

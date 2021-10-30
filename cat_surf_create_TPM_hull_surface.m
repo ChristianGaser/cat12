@@ -91,7 +91,18 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull)
   elseif isstruct(tpm)
     % if we got the TPM as file header structure
     istpm = 2; 
-    Yb = spm_read_vol( V(1) ) + spm_read_vol( V(2) ); 
+    try 
+      Yb = spm_read_vol( V(1) ) + spm_read_vol( V(2) ); 
+    catch 
+      % create brainmask surface
+      if skull==-2
+        Yb = exp(tpm.dat{1}) + exp(tpm.dat{2});
+      else
+        Yb = exp(tpm.dat{1}) + exp(tpm.dat{2}) + exp(tpm.dat{3});
+        % remove SPM CSF eye
+        Yb = Yb .* smooth3( cat_vol_morph( cat_vol_morph( Yb , 'lo' , 2), 'd') ); 
+      end
+    end
   else
     % otherwise avoid errors
     Yb = zeros(5,5,5);  
