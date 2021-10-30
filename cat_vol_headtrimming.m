@@ -58,7 +58,7 @@ function varargout = cat_vol_headtrimming(job)
   def.range1  = 90;                   % internal scaling for masking
   def.returnOnlyFilename  = 0;        % 
   def.process_index = 1;              %
-  def.lazy    = 1; 
+  def.lazy    = 0; 
   job = cat_io_checkinopt(job,def);
 
   

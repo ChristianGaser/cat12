@@ -30,7 +30,7 @@ function run = cat_io_rerun(files,filedates,verb)
 % ______________________________________________________________________
 % $Id$
   
-  if ~exist('verb','var'), verb = 0; end
+  if ~exist('verb','var'), verb = 1; end
   files = cellstr(files);
 
   % only use that function in developer mode because it's simply too dangerous if files
@@ -38,6 +38,9 @@ function run = cat_io_rerun(files,filedates,verb)
   if cat_get_defaults('extopts.expertgui') < 2
     run = ones(size(files));
     return
+  end
+  if verb
+    fprintf('\n'); 
   end
   
   if iscellstr(filedates) || ischar(filedates)
@@ -54,7 +57,7 @@ function run = cat_io_rerun(files,filedates,verb)
       filedates = repmat(filedates,numel(files),1);
     end
   end
-  
+     
   run = ones(size(files));
   exf = ones(size(files)); 
   for fi = 1:numel(files)
@@ -94,16 +97,16 @@ function run = cat_io_rerun(files,filedates,verb)
             end
           end
           if numel(fdata)>1
-            run{fi} = [fdata(:).datenum] > fdata2.datenum;
+            run{fi} = [fdata(:).datenum] >= fdata2.datenum;
           else
-            run(fi) = fdata.datenum > fdata2.datenum;
+            run(fi) = fdata.datenum >= fdata2.datenum;
           end
         end
       elseif ~isempty(filedates) && isdatetime( filedates(fi,:) )
         if numel(fdata)>1
-          run{fi} = [fdata(:).datenum] > datenum( filedates(fi,:) );
+          run{fi} = [fdata(:).datenum] >= datenum( filedates(fi,:) );
         else
-          run(fi) = fdata.datenum > datenum( filedates(fi,:) );
+          run(fi) = fdata.datenum >= datenum( filedates(fi,:) );
         end
       else
         if numel(fdata)>1

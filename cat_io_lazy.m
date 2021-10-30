@@ -1,10 +1,10 @@
-function run = cat_io_rerun(files,filedates)
+function run = cat_io_rerun(files,filedates,verb)
 %cat_io_lazy. Test if a file is newer than another file.  
 % This function is used to estimated if a file is newer than another given 
 % file or date. For instance file is the result of anther file that was 
 % changed in the meantime, it has to be reprocessed. 
 %
-%  run = cat_io_lazy(files,filedates)
+%  run = cat_io_lazy(files,filedates,verb)
 % 
 %  run      .. logical vector with the number of given files
 %              cell if directories or wildcards are used
@@ -30,6 +30,18 @@ function run = cat_io_rerun(files,filedates)
 % ______________________________________________________________________
 % $Id$
 
+  if ~exist('verb','var'), verb = 1; end
+  
+  % only use that function in developer mode because it's simply too dangerous if files
+  % are not processed if already existing and parameter changed
+  if cat_get_defaults('extopts.expertgui') < 2
+    run = zeros(size(files));
+    return
+  end
+  if verb
+    fprintf('\n'); 
+  end
+  
   files = cellstr(files);
   if iscellstr(filedates) || ischar(filedates)
     filedates = cellstr(filedates);
@@ -69,6 +81,30 @@ function run = cat_io_rerun(files,filedates)
           run(fi) = fdata.datenum < datenum( filedates(fi,:) );
         end
       end
+      if verb
+        if numel(files)==1
+          fprintf(' Input file 1: %50s: %s\n',spm_str_manip( fdata.name , 'a50'),datestr(fdata.datenum) ); 
+          fprintf(' Input file 2: %50s: %s\n',spm_str_manip( fdata2.name, 'a50'),datestr(fdata2.datenum));
+        else
+          if fi == 1
+            fprintf(' Input file 1:     %50s: %s\n',   spm_str_manip( fdata.name ,'a50'),datestr(fdata.datenum) ); 
+          end
+          fprintf(' Input file 2-%02d: %50s: %s\n',fi,spm_str_manip( fdata2.name,'a50'),datestr(fdata2.datenum));
+        end
+      end
+    end
+  end
+  if verb 
+    if (iscell(run) && any(cell2mat(run))) || ( ismatrix(run) && any(run) )
+      if all(exf)
+        cat_io_cprintf([0.5 0.0 0.0],' Reprocessing is required. \n'); 
+      elseif all(exf==0) && numel(files)>1
+        cat_io_cprintf([0.5 0.0 0.0],' (Re)processing is required. \n'); 
+      else
+        cat_io_cprintf([0.5 0.0 0.0],' Processing is required. \n');
+      end
+    else
+      cat_io_cprintf([0.0 0.5 0.0],' Reprocessing is NOT required. \n'); 
     end
   end
 end

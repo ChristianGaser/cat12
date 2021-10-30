@@ -724,7 +724,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
   
   
  %% 
- if ~res.ppe.affreg.highBG 
+ if isfield(res,'affreg') && isfield(res.affreg,'highBG') && ~res.ppe.affreg.highBG 
   %% CSF & BG 
   %  The differentiation of CSF and Background is not allway good. In some
   %  images with low intensity (especially for defacing/skull-stripping)

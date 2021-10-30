@@ -1,5 +1,41 @@
 ------------------------------------------------------------------------
-r1901 | gaser | 2021-10-26 12:25:02
+r1902 | dahnke | 2021-10-30 16:31:08
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_lazy.m
+M       cat_io_rerun.m
+M       cat_long_createTPM.m
+M       cat_main.m
+M       cat_main1639.m
+M       cat_main_LAS2.m
+M       cat_main_updateSPM.m
+M       cat_main_updateSPM1639.m
+M       cat_run_job.m
+M       cat_run_job1639.m
+M       cat_surf_createCS2.m
+M       cat_surf_create_TPM_hull_surface.m
+M       cat_vol_headtrimming.m
+M       cat_vol_partvol1639.m
+M       cat_vol_sanlm.m
+M       ds.m
+M       templates_surfaces/bh.headbrain.TPM.gii
+
+(1) Fixed:      Corrected bug in cat_io_run/lazy that avoid reprocessing of 
+                files with equal age (only used in developer mode).
+(2) Fixed:      Corrected bug due to missing lesion variable in cat_main1639 
+                that is already fixed in cat_main. 
+(3) Fixed:      Corrected handling of missing variable in cat_main_LAS2.        
+(4) Fixed:      Further corrections to handle miss-aligned backgrounds in 
+                longitudinal processing in cat_main_upateSPM[1639].
+                Further changes in cat_long_createTPM.
+(5) Fixed:      Corrected handling of variables in backup routine of 
+                cat_run_job[1639].              
+(6) Fixed:      Corrected bug in cat_surf_createCS2.
+(7) Fixed:      Corrected default setting of lazy/rerun option in 
+                cat_vol_headtrimming.
+------------------------------------------------------------------------
+r1901 | gaser | 2021-10-26 12:25:52 +0200 (Tue, 26 Oct 2021) | 32 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -32,6 +68,7 @@ M       spm_cat12.m
 (2) Changed: Added check whether binaries can be executed to cat_system.m.
 (3) Changed: Changed check for render view in check_pipeline.sh.
 (4) Fixed:   Removed clearing of cat_defaults in cat_batch_long.m.
+
 ------------------------------------------------------------------------
 r1900 | gaser | 2021-10-25 11:13:19 +0200 (Mon, 25 Oct 2021) | 6 lines
 

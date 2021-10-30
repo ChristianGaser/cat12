@@ -1099,7 +1099,7 @@ fullfile(pp1_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff1))
 
       % estimate size of topology defects 
       cmd = sprintf('CAT_MarkDefects "%s" "%s" "%s"',Praw,Psphere0,Pdefects0); 
-      [ST, RS] = cat_system(cmd);
+      cat_system(cmd);
       sdefects       = cat_io_FreeSurfer('read_surf_data',Pdefects0); delete(Pdefects0);  
       defect_number0 = defect_number0 + max(sdefects); 
       defect_size0   = defect_size0   + sum(sdefects > 0) / length(sdefects) * 100; % percent
