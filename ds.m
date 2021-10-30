@@ -80,7 +80,9 @@ function varargout=ds(type,viewtype,DAR,varargin)
     end
     fpos = [(mp(end,3:4) - fpos)/2 fpos];
     figure('tag',fhn,'name',fhn,'Position',fpos,'color',[0.5 0.5 0.5],'PaperPositionMode','auto');
-    clf(fhn);
+    try
+      clf(fhn);
+    end
   end
   
   if numel(slice)>1, hold on; end

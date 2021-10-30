@@ -115,7 +115,7 @@ if ~isfield(res,'spmpp')
   %  peaks of WM (maximum-based), GM, and CSF. 
   %  ---------------------------------------------------------------------
   stime = cat_io_cmd('Global intensity correction');
-  if all(vx_vol < 0.4 ) %&& job.extopts.ignoreErros<2 % 1639
+  if all(vx_vol < 0.4 ) && strcmp(job.extopts.species,'human')  %&& job.extopts.ignoreErros<2 % 1639
     % guaranty average (lower) resolution with >0.7 mm
     % RD202006: This solution is not working when cat_main_gintnorm
     %           optimize the image (e.g. bias correction). Just calling
@@ -128,8 +128,9 @@ if ~isfield(res,'spmpp')
     %           Possible test subject: ADHD200/ADHD200_HC_BEJ_1050345_T1_SD000000-RS00.nii        
     [Ysrcr,resGI] = cat_vol_resize(Ysrc      , 'reduceV', vx_vol, 0.6, 32, 'meanm');
     Ybr           = cat_vol_resize(single(Yb), 'reduceV', vx_vol, 0.6, 32, 'meanm')>0.5;
-    Yclsr = cell(size(Ycls)); for i=1:6, Yclsr{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,0.6,32); end
-    [Ymr,T3th,Tth,job.inv_weighting,noise] = cat_main_gintnorm1639(Ysrcr,Yclsr,Ybr,resGI.vx_volr,res,job.extopts);
+    Yclsr = cell(size(Ycls)); for i=1:6, Yclsr{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,0.6,32,'meanm'); end
+    Yyr = zeros([size(Yb),3],'single'); for i=1:3, Yyr(:,:,:,i) = cat_vol_resize(Yy(:,:,:,i),'reduceV',vx_vol,0.6,32,'meanm'); end
+    [Ymr,Yb,T3th,Tth,job.inv_weighting,noise] = cat_main_gintnorm1639(Ysrcr,Yclsr,Ybr,resGI.vx_volr,res,job.extopts);
     clear Ymr Ybr Ysrcr Yclsr; 
     Ym = cat_main_gintnorm1639(Ysrc,Tth); 
   else
@@ -247,7 +248,11 @@ if ~isfield(res,'spmpp')
       job2.extopts.reg.affreg  = 0;      % new affine registration
       res2.do_dartel           = 1;      % use dartel
     end
-    [trans1,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,res.Ylesion); 
+    if isfield(res,'Ylesion')
+      [trans1,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,res.Ylesion);
+    else
+      [trans1,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy);
+    end  
     Yy2  = trans1.warped.y;
     if ~debug, clear job2 res2; end
 

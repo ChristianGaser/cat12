@@ -253,7 +253,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   %  TPM should be close to the segmentation outcome.  
   if (isfield(job,'useprior') && ~isempty(job.useprior) ) && ... 
      (isfield(res,'ppe') && ~res.ppe.affreg.highBG)
-    % sum of all TPM classes without background
+    %% sum of all TPM classes without background
     Vall = tpm.V(end); Vall.pinfo(3) = 0; Vall.dt=16; 
     Vall.dat = zeros(size(tpm.dat{1})); for k1 = 1:numel(tpm.dat)-1, Vall.dat = Vall.dat + single(exp(tpm.dat{k1})); end 
     Yall = cat_vol_sample(res.tpm(1),Vall,Yy,1);
@@ -261,7 +261,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
     % backgound class
     Ybg = 1 - Yall; clear Yall Vall; 
 
-    % estimate error and do correction 
+    %% estimate error and do correction 
     rmse = @(x,y) mean( (x(:) - y(:)).^2 ).^0.5; 
     if rmse(Ybg,single(P(:,:,:,end))/255) > 0.3 % just some threshold 
       % setup new background
@@ -270,7 +270,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
       Ynbg = uint8( 255 .* smooth3(Ynbg) ); 
       
       % correct classes
-      for k1 = 1:size(P,4)-1, P(:,:,:,k1) = P(:,:,:,k1) .* (255 - Ynbg); end
+      for k1 = 1:size(P,4)-1, P(:,:,:,k1) = P(:,:,:,k1) - min(P(:,:,:,k1),Ynbg); end
       P(:,:,:,end) = max( Ynbg , P(:,:,:,end) ); 
       clear Ynbg; 
       
@@ -279,7 +279,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
       for k1=1:size(P,4), P(:,:,:,k1) = cat_vol_ctype(single(P(:,:,:,k1))./sP); end
       clear sP; 
     
-      cat_io_addwarning('cat_main_updateSPM:ReplacedBadLongBackground','Detected and corrected inadequate background \\nsegmentation in longitudinal mode.',0,[1 2]);
+      cat_io_addwarning('cat_main_updateSPM:ReplacedLongBackground','Detected and corrected inadequate background \\nsegmentation in longitudinal mode.',0,[1 2]);
     end
     clear Ybg; 
   end
@@ -301,16 +301,6 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
         Ybgr = cat_vol_morph(cat_vol_morph(cat_vol_morph(Ybgr>128,'d') & Ysrcr<Ybgrth,'lo',1),'lc',1);
         Ybg  = cat_vol_resize(cat_vol_smooth3X(Ybgr,1),'dereduceV',resT2); 
         clear Ysrcr Ybgr; 
-% RD202010 bad SPM background
-%{
-      elseif sum(sum(sum(P(:,:,:,6)>8 & Ysrc<cat_stat_nanmean(T3th(1:2)))))>10000
-        Ybg = cat_vol_smooth3X( single(P(:,:,:,6)) * 240 ,2); 
-        [Ybgr,Ysrcr,resT2] = cat_vol_resize({Ybg,Ysrc},'reduceV',vx_vol,2,32); 
-        Ybgrth = max(cat_stat_nanmean(Ysrcr(Ybgr(:)>128)) + 2*std(Ysrcr(Ybgr(:)>128)),T3th(1));
-        Ybgr = cat_vol_morph(cat_vol_morph(cat_vol_morph(Ybgr>128,'d') & Ysrcr<Ybgrth,'lo',1),'lc',1);
-        Ybg  = cat_vol_resize(cat_vol_smooth3X(Ybgr,1),'dereduceV',resT2); 
-        clear Ysrcr Ybgr;
-%}
       else
         Ybg = ~Yb;
       end

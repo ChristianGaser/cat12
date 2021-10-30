@@ -1047,6 +1047,8 @@ end
         % sampling resolution definition
         if      round(obj.samp) == 3, samp = [obj.samp 4 2]; 
         elseif  round(obj.samp) == 2, samp = [obj.samp 3 4]; 
+        elseif  ~strcmp(job.extopts.species,'human')
+                                      samp = [obj.samp obj.samp*2 obj.samp/2];          
         else,                         samp = [obj.samp 3 2]; 
         end 
 
@@ -1079,7 +1081,16 @@ end
         if ppe.affreg.skullstripped, res.mn(end) = 0; end 
 
       catch
-        tmp = obj.image.dat; 
+        cat_io_addwarning([mfilename ':ignoreErrors'],'Run backup function (IN DEVELOPMENT).',1,[1 1]); 
+        
+        if isfield(obj.image,'dat')
+          tmp = obj.image.dat; 
+        else
+          tmp = spm_read_vols(obj.image); 
+          dt2 = cat_io_strrep(spm_type(obj.image.dt(1)),{'float32','float64'},{'single','double'}); 
+          obj.image.dat = eval(sprintf('%s(tmp);',dt2)); 
+          obj.image.pinfo = repmat([1;0],1,size(tmp,3));
+        end
         if exist('Ybi','var')
           obj.image.dat = obj.image.dat .* (cat_vbdist(single(Ybi>0.5))<10);
         else

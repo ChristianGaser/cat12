@@ -139,11 +139,13 @@ function out = cat_vol_sanlm(varargin)
         varargin{1} = cat_io_checkinopt(varargin{1}.nlmfilter.expert,varargin{1});
       end
     end
-    switch varargin{1}.NCstr
-      case 2,        varargin{1}.NCstr =  -0.5; varargin{1}.red = 0; varargin{1}.fred = 0; varargin{1}.miter = 0; % light
-      case {3,-inf}, varargin{1}.NCstr =  -1.0; varargin{1}.red = 1; varargin{1}.fred = 0; varargin{1}.miter = 0; % medium
-      case 4,        varargin{1}.NCstr =   1.0; varargin{1}.red = 1; varargin{1}.fred = 1; varargin{1}.miter = 1; varargin{1}.iter = 1;% strong
-    end 
+    if nargin > 0 && isstruct(varargin{1}) && isfield(varargin{1},'NCstr')
+      switch varargin{1}.NCstr
+        case 2,        varargin{1}.NCstr =  -0.5; varargin{1}.red = 0; varargin{1}.fred = 0; varargin{1}.miter = 0; % light
+        case {3,-inf}, varargin{1}.NCstr =  -1.0; varargin{1}.red = 1; varargin{1}.fred = 0; varargin{1}.miter = 0; % medium
+        case 4,        varargin{1}.NCstr =   1.0; varargin{1}.red = 1; varargin{1}.fred = 1; varargin{1}.miter = 1; varargin{1}.iter = 1;% strong
+      end 
+    end
     
     if nargin <= 1 && isstruct(varargin{1}) % job structure input
         out.files = cat_vol_sanlm_file(job{1});

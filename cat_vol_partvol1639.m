@@ -158,7 +158,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
   
 
   % use addition FLAIR images
-  if exist('job','var') && isfield(job,'data_wmh') && ~isempty(job.data_wmh) && numel(job.data_wmh)>=job.subj
+  if exist('job','var') && isfield(job,'data_wmh') && ~isempty(job.data_wmh) && isfield(job,'subj') && numel(job.data_wmh)>=job.subj
     %%
     [pp,ff,ee] = spm_fileparts(job.data_wmh{job.subj}); 
     Pflair = fullfile(pp,[ff ee]); 
