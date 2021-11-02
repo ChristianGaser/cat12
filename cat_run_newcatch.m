@@ -212,7 +212,7 @@ function cat_run_newcatch(job,tpm,subj)
     end
         
     % create mail report for serial processing
-    if ~isfield(job,'process_index')
+    if ~isfield(job,'process_index') && feature('ShowFigureWindows')
       promptMessage = sprintf('Do you want to send error message?');
       button = questdlg(promptMessage, 'Error message', 'Yes', 'No', 'Yes');
       if strcmpi(button, 'Yes')

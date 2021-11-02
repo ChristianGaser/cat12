@@ -1204,7 +1204,7 @@ function fh = cat_stat_boxplot_batch(job)
       ax.YLabel.FontSize  = jobpara.FS*1.2;
       ax.XLabel.FontSize  = jobpara.FS*1.2;
     end
-    box on;
+    box('on')
     
     
     %% save images
