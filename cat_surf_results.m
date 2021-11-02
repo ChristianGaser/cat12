@@ -689,7 +689,7 @@ switch lower(action)
       H.rcsv{3} = rcsv3;
       
       H.dcm_obj = datacursormode(H.figure);
-      set(H.dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', ...
+      set(H.dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', 'Interpreter', 'none', ...
         'DisplayStyle', 'datatip', 'Updatefcn', {@myDataCursorAtlas, H});
       
     end
@@ -820,33 +820,25 @@ switch lower(action)
     
   %-CLim
   %======================================================================
-  case 'clim'
-    if isempty(varargin), varargin{1} = gca; end
-    H = getHandles(varargin{1});
-    if length(varargin) == 1
-      c = getappdata(H.patch, 'clim');
-      if ~isempty(c), c = c(2:3); end
-      varargout = {c};
-      return;
-    else
-      if strcmp(varargin{2}, 'on') || isempty(varargin{2}) || any(~isfinite(varargin{2}))
-        setappdata(H.patch, 'clim', [false NaN NaN]);
-      else
-        setappdata(H.patch, 'clim', [true varargin{2}]);
-      end
-      d = getappdata(H.patch, 'data');
-      H = updateTexture(H, d);
-      
+  case 'clim'      
+    
+    caxis(H.axis, varargin{1});
+    for ind = 1:5
+      setappdata(H.patch(ind), 'clim', [true varargin{1}]);
+      d = getappdata(H.patch(ind), 'data');
+      col = getappdata(H.patch(ind), 'col');
+      H = updateTexture(H, ind, d, col, H.show_transp);
+    end    
+
+    if ~H.isvol(H.results_sel)
+      set(H.atlas, 'Enable', 'on');
+    end
+
+    if ~H.disable_cbar
+      H = show_colorbar(H);
     end
     
-    if nargin > 1 && isnumeric(varargin{2}) && numel(varargin{2}) == 2
-      caxis(H.axis, varargin{2});
-    else
-      caxis(H.axis, [min(d), max(d)])
-    end
-    
-    
-  %-CLip
+%-CLip
   %======================================================================
   case 'clip'
     if isempty(varargin), varargin{1} = gca; end
@@ -867,7 +859,7 @@ switch lower(action)
         end
       end
       for ind = 1:5
-        d = getappdata(H.patch, 'data');
+        d = getappdata(H.patch(ind), 'data');
         H = updateTexture(H, ind, d);
       end
     end

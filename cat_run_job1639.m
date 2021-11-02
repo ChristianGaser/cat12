@@ -246,7 +246,9 @@ function cat_run_job1639(job,tpm,subj)
         ofname  = fullfile(pp,[ff ee]); 
         nfname  = fullfile(pp,mrifolder,['n' ff '.nii']);
         if strcmp(ee,'.nii')
-          copyfile(ofname,nfname,'f'); 
+          if ~copyfile(ofname,nfname,'f')
+            spm('alert!',sprintf('ERROR: Check file permissions for folder %s.\n',fullfile(pp,mrifolder)),'',spm('CmdLine'),1);
+          end
         elseif strcmp(ee,'.img')
           V = spm_vol(job.channel(n).vols{subj});
           Y = spm_read_vols(V);

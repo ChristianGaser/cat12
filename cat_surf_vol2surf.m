@@ -75,7 +75,7 @@ function out = cat_surf_vol2surf(varargin)
  
   if nargin == 0
     help cat_surf_vol2surf; 
-    [ST, RS] = cat_system('CAT_3dVol2Surf -help');
+    cat_system('CAT_3dVol2Surf -help');
     out = {};
     return    
   elseif nargin == 1
