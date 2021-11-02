@@ -76,6 +76,8 @@ for i=1:numel(Nii)
   Nii(i).dat.scl_inter = 100/g*Nii(i).dat.scl_inter;
 end
 
+fprintf('\n------------------------------------------------------------------------\n');
+
 % Determine noise estimates when unknown
 for i=1:numel(Nii)
   if ~isfinite(prec(i))

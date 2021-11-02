@@ -1,5 +1,27 @@
 ------------------------------------------------------------------------
-r1903 | dahnke | 2021-11-02 09:08:27
+r1904 | gaser | 2021-11-02 14:57:56
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_plot_boxplot.m
+M       cat_run_job1639.m
+M       cat_run_newcatch.m
+M       cat_surf_results.m
+M       cat_surf_vol2surf.m
+M       cat_vol_groupwise_ls.m
+M       cat_vol_qa.m
+M       html/cat.html
+
+(1) Changed: Considered display-less occurance of errors in cat_run_newcatch.m.
+(2) Changed: Some smaller changes for compatibiliy.
+(3) Changed: Changed text interpreter to "none" in cat_surf_results.m and
+             again modified clim option.
+(4) Changed: Removed output parameters for cat_system function in 
+             cat_surf_vol2surf.m.
+(5) Fixed:   Corrected bug in size comparison in cat_vol_qa.m.
+------------------------------------------------------------------------
+r1903 | dahnke | 2021-11-02 09:09:12 +0100 (Tue, 02 Nov 2021) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +34,7 @@ M       cat_vol_qa.m
 (1) Fixed:   Corrected tiny bug due to imaginary values in cat_vol_qa.
 (2) New:     Added longitudinal skull-stripping cases in cat_main_updateSPM[1639].
 (3) New:     Added backup routine for cat_spm_preproc8 in cat_run_job[1639].
+
 
 ------------------------------------------------------------------------
 r1902 | dahnke | 2021-10-30 16:32:01 +0200 (Sat, 30 Oct 2021) | 34 lines

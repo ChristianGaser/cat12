@@ -229,7 +229,8 @@ function varargout = cat_vol_qa(action,varargin)
         opt.verb = 0;
         
         % reduce to original native space if it was interpolated
-        if any(size(Yp0)~=Vo.dim)
+        sz = size(Yp0);
+        if any(sz(1:3)~=Vo.dim(1:3))
           if isfield(Vo,'private'), Vo = rmfield(Vo,'private'); end
           if isfield(Vo,'mat0'),    Vo = rmfield(Vo,'mat0');    end
           Vo.dat = zeros(Vo.dim,'single'); Vo.dt(1) = 16; Vo.pinfo = [1;0;0];
