@@ -1062,12 +1062,35 @@ end
         warning off; % turn off "Warning: Using 'state' to set RANDN's internal state causes RAND ..."
         for sampi = 1:numel(samp)
           obj.samp = samp(sampi); 
-          res = cat_spm_preproc8(obj);
-          if any(~isnan(res.ll))
-            break
-          else
-            stime = cat_io_cmd(sprintf('SPM preprocessing 1 (estimate %d - Unified segmentation %d):',...
-              2 + sampi,sampi + 1),'caution','',job.extopts.verb-1,stime);
+          try 
+            res = cat_spm_preproc8(obj);
+            if any(~isnan(res.ll))
+              break
+            else
+              stime = cat_io_cmd(sprintf('SPM preprocessing 1 (estimate %d):',...
+                2 + sampi),'caution','',job.extopts.verb-1,stime);
+            end
+          catch  
+            % RD202110: Catch real errors of cat_spm_preproc8 and try a 
+            %           skull-stripped version just to get some result.
+            stime = cat_io_cmd(sprintf('SPM preprocessing 1 (estimate %d skull-stripped):',...
+                2 + sampi),'caution','',job.extopts.verb-1,stime);
+            if exist('Ybi','var') % use individual mask
+              obj.image.dat = obj.image.dat .* (cat_vbdist(single(Ybi>0.5))<10);
+            else % use template mask 
+              VFa = VF; VFa.mat = Affine * VF.mat; %Fa.mat = res0(2).Affine * VF.mat;
+              if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
+              [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1));  
+              ds('d2sm','',1,Ym,Ym.*(Yb>0.5),round(size(Yb,3)*0.6))
+              obj.image.dat = obj.image.dat .* (cat_vbdist(single(Yb>0.5))<10);
+            end 
+            res = cat_spm_preproc8(obj);
+            if any(~isnan(res.ll))
+              break
+            else
+              stime = cat_io_cmd(sprintf('SPM preprocessing 1 (estimate %d):',...
+                2 + sampi),'caution','',job.extopts.verb-1,stime);
+            end
           end
         end
         warning on; 

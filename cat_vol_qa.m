@@ -916,7 +916,7 @@ function varargout = cat_vol_qa(action,varargin)
       % Nitz W R. Praxiskurs MRT. Page 28.
       NCwc = min(wcth,max(0,NCwc-wcth)); NCww = min(wcth,NCww) - NCwc; % use CSF if possible
       if NCwc<3*wcth && NCww<10*wcth, NCRc = min(NCRc,NCRw); end
-      QAS.qualitymeasures.NCR = (NCRw*NCww + NCRc*NCwc)/(NCww+NCwc);
+      QAS.qualitymeasures.NCR = max(0,NCRw*NCww + NCRc*NCwc)/(NCww+NCwc);
       QAS.qualitymeasures.NCR = QAS.qualitymeasures.NCR * abs(prod(resr.vx_volo*res))^0.4 * 5/4; %* 7.5; %15;
       %QAS.qualitymeasures.CNR = 1 / QAS.qualitymeasures.NCR;  
 %fprintf('NCRw: %8.3f, NCRc: %8.3f, NCRf: %8.3f\n',NCRw,NCRc,(NCRw*NCww + NCRc*NCwc)/(NCww+NCwc));
