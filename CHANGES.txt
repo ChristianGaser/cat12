@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1902 | dahnke | 2021-10-30 16:31:08
+r1903 | dahnke | 2021-11-02 09:08:27
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main_updateSPM.m
+M       cat_main_updateSPM1639.m
+M       cat_run_job.m
+M       cat_run_job1639.m
+M       cat_vol_qa.m
+
+(1) Fixed:   Corrected tiny bug due to imaginary values in cat_vol_qa.
+(2) New:     Added longitudinal skull-stripping cases in cat_main_updateSPM[1639].
+(3) New:     Added backup routine for cat_spm_preproc8 in cat_run_job[1639].
+
+------------------------------------------------------------------------
+r1902 | dahnke | 2021-10-30 16:32:01 +0200 (Sat, 30 Oct 2021) | 34 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -34,6 +49,7 @@ M       templates_surfaces/bh.headbrain.TPM.gii
 (6) Fixed:      Corrected bug in cat_surf_createCS2.
 (7) Fixed:      Corrected default setting of lazy/rerun option in 
                 cat_vol_headtrimming.
+
 ------------------------------------------------------------------------
 r1901 | gaser | 2021-10-26 12:25:52 +0200 (Tue, 26 Oct 2021) | 32 lines
 
