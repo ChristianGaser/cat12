@@ -63,10 +63,12 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
       Yb = cat_vol_morph( Yb , 'ldo' ,   5 , vx_vol );  % final opening to remove further menignes
       Yb = cat_vol_morph( Yb , 'dd'  ,   2 , vx_vol );  % add one mm to avoid to hard skull-strippings that could trouble thickness estimation  
       Yb = cat_vol_ctype(Yb);                           % convert to uint8 like P  
-     %%
       for i=1:3, P(:,:,:,i) = P(:,:,:,i) .* Yb; end     % apply masking for major tissues ...
       P(:,:,:,4) = cat_vol_ctype((1 - Yb) * 255);       % ... and create a new background class
       Yb = Yb>0.5;                                      % convert to logical 
+      postmortem = 1; 
+    else 
+      postmortem = 0; 
     end
 
     %% correction of CSF-GM-WM PVE voxels that were miss aligned to skull
@@ -274,7 +276,27 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
     %  Update Skull-Stripping 1
     %  ----------------------------------------------------------------------
     stime2 = cat_io_cmd('  Update skull-stripping','g5','',job.extopts.verb-1,stime2); 
-    if size(P,4)==4 || size(P,4)==3 % skull-stripped
+    if (isfield(job,'useprior') && ~isempty(job.useprior) ) && ... 
+       (isfield(res,'ppe') && ~res.ppe.affreg.highBG)
+      % RD202010: use longitudinal skull-stripping 
+      [pp,ff,ee] = spm_fileparts(char(job.useprior));
+      Pavgp0 = fullfile(pp,'mri',[strrep(ff,'avg_','p0avg_'),ee]);
+
+      % get gradient and divergence map (Yg and Ydiv)
+      [Ytmp,Ytmp,Yg,Ydiv] = cat_main_updateSPM_gcut0(Ysrc,P,vx_vol,T3th); clear Ytmp;  %#ok<ASGLU>
+      if exist(Pavgp0,'file')
+        % the p0avg should be optimal 
+        Yb = spm_read_vols(spm_vol(Pavgp0))>0.5;
+      else
+        % otherwise it would be possible to use the individual TPM 
+        % however, the TPM is more smoothed and is therefore only second choice  
+        Yb  = YbA > 0.5;
+        clear YbA
+      end
+      Ybb = cat_vol_ctype(cat_vol_smooth3X(Yb,2)*256); 
+    elseif postmortem
+      % already done 
+    elseif size(P,4)==4 || size(P,4)==3 % skull-stripped
       [Yb,Ybb,Yg,Ydiv,P] = cat_main_updateSPM_skullstriped(Ysrc,P,res,vx_vol,T3th);
     elseif isfield(job.extopts,'inv_weighting') && job.extopts.inv_weighting
       %% estimate gradient (edge) and divergence maps
@@ -596,7 +618,14 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
     
     % Yb - skull-stripping
     if ~exist('Yb','var')
-      if size(P,4)==4 || size(P,4)==3
+      if (isfield(job,'useprior') && ~isempty(job.useprior) ) && ... 
+         (isfield(res,'ppe') && ~res.ppe.affreg.highBG)
+        % use longitudinal TPM
+        [Ytmp,Ytmp,Yg,Ydiv] = cat_main_updateSPM_gcut0(Ysrc,P,vx_vol,T3th); clear Ytmp;  %#ok<ASGLU>
+        Yb  = YbA > 0.5;
+        Ybb = Yb; 
+        clear YbA
+      elseif size(P,4)==4 || size(P,4)==3
         cat_io_cprintf('warn','\n  Skull-stripped input - refine original mask                                 ')
         [Yb,Ybb,Yg,Ydiv,P] = cat_main_updateSPM_skullstriped(Ysrc,P,res,vx_vol,T3th); %#ok<ASGLU>
         clear Ybb Yg Ydiv 

@@ -75,8 +75,10 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
       clear Pc1 Pc2 Ybb;
     end
   end
-  clear YbA;
-  
+  if ~( (isfield(job,'useprior') && ~isempty(job.useprior) ) && ... 
+        (isfield(res,'ppe') && ~res.ppe.affreg.highBG) )
+    clear YbA;
+  end
   
   % some reports
   for i=1:size(P,4), Pt = P(:,:,:,i); res.ppe.SPMvols0(i) = cat_stat_nansum(single(Pt(:)))/255 .* prod(vx_vol) / 1000; end; clear Pt; 
@@ -181,7 +183,25 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   %  Update Skull-Stripping 1
   %  ----------------------------------------------------------------------
   stime2 = cat_io_cmd('  Update Skull-Stripping','g5','',job.extopts.verb-1,stime2); 
-  if size(P,4)==4 || size(P,4)==3 % skull-stripped
+  if (isfield(job,'useprior') && ~isempty(job.useprior) ) && ... 
+     (isfield(res,'ppe') && ~res.ppe.affreg.highBG)
+    % RD202010: use longitudinal skull-stripping 
+    [pp,ff,ee] = spm_fileparts(char(job.useprior));
+    Pavgp0 = fullfile(pp,'mri',[strrep(ff,'avg_','p0avg_'),ee]);
+    
+    % get gradient and divergence map (Yg and Ydiv)
+    [Ytmp,Ytmp,Yg,Ydiv] = cat_main_updateSPM_gcut0(Ysrc,P,vx_vol,T3th); clear Ytmp;  %#ok<ASGLU>
+    if exist(Pavgp0,'file')
+      % the p0avg should be optimal 
+      Yb = spm_read_vols(spm_vol(Pavgp0))>0.5;
+    else
+      % otherwise it would be possible to use the individual TPM 
+      % however, the TPM is more smoothed and is therefore only second choice  
+      Yb  = YbA > 0.5;
+      clear YbA
+    end
+    Ybb = cat_vol_ctype(cat_vol_smooth3X(Yb,2)*256); 
+  elseif size(P,4)==4 || size(P,4)==3 % skull-stripped
     [Yb,Ybb,Yg,Ydiv,P] = cat_main_updateSPM_skullstriped(Ysrc,P,res,vx_vol,T3th);
   elseif job.extopts.gcutstr==0 
     [Yb,Ybb,Yg,Ydiv] = cat_main_updateSPM_gcut0(Ysrc,P,vx_vol,T3th);
@@ -265,7 +285,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
     rmse = @(x,y) mean( (x(:) - y(:)).^2 ).^0.5; 
     if rmse(Ybg,single(P(:,:,:,end))/255) > 0.3 % just some threshold 
       % setup new background
-      Ynbg = Ybg>0.5 | P(:,:,:,end)>128;
+      Ynbg = Ybg>0.5 | ( P(:,:,:,end)>128 & Ysrc < mean( T3th(1:2) ) );
       Ynbg = cat_vol_morph(Ynbg,'dc',5,vx_vol); 
       Ynbg = uint8( 255 .* smooth3(Ynbg) ); 
       
