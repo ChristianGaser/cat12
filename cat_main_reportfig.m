@@ -1131,11 +1131,13 @@ if 1
     for hti = 1:numel(lg),    try, set(lg{hti}   ,'FontName',fontname,'Fontsize',get(lg{hti}   ,'Fontsize')*spm_figure_scale/0.8); end; end
   end
   if job.extopts.report.useoverlay > 1 
-    set(st.vols{p0id}.blobs{1}.cbar,'FontName',fontname,'Fontsize',get(st.vols{p0id}.blobs{1}.cbar,'Fontsize')*spm_figure_scale/0.8);
-    % I create a copy of the colorbar that is not changed by SPM and remove
-    % the old one that is redrawn by SPM otherwise.
-    st.vols{p0id}.blobs1cbar = copyobj(st.vols{p0id}.blobs{1}.cbar,fg);
-    st.vols{p0id}.blobs{1} = rmfield(st.vols{p0id}.blobs{1},'cbar'); 
+    try
+      set(st.vols{p0id}.blobs{1}.cbar,'FontName',fontname,'Fontsize',get(st.vols{p0id}.blobs{1}.cbar,'Fontsize')*spm_figure_scale/0.8);
+      % I create a copy of the colorbar that is not changed by SPM and remove
+      % the old one that is redrawn by SPM otherwise.
+      st.vols{p0id}.blobs1cbar = copyobj(st.vols{p0id}.blobs{1}.cbar,fg);
+      st.vols{p0id}.blobs{1} = rmfield(st.vols{p0id}.blobs{1},'cbar'); 
+    end
   end
   
   % restore old SPM figure settings
