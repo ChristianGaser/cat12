@@ -18,7 +18,7 @@ function tools = cat_conf_tools(expert)
 
   % just used once 
   data_xml          = cfg_files;
-  data_xml.name     = '';
+  data_xml.name     = 'Quality measures';
   data_xml.tag      = 'data_xml';
   data_xml.filter   = 'xml';
   data_xml.ufilter  = '^cat_.*\.xml$';
@@ -2392,7 +2392,7 @@ function quality_measures = conf_quality_measures
 
   quality_measures         = cfg_exbranch;
   quality_measures.tag     = 'quality_measures';
-  quality_measures.name    = 'Save quality parameters of large samples for external analysis';
+  quality_measures.name    = 'Check sample homogeneity for very large samples using mean z-score';
   quality_measures.val     = {data,globals,csv_name};
   quality_measures.prog    = @cat_stat_quality_measures;
   quality_measures.help    = {
