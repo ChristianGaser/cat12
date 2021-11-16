@@ -19,7 +19,7 @@ function varargout = cat_check_system_output(status,result,debugON,trerr)
 
   if ~exist('debugON','var'), debugON=0; end
   if ~exist('trerr','var'), trerr=1; end
-  if nargout>0, varargout{1} = false; end 
+  if nargout>0, varargout{1} = false; varargout{2} = result; end 
   
   % replace special characters
   result = genstrarray(result);
@@ -27,7 +27,7 @@ function varargout = cat_check_system_output(status,result,debugON,trerr)
   if status > 1 || ...
      ~isempty(strfind(result,'ERROR')) || ...
      ~isempty(strfind(result,'Segmentation fault'))
-    if nargout>0, varargout{1} = true; end
+    if nargout>0, varargout{1} = true; varargout{2} = result; end
     if trerr
       try
         error('CAT:system_error',sprintf(result)); 

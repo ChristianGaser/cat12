@@ -6,6 +6,22 @@
 %
 % signal_change  - signal change
 % xyz            - coordinates of local cluster maximum     
+%
+% Quick Start Guide:
+% 1. Define F-contrast "effects of interest" (check CAT12 manual for howto defining that contrast)
+% 2. Call results with CAT12|View Results|Call Results
+% 3. Call cat_stat_confplot_spm 
+%	VOI definition: cluster (or what you like)
+%	Boxplot: 		colored (or define your own colors)
+%	Which contrast:	effects of interest (from step 1)
+%	Define names: 	define names of groups for the boxplots or use the default numbers
+% The right boxplot shows the adjusted raw data, which are corrected for any nuisance parameters
+% (i.e. TIV), but not mean corrected like the parameter plot on the left. You can also enable 
+% "Show Raw Data" and press "Plot" to update the boxplot. With this you can also change the 
+% clusters and then update again with "Plot".
+% Now the adjusted raw data are stored in the Matlab command line as variable "y". So just enter
+% "y" and copy the output it to your prefered tool.
+
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
