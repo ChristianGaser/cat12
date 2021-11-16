@@ -1,14 +1,15 @@
-function varargout = cat_system(cmd,verb,trerr)
+function [status,result] = cat_system(cmd,verb,trerr)
 % ______________________________________________________________________
 % CAT12 wrapper for system calls
 % This is necessary because windows does not allow spaces in system
 % calls. Thus, we have to cd into that folder and call the command
 % from this folder.
 %
-% cat_system(cmd,debugON,trerr)
-% cmd       .. system call;
-% verb.     .. verbosity
-% trerr     .. trough an error message (default), else just display error
+% [status,result] = cat_system(cmd,verb,trerr)
+% cmd            .. system call;
+% verb           .. verbosity
+% trerr          .. trough an error message (default), else just display error
+% status, result .. system call outputs [status,result] = system('...');
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -60,7 +61,7 @@ else
 end
 
 if nargout > 0
-  varargout{1} = cat_check_system_output(ST,RS,verb,trerr);
+  [status,result] = cat_check_system_output(ST,RS,verb,trerr);
 else
   cat_check_system_output(ST,RS,verb,trerr);
 end
