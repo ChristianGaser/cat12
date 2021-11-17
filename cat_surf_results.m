@@ -689,7 +689,7 @@ switch lower(action)
       H.rcsv{3} = rcsv3;
       
       H.dcm_obj = datacursormode(H.figure);
-      set(H.dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', 'Interpreter', 'none', ...
+      set(H.dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', ...
         'DisplayStyle', 'datatip', 'Updatefcn', {@myDataCursorAtlas, H});
       
     end
