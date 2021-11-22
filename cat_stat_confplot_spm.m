@@ -9,19 +9,20 @@
 %
 % Quick Start Guide:
 % 1. Define F-contrast "effects of interest" (check CAT12 manual for howto defining that contrast)
+%    This contrast is only used for plotting the data! 
 % 2. Call results with CAT12|View Results|Call Results
 % 3. Call cat_stat_confplot_spm 
 %	VOI definition: cluster (or what you like)
-%	Boxplot: 		colored (or define your own colors)
-%	Which contrast:	effects of interest (from step 1)
-%	Define names: 	define names of groups for the boxplots or use the default numbers
+%	Boxplot:        colored (or define your own colors)
+%	Which contrast: effects of interest (from step 1)
+%	Define names:   define names of groups for the boxplots or use the default numbers
+%
 % The right boxplot shows the adjusted raw data, which are corrected for any nuisance parameters
 % (i.e. TIV), but not mean corrected like the parameter plot on the left. You can also enable 
 % "Show Raw Data" and press "Plot" to update the boxplot. With this you can also change the 
 % clusters and then update again with "Plot".
 % Now the adjusted raw data are stored in the Matlab command line as variable "y". So just enter
 % "y" and copy the output it to your prefered tool.
-
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -129,6 +130,10 @@ XYZ     = xSPM.XYZ(:,Q);    % coordinates
 %-Residual mean square: ResMS = sum(R.^2)/xX.trRV
 %---------------------------------------------------------------
 
+if ~exist(SPM.Vbeta(end).fname,'file')
+  error('File %s not found. Please check that you are in your analysis folder!',SPM.Vbeta(end).fname);
+end
+  
 beta0  = spm_get_data(SPM.Vbeta, XYZ);
 beta   = mean(beta0,2);
 
@@ -138,9 +143,12 @@ try
   fprintf(sprintf('%s',repmat('\b',1,150)));
   fprintf(sprintf('%s',repmat(' ',1,150)));
   Hc.y_found = 1;
+  
+  fprintf('\n');
 catch
   fprintf('No raw data found! Please check that you have not moved your data.\n');
   Hc.y_found = 0;
+  clear y
   try close(Hc.h12); end
 end
 
@@ -167,14 +175,14 @@ end
 if F_contrast_multiple_rows 
   c0 = xCon.c;
   c0 = c0(any(c0'),:);
-
-  if size(c0,1) > 1 && all(all(c0 == eye(size(c0,1))))
+  if 0
+%  if size(c0,1) > 1 && all(all(c0 == eye(size(c0,1))))
     fprintf('\nFor some F-contrasts (i.e. effects of interest) no plot of raw data is possible!\n');
     Hc.y_found = 0;
     try close(Hc.h12); end
   end
 end
-
+    
 ResMS  = spm_get_data(SPM.VResMS,XYZ);
 ResMS  = mean(ResMS,2);
 Bcov   = ResMS*SPM.xX.Bcov;
@@ -193,6 +201,7 @@ X = X(:,ind_X);
 n_effects = size(X,2);
 
 covariate = 0;
+nuisance_interaction = 0;
 
 % check for covariates
 if ~isempty(SPM.xX.iC) && n_effects <= 2
@@ -204,6 +213,27 @@ if ~isempty(SPM.xX.iC) && n_effects <= 2
       covariate = 0;
     end
   end
+  % for factor designs we have to check whether we have
+  % interactions in the nuisance parameters
+  if covariate == 0
+    rank_covariates = rank(SPM.xX.X(:,SPM.xX.iC));
+    sum_covariates_with0 = sum(SPM.xX.X(:,SPM.xX.iC)==0,2);
+    if all(sum_covariates_with0 < rank_covariates) 
+      nuisance_interaction = 1;
+    else
+      nuisance_interaction = 0;
+    end
+  else
+    nuisance_interaction = 0;
+  end
+end
+
+% no raw data plot if interactions for nuisance parameters were found
+if nuisance_interaction
+  fprintf('\nFor designs whith nuisance interactions no plot of raw data is possible!\n');
+  Hc.y_found = 0;
+  try close(Hc.h12); end
+  clear y
 end
 
 c0 = c0(ind_X,:);
@@ -223,11 +253,8 @@ end
 
 % compute contrast of parameter estimates and 90% C.I.
 %-------------------------------------------------------------- 
-signal_change0 = xCon.c'*beta0;
-signal_change  = xCon.c'*beta;
+signal_change  = xCon.c'*beta
 CI = CI*sqrt(diag(xCon.c'*Bcov*xCon.c));
-
-n_groups = max(SPM.xX.I(:,3));
 
 if ~exist('repeated_anova','var')
   repeated_anova = ~isempty(SPM.xX.iB);
@@ -235,9 +262,10 @@ if ~exist('repeated_anova','var')
   if repeated_anova
     [rw,cl] = find(SPM.xX.I == length(SPM.xX.iB)); % find column which codes subject factor (length(xX.iB) -> n_subj)
     
+    n_groups = max(SPM.xX.I(:,3));
+    
     % expect that subject factors are 2nd colum, group 3rd column, time 4th column
     if cl(1) == 2
-      n_groups = max(SPM.xX.I(:,3));
       count = 0;
       for i=1:n_groups
         ind_times{i} = count + (1:max(SPM.xX.I(find(SPM.xX.I(:,3)==i),4)));
@@ -254,6 +282,16 @@ if ~exist('repeated_anova','var')
     end
   end
 end
+
+% get groups and subjects from SPM.xX.I for the different designs
+if repeated_anova
+  groups   = SPM.xX.I(:,3);
+  subjects = SPM.xX.I(:,2);
+else
+  groups   = SPM.xX.I(:,2);
+  subjects = SPM.xX.I(:,1);
+end
+n_groups = max(groups);
 
 % GUI figure
 %--------------------------------------------------------------
@@ -451,7 +489,7 @@ end
 % prepare raw values for boxplot
 %--------------------------------------------------------------
 if Hc.y_found
-
+  
   % adjust raw data
   if Hc.adjust
 
@@ -479,24 +517,24 @@ if Hc.y_found
   
   % estimate group means for correction for repeated anovas or interaction designs
   % expect that subject factors are 2nd colum, group 3rd column, time 4th column
-  if Hc.adjust && (repeated_anova || ((n_groups > 1) && covariate))
-    mean_group = zeros(n_groups,1);
-    count_times = 1;
-    for i=1:n_groups
-      ind_group = find(SPM.xX.I(:,3) == i);
-      if repeated_anova
-        % find subjects effects in that group
-        ind_subj = unique(SPM.xX.I(ind_group,2));
-        n_subj_group = numel(ind_subj);
-        n_times = max(SPM.xX.I(ind_group,4));
-        mean_group(i) = sum(beta(SPM.xX.iH(count_times:(count_times+n_times-1))))/n_times + ...
-          sum(beta(SPM.xX.iB(ind_subj)))/n_subj_group;
-        count_times = count_times + n_times;
-      else
-        mean_group(i) = beta(SPM.xX.iH(i));
-      end
-      y(ind_group,:) = y(ind_group,:) - mean(y(ind_group,:)) + mean_group(i);
-    end
+  if Hc.adjust &&  (repeated_anova || ((n_groups > 1) && covariate))
+		mean_group = zeros(n_groups,1);
+		count_times = 1;
+		for i=1:n_groups
+			ind_group = find(groups == i);
+			if repeated_anova
+				% find subjects effects in that group
+				ind_subj = unique(subjects(ind_group));
+				n_subj_group = numel(ind_subj);
+				n_times = max(SPM.xX.I(ind_group,4));
+				mean_group(i) = sum(beta(SPM.xX.iH(count_times:(count_times+n_times-1))))/n_times + ...
+					sum(beta(SPM.xX.iB(ind_subj)))/n_subj_group;
+				count_times = count_times + n_times;
+			else
+				mean_group(i) = beta(SPM.xX.iH(i));
+			end
+			y(ind_group,:) = y(ind_group,:) - mean(y(ind_group,:)) + mean_group(i);
+		end
   end
   
   yy = cell(n_effects,1);
@@ -549,13 +587,13 @@ if Hc.y_found
     if exist('x','var') && numel(x)==size(X,1)
       xx_array = [min(x) max(x)]; 
       for i=1:n_effects
-        xx{i} = X(SPM.xX.I(:,3)==i);
+        xx{i} = X(groups==i);
       end
       x0 = x;
     else
       xx_array = [min(X(X~=0)) max(X(X~=0))]; 
       for i=1:n_effects
-        xx{i} = X(SPM.xX.I(:,3)==i,i);
+        xx{i} = X(groups==i,i);
       end
       x0 = sum(X,2);
     end
@@ -574,17 +612,17 @@ if Hc.y_found
     % for repeated anovas also plot connected lines if defined
     if repeated_anova && Hc.connected
       % coding of subject factor should be hopefully always 2nd column of xX.I
-      n_subjects = max(SPM.xX.I(:,2));
+      n_subjects = max(subjects);
 
       y0 = mean(y,2);
       for i=1:n_subjects
 
-        ind = find(SPM.xX.I(:,2) == i);
+        ind = find(subjects == i);
         x_tmp = x0(ind);
         y_tmp = y0(ind);
         
         if ~isempty(ind)
-          line(x_tmp,y_tmp,'Color',Hc.col(SPM.xX.I(ind(1),3),:));
+          line(x_tmp,y_tmp,'Color',Hc.col(groups(ind(1)),:));
         end
       end
     end
