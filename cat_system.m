@@ -71,13 +71,13 @@ if ismac && ST == 137
   [ST2, RS2] = system('spctl --status');
   if ~isempty(strfind(RS2,'enabled'))
     cat_io_cmd(sprintf('\nThe following commands will be executed as administrator to allow execution of CAT12 binaries and mex-files.\n Please now type admin password to call sudo\n'),'warning');
-    cmd = ['sudo xattr -r -d com.apple.quarantine ' catdir];
+    cmd = ['sudo xattr -r -d com.apple.quarantine ' CATDir];
     system(cmd); fprintf([cmd '\n']);
-    cmd = ['sudo find ' catdir ' -name *.mexmac* -exec spctl --add {} \;'];
+    cmd = ['sudo find ' CATDir ' -name *.mexmac* -exec spctl --add {} \;'];
     system(cmd); fprintf([cmd '\n']);
-    cmd = ['sudo chmod a+x ' catdir '/CAT.mac*/CAT*'];
+    cmd = ['sudo chmod a+x ' CATDir '/CAT.mac*/CAT*'];
     system(cmd); fprintf([cmd '\n']);
-    cmd = ['sudo find ' catdir ' -name *.mexmac* -exec xattr -d com.apple.quarantine {} \;'];
+    cmd = ['sudo find ' CATDir ' -name *.mexmac* -exec xattr -d com.apple.quarantine {} \;'];
     system(cmd); fprintf([cmd '\n']);
     ST = system(fullfile(CATDir,'CAT_3dVol2Surf'));
   end
