@@ -240,8 +240,10 @@ if H.isxml
       break
     end
     if ~isfield(xml,'qualityratings') && ~isfield(xml,'QAM')
-      fprintf('Quality rating is not saved for %s. Report file %s is incomplete.\nPlease repeat preprocessing amd check for potential errors in the ''err'' folder.\n',H.V(i).fname,xml_files(i,:));    
-      return
+      fprintf('Quality rating is not saved for %s. Report file %s is incomplete.\nPlease repeat preprocessing amd check for potential errors in the ''err'' folder.\n',H.V(i).fname,xml_files(i,:));  
+      H.found_xml = 0;
+      H.isxml = 0;
+      break
     end
     if H.mesh_detected
       if isfield(xml.qualityratings,'NCR')
