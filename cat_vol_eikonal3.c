@@ -25,9 +25,9 @@
 
 /* estimate x,y,z position of index i in an array size sx,sxy=sx*sy... */
 void ind2sub(int i,int *x,int *y, int *z, int sxy, int sy) {
-  *z = (int)floor( i / (double)sxy ) +1; 
+  *z = (int)floor( (double)i / (double)sxy ) +1; 
    i = i % (sxy);
-  *y = (int)floor( i / (double)sy ) +1;        
+  *y = (int)floor( (double)i / (double)sy ) +1;        
   *x = i % sy + 1;
 }
 

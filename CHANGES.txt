@@ -1,5 +1,39 @@
 ------------------------------------------------------------------------
-r1908 | gaser | 2021-11-22 12:14:14
+r1909 | gaser | 2021-11-24 12:18:32
+
+Changed paths:
+M       CHANGES.txt
+M       cat_amap.mex
+M       cat_ornlm.mex
+M       cat_sanlm.mex
+M       cat_stat_check_cov.m
+M       cat_vbdist.mex
+M       cat_vol_downcut.c
+M       cat_vol_downcut.mex
+M       cat_vol_eidist.c
+M       cat_vol_eidist.mex
+M       cat_vol_eikonal3.c
+M       cat_vol_genus0.mex
+M       cat_vol_gradient3.c
+M       cat_vol_gradient3.mex
+M       cat_vol_interp3f.mex
+M       cat_vol_laplace3.c
+M       cat_vol_laplace3.mex
+M       cat_vol_laplace3R.c
+M       cat_vol_laplace3R.mex
+M       cat_vol_localstat.mex
+M       cat_vol_median3.mex
+M       cat_vol_median3c.mex
+M       cat_vol_pbtp.mex
+M       cat_vol_pbtp2.c
+M       cat_vol_simgrow.c
+M       cat_vol_simgrow.mex
+M       internal/cat_vol_cMRegularizarNLM3D.mex
+
+(1) Changed: Move on with cov-check if report files are incomplete.
+(2) Changed: Modified ind2sub subfunction for many c-files. 
+------------------------------------------------------------------------
+r1908 | gaser | 2021-11-22 12:15:04 +0100 (Mon, 22 Nov 2021) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +49,7 @@ M       standalone/cat_standalone_segment_long.m
 (3) Fixed:   Removed UNDEFINED-field from cat_standalone_segment_long.m that 
              caused crashes ins standalone mode for longitudinal data (thanks
              to Felix Hofstaedter for pointing to that error).
+
 ------------------------------------------------------------------------
 r1907 | gaser | 2021-11-17 23:17:30 +0100 (Wed, 17 Nov 2021) | 6 lines
 

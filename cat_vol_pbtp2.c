@@ -84,7 +84,7 @@ float pmax(const float GMT[], const float RPM[], const float SEG[], const float 
 
 
 
-// estimate x,y,z position of index i in an array size sx,sxy=sx*sy...
+/* estimate x,y,z position of index i in an array size sx,sxy=sx*sy... */
 void ind2sub(int i, int *x, int *y, int *z, int snL, int sxy, int sy) {
   /* not here ... 
    *  if (i<0) i=0; 
@@ -96,7 +96,6 @@ void ind2sub(int i, int *x, int *y, int *z, int snL, int sxy, int sy) {
   *y = (int)floor( (double)i / (double)sy ) ;        
   *x = i % sy ;
 }
-
 
 
 // main function

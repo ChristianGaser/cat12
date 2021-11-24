@@ -24,9 +24,9 @@
 
 /* estimate x,y,z position of index i in an array size sx,sxy=sx*sy... */
 void ind2sub(int i,int *x,int *y, int *z, int sxy, int sy) {
-  *z = (int)floor( i / (double)sxy ) +1; 
+  *z = (int)floor( (double)i / (double)sxy ) +1; 
    i = i % (sxy);
-  *y = (int)floor( i / (double)sy ) +1;        
+  *y = (int)floor( (double)i / (double)sy ) +1;        
   *x = i % sy + 1;
 }
 
@@ -84,35 +84,35 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     n1i=i-1; ind2sub(n1i,&nu,&nv,&nw,xy,x); if ( (n1i<0) || (n1i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) ) n1i=i;
     n2i=i+1; ind2sub(n2i,&nu,&nv,&nw,xy,x); if ( (n2i<0) || (n2i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) ) n2i=i;
     if ( nrhs==1 ) {
-      G1[i] = ( I[n2i] - I[n1i] ) / 2;
+      G1[i] = ( I[n2i] - I[n1i] ) / 2.0;
     }
     else {
       if ( M[n1i] && M[n2i] ) 
-        G1[i] = ( I[n2i] - I[n1i] ) / 2;
+        G1[i] = ( I[n2i] - I[n1i] ) / 2.0;
       else
-        G1[i] = 0;  
+        G1[i] = 0.0;  
     }
     
     n1i=i-x; ind2sub(n1i,&nu,&nv,&nw,xy,x); if ( (n1i<0) || (n1i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) ) n1i=i;
     n2i=i+x; ind2sub(n2i,&nu,&nv,&nw,xy,x); if ( (n2i<0) || (n2i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) ) n2i=i;
     if ( nrhs==1 )
-      G2[i] = ( I[n2i] - I[n1i] ) / 2;
+      G2[i] = ( I[n2i] - I[n1i] ) / 2.0;
     else {
       if ( M[n1i] && M[n2i] )
-        G2[i] = ( I[n2i] - I[n1i] ) / 2;
+        G2[i] = ( I[n2i] - I[n1i] ) / 2.0;
       else
-        G2[i] = 0;  
+        G2[i] = 0.0;  
     }
     
     n1i=i-xy; ind2sub(n1i,&nu,&nv,&nw,xy,x); if ( (n1i<0) || (n1i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) ) n1i=i;
     n2i=i+xy; ind2sub(n2i,&nu,&nv,&nw,xy,x); if ( (n2i<0) || (n2i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) ) n2i=i;
     if ( nrhs==1 )
-      G3[i] = ( I[n2i] - I[n1i] ) / 2;
+      G3[i] = ( I[n2i] - I[n1i] ) / 2.0;
     else {
       if ( M[n1i] && M[n2i] )
-        G3[i] = ( I[n2i] - I[n1i] ) / 2;
+        G3[i] = ( I[n2i] - I[n1i] ) / 2.0;
       else
-        G3[i] = 0;
+        G3[i] = 0.0;
     }
   }
 
