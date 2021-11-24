@@ -134,7 +134,7 @@ float ffloor(float x) {
 /* 
  * Read out the linear interpolated value of a volume SEG with the size
  * s on the position x,y,z (c-notation). See also ind2sub for details of
- * the c-noation.
+ * the c-notation.
  */
 float isoval(float SEG[], float x, float y, float z, int s[]){
 
