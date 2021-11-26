@@ -112,7 +112,13 @@ function varargout = compile(comp,test,verb)
           if nci==1
             cd(catdir)
             %try
-              rc{nci}{ncj} = evalc([mexcmd ' ' mexflag ' ' nc{nci}{ncj}]);
+            
+            % clear function if it was maybe used before
+            if  strcmpi(spm_check_version,'octave')
+              evalc(['clear ' nc{nci}{ncj}]); 
+            end
+            
+            rc{nci}{ncj} = evalc([mexcmd ' ' mexflag ' ' nc{nci}{ncj}]);
             %{
             catch 
               rcc{nci}(ncj) = 1; 

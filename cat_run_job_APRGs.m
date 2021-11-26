@@ -193,7 +193,7 @@ function [Affine2,Yb,Ymi,Ym0] = cat_run_job_APRGs(Ysrc,Ybg,VF,Pb,Pbt,Affine,vx_v
   Ybd  = cat_vbdist(single(smooth3(Yb)>0.5),~Ybg,vx_vol);
   mnhd = cat_stat_kmeans( Ybd( cat_vol_morph(Ybg,'d') & Ybd<10 ) ); 
   Ybgd = cat_vbdist(single(Ybg | Ybd>mnhd),~Yb,vx_vol);
-  Ymx  = Ybgd./(Ybd+Ybgd);
+  Ymx  = min(1,Ybgd./(Ybd+Ybgd));
     
   
   %% cutting parameter
