@@ -1,4 +1,4 @@
-function Ydiv = cat_vol_div(Ym,vx_vol,vx_volr)
+function Ydiv = cat_vol_div(Ym,vx_vol,vx_volr,norm)
 % ----------------------------------------------------------------------
 % Divergence helps to identify all gyri that should not be in the GM, but 
 % helps to improve the WM. Divergence estimation is very memory intensive 
@@ -10,7 +10,7 @@ function Ydiv = cat_vol_div(Ym,vx_vol,vx_volr)
 %   vx_vol    .. voxel resolution
 %   vx_volr   .. lower voxel resolution for faster processing 
 %                and smoother results
-%
+%   norm      .. normalize gradients (default = 0)
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -25,6 +25,7 @@ function Ydiv = cat_vol_div(Ym,vx_vol,vx_volr)
   if numel(vx_vol)==1, vx_vol = repmat(vx_vol,1,3); end
   if ~exist('vx_volr','var'), vx_volr = min(1.5,vx_vol*3); end
   if numel(vx_volr)==1, vx_volr = repmat(vx_volr,1,3); end
+  if ~exist('norm','var'), norm = 0; end
   
   Ym = single(Ym); 
   Ynan = isnan(Ym); 
@@ -38,7 +39,13 @@ function Ydiv = cat_vol_div(Ym,vx_vol,vx_volr)
   clear Ym
   
   % gradients
-  [gx,gy,gz]  = cat_vol_gradient3(max(1/3,Ymr)); clear Ymr
+  if norm == 1 
+    [gx,gy,gz]  = cat_vol_gradient3(Ymr); clear Ymr
+    gs = max(1e-1,(gx.^2 + gy.^2 + gz.^2).^0.5); 
+    gx = gx ./ gs; gy = gy ./ gs; gz = gz ./ gs; 
+  else
+    [gx,gy,gz]  = cat_vol_gradient3(max(1/3,Ymr)); clear Ymr
+  end
   
   % divergence function was too memory demanding for some systems
   [px,junk,junk] = cat_vol_gradient3(gx./resT2.vx_volr(1)); clear gx junk

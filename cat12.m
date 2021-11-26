@@ -12,7 +12,8 @@ function varargout = cat12(varargin)
 %     action = ['default','expert','developer'] 
 %
 %   CAT default files for other species (in development):
-%     action = ['oldwoldmonkeys'|'greaterapes']
+%     action = ['oldwoldmonkeys'|'greaterapes'|'macaque'|'baboon'| ...
+%               'chimpanzee']
 %
 %   CAT start with own default files:
 %     action = 'select' 

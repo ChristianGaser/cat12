@@ -139,9 +139,16 @@ function varargout=ds(type,viewtype,DAR,varargin)
         subplot('Position',[0.5 0.0 0.5 0.5]); imagesc(varargin{4}(:,:,s)); axis equal off; daspect(DAR); caxis 'auto';
      case {'d2sm'}
         %set(fh,'WindowStyle','docked','Visible','on');
-        subplot('Position',[0 0.5 1 0.5]); imagesc(varargin{1}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); zoom(myzoom);
-        subplot('Position',[0 0.0 1 0.5]); imagesc(varargin{2}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); zoom(myzoom);
+        subplot('Position',[0 0.5 1 0.5]); imagesc(varargin{1}(:,:,s)); colormap(jet); axis equal off; daspect(DAR); caxis([0 2]); zoom(myzoom);
+        subplot('Position',[0 0.0 1 0.5]); imagesc(varargin{2}(:,:,s)); colormap(jet); axis equal off; daspect(DAR); caxis([0 2]); zoom(myzoom);
         cm=BCGWH; ss=2/(size(cm,1)+2); [X,Y] = meshgrid(1:ss:size(cm,1)+1,1:3); cm=interp2(1:size(cm,1),1:3,cm',X,Y)'; colormap(cm);
+     case {'d2smns'} % no scaling 
+        %set(fh,'WindowStyle','docked','Visible','on');
+        data  = cat(3,varargin{1}(:,:,s),varargin{2}(:,:,s)); data = data(:); data(isnan(data) | isinf(data)) = []; 
+        scale = [ mean(data) - 2*std(data) - eps , mean(data) + 2*std(data) + eps ];
+        subplot('Position',[0 0.5 1 0.5]); imagesc(varargin{1}(:,:,s)); axis equal off; daspect(DAR); caxis(scale); zoom(myzoom);
+        subplot('Position',[0 0.0 1 0.5]); imagesc(varargin{2}(:,:,s)); axis equal off; daspect(DAR); caxis(scale); zoom(myzoom);
+        %cm=BCGWH; ss=2/(size(cm,1)+2); [X,Y] = meshgrid(1:ss:size(cm,1)+1,1:3); cm=interp2(1:size(cm,1),1:3,cm',X,Y)'; colormap(cm);
      case {'d2','default2'}
         %set(fh,'WindowStyle','docked','Visible','on');
         subplot('Position',[0 0.5 0.5 0.5]);   imagesc(varargin{1}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); zoom(myzoom);

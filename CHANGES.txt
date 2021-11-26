@@ -1,5 +1,51 @@
 ------------------------------------------------------------------------
-r1910 | gaser | 2021-11-26 14:46:36
+r1911 | dahnke | 2021-11-26 15:32:59
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_main.m
+M       cat_main1639.m
+M       cat_run_job_APRGs.m
+M       cat_surf_fun.m
+M       cat_vbdist.c
+M       cat_vbdist.m
+M       cat_vbdist.mexmaci64
+M       cat_vol_div.m
+M       cat_vol_grad.m
+M       cat_vol_localstat.c
+M       cat_vol_localstat.m
+M       cat_vol_localstat.mexmaci64
+M       compile.m
+M       ds.m
+M       spm_cat12.m
+
+(1) Fixed:   Added missing variable in catch-block in cat_main.
+(2) Fixed:   Corrected octave bugs in cat_vbdist and cat_vol_localstat.
+             Updated documentation and help.
+(3) Fixed:   Corrected median estimation in cat_vol_localstat that is
+             currently not used. 
+(4) Changed: Throw error message in case of experimental histogram functions
+             that are not used and seams not not work in a proper way.
+(5) New:     Added further functionality to cat_vol_localstat, such as
+             iterations, definition of mask area, handling of zeros,
+             that are in line with previous use.
+(6) New:     Added subfunction to debugging display function ds.              
+(7) Changed: Small changes in documentation in cat12 and spm_cat12.
+(8) Fixed:   Corrected small bug in inactive path in cat_main1639.
+(9) Changed: Did not changed undefined output from FLT_MAX to INFINITY 
+             in cat_vbdist because this may cause to many problems. Although,   
+             this changes are tiny such as in cat_run_job_APRGs, there are 
+             too many cases where it may cause further problems that are 
+             currently running.                                     
+(10) New:    Added normalization parameter and new normalization function 
+             in cat_vol_div that is not used by default.
+(11) New:    Added new functionality in cat_vol_grad to handle NANs and to 
+             normalize the gradients. Added further documentation.   
+ 
+
+------------------------------------------------------------------------
+r1910 | gaser | 2021-11-26 14:47:25 +0100 (Fri, 26 Nov 2021) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +53,7 @@ M       cat_stat_check_cov.m
 M       cat_stat_confplot_spm.m
 
 Changed: Updated search for corresponding xml-files in cat_stat_check_cov.m
+
 ------------------------------------------------------------------------
 r1909 | gaser | 2021-11-24 12:19:25 +0100 (Wed, 24 Nov 2021) | 32 lines
 
