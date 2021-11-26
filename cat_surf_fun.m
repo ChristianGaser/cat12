@@ -227,6 +227,10 @@ function varargout = cat_surf_fun(action,S,varargin)
       if nargin<2, help cat_surf_fun>show_orthview; return; end
       [varargout{1},varargout{2},varargout{3}] = cat_surf_vdist(S,varargin);
     
+    case 'vol2surf'  
+      [varargout{1}] = cat_surf_vol2surf(S,varargin{:});
+      
+      
     case 'surf2vol'
     % Render surface (data) into volume space. See also spm_mesh_to_grid. 
       if nargin<2, help cat_surf_fun>surf2vol; return; end
@@ -297,18 +301,55 @@ function varargout = cat_surf_fun(action,S,varargin)
       else
         varargout{1} = cat_surf_cdatamapping(S,varargin{:});
       end
+      
     case 'reduce'
       varargout{1} = cat_surf_reduce(S,varargin{:});
+    
     case 'isocolors'
     % Similar to MATLAB isocolor function but faster and support to use mat
     % files. See also spm_mesh_project. 
       if nargin<2, help cat_surf_fun>isocolors2; return; end
       varargout{1} = cat_surf_isocolors2(S,varargin{:});
     
+    case 'approxnans'
+      varargout{1} = cat_surf_approxnans(S);
+      
     otherwise
       error('Unknow action "%s"! Check "help cat_surf_fun".\n',action); 
   end
     
+end
+
+function S2 = cat_surf_approxnans(S,D,ds)
+  if ~exist('D','var')
+    if isfield(S,'facevertexcdata')
+      D = S.facevertexcdata; 
+    elseif isfield(S,'cdata')
+      D = S.cdata; 
+    end
+  end
+  if ~exist('ds','var')
+    ds = 10; 
+  end
+  
+  V  = double(S.vertices(~isnan(D),:)); 
+  T  = delaunayn(V);
+
+  [VI,VD] = dsearchn(V,T,double(S.vertices(isnan(D),:)));
+  Dv = D(~isnan(D)); 
+  Df = D; Df(isnan(D)) = Dv(VI);  
+
+  M  = spm_mesh_smooth(S);
+  Ds = single(spm_mesh_smooth(M,double(Df),ds * mean(VD)));
+  D(isnan(D)) = Ds(isnan(D)); 
+  
+  if isfield(S,'facevertexcdata')
+    S2=S; S2.facevertexcdata = D; 
+  elseif isfield(S,'cdata')
+    S2=S; S2.cdata = D;
+  else
+    S2 = D; 
+  end
 end
 
 function CS = cat_surf_localsurfsmooth(CS,C,s)
@@ -319,14 +360,21 @@ function CS = cat_surf_localsurfsmooth(CS,C,s)
   if ~exist('s','var'), s = 1; end
 
   M = spm_mesh_smooth(CS);
-  Cst = sort(C); 
-  
-  for i=1:s
-    Ci  = min(1,max(0,C - (s - i) * Cst(round(numel(C)*0.99)))); 
-    CSV = cat_surf_smooth(M,CS.vertices,1);
-    CS.vertices = CS.vertices .* repmat(1 - Ci,1,3) + CSV .* repmat(Ci,1,3);
-  end
-  
+  if isempty(C) || all(size(C)==1)
+    if nargin<3 && all(size(C)==1)
+      CS.vertices = cat_surf_smooth(M,CS.vertices,C);
+    else
+      CS.vertices = cat_surf_smooth(M,CS.vertices,s);
+    end
+  else
+    Cst = sort(C); 
+
+    for i=1:s
+      Ci  = min(1,max(0,C - (s - i) * Cst(round(numel(C)*0.99)))); 
+      CSV = cat_surf_smooth(M,CS.vertices,1);
+      CS.vertices = CS.vertices .* repmat(1 - Ci,1,3) + CSV .* repmat(Ci,1,3);
+    end
+  end  
 end
 
 function S = cat_surf_reduce(S,red)
@@ -3946,8 +3994,8 @@ function I = cat_surf_isocolors2(V,Y,mat,interp)
 %  Robert Dahnke, 2009-2019
   
   if isempty(Y), return; end
-  if ~isnumeric(V) && isfield(V,'vertices'), V = V.vertices; end 
-  if ~isnumeric(Y) && isfield(Y,'vertices'), Y = Y.vertices; end 
+  if ~isnumeric(V) && isfield(V,'vertices'), SV = V; V = V.vertices; end 
+  if ~isnumeric(Y) && isfield(Y,'vertices'), SY = Y; Y = Y.vertices; end 
   if ~ismatrix(V) && ndims(Y)~=3, VR = Y; Y = V; V = VR; end; clear VR % flip
   if ndims(Y)~=3,  error('MATLAB:isocolor2:dimsY','Only 2 or 3 dimensional input of Y.'); end
   if ~exist('interp','var'); interp = 'linear'; end 
@@ -3980,8 +4028,179 @@ function I = cat_surf_isocolors2(V,Y,mat,interp)
   % We have to process everything with double, thus larger images will cause memory issues.
   switch interp
     case 'nearest'
-      V = max(1,min(round(V),repmat(size(Y),nV,1))); 
-      I = Y( max(1,min(numel(Y), sub2ind(size(Y),V(:,2),V(:,1),V(:,3)))));
+      sY = [size(Y,2) size(Y,1) size(Y,3)]; % flipped limit
+      V = max(1,min(round(V),repmat(sY,nV,1))); 
+      I = Y( max(1,min(numel(Y), sub2ind(size(Y),V(:,2),V(:,1),V(:,3))))); % flipped vertices
+    case {'pushWSsum','pushWSmean','pushmax','pushsum','pushw','pushmean'}
+      %% map all non-NaN voxel to the surface
+      
+      % find voxels for mapping
+      switch interp
+        case 'pushWSsum'
+        otherwise
+          voxi = find(isnan(Y)==0);
+          [vox(:,2),vox(:,1),vox(:,3)] = ind2sub(size(Y),voxi); 
+      end
+      
+      % estimate nearest neighbor mapping (push of each voxel)
+      V = double(V); 
+      T = delaunayn(V);
+      %[VI,SD] = dsearchn(double(V),T,vox);
+%%
+      I   = nan(size(V,1),1);
+      switch interp
+        case {'pushWSsum','pushWSmean'}
+          % A) Cluster first and map the whole region to one voxel
+          %    (*) add local smoothing
+          %    (*) limit size of the cluster ?! But how?
+          %        >> structural separation by sulcal/gyral skeleton?
+          %    (*) extract local surface of the cluster and 
+          %        extract the largest component 
+          %        create new mapping of the whole cluster to this component 
+          %    (*) cluster mapping only for large structures?
+          % extract minima and maxima
+          %
+          %   Problems: 
+          %   - Mapping error of missing (broken) structures with huge miss-mapping
+          %   - "Overmapping" to peak structures (a skyscraber get all views)  
+          %     and that can change the whole picture (= instable)
+          %     >> futher differentitiation or cluster limitation is needed ! 
+          %
+          % (C) Mapping via simpler surfaces with later refinement or 
+          %     Mixed mapping ?
+          % 
+          % - use tissue segmentation to limit Y 
+          if 1
+            Yd  = -cat_vol_div(smooth3(Y),1,2);
+            Yd( cat_vol_morph( smooth3(abs(Yd))<0.01) ) = 0; 
+          else
+            Yd = Y; Yd(isnan(Yd)) = 0;
+          end
+          % watershed segmentation/partitioning
+          if exist('watershed','var')
+            Yw  = watershed(-Yd); %<-0.001);
+            % remove unwanted (superlarge) clusters
+            Yw(isnan(Y) | Yd==0) = 0;
+          else
+            %% normalize map to find local peaks 
+            Yw      = Y ./ max(0.1,cat_vol_smooth3X(log(abs(Y)+1),2)); 
+            [Yw,th] = cat_stat_histth(Yw,95); Yw = Yw ./ max(abs(th)); 
+            Yd      = -cat_vol_div(abs(Yw),1,1,1);
+            [Yd,th] = cat_stat_histth(Yd,99); Yd = Yd ./ max(abs(th)); 
+            Yw      = abs(Yd) .* abs(Yw); 
+            %
+            Yw(isnan(Y)) = nan; 
+            Yl  = spm_bwlabel(double(Yw>0.95)); 
+            Yw  = cat_vol_downcut(single(Yl),abs(single(Yw)),-0.4); Yw = cat_vol_median3c(Yw,~isnan(Y)); Yw(isnan(Y)) = nan; 
+            Yw  = cat_vol_downcut(single(Yw),abs(single(Yw)),-0.2); Yw = cat_vol_median3c(Yw,~isnan(Y)); Yw(isnan(Y)) = nan; 
+            Yw  = cat_vol_downcut(single(Yw),abs(single(Yw)),-0.1); Yw = cat_vol_median3c(Yw,~isnan(Y)); Yw(isnan(Y)) = nan; 
+          end
+          
+          
+          %% remove mini clusters (better to use the direct projection)
+          if 1
+            [whst,wind] = hist(single(Yw(Yw(:)>0)),1:single(max(Yw(:))));
+            wind(whst > 3^3) = []; 
+            for wi = 1:numel(wind)
+              Yw(Yw==wind(wi)) = 0; 
+            end
+          end
+          
+          %% map cluster to surface
+          Scluster = cat_surf_fun('isocolors',SV,Yw,[],'nearest');
+          Sdata    = cat_surf_fun('isocolors',SV,Y ,[],'nearest');
+          
+          % for cluster 
+          
+          SV.facevertexcdata = Scluster; 
+          
+          %% map 0-values (direct projection via push)
+          if 1
+            voxi = find(isnan(Y)==0 & Yw==0); clear vox; 
+            [vox(:,2),vox(:,1),vox(:,3)] = ind2sub(size(Y),voxi); 
+
+            I = nan(size(V,1),1);
+            [VI,SD] = dsearchn(V,T,vox);
+
+            for vi = 1:numel(VI)
+              if isnan(I(VI(vi)))
+                I(VI(vi)) = Y(voxi(vi)) .* 10./SD(vi);
+              else
+                I(VI(vi)) = I(VI(vi)) + Y(voxi(vi)) .* 10./SD(vi);
+              end
+            end
+          end
+          
+          
+          %% there should be some general limit vom a center point 
+          for wi = setxor( 1:max(single(Yw(:))) , single(wind) ) 
+            th = 0.1 * max(Y(Yw(:)==wi));
+            if ~isempty(th) && sum(Yw(:)==wi & Y(:)>=th)>0
+              %%
+              if 0
+                voxi = find(Yw==wi & Y>=th); clear vox;
+                [vox(:,2),vox(:,1),vox(:,3)] = ind2sub(size(Y),voxi); 
+                [VIwi,SD] = dsearchn(V,T,vox);
+
+                [VThst,VTind] = hist(VIwi,min(VIwi(:)):max(VIwi(:)));
+                [VThstmax,VThstind] = max(VThst); 
+                VIwimax = VTind(VThstind);
+
+                I(VIwimax) = sum( Y(Yw(:)==wi) ); 
+              else
+                voxi = find(Yw==wi & Y>=th); clear vox;
+                [vox(:,2),vox(:,1),vox(:,3)] = ind2sub(size(Y),voxi); 
+              
+                
+                
+                [VIwi,SD] = dsearchn(V,T,vox);
+                
+                
+              end
+            end
+          end
+          
+        case 'pushsum' % for fMRI
+          I = zeros(size(V,1),1,'single');
+          [VI,SD] = dsearchn(V,T,vox);
+            
+          for vi = 1:numel(VI)
+            if isnan(I(VI(vi)))
+              I(VI(vi)) = Y(voxi(vi)) .* min(1,1./SD(vi));
+            else
+              I(VI(vi)) = I(VI(vi)) + Y(voxi(vi)) .* min(1,1./SD(vi));
+            end
+          end
+        case 'pushmax'
+          for vi = 1:numel(vox)
+            if ~isnan(I(VI(vi))) 
+              I(VI(vi)) = max(I(VI(vi)),vox(vi)); 
+            else
+              I(VI(vi)) = vox(vi);
+            end
+          end
+        case 'pushmean'
+          I = nan(size(V,1),1,'single');
+          N = zeros(size(V,1),1,'single');
+          [VI,SD] = dsearchn(V,T,vox); SD=SD*6;
+            
+          for vi = 1:numel(VI)
+            if isnan(I(VI(vi)))
+              I(VI(vi)) = Y(voxi(vi)) .* min(1,1./SD(vi));
+              N(VI(vi)) =                min(1,1./SD(vi));
+            else
+              I(VI(vi)) = I(VI(vi)) + Y(voxi(vi)) .* min(1,1./SD(vi));
+              N(VI(vi)) = N(VI(vi)) +                min(1,1./SD(vi));
+            end
+          end
+          I = I ./ max(1,N); 
+      end 
+      
+      % question of smoothing & interpolation 
+     % I(isnan(I)) = 0; 
+      
+      
+          
     case 'linear'
       nb  = repmat(shiftdim(double([0 0 0;0 0 1;0 1 0;0 1 1;1 0 0;1 0 1;1 1 0;1 1 1]'),-1),nV,1);  
       enb = repmat(shiftdim((ones(8,1,'double')*[size(Y,2),size(Y,1),size(Y,3)])',-1),nV,1);  

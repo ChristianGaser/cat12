@@ -333,12 +333,14 @@ if ~isfield(res,'spmpp')
   if update_intnorm 
     try
       [Ym,Ymi,Tthm,Tthmi] = cat_main_update_intnorm(Ym,Ymi,Yb,Ycls,job);
+      res.ppe.tths.uintnorm1postlas.Tthm  = Tthm; 
+      res.ppe.tths.uintnorm1postlas.Tthmi = Tthmi;
+      clear Tthm Tthmi; 
     catch
       cat_io_cprintf('warn','Update of intensities failed!\n');
+      res.ppe.tths.uintnorm1postlas.Tthm  = nan; 
+      res.ppe.tths.uintnorm1postlas.Tthmi = nan;
     end
-    res.ppe.tths.uintnorm1postlas.Tthm  = Tthm; 
-    res.ppe.tths.uintnorm1postlas.Tthmi = Tthmi;
-    clear Tthm Tthmi; 
   end
   
   
