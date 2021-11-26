@@ -253,7 +253,7 @@ end
 
 % compute contrast of parameter estimates and 90% C.I.
 %-------------------------------------------------------------- 
-signal_change  = xCon.c'*beta
+signal_change  = xCon.c'*beta;
 CI = CI*sqrt(diag(xCon.c'*Bcov*xCon.c));
 
 if ~exist('repeated_anova','var')
