@@ -129,25 +129,38 @@ end
 
 if isempty(char(job.data_xml))
   H.isxml = 0;
+  xml_defined = 0;
   QM_names = '';
   xml_files = [];
 else
   xml_files = char(job.data_xml);
-  H.isxml = 1;
+  if size(xml_files,1) ~= n_subjects
+    fprintf('Only %d of %d report files were defined. Try to find xml-files for quality measures.\n',size(xml_files,1),n_subjects);
+    H.isxml = 0;
+    xml_defined = 0;
+  else
+    H.isxml = 1;
+    xml_defined = 1;
+  end
+end
+
+if H.mesh_detected
+  QM = ones(n_subjects,5);
+  QM_names = char('Noise','Bias','Weighted overall image quality (IQR)','Euler number','Size of topology defects');
+else
+  QM = ones(n_subjects,3);
+  QM_names = char('Noise','Bias','Weighted overall image quality (IQR)');
 end
 
 pth = spm_fileparts(H.V(1).fname);
 report_folder = fullfile(spm_fileparts(pth),'report');
-subfolder = 1;
 % check whether report subfolder exists
 if ~exist(report_folder,'dir')
   report_folder = pth;
-  subfolder = 0;
 end
 
 % search xml report files if not defined
-H.found_xml = 0;
-if ~H.isxml
+if ~xml_defined
   xml_files = spm_select('List',report_folder,'^cat_.*\.xml$');
   if ~isempty(xml_files)
 
@@ -164,9 +177,6 @@ if ~H.isxml
         ind = strfind(H.V(i).fname,fname);
         if ~isempty(ind)
           [pth, prep_str] = spm_fileparts(H.V(1).fname(1:ind-1));
-          H.isxml = 1;
-          H.found_xml = 1;
-          fprintf('Corresponding xml-files were found.\n')
           i = n_subjects;
           j = size(xml_files,1);
           break
@@ -179,103 +189,103 @@ if ~H.isxml
   end  
 end
 
-if H.isxml && (size(xml_files,1) < n_subjects)
-    fprintf('WARNING: Less XML-files than data sets found. XML-files will be not used.\n');
-    H.isxml = 0;
-  end
-  
-if H.isxml
-  if H.mesh_detected
-    QM = ones(n_subjects,5);
-    QM_names = char('Noise','Bias','Weighted overall image quality (IQR)','Euler number','Size of topology defects');
-  else
-    QM = ones(n_subjects,3);
-    QM_names = char('Noise','Bias','Weighted overall image quality (IQR)');
-  end
-  
-  spm_progress_bar('Init',n_subjects,'Load xml-files','subjects completed')
-  for i=1:n_subjects
-    % get basename for data files
-    [pth, data_name] = fileparts(H.V(i).fname);
-    
-    % remove ending for rigid or affine transformed files
-    data_name = strrep(data_name,'_affine','');
-    data_name = strrep(data_name,'_rigid','');
-    % use xml-file if found by name
-    if H.found_xml
-      % get report folder
-      if subfolder
-        report_folder = fullfile(spm_fileparts(pth),'report');
-      else
-        report_folder = pth;
-      end
+n_xml_files = 0;
+spm_progress_bar('Init',n_subjects,'Load xml-files','subjects completed')
 
-      % remove prep_str from name and use report folder and xml extension
-      if H.mesh_detected
-        % for meshes we aso have to remove the additional "." from name
-        tmp_str = strrep(data_name,prep_str,'');
-        xml_file = fullfile(report_folder,['cat_' tmp_str(2:end) '.xml']);
-      else
-        xml_file = fullfile(report_folder,['cat_' strrep(data_name,prep_str,'') '.xml']);
-      end
-    else
-    
-      [pth, xml_name] = fileparts(deblank(xml_files(i,:)));
-      % remove leading 'cat_'
-      xml_name = xml_name(5:end);
+for i=1:n_subjects
+  % get basename for data files
+  [pth, data_name] = fileparts(H.V(i).fname);
 
-      % check for filenames
-      if isempty(strfind(data_name,xml_name))
-        fprintf('Please check file names because of deviating subject names:\n%s vs. %s\n',H.V(i).fname,xml_files(i,:));
-      end
-      xml_file = deblank(xml_files(i,:));
-    end
-    
-    if exist(xml_file,'file')
-      xml = cat_io_xml(xml_file);
+  % remove ending for rigid or affine transformed files
+  data_name = strrep(data_name,'_affine','');
+  data_name = strrep(data_name,'_rigid','');
+  
+  % use xml-file if found by name
+  if ~xml_defined
+    % get report folder
+    if exist(fullfile(spm_fileparts(pth),'report'),'dir')
+      report_folder = fullfile(spm_fileparts(pth),'report');
     else
-      fprintf('File %s not found. Skip use of xml-files for quality measures.\n',xml_file);
-      H.isxml = 0;
-      H.found_xml = 0;
-      break
+      report_folder = pth;
     end
-    if ~isfield(xml,'qualityratings') && ~isfield(xml,'QAM')
-      fprintf('Quality rating is not saved for %s. Report file %s is incomplete.\nPlease repeat preprocessing amd check for potential errors in the ''err'' folder.\n',H.V(i).fname,xml_files(i,:));  
-      H.found_xml = 0;
-      H.isxml = 0;
-      break
-    end
+
+    % remove prep_str from name and use report folder and xml extension
     if H.mesh_detected
-      if isfield(xml.qualityratings,'NCR')
-      % check for newer available surface measures
-        if isfield(xml.subjectmeasures,'EC_abs')
-          QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR xml.subjectmeasures.EC_abs xml.subjectmeasures.defect_size];
-        else
-          QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR NaN NaN];
-        end
-      else % also try to use old version
-        QM(i,:) = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
-      end
+      % for meshes we also have to remove the additional "." from name
+      tmp_str = strrep(data_name,prep_str,'');
+      xml_file = fullfile(report_folder,['cat_' tmp_str(2:end) '.xml']);
     else
-      if isfield(xml.qualityratings,'NCR')
-        QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR];
-      else % also try to use old version
-        QM(i,:) = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
-      end
+      xml_file = fullfile(report_folder,['cat_' strrep(data_name,prep_str,'') '.xml']);
     end
-    spm_progress_bar('Set',i);  
+  else % use defined xml-files
+
+    [pth, xml_name] = fileparts(deblank(xml_files(i,:)));
+    % remove leading 'cat_'
+    xml_name = xml_name(5:end);
+
+    % check for filenames
+    if isempty(strfind(data_name,xml_name))
+      fprintf('Skip use of xml-files for quality measures because of deviating subject names:\n%s vs. %s\n',H.V(i).fname,xml_files(i,:));
+      H.isxml = 0;
+      break
+    end
+    xml_file = deblank(xml_files(i,:));
   end
-  spm_progress_bar('Clear');
-  
-  % remove last two columns if EC_abs and defect_size are not defined
-  if H.mesh_detected & all(isnan(QM(:,4))) & all(isnan(QM(:,5)))
-    QM = QM(:,1:3);
-    QM_names = QM_names(1:3,:);
+
+  if exist(xml_file,'file')
+    xml = cat_io_xml(xml_file);
+    n_xml_files = n_xml_files + 1;
+    H.isxml = 1;
+  else
+    fprintf('File %s not found. Skip use of xml-files for quality measures.\n',xml_file);
+    H.isxml = 0;
+    break
   end
-  
+
+  if ~isfield(xml,'qualityratings') && ~isfield(xml,'QAM')
+    fprintf('Quality rating is not saved for %s. Report file %s is incomplete.\nPlease repeat preprocessing amd check for potential errors in the ''err'' folder.\n',H.V(i).fname,xml_files(i,:));  
+    H.isxml = 0;
+    break
+  end
+
+  if H.mesh_detected
+    if isfield(xml.qualityratings,'NCR')
+    % check for newer available surface measures
+      if isfield(xml.subjectmeasures,'EC_abs')
+        QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR xml.subjectmeasures.EC_abs xml.subjectmeasures.defect_size];
+      else
+        QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR NaN NaN];
+      end
+    else % also try to use old version
+      QM(i,:) = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
+    end
+  else
+    if isfield(xml.qualityratings,'NCR')
+      QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR];
+    else % also try to use old version
+      QM(i,:) = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
+    end
+  end
+  spm_progress_bar('Set',i);  
+end
+spm_progress_bar('Clear');
+
+if H.isxml
+  if n_xml_files ~= n_subjects
+    fprintf('Only %d of %d report files found. Skip use of xml-files for quality measures.\n',n_xml_files,n_subjects);
+    H.isxml = 0;
+  else
+    fprintf('%d report files with quality measures were found.\n',n_xml_files);
+  end
 end
 
-[pth,nam] = spm_fileparts(H.V(1).fname);
+% remove last two columns if EC_abs and defect_size are not defined
+if H.mesh_detected && all(isnan(QM(:,4))) && all(isnan(QM(:,5)))
+  QM = QM(:,1:3);
+  QM_names = QM_names(1:3,:);
+end
+
+%[pth,nam] = spm_fileparts(H.V(1).fname);
 
 if H.mesh_detected
   % load surface texture data

@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1909 | gaser | 2021-11-24 12:18:32
+r1910 | gaser | 2021-11-26 14:46:36
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_check_cov.m
+M       cat_stat_confplot_spm.m
+
+Changed: Updated search for corresponding xml-files in cat_stat_check_cov.m
+------------------------------------------------------------------------
+r1909 | gaser | 2021-11-24 12:19:25 +0100 (Wed, 24 Nov 2021) | 32 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -32,6 +41,7 @@ M       internal/cat_vol_cMRegularizarNLM3D.mex
 
 (1) Changed: Move on with cov-check if report files are incomplete.
 (2) Changed: Modified ind2sub subfunction for many c-files. 
+
 ------------------------------------------------------------------------
 r1908 | gaser | 2021-11-22 12:15:04 +0100 (Mon, 22 Nov 2021) | 15 lines
 
