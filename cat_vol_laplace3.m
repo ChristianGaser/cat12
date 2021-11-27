@@ -10,6 +10,11 @@
 %  TH   .. threshold to control the number of iterations
 %          maximum change of an element after iteration
 %
+% Example: 
+%   A = zeros(50,50,3,'single'); A(10:end-9,10:end-9,2)=0.5; 
+%   A(20:end-19,20:end-19,2)=1;
+%   C = cat_vol_laplace3(A,0,1,0.001); ds('d2smns','',1,A,C,2); 
+% 
 %  See also cat_vol_laplace3R, compile.
 % ______________________________________________________________________
 %

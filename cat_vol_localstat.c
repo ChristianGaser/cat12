@@ -81,6 +81,14 @@
 #define ROUND( x ) ((long) ((x) + ( ((x) >= 0) ? 0.5 : (-0.5) ) ))
 #endif
 
+#ifdef _MSC_VER
+  #define FINFINITY (FLT_MAX+FLT_MAX);
+  static const unsigned long __nan[2] = {0xffffffff, 0x7fffffff};
+  #define FNAN (*(const float *) __nan)
+#else
+  #define FINFINITY 1.0f/0.0f;
+  #define FNAN 0.0f/0.0f
+#endif
 
 #define index(A,B,C,DIM) ((C)*DIM[0]*DIM[1] + (B)*DIM[0] + (A))
 
@@ -411,9 +419,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   switch ( mskval ) { 
     case 0: for (i=0;i<nL;i++) if ( MB[i]==false ) M[i]=0.0; break;
     case 1: for (i=0;i<nL;i++) if ( MB[i]==false ) M[i]=D[i]; break;
-    case 2: for (i=0;i<nL;i++) if ( MB[i]==false ) M[i]=NAN; break;
-    case 3: for (i=0;i<nL;i++) if ( MB[i]==false ) M[i]=-INFINITY; break;
-    case 4: for (i=0;i<nL;i++) if ( MB[i]==false ) M[i]=INFINITY; break;
+    case 2: for (i=0;i<nL;i++) if ( MB[i]==false ) M[i]=FNAN; break;
+    case 3: for (i=0;i<nL;i++) if ( MB[i]==false ) M[i]=-FINFINITY; break;
+    case 4: for (i=0;i<nL;i++) if ( MB[i]==false ) M[i]=FINFINITY; break;
   }
   
   if ( verb ) printf(" done. \n");   
