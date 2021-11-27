@@ -1,12 +1,14 @@
 /* eikonal distance calculation
- * _____________________________________________________________________________
- * Estimates eikonal distance to an object (negative values) with the speed given
- * by the positive values
+ * ________________________________________________________________________
+ * Estimates eikonal distance to an object (negative values) with the speed 
+ * given by the positive values
  *
- *  D = cat_vol_eidist(O,F) 
+ *  D = cat_vol_eidist(O,F,vx_vol) 
  *
+ *  D      (single) distance map
  *  O      (single) object
  *  F      (single) speed map
+ *  vx_vol (double) voxel size
  * 
  * ______________________________________________________________________
  *
@@ -46,8 +48,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if (nrhs>2)                                       mexErrMsgTxt("ERROR:eikonal3: too many input elements.\n");
   if (nlhs>2)                                       mexErrMsgTxt("ERROR:eikonal3: too many output elements.\n");
   if (mxIsSingle(prhs[0])==0)                       mexErrMsgTxt("ERROR:eikonal3: first  input must be an 3d single matrix\n");
-  if (nrhs==2 && mxIsDouble(prhs[1])==0)            mexErrMsgTxt("ERROR:eikonal3: fourth  input must be an double matrix\n");
-  if (nrhs==2 && mxGetNumberOfElements(prhs[1])!=3) mexErrMsgTxt("ERROR:eikonal3: fourth input must have 3 Elements");
+  if (nrhs==2 && mxIsSingle(prhs[1])==0)            mexErrMsgTxt("ERROR:eikonal3: second input must be an 3d single matrix\n");
+  if (nrhs==3 && mxIsDouble(prhs[2])==0)            mexErrMsgTxt("ERROR:eikonal3: third input must be an 3d double matrix\n");
+  if (nrhs==3 && mxGetNumberOfElements(prhs[2])!=3) mexErrMsgTxt("ERROR:eikonal3: third input must have 3 Elements");
+  
+  mexErrMsgTxt("ERROR:eikonal3: NOT WORKING AND USED AT ALL!\n");
   
   /* main information about input data (size, dimensions, ...) */
   const mwSize *sL = mxGetDimensions(prhs[0]); int sSEG[] = {sL[0],sL[1],sL[2]}; 
@@ -57,12 +62,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   const int     y  = sL[1];
   const int     xy = x*y;
 
-  const int sS[] = {1,3}; 
-  mxArray *SS = mxCreateNumericArray(2,sS,mxDOUBLE_CLASS,mxREAL);
-  double*S = mxGetPr(SS);
-  if (nrhs<2) {S[0]=1; S[1]=1; S[2]=1;} else {S=mxGetPr(prhs[1]);}
-  
+  const mwSize sSS[] = {1,3};
+  mxArray *SS  = mxCreateNumericArray(2,sSS, mxDOUBLE_CLASS,mxREAL); double*S  = mxGetPr(SS);
+  if (nrhs<3) {S[0]=1.0; S[1]=1.0; S[2]=1.0;} else {S = mxGetPr(prhs[2]);}
   float s1 = abs2((float)S[0]),s2 = abs2((float)S[1]),s3 = abs2((float)S[2]);
+  
   const float   s12  = sqrt( s1*s1  + s2*s2); /* xy - voxel size */
   const float   s13  = sqrt( s1*s1  + s3*s3); /* xz - voxel size */
   const float   s23  = sqrt( s2*s2  + s3*s3); /* yz - voxel size */

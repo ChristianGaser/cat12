@@ -1,5 +1,37 @@
 ------------------------------------------------------------------------
-r1911 | dahnke | 2021-11-26 15:32:59
+r1912 | dahnke | 2021-11-27 15:13:28
+
+Changed paths:
+M       CHANGES.txt
+M       cat_vbdist.c
+M       cat_vol_downcut.c
+M       cat_vol_downcut.m
+M       cat_vol_downcut.mexmaci64
+M       cat_vol_eidist.c
+M       cat_vol_eidist.m
+M       cat_vol_eidist.mexmaci64
+M       cat_vol_eikonal3.c
+M       cat_vol_eikonal3.m
+M       cat_vol_eikonal3.mexmaci64
+M       cat_vol_laplace3.c
+M       cat_vol_laplace3.m
+M       cat_vol_laplace3.mexmaci64
+M       cat_vol_laplace3R.c
+M       cat_vol_laplace3R.m
+M       cat_vol_laplace3R.mexmaci64
+M       cat_vol_localstat.c
+M       cat_vol_simgrow.c
+M       cat_vol_simgrow.m
+M       cat_vol_simgrow.mexmaci64
+M       ds.m
+
+(1) Fixed:   Corrected Octave bugs and added examples in documentation in 
+               cat_vol_laplace3(R), cat_vol_simgrow, cat_vol_gradient3, 
+               cat_vol_eikonal3, cat_vol_eidist, cat_vol_downcut.
+(2) Fixed:   Small adaptions for display function ds.               
+ 
+------------------------------------------------------------------------
+r1911 | dahnke | 2021-11-26 15:33:25 +0100 (Fri, 26 Nov 2021) | 44 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -43,6 +75,7 @@ M       spm_cat12.m
 (11) New:    Added new functionality in cat_vol_grad to handle NANs and to 
              normalize the gradients. Added further documentation.   
  
+
 
 ------------------------------------------------------------------------
 r1910 | gaser | 2021-11-26 14:47:25 +0100 (Fri, 26 Nov 2021) | 7 lines
