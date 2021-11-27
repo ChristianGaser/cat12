@@ -36,11 +36,12 @@
 %  Definitions of a object matrix A and of a speedmap F:
 %
 %  1) 
-%    A = zeros(50,50,50,'single'); 
-%    A(20:30,5:15,20:30) = 1; A(20:30,35:45,20:30) = 1; 
-%    A = smooth3(A); A(1:5,1:25,:) = nan; 
-%    A(1:5,26:50,:) = -inf; A(45:50,26:50,:) = inf;
+%    A=zeros(50,50,3,'single'); A(20:30,5:15,2)=10; A = smooth3(A); 
+%    A(20:30,35:45,2) = 1; A(1:5,1:25,:) = nan; A(1:5,26:50,:) = -inf; 
 %    F = ones(size(A),'single'); F(10:40,20,:) = 0.5; F(40,10:40,:) = 0;
+%    [D,I,T] = cat_vol_eidist(A,F,[1 1 1],1,1); 
+%    ds('d2smns','',1,A - F,D/10,2); title('Euclidean distance')
+%    ds('d2smns','',1,A - F,T/10,2); title('Eikonal distance')
 %
 %  2) 
 %    A = zeros(10,20,10,'single'); 

@@ -43,6 +43,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef _MSC_VER
+  #define FINFINITY (FLT_MAX+FLT_MAX);
+  static const unsigned long __nan[2] = {0xffffffff, 0x7fffffff};
+  #define FNAN (*(const float *) __nan)
+#else
+  #define FINFINITY 1.0f/0.0f;
+  #define FNAN 0.0f/0.0f
+#endif
 
 /* estimate minimum of A and its index in A */
 void pmin(float A[], int sA, float *minimum, int *index)
@@ -136,7 +144,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     L[i]=(unsigned char) round(V[i]);
     I[i]=(unsigned int)i;
   
-    /* FLT_MAX should be better INFINITY but this will cause errors in different CAT functions */
+    /* FLT_MAX should be better FINFINITY but this will cause errors in different CAT functions */
     /* such as cat_run_job.APRGs:196 where the old call "Ymx  = Ybgd./(Ybd+Ybgd);" was working but 
      * the new version caused a treshold in an image with INF that lead to an empty brainmask 
      * Although, this can be solved by "Ymx  = min(1,Ybgd./(Ybd+Ybgd));" I do not know other 
