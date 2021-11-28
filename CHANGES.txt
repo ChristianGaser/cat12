@@ -1,5 +1,30 @@
 ------------------------------------------------------------------------
-r1912 | dahnke | 2021-11-27 15:13:28
+r1913 | dahnke | 2021-11-28 21:43:32
+
+Changed paths:
+M       CHANGES.txt
+M       cat_vol_downcut.c
+M       cat_vol_downcut.mexmaci64
+M       cat_vol_gradient3.c
+M       cat_vol_gradient3.mexmaci64
+M       cat_vol_median3.c
+M       cat_vol_median3.m
+M       cat_vol_median3.mexmaci64
+M       cat_vol_median3c.c
+M       cat_vol_median3c.m
+M       cat_vol_median3c.mexmaci64
+M       cat_vol_pbtp.c
+M       cat_vol_pbtp.mexmaci64
+
+(1) Fixed:   Corrected Octave bugs and added examples in documentation in 
+               cat_vol_laplace3(R), cat_vol_simgrow, cat_vol_gradient3, 
+               cat_vol_eikonal3, cat_vol_eidist, cat_vol_downcut,
+               cat_vol_pbtp, and cat_vol_median3(c).
+(2) Fixed:   Small adaptions for display function ds.               
+(3) New:     Added normalization parameter to cat_vol_gradient3. 
+
+------------------------------------------------------------------------
+r1912 | dahnke | 2021-11-27 15:14:31 +0100 (Sat, 27 Nov 2021) | 30 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -30,6 +55,7 @@ M       ds.m
                cat_vol_eikonal3, cat_vol_eidist, cat_vol_downcut.
 (2) Fixed:   Small adaptions for display function ds.               
  
+
 ------------------------------------------------------------------------
 r1911 | dahnke | 2021-11-26 15:33:25 +0100 (Fri, 26 Nov 2021) | 44 lines
 
