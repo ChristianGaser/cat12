@@ -21,6 +21,12 @@
 %  Used slower quicksort for median calculation, because the faster median 
 %  of the median application implementation leads to wrong results. 
 % 
+%  Example: 
+%  1) 
+%     A = rand(50,50,3,'single');
+%     B = false(size(A)); B(5:end-4,5:end-4,:)=true; 
+%     C = cat_vol_median3(A,B); ds('d2smns','',1,A+B,C,2);
+%
 %  See also cat_vol_median3c, compile.
 % ______________________________________________________________________
 %

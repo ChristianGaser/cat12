@@ -2,11 +2,12 @@
  * _____________________________________________________________________
  * Estimation of gradient of a volume L (within a ROI M). 
  * 
- * [gi,gj,gk] = cat_vol_gradient3(L[,M])
+ * [gi,gj,gk] = cat_vol_gradient3(L[,M,norm])
  *
  * L          = 3d single input matrix
  * M          = 3d logical input matrix
- * [gi,gj,gk] = 3d single output matrix
+ * norm       = 3d double input (0=no, 1=yes, default=0)
+ * [gi,gj,gk] = 3d single output matrix (xyz gradients defined by [-1 0 1])
  *
  * ______________________________________________________________________
  *
@@ -35,8 +36,8 @@ void ind2sub(int i,int *x,int *y, int *z, int sxy, int sy) {
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
   if (nrhs<1)                  mexErrMsgTxt("ERROR:cat_vol_gradient3: not enough input elements\n");
-  if (nrhs>2)                  mexErrMsgTxt("ERROR:cat_vol_gradient3: too many input elements\n");
-  if (nlhs<3)                  mexErrMsgTxt("ERROR:cat_vol_gradient3: to less output elements\n");
+  if (nrhs>3)                  mexErrMsgTxt("ERROR:cat_vol_gradient3: too many input elements\n");
+  if (nlhs<3)                  mexErrMsgTxt("ERROR:cat_vol_gradient3: not enough output elements\n");
   if (nlhs>3)                  mexErrMsgTxt("ERROR:cat_vol_gradient3: too many output elements\n");
   if (mxIsSingle(prhs[0])==0)  mexErrMsgTxt("ERROR:cat_vol_gradient3: input must be an 3d single matrix\n");
  
@@ -67,6 +68,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   
     M = (bool *)mxGetPr(prhs[1]);
   } 
+  int norm  = 0; 
+  if ( nrhs > 2) norm = (int) round( mxGetScalar(prhs[2]) );
   
   plhs[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
   plhs[1] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
@@ -76,9 +79,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   float *G2 = (float *)mxGetPr(plhs[1]);
   float *G3 = (float *)mxGetPr(plhs[2]);
   
-  int i,u,v,w,nu,nv,nw,n1i,n2i; 
-  for (i=0;i<nL;i++) 
-  {
+  int u,v,w,nu,nv,nw,n1i,n2i; 
+  for (int i=0;i<nL;i++) {
     ind2sub(i,&u,&v,&w,xy,x);
 
     n1i=i-1; ind2sub(n1i,&nu,&nv,&nw,xy,x); if ( (n1i<0) || (n1i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) ) n1i=i;
@@ -115,7 +117,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         G3[i] = 0.0;
     }
   }
-
+  
+  if ( norm == 1 ) {
+    mxArray *hlps[1]; 
+    hlps[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);  
+    float*GS  = (float *)mxGetPr(hlps[0]);	/* distance map */
+    
+    for (int i=0;i<nL;i++) {
+      GS[i] = G1[i] + G2[i] + G3[i]; 
+      if ( GS[i] != 0.0 ) {
+        G1[i] /= GS[i];  
+        G2[i] /= GS[i]; 
+        G3[i] /= GS[i]; 
+      }
+    }
+  }
 }
 
 
