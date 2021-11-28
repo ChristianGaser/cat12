@@ -61,8 +61,8 @@ int sub2ind(int x,int y, int z, const int s[]) {
   return i;
 }
 
-float abs2(float n) {	if (n<0) return -n; else return n; }
-float sign(float n) {	if (n<0) return 1; else return 0; }
+float abs2(float n) {	if (n<0.0) return -n; else return n; }
+float sign(float n) {	if (n<0.0) return 1.0; else return 0.0; }
 float max2(float a, float b) { if (a>b) return a; else return b; }
 float min2(float a, float b) { if (a<b) return a; else return b; }
 
@@ -91,9 +91,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   mxArray *SS  = mxCreateNumericArray(2,sSS, mxDOUBLE_CLASS,mxREAL); double*S  = mxGetPr(SS);
   mxArray *dsv = mxCreateNumericArray(2,sdsv,mxDOUBLE_CLASS,mxREAL); double*dd = mxGetPr(dsv);
   float dI=0.0; double*SEGd; if (nrhs>=3) {SEGd=mxGetPr(prhs[2]); dI=(float) SEGd[0];}; 
-  if (nrhs<4) {S[0]=1; S[1]=1; S[2]=1;} else {S=mxGetPr(prhs[3]);}
-  if (nrhs<5) {dd[0]=0.1; dd[1]=10;}    else {dd=mxGetPr(prhs[4]);} /* THIS SEAMS TO BE INOPTIMAL IN THE SIMPLE EXAMPLES - DO FURTHER TESTS */!
-  /*if (nrhs<5) {dd[0]=10; dd[1]=0.1;}    else {dd=mxGetPr(prhs[4]);} */
+  if (nrhs<4) {S[0]=1.0; S[1]=1.0; S[2]=1.0;} else {S=mxGetPr(prhs[3]);}
+  if (nrhs<5) {dd[0]=0.1; dd[1]=10;}    else {dd=mxGetPr(prhs[4]);} /* THIS SEAMS TO BE INOPTIMAL IN THE SIMPLE EXAMPLES - DO FURTHER TESTS */
+  /* if (nrhs<5) {dd[0]=10; dd[1]=0.1;}    else {dd=mxGetPr(prhs[4]);} */
   
   float s1 = abs2((float)S[0]),s2 = abs2((float)S[1]),s3 = abs2((float)S[2]);
   const float   s12  = sqrt( s1*s1  + s2*s2); /* xy - voxel size */

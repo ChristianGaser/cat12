@@ -22,6 +22,13 @@
  * Used slower quicksort for median calculation, because the faster median 
  * of the median application implementation leads to wrong results. 
  *
+ * Example: 
+ *  1) 
+ *    A = rand(50,50,3,'single');
+ *    B = false(size(A)); B(5:end-4,5:end-4,:)=true; 
+ *    C = cat_vol_median3(A,B); ds('d2smns','',1,A+B,C,2);
+ *
+ *
  * TODO: check all input elements... 
  * ______________________________________________________________________
  *
@@ -81,26 +88,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   const int     dL  = mxGetNumberOfDimensions(prhs[0]);
   const int     nL  = (int) mxGetNumberOfElements(prhs[0]);
   
-  if ( dL  != 3 || mxIsSingle(prhs[0])==0)        mexErrMsgTxt("ERROR:cat_vol_median3: first input must be a single 3d matrix\n");
+  if ( dL  != 3 || mxIsSingle(prhs[0])==false)   mexErrMsgTxt("ERROR:cat_vol_median3: first input must be a single 3d matrix\n");
   if ( nrhs>1) {
     const int     nBi = (int) mxGetNumberOfElements(prhs[1]);
     
     if ( mxGetNumberOfDimensions(prhs[1]) != 3 ) mexErrMsgTxt("ERROR:cat_vol_median3: second input must be 3d - to use a later parameter use ''true(size( input1 ))''\n");
-    if ( mxIsLogical(prhs[1])==0)                mexErrMsgTxt("ERROR:cat_vol_median3: second input must be a logical 3d matrix\n");
+    if ( mxIsLogical(prhs[1])==false)            mexErrMsgTxt("ERROR:cat_vol_median3: second input must be a logical 3d matrix\n");
     if ( nL != nBi)                              mexErrMsgTxt("ERROR:cat_vol_median3: second input must be a logical 3d matrix with equal size than input 1\n");
   } 
   if ( nrhs>2) {
     const int     nBn = (int) mxGetNumberOfElements(prhs[2]); 
     
     if ( mxGetNumberOfDimensions(prhs[2]) != 3 ) mexErrMsgTxt("ERROR:cat_vol_median3: third input must be 3d - to use a later parameter use ''true(size( input1 ))'\n");
-    if ( mxIsLogical(prhs[2])==0)                mexErrMsgTxt("ERROR:cat_vol_median3: third input must be a logical 3d matrix\n"); 
+    if ( mxIsLogical(prhs[2])==false)            mexErrMsgTxt("ERROR:cat_vol_median3: third input must be a logical 3d matrix\n"); 
     if ( nL != nBn)                              mexErrMsgTxt("ERROR:cat_vol_median3: third input must be a logical 3d matrix with equal size than input 1\n");
   }
   
   
   /* indices of the neighbor Ni (index distance) and euclidean distance NW */
   float NV[27], sf, bil, bih, bnl, bnh; 
-  int i,j,k,ind,ni,x,y,z,n;
+  int ind,ni,n;
   bool *Bi, *Bn;
         
   /* in- and output */
@@ -123,12 +130,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   float *M = (float *) mxGetPr(plhs[0]);
   
   /* filter process */
-  for (z=0;z<sL[2];z++) for (y=0;y<sL[1];y++) for (x=0;x<sL[0];x++) {
+  for (int z=0;z<sL[2];z++) for (int y=0;y<sL[1];y++) for (int x=0;x<sL[0];x++) {
     ind = index(x,y,z,sL);
     if ((nrhs==1 || (nrhs>=2 && Bi[ind])) && D[ind]>=bil && D[ind]<=bih) {
       n = 0;
       /* go through all elements in a 3x3x3 box */
-      for (i=-1;i<=1;i++) for (j=-1;j<=1;j++) for (k=-1;k<=1;k++) {
+      for (int i=-1;i<=1;i++) for (int j=-1;j<=1;j++) for (int k=-1;k<=1;k++) {
         /* check borders */ 
         if ( ((x+i)>=0) && ((x+i)<sL[0]) && ((y+j)>=0) && ((y+j)<sL[1]) && ((z+k)>=0) && ((z+k)<sL[2])) {
           ni = index(x+i,y+j,z+k,sL);
@@ -144,11 +151,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       
       /* sort and get the median by finding the element in the middle of the sorting */
       if (n>1) { if (n==2) {
-          M[ind] = (NV[0] + NV[1]) / 2;  
+          M[ind] = (NV[0] + NV[1]) / 2.0;  
         }
         else {
           sort(NV,0,n); 
-          M[ind] = NV[(int)(n/2)];
+          M[ind] = NV[(int) round( ((double)n)/2.0)];
         }
       }
     }
@@ -158,14 +165,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   }
   
   /* selective filter settings - only big changes (only change extremly noisy data) */
-  if (sf>0) {
-    for (i=0;i<nL;i++) {
+  if (sf>0.0) {
+    for (int i=0;i<nL;i++) {
       if ( (nrhs>=2 && Bi[i]) && D[i]>bil && D[i]<bih && (fabs(D[i]-M[i])<sf) ) M[i]=D[i];
     }
   }
   /* selective filter settings - only small changes */
-  if (sf<0) { 
-    for (i=0;i<nL;i++) {
+  if (sf<0.0) { 
+    for (int i=0;i<nL;i++) {
       if ( (nrhs>=2 && Bi[i]) && D[i]>bil && D[i]<bih && (fabs(D[i]-M[i])>-sf) ) M[i]=D[i];
     }
   }
