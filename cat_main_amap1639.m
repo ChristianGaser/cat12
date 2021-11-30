@@ -178,7 +178,7 @@ function [prob,indx,indy,indz,th] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res)
   if init_kmeans, Ymib(Ymib<0.1) = 0; end %#ok<UNRCH>
   
   % do segmentation  
-  amapres = evalc(['prob = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
+  amapres = evalc(['[prob,mean] = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
     'job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);']);
   fprintf('%5.0fs\n',etime(clock,stime));
   

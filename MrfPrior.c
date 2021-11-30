@@ -86,7 +86,7 @@ void MrfPrior(unsigned char *label, int n_classes, double *alpha, double *beta, 
   /* evaluate alphas */
   printf("MRF priors: alpha ");
   for (i = 0; i < n_classes; i++) {
-    if (init == 0) alpha[i] /= n; else alpha[i] = 1.0;
+    if (init == 0) alpha[i] /= (double) n; else alpha[i] = 1.0;
     printf("%3.3f ", alpha[i]);
   }
 
@@ -103,7 +103,7 @@ void MrfPrior(unsigned char *label, int n_classes, double *alpha, double *beta, 
               if (color[i][f[0]][f[1]][f[2]][f[3]] < TH_COLOR ||
                   color[j][f[0]][f[1]][f[2]][f[3]] < TH_COLOR) continue;
 	      
-              L = log(((double) color[i][f[0]][f[1]][f[2]][f[3]])/
+              L = log(((double) color[i][f[0]][f[1]][f[2]][f[3]]) /
                        (double) color[j][f[0]][f[1]][f[2]][f[3]]);
 	      
               if (i == 0) 
@@ -114,8 +114,8 @@ void MrfPrior(unsigned char *label, int n_classes, double *alpha, double *beta, 
                 fj = 6 - f[0] - f[1] - f[2] - f[3];
               else fj = f[j-1];
 
-              XX += (fi-fj)*(fi-fj);
-              YY += L*(fi-fj);
+              XX += (double) (fi-fj)*(fi-fj);
+              YY += L * ( (double) (fi-fj));
   }
   
   /* weighting of beta was empirically estimated using brainweb data with different noise levels

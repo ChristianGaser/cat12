@@ -22,7 +22,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   const mwSize *dims;
   mwSize dims3[4];
   int dims2[4];
-  int i, n_classes, pve, nvox, iters_icm;
+  int n_classes, pve, nvox, iters_icm;
   int niters, iters_nu, sub, init, thresh, thresh_kmeans_int;
     
   if (nrhs!=11)
@@ -71,15 +71,14 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     mexErrMsgTxt("Voxelsize should have 3 values.");
 
   dims = mxGetDimensions(prhs[0]);
-  dims2[0] = (int)dims[0]; dims2[1] = (int)dims[1]; dims2[2] = (int)dims[2];
-  dims2[3] = n_classes;
+  dims2[0] = (int)dims[0]; dims2[1] = (int)dims[1]; dims2[2] = (int)dims[2]; dims2[3] = n_classes;
   
   /* for PVE we need more classes */
   if(pve == 6) dims2[3] += 3;
   if(pve == 5) dims2[3] += 2;
 
   /* mxCreateNumericArray expects mwSize data type */
-  for(i = 0; i < 4; i++) dims3[i] = (mwSize)dims2[i]; 
+  for(int i = 0; i < 4; i++) dims3[i] = (mwSize)dims2[i]; 
 
   plhs[0] = mxCreateNumericArray(4, dims3, mxUINT8_CLASS, mxREAL);
   plhs[1] = mxCreateNumericMatrix(1, n_classes+3, mxDOUBLE_CLASS, mxREAL);
@@ -88,31 +87,37 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
   nvox = dims[0]*dims[1]*dims[2];
   
-  for(i = 0; i < nvox; i++) {
+  for(int i = 0; i < nvox; i++) {
     max_vol = MAX(src[i], max_vol);
   }
 
   offset = 0.2*max_vol;
   
   /* add offset to ensure that CSF values are much larger than background noise */
-  for (i=0; i<nvox; i++) {
+  for (int i=0; i<nvox; i++) {
     if (label[i] > 0) src[i] += offset;
   }
 
   /* initial labeling using Kmeans */
-  if (init) {
+  if (init>0) {
     mask = (unsigned char *)mxMalloc(sizeof(unsigned char)*nvox);
     if(mask == NULL) {
       mexErrMsgTxt("Memory allocation error\n");
       exit(EXIT_FAILURE);
     }
-    for (i=0; i<nvox; i++)
+    for (int i=0; i<nvox; i++)
       mask[i] = (src[i]>0) ? 255 : 0;
 
-    thresh = 0;
+    thresh            = 0;
     thresh_kmeans_int = 128;
-    iters_nu = 0; /* bias correction works better inside Amap */
+    iters_nu          = 0;    /* bias correction works better inside Amap */
 
+    /* 
+     * kmeans.c: 
+     *   double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, int n_clusters,
+     *     double *voxelsize, int *dims, int thresh_mask, int thresh_kmeans, int iters_nu, int pve, double bias_fwhm) 
+     */
+  
     /* initial Kmeans estimation with 6 classes */
     max_vol = Kmeans( src, label, mask, 25, n_classes, voxelsize, dims2, thresh, thresh_kmeans_int, iters_nu, KMEANS, bias_fwhm);
     /* final Kmeans estimation with 3 classes */
@@ -121,9 +126,20 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     mxFree(mask);
   }
     
+  
+  /* 
+   * Amap.c: 
+   *   void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int n_classes, int niters, 
+   *     int sub, int *dims, int pve, double weight_MRF, double *voxelsize, int niters_ICM, double offset, double bias_fwhm)
+   */
   Amap(src, label, prob, mean, n_classes, niters, sub, dims2, pve, weight_MRF, voxelsize, iters_icm, offset, bias_fwhm);
+  
+  /* Pve.c:
+   *   void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, int *dims)
+   *   void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, int *dims)
+   */
   if(pve==6) Pve6(src, prob, label, mean, dims2);
   if(pve==5) Pve5(src, prob, label, mean, dims2);
-
+  
 }
 
