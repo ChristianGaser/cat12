@@ -68,7 +68,7 @@ function varargout = compile(comp,test,verb)
       mexflag=['-Dchar16_t=UINT16_T CFLAGS=''$CFLAGS -Wall -ansi -pedantic ' ...
         '-Wextra'' CPPLAGS=''$CPPFLAGS -Wall -ansi -pedantic -Wextra'''];
     elseif strcmpi(spm_check_version,'octave')
-      mexflag=' -O ';
+      mexflag=' -O -DOCTAVE';
     else
       mexflag=' -O -largeArrayDims COPTIMFLAGS=''-O3 -fwrapv -DNDEBUG''';
     end
@@ -119,7 +119,7 @@ function varargout = compile(comp,test,verb)
               str = strrep( strrep( nc{nci}{ncj}, '.cpp' , ''), '.c' , ''); 
               evalc(['clear ' str]); 
             end
-            
+           
             rc{nci}{ncj} = evalc([mexcmd ' ' mexflag ' ' nc{nci}{ncj}]);
             %{
             catch 

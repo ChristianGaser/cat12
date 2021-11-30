@@ -107,7 +107,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
  
   int         ni,u,v,w,nu,nv,nw;
     
-  /* main volumes - actual without memory optimation ... */
+  /* main volumes - actual without memory optimization ... */
   plhs[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL); /* label map  */
   plhs[1] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL); /* tissue map (speed) */
     
