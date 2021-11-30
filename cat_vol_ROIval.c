@@ -2,6 +2,15 @@
  * _____________________________________________________________________
  * Estimation of mean, standard deviation, minimum, maximum, sum, number
  * and median (not yet implemented) of Yv in a ROI described by Ya.
+ *
+ * Example: 
+ *  1) 
+ *    A = rand(50,50,3,'single');  
+ *    for i=1:size(A,2), A(:,i,:) = A(:,i,:) + (( i/size(A,2) ) - 0.5); end
+ *    L = zeros(size(A),'single'); L(round(numel(L)*0.367))=1; 
+ *    L(round(numel(L)*0.533))=2; L(round(numel(L)*0.616))=3; 
+ *    [D,I] = cat_vbdist(L); L=L(I); L = uint8(round(L));
+ *    [MN,STD,MIN,MAX,SM,N,MD] = cat_vol_ROIval(A,L); 
  * ______________________________________________________________________
  *
  * Christian Gaser, Robert Dahnke
@@ -19,7 +28,16 @@
 #ifndef isnan
 #define isnan(a) ((a)!=(a)) 
 #endif
+#ifdef _MSC_VER
+  #define FINFINITY (FLT_MAX+FLT_MAX);
+  static const unsigned long __nan[2] = {0xffffffff, 0x7fffffff};
+  #define FNAN (*(const float *) __nan)
+#else
+  #define FINFINITY 1.0f/0.0f;
+  #define FNAN 0.0f/0.0f
+#endif
 
+  
 /* qicksort for median */
 /*
 void swap(float *a, float *b)
@@ -69,19 +87,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   const unsigned char *Ya = (unsigned char *) mxGetPr(prhs[0]);
   const float         *Yv = (float *) mxGetPr(prhs[1]); 
   
-  unsigned int i, ti, tii, maxYa=0, maxYa2=0;
-  unsigned char id;
+  unsigned int ti, tii, maxYa=0, maxYa2=0;
 
-  for (i=0;i<n;i++) {if (maxYa<Ya[i]) maxYa=Ya[i];}
+
+  for (int i=0;i<n;i++) {if (maxYa<Ya[i]) maxYa=Ya[i];}
   const int sV[] = {1,256}; 
+  const mwSize sVm[] = {1,2}, sdsv[] = {1,256}; 
   
   /* output data */
-  plhs[0]    = mxCreateNumericArray(2,sV,mxSINGLE_CLASS,mxREAL);
-  plhs[1]    = mxCreateNumericArray(2,sV,mxSINGLE_CLASS,mxREAL);
-  plhs[2]    = mxCreateNumericArray(2,sV,mxSINGLE_CLASS,mxREAL);
-  plhs[3]    = mxCreateNumericArray(2,sV,mxSINGLE_CLASS,mxREAL);
-  plhs[4]    = mxCreateNumericArray(2,sV,mxSINGLE_CLASS,mxREAL);
-  plhs[5]    = mxCreateNumericArray(2,sV,mxSINGLE_CLASS,mxREAL);
+  plhs[0]    = mxCreateNumericArray(2,sVm,mxSINGLE_CLASS,mxREAL);
+  plhs[1]    = mxCreateNumericArray(2,sVm,mxSINGLE_CLASS,mxREAL);
+  plhs[2]    = mxCreateNumericArray(2,sVm,mxSINGLE_CLASS,mxREAL);
+  plhs[3]    = mxCreateNumericArray(2,sVm,mxSINGLE_CLASS,mxREAL);
+  plhs[4]    = mxCreateNumericArray(2,sVm,mxSINGLE_CLASS,mxREAL);
+  plhs[5]    = mxCreateNumericArray(2,sVm,mxSINGLE_CLASS,mxREAL);
   /* plhs[6]    = mxCreateNumericArray(2,sV,mxSINGLE_CLASS,mxREAL); */
   float*rmn  = (float *)mxGetPr(plhs[0]);
   float*rstd = (float *)mxGetPr(plhs[1]);
@@ -89,68 +108,70 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   float*rmax = (float *)mxGetPr(plhs[3]);
   float*rsum = (float *)mxGetPr(plhs[4]); 
   float*rn   = (float *)mxGetPr(plhs[5]);
-  /* 
+  /* f
   float*rmed = (float *)mxGetPr(plhs[6]);
   float Yt[16777216]; for (i=0;i<16777216;i++) Yt[i]=0;
   */ 
   
   
   /* initialization of output data with 0 */
-  for (id=0;id<maxYa;id++) {
-    rn[id]=0;
-    rmn[id]=0;
-    rstd[id]=0;
-    rmin[id]=FLT_MAX;
-    rmax[id]=-FLT_MAX;
-    rsum[id]=0;
+  for (int id=0;id<maxYa;id++) {
+    rn[id]   = 0.0;
+    rmn[id]  = 0.0;
+    rstd[id] = 0.0;
+    rmin[id] = FLT_MAX;
+    rmax[id] = -FLT_MAX;
+    rsum[id] = 0.0;
     /*
     rmed[id]=0; 
     */
   }
 
   /* estimation */
-  for (i=0;i<n;i++) {
-    id=Ya[i] - 1; 
+  for (int i=0;i<n;i++) {
+    int id= (int) (Ya[i]) - 1; 
     if (id>=0) {
-      rn[id]++;
-      rsum[id]+=Yv[i];
+      rn[id]     = rn[id]   + 1; 
+      rsum[id]   = rsum[id] + Yv[i];
       if (rmax[id]<Yv[i]) 
-        rmax[id]=Yv[i]; /* maximum */
+        rmax[id] = Yv[i];
       if (rmin[id]>Yv[i]) 
-        rmin[id]=Yv[i]; /* minimum */
+        rmin[id] = Yv[i]; 
     }
   }
   
+  return;
   /* correct minimum and maximum for empty ROIs */
-  for (id=0;id<maxYa;id++) {
+  for (int id=0;id<maxYa;id++) {
     if (rn[id]==0) {
-      rmax[id]=NAN;
-      rmin[id]=NAN;
+      rmax[id]=FNAN;
+      rmin[id]=FNAN;
     }
   }
 
   /* mean */
-  for (id=0;id<maxYa;id++) {
+  for (int id=0;id<maxYa;id++) {
     if (rn[id]>0)
       rmn[id] = rsum[id] / rn[id];
     else
-      rmn[id] = NAN;
+      rmn[id] = FNAN;
   }
   
   /* standard deviation */
-  for (i=0;i<n;i++) {
+  for (int i=0;i<n;i++) {
+    int id= (int) (Ya[i]) - 1; 
     if (id>=0 & rn[Ya[i]]>0) {
-      rstd[id]+=powf(Yv[i]-rmn[Ya[i]-1],2);
+      rstd[id] += powf(Yv[i]-rmn[Ya[i]-1],2);
     }
   }
-  for (id=0;id<maxYa;id++) {
+  for (int id=0;id<maxYa;id++) {
    if (rn[id]>1)
-     rstd[id] = sqrtf( 1 / (rn[id] - 1) * rstd[id]);
+     rstd[id] = sqrtf( 1.0 / (rn[id] - 1.0) * rstd[id]);
    else {
      if (rn[id]==1)
-       rstd[id] = 1;
+       rstd[id] = 1.0;
      else
-       rstd[id] = NAN;
+       rstd[id] = FNAN;
     }
   }
 

@@ -91,7 +91,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   float  *L2 = (float *)mxGetPr(hlps[0]);
   bool   *LN = (bool  *)mxGetPr(hlps[1]);
 
-  return; 
   
   /* intitialisiation */
   for (int i=0;i<nL;i++) 

@@ -1,5 +1,76 @@
 ------------------------------------------------------------------------
-r1913 | dahnke | 2021-11-28 21:43:32
+r1914 | dahnke | 2021-11-30 14:39:09
+
+Changed paths:
+M       Amap.c
+M       CHANGES.txt
+M       Kmeans.c
+M       MrfPrior.c
+M       Pve.c
+M       cat_amap.c
+M       cat_amap.m
+M       cat_amap.mex
+M       cat_amap.mexmaci64
+M       cat_main_amap.m
+M       cat_main_amap1639.m
+M       cat_main_kamap.m
+M       cat_ornlm.mex
+M       cat_ornlm.mexmaci64
+M       cat_sanlm.mex
+M       cat_sanlm.mexmaci64
+M       cat_vbdist.mex
+M       cat_vbdist.mexmaci64
+M       cat_vol_ROIval.c
+M       cat_vol_ROIval.mexmaci64
+M       cat_vol_downcut.mex
+M       cat_vol_downcut.mexmaci64
+M       cat_vol_eidist.mex
+M       cat_vol_eidist.mexmaci64
+D       cat_vol_eikonal3.c
+D       cat_vol_eikonal3.m
+M       cat_vol_genus0.mex
+M       cat_vol_genus0.mexmaci64
+M       cat_vol_gradient3.mex
+M       cat_vol_gradient3.mexmaci64
+M       cat_vol_interp3f.mex
+M       cat_vol_interp3f.mexmaci64
+M       cat_vol_laplace3.c
+M       cat_vol_laplace3.mex
+M       cat_vol_laplace3.mexmaci64
+M       cat_vol_laplace3R.mex
+M       cat_vol_laplace3R.mexmaci64
+M       cat_vol_localstat.m
+M       cat_vol_localstat.mex
+M       cat_vol_localstat.mexmaci64
+M       cat_vol_median3.c
+M       cat_vol_median3.mex
+M       cat_vol_median3.mexmaci64
+M       cat_vol_median3c.c
+M       cat_vol_median3c.mex
+M       cat_vol_median3c.mexmaci64
+M       cat_vol_pbtp.c
+M       cat_vol_pbtp.mex
+M       cat_vol_pbtp.mexmaci64
+M       cat_vol_pbtp2.c
+A       cat_vol_pbtp2.m
+M       cat_vol_pbtp2.mexmaci64
+M       cat_vol_simgrow.mex
+M       cat_vol_simgrow.mexmaci64
+M       compile.m
+M       internal/cat_vol_cMRegularizarNLM3D.mex
+M       internal/cat_vol_cMRegularizarNLM3D.mexmaci64
+
+(1) Deleted:   Remove unused function cat_vol_eikonal3.c.
+(2) Fixed:     Corrected cat_vol_ROIval.c, cat_vol_pbtp2.c.
+(3) Fixed:     Corrected bugs in cat_vol_laplace3.c and
+               cat_vol_median3.c.
+(4) Fixed:     Corrected octave bugs in compile.  
+(5) Fixed:     Corrected octave issues in cat_amap.c, 
+               Amap.c, kmeans.c, MrfPrior.c, Pve.c and
+               cat_main_amap[1639].
+
+------------------------------------------------------------------------
+r1913 | dahnke | 2021-11-28 21:44:47 +0100 (Sun, 28 Nov 2021) | 23 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -22,6 +93,7 @@ M       cat_vol_pbtp.mexmaci64
                cat_vol_pbtp, and cat_vol_median3(c).
 (2) Fixed:   Small adaptions for display function ds.               
 (3) New:     Added normalization parameter to cat_vol_gradient3. 
+
 
 ------------------------------------------------------------------------
 r1912 | dahnke | 2021-11-27 15:14:31 +0100 (Sat, 27 Nov 2021) | 30 lines

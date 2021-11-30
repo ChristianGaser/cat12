@@ -132,7 +132,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   /* filter process */
   for (int z=0;z<sL[2];z++) for (int y=0;y<sL[1];y++) for (int x=0;x<sL[0];x++) {
     ind = index(x,y,z,sL);
-    if ((nrhs==1 || (nrhs>=2 && Bi[ind])) && D[ind]>=bil && D[ind]<=bih) {
+    if ((nrhs==1 || (nrhs>=2 && Bi[ind])) && D[ind]>=bil && D[ind]<=bih && mxIsNaN(D[ind]) && mxIsInf(D[ind])) {
       n = 0;
       /* go through all elements in a 3x3x3 box */
       for (int i=-1;i<=1;i++) for (int j=-1;j<=1;j++) for (int k=-1;k<=1;k++) {
@@ -140,8 +140,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if ( ((x+i)>=0) && ((x+i)<sL[0]) && ((y+j)>=0) && ((y+j)<sL[1]) && ((z+k)>=0) && ((z+k)<sL[2])) {
           ni = index(x+i,y+j,z+k,sL);
           /* check masks and NaN or Infinities */
-          if ((nrhs>=3 && Bn[ni]==0) || D[ni]<bnl || D[ni]>bnh || isnan(D[ni]) ||
-              D[ni]==FLT_MAX || D[ind]==-FLT_MAX ) ni = ind;
+          if ((nrhs>=3 && Bn[ni]==0) || D[ni]<bnl || D[ni]>bnh || mxIsNaN(D[ni]) || mxIsInf(D[ni]) ) ni = ind;
           NV[n] = D[ni];
           n++;
         }

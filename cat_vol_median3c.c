@@ -95,7 +95,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   /* in- and output */
   float *D = (float *) mxGetPr(prhs[0]);
   if (nrhs>1)  Bi = (bool *) mxGetPr(prhs[1]); 
-  if (nrhs>2)  Bn =  (bool *) mxGetPr(prhs[2]); 
+  if (nrhs>2)  Bn = (bool *) mxGetPr(prhs[2]); 
 
   plhs[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
   float *M = (float *) mxGetPr(plhs[0]);
@@ -103,7 +103,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   /* filter process */
   for (int z=0;z<sL[2];z++) for (int y=0;y<sL[1];y++) for (int x=0;x<sL[0];x++) {
     ind = index(x,y,z,sL);
-    if ((nrhs==1 || (nrhs>=2 && Bi[ind])) ) {
+    if ((nrhs==1 || (nrhs>1 && Bi[ind])) && D[ind]>=0 && mxIsNaN(D[ind]) && mxIsInf(D[ind])) {
       n = 0;
       /* go through all elements in a 3x3x3 box */
       for (int i=0;i<255;i++) NV[i]=0;  
@@ -112,13 +112,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if ( ((x+i)>=0) && ((x+i)<sL[0]) && ((y+j)>=0) && ((y+j)<sL[1]) && ((z+k)>=0) && ((z+k)<sL[2])) {
           ni = index(x+i,y+j,z+k,sL);
           /* check masks and NaN or Infinities */
-          if ((nrhs>=3 && Bn[ni]==0) || isnan(D[ni]) ||
-              D[ni]==FLT_MAX || D[ind]==-FLT_MAX ) ni = ind;
+          if ((nrhs>2 && Bn[ni]==0) || D[ni]<0 || mxIsNaN(D[ni]) || mxIsInf(D[ni]) ) ni = ind;
           NV[(int) D[ni]]++;
         }
       }
       /* find maximum occurent value */
-      M[ind]=0.0; n=0; for (int i=0;i<255;i++) {if ((NV[i]>=0) && (NV[i]>n)) {n=NV[i]; M[ind]=i;}}
+      M[ind]=0.0; n=0; for (int i=0;i<255;i++) {if ((NV[i]>=0) && (NV[i]>n)) {n=NV[i]; M[ind]=(float) i;}}
      }
     else {
       M[ind] = D[ind];

@@ -242,7 +242,7 @@ end
     if init_kmeans && job.extopts.ignoreErrors < 3, Ymib(Ymib<0.1) = 0; end %#ok<NASGU>
 
     %% do segmentation  
-    amapres = evalc(['prob = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
+    amapres = evalc(['[prob,mean] = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
       'job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);']);
     fprintf('%5.0fs\n',etime(clock,stime));
 

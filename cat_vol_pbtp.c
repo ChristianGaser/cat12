@@ -102,7 +102,7 @@ void ind2sub(int i, int *x, int *y, int *z, int snL, int sxy, int sy) {
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if (nrhs<3) mexErrMsgTxt("ERROR: not enought input elements\n");
   if (nrhs>4) mexErrMsgTxt("ERROR: too many input elements.\n");
-  if (nlhs<2) mexErrMsgTxt("ERROR: not enought output elements.\n");
+  if (nlhs<1) mexErrMsgTxt("ERROR: not enought output elements.\n");
   if (nlhs>2) mexErrMsgTxt("ERROR: too many output elements.\n");
   if (mxIsSingle(prhs[0])==0) mexErrMsgTxt("ERROR: first  input must be an 3d single matrix\n");
  
@@ -129,9 +129,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   int         ni,u,v,w,nu,nv,nw, tmpint, WMC=0, CSFC=0;
     
   /* main volumes - actual without memory optimization ... */
+  mxArray *hlps[1];  
+  hlps[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
   plhs[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
-  plhs[1] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
-  
 /* not yet defined  
   plhs[2] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
   plhs[3] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
@@ -142,7 +142,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   float*SEG  = (float *)mxGetPr(prhs[0]);
   float*WMD  = (float *)mxGetPr(prhs[1]);
   float*CSFD = (float *)mxGetPr(prhs[2]);
-  
+
   /*if ( nrhs>1) {
     tmpint   = (int)mxGetScalar(mxGetField(prhs[1],1,"CSFD"));  printf("X=%d", tmpint); if ( tmpint!=NULL && (tmpint>=0 && tmpint<=1) ) opt.CSFD = tmpint;   else opt.CSFD  = 1;
     tmpint   = (int)mxGetScalar(mxGetField(prhs[1],1,"PVE"));   printf("X=%d", tmpint); if ( tmpint!=NULL && (tmpint>=0 && tmpint<=2) ) opt.PVE  = tmpint;   else opt.PVE   = 2;
@@ -154,7 +154,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   
   /* output variables */
   float        *GMT  = (float *)mxGetPr(plhs[0]);
-  float        *RPM  = (float *)mxGetPr(plhs[1]);
+  float        *RPM  = (float *)mxGetPr(hlps[0]);
+           
   
   /* intitialisiation */
   for (int i=0;i<nL;i++) {
@@ -244,6 +245,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     } 
   }
   
+  /* create second output */
+  if ( nlhs > 1 ) {
+    plhs[1] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
+    float        *RPMO  = (float *)mxGetPr(plhs[1]);
+    for (int i=0;i<nL;i++) RPMO[i] = RPM[i]; 
+  }
 }
 
 

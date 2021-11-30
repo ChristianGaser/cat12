@@ -1,5 +1,5 @@
 %cat_vol_localstat Local mean, minimum, maximum, SD, and peak estimation.
-* Estimates specific functions in a volume V within a mask region M. 
+% Estimates specific functions in a volume V within a mask region M. 
 % For each voxel v of M, the values of the neigbors of v that belong to M 
 % and are within a distance smaller than nb where used (i.e. masked voxels
 % within a sphere of radius nb). 
