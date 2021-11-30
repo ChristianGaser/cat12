@@ -99,9 +99,9 @@ void ind2sub(int i, int *x, int *y, int *z, int snL, int sxy, int sy) {
 
 // main function
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-  if (nrhs<3) mexErrMsgTxt("ERROR: not enought input elements\n");
+  if (nrhs<3) mexErrMsgTxt("ERROR: not enough input elements\n");
   if (nrhs>4) mexErrMsgTxt("ERROR: too many input elements.\n");
-  if (nlhs<2) mexErrMsgTxt("ERROR: not enought output elements.\n");
+  if (nlhs<2) mexErrMsgTxt("ERROR: not enough output elements.\n");
   if (nlhs>2) mexErrMsgTxt("ERROR: too many output elements.\n");
   if (mxIsSingle(prhs[0])==0) mexErrMsgTxt("ERROR: first  input must be an 3d single matrix\n");
  

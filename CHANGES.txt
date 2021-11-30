@@ -1,5 +1,24 @@
 ------------------------------------------------------------------------
-r1914 | dahnke | 2021-11-30 14:39:09
+r1915 | gaser | 2021-11-30 16:27:16
+
+Changed paths:
+M       Amap.c
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       cat_vol_downcut.c
+M       cat_vol_pbtp.c
+M       cat_vol_pbtp2.c
+M       cat_vol_resize.m
+M       cat_vol_simgrow.c
+M       compile.m
+M       html/cat.html
+M       html/cat_starting.html
+
+(1) Changed: Added OCTAVE Macro to Amap.c to allow running original code under 
+             Matlab.
+(2) Changed: Extended help text for Quick start guide.
+------------------------------------------------------------------------
+r1914 | dahnke | 2021-11-30 14:40:04 +0100 (Tue, 30 Nov 2021) | 69 lines
 
 Changed paths:
 M       Amap.c
@@ -68,6 +87,7 @@ M       internal/cat_vol_cMRegularizarNLM3D.mexmaci64
 (5) Fixed:     Corrected octave issues in cat_amap.c, 
                Amap.c, kmeans.c, MrfPrior.c, Pve.c and
                cat_main_amap[1639].
+
 
 ------------------------------------------------------------------------
 r1913 | dahnke | 2021-11-28 21:44:47 +0100 (Sun, 28 Nov 2021) | 23 lines

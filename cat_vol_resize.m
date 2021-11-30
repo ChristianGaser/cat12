@@ -798,7 +798,7 @@ function varargout=cat_vol_resize(T,operation,varargin)
       if strcmp(interp,'masked')
         % for interpolation of partial defined maps like the cortical
         % thickness... finally 'nearest' interpolation is often good 
-        % enought and much faster 
+        % enough and much faster 
         if all(res>0) %&& any(round(abs(res)*100)/100>resV)
           d = single(res./resV);
           %[Rx,Ry,Rz]=meshgrid(0.5:d(1):size(D,2),0.5:d(2):size(D,1),0.5:d(3):size(D,3));

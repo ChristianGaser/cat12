@@ -76,7 +76,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   float*ALAB = (float *)mxGetPr(prhs[0]);	/* label map */
   float*SEG  = (float *)mxGetPr(prhs[1]);	/* tissue map */
   
-  /* main volumes - actual without memory optimation ... */
+  /* main volumes - actual without memory optimization ... */
   mxArray *hlps[1]; 
   hlps[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);  
   float*DIST  = (float *)mxGetPr(hlps[0]);	/* distance map */
