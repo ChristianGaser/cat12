@@ -600,7 +600,13 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean,
 
   /* find values between 1% and 99% quartile */
   cumsum[0] = 0;  
+  
+#ifdef OCTAVE
   int use_fixed_code = 2; /* 0 - no, original code; 1 - fixed; 2 - "improved" without outlier removal */
+#else
+  int use_fixed_code = 0; /* 0 - no, original code; 1 - fixed; 2 - "improved" without outlier removal */
+#endif
+
   for(i = 1; i < 65536; i++) cumsum[i] = cumsum[i-1] + histo[i]; 
   /* ########################### CORRUPT LINES ############################
    * RD202112: 

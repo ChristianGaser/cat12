@@ -30,10 +30,14 @@
       <h4>VBM data</h4>
       <ul>
         <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data using defaults (use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.long');">Segment Longitudinal Data</a> for longitudinal data).</li>
+        The resulting segmentations that can now be used for VBM are saved in the "mri" folder and are named "mwp1" for gray matter and "mwp2" for white matter. If you have used the longitudinal pipeline, the default segmentations for gray matter are named "mwp1r" or "mwmwp1r" if the  longitudinal model for detecting larger changes was selected.
         <li>Get total intracranial volume<a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.calcvol');"> (TIV)</a> to correct for different brain sizes and volumes.</li>
-        <li>Check the data quality with <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_cov');">Sample Homogeneity</a> for VBM data  (optionally consider TIV and age as nuisance variables).</li>
+        Select the xml-files that are saved in the "report" folder.
+        <li>Check the data quality with <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_cov');">Sample Homogeneity</a> for VBM data (optionally consider TIV and age as nuisance variables).</li>
+        Select the gray or white matter segmentations from the first step.
         <li><a class="function" href="matlab:spm_jobman('interactive','','spm.spatial.smooth');">Smooth</a> data (recommended start value 6-8mm<sup>1</sup>).</li>
-        <li>Specify the <a class="function" href="matlab:spm_jobman('interactive','cat_stat_factorial_design.m');">2nd-level Model</a> and check for design orthogonality and sample homogeneity:</li>
+        Select the gray or white matter segmentations from the first step.
+        <li>Specify the <a class="function" href="matlab:spm_jobman('interactive','cat_stat_factorial_design.m');">2nd-level Model</a> with the smoothed gray or white matter segmentations and check for design orthogonality and sample homogeneity:</li>
         <ul>
           <li>Use "Full factorial" for cross-sectional data.</li>
           <li>Use "Flexible factorial" for longitudinal data.</li>
@@ -51,10 +55,12 @@
       <h4>Additional surface data</h4>
       <ul>
         <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data and also select "Surface and thickness estimation" under "Writing options" (for longitudinal data use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.long');">Segment Longitudinal Data</a>).</li>
+        The surfaces data are saved in the folder "surf" and are named "?h.thickness.*" for cortical thickness.
         <li>Optionally, <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfextract');">Extract Additional Surface Parameters</a> (e.g. sulcal depth, gyrification index, cortical complexity).</li>
         <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfresamp');">Resample & smooth</a> surface data (suggested starting value 12mm for cortical thickness and 20-25mm for folding measures<sup>1</sup>, use the default merging of hemispheres).</li>
-        <li>Check data quality using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.check_mesh_cov');">Sample Homogeneity</a> for surface data.</li>
-        <li>Build <a class="function" href="matlab:spm_jobman('interactive','cat_stat_factorial_design.m');">2nd-level Model</a> for (merged) hemispheres  and check for design orthogonality and sample homogeneity.</li>
+        Select the "lh.thickness.*" data in the folder "surf". The resampled data are named "s12.mesh.resampled_32k.thickness.*" for 12mm smoothed, merged hemispheres that were resampled to 32k template space.
+        <li>Check data quality of the resampled data using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.check_mesh_cov');">Sample Homogeneity</a> for surface data.</li>
+        <li>Build <a class="function" href="matlab:spm_jobman('interactive','cat_stat_factorial_design.m');">2nd-level Model</a> for the resampled data and check for design orthogonality and sample homogeneity.</li>
         <ul>
           <li>Use "Full factorial" for cross-sectional data.</li>
           <li>Use "Flexible factorial" for longitudinal data.</li>
@@ -62,7 +68,7 @@
           <li>It is not necessary to use any threshold masking.</li>
           <li>If you find a considerable correlation between a nuisance parameter and any other parameter of interest it is advisable to use global scaling with that parameter. For more information, refer to <a href="cat_orthogonality.html">Orthogonality</a>.</li>
         </ul>
-        <li><a class="function" href="matlab:cat_stat_spm;">Estimate</a> the surface model for (merged) hemispheres and finally call <a class="function" href="matlab:[hReg xSPM SPM] = cat_spm_results_ui('Setup');">Results</a>.</li>
+        <li><a class="function" href="matlab:cat_stat_spm;">Estimate</a> the surface model and finally call <a class="function" href="matlab:[hReg xSPM SPM] = cat_spm_results_ui('Setup');">Results</a>.</li>
         <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x_surf');">Transform and Threshold SPM-maps</a> to (log-scaled) p-maps or correlation maps.</li>
         <li>Optionally, you can try <a class="function" href="matlab:if exist(fullfile(spm('dir'),'toolbox','TFCE')),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">Threshold-Free Cluster Enhancement</a> (TFCE) with the SPM.mat file of a previously estimated statistical design.</li>
         <li>Optionally <a class="function" href="matlab:y=cat_surf_results;">Surface Overlay</a> for both hemispheres. Select the results (preferably saved as log-p maps with "Transform SPM-maps" or the TFCE_log maps with the different methods for multiple comparison correction) for the merged hemispheres to display rendering views of your results.</li>
