@@ -938,7 +938,11 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,facevertexcdat
       % call collision correction
       [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,struct('optimize',opt.SRP==2,'verb',verblc,'mat',Smat.matlabIBB_mm)); 
       if verblc, fprintf('\b\b'); end
-      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3));
+      if strcmpi(spm_check_version,'octave') 
+        cat_io_addwarning('cat_surf_createCS2:nofullSRP','Fine correction of surface collisions is not yet available under Octave.',2)
+      else
+        [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3));
+      end
       if debug, toc; end
       
       % evaluate and save results

@@ -4210,7 +4210,7 @@ function I = cat_surf_isocolors2(V,Y,mat,interp)
       % if the streamline is near the boundary of the image you could be out of range if you add 1 
       n8b = min(floor(w8b) + nb,enb); clear enb
       n8b = max(n8b,1);
-      w8b = flipdim(prod(abs(n8b - w8b),2),3);        
+      w8b = flip(prod(abs(n8b - w8b),2),3);        
 
       % multiply this with the intensity value of R
       I = sum( Y( max(1,min(numel(Y), sub2ind(size(Y),n8b(:,2,:),n8b(:,1,:),n8b(:,3,:))))) .* w8b,3);
