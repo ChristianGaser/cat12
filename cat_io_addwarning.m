@@ -56,10 +56,13 @@ function varargout = cat_io_addwarning(id,mess,level,nline,data,usebox)
   elseif (nargin==1 && strcmp(id,'reset') )
      cat_err_res = rmfield(cat_err_res,'cat_warnings'); 
      cat_err_res.cat_warnings = struct('identifier',{},'message',{},'level',[],'data',{});
+     if nargout>0
+       varargout{1} = struct('identifier',{},'message',{},'level',[],'data',{});
+     end
      return; 
   end
 
-  if nargin > 2 && ischar( id )
+  if nargin > 1 && ischar( id )
     % variables
     if ~exist('nline','var'),   nline = [0 1]; end
     if ~exist('level','var'),   level = 1;  end
@@ -81,6 +84,9 @@ function varargout = cat_io_addwarning(id,mess,level,nline,data,usebox)
       nline2 = [0 1]; 
     end
     
+    if nargin<2
+      mess = id; 
+    end
     if ~ischar(id)
       error('cat_io_addwarning:idstr','Identifier must be a char'); 
     end
@@ -108,11 +114,16 @@ function varargout = cat_io_addwarning(id,mess,level,nline,data,usebox)
       's',['    '   repmat('=',1,bsize) '\n'], ... char(9559)
       'i',['    '   ' '], ...
       'e',['\n    ' repmat('=',1,bsize) '']); % char(9595)
-    box(4) = struct(... % the chars are not vissible in the log file 
-      's',['    '   char(9556) repmat(char(9552),1,bsize) '\n'], ... char(9559)
-      'i',['    '   char(9553) ' '], ...
-      'e',['\n    ' char(9562) repmat(char(9552),1,bsize) '']); % char(9595)
-      
+    if strcmpi(spm_check_version,'octave') 
+      % octave: "warning: range error for conversion to character value"
+      box(4) = box(3); 
+    else
+      box(4) = struct(... % the chars are not vissible in the log file 
+        's',['    '   char(9556) repmat(char(9552),1,bsize) '\n'], ... char(9559)
+        'i',['    '   char(9553) ' '], ...
+        'e',['\n    ' char(9562) repmat(char(9552),1,bsize) '']); % char(9595)
+    end
+    
     % print output
     if nline2(1)>0, fprintf('\n'); end
     warnstr = strrep(mess,'\\n',['\n' box(usebox).i '             ']); 
@@ -138,10 +149,22 @@ function varargout = cat_io_addwarning(id,mess,level,nline,data,usebox)
     if nargin == 0
       varargout{1} = cat_err_res.cat_warnings; 
     else
-      if numel(cat_err_res.cat_warnings)>0
-        varargout{1} = cat_err_res.cat_warnings( [ cat_err_res.cat_warnings(:).level ] == id  ); 
-      else
+      if isnumeric( id )
+        if numel(cat_err_res.cat_warnings)>0
+          varargout{1} = cat_err_res.cat_warnings( [ cat_err_res.cat_warnings(:).level ] == id  ); 
+        else
+          varargout{1} = struct('identifier',{},'message',{},'level',[],'data',{});
+        end
+      elseif strcmp(id,'reset') && nargout>0 % required for octave
+        cat_err_res = rmfield(cat_err_res,'cat_warnings'); 
+        cat_err_res.cat_warnings = struct('identifier',{},'message',{},'level',[],'data',{});
         varargout{1} = struct('identifier',{},'message',{},'level',[],'data',{});
+      else
+        error('ERROR:cat_io_addwarning:incorrectInput',...
+              ['Using only one input is limited to the keyword "reset" and \n' ...
+               'to output collected warnings by level (0,1,2,3 or 4): \n' ...
+               '  "cat_io_addwarning(''reset''); \n' ...
+               '  "warning_structure = cat_io_addwarning(level);"\n']);
       end
     end
   end

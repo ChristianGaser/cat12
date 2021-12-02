@@ -1,5 +1,28 @@
 ------------------------------------------------------------------------
-r1915 | gaser | 2021-11-30 16:27:16
+r1916 | dahnke | 2021-12-02 10:51:02
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_addwarning.m
+M       cat_main_amap.m
+M       cat_main_amap1639.m
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       cat_surf_fun.m
+M       cat_vol_resize.m
+
+(1) Fixed:   Corrected bugs in Octave in cat_main_amap[1639] because 
+             Octaves evalc function does not catch the output of the 
+             called AMAP c-function.
+(2) Fixed:   Corrected Octave char warning in cat_io_addwarning and 
+             corrected output behavior that differs from Matlab. 
+(3) Fixed:   Corrected Octave meshgrid in cat_vol_resize.m
+(4) Fixed:   Replaced outdated call of flipdim by flip in cat_surf_fun. 
+(5) Fixed:   Skipping of the second fine collision correction in 
+             cat_surf_createCS[2] in Octave.
+ 
+------------------------------------------------------------------------
+r1915 | gaser | 2021-11-30 16:28:08 +0100 (Tue, 30 Nov 2021) | 17 lines
 
 Changed paths:
 M       Amap.c
@@ -17,6 +40,7 @@ M       html/cat_starting.html
 (1) Changed: Added OCTAVE Macro to Amap.c to allow running original code under 
              Matlab.
 (2) Changed: Extended help text for Quick start guide.
+
 ------------------------------------------------------------------------
 r1914 | dahnke | 2021-11-30 14:40:04 +0100 (Tue, 30 Nov 2021) | 69 lines
 
