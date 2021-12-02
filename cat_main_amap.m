@@ -247,10 +247,15 @@ end
     fprintf('%5.0fs\n',etime(clock,stime));
 
     %% analyse segmentation ... the input Ym is normalized an the tissue peaks should be around [1/3 2/3 3/3]
-    amapres = textscan(amapres,'%s'); amapres = amapres{1}; 
-    th{1}   = cell2mat(textscan(amapres{11},'%f*%f')); 
-    th{2}   = cell2mat(textscan(amapres{12},'%f*%f')); 
-    th{3}   = cell2mat(textscan(amapres{13},'%f*%f')); 
+    if isempty(amapres)
+      % in Ocatave evalc is not working properly and we have to skip the evaluation  
+      th = {{nan nan},{nan nan},{nan nan}}; 
+    else
+      amapres = textscan(amapres,'%s'); amapres = amapres{1}; 
+      th{1}   = cell2mat(textscan(amapres{11},'%f*%f')); 
+      th{2}   = cell2mat(textscan(amapres{12},'%f*%f')); 
+      th{3}   = cell2mat(textscan(amapres{13},'%f*%f')); 
+    end
 
     if job.extopts.AMAPframing
       for i=1:3, prob(:,:,:,i) = prob(:,:,:,i) .* uint8(Ybb); end
@@ -258,7 +263,7 @@ end
     clear Ybb;
     
 
-    if job.extopts.verb>1 
+    if job.extopts.verb>1 && ~isempty(amapres)
       if (th{1}(1) < th{2}(1)) && (th{2}(1) < th{3}(1)) % T1 
         fprintf('    AMAP peaks: [CSF,GM,WM] = [%0.2f%s%0.2f,%0.2f%s%0.2f,%0.2f%s%0.2f]\n',...
           th{1}(1),char(177),th{1}(2),th{2}(1),char(177),th{2}(2),th{3}(1),char(177),th{3}(2));
@@ -268,18 +273,18 @@ end
       end
     end
     % if one of the peaks is NaN than create an error
-    if any( isnan( cell2mat(th) ) )
+    if ~isempty(amapres) && any( isnan( cell2mat(th) ) )
       error('cat_main_amap:nan',['AMAP estimated NaN tissue peaks that point to an error in the \\\\n' ...
                                  'preprocessing before the AMAP segmentation or inadequate input. ']);
     end
     % fine evaluation of tissue peaks
-    if (th{1}(1) < th{2}(1)) && (th{2}(1) < th{3}(1)) % T1 
+    if ~isempty(amapres) && (th{1}(1) < th{2}(1)) && (th{2}(1) < th{3}(1)) % T1 
       % in the T1 contrast we have a clear expectation for each tissue class 
       if th{1}(1)<0 || th{1}(1)>0.6 || th{2}(1)<0.5 || th{2}(1)>0.9 || th{3}(1)<0.95-th{3}(2) || th{3}(1)>1.1
         error('cat_main_amap:peaks',['AMAP estimated untypical tissue peaks that point to an \\\\n' ...
                                      'error in the preprocessing before the AMAP segmentation. ']);
       end
-    else
+    elseif ~isempty(amapres)
       % if there is a very low contrast between two peaks then create an error  
       % because the intensity normalization unsed before was probably incorrect 
       con = [ abs(diff([th{1}(1) th{2}(1)])) , abs(diff([th{1}(1) th{3}(1)])) , abs(diff([th{2}(1) th{3}(1)]))];

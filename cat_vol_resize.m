@@ -803,10 +803,13 @@ function varargout=cat_vol_resize(T,operation,varargin)
           d = single(res./resV);
           %[Rx,Ry,Rz]=meshgrid(0.5:d(1):size(D,2),0.5:d(2):size(D,1),0.5:d(3):size(D,3));
           [Rx,Ry,Rz]=meshgrid(d(2):d(2):size(T,2),d(1):d(1):size(T,1),d(3):d(3):size(T,3));
-          M  = T>0.5; MM = cat_vol_morph(M,'d',2);
+          if strcmpi(spm_check_version,'octave') 
+            Rx = single(Rx); Ry = single(Ry); Rz = single(Rz);
+          end
+          M  = single(T>0.5); MM = cat_vol_morph(M,'d',2);
           [D,I] = cat_vbdist(T,MM); T=T(I); clear D I; 
           %Ts = smooth3(T); MM=cat_vol_morph(M,'e'); T(~MM)=Ts(~MM); clear MM; 
-          M = cat_vol_interp3f(single(M),Rx,Ry,Rz,'linear')>0.5;
+          M = cat_vol_interp3f(M,Rx,Ry,Rz,'linear')>0.5;
           T = cat_vol_interp3f(T,Rx,Ry,Rz,'linear');
           T = T .* M; 
           clear Rx Ry Rz;
@@ -816,6 +819,9 @@ function varargout=cat_vol_resize(T,operation,varargin)
           d = single(res./resV);
           %[Rx,Ry,Rz]=meshgrid(0.5:d(1):size(D,2),0.5:d(2):size(D,1),0.5:d(3):size(D,3));
           [Rx,Ry,Rz]=meshgrid(d(2):d(2):size(T,2),d(1):d(1):size(T,1),d(3):d(3):size(T,3));
+          if strcmpi(spm_check_version,'octave') 
+            Rx = single(Rx); Ry = single(Ry); Rz = single(Rz);
+          end
           T = cat_vol_interp3f(T,Rx,Ry,Rz,interp);
           clear Rx Ry Rz;
         end
