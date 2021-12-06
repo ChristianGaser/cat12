@@ -1,9 +1,11 @@
-function cat_batch_long(namefile,output_surface,large_changes,cat_defaults)
+function cat_batch_long(namefile,output_surface,large_changes,cat_defaults,export_dartel)
 % wrapper for using batch mode (see cat_batch_long.sh)
 %
 % namefile       - array of file names
 % output_surface - enable surface estimation
+% large_changes  - use model for (large) ageing/developmental changes
 % cat_defaults   - use this default file instead of cat_defaults.m
+% export_dartel  - export affine registered segmentations for Dartel
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -25,6 +27,12 @@ else
   if isstr(output_surface)
     output_surface = str2num(output_surface);
   end
+end
+
+if nargin < 3
+  large_changes = 0;
+else
+  % string argument has to be converted 
   if isstr(large_changes)
     large_changes = str2num(large_changes);
   end
@@ -43,7 +51,7 @@ global defaults cat matlabbatch
 
 spm_get_defaults;
 
-if nargin < 3
+if nargin < 4
     cat_get_defaults;
 else
   if isempty(cat_defaults)
@@ -59,20 +67,35 @@ else
   end
 end
 
+if nargin < 5
+  export_dartel = 0;
+else
+  % string argument has to be converted 
+  if isstr(export_dartel)
+    export_dartel = str2num(export_dartel);
+  end
+end
+
 matlabbatch{1}.spm.tools.cat.long.datalong.subjects{1} = names;
 matlabbatch{1}.spm.tools.cat.long.nproc = 0;
 matlabbatch{1}.spm.tools.cat.long.modulate = 1;
 
-if output_surface == 1
+if output_surface
   matlabbatch{1}.spm.tools.cat.long.output.surface = 1;
 else
   matlabbatch{1}.spm.tools.cat.long.output.surface = 0;
 end
 
-if large_changes == 1
+if large_changes
   matlabbatch{1}.spm.tools.cat.long.longmodel = 2;
 else
   matlabbatch{1}.spm.tools.cat.long.longmodel = 1;
+end
+
+if export_dartel
+  matlabbatch{1}.spm.tools.cat.long.dartel = 1;
+else
+  matlabbatch{1}.spm.tools.cat.long.dartel = 0;
 end
 
 warning off

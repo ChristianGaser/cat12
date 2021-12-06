@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1916 | dahnke | 2021-12-02 10:51:02
+r1917 | gaser | 2021-12-06 16:36:32
+
+Changed paths:
+M       CHANGES.txt
+M       cat_batch_long.m
+M       cat_batch_long.sh
+MM      cat_vol_pbtp2.m
+
+Changed: Extended cat_batch_long.* by option to save affine registered
+         segmentations for Dartel.
+            
+------------------------------------------------------------------------
+r1916 | dahnke | 2021-12-02 10:51:53 +0100 (Thu, 02 Dec 2021) | 21 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -21,6 +33,7 @@ M       cat_vol_resize.m
 (5) Fixed:   Skipping of the second fine collision correction in 
              cat_surf_createCS[2] in Octave.
  
+
 ------------------------------------------------------------------------
 r1915 | gaser | 2021-11-30 16:28:08 +0100 (Tue, 30 Nov 2021) | 17 lines
 
