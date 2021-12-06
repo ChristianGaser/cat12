@@ -18,6 +18,7 @@ cat12_dir=$cwd
 spm12=$(dirname "$cwd")
 spm12=$(dirname "$spm12")
 LOGDIR=$PWD
+export_dartel=0
 output_surface=1
 large_changes=0
 fg=0
@@ -69,6 +70,10 @@ parse_args ()
       --large* | -large*)
         exit_if_empty "$optname" "$optarg"
         large_changes=1
+        ;;
+      --export-dartel* | -e*)
+        exit_if_empty "$optname" "$optarg"
+        export_dartel=1
         ;;
       --no-surf* | -ns*)
         exit_if_empty "$optname" "$optarg"
@@ -230,7 +235,7 @@ run_cat12 ()
   echo Check $vbmlog for logging information
   echo
 
-  COMMAND="cat_batch_long('${TMP}','${output_surface}','${large_changes}','${defaults}')"
+  COMMAND="cat_batch_long('${TMP}','${output_surface}','${large_changes}','${defaults}','${export_dartel}')"
   echo Running ${ARG_LIST}
   echo > $vbmlog
   echo ---------------------------------- >> $vbmlog
@@ -272,13 +277,14 @@ cat <<__EOM__
 
 USAGE:
   cat_batch_long.sh filenames|filepattern [-d default_file] [-m matlabcommand] 
-                      [-log logdir] [-ns] [-l] [-nj] 
+                      [-log logdir] [-ns] [-l] [-e] [-nj] 
   
   -m <FILE>   | --matlab  <FILE> matlab command (default $matlab)
   -d <FILE>   | --default <FILE> optional default file (default ${cat12_dir}/cat_defaults.m)
   -log <FILE> | --logdir         directory for log-file (default $LOGDIR)
   -fg         | --fg             do not run matlab process in background
   -ns         | --no-surf        disable surface and thickness estimation
+  -e          | --export-dartel  export affine registered segmentations for Dartel
   -large      | --large          use longitudinal model for detecting large changes (e.g. ageing or development)
   -nj         | --nojvm          supress call of jvm using the -nojvm flag
 
