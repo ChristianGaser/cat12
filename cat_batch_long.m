@@ -1,9 +1,9 @@
-function cat_batch_long(namefile,output_surface,large_changes,cat_defaults,export_dartel)
+function cat_batch_long(namefile,output_surface,long_model,cat_defaults,export_dartel)
 % wrapper for using batch mode (see cat_batch_long.sh)
 %
 % namefile       - array of file names
 % output_surface - enable surface estimation
-% large_changes  - use model for (large) ageing/developmental changes
+% long_model     - 1: use model for (small) plasticity changes, 2: use model for (large) ageing/developmental changes, 3: use both
 % cat_defaults   - use this default file instead of cat_defaults.m
 % export_dartel  - export affine registered segmentations for Dartel
 % ______________________________________________________________________
@@ -30,11 +30,11 @@ else
 end
 
 if nargin < 3
-  large_changes = 0;
+  long_model = 1;
 else
   % string argument has to be converted 
-  if isstr(large_changes)
-    large_changes = str2num(large_changes);
+  if isstr(long_model)
+    long_model = str2num(long_model);
   end
 end
 
@@ -59,11 +59,12 @@ else
   else
     fprintf('Use defaults in %s.\n',cat_defaults);
     [pp, name] = spm_fileparts(cat_defaults);
-%    clear cat_defaults
-    oldpath = pwd;
-    cd(pp)
+    global cat;
+
+    addpath(pp);
     eval(name);
-    cd(oldpath)
+    rmpath(pp);
+    
   end
 end
 
@@ -80,23 +81,10 @@ matlabbatch{1}.spm.tools.cat.long.datalong.subjects{1} = names;
 matlabbatch{1}.spm.tools.cat.long.nproc = 0;
 matlabbatch{1}.spm.tools.cat.long.modulate = 1;
 
-if output_surface
-  matlabbatch{1}.spm.tools.cat.long.output.surface = 1;
-else
-  matlabbatch{1}.spm.tools.cat.long.output.surface = 0;
-end
-
-if large_changes
-  matlabbatch{1}.spm.tools.cat.long.longmodel = 2;
-else
-  matlabbatch{1}.spm.tools.cat.long.longmodel = 1;
-end
-
-if export_dartel
-  matlabbatch{1}.spm.tools.cat.long.dartel = 1;
-else
-  matlabbatch{1}.spm.tools.cat.long.dartel = 0;
-end
+% update parameters
+matlabbatch{1}.spm.tools.cat.long.output.surface = output_surface;
+matlabbatch{1}.spm.tools.cat.long.longmodel = long_model;
+matlabbatch{1}.spm.tools.cat.long.dartel = 2*export_dartel; % affine registered data
 
 warning off
 try
