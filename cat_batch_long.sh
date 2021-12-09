@@ -20,7 +20,7 @@ spm12=$(dirname "$spm12")
 LOGDIR=$PWD
 export_dartel=0
 output_surface=1
-large_changes=0
+long_model=1
 fg=0
 
 ########################################################
@@ -57,34 +57,31 @@ parse_args ()
     optarg="`echo $2 | sed 's,^[^=]*=,,'`"
     paras="$paras $optname $optarg"
     case "$1" in
-      --matlab* | -m*)
-        exit_if_empty "$optname" "$optarg"
-        matlab=$optarg
-        shift
-        ;;
       --defaults* | -d*)
         exit_if_empty "$optname" "$optarg"
         defaults=$optarg
         shift
         ;;
-      --large* | -large*)
+      --model* | -model*)
         exit_if_empty "$optname" "$optarg"
-        large_changes=1
+        long_model=$optarg
+        shift
+        ;;
+      --matlab* | -m*)
+        exit_if_empty "$optname" "$optarg"
+        matlab=$optarg
+        shift
         ;;
       --export-dartel* | -e*)
-        exit_if_empty "$optname" "$optarg"
         export_dartel=1
         ;;
       --no-surf* | -ns*)
-        exit_if_empty "$optname" "$optarg"
         output_surface=0
         ;;
       --nojvm | -nj*)
-        exit_if_empty "$optname" "$optarg"
         nojvm=" -nojvm "
         ;;
       --fg* | -fg*)
-        exit_if_empty "$optname" "$optarg"
         fg=1
         ;;
       --logdir* | -log*)
@@ -94,6 +91,9 @@ parse_args ()
            mkdir -p $LOGDIR
         fi
         shift
+        ;;
+      --large* | -l*)
+        long_model=2
         ;;
       -h | --help | -v | --version | -V)
         help
@@ -185,7 +185,7 @@ run_cat12 ()
       exit
     fi
   else
-    defaults=${cat12_dir}/cat_defaults.m
+    defaults=''
   fi
 
   # we have to go into toolbox folder to find matlab files
@@ -235,7 +235,7 @@ run_cat12 ()
   echo Check $vbmlog for logging information
   echo
 
-  COMMAND="cat_batch_long('${TMP}','${output_surface}','${large_changes}','${defaults}','${export_dartel}')"
+  COMMAND="cat_batch_long('${TMP}','${output_surface}','${long_model}','${defaults}','${export_dartel}')"
   echo Running ${ARG_LIST}
   echo > $vbmlog
   echo ---------------------------------- >> $vbmlog
@@ -277,7 +277,7 @@ cat <<__EOM__
 
 USAGE:
   cat_batch_long.sh filenames|filepattern [-d default_file] [-m matlabcommand] 
-                      [-log logdir] [-ns] [-l] [-e] [-nj] 
+                      [-log logdir] [-ns] [-large] [-e] [-nj] 
   
   -m <FILE>   | --matlab  <FILE> matlab command (default $matlab)
   -d <FILE>   | --default <FILE> optional default file (default ${cat12_dir}/cat_defaults.m)

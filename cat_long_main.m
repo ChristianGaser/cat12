@@ -32,13 +32,13 @@ try
     delete_temp = 1;
   end
 catch
-  longmodel   = 2;
+  longmodel   = 1; % use plasticity model as default
   dartel      = 0;
-  modulate    = 1;
-  delete_temp = 1;
-  useprior    = 1;
+  modulate    = 1; % save modulated data
+  delete_temp = 1; % delete temporary files after preprocessing
+  useprior    = 1; % use prior from avg-data
   surfaces    = cat_get_defaults('output.surface'); 
-  longTPM     = 1;
+  longTPM     = 1; % create longitudinal TPM form avg-data
   bstr        = 0;
 end
 
@@ -46,7 +46,7 @@ if ~useprior & longTPM
   longTPM = 0;
 end
 
-write_CSF = cat_get_defaults('output.CSF.mod') > 0;
+write_CSF = double(cat_get_defaults('output.CSF.mod') > 0);
 
 warning('off','MATLAB:DELETE:FileNotFound');
 
@@ -205,6 +205,8 @@ matlabbatch{mbi}.spm.tools.cat.estwrite.output.WM.mod       = 0;
 
 if write_CSF
   matlabbatch{mbi}.spm.tools.cat.estwrite.output.CSF.native = 1; % also write CSF?
+  matlabbatch{mbi}.spm.tools.cat.estwrite.output.CSF.dartel = dartel;
+  matlabbatch{mbi}.spm.tools.cat.estwrite.output.CSF.mod    = 0;
 end
 
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.bias.warped  = 0;
@@ -238,7 +240,7 @@ matlabbatch{mbi}.spm.tools.cat.tools.avg_img.data(1)  = cfg_dep('CAT12: Segmenta
 matlabbatch{mbi}.spm.tools.cat.tools.avg_img.output   = '';
 matlabbatch{mbi}.spm.tools.cat.tools.avg_img.outdir   = {''};
 
-if longmodel==2
+if longmodel>1
 % 6) creating time point specific deformation 
 % -----------------------------------------------------------------------
 % To reduce longitudinal changes of moving structures between time points 
@@ -256,7 +258,7 @@ if longmodel==2
     % but those depend on user definition of extopts.vox and we are more
     % flexible and probably faster and more robust this way.
     mb_lr = zeros(1,2);
-    for ci = 1:2 % only GM and WM are reqired for Shooting
+    for ci = 1:2 % only GM and WM are required for Shooting
       mbi = mbi + 1; mb_lr(ci) = mbi; % have to do this for all shooting tissues to get the dependencies
       matlabbatch{mbi}.spm.tools.cat.tools.resize.data(1)     = cfg_dep(sprintf('CAT12: Segmentation (current release): p%d Image',ci),...
                                                                       substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
@@ -303,8 +305,8 @@ if longmodel==2
   % 7) applying time point deformations to rigid native segmentations
   % -----------------------------------------------------------------------
   % this is the first simple approach with full resolution
-  mb_aGS = zeros(1,2 + single(write_CSF));
-  for ci = 1:2 + single(write_CSF)
+  mb_aGS = zeros(1,2 + write_CSF);
+  for ci = 1:2 + write_CSF
     mbi = mbi + 1; mb_aGS(ci) = mbi;
     if lowres
       matlabbatch{mbi}.spm.tools.cat.tools.defs2.field(1)   = cfg_dep('Resize images: Resized',...
@@ -333,15 +335,23 @@ mbi = mbi + 1;
 matlabbatch{mbi}.spm.tools.cat.tools.defs.field1(1)       = cfg_dep('Image Average: Average Image: ',...
                                                                       substruct('.','val', '{}',{mb_avgdef}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','files'));
-for ci = 1:2 + single(write_CSF) % fill image sets
+for ci = 1:2 + write_CSF % fill image sets
   if longmodel==1
     matlabbatch{mbi}.spm.tools.cat.tools.defs.images(ci)  = cfg_dep(sprintf('CAT12: Segmentation (current release): p%d Image',ci),...
                                                                       substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','tiss', '()',{ci}, '.','p', '()',{':'}));
   else
-    matlabbatch{mbi}.spm.tools.cat.tools.defs.images(ci)  = cfg_dep('Apply deformations (many subjects): All Output Files',...
+matlabbatch{mbi}.spm.tools.cat.tools.defs.images(ci)  = cfg_dep('Apply deformations (many subjects): All Output Files',...
                                                                       substruct('.','val', '{}',{mb_aGS(ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','vfiles'));
+  end
+end
+
+for ci = 1:2 + write_CSF % fill image sets
+  if longmodel==3
+    matlabbatch{mbi}.spm.tools.cat.tools.defs.images(ci+2+write_CSF)  = cfg_dep(sprintf('CAT12: Segmentation (current release): p%d Image',ci),...
+                                                                      substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+                                                                      substruct('.','tiss', '()',{ci}, '.','p', '()',{':'}));
   end
 end
 
@@ -376,7 +386,7 @@ if delete_temp
   c = 1;
   
   % time point specific preprocessing data
-  for ci = 1:2 + single(write_CSF)
+  for ci = 1:2 + write_CSF
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep(sprintf('CAT12: Segmentation (current release): p%d Image',ci),...
                                                                       substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','tiss', '()',{ci}, '.','p', '()',{':'})); c = c+1;
@@ -468,7 +478,7 @@ if delete_temp
                                                                       substruct('.','tpm', '()',{':'})); c = c+1;
   end
   
-  if longmodel==2
+  if longmodel>=2
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Run Shooting (create Templates): Template (0)',...
                                                                       substruct('.','val', '{}',{mb_GS}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','template', '()',{':'})); c = c+1;
@@ -481,14 +491,18 @@ if delete_temp
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Run Shooting (create Templates): Jacobian Fields',...
                                                                       substruct('.','val', '{}',{mb_GS}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','jac', '()',{':'})); c = c+1;
-    for ci = 1:2 + single(write_CSF)
-      matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Apply deformations (many subjects): All Output Files',...
-                                                                      substruct('.','val', '{}',{mb_aGS(ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
-                                                                      substruct('.','vfiles')); c = c+1;
-      matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Resize images: Resized', ...
-                                                                      substruct('.','val', '{}',{mb_lr(ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-                                                                      substruct('.','res', '()',{':'})); ; c = c+1;
-
+                                                                    
+    if longmodel==2
+      for ci = 1:2 + write_CSF
+        matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Apply deformations (many subjects): All Output Files',...
+                                                                        substruct('.','val', '{}',{mb_aGS(ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+                                                                        substruct('.','vfiles')); c = c+1;
+      end
+      for ci = 1:2 % for shooting we only have GM/WM
+        matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Resize images: Resized', ...
+                                                                        substruct('.','val', '{}',{mb_lr(ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+                                                                        substruct('.','res', '()',{':'})); ; c = c+1;
+      end
     end
   end
   
@@ -496,3 +510,4 @@ if delete_temp
   matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.delete  = false;
 end
 
+save matlabbatch matlabbatch
