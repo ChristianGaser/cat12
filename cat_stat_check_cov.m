@@ -160,6 +160,7 @@ if ~exist(report_folder,'dir')
 end
 
 % search xml report files if not defined
+prep_str = '';
 if ~xml_defined
   xml_files = spm_select('List',report_folder,'^cat_.*\.xml$');
   if ~isempty(xml_files)

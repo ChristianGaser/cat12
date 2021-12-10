@@ -96,20 +96,24 @@ matlabbatch{mbi}.spm.tools.cat.estwrite.nproc               = 0;
 if exist('opts','var') && ~isempty(opts)
   matlabbatch{mbi}.spm.tools.cat.estwrite.opts              = opts;
 end
+
 % matlabbatch{mbi}.spm.tools.cat.estwrite.opts.ngaus          = [1 1 2 3 4 2]; 
 if exist('extopts','var') && ~isempty(extopts)
   matlabbatch{mbi}.spm.tools.cat.estwrite.extopts           = extopts;
   
 end
+
 % RD202102: differentiation between user levels not tested yet !
 if exist('extopts','var') && isfield(extopts,'bb')
   matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.bb              = 1; % use TPM output BB 
 elseif exist('extopts','var') &&  isfield(extopts,'registration') && isfield(extopts.registration,'bb')
   matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.registration.bb = 1; % use TPM output BB 
 end
+
 if exist('output','var') && ~isempty(output)
   matlabbatch{mbi}.spm.tools.cat.estwrite.output            = output;
 end
+
 % surface estimation
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.surface      = surfaces;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.ROImenu.noROI= struct([]);
@@ -341,7 +345,7 @@ for ci = 1:2 + write_CSF % fill image sets
                                                                       substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','tiss', '()',{ci}, '.','p', '()',{':'}));
   else
-matlabbatch{mbi}.spm.tools.cat.tools.defs.images(ci)  = cfg_dep('Apply deformations (many subjects): All Output Files',...
+    matlabbatch{mbi}.spm.tools.cat.tools.defs.images(ci)  = cfg_dep('Apply deformations (many subjects): All Output Files',...
                                                                       substruct('.','val', '{}',{mb_aGS(ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','vfiles'));
   end
@@ -385,16 +389,17 @@ if delete_temp
   mbi = mbi + 1; 
   c = 1;
   
-  % time point specific preprocessing data
+  % remove time point specific preprocessing data
   for ci = 1:2 + write_CSF
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep(sprintf('CAT12: Segmentation (current release): p%d Image',ci),...
                                                                       substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','tiss', '()',{ci}, '.','p', '()',{':'})); c = c+1;
   end
+  % deformation field
   matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Deformation Field',...
                                                                       substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('()',{1}, '.','fordef', '()',{':'})); c = c+1;
-  % average preprocessing data
+  % remove average preprocessing data
   matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): CAT Report JGP',...
                                                                       substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','catreportjpg', '()',{':'})); c = c+1;
@@ -404,27 +409,31 @@ if delete_temp
   matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): CAT log-file',...
                                                                       substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','catlog', '()',{':'})); c = c+1;
+                                                                      
+  % remove affine registered GM/WM segmentations of average data if not needed
   if ~dartel
-    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): rp1 affine Image',...
+    for ci = 1:2
+      matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep(sprintf('CAT12: Segmentation (current release): rp%d affine Image',ci),...
                                                                       substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
-                                                                      substruct('.','tiss', '()',{1}, '.','rpa', '()',{':'})); c = c+1;
-    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): rp2 affine Image',...
-                                                                      substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
-                                                                      substruct('.','tiss', '()',{2}, '.','rpa', '()',{':'})); c = c+1;
+                                                                      substruct('.','tiss', '()',{ci}, '.','rpa', '()',{':'})); c = c+1;
+    end
   end
   
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): rp3 affine Image',...
+  % remove affine registered CSF segmentation of average data if not needed
+  if ~write_CSF || ~dartel
+    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): rp3 affine Image',...
                                                                       substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','tiss', '()',{3}, '.','rpa', '()',{':'})); c = c+1;  
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): rp4 affine Image',...
-                                                                      substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
-                                                                      substruct('.','tiss', '()',{4}, '.','rpa', '()',{':'})); c = c+1;
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): rp5 affine Image',...
-                                                                      substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
-                                                                      substruct('.','tiss', '()',{5}, '.','rpa', '()',{':'})); c = c+1;
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): rp6 affine Image',...
-                                                                      substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
-                                                                      substruct('.','tiss', '()',{6}, '.','rpa', '()',{':'})); c = c+1;  
+  end
+  
+  % remove affine registered segmentations of average data (class 4-6)
+	for ci = 4:6
+		matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep(sprintf('CAT12: Segmentation (current release): rp%d affine Image',ci),...
+																																		substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+																																		substruct('.','tiss', '()',{ci}, '.','rpa', '()',{':'})); c = c+1;
+	end
+
+  % remove ROI label files of average data
   if exist('ROImenu','var') && ~isempty(ROImenu)
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): ROI XML File',...
                                                                       substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
@@ -437,7 +446,7 @@ if delete_temp
                                                                       substruct('.','bc', '()',{':'}));
   end
   
-  % surfaces
+  % remove surfaces of average data
   if surfaces
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): Left Central Surface',...
                                                                       substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
@@ -470,15 +479,16 @@ if delete_temp
                                                                       substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('()',{1}, '.','rhpbt', '()',{':'})); c = c+1;
   end
-  % timepoint deformations
-
+  
+  % remove timepoint deformations
   if longTPM
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Longitudinal TPM creation: Longitudinal TPMs',...
                                                                       substruct('.','val', '{}',{mb_tpm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','tpm', '()',{':'})); c = c+1;
   end
   
-  if longmodel>=2
+  % remove temporary shooting files
+  if longmodel>1
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Run Shooting (create Templates): Template (0)',...
                                                                       substruct('.','val', '{}',{mb_GS}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','template', '()',{':'})); c = c+1;
@@ -492,16 +502,17 @@ if delete_temp
                                                                       substruct('.','val', '{}',{mb_GS}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','jac', '()',{':'})); c = c+1;
                                                                     
-    if longmodel==2
+		for ci = 1:2 % for shooting we only have GM/WM
+			matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Resize images: Resized', ...
+																																			substruct('.','val', '{}',{mb_lr(ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+																																			substruct('.','res', '()',{':'})); ; c = c+1;
+		end
+
+    if longmodel==2 % temporary warped segmentations
       for ci = 1:2 + write_CSF
         matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Apply deformations (many subjects): All Output Files',...
-                                                                        substruct('.','val', '{}',{mb_aGS(ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
-                                                                        substruct('.','vfiles')); c = c+1;
-      end
-      for ci = 1:2 % for shooting we only have GM/WM
-        matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Resize images: Resized', ...
-                                                                        substruct('.','val', '{}',{mb_lr(ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-                                                                        substruct('.','res', '()',{':'})); ; c = c+1;
+                                                                      substruct('.','val', '{}',{mb_aGS(ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+                                                                      substruct('.','vfiles')); c = c+1;
       end
     end
   end
@@ -509,5 +520,3 @@ if delete_temp
   % final command of this batch 
   matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.delete  = false;
 end
-
-save matlabbatch matlabbatch
