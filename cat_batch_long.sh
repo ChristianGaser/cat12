@@ -277,7 +277,7 @@ cat <<__EOM__
 
 USAGE:
   cat_batch_long.sh filenames|filepattern [-d default_file] [-m matlabcommand] 
-                      [-log logdir] [-ns] [-large] [-e] [-nj] 
+                      [-log logdir] [-ns] [-large] [-model longmodel] [-e] [-nj] 
   
   -m <FILE>   | --matlab  <FILE> matlab command (default $matlab)
   -d <FILE>   | --default <FILE> optional default file (default ${cat12_dir}/cat_defaults.m)
@@ -285,8 +285,12 @@ USAGE:
   -fg         | --fg             do not run matlab process in background
   -ns         | --no-surf        disable surface and thickness estimation
   -e          | --export-dartel  export affine registered segmentations for Dartel
-  -large      | --large          use longitudinal model for detecting large changes (e.g. ageing or development)
+  -large      | --large          use longitudinal model for detecting large changes (i.e. ageing or development)
   -nj         | --nojvm          supress call of jvm using the -nojvm flag
+  -model      | --model          longitudinal model:
+                                   1 - detect small chamges (i.e. due to plasticity)
+                                   2 - detect large changes (i.e. ageing or development)
+                                   3 - save results for both models
 
   Processing is omly supported for one subject.
   Optionally you can set the matlab command with the "-m" option. As default no display
