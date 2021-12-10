@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1918 | gaser | 2021-12-09 16:31:18
+r1919 | gaser | 2021-12-10 17:50:50
+
+Changed paths:
+M       CHANGES.txt
+M       cat_batch_long.sh
+M       cat_long_main.m
+M       cat_stat_check_cov.m
+
+(1) Changed: Updated help text for cat_batch_long.sh.
+(2) Fixed:   Variable prep_str was not defined for all cases in 
+             cat_stat_check_cov.m.
+(3) Fixed:   Corrected cat_long_main.m to allow saving of both longmodels.          
+------------------------------------------------------------------------
+r1918 | gaser | 2021-12-09 16:32:10 +0100 (Thu, 09 Dec 2021) | 31 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -31,6 +44,7 @@ M       internal/cat_vol_cMRegularizarNLM3D.mex
 (2) Changed: Extended cat_long_main.m to correctly save both long. models.
 (3) Changed: Many changes to cat_batch_long.sh and cat_batch_long.m to consider
              new options.          
+
 ------------------------------------------------------------------------
 r1917 | gaser | 2021-12-06 16:37:22 +0100 (Mon, 06 Dec 2021) | 10 lines
 
