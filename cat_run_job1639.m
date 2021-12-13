@@ -91,6 +91,8 @@ function cat_run_job1639(job,tpm,subj)
     else  
       cat_io_cprintf('warn',sprintf('External diary log is written to "%s".\n',get(0,'DiaryFile'))); 
     end
+  else
+    usediary = 0; 
   end
   
   % print current CAT release number and subject file

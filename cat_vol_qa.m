@@ -214,7 +214,10 @@ function varargout = cat_vol_qa(action,varargin)
       % CAT12 internal input
       if nargin>3 
         Yp0 = varargin{1};
+% Octave is starting with many warning messages here ...        
+%        if strcmpi(spm_check_version,'octave'), warning off; end
         Vo  = spm_vol(varargin{2});
+%        if strcmpi(spm_check_version,'octave'), warning on; end
         Yo  = single(spm_read_vols(Vo));    
         Ym  = varargin{3}; 
         res = varargin{4};
@@ -521,13 +524,17 @@ function varargout = cat_vol_qa(action,varargin)
       % ----------------------------------------------------------------
       [nam,rev_spm] = spm('Ver');
       QAS.software.version_spm = rev_spm;
-      A = ver;
-      for i=1:length(A)
-        if strcmp(A(i).Name,'MATLAB')
-          QAS.software.version_matlab = A(i).Version; 
+      if strcmpi(spm_check_version,'octave')
+        QAS.software.version_octave = version;  
+      else
+        A = ver;
+        for i=1:length(A)
+          if strcmp(A(i).Name,'MATLAB')
+            QAS.software.version_matlab = A(i).Version; 
+          end
         end
+        clear A
       end
-      clear A
       % 1 line: Matlab, SPM12, CAT12 version number and GUI and experimental mode 
       if ispc,      OSname = 'WIN';
       elseif ismac, OSname = 'MAC';
@@ -568,11 +575,15 @@ function varargout = cat_vol_qa(action,varargin)
       % file information
       % ----------------------------------------------------------------
       [pp,ff,ee] = spm_fileparts(Vo.fname);
+%      if strcmpi(spm_check_version,'octave'), warning off; end
       [QAS.filedata.path,QAS.filedata.file] = spm_fileparts(Vo.fname);
-      QAS.filedata.fname  = Vo.fname;
-      QAS.filedata.F      = Vo.fname; 
+      QAS.filedata.fname  = char(Vo.fname);
+      QAS.filedata.F      = char(Vo.fname); 
+%      if strcmpi(spm_check_version,'octave'), warning on; end
+%      if strcmpi(spm_check_version,'octave'), warning off; end
       QAS.filedata.Fm     = fullfile(pp,mrifolder,['m'  ff ee]);
       QAS.filedata.Fp0    = fullfile(pp,mrifolder,['p0' ff ee]);
+%      if strcmpi(spm_check_version,'octave'), warning on; end
       QAS.filedata.fnames = [spm_str_manip(pp,sprintf('k%d',...
                          floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
                        spm_str_manip(ff,sprintf('k%d',...
@@ -587,15 +598,19 @@ function varargout = cat_vol_qa(action,varargin)
       else          OSname = 'LINUX';
       end
       
-      QAS.software.system       = OSname;
+      QAS.software.system       = char(OSname);
       QAS.software.version_spm  = rev_spm;
-      A = ver;
-      for i=1:length(A)
-        if strcmp(A(i).Name,'MATLAB')
-          QAS.software.version_matlab = A(i).Version; 
+      if strcmpi(spm_check_version,'octave')
+        QAS.software.version_matlab = ['Octave ' version];
+      else
+        A = ver;
+        for i=1:length(A)
+          if strcmp(A(i).Name,'MATLAB')
+            QAS.software.version_matlab = A(i).Version; 
+          end
         end
+        clear A
       end
-      clear A
       QAS.software.version_cat  = ver_cat;
       if ~isfield(QAS.software,'version_segment')
         QAS.software.version_segment = rev_cat;
@@ -607,10 +622,10 @@ function varargout = cat_vol_qa(action,varargin)
       QAS.software.date         = datestr(clock,'yyyymmdd-HHMMSS');
       % RD202007: not requried 
       %{
-      warning off
-      QAS.software.opengl       = opengl('INFO');
-      QAS.software.opengldata   = opengl('DATA');
-      warning on
+      %warning off
+      %QAS.software.opengl       = opengl('INFO');
+      %QAS.software.opengldata   = opengl('DATA');
+      %warning on
       %}
       QAS.software.cat_warnings = cat_io_addwarning;
       % replace matlab newlines by HTML code

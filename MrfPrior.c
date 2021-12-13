@@ -30,7 +30,7 @@
 #include <mex.h> 
 #endif
 
-void MrfPrior(unsigned char *label, int n_classes, double *alpha, double *beta, int init, int *dims)
+void MrfPrior(unsigned char *label, int n_classes, double *alpha, double *beta, int init, int *dims, int verb)
 {
   int i, j, x, y, z;
   int fi, fj;
@@ -84,10 +84,10 @@ void MrfPrior(unsigned char *label, int n_classes, double *alpha, double *beta, 
   }
 
   /* evaluate alphas */
-  printf("MRF priors: alpha ");
+  if ( verb == 1 ) printf("MRF priors: alpha ");
   for (i = 0; i < n_classes; i++) {
     if (init == 0) alpha[i] /= (double) n; else alpha[i] = 1.0;
-    printf("%3.3f ", alpha[i]);
+    if ( verb == 1 ) printf("%3.3f ", alpha[i]);
   }
 
   /* compute beta */
@@ -121,7 +121,7 @@ void MrfPrior(unsigned char *label, int n_classes, double *alpha, double *beta, 
   /* weighting of beta was empirically estimated using brainweb data with different noise levels
      because old beta estimation was not working */
   beta[0] = XX/YY;
-  printf("\t beta %3.3f\n", beta[0]);
+  if ( verb == 1 ) printf("\t beta %3.3f\n", beta[0]);
   fflush(stdout);
 }
 

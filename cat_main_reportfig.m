@@ -137,18 +137,22 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   if exist('ax','var')
     fontname = get(ax,'fontname');
   end
-  fonts  = listfonts; 
-  pfonts = {'Verdana','Arial','Helvetica','Tebuchet MS','Tahoma','Geneva','Microsoft Sans Serif'};
-  for pfi = 1:numel(pfonts)
-    ffonti = [];
-    try
-      ffonti = find(cellfun('isempty',strfind(fonts,pfonts{pfi},'ForceCellOutput',1))==0,1,'first'); 
-    end
-    if ~isempty( ffonti )
-      fontname  = fonts{ffonti};
-      break
-    end
-  end   
+  if strcmpi(spm_check_version,'octave')
+    fontname = 'Helvetica'; 
+  else
+    fonts  = listfonts; 
+    pfonts = {'Verdana','Arial','Helvetica','Tebuchet MS','Tahoma','Geneva','Microsoft Sans Serif'};
+    for pfi = 1:numel(pfonts)
+      ffonti = [];
+      try
+        ffonti = find(cellfun('isempty',strfind(fonts,pfonts{pfi},'ForceCellOutput',1))==0,1,'first'); 
+      end
+      if ~isempty( ffonti )
+        fontname  = fonts{ffonti};
+        break
+      end
+    end   
+  end
   
  
   
@@ -181,7 +185,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       end
       yticklabelo  = {' BG',' ','    ','    ','   ','    ',' ~WM  ',' ',' ',' ',' ',' ',' Vessels/Head '};
       yticklabeli  = {' BG',' ','    ','    ','   ','    ','         ',' ',' ',' ',' ',' ',' Vessels/Head '};
-      cmap         = [cat_io_colormaps([cm 'ov'],60);flipud(cat_io_colormaps([cm 'ov'],60));jet(surfcolors)]; 
+      cmap         = [cat_io_colormaps([cm 'ov'],60);flip(cat_io_colormaps([cm 'ov'],60),1);jet(surfcolors)]; 
       cmmax        = 2;
     case {'gray'} 
       % CAT colormap with larger range colorrange from 0 (BG) to 1 (WM) to 2 (HD).  
@@ -243,8 +247,12 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       yticklabelp0{end-2} = ' no/small WMHs';
     end
   end
-
-  colormap(fg,cmap);
+  
+  if strcmpi(spm_check_version,'octave')
+    colormap(cmap);
+  else
+    colormap(fg,cmap);
+  end
   try spm_orthviews('Redraw'); end
   %  ----------------------------------------------------------------------
 
@@ -385,7 +393,12 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     %%
     
     try % sometimes creation of axes fails for unknown reasons
-      cc{1} = axes('Position',[st.vols{1}.ax{3}.ax.Position(1) st.vols{1}.ax{1}.ax.Position(2) 0.01 0.13],'Parent',fg);     
+      if strcmpi(spm_check_version,'octave')
+        axes('Position',[st.vols{1}.ax{3}.ax.Position(1) st.vols{1}.ax{1}.ax.Position(2) 0.01 0.13],'Parent',fg);     
+        cc{1} = gca; 
+      else
+        cc{1} = axes('Position',[st.vols{1}.ax{3}.ax.Position(1) st.vols{1}.ax{1}.ax.Position(2) 0.01 0.13],'Parent',fg);     
+      end
       image((60:-1:1)','Parent',cc{1});
   
       if job.extopts.inv_weighting
@@ -395,6 +408,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         set(cc{1},'YTick',ytick,'YTickLabel',fliplr(yticklabelo),'XTickLabel','','XTick',[],'TickLength',[0 0],...
           'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal','YAxisLocation','right','xcolor',fontcolor,'ycolor',fontcolor);
       end
+    catch
+      cc = {}; 
     end
   else
     cat_io_cprintf('warn','WARNING: Can''t display original file "%s"!\n',VT.fname); 
@@ -421,8 +436,13 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       spm_orthviews('window',hhm,[0 cmmax]);
       
       % new histogram
-      cc{2} = axes('Position',[st.vols{2}.ax{3}.ax.Position(1) st.vols{2}.ax{1}.ax.Position(2) 0.01 0.13],'Parent',fg);
-      image((60:-1:1)','Parent',cc{2}); 
+      if strcmpi(spm_check_version,'octave')
+        axes('Position',[st.vols{2}.ax{3}.ax.Position(1) st.vols{2}.ax{1}.ax.Position(2) 0.01 0.13],'Parent',fg);
+        cc{2} = gca; 
+      else
+        cc{2} = axes('Position',[st.vols{2}.ax{3}.ax.Position(1) st.vols{2}.ax{1}.ax.Position(2) 0.01 0.13],'Parent',fg);
+      end
+      image((60:-1:1)','Parent',cc{2});
       set(cc{2},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
         'FontName',fontname,'FontSize',fontsize-2,'color',fontcolor,'FontWeight','normal','YAxisLocation','right',...
         'xcolor',fontcolor,'ycolor',fontcolor);
@@ -609,7 +629,12 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       set(st.vols{p0id}.blobs{1}.cbar,'NextPlot','add'); % avoid replacing of labels
       set(st.vols{p0id}.blobs{1}.cbar,'HitTest','off'); % avoid replacing of labels
     else
-      cc{p0id} = axes('Position',[st.vols{p0id}.ax{3}.ax.Position(1) st.vols{p0id}.ax{1}.ax.Position(2) 0.01 0.13],'Parent',fg);
+      if strcmpi(spm_check_version,'octave')
+        axes('Position',[st.vols{p0id}.ax{3}.ax.Position(1) st.vols{p0id}.ax{1}.ax.Position(2) 0.01 0.13],'Parent',fg);
+        cc{p0id} = gca; 
+      else
+        cc{p0id} = axes('Position',[st.vols{p0id}.ax{3}.ax.Position(1) st.vols{p0id}.ax{1}.ax.Position(2) 0.01 0.13],'Parent',fg);
+      end
       image((60:-1:1)','Parent',cc{p0id});
       set(cc{p0id},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
         'FontName',fontname,'FontSize',fontsize-2,'color',fontcolor,'YAxisLocation','right','xcolor',fontcolor,'ycolor',fontcolor);
@@ -787,7 +812,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   %  ----------------------------------------------------------------------
   if job.extopts.print>1 
     if exist('Psurf','var') && ~isempty(Psurf)
-      if opengl('info')
+      if 1 %~strcmpi(spm_check_version,'octave') && opengl('info')
         boxwidth = 0.2; 
         if job.extopts.report.type <= 1
           %% classic top view
@@ -800,7 +825,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
             spm_figure('Focus','Graphics'); 
             % this is strange but a 3:4 box property results in a larger brain scaling 
             hCS = subplot('Position',[0.52 0.037*(~sidehist) 0.42 0.31+0.02*sidehist],'visible','off'); 
-            renderer = get(fg,'Renderer');
+            if ~strcmpi(spm_check_version,'octave'), renderer = get(fg,'Renderer'); else, renderer = 'volume'; end
 
             % only add contours if OpenGL is found (to prevent crashing on clusters)
             if strcmpi(renderer,'opengl')
@@ -842,7 +867,12 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
             
             if any( job.output.surface == [5 6] ); fst = ' \color[rgb]{1 0 0}preview!'; else, fst = ''; end
             if ~sidehist
-              cc{4} = axes('Position',[0.58 0.022 0.3 0.007],'Parent',fg); image((121:1:120+surfcolors),'Parent',cc{4});
+              if strcmpi(spm_check_version,'octave')
+                axes('Position',[0.58 0.022 0.3 0.007],'Parent',fg); image((121:1:120+surfcolors),'Parent',cc{4});
+                cc{4} = gca; 
+              else
+                cc{4} = axes('Position',[0.58 0.022 0.3 0.007],'Parent',fg); image((121:1:120+surfcolors),'Parent',cc{4});
+              end
               set(cc{4},'XTick',1:(surfcolors-1)/6:surfcolors,'xcolor',fontcolor,'ycolor',fontcolor,'XTickLabel',...
                  {'0','1','2','3','4','5',['               6 mm' fst]},...
                 'YTickLabel','','YTick',[],'TickLength',[0 0],'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal');
@@ -850,14 +880,25 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
               %% histogram
 
               % colormap
-              cc{4} = axes('Position',[0.965 0.03 0.01 0.28],'Parent',fg); image(flip(121:1:120+surfcolors)','Parent',cc{4});
+              if strcmpi(spm_check_version,'octave')
+                axes('Position',[0.965 0.03 0.01 0.28],'Parent',fg); image(flip(121:1:120+surfcolors)','Parent',cc{4});
+                cc{4} = gca; 
+              else
+                cc{4} = axes('Position',[0.965 0.03 0.01 0.28],'Parent',fg); image(flip(121:1:120+surfcolors)','Parent',cc{4});
+              end
               set(cc{4},'YAxisLocation','right','YTick',1:(surfcolors-1)/6:surfcolors,'YTickLabel',{'6','5','4','3','2','1','0'},...
                 'XTickLabel','','XTick',[],'FontName',fontname,'FontSize',fontsize-2,'xcolor',fontcolor,'ycolor',fontcolor,'FontWeight','normal');
               
               %% histogram line
-              cc{5} = axes('Position',[0.936 0.03 0.03 0.28],'Parent',fg,'Visible', 'off','tag', 'cat_surf_results_hist', ...
+              if strcmpi(spm_check_version,'octave')
+                axes('Position',[0.936 0.03 0.03 0.28],'Parent',fg,'Visible', 'off','tag', 'cat_surf_results_hist', ...
                 'xcolor',fontcolor,'ycolor',fontcolor);
-              side  = hSD{1}.cdata; 
+                cc{5} = gca; 
+              else
+                cc{5} = axes('Position',[0.936 0.03 0.03 0.28],'Parent',fg,'Visible', 'off','tag', 'cat_surf_results_hist', ...
+                  'xcolor',fontcolor,'ycolor',fontcolor);
+              end
+              side  = hSD{1}.cdata;
               [d,h] = hist( side(~isinf(side(:)) & ~isnan(side(:)) &  side(:)<6 & side(:)>0) ,  0.1:boxwidth:6);
               d = d./numel(side);
               d = d./max(d);
@@ -865,7 +906,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
               % print histogram
               hold(cc{5},'on');  
               jetsc = jet(numel(h)); 
-              for bi = 1:numel(d);
+              for bi = 1:numel(d)
                 b(bi) = barh(cc{5},h(bi),-d(bi),boxwidth); 
                 set(b(bi),'Facecolor',jetsc(bi,:),'Edgecolor',fontcolor); 
               end
@@ -884,7 +925,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
           hCS{3} = subplot('Position',[0.68 0.18 0.30 0.17],'Parent',fg,'visible','off'); PCS{3} = Psurf(id2).Pthick; sview{3} = 'r';
           hCS{4} = subplot('Position',[0.02 0.01 0.30 0.17],'Parent',fg,'visible','off'); PCS{4} = Psurf(id1).Pthick; sview{4} = 'r';
           hCS{5} = subplot('Position',[0.68 0.01 0.30 0.17],'Parent',fg,'visible','off'); PCS{5} = Psurf(id2).Pthick; sview{5} = 'l';
-          renderer = get(fg,'Renderer');
+          if ~strcmpi(spm_check_version,'octave'), renderer = get(fg,'Renderer'); else, renderer = 'volume'; end
  
           % only add contours if OpenGL is found (to prevent crashing on clusters)
           if strcmpi(renderer,'opengl')
@@ -997,8 +1038,14 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
           if any( job.output.surface == [5 6] ); fst = ' \color[rgb]{1 0 0}preview!'; else, fst = ''; end
           
           % histogram 
-          cc{5} = axes('Position',[0.36 0.0245 0.28 0.030],'Parent',fg,'visible','off', 'tag','cat_surf_results_hist', ...
-            'xcolor',fontcolor,'ycolor',fontcolor); 
+          if strcmpi(spm_check_version,'octave')
+            axes('Position',[0.36 0.0245 0.28 0.030],'Parent',fg,'visible','off', 'tag','cat_surf_results_hist', ...
+              'xcolor',fontcolor,'ycolor',fontcolor); 
+            cc{5} = gca; 
+          else
+            cc{5} = axes('Position',[0.36 0.0245 0.28 0.030],'Parent',fg,'visible','off', 'tag','cat_surf_results_hist', ...
+              'xcolor',fontcolor,'ycolor',fontcolor); 
+          end
           % boxes
           [d,h] = hist( side(~isinf(side(:)) & ~isnan(side(:)) &  side(:)<6 & side(:)>0) , boxwidth/2:boxwidth:6-boxwidth/2); %h = h + boxwidth/2; 
           dmax  = max(d) * 1.2; % 15% extra for the line plot (use thickness phantom to set this value)
@@ -1158,8 +1205,12 @@ end
   %  gray colormap 
   cmap(1:60,:) = gray(60); cmap(61:120,:) = flipud(pink(60)); 
   cmap(121:120+surfcolors,:) = jet(surfcolors); 
-  colormap(fg,cmap); clear cmap;
-
+  if strcmpi(spm_check_version,'octave')
+    colormap(cmap); clear cmap;
+  else
+    colormap(fg,cmap); clear cmap;
+  end
+    
   % update intensity scaling for gray colormap 
   WMfactor0 = single(WMth) * 8/6; 
   WMfactor1 = 8/6; 

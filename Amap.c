@@ -332,7 +332,7 @@ void ComputeMrfProbability(double *mrf_probability, double *exponent, unsigned c
 } 
 
 /* Iterative conditional mode */
-void ICM(unsigned char *prob, unsigned char *label, int n_classes, int *dims, double beta, int iterations, double *voxelsize)
+void ICM(unsigned char *prob, unsigned char *label, int n_classes, int *dims, double beta, int iterations, double *voxelsize, int verb)
 {
   
   int i, iter, x, y, z, z_area, y_dims, index, sum_voxel;
@@ -386,13 +386,14 @@ void ICM(unsigned char *prob, unsigned char *label, int n_classes, int *dims, do
 #endif
     if(rel_changed < TH_CHANGE) break;
   }   
-  printf("\n");
+  if ( verb == 1) printf("\n");
 } 
 
 void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob, 
-  struct point *r, double *mean, double *var, int n_classes, int niters, int sub, 
-  int *dims, double *thresh, double *beta, double offset, double *voxelsize, double bias_fwhm)
-{
+    struct point *r, double *mean, double *var, int n_classes, int niters, int sub, 
+    int *dims, double *thresh, double *beta, double offset, double *voxelsize, 
+    double bias_fwhm, int verb, double *fmeans, double *fstds) {
+  
   int i,j;
   int area, narea, nvol, vol, z_area, y_dims, index, ind;
   double *bias, sub_1, dmin, val, fwhm[3];
@@ -403,7 +404,7 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
   int ix, iy, iz, ind2, masked_smoothing, subsample;
   double ll, ll_old, change_ll;
 
-  MrfPrior(label, n_classes, alpha, beta, 0, dims);    
+  MrfPrior(label, n_classes, alpha, beta, 0, dims, verb);    
 
   area = dims[0]*dims[1];
   vol = area*dims[2];
@@ -557,11 +558,17 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
 
   if(bias_fwhm > 0.0) free(bias);
 
-  printf("\nFinal Mean*Std: "); 
-  for(i = 0; i < n_classes; i++) printf("%.3f*%.3f  ",mean_global[i]-offset,sqrt(var_global[i])); 
-  printf("\n"); 
-
-}
+  /* be verbose */
+  if ( verb == 1 ) printf("\nFinal Mean*Std: "); 
+  for(i = 0; i < n_classes; i++) {
+    fmeans[i] = (double) mean_global[i] - offset; 
+    fstds[i]  = (double) sqrt(var_global[i]); 
+    if ( verb == 1 ) {
+      printf("(%d) %.3f*%.3f  ",i,fmeans[i],fstds[i]); 
+    }
+  } 
+  if ( verb== 1 ) printf("\n"); 
+}  
 
 double max2(double a, double b) { if (a>b) return a; else return b; }
 double min2(double a, double b) { if (a<b) return a; else return b; }
@@ -570,8 +577,8 @@ double min2(double a, double b) { if (a<b) return a; else return b; }
 /* perform adaptive MAP on given src and initial segmentation label */
 void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
           int n_classes, int niters, int sub, int *dims, int pve, double weight_MRF, 
-          double *voxelsize, int niters_ICM, double offset, double bias_fwhm)
-{
+          double *voxelsize, int niters_ICM, double offset, double bias_fwhm, 
+          int verb, double *fmeans, double *fstds) { 
   int i, nix, niy, niz;
   int area, nvol, vol;
   int histo[65536];
@@ -606,7 +613,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean,
 #else
   int use_fixed_code = 0; /* 0 - no, original code; 1 - fixed; 2 - "improved" without outlier removal */
 #endif
-
+/* use_fixed_code = 2; */
   for(i = 1; i < 65536; i++) cumsum[i] = cumsum[i-1] + histo[i]; 
   /* ########################### CORRUPT LINES ############################
    * RD202112: 
@@ -623,6 +630,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean,
     /* new code - working in Octave */
     for(i = 0; i < 65536; i++) cumsumr[i] = (int) round( 1000.0 * ((double) cumsum[i]) / max2(TINY,(double)cumsum[65535]) ); 
   }
+  
   /* ########################### CORRUPT LINES ############################
    * RD202112: 
    *   Although the prevous step was now running  
@@ -668,10 +676,10 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean,
     exit(EXIT_FAILURE);
   }
     
-    
+   
   /* estimate 3 classes before PVE */
   EstimateSegmentation(src, label, prob, r, mean, var, n_classes, niters, 
-          sub, dims, thresh, beta, offset, voxelsize, bias_fwhm);
+          sub, dims, thresh, beta, offset, voxelsize, bias_fwhm, verb, fmeans, fstds);
   
   /* Use marginalized likelihood to estimate initial 5 or 6 classes */
   if (pve) {
@@ -681,15 +689,30 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean,
     
     /* recalculate means for pure and mixed classes */
     for(j = 0; j < n_classes; j++) {
-      n[j] = 0;
-      mean[j] = 0.0;
+      n[j]      = 0;
+      mean[j]   = 0.0;
+      /*
+      fmeans[j] = 0.0; 
+      fstds[j]  = 0.0;
+       */
     }
     for(i = 0; i < vol; i++) {
       if(label[i] == 0) continue;
       n[label[i]-1]++;
-      mean[label[i]-1] += src[i];
+      mean[label[i]-1]   += src[i];
+      /*
+      fmeans[label[i]-1] += src[i] - offset;
+       */
     }
-    for(j = 0; j < n_classes; j++) mean[j] /= n[j];
+    for(j = 0; j < n_classes; j++) mean[j]   /= n[j];
+    /*
+    for(j = 0; j < n_classes; j++) fmeans[j] /= n[j];
+    for(i = 0; i < vol; i++) {
+      if(label[i] == 0) continue;
+      fstds[label[i]-1]  += (src[i] - fmeans[label[i]-1]); 
+    }
+    for(j = 0; j < n_classes; j++) fstds[j] /= n[j];
+     */
   }
   
   /* use much smaller beta for if no pve is selected */
@@ -699,10 +722,10 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean,
   if((niters_ICM > 0) && (weight_MRF > 0)) {
     if(weight_MRF != 1.0) {
       beta[0] *= weight_MRF;
-      printf("Weighted MRF beta %3.3f\n",beta[0]);
+      if ( verb == 1 ) printf("Weighted MRF beta %3.3f\n",beta[0]);
     }
   
-    ICM(prob, label, n_classes, dims, beta[0], niters_ICM, voxelsize);
+    ICM(prob, label, n_classes, dims, beta[0], niters_ICM, voxelsize, verb);
   }
   
   free(r);

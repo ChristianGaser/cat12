@@ -126,12 +126,19 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull)
     end
     Yhd = cat_vol_morph(Yhd>0.5,'l',[1 0.5]);
     Yhd = ~cat_vol_morph(~Yhd,'l',[1 0.5]);
-    Shd = isosurface(Yhd,0.5);
+    if strcmpi(spm_check_version,'octave')
+      Shd = spm_mesh_isosurface(smooth3(Yhd),0.5,0.5);
+    else
+      Shd = isosurface(Yhd,0.5);
+    end
     Sh.faces    = [Sh.faces; Shd.faces + size(Sh.vertices,1)];
     Sh.vertices = [Sh.vertices; Shd.vertices];
   end
-  Sh  = reducepatch(Sh,0.2);
-      
+  if strcmpi(spm_check_version,'octave')
+    Sh  = spm_mesh_reduce(Sh,0.2);
+  else
+    Sh  = reducepatch(Sh,0.2);
+  end    
     
   % save surface
   if istpm == 1

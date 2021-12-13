@@ -118,6 +118,15 @@ function varargout = compile(comp,test,verb)
               % replace expected endings to clear the function
               str = strrep( strrep( nc{nci}{ncj}, '.cpp' , ''), '.c' , ''); 
               evalc(['clear ' str]); 
+             
+              % not working yet - see also cat_io_xml
+              %{
+              pkglist = pkg('list'); 
+              if all( strfind( [pkglist{:}.name] , 'io') == 0 )  
+                pkg install -forge io
+              end
+              pkg load io
+              %}
             end
            
             rc{nci}{ncj} = evalc([mexcmd ' ' mexflag ' ' nc{nci}{ncj}]);
