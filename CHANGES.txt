@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1919 | gaser | 2021-12-10 17:50:50
+r1920 | gaser | 2021-12-13 13:44:17
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_colormaps.m
+M       cat_plot_boxplot.m
+A       cat_plot_histogram.m
+
+(1) Changed: Added many new categorical colormaps to cat_io_colormaps.
+(2) Changed: Changed default colormap in cat_plot_boxplot to nejm.
+(3) Added:   Added new function to plot multiple histograms 
+             cat_plot_histograms.m
+------------------------------------------------------------------------
+r1919 | gaser | 2021-12-10 17:51:40 +0100 (Fri, 10 Dec 2021) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +24,7 @@ M       cat_stat_check_cov.m
 (2) Fixed:   Variable prep_str was not defined for all cases in 
              cat_stat_check_cov.m.
 (3) Fixed:   Corrected cat_long_main.m to allow saving of both longmodels.          
+
 ------------------------------------------------------------------------
 r1918 | gaser | 2021-12-09 16:32:10 +0100 (Thu, 09 Dec 2021) | 31 lines
 
