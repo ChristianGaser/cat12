@@ -221,9 +221,9 @@ end
     % RD202006 the bias_fwhm paraemter (and/or other) cause also MATLAB crashes in the ignoreError pipeline 
     % RD202104 sub has to be large because the AMAP bias corrections seams to be in-optimal and caused bad threshold 
     % RD202104 Ymib should only include positive values
-    n_iters = 10; sub = round(64/mean(vx_vol));   %#ok<NASGU>
-    n_classes = 3;  pve = 5; bias_fwhm = 0; init_kmeans = 0;           %#ok<NASGU>
-    if job.extopts.mrf~=0, iters_icm = 50; else iters_icm = 0; end    %#ok<NASGU>
+    n_iters = 10; sub = round(64/mean(vx_vol));   
+    n_classes = 3;  pve = 5; bias_fwhm = 0; init_kmeans = 0;          
+    if job.extopts.mrf~=0, iters_icm = 50; else, iters_icm = 0; end  
     if 0 %job.extopts.ignoreErrors > 2 || job.extopts.inv_weighting
       % init_kmeans = 0; % k-means was not stable working (e.g. HR075T2) 
       %                  % and it is better to use also here the previous intensity scaling  
@@ -233,58 +233,53 @@ end
       %                                  % but I will try the pve5 again after Christians comments  
       %
       % we need more iterations and also some bias correction here because LAS is missing
-      n_iters = 200; %#ok<NASGU>
+      n_iters = 200; 
       % bias_fwhm = 60; % using bias_fwhm=60 caused MATLAB errors so we only use more iterations 
     end
 
 
     % remove noisy background for kmeans
-    if init_kmeans && job.extopts.ignoreErrors < 3, Ymib(Ymib<0.1) = 0; end %#ok<NASGU>
+    if init_kmeans && job.extopts.ignoreErrors < 3, Ymib(Ymib<0.1) = 0; end 
 
-    %% do segmentation  
-    amapres = evalc(['[prob,mean0] = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
-      'job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);']);
+    % do segmentation  
+    [prob,amap_means,amap_stds] = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans,  ...
+      job.extopts.mrf, vx_vol, iters_icm, bias_fwhm); 
     fprintf('%5.0fs\n',etime(clock,stime));
 
-    %% analyse segmentation ... the input Ym is normalized an the tissue peaks should be around [1/3 2/3 3/3]
-    if isempty(amapres)
-      % in Ocatave evalc is not working properly and we have to skip the evaluation  
-      th = {{nan nan},{nan nan},{nan nan}}; 
-    else
-      amapres = textscan(amapres,'%s'); amapres = amapres{1}; 
-      th{1}   = cell2mat(textscan(amapres{11},'%f*%f')); 
-      th{2}   = cell2mat(textscan(amapres{12},'%f*%f')); 
-      th{3}   = cell2mat(textscan(amapres{13},'%f*%f')); 
-    end
-
+    % analyse segmentation ... the input Ym is normalized an the tissue peaks should be around [1/3 2/3 3/3]
+    th = {[amap_means(1) amap_stds(1)],[amap_means(2) amap_stds(2)],[amap_means(3) amap_stds(3)]}; 
+  
+    
     if job.extopts.AMAPframing
+      prob = zeros([size(Ybb),3],'uint8');
       for i=1:3, prob(:,:,:,i) = prob(:,:,:,i) .* uint8(Ybb); end
     end
     clear Ybb;
     
 
-    if job.extopts.verb>1 && ~isempty(amapres)
+    if job.extopts.verb>1
+      if strcmpi(spm_check_version,'octave'), pm = '+/-'; else, pm = char(177); end
       if (th{1}(1) < th{2}(1)) && (th{2}(1) < th{3}(1)) % T1 
         fprintf('    AMAP peaks: [CSF,GM,WM] = [%0.2f%s%0.2f,%0.2f%s%0.2f,%0.2f%s%0.2f]\n',...
-          th{1}(1),char(177),th{1}(2),th{2}(1),char(177),th{2}(2),th{3}(1),char(177),th{3}(2));
+          th{1}(1),pm,th{1}(2),th{2}(1),pm,th{2}(2),th{3}(1),pm,th{3}(2));
       else
         fprintf('    AMAP peaks: [%0.2f%s%0.2f,%0.2f%s%0.2f,%0.2f%s%0.2f]\n',...
-          th{1}(1),char(177),th{1}(2),th{2}(1),char(177),th{2}(2),th{3}(1),char(177),th{3}(2));
+          th{1}(1),pm,th{1}(2),th{2}(1),pm,th{2}(2),th{3}(1),pm,th{3}(2));
       end
     end
     % if one of the peaks is NaN than create an error
-    if ~isempty(amapres) && any( isnan( cell2mat(th) ) )
+    if any( isnan( cell2mat(th) ) )
       error('cat_main_amap:nan',['AMAP estimated NaN tissue peaks that point to an error in the \\\\n' ...
                                  'preprocessing before the AMAP segmentation or inadequate input. ']);
     end
     % fine evaluation of tissue peaks
-    if ~isempty(amapres) && (th{1}(1) < th{2}(1)) && (th{2}(1) < th{3}(1)) % T1 
+    if (th{1}(1) < th{2}(1)) && (th{2}(1) < th{3}(1)) % T1 
       % in the T1 contrast we have a clear expectation for each tissue class 
       if th{1}(1)<0 || th{1}(1)>0.6 || th{2}(1)<0.5 || th{2}(1)>0.9 || th{3}(1)<0.95-th{3}(2) || th{3}(1)>1.1
         error('cat_main_amap:peaks',['AMAP estimated untypical tissue peaks that point to an \\\\n' ...
                                      'error in the preprocessing before the AMAP segmentation. ']);
       end
-    elseif ~isempty(amapres)
+    else
       % if there is a very low contrast between two peaks then create an error  
       % because the intensity normalization unsed before was probably incorrect 
       con = [ abs(diff([th{1}(1) th{2}(1)])) , abs(diff([th{1}(1) th{3}(1)])) , abs(diff([th{2}(1) th{3}(1)]))];

@@ -51,6 +51,11 @@ cstime = clock;
 
   % variables to tranfer from MATLAB to image coordinates used by loadSurf and saveSurf subfunctions
   global vmat vmati mati
+
+  if strcmpi(spm_check_version,'octave')
+    cat_io_addwarning('cat_surf_createCS:noSRP','Correction of surface collisions is not yet available under Octave.',[1 1])
+    opt.SRP = 0; 
+  end
   
   % surface evaluation paramter 
   res = struct('euler_characteristic',nan,'defect_size',nan,'lh',struct(),'rh',struct()); 
@@ -917,7 +922,8 @@ res.(opt.surf{si}).createCS_0_initfast = cat_surf_fun('evalCS',CS,facevertexcdat
       cat_system(cmd,opt.verb-2);
     end
 
-    if opt.SRP
+    if opt.SRP 
+        
     %% Collision correction by Delaunay triangularization
     %  --------------------------------------------------------------------
     %  New self-intersection correction that uses different detections of

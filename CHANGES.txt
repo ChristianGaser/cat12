@@ -1,5 +1,47 @@
 ------------------------------------------------------------------------
-r1920 | gaser | 2021-12-13 13:44:17
+r1921 | dahnke | 2021-12-13 14:31:22
+
+Changed paths:
+M       Amap.c
+M       Amap.h
+M       CHANGES.txt
+M       MrfPrior.c
+M       cat_amap.c
+M       cat_amap.m
+M       cat_amap.mexmaci64
+M       cat_io_csv.m
+M       cat_io_xml.m
+M       cat_main1639.m
+M       cat_main_amap.m
+M       cat_main_amap1639.m
+M       cat_main_kamap.m
+M       cat_main_reportfig.m
+M       cat_main_reportstr.m
+M       cat_main_roi.m
+M       cat_run.m
+M       cat_run_job1639.m
+M       cat_surf_createCS.m
+M       cat_surf_createCS2.m
+M       cat_surf_create_TPM_hull_surface.m
+M       cat_surf_surf2roi.m
+M       cat_vol_qa.m
+M       compile.m
+
+(1) Fixed:   Corrected handling AMAP output variables in cat_main_[k]amap[1639].
+             Added mean, std, and verb variables in cat_amap.c, MrfPrior.c, Amap.c/h
+             cat_main_amap and cat_main_kamap. 
+(2) Fixed:   Further Octave correction in cat_surf_createCS[2] by full   
+             deactivation of surface correction collisions that creates a warning. 
+(3) Fixed:   As Shooting is yet not running under Octave, we switch to Dartel in 
+             cat_run and print a warning.              
+(4) Fixed:   Added further Octave corrections in cat_io_csv, cat_io_xml, compile,
+             cat_main_reportstr, cat_main_reportfig, cat_surf_surf2roi.m, and cat_run.               
+(5) Fixed:   Corrected bugs under Octave for hull surface creation in 
+             cat_surf_create_TPM_hull_surface.               
+(6) Fixed:   Corrected missing definitions for Octave in cat_vol_qa.             
+             
+------------------------------------------------------------------------
+r1920 | gaser | 2021-12-13 14:01:39 +0100 (Mon, 13 Dec 2021) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +53,7 @@ A       cat_plot_histogram.m
 (2) Changed: Changed default colormap in cat_plot_boxplot to nejm.
 (3) Added:   Added new function to plot multiple histograms 
              cat_plot_histograms.m
+
 ------------------------------------------------------------------------
 r1919 | gaser | 2021-12-10 17:51:40 +0100 (Fri, 10 Dec 2021) | 11 lines
 

@@ -53,7 +53,7 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,Yy,tpm,job,res,vx_vol,stime2)
   for z=1:d(3)
     YbA(:,:,z) = spm_sample_vol(Vb,double(Yy(:,:,z,1)),double(Yy(:,:,z,2)),double(Yy(:,:,z,3)),1); 
   end
-  if round(max(YbA(:))/Vb.pinfo(1)), YbA=YbA>0.1*Vb.pinfo(1); else YbA=YbA>0.1; end
+  if round(max(YbA(:))/Vb.pinfo(1)), YbA=YbA>0.1*Vb.pinfo(1); else, YbA=YbA>0.1; end
   % add some distance around brainmask (important for bias!)
   YbA = YbA | cat_vol_morph(YbA & (Ycls{1} + Ycls{2})>4 ,'dd',2.4,vx_vol);
   
@@ -220,11 +220,11 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,Yy,tpm,job,res,vx_vol,stime2)
 
   % Yb source image because Amap needs a skull stripped image
   % set Yp0b and source inside outside Yb to 0
-  Yp0b = Yp0(indx,indy,indz);  %#ok<NASGU>
+  Yp0b = Yp0(indx,indy,indz);  
   Ymib = Ymib(indx,indy,indz); 
 
   % adaptive mrf noise 
-  if job.extopts.mrf>=1 || job.extopts.mrf<0; 
+  if job.extopts.mrf>=1 || job.extopts.mrf<0 
     % estimate noise
     [Yw,Yg] = cat_vol_resize({Ymi.*(Ycls{1}>240),Ymi.*(Ycls{2}>240)},'reduceV',vx_vol,3,32,'meanm');
     Yn = max(cat(4,cat_vol_localstat(Yw,Yw>0,2,4),cat_vol_localstat(Yg,Yg>0,2,4)),[],4);
@@ -240,14 +240,13 @@ function [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,Yy,tpm,job,res,vx_vol,stime2)
   %% Amap parameters  - default sub=16 caused errors with highres data!
   % don't use bias_fwhm, because the Amap bias correction is not that efficient
   % and also changes intensity values
-  Ymib = double(Ymib); n_iters = 200; sub = round(128/min(vx_vol)); %#ok<NASGU>
-  n_classes = 3; pve = 5; bias_fwhm = 0; init_kmeans = 1;  %#ok<NASGU> % RD202007: bias_fwhm > 0 can cause MATLAB crashes
-  if job.extopts.mrf~=0, iters_icm = 50; else, iters_icm = 0; end %#ok<NASGU>
+  Ymib = double(Ymib); n_iters = 200; sub = round(128/min(vx_vol)); 
+  n_classes = 3; pve = 5; bias_fwhm = 0; init_kmeans = 1;   % RD202007: bias_fwhm > 0 can cause MATLAB crashes
+  if job.extopts.mrf~=0, iters_icm = 50; else, iters_icm = 0; end 
 
   
   % do segmentation and rep
-  evalc(['[prob,mean] = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
-    'job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);']);
+  prob = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, job.extopts.mrf, vx_vol, iters_icm, bias_fwhm, 0);
   clear Ymib Yp0b;
  
   

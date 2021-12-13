@@ -349,6 +349,7 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA,vx_vox)
 
   [pp,ff] = fileparts(FA{ai,1});
   csvf = fullfile(pp,[ff '.csv']);
+  csvf = char( min(255, max(0, double( csvf ))));
   
   if isempty(csv) 
     if exist(csvf,'file')

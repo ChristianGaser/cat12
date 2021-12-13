@@ -62,9 +62,21 @@ function str = cat_main_reportstr(job,res,qa)
 
 % red version in case of old version?
   % 1 line: Matlab, SPM12, CAT12 version number and GUI and experimental mode 
-  str{1} = [str{1} struct('name', 'Version: OS / Matlab / SPM12 / CAT12:','value',...
-    sprintf('%s / %s / %s / %s (%s)',qa.software.system,qa.software.version_matlab,...
-    qa.software.version_spm,qa.software.version_cat,catv))];
+  if strcmpi(spm_check_version,'octave')
+    str{1} = [str{1} struct('name', 'Version: OS / Octave / SPM12 / CAT12:','value',...
+      sprintf('%s / %s / %s / %s (%s)',qa.software.system,qa.software.version_octave,...
+      qa.software.version_spm,qa.software.version_cat,catv))];
+    % native2unicode is working on the command line but not in the figure
+    cub = '^3';
+    pm  = '+/-';
+  else
+    str{1} = [str{1} struct('name', 'Version: OS / Matlab / SPM12 / CAT12:','value',...
+      sprintf('%s / %s / %s / %s (%s)',qa.software.system,qa.software.version_matlab,...
+      qa.software.version_spm,qa.software.version_cat,catv))];
+    cub = native2unicode(179, 'latin1'); % char(179);
+    pm  = native2unicode(177, 'latin1');
+  end
+  
   % add CAT segmentation version if not current
   if ~isempty(qa.software.version_segment)
     str{1}(end).name = [str{1}(end).name(1:end-1) ' / seg:']; 
@@ -415,10 +427,10 @@ function str = cat_main_reportstr(job,res,qa)
     end
   end
   
-  str{3} = [str{3} struct('name', ' TIV:','value', sprintf(['%0.0f cm' native2unicode(179, 'latin1')],qa.subjectmeasures.vol_TIV))];  
+  str{3} = [str{3} struct('name', ' TIV:','value', sprintf(['%0.0f cm' cub],qa.subjectmeasures.vol_TIV))];  
   if isfield(qa.subjectmeasures,'surf_TSA') && job.extopts.expertgui>1
     str{3}(end).name  = [str{3}(end).name(1:end-1)  ' / TSA:']; 
-    str{3}(end).value = [str{3}(end).value sprintf(' / %0.0f cm%s' ,qa.subjectmeasures.surf_TSA,char(178))];  
+    str{3}(end).value = [str{3}(end).value sprintf(' / %0.0f cm%s' ,qa.subjectmeasures.surf_TSA,cub)];  
   end
 
   % Surface measures - Thickness, (Curvature, Depth, ...)
@@ -427,12 +439,12 @@ function str = cat_main_reportstr(job,res,qa)
     if job.extopts.expertgui > 1 && isfield(qa.subjectmeasures,'dist_thickness_kmeans')
       [tmp,kmax] = max( qa.subjectmeasures.dist_thickness_kmeans_inner3(:,3) ); clear tmp; %#ok<ASGLU>
       str{3} = [str{3} struct('name', '\bfThickness \rm(kmeans):','value',sprintf('%4.2f%s%4.2f mm (%4.2f%s%4.2f mm)', ...
-       qa.subjectmeasures.dist_thickness{1}(1),native2unicode(177, 'latin1'),qa.subjectmeasures.dist_thickness{1}(2), ...
-       qa.subjectmeasures.dist_thickness_kmeans_inner3(kmax,1),native2unicode(177, 'latin1'),...
+       qa.subjectmeasures.dist_thickness{1}(1),pm,qa.subjectmeasures.dist_thickness{1}(2), ...
+       qa.subjectmeasures.dist_thickness_kmeans_inner3(kmax,1),pm,...
        qa.subjectmeasures.dist_thickness_kmeans_inner3(kmax,2)))];
     else
       str{3} = [str{3} struct('name', '\bfThickness:','value',sprintf('%4.2f%s%4.2f mm', ...
-       qa.subjectmeasures.dist_thickness{1}(1),native2unicode(177, 'latin1'),qa.subjectmeasures.dist_thickness{1}(2)))];
+       qa.subjectmeasures.dist_thickness{1}(1),pm,qa.subjectmeasures.dist_thickness{1}(2)))];
     end
     % we warn only if WMHC is off ... without WMHC you have not thresholds!
     %if job.extopts.WMHC==0 && (qa.subjectmeasures.vol_rel_WMH>0.01*3 || ... % 3 times higher treshold 
@@ -442,11 +454,11 @@ function str = cat_main_reportstr(job,res,qa)
          
     if isfield(qa.subjectmeasures,'dist_gyruswidth') && ~isnan(qa.subjectmeasures.dist_gyruswidth{1}(1))
       str{3} = [str{3} struct('name', '\bfGyruswidth:','value',sprintf('%5.2f%s%4.2f mm', ...
-             qa.subjectmeasures.dist_gyruswidth{1}(1),native2unicode(177, 'latin1'),qa.subjectmeasures.dist_gyruswidth{1}(2)))];
+             qa.subjectmeasures.dist_gyruswidth{1}(1),pm,qa.subjectmeasures.dist_gyruswidth{1}(2)))];
     end
     if isfield(qa.subjectmeasures,'dist_sulcuswidth') && ~isnan(qa.subjectmeasures.dist_sulcuswidth{1}(1))
       str{3} = [str{3} struct('name', '\bfSulcuswidth:','value',sprintf('%5.2f%s%4.2f mm', ...
-             qa.subjectmeasures.dist_sulcuswidth{1}(1),native2unicode(177, 'latin1'),qa.subjectmeasures.dist_sulcuswidth{1}(2)))];
+             qa.subjectmeasures.dist_sulcuswidth{1}(1),pm,qa.subjectmeasures.dist_sulcuswidth{1}(2)))];
     end
   end
 
