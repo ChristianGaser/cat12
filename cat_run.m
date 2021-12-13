@@ -900,6 +900,12 @@ function job = update_job(job)
   end
   clear sampval tolval;
   
+  if strcmpi(spm_check_version,'octave') && job.extopts.regstr > 0
+    warning('cat_run:noShooting','No Shooting registration possible under Octave yet.')
+    job.extopts.regstr = 0; 
+  end
+
+  
   %% set Dartel/Shooting templates
   if isfield(job.extopts,'regmethod') 
     if isfield(job.extopts.regmethod,'dartel')
@@ -994,7 +1000,7 @@ function job = update_job(job)
        'output has been deselected.']);
     job.output.ROI = 0;
   end
-  
+
   
   % set boundary box by Template properties 
   if ~isfield(job.extopts,'bb'), job.extopts.bb = 12; end
@@ -1076,7 +1082,7 @@ function vout = run_job(job)
 %           log files. 
 % ######################################################################
   surfcolors = 128;
-  cmap(1:60,:) = gray(60); cmap(61:120,:) = flipud(pink(60)); cmap(121:120+surfcolors,:) = jet(surfcolors);  
+  cmap(1:60,:) = gray(60); cmap(61:120,:) = flip(pink(60),1); cmap(121:120+surfcolors,:) = jet(surfcolors);  
   colormap(cmap)
   
   if isfield(job,'nproc') && job.nproc>0 

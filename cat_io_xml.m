@@ -51,6 +51,30 @@ function varargout = cat_io_xml(file,varargin)
 % datastoring.
 % ______________________________________________________________________
 
+  onlyxml = 0; 
+  if strcmpi(spm_check_version,'octave')
+    pkglist = pkg('list'); 
+    if all( strfind( [pkglist{:}.name] , 'io') == 0 )  
+      pkg install -forge io
+    end
+    pkg load io
+    try 
+      % add java files
+      xmljava{1} = fullfile(spm('dir'),'toolbox','cat12','Octave','xercesImpl.jar'); 
+      xmljava{2} = fullfile(spm('dir'),'toolbox','cat12','Octave','xml-apis.jar'); 
+      % call them
+      for xi=1:numel(xmljava), eval(sprintf('javaaddpath("%s");',xmljava{xi})); end
+      % test function 
+      xmlread;
+    catch e
+      if strcmp(e.message,'xmlread: no Java JRE or JDK detected, exiting')
+        onlyxml = 1; 
+      end
+    end
+    
+  end
+
+
 
   verbose = 0;
   if usejava('jvm')==0
@@ -59,7 +83,7 @@ function varargout = cat_io_xml(file,varargin)
     %varargout = {};
     %return;
   end
-  if ~exist('file','var'),
+  if ~exist('file','var')
     file = spm_select(Inf,'xml','Select *.xml files',{},pwd,'^cat.*.xml');
     if isempty(file)
       if nargout>0, varargout{1}=struct(); end
@@ -157,15 +181,19 @@ function varargout = cat_io_xml(file,varargin)
         S=orderfields(S); 
         if ~exist(fileparts(mfile),'dir'), try mkdir(fileparts(mfile)); end; end
         save(mfile,'S');
-      catch %#ok<*NASGU> % can write xml file??
+      catch %#ok<*NASGU> % can write xml file?? 
+        % This has to be an error because we need at least the mat for the TIV. 
         error('MATLAB:cat_io_xml:writeErr','Can''t write MAT-file ''%s''!\n',mfile);
       end
       try
         if usejava('jvm')
           xml_write(file,S);
+        elseif strcmpi(spm_check_version,'octave') && ~onlyxml
+          xmlwrite(file,S);
         end
       catch %#ok<*NASGU> % can write xml file??
-        error('MATLAB:cat_io_xml:writeErr','Can''t write XML-file ''%s''!\n',file);
+        % This can be a warning as far as we have the mat.
+        warning('MATLAB:cat_io_xml:writeErr','Can''t write XML-file ''%s''!\n',file);
       end
       
       
@@ -177,9 +205,13 @@ function varargout = cat_io_xml(file,varargin)
       
       if exist(mfile,'file')
         load(mfile,'S');
-      elseif exist(file,'file') && usejava('jvm')
+      elseif exist(file,'file') 
         try
-          S = xml_read(file);
+          if usejava('jvm')
+            S = xml_read(file);
+          elseif strcmpi(spm_check_version,'octave') && ~onlyxml
+            S = xmlread(file);
+          end
         catch 
           error('MATLAB:cat_io_xml:write+ReadErr','Can''t read XML-file ''%s'' for update!\n',file);
         end
@@ -187,7 +219,7 @@ function varargout = cat_io_xml(file,varargin)
         S = struct(); 
       end
       
-      if numel(S)>1 || numel(S)>1,
+      if numel(S)>1 || numel(S)>1
         error('MATLAB:cat_io_xml:write','Not implemented yet!\n');
       end
       
@@ -200,9 +232,13 @@ function varargout = cat_io_xml(file,varargin)
         error('MATLAB:cat_io_xml:writeErr','Can''t write MAT-file ''%s''!\n',mfile);
       end 
       try
-        xml_write(file,S);
+        if usejava('jvm')
+          xml_write(file,S);
+        elseif strcmpi(spm_check_version,'octave') && ~onlyxml
+          xmlwrite(file,S);
+        end
       catch 
-        error('MATLAB:cat_io_xml:writeErr','Can''t write XML-file ''%s''!\n',file);
+        warning('MATLAB:cat_io_xml:writeErr','Can''t write XML-file ''%s''!\n',file);
       end 
     
       
@@ -215,10 +251,14 @@ function varargout = cat_io_xml(file,varargin)
         catch
           error('MATLAB:cat_io_xml:readErr','Can''t read MAT-file ''%s'' for update!\n',mfile);
         end
-      elseif exist(file,'file') && usejava('jvm')
+      elseif exist(file,'file') % && usejava('jvm')
         try 
           warning off
-          S = xml_read(file);
+          if usejava('jvm')
+            S = xml_read(file);
+          elseif strcmpi(spm_check_version,'octave') 
+            S = xmlread(file);
+          end
           warning on
         catch 
           error('MATLAB:cat_io_xml:readErr','Can''t read XML-file ''%s'' for update!\n',file);
@@ -228,7 +268,7 @@ function varargout = cat_io_xml(file,varargin)
             if ~exist(fileparts(mfile),'dir'), try, mkdir(fileparts(mfile)); end; end
             save(mfile,'S');
           catch
-             error('MATLAB:cat_io_xml:writeErr','Can''t write MAT-file ''%s''!\n',mfile);
+            error('MATLAB:cat_io_xml:writeErr','Can''t write MAT-file ''%s''!\n',mfile);
           end
         end
       elseif exist(file,'file') && ~(usejava('jvm'))
@@ -824,7 +864,11 @@ end
     end
     str = regexprep(str,'-','_DASH_'  ,'once', 'ignorecase');
     if (~isvarname(str)) && (~iskeyword(str))
-      str = genvarname(str);
+      if strcmpi(spm_check_version,'octave') 
+        str = matlab.lang.makeValidName(str);
+      else
+        str = genvarname(str);
+      end
     end
   end
   % =======================================================================

@@ -1,7 +1,28 @@
-function [prob, mean] = cat_amap(src, label, n_classes, n_iters, sub, pve, init, mrf_weight, voxelsize, iters_icm, bias_fwhm)
-% FORMAT [prob, mean] = cat_amap(src, label, n_classes, n_iters, sub, pve, init, mrf_weight, voxelsize, iters_icm, bias_fwhm)
+%cat_amap. AMAP classification. 
 %
-%  WARNING: The function changes the input data src and label!
+% [prob, means, stds, srcb] = cat_amap(src, label, n_classes, n_iters, 
+%   sub, pve, init, mrf_weight, voxelsize, iters_icm, bias_fwhm)
+%
+%  prob       .. tissue probability maps (4D uint8)
+%  means      .. mean tissue values
+%  stds       .. std of each tissue class
+%  srcb       .. bias corrected input image
+%  src        .. input image
+%  label      .. probality map
+%  n_classes  .. number of tissue classes
+%  n_iter     .. number of iterations
+%  sub        ..
+%  pve        .. use partial-volume-effect model
+%                 0 - none
+%                 5 - BG       ,CSF,CSF/GM,GM,GM/WM,WM
+%                 6 - BG,BG/CSF,CSF,CSF/GM,GM,GM/WM,WM
+%  init       ..
+%  mrf_weight .. use weighting for Markov-Random-Field denoising
+%  voxelsize  .. handling of anisotropic voxels and scaling of metric 
+%                filter sizes 
+%  iters_icm  .. iteration of ...
+%  bias_fwhm  .. weidth of bias field (eg. 60 mm)
+%
 %
 %  Examples: 
 %   % create a labelmap with 3 large areas
@@ -38,21 +59,25 @@ function [prob, mean] = cat_amap(src, label, n_classes, n_iters, sub, pve, init,
 % ______________________________________________________________________
 % $Id$
 
-  %% THIS CODE IS NOT PROCESSED BECAUSE THIS FILE IS ONLY TO DISPLAY THE HELP
-  rev = '$Rev$';
 
-  disp('Compiling cat_amap.c')
+% THE CODE HERE IS NOT PROCESSED BECAUSE THIS FILE IS ONLY TO DISPLAY THE HELP
 
-  pth = fileparts(which(mfilename));
-  p_path = pwd;
-  cd(pth);
-  mex -O cat_amap.c Kmeans.c Amap.c MrfPrior.c Pve.c vollib.c
-  cd(p_path);
-  
-  [prob, mean] = cat_amap(src, label, n_classes, n_iters, sub, pve, init, mrf_weight, voxelsize, iters_icm, bias_fwhm);
+  if 0 % only create a block to avoid confusion 
+    %% compile
+    rev = '$Rev$';
 
-  
-  if 0
+    disp('Compiling cat_amap.c')
+
+    pth = fileparts(which(mfilename));
+    p_path = pwd;
+    cd(pth);
+    mex -O cat_amap.c Kmeans.c Amap.c MrfPrior.c Pve.c vollib.c
+    cd(p_path);
+
+    [prob, mean] = cat_amap(src, label, n_classes, n_iters, sub, pve, init, mrf_weight, voxelsize, iters_icm, bias_fwhm);
+  end
+
+  if 0 % only create a block to avoid confusion 
     %% call test case
     % create a labelmap with 3 large areas
     L = zeros(50,50,9,'single'); 
@@ -65,20 +90,21 @@ function [prob, mean] = cat_amap(src, label, n_classes, n_iters, sub, pve, init,
     %% simulate real image with noise and bias
     A = double(L);  
     for i=1:size(A,2), A(:,i,:) = A(:,i,:) .* (( i/size(A,2) ) + 0.5) / 3; end
-    A = A + 0.1 * rand(size(L)); 
+    A = A + 0.01 * rand(size(L)); 
     ds('d2smns','',1,A,L,round(size(L,3)/2)+1);
 
     % use AMAP to segment the simulated image
     Atmp = A + 0; Ltmp = L + 0; % create copies!
-    [prob, mean] = cat_amap(Atmp,Ltmp, 3,16,32, 5,0, 0.1,ones(1,3),50,60);
+    [prob, ameans, astds, Abc] = cat_amap(Atmp,Ltmp, 3,16,32, 5,0, 0.1,ones(1,3),50,60, 1);
     S = single(prob(:,:,:,1))*1/3/255 + single(prob(:,:,:,2))*2/3/255 + single(prob(:,:,:,3))/255;
-    ds('d2sm','',1,A,S,round(size(L,3)/2)+1);
+    ds('d2sm','',1,A,S,round(size(L,3)/2)+1); ameans, astds,
 
     %% another test
-    B = double(L)/3 + 0.01 * randn(size(L)); Btmp = B + 0;  Ltmp = L + 0;
-    amapres = evalc('[prob, mean] = cat_amap(Btmp,Ltmp, 3,16,32, 5,0, 0.1,ones(1,3),50,60)');
+    B = double(L)/3 + 0.01 * randn(size(L)); Btmp = smooth3(B) + 0;  Ltmp = L + 0;
+    %amapres = evalc('[prob, ameans, astds, Abc] = cat_amap(Btmp,Ltmp, 3,16,32, 5,0, 0.1,ones(1,3),50,60,1);');
+    [prob, ameans, astds, Abc] = cat_amap(Btmp,Ltmp, 3,16,32, 5,0, 0.1,ones(1,3),50,60,0);
     S = single(prob(:,:,:,1))*1/3/255 + single(prob(:,:,:,2))*2/3/255 + single(prob(:,:,:,3))/255;
-    ds('d2sm','',1,B,S,round(size(L,3)/2)+1);
+    ds('d2sm','',1,Btmp,S,round(size(L,3)/2)+1); ameans, astds,
     %rmse = sum( (S(:) - (single(L(:))/3)).^2 ).^(1/2)
 
   end

@@ -185,7 +185,8 @@ function varargout = cat_surf_surf2roi(job)
               else
                 fieldname = sprintf('%s_%s',FN{ai},sinfo.dataname);
               end
-              fieldname = cat_io_strrep(fieldname,num2cell(char([33:47,124:1024])),'_');
+              if strcmpi(spm_check_version,'octave'), maxchar = 127; else, maxchar = 1023; end
+              fieldname = cat_io_strrep(fieldname,num2cell(char([33:47,124:maxchar])),'_');
               fieldname = cat_io_strrep(fieldname,'__','_');
               switch FN{ai}
                 case {'min','max'},           nanfunc = ''; 

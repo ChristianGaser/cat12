@@ -479,6 +479,8 @@ if ~isfield(res,'spmpp')
   %
   %    prob .. new AMAP segmenation (4D)
   %    ind* .. index elements to asign a subvolume
+  % 
+  %  ds('d2sm','',1,Ym,single(prob(:,:,:,1))/255/3 + single(prob(:,:,:,2))/255*2/3 + single(prob(:,:,:,3))/255,50);
   %  -------------------------------------------------------------------
   job.extopts.AMAPframing = 1;
   [prob,indx,indy,indz] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res);
