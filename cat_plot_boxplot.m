@@ -30,8 +30,8 @@ function [out,s] = cat_plot_boxplot(data,opt)
 %  opt.violin      = 0;             % violin-plot: 0 - box plot; 1 - violin plot; 2 - violin + thin box plot
 %  opt.boxwidth    = 0.8;           % width of box
 %  opt.groupcolor  = [R G B];       % matrix with (group)-bar-color(s) 
-%                                     use jet(numel(data)) 
-%                                     or other color functions
+%                                     default is nejm(numel(data)) 
+%                                     or other color functions (see also cat_io_colormaps for categorical colormaps)
 %  opt.symbolcolor = 'r';           % color of symbols
 %  opt.fontsize    = [];            % axis fontsize 
 %                                     important for ygrid size!
@@ -165,7 +165,7 @@ def.maxwhisker  = 1.5;
 def.sort        = 0; 
 def.names       = num2str( (1:numel(data))' );
 def.fill        = 1;
-def.groupcolor  = jet(numel(data));
+def.groupcolor  = cat_io_colormaps('nejm',numel(data));
 def.symbolcolor = 'r';
 def.groupnum    = 0;
 def.groupmin    = 5;
@@ -1002,6 +1002,7 @@ if nargout>3
 end
 
 end
+
 %---------------------------------------------
 function  out=fixed_point(t,N,I,a2)
 % this implements the function t-zeta*gamma^[l](t)
@@ -1014,8 +1015,6 @@ for s=l-1:-1:2
 end
 out=t-(2*N*sqrt(pi)*f)^(-2/5);
 end
-
-
 
 %---------------------------------------------
 function out = idct1d(data)
@@ -1231,6 +1230,7 @@ function fh = cat_stat_boxplot_batch(job)
   end
 
 end
+
 function S = setval( S , i , fname , val )
   if isfield( S , fname ) 
     if iscell( S.(fname) ) && numel( S.(fname) )>=i 

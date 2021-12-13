@@ -1,11 +1,49 @@
+
 function [C,XML] = cat_io_colormaps(Cname,ncolors)
 % _________________________________________________________________________
 % Create CAT Colormaps.
 %
 %   [C,XML] = cat_io_colormaps(Cname,ncolors)
 %
-%   Cname   = ['marks' | 'marks+' | 'turbo' | 'BCGWHw' | 'BGWHn'];
-%   ncolors =
+%   Cname - colormap
+%   colormaps internally used in CAT12
+%		'marks'
+%		'marks+'
+%		'turbo'
+%		'BCGWHw'
+%		'BGWHn'
+%		'magentadk'
+%		'magenta'
+%		'orange'
+%		'blue'
+%		'BCGWHw'
+%		'BCGWHwov'
+%		'BCGWHn'
+%		'BCGWHn2'
+%		'BCGWHgov'
+%		'BCGWHnov'
+%		'BCGWHcheckcov'
+%		'curvature'
+%		'hotinv'
+%		'cold'
+%		'coldinv'
+%		'BWR'
+%   categorical colormaps from RColorBrewer
+%   https://rdrr.io/cran/RColorBrewer/man/ColorBrewer.html
+%		'accent'
+%		'dark2'
+%		'paired'
+%		'set1'
+%		'set2'
+%		'set3'
+%   categorical colormaps from ggsci
+%   https://nanx.me/ggsci/articles/ggsci.html
+%		'nejm'
+%		'jco'
+%		'jama'
+%		'd3'
+% 
+%   ncolors - number of colors
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -30,6 +68,8 @@ function [C,XML] = cat_io_colormaps(Cname,ncolors)
     end
   end
   
+  % expect continuous colormaps by default
+  cmap_categorical = false;
   
   % load basic colormap
   switch Cname
@@ -59,6 +99,36 @@ function [C,XML] = cat_io_colormaps(Cname,ncolors)
     % vbm-output
     % GMT output
     % ...
+    case 'accent'
+      C = accent; 
+      cmap_categorical = true;
+    case 'dark2'
+      C = dark2; 
+      cmap_categorical = true;
+    case 'paired'
+      C = paired; 
+      cmap_categorical = true;
+    case 'set1'
+      C = set1; 
+      cmap_categorical = true;
+    case 'set2'
+      C = set2; 
+      cmap_categorical = true;
+    case 'set3'
+      C = set3; 
+      cmap_categorical = true;
+    case 'nejm'
+      C = nejm; 
+      cmap_categorical = true;
+    case 'jco'
+      C = jco; 
+      cmap_categorical = true;
+    case 'jama'
+      C = jama; 
+      cmap_categorical = true;
+    case 'd3'
+      C = d3; 
+      cmap_categorical = true;
     case 'turbo'
       C = turbo; 
     case 'magentadk'
@@ -111,18 +181,198 @@ function [C,XML] = cat_io_colormaps(Cname,ncolors)
   end
   if isempty(ncolors), ncolors = size(C,1); end
   
-  % interpolate colormap
-  if size(C,1)~=ncolors;
-    ss    = (size(C,1)-1)/(ncolors);
+  % interpolate colormap, if colormap is categorical only use interpolation for larger number of colors
+  if (size(C,1)~=ncolors && ~cmap_categorical) || (size(C,1)<ncolors && cmap_categorical)
+    ss    = (size(C,1)-1)/(ncolors)
     [X,Y] = meshgrid(1:ss:size(C,1)-ss,1:3);
     C     = interp2(1:size(C,1),1:3,C',X,Y)'; 
     XML   = cellstr([ dec2hex(round(min(255,max(0,C(:,1)*255)))), ...
              dec2hex(round(min(255,max(0,C(:,2)*255)))), ...
              dec2hex(round(min(255,max(0,C(:,3)*255)))) ]);
+  % limit categorical colormaps
+  elseif size(C,1)>ncolors && cmap_categorical
+    C = C(1:ncolors,:);
   end
  
   
 end
+
+
+% from RColorBrewer
+% https://rdrr.io/cran/RColorBrewer/man/ColorBrewer.html
+function C=accent
+  C = [
+    127 201 127
+    190 174 212
+    253 192 134
+    255 255 153
+    56  108 176
+    240 2   127
+    191 91  23
+    102 102 102
+  ]/255;
+end
+
+% from RColorBrewer
+% https://rdrr.io/cran/RColorBrewer/man/ColorBrewer.html
+function C=dark2
+  C = [
+    27  158 119
+    217 95  2
+    117 112 179
+    231 41  138
+    102 155 30
+    230 171 2
+    166 118 29
+    102 102 102 
+  ]/255;
+end
+
+% from RColorBrewer
+% https://rdrr.io/cran/RColorBrewer/man/ColorBrewer.html
+function C=paired
+  C = [
+    166 206 227
+    31  120 180
+    178 223 138
+    51  160 44
+    251 154 153
+    227 26  28
+    253 191 111
+    255 127 0
+    202 178 214
+    106 61  154
+    255 255 153
+    177 89  40
+  ]/255;
+end
+
+% from RColorBrewer
+% https://rdrr.io/cran/RColorBrewer/man/ColorBrewer.html
+function C=set1
+  C = [
+    228 26  28
+    55  126 184
+    77  175 74
+    152 78 163
+    255 127 0
+    255 255 51
+    166 86  40
+    247 129 191
+    153 153 153
+  ]/255;
+end
+
+% from RColorBrewer
+% https://rdrr.io/cran/RColorBrewer/man/ColorBrewer.html
+function C=set2
+  C = [
+    102 194 165
+    252 141 98
+    141 160 203
+    231 138 195
+    166 216 84
+    255 217 47
+    229 196 148
+    179 179 179
+  ]/255;
+end
+
+% from RColorBrewer
+% https://rdrr.io/cran/RColorBrewer/man/ColorBrewer.html
+function C=set3
+  C = [
+    141 211 199
+    255 255 179
+    190 186 218
+    251 128 114
+    128 177 211
+    253 180 98
+    179 222 105
+    252 205 229
+    217 217 217
+    188 128 189
+    204 235 197
+    255 237 111
+  ]/255;
+end
+
+% from ggsci
+% https://nanx.me/ggsci/articles/ggsci.html
+% extended by additional colors
+function C=nejm
+  C = [
+    '#BC3C29'
+    '#0072B5'
+    '#E18727'
+    '#20854E'
+    '#7876B1'
+    '#6F99AD'
+    '#FFDC91'
+    '#EE4C97'
+    '#8C564B'
+    '#BCBD22'
+    '#00A1D5'
+    '#374E55'
+    '#003C67'
+    '#8F7700'
+    '#7F7F7F'    
+    '#353535'    
+  ];
+  C = hex2rgb(C);
+end
+
+% from ggsci
+% https://nanx.me/ggsci/articles/ggsci.html
+function C=jama
+  C = [
+    '#374E55'
+    '#DF8F44'
+    '#00A1D5'
+    '#B24745'
+    '#79AF97'
+    '#6A6599'
+    '#80796B'
+  ];
+  C = hex2rgb(C);
+end
+
+% from ggsci
+% https://nanx.me/ggsci/articles/ggsci.html
+function C=jco
+  C = [
+    '#0073C2'
+    '#EFC000'
+    '#868686'
+    '#CD534C'
+    '#7AA6DC'
+    '#003C67'
+    '#8F7700'
+    '#3B3B3B'
+    '#A73030'
+    '#4A6990'
+  ];
+  C = hex2rgb(C);
+end
+
+% from ggsci
+% https://nanx.me/ggsci/articles/ggsci.html
+function C=d3
+  C = [
+    '#1F77B4'
+    '#FF7F0E'
+    '#2CA02C'
+    '#D62728'
+    '#9467BD'
+    '#8C564B'
+    '#E377C2'
+    '#7F7F7F'
+    '#BCBD22'
+    '#17BECF'
+  ];
+  C = hex2rgb(C);
+end
+
 function C=hotinv
   C = [ 
     0.9900    0.9900    0.9900 
@@ -135,6 +385,7 @@ function C=hotinv
     0.0000    0.0000    0.0000  
   ]; 
 end
+
 function C=BCGWHcheckcov
   C = [ 
          0         0         0
@@ -203,6 +454,7 @@ function C=BCGWHcheckcov
     0.4941    0.1843    0.5569
   ]; 
 end
+
 function C=BCGWHgov
 C = [
          0.95    0.95      0.95
@@ -221,6 +473,7 @@ C = [
     0.7882         0    1.0000
   ];
 end
+
 function C=BCGWHnov
 C = [
          0         0         0
@@ -241,6 +494,7 @@ C = [
     1              1    1.0000
   ];
 end
+
 function C=BCGWHn
   C = [
     0.0392    0.1412    0.4157
@@ -305,6 +559,7 @@ function C=BCGWHn
     0.9608    0.9216    0.9216
   ]; 
 end
+
 function C=BCGWHnov_old
   C = [
     0.0392    0.1412    0.4157
@@ -370,6 +625,7 @@ function C=BCGWHnov_old
          0         0         0
    ];
 end
+
 function C=BCGWHw
   C = [
     1.0000    1.0000    1.0000
@@ -434,6 +690,7 @@ function C=BCGWHw
          0         0         0
   ]; 
 end
+
 function C=BCGWHwov
   C = [
     1.0000    1.0000    1.0000
@@ -498,6 +755,7 @@ function C=BCGWHwov
          0         0         0
    ];
 end
+
 function C = blue
   C = [
     0.02  0.25  0.50
@@ -507,6 +765,7 @@ function C = blue
     0.94  0.96  0.99
     ];
 end
+
 function C = turbo
 %TURBO   Turbo colormap.
 %   TURBO(M) returns an M-by-3 matrix containing the turbo colormap, a
@@ -768,4 +1027,8 @@ C = [
      0.50664, 0.02354, 0.00863;
      0.49321, 0.01963, 0.00955;
      0.47960, 0.01583, 0.01055];
+end
+
+function rgb = hex2rgb(hex)
+  rgb = reshape(sscanf(hex(:,2:end)','%2x'),3,[]).'/255;
 end
