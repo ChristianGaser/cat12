@@ -74,7 +74,9 @@ for i = 1:n
   switch filetype
   case 1
     [cdata{i}, mn(i), mx(i)] = loadsingle_txt(deblank(data(i,:)));
-  case {2, 3}
+  case 2
+    [cdata{i}, mn(i), mx(i)] = loadsingle(nifti(data(i,:)));
+  case 3
     [cdata{i}, mn(i), mx(i)] = loadsingle(spm_data_hdr_read(data(i,:)));
   case 4
     try
@@ -286,7 +288,12 @@ end
 function [udat, mn, mx] = loadsingle(V)
 % Load surface or volume data from file indicated by V into an array of floats.
 
-udat = spm_data_read(V);
+% use fast method for file reading for nifti files
+if isa(V,'nifti')
+  udat(:,:,:) = V.dat(:,:,:);
+else
+  udat = spm_data_read(V);
+end
 
 % remove zero background
 ind0 = find(udat == 0);

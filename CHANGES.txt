@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1921 | dahnke | 2021-12-13 14:31:22
+r1922 | gaser | 2021-12-16 18:59:54
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_conf_long.m
+M       cat_plot_histogram.m
+M       cat_stat_check_SPM.m
+M       cat_stat_check_cov.m
+
+(1) Changed: Imporved speed for nifti files in cat_stat_check_cov.m
+(2) Changed: Added option to expert mode to save both longmodels in 
+             cat_conf_long.m.
+(3) Changed: Added option to extract IQR values to CAT12 GUI.
+------------------------------------------------------------------------
+r1921 | dahnke | 2021-12-13 14:31:32 +0100 (Mon, 13 Dec 2021) | 40 lines
 
 Changed paths:
 M       Amap.c
@@ -40,6 +55,7 @@ M       compile.m
              cat_surf_create_TPM_hull_surface.               
 (6) Fixed:   Corrected missing definitions for Octave in cat_vol_qa.             
              
+
 ------------------------------------------------------------------------
 r1920 | gaser | 2021-12-13 14:01:39 +0100 (Mon, 13 Dec 2021) | 11 lines
 
