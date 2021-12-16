@@ -107,7 +107,7 @@ longmodel.tag    = 'longmodel';
 longmodel.name   = 'Longitudinal Model';
 longmodel.labels = {'Optimized for detecting small changes (i.e. plasticity/learning effects','Optimized for detecting large changes (i.e. aging/developmental effects)'};
 longmodel.values = {1 2};
-if expert && 0
+if expert
   longmodel.labels{3} = 'Save both longitudinal models'; 
   longmodel.values{3} = 3;
 end

@@ -97,7 +97,7 @@ if isfield(job,'data_vol')
       job.data_vol{i} = fullfile(pth,[nam ext]);
     end
     
-    V0 = spm_data_hdr_read(char(job.data_vol{i}));
+    V0 = nifti(char(job.data_vol{i}));
     n_subjects = n_subjects + length(V0);
       
     if i==1, H.V = V0;
@@ -152,7 +152,12 @@ else
   QM_names = char('Noise','Bias','Weighted overall image quality (IQR)');
 end
 
-pth = spm_fileparts(H.V(1).fname);
+if H.mesh_detected
+  pth = spm_fileparts(H.V(1).fname);
+else
+  pth = spm_fileparts(H.V(1).dat.fname);
+end
+
 report_folder = fullfile(spm_fileparts(pth),'report');
 % check whether report subfolder exists
 if ~exist(report_folder,'dir')
@@ -175,9 +180,14 @@ if ~xml_defined
         fname = fname(5:end-4);
 
         % and find that string in data filename
-        ind = strfind(H.V(i).fname,fname);
+        if H.mesh_detected
+          Vfname = H.V(i).fname;
+        else
+          Vfname = H.V(i).dat.fname;
+        end
+        ind = strfind(Vfname,fname);
         if ~isempty(ind)
-          [pth, prep_str] = spm_fileparts(H.V(1).fname(1:ind-1));
+          [pth, prep_str] = spm_fileparts(Vfname(1:ind-1));
           i = n_subjects;
           j = size(xml_files,1);
           break
@@ -195,8 +205,12 @@ spm_progress_bar('Init',n_subjects,'Load xml-files','subjects completed')
 
 for i=1:n_subjects
   % get basename for data files
-  [pth, data_name] = fileparts(H.V(i).fname);
-
+  if H.mesh_detected
+    [pth, data_name] = fileparts(H.V(i).fname);
+  else
+    [pth, data_name] = fileparts(H.V(i).dat.fname);
+  end
+  
   % remove ending for rigid or affine transformed files
   data_name = strrep(data_name,'_affine','');
   data_name = strrep(data_name,'_rigid','');
@@ -309,7 +323,7 @@ else
   vx =  sqrt(sum(H.V(1).mat(1:3,1:3).^2));
   Orig = H.V(1).mat\[0 0 0 1]';
 
-  if length(H.V)>1 && any(any(diff(cat(1,H.V.dim),1,1),1))
+  if length(H.V)>1 && any(any(diff(cat(1,H.V.dat.dim),1,1),1))
     error('images don''t all have same dimensions')
   end
   if max(max(max(abs(diff(cat(3,H.V.mat),1,3))))) > 1e-8
@@ -365,27 +379,26 @@ if H.mesh_detected
   clear Y
 else
   % consider image aspect ratio
-  H.pos.slice = [0.775 0.050 0.20 0.40*H.V(1).dim(2)/H.V(1).dim(1)];
+  H.pos.slice = [0.775 0.050 0.20 0.40*H.V(1).dat.dim(2)/H.V(1).dat.dim(1)];
 
-  slices = 1:sep:H.V(1).dim(3);
+  slices = 1:sep:H.V(1).dat.dim(3);
 
-  dimx = length(1:sep:H.V(1).dim(1));
-  dimy = length(1:sep:H.V(1).dim(2));
+  dimx = length(1:sep:H.V(1).dat.dim(1));
+  dimy = length(1:sep:H.V(1).dat.dim(2));
   Y = zeros(n_subjects, prod(dimx*dimy));
   H.YpY = zeros(n_subjects);
-%  MSE = zeros(n_subjects,1);
-  H.data = zeros([H.V(1).dim(1:2) n_subjects],'single');
+  H.data = zeros([H.V(1).dat.dim(1:2) n_subjects],'single');
 
   %-Start progress plot
   %-----------------------------------------------------------------------
-  spm_progress_bar('Init',H.V(1).dim(3),'Check correlation','planes completed')
+  spm_progress_bar('Init',H.V(1).dat.dim(3),'Check correlation','planes completed')
 
   for j=slices
 
     M  = spm_matrix([0 0 j 0 0 0 sep sep sep]);
 
     for i = 1:n_subjects
-      H.img = spm_slice_vol(H.V(i),M,[dimx dimy],[1 0]);
+      H.img(:,:) = H.V(i).dat(1:sep:H.V(1).dat.dim(1),1:sep:H.V(1).dat.dim(2),j);
       H.img(isnan(H.img)) = 0;
       Y(i,:) = H.img(:);
       if is_gSF
@@ -411,19 +424,17 @@ else
     % calculate residual mean square of mean adjusted Y
     Y = Y - repmat(mean(Y,1), [n_subjects 1]);
     
-    %MSE = MSE + sum(Y.*Y,2);
-
     spm_progress_bar('Set',j);  
 
   end
 
   % correct filenames for 4D data
-  if strcmp(H.V(1).fname, H.V(2).fname)
+  if strcmp(H.V(1).dat.fname, H.V(2).dat.fname)
     H.names_changed = 1;
     H.Vchanged = H.V;
     for i=1:n_subjects
-      [pth,nam,ext] = spm_fileparts(H.V(i).fname);
-      H.V(i).fname = fullfile(pth, [nam sprintf('%04d',i) ext]);
+      [pth,nam,ext] = spm_fileparts(H.V(i).dat.fname);
+      H.V(i).dat.fname = fullfile(pth, [nam sprintf('%04d',i) ext]);
     end
   end
   
@@ -457,7 +468,11 @@ fname_s   = cell(n_samples,1);
 fname_e   = cell(n_samples,1);
 
 for i=1:n_samples
-  [tmp, fname_tmp{i}] = spm_str_manip(char(H.V(H.sample == i).fname),'C');
+  if H.mesh_detected
+    [tmp, fname_tmp{i}] = spm_str_manip(char(H.V(H.sample == i).fname),'C');
+  else
+    [tmp, fname_tmp{i}] = spm_str_manip(char(H.V(H.sample == i).dat.fname),'C');
+  end
   fname_m = [fname_m; fname_tmp{i}.m];
   fname_s{i} = fname_tmp{i}.s;
   fname_e{i} = fname_tmp{i}.e;
@@ -677,7 +692,7 @@ if job.verb
 
     H.mm = uicontrol(H.figure,...
           'Units','normalized','position',H.pos.sslider,...
-          'Min',(1 - Orig(3))*vx(3),'Max',(H.V(1).dim(3) - Orig(3))*vx(3),...
+          'Min',(1 - Orig(3))*vx(3),'Max',(H.V(1).dat.dim(3) - Orig(3))*vx(3),...
           'Style','slider','HorizontalAlignment','center',...
           'callback',@update_slices_array,...
           'ToolTipString','Select slice for display',...
@@ -743,7 +758,12 @@ number = min([number 24]);
 number = min([number length(H.V)]);
   
 ind_sorted_decreased = H.ind_sorted_display(n:-1:1);
-list = char(H.V(ind_sorted_decreased).fname);
+
+if H.mesh_detected
+  list = char(H.V(ind_sorted_decreased).fname);
+else
+  list = char(H.V(ind_sorted_decreased).dat.fname);
+end
 sample = H.sample(ind_sorted_decreased);
 list2 = list(1:number,:);
 
@@ -1066,22 +1086,22 @@ Orig = P(1).mat\[0 0 0 1]';
 sl   = round(slice_mm/vx(3)+Orig(3));
 
 % if slice is outside of image use middle slice
-if (sl>P(1).dim(3)) || (sl<1)
-  sl = round(P(1).dim(3)/2);
+if (sl>P(1).dat.dim(3)) || (sl<1)
+  sl = round(P(1).dat.dim(3)/2);
 end
 
 M  = spm_matrix([0 0 sl]);
 H.data_diff = H.data;
 
 for i = 1:length(H.V)
-  H.img = single(spm_slice_vol(P(i),M,P(1).dim(1:2),[1 0]));
-  H.img(isnan(H.img)) = 0;
+  img(:,:) = single(P(i).dat(:,:,sl));
+  img(isnan(H.img)) = 0;
   
   % rescue unscaled data
-  H.data_diff(:,:,i) = H.img;
+  H.data_diff(:,:,i) = img;
 
   % scale image according to mean
-  H.data(:,:,i) = H.img/mean(H.img(H.img ~= 0));
+  H.data(:,:,i) = img/mean(img(img ~= 0));
 end
 
 % calculate individual difference to mean image
@@ -1183,7 +1203,7 @@ if H.isscatter
   % text info for textbox
   txt2 = {[],sprintf('%s',spm_file(H.filename.m{H.pos.x},'short25')),[],'Difference to Sample Mean','(red: - green: +)'};
 
-  set(H.text,'String',txt2,'FontSize',H.FS-2,'Interpreter','none');
+  set(H.text,'String',txt2,'FontSize',H.FS-2);
 
   if ~H.mesh_detected
     axes('Position',H.pos.slice);
