@@ -188,7 +188,7 @@ if check_ortho
     fprintf('-------------------------------------------\n');
     h = check_orthogonality(SPM.xX);
     
-    if nargin > 0 && isfield(job.check_SPM_cov.do_check_cov,'save')
+    if nargin > 0 && isfield(job.check_SPM_cov,'do_check_cov') && isfield(job.check_SPM_cov.do_check_cov,'save')
       %%
       if ~isempty(job.check_SPM_cov.do_check_cov.fname)
         dpi = cat_get_defaults('print.dpi'); 
