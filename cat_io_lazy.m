@@ -1,4 +1,4 @@
-function run = cat_io_rerun(files,filedates,verb)
+function run = cat_io_lazy(files,filedates,verb,force)
 %cat_io_lazy. Test if a file is newer than another file.  
 % This function is used to estimated if a file is newer than another given 
 % file or date. For instance file is the result of anther file that was 
@@ -10,6 +10,9 @@ function run = cat_io_rerun(files,filedates,verb)
 %              cell if directories or wildcards are used
 %  files    .. filenames (cellstr or char)
 %  filedat  .. filenames (cellstr or char) or datetimes or datenum
+%  verb     .. print details about the files and about the result 
+%               (default = 1)
+%  force    .. use also in non developer mode (default = 0)
 %
 % Examples: 
 %  1) Is the working directory younger than the SPM dir?
@@ -30,11 +33,12 @@ function run = cat_io_rerun(files,filedates,verb)
 % ______________________________________________________________________
 % $Id$
 
-  if ~exist('verb','var'), verb = 1; end
+  if ~exist('verb','var'), verb  = 1; end
+  if ~exist('verb','var'), force = 1; end
   
   % only use that function in developer mode because it's simply too dangerous if files
   % are not processed if already existing and parameter changed
-  if cat_get_defaults('extopts.expertgui') < 2
+  if cat_get_defaults('extopts.expertgui') < 2 && ~force 
     run = zeros(size(files));
     return
   end

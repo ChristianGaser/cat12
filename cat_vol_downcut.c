@@ -38,6 +38,7 @@
 #include "mex.h"   
 #include "math.h"
 #include "float.h"
+/* #include "matrix.h" */
 
 /*
 #ifndef isnan
@@ -177,4 +178,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		
 	}
 	/*printf("(%d,%d)",nCV,kll); */
+
+  /* clear internal variables 
+  mxDestroyArray(plhs[1]);
+  mxDestroyArray(plhs[2]);
+  */
+
 }

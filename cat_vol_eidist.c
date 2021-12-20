@@ -70,6 +70,7 @@
 
 #include "mex.h"   
 #include "math.h"
+/* #include "matrix.h" */
 #include "float.h"
 #include "limits.h"
 #include <stdio.h>
@@ -569,6 +570,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     for (int i=0;i<nL;i++) TO[i] = T[i]; 
   }
   
+  /* clear internal variables */
+  /*
+  mxDestroyArray(hlps[0]);
+  mxDestroyArray(hlps[1]);
+  mxDestroyArray(hlps[2]);
+  */
   
   if ( verb ) printf("done. \n");   
 }

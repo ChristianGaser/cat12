@@ -39,9 +39,11 @@
 
 #include "mex.h"   
 #include "math.h"
+/* #include "matrix.h" */
 #include "float.h"
 #include <stdio.h>
 #include <stdlib.h>
+
 
 #ifdef _MSC_VER
   #define FINFINITY (FLT_MAX+FLT_MAX);
@@ -230,6 +232,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     }
   }
 
+  /* clear internal variables */
+  /*
+  mxDestroyArray(plhs[1]);
+  mxDestroyArray(plhs[2]);
+   */
   
   /* set outputs and correct index values */
   if (nlhs>1) for (int i=0;i<nL;i++) IO[i]=I[i]+1;

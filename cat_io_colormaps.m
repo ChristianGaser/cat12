@@ -183,7 +183,7 @@ function [C,XML] = cat_io_colormaps(Cname,ncolors)
   
   % interpolate colormap, if colormap is categorical only use interpolation for larger number of colors
   if (size(C,1)~=ncolors && ~cmap_categorical) || (size(C,1)<ncolors && cmap_categorical)
-    ss    = (size(C,1)-1)/(ncolors)
+    ss    = (size(C,1)-1)/(ncolors);
     [X,Y] = meshgrid(1:ss:size(C,1)-ss,1:3);
     C     = interp2(1:size(C,1),1:3,C',X,Y)'; 
     XML   = cellstr([ dec2hex(round(min(255,max(0,C(:,1)*255)))), ...

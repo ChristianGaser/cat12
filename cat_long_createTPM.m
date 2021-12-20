@@ -69,7 +69,10 @@ function out = cat_long_createTPM(job)
   def.ssize        = [ 0.5  1    2    4    8    ];  % we use multipe smoothing levels to softly include also larger changes ...
   def.sweight      = [ 0.30 0.25 0.20 0.15 0.10 ];  % ... but with lower weighting 
   def.scsize       = [ 1 1 1 1 1 1 ];               % moreover we use a class specific filter size factor to suport smoother head classes
-  def.minprob      = 0.01;                          % this value could be between 0.01 and 0.1
+  def.minprob      = 0.001;                         % this value could be between 0.001 and 0.1 
+                                                    % RD20201220: plasticity with 0.001 more stable?
+                                                    %             but problems in some long datasets with the SPM background segmentation  
+                                                    %              >> see also useBrainMasking 
   def.fast         = 1;                             % CAT vs. SPM smoothing 
   def.median       = 1;                             % use median filter (values from 0 to 1) 
   def.sanlm        = 0;                             % use sanlm filter (0|1)
@@ -82,7 +85,9 @@ function out = cat_long_createTPM(job)
   def.prefixBM     = 'longbrain_'; 
   def.smoothness   = 1;                             % main smoothing factor
   def.verb         = 0;                             % be verbose
-  def.useBrainMasking = 1; 
+  def.useBrainMasking = 2;                          % 0-none, 1-brainmask, 2-brainmask+backgroundmask 
+                                                    % RD20201220: extended for further plasticity tests
+                                                    %             0-old approach (R1844)
   job = cat_io_checkinopt(job,def);
   
   
@@ -216,8 +221,9 @@ function out = cat_long_createTPM(job)
     
     % RD20211028: Keep the backround with very high probability to avoid 
     %             miss-classificaktion by other head tissue classes.
-    Ybg = cat_vol_smooth3X( Ytpms{6} > 128 ,max(1,job.smoothness/2)); 
-    
+    if job.useBrainMasking > 0
+      Ybg = cat_vol_smooth3X( Ytpms{6} > 128 ,max(1,job.smoothness/2)); 
+    end  
     
     % main smooting
     for si = 1:numel(job.ssize)
@@ -256,11 +262,23 @@ function out = cat_long_createTPM(job)
         end
 
         % use the brain mask to support a harder brain boundary
-        if job.useBrainMasking
+        if job.useBrainMasking == 2
           if ci<4
-            Ytpmts = Ytpmts .* Yb .*  (1 - Ybg); 
+            Ytpmts = Ytpmts .* max(job.minprob,Yb) .* max(job.minprob,1 - Ybg); 
           else
-            Ytpmts = Ytpmts .* (1-Yb) .*  (1 - Ybg); 
+            Ytpmts = Ytpmts .* max(job.minprob,1-Yb) .*  max(job.minprob,1 - Ybg); 
+          end
+        elseif job.useBrainMasking == 1
+          if ci<4
+            Ytpmts = Ytpmts .* max(job.minprob,Yb); 
+          else
+            Ytpmts = Ytpmts .* max(job.minprob,1-Yb); 
+          end
+        else
+          if ci<4
+            Ytpmts = Ytpmts .* Yb; 
+          else
+            Ytpmts = Ytpmts .* (1-Yb); 
           end
         end
         %Ytpmts = min(1,max(Ytpmts,job.minprob)); 
@@ -276,9 +294,17 @@ function out = cat_long_createTPM(job)
     end
     
     % final setting with minimal probability 
-    for ci=1:3,  Ytpms{ci} =  max( Ytpms{ci} .* Yb     .* (1 - Ybg), job.minprob * (1 - Ybg)); end 
-    for ci=4:5,  Ytpms{ci} =  max( Ytpms{ci} .* (1-Yb) .* (1 - Ybg), job.minprob * (1 - Ybg)); end 
-    Ytpms{6} = max(Ytpms{6},job.minprob * 6); %Ybgb - job.minprob * 5 ); 
+    if job.useBrainMasking > 0
+      % new correction with full background
+      for ci=1:3,  Ytpms{ci} =  max( Ytpms{ci} .* Yb     .* (1 - Ybg), job.minprob * (1 - Ybg)); end 
+      for ci=4:5,  Ytpms{ci} =  max( Ytpms{ci} .* (1-Yb) .* (1 - Ybg), job.minprob * (1 - Ybg)); end 
+      Ytpms{6} = max(Ytpms{6},job.minprob * 6); %Ybgb - job.minprob * 5 ); 
+    else
+      % old correction by boxed backgrounds (R1844) 
+      for ci=1:3,  Ytpms{ci} =  max( Ytpms{ci} .* (1 - Ybgb) , job.minprob); end % .* Yb ); end
+      for ci=4:5,  Ytpms{ci} =  max( Ytpms{ci} .* (1 - Ybgb) , job.minprob); end % .* (1-Yb) ); end
+      Ytpms{6} = max(Ytpms{6},job.minprob); %Ybgb - job.minprob * 5 ); 
+    end
     Ytpms = clsnorm(Ytpms);
     clear Ytpmts; 
 

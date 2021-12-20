@@ -11,6 +11,7 @@
 #include "mex.h"   
 #include "math.h"
 #include "float.h"
+/* #include "matrix.h" */
 
 #ifndef isnan
 #define isnan(a) ((a)!=(a)) 
@@ -152,4 +153,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	for (int i=0;i<nL;i++) { if (DIST[i]==-FLT_MAX) DIST[i]=0.0; }
   if (nlhs>0) for (int i=0;i<nL;i++) { DISTO[i]=DIST[i]; } 
 
+  
+  /* clear internal variables */
+  /*
+  mxDestroyArray(hlps[0]);
+  */
 }

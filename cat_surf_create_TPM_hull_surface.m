@@ -71,7 +71,7 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull)
   end
   
   % nothing to do - just return filename 
-  if ~cat_io_rerun(Ptpm,Phull), return; end
+  if ~cat_io_rerun(Ptpm,Phull,0,1), return; end
     
   
   % load SPM-TPM-structure

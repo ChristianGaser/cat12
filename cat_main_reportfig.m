@@ -1223,7 +1223,9 @@ end
   clear WMfactor0 WMfactor1; 
   
   %% change line style of TPM surf (from b-- to r--)
-  if ov_mesh && exist('Psurf','var') && ~isempty(Psurf)
+  if ov_mesh && exist('Psurf','var') && ~isempty(Psurf) && exist('st','var') && ...
+      isfield(st,'vols') && iscell(st.vols) && isfield(st.vols{1},'ax') && ... 
+      iscell(st.vols{1}.ax) && isfield(st.vols{1}.ax{1} ,'cm') 
     hM = findobj(st.vols{1}.ax{1}.cm,'Label','Mesh');
     UD = get(hM,'UserData');
     UD.style{1} = 'r--'; 
