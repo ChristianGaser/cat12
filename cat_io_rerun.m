@@ -1,15 +1,18 @@
-function run = cat_io_rerun(files,filedates,verb)
+function run = cat_io_rerun(files,filedates,verb,force)
 %cat_io_rerun(f1,fd). Test if a file f1 is newer than another file/date fd.  
 % This function is used to estimated if a file is newer than another given 
 % file or date. For instance file is the result of another file that was 
 % changed in the meantime, it has to be reprocessed. 
 %
-%  run = cat_io_rerun(files,filedates,verb)
+%  run = cat_io_rerun(files,filedates,verb,force)
 % 
 %  run      .. logical vector with the number of given files
 %              cell if directories or wildcards are used
 %  files    .. filenames (cellstr or char)
 %  filedat  .. filenames (cellstr or char) or datetimes or datenum
+%  verb     .. print details about the files and about the result 
+%               (default = 1)
+%  force    .. use also in non developer mode (default = 0)
 %
 % Examples: 
 %  1) Is the working directory younger/newer than the SPM dir?
@@ -30,12 +33,13 @@ function run = cat_io_rerun(files,filedates,verb)
 % ______________________________________________________________________
 % $Id$
   
-  if ~exist('verb','var'), verb = 1; end
+  if ~exist('verb','var'), verb  = 1; end
+  if ~exist('verb','var'), force = 0; end
   files = cellstr(files);
 
   % only use that function in developer mode because it's simply too dangerous if files
   % are not processed if already existing and parameter changed
-  if cat_get_defaults('extopts.expertgui') < 2
+  if cat_get_defaults('extopts.expertgui') < 2 && ~force 
     run = ones(size(files));
     return
   end

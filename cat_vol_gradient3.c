@@ -21,7 +21,7 @@
 
 #include "mex.h"   
 #include "math.h"
-
+#include "matrix.h"
 
 /* estimate x,y,z position of index i in an array size sx,sxy=sx*sy... */
 void ind2sub(int i,int *x,int *y, int *z, int sxy, int sy) {
@@ -131,7 +131,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         G3[i] /= GS[i]; 
       }
     }
+
   }
+  /* clear internal variables */
+  mxDestroyArray(hlps[0]);
+  mxDestroyArray(hlps[1]);
 }
 
 

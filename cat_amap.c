@@ -18,7 +18,7 @@
 #include "mex.h"
 #include "math.h"
 #include "stdio.h"
-#include "Amap.h"
+/* #include "matrix.h" */
 
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
@@ -202,5 +202,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     for (int i=0; i<nvox; i++) srco[i] = src[i] - offset;
   }
   
+  /* clear internal variables */ 
+  /*
+  mxDestroyArray(prhsi[0]);
+  mxDestroyArray(prhsi[1]);
+   */
 }
 

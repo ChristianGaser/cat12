@@ -1,5 +1,34 @@
 ------------------------------------------------------------------------
-r1922 | gaser | 2021-12-16 18:59:54
+r1923 | dahnke | 2021-12-20 17:52:22
+
+Changed paths:
+M       CHANGES.txt
+M       cat_amap.c
+M       cat_io_colormaps.m
+M       cat_io_lazy.m
+M       cat_io_rerun.m
+M       cat_long_createTPM.m
+M       cat_main_reportfig.m
+M       cat_surf_create_TPM_hull_surface.m
+M       cat_vbdist.c
+M       cat_vol_downcut.c
+M       cat_vol_eidist.c
+M       cat_vol_gradient3.c
+M       cat_vol_laplace3.c
+M       cat_vol_laplace3R.c
+M       cat_vol_pbtp.c
+M       cat_vol_simgrow.c
+
+(1) Fixed:   Prepared to manually free the memory in the c-functions of larger 
+             matrixes (currently commented). 
+(2) Changed: Refined settings in cat_long_createTPM and reset minimum class 
+             probability for further tests.   
+(3) Changed: Extended cat_io_lazy and cat_io_rerun by a force option to use this 
+             function in special save cases to avoid reprocessing of some files
+             even in normal user modes, e.g. in cat_surf_create_TPM_hull_surface.             
+             
+------------------------------------------------------------------------
+r1922 | gaser | 2021-12-16 19:00:43 +0100 (Thu, 16 Dec 2021) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +42,7 @@ M       cat_stat_check_cov.m
 (2) Changed: Added option to expert mode to save both longmodels in 
              cat_conf_long.m.
 (3) Changed: Added option to extract IQR values to CAT12 GUI.
+
 ------------------------------------------------------------------------
 r1921 | dahnke | 2021-12-13 14:31:32 +0100 (Mon, 13 Dec 2021) | 40 lines
 
