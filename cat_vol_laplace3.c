@@ -27,6 +27,7 @@
 
 #include "mex.h"   
 #include "math.h"
+/* #include "matrix.h" */
 
 #ifdef _MSC_VER
   #define FINFINITY (FLT_MAX+FLT_MAX);
@@ -146,7 +147,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
        Lt=L1; L1=L2; L2=Lt;
        update L1 */
    
- }
+  }
+  
+  /* clear internal variables */
+  /*
+  mxDestroyArray(hlps[0]);
+  mxDestroyArray(hlps[1]);
+  */
 }
 
 

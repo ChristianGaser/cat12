@@ -31,6 +31,7 @@
 #include "mex.h"   
 #include "math.h"
 #include <stdlib.h>
+/* #include "matrix.h" */
 
 struct opt_type {
   int   CSFD;                         /* use CSFD */
@@ -251,6 +252,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     float        *RPMO  = (float *)mxGetPr(plhs[1]);
     for (int i=0;i<nL;i++) RPMO[i] = RPM[i]; 
   }
+  
+  /* clear internal variables */
+  /*
+  mxDestroyArray(hlps[0]);
+   */
 }
 
 
