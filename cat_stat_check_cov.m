@@ -105,6 +105,9 @@ if isfield(job,'data_vol')
 
     H.sample = [H.sample, i*ones(1,length(V0))];
   end
+  
+  % we need that field to be comparable to V of mesh-structure
+  H.fname = cellstr({H.V.dat.fname}'); 
   sep = job.gap;
 else
   H.mesh_detected = 1;
@@ -119,6 +122,7 @@ else
     else,    H.V = [H.V; V0]; end
     H.sample = [H.sample, i*ones(1,size(job.data_surf{i},1))];
   end
+  H.fname = cellstr({H.V.fname}'); 
 end
     
 if ~isempty(job.c)
@@ -152,13 +156,9 @@ else
   QM_names = char('Noise','Bias','Weighted overall image quality (IQR)');
 end
 
-if H.mesh_detected
-  pth = spm_fileparts(H.V(1).fname);
-else
-  pth = spm_fileparts(H.V(1).dat.fname);
-end
-
+pth = spm_fileparts(H.fname{1});
 report_folder = fullfile(spm_fileparts(pth),'report');
+
 % check whether report subfolder exists
 if ~exist(report_folder,'dir')
   report_folder = pth;
@@ -180,11 +180,7 @@ if ~xml_defined
         fname = fname(5:end-4);
 
         % and find that string in data filename
-        if H.mesh_detected
-          Vfname = H.V(i).fname;
-        else
-          Vfname = H.V(i).dat.fname;
-        end
+        Vfname = H.fname{i};
         ind = strfind(Vfname,fname);
         if ~isempty(ind)
           [pth, prep_str] = spm_fileparts(Vfname(1:ind-1));
@@ -205,11 +201,7 @@ spm_progress_bar('Init',n_subjects,'Load xml-files','subjects completed')
 
 for i=1:n_subjects
   % get basename for data files
-  if H.mesh_detected
-    [pth, data_name] = fileparts(H.V(i).fname);
-  else
-    [pth, data_name] = fileparts(H.V(i).dat.fname);
-  end
+  [pth, data_name] = fileparts(H.fname{i});
   
   % remove ending for rigid or affine transformed files
   data_name = strrep(data_name,'_affine','');
@@ -240,7 +232,7 @@ for i=1:n_subjects
 
     % check for filenames
     if isempty(strfind(data_name,xml_name))
-      fprintf('Skip use of xml-files for quality measures because of deviating subject names:\n%s vs. %s\n',H.V(i).fname,xml_files(i,:));
+      fprintf('Skip use of xml-files for quality measures because of deviating subject names:\n%s vs. %s\n',H.fname{i},xml_files(i,:));
       H.isxml = 0;
       break
     end
@@ -258,7 +250,7 @@ for i=1:n_subjects
   end
 
   if ~isfield(xml,'qualityratings') && ~isfield(xml,'QAM')
-    fprintf('Quality rating is not saved for %s. Report file %s is incomplete.\nPlease repeat preprocessing amd check for potential errors in the ''err'' folder.\n',H.V(i).fname,xml_files(i,:));  
+    fprintf('Quality rating is not saved for %s. Report file %s is incomplete.\nPlease repeat preprocessing amd check for potential errors in the ''err'' folder.\n',H.fname{i},xml_files(i,:));  
     H.isxml = 0;
     break
   end
@@ -299,8 +291,6 @@ if H.mesh_detected && all(isnan(QM(:,4))) && all(isnan(QM(:,5)))
   QM = QM(:,1:3);
   QM_names = QM_names(1:3,:);
 end
-
-%[pth,nam] = spm_fileparts(H.V(1).fname);
 
 if H.mesh_detected
   % load surface texture data
@@ -413,7 +403,7 @@ else
     if ~isempty(G) 
       [ind_inf,tmp] = find(isinf(G) | isnan(G));
       if ~isempty(ind_inf)
-        fprintf('Nuisance parameter for %s is Inf or NaN.\n',H.V(ind_inf).fname);
+        fprintf('Nuisance parameter for %s is Inf or NaN.\n',H.fname{ind_inf});
         return
       end
       Ymean = repmat(mean(Y), [n_subjects 1]);
@@ -429,12 +419,12 @@ else
   end
 
   % correct filenames for 4D data
-  if strcmp(H.V(1).dat.fname, H.V(2).dat.fname)
+  if strcmp(H.fname{1}, H.fname{2})
     H.names_changed = 1;
     H.Vchanged = H.V;
     for i=1:n_subjects
-      [pth,nam,ext] = spm_fileparts(H.V(i).dat.fname);
-      H.V(i).dat.fname = fullfile(pth, [nam sprintf('%04d',i) ext]);
+      [pth,nam,ext] = spm_fileparts(H.fname{i});
+      H.fname{i} = fullfile(pth, [nam sprintf('%04d',i) ext]);
     end
   end
   
@@ -468,11 +458,7 @@ fname_s   = cell(n_samples,1);
 fname_e   = cell(n_samples,1);
 
 for i=1:n_samples
-  if H.mesh_detected
-    [tmp, fname_tmp{i}] = spm_str_manip(char(H.V(H.sample == i).fname),'C');
-  else
-    [tmp, fname_tmp{i}] = spm_str_manip(char(H.V(H.sample == i).dat.fname),'C');
-  end
+  [tmp, fname_tmp{i}] = spm_str_manip(char(H.fname{H.sample == i}),'C');
   fname_m = [fname_m; fname_tmp{i}.m];
   fname_s{i} = fname_tmp{i}.s;
   fname_e{i} = fname_tmp{i}.e;
@@ -539,14 +525,14 @@ if ~isempty(n_thresholded) && job.verb
   fprintf('\nThese data have a mean correlation below 2 standard deviations.\n');
   fprintf('This does not necessarily mean that you have to exclude these data. However, these data have to be carefully checked:\n');
   for i=n_thresholded:n_subjects
-    fprintf('%s: %3.3f\n',H.V(H.ind_sorted(i)).fname,H.mean_cov_sorted(i));
+    fprintf('%s: %3.3f\n',H.fname{H.ind_sorted(i)},H.mean_cov_sorted(i));
   end
 end
 
 if nargout>0
-  varargout{1} = struct('table',{[cellstr([{H.V.fname}]'),num2cell(H.mean_cov)]},...
+  varargout{1} = struct('table',{[H.fname,num2cell(H.mean_cov)]},...
                         'covmat',H.YpY,...
-                        'sorttable',{[cellstr([{H.V(H.ind_sorted).fname}]'),num2cell(H.mean_cov_sorted)]},...
+                        'sorttable',{[H.fname(H.ind_sorted),num2cell(H.mean_cov_sorted)]},...
                         'sortcovmat',H.YpYsorted, ...
                         'cov',H.mean_cov,...
                         'threshold_cov',threshold_cov);
@@ -759,11 +745,7 @@ number = min([number length(H.V)]);
   
 ind_sorted_decreased = H.ind_sorted_display(n:-1:1);
 
-if H.mesh_detected
-  list = char(H.V(ind_sorted_decreased).fname);
-else
-  list = char(H.V(ind_sorted_decreased).dat.fname);
-end
+list = char(H.fname{ind_sorted_decreased});
 sample = H.sample(ind_sorted_decreased);
 list2 = list(1:number,:);
 

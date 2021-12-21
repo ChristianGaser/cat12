@@ -43,6 +43,7 @@ function run = cat_io_rerun(files,filedates,verb,force)
     run = ones(size(files));
     return
   end
+  
   if verb
     fprintf('\n'); 
   end
