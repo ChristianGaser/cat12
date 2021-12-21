@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1924 | dahnke | 2021-12-21 16:23:53
+r1925 | dahnke | 2021-12-21 16:57:02
+
+Changed paths:
+M       CHANGES.txt
+M       cat_amap.c
+M       cat_io_lazy.m
+M       cat_io_rerun.m
+M       cat_vol_gradient3.c
+
+(1) Fixed:   Corrected stupid bugs in cat_amap.c, cat_vol_gradient3.c,
+             cat_io_rerun and cat_io_lazy. 
+------------------------------------------------------------------------
+r1924 | dahnke | 2021-12-21 16:25:44 +0100 (Tue, 21 Dec 2021) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +21,7 @@ M       cat_vol_median3.m
 (1) Fixed:   Corrected severe bug in cat_vol_median3.
 (2) New:     Extended cat_vol_median3 to replace local NANs/INFs
              if the neighbors and mask allow it.
+
 
 ------------------------------------------------------------------------
 r1923 | dahnke | 2021-12-20 17:53:15 +0100 (Mon, 20 Dec 2021) | 27 lines

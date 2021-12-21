@@ -33,8 +33,8 @@ function run = cat_io_lazy(files,filedates,verb,force)
 % ______________________________________________________________________
 % $Id$
 
-  if ~exist('verb','var'), verb  = 1; end
-  if ~exist('verb','var'), force = 1; end
+  if ~exist('verb','var'),  verb  = 1; end
+  if ~exist('force','var'), force = 1; end
   
   % only use that function in developer mode because it's simply too dangerous if files
   % are not processed if already existing and parameter changed
