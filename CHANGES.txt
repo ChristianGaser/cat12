@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1923 | dahnke | 2021-12-20 17:52:22
+r1924 | dahnke | 2021-12-21 16:23:53
+
+Changed paths:
+M       CHANGES.txt
+M       cat_vol_median3.c
+M       cat_vol_median3.m
+
+(1) Fixed:   Corrected severe bug in cat_vol_median3.
+(2) New:     Extended cat_vol_median3 to replace local NANs/INFs
+             if the neighbors and mask allow it.
+
+------------------------------------------------------------------------
+r1923 | dahnke | 2021-12-20 17:53:15 +0100 (Mon, 20 Dec 2021) | 27 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -27,6 +39,7 @@ M       cat_vol_simgrow.c
              function in special save cases to avoid reprocessing of some files
              even in normal user modes, e.g. in cat_surf_create_TPM_hull_surface.             
              
+
 ------------------------------------------------------------------------
 r1922 | gaser | 2021-12-16 19:00:43 +0100 (Thu, 16 Dec 2021) | 13 lines
 
