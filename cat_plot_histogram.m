@@ -22,7 +22,7 @@ function out = cat_plot_histogram(data,opt)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
-% $Id: cat_plot_histogram.m 1904 2021-11-02 13:58:07Z gaser $
+% $Id$
 
 % default parameter
 if ~exist('opt','var'), opt = struct(''); end

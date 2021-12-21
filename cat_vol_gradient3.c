@@ -132,12 +132,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       }
     }
 
+    /* clear internal variables */
+    /* mxDestroyArray(hlps[0]); */
   }
-  /* clear internal variables */
-  /*
-  mxDestroyArray(hlps[0]);
-  mxDestroyArray(hlps[1]);
-   */
 }
 
 

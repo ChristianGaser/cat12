@@ -205,5 +205,6 @@ archive:
 # run check pipeline
 check_pipeline: update install
 	-@echo Check pipeline
-	-@./check_pipeline.sh -d /Volumes/UltraMax/check_pipeline/ -s ~/spm/spm12 -bg 8 -f /Volumes/UltraMax/check_pipeline/check_pipeline_files.txt
+	-@cd /Volumes/UltraMax/check_pipeline/
+	-@~/matlab/cat12/check_pipeline.sh -d /Volumes/UltraMax/check_pipeline/ -s ~/spm/spm12 -bg 8 -f /Volumes/UltraMax/check_pipeline/check_pipeline_files.txt -l /Volumes/UltraMax/check_pipeline/check_pipeline_files_long.txt
 	-@echo Please finally call post-processing with the resp. pid: check_pipeline.sh -p pid
