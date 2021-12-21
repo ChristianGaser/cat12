@@ -18,6 +18,7 @@
 #include "mex.h"
 #include "math.h"
 #include "stdio.h"
+#include "Amap.h"
 /* #include "matrix.h" */
 
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )

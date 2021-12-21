@@ -33,8 +33,8 @@ function run = cat_io_rerun(files,filedates,verb,force)
 % ______________________________________________________________________
 % $Id$
   
-  if ~exist('verb','var'), verb  = 1; end
-  if ~exist('verb','var'), force = 0; end
+  if ~exist('verb','var'),  verb  = 1; end
+  if ~exist('force','var'), force = 0; end
   files = cellstr(files);
 
   % only use that function in developer mode because it's simply too dangerous if files
