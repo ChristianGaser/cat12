@@ -856,6 +856,27 @@ function job = update_job(job)
     job.opts.biasfwhm	= min( inf , max( 30 , 30 + 60*(1-job.opts.biasstr) ));  
   end
   
+  % RD20211224:  Strong bias correction in case of long TPMs and long BC.
+  % In case of individual TPMs we should force strong correction. Although
+  % it further adapation of by another bias correction parameter would be
+  % possible, I think that simple fixed values are the better solution. 
+  % >> seems not be realy important and could be tested in the next release
+  if isfield(job,'useprior') && ~isempty(job.useprior) && job.extopts.new_release
+    cat_io_cprintf('blue','Addapt bias correction for longitudinal TPM!\n'); 
+    job.opts.biasacc  = 1;
+    job.opts.biasstr  = 1; 
+    job.opts.biasreg	= 1e-06;
+    job.opts.biasfwhm	= 30; 
+    %{
+      % RD20220103: Further optimisation? > Slow and no clear improvement 
+      % in single test cases (ADNI 0559 with 1.5 and 3.0T scans)
+      job.opts = rmfield(job.opts,'accstr');
+      job.opts = rmfield(job.opts,'acc');
+      job.opts.samp     = 1.5; 
+      job.opts.tol      = 1e-8;
+    %}
+  end
+  
   % SPM preprocessing accuracy
   if ~isfield(job.opts,'tol')
     job.opts.tol = cat_get_defaults('opts.tol');

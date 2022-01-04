@@ -45,7 +45,8 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
    %for z=1:d(3)
    %   YbA(:,:,z) = spm_sample_vol(Vb,double(Yy(:,:,z,1)),double(Yy(:,:,z,2)),double(Yy(:,:,z,3)),1); 
    % end
-    if round(max(YbA(:))/Vb.pinfo(1)), YbA=YbA>0.1*Vb.pinfo(1); else, YbA=YbA>0.1; end
+    if (isfield(job,'useprior') && ~isempty(job.useprior) ), bth = 0.5; else, bth = 0.1; end
+    if round(max(YbA(:))/Vb.pinfo(1)), YbA=YbA>bth*Vb.pinfo(1); else, YbA=YbA>bth; end
     % add some distance around brainmask (important for bias!)
     YbA = YbA | cat_vol_morph(YbA & sum(P(:,:,:,1:2),4)>4 ,'dd',2.4,vx_vol);
 
@@ -290,10 +291,40 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
       else
         % otherwise it would be possible to use the individual TPM 
         % however, the TPM is more smoothed and is therefore only second choice  
+        cat_io_cpirntf('warn','Cannot find p0avg use TPM for brainmask: \n  %s\n',Pavgp0);
         Yb  = YbA > 0.5;
         clear YbA
       end
-      Ybb = cat_vol_ctype(cat_vol_smooth3X(Yb,2)*256); 
+      Ybb = cat_vol_ctype(cat_vol_smooth3X(Yb,0.5)*256); 
+      
+      %% correct tissues
+      %  RD20221224: Only the brainmask wasn't enough and we need to cleanup 
+      %              the segmentation also here (only for long pipeline)
+      % move brain tissue to head tissues or vice versa
+      for ti = 1:3
+        if ti == 1 % GM with soft bounary to reduce meninges
+          Ynbm = cat_vol_ctype( single(P(:,:,:,ti)) .* (1 - max(0,2 * smooth3(Yb) - 1) ) ); 
+          Ybm  = cat_vol_ctype( single(P(:,:,:,5))  .* (    max(0,2 * smooth3(Yb) - 1) ) ); 
+        elseif ti == 2 % WM with very soft boundary because we exptect no WM close to the skull
+          Ynbm = cat_vol_ctype( single(P(:,:,:,ti)) .* (1 - max(0,2 * single(Ybb)/255 - 1) ) ); 
+          Ybm  = cat_vol_ctype( single(P(:,:,:,5))  .* (    max(0,2 * single(Ybb)/255 - 1) ) ); 
+        else % CSF with hard boundary
+          Ynbm = cat_vol_ctype( single(P(:,:,:,ti)) .* (1 - Yb) ); 
+          Ybm  = cat_vol_ctype( single(P(:,:,:,5))  .* (    Yb) ); 
+        end
+        P(:,:,:,ti) = P(:,:,:,ti) - Ynbm + Ybm; 
+        P(:,:,:,5)  = P(:,:,:,5)  + Ynbm - Ybm; 
+        clear Ynbm Ybm;
+      end
+      % some extra GM cleanup for meninges
+      Yngm = P(:,:,:,1) .* uint8( Ybb<255 & (P(:,:,:,1)>64) & (smooth3( single(P(:,:,:,1)>64) )<0.5) );
+      P(:,:,:,1) = P(:,:,:,1) - Yngm; P(:,:,:,5) = P(:,:,:,5) + Yngm; %if ~debug, clear Yngm; end
+      % some further hard GM cleanup ? 
+      %{
+      Yp0avg = spm_read_vols(spm_vol(Pavgp0));
+      Yngm = P(:,:,:,1) .* uint8( cat_vol_morph( Yp0avg < 1.75 , 'de' , 3, vx_vol) & Yp0yvg>0 );
+      P(:,:,:,1) = P(:,:,:,1) - Yngm; P(:,:,:,5) = P(:,:,:,5) + Yngm; %if ~debug, clear Yngm; end
+      %}
     elseif postmortem
       % already done 
     elseif size(P,4)==4 || size(P,4)==3 % skull-stripped
@@ -381,7 +412,10 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
 
       % estimate error and do correction 
       rmse = @(x,y) mean( (x(:) - y(:)).^2 ).^0.5; 
-      if rmse(Ybg,single(P(:,:,:,end))/255) > 0.3 % just some threshold 
+      % the TPM BG may be smaller due to the limited overlap and we need a
+      % higher threshold to avoid unnecessary background corrections
+      TPisSmaller = ( sum(sum(sum(single(P(:,:,:,end))/255))) - sum(Ybg(:))) < 0;  
+      if rmse(Ybg,single(P(:,:,:,end))/255) > 0.3 + 0.2*TPisSmaller % just some threshold (RD20220103: adjusted by TPisSmaller)
         % setup new background
         Ynbg = Ybg>0.5 | P(:,:,:,end)>128;
         Ynbg = cat_vol_morph(Ynbg,'dc',5,vx_vol); 
@@ -405,7 +439,9 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
   
   %%
     stime2 = cat_io_cmd('  Update probability maps','g5','',job.extopts.verb-1,stime2);
-    if all(sign(diff(T3th))>0)
+    if ~(any(sign(diff(T3th))==-1)) && ...
+       ~( (isfield(job,'useprior') && ~isempty(job.useprior) ) && ... % no single longitudinal timepoint
+        (isfield(res,'ppe') && ~res.ppe.affreg.highBG) )
       %% Update probability maps
       % background vs. head - important for noisy backgrounds such as in MT weighting
       if size(P,4)==4 || size(P,4)==3 % skull-stripped
