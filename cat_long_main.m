@@ -138,12 +138,12 @@ matlabbatch{mbi}.spm.tools.cat.estwrite.output.warps        = [0 0];
 % segmenation are relatively small. 
 if longTPM
   mbi = mbi + 1; mb_tpm = mbi;
-  matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.files(1) = cfg_dep('CAT12: Segmentation (current release): rp1 affine Image',...
+  matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.files(1)  = cfg_dep('CAT12: Segmentation (current release): rp1 affine Image',...
                                                                       substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','tiss', '()',{1}, '.','rpa', '()',{':'}));
-  matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.fstrength = 3;
-  matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.writeBM = 0;
-  matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.verb = 1;
+  matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.fstrength = 2; % smoothness of the individual TPM (0 very hard for plasticity, .., 4 very smooth for long-time aging)
+  matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.writeBM   = 0;
+  matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.verb      = 1;
 end
 
 

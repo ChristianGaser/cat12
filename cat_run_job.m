@@ -799,37 +799,45 @@ end
           % Masking causes general problems in SPM US with Christian's 
           % thickness phantom (brain PVE voxels were aligned to class 5) 
           % that required further correction in cat_main_updateSPM. 
-          if exist('Ybg','var') && job.extopts.setCOM ~= 120
-            if job.extopts.setCOM > 120
-              Ymsk          = cat_vol_morph( ~Ybg ,'dd',15,vx_vol) & ...        % remove voxels far from head
-                              ~( Ybg & rand(size(Ybg))>0.5) & ...               % have a noisy corona
-                              ~( cat_vol_grad( Ysrc , vx_vol)==0  &  Ysrc==0 ); % remove voxel that are 0 and have no gradient
-              Ybge          = cat_vol_morph(Ybg,'de',10,vx_vol) | ...           % define background for cat_main_updateSPM
-                              ( cat_vol_grad( Ysrc , vx_vol)==0  &  Ysrc==0 );  % RD202006: set value arbitrary to 10 mm 
+          if exist('Ybg','var') && job.extopts.setCOM ~= 120 % case 120 no msk at all
+            if ~isempty(job.useprior) || job.extopts.new_release 
+              if job.extopts.setCOM == 122
+                % RD202006 background corona to have save background values
+                Ymsk      = cat_vol_morph(Ybg,'de',10,vx_vol) | ...           % define background for cat_main_updateSPM
+                            ( cat_vol_grad( Ysrc , vx_vol)==0  &  Ysrc==0 );  % RD202006: set value arbitrary to 10 mm 
+              else
+                % RD202006 background random msk to have save background values
+                Ymsk      = cat_vol_morph( ~Ybg ,'dd',15,vx_vol) & ...        % remove voxels far from head
+                            ~( Ybg & rand(size(Ybg))>0.5) & ...               % have a noisy corona
+                            ~( cat_vol_grad( Ysrc , vx_vol)==0  &  Ysrc==0 ); % remove voxel that are 0 and have no gradient
+              end
+            else
+              % RD20220103: old cross-sectional setting with small correction for own TPMs
+              if isSPMtpm
+                Ymsk      = ~Ybg; % old default - mask background
+              else
+                cat_io_addwarning([mfilename ':noSPMTPM-noBGmasking'],...
+                  'Different TPM detected - deactivated background masking!',1,[1 2]);  
+                Ymsk      = []; % new special case for other TPMs
+              end
             end
-            obj.msk       = VF;
-            obj.msk.pinfo = repmat([255;0],1,size(Ybg,3));
-            obj.msk.dt    = [spm_type('uint8') spm_platform('bigend')];
-            switch job.extopts.setCOM
-              % case 120 no msk at all
-              case 122,  obj.msk.dat = uint8( Ybge );  % RD202006 background corona to have save background values
-              case 123,  obj.msk.dat = uint8( Ymsk );  % RD202006 background random msk to have save background values
-              otherwise, obj.msk.dat = uint8( ~Ybg );  % ~?case 121
+            if ~isempty( Ymsk )
+              obj.msk       = VF; 
+              obj.msk.pinfo = repmat([255;0],1,size(Ybg,3));
+              obj.msk.dt    = [spm_type('uint8') spm_platform('bigend')];
+              obj.msk.dat   = uint8( Ymsk ); 
+              obj.msk       = spm_smoothto8bit(obj.msk,0.1); 
             end
-            obj.msk       = spm_smoothto8bit(obj.msk,0); 
-          % else??? mask not required or zero mask?   
+            clear Ymsk;
           end            
-          %clear Ysrc; 
+          clear Ysrc; 
       else
         % defintion of basic variables in case of no APP 
           obj.image.dat(:,:,:)  = single(obj.image.private.dat(:,:,:));
           obj.image.dt          = [spm_type('FLOAT32') spm_platform('bigend')];
           obj.image.pinfo       = repmat([255;0],1,size(obj.image.dat,3));
-          obj.msk               = VF; 
-          obj.msk.pinfo         = repmat([255;0],1,size(Ybg,3));
-          obj.msk.dt            = [spm_type('uint8') spm_platform('bigend')];
-          obj.msk.dat           = zeros(size(obj.image.dat),'uint8');  
-          obj.msk               = spm_smoothto8bit(obj.msk,0.1); 
+          
+        % no masking !
       end
 
       
@@ -1137,6 +1145,20 @@ end
           [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});
           delete(fullfile(pp,[ff,ee]));
         end
+      end
+      if job.extopts.expertgui>1
+        %% print the tissue peaks 
+        mnstr = sprintf('\n  SPM-US:  ll=%0.6f, Tissue-peaks: ',res.ll);
+        for lkpi = 1:numel(res.lkp)
+          if lkpi==1 || ( res.lkp(lkpi) ~= res.lkp(lkpi-1) )
+            mnstr = sprintf('%s  (%d) ',mnstr,res.lkp(lkpi)); 
+          end
+          if lkpi>1 &&( res.lkp(lkpi) == res.lkp(lkpi-1) ), mnstr = sprintf('%s, ',mnstr); end
+          if sum(res.lkp == res.lkp(lkpi))>1 && res.mg(lkpi)==max( res.mg( res.lkp == res.lkp(lkpi) )), mnstr = sprintf('%s*',mnstr); end
+          mnstr = sprintf('%s%0.2f',mnstr,res.mn( lkpi )); 
+        end
+        cat_io_cprintf('blue',sprintf('%s\n',mnstr)); 
+        cat_io_cmd(' ',' ');
       end
       fprintf('%5.0fs\n',etime(clock,stime));
       clear Ysrc; 

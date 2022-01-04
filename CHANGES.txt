@@ -1,5 +1,39 @@
 ------------------------------------------------------------------------
-r1926 | gaser | 2021-12-21 17:10:47
+r1927 | dahnke | 2022-01-04 11:24:53
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_lazy.m
+M       cat_io_rerun.m
+M       cat_long_main.m
+M       cat_main_reportcmd.m
+M       cat_main_reportfig.m
+M       cat_main_updateSPM.m
+M       cat_main_updateSPM1639.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_job1639.m
+
+(1) Changed:  cat_run_lazy/rerun are now only verbose if no reprocessing is used.
+(2) Changed:  Adapted longTPM filter strength parameter in cat_long_main
+              and fixed strengthrong biased correction in single time points in  
+              cat_run to have the full benefit of the individual TPM. 
+(3) Fixed:    Small correction in cat_main_reportcmd. 
+(4) Changed:  Optimized background of the segmentation map in the CAT report in 
+              cat_main_reportfig. 
+(5) Fixed:    Multiple corrections in cat_main_updateSPM[1639] to handle the 
+              brainmasking in longitudinal processing.               
+(6) Changed:  Prepared stronger bias correction in longitudinal processing in 
+              cat_run (new_release).              
+(7) Fixed:    Corrected handling of background in longitudinal cases in 
+              cat_run_job[1639] to avoid problems due to the harder background
+              definition that causes problems with the unified segmentation 
+              that was not able to get the real background values.            
+(8) Changed:  Optimized command line output of SPM tissue peaks in developer  
+              mode in cat_run_job[1639]. 
+
+------------------------------------------------------------------------
+r1926 | gaser | 2021-12-21 17:10:56 +0100 (Tue, 21 Dec 2021) | 38 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -38,6 +72,7 @@ M       internal/cat_vol_cMRegularizarNLM3D.mexmaci64
 (3) Fixed:   Corrected deletion of hlps in cat_vol_gradient3.c.
 (4) Fixed:   Added missing Amap.h again to cat_amap.c.
 (5) Fixed:   Corrected check for missing "force" variable in cat_io_rerun.m.
+
 ------------------------------------------------------------------------
 r1925 | dahnke | 2021-12-21 16:57:11 +0100 (Tue, 21 Dec 2021) | 10 lines
 

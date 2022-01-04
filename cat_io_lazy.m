@@ -11,7 +11,7 @@ function run = cat_io_lazy(files,filedates,verb,force)
 %  files    .. filenames (cellstr or char)
 %  filedat  .. filenames (cellstr or char) or datetimes or datenum
 %  verb     .. print details about the files and about the result 
-%               (default = 1)
+%               (default = 0.5 only display if reprocessing is NOT reqired)
 %  force    .. use also in non developer mode (default = 0)
 %
 % Examples: 
@@ -33,7 +33,7 @@ function run = cat_io_lazy(files,filedates,verb,force)
 % ______________________________________________________________________
 % $Id$
 
-  if ~exist('verb','var'),  verb  = 1; end
+  if ~exist('verb','var'),  verb  = 0.5; end
   if ~exist('force','var'), force = 1; end
   
   % only use that function in developer mode because it's simply too dangerous if files
@@ -41,9 +41,6 @@ function run = cat_io_lazy(files,filedates,verb,force)
   if cat_get_defaults('extopts.expertgui') < 2 && ~force 
     run = zeros(size(files));
     return
-  end
-  if verb
-    fprintf('\n'); 
   end
   
   files = cellstr(files);
@@ -85,21 +82,24 @@ function run = cat_io_lazy(files,filedates,verb,force)
           run(fi) = fdata.datenum < datenum( filedates(fi,:) );
         end
       end
-      if verb
+      % be verbose only if verb>=1 or if no reprocessing is required  
+      if verb >= 1 || (verb && ~( (iscell(run) && any(cell2mat(run))) || ( ismatrix(run) && any(run) ) ))
+        fprintf('\n'); 
         if numel(files)==1
-          fprintf(' Input file 1: %50s: %s\n',spm_str_manip( fdata.name , 'a50'),datestr(fdata.datenum) ); 
-          fprintf(' Input file 2: %50s: %s\n',spm_str_manip( fdata2.name, 'a50'),datestr(fdata2.datenum));
+          fprintf('\n Input file 1: %50s: %s\n',spm_str_manip( fdata.name , 'a50'),datestr(fdata.datenum) ); 
+          fprintf('\n Input file 2: %50s: %s\n',spm_str_manip( fdata2.name, 'a50'),datestr(fdata2.datenum));
         else
           if fi == 1
-            fprintf(' Input file 1:     %50s: %s\n',   spm_str_manip( fdata.name ,'a50'),datestr(fdata.datenum) ); 
+            fprintf('\n Input file 1:     %50s: %s\n',   spm_str_manip( fdata.name ,'a50'),datestr(fdata.datenum) ); 
           end
-          fprintf(' Input file 2-%02d: %50s: %s\n',fi,spm_str_manip( fdata2.name,'a50'),datestr(fdata2.datenum));
+          fprintf('\n Input file 2-%02d: %50s: %s\n',fi,spm_str_manip( fdata2.name,'a50'),datestr(fdata2.datenum));
         end
       end
     end
   end
-  if verb 
-    if (iscell(run) && any(cell2mat(run))) || ( ismatrix(run) && any(run) )
+  % be verbose only if verb>=1 or if no reprocessing is required  
+  if verb >= 1 || ~( (iscell(run) && any(cell2mat(run))) || ( ismatrix(run) && any(run) ) ) 
+    if verb >= 1 && ( (iscell(run) && any(cell2mat(run))) || ( ismatrix(run) && any(run) ) )
       if all(exf)
         cat_io_cprintf([0.5 0.0 0.0],' Reprocessing is required. \n'); 
       elseif all(exf==0) && numel(files)>1
@@ -107,7 +107,7 @@ function run = cat_io_lazy(files,filedates,verb,force)
       else
         cat_io_cprintf([0.5 0.0 0.0],' Processing is required. \n');
       end
-    else
+    elseif verb 
       cat_io_cprintf([0.0 0.5 0.0],' Reprocessing is NOT required. \n'); 
     end
   end
