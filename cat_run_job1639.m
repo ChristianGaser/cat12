@@ -771,7 +771,6 @@ function cat_run_job1639(job,tpm,subj)
             Ymc = Ym * abs(diff([bth,WMth])) + bth; 
             clear bth
           end
-          clear Ysrc; 
           
           % set variable and write image
           obj.image.dat(:,:,:)         = Ymc;  
@@ -782,14 +781,40 @@ function cat_run_job1639(job,tpm,subj)
           obj.image.pinfo = repmat([1;0],1,size(Ymc,3));
 
           % mask the background
+          % RD20211229: Masking of unwanted regions in differnt cases.
+          % In standard cross-secitonal processing the background of the 
+          % SPM TPM is quite smooth and a hard masking works (pre R1900). 
+          % However, in longitudinal TPMs with its hard background setting 
+          % the SPM US have enough values. Hence, we have to include some 
+          % (random) values close (10-15 mm) to the brain ("corona").  
+          % It would be also possible to test the smoothness of the TPM 
+          % backgroud class to avoid problems with "own" hard TPMs.
+          isSPMtpm = strcmp(job.opts.tpm , fullfile(spm('dir'),'tpm','TPM.nii') ) && strcmp(job.extopts.species,'human'); 
           if exist('Ybg','var') && job.extopts.setCOM ~= 120 % setCOM == 120 - useCOM,useMaffreg,noMask
-            obj.msk       = VF; 
-            obj.msk.pinfo = repmat([255;0],1,size(Ybg,3));
-            obj.msk.dt    = [spm_type('uint8') spm_platform('bigend')];
-            obj.msk.dat   = uint8(~Ybg); 
-            obj.msk       = spm_smoothto8bit(obj.msk,0.1); 
-          end            
-          clear Ysrc; 
+            if ~isempty(job.useprior) || job.extopts.new_release
+              % new minimal masking approach in longitidunal processing to avoid backgound peak erros and for future releases 
+              Ymsk        = cat_vol_morph( ~Ybg ,'dd',10,vx_vol) & ...          % remove voxels far from head
+                              ~( Ybg & rand(size(Ybg))>0.5) & ...               % have a noisy corona
+                              ~( cat_vol_grad( Ysrc , vx_vol)==0  &  Ysrc==0 ); % remove voxel that are 0 and have no gradient
+            else
+              % RD20220103: old cross-sectional setting with small correction for own TPMs
+              if isSPMtpm
+                Ymsk      = ~Ybg; % old default - mask background
+              else
+                cat_io_addwarning([mfilename ':noSPMTPM-noBGmasking'],...
+                  'Different TPM detected - deactivated background masking!',1,[1 2]);  
+                Ymsk      = []; % new special case for other TPMs
+              end
+            end
+            if ~isempty( Ymsk )
+              obj.msk       = VF; 
+              obj.msk.pinfo = repmat([255;0],1,size(Ybg,3));
+              obj.msk.dt    = [spm_type('uint8') spm_platform('bigend')];
+              obj.msk.dat   = uint8( Ymsk ); 
+              obj.msk       = spm_smoothto8bit(obj.msk,0.1); 
+            end
+          end 
+          clear Ysrc Ymsk; 
       end
 
       
@@ -1034,7 +1059,7 @@ function cat_run_job1639(job,tpm,subj)
           cat_io_printf('SPM preprocessing with default settings failed. Run backup settings. \n'); 
         end
         warning on; 
-        
+          
         if job.opts.redspmres
           res.image1 = image1; 
           clear reduce; 
@@ -1118,6 +1143,21 @@ function cat_run_job1639(job,tpm,subj)
         res.image.dt(1) = dt2; 
       end
       warning on 
+      
+      if job.extopts.expertgui>1
+        %% print the tissue peaks 
+        mnstr = sprintf('\n  SPM-US:  ll=%0.6f, Tissue-peaks: ',res.ll);
+        for lkpi = 1:numel(res.lkp)
+          if lkpi==1 || ( res.lkp(lkpi) ~= res.lkp(lkpi-1) )
+            mnstr = sprintf('%s  (%d) ',mnstr,res.lkp(lkpi)); 
+          end
+          if lkpi>1 &&( res.lkp(lkpi) == res.lkp(lkpi-1) ), mnstr = sprintf('%s, ',mnstr); end
+          if sum(res.lkp == res.lkp(lkpi))>1 && res.mg(lkpi)==max( res.mg( res.lkp == res.lkp(lkpi) )), mnstr = sprintf('%s*',mnstr); end
+          mnstr = sprintf('%s%0.2f',mnstr,res.mn( lkpi )); 
+        end
+        cat_io_cprintf('blue',sprintf('%s\n',mnstr)); 
+        cat_io_cmd(' ',' ');
+      end
       fprintf('%5.0fs\n',etime(clock,stime));   
 
       %% check contrast (and convergence)

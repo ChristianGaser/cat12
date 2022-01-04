@@ -523,11 +523,15 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         switch job.extopts.report.useoverlay 
           case 22 % pink head  
             BCGWH = pink(15); fx = 4; 
-          case 222, % green head 
+          case 222 % green head 
             BCGWH = [0 0.1 0.05; 0.05 0.2 0.1; 0.1 0.3 0.2; 0.15 0.4 0.3; summer(11)]; fx = 3; 
           otherwise % blue head 
             BCGWH = [0 0 0;  0.03 0.12 0.25; 0.05 0.18 0.40; cat_io_colormaps('blue',12)];fx = 3;
         end
+        % background correction
+        Yhd  = Yp0==0; 
+        BGth = cat_stat_kmeans( Ym(Yhd(:)) , 5); Ym(Yhd) = (Ym(Yhd) - BGth(1)) / ( 1 - BGth(1) ); clear Ybg; 
+        % create image
         V2.dat(:,:,:) = min(0.49,Ym/fx).*(Yp0<0.5) + (Yp0/3+0.5).*(Yp0>0.5); 
         
         % meninges/blood vessels: GM > CSF 
@@ -546,6 +550,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         V2.dat(Ychange & Ym<1.33/3) = 58/30;
         V2.dat(Ychange & Ym>1.33/3) = 59/30;
         V2.dat(Ychange & Ym>1.66/3) = 60/30; 
+        clear Ychange; 
         
         % WMHs
         if job.extopts.WMHC > 1 || (qa.subjectmeasures.vol_rel_WMH>0.01 || ...
