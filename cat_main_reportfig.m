@@ -694,8 +694,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   
   % test mesh display
   idi   = 1; 
-  Phull = cat_surf_create_TPM_hull_surface(res.tpm,strcmp(job.extopts.species,'human'),min( job.extopts.gcutstr , ...
-    ~isfield(res,'spmpp') && ~(isfield(res,'spmpp') && res.spmpp) )>0 );
+  try
+    Phull = cat_surf_create_TPM_hull_surface(res.tpm,strcmp(job.extopts.species,'human'),min( job.extopts.gcutstr , ...
+      ~isfield(res,'spmpp') && ~(isfield(res,'spmpp') && res.spmpp) )>0 );
+    ov_mesh = 0;
+  end
   try, spm_orthviews('AddContext',idi); end % need the context menu for mesh handling
   try
     warning('off','MATLAB:subscripting:noSubscriptsSpecified');
