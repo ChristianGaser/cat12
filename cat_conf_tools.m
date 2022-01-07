@@ -24,7 +24,10 @@ function tools = cat_conf_tools(expert)
   data_xml.ufilter  = '^cat_.*\.xml$';
   data_xml.val      = {{''}};
   data_xml.num      = [0 Inf];
-  data_xml.help     = {''};
+  data_xml.help     = {
+    'Select the quality measures that are saved during segmentation as xml-files in the report folder.'
+    'Please note, that the order of the xml-files should be the same as the other data files.'
+    };
 
   outdir            = cfg_files;
   outdir.tag        = 'outdir';
@@ -2438,14 +2441,15 @@ function [check_cov, check_cov2] = conf_check_cov(data_xml,outdir,fname,save,exp
   gap.strtype       = 'n';
   gap.num           = [1 1];
   gap.val           = {3};
+  gap.hidden        = expert<2;
   gap.help          = {'To speed up calculations you can define that covariance is estimated only every x voxel. Smaller values give slightly more accurate covariance, but will be much slower.'};
 
   data_vol          = cfg_files;
   data_vol.name     = 'Sample data';
   data_vol.tag      = 'data_vol';
-  data_vol.filter   = 'image';
+  data_vol.filter   = {'image','resampled.*\.gii$'};
   data_vol.num      = [1 Inf];
-  data_vol.help     = {'These are the (spatially registered) data. They must all have the same image dimensions, orientation, voxel size etc. Furthermore, it is recommended to use unsmoothed files.'};
+  data_vol.help     = {'These are the (spatially registered or resampled) data. Volumes must all have the same image dimensions, orientation, voxel size and surfaces should be resampled with the same parameters. Furthermore, it is recommended to use unsmoothed files (i.e. for volumes).'};
 
   sample            = cfg_repeat;
   sample.tag        = 'sample';
@@ -2457,18 +2461,18 @@ function [check_cov, check_cov2] = conf_check_cov(data_xml,outdir,fname,save,exp
 
   check_cov         = cfg_exbranch;
   check_cov.tag     = 'check_cov';
-  check_cov.name    = 'Check sample homogeneity of 3D data';
+  check_cov.name    = 'Check Sample Homogeneity';
   if expert>1
-    check_cov.val     = {sample,data_xml,gap,nuisance, outdir,fname,save};
+    check_cov.val     = {sample,data_xml,gap,nuisance,outdir,fname,save};
   else
     check_cov.val     = {sample,data_xml,gap,nuisance};
   end
   check_cov.prog    = @cat_stat_check_cov;
   check_cov.help    = {
-    'In order to identify images with poor image quality or even artefacts you can use this function. Images have to be in the same orientation with same voxel size and dimension (e.g. normalized images without smoothing). The idea of this tool is to check the correlation of all files across the sample.'
+    'In order to identify data with poor data quality or even artefacts you can use this function. 3D images have to be in the same orientation with same voxel size and dimension (e.g. normalized images without smoothing) while surfaces have to be resampled and smoothed using the same parameters. The idea of this tool is to check the correlation of all data across the sample.'
     ''
-    'The correlation is calculated between all images and the mean for each image is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this image from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order.'
-    'If you have loaded quality measures, you can also display the ratio between weighted overall image quality (IQR) and mean correlation. These two are the most important measures for assessing image quality.'
+    'The correlation is calculated between all data and the mean for each data is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this data from the sample mean. In the plot, outliers from the sample are usually isolated from the majority of data which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the data order.'
+    'If you have loaded quality measures, you can also display the ratio between weighted overall image quality (IQR) and mean correlation. These two are the most important measures for assessing data quality.'
   };
 
 

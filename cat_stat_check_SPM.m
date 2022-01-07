@@ -141,20 +141,12 @@ if check_cov
     end
     
     % select data for each sample
-    if mesh_detected
-        job_check_cov.data_surf = cell(n_samples,1);
-        for i=1:n_samples
-            ind = find(xX.I(:,cl)==i);
-            job_check_cov.data_surf{i} = char(VY(ind).fname);
-        end
-    else
-        job_check_cov.data_vol = cell(n_samples,1);
-        for i=1:n_samples
-            ind = find(xX.I(:,cl)==i);
-            job_check_cov.data_vol{i} = char(VY(ind).fname);
-        end
-        job_check_cov.gap = 3;
+    job_check_cov.data_vol = cell(n_samples,1);
+    for i=1:n_samples
+        ind = find(xX.I(:,cl)==i);
+        job_check_cov.data_vol{i} = char(VY(ind).fname);
     end
+    job_check_cov.gap = 3;
     
     % don't use parameter files for quality measures
     job_check_cov.data_xml = '';
@@ -249,8 +241,8 @@ X(:,[xX.iC xX.iG]) = X(:,[xX.iC xX.iG]) - repmat(mean(X(:,[xX.iC xX.iG])), nScan
 tmp = sqrt(sum(X.^2));
 O   = X'*X./kron(tmp',tmp);
 tmp = sum(X);
-tmp     = abs(tmp)<eps*1e5;
-bC      = kron(tmp',tmp);
+tmp = abs(tmp)<eps*1e5;
+bC  = kron(tmp',tmp);
 
 
 %-Display
