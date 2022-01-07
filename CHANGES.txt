@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1929 | gaser | 2022-01-07 18:06:48
+r1930 | gaser | 2022-01-07 19:19:12
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       check_pipeline/batch_surface_pipeline.m
+M       html/cat.html
+
+(1) Changed: Updated batch_surface_pipeline.m to work with new check sample
+             homogeneity tool.
+------------------------------------------------------------------------
+r1929 | gaser | 2022-01-07 18:06:57 +0100 (Fri, 07 Jan 2022) | 35 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -34,6 +46,7 @@ M       html/cat.html
 (3) Changed: Changed GUI and batch files to only use one check sample
              homogeneity tool.
 (4) Fixed:   Corrected handling of dartel export option in cat_batch_cat.sh.
+
 
 ------------------------------------------------------------------------
 r1928 | gaser | 2022-01-07 17:54:20 +0100 (Fri, 07 Jan 2022) | 25 lines
