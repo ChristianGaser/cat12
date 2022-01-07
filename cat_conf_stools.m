@@ -118,7 +118,7 @@ stools = cfg_choice;
 stools.name   = 'Surface Tools';
 stools.tag    = 'stools';
 stools.values = { ...
-  check_mesh_cov, ...     .cat.stat
+...  check_mesh_cov, ...     .cat.stat
   check_mesh_cov2, ...    .cat.stat
   surfextract, ...        .cat.stools
   surfresamp, ...         .cat.stools

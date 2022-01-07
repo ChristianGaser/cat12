@@ -9,9 +9,8 @@ function varargout = cat_stat_check_cov(job)
 % varargout = cat_stat_check_cov(job)
 %  
 % job                .. SPM job structure
-%  .data_vol         .. volume files
-%  .data_surf        .. surface files
-%  .gap              .. gap between slices (default=3)
+%  .data_vol         .. volume and surface files
+%  .gap              .. gap between slices for volumes (default=3, not used anymore in GUI)
 %  .c                .. confounds
 %  .data_xml         .. optional xml QC data
 %  .verb             .. print figures
@@ -86,7 +85,7 @@ else
 end
 
 % read filenames for each sample and indicate sample parameter
-if isfield(job,'data_vol')
+if ~spm_mesh_detect(char(job.data_vol{1}(1,:)))
   H.mesh_detected = 0;
   n_samples = numel(job.data_vol);
   for i=1:n_samples
@@ -101,7 +100,7 @@ if isfield(job,'data_vol')
     n_subjects = n_subjects + length(V0);
       
     if i==1, H.V = V0;
-    else,    H.V = [H.V; V0]; end
+    else,    H.V = [H.V V0]; end
 
     H.sample = [H.sample, i*ones(1,length(V0))];
   end
@@ -111,16 +110,16 @@ if isfield(job,'data_vol')
   sep = job.gap;
 else
   H.mesh_detected = 1;
-  n_samples = numel(job.data_surf);
-  sinfo = cat_surf_info(char(job.data_surf{1}(1,:)));
+  n_samples = numel(job.data_vol);
+  sinfo = cat_surf_info(char(job.data_vol{1}(1,:)));
   H.Pmesh = gifti(sinfo.Pmesh);
   for i=1:n_samples
-    V0 = spm_data_hdr_read(char(job.data_surf{i}));
+    V0 = spm_data_hdr_read(char(job.data_vol{i}));
     n_subjects = n_subjects + length(V0);
       
     if i==1, H.V = V0;
     else,    H.V = [H.V; V0]; end
-    H.sample = [H.sample, i*ones(1,size(job.data_surf{i},1))];
+    H.sample = [H.sample, i*ones(1,size(job.data_vol{i},1))];
   end
   H.fname = cellstr({H.V.fname}'); 
 end
@@ -1025,6 +1024,7 @@ else
 end
 
 % display image with 2nd colorbar (gray)
+axes('Position',H.pos.slice);
 image(65 + H.img);
 if ~H.mesh_detected, axis image; end
 set(gca,'XTickLabel','','YTickLabel','','TickLength',[0 0]);
@@ -1077,7 +1077,7 @@ H.data_diff = H.data;
 
 for i = 1:length(H.V)
   img(:,:) = single(P(i).dat(:,:,sl));
-  img(isnan(H.img)) = 0;
+  img(isnan(img)) = 0;
   
   % rescue unscaled data
   H.data_diff(:,:,i) = img;
@@ -1154,7 +1154,7 @@ if isfield(H.pos,'x')
       ['Bottom: ',spm_file(H.filename.m{y},'short25')],[],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
   end
 
-  set(H.text,'String',txt,'FontSize',H.FS-2,'Interpreter','none');
+  set(H.text,'String',txt,'FontSize',H.FS-2);
   set(H.mm_txt,'String',[num2str(round(get(H.mm,'Value'))),' mm'],...
       'FontSize',H.FS-2);
 end
@@ -1183,8 +1183,12 @@ if H.isscatter
   txt = {sprintf('%s',H.filename.m{H.pos.x})};
 
   % text info for textbox
-  txt2 = {[],sprintf('%s',spm_file(H.filename.m{H.pos.x},'short25')),[],'Difference to Sample Mean','(red: - green: +)'};
-
+  if H.mesh_detected
+    txt2 = {[],sprintf('%s',spm_file(H.filename.m{H.pos.x},'short25'))};
+  else
+    txt2 = {[],sprintf('%s',spm_file(H.filename.m{H.pos.x},'short25')),[],'Difference to Sample Mean','(red: - green: +)'};
+  end
+  
   set(H.text,'String',txt2,'FontSize',H.FS-2);
 
   if ~H.mesh_detected
@@ -1225,9 +1229,8 @@ else
 
   % text info for textbox
   if H.mesh_detected
-    txt2 = {[],sprintf('Correlation: %3.3f',H.YpY(x,y)),[],'right (1st row) and left (2nd row) hemisphere',['Left: ',...
-      spm_file(H.filename.m{x},'short25') '     Right: ',spm_file(H.filename.m{y},'short25')],...
-      [],'Difference to Sample Mean', '(red: - green: +)'};
+    txt2 = {[],sprintf('Correlation: %3.3f',H.YpY(x,y)),['Left: ',...
+      spm_file(H.filename.m{x},'short25') '     Right: ',spm_file(H.filename.m{y},'short25')]};
   else
     txt2 = {[],sprintf('Correlation: %3.3f',H.YpY(x,y)),['Top: ',...
       spm_file(H.filename.m{x},'short25')],['Bottom: ',spm_file(H.filename.m{y},'short25')],...
