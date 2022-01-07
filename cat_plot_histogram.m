@@ -32,7 +32,12 @@ if nargin == 0 || (nargin > 0 && isempty(data))
 end
 
 if isempty(data), error('no input images specified'), end
-n = size(data,1);
+
+if ischar(data)
+  n = size(data,1);
+else
+  n = numel(data);
+end
 
 def.color          = cat_io_colormaps('nejm',n);
 def.norm_frequency = true;
@@ -58,31 +63,38 @@ cdata = cell(n,1);
 
 for i = 1:n
 
-  [pth,nam,ext] = spm_fileparts(deblank(data(i,:)));
-  
-  % 1 - txt; 2 - volume; 3 - mesh; 4 - Freesurfer
-  if strcmp(ext,'.txt')
-    filetype = 1;
-  elseif strcmp(ext,'.nii') || strcmp(ext,'.img')
-    filetype = 2;
-  elseif strcmp(ext,'.gii')
-    filetype = 3;
+  if ~ischar(data)
+    cdata{i} = single(data{i}(:));
+    mn(i) = min(data{i}(:));
+    mx(i) = min(data{i}(:));
   else
-    filetype = 4;
-  end
-    
-  switch filetype
-  case 1
-    [cdata{i}, mn(i), mx(i)] = loadsingle_txt(deblank(data(i,:)));
-  case 2
-    [cdata{i}, mn(i), mx(i)] = loadsingle(nifti(data(i,:)));
-  case 3
-    [cdata{i}, mn(i), mx(i)] = loadsingle(spm_data_hdr_read(data(i,:)));
-  case 4
-    try
-      [cdata{i}, mn(i), mx(i)] = loadsingleFS(deblank(data(i,:)));
-    catch
-      error('Unknown data format');
+  
+    [pth,nam,ext] = spm_fileparts(deblank(data(i,:)));
+
+    % 1 - txt; 2 - volume; 3 - mesh; 4 - Freesurfer
+    if strcmp(ext,'.txt')
+      filetype = 1;
+    elseif strcmp(ext,'.nii') || strcmp(ext,'.img')
+      filetype = 2;
+    elseif strcmp(ext,'.gii')
+      filetype = 3;
+    else
+      filetype = 4;
+    end
+
+    switch filetype
+    case 1
+      [cdata{i}, mn(i), mx(i)] = loadsingle_txt(deblank(data(i,:)));
+    case 2
+      [cdata{i}, mn(i), mx(i)] = loadsingle(nifti(data(i,:)));
+    case 3
+      [cdata{i}, mn(i), mx(i)] = loadsingle(spm_data_hdr_read(data(i,:)));
+    case 4
+      try
+        [cdata{i}, mn(i), mx(i)] = loadsingleFS(deblank(data(i,:)));
+      catch
+        error('Unknown data format');
+      end
     end
   end
 end
@@ -215,22 +227,25 @@ for j = 1:n
   end
   H(j,:) = H0;
   X(j,:) = X0;
-  legend_str{j} = char(spm_str_manip(data(j,:),'a90'));
+  if ischar(data)
+    legend_str{j} = char(spm_str_manip(data(j,:),'a90'));
   
-  % give some specific output for (normally distributed) T-values
-	[pth,nam] = spm_fileparts(deblank(data(j,:)));
-	spmT_found = ~isempty(strfind(nam,'spmT'));
-	if spmT_found
-		mn = mean(y);
-		sd = std(y);
-		ES = mn/sd;
-		TH5 = X0(min(find(cumsum(H0)/sum(H0) > 0.95)));
-		fprintf('%s\tmean=%g\tSD=%g\tES=%g\tTH5=%g\n',data(j,:),mn,sd,ES,TH5);
-    legend_str{j} = sprintf('TH5=%.4f %s',TH5,legend_str{j}); 
-	else
-		fprintf('%s\tSD=%g\n',data(j,:),std(y));
-	end
-  
+    % give some specific output for (normally distributed) T-values
+    [pth,nam] = spm_fileparts(deblank(data(j,:)));
+    spmT_found = ~isempty(strfind(nam,'spmT'));
+    if spmT_found
+      mn = mean(y);
+      sd = std(y);
+      ES = mn/sd;
+      TH5 = X0(min(find(cumsum(H0)/sum(H0) > 0.95)));
+      fprintf('%s\tmean=%g\tSD=%g\tES=%g\tTH5=%g\n',data(j,:),mn,sd,ES,TH5);
+      legend_str{j} = sprintf('TH5=%.4f %s',TH5,legend_str{j}); 
+    else
+      fprintf('%s\tSD=%g\n',data(j,:),std(y));
+    end
+  else
+    legend_str{j} = num2str(i);
+  end
 end
 
 % check whether there are (almost) identical data
@@ -238,7 +253,7 @@ Hcorr = corrcoef(H');
 Hcorr = Hcorr - triu(Hcorr);
 [xc,yc] = find(Hcorr > 0.99999);
 for i = 1:numel(xc)
-  fprintf('File %s and %s are (almost) identical\n',deblank(data(xc(i),:)),deblank(data(yc(i),:)));
+%  fprintf('File %s and %s are (almost) identical\n',deblank(data(xc(i),:)),deblank(data(yc(i),:)));
 end
 
 if ~isempty(opt.dist)
