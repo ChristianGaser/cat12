@@ -317,9 +317,6 @@ modifiy_defaults ()
   if [ "$rp" -eq 1 ]; then
     echo "cat.output.GM.dartel = 2;" >> ${defaults_tmp}
     echo "cat.output.WM.dartel = 2;" >> ${defaults_tmp}
-  else
-    echo "cat.output.GM.dartel = 0;" >> ${defaults_tmp}
-    echo "cat.output.WM.dartel = 0;" >> ${defaults_tmp}
   fi
   
   if [ -n "$tpm" ]; then
