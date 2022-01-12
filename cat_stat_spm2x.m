@@ -156,7 +156,7 @@ else
 
   if T2x
     stat = 'T';
-    P = spm_select(Inf,'^spmT.*(img|nii|gii)','Select T-images');
+    P = spm_select(Inf,'^(spmT|nullT).*(img|nii|gii)','Select T-images');
     sel = spm_input('Convert t value to?',1,'m',...
       '1-p|-log(1-p)|correlation coefficient cc|effect size d|apply thresholds without conversion|standard Normal (z-score) distribution',1:6, 2);
   else
@@ -198,7 +198,11 @@ else
   end
 
   if T2x
-    neg_results = spm_input('Show also inverse effects (e.g. neg. values)','+1','b','yes|no',[1 0],2);
+    if adjustment < 0
+      neg_results = 1;
+    else
+      neg_results = spm_input('Show also inverse effects (e.g. neg. values)','+1','b','yes|no',[1 0],2);
+    end
   end
 
   if pk ~= 0
@@ -231,7 +235,7 @@ for i=1:size(P,1)
      error('SPM.mat not found')
   end
 
-  if strcmp(nm(1:6),sprintf('spm%s_0',stat)) 
+  if strcmp(nm(1:6),sprintf('spm%s_0',stat)) || strcmp(nm(1:7),sprintf('nullT_0'))
     Ic = str2double(nm(length(nm)-2:length(nm)));
   else
     % conversion needs spmT/F images
@@ -481,6 +485,10 @@ for i=1:size(P,1)
     end
   end    
 
+  if strcmp(nm(1:7),sprintf('nullT_0'))
+    t2x_name = ['null' t2x_name];
+  end
+  
   if isempty(Qe) || isempty(Qh)
     t2x  = Inf;  
   else
@@ -631,6 +639,7 @@ for i=1:size(P,1)
   
 end % (for i=1:size(P,1))
 
-out.Pname = Pname;  
-
+if nargout
+  out.Pname = Pname;  
+end
 
