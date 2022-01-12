@@ -7,7 +7,7 @@ function out = cat_plot_histogram(data,opt)
 %
 % data           - input files
 % opt fields:
-% color          = nejm(size(data,1)) as default, see cat_io_colormaps for more categorical colormaps
+% color          = cat_io_colormaps('nejm',size(data,1)) as default, see cat_io_colormaps for more categorical colormaps
 % norm_frequency = true;
 % winsize        = [750 500];
 % xrange         = [];
@@ -230,9 +230,10 @@ for j = 1:n
   if ischar(data)
     legend_str{j} = char(spm_str_manip(data(j,:),'a90'));
   
-    % give some specific output for (normally distributed) T-values
+    % give some specific output for (normally distributed) T-values or
+    % effect size (D)
     [pth,nam] = spm_fileparts(deblank(data(j,:)));
-    spmT_found = ~isempty(strfind(nam,'spmT'));
+    spmT_found = ~isempty(strfind(nam,'spmT')) || strcmp(nam(1),'D');
     if spmT_found
       mn = mean(y);
       sd = std(y);
