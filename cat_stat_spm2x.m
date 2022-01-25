@@ -621,18 +621,18 @@ for i=1:size(P,1)
     fprintf('\n');
   end
 
+  %-Reconstruct (filtered) image from XYZ & T/Z pointlist
+  %-----------------------------------------------------------------------
+  Y    = zeros(Vspm.dim);
+  OFF    = XYZ(1,:) + Vspm.dim(1)*(XYZ(2,:)-1 + Vspm.dim(2)*(XYZ(3,:)-1));
+  Y(OFF) = t2x;
+
+  VO = Vspm;
+  VO.fname = Pname{i};
+  VO.dt = [spm_type('float32') spm_platform('bigend')];
+
   % only write and display files if some voxels survived thresholds
-  if ~isempty(Qh) && ~isempty(Qe) || 1 % RD202108: it is important to export even empty results to keep the dependencies
-    %-Reconstruct (filtered) image from XYZ & T/Z pointlist
-    %-----------------------------------------------------------------------
-    Y    = zeros(Vspm.dim);
-    OFF    = XYZ(1,:) + Vspm.dim(1)*(XYZ(2,:)-1 + Vspm.dim(2)*(XYZ(3,:)-1));
-    Y(OFF) = t2x;
-  
-    VO = Vspm;
-    VO.fname = Pname{i};
-    VO.dt = [spm_type('float32') spm_platform('bigend')];
-  
+  if ~isempty(Qh) && ~isempty(Qe)  
     VO = spm_data_hdr_write(VO);
     spm_data_write(VO,Y);
   end

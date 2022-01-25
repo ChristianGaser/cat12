@@ -208,7 +208,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
     %              the segmentation also here (only for long pipeline)
     % move brain tissue to head tissues or vice versa
     for ti = 1:3
-      if ti == 1 % GM with soft bounary to reduce meninges
+      if ti == 1 % GM with soft boundary to reduce meninges
         Ynbm = cat_vol_ctype( single(P(:,:,:,ti)) .* (1 - max(0,2 * smooth3(Yb) - 1) ) ); 
         Ybm  = cat_vol_ctype( single(P(:,:,:,5))  .* (    max(0,2 * smooth3(Yb) - 1) ) ); 
       elseif ti == 2 % WM with very soft boundary because we exptect no WM close to the skull
