@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1932 | gaser | 2022-01-13 00:23:53
+r1933 | gaser | 2022-01-25 23:05:00
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_main_updateSPM1639.m
+M       cat_stat_spm2x.m
+M       cat_vol_set_com.m
+M       html/cat.html
+
+(1) Changed: Updated help text for cat_stat_set_com.m and removed output if
+             not necessary.
+(2) Fixed:   Output for cat_stat_spm2x was also written for empty results.
+             
+------------------------------------------------------------------------
+r1932 | gaser | 2022-01-13 00:24:44 +0100 (Thu, 13 Jan 2022) | 30 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -30,6 +45,7 @@ M       html/cat.html
              T maps.
 (3) Fixed:   Recompiled unix mex-files for compatibilty.
              
+
 ------------------------------------------------------------------------
 r1931 | gaser | 2022-01-07 23:39:22 +0100 (Fri, 07 Jan 2022) | 6 lines
 

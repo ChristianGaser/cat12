@@ -7,8 +7,9 @@ function Affine = cat_vol_set_com(V)
 % V      - mapped images or filenames 
 % Affine - affine transformation to roughly correct origin 
 % 
-% If no output filed is defined the estimated transformation is applied 
-% to the images
+% Only if no input is defined the function is called interactively and the
+% estimated transformation is applied to the images. Otherwise, only the 
+% Affine paramter is returned.
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -53,8 +54,13 @@ for i=1:n
 
   M = spm_get_space(V(i).fname);
   Affine(1:3,4) = (com - com_reference)';
+  
   if nargin < 1
     spm_get_space(V(i).fname,Affine\M);
     fprintf('\n');
+  end
+  
+  if ~nargout
+    clear Affine
   end
 end
