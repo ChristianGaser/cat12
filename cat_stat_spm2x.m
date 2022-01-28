@@ -554,9 +554,9 @@ for i=1:size(P,1)
   end
 
   if ~isempty(Qe) || u0 > -Inf
-     name = [t2x_name str_num p_height_str num2str(u0*100) p_extent_str '_k' num2str(k) neg_str ext];
+    name = [t2x_name str_num p_height_str num2str(u0*100) p_extent_str '_k' num2str(k) neg_str ext];
   else
-     name = [t2x_name str_num ext];
+    name = [t2x_name str_num ext];
   end
 
   Pname{i} = deblank(fullfile(pth,name));
@@ -578,26 +578,31 @@ for i=1:size(P,1)
     if ~isempty(maxsort)
       found_neg = 0;
       found_pos = 0;
+      print_header_neg = 0;
+      print_header_pos = 0;
       for l=1:length(maxsort)
         j = maxsort(l); 
         [tmp, indZ] = max(abs(Zj{j}));
       
         if ~isempty(indZ)
-          if maxZ(j) < 0,  found_neg = found_neg + 1; end
-          if maxZ(j) >= 0, found_pos = found_pos + 1; end
+          if maxZ(j) < 0, found_neg = 1; end
+          if maxZ(j) > 0, found_pos = 1; end
           
           % print header if the first pos./neg. result was found
-          if found_pos == 1
+          if found_pos && ~print_header_pos
+
             fprintf('\n______________________________________________________');
             fprintf('\n%s: Positive effects\n%s',name,atlas_name);
             fprintf('\n______________________________________________________\n\n');
             fprintf('%1s-%5s\t%12s\t%15s\t%s\n\n',STAT,'Value','Cluster-Size','  xyz [mm] ','Overlap of atlas region');
+            print_header_pos = 1;
           end
-          if found_neg == 1
+          if found_neg && ~print_header_neg
             fprintf('\n______________________________________________________');
             fprintf('\n%s: Negative effects\n%s',name,atlas_name);
             fprintf('\n______________________________________________________\n\n');
             fprintf('%1s-%5s\t%12s\t%15s\t%s\n\n',STAT,'Value','Cluster-Size','  xyz [mm] ','Overlap of atlas region');
+            print_header_neg = 1;
           end
           if ~found_pos && ~found_neg
             fprintf('\n______________________________________________________');
