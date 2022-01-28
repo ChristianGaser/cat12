@@ -29,6 +29,7 @@ end
 prec   = noise.^(-2);
 
 if isfield(job.reg,'nonlin')
+  cat_io_cprintf('blue','Non-linear Registration!\n');
   tim = job.reg.nonlin.times(:);
   if all(isfinite(tim))
     if numel(tim) ~= N,
@@ -45,7 +46,7 @@ if isfield(job.reg,'nonlin')
     s_settings = round(3*abs(tim)+2);
   else % use default regularization if tim is set to NAN
     w_settings = job.reg.nonlin.wparam;
-    s_settings = 6;
+    s_settings = 6; %round( job.reg.nonlin.wparam(5) / 25);
   end
 else
   w_settings = [Inf Inf Inf Inf Inf];

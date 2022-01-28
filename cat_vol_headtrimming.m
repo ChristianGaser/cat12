@@ -259,7 +259,9 @@ function varargout = cat_vol_headtrimming(job)
                         'range',job.range,'prefix',job.prefix,'suffix',job.suffix);
           P = cat_io_volctype(job2);
         else
-          copyfile(job.images1{si}{di},job.images2{si}{di});
+          if ~strcmp(job.images1{si}{di},job.images2{si}{di})
+            copyfile(job.images1{si}{di},job.images2{si}{di});
+          end
           P = job.images2{si}(di);
         end
         spm_progress_bar('Set',si + di/numel(V));

@@ -610,7 +610,7 @@ function cat_run_job1639(job,tpm,subj)
             xml      = cat_io_xml(catxml);
             % sometimes xml file does not contain affine transformation
             if ~isfield(xml,'SPMpreprocessing')
-              cat_io_cprintf('warn',sprintf('WARNING: File %s does not contain successful affine transformation. Use individual affine transformation\n',catxml));
+              cat_io_cprintf('warn',sprintf('WARNING: File "%s" does not contain successful affine transformation. Use individual affine transformation\n',catxml));
               Affine   = eye(4); 
               useprior = 0;
             else
@@ -619,7 +619,8 @@ function cat_run_job1639(job,tpm,subj)
               useprior = 1;
             end
           else
-            cat_io_cprintf('warn',sprintf('WARNING: File %s not found. Use individual affine transformation\n',catxml));
+            cat_io_cprintf('warn',sprintf('WARNING: File "%s" not found. Use individual affine transformation\n',catxml));
+            Affine   = eye(4); 
             useprior = 0;
           end
         else
@@ -702,6 +703,8 @@ function cat_run_job1639(job,tpm,subj)
         [Ym,Yt,Ybg,WMth] = APPmini(obj,VF); %#ok<ASGLU>
         %[Ym,Yt,Ybg,WMth] = cat_run_job_APP_init1070(single(obj.image.private.dat(:,:,:)),vx_vol,job.extopts.verb); %#ok<ASGLU>
         if ~debug, clear Yt; end
+        useprior = 0; 
+        Affine = eye(4); 
       end
           
       

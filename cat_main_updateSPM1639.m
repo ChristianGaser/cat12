@@ -197,7 +197,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
     else
       % otherwise it would be possible to use the individual TPM 
       % however, the TPM is more smoothed and is therefore only second choice  
-      cat_io_cpirntf('warn','Cannot find p0avg use TPM for brainmask: \n  %s\n',Pavgp0);
+      cat_io_cprintf('warn','Cannot find p0avg use TPM for brainmask: \n  %s\n',Pavgp0);
       Yb  = YbA > 0.5;
       clear YbA
     end

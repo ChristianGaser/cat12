@@ -618,9 +618,16 @@ end
             cat_io_cmd(sprintf('  Use affine transformation from:\n"%s"',ff),'','',1,stime); 
             stime           = cat_io_cmd(' ',' ','',job.extopts.verb); 
             xml             = cat_io_xml(catxml);
-            Affine          = xml.SPMpreprocessing.Affine;
-            useprior        = 1; 
-            job.opts.affreg = 'prior'; 
+            % sometimes xml file does not contain affine transformation
+            if ~isfield(xml,'SPMpreprocessing')
+              cat_io_cprintf('warn',sprintf('WARNING: File "%s" does not contain successful affine transformation. Use individual affine transformation\n',catxml));
+              Affine   = eye(4); 
+              useprior = 0;
+            else
+              Affine   = xml.SPMpreprocessing.Affine;
+              affscale = 1;
+              useprior = 1;
+            end
           else
             cat_io_addwarning([mfilename ':UseAffRegPrior'],...
               sprintf('Affine prior file "%s" not found. \\\\nEstimate individual affine transformation. ',catxml),2,[1 2],catxml);
