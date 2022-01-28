@@ -51,10 +51,10 @@ function cat_main_reportcmd(job,res,qa)
   fprintf(1,'\nCAT preprocessing takes %0.0f minute(s) and %0.0f second(s).\n', ...
     floor(round(etime(clock,res.stime))/60),mod(round(etime(clock,res.stime)),60));
   
-  % image quality
-  cat_io_cprintf(color(QMC,qa.qualityratings.IQR), sprintf('Image Quality Rating (IQR):  %5.2f%%%% (%s)\n',...
-    mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR)));
-
+  % image quality (just use real to avoid some rare problems with irrational values that should not occur anymore)
+  cat_io_cprintf(color(QMC,real(qa.qualityratings.IQR)), sprintf('Image Quality Rating (IQR):  %5.2f%%%% (%s)\n',...
+    mark2rps(real(qa.qualityratings.IQR)),mark2grad(real(qa.qualityratings.IQR))));
+  
   % processing quality
   % coming soon
   

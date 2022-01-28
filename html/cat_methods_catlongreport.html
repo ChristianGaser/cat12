@@ -1,0 +1,89 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+  
+    <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link rel="stylesheet" type="text/css" href="spm.css" />
+    <link rel="stylesheet" type="text/css" href="../spm.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  
+  <body>
+    <div id="header">
+      <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
+      <p>
+          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
+          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');">Department of Neurology</a> | 
+          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');">Department of Psychiatry</a> | 
+          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
+      </p>
+      <div id="breadcrumbs">
+        <a href="cat.html">CAT</a> > <a href="cat_methods.html">Methods</a> > <a href="cat_methods_LP.html">Longitudinal pipeline</a> > <a href="cat_methods_catlongreport.html">catlongreport</a>
+      </div>
+    </div>
+    
+    <!-- TEXT --> 
+    <div id="content">
+      <h2>Catlongreport</h2>
+				<p>
+					Although the <i>cat_long_report</i> (<a href="#Fig1">Figure 1</a>) looks quite similar to the scan-specific report there are some special aspects.  The report is produced for each aging model that results in different volumes but the same surfaces.  The parameters describe the <i>tissue probability map</i> (TPM) used for the average case and only mark the use of the individual TPM.
+				</p>
+				
+				<p class="img" style="width: 50%;" id="Fig1">
+					<img src="images/catlongreportj_mwp1r.jpg" width=100% height=auto alt="cat_long_report_plasticity-aging_ADNI011S0003 - CAT long plasticity vs. aging pipeline in a ADNI case" >
+				</p>
+				<p class="img" style="width: 90%;" id="Fig1a">
+					<b>Figure 1 - Full report:</b> Shown is the CAT long report of the 28andMe dataset <a href="https://doi.org/10.1016/j.neuroimage.2020.117091">(Pritschet et al., 2021)</a> with only small variance in terms of image quality and structural changes of daily scans over two months with strict quality control.</a>    
+				</p>
+
+				
+				<p> 
+					The <b>Image and preprocessing quality</b> section focuses on the best <i>image quality rating</i> (IQR) values and its worst deviation in <i>percent points</i> (pp), which indicate potential problems (e.g., less than -4pp) such as movement artifacts or lower resolution that often lead to GM underestimation (see also <a href="#Fig2">Figure 2</a>).  In addition, the covariance (COV) and the <i>root mean square error</i> (RMSE) error are estimated between the normalized tissue maps.  In contrast to IQR, COV and RMSE can be biased by structural changes.  The values of COV and RMSE are color-coded similarly to IQR, with the best COV being 0.98 (100%, A+) and the worst 0.88 (0%, F), i.e., a COV of 0.93 corresponds to the worst regular score (50%, E-/F). For the RMSE, the scaling is defined between 0.05 (best-case, 100%, A+) and 0.15 (worst-case, 0%, F).    
+				</p><p>
+					The <b>(Relative) tissue changes</b> section contains the global mean values of the <i>relative gray matter volume</i> (rGMV), <i>relative white matter volume</i> (rWMV), and <i>relative cerebrospinal fluid volume</i> (rCSFV) defined for the <i>total intracranial volume</i>, and their changes in pp. In case of thickness estimation, the mean changes are also presented here as absolute values in millimeters (mm). 
+				</p><p>  
+					There are two <b>volume plots</b>, the first is experimental and shows regions with large changes that indicate problematic regions (e.g., problems due to skull stripping or WMHs), while the second shows the relative changes in GM, WM, or CSF, with red values indicating atrophy and blue values indicating growth. Both volume charts also include a small glass brain figure in the lower right corner.  The changes shown may be due to real anatomical changes (the desired outcome), but also to differences due to (i) MR protocol and image quality, (ii) inaccurate pre-processing, and (iii) the longitudinal modeling (plasticity vs. aging). 
+				</p>
+				<p>
+					You access the longitudinal report <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.long_report');">cat_long_report</a> via SPM batch mode.   
+				</p>
+				
+				<p>
+					We selected 2 examples from ADNI to illustrate some observations. The first example shows real aging effects, while the second focuses on scanner effects. 
+				</p>
+				
+				<p class="img" style="width: 90%;" id="Fig2">
+					<img src="images/cat_long_report_plasticity-aging_ADNI011S0003.jpg" width=100% height=auto alt="cat_long_report_plasticity-aging_ADNI011S0003 - CAT long plasticity vs. aging pipeline in a ADNI case" >
+					</br>
+					<b>Figure 1 - Aging effects:</b> Shown are the tissue changes in an ADNI subject after one and two years, processed with the CAT plasticity (A) and CAT aging pipeline (B) with default settings. In the plasticity model, some gyri show strong local increase and decrease of tissue volume (yellow and cyan boxes with detailed view in subfigure C) that link to local movement of structures (moving from the decreased to the increased area) rather than real tissue changes and where compensated by an additional inter time point deformation in the aging model. You can also see a general shrinkage of the brain and the enlargement of the ventricles near the basal ganglia (white circles) and some pre-processing problems with strong local GM atrophy due to uncorrected white matter hyperintensities (white arrows) and blood vessel (green arrows). As atypical GM regions are affected, this has negligible impact on common VBM analyses. 
+				</p>
+				<p class="img" style="width: 90%;" id="Fig3">
+					<img src="images/cat_long_report_scannerdifferences_ADNI002S0559.jpg" width=100% height=auto alt="cat_long_report_scannerdifferences_ADNI002S0559 - CAT long scanner differences">
+					</br>
+					
+					<b>Figure 2 - Scanner effects:</b> 
+					In ADNI some subjects were additionally scan on 1.5 and 3.0 Tesla systems that allows testing for scanner-specific differences although there were about 100 days between the scans. In this case, the differences in terms of image quality are much higher although ADNI did a lot to reduce scanner effects. The lower image contrast and higher noise of the 1.5 Tesla makes it harder to correctly segment myelinated GM regions that have higher more white matter like intensities. In this example, the first scan was performed with a 1.5 Tesla scanner and the second with a 3.0 Tesla device, showing a global and local increase in GM thickness rather than the expected decrease, especially in myelinated regions.  
+					<!--In addition, comparing <a href="#Fig3">Figure 3</a> to <a href="#Fig2">Figure 2</a> you can see that the scaling of the thickness colorbar changes as well.-->     	
+				</p>
+					 
+				<!--
+##########
+Maybe it is useful to create a volume report for both volume models (but what is with the future development model with affreg?). Alternatively, WM and GM maps could be printed and a separate surface report would allow a second surface with variation between timepoints.
+##########
+			 <p style="text-align:center;"><img src="images/catlongreport_Collins.jpg" width=100% height=auto alt="catlongreport_#####" >
+					
+				</p>	
+				
+				
+				-->
+      
+      
+      
+    </div>
+  
+    <div id="content"><a href="cat_methods_LP.html">Longitudinal pipeline</a></div>  
+    <div id="footer">
+      <p>Copyright (C) Structural Brain Mapping Group <a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a></p>
+    </div>
+  </body>
+</html>

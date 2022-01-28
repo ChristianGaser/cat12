@@ -95,14 +95,25 @@ function str = cat_main_reportstr(job,res,qa)
     if job.extopts.experimental, str{1}(end).value = [str{1}(end).value '\bf\color[rgb]{0 0.2 1}x']; end  
   end
   if job.extopts.ignoreErrors > 2, str{1}(end).value = [str{1}(end).value '    \bf\color[rgb]{0.8 0 0}Ignore Errors!']; end  
+  if isfield(res,'long')
+    str{1}(end).value = [str{1}(end).value '\bf\color[rgb]{0 0.2 1}-longreport'];
+    if ~isempty(res.long.model)
+      str{1}(end).value = [str{1}(end).value '\bf\color[rgb]{0 0.2 1}-' res.long.model];
+    end
+  elseif isfield(job,'useprior') && ~isempty(job.useprior) 
+    str{1}(end).value = [str{1}(end).value '\bf\color[rgb]{0 0.2 1}-long'];
+  end
   
   
   % 2 lines: TPM, Template, Normalization method with voxel size
-  if strcmp(res.tpm(1).fname,catdef.opts.tpm{1}), cp{1} = npara; else, cp{1} = cpara; end
-  if exist('seg8','var')
-    str{1} = [str{1} struct('name', 'Tissue Probability Map:','value',[cp{1} strrep(spm_str_manip(seg8.tpm(1).fname,'k40d'),'_','\_')])];
-  else
-    str{1} = [str{1} struct('name', 'Tissue Probability Map:','value',[cp{1} strrep(spm_str_manip(res.tpm(1).fname,'k40d'),'_','\_')])];
+  if isfield(res,'tpm')
+    if strcmp(res.tpm(1).fname,catdef.opts.tpm{1}) || isfield(job,'useprior') && ~isempty(job.useprior), cp{1} = npara; else, cp{1} = cpara; end
+    if isfield(res,'long'), TPMlstr = ' for Long. AVG (use AVG as TPM in TPs)'; else, TPMlstr = ''; end
+    if exist('seg8','var')
+      str{1} = [str{1} struct('name', ['Tissue Probability Map' TPMlstr ':'],'value',[cp{1} strrep(spm_str_manip(seg8.tpm(1).fname,'k40d'),'_','\_')])];
+    else
+      str{1} = [str{1} struct('name', ['Tissue Probability Map' TPMlstr ':'],'value',[cp{1} strrep(spm_str_manip(res.tpm(1).fname,'k40d'),'_','\_')])];
+    end
   end
   if res.do_dartel
     if job.extopts.regstr==0 % Dartel
@@ -161,6 +172,26 @@ function str = cat_main_reportstr(job,res,qa)
   % 1 line 3: biasstr / biasreg+biasfwhm
   if ~isfield(res,'spmpp') || ~res.spmpp
     str{1}(end+1) = struct('name', '','value','');
+    if isfield(job.extopts,'prior')
+      % ############# 
+      % RD202201: Longituinal report settings:
+      % * LBC is a different batch but it renames the file and adds m as prefix 
+      % * This would need an extra variable only for display :/
+      %   Would be possible to use some surf-variable that are not required
+      %   for longitudial process but this would be highly unclear in future.
+      %   So we keep it simple here with yes/no.
+      %   Maybe just save an early version of the cat_long_xml? Yes.
+      % * other settings: 
+      %   - use priors
+      %   - longmodel (allready inlcuded)
+      % #############
+      [~,ff] = spm_fileparts(res.image0(1),fname);
+      LBCstr = {'no','yes'};
+      if ff(1)=='m',  LBC = 0; else, LBC = 1; end % manual setting
+      cl = cat_conf_long; if cl.val{4}.val{1} == 0 && LBC == 0, cp{1} = npara; else, cp{1} = cpara; end
+      str{1}(end).name  = [str{1}(end).name(1:end-1) 'LBC /'];
+      str{1}(end).value = [str{1}(end).value sprintf('%s{%s}',cp{1},LBCstr{LBC})]; % {round(job.opts.LBC*4)+1}
+    end
     if job.opts.biasacc>0
       if job.opts.biasacc == catdef.opts.biasstr, cp{1} = npara; else, cp{1} = cpara; end % yes, catdef.opts.biasstr!
       biasacc = {'ultralight','light','medium','strong','heavy'};

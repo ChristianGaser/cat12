@@ -85,7 +85,8 @@ else
 end
 
 % read filenames for each sample and indicate sample parameter
-if ~spm_mesh_detect(char(job.data_vol{1}(1,:)))
+if isfield(job,'data_vol') && ~isempty(job.data_vol) && ~isempty(job.data_vol{1}) && ...
+  ~spm_mesh_detect(char(job.data_vol{1}(1,:)))
   H.mesh_detected = 0;
   n_samples = numel(job.data_vol);
   for i=1:n_samples
@@ -109,22 +110,39 @@ if ~spm_mesh_detect(char(job.data_vol{1}(1,:)))
   H.fname = cellstr({H.V.dat.fname}'); 
   sep = job.gap;
 else
+  [pp,ff,ee] = spm_fileparts( job.data_surf{1} ); 
+  if ~isfield(job,'data_surf') && isfield(job,'data_vol') && strcmp(ee,'.gii')
+  % RD202201: Older versions also use the data_vol field for surface data.
+  %           However, this was limited to gifti input. 
+    job.data_surf = job.data_vol;
+  end
   H.mesh_detected = 1;
-  n_samples = numel(job.data_vol);
-  sinfo = cat_surf_info(char(job.data_vol{1}(1,:)));
+  n_samples = numel(job.data_surf);
+  sinfo = cat_surf_info(char(job.data_surf{1}(1,:)));
   H.Pmesh = gifti(sinfo.Pmesh);
   for i=1:n_samples
-    V0 = spm_data_hdr_read(char(job.data_vol{i}));
+    [pp,ff,ee] = spm_fileparts( job.data_surf{i} ); 
+    if any( ~isempty( strfind({'lh.thickness' },[ff ee]) ) ) && ~strcmp(ee,'gii')
+      %% native longitudinal surface
+      sdata = gifti(fullfile(pp,[strrep(ff,'lh.thickness','lh.central') ee '.gii'])); 
+      cdata = single(cat_io_FreeSurfer('read_surf_data',job.data_surf{i})); 
+      gdata = gifti(struct('vertices',sdata.vertices,'faces',sdata.faces,'cdata',cdata)); 
+      V0 = struct('fname',job.data_surf{i},'dim',size(cdata),'dt',[16 0], ...
+             'pinfo',[1 0 0],'mat',eye(4),'n',[1 1],'descript','GMT'); 
+      V0.private = gdata; 
+    else
+      V0 = spm_data_hdr_read(char(job.data_surf{i}));
+    end
     n_subjects = n_subjects + length(V0);
       
     if i==1, H.V = V0;
     else,    H.V = [H.V; V0]; end
-    H.sample = [H.sample, i*ones(1,size(job.data_vol{i},1))];
+    H.sample = [H.sample, i*ones(1,size(job.data_surf{i},1))];
   end
   H.fname = cellstr({H.V.fname}'); 
 end
     
-if ~isempty(job.c)
+if isfield(job,'c') && ~isempty(job.c)
   for i=1:numel(job.c)
     G = [G job.c{i}];
   end
@@ -200,7 +218,8 @@ spm_progress_bar('Init',n_subjects,'Load xml-files','subjects completed')
 
 for i=1:n_subjects
   % get basename for data files
-  [pth, data_name] = fileparts(H.fname{i});
+  [pth, data_name ee] = fileparts(H.fname{i});
+  if ~strcmp(ee,'.nii') && ~strcmp(ee,'.gii'), data_name = [data_name ee]; end
   
   % remove ending for rigid or affine transformed files
   data_name = strrep(data_name,'_affine','');
@@ -455,12 +474,16 @@ fname_m = [];
 fname_tmp = cell(n_samples,1);
 fname_s   = cell(n_samples,1);
 fname_e   = cell(n_samples,1);
-
 for i=1:n_samples
   [tmp, fname_tmp{i}] = spm_str_manip(char(H.fname{H.sample == i}),'C');
-  fname_m = [fname_m; fname_tmp{i}.m];
-  fname_s{i} = fname_tmp{i}.s;
-  fname_e{i} = fname_tmp{i}.e;
+  if ~isempty(fname_tmp{i})
+    fname_m    = [fname_m; fname_tmp{i}.m]; 
+    fname_s{i} = fname_tmp{i}.s;
+    fname_e{i} = fname_tmp{i}.e;
+  else
+    fname_s{i} = '';
+    fname_e{i} = '';
+  end
   if job.verb
     fprintf('Compressed filenames sample %d: %s  \n',i,tmp);
   end
