@@ -34,9 +34,9 @@ function [Affine2,Yb,Ymi,Ym0] = cat_run_job_APRGs(Ysrc,Ybg,VF,Pb,Pbt,Affine,vx_v
   [Ysrc,BB] = cat_vol_resize(Ysrc,'reduceBrain',vx_vol,round(20/mean(vx_vol)),Yb0);
   Ybg       = cat_vol_resize(Ybg ,'reduceBrain',vx_vol,round(20/mean(vx_vol)),Yb0);
   Yb0       = cat_vol_resize(Yb0 ,'reduceBrain',vx_vol,round(20/mean(vx_vol)),Yb0);
-  [Ysrc,rV] = cat_vol_resize(Ysrc,'reduceV',vx_vol,1.5,32);
-  Ybg       = cat_vol_resize(Ybg ,'reduceV',vx_vol,1.5,32);
-  Yb0       = cat_vol_resize(Yb0 ,'reduceV',vx_vol,1.5,32);
+  [Ysrc,rV] = cat_vol_resize(Ysrc,'reduceV',vx_vol,1.5,64);
+  Ybg       = cat_vol_resize(Ybg ,'reduceV',vx_vol,1.5,64);
+  Yb0       = cat_vol_resize(Yb0 ,'reduceV',vx_vol,1.5,64);
   
   vx_vol    = rV.vx_volr;
   
@@ -305,6 +305,9 @@ end
       end
     end
   else
+    Affine2 = Affine; 
+  end
+  if any( isnan( Affine2(:) ) )
     Affine2 = Affine; 
   end
   

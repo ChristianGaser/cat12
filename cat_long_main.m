@@ -26,6 +26,8 @@ try
   surfaces    = job.output.surface;
   longTPM     = job.longTPM;
   bstr        = job.bstr;
+  prepavg     = 2;
+  longreport  = [1 1 1]; % [GM WM (CSF)] 
   if isfield(job,'delete_temp')  
     delete_temp = job.delete_temp;
   else
@@ -39,10 +41,13 @@ catch
   useprior    = 1; % use prior from avg-data
   surfaces    = cat_get_defaults('output.surface'); 
   longTPM     = 1; % create longitudinal TPM form avg-data
-  bstr        = 0;
+  bstr        = 0; % additional longitudinal bias correction based on the avg pp
+  prepavg     = 2; % preparation of the images in native space before SPM longitudinal realignment/averaging
+                   % 0-none, 1-SANLM, 2-SANLM+trimming, 3-SANLM+trimming+rescaleIntensities  
+  longreport  = [1 1 1]; % create report for each longitudinal model and tissue class if available [GM WM (CSF)]                 
 end
 
-if ~useprior & longTPM
+if ~useprior && longTPM
   longTPM = 0;
 end
 
@@ -67,6 +72,79 @@ else
 end
 
 
+
+% 0) denoising in native space (RD 202201)
+% -----------------------------------------------------------------------
+% The SANLM is most effective in native space (non-interpolated) images.
+% The prefix is required to avoid overwriting of the original data and we 
+% have to rename the registered output.
+% The trimming and intensity have maybe negative effects on the SPM noise
+% estimation!
+if prepavg
+  mbi = mbi + 1; mb_sanlm = mbi; 
+  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.data                                           = '<UNDEFINED>';
+  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.spm_type                                       = 16;
+  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.prefix                                         = 'sanlm_'; % we need a copy here (so we need a prefix) and have to rename it later
+  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.suffix                                         = '';
+  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.intlim                                         = 100;
+  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.addnoise                                       = 0; % no additional noise here because this comes later in each preprocessing!
+  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.rician                                         = 0;
+  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.replaceNANandINF                               = 1;
+  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.NCstr                         = -Inf;
+  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.iter                          = 0;
+  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.iterm                         = 0;
+  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.outlier                       = 1; % no outlier correction here (no median filter)? 
+  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.relativeIntensityAdaption     = 1;
+  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.relativeIntensityAdaptionTH   = 2;
+  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.relativeFilterStengthLimit    = 1;
+  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.resolutionDependency          = 0;
+  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.resolutionDependencyRange     = [1 2.5];
+  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.red                           = 0;
+  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.lazy                          = 0;
+  
+  if prepavg>1
+  % The trimming may increase the speed of the longitudinal realignment and 
+  % may helps also to remove side effects by huge low intensity backgrounds. 
+    mbi = mbi + 1; mb_trim = mbi;
+    matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.image_selector.manysubjects.simages(1) = cfg_dep('Spatially adaptive non-local means (SANLM) denoising filter: SANLM Images', ... 
+                                                                        substruct('.','val', '{}',{mb_sanlm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+                                                                        substruct('.','files', '()',{':'}));
+    matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.image_selector.manysubjects.oimages = {};
+    matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.prefix      = '';
+    matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.mask        = 1;
+    matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.suffix      = '';
+    matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.intlim1     = 90;
+    matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.pth         = 0.4;
+    matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.avg         = 0;
+    matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.open        = 2;
+    matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.addvox      = 10; % defautl = 2, but we want to keep some more space around it for SPM noise estimation 
+    matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.spm_type    = 0;
+    matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.intlim      = 99.9999; % light intensity limitiation to avoid odd outliers
+    matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.lazy        = 0;
+  
+    if prepavg>2
+      % Normalize data range to stabilize SPM longitudinal processing?
+      % Seems to be unnecessary because SPM scale the data itself.
+      mbi = mbi + 1; mb_type = mbi;
+      matlabbatch{mbi}.spm.tools.cat.tools.spmtype.data(1)          = cfg_dep('Image data trimming: source images', ...
+                                                                        substruct('.','val', '{}',{mb_trim}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+                                                                        substruct('.','image_selector', '.','manysubjects', '.','simages'));
+      matlabbatch{mbi}.spm.tools.cat.tools.spmtype.ctype            = 16;
+      matlabbatch{mbi}.spm.tools.cat.tools.spmtype.prefix           = '';
+      matlabbatch{mbi}.spm.tools.cat.tools.spmtype.suffix           = '';
+      matlabbatch{mbi}.spm.tools.cat.tools.spmtype.range            = 99.9999;  % finally we also want to remove the worst outlier
+      matlabbatch{mbi}.spm.tools.cat.tools.spmtype.intscale         = 2;          % 0-255 ?
+      matlabbatch{mbi}.spm.tools.cat.tools.spmtype.lazy             = 0;
+
+      % This is the depenceny of the image converter that we don't need now
+      % because the filename is not changed ... just in case we need it later 
+      %   dep(1) = cfg_dep('Image data type converter: Converted Images', substruct('.','val', '{}',{mb_type}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','files', '()',{':'}));
+    end
+  end
+end
+
+
+
 % 1) longitudinal rigid registration with final masking (SAVG space)
 % -----------------------------------------------------------------------
 % Here we bring all time points to the same rigid orientation, reslice the
@@ -75,13 +153,62 @@ end
 % ########
 % RD202005: In case of strong developmental differences due to head size
 %           an affine registration or John's longitudinal average is maybe 
-%           required.
-% ########
+%           required at least to create the average. 
+% RD202201: To do so, it would be necessary to save the deformation field 
+%           or the affine factor to include volumetric changes. 
+% RD202201: Can non-linear deformations improve average quality?
+%             In ADNI011S0003 I saw no improvement by using the original 
+%             SPM pipeline.  
+def = 0; % use deformations .. 1 = one year 
 mbi = mbi + 1; mb_rigid = mbi; 
+if def>0
+  matlabbatch{mbi}.spm.tools.cat.tools.series.reg.nonlin.times  = inf; 
+  matlabbatch{mbi}.spm.tools.cat.tools.series.reg.nonlin.wparam = def * [0 0 100 25 100];
+end
+% ########
 matlabbatch{mbi}.spm.tools.cat.tools.series.bparam          = 1e6;
 matlabbatch{mbi}.spm.tools.cat.tools.series.use_brainmask   = 1;
 matlabbatch{mbi}.spm.tools.cat.tools.series.reduce          = 1;
-matlabbatch{mbi}.spm.tools.cat.tools.series.data            = '<UNDEFINED>';
+if prepavg
+  matlabbatch{mbi}.spm.tools.cat.tools.series.data(1)       =  cfg_dep('Spatially adaptive non-local means (SANLM) denoising filter: SANLM Images', ... 
+                                                                      substruct('.','val', '{}',{mb_sanlm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+                                                                      substruct('.','files', '()',{':'}));
+ 
+  % get homediretory for the move/rename operations                                                                  
+  mbi = mbi + 1; mb_dir = mbi; 
+  matlabbatch{mbi}.cfg_basicio.file_dir.cfg_fileparts.files = cfg_dep('Longitudinal Registration: Midpoint Average',...
+                                                                      substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+                                                                      substruct('.','avg', '()',{':'}));
+
+  % in case of denoising we may need another renaming step for the avg
+  mbi = mbi + 1; mb_rigid_ravg = mbi; 
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files = cfg_dep('Longitudinal Registration: Midpoint Average',...
+                                                                      substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+                                                                      substruct('.','avg', '()',{':'}));
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.moveren.moveto(1)       = cfg_dep('Get Pathnames: Directories', ...
+                                                                      substruct('.','val', '{}',{mb_dir}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+                                                                      substruct('.','p'));
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.moveren.patrep.pattern  = 'avg_sanlm_';
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.moveren.patrep.repl     = 'avg_';
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.moveren.unique          = false;
+  
+  % ... and all registrated images
+  mbi = mbi + 1; mb_rigid_rtp = mbi; 
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files = cfg_dep('Longitudinal Rigid Registration: Realigned images',...
+                                                                      substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+                                                                      substruct('.','rimg', '()',{':'}));
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.moveren.moveto(1)       = cfg_dep('Get Pathnames: Directories', ...
+                                                                      substruct('.','val', '{}',{mb_dir}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+                                                                      substruct('.','p'));
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.moveren.patrep.pattern  = 'rsanlm_';
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.moveren.patrep.repl     = 'r';
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.moveren.unique          = false;
+else
+  matlabbatch{mbi}.spm.tools.cat.tools.series.data                                        = '<UNDEFINED>';
+end
+
+
+
 
 % 2) cat12 segmentation of average image 
 % -----------------------------------------------------------------------
@@ -89,18 +216,36 @@ matlabbatch{mbi}.spm.tools.cat.tools.series.data            = '<UNDEFINED>';
 % to the MNI template.  The rigid segmentation is used to create an 
 % individual TPM in step 3.  
 mbi = mbi + 1; mb_catavg = mbi;
-matlabbatch{mbi}.spm.tools.cat.estwrite.data(1)             = cfg_dep('Longitudinal Registration: Midpoint Average',...
+if prepavg
+  matlabbatch{mbi}.spm.tools.cat.estwrite.data(1)           = cfg_dep('Move/Delete Files: Moved/Copied Files', ... 
+                                                                      substruct('.','val', '{}',{mb_rigid_ravg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+                                                                      substruct('.','files'));
+else
+  matlabbatch{mbi}.spm.tools.cat.estwrite.data(1)           = cfg_dep('Longitudinal Registration: Midpoint Average',...
                                                                       substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','avg', '()',{':'}));
+end
 matlabbatch{mbi}.spm.tools.cat.estwrite.nproc               = 0;
 if exist('opts','var') && ~isempty(opts)
   matlabbatch{mbi}.spm.tools.cat.estwrite.opts              = opts;
 end
-
-% matlabbatch{mbi}.spm.tools.cat.estwrite.opts.ngaus          = [1 1 2 3 4 2]; 
 if exist('extopts','var') && ~isempty(extopts)
-  matlabbatch{mbi}.spm.tools.cat.estwrite.extopts           = extopts;
-  
+  matlabbatch{mbi}.spm.tools.cat.estwrite.extopts           = extopts; 
+  % WMHC: Only temporary because we don't want to bias the WM segmentation of the TPs!
+  %       RD20220126: This works better but there are now maybe some more
+  %       problems with incorrected WMHs.
+  matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.segmentation.WMHC   = 1;  
+  % LAS: Only the small correction here, because it will be done in the TPs 
+  %      and we do not want to do it twice (the longTPM would introduce a bias).
+  %      The lowes setting (eps) was a bit to weak. 
+  matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.segmentation.LASstr = 0.25;
+  % RD202201: Shooting with lower frequency setting?
+  %           Although, we don't use the deformations this effects the WMHC.
+  %           But as far as this is also not used now it is not necessary/
+  %           useful to change something now.
+  %if isfield(extopts,'registration') && isfield(extopts.registration,'regmethod') && isfield(extopts.registration.regmethod,'regstr')
+  %  matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.registration.regmethod.shooting.regstr  = 14; % low frequency 2.5 mm 
+  %end
 end
 
 % RD202102: differentiation between user levels not tested yet !
@@ -132,10 +277,10 @@ matlabbatch{mbi}.spm.tools.cat.estwrite.output.warps        = [0 0];
 % 3) creating longitudinal TPM
 % -----------------------------------------------------------------------
 % Using a subject-specific TPM allows to stabilize the preprocessing of the
-% indivividual time points, mostly of the initial affine registration and 
+% individual time points, mostly of the initial affine registration and 
 % the Unified segmentation that also compensates for slight structural 
 % changes between the time points.  However the effects on the final AMAP
-% segmenation are relatively small. 
+% segmentation are relatively small. 
 if longTPM
   mbi = mbi + 1; mb_tpm = mbi;
   matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.files(1)  = cfg_dep('CAT12: Segmentation (current release): rp1 affine Image',...
@@ -147,16 +292,26 @@ if longTPM
 end
 
 
+
+
+% 3a) longitudinal bias correction (in development)
+% -----------------------------------------------------------------------
 if bstr > 0
   mbi = mbi + 1; mb_tpbc = mbi;
-  matlabbatch{mbi}.spm.tools.cat.tools.longBiasCorr.images(1)  = cfg_dep('Longitudinal Rigid Registration: Realigned images',...
-                                                                      substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
-                                                                      substruct('.','rimg', '()',{':'}));
-  matlabbatch{mbi}.spm.tools.cat.tools.longBiasCorr.segment(1) = cfg_dep('CAT12: Segmentation (current release): Native Label Image',...
-                                                                      substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
-                                                                      substruct('.','label', '()',{':'}));
-  matlabbatch{mbi}.spm.tools.cat.tools.longBiasCorr.str        = job.bstr; 
-  matlabbatch{mbi}.spm.tools.cat.tools.longBiasCorr.prefix     = 'm'; 
+  if prepavg  
+    matlabbatch{mbi}.spm.tools.cat.tools.longBiasCorr.images(1)  = cfg_dep('Move/Delete Files: Moved/Copied Files', ... 
+                                                                        substruct('.','val', '{}',{mb_rigid_rtp}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+                                                                        substruct('.','files'));
+  else                                                                  
+    matlabbatch{mbi}.spm.tools.cat.tools.longBiasCorr.images(1)  = cfg_dep('Longitudinal Rigid Registration: Realigned images',...
+                                                                        substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+                                                                        substruct('.','rimg', '()',{':'}));
+  end
+  matlabbatch{mbi}.spm.tools.cat.tools.longBiasCorr.segment(1)   = cfg_dep('CAT12: Segmentation (current release): Native Label Image',...
+                                                                        substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+                                                                        substruct('.','label', '()',{':'}));
+  matlabbatch{mbi}.spm.tools.cat.tools.longBiasCorr.str          = job.bstr; 
+  matlabbatch{mbi}.spm.tools.cat.tools.longBiasCorr.prefix       = 'm'; 
 end
 
 
@@ -174,6 +329,10 @@ if bstr > 0
   matlabbatch{mbi}.spm.tools.cat.estwrite.data(1)           = cfg_dep('Segment: Longitudinal Bias Corrected',...
                                                                       substruct('.','val', '{}',{mb_tpbc}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','bc', '()',{':'}));
+elseif prepavg 
+  matlabbatch{mbi}.spm.tools.cat.estwrite.data(1)           = cfg_dep('Move/Delete Files: Moved/Copied Files', ... 
+                                                                      substruct('.','val', '{}',{mb_rigid_rtp}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+                                                                      substruct('.','files'));
 else
   matlabbatch{mbi}.spm.tools.cat.estwrite.data(1)           = cfg_dep('Longitudinal Rigid Registration: Realigned images',...
                                                                       substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
@@ -217,13 +376,19 @@ matlabbatch{mbi}.spm.tools.cat.estwrite.output.bias.warped  = 0;
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.warps        = [1 0];
 
 if useprior
-  matlabbatch{mbi}.spm.tools.cat.estwrite.useprior(1)         = cfg_dep('Longitudinal Registration: Midpoint Average',...
+  if prepavg 
+    matlabbatch{mbi}.spm.tools.cat.estwrite.useprior(1)     = cfg_dep('Move/Delete Files: Moved/Copied Files', ... 
+                                                                      substruct('.','val', '{}',{mb_rigid_ravg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+                                                                      substruct('.','files'));
+  else
+    matlabbatch{mbi}.spm.tools.cat.estwrite.useprior(1)     = cfg_dep('Longitudinal Registration: Midpoint Average',...
                                                                       substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','avg', '()',{':'}));
+  end
 end
 
 if longTPM
-  matlabbatch{mbi}.spm.tools.cat.estwrite.opts.tpm            = cfg_dep('Longitudinal TPM creation: Longitudinal TPMs',...
+  matlabbatch{mbi}.spm.tools.cat.estwrite.opts.tpm          = cfg_dep('Longitudinal TPM creation: Longitudinal TPMs',...
                                                                       substruct('.','val', '{}',{mb_tpm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','tpm', '()',{':'}));
 end
@@ -244,13 +409,16 @@ matlabbatch{mbi}.spm.tools.cat.tools.avg_img.data(1)  = cfg_dep('CAT12: Segmenta
 matlabbatch{mbi}.spm.tools.cat.tools.avg_img.output   = '';
 matlabbatch{mbi}.spm.tools.cat.tools.avg_img.outdir   = {''};
 
+
+
+
 if longmodel>1
 % 6) creating time point specific deformation 
 % -----------------------------------------------------------------------
 % To reduce longitudinal changes of moving structures between time points 
 % a longitudinal Shooting template is estimated.
 % #######
-% RD202005: In case of developemental data, we may need to use different
+% RD202005: In case of developmental data, we may need to use different
 %           Shooting parameters (e.g., more iterations, more low-freq.
 %           changes to adapt for head size changes.
 % #######
@@ -286,9 +454,15 @@ if longmodel>1
     matlabbatch{mbi}.spm.tools.cat.tools.resize.data(1)       = cfg_dep('Run Shooting (create Templates): Deformation Fields',...
                                                                       substruct('.','val', '{}',{mb_GS}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','def', '()',{':'}));
-    matlabbatch{mbi}.spm.tools.cat.tools.resize.restype.Pref  = cfg_dep('Longitudinal Registration: Midpoint Average',...
-                                                                      substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
-                                                                      substruct('.','avg', '()',{':'}));
+    if prepavg
+      matlabbatch{mbi}.spm.tools.cat.tools.resize.restype.Pref  = cfg_dep('Move/Delete Files: Moved/Copied Files', ... 
+                                                                        substruct('.','val', '{}',{mb_rigid_ravg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+                                                                        substruct('.','files'));
+    else
+      matlabbatch{mbi}.spm.tools.cat.tools.resize.restype.Pref  = cfg_dep('Longitudinal Registration: Midpoint Average',...
+                                                                        substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+                                                                        substruct('.','avg', '()',{':'}));
+    end
     matlabbatch{mbi}.spm.tools.cat.tools.resize.interp        = 5;
     matlabbatch{mbi}.spm.tools.cat.tools.resize.prefix        = ''; % has to be another name?
   else
@@ -332,38 +506,45 @@ if longmodel>1
   end
 end
 
+
 % 8) applying deformations to time point optimized native segmentations
 % -----------------------------------------------------------------------
-% applying deformations to tissues
-mbi = mbi + 1; 
-matlabbatch{mbi}.spm.tools.cat.tools.defs.field1(1)       = cfg_dep('Image Average: Average Image: ',...
-                                                                      substruct('.','val', '{}',{mb_avgdef}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
-                                                                      substruct('.','files'));
-for ci = 1:2 + write_CSF % fill image sets
-  if longmodel==1
-    matlabbatch{mbi}.spm.tools.cat.tools.defs.images(ci)  = cfg_dep(sprintf('CAT12: Segmentation (current release): p%d Image',ci),...
-                                                                      substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
-                                                                      substruct('.','tiss', '()',{ci}, '.','p', '()',{':'}));
+% Applying deformations to tissues by using separate batches to keep the 
+% dependencies for the different tissue maps of each longitudinal model to
+% create the longitudinal reports.
+mbfdef = zeros(2,2 + write_CSF);
+for ci = 1:(2 + write_CSF)*(1 + (longmodel==3)) % fill image sets
+  mbi = mbi + 1; 
+  mbfdef(1 + (ci>(2+write_CSF)) , 1 + mod(ci - 1,2+write_CSF)) = mbi; 
+  matlabbatch{mbi}.spm.tools.cat.tools.defs.field1(1)      = cfg_dep('Image Average: Average Image: ',...
+                                                                        substruct('.','val', '{}',{mb_avgdef}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+                                                                        substruct('.','files'));
+  if ci <= 2 + write_CSF
+    if longmodel==1
+      matlabbatch{mbi}.spm.tools.cat.tools.defs.images(1)  = cfg_dep('Apply deformations (many subjects): All Output Files', substruct('.','val', '{}',{11}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','vfiles'));
+
+      matlabbatch{mbi}.spm.tools.cat.tools.defs.images(1)  = cfg_dep(sprintf('CAT12: Segmentation (current release): p%d Image',ci),...
+                                                                        substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+                                                                        substruct('.','tiss', '()',{ci}, '.','p', '()',{':'}));
+    else
+      matlabbatch{mbi}.spm.tools.cat.tools.defs.images(1)  = cfg_dep('Apply deformations (many subjects): All Output Files',...
+                                                                        substruct('.','val', '{}',{mb_aGS(ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+                                                                        substruct('.','vfiles'));
+    end
   else
-    matlabbatch{mbi}.spm.tools.cat.tools.defs.images(ci)  = cfg_dep('Apply deformations (many subjects): All Output Files',...
-                                                                      substruct('.','val', '{}',{mb_aGS(ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
-                                                                      substruct('.','vfiles'));
+    if longmodel==3
+      matlabbatch{mbi}.spm.tools.cat.tools.defs.images(1)  = cfg_dep(sprintf('CAT12: Segmentation (current release): p%d Image',ci - (2 + write_CSF)),...
+                                                                        substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+                                                                        substruct('.','tiss', '()',{ci - (2 + write_CSF)}, '.','p', '()',{':'}));
+    end
   end
+  matlabbatch{mbi}.spm.tools.cat.tools.defs.interp          = 1;
+  matlabbatch{mbi}.spm.tools.cat.tools.defs.bb  = [NaN NaN NaN
+                                                   NaN NaN NaN];
+  matlabbatch{mbi}.spm.tools.cat.tools.defs.vox = [NaN NaN NaN];
+  if modulate, matlabbatch{mbi}.spm.tools.cat.tools.defs.modulate = modulate; end  % modulation option for applying deformations
 end
 
-for ci = 1:2 + write_CSF % fill image sets
-  if longmodel==3
-    matlabbatch{mbi}.spm.tools.cat.tools.defs.images(ci+2+write_CSF)  = cfg_dep(sprintf('CAT12: Segmentation (current release): p%d Image',ci),...
-                                                                      substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
-                                                                      substruct('.','tiss', '()',{ci}, '.','p', '()',{':'}));
-  end
-end
-
-matlabbatch{mbi}.spm.tools.cat.tools.defs.interp          = 1;
-matlabbatch{mbi}.spm.tools.cat.tools.defs.bb  = [NaN NaN NaN
-                                                 NaN NaN NaN];
-matlabbatch{mbi}.spm.tools.cat.tools.defs.vox = [NaN NaN NaN];
-if modulate, matlabbatch{mbi}.spm.tools.cat.tools.defs.modulate = modulate; end  % modulation option for applying deformations
 
 
 % 9) applying deformations to average T1 image
@@ -372,9 +553,15 @@ mbi = mbi + 1;
 matlabbatch{mbi}.spm.tools.cat.tools.defs.field1(1)       = cfg_dep('Image Average: Average Image: ',...
                                                                       substruct('.','val', '{}',{mb_avgdef}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','files'));
-matlabbatch{mbi}.spm.tools.cat.tools.defs.images(1)       = cfg_dep('Longitudinal Registration: Midpoint Average',...
+if prepavg    
+  matlabbatch{mbi}.spm.tools.cat.tools.defs.images(1)     = cfg_dep('Move/Delete Files: Moved/Copied Files', ... 
+                                                                        substruct('.','val', '{}',{mb_rigid_ravg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+                                                                        substruct('.','files'));
+else
+  matlabbatch{mbi}.spm.tools.cat.tools.defs.images(1)     = cfg_dep('Longitudinal Registration: Midpoint Average',...
                                                                       substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','avg', '()',{':'}));
+end
 matlabbatch{mbi}.spm.tools.cat.tools.defs.interp          = 1;
 matlabbatch{mbi}.spm.tools.cat.tools.defs.modulate        = 0;
 matlabbatch{mbi}.spm.tools.cat.tools.defs.bb  = [NaN NaN NaN
@@ -383,7 +570,40 @@ matlabbatch{mbi}.spm.tools.cat.tools.defs.vox = [NaN NaN NaN];
 
 
 
-% 10) delete temporary files
+% 10) final report
+if any(longreport) %&& spm_get_defaults('job.extopts.expertgui')>1  
+  for ci = 1:2 + write_CSF
+    for modi = 1:2
+      if longreport(ci) && mbfdef(modi,ci)>0
+        if ( modi == 1 && (longmodel==1 || longmodel==3) ) ||  ( modi == 2 && (longmodel==2 || longmodel==3) ) 
+          mbi = mbi + 1; 
+          matlabbatch{mbi}.spm.tools.cat.tools.long_report.data_vol(1)      = cfg_dep('Apply deformations (many subjects): All Output Files',...
+                                                                              substruct('.','val', '{}',{mbfdef(modi,ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+                                                                              substruct('.','vfiles', '()',{':'}));  
+          if surfaces
+            matlabbatch{mbi}.spm.tools.cat.tools.long_report.data_surf(1)   = cfg_dep('CAT12: Segmentation (current release): Left Thickness',...
+                                                                              substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+                                                                              substruct('()',{1}, '.','lhthickness', '()',{':'})); 
+          else
+            matlabbatch{mbi}.spm.tools.cat.tools.long_report.data_surf      = {''}; 
+          end
+          matlabbatch{mbi}.spm.tools.cat.tools.long_report.data_xml(1)      = cfg_dep('CAT12: Segmentation (current release): ROI XML File',...
+                                                                              substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+                                                                              substruct('.','catroi')); 
+          %matlabbatch{mbi}.spm.tools.cat.tools.long_report.timepoints       = []; % not implemented yet
+          %matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.midpoint    = 0; % not implemented yet
+          matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.smoothvol   = 3;
+          matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.smoothsurf  = 12;
+        end
+      end
+    end
+  end
+end
+
+
+
+
+% 11) delete temporary files
 % -----------------------------------------------------------------------
 if delete_temp
   mbi = mbi + 1; 
@@ -400,7 +620,7 @@ if delete_temp
                                                                       substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('()',{1}, '.','fordef', '()',{':'})); c = c+1;
   % remove average preprocessing data
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): CAT Report JGP',...
+  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): CAT Report JPG',...
                                                                       substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','catreportjpg', '()',{':'})); c = c+1;
   matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation (current release): CAT Report',...
@@ -480,6 +700,12 @@ if delete_temp
                                                                       substruct('()',{1}, '.','rhpbt', '()',{':'})); c = c+1;
   end
   
+  if prepavg 
+    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Spatially adaptive non-local means (SANLM) denoising filter: SANLM Images', ... 
+                                                                    substruct('.','val', '{}',{mb_sanlm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+                                                                    substruct('.','files', '()',{':'})); c = c+1;
+  end
+  
   % remove timepoint deformations
   if longTPM
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Longitudinal TPM creation: Longitudinal TPMs',...
@@ -505,7 +731,7 @@ if delete_temp
 		for ci = 1:2 % for shooting we only have GM/WM
 			matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Resize images: Resized', ...
 																																			substruct('.','val', '{}',{mb_lr(ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-																																			substruct('.','res', '()',{':'})); ; c = c+1;
+																																			substruct('.','res', '()',{':'})); c = c+1;
 		end
 
     if longmodel==2 % temporary warped segmentations
@@ -516,7 +742,6 @@ if delete_temp
       end
     end
   end
-  
   % final command of this batch 
   matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.delete  = false;
 end

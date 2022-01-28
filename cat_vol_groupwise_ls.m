@@ -177,6 +177,7 @@ brainmask = [];
 % check whether reduce option is enabled for non-linear registration
 if all(isfinite(w_settings(:))) & reduce
   reduce = 0;
+  use_brainmask = 0; 
   fprintf('Reducing bounding box is not supported for non-linear registration and will be disabled.\n');
 end
 
@@ -278,11 +279,11 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
             % for i=1:numel(param), fprintf('  %12.5g %12.5g %12.5g', prec(i)*ss(i), param(i).eb, param(i).ev); end; fprintf('  0\n');
 
             if (level == 1) && (iter == 1)
-            
+              vx_vol  = sqrt(sum(pyramid(level).mat(1:3,1:3).^2)); 
+              
               % reduce bounding box at final resolution level
               if reduce
                 fprintf('Reduce bounding box for final resolution level.\n');
-                vx_vol  = sqrt(sum(pyramid(level).mat(1:3,1:3).^2)); 
                 
                 % intensity normalization using 99% of data (to ignore outliers)
                 [msk,hth] = cat_stat_histth(smooth3(mu),0.99,0); 

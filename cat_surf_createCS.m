@@ -1,4 +1,4 @@
-function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
+function [Yth1,S,Psurf,EC,defect_size,res] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt,job)
 % ______________________________________________________________________
 % Surface creation and thickness estimation.
 %
@@ -115,7 +115,11 @@ cstime = clock;
   % correction for 'n' prefix for noise corrected and/or interpolated files
   [pp,ff]   = spm_fileparts(V.fname);
 
-  [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(V0.fname);
+  if exist('job','var')
+    [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(V0.fname,job);
+  else
+    [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(V0.fname);
+  end
   
   % change surffolder name if subfolders are forced and surffolder has
   % default name "surf" (i.e. for non-BIDS structure)

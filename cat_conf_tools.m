@@ -149,7 +149,8 @@ function tools = cat_conf_tools(expert)
   [defs,defs2]                = conf_vol_defs;
   nonlin_coreg                = cat_conf_nonlin_coreg;
   createTPM                   = conf_createTPM(data_vol,expert,suffix,outdir); 
-  createTPMlong               = conf_createTPMlong(data_vol);
+  createTPMlong               = conf_createTPMlong(data_vol,expert);
+  long_report                 = conf_long_report(data_vol,data_xml,expert);
   headtrimming                = conf_vol_headtrimming(intlim,spm_type,prefix,suffix,lazy,expert);
   check_SPM                   = conf_stat_check_SPM(outdir,fname,save,expert); 
   showslice                   = conf_stat_showslice_all(data_vol);
@@ -205,6 +206,7 @@ function tools = cat_conf_tools(expert)
     shootlong,...                         cat.pre.long.?          % hidden
     biascorrlong,...                      cat.pre.long.?          % hidden
     createTPMlong, ...                    cat.pre.long.createTPM  % hidden
+    long_report, ...                  cat.pre.long.report     % hidden
     ...
     createTPM, ...                        
     nonlin_coreg, ...                     cat.pre.vtools.
@@ -223,7 +225,155 @@ function tools = cat_conf_tools(expert)
   %  tools.values = [tools.values,{urqio}]; 
   %end
 return
+%_______________________________________________________________________
+function long_report = conf_long_report(data_vol,data_xml,expert)
+% -------------------------------------------------------------------------
+% Batch to create a final report of the processing of a set of files of one
+% (or multiple) subject(s).
+% 
+% RD202201: start of development for fast visualisation of longitudinal and
+%           test-retest data
+% -------------------------------------------------------------------------
+  data_vol.name         = 'Volume Data Files';
+  data_vol.num          = [0 Inf];
+  data_vol.val{1}       = {''};
+  
+  data_surf             = cfg_files;
+  data_surf.tag         = 'data_surf';
+  data_surf.name        = '(Left) Surface Data Files';
+  data_surf.filter      = 'any';
+  data_surf.ufilter     = 'lh.(?!cent|pial|white|sphe|defe|hull|pbt).*';
+  data_surf.num         = [0 Inf];
+  data_surf.help        = {'Surface data files. Both sides will be processed'};
+  data_surf.val{1}      = {''};
+   
+  avg_vol               = data_vol; 
+  avg_vol.tag           = 'avg_vol';
+  avg_vol.name          = 'Volume Average Data File (In Development)'; % ###### not implemented yet ######
+  avg_vol.num           = [0 1];
+  avg_vol.help          = {'Segmentation of an average volume T1 to estimate further measures.' ''}; 
+  avg_vol.val{1}        = {''};
+  avg_vol.hidden        = expert<2;
 
+  avg_surf              = data_surf; 
+  avg_surf.tag          = 'avg_vol';
+  avg_surf.name         = '(Left) Surface Average Data File (In Development)'; % ###### not implemented yet ######
+  avg_surf.num          = [0 1];
+  avg_surf.help         = {'Surface/thickness of an average volume T1 to estimate further measures.' ''}; 
+  avg_surf.val{1}       = {''}; 
+  avg_surf.hidden       = expert<2;
+  
+  % selected automatically ... need further controlling routines for covariance analysis
+  xmls                  = data_xml; 
+  xmls.name             = 'XML Data Files (In Development)'; % ###### not implemented yet ######
+  xmls.hidden           = expert<2; 
+  
+  timepoints            = cfg_entry;
+  timepoints.tag        = 'timepoints';
+  timepoints.name       = 'Timepoints (In Development)'; % ###### not implemented yet ######
+  timepoints.help       = {'Define difference between timepoints in years. '}; 
+  timepoints.strtype    = 'r';
+  timepoints.num        = [0 inf];
+  timepoints.val        = {[]}; 
+  timepoints.hidden     = expert<2;
+  
+  
+  % == options ==
+  smoothvol             = cfg_entry;
+  smoothvol.tag         = 'smoothvol';
+  smoothvol.name        = 'Volumetric Smoothing';
+  smoothvol.help        = {'FWHM of volumetric smoothing in mm.'}; 
+  smoothvol.strtype     = 'r';
+  smoothvol.num         = [1 1];
+  smoothvol.val         = {3}; 
+  
+  smoothsurf            = cfg_entry;
+  smoothsurf.tag        = 'smoothsurf';
+  smoothsurf.name       = 'Thickness Smoothing';
+  smoothsurf.help       = {'Amount of surface-based smoothing in mm'}; 
+  smoothsurf.strtype    = 'r';
+  smoothsurf.num        = [1 1];
+  smoothsurf.val        = {12}; 
+  
+  midpoint              = cfg_menu;
+  midpoint.tag          = 'midpoint';
+  midpoint.name         = 'Scaling (In Development)'; % ###### not implemented yet ######
+  midpoint.labels       = {
+    'first image'
+    'mean'
+    };
+  midpoint.values       = {0;1};
+  midpoint.val          = {0};
+  midpoint.help         = {'Data scaling by first image or by mean value. ' ''}; 
+  midpoint.hidden       = expert<2;
+  
+  boxplot               = cfg_menu;
+  boxplot.tag           = 'boxplot';
+  boxplot.name          = 'Boxplot (In Development)'; % ###### not implemented yet ######
+  boxplot.labels        = {
+    'no'
+    'yes'
+    };
+  boxplot.values        = {0;1};
+  boxplot.val           = {0};
+  boxplot.help          = {'Use boxplots.' ''};
+  boxplot.hidden        = expert < 2;
+  
+  
+  opts                  = cfg_exbranch;
+  opts.tag              = 'opts';
+  opts.name             = 'Options';
+  opts.val              = {smoothvol smoothsurf midpoint}; 
+  opts.help             = {'Specify some processing options.' ''};
+  opts.hidden           = expert<1;
+  
+  % == output ==
+  vols                  = cfg_menu;
+  vols.tag              = 'vols';
+  vols.name             = 'Difference Maps';
+  vols.labels           = {'No';'Yes'};
+  vols.values           = {0,1};
+  vols.val              = {0};
+  vols.help             = {'Write difference volume maps.' ''};
+  
+  surfs                 = cfg_menu;
+  surfs.tag             = 'surfs';
+  surfs.name            = 'Difference Surfaces Data Files';
+  surfs.labels          = {'No';'Yes'};
+  surfs.values          = {0,1};
+  surfs.val             = {0};
+  surfs.help            = {'Write difference surface data files.' ''};
+  
+  xml                   = cfg_menu;
+  xml.tag               = 'xml';
+  xml.name              = 'XML';
+  xml.labels            = {'No';'Yes'};
+  xml.values            = {0,1};
+  xml.val               = {1};
+  xml.help              = {'Write combined XML file.' ''};
+  
+  output                = cfg_exbranch;
+  output.tag            = 'output';
+  output.name           = 'Write Output Data';
+  output.val            = {vols surfs xml}; 
+  output.help           = {'Specify output data.' ''};
+  output.hidden         = expert<1;
+  
+  % == main ==
+  long_report           = cfg_exbranch;
+  long_report.tag       = 'long_report';
+  long_report.name      = 'Longitudinal Report';
+  if expert
+    long_report.val     = {data_vol avg_vol data_surf avg_surf xmls timepoints opts output};
+  else
+    long_report.val     = {data_vol data_surf};
+  end  
+  long_report.prog      = @cat_long_report;
+  %long_report.vout      = @vout_long_report; 
+  long_report.hidden    = expert<1;
+  long_report.help      = {
+    };
+return
 %_______________________________________________________________________
 function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
 % -------------------------------------------------------------------------
@@ -955,7 +1105,7 @@ function createTPM = conf_createTPM(data,expert,name,outdir)
 return
 
 %_______________________________________________________________________
-function createTPMlong = conf_createTPMlong(data)
+function createTPMlong = conf_createTPMlong(data,expert)
 % -------------------------------------------------------------------------
 % This is a special version of the cat_vol_createTPM batch only for the
 % longitudinal preprocessing without further GUI interaction and well
@@ -1016,7 +1166,7 @@ function createTPMlong = conf_createTPMlong(data)
   createTPMlong.prog   = @cat_long_createTPM;
   createTPMlong.vfiles = @vout_createTPMlong;
   createTPMlong.vout   = @vout_createTPMlong;
-  createTPMlong.hidden = true; 
+  createTPMlong.hidden = expert<1; 
   createTPMlong.help   = {
     'Create individual TPMs for longitudinal preprocessing. This is a special version of the cat_vol_createTPM batch only for the longitudinal preprocessing without further GUI interaction and well defined input. '
    ['There has to be 6 tissue classes images (GM,WM,CSF,HD1,HD2,BG) that can be in the native space, the affine or a non-linear normalized space.  ' ...
@@ -3620,7 +3770,7 @@ PU = job.field1;
 PI = job.images;
 
 vf = cell(numel(PI),1);
-for i=1:numel(PU),
+for i=1:numel(PU), % ########### RD202201: i is not used  
     for m=1:numel(PI),
         [pth,nam,ext,num] = spm_fileparts(PI{m});
         
@@ -3631,6 +3781,8 @@ for i=1:numel(PU),
             filename = fullfile(pth,['mw' nam ext num]);
         case 0
             filename = fullfile(pth,['w' nam ext num]);
+        otherwise 
+            error('incorrect - DEP')
         end;
         vf{m} = filename;
     end
@@ -3655,6 +3807,8 @@ function vf = vout_defs2(job)
               filename = fullfile(pth,['mw' nam ext num]);
           case 0
               filename = fullfile(pth,['w' nam ext num]);
+          otherwise 
+            error('incorrect - DEP')
           end;
           vf{i,m} = filename;
       end

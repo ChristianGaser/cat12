@@ -86,6 +86,8 @@ function varargout = cat_vol_qa(action,varargin)
   try
     if strcmp(action,'cat12err')
       [mrifolder, reportfolder] = cat_io_subfolders(varargin{1}.job.data,varargin{1}.job);
+    elseif strcmp(action,'cat12')
+      [mrifolder, reportfolder] = cat_io_subfolders(varargin{2},varargin{6}.job);
     else
       [mrifolder, reportfolder] = cat_io_subfolders(varargin{4}.catlog,varargin{6}.job);
     end
@@ -740,6 +742,7 @@ function varargout = cat_vol_qa(action,varargin)
                 Ysc>0.75 & Yp0<1.25;% avoid PVE & ventricle focus
         if sum(Ycm(:)>0)<10; Ycm=cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<cat_stat_nanmean(T1th(1:2)),'e') & Yp0<1.25; end
         if sum(Ycm(:)>0)<10; Ycm=Yp0>0.5 & Yms<cat_stat_nanmean(T1th(1:2)) & Yp0<1.25; end
+        if sum(Ycm(:)>0)<10; Ycm=Yp0>0.5 & Yp0<1.5; end
         %Ycm  = Ycm | (Yp0==1 & Ysc>0.7 & Yms<cat_stat_nanmean(T1th(2:3))); % HEBEL      
         Ygm1 = round(Yp0*10)/10==2;                                       % avoid PVE 1
         Ygm2 = cat_vol_morph(Yp0>1.1,'e') & cat_vol_morph(Yp0<2.9,'e');   % avoid PVE 2
@@ -933,7 +936,7 @@ function varargout = cat_vol_qa(action,varargin)
       NCwc = min(wcth,max(0,NCwc-wcth)); NCww = min(wcth,NCww) - NCwc; % use CSF if possible
       if NCwc<3*wcth && NCww<10*wcth, NCRc = min(NCRc,NCRw); end
       QAS.qualitymeasures.NCR = max(0,NCRw*NCww + NCRc*NCwc)/(NCww+NCwc);
-      QAS.qualitymeasures.NCR = QAS.qualitymeasures.NCR * abs(prod(resr.vx_volo*res))^0.4 * 5/4; %* 7.5; %15;
+      QAS.qualitymeasures.NCR = real( QAS.qualitymeasures.NCR * abs(prod(resr.vx_volo*res))^0.4 * 5/4); %* 7.5; %15;
       %QAS.qualitymeasures.CNR = 1 / QAS.qualitymeasures.NCR;  
 %fprintf('NCRw: %8.3f, NCRc: %8.3f, NCRf: %8.3f\n',NCRw,NCRc,(NCRw*NCww + NCRc*NCwc)/(NCww+NCwc));
 

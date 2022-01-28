@@ -320,6 +320,14 @@ function varargout = cat_surf_display(varargin)
             end
         end    
       else
+        switch sinfo(i).texture
+          case {'longThicknessChanges'}
+            if expert<2
+              h = cat_surf_render('ColourMap',h.axis,flip(cat_io_colormaps('BWR',128),1)); 
+            else
+              h = cat_surf_render2('ColourMap',h.axis,flip(cat_io_colormaps('BWR',128),1)); 
+            end
+        end
         if expert<2
           cat_surf_render('clim',h.axis,job.caxis);
         else
