@@ -1,5 +1,24 @@
 ------------------------------------------------------------------------
-r1933 | gaser | 2022-01-25 23:05:00
+r1934 | gaser | 2022-01-28 10:47:58
+
+Changed paths:
+M       CHANGES.txt
+M       Makefile
+M       cat_stat_spm2x.m
+M       cat_vol_slice_overlay.m
+M       cat_vol_slice_overlay_ui.m
+
+(1) Changed: Updated help text and examples for cat_vol_slice_overlay_ui.m
+             to cover all options.
+(2) Changed: Extended cat_vol_slice_overlay to automatically define output 
+             images with either one column or one row.
+             options.
+(3) Changed: Updated help text in Makefile. 
+(4) Fixed:   Corrected bug in atlas output for cat_stat_spm2x where header 
+             information wasn't correct in some cases.
+             
+------------------------------------------------------------------------
+r1933 | gaser | 2022-01-25 23:05:50 +0100 (Tue, 25 Jan 2022) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +32,7 @@ M       html/cat.html
              not necessary.
 (2) Fixed:   Output for cat_stat_spm2x was also written for empty results.
              
+
 ------------------------------------------------------------------------
 r1932 | gaser | 2022-01-13 00:24:44 +0100 (Thu, 13 Jan 2022) | 30 lines
 

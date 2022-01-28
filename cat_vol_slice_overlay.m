@@ -3,19 +3,26 @@ function cat_vol_slice_overlay(OV)
 % Call help for slice_overlay for any additional help
 % 
 % Additional fields to slice_overlay:
-% OV.xy    - define number of columns and rows
-%            comment this out for interactive selection
-% OV.atlas - define atlas for labeling
-%            comment this out for interactive selection
-%            or use 'none' for no atlas information
-% OV.save  - save result as png/jpg/pdf/tif
-%            comment this out for interactive selection or use '' for not 
-%            saving any file or use just file extension (png/jpg/pdf/tif) to 
-%            automatically estimate filename to save
-% OV.FS    - normalized font size
+% OV.name       - char array of filenames for overlay that can be interactively
+%                 selected
+% OV.slices_str - char array of slice values (e.g. '-32:2:20')
+%                 use empty string for automatically estimating slices with
+%                 local maxima
+% OV.xy         - define number of columns and rows
+%                 comment this out for interactive selection or set the values
+%                 to [Inf 1] for using one row and automatically estimate number
+%                 of columns or use [1 Inf] for using one column
+% OV.atlas      - define atlas for labeling
+%                 comment this out for interactive selection
+%                 or use 'none' for no atlas information
+% OV.save       - save result as png/jpg/pdf/tif
+%                 comment this out for interactive selection or use '' for not 
+%                 saving any file or use just file extension (png/jpg/pdf/tif) to 
+%                 automatically estimate filename to save
+% OV.FS         - normalized font size (default 0.08)
 % OV.name_subfolder
-%          - if result is saved as image use up to 2 subfolders to add their 
-%            names to the filename (default 1)
+%               - if result is saved as image use up to 2 subfolders to add their 
+%                 names to the filename (default 1)
 %
 % see cat_vol_slice_overlay_ui.m for an example
 % ______________________________________________________________________
@@ -106,7 +113,7 @@ else
   sel = 1;
 end
 
-nm = deblank(OV.name(sel, :));
+OV.name = deblank(OV.name(sel, :));
 
 % if only one argument is given assume that parameters are the same for all files
 if size(OV.range, 1) > 1
@@ -128,8 +135,8 @@ else
   compare_to_threshold = @(a,b) ge(a,b);
 end
 
-[path, tmp] = spm_fileparts(nm);
-img = nm;
+[path, tmp] = spm_fileparts(OV.name);
+img = OV.name;
 
 n_slice = size(OV.slices_str, 1);
 if n_slice > 0
@@ -233,11 +240,18 @@ xy_name = num2str(xy);
 str = deblank(xy_name(1, :));
 for i = 2:n, str = [str '|' deblank(xy_name(i, :))]; end
 
+% either interactively select columns/rows or use the defined values
 if ~isfield(OV, 'xy')
   indxy = spm_input('Select number of columns/rows', '+1', 'm', str);
   xy = xy(indxy, :);
 else
-  xy = OV.xy;
+  if ~isfinite(OV.xy(1))
+    xy = xy(n,:);
+  elseif ~isfinite(OV.xy(2))
+    xy = xy(1,:);
+  else
+    xy = OV.xy;
+  end
 end
 
 
