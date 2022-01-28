@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1935 | dahnke | 2022-01-28 13:47:45
+r1936 | dahnke | 2022-01-28 15:37:34
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_report.m
+
+(1) Fixed:   Corrected tiny bugs in cat_long_report.
+------------------------------------------------------------------------
+r1935 | dahnke | 2022-01-28 13:47:57 +0100 (Fri, 28 Jan 2022) | 54 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -53,6 +61,7 @@ A       html/images/catlongreportj_mwp1r.jpg
 (10) Fixed:   Small correction in cat_vol_headtrimming if no new file is written.  
 (11) Fixed:   Corrected small bug in filename settings in cat_vol_qa.  
 (12) Fixed:   Corrected small rare bug in cat_run_job[1639]. 
+
 
 ------------------------------------------------------------------------
 r1934 | gaser | 2022-01-28 10:48:48 +0100 (Fri, 28 Jan 2022) | 17 lines

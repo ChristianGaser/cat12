@@ -160,7 +160,7 @@ function [cres,Vmn,Vidiff,Vrdiff,Vadiff] = cat_vol_longdiff(Pdata_vol,Pavg,s,wri
 
   % the average is created by a more complex function and not only the
   % mean/median so it is not clear what I can do if it is missed
-  useAvg = 0 % exist(Pavg{1},'file'); 
+  useAvg = 0; % exist(Pavg{1},'file'); 
   if useAvg
     Vavg = spm_vol(Pavg{1}); 
     Yavg = spm_read_vols(Vavg); 
@@ -403,11 +403,11 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
         repmat(long.dist_thickness(1,:),size(long.dist_thickness,1),1);
     end
     
-    % combine 
+    %% combine 
     QM  = struct(); 
     QFN = {'qualitymeasures','qualityratings','subjectmeasures'};
     for qfni = 1:numel(QFN)
-      FN = fieldnames(xml(fi).(QFN{qfni})); clear QM QMF; 
+      FN = fieldnames(xml(fi).(QFN{qfni})); clear QMF; 
       for fni = 1:numel(FN)
         try
           for fi = 1:numel(job.data_xml)
@@ -415,7 +415,7 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
           end
           QM.(QFN{qfni}).(FN{fni}) = mean(QMF.(FN{fni}));
         catch
-          cat_io_cprint('err','cat_long_report:XMLerror','Error in extracting XML data.\n'); 
+          cat_io_cprintf('err','cat_long_report:XMLerror','Error in extracting XML data.\n'); 
         end
       end
     end
