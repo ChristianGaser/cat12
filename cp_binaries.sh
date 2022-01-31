@@ -16,5 +16,5 @@ else
 	cd ../CAT.maci64
 fi
 
-for i in CAT*; do cp ~/work/c/CAT/build-native/Progs/${i} .; done
+for i in CAT*; do cp ~/Dropbox/c/CAT/build-native/Progs/${i} .; done
 cd ..
