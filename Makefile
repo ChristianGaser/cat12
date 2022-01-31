@@ -117,7 +117,7 @@ scp_precompile:
 	-@find ${PRECOMPILED} -type f -name .DS_Store -exec rm {} \;
 	-@chmod -R a+r,go-w ${PRECOMPILED}
 	-@find ${PRECOMPILED} -type f \( -name "*.sh" -o -name "spm12" \) -exec chmod a+x {} \;
-	-@for i in Linux Mac Win; do \
+	-@for i in Linux Mac; do \
 	   mkdir -p ${NEWVERSION}_r${REVISION}_R2017b_MCR_$${i} ;\
 	   ln -s ${PRECOMPILED}/MCR_$${i}/*spm12* ${PRECOMPILED}/MCR_$${i}/readme.txt ${PRECOMPILED}/MCR_$${i}/MCR_v93.webloc ${NEWVERSION}_r${REVISION}_R2017b_MCR_$${i}/ ;\
 	   cp -r standalone ${NEWVERSION}_r${REVISION}_R2017b_MCR_$${i}/ ;\
@@ -132,10 +132,10 @@ scp_precompile:
 # copy binaries after cross-compiling
 cp_binaries: 
 	-@echo copy binaries
-	-@test ! -f ~/work/c/CAT/build-*/Progs/*.o || rm ~/work/c/CAT/build-*/Progs/*.o
-	-@for i in CAT.glnx86/CAT*; do cp ~/work/c/CAT/build-x86_64-pc-linux/Progs/`basename $${i}` CAT.glnx86/ ; done
-	-@for i in CAT.w32/CAT*; do cp ~/work/c/CAT/build-i586-mingw32/Progs/`basename $${i}` CAT.w32/ ; done
-	-@for i in CAT.maci64/CAT*; do cp ~/work/c/CAT/build-native/Progs/`basename $${i}` CAT.maci64/ ; done
+	-@test ! -f ~/Dropbox/c/CAT/build-*/Progs/*.o || rm ~/Dropbox/c/CAT/build-*/Progs/*.o
+	-@for i in CAT.glnx86/CAT*; do cp ~/Dropbox/c/CAT/build-x86_64-pc-linux/Progs/`basename $${i}` CAT.glnx86/ ; done
+	-@for i in CAT.w32/CAT*; do cp ~/Dropbox/c/CAT/build-i586-mingw32/Progs/`basename $${i}` CAT.w32/ ; done
+	-@for i in CAT.maci64/CAT*; do cp ~/Dropbox/c/CAT/build-native/Progs/`basename $${i}` CAT.maci64/ ; done
 
 # print check list for releasing
 checklist:

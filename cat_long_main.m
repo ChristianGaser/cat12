@@ -90,17 +90,6 @@ if prepavg
   matlabbatch{mbi}.spm.tools.cat.tools.sanlm.addnoise                                       = 0; % no additional noise here because this comes later in each preprocessing!
   matlabbatch{mbi}.spm.tools.cat.tools.sanlm.rician                                         = 0;
   matlabbatch{mbi}.spm.tools.cat.tools.sanlm.replaceNANandINF                               = 1;
-  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.NCstr                         = -Inf;
-  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.iter                          = 0;
-  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.iterm                         = 0;
-  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.outlier                       = 1; % no outlier correction here (no median filter)? 
-  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.relativeIntensityAdaption     = 1;
-  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.relativeIntensityAdaptionTH   = 2;
-  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.relativeFilterStengthLimit    = 1;
-  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.resolutionDependency          = 0;
-  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.resolutionDependencyRange     = [1 2.5];
-  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.red                           = 0;
-  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.nlmfilter.expert.lazy                          = 0;
   
   if prepavg>1
   % The trimming may increase the speed of the longitudinal realignment and 
@@ -234,15 +223,20 @@ if exist('extopts','var') && ~isempty(extopts)
   % WMHC: Only temporary because we don't want to bias the WM segmentation of the TPs!
   %       RD20220126: This works better but there are now maybe some more
   %       problems with incorrected WMHs.
-  matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.segmentation.WMHC   = 1;  
+  if spm_get_defaults('job.extopts.expertgui')>1
+    matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.segmentation.WMHC   = 1;  
   % LAS: Only the small correction here, because it will be done in the TPs 
   %      and we do not want to do it twice (the longTPM would introduce a bias).
   %      The lowes setting (eps) was a bit to weak. 
-  matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.segmentation.LASstr = 0.25;
+    matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.segmentation.LASstr = 0.25;
   % RD202201: Shooting with lower frequency setting?
   %           Although, we don't use the deformations this effects the WMHC.
   %           But as far as this is also not used now it is not necessary/
   %           useful to change something now.
+  else
+    matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.WMHC   = 1;  
+    matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.LASstr = 0.25;
+  end
   %if isfield(extopts,'registration') && isfield(extopts.registration,'regmethod') && isfield(extopts.registration.regmethod,'regstr')
   %  matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.registration.regmethod.shooting.regstr  = 14; % low frequency 2.5 mm 
   %end

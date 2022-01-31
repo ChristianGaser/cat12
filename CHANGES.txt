@@ -1,11 +1,51 @@
 ------------------------------------------------------------------------
-r1936 | dahnke | 2022-01-28 15:37:34
+r1937 | gaser | 2022-01-31 12:47:20
+
+Changed paths:
+M       CAT.maca64/CAT_3dVol2Surf
+M       CAT.maca64/CAT_AddValuesToSurf
+M       CAT.maca64/CAT_AverageSurfaces
+M       CAT.maca64/CAT_BlurSurfHK
+M       CAT.maca64/CAT_Central2Pial
+M       CAT.maca64/CAT_DeformSurf
+M       CAT.maca64/CAT_DumpCurv
+M       CAT.maca64/CAT_DumpSurfArea
+M       CAT.maca64/CAT_DumpSurfaceRatio
+M       CAT.maca64/CAT_FixTopology
+M       CAT.maca64/CAT_FractalDimension
+M       CAT.maca64/CAT_Hausdorff
+M       CAT.maca64/CAT_Isometize
+M       CAT.maca64/CAT_MarkDefects
+M       CAT.maca64/CAT_RefineMesh
+M       CAT.maca64/CAT_ResampleSphericalSurf
+M       CAT.maca64/CAT_ResampleSphericalSurfSPH
+M       CAT.maca64/CAT_ResampleSurf
+M       CAT.maca64/CAT_SelfIntersect
+M       CAT.maca64/CAT_SeparatePolygon
+M       CAT.maca64/CAT_SmoothConvexity
+M       CAT.maca64/CAT_SulcusDepth
+M       CAT.maca64/CAT_Surf2Sphere
+M       CAT.maca64/CAT_Surf2Vol
+M       CAT.maca64/CAT_SurfDistance
+M       CAT.maca64/CAT_WarpSurf
+M       CHANGES.txt
+M       Makefile
+M       cat_long_main.m
+M       cp_binaries.sh
+
+(1) Changed: Recompiled CAT-binaries for Apple ARM processors.
+(2) Changed: Updated folder for binaries in Makefile and cp_binaries.
+(3) Fixed:   Corrected expert-dependent parameters in cat_long_main.m. 
+
+------------------------------------------------------------------------
+r1936 | dahnke | 2022-01-28 15:37:43 +0100 (Fri, 28 Jan 2022) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_long_report.m
 
 (1) Fixed:   Corrected tiny bugs in cat_long_report.
+
 ------------------------------------------------------------------------
 r1935 | dahnke | 2022-01-28 13:47:57 +0100 (Fri, 28 Jan 2022) | 54 lines
 
