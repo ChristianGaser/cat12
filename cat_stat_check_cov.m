@@ -85,8 +85,7 @@ else
 end
 
 % read filenames for each sample and indicate sample parameter
-if isfield(job,'data_vol') && ~isempty(job.data_vol) && ~isempty(job.data_vol{1}) && ...
-  ~spm_mesh_detect(char(job.data_vol{1}(1,:)))
+if ~spm_mesh_detect(char(job.data_vol{1}(1,:)))
   H.mesh_detected = 0;
   n_samples = numel(job.data_vol);
   for i=1:n_samples
@@ -110,34 +109,28 @@ if isfield(job,'data_vol') && ~isempty(job.data_vol) && ~isempty(job.data_vol{1}
   H.fname = cellstr({H.V.dat.fname}'); 
   sep = job.gap;
 else
-  [pp,ff,ee] = spm_fileparts( job.data_surf{1} ); 
-  if ~isfield(job,'data_surf') && isfield(job,'data_vol') && strcmp(ee,'.gii')
-  % RD202201: Older versions also use the data_vol field for surface data.
-  %           However, this was limited to gifti input. 
-    job.data_surf = job.data_vol;
-  end
   H.mesh_detected = 1;
-  n_samples = numel(job.data_surf);
-  sinfo = cat_surf_info(char(job.data_surf{1}(1,:)));
+  n_samples = numel(job.data_vol);
+  sinfo = cat_surf_info(char(job.data_vol{1}(1,:)));
   H.Pmesh = gifti(sinfo.Pmesh);
   for i=1:n_samples
-    [pp,ff,ee] = spm_fileparts( job.data_surf{i} ); 
+    [pp,ff,ee] = spm_fileparts( job.data_vol{i} ); 
     if any( ~isempty( strfind({'lh.thickness' },[ff ee]) ) ) && ~strcmp(ee,'gii')
       %% native longitudinal surface
       sdata = gifti(fullfile(pp,[strrep(ff,'lh.thickness','lh.central') ee '.gii'])); 
-      cdata = single(cat_io_FreeSurfer('read_surf_data',job.data_surf{i})); 
+      cdata = single(cat_io_FreeSurfer('read_surf_data',job.data_vol{i})); 
       gdata = gifti(struct('vertices',sdata.vertices,'faces',sdata.faces,'cdata',cdata)); 
-      V0 = struct('fname',job.data_surf{i},'dim',size(cdata),'dt',[16 0], ...
+      V0 = struct('fname',job.data_vol{i},'dim',size(cdata),'dt',[16 0], ...
              'pinfo',[1 0 0],'mat',eye(4),'n',[1 1],'descript','GMT'); 
       V0.private = gdata; 
     else
-      V0 = spm_data_hdr_read(char(job.data_surf{i}));
+      V0 = spm_data_hdr_read(char(job.data_vol{i}));
     end
     n_subjects = n_subjects + length(V0);
       
     if i==1, H.V = V0;
     else,    H.V = [H.V; V0]; end
-    H.sample = [H.sample, i*ones(1,size(job.data_surf{i},1))];
+    H.sample = [H.sample, i*ones(1,size(job.data_vol{i},1))];
   end
   H.fname = cellstr({H.V.fname}'); 
 end
