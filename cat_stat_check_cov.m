@@ -85,7 +85,7 @@ else
 end
 
 % read filenames for each sample and indicate sample parameter
-if ~spm_mesh_detect(char(job.data_vol{1}(1,:)))
+if ~spm_mesh_detect(char(job.data_vol{1}(1,:))) && isempty(strfind(char(job.data_vol{1}(1,:)),'thickness'))
   H.mesh_detected = 0;
   n_samples = numel(job.data_vol);
   for i=1:n_samples
@@ -107,7 +107,11 @@ if ~spm_mesh_detect(char(job.data_vol{1}(1,:)))
   
   % we need that field to be comparable to V of mesh-structure
   H.fname = cellstr({H.V.dat.fname}'); 
-  sep = job.gap;
+  if isfield(job,'gap')
+    sep = job.gap;
+  else
+    sep = 3;
+  end
 else
   H.mesh_detected = 1;
   n_samples = numel(job.data_vol);
