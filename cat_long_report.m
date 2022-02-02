@@ -53,6 +53,7 @@ function out = cat_long_report(job)
   def.opts.midpoint   = 0;                % setup of anatomical variables: 0-first, 1-midpoint 
                                           % check estiamtion of other measurements 
   def.opts.boxplot    = 0;                % use boxplot rather than normal plot 
+  def.opts.plotGMWM   = 0; 
   % print* to control the diagram output in the report that is maybe a bit crammed 
   %def.output.printqc  = [1 1 1];          % [IQR COV RMSE]
   %def.output.printana = [1 1 0 0 0 0 1];  % [GM WM CSF WMHs LS TIV GMT] 
@@ -317,9 +318,9 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
     if ~isempty( job.data_vol ) &&  ~isempty( job.data_vol{1} )
       % detect XML files based on the volume data
       prefs = {'p0',...
-        'mwmwp1','mwp1', ...
-        'mwmwp2','mwp2', ...
-        'mwmwp3','mwp3', ...
+        'mwmwp1','mwwp1','mwp1','mwp1m','mwmwp1m', ...
+        'mwmwp2','mwwp2','mwp2','mwp2m','mwmwp2m', ...
+        'mwmwp3','mwwp3','mwp3','mwp3m','mwmwp3m', ...
         }; 
       % try to find it
       for fi = 1:numel(job.data_vol)
@@ -399,21 +400,34 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
     end
     long.change_qar_IQR     = (mark2rps(long.qar_IQR) - max(mark2rps(long.qar_IQR)) );
     if isfield(long,'dist_thickness')
-      long.change_dist_thickness = (long.dist_thickness - repmat(mean(long.dist_thickness,1),size(long.dist_thickness,1),1)) ./ ...
-        repmat(long.dist_thickness(1,:),size(long.dist_thickness,1),1);
+      if job.opts.midpoint
+        long.change_dist_thickness = (long.dist_thickness - repmat(mean(long.dist_thickness,1),size(long.dist_thickness,1),1)) ./ ...
+          repmat(long.dist_thickness(1,:),size(long.dist_thickness,1),1);
+      else
+        long.change_dist_thickness = (long.dist_thickness - repmat(long.dist_thickness(1,:),size(long.dist_thickness,1),1)) ./ ...
+            repmat(long.dist_thickness(1,:),size(long.dist_thickness,1),1);
+      end
     end
     
     %% combine 
     QM  = struct(); 
     QFN = {'qualitymeasures','qualityratings','subjectmeasures'};
     for qfni = 1:numel(QFN)
-      FN = fieldnames(xml(fi).(QFN{qfni})); clear QMF; 
+      FN = fieldnames(xml(fi).(QFN{qfni})); 
       for fni = 1:numel(FN)
+        clear QMF; 
         try
           for fi = 1:numel(job.data_xml)
-            QMF.(FN{fni})(fi,:) = xml(fi).(QFN{qfni}).(FN{fni});
+            try
+              QMF.(FN{fni})(fi,:) = xml(fi).(QFN{qfni}).(FN{fni});
+            catch
+              % struct/cell, missing or empty field
+              QMF.(FN{fni})(fi,:) = nan; 
+            end
           end
-          QM.(QFN{qfni}).(FN{fni}) = mean(QMF.(FN{fni}));
+          if isnumeric(QMF.(FN{fni}))
+            QM.(QFN{qfni}).(FN{fni}) = cat_stat_nanmean(QMF.(FN{fni}));
+          end
         catch
           cat_io_cprintf('err','cat_long_report:XMLerror','Error in extracting XML data.\n'); 
         end

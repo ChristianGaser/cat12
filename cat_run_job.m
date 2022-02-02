@@ -216,7 +216,7 @@ function cat_run_job(job,tpm,subj)
         reslimits    = [5 4 8]; 
         
         % too thin slices
-        if any( vx_vol > reslimits(1)/2 ) || job.test_warnings
+        if any( vx_vol > reslimits(1) ) || job.test_warnings
           mid = [mfilename 'cat_run_job:TooLowResolution']; 
           msg = sprintf(['Voxel resolution should be better than %d mm in any dimension for \\\\n' ...
             'reliable preprocessing! This image has a resolution of %0.2fx%0.2fx%0.2f mm%s. '], ... 
@@ -225,7 +225,7 @@ function cat_run_job(job,tpm,subj)
         end
         
         % too small voxel volume (smaller than 3x3x3 mm3)
-        if prod(vx_vol) > (reslimits(2)/2)^3 || job.test_warnings
+        if prod(vx_vol) > (reslimits(2))^3 || job.test_warnings
           mid = [mfilename 'cat_run_job:TooLargeVoxelVolume']; 
           msg = sprintf(['Voxel volume should be smaller than %d mm%s (around %dx%dx%d mm%s) for \\\\n' ...
                   'reliable preprocessing! This image has a voxel volume of %0.2f mm%s. '], ...
@@ -235,7 +235,7 @@ function cat_run_job(job,tpm,subj)
         end
         
         % anisotropy
-        if max(vx_vol) / min(vx_vol) > reslimits(3)/2 || job.test_warnings
+        if max(vx_vol) / min(vx_vol) > reslimits(3) || job.test_warnings
           mid = [mfilename 'cat_run_job:TooStrongAnisotropy'];
           msg = sprintf(['Voxel anisotropy (max(vx_size)/min(vx_size)) should be smaller than %d for \\\\n' ...
                   'reliable preprocessing! This image has a resolution %0.2fx%0.2fx%0.2f mm%s \\\\nand a anisotropy of %0.2f. '], ...
