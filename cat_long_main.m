@@ -164,7 +164,7 @@ if prepavg
                                                                       substruct('.','val', '{}',{mb_sanlm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
                                                                       substruct('.','files', '()',{':'}));
  
-  % get homediretory for the move/rename operations                                                                  
+  % get home directory for the move/rename operations                                                                  
   mbi = mbi + 1; mb_dir = mbi; 
   matlabbatch{mbi}.cfg_basicio.file_dir.cfg_fileparts.files = cfg_dep('Longitudinal Registration: Midpoint Average',...
                                                                       substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
@@ -275,7 +275,7 @@ matlabbatch{mbi}.spm.tools.cat.estwrite.output.warps        = [0 0];
 % individual time points, mostly of the initial affine registration and 
 % the Unified segmentation that also compensates for slight structural 
 % changes between the time points.  However the effects on the final AMAP
-% segmentation are relatively small. 
+% segmentations are relatively small. 
 if longTPM
   mbi = mbi + 1; mb_tpm = mbi;
   matlabbatch{mbi}.spm.tools.cat.tools.createTPMlong.files(1)  = cfg_dep('CAT12: Segmentation (current release): rp1 affine Image',...

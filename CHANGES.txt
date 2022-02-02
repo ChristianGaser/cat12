@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1938 | dahnke | 2022-02-02 09:10:43
+r1939 | gaser | 2022-02-02 10:50:27
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_main.m
+M       cat_stat_check_cov.m
+
+(1) Changed: Corrected data field in cat_stat_check_cov which is the same for
+             volume as well as surface data.
+
+------------------------------------------------------------------------
+r1938 | dahnke | 2022-02-02 09:11:40 +0100 (Wed, 02 Feb 2022) | 34 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -34,6 +45,7 @@ MM      html/images/cat_long_report_plasticity-aging_ADNI011S0003.jpg
 (8) Fixed:   Corrected bug that avoid printing of the long report if only 
              the aging model was used. 
              
+
 ------------------------------------------------------------------------
 r1937 | gaser | 2022-01-31 12:48:19 +0100 (Mon, 31 Jan 2022) | 37 lines
 
