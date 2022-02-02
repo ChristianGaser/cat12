@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1939 | gaser | 2022-02-02 10:50:27
+r1940 | gaser | 2022-02-02 16:39:24
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_report.m
+M       cat_stat_check_cov.m
+
+(1) Fixed: Added additional check for raw thickness data to cat_stat_check_cov.m.
+           and added check for missing gap-field.
+(2) Fixed: Changed wrong data field for cat_stat_check_cov in cat_long_report.m. 
+           
+------------------------------------------------------------------------
+r1939 | gaser | 2022-02-02 10:50:35 +0100 (Wed, 02 Feb 2022) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +20,7 @@ M       cat_stat_check_cov.m
 
 (1) Changed: Corrected data field in cat_stat_check_cov which is the same for
              volume as well as surface data.
+
 
 ------------------------------------------------------------------------
 r1938 | dahnke | 2022-02-02 09:11:40 +0100 (Wed, 02 Feb 2022) | 34 lines

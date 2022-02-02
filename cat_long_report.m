@@ -127,6 +127,7 @@ function out = cat_long_report(job)
     out.Padiff = Vadiff.fname; 
   end
 end
+
 function [cres,Vmn,Vidiff,Vrdiff,Vadiff] = cat_vol_longdiff(Pdata_vol,Pavg,s,write)
 % Create multiple difference image to characterise real (anatomically) and 
 % articial (protocol/processing) depending changes over time.
@@ -266,6 +267,7 @@ function [cres,Vmn,Vidiff,Vrdiff,Vadiff] = cat_vol_longdiff(Pdata_vol,Pavg,s,wri
   if write, spm_write_vol(Vrdiff,Yrdiff); end
 
 end
+
 function [cres,Psurf] = cat_surf_longdiff(Pdata_surf,s)
 % create surface difference maps 
   
@@ -274,9 +276,10 @@ function [cres,Psurf] = cat_surf_longdiff(Pdata_surf,s)
     Psurf = [];
   else
     %% estimate covariance 
-    cjob.data_surf = Pdata_surf; 
+    cjob.data_vol = Pdata_surf; 
     cjob.verb      = 0; 
     cjob.data_xml  = {};
+    cjob.gap       = 3;
     cres           = cat_stat_check_cov(cjob);
      
     %% load data
@@ -308,6 +311,7 @@ function [cres,Psurf] = cat_surf_longdiff(Pdata_surf,s)
     end
   end  
 end
+
 function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
 % 
 
