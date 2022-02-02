@@ -1,5 +1,41 @@
 ------------------------------------------------------------------------
-r1937 | gaser | 2022-01-31 12:47:20
+r1938 | dahnke | 2022-02-02 09:10:43
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_biascorr.m
+M       cat_long_main.m
+MM      cat_long_report.m
+M       cat_main_reportfig.m
+M       cat_main_reportstr.m
+MM      cat_plot_glassbrain.m
+M       cat_run_job.m
+M       cat_run_job1639.m
+ M      html/cat_methods_catlongreport.html
+MM      html/images/cat_long_report_plasticity-aging_ADNI011S0003.jpg
+ M      html/images/cat_long_report_scannerdifferences_ADNI002S0559.jpg
+ M      html/images/catlongreportj_mwp1r.jpg
+
+(1) Fixed:   Corrected typos in plasticity-aging figure. 
+(2) Changed: Corrections in cat_long_biascorr to improve the longitudinal 
+             bias correction by replacing the median-based tissue threshold
+             estimation by kmeans and further filtering terms to create a 
+             smoother bias-correction field. 
+             Also added a new further internal option to remove protocol-
+             depending intensity changes by a simplified LAS approach.
+             Although both elements work, recent tests did not show the 
+             hoped for improvements in the ADNI test data. 
+(3) Fixed:   Added further setting to detect XML files and improved handling
+             of some fields in cat_long_report and cat_main_reportstr.             
+(4) Fixes:   Corrected many small display bugs in cat_main_reportfig.               
+(5) Tested:  Checked processing of longitudinal models.            
+(6) Fixed:   Corrected tiny bugs in cat_long_main.
+(7) Fixed:   Corrected settings of resolution warnings in cat_run[1639].
+(8) Fixed:   Corrected bug that avoid printing of the long report if only 
+             the aging model was used. 
+             
+------------------------------------------------------------------------
+r1937 | gaser | 2022-01-31 12:48:19 +0100 (Mon, 31 Jan 2022) | 37 lines
 
 Changed paths:
 M       CAT.maca64/CAT_3dVol2Surf
@@ -36,6 +72,7 @@ M       cp_binaries.sh
 (1) Changed: Recompiled CAT-binaries for Apple ARM processors.
 (2) Changed: Updated folder for binaries in Makefile and cp_binaries.
 (3) Fixed:   Corrected expert-dependent parameters in cat_long_main.m. 
+
 
 ------------------------------------------------------------------------
 r1936 | dahnke | 2022-01-28 15:37:43 +0100 (Fri, 28 Jan 2022) | 6 lines
