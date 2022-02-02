@@ -34,14 +34,15 @@ try
     delete_temp = 1;
   end
 catch
-  longmodel   = 1; % use plasticity model as default
+  cat_io_cprintf('err','Setting parameters failed! Use defaults! \n');  
+  longmodel   = 1; % use plasticity model as default (1-plasticity, 2-aging, 3-both)
   dartel      = 0;
   modulate    = 1; % save modulated data
   delete_temp = 1; % delete temporary files after preprocessing
   useprior    = 1; % use prior from avg-data
   surfaces    = cat_get_defaults('output.surface'); 
   longTPM     = 1; % create longitudinal TPM form avg-data
-  bstr        = 0; % additional longitudinal bias correction based on the avg pp
+  bstr        = 0.75; % additional longitudinal bias correction based on the avg pp
   prepavg     = 2; % preparation of the images in native space before SPM longitudinal realignment/averaging
                    % 0-none, 1-SANLM, 2-SANLM+trimming, 3-SANLM+trimming+rescaleIntensities  
   longreport  = [1 1 1]; % create report for each longitudinal model and tissue class if available [GM WM (CSF)]                 
@@ -223,7 +224,7 @@ if exist('extopts','var') && ~isempty(extopts)
   % WMHC: Only temporary because we don't want to bias the WM segmentation of the TPs!
   %       RD20220126: This works better but there are now maybe some more
   %       problems with incorrected WMHs.
-  if spm_get_defaults('job.extopts.expertgui')>1
+  if cat_get_defaults('extopts.expertgui')>0
     matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.segmentation.WMHC   = 1;  
   % LAS: Only the small correction here, because it will be done in the TPs 
   %      and we do not want to do it twice (the longTPM would introduce a bias).
@@ -569,7 +570,7 @@ if any(longreport) %&& spm_get_defaults('job.extopts.expertgui')>1
   for ci = 1:2 + write_CSF
     for modi = 1:2
       if longreport(ci) && mbfdef(modi,ci)>0
-        if ( modi == 1 && (longmodel==1 || longmodel==3) ) ||  ( modi == 2 && (longmodel==2 || longmodel==3) ) 
+        if ( modi == 1 ) ||  ( modi == 2 && (longmodel==2 || longmodel==3) ) % allways print in modi 1 ! ... && (longmodel==1 || longmodel==3) )
           mbi = mbi + 1; 
           matlabbatch{mbi}.spm.tools.cat.tools.long_report.data_vol(1)      = cfg_dep('Apply deformations (many subjects): All Output Files',...
                                                                               substruct('.','val', '{}',{mbfdef(modi,ci)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
@@ -581,13 +582,15 @@ if any(longreport) %&& spm_get_defaults('job.extopts.expertgui')>1
           else
             matlabbatch{mbi}.spm.tools.cat.tools.long_report.data_surf      = {''}; 
           end
-          matlabbatch{mbi}.spm.tools.cat.tools.long_report.data_xml(1)      = cfg_dep('CAT12: Segmentation (current release): ROI XML File',...
-                                                                              substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
-                                                                              substruct('.','catroi')); 
-          %matlabbatch{mbi}.spm.tools.cat.tools.long_report.timepoints       = []; % not implemented yet
-          %matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.midpoint    = 0; % not implemented yet
-          matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.smoothvol   = 3;
-          matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.smoothsurf  = 12;
+          if cat_get_defaults('extopts.expertgui')>0
+            matlabbatch{mbi}.spm.tools.cat.tools.long_report.data_xml(1)      = cfg_dep('CAT12: Segmentation (current release): ROI XML File',...
+                                                                                substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+                                                                                substruct('.','catroi')); 
+            %matlabbatch{mbi}.spm.tools.cat.tools.long_report.timepoints       = []; % not implemented yet
+            %matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.midpoint    = 0; % not implemented yet
+            matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.smoothvol   = 3;
+            matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.smoothsurf  = 12;
+          end
         end
       end
     end

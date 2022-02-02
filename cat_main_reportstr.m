@@ -379,7 +379,8 @@ function str = cat_main_reportstr(job,res,qa)
       str{2} = [str{2} struct('name',' Defect area:','value',marks2str(qa.qualityratings.SurfaceDefectArea,...
                 sprintf('%0.2f%%', qa.qualitymeasures.SurfaceDefectArea)))];
 
-      if isfield(qa.qualitymeasures,'SurfaceSelfIntersections') && ~isempty(qa.qualitymeasures.SurfaceSelfIntersections)
+      if isfield(qa.qualitymeasures,'SurfaceSelfIntersections') && ~isempty(qa.qualitymeasures.SurfaceSelfIntersections) && ...
+        ~isnan(qa.qualitymeasures.SurfaceSelfIntersections)
         str{2}(end).name  = [str{2}(end).name(1:end-6)  ' / self-inters. size:'];
         str{2}(end).value = [str{2}(end).value ' / ' marks2str(qa.qualityratings.SurfaceSelfIntersections,...
                 sprintf('%0.2f%%', qa.qualitymeasures.SurfaceSelfIntersections)) ];

@@ -15,7 +15,7 @@ function [img,range] = cat_plot_glassbrain(P)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
-% $Id: cat_run.m 1927 2022-01-04 10:25:27Z dahnke $
+% $Id$
 
   if isstruct(P)
     V = P; 

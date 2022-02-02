@@ -353,19 +353,23 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       if numel(res.long.files) > 2
         val  = min(res.long.vres.cov) - max(res.long.vres.cov); 
         val2 = marks2str(min(10.5,max(val * 100 + 0.5)),sprintf('%+0.3f',val)); 
+        cstr = '\bf\color[rgb]{0 0.6 0}COV:';
       else
         val2 = ''; 
+        cstr = 'COV:';
       end
-      lstr{1}(2) = struct('name','\bf\color[rgb]{0 0.6 0}COV:' ,...
+      lstr{1}(2) = struct('name',cstr ,...
         'value', marks2str( min(10.5,max(0.5,(0.98 - min(res.long.vres.cov))*100+0.5)) , sprintf('%0.3f',min(res.long.vres.cov)) ), ...
         'value2',val2); 
       if numel(res.long.files) > 2
         val  = max(res.long.vres.RMSEidiff) - min(res.long.vres.RMSEidiff);
         val2 = marks2str( min(10.5,max(0.5,max(0,val-0.05)*100+0.5)),sprintf('%+0.3f',val)); 
+        cstr = '\bf\color[rgb]{0 .3 .7}RMSE:'; 
       else
         val2 = ''; 
+        cstr = 'RMSE:'; 
       end
-      lstr{1}(3) = struct('name','\bf\color[rgb]{0 .3 .7}RMSE:', ...
+      lstr{1}(3) = struct('name',cstr, ...
         'value' ,marks2str( min(10.5,max(0.5,max(0,max(res.long.vres.RMSEidiff) - 0.05)*50+0.5))  , ...
            sprintf('%0.3f',max(res.long.vres.RMSEidiff)) ), ...
         'value2',val2); 
@@ -375,7 +379,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
       htext(2,i+1,2) = text(0.08,0.47-(0.055*(i+1)), lstr{1}(i).value , ...
         'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
-      htext(2,i+1,2) = text(0.14,0.47-(0.055*(i+1)), lstr{1}(i).value2, ...
+      htext(2,i+1,3) = text(0.14,0.47-(0.055*(i+1)), lstr{1}(i).value2, ...
         'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
     end
     
@@ -385,8 +389,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     tcmap  = [0.6 0 0; 0 .6 0; 0 0.3 0.7; 0.5 0.5 0.5]; 
     marker = {'^','s','>','o'}; 
     leg    = {}; 
-    axi    = axes('Position',[0.24,0.76,0.23,0.08],'Parent',fg); cp{1} = gca; hold on; 
-    set(axi,'Color',job.extopts.report.color,'YAxisLocation','right','box','on','XAxisLocation','bottom'); 
+    axi(1) = axes('Position',[0.24,0.76,0.22,0.08],'Parent',fg); cp(1) = gca; hold on; 
+    set(axi(1),'Color',job.extopts.report.color,'YAxisLocation','right','box','on','XAxisLocation','bottom'); 
     % plot QC boxes
     if 0 %mlim < -0.04
       fb = fill(cp{1},[0 numel(res.long.files) numel(res.long.files) 0]+0.5,-[ 40  40  0  0]/1000,'green');
@@ -416,10 +420,10 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     end
     % final settings
     ylim([mlim 0]); xlim([0.9 numel(res.long.files)+0.1]); 
-    set(cp{1},'Fontsize',fontsize*0.9,'xtick',max(1,0:round(numel(res.long.files)/100)*10:numel(res.long.files)), ...
-      'ytick',mlim:ceil((abs(mlim)/4)*500)/500:0,...
+    set(cp(1),'Fontsize',fontsize*0.8,'xtick',max(1,0:round(numel(res.long.files)/100)*10:numel(res.long.files)), ...
+      'ytick',mlim:floor((abs(mlim)/4)*500)/500:0,...
       'XAxisLocation','origin');
-    lh{1} = legend(leg,'Location','southoutside','Orientation','horizontal','box','off'); grid on; 
+    lh(1) = legend(leg,'Location','southoutside','Orientation','horizontal','box','off','FontSize',fontsize*.8); grid on; 
     
     
     
@@ -479,15 +483,15 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
       htext(3,i+1,2) = text(0.59,0.47-(0.055*(i+1)), lstr{2}(i).value , ...
         'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
-      htext(3,i+1,2) = text(0.66,0.47-(0.055*(i+1)), lstr{2}(i).value2 , ...
+      htext(3,i+1,3) = text(0.66,0.47-(0.055*(i+1)), lstr{2}(i).value2 , ...
         'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
     end
     
     % figure
     tcmap  = [0 0.3 0.7; 0 .6 0; 0.6 0 0; 0.5 0.5 0.5; 0.3 0.0 0.7]; 
     marker = {'<','^','>','o','s'}; 
-    axi    = axes('Position',[0.75,0.76,0.23,0.08],'Parent',fg); cp{1} = gca; hold on;
-    set(axi,'Color',job.extopts.report.color,'YAxisLocation','right','XAxisLocation','bottom','box','on'); 
+    axi(2) = axes('Position',[0.75,0.76,0.22,0.08],'Parent',fg); cp(2) = gca; hold on;
+    set(axi(2),'Color',job.extopts.report.color,'YAxisLocation','right','XAxisLocation','bottom','box','on'); 
     % plot tissue values
     for ti = [2 3 1]
       pt = plot(res.long.change_vol_rel_CGW(:,ti)' * 100);
@@ -506,9 +510,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     end
     mlim = max( 0.01 , ceil( max(max( abs( res.long.change_vol_rel_CGW(:,1:3))) ) * 100 / 2 ) * 2);
     ylim([-mlim mlim]); xlim([0.9 numel(res.long.files)+0.1]); 
-    set(cp{1},'Fontsize',fontsize*0.9,'xtick',max(1,0:round(numel(res.long.files)/100)*10:numel(res.long.files)), ...
+    set(cp(2),'Fontsize',fontsize*0.8,'xtick',max(1,0:round(numel(res.long.files)/100)*10:numel(res.long.files)), ...
       'ytick',-mlim:round(mlim*2 / 4):mlim,'XAxisLocation','top');
-    lh{2} = legend(leg,'Location','southoutside','Orientation','horizontal','box','off'); grid on; 
+    lh(2) = legend(leg,'Location','southoutside','Orientation','horizontal','box','off','FontSize',fontsize*0.8); grid on; 
 
     
 
@@ -556,10 +560,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     if isfield(res,'long')
       try
         % create SPM volume plots
-        Ymn  = res.Vmn.dat(:,:,:); 
-        WMth = cat_stat_kmeans(Ymn(Ymn(:)>0)) * 3; 
-        hho  = spm_orthviews('Image',res.Vmn,pos{1});
-        spm_orthviews('Caption',hho,'High variant regions','FontName',fontname,'FontSize',fontsize-1,'color',fontcolor,'FontWeight','Bold');
+        Ymn   = res.Vmn.dat(:,:,:); 
+        WMth  = cat_stat_kmeans(Ymn(Ymn(:)>0)) * 3; 
+        hho   = spm_orthviews('Image',res.Vmn,pos{1}); 
+        T1txt = 'High variant regions'; 
+        spm_orthviews('Caption',hho,T1txt,'FontName',fontname,'FontSize',fontsize-1,'color',fontcolor,'FontWeight','Bold');
         spm_orthviews('window',hho,[0 single(WMth)*cmmax]); 
         %rang = (0:6)'; hoti = [rang,flip(rang,1)*0,flip(rang,1)]; hoti(1,:) = [0 0 0]; 
         %rang = (0:10)'; hoti = [rang,flip(rang,1),flip(rang,1)*0] .* repmat(min(max(rang),rang*2)/2,1,3) / max(rang) * 1; hoti(1,:) = [0 0 0];
@@ -610,7 +615,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
           else
             set(gbcc{gbi},'XTickLabel','','XTick',[],'TickLength',[0.01 0],'YAxisLocation','right',...
               'YTick',max(1,0:surfcolors/2:surfcolors),'YTickLabel',{num2str([glassbrainmax; 0; -glassbrainmax] ,'%+0.1f')},...
-              'FontSize', fontsize-2,'FontName',fontname,'xcolor',fontcolor,'ycolor',fontcolor);
+              'FontSize', fontsize*0.8,'FontName',fontname,'xcolor',fontcolor,'ycolor',fontcolor);
           end
         end
       end
@@ -761,12 +766,12 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     if isfield(res,'long')
       %%
       try
-        hhp0   = spm_orthviews('Image',res.Vmn,pos{2});
-        Vidiff = res.Vidiff; Vidiff.dat = Vidiff.dat * 100; 
-        BCGWH  = [cat_io_colormaps('hotinv',35);cat_io_colormaps('cold',35)]; BCGWH = BCGWH(6:65,:); 
-        BCGWH  = BCGWH.^1.1 * 2; % less transparent for high values
+        hhp0    = spm_orthviews('Image',res.Vmn,pos{2});
+        Vidiff  = res.Vidiff; Vidiff.dat = Vidiff.dat * 100; 
+        BCGWH   = [cat_io_colormaps('hotinv',35);cat_io_colormaps('cold',35)]; BCGWH = BCGWH(6:65,:); 
+        BCGWH   = BCGWH.^1.1 * 2; % less transparent for high values
+        maxdiff = round(std(Vidiff.dat(:))) * 5; 
         spm_orthviews('window',hhp0,[0 single(WMth)*cmmax]);
-        maxdiff = 2; %round(std(Vidiff.dat(:))) * 5; 
         spm_orthviews('addtruecolourimage',hhp0,Vidiff, BCGWH,0.4,maxdiff,-maxdiff); 
         spm_orthviews('redraw');
         spm_orthviews('Reposition',[-25 0 0]); 
@@ -786,40 +791,41 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       end
       ov_mesh = 0;
       try, spm_orthviews('AddContext',1); end 
-      try
+    %  try
         % create glassbrain images
-        glassbr    = cat_plot_glassbrain( res.Vmn ); 
-        glassbrain = cat_plot_glassbrain( res.Vidiff ); 
-        glassbrainmax = 2;  % ########## need dynamic adaptions in extrem cases
+        glassbr       = cat_plot_glassbrain( res.Vmn ); 
+        glassbrain    = cat_plot_glassbrain( res.Vidiff ); 
+        glassbrainmax = maxdiff;  % ########## need dynamic adaptions in extrem cases
         % max(abs([glassbrain{1}(:); glassbrain{2}(:); glassbrain{3}(:)])); 
 
         % glassbrain positions
         gbpos{1} = [ pos{2}(1) + st.vols{p0id}.ax{3}.ax.Position(3)+0.015, st.vols{p0id}.ax{1}.ax.Position(2)+0.00 ,0.11, 0.09]; 
         gbpos{2} = [ pos{2}(1) + st.vols{p0id}.ax{3}.ax.Position(3)+0.015, st.vols{p0id}.ax{1}.ax.Position(2)+0.09 ,0.11, 0.07];
         gbpos{3} = [ pos{2}(1) + st.vols{p0id}.ax{3}.ax.Position(3)+0.115, st.vols{p0id}.ax{1}.ax.Position(2)+0.09 ,0.12, 0.07];
-        gbpos{4} = [ pos{2}(1) + st.vols{p0id}.ax{3}.ax.Position(3)+0.125, st.vols{p0id}.ax{1}.ax.Position(2)+0.00 ,0.01, 0.09]; 
+        gbpos{4} = [ pos{2}(1) + st.vols{p0id}.ax{3}.ax.Position(3)+0.125, st.vols{p0id}.ax{1}.ax.Position(2)+0.00 ,0.005,0.09]; 
 
         % plot
         for gbi=1:4
           if strcmpi(spm_check_version,'octave') 
 
             axes('Position',gbpos{gbi},'Parent',fg);     
-            gbcc{gbi} = gca; 
+            gbcc{4+gbi} = gca; 
           else
-            gbcc{gbi} = axes('Position',gbpos{gbi},'Parent',fg);     
+            gbcc{4+gbi} = axes('Position',gbpos{gbi},'Parent',fg);     
           end
-          gbp0 = image(gbcc{gbi},max( 60 + 60 + 1 , min( 60+60+surfcolors, ((glassbrain{gbi} / glassbrainmax) ) * ...
+          gbp0 = image(gbcc{4+gbi},max( 60 + 60 + 1 , min( 60+60+surfcolors, ((glassbrain{gbi} / glassbrainmax) ) * ...
             surfcolors/2 + 	60 + 60 + surfcolors/2))); hold on;
+          caxis([-maxdiff maxdiff]); 
           if gbi<4
             set(gbp0,'AlphaDataMapping','scaled','AlphaData',glassbr{gbi}>0.25 & get(gbp0,'CData')>(60 + 60) );
-            contour(gbcc{gbi},log(max(0,glassbr{gbi})),[0.5 0.5],'color',repmat(0.2,1,3));
+            contour(gbcc{4+gbi},log(max(0,glassbr{gbi})),[0.5 0.5],'color',repmat(0.2,1,3));
             axis equal off;
           else
-            set(gbcc{gbi},'XTickLabel','','XTick',[],'TickLength',[0.01 0],'YAxisLocation','right',...
+            set(gbcc{4+gbi},'XTickLabel','','XTick',[],'TickLength',[0.01 0],'YAxisLocation','right',...
               'YTick',max(1,0:surfcolors/2:surfcolors),'YTickLabel',{num2str([glassbrainmax; 0; -glassbrainmax] ,'%+0.1f')},...
-              'FontSize', fontsize-2,'FontName',fontname,'xcolor',fontcolor,'ycolor',fontcolor);
+              'FontSize', fontsize*0.8,'FontName',fontname,'xcolor',fontcolor,'ycolor',fontcolor);
           end
-        end
+      %  end
         spm_orthviews('redraw');
       end
     else
@@ -1517,11 +1523,20 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
             % boxplot
             % sometimes it's crashing on windows systems for no reason...
             try
-              line(cc{4},(surfcolors-1)/6 * [(q0 - 1.5*(q0-q1)) q1 ], [ 1 1] , 'Color',[0 0 0],'LineWidth',0.75); 
-              line(cc{4},(surfcolors-1)/6 * [q2 (q0 + 1.5*(q2-q0)) ], [ 1 1] , 'Color',[0 0 0],'LineWidth',0.75); 
-              fill(cc{4},(surfcolors-1)/6 * [q1 q2 q2 q1], [ 0.8 0.8 1.2 1.2],[1 1 1],'LineWidth',0.5,'FaceAlpha',0.7); 
-              line(cc{4},(surfcolors-1)/6 * repmat(mean(side),1,2), [ 0.6 1.4 ] , 'Color',[0 0 0],'LineWidth',0.75); 
-              line(cc{4},(surfcolors-1)/6 * repmat(q0,1,2), [ 0.6 1.4 ] , 'Color',[1 0 0],'LineWidth',1.5); 
+              if isfield(res,'long')
+                %%
+                line(cc{4},surfcolors/2 + surfcolors/2 * [(q0 - 1.5*(q0-q1)) q1 ], [ 1 1] , 'Color',[0 0 0],'LineWidth',0.75); 
+                line(cc{4},surfcolors/2 + surfcolors/2 * [q2 (q0 + 1.5*(q2-q0)) ], [ 1 1] , 'Color',[0 0 0],'LineWidth',0.75); 
+                fill(cc{4},surfcolors/2 + surfcolors/2 * [q1 q2 q2 q1], [ 0.8 0.8 1.2 1.2],[1 1 1],'LineWidth',0.5,'FaceAlpha',0.7); 
+                line(cc{4},surfcolors/2 + surfcolors/2 * repmat(mean(side),1,2), [ 0.6 1.4 ] , 'Color',[0 0 0],'LineWidth',0.75); 
+                line(cc{4},surfcolors/2 + surfcolors/2 * repmat(q0,1,2), [ 0.6 1.4 ] , 'Color',[1 0 0],'LineWidth',1.5); 
+              else
+                line(cc{4},(surfcolors-1)/6 * [(q0 - 1.5*(q0-q1)) q1 ], [ 1 1] , 'Color',[0 0 0],'LineWidth',0.75); 
+                line(cc{4},(surfcolors-1)/6 * [q2 (q0 + 1.5*(q2-q0)) ], [ 1 1] , 'Color',[0 0 0],'LineWidth',0.75); 
+                fill(cc{4},(surfcolors-1)/6 * [q1 q2 q2 q1], [ 0.8 0.8 1.2 1.2],[1 1 1],'LineWidth',0.5,'FaceAlpha',0.7); 
+                line(cc{4},(surfcolors-1)/6 * repmat(mean(side),1,2), [ 0.6 1.4 ] , 'Color',[0 0 0],'LineWidth',0.75); 
+                line(cc{4},(surfcolors-1)/6 * repmat(q0,1,2), [ 0.6 1.4 ] , 'Color',[1 0 0],'LineWidth',1.5); 
+              end
             end
             hold off; 
           end        
@@ -1574,15 +1589,29 @@ if 1
       'FontName',fontname,'FontSize',(fontsize-1)/spm_figure_scale*0.8,'FontWeight','Bold'); end
   if ~isfield(res,'long')
     try, spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontName',fontname,'FontSize',(fontsize-1)/spm_figure_scale*0.8,'FontWeight','Bold'); end
+  else
+    try, spm_orthviews('Caption',hhp0,sprintf('Tissue changes (FWHM %d mm)',res.long.smoothvol),'FontName',fontname,'FontSize',(fontsize-1)/spm_figure_scale*0.8,'FontWeight','Bold'); end
   end
+  if exist('axi','var')
+    for hti = 1:numel(axi), try, set(axi(hti),'FontName',fontname,'Fontsize',get(axi(hti),'Fontsize')/spm_figure_scale*0.8); end; end
+  end
+  if exist('cp','var')
+    for hti = 1:numel(cp), try, set(cp(hti),'FontName',fontname,'Fontsize',get(cp(hti),'Fontsize')/spm_figure_scale*0.8); end; end
+  end
+  if exist('lh','var')
+    for hti = 1:numel(lh), try, set(lh(hti),'FontName',fontname,'Fontsize',get(lh(hti),'Fontsize')/spm_figure_scale*0.8); end; end
+  end
+  if exist('gbcc','var')
+    for hti = [4,8], try, set(gbcc{hti},'FontName',fontname,'Fontsize',get(gbcc{hti},'Fontsize')/spm_figure_scale*0.8); end; end
+  end  
   for hti = 1:numel(htext), try, set(htext(hti),'FontName',fontname,'Fontsize',get(htext(hti),'Fontsize')/spm_figure_scale*0.8); end; end
-  if exist('cc') % sometimes cc does not exist of anything fails before
+  if exist('cc','var') % sometimes cc does not exist of anything fails before
     for hti = 1:numel(cc),   try, set(cc{hti}  , 'FontName', fontname, 'Fontsize', get(cc{hti}  , 'Fontsize')/spm_figure_scale*0.8); end; end
   end
-  if exist('ccl') % sometimes lg does not exist of anything fails before
+  if exist('ccl','var') % sometimes lg does not exist of anything fails before
     for hti = 1:numel(ccl), try, set(ccl{hti}  ,'FontName',fontname,'Fontsize',get(ccl{hti}  ,'Fontsize')/spm_figure_scale*0.8); end; end
   end
-  if exist('lg') % sometimes lg does not exist of anything fails before
+  if exist('lg','var') % sometimes lg does not exist of anything fails before
     for hti = 1:numel(lg), try, set(lg{hti}   ,'FontName',fontname,'Fontsize',get(lg{hti}   ,'Fontsize')/spm_figure_scale*0.8); end; end
   end
   if job.extopts.report.useoverlay > 1
@@ -1600,12 +1629,26 @@ if 1
 
   %% reset font settings
   try, set(hd,'FontName',fontname,'Fontsize',get(hd,'Fontsize')*spm_figure_scale/0.8); end
+  try, spm_orthviews('Caption',hho,{T1txt},'FontName',fontname,'FontSize',fontsize-1,'FontWeight','Bold'); end
   if ~isfield(res,'long')
-    try, spm_orthviews('Caption',hho,{T1txt},'FontName',fontname,'FontSize',fontsize-1,'FontWeight','Bold'); end
     try, spm_orthviews('Caption',hhm,{['m*.nii (Normalized ' wstr ')']},'FontName',fontname,'FontSize',fontsize-1,'FontWeight','Bold'); end
     try, spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontName',fontname,'FontSize',fontsize-1,'FontWeight','Bold'); end
+  else
+    try, spm_orthviews('Caption',hhp0,sprintf('Tissue changes (FWHM %d mm)',res.long.smoothvol),'FontName',fontname,'FontSize',fontsize-1,'FontWeight','Bold'); end
   end
   for hti = 1:numel(htext), try, set(htext(hti),'FontName',fontname,'Fontsize',get(htext(hti),'Fontsize')*spm_figure_scale/0.8); end; end
+  if exist('axi','var')
+    for hti = 1:numel(axi  ), try, set(axi(hti),'FontName',fontname,'Fontsize',get(axi(hti),'Fontsize')*spm_figure_scale/0.8); end; end
+  end
+  if exist('cp','var')
+    for hti = 1:numel(cp   ), try, set(cp(hti),'FontName',fontname,'Fontsize',get(cp(hti),'Fontsize')*spm_figure_scale/0.8); end; end
+  end
+  if exist('lh','var')
+    for hti = 1:numel(lh), try, set(lh(hti),'FontName',fontname,'Fontsize',get(lh(hti),'Fontsize')*spm_figure_scale/0.8); end; end
+  end
+  if exist('gbcc','var') 
+    for hti = [4,8], try, set(gbcc{hti},'FontName',fontname,'Fontsize',get(gbcc{hti},'Fontsize')*spm_figure_scale/0.8); end; end
+  end
   try, for hti = 1:numel(cc),    try, set(cc{hti}   ,'FontName',fontname,'Fontsize',get(cc{hti}   ,'Fontsize')*spm_figure_scale/0.8); end; end; end
   try, for hti = 1:numel(ccl),   set(ccl{hti}  ,'FontName',fontname,'Fontsize',get(ccl{hti}  ,'Fontsize')*spm_figure_scale/0.8); end; end
   if exist('lg','var') % sometimes lg does not exist of anything fails before
