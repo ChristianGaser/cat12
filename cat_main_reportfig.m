@@ -385,7 +385,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     
     % create figure
     mdiff  = min([ COV; (mark2rps(IQRE) - 100)/100; RMSE]); 
-    mlim   = min(-0.01,-ceil(abs(mdiff)*50)/50); 
+    mlim   = min(-0.05,-ceil(abs(mdiff)*20)/20); 
     tcmap  = [0.6 0 0; 0 .6 0; 0 0.3 0.7; 0.5 0.5 0.5]; 
     marker = {'^','s','>','o'}; 
     leg    = {}; 
@@ -421,7 +421,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     % final settings
     ylim([mlim 0]); xlim([0.9 numel(res.long.files)+0.1]); 
     set(cp(1),'Fontsize',fontsize*0.8,'xtick',max(1,0:round(numel(res.long.files)/100)*10:numel(res.long.files)), ...
-      'ytick',mlim:floor((abs(mlim)/4)*500)/500:0,...
+      'ytick',mlim:max(0.01,round((abs(mlim)/5)*200)/200):0,...
       'XAxisLocation','origin');
     lh(1) = legend(leg,'Location','southoutside','Orientation','horizontal','box','off','FontSize',fontsize*.8); grid on; 
     
@@ -432,7 +432,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     %  --------------------------------------------------------------------
     leg          = {'drGMV','drWMV','drCSFV','dTIV'};
     val2f        = @(val) marks2strt(val,sprintf('%+0.2f',val)); 
-    htext(3,1,1) = text(0.51,0.48-(0.055), '\bf(Relative) tissue changes:', ...
+    htext(3,1,1) = text(0.51,0.48-(0.055), '\bfTissue proposions and their changes:', ...
       'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
     
     % rGMV
@@ -559,17 +559,35 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   if dispvol
     if isfield(res,'long')
       try
+        fprintf('dkf');
         % create SPM volume plots
-        Ymn   = res.Vmn.dat(:,:,:); 
+        if isfield(res,'Vmnw')
+          Ymn = res.Vmnw.dat(:,:,:); 
+        else
+          Ymn = res.Vmn.dat(:,:,:); 
+        end
         WMth  = cat_stat_kmeans(Ymn(Ymn(:)>0)) * 3; 
-        hho   = spm_orthviews('Image',res.Vmn,pos{1}); 
-        T1txt = 'High variant regions'; 
+        if isfield(res,'Vmnw')
+          hho   = spm_orthviews('Image',res.Vmnw,pos{1}); 
+          T1txt = sprintf('WM tissue changes (FWHM %d mm)',res.long.smoothvol);
+        else
+          hho   = spm_orthviews('Image',res.Vmn,pos{1}); 
+          T1txt = 'High variant regions'; 
+        end
         spm_orthviews('Caption',hho,T1txt,'FontName',fontname,'FontSize',fontsize-1,'color',fontcolor,'FontWeight','Bold');
         spm_orthviews('window',hho,[0 single(WMth)*cmmax]); 
         %rang = (0:6)'; hoti = [rang,flip(rang,1)*0,flip(rang,1)]; hoti(1,:) = [0 0 0]; 
         %rang = (0:10)'; hoti = [rang,flip(rang,1),flip(rang,1)*0] .* repmat(min(max(rang),rang*2)/2,1,3) / max(rang) * 1; hoti(1,:) = [0 0 0];
-        hoti = cat_io_colormaps('hot',10); 
-        spm_orthviews('addtruecolourimage',hho,res.Vrdiff,hoti,0.4,0.5,0.4); 
+        if isfield(res,'Vidiffw')
+          Vidiff  = res.Vidiffw; Vidiff.dat = Vidiff.dat * 100; 
+          BCGWH   = [cat_io_colormaps('hotinv',35);cat_io_colormaps('cold',35)]; BCGWH = BCGWH(6:65,:); 
+          BCGWH   = BCGWH.^1.1 * 2; % less transparent for high values
+          maxdiff = round(std(Vidiff.dat(:))) * 5; 
+          spm_orthviews('addtruecolourimage',hho,Vidiff, BCGWH,0.4,maxdiff,-maxdiff); 
+        else
+          hoti = cat_io_colormaps('hot',10); 
+          spm_orthviews('addtruecolourimage',hho,res.Vrdiff,hoti,0.4,0.5,0.4); 
+        end
         spm_orthviews('redraw');
       end
       try
@@ -586,12 +604,17 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       end
       try
         % create glassbrain images
-        Vrdiff2    = res.Vrdiff; 
-        Vrdiff2.dat(:,:,:) = max(0,abs(Vrdiff2.dat(:,:,:)) - 0.4); 
+        if isfield(res,'Vidiffw')
+          glassbrain         = cat_plot_glassbrain( res.Vidiffw );  
+          glassbrainmax     = maxdiff;  % ########## need dynamic adaptions in extrem cases
+        else
+          Vrdiff            = res.Vrdiff;
+          Vrdiff.dat(:,:,:) = max(0,abs(Vrdiff2.dat(:,:,:)) - 0.4); 
+          glassbrain         = cat_plot_glassbrain( Vrdiff );  
+          glassbrainmax     = 1; 
+        end
         [glassbr,gbrange]  = cat_plot_glassbrain( res.Vmn ); 
-        glassbrain         = cat_plot_glassbrain( Vrdiff2 );  
-        glassbrainmax      = 1; 
-
+        
         % position of each glassbrain view and its colormap
         gbpos{1} = [ st.vols{1}.ax{3}.ax.Position(3)+0.015, st.vols{1}.ax{1}.ax.Position(2)+0.00 ,0.11, 0.09]; 
         gbpos{2} = [ st.vols{1}.ax{3}.ax.Position(3)+0.015, st.vols{1}.ax{1}.ax.Position(2)+0.09 ,0.11, 0.07];
@@ -606,8 +629,15 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
           else
             gbcc{gbi} = axes('Position',gbpos{gbi},'Parent',fg);     
           end
-          gbo = image(gbcc{gbi},max( 60 + 60 + 1, min( 60+60+surfcolors/2-1, - ((glassbrain{gbi}) ) / ...
-            glassbrainmax * surfcolors/2 + 	60 + 60 + surfcolors/2))); hold on;
+          
+          if isfield(res,'Vidiffw')
+            gbo = image(gbcc{gbi},max( 60 + 60 + 1 , min( 60+60+surfcolors, ((glassbrain{gbi} / glassbrainmax) ) * ...
+              surfcolors/2 + 	60 + 60 + surfcolors/2))); hold on;
+          else
+            gbo = image(gbcc{gbi},max( 60 + 60 + 1, min( 60+60+surfcolors/2-1, - ((glassbrain{gbi}) ) / ...
+              glassbrainmax * surfcolors/2 + 	60 + 60 + surfcolors/2))); hold on;
+          end
+          caxis([-glassbrainmax glassbrainmax]); 
           if gbi<4
             set(gbo,'AlphaDataMapping','scaled','AlphaData',glassbr{gbi}>0.25 & get(gbo,'CData')>(60 + 60) );
             contour(gbcc{gbi},log(max(0,glassbr{gbi})),[0.5 0.5],'color',repmat(0.2,1,3));
@@ -617,6 +647,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
               'YTick',max(1,0:surfcolors/2:surfcolors),'YTickLabel',{num2str([glassbrainmax; 0; -glassbrainmax] ,'%+0.1f')},...
               'FontSize', fontsize*0.8,'FontName',fontname,'xcolor',fontcolor,'ycolor',fontcolor);
           end
+         
         end
       end
     else
@@ -815,7 +846,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
           end
           gbp0 = image(gbcc{4+gbi},max( 60 + 60 + 1 , min( 60+60+surfcolors, ((glassbrain{gbi} / glassbrainmax) ) * ...
             surfcolors/2 + 	60 + 60 + surfcolors/2))); hold on;
-          caxis([-maxdiff maxdiff]); 
+          caxis([-glassbrainmax glassbrainmax]); 
           if gbi<4
             set(gbp0,'AlphaDataMapping','scaled','AlphaData',glassbr{gbi}>0.25 & get(gbp0,'CData')>(60 + 60) );
             contour(gbcc{4+gbi},log(max(0,glassbr{gbi})),[0.5 0.5],'color',repmat(0.2,1,3));

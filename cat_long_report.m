@@ -52,14 +52,15 @@ function out = cat_long_report(job)
   def.opts.smoothsurf = 12;               % this could be less 
   def.opts.midpoint   = 0;                % setup of anatomical variables: 0-first, 1-midpoint 
                                           % check estiamtion of other measurements 
+  def.tp              = [];                 % timepoints
   def.opts.boxplot    = 0;                % use boxplot rather than normal plot 
-  def.opts.plotGMWM   = 0; 
+  def.opts.plotGMWM   = 1; 
   % print* to control the diagram output in the report that is maybe a bit crammed 
   %def.output.printqc  = [1 1 1];          % [IQR COV RMSE]
   %def.output.printana = [1 1 0 0 0 0 1];  % [GM WM CSF WMHs LS TIV GMT] 
   % def.output ... to write output files 
-  def.output.vols     = 0; 
-  def.output.surfs    = 0; 
+  def.output.vols     = 3; 
+  def.output.surfs    = 12; 
   def.output.xml      = 1; 
   job = cat_io_checkinopt(job,def); 
 
@@ -73,24 +74,33 @@ function out = cat_long_report(job)
     end
   end
   
-  % default settings and job structure
-  def.data_vol        = {}; 
-  def.data_surf       = {};
-  def.avg             = {};
-  def.data_xml        = {}; 
-  def.tp              = []; % timepoints
-  def.opts.smoothvol  = 3; 
-  def.opts.smoothsurf = 12; 
-  job = cat_io_checkinopt(job,def);
-
-  
   % estimate (and write) volumetric differences images and measurements (in vres) 
-  [vres,Vmn,Vidiff,Vrdiff]  = cat_vol_longdiff(job.data_vol, job.avg, job.opts.smoothvol, job.output.vols);
+  [vres,Vmn,Vidiff,Vrdiff]  = cat_vol_longdiff(job.data_vol, job.data_vol_avg, job.opts.smoothvol, job.output.vols);
+  if job.opts.plotGMWM
+    for fi = 1:numel(job.data_vol)
+      [pp,ff,ee]         = spm_fileparts(job.data_vol{fi});
+      job.data_volw{fi}  = fullfile(pp,[strrep(ff(1:8),'wp1','wp2') ff(9:end) ee]); 
+      if ~exist( job.data_volw{fi} , 'file' )
+        job.data_volw{fi} = ''; 
+        job.opts.plotGMWM = 0; 
+        cat_io_cprintf('err','Cannot find WM files. Use default printing.\n'); 
+        continue
+      end
+    end
+    if ~isempty(job.data_vol_avg) && ~isempty(job.data_vol_avg{1})
+      [pp,ff,ee]           = spm_fileparts(job.data_vol_avg{1});
+      job.data_vol_avgw{1} = fullfile(pp,[strrep(ff(1:8),'wp1','wp2') ff(9:end) ee]); 
+    else
+      job.data_vol_avgw    = job.data_vol_avg; 
+    end
+    
+    [vresw,Vmnw,Vidiffw,Vrdiffw] = cat_vol_longdiff(job.data_volw, job.data_vol_avgw, job.opts.smoothvol, job.output.vols);
+  end
   % create (and write) surface maps and measurements (sres)
   [sres,Psurf]              = cat_surf_longdiff(job.data_surf, job.opts.smoothsurf); 
   % extract values from XML files and combine (and write) them 
   % this function creates also the main report str
-  [repstr,ppjob,ppres,qa]      = cat_get_xml(job,Psurf);
+  [repstr,ppjob,ppres,qa]   = cat_get_xml(job,Psurf);
   
   
   %% create final report structure to call cat_main_reportfig
@@ -101,7 +111,22 @@ function out = cat_long_report(job)
   ppres.Vrdiff     = Vrdiff; 
   clear Yrdiffmn Yrdiffsd Yrdiff;
   ppres.long.vres  = vres; 
-  ppres.long.sres  = sres; 
+  ppres.long.sres  = sres;
+  if job.opts.plotGMWM
+    ppres.long.vresw  = vresw; 
+    ppres.Vmnw        = Vmnw; 
+    ppres.Vidiffw     = Vidiffw;
+    % RD20220203: A general map that shows GM and WM tissue atropy could be 
+    %             also quit interesting and it is also more stable.
+    %             I see a lot of local spots, where GM is detected as WM  
+    %             and vice versa, probably by the WMHC and inhomogeneity. 
+    %             But of course this happens also in development. 
+    %             I also though about a general map that code all changes 
+    %             (GM>WM, WM>GM, GM>CSF, WM>CSF, CSF>WM, CSF>GM) but I am 
+    %             not sure if this gets to complex and how do code ...
+    ppres.Vidiffw.dat = Vidiffw.dat; % + max(0,-ppres.Vidiff.dat);
+    ppres.Vrdiffw     = Vrdiffw;
+  end
   ppjob.extopts.colormap = 'gray';
   cat_main_reportfig([],[],[],Psurf,ppjob,qa,ppres,repstr);
 
