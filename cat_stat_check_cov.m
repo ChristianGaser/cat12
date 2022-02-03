@@ -981,12 +981,11 @@ ylim_add = 0.075;
 cat_plot_boxplot(data,opt);
 
 set(gca,'XTick',[],'XLim',[-.25 n_samples+1.25]);
-if max(data_boxp) > min(data_boxp)
-  yamp = max(data_boxp) - min(data_boxp);
-  ylim_min = min(data_boxp) - ylim_add*yamp;
-  ylim_max = max(data_boxp) + ylim_add*yamp;
-  set(gca,'YLim',[ylim_min ylim_max]);
-end
+
+yamp = max(data_boxp) - min(data_boxp) + 0.001;
+ylim_min = min(data_boxp) - ylim_add*yamp;
+ylim_max = max(data_boxp) + ylim_add*yamp;
+set(gca,'YLim',[ylim_min ylim_max]);
 
 % add colored labels and title
 if n_samples > 1

@@ -2280,6 +2280,20 @@ function realign  = conf_vol_series_align(data)
   bparam.num      = [1 1];
   bparam.val      = {1e7};
 
+  setCOM        = cfg_menu;
+  setCOM.tag    = 'setCOM';
+  setCOM.name   = 'Use center-of-mass to set origin';
+  setCOM.help   = { ...
+      ''
+      'Use center-of-mass to roughly correct for differences in the position between image and template. This will internally correct the origin. '
+      ''
+      'If affine registration fails you can try to disable this option and/or set the origin manually. '
+    };
+  setCOM.def    = @(val) cat_get_defaults('extopts.setCOM', val{:});
+  setCOM.labels = {'No','Yes'};
+  setCOM.values = {0 1};
+
+
   wparam          = cfg_entry;   
   wparam.tag      = 'wparam';
   wparam.name     = 'Warping Regularisation';
@@ -2381,7 +2395,7 @@ function realign  = conf_vol_series_align(data)
   realign               = cfg_exbranch;
   realign.tag           = 'series';
   realign.name          = 'Longitudinal Registration';
-  realign.val           = {data noise bparam use_brainmask reduce reg write_rimg write_avg};
+  realign.val           = {data noise setCOM bparam use_brainmask reduce reg write_rimg write_avg};
   realign.help          = {
     'Longitudinal registration of series of anatomical MRI scans for a single subject.  It is based on inverse-consistent alignment among each of the subject''s scans, and incorporates a bias field correction.  Prior to running the registration, the scans should already be in very rough alignment, although because the model incorporates a rigid-body transform, this need not be extremely precise.  Note that there are a bunch of hyper-parameters to be specified.  If you are unsure what values to take, then the defaults should be a reasonable guess of what works.  Note that changes to these hyper-parameters will impact the results obtained.'
     ''
