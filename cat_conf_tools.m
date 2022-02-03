@@ -168,6 +168,7 @@ function tools = cat_conf_tools(expert)
   data2mat                    = conf_io_data2mat(data,outdir);
   boxplot                     = conf_io_boxplot(outdir,subdir,prefix,expert);
   getCSVXML                   = cat_cfg_getCSVXML(outdir,expert);
+  file_move                   = conf_io_file_move; 
   %urqio                       = conf_vol_urqio; % this cause problems
   iqr                         = conf_stat_IQR(data_xml);
   qa                          = conf_vol_qa(expert,outdir);
@@ -217,6 +218,7 @@ function tools = cat_conf_tools(expert)
     ...
     boxplot, ...                          cat.stat.eval ... print of XML data by the boxplot function and saving as images  
     getCSVXML, ...                        cat.stat.eval ... read out of XML/CSV data and export as batch dependency 
+    file_move, ...
     ...                                   
     };
   
@@ -224,6 +226,218 @@ function tools = cat_conf_tools(expert)
   %if expert 
   %  tools.values = [tools.values,{urqio}]; 
   %end
+return
+%_______________________________________________________________________
+function file_move = conf_io_file_move
+
+% ---------------------------------------------------------------------
+% file_move Move/Delete Files
+% ---------------------------------------------------------------------
+
+
+% ---------------------------------------------------------------------
+% files Files to move/copy/delete
+% ---------------------------------------------------------------------
+files         = cfg_files;
+files.tag     = 'files';
+files.name    = 'Files to move/copy/delete';
+files.help    = {'These files will be moved, copied or deleted.'};
+files.filter = {'any'};
+files.ufilter = '.*';
+files.num     = [0 Inf];
+% ---------------------------------------------------------------------
+% moveto Move to
+% ---------------------------------------------------------------------
+moveto         = cfg_files;
+moveto.tag     = 'moveto';
+moveto.name    = 'Move to';
+moveto.help    = {'Files will be moved to the specified directory.'};
+moveto.filter = {'dir'};
+moveto.ufilter = '.*';
+moveto.num     = [1 1];
+% ---------------------------------------------------------------------
+% copyto Copy to
+% ---------------------------------------------------------------------
+copyto         = cfg_files;
+copyto.tag     = 'copyto';
+copyto.name    = 'Copy to';
+copyto.help    = {'Files will be moved to the specified directory.'};
+copyto.filter = {'dir'};
+copyto.ufilter = '.*';
+copyto.num     = [1 1];
+% ---------------------------------------------------------------------
+% moveto Move to
+% ---------------------------------------------------------------------
+moveto1         = cfg_files;
+moveto1.tag     = 'moveto';
+moveto1.name    = 'Move to';
+moveto1.help    = {'Files will be moved to the specified directory.'};
+moveto1.filter = {'dir'};
+moveto1.ufilter = '.*';
+moveto1.num     = [1 1];
+% ---------------------------------------------------------------------
+% pattern Pattern
+% ---------------------------------------------------------------------
+pattern         = cfg_entry;
+pattern.tag     = 'pattern';
+pattern.name    = 'Pattern';
+pattern.help    = {'The regular expression pattern to look for.'};
+pattern.strtype = 's';
+pattern.num     = [1  Inf];
+% ---------------------------------------------------------------------
+% repl Replacement
+% ---------------------------------------------------------------------
+repl         = cfg_entry;
+repl.tag     = 'repl';
+repl.name    = 'Replacement';
+repl.help    = {'This string (or pattern) will be inserted instead.'};
+repl.strtype = 's';
+repl.num     = [1  Inf];
+% ---------------------------------------------------------------------
+% patrep Pattern/Replacement Pair
+% ---------------------------------------------------------------------
+patrep         = cfg_branch;
+patrep.tag     = 'patrep';
+patrep.name    = 'Pattern/Replacement Pair';
+patrep.val     = {pattern repl };
+% ---------------------------------------------------------------------
+% patreplist Pattern/Replacement List
+% ---------------------------------------------------------------------
+patreplist         = cfg_repeat;
+patreplist.tag     = 'patreplist';
+patreplist.name    = 'Pattern/Replacement List';
+patreplist.help    = {'Regexprep supports a list of multiple patterns and corresponding replacements. These will be applied to the filename portion (without path, without extension) one after another. E.g., if your filename is ''testimage(.nii)'', and you replace ''test'' with ''xyz'' and ''xyzim'' with ''newtestim'', the final filename will be ''newtestimage.nii''.'};
+patreplist.values  = {patrep };
+patreplist.num     = [1 Inf];
+% ---------------------------------------------------------------------
+% unique Unique Filenames
+% ---------------------------------------------------------------------
+unique         = cfg_menu;
+unique.tag     = 'unique';
+unique.name    = 'Unique Filenames';
+unique.help    = {
+                  'If the regexprep operation results in identical output filenames for two or more input files, these can not be written/renamed to their new location without loosing data. If you are sure that your regexprep patterns produce unique filenames, you do not need to care about this.'
+                  'If you choose to append a running number, it will be zero-padded to make sure alphabetical sort of filenames returns them in the same order as the input files are.'
+                  }';
+unique.labels = {
+                 'Don''t Care'
+                 'Append Index Number'
+                 }';
+unique.values = {
+                 false
+                 true
+                 }';
+% ---------------------------------------------------------------------
+% moveren Move and Rename
+% ---------------------------------------------------------------------
+moveren         = cfg_branch;
+moveren.tag     = 'moveren';
+moveren.name    = 'Move and Rename';
+moveren.val     = {moveto1 patreplist unique };
+moveren.help    = {'The input files will be moved to the specified target folder. In addition, their filenames (not paths, not extensions) will be changed by replacing regular expression patterns using MATLABs regexprep function. Please consult MATLAB help and HTML documentation for how to specify regular expressions.'};
+
+ren         = cfg_branch;
+ren.tag     = 'ren';
+ren.name    = 'Rename';
+ren.val     = {patreplist unique };
+ren.help    = {'The input files will be moved to the specified target folder. In addition, their filenames (not paths, not extensions) will be changed by replacing regular expression patterns using MATLABs regexprep function. Please consult MATLAB help and HTML documentation for how to specify regular expressions.'};
+
+
+% ---------------------------------------------------------------------
+% copyto Copy to
+% ---------------------------------------------------------------------
+copyto1         = cfg_files;
+copyto1.tag     = 'copyto';
+copyto1.name    = 'Copy to';
+copyto1.help    = {'Files will be moved to the specified directory.'};
+copyto1.filter = {'dir'};
+copyto1.ufilter = '.*';
+copyto1.num     = [1 1];
+% ---------------------------------------------------------------------
+% pattern Pattern
+% ---------------------------------------------------------------------
+pattern         = cfg_entry;
+pattern.tag     = 'pattern';
+pattern.name    = 'Pattern';
+pattern.help    = {'The regular expression pattern to look for.'};
+pattern.strtype = 's';
+pattern.num     = [1  Inf];
+% ---------------------------------------------------------------------
+% repl Replacement
+% ---------------------------------------------------------------------
+repl         = cfg_entry;
+repl.tag     = 'repl';
+repl.name    = 'Replacement';
+repl.help    = {'This string (or pattern) will be inserted instead.'};
+repl.strtype = 's';
+repl.num     = [1  Inf];
+% ---------------------------------------------------------------------
+% patrep Pattern/Replacement Pair
+% ---------------------------------------------------------------------
+patrep         = cfg_branch;
+patrep.tag     = 'patrep';
+patrep.name    = 'Pattern/Replacement Pair';
+patrep.val     = {pattern repl };
+% ---------------------------------------------------------------------
+% patreplist Pattern/Replacement List
+% ---------------------------------------------------------------------
+patreplist         = cfg_repeat;
+patreplist.tag     = 'patreplist';
+patreplist.name    = 'Pattern/Replacement List';
+patreplist.help    = {'Regexprep supports a list of multiple patterns and corresponding replacements. These will be applied to the filename portion (without path, without extension) one after another. E.g., if your filename is ''testimage(.nii)'', and you replace ''test'' with ''xyz'' and ''xyzim'' with ''newtestim'', the final filename will be ''newtestimage.nii''.'};
+patreplist.values  = {patrep };
+patreplist.num     = [1 Inf];
+% ---------------------------------------------------------------------
+% unique Unique Filenames
+% ---------------------------------------------------------------------
+unique         = cfg_menu;
+unique.tag     = 'unique';
+unique.name    = 'Unique Filenames';
+unique.help    = {
+                  'If the regexprep operation results in identical output filenames for two or more input files, these can not be written/renamed to their new location without loosing data. If you are sure that your regexprep patterns produce unique filenames, you do not need to care about this.'
+                  'If you choose to append a running number, it will be zero-padded to make sure alphabetical sort of filenames returns them in the same order as the input files are.'
+                  }';
+unique.labels = {
+                 'Don''t Care'
+                 'Append Index Number'
+                 }';
+unique.values = {
+                 false
+                 true
+                 }';
+% ---------------------------------------------------------------------
+% copyren Copy and Rename
+% ---------------------------------------------------------------------
+copyren         = cfg_branch;
+copyren.tag     = 'copyren';
+copyren.name    = 'Copy and Rename';
+copyren.val     = {copyto1 patreplist unique };
+copyren.help    = {'The input files will be copied to the specified target folder. In addition, their filenames (not paths, not extensions) will be changed by replacing regular expression patterns using MATLABs regexprep function. Please consult MATLAB help and HTML documentation for how to specify regular expressions.'};
+% ---------------------------------------------------------------------
+% delete Delete
+% ---------------------------------------------------------------------
+delete         = cfg_const;
+delete.tag     = 'delete';
+delete.name    = 'Delete';
+delete.val = {false};
+delete.help    = {'The selected files will be deleted.'};
+% ---------------------------------------------------------------------
+% action Action
+% ---------------------------------------------------------------------
+action         = cfg_choice;
+action.tag     = 'action';
+action.name    = 'Action';
+action.values  = {moveto copyto moveren copyren ren delete };
+
+
+file_move         = cfg_exbranch;
+file_move.tag     = 'file_move';
+file_move.name    = 'Move/Delete Files';
+file_move.val     = {files action };
+file_move.help    = {'Move or delete files.'};
+file_move.prog    = @cat_io_file_move;
+file_move.vout    = @cfg_vout_file_move;
+
 return
 %_______________________________________________________________________
 function long_report = conf_long_report(data_vol,data_xml,expert)
@@ -319,11 +533,22 @@ function long_report = conf_long_report(data_vol,data_xml,expert)
   boxplot.help          = {'Use boxplots.' ''};
   boxplot.hidden        = expert < 2;
   
+  boxplot               = cfg_menu;
+  boxplot.tag           = 'plotGMWM';
+  boxplot.name          = 'Plot WM and GM in one figure'; % ###### not implemented yet ######
+  boxplot.labels        = {
+    'no'
+    'yes'
+    };
+  boxplot.values        = {0;1};
+  boxplot.val           = {1};
+  boxplot.help          = {'Plot WM and GM in one figure. ' ''};
+  boxplot.hidden        = expert < 2;
   
   opts                  = cfg_exbranch;
   opts.tag              = 'opts';
   opts.name             = 'Options';
-  opts.val              = {smoothvol smoothsurf midpoint}; 
+  opts.val              = {smoothvol smoothsurf midpoint plotGMWM}; 
   opts.help             = {'Specify some processing options.' ''};
   opts.hidden           = expert<1;
   

@@ -43,8 +43,12 @@ function out = cat_long_biascorr(job)
   if ~isfield(job,'fs') ||  isempty(job.fs)  
     job.fs = 2^(4 * (1 - job.str));
   end
-  
-  fprintf('  Biasstr = %0.2f, FS: %0.2f \n',job.str,job.fs);
+  %%
+  if job.LASstr > 0
+    fprintf('  Biasstr = %0.2f, filtersize = %0.2f, LASstr = \n',job.str,job.fs,job.LASstr);
+  else
+    fprintf('  Biasstr = %0.2f, filtersize = %0.2f \n',job.str,job.fs);
+  end
   
   if job.hardcore
     %% 202201 intensity based correction > remove if not further needed in 202301
@@ -125,10 +129,10 @@ function out = cat_long_biascorr(job)
 
     %% extract save segment
     gstr = 2^( 2 * (job.str - 0.5) ); 
-    Ywm = abs(Ydiv)<0.2 & Yd<0.2 & Yg<0.6 * gstr & Ygp0<0.3 & Yp0>2.5 & cat_vol_morph(Yp0>2,'e');
-    Ygm = abs(Ydiv)<0.2 & Yd<0.2 & Yg<0.6 * gstr & Ygp0<0.6 & Yp0>1.5 & Yp0<2.5; % & cat_vol_morph(Yp0>1,'e') & cat_vol_morph(Yp0<3,'e'); 
-    Ycm = abs(Ydiv)<0.2 & Yd<0.2 & Yg<0.6 * gstr & Ygp0<1.2 & Yp0>0.5 & Yp0<1.5 & cat_vol_morph(Yp0>0,'e',3,vx_vol) & cat_vol_morph(Yp0<2,'de',3,vx_vol);
-    Ycm(smooth3(Ycm)<0.8) = 0; 
+    Ywm = abs(Ydiv)<0.2*mean(vx_vol) & Yd<0.2*mean(vx_vol) & Yg<0.6*mean(vx_vol) * gstr & Ygp0<0.6*mean(vx_vol) & Yp0>2.5; % & cat_vol_morph(Yp0>2,'e',1,vx_vol);
+    Ygm = abs(Ydiv)<0.2*mean(vx_vol) & Yd<0.2*mean(vx_vol) & Yg<0.6*mean(vx_vol) * gstr & Ygp0<0.6*mean(vx_vol) & Yp0>1.5 & Yp0<2.5; % & cat_vol_morph(Yp0>1,'e') & cat_vol_morph(Yp0<3,'e'); 
+    Ycm = abs(Ydiv)<0.2*mean(vx_vol) & Yd<0.2*mean(vx_vol) & Yg<0.6*mean(vx_vol) * gstr & Ygp0<1.2*mean(vx_vol) & Yp0>0.5 & Yp0<1.5 & cat_vol_morph(Yp0>0,'e',3,vx_vol) & cat_vol_morph(Yp0<2,'de',3,vx_vol);
+    Ycm(smooth3(Ycm)<0.3) = 0; 
     Ybg = Ym<0.5 & single(cat_vol_morph(Yp0==0,'de',40,vx_vol)); 
     %clear Yg; 
     
@@ -137,6 +141,13 @@ function out = cat_long_biascorr(job)
     Yi = Ybg + Yo .* Ywm ./ cat_stat_kmeans(Yo(Ywm(:)));
     Yi = Yi  + Yo .* Ygm ./ cat_stat_kmeans(Yo(Ygm(:)));
     Yi = Yi  + Yo .* Ycm ./ cat_stat_kmeans(Yo(Ycm(:)));
+    if 1
+      if T3th(4)<T3th(5) % T1
+        Yi = cat_vol_localstat(Yi,Yi~=0,1,3,round(2 ./ mean(vx_vol)));
+      else
+        Yi = cat_vol_localstat(Yi,Yi~=0,1,2,round(2 ./ mean(vx_vol)));
+      end
+    end
     % remove outlier 
     Yi2 = Yi; Yi2( smooth3(Yi2)<0.8 ) = 0;  
     Yi2 = cat_vol_localstat(Yi2,Yi2~=0,1,1,round(2 ./ mean(vx_vol)));
@@ -145,9 +156,10 @@ function out = cat_long_biascorr(job)
     % remove background
     Yi(Ybg) = 0; 
     Yi = cat_vol_median3(Yi,Yi~=1 & Yi~=0,Yi~=1 & Yi~=0);
-    Yi = cat_vol_localstat(Yi,Yi~=0,1,1,round(10 ./ mean(vx_vol)));
+    Yi = cat_vol_localstat(Yi,Yi~=0,round(3/mean(vx_vol)),1,round(10 ./ mean(vx_vol)));
     % approximate bias field
-    Yw = cat_vol_approx(Yi,'nh',vx_vol,job.fs * 4); % overcorrection of subcortical structures
+    Yw = cat_vol_approx(Yi,'nh',vx_vol,job.fs); % overcorrection of subcortical structures
+    Yw = Yw ./ cat_stat_kmeans(Yw(Ywm(:)));
     
     
     
@@ -170,11 +182,16 @@ function out = cat_long_biascorr(job)
       T3th2 = zeros(1,3); 
       for ti=1:3, T3th2(ti) = cat_stat_kmeans(Ysrc(round(Yp0)==ti & Yg<0.3)); end
     
-      % the most important segment is the GM 
-      Ygm2    = Ygp0<0.6 & Yp0>1.5 & Yp0<2.5 & Yg<0.6; 
+      %% the most important segment is the GM 
+      Ygm2    = Ygp0<0.6*mean(vx_vol) & Yp0>1.5 & Yp0<2.5 & Yg<0.6*mean(vx_vol); 
+      Ygm2(smooth3(Ygm2)<0.3) = 0; % remove small dots
       Yi      = Ysrc .* Ygm2;
       Yi      = cat_vol_median3(Yi,Yi~=1 & Yi~=0,Yi~=1 & Yi~=0);
       Yi      = cat_vol_localstat(Yi,Yi~=0,1,1,round(20 ./ mean(vx_vol)));
+      % first approximation to remove local outlier
+      Ylab{1} = cat_vol_approx(Yi,'nh',vx_vol,job.fs * 4 / job.LASstr); 
+      Yi( abs( log( Yi ./ Ylab{1} )) > 0.2 ) = 0; % arbitrary value between 0.10 (remove more) and 0.25 (remove less)  
+      % final approximation 
       Ylab{1} = cat_vol_approx(Yi,'nh',vx_vol,job.fs * 4 / job.LASstr); 
       % for all other segments we just use the global values
       Ylab{2} = T3th2(3);
@@ -183,7 +200,7 @@ function out = cat_long_biascorr(job)
 
       % intensity normalization 
       Yml = zeros(size(Ysrc)); 
-      Yml = Yml + ( (Ysrc>=Ylab{2}                ) .* (3 + (Ysrc - Ylab{2}) ./ max(eps,Ylab{2} - Ylab{3})) );
+      Yml = Yml + ( (Ysrc>=Ylab{2}                ) .* (3 + (Ysrc - Ylab{2}) ./ max(eps,Ylab{2} - Ylab{1})) );
       Yml = Yml + ( (Ysrc>=Ylab{1} & Ysrc<Ylab{2} ) .* (2 + (Ysrc - Ylab{1}) ./ max(eps,Ylab{2} - Ylab{1})) );
       Yml = Yml + ( (Ysrc>=Ylab{3} & Ysrc<Ylab{1} ) .* (1 + (Ysrc - Ylab{3}) ./ max(eps,Ylab{1} - Ylab{3})) );
       Yml = Yml + ( (Ysrc< Ylab{3}                ) .* (    (Ysrc - Ylab{6}) ./ max(eps,Ylab{3} - Ylab{6})) );

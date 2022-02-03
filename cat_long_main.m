@@ -27,7 +27,7 @@ try
   longTPM     = job.longTPM;
   bstr        = job.bstr;
   prepavg     = 2;
-  longreport  = [1 1 1]; % [GM WM (CSF)] 
+  longreport  = 1; % [GM WM (CSF)] 
   if isfield(job,'delete_temp')  
     delete_temp = job.delete_temp;
   else
@@ -45,7 +45,7 @@ catch
   bstr        = 0.75; % additional longitudinal bias correction based on the avg pp
   prepavg     = 2; % preparation of the images in native space before SPM longitudinal realignment/averaging
                    % 0-none, 1-SANLM, 2-SANLM+trimming, 3-SANLM+trimming+rescaleIntensities  
-  longreport  = [1 1 1]; % create report for each longitudinal model and tissue class if available [GM WM (CSF)]                 
+  longreport  = 1; % create longitudinal subject report                  
 end
 
 if ~useprior && longTPM
@@ -165,36 +165,30 @@ if prepavg
                                                                       substruct('.','files', '()',{':'}));
  
   % get home directory for the move/rename operations                                                                  
-  mbi = mbi + 1; mb_dir = mbi; 
-  matlabbatch{mbi}.cfg_basicio.file_dir.cfg_fileparts.files = cfg_dep('Longitudinal Registration: Midpoint Average',...
-                                                                      substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
-                                                                      substruct('.','avg', '()',{':'}));
+%  mbi = mbi + 1; mb_dir = mbi; 
+%  matlabbatch{mbi}.cfg_basicio.file_dir.cfg_fileparts.files = cfg_dep('Longitudinal Registration: Midpoint Average',...
+%                                                                      substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+ %                                                                     substruct('.','avg', '()',{':'}));
 
   % in case of denoising we may need another renaming step for the avg
   mbi = mbi + 1; mb_rigid_ravg = mbi; 
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files = cfg_dep('Longitudinal Registration: Midpoint Average',...
+  matlabbatch{mbi}.spm.tools.cat.tools.file_move.files = cfg_dep('Longitudinal Registration: Midpoint Average',...
                                                                       substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','avg', '()',{':'}));
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.moveren.moveto(1)       = cfg_dep('Get Pathnames: Directories', ...
-                                                                      substruct('.','val', '{}',{mb_dir}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-                                                                      substruct('.','p'));
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.moveren.patrep.pattern  = 'avg_sanlm_';
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.moveren.patrep.repl     = 'avg_';
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.moveren.unique          = false;
+  matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.patrep.pattern  = 'avg_sanlm_';
+  matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.patrep.repl     = 'avg_';
+  matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.unique          = false;
   
   % ... and all registrated images
   mbi = mbi + 1; mb_rigid_rtp = mbi; 
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files = cfg_dep('Longitudinal Rigid Registration: Realigned images',...
+  matlabbatch{mbi}.spm.tools.cat.tools.file_move.files = cfg_dep('Longitudinal Rigid Registration: Realigned images',...
                                                                       substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','rimg', '()',{':'}));
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.moveren.moveto(1)       = cfg_dep('Get Pathnames: Directories', ...
-                                                                      substruct('.','val', '{}',{mb_dir}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-                                                                      substruct('.','p'));
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.moveren.patrep.pattern  = 'rsanlm_';
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.moveren.patrep.repl     = 'r';
-  matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.action.moveren.unique          = false;
+  matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.patrep.pattern            = 'rsanlm_';
+  matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.patrep.repl               = 'r';
+  matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.unique                    = false;
 else
-  matlabbatch{mbi}.spm.tools.cat.tools.series.data                                        = '<UNDEFINED>';
+  matlabbatch{mbi}.spm.tools.cat.tools.series.data                                    = '<UNDEFINED>';
 end
 
 
@@ -566,6 +560,37 @@ matlabbatch{mbi}.spm.tools.cat.tools.defs.vox = [NaN NaN NaN];
 
 
 % 10) final report
+
+if any(longreport) %&& spm_get_defaults('job.extopts.expertgui')>1  
+  for modi = 1:2
+    if longreport && mbfdef(modi,1)>0
+      if ( modi == 1 ) ||  ( modi == 2 && (longmodel==2 || longmodel==3) ) % allways print in modi 1 ! ... && (longmodel==1 || longmodel==3) )
+        mbi = mbi + 1; 
+        matlabbatch{mbi}.spm.tools.cat.tools.long_report.data_vol(1)      = cfg_dep('Apply deformations (many subjects): All Output Files',...
+                                                                            substruct('.','val', '{}',{mbfdef(modi,1)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+                                                                            substruct('.','vfiles', '()',{':'}));  
+        if surfaces
+          matlabbatch{mbi}.spm.tools.cat.tools.long_report.data_surf(1)   = cfg_dep('CAT12: Segmentation (current release): Left Thickness',...
+                                                                            substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+                                                                            substruct('()',{1}, '.','lhthickness', '()',{':'})); 
+        else
+          matlabbatch{mbi}.spm.tools.cat.tools.long_report.data_surf      = {''}; 
+        end
+        if cat_get_defaults('extopts.expertgui')>0
+          matlabbatch{mbi}.spm.tools.cat.tools.long_report.data_xml(1)      = cfg_dep('CAT12: Segmentation (current release): ROI XML File',...
+                                                                              substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+                                                                              substruct('.','catroi')); 
+          %matlabbatch{mbi}.spm.tools.cat.tools.long_report.timepoints       = []; % not implemented yet
+          %matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.midpoint    = 0; % not implemented yet
+          matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.smoothvol   = 3;
+          matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.smoothsurf  = 12;
+          matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.plotGMWM    = 1; 
+        end
+      end
+    end
+  end
+end
+%{
 if any(longreport) %&& spm_get_defaults('job.extopts.expertgui')>1  
   for ci = 1:2 + write_CSF
     for modi = 1:2
@@ -596,7 +621,7 @@ if any(longreport) %&& spm_get_defaults('job.extopts.expertgui')>1
     end
   end
 end
-
+%}
 
 
 
