@@ -32,12 +32,12 @@ if isfield(job.reg,'nonlin')
   cat_io_cprintf('blue','Non-linear Registration!\n');
   tim = job.reg.nonlin.times(:);
   if all(isfinite(tim))
-    if numel(tim) ~= N,
+    if numel(tim) ~= N
         error('Incompatible numbers of times and scans.');
     end
-    if any(abs(diff(tim)) > 50),
+    if any(abs(diff(tim)) > 50)
         error('Time differences should be in years.');
-    end;
+    end
     wparam0   = job.reg.nonlin.wparam;
     
     midtim = median(tim);
@@ -78,7 +78,13 @@ else
   reduce = job.reduce;
 end
 
-out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask, reduce);
+if ~isfield(job,'setCOM')
+  setCOM = 1;
+else
+  setCOM = job.setCOM;
+end
+
+out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask, reduce, setCOM);
 
 return
 

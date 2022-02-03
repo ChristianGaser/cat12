@@ -159,6 +159,13 @@ end
 matlabbatch{mbi}.spm.tools.cat.tools.series.bparam          = 1e6;
 matlabbatch{mbi}.spm.tools.cat.tools.series.use_brainmask   = 1;
 matlabbatch{mbi}.spm.tools.cat.tools.series.reduce          = 1;
+
+if exist('extopts','var') && ((isfield(extopts,'setCOM') && extopts.setCOM) || (isfield(extopts,'segmentation') && isfield(extopts.segmentation,'setCOM') && extopts.segmentation.setCOM))
+  matlabbatch{mbi}.spm.tools.cat.tools.series.setCOM = 1;
+else
+  matlabbatch{mbi}.spm.tools.cat.tools.series.setCOM = 0;
+end
+
 if prepavg
   matlabbatch{mbi}.spm.tools.cat.tools.series.data(1)       =  cfg_dep('Spatially adaptive non-local means (SANLM) denoising filter: SANLM Images', ... 
                                                                       substruct('.','val', '{}',{mb_sanlm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...

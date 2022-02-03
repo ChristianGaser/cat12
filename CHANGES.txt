@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1941 | dahnke | 2022-02-03 16:24:55
+r1942 | gaser | 2022-02-03 17:16:45
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_long_main.m
+M       cat_stat_check_cov.m
+M       cat_vol_groupwise_ls.m
+M       cat_vol_series_align.m
+
+(1) Changed: Added support for setting origin using center-of-mass in 
+             longitudinal registration.
+(2) Fixed:   Corrected axis scaling in cat_stat_check_cov.m for some cases.
+           
+------------------------------------------------------------------------
+r1941 | dahnke | 2022-02-03 16:25:50 +0100 (Thu, 03 Feb 2022) | 18 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -18,6 +33,7 @@ M       cat_main_reportfig.m
              without changing the directory that is required to avoid the 
              directory bug (see (1) ).
              
+
 ------------------------------------------------------------------------
 r1940 | gaser | 2022-02-02 16:39:30 +0100 (Wed, 02 Feb 2022) | 10 lines
 

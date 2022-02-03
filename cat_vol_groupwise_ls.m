@@ -1,4 +1,4 @@
-function out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask, reduce)
+function out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask, reduce, setCOM)
 % Groupwise registration via least squares
 % FORMAT out = spm_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask, reduce)
 % Nii    - a nifti object for two or more image volumes.
@@ -25,6 +25,7 @@ function out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s
 % reduce     - reduce bounding box at final resolution level because usually
 %              there is a lot of air around the head after registration of 
 %              multiple scans
+% setCOM     - set origin using center-of-mass
 %
 %_______________________________________________________________________
 % Copyright (C) 2012 Wellcome Trust Centre for Neuroimaging
@@ -54,13 +55,14 @@ end
 
 % Specify default settings
 %-----------------------------------------------------------------------
-if nargin<3, prec       = NaN; end
-if nargin<4, w_settings = [0 1 80 20 80]; end
-if nargin<5, b_settings = [0 0 1e6]; end
-if nargin<6, s_settings = 6; end
-if nargin<7, ord        = [3 3 3 0 0 0]; end
-if nargin<8, use_brainmask = 1; end
-if nargin<9, reduce     = 1; end
+if nargin<3,  prec       = NaN; end
+if nargin<4,  w_settings = [0 1 80 20 80]; end
+if nargin<5,  b_settings = [0 0 1e6]; end
+if nargin<6,  s_settings = 6; end
+if nargin<7,  ord        = [3 3 3 0 0 0]; end
+if nargin<8,  use_brainmask = 1; end
+if nargin<9,  reduce     = 1; end
+if nargin<10, setCOM     = 1; end
 
 % If settings are not subject-specific, then generate
 %-----------------------------------------------------------------------
@@ -74,6 +76,17 @@ for i=1:numel(Nii)
   g = spm_global(spm_vol(Nii(i).dat.fname));
   Nii(i).dat.scl_slope = 100/g*Nii(i).dat.scl_slope;
   Nii(i).dat.scl_inter = 100/g*Nii(i).dat.scl_inter;
+end
+
+% correct origin using COM
+if setCOM
+  fprintf('Set origin using center-of-mass.\n');
+  for i=1:numel(Nii)
+    M0 = spm_imatrix(Nii(i).mat);
+    M = spm_imatrix(cat_vol_set_com(spm_vol(Nii(i).dat.fname)));
+    M0(1:3) = M0(1:3) - M(1:3);
+    Nii(i).mat = spm_matrix(M0);
+  end
 end
 
 fprintf('\n------------------------------------------------------------------------\n');
