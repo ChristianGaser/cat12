@@ -1,5 +1,25 @@
 ------------------------------------------------------------------------
-r1940 | gaser | 2022-02-02 16:39:24
+r1941 | dahnke | 2022-02-03 16:24:55
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+A       cat_io_file_move.m
+M       cat_long_biascorr.m
+M       cat_long_main.m
+M       cat_long_report.m
+M       cat_main_reportfig.m
+
+(1) Fixed:   Corrected directory bug in cat_long_main that moved all 
+             time points to the first directory. 
+(2) Changed: Replace first volume plot of a possible error map by save WM 
+             change plot and removed the WM plot batches in cat_long_main. 
+(3) New:     Added a copy of the SPM IO filename batch to rename filenames
+             without changing the directory that is required to avoid the 
+             directory bug (see (1) ).
+             
+------------------------------------------------------------------------
+r1940 | gaser | 2022-02-02 16:39:30 +0100 (Wed, 02 Feb 2022) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +30,7 @@ M       cat_stat_check_cov.m
            and added check for missing gap-field.
 (2) Fixed: Changed wrong data field for cat_stat_check_cov in cat_long_report.m. 
            
+
 ------------------------------------------------------------------------
 r1939 | gaser | 2022-02-02 10:50:35 +0100 (Wed, 02 Feb 2022) | 9 lines
 
