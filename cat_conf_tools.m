@@ -533,17 +533,17 @@ function long_report = conf_long_report(data_vol,data_xml,expert)
   boxplot.help          = {'Use boxplots.' ''};
   boxplot.hidden        = expert < 2;
   
-  boxplot               = cfg_menu;
-  boxplot.tag           = 'plotGMWM';
-  boxplot.name          = 'Plot WM and GM in one figure'; % ###### not implemented yet ######
-  boxplot.labels        = {
+  plotGMWM              = cfg_menu;
+  plotGMWM.tag          = 'plotGMWM';
+  plotGMWM.name         = 'Plot WM and GM in one figure'; % ###### not implemented yet ######
+  plotGMWM.labels       = {
     'no'
     'yes'
     };
-  boxplot.values        = {0;1};
-  boxplot.val           = {1};
-  boxplot.help          = {'Plot WM and GM in one figure. ' ''};
-  boxplot.hidden        = expert < 2;
+  plotGMWM.values       = {0;1};
+  plotGMWM.val          = {1};
+  plotGMWM.help         = {'Plot WM and GM in one figure. ' ''};
+  plotGMWM.hidden       = expert < 2;
   
   opts                  = cfg_exbranch;
   opts.tag              = 'opts';

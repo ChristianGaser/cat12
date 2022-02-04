@@ -59,8 +59,8 @@ function out = cat_long_report(job)
   %def.output.printqc  = [1 1 1];          % [IQR COV RMSE]
   %def.output.printana = [1 1 0 0 0 0 1];  % [GM WM CSF WMHs LS TIV GMT] 
   % def.output ... to write output files 
-  def.output.vols     = 3; 
-  def.output.surfs    = 12; 
+  def.output.vols     = 1; 
+  def.output.surfs    = 1; 
   def.output.xml      = 1; 
   job = cat_io_checkinopt(job,def); 
 
@@ -109,7 +109,6 @@ function out = cat_long_report(job)
   ppres.Vmn        = Vmn;
   ppres.Vidiff     = Vidiff;
   ppres.Vrdiff     = Vrdiff; 
-  clear Yrdiffmn Yrdiffsd Yrdiff;
   ppres.long.vres  = vres; 
   ppres.long.sres  = sres;
   if job.opts.plotGMWM
@@ -122,8 +121,8 @@ function out = cat_long_report(job)
     %             and vice versa, probably by the WMHC and inhomogeneity. 
     %             But of course this happens also in development. 
     %             I also though about a general map that code all changes 
-    %             (GM>WM, WM>GM, GM>CSF, WM>CSF, CSF>WM, CSF>GM) but I am 
-    %             not sure if this gets to complex and how do code ...
+    %             (GM>WM, WM>GM, GM>CSF, WM>CSF, CSF>WM, CSF>GM, WMHs>WM, WM>WMHs) 
+    %             but I am not sure if this gets to complex and how do code ...
     ppres.Vidiffw.dat = Vidiffw.dat; % + max(0,-ppres.Vidiff.dat);
     ppres.Vrdiffw     = Vrdiffw;
   end
@@ -140,7 +139,7 @@ function out = cat_long_report(job)
     end
   end
   
-  % output
+  % output for dependencies 
   out = struct(); 
   if job.output.surfs
     out.Psurf = Psurf;
@@ -148,8 +147,10 @@ function out = cat_long_report(job)
   if job.output.vols
     out.Pvm    = Vmn.fname; 
     out.Pidiff = Vidiff.fname; 
-    out.Prdiff = Vrdiff.fname; 
-    out.Padiff = Vadiff.fname; 
+    out.Prdiff = Vrdiff.fname;
+    if exist('Vadiff','var')
+      out.Padiff = Vadiff.fname; 
+    end
   end
 end
 
@@ -270,27 +271,27 @@ function [cres,Vmn,Vidiff,Vrdiff,Vadiff] = cat_vol_longdiff(Pdata_vol,Pavg,s,wri
     Vadiff          = struct(); 
   end
   
-  Vmn               = Vfi; 
+  Vmn               = rmfield(Vfi,'private'); 
   Vmn.fname         = fullfile(pp,['mean_' ff ee]);
   Vmn.dt            = [spm_type('FLOAT32') spm_platform('bigend')];
+  if write, spm_write_vol(Vmn,Ymn); end
   Vmn.dat(:,:,:)    = single(Ymn);
   Vmn.pinfo         = repmat([1;0],1,size(Ymn,3));
-  if write, spm_write_vol(Vimn,Yimn); end
   
-  Vidiff            = Vfi; 
+  Vidiff            = rmfield(Vfi,'private');  
   Vidiff.fname      = fullfile(pp,['tpidiff_' ff ee]);
   Vidiff.dt         = [spm_type('FLOAT32') spm_platform('bigend')];
+  if write, spm_write_vol(Vidiff,Yidiff); end
   Vidiff.dat(:,:,:) = single(Yidiff);
   Vidiff.pinfo      = repmat([1;0],1,size(Yidiff,3));
-  if write, spm_write_vol(Vidiff,Yidiff); end
   
-  Vrdiff            = Vfi; 
+  Vrdiff            = rmfield(Vfi,'private'); 
   Vrdiff.fname      = fullfile(pp,['tprdiff_' ff ee]);
   Vrdiff.dt         = [spm_type('FLOAT32') spm_platform('bigend')];
+  if write, spm_write_vol(Vrdiff,Yrdiff); end
   Vrdiff.dat(:,:,:) = single(Yrdiff);
   Vrdiff.pinfo      = repmat([1;0],1,size(Yrdiff,3));
-  if write, spm_write_vol(Vrdiff,Yrdiff); end
-
+  
 end
 
 function [cres,Psurf] = cat_surf_longdiff(Pdata_surf,s)
@@ -411,6 +412,8 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
     
     % for fi = 1:numel(job.data_vol), SPMpp(fi,:) = xml(fi).SPMpreprocessing.mn ./ xml(fi).SPMpreprocessing.mn(2); end
     for fi = 1:numel(job.data_xml), long.vol_rel_CGW(fi,:) = xml(fi).subjectmeasures.vol_rel_CGW; end
+    for fi = 1:numel(job.data_xml), long.vol_abs_CGW(fi,:) = xml(fi).subjectmeasures.vol_abs_CGW; end
+    for fi = 1:numel(job.data_xml), long.vol_abs_WMH(fi)   = xml(fi).subjectmeasures.vol_abs_WMH; end
     for fi = 1:numel(job.data_xml), long.vol_TIV(fi,:)     = xml(fi).subjectmeasures.vol_TIV; end
     for fi = 1:numel(job.data_xml), long.qar_IQR(fi,:)     = xml(fi).qualityratings.IQR; end
     for fi = 1:numel(job.data_xml), long.tissue_mn(fi,:)   = xml(fi).qualitymeasures.tissue_mn; end

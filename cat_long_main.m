@@ -57,6 +57,7 @@ write_CSF = double(cat_get_defaults('output.CSF.mod') > 0);
 warning('off','MATLAB:DELETE:FileNotFound');
 
 % display start
+% remove this in 202301
 if 0 %~isempty(extopts)  
   % The idea of simply repeat the input is not optimal.  
   % You have to use the DEP output otherwise it will result in more problems. 
@@ -96,9 +97,10 @@ if prepavg
   % The trimming may increase the speed of the longitudinal realignment and 
   % may helps also to remove side effects by huge low intensity backgrounds. 
     mbi = mbi + 1; mb_trim = mbi;
-    matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.image_selector.manysubjects.simages(1) = cfg_dep('Spatially adaptive non-local means (SANLM) denoising filter: SANLM Images', ... 
-                                                                        substruct('.','val', '{}',{mb_sanlm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-                                                                        substruct('.','files', '()',{':'}));
+    matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.image_selector.manysubjects.simages(1) = ...
+      cfg_dep('Spatially adaptive non-local means (SANLM) denoising filter: SANLM Images', ... 
+        substruct('.','val', '{}',{mb_sanlm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+        substruct('.','files', '()',{':'}));
     matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.image_selector.manysubjects.oimages = {};
     matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.prefix      = '';
     matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.mask        = 1;
@@ -117,18 +119,14 @@ if prepavg
       % Seems to be unnecessary because SPM scale the data itself.
       mbi = mbi + 1; mb_type = mbi;
       matlabbatch{mbi}.spm.tools.cat.tools.spmtype.data(1)          = cfg_dep('Image data trimming: source images', ...
-                                                                        substruct('.','val', '{}',{mb_trim}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-                                                                        substruct('.','image_selector', '.','manysubjects', '.','simages'));
+        substruct('.','val', '{}',{mb_trim}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+        substruct('.','image_selector', '.','manysubjects', '.','simages'));
       matlabbatch{mbi}.spm.tools.cat.tools.spmtype.ctype            = 16;
       matlabbatch{mbi}.spm.tools.cat.tools.spmtype.prefix           = '';
       matlabbatch{mbi}.spm.tools.cat.tools.spmtype.suffix           = '';
       matlabbatch{mbi}.spm.tools.cat.tools.spmtype.range            = 99.9999;  % finally we also want to remove the worst outlier
       matlabbatch{mbi}.spm.tools.cat.tools.spmtype.intscale         = 2;          % 0-255 ?
       matlabbatch{mbi}.spm.tools.cat.tools.spmtype.lazy             = 0;
-
-      % This is the depenceny of the image converter that we don't need now
-      % because the filename is not changed ... just in case we need it later 
-      %   dep(1) = cfg_dep('Image data type converter: Converted Images', substruct('.','val', '{}',{mb_type}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','files', '()',{':'}));
     end
   end
 end
@@ -152,7 +150,7 @@ end
 def = 0; % use deformations .. 1 = one year 
 mbi = mbi + 1; mb_rigid = mbi; 
 if def>0
-  matlabbatch{mbi}.spm.tools.cat.tools.series.reg.nonlin.times  = inf; 
+  matlabbatch{mbi}.spm.tools.cat.tools.series.reg.nonlin.times  = inf; % inf means linear registration ...  
   matlabbatch{mbi}.spm.tools.cat.tools.series.reg.nonlin.wparam = def * [0 0 100 25 100];
 end
 % ########
@@ -160,28 +158,23 @@ matlabbatch{mbi}.spm.tools.cat.tools.series.bparam          = 1e6;
 matlabbatch{mbi}.spm.tools.cat.tools.series.use_brainmask   = 1;
 matlabbatch{mbi}.spm.tools.cat.tools.series.reduce          = 1;
 
-if exist('extopts','var') && ((isfield(extopts,'setCOM') && extopts.setCOM) || (isfield(extopts,'segmentation') && isfield(extopts.segmentation,'setCOM') && extopts.segmentation.setCOM))
+if exist('extopts','var') && ((isfield(extopts,'setCOM') && extopts.setCOM) || ...
+    (isfield(extopts,'segmentation') && isfield(extopts.segmentation,'setCOM') && extopts.segmentation.setCOM))
   matlabbatch{mbi}.spm.tools.cat.tools.series.setCOM = 1;
 else
   matlabbatch{mbi}.spm.tools.cat.tools.series.setCOM = 0;
 end
 
 if prepavg
-  matlabbatch{mbi}.spm.tools.cat.tools.series.data(1)       =  cfg_dep('Spatially adaptive non-local means (SANLM) denoising filter: SANLM Images', ... 
-                                                                      substruct('.','val', '{}',{mb_sanlm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-                                                                      substruct('.','files', '()',{':'}));
- 
-  % get home directory for the move/rename operations                                                                  
-%  mbi = mbi + 1; mb_dir = mbi; 
-%  matlabbatch{mbi}.cfg_basicio.file_dir.cfg_fileparts.files = cfg_dep('Longitudinal Registration: Midpoint Average',...
-%                                                                      substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
- %                                                                     substruct('.','avg', '()',{':'}));
+  matlabbatch{mbi}.spm.tools.cat.tools.series.data(1) =  cfg_dep('Spatially adaptive non-local means (SANLM) denoising filter: SANLM Images', ... 
+    substruct('.','val', '{}',{mb_sanlm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','files', '()',{':'}));
 
   % in case of denoising we may need another renaming step for the avg
   mbi = mbi + 1; mb_rigid_ravg = mbi; 
   matlabbatch{mbi}.spm.tools.cat.tools.file_move.files = cfg_dep('Longitudinal Registration: Midpoint Average',...
-                                                                      substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
-                                                                      substruct('.','avg', '()',{':'}));
+    substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+    substruct('.','avg', '()',{':'}));
   matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.patrep.pattern  = 'avg_sanlm_';
   matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.patrep.repl     = 'avg_';
   matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.unique          = false;
@@ -189,13 +182,13 @@ if prepavg
   % ... and all registrated images
   mbi = mbi + 1; mb_rigid_rtp = mbi; 
   matlabbatch{mbi}.spm.tools.cat.tools.file_move.files = cfg_dep('Longitudinal Rigid Registration: Realigned images',...
-                                                                      substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
-                                                                      substruct('.','rimg', '()',{':'}));
-  matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.patrep.pattern            = 'rsanlm_';
-  matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.patrep.repl               = 'r';
-  matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.unique                    = false;
+    substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+    substruct('.','rimg', '()',{':'}));
+  matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.patrep.pattern  = 'rsanlm_';
+  matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.patrep.repl     = 'r';
+  matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.unique          = false;
 else
-  matlabbatch{mbi}.spm.tools.cat.tools.series.data                                    = '<UNDEFINED>';
+  matlabbatch{mbi}.spm.tools.cat.tools.series.data                          = '<UNDEFINED>';
 end
 
 
@@ -209,12 +202,12 @@ end
 mbi = mbi + 1; mb_catavg = mbi;
 if prepavg
   matlabbatch{mbi}.spm.tools.cat.estwrite.data(1)           = cfg_dep('Move/Delete Files: Moved/Copied Files', ... 
-                                                                      substruct('.','val', '{}',{mb_rigid_ravg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-                                                                      substruct('.','files'));
+    substruct('.','val', '{}',{mb_rigid_ravg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','files'));
 else
   matlabbatch{mbi}.spm.tools.cat.estwrite.data(1)           = cfg_dep('Longitudinal Registration: Midpoint Average',...
-                                                                      substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
-                                                                      substruct('.','avg', '()',{':'}));
+    substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+    substruct('.','avg', '()',{':'}));
 end
 matlabbatch{mbi}.spm.tools.cat.estwrite.nproc               = 0;
 if exist('opts','var') && ~isempty(opts)
