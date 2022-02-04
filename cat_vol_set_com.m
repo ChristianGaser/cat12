@@ -36,8 +36,8 @@ n = numel(V);
 % pre-estimated COM of MNI template
 com_reference = [0 -20 -15];
 
+fprintf('Correct center-of-mass                                            ');
 for i=1:n
-  fprintf('Correct center-of-mass                                            ');
   Affine = eye(4);
   if isfield(V(i),'dat')
     vol(:,:,:) = V(i).dat(:,:,:);

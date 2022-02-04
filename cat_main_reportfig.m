@@ -342,7 +342,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     
     % text to display (header + main measures)
     IQRE = (max(res.long.qar_IQR) - min(res.long.qar_IQR)) + 0.5; 
-    htext(2,1,1) = text(0.01,0.48 - (0.055 * 1), '\bfImage and preprocessing quality changes (best-worst):', ...
+    htext(2,1,1) = text(0.01,0.48 - (0.055 * 1), '\bfImage and preprocessing quality changes (best to worst):', ...
       'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
     lstr{1}(1) = struct('name','\bf\color[rgb]{.6 0  0}IQR:' , ...
       'value',  marks2str(min(res.long.qar_IQR),   sprintf('%0.2f%%' ,mark2rps(min(res.long.qar_IQR) )) ), ... ,mark2grad(min(res.long.qar_IQR)
@@ -377,9 +377,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     for i=1:size(lstr{1},2)  % qa-measurements
       htext(2,i+1,1) = text(0.01,0.47-(0.055*(i+1)), lstr{1}(i).name  , ...
         'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
-      htext(2,i+1,2) = text(0.08,0.47-(0.055*(i+1)), lstr{1}(i).value , ...
+      htext(2,i+1,2) = text(0.135,0.47-(0.055*(i+1)), lstr{1}(i).value , 'HorizontalAlignment','right', ......
         'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
-      htext(2,i+1,3) = text(0.14,0.47-(0.055*(i+1)), lstr{1}(i).value2, ...
+      htext(2,i+1,3) = text(0.14,0.47-(0.055*(i+1)), lstr{1}(i).value2, 'HorizontalAlignment','left', ......
         'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
     end
     
@@ -389,7 +389,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     tcmap  = [0.6 0 0; 0 .6 0; 0 0.3 0.7; 0.5 0.5 0.5]; 
     marker = {'^','s','>','o'}; 
     leg    = {}; 
-    axi(1) = axes('Position',[0.24,0.76,0.22,0.08],'Parent',fg); cp(1) = gca; hold on; 
+    axi(1) = axes('Position',[0.24,0.745,0.22,0.095],'Parent',fg); cp(1) = gca; hold on; 
     set(axi(1),'Color',job.extopts.report.color,'YAxisLocation','right','box','on','XAxisLocation','bottom'); 
     % plot QC boxes
     if 0 %mlim < -0.04
@@ -430,85 +430,103 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     
     %% morphmetric parameter normalized to the first value 
     %  --------------------------------------------------------------------
-    leg          = {'drGMV','drWMV','drCSFV','dTIV'};
-    val2f        = @(val) marks2strt(val,sprintf('%+0.2f',val)); 
-    htext(3,1,1) = text(0.51,0.48-(0.055), '\bfTissue proposions and their changes:', ...
+    leg          = {'dGMV','dWMV','dCSFV'};
+    val2f        = @(valr,vala) marks2strt(valr  * 100,sprintf('%+0.2f',vala)); 
+    htext(3,1,1) = text(0.51,0.48-(0.055), '\bfGlobal tissue volumes and their maximum change:', ...
       'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
     
     % rGMV
-    val        = mean(res.long.change_vol_rel_CGW(2:end,2)) * 100; 
-    lstr{2}(1) = struct('name','\bf\color[rgb]{0 0.6 0}rGMV:', ...
-      'value' ,  sprintf('%0.2f%%' , res.long.vol_rel_CGW(1,2) * 100), ...
-      'value2',  [val2f(val) 'pp'] ); 
+    li          = 1;
+    valr        = max(diff(res.long.vol_rel_CGW(:,2))); 
+    vala        = max(diff(res.long.vol_abs_CGW(:,2))); 
+    lstr{2}(li) = struct('name','\bf\color[rgb]{0 0.6 0}GMV:', ...
+      'value' ,  sprintf('%0.0fml' , res.long.vol_abs_CGW(1,2)), ...
+      'value2',  [val2f(valr,vala) 'ml'] ); 
     
     % rWMV
-    val        = mean(res.long.change_vol_rel_CGW(2:end,3)) * 100; 
-    lstr{2}(2) = struct('name','\bf\color[rgb]{0.6 0 0}rWMV:', ...
-      'value' ,  sprintf('%0.2f%%' , res.long.vol_rel_CGW(1,3) * 100), ...
-      'value2',  [val2f(val) 'pp'] );
+    li          = li + 1;
+    valr        = max(diff(res.long.vol_rel_CGW(:,3))); 
+    vala        = max(diff(res.long.vol_abs_CGW(:,3))); 
+    lstr{2}(li) = struct('name','\bf\color[rgb]{0.6 0 0}WMV:', ...
+      'value' ,  sprintf('%0.0fml' , res.long.vol_abs_CGW(1,3)), ...
+      'value2',  [val2f(valr,vala) 'ml'] );
     
     % rCSFV
-    val        = mean(res.long.change_vol_rel_CGW(2:end,1)) * 100;
-    lstr{2}(3) = struct('name','\bf\color[rgb]{0 .3 0.7}rCSFV:', ...
-      'value',   sprintf('%0.2f%%' , res.long.vol_rel_CGW(1,1) * 100), ...
-      'value2',  [val2f(val) 'pp'] );
+    li          = li + 1;
+    valr        = max(diff(res.long.vol_rel_CGW(:,1)));
+    vala        = max(diff(res.long.vol_abs_CGW(:,1)));
+    lstr{2}(li) = struct('name','\bf\color[rgb]{0 .3 0.7}CSFV:', ...
+      'value',   sprintf('%0.0fml' , res.long.vol_abs_CGW(1,1)), ...
+      'value2',  [val2f(valr,vala) 'ml'] );
     
     % WMHs 
     % ###########################    
-    if 0 % any( res.long.vol_rel_CGW(1:end,4) )
-      val        = mean(res.long.change_vol_rel_CGW(2:end,4)) * 100;
-      lstr{2}(3) = struct('name','\bf\color[rgb]{0 .3 0.7}rCSFV:', ...
-        'value',   sprintf('%0.2f%%' , res.long.vol_rel_CGW(1,1) * 100), ...
-        'value2',  [val2f(val) 'pp'] );
+    if any( res.long.vol_abs_WMH )
+      li          = li + 1;
+      leg         = [leg,{'dWMHs'}];
+      val         = max(diff(res.long.vol_abs_WMH));
+      lstr{2}(li) = struct('name','\bf\color[rgb]{0.8 0.4 0.8}WMHs:', ...
+        'value',   sprintf('%0.0fml' , res.long.vol_abs_WMH(1,1)), ...
+        'value2',  [val2f(max(diff( res.long.vol_abs_WMH ./ res.long.vol_TIV')),val) 'ml'] );
     end
     
     % TIV (looks boring in adult but not in children)
-    val        = mean(diff(res.long.vol_TIV));
-    lstr{2}(4) = struct('name','\bf\color[rgb]{.5 .5 .5}TIV:' ,...
+    li          = li + 1;
+    leg         = [leg,{'dTIV'}];
+    valr        = mean(diff(res.long.vol_TIV) ./ mean(res.long.vol_TIV));
+    vala        = mean(diff(res.long.vol_TIV));
+    lstr{2}(li) = struct('name','\bf\color[rgb]{.5 .5 .5}TIV:' ,...
       'value',   sprintf('%0.0fml' , res.long.vol_TIV(1,1)) , ...
-      'value2',  [val2f(val) 'ml'] );
+      'value2',  [val2f(valr,vala) 'ml'] );
     
     % thickness
     if isfield(res.long,'dist_thickness')
-      leg        = [leg,{'dGMT*100'}];
-      val        = mean(res.long.change_dist_thickness(2:end,1));
-      lstr{2}(5) = struct('name','\bf\color[rgb]{.3 .0 .7}GMT:', ...
+      li          = li + 1;
+      leg         = [leg,{'dGMT*1k'}];
+      val         = mean(res.long.change_dist_thickness(2:end,1));
+      lstr{2}(li) = struct('name','\bf\color[rgb]{.3 .0 .7}GMT:', ...
         'value' ,  sprintf('%0.2fmm',res.long.dist_thickness(1,1)), ...
-        'value2',  [val2f(val) 'mm']);  
+        'value2',  [val2f(val,val) 'mm']);  
 %      marks2str(min(10.5,max(val * 100 + 0.5)),sprintf('%+0.3fmm',val)));
     end
     
     for i=1:size(lstr{2},2)  % morphometric measurements
       htext(3,i+1,1) = text(0.52,0.47-(0.055*(i+1)), lstr{2}(i).name  , ...
         'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
-      htext(3,i+1,2) = text(0.59,0.47-(0.055*(i+1)), lstr{2}(i).value , ...
+      htext(3,i+1,2) = text(0.64,0.47-(0.055*(i+1)), lstr{2}(i).value , 'HorizontalAlignment','right', ...
         'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
-      htext(3,i+1,3) = text(0.66,0.47-(0.055*(i+1)), lstr{2}(i).value2 , ...
+      htext(3,i+1,3) = text(0.645,0.47-(0.055*(i+1)), lstr{2}(i).value2 ,'HorizontalAlignment','left', ...
         'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
     end
     
-    % figure
-    tcmap  = [0 0.3 0.7; 0 .6 0; 0.6 0 0; 0.5 0.5 0.5; 0.3 0.0 0.7]; 
+    %% figure
+    tcmap  = [0 0.3 0.7; 0 .6 0; 0.6 0 0; 0.5 0.5 0.5; 0.3 0.0 0.7; 0.8 0.4 0.8]; 
     marker = {'<','^','>','o','s'}; 
-    axi(2) = axes('Position',[0.75,0.76,0.22,0.08],'Parent',fg); cp(2) = gca; hold on;
+    axi(2) = axes('Position',[0.75,0.745,0.22,0.095],'Parent',fg); cp(2) = gca; hold on;
     set(axi(2),'Color',job.extopts.report.color,'YAxisLocation','right','XAxisLocation','bottom','box','on'); 
     % plot tissue values
     for ti = [2 3 1]
-      pt = plot(res.long.change_vol_rel_CGW(:,ti)' * 100);
+      pt = plot([0,diff(res.long.vol_abs_CGW(:,ti))']);
       set(pt,'Color',tcmap(ti,:),'Marker',marker{ti},...
         'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
     end
+    % plot WMH
+    if any( res.long.vol_abs_WMH )
+      pt = plot([0 diff(res.long.vol_abs_WMH)]);
+      set(pt,'Color',tcmap(6,:),'LineStyle','-','Marker',marker{4}, ...
+        'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
+    end
     % plot TIV 
-    pt = plot(res.long.change_vol_rel_TIV * 100);
+    pt = plot([0 diff(res.long.vol_TIV)']);
     set(pt,'Color',tcmap(4,:),'LineStyle','-','Marker',marker{4}, ...
       'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
     % plot thickness
     if isfield(res.long,'change_dist_thickness')
-      pt = plot(res.long.change_dist_thickness(:,1) * 100);
+      pt = plot(res.long.change_dist_thickness(:,1) * 1000);
       set(pt,'Color',tcmap(5,:),'LineStyle','-','Marker',marker{5}, ...
         'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
     end
-    mlim = max( 0.01 , ceil( max(max( abs( res.long.change_vol_rel_CGW(:,1:3))) ) * 100 / 2 ) * 2);
+    mlim = max( 20 , ceil( max( max( abs( diff( res.long.vol_abs_CGW(:,1:3))) )) / 20 ) * 20);
     ylim([-mlim mlim]); xlim([0.9 numel(res.long.files)+0.1]); 
     set(cp(2),'Fontsize',fontsize*0.8,'xtick',max(1,0:round(numel(res.long.files)/100)*10:numel(res.long.files)), ...
       'ytick',-mlim:round(mlim*2 / 4):mlim,'XAxisLocation','top');
@@ -527,7 +545,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     end
   end
   
-  % position values of the orthview/surface subfigures
+  %% position values of the orthview/surface subfigures
   pos = {[0.008 0.375 0.486 0.35]; [0.506 0.375 0.486 0.35]; ...
          [0.008 0.010 0.486 0.35]; [0.506 0.010 0.486 0.35]};
   try spm_orthviews('Reset'); end
@@ -559,7 +577,6 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   if dispvol
     if isfield(res,'long')
       try
-        fprintf('dkf');
         % create SPM volume plots
         if isfield(res,'Vmnw')
           Ymn = res.Vmnw.dat(:,:,:); 
@@ -582,7 +599,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
           Vidiff  = res.Vidiffw; Vidiff.dat = Vidiff.dat * 100; 
           BCGWH   = [cat_io_colormaps('hotinv',35);cat_io_colormaps('cold',35)]; BCGWH = BCGWH(6:65,:); 
           BCGWH   = BCGWH.^1.1 * 2; % less transparent for high values
-          maxdiff = round(std(Vidiff.dat(:))) * 5; 
+          maxdiff = round(std(Vidiff.dat(:))) * 10; 
           spm_orthviews('addtruecolourimage',hho,Vidiff, BCGWH,0.4,maxdiff,-maxdiff); 
         else
           hoti = cat_io_colormaps('hot',10); 
@@ -603,14 +620,14 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         st.vols{1}.blobs{1}   = rmfield(st.vols{1}.blobs{1},'cbar'); 
       end
       try
-        % create glassbrain images
+        %% create glassbrain images
         if isfield(res,'Vidiffw')
-          glassbrain         = cat_plot_glassbrain( res.Vidiffw );  
-          glassbrainmax     = maxdiff;  % ########## need dynamic adaptions in extrem cases
+          glassbrain        = cat_plot_glassbrain( res.Vidiffw );  
+          glassbrainmax     = max( maxdiff / 5,  ceil(mean(abs(glassbrain{1}(:))) + 4*std(glassbrain{1}(:))) );  % maxdiff / 5;  % ########## need dynamic adaptions in extrem cases
         else
           Vrdiff            = res.Vrdiff;
           Vrdiff.dat(:,:,:) = max(0,abs(Vrdiff2.dat(:,:,:)) - 0.4); 
-          glassbrain         = cat_plot_glassbrain( Vrdiff );  
+          glassbrain        = cat_plot_glassbrain( Vrdiff );  
           glassbrainmax     = 1; 
         end
         [glassbr,gbrange]  = cat_plot_glassbrain( res.Vmn ); 
@@ -621,8 +638,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         gbpos{3} = [ st.vols{1}.ax{3}.ax.Position(3)+0.115, st.vols{1}.ax{1}.ax.Position(2)+0.09 ,0.12, 0.07];
         gbpos{4} = [ st.vols{1}.ax{3}.ax.Position(3)+0.125, st.vols{1}.ax{1}.ax.Position(2)+0.00 ,0.005,0.09]; 
 
-        % plot glassbrains
+        %% plot glassbrains
         for gbi=1:4
+          %%
           if strcmpi(spm_check_version,'octave')
             axes('Position',gbpos{gbi},'Parent',fg);     
             gbcc{gbi} = gca; 
@@ -631,20 +649,19 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
           end
           
           if isfield(res,'Vidiffw')
-            gbo = image(gbcc{gbi},max( 60 + 60 + 1 , min( 60+60+surfcolors, ((glassbrain{gbi} / glassbrainmax) ) * ...
+            gbo = image(gbcc{gbi},max( 60 + 60 + 1 , min( 60+60+surfcolors, (glassbrain{gbi} / glassbrainmax ) * ...
               surfcolors/2 + 	60 + 60 + surfcolors/2))); hold on;
           else
-            gbo = image(gbcc{gbi},max( 60 + 60 + 1, min( 60+60+surfcolors/2-1, - ((glassbrain{gbi}) ) / ...
-              glassbrainmax * surfcolors/2 + 	60 + 60 + surfcolors/2))); hold on;
+            gbo = image(gbcc{gbi},max( 60 + 60 + 1, min( 60+60+surfcolors/2-1, - (glassbrain{gbi} / glassbrainmax ) * ...
+              surfcolors/2 + 	60 + 60 + surfcolors/2))); hold on;
           end
-          caxis([-glassbrainmax glassbrainmax]); 
           if gbi<4
             set(gbo,'AlphaDataMapping','scaled','AlphaData',glassbr{gbi}>0.25 & get(gbo,'CData')>(60 + 60) );
             contour(gbcc{gbi},log(max(0,glassbr{gbi})),[0.5 0.5],'color',repmat(0.2,1,3));
             axis equal off;
           else
             set(gbcc{gbi},'XTickLabel','','XTick',[],'TickLength',[0.01 0],'YAxisLocation','right',...
-              'YTick',max(1,0:surfcolors/2:surfcolors),'YTickLabel',{num2str([glassbrainmax; 0; -glassbrainmax] ,'%+0.1f')},...
+              'YTick',max(1,0:surfcolors/2:surfcolors),'YTickLabel',{num2str([glassbrainmax; 0; -glassbrainmax] ,'%+0.0f')},...
               'FontSize', fontsize*0.8,'FontName',fontname,'xcolor',fontcolor,'ycolor',fontcolor);
           end
          
@@ -801,12 +818,14 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         Vidiff  = res.Vidiff; Vidiff.dat = Vidiff.dat * 100; 
         BCGWH   = [cat_io_colormaps('hotinv',35);cat_io_colormaps('cold',35)]; BCGWH = BCGWH(6:65,:); 
         BCGWH   = BCGWH.^1.1 * 2; % less transparent for high values
-        maxdiff = round(std(Vidiff.dat(:))) * 5; 
+        maxdiff = round(std(Vidiff.dat(:))) * 10; 
         spm_orthviews('window',hhp0,[0 single(WMth)*cmmax]);
         spm_orthviews('addtruecolourimage',hhp0,Vidiff, BCGWH,0.4,maxdiff,-maxdiff); 
         spm_orthviews('redraw');
-        spm_orthviews('Reposition',[-25 0 0]); 
-        spm_orthviews('Caption',hhp0,sprintf('Tissue changes (FWHM %d mm)',res.long.smoothvol),'FontName',fontname,'FontSize',fontsize-1,'color',fontcolor,'FontWeight','Bold');
+        spm_orthviews('Reposition',[-25 0 0]);
+        if 1
+          spm_orthviews('Caption',hhp0,sprintf('Tissue changes (FWHM %d mm)',res.long.smoothvol),'FontName',fontname,'FontSize',fontsize-1,'color',fontcolor,'FontWeight','Bold');
+        end
       end
       try
         set(st.vols{p0id}.blobs{1}.cbar,'Position', [st.vols{p0id}.ax{3}.ax.Position(1) st.vols{p0id}.ax{1}.ax.Position(2) 0.01 0.13] ); 
@@ -822,12 +841,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       end
       ov_mesh = 0;
       try, spm_orthviews('AddContext',1); end 
-    %  try
+    %%  try
         % create glassbrain images
         glassbr       = cat_plot_glassbrain( res.Vmn ); 
         glassbrain    = cat_plot_glassbrain( res.Vidiff ); 
-        glassbrainmax = maxdiff;  % ########## need dynamic adaptions in extrem cases
-        % max(abs([glassbrain{1}(:); glassbrain{2}(:); glassbrain{3}(:)])); 
+        glassbrainmax = max( maxdiff / 5, ceil(mean(abs(glassbrain{1}(:))) + 4*std(glassbrain{1}(:)) ));  % ########## need dynamic adaptions in extrem cases
 
         % glassbrain positions
         gbpos{1} = [ pos{2}(1) + st.vols{p0id}.ax{3}.ax.Position(3)+0.015, st.vols{p0id}.ax{1}.ax.Position(2)+0.00 ,0.11, 0.09]; 
@@ -838,22 +856,21 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         % plot
         for gbi=1:4
           if strcmpi(spm_check_version,'octave') 
-
             axes('Position',gbpos{gbi},'Parent',fg);     
             gbcc{4+gbi} = gca; 
           else
             gbcc{4+gbi} = axes('Position',gbpos{gbi},'Parent',fg);     
           end
-          gbp0 = image(gbcc{4+gbi},max( 60 + 60 + 1 , min( 60+60+surfcolors, ((glassbrain{gbi} / glassbrainmax) ) * ...
+          gbp0 = image(gbcc{4+gbi},max( 60 + 60 + 1 , min( 60+60+surfcolors, (glassbrain{gbi} / glassbrainmax) * ...
             surfcolors/2 + 	60 + 60 + surfcolors/2))); hold on;
-          caxis([-glassbrainmax glassbrainmax]); 
+          caxis([-1 1]); 
           if gbi<4
             set(gbp0,'AlphaDataMapping','scaled','AlphaData',glassbr{gbi}>0.25 & get(gbp0,'CData')>(60 + 60) );
             contour(gbcc{4+gbi},log(max(0,glassbr{gbi})),[0.5 0.5],'color',repmat(0.2,1,3));
             axis equal off;
           else
             set(gbcc{4+gbi},'XTickLabel','','XTick',[],'TickLength',[0.01 0],'YAxisLocation','right',...
-              'YTick',max(1,0:surfcolors/2:surfcolors),'YTickLabel',{num2str([glassbrainmax; 0; -glassbrainmax] ,'%+0.1f')},...
+              'YTick',max(1,0:surfcolors/2:surfcolors),'YTickLabel',{num2str([glassbrainmax; 0; -glassbrainmax] ,'%+0.0f')},...
               'FontSize', fontsize*0.8,'FontName',fontname,'xcolor',fontcolor,'ycolor',fontcolor);
           end
       %  end
@@ -1103,22 +1120,24 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     end    
 
     % test mesh display
-    idi   = 1; 
-    try
-      Phull = cat_surf_create_TPM_hull_surface(res.tpm,strcmp(job.extopts.species,'human'),min( job.extopts.gcutstr , ...
-        ~isfield(res,'spmpp') && ~(isfield(res,'spmpp') && res.spmpp) )>0 );
-      ov_mesh = 0;
+    if ~isfield(res,'long')
+      idi   = 1; 
+      try
+        Phull = cat_surf_create_TPM_hull_surface(res.tpm,strcmp(job.extopts.species,'human'),min( job.extopts.gcutstr , ...
+          ~isfield(res,'spmpp') && ~(isfield(res,'spmpp') && res.spmpp) )>0 );
+        ov_mesh = 0;
+      end
+      try, spm_orthviews('AddContext',idi); end % need the context menu for mesh handling
+      try
+        warning('off','MATLAB:subscripting:noSubscriptsSpecified');
+        spm_ov_mesh('display',idi,{Phull});
+        ov_mesh = 1 & ~isfield(res,'long');
+      catch
+        fprintf('Please update to a newer version of spm12 for using this contour overlay\n');
+        ov_mesh = 0;
+      end
     end
-    try, spm_orthviews('AddContext',idi); end % need the context menu for mesh handling
-    try
-      warning('off','MATLAB:subscripting:noSubscriptsSpecified');
-      spm_ov_mesh('display',idi,{Phull});
-      ov_mesh = 1 & ~isfield(res,'long');
-    catch
-      fprintf('Please update to a newer version of spm12 for using this contour overlay\n');
-      ov_mesh = 0;
-    end
-
+    
     % display mesh
     if ov_mesh
 

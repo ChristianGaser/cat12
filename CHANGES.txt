@@ -1,5 +1,29 @@
 ------------------------------------------------------------------------
-r1942 | gaser | 2022-02-03 17:16:45
+r1943 | dahnke | 2022-02-04 17:52:10
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_long_main.m
+M       cat_long_report.m
+M       cat_main_reportfig.m
+M       cat_main_updateSPM1639.m
+M       cat_plot_glassbrain.m
+M       cat_vol_groupwise_ls.m
+M       cat_vol_set_com.m
+
+(1) Fixed:   Further improvements of the CAT long report in
+             cat_long_report and cat_main_reportfig.
+(2) Fixed:   Create symmetric colormap image in cat_plot_glassbrain 
+             to allow simple scaling in cat_vol_reportfig.                
+(3) Fixed:   Corrected a bug in cat_main_upateSPM in case of low resolution 
+             data in the longitudinal preprocessing.              
+(4) Changed: Tiny corrections in cat_vol_set_com and cat_vol_groupwise_ls.
+                
+             
+
+------------------------------------------------------------------------
+r1942 | gaser | 2022-02-03 17:16:54 +0100 (Thu, 03 Feb 2022) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +37,7 @@ M       cat_vol_series_align.m
              longitudinal registration.
 (2) Fixed:   Corrected axis scaling in cat_stat_check_cov.m for some cases.
            
+
 ------------------------------------------------------------------------
 r1941 | dahnke | 2022-02-03 16:25:50 +0100 (Thu, 03 Feb 2022) | 18 lines
 

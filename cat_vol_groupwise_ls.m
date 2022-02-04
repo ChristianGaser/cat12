@@ -80,10 +80,9 @@ end
 
 % correct origin using COM
 if setCOM
-  fprintf('Set origin using center-of-mass.\n');
   for i=1:numel(Nii)
     M0 = spm_imatrix(Nii(i).mat);
-    M = spm_imatrix(cat_vol_set_com(spm_vol(Nii(i).dat.fname)));
+    M = spm_imatrix(cat_vol_set_com(spm_vol(Nii(i).dat.fname))); 
     M0(1:3) = M0(1:3) - M(1:3);
     Nii(i).mat = spm_matrix(M0);
   end
