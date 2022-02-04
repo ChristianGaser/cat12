@@ -46,11 +46,16 @@ function [img,range] = cat_plot_glassbrain(P)
   img{1} = flip(rot90(cat_stat_nansum(Y,3),1),2); 
   img{2} = rot90(cat_stat_nansum(shiftdim(Y,2),3),2);
   img{3} = rot90(cat_stat_nansum(flip(shiftdim(Y,1),2),3),-1); 
-  imin   = floor(min([img{1}(:);img{2}(:);img{3}(:)])); 
-  imax   = ceil( max([img{1}(:);img{2}(:);img{3}(:)] ));
-  img{4} = flip( (imin:(imax-imin)/128:imax)' , 1); 
-  range  = [imin imax];
-  
+  % create a (symmetric) colormap image 
+  imax   = max( abs( [img{1}(:); img{2}(:); img{3}(:) ] )); 
+  if all(  [img{1}(:); img{2}(:); img{3}(:)] >= 0 )
+    img{4} = flip( (0:imax/128:imax)' , 1); 
+    range  = [0 imax];
+  else
+    img{4} = flip( (-imax:(2*imax)/128:imax)' , 1); 
+    range  = [-imax imax];
+  end
+    
   if 0 
     %% test area 
     %d=1; figure; imagesc(log10(max(1,img{d}-2)) + img{d}), colormap pink; axis equal off; 
