@@ -370,7 +370,19 @@ function varargout = cat_parallelize(job,func,datafield)
                         
                           if strcmp(FN{fni},'mov') % long
                             % this does not work
-                            FIN = find( cellfun('isempty', strfind( txt, 'Finished CAT12 longitudinal processing of '))); 
+                            FIN = find( ~cellfun('isempty', strfind( txt, 'Finished CAT12 longitudinal processing of '))); 
+                            if ~isempty( FIN ) && numel(txt)>FIN(end)
+                              SIDFIN = find( cellfun('isempty', strfind( txt( FIN(end)+1 ) , ff ))==0 ); 
+                              if ~isempty( SIDFIN )
+                                jobIDs( jobSID , 5) = 1;
+                                jobIDs( jobSID , 6) = 0;
+                              else
+                                jobIDs( jobSID , 5) = 1;
+                                jobIDs( jobSID , 6) = 1;
+                              end
+                            end
+                            % CAT long errors with broken batch pipeline 
+                            FIN = find( ~cellfun('isempty', strfind( txt, 'Error using MATLABbatch system')));
                             if ~isempty( FIN ) && numel(txt)>FIN(end)
                               SIDFIN = find( cellfun('isempty', strfind( txt( FIN(end)+1 ) , ff ))==0 ); 
                               if ~isempty( SIDFIN )
@@ -399,7 +411,7 @@ function varargout = cat_parallelize(job,func,datafield)
                                 jobSID,sum( numel(job_data) ),  i, jobIDs(jobSID,3) , numel(jobs(i).(datafield)), ...
                                 spm_str_manip( jobs(i).(datafield)(si).(FN{1}){1}, 'k40') ));
                             else
-                              cat_io_cprintf( [1 0 0] ,sprintf('  failed %d/%d (pjob %d: %d/%d): %s\n',...
+                              cat_io_cprintf( [1 0 0] ,sprintf('  failed   %d/%d (pjob %d: %d/%d): %s\n',...
                                 jobSID,sum( numel(job_data) ),  i, jobIDs(jobSID,3) , numel(jobs(i).(datafield)), ...
                                 spm_str_manip( jobs(i).(datafield)(si).(FN{1}){1}, 'k40') ));
                             end

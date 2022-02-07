@@ -14,9 +14,9 @@ function out = cat_io_file_move(job)
 % Copyright (C) 2007 Freiburg Brain Imaging
 
 % Volkmar Glauche
-% $Id: cfg_run_file_move.m 5706 2013-10-21 07:49:18Z volkmar $
+% $Id$
 
-rev = '$Rev: 5706 $'; %#ok
+rev = '$Rev$'; %#ok
 
 action = fieldnames(job.action);
 action = action{1};

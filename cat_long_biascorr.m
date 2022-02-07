@@ -45,7 +45,7 @@ function out = cat_long_biascorr(job)
   end
   %%
   if job.LASstr > 0
-    fprintf('  Biasstr = %0.2f, filtersize = %0.2f, LASstr = \n',job.str,job.fs,job.LASstr);
+    fprintf('  Biasstr = %0.2f, filtersize = %0.2f, LASstr = %0.2f\n',job.str,job.fs,job.LASstr);
   else
     fprintf('  Biasstr = %0.2f, filtersize = %0.2f \n',job.str,job.fs);
   end
@@ -177,11 +177,85 @@ function out = cat_long_biascorr(job)
       
       % apply bias correction 
       Ysrc = Yo ./ Yw; 
+
+if 0      
+      clsdef = { 
+     ... p0-  g   d   k op
+        0.01  0.1 0.1 1;
+        1.05  0.1 0.1 1; ... C
+       ... 1.33  0.1 0.1 1; 
+       ... 1.66  0.1 0.1 1; 
+        1.95  0.1 0.1 1; 
+        2.05  0.1 0.1 1; ... G
+       ... 2.33  0.1 0.1 1; 
+       ... 2.66  0.1 0.1 1; 
+        2.95  0.1 0.1 1; 
+        3.15  0.1 0.1 1; ... W
+        };
+      clsdef = { 
+     ... p0-  g   d   k op
+        0.50  0.1 0.1 1;  %C
+        1.25  1.1 1.5 1; % G
+        1.75  1.1 1.1 1; % C
+        2.25  1.1 1.1 1; % G
+        2.75  1.3 1.1 1; % W
+        3.10  0.3 0.5 1; % W
+        };
+      for ci = 2:size(clsdef,1)
+        Ymsk = Yp0>=clsdef{ci-1,1} & Yp0<clsdef{ci,1} & Yg<clsdef{ci,2} & abs(Ydiv)<clsdef{ci,3};
+        
+        [srcm,strs,strn] = cat_stat_kmeans(Ysrc(Ymsk(:)),clsdef{ci,4});
+        [avgm,avgs,avgn] = cat_stat_kmeans(Yavg(Ymsk(:)),clsdef{ci,4});
+        
+        Tth.T3th(ci)  = srcm(strn==max(strn));
+        Tth.T3thx(ci) = avgm(avgn==max(avgn));
+      end  
      
+      if 0
+        T3thx = interp1(Tth.T3thx,1:0.1:numel(Tth.T3thx),'spline');
+        T3th  = interp1(Tth.T3th ,1:0.1:numel(Tth.T3th) ,'spline');
+      else
+        T3thx = Tth.T3thx;
+        T3th  = Tth.T3th;
+      end
+      
+      [T3th,si] = sort(T3th);
+      T3thx     = T3thx(si);
+      
+    %  T3th  = interp1(T3thx,1:0.5:numel(Tth.T3thx),'spline');
+    %  T3thx = interp1(T3th ,1:0.5:numel(Tth.T3th) ,'spline');
+     
+      
+      isc=1; Ym = Ysrc; Ysrc = Ysrc * 0; % * 1000; Tth.T3th = Tth.T3th * 1000; 
+      for i = 2:numel(T3th)
+        M = Ym>T3th(i-1) & Ym<=T3th(i);
+        Ysrc(M(:)) = T3thx(i-1) + (Ym(M(:)) - T3th(i-1))/diff(T3th(i-1:i))*diff(T3thx(i-1:i));
+      end
+      M  = Ym>=T3th(end); 
+      Ysrc(M(:)) = numel(T3th)/isc/6 + (Ym(M(:)) - T3th(i))/diff(T3th(end-1:end))*diff(T3thx(i-1:i));    
+      %%
+   Yww = smooth3(Ysrc)./smooth3(Yavg) .* (Yp0>0) .* (Yg<0.3 | abs(Yd)>0.1); Yww = cat_vol_median3(Yww,Yp0>0); 
+   %Yww = cat_vol_localstat(Yww,Yp0>0,1,1,10); 
+   Yww = cat_vol_approx(Yww,1);
+   Yww = Yww ./ ( cat_stat_nanmean(Ysrc(:)./Yavg(:)./Yww(:) .* (Yp0(:)>0)) ./ cat_stat_nanmean(Ysrc(:)./Yavg(:) .* (Yp0(:)>0)));
+   %   Ysrc2 = Ysrc / 1000; 
+  
+ %  Yn = (Ysrc ./ Yww  -  Yavg); 
+ %  cat_sanlm(Yn,1,3); 
+   
+  %%
+      Ym = cat_main_gintnormi(Ysrc,Tth);
+end
+
+      %%
+      
       % estimate threshholds
       T3th2 = zeros(1,3); 
       for ti=1:3, T3th2(ti) = cat_stat_kmeans(Ysrc(round(Yp0)==ti & Yg<0.3)); end
     
+        
+      
+      
       %% the most important segment is the GM 
       Ygm2    = Ygp0<0.6*mean(vx_vol) & Yp0>1.5 & Yp0<2.5 & Yg<0.6*mean(vx_vol); 
       Ygm2(smooth3(Ygm2)<0.3) = 0; % remove small dots
@@ -206,6 +280,12 @@ function out = cat_long_biascorr(job)
       Yml = Yml + ( (Ysrc< Ylab{3}                ) .* (    (Ysrc - Ylab{6}) ./ max(eps,Ylab{3} - Ylab{6})) );
       Yml(isnan(Yml) | Yml<0)=0; Yml(Yml>10)=10;
     end
+    
+    %% create some final measurements 
+    %  CJV ? 
+    %  RMSE ? 
+    %  COV ?
+    %  hist overlap? > rmse? 
     
     
     %% write corrected output

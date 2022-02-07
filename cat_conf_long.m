@@ -123,7 +123,7 @@ longmodel.help = {
 % However, this could be relevant of strong artifacts and plasticity studies.  
 bstr                 = cfg_menu;
 bstr.tag             = 'bstr';
-bstr.name            = 'Strength of final longitudinal bias correction';
+bstr.name            = 'Strength of final longitudinal bias correction (IN DEVELOPMENT)';
 bstr.labels          = {'no correction','light','medium','strong'}; %,'heavy'};
 bstr.values          = {0,0.25,0.5,0.75}; %,1.0
 bstr.val             = {0};
@@ -131,6 +131,36 @@ bstr.hidden          = expert<2;
 bstr.help            = {
   'Strength of final longitudinal bias correction that utilize the average segmentation for further subtile corrections. Test also higher SPM bias correction that also incooperates the information from the average by using the longTPM. Use weaker corrections if the points in time are far apart or if the imgages are less affected by inhomogeneities. Only use stong corrections in case of severe inhomogeneities or artefacts and check the results! '
   'This correction was introduced in CAT12.7 (2020/10) and is still under test! So use it carefully! '
+  ''
+};
+
+prepavg              = cfg_menu;
+prepavg.tag          = 'prepavg';
+prepavg.name         = 'Optimize orignal data before averaging (IN DEVELOPMENT)';
+prepavg.labels       = {'no preparation','denoising','denosing+trimming'};
+prepavg.values       = {0,1,2};
+prepavg.val          = {0};
+prepavg.hidden       = expert<2; 
+prepavg.help         = {
+  'Denoising, trimming and intensity scaling of the original timepoint data before creating the average. '
+  ''
+};
+
+avgLASWMHC              = cfg_menu;
+avgLASWMHC.tag          = 'avgLASWMHC';
+avgLASWMHC.name         = 'Handling of LAS and WMHC on the average (IN DEVELOPMENT)';
+avgLASWMHC.labels       = {'classic (AVG=TP)','reduced LAS','reduce LAS & extra WMH class','reduce LAS in TPs & extra WMH class'};
+avgLASWMHC.values       = {0,1,2,3};
+avgLASWMHC.val          = {0};
+avgLASWMHC.hidden       = expert<2; 
+
+avgLASWMHC.help         = {
+ ['The use of the LAS for the creation of the indiviudal TPM as well as in the time point specific processing can result in a overestimation of subcortical GM. ' ...
+  'A lower correction in the average or the time point is therefore maybe better suited. '];
+ ['The correction of WMHs to the WM is most similar to the original SPM TPM in principle. ' ...
+  'However, the many GM-like values of large WMHs seams to bias the WM peak resulting in WM over- and GM underestimation. ' ...
+  'Without or with temporar correction (WMHC=0, WMHC=1) the values of WMHs are maybe corrected to GM what can causes problems in the WMHC of the time points. ' ...
+  'Using an extra WMH class (WMHC=3) may reduce this bias. '];
   ''
 };
 
@@ -238,7 +268,7 @@ if newapproach % new way - not working
   if expert
     output.val = [output.val, delete_temp]; 
   end
-  long.val  = {datalong,longmodel,bstr,nproc,opts,extopts,output}; 
+  long.val  = {datalong,longmodel,prepavg,bstr,avgLASWMHC,nproc,opts,extopts,output}; 
   long.vout = @vout_long2;
 else
   % old appraoch
@@ -289,7 +319,7 @@ else
   
   delete_temp.hidden = expert<1;
   
-  long.val  = {datalong,longmodel,enablepriors,bstr,nproc,opts,extopts,output,ROI,longTPM,modulate,dartel,delete_temp};
+  long.val  = {datalong,longmodel,enablepriors,prepavg,bstr,avgLASWMHC,nproc,opts,extopts,output,ROI,longTPM,modulate,dartel,delete_temp};
   
 % does not yet work! 
 % long.vout = @vout_long;
