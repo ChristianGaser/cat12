@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1944 | dahnke | 2022-02-07 18:48:41
+r1945 | dahnke | 2022-02-07 22:40:03
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_main.m
+
+(1) New:     Corrected typos in cat_long_main.
+------------------------------------------------------------------------
+r1944 | dahnke | 2022-02-07 18:49:38 +0100 (Mon, 07 Feb 2022) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -16,6 +24,7 @@ M       cat_parallelize.m
              and cat_long_main for the further test in the developer mode.
 (3) Fixed:   Corrected bugs in the renaming batch in cat_conf_tools. 
              
+
 ------------------------------------------------------------------------
 r1943 | dahnke | 2022-02-04 17:53:42 +0100 (Fri, 04 Feb 2022) | 22 lines
 
