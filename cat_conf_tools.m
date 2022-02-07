@@ -405,6 +405,7 @@ unique.values = {
                  false
                  true
                  }';
+unique.val    = {false};                
 % ---------------------------------------------------------------------
 % copyren Copy and Rename
 % ---------------------------------------------------------------------
@@ -419,7 +420,7 @@ copyren.help    = {'The input files will be copied to the specified target folde
 delete         = cfg_const;
 delete.tag     = 'delete';
 delete.name    = 'Delete';
-delete.val = {false};
+delete.val     = {false};
 delete.help    = {'The selected files will be deleted.'};
 % ---------------------------------------------------------------------
 % action Action
@@ -432,11 +433,11 @@ action.values  = {moveto copyto moveren copyren ren delete };
 
 file_move         = cfg_exbranch;
 file_move.tag     = 'file_move';
-file_move.name    = 'Move/Delete Files';
+file_move.name    = 'Move/Rename/Delete Files';
 file_move.val     = {files action };
-file_move.help    = {'Move or delete files.'};
+file_move.help    = {'Move, rename or delete files.'};
 file_move.prog    = @cat_io_file_move;
-file_move.vout    = @cfg_vout_file_move;
+file_move.vout    = @vout_file_move;
 
 return
 %_______________________________________________________________________
@@ -4354,4 +4355,29 @@ function dep = vout_stat_getCSVXML(job)
       end
     end
   end
+return
+function dep = vout_file_move(job)
+
+% Define virtual output for cfg_run_move_file. Output can be passed on to
+% either a cfg_files or an evaluated cfg_entry.
+%
+% This code is part of a batch job configuration system for MATLAB. See 
+%      help matlabbatch
+% for a general overview.
+%_______________________________________________________________________
+% Copyright (C) 2007 Freiburg Brain Imaging
+
+% Volkmar Glauche
+% $Id$
+
+rev = '$Rev$'; %#ok
+
+if ~isfield(job.action,'delete')
+    dep = cfg_dep;
+    dep.sname = 'Moved/Rename/Copied Files';
+    dep.src_output = substruct('.','files');
+    dep.tgt_spec   = cfg_findspec({{'class','cfg_files','strtype','e'}});
+else
+    dep = [];
+end
 return
