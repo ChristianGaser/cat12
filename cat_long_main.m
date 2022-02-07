@@ -26,7 +26,16 @@ try
   surfaces    = job.output.surface;
   longTPM     = job.longTPM;
   bstr        = job.bstr;
-  prepavg     = 2;
+  if isfield(job,'avgLASWMHC')
+    avgLASWMHC  = job.avgLASMWHC;
+  else
+    avgLASWMHC  = 0;
+  end
+  if isfield(job,'prepavg')
+    prepavg   = job.prepavg;
+  else
+    prepavg   = 2; 
+  end
   longreport  = 1; % [GM WM (CSF)] 
   if isfield(job,'delete_temp')  
     delete_temp = job.delete_temp;
@@ -45,6 +54,9 @@ catch
   bstr        = 0.75; % additional longitudinal bias correction based on the avg pp
   prepavg     = 2; % preparation of the images in native space before SPM longitudinal realignment/averaging
                    % 0-none, 1-SANLM, 2-SANLM+trimming, 3-SANLM+trimming+rescaleIntensities  
+  avgLASWMHC  = 0; % 0-classical approach with LAS (0.5) and WMHC=2 (too WM) in both the avg as well as each timepoint
+                   % (>> overcorrection)
+                   % 1-new approach with 
   longreport  = 1; % create longitudinal subject report                  
 end
 
@@ -157,31 +169,32 @@ end
 matlabbatch{mbi}.spm.tools.cat.tools.series.bparam          = 1e6;
 matlabbatch{mbi}.spm.tools.cat.tools.series.use_brainmask   = 1;
 matlabbatch{mbi}.spm.tools.cat.tools.series.reduce          = 1;
-
 if exist('extopts','var') && ((isfield(extopts,'setCOM') && extopts.setCOM) || ...
     (isfield(extopts,'segmentation') && isfield(extopts.segmentation,'setCOM') && extopts.segmentation.setCOM))
   matlabbatch{mbi}.spm.tools.cat.tools.series.setCOM = 1;
 else
   matlabbatch{mbi}.spm.tools.cat.tools.series.setCOM = 0;
 end
-
 if prepavg
+  % last part of series batch
   matlabbatch{mbi}.spm.tools.cat.tools.series.data(1) =  cfg_dep('Spatially adaptive non-local means (SANLM) denoising filter: SANLM Images', ... 
     substruct('.','val', '{}',{mb_sanlm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
     substruct('.','files', '()',{':'}));
 
+  
   % in case of denoising we may need another renaming step for the avg
   mbi = mbi + 1; mb_rigid_ravg = mbi; 
-  matlabbatch{mbi}.spm.tools.cat.tools.file_move.files = cfg_dep('Longitudinal Registration: Midpoint Average',...
+  matlabbatch{mbi}.spm.tools.cat.tools.file_move.files(1) = cfg_dep('Longitudinal Registration: Midpoint Average',...
     substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
     substruct('.','avg', '()',{':'}));
   matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.patrep.pattern  = 'avg_sanlm_';
   matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.patrep.repl     = 'avg_';
   matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.unique          = false;
   
+  
   % ... and all registrated images
   mbi = mbi + 1; mb_rigid_rtp = mbi; 
-  matlabbatch{mbi}.spm.tools.cat.tools.file_move.files = cfg_dep('Longitudinal Rigid Registration: Realigned images',...
+  matlabbatch{mbi}.spm.tools.cat.tools.file_move.files(1) = cfg_dep('Longitudinal Rigid Registration: Realigned images',...
     substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
     substruct('.','rimg', '()',{':'}));
   matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.patrep.pattern  = 'rsanlm_';
@@ -200,7 +213,7 @@ end
 % to the MNI template.  The rigid segmentation is used to create an 
 % individual TPM in step 3.  
 mbi = mbi + 1; mb_catavg = mbi;
-if prepavg
+if prepavg>0
   matlabbatch{mbi}.spm.tools.cat.estwrite.data(1)           = cfg_dep('Move/Delete Files: Moved/Copied Files', ... 
     substruct('.','val', '{}',{mb_rigid_ravg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
     substruct('.','files'));
@@ -215,26 +228,46 @@ if exist('opts','var') && ~isempty(opts)
 end
 if exist('extopts','var') && ~isempty(extopts)
   matlabbatch{mbi}.spm.tools.cat.estwrite.extopts           = extopts; 
-  % WMHC: Only temporary because we don't want to bias the WM segmentation of the TPs!
-  %       RD20220126: This works better but there are now maybe some more
-  %       problems with incorrected WMHs.
-  if cat_get_defaults('extopts.expertgui')>0
-    matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.segmentation.WMHC   = 1;  
-  % LAS: Only the small correction here, because it will be done in the TPs 
-  %      and we do not want to do it twice (the longTPM would introduce a bias).
-  %      The lowes setting (eps) was a bit to weak. 
-    matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.segmentation.LASstr = 0.25;
+
+  % WMHC: This is more complicated ...
+  %       Using the CAT default (WMHC==2
+  % LAS:  Only the small correction here, because it will be done in the TPs 
+  %       and we do not want to do it twice (the longTPM would introduce a bias).
+  %       The lowes setting (eps) was a bit to weak. 
+
   % RD202201: Shooting with lower frequency setting?
   %           Although, we don't use the deformations this effects the WMHC.
   %           But as far as this is also not used now it is not necessary/
   %           useful to change something now.
-  else
-    matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.WMHC   = 1;  
-    matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.LASstr = 0.25;
-  end
   %if isfield(extopts,'registration') && isfield(extopts.registration,'regmethod') && isfield(extopts.registration.regmethod,'regstr')
   %  matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.registration.regmethod.shooting.regstr  = 14; % low frequency 2.5 mm 
   %end
+  switch avgLASWMC
+    case 0 % old setting
+      WMHC    = [];   % use default
+      LASstr  = [];   % use default
+    case 1 % new corrected setting 
+      % RD20220126: WMHC==1:  
+      %   Only temporary because we don't want to bias the WM segmentation of the TPs!
+      %   This works better for the peaks and the GM is less biased compared to the average
+      %   but there are now more problems with incorrected WMHs.
+      WMHC    = 2;    % Correct WMH as WM to have a similar handling like in normal TPMs. 
+                      % This maybe reduce the chance to find WMHs within the timepoints. 
+      LASstr  = 0.25; 
+    case 2 % ... use extra class for WMHC to avoid bias ... 
+      WMHC    = 3;
+      LASstr  = 0.25;
+    case 3
+      WMHC    = 3;  % use own class
+      LASstr  = []; % use GUI value here and lower LASstr in time points
+  end
+  if cat_get_defaults('extopts.expertgui')>0
+    if ~isempty(WMHC),   matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.segmentation.WMHC   = WMHC;   end  
+    if ~isempty(LASstr), matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.segmentation.LASstr = LASstr; end
+  else
+    if ~isempty(WMHC),   matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.WMHC                = WMHC;   end
+    if ~isempty(LASstr), matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.LASstr              = LASstr; end
+  end
 end
 
 % RD202102: differentiation between user levels not tested yet !
@@ -335,6 +368,15 @@ end
 
 if exist('extopts','var') && ~isempty(extopts)
   matlabbatch{mbi}.spm.tools.cat.estwrite.extopts           = extopts;
+  
+  if avgLASWMC==3
+    LASstr = 0.25; 
+    if cat_get_defaults('extopts.expertgui')>0 
+      matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.segmentation.LASstr = LASstr;
+    else
+      matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.LASstr = LASstr;
+    end
+  end  
 end
 
 if exist('output','var') && ~isempty(output)

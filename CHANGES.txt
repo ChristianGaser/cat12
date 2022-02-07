@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1943 | dahnke | 2022-02-04 17:52:10
+r1944 | dahnke | 2022-02-07 18:48:41
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_long.m
+M       cat_conf_tools.m
+MM      cat_io_file_move.m
+M       cat_long_biascorr.m
+M       cat_long_main.m
+M       cat_parallelize.m
+
+(1) New:     Added detection of broken longitudinal batches in case
+             of parallel processing in cat_parallelize.
+(2) Fixed:   Added prepavg and avgLASWMHC parameters in cat_conf_long
+             and cat_long_main for the further test in the developer mode.
+(3) Fixed:   Corrected bugs in the renaming batch in cat_conf_tools. 
+             
+------------------------------------------------------------------------
+r1943 | dahnke | 2022-02-04 17:53:42 +0100 (Fri, 04 Feb 2022) | 22 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -21,6 +39,7 @@ M       cat_vol_set_com.m
 (4) Changed: Tiny corrections in cat_vol_set_com and cat_vol_groupwise_ls.
                 
              
+
 
 ------------------------------------------------------------------------
 r1942 | gaser | 2022-02-03 17:16:54 +0100 (Thu, 03 Feb 2022) | 13 lines
