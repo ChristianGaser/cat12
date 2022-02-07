@@ -27,7 +27,7 @@ try
   longTPM     = job.longTPM;
   bstr        = job.bstr;
   if isfield(job,'avgLASWMHC')
-    avgLASWMHC  = job.avgLASMWHC;
+    avgLASWMHC  = job.avgLASWMHC;
   else
     avgLASWMHC  = 0;
   end
@@ -84,7 +84,6 @@ if 0 %~isempty(extopts)
 else
   mbi = 0;
 end
-
 
 
 % 0) denoising in native space (RD 202201)
@@ -242,7 +241,7 @@ if exist('extopts','var') && ~isempty(extopts)
   %if isfield(extopts,'registration') && isfield(extopts.registration,'regmethod') && isfield(extopts.registration.regmethod,'regstr')
   %  matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.registration.regmethod.shooting.regstr  = 14; % low frequency 2.5 mm 
   %end
-  switch avgLASWMC
+  switch avgLASWMHC
     case 0 % old setting
       WMHC    = [];   % use default
       LASstr  = [];   % use default
@@ -369,7 +368,7 @@ end
 if exist('extopts','var') && ~isempty(extopts)
   matlabbatch{mbi}.spm.tools.cat.estwrite.extopts           = extopts;
   
-  if avgLASWMC==3
+  if avgLASWMHC==3
     LASstr = 0.25; 
     if cat_get_defaults('extopts.expertgui')>0 
       matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.segmentation.LASstr = LASstr;
