@@ -65,9 +65,10 @@ function [prob,indx,indy,indz,th,Yrep] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res)
           % find maximum for reordered segmentations
           [maxi,maxind] = max(cls2(:,:,[3,1,2,4:Kb2]),[],3);
           for k1 = 1:Kb2
-            Yp0(:,:,i) = Yp0(:,:,i) + cat_vol_ctype((maxind == k1) .* (maxi~=0) * k1ind(k1) .* Yb(:,:,i)); 
+            Yp0(:,:,i) = Yp0(:,:,i) + cat_vol_ctype((maxind == k1) .* (maxi~=0) * k1ind(k1) .* min(1,Yb(:,:,i))); 
           end
       end
+      Yp0 = min(3,Yp0);
       if ~debug, clear maxi maxind Kb k1 cls2; end
   
       

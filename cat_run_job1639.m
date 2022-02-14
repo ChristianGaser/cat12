@@ -562,9 +562,8 @@ function cat_run_job1639(job,tpm,subj)
       
           if ~debug, clear Yt; end
 
-          if job.extopts.setCOM && ~( isfield(job,'useprior') && ~isempty(job.useprior) ) && ~ppe.affreg.highBG
-            
-          else
+          if ~( job.extopts.setCOM && ~( isfield(job,'useprior') && ~isempty(job.useprior) ) && ...
+              ~ppe.affreg.highBG && strcmp(job.opts.affreg,'prior') )
             stime = cat_io_cmd('Affine registration','','',1,stime); 
           end
           
@@ -579,7 +578,8 @@ function cat_run_job1639(job,tpm,subj)
           VF1   = spm_smoothto8bit(VF,resa);
           VG1   = spm_smoothto8bit(VG,resa);
 
-        elseif job.extopts.setCOM && ~( isfield(job,'useprior') && ~isempty(job.useprior) ) && ~ppe.affreg.highBG
+        elseif job.extopts.setCOM && ~( isfield(job,'useprior') && ~isempty(job.useprior) ) && ...
+            ~ppe.affreg.highBG && strcmp(job.opts.affreg,'prior')
           % standard approach (no APP) with static resa value and no VG smoothing
           stime = cat_io_cmd('Coarse affine registration');
           resa  = 8;
@@ -598,7 +598,7 @@ function cat_run_job1639(job,tpm,subj)
         aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
 
         % use affine transformation of given (average) data for longitudinal mode
-        if isfield(job,'useprior') && ~isempty(job.useprior)
+        if isfield(job,'useprior') && ~isempty(job.useprior) && strcmp(job.opts.affreg,'prior')
           priorname = job.useprior{1};
           [pp,ff,ee,ex] = spm_fileparts(priorname);  %#ok<ASGLU>
           catxml = fullfile(pp,reportfolder,['cat_' ff '.xml']);
