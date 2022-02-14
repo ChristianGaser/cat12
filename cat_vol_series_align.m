@@ -32,7 +32,9 @@ if isfield(job.reg,'nonlin')
   cat_io_cprintf('blue','Non-linear Registration!\n');
   tim = job.reg.nonlin.times(:);
   if all(isfinite(tim))
-    if numel(tim) ~= N
+    if numel(tim) == 1
+        tim = (1:N)';
+    elseif numel(tim) ~= N
         error('Incompatible numbers of times and scans.');
     end
     if any(abs(diff(tim)) > 50)

@@ -287,12 +287,17 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
       [Ytmp,Ytmp,Yg,Ydiv] = cat_main_updateSPM_gcut0(Ysrc,P,vx_vol,T3th); clear Ytmp;  %#ok<ASGLU>
       if exist(Pavgp0,'file')
         % the p0avg should be optimal 
-        Yb = spm_read_vols(spm_vol(Pavgp0))>0.5;
+        if any(vx_vol0 ~= vx_vol) % if the data was internaly resampled we have to load it via imcalc
+          [Vb,Yb] = cat_vol_imcalc(spm_vol(Pavgp0),spm_vol(res.image.fname),'i1',struct('interp',3,'verb',0,'mask',-1)); clear Vb;  %#ok<ASGLU>
+        else
+          Yb = spm_read_vols(spm_vol(Pavgp0));
+        end
+        Yb = Yb > 0.5; 
       else
         % otherwise it would be possible to use the individual TPM 
         % however, the TPM is more smoothed and is therefore only second choice  
         cat_io_cprintf('warn','Cannot find p0avg use TPM for brainmask: \n  %s\n',Pavgp0);
-        Yb  = YbA > 0.5;
+        Yb = YbA > 0.5;
         clear YbA
       end
       Ybb = cat_vol_ctype(cat_vol_smooth3X(Yb,0.5)*256); 

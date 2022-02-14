@@ -566,9 +566,8 @@ function cat_run_job(job,tpm,subj)
             end 
           end
       
-          if ~debug, clear Yt; end
-
-          if ~isfield(job,'useprior') || isempty(job.useprior)
+          if ~( job.extopts.setCOM && ~( isfield(job,'useprior') && ~isempty(job.useprior) ) && ...
+              ~ppe.affreg.highBG && strcmp(job.opts.affreg,'prior') )
             stime = cat_io_cmd('Affine registration','','',1,stime); 
           end
 
@@ -586,15 +585,16 @@ end
 
           % smoothing
           resa  = obj.samp*2; % definine smoothing by sample size
-          VF1   = spm_smoothto8bit(VF,resa); %#ok<NASGU>
+          VF1   = spm_smoothto8bit(VF,resa); 
           VG1   = spm_smoothto8bit(VG,resa); %#ok<NASGU>
 
-        elseif job.extopts.setCOM && ~( isfield(job,'useprior') && ~isempty(job.useprior) ) && ~ppe.affreg.highBG
+        elseif job.extopts.setCOM && ~( isfield(job,'useprior') && ~isempty(job.useprior) ) && ...
+            ~ppe.affreg.highBG && strcmp(job.opts.affreg,'prior')
           % standard approach (no APP) with static resa value and no VG smoothing
           stime = cat_io_cmd('Coarse affine registration');
           resa  = 8;
           VF1   = spm_smoothto8bit(VF,resa);
-          VG1   = VG; 
+          VG1   = VG; %#ok<NASGU>
           [Ym,Yt,Ybg,WMth] = APPmini(obj,VF,job.extopts.histth);
         else
           stime = cat_io_cmd('Skip initial affine registration due to high-intensity background','','',1);  
@@ -608,7 +608,7 @@ end
         aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
 
         % use affine transformation of given (average) data for longitudinal mode
-        if isfield(job,'useprior') && ~isempty(job.useprior)   
+        if isfield(job,'useprior') && ~isempty(job.useprior) && strcmp(job.opts.affreg,'prior')  
           priorname = job.useprior{1};
           [pp,ff,ee,ex] = spm_fileparts(priorname);  %#ok<ASGLU>
           catxml = fullfile(pp,reportfolder,['cat_' ff '.xml']);
