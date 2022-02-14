@@ -1,11 +1,44 @@
 ------------------------------------------------------------------------
-r1945 | dahnke | 2022-02-07 22:40:03
+r1946 | dahnke | 2022-02-14 12:22:27
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_long.m
+M       cat_long_main.m
+M       cat_main_amap.m
+M       cat_main_amap1639.m
+M       cat_main_updateSPM.m
+M       cat_main_updateSPM1639.m
+M       cat_run_job.m
+M       cat_run_job1639.m
+M       cat_vol_groupwise_ls.m
+M       cat_vol_series_align.m
+
+(1) Fixed:   Updated setup of the initial segmentation setup of the AMAP 
+             to prevent errors in cat_main_amap. 
+(2) Fixed:   Corrected definition of the longitudinal brain mask in case 
+             of internally interpolated images that finally crashed the 
+             AMAP segmentation above (e.g., in NIH-NBD but not in ADNI).              
+(3) New:     Added longitudinal development model that is quite similar as 
+             the longitudinal aging model but uses a time point independent 
+             affine registration to adapt for brain/head growth. 
+             Changes in cat_conf_long (model setup), cat_long_main (affreg
+             settings), cat_run_job[1639] (affreg handling).
+(4) Fixed:   Corrected settings of the longitudinal deformation model to 
+             create the average (not used yet) in cat_long_main and in 
+             cat_vol_series_align. Further comments in cat_vol_groupwise_ls.
+(5) Fixed:   Deactivated surface output if no prior surface but time point
+             specific surfaces are used.   
+
+------------------------------------------------------------------------
+r1945 | dahnke | 2022-02-07 22:40:22 +0100 (Mon, 07 Feb 2022) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_long_main.m
 
 (1) New:     Corrected typos in cat_long_main.
+
 ------------------------------------------------------------------------
 r1944 | dahnke | 2022-02-07 18:49:38 +0100 (Mon, 07 Feb 2022) | 16 lines
 

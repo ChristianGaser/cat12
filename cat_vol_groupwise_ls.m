@@ -271,11 +271,23 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
 
     spm_plot_convergence('Clear');
     spm_plot_convergence('Init',['Optimising (level ' num2str(level) ')'],'Objective Function','Step');
-    for iter=1:(2*2^(level-1)+1) % Use more iterations at lower resolutions (its faster, so may as well)
+    for iter=1:(2*2^(level-1)+1) % / 8 % Use more iterations at lower resolutions (its faster, so may as well) ############# RD20220213 marked
+      % RD20220213: markings for future experiments
+      %  I marked some parts of using bias correction and deformations, 
+      %  because they are interesting in case case of development, adaptions 
+      %  of the scanner protocol or device itself.
+      %  Soft, very low frequency changes could be interesting. However, 
+      %  the necessary adaptions of the long pipeline are curenty to much 
+      %  for this quite rare case that would remain still complicated.
+      %  Changes would need extra flag for the protocol case. 
+      %  The developmental changes would require separate processing of the
+      %  average (with deformation) and of the single time-points (without
+      %  deformations) to get correct measurements.
 
 
         % Compute deformations from initial velocities
         %-----------------------------------------------------------------------
+        
         for i=1:numel(param)
             if all(isfinite(w_settings(i,:)))
                 [param(i).y,param(i).J] = spm_shoot3d(param(i).v0,[vx w_settings(i,:)*sc],s_settings(i,:));
@@ -543,9 +555,10 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
             end
             clear r_avg
         end
-
-        if any(all(isfinite(b_settings),2))
+        
+        if any(all(isfinite(b_settings),2)) %&& level>4 %######## RD20220213 marked  
             % Bias field
+            %fprintf('Bias %d-%d\n',level,iter); % ######## RD20220213 marked
             %=======================================================================
             % Recompute template data
             %-----------------------------------------------------------------------
@@ -621,12 +634,12 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
             clear mu
         end
 
-
-        if any(all(isfinite(w_settings),2))
+        if any(all(isfinite(w_settings),2)) %&& level>4 % ########## RD20220213 marked
             % Deformations
             %=======================================================================
             % Recompute template data (with gradients)
             %-----------------------------------------------------------------------
+            %fprintf('Defs %d-%d\n',level,iter); %##########   RD20220213 marked 
             [mu,ss,nvox,D] = compute_mean(pyramid(level), param, ord);
             % for i=1:numel(param), fprintf('  %12.5g %12.5g %12.5g', prec(i)*ss(i), param(i).eb, param(i).ev); end; fprintf('  2\n');
 

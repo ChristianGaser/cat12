@@ -161,8 +161,8 @@ end
 def = 0; % use deformations .. 1 = one year 
 mbi = mbi + 1; mb_rigid = mbi; 
 if def>0
-  matlabbatch{mbi}.spm.tools.cat.tools.series.reg.nonlin.times  = inf; % inf means linear registration ...  
-  matlabbatch{mbi}.spm.tools.cat.tools.series.reg.nonlin.wparam = def * [0 0 100 25 100];
+  matlabbatch{mbi}.spm.tools.cat.tools.series.reg.nonlin.times  = def; % inf means linear registration ...  
+  matlabbatch{mbi}.spm.tools.cat.tools.series.reg.nonlin.wparam = [0 0 100 25 100];
 end
 % ########
 matlabbatch{mbi}.spm.tools.cat.tools.series.bparam          = 1e6;
@@ -202,7 +202,7 @@ if prepavg
 else
   matlabbatch{mbi}.spm.tools.cat.tools.series.data                          = '<UNDEFINED>';
 end
-
+%return
 
 
 
@@ -415,6 +415,11 @@ if useprior
                                                                       substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                       substruct('.','avg', '()',{':'}));
   end
+  if longmodel<4 % plasticity and aging
+    matlabbatch{mbi}.spm.tools.cat.estwrite.opts.affreg = 'prior';
+  else % development model 
+    matlabbatch{mbi}.spm.tools.cat.estwrite.opts.affreg = 'subj';
+  end
 end
 
 if longTPM
@@ -610,7 +615,7 @@ if any(longreport) %&& spm_get_defaults('job.extopts.expertgui')>1
         matlabbatch{mbi}.spm.tools.cat.tools.long_report.data_vol(1)      = cfg_dep('Apply deformations (many subjects): All Output Files',...
                                                                             substruct('.','val', '{}',{mbfdef(modi,1)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                             substruct('.','vfiles', '()',{':'}));  
-        if surfaces
+        if surfaces && useprior % otherwise the indivudal surfaces will not have the same mesh!  
           matlabbatch{mbi}.spm.tools.cat.tools.long_report.data_surf(1)   = cfg_dep('CAT12: Segmentation (current release): Left Thickness',...
                                                                             substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
                                                                             substruct('()',{1}, '.','lhthickness', '()',{':'})); 
