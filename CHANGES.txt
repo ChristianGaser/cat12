@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1946 | dahnke | 2022-02-14 12:22:27
+r1947 | dahnke | 2022-02-15 14:49:25
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_main.m
+M       cat_long_report.m
+M       cat_main_updateSPM.m
+M       cat_main_updateSPM1639.m
+M       cat_run_job1639.m
+M       html/cat_methods_catlongreport.html
+
+(1) Fixed:   Added development case to longitudinal report (unfinished).
+(2) Fixed:   Corrected tiny bug in the setup of the development pipeline. 
+(3) Changed: Added development case to longitudinal help page (unfinished).   
+(4) Changed: Setup parameters to clear temporary report data.
+ 
+
+------------------------------------------------------------------------
+r1946 | dahnke | 2022-02-14 12:23:23 +0100 (Mon, 14 Feb 2022) | 30 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -29,6 +47,7 @@ M       cat_vol_series_align.m
              cat_vol_series_align. Further comments in cat_vol_groupwise_ls.
 (5) Fixed:   Deactivated surface output if no prior surface but time point
              specific surfaces are used.   
+
 
 ------------------------------------------------------------------------
 r1945 | dahnke | 2022-02-07 22:40:22 +0100 (Mon, 07 Feb 2022) | 6 lines

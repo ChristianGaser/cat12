@@ -529,8 +529,9 @@ function cat_run_job1639(job,tpm,subj)
         % large head intensities can disturb the whole process.
         % --------------------------------------------------------------
         % ds('l2','',vx_vol,Ym, Yt + 2*Ybg,obj.image.private.dat(:,:,:)/WMth,Ym,60)
-        if (job.extopts.APP == 1070 || job.extopts.APP == 1144) && ~ppe.affreg.highBG 
-          stime = cat_io_cmd('APP: Rough bias correction'); 
+        if (job.extopts.APP == 1070 || job.extopts.APP == 1144) && ~ppe.affreg.highBG && ...
+          ( ~isfield(job,'useprior') || isempty(job.useprior) )
+          stime = cat_io_cmd('APP: Rough bias correction');
           try
             Ysrc  = single(obj.image.private.dat(:,:,:)); 
             if job.extopts.APP == 1070 
@@ -562,8 +563,7 @@ function cat_run_job1639(job,tpm,subj)
       
           if ~debug, clear Yt; end
 
-          if ~( job.extopts.setCOM && ~( isfield(job,'useprior') && ~isempty(job.useprior) ) && ...
-              ~ppe.affreg.highBG && strcmp(job.opts.affreg,'prior') )
+          if ~( job.extopts.setCOM && ~( isfield(job,'useprior') && ~isempty(job.useprior) ) && ~ppe.affreg.highBG )
             stime = cat_io_cmd('Affine registration','','',1,stime); 
           end
           
@@ -578,8 +578,7 @@ function cat_run_job1639(job,tpm,subj)
           VF1   = spm_smoothto8bit(VF,resa);
           VG1   = spm_smoothto8bit(VG,resa);
 
-        elseif job.extopts.setCOM && ~( isfield(job,'useprior') && ~isempty(job.useprior) ) && ...
-            ~ppe.affreg.highBG && strcmp(job.opts.affreg,'prior')
+        elseif job.extopts.setCOM && ~( isfield(job,'useprior') && ~isempty(job.useprior) ) && ~ppe.affreg.highBG 
           % standard approach (no APP) with static resa value and no VG smoothing
           stime = cat_io_cmd('Coarse affine registration');
           resa  = 8;
@@ -597,15 +596,23 @@ function cat_run_job1639(job,tpm,subj)
         aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
         aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
 
+% if isfield(job,'useprior') && ( isempty(job.useprior) && ~strcmp(job.opts.affreg,'prior') )
+ %           stime = cat_io_cmd('Affine registration (longitudinal-development model)','','',1,stime); 
+                 
         % use affine transformation of given (average) data for longitudinal mode
-        if isfield(job,'useprior') && ~isempty(job.useprior) && strcmp(job.opts.affreg,'prior')
+        if isfield(job,'useprior') && ~isempty(job.useprior) 
+          % even in the development pipeline the prior is a good start !
           priorname = job.useprior{1};
           [pp,ff,ee,ex] = spm_fileparts(priorname);  %#ok<ASGLU>
           catxml = fullfile(pp,reportfolder,['cat_' ff '.xml']);
           
           % check that file exists and get affine transformation
           if exist(catxml,'file')
-            fprintf('\nUse affine transformation from:\n%s\n',priorname);
+            if strcmp(job.opts.affreg,'prior')
+              fprintf('\nUse affine transformation from:\n%s\n',priorname);
+            else
+              fprintf('\nInitialize with affine transformation from:\n%s\n',priorname);
+            end
             stime    = cat_io_cmd(' ',' ','',job.extopts.verb); 
             xml      = cat_io_xml(catxml);
             % sometimes xml file does not contain affine transformation
@@ -616,7 +623,7 @@ function cat_run_job1639(job,tpm,subj)
             else
               Affine   = xml.SPMpreprocessing.Affine;
               affscale = 1;
-              useprior = 1;
+              useprior = 1 + ~strcmp(job.opts.affreg,'prior'); 
             end
           else
             cat_io_cprintf('warn',sprintf('WARNING: File "%s" not found. Use individual affine transformation\n',catxml));
@@ -624,6 +631,7 @@ function cat_run_job1639(job,tpm,subj)
             useprior = 0;
           end
         else
+          %%
           Affine   = eye(4); 
           useprior = 0;
         
@@ -670,7 +678,7 @@ function cat_run_job1639(job,tpm,subj)
         
         
         % fine affine registration 
-        if ~useprior && ~ppe.affreg.highBG ... strcmp('human',job.extopts.species) && 
+        if ~useprior && ~ppe.affreg.highBG   % strcmp('human',job.extopts.species) && 
           aflags.sep = obj.samp/2; 
           aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
           aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
@@ -699,6 +707,7 @@ function cat_run_job1639(job,tpm,subj)
         clear VG1 VF1
        
       else
+        %%
         VF = spm_vol(obj.image(1));
         [Ym,Yt,Ybg,WMth] = APPmini(obj,VF); %#ok<ASGLU>
         %[Ym,Yt,Ybg,WMth] = cat_run_job_APP_init1070(single(obj.image.private.dat(:,:,:)),vx_vol,job.extopts.verb); %#ok<ASGLU>
@@ -826,14 +835,14 @@ function cat_run_job1639(job,tpm,subj)
       %% Fine affine Registration with automatic selection in case of multiple TPMs. 
       %  This may not work for non human data (or very small brains).
       %  This part should be an external (coop?) function?
-      if useprior
+      if useprior==1
         stime = cat_io_cmd('SPM preprocessing 1 (estimate 1 - use prior):','','',1,stime); 
       elseif job.extopts.setCOM == 10 % no maffreg
         stime = cat_io_cmd('SPM preprocessing 1 (estimate 1 - use no TPM registration):','','',1,stime); 
       else
         stime = cat_io_cmd('SPM preprocessing 1 (estimate 1 - TPM registration):','','',1,stime); 
       end
-      if ~isempty(job.opts.affreg) && ~useprior && job.extopts.setCOM ~= 10 % setcom == 10 - never use ... && strcmp('human',job.extopts.species)
+      if ~isempty(job.opts.affreg) && useprior~=1 && job.extopts.setCOM ~= 10 % setcom == 10 - never use ... && strcmp('human',job.extopts.species)
         if numel(job.opts.tpm)>1
           %% merging of multiple TPMs
           obj2 = obj; obj2.image.dat(:,:,:) = max(0.0,Ym);
