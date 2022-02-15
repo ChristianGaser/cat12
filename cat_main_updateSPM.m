@@ -277,7 +277,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
     %  Update Skull-Stripping 1
     %  ----------------------------------------------------------------------
     stime2 = cat_io_cmd('  Update skull-stripping','g5','',job.extopts.verb-1,stime2); 
-    if (isfield(job,'useprior') && ~isempty(job.useprior) ) && ... 
+    if (isfield(job,'useprior') && ~isempty(job.useprior) && strcmp(job.opts.affreg,'prior') ) && ... 
        (isfield(res,'ppe') && ~res.ppe.affreg.highBG)
       % RD202010: use longitudinal skull-stripping 
       [pp,ff,ee] = spm_fileparts(char(job.useprior));
