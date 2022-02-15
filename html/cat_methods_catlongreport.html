@@ -26,7 +26,7 @@
     <div id="content">
       <h2>Catlongreport</h2>
 				<p>
-					Although the <i>cat_long_report</i> (<a href="#Fig1">Figure 1</a>) looks quite similar to the scan-specific report there are some special aspects.  The report is produced for each aging model that results in different volumes but the same surfaces.  The parameters describe the <i>tissue probability map</i> (TPM) used for the average case and only mark the use of the individual TPM.
+					Although the <i>cat_long_report</i> (<a href="#Fig1">Figure 1</a>) looks quite similar to the scan-specific report there are some special aspects.  The report is produced for each longitudinal model, resulting in different volumes but the same surfaces.  The parameters describe the <i>tissue probability map</i> (TPM) used for the average case and only mark the use of the individual TPM.
 				</p>
 				
 				<p class="img" style="width: 50%;" id="Fig1">
@@ -65,6 +65,22 @@
 					In ADNI some subjects were additionally scan on 1.5 and 3.0 Tesla systems that allows testing for scanner-specific differences although there were about 100 days between the scans. In this case, the differences in terms of image quality are much higher although ADNI did a lot to reduce scanner effects. The lower image contrast and higher noise of the 1.5 Tesla makes it harder to correctly segment myelinated GM regions that have higher more white matter like intensities. In this example, the first scan was performed with a 1.5 Tesla scanner and the second with a 3.0 Tesla device, showing a global and local increase in GM thickness rather than the expected decrease, especially in myelinated regions.  
 					<!--In addition, comparing <a href="#Fig3">Figure 3</a> to <a href="#Fig2">Figure 2</a> you can see that the scaling of the thickness colorbar changes as well.-->     	
 				</p>
+
+<!--
+				In longitudinal models of adult subjects no changes of the brain or head are expected and the affine registration of the average  is used for all time points. However, in the developing brain head and brain are of course heavily changing an independent affine registration to the (longitudinal) TPM is essential to obtain the good segmentation. 
+				Besides this, the development model is similar to the aging pipeline and adapts for changes between time points before the averaged registration is applied (that considers the affine registration). 
+-->
+				<!-- I am not sure what is best for the registration but the averaging of the time point specific deformation seems to be ok. -->    
+<!--
+				<p class="img" style="width: 90%;" id="Fig3">
+					<img src="images/cat_long_report_scannerdifferences_ADNI002S0559.jpg" width=100% height=auto alt="cat_long_report_scannerdifferences_ADNI002S0559 - Changes in development vs. changes in aging ">
+					</br>
+					<b>Figure 3 - Development vs. aging effects:</b> 
+					The figure shows the results of the aging (left) and the development (pipeline) of child, scanned with ... and ... years. 
+					Using only the aging model, without modeling of affine changes of head/brain size between time points, it is possible to see strong GM increase at the CSF/GM boundary but also GM atrophy at the GM/WM boundary (a) that indicate a movement of the GM cortex by WM growth (b), which can be found close to the GM/WM boundary in most regions but not close the Insula and ventricles. The general growth of the brain/head result in a blue corona along the scull in the GM glassbrain.
+					The developmental model integrated such major changes by <i>upscaling</i> of the brain/head and allows focusing on <i>relative</i> local changes. The increase of GM and WM is now more equally distributed over the whole brain. Because the GM surrounds the WM its increase is significantly higher on a global level also if both tissue <i>scales up</i> in a similar way, what may also explain the strong GM increase and WM decrease within the Insula.   
+				</p>
+-->
 					 
 				<!--
 ##########

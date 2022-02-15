@@ -631,6 +631,9 @@ if any(longreport) %&& spm_get_defaults('job.extopts.expertgui')>1
           matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.smoothvol   = 3;
           matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.smoothsurf  = 12;
           matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.plotGMWM    = 1; 
+          matlabbatch{mbi}.spm.tools.cat.tools.long_report.output.vols      = ~delete_temp;
+          matlabbatch{mbi}.spm.tools.cat.tools.long_report.output.surfs     = ~delete_temp;
+          matlabbatch{mbi}.spm.tools.cat.tools.long_report.output.xml       = ~delete_temp;
         end
       end
     end

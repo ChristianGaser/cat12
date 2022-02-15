@@ -370,7 +370,14 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
         end
       end
       [~,ff] = spm_fileparts(job.data_vol{1});
-      if      ~isempty(strfind(ff,'mwmwp')), model = 'aging'; 
+      if      ~isempty(strfind(ff,'mwmwp')), model = 'aging/development'; 
+        %{
+        if job.data_xml{fi,1}.job
+          model = 'aging';
+        else
+          model = 'development';
+        end
+        %}  
       elseif  ~isempty(strfind(ff,'mwp')),   model = 'plasticity'; 
       else,                                  model = '';
       end

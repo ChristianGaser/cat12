@@ -184,12 +184,18 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   %  Update Skull-Stripping 1
   %  ----------------------------------------------------------------------
   stime2 = cat_io_cmd('  Update Skull-Stripping','g5','',job.extopts.verb-1,stime2); 
-  if (isfield(job,'useprior') && ~isempty(job.useprior) ) && ... 
-     (isfield(res,'ppe') && ~res.ppe.affreg.highBG)
+  if (isfield(job,'useprior') && ~isempty(job.useprior) && strcmp(job.opts.affreg,'prior') ) && ... 
+     (isfield(res,'ppe') && ~res.ppe.affreg.highBG) 
     % RD202010: use longitudinal skull-stripping 
     [pp,ff,ee] = spm_fileparts(char(job.useprior));
     Pavgp0 = fullfile(pp,'mri',[strrep(ff,'avg_','p0avg_'),ee]);
-    
+
+% RD20220213: 
+%  For the development model with longitudinal TPM you may have to add the affine registration. 
+%  However it seems that the adaption of the brainmask works quite well ... 
+%  but maybe it is better to full deactive the skull-stripping in the 
+%  plasticity/aging case
+
     % get gradient and divergence map (Yg and Ydiv)
     [Ytmp,Ytmp,Yg,Ydiv] = cat_main_updateSPM_gcut0(Ysrc,P,vx_vol,T3th); clear Ytmp;  %#ok<ASGLU>
     if exist(Pavgp0,'file')
@@ -308,7 +314,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   %  the number of gaussians per class, we decided that it is simpler and 
   %  maybe saver to add further test in the longitudinal case, where the 
   %  TPM should be close to the segmentation outcome.  
-  if (isfield(job,'useprior') && ~isempty(job.useprior) ) && ... 
+  if (isfield(job,'useprior') && ~isempty(job.useprior) && strcmp(job.opts.affreg,'prior') ) && ... 
      (isfield(res,'ppe') && ~res.ppe.affreg.highBG)
     %% sum of all TPM classes without background
     Vall = tpm.V(end); Vall.pinfo(3) = 0; Vall.dt=16; 
@@ -349,7 +355,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   
   stime2 = cat_io_cmd('  Update probability maps','g5','',job.extopts.verb-1,stime2);
   if ~(any(sign(diff(T3th))==-1)) && ...
-     ~( (isfield(job,'useprior') && ~isempty(job.useprior) ) && ... % no single longitudinal timepoint
+     ~( (isfield(job,'useprior') && ~isempty(job.useprior) && strcmp(job.opts.affreg,'prior') ) && ... % no single longitudinal timepoint
         (isfield(res,'ppe') && ~res.ppe.affreg.highBG) )
     %% Update probability maps
     % background vs. head - important for noisy backgrounds such as in MT weighting
