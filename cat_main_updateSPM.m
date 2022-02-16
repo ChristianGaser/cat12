@@ -21,6 +21,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
 
   % voxel size parameter
   vx_vol  = sqrt(sum(res.image(1).mat(1:3,1:3).^2));    % voxel size of the processed image
+  vx_vol0 = sqrt(sum(res.image0(1).mat(1:3,1:3).^2));
   vx_volp = prod(vx_vol)/1000;
 
   %d = res.image(1).dim(1:3);

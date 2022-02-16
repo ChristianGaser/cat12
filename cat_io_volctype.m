@@ -67,7 +67,13 @@ function out = cat_io_volctype(varargin)
     end
     ctype = spm_input('Datatype',1,'(u)int8|(u)int16|single',[2,512,16],dtype);
   end
+  V = spm_vol(strrep(job.data{1},',1',''));
+  if ctype == 0
+    ctype = V.dt(1); 
+  end
+ 
   if any(ctype==[2 4 256 512])
+      
     if isfield(job,'range')
       range = job.range; 
     else
@@ -75,8 +81,7 @@ function out = cat_io_volctype(varargin)
     end
     
     if range==0
-      V = spm_vol(strrep(job.data{1},',1',''));
-      Y = spm_read_vols(V);
+      if ~exist('Y','var'), Y = spm_read_vols(V); end
       cvals = 1/round(single(intmax(spm_type(ctype))) * diff([min(Y(:)),max(Y(:))]));
     elseif range<0 || range>100
       range = min(100,max(eps,spm_input('Range in %:','+1','r',99.99,1)));
@@ -92,8 +97,13 @@ function out = cat_io_volctype(varargin)
   end
   
   % stepsize
-  if ~isfield(job,'cvals') && range==0
-    job.cvals = spm_input(sprintf('Stepsize (0=auto;min:%4.2f;max:%4.2f):',min(Y(:)),max(Y(:))),'+1','r',0,1);
+  if ~isfield(job,'cvals') %&& range==0
+    if ~exist('Y','var'), Y = spm_read_vols(V); end
+    if range==0
+      job.cvals = spm_input(sprintf('Stepsize (0=auto;min:%4.2f;max:%4.2f):',min(Y(:)),max(Y(:))),'+1','r',0,1);
+    else
+      job.cvals = 0;  
+    end
   else
     job.cvals = cvals; 
   end
@@ -158,7 +168,7 @@ function out = cat_io_volctype(varargin)
       else
         descrip = V(1).descrip;
       end
-
+      
 
       % replace NAN and INF in case of integer
       switch V(1).dt(1) 
