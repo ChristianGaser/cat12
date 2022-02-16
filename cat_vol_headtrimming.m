@@ -40,6 +40,11 @@ function varargout = cat_vol_headtrimming(job)
 
   SVNid = '$Rev$';
   
+  if nargin == 0
+    help cat_vol_headtrimming; 
+    return; 
+  end
+  
   %def.image_selector.subjectimages        = {{}}; % GUI input data structure 1
   %def.image_selector.manysubjects.simages = {};   % GUI input data structure 2
   %def.image_selector.manysubjects.oimages = {{}}; % GUI input data structure 2
@@ -250,14 +255,15 @@ function varargout = cat_vol_headtrimming(job)
       Vo = V; 
       for di = 1:numel(V)
         % optimize tissue intensity range if 0<range<100 or for changed datatype 
-        if (job.range>0 && job.range<100) || ...
+        if 1 || ... (job.range>0 && job.range<100) || ...
            (~isempty(job.ctype) && ( ...
            ( isnumeric(job.ctype) && job.ctype>0) || ...
            ( ischar(job.ctype) && ~strcmp(job.ctype,'native') ))) 
 
-          job2 = struct('data',job.images{si}{di},'verb',0,'ctype',job.ctype,...
+          job2 = struct('data',job.images{si}{di},'verb',0,'ctype',job.ctype,'cvals','inf',...
                         'range',job.range,'prefix',job.prefix,'suffix',job.suffix);
-          P = cat_io_volctype(job2);
+          files = cat_io_volctype(job2);
+          P = files.files;
         else
           if ~strcmp(job.images1{si}{di},job.images2{si}{di})
             copyfile(job.images1{si}{di},job.images2{si}{di});

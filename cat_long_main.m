@@ -64,6 +64,12 @@ if ~useprior && longTPM
   longTPM = 0;
 end
 
+if longmodel == 4 
+  fprintf('Have to use prepavg!\n');
+  prepavg     = 2; 
+end
+
+
 write_CSF = double(cat_get_defaults('output.CSF.mod') > 0);
 
 warning('off','MATLAB:DELETE:FileNotFound');
@@ -158,39 +164,44 @@ end
 % RD202201: Can non-linear deformations improve average quality?
 %             In ADNI011S0003 I saw no improvement by using the original 
 %             SPM pipeline.  
-def = 0; % use deformations .. 1 = one year 
-mbi = mbi + 1; mb_rigid = mbi; 
-if def>0
-  matlabbatch{mbi}.spm.tools.cat.tools.series.reg.nonlin.times  = def; % inf means linear registration ...  
+
+if longmodel == 4 % ===== development =====  
+% create average with deformation   
+  mbi = mbi + 1; mb_nonlin = mbi; 
+  matlabbatch{mbi}.spm.tools.cat.tools.series.reg.nonlin.times  = 1; % inf means linear registration ...  
   matlabbatch{mbi}.spm.tools.cat.tools.series.reg.nonlin.wparam = [0 0 100 25 100];
-end
-% ########
-matlabbatch{mbi}.spm.tools.cat.tools.series.bparam          = 1e6;
-matlabbatch{mbi}.spm.tools.cat.tools.series.use_brainmask   = 1;
-matlabbatch{mbi}.spm.tools.cat.tools.series.reduce          = 1;
-if exist('extopts','var') && ((isfield(extopts,'setCOM') && extopts.setCOM) || ...
-    (isfield(extopts,'segmentation') && isfield(extopts.segmentation,'setCOM') && extopts.segmentation.setCOM))
-  matlabbatch{mbi}.spm.tools.cat.tools.series.setCOM = 1;
-else
-  matlabbatch{mbi}.spm.tools.cat.tools.series.setCOM = 0;
-end
-if prepavg
-  % last part of series batch
+  matlabbatch{mbi}.spm.tools.cat.tools.series.bparam            = 1e6;
+  matlabbatch{mbi}.spm.tools.cat.tools.series.use_brainmask     = 0;
+  matlabbatch{mbi}.spm.tools.cat.tools.series.reduce            = 0;
+  matlabbatch{mbi}.spm.tools.cat.tools.series.setCOM            = ...
+    exist('extopts','var') && ((isfield(extopts,'setCOM') && extopts.setCOM) || ...
+    (isfield(extopts,'segmentation') && isfield(extopts.segmentation,'setCOM') && extopts.segmentation.setCOM));
   matlabbatch{mbi}.spm.tools.cat.tools.series.data(1) =  cfg_dep('Spatially adaptive non-local means (SANLM) denoising filter: SANLM Images', ... 
     substruct('.','val', '{}',{mb_sanlm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
     substruct('.','files', '()',{':'}));
-
   
-  % in case of denoising we may need another renaming step for the avg
+  % rename average output  
   mbi = mbi + 1; mb_rigid_ravg = mbi; 
   matlabbatch{mbi}.spm.tools.cat.tools.file_move.files(1) = cfg_dep('Longitudinal Registration: Midpoint Average',...
-    substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+    substruct('.','val', '{}',{mb_nonlin}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
     substruct('.','avg', '()',{':'}));
   matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.patrep.pattern  = 'avg_sanlm_';
   matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.patrep.repl     = 'avg_';
   matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.unique          = false;
-  
-  
+
+ 
+% create timepoints with deformation   
+  mbi = mbi + 1; mb_rigid = mbi; 
+  matlabbatch{mbi}.spm.tools.cat.tools.series.bparam            = 1e6;
+  matlabbatch{mbi}.spm.tools.cat.tools.series.use_brainmask     = 1;
+  matlabbatch{mbi}.spm.tools.cat.tools.series.reduce            = 1;
+  matlabbatch{mbi}.spm.tools.cat.tools.series.setCOM            = ...
+    exist('extopts','var') && ((isfield(extopts,'setCOM') && extopts.setCOM) || ...
+    (isfield(extopts,'segmentation') && isfield(extopts.segmentation,'setCOM') && extopts.segmentation.setCOM));
+  matlabbatch{mbi}.spm.tools.cat.tools.series.data(1) =  cfg_dep('Spatially adaptive non-local means (SANLM) denoising filter: SANLM Images', ... 
+    substruct('.','val', '{}',{mb_sanlm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','files', '()',{':'}));
+
   % ... and all registrated images
   mbi = mbi + 1; mb_rigid_rtp = mbi; 
   matlabbatch{mbi}.spm.tools.cat.tools.file_move.files(1) = cfg_dep('Longitudinal Rigid Registration: Realigned images',...
@@ -199,10 +210,58 @@ if prepavg
   matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.patrep.pattern  = 'rsanlm_';
   matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.patrep.repl     = 'r';
   matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.unique          = false;
-else
-  matlabbatch{mbi}.spm.tools.cat.tools.series.data                          = '<UNDEFINED>';
+
+  % delete average output
+  
+else % ===== plasticity/aging =====
+  
+  def = 0; % use deformations .. 1 = one year 
+  mbi = mbi + 1; mb_rigid = mbi; 
+  if def>0
+    matlabbatch{mbi}.spm.tools.cat.tools.series.reg.nonlin.times  = def; % inf means linear registration ...  
+    matlabbatch{mbi}.spm.tools.cat.tools.series.reg.nonlin.wparam = [0 0 100 25 100];
+  end
+  % ########
+  matlabbatch{mbi}.spm.tools.cat.tools.series.bparam          = 1e6;
+  matlabbatch{mbi}.spm.tools.cat.tools.series.use_brainmask   = 1;
+  matlabbatch{mbi}.spm.tools.cat.tools.series.reduce          = 1;
+  if exist('extopts','var') && ((isfield(extopts,'setCOM') && extopts.setCOM) || ...
+      (isfield(extopts,'segmentation') && isfield(extopts.segmentation,'setCOM') && extopts.segmentation.setCOM))
+    matlabbatch{mbi}.spm.tools.cat.tools.series.setCOM = 1;
+  else
+    matlabbatch{mbi}.spm.tools.cat.tools.series.setCOM = 0;
+  end
+  if prepavg
+    % last part of series batch
+    matlabbatch{mbi}.spm.tools.cat.tools.series.data(1) =  cfg_dep('Spatially adaptive non-local means (SANLM) denoising filter: SANLM Images', ... 
+      substruct('.','val', '{}',{mb_sanlm}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+      substruct('.','files', '()',{':'}));
+
+
+    % in case of denoising we may need another renaming step for the avg
+    mbi = mbi + 1; mb_rigid_ravg = mbi; 
+    matlabbatch{mbi}.spm.tools.cat.tools.file_move.files(1) = cfg_dep('Longitudinal Registration: Midpoint Average',...
+      substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+      substruct('.','avg', '()',{':'}));
+    matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.patrep.pattern  = 'avg_sanlm_';
+    matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.patrep.repl     = 'avg_';
+    matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.unique          = false;
+
+
+    % ... and all registrated images
+    mbi = mbi + 1; mb_rigid_rtp = mbi; 
+    matlabbatch{mbi}.spm.tools.cat.tools.file_move.files(1) = cfg_dep('Longitudinal Rigid Registration: Realigned images',...
+      substruct('.','val', '{}',{mb_rigid}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
+      substruct('.','rimg', '()',{':'}));
+    matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.patrep.pattern  = 'rsanlm_';
+    matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.patrep.repl     = 'r';
+    matlabbatch{mbi}.spm.tools.cat.tools.file_move.action.ren.unique          = false;
+  else
+    matlabbatch{mbi}.spm.tools.cat.tools.series.data                          = '<UNDEFINED>';
+  end
+
 end
-%return
+
 
 
 
