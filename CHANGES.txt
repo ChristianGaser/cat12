@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1947 | dahnke | 2022-02-15 14:49:25
+r1948 | dahnke | 2022-02-16 16:38:27
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_volctype.m
+M       cat_long_main.m
+M       cat_main_updateSPM.m
+M       cat_run_job1639.m
+M       cat_vol_headtrimming.m
+
+(1) Changed:  Small unfinished corrections to solve datatype bug 
+              in cat_io_volctype, cat_vol_headtripping.
+(2) Fixed:    Corrected bug in cat_main_updateSPM. 
+(3) Changed:  Prototype for non-linear AVG for the developmental  
+              longitudinal model in cat_long_main.
+(4) Changed:  Tiny modification of the cml output in cat_run_job1639.
+            
+------------------------------------------------------------------------
+r1947 | dahnke | 2022-02-15 14:50:24 +0100 (Tue, 15 Feb 2022) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +33,7 @@ M       html/cat_methods_catlongreport.html
 (3) Changed: Added development case to longitudinal help page (unfinished).   
 (4) Changed: Setup parameters to clear temporary report data.
  
+
 
 ------------------------------------------------------------------------
 r1946 | dahnke | 2022-02-14 12:23:23 +0100 (Mon, 14 Feb 2022) | 30 lines
