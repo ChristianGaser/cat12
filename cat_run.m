@@ -819,6 +819,13 @@ function job = update_job(job)
       disp(alert_str);
       disp('--------------------------------------------')
     end
+    if ~isempty(strfind(ff,'suit')) && job.extopts.atlas{ai,4}
+      disp('--------------------------------------------')
+      disp('No commercial use of SUIT cerebellar atlas')
+      alert_str = ['Creative Commons Attribution-NonCommercial 3.0 Unported License does not allow commercial use.'];
+      disp(alert_str);
+      disp('--------------------------------------------')
+    end
   end
 
 

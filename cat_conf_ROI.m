@@ -198,6 +198,12 @@ for ali=1:numel(atlaslist)
         '    Najdenovska E, Alemán-Gómez Y, Battistella G, Descoteaux M, Hagmann P, Jacquemont S, Maeder P, Thiran JP, Fornari E, Bach Cuadra M. In-vivo probabilistic atlas of human thalamic nuclei based on diffusion- weighted magnetic resonance imaging. Sci Data. 2018 Nov 27;5:180270.'
         ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
   end
+  if any(~cellfun('isempty',strfind(atlaslist(ali),'suit')))
+    ROI.help = [ROI.help; strrep({
+        '(MAI) SUIT Atlas of the human cerebellum:'
+        '    Diedrichsen J., Balster J.H., Flavell J., Cussans E., Ramnani N. (2009). A probabilistic MR atlas of the human cerebellum. Neuroimage; 46(1), 39-46.'
+        ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
+  end
   if any(~cellfun('isempty',strfind(atlaslist(ali),'Schaefer2018_200Parcels_17Networks_order')))
     ROI.help = [ROI.help; strrep({
         '(MAI) Local-Global Intrinsic Functional Connectivity Parcellation by Schaefer et al.:'

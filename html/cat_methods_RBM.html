@@ -79,6 +79,7 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
           <li><a href="#Anatomy">Anatomy3</li>
           <li><a href="#JulichBrain">JulichBrain</li>
           <li><a href="#Schaefer">Local-Global Intrinsic Functional Connectivity Parcellation by Schaefer</a></li>
+          <li><a href="#SUIT">SUIT</a></li>
         </ul>  
         <li><a href="#surfrois">List of Freesurfer surface-based atlas maps (located in atlases_surfaces or atlases_surfaces_32k)</a></li>
         <ul>
@@ -199,7 +200,7 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
         <li>
           <h5 id="Mori">Mori</h5>
           <p>
-            This atlas based on the <a href="matlab:web('http://wiki.slicer.org/slicerWiki/index.php/Slicer3:Mori-Atlas_labels','-browser');">"Slicer3:Mori_Atlas_labels_JHU-MNI_SS_Type-II"</a> atlas of Version 2010-05 <a href="#Oishi">by Oishi et al. 2009</a>. 
+            This atlas is based on the <a href="matlab:web('http://wiki.slicer.org/slicerWiki/index.php/Slicer3:Mori-Atlas_labels','-browser');">"Slicer3:Mori_Atlas_labels_JHU-MNI_SS_Type-II"</a> atlas of Version 2010-05 <a href="#Oishi">by Oishi et al. 2009</a>. 
           </p>
           <p>
             Display Mori atlas as
@@ -210,7 +211,7 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
         <li>
           <h5 id="Thalamus">Thalamus</h5>
           <p>
-            This atlas based on the <a href="matlab:web('https://wp.unil.ch/mial/probabilistic-atlas-of-thalamic-nuclei/','-browser');">atlas of human thalamic nuclei</a> <a href="#Najdenovska">by Najdenovska et al. 2018</a>. 
+            This atlas is based on the <a href="matlab:web('https://wp.unil.ch/mial/probabilistic-atlas-of-thalamic-nuclei/','-browser');">atlas of human thalamic nuclei</a> <a href="#Najdenovska">by Najdenovska et al. 2018</a>. 
           </p>
           <p>
             Display Thalamus atlas as
@@ -232,7 +233,7 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
         <li>
           <h5 id="Anatomy">Anatomy version 3</h5>
           <p>
-            This atlas based on <a href="matlab:web('http://www.fz-juelich.de/inm/inm-1/DE/Forschung/_docs/SPMAnatomyToolbox/SPMAnatomyToolbox_node.html','-browser');">probabilistic cytoarchitectonic maps and functional imaging data
+            This atlas is based on <a href="matlab:web('http://www.fz-juelich.de/inm/inm-1/DE/Forschung/_docs/SPMAnatomyToolbox/SPMAnatomyToolbox_node.html','-browser');">probabilistic cytoarchitectonic maps and functional imaging data
           by <a href="#Eickhoff2005">Eickhoff et al. 2005.</a>
             </a>
           </p>
@@ -245,7 +246,7 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
         <li>
           <h5 id="JulichBrain">JulichBrain</h5>
           <p>
-            This atlas based on <a href="matlab:web('https://kg.ebrains.eu/search/instances/Dataset/3fde2768-e845-4fc3-a425-61e2c1fb6db7','-browser');">whole-brain parcellation of the Julich-Brain Cytoarchitectonic Atlas (v2.6) by <a href="#Amunts2020">Amunts et al. 2020.</a>
+            This atlas is based on <a href="matlab:web('https://kg.ebrains.eu/search/instances/Dataset/3fde2768-e845-4fc3-a425-61e2c1fb6db7','-browser');">whole-brain parcellation of the Julich-Brain Cytoarchitectonic Atlas (v2.6) by <a href="#Amunts2020">Amunts et al. 2020.</a>
             </a>
           </p>
           <p>
@@ -255,7 +256,7 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
         </li>
 
         <li>
-          <h5 id="Schaefer">Local-Global Intrinsic Functional Connectivity Parcellation by <a href="#Schaefer2018">Schaefer et al. 2018.</h5>
+          <h5 id="Schaefer">Local-Global Intrinsic Functional Connectivity Parcellation by <a href="#Schaefer2018">Schaefer et al. 2018.</a></h5>
           <p>
             These <a href="matlab:web('https://github.com/ThomasYeoLab/CBIG/tree/master/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal','-browser');">atlases</a> are available for different numbers of parcellations (100, 200, 400, 600) and are based on resting state data from 1489 subjects. 
           </p>
@@ -264,6 +265,18 @@ These maps can be optionally visualized using <a class="function" href="matlab:c
             <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Schaefer2018_200Parcels_17Networks_order.nii')}}))">volume map</a>. 
           </p>
           You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','schaefer.txt'));">here</a>.
+        </li>
+
+        <li>
+          <h5 id="SUIT">Atlas of the human cerebellum by <a href="#Diedrichsen2009">Diedrichsen et al. 2009.</a></h5>
+          <p>
+            This atlas is based on <a href="matlab:web('https://github.com/DiedrichsenLab/cerebellar_atlases','-browser');">atlas of the human cerebellum</a>.
+          </p>
+          <p>
+            Display the SUIT atlas as 
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','suit.nii')}}))">volume map</a>. 
+          </p>
+          You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','suit.txt'));">here</a>.
         </li>
         </ br>
 
