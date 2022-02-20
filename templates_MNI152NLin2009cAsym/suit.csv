@@ -1,0 +1,29 @@
+ROIid;ROIabbr;ROIname;Vgm;Vwm;Vcsf;color
+1;lI_IV;Left I IV;1;1;0;#ccff00
+2;rI_IV;Right I IV;1;1;0;#b8e600
+3;lV;Left V;1;1;0;#00e65c
+4;rV;Right V;1;1;0;#00ff66
+5;lVI;Left VI;1;1;0;#0066ff
+6;bVI;Vermis VI;1;1;0;#0052cc
+7;rVI;Right VI;1;1;0;#0066ff
+8;lCrusI;Left CrusI;1;1;0;#cc00ff
+9;bCrusI;Vermis CrusI;1;1;0;#a200cc
+10;bCrusI;Right CrusI;1;1;0;#cc00ff
+11;lCrusII;Left CrusII;1;1;0;#ff0000
+12;bCrusII;Vermis CrusII;1;1;0;#cc0000
+13;rCrusII;Right CrusII;1;1;0;#ff0000
+14;lVIIb;Left VIIb;1;1;0;#ff9900
+15;bVIIb;Vermis VIIb;1;1;0;#cc7900
+16;rVIIb;Right VIIb;1;1;0;#ff9900
+17;lVIIIa;Left VIIIa;1;1;0;#33ff00
+18;bVIIIa;Vermis VIIIa;1;1;0;#29cc00
+19;rVIIIa;Right VIIIa;1;1;0;#33ff00
+20;lVIIIa;Left VIIIb;1;1;0;#00ffff
+21;bVIIIa;Vermis VIIIb;1;1;0;#00cccc
+22;rVIIIa;Right VIIIb;1;1;0;#00ffff
+23;lIX;Left IX;1;1;0;#3300ff
+24;bIX;Vermis IX;1;1;0;#2900cc
+25;rIX;Right IX;1;1;0;#3300ff
+26;lX;Left X;1;1;0;#ff0099
+27;bX;Vermis X;1;1;0;#cc0079
+28;rX;Right X;1;1;0;#ff0099

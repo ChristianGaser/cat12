@@ -38,10 +38,10 @@ out.files = { fullfile(p,[nam ext]) };
 N = nifti(char(job.data));
 
 if length(N)>1 && any(any(diff(cat(1,N.dat.dim),1,1),1))
-	error('images don''t all have same dimensions')
+  error('images don''t all have same dimensions')
 end
 if max(max(max(abs(diff(cat(3,N.mat),1,3))))) > 1e-8
-	error('images don''t all have same orientation & voxel size')
+  error('images don''t all have same orientation & voxel size')
 end
 
 d = N(1).dat.dim;
