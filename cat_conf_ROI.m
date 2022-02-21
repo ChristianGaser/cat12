@@ -43,6 +43,7 @@ for ai = 1:size(exatlas,1)
       switch ff
         case 'hammers', lic = 2; 
         case 'lpba40' , lic = 1; 
+        case 'suit',    lic = 1; 
         otherwise,      lic = 0; 
       end
     end

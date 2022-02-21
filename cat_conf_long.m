@@ -151,7 +151,7 @@ prepavg.tag          = 'prepavg';
 prepavg.name         = 'Optimize orignal data before averaging (IN DEVELOPMENT)';
 prepavg.labels       = {'no preparation','denoising','denosing+trimming'};
 prepavg.values       = {0,1,2};
-prepavg.val          = {0};
+prepavg.val          = {2};
 prepavg.hidden       = expert<2; 
 prepavg.help         = {
   'Denoising, trimming and intensity scaling of the original timepoint data before creating the average. '
