@@ -67,6 +67,9 @@ function varargout = cat_surf_results(action, varargin)
 %  * cat_surf_results('hide_neg',[,0..1]); 
 %  Hide negative results (1) or show everything (0). Toggles without input.
 %
+%  * cat_surf_results('print'); 
+%  Save render as png image file
+%
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke

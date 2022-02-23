@@ -1,5 +1,22 @@
 ------------------------------------------------------------------------
-r1950 | gaser | 2022-02-21 21:09:43
+r1951 | gaser | 2022-02-23 09:45:02
+
+Changed paths:
+M       CHANGES.txt
+M       cat_spm_results_ui.m
+M       cat_surf_results.m
+A       cat_vol_img2mip.m
+ M      templates_MNI152NLin2009cAsym/suit.csv
+ M      templates_MNI152NLin2009cAsym/suit.nii
+MM      templates_MNI152NLin2009cAsym/suit.txt
+
+(1) Changed: Updated help text in cat_surf_results.m
+(2) Changed: Enabled eigenvariate and CVA function in cat_spm_results_ui.m.
+(3) Fixed:   Added check that directory that is saved in SPM.mat really exists
+             to cat_spm_results_ui.m.
+           
+------------------------------------------------------------------------
+r1950 | gaser | 2022-02-21 21:10:37 +0100 (Mon, 21 Feb 2022) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +32,7 @@ M       templates_MNI152NLin2009cAsym/suit.nii
 (3) Fixed:   Corrected orientation of SUIT atlas  where x-voxel size was not 
              negative (neurological orientation).
            
+
 ------------------------------------------------------------------------
 r1949 | gaser | 2022-02-20 23:55:40 +0100 (Sun, 20 Feb 2022) | 16 lines
 

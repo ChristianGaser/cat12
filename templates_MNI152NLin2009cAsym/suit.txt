@@ -15,4 +15,4 @@ License:
 Creative Commons Attribution-NonCommercial 3.0 Unported License
 
 --------------------------------------------------------------------------------
-$Id: suit.txt 1751 2021-01-12 06:58:54Z gaser $
+$Id$
