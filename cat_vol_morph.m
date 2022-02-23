@@ -12,6 +12,11 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
 % for small n, where the convolution matrix for distance operations has 
 % to be larger. 
 %
+% If you call this function without any argument you can select the 
+% morphological operations, the number of iterations, and the threshold
+% interactively. Th output files will be saved as uint8 file with prepending
+% name and number of morphological operations.
+%
 %  out = cat_vol_morph(in,action[,n,vx_vol])
 %
 %  in     = input volume that will be thresholded at 0.5
@@ -22,27 +27,27 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
 %  n      = 1x1 double (default=1), will be rounded for standard 
 %           morphological operations, but not for distance-based 
 %           operations.
-%         = 1x2 for 'l' operation to extract the largend n(1) cluster 
+%         = 1x2 for 'l' operation to extract the largest n(1) cluster 
 %           with at last n(2) absolute (>1) or relative (<1) voxels
 %  vx_vol = 1x1 or 1x3 double (default=1)
 %  out    = volume with the same class like the input volume
 %
 % Actions:
 %   Morphological operations with 26-neighborhood 
-%   (cube/chessboard distance):
+%   (cube distance):
 %    - d  | dilate 
 %    - e  | erode  
 %    - c  | close  
 %    - o  | open   
 %
 %   Morphological operations with 26-neighborhood 
-%   (cube/chessboard distance):
+%   (chessboard distance):
 %    - cd  | cdilate 
 %    - ce  | cerode  
 %    - cc  | cclose  
 %    - co  | copen   
 %
-%   Morphological operations with distance opereration (sphere):
+%   Morphological operations with distance operation (sphere):
 %    - dd | distdilate
 %    - de | disterode
 %    - dc | distclose
@@ -69,7 +74,36 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
   if nargin < 4, vx_vol = 1; end
   if nargin < 3, n      = 1; end
   if nargin < 2, action = ''; end
-  if nargin < 1, help cat_vol_morph; return; end
+  
+  % interactive call
+  if nargin < 1
+    P = spm_select(Inf,'image','Select images');
+    V = spm_vol(P);
+
+    actions = {'dilate','erode','open','close','labclose','labopen','cdilate',...
+      'cerode','cclose','copen','labcclose','labcopen','labclosebg','labopenbg',...
+      'lab','distdilate','disterode','distclose','distopen','labdistclose','labdistopen'};
+    sel = spm_input('Operation ?',1,'m',actions);
+    action = actions{sel};
+    if strcmp(action,'lab')
+      n = spm_input('# of largest objects/# of voxels','+1', 'n', '1 10');
+    else
+      n = spm_input('Number of morphol. iterations','+1', 'n', '1');
+    end
+    th = spm_input('Threshold','+1', 'e', '0.5');
+
+    for i=1:length(V)
+      [pth,nam,ext] = spm_fileparts(V(i).fname);
+      vol = spm_read_vols(V(i)) > th;
+      vx_vol = sqrt(sum((V(i).mat(1:3,1:3)).^2));
+      out = cat_vol_morph(vol,action,n,vx_vol);
+      V(i).fname = fullfile(pth,[action num2str(n) '_' nam ext]);
+      V(i).dt(1) = 2;
+      V(i).pinfo(1) = 1;
+      spm_write_vol(V(i),out);
+    end
+    return
+  end
   
   classVol = class(vol); 
   
