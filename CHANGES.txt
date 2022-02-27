@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1952 | gaser | 2022-02-23 16:41:12
+r1953 | gaser | 2022-02-27 22:00:31
+
+Changed paths:
+M       CHANGES.txt
+MM      cat_vol_img2mip.m
+M       cat_vol_morph.m
+
+Fixed: Corrected output of cat_vol_morph.m that was not correctly returned
+       for multiple calls.
+------------------------------------------------------------------------
+r1952 | gaser | 2022-02-23 16:42:07 +0100 (Wed, 23 Feb 2022) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14,6 +24,7 @@ M       cat_vol_morph.m
              32k-meshes.
 (4) Added:   New function cat_surf_laterality_index to calculate laterality
              index in resampled 32k-meshes.
+
 
 ------------------------------------------------------------------------
 r1951 | gaser | 2022-02-23 09:45:57 +0100 (Wed, 23 Feb 2022) | 15 lines

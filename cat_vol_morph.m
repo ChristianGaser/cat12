@@ -102,6 +102,7 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
       V(i).pinfo(1) = 1;
       spm_write_vol(V(i),out);
     end
+    clear vol
     return
   end
   
@@ -324,10 +325,6 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
       vol = cat_vol_morph(vol,'distopen',nn,vx_vol); 
       vol = cat_vol_morph(vol,'lab',nn,vx_vol); % removing of other objects
 
-      
-      
-      
-
     %===================================================================
     case {'selftest' 'st'}
       % a=zeros(7,11,3); a(4,4,2)=1; a(4,8,2)=1; % two dots
@@ -376,7 +373,9 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
   
   eval(sprintf('vol = %s(vol);',classVol));
   if isa(classVol,'uint8'); vol = 255*vol; end
+
 end
+
 function vol = cat_vol_morpho(vol,action,n,vx_vol)
 % ______________________________________________________________________
 % Morphological operations for a volume vol based on a 26-neighborhood 
@@ -433,7 +432,6 @@ function vol = cat_vol_morpho(vol,action,n,vx_vol)
 % quality is necessary. 
 % For fast estimation the prefix 'f' should be added to the action.
 % ______________________________________________________________________
-
 
   if nargin < 4, vx_vol = 1; end
   if nargin < 3, n      = 1; end
@@ -592,4 +590,5 @@ function vol = cat_vol_morpho(vol,action,n,vx_vol)
   
   eval(sprintf('vol = %s(vol);',classVol));
   if isa(classVol,'uint8'); vol = 255*vol; end
+
 end
