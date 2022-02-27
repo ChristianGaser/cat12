@@ -15,7 +15,7 @@ function cat_vol_img2mip(P, gamma_scl, save_image, RGB_order)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
-% $Id: cat_vol_img2mip.m 1907 2021-11-17 22:17:30Z gaser $
+% $Id$
 
 load MIP
 mip96 = double(mip96);
