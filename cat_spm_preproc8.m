@@ -203,10 +203,24 @@ for n=1:N
     end
 end
 
-
-ll     = -Inf;
-if isfield(obj,'tol'), tol1 = obj.tol; else tol1 = 1e-4; end% Stopping criterion.  For more accuracy, use a smaller value
-
+% =========================================================================
+outputGUIlevel = 2; % output of command line report of outer iterations
+AUCprint = [1 1 1]; % plot different stop criterial in the interactive SPM window  
+ll       = -Inf;    % default ll parameter
+lllog    = [];      % ll log paraemter to estimate further ratings
+if isfield(obj,'newtol'), newtol = obj.newtol; else, newtol = 1;    end % use new interation criteria (0-no,1-yes-optimal,2-accurate)
+if isfield(obj,'tol'),    tol1   = obj.tol;    else, tol1   = 1e-4; end % Stopping critera, for higher accuracy, use a smaller values
+if newtol==1 % faster inner iteration, default 1e-4
+  tol11  = 1e-2; % should be ok 
+elseif newtol==2
+  tol11  = 1e-4; % SPM default 
+else
+  tol11  = tol1; % current CAT default
+end 
+if cat_get_defaults('extopts.expertgui') >= outputGUIlevel
+  fprintf('\n  cat_spm_preproc8: newtol=%d, tol1=%1.0e, tol11=%1.0e', newtol, tol1, tol11); 
+end
+% =========================================================================
 if isfield(obj,'msk') && ~isempty(obj.msk)
     VM = spm_vol(obj.msk);
     if sum(sum((VM.mat-V(1).mat).^2)) > 1e-6 || any(VM.dim(1:3) ~= V(1).dim(1:3))
@@ -352,7 +366,7 @@ for iter=1:60 % RD202012: increased from 30
                     for n=1:N
                         cr(:,n)  = double(buf(z).f{n}.*buf(z).bf{n});
                     end
-                    for k1=1:Kb, % Moments
+                    for k1=1:Kb % Moments
                         b           = double(buf(z).dat(:,k1));
                         mm0(k1)     = mm0(k1)     + sum(b);
                         mm1(:,k1)   = mm1(:,k1)   + (b'*cr)';
@@ -405,7 +419,7 @@ for iter=1:60 % RD202012: increased from 30
         end
     end
 
-    for iter1=1:8
+    for iter1=1:8 + 8*(iter==1) % double initial iterations
         if use_mog
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % Estimate cluster parameters
@@ -429,7 +443,7 @@ for iter=1:60 % RD202012: increased from 30
                     for n=1:N
                         cr(:,n)  = double(buf(z).f{n}.*buf(z).bf{n});
                     end
-                    for k=1:K, % Update moments
+                    for k=1:K % Update moments
                         q(:,k)      = q(:,k);
                         mom0(k)     = mom0(k)     + sum(q(:,k));
                         mom1(:,k)   = mom1(:,k)   + (q(:,k)'*cr)';
@@ -453,6 +467,7 @@ for iter=1:60 % RD202012: increased from 30
 
                 if subit>1 || iter>1
                     spm_plot_convergence('Set',ll);
+                    lllog = [lllog ll]; %#ok<AGROW> % RD202202: added to track changes
                 end
                 if subit>2 && ll-oll<tol1*nm % RD202012: increased to minimum iteration - default was subit>1 
                     % Improvement is small, so go to next step
@@ -512,8 +527,9 @@ for iter=1:60 % RD202012: increased from 30
 
                 if subit>1 || iter>1
                     spm_plot_convergence('Set',ll);
+                    lllog = [lllog ll]; %#ok<AGROW> % RD202202: added to track changes
                 end
-                if subit>2 && ll-oll<tol1*nm % RD202012: increased to minimum iteration - default was subit>1 
+                if subit>2 && ll-oll<tol11*nm % RD202012: increased to minimum iteration - default was subit>1 
                     % Improvement is small, so go to next step
                     break;
                 end
@@ -526,9 +542,10 @@ for iter=1:60 % RD202012: increased from 30
                 chan(n).grad2 = convn(chan(n).alph,[1  -2  1  ]'*chan(n).interscal(2)^2,'same');
             end
         end
+        
  
-        if iter1 > 2 && ~((ll-ooll)>2*tol1*nm), break; end % RD202012: increased to minimum iteration - default was subit>1 
-        ooll = ll;
+        if iter1 > 2 && ~((ll-ooll)>2*tol11*nm) || isnan(ll), break; end % RD202012: increased to minimum iteration - default was subit>1 
+        ooll = ll; 
 
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -650,7 +667,7 @@ for iter=1:60 % RD202012: increased from 30
                     clear oldT
                 end
             end
-            if subit > 2 && ~(ll-oll>tol1*nm) % RD202012: increased to minimum iteration - default was subit>1 
+            if subit > 2 && ~(ll-oll>tol1*nm) || isnan(ll) % RD202012: increased to minimum iteration - default was subit>1 
                 % Improvement is only small, so go to next step
                 break;
             end
@@ -659,7 +676,7 @@ for iter=1:60 % RD202012: increased from 30
         if iter==1 && iter1==1
             % Most of the log-likelihood improvements are in the first iteration.
             % Show only improvements after this, as they are more clearly visible.
-            spm_plot_convergence('Clear');
+            spm_plot_convergence('Clear'); lllog = []; % reset also the ll-log  
             spm_plot_convergence('Init','Processing','Log-likelihood','Iteration');
 
            if use_mog && numel(obj.lkp) ~= numel(lkp)
@@ -871,9 +888,11 @@ for iter=1:60 % RD202012: increased from 30
                 % Better.  Accept the new solution.
                 spm_plot_convergence('Set',ll1);
                 my_fprintf('Warp:\t%g\t%g\t%g :o)\t(%g)\n', ll1, llr1,llrb,armijo);
-                ll     = ll1;
-                llr    = llr1;
-                Twarp  = Twarp1;
+                if ~isnan(llr1) % ignore in case of NAN 
+                  ll     = ll1;
+                  llr    = llr1;
+                  Twarp  = Twarp1;
+                end
                 break
             end
         end
@@ -886,10 +905,93 @@ for iter=1:60 % RD202012: increased from 30
         oll = ll;
     end
 
-    if iter>19 && ~((ll-ooll)>2*tol1*nm) % RD202012: increased to minimum iteration - default was iter>9
-        % Finished
-        break
+    % RD202202: Estimate something like the AUC to assure that no larger 
+    %           changes appear in the last iterations, ie. that the process
+    %           is stable 
+    nlllog = (lllog - min(lllog)) / (max(lllog) - min(lllog));  % save ll  
+    llpc   = ((ll   - min(lllog)) / (max(lllog) - min(lllog) )) ./ ...
+             ((ooll - min(lllog)) / (max(lllog) - min(lllog) )); % test relative changes between the outer loops
+    AUC    = sum(nlllog) / numel(nlllog);
+    AUC(isnan(AUC)) = 1; 
+    
+    % visualize stop criteria for experts
+    if cat_get_defaults('extopts.expertgui') >= outputGUIlevel
+      % print the minimum iteration critieria 
+      Finter = spm_figure('FindWin','Interactive');
+      if ~exist('Faxes','var')
+        Faxes  = findobj(Finter,'Type','Axes'); 
+      end
+      if  ~exist('Faxes','var') && isemtpy(Faxes)
+        ydata  = get(findobj(Finter,'Type','Line'),'ydata'); 
+        xdata  = get(findobj(Finter,'Type','Line'),'xdata'); 
+        if iscell(ydata) 
+          ydata = ydata{ cellfun(@numel,ydata)>2 };
+          xdata = xdata{ cellfun(@numel,xdata)>2 };
+        end
+        ydata(isnan(ydata)) = max(ydata); 
+        maxis  = get(Faxes,'ylim'); 
+        % print minimum number of iterations
+        if iter>9 && AUCprint(3)
+          hold(Faxes,'on'); AUCprint(3) = 0; 
+          plot(Faxes,[xdata(end),xdata(end)],[maxis(1),ydata(end)],'Color',[0.9 0.9 0.9]); 
+          hold(Faxes,'off');
+        end
+        % print the normal SPM stop criteria as orientation 
+        if iter>9 && ~((ll-ooll)>2*(1e-4)*nm)  && AUCprint(2)
+          hold(Faxes,'on'); AUCprint(2) = 0; 
+          plot(Faxes,[xdata(end),xdata(end)],[maxis(1),ydata(end)],'Color',[0.7 0.7 0.7]); 
+          hold(Faxes,'off');
+        end
+        % print the adapted CAT stop criteria as orientation 
+        if iter>10 && ~((ll-ooll)>2*tol1*nm)  && AUCprint(1)
+          hold(Faxes,'on'); AUCprint(1) = 0; 
+          plot(Faxes,[xdata(end),xdata(end)],[maxis(1),ydata(end)],'Color',[0.5 1 0.5]); 
+          hold(Faxes,'off');
+        end
+        % print the final progress of AUCH
+        if iter>10 && ~((ll-ooll)>2*tol1*nm) 
+          hold(Faxes,'on');
+          plot(Faxes,[xdata(end),xdata(end)],[maxis(1),ydata(end)],'Color',[1 1 1] - [0 1 1]*min(1,max(0,AUC-0.75))*4 ); 
+          hold(Faxes,'off');
+        end
+      end
     end
+    
+    % command line output for experts
+    if cat_get_defaults('extopts.expertgui') >= outputGUIlevel
+      if iter==1 % display also intial values in the first loop
+        fprintf('\n    Iteration %2d - ll: %8.6f,  llc: %8.6f,  llpc: %8.6f,  AUC: %6.4f ', iter-1, lllog(1)/nm, lllog(end)/nm - lllog(1)/nm, inf, 0);  
+      end
+      fprintf('\n    Iteration %2d - ll: %8.6f,  llc: %8.6f,  llpc: %8.6f,  AUC: %6.4f ', iter, ll/nm, lllog(end)/nm - lllog(1)/nm, llpc, AUC);  
+    end  
+    
+    % final outer iteration stop criterias
+    if newtol==-1 % old SPM 
+        if iter>9 && ~((ll-ooll)>2*tol1*nm) 
+            % Finished
+            break
+        end
+    elseif newtol==0 % old but adapted criteria with additiona iterations
+        if iter>19 && ~((ll-ooll)>2*tol1*nm) % RD202012: increased to minimum iteration - default was iter>9
+            % Finished
+            break
+        end
+    else % new criteria with less minimum iterations but further tests
+        % check if there are no big changes within the last 25% of all iterations
+        dnlllog = nlllog( numel(lllog) ) - nlllog( numel(lllog) - round(numel(lllog)/6) ); 
+        if iter>9 && ... minimum number of iterations of the outer loop (defaults: SPM=9, CAT=19) .. no longer needed but it is ok to keep it
+          any(llpc < 1.01) && ... % avoid stops when we made some minimum progress 
+          ~((ll-ooll)>2*tol1*nm) && ... stopping criteria based by changes to last outer iteration
+           ( ~exist('AUCO','var') || AUC > AUCO ) && ... no stronger changes in the last steps - necessary?
+          ( ( AUC > max( 0.75 , min( 0.96 , 0.74 - 0.01 * log10(tol1) )) &&  dnlllog < 2*(16 ./ -log10(tol1)) / 100 ) ||  ...  
+          ... % only small changes over the last major iterations (increase iterations)
+            ( dnlllog < min(0.1,16 ./ -log10(tol1)) / 100 ) || any(llpc < 1e-4) ) % avoid useless interations
+            % Finished
+            if isnan(ll), ll = max(lllog); end % best value without NaN
+            break
+        end
+    end
+    AUCO = AUC;
 end
 spm_plot_convergence('Clear');
 
@@ -903,16 +1005,20 @@ results.Twarp  = Twarp;
 results.Tbias  = {chan(:).T};
 results.wp     = wp;
 if use_mog
-    results.mg     = mg;
-    results.mn     = mn;
-    results.vr     = vr;
+    results.mg = mg;
+    results.mn = mn;
+    results.vr = vr;
 else
     for n=1:N
         results.intensity(n).lik       = chan(n).lik;
         results.intensity(n).interscal = chan(n).interscal;
     end
 end
-results.ll      = ll;
+% RD: further output parameter for later analysis
+results.ll     = ll / nm; % normalize it 
+results.llpc   = llpc; 
+results.lllog  = lllog ./ nm; 
+results.AUC    = AUC; 
 return;
 %=======================================================================
 

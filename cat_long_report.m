@@ -428,6 +428,20 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
       for fi = 1:numel(job.data_xml), long.dist_thickness(fi,:) = xml(fi).subjectmeasures.dist_thickness{1}; end
     end
     
+    %%
+    %try
+    for ti = 1:3; %size(long.vol_rel_CGW,2)
+      [ pfp , pfS , pfmu ] = polyfit( 1:size(long.vol_rel_CGW,1) , long.vol_rel_CGW(:,ti)' , 1);
+      long.vol_rel_CGW_fit.p{ti}  = pfp; 
+      long.vol_rel_CGW_fit.S{ti}  = pfS; 
+      long.vol_rel_CGW_fit.mu{ti} = pfmu; 
+      [ pfp , pfS , pfmu ] = polyfit( 1:size(long.vol_abs_CGW,1) , long.vol_abs_CGW(:,ti)' , 1);
+      long.vol_abs_CGW_fit.p{ti}  = pfp; 
+      long.vol_abs_CGW_fit.S{ti}  = pfS; 
+      long.vol_abs_CGW_fit.mu{ti} = pfmu; 
+    end
+    %end    
+    %%
     long.model = model; 
 %    long.change_vol_rel_CGW = (long.vol_rel_CGW - repmat(long.vol_rel_CGW(1,:),size(long.vol_rel_CGW,1),1));
     if job.opts.midpoint

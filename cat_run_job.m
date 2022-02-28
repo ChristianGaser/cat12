@@ -139,6 +139,11 @@ function cat_run_job(job,tpm,subj)
       obj.biasreg  = cat(1,job.opts.biasreg);
       obj.biasfwhm = cat(1,job.opts.biasfwhm);
       obj.tol      = job.opts.tol;
+      obj.newtol   = 2; % stopping criteria for outer (=tol) and inner loop:
+                        %  -1-old SPM (>9 iters, inner=tol), 
+                        %   0-old CAT more outer iterations (>19 iter, inner=tol),  
+                        %   1-new optimal/faster with additional AUC criteria to have SPM minimum iterations (>9 iters, inner=1e-2)
+                        %   2-new accurate with additioal AUC criteria but CAT minimum iterations (>19 iter, outer=tol, inner=1e-4)
       obj.lkp      = [];
       obj.reg      = job.opts.warpreg;
       obj.samp     = job.opts.samp;              
