@@ -12,7 +12,7 @@ function cat_surf_flipvalues(P)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
-% $Id: cat_surf_flipvalues.m 1901 2021-10-26 10:25:52Z gaser $
+% $Id$
 
 if ~nargin
   P = spm_select(Inf,'mesh','select 32k-meshes to flip',{},pwd,'mesh.*.resampled_32k');

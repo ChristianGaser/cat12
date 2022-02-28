@@ -59,9 +59,10 @@ function out = cat_long_report(job)
   %def.output.printqc  = [1 1 1];          % [IQR COV RMSE]
   %def.output.printana = [1 1 0 0 0 0 1];  % [GM WM CSF WMHs LS TIV GMT] 
   % def.output ... to write output files 
-  def.output.vols     = 1; 
-  def.output.surfs    = 1; 
+  def.output.vols     = 0; 
+  def.output.surfs    = 0; 
   def.output.xml      = 1; 
+  def.output.prefix   = 'catlongreport';
   job = cat_io_checkinopt(job,def); 
 
   if isempty(job.data_vol)  && isempty(job.data_vol{1}) && ...
@@ -151,6 +152,12 @@ function out = cat_long_report(job)
     if exist('Vadiff','var')
       out.Padiff = Vadiff.fname; 
     end
+  else
+    %%
+    if exist(Vmn.fname,'file'), delete(Vmn.fname); end
+    if exist(Vidiff.fname,'file'); delete(Vidiff.fname); end
+    if exist(Vrdiff.fname,'file'); delete(Vrdiff.fname); end
+    if exist('Vadiff','var') && exist(Vadiff,'file'); delete(Vadiff); end
   end
 end
 
@@ -178,6 +185,10 @@ function [cres,Vmn,Vidiff,Vrdiff,Vadiff] = cat_vol_longdiff(Pdata_vol,Pavg,s,wri
     return
   end
 
+  if numel(Pdata_vol)<2
+    error('Need more than one case.\n');
+  end
+  
   %% estimate covariance 
   cjob.data_vol  = Pdata_vol; 
   cjob.verb      = 0; 
@@ -301,40 +312,99 @@ function [cres,Psurf] = cat_surf_longdiff(Pdata_surf,s)
     cres  = struct();
     Psurf = [];
   else
+     Pdata_surfold     = Pdata_surf; 
+      
     %% estimate covariance 
-    cjob.data_vol = Pdata_surf; 
+    cjob.data_vol  = Pdata_surf; 
     cjob.verb      = 0; 
     cjob.data_xml  = {};
     cjob.gap       = 3;
-    cres           = cat_stat_check_cov(cjob);
+    try 
+      % try to estimate covariance ... if it fails then asume that the
+      % meshes are not equal and resmaple them 
+      warning('off',sprintf('[GIFTI] Parsing of XML file %s failed.', Pdata_surf{1}));
+      cres         = cat_stat_check_cov(cjob);
+    catch  
+      % resample (& smooth)
+      srjob.data_surf   = Pdata_surf;
+      srjob.fwhm_surf   = 0; 
+      srjob.nproc       = 0; 
+      srjob.verb        = 0;
+      srjob.merge_hemi  = 0;
+      srjob.mesh32k     = 1; % use option 2 - 192k? 
+      Psdata            = cat_surf_resamp(srjob);
+      Pdata_surf        = Psdata.sample.lPsdata; 
+      
+      cjob.data_vol     = Pdata_surf; 
+      cres              = cat_stat_check_cov(cjob);
+    end
+    
+    
      
     %% load data
     sides = {'lh','rh','cb'}; 
-    sdata = cell(size(sides)); Psurf = struct(); 
-    for si = 1:numel(sides)
-      [pp1,ff1,ee1] = spm_fileparts(Pdata_surf{1} );
-      Pcentral      = fullfile(pp1,[strrep(ff1,'lh.thickness',[sides{si} '.central']) ee1 '.gii']); 
-      if ~exist(Pcentral,'file'), continue; end
-      sdata{si}     = gifti(Pcentral); 
-      
-      if ~strcmp(ee1,'gii') 
-      % native FS files
-        clear cdata; 
-        
-        for fi = 1:numel(Pdata_surf)
-          if ~exist(Pdata_surf{fi},'file'), continue; end
-          [pp,ff,ee]  = spm_fileparts( Pdata_surf{fi} ); 
-          cdata(:,fi) = cat_io_FreeSurfer('read_surf_data',fullfile(pp,[strrep(ff,'lh.thickness',[sides{si} '.thickness']) ee]));  %#ok<AGROW>
+    [pp1,ff1,ee1] = spm_fileparts(Pdata_surf{1} );
+    if any( contains( ff1 , sides )) 
+      sdata = cell(size(sides)); Psurf = struct(); 
+      for si = 1:numel(sides)
+        % load surfaces mesh (only first)
+        [pp1,ff1,ee1] = spm_fileparts(Pdata_surf{1}); 
+        if strcmp(ee1,'.gii') % resampled       
+          Pcentral  = fullfile(pp1,[strrep(ff1,'lh.thickness',[sides{si} '.thickness']) ee1]); 
+          if ~exist(Pcentral,'file'), continue; end
+          if 0 % average surface in cross sectional pipeline
+            for i = 1:numel(Pdata_surf)
+              [ppi,ffi,eei] = spm_fileparts(Pdata_surf{i}); 
+              Pcentrali = fullfile(ppi,[strrep(ffi,'lh.thickness',[sides{si} '.thickness']) ee1]); 
+              sdatai    = export(gifti(Pcentrali),'patch'); 
+              if i==1, sdata{si} = sdatai; else, sdata{si} = sdata{si} + sdatai; end
+            end
+            Pcentral  = fullfile(pp1,[strrep(ff1,'lh.thickness',[sides{si} '.thickness']) ee1]); 
+          else
+            sdata{si} = export(gifti(Pcentral),'patch'); 
+          end
+
+          Pcentral    = fullfile(pp1,strrep(ff1,'lh.thickness',[sides{si} '.central'])); 
+          cat_io_FreeSurfer('write_surf',Pcentral,sdata{si});      
+        else % native thickness data in freesurfer format
+          Pcentral    = fullfile(pp1,[strrep(ff1,'lh.thickness',[sides{si} '.central']) ee1 '.gii']); 
+          if ~exist(Pcentral,'file'), continue; end
+          sdata{si}   = gifti(Pcentral); 
         end
+
+          
+        % load surface data
+        clear cdata; cdata = cell(numel(sides),si); 
+        for fi = 1:numel(Pdata_surf)
+          %if ~exist(Pdata_surf{fi},'file'), continue; end
+          [pp,ff,ee]  = spm_fileparts( Pdata_surf{fi} ); 
+          if ~strcmp(ee,'.gii') 
+            cdata(:,fi) = cat_io_FreeSurfer('read_surf_data',fullfile(pp,[strrep(ff,'lh.thickness',[sides{si} '.thickness']) ee]));  %#ok<AGROW>
+            Psurf(si).Pcentral = fullfile(pp1,[strrep(ff1,'lh.thickness',[sides{si} '.central']) ee1 '.gii']);
+          else %% native FS files
+            data   = gifti(fullfile(pp,[strrep(ff,'lh.thickness',[sides{si} '.thickness' ]) ee])); 
+            data   = export(data,'patch'); 
+            cdata(:,fi) = data.facevertexcdata; 
+            Psurf(si).Pcentral = Pcentral; 
+          end
+        end
+        
+        %% simple meshsmooth
         M     = spm_mesh_smooth(sdata{si}); 
         cdata = cat_stat_nanmean(diff(cdata,[],2),2); % ./ cat_stat_nanmean(cdata,2); % relative changes
-        cdata = spm_mesh_smooth(M,cdata, s * (size(cdata,1)/128000).^0.5 ); % ############ some adaptions to be closer to mm
-        
-        Psurf(si).Pcentral = fullfile(pp1,[strrep(ff1,'lh.thickness',[sides{si} '.central']) ee1 '.gii']);
-        Psurf(si).Pthick   = fullfile(pp1,[strrep(ff1,'lh.thickness',[sides{si} '.longThicknessChanges']) ee1]); 
+        cdata = spm_mesh_smooth(M,cdata, s * (size(cdata,1)/128000).^0.5 ); % some adaptions to be closer to mm
+
+        if ~strcmp(ee1,'.gii') 
+          Psurf(si).Pthick   = fullfile(pp1,[strrep(ff1,'lh.thickness',[sides{si} '.longThicknessChanges']) ee1]);
+        else
+          Psurf(si).Pthick   = fullfile(pp1,strrep(ff1,'lh.thickness',[sides{si} '.longThicknessChanges']));
+        end  
         cat_io_FreeSurfer('write_surf_data',Psurf(si).Pthick,cdata);
+       
       end
     end
+    
+    
   end  
 end
 
@@ -369,17 +439,27 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
           end
         end
       end
-      [~,ff] = spm_fileparts(job.data_vol{1});
-      if      ~isempty(strfind(ff,'mwmwp')), model = 'aging/development'; 
-        %{
-        if job.data_xml{fi,1}.job
+% ######### separation is not realy working 
+% I need an long-xml/mat file to store all parameters in a useful way 
+      [pp,ff,ee] = spm_fileparts(job.data_vol{1});
+      if contains(ff,'mwmwp') % ~isempty(strfind(ff,'mwmwp'))
+        if 1 % job.data_xml{fi,1}.job
           model = 'aging';
         else
-          model = 'development';
+          model = 'development'; % not working now
         end
-        %}  
-      elseif  ~isempty(strfind(ff,'mwp')),   model = 'plasticity'; 
-      else,                                  model = '';
+      elseif  contains(ff,'mwp1r') % ~isempty(strfind(ff,'mwp1r'))
+        if exist( fullfile( pp , ['mean_mwp1r' ff ee ]), 'file') % not sure only runs if the files exist (bad for independent rerun) 
+          model = 'plasticity'; 
+        else
+          model = 'development'; 
+        end
+      elseif  contains(ff,'mwp1') % ~isempty(strfind(ff,'mwp1'))
+        model = 'cross-sectional'; 
+      elseif  contains(ff,'mwp') % ~isempty(strfind(ff,'mwp'))
+        model = 'plasticity'; 
+      else                                 
+        model = '';
       end
     elseif  ~isempty( job.data_surf ) &&  ~isempty( job.data_surf{1} )
       % detect XML files based on the surface data
@@ -416,7 +496,8 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
     for fi = 1:numel(job.data_xml)
       xml(fi).subjectmeasures = rmfield(xml(fi).subjectmeasures,'software'); 
     end
-    
+
+
     % for fi = 1:numel(job.data_vol), SPMpp(fi,:) = xml(fi).SPMpreprocessing.mn ./ xml(fi).SPMpreprocessing.mn(2); end
     for fi = 1:numel(job.data_xml), long.vol_rel_CGW(fi,:) = xml(fi).subjectmeasures.vol_rel_CGW; end
     for fi = 1:numel(job.data_xml), long.vol_abs_CGW(fi,:) = xml(fi).subjectmeasures.vol_abs_CGW; end
@@ -427,7 +508,7 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
     if isfield(xml(fi).subjectmeasures,'dist_thickness')
       for fi = 1:numel(job.data_xml), long.dist_thickness(fi,:) = xml(fi).subjectmeasures.dist_thickness{1}; end
     end
-    
+
     %%
     %try
     for ti = 1:3; %size(long.vol_rel_CGW,2)
@@ -461,7 +542,7 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
             repmat(long.dist_thickness(1,:),size(long.dist_thickness,1),1);
       end
     end
-    
+
     %% combine 
     QM  = struct(); 
     QFN = {'qualitymeasures','qualityratings','subjectmeasures'};
@@ -509,10 +590,12 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
     % search xml of the average to extract some parameters that we change 
     % in the longitudinal processings (at least for bias, acc and tpm)
     [pp,ff] = spm_fileparts(job.data_xml{1});
-    xmlavg = fullfile(pp,[strrep(ff,'cat_r','cat_avg_') '.mat']); 
-    if exist(xmlavg,'file')
-      xmlavg = load(xmlavg); 
-    end 
+    Pxmlavg = fullfile(pp,[strrep(ff,'cat_r','cat_avg_') '.mat']); 
+    if exist(Pxmlavg,'file')
+      xmlavg = load(Pxmlavg); 
+    else
+      xmlavg.S = xml(1); 
+    end
     ppjob.opts    = xmlavg.S.parameter.opts;     
 
     try

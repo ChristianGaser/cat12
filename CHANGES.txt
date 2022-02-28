@@ -1,5 +1,27 @@
 ------------------------------------------------------------------------
-r1955 | rdahnke | 2022-02-28 14:57:21
+r1956 | rdahnke | 2022-02-28 20:47:02
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_report.m
+M       cat_main_reportcmd.m
+M       cat_main_reportfig.m
+M       cat_stat_check_cov.m
+MM      cat_surf_flipvalues.m
+M       cat_surf_info.m
+MM      cat_surf_laterality_index.m
+M       cat_surf_rename.m
+
+(1) New:      Added internal resampling of cross-sectional input meshes in 
+              cat_long_report. No output of difference maps by default. 
+(2) Fixed:    Corrected tiny bugs in cat_main_reportcmd and cat_main_reportfig.
+(3) Fixed:    Tiny correction in cat_stat_check_cov.
+(4) Fixed:    Corrected problem of loading individual surface mesh rather than
+              the FS average and incorrect setting of resampled32k suraces in
+              cat_surf_info and cat_surf_rename.
+
+------------------------------------------------------------------------
+r1955 | dahnke | 2022-02-28 14:59:17 +0100 (Mo, 28 Feb 2022) | 22 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -21,6 +43,7 @@ M       cat_vol_resize.m
 (4) Fixed:    Corrected MRI directory bug in cat_run_newcatch. 
 (5) Fixed:    Path corrections in cat_stat_getCSVXMLfield.
 (6) Fixed:    Corrected small data type bug in cat_vol_resize.
+
 
 ------------------------------------------------------------------------
 r1954 | dahnke | 2022-02-28 12:04:43 +0100 (Mo, 28 Feb 2022) | 22 lines

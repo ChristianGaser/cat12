@@ -17,7 +17,7 @@ function cat_surf_laterality_index(P)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
-% $Id: cat_surf_laterality_index.m 1901 2021-10-26 10:25:52Z gaser $
+% $Id$
 
 if ~nargin
   P = spm_select(Inf,'mesh','Select 32k-meshes for LI estimation',{},pwd,'mesh.*.resampled_32k');

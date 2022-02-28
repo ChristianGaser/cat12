@@ -580,7 +580,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   if dispvol
     if isfield(res,'long')
       try
-        % create SPM volume plots
+        %% create SPM volume plots
         if isfield(res,'Vmnw')
           Ymn = res.Vmnw.dat(:,:,:); 
         else
@@ -596,13 +596,13 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         end
         spm_orthviews('Caption',hho,T1txt,'FontName',fontname,'FontSize',fontsize-1,'color',fontcolor,'FontWeight','Bold');
         spm_orthviews('window',hho,[0 single(WMth)*cmmax]); 
-        %rang = (0:6)'; hoti = [rang,flip(rang,1)*0,flip(rang,1)]; hoti(1,:) = [0 0 0]; 
+        % rang = (0:6)'; hoti = [rang,flip(rang,1)*0,flip(rang,1)]; hoti(1,:) = [0 0 0]; 
         %rang = (0:10)'; hoti = [rang,flip(rang,1),flip(rang,1)*0] .* repmat(min(max(rang),rang*2)/2,1,3) / max(rang) * 1; hoti(1,:) = [0 0 0];
         if isfield(res,'Vidiffw')
           Vidiff  = res.Vidiffw; Vidiff.dat = Vidiff.dat * 100; 
           BCGWH   = [cat_io_colormaps('hotinv',35);cat_io_colormaps('cold',35)]; BCGWH = BCGWH(6:65,:); 
           BCGWH   = BCGWH.^1.1 * 2; % less transparent for high values
-          maxdiff = round(std(Vidiff.dat(:))) * 10; 
+          maxdiff = max(1,round(std(Vidiff.dat(:)))) * 10; 
           spm_orthviews('addtruecolourimage',hho,Vidiff, BCGWH,0.4,maxdiff,-maxdiff); 
         else
           hoti = cat_io_colormaps('hot',10); 
@@ -821,7 +821,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         Vidiff  = res.Vidiff; Vidiff.dat = Vidiff.dat * 100; 
         BCGWH   = [cat_io_colormaps('hotinv',35);cat_io_colormaps('cold',35)]; BCGWH = BCGWH(6:65,:); 
         BCGWH   = BCGWH.^1.1 * 2; % less transparent for high values
-        maxdiff = round(std(Vidiff.dat(:))) * 10; 
+        maxdiff = max(1,round(std(Vidiff.dat(:)))) * 10; 
         spm_orthviews('window',hhp0,[0 single(WMth)*cmmax]);
         spm_orthviews('addtruecolourimage',hhp0,Vidiff, BCGWH,0.4,maxdiff,-maxdiff); 
         spm_orthviews('redraw');

@@ -21,8 +21,8 @@ function cat_main_reportcmd(job,res,qa)
   QMC       = cat_io_colormaps('marks+',17);
   GMC       = cat_io_colormaps('turbo',45);
   GMC       = GMC ./ repmat( max(1,sum(GMC,2)) , 1 , 3);  % make bright values darker 
-  color     = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
-  colorgmt  = @(GMC,m) GMC(max(1,min(size(GMC,1),round(((m-0.5)*10)+1))),:);
+  color     = @(QMC,m) QMC(max(1,min(size(QMC,1),isnan(m) + round(((m-1)*3)+1))),:);
+  colorgmt  = @(GMC,m) GMC(max(1,min(size(GMC,1),isnan(m) + round(((m-0.5)*10)+1))),:);
   mark2rps  = @(mark) min(100,max(0,105 - mark*10)) + isnan(mark).*mark;
   grades    = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
   mark2grad = @(mark) grades{max(min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3))))};
