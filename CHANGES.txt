@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1957 | rdahnke | 2022-02-28 21:06:46
+r1958 | rdahnke | 2022-02-28 22:41:06
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_long.m
+M       cat_long_main.m
+
+(1) New:      Added new longitudinal development model (0) that focuses on the 
+              cross-sectional pipeline. The model includes use of an average 
+              based TPM creation to improve the longitudinal processing. 
+              Major changes in cat_long_main and cat_conf_long.
+
+------------------------------------------------------------------------
+r1957 | dahnke | 2022-02-28 21:10:19 +0100 (Mo, 28 Feb 2022) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +26,7 @@ M       cat_surf_fun.m
 (3) Fixed:    Corrected small bug in cat_main_updateSPM(1639) for longitudinal 
               skull-stripping with prior. 
 (4) New:      Added tnear function in cat_surf_fun. 
+
 
 ------------------------------------------------------------------------
 r1956 | dahnke | 2022-02-28 20:48:23 +0100 (Mo, 28 Feb 2022) | 20 lines
