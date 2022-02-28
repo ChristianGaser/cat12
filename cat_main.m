@@ -856,8 +856,12 @@ end
 %     cat_main_roi(job,trans,Ycls,Yp0,struct('type',1,'write',1)); 
 %  ---------------------------------------------------------------------
 if job.output.ROI  
-  Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
-  cat_main_roi(job,trans,Ycls,Yp0); 
+  try
+    Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; 
+    cat_main_roi(job,trans,Ycls,Yp0); 
+  catch
+    cat_io_addwarning([mfilename ':cat_main_roi'],'Error in cat_main_roi.',1,[1 1]);
+  end
 end
 if ~debug, clear wYp0 wYcls wYv Yp0; end
 

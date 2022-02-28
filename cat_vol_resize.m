@@ -317,7 +317,7 @@ function varargout=cat_vol_resize(T,operation,varargin)
                 for kk=1:ss(3)
                   Tadd = T{i}(ii:ss(1):nsize(1),jj:ss(2):nsize(2),kk:ss(3):nsize(3));
                   Tadd(isnan(Tadd(:))) = 0;
-                  varargout{i} = varargout{i} + Tadd;
+                  varargout{i} = varargout{i} + single(Tadd);
                   counter = counter + (Tadd~=0);
                   clear Tadd;
                 end
@@ -605,7 +605,7 @@ function varargout=cat_vol_resize(T,operation,varargin)
                             single(res(3) / resV(3) : res(3)/resV(3) : size(T,3))); 
 
         % use smoothing in case of resolution downsampling as partial volume effect                 
-        if exist('smooth','var') && any( res ./ resV ) > 1
+        if exist('smooth','var') && any( ( res ./ resV ) > 1.0 )
           if ndims(T)>3
             for d4i = 1:size(T,4)
               if ndims(T)>4

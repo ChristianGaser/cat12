@@ -205,9 +205,9 @@ function cat_run_newcatch(job,tpm,subj)
     cat_io_report(job,qa,subj)
     
     % delete noise corrected image
-    if exist(fullfile(mrifolder,['n' nam ext]),'file')
+    if exist(fullfile(pth,mrifolder,['n' nam ext]),'file')
       try %#ok<TRYNC>
-        delete(fullfile(mrifolder,['n' nam ext]));
+        delete(fullfile(pth,mrifolder,['n' nam ext]));
       end
     end
         
@@ -228,6 +228,7 @@ function cat_run_newcatch(job,tpm,subj)
     
     if job.extopts.subfolders
       try
+        %%
         [ppe,ffe]    = spm_fileparts(caterr.stack(1).file); 
         suberrfolder = sprintf('%s.line%d.%s',ffe,caterr.stack(1).line,caterr.identifier); 
         suberrfolder = char(regexp(strrep(suberrfolder,':','.'),'[A-Za-z0-9_.\- ]','match'))'; % remove bad chars
@@ -246,6 +247,8 @@ function cat_run_newcatch(job,tpm,subj)
             fullfile(pth,[nam ext]),fullfile(pth,errfolder,suberrfolder,[nam ext])));
             cat_check_system_output(ST,RS,job.extopts.verb>2);
         end
+      catch 
+        cat_io_printf('warn','Warning: Cleanup error\.'); 
       end
     end
     
