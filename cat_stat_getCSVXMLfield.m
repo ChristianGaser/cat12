@@ -62,7 +62,7 @@ function out = cat_stat_getCSVXMLfield(job)
       Pxml = job.files; 
       for xi = 1:numel(Pxml)
         [pp,ff,ee] = spm_fileparts(Pxml{xi}); 
-        Pnii{xi} = [pp ff(5:end) ee];
+        Pnii{xi} = fullfile(pp,[ff(5:end) ee]);
       end
     case '.gii'
       % easy
@@ -95,7 +95,12 @@ function out = cat_stat_getCSVXMLfield(job)
   if exist('Pxml','var') && ~isempty(Pxml)
     for fi = 1:numel(Pxml)   
       if ~exist(Pxml{fi},'file') 
-        Pxml{fi} = fullfile( sinfo(fi).pp , [ 'cat_' sinfo(fi).name '.xml' ]); % same dir? 
+        if exist('sinfo','var')
+          Pxml{fi} = fullfile( sinfo(fi).pp , [ 'cat_' sinfo(fi).name '.xml' ]); % same dir? 
+        else
+          [pp,ff,ee] = spm_fileparts(job.files{fi});  
+          Pxml{fi} = fullfile( pp , [ 'cat_' sinfo(fi).name '.xml' ]); % same dir? 
+        end
         if ~exist(Pxml{fi},'file')
           Pxml{fi} = fullfile( fileparts(sinfo(fi).pp) , [ 'cat_' sinfo(fi).name '.xml' ]); 
           if ~exist(Pxml{fi},'file')
@@ -272,7 +277,7 @@ function out = cat_stat_getCSVXMLfield(job)
         pp = Pnii{si}; ff=''; P{si} = Pnii{si}; 
       end
       %%
-      if ~isempty( job.idselector.csvIDfd )
+      if ~isempty( job.idselector.csvIDfd ) || job.idselector.csvIDfd~=0
         for pi = 0:job.idselector.csvIDfd(1)
           [pp,ff0] = spm_fileparts(pp);
           if  job.csvIDfd(1)==pi || pi>job.idselector.csvIDfd(2)
@@ -285,7 +290,7 @@ function out = cat_stat_getCSVXMLfield(job)
         end
         [pp,ff,ee] = spm_fileparts(ff); 
 
-
+%%
         pp  = cat_io_strrep(ff,num2cell(job.idselector.fileseps),repmat({filesep},size(job.idselector.fileseps))); 
         pps = textscan(pp,'%s','Delimiter',filesep); 
         if numel(job.idselector.filesel)>1
@@ -300,15 +305,16 @@ function out = cat_stat_getCSVXMLfield(job)
       %%
       ids = []; idsl = [];
       for sii = 1:numel(csvids)
-        if ~isempty( strfind(ff,csvids{sii}) )
+        if ~isempty( strfind( csvids{sii} ,ff ) ) ||  ~isempty( strfind( ff , csvids{sii} ) )
           ids = [ids sii]; idsl = [idsl length(csvids{sii})];
         end
       end
+     
       %% remove double entries by bad ids (eg. the id="1" can also be found in "101" 
       ids( idsl < max(idsl))  = [];
       % idsl( idsl < max(idsl)) = [];
       if isempty(ids)
-        cat_io_cprintf('err',sprintf('Cannot find data for "%s".\n',P{si}));
+        cat_io_cprintf('err',sprintf('Cannot find data for "%s". You selected "%s" of the filename.\n',P{si},ff));
         out.(csvsvars{fi}){si,1} = nan; 
       elseif numel(ids)>1
         if numel( unique( [csv{ids + 1,1}] ) )==1
