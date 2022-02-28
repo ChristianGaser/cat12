@@ -811,6 +811,11 @@ end
           % Masking causes general problems in SPM US with Christian's 
           % thickness phantom (brain PVE voxels were aligned to class 5) 
           % that required further correction in cat_main_updateSPM. 
+          isSPMtpm = strcmp(job.extopts.species,'human') && ...
+            ( strcmp(job.opts.tpm , fullfile(spm('dir'),'tpm','TPM.nii') ) || ...
+              strcmp(job.opts.tpm , fullfile(spm('dir'),'tpm','TPM.nii,1') ) );
+          [ppt,fft] = spm_fileparts(job.opts.tpm{1});
+          isLONGtpm = strcmp(fft(1:min(numel(fft),7)),'longTPM');
           if exist('Ybg','var') && job.extopts.setCOM ~= 120 % case 120 no msk at all
             if ~isempty(job.useprior) || job.extopts.new_release 
               if job.extopts.setCOM == 122
@@ -825,7 +830,7 @@ end
               end
             else
               % RD20220103: old cross-sectional setting with small correction for own TPMs
-              if isSPMtpm
+              if isSPMtpm || isLONGtpm
                 Ymsk      = ~Ybg; % old default - mask background
               else
                 cat_io_addwarning([mfilename ':noSPMTPM-noBGmasking'],...

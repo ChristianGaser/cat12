@@ -806,7 +806,11 @@ function cat_run_job1639(job,tpm,subj)
           % (random) values close (10-15 mm) to the brain ("corona").  
           % It would be also possible to test the smoothness of the TPM 
           % backgroud class to avoid problems with "own" hard TPMs.
-          isSPMtpm = strcmp(job.opts.tpm , fullfile(spm('dir'),'tpm','TPM.nii') ) && strcmp(job.extopts.species,'human'); 
+          isSPMtpm = strcmp(job.extopts.species,'human') && ...
+            ( strcmp(job.opts.tpm , fullfile(spm('dir'),'tpm','TPM.nii') ) || ...
+              strcmp(job.opts.tpm , fullfile(spm('dir'),'tpm','TPM.nii,1') ) );
+          [ppt,fft] = spm_fileparts(job.opts.tpm{1});
+          isLONGtpm = strcmp(fft(1:min(numel(fft),7)),'longTPM');
           if exist('Ybg','var') && job.extopts.setCOM ~= 120 % setCOM == 120 - useCOM,useMaffreg,noMask
             if ~isempty(job.useprior) || job.extopts.new_release
               % new minimal masking approach in longitidunal processing to avoid backgound peak erros and for future releases 
@@ -815,7 +819,7 @@ function cat_run_job1639(job,tpm,subj)
                               ~( cat_vol_grad( Ysrc , vx_vol)==0  &  Ysrc==0 ); % remove voxel that are 0 and have no gradient
             else
               % RD20220103: old cross-sectional setting with small correction for own TPMs
-              if isSPMtpm
+              if isSPMtpm || isLONGtpm
                 Ymsk      = ~Ybg; % old default - mask background
               else
                 cat_io_addwarning([mfilename ':noSPMTPM-noBGmasking'],...

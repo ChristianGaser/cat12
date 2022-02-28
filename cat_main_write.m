@@ -275,9 +275,18 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
 
       % write map (mri as tissue and ROI subfolder) and copy atlas csv file
       [pp,ff] = spm_fileparts(VT0.fname);
-      copyfile(fullfile(cat_get_defaults('extopts.pth_templates'),[atlas '.csv']),fullfile(pp,mrifolder,[atlas '_' ff '.csv']));
+      if strcmp(job.extopts.species,'human') 
+        % RD20220208: this may cause problemes in modifed batches that are not equal to the defaults ...
+        try
+          copyfile(fullfile(cat_get_defaults('extopts.pth_templates'),[atlas '.csv']),fullfile(pp,mrifolder,[atlas '_' ff '.csv']));
+        catch
+          copyfile(fullfile(px,[atlas '.csv']),fullfile(pp,mrifolder,[atlas '_' ff '.csv']));
+        end    
+      else
+        copyfile(fullfile(px,[atlas '.csv']),fullfile(pp,mrifolder,[atlas '_' ff '.csv']));
+      end
       cat_io_writenii(VT0,Ylai,mrifolder,[atlas '_'],[prefix ' ' atlas ' original'],...
-        type,[0,1],job.output.atlas,trans);
+          type,[0,1],job.output.atlas,trans);
       if ~debug, clear Vlai Ylai; end
     end
   end
