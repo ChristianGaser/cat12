@@ -506,18 +506,18 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     set(axi(2),'Color',job.extopts.report.color,'YAxisLocation','right','XAxisLocation','bottom','box','on'); 
     % plot tissue values
     for ti = [2 3 1]
-      pt = plot([0,diff(res.long.vol_abs_CGW(:,ti))']);
+      pt = plot( ( res.long.vol_abs_CGW(:,ti) - repmat( res.long.vol_abs_CGW(1,ti) , size(res.long.vol_abs_CGW,1) , 1) )');
       set(pt,'Color',tcmap(ti,:),'Marker',marker{ti},...
         'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
     end
     % plot WMH
     if any( res.long.vol_abs_WMH )
-      pt = plot([0 diff(res.long.vol_abs_WMH)]);
+      pt = plot(res.long.vol_abs_WMH - res.long.vol_abs_WMH(1));
       set(pt,'Color',tcmap(6,:),'LineStyle','-','Marker',marker{4}, ...
         'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
     end
     % plot TIV 
-    pt = plot([0 diff(res.long.vol_TIV)']);
+    pt = plot(res.long.vol_TIV - res.long.vol_TIV(1));
     set(pt,'Color',tcmap(4,:),'LineStyle','-','Marker',marker{4}, ...
       'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
     % plot thickness
@@ -526,7 +526,10 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       set(pt,'Color',tcmap(5,:),'LineStyle','-','Marker',marker{5}, ...
         'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
     end
-    mlim = max( 20 , ceil( max( max( abs( diff( res.long.vol_abs_CGW(:,1:3))) )) / 20 ) * 20);
+    %mlim = max( 20 , ceil( max( max( abs( [ diff( res.long.vol_abs_CGW(:,1:3) ,1 ); diff( res.long.vol_TIV ) ] ) )) / 20 ) * 20);
+    mlim = max( 20 , ceil( max( max( abs( [ ...
+      [res.long.vol_abs_CGW(:,1:3) - repmat( res.long.vol_abs_CGW(1,1:3) , size(res.long.vol_abs_CGW,1) , 1)], ...
+      [res.long.vol_TIV - res.long.vol_TIV(1)]  ] ) )) / 20 ) * 20);
     ylim([-mlim mlim]); xlim([0.9 numel(res.long.files)+0.1]); 
     set(cp(2),'Fontsize',fontsize*0.8,'xtick',max(1,0:round(numel(res.long.files)/100)*10:numel(res.long.files)), ...
       'ytick',-mlim:round(mlim*2 / 4):mlim,'XAxisLocation','top');

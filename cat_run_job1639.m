@@ -449,8 +449,13 @@ function cat_run_job1639(job,tpm,subj)
       obj.biasfwhm = job.opts.biasfwhm;
       obj.tpm      = tpm;   
       obj.reg      = job.opts.warpreg;
-      obj.samp     = job.opts.samp;              
-      obj.tol      = job.opts.tol;
+      obj.samp     = job.opts.samp; % resolution of SPM preprocessing (def. 3, 1.5 as last highest TPM optimal level)               
+      obj.tol      = job.opts.tol;  % stopping criteria for SPM iteration of outer/inner loops
+      obj.newtol   = 1; % stopping criteria for outer (=tol) and inner loop:
+                        %  -1-old SPM (>9 iters, inner=tol), 
+                        %   0-old CAT more outer iterations (>19 iter, inner=tol),  
+                        %   1-new optimal/faster with additional AUC criteria to have SPM minimum iterations (>9 iters, inner=1e-2)
+                        %   2-new accurate with additioal AUC criteria but CAT minimum iterations (>19 iter, outer=tol, inner=1e-4) - like 0 
       obj.lkp      = [];
       if ~strcmp('human',job.extopts.species) 
         % RD202105: There are multiple problems in primates and increased 
@@ -999,7 +1004,7 @@ function cat_run_job1639(job,tpm,subj)
       try 
         %% inital estimate
         stime = cat_io_cmd('SPM preprocessing 1 (estimate 2):','','',job.extopts.verb-1,stime);
-        obj.tol = job.opts.tol; 
+        obj.tol = job.opts.tol; % reset within loop 
         
         % RD202012:  Missclassification of GM as CSF and BG as tissue:
         %  We observed problems with high-quality data (e.g. AVGs) and

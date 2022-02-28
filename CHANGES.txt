@@ -1,5 +1,29 @@
 ------------------------------------------------------------------------
-r1953 | gaser | 2022-02-27 22:00:31
+r1954 | dahnke | 2022-02-28 12:02:44
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_report.m
+M       cat_main_reportfig.m
+M       cat_run_job.m
+M       cat_run_job1639.m
+M       cat_spm_preproc8.m
+
+(1) Fixed:   Corrected longitudinal structural plot in cat_long_report and 
+             cat_main_reportfig.
+(2) Changed: Extended SPM US stop criteria in cat_spm_preproc8 to avoid too 
+             early stops, i.e. after strong recent improvements. Added command
+             line output of ll parameters for outer loops in developer mode.  
+             Added control variable in cat_run_job(1639) to switch between major
+             settings. However, the differences between the even very low number
+             and high number of iterations are relative small. Hence, I reduced 
+             the number of inner interactions and reset the increased amount of 
+             minimum outer iterations from 20 to 10 to speed up the process. 
+(3) Fixed:   Corrected bug where ll becomes nan in cat_spm_preproc8.
+
+
+------------------------------------------------------------------------
+r1953 | gaser | 2022-02-27 22:03:20 +0100 (Sun, 27 Feb 2022) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +32,7 @@ M       cat_vol_morph.m
 
 Fixed: Corrected output of cat_vol_morph.m that was not correctly returned
        for multiple calls.
+
 ------------------------------------------------------------------------
 r1952 | gaser | 2022-02-23 16:42:07 +0100 (Wed, 23 Feb 2022) | 15 lines
 
