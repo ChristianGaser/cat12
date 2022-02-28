@@ -358,6 +358,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     
     % if the dataname is central we got a mesh or surf datafile
     if isempty(sinfo(i).Pdata) || isempty(sinfo(i).Pmesh) 
+      Pcentral = fullfile(sinfo(i).pp,[strrep(sinfo(i).ff,['.' sinfo(i).texture],'.central') sinfo(i).ee]);
       switch sinfo(i).texture
         %case {'defects'} % surf
         %  sinfo(i).Pmesh = sinfo(i).fname;
@@ -372,6 +373,22 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
               'intlayer4','intwhite','intpial',...
               'gyruswidth','gyruswidthWM','sulcuswidth'} % only thickness
           sinfo(i).Pdata = sinfo(i).fname;
+          if strcmp(sinfo(i).ee,'.gii') && sinfo(i).ftype == 1 && exist(sinfo(i).fname,'file') 
+            S = gifti(sinfo(i).fname);
+            if isfield(S,'vertices') && isfield(S,'faces')
+              sinfo(i).Pmesh = sinfo(i).fname;
+            end
+          end
+        otherwise
+          sinfo(i).Pdata =sinfo(i).fname;
+          if exist(Pcentral,'file')
+            sinfo(i).Pmesh = Pcentral;
+          elseif strcmp(sinfo(i).ee,'.gii') && sinfo(i).ftype == 1 && exist(sinfo(i).fname,'file')
+            S = gifti(sinfo(i).fname);
+            if isfield(S,'vertices') && isfield(S,'faces')
+              sinfo(i).Pmesh = sinfo(i).fname;
+            end
+          end
       end
     end
     % if we still dont know what kind of datafile, we can try to find a

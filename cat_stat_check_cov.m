@@ -119,7 +119,7 @@ else
   H.Pmesh = gifti(sinfo.Pmesh);
   for i=1:n_samples
     [pp,ff,ee] = spm_fileparts( job.data_vol{i} ); 
-    if any( ~isempty( strfind({'lh.thickness' },[ff ee]) ) ) && ~strcmp(ee,'gii')
+    if any( ~isempty( strfind({'lh.thickness' },[ff ee]) ) ) && ~strcmp(ee,'.gii')
       %% native longitudinal surface
       sdata = gifti(fullfile(pp,[strrep(ff,'lh.thickness','lh.central') ee '.gii'])); 
       cdata = single(cat_io_FreeSurfer('read_surf_data',job.data_vol{i})); 
