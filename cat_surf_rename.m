@@ -55,7 +55,9 @@ function [PO,sinfo] = cat_surf_rename(P,varargin)
         if sinfo(i).resampled==1
           if sinfo(i).template==1
             templateresampled=''; %.template';
-          else
+          elseif sinfo(i).resampled_32k==1
+            templateresampled='.resampled_32k';
+          elseif sinfo(i).resampled==1
             if sinfo(i).resampled_32k
               templateresampled='.resampled_32k';
             else
