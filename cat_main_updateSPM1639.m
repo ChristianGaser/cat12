@@ -188,7 +188,11 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
      (isfield(res,'ppe') && ~res.ppe.affreg.highBG) 
     % RD202010: use longitudinal skull-stripping 
     [pp,ff,ee] = spm_fileparts(char(job.useprior));
-    Pavgp0 = fullfile(pp,'mri',[strrep(ff,'avg_','p0avg_'),ee]);
+    if isfield(job.output.BIDS,'BIDSyes')
+      Pavgp0 = fullfile(pp,[strrep(ff,'avg_','p0avg_'),ee]);
+    else
+      Pavgp0 = fullfile(pp,'mri',[strrep(ff,'avg_','p0avg_'),ee]);
+    end
 
 % RD20220213: 
 %  For the development model with longitudinal TPM you may have to add the affine registration. 

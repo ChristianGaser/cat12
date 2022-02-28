@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1956 | rdahnke | 2022-02-28 20:47:02
+r1957 | rdahnke | 2022-02-28 21:06:46
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_file_move.m
+M       cat_main_updateSPM.m
+M       cat_main_updateSPM1639.m
+M       cat_surf_fun.m
+
+(1) New:      Added handling of copyto the same directory in cat_io_file_move.
+(2) Fixed:    Corrected test for TPM in cat_run_job(1639).
+(3) Fixed:    Corrected small bug in cat_main_updateSPM(1639) for longitudinal 
+              skull-stripping with prior. 
+(4) New:      Added tnear function in cat_surf_fun. 
+
+------------------------------------------------------------------------
+r1956 | dahnke | 2022-02-28 20:48:23 +0100 (Mo, 28 Feb 2022) | 20 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -19,6 +35,7 @@ M       cat_surf_rename.m
 (4) Fixed:    Corrected problem of loading individual surface mesh rather than
               the FS average and incorrect setting of resampled32k suraces in
               cat_surf_info and cat_surf_rename.
+
 
 ------------------------------------------------------------------------
 r1955 | dahnke | 2022-02-28 14:59:17 +0100 (Mo, 28 Feb 2022) | 22 lines

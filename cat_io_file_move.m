@@ -46,9 +46,17 @@ else
         cmd = @copyfile;
         for k = 1:numel(job.files)
           if strcmp(action,'copyto')
+            if isempty(job.action.copyto{min(k,numel(job.action.copyto))})
+              tgt{k} = fileparts(job.files{min(k,numel(job.action.(action)))});
+            else
               tgt{k} = job.action.copyto{max(k,numel(job.action.copyto))};
+            end
           else
-              tgt{k} = job.action.(action).copyto{max(k,numel(job.action.copyto))};
+            if isempty(job.action.(action).copyto{min(k,numel(job.action.(action)))})
+              tgt{k} = fileparts(job.files{min(k,numel(job.action.(action)))}); 
+            else
+              tgt{k} = job.action.(action).copyto{max(k,numel(job.action.(action)))}; % here was a bug ... replaced numel(job.action.copto)
+            end
           end
         end
     elseif any(strcmp(action, {'ren'}))
@@ -57,9 +65,17 @@ else
         cmd = @movefile;
         for k = 1:numel(job.files)
           if strcmp(action,'moveto')
+            if isempty(job.action.moveto{max(k,numel(job.action.copyto))})
+              tgt{k} = fileparts(job.files{max(k,numel(job.action.(action)))});
+            else
               tgt{k} = job.action.moveto{max(k,numel(job.action.copyto))};
+            end
           else
+            if isempty(job.action.(action).moveto{max(k,numel(job.action.copyto))})
+              tgt{k} = fileparts(job.files{max(k,numel(job.action.(action)))});
+            else
               tgt{k} = job.action.(action).moveto{max(k,numel(job.action.copyto))};
+            end
           end
         end
     end
@@ -78,7 +94,7 @@ else
             end
         end
         if any(strcmp(action, {'copyren','moveren','ren'}))
-            on = regexprep(n, patrep(1,:), patrep(2,:));
+            on = regexprep(n, patrep(1,:), patrep(2,:),'emptymatch');
             if job.action.(action).unique
                 on = sprintf('%s_%0*d', on, nw, k);
             end

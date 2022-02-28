@@ -143,7 +143,7 @@ function varargout = cat_surf_fun(action,S,varargin)
       if nargout==2, [varargout{1},varargout{2}] = cat_surf_core(S,varargin{:}); end
     
     case {'tfs','tmin','tmax'}
-      % estimate the distance between two linked? surfaces
+      % estimate the distance between two (linked) surfaces
       if nargin<2, help cat_surf_fun>cat_surf_thickness; return; end
       if numel(varargin)==1
         if nargout==1
@@ -158,6 +158,13 @@ function varargout = cat_surf_fun(action,S,varargin)
           cat_surf_thickness(action,S);
         end
       end
+      
+    case {'tlink','surfdist'}
+      % tlink. Estimate the distance/thickness between two linked surfaces.
+      %  See also tfs, tmin, and tmax for unlinked/unrelated surfaced.
+      if nargin<2, help cat_surf_fun>cat_surf_tlink; return; end
+      varargout{1} = cat_surf_tlink(S,varargin{1});
+      
     case 'meshinterp'
       %S=cat_surf_meshinterp(S,interp,method,distth)  
       varargout{1} = cat_surf_meshinterp(S,varargin{:});  
@@ -319,7 +326,18 @@ function varargout = cat_surf_fun(action,S,varargin)
   end
     
 end
-
+function S = cat_surf_tlink(S1,S2)
+% tlink. Estimate the distance/thickness between two linked surfaces.
+%  See also tfs, tmin, and tmax for unlinked/unrelated surfaced.
+  if numel( S1.vertices ) ~= numel( S2.vertices ) || ...
+     numel( S1.faces    ) ~= numel( S2.faces    ) 
+     error(['Surfaces has to have the same number of vertices and faces.' ...
+            'Use tfs, tmin, or tmax functions otherwise']);
+  end
+  S.facevertexcdata = sum((S1.vertices - S2.vertices).^2,2).^2;
+  S.vertices        = mean(cat(3,S1.vertices,S2.vertices),3);
+  S.faces           = S1.faces;
+end
 function S2 = cat_surf_approxnans(S,D,ds)
   if ~exist('D','var')
     if isfield(S,'facevertexcdata')
