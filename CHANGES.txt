@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1958 | rdahnke | 2022-02-28 22:41:06
+r1959 | rdahnke | 2022-03-01 15:20:15
+
+Changed paths:
+M       CHANGES.txt
+M       cat_vol_groupwise_ls.m
+M       cat_vol_series_align.m
+
+(1) New:      Added parameter to force isotropic resolution in longitudinal 
+              average estimation in cat_vol_groupwise_ls controlled in 
+              cat_vol_series_align. Currently, the optimized version is active
+              that will optimize the resolution if the input resolution is not
+              isotropic.
+
+------------------------------------------------------------------------
+r1958 | dahnke | 2022-02-28 22:42:18 +0100 (Mo, 28 Feb 2022) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +24,7 @@ M       cat_long_main.m
               cross-sectional pipeline. The model includes use of an average 
               based TPM creation to improve the longitudinal processing. 
               Major changes in cat_long_main and cat_conf_long.
+
 
 ------------------------------------------------------------------------
 r1957 | dahnke | 2022-02-28 21:10:19 +0100 (Mo, 28 Feb 2022) | 14 lines

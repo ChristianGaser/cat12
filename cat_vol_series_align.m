@@ -86,7 +86,14 @@ else
   setCOM = job.setCOM;
 end
 
-out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask, reduce, setCOM);
+% force isotropic average resolution (0-default,1-best,2-worst,3-optimal)
+if ~isfield(job,'isores')
+  isores = 0;
+else
+  isores = job.isores;
+end
+
+out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask, reduce, setCOM, isores);
 
 return
 
