@@ -63,6 +63,7 @@ function out = cat_long_report(job)
   def.output.surfs    = 0; 
   def.output.xml      = 1; 
   def.output.prefix   = 'catlongreport';
+  def.extopts.expertgui = cat_get_defaults('extopts.expertgui'); 
   job = cat_io_checkinopt(job,def); 
 
   if isempty(job.data_vol)  && isempty(job.data_vol{1}) && ...
@@ -374,12 +375,12 @@ function [cres,Psurf] = cat_surf_longdiff(Pdata_surf,s)
 
           
         % load surface data
-        clear cdata; cdata = cell(numel(sides),si); 
+        clear cdata; %cdata = zeros(numel(sides),si); 
         for fi = 1:numel(Pdata_surf)
           %if ~exist(Pdata_surf{fi},'file'), continue; end
           [pp,ff,ee]  = spm_fileparts( Pdata_surf{fi} ); 
           if ~strcmp(ee,'.gii') 
-            cdata(:,fi) = cat_io_FreeSurfer('read_surf_data',fullfile(pp,[strrep(ff,'lh.thickness',[sides{si} '.thickness']) ee]));  %#ok<AGROW>
+            cdata(:,fi) = cat_io_FreeSurfer('read_surf_data',fullfile(pp,[strrep(ff,'lh.thickness',[sides{si} '.thickness']) ee])); 
             Psurf(si).Pcentral = fullfile(pp1,[strrep(ff1,'lh.thickness',[sides{si} '.central']) ee1 '.gii']);
           else %% native FS files
             data   = gifti(fullfile(pp,[strrep(ff,'lh.thickness',[sides{si} '.thickness' ]) ee])); 
