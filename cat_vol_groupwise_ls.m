@@ -1,6 +1,7 @@
-function out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask, reduce, setCOM)
+function out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask, reduce, setCOM, isores)
 % Groupwise registration via least squares
-% FORMAT out = spm_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask, reduce)
+% FORMAT out = spm_groupwise_ls(Nii, output, prec, w_settings, b_settings, ...
+%              s_settings, ord, use_brainmask, reduce, setCOM, isores)
 % Nii    - a nifti object for two or more image volumes.
 % output - a cell array of output options (as character strings).
 %          'wimg   - write realigned images to disk
@@ -26,6 +27,8 @@ function out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s
 %              there is a lot of air around the head after registration of 
 %              multiple scans
 % setCOM     - set origin using center-of-mass
+% isore      - force isotropic average resolution
+%              (0-default,1-best,2-worst,3-optimal)
 %
 %_______________________________________________________________________
 % Copyright (C) 2012 Wellcome Trust Centre for Neuroimaging
@@ -63,6 +66,7 @@ if nargin<7,  ord        = [3 3 3 0 0 0]; end
 if nargin<8,  use_brainmask = 1; end
 if nargin<9,  reduce     = 1; end
 if nargin<10, setCOM     = 1; end
+if nargin<11, isores     = 0; end % force isotropic average resolution (0-default,1-best,2-worst,3-optimal)
 
 % If settings are not subject-specific, then generate
 %-----------------------------------------------------------------------
@@ -82,10 +86,11 @@ end
 if setCOM
   for i=1:numel(Nii)
     M0 = spm_imatrix(Nii(i).mat);
-    M = spm_imatrix(cat_vol_set_com(spm_vol(Nii(i).dat.fname))); 
+    M  = spm_imatrix(cat_vol_set_com(spm_vol(Nii(i).dat.fname))); 
     M0(1:3) = M0(1:3) - M(1:3);
     Nii(i).mat = spm_matrix(M0);
   end
+  clear M0 M; 
 end
 
 fprintf('\n------------------------------------------------------------------------\n');
@@ -121,8 +126,15 @@ for i=1:numel(Nii)
     dm = [size(Nii(i).dat) 1];
     d  = max(d, dm(1:3));
 end
-d  = min(d);
-
+switch isores && ( max(d) / min(d) ) > 1.1 % only for strong differences
+    case 1 % best resolution - this may help in case of low slice resolution eg. 1.0x1.0x3.0 > 1.0
+        d = min(d); 
+    case 2 % worst resolution - this is better in case of to high resolution and noise eg. 0.5x0.5x1.0 > 1.0
+        d = max(d); 
+    case 3 % optimal - keep the volume similar but move it a bit torwards one
+           % eg. 1.0x1.0x3.0 > 1.2, 0.5x0.5x1.0 > 0.7
+        d = floor( (prod(d).^(1/3) ).^0.5  * 10 ) / 10;
+end  
 % Specify highest resolution data
 %-----------------------------------------------------------------------
 clear pyramid
@@ -162,9 +174,19 @@ end
 % Stuff for figuring out the orientation, dimensions etc of the highest resolution template
 %-----------------------------------------------------------------------
 Mat0 = cat(3,pyramid(1).img.mat);
+if 1 
+  %% RD20220217: use best resolution and create an isotropic output 
+  mati      = spm_imatrix(Mat0); 
+  vx_vol    = min(2,max(1,min(mati(7:9)))); % range of voxel resolution
+  cdim      = mati(7:9) ./ vx_vol; 
+  mati(7:9) = vx_vol; 
+  Mat0      = spm_matrix(mati); 
+else
+  cdim      = [1 1 1];
+end
 dims = zeros(numel(Nii),3);
 for i=1:size(dims,1)
-    dims(i,:) = Nii(i).dat.dim(1:3);
+    dims(i,:) = round(Nii(i).dat.dim(1:3) .* cdim);
 end
 [pyramid(1).mat,pyramid(1).d] = compute_avg_mat(Mat0,dims);
 pyramid(1).sc   = abs(det(pyramid(1).mat(1:3,1:3)));
