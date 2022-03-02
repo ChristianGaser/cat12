@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1961 | gaser | 2022-03-02 14:09:07
+r1962 | gaser | 2022-03-02 14:47:56
+
+Changed paths:
+M       CHANGES.txt
+M       cat_vol_sanlm.m
+
+Fixed: For skull-stripped data noise while using sanlm-filter was added even 
+       in zero-valued areas.
+------------------------------------------------------------------------
+r1961 | gaser | 2022-03-02 14:11:59 +0100 (Wed, 02 Mar 2022) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +18,7 @@ M       html/cat.html
 
 Fixed: For skull-stripped data noise while using sanlm-filter was added even 
        in zero-valued areas.
+
 ------------------------------------------------------------------------
 r1960 | dahnke | 2022-03-01 17:31:23 +0100 (Tue, 01 Mar 2022) | 7 lines
 
