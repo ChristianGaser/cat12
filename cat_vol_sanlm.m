@@ -490,10 +490,12 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
           % avoid adding of noise in skull-stripped data. This may lead to
           % problems with the skull-stripping detection in cat_run_job!
           % Also important in case of ADNI.
-          src2 = src2 + max( 0 , min(1 , cat_vol_smooth3X( ...
+          sth = max( 0 , min(1 , cat_vol_smooth3X( ...
                  ( job.addnoise.*sth/100 ) - abs(srco - src) , 4/mean(vx_vol) ) ./ ( job.addnoise.*sth/100 ) )) .* ...
                  ( src~=0 ) .* ... save skull-stripping / defacing regions
-                 (randn(size(src)) * job.addnoise.*sth/100);  
+                 (randn(size(src)) * job.addnoise.*sth/100);
+          ind = src2 ~= 0;
+          src2(ind) = src2(ind) + sth(ind);  
           if ~debug, clear sth; end
         end
         if numel(NCstr)==1 && ~debug, clear src srco; end
