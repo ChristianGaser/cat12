@@ -624,7 +624,7 @@ function cat_run_job1639(job,tpm,subj)
             if ~isfield(xml,'SPMpreprocessing')
               cat_io_cprintf('warn',sprintf('WARNING: File "%s" does not contain successful affine transformation. Use individual affine transformation\n',catxml));
               Affine   = eye(4); 
-              useprior = 0;
+              useprior = 0; 
             else
               Affine   = xml.SPMpreprocessing.Affine;
               affscale = 1;
@@ -881,7 +881,7 @@ function cat_run_job1639(job,tpm,subj)
             end
           else
             % check for > 10% larger scaling 
-            if scl1 > 1.1*scl2 && job.extopts.setCOM ~= 11 % setcom == 11 - use always 
+            if ~strcmp(job.opts.affreg,'prior')  &&  scl1 > 1.1*scl2 && job.extopts.setCOM ~= 11 % setcom == 11 - use always 
               stime = cat_io_cmd('  Use initial fine affine registration.','warn','',1,stime);
               %fprintf('\n  First fine affine registration failed.\n  Use affine registration from previous step.                ');
               Affine2 = Affine1;
@@ -897,7 +897,7 @@ function cat_run_job1639(job,tpm,subj)
           if ~any(any(isnan(Affine3(1:3,:))))
             scl3 = abs(det(Affine3(1:3,1:3)));
             % check for > 5% larger scaling 
-            if scl2 > 1.05*scl3 && job.extopts.setCOM ~= 11 % setcom == 11 - use always
+            if ~strcmp(job.opts.affreg,'prior')  &&  scl2 > 1.05*scl3 && job.extopts.setCOM ~= 11 % setcom == 11 - use always
               stime = cat_io_cmd('  Use previous fine affine registration.','warn','',1,stime);
               %fprintf('\n  Final fine affine registration failed.\n  Use fine affine registration from previous step.                ');
               Affine = Affine2;
