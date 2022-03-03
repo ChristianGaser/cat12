@@ -206,8 +206,11 @@ switch lower(action)
               [pp,ff,ee] = spm_fileparts(sinfo(pi).Pdata);
               switch sinfo(pi).ee
                   case '.gii'
-                      cdata = gifti(O.pcdata{pi}); 
-                      if isfield(cdata,'cdata')
+                      cdata  = gifti(O.pcdata{pi}); 
+                      cdatap = export(cdata,'patch');
+                      if isfield(cdatap,'facevertexcdata')
+                        cdata = cdatap.facevertexcdata; 
+                      elseif isfield(cdata,'cdata')
                         if isnumeric(cdata.cdata)
                           cdata = cdata.cdata; 
                         else
@@ -3116,7 +3119,7 @@ for pi=pis
     error('cat_surf_render:add_wrong_mesh',[...
       'Colordata does not fit to underlying mesh.\n' ...
       '  Colordata:   %d values\n' ...
-      '  Surface:     %d vertices'],size(C,1),size(curv,1) );
+      '  Surface:     %d vertices'],size(curv,1),size(C,1) );
   end
 
  %C = repmat(~any(v,1),3,1)' .* curv + repmat(any(v,1),3,1)' .* C;
