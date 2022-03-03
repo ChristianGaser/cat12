@@ -126,15 +126,12 @@ for i=1:numel(Nii)
     dm = [size(Nii(i).dat) 1];
     d  = max(d, dm(1:3));
 end
-switch isores && ( max(d) / min(d) ) > 1.1 % only for strong differences
-    case 1 % best resolution - this may help in case of low slice resolution eg. 1.0x1.0x3.0 > 1.0
-        d = min(d); 
-    case 2 % worst resolution - this is better in case of to high resolution and noise eg. 0.5x0.5x1.0 > 1.0
-        d = max(d); 
-    case 3 % optimal - keep the volume similar but move it a bit torwards one
-           % eg. 1.0x1.0x3.0 > 1.2, 0.5x0.5x1.0 > 0.7
-        d = floor( (prod(d).^(1/3) ).^0.5  * 10 ) / 10;
-end  
+if isores
+  d = max(d);
+else
+  d = min(d);
+end
+
 % Specify highest resolution data
 %-----------------------------------------------------------------------
 clear pyramid
@@ -174,10 +171,22 @@ end
 % Stuff for figuring out the orientation, dimensions etc of the highest resolution template
 %-----------------------------------------------------------------------
 Mat0 = cat(3,pyramid(1).img.mat);
-if 1 
+if isores>0  
   %% RD20220217: use best resolution and create an isotropic output 
   mati      = spm_imatrix(Mat0); 
-  vx_vol    = min(2,max(1,min(mati(7:9)))); % range of voxel resolution
+  vx_vol    = mati(7:9); 
+  switch isores 
+    case 1
+      vx_vol = min(vx_vol); 
+    case 2 % need at least something like 2 mm
+      vx_vol = min(2,max(vx_vol));
+    case 3 
+      % optimal - keep the volume similar but move it a bit torwards one
+      %   eg. 1.0x1.0x3.0 > 1.2, 0.5x0.5x1.0 > 0.7
+      vx_vol  = floor( (prod(abs(vx_vol)).^(1/3) ).^0.5  * 10 ) / 10;
+    case 4 % similar volume and between 1 and 2 mm
+      vx_vol  = min(2,max(1,min(vx_vol)));             
+  end
   cdim      = mati(7:9) ./ vx_vol; 
   mati(7:9) = vx_vol; 
   Mat0      = spm_matrix(mati); 
