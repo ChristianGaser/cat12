@@ -381,7 +381,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
           end
         otherwise
           sinfo(i).Pdata =sinfo(i).fname;
-          if exist(Pcentral,'file')
+          if 0 %exist(Pcentral,'file')
             sinfo(i).Pmesh = Pcentral;
           elseif strcmp(sinfo(i).ee,'.gii') && sinfo(i).ftype == 1 && exist(sinfo(i).fname,'file')
             S = gifti(sinfo(i).fname);
@@ -408,8 +408,6 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     end
     % if we got still no mesh than we can use SPM.mat information or average mesh
     % ...
-
-    
     if isempty(sinfo(i).Pmesh) %&& sinfo(i).ftype==1
       try 
         if ischar(SPM.xVol.G)

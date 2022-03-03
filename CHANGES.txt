@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1962 | gaser | 2022-03-02 14:47:56
+r1963 | dahnke | 2022-03-03 10:48:09
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_info.m
+M       cat_surf_render2.m
+
+(1) Fixed:   Corrected bugs in displaying surface textures.
+------------------------------------------------------------------------
+r1962 | gaser | 2022-03-02 14:49:28 +0100 (Wed, 02 Mar 2022) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +16,7 @@ M       cat_vol_sanlm.m
 
 Fixed: For skull-stripped data noise while using sanlm-filter was added even 
        in zero-valued areas.
+
 ------------------------------------------------------------------------
 r1961 | gaser | 2022-03-02 14:11:59 +0100 (Wed, 02 Mar 2022) | 9 lines
 
