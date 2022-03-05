@@ -145,7 +145,8 @@ function out = cat_vol_sanlm(varargin)
     end
     
     % general settings
-    if nargin > 0 && isstruct(job{1}) && isfield(job{1},'NCstr') && ~isfield(job{1}.nlmfilter,'classic')
+    if nargin > 0 && isstruct(job{1}) && isfield(job{1},'NCstr') && ...
+      ( isfield(job{1},'nlmfilter') && ~isfield(job{1}.nlmfilter,'classic') )
       switch job{1}.NCstr
         case 2,        job{1}.NCstr =  -0.5; job{1}.red = 0; job{1}.fred = 0; job{1}.iterm = 0; name = 'light';
         case {3,-inf}, job{1}.NCstr =  -1.0; job{1}.red = 1; job{1}.fred = 0; job{1}.iterm = 0; name = 'medium';
@@ -158,7 +159,7 @@ function out = cat_vol_sanlm(varargin)
       if ~isempty(strfind(job{1}.suffix,'PARA'))
         job{1}.suffix = strrep(job{1}.suffix,'PARA',['_optimized-' name]); 
       end
-    elseif isfield(job{1}.nlmfilter,'classic')
+    elseif isfield(job{1},'nlmfilter') && isfield(job{1}.nlmfilter,'classic')
       if ~isempty(strfind(job{1}.prefix,'PARA'))
         job{1}.prefix = strrep(job{1}.prefix,'PARA','classic_'); 
       end
