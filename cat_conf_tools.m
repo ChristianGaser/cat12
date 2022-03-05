@@ -1603,15 +1603,20 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
   
   prefix.val        = {'sanlm_'};
   prefix.help       = {
-    'Specify the string to be prepended to the filenames of the filtered image file(s). Default prefix is "samlm_". Use the keyword "PARA" to add the strength of filtering, e.g. "sanlm_PARA" result in "sanlm_NC#_*.nii".'
+    'Specify the string to be prepended to the filenames of the filtered image file(s). Default prefix is "samlm_". Use the keyword "PARA" to add the name of the filter, e.g., "classic" or "optimized-medium".'
     ''
   };
-
-  suffix.val        = {''};
-  suffix.help       = {
-    'Specify the string to be appended to the filenames of the filtered image file(s). Default suffix is ''''.  Use "PARA" to add input parameters, e.g. "sanlm_*_NC#.##_RN#_RD#_RIA#.##_SR#_FSR#_RNI#_OL#.##_iterm#_iter#.nii" with NC=NCstr, RN=Rician noise, RD=resolution dependency, RIA=relative intensity adaptation, SR=sub-resolutions, FSR=force sub-resolution, RNI=replace NAN and INF, and OL=outlier correction.'
-    ''
-  };
+  if expert>1
+    prefix.help       = {
+      'Specify the string to be prepended to the filenames of the filtered image file(s). Default prefix is "samlm_". Use the keyword "PARA" to add the strength of filtering, e.g. "sanlm_PARA" result in "sanlm_NC#_*.nii".'
+      ''
+    };
+    suffix.val        = {''};
+    suffix.help       = {
+      'Specify the string to be appended to the filenames of the filtered image file(s). Default suffix is ''''.  Use the keyword "PARA" to add the name of the filter, e.g., "classic" or "optimized-medium".'
+      ''
+    };
+  end
   
 
   % --- new fields ---
@@ -1658,15 +1663,17 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
   NCstrm.name       = 'Strength of Noise Corrections';
   NCstrm.def        = @(val) cat_get_defaults('extopts.NCstr', val{:});
   NCstrm.help       = {
-    ['Strength of the (sub-resolution) spatial adaptive  non local means (SANLM) noise correction. Please note that the filter strength is automatically estimated. Change this parameter only for specific conditions. ' ...
+    ['Strength of the (sub-resolution) spatial adaptive non local means (SANLM) noise correction. Please note that the filter strength is automatically estimated. Change this parameter only for specific conditions. ' ...
      'The "light" option applies half of the filter strength of the adaptive "medium" cases, whereas the "strong" option uses the full filter strength, force sub-resolution filtering and applies an additional iteration. Sub-resolution filtering is only used in case of high image resolution below 0.8 mm or in case of the "strong" option.']
+     'If you have high quality data or multiple scans then use the "light" option. If you have data that was interpolated in some way (i.e., even within scanning/reconstruction) then noise is typically blurred over multiple voxels and has to be handled on lower resolutions available for the try the "strong" filter setting.'
+     'The filter will always leave some low amount of noise in the data that is assumed by preprocessing routines such as the tissue classification with its Gaussian fitting.'
      ''
   };
-  NCstrm.values     = {2 -inf 4};
+  NCstrm.values     = {2 -inf 4 5};
   if expert
-    NCstrm.labels   = {'light (2)','medium (3|-inf)','strong (4)'};
+    NCstrm.labels   = {'light (adapted half strength; 2)','medium (adapted; default; -1|3|-inf)','strong (low-resolution filtering; 4)','heavy (low-resolution filtering with 2 iterations; 5)'};
   else
-    NCstrm.labels   = {'light','medium','strong'};
+    NCstrm.labels   = {'light','medium (default)','strong','heavy'};
   end
 
   addnoise          = cfg_entry;
@@ -1699,6 +1706,7 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
     relativeFilterStengthLimit.strtype  = 'r';
     relativeFilterStengthLimit.num      = [1 1];
     relativeFilterStengthLimit.val      = {1};
+    relativeFilterStengthLimit.hidden   = expert<2;
     relativeFilterStengthLimit.help     = {
       'Limit the relative noise correction to avoid over-filtering of low intensity areas. Low values will lead to less filtering in low intensity areas, whereas high values will be closer to the original filter. INF deactivates the filter. '
       ''
@@ -1710,6 +1718,7 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
     relativeFilterStengthLimit.labels   = {'Yes' 'No'};
     relativeFilterStengthLimit.values   = {1 0};
     relativeFilterStengthLimit.val      = {1};
+    relativeFilterStengthLimit.hidden   = expert<2;
     relativeFilterStengthLimit.help     = {
       'Limit the relative noise correction to avoid over-filtering of low intensities areas.'
       ''
@@ -1722,11 +1731,11 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
   relativeIntensityAdaption.strtype     = 'r';
   relativeIntensityAdaption.num         = [1 1];
   relativeIntensityAdaption.val         = {1};
+  relativeIntensityAdaption.hidden      = expert<2;
   relativeIntensityAdaption.help        = {
     'Strength of relative intensity adaptation, with 0 for no adaptation and 1 for full adaptation. The SANLM filter is often very successful in the background and removed nearly all noise. However, routines such as the SPM Unified Segmentation expect Gaussian distribution in all regions and is troubled by regions with too low variance. Hence, a relative limitation of SANLM correction is added here that is based on the bias reduced image intensity. '
     ''
   };
-
 
   % very special parameter ...
   % -----------------------------------------------------------------------
@@ -1760,7 +1769,7 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
   relativeIntensityAdaptionTH.strtype = 'r';
   relativeIntensityAdaptionTH.num     = [1 1];
   relativeIntensityAdaptionTH.val     = {2};
-  relativeIntensityAdaptionTH.hidden  = expert<1;
+  relativeIntensityAdaptionTH.hidden  = expert<2;
   relativeIntensityAdaptionTH.help    = {
     'Smoothing of the relative filter strength limitation.'
     ''
@@ -1772,7 +1781,7 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
   resolutionDependency.labels         = {'Yes' 'No'};
   resolutionDependency.values         = {1 0};
   resolutionDependency.val            = {0};
-  resolutionDependency.hidden         = expert<1;
+  resolutionDependency.hidden         = expert<2;
   resolutionDependency.help           = {
     'Resolution depending filtering with reduced filter strength in data with low spatial resolution defined by the "Range of resolution dependency".'
     ''
@@ -1796,7 +1805,7 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
   resolutionReduction.labels          = {'Yes (allways)' 'Yes (only highres <0.8 mm)' 'No'};
   resolutionReduction.values          = {11 1 0};
   resolutionReduction.val             = {0};
-  resolutionReduction.hidden          = expert<1;
+  resolutionReduction.hidden          = 0; % expert<1;
   resolutionReduction.help            = {
     'Some MR images were interpolated or use a limited frequency spectrum to support higher spatial resolution with acceptable scan-times (e.g., 0.5x0.5x1.5 mm on a 1.5 Tesla scanner). However, this can result in "low-frequency" noise that can not be handled by the standard NLM-filter. Hence, an additional filtering step is used on a reduces resolution. As far as filtering of low resolution data will also remove anatomical information the filter use by default maximal one reduction with a resolution limit of 1.6 mm. I.e. a 0.5x0.5x1.5 mm image is reduced to 1.0x1.0x1.5 mm, whereas a 0.8x0.8x0.4 mm images is reduced to 0.8x0.8x0.8 mm and a 1x1x1 mm dataset is not reduced at all. '
     ''
