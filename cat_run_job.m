@@ -336,6 +336,7 @@ function cat_run_job(job,tpm,subj)
           ppe.affreg.skullstrippedpara(2)<15  && ...                     % only a few objects
           ppe.affreg.skullstrippedpara(3)<10  && ...                     % only a few background regions 
           F0vol<2500 && F0std<0.5 && ...                                 % many zeros and not too big
+% RD20220301: Need further test on trimmed data.          
           ppe.affreg.skullstrippedpara(3)<0.02;                          % there should be no object (neck) very close to the boundary
         ppe.affreg.skullstripped = ppe.affreg.skullstripped || ...
           sum([ppe.affreg.skullstrippedpara(1)>0.8 F0vol<1500 F0std<0.4])>1; % or 2 extreme values
@@ -517,7 +518,7 @@ function cat_run_job(job,tpm,subj)
           elseif job.extopts.gcutstr<0 && ~ppe.affreg.skullstripped || job.test_warnings
             cat_io_addwarning([mfilename ':noSkullStrippingButSkull'],[...
                 'Skull-Stripping is deactivated but skull was detected. \\n' ...
-                'Go on without skull-stripping what possibly will fail.'],1,[0 1],ppe.affreg.skullstrippedpara);
+                'Go on without skull-stripping what possibly will fail.'],0,[0 1],ppe.affreg.skullstrippedpara);
           end
 
           % skull-stripping of the template

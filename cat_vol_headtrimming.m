@@ -59,7 +59,7 @@ function varargout = cat_vol_headtrimming(job)
   def.verb    = 1;                    % some output information
   def.open    = 2;                    % open operation for masking
   def.ctype   = 0;                    % default data type (0=native)
-  def.range   = 0;                    % data range for output 
+  def.intlim  = 1;                    % data range for output 
   def.range1  = 90;                   % internal scaling for masking
   def.returnOnlyFilename  = 0;        % 
   def.process_index = 1;              %
@@ -260,8 +260,8 @@ function varargout = cat_vol_headtrimming(job)
            ( isnumeric(job.ctype) && job.ctype>0) || ...
            ( ischar(job.ctype) && ~strcmp(job.ctype,'native') ))) 
 
-          job2 = struct('data',job.images{si}{di},'verb',0,'ctype',job.ctype,'cvals','inf',...
-                        'range',job.range,'prefix',job.prefix,'suffix',job.suffix);
+          job2 = struct('data',job.images{si}{di},'verb',0,'ctype',job.ctype,'intscale',1,...
+                        'range',job.intlim,'prefix',job.prefix,'suffix',job.suffix);
           files = cat_io_volctype(job2);
           P = files.files;
         else
