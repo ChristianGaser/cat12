@@ -145,20 +145,29 @@ function out = cat_vol_sanlm(varargin)
     end
     
     % general settings
+    if nargin > 0 && isstruct(job{1}) && isfield(job{1},'nlmfilter') && isfield(job{1}.nlmfilter,'optimized') && isfield(job{1}.nlmfilter,'NCstr') 
+      job{1}.NCstr = job{1}.nlmfilter.optimized.NCstr; 
+    end
     if nargin > 0 && isstruct(job{1}) && isfield(job{1},'NCstr') && ...
       ( isfield(job{1},'nlmfilter') && ~isfield(job{1}.nlmfilter,'classic') )
-      switch job{1}.NCstr
-        case 2,        job{1}.NCstr =  -0.5; job{1}.red = 0; job{1}.fred = 0; job{1}.iterm = 0; name = 'light';
-        case {3,-inf}, job{1}.NCstr =  -1.0; job{1}.red = 1; job{1}.fred = 0; job{1}.iterm = 0; name = 'medium';
-        case 4,        job{1}.NCstr =   1.0; job{1}.red = 1; job{1}.fred = 1; job{1}.iterm = 0; job{1}.iter = 0; job{1}.nlmfilter.optimized.NCstr = -1; name = 'strong';
-        case 5,        job{1}.NCstr =   1.0; job{1}.red = 1; job{1}.fred = 1; job{1}.iterm = 1; job{1}.iter = 1; job{1}.nlmfilter.optimized.NCstr =  1; name = 'heavy';
-      end 
+        switch job{1}.NCstr
+          case 2,        job{1}.NCstr =  -0.5; job{1}.red = 0; job{1}.fred = 0; job{1}.iterm = 0; name = 'light';
+          case {3,-inf}, job{1}.NCstr =  -1.0; job{1}.red = 1; job{1}.fred = 0; job{1}.iterm = 0; name = 'medium';
+          case 4,        job{1}.NCstr =   1.0; job{1}.red = 1; job{1}.fred = 1; job{1}.iterm = 0; job{1}.iter = 0; name = 'strong';
+          case 5,        job{1}.NCstr =   1.0; job{1}.red = 1; job{1}.fred = 1; job{1}.iterm = 1; job{1}.iter = 1; name = 'heavy';
+          case 12,       job{1}.NCstr =  -0.5; job{1}.red = 0; job{1}.fred = 0; job{1}.iterm = 0; name = 'lightavg';
+                         job{1}.addnoise = 0;  job{1}.outlier = 0; 
+          case 14,       job{1}.NCstr =  -1.0; job{1}.red = 1; job{1}.fred = 1; job{1}.iterm = 0; job{1}.iter = 0; name = 'strongavg';
+                         job{1}.addnoise = 0;  job{1}.outlier = 0; 
+        end 
+        job{1}.nlmfilter.optimized.NCstr = job{1}.NCstr; 
       if ~isempty(strfind(job{1}.prefix,'PARA'))
         job{1}.prefix = strrep(job{1}.prefix,'PARA',['optimized-' name '_']); 
       end
       if ~isempty(strfind(job{1}.suffix,'PARA'))
         job{1}.suffix = strrep(job{1}.suffix,'PARA',['_optimized-' name]); 
       end
+      job{1}.filtername = ['optimized-' name]; 
     elseif isfield(job{1},'nlmfilter') && isfield(job{1}.nlmfilter,'classic')
       if ~isempty(strfind(job{1}.prefix,'PARA'))
         job{1}.prefix = strrep(job{1}.prefix,'PARA','classic_'); 
@@ -166,6 +175,11 @@ function out = cat_vol_sanlm(varargin)
       if ~isempty(strfind(job{1}.suffix,'PARA'))
         job{1}.suffix = strrep(job{1}.suffix,'PARA','_classic'); 
       end
+      job{1}.filtername = 'classic';
+    elseif nargin > 0 && isstruct(job{1})
+      job{1}.filtername = 'manual';
+    else
+      job{1}.filtername = '';
     end
     
     if nargin <= 1 && isstruct(varargin{1}) % job structure input
@@ -262,7 +276,7 @@ function varargout = cat_vol_sanlm_file(job)
 end
 
 %_______________________________________________________________________
-function src2 = cat_vol_sanlm_filter(job,V,i,src)
+function [src2,NCstr] = cat_vol_sanlm_filter(job,V,i,src)
     Vo = V;
 
     QMC   = cat_io_colormaps('marks+',17);
@@ -303,8 +317,11 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
       % use intensity normalisation because cat_sanlm did not filter values below ~0.01 
       th  = max( cat_stat_nanmean( src(src(:)>cat_stat_nanmean(src(src(:)>0))) ) , ...
                  abs(cat_stat_nanmean( src(src(:)<abs(cat_stat_nanmean(src(src(:)<0)))))) );
+        
+               
                
       % low resolution filtering
+      % -------------------------------------------------------------------
       if job.red>0 && (any(vx_vol<0.8) || job.fred )
         [srcr,resr]   = cat_vol_resize( src ,'reduceV',vx_vol,min(2.2*(job.fred+1),min(vx_vol)*2.3),32,'median');
         
@@ -320,7 +337,6 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
                           min(1,1 - (mean(resr.vx_volr) - jobr.resolutionDependencyRange(1) )) / ...
                           diff(jobr.resolutionDependencyRange); 
         end
-        %jobr.NCstr = jobr.NCstr / prod(resr.vx_red);  % RD20220302: simplified handling 
         if 0 % RD20220302: deactivated
           % larger var => more information
           Ygr   = cat_vol_grad(srcr/th,resr.vx_volr,0); 
@@ -334,7 +350,7 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
           Vr = V(i); Vmat = spm_imatrix(Vr.mat); Vmat(7:9) = Vmat(7:9).*resr.vx_red; Vr.mat = spm_matrix(Vmat);
           srcR  = cat_vol_resize(srcr,'dereduceV',resr,'cubic');
           for iter=1:1+job.iter
-            srcr  = cat_vol_sanlm_filter(jobr,Vr,1,srcr);
+            [srcr,NCstrr1(iter)]  = cat_vol_sanlm_filter(jobr,Vr,1,srcr);
           end
           srcRS = cat_vol_resize(srcr,'dereduceV',resr,'cubic');
           src   = (src - srcR) + srcRS; 
@@ -347,7 +363,7 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
             srcRr = cat_vol_resize(srcr,'dereduceV',resr,'cubic');
             srcR  = src; srcR(2:end,2:end,2:end) = srcRr; 
             for iter=1:1+job.iter
-              srcr  = cat_vol_sanlm_filter(jobr,Vr,1,srcr);
+              [srcr,NCstrr2(iter)]  = cat_vol_sanlm_filter(jobr,Vr,1,srcr);
             end
             srcRr = cat_vol_resize(srcr,'dereduceV',resr,'cubic');
             srcRS = src; srcRS(2:end,2:end,2:end) = srcRr; 
@@ -357,7 +373,8 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
           end
         end
         
-        NCstrr = 15 * abs(cat_stat_nanmean(abs(src(:)/th - srco(:)/th))); 
+        NCstrr = mean([NCstrr1 NCstrr2]); % or sum() / 2 ;
+        %NCstrr = 15 * abs(cat_stat_nanmean(abs(src(:)/th - srco(:)/th))); 
       else
         NCstrr = 0; 
       end
@@ -371,7 +388,7 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
       src = (src / th) * 100; 
       src = (src - srcth(1)); % avoid negative values!
       cat_sanlm(src,3,1,job.rician);
-      src = src + srcth(1);  % reset negative values 
+      src = src + srcth(1);  % restore original intensity range 
       src = (src / 100) * th; 
       if job.verb>1 && (nargin>3 || NCstrr>0) && im<1+job.iterm
         if job.verb>1 && (nargin>3 || NCstrr>0), cat_io_cprintf('g5',sprintf('  %5.0fs\n',etime(clock,stime))); end
@@ -567,26 +584,32 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
             % that red means failed filtering ...
             %   green > low filtering 
             %   red   > strong filtering
-            if NCstr(NCstri)>0 || isinf(NCstr(NCstri))
-                fprintf('NCstr = '); 
+            if cat_get_defaults('extopts.expertgui') % NCstr(NCstri)<0 || isinf(NCstr(NCstri))
+                fprintf('  NCstr = '); 
                 cat_io_cprintf( color( ( ( abs(NCstr(NCstri)) ) * 6 )) , ...
-                    sprintf('%- 5.2f > %4.2f', job.NCstr(NCstri) , abs(NCstr(NCstri)) ));
-                cat_io_cprintf( [0 0 0] , ', '); % restore default color!
+                  sprintf('%- 5.2f > %4.2f', job.NCstr(NCstri) , abs(NCstr(NCstri)) ));
+                if NCstrr
+                  cat_io_cprintf( color( ( ( abs(NCstrr) ) * 6 )) , ...
+                      sprintf(' (R0: %4.2f)', abs(NCstrr) ));
+                end
+                cat_io_cprintf( [0 0 0] , ', '); % restore default color! 
             end
             
             % create some further parameter output for experts
+            FNs = {'filtername'};
+            FNf = {'NCstr'};
             if cat_get_defaults('extopts.expertgui')
-              FNf = {'NCstr'};
               FNi = {'rician','intlim','outlier','addnoise','red','fred','iter','iterm'};
-              parastr = ['''name = ' job.prefix '*' job.suffix ''';' ];
-              for fni = 1:numel(FNf) 
-                parastr = [parastr sprintf('''%s = %0.2f''; ', FNf{fni}, job.(FNf{fni}))];  %#ok<AGROW>
-              end
-              for fni = 1:numel(FNi) 
-                parastr = [parastr sprintf('''%s = %d''; ', FNi{fni}, job.(FNi{fni}))];  %#ok<AGROW>
-              end
-            else
-              parastr = '';
+            end
+            parastr = ['''name = ' job.prefix '*' job.suffix ''';' ];
+            for fni = 1:numel(FNs) 
+              parastr = [parastr sprintf('''%s = %s''; ', FNs{fni}, job.(FNs{fni}))];  %#ok<AGROW>
+            end
+            for fni = 1:numel(FNf) 
+              parastr = [parastr sprintf('''%s = %0.2f''; ', FNf{fni}, job.(FNf{fni}))];  %#ok<AGROW>
+            end
+            for fni = 1:numel(FNi) 
+              parastr = [parastr sprintf('''%s = %d''; ', FNi{fni}, job.(FNi{fni}))];  %#ok<AGROW>
             end
             
             %% spm_orthview preview
@@ -600,7 +623,7 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
                'ho = spm_orthviews(''Image'',''%s'' ,[0 0.51 1 0.49]); ',... top image
                'hf = spm_orthviews(''Image'',''%%s'',[0 0.01 1 0.49]);', ... bottom image
                'spm_orthviews(''Caption'', ho, ''original''); ', ... caption top image
-               'spm_orthviews(''Caption'', hf, {{''filtered'';' , ... caption bottom image
+               'spm_orthviews(''Caption'', hf, {{''filtered'';'' '';' , ... caption bottom image
                parastr '}}); ', ... % the parameters
                'spm_orthviews(''AddContext'',ho); spm_orthviews(''AddContext'',hf); ', ... % add menu
                'spm_orthviews(''Zoom'',40);', ... % zoom in
