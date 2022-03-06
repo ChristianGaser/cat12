@@ -1,11 +1,24 @@
 ------------------------------------------------------------------------
-r1966 | dahnke | 2022-03-05 15:22:59
+r1967 | dahnke | 2022-03-06 21:02:48
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_vol_sanlm.m
+
+(1) Changed:  Added new filter setups to filter images that should be averaged.
+              Added further denoising measures also for lower resolution.
+(2) Fixed:    Corrected data type bug in cat_conf_tools.  
+
+------------------------------------------------------------------------
+r1966 | dahnke | 2022-03-05 15:26:08 +0100 (Sat, 05 Mar 2022) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_vol_sanlm.m
 
 (1) Fixed:   Corrected bug in cat_vol_sanlm due to missing datafield. 
+
 ------------------------------------------------------------------------
 r1965 | dahnke | 2022-03-05 13:44:38 +0100 (Sat, 05 Mar 2022) | 7 lines
 

@@ -1665,14 +1665,16 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
   NCstrm.help       = {
     ['Strength of the (sub-resolution) spatial adaptive non local means (SANLM) noise correction. Please note that the filter strength is automatically estimated. Change this parameter only for specific conditions. ' ...
      'The "light" option applies half of the filter strength of the adaptive "medium" cases, whereas the "strong" option uses the full filter strength, force sub-resolution filtering and applies an additional iteration. Sub-resolution filtering is only used in case of high image resolution below 0.8 mm or in case of the "strong" option.']
-     'If you have high quality data or multiple scans then use the "light" option. If you have data that was interpolated in some way (i.e., even within scanning/reconstruction) then noise is typically blurred over multiple voxels and has to be handled on lower resolutions available for the try the "strong" filter setting.'
+    ['If you have scans with low amount of noise then use the "light" option. If you have data that was resampled or interpolated in some way (i.e., even within scanning/reconstruction) then the noise is often blurred over multiple voxels and has to be handled on lower resolutions available for the try the "strong" or "heavy" filter setting.' ...
+     'If you have multiple scans that should be averaged than you should use the ".. for average" filter settings.']
      'The filter will always leave some low amount of noise in the data that is assumed by preprocessing routines such as the tissue classification with its Gaussian fitting.'
      ''
   };
-  NCstrm.values     = {2 -inf 4 5};
   if expert
-    NCstrm.labels   = {'light (adapted half strength; 2)','medium (adapted; default; -1|3|-inf)','strong (low-resolution filtering; 4)','heavy (low-resolution filtering with 2 iterations; 5)'};
+    NCstrm.values   = {2 -inf 4 5 12 14};
+    NCstrm.labels   = {'light (adapted half strength; 2)','medium (adapted; default; -1|3|-inf)','strong (low-resolution filtering; 4)','heavy (low-resolution filtering with 2 iterations; 5)','light for averaging (adapted half strength; 12)','strong for averaging (low-resolution filtering; 14)',};
   else
+    NCstrm.values   = {2 -inf 4 5};
     NCstrm.labels   = {'light','medium (default)','strong','heavy'};
   end
 
@@ -1805,7 +1807,7 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
   resolutionReduction.labels          = {'Yes (allways)' 'Yes (only highres <0.8 mm)' 'No'};
   resolutionReduction.values          = {11 1 0};
   resolutionReduction.val             = {0};
-  resolutionReduction.hidden          = 0; % expert<1;
+  %resolutionReduction.hidden          = expert<1;
   resolutionReduction.help            = {
     'Some MR images were interpolated or use a limited frequency spectrum to support higher spatial resolution with acceptable scan-times (e.g., 0.5x0.5x1.5 mm on a 1.5 Tesla scanner). However, this can result in "low-frequency" noise that can not be handled by the standard NLM-filter. Hence, an additional filtering step is used on a reduces resolution. As far as filtering of low resolution data will also remove anatomical information the filter use by default maximal one reduction with a resolution limit of 1.6 mm. I.e. a 0.5x0.5x1.5 mm image is reduced to 1.0x1.0x1.5 mm, whereas a 0.8x0.8x0.4 mm images is reduced to 0.8x0.8x0.8 mm and a 1x1x1 mm dataset is not reduced at all. '
     ''
@@ -1840,14 +1842,14 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
   nlm_optimized.name    = 'Optimized filter';
   nlm_optimized.val     = {NCstrm};
   nlm_optimized.help    = {
-      'Optimized SANLM filter with adaptive predefined parameters for simplified GUI cases.' 
+      'Optimized SANLM filter with predefined parameter settings.' 
   }; 
 
   nlm_expert          = cfg_branch;
   nlm_expert.tag      = 'expert';
   nlm_expert.name     = 'Optimized filter (expert options)';
   nlm_expert.hidden   = expert<0;
-  nlm_expert.val      = {NCstr iter iterm outlier relativeIntensityAdaption relativeIntensityAdaptionTH relativeFilterStengthLimit resolutionDependency resolutionDependencyRange resolutionReduction lazy};
+  nlm_expert.val      = {NCstr iter iterm outlier addnoise relativeIntensityAdaption relativeIntensityAdaptionTH relativeFilterStengthLimit resolutionDependency resolutionDependencyRange resolutionReduction lazy};
   nlm_expert.help     = {
       'Optimized SANLM filter with all parameters.' 
   }; 
@@ -1860,21 +1862,15 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
   else
     nlmfilter.values    = {nlm_default nlm_optimized};
   end
-  if cat_get_defaults('extopts.NCstr')>0 && cat_get_defaults('extopts.NCstr')<=1
-    nlmfilter.val       = {nlm_default}; 
-  elseif expert
-    nlmfilter.val       = {nlm_expert}; 
-  else
-    nlmfilter.val       = {nlm_optimized}; 
-  end  
+  nlmfilter.val         = {nlm_optimized}; 
   if expert
     nlmfilter.help      = {
-      'Selection between the classical SANLM filter and an optimized SANLM filter with simplyfied and complex setting.' 
+      'Selection between the classical SANLM filter and an optimized SANLM filter with predefined settings or detailed parameterization. The classic filter is often too strong in normal data that was not interpolated or resampled and the default CAT12 preprocessing uses the medium optimized version. '
       ''
     }; 
   else
     nlmfilter.help      = {
-      'Selection between the classical SANLM filter and an optimized SANLM filter.' 
+      'Selection between the classical SANLM filter and an optimized SANLM filter. The classic filter is often too strong in normal data that was not interpolated or resampled and the default CAT12 preprocessing uses the medium optimized version. ' 
       ''
     };
   end
@@ -1884,7 +1880,7 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
   
   intlim.hidden         = expert<2;
   
-  sanlm.val             = {data spm_type prefix suffix intlim addnoise rician replaceNANandINF nlmfilter};
+  sanlm.val             = {data spm_type prefix suffix intlim rician replaceNANandINF nlmfilter};
   sanlm.prog            = @cat_vol_sanlm;
   sanlm.vout            = @vout_sanlm;
   sanlm.help            = {
