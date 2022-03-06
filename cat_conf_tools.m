@@ -83,7 +83,7 @@ function tools = cat_conf_tools(expert)
   spm_type          = cfg_menu; %
   spm_type.tag      = 'spm_type';
   spm_type.name     = 'Data type of the output images';
-  if expert>1 
+  if expert>0
     % developer! there should be no great difference between uint# and int# due to rescaling 
     spm_type.labels = {'same','uint8','int8','uint16','int16','single'};
     spm_type.values = {0 2 256 512 4 16};
@@ -1899,6 +1899,7 @@ function spmtype = conf_io_volctype(data,  intlim,  spm_type,prefix,suffix,exper
   data.help           = {'Select images for data type conversion';''};
   
   intlim.tag          = 'range';
+  intlim.num          = [1 inf];
   
   prefix.val          = {'PARA'};
   prefix.help         = {
@@ -1919,10 +1920,15 @@ function spmtype = conf_io_volctype(data,  intlim,  spm_type,prefix,suffix,exper
   intscale            = cfg_menu;
   intscale.name       = 'Intensity scaling';
   intscale.tag        = 'intscale';
-  intscale.labels     = {'Yes (0-65535)','Yes (0-255)','Yes (0-1)','No'};
-  intscale.values     = {3,2,1,0};
-  intscale.val        = {2};
-  intscale.help       = {'Normalize image intensities.'};
+  if expert>1
+    intscale.labels   = {'No (round in case of integer)','Yes (0-1)','Yes (-1:1)','Yes (0:max)','Yes (min:max)', 'Yes (0:256)'};
+    intscale.values   = {0,1,-1,inf,-inf,2};
+  else
+    intscale.labels   = {'No (round in case of integer)','Yes (0-1)','Yes (-1:1)','Yes (0:max)','Yes (min:max)'};
+    intscale.values   = {0,1,-1,inf,-inf};
+  end
+  intscale.val        = {1};
+  intscale.help       = {'Normalize image intensities in range between (i) 0 and 1 (0:1) or (ii) between -1 and 1 (-1:1) balanced around zero, i.e., the absoluted values are ranged betweed 0 and 1. '};
 
   % new
   spmtype             = cfg_exbranch;
@@ -1951,6 +1957,7 @@ function headtrimming = conf_vol_headtrimming(intlim,spm_type,prefix,suffix,lazy
   intlim1.name          = 'Global intensity limitation for masking';
   intlim1.val           = {90};
   intlim1.hidden        = expert<1; 
+  intlim1.num           = [1 Inf];
   intlim1.help          = {'General intensity limitation to remove strong outliers by using 90% of the original histogram values. Too high values will include background noise and do not allow trimming, whereas to low values will cut objects with low values (e.g. by image inhomogeneities). ' ''};
 
   prefix.val            = {'trimmed_'};
@@ -2081,6 +2088,7 @@ function headtrimming = conf_vol_headtrimming(intlim,spm_type,prefix,suffix,lazy
 
   % don't change data type
   spm_type.val         = {0};
+  spm_type.tag         = 'ctype';
   % --- main ---
   headtrimming         = cfg_exbranch;
   headtrimming.tag     = 'datatrimming';

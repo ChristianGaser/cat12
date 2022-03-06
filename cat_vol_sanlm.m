@@ -600,6 +600,8 @@ function [src2,NCstr] = cat_vol_sanlm_filter(job,V,i,src)
             FNf = {'NCstr'};
             if cat_get_defaults('extopts.expertgui')
               FNi = {'rician','intlim','outlier','addnoise','red','fred','iter','iterm'};
+            else
+              FNi = {};
             end
             parastr = ['''name = ' job.prefix '*' job.suffix ''';' ];
             for fni = 1:numel(FNs) 

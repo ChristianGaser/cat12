@@ -40,75 +40,67 @@ function out = cat_io_volctype(varargin)
   def.suffix              = '';
   def.intscale            = 0; 
   def.returnOnlyFilename  = 0; 
-  %def.ctype               = 16; ... this is defined later
+  def.ctype               = 16; 
+  def.cvals               = 1; 
   job = cat_io_checkinopt(job,def); 
 
-  if ~isfield(job,'data') || isempty(job.data)
-     job.data = cellstr(spm_select([1 Inf],'image','Select images')); 
+  
+  % define images - return in case of no input
+  if nargin==0 || ~isfield(job,'data') || isempty(job.data)
+    % interatcive
+    job.data = cellstr(spm_select([1 Inf],'image','Select images')); 
   else
-     job.data = cellstr(job.data);
+    job.data = cellstr(job.data);
   end
   if isempty(job.data) || isempty(job.data{1}), return; end
   
-% choose output format
-  spm_clf('Interactive'); 
-  if isfield(job,'ctype')
+
+  % choose output datatype
+  if nargin
     if ischar(job.ctype)
       ctype = spm_type(job.ctype);
     else
       ctype = job.ctype;
     end  
   else
+    % interactive
     V = spm_vol(strrep(job.data{1},',1',''));
     switch V(1).dt(1)
       case {2,512}, dtype = 1; % uint8
       case {4,256}, dtype = 3; % int8
       otherwise,    dtype = 2; % uint16
     end
+    spm_clf('Interactive');   
     ctype = spm_input('Datatype',1,'(u)int8|(u)int16|single',[2,512,16],dtype);
   end
-  V = spm_vol(strrep(job.data{1},',1',''));
-  if ctype == 0
-    ctype = V.dt(1); 
-  end
- 
-  if any(ctype==[2 4 256 512])
+
+  
+  % choose data limiting (range) and define histogram scaling cvals (with 0 for auto)
+  if ~nargin && any(ctype==[2 4 256 512])
       
     if isfield(job,'range')
       range = job.range; 
     else
-      range = spm_input('Range','+1','100%|99.99%|%|ss',[100,99.99,-1,0],2);
+      range = spm_input('Range','+1','100%|99.99%|%',[100,99.99,-1],2);
     end
-    
-    if range==0
-      if ~exist('Y','var'), Y = spm_read_vols(V); end
-      cvals = 1/round(single(intmax(spm_type(ctype))) * diff([min(Y(:)),max(Y(:))]));
-    elseif range<0 || range>100
+    if range == -1
       range = min(100,max(eps,spm_input('Range in %:','+1','r',99.99,1)));
-      cvals = 0;
-    else
-      cvals = 0;
     end
   else
-    if isfield(job,'range')
-      range = job.range; 
-    end
-    cvals = 0;
+    range = job.range; 
   end
   
-  % stepsize
-  if ~isfield(job,'cvals') %&& range==0
-    if ~exist('Y','var'), Y = spm_read_vols(V); end
-    if range==0
-      job.cvals = spm_input(sprintf('Stepsize (0=auto;min:%4.2f;max:%4.2f):',min(Y(:)),max(Y(:))),'+1','r',0,1);
-    else
-      job.cvals = 0;  
-    end
+  
+  % stepsize (0=auto)
+  if ~nargin 
+    Y      = spm_read_vols(V); 
+    cvals  = spm_input(sprintf('Stepsize (0=auto;min:%4.2f;max:%4.2f):',min(Y(:)),max(Y(:))),'+1','r',0,1);
   else
-    job.cvals = cvals; 
+    cvals  = job.cvals; 
   end
   
-% choose prefix
+  
+  % choose prefix
   if ~isfield(job,'prefix') 
     job.prefix = spm_input('Filename prefix (empty=overwrite!)','+1','s',[spm_type(ctype) '_'],1);
   end
@@ -124,7 +116,17 @@ function out = cat_io_volctype(varargin)
   end
   if job.returnOnlyFilename, return; end
   
- 
+%
+%  
+%     2  'uint8  '
+%     4  'int16  '
+%     8  'int32  '
+%    16  'float32'
+%    64  'float64'
+%   256  'int8   '
+%   512  'uint16 '
+%   768  'uint32 '
+
   
   %% convert
   if isfield(job,'process_index') && job.process_index && job.verb
@@ -134,35 +136,93 @@ function out = cat_io_volctype(varargin)
   spm_progress_bar('Init',numel(job.data),'SANLM-Filtering','Volumes Complete');
   for si=1:numel(job.data)
     if job.lazy==0 || cat_io_rerun( out.files{si} , job.data{si} )
-      V = spm_vol(strrep(job.data{si},',1',''));
-      Y = spm_read_vols(V); 
-
+      V  = spm_vol(strrep(job.data{si},',1',''));
+      Y  = spm_read_vols(V); 
+      
+      % reduce volumes to be more robust and faster
+      vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
+      Yr = cat_vol_resize(Y,'reduceV',vx_vol,2,32);
+      
       [pp,ff,ee] = spm_fileparts(V(1).fname);
 
-      [Yt,clim] = cat_stat_histth(Y,range); clear Yt;  %#ok<ASGLU>
+      % intensity scaling / limitation
+      [Yt,clim]  = cat_stat_histth(Yr,range); clear Yt;  %#ok<ASGLU>
 
-      if round(cvals)~=cvals && ccvals~=0
-        switch ctype
-          case {2,256}, V(1).pinfo(1) = (clim(2) - clim(1)) / 256;
-          case {4,512}, V(1).pinfo(1) = (clim(2) - clim(1)) / 256^2;
+      
+      
+      % extend datatype uint to int or vice versa
+      % -------------------------------------------------------------------
+      changetype = 0; % 0-ignore, 1-warn, 2-change
+      if changetype 
+        switch ctype  %#ok<UNRCH>
+          case {2,4,8,256,512,768} % integer types
+            if  any(clim<0) % negative value use int
+              if changetype==2
+                cat_io_cprintf('warning',['  cat_io_volctype:useInt: '...
+                  'Switch from unsigned integer to integer datatype.\n']);
+                switch ctype %V(1).dt(1) 
+                  case 2,   ctype = 256;  
+                  case 512, ctype = 4; 
+                  case 768, ctype = 8; 
+                end
+              else
+                cat_io_cprintf('note',['  cat_io_volctype:useUint: '...
+                  'Selected datatype does not support the (small) negative values in the image.\n']);
+              end
+            else % otherwise use uint
+              if changetype==2
+                cat_io_cprintf('warning',['  cat_io_volctype:useInt: '...
+                  'Switch from integer to unsigned integer datatype because no negative values exist.\n']);
+                switch ctype %V(1).dt(1) 
+                  case 256, ctype = 2;  
+                  case 4,   ctype = 512;  
+                  case 8,   ctype = 768; 
+                end
+              else
+                cat_io_cprintf('note',['  cat_io_volctype:useUint: '...
+                  'Selected datatype does not support the (small) negative values in the image.\n']);
+              end
+            end
         end
-      else
-         V(1).pinfo(1) = cvals; 
       end
-
-      if any(clim<0)
-        switch V(1).dt(1) 
-          case 2,   ctype = 4;  
-          case 512, ctype = 256; 
-        end
-      else
-        switch V(1).dt(1) 
-          case 4,   ctype = 2;  
-          case 256, ctype = 512; 
+      
+      
+      
+      % data type changes ... to simple ...
+      % -------------------------------------------------------------------
+      if ( ctype == 0 || ctype ~= V.dt(1) )
+        if job.intscale == 1 || job.intscale == -1  
+          % fixed scaling between 0 and 1 (uint) or -1 and 1 (int)
+          switch ctype
+            case 2,    V(1).pinfo(1) = 1 / 2^8;       % uint8
+            case 512,  V(1).pinfo(1) = 1 / 2^16;      % uint16
+            case 768,  V(1).pinfo(1) = 1 / 2^32;      % uint32
+            case 256,  V(1).pinfo(1) = 1 / 2^8  * 2;  % int8
+            case 4,    V(1).pinfo(1) = 1 / 2^16 * 2;  % int16 
+            case 8,    V(1).pinfo(1) = 1 / 2^32 * 2;  % int32
+            otherwise, V(1).pinfo(1) = 1;             % float/double
+          end
+        elseif isinf( job.intscale )
+          % dynamic scaling based on the maximal absolute value
+          switch ctype
+            case 2,    V(1).pinfo(1) = max(abs(clim)) / 2^8;       % uint8
+            case 512,  V(1).pinfo(1) = max(abs(clim)) / 2^16;      % uint16
+            case 768,  V(1).pinfo(1) = max(abs(clim)) / 2^32;      % uint32
+            case 256,  V(1).pinfo(1) = max(abs(clim)) / 2^8  * 2;  % int8
+            case 4,    V(1).pinfo(1) = max(abs(clim)) / 2^16 * 2;  % int16 
+            case 8,    V(1).pinfo(1) = max(abs(clim)) / 2^32 * 2;  % int32
+            otherwise, V(1).pinfo(1) = 1;                          % float/double
+          end
+        elseif job.intscale == 2 || job.intscale == 256
+          V(1).pinfo(1) = 1; % just to mention this case clearly
+        else
+          V(1).pinfo(1) = 1;
         end
       end
-      % special case for external input
-      if ctype>0
+      
+      
+      % add info about change of datatype
+      if ctype ~= 0
         V(1).dt(1) = ctype;
         descrip = [V(1).descrip ' > ' spm_type(ctype)];
       else
@@ -179,32 +239,93 @@ function out = cat_io_volctype(varargin)
       end
 
 
-      if job.intscale
-        Y = ( Y - min(Y(:)) ) / diff([min(Y(:)),max(Y(:))]);
-        
-        % check some cases where the scaling can lead to problems
-        % RD20210701: this part needs correction
-        %{
-        if job.intscale==2 % RD20210701 ????
-          if any( ctype == [ 256 512 768 2 4 8] ) %  all integer types
-            error('cat_io_volctype:improperDatatype','Selected datatype does not provide selected intensity range.');
-          else
-            Y = Y * (2^8  - 1); 
-          end
-        elseif job.intscale==2
-          if ctype == 256  %  int8
-            error('cat_io_volctype:improperDatatype','Selected datatype does not provide selected intensity range.');
-          else
-            Y = Y * (2^8  - 1); 
-          end
-        elseif job.intscale==3
-          if any( ctype == [ 256 2 4 ] ) % int8 uint8 int16
-            error('cat_io_volctype:improperDatatype','Selected datatype does not provide selected intensity range.');
-          else
-            Y = Y * (2^16 - 1);
-          end
+      if job.intscale ~= 0
+        switch job.intscale
+          case  1 % range 0 to 1
+            ivals = [0 1];
+            Y     = ( Y - min(clim) ) / diff([min(clim),max(clim)]);
+            Yrd   = round(Y / V(1).pinfo(1)) * V(1).pinfo(1); 
+          case -1 % range -1 to 1 scaled around 0
+            ivals = [-1 1];
+            Y     = Y / max( abs(clim) );
+            Yrd   = round(Y / V(1).pinfo(1)) * V(1).pinfo(1); 
+          case {2,256}
+            ivals = [0 256];
+            Y     = ( Y - min(clim) ) / diff([min(clim),max(clim)]) * 256;
+            Yrd   = round(Y); 
+          otherwise
+            if V(1).dt(1) == 16 || V(1).dt(1) == 64 
+              ivals = [-inf inf]; 
+              % no scaling for (-)inf!
+              if V(1).dt(1) == 16 
+                Yrd = single(Y); 
+              end
+            else
+              switch V(1).dt(1) 
+                case   2,  ivals = [0 V(1).pinfo(1)] * 2^8;
+                case 512,  ivals = [0 V(1).pinfo(1)] * 2^16;
+                case 768,  ivals = [0 V(1).pinfo(1)] * 2^32;
+                case 256,  ivals = [-V(1).pinfo(1) V(1).pinfo(1)] * (2^8  / 2);
+                case   4,  ivals = [-V(1).pinfo(1) V(1).pinfo(1)] * (2^16 / 2);
+                case   8,  ivals = [-V(1).pinfo(1) V(1).pinfo(1)] * (2^32 / 2);
+              end
+              Yrd   = round(Y / V(1).pinfo(1)) * V(1).pinfo(1); 
+            end
         end
-        %}
+        
+        
+        % estimate error measures
+        switch V(1).dt(1) 
+          case {2,4,8,256,512,768}
+            intlimlow  = sum( Y(:) < (ivals(1) - ivals(1)*0.05) ) / numel(Y) * 100; 
+            intlimhigh = sum( Y(:) > (ivals(2) + ivals(2)*0.05) ) / numel(Y) * 100;
+        end
+        Yrdc  = max(ivals(1),min(ivals(2),Yrd)); 
+        Yc    = max(ivals(1),min(ivals(2),Y)); 
+        RMSEf = sum(( ( Y(:)  - Yrd(:)  ) / max(clim) ).^2)^0.5; 
+        RMSEl = sum(( ( Yc(:) - Yrdc(:) ) / max(clim) ).^2)^0.5; 
+        
+        
+        % print critical cases 
+        if job.verb || RMSEf>2 || RMSEl>2 || intlimlow > 2 || intlimhigh > 2
+          switch V(1).dt(1) 
+% linked display image from sanlm 
+            case {2,4,256,512}
+              QMC    = cat_io_colormaps('marks+',17);
+              color  = @(QMC2,m)  QMC2(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
+              rating = @(x,best,worst) cat_io_cprintf( color(QMC,min(10.5,max(0.5, ((x-best) / (worst-best)) * 10 + 0.5))) , sprintf('%6.3f',x) );
+              
+              cat_io_cprintf([0 0 0],sprintf('  %s(%s):',spm_type(ctype),spm_str_manip(job.data{si},'k40'))); 
+              cat_io_cprintf([0 0 0],sprintf('RSME-fullRange: ')); 
+              rating(RMSEf,0,40);
+              cat_io_cprintf([0 0 0],sprintf(', RSME-inRange: ')); 
+              rating(RMSEl,0,40);
+              cat_io_cprintf([0 0 0],sprintf(', interger-cutoff(low,high): ')); 
+              rating(intlimlow,0,40); fprintf('%%, '); 
+              rating(intlimhigh,0,40); fprintf('%%\n'); 
+            otherwise
+              fprintf('  %s(%s)\n',spm_type(ctype),spm_str_manip(job.data{si},'k40'));
+          end      
+        end
+        
+        
+        % print critical cases 
+        msg = {'note','warning','error'};
+        switch V(1).dt(1) 
+          case {2,4,256,512}
+            if intlimlow > 2
+              cat_io_cprintf(msg{round(max(1,min(3,intlimlow / 4)))},sprintf(['  cat_io_volctype:intlimitlow: '...
+                'Selected datatype/scaling cut off %0.2f%%%% of the low values.\n'],intlimlow));
+            end
+            if intlimhigh > 2
+              cat_io_cprintf(msg{round(max(1,min(3,intlimhigh / 4)))},sprintf(['  cat_io_volctype:intlimithigh: ' ...
+                'Selected datatype/scaling cut off %0.2f%%%% of the high values.\n'],intlimhigh));
+            end
+        end
+
+      end
+      if ctype==0
+        ctype = V(1).dt;
       end
 
 
