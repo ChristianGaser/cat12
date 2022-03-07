@@ -83,14 +83,8 @@ function tools = cat_conf_tools(expert)
   spm_type          = cfg_menu; %
   spm_type.tag      = 'spm_type';
   spm_type.name     = 'Data type of the output images';
-  if expert>0
-    % developer! there should be no great difference between uint# and int# due to rescaling 
-    spm_type.labels = {'same','uint8','int8','uint16','int16','single'};
-    spm_type.values = {0 2 256 512 4 16};
-  else
-    spm_type.labels = {'same','uint8','uint16','single (32 bit)'};
-    spm_type.values = {0 2 512 16};
-  end
+  spm_type.labels   = {'same','uint8','int8','uint16','int16','single'};
+  spm_type.values   = {0 2 256 512 4 16};
   spm_type.val      = {16};
   spm_type.help     = {
     'SPM data type of the output image. Single precision is recommended, but  uint16 also provides good results. Internal scaling supports a relative high accuracy for the limited number of bits, special values such as NAN and INF (e.g. in the background) will be lost and NAN is converted to 0, -INF to the minimum, and INF to the maximum value. '
@@ -103,10 +97,11 @@ function tools = cat_conf_tools(expert)
   intlim.tag        = 'intlim';
   intlim.name       = 'Global intensity limitation';
   intlim.strtype    = 'r';
-  intlim.num        = [1 1];
+  intlim.num        = [1 inf];
   intlim.val        = {100};
   intlim.help       = {
-    'General intensity limitation to remove strong outliers by using 99.99%% of the original histogram values  before noise correction. '
+    'General intensity limitation to remove strong outliers by using 100%% of the original histogram values. '
+    'You can also specify the lower and upper boundary seperatlym, e.g. [80 99], what will keep only 80%% of the (many) low (background values) but 99%% of the (rew) high intensity (skull) values. ' 
     ''
   };
 
@@ -140,7 +135,17 @@ function tools = cat_conf_tools(expert)
   save.val          = {0};
   save.help         = {'Save and close figures for batch processing.'};
   
-
+  verb                                = cfg_menu;
+  verb.tag                            = 'verb';
+  verb.name                           = 'Verbose output';
+  verb.labels                         = {'No' 'Yes' 'Yes (Details)'};
+  verb.values                         = {0 1 2};
+  verb.val                            = {1};
+  verb.hidden                         = expert<1;
+  verb.help                           = {
+    'Be more or less verbose. '
+    ''
+    };
 % get subbatches
 % -------------------------------------------------------------------------
   [T2x,T2x_surf,F2x,F2x_surf] = conf_T2x;
@@ -151,12 +156,12 @@ function tools = cat_conf_tools(expert)
   createTPM                   = conf_createTPM(data_vol,expert,suffix,outdir); 
   createTPMlong               = conf_createTPMlong(data_vol,expert);
   long_report                 = conf_long_report(data_vol,data_xml,expert);
-  headtrimming                = conf_vol_headtrimming(intlim,spm_type,prefix,suffix,lazy,expert);
+  headtrimming                = conf_vol_headtrimming(intlim,spm_type,prefix,suffix,verb,lazy,expert);
   check_SPM                   = conf_stat_check_SPM(outdir,fname,save,expert); 
   showslice                   = conf_stat_showslice_all(data_vol);
   maskimg                     = conf_vol_maskimage(data,prefix);
   calcvol                     = conf_stat_TIV;
-  spmtype                     = conf_io_volctype(data,intlim,spm_type,prefix,suffix,expert,lazy);
+  spmtype                     = conf_io_volctype(data,intlim,spm_type,prefix,suffix,verb,expert,lazy);
   calcroi                     = conf_roi_fun(outdir);
   [ROI,sROI,ROIsum]           = cat_conf_ROI(expert);
   resize                      = conf_vol_resize(data,prefix,expert,outdir);
@@ -1894,7 +1899,7 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
 return
 
 %_______________________________________________________________________
-function spmtype = conf_io_volctype(data,  intlim,  spm_type,prefix,suffix,expert,lazy)
+function spmtype = conf_io_volctype(data,  intlim,  spm_type,prefix,suffix,verb,expert,lazy)
   % update variables 
   data.help           = {'Select images for data type conversion';''};
   
@@ -1917,14 +1922,17 @@ function spmtype = conf_io_volctype(data,  intlim,  spm_type,prefix,suffix,exper
   spm_type.values(1)  = []; % remove native case
   spm_type.tag        = 'ctype';
   
+  lazy.hidden         = expert<1; 
+  verb.hidden         = expert<1; 
+  
   intscale            = cfg_menu;
   intscale.name       = 'Intensity scaling';
   intscale.tag        = 'intscale';
   if expert>1
-    intscale.labels   = {'No (round in case of integer)','Yes (0-1)','Yes (-1:1)','Yes (0:max)','Yes (min:max)', 'Yes (0:256)'};
+    intscale.labels   = {'No (round in case of integer)','Yes (0:1)','Yes (-1:1)','Yes (0:max)','Yes (min:max)', 'Yes (0:256)'};
     intscale.values   = {0,1,-1,inf,-inf,2};
   else
-    intscale.labels   = {'No (round in case of integer)','Yes (0-1)','Yes (-1:1)','Yes (0:max)','Yes (min:max)'};
+    intscale.labels   = {'No (round in case of integer)','Yes (0:1)','Yes (-1:1)','Yes (0:max)','Yes (min:max)'};
     intscale.values   = {0,1,-1,inf,-inf};
   end
   intscale.val        = {1};
@@ -1934,7 +1942,7 @@ function spmtype = conf_io_volctype(data,  intlim,  spm_type,prefix,suffix,exper
   spmtype             = cfg_exbranch;
   spmtype.tag         = 'spmtype';
   spmtype.name        = 'Image data type converter'; 
-  spmtype.val         = {data spm_type prefix suffix intlim intscale lazy};
+  spmtype.val         = {data prefix suffix intlim spm_type intscale verb lazy};
   spmtype.prog        = @cat_io_volctype;
   spmtype.vout        = @vout_volctype;
   spmtype.help        = {
@@ -1945,11 +1953,12 @@ function spmtype = conf_io_volctype(data,  intlim,  spm_type,prefix,suffix,exper
 return
 
 %_______________________________________________________________________
-function headtrimming = conf_vol_headtrimming(intlim,spm_type,prefix,suffix,lazy,expert)
+function headtrimming = conf_vol_headtrimming(intlim,spm_type,prefix,suffix,verb,lazy,expert)
 
   suffix.hidden         = expert<1; 
   intlim.hidden         = expert<1; 
   lazy.hidden           = expert<1;
+  intlim.num            = [1 inf]; 
   
   % update input variables
   intlim1               = intlim;
@@ -1962,6 +1971,15 @@ function headtrimming = conf_vol_headtrimming(intlim,spm_type,prefix,suffix,lazy
 
   prefix.val            = {'trimmed_'};
 
+  intscale              = cfg_menu;
+  intscale.name         = 'Intensity scaling';
+  intscale.tag          = 'intscale';
+  intscale.labels       = {'No','Yes','Yes (force positive values)'};
+  intscale.values       = {0,1,3};
+  intscale.val          = {0};
+  intscale.help         = {'Normalize image intensities in range between 0 and 1 (unsigned integer or forced scaling option) or -1 to 1 (signed integer / float). '};
+
+  
   % many subjects
   simages               = cfg_files;
   simages.tag           = 'simages';
@@ -2083,6 +2101,7 @@ function headtrimming = conf_vol_headtrimming(intlim,spm_type,prefix,suffix,lazy
   mask.labels           = {'Yes','No'};
   mask.values           = {1,0};
   mask.val              = {1};
+  mask.hidden           = expert < 1; 
   mask.help             = {'Use source image for trimming and final masking (e.g. for skull-stripping in longitudinal pipeline).'};
 
 
@@ -2093,7 +2112,7 @@ function headtrimming = conf_vol_headtrimming(intlim,spm_type,prefix,suffix,lazy
   headtrimming         = cfg_exbranch;
   headtrimming.tag     = 'datatrimming';
   headtrimming.name    = 'Image data trimming'; 
-  headtrimming.val     = {timages prefix mask suffix intlim1 pth avg open addvox spm_type intlim lazy};
+  headtrimming.val     = {timages prefix suffix mask intlim1 pth avg open addvox intlim spm_type intscale verb lazy};
   headtrimming.prog    = @cat_vol_headtrimming;
   headtrimming.vout    = @vout_headtrimming;
   headtrimming.help    = {

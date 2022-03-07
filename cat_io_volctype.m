@@ -65,7 +65,7 @@ function out = cat_io_volctype(varargin)
   else
     % interactive
     V = spm_vol(strrep(job.data{1},',1',''));
-    switch V(1).dt(1)
+    switch V.dt(1)
       case {2,512}, dtype = 1; % uint8
       case {4,256}, dtype = 3; % int8
       otherwise,    dtype = 2; % uint16
@@ -143,7 +143,7 @@ function out = cat_io_volctype(varargin)
       vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
       Yr = cat_vol_resize(Y,'reduceV',vx_vol,2,32);
       
-      [pp,ff,ee] = spm_fileparts(V(1).fname);
+      [pp,ff,ee] = spm_fileparts(V.fname);
 
       % intensity scaling / limitation
       [Yt,clim]  = cat_stat_histth(Yr,range); clear Yt;  %#ok<ASGLU>
@@ -160,7 +160,7 @@ function out = cat_io_volctype(varargin)
               if changetype==2
                 cat_io_cprintf('warning',['  cat_io_volctype:useInt: '...
                   'Switch from unsigned integer to integer datatype.\n']);
-                switch ctype %V(1).dt(1) 
+                switch ctype %V.dt(1) 
                   case 2,   ctype = 256;  
                   case 512, ctype = 4; 
                   case 768, ctype = 8; 
@@ -173,7 +173,7 @@ function out = cat_io_volctype(varargin)
               if changetype==2
                 cat_io_cprintf('warning',['  cat_io_volctype:useInt: '...
                   'Switch from integer to unsigned integer datatype because no negative values exist.\n']);
-                switch ctype %V(1).dt(1) 
+                switch ctype %V.dt(1) 
                   case 256, ctype = 2;  
                   case 4,   ctype = 512;  
                   case 8,   ctype = 768; 
@@ -190,159 +190,177 @@ function out = cat_io_volctype(varargin)
       
       % data type changes ... to simple ...
       % -------------------------------------------------------------------
-      if ( ctype == 0 || ctype ~= V.dt(1) )
+      if ( ctype ~= 0 && ctype ~= V.dt(1) )
         if job.intscale == 1 || job.intscale == -1  
           % fixed scaling between 0 and 1 (uint) or -1 and 1 (int)
           switch ctype
-            case 2,    V(1).pinfo(1) = 1 / 2^8;       % uint8
-            case 512,  V(1).pinfo(1) = 1 / 2^16;      % uint16
-            case 768,  V(1).pinfo(1) = 1 / 2^32;      % uint32
-            case 256,  V(1).pinfo(1) = 1 / 2^8  * 2;  % int8
-            case 4,    V(1).pinfo(1) = 1 / 2^16 * 2;  % int16 
-            case 8,    V(1).pinfo(1) = 1 / 2^32 * 2;  % int32
-            otherwise, V(1).pinfo(1) = 1;             % float/double
+            case 2,    V.pinfo(1) = 1 / 2^8;       % uint8
+            case 512,  V.pinfo(1) = 1 / 2^16;      % uint16
+            case 768,  V.pinfo(1) = 1 / 2^32;      % uint32
+            case 256,  V.pinfo(1) = 1 / 2^8  * 2;  % int8
+            case 4,    V.pinfo(1) = 1 / 2^16 * 2;  % int16 
+            case 8,    V.pinfo(1) = 1 / 2^32 * 2;  % int32
+            otherwise, V.pinfo(1) = 1;             % float/double
           end
         elseif isinf( job.intscale )
           % dynamic scaling based on the maximal absolute value
           switch ctype
-            case 2,    V(1).pinfo(1) = max(abs(clim)) / 2^8;       % uint8
-            case 512,  V(1).pinfo(1) = max(abs(clim)) / 2^16;      % uint16
-            case 768,  V(1).pinfo(1) = max(abs(clim)) / 2^32;      % uint32
-            case 256,  V(1).pinfo(1) = max(abs(clim)) / 2^8  * 2;  % int8
-            case 4,    V(1).pinfo(1) = max(abs(clim)) / 2^16 * 2;  % int16 
-            case 8,    V(1).pinfo(1) = max(abs(clim)) / 2^32 * 2;  % int32
-            otherwise, V(1).pinfo(1) = 1;                          % float/double
+            case 2,    V.pinfo(1) = max(abs(clim)) / 2^8;       % uint8
+            case 512,  V.pinfo(1) = max(abs(clim)) / 2^16;      % uint16
+            case 768,  V.pinfo(1) = max(abs(clim)) / 2^32;      % uint32
+            case 256,  V.pinfo(1) = max(abs(clim)) / 2^8  * 2;  % int8
+            case 4,    V.pinfo(1) = max(abs(clim)) / 2^16 * 2;  % int16 
+            case 8,    V.pinfo(1) = max(abs(clim)) / 2^32 * 2;  % int32
+            otherwise, V.pinfo(1) = 1;                          % float/double
           end
         elseif job.intscale == 2 || job.intscale == 256
-          V(1).pinfo(1) = 1; % just to mention this case clearly
+          V.pinfo(1) = 1; % just to mention this case clearly
         else
-          V(1).pinfo(1) = 1;
+          V.pinfo(1) = 1;
         end
       end
       
       
       % add info about change of datatype
       if ctype ~= 0
-        V(1).dt(1) = ctype;
-        descrip = [V(1).descrip ' > ' spm_type(ctype)];
+        V.dt(1) = ctype;
+        descrip = [V.descrip ' > ' spm_type(ctype)];
       else
-        descrip = V(1).descrip;
+        descrip = V.descrip;
       end
       
 
       % replace NAN and INF in case of integer
-      switch V(1).dt(1) 
+      switch V.dt(1) 
         case {2,4,256,512}
           Y(isnan(Y)) = 0;
           Y(isinf(Y) & Y<0) = min(Y(:));
           Y(isinf(Y) & Y>0) = max(Y(:));
       end
 
-
-      if job.intscale ~= 0
+      switch V.dt(1) 
+        case   2,  ivals = [0 V.pinfo(1)] * 2^8;
+        case 512,  ivals = [0 V.pinfo(1)] * 2^16;
+        case 768,  ivals = [0 V.pinfo(1)] * 2^32;
+        case 256,  ivals = [-V.pinfo(1) V.pinfo(1)] * (2^8  / 2);
+        case   4,  ivals = [-V.pinfo(1) V.pinfo(1)] * (2^16 / 2);
+        case   8,  ivals = [-V.pinfo(1) V.pinfo(1)] * (2^32 / 2);
+        otherwise, ivals = [-inf inf];
+      end
+      
+      
+      if job.intscale ~= 0 % ctype ~= 0 &&
         switch job.intscale
           case  1 % range 0 to 1
-            ivals = [0 1];
             Y     = ( Y - min(clim) ) / diff([min(clim),max(clim)]);
-            Yrd   = round(Y / V(1).pinfo(1)) * V(1).pinfo(1); 
+            Yrd   = round(Y / V.pinfo(1)) * V.pinfo(1); 
           case -1 % range -1 to 1 scaled around 0
-            ivals = [-1 1];
             Y     = Y / max( abs(clim) );
-            Yrd   = round(Y / V(1).pinfo(1)) * V(1).pinfo(1); 
+            Yrd   = round(Y / V.pinfo(1)) * V.pinfo(1); 
           case {2,256}
             ivals = [0 256];
             Y     = ( Y - min(clim) ) / diff([min(clim),max(clim)]) * 256;
             Yrd   = round(Y); 
           otherwise
-            if V(1).dt(1) == 16 || V(1).dt(1) == 64 
-              ivals = [-inf inf]; 
-              % no scaling for (-)inf!
-              if V(1).dt(1) == 16 
-                Yrd = single(Y); 
-              end
-            else
-              switch V(1).dt(1) 
-                case   2,  ivals = [0 V(1).pinfo(1)] * 2^8;
-                case 512,  ivals = [0 V(1).pinfo(1)] * 2^16;
-                case 768,  ivals = [0 V(1).pinfo(1)] * 2^32;
-                case 256,  ivals = [-V(1).pinfo(1) V(1).pinfo(1)] * (2^8  / 2);
-                case   4,  ivals = [-V(1).pinfo(1) V(1).pinfo(1)] * (2^16 / 2);
-                case   8,  ivals = [-V(1).pinfo(1) V(1).pinfo(1)] * (2^32 / 2);
-              end
-              Yrd   = round(Y / V(1).pinfo(1)) * V(1).pinfo(1); 
-            end
+            Yrd   = round(Y / V.pinfo(1)) * V.pinfo(1); 
         end
+      end
         
-        
-        % estimate error measures
-        switch V(1).dt(1) 
-          case {2,4,8,256,512,768}
-            intlimlow  = sum( Y(:) < (ivals(1) - ivals(1)*0.05) ) / numel(Y) * 100; 
-            intlimhigh = sum( Y(:) > (ivals(2) + ivals(2)*0.05) ) / numel(Y) * 100;
-        end
-        Yrdc  = max(ivals(1),min(ivals(2),Yrd)); 
-        Yc    = max(ivals(1),min(ivals(2),Y)); 
-        RMSEf = sum(( ( Y(:)  - Yrd(:)  ) / max(clim) ).^2)^0.5; 
-        RMSEl = sum(( ( Yc(:) - Yrdc(:) ) / max(clim) ).^2)^0.5; 
-        
-        
-        % print critical cases 
-        if job.verb || RMSEf>2 || RMSEl>2 || intlimlow > 2 || intlimhigh > 2
-          switch V(1).dt(1) 
+
+      % estimate error measures
+      switch V.dt(1) 
+        case {2,4,8,256,512,768}
+          intlimlow  = sum( Y(:) < (ivals(1) - abs(ivals(1))*0.05) ) / numel(Y) * 100; 
+          intlimhigh = sum( Y(:) > (ivals(2) + abs(ivals(2))*0.05) ) / numel(Y) * 100;
+        otherwise 
+          intlimlow  = 0; 
+          intlimhigh = 0;
+      end
+      Yrd   = max(ivals(1),min(ivals(2),Yrd)); 
+      Yc    = max(ivals(1),min(ivals(2),Y)); 
+      RMSEf = sum(( ( Y(:)  - Yrd(:) ) / max(clim) ).^2)^0.5; 
+      RMSEl = sum(( ( Yc(:) - Yrd(:) ) / max(clim) ).^2)^0.5; 
+
+
+      % print critical cases 
+      if job.verb % || RMSEf>2 || RMSEl>2 || intlimlow > 2 || intlimhigh > 2
+        switch V.dt(1) 
 % linked display image from sanlm 
-            case {2,4,256,512}
-              QMC    = cat_io_colormaps('marks+',17);
-              color  = @(QMC2,m)  QMC2(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
-              rating = @(x,best,worst) cat_io_cprintf( color(QMC,min(10.5,max(0.5, ((x-best) / (worst-best)) * 10 + 0.5))) , sprintf('%6.3f',x) );
-              
+          case {2,4,256,512}
+            QMC    = cat_io_colormaps('marks+',17);
+            color  = @(QMC2,m)  QMC2(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
+            rating = @(x,best,worst) cat_io_cprintf( color(QMC,min(10.5,max(0.5, ...
+              ((x-best) / (worst-best)) * 10 + 0.5))) , sprintf('%5.2f',x) );
+
+            if job.verb >= 1 % not repeat for headtrimming (=.5)
               cat_io_cprintf([0 0 0],sprintf('  %s(%s):',spm_type(ctype),spm_str_manip(job.data{si},'k40'))); 
-              cat_io_cprintf([0 0 0],sprintf('RSME-fullRange: ')); 
+            end
+            if 0
+              cat_io_cprintf([0 0 0],sprintf('RSME-fullRange: '));
               rating(RMSEf,0,40);
               cat_io_cprintf([0 0 0],sprintf(', RSME-inRange: ')); 
               rating(RMSEl,0,40);
-              cat_io_cprintf([0 0 0],sprintf(', interger-cutoff(low,high): ')); 
-              rating(intlimlow,0,40); fprintf('%%, '); 
-              rating(intlimhigh,0,40); fprintf('%%\n'); 
-            otherwise
-              fprintf('  %s(%s)\n',spm_type(ctype),spm_str_manip(job.data{si},'k40'));
-          end      
-        end
-        
-        
-        % print critical cases 
-        msg = {'note','warning','error'};
-        switch V(1).dt(1) 
-          case {2,4,256,512}
-            if intlimlow > 2
-              cat_io_cprintf(msg{round(max(1,min(3,intlimlow / 4)))},sprintf(['  cat_io_volctype:intlimitlow: '...
-                'Selected datatype/scaling cut off %0.2f%%%% of the low values.\n'],intlimlow));
-            end
-            if intlimhigh > 2
-              cat_io_cprintf(msg{round(max(1,min(3,intlimhigh / 4)))},sprintf(['  cat_io_volctype:intlimithigh: ' ...
-                'Selected datatype/scaling cut off %0.2f%%%% of the high values.\n'],intlimhigh));
-            end
-        end
-
+              cat_io_cprintf([0 0 0],sprintf(', interger cut-off(low,high): ')); 
+            else
+              cat_io_cprintf([0 0 0],sprintf('RSME: ')); 
+              rating(RMSEf,0,40);
+              cat_io_cprintf([0 0 0],sprintf(', int-cut-off(low,high): ')); 
+            end  
+            rating(intlimlow,0,40); fprintf('%%, '); 
+            rating(intlimhigh,0,40); fprintf('%%.'); 
+            if job.verb >= 1, fprintf('\n'); else, cat_io_cprintf([0 0 0],'  ');  end 
+          otherwise
+            fprintf('  %s(%s)\n',spm_type(ctype),spm_str_manip(job.data{si},'k40'));
+        end   
       end
+        
+      %% print critical cases 
+      msg = {'note','warning','error'};
+      switch V.dt(1) 
+        case {2,4,8,256,512,768}
+          if intlimlow > 2 || intlimhigh > 2
+            fprintf('\n');
+          end
+          if intlimlow > 2
+            cat_io_cprintf(msg{round(max(1,min(3,intlimlow / 4)))},sprintf(['    cat_io_volctype:intlimitlow:  '...
+              'Selected datatype/scaling cut off %0.2f%%%% of the low values (RMSE: %0.3f).\n'],intlimlow,RMSEf));
+          end
+          if intlimhigh > 2
+            cat_io_cprintf(msg{round(max(1,min(3,intlimhigh / 4)))},sprintf(['    cat_io_volctype:intlimithigh: ' ...
+              'Selected datatype/scaling cut off %0.2f%%%% of the high values (RMSE: %0.3f).\n'],intlimhigh,RMSEf));
+          end
+      end
+      if ( intlimlow >= 10 || intlimhigh >= 10 ) && (any(V.dt(1) == [2,512,768])) && (job.intscale < 0)
+         cat_io_cprintf('error',sprintf(['  cat_io_volctype:inoptimalType:  ' ...
+              'You selected an unsigned integer datatype but your data probalby needs signed integer.\n'],...
+              intlimhigh,RMSEf));
+      elseif ( intlimlow >= 10 || intlimhigh >= 10 ) && any(V.dt(1) == [2,4,8,256,512,768]) 
+         cat_io_cprintf('error',sprintf(['  cat_io_volctype:inoptimalType:  ' ...
+              'The RMSE is unexpected high (%0.3f but should be strongly below 10). \n                                  '...
+              'Use a datatype that uses more bits supporting high accuracy (e.g. uint16 rather than uint8).\n'],RMSEf));
+      end
+
       if ctype==0
-        ctype = V(1).dt;
+        ctype = V.dt;
       end
 
 
       if ndims(Y)==4
         %%
-        V(1).fname    = fullfile(pp,[job.prefix ff job.suffix ee]);
-        if exist(V(1).fname,'file'), delete(V(1).fname); end % delete required in case of smaller file size! 
+        V.fname    = fullfile(pp,[job.prefix ff job.suffix ee]);
+        if exist(V.fname,'file'), delete(V.fname); end % delete required in case of smaller file size! 
         N              = nifti;
-        N.dat          = file_array(fullfile(pp,[job.prefix ff ee]),min([inf inf inf size(Y,4)],size(Y)),[ctype spm_platform('bigend')],0,job.cvals,0);
+        N.dat          = file_array(fullfile(pp,[job.prefix ff ee]),...
+          min([inf inf inf size(Y,4)],size(Y)),[ctype spm_platform('bigend')],0,job.cvals,0);
         N.descrip      = descrip; 
-        N.mat          = V(1).mat;
-        N.mat0         = V(1).private.mat0;
-        N.descrip      = V(1).descrip;
+        N.mat          = V.mat;
+        N.mat0         = V.private.mat0;
+        N.descrip      = V.descrip;
         create(N);    
         %Y(:,:,:,3) = Y(:,:,:,3) + Y(:,:,:,4);
         N.dat(:,:,:,:) = Y(:,:,:,:);
       else
+        %%
         Vo = V; 
         Vo(1).fname    = fullfile(pp,[job.prefix ff job.suffix ee]);
         Vo(1).descrip  = descrip;
