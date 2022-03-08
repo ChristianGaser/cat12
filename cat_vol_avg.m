@@ -18,6 +18,19 @@ function out = cat_vol_avg(job)
 % $Id$
 %
 
+% interactive call function
+if ~nargin
+  job.outdir{1} = '';
+  job.data = cellstr(spm_select(Inf,'image','Select (spatially registered) images for average'));
+  [tmp, name]=spm_str_manip(spm_str_manip(job.data,'t'),'C');
+  pos = strfind(name.e,',1');
+  if ~isempty(pos)
+    name.e = name.e(1:pos-1);
+  end
+  Q = ['avg_' name.s name.e];
+  job.output = spm_input('Output filename',1,'s',Q);
+end
+
 [p,nam,ext] = spm_fileparts(job.output);
 if isempty(p)
     if isempty(job.outdir{1})
@@ -66,3 +79,6 @@ Nout.dat.fname = out.files{1};
 create(Nout);
 Nout.dat(:,:,:,:,:) = avg;
 
+if ~nargout
+  clear out
+end
