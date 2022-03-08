@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1970 | gaser | 2022-03-08 10:58:22
+r1971 | gaser | 2022-03-08 13:39:59
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_stat_check_cov.m
+M       check_pipeline_homogeneity.m
+M       html/cat.html
+
+(1) Changed: Updated check_pipeline_homogeneity.m to ignore older versions.
+(2) Fixed:   Corrected indexing of data_vol field in cat_stat_check_cov.m.
+------------------------------------------------------------------------
+r1970 | gaser | 2022-03-08 11:01:28 +0100 (Tue, 08 Mar 2022) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +22,7 @@ M       cat_vol_slice_overlay.m
 (1) Changed: Updated help text for cat_vol_slice_overlay.m.
 (2) Changed: Added interactive call to cat_vol_avg.m.
 (3) Changed: Changed default boxplot to density plot in cat_stat_confplot_spm.m.
+
 ------------------------------------------------------------------------
 r1969 | dahnke | 2022-03-07 21:58:24 +0100 (Mon, 07 Mar 2022) | 10 lines
 
