@@ -69,9 +69,10 @@ if ~exist('Hc','var') || (exist('Hc','var') && isempty(Hc))
   Hc.connected = 0;    % show connected lines for repeated anova
   Hc.legend = 1;       % show legend
   Hc.line = cell(1,1); % trend line property 
+  Hc.style = 3;        % density plot
 end
 
-if ~exist('colored','var')
+if ~exist('colored','var') && exist('n_effects','var')
     colored = spm_input('Boxplot','+1', 'm',['Colored|Define colors|Grey'],[2 1 0],1);
   switch colored
   case 0
@@ -81,8 +82,6 @@ if ~exist('colored','var')
   case 2
     groupcolor = [];
   end
-else
-  groupcolor = [];
 end
 
 switch xY.def
@@ -426,6 +425,7 @@ if Hc.y_found
     if repeated_anova
       set(hShowConnected,'Visible','on');
       set(hShowLegend,'Visible','on');
+      Hc.style = 0;
     end
   else
     set(hShowBoxplot,'Visible','on');
@@ -435,6 +435,7 @@ if Hc.y_found
       set(hShowMedianplot,'Visible','on');
       set(htext2,'Visible','on');
       set(hedit2,'Visible','on');
+      Hc.style = 0;
     end
   end
 end
@@ -444,7 +445,7 @@ end
 
 if ~exist('Hc','var') || (exist('Hc','var') && ~isfield(Hc,'h11'))
   Hc.h11 = figure(11);
-  set(Hc.h11,'Position',[menu_width 800 max_width 550],'NumberTitle','off','MenuBar','none');
+  set(Hc.h11,'Position',[menu_width 800 max_width 550],'NumberTitle','off','MenuBar','none','color',[1 1 1]);
 else
   Hc.h11 = figure(11);
 end
@@ -544,7 +545,7 @@ if Hc.y_found
   
   if ~exist('Hc','var') || (exist('Hc','var') && ~isfield(Hc,'h12'))
     Hc.h12 = figure(12);
-    set(Hc.h12,'Position',[max_width+menu_width 800 max_width 550],'NumberTitle','off','MenuBar','none');
+    set(Hc.h12,'Position',[max_width+menu_width 800 max_width 550],'NumberTitle','off','MenuBar','none','color',[1 1 1]);
   else
     Hc.h12 = figure(12);
   end
@@ -565,11 +566,10 @@ if Hc.y_found
     voutliers = 0;
   end
 
-  vstruct = struct('showdata',vshowdata,'box',vbox,'outliers',voutliers);
-  if ~isempty(groupcolor)
+  vstruct = struct('showdata',vshowdata,'box',vbox,'outliers',voutliers,'style',Hc.style);
+  if exist('groupcolor','var') && ~isempty(groupcolor)
     vstruct = setfield(vstruct,'groupcolor',groupcolor);
   end
-
 
   if isempty(yy{1}), return, end
   
@@ -639,13 +639,22 @@ if Hc.y_found
 
     TITLE = {['Scatterplot of ' title_name] XYZstr};
   else
+    
     cat_plot_boxplot(yy,vstruct);
     TITLE = {['Boxplot of ' title_name] XYZstr};
-    set(gca,'XLim',[0.4 (length(signal_change) + 0.6)],'XTick',1:length(signal_change));
+    if Hc.style == 3
+      set(gca,'YLim',[0.4 (length(signal_change) + 0.6)],'YTick',1:length(signal_change));
+    else
+      set(gca,'XLim',[0.4 (length(signal_change) + 0.6)],'XTick',1:length(signal_change));
+    end
     
     if exist('names','var')
       if size(names,1) == length(signal_change)
-        set(gca,'XTickLabel',names,'TickLabelInterpreter','none');
+        if Hc.style == 3
+          set(gca,'YTickLabel',names,'TickLabelInterpreter','none');
+        else
+          set(gca,'XTickLabel',names,'TickLabelInterpreter','none');
+        end
       end
     end  
     
@@ -666,8 +675,11 @@ if Hc.y_found
   end
   
   title(TITLE,'FontSize',14,'FontWeight','bold')
-  ylabel(y_label,'FontSize',12)
-
+  if Hc.style == 3
+    xlabel(y_label,'FontSize',12)
+  else
+    ylabel(y_label,'FontSize',12)
+  end
     
   set(gca(Hc.h12),'FontSize',Hc.FS);
 end

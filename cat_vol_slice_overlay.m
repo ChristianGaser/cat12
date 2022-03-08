@@ -12,7 +12,7 @@ function cat_vol_slice_overlay(OV)
 %                 comment this out for interactive selection or set the values
 %                 to [Inf 1] for using one row and automatically estimate number
 %                 of columns or use [1 Inf] for using one column
-% OV.atlas      - define atlas for labeling
+% OV.atlas      - define atlas for labeling (e.g. 'cat12_cobra')
 %                 comment this out for interactive selection
 %                 or use 'none' for no atlas information
 % OV.save       - save result as png/jpg/pdf/tif
@@ -23,6 +23,7 @@ function cat_vol_slice_overlay(OV)
 % OV.name_subfolder
 %               - if result is saved as image use up to 2 subfolders to add their 
 %                 names to the filename (default 1)
+% OV.overview   - use empty brackets to not suppress slice overview (.e.g []);
 %
 % see cat_vol_slice_overlay_ui.m for an example
 % ______________________________________________________________________
