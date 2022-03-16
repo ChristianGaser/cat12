@@ -319,9 +319,11 @@ function cat_run_job1639(job,tpm,subj)
         % background  
         if sum(YOB(:)>0)<numel(YOB)*0.9 && sum(YOB(:)>0)>numel(YOB)*0.1  % if there is a meanful background
           YBG = ~cat_vol_morph(YOB,'lc',2/mean(R.vx_volr));                 % close noisy background
+        elseif ppe.affreg.skullstripped % RD20220316: added skull-stripping case to avoid warning
+          YBG = YF==0;
         else
           YBG = ~cat_vol_morph(YOB,'lc',2/mean(R.vx_volr));  
-          msg = [mfilename 'Detection of background failed.']; 
+          msg = [mfilename ': Detection of background failed.']; 
           cat_io_addwarning('cat_run_job:failedBGD',msg,1,[0 1]);
         end
         ppe.affreg.highBGpara = [ ...

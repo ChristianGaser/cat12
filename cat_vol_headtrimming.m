@@ -14,10 +14,6 @@ function varargout = cat_vol_headtrimming(job)
 %    .pefix   .. filename prefix (char, default = 'trimmed_')
 %    .addvox  .. additional voxels around the box (default = 2); 
 %    .pth     .. percentual threshold to estimate the box (0.1);
-%    .avg     .. create the box on the average of ..
-%                  avg = 0 .. use only first image (default)
-%                  avg = 1 .. all
-%                  avg > 1 .. use image 1 to avg
 %    .verb    .. be verbose (default = 1) 
 %    .ctype   .. 'uint16';
 %    .range   .. 99.99;
@@ -55,7 +51,6 @@ function varargout = cat_vol_headtrimming(job)
   def.suffix  = '';                   % add suffix to filename
   def.addvox  = 2;                    % add some voxels around the mask
   def.pth     = 0.4;                  % default threshold for masking with bg=0 and object~1 
-  def.avg     = 1;                    % handling of multiple images
   def.verb    = 1;                    % some output information
   def.open    = 2;                    % open operation for masking
   def.ctype   = 0;                    % default data type (0=native)
@@ -190,16 +185,8 @@ function varargout = cat_vol_headtrimming(job)
     
     if ~job.lazy || any( cat_io_rerun( job.images{si}, job.images2{si} ) )
       %% estimate trimming parameter
-      V = spm_vol(char(job.images{si}));
-      Y = zeros(V.dim,'single');
-      if job.avg
-        for di = 1:max(1,min(numel(V,job.avg)))
-          Y = Y + single(spm_read_vols(V(di))); 
-        end
-        Y = Y ./ max(1,min(numel(V,job.avg)));
-      else
-        Y = single(spm_read_vols(V)); 
-      end
+      V = spm_vol(char(job.images{si})); % there could be more than one image per subject!
+      Y = single(spm_read_vols(V(1))); % here we use only the first image
 
       % create mask for skull-stripped images
       if job.mask, Ymask = Y ~= 0; end
@@ -207,7 +194,7 @@ function varargout = cat_vol_headtrimming(job)
       % categorical data have data type uint8 or int16
       % and typically < 1000 different values
       categorical = 0;
-      if V.dt(1) == 2 || V.dt(1) == 4 && min(Y(:))>=0
+      if V(1).dt(1) == 2 || V(1).dt(1) == 4 && min(Y(:))>=0 && V(1).pinfo(1) == 1
         h = hist(Y(:),0:max(Y(:)));
         n_values = numel(unique(h));
         if n_values < 1000
@@ -216,7 +203,7 @@ function varargout = cat_vol_headtrimming(job)
       end
 
       % skip most of steps that are only needed for non-categorical data
-      vx_vol  = sqrt(sum(V.mat(1:3,1:3).^2)); 
+      vx_vol  = sqrt(sum(V(1).mat(1:3,1:3).^2)); 
       if categorical
         Yb = Y;
         Yb = cat_vol_morph(Yb,'ldc',10); 
@@ -263,7 +250,7 @@ function varargout = cat_vol_headtrimming(job)
         % udpate for full range (use slope rather than fixed range)
         if job.intscale == 0, intscale = intscale * inf; end
       else % full range 
-        if any( V.dt(1) == [2 512 768] ) % uint
+        if any( V(1).dt(1) == [2 512 768] ) % uint
           intscale = inf; 
         else % int
           intscale = -inf; 
@@ -272,35 +259,35 @@ function varargout = cat_vol_headtrimming(job)
       
       clear Yt Y;
       % prepare update of AC orientation
-      mati  = spm_imatrix(V.mat); mati(1:3) = mati(1:3) + mati(7:9).*(redB.BB(1:2:end) - 1);
+      mati  = spm_imatrix(V(1).mat); mati(1:3) = mati(1:3) + mati(7:9).*(redB.BB(1:2:end) - 1);
 
 
       % trimming
       Vo = V; 
       for di = 1:numel(V)
+        if numel(V)>1 && di>1 && job.verb, fprintf('\n %57s: ',spm_str_manip(job.images{si}{di},'ra55')); end
+        
         % optimize tissue intensity range if 0<range<100 or for changed datatype 
         if 1 || ... (job.range>0 && job.range<100) || ...
            (~isempty(job.ctype) && ( ...
            ( isnumeric(job.ctype) && job.ctype>0) || ...
            ( ischar(job.ctype) && ~strcmp(job.ctype,'native') ))) 
-
-          
          
           job2 = struct('data',job.images{si}{di},'ctype',job.ctype,'intscale',intscale,...
                         'verb',job.verb*0.5,'range',job.intlim,'prefix',job.prefix,'suffix',job.suffix);
           files = cat_io_volctype(job2);
-          P = files.files;
+          Pdi = files.files;
         else
           if ~strcmp(job.images1{si}{di},job.images2{si}{di})
             copyfile(job.images1{si}{di},job.images2{si}{di});
           end
-          P = job.images2{si}(di);
+          Pdi = job.images2{si}(di);
         end
         spm_progress_bar('Set',si + di/numel(V));
 
         %% create ouput
-        Vo(di) = spm_vol(P{1}); 
-        Yo = single(spm_read_vols(Vo(di)));
+        Vo(di) = spm_vol(Pdi{1}); 
+        Yo     = single(spm_read_vols(Vo(di)));
 
         % apply mask
         if job.mask, Yo = Yo .* Ymask; end
@@ -310,6 +297,11 @@ function varargout = cat_vol_headtrimming(job)
         Vo(di).dim = redB.sizeTr;
         if exist(Vo(di).fname,'file'), delete(Vo(di).fname); end % delete required in case of smaller file size!
         spm_write_vol(Vo(di),Yo);
+        
+        % if there are multiple subjects with multiple images
+        if numel(job.images)>1 && numel(V)>1 && di>numel(V) && job.verb
+          fprintf('  ------------------------------------------------------------------------\n'); 
+        end
       end
     
     
