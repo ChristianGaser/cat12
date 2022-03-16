@@ -598,7 +598,18 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
       xmlavg.S = xml(1); 
     end
     ppjob.opts    = xmlavg.S.parameter.opts;     
-
+    
+    % get catlong parameter setting 
+    try
+      Pxmllong = fullfile(pp,[strrep(ff,'cat_r','catlong_') '.mat']); 
+      if exist(Pxmllong,'file')
+        xmllong = load(Pxmllong); 
+      else
+        xmllong.S = xml(1); 
+      end
+      ppjob.lopts = xmllong.S.parameter;     
+    end
+    
     try
       str = cat_main_reportstr(ppjob,ppres,qa);
     catch

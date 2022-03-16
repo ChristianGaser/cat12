@@ -9,7 +9,7 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull)
 %   Shull =  cat_surf_create_TPM_hull_surface(tpm[,human,skull])
 % 
 %   tpm   .. TPM-filename, TPM-header, SPM-TPM-structure 
-%   human .. flat to write animal templates into another directory
+%   human .. flag to write animal templates into another directory
 %   skull .. create outline without skull
 %   Phull .. filename of the surface file 
 %   Shull .. export surface in case of reading/writing errors
@@ -48,7 +48,16 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull)
     end
   end
   if ~exist('human','var')
-    human = 1;
+    species = '';
+    human   = 1;
+  else
+    if isnumeric(human) || islogical(human)
+      species = '';
+      human   = human > 0;
+    else % it is a string
+      species = ['.' human];
+      human   = strcmp(human,'human');
+    end
   end
   if ~exist('skull','var')
     skull = 1;
@@ -57,16 +66,16 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull)
   % define filename
   [pp,Pname,ee] = spm_fileparts(Ptpm); Pname = strrep([Pname ee],'.nii',''); 
   if human
-    if skull
-      Phull = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',sprintf('bh.headbrain.%s.gii',Pname));
+    if skull > 0
+      Phull = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',sprintf('bh.headbrain%s.%s.gii',species,Pname));
     else
-      Phull = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',sprintf('bh.brain.%s.gii',Pname));
+      Phull = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',sprintf('bh.brain%s.%s.gii',species,Pname));
     end    
   else
-    if skull
-      Phull = fullfile(spm('dir'),'toolbox','cat12','templates_animals_surfaces',sprintf('bh.headbrain.%s.gii',Pname));
+    if skull > 0
+      Phull = fullfile(spm('dir'),'toolbox','cat12','templates_animals_surfaces',sprintf('bh.headbrain%s.%s.gii',species,Pname));
     else
-      Phull = fullfile(spm('dir'),'toolbox','cat12','templates_animals_surfaces',sprintf('bh.brain.%s.gii',Pname));
+      Phull = fullfile(spm('dir'),'toolbox','cat12','templates_animals_surfaces',sprintf('bh.brain%s.%s.gii',species,Pname));
     end
   end
   
@@ -127,9 +136,9 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull)
     Yhd = cat_vol_morph(Yhd>0.5,'l',[1 0.5]);
     Yhd = ~cat_vol_morph(~Yhd,'l',[1 0.5]);
     if strcmpi(spm_check_version,'octave')
-      Shd = spm_mesh_isosurface(smooth3(Yhd),0.5,0.5);
+      Shd = spm_mesh_isosurface(smooth3(Yhd),0.5 - ( 0.4 * (skull<0)),0.5);
     else
-      Shd = isosurface(Yhd,0.5);
+      Shd = isosurface(Yhd,0.5 - ( 0.4 * (skull<0)) );
     end
     Sh.faces    = [Sh.faces; Shd.faces + size(Sh.vertices,1)];
     Sh.vertices = [Sh.vertices; Shd.vertices];

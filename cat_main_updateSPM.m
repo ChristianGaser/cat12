@@ -284,10 +284,13 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
       [pp,ff,ee] = spm_fileparts(char(job.useprior));
       if isfield(job.output.BIDS,'BIDSyes')
         Pavgp0 = fullfile(pp,[strrep(ff,'avg_','p0avg_'),ee]);
+        if ~exist(Pavgp0,'file')
+          Pavgp0 = fullfile(pp,'mri',[strrep(ff,'avg_','p0avg_'),ee]);
+        end      
       else
         Pavgp0 = fullfile(pp,'mri',[strrep(ff,'avg_','p0avg_'),ee]);
       end
-
+    
       % get gradient and divergence map (Yg and Ydiv)
       [Ytmp,Ytmp,Yg,Ydiv] = cat_main_updateSPM_gcut0(Ysrc,P,vx_vol,T3th); clear Ytmp;  %#ok<ASGLU>
       if exist(Pavgp0,'file')

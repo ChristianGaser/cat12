@@ -292,7 +292,7 @@ function out = cat_io_volctype(varargin)
             rating = @(x,best,worst) cat_io_cprintf( color(QMC,min(10.5,max(0.5, ...
               ((x-best) / (worst-best)) * 10 + 0.5))) , sprintf('%5.2f',x) );
 
-            if job.verb >= 1 % not repeat for headtrimming (=.5)
+            if job.verb >= 1 && ctype>0 % not repeat for headtrimming (=.5)
               cat_io_cprintf([0 0 0],sprintf('  %s(%s):',spm_type(ctype),spm_str_manip(job.data{si},'k40'))); 
             end
             if 0
@@ -310,7 +310,9 @@ function out = cat_io_volctype(varargin)
             rating(intlimhigh,0,40); fprintf('%%.'); 
             if job.verb >= 1, fprintf('\n'); else, cat_io_cprintf([0 0 0],'  ');  end 
           otherwise
-            fprintf('  %s(%s)\n',spm_type(ctype),spm_str_manip(job.data{si},'k40'));
+            if ctype>0 
+              fprintf('  %s(%s)\n',spm_type(ctype),spm_str_manip(job.data{si},'k40'));
+            end
         end   
       end
         
