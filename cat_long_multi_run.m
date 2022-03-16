@@ -213,8 +213,9 @@ out.catreport = cell(''); out.catroi = cell('');
 
 for i=1:numel(job.subj)
   [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(job.subj(i).mov{1},job);
-  out.sess(i).warps = cell(1,1);
-  [pth,nam,ext,num] = spm_fileparts(job.subj(i).mov{1});
+  
+  out.sess(i).warps    = cell(1,1);
+  [pth,nam,ext,num]    = spm_fileparts(job.subj(i).mov{1});
   out.sess(i).warps{1} = fullfile(pth,mrifolder,['avg_y_', nam, ext, num]);
 
   out.sess(i).files = cell(numel(job.subj(i).mov),1);
@@ -241,6 +242,17 @@ for i=1:numel(job.subj)
   end
   inputs{1,i} = data;
     
+  % save XML Parameter
+  [pp,ff]   = spm_fileparts(job.subj(i).mov{1});
+  longxml   = fullfile( pp , reportfolder , ['catlong_' ff '.xml'] ); 
+  jobs      = rmfield(job,{'data','subj'});
+  jobs.subj = job.subj(i); 
+  jobs.out  = out; 
+  jobs.dirs = struct('mrifolder',mrifolder, 'reportfolder', reportfolder, ...
+    'surffolder', surffolder, 'labelfolder', labelfolder, 'pp1', pp, 'ff1', ff);
+  cat_io_xml(longxml,struct('parameter',jobs));
+  
+  
 end
 
 % split job and data into separate processes to save computation time

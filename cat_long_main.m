@@ -146,10 +146,10 @@ if prepavg
   end
   matlabbatch{mbi}.spm.tools.cat.tools.sanlm.suffix               = '';
   matlabbatch{mbi}.spm.tools.cat.tools.sanlm.intlim               = 100;
-  matlabbatch{mbi}.spm.tools.cat.tools.sanlm.addnoise             = 0; % no additional noise here because this comes later in each preprocessing!
   matlabbatch{mbi}.spm.tools.cat.tools.sanlm.rician               = 0;
   matlabbatch{mbi}.spm.tools.cat.tools.sanlm.replaceNANandINF     = 1;
-
+  matlabbatch{1}.spm.tools.cat.tools.sanlm.nlmfilter.optimized.NCstr = 12; % lightavg
+  
   if prepavg>1
   % The trimming may increase the speed of the longitudinal realignment and 
   % may helps also to remove side effects by huge low intensity backgrounds. 
@@ -164,10 +164,9 @@ if prepavg
     matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.suffix      = '';
     matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.intlim1     = 90;
     matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.pth         = 0.4;
-    matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.avg         = 0;
     matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.open        = 2;
     matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.addvox      = 10; % defautl = 2, but we want to keep some more space around it for SPM noise estimation 
-    matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.spm_type    = 0;
+    matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.ctype       = 0;
     matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.intlim      = 99.9999; % light intensity limitiation to avoid odd outliers
     matlabbatch{mbi}.spm.tools.cat.tools.datatrimming.lazy        = 0;
 
