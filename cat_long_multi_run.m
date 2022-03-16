@@ -243,14 +243,16 @@ for i=1:numel(job.subj)
   inputs{1,i} = data;
     
   % save XML Parameter
-  [pp,ff]   = spm_fileparts(job.subj(i).mov{1});
-  longxml   = fullfile( pp , reportfolder , ['catlong_' ff '.xml'] ); 
-  jobs      = rmfield(job,{'data','subj'});
-  jobs.subj = job.subj(i); 
-  jobs.out  = out; 
-  jobs.dirs = struct('mrifolder',mrifolder, 'reportfolder', reportfolder, ...
-    'surffolder', surffolder, 'labelfolder', labelfolder, 'pp1', pp, 'ff1', ff);
-  cat_io_xml(longxml,struct('parameter',jobs));
+  if ~(isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index')) && numel(job.subj) > 1 )
+    [pp,ff]    = spm_fileparts(job.subj(i).mov{1});
+    longxml    = fullfile( pp , reportfolder , ['catlong_' ff '.xml'] ); 
+    jobsx      = rmfield(job,{'data','subj'});
+    jobsx.subj = job.subj(i); 
+    jobsx.out  = out; 
+    jobsx.dirs = struct('mrifolder',mrifolder, 'reportfolder', reportfolder, ...
+      'surffolder', surffolder, 'labelfolder', labelfolder, 'pp1', pp, 'ff1', ff);
+    cat_io_xml(longxml,struct('parameter',jobsx));
+  end
   
   
 end
