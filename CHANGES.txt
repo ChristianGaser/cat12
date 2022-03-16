@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1973 | dahnke | 2022-03-16 15:30:49
+r1974 | dahnke | 2022-03-16 16:13:04
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_multi_run.m
+
+(1) Fixed:     Corrected bug with jobs variable in cat_long_multi_run.
+------------------------------------------------------------------------
+r1973 | dahnke | 2022-03-16 15:32:01 +0100 (Wed, 16 Mar 2022) | 20 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -19,6 +27,7 @@ M       cat_surf_create_TPM_hull_surface.m
                cat_surf_create_TPM_hull_surface. 
 (5) New:       Added creation of catlong XML file to save longitudinal
                parameters in cat_long_multi_run and cat_long_report.              
+
 
 ------------------------------------------------------------------------
 r1972 | dahnke | 2022-03-16 11:32:57 +0100 (Wed, 16 Mar 2022) | 13 lines
