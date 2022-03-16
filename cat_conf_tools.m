@@ -2068,15 +2068,6 @@ function headtrimming = conf_vol_headtrimming(intlim,spm_type,prefix,suffix,verb
   pth.val               = {0.4};
   pth.help              = {'Percentual treshold for trimming. Lower values will result in a wider mask, ie. more air, whereas higher values will remove more air but maybe also brain regions with very low intensity.' ''};
 
-  avg                   = cfg_entry;
-  avg.tag               = 'avg';
-  avg.name              = 'Average images';
-  avg.strtype           = 'r';
-  avg.num               = [1 1];
-  avg.val               = {0};
-  avg.hidden            = expert<1; 
-  avg.help              = {'By default, only the source image is used for masking. However sometimes it is helpful to use the average of all additional images (avg=1) or the first n images inclusive th source image (avg>1) of the given set.' ''};
-
   open                  = cfg_entry;
   open.tag              = 'open';
   open.name             = 'Size of morphological opening of the mask';
@@ -2101,7 +2092,8 @@ function headtrimming = conf_vol_headtrimming(intlim,spm_type,prefix,suffix,verb
   mask.labels           = {'Yes','No'};
   mask.values           = {1,0};
   mask.val              = {1};
-  mask.hidden           = expert < 1; 
+  mask.hidden           = false; % expert < 1; % the field is important if multiple images are used and the first one is skull-stripped
+                                 % but this stripping/masking should not applied to the other images
   mask.help             = {'Use source image for trimming and final masking (e.g. for skull-stripping in longitudinal pipeline).'};
 
 
@@ -2112,7 +2104,7 @@ function headtrimming = conf_vol_headtrimming(intlim,spm_type,prefix,suffix,verb
   headtrimming         = cfg_exbranch;
   headtrimming.tag     = 'datatrimming';
   headtrimming.name    = 'Image data trimming'; 
-  headtrimming.val     = {timages prefix suffix mask intlim1 pth avg open addvox intlim spm_type intscale verb lazy};
+  headtrimming.val     = {timages prefix suffix mask intlim1 pth open addvox intlim spm_type intscale verb lazy};
   headtrimming.prog    = @cat_vol_headtrimming;
   headtrimming.vout    = @vout_headtrimming;
   headtrimming.help    = {
