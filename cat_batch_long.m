@@ -3,7 +3,10 @@ function cat_batch_long(namefile,output_surface,long_model,cat_defaults,export_d
 %
 % namefile       - array of file names
 % output_surface - enable surface estimation
-% long_model     - 1: use model for (small) plasticity changes, 2: use model for (large) ageing/developmental changes, 3: use both
+% long_model     - 0: use model for large developmental changes (i.i with brain/head growth)
+%                  1: use model for (small) plasticity changes
+%                  2: use model for (large) ageing/developmental changes
+%                  3: use both models 1 and 2
 % cat_defaults   - use this default file instead of cat_defaults.m
 % export_dartel  - export affine registered segmentations for Dartel
 % ______________________________________________________________________

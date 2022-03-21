@@ -169,6 +169,7 @@ cat.extopts.resval       = [1.0 0.30];   % resolution value and its tolerance ra
 % use BIDS data structure
 [cat_ver cat_rel] = cat_version;
 cat.extopts.bids_folder  = fullfile('..','derivatives',[cat_ver '_' cat_rel]); % default relative BIDS path for saving data
+cat.extopts.bids_yes     = 0; % use BIDS structure for saving data
 
 % check for multiple cores is different for octave
 if strcmpi(spm_check_version,'octave')
