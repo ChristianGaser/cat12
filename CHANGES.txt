@@ -1,11 +1,33 @@
 ------------------------------------------------------------------------
-r1974 | dahnke | 2022-03-16 16:13:04
+r1975 | dahnke | 2022-03-21 08:57:54
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_long.m
+M       cat_long_main.m
+M       cat_long_report.m
+M       cat_main_reportfig.m
+M       cat_main_reportstr.m
+M       cat_surf_display.m
+M       cat_surf_info.m
+
+(1) Fixed:     Limited use of the longitudinal development model to developer
+               (cat_conf_long)
+(2) New:       Extended todo list and comments in cat_long_main.
+(3) New:       Extended cat_long_report (cat_main_reportstr, cat_main_reportfig)
+               by longitudinal parameters.
+(4) Fixed:     Tried to correct use of internal subject-specific surface data in 
+               case of resampled surface in cat_surf_display and cat_surf_info.                               
+                 
+------------------------------------------------------------------------
+r1974 | dahnke | 2022-03-16 16:14:54 +0100 (Wed, 16 Mar 2022) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_long_multi_run.m
 
 (1) Fixed:     Corrected bug with jobs variable in cat_long_multi_run.
+
 ------------------------------------------------------------------------
 r1973 | dahnke | 2022-03-16 15:32:01 +0100 (Wed, 16 Mar 2022) | 20 lines
 
