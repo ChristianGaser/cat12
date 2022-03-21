@@ -19,6 +19,8 @@
 %  (4) A longitudial development mdoel "LD" that works similar as the LA 
 %      but allow affine rather than rigid adaptions. 
 %
+% Besides abreviations also the code of the longmodel is used, e.g., L0=LC. 
+%
 % Depending on longitudinal model the following optimizations steps/batches 
 % were arranged:
 %  * denoising of data in native space
@@ -46,8 +48,80 @@
 % ______________________________________________________________________
 % $Id$ 
 
+
+% =======================================================================
 % TODO: 
-% * Could the LC model profit by averaging results of the spherical registration?
+% =======================================================================
+% * RD202203: LC surfaces 
+%   Could the LC model profit by averaging results of the spherical registration?
+%
+% * RD202203: LC output maps:
+%   The LC model does not provide registrated maps r*.nii becuase of the 
+%   stong differences in individual brain develpment. However, it would be 
+%   possible to provide the TP specific deformations avg_y_*.nii and also an 
+%   average spatial (and intensity) normalized T1 average image wavg*.nii.
+%
+% * RD202203: The LD pipeline needs a lot of work ...
+%
+% * RD202203: WMHs should be better handled, e.g., as own class in the TPM  
+%             but I am no sure it the general pipeline is ready for this. 
+%             Problems are more obvious for 2 mm processing that also point
+%             to inoptimal values in the CS-Pipeline!
+%
+% * RD202203: LBC / LongLAS 
+%   A general function for severe intensity (protocol) corrections would be
+%   important (see ADNI 1.5 & 3.0T test cases or other test-retrest cases).
+%   John's pipeline has to be use to create a common space where the
+%   corrections should take place follow by a backprojection to the spaces
+%   of the single time points. Some of the results can maybe reused and the
+%   integration in cat_long_main is maybe messy. This corrections could/
+%   should also include corrections for geometrical distortions, controlled
+%   by the main parameter. This problably also need a fast segmentation.
+%   The whole thing is much more complicated than it looks and it is
+%   unclear if my hopes can be fullfilled. Test can be done on rescan data
+%   or on manipulated real datasets or the BWP. Such a function can maybe
+%   be build on or replace the current LBC function after CAT12 average 
+%   processing what would allow to use the average segmentation but here 
+%   could be problems due to the used longitudinal pipeline and the time
+%   point specific spaces. 
+%   Buchert data could be use for geometric distortion test data ...
+%
+% * RD202203: LC pipeline by superior deformations
+%   Would it be possible to improve the final deformation, by adapting them
+%   to the average? Would it be useful to use the average not only to create
+%   a TPM but also a Shooting template and to combine the average>IXI def.
+%   with the time-point specific deformation? 
+%   This would improve the VBM but not the SBM pipeline. 
+%   Lot of work but probably small effects and many evaluation issues.
+%
+% =======================================================================
+% Evaluation/Validation/Phantoms: 
+% =======================================================================
+%
+%   RD202203: 
+%   - To test the LD pipeline, real longitudinal scans could be use  
+%     and scaled - btw. how are we normalizing for TIV in such cases?
+%     A simplyfied version can use one cross-section scan and add rotation 
+%     and noise, where global-equally changes are expected. This can also
+%     be used to test the null-hypotheses in the LP and PA pipelines if no
+%     scaling is introduced and to show that with scaling the LC pipeline 
+%     has to be used. 
+%   - Test values are given by the long report (cov,RMSE,..)
+%   - Affine-scaling (1D) has to be adapted to 3D nature (lin>vol). 
+%     Subpoints are possible in linear or log facion.
+%
+%   * John's pipeline can be use to create generalized smoothed deformation 
+%     maps that can be applied (factorized) to create individual time
+%     points for aging, plasticity or development. 
+%     How many subjects would be sufficient to create general test pattern? 
+%      - Maybe 5 because the result will be smoothed and we only want to 
+%        test the principle idea. 
+%      - Deformation for plasticity/aging could be further limited to 
+%        specific regions to allow more artificial test
+%
+% =======================================================================
+
+
 
 % global variables don't work properly in deployed mode, thus we have to use
 % setappdat/getappdata

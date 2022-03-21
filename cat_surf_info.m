@@ -1,4 +1,4 @@
-function [varargout] = cat_surf_info(P,readsurf,gui,verb)
+function [varargout] = cat_surf_info(P,readsurf,gui,verb,useavg)
 % ______________________________________________________________________
 % Extact surface information from filename.
 %
@@ -52,6 +52,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
 %#ok<*RGXP1>
 
   if ~exist('P','var'), P=''; end
+  if ~exist('useavg','var'), useavg=1; end
   if strcmp(P,'selftest')
     pps = {
       fullfile(spm('dir'),'toolbox','cat12','templates_surfaces')
@@ -269,7 +270,8 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
    
     
     % resampled
-    sinfo(i).resampled     = ~isempty(strfind(sinfo(i).posside,'.resampled'));
+    sinfo(i).resampled     = ~isempty(strfind(sinfo(i).posside,'.resampled')) && ...
+                              isempty(strfind(sinfo(i).posside,'.resampled_32k'));
     sinfo(i).resampled_32k = ~isempty(strfind(sinfo(i).posside,'.resampled_32k'));
     % template
     sinfo(i).template  = ~isempty(strfind(lower(sinfo(i).ff),'.template')); 
@@ -381,7 +383,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
           end
         otherwise
           sinfo(i).Pdata =sinfo(i).fname;
-          if 0 %exist(Pcentral,'file')
+          if exist(Pcentral,'file') && ~useavg
             sinfo(i).Pmesh = Pcentral;
           elseif strcmp(sinfo(i).ee,'.gii') && sinfo(i).ftype == 1 && exist(sinfo(i).fname,'file')
             S = gifti(sinfo(i).fname);
@@ -472,7 +474,9 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     end
 
     [ppm,ffm,eem]        = fileparts(sinfo(i).Pmesh);
-    ffm                  = cat_io_strrep(ffm,{'central','white','pial','inner','outer','sphere','hull','core','layer4'},'central');
+    % RD202203 new garbage:   if ~strcmp(eem,'.gii'), eem = [eem '.gii']; end
+    ffm                  = cat_io_strrep(ffm,{'thickness','central','white','pial','inner','outer','sphere','hull','core','layer4'},'central');
+    % RD202203 new garbage:  ffm                  = cat_io_strrep(ffm,{'.resampled_32k','.resampled'},'');
     sinfo(i).Phull       = fullfile(ppm,strrep(strrep([ffm eem],'.central.','.hull.'),'.gii',''));
     sinfo(i).Pcore       = fullfile(ppm,strrep(strrep([ffm eem],'.central.','.core.'),'.gii',''));
     sinfo(i).Psphere     = fullfile(ppm,strrep([ffm eem],'.central.','.sphere.'));
@@ -484,6 +488,22 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
 
     if ~exist(sinfo(i).Pdefects,'file'), sinfo(i).Pdefects = ''; end
 
+    %{
+    RD202203 new garbage
+    if sinfo(i).resampled_32k || sinfo(i).resampled
+      % in case of resampled data we have to use the freesurfer spheres ? 
+      if sinfo(1).resampled_32k
+        str_32k = '_32k';
+      else
+        str_32k = '';
+      end
+      sinfo(i).Psphere = fullfile(spm('dir'),'toolbox','cat12',['templates_surfaces' str_32k],...
+            [sinfo(i).side '.sphere.freesurfer.gii']);
+      sinfo(i).Pspherereg = fullfile(spm('dir'),'toolbox','cat12',['templates_surfaces' str_32k],...
+            [sinfo(i).side '.sphere.reg.freesurfer.gii']);          
+    end
+    %}
+    
     % check if files exist and if they have the same structure (size)
     Pmesh_data = dir(sinfo(i).Pmesh);
     FN = {'Phull','Pcore','Psphere','Pspherereg','Pwhite','Ppial','Player4'};

@@ -96,14 +96,28 @@ function str = cat_main_reportstr(job,res,qa)
   end
   if job.extopts.ignoreErrors > 2, str{1}(end).value = [str{1}(end).value '    \bf\color[rgb]{0.8 0 0}Ignore Errors!']; end  
   if isfield(res,'long')
-    str{1}(end).value = [str{1}(end).value '\bf\color[rgb]{0 0.2 1}-longreport'];
+    %str{1}(end).value = [str{1}(end).value '\bf\color[rgb]{0 0.2 1}-longreport'];
     if ~isempty(res.long.model)
       str{1}(end).value = [str{1}(end).value '\bf\color[rgb]{0 0.2 1}-' res.long.model];
     end
   elseif isfield(job,'useprior') && ~isempty(job.useprior) 
     str{1}(end).value = [str{1}(end).value '\bf\color[rgb]{0 0.2 1}-long'];
   end
-  
+  % additional output for longitudinal pipeline
+  if isfield(job,'lopts') && job.extopts.expertgui
+    if job.lopts.enablepriors==1, cp{1} = npara; else, cp{1} = cpara; end 
+    if job.lopts.longTPM==1,      cp{2} = npara; else, cp{2} = cpara; end 
+    str{1}(end+1).name  = 'priors / longTPM:';
+    str{1}(end).value = sprintf('%s%d / %s%d',cp{1},job.lopts.enablepriors,  cp{2},job.lopts.longTPM);
+    if job.extopts.expertgui > 1
+      if job.lopts.prepavg==0,    cp{3} = npara; else, cp{3} = cpara; end 
+      if job.lopts.bstr==0,       cp{4} = npara; else, cp{4} = cpara; end
+      if job.lopts.avgLASWMHC==0, cp{5} = npara; else, cp{5} = cpara; end
+      str{1}(end).name  = [ str{1}(end).name(1:end-1)  ' / prepavg / bstr / avgLASWMHC:' ]; 
+      str{1}(end).value = sprintf('%s / %s%d / %s%d / %s%d',str{1}(end).value, ...
+        cp{3}, job.lopts.prepavg, cp{4}, job.lopts.bstr, cp{5}, job.lopts.avgLASWMHC);
+    end
+  end
   
   % 2 lines: TPM, Template, Normalization method with voxel size
   if isfield(res,'tpm')

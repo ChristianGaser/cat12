@@ -110,14 +110,18 @@ longmodel.labels = {
   'Optimized for detecting large changes (i.e. aging effects)', ...
   'Optimized for detecting large changes with brain/head growth (i.e. developmental effects)'}; 
 longmodel.values = {1 2 0};
-if expert % add the internal values and the special plasticity&aging at once model case
+if expert 
+  % Add the internal values and the special plasticity & aging model for 
+  % developer only because it is not fully working now (RD20220317).
   longmodel.labels{1} = [longmodel.labels{1}(1:end-1) '; 1)']; 
   longmodel.labels{2} = [longmodel.labels{2}(1:end-1) '; 2)']; 
-  longmodel.labels{4} = [longmodel.labels{3}(1:end-1) ' V2; 4)']; 
+  if expert > 1
+    longmodel.labels{4} = [longmodel.labels{3}(1:end-1) ' V2; 4)']; 
+    longmodel.values{4} = 4;
+  end
   longmodel.labels{3} = [longmodel.labels{3}(1:end-1) '; 0)']; 
-  longmodel.labels{5} = 'Save plasticity and aging models (3)';
-  longmodel.values{4} = 4;
-  longmodel.values{5} = 3;
+  longmodel.labels{3 + expert} = 'Save plasticity and aging models (3)';
+  longmodel.values{3 + expert} = 3;
 end
 longmodel.val  = {1};
 longmodel.help = {

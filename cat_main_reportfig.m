@@ -479,6 +479,18 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       'value',   sprintf('%0.0fml' , res.long.vol_TIV(1,1)) , ...
       'value2',  [val2f(valr,vala) 'ml'] );
     
+    % TSA
+    if isfield(res.long,'surf_TSA')
+      li          = li + 1;
+      leg         = [leg,{'TSA/1k'}];
+      valr        = mean(diff(res.long.surf_TSA) ./ mean(res.long.surf_TSA));
+      vala        = mean(diff(res.long.surf_TSA));
+      lstr{2}(li) = struct('name','\bf\color[rgb]{.7 .2 .7}TSA:', ...
+        'value' ,  sprintf('%0.0fsqmm',res.long.surf_TSA(1,1)), ...
+        'value2',  [val2f(valr,vala) 'sqmm']);  
+%      marks2str(min(10.5,max(val * 100 + 0.5)),sprintf('%+0.3fmm',val)));
+    end
+    
     % thickness
     if isfield(res.long,'dist_thickness')
       li          = li + 1;
@@ -490,18 +502,19 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 %      marks2str(min(10.5,max(val * 100 + 0.5)),sprintf('%+0.3fmm',val)));
     end
     
+    mod = 0.003 * (isfield(res.long,'surf_TSA') + isfield(res.long,'dist_thickness'));
     for i=1:size(lstr{2},2)  % morphometric measurements
-      htext(3,i+1,1) = text(0.52,0.47-(0.055*(i+1)), lstr{2}(i).name  , ...
+      htext(3,i+1,1) = text(0.52,0.47-((0.055-mod)*(i+1)), lstr{2}(i).name  , ...
         'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
-      htext(3,i+1,2) = text(0.64,0.47-(0.055*(i+1)), lstr{2}(i).value , 'HorizontalAlignment','right', ...
+      htext(3,i+1,2) = text(0.64,0.47-((0.055-mod)*(i+1)), lstr{2}(i).value , 'HorizontalAlignment','right', ...
         'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
-      htext(3,i+1,3) = text(0.645,0.47-(0.055*(i+1)), lstr{2}(i).value2 ,'HorizontalAlignment','left', ...
+      htext(3,i+1,3) = text(0.645,0.47-((0.055-mod)*(i+1)), lstr{2}(i).value2 ,'HorizontalAlignment','left', ...
         'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
     end
     
     %% figure
-    tcmap  = [0 0.3 0.7; 0 .6 0; 0.6 0 0; 0.5 0.5 0.5; 0.3 0.0 0.7; 0.8 0.4 0.8]; 
-    marker = {'<','^','>','o','s'}; 
+    tcmap  = [0 0.3 0.7; 0 .6 0; 0.6 0 0; 0.5 0.5 0.5; 0.3 0.0 0.7; 0.7 0.2 0.7; 0.8 0.4 0.8]; 
+    marker = {'<','^','>','o','d','s'}; 
     axi(2) = axes('Position',[0.75,0.745,0.22,0.095],'Parent',fg); cp(2) = gca; hold on;
     set(axi(2),'Color',job.extopts.report.color,'YAxisLocation','right','XAxisLocation','bottom','box','on'); 
     % plot tissue values
@@ -520,10 +533,16 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     pt = plot(res.long.vol_TIV - res.long.vol_TIV(1));
     set(pt,'Color',tcmap(4,:),'LineStyle','-','Marker',marker{4}, ...
       'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
+    % plot TSA
+    if isfield(res.long,'surf_TSA')
+      pt = plot(res.long.surf_TSA - res.long.surf_TSA(1));
+      set(pt,'Color',tcmap(5,:),'LineStyle','-','Marker',marker{5}, ...
+        'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
+    end
     % plot thickness
     if isfield(res.long,'change_dist_thickness')
       pt = plot(res.long.change_dist_thickness(:,1) * 1000);
-      set(pt,'Color',tcmap(5,:),'LineStyle','-','Marker',marker{5}, ...
+      set(pt,'Color',tcmap(6,:),'LineStyle','-','Marker',marker{6}, ...
         'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
     end
     %mlim = max( 20 , ceil( max( max( abs( [ diff( res.long.vol_abs_CGW(:,1:3) ,1 ); diff( res.long.vol_TIV ) ] ) )) / 20 ) * 20);
@@ -1397,7 +1416,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
             srange      = [0 6]; 
             boxwidth    = diff(srange)/30; % 0.2; 
           end
-          %hrange      = srange(1) + boxwidth/2:boxwidth:srange(2);
+          %% hrange      = srange(1) + boxwidth/2:boxwidth:srange(2);
           if strcmpi(renderer,'opengl')
             i=1; hSD{i} = cat_surf_display(struct('data',PCS{i},'readsurf',0,'expert',2,...
               'multisurf',1,'view',sview{i},'menu',0,'parent',hCS{i},'verb',0,'caxis',srange,'imgprint',struct('do',0))); 

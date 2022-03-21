@@ -93,7 +93,7 @@ function varargout = cat_surf_display(varargin)
   job = cat_io_checkinopt(job,def);
   
   %% ... need further development 
-  sinfo = cat_surf_info(job.data,job.readsurf,job.usefsaverage);
+  sinfo = cat_surf_info(job.data,job.readsurf,0,0,job.usefsaverage);
 
   if job.verb
     spm('FnBanner',mfilename,SVNid); 
