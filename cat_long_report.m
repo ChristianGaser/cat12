@@ -323,7 +323,7 @@ function [cres,Psurf] = cat_surf_longdiff(Pdata_surf,s)
     try 
       % try to estimate covariance ... if it fails then asume that the
       % meshes are not equal and resmaple them 
-      warning('off',sprintf('[GIFTI] Parsing of XML file %s failed.', Pdata_surf{1}));
+      %warning('off',char(sprintf('[GIFTI] Parsing of XML file %s failed.', Pdata_surf{1})));
       cres         = cat_stat_check_cov(cjob);
     catch  
       % resample (& smooth)
@@ -444,19 +444,7 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
 % I need an long-xml/mat file to store all parameters in a useful way 
       [pp,ff,ee] = spm_fileparts(job.data_vol{1});
       if contains(ff,'mwmwp') % ~isempty(strfind(ff,'mwmwp'))
-        if 1 % job.data_xml{fi,1}.job
-          model = 'aging';
-        else
-          model = 'development'; % not working now
-        end
-      elseif  contains(ff,'mwp1r') % ~isempty(strfind(ff,'mwp1r'))
-        if exist( fullfile( pp , ['mean_mwp1r' ff ee ]), 'file') % not sure only runs if the files exist (bad for independent rerun) 
-          model = 'plasticity'; 
-        else
-          model = 'development'; 
-        end
-      elseif  contains(ff,'mwp1') % ~isempty(strfind(ff,'mwp1'))
-        model = 'cross-sectional'; 
+        model = 'aging';
       elseif  contains(ff,'mwp') % ~isempty(strfind(ff,'mwp'))
         model = 'plasticity'; 
       else                                 
@@ -508,6 +496,9 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
     for fi = 1:numel(job.data_xml), long.tissue_mn(fi,:)   = xml(fi).qualitymeasures.tissue_mn; end
     if isfield(xml(fi).subjectmeasures,'dist_thickness')
       for fi = 1:numel(job.data_xml), long.dist_thickness(fi,:) = xml(fi).subjectmeasures.dist_thickness{1}; end
+    end
+    if isfield(xml(fi).subjectmeasures,'surf_TSA')
+      for fi = 1:numel(job.data_xml), long.surf_TSA(fi,:) = xml(fi).subjectmeasures.surf_TSA; end
     end
 
     %%
@@ -601,13 +592,28 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
     
     % get catlong parameter setting 
     try
+      %%
       Pxmllong = fullfile(pp,[strrep(ff,'cat_r','catlong_') '.mat']); 
       if exist(Pxmllong,'file')
         xmllong = load(Pxmllong); 
       else
         xmllong.S = xml(1); 
       end
-      ppjob.lopts = xmllong.S.parameter;     
+      ppjob.lopts = xmllong.S.parameter;  
+      
+      % update model
+      longmodels = {'LC','LP','LA','LD','LPA'};
+      %longmodels = {'LongCrossDevelopment','LongPlasticity','LongAging','LongDevelopment','LongPlasticityAging'};
+      ppres.long.model = longmodels{ppjob.lopts.longmodel + 1}; 
+      if ppjob.lopts.longmodel == 3 % Plasticity + Aging
+        if strcmp(model,'plasticity')
+           ppres.long.model = longmodels{2}; 
+        elseif strcmp(model,'aging')
+           ppres.long.model = longmodels{3}; 
+        end
+      end
+      long.model = ppres.long.model;
+      model      = long.model;
     end
     
     try
@@ -624,7 +630,7 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
     ppjob.output.surface  = ~isempty(Psurf);
   end
   
-  % add further fields to the output structure
+  %% add further fields to the output structure
   ppres.long            = long; 
   ppres.long.measure    = 'thickness';  % ################### generalize!
   if ~isempty(job.data_vol) && ~isempty(job.data_vol{1})
