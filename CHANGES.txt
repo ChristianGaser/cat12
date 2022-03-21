@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1975 | dahnke | 2022-03-21 08:57:54
+r1976 | gaser | 2022-03-21 13:34:35
+
+Changed paths:
+M       CHANGES.txt
+M       cat_batch_cat.sh
+M       cat_batch_long.m
+M       cat_batch_long.sh
+M       cat_conf_output.m
+M       cat_defaults.m
+M       cat_main_reportfig.m
+M       cat_plot_glassbrain.m
+M       standalone/cat_parallelize.sh
+M       standalone/cat_standalone.sh
+
+(1) Changed: Updated help text in several functions.
+(2) Changed: Added flag for using BIDS to cat_defaults.m.
+(3) Changed: Added flag for using BIDS to shell-scripts.
+------------------------------------------------------------------------
+r1975 | dahnke | 2022-03-21 09:00:58 +0100 (Mon, 21 Mar 2022) | 19 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -19,6 +37,7 @@ M       cat_surf_info.m
 (4) Fixed:     Tried to correct use of internal subject-specific surface data in 
                case of resampled surface in cat_surf_display and cat_surf_info.                               
                  
+
 ------------------------------------------------------------------------
 r1974 | dahnke | 2022-03-16 16:14:54 +0100 (Wed, 16 Mar 2022) | 6 lines
 

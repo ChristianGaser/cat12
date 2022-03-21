@@ -326,9 +326,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     htext(1,i,2) = text(0.51,0.98-(0.055*i), str{1}(i).value ,'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
   end
   if isfield(res,'long') 
-    % Adaption for longitudinal reports, where we focuses on changes between 
+    % Adaption for longitudinal reports, where we focus on changes between 
     % timepoints or scanners in case of test-retest data.
-    % As far as we have some additional plots here also the cration of the 
+    % As far as we have some additional plots here also the creation of the 
     % text/table is here and not in cat_main_reportstr. 
     
     
