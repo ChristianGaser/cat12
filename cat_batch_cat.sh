@@ -29,6 +29,8 @@ no_surf=0
 rp=0
 TEST=0
 fg=0
+bids=0
+bids_folder=
 
 ########################################################
 # run main
@@ -63,7 +65,7 @@ parse_args ()
   
   while [ $# -gt 0 ]; do
     optname="`echo $1 | sed 's,=.*,,'`"
-    optarg="`echo $2 | sed 's,^[^=]*=,,'`"
+    optarg="`echo $2`"
     paras="$paras $optname $optarg"
     case "$1" in
       --matlab* | -m*)
@@ -138,6 +140,15 @@ parse_args ()
           ARRAY[$count]=$F
           ((count++))
         done
+        ;;
+      --bids_folder* | --bids-folder* | -bf*)
+        exit_if_empty "$optname" "$optarg"
+        bids_folder=$optarg
+        shift
+        ;;
+      --b* | -b*)
+        exit_if_empty "$optname" "$optarg"
+        bids=1
         ;;
       --s* | -s* | --shell* | -shell*)
         exit_if_empty "$optname" "$optarg"
@@ -238,7 +249,7 @@ get_no_of_cpus () {
     if [ "$ARCH" == "Linux" ]; then
       NUMBER_OF_PROC=`grep ^processor $CPUINFO | wc -l`
     elif [ "$ARCH" == "Darwin" ]; then
-      NUMBER_OF_PROC=`sysctl -a hw | grep -w logicalcpu | awk '{ print $2 }'`
+      NUMBER_OF_PROC=`sysctl -a hw | grep -w hw.logicalcpu | awk '{ print $2 }'`
     elif [ "$ARCH" == "FreeBSD" ]; then
       NUMBER_OF_PROC=`sysctl hw.ncpu | awk '{ print $2 }'`
     else
@@ -254,7 +265,7 @@ get_no_of_cpus () {
     if [ ! -n "$NUMBER_OF_JOBS" ]; then
       NUMBER_OF_JOBS=$NUMBER_OF_PROC
     fi
-    
+
     if [ $NUMBER_OF_JOBS -le -1 ]; then
       NUMBER_OF_JOBS=$(echo "$NUMBER_OF_PROC + $NUMBER_OF_JOBS" | bc)
     if [ "$NUMBER_OF_JOBS" -lt 1 ]; then
@@ -319,6 +330,15 @@ modifiy_defaults ()
     echo "cat.output.WM.dartel = 2;" >> ${defaults_tmp}
   fi
   
+  if [ -n "$bids_folder" ]; then
+    echo "cat.extopts.bids_folder = '${bids_folder}';" >> ${defaults_tmp}
+    echo "cat.extopts.bids_yes = 1;" >> ${defaults_tmp}
+  fi
+  
+  if [ "$bids" -eq 1 ]; then
+    echo "cat.extopts.bids_yes = 1;" >> ${defaults_tmp}
+  fi
+
   if [ -n "$tpm" ]; then
     # check whether absolute or relative tpm was given
     if [ -f "${pwd}/${tpm}" ]; then
@@ -330,6 +350,7 @@ modifiy_defaults ()
   if [ -n "$add_to_defaults" ]; then
     echo "${add_to_defaults}" >> ${defaults_tmp}
   fi
+  
 }
 
 ########################################################
@@ -524,6 +545,8 @@ USAGE:
   -c  <STRING>| --command <STRING>      alternative matlab function that can be called such as the SANLM-filter
   -t          | --test                  do not call command, but print files to be processed
   -fg         | --fg                    do not run matlab process in background
+  -b          | --bids                  use defaults BIDS path (i.e. '../derivatives/CAT12.x_rxxxx')
+  -bf <STRING>| --bids_folder <STRING>  define BIDS path
   -nj         | --nojvm                 supress call of jvm using the -nojvm flag
  
  Only one filename or pattern is allowed. This can be either a single file or a pattern
@@ -561,7 +584,12 @@ EXAMPLE
    the additional option for handling WMHs as separate class. No surfaces and modulated and warped segmentations
    are estimated. Only the affine registered segmentations are saved.
  
- cat_batch_cat.sh -tpm ${cat12_dir}/templates_MNI152NLin2009cAsymumes/TPM_Age11.5.nii ${spm12}/canonical/single_subj_T1.nii
+ cat_batch_cat.sh -bids_folder ../derivatives/CAT12.8 sub*/anat/sub*T1w.nii.gz
+   This command will process all *.nii.gz files in the BIDS subfolders sub* with the defaults in cat_defaults.m and
+   will save the results as BIDS structure in '../derivatives/CAT12.8'. If the option for bids_folder is not given the
+   default BIDS path is '../derivatives/CAT12.x_rxxxx' where the CAT12 version is used in the path.
+
+ cat_batch_cat.sh -tpm ${cat12_dir}/templates_MNI152NLin2009cAsym/TPM_Age11.5.nii ${spm12}/canonical/single_subj_T1.nii
    This command will process only the single file single_subj_T1.nii with the defaults in cat_defaults.m
    and the children template that is provided with cat12.
 

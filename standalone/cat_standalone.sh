@@ -326,7 +326,7 @@ EXAMPLES
        -a2 "${cat12_dir}/templates_MNI152NLin2009cAsym/Template_0_GS1mm.nii"
    Unzip and preprocess (segment) the files sTRIO0001.nii.gz using the default CAT12 preprocessing 
    batch, but use the children TPM provided with CAT12 and a 1mm Shooting template (not provided 
-   with CAT12). Please not that zipped file can only be handled with this standalone batch.
+   with CAT12). Please note that zipped file can only be handled with this standalone batch.
 
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
        -b ${cwd}/cat_standalone_segment.m sTRIO0001.nii \ 

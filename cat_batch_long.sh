@@ -21,7 +21,11 @@ LOGDIR=$PWD
 export_dartel=0
 output_surface=1
 long_model=1
+time=`date "+%Y%b%d_%H%M"`
+defaults_tmp=/tmp/defaults$$.m
 fg=0
+bids=0
+bids_folder=
 
 ########################################################
 # run main
@@ -29,12 +33,13 @@ fg=0
 
 main ()
 {
- parse_args ${1+"$@"}
- check_matlab
- check_files
- run_cat12
+  parse_args ${1+"$@"}
+  check_matlab
+  check_files
+  modifiy_defaults
+  run_cat12
 
- exit 0
+  exit 0
 }
 
 
@@ -83,6 +88,15 @@ parse_args ()
         ;;
       --fg* | -fg*)
         fg=1
+        ;;
+      --bids_folder* | --bids-folder* | -bf*)
+        exit_if_empty "$optname" "$optarg"
+        bids_folder=$optarg
+        shift
+        ;;
+      --b* | -b*)
+        exit_if_empty "$optname" "$optarg"
+        bids=1
         ;;
       --logdir* | -log*)
         exit_if_empty "$optname" "$optarg"
@@ -165,10 +179,10 @@ check_files ()
 }
 
 ########################################################
-# run cat12 long pipeline
+# modify defaults
 ########################################################
 
-run_cat12 ()
+modifiy_defaults ()
 {
   pwd=$PWD
   
@@ -185,9 +199,31 @@ run_cat12 ()
       exit
     fi
   else
-    defaults=''
+    defaults=${cat12_dir}/cat_defaults.m
   fi
 
+  # modifiy defaults if needed
+  cp ${defaults} ${defaults_tmp}
+
+  if [ -n "$bids_folder" ]; then
+    echo "cat.extopts.bids_folder = '${bids_folder}';" >> ${defaults_tmp}
+    echo "cat.extopts.bids_yes = 1;" >> ${defaults_tmp}
+  fi
+  
+  if [ "$bids" -eq 1 ]; then
+    echo "cat.extopts.bids_yes = 1;" >> ${defaults_tmp}
+  fi
+
+}
+
+########################################################
+# run cat12 long pipeline
+########################################################
+
+run_cat12 ()
+{
+  pwd=$PWD
+  
   # we have to go into toolbox folder to find matlab files
   cd $cwd
   
@@ -235,7 +271,7 @@ run_cat12 ()
   echo Check $vbmlog for logging information
   echo
 
-  COMMAND="cat_batch_long('${TMP}','${output_surface}','${long_model}','${defaults}','${export_dartel}')"
+  COMMAND="cat_batch_long('${TMP}','${output_surface}','${long_model}','${defaults_tmp}','${export_dartel}')"
   echo Running ${ARG_LIST}
   echo > $vbmlog
   echo ---------------------------------- >> $vbmlog
@@ -279,20 +315,24 @@ USAGE:
   cat_batch_long.sh filenames|filepattern [-d default_file] [-m matlabcommand] 
                       [-log logdir] [-ns] [-large] [-model longmodel] [-e] [-nj] 
   
-  -m <FILE>   | --matlab  <FILE> matlab command (default $matlab)
-  -d <FILE>   | --default <FILE> optional default file (default ${cat12_dir}/cat_defaults.m)
-  -log <FILE> | --logdir         directory for log-file (default $LOGDIR)
-  -fg         | --fg             do not run matlab process in background
-  -ns         | --no-surf        disable surface and thickness estimation
-  -e          | --export-dartel  export affine registered segmentations for Dartel
-  -large      | --large          use longitudinal model for detecting large changes (i.e. ageing or development)
-  -nj         | --nojvm          supress call of jvm using the -nojvm flag
-  -model      | --model          longitudinal model:
-                                   1 - detect small chamges (i.e. due to plasticity)
-                                   2 - detect large changes (i.e. ageing or development)
-                                   3 - save results for both models
+  -m <FILE>   | --matlab  <FILE>        matlab command (default $matlab)
+  -d <FILE>   | --default <FILE>        optional default file (default ${cat12_dir}/cat_defaults.m)
+  -log <FILE> | --logdir                directory for log-file (default $LOGDIR)
+  -fg         | --fg                    do not run matlab process in background
+  -ns         | --no-surf               disable surface and thickness estimation
+  -e          | --export-dartel         export affine registered segmentations for Dartel
+  -large      | --large                 use longitudinal model for detecting large changes (i.e. ageing or development)
+                                        This option is only thought for compatibility with older scripts. Do not use that option together with the model flag. 
+  -nj         | --nojvm                 supress call of jvm using the -nojvm flag
+  -model      | --model                 longitudinal model:
+                                          0 - detect large changes with brain/head growth (i.e. developmental effects)
+                                          1 - detect small changes (i.e. due to plasticity)
+                                          2 - detect large changes (i.e. ageing or development)
+                                          3 - save results for both models 1 and 2
+  -b          | --bids                  use defaults BIDS path (i.e. '../derivatives/CAT12.x_rxxxx')
+  -bf <STRING>| --bids_folder <STRING>  define BIDS path
 
-  Processing is omly supported for one subject.
+  Processing is only supported for one subject.
   Optionally you can set the matlab command with the "-m" option. As default no display
   is used (via the -nodisplay option in matlab). However sometimes the batch file needs
   a graphical output and the display should be enabled with the option "-d".

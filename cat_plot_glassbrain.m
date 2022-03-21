@@ -1,5 +1,5 @@
 function [img,range] = cat_plot_glassbrain(P)
-%cat_plot_glassbrain. Creat glassbrain images
+%cat_plot_glassbrain. Create glassbrain images
 %
 % [img,range] = cat_plot_glassbrain(P)
 %
@@ -30,7 +30,7 @@ function [img,range] = cat_plot_glassbrain(P)
   end
  
   if 0
-  % load futher atlas maps, eg. to outline the ventricles or the cerebellum
+  % load additional atlas maps, eg. to outline the ventricles or the cerebellum
     LAB = cat_get_defaults('extopts.LAB');
     VT1 = spm_vol(char(cat_get_defaults('extopts.T1')));
     YT1 = spm_read_vols(VT1);
@@ -46,6 +46,7 @@ function [img,range] = cat_plot_glassbrain(P)
   img{1} = flip(rot90(cat_stat_nansum(Y,3),1),2); 
   img{2} = rot90(cat_stat_nansum(shiftdim(Y,2),3),2);
   img{3} = rot90(cat_stat_nansum(flip(shiftdim(Y,1),2),3),-1); 
+  
   % create a (symmetric) colormap image 
   imax   = max( abs( [img{1}(:); img{2}(:); img{3}(:) ] )); 
   if all(  [img{1}(:); img{2}(:); img{3}(:)] >= 0 )

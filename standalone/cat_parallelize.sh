@@ -147,7 +147,7 @@ get_no_of_cpus () {
     if [ "$ARCH" == "Linux" ]; then
       NUMBER_OF_PROC=`grep ^processor $CPUINFO | wc -l`
     elif [ "$ARCH" == "Darwin" ]; then
-      NUMBER_OF_PROC=`sysctl -a hw | grep -w logicalcpu | awk '{ print $2 }'`
+      NUMBER_OF_PROC=`sysctl -a hw | grep -w hw.logicalcpu | awk '{ print $2 }'`
     elif [ "$ARCH" == "FreeBSD" ]; then
       NUMBER_OF_PROC=`sysctl hw.ncpu | awk '{ print $2 }'`
     else

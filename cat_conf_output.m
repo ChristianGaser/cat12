@@ -53,7 +53,11 @@ function [output,output_spm] = cat_conf_output(expert)
   BIDS.tag      = 'BIDS';
   BIDS.name     = 'Use BIDS directory structure?';
   BIDS.values   = {BIDSyes BIDSno};
-  BIDS.val      = {BIDSno};
+  if cat_get_defaults('extopts.bids_yes')
+    BIDS.val      = {BIDSyes};
+  else
+    BIDS.val      = {BIDSno};
+  end
   BIDS.help     = {'Select prefered output structure to save data.'};
 
 
