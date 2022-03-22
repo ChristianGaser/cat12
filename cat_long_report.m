@@ -425,8 +425,9 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
         }; 
       % try to find it
       for fi = 1:numel(job.data_vol)
-        [pp,ff] = spm_fileparts(job.data_vol{fi});
-        Pxml = fullfile(strrep(pp,'mri','report'),...
+        [pp,ff]   = spm_fileparts(job.data_vol{fi});
+        [pp1,pp2] = spm_fileparts(pp);
+        Pxml = fullfile(pp1,strrep(pp2,'mri','report'),...
           [cat_io_strrep(ff,prefs,repmat({'cat_'},1,numel(prefs))) '.xml']); 
         if exist(Pxml,'file') 
           job.data_xml{fi,1} = Pxml;
@@ -440,7 +441,7 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
           end
         end
       end
-% ######### separation is not realy working 
+%% ######### separation is not realy working 
 % I need an long-xml/mat file to store all parameters in a useful way 
       [pp,ff,ee] = spm_fileparts(job.data_vol{1});
       if contains(ff,'mwmwp') % ~isempty(strfind(ff,'mwmwp'))

@@ -280,21 +280,30 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
     stime2 = cat_io_cmd('  Update skull-stripping','g5','',job.extopts.verb-1,stime2); 
     if (isfield(job,'useprior') && ~isempty(job.useprior) && strcmp(job.opts.affreg,'prior') ) && ... 
        (isfield(res,'ppe') && ~res.ppe.affreg.highBG)
-      % RD202010: use longitudinal skull-stripping 
+       % RD202010: use longitudinal skull-stripping 
       [pp,ff,ee] = spm_fileparts(char(job.useprior));
-      if isfield(job.output.BIDS,'BIDSyes')
+      if isfield(job.output.BIDS,'BIDSyes') % I am not sure if separation is needed or if we simply try with/without mri-dir
         Pavgp0 = fullfile(pp,[strrep(ff,'avg_','p0avg_'),ee]);
         if ~exist(Pavgp0,'file')
           Pavgp0 = fullfile(pp,'mri',[strrep(ff,'avg_','p0avg_'),ee]);
         end      
       else
         Pavgp0 = fullfile(pp,'mri',[strrep(ff,'avg_','p0avg_'),ee]);
+        if ~exist(Pavgp0,'file')
+          Pavgp0 = fullfile(pp,[strrep(ff,'avg_','p0avg_'),ee]);
+        end
       end
-    
+
+  % RD20220213: 
+  %  For the development model with longitudinal TPM you may have to add the affine registration. 
+  %  However it seems that the adaption of the brainmask works quite well ... 
+  %  but maybe it is better to full deactive the skull-stripping in the 
+  %  plasticity/aging case
+
       % get gradient and divergence map (Yg and Ydiv)
       [Ytmp,Ytmp,Yg,Ydiv] = cat_main_updateSPM_gcut0(Ysrc,P,vx_vol,T3th); clear Ytmp;  %#ok<ASGLU>
       if exist(Pavgp0,'file')
-        % the p0avg should be optimal 
+        % the p0avg should fit optimal  
         if any(vx_vol0 ~= vx_vol) % if the data was internaly resampled we have to load it via imcalc
           [Vb,Yb] = cat_vol_imcalc(spm_vol(Pavgp0),spm_vol(res.image.fname),'i1',struct('interp',3,'verb',0,'mask',-1)); clear Vb;  %#ok<ASGLU>
         else
@@ -304,12 +313,12 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
       else
         % otherwise it would be possible to use the individual TPM 
         % however, the TPM is more smoothed and is therefore only second choice  
-        cat_io_cprintf('warn','Cannot find p0avg use TPM for brainmask: \n  %s\n',Pavgp0);
+        cat_io_addwarning('cat_main_updateSPM:miss_p0avg',sprintf('Cannot find p0avg use TPM for brainmask: \n  %s\n',Pavgp0),2,[1 2]);
         Yb = YbA > 0.5;
         clear YbA
       end
       Ybb = cat_vol_ctype(cat_vol_smooth3X(Yb,0.5)*256); 
-      
+
       %% correct tissues
       %  RD20221224: Only the brainmask wasn't enough and we need to cleanup 
       %              the segmentation also here (only for long pipeline)
