@@ -188,13 +188,16 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
      (isfield(res,'ppe') && ~res.ppe.affreg.highBG) 
     % RD202010: use longitudinal skull-stripping 
     [pp,ff,ee] = spm_fileparts(char(job.useprior));
-    if isfield(job.output.BIDS,'BIDSyes')
+    if isfield(job.output.BIDS,'BIDSyes') % I am not sure if separation is needed or if we simply try with/without mri-dir
       Pavgp0 = fullfile(pp,[strrep(ff,'avg_','p0avg_'),ee]);
       if ~exist(Pavgp0,'file')
         Pavgp0 = fullfile(pp,'mri',[strrep(ff,'avg_','p0avg_'),ee]);
       end      
     else
       Pavgp0 = fullfile(pp,'mri',[strrep(ff,'avg_','p0avg_'),ee]);
+      if ~exist(Pavgp0,'file')
+        Pavgp0 = fullfile(pp,[strrep(ff,'avg_','p0avg_'),ee]);
+      end
     end
 
 % RD20220213: 
@@ -216,7 +219,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
     else
       % otherwise it would be possible to use the individual TPM 
       % however, the TPM is more smoothed and is therefore only second choice  
-      cat_io_cprintf('warn','Cannot find p0avg use TPM for brainmask: \n  %s\n',Pavgp0);
+      cat_io_addwarning('cat_main_updateSPM:miss_p0avg',sprintf('Cannot find p0avg use TPM for brainmask: \n  %s\n',Pavgp0),2,[1 2]);
       Yb = YbA > 0.5;
       clear YbA
     end
