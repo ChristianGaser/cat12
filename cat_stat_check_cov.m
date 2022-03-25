@@ -576,8 +576,10 @@ if job.verb
   end
 
   cm = datacursormode(H.figure);
-  set(cm,'UpdateFcn',@myupdatefcn,'SnapToDataVertex','on','Enable','on','Interpreter','none');
-  try set(cm,'NewDataCursorOnClick',false); end
+  set(cm,'UpdateFcn',@myupdatefcn,'SnapToDataVertex','on','Enable','on');
+  try
+    set(cm,'Interpreter','none','NewDataCursorOnClick',false);
+  end
 
   % add colorbar
   H.cbar = axes('Position',H.pos.cbar,'Parent',H.figure);

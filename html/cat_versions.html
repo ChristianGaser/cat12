@@ -28,8 +28,23 @@
 
     <div id="content">
       <p>
-        </br>Preprocessing should remain unaffected until the next minor version number. New processing of your data is not necessary if the minor version number of CAT12 remains unchanged.
+        </br>Preprocessing should remain unaffected until the next minor version number (12.x). New processing of your data is not necessary if the minor version number of CAT12 remains unchanged.
       </p>
+      <h2>Changes in version CAT12.8.1 (1975)</h2>      
+      <p>
+        <ul>
+          <li>Changes in preprocessing pipeline (which affects your results compared to CAT12.8)</li>
+          <ul>
+            <li>The longitudinal pipeline has been largely updated and is no longer compatible with preprocessing with version 12.8:/li>
+            <ul>
+              <li>The estimate of subject-specific TPM should now be more stable and less sensitive to changes between time points.</li>
+              <li>For data where the brain/head is still growing between time points and major changes are expected, a new longitudinal development model was added. For this type of data, an adapted pipeline was created that is very similar to the longitudinal aging model, but uses a time point-independent affine registration to adjust for brain/head growth. In addition, this model uses a subject-specific TPM based on the average image.</li>
+              <li>An additional longitudinal report is now provided to better assess differences between time points.</li>
+            </ul>
+          </ul>
+        </ul>
+      </p>
+
       <h2>Changes in version CAT12.8 (1830)</h2>      
       <p>
         <ul>
