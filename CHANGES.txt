@@ -1,5 +1,24 @@
 ------------------------------------------------------------------------
-r1977 | dahnke | 2022-03-22 14:21:18
+r1978 | gaser | 2022-03-25 22:50:35
+
+Changed paths:
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_stat_check_cov.m
+M       cat_surf_results.m
+M       html/cat.html
+M       html/cat_versions.html
+M       spm_cat12.m
+
+(1) Changed: Updated manual and version information.
+(2) Fixed:   Removed bug in cat_stat_check_cov.m if no text-interpreter could
+             be found for data cursor.
+(3) Fixed:   Corrected handling of surface data in cat_surf_results.m where
+             no texture data are available.
+------------------------------------------------------------------------
+r1977 | dahnke | 2022-03-22 14:24:14 +0100 (Tue, 22 Mar 2022) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +29,7 @@ M       cat_main_updateSPM1639.m
 (1) Fixed:     Corrected bugs in long pipeline in case of BIDS data.
 (2) Fixed:     Corrected prior setup in longitudinal timepoints in 
                cat_main_updateSPM(1639) in case of BIDS data.
+
 ------------------------------------------------------------------------
 r1976 | gaser | 2022-03-21 13:38:34 +0100 (Mon, 21 Mar 2022) | 16 lines
 
