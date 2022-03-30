@@ -18,8 +18,10 @@ clear matlabbatch
 % Remove comments and edit entry if you would like to change the parameter.
 % Otherwise the default value from cat_defaults.m is used.
 % Or use 1st parameter field, that will be dynamically replaced by cat_standalone.sh
+% (0) large changes with brain/head growth (i.e. developmental effects)
 % (1) small changes (i.e. plasticity/learning effects)
-% (2) large changes (i.e. aging/developmental effects)
+% (2) large changes (i.e. aging effects)
+% (3) save results for both models 1 and 2
 %matlabbatch{1}.spm.tools.cat.long.longmodel = '<UNDEFINED>';
 
 % Entry for choosing TPM
