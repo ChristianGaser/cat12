@@ -159,6 +159,7 @@ function out = cat_vol_sanlm(varargin)
                          job{1}.addnoise = 0;  job{1}.outlier = 0; 
           case 14,       job{1}.NCstr =  -1.0; job{1}.red = 1; job{1}.fred = 1; job{1}.iterm = 0; job{1}.iter = 0; name = 'strongavg';
                          job{1}.addnoise = 0;  job{1}.outlier = 0; 
+          otherwise,     name = num2str(abs(job{1}.NCstr));
         end 
         job{1}.nlmfilter.optimized.NCstr = job{1}.NCstr; 
       if ~isempty(strfind(job{1}.prefix,'PARA'))

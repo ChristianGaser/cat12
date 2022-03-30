@@ -57,7 +57,7 @@ parse_args ()
     
   while [ $# -gt 0 ]; do
     optname="`echo $1 | sed 's,=.*,,'`"
-    optarg="`echo $2 | sed 's,^[^=]*=,,'`"
+    optarg="`echo $2`"
     paras="$paras $optname $optarg"
     case "$1" in
         --batch* | -b*)
@@ -87,7 +87,7 @@ parse_args ()
             ;;
         --add* | -a*)
             exit_if_empty "$optname" "$optarg"
-            add_to_defaults="$optarg"
+            add_to_batch="$optarg"
             shift
             ;;
         -h | --help | -v | --version | -V)
@@ -254,9 +254,9 @@ run_cat ()
     fi
   fi
   
-  # add optional lines to defaults file
-  if [ -n "$add_to_defaults" ]; then
-    echo "${add_to_defaults}" >> ${TMP}
+  # add optional lines to batch file
+  if [ -n "$add_to_batch" ]; then
+    echo "${add_to_batch}" >> ${TMP}
   fi
 
   eval "\"${SPMROOT}/run_spm12.sh\"" $MCRROOT "batch" $TMP
@@ -282,14 +282,14 @@ cat <<__EOM__
 USAGE:
    cat_standalone.sh filename(s) [-s spm_standalone_folder] [-m mcr_folder] [-b batch_file] 
                                  [-a1 additional_argument1] [-a2 additional_argument2]
-                                 [-a add_to_defaults]
+                                 [-a add_to_batch]
    
    -s <DIR>    | --spm <DIR>     SPM12 folder of standalone version (can be also defined by SPMROOT)
    -m <DIR>    | --mcr <DIR>     Matlab Compiler Runtime (MCR) folder (can be also defined by MCRROOT)
    -b <FILE>   | --batch <FILE>  batch file to execute
-   -a1 <STRING>| --arg1 <STRING> 1st additional argument (otherwise use defaults)
-   -a2 <STRING>| --arg2 <STRING> 2nd additional argument (otherwise use defaults)
-   -a <FILE>   | --add  <FILE>   add option to default file
+   -a1 <STRING>| --arg1 <STRING> 1st additional argument (otherwise use defaults or batch)
+   -a2 <STRING>| --arg2 <STRING> 2nd additional argument (otherwise use defaults or batch)
+   -a <STRING> | --add  <STRING> add option to batch file
 
    The first occurance of the parameter "<UNDEFINED>" in the batch file will be replaced by the
    list of input files. You can use the existing batch files in this folder or create your own batch 
@@ -301,6 +301,7 @@ USAGE:
    You can also define one or two optional arguments to change other parameters that are indicated by 
    "<UNDEFINED>" in the batch file. Please take care of the order of the "<UNDEFINED>" fields in the 
    batch file! If no additional arguments are defined the default values are used.
+   Also, you must use multiple quotes if the argument is a string (e.g. " 'your_string' ").
    
    If you use a computer cluster it is recommended to use the batch files to only process one data set 
    and use a job or queue tool to call the (single) jobs on the cluster.
@@ -322,21 +323,22 @@ EXAMPLES
 
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
        -b ${cwd}/cat_standalone_segment.m sTRIO000*.nii.gz \ 
-       -a1 "${cat12_dir}/templates_MNI152NLin2009cAsym/TPM_Age11.5.nii" \ 
-       -a2 "${cat12_dir}/templates_MNI152NLin2009cAsym/Template_0_GS1mm.nii"
+       -a1 " '${cat12_dir}/templates_MNI152NLin2009cAsym/TPM_Age11.5.nii' " \ 
+       -a2 " '${cat12_dir}/templates_MNI152NLin2009cAsym/Template_0_GS1mm.nii' "
    Unzip and preprocess (segment) the files sTRIO0001.nii.gz using the default CAT12 preprocessing 
    batch, but use the children TPM provided with CAT12 and a 1mm Shooting template (not provided 
-   with CAT12). Please note that zipped file can only be handled with this standalone batch.
+   with CAT12). Please note that zipped file can only be handled with this standalone batch and also
+   note the multiple quotes for parameter a1 and a2.
 
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
        -b ${cwd}/cat_standalone_segment.m sTRIO0001.nii \ 
-       -a "cat.extopts.WMHC = 3;"
+       -a "matlabbatch{1}.spm.tools.cat.estwrite.output.surface = 0;"
    Preprocess (segment) the single file sTRIO0001.nii using the default CAT12 preprocessing batch, 
-   but handle WMHs as separate class
+   but skip surface estimation.
 
    -----------------------------------------------------------------------------------------------
    Longitudinal Segmentation
-     -a1 longitudinal model (1 - aging/developmental; 2 - plasticity/learning)
+     -a1 longitudinal model (0 - developmental; 1 - plasticity/learning; 2 - aging; 3 - save models 1 and 2)
      -a2 TPM
    -----------------------------------------------------------------------------------------------
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
@@ -348,9 +350,10 @@ EXAMPLES
 
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
        -b ${cwd}/cat_standalone_segment_long.m sTRIO000*.nii \ 
-       -a1 "1" -a2 "${cat12_dir}/templates_MNI152NLin2009cAsym/TPM_Age11.5.nii"
+       -a1 "1" -a2 " '${cat12_dir}/templates_MNI152NLin2009cAsym/TPM_Age11.5.nii' "
    Preprocess (segment) the files sTRIO000*.nii with the longitudinal pipeline optimized for 
    detecting plasticity/learning effects and use the children TPM provided with CAT12.
+   Please note the multiple quotes for parameter a2.
 
    -----------------------------------------------------------------------------------------------
    Segmentation (Simple Mode)
@@ -378,8 +381,9 @@ EXAMPLES
    -----------------------------------------------------------------------------------------------
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
        -b ${cwd}/cat_standalone_smooth.m sTRIO*nii \ 
-       -a1 "[6 6 6]" -a2 "'s6'"
+       -a1 "[6 6 6]" -a2 " 's6' "
    Smooth the volume files sTRIO*nii with 6mm and prepend the string "s6" to the smoothed files.
+   Please note the multiple quotes for parameter a2.
 
    -----------------------------------------------------------------------------------------------
    Dicom Import
@@ -388,7 +392,7 @@ EXAMPLES
    -----------------------------------------------------------------------------------------------
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
        -b ${cwd}/cat_standalone_dicom2nii.m *.dcm \ 
-       -a1 "'patid_date'" -a2 "{'converted'}"
+       -a1 " 'patid_date' " -a2 "{'converted'}"
    Import DICOM files *.dcm and save converted nifti files in directory "converted" with structure 
    ./<PatientID>/<StudyDate-StudyTime>/<ProtocollName>
    Other options for directory structure are:
@@ -397,6 +401,7 @@ EXAMPLES
      'patid_date' ./<PatientID>/<StudyDate-StudyTime>/<ProtocollName>
      'patid'      ./<PatientID>/<ProtocollName>
      'date_time'  ./<StudyDate-StudyTime>/<ProtocollName>
+   Please note the multiple quotes for parameter a1.
 
    -----------------------------------------------------------------------------------------------
    De-Facing
@@ -412,22 +417,24 @@ EXAMPLES
    -----------------------------------------------------------------------------------------------
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
        -b ${cwd}/cat_standalone_get_quality.m mwp1sTRIO*nii \ 
-       -a1 "'Quality_measures.csv'" -a2 "1"
+       -a1 " 'Quality_measures.csv' " -a2 "1"
    Estimate mean z-scores using global scaling with TIV for the files mwp1sTRIO*nii and save quality 
    measures in Quality_measures.csv for external analysis. Processing of surface meshes is also
    supported.
-   
+   Please note the multiple quotes for parameter a1.
+
    -----------------------------------------------------------------------------------------------
    Estimate mean/volume inside ROI
      -a1 output-file string
    -----------------------------------------------------------------------------------------------
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
        -b ${cwd}/cat_standalone_get_ROI_values.m catROI_*.xml \ 
-       -a1 "'ROI'" 
-    Save mean volume values in mL (e.g. GM volume) or the mean surface values (e.g. thickness) for 
-    all data catROI_*.xml in a csv-file. The csv-file is named "ROI_" followed by the atlas name
-    and the name of the measure (e.g. Vgm).
-
+       -a1 " 'ROI' " 
+   Save mean volume values in mL (e.g. GM volume) or the mean surface values (e.g. thickness) for 
+   all data catROI_*.xml in a csv-file. The csv-file is named "ROI_" followed by the atlas name
+   and the name of the measure (e.g. Vgm).
+   Please note the multiple quotes for parameter a1.
+ 
    -----------------------------------------------------------------------------------------------
    TFCE Statistical Estimation
      -a1 contrast number
