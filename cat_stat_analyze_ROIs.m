@@ -386,7 +386,11 @@ end
 if n_corr > 2
   p_tissue = p(defined_measure);
   [Psort0, indP0] = sort(p_tissue);
-  HBcorr = length(Psort0):-1:1;
+  HBcorr = (length(Psort0):-1:1)';
+  % sometimes we have to transpose HBcorr for some unkwown reasons
+  if ~all(size(p) == size(HBcorr))
+    HBcorr = HBcorr';
+  end
   p_tissue = p_tissue.*HBcorr(indP0);
   Pcorr{3} = ones(size(p));
   Pcorr{3}(defined_measure) = p_tissue;

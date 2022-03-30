@@ -71,6 +71,7 @@ merge_hemi.labels  = {
 };
 merge_hemi.values  = {0,1};
 merge_hemi.val     = {1};
+merge_hemi.hidden  = expert<1;
 merge_hemi.help    = {
   'Meshes for left and right hemisphere can be merged to one single mesh. This simplifies the analysis because only one analysis has to be made for both hemispheres and this is the recommended approach.'
   'However, this also means that data size is doubled for one single analysis which might be too memory demanding for studies with several hundreds or even more files. If your model cannot be estimated due to memory issues you should not merge the resampled data.'
@@ -1312,7 +1313,7 @@ else
   data_surf.ufilter = '^lh.(?!cent|pial|white|sphe|defe|hull|pbt).*';
 end
 data_surf.num     = [1 Inf];
-data_surf.help    = {'Select surfaces data files for left hemisphere for resampling to template space.'};
+data_surf.help    = {'Select surfaces data files for left hemisphere for resampling to template space.Right side will be automatically processed.'};
 
 data_surf_mixed        = data_surf; 
 data_surf_mixed.tag    = 'data_surf_mixed';

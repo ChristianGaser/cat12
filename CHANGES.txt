@@ -1,5 +1,27 @@
 ------------------------------------------------------------------------
-r1978 | gaser | 2022-03-25 22:50:35
+r1979 | gaser | 2022-03-30 16:07:55
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_conf_stools.m
+M       cat_stat_analyze_ROIs.m
+M       cat_vol_sanlm.m
+M       html/cat.html
+M       html/cat_versions.html
+M       standalone/cat_standalone.sh
+M       standalone/cat_standalone_segment_long.m
+
+(1) Changed: Updated standalone tools and help text.
+(2) Changed: Hide option for merging hemipsheres in "Resample & Smooth".
+(3) Fixed:   Corrected handling of additional arguments in cat_standalone.sh.
+(4) Fixed:   Corrected error in Holm-Bonferroni correction in 
+             cat_stat_analyze_ROIs.m
+(5) Fixed:   Corrected handling of floating values in expert mode in 
+             cat_vol_sanlm.m.
+------------------------------------------------------------------------
+r1978 | gaser | 2022-03-25 22:51:43 +0100 (Fri, 25 Mar 2022) | 17 lines
 
 Changed paths:
 M       CAT12-Manual.pdf
@@ -17,6 +39,7 @@ M       spm_cat12.m
              be found for data cursor.
 (3) Fixed:   Corrected handling of surface data in cat_surf_results.m where
              no texture data are available.
+
 ------------------------------------------------------------------------
 r1977 | dahnke | 2022-03-22 14:24:14 +0100 (Tue, 22 Mar 2022) | 10 lines
 
