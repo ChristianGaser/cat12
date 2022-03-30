@@ -188,7 +188,7 @@ function mcsvtab = cat_roi_exportSample(job)
 
           %% write result if measures are not beginning with "I" (intensity) or "T" (volume thickness)
           if ~strcmp(measures{mi}(1),'T') && ~strcmp(measures{mi}(1),'I')
-            csv_file = fullfile(job.outdir,sprintf('%s_%s_%s_%s.csv',job.calcroi_name,FN{fni},atlases{ai},measures{mi}));
+            csv_file = fullfile(job.outdir,sprintf('%s_%s_%s.csv',job.calcroi_name,atlases{ai},measures{mi}));
             fprintf('Save %s.\n',csv_file);
             cat_io_csv(csv_file,...
               mcsvtab.(FN{fni}).(atlases{ai}).(measures{mi}),'','',struct('delimiter',job.delimiter,'komma',job.point));
