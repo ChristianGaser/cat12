@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1979 | gaser | 2022-03-30 16:07:55
+r1980 | gaser | 2022-03-30 16:39:11
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_roi_fun.m
+M       cat_run_job.m
+M       html/cat.html
+
+(1) Changed: Removed catROI(2)_ from output filename for writing csv files
+             to summarize ROI measures.
+(2) Fixed:   Removed comment in cat_run_job.m that caused trouble for compiling.
+
+------------------------------------------------------------------------
+r1979 | gaser | 2022-03-30 16:12:01 +0200 (Wed, 30 Mar 2022) | 20 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -20,6 +34,7 @@ M       standalone/cat_standalone_segment_long.m
              cat_stat_analyze_ROIs.m
 (5) Fixed:   Corrected handling of floating values in expert mode in 
              cat_vol_sanlm.m.
+
 ------------------------------------------------------------------------
 r1978 | gaser | 2022-03-25 22:51:43 +0100 (Fri, 25 Mar 2022) | 17 lines
 
