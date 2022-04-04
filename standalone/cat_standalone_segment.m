@@ -1,4 +1,4 @@
-% Batch file of CAT12 segmentation for SPM12 standalone installation
+% Batch file for CAT12 segmentation for SPM12/CAT12 standalone installation
 %
 %_______________________________________________________________________
 % $Id$

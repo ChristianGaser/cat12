@@ -1,5 +1,37 @@
 ------------------------------------------------------------------------
-r1980 | gaser | 2022-03-30 16:39:11
+r1981 | gaser | 2022-04-04 09:20:54
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+M       cat_surf_createCS2.m
+M       cat_surf_surf2roi.m
+M       html/cat.html
+M       standalone/cat_standalone.sh
+M       standalone/cat_standalone_deface.m
+M       standalone/cat_standalone_dicom2nii.m
+M       standalone/cat_standalone_get_ROI_values.m
+A       standalone/cat_standalone_get_TIV.m
+M       standalone/cat_standalone_get_quality.m
+M       standalone/cat_standalone_resample.m
+M       standalone/cat_standalone_segment.m
+M       standalone/cat_standalone_segment_enigma.m
+M       standalone/cat_standalone_segment_long.m
+M       standalone/cat_standalone_simple.m
+M       standalone/cat_standalone_smooth.m
+M       standalone/cat_standalone_tfce.m
+
+(1) Changed: Updated help text for standalone tools.
+(2) Changed: Added standalone tool for estimating TIV.
+(3) Changed: Replaced matlab.lang.makeUniqueStrings by older genvarname to
+             ensure compatibility with older Matlab versions in cat12.m.
+(4) Fixed:   Corrected handling different atlases in cat_surf_surf2roi.m.
+(5) Fixed:   Added check for defects file in cat_surf_createCS2.m that is 
+             sometimes missing for some unknown reason.
+
+------------------------------------------------------------------------
+r1980 | gaser | 2022-03-30 16:40:08 +0200 (Wed, 30 Mar 2022) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +43,7 @@ M       html/cat.html
 (1) Changed: Removed catROI(2)_ from output filename for writing csv files
              to summarize ROI measures.
 (2) Fixed:   Removed comment in cat_run_job.m that caused trouble for compiling.
+
 
 ------------------------------------------------------------------------
 r1979 | gaser | 2022-03-30 16:12:01 +0200 (Wed, 30 Mar 2022) | 20 lines
