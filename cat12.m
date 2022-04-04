@@ -1133,7 +1133,7 @@ else
     % this application data is used to indicate the running mode of a GUIDE
     % GUI to distinguish it from the design mode of the GUI in GUIDE. it is
     % only used by actxproxy at this time.   
-    setappdata(0,matlab.lang.makeUniqueStrings(['OpenGuiWhenRunning_', gui_State.gui_Name]),1);
+    setappdata(0,genvarname(['OpenGuiWhenRunning_', gui_State.gui_Name]),1);
     if gui_Exported
         gui_hFigure = feval(gui_State.gui_LayoutFcn, gui_SingletonOpt);
 
@@ -1157,8 +1157,8 @@ else
             gui_hFigure = local_openfig(gui_State.gui_Name, gui_SingletonOpt, gui_Visible);
         end
     end
-    if isappdata(0, matlab.lang.makeUniqueStrings(['OpenGuiWhenRunning_', gui_State.gui_Name]))
-        rmappdata(0,matlab.lang.makeUniqueStrings(['OpenGuiWhenRunning_', gui_State.gui_Name]));
+    if isappdata(0, genvarname(['OpenGuiWhenRunning_', gui_State.gui_Name]))
+        rmappdata(0,genvarname(['OpenGuiWhenRunning_', gui_State.gui_Name]));
     end
 
     % Set flag to indicate starting GUI initialization

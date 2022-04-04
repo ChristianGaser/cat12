@@ -1104,11 +1104,19 @@ fullfile(pp1_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff1))
       % estimate size of topology defects 
       cmd = sprintf('CAT_MarkDefects "%s" "%s" "%s"',Praw,Psphere0,Pdefects0); 
       cat_system(cmd);
-      sdefects       = cat_io_FreeSurfer('read_surf_data',Pdefects0); delete(Pdefects0);  
-      defect_number0 = defect_number0 + max(sdefects); 
-      defect_size0   = defect_size0   + sum(sdefects > 0) / length(sdefects) * 100; % percent
-      defect_area0   = defect_area0   + sum(sdefects > 0) / length(sdefects) .* ...
-        sum(cat_surf_fun('area',CS)) / opt.interpV / 100; % cm2
+      
+      % sometimes defects-file is missing for no reasons
+      if exist(Pdefects0,'file')
+        sdefects       = cat_io_FreeSurfer('read_surf_data',Pdefects0); delete(Pdefects0);  
+        defect_number0 = defect_number0 + max(sdefects); 
+        defect_size0   = defect_size0   + sum(sdefects > 0) / length(sdefects) * 100; % percent
+        defect_area0   = defect_area0   + sum(sdefects > 0) / length(sdefects) .* ...
+          sum(cat_surf_fun('area',CS)) / opt.interpV / 100; % cm2
+      else
+        defect_number0 = defect_number0 + NaN; 
+        defect_size0   = defect_size0   + NaN;
+        defect_area0   = defect_area0   + NaN;
+      end
       % estimate Euler characteristics: EC = #vertices + #faces - #edges
       EC0            = (EC0-2) + ( size(CS.vertices,1) + size(CS.faces,1) - size(spm_mesh_edges(CS),1) - 2) + 2;
       if any( strcmp( {'lh','rh'} , opt.surf{si} ))

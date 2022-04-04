@@ -311,6 +311,31 @@ PURPOSE:
 
 EXAMPLES
    -----------------------------------------------------------------------------------------------
+   Dicom Import
+     -a1 directory structure
+     -a2 output directory
+   -----------------------------------------------------------------------------------------------
+   cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
+       -b ${cwd}/cat_standalone_dicom2nii.m *.dcm \ 
+       -a1 " 'patid_date' " -a2 "{'converted'}"
+   Import DICOM files *.dcm and save converted nifti files in directory "converted" with structure 
+   ./<PatientID>/<StudyDate-StudyTime>/<ProtocollName>
+   Other options for directory structure are:
+     'flat'       No directory hierarchy
+     'series'     ./<ProtocollName>
+     'patid_date' ./<PatientID>/<StudyDate-StudyTime>/<ProtocollName>
+     'patid'      ./<PatientID>/<ProtocollName>
+     'date_time'  ./<StudyDate-StudyTime>/<ProtocollName>
+   Please note the multiple quotes for parameter a1.
+
+   -----------------------------------------------------------------------------------------------
+   De-Facing
+   -----------------------------------------------------------------------------------------------
+   cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
+       -b ${cwd}/cat_standalone_deface.m sTRIO*.nii
+   Apply de-facing to sTRIO*.nii and save the files prefixed by "anon_".
+
+   -----------------------------------------------------------------------------------------------
    Segmentation
      -a1 TPM
      -a2 Shooting template
@@ -368,7 +393,7 @@ EXAMPLES
      -a2 use 32k mesh from HCP (or 164k mesh from Freesurfer)
    -----------------------------------------------------------------------------------------------
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
-       -b ${cwd}/cat_standalone_resample.m lh.thickness.sTRIO0001 \ 
+       -b ${cwd}/cat_standalone_resample.m surf/lh.thickness.sTRIO0001 \ 
        -a1 "12" -a2 "1" 
    Resample and smooth the single thickness file lh.thickness.sTRIO0001 with 12mm and save the 
    resampled mesh as 32k mesh (HCP conform mesh). Only the left surface file has to be defined.
@@ -380,35 +405,10 @@ EXAMPLES
      -a2 prepending string for smoothed file (e.g. 's6')
    -----------------------------------------------------------------------------------------------
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
-       -b ${cwd}/cat_standalone_smooth.m sTRIO*nii \ 
+       -b ${cwd}/cat_standalone_smooth.m mri/sTRIO*nii \ 
        -a1 "[6 6 6]" -a2 " 's6' "
    Smooth the volume files sTRIO*nii with 6mm and prepend the string "s6" to the smoothed files.
    Please note the multiple quotes for parameter a2.
-
-   -----------------------------------------------------------------------------------------------
-   Dicom Import
-     -a1 directory structure
-     -a2 output directory
-   -----------------------------------------------------------------------------------------------
-   cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
-       -b ${cwd}/cat_standalone_dicom2nii.m *.dcm \ 
-       -a1 " 'patid_date' " -a2 "{'converted'}"
-   Import DICOM files *.dcm and save converted nifti files in directory "converted" with structure 
-   ./<PatientID>/<StudyDate-StudyTime>/<ProtocollName>
-   Other options for directory structure are:
-     'flat'       No directory hierarchy
-     'series'     ./<ProtocollName>
-     'patid_date' ./<PatientID>/<StudyDate-StudyTime>/<ProtocollName>
-     'patid'      ./<PatientID>/<ProtocollName>
-     'date_time'  ./<StudyDate-StudyTime>/<ProtocollName>
-   Please note the multiple quotes for parameter a1.
-
-   -----------------------------------------------------------------------------------------------
-   De-Facing
-   -----------------------------------------------------------------------------------------------
-   cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
-       -b ${cwd}/cat_standalone_deface.m sTRIO*.nii
-   Apply de-facing to sTRIO*.nii and save the files prefixed by "anon_".
 
    -----------------------------------------------------------------------------------------------
    Estimate and Save Quality Measures for Volumes or Surfaces
@@ -416,7 +416,7 @@ EXAMPLES
      -a2 enable global scaling with TIV (only for volumes meaningful)
    -----------------------------------------------------------------------------------------------
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
-       -b ${cwd}/cat_standalone_get_quality.m mwp1sTRIO*nii \ 
+       -b ${cwd}/cat_standalone_get_quality.m mri/mwp1sTRIO*nii \ 
        -a1 " 'Quality_measures.csv' " -a2 "1"
    Estimate mean z-scores using global scaling with TIV for the files mwp1sTRIO*nii and save quality 
    measures in Quality_measures.csv for external analysis. Processing of surface meshes is also
@@ -428,13 +428,24 @@ EXAMPLES
      -a1 output-file string
    -----------------------------------------------------------------------------------------------
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
-       -b ${cwd}/cat_standalone_get_ROI_values.m catROI_*.xml \ 
+       -b ${cwd}/cat_standalone_get_ROI_values.m label/catROI_*.xml \ 
        -a1 " 'ROI' " 
    Save mean volume values in mL (e.g. GM volume) or the mean surface values (e.g. thickness) for 
    all data catROI_*.xml in a csv-file. The csv-file is named "ROI_" followed by the atlas name
    and the name of the measure (e.g. Vgm).
    Please note the multiple quotes for parameter a1.
  
+   -----------------------------------------------------------------------------------------------
+   Estimate total intra-cranial volume (TIV) or all global tissue volumes (in ml)
+     -a1 output filename
+     -a2 save TIV only
+   -----------------------------------------------------------------------------------------------
+   cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
+       -b ${cwd}/cat_standalone_getTIV.m report/cat_*.xml \ 
+       -a1 " 'TIV.txt' " -a2 "1"
+   Estimate TIV only and save values for each data set in TIV.txt.
+   Please note the multiple quotes for parameter a1.
+
    -----------------------------------------------------------------------------------------------
    TFCE Statistical Estimation
      -a1 contrast number
