@@ -122,10 +122,8 @@ function varargout = cat_surf_surf2roi(job)
           % RD202108: resampled data but without given filename information
           if size(lrdata,1) == 163842 
             type = '164k';
-            sinfo.resmapled = 1; 
           elseif size(lrdata,1) == 32492
             type = '32k';
-            sinfo.resampled_32k = 1; 
           end
           
           % RD202108: data without structured filename
@@ -155,7 +153,7 @@ function varargout = cat_surf_surf2roi(job)
                 rCS = gifti(char(cat_surf_rename(sinfo,'side','rh'))); 
               otherwise
                 lCS = cat_io_FreeSurfer('read_surf_data',job.cdata{ti}{si});
-                rCS = cat_io_FreeSurfer('read_surf_data',cat_surf_rename(sinfo,'side','rh')); 
+                rCS = cat_io_FreeSurfer('read_surf_data',char(cat_surf_rename(sinfo,'side','rh')));
             end
           end
 

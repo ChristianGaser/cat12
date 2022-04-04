@@ -1,4 +1,4 @@
-% batch file of volume smoothing for SPM12 standalone installation
+% Batch file for getting ROI values for SPM12/CAT12 standalone installation
 %
 %_______________________________________________________________________
 % $Id$
