@@ -187,7 +187,7 @@ function [cres,Vmn,Vidiff,Vrdiff,Vadiff] = cat_vol_longdiff(Pdata_vol,Pavg,s,wri
   end
 
   if numel(Pdata_vol)<2
-    error('Need more than one case.\n');
+    error('Need more than one case.');
   end
   
   %% estimate covariance 
@@ -481,8 +481,9 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
   
   
   % load XML data 
-  if ~isempty(job.data_xml)
+  if ~isempty(job.data_xml) && ~isempty(job.data_xml{1}) 
     xml = cat_io_xml(job.data_xml);
+    
     for fi = 1:numel(job.data_xml)
       xml(fi).subjectmeasures = rmfield(xml(fi).subjectmeasures,'software'); 
     end

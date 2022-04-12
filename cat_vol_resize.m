@@ -86,7 +86,7 @@ function varargout=cat_vol_resize(T,operation,varargin)
         end
       end
 
-      
+      varargout{1}.res = {}; 
       for fi = 1:numel(job.data)
         stimef      = clock;
         fnameres    = spm_file(job.data{fi},'prefix',job.prefix); 
@@ -96,7 +96,7 @@ function varargout=cat_vol_resize(T,operation,varargin)
           pp = job.outdir{1}; 
         end
         fnameres = fullfile(pp,[ff ee]); 
-        varargout{1}.res{fi} = fnameres; 
+        varargout{1}.res{fi,1} = fnameres; 
         
         if job.lazy && ~cat_io_rerun(fnameres,job.data{fi} ) 
           if job.verb, fprintf('  Exist %s\n',fnameres); end
