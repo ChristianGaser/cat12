@@ -48,6 +48,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   def.extopts.report.color        = cat_get_defaults('extopts.report.color'); 
                                         % background gray level that focus on: white, black, gray
                                         % [] - current figure, 0.95 - light gray
+  def.extopts.expertgui           = cat_get_defaults('extopts.expertgui'); 
+  def.extopts.WMHC                = cat_get_defaults('extopts.WMHC'); 
+  def.extopts.print               = 2; 
   %def.extopts.report.thickvar     = 0;  % 0 - thickness, 1 - thickness corrected by global mean 
   %def.extopts.report.orthviewbox  = 0;  % 0 - off, 1 - on; % not ready
   %if job.extopts.report.orthviewbox && cm(1)=='b', for ai=1:3, st.vols{1}.ax{2}.ax.Visible = 'off'; end; end
@@ -219,7 +222,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     case {'gray'} 
       % CAT colormap with larger range colorrange from 0 (BG) to 1 (WM) to 2 (HD).  
       ytick        = [1,15:15:60];
-      if job.extopts.inv_weighting
+      if isfield(job.extopts,'inv_weighting') && job.extopts.inv_weighting
         Tth = [cat_stat_kmeans(Ym(Yp0(:)>0.5 & Yp0(:)<1.5),2,0),...
                cat_stat_kmeans(Ym(Yp0(:)>1.5 & Yp0(:)<2.5),5,0),...
                cat_stat_kmeans(Ym(Yp0(:)>2.5 & Yp0(:)<3.5),2,0)]; 
@@ -254,26 +257,28 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   end
   %if job.extopts.WMHC<1
   %  yticklabelp0{end-2} = ' \color[rgb]{1,0,1}no WMHC!';
-  if job.extopts.WMHC<2 
-    if qa.subjectmeasures.vol_rel_WMH>0.01 || ...
-      (qa.subjectmeasures.vol_abs_WMH / qa.subjectmeasures.vol_abs_CGW(3) )>0.02
-      yticklabelp0{end-2} = ' \color[rgb]{1,0,1}uncorrected WMHs=GM!';
+  if isfield(qa,'subjectmeasures')
+    if job.extopts.WMHC<2 
+      if qa.subjectmeasures.vol_rel_WMH>0.01 || ...
+        (qa.subjectmeasures.vol_abs_WMH / qa.subjectmeasures.vol_abs_CGW(3) )>0.02
+        yticklabelp0{end-2} = ' \color[rgb]{1,0,1}uncorrected WMHs=GM!';
+      else
+        yticklabelp0{end-2} = ' no/small WMHs';
+      end
+    elseif job.extopts.WMHC==2 
+      if qa.subjectmeasures.vol_rel_WMH>0.01 || ...
+         qa.subjectmeasures.vol_abs_WMH / qa.subjectmeasures.vol_rel_CGW(3)>0.02
+        yticklabelp0{end-2} = ' \color[rgb]{1,0,1}WMHs->WM';
+      else
+        yticklabelp0{end-2} = ' no/small WMHs->WM';
+      end
     else
-      yticklabelp0{end-2} = ' no/small WMHs';
-    end
-  elseif job.extopts.WMHC==2 
-    if qa.subjectmeasures.vol_rel_WMH>0.01 || ...
-       qa.subjectmeasures.vol_abs_WMH / qa.subjectmeasures.vol_rel_CGW(3)>0.02
-      yticklabelp0{end-2} = ' \color[rgb]{1,0,1}WMHs->WM';
-    else
-      yticklabelp0{end-2} = ' no/small WMHs->WM';
-    end
-  else
-    if qa.subjectmeasures.vol_rel_WMH>0.01 || ...
-       qa.subjectmeasures.vol_abs_WMH / qa.subjectmeasures.vol_rel_CGW(3)>0.02
-      yticklabelp0{end-2} = ' \color[rgb]{1,0,1}WMHs';
-    else
-      yticklabelp0{end-2} = ' no/small WMHs';
+      if qa.subjectmeasures.vol_rel_WMH>0.01 || ...
+         qa.subjectmeasures.vol_abs_WMH / qa.subjectmeasures.vol_rel_CGW(3)>0.02
+        yticklabelp0{end-2} = ' \color[rgb]{1,0,1}WMHs';
+      else
+        yticklabelp0{end-2} = ' no/small WMHs';
+      end
     end
   end
   
@@ -336,18 +341,30 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     %  --------------------------------------------------------------------
     
     % measures to display
-    IQR  = res.long.change_qar_IQR; 
+    if isfield(res.long,'change_qar_IQR')
+      IQR  = res.long.change_qar_IQR; 
+    else
+      IQR  = nan; 
+    end
     COV  = (res.long.vres.cov - max(res.long.vres.cov)); 
     RMSE = (min(res.long.vres.RMSEidiff) - res.long.vres.RMSEidiff )';
     
     % text to display (header + main measures)
-    IQRE = (max(res.long.qar_IQR) - min(res.long.qar_IQR)) + 0.5; 
+    if isfield(res.long,'qar_IQR')
+      IQRE = (max(res.long.qar_IQR) - min(res.long.qar_IQR)) + 0.5; 
+    else
+      IQRE = nan; 
+    end
     htext(2,1,1) = text(0.01,0.48 - (0.055 * 1), '\bfImage and preprocessing quality changes (best to worst):', ...
       'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
-    lstr{1}(1) = struct('name','\bf\color[rgb]{.6 0  0}IQR:' , ...
-      'value',  marks2str(min(res.long.qar_IQR),   sprintf('%0.2f%%' ,mark2rps(min(res.long.qar_IQR) )) ), ... ,mark2grad(min(res.long.qar_IQR)
-      'value2', marks2str( (IQRE - 0.5) * 2 + 0.5, sprintf('%+0.2fpp',mark2rps(IQRE) - 100)));
-
+    if isfield(res.long,'qar_IQR')
+      lstr{1}(1) = struct('name','\bf\color[rgb]{.6 0  0}IQR:' , ...
+        'value',  marks2str(min(res.long.qar_IQR),   sprintf('%0.2f%%' ,mark2rps(min(res.long.qar_IQR) )) ), ... ,mark2grad(min(res.long.qar_IQR)
+        'value2', marks2str( (IQRE - 0.5) * 2 + 0.5, sprintf('%+0.2fpp',mark2rps(IQRE) - 100)));
+    else
+      lstr{1}(1) = struct('name','','value','','value2','');
+    end
+    
     % only plot COV and RMSE if more than two timepoints are available
     if ~isnan(COV)
       if numel(res.long.files) > 2
@@ -430,130 +447,132 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     
     %% morphmetric parameter normalized to the first value 
     %  --------------------------------------------------------------------
-    leg          = {'dGMV','dWMV','dCSFV'};
-    val2f        = @(valr,vala) marks2strt(valr  * 100,sprintf('%+0.2f',vala)); 
-    htext(3,1,1) = text(0.51,0.48-(0.055), '\bfGlobal tissue volumes and their maximum change:', ...
-      'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
-    
-    % rGMV
-    li          = 1;
-    valr        = max(diff(res.long.vol_rel_CGW(:,2))); 
-    vala        = max(diff(res.long.vol_abs_CGW(:,2))); 
-    lstr{2}(li) = struct('name','\bf\color[rgb]{0 0.6 0}GMV:', ...
-      'value' ,  sprintf('%0.0fml' , res.long.vol_abs_CGW(1,2)), ...
-      'value2',  [val2f(valr,vala) 'ml'] ); 
-    
-    % rWMV
-    li          = li + 1;
-    valr        = max(diff(res.long.vol_rel_CGW(:,3))); 
-    vala        = max(diff(res.long.vol_abs_CGW(:,3))); 
-    lstr{2}(li) = struct('name','\bf\color[rgb]{0.6 0 0}WMV:', ...
-      'value' ,  sprintf('%0.0fml' , res.long.vol_abs_CGW(1,3)), ...
-      'value2',  [val2f(valr,vala) 'ml'] );
-    
-    % rCSFV
-    li          = li + 1;
-    valr        = max(diff(res.long.vol_rel_CGW(:,1)));
-    vala        = max(diff(res.long.vol_abs_CGW(:,1)));
-    lstr{2}(li) = struct('name','\bf\color[rgb]{0 .3 0.7}CSFV:', ...
-      'value',   sprintf('%0.0fml' , res.long.vol_abs_CGW(1,1)), ...
-      'value2',  [val2f(valr,vala) 'ml'] );
-    
-    % WMHs 
-    % ###########################    
-    if any( res.long.vol_abs_WMH )
-      li          = li + 1;
-      leg         = [leg,{'dWMHs'}];
-      val         = max(diff(res.long.vol_abs_WMH));
-      lstr{2}(li) = struct('name','\bf\color[rgb]{0.8 0.4 0.8}WMHs:', ...
-        'value',   sprintf('%0.0fml' , res.long.vol_abs_WMH(1,1)), ...
-        'value2',  [val2f(max(diff( res.long.vol_abs_WMH ./ res.long.vol_TIV')),val) 'ml'] );
-    end
-    
-    % TIV (looks boring in adult but not in children)
-    li          = li + 1;
-    leg         = [leg,{'dTIV'}];
-    valr        = mean(diff(res.long.vol_TIV) ./ mean(res.long.vol_TIV));
-    vala        = mean(diff(res.long.vol_TIV));
-    lstr{2}(li) = struct('name','\bf\color[rgb]{.5 .5 .5}TIV:' ,...
-      'value',   sprintf('%0.0fml' , res.long.vol_TIV(1,1)) , ...
-      'value2',  [val2f(valr,vala) 'ml'] );
-    
-    % TSA
-    if isfield(res.long,'surf_TSA')
-      li          = li + 1;
-      leg         = [leg,{'TSA/1k'}];
-      valr        = mean(diff(res.long.surf_TSA) ./ mean(res.long.surf_TSA));
-      vala        = mean(diff(res.long.surf_TSA));
-      lstr{2}(li) = struct('name','\bf\color[rgb]{.7 .2 .7}TSA:', ...
-        'value' ,  sprintf('%0.0fsqmm',res.long.surf_TSA(1,1)), ...
-        'value2',  [val2f(valr,vala) 'sqmm']);  
-%      marks2str(min(10.5,max(val * 100 + 0.5)),sprintf('%+0.3fmm',val)));
-    end
-    
-    % thickness
-    if isfield(res.long,'dist_thickness')
-      li          = li + 1;
-      leg         = [leg,{'dGMT*1k'}];
-      val         = mean(res.long.change_dist_thickness(2:end,1));
-      lstr{2}(li) = struct('name','\bf\color[rgb]{.3 .0 .7}GMT:', ...
-        'value' ,  sprintf('%0.2fmm',res.long.dist_thickness(1,1)), ...
-        'value2',  [val2f(val,val) 'mm']);  
-%      marks2str(min(10.5,max(val * 100 + 0.5)),sprintf('%+0.3fmm',val)));
-    end
-    
-    mod = 0.003 * (isfield(res.long,'surf_TSA') + isfield(res.long,'dist_thickness'));
-    for i=1:size(lstr{2},2)  % morphometric measurements
-      htext(3,i+1,1) = text(0.52,0.47-((0.055-mod)*(i+1)), lstr{2}(i).name  , ...
+    if isfield(res.long,'vol_rel_CGW')
+      leg          = {'dGMV','dWMV','dCSFV'};
+      val2f        = @(valr,vala) marks2strt(valr  * 100,sprintf('%+0.2f',vala)); 
+      htext(3,1,1) = text(0.51,0.48-(0.055), '\bfGlobal tissue volumes and their maximum change:', ...
         'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
-      htext(3,i+1,2) = text(0.64,0.47-((0.055-mod)*(i+1)), lstr{2}(i).value , 'HorizontalAlignment','right', ...
-        'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
-      htext(3,i+1,3) = text(0.645,0.47-((0.055-mod)*(i+1)), lstr{2}(i).value2 ,'HorizontalAlignment','left', ...
-        'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
-    end
-    
-    %% figure
-    tcmap  = [0 0.3 0.7; 0 .6 0; 0.6 0 0; 0.5 0.5 0.5; 0.3 0.0 0.7; 0.7 0.2 0.7; 0.8 0.4 0.8]; 
-    marker = {'<','^','>','o','d','s'}; 
-    axi(2) = axes('Position',[0.75,0.745,0.22,0.095],'Parent',fg); cp(2) = gca; hold on;
-    set(axi(2),'Color',job.extopts.report.color,'YAxisLocation','right','XAxisLocation','bottom','box','on'); 
-    % plot tissue values
-    for ti = [2 3 1]
-      pt = plot( ( res.long.vol_abs_CGW(:,ti) - repmat( res.long.vol_abs_CGW(1,ti) , size(res.long.vol_abs_CGW,1) , 1) )');
-      set(pt,'Color',tcmap(ti,:),'Marker',marker{ti},...
-        'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
-    end
-    % plot WMH
-    if any( res.long.vol_abs_WMH )
-      pt = plot(res.long.vol_abs_WMH - res.long.vol_abs_WMH(1));
-      set(pt,'Color',tcmap(6,:),'LineStyle','-','Marker',marker{4}, ...
-        'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
-    end
-    % plot TIV 
-    pt = plot(res.long.vol_TIV - res.long.vol_TIV(1));
-    set(pt,'Color',tcmap(4,:),'LineStyle','-','Marker',marker{4}, ...
-      'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
-    % plot TSA
-    if isfield(res.long,'surf_TSA')
-      pt = plot(res.long.surf_TSA - res.long.surf_TSA(1));
-      set(pt,'Color',tcmap(5,:),'LineStyle','-','Marker',marker{5}, ...
-        'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
-    end
-    % plot thickness
-    if isfield(res.long,'change_dist_thickness')
-      pt = plot(res.long.change_dist_thickness(:,1) * 1000);
-      set(pt,'Color',tcmap(6,:),'LineStyle','-','Marker',marker{6}, ...
-        'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
-    end
-    %mlim = max( 20 , ceil( max( max( abs( [ diff( res.long.vol_abs_CGW(:,1:3) ,1 ); diff( res.long.vol_TIV ) ] ) )) / 20 ) * 20);
-    mlim = max( 20 , ceil( max( max( abs( [ ...
-      [res.long.vol_abs_CGW(:,1:3) - repmat( res.long.vol_abs_CGW(1,1:3) , size(res.long.vol_abs_CGW,1) , 1)], ...
-      [res.long.vol_TIV - res.long.vol_TIV(1)]  ] ) )) / 20 ) * 20);
-    ylim([-mlim mlim]); xlim([0.9 numel(res.long.files)+0.1]); 
-    set(cp(2),'Fontsize',fontsize*0.8,'xtick',max(1,0:round(numel(res.long.files)/100)*10:numel(res.long.files)), ...
-      'ytick',-mlim:round(mlim*2 / 4):mlim,'XAxisLocation','top');
-    lh(2) = legend(leg,'Location','southoutside','Orientation','horizontal','box','off','FontSize',fontsize*0.8); grid on; 
 
+      % rGMV
+      li          = 1;
+      valr        = max(diff(res.long.vol_rel_CGW(:,2))); 
+      vala        = max(diff(res.long.vol_abs_CGW(:,2))); 
+      lstr{2}(li) = struct('name','\bf\color[rgb]{0 0.6 0}GMV:', ...
+        'value' ,  sprintf('%0.0fml' , res.long.vol_abs_CGW(1,2)), ...
+        'value2',  [val2f(valr,vala) 'ml'] ); 
+
+      % rWMV
+      li          = li + 1;
+      valr        = max(diff(res.long.vol_rel_CGW(:,3))); 
+      vala        = max(diff(res.long.vol_abs_CGW(:,3))); 
+      lstr{2}(li) = struct('name','\bf\color[rgb]{0.6 0 0}WMV:', ...
+        'value' ,  sprintf('%0.0fml' , res.long.vol_abs_CGW(1,3)), ...
+        'value2',  [val2f(valr,vala) 'ml'] );
+
+      % rCSFV
+      li          = li + 1;
+      valr        = max(diff(res.long.vol_rel_CGW(:,1)));
+      vala        = max(diff(res.long.vol_abs_CGW(:,1)));
+      lstr{2}(li) = struct('name','\bf\color[rgb]{0 .3 0.7}CSFV:', ...
+        'value',   sprintf('%0.0fml' , res.long.vol_abs_CGW(1,1)), ...
+        'value2',  [val2f(valr,vala) 'ml'] );
+
+      % WMHs 
+      % ###########################    
+      if any( res.long.vol_abs_WMH )
+        li          = li + 1;
+        leg         = [leg,{'dWMHs'}];
+        val         = max(diff(res.long.vol_abs_WMH));
+        lstr{2}(li) = struct('name','\bf\color[rgb]{0.8 0.4 0.8}WMHs:', ...
+          'value',   sprintf('%0.0fml' , res.long.vol_abs_WMH(1,1)), ...
+          'value2',  [val2f(max(diff( res.long.vol_abs_WMH ./ res.long.vol_TIV')),val) 'ml'] );
+      end
+
+      % TIV (looks boring in adult but not in children)
+      li          = li + 1;
+      leg         = [leg,{'dTIV'}];
+      valr        = mean(diff(res.long.vol_TIV) ./ mean(res.long.vol_TIV));
+      vala        = mean(diff(res.long.vol_TIV));
+      lstr{2}(li) = struct('name','\bf\color[rgb]{.5 .5 .5}TIV:' ,...
+        'value',   sprintf('%0.0fml' , res.long.vol_TIV(1,1)) , ...
+        'value2',  [val2f(valr,vala) 'ml'] );
+
+      % TSA
+      if isfield(res.long,'surf_TSA')
+        li          = li + 1;
+        leg         = [leg,{'TSA/1k'}];
+        valr        = mean(diff(res.long.surf_TSA) ./ mean(res.long.surf_TSA));
+        vala        = mean(diff(res.long.surf_TSA));
+        lstr{2}(li) = struct('name','\bf\color[rgb]{.7 .2 .7}TSA:', ...
+          'value' ,  sprintf('%0.0fsqmm',res.long.surf_TSA(1,1)), ...
+          'value2',  [val2f(valr,vala) 'sqmm']);  
+  %      marks2str(min(10.5,max(val * 100 + 0.5)),sprintf('%+0.3fmm',val)));
+      end
+
+      % thickness
+      if isfield(res.long,'dist_thickness')
+        li          = li + 1;
+        leg         = [leg,{'dGMT*1k'}];
+        val         = mean(res.long.change_dist_thickness(2:end,1));
+        lstr{2}(li) = struct('name','\bf\color[rgb]{.3 .0 .7}GMT:', ...
+          'value' ,  sprintf('%0.2fmm',res.long.dist_thickness(1,1)), ...
+          'value2',  [val2f(val,val) 'mm']);  
+  %      marks2str(min(10.5,max(val * 100 + 0.5)),sprintf('%+0.3fmm',val)));
+      end
+
+      mod = 0.003 * (isfield(res.long,'surf_TSA') + isfield(res.long,'dist_thickness'));
+      for i=1:size(lstr{2},2)  % morphometric measurements
+        htext(3,i+1,1) = text(0.52,0.47-((0.055-mod)*(i+1)), lstr{2}(i).name  , ...
+          'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
+        htext(3,i+1,2) = text(0.64,0.47-((0.055-mod)*(i+1)), lstr{2}(i).value , 'HorizontalAlignment','right', ...
+          'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
+        htext(3,i+1,3) = text(0.645,0.47-((0.055-mod)*(i+1)), lstr{2}(i).value2 ,'HorizontalAlignment','left', ...
+          'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
+      end
+    
+      %% figure
+      tcmap  = [0 0.3 0.7; 0 .6 0; 0.6 0 0; 0.5 0.5 0.5; 0.3 0.0 0.7; 0.7 0.2 0.7; 0.8 0.4 0.8]; 
+      marker = {'<','^','>','o','d','s'}; 
+      axi(2) = axes('Position',[0.75,0.745,0.22,0.095],'Parent',fg); cp(2) = gca; hold on;
+      set(axi(2),'Color',job.extopts.report.color,'YAxisLocation','right','XAxisLocation','bottom','box','on'); 
+      % plot tissue values
+      for ti = [2 3 1]
+        pt = plot( ( res.long.vol_abs_CGW(:,ti) - repmat( res.long.vol_abs_CGW(1,ti) , size(res.long.vol_abs_CGW,1) , 1) )');
+        set(pt,'Color',tcmap(ti,:),'Marker',marker{ti},...
+          'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
+      end
+      % plot WMH
+      if any( res.long.vol_abs_WMH )
+        pt = plot(res.long.vol_abs_WMH - res.long.vol_abs_WMH(1));
+        set(pt,'Color',tcmap(6,:),'LineStyle','-','Marker',marker{4}, ...
+          'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
+      end
+      % plot TIV 
+      pt = plot(res.long.vol_TIV - res.long.vol_TIV(1));
+      set(pt,'Color',tcmap(4,:),'LineStyle','-','Marker',marker{4}, ...
+        'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
+      % plot TSA
+      if isfield(res.long,'surf_TSA')
+        pt = plot(res.long.surf_TSA - res.long.surf_TSA(1));
+        set(pt,'Color',tcmap(5,:),'LineStyle','-','Marker',marker{5}, ...
+          'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
+      end
+      % plot thickness
+      if isfield(res.long,'change_dist_thickness')
+        pt = plot(res.long.change_dist_thickness(:,1) * 1000);
+        set(pt,'Color',tcmap(6,:),'LineStyle','-','Marker',marker{6}, ...
+          'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
+      end
+      %mlim = max( 20 , ceil( max( max( abs( [ diff( res.long.vol_abs_CGW(:,1:3) ,1 ); diff( res.long.vol_TIV ) ] ) )) / 20 ) * 20);
+      mlim = max( 20 , ceil( max( max( abs( [ ...
+        [res.long.vol_abs_CGW(:,1:3) - repmat( res.long.vol_abs_CGW(1,1:3) , size(res.long.vol_abs_CGW,1) , 1)], ...
+        [res.long.vol_TIV - res.long.vol_TIV(1)]  ] ) )) / 20 ) * 20);
+      ylim([-mlim mlim]); xlim([0.9 numel(res.long.files)+0.1]); 
+      set(cp(2),'Fontsize',fontsize*0.8,'xtick',max(1,0:round(numel(res.long.files)/100)*10:numel(res.long.files)), ...
+        'ytick',-mlim:round(mlim*2 / 4):mlim,'XAxisLocation','top');
+      lh(2) = legend(leg,'Location','southoutside','Orientation','horizontal','box','off','FontSize',fontsize*0.8); grid on; 
+    end
+   
     
 
   else
@@ -575,19 +594,20 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   % BB box is not optimal for all images
   disptype = 'affine'; 
   warning('off','MATLAB:handle_graphics:exceptions:SceneNode')
-  switch disptype
-    case 'affine'
-      dispmat = res.Affine; 
-      warning('off')
-      try spm_orthviews('BB', res.bb*0.95 ); end
-      warning('on')
-    case 'rigid'
-      % this does not work so good... AC has a little offset ...
-      aff = spm_imatrix(res.Affine);  scale = aff(7:9); 
-      try spm_orthviews('BB', res.bb ./ mean(scale)); end
-      dispmat = R; 
+  if isfield(res,'Affine')
+    switch disptype
+      case 'affine'
+        dispmat = res.Affine; 
+        warning('off')
+        try spm_orthviews('BB', res.bb*0.95 ); end
+        warning('on')
+      case 'rigid'
+        % this does not work so good... AC has a little offset ...
+        aff = spm_imatrix(res.Affine);  scale = aff(7:9); 
+        try spm_orthviews('BB', res.bb ./ mean(scale)); end
+        dispmat = R; 
+    end
   end
- 
   
   
   
@@ -978,8 +998,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
             clear Ychange; 
 
             % WMHs
-            if job.extopts.WMHC > 1 || (qa.subjectmeasures.vol_rel_WMH>0.01 || ...
-              qa.subjectmeasures.vol_rel_WMH/qa.subjectmeasures.vol_rel_WMH>0.02)
+            if job.extopts.WMHC > 1 || ( isfield(qa,'subjectmeasures') && ( ...
+              (qa.subjectmeasures.vol_rel_WMH>0.01 || qa.subjectmeasures.vol_rel_WMH/qa.subjectmeasures.vol_rel_WMH>0.02)))
               V2.dat(NS(Yl1,LAB.HI)) = 52/30;
             end
 

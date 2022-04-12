@@ -71,6 +71,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
   % - resolution - 
    'qualitymeasures'  'res_vx_vol'            'linear'    [  0.50   3.00]  'voxel dimensions'
    'qualitymeasures'  'res_RMS'               'linear'    [  0.50   3.00]  'RMS error of voxel size'
+   'qualitymeasures'  'res_grad'              'linear'    [  0.00   0.30]  'normalized gradient slope of the white matter boundary'
   %'qualitymeasures'  'res_MVR'               'linear'    [  0.50   3.00]  'mean voxel resolution'
   %'qualitymeasures'  'res_vol'               'linear'    [  0.125    27]  'voxel volume'
   %'qualitymeasures'  'res_isotropy'          'linear'    [  1.00   8.00]  'voxel isotropy'
@@ -257,7 +258,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
 %       BWP.NCRm = evallinear(QA.qualitymeasures.NCR    ,0.05,0.35,6);
 %       BWP.MVRm = evallinear(QA.qualitymeasures.res_RMS,0.50,3.00,6);    
       
-      QAM.qualityratings.IQR = rms([QAM.qualityratings.NCR QAM.qualityratings.res_RMS],8);
+      QAM.qualityratings.IQR = rms([QAM.qualityratings.NCR  QAM.qualityratings.res_RMS  QAM.qualityratings.res_grad],8);
       QAM.subjectratings.SQR = rms([QAM.subjectratings.vol_rel_CGW],8);
       
       varargout{1} = QAM;
@@ -265,7 +266,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
     
     case 'init'    % ausgabe einer leeren struktur
       varargout{1} = QS;
-      varargout{2} = {'NCR','ICR','res_RMS','contrastr'}; 
+      varargout{2} = {'NCR','ICR','res_RMS','res_grad','contrastr'}; 
     
       
     case 'marks'    % ausgabe einer leeren struktur
