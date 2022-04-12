@@ -1,4 +1,4 @@
-function out = cat_vol_sanlm(varargin)
+function out = cat_vol_sanlm2(varargin)
 % Spatial Adaptive Non Local Means (SANLM) Denoising Filter
 %_______________________________________________________________________
 % Filter a set of images and add the prefix 'sanlm_'.
@@ -86,7 +86,7 @@ function out = cat_vol_sanlm(varargin)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
-% $Id$
+% $Id: cat_vol_sanlm.m 1979 2022-03-30 14:12:01Z gaser $
 
     % this function adds noise to the data to stabilize processing and we
     % have to define a specific random pattern to get the same results each time
@@ -113,14 +113,15 @@ function out = cat_vol_sanlm(varargin)
     def.relativeIntensityAdaptionTH = 1;         % larger values for continuous filter strength
     def.relativeFilterStengthLimit  = 1;         % limit the noise correction by the relative changes 
                                                  % to avoid over-filtering in low intensity regions
-    def.outlier                     = 1;         % threshold to define outlier voxel to filter them with full strength
-    def.addnoise                    = 1;         % option to add a minimal amount of noise in regions without noise
+    def.outlier                     = 0;         % threshold to define outlier voxel to filter them with full strength
+    def.addnoise                    = 0;         % option to add a minimal amount of noise in regions without noise
     def.returnOnlyFilename          = 0;         % just to get the resulting filenames for SPM batch mode
-    def.red                         = 1;         % number of reductions (be careful using values greater 1!)
+    def.red                         = 0;         % number of reductions (be careful using values greater 1!)
     def.fred                        = 0;         % force reduce
     def.iter                        = 0;         % additional inner iterations on the reduced resolution
     def.iterm                       = 0;         % additional main iterations of the full filter
-    def.lazy                        = 1;         % avoid reprocessing if file exist 
+    def.lazy                        = 0;         % avoid reprocessing if file exist 
+    def.sharpening                  = 0; 
     job = varargin; 
     if isfield(job{1},'nlmfilter')
       subfield = fieldnames(job{1}.nlmfilter); 
@@ -132,19 +133,59 @@ function out = cat_vol_sanlm(varargin)
     job{1} = cat_io_checkinopt(job{1},def);
     
     % special cases of the CAT GUI
-    if isfield(varargin{1},'nlmfilter') 
-      if isfield(varargin{1}.nlmfilter,'optimized')
-        varargin{1} = cat_io_checkinopt(varargin{1}.nlmfilter.optimized,varargin{1});
-      elseif isfield(varargin{1}.nlmfilter,'expert')
-        varargin{1} = cat_io_checkinopt(varargin{1}.nlmfilter.expert,varargin{1});
+    if isfield(job{1},'nlmfilter') 
+      if isfield(job{1}.nlmfilter,'optimized')
+        job{1} = cat_io_checkinopt(job{1}.nlmfilter.optimized,job{1});
+      elseif isfield(job{1}.nlmfilter,'expert')
+        job{1} = cat_io_checkinopt(job{1}.nlmfilter.expert,job{1});
+      elseif isfield(job{1}.nlmfilter,'classic')
+        job{1}.resolutionDependency       = 0;
+        job{1}.relativeIntensityAdaption  = 0; 
+        job{1}.relativeFilterStengthLimit = 0; 
       end
     end
-    if nargin > 0 && isstruct(varargin{1}) && isfield(varargin{1},'NCstr')
-      switch varargin{1}.NCstr
-        case 2,        varargin{1}.NCstr =  -0.5; varargin{1}.red = 0; varargin{1}.fred = 0; varargin{1}.iterm = 0; % light
-        case {3,-inf}, varargin{1}.NCstr =  -1.0; varargin{1}.red = 1; varargin{1}.fred = 0; varargin{1}.iterm = 0; % medium
-        case 4,        varargin{1}.NCstr =   1.0; varargin{1}.red = 1; varargin{1}.fred = 1; varargin{1}.iterm = 1; varargin{1}.iter = 1;% strong
+    
+    % general settings
+    if nargin > 0 && isstruct(job{1}) && isfield(job{1},'nlmfilter') && isfield(job{1}.nlmfilter,'optimized') && isfield(job{1}.nlmfilter,'NCstr') 
+      job{1}.NCstr = job{1}.nlmfilter.optimized.NCstr; 
+    end
+    if nargin > 0 && isstruct(job{1}) && isfield(job{1},'NCstr') && ...
+      ( isfield(job{1},'nlmfilter') && ~isfield(job{1}.nlmfilter,'classic') )
+      switch job{1}.NCstr
+        case 2,           job{1}.NCstr =  -0.5; job{1}.red = 0; job{1}.fred = 0; job{1}.iterm = 0; job{1}.iter = 0; name = 'light';
+        case {3,-inf,-1}, job{1}.NCstr =  -1.0; job{1}.red = 1; job{1}.fred = 0; job{1}.iterm = 0; job{1}.iter = 0; name = 'medium';
+        case 4,           job{1}.NCstr =   1.0; job{1}.red = 1; job{1}.fred = 1; job{1}.iterm = 0; job{1}.iter = 0; name = 'strong';
+        case 5,           job{1}.NCstr =   1.0; job{1}.red = 1; job{1}.fred = 1; job{1}.iterm = 1; job{1}.iter = 1; name = 'heavy';
+        case 12,          job{1}.NCstr =  -0.5; job{1}.red = 0; job{1}.fred = 0; job{1}.iterm = 0; job{1}.iter = 0; name = 'lightavg';
+                          job{1}.addnoise = 0;  job{1}.outlier = 0;   
+        case 14,          job{1}.NCstr =  -1.0; job{1}.red = 1; job{1}.fred = 1; job{1}.iterm = 0; job{1}.iter = 0; name = 'strongavg';
+                          job{1}.addnoise = 0;  job{1}.outlier = 0; 
+        otherwise,        name = ''; 
       end 
+      job{1}.nlmfilter.optimized.NCstr = job{1}.NCstr; 
+      if ~isempty( name ) 
+        if ~isempty(strfind(job{1}.prefix,'PARA'))
+          job{1}.prefix = strrep(job{1}.prefix,'PARA',['optimized-' name '_']); 
+        end
+        if ~isempty(strfind(job{1}.suffix,'PARA'))
+          job{1}.suffix = strrep(job{1}.suffix,'PARA',['_optimized-' name]); 
+        end
+        job{1}.filtername = ['optimized-' name]; 
+      else
+        job{1}.filtername = sprintf('NC%+0.1f',job{1}.NCstr); 
+      end  
+    elseif isfield(job{1},'nlmfilter') && isfield(job{1}.nlmfilter,'classic')
+      if ~isempty(strfind(job{1}.prefix,'PARA'))
+        job{1}.prefix = strrep(job{1}.prefix,'PARA','classic_'); 
+      end
+      if ~isempty(strfind(job{1}.suffix,'PARA'))
+        job{1}.suffix = strrep(job{1}.suffix,'PARA','_classic'); 
+      end
+      job{1}.filtername = 'classic';
+    elseif nargin > 0 && isstruct(job{1})
+      job{1}.filtername = 'manual';
+    else
+      job{1}.filtername = '';
     end
     
     if nargin <= 1 && isstruct(varargin{1}) % job structure input
@@ -157,7 +198,7 @@ end
 
 %_______________________________________________________________________
 function varargout = cat_vol_sanlm_file(job)
-    SVNid = '$Rev$';
+    SVNid = '$Rev: 1979 $';
     
     if ~isfield(job,'data') || isempty(job.data)
      job.data = cellstr(spm_select([1 Inf],'image','select images to filter'));
@@ -178,7 +219,6 @@ function varargout = cat_vol_sanlm_file(job)
                     job.(FN{fni}) = job.nlmfilter.optimized.(FN{fni}); 
                 end
             end
-            job.NCstr = -abs(job.nlmfilter.optimized.NCstr); 
         end
     end
 
@@ -242,7 +282,7 @@ function varargout = cat_vol_sanlm_file(job)
 end
 
 %_______________________________________________________________________
-function src2 = cat_vol_sanlm_filter(job,V,i,src)
+function [src2,NCstr,NCrate] = cat_vol_sanlm_filter(job,V,i,src)
     Vo = V;
 
     QMC   = cat_io_colormaps('marks+',17);
@@ -262,6 +302,9 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
     else
       src = single(src);
     end
+
+    % get zero areas before filtering to consider skull-stripped data
+    ind_zero = src == 0;
         
     for im=1:1+job.iterm  
       % prevent NaN and INF
@@ -280,37 +323,48 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
       % use intensity normalisation because cat_sanlm did not filter values below ~0.01 
       th  = max( cat_stat_nanmean( src(src(:)>cat_stat_nanmean(src(src(:)>0))) ) , ...
                  abs(cat_stat_nanmean( src(src(:)<abs(cat_stat_nanmean(src(src(:)<0)))))) );
+        
+      % the real noise filter
+      if im==1, srco = src; end
+      src = (src / th) * 100; 
+      src = (src - srcth(1)); % avoid negative values!
+      cat_sanlm(src,3,1,job.rician);
+      src = src + srcth(1);  % restore original intensity range 
+      src = (src / 100) * th;          
+      
                
       % low resolution filtering
+      % -------------------------------------------------------------------
       if job.red>0 && (any(vx_vol<0.8) || job.fred )
-        [srcr,resr]   = cat_vol_resize( src ,'reduceV',vx_vol,min(2.2*(job.fred+1),min(vx_vol)*2.3),32,'median');
+        clear NCrater; 
+        [srcr,resr]   = cat_vol_resize( src ,'reduceV',vx_vol,min(2.2*(job.fred+1),min(vx_vol)*2.3),32,'mean');
         
         jobr            = job;
-        jobr.red        = job.red - 1;     
+        jobr.red        = job.red - 1;
         jobr.iterm      = 0; 
         jobr.addnoise   = 0;                        % no additional noise on lower resolution 
         jobr.resolutionDependency      = 1;         % resolution depending filter strength
         jobr.resolutionDependencyRange = [1 1.6];   % [full-correction no-correction]
-        jobr.outlier    = jobr.outlier*2; 
-        jobr.NCstr      = -prod(3-resr.vx_red)*2 .* ...                 
+        jobr.outlier    = 0; 
+        if 0 % RD20220302: deactivated ... this was even not used before and rewritten by the next if-block 
+          jobr.NCstr    = -prod(3-resr.vx_red)*2 .* ...                 
                           min(1,1 - (mean(resr.vx_volr) - jobr.resolutionDependencyRange(1) )) / ...
                           diff(jobr.resolutionDependencyRange); 
-  
-        if 1
+        end
+        if 0 % RD20220302: deactivated
           % larger var => more information
           Ygr   = cat_vol_grad(srcr/th,resr.vx_volr,0); 
           grsd  = std(Ygr(Ygr(:)>0)); 
           grrel = numel(Ygr(Ygr(:)>grsd))/numel(Ygr(Ygr(:)>0)); 
-          jobr.NCstr = jobr.NCstr * grrel*10; 
+          jobr.NCstr =  jobr.NCstr .* jobr.NCstr * grrel*10; 
         end
-  
-        srco = src;
+        srcor = src;
         if any(resr.vx_red>1) && any( resr.vx_volr < jobr.resolutionDependencyRange(2)*(job.fred+1) ) && jobr.NCstr~=0
           % first block
           Vr = V(i); Vmat = spm_imatrix(Vr.mat); Vmat(7:9) = Vmat(7:9).*resr.vx_red; Vr.mat = spm_matrix(Vmat);
           srcR  = cat_vol_resize(srcr,'dereduceV',resr,'cubic');
           for iter=1:1+job.iter
-            srcr  = cat_vol_sanlm_filter(jobr,Vr,1,srcr);
+            [srcr,NCstrr1(iter),NCrater1(iter)]  = cat_vol_sanlm_filter(jobr,Vr,1,srcr);
           end
           srcRS = cat_vol_resize(srcr,'dereduceV',resr,'cubic');
           src   = (src - srcR) + srcRS; 
@@ -318,12 +372,12 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
   
           % second block
           if 1 % the second displaced filtering helps to deduce low frequency noise a little bit more 
-            [srcr,resr] = cat_vol_resize( smooth3(src(2:end,2:end,2:end)) ,'reduceV',...
+            [srcr,resr] = cat_vol_resize( src(2:end,2:end,2:end) ,'reduceV',...
               vx_vol,min(2.2*(job.fred+1),min(vx_vol)*2.3),32,'median');
             srcRr = cat_vol_resize(srcr,'dereduceV',resr,'cubic');
             srcR  = src; srcR(2:end,2:end,2:end) = srcRr; 
             for iter=1:1+job.iter
-              srcr  = cat_vol_sanlm_filter(jobr,Vr,1,srcr);
+              [srcr,NCstrr2(iter),NCrater2(iter)]  = cat_vol_sanlm_filter(jobr,Vr,1,srcr);
             end
             srcRr = cat_vol_resize(srcr,'dereduceV',resr,'cubic');
             srcRS = src; srcRS(2:end,2:end,2:end) = srcRr; 
@@ -332,10 +386,14 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
             src = src / 2;
           end
         end
+%        srcoo   = srco; 
         
-        NCstrr = 15 * abs(cat_stat_nanmean(abs(src(:)/th - srco(:)/th))); 
+        NCrater = mean([NCrater1 NCrater2]); 
+        NCstrr  = mean([NCstrr1  NCstrr2]); % or sum() / 2 ;
+        %NCstrr = 15 * abs(cat_stat_nanmean(abs(src(:)/th - srco(:)/th))); 
       else
-        NCstrr = 0; 
+        NCrater = 0; 
+        NCstrr  = 0; 
       end
       if job.verb>1 && (nargin>3 || NCstrr>0) 
         cat_io_cprintf('g5',sprintf('R%1d) %0.2fx%0.2fx%0.2f mm:  ',job.red,vx_vol)); stime = clock; 
@@ -343,29 +401,66 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
       
       
       % the real noise filter
+  if 0 
       if im==1, srco = src; end
       src = (src / th) * 100; 
       src = (src - srcth(1)); % avoid negative values!
       cat_sanlm(src,3,1,job.rician);
-      src = src + srcth(1);  % reset negative values 
+      src = src + srcth(1);  % restore original intensity range 
       src = (src / 100) * th; 
+  end
       if job.verb>1 && (nargin>3 || NCstrr>0) && im<1+job.iterm
         if job.verb>1 && (nargin>3 || NCstrr>0), cat_io_cprintf('g5',sprintf('  %5.0fs\n',etime(clock,stime))); end
       end
     end
       
-    % measures changes
-    NCrate = cat_stat_nanmean(abs(src(:)/th - srco(:)/th)); 
-    
+    % measures normalized changes (th ~ signal intensity) as RMS rate  
+    NCrate = cat_stat_nanmean( abs( src(src(:)~=0)/th - srco(src(:)~=0)/th ).^2 )^0.5; 
+
+    lowResMixing = 2; 
+    if lowResMixing>0  &&  NCrater > 0  &&  NCrate > NCrater 
+    % Skip low resolution filtering if the default resolution contains more 
+    % noise to prevent overfiltering. Low resolution filtering is only
+    % useful in case of interpolated/smoothed data were the sanlm is not 
+    % effective at full resolution.   
+      if lowResMixing == 1
+        if job.verb > 1  &&  NCrater > 0 
+           cat_io_cprintf('blue',sprintf(...
+             'Skip low-res filter result because there is more high-frequency noise (NCrater=%8.6f < NCrate=%8.6f).\n ', ... 
+             NCrater, NCrate));
+        end
+        NCrater = 0; 
+        src = src + (srcor - srco);
+      else
+        NCmix   = min(1,max(0,(NCrater / NCrate )^2)); 
+        NCrater = NCrater * NCmix; 
+        src = src + NCmix * (srcor - srco);
+      end
+    end
+    if ~debug, clear srcor; end
+     
     % set actual filter rate - limit later!
     % the factor 15 was estimated on the BWP 
     NCstr                         = job.NCstr; 
-    NCstr(isinf(NCstr) & NCstr>0) = 15 * NCrate;   
-    NCstr(isinf(NCstr) & NCstr<0) = -1;   
-   
+    NCstr(isinf(NCstr) & NCstr<0) = -1;   % default value
+    NCstr(NCstr<0)                = NCstr(NCstr<0) .* 15 * NCrate;  % local dynamic weighting
    
     for NCstri = 1:numel(NCstr)
-       
+        if job.verb>1 && (nargin>3 || NCstrr>0)
+          if exist('NCrater','var') && NCrater > 0
+            cat_io_cprintf('g5',sprintf(' (NCrater=%9.6f; NCrate=%8.6f; NCstr=%5.2f)  ',NCrater,NCrate,NCstr(NCstri)));
+          else
+            cat_io_cprintf('g5',sprintf(' (NCrate=%9.6f; NCstr=%5.2f)  ',NCrate,NCstr(NCstri)));
+          end
+        elseif exist('NCrater','var') && NCrater > 0
+          if job.verb>1 && ~(nargin>3 || NCstrr>0) 
+            % if multiple resolution were used (and printed) than also show when working on full resolution  
+            cat_io_cprintf('g5',sprintf('R0) %0.2fx%0.2fx%0.2f mm:  ',vx_vol)); 
+          end
+          cat_io_cprintf('g5',sprintf(' (NCrater=%8.6f; NCrate=%8.6f) \n  ',NCrater,NCrate));
+        end
+        
+        
         if NCstr(NCstri)<0
         % adaptive local denoising 
 
@@ -421,39 +516,52 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
             %  The average change rate in signal region is estimated (mNCs) and used as limit
             %  for corrections (job.relativeFilterStengthLimit), where higher values allow 
             %  stronger filtering. 
-            [NCi,range]  = cat_stat_histth(src,job.intlim); % lower values > more similar filtering
-            NCi  = max(eps,log10( 1 + (NCi + range(1)) / diff(range) * 7 + 3 )); % bias corr + intensity normalization 
-            NCi  = cat_vol_smooth3X( NCi , job.relativeIntensityAdaption / mean(vx_vol)); % smoothing
-            if job.relativeIntensityAdaption>0 && ...
-               job.relativeFilterStengthLimit && ~isinf(job.relativeFilterStengthLimit)
-                NCsi = NCs ./ max(eps,NCi); 
-                mNCs = cat_stat_nanmean( NCsi(src(:)>th/2 & NCsi(:)>0 )) * ...
-                          job.relativeFilterStengthLimit * ...
-                          max(1,min(4,4 - job.relativeIntensityAdaption*2)); % lower boundary for strong adaptation
-                NCsi = min( NCsi , mNCs ) .* NCi; 
-                
-                % Finally, both images were mixed
-                NCs  = NCs  * (1 - job.relativeIntensityAdaption) + ... % linear average model to contoll filter strength
-                       NCsi *      job.relativeIntensityAdaption; 
-                if ~debug, clear NCsi; end
-            end  
+            if job.outlier>0 
+              [NCi,range]  = cat_stat_histth(src,job.intlim); % lower values > more similar filtering
+              NCi  = max(eps,log10( 1 + (NCi + range(1)) / diff(range) * 7 + 3 )); % bias corr + intensity normalization 
+              NCi  = cat_vol_smooth3X( NCi , job.relativeIntensityAdaption / mean(vx_vol)); % smoothing
+              if job.relativeIntensityAdaption>0 && ...
+                 job.relativeFilterStengthLimit && ~isinf(job.relativeFilterStengthLimit)
+                  NCsi = NCs ./ max(eps,NCi); 
+                  mNCs = cat_stat_nanmean( NCsi(src(:)>th/2 & NCsi(:)>0 )) * ...
+                            job.relativeFilterStengthLimit * ...
+                            max(1,min(4,4 - job.relativeIntensityAdaption*2)); % lower boundary for strong adaptation
+                  NCsi = min( NCsi , mNCs ) .* NCi; 
+
+                  % Finally, both images were mixed
+                  NCs  = NCs  * (1 - job.relativeIntensityAdaption) + ... % linear average model to contoll filter strength
+                         NCsi *      job.relativeIntensityAdaption; 
+                  if ~debug, clear NCsi; end
+              end  
             
 
             
-            % heavy outlier / artifacts
-            if job.outlier>0
-                NCi = min(1,max(0,NCi .* (NCso - ( (stdNC*2) / job.outlier ) ) ./ ((stdNC*2) / job.outlier ))); 
-                NCs = max(NCs, NCi); 
-                if ~debug, clear NCi; end
-                if ~debug, clear NCso; end
-            end  
+              % heavy outlier / artifacts
+              NCi = min(1,max(0,NCi .* (NCso - ( (stdNC*2) / job.outlier ) ) ./ ((stdNC*2) / job.outlier ))); 
+              NCs = max(NCs, NCi); 
+              if ~debug, clear NCi; end
+            end
             
             
+            %% preserve anatomy
+            % the idea was to avoid locally clustered corrections but its
+            % not really working
+            % >> changed this to a general limitation that only corrects 
+            %    stong differences what is maybe useful in case of multiple
+            %    iterations but also this looks better the interesting
+            %    parts of the hippocampus are gone :/
+            %
+           
+            if 1 % sharpending
+              src = src .* 2.^(smooth3(NCso)); 
+            end
             
+            %%
             if debug, src2 = srco.*(1-NCs) + src.*NCs; end
             % ds('d2','',vx_vol,src/th,srco/th,srco2/th, NCs,160)
 
             
+              if ~debug, clear NCso; end
             
             % mix original and noise corrected image
             src2 = srco.*(1-NCs) + src.*NCs; 
@@ -479,9 +587,8 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
         end
 
         
-        
         %% add noise
-        if job.addnoise
+        if job.addnoise && NCstrr==0 % only add noise on original resolution 
           % Small adaptation for inhomogeneity to avoid too much noise in
           % regions with low signal intensity.
           sth  = cat_vol_smooth3X(log10(2 + 8*src/th),4/mean(vx_vol)) * th; 
@@ -493,11 +600,13 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
           src2 = src2 + max( 0 , min(1 , cat_vol_smooth3X( ...
                  ( job.addnoise.*sth/100 ) - abs(srco - src) , 4/mean(vx_vol) ) ./ ( job.addnoise.*sth/100 ) )) .* ...
                  ( src~=0 ) .* ... save skull-stripping / defacing regions
-                 (randn(size(src)) * job.addnoise.*sth/100);  
+                 (randn(size(src)) * job.addnoise.*sth/100);
           if ~debug, clear sth; end
         end
         if numel(NCstr)==1 && ~debug, clear src srco; end
         
+        % rescue zero-values (i.e. for skull-stripped data)
+        src2(ind_zero) = 0;  
         
         
         %% restore NAN and INF
@@ -511,8 +620,8 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
         
         % use only float precision
         Vo(i).fname   = fullfile(pth,[job.prefix nm job.suffix '.nii' vr]);
-        Vo(i).descrip = sprintf('%s SANLM filtered (NCstr=%-4.2f > %0.2f)',...
-          V(i).descrip,job.NCstr(NCstri),abs(NCstr(NCstri)) + NCstrr);
+        Vo(i).descrip = sprintf('%s SANLM filtered (NCrate=%-4.2f; NCstr=%-4.2f > %0.2f)',...
+          V(i).descrip,NCrate,job.NCstr(NCstri),abs(NCstr(NCstri)) + NCstrr);
         Vo(i).dt(1)   = 16; % default - changes later if required 
         if exist(Vo(i).fname,'file'); delete(Vo(i).fname); end
         spm_write_vol(Vo(i), src2);
@@ -542,6 +651,17 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
             % that red means failed filtering ...
             %   green > low filtering 
             %   red   > strong filtering
+            if cat_get_defaults('extopts.expertgui') % NCstr(NCstri)<0 || isinf(NCstr(NCstri))
+                fprintf('  NCstr = '); 
+                cat_io_cprintf( color( ( ( abs(NCstr(NCstri)) ) * 6 )) , ...
+                  sprintf('%- 5.2f > %4.2f', job.NCstr(NCstri) , abs(NCstr(NCstri)) ));
+                if NCstrr
+                  cat_io_cprintf( color( ( ( abs(NCstrr) ) * 6 )) , ...
+                      sprintf(' (R0: %4.2f)', abs(NCstrr) ));
+                end
+                cat_io_cprintf( [0 0 0] , ', '); % restore default color! 
+            end
+            
             % create some further parameter output for experts
             FNs = {'filtername'};
             FNf = {'NCstr'};
@@ -551,9 +671,9 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
               FNi = {};
             end
             parastr = ['''name = ' job.prefix '*' job.suffix ''';' ];
-            %for fni = 1:numel(FNs) 
-            %  parastr = [parastr sprintf('''%s = %s''; ', FNs{fni}, job.(FNs{fni}))];  %#ok<AGROW>
-            %end
+            for fni = 1:numel(FNs) 
+              parastr = [parastr sprintf('''%s = %s''; ', FNs{fni}, job.(FNs{fni}))];  %#ok<AGROW>
+            end
             for fni = 1:numel(FNf) 
               parastr = [parastr sprintf('''%s = %0.2f''; ', FNf{fni}, job.(FNf{fni}))];  %#ok<AGROW>
             end
@@ -581,5 +701,19 @@ function src2 = cat_vol_sanlm_filter(job,V,i,src)
         
         
     end
+end
+
+function cat_vol_sanlm_selftest(BWPdir)
+  % define files 
+
+  % create some further test cases 
+  % - resampling (e.g. from 1 to 0.5 mm) to simulated interpolation and low
+  %   resolution filtering and final resampling to the original resolution  
+  %   should include 1/2 and 3/4 resolution
+  % - rotation 
+  
+  % process major types
+  
+  % prepare some output
 end
 

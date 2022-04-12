@@ -1,5 +1,34 @@
 ------------------------------------------------------------------------
-r1981 | gaser | 2022-04-04 09:20:54
+r1982 | dahnke | 2022-04-12 13:07:53
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_long_report.m
+M       cat_main_reportfig.m
+M       cat_stat_marks.m
+M       cat_vol_groupwise_ls.m
+M       cat_vol_qa.m
+M       cat_vol_resize.m
+M       cat_vol_sanlm.m
+A       cat_vol_sanlm2.m
+
+(1) Fixed:     Corrected some bugs in cat_vol_qa when it is called as batch.
+               Corrected bias-correction WM threshold in case of batch input.
+(2) Fixed:     Corrected dependencies of QC batch in cat_conf_tools.
+(3) New:       Added res_grad measure scaling in cat_    
+(4) Fixed:     Corrections in cat_long_report in case of missing xml data. 
+               Added missing default settings in cat_main_reportfig. 
+(5) New:       Renamed cat_vol_sanlm to cat_vol_sanlm2 and create a new batch
+               in cat_conf_tools.
+               Added low-resolution filter test to avoid overfiltering, and              
+               new resolution measure and further outputs. 
+(6) Reset:     Revert cat_vol_sanlm to revision 1936. 
+(7) Changed:   Small adaptions in cat_vol_groupwise_ls to control the 
+               average resolution.
+
+------------------------------------------------------------------------
+r1981 | gaser | 2022-04-04 09:23:37 +0200 (Mon, 04 Apr 2022) | 30 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -29,6 +58,7 @@ M       standalone/cat_standalone_tfce.m
 (4) Fixed:   Corrected handling different atlases in cat_surf_surf2roi.m.
 (5) Fixed:   Added check for defects file in cat_surf_createCS2.m that is 
              sometimes missing for some unknown reason.
+
 
 ------------------------------------------------------------------------
 r1980 | gaser | 2022-03-30 16:40:08 +0200 (Wed, 30 Mar 2022) | 12 lines

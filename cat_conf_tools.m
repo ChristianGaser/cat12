@@ -168,7 +168,7 @@ function tools = cat_conf_tools(expert)
   avg_img                     = conf_vol_average(data,outdir);
   realign                     = conf_vol_series_align(data);
   shootlong                   = conf_shoot(expert); 
-  sanlm                       = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert);
+  [sanlm,sanlm2]              = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert);
   biascorrlong                = conf_longBiasCorr(data,expert,prefix);
   data2mat                    = conf_io_data2mat(data,outdir);
   boxplot                     = conf_io_boxplot(outdir,subdir,prefix,expert);
@@ -203,6 +203,7 @@ function tools = cat_conf_tools(expert)
     ... SPLIT THIS FILE ?!
     ...
     sanlm, ...                            cat.pre.vtools.
+    sanlm2, ...
     maskimg, ...                          cat.pre.vtools.
     spmtype, ...                          cat.pre.vtools.
     headtrimming, ...                     cat.pre.vtools.
@@ -1601,7 +1602,7 @@ function qa = conf_vol_qa(expert,outdir)
 return
   
 %_______________________________________________________________________
-function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
+function [sanlm,sanlm2] = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
 
   % --- update input variables ---
   data.help         = {'Select images for filtering.'};
@@ -1829,6 +1830,20 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
     'Be verbose.'
     ''
     };
+  
+  sharpening         = cfg_entry;
+  sharpening.tag     = 'sharpening';
+  sharpening.name    = 'Sharpening';
+  sharpening.strtype = 'r';
+  sharpening.num     = [1 1];
+  sharpening.val     = {1};
+  sharpening.hidden  = expert<2;
+  sharpening.help    = {
+    'By smoothing heavily noisy areas, fine structures and local contrasts such as cerebellar sublobuli can disappear.  The effect is similar to a real photo of a meadow at night and short exposure time (e.g., with a lot of noise), where the denoising filter merges everything into one large smooth area.  The sharpening tries to preserve local contrasts. '
+    'Sharpening is only applied in case of the optimized filters.'
+    ''
+  };
+  
   % -----------------------------------------------------------------------
 
 
@@ -1879,6 +1894,8 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
       ''
     };
   end
+  
+  % V1
   sanlm                 = cfg_exbranch;
   sanlm.tag             = 'sanlm';
   sanlm.name            = 'Spatially adaptive non-local means (SANLM) denoising filter';
@@ -1895,6 +1912,13 @@ function sanlm = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
     ''
   };
 
+  % V2
+  sanlm2                = sanlm; 
+  sanlm2.tag            = 'sanlm2';
+  sanlm2.name           = 'Spatially adaptive non-local means (SANLM) denoising filter V2';
+  sanlm2.val            = {data spm_type prefix suffix intlim rician sharpening replaceNANandINF nlmfilter};
+  sanlm2.prog           = @cat_vol_sanlm2;
+  sanlm2.hidden         = expert<2;
 
 return
 
@@ -4270,11 +4294,24 @@ function dep = vout_resize(varargin)
 return;
 %_______________________________________________________________________
 function vf = vout_qa(job)
-  s  = cellstr(char(job.data)); vf = s; 
-  for i=1:numel(s),
+  if isfield(job,'data')
+    s  = cellstr(char(job.data)); vf = s; 
+  elseif isfield(job,'images')
+    s  = cellstr(char(job.images)); vf = s; 
+  else  
+    s  = {}; 
+    vf = {}; 
+  end
+  for i=1:numel(s)
       [pth,nam,ext,num] = spm_fileparts(s{i});
-      vf{i} = fullfile(pth,[job.prefix,nam,ext,num]);
-  end;
+      if isfield(job,'prefix') % old 
+        vf{i} = fullfile(pth,[job.prefix,nam,ext,num]);
+      elseif isfield(job,'opts') && isfield(job.opts,'prefix') 
+        vf{i} = fullfile(pth,[job.opts.prefix,nam,ext,num]);
+      else
+        vf{i} = fullfile(pth,[nam,ext,num]);
+      end  
+  end
 return;
 
 %------------------------------------------------------------------------
