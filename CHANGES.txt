@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1982 | dahnke | 2022-04-12 13:07:53
+r1983 | dahnke | 2022-04-14 16:17:36
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_main.m
+
+(1) Fixed:     Corrected filter setting in cat_long_main. 
+------------------------------------------------------------------------
+r1982 | dahnke | 2022-04-12 13:09:13 +0200 (Tue, 12 Apr 2022) | 27 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -26,6 +34,7 @@ A       cat_vol_sanlm2.m
 (6) Reset:     Revert cat_vol_sanlm to revision 1936. 
 (7) Changed:   Small adaptions in cat_vol_groupwise_ls to control the 
                average resolution.
+
 
 ------------------------------------------------------------------------
 r1981 | gaser | 2022-04-04 09:23:37 +0200 (Mon, 04 Apr 2022) | 30 lines
