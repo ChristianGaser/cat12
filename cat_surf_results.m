@@ -17,6 +17,7 @@ function varargout = cat_surf_results(action, varargin)
 %
 %  * cat_surf_results('surface',1..4) 
 %  Select surface type.
+%  1 - FSaverage, 2 - Inflated, 3 - Dartel, 4 - Flatmap
 %
 %  * cat_surf_results('texture',0..3)
 %  Select surface underlay. 
@@ -37,38 +38,44 @@ function varargout = cat_surf_results(action, varargin)
 %  Select overlay colormap.
 %  1 - jet, 2 - hot, 3 - hsv, 4 - cold-hot
 %
+%  * cat_surf_results('ctitle',string)
+%  Set title for colorbar.
+%
 %  * cat_surf_results('colormap','customized',cmap)
 %  use customized overlay colormap.
 %  cmap can be a nx3 variable with the colormap values
 % or a function that creates a colormap (e.g. jet)
 %
-%  * cat_surf_results('invcolormap',[0..1])
+%  * cat_surf_results('invcolormap',0..1)
 %  Default (0) or inverts colormap (1). Toggles without input.
 %  
-%  * cat_surf_results('background',[0..2])
+%  * cat_surf_results('background',0..2)
 %  White (1) or black (0|2) background. Toggles without input.
 %
-%  * cat_surf_results('showfilename',[0..1]); 
+%  * cat_surf_results('showfilename',0..1); 
 %  Show (1) or not show (0) surface name in figure. Toggles without input.
 %
-%  * cat_surf_results('clim',[val]);
+%  * cat_surf_results('clim',[mn mx]);
 %  Define clim to define view range. 
 %
 %  * cat_surf_results('clip',[mn mx]);
-%  Define clip to limit view range. 
+%  Define clip to limit view range. This is the range that is not displayed
+%  with colors and thresholded.
 %
-%  * cat_surf_results('threshold',[0..4]);
+%  * cat_surf_results('threshold',val);
 %  Define statistical threshold. 
 %  0 - none, -log10(0.05) - 0.05, 2 - 0.01, 3 - 0.001
 %
 %  * cat_surf_results('transparency');
 %  Disable transparency. 
 %
-%  * cat_surf_results('hide_neg',[,0..1]); 
+%  * cat_surf_results('hide_neg',0..1); 
 %  Hide negative results (1) or show everything (0). Toggles without input.
 %
-%  * cat_surf_results('print'); 
-%  Save render as png image file
+%  * cat_surf_results('print',fpart); 
+%  Save render as png image file. The parameter fpart has to be a structure
+%  with the fields 'outdir','prefix', and 'suffix' but can be optionally
+%  skipped to estimte the filename automatically.
 %
 % ______________________________________________________________________
 %
@@ -783,7 +790,15 @@ switch lower(action)
     if nargout, varargout{1} = y; end
      %}
     
-    
+  %-ColourMapTitle
+  %======================================================================
+  case {'ctitle'}
+
+    if ~H.disable_cbar
+      
+      title(H.cbar, varargin{1}, 'Color', 1 - H.bkg_col);
+    end
+
   %-ColourMap
   %======================================================================
   case {'colourmap', 'colormap'}
@@ -844,29 +859,30 @@ switch lower(action)
 %-CLip
   %======================================================================
   case 'clip'
-    if isempty(varargin), varargin{1} = gca; end
-    H = getHandles(varargin{1});
-    if length(varargin) == 1
-      c = getappdata(H.patch, 'clip');
+
+    if nargin < 2
+      c = getappdata(H.patch(5), 'clip');
       if ~isempty(c), c = c(2:3); end
       varargout = {c};
       return;
     else
-      if isempty(varargin{2}) || any(~isfinite(varargin{2}))
-        for ind = 1:5
-          setappdata(H.patch(ind), 'clip', [false NaN NaN]);
-        end
+      if isempty(varargin{1}) || any(~isfinite(varargin{1}))
+        H.clip = [false NaN NaN];
       else
-        for ind = 1:5
-          setappdata(H.patch(ind), 'clip', [true varargin{2}]);
-        end
+        H.clip = [true varargin{1}];
       end
       for ind = 1:5
-        d = getappdata(H.patch(ind), 'data');
-        H = updateTexture(H, ind, d);
+        setappdata(H.patch(ind), 'clip', H.clip);
+      end
+      for ind = 1:5
+        col = getappdata(H.patch(ind), 'col');
+        H = updateTexture(H, ind);
       end
     end
-  
+
+    if ~H.disable_cbar
+      H = show_colorbar(H);
+    end
     
   %-CLims
   %======================================================================
@@ -912,8 +928,8 @@ switch lower(action)
 
     %% update textures of each patch
     for j=1:numel(H.patch) 
-    setappdata(H.patch(j), 'clim',H.clim);
-    H = updateTexture(H, j); 
+      setappdata(H.patch(j), 'clim',H.clim);
+      H = updateTexture(H, j); 
     end
     if isvalid(H.str_min)
       set(H.str_min, 'String', sprintf('%g',H.clim(2)));
@@ -1219,39 +1235,17 @@ switch lower(action)
       fparts.suffix = '';
     end
     
-    if nargin>2
-      imgs = varargin{2};
-    else
-      imgs = inf; 
-    end
-    maximg = numel(H.S1.info);
-    if isinf(imgs), imgs = 1:maximg; end 
-    imgs(imgs<0 | imgs>maximg) = []; 
-    
-    %% print images
-    for fi=1:numel(imgs)
-      if fi>1, select_results(imgs(fi)); end
-      
-      [pp,ff] = spm_fileparts( H.S1.name(imgs(fi),:) );
-      if isempty(fparts.outdir{1})
+    if iscell(fparts.outdir), fparts.outdir{1}; end
+    [pp,ff] = spm_fileparts( H.S1.name );
+    if isempty(fparts.outdir)
       fparts.outdir{1} = pp; 
-      end
-      filenames{imgs(fi)} = fullfile(fparts.outdir{1},[fparts.prefix ff fparts.suffix '.png']); %#ok<AGROW>
-      
-      save_image(1,1,filenames{imgs(fi)});
-      
-      % display image
-      fprintf('  Display %s\n',...
-      spm_file(filenames{imgs(fi)},'link',[...
-        'try, delete(314); end; fh=figure(314); img = imread(''%s''); pos = get(fh,''Position'');'...
-        'pos(4) = pos(3) * size(img,1)./size(img,2);' ...
-        'set(fh,''name'',''cat_surf_result_png'', '...
-        '  ''menubar'',''none'',''toolbar'',''none'',''Position'',pos); '...
-        'image(img); set(gca,''Position'',[0 0 1 1],''visible'',''off''); '])); 
     end
+    [tmp, pathname, ext] = spm_fileparts(pp);
+    filenames = fullfile(fparts.outdir,[pathname ext '_' fparts.prefix ff fparts.suffix '.png']); %#ok<AGROW>
+
+    save_image(1,1,filenames);
     
     varargout{1} = filenames; 
-    
     
   otherwise   
     error('Unknown action "%s"!\n',action); 
@@ -2588,7 +2582,8 @@ if ~exist('filename', 'var')
   
   nm = H.S{1}.info(1).ff;
   [pp, nm] = spm_fileparts(H.S{1}.name);
-  filename = [nm '.png'];
+  pathname = spm_fileparts(pp);
+  filename = [pathname '_' nm '.png'];
   
   % end with _0???.ext?
   if length(nm) > 4

@@ -1,0 +1,49 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link rel="stylesheet" type="text/css" href="spm.css" />
+    <link rel="stylesheet" type="text/css" href="../spm.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  
+  <body>
+    <div id="header">
+      <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
+      <p>
+          <a href="matlab:web('http://www.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
+          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');">Department of Neurology</a> | 
+          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');">Department of Psychiatry</a> | 
+          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
+      </p>
+      <div id="breadcrumbs">
+        <a href="cat.html">CAT</a> > <a href="cat_licences.html">License Information</a>
+      </div>
+    </div>
+    
+    <div id="content">
+      <h2>Calling CAT12 from the shell and running in headless mode without display</h2>      
+      <p>
+        If you do not want to use the CAT12 and SPM12 graphical user interface, you can use the cat_standalone.sh script 
+        located in the cat12 standalone folder to call batch files. You can use any of the supplied batches in the standalone 
+        folder, but you can also create your own batches using the batch manager in SPM12. Please note that the supplied 
+        standalone batches must be called in CAT12 expert mode.
+        </br>The cat_standalone.sh script can be used with few changes with the same flags as for the standalone version. You 
+        just need to add the flags "-ns" to turn off standalone mode and "-e" to call CAT12 in expert mode. Also, the flag 
+        "-m" now defines the Matlab command and "-s" the SPM12 folder, but can be skipped if they are found automatically. 
+        </br>For example, to preprocess (segment) files, you can call:
+        your_spm12_folder/toolbox/cat12/standalone/cat_standalone.sh -ns -e -m /usr/local/bin/matlab \
+          -b your_spm12_folder/toolbox/cat12/standalone/cat_standalone_segment_enigma.m \
+          -s your_spm12_folder /data/enigma-data/raw/sub*.nii.gz
+        
+        See the standalone version for more examples.
+      </p>
+      
+    </div>
+
+    <div id="content"><a href="cat.html">< CAT</a></div>  
+    <div id="footer">
+      <p>Copyright (C) Structural Brain Mapping Group <a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a></p>
+    </div>
+  </body>
+</html>

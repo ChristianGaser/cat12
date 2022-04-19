@@ -54,7 +54,7 @@ function varargout = cat_io_xml(file,varargin)
   onlyxml = 0; 
   if strcmpi(spm_check_version,'octave')
     pkglist = pkg('list'); 
-    if all( strfind( [pkglist{:}.name] , 'io') == 0 )  
+    if isempty(pkglist) || all( strfind( [pkglist{:}.name] , 'io') == 0 )  
       pkg install -forge io
     end
     pkg load io

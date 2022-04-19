@@ -38,7 +38,7 @@ for i=1:length(p.data_xml)
       end
     end
       
-    name = spm_str_manip(xml.filedata.fname,'a50');
+    name = spm_str_manip(deblank(p.data_xml{i}),'a50');
 
     % only save TIV
     if p.calcvol_TIV
