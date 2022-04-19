@@ -206,11 +206,11 @@ function varargout = cat_parallelize(job,func,datafield)
         
         % open file in editor
         test = inf; 
-        edit(log_name{i});
+        try, edit(log_name{i}); end
       end
     end
 
-    edit(log_name{i});
+    try, edit(log_name{i}); end
     if PID(i)>0
       fprintf('\nCheck %s for logging information (PID: ',spm_file(log_name{i},'link','edit(''%s'')')); 
       cat_io_cprintf([1 0 0.5],sprintf('%d',PID(i))); 

@@ -91,7 +91,6 @@ dept.help    = {
 dept.labels  = {'Yes', 'No'};
 dept.values  = {0 1};
 dept.val     = {0};
-dept.hidden  = expert<1;
 
 %--------------------------------------------------------------------------
 % deptn Independence (default is 'No')
