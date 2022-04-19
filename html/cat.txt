@@ -89,6 +89,7 @@
           <li><a href=cat_tools_FF.html>Other tools</a></li>
         </ul>
         <li><a href=cat_orthogonality.html>Design orthogonality</a></li>
+<!--        <li><a href=cat_shell.html>Calling CAT12 from the shell and running in headless mode without display</a></li> -->
         <li><a href=cat_FAQ.html>FAQ</a></li>
         <li><a href=cat_licences.html>License information</a></li>
         <li><a href=cat_references.html>Citation/References</a></li>

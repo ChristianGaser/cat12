@@ -27,6 +27,12 @@ else
   cat12_dir="your_folder/spm12/toolbox/cat12" 
 fi
 
+# default values
+standalone=1
+expert=0
+fg=0
+matlab=matlab # you can use other matlab versions by changing the matlab parameter
+
 ########################################################
 # run main
 ########################################################
@@ -90,7 +96,19 @@ parse_args ()
             add_to_batch="$optarg"
             shift
             ;;
-        -h | --help | -v | --version | -V)
+        --fg* | -fg*)
+            exit_if_empty "$optname" "$optarg"
+            fg=1
+            ;;
+        --no-s* | -ns*)
+            exit_if_empty "$optname" "$optarg"
+            standalone=0
+            ;;
+        --e* | -e*)
+            exit_if_empty "$optname" "$optarg"
+            expert=1
+            ;;
+        -h* | --h* | -v | --version | -V)
             help
             exit 1
             ;;
@@ -131,20 +149,6 @@ exit_if_empty ()
 check_files ()
 {
   
-  # check for MCR parameter
-  if [ ! -n "$MCRROOT" ]; then
-    echo "No MCR folder defined."
-    help
-    exit 1  
-  fi
-  
-  # check for MCR folder
-  if [ ! -d "$MCRROOT" ]; then
-    echo "No MCR folder found."
-    help
-    exit 1  
-  fi
-
   # check for SPM parameter
   if [ ! -n "$SPMROOT" ]; then
     echo "No SPM folder defined."
@@ -152,13 +156,41 @@ check_files ()
     exit 1  
   fi
   
-  # check for SPM folder
-  if [ ! -f "$SPMROOT/run_spm12.sh" ]; then
-    echo "File $SPMROOT/run_spm12.sh not found found."
-    help
-    exit 1  
-  fi
+  # check this only for standalone version
+  if [ $standalone == 1 ]; then
+    # check for MCR parameter
+    if [ ! -n "$MCRROOT" ]; then
+      echo "No MCR folder defined."
+      help
+      exit 1  
+    fi
+    
+    # check for MCR folder
+    if [ ! -d "$MCRROOT" ]; then
+      echo "No MCR folder found."
+      help
+      exit 1  
+    fi
 
+    # check for SPM folder
+    if [ ! -f "$SPMROOT/run_spm12.sh" ]; then
+      echo "File $SPMROOT/run_spm12.sh not found found."
+      help
+      exit 1  
+    fi
+  else
+    # we use the same flag as for MCRROOT, but here for Matlab command
+    if [ -n "$MCRROOT" ]; then
+      eval "matlab=\"$MCRROOT\";"
+    fi
+    
+    found=`which "${matlab}" 2>/dev/null`
+    if [ ! -n "$found" ]; then
+      echo $matlab not found.
+      exit 1
+    fi
+  fi
+  
   # check for batch file
   if [ ! -n "$BATCHFILE" ]; then
     echo "No batch file defined."
@@ -191,36 +223,46 @@ run_cat ()
   
   # if no files are given expect that file name is defined
   # in batch file and execute that file
-  if [ "$count" -eq "0" ]; then
+  if [ "$count" -eq "0" ] && [ $standalone == 1 ] ; then
     eval "\"${SPMROOT}/run_spm12.sh\"" $MCRROOT "batch" $BATCHFILE
     exit 0
   fi
   
+  if [ "$count" -eq "0" ]  ; then
+    c2=1
+    c3=2
+  else
+    c2=2
+    c3=3
+  fi
+
   # create temporary batch file
   TMP=/tmp/cat_$$.m
 
   # copy everything except rows with UNDEFINED to temp file 
   grep -v "<UNDEFINED>" $BATCHFILE > $TMP
   
-  # extract parameter name of data structure (1st occurance of "<UNDEFINED>")
-  data=`grep -m 1 "<UNDEFINED>" $BATCHFILE | cut -f1 -d'='| sed -e 's,%,,'`
-
-  # extract parameter name of optional argument(s) (additional occurances of "<UNDEFINED>")
-  if [ -n "$ARG1" ]; then # ARG1 defined?
-    param1=`grep -m 2 "<UNDEFINED>" $BATCHFILE | tail -n 1 | cut -f1 -d'=' | sed -e 's,%,,'`
-    # extract parameter name of optional argument (3rd occurance of "<UNDEFINED>")
-    if [ -n "$ARG2" ]; then # ARG2 defined?
-      param2=`grep -m 3 "<UNDEFINED>" $BATCHFILE | tail -n 1 | cut -f1 -d'=' | sed -e 's,%,,'`
+  if [ ! "$count" -eq "0" ]  ; then
+    # extract parameter name of data structure (1st occurance of "<UNDEFINED>")
+    data=`grep -m 1 "<UNDEFINED>" $BATCHFILE | cut -f1 -d'='| sed -e 's,%,,'`
+  
+    # surface data need an additional curly bracket
+    if grep -q -e "\.datalong" $BATCHFILE ; then
+      echo "$data = {{" >> $TMP
+    else
+      echo "$data = {" >> $TMP
     fi
   fi
   
-  # surface data need an additional curly bracket
-  if grep -q -e "\.datalong" $BATCHFILE ; then
-    echo "$data = {{" >> $TMP
-  else
-    echo "$data = {" >> $TMP
+  # extract parameter name of optional argument(s) (additional occurances of "<UNDEFINED>")
+  if [ -n "$ARG1" ]; then # ARG1 defined?
+    param1=`grep -m $c{2} "<UNDEFINED>" $BATCHFILE | tail -n 1 | cut -f1 -d'=' | sed -e 's,%,,'`
+    # extract parameter name of optional argument (3rd occurance of "<UNDEFINED>")
+    if [ -n "$ARG2" ]; then # ARG2 defined?
+      param2=`grep -m $c{3} "<UNDEFINED>" $BATCHFILE | tail -n 1 | cut -f1 -d'=' | sed -e 's,%,,'`
+    fi
   fi
-  
+    
   i=0
   ARG_LIST=""
   while [ "$i" -lt "$count" ]; do
@@ -240,13 +282,15 @@ run_cat ()
     ((i++))
   done
 
-  # surface data need an additional curly bracket
-  if grep -q -e "\.datalong" $BATCHFILE ; then
-    echo "     }};" >> $TMP
-  else
-    echo "     };" >> $TMP
+  if [ ! "$count" -eq "0" ]  ; then
+    # surface data need an additional curly bracket
+    if grep -q -e "\.datalong" $BATCHFILE ; then
+      echo "     }};" >> $TMP
+    else
+      echo "     };" >> $TMP
+    fi
   fi
-  
+    
   if [ -n "$ARG1" ]; then # ARG1 defined?
     echo "$param1 = $ARG1 ;" >> $TMP
     if [ -n "$ARG2" ]; then # ARG2 defined?
@@ -259,9 +303,36 @@ run_cat ()
     echo "${add_to_batch}" >> ${TMP}
   fi
 
-  eval "\"${SPMROOT}/run_spm12.sh\"" $MCRROOT "batch" $TMP
-  rm $TMP
-  exit 0
+  if [ $standalone == 1 ]; then
+    eval "\"${SPMROOT}/run_spm12.sh\"" $MCRROOT "batch" $TMP
+    rm $TMP
+    exit 0
+  else
+    DIR=$(dirname "${TMP}")
+    
+    # we have to check where spm.m is found
+    if [ ! -f ${SPMROOT}/spm.m ]; then
+      SPMROOT=$(dirname "${SPMROOT}")
+      SPMROOT=$(dirname "${SPMROOT}")
+    fi
+    
+    BATCHFILE=$(basename "${TMP}")
+    BATCHFILE=$(echo "${BATCHFILE}" | cut -f1 -d'.')
+    cat12_dir="${SPMROOT}/toolbox/cat12" 
+    export MATLABPATH=${SPMROOT}:${cat12_dir}:${DIR}
+    eval "COMMAND=\"$BATCHFILE\";"
+    
+    if [ $expert == 1 ]; then
+      COMMAND="spm; spm_get_defaults; cat_get_defaults; global defaults cat matlabbatch; cat12('expert'); $COMMAND;spm_jobman('run',matlabbatch); exit;";
+    else
+      COMMAND="spm; spm_get_defaults; cat_get_defaults; global defaults cat matlabbatch;$COMMAND;spm_jobman('run',matlabbatch); exit;";
+    fi
+    if [ "$fg" -eq 0 ]; then
+      nohup nice ${matlab} -nodisplay -nosplash -r "$COMMAND"  2>&1 &
+    else
+      nohup nice  ${matlab} -nodisplay -nosplash -r "$COMMAND" 2>&1
+    fi
+  fi
 }
 
 
@@ -282,14 +353,20 @@ cat <<__EOM__
 USAGE:
    cat_standalone.sh filename(s) [-s spm_standalone_folder] [-m mcr_folder] [-b batch_file] 
                                  [-a1 additional_argument1] [-a2 additional_argument2]
-                                 [-a add_to_batch]
+                                 [-a add_to_batch] [-ns -e -fg]
    
-   -s <DIR>    | --spm <DIR>     SPM12 folder of standalone version (can be also defined by SPMROOT)
-   -m <DIR>    | --mcr <DIR>     Matlab Compiler Runtime (MCR) folder (can be also defined by MCRROOT)
-   -b <FILE>   | --batch <FILE>  batch file to execute
+   -s  <DIR>   | --spm <DIR>     SPM12 folder of standalone version (can be also defined by SPMROOT)
+   -m  <DIR>   | --mcr <DIR>     Matlab Compiler Runtime (MCR) folder (can be also defined by MCRROOT)
+   -b  <FILE>  | --batch <FILE>  batch file to execute
    -a1 <STRING>| --arg1 <STRING> 1st additional argument (otherwise use defaults or batch)
    -a2 <STRING>| --arg2 <STRING> 2nd additional argument (otherwise use defaults or batch)
-   -a <STRING> | --add  <STRING> add option to batch file
+   -a  <STRING>| --add  <STRING> add option to batch file
+   
+   options for calling standard Matlab mode
+   -ns         | --no-standalone call the standard Matlab version instead of the standalone version
+   -e          | --expert        call CAT12 in expert mode (needed for using standalone batches!)
+   -fg         | --fg            do not run matlab process in background
+   -m  <FILE>  | --m <FILE>      Matlab command (matlab version) (default $matlab)
 
    The first occurance of the parameter "<UNDEFINED>" in the batch file will be replaced by the
    list of input files. You can use the existing batch files in this folder or create your own batch 
@@ -306,7 +383,14 @@ USAGE:
    If you use a computer cluster it is recommended to use the batch files to only process one data set 
    and use a job or queue tool to call the (single) jobs on the cluster.
    
-PURPOSE:
+   Although this tool is mainly intended for calling scripts for the standalone version of Matlab without 
+   a Matlab license, you can also use it to call the standard version of Matlab. If you have a Matlab
+   license, this has the advantage that you can use the same scripts as for the standalone version, but 
+   you can run CAT12 without a GUI. Please note that standalone batches must be called in CAT12 expert
+   mode. Of course, you can also create and use your own batches that you use regulary in CAT12 or
+   SPM12. With this script you canrun these batches in headless mode without any display.
+   
+   PURPOSE:
    Command line call of (CAT12) batch files for SPM12 standalone installation
 
 EXAMPLES
@@ -329,7 +413,7 @@ EXAMPLES
    Please note the multiple quotes for parameter a1.
 
    -----------------------------------------------------------------------------------------------
-   De-Facing
+   De-facing
    -----------------------------------------------------------------------------------------------
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
        -b ${cwd}/cat_standalone_deface.m sTRIO*.nii
@@ -362,7 +446,7 @@ EXAMPLES
    but skip surface estimation.
 
    -----------------------------------------------------------------------------------------------
-   Longitudinal Segmentation
+   Longitudinal segmentation
      -a1 longitudinal model (0 - developmental; 1 - plasticity/learning; 2 - aging; 3 - save models 1 and 2)
      -a2 TPM
    -----------------------------------------------------------------------------------------------
@@ -381,14 +465,14 @@ EXAMPLES
    Please note the multiple quotes for parameter a2.
 
    -----------------------------------------------------------------------------------------------
-   Segmentation (Simple Mode)
+   Segmentation (simple mode)
    -----------------------------------------------------------------------------------------------
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
        -b ${cwd}/cat_standalone_simple.m sTRIO0001.nii
    Process the single file sTRIO0001.nii using the simple processing batch. 
 
    -----------------------------------------------------------------------------------------------
-   Resample & Smooth Surfaces
+   Resample & smooth surfaces
      -a1 smoothing filter size surface values
      -a2 use 32k mesh from HCP (or 164k mesh from Freesurfer)
    -----------------------------------------------------------------------------------------------
@@ -411,7 +495,7 @@ EXAMPLES
    Please note the multiple quotes for parameter a2.
 
    -----------------------------------------------------------------------------------------------
-   Estimate and Save Quality Measures for Volumes or Surfaces
+   Estimate and save quality measures for volumes or surfaces
      -a1 csv output filename
      -a2 enable global scaling with TIV (only for volumes meaningful)
    -----------------------------------------------------------------------------------------------
@@ -447,7 +531,7 @@ EXAMPLES
    Please note the multiple quotes for parameter a1.
 
    -----------------------------------------------------------------------------------------------
-   TFCE Statistical Estimation
+   TFCE statistical estimation
      -a1 contrast number
      -a2 number of permutations
    -----------------------------------------------------------------------------------------------
@@ -456,6 +540,16 @@ EXAMPLES
        -a1 "2" -a2 "20000"
    Call estimation of TFCE statistics for the given SPM.mat file for contrast number 2 with 20000 
    permutations.
+
+   -----------------------------------------------------------------------------------------------
+   Calling standard Matlab mode
+   -----------------------------------------------------------------------------------------------
+   cat_standalone.sh -ns -e -s $SPMROOT -m matlab_R2017b \ 
+       -b ${cwd}/cat_standalone_segment.m sTRIO0001.nii \ 
+       -a "matlabbatch{1}.spm.tools.cat.estwrite.output.surface = 0;"
+   Preprocess (segment) the single file sTRIO0001.nii in standard Matlab mode (using CAT12 expert
+   mode) and the default CAT12 preprocessing batch, but skip surface estimation. As Matlab command
+   matlab_R2017b is used.
 
    -----------------------------------------------------------------------------------------------
    Parallelization

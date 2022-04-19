@@ -1,7 +1,7 @@
 %-----------------------------------------------------------------------
 % Job for longitudinal batch processing in CAT12.
 %
-% The batch consist of different longiditundal models (job.longmodel): 
+% The batch consist of different longitudinal models (job.longmodel): 
 %  (0) A longitudinal cross-sectional pipeline "LC" for a maximal independ 
 %      processing (with a subject specific TPM, based on the segmentation
 %      of the non-linear average to reduce time point specific differences) 
@@ -17,7 +17,7 @@
 %      cortical structures (sinking of gyri due to tissue atropy). 
 %  (3) The LP and LA pipeline can be processes at the same time. 
 %  (4) A longitudial development mdoel "LD" that works similar as the LA 
-%      but allow affine rather than rigid adaptions. 
+%      but allows affine rather than rigid adaptions. 
 %
 % Besides abreviations also the code of the longmodel is used, e.g., L0=LC. 
 %
@@ -34,7 +34,7 @@
 %    this is finaly the core preprocessing  
 %  * averaging of time point specific deformations (not LC)
 %  * time point specific deformations to the average (not LC/LP)
-%  * cleanup of temporar files
+%  * cleanup of temporary files
 %
 %
 % Christian Gaser
@@ -53,7 +53,7 @@
 % TODO: 
 % =======================================================================
 % * RD202203: LC surfaces 
-%   Could the LC model profit by averaging results of the spherical registration?
+%   Could the LC model benefit from averaging results of the spherical registration?
 %
 % * RD202203: LC output maps:
 %   The LC model does not provide registrated maps r*.nii becuase of the 
@@ -99,7 +99,7 @@
 % =======================================================================
 %
 %   RD202203: 
-%   - To test the LD pipeline, real longitudinal scans could be use  
+%   - To test the LD pipeline, real longitudinal scans could be used  
 %     and scaled - btw. how are we normalizing for TIV in such cases?
 %     A simplyfied version can use one cross-section scan and add rotation 
 %     and noise, where global-equally changes are expected. This can also
@@ -156,7 +156,7 @@ try
   end
 catch
   cat_io_cprintf('err','Setting parameters failed! Use defaults! \n');  
-  longmodel   = 1; % use plasticity model as default (1-plasticity, 2-aging, 3-both)
+  longmodel   = 1; % use plasticity model as default (0-development, 1-plasticity, 2-aging, 3-both 1 and 2)
   dartel      = 0;
   modulate    = 1; % save modulated data
   delete_temp = 1; % delete temporary files after preprocessing
@@ -399,7 +399,7 @@ if longmodel == 4 || ( longmodel == 0 && longTPM )
     end
   end
 elseif longmodel 
-% ===== classical modell for plasticity/aging =====
+% ===== classical model for plasticity/aging =====
 
   mbi = mbi + 1; mb_rigid = mbi; 
   matlabbatch{mbi}.spm.tools.cat.tools.series.bparam          = 1e6;
@@ -988,9 +988,11 @@ if delete_temp
   end
   
   if longmodel || longTPM 
-    matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Move/Delete Files: Moved/Copied Files', ... 
-      substruct('.','val', '{}',{mb_rigid_ravg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-      substruct('.','files')); c = c+1;
+    if prepavg
+      matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('Move/Delete Files: Moved/Copied Files', ... 
+        substruct('.','val', '{}',{mb_rigid_ravg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+        substruct('.','files')); c = c+1;
+    end
     matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep('CAT12: Segmentation: Native Label Image', ...
       substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
       substruct('()',{1}, '.','label', '()',{':'})); c = c+1;
