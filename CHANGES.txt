@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1985 | gaser | 2022-04-25 09:17:58
+r1986 | gaser | 2022-04-25 13:44:53
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_analyze_ROIs.m
+ M      html/cat_shell.html
+
+(1) Changed: Added check to cat_stat_analyze_ROI.m to indicate ROI values that
+             have low relative values and should be care with caution.
+------------------------------------------------------------------------
+r1985 | gaser | 2022-04-25 09:18:54 +0200 (Mon, 25 Apr 2022) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14,6 +24,7 @@ MM      standalone/cat_standalone_get_TIV.m
              headless mode without GUI.
 (2) Fixed:   Corrected bug in cat_vol_img2mip.m that was caused if one view
              was empty.
+
 
 ------------------------------------------------------------------------
 r1984 | gaser | 2022-04-19 09:59:02 +0200 (Tue, 19 Apr 2022) | 49 lines
