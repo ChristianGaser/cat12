@@ -86,7 +86,7 @@ function out = cat_vol_sanlm2(varargin)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
-% $Id: cat_vol_sanlm.m 1979 2022-03-30 14:12:01Z gaser $
+% $Id$
 
     % this function adds noise to the data to stabilize processing and we
     % have to define a specific random pattern to get the same results each time
@@ -198,7 +198,7 @@ end
 
 %_______________________________________________________________________
 function varargout = cat_vol_sanlm_file(job)
-    SVNid = '$Rev: 1979 $';
+    SVNid = '$Rev$';
     
     if ~isfield(job,'data') || isempty(job.data)
      job.data = cellstr(spm_select([1 Inf],'image','select images to filter'));
