@@ -1,7 +1,7 @@
 % Batch file for getting TIV values for SPM12/CAT12 standalone installation
 %
 %_______________________________________________________________________
-% $Id: cat_standalone_get_TIV.m 1841 2021-06-01 10:03:38Z gaser $
+% $Id$
 
 % data field, that will be dynamically replaced by cat_standalone.sh
 matlabbatch{1}.spm.tools.cat.tools.calcvol.data_xml = '<UNDEFINED>';

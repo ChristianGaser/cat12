@@ -106,8 +106,10 @@ end
 mx = 0;
 for i=1:n
   XYZ{i} = XYZ{i}';
-  Y{i} = Y{i}';
-  rgb{i}   = rot90(spm_project(Y{i},round(XYZ{i}),dim));
+  if ~isempty(Y{i})
+    Y{i} = Y{i}';
+    rgb{i}   = rot90(spm_project(Y{i},round(XYZ{i}),dim));
+  end
   if gamma_scl ~= 1
 	rgb{i} = rgb{i}.^(1/gamma_scl);
   end

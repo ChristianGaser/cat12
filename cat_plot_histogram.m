@@ -1,5 +1,4 @@
 function out = cat_plot_histogram(data,opt)
-%CG_HIST2D
 % Format out = cat_plot_histogram(data,opt);
 % Show histogram of one or more image or surface data 
 % If data are spmT-files also print mean, std, effect size,

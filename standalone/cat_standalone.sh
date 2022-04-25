@@ -137,8 +137,7 @@ exit_if_empty ()
   val="$*"
 
   if [ ! -n "$val" ]; then
-    echo 'ERROR: No argument given with \"$desc\" command line argument!' >&2
-    exit 1
+    echo 'WARNING: No argument given with command line argument! Please check that all arguments are defined in the batch file' >&2
   fi
 }
 
