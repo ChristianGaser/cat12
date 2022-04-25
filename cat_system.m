@@ -68,19 +68,19 @@ end
 
 % for mac we need to enable execution because of Apple Gatekeeper
 if ismac && ST == 137
-  [ST2, RS2] = system('spctl --status');
-  if ~isempty(strfind(RS2,'enabled'))
-    cat_io_cmd(sprintf('\nThe following commands will be executed as administrator to allow execution of CAT12 binaries and mex-files.\n Please now type admin password to call sudo\n'),'warning');
-    cmd = ['sudo xattr -r -d com.apple.quarantine ' CATDir];
-    system(cmd); fprintf([cmd '\n']);
-    cmd = ['sudo find ' CATDir ' -name *.mexmac* -exec spctl --add {} \;'];
-    system(cmd); fprintf([cmd '\n']);
-    cmd = ['sudo chmod a+x ' CATDir '/CAT.mac*/CAT*'];
-    system(cmd); fprintf([cmd '\n']);
-    cmd = ['sudo find ' CATDir ' -name *.mexmac* -exec xattr -d com.apple.quarantine {} \;'];
-    system(cmd); fprintf([cmd '\n']);
-    ST = system(fullfile(CATDir,'CAT_3dVol2Surf'));
-  end
+  web('https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)#Troubleshooting');
+  CATDir = fullfile(spm('dir'),'toolbox','cat12','CAT');
+  cat_io_cmd(sprintf('\nThe following commands will be executed as administrator to allow execution of CAT12 binaries and mex-files.\n Please now type admin password to call sudo\n'),'warning');
+  cat_io_cmd(sprintf('You can also break that command here and run the commands that are listed on the open website under Troubleshooting manually.\n'),'warning');
+  cmd = ['sudo xattr -r -d com.apple.quarantine ' CATDir];
+  system(cmd); fprintf([cmd '\n']);
+  cmd = ['sudo find ' CATDir ' -name *.mexmac* -exec spctl --add {} \;'];
+  system(cmd); fprintf([cmd '\n']);
+  cmd = ['sudo chmod a+x ' CATDir '/CAT.mac*/CAT*'];
+  system(cmd); fprintf([cmd '\n']);
+  cmd = ['sudo find ' CATDir ' -name *.mexmac* -exec xattr -d com.apple.quarantine {} \;'];
+  system(cmd); fprintf([cmd '\n']);
+  ST = system(fullfile(CATDir,'CAT_3dVol2Surf'));
 end
 
 if ST > 1

@@ -35,6 +35,26 @@ if ~strcmp(nam,'cat12')
   spm('alert!',sprintf('Please check that you do not have multiple CAT12 installations in your path!\nYour current CAT12 version is installed in %s but should be installed in %s',pth,fullfile(spm('dir'),'toolbox','cat12')),'WARNING');
 end
 
+% check that mex-files on MAC are not blocked
+try
+  feval(@cat_sanlms,single(rand(6,6,6)),1,3);
+catch
+  if ismac 
+    CATDir = fullfile(spm('dir'),'toolbox','cat12','CAT');
+    web('https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)#Troubleshooting');
+    cat_io_cmd(sprintf('\nThe following commands will be executed as administrator to allow execution of CAT12 binaries and mex-files.\n Please now type admin password to call sudo\n'),'warning');
+    cat_io_cmd(sprintf('You can also break that command here and run the commands that are listed on the open website under Troubleshooting manually.\n'),'warning');
+    cmd = ['sudo xattr -r -d com.apple.quarantine ' CATDir];
+    system(cmd); fprintf([cmd '\n']);
+    cmd = ['sudo find ' CATDir ' -name *.mexmac* -exec spctl --add {} \;'];
+    system(cmd); fprintf([cmd '\n']);
+    cmd = ['sudo chmod a+x ' CATDir '/CAT.mac*/CAT*'];
+    system(cmd); fprintf([cmd '\n']);
+    cmd = ['sudo find ' CATDir ' -name *.mexmac* -exec xattr -d com.apple.quarantine {} \;'];
+  end
+end
+
+
 % get expert level except for standalone installation
 expert   = cat_get_defaults('extopts.expertgui'); 
 
