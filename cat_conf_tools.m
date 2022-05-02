@@ -3012,6 +3012,16 @@ function calcvol = conf_stat_TIV
   ''
   };
 
+  calcvol_savenames         = cfg_menu;
+  calcvol_savenames.tag     = 'calcvol_savenames';
+  calcvol_savenames.name    = 'Add filenames';
+  calcvol_savenames.labels  = {'Values only' 'Add filenames' 'Add folders and filenames'};
+  calcvol_savenames.values  = {0 1 2};
+  calcvol_savenames.val     = {0};
+  calcvol_savenames.help    = {'You can either save only the values (that can be easily read with spm_load) or also add filenames (and folders) to 1st column.'
+  ''
+  };
+
   clear data_xml
   data_xml = cfg_files;
   data_xml.name = 'XML files';
@@ -3025,11 +3035,11 @@ function calcvol = conf_stat_TIV
   calcvol       = cfg_exbranch;
   calcvol.tag   = 'calcvol';
   calcvol.name  = 'Estimate TIV and global tissue volumes';
-  calcvol.val   = {data_xml,calcvol_TIV,calcvol_name};
+  calcvol.val   = {data_xml,calcvol_TIV,calcvol_savenames,calcvol_name};
   calcvol.prog  = @cat_stat_TIV;
   calcvol.vout  = @vout_stat_TIV;
   calcvol.help  = {
-  'This function reads raw volumes for TIV/GM/WM/CSF/WM hyperintensities (WMH) and saves values in a txt-file. These values can be read with the matlab command: vol = spm_load. If you choode to save all values the entries for TIV/GM/WM/CSF/WMH are now saved in vol(:,1) vol(:,2) vol(:,3), vol(:,4), and vol(:,5) respectively.'
+  'This function reads raw volumes for TIV/GM/WM/CSF/WM hyperintensities (WMH) and saves values in a txt-file. These values can be read with the matlab command: vol = spm_load. If you choose to save all values the entries for TIV/GM/WM/CSF/WMH are now saved in vol(:,1) vol(:,2) vol(:,3), vol(:,4), and vol(:,5) respectively.'
   ''
   'You can use TIV either as nuisance in an AnCova model or as user-specified globals with the "global calculation" option depending on your hypothesis. The use of TIV as nuisance or globals is recommended for modulated data where both the affine transformation and the non-linear warping of the registration are corrected for. '
   ''
