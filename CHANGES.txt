@@ -1,5 +1,34 @@
 ------------------------------------------------------------------------
-r1987 | gaser | 2022-04-25 14:27:55
+r1988 | gaser | 2022-05-02 12:27:49
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       cat_stat_TIV.m
+M       cat_vol_qa.m
+M       html/cat.html
+M       html/cat_licences.html
+M       spm_cat12.m
+M       standalone/cat_standalone.sh
+M       standalone/cat_standalone_get_TIV.m
+
+(1) Changed: Extended cat_stat_TIV to also optionally add filename and folder 
+             to 1st column of output file.
+(2) Changed: Extended cat_standalone.sh to allow 3rd parameter. 
+(3) Changed: Added 3rd parameter to cat_standalone_get_TIV.m to to also 
+             optionally add filename and folder to output file.
+(4) Changed: Updated references in cat_licences.html. 
+(5) Changed: Enabled extraction of surface ratio as new folding measure in
+             cat_conf_stools.m.
+(6) Changed: Updated GUI names for standard CAT12 mode in cat12.m. 
+(7) Fixed:   Corrected typo in spm_cat12.m that called not existing command.
+(8) Fixed:   Added check for variable Pp0 to cat_vol_qa.m.
+             
+------------------------------------------------------------------------
+r1987 | gaser | 2022-04-25 14:28:37 +0200 (Mon, 25 Apr 2022) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +37,7 @@ M       spm_cat12.m
 
 (1) Changed: Added check to spm_cat12.m to check whether mex-files on MAC OS
              are blocked.
+
 ------------------------------------------------------------------------
 r1986 | gaser | 2022-04-25 13:45:39 +0200 (Mon, 25 Apr 2022) | 8 lines
 

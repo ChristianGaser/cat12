@@ -1087,7 +1087,7 @@ end
 
   end
 
-  if isempty(varargin) || isstruct(varargin{1})
+  if (isempty(varargin) || isstruct(varargin{1})) && exist('Pp0','var')
     varargout{1}.data = Pp0;
     action = action2; 
   else
