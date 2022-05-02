@@ -91,6 +91,11 @@ parse_args ()
             ARG2=$optarg
             shift
             ;;
+        --arg3* | -a3*)
+            exit_if_empty "$optname" "$optarg"
+            ARG3=$optarg
+            shift
+            ;;
         --add* | -a*)
             exit_if_empty "$optname" "$optarg"
             add_to_batch="$optarg"
@@ -259,6 +264,10 @@ run_cat ()
     # extract parameter name of optional argument (3rd occurance of "<UNDEFINED>")
     if [ -n "$ARG2" ]; then # ARG2 defined?
       param2=`grep -m $c{3} "<UNDEFINED>" $BATCHFILE | tail -n 1 | cut -f1 -d'=' | sed -e 's,%,,'`
+      # extract parameter name of optional argument (4th occurance of "<UNDEFINED>")
+      if [ -n "$ARG3" ]; then # ARG3 defined?
+        param3=`grep -m $c{4} "<UNDEFINED>" $BATCHFILE | tail -n 1 | cut -f1 -d'=' | sed -e 's,%,,'`
+      fi
     fi
   fi
     
@@ -294,6 +303,9 @@ run_cat ()
     echo "$param1 = $ARG1 ;" >> $TMP
     if [ -n "$ARG2" ]; then # ARG2 defined?
       echo "$param2 = $ARG2 ;" >> $TMP
+      if [ -n "$ARG3" ]; then # ARG3 defined?
+        echo "$param3 = $ARG3 ;" >> $TMP
+      fi
     fi
   fi
   
@@ -359,6 +371,7 @@ USAGE:
    -b  <FILE>  | --batch <FILE>  batch file to execute
    -a1 <STRING>| --arg1 <STRING> 1st additional argument (otherwise use defaults or batch)
    -a2 <STRING>| --arg2 <STRING> 2nd additional argument (otherwise use defaults or batch)
+   -a3 <STRING>| --arg3 <STRING> 3rd additional argument (otherwise use defaults or batch)
    -a  <STRING>| --add  <STRING> add option to batch file
    
    options for calling standard Matlab mode
@@ -522,11 +535,14 @@ EXAMPLES
    Estimate total intra-cranial volume (TIV) or all global tissue volumes (in ml)
      -a1 output filename
      -a2 save TIV only
+     -a3 add filenames
    -----------------------------------------------------------------------------------------------
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
        -b ${cwd}/cat_standalone_getTIV.m report/cat_*.xml \ 
-       -a1 " 'TIV.txt' " -a2 "1"
-   Estimate TIV only and save values for each data set in TIV.txt.
+       -a1 " 'TIV.txt' " -a2 "1" -a3 "1"
+   Estimate TIV only and save filenames and values for each data set in TIV.txt.
+   The parameter a3 allows to add filenames to 1st column:
+     0 - save values only; 1 - add filename; 2 - add folder and filename 
    Please note the multiple quotes for parameter a1.
 
    -----------------------------------------------------------------------------------------------

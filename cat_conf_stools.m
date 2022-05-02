@@ -1769,25 +1769,24 @@ SD.values = {0,1,2};
 % affine normalized measures
 if expert>1
   tGI           = cfg_entry;
-  tGI.name      = 'Toro''s gyrification index';
+  tGI.name      = 'Toro''s gyrification index (surface ratio)';
   tGI.tag       = 'tGI';
   tGI.strtype   = 'r';
   tGI.num       = [1 inf];
   tGI.val       = {0};
   tGI.hidden    = expert<1; 
   tGI.help      = {
-    'Toro''s gyrification index (#toroGI) with definable radii.  The original method is described in Toro et al., 2008.'
+    'Toro''s gyrification index (#toroGI) based on local degree of folding through the surface ratio with definable radii.  The original method is described in Toro et al., 2008.'
   };
 else
   tGI        = cfg_menu;
-  tGI.name   = 'Toro''s gyrification index';
+  tGI.name   = 'Toro''s gyrification index (surface ratio)';
   tGI.tag    = 'tGI';
   tGI.labels = {'No','Yes'};
   tGI.values = {0,1};
   tGI.val    = {0};
-  tGI.hidden = expert<1; 
   tGI.help   = {
-    'Different versions of Toro''s gyrification index (#toroGI). The original method is described in Toro et al., 2008.'
+    'Toro''s gyrification index (#toroGI) based on local degree of folding through the surface ratio. The original method is described in Toro et al., 2008.'
   };
 end
 
@@ -1918,7 +1917,7 @@ surfextract.name = 'Extract additional surface parameters';
 surfextract.val  = {data_surf_extract, ...
   area,gmv, ... developer
   GI, SD, FD, ...
-  tGI, ... expert
+  tGI, ...
   lGI, GIL, ... developer
   surfaces, norm, ... expert
   FS_HOME, ...

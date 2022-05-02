@@ -37,7 +37,7 @@ end
 
 % check that mex-files on MAC are not blocked
 try
-  feval(@cat_sanlms,single(rand(6,6,6)),1,3);
+  feval(@cat_sanlm,single(rand(6,6,6)),1,3);
 catch
   if ismac 
     CATDir = fullfile(spm('dir'),'toolbox','cat12','CAT');
