@@ -42,31 +42,36 @@ for i=1:length(p.data_xml)
     end
   end
     
-  name = spm_str_manip(deblank(fullfile(xml.filedata.path,xml.filedata.file)),'a60');
-
+  if isfield(xml,'filedata')
+    filename = spm_str_manip(deblank(fullfile(xml.filedata.path,xml.filedata.file)),'a60');
+  else
+    [pth,file] = fileparts(deblank(p.data_xml{i}));
+    filename = spm_str_manip(deblank(p.data_xml{i}),'a60');
+  end
+  
   % only save TIV
   if p.calcvol_TIV
     switch p.calcvol_savenames
       case 0
         fprintf(fid,'%7.2f\n',sum(tmp));
       case 1
-        fprintf(fid,'%s\t%7.2f\n',xml.filedata.file,sum(tmp));
+        fprintf(fid,'%s\t%7.2f\n',file,sum(tmp));
       case 2
-        fprintf(fid,'%s\t%7.2f\n',fullfile(xml.filedata.path,xml.filedata.file),sum(tmp));
+        fprintf(fid,'%s\t%7.2f\n',fullfile(pth,file),sum(tmp));
     end
     calcvol(i) = sum(tmp);
-    fprintf('%60s\t%7.2f\n',name,sum(tmp));
+    fprintf('%60s\t%7.2f\n',filename,sum(tmp));
   else % also save GM/WM/CSF 
     switch p.calcvol_savenames
       case 0
         fprintf(fid,'%7.2f\t%7.2f\t%7.2f\t%7.2f\t%7.2f\n',sum(tmp),tmp(2),tmp(3),tmp(1),tmp(4));
       case 1
-        fprintf(fid,'%s\t%7.2f\t%7.2f\t%7.2f\t%7.2f\t%7.2f\n',xml.filedata.file,sum(tmp),tmp(2),tmp(3),tmp(1),tmp(4));
+        fprintf(fid,'%s\t%7.2f\t%7.2f\t%7.2f\t%7.2f\t%7.2f\n',file,sum(tmp),tmp(2),tmp(3),tmp(1),tmp(4));
       case 2
-        fprintf(fid,'%s\t%7.2f\t%7.2f\t%7.2f\t%7.2f\t%7.2f\n',fullfile(xml.filedata.path,xml.filedata.file),sum(tmp),tmp(2),tmp(3),tmp(1),tmp(4));
+        fprintf(fid,'%s\t%7.2f\t%7.2f\t%7.2f\t%7.2f\t%7.2f\n',fullfile(pth,file),sum(tmp),tmp(2),tmp(3),tmp(1),tmp(4));
     end
     calcvol(i,:) = [sum(tmp),tmp(2),tmp(3),tmp(1),tmp(4)];
-    fprintf('%60s\t%7.2f\t%7.2f\t%7.2f\t%7.2f\t%7.2f\n',name,sum(tmp),tmp(2),tmp(3),tmp(1),tmp(4));
+    fprintf('%60s\t%7.2f\t%7.2f\t%7.2f\t%7.2f\t%7.2f\n',filename,sum(tmp),tmp(2),tmp(3),tmp(1),tmp(4));
   end
   spm_progress_bar('Set',i);  
 end

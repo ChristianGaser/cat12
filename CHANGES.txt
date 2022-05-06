@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1989 | gaser | 2022-05-06 11:13:16
+r1990 | gaser | 2022-05-06 15:34:21
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_TIV.m
+
+(1) Fixed:   Corrected bug in cat_stat_TIV.m if no filedata field was found in 
+             xml-file.
+             
+------------------------------------------------------------------------
+r1989 | gaser | 2022-05-06 11:16:31 +0200 (Fri, 06 May 2022) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +23,7 @@ M       templates_MNI152NLin2009cAsym/cobra.txt
 (3) Fixed:   Corrected bug for saving surface data as mat file in 
              cat_io_data2mat.m.
              
+
 ------------------------------------------------------------------------
 r1988 | gaser | 2022-05-02 12:30:43 +0200 (Mon, 02 May 2022) | 27 lines
 
