@@ -3015,10 +3015,10 @@ function calcvol = conf_stat_TIV
   calcvol_savenames         = cfg_menu;
   calcvol_savenames.tag     = 'calcvol_savenames';
   calcvol_savenames.name    = 'Add filenames';
-  calcvol_savenames.labels  = {'Values only' 'Add filenames' 'Add folders and filenames'};
+  calcvol_savenames.labels  = {'Values only' 'Add file names' 'Add folders and file names'};
   calcvol_savenames.values  = {0 1 2};
   calcvol_savenames.val     = {0};
-  calcvol_savenames.help    = {'You can either save only the values (that can be easily read with spm_load) or also add filenames (and folders) to 1st column.'
+  calcvol_savenames.help    = {'You can either save only the values (that can be easily read with spm_load) or also add file names (and folders) to 1st column.'
   ''
   };
 
@@ -4023,6 +4023,7 @@ function data2mat = conf_io_data2mat(data,outdir)
   
   data.name          = 'Sample surface data';
   data.filter        = 'mesh';
+  data.ufilter       = 'resampled';
   data.help          = {'Select resampled and smoothed surface data. They must all have the same mesh size (32k or 164k).'};
 
   sample.values      = {data};

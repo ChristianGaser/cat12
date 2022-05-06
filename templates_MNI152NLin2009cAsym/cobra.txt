@@ -6,7 +6,18 @@ CAT12 was used to segment the T1 data and to estimate the registration parameter
 The resulting maximum probability map was slightly modified: (1) remaining holes were filled with median value, (2) an additionally mask with brainmask_T1.nii was applied to remove non-brain areas.
 Furthermore, the different labels were merged and re-labeled with unique IDs.
 
-The Cobra atlas is build from 4 atlases that are provided by the Computational Brain Anatomy Laboratory at the Douglas Institute (CoBra Lab). The 4 atlases are based on high-resolution (0.3mm isotropic voxel size) images of the amygdala, hippocampus, subcortical structures and the cerebellum. Please note that the original labels were changed in order to allow a combined atlas.
+The Cobra atlas is build from 5 atlases that are provided by the Computational Brain Anatomy Laboratory at the Douglas Institute (CoBra Lab). The 5 atlases are based on high-resolution (0.3mm isotropic voxel size) images of the amygdala, hippocampus, subcortical structures and the cerebellum. Please note that the original labels were changed in order to allow a combined atlas.
+
+High-resolution in vivo atlases of the hippocampal subfields
+============================================================
+
+This atlas is described in: 
+
+    Winterburn JL, Pruessner JC, Chavez S, Schira MM, Lobaugh NJ, Voineskos AN,
+    Chakravarty MM. A novel in vivo atlas of human hippocampal subfields using high-
+    resolution 3 T magnetic resonance imaging. Neuroimage. 2013 Jul 1;74:254-65.
+
+Please cite this paper when using the atlas. 
 
 High-resolution in vivo atlases of the amygdala
 =================================================
