@@ -144,9 +144,9 @@ else
   
   % use mask from first mesh and assume this holds for all data
   if isfield(V{1}(1),'private')
-    ind = find(isfinite(V{1}(1).private.cdata));
+    ind = find(isfinite(V{1}(1).private.cdata(:)));
   else
-    ind = find(isfinite(V{1}(1).cdata));
+    ind = find(isfinite(V{1}(1).cdata(:)));
   end
   dim = V{1}(1).dim(1);
 end
@@ -176,9 +176,9 @@ if nargin > 3
           g = spm_global(V{j}(i));
         else
           if isfield(V{1}(1),'private')
-            y = V{j}(i).private.cdata;
+            y = V{j}(i).private.cdata(:);
           else
-            y = V{j}(i).cdata;
+            y = V{j}(i).cdata(:);
           end
           g = mean(y(isfinite(y)));
         end
@@ -265,8 +265,12 @@ end
 
 % save surface or resampled volume structure
 if spm_mesh_detect(V{1}(1))
-  V = V{1}(1).private;
-  V = rmfield(V,'cdata');
+  if isfield(V{1}(1),'private')
+    V = V{1}(1).private;
+  else
+    V = V{1}(1);
+  end
+  try, V = rmfield(V,'cdata'); end
 else
   V = Vres;
 end

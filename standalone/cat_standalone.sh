@@ -540,9 +540,9 @@ EXAMPLES
    cat_standalone.sh -s $SPMROOT -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
        -b ${cwd}/cat_standalone_getTIV.m report/cat_*.xml \ 
        -a1 " 'TIV.txt' " -a2 "1" -a3 "1"
-   Estimate TIV only and save filenames and values for each data set in TIV.txt.
-   The parameter a3 allows to add filenames to 1st column:
-     0 - save values only; 1 - add filename; 2 - add folder and filename 
+   Estimate TIV only and save file names and values for each data set in TIV.txt.
+   The parameter a3 allows to add file names to 1st column:
+     0 - save values only; 1 - add file name; 2 - add folder and file name s
    Please note the multiple quotes for parameter a1.
 
    -----------------------------------------------------------------------------------------------

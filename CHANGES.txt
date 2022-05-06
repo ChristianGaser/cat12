@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1988 | gaser | 2022-05-02 12:27:49
+r1989 | gaser | 2022-05-06 11:13:16
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_io_data2mat.m
+M       standalone/cat_standalone.sh
+M       templates_MNI152NLin2009cAsym/cobra.txt
+
+(1) Changed: Updated help text and references for atlases used in CAT12.
+(2) Changed: Updated some general help text. 
+(3) Fixed:   Corrected bug for saving surface data as mat file in 
+             cat_io_data2mat.m.
+             
+------------------------------------------------------------------------
+r1988 | gaser | 2022-05-02 12:30:43 +0200 (Mon, 02 May 2022) | 27 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -27,6 +42,7 @@ M       standalone/cat_standalone_get_TIV.m
 (7) Fixed:   Corrected typo in spm_cat12.m that called not existing command.
 (8) Fixed:   Added check for variable Pp0 to cat_vol_qa.m.
              
+
 ------------------------------------------------------------------------
 r1987 | gaser | 2022-04-25 14:28:37 +0200 (Mon, 25 Apr 2022) | 8 lines
 
