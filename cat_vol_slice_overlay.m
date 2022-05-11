@@ -24,6 +24,7 @@ function cat_vol_slice_overlay(OV)
 %               - if result is saved as image use up to 2 subfolders to add their 
 %                 names to the filename (default 1)
 % OV.overview   - use empty brackets to not suppress slice overview (.e.g []);
+% OV.pos        - define first two numbers of image position
 %
 % see cat_vol_slice_overlay_ui.m for an example
 % ______________________________________________________________________
@@ -247,9 +248,17 @@ if ~isfield(OV, 'xy')
   xy = xy(indxy, :);
 else
   if ~isfinite(OV.xy(1))
-    xy = xy(n,:);
+    ind = find(xy(:,2) == OV.xy(2));
+    if isempty(ind)
+      ind = n;
+    end
+    xy = xy(ind,:);
   elseif ~isfinite(OV.xy(2))
-    xy = xy(1,:);
+    ind = find(xy(:,1) == OV.xy(1));
+    if isempty(ind)
+      ind = 1;
+    end
+    xy = xy(ind,:);
   else
     xy = OV.xy;
   end
@@ -302,7 +311,7 @@ if ~isfield(SO,'overview')
       end
   end
 
-  set(h0, 'Position', [10, 10, 2 * size(ref_img, 2), 2 * size(ref_img, 1)], ...
+  set(h0, 'Position', [10 10 2 * size(ref_img, 2), 2 * size(ref_img, 1)], ...
       'MenuBar', 'none', ...
       'Resize', 'off', ...
       'PaperType', 'A4', ...
@@ -341,8 +350,13 @@ end
 [pt, nm] = spm_fileparts(img);
 
 h = figure(21);
+if isfield(OV,'pos')
+  pos0 = OV.pos(1:2);
+else
+  pos0 = pos1(1:2);
+end
 set(h, ...
-    'Position', [pos1(1) pos1(2) fig_size], ...
+    'Position', [pos0 fig_size], ...
     'MenuBar', 'none', ...
     'Resize', 'off', ...
     'PaperType', 'A4', ...

@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1990 | gaser | 2022-05-06 15:34:21
+r1991 | gaser | 2022-05-11 16:14:10
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_surf_results.m
+M       cat_vol_slice_overlay.m
+
+(1) Changed: Extended cat_surf_results.m to show interactive slice overlay if
+             volume data are used as result. 
+(2) Changed: Added pos-flag to cat_vol_slice_overlay.m to define location of 
+             overlay window.             
+(3) Fixed:   Corrected some typos in cat_conf_tools.m
+------------------------------------------------------------------------
+r1990 | gaser | 2022-05-06 15:36:53 +0200 (Fri, 06 May 2022) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +22,7 @@ M       cat_stat_TIV.m
 (1) Fixed:   Corrected bug in cat_stat_TIV.m if no filedata field was found in 
              xml-file.
              
+
 ------------------------------------------------------------------------
 r1989 | gaser | 2022-05-06 11:16:31 +0200 (Fri, 06 May 2022) | 13 lines
 
