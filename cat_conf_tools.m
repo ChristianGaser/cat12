@@ -915,11 +915,11 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   
   csvdelkom           = cfg_menu;
   csvdelkom.tag       = 'seg';
-  csvdelkom.name      = 'CSV delimiter and komma';
+  csvdelkom.name      = 'CSV delimiter and comma';
   csvdelkom.labels    = {',.',';,',';.',' ,',' .'}; % ... space/tab? ' ,',' .' 
   csvdelkom.values    = {',.',';,',';.',' ,',' .'};
   csvdelkom.val       = {',.'}; 
-  csvdelkom.help      = {'Delimiter and komma in the CSV file. '};
+  csvdelkom.help      = {'Delimiter and comma in the CSV file. '};
 
   write               = cfg_entry;
   write.tag           = 'fname';
@@ -4044,6 +4044,7 @@ function data2mat = conf_io_data2mat(data,outdir)
   fname.name         = 'Filename';
   fname.tag          = 'fname';
   fname.val          = {'Data.mat'}; 
+  fname.strtype      = 's';
   fname.help         = {'Filename to save data matrix.'};
 
   data2mat           = cfg_exbranch;
