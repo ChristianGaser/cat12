@@ -86,14 +86,14 @@ function varargout = cat_surf_results(action, varargin)
 % ______________________________________________________________________
 % $Id$
 
-global H y x
+global H OV y x
 
 % ignore this warning writing gifti with int32 (eg. cat_surf_createCS:580 > gifti/subsref:45)
 warning off MATLAB:subscripting:noSubscriptsSpecified
 
 %-Input parameters
 %--------------------------------------------------------------------------
-if ~nargin, clearvars -global H; action = 'Disp'; end
+if ~nargin, clearvars -global H OV; action = 'Disp'; end
 
 if ~ischar(action)
   varargin = {action varargin{:}};
@@ -143,9 +143,9 @@ switch lower(action)
     
     % positions
     WS = spm('Winsize', 'Graphics');
-    SS = get(0, 'Screensize');
-    if 2.6 * WS(3) > SS(3)
-      WS(3) = WS(3) / (2.6 * WS(3) / SS(3));
+    H.SS = get(0, 'Screensize');
+    if 2.6 * WS(3) > H.SS(3)
+      WS(3) = WS(3) / (2.6 * WS(3) / H.SS(3));
     end
     
     % result window with 5 surface views and alternative positions without top view and  only with lateral views
@@ -183,6 +183,18 @@ switch lower(action)
       'fixscl', [0.050 0.260 0.425 0.050],'scaling', [0.050 0.260 0.425 0.050],...
       'ovmin',  [0.050 0.125 0.425 0.100],'ovmax',   [0.525 0.125 0.425 0.100],... 
       'save',   [0.050 0.050 0.425 0.050],'close',   [0.525 0.050 0.425 0.050]);
+    
+    % figure for interactive use of slice overlay
+    H.pos{3} = struct(...
+      'fig',   [H.SS(3)-150 H.SS(4)-250 150 250],...
+      'str1',  [0.05 0.85 0.900 0.1],...
+      'xy',    [0.05 0.75 0.900 0.1],...
+      'str2',  [0.05 0.65 0.900 0.1],...
+      'trans', [0.05 0.55 0.900 0.1],...
+      'str3',  [0.05 0.45 0.900 0.1],...
+      'slice', [0.05 0.35 0.900 0.1],...
+      'labels',[0.05 0.25 0.900 0.1],...
+      'save',  [0.05 0.05 0.900 0.15]);
     
     H.figure = figure(22);
     clf(H.figure);
@@ -224,7 +236,7 @@ switch lower(action)
       'String', 'Close', 'Units', 'normalized', ...
       'Position', H.pos{2}.close, ...
       'Style', 'Pushbutton', 'HorizontalAlignment', 'center', ...
-      'Callback', 'clear -globalvar H;close(22);', ...
+      'Callback', 'clear -globalvar H OV;try,close(11);end;try,close(21);end;close(22);close(23)', ...
       'FontSize',H.FS,'ForegroundColor','red',...
       'ToolTipString', 'Close windows', ...
       'Interruptible', 'on', 'Enable', 'on');
@@ -626,7 +638,6 @@ switch lower(action)
         set(H.fix, 'Visible', 'on');
       end
       
-      H.Pvol_sel = H.S{1}.name;
       display_results_all;
       
       H.SPM_found = 1;
@@ -1253,9 +1264,8 @@ end
 
      
 
-%-----------------------------------------------------------------------
+%==========================================================================
 function Ho = select_thresh(thresh)
-%-----------------------------------------------------------------------
 global H
 
 H.thresh_value = thresh;
@@ -1322,14 +1332,13 @@ if ~H.disable_cbar
 end
 
 if isfield(H,'Pvol_sel')
-  update_slice_overlay(H);
+  H = update_slice_overlay(H);
 end
 
 if nargout, Ho = H; end
 
-%-----------------------------------------------------------------------
+%==========================================================================
 function disphist(type)
-%-----------------------------------------------------------------------
 global H; 
 
 i = get(H.sel,'value');
@@ -1343,9 +1352,8 @@ cat_stat_histth(d(d(:)~=0),1,type);
 end
 
 
-%-----------------------------------------------------------------------
+%==========================================================================
 function Ho = select_cmap(cmap,cust_cmap)
-%-----------------------------------------------------------------------
 global H
 
 switch cmap
@@ -1396,12 +1404,11 @@ end
 if ~H.disable_cbar
   H = show_colorbar(H);
 end
-H.cmap = col;
+H.cmap_col = col;
 if nargout, Ho = H; end
 
-%-----------------------------------------------------------------------
+%==========================================================================
 function Ho = select_atlas(atlas)
-%-----------------------------------------------------------------------
 global H
 
 % get threshold from clipping
@@ -1535,9 +1542,8 @@ for ind = [1 3]
 end
 if nargout, Ho = H; end
 
-%-----------------------------------------------------------------------
+%==========================================================================
 function Ho = select_results(sel)
-%-----------------------------------------------------------------------
 global H
 
 H.results_sel = sel;
@@ -1686,7 +1692,7 @@ end
 if H.isvol(sel)
   H.Pvol_sel = H.Pvol{sel};
   if isfield(H,'Pvol_sel')
-    update_slice_overlay(H);
+    H = update_slice_overlay(H);
   end
   set(H.atlas, 'Enable', 'off');
 else
@@ -1732,15 +1738,16 @@ text(0.5, 0.5, spm_str_manip(H.S{1}.name, 'k60d'), 'Parent', H.nam, 'Interpreter
   'FontSize', H.FS, 'HorizontalAlignment', 'center');
 if nargout, Ho = H; end
 
-%-----------------------------------------------------------------------
-function update_slice_overlay(H,file_save)
-%-----------------------------------------------------------------------
+%==========================================================================
+function H = update_slice_overlay(H,file_save)
+global OV
 
-return
-if ~isfield(H,'Pvol_sel'), return; end
+if ~isfield(H,'Pvol_sel') || isempty(H.Pvol{1}), return; end
 
 % display image as overlay
 OV.reference_image = char(cat_get_defaults('extopts.shootingT1'));
+
+OV.FS = 0.12;
 
 if H.show_transp
   OV.opacity = 0.6;                                      
@@ -1751,13 +1758,13 @@ else
 end
 
 % clipping if defined
-if ~isempty(H.clip)
+if ~isempty(H.clip) && ~isnan(H.clip(2)) && ~isnan(H.clip(3))
   OV.func = sprintf('i1(i1>%g & i1<%g)=NaN;',H.clip(2),H.clip(3));
 end
 
-if isfield(H,'cmap')
-  if size(H.cmap,2) == 3
-    OV.cmap    = H.cmap;                                      
+if isfield(H,'cmap_col')
+  if size(H.cmap_col,2) == 3
+    OV.cmap = H.cmap_col;                                      
   else
     OV.cmap = jet;
   end
@@ -1767,7 +1774,11 @@ end
 OV.overview = []; % don't show slice overviev
 
 if ~isempty(H.clip)
-  OV.range   = [H.clip(3) H.clim(3)];
+  if ~isnan(H.clip(3))
+    OV.range   = [H.clip(3) H.clim(3)];
+  else
+  OV.range   = [min(H.S{1}.Y(:)) H.clim(3)];
+  end
 else
   OV.range   = H.clim(2:3);
 end
@@ -1778,15 +1789,179 @@ if nargin < 2
 else
   OV.save = file_save;
 end
-OV.atlas = 'none';
-OV.slices_str = '-30:4:60';
-OV.xy = [4 6];
-OV.transform = char('axial');
+
+if H.disable_cbar
+  OV.cbar = [];
+else
+  OV.cbar = 2;
+end
+
+% correct position of overlay window
+pos = get(gcf,'Position');
+OV.pos = [10 H.SS(4) - pos(4) - 10];
+
+% don't update these fields if already existing because an interactive change is planned
+if ~isfield(OV,'atlas')
+  OV.atlas = 'none';
+  OV.slices_str = '-30:5:60';
+  OV.xy = [4 5];
+  OV.transform = char('axial');
+end
+
+cat_vol_slice_overlay(OV);
+     
+H.fig_OV = figure(23);
+set(H.fig_OV, 'MenuBar', 'none', 'Position', H.pos{3}.fig, 'Color',H.col(1,:),...
+  'Name', 'Slices', 'NumberTitle', 'off', 'Renderer', 'OpenGL');
+axis off
+
+% select numbers of columns/rows
+uicontrol('Style', 'Text', 'Units', 'normalized','FontSize',H.FS,...
+  'BackgroundColor',H.col(1,:),...
+  'String', 'Number of Columns/Rows', 'Position', H.pos{3}.str1);
+OV.xy_sel = get_xy(OV);
+H.OV_xy = uicontrol(H.fig_OV, ...
+  'String', cellstr(num2str(OV.xy_sel)), 'Units', 'normalized', ...
+  'Position', H.pos{3}.xy, 'Callback', @select_OV_xy, ...
+  'Style', 'PopUpMenu', 'HorizontalAlignment', 'center', ...
+  'FontSize',H.FS,...
+  'ToolTipString', 'Select columns and rows', ...
+  'Interruptible', 'on', 'Enable', 'on');
+
+% select orientation
+uicontrol('Style', 'Text', 'Units', 'normalized','FontSize',H.FS,...
+  'BackgroundColor',H.col(1,:),...
+  'String', 'Orientation', 'Position', H.pos{3}.str2);
+H.OV_trans = uicontrol(H.fig_OV, ...
+  'String', {'axial','sagittal','coronal'}, 'Units', 'normalized', ...
+  'Position', H.pos{3}.trans, 'Callback', @select_OV_trans, ...
+  'Style', 'PopUpMenu', 'HorizontalAlignment', 'center', ...
+  'FontSize',H.FS,...
+  'ToolTipString', 'Select orientation', ...
+  'Interruptible', 'on', 'Enable', 'on');
+
+% define slices
+uicontrol('Style', 'Text', 'Units', 'normalized','FontSize',H.FS,...
+  'BackgroundColor',H.col(1,:),...
+  'String', 'Slices', 'Position', H.pos{3}.str3);
+H.OV_slice = uicontrol('Style', 'edit', 'Units', 'normalized',...
+  'String', OV.slices_str, 'Position', H.pos{3}.slice, 'Callback', @OV_slice);
+
+H.OV_labels = uicontrol(H.fig_OV, ...
+  'String', 'Hide labels', 'Units', 'normalized', ...
+  'BackgroundColor',H.col(1,:),...
+  'Position', H.pos{3}.labels, ...
+  'Style', 'CheckBox', 'HorizontalAlignment', 'center', ...
+  'Callback', {@checkbox_OV_labels}, ...
+  'FontSize',H.FS,...
+  'ToolTipString', 'Hide slice labels', ...
+  'Interruptible', 'on', 'Enable', 'on');
+    
+H.OV_trans = uicontrol(H.fig_OV, ...
+  'String', 'Save png', 'Units', 'normalized', ...
+  'Position', H.pos{3}.save, 'Callback', @save_overlay, ...
+  'Style', 'PushButton', 'HorizontalAlignment', 'center', ...
+  'FontSize',H.FS,...
+  'ToolTipString', 'Save overlay as png files', ...
+  'Interruptible', 'on', 'Enable', 'on');
+
+%==========================================================================
+function checkbox_OV_labels(obj, event_obj)
+global H OV
+
+hide_labels = get(H.OV_labels, 'Value');
+if hide_labels
+  OV.labels = [];
+else
+  OV.labels.size = H.FS;
+end
 cat_vol_slice_overlay(OV);
 
-%-----------------------------------------------------------------------
+%==========================================================================
+function save_overlay(hObject, event)
+global OV
+
+old_save = OV.save;
+OV.save = 'png';
+OV.name_subfolder = 2;
+cat_vol_slice_overlay(OV);
+OV.save = old_save;
+cat_vol_slice_overlay(OV);
+
+%==========================================================================
+function xy = get_xy(OV)
+
+% get number of images with optional colorbar
+n = numel(str2num(OV.slices_str));
+if ~isempty(OV.cbar), n = n + 1; end
+
+nn = round(n^0.4);
+if n > 8, x = nn:round(n / nn); else x = 1:n; end
+xy = [];
+for i = 1:length(x)
+    y = round(n / x(i));
+  % check whether y is to small
+  while y * x(i) < n, y = y + 1; end
+  if i > 2
+    if y * x(i - 1) < n, xy = [xy; [x(i) y]]; end
+  else xy = [xy; [x(i) y]]; end
+end
+
+% change order of x and y
+for i = 1:size(xy, 2)
+  yx = [xy(i, 2) xy(i, 1)];
+  xy = [xy; yx];
+end
+
+% remove duplicates
+xy = [[n 1];xy];
+xy = unique(xy, 'rows');
+
+%==========================================================================
+function select_OV_xy(hObject, event)
+global OV
+
+value = get(hObject, 'value');
+OV.xy = OV.xy_sel(value,:);
+cat_vol_slice_overlay(OV);
+
+%==========================================================================
+function select_OV_trans(hObject, event)
+global OV
+
+value = get(hObject, 'value');
+str = get(hObject,'String');
+OV.transform = str{value};
+cat_vol_slice_overlay(OV);
+
+%==========================================================================
+function OV_xy(hObject, event)
+global OV
+
+xy = str2num(get(hObject, 'String'));
+if numel(xy) == 2
+  OV.xy = xy;
+  cat_vol_slice_overlay(OV);
+else
+  fprintf('You have to define 2 numbers\n');
+end
+
+%==========================================================================
+function OV_slice(hObject, event)
+global OV H
+
+slices_str = get(hObject, 'String');
+if ~isempty(str2num(slices_str))
+  OV.slices_str = slices_str;
+  OV.xy_sel = get_xy(OV);
+  set(H.OV_xy,'String', cellstr(num2str(OV.xy_sel)));
+cat_vol_slice_overlay(OV);
+else
+  fprintf('You have to define numbers\n');
+end
+
+%==========================================================================
 function Ho = select_surf(surf)
-%-----------------------------------------------------------------------
 global H
 
 H.surf_sel = surf;
@@ -1850,9 +2025,8 @@ end
 
 if nargout, Ho = H; end
 
-%-----------------------------------------------------------------------
+%==========================================================================
 function display_results_all(obj, event_obj)
-%-----------------------------------------------------------------------
 global H
 
 if (size(H.S{1}.Y) > 1 | size(H.S{2}.Y) > 1) & min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0
@@ -1948,7 +2122,7 @@ for ind = 1:5
 end
 
 if isfield(H,'Pvol_sel')
-  update_slice_overlay(H);
+  H = update_slice_overlay(H);
 end
 
 % only show threshold popup if log-name was found and minimal value > 0 is < -log10(0.05)
@@ -2012,9 +2186,8 @@ if H.n_surf == 1
   end
 end
 
-%-----------------------------------------------------------------------
+%==========================================================================
 function H = show_colorbar(H)
-%-----------------------------------------------------------------------
 
 % show colorbar
 if H.n_surf == 1
@@ -2142,9 +2315,8 @@ else
   axis(H.cbar, 'off'); axis('image');
 end
 
-%-----------------------------------------------------------------------
+%==========================================================================
 function display_results(ind, win, vw)
-%-----------------------------------------------------------------------
 global H
 
 % rescue old color before a new H.patch is created
@@ -2471,9 +2643,8 @@ if 0 %isfield(H,'histax')
   cat_surf_results('hist')
 end
   
-%-----------------------------------------------------------------------
+%==========================================================================
 function select_data(obj, event_obj, P)
-%-----------------------------------------------------------------------
 global H
 
 if ~exist('P','var')
@@ -2526,6 +2697,7 @@ for i = 1:n
     P0{i} = Pout; 
     H.isvol(i) = 1;
     H.Pvol{i} = Pvol;
+    H.Pvol_sel = Pvol;
     
     % print warning if no SPM.mat file was found
     if ~exist(fullfile(pp, 'SPM.mat'), 'file')
@@ -2657,7 +2829,7 @@ col = colormap;
 imwrite(img,col,fullfile(newpth,filename));
 fprintf('Image %s saved.\n',filename);
 
-update_slice_overlay(H,fullfile(newpth,['slices_' filename]))
+H = update_slice_overlay(H,fullfile(newpth,['slices_' filename]));
 
 % write dataplot window
 if isfield(H, 'dataplot') && strcmpi(get(H.dataplot,'Visible'),'on')
@@ -2699,7 +2871,7 @@ end
 H.clim = [true val c(3)];
 
 if isfield(H,'Pvol_sel')
-  update_slice_overlay(H);
+  H = update_slice_overlay(H);
 end
 
 %==========================================================================
@@ -2729,7 +2901,7 @@ end
 H.clim = [true c(2) val];
 
 if isfield(H,'Pvol_sel')
-  update_slice_overlay(H);
+  H = update_slice_overlay(H);
 end
 
 %==========================================================================
@@ -2751,8 +2923,8 @@ if ~H.disable_cbar
 end
 
 if isfield(H,'Pvol_sel')
-  H.cmap = flipud(col);
-  update_slice_overlay(H);
+  H.cmap_col = flipud(col);
+  H = update_slice_overlay(H);
 end
 
 %==========================================================================
@@ -2818,7 +2990,7 @@ if ~H.disable_cbar
 end
 
 if isfield(H,'Pvol_sel')
-  update_slice_overlay(H);
+  H = update_slice_overlay(H);
 end
 
 if nargout, Ho = H; end
@@ -2836,7 +3008,7 @@ for ind = 1:5
 end
 
 if isfield(H,'Pvol_sel')
-  update_slice_overlay(H);
+  H = update_slice_overlay(H);
 end
 
 % update colorbar
@@ -2918,6 +3090,10 @@ else
   else
     H = show_colorbar(H);
   end
+end
+
+if isfield(H,'Pvol_sel')
+  H = update_slice_overlay(H);
 end
 
 %==========================================================================
