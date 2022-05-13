@@ -75,7 +75,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
   %'qualitymeasures'  'res_MVR'               'linear'    [  0.50   3.00]  'mean voxel resolution'
   %'qualitymeasures'  'res_vol'               'linear'    [  0.125    27]  'voxel volume'
   %'qualitymeasures'  'res_isotropy'          'linear'    [  1.00   8.00]  'voxel isotropy'
-   'qualitymeasures'  'res_BB'                'linear'    [   200    500]  'brain next to the image boundary'
+   'qualitymeasures'  'res_BB'                'linear'    [     0     10]  'brain next to the image boundary'
   % - tissue mean and varianz - 
    'qualitymeasures'  'tissue_mn'             'normal'    def.tissue       'mean within the tissue classes'
    'qualitymeasures'  'tissue_std'            'normal'    [  0.10   0.20]  'standard deviation within the tissue classes'
@@ -258,7 +258,11 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
 %       BWP.NCRm = evallinear(QA.qualitymeasures.NCR    ,0.05,0.35,6);
 %       BWP.MVRm = evallinear(QA.qualitymeasures.res_RMS,0.50,3.00,6);    
       
-      QAM.qualityratings.IQR = rms([QAM.qualityratings.NCR  QAM.qualityratings.res_RMS  QAM.qualityratings.res_grad],8);
+      if cat_get_defaults('extopts.expertgui') == 2
+        QAM.qualityratings.IQR = rms([QAM.qualityratings.NCR  QAM.qualityratings.res_RMS  QAM.qualityratings.res_grad],8);
+      else
+        QAM.qualityratings.IQR = rms([QAM.qualityratings.NCR  QAM.qualityratings.res_RMS ],8);
+      end
       QAM.subjectratings.SQR = rms([QAM.subjectratings.vol_rel_CGW],8);
       
       varargout{1} = QAM;
