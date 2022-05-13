@@ -382,7 +382,7 @@ function varargout = cat_vol_qa(action,varargin)
           end
           rmse = (mean(Ym(Yp0(:)>0) - Yp0(Yp0(:)>0)/3).^2).^0.5; 
           if rmse>0.1
-            warning('Segmentation is maybe not fitting to the image (RMSE(Ym,Yp0)=%0.2f)?:\n  %s\n  %s',rmse,Pm{fi},Pp0{fi}); 
+            cat_io_cprintf('warn','Segmentation is maybe not fitting to the image (RMSE(Ym,Yp0)=%0.2f)?:\n  %s\n  %s',rmse,Pm{fi},Pp0{fi}); 
           end
           
           res.image = spm_vol(Pp0{fi}); 
@@ -711,12 +711,30 @@ function varargout = cat_vol_qa(action,varargin)
       %QAS.qualitymeasures.res_vol       = prod(abs(vx_vol));
       %QAS.qualitymeasures.res_MVR       = mean(vx_vol);
       
-      % boundary box - brain tissue next to image boundary
-      bbth = round(2/cat_stat_nanmean(vx_vol)); M = true(size(Yp0));
-      M(bbth:end-bbth,bbth:end-bbth,bbth:end-bbth) = 0;
-      QAS.qualitymeasures.res_BB = sum(Yp0(:)>1.25 & M(:))*prod(abs(vx_vol)); 
+      %% boundary box - brain tissue next to image boundary
+      %  RD20220415: 
+      % * Although it is quite rare that the boundary box is to small and the 
+      %   brain scan is incomplete, it is of course essential to detect such 
+      %   cases: see OpenNeuro:BEANstudy: https://openneuro.org/datasets/ds003877/versions/1.0.1   
+      % * In addition, inhomogeneities close to image boundaries can be a
+      %   severe problem that can be seen only be trained experts. The bias 
+      %   can even result a distorted cortex-like structure with normal
+      %   thickness values.
+      % * need some tests
+      Ybw   = cat_vbdist(single(Yp0<0.5),true(size(Yp0)),vx_vol) - ...
+              cat_vbdist(single(Yp0>0.5),true(size(Yp0)),vx_vol);
+      Ybb   = Ybw>0 & Ybw<2*mean(vx_vol); sumYbb = sum(Ybb(:)); % use the brain boundary for normalization
+      M     = ones(size(Yp0),'single'); 
+      dmm   = [10 5]; % inner and outer boundary range in mm
+      Ybw   = max(0,Ybw + dmm(2)); % in mm 
+      for bbth = 1:ceil( dmm(1) / cat_stat_nanmean(vx_vol) )
+        M(bbth:end-bbth+1,bbth:end-bbth+1,bbth:end-bbth+1) = ...
+          2 * (floor( dmm(1) / cat_stat_nanmean(vx_vol) ) - bbth + 1) / floor( dmm(1) / cat_stat_nanmean(vx_vol) );
+      end
+      QAS.qualitymeasures.res_BB = sum( (1+Yp0(:)) .* Ybw(:) .* M(:)) / sumYbb * prod(abs(vx_vol)); 
 
-      % check segmentation
+      
+      %% check segmentation
       spec = species; for ai=num2str(0:9); spec = strrep(spec,ai,''); end 
       bvol = species; for ai=char(65:122); bvol = strrep(bvol,ai,''); end; bvol = str2double(bvol);
       
