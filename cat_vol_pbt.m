@@ -106,7 +106,7 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
       % variance in CAT compared to FS and CIVET.
       % RD 201908
       
-        stime = cat_io_cmd('    WM boundar optimization: ','g5','',opt.verb);
+        stime = cat_io_cmd('    WM boundary optimization: ','g5','',opt.verb);
         vx_vol_org = 1; %max(1,sqrt(sum(opt.vmat(1:3,1:3).^2))));
         
         

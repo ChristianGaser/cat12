@@ -566,7 +566,13 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       %mlim = max( 20 , ceil( max( max( abs( [ diff( res.long.vol_abs_CGW(:,1:3) ,1 ); diff( res.long.vol_TIV ) ] ) )) / 20 ) * 20);
       mlim = max( 20 , ceil( max( max( abs( [ ...
         [res.long.vol_abs_CGW(:,1:3) - repmat( res.long.vol_abs_CGW(1,1:3) , size(res.long.vol_abs_CGW,1) , 1)], ...
-        [res.long.vol_TIV - res.long.vol_TIV(1)]  ] ) )) / 20 ) * 20);
+        [res.long.vol_TIV - res.long.vol_TIV(1)]  ] ) )) * 1.2 / 20 ) * 20);
+      if isfield(res.long,'surf_TSA')
+        mlim = max( mlim , ceil( max( max( abs( res.long.surf_TSA - res.long.surf_TSA(1) ) )) * 1.2 / 20 ) * 20);
+      end
+      if isfield(res.long,'change_dist_thickness')
+        mlim = max( mlim , ceil( max( max( res.long.change_dist_thickness(:,1) * 1000 )) * 1.2 / 20 ) * 20);
+      end
       ylim([-mlim mlim]); xlim([0.9 numel(res.long.files)+0.1]); 
       set(cp(2),'Fontsize',fontsize*0.8,'xtick',max(1,0:round(numel(res.long.files)/100)*10:numel(res.long.files)), ...
         'ytick',-mlim:round(mlim*2 / 4):mlim,'XAxisLocation','top');
@@ -627,8 +633,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         end
         WMth  = cat_stat_kmeans(Ymn(Ymn(:)>0)) * 3; 
         if isfield(res,'Vmnw')
-          hho   = spm_orthviews('Image',res.Vmnw,pos{1}); 
-          T1txt = sprintf('WM tissue changes (FWHM %d mm)',res.long.smoothvol);
+          hho   = spm_orthviews('Image',res.Vmn,pos{1}); 
+          T1txt = sprintf('GM tissue changes (FWHM %d mm)',res.long.smoothvol);
         else
           hho   = spm_orthviews('Image',res.Vmn,pos{1}); 
           T1txt = 'High variant regions'; 
@@ -638,7 +644,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         % rang = (0:6)'; hoti = [rang,flip(rang,1)*0,flip(rang,1)]; hoti(1,:) = [0 0 0]; 
         %rang = (0:10)'; hoti = [rang,flip(rang,1),flip(rang,1)*0] .* repmat(min(max(rang),rang*2)/2,1,3) / max(rang) * 1; hoti(1,:) = [0 0 0];
         if isfield(res,'Vidiffw')
-          Vidiff  = res.Vidiffw; Vidiff.dat = Vidiff.dat * 100; 
+          Vidiff  = res.Vidiff; Vidiff.dat = Vidiff.dat * 100; 
           BCGWH   = [cat_io_colormaps('hotinv',35);cat_io_colormaps('cold',35)]; BCGWH = BCGWH(6:65,:); 
           BCGWH   = BCGWH.^1.1 * 2; % less transparent for high values
           maxdiff = max(1,round(std(Vidiff.dat(:)))) * 10; 
@@ -663,15 +669,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       end
       try
         %% create glassbrain images
-        if isfield(res,'Vidiffw')
-          glassbrain        = cat_plot_glassbrain( res.Vidiffw );  
-          glassbrainmax     = max( maxdiff / 5,  ceil(mean(abs(glassbrain{1}(:))) + 4*std(glassbrain{1}(:))) );  % maxdiff / 5;  % ########## need dynamic adaptions in extrem cases
-        else
-          Vrdiff            = res.Vrdiff;
-          Vrdiff.dat(:,:,:) = max(0,abs(Vrdiff2.dat(:,:,:)) - 0.4); 
-          glassbrain        = cat_plot_glassbrain( Vrdiff );  
-          glassbrainmax     = 1; 
-        end
+        glassbr       = cat_plot_glassbrain( res.Vmn ); 
+        glassbrain    = cat_plot_glassbrain( res.Vidiff ); 
+        glassbrainmax = max( maxdiff / 5, ceil(mean(abs(glassbrain{1}(:))) + 4*std(glassbrain{1}(:)) ));  % ########## need dynamic adaptions in extrem cases
         [glassbr,gbrange]  = cat_plot_glassbrain( res.Vmn ); 
         
         % position of each glassbrain view and its colormap
@@ -856,8 +856,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     if isfield(res,'long')
       %%
       try
-        hhp0    = spm_orthviews('Image',res.Vmn,pos{2});
-        Vidiff  = res.Vidiff; Vidiff.dat = Vidiff.dat * 100; 
+        hhp0    = spm_orthviews('Image',res.Vmnw,pos{2});
+        Vidiff  = res.Vidiffw; Vidiff.dat = Vidiff.dat * 100; 
         BCGWH   = [cat_io_colormaps('hotinv',35);cat_io_colormaps('cold',35)]; BCGWH = BCGWH(6:65,:); 
         BCGWH   = BCGWH.^1.1 * 2; % less transparent for high values
         maxdiff = max(1,round(std(Vidiff.dat(:)))) * 10; 
@@ -866,7 +866,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         spm_orthviews('redraw');
         spm_orthviews('Reposition',[-25 0 0]);
         if 1
-          spm_orthviews('Caption',hhp0,sprintf('Tissue changes (FWHM %d mm)',res.long.smoothvol),'FontName',fontname,'FontSize',fontsize-1,'color',fontcolor,'FontWeight','Bold');
+          spm_orthviews('Caption',hhp0,sprintf('WM tissue changes (FWHM %d mm)',res.long.smoothvol),'FontName',fontname,'FontSize',fontsize-1,'color',fontcolor,'FontWeight','Bold');
         end
       end
       try
@@ -885,10 +885,16 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       try, spm_orthviews('AddContext',1); end 
     %%  try
         % create glassbrain images
-        glassbr       = cat_plot_glassbrain( res.Vmn ); 
-        glassbrain    = cat_plot_glassbrain( res.Vidiff ); 
-        glassbrainmax = max( maxdiff / 5, ceil(mean(abs(glassbrain{1}(:))) + 4*std(glassbrain{1}(:)) ));  % ########## need dynamic adaptions in extrem cases
-
+        if isfield(res,'Vidiffw')
+          glassbrain        = cat_plot_glassbrain( res.Vidiffw );  
+          glassbrainmax     = max( maxdiff / 5,  ceil(mean(abs(glassbrain{1}(:))) + 4*std(glassbrain{1}(:))) );  % maxdiff / 5;  % ########## need dynamic adaptions in extrem cases
+        else
+          Vrdiff            = res.Vrdiff;
+          Vrdiff.dat(:,:,:) = max(0,abs(Vrdiff2.dat(:,:,:)) - 0.4); 
+          glassbrain        = cat_plot_glassbrain( Vrdiff );  
+          glassbrainmax     = 1; 
+        end
+        
         % glassbrain positions
         gbpos{1} = [ pos{2}(1) + st.vols{p0id}.ax{3}.ax.Position(3)+0.015, st.vols{p0id}.ax{1}.ax.Position(2)+0.00 ,0.11, 0.09]; 
         gbpos{2} = [ pos{2}(1) + st.vols{p0id}.ax{3}.ax.Position(3)+0.015, st.vols{p0id}.ax{1}.ax.Position(2)+0.09 ,0.11, 0.07];
@@ -1697,7 +1703,7 @@ if 1
   if ~isfield(res,'long')
     try, spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontName',fontname,'FontSize',(fontsize-1)/spm_figure_scale*0.8,'FontWeight','Bold'); end
   else
-    try, spm_orthviews('Caption',hhp0,sprintf('Tissue changes (FWHM %d mm)',res.long.smoothvol),'FontName',fontname,'FontSize',(fontsize-1)/spm_figure_scale*0.8,'FontWeight','Bold'); end
+    try, spm_orthviews('Caption',hhp0,sprintf('WM tissue changes (FWHM %d mm)',res.long.smoothvol),'FontName',fontname,'FontSize',(fontsize-1)/spm_figure_scale*0.8,'FontWeight','Bold'); end
   end
   if exist('axi','var')
     for hti = 1:numel(axi), try, set(axi(hti),'FontName',fontname,'Fontsize',get(axi(hti),'Fontsize')/spm_figure_scale*0.8); end; end
@@ -1741,7 +1747,7 @@ if 1
     try, spm_orthviews('Caption',hhm,{['m*.nii (Normalized ' wstr ')']},'FontName',fontname,'FontSize',fontsize-1,'FontWeight','Bold'); end
     try, spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontName',fontname,'FontSize',fontsize-1,'FontWeight','Bold'); end
   else
-    try, spm_orthviews('Caption',hhp0,sprintf('Tissue changes (FWHM %d mm)',res.long.smoothvol),'FontName',fontname,'FontSize',fontsize-1,'FontWeight','Bold'); end
+    try, spm_orthviews('Caption',hhp0,sprintf('WM tissue changes (FWHM %d mm)',res.long.smoothvol),'FontName',fontname,'FontSize',fontsize-1,'FontWeight','Bold'); end
   end
   for hti = 1:numel(htext), try, set(htext(hti),'FontName',fontname,'Fontsize',get(htext(hti),'Fontsize')*spm_figure_scale/0.8); end; end
   if exist('axi','var')
