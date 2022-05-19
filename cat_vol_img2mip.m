@@ -1,11 +1,25 @@
-function cat_vol_img2mip(P, gamma_scl, save_image, RGB_order)
+function cat_vol_img2mip(OV)
 % Visualise up to 3 images as RGB colored MIP (glass brain)
 % ______________________________________________________________________
 %
-% P          - char array of 1..3 nifti filenames
-% gamma_scl  - gamma value to provide non-linear intensity scaling
-% save_image - save mip as png image
-% RGB_order  - array of RGB order (default [1 2 3])
+% OV         - either char array of 1..3 nifti filenames or structure with
+%              the following fields:
+%               name - char array of 1..3 nifti filenames
+%               cmap - colormap for single MIP wth just one result (default
+%                      jet(64))
+%               func - function to apply to image before scaling to cmap
+%                      (and therefore before min/max thresholding. E.g. a func of
+%                      'i1(i1==0)=NaN' would convert zeros to NaNs
+%                      (default 'i1(i1==0)=NaN')
+%               range - 2x1 vector of values for image to distribute colormap across
+%                      the first row of the colormap applies to the first
+%                      value in 'range', and the last value to the second
+%                      value in 'range'
+%                      (default [-Inf Inf])
+%               gamma_scl  - gamma value to provide non-linear intensity
+%                            scaling (default 0.7)
+%               save_image - save mip as png image (default 0)
+%               RGB_order  - array of RGB order (default [1 2 3])
 %
 % If < 3 arguments are given, you can save the png-file by using the
 % context menu (right mouse click in the image)
@@ -21,25 +35,21 @@ load MIP
 mip96 = double(mip96);
 
 if nargin < 1
-  P = spm_select([1 3],'image','Select images');
+  OV = spm_select([1 3],'image','Select images');
 end
+
+def = struct('name',OV,'func','i1(i1==0)=NaN;','cmap',jet(64),'range',[-Inf Inf],...
+      'gamma_scl',0.7,'save_image',0,'RGB_order',1:3,'Pos',[10 10]);
+if ischar(OV)
+  OV = def;
+else
+  OV = cat_io_checkinopt(OV,def); 
+end
+P = OV.name;
 
 n = size(P,1);
 if n > 3
-  error('At maximum 3 images are allowd.');
-end
-
-% define gamma to provide non-linear scaling
-if nargin < 2
-  gamma_scl = 1;
-end
-
-if nargin < 3
-  save_image = 0;
-end
-
-if nargin < 4
-  RGB_order = 1:3;
+  error('At maximum 3 images are allowed.');
 end
 
 V = spm_vol(P);
@@ -62,9 +72,11 @@ zx = coord(1)-s:coord(1)+s-1;
 zy = coord(2)-s:coord(2)+s-1;
 
 col = {'R','G','B'};
-col = col(RGB_order);
+col = col(OV.RGB_order);
 for i=1:n
-  fprintf('%s color: %s\n',col{i},V(i).fname);
+  if n > 1
+    fprintf('%s color: %s\n',col{i},V(i).fname);
+  end
   XYZ{i} = [];
   Y{i} = [];
 end
@@ -79,17 +91,29 @@ for j = 1:V(1).dim(3)
 	M1 = inv(B);
 	
   for i=1:n
-	  d{i}  = spm_slice_vol(V(i),M1,V(i).dim(1:2),1);
-    d{i} = flipud(d{i});
-	  Q = find(d{i} > 0);
+    % read slice and flip for MIP
+	  i1  = spm_slice_vol(V(i),M1,V(i).dim(1:2),1);
+    i1 = flipud(i1);
     
+    % apply defined function
+    eval(OV.func)
+    
+    % find indeices in defined range
+	  [Qc Qr] = find(i1 >= OV.range(1) & i1 <= OV.range(2));
+    Q = sub2ind(size(i1),Qc,Qr);
+        
 	  if ~isempty(Q)
-		  [Qc Qr] = find(d{i} > 0);
 		  Qc = (Qc - Origin(1))*vox(1);
 		  Qr = (Qr - Origin(2))*vox(2);
-		  XYZ{i} = [XYZ{i}; [Qc Qr ...
-			ones(size(Qc,1),1)*(j - Origin(3))*vox(3)]];
-		  Y{i} = [Y{i}; d{i}(Q)];
+		  XYZ{i} = [XYZ{i}; [Qc Qr ones(size(Qc,1),1)*(j - Origin(3))*vox(3)]];
+      
+      % if finite lower range is defined this should be subtracted from
+      % image
+      if isfinite(OV.range(1))
+        i1(Q) = i1(Q) - OV.range(1);
+      end
+      
+		  Y{i} = [Y{i}; i1(Q)];
 	  end
   end
   
@@ -110,8 +134,8 @@ for i=1:n
     Y{i} = Y{i}';
     rgb{i}   = rot90(spm_project(Y{i},round(XYZ{i}),dim));
   end
-  if gamma_scl ~= 1
-	rgb{i} = rgb{i}.^(1/gamma_scl);
+  if OV.gamma_scl ~= 1
+	rgb{i} = rgb{i}.^(1/OV.gamma_scl);
   end
   mx = max([mx; rgb{i}(:)]);
 end
@@ -120,37 +144,62 @@ for i=1:n
   rgb{i} = rgb{i}/mx;
 end
 
-rgb{1}(zx,zy-20) = rgb{1}(zx,zy-20) + yy;
 if n > 1
+  rgb{1}(zx,zy-20) = rgb{1}(zx,zy-20) + yy;
   rgb{2}(zx,zy) = rgb{2}(zx,zy) + yy;
 end
 if n > 2
   rgb{3}(zx-14,zy-10) = rgb{3}(zx-14,zy-10) + yy;
 end
 
-col = reshape([rgb{RGB_order(1)},rgb{RGB_order(2)},rgb{RGB_order(3)}],size(mip));
+col = reshape([rgb{OV.RGB_order(1)},rgb{OV.RGB_order(2)},rgb{OV.RGB_order(3)}],size(mip));
+old_mip = mip;
 mip = max(cat(3,col),mip);
 
 % show mip image
-fig = figure(11);
+fig = figure(12);
 [pt,nm,xt] = fileparts(P(1,:));
 png_name = ['mip' num2str(n) '_' nm '.png'];
-set(fig, 'MenuBar', 'none','Name',nm);
+sz = size(mip(:,:,1));
+set(fig, 'MenuBar', 'none','Name',nm,'Position',[10 10 sz([2 1])]);
 
-p = image(mip);
+% single MIP of one result supports colored MIP
+if n == 1
+  % only use 1st channel
+  mip = mip(:,:,1);
+  
+  % add MIP grid with white color
+  mip(old_mip(:,:,1)>0) = 1.1; 
+  
+  p = imagesc(mip);
+  
+  % force black background and white MIP grid
+  OV.cmap(1,:)     = [0 0 0];
+  OV.cmap(end+1,:) = [1 1 1];
+  colormap(OV.cmap)
+else
+  p = image(mip);
+end
+
 axis image; axis off;
 
-if nargin < 3
+% remove border
+set(gca,'units','pixels'); x = get(gca,'position');
+set(gcf,'units','pixels'); y = get(gcf,'position');
+set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
+set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
 
-  cmenu = uicontextmenu(fig);        
-  m2 = uimenu(cmenu, 'Label','Save png image','Callback',@(src,event)save_png(mip,png_name));
-  p.ContextMenu = cmenu;
-else
-  if save_image
-    save_png(mip,png_name);
-  end
+cmenu = uicontextmenu(fig);        
+m2 = uimenu(cmenu, 'Label','Save png image','Callback',@(src,event)save_png(mip,png_name));
+try, p.ContextMenu = cmenu; end
+if OV.save_image
+  save_png(mip,png_name);
 end
-              
+           
 function save_png(mip,png_name)
-imwrite(mip,png_name,'png','BitDepth',8)
+if size(mip,3) > 1
+  imwrite(mip,png_name,'png','BitDepth',8)
+else
+  saveas(gcf,png_name);
+end
 fprintf('Image %s saved.\n',png_name);

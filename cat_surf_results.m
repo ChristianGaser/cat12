@@ -236,7 +236,7 @@ switch lower(action)
       'String', 'Close', 'Units', 'normalized', ...
       'Position', H.pos{2}.close, ...
       'Style', 'Pushbutton', 'HorizontalAlignment', 'center', ...
-      'Callback', 'clear -globalvar H OV;try,close(11);end;try,close(21);end;close(22);close(23)', ...
+      'Callback', 'clear -globalvar H OV;try,close(11);end;try,close(12);end;try,close(21);end;close(22);close(23)', ...
       'FontSize',H.FS,'ForegroundColor','red',...
       'ToolTipString', 'Close windows', ...
       'Interruptible', 'on', 'Enable', 'on');
@@ -1744,6 +1744,9 @@ global OV
 
 if ~isfield(H,'Pvol_sel') || isempty(H.Pvol{1}), return; end
 
+% correct position of overlay window
+OV.pos = [10 H.SS(4)];
+
 % display image as overlay
 OV.reference_image = char(cat_get_defaults('extopts.shootingT1'));
 
@@ -1774,10 +1777,10 @@ end
 OV.overview = []; % don't show slice overviev
 
 if ~isempty(H.clip)
-  if ~isnan(H.clip(3))
-    OV.range   = [H.clip(3) H.clim(3)];
+  if isnan(H.clip(2))
+    OV.range   = H.clim(2:3);
   else
-  OV.range   = [min(H.S{1}.Y(:)) H.clim(3)];
+    OV.range   = H.clim(2:3);
   end
 else
   OV.range   = H.clim(2:3);
@@ -1796,9 +1799,10 @@ else
   OV.cbar = 2;
 end
 
-% correct position of overlay window
+% show MIP
+cat_vol_img2mip(OV)
 pos = get(gcf,'Position');
-OV.pos = [10 H.SS(4) - pos(4) - 10];
+set(gcf,'Position',[H.SS(3) - pos(3) 0 pos(3:4)]);
 
 % don't update these fields if already existing because an interactive change is planned
 if ~isfield(OV,'atlas')
