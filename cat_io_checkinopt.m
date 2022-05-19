@@ -1,5 +1,5 @@
 function res = cat_io_checkinopt(opt, def, cond)
-% format: res = checkin(opt,def,cond)
+% format: res = cat_io_checkinopt(opt,def,cond)
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke

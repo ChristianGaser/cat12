@@ -216,6 +216,7 @@ function varargout = cat_surf_calc(job)
     end
   end
 end
+
 function surfcalc(job)
     
   def.debug     = cat_get_defaults('extopts.verb')>2;
@@ -227,6 +228,10 @@ function surfcalc(job)
   [sinfo1,S1] = cat_surf_info(job.cdata{1},1);
   sinfo = cat_surf_info(job.cdata);
   
+  if ~isfield(sinfo1(1),'ncdata')
+    G = gifti(sinfo1(1).fname);
+    sinfo1(1).ncdata  = numel(G.cdata);
+  end
   cdata  = zeros([1,sinfo1(1).ncdata],'single');
   if sinfo1.datatype==3
     vdata = zeros([1,sinfo1(1).nvertices,3],'single'); 
