@@ -43,6 +43,8 @@ for i=1:length(p.data_xml)
   end
     
   if isfield(xml,'filedata')
+    pth = xml.filedata.path;
+    file = xml.filedata.file;
     filename = spm_str_manip(deblank(fullfile(xml.filedata.path,xml.filedata.file)),'a60');
   else
     [pth,file] = fileparts(deblank(p.data_xml{i}));
