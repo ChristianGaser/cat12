@@ -144,6 +144,12 @@ for i=1:n
   rgb{i} = rgb{i}/mx;
 end
 
+% just draw colorbar for a single image
+if n == 1
+  rgb{1}(230:329,305:315) = repmat((100:-1:1)'/100,1,11);
+end
+
+% use REGB color-spheres
 if n > 1
   rgb{1}(zx,zy-20) = rgb{1}(zx,zy-20) + yy;
   rgb{2}(zx,zy) = rgb{2}(zx,zy) + yy;
