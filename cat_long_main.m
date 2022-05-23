@@ -1028,9 +1028,9 @@ if delete_temp
     end
     
     
-    % remove affine registered segmentations of average data (class 4-6)
+    % remove remaining affine registered segmentations of average data (class 4-6)
     if longTPM
-      for ci = 1:6
+      for ci = 4:6
         matlabbatch{mbi}.cfg_basicio.file_dir.file_ops.file_move.files(c) = cfg_dep(sprintf('CAT12: Segmentation (current release): rp%d affine Image',ci),...
           substruct('.','val', '{}',{mb_catavg}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
           substruct('.','tiss', '()',{ci}, '.','rpa', '()',{':'})); c = c+1;
