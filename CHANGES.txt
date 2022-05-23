@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1993 | gaser | 2022-05-19 11:21:52
+r1994 | gaser | 2022-05-23 16:51:11
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_main.m
+M       cat_surf_results.m
+M       cat_vol_img2mip.m
+
+(1) Changed: Added colorbar to single MIP in cat_vol_img2mip.m.
+(2) Fixed:   Multiple volume files were not correctly recognized in 
+             cat_surf_results.m.        
+(3) Fixed:   Dartel export images of average image were always removed even
+             if the Dartel save option was used.
+
+------------------------------------------------------------------------
+r1993 | gaser | 2022-05-19 11:23:00 +0200 (Thu, 19 May 2022) | 25 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -25,6 +40,7 @@ M       standalone/cat_standalone.sh
 (5) Fixed:   Corrected estimation of filename and path in cat_stat_TIV.m.
 (6) Fixed:   Corrected handling of surfaces without faces/vertices in
              cat_surf_calc.m
+
 ------------------------------------------------------------------------
 r1992 | dahnke | 2022-05-13 10:05:20 +0200 (Fri, 13 May 2022) | 22 lines
 
