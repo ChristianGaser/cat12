@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1994 | gaser | 2022-05-23 16:51:11
+r1995 | gaser | 2022-05-24 17:17:44
+
+Changed paths:
+M       CHANGES.txt
+M       cat_plot_histogram.m
+A       cat_plot_scatter.m
+
+(1) Added:   New function cat_plot_scatter to draw scatter plots coloured by
+             density and to fit polynomial curves and add confidence interval.
+(2) Changed: Replaced old 2d histogram function by scatter plot coloured by 
+             density using cat_plot_scatter.m.
+
+------------------------------------------------------------------------
+r1994 | gaser | 2022-05-23 16:57:46 +0200 (Mon, 23 May 2022) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +25,7 @@ M       cat_vol_img2mip.m
              cat_surf_results.m.        
 (3) Fixed:   Dartel export images of average image were always removed even
              if the Dartel save option was used.
+
 
 ------------------------------------------------------------------------
 r1993 | gaser | 2022-05-19 11:23:00 +0200 (Thu, 19 May 2022) | 25 lines
