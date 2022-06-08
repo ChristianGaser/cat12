@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1995 | gaser | 2022-05-24 17:17:44
+r1996 | gaser | 2022-06-08 17:49:31
+
+Changed paths:
+M       CHANGES.txt
+M       cat_plot_histogram.m
+M       cat_plot_scatter.m
+M       cat_vol_qa.m
+
+(1) Changed: Added new flags to cat_plot_scatter.m.
+(2) Fixed:   Corrected order of labels in cat_plot_histogram.m.
+(3) Fixed:   Added missing paramter 'red' to cat_vol_qa.m.
+
+------------------------------------------------------------------------
+r1995 | gaser | 2022-05-24 17:22:04 +0200 (Tue, 24 May 2022) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +23,7 @@ A       cat_plot_scatter.m
              density and to fit polynomial curves and add confidence interval.
 (2) Changed: Replaced old 2d histogram function by scatter plot coloured by 
              density using cat_plot_scatter.m.
+
 
 ------------------------------------------------------------------------
 r1994 | gaser | 2022-05-23 16:57:46 +0200 (Mon, 23 May 2022) | 13 lines
