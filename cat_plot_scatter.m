@@ -20,8 +20,13 @@ function hAxes = cat_plot_scatter(X,Y, varargin)
 % cat_plot_scatter(...,'CI',false) add plot of confidence interval for
 % polynomial fit. The default is true.
 %
+% cat_plot_scatter(...,'CMAP',cmap) defines colormap
+% The default is parula (if available) or jet.
+%
+% cat_plot_scatter(...,'fig',fig) defines figure handle
+%
 % cat_plot_scatter(...,'PLOTTYPE',TYPE) allows you to create other ways of
-% plotting the scatter data. Options are "surf','mesh','image','contour','dscatter', and 'scatter'.
+% plotting the scatter data. Options are 'image','contour','dscatter', and 'scatter'.
 % These create surf, mesh and contour plots colored by density of the
 % scatter data. The default is 'dscatter'.
 %
@@ -74,19 +79,24 @@ logy        = false;
 filled      = true;
 fit_poly    = 0;
 ci          = true;
+if exist('parula')
+  cmap        = 'parula';
+else
+  cmap        = 'jet';
+end
 
 if nargin > 2
   if rem(nargin,2) == 1
     error('IncorrectNumberOfArguments',...
       'Incorrect number of arguments to %s.',mfilename);
   end
-  okargs = {'smoothing','bins','plottype','logy','contourFlag','marker','msize','filled','fit_poly','ci'};
+  okargs = {'smoothing','bins','plottype','logy','contourFlag','marker','msize','filled','fit_poly','ci','cmap','fig'};
   for j=1:2:nargin-2
     pname = varargin{j};
     pval = varargin{j+1};
     k = strmatch(lower(pname), okargs); %#ok
     if isempty(k)
-      error(UnknownParameterName',...
+      error('UnknownParameterName',...
         'Unknown parameter name: %s.',pname);
     elseif length(k)>1
       error('AmbiguousParameterName',...
@@ -122,6 +132,10 @@ if nargin > 2
           fit_poly = pval;
         case 10
           ci = pval;
+        case 11
+          cmap = pval;
+        case 12
+          fig = pval;
       end
     end
   end
@@ -173,7 +187,13 @@ if logy
   Y = 10.^Y;
 end
 
-% polynomial fit and confodence interval
+if exist('fig','var')
+  figure(fig)
+else
+  figure
+end
+
+% polynomial fit and confidence interval
 if fit_poly
   clf
   [p,S] = polyfit(X,Y,fit_poly);
@@ -194,7 +214,7 @@ if fit_poly
   hold on
 end
 
-okTypes = {'surf','mesh','contour','image','dscatter','scatter'};
+okTypes = {'contour','image','dscatter','scatter'};
 k = strmatch(lower(plottype), okTypes); %#ok
 
 if isempty(k)
@@ -205,18 +225,14 @@ elseif length(k)>1
     'Ambiguous plot type: %s.',plottype);
 else
   switch(k)
-    case 1 %'surf'
-      h = surf(ctrs1,ctrs2,F,'edgealpha',0);
-    case 2 % 'mesh'
-      h = mesh(ctrs1,ctrs2,F);
-    case 3 %'contour'
+    case 1 %'contour'
       [dummy, h] = contour(ctrs1,ctrs2,F);
-    case 4 %'image'
+    case 2 %'image'
       nc = 256;
       F = F./max(F(:));
       colormap(repmat(linspace(1,0,nc)',1,3));
       h =image(ctrs1,ctrs2,floor(nc.*F) + 1);
-    case 5 %'dscatter'
+    case 3 %'dscatter'
       F = F./max(F(:));
       ind = sub2ind(size(F),bin(:,1),bin(:,2));
       col = F(ind);
@@ -225,7 +241,7 @@ else
       else
         h = scatter(X,Y,msize,col,marker);
       end
-    case 6 %'scatter'
+    case 4 %'scatter'
       if filled
         h = scatter(X,Y,msize,marker,'filled');
       else
@@ -234,8 +250,10 @@ else
   end
 end
 
+colormap(cmap)
+
 if fit_poly
-  pl = plot(xfit,yfit,'r');
+  pl = plot(xfit,yfit,'k');
   set(pl,'LineWidth',2)
   if minx > 0 && minx < 1e-4
     xl = xlim;
