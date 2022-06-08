@@ -1063,6 +1063,7 @@ end
         end
         clear Yos0 Yos1 Yos2 YM0 YM1 YM2;
       else
+        red = R;
         NCRc = 0;
         NCwc = 0;
       end

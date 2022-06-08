@@ -110,8 +110,8 @@ if n == 2
     set(ax,'PlotBoxAspectRatioMode','auto','XDir','normal','YDir','normal');
 
     title('Histogram','Parent',ax);
-    xlabel(spm_str_manip(data(2,:),'a90'),'Parent',ax,'Interpreter','none');
-    ylabel(spm_str_manip(data(1,:),'a90'),'Parent',ax,'Interpreter','none');
+    xlabel(spm_str_manip(data(1,:),'a90'),'Parent',ax,'Interpreter','none');
+    ylabel(spm_str_manip(data(2,:),'a90'),'Parent',ax,'Interpreter','none');
         
     if (filetype == 2) && (size(cdata{1},2) ~= 1) && (size(cdata{2},2) ~= 1)
 
