@@ -4,7 +4,7 @@ function out = cat_plot_histogram(data,opt)
 % If data are spmT-files also print mean, std, effect size,
 % and upper 5%-tail cutoff
 %
-% data           - input files
+% data           - char array of input files or data matrix
 % opt fields:
 % color          = cat_io_colormaps('nejm',size(data,1)) as default, see cat_io_colormaps for more categorical colormaps
 % norm_frequency = true;
@@ -35,6 +35,20 @@ if isempty(data), error('no input images specified'), end
 if ischar(data)
   n = size(data,1);
 else
+  if ~iscell(data)
+    [n, ind] = min(size(data));
+    if n==1
+      data0{1} = data(:);
+    else
+      if ind == 2
+        data = data';
+      end
+      for i=1:n
+        data0{i} = data(i,:);
+      end
+    end
+    data = data0; clear data0;
+  end
   n = numel(data);
 end
 
@@ -65,7 +79,7 @@ for i = 1:n
   if ~ischar(data)
     cdata{i} = single(data{i}(:));
     mn(i) = min(data{i}(:));
-    mx(i) = min(data{i}(:));
+    mx(i) = max(data{i}(:));
   else
   
     [pth,nam,ext] = spm_fileparts(deblank(data(i,:)));
@@ -110,10 +124,14 @@ if n == 2
     set(ax,'PlotBoxAspectRatioMode','auto','XDir','normal','YDir','normal');
 
     title('Histogram','Parent',ax);
-    xlabel(spm_str_manip(data(1,:),'a90'),'Parent',ax,'Interpreter','none');
-    ylabel(spm_str_manip(data(2,:),'a90'),'Parent',ax,'Interpreter','none');
-        
-    if (filetype == 2) && (size(cdata{1},2) ~= 1) && (size(cdata{2},2) ~= 1)
+    if ischar(data(1,:))
+      xlabel(spm_str_manip(data(1,:),'a90'),'Parent',ax,'Interpreter','none');
+      ylabel(spm_str_manip(data(2,:),'a90'),'Parent',ax,'Interpreter','none');
+    else
+      xlabel('Data 1','Parent',ax,'Interpreter','none');
+      ylabel('Data 2','Parent',ax,'Interpreter','none');
+    end
+    if ischar(data(1,:)) && (filetype == 2) && (size(cdata{1},2) ~= 1) && (size(cdata{2},2) ~= 1)
 
       d = double(cdata{2}) - double(cdata{1});
       d(isnan(d)) = 0;
@@ -155,7 +173,7 @@ if n == 2
         disp('Images are identical!');
       end
     % display surface rendering of difference
-    elseif filetype == 3
+    elseif ischar(data(1,:)) && filetype == 3
       d = double(cdata{2}) - double(cdata{1});
       d(isnan(d)) = 0;
       sinfo = cat_surf_info(data(1,:));
@@ -240,7 +258,7 @@ for j = 1:n
       fprintf('%s\tSD=%g\n',data(j,:),std(y));
     end
   else
-    legend_str{j} = num2str(i);
+    legend_str{j} = num2str(j);
   end
 end
 
