@@ -25,6 +25,9 @@ function hAxes = cat_plot_scatter(X,Y, varargin)
 %
 % cat_plot_scatter(...,'fig',fig) defines figure handle
 %
+% cat_plot_scatter(...,'jitter',true) adds jitter on x-axsis for
+% categorical x-variables
+%
 % cat_plot_scatter(...,'PLOTTYPE',TYPE) allows you to create other ways of
 % plotting the scatter data. Options are 'image','contour','dscatter', and 'scatter'.
 % These create surf, mesh and contour plots colored by density of the
@@ -55,7 +58,7 @@ function hAxes = cat_plot_scatter(X,Y, varargin)
 % original dscatter version was written by Paul H. C. Eilers
 %
 % Copyright 2003-2004 The MathWorks, Inc.
-% $Revision:  $   $Date:  $
+% $Revision$   $Date$
 % Reference:
 % Paul H. C. Eilers and Jelle J. Goeman
 % Enhancing scatterplots with smoothed densities
@@ -67,7 +70,7 @@ function hAxes = cat_plot_scatter(X,Y, varargin)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
-% $Id: cat_plot_scatter.m 1985 2022-04-25 07:18:54Z gaser $
+% $Id$
 
 lambda      = [];
 nbins       = [];
@@ -79,6 +82,7 @@ logy        = false;
 filled      = true;
 fit_poly    = 0;
 ci          = true;
+jitter      = false;
 if exist('parula')
   cmap        = 'parula';
 else
@@ -90,7 +94,7 @@ if nargin > 2
     error('IncorrectNumberOfArguments',...
       'Incorrect number of arguments to %s.',mfilename);
   end
-  okargs = {'smoothing','bins','plottype','logy','contourFlag','marker','msize','filled','fit_poly','ci','cmap','fig'};
+  okargs = {'smoothing','bins','plottype','logy','contourFlag','marker','msize','filled','fit_poly','ci','cmap','fig','jitter'};
   for j=1:2:nargin-2
     pname = varargin{j};
     pval = varargin{j+1};
@@ -136,6 +140,8 @@ if nargin > 2
           cmap = pval;
         case 12
           fig = pval;
+        case 13
+          jitter = pval;
       end
     end
   end
@@ -193,11 +199,21 @@ else
   figure
 end
 
+% check whether X has limited number of entries (and is rather categorical)
+n_categories_X = numel(unique(X));
+add_range = min([1,log10(n_categories_X)/10]);
+
 % polynomial fit and confidence interval
 if fit_poly
   clf
   [p,S] = polyfit(X,Y,fit_poly);
-  xfit = linspace(minx*1,maxx*1,100);
+  
+  % add some more range because of jittered data
+  if n_categories_X < 30 && jitter
+    xfit = linspace(minx-2*add_range,maxx+2*add_range,100);
+  else
+    xfit = linspace(minx,maxx,100);
+  end
   yfit = polyval(p,xfit);
 
   if ci
@@ -208,10 +224,17 @@ if fit_poly
 
   % estimate R^2
   R2 = 1 - (S.normr/norm(Y - mean(Y)))^2;
-  fprintf('R^2 = %g\n',R2)
+  [cc,pp] = corrcoef(X,Y);
+  fprintf('R^2 = %g\tr = %g\tp = %g\n',R2,cc(1,2),pp(1,2))
   fprintf('Coefficients = %g\n',p)
 
   hold on
+end
+
+% check whether X has limited number of entries (and is rather categorical)
+% and add jitter if defined
+if n_categories_X < 30 && jitter
+  X = X + add_range*randn(size(X));
 end
 
 okTypes = {'contour','image','dscatter','scatter'};
@@ -231,7 +254,7 @@ else
       nc = 256;
       F = F./max(F(:));
       colormap(repmat(linspace(1,0,nc)',1,3));
-      h =image(ctrs1,ctrs2,floor(nc.*F) + 1);
+      h = image(ctrs1,ctrs2,floor(nc.*F) + 1);
     case 3 %'dscatter'
       F = F./max(F(:));
       ind = sub2ind(size(F),bin(:,1),bin(:,2));
@@ -329,7 +352,7 @@ function [y, delta] = cg_polyconf(p,x,S,varargin)
 %   [...] = POLYCONF(p,x,s,alpha,MU)
 
 %   Copyright 1993-2009 The MathWorks, Inc.
-%   $Revision: 1.1.8.1 $  $Date: 2010/03/16 00:16:53 $
+%   $Revision$  $Date$
 
 error(nargchk(2,Inf,nargin,'struct'));
 

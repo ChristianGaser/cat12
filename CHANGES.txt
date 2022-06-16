@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1996 | gaser | 2022-06-08 17:49:31
+r1997 | gaser | 2022-06-16 11:16:32
+
+Changed paths:
+M       CHANGES.txt
+M       cat_plot_boxplot.m
+M       cat_plot_histogram.m
+MM      cat_plot_scatter.m
+
+(1) Changed: Added option to add jitter to categorical variables in 
+             cat_plot_scatter.m.
+(2) Changed: Added more functionality to handle data arrays in 
+             cat_plot_histogram.m.
+(3) Changed: Added option to add jittered data points with probability density
+             as shape (similar to beeswwarm plot).
+
+------------------------------------------------------------------------
+r1996 | gaser | 2022-06-08 17:50:23 +0200 (Wed, 08 Jun 2022) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +26,7 @@ M       cat_vol_qa.m
 (1) Changed: Added new flags to cat_plot_scatter.m.
 (2) Fixed:   Corrected order of labels in cat_plot_histogram.m.
 (3) Fixed:   Added missing paramter 'red' to cat_vol_qa.m.
+
 
 ------------------------------------------------------------------------
 r1995 | gaser | 2022-05-24 17:22:04 +0200 (Tue, 24 May 2022) | 11 lines
