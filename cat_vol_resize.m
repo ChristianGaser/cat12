@@ -98,7 +98,7 @@ function varargout=cat_vol_resize(T,operation,varargin)
         fnameres = fullfile(pp,[ff ee]); 
         varargout{1}.res{fi,1} = fnameres; 
         
-        if job.lazy && ~cat_io_rerun(fnameres,job.data{fi} ) 
+        if job.lazy && ~cat_io_rerun(job.data{fi},fnameres) 
           if job.verb, fprintf('  Exist %s\n',fnameres); end
         else
           V  = spm_vol(job.data{fi});
