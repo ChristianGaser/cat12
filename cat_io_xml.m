@@ -204,7 +204,21 @@ function varargout = cat_io_xml(file,varargin)
       SN = orderfields(S); 
       
       if exist(mfile,'file')
-        load(mfile,'S');
+        try
+          load(mfile,'S');
+        catch
+          if exist(file,'file') 
+            try
+              if usejava('jvm')
+                S = xml_read(file);
+              elseif strcmpi(spm_check_version,'octave') && ~onlyxml
+                S = xmlread(file);
+              end
+            catch 
+              error('MATLAB:cat_io_xml:write+ReadErr','Can''t read XML-file ''%s'' for update!\n',file);
+            end
+          end
+        end
       elseif exist(file,'file') 
         try
           if usejava('jvm')

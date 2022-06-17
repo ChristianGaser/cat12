@@ -195,10 +195,12 @@ function cat_run_newcatch(job,tpm,subj)
     end
     
     % better to have the res that the opt field
-    if isfield(cat_err_res,'res')
-      job.SPM.res = cat_err_res.res;
-    elseif isfield(cat_err_res,'obj')
-      job.SPM.opt = cat_err_res.obj;
+    if exist('cat_err_res','var')
+      if isfield(cat_err_res,'res')
+        job.SPM.res = cat_err_res.res;
+      elseif isfield(cat_err_res,'obj')
+        job.SPM.opt = cat_err_res.obj;
+      end
     end
     
     qa = cat_vol_qa('cat12err',struct('write_csv',0,'write_xml',1,'caterrtxt',{caterrtxt},'caterr',caterrstruct,'job',job,'subj',subj));
