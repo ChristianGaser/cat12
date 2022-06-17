@@ -866,7 +866,7 @@ for sm = 0 %-1:0.5:1
   %%
   Yms = Ym + 0; %sm = -1;
   if sm<0, Yms = round(Ym*3)/3*(0-sm) + Yms*(1+sm); end 
-  spm_smooth(Yms,Yms,repmat(max(0,sm),3,1));
+  if sm>0, spm_smooth(Yms,Yms,repmat(max(0,sm),1,3)); end
   Ygrad   = cat_vol_grad(max(2/3,min(1,Yms) .* (Yp0>0)) , vx_vol); 
   [res_ECR,b,c] = cat_stat_kmeans(Ygrad(Yp0(:)>2.05 & Yp0(:)<2.95),1);
   %QAS.qualitymeasures.res_ECR = (abs(a-1/4) + abs(b - 0.025) ) / mean(vx_vol); 
@@ -887,9 +887,9 @@ usekmeans = 1;
 if 0
   sm = 0.2:0.05:1; clear a b, dx = 1; 
   smx = 0; Ym2 = Ym + 0; if smx<0, Ym2 = round(Ym2*3)/3*(0-smx) + Ym2*(1+smx); end 
-  spm_smooth(Ym2,Ym2,repmat(max(0,smx),3,1));
+  if smx>0, spm_smooth(Ym2,Ym2,repmat(max(0,smx),1,3)); end
   for smi = 1:numel(sm)
-    Yms    = Ym2 + 0; spm_smooth(Yms,Yms,repmat(sm(smi),3,1));
+    Yms    = Ym2 + 0; spm_smooth(Yms,Yms,repmat(sm(smi),3,1)); % #### RD20220617: this line caused an error in some cases ?! ...
     Ygrad  = (Ym2 - Yms) .* (Yp0>0);
     Ymsk   = Yp0(:)>2 & Yp0(:)<3; %smooth3( Yp0>2 & Yp0<3 )>0.5; 
   % ################ KMEANS ################
