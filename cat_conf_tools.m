@@ -1106,6 +1106,9 @@ function resize = conf_vol_resize(data,prefix,expert,outdir)
     
   % imcalc interpolation field
   imcalc            = spm_cfg_imcalc;
+  if isa(imcalc.val,'function_handle')
+    imcalc.val = feval(imcalc.val);
+  end
   method            = imcalc.val{6}.val{3}; 
   if expert>1 
   % extended version with additional filtering filtering
