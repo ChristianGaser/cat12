@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1999 | gaser | 2022-06-17 14:38:09
+r2000 | gaser | 2022-06-17 14:56:41
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       html/cat.html
+M       html/cat.txt
+M       html/cat_references.html
+
+(1) Changed: Updated CAT12 references.
+------------------------------------------------------------------------
+r1999 | gaser | 2022-06-17 14:38:19 +0200 (Fri, 17 Jun 2022) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +18,7 @@ M       cat_conf_tools.m
 
 (1) Changed: Adapted call of spm_cfg_imcalc to newer functionality in SPM12
              in cat_conf_tools.m.
+
 ------------------------------------------------------------------------
 r1998 | dahnke | 2022-06-17 11:57:40 +0200 (Fri, 17 Jun 2022) | 18 lines
 
