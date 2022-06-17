@@ -43,7 +43,11 @@
       </p><p>
         For further instructions check also the <a class="function" href="matlab:try,open(fullfile(spm('dir'),'toolbox','cat12','CAT12-Manual.pdf'));end; ">CAT12-Manual</a>.  
       </p><p>
-        Please <a href=cat_references.html>cite our papers</a> and the work of other researchers if you use this software.</li>
+      Please <a href=cat_references.html>cite our papers</a> and the work of other researchers if you use this software.</p><p>
+      Our main paper is:<br>
+      Gaser C, Dahnke R, Kurth K, Luders E, Alzheimer's Disease Neuroimaging Initiative.<br>
+      <a href="matlab:web('https://www.biorxiv.org/content/10.1101/2022.06.11.495736','-browser');">A Computational Anatomy Toolbox for the Analysis of Structural MRI Data.</a>
+      </p>
       </p>
       <ol>
         <li><a href=cat_starting.html>Quick start guide</a></li>         
