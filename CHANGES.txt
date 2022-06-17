@@ -1,5 +1,25 @@
 ------------------------------------------------------------------------
-r1997 | gaser | 2022-06-16 11:16:32
+r1998 | dahnke | 2022-06-17 11:56:44
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_marks.m
+M       cat_vol_headtrimming.m
+M       cat_vol_qa.m
+M       cat_vol_resize.m
+
+(1) Fixed:     Light changes of the QC in cat_stat_marks and cat_vol_qa.
+							 Adaptions for the edge-to-contrast-ratio (ECR) resolution measure
+               res_ECR (previously named res_grad). Further added the structural 
+               image quality rating (SIQR) as successor of IQR that also include 
+               ECR. Replace old tissue peak estimation with cat_stat_nanmean by 
+               cat_stat_kmeans that should be more reliable (currently flagged 
+               for further tests).
+(2) Fixed:     Tiny corrections in cat_vol_resize.
+(3) Fixed:     Corrected bug in cat_vol_headtrimming with some atlas datasets. 
+
+------------------------------------------------------------------------
+r1997 | gaser | 2022-06-16 11:17:25 +0200 (Thu, 16 Jun 2022) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +33,7 @@ MM      cat_plot_scatter.m
              cat_plot_histogram.m.
 (3) Changed: Added option to add jittered data points with probability density
              as shape (similar to beeswwarm plot).
+
 
 ------------------------------------------------------------------------
 r1996 | gaser | 2022-06-08 17:50:23 +0200 (Wed, 08 Jun 2022) | 11 lines
@@ -10138,7 +10159,7 @@ A       templates_surfaces/cb.sphere.freesurfer.gii
                 and changes in tbx_cfg_cat, cat_conf_output, cat_simple, 
                 and cat12.
 (7)  New:       Added cb surfaces.
-â‰ˆ
+{U+2248}
 
 
 ------------------------------------------------------------------------
@@ -14422,7 +14443,7 @@ M       cat_run_job_APP_SPMinit.m
 M       cat_vol_imcalc.m
 
 (1) Fixed:  Corrected bugs in cat_conf_opts, cat_run1173 and cat_main1173.
-(2) Fixed:  Corrected interpolation bug "Cannot read header extension.â€œ in      
+(2) Fixed:  Corrected interpolation bug "Cannot read header extension.{U+201C} in      
             cat_run_job_APP_SPM* and cat_run_job.
 (3) Fixed:  Corrected type convertation in cat_vol_imcalc.
 (4) Fixed:  Added skull-stripped handling in cat_run_job_APP_SPMinit and
@@ -15737,10 +15758,10 @@ Changed:    Small modifications in cat_tst_calc_kappa.
 Changed:    Small modifications in cat_vol_morph.
 Changed*:   Large modifications of the WMH detection in cat_part_vol.
             Tested for MICCAI2017 WMH data with/without FLAIR input:
-                CAT     (T1)     DSC 0.5824Â±0.1705  gtt1 
-                CAT     (T1+FL)  DSC 0.5235Â±0.2013  gtt1 
-                LST-LGA (T1+FL)  DSC 0.6186Â±0.1539  gtt1
-                LST-LPA (FL)     DSC 0.6172Â±0.2003  gto
+                CAT     (T1)     DSC 0.5824±0.1705  gtt1 
+                CAT     (T1+FL)  DSC 0.5235±0.2013  gtt1 
+                LST-LGA (T1+FL)  DSC 0.6186±0.1539  gtt1
+                LST-LPA (FL)     DSC 0.6172±0.2003  gto
             with gtt1 as T1-optimized ground truth with intensity limit
             and gto as original FLAIR-based ground truth. 
             
@@ -20101,7 +20122,7 @@ M       html/cat_methods_validation.html
 
 (1) Changed: Added option for initial morphological closing in the parahippocampal 
     area to minimize large cuts after topology correction.
-(2) Changed: Updated CAT_FixToÃ¼ology to better deal with large topology aretefacts
+(2) Changed: Updated CAT_FixToüology to better deal with large topology aretefacts
 (2) Changed: Updated help text.
 
 ------------------------------------------------------------------------
@@ -20272,7 +20293,7 @@ M       internal/cat_vol_flipside.m
 (1) Fixed:     Corrected bugs in cat_run_APP_init.
 (2) Fixed:     Corrected Ym intensity scaling problem in cat_main_LAS.
 (3) Fixed:     Corrected index error in cat_surf_smooth.
-               Thanks to BjÃ¶rn Horing for pointing out this bug.
+               Thanks to Björn Horing for pointing out this bug.
 (4) Fixed:     Corrected WMH volume output in CAT report and XML file.
                Thanks to M.H.T. Zwartbol for pointing out this bug.
 (5) Fixed:     Corrected simultan output of modulated data in expert mode in 
@@ -20574,7 +20595,7 @@ M       cat_surf_surf2roi.m
  M      templates_1.50mm/Template_4_IXI555_MNI152_GS.nii
 
 Fixed: Surface ROI values for the right hemisphere in cat_surf_surf2ROIs.m
-were not correct. Thanks to RenÃ© Seiger for pointing to that issue.
+were not correct. Thanks to René Seiger for pointing to that issue.
 
 
 ------------------------------------------------------------------------
@@ -22081,7 +22102,7 @@ M       cat_vol_defs.m
 A  +    development/cat.nii
 A       development/cat_main_LAS.m
 
-â‰ˆ(1) Changed*:   Update LAS cortex segmentation in "cat_main_LAS". 
+{U+2248}(1) Changed*:   Update LAS cortex segmentation in "cat_main_LAS". 
                 Added further comments.
 (2) Changed:    Added comments and verbose output in CAT deformation tool 
                 "cat_vol_defs". Refined regular expression of deformation 
@@ -33970,7 +33991,7 @@ M       cg_vbm_write.m
 ------------------------------------------------------------------------
 r453 | dahnke | 2013-03-27 11:05:32 +0100 (Wed, 27 Mar 2013) | 1 line
 
-Little changes for Skull-Stripping and adding of export for the bias and noise corrected image (can find the original partâ€¦ )
+Little changes for Skull-Stripping and adding of export for the bias and noise corrected image (can find the original part... )
 ------------------------------------------------------------------------
 r452 | gaser | 2013-03-26 15:09:46 +0100 (Tue, 26 Mar 2013) | 13 lines
 

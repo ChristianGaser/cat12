@@ -194,8 +194,8 @@ function varargout = cat_vol_headtrimming(job)
       % categorical data have data type uint8 or int16
       % and typically < 1000 different values
       categorical = 0;
-      if V(1).dt(1) == 2 || V(1).dt(1) == 4 && min(Y(:))>=0 && V(1).pinfo(1) == 1
-        h = hist(Y(:),0:max(Y(:)));
+      if V(1).pinfo(1) == 1 && all( round(Y(:)) == Y(:) ) %  V(1).dt(1) == 2 || V(1).dt(1) == 4 &&
+        h = hist(Y(:),min(Y(:)):max(Y(:)));
         n_values = numel(unique(h));
         if n_values < 1000
           categorical = 1;
@@ -205,11 +205,13 @@ function varargout = cat_vol_headtrimming(job)
       % skip most of steps that are only needed for non-categorical data
       vx_vol  = sqrt(sum(V(1).mat(1:3,1:3).^2)); 
       if categorical
-        Yb = Y;
-        Yb = cat_vol_morph(Yb,'ldc',10); 
+        fprintf('Categorical Image (Label map) ')
+        Yb = cat_vol_morph(Y,'o',1);        % remove noise ?
+        %Yb = cat_vol_morph(Yb,'ldc',5) > 0; % why?
       else
         % intensity normalization 
-        [Y,hth] = cat_stat_histth(smooth3(Y),job.range1,0); 
+        Yr = cat_vol_resize(Y,'reduceV',vx_vol,2,64,'meanm');
+        [Yr,hth] = cat_stat_histth(smooth3(Yr),job.range1,0); 
         Y = (Y - hth(1)) ./ abs(diff(hth));
 
         % masking
