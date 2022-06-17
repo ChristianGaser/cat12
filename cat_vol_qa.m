@@ -114,14 +114,17 @@ function varargout = cat_vol_qa(action,varargin)
     if isfield(action,'data')
       Pp0 = action.data;
     end
-    
     action = 'p0';
   end
   if nargin>1 && isstruct(varargin{end}) && isstruct(varargin{end})
     opt  = cat_check('checkinopt',varargin{end},defaults);
     nopt = 1; 
   else
-    opt  = defaults;
+    if isstruct(action2)
+      opt = cat_check('checkinopt',action2.opts,defaults);
+    else
+      opt = defaults;
+    end
     nopt = 0;
   end
 
@@ -314,8 +317,13 @@ function varargout = cat_vol_qa(action,varargin)
     Tline2  = sprintf('%s%%%d.%df',Tline2,opt.snspace(2),opt.snspace(3));
     Tavg    = sprintf('%s%%%d.%df',Tavg,opt.snspace(2),opt.snspace(3));
   end
-  Cheader = [Cheader 'IQM'];
-  Theader = sprintf(sprintf('%%s%%%ds',opt.snspace(2)),Theader,'IQM');
+  Cheader = [Cheader 'IQR']; 
+  Theader = sprintf(sprintf('%%s%%%ds',opt.snspace(2)),Theader,'IQR');
+  Tline   = sprintf('%s%%%d.%df',Tline,opt.snspace(2),opt.snspace(3));
+  Tline2  = sprintf('%s%%%d.%df',Tline2,opt.snspace(2),opt.snspace(3));
+  Tavg    = sprintf('%s%%%d.%df',Tavg,opt.snspace(2),opt.snspace(3));
+  Cheader = [Cheader 'SIQR']; 
+  Theader = sprintf(sprintf('%%s%%%ds',opt.snspace(2)),Theader,'SIQR');
   Tline   = sprintf('%s%%%d.%df\n',Tline,opt.snspace(2),opt.snspace(3));
   Tline2  = sprintf('%s%%%d.%df\n',Tline2,opt.snspace(2),opt.snspace(3));
   Tavg    = sprintf('%s%%%d.%df\n',Tavg,opt.snspace(2),opt.snspace(3));
@@ -366,10 +374,11 @@ function varargout = cat_vol_qa(action,varargin)
             Yp0 = single(spm_read_vols(Vp0));
           end
           Yp0(isnan(Yp0) | isinf(Yp0)) = 0; 
-          if ~isempty(Pm{fi}) && exist(Pm{fi},'file')
+          if 0 %~isempty(Pm{fi}) && exist(Pm{fi},'file')
             Ym  = single(spm_read_vols(spm_vol(Pm{fi})));
             Ym(isnan(Yp0) | isinf(Yp0)) = 0; 
-          elseif 1
+          elseif 1 %end
+          %if ~exist(Ym,'var') || round( cat_stat_nanmean(Ym(round(Yp0)==3)) * 100) ~= 100 
             Ym  = single(spm_read_vols(spm_vol(Po{fi})));
             Ym(isnan(Yp0) | isinf(Yp0)) = 0; 
             Yw  = Yp0>2.95 | cat_vol_morph( Yp0>2.25 , 'e'); 
@@ -381,7 +390,7 @@ function varargout = cat_vol_qa(action,varargin)
             error('cat_vol_qa:noYm','No corrected image.');
           end
           rmse = (mean(Ym(Yp0(:)>0) - Yp0(Yp0(:)>0)/3).^2).^0.5; 
-          if rmse>0.1
+          if rmse>0.2
             cat_io_cprintf('warn','Segmentation is maybe not fitting to the image (RMSE(Ym,Yp0)=%0.2f)?:\n  %s\n  %s',rmse,Pm{fi},Pp0{fi}); 
           end
           
@@ -402,22 +411,24 @@ function varargout = cat_vol_qa(action,varargin)
             qamat(fi,fni)  = QAS(fi).qualitymeasures.(QMAfn{fni});
             qamatm(fi,fni) = QAR(fi).qualityratings.(QMAfn{fni});
           end
-          mqamatm(fi) = QAR(fi).qualityratings.IQR;
-          mqamatm(fi) = max(0,min(10.5, mqamatm(fi)));
+          mqamatm(fi,1) = QAR(fi).qualityratings.IQR;
+          mqamatm(fi,1) = max(0,min(10.5, mqamatm(fi,1)));
+          mqamatm(fi,2)   = QAR(fi).qualityratings.SIQR;
+          mqamatm(fi,2)   = max(0,min(10.5, mqamatm(fi,2)));
           
           
-          % print the results for each scan 
+          %% print the results for each scan 
           if opt.verb>1 
             if opt.orgval 
-              cat_io_cprintf(opt.MarkColor(max(1,floor( mqamatm(fi,:)/9.5 * ...
+              cat_io_cprintf(opt.MarkColor(max(1,floor( mqamatm(fi,2)/9.5 * ...
                 size(opt.MarkColor,1))),:),sprintf(Tline,fi,...
                 QAS(fi).filedata.fnames, ... spm_str_manip(QAS(fi).filedata.file,['f' num2str(opt.snspace(1) - 14)]),...
-                qamat(fi,:),max(1,min(6,mqamatm(fi)))));
+                qamat(fi,:),max(1,min(6,mqamatm(fi,:)))));
             else
-              cat_io_cprintf(opt.MarkColor(max(1,floor( mqamatm(fi,:)/9.5 * ...
+              cat_io_cprintf(opt.MarkColor(max(1,floor( mqamatm(fi,2)/9.5 * ...
                 size(opt.MarkColor,1))),:),sprintf(Tline,fi,...
                 QAS(fi).filedata.fnames, ... spm_str_manip(QAS(fi).filedata.file,['f' num2str(opt.snspace(1) - 14)]),...
-                qamatm(fi,:),max(1,min(6,mqamatm(fi)))));
+                qamatm(fi,:),max(1,min(6,mqamatm(fi,:)))));
             end
           end
         catch  %#ok<CTCH> ... normal "catch err" does not work for MATLAB 2007a
@@ -451,7 +462,7 @@ function varargout = cat_vol_qa(action,varargin)
       % ----------------------------------------------------------------
       if opt.sortQATm && numel(Po)>1
         % sort matrix
-        [smqamatm,smqamatmi] = sort(mqamatm,'ascend');
+        [smqamatm,smqamatmi] = sort(mqamatm(:,2),'ascend');
         sqamatm  = qamatm(smqamatmi,:);
         sqamat   = qamat(smqamatmi,:); 
 
@@ -461,20 +472,20 @@ function varargout = cat_vol_qa(action,varargin)
           for fi=1:numel(QAS)
             if opt.orgval 
               cat_io_cprintf(opt.MarkColor(min(size(opt.MarkColor,1),...
-                round( smqamatm(fi,:)/9.5 * ...
+                round( mqamatm(smqamatmi(fi),2)/9.5 * ...
                 size(opt.MarkColor,1))),:),sprintf(...
                 Tline2,fi,sprintf('(%d)',smqamatmi(fi)),...
                 QAS(smqamatmi(fi)).filedata.fnames, ...
                 ...spm_str_manip(QAS(smqamatmi(fi)).filedata.file,['f' num2str(opt.snspace(1) - 14)]),...
-                sqamat(fi,:),max(1,min(6,smqamatm(fi)))));
+                sqamat(fi,:),max(1,min(6,mqamatm(smqamatmi(fi),:)))));
             else
               cat_io_cprintf(opt.MarkColor(min(size(opt.MarkColor,1),...
-                round( smqamatm(fi,:)/9.5 * ...
+                round( mqamatm(smqamatmi(fi),2)/9.5 * ...
                 size(opt.MarkColor,1))),:),sprintf(...
                 Tline2,fi,sprintf('(%d)',smqamatmi(fi)),...
                 QAS(smqamatmi(fi)).filedata.fnames, ...
                 ...spm_str_manip(QAS(smqamatmi(fi)).filedata.file,['f' num2str(opt.snspace(1) - 14)]),...
-                sqamatm(fi,:),smqamatm(fi)));
+                sqamatm(fi,:),mqamatm(smqamatmi(fi),:)));
             end
           end
         end
@@ -486,10 +497,10 @@ function varargout = cat_vol_qa(action,varargin)
       if opt.verb>1 && numel(Pp0)>1
         fprintf('%s\n',repmat('-',size(Theader)));  
         if opt.orgval 
-          fprintf(Tavg,'mean',cat_stat_nanmean(qamat,1),cat_stat_nanmean(mqamatm,1));    %#ok<CTPCT>
+          fprintf(Tavg,'mean',cat_stat_nanmean(qamat,1), cat_stat_nanmean(mqamatm,1));   %#ok<CTPCT>
           fprintf(Tavg,'std' , cat_stat_nanstd(qamat,1), cat_stat_nanstd(mqamatm,1));    %#ok<CTPCT>  
         else
-          fprintf(Tavg,'mean',cat_stat_nanmean(qamatm,1),cat_stat_nanmean(mqamatm,1));    %#ok<CTPCT>
+          fprintf(Tavg,'mean',cat_stat_nanmean(qamatm,1), cat_stat_nanmean(mqamatm,1));   %#ok<CTPCT>
           fprintf(Tavg,'std' , cat_stat_nanstd(qamatm,1), cat_stat_nanstd(mqamatm,1));    %#ok<CTPCT>  
         end 
         %fprintf('%s\n',repmat('-',size(Theader)));  
@@ -599,8 +610,10 @@ function varargout = cat_vol_qa(action,varargin)
       
     case 'cat12'
     % estimation of the measures for the single case    
-    
-    
+ 
+[pp,ff,ee] = spm_fileparts(Vo.fname);    
+if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '.xml']) ) 
+  
       % file information
       % ----------------------------------------------------------------
       [pp,ff,ee] = spm_fileparts(Vo.fname);
@@ -854,15 +867,14 @@ for sm = 0 %-1:0.5:1
   Yms = Ym + 0; %sm = -1;
   if sm<0, Yms = round(Ym*3)/3*(0-sm) + Yms*(1+sm); end 
   spm_smooth(Yms,Yms,repmat(max(0,sm),3,1));
-  Ygrad   = cat_vol_grad(max(2/3,Yms .* (Yp0>0)) , vx_vol); 
-  [a,b,c] = cat_stat_kmeans(Ygrad(Yp0(:)>2.05 & Yp0(:)<2.95),1);
-  QAS.qualitymeasures.res_grad = abs( a - 1/3 ); 
-  %QAS.qualitymeasures.res_grad = (abs(a-1/4) + abs(b - 0.025) ) / mean(vx_vol); 
+  Ygrad   = cat_vol_grad(max(2/3,min(1,Yms) .* (Yp0>0)) , vx_vol); 
+  [res_ECR,b,c] = cat_stat_kmeans(Ygrad(Yp0(:)>2.05 & Yp0(:)<2.95),1);
+  %QAS.qualitymeasures.res_ECR = (abs(a-1/4) + abs(b - 0.025) ) / mean(vx_vol); 
   %fprintf(' s=%+0.2f:  %0.4f + %0.4f ~ %0.4f , %0.4f \n', sm, a ,b , b-a, abs(a-1/4) + abs(b-0.02) );
   %ds('d2sm','',1,Yms,Ygrad,100)
 end  
 
-
+usekmeans = 1; 
   
 
 %%  B) by smoothing (RD20220324)
@@ -872,23 +884,30 @@ end
 %      neglidable. However, this is of course also effected by noise and
 %      anatomical features and seems to be not stable enough to been used.
 % -------------------------------------------------------------------------
-sm = 0.2:0.05:1; clear a b, dx = 1; 
-smx = 0; Ym2 = Ym + 0; if smx<0, Ym2 = round(Ym2*3)/3*(0-smx) + Ym2*(1+smx); end 
-spm_smooth(Ym2,Ym2,repmat(max(0,smx),3,1));
-for smi = 1:numel(sm)
-  Yms    = Ym2 + 0; spm_smooth(Yms,Yms,repmat(sm(smi),3,1));
-  Ygrad  = (Ym2 - Yms) .* (Yp0>0);
-  Ymsk   = Yp0(:)>2 & Yp0(:)<3; %smooth3( Yp0>2 & Yp0<3 )>0.5; 
-  a(smi) = cat_stat_nanmean(Ygrad(Ymsk(:))); %,1);
-end  
-cx = diff(a,dx); cx = (cx - min(cx)) ./ ( max(cx) - min(cx)); 
-%if cx(1)==1; cx=flip(cx); end
-switch dx
-  case 1
-    % 0.55 to 0.45 to 0.35 
-  %  fprintf(' s=%+0.2f:  %0.4f %0.4f \n', smx, cx(1) , sm( find(diff([cx,inf])>0,1,'first')) ); %ds('d2sm','',1,Yms,Ygrad,100)
-  case 2
-  %  fprintf(' s=%+0.2f:  %0.4f %0.4f \n', smx, mean( diff(a,dx) ) , sm( find(cx>0.9,1,'first')) ); %ds('d2sm','',1,Yms,Ygrad,100)
+if 0
+  sm = 0.2:0.05:1; clear a b, dx = 1; 
+  smx = 0; Ym2 = Ym + 0; if smx<0, Ym2 = round(Ym2*3)/3*(0-smx) + Ym2*(1+smx); end 
+  spm_smooth(Ym2,Ym2,repmat(max(0,smx),3,1));
+  for smi = 1:numel(sm)
+    Yms    = Ym2 + 0; spm_smooth(Yms,Yms,repmat(sm(smi),3,1));
+    Ygrad  = (Ym2 - Yms) .* (Yp0>0);
+    Ymsk   = Yp0(:)>2 & Yp0(:)<3; %smooth3( Yp0>2 & Yp0<3 )>0.5; 
+  % ################ KMEANS ################
+  if usekmeans
+    a(smi) = cat_stat_kmeans(Ygrad(Ymsk(:))); %,1);
+  else  
+    a(smi) = cat_stat_nanmean(Ygrad(Ymsk(:))); %,1);
+  end
+  end  
+  cx = diff(a,dx); cx = (cx - min(cx)) ./ ( max(cx) - min(cx)); 
+  %if cx(1)==1; cx=flip(cx); end
+  switch dx
+    case 1
+      % 0.55 to 0.45 to 0.35 
+    %  fprintf(' s=%+0.2f:  %0.4f %0.4f \n', smx, cx(1) , sm( find(diff([cx,inf])>0,1,'first')) ); %ds('d2sm','',1,Yms,Ygrad,100)
+    case 2
+    %  fprintf(' s=%+0.2f:  %0.4f %0.4f \n', smx, mean( diff(a,dx) ) , sm( find(cx>0.9,1,'first')) ); %ds('d2sm','',1,Yms,Ygrad,100)
+  end
 end
 %QAS.qualitymeasures.RESsmooth = 
 %figure(1000 + round(smx*10)); plot(sm(1:end-dx),cx)
@@ -940,11 +959,21 @@ end
       resr.vx_volo = vx_vol; vx_vol=resr.vx_red .* resr.vx_volo;
 
       %% intensity scaling for normalized Ym maps like in CAT12
+
+% ################ KMEANS ################
+if usekmeans
+      if  cat_stat_nanmean(Yo(Yp0(:)>2))<0
+        Ywc = Ywc .* (cat_stat_kmeans(Yo(Yp0(:)>2))/cat_stat_nanmean(2 - Ym(Yp0(:)>2))); % RD202004: negative values in chimp data showed incorrect scalling
+      else
+        Ywc = Ywc .* (cat_stat_kmeans(Yo(Yp0(:)>2))/cat_stat_nanmean(Ym(Yp0(:)>2)));
+      end
+else
       if  cat_stat_nanmean(Yo(Yp0(:)>2))<0
         Ywc = Ywc .* (cat_stat_nanmean(Yo(Yp0(:)>2))/cat_stat_nanmean(2 - Ym(Yp0(:)>2))); % RD202004: negative values in chimp data showed incorrect scalling
       else
         Ywc = Ywc .* (cat_stat_nanmean(Yo(Yp0(:)>2))/cat_stat_nanmean(Ym(Yp0(:)>2)));
       end
+end
       %% bias correction for original map, based on the 
       WI  = zeros(size(Yw),'single'); WI(Ywc(:)~=0) = Yw(Ywc(:)~=0)./Ywc(Ywc(:)~=0); WI(isnan(Ywe) | isinf(WI) | Ywe==0) = 0;
       WI  = cat_vol_approx(WI,2);
@@ -960,11 +989,20 @@ end
       
      
       % tissue segments for contrast estimation etc. 
+
+% ################ KMEANS ################
+if usekmeans
+      CSFth = cat_stat_kmeans(Yc(~isnan(Yc(:)) & Yc(:)~=0)); 
+      GMth  = cat_stat_kmeans(Yg(~isnan(Yg(:)) & Yg(:)~=0));
+      WMth  = cat_stat_kmeans(Yw(~isnan(Yw(:)) & Yw(:)~=0)); 
+      T3th  = [CSFth GMth WMth];
+else
       CSFth = cat_stat_nanmean(Yc(~isnan(Yc(:)) & Yc(:)~=0)); 
       GMth  = cat_stat_nanmean(Yg(~isnan(Yg(:)) & Yg(:)~=0));
       WMth  = cat_stat_nanmean(Yw(~isnan(Yw(:)) & Yw(:)~=0)); 
       T3th  = [CSFth GMth WMth];
-      
+end
+
       % estimate background
       [Ymir,resYbg] = cat_vol_resize(Ymi,'reduceV',1,6,32,'meanm'); 
       try
@@ -1019,6 +1057,9 @@ end
       QAS.qualitymeasures.contrastr = contrast;
 
       
+      
+      QAS.qualitymeasures.res_ECR =  1 - abs( res_ECR / contrast).^1 ; 
+      %fprintf(' ( %0.4f ) ', QAS.qualitymeasures.res_ECR); 
       
       %% noise estimation (original (bias corrected) image)
       % WM variance only in one direction to avoid WMHs!
@@ -1086,8 +1127,8 @@ end
       %QAS.qualitymeasures.CIR  = 1 / QAS.qualitymeasures.ICR;
       % local concept that could work also on the BWP?
       Yosm2 = cat_vol_localstat(Yosm,Yosmm,1,4) / mean(red.vx_volr)/3;
-      QAS.qualitymeasures.ICR1 = cat_stat_nanstd(Yosm2(Yosmm(:))) / signal_intensity / contrast * 20;
-      
+%      QAS.qualitymeasures.ICRk = cat_stat_kmeans( (Yosm2(Yosmm(:)) / signal_intensity  / contrast * 100 + 1).^4 ).^(1/4); 
+%  fprintf('ICR: %8.3f, ICRk: %8.6f\n',QAS.qualitymeasures.ICR,QAS.qualitymeasures.ICRk);    
   
       %% marks
       QAR = cat_stat_marks('eval',1,QAS);
@@ -1100,7 +1141,11 @@ end
         
         cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write'); %struct('QAS',QAS,'QAM',QAM)
       end
-
+else
+  QAS = cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),'load'); %struct('QAS',QAS,'QAM',QAM)
+  QAR = cat_stat_marks('eval',1,QAS);
+end
+      
       clear Yi Ym Yo Yos Ybc
       clear Ywm Ygm Ycsf Ybg
 
@@ -1134,7 +1179,8 @@ function def=defaults
   def.method     = 'spm';
   def.snspace    = [70,7,3];
   def.nogui      = exist('XT','var');
-  def.MarkColor = cat_io_colormaps('marks+',40); 
+  def.rerun      = 0;
+  def.MarkColor  = cat_io_colormaps('marks+',40); 
 end
 
 function noise = estimateNoiseLevel(Ym,YM,r,rms,vx_vol)

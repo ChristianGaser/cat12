@@ -36,7 +36,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
 % used measures and marks:
 % ______________________________________________________________________
 %  def.tisvolr with the mean relative tissue volume of 10 year groups of
-%  healty subjects of a set of different projects with IQM<3 and the std
+%  healty subjects of a set of different projects with IQR<3 and the std
 %  of all datasets (5122 images).
     
   def.tissue    = [ 1/3 3/12;  2/3 3/12;    1 3/12]; % ideal normalized tissue peak values 
@@ -71,7 +71,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
   % - resolution - 
    'qualitymeasures'  'res_vx_vol'            'linear'    [  0.50   3.00]  'voxel dimensions'
    'qualitymeasures'  'res_RMS'               'linear'    [  0.50   3.00]  'RMS error of voxel size'
-   'qualitymeasures'  'res_grad'              'linear'    [  0.00   0.30]  'normalized gradient slope of the white matter boundary'
+   'qualitymeasures'  'res_ECR'               'linear'    [  0.02   1.00]  'normalized gradient slope of the white matter boundary'
   %'qualitymeasures'  'res_MVR'               'linear'    [  0.50   3.00]  'mean voxel resolution'
   %'qualitymeasures'  'res_vol'               'linear'    [  0.125    27]  'voxel volume'
   %'qualitymeasures'  'res_isotropy'          'linear'    [  1.00   8.00]  'voxel isotropy'
@@ -87,6 +87,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
   %'qualitymeasures'  'CNR'                   'linear'    [1/NM(1) 1/NM(2)]  'contrast to noise ratio'
   % - inhomogeneity & contrast -
    'qualitymeasures'  'ICR'                   'linear'    [  BM(1)   BM(2)]  'inhomogeneity to contrast ratio' 
+ %  'qualitymeasures'  'ICRk'                  'linear'    [  1.095   1.80]  'inhomogeneity to contrast ratio' 
   %'qualitymeasures'  'CIR'                   'linear'    [1/BM(1) 1/BM(2)]  'contrast to inhomogeneity ratio'
   % - subject measures / preprocessing measures -
   %'qualitymeasures'  'CJV'                   'linear'    [  0.12   0.18]  'coefficient of variation - avg. std in GM and WM'
@@ -258,19 +259,17 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
 %       BWP.NCRm = evallinear(QA.qualitymeasures.NCR    ,0.05,0.35,6);
 %       BWP.MVRm = evallinear(QA.qualitymeasures.res_RMS,0.50,3.00,6);    
       
-      if cat_get_defaults('extopts.expertgui') == 2
-        QAM.qualityratings.IQR = rms([QAM.qualityratings.NCR  QAM.qualityratings.res_RMS  QAM.qualityratings.res_grad],8);
-      else
-        QAM.qualityratings.IQR = rms([QAM.qualityratings.NCR  QAM.qualityratings.res_RMS ],8);
-      end
-      QAM.subjectratings.SQR = rms([QAM.subjectratings.vol_rel_CGW],8);
+      % SIQR is the successor of IQR and also uses the new edge-based resoltion rating 
+      QAM.qualityratings.SIQR = rms([QAM.qualityratings.NCR  QAM.qualityratings.res_RMS QAM.qualityratings.res_ECR],8);   
+      QAM.qualityratings.IQR  = rms([QAM.qualityratings.NCR  QAM.qualityratings.res_RMS ],8);
+      QAM.subjectratings.SQR  = rms([QAM.subjectratings.vol_rel_CGW],8);
       
       varargout{1} = QAM;
     
     
     case 'init'    % ausgabe einer leeren struktur
       varargout{1} = QS;
-      varargout{2} = {'NCR','ICR','res_RMS','res_grad','contrastr'}; 
+      varargout{2} = {'NCR','ICR','res_RMS','res_ECR','contrastr'}; % ,'res_BB' is not working now 
     
       
     case 'marks'    % ausgabe einer leeren struktur
