@@ -4,8 +4,8 @@
 
 OLDVERSION="CAT12.8.1"
 NEWVERSION="CAT12.8.1"
-REVISION=`svn info |grep Revision|sed -e 's/Revision: //g'`
-DATE=`svn info |grep 'Last Changed Date: '|sed -e 's/Last Changed Date: //g'|cut -f1 -d' '`
+REVISION=`git rev-list --count HEAD`
+DATE=`git log --date short |grep "Date:"|head -1|cut -f2 -d':'|sed -e s'/ //g'`
 
 TARGET=/Users/gaser/spm/spm12/toolbox/cat12
 TARGET2=/Volumes/UltraMax/spm12/toolbox/cat12
@@ -36,7 +36,6 @@ clean:
 	-@chmod -R a+r,g+w,o-w .
 	-@find . -type f \( -name "*.sh" -o -name "*.mex*" \) -exec chmod a+x {} \;
 	-@find . -type f \( -name "*.c" -o -name "*.c??" -o -name "*.m" -o -name "*.gii" -o -name "*.nii" -o -name "*.txt" -o -name "*.html" -o -name "*.annot" \) -exec chmod a-x {} \;
-# 	-@svn propset svn:executable OFF *.c *.c?? *.m */*.gii */*.nii *.txt *.html */*.c */*.c?? */*.m */*.annot */*.txt */*.html
 
 # prepare txt file for deployed versions
 copy_longmode:
@@ -79,7 +78,7 @@ doc:
 
 # update version numbers
 update: doc copy_longmode
-	-@svn update
+	-@git pull
 	-@echo '% Computational Anatomy Toolbox' > Contents.m
 	-@echo '% Version' ${REVISION}' ('${NEWVERSION}')' ${DATE} >> Contents.m
 	-@cat Contents_info.txt >> Contents.m
