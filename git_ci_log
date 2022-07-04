@@ -14,6 +14,7 @@ if [ -f log ]; then
   echo "Changed paths:" >> CHANGES.txt
   git status --short|grep -v ?? >> CHANGES.txt
   echo >> CHANGES.txt
+  echo >> CHANGES.txt
   cat log >> CHANGES.txt
   cat CHANGES2.txt >> CHANGES.txt
   rm CHANGES2.txt

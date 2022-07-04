@@ -1,4 +1,1788 @@
 ------------------------------------------------------------------------
+r2015 | gaser | 2022-07-05 00:11:33
+
+Changed paths:
+ M .gitattributes
+ M Amap.c
+ M Bayes.c
+ M BayesMex.c
+ M CHANGES.txt
+ M Contents.m
+ M Kmeans.c
+ M KmeansMex.c
+ M MBeautify.m
+ M MBeautify.txt
+ M MFormatter.m
+ M Makefile
+ M MrfPrior.c
+ M Pve.c
+ M WarpPriors.c
+ M atlases_surfaces/lh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/lh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces/rh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/rh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.aparc_a2005s.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.aparc_a2005s.freesurfer.annot
+ M cat_amap.c
+ M cat_ornlm.c
+ M cat_plot_circular.m
+ M cat_sanlm.c
+ M cat_stat_factorial_design.m
+ M cat_stat_histth.m
+ M cat_stat_kmeans.m
+ M cat_surf_coregvol2surf.m
+ M cat_vbdist.c
+ M cat_vol_ROIval.c
+ M cat_vol_downcut.c
+ M cat_vol_eidist.c
+ M cat_vol_findfiles.m
+ M cat_vol_genus0.c
+ M cat_vol_gradient3.c
+ M cat_vol_laplace3.c
+ M cat_vol_laplace3R.c
+ M cat_vol_localstat.c
+ M cat_vol_median3.c
+ M cat_vol_median3c.c
+ M cat_vol_nonlin_coreg.m
+ M cat_vol_pbt.m
+ M cat_vol_pbtp.c
+ M cat_vol_pbtp.cpp
+ M cat_vol_pbtp2.c
+ M cat_vol_simgrow.c
+ M cat_vol_smooth3X.m
+ M check_pipeline_ROIs.m
+ M genus0.c
+M  git_ci_log
+ M html/cat.html
+ M internal/cat_vol_cMRegularizarNLM3D.c
+ M internal/cat_vol_cMRegularizarNLM3Dw.c
+ M internal/cat_vol_gbdist.m
+ M optimizer3d.c
+ M ornlm_float.c
+ M sanlm_float.c
+ M spm_diffeo_old.c
+ M templates_MNI152NLin2009cAsym/hammers.txt
+ M templates_volumes/hammers.txt
+
+Updated git_ci_log
+------------------------------------------------------------------------
+r2015 | gaser | 2022-07-05 00:10:55
+
+Changed paths:
+ M .gitattributes
+ M Amap.c
+ M Bayes.c
+ M BayesMex.c
+ M CHANGES.txt
+ M Contents.m
+ M Kmeans.c
+ M KmeansMex.c
+ M MBeautify.m
+ M MBeautify.txt
+ M MFormatter.m
+ M Makefile
+ M MrfPrior.c
+ M Pve.c
+ M WarpPriors.c
+ M atlases_surfaces/lh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/lh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces/rh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/rh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.aparc_a2005s.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.aparc_a2005s.freesurfer.annot
+ M cat_amap.c
+ M cat_ornlm.c
+ M cat_plot_circular.m
+ M cat_sanlm.c
+ M cat_stat_factorial_design.m
+ M cat_stat_histth.m
+ M cat_stat_kmeans.m
+ M cat_surf_coregvol2surf.m
+ M cat_vbdist.c
+ M cat_vol_ROIval.c
+ M cat_vol_downcut.c
+ M cat_vol_eidist.c
+ M cat_vol_findfiles.m
+ M cat_vol_genus0.c
+ M cat_vol_gradient3.c
+ M cat_vol_laplace3.c
+ M cat_vol_laplace3R.c
+ M cat_vol_localstat.c
+ M cat_vol_median3.c
+ M cat_vol_median3c.c
+ M cat_vol_nonlin_coreg.m
+ M cat_vol_pbt.m
+ M cat_vol_pbtp.c
+ M cat_vol_pbtp.cpp
+ M cat_vol_pbtp2.c
+ M cat_vol_simgrow.c
+ M cat_vol_smooth3X.m
+ M check_pipeline_ROIs.m
+ M genus0.c
+ M git_ci_log
+ M html/cat.html
+ M internal/cat_vol_cMRegularizarNLM3D.c
+ M internal/cat_vol_cMRegularizarNLM3Dw.c
+ M internal/cat_vol_gbdist.m
+ M optimizer3d.c
+ M ornlm_float.c
+ M sanlm_float.c
+ M spm_diffeo_old.c
+ M templates_MNI152NLin2009cAsym/hammers.txt
+ M templates_volumes/hammers.txt
+
+Updated git_ci_log
+------------------------------------------------------------------------
+r2015 | gaser | 2022-07-04 23:52:05
+
+Changed paths:
+ M .gitattributes
+ M Amap.c
+ M Bayes.c
+ M BayesMex.c
+ M CHANGES.txt
+ M Contents.m
+ M Kmeans.c
+ M KmeansMex.c
+ M MBeautify.m
+ M MBeautify.txt
+ M MFormatter.m
+ M Makefile
+ M MrfPrior.c
+ M Pve.c
+ M WarpPriors.c
+ M atlases_surfaces/lh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/lh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces/rh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/rh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.aparc_a2005s.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.aparc_a2005s.freesurfer.annot
+ M cat_amap.c
+ M cat_ornlm.c
+ M cat_plot_circular.m
+ M cat_sanlm.c
+ M cat_stat_factorial_design.m
+ M cat_stat_histth.m
+ M cat_stat_kmeans.m
+ M cat_surf_coregvol2surf.m
+ M cat_vbdist.c
+ M cat_vol_ROIval.c
+ M cat_vol_downcut.c
+ M cat_vol_eidist.c
+ M cat_vol_findfiles.m
+ M cat_vol_genus0.c
+ M cat_vol_gradient3.c
+ M cat_vol_laplace3.c
+ M cat_vol_laplace3R.c
+ M cat_vol_localstat.c
+ M cat_vol_median3.c
+ M cat_vol_median3c.c
+ M cat_vol_nonlin_coreg.m
+ M cat_vol_pbt.m
+ M cat_vol_pbtp.c
+ M cat_vol_pbtp.cpp
+ M cat_vol_pbtp2.c
+ M cat_vol_simgrow.c
+ M cat_vol_smooth3X.m
+ M check_pipeline_ROIs.m
+ M genus0.c
+ M html/cat.html
+ M internal/cat_vol_cMRegularizarNLM3D.c
+ M internal/cat_vol_cMRegularizarNLM3Dw.c
+ M internal/cat_vol_gbdist.m
+ M optimizer3d.c
+ M ornlm_float.c
+ M sanlm_float.c
+ M spm_diffeo_old.c
+ M templates_MNI152NLin2009cAsym/hammers.txt
+ M templates_volumes/hammers.txt
+
+Updated .gitattributes to remove files from Git LFS
+------------------------------------------------------------------------
+r2015 | gaser | 2022-07-04 23:49:48
+
+Changed paths:
+ M .gitattributes
+ M Amap.c
+ M Bayes.c
+ M BayesMex.c
+ M CHANGES.txt
+ M Contents.m
+ M Kmeans.c
+ M KmeansMex.c
+ M MBeautify.m
+ M MBeautify.txt
+ M MFormatter.m
+ M Makefile
+ M MrfPrior.c
+ M Pve.c
+ M WarpPriors.c
+ M atlases_surfaces/lh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/lh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces/rh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/rh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.aparc_a2005s.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.aparc_a2005s.freesurfer.annot
+ M cat_amap.c
+ M cat_ornlm.c
+ M cat_plot_circular.m
+ M cat_sanlm.c
+ M cat_stat_factorial_design.m
+ M cat_stat_histth.m
+ M cat_stat_kmeans.m
+ M cat_surf_coregvol2surf.m
+ M cat_vbdist.c
+ M cat_vol_ROIval.c
+ M cat_vol_downcut.c
+ M cat_vol_eidist.c
+ M cat_vol_findfiles.m
+ M cat_vol_genus0.c
+ M cat_vol_gradient3.c
+ M cat_vol_laplace3.c
+ M cat_vol_laplace3R.c
+ M cat_vol_localstat.c
+ M cat_vol_median3.c
+ M cat_vol_median3c.c
+ M cat_vol_nonlin_coreg.m
+ M cat_vol_pbt.m
+ M cat_vol_pbtp.c
+ M cat_vol_pbtp.cpp
+ M cat_vol_pbtp2.c
+ M cat_vol_simgrow.c
+ M cat_vol_smooth3X.m
+ M check_pipeline_ROIs.m
+ M genus0.c
+ M html/cat.html
+ M internal/cat_vol_cMRegularizarNLM3D.c
+ M internal/cat_vol_cMRegularizarNLM3Dw.c
+ M internal/cat_vol_gbdist.m
+ M optimizer3d.c
+ M ornlm_float.c
+ M sanlm_float.c
+ M spm_diffeo_old.c
+ M templates_MNI152NLin2009cAsym/hammers.txt
+ M templates_volumes/hammers.txt
+
+Updated .gitattributes to remove files from Git LFS
+------------------------------------------------------------------------
+r2014 | gaser | 2022-07-04 23:43:26
+
+Changed paths:
+ M .gitattributes
+ M Amap.c
+ M Bayes.c
+ M BayesMex.c
+ M CHANGES.txt
+ M Contents.m
+ M Kmeans.c
+ M KmeansMex.c
+ M MBeautify.m
+ M MBeautify.txt
+ M MFormatter.m
+ M Makefile
+ M MrfPrior.c
+ M Pve.c
+ M WarpPriors.c
+ M atlases_surfaces/lh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/lh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces/rh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/rh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.aparc_a2005s.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.aparc_a2005s.freesurfer.annot
+ M cat_amap.c
+ M cat_ornlm.c
+ M cat_plot_circular.m
+ M cat_sanlm.c
+ M cat_stat_factorial_design.m
+ M cat_stat_histth.m
+ M cat_stat_kmeans.m
+ M cat_surf_coregvol2surf.m
+ M cat_vbdist.c
+ M cat_vol_ROIval.c
+ M cat_vol_downcut.c
+ M cat_vol_eidist.c
+ M cat_vol_findfiles.m
+ M cat_vol_genus0.c
+ M cat_vol_gradient3.c
+ M cat_vol_laplace3.c
+ M cat_vol_laplace3R.c
+ M cat_vol_localstat.c
+ M cat_vol_median3.c
+ M cat_vol_median3c.c
+ M cat_vol_nonlin_coreg.m
+ M cat_vol_pbt.m
+ M cat_vol_pbtp.c
+ M cat_vol_pbtp.cpp
+ M cat_vol_pbtp2.c
+ M cat_vol_simgrow.c
+ M cat_vol_smooth3X.m
+ M check_pipeline_ROIs.m
+ M genus0.c
+ M html/cat.html
+ M internal/cat_vol_cMRegularizarNLM3D.c
+ M internal/cat_vol_cMRegularizarNLM3Dw.c
+ M internal/cat_vol_gbdist.m
+ M optimizer3d.c
+ M ornlm_float.c
+ M sanlm_float.c
+ M spm_diffeo_old.c
+ M templates_MNI152NLin2009cAsym/hammers.txt
+A  templates_volumes/Schaefer2018_100Parcels_17Networks_order.nii
+A  templates_volumes/Schaefer2018_200Parcels_17Networks_order.nii
+A  templates_volumes/Schaefer2018_400Parcels_17Networks_order.nii
+A  templates_volumes/Schaefer2018_600Parcels_17Networks_order.nii
+A  templates_volumes/TPM_Age11.5.nii
+A  templates_volumes/Template_0_IXI555_MNI152_GS.nii
+A  templates_volumes/Template_1_IXI555_MNI152.nii
+A  templates_volumes/Template_1_IXI555_MNI152_GS.nii
+A  templates_volumes/Template_2_IXI555_MNI152.nii
+A  templates_volumes/Template_2_IXI555_MNI152_GS.nii
+A  templates_volumes/Template_3_IXI555_MNI152.nii
+A  templates_volumes/Template_3_IXI555_MNI152_GS.nii
+A  templates_volumes/Template_4_IXI555_MNI152.nii
+A  templates_volumes/Template_4_IXI555_MNI152_GS.nii
+A  templates_volumes/Template_5_IXI555_MNI152.nii
+A  templates_volumes/Template_6_IXI555_MNI152.nii
+A  templates_volumes/Template_T1_IXI555_MNI152_GS.nii
+A  templates_volumes/aal3.nii
+A  templates_volumes/anatomy3.nii
+A  templates_volumes/brainmask.nii
+A  templates_volumes/cat.nii
+A  templates_volumes/cat_strokelesions_ATLAS303.nii
+A  templates_volumes/cat_wmh.nii
+A  templates_volumes/cat_wmh_miccai2017.nii
+A  templates_volumes/cobra.nii
+A  templates_volumes/hammers.nii
+ M templates_volumes/hammers.txt
+A  templates_volumes/ibsr.nii
+A  templates_volumes/julichbrain.nii
+A  templates_volumes/lpba40.nii
+A  templates_volumes/mori.nii
+A  templates_volumes/neuromorphometrics.nii
+
+Updated .gitattributes to remove files from Git LFS
+------------------------------------------------------------------------
+r2014 | gaser | 2022-07-04 23:26:32
+
+Changed paths:
+ M .gitattributes
+ M Amap.c
+ M Bayes.c
+ M BayesMex.c
+ M CHANGES.txt
+ M Contents.m
+ M Kmeans.c
+ M KmeansMex.c
+ M MBeautify.m
+ M MBeautify.txt
+ M MFormatter.m
+ M Makefile
+ M MrfPrior.c
+ M Pve.c
+ M WarpPriors.c
+ M atlases_surfaces/lh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/lh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces/rh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/rh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.aparc_a2005s.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.aparc_a2005s.freesurfer.annot
+ M cat_amap.c
+ M cat_ornlm.c
+ M cat_plot_circular.m
+ M cat_sanlm.c
+ M cat_stat_factorial_design.m
+ M cat_stat_histth.m
+ M cat_stat_kmeans.m
+ M cat_surf_coregvol2surf.m
+ M cat_vbdist.c
+ M cat_vol_ROIval.c
+ M cat_vol_downcut.c
+ M cat_vol_eidist.c
+ M cat_vol_findfiles.m
+ M cat_vol_genus0.c
+ M cat_vol_gradient3.c
+ M cat_vol_laplace3.c
+ M cat_vol_laplace3R.c
+ M cat_vol_localstat.c
+ M cat_vol_median3.c
+ M cat_vol_median3c.c
+ M cat_vol_nonlin_coreg.m
+ M cat_vol_pbt.m
+ M cat_vol_pbtp.c
+ M cat_vol_pbtp.cpp
+ M cat_vol_pbtp2.c
+ M cat_vol_simgrow.c
+ M cat_vol_smooth3X.m
+ M check_pipeline_ROIs.m
+ M genus0.c
+ M html/cat.html
+ M internal/cat_vol_cMRegularizarNLM3D.c
+ M internal/cat_vol_cMRegularizarNLM3Dw.c
+ M internal/cat_vol_gbdist.m
+ M optimizer3d.c
+ M ornlm_float.c
+ M sanlm_float.c
+ M spm_diffeo_old.c
+ M templates_MNI152NLin2009cAsym/hammers.txt
+ M templates_volumes/hammers.txt
+
+Updated .gitattributes to remove files from Git LFS
+------------------------------------------------------------------------
+r2013 | gaser | 2022-07-04 23:18:42
+
+Changed paths:
+ M .gitattributes
+ M Amap.c
+ M Bayes.c
+ M BayesMex.c
+ M CHANGES.txt
+ M Contents.m
+ M Kmeans.c
+ M KmeansMex.c
+ M MBeautify.m
+ M MBeautify.txt
+ M MFormatter.m
+ M Makefile
+ M MrfPrior.c
+ M Pve.c
+ M WarpPriors.c
+ M atlases_surfaces/lh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/lh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces/rh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/rh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.aparc_a2005s.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.aparc_a2005s.freesurfer.annot
+ M cat_amap.c
+ M cat_ornlm.c
+ M cat_plot_circular.m
+ M cat_sanlm.c
+ M cat_stat_factorial_design.m
+ M cat_stat_histth.m
+ M cat_stat_kmeans.m
+ M cat_surf_coregvol2surf.m
+ M cat_vbdist.c
+ M cat_vol_ROIval.c
+ M cat_vol_downcut.c
+ M cat_vol_eidist.c
+ M cat_vol_findfiles.m
+ M cat_vol_genus0.c
+ M cat_vol_gradient3.c
+ M cat_vol_laplace3.c
+ M cat_vol_laplace3R.c
+ M cat_vol_localstat.c
+ M cat_vol_median3.c
+ M cat_vol_median3c.c
+ M cat_vol_nonlin_coreg.m
+ M cat_vol_pbt.m
+ M cat_vol_pbtp.c
+ M cat_vol_pbtp.cpp
+ M cat_vol_pbtp2.c
+ M cat_vol_simgrow.c
+ M cat_vol_smooth3X.m
+ M check_pipeline_ROIs.m
+D  data/uint8_lowresR2x2x1_human_tumor_tp01.nii
+D  data/uint8_lowresR2x2x2_primate_chimpanzee_laz.nii
+D  data/uint8_lowresR2x2x2_primate_gibbon_gibbon4.nii
+D  development/Template_0_GS1mm.nii
+D  development/Template_0_IXI555_MNI152_GS1mm.nii
+D  development/Template_1_GS1mm.nii
+D  development/Template_1_IXI555_MNI152_GS1mm.nii
+D  development/Template_2_GS1mm.nii
+D  development/Template_2_IXI555_MNI152_GS1mm.nii
+D  development/Template_3_GS1mm.nii
+D  development/Template_3_IXI555_MNI152_GS1mm.nii
+D  development/Template_4_GS1mm.nii
+D  development/Template_4_IXI555_MNI152_GS1mm.nii
+D  development/cat.nii
+ M genus0.c
+ M html/cat.html
+ M internal/cat_vol_cMRegularizarNLM3D.c
+ M internal/cat_vol_cMRegularizarNLM3Dw.c
+ M internal/cat_vol_gbdist.m
+ M optimizer3d.c
+ M ornlm_float.c
+ M sanlm_float.c
+ M spm_diffeo_old.c
+ M templates_MNI152NLin2009cAsym/hammers.txt
+D  templates_animals/ape_greater_T1.nii
+D  templates_animals/ape_greater_T2.nii
+D  templates_animals/ape_greater_TPM.nii
+D  templates_animals/ape_greater_TPMt.nii
+D  templates_animals/ape_greater_Template_1.nii
+D  templates_animals/ape_greater_Template_2.nii
+D  templates_animals/ape_greater_Template_3.nii
+D  templates_animals/ape_greater_Template_4.nii
+D  templates_animals/ape_greater_Template_5.nii
+D  templates_animals/ape_greater_Template_6.nii
+D  templates_animals/ape_greater_brainmask.nii
+D  templates_animals/ape_greater_cat.nii
+D  templates_animals/baboon_T1.nii
+D  templates_animals/baboon_TPM.nii
+D  templates_animals/baboon_Template_1.nii
+D  templates_animals/baboon_Template_2.nii
+D  templates_animals/baboon_Template_3.nii
+D  templates_animals/baboon_Template_4.nii
+D  templates_animals/baboon_Template_5.nii
+D  templates_animals/baboon_Template_6.nii
+D  templates_animals/baboon_brainmask.nii
+D  templates_animals/baboon_cat.nii
+D  templates_animals/chimpanzee_T1.nii
+D  templates_animals/chimpanzee_TPM.nii
+D  templates_animals/chimpanzee_Template_0_GS.nii
+D  templates_animals/chimpanzee_Template_1_GS.nii
+D  templates_animals/chimpanzee_Template_2_GS.nii
+D  templates_animals/chimpanzee_Template_3_GS.nii
+D  templates_animals/chimpanzee_Template_4_GS.nii
+D  templates_animals/chimpanzee_atlas_davi.nii
+D  templates_animals/chimpanzee_brainmask.nii
+D  templates_animals/chimpanzee_cat.nii
+D  templates_animals/dog_T1.nii
+D  templates_animals/dog_Template_0.nii
+D  templates_animals/dog_Template_1.nii
+D  templates_animals/dog_Template_2.nii
+D  templates_animals/dog_Template_3.nii
+D  templates_animals/dog_Template_4.nii
+D  templates_animals/dog_Template_5.nii
+D  templates_animals/dog_Template_6.nii
+D  templates_animals/dog_brainmask.nii
+D  templates_animals/monkey_oldworld_T1.nii
+D  templates_animals/monkey_oldworld_T2.nii
+D  templates_animals/monkey_oldworld_TPM.nii
+D  templates_animals/monkey_oldworld_Template_1.nii
+D  templates_animals/monkey_oldworld_Template_2.nii
+D  templates_animals/monkey_oldworld_Template_3.nii
+D  templates_animals/monkey_oldworld_Template_4.nii
+D  templates_animals/monkey_oldworld_Template_5.nii
+D  templates_animals/monkey_oldworld_Template_6.nii
+D  templates_animals/monkey_oldworld_atlas_inia19NeuroMaps.nii
+D  templates_animals/monkey_oldworld_brainmask.nii
+D  templates_animals/monkey_oldworld_cat.nii
+D  templates_external/MNI152NLin2009cAsym.nii
+D  templates_external/MNI152NLin2009cSym.nii
+D  templates_external/MNI152NLin6Asym.nii
+D  templates_external/MNIColin27.nii
+D  templates_external/y_IXI555Dartel_to_MNI152NLin2009cAsym.nii
+D  templates_external/y_MNI152NLin2009cSym_to_MNI152NLin2009cAsym.nii
+D  templates_external/y_MNI152NLin6Asym_to_MNI152NLin2009cAsym.nii
+D  templates_external/y_MNIColin27_to_MNI152NLin2009cAsym.nii
+D  templates_external/y_fMNI152NLin2009cAsym_to_MNI152NLin2009cAsym.nii
+D  templates_volumes/Schaefer2018_100Parcels_17Networks_order.nii
+D  templates_volumes/Schaefer2018_200Parcels_17Networks_order.nii
+D  templates_volumes/Schaefer2018_400Parcels_17Networks_order.nii
+D  templates_volumes/Schaefer2018_600Parcels_17Networks_order.nii
+D  templates_volumes/TPM_Age11.5.nii
+D  templates_volumes/Template_0_IXI555_MNI152_GS.nii
+D  templates_volumes/Template_1_IXI555_MNI152.nii
+D  templates_volumes/Template_1_IXI555_MNI152_GS.nii
+D  templates_volumes/Template_2_IXI555_MNI152.nii
+D  templates_volumes/Template_2_IXI555_MNI152_GS.nii
+D  templates_volumes/Template_3_IXI555_MNI152.nii
+D  templates_volumes/Template_3_IXI555_MNI152_GS.nii
+D  templates_volumes/Template_4_IXI555_MNI152.nii
+D  templates_volumes/Template_4_IXI555_MNI152_GS.nii
+D  templates_volumes/Template_5_IXI555_MNI152.nii
+D  templates_volumes/Template_6_IXI555_MNI152.nii
+D  templates_volumes/Template_T1_IXI555_MNI152_GS.nii
+D  templates_volumes/aal3.nii
+D  templates_volumes/anatomy3.nii
+D  templates_volumes/brainmask.nii
+D  templates_volumes/cat.nii
+D  templates_volumes/cat_strokelesions_ATLAS303.nii
+D  templates_volumes/cat_wmh.nii
+D  templates_volumes/cat_wmh_miccai2017.nii
+D  templates_volumes/cobra.nii
+D  templates_volumes/hammers.nii
+ M templates_volumes/hammers.txt
+D  templates_volumes/ibsr.nii
+D  templates_volumes/julichbrain.nii
+D  templates_volumes/lpba40.nii
+D  templates_volumes/mori.nii
+D  templates_volumes/neuromorphometrics.nii
+D  templates_volumes_not_distributed/aal.nii
+D  templates_volumes_not_distributed/anatomy.nii
+D  templates_volumes_not_distributed/aparc_DKT40.nii
+D  templates_volumes_not_distributed/aparc_a2009s.nii
+
+Removed some large files from Git Large File Storage because size exceeded 1GB
+
+------------------------------------------------------------------------
+r2012 | gaser | 2022-07-04 22:52:20
+
+Changed paths:
+AM .gitattributes
+ M Amap.c
+ M Bayes.c
+ M BayesMex.c
+A  CAT.glnx86/CAT_3dVol2Surf
+A  CAT.glnx86/CAT_AddValuesToSurf
+A  CAT.glnx86/CAT_AverageSurfaces
+A  CAT.glnx86/CAT_BlurSurfHK
+A  CAT.glnx86/CAT_Central2Pial
+A  CAT.glnx86/CAT_DeformSurf
+A  CAT.glnx86/CAT_DumpCurv
+A  CAT.glnx86/CAT_DumpSurfArea
+A  CAT.glnx86/CAT_DumpSurfaceRatio
+A  CAT.glnx86/CAT_FixTopology
+A  CAT.glnx86/CAT_FractalDimension
+A  CAT.glnx86/CAT_Hausdorff
+A  CAT.glnx86/CAT_Isometize
+A  CAT.glnx86/CAT_MarkDefects
+A  CAT.glnx86/CAT_RefineMesh
+A  CAT.glnx86/CAT_ResampleSphericalSurf
+A  CAT.glnx86/CAT_ResampleSphericalSurfSPH
+A  CAT.glnx86/CAT_ResampleSurf
+A  CAT.glnx86/CAT_SelfIntersect
+A  CAT.glnx86/CAT_SeparatePolygon
+A  CAT.glnx86/CAT_SmoothConvexity
+A  CAT.glnx86/CAT_SulcusDepth
+A  CAT.glnx86/CAT_Surf2Sphere
+A  CAT.glnx86/CAT_Surf2Vol
+A  CAT.glnx86/CAT_SurfDistance
+A  CAT.glnx86/CAT_WarpSurf
+A  CAT.maca64/CAT_3dVol2Surf
+A  CAT.maca64/CAT_AddValuesToSurf
+A  CAT.maca64/CAT_AverageSurfaces
+A  CAT.maca64/CAT_BlurSurfHK
+A  CAT.maca64/CAT_Central2Pial
+A  CAT.maca64/CAT_DeformSurf
+A  CAT.maca64/CAT_DumpCurv
+A  CAT.maca64/CAT_DumpSurfArea
+A  CAT.maca64/CAT_DumpSurfaceRatio
+A  CAT.maca64/CAT_FixTopology
+A  CAT.maca64/CAT_FractalDimension
+A  CAT.maca64/CAT_Hausdorff
+A  CAT.maca64/CAT_Isometize
+A  CAT.maca64/CAT_MarkDefects
+A  CAT.maca64/CAT_RefineMesh
+A  CAT.maca64/CAT_ResampleSphericalSurf
+A  CAT.maca64/CAT_ResampleSphericalSurfSPH
+A  CAT.maca64/CAT_ResampleSurf
+A  CAT.maca64/CAT_SelfIntersect
+A  CAT.maca64/CAT_SeparatePolygon
+A  CAT.maca64/CAT_SmoothConvexity
+A  CAT.maca64/CAT_SulcusDepth
+A  CAT.maca64/CAT_Surf2Sphere
+A  CAT.maca64/CAT_Surf2Vol
+A  CAT.maca64/CAT_SurfDistance
+A  CAT.maca64/CAT_WarpSurf
+A  CAT.maci64/CAT_3dVol2Surf
+A  CAT.maci64/CAT_AddValuesToSurf
+A  CAT.maci64/CAT_AverageSurfaces
+A  CAT.maci64/CAT_BlurSurfHK
+A  CAT.maci64/CAT_Central2Pial
+A  CAT.maci64/CAT_DeformSurf
+A  CAT.maci64/CAT_DumpCurv
+A  CAT.maci64/CAT_DumpSurfArea
+A  CAT.maci64/CAT_DumpSurfaceRatio
+A  CAT.maci64/CAT_FixTopology
+A  CAT.maci64/CAT_FractalDimension
+A  CAT.maci64/CAT_Hausdorff
+A  CAT.maci64/CAT_Isometize
+A  CAT.maci64/CAT_MarkDefects
+A  CAT.maci64/CAT_RefineMesh
+A  CAT.maci64/CAT_ResampleSphericalSurf
+A  CAT.maci64/CAT_ResampleSphericalSurfSPH
+A  CAT.maci64/CAT_ResampleSurf
+A  CAT.maci64/CAT_SelfIntersect
+A  CAT.maci64/CAT_SeparatePolygon
+A  CAT.maci64/CAT_SmoothConvexity
+A  CAT.maci64/CAT_SulcusDepth
+A  CAT.maci64/CAT_Surf2Sphere
+A  CAT.maci64/CAT_Surf2Vol
+A  CAT.maci64/CAT_SurfDistance
+A  CAT.maci64/CAT_WarpSurf
+A  CAT.w32/CAT_3dVol2Surf.exe
+A  CAT.w32/CAT_AddValuesToSurf.exe
+A  CAT.w32/CAT_AverageSurfaces.exe
+A  CAT.w32/CAT_BlurSurfHK.exe
+A  CAT.w32/CAT_Central2Pial.exe
+A  CAT.w32/CAT_DeformSurf.exe
+A  CAT.w32/CAT_DumpCurv.exe
+A  CAT.w32/CAT_DumpSurfArea.exe
+A  CAT.w32/CAT_DumpSurfaceRatio.exe
+A  CAT.w32/CAT_FixTopology.exe
+A  CAT.w32/CAT_FractalDimension.exe
+A  CAT.w32/CAT_Hausdorff.exe
+A  CAT.w32/CAT_Isometize.exe
+A  CAT.w32/CAT_MarkDefects.exe
+A  CAT.w32/CAT_RefineMesh.exe
+A  CAT.w32/CAT_ResampleSphericalSurf.exe
+A  CAT.w32/CAT_ResampleSphericalSurfSPH.exe
+A  CAT.w32/CAT_ResampleSurf.exe
+A  CAT.w32/CAT_SelfIntersect.exe
+A  CAT.w32/CAT_SeparatePolygon.exe
+A  CAT.w32/CAT_SmoothConvexity.exe
+A  CAT.w32/CAT_SulcusDepth.exe
+A  CAT.w32/CAT_Surf2Sphere.exe
+A  CAT.w32/CAT_Surf2Vol.exe
+A  CAT.w32/CAT_SurfDistance.exe
+A  CAT.w32/CAT_WarpSurf.exe
+A  CAT12-Manual-Word-Old.docx
+A  CAT12-Manual.pdf
+ M CHANGES.txt
+ M Contents.m
+ M Kmeans.c
+ M KmeansMex.c
+ M MBeautify.m
+ M MBeautify.txt
+ M MFormatter.m
+ M Makefile
+ M MrfPrior.c
+A  OverlayCAT12_cg.docx
+ M Pve.c
+A  VBM12-Manual_Japanese.doc
+A  VBM12-Manual_Japanese.pdf
+A  VBM8-flowchart.doc
+ M WarpPriors.c
+ M atlases_surfaces/lh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/lh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces/rh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/rh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.aparc_a2005s.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.aparc_a2005s.freesurfer.annot
+ M cat_amap.c
+ M cat_ornlm.c
+ M cat_plot_circular.m
+ M cat_sanlm.c
+ M cat_stat_factorial_design.m
+ M cat_stat_histth.m
+ M cat_stat_kmeans.m
+ M cat_surf_coregvol2surf.m
+ M cat_vbdist.c
+ M cat_vol_ROIval.c
+ M cat_vol_downcut.c
+ M cat_vol_eidist.c
+ M cat_vol_findfiles.m
+ M cat_vol_genus0.c
+ M cat_vol_gradient3.c
+ M cat_vol_laplace3.c
+ M cat_vol_laplace3R.c
+ M cat_vol_localstat.c
+ M cat_vol_median3.c
+ M cat_vol_median3c.c
+ M cat_vol_nonlin_coreg.m
+ M cat_vol_pbt.m
+ M cat_vol_pbtp.c
+ M cat_vol_pbtp.cpp
+ M cat_vol_pbtp2.c
+ M cat_vol_simgrow.c
+ M cat_vol_smooth3X.m
+A  check_pipeline/IXI002-Guys-0828-T1.nii
+ M check_pipeline_ROIs.m
+A  data/uint8_lowresR2x2x1_human_tumor_tp01.nii
+A  data/uint8_lowresR2x2x2_primate_chimpanzee_laz.nii
+A  data/uint8_lowresR2x2x2_primate_gibbon_gibbon4.nii
+M  development/Template_0_GS1mm.nii
+A  development/Template_0_IXI555_MNI152_GS1mm.nii
+M  development/Template_1_GS1mm.nii
+A  development/Template_1_IXI555_MNI152_GS1mm.nii
+M  development/Template_2_GS1mm.nii
+A  development/Template_2_IXI555_MNI152_GS1mm.nii
+M  development/Template_3_GS1mm.nii
+A  development/Template_3_IXI555_MNI152_GS1mm.nii
+M  development/Template_4_GS1mm.nii
+A  development/Template_4_IXI555_MNI152_GS1mm.nii
+A  development/cat.nii
+ M genus0.c
+ M html/cat.html
+ M internal/cat_vol_cMRegularizarNLM3D.c
+ M internal/cat_vol_cMRegularizarNLM3Dw.c
+ M internal/cat_vol_gbdist.m
+ M optimizer3d.c
+ M ornlm_float.c
+ M sanlm_float.c
+ M spm_diffeo_old.c
+M  templates_MNI152NLin2009cAsym/Schaefer2018_100Parcels_17Networks_order.nii
+M  templates_MNI152NLin2009cAsym/Schaefer2018_200Parcels_17Networks_order.nii
+M  templates_MNI152NLin2009cAsym/Schaefer2018_400Parcels_17Networks_order.nii
+M  templates_MNI152NLin2009cAsym/Schaefer2018_600Parcels_17Networks_order.nii
+M  templates_MNI152NLin2009cAsym/T1.nii
+M  templates_MNI152NLin2009cAsym/TPM_Age11.5.nii
+M  templates_MNI152NLin2009cAsym/Template_0_GS.nii
+M  templates_MNI152NLin2009cAsym/Template_1_Dartel.nii
+M  templates_MNI152NLin2009cAsym/Template_1_GS.nii
+M  templates_MNI152NLin2009cAsym/Template_2_Dartel.nii
+M  templates_MNI152NLin2009cAsym/Template_2_GS.nii
+M  templates_MNI152NLin2009cAsym/Template_3_Dartel.nii
+M  templates_MNI152NLin2009cAsym/Template_3_GS.nii
+M  templates_MNI152NLin2009cAsym/Template_4_Dartel.nii
+M  templates_MNI152NLin2009cAsym/Template_4_GS.nii
+M  templates_MNI152NLin2009cAsym/Template_5_Dartel.nii
+M  templates_MNI152NLin2009cAsym/Template_6_Dartel.nii
+M  templates_MNI152NLin2009cAsym/Template_T1.nii
+M  templates_MNI152NLin2009cAsym/Template_T1_masked.nii
+M  templates_MNI152NLin2009cAsym/aal3.nii
+M  templates_MNI152NLin2009cAsym/anatomy3.nii
+M  templates_MNI152NLin2009cAsym/brainmask.nii
+M  templates_MNI152NLin2009cAsym/brainmask_T1.nii
+M  templates_MNI152NLin2009cAsym/cat.nii
+M  templates_MNI152NLin2009cAsym/cat_1mm.nii
+M  templates_MNI152NLin2009cAsym/cat_strokelesions_ATLAS303.nii
+M  templates_MNI152NLin2009cAsym/cat_wmh.nii
+M  templates_MNI152NLin2009cAsym/cat_wmh_miccai2017.nii
+M  templates_MNI152NLin2009cAsym/cobra.nii
+M  templates_MNI152NLin2009cAsym/hammers.nii
+ M templates_MNI152NLin2009cAsym/hammers.txt
+M  templates_MNI152NLin2009cAsym/ibsr.nii
+M  templates_MNI152NLin2009cAsym/julichbrain.nii
+M  templates_MNI152NLin2009cAsym/lpba40.nii
+M  templates_MNI152NLin2009cAsym/mori.nii
+M  templates_MNI152NLin2009cAsym/neuromorphometrics.nii
+M  templates_MNI152NLin2009cAsym/suit.nii
+M  templates_MNI152NLin2009cAsym/thalamus.nii
+A  templates_animals/ape_greater_T1.nii
+A  templates_animals/ape_greater_T2.nii
+A  templates_animals/ape_greater_TPM.nii
+A  templates_animals/ape_greater_TPMt.nii
+A  templates_animals/ape_greater_Template_1.nii
+A  templates_animals/ape_greater_Template_2.nii
+A  templates_animals/ape_greater_Template_3.nii
+A  templates_animals/ape_greater_Template_4.nii
+A  templates_animals/ape_greater_Template_5.nii
+A  templates_animals/ape_greater_Template_6.nii
+A  templates_animals/ape_greater_brainmask.nii
+A  templates_animals/ape_greater_cat.nii
+A  templates_animals/baboon_T1.nii
+A  templates_animals/baboon_TPM.nii
+A  templates_animals/baboon_Template_1.nii
+A  templates_animals/baboon_Template_2.nii
+A  templates_animals/baboon_Template_3.nii
+A  templates_animals/baboon_Template_4.nii
+A  templates_animals/baboon_Template_5.nii
+A  templates_animals/baboon_Template_6.nii
+A  templates_animals/baboon_brainmask.nii
+A  templates_animals/baboon_cat.nii
+A  templates_animals/chimpanzee_T1.nii
+A  templates_animals/chimpanzee_TPM.nii
+A  templates_animals/chimpanzee_Template_0_GS.nii
+A  templates_animals/chimpanzee_Template_1_GS.nii
+A  templates_animals/chimpanzee_Template_2_GS.nii
+A  templates_animals/chimpanzee_Template_3_GS.nii
+A  templates_animals/chimpanzee_Template_4_GS.nii
+A  templates_animals/chimpanzee_atlas_davi.nii
+A  templates_animals/chimpanzee_brainmask.nii
+A  templates_animals/chimpanzee_cat.nii
+A  templates_animals/dog_T1.nii
+A  templates_animals/dog_Template_0.nii
+A  templates_animals/dog_Template_1.nii
+A  templates_animals/dog_Template_2.nii
+A  templates_animals/dog_Template_3.nii
+A  templates_animals/dog_Template_4.nii
+A  templates_animals/dog_Template_5.nii
+A  templates_animals/dog_Template_6.nii
+A  templates_animals/dog_brainmask.nii
+A  templates_animals/monkey_oldworld_T1.nii
+A  templates_animals/monkey_oldworld_T2.nii
+A  templates_animals/monkey_oldworld_TPM.nii
+A  templates_animals/monkey_oldworld_Template_1.nii
+A  templates_animals/monkey_oldworld_Template_2.nii
+A  templates_animals/monkey_oldworld_Template_3.nii
+A  templates_animals/monkey_oldworld_Template_4.nii
+A  templates_animals/monkey_oldworld_Template_5.nii
+A  templates_animals/monkey_oldworld_Template_6.nii
+A  templates_animals/monkey_oldworld_atlas_inia19NeuroMaps.nii
+A  templates_animals/monkey_oldworld_brainmask.nii
+A  templates_animals/monkey_oldworld_cat.nii
+A  templates_external/MNI152NLin2009cAsym.nii
+A  templates_external/MNI152NLin2009cSym.nii
+A  templates_external/MNI152NLin6Asym.nii
+A  templates_external/MNIColin27.nii
+A  templates_external/y_IXI555Dartel_to_MNI152NLin2009cAsym.nii
+A  templates_external/y_MNI152NLin2009cSym_to_MNI152NLin2009cAsym.nii
+A  templates_external/y_MNI152NLin6Asym_to_MNI152NLin2009cAsym.nii
+A  templates_external/y_MNIColin27_to_MNI152NLin2009cAsym.nii
+A  templates_external/y_fMNI152NLin2009cAsym_to_MNI152NLin2009cAsym.nii
+A  templates_volumes/Schaefer2018_100Parcels_17Networks_order.nii
+A  templates_volumes/Schaefer2018_200Parcels_17Networks_order.nii
+A  templates_volumes/Schaefer2018_400Parcels_17Networks_order.nii
+A  templates_volumes/Schaefer2018_600Parcels_17Networks_order.nii
+A  templates_volumes/TPM_Age11.5.nii
+A  templates_volumes/Template_0_IXI555_MNI152_GS.nii
+A  templates_volumes/Template_1_IXI555_MNI152.nii
+A  templates_volumes/Template_1_IXI555_MNI152_GS.nii
+A  templates_volumes/Template_2_IXI555_MNI152.nii
+A  templates_volumes/Template_2_IXI555_MNI152_GS.nii
+A  templates_volumes/Template_3_IXI555_MNI152.nii
+A  templates_volumes/Template_3_IXI555_MNI152_GS.nii
+A  templates_volumes/Template_4_IXI555_MNI152.nii
+A  templates_volumes/Template_4_IXI555_MNI152_GS.nii
+A  templates_volumes/Template_5_IXI555_MNI152.nii
+A  templates_volumes/Template_6_IXI555_MNI152.nii
+A  templates_volumes/Template_T1_IXI555_MNI152_GS.nii
+A  templates_volumes/aal3.nii
+A  templates_volumes/anatomy3.nii
+A  templates_volumes/brainmask.nii
+A  templates_volumes/cat.nii
+A  templates_volumes/cat_strokelesions_ATLAS303.nii
+A  templates_volumes/cat_wmh.nii
+A  templates_volumes/cat_wmh_miccai2017.nii
+A  templates_volumes/cobra.nii
+A  templates_volumes/hammers.nii
+ M templates_volumes/hammers.txt
+A  templates_volumes/ibsr.nii
+A  templates_volumes/julichbrain.nii
+A  templates_volumes/lpba40.nii
+A  templates_volumes/mori.nii
+A  templates_volumes/neuromorphometrics.nii
+A  templates_volumes_not_distributed/aal.nii
+A  templates_volumes_not_distributed/anatomy.nii
+A  templates_volumes_not_distributed/aparc_DKT40.nii
+A  templates_volumes_not_distributed/aparc_a2009s.nii
+
+Moved large files to Git Large File Storage
+
+------------------------------------------------------------------------
+r2011 | gaser | 2022-07-04 22:41:33
+
+Changed paths:
+ M Amap.c
+ M Bayes.c
+ M BayesMex.c
+ M CHANGES.txt
+ M Contents.m
+ M Kmeans.c
+ M KmeansMex.c
+ M MBeautify.m
+ M MBeautify.txt
+ M MFormatter.m
+ M Makefile
+ M MrfPrior.c
+ M Pve.c
+ M WarpPriors.c
+ M atlases_surfaces/lh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/lh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces/rh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/rh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.aparc_a2005s.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.aparc_a2005s.freesurfer.annot
+ M cat_amap.c
+ M cat_ornlm.c
+ M cat_plot_circular.m
+ M cat_sanlm.c
+ M cat_stat_factorial_design.m
+ M cat_stat_histth.m
+ M cat_stat_kmeans.m
+ M cat_surf_coregvol2surf.m
+ M cat_vbdist.c
+ M cat_vol_ROIval.c
+ M cat_vol_downcut.c
+ M cat_vol_eidist.c
+ M cat_vol_findfiles.m
+ M cat_vol_genus0.c
+ M cat_vol_gradient3.c
+ M cat_vol_laplace3.c
+ M cat_vol_laplace3R.c
+ M cat_vol_localstat.c
+ M cat_vol_median3.c
+ M cat_vol_median3c.c
+ M cat_vol_nonlin_coreg.m
+ M cat_vol_pbt.m
+ M cat_vol_pbtp.c
+ M cat_vol_pbtp.cpp
+ M cat_vol_pbtp2.c
+ M cat_vol_simgrow.c
+ M cat_vol_smooth3X.m
+ M check_pipeline_ROIs.m
+A  development/Template_0_GS1mm.nii
+A  development/Template_1_GS1mm.nii
+A  development/Template_2_GS1mm.nii
+A  development/Template_3_GS1mm.nii
+A  development/Template_4_GS1mm.nii
+ M genus0.c
+ M html/cat.html
+ M internal/cat_vol_cMRegularizarNLM3D.c
+ M internal/cat_vol_cMRegularizarNLM3Dw.c
+ M internal/cat_vol_gbdist.m
+ M optimizer3d.c
+ M ornlm_float.c
+ M sanlm_float.c
+ M spm_diffeo_old.c
+ M templates_MNI152NLin2009cAsym/hammers.txt
+ M templates_volumes/hammers.txt
+
+Added 1mm Shooting templates
+
+------------------------------------------------------------------------
+r2010 | gaser | 2022-07-04 22:23:42
+
+Changed paths:
+ M Amap.c
+ M Bayes.c
+ M BayesMex.c
+D  CAT.glnx86/CAT_3dVol2Surf
+D  CAT.glnx86/CAT_AddValuesToSurf
+D  CAT.glnx86/CAT_AverageSurfaces
+D  CAT.glnx86/CAT_BlurSurfHK
+D  CAT.glnx86/CAT_Central2Pial
+D  CAT.glnx86/CAT_DeformSurf
+D  CAT.glnx86/CAT_DumpCurv
+D  CAT.glnx86/CAT_DumpSurfArea
+D  CAT.glnx86/CAT_DumpSurfaceRatio
+D  CAT.glnx86/CAT_FixTopology
+D  CAT.glnx86/CAT_FractalDimension
+D  CAT.glnx86/CAT_Hausdorff
+D  CAT.glnx86/CAT_Isometize
+D  CAT.glnx86/CAT_MarkDefects
+D  CAT.glnx86/CAT_RefineMesh
+D  CAT.glnx86/CAT_ResampleSphericalSurf
+D  CAT.glnx86/CAT_ResampleSphericalSurfSPH
+D  CAT.glnx86/CAT_ResampleSurf
+D  CAT.glnx86/CAT_SelfIntersect
+D  CAT.glnx86/CAT_SeparatePolygon
+D  CAT.glnx86/CAT_SmoothConvexity
+D  CAT.glnx86/CAT_SulcusDepth
+D  CAT.glnx86/CAT_Surf2Sphere
+D  CAT.glnx86/CAT_Surf2Vol
+D  CAT.glnx86/CAT_SurfDistance
+D  CAT.glnx86/CAT_WarpSurf
+D  CAT.maca64/CAT_3dVol2Surf
+D  CAT.maca64/CAT_AddValuesToSurf
+D  CAT.maca64/CAT_AverageSurfaces
+D  CAT.maca64/CAT_BlurSurfHK
+D  CAT.maca64/CAT_Central2Pial
+D  CAT.maca64/CAT_DeformSurf
+D  CAT.maca64/CAT_DumpCurv
+D  CAT.maca64/CAT_DumpSurfArea
+D  CAT.maca64/CAT_DumpSurfaceRatio
+D  CAT.maca64/CAT_FixTopology
+D  CAT.maca64/CAT_FractalDimension
+D  CAT.maca64/CAT_Hausdorff
+D  CAT.maca64/CAT_Isometize
+D  CAT.maca64/CAT_MarkDefects
+D  CAT.maca64/CAT_RefineMesh
+D  CAT.maca64/CAT_ResampleSphericalSurf
+D  CAT.maca64/CAT_ResampleSphericalSurfSPH
+D  CAT.maca64/CAT_ResampleSurf
+D  CAT.maca64/CAT_SelfIntersect
+D  CAT.maca64/CAT_SeparatePolygon
+D  CAT.maca64/CAT_SmoothConvexity
+D  CAT.maca64/CAT_SulcusDepth
+D  CAT.maca64/CAT_Surf2Sphere
+D  CAT.maca64/CAT_Surf2Vol
+D  CAT.maca64/CAT_SurfDistance
+D  CAT.maca64/CAT_WarpSurf
+D  CAT.maci64/CAT_3dVol2Surf
+D  CAT.maci64/CAT_AddValuesToSurf
+D  CAT.maci64/CAT_AverageSurfaces
+D  CAT.maci64/CAT_BlurSurfHK
+D  CAT.maci64/CAT_Central2Pial
+D  CAT.maci64/CAT_DeformSurf
+D  CAT.maci64/CAT_DumpCurv
+D  CAT.maci64/CAT_DumpSurfArea
+D  CAT.maci64/CAT_DumpSurfaceRatio
+D  CAT.maci64/CAT_FixTopology
+D  CAT.maci64/CAT_FractalDimension
+D  CAT.maci64/CAT_Hausdorff
+D  CAT.maci64/CAT_Isometize
+D  CAT.maci64/CAT_MarkDefects
+D  CAT.maci64/CAT_RefineMesh
+D  CAT.maci64/CAT_ResampleSphericalSurf
+D  CAT.maci64/CAT_ResampleSphericalSurfSPH
+D  CAT.maci64/CAT_ResampleSurf
+D  CAT.maci64/CAT_SelfIntersect
+D  CAT.maci64/CAT_SeparatePolygon
+D  CAT.maci64/CAT_SmoothConvexity
+D  CAT.maci64/CAT_SulcusDepth
+D  CAT.maci64/CAT_Surf2Sphere
+D  CAT.maci64/CAT_Surf2Vol
+D  CAT.maci64/CAT_SurfDistance
+D  CAT.maci64/CAT_WarpSurf
+D  CAT.w32/CAT_3dVol2Surf.exe
+D  CAT.w32/CAT_AddValuesToSurf.exe
+D  CAT.w32/CAT_AverageSurfaces.exe
+D  CAT.w32/CAT_BlurSurfHK.exe
+D  CAT.w32/CAT_Central2Pial.exe
+D  CAT.w32/CAT_DeformSurf.exe
+D  CAT.w32/CAT_DumpCurv.exe
+D  CAT.w32/CAT_DumpSurfArea.exe
+D  CAT.w32/CAT_DumpSurfaceRatio.exe
+D  CAT.w32/CAT_FixTopology.exe
+D  CAT.w32/CAT_FractalDimension.exe
+D  CAT.w32/CAT_Hausdorff.exe
+D  CAT.w32/CAT_Isometize.exe
+D  CAT.w32/CAT_MarkDefects.exe
+D  CAT.w32/CAT_RefineMesh.exe
+D  CAT.w32/CAT_ResampleSphericalSurf.exe
+D  CAT.w32/CAT_ResampleSphericalSurfSPH.exe
+D  CAT.w32/CAT_ResampleSurf.exe
+D  CAT.w32/CAT_SelfIntersect.exe
+D  CAT.w32/CAT_SeparatePolygon.exe
+D  CAT.w32/CAT_SmoothConvexity.exe
+D  CAT.w32/CAT_SulcusDepth.exe
+D  CAT.w32/CAT_Surf2Sphere.exe
+D  CAT.w32/CAT_Surf2Vol.exe
+D  CAT.w32/CAT_SurfDistance.exe
+D  CAT.w32/CAT_WarpSurf.exe
+ M CHANGES.txt
+ M Contents.m
+ M Kmeans.c
+ M KmeansMex.c
+ M MBeautify.m
+ M MBeautify.txt
+ M MFormatter.m
+ M Makefile
+ M MrfPrior.c
+ M Pve.c
+ M WarpPriors.c
+ M atlases_surfaces/lh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/lh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces/rh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/rh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.aparc_a2005s.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.aparc_a2005s.freesurfer.annot
+ M cat_amap.c
+ M cat_ornlm.c
+ M cat_plot_circular.m
+ M cat_sanlm.c
+ M cat_stat_factorial_design.m
+ M cat_stat_histth.m
+ M cat_stat_kmeans.m
+ M cat_surf_coregvol2surf.m
+ M cat_vbdist.c
+ M cat_vol_ROIval.c
+ M cat_vol_downcut.c
+ M cat_vol_eidist.c
+ M cat_vol_findfiles.m
+ M cat_vol_genus0.c
+ M cat_vol_gradient3.c
+ M cat_vol_laplace3.c
+ M cat_vol_laplace3R.c
+ M cat_vol_localstat.c
+ M cat_vol_median3.c
+ M cat_vol_median3c.c
+ M cat_vol_nonlin_coreg.m
+ M cat_vol_pbt.m
+ M cat_vol_pbtp.c
+ M cat_vol_pbtp.cpp
+ M cat_vol_pbtp2.c
+ M cat_vol_simgrow.c
+ M cat_vol_smooth3X.m
+ M check_pipeline_ROIs.m
+ M genus0.c
+ M html/cat.html
+ M internal/cat_vol_cMRegularizarNLM3D.c
+ M internal/cat_vol_cMRegularizarNLM3Dw.c
+ M internal/cat_vol_gbdist.m
+ M optimizer3d.c
+ M ornlm_float.c
+ M sanlm_float.c
+ M spm_diffeo_old.c
+A  templates_MNI152NLin2009cAsym/Schaefer2018_100Parcels_17Networks_order.nii
+A  templates_MNI152NLin2009cAsym/Schaefer2018_200Parcels_17Networks_order.nii
+A  templates_MNI152NLin2009cAsym/Schaefer2018_400Parcels_17Networks_order.nii
+A  templates_MNI152NLin2009cAsym/Schaefer2018_600Parcels_17Networks_order.nii
+A  templates_MNI152NLin2009cAsym/T1.nii
+A  templates_MNI152NLin2009cAsym/TPM_Age11.5.nii
+A  templates_MNI152NLin2009cAsym/Template_0_GS.nii
+A  templates_MNI152NLin2009cAsym/Template_1_Dartel.nii
+A  templates_MNI152NLin2009cAsym/Template_1_GS.nii
+A  templates_MNI152NLin2009cAsym/Template_2_Dartel.nii
+A  templates_MNI152NLin2009cAsym/Template_2_GS.nii
+A  templates_MNI152NLin2009cAsym/Template_3_Dartel.nii
+A  templates_MNI152NLin2009cAsym/Template_3_GS.nii
+A  templates_MNI152NLin2009cAsym/Template_4_Dartel.nii
+A  templates_MNI152NLin2009cAsym/Template_4_GS.nii
+A  templates_MNI152NLin2009cAsym/Template_5_Dartel.nii
+A  templates_MNI152NLin2009cAsym/Template_6_Dartel.nii
+A  templates_MNI152NLin2009cAsym/Template_T1.nii
+A  templates_MNI152NLin2009cAsym/Template_T1_masked.nii
+A  templates_MNI152NLin2009cAsym/aal3.nii
+A  templates_MNI152NLin2009cAsym/anatomy3.nii
+A  templates_MNI152NLin2009cAsym/brainmask.nii
+A  templates_MNI152NLin2009cAsym/brainmask_T1.nii
+A  templates_MNI152NLin2009cAsym/cat.nii
+A  templates_MNI152NLin2009cAsym/cat_1mm.nii
+A  templates_MNI152NLin2009cAsym/cat_strokelesions_ATLAS303.nii
+A  templates_MNI152NLin2009cAsym/cat_wmh.nii
+A  templates_MNI152NLin2009cAsym/cat_wmh_miccai2017.nii
+A  templates_MNI152NLin2009cAsym/cobra.nii
+A  templates_MNI152NLin2009cAsym/hammers.nii
+ M templates_MNI152NLin2009cAsym/hammers.txt
+A  templates_MNI152NLin2009cAsym/ibsr.nii
+A  templates_MNI152NLin2009cAsym/julichbrain.nii
+A  templates_MNI152NLin2009cAsym/lpba40.nii
+A  templates_MNI152NLin2009cAsym/mori.nii
+A  templates_MNI152NLin2009cAsym/neuromorphometrics.nii
+A  templates_MNI152NLin2009cAsym/suit.nii
+A  templates_MNI152NLin2009cAsym/thalamus.nii
+ M templates_volumes/hammers.txt
+
+Added *.nii files again
+
+------------------------------------------------------------------------
+r2009 | gaser | 2022-07-04 22:13:35
+
+Changed paths:
+ M Amap.c
+ M Bayes.c
+ M BayesMex.c
+ M CHANGES.txt
+ M Contents.m
+ M Kmeans.c
+ M KmeansMex.c
+ M MBeautify.m
+ M MBeautify.txt
+ M MFormatter.m
+ M Makefile
+ M MrfPrior.c
+ M Pve.c
+ M WarpPriors.c
+ M atlases_surfaces/lh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/lh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces/rh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/rh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.aparc_a2005s.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.aparc_a2005s.freesurfer.annot
+ M cat_amap.c
+ M cat_ornlm.c
+ M cat_plot_circular.m
+ M cat_sanlm.c
+ M cat_stat_factorial_design.m
+ M cat_stat_histth.m
+ M cat_stat_kmeans.m
+ M cat_surf_coregvol2surf.m
+ M cat_vbdist.c
+ M cat_vol_ROIval.c
+ M cat_vol_downcut.c
+ M cat_vol_eidist.c
+ M cat_vol_findfiles.m
+ M cat_vol_genus0.c
+ M cat_vol_gradient3.c
+ M cat_vol_laplace3.c
+ M cat_vol_laplace3R.c
+ M cat_vol_localstat.c
+ M cat_vol_median3.c
+ M cat_vol_median3c.c
+ M cat_vol_nonlin_coreg.m
+ M cat_vol_pbt.m
+ M cat_vol_pbtp.c
+ M cat_vol_pbtp.cpp
+ M cat_vol_pbtp2.c
+ M cat_vol_simgrow.c
+ M cat_vol_smooth3X.m
+ M check_pipeline_ROIs.m
+ M genus0.c
+ M html/cat.html
+ M internal/cat_vol_cMRegularizarNLM3D.c
+ M internal/cat_vol_cMRegularizarNLM3Dw.c
+ M internal/cat_vol_gbdist.m
+ M optimizer3d.c
+ M ornlm_float.c
+ M sanlm_float.c
+ M spm_diffeo_old.c
+ M templates_MNI152NLin2009cAsym/hammers.txt
+A  templates_animals_surfaces/bh.headbrain.ape_greater_TPM.gii
+A  templates_animals_surfaces/bh.headbrain.chimpanzee_TPM.gii
+A  templates_animals_surfaces/bh.headbrain.monkey_oldworld_TPM.gii
+A  templates_animals_surfaces/lc.central.Template_chimpanzee_T1_GS.gii
+A  templates_animals_surfaces/lh.central.Template_chimpanzee_T1_GS.gii
+A  templates_animals_surfaces/mesh.central.Template_chimpanzee_T1_GS.gii
+A  templates_animals_surfaces/rc.central.Template_chimpanzee_T1_GS.gii
+A  templates_animals_surfaces/rh.central.Template_chimpanzee_T1_GS.gii
+A  templates_surfaces/bh.headbrain.TPM.gii
+A  templates_surfaces/cb.central.Template_T1.gii
+A  templates_surfaces/cb.central.freesurfer.gii
+A  templates_surfaces/cb.sphere.freesurfer.gii
+A  templates_surfaces/lh.central.Template_T1.gii
+A  templates_surfaces/lh.central.freesurfer.gii
+A  templates_surfaces/lh.inflated.freesurfer.gii
+A  templates_surfaces/lh.mc.freesurfer.gii
+A  templates_surfaces/lh.patch.freesurfer.gii
+A  templates_surfaces/lh.sphere.freesurfer.gii
+A  templates_surfaces/lh.sqrtsulc.freesurfer.gii
+A  templates_surfaces/mesh.central.Template_T1.gii
+A  templates_surfaces/mesh.central.freesurfer.gii
+A  templates_surfaces/mesh.inflated.freesurfer.gii
+A  templates_surfaces/rh.central.Template_T1.gii
+A  templates_surfaces/rh.central.freesurfer.gii
+A  templates_surfaces/rh.inflated.freesurfer.gii
+A  templates_surfaces/rh.mc.freesurfer.gii
+A  templates_surfaces/rh.patch.freesurfer.gii
+A  templates_surfaces/rh.sphere.freesurfer.gii
+A  templates_surfaces/rh.sqrtsulc.freesurfer.gii
+A  templates_surfaces_32k/lh.central.Template_T1.gii
+A  templates_surfaces_32k/lh.central.freesurfer.gii
+A  templates_surfaces_32k/lh.inflated.freesurfer.gii
+A  templates_surfaces_32k/lh.mc.freesurfer.gii
+A  templates_surfaces_32k/lh.patch.freesurfer.gii
+A  templates_surfaces_32k/lh.sphere.freesurfer.gii
+A  templates_surfaces_32k/lh.sqrtsulc.freesurfer.gii
+A  templates_surfaces_32k/mesh.central.Template_T1.gii
+A  templates_surfaces_32k/mesh.central.freesurfer.gii
+A  templates_surfaces_32k/mesh.inflated.freesurfer.gii
+A  templates_surfaces_32k/rh.central.Template_T1.gii
+A  templates_surfaces_32k/rh.central.freesurfer.gii
+A  templates_surfaces_32k/rh.inflated.freesurfer.gii
+A  templates_surfaces_32k/rh.mc.freesurfer.gii
+A  templates_surfaces_32k/rh.patch.freesurfer.gii
+A  templates_surfaces_32k/rh.sphere.freesurfer.gii
+A  templates_surfaces_32k/rh.sqrtsulc.freesurfer.gii
+ M templates_volumes/hammers.txt
+
+(1) Removed pdf/doc*-files from git.
+(2) Added *.gii files again
+
+------------------------------------------------------------------------
+r2008 | gaser | 2022-07-04 22:12:34
+
+Changed paths:
+ M Amap.c
+ M Bayes.c
+ M BayesMex.c
+D  CAT12-Manual-Word-Old.docx
+D  CAT12-Manual.pdf
+ M CHANGES.txt
+ M Contents.m
+ M Kmeans.c
+ M KmeansMex.c
+ M MBeautify.m
+ M MBeautify.txt
+ M MFormatter.m
+ M Makefile
+ M MrfPrior.c
+D  OverlayCAT12_cg.docx
+ M Pve.c
+D  "Sicherungskopie von CAT12-Manual.doc"
+D  "Sicherungskopie von CAT12-Manual.docx"
+D  VBM12-Manual_Japanese.doc
+D  VBM12-Manual_Japanese.pdf
+D  VBM8-flowchart.doc
+ M WarpPriors.c
+ M atlases_surfaces/lh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/lh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces/rh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/rh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.aparc_a2005s.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.aparc_a2005s.freesurfer.annot
+ M cat_amap.c
+ M cat_ornlm.c
+ M cat_plot_circular.m
+ M cat_sanlm.c
+ M cat_stat_factorial_design.m
+ M cat_stat_histth.m
+ M cat_stat_kmeans.m
+ M cat_surf_coregvol2surf.m
+ M cat_vbdist.c
+ M cat_vol_ROIval.c
+ M cat_vol_downcut.c
+ M cat_vol_eidist.c
+ M cat_vol_findfiles.m
+ M cat_vol_genus0.c
+ M cat_vol_gradient3.c
+ M cat_vol_laplace3.c
+ M cat_vol_laplace3R.c
+ M cat_vol_localstat.c
+ M cat_vol_median3.c
+ M cat_vol_median3c.c
+ M cat_vol_nonlin_coreg.m
+ M cat_vol_pbt.m
+ M cat_vol_pbtp.c
+ M cat_vol_pbtp.cpp
+ M cat_vol_pbtp2.c
+ M cat_vol_simgrow.c
+ M cat_vol_smooth3X.m
+ M check_pipeline_ROIs.m
+ M genus0.c
+ M html/cat.html
+ M internal/cat_vol_cMRegularizarNLM3D.c
+ M internal/cat_vol_cMRegularizarNLM3Dw.c
+ M internal/cat_vol_gbdist.m
+ M optimizer3d.c
+ M ornlm_float.c
+ M sanlm_float.c
+ M spm_diffeo_old.c
+ M templates_MNI152NLin2009cAsym/hammers.txt
+ M templates_volumes/hammers.txt
+
+(1) Removed pdf/doc*-files from git.
+(2) Added *.gii files again
+
+------------------------------------------------------------------------
+r2007 | gaser | 2022-07-04 22:03:52
+
+Changed paths:
+ M Amap.c
+ M Bayes.c
+ M BayesMex.c
+A  CAT12-Manual-Word-Old.docx
+A  CAT12-Manual.pdf
+ M CHANGES.txt
+ M Contents.m
+ M Kmeans.c
+ M KmeansMex.c
+ M MBeautify.m
+ M MBeautify.txt
+ M MFormatter.m
+ M Makefile
+ M MrfPrior.c
+A  OverlayCAT12_cg.docx
+ M Pve.c
+A  "Sicherungskopie von CAT12-Manual.doc"
+A  "Sicherungskopie von CAT12-Manual.docx"
+A  VBM12-Manual_Japanese.doc
+A  VBM12-Manual_Japanese.pdf
+A  VBM8-flowchart.doc
+ M WarpPriors.c
+ M atlases_surfaces/lh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/lh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces/rh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/rh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.aparc_a2005s.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.aparc_a2005s.freesurfer.annot
+ M cat_amap.c
+ M cat_ornlm.c
+ M cat_plot_circular.m
+ M cat_sanlm.c
+ M cat_stat_factorial_design.m
+ M cat_stat_histth.m
+ M cat_stat_kmeans.m
+ M cat_surf_coregvol2surf.m
+ M cat_vbdist.c
+ M cat_vol_ROIval.c
+ M cat_vol_downcut.c
+ M cat_vol_eidist.c
+ M cat_vol_findfiles.m
+ M cat_vol_genus0.c
+ M cat_vol_gradient3.c
+ M cat_vol_laplace3.c
+ M cat_vol_laplace3R.c
+ M cat_vol_localstat.c
+ M cat_vol_median3.c
+ M cat_vol_median3c.c
+ M cat_vol_nonlin_coreg.m
+ M cat_vol_pbt.m
+ M cat_vol_pbtp.c
+ M cat_vol_pbtp.cpp
+ M cat_vol_pbtp2.c
+ M cat_vol_simgrow.c
+ M cat_vol_smooth3X.m
+ M check_pipeline_ROIs.m
+ M genus0.c
+ M html/cat.html
+ M internal/cat_vol_cMRegularizarNLM3D.c
+ M internal/cat_vol_cMRegularizarNLM3Dw.c
+ M internal/cat_vol_gbdist.m
+ M optimizer3d.c
+ M ornlm_float.c
+ M sanlm_float.c
+ M spm_diffeo_old.c
+ M templates_MNI152NLin2009cAsym/hammers.txt
+ M templates_volumes/hammers.txt
+
+Added pdf/doc*-files again
+------------------------------------------------------------------------
+r2006 | gaser | 2022-07-04 22:01:20
+
+Changed paths:
+ M Amap.c
+ M Bayes.c
+ M BayesMex.c
+ M CHANGES.txt
+ M Contents.m
+ M Kmeans.c
+ M KmeansMex.c
+A  KmeansMex.mexmaci64
+ M MBeautify.m
+ M MBeautify.txt
+ M MFormatter.m
+ M Makefile
+ M MrfPrior.c
+ M Pve.c
+ M WarpPriors.c
+ M atlases_surfaces/lh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/lh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces/rh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/rh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.aparc_a2005s.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.aparc_a2005s.freesurfer.annot
+ M cat_amap.c
+A  cat_amap.mexa64
+A  cat_amap.mexmaci64
+A  cat_amap.mexw64
+A  cat_amap_new.mexmaci64
+ M cat_ornlm.c
+A  cat_ornlm.mexa64
+A  cat_ornlm.mexmaci
+A  cat_ornlm.mexmaci64
+A  cat_ornlm.mexw64
+ M cat_plot_circular.m
+ M cat_sanlm.c
+A  cat_sanlm.mexa64
+A  cat_sanlm.mexmaci64
+A  cat_sanlm.mexw64
+ M cat_stat_factorial_design.m
+ M cat_stat_histth.m
+ M cat_stat_kmeans.m
+ M cat_surf_coregvol2surf.m
+ M cat_vbdist.c
+A  cat_vbdist.mexa64
+A  cat_vbdist.mexmaci64
+A  cat_vbdist.mexw64
+ M cat_vol_ROIval.c
+A  cat_vol_ROIval.mexmaci64
+ M cat_vol_downcut.c
+A  cat_vol_downcut.mexa64
+A  cat_vol_downcut.mexmaci64
+A  cat_vol_downcut.mexw64
+ M cat_vol_eidist.c
+A  cat_vol_eidist.mexa64
+A  cat_vol_eidist.mexmaci64
+A  cat_vol_eidist.mexw64
+A  cat_vol_eikonal3.mexa64
+A  cat_vol_eikonal3.mexmaci64
+A  cat_vol_eikonal3.mexw64
+ M cat_vol_findfiles.m
+ M cat_vol_genus0.c
+A  cat_vol_genus0.mexa64
+A  cat_vol_genus0.mexmaci64
+A  cat_vol_genus0.mexw64
+ M cat_vol_gradient3.c
+A  cat_vol_gradient3.mexa64
+A  cat_vol_gradient3.mexmaci64
+A  cat_vol_gradient3.mexw64
+A  cat_vol_interp3f.mexa64
+A  cat_vol_interp3f.mexmaci64
+A  cat_vol_interp3f.mexw64
+ M cat_vol_laplace3.c
+A  cat_vol_laplace3.mexa64
+A  cat_vol_laplace3.mexmaci64
+A  cat_vol_laplace3.mexw64
+ M cat_vol_laplace3R.c
+A  cat_vol_laplace3R.mexa64
+A  cat_vol_laplace3R.mexmaci64
+A  cat_vol_laplace3R.mexw64
+ M cat_vol_localstat.c
+A  cat_vol_localstat.mexa64
+A  cat_vol_localstat.mexmaci64
+A  cat_vol_localstat.mexw64
+ M cat_vol_median3.c
+A  cat_vol_median3.mexa64
+A  cat_vol_median3.mexmaci64
+A  cat_vol_median3.mexw64
+ M cat_vol_median3c.c
+A  cat_vol_median3c.mexa64
+A  cat_vol_median3c.mexmaci64
+A  cat_vol_median3c.mexw64
+ M cat_vol_nonlin_coreg.m
+ M cat_vol_pbt.m
+ M cat_vol_pbtp.c
+ M cat_vol_pbtp.cpp
+A  cat_vol_pbtp.mexa64
+A  cat_vol_pbtp.mexmaci64
+A  cat_vol_pbtp.mexw64
+ M cat_vol_pbtp2.c
+A  cat_vol_pbtp2.mexa64
+A  cat_vol_pbtp2.mexmaci64
+A  cat_vol_pbtp2.mexw64
+A  cat_vol_pbtv.mexmaci64
+ M cat_vol_simgrow.c
+A  cat_vol_simgrow.mexa64
+A  cat_vol_simgrow.mexmaci64
+A  cat_vol_simgrow.mexw64
+ M cat_vol_smooth3X.m
+ M check_pipeline_ROIs.m
+ M genus0.c
+ M html/cat.html
+ M internal/cat_vol_cMRegularizarNLM3D.c
+ M internal/cat_vol_cMRegularizarNLM3Dw.c
+ M internal/cat_vol_gbdist.m
+ M optimizer3d.c
+ M ornlm_float.c
+ M sanlm_float.c
+ M spm_diffeo_old.c
+A  spm_diffeo_old.mexa64
+A  spm_diffeo_old.mexmaci64
+A  spm_diffeo_old.mexw64
+ M templates_MNI152NLin2009cAsym/hammers.txt
+ M templates_volumes/hammers.txt
+
+Added mex-files again
+------------------------------------------------------------------------
+r2006 | gaser | 2022-07-04 22:00:24
+
+Changed paths:
+ M Amap.c
+ M Bayes.c
+ M BayesMex.c
+ M CHANGES.txt
+ M Contents.m
+ M Kmeans.c
+ M KmeansMex.c
+ M MBeautify.m
+ M MBeautify.txt
+ M MFormatter.m
+ M Makefile
+ M MrfPrior.c
+ M Pve.c
+ M WarpPriors.c
+ M atlases_surfaces/lh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/lh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces/rh.aparc_DK40.freesurfer.annot
+ M atlases_surfaces/rh.aparc_a2009s.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/lh.aparc_a2005s.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Brodmann.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Lobes.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.PALS_B12_Visuotopic.freesurfer.annot
+ M atlases_surfaces_not_distributed/rh.aparc_a2005s.freesurfer.annot
+ M cat_amap.c
+ M cat_ornlm.c
+ M cat_plot_circular.m
+ M cat_sanlm.c
+ M cat_stat_factorial_design.m
+ M cat_stat_histth.m
+ M cat_stat_kmeans.m
+ M cat_surf_coregvol2surf.m
+ M cat_vbdist.c
+ M cat_vol_ROIval.c
+ M cat_vol_downcut.c
+ M cat_vol_eidist.c
+ M cat_vol_findfiles.m
+ M cat_vol_genus0.c
+ M cat_vol_gradient3.c
+ M cat_vol_laplace3.c
+ M cat_vol_laplace3R.c
+ M cat_vol_localstat.c
+ M cat_vol_median3.c
+ M cat_vol_median3c.c
+ M cat_vol_nonlin_coreg.m
+ M cat_vol_pbt.m
+ M cat_vol_pbtp.c
+ M cat_vol_pbtp.cpp
+ M cat_vol_pbtp2.c
+ M cat_vol_simgrow.c
+ M cat_vol_smooth3X.m
+ M check_pipeline_ROIs.m
+ M genus0.c
+ M html/cat.html
+ M internal/cat_vol_cMRegularizarNLM3D.c
+ M internal/cat_vol_cMRegularizarNLM3Dw.c
+ M internal/cat_vol_gbdist.m
+ M optimizer3d.c
+ M ornlm_float.c
+ M sanlm_float.c
+ M spm_diffeo_old.c
+ M templates_MNI152NLin2009cAsym/hammers.txt
+ M templates_volumes/hammers.txt
+
+Added mex-files again
+------------------------------------------------------------------------
 r2004 | gaser | 2022-07-04 17:56:51
 
 Changed paths:
