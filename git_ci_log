@@ -7,22 +7,24 @@ date=`date "+%Y-%m-%d %H:%M:%S"`
 nano log
 
 if [ -f log ]; then
-
-  echo '------------------------------------------------------------------------' >> CHANGES.txt
+  mv CHANGES.txt CHANGES2.txt
+  echo '------------------------------------------------------------------------' > CHANGES.txt
   echo r$newrev '|' $USER '|' $date >> CHANGES.txt
   echo >> CHANGES.txt
   echo "Changed paths:" >> CHANGES.txt
-  git status --short >> CHANGES.txt
+  git status --short|grep -v ?? >> CHANGES.txt
   echo >> CHANGES.txt
   cat log >> CHANGES.txt
-
+  cat CHANGES2.txt >> CHANGES.txt
+  rm CHANGES2.txt
+  
   echo "Changed paths:" > log2
-  git status --short >> log2
+  git status --short|grep -v ?? >> log2
   echo  >> log2
   cat log >> log2
   echo  >> log2
   git commit -F log2
-#  svn list -R | grep -v '/$' | xargs svn propset svn:keywords "Id Rev Date Author" 1>/dev/null
+  git push
   git fetch
 else
   echo "Put commit information in log"
