@@ -18,10 +18,10 @@ if [ -f log ]; then
   cat CHANGES2.txt >> CHANGES.txt
   rm CHANGES2.txt
   
-  echo "Changed paths:" > log2
-  git status --short|grep -v ?? >> log2
+  cat log > log2
   echo  >> log2
-  cat log >> log2
+  echo "Changed paths:" >> log2
+  git status --short|grep -v ?? >> log2
   echo  >> log2
   git commit -F log2
   git push
