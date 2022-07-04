@@ -78,7 +78,7 @@ doc:
 
 # update version numbers
 update: doc copy_longmode
-	-@git pull
+	-@git fetch
 	-@echo '% Computational Anatomy Toolbox' > Contents.m
 	-@echo '% Version' ${REVISION}' ('${NEWVERSION}')' ${DATE} >> Contents.m
 	-@cat Contents_info.txt >> Contents.m
