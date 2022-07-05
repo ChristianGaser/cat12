@@ -24,7 +24,7 @@ if [ -f log ]; then
   echo "Changed paths:" >> log2
   git status --short|grep -v ?? >> log2
   echo  >> log2
-  git commit -F log2
+  git commit -a -F log2
   git push
   git fetch
 else
