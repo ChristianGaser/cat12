@@ -515,9 +515,21 @@ EXAMPLES
    cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
        -b ${cwd}/cat_standalone_get_quality.m mri/mwp1sTRIO*nii \ 
        -a1 " 'Quality_measures.csv' " -a2 "1"
-   Estimate mean z-scores using global scaling with TIV for the files mwp1sTRIO*nii and save quality 
-   measures in Quality_measures.csv for external analysis. Processing of surface meshes is also
-   supported.
+   Estimate sample homogeneity (after preprocessing) using mean z-scores with global scaling with TIV 
+   for the files mwp1sTRIO*nii and save quality measures in Quality_measures.csv for external analysis. 
+   Processing of surface meshes is also supported.
+   Please note the multiple quotes for parameter a1.
+
+   -----------------------------------------------------------------------------------------------
+   Estimate and save weighted overall image quality
+     -a1 csv output filename
+     -a2 enable global scaling with TIV (only for volumes meaningful)
+   -----------------------------------------------------------------------------------------------
+   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
+       -b ${cwd}/cat_standalone_get_IQR.m report/cat_*.xml \ 
+       -a1 " 'IQR.txt' "
+   Estimate weighted overall image quality (before preprocessing) using xml-files in report folder 
+   and save IQR measures in IQR.txt for external analysis.
    Please note the multiple quotes for parameter a1.
 
    -----------------------------------------------------------------------------------------------
