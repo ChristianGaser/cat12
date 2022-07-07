@@ -1,18 +1,29 @@
 ------------------------------------------------------------------------
+r2018 | gaser | 2022-07-07 16:38:42
+
+Changed paths:
+ M CHANGES.txt
+ M Makefile
+ M html/cat.html
+ M html/cat.txt
+
+
+Updated Makefile to copy cat12-html to another folder.
+Updated html help text.------------------------------------------------------------------------
 r2017 | gaser | 2022-07-05 21:30:20
 
 Changed paths:
  M CHANGES.txt
  M git_ci_log
  M standalone/cat_standalone.sh
-A  standalone/cat_standalone_get_IQR.m
+ A standalone/cat_standalone_get_IQR.m
 
 
 Updated git_ci_log and added -a flag to commit.
 Added new option for getting image quality to cat_standalone.sh.
 Added new function for getting image quality cat_standalone_get_IQR.m.
 ------------------------------------------------------------------------
-r2015 | gaser | 2022-07-05 00:11:33
+r2016 | gaser | 2022-07-05 00:11:33
 
 Changed paths:
  M .gitattributes
