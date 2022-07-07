@@ -30,7 +30,7 @@
       <hr />
     
     <div id="button">
-      <p align="center" style="text-align:center;"><a href="matlab:web(fullfile(spm('dir'),'toolbox','cat12','html','cat_starting.html'))">Open ''Quick Start Guide'' in external window</a></p>      
+      <p align="center" style="text-align:center;"><a target="_blank" href="cat_starting.html">Open ''Quick Start Guide'' in external window</a></p>      
     </div>
 
       <h2>Description</h2>
@@ -41,7 +41,7 @@
           <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',0))">left LPBA40 surface</a>-->.
         You can find this help (e.g. if the SPM graphic window was used by SPM/CAT) in the CAT toolbox menu at the left bottom button <em>Tools > Internet/Help....</em>
       </p><p>
-        For further instructions check also the <a class="function" href="matlab:try,open(fullfile(spm('dir'),'toolbox','cat12','CAT12-Manual.pdf'));end; ">CAT12-Manual</a>.  
+        For further instructions check also the <a class="function" href="matlab:try,open(fullfile(spm('dir'),'toolbox','cat12','CAT12-Manual.pdf'));end">CAT12-Manual</a>.  
       </p><p>
       Please <a href=cat_references.html>cite our papers</a> and the work of other researchers if you use this software.</p><p>
       Our main paper is:<br>
