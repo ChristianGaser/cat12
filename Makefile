@@ -69,12 +69,12 @@ help:
 #make html documentation
 doc:
 	-@cat html/cat.txt | sed -e 's/VERSION/'${NEWVERSION}'/g' -e 's/RELNUMBER/r'${REVISION}'/g' -e 's/DATE/'${DATE}'/g' > html/cat.html
-	-@test ! -d cat12-html || rm -r cat12-html
-	-@cp -R html cat12-html
-	-@perl -p -i -e "s/\','-browser'\);//g" cat12-html/*.html
-	-@perl -p -i -e "s/\','-browser'\)//g" cat12-html/*.html
-	-@perl -p -i -e "s/matlab:web\(\'//g" cat12-html/*.html
-	-@cp cat12-html/cat.html cat12-html/index.html
+	-@cp -R html/* ../cat12-html/
+	-@perl -p -i -e "s/\','-browser'\);//g" ../cat12-html/*.html
+	-@perl -p -i -e "s/\','-browser'\)//g" ../cat12-html/*.html
+	-@perl -p -i -e "s/matlab:web\(\'//g" ../cat12-html/*.html
+	-@perl -p -i -e "s/matlab:try,open\(fullfile\(spm\(\'dir\'\)\,\'toolbox\'\,\'cat12\'\,\'CAT12-Manual.pdf\'\)\)\;end/http\:\/\/www\.neuro\.uni-jena\.de\/cat12\/CAT12-Manual\.pdf/g" ../cat12-html/*.html
+	-@cp ../cat12-html/cat.html ../cat12-html/index.html
 
 # update version numbers
 update: doc copy_longmode
@@ -101,14 +101,14 @@ zip: update clean
 scp: doc zip
 	-@echo scp to http://${STARGET_HOST}/cat12/${ZIPFILE}
 	-@scp -P ${PORT} CHANGES.txt CAT12-Manual.pdf ${ZIPFILE} ${STARGET}
-	-@scp -r -P ${PORT} cat12-html ${STARGET_HTDOCS}/
+	-@scp -r -P ${PORT} ../cat12-html ${STARGET_HTDOCS}/
 	-@bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${ZIPFILE} ${STARGET_FOLDER}/cat12_latest.zip"
 
 # scp manual
 scp_manual:
 	-@echo scp CAT12-Manual.pdf to http://${STARGET}
 	-@scp -P ${PORT} CAT12-Manual.pdf ${STARGET}
-	-@scp -r -P ${PORT} cat12-html ${STARGET_HTDOCS}/
+	-@scp -r -P ${PORT} ../cat12-html ${STARGET_HTDOCS}/
 
 # scp deployed versions
 scp_precompile:
