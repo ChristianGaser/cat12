@@ -11,6 +11,7 @@ INSTALL.txt
 *.pdf
 *.doc*
 *.nii
+*.webloc
 */*.nii
 
 # but consider nifti in main template folder
