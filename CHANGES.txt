@@ -19,7 +19,8 @@ Changed paths:
 
 Added some HowTos for fMRI and PET.
 Updated .gitignore.
-Updated Make to consider new file structure.------------------------------------------------------------------------
+Updated Make to consider new file structure.
+------------------------------------------------------------------------
 r2018 | gaser | 2022-07-07 16:38:42
 
 Changed paths:
@@ -30,7 +31,8 @@ Changed paths:
 
 
 Updated Makefile to copy cat12-html to another folder.
-Updated html help text.------------------------------------------------------------------------
+Updated html help text.
+------------------------------------------------------------------------
 r2017 | gaser | 2022-07-05 21:30:20
 
 Changed paths:

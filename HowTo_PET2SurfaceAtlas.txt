@@ -1,0 +1,10 @@
+Map PET/fMRI to surface atlas:
+
+1. Coregister PET to T1 images
+2. Surface Tools -> Map Volume (Native Space) to Induvidual Surface
+    Here I would change the sampling function for PET images to "Weighted mean", which uses a weighted average 
+    with gaussian kernel for mapping along normals. Otherwise, for fMRI contrast images the default "absmax" is more appropriate.
+3. ROI Tools -> Extract ROI-based surface values
+   Select the lh.intensity* file from the step above and the Desikan atlas
+4. ROI Tools -> Estimate Mean Value inside ROI for external Analysis
+    Select the catROIs-file (take care of the additional "s" that indicates the surface ROIs)
