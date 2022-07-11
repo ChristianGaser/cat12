@@ -28,7 +28,7 @@ MISC_FILES=CAT12-Manual.pdf CHANGES.txt INSTALL.txt standalone templates_MNI152N
 
 FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
 
-ZIPFILE=cat12_r${REVISION}.zip
+ZIPFILE=/Users/gaser/matlab/cat12/cat12_r${REVISION}.zip
 
 # remove .DS_Store files and correct file permissions
 clean:
@@ -86,7 +86,7 @@ update: doc copy_longmode
 	-@echo '% Computational Anatomy Toolbox' > INSTALL.txt
 	-@echo '% Version ' ${REVISION} ${NEWVERSION} ${DATE} >> INSTALL.txt
 	-@cat INSTALL_info.txt >> INSTALL.txt
-	-@cp cat_spm_results_ui.m ../tfce8/
+	-@cp cat_spm_results_ui.m ../tfce/
 	-@perl -p -i -e "s/${OLDVERSION}/${NEWVERSION}/g" spm_cat12.m
 
 # zip release
