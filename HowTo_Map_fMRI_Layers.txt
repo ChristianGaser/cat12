@@ -1,0 +1,15 @@
+1. Run the first-level analysis with the native images (use non-smoothed images and use smaller masking threshold).
+2. Co-register fMRI data non-linearly to the T1 average image:
+SPM->Tools->CAT12->Tools->Non-linear Co-registration
+Use the mean image after realignment as „Source Image“, the average T1 as „Reference Image“ and apply the co-registration to the 1st level output (beta or contrast images).
+3. Run CAT12 with the average T1 and save surfaces and (forward) deformation field.
+4. Map the 1st level output (beta or contrast images) to the individual surfaces for each subject:
+SPM->Tools->CAT12->Surface Tools->Map Volume (Native Space) to Individual Surface
+Sample Function: multi-values (for obtaining single values for each layer independently)
+                 or absmax (for combining values of all layers)
+Mapping Function: Relative Grid Position Within a Tissue Class (Equi-volume Model)
+The result of this function is the mapping of 7 layers (select fewer, but uneven number if necessary) that are corrected for foldings (curvature) using the model of Bok. Please note that mapping of subcortical and cerebellar areas is not feasable.
+5. Resample & Smooth mapped values with FWHM of around 8mm and select 32k meshes merged for both hemispheres.
+6. Run 2nd-level analysis on the surface.
+7. Optionally, run TFCE statistics
+8. Optionally, apply deformation fields to 1st-level output (beta or contrast images) and run 2nd-level analysis of these high-dimensionally warped data.
