@@ -1,0 +1,23 @@
+# some log and debug files
+.DS_Store
+log
+log2
+Contents.txt
+cat_long_main.txt
+INSTALL.txt
+
+# ignore zip, pdf, doc*, and nifti
+*.zip
+*.pdf
+*.doc*
+*.nii
+*/*.nii
+
+# but consider nifti in main template folder
+!templates_MNI152NLin2009cAsym/*.nii
+
+# exclude some folders
+/data
+/templates_animals
+cat12-html/
+check_pipeline/
