@@ -9,13 +9,7 @@
   
   <body>
     <div id="header" style="background: black url('images/home.jpg') right;">
-      <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
-      <p>
-          <a href="matlab:web('http://www.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
-          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');">Department of Neurology</a> | 
-          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');">Department of Psychiatry</a> | 
-          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
-      </p>
+      <h1><a href="matlab:web('https://neuro-jena.github.io/','-browser');">Structural Brain Mapping Group</a></h1>
       <!-- required for layout -->
       <div id="breadcrumbs">
         <a href="cat.html">CAT</a>
@@ -45,7 +39,7 @@
       </p><p>
       Please <a href=cat_references.html>cite our papers</a> and the work of other researchers if you use this software.</p><p>
       Our main paper is:<br>
-      Gaser C, Dahnke R, Kurth K, Luders E, Alzheimer's Disease Neuroimaging Initiative.<br>
+      Gaser C, Dahnke R, P.M. Thompson, Kurth K, Luders E, Alzheimer's Disease Neuroimaging Initiative.<br>
       <a href="matlab:web('https://www.biorxiv.org/content/10.1101/2022.06.11.495736','-browser');">A Computational Anatomy Toolbox for the Analysis of Structural MRI Data.</a>
       </p>
       </p>

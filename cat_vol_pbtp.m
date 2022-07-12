@@ -1,5 +1,5 @@
 %cat_vol_pbtp Projection-Based Thickness.
-%  Main thickness projection function (<a href="matlab:web('http://dbm.neuro.uni-jena.de/pdf-files/Dahnke-NI12.pdf','-browser');">Dahnke et al., 2011)</a>).
+%  Main thickness projection function (<a href="matlab:web('https://neuro-jena.github.io/pdf/Dahnke-NI12.pdf','-browser');">Dahnke et al., 2011)</a>).
 %
 %  [GMT,RPM] = cat_vol_pbtp(SEG,WMD,CSFD[,opt])
 %
@@ -19,7 +19,7 @@
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
-% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Structural Brain Mapping Group (https://neuro-jena.github.io)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
