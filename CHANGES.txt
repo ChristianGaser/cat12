@@ -1,9 +1,12 @@
 ------------------------------------------------------------------------
+r2024 | gaser | 2022-07-12 22:35:28
+
+Updated website links
+------------------------------------------------------------------------
 r2022 | gaser | 2022-07-11 12:35:28
 
 Changed paths:
  M CHANGES.txt
-
 
 Added some HowTos for fMRI and PET.
 ------------------------------------------------------------------------
@@ -17,9 +20,8 @@ Changed paths:
  M html/cat.html
 
 
-Added some HowTos for fMRI and PET.
 Updated .gitignore.
-Updated Make to consider new file structure.
+Updated Makefile to consider new file structure.
 ------------------------------------------------------------------------
 r2018 | gaser | 2022-07-07 16:38:42
 
