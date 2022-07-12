@@ -5,7 +5,7 @@ function varargout = cat_install_tfce(install)
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
-% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Structural Brain Mapping Group (https://neuro-jena.github.io)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
@@ -21,7 +21,7 @@ if install
     d0 = spm('Dir');
     d = fullfile(spm('Dir'),'toolbox'); 
     lastwarn('');
-    s = unzip('http://www.neuro.uni-jena.de/tfce/tfce_latest.zip', d);
+    s = unzip('https://neuro-jena.github.io/tfce/tfce_latest.zip', d);
     fprintf('         Success: %d files have been downloaded.\n',numel(s));
     addpath(d0);
     rehash
