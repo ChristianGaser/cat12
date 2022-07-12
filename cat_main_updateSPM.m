@@ -5,7 +5,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
-% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Structural Brain Mapping Group (https://neuro-jena.github.io)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
