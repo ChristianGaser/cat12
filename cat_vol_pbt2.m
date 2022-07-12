@@ -26,7 +26,7 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ywmdc] = cat_vol_pbt2(Ymf,opt)
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
-% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Structural Brain Mapping Group (https://neuro-jena.github.io)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________

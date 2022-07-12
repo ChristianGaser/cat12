@@ -9,7 +9,7 @@ function cat_io_send_to_server(urlinfo)
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
-% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Structural Brain Mapping Group (https://neuro-jena.github.io)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
@@ -18,7 +18,7 @@ function cat_io_send_to_server(urlinfo)
 urlinfo = regexprep(urlinfo, '\n', '%20'); % replace returns
 urlinfo = regexprep(urlinfo, ' ' , '%20'); % replace spaces
 
-piwikserver = 'http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=';
+piwikserver = 'http://dbm.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&action_name=';
 url = sprintf('%s%s',piwikserver,urlinfo);
 
 try
