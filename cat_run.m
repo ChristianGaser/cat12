@@ -709,6 +709,14 @@ function job = update_job(job)
       if ~isempty( job.output.ROImenu.atlases.ownatlas ) && ~isempty( job.output.ROImenu.atlases.ownatlas{1} )
         for i=1:numel( job.output.ROImenu.atlases.ownatlas ) 
           [pp,ff,ee] = spm_fileparts( job.output.ROImenu.atlases.ownatlas{i} ); 
+          if ~exist(fullfile(pp,[ff,ee]),'file')
+            error('cat_run:missingAtlasFile','Cannot find "%s".',job.output.ROImenu.atlases.ownatlas{i})
+          end
+          if ~isvarname(ff)
+            error('cat_run:atlasName',['Your atlas "%s" has to be named to be a matlab variable, i.e., \n' ...
+              'the filename should not include blanks and other special characters. \n' ...
+              'You can test the new filename with "isvarname".'],ff); 
+          end
           if any( strcmp( spm_str_manip( def.extopts.atlas( cell2mat(def.extopts.atlas(:,2)) < cat_get_defaults('extopts.expertgui') + 1 ,1) ,'cs') ,ff))
             error('cat_run:ownatlasname', ...
              ['There is a atlas file name conflict. Each atlas name has to be unique. \n' ...
