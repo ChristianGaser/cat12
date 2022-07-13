@@ -262,7 +262,7 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
   
 return
 %=======================================================================
-function wYa = cat_vol_roi_load_atlas(FAai,warped)
+function wYa2 = cat_vol_roi_load_atlas(FAai,warped)
 % ----------------------------------------------------------------------
 % just load atlas in its own space
 % ----------------------------------------------------------------------
@@ -275,18 +275,50 @@ function wYa = cat_vol_roi_load_atlas(FAai,warped)
   for i=1:5
     try
       wVa = spm_vol(FAai1);
+      dt  = wVa(1).private.dat.dtype;
       if ~exist('warped','var')
         wYa = spm_read_vols(wVa);
       else
+        mati = spm_imatrix(wVa.mat);
+        if 0 % mati(1)<0 && mati(7)>0 
+          wVa.mat = spm_matrix( mati .* [-1 1 1, 1 1 1, -1 1 1, 1 1 1] ); %wVa = rmfield(wVa,'private'); 
+          wVa.mat0 = wVa.mat; 
+          wVa.private.mat0 = spm_matrix( mati .* [-1 1 1, 1 1 1, -1 1 1, 1 1 1] );
+        end
+        
         wYa = spm_sample_vol(wVa,double(warped.y(:,:,:,1)),double(warped.y(:,:,:,2)),double(warped.y(:,:,:,3)),0);
         wYa = reshape(wYa,size(warped.y(:,:,:,1))); 
+        
+        if sum(wYa(:))==0 % && mati(1)<0 && mati(7)>0 
+          wYa2 = spm_read_vols(wVa);
+          if  sum(wYa2(:))==0 
+            cat_io_addwarning('cat_main_roi:emptyAtlas','Atlas has no values!',1,[1 0])
+          else
+            cat_io_addwarning('cat_main_roi:emptyMappedAtlas', ...
+              ['The remapped atlas has no values and x dimension is positiv (should be negative). \\n' ...
+               'Check your atlas orientation with SPM display to confirm that the image is in MNI space.'],1,[1 1])
+          end
+        end
       end
       break
     catch 
       pause(0.5 + rand(1))
     end
   end
-  wYa = cat_vol_ctype(wYa,wVa(1).private.dat.dtype);
+  
+  %% final data type setting
+  if ~isempty(strfind( dt , 'FLOAT'  )) || ~isempty(strfind( dt , 'DOUBLE' )) 
+    %% convert to (usinged) integer datatype  
+    dtypes = {'uint8','int8','uint16','int16','uint32','int32'};
+    for di = 1:numel(dtypes) 
+      if min(wYa(:))>=intmin(dtypes{di}) && max(wYa(:))<intmax(dtypes{di})
+        wYa2 = cat_vol_ctype(wYa,dtypes{di});
+        break
+      end     
+    end
+  else % use the default datatype in case of (unsigned) integer
+    wYa2 = cat_vol_ctype(wYa,dt);
+  end
 return
 %=======================================================================
 function wYv = cat_vol_roi_map2atlas(Yv,warped,mod,usepull)
@@ -351,7 +383,7 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA,vx_vox)
   csvf = fullfile(pp,[ff '.csv']);
   csvf = char( min(255, max(0, double( csvf ))));
   
-  if isempty(csv) 
+  if isempty(csv) || size(csv,1)<=1 % empty or only header
     if exist(csvf,'file')
       csv = cat_io_csv(csvf,'','',struct('delimiter',';')); 
     else
@@ -373,7 +405,10 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA,vx_vox)
   end
   name = genvarname(strrep(strrep(name,'-','_'),' ','_'));
   
-  
+  if isempty(csv) || size(csv,1)<=1
+    cat_io_addwarning('cat_main_roi:emptyAtlas','Cannot find atlas ROIs and export empty atlas.',1,[1 1])
+    return;
+  end
   
   %% volume case
   Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));   

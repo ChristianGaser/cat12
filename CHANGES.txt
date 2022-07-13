@@ -1,4 +1,24 @@
 ------------------------------------------------------------------------
+r2024 | dahnke | 2022-07-13 11:16:06
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_tools.m
+ M cat_main_roi.m
+ M cat_run.m
+ M cat_stat_marks.m
+
+
+1) Fixed:     Corrected a problem with own atlas maps saved as float 
+              rather than integer in cat_main_roi. 
+2) Fixed:     Create warning in cat_main_roi in case of atlas maps  
+              with positive x values that cannot be mapped via the used 
+              spm_sample_vol function. User has to provide images in
+              the right orientation and space.
+3) Fixed:     Use whole rather than natural numbers in cat_conf_tools to
+              avoid opening of the input image in the head trimming tool.               
+4) Fixed:     Added checks in cat_run to detect incorrect named own atlases. 
+              ------------------------------------------------------------------------
 r2022 | gaser | 2022-07-11 12:35:28
 
 Changed paths:
