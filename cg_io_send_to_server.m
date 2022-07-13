@@ -22,7 +22,7 @@ mac = strrep(mac,':','');
 % use 16 hex digits
 mac = ['0000' mac];
 
-url = sprintf('http://www.neuro.uni-jena.de/piwik/piwik.php?idsite=1&rec=1&_id=%s&action_name=%s%s%s',mac,'Start','%2F',version('-release'));
+url = sprintf('https://neuro-jena.github.io/piwik/piwik.php?idsite=1&rec=1&_id=%s&action_name=%s%s%s',mac,'Start','%2F',version('-release'));
 try, urlread(url); end
 
 function [mac, st] = MACAddress(allMac)

@@ -11,7 +11,7 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
-% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Structural Brain Mapping Group (https://neuro-jena.github.io)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________

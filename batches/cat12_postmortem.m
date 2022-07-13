@@ -94,7 +94,7 @@
 % Robert Dahnke 2020/09 (robert.dahnke@uni-jena.de)
 %-----------------------------------------------------------------------
 % Christian Gaser, Robert Dahnke
-% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Structural Brain Mapping Group (https://neuro-jena.github.io)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 %-----------------------------------------------------------------------

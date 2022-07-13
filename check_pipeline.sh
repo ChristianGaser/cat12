@@ -2,7 +2,7 @@
 # ______________________________________________________________________
 #
 # Christian Gaser, Robert Dahnke
-# Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+# Structural Brain Mapping Group (https://neuro-jena.github.io)
 # Departments of Neurology and Psychiatry
 # Jena University Hospital
 # ______________________________________________________________________
@@ -485,7 +485,7 @@ OUTPUT:
      check_r* folders with release name
 
 EXAMPLE:
-   check_pipeline.sh -s ~/spm/spm12 -r http://www.neuro.uni-jena.de/cat12/cat12_r1318.zip file1 file2 file3 file4 file5
+   check_pipeline.sh -s ~/spm/spm12 -r http://dbm.neuro.uni-jena.de/cat12/cat12_r1318.zip file1 file2 file3 file4 file5
    Run check_pipeline.sh with given 5 files and use CAT12 release 1318 from dbm-server and the defined SPM12 folder.
    
    check_pipeline.sh -s ~/spm/spm12 -bg 8 -f /Volumes/UltraMax/check_pipeline/check_pipeline_files.txt -l /Volumes/UltraMax/check_pipeline/check_pipeline_files_long.txt

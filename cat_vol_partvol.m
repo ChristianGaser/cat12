@@ -43,7 +43,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
-% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Structural Brain Mapping Group (https://neuro-jena.github.io)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
