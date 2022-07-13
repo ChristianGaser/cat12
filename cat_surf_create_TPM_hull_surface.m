@@ -66,11 +66,19 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull)
   % define filename
   [pp,Pname,ee] = spm_fileparts(Ptpm); Pname = strrep([Pname ee],'.nii',''); 
   if human
-    if skull > 0
-      Phull = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',sprintf('bh.headbrain%s.%s.gii',species,Pname));
+    if strcmp(pp,fullfile(spm('dir'),'tpm')) && strcmp(Pname,TPM) % default 
+      if skull > 0
+        Phull = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',sprintf('bh.headbrain%s.%s.gii',species,Pname));
+      else
+        Phull = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',sprintf('bh.brain%s.%s.gii',species,Pname));
+      end    
     else
-      Phull = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',sprintf('bh.brain%s.%s.gii',species,Pname));
-    end    
+      if skull > 0
+        Phull = fullfile(pp,sprintf('bh.headbrain%s.%s.gii',species,Pname));
+      else
+        Phull = fullfile(pp,sprintf('bh.brain%s.%s.gii',species,Pname));
+      end    
+    end
   else
     if skull > 0
       Phull = fullfile(spm('dir'),'toolbox','cat12','templates_animals_surfaces',sprintf('bh.headbrain%s.%s.gii',species,Pname));
@@ -80,7 +88,7 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull)
   end
   
   % nothing to do - just return filename 
-  if ~cat_io_rerun(Ptpm,Phull,0,1), return; end
+  if ~cat_io_rerun(Ptpm,Phull,0,0), return; end
     
   
   % load SPM-TPM-structure
