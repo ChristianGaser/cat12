@@ -47,7 +47,7 @@ end
 try
   judp('send',2222,'dbm.neuro.uni-jena.de',int8(info));
   info = strrep(info,',',' ');
-  fprintf('\n%s\nIf you don''t want to send this information to the SBM server www.neuro.uni-jena.de (for internal use only) change the flag ''cat.extopts.send_info'' in cat_defaults.m.\n',info);
+  fprintf('\n%s\nIf you don''t want to send this information to the SBM server dbm.neuro.uni-jena.de (for internal use only) change the flag ''cat.extopts.send_info'' in cat_defaults.m.\n',info);
 end
 
 function [mac, st] = MACAddress(allMac)

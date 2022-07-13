@@ -62,7 +62,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
 % ______________________________________________________________________
 %
 %   Robert Dahnke (robert.dahnke@uni-jena.de)
-%   Structural Brain Mapping Group (http://dbm.neuro.uni-jena.de/)
+%   Structural Brain Mapping Group (https://neuro-jena.github.io/)
 %   Department of Neurology
 %   University Jena
 % ______________________________________________________________________

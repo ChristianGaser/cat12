@@ -9,13 +9,7 @@
   
   <body>
     <div id="header" style="background: black url('images/contact.jpg') right;">
-      <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
-      <p>
-          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
-          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');">Department of Neurology</a> | 
-          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');">Department of Psychiatry</a> | 
-          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
-      </p>
+      <h1><a href="matlab:web('https://neuro-jena.github.io/','-browser');">Structural Brain Mapping Group</a></h1>
       <div id="breadcrumbs">
         <a href="cat.html">CAT</a> > <a href="cat_methods.html">Methods</a> > <a href="cat_methods_warnings.html">Preprocessing warnings</a>
       </div>
@@ -24,61 +18,61 @@
     <div id="content">
       <h2>Preprocessing warnings <b style="color:#DD0000">(IN DEVELOPMENT):</b></h2>
       <p>
-	      CAT uses 3 levels of warnings ( <i style="color:#0000FF">note</i>, <i style="color:#FF7700">warning</i>, and <i style="color:#DD0000">alert</i> ) to inform about major events in the preprocessing. Notes have normally only very light effects and can be ignored, whereas warnings and alerts describe atypical processing with more obvious effects that can / should be considered, in particular if the results are outlier in the covariance analysis. 
-	    </p>
-			<table id="table">
-		    <hd id="thead">
-			     <td><b>Name</b></td><td><b>Level</b></td><td><b>Comment</b></td>
+        CAT uses 3 levels of warnings ( <i style="color:#0000FF">note</i>, <i style="color:#FF7700">warning</i>, and <i style="color:#DD0000">alert</i> ) to inform about major events in the preprocessing. Notes have normally only very light effects and can be ignored, whereas warnings and alerts describe atypical processing with more obvious effects that can / should be considered, in particular if the results are outlier in the covariance analysis. 
+      </p>
+      <table id="table">
+        <hd id="thead">
+           <td><b>Name</b></td><td><b>Level</b></td><td><b>Comment</b></td>
         </hd>
-		    <tr style="color:#0000FF; vertical-align: top;"> 
-			    <td style="vertical-align: top;">notes</td><td style="vertical-align: top;">0</td><td>
-				    <ul>
-					    <li>information and notes of possible problems of skipped uncritical (non-final) functions that <b>possibly have lightly effects</b> on preprocessing result and <b><u>can be ignored</u></b>
-							</li><li>
-							  only relevant for experts/developers in case of debugging of following problems and errors 
-							</li><li>
-							  e.g., use "none" vs. "mni" affine registration setting, skipped APP
-							</li>
-						</ul>
-					</td>
-				</tr>
-		    <tr style="color:#FF7700"> <!-- violet: AA00FF, orange: FF9900 -->
-			    <td style="vertical-align: top;">warning</td><td style="vertical-align: top;">1</td><td>
-				    <ul>
-					    <li>regular but atypical processing stream with skipped functions to process special input that <b> probably have effects</b> on preprocessing results and <b><u>could/should be considered</u></b>
-							</li><li>
-							  e.g., T2/PD/FLAIR contrasts with skipped T1-specific functions;  low resolution and quality warnings, irregularly skipped functions like LAS in T1; WMHs if WMHC is inactive/only temporary active
-							</li>
-						</ul>
-					</td>
-				</tr>
-		    <tr style="color:#DD0000"> 
-			    <td style="vertical-align: top;">alert</td><td style="vertical-align: top;">2</td><td>
-				    <ul>
-					    <li>severe problems of a critical (final) function that <b>will have strongly effects</b> preprocessing results and <b><u>has to be considered</u></b>
-							</li><li>
-							  e.g., AMAP vs. SPM backup segmentation in case of AMAP problems 
-							</li>
-						</ul>
-					</td>
-				</tr>
-			</table>	
-		</p><br><p>
-			All warnings will be printed fully on the command line (<a href="#Fig1">Fig. 1</a>) and in the LOG-file in the report preprocessing directory. 	
-			<div>	
-				<p class="code" style="width: 90%; color:#FF7700" id="Fig1">
+        <tr style="color:#0000FF; vertical-align: top;"> 
+          <td style="vertical-align: top;">notes</td><td style="vertical-align: top;">0</td><td>
+            <ul>
+              <li>information and notes of possible problems of skipped uncritical (non-final) functions that <b>possibly have lightly effects</b> on preprocessing result and <b><u>can be ignored</u></b>
+              </li><li>
+                only relevant for experts/developers in case of debugging of following problems and errors 
+              </li><li>
+                e.g., use "none" vs. "mni" affine registration setting, skipped APP
+              </li>
+            </ul>
+          </td>
+        </tr>
+        <tr style="color:#FF7700"> <!-- violet: AA00FF, orange: FF9900 -->
+          <td style="vertical-align: top;">warning</td><td style="vertical-align: top;">1</td><td>
+            <ul>
+              <li>regular but atypical processing stream with skipped functions to process special input that <b> probably have effects</b> on preprocessing results and <b><u>could/should be considered</u></b>
+              </li><li>
+                e.g., T2/PD/FLAIR contrasts with skipped T1-specific functions;  low resolution and quality warnings, irregularly skipped functions like LAS in T1; WMHs if WMHC is inactive/only temporary active
+              </li>
+            </ul>
+          </td>
+        </tr>
+        <tr style="color:#DD0000"> 
+          <td style="vertical-align: top;">alert</td><td style="vertical-align: top;">2</td><td>
+            <ul>
+              <li>severe problems of a critical (final) function that <b>will have strongly effects</b> preprocessing results and <b><u>has to be considered</u></b>
+              </li><li>
+                e.g., AMAP vs. SPM backup segmentation in case of AMAP problems 
+              </li>
+            </ul>
+          </td>
+        </tr>
+      </table>  
+    </p><br><p>
+      All warnings will be printed fully on the command line (<a href="#Fig1">Fig. 1</a>) and in the LOG-file in the report preprocessing directory.  
+      <div> 
+        <p class="code" style="width: 90%; color:#FF7700" id="Fig1">
     ------------------------------------------------------------------------<br>
      WARNING 01:  cat_run_job:ignoreErrors<br>
      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Run pipeline with backup functions (IN DEVELOPMENT).<br>
     ------------------------------------------------------------------------<br>
-    		<p>
-	    	<p class="img" id="Fig1">
-				  Fig. 1: CAT result reports with different warnings (A) and the CAT error report (B). 
-      	<p>
-	    </div>
-		</p><br><p>
-			In contrast to a real severe error (<a href="#Fig2">Fig. 2</a> right), a warning just represent an abnormal processing, e.g., in case of well known errors or bad values.  On the CAT report (<a href="#Fig2">Fig. 2</a> left) only their number is listed and only the identifier of serious warnings (level 1 and 2) were displayed.  Warnings are save in the XML-file <i>cat_*.xml</i> in the report preprocessing directory (see <a href="#xml">Warning structure</a>).  The warning level or identifier may be used as confound in the (quality control) analysis to handle outlier.   
-			<div>
+        <p>
+        <p class="img" id="Fig1">
+          Fig. 1: CAT result reports with different warnings (A) and the CAT error report (B). 
+        <p>
+      </div>
+    </p><br><p>
+      In contrast to a real severe error (<a href="#Fig2">Fig. 2</a> right), a warning just represent an abnormal processing, e.g., in case of well known errors or bad values.  On the CAT report (<a href="#Fig2">Fig. 2</a> left) only their number is listed and only the identifier of serious warnings (level 1 and 2) were displayed.  Warnings are save in the XML-file <i>cat_*.xml</i> in the report preprocessing directory (see <a href="#xml">Warning structure</a>).  The warning level or identifier may be used as confound in the (quality control) analysis to handle outlier.   
+      <div>
         <p class="img" style="width: 90%;" id="Fig2">
           <a href="cat_methods_WMHC0.html"><img src="images/catreportj_OAS1_0031_MR1_mpr_n4_anon_sbj_111_WMHC0.jpg" width=33.5% height=auto alt="CAT preprocessing report with WMHC=0" ></a>
           <a href="cat_methods_WMHC0.html"><img src="images/catreportj_OAS1_0031_MR1_mpr_n4_anon_sbj_111_WMHC0.jpg" width=33.5% height=auto alt="CAT preprocessing report with WMHC=0" ></a>
@@ -86,16 +80,16 @@
             Fig. 2: CAT result reports with different warnings (A) and the CAT error report (B). 
         </p>
       </div>
-	      
-	      
-	      
-	      
-	    <h3 id="xml">Warning structure</h3>
-	    <p>All warnings were saved in the XML-file as structure with identifier, message, level, and additional data, e.g.:</p>
-	    
-	     <div style="text-indent:10px;"><i style="color:#999999">&lt;software&gt;</i></div>
-	     <div style="text-indent:20px;"><i style="color:#999999">&lt;cat_warnings&gt;</i></div>
-	     <div style="text-indent:30px;"><i style="color:#999999">&lt;item&gt;</i></div>
+        
+        
+        
+        
+      <h3 id="xml">Warning structure</h3>
+      <p>All warnings were saved in the XML-file as structure with identifier, message, level, and additional data, e.g.:</p>
+      
+       <div style="text-indent:10px;"><i style="color:#999999">&lt;software&gt;</i></div>
+       <div style="text-indent:20px;"><i style="color:#999999">&lt;cat_warnings&gt;</i></div>
+       <div style="text-indent:30px;"><i style="color:#999999">&lt;item&gt;</i></div>
        <div style="text-indent:40px;"><i style="color:#999999">&lt;identifier&gt;</i>cat_run_job:TooLowResolution<i style="color:#999999">&lt;/identifier&gt;</i></div>
        <div style="text-indent:40px;"><i style="color:#999999">&lt;message&gt;</i>Voxel resolution should be better than 5 mm in any dimension for reliable preprocessing! This image has a resolution of 2.00x2.00x2.00 mm³.<i style="color:#999999">&lt;/message&gt;</i></div>
        <div style="text-indent:40px;"><i style="color:#999999">&lt;level&gt;</i>1<i style="color:#999999">&lt;/level&gt;</i></div>
@@ -105,20 +99,20 @@
        <div style="text-indent:10px;"><i style="color:#999999">&lt;software&gt;</i></div>
               
        <p>
-	       You can load XML-files in MATLAB as structure by using the <a class="function" href="matlab:cat_io_xml">cat_io_xml</a> function to access the field <i>software.cat_warnings</i>.
-	     </p>
-	     
-	     
-	     
-	     <h3>List of Warnings</h3> 
-			 <div>	
-					<p class="code" style="width: 90%; color:#FF7700" id="Fig1">
-						<table style="color:#0000FF;">
-							<tr style="vertical-align: top;"><td>WARNING #:</td><td>cat_run_newcatch:newPipeline<br>Run new pipeline with backup function (IN DEVELOPMENT).</td></tr>
-							<tr style="vertical-align: top;"><td>WARNING #:</td><td>cat_run_job:ignoreErrors<br>Run pipeline with backup functions (IN DEVELOPMENT).</td></tr>
-						</table>
-					</p>
-	    </div>
+         You can load XML-files in MATLAB as structure by using the <a class="function" href="matlab:cat_io_xml">cat_io_xml</a> function to access the field <i>software.cat_warnings</i>.
+       </p>
+       
+       
+       
+       <h3>List of Warnings</h3> 
+       <div>  
+          <p class="code" style="width: 90%; color:#FF7700" id="Fig1">
+            <table style="color:#0000FF;">
+              <tr style="vertical-align: top;"><td>WARNING #:</td><td>cat_run_newcatch:newPipeline<br>Run new pipeline with backup function (IN DEVELOPMENT).</td></tr>
+              <tr style="vertical-align: top;"><td>WARNING #:</td><td>cat_run_job:ignoreErrors<br>Run pipeline with backup functions (IN DEVELOPMENT).</td></tr>
+            </table>
+          </p>
+      </div>
     <div id="content"><a href="cat_methods.html">< Methods</a></div>  
     <div id="footer">
       <p>Copyright (C) Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
