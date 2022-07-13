@@ -1,9 +1,9 @@
 % Computational Anatomy Toolbox
-% Version 2020 (CAT12.8.1) 2022-07-11
+% Version 2024 (CAT12.8.1) 2022-07-12
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
-% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
+% Structural Brain Mapping Group (https://neuro-jena.github.io)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
@@ -13,9 +13,9 @@
 % ==========================================================================
 % This toolbox is a collection of extensions to the segmentation algorithm 
 % of SPM12 (Wellcome Department of Cognitive Neurology) to provide computational
-% morphometry. It is developed by Christian Gaser and Robert Dahnke (University
-% of Jena, Departments of Psychiatry and Neurology) and is available to the 
-% scientific community under the terms of the GNU General Public Licence as 
+% morphometry. It is developed by Christian Gaser and Robert Dahnke (Jena
+% University Hospital, Departments of Psychiatry and Neurology) and is available 
+% to the scientific community under the terms of the GNU General Public Licence as 
 % published by the Free Software Foundation; either version 2 of the Licence, 
 % or (at your option) any later version.
 %
