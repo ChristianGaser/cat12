@@ -5,6 +5,7 @@ log2
 Contents.txt
 cat_long_main.txt
 INSTALL.txt
+.gitignore
 
 # ignore zip, pdf, doc*, and nifti
 *.zip
@@ -13,6 +14,7 @@ INSTALL.txt
 *.nii
 *.webloc
 */*.nii
+*.~ 
 
 # but consider nifti in main template folder
 !templates_MNI152NLin2009cAsym/*.nii
@@ -22,3 +24,7 @@ INSTALL.txt
 /templates_animals
 cat12-html/
 check_pipeline/
+/private
+/cattest
+/templates_animals_internal
+
