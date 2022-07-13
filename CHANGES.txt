@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2030 | dahnke | 2022-07-13 13:23:59
+
+Changed paths:
+ M .gitignore
+ M CHANGES.txt
+ M cat_surf_create_TPM_hull_surface.m
+
+
+1) Fixed:     Corrected problem with headbrain mesh recreation. In case of
+              an own TPM the mesh is written into the own TPM directory.
+              ------------------------------------------------------------------------
 r2029 | dahnke | 2022-07-13 12:08:28
 
 Changed paths:
