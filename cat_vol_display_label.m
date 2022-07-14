@@ -18,8 +18,6 @@ function cat_vol_display_label(job)
 %  - use xml colormaps if available (not defiend yet)
 %  - display atlas rois of multiple atlas maps
 %
-
-  SVNid = '$Rev$';
   
   if ~exist('job','var'), job = struct(); end
 
@@ -91,7 +89,7 @@ function cat_vol_display_label(job)
   end
   
   % new banner
-  spm('FnBanner',mfilename,SVNid);
+  spm('FnBanner',mfilename);
   % all files
   if numel(V)>2
     files = sprintf('''%s''',job.data{1});

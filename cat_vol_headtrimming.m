@@ -33,8 +33,6 @@ function varargout = cat_vol_headtrimming(job)
 % * 4D extension & test
 % ______________________________________________________________________
 
-
-  SVNid = '$Rev$';
   
   if nargin == 0
     help cat_vol_headtrimming; 
@@ -173,7 +171,7 @@ function varargout = cat_vol_headtrimming(job)
   
   % be verbose
   if isfield(job,'process_index') && job.process_index && job.verb
-    spm('FnBanner',mfilename,SVNid); 
+    spm('FnBanner',mfilename); 
   end
   spm_clf('Interactive'); 
   spm_progress_bar('Init',numel(job.images{1}),'Head-Trimming','Volumes Complete');

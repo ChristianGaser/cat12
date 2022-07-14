@@ -34,7 +34,7 @@ function out = cat_vol_maskimage(job)
   Po = cell(numel(job.data),1); 
 
   % SPM processbar
-  if isfield(job,'process_index') && job.verb, spm('FnBanner',mfilename,SVNid); end
+  if isfield(job,'process_index') && job.verb, spm('FnBanner',mfilename); end
   spm_clf('Interactive'); 
   spm_progress_bar('Init',numel(job.data),'Image masking','Volumes Complete');
   

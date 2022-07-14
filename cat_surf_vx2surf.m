@@ -45,8 +45,6 @@ function out = cat_surf_vx2surf(job)
 % . test function ?
 % . external evaluation concept ?
   
-  SVNid = '$Rev$';
-
   if ~exist('job','var'); job = struct(); end
 
   def.surf     = {};  % left surfaces 
@@ -103,7 +101,7 @@ function out = cat_surf_vx2surf(job)
   end
 
   % new banner
-  if isfield(job,'process_index') && job.opts.verb, spm('FnBanner',mfilename,SVNid); end
+  if isfield(job,'process_index') && job.opts.verb, spm('FnBanner',mfilename); end
   
   % display something
   spm_clf('Interactive'); 

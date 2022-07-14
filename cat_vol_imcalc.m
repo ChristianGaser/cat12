@@ -98,8 +98,6 @@ function varargout = cat_vol_imcalc(Vi,Vo,f,flags,varargin)
 % ______________________________________________________________________
 % $Id$ 
 
-SVNid = '$Rev$';
-
 %-Parameters & arguments
 %==========================================================================
 if nargin < 3
@@ -131,7 +129,7 @@ if isempty(verb),   verb   = 0; end
 if isempty(dtype),  dtype  = spm_type('int16'); end
 
 if verb
-  spm('FnBanner',mfilename,SVNid);
+  spm('FnBanner',mfilename);
 end
 
 %-Input images

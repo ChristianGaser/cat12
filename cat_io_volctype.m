@@ -25,8 +25,6 @@ function out = cat_io_volctype(varargin)
 % Jena University Hospital
 % ______________________________________________________________________
 % $Id$
-
-  SVNid = '$Rev$';
     
 %% choose images
   
@@ -130,7 +128,7 @@ function out = cat_io_volctype(varargin)
   
   %% convert
   if isfield(job,'process_index') && job.process_index && job.verb
-    spm('FnBanner',mfilename,SVNid); 
+    spm('FnBanner',mfilename); 
   end
   spm_clf('Interactive'); 
   spm_progress_bar('Init',numel(job.data),'SANLM-Filtering','Volumes Complete');

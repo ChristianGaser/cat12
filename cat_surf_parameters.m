@@ -32,8 +32,6 @@ function varargout = cat_surf_parameters(job)
 % Jena University Hospital
 % ______________________________________________________________________
 % $Id$
-
-  SVNid = '$Rev$';
  
   if nargin == 1
     P  = char(job.data_surf);
@@ -98,7 +96,7 @@ function varargout = cat_surf_parameters(job)
 
     
   % new banner
-  if isfield(job,'process_index') && job.verb, spm('FnBanner',mfilename,SVNid); end
+  if isfield(job,'process_index') && job.verb, spm('FnBanner',mfilename); end
   
   % display something
   spm_clf('Interactive'); 
