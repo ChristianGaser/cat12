@@ -1,4 +1,12 @@
 ------------------------------------------------------------------------
+r2032 | gaser | 2022-07-14 22:39:10
+
+Changed paths:
+ M CHANGES.txt
+
+
+Fixed: Corrected capitals in some filenames in html/images.
+------------------------------------------------------------------------
 r2031 | gaser | 2022-07-14 22:03:49
 
 Changed paths:
