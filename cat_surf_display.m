@@ -40,7 +40,6 @@ function varargout = cat_surf_display(varargin)
 % ______________________________________________________________________
 % $Id$
 
-  SVNid = '$Rev$';
   if nargout>0, varargout{1}{1} = []; end   
 
   if nargin>0
@@ -96,7 +95,7 @@ function varargout = cat_surf_display(varargin)
   sinfo = cat_surf_info(job.data,job.readsurf,0,0,job.usefsaverage);
 
   if job.verb
-    spm('FnBanner',mfilename,SVNid); 
+    spm('FnBanner',mfilename); 
   end
   
   for i=1:numel(job.data)

@@ -22,8 +22,6 @@ function varargout = cat_surf_smooth(varargin)
 %   job.lazy .. does not do anything, if the result already exist
 
 %#ok<*ASGLU>
-
-  SVNid = '$Rev$';
   
   if nargin == 1
     Pdata = varargin{1}.data;
@@ -63,7 +61,7 @@ function varargout = cat_surf_smooth(varargin)
   % ____________________________________________________________________
   
   % new banner
-  if isfield(job,'process_index'), spm('FnBanner',mfilename,SVNid); end
+  if isfield(job,'process_index'), spm('FnBanner',mfilename); end
   
   % display something
   spm_clf('Interactive'); 

@@ -157,7 +157,6 @@ end
 
 %_______________________________________________________________________
 function varargout = cat_vol_sanlm_file(job)
-    SVNid = '$Rev$';
     
     if ~isfield(job,'data') || isempty(job.data)
      job.data = cellstr(spm_select([1 Inf],'image','select images to filter'));
@@ -227,7 +226,7 @@ function varargout = cat_vol_sanlm_file(job)
     V  = spm_vol(char(job.data));
 
     % new banner
-    if isfield(job,'process_index') && job.verb, spm('FnBanner',mfilename,SVNid); end
+    if isfield(job,'process_index') && job.verb, spm('FnBanner',mfilename); end
     spm_clf('Interactive'); 
     spm_progress_bar('Init',numel(job.data),'SANLM-Filtering','Volumes Complete');
 

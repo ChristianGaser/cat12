@@ -3,7 +3,6 @@ function varargout = cat_parallelize(job,func,datafield)
 % Function to parallelize other functions with job structure, by the 
 % following call:
 % 
-%   SVNid = '$Rev$';
 % 
 %   ... further initialization code
 %  
@@ -20,7 +19,7 @@ function varargout = cat_parallelize(job,func,datafield)
 %   end 
 %  
 %   % new banner
-%   if isfield(job,'process_index'), spm('FnBanner',mfilename,SVNid); end
+%   if isfield(job,'process_index'), spm('FnBanner',mfilename); end
 %   
 %   % add system dependent extension to CAT folder
 %   if ispc

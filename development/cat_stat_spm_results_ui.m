@@ -239,8 +239,6 @@ function varargout = cat_stat_spm_results_ui(varargin)
 % modified version of
 % spm_results_ui.m 7388 2018-08-06
 
-SVNid = '$Rev$'; 
-
 %-Condition arguments
 %--------------------------------------------------------------------------
 if nargin == 0, Action='Setup'; else Action=varargin{1}; end
@@ -273,7 +271,7 @@ switch lower(Action), case 'setup'                         %-Set up results
  
     %-Initialise
     %----------------------------------------------------------------------
-    spm('FnBanner',mfilename,SVNid);
+    spm('FnBanner',mfilename);
     try
       dcm = datacursormode(spm_figure('FindWin','Graphics')); 
       set(dcm,'Enable','off','UpdateFcn',[]); 

@@ -13,8 +13,6 @@ function out = cat_stat_getCSVXMLfield(job)
 
 
 %#ok<*ASGLU,*AGROW>
-
-  SVNid = '$Rev$';
   
   def.files     = {};   % n-files, e.g. XML for direct extraction or nii/gii as selector
   def.csvfile   = {''}; % 0..1-file ... maybe n later
@@ -48,7 +46,7 @@ function out = cat_stat_getCSVXMLfield(job)
     end
   else
     % new banner
-    if job.verb, spm('FnBanner',mfilename,SVNid); end
+    if job.verb, spm('FnBanner',mfilename); end
   end 
   
   

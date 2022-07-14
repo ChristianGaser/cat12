@@ -23,8 +23,6 @@ function vout = cat_surf_resamp(varargin)
 %   supported that are only available in the developer mode (RD20180408)
 %    > catched by error message
 
-  SVNid = '$Rev$';
-
   
   % Transform input 
   % Due to dependencies the input has to be a cell-array of cellstr in general.
@@ -122,7 +120,7 @@ function vout = cat_surf_resamp(varargin)
   % ____________________________________________________________________
   
   % new banner
-  if isfield(job,'process_index'), spm('FnBanner',mfilename,SVNid); end
+  if isfield(job,'process_index'), spm('FnBanner',mfilename); end
   
   % display something
   spm_clf('Interactive'); 

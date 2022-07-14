@@ -1,4 +1,30 @@
 ------------------------------------------------------------------------
+r2031 | gaser | 2022-07-14 22:03:49
+
+Changed paths:
+ M CHANGES.txt
+ M cat_io_volctype.m
+ M cat_long_createTPM.m
+ M cat_parallelize.m
+ M cat_spm_preproc_run.m
+ M cat_spm_results_ui.m
+ M cat_stat_getCSVXMLfield.m
+ M cat_surf_display.m
+ M cat_surf_parameters.m
+ M cat_surf_resamp.m
+ M cat_surf_smooth.m
+ M cat_surf_vx2surf.m
+ M cat_vol_display_label.m
+ M cat_vol_headtrimming.m
+ M cat_vol_imcalc.m
+ M cat_vol_maskimage.m
+ M cat_vol_sanlm.m
+ M cat_vol_sanlm2.m
+ M development/cat_stat_spm_results_ui.m
+
+
+Removed SVNid and SVNrev from subversion.
+------------------------------------------------------------------------
 r2030 | dahnke | 2022-07-13 13:23:59
 
 Changed paths:
@@ -9,7 +35,8 @@ Changed paths:
 
 1) Fixed:     Corrected problem with headbrain mesh recreation. In case of
               an own TPM the mesh is written into the own TPM directory.
-              ------------------------------------------------------------------------
+              
+------------------------------------------------------------------------
 r2029 | dahnke | 2022-07-13 12:08:28
 
 Changed paths:
@@ -26,7 +53,8 @@ Changed paths:
 3) Fixed:     Use whole rather than natural numbers in cat_conf_tools to
               avoid opening of the input image in the head trimming tool.               
 4) Fixed:     Added checks in cat_run to detect incorrect named own atlases. 
-              ------------------------------------------------------------------------
+
+------------------------------------------------------------------------
 r2024 | gaser | 2022-07-12 22:35:28
 
 Updated website links

@@ -37,8 +37,6 @@ function varargout = cat_spm_preproc_run(job,action)
 % $Id$
 
 
-SVNid = '$Rev$';
-
 if nargin == 1, action = 'run'; end
 if ~isfield(job,'Yclsout'), if nargout==0, job.Yclsout = [0 0 0 0 0 0]; else job.Yclsout = [1 1 1 1 1 1]; end; end %% ADDED RD
 switch lower(action)
