@@ -129,7 +129,7 @@ function out = cat_long_createTPM(job)
   end
   
   
-  if isfield(job,'process_index') && job.verb, spm('FnBanner',mfilename,SVNid); end
+  if isfield(job,'process_index') && job.verb, spm('FnBanner',mfilename); end
   
   % display something
   spm_clf('Interactive'); 
