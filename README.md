@@ -25,7 +25,7 @@ The advantage of the standalone version is that no Matlab license is needed. Onl
 
 The MATLAB Compiler Runtime (MCR) enables you to run applications compiled within MATLAB using MATLAB Compiler. MCR does not require a MATLAB license and can be used to run the MATLAB compiled program on computers which do not have MATLAB installed.
 
-|[CAT12 Standalone for Mac](http://141.35.69.218/cat12/cat12_latest_R2017b_MCR_Mac.zip) |[MCR for Mac](https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/maci64/MCR_R2017b_maci64_installer.dmg.zip)|
 |---|---:|
+|[CAT12 Standalone for Mac](http://141.35.69.218/cat12/cat12_latest_R2017b_MCR_Mac.zip) |[MCR for Mac](https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/maci64/MCR_R2017b_maci64_installer.dmg.zip)|
 [CAT12 Standalone for Linux](http://141.35.69.218/cat12/cat12_latest_R2017b_MCR_Linux.zip) |[MCR for Linux](https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/glnxa64/MCR_R2017b_glnxa64_installer.zip)|
 [CAT12 Standalone for Windows](http://141.35.69.218/cat12/cat12_latest_R2017b_MCR_Win.zip) |[MCR for Windows](https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/win64/MCR_R2017b_win64_installer.exe)|
