@@ -8,7 +8,10 @@ It is developed by Christian Gaser and Robert Dahnke (Jena University Hospital, 
 
 [CAT12 manual](http://141.35.69.218/cat12/CAT12-Manual.pdf)
 
+[Quick Start Guide](https://neuro-jena.github.io/cat12-html/cat_starting.html)
+
 Older version can be obtained [here](http://141.35.69.218/cat12/).
+
 
 ## Requirements
 CAT12 is designed to work with SPM12 and Matlab versions 7.4 (R2007a) or newer. No additional toolboxes are required.
