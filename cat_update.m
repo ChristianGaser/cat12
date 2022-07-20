@@ -173,17 +173,17 @@ if update
     [warnmsg, msgid] = lastwarn;
     switch msgid
       case ''
-          % open version information if difference between release numbers 
-          % is large enough
-          if rnew > r+20
-            web(fullfile(spm('Dir'),'toolbox','cat12','html','cat_versions.html'));
-          end
+        % open version information if difference between release numbers 
+        % is large enough
+        if rnew > r+20
+          web(fullfile(spm('Dir'),'toolbox','cat12','html','cat_versions.html'));
+        end
       case 'MATLAB:extractArchive:unableToCreate'
-          fprintf('          Update failed: check folder permission.\n');
+        fprintf('          Update failed: check folder permission.\n');
       case 'MATLAB:extractArchive:unableToOverwrite'
-          fprintf('          Update failed: check file permissions.\n');
+        fprintf('          Update failed: check file permissions.\n');
       otherwise
-          fprintf('          Update failed: %s.\n',warnmsg);
+        fprintf('          Update failed: %s.\n',warnmsg);
     end      
   end
 end

@@ -7,11 +7,12 @@ NEWVERSION="CAT12.8.1"
 REVISION=`git rev-list --count HEAD`
 DATE=`git log --date short |grep "Date:"|head -1|cut -f2 -d':'|sed -e s'/ //g'`
 
+ZIPFOLDER=/Users/gaser/matlab/cat12
+
 TARGET=/Users/gaser/spm/spm12/toolbox/cat12
 TARGET2=/Volumes/UltraMax/spm12/toolbox/cat12
 
-PRECOMPILED=/Users/gaser/install/Matlab/Matlab_R2017b
-CAT12=/Users/gaser/matlab/cat12
+PRECOMPILED=/Users/gaser/matlab/Matlab_R2017b
 
 STARGET_HOST=141.35.69.218
 STARGET_HTDOCS=${STARGET_HOST}:/volume1/web/
@@ -24,11 +25,11 @@ STARGET3=${STARGET3_HOST}:${STARGET3_FOLDER}
 
 MATLAB_FILES=Contents.* cat_*.m spm_cat12.m tbx_cfg_cat.m sliderPanel.m slice_overlay.m cat_run* compile.m
 C_FILES=Amap.[ch] ornlm_float.c sanlm_float.c MrfPrior.c Pve.c Kmeans.c cat_*.c* cat_*.mex* vollib.c genus0.[ch] tricases.h spm_diffeo_old.mex*
-MISC_FILES=CAT12-Manual.pdf CHANGES.txt INSTALL.txt standalone templates_MNI152NLin2009cAsym html templates_surfaces templates_surfaces_32k atlases_surfaces atlases_surfaces_32k cat12.* CAT.* distribute_to_server.sh cat_*.sh  cat_long_main*txt
+MISC_FILES=CAT12-Manual.pdf README.md CHANGES.txt INSTALL.txt standalone templates_MNI152NLin2009cAsym html templates_surfaces templates_surfaces_32k atlases_surfaces atlases_surfaces_32k cat12.* CAT.* distribute_to_server.sh cat_*.sh  cat_long_main*txt
 
 FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
 
-ZIPFILE=/Users/gaser/matlab/cat12/cat12_r${REVISION}.zip
+ZIPFILE=cat12_r${REVISION}.zip
 
 # remove .DS_Store files and correct file permissions
 clean:
@@ -64,7 +65,7 @@ install3: copy_longmode
 # print available commands
 help:
 	-@echo Available commands:
-	-@echo clean install zip scp scp_manual scp_precompile doc update cp_binaries archive check_pipeline checklist precompile
+	-@echo clean install zip scp scp_manual scp_precompile scp_standalone doc update cp_binaries archive check_pipeline checklist precompile standalone
 
 #make html documentation
 doc:
@@ -96,12 +97,12 @@ zip: update clean
 	-@mkdir cat12
 	-@cp -rp ${FILES} cat12
 	-@bash update_revision.sh
-	-@zip ${ZIPFILE} -rm cat12
+	-@zip ${ZIPFOLDER}/${ZIPFILE} -rm cat12
 
 # scp release
 scp: doc zip
 	-@echo scp to http://${STARGET_HOST}/cat12/${ZIPFILE}
-	-@scp -P ${PORT} CHANGES.txt CAT12-Manual.pdf ${ZIPFILE} ${STARGET}
+	-@scp -P ${PORT} CHANGES.txt CAT12-Manual.pdf ${ZIPFOLDER}/${ZIPFILE} ${STARGET}
 	-@scp -r -P ${PORT} ../cat12-html ${STARGET_HTDOCS}/
 	-@bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${ZIPFILE} ${STARGET_FOLDER}/cat12_latest.zip"
 
@@ -122,12 +123,17 @@ scp_precompile:
 	   ln -s ${PRECOMPILED}/MCR_$${i}/*spm12* ${PRECOMPILED}/MCR_$${i}/readme.txt ${PRECOMPILED}/MCR_$${i}/MCR_v93.webloc ${NEWVERSION}_r${REVISION}_R2017b_MCR_$${i}/ ;\
 	   cp -r standalone ${NEWVERSION}_r${REVISION}_R2017b_MCR_$${i}/ ;\
 	   cp -r standalone ${PRECOMPILED}/MCR_$${i}/ ;\
-	   zip ${NEWVERSION}_r${REVISION}_R2017b_MCR_$${i}.zip -r ${NEWVERSION}_r${REVISION}_R2017b_MCR_$${i} ; \
-	   scp -P ${PORT} ${NEWVERSION}_r${REVISION}_R2017b_MCR_$${i}.zip  ${STARGET}; \
+	   zip ${ZIPFOLDER}/${NEWVERSION}_r${REVISION}_R2017b_MCR_$${i}.zip -r ${NEWVERSION}_r${REVISION}_R2017b_MCR_$${i} ; \
+	   scp -P ${PORT} ${ZIPFOLDER}/${NEWVERSION}_r${REVISION}_R2017b_MCR_$${i}.zip  ${STARGET}; \
 	   bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${NEWVERSION}_r${REVISION}_R2017b_MCR_$${i}.zip ${STARGET_FOLDER}/cat12_latest_R2017b_MCR_$${i}.zip"; \
 	done
 	-@rm -r ${NEWVERSION}_r${REVISION}_R2017b_MCR*
+	-@echo Please keep in mind to change ../enigma-cat12/index.html
+	-@see ../enigma-cat12/index.html
+	
 
+# scp deployed versions
+scp_standalone: scp_precompile
 
 # copy binaries after cross-compiling
 cp_binaries: 
@@ -167,7 +173,7 @@ checklist:
 	-@echo    SPM->Tools->CAT12->CAT12 Simple Preprocessing
 	-@echo    
 	-@echo 6. Check Precompiled Versions
-	-@echo    /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Mac/standalone/cat_standalone.sh 
+	-@echo    ${PRECOMPILED}/MCR_Mac/standalone/cat_standalone.sh 
 	-@echo    
 	-@echo 7. Check Skull-Stripping
 	-@echo    cat12_all.m in /Volumes/UltraMax/validate_skullstripping_withT12
@@ -190,11 +196,14 @@ precompile:
 	-@echo    spm fmri
 	-@echo    cd spm12/config
 	-@echo    spm_make_standalone
-#	-@echo    "Ubuntu 19.10 (run spm12_R2017b on paris to compile) : mv /Users/gaser/spm/standalone/spm12.ctf /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Linux/"
-	-@echo    "Ubuntu 17.10 (run spm12_R2017b on MacBook to compile) : mv /Users/gaser/spm/standalone/spm12.ctf /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Linux/"
-	-@echo    "Windows 10: mv /Users/gaser/spm/standalone/spm12.[ce][tx][fe] /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Win/"
-	-@echo    "Mac OS (run spm12_R2017b): rm -rf /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Mac/spm12.app; mv /Users/gaser/spm/standalone/spm12.app /Users/gaser/install/Matlab/Matlab_R2017b/MCR_Mac/"
+#	-@echo    "Ubuntu 19.10 (run spm12_R2017b on paris to compile) : mv /Users/gaser/spm/standalone/spm12.ctf ${PRECOMPILED}/MCR_Linux/"
+	-@echo    "Ubuntu 17.10 (run spm12_R2017b on MacBook to compile) : mv /Users/gaser/spm/standalone/spm12.ctf ${PRECOMPILED}/MCR_Linux/"
+	-@echo    "Windows 10: mv /Users/gaser/spm/standalone/spm12.[ce][tx][fe] ${PRECOMPILED}/MCR_Win/"
+	-@echo    "Mac OS (run spm12_R2017b): rm -rf ${PRECOMPILED}/MCR_Mac/spm12.app; mv /Users/gaser/spm/standalone/spm12.app ${PRECOMPILED}/MCR_Mac/"
 	-@echo    
+
+# print help for standalone
+standalone: precompile
 
 # rescue from archives
 archive:
