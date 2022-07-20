@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2044 | gaser | 2022-07-20 12:24:32
+
+Changed paths:
+ M .gitattributes
+ M CHANGES.txt
+ M Contents.m
+ M Makefile
+ M html/cat.html
+
+
+Added 1mm Geodesic Shooting templates.------------------------------------------------------------------------
 r2043 | gaser | 2022-07-20 11:49:22
 
 Changed paths:
