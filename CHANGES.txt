@@ -1,4 +1,18 @@
 ------------------------------------------------------------------------
+r2046 | gaser | 2022-07-20 12:29:36
+
+Changed paths:
+ M .gitattributes
+ M .gitignore
+ M CHANGES.txt
+A  templates_MNI152NLin2009cAsym_1mm/Template_0_GS1mm.nii
+A  templates_MNI152NLin2009cAsym_1mm/Template_1_GS1mm.nii
+A  templates_MNI152NLin2009cAsym_1mm/Template_2_GS1mm.nii
+A  templates_MNI152NLin2009cAsym_1mm/Template_3_GS1mm.nii
+A  templates_MNI152NLin2009cAsym_1mm/Template_4_GS1mm.nii
+
+
+Added 1mm Geodesic Shooting templates.------------------------------------------------------------------------
 r2044 | gaser | 2022-07-20 12:24:32
 
 Changed paths:
