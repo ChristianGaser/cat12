@@ -103,14 +103,12 @@ zip: update clean
 scp: doc zip
 	-@echo scp to http://${STARGET_HOST}/cat12/${ZIPFILE}
 	-@scp -P ${PORT} CHANGES.txt CAT12-Manual.pdf ${ZIPFOLDER}/${ZIPFILE} ${STARGET}
-	-@scp -r -P ${PORT} ../cat12-html ${STARGET_HTDOCS}/
 	-@bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${ZIPFILE} ${STARGET_FOLDER}/cat12_latest.zip"
 
 # scp manual
 scp_manual:
 	-@echo scp CAT12-Manual.pdf to http://${STARGET}
 	-@scp -P ${PORT} CAT12-Manual.pdf ${STARGET}
-	-@scp -r -P ${PORT} ../cat12-html ${STARGET_HTDOCS}/
 
 # scp deployed versions
 scp_precompile:
