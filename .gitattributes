@@ -145,4 +145,4 @@ templates_MNI152NLin2009cAsym/Template_T1.nii filter=lfs diff=lfs merge=lfs -tex
 templates_MNI152NLin2009cAsym/cat_wmh.nii filter=lfs diff=lfs merge=lfs -text
 CAT12-Manual.pdf filter=lfs diff=lfs merge=lfs -text
 VBM12-Manual_Japanese.pdf filter=lfs diff=lfs merge=lfs -text
-Template_GS1mm/* filter=lfs diff=lfs merge=lfs -text
+templates_MNI152NLin2009cAsym_1mm/* filter=lfs diff=lfs merge=lfs -text
