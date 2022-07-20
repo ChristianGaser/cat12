@@ -1,4 +1,31 @@
 ------------------------------------------------------------------------
+r2043 | gaser | 2022-07-20 11:49:22
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M Makefile
+ M cat_update.m
+ M html/cat.html
+ M spm_cat12.m
+ M update_revision.sh
+
+
+1. Updated Makefile to consider new file structure
+2. Fixed two issues in spm_cat12.m for open interactive help for newer Matlab
+   versions and for dealing with mac permissions.
+3. Some minor edits to cat_update.m and update_revision.sh------------------------------------------------------------------------
+r2041 | gaser | 2022-07-19 12:05:50
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M Makefile
+ M html/cat.html
+
+
+Updated Makefile
+------------------------------------------------------------------------
 r2037 | gaser | 2022-07-18 17:35:47
 
 Changed paths:

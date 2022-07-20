@@ -40,7 +40,7 @@ try
   feval(@cat_sanlm,single(rand(6,6,6)),1,3);
 catch
   if ismac 
-    CATDir = fullfile(spm('dir'),'toolbox','cat12','CAT');
+    CATDir = fullfile(spm('dir'),'toolbox','cat12');
     web('https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)#Troubleshooting');
     cat_io_cmd(sprintf('\nThe following commands will be executed as administrator to allow execution of CAT12 binaries and mex-files.\n Please now type admin password to call sudo\n'),'warning');
     cat_io_cmd(sprintf('You can also break that command here and run the commands that are listed on the open website under Troubleshooting manually.\n'),'warning');
@@ -261,6 +261,11 @@ spm('FnBanner',mfilename,cat_version);
 [Finter,Fgraph] = spm('FnUIsetup','CAT12.8.1');
 url = fullfile(spm('Dir'),'toolbox','cat12','html','cat.html');
 spm_help('!Disp',url,'',Fgraph,'Computational Anatomy Toolbox for SPM12');
+
+% open interactive help for newer version because display of html pages does not work anymore
+if cat_io_matlabversion > 20212
+  web(fullfile(spm('dir'),'toolbox','cat12','html','cat.html'));
+end
 
 % check that binaries for surface tools are running 
 cat_system('CAT_3dVol2Surf');
