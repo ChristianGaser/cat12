@@ -19,6 +19,7 @@ INSTALL.txt
 
 # but consider nifti in main template folder
 !templates_MNI152NLin2009cAsym/*.nii
+!templates_MNI152NLin2009cAsym_1mm/*.nii
 
 # exclude some folders
 /data
