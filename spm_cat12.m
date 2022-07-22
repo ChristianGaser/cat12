@@ -291,5 +291,3 @@ cat_io_cprintf([0.0 0.0 0.5],' CAT default file:\n\t%s\n\n',deffile);
 % call GUI
 cat12('fig'); 
 
-
-

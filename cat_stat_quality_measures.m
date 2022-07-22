@@ -48,6 +48,7 @@ if ~exist(report_folder,'dir')
   subfolder = 0;
 end
 
+isxml = 0;
 % search xml report files
 xml_files = spm_select('List',report_folder,'^cat_.*\.xml$');
 if ~isempty(xml_files)
@@ -77,7 +78,6 @@ if ~isempty(xml_files)
   end
 end
 
-isxml = 0
 % check for global scaling with TIV
 if job.globals
   if mesh_detected
