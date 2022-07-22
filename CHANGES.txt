@@ -1,4 +1,18 @@
 ------------------------------------------------------------------------
+r2048 | gaser | 2022-07-22 18:09:55
+
+Changed paths:
+ M .gitignore
+ M CHANGES.txt
+ M cat_stat_check_cov.m
+ M cat_stat_quality_measures.m
+ M cat_update.m
+ M spm_cat12.m
+
+
+Fixed:   Initializiation of isxml parameter in cat_stat_quality_measures.m.
+Changed: Added zoom options and changed layout in cat_stat_check_cov.m.
+Changed: Removed eval call from cat_update.m.------------------------------------------------------------------------
 r2046 | gaser | 2022-07-20 12:29:36
 
 Changed paths:

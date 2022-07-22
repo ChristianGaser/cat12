@@ -17,7 +17,7 @@ INSTALL.txt
 *.m~
 *.~ 
 
-# but consider nifti in main template folder
+# but consider nifti in template folders
 !templates_MNI152NLin2009cAsym/*.nii
 !templates_MNI152NLin2009cAsym_1mm/*.nii
 !templates_external/*.nii

@@ -155,10 +155,10 @@ if update
       m = sprintf('         Success: %d files have been updated.\n',numel(s));
       if ~nargout, fprintf(m); else varargout = {sts, [msg m]}; end
       addpath(d0);
-      rehash
+      rehash;
       rehash toolboxcache;
       if exist('toolbox_path_cache','file'), toolbox_path_cache; end
-      eval(['spm fmri;clear cat_version;spm_cat12']);
+      spm fmri; clear cat_version; spm_cat12
       warning on
     catch
       le = lasterror;
