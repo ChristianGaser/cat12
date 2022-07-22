@@ -348,20 +348,33 @@ end
 ws = spm('Winsize','Graphics');
 H.FS = cat_get_defaults('extopts.fontsize');
 
+popb = [0.038 0.035];  % size of the small buttons
+popm = 0.780;          % x-position of the control elements
+
 H.pos = struct(...
     'fig',    [10  10  1.3*ws(3) 1.1*ws(3)],... % figure
     'cbar',   [0.045 0.050 0.700 0.020],... % colorbar for correlation matrix
     'corr',   [-0.02 0.100 0.825 0.825],... % correlation matrix
     'scat',   [0.050 0.050 0.700 0.825],... % scatter plot
-    'close',  [0.775 0.925 0.200 0.050],... % close button
-    'show',   [0.775 0.875 0.200 0.050],... % button to show worst cases
-    'boxp',   [0.775 0.820 0.200 0.050],... % button to display boxplot
-    'sort',   [0.775 0.775 0.200 0.050],... % button to enable ordered matrix
+    ...
+    'close',  [0.775 0.935 0.100 0.040],... % close button
+    'show',   [0.875 0.935 0.100 0.040],... % button to show worst cases
+    'boxp',   [0.772 0.880 0.110 0.050],... % button to display boxplot
+    'sort',   [0.872 0.880 0.110 0.050],... % button to enable ordered matrix
+    ...
     'fnambox',[0.775 0.735 0.200 0.050],... % show filenames?
     'text',   [0.775 0.600 0.200 0.150],... % textbox
     'aslider',[0.775 0.555 0.200 0.040],... % slider for alpha overlay
     'slice',  [0.775 0.050 0.200 0.400],... % two single images according to position of mouse pointer
     'sslider',[0.775 0.010 0.200 0.040],... % slider for z-slice   
+    ...
+    ... == navigation unit ==
+    'scSelect',       [popm+popb(1)*0 0.835 popb],... % select (default) 
+    'scZoomReset',    [popm+popb(1)*1 0.835 popb],... % standard zoom
+    'scZoomIn',       [popm+popb(1)*2 0.835 popb],... % zoom in 
+    'scZoomOut',      [popm+popb(1)*3 0.835 popb],... % zoom out
+    'scPan',          [popm+popb(1)*4 0.835 popb],... % pan (moving hand)
+    ...
     'plotbox',[0.875 0.735 0.200 0.050]);   % switch between boxplot and violin plot 
 
 if H.mesh_detected
@@ -609,7 +622,7 @@ if job.verb
 
   % check button
   H.show = uicontrol(H.figure,...
-          'String','Check most deviating data','Units','normalized',...
+          'String','Check worst','Units','normalized',...
           'Position',H.pos.show,...
           'Style','Pushbutton','HorizontalAlignment','center',...
           'Callback',@check_worst_data,...
@@ -623,7 +636,7 @@ if job.verb
     H.X = [H.mean_cov, QM(:,3)];
     H.IQRratio = (H.X(:,2)/std(H.X(:,2)))./(H.X(:,1)/std(H.X(:,1)));
 
-    str  = { 'Boxplot...','Mean correlation',QM_names,'Norm. Ratio IQR/Mean Correlation'};
+    str  = { 'Boxplot','Mean correlation',QM_names,'Norm. Ratio IQR/Mean Correlation'};
 
     if size(QM,2) == 5
       tmp  = { {@show_boxplot, H.mean_cov, 'Mean correlation  ', 1},...
@@ -642,7 +655,7 @@ if job.verb
     end
 
   else
-    str  = { 'Boxplot...','Mean correlation'};
+    str  = { 'Boxplot','Mean correlation'};
     tmp  = { {@show_boxplot, H.mean_cov, 'Mean correlation  ', 1} };
   end
 
@@ -655,12 +668,12 @@ if job.verb
           'Interruptible','on','Visible','on');
 
   if H.isxml
-    str  = { 'Image...','Mean Correlation: Order by selected filenames','Mean Correlation: Sorted by mean correlation','Norm. Ratio IQR/Mean Correlation'};
+    str  = { 'Image','Mean Correlation: Order by selected filenames','Mean Correlation: Sorted by mean correlation','Norm. Ratio IQR/Mean Correlation'};
     tmp  = { {@show_matrix, H.YpY, 0},...
              {@show_matrix, H.YpYsorted, 1},...
              {@show_IQRratio, H.X} };
   else
-    str  = { 'Correlation matrix...','Order by selected filename','Sorted by mean correlation'};
+    str  = { 'Image','Order by selected filename','Sorted by mean correlation'};
     tmp  = { {@show_matrix, H.YpY, 0},...
              {@show_matrix, H.YpYsorted, 1} };
   end
@@ -680,6 +693,55 @@ if job.verb
           'ToolTipString','Select slice for display',...
           'FontSize',H.FS-2);
 
+  %% == zoom unit ==
+  H.naviuitext = uicontrol(H.figure,...
+    'Units','normalized','Style','text',...
+    'Position',[H.pos.scSelect(1) H.pos.scSelect(2)+0.035 0.2 0.02],...
+    'String','Zoom options','FontSize',H.FS,'BackgroundColor',[0.8 0.8 0.8]);
+  
+  % load icon and scale it to double 0..1 and set background to 0.94 to hide it
+  icon = imread(fullfile(matlabroot,'toolbox','matlab','icons','tool_data_cursor.png')); 
+  icon = double(icon)./double(max(icon(:))); icon(icon==0) = 0.94; 
+  H.naviui.select = uicontrol(H.figure,...
+    'Units','normalized','position',H.pos.scSelect,'callback','datacursormode(''on'')',...
+    'Style','Pushbutton','enable','on','ToolTipString','Data selection','CData',icon);
+
+  % load icon and scale it to double 0..1 and set background to 0.94 to hide it
+  icon = imread(fullfile(spm('dir'),'toolbox','cat12','html','icons','tool_fit.png')); 
+  icon = double(icon)./double(max(icon(:))); icon(icon==0) = 0.94; 
+  H.naviui.zoomReset = uicontrol(H.figure,...
+    'Units','normalized','position',H.pos.scZoomReset,...
+    'callback','zoom out; datacursormode(''on'')',...
+    'Style','Pushbutton','enable','on','ToolTipString','Reset view','CData',icon); 
+
+  % load icon and scale it to double 0..1 and set background to 0.94 to hide it
+  icon = imread(fullfile(matlabroot,'toolbox','matlab','icons','tool_zoom_in.png')); 
+  icon = double(icon)./double(max(icon(:))); icon(icon==0) = 0.94; 
+  H.naviui.zoomIn = uicontrol(H.figure,...
+    'Units','normalized','position',H.pos.scZoomIn,'callback',...
+    ['global H; ' ...
+     'hz = zoom(H.ax); ' ...
+     'set(hz,''enable'',''on'',''direction'',''in'')'], ... 
+    'Style','Pushbutton','enable','on','ToolTipString','Zoom in','CData',icon);
+
+  % load icon and scale it to double 0..1 and set background to 0.94 to hide it
+  icon = imread(fullfile(matlabroot,'toolbox','matlab','icons','tool_zoom_out.png')); 
+  icon = double(icon)./double(max(icon(:))); icon(icon==0) = 0.94; 
+  H.naviui.zoomOut = uicontrol(H.figure,...
+    'Units','normalized','position',H.pos.scZoomOut,'callback',...
+    ['global H; ' ...
+     'hz = zoom(H.ax); ' ...
+     'set(hz,''enable'',''on'',''direction'',''out'')'], ...
+    'Style','Pushbutton','enable','on','ToolTipString','Zoom out','CData',icon);
+
+  % load icon and scale it to double 0..1 and set background to 0.94 to hide it
+  icon = imread(fullfile(matlabroot,'toolbox','matlab','icons','tool_hand.png')); 
+  icon = double(icon)./double(max(icon(:))); icon(icon==0) = 0.94; 
+  H.naviui.pan = uicontrol(H.figure,...
+    'Units','normalized','position',H.pos.scPan,'Enable','off','callback','pan on',...
+    'Style','Pushbutton','enable','on','ToolTipString','Hand','CData',icon);
+
+        
   % add slider and opacity control only for volume data
   if ~H.mesh_detected
     H.alpha = uicontrol(H.figure,...
@@ -848,7 +910,7 @@ scatter(X(:,1),X(:,2),30,C,'o','Linewidth',2);
 
 xlabel('<----- Worst ---      Mean correlation      --- Best ------>  ','FontSize',H.FS-1,'FontWeight','Bold');
 ylabel('<----- Best ---      Weighted overall image quality (IQR)      --- Worst ------>  ','FontSize',H.FS-1,'FontWeight','Bold');
-title('<--- Smallest -- Norm. Ratio IQR/Mean Correlation -- Largest ---->  ','FontSize',H.FS+1,'FontWeight','Bold');
+title('<--- Best -- Norm. Ratio IQR/Mean Correlation -- Worst ---->  ','FontSize',H.FS+1,'FontWeight','Bold');
 
 % add colorbar
 H.cbar = axes('Position',H.pos.cbar+[0 0.9 0 0],'Parent',H.figure);
@@ -942,14 +1004,6 @@ for i=1:n_samples
   else
     xpos{i} = 0.5/length(ind) + 0.5+(i-1)+1*(0:length(ind)-1)/(length(ind));
   end
-
-  for j=1:length(ind)
-    if H.show_name
-      text(xpos{i}(j),data{i}(j),H.filename.m{ind(j)},'FontSize',H.FS-2,'HorizontalAlignment','center')
-    else
-      plot(xpos{i}(j),data{i}(j),'k.');
-    end
-  end
 end
 
 H.fnambox = uicontrol(H.figure,...
@@ -981,6 +1035,19 @@ opt = struct('groupnum',0,'ygrid',0,'violin',2*H.show_violin,'median',2,'groupco
 ylim_add = 0.075;
 
 cat_plot_boxplot(data,opt);
+
+hold on
+for i=1:n_samples
+  ind = find(H.sample == i);
+
+  for j=1:length(ind)
+    if H.show_name
+      text(xpos{i}(j),data{i}(j),H.filename.m{ind(j)},'FontSize',H.FS-2,'HorizontalAlignment','center')
+    else
+      plot(xpos{i}(j),data{i}(j),'k.');
+    end
+  end
+end
 
 set(gca,'XTick',[],'XLim',[-.25 n_samples+1.25]);
 
