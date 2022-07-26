@@ -1,4 +1,22 @@
 ------------------------------------------------------------------------
+r2049 | gaser | 2022-07-26 18:14:06
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_stools.m
+ M cat_conf_tools.m
+MM cat_stat_check_cov2.m
+ M cat_surf_render.m
+ M html/icons/tool_fit.png
+R  cat_io_findjobj.m -> internal/cat_io_findjobj.m
+A  internal/cat_stat_check_cov2.m
+
+
+Changed: Moved old cat_stat_check_cov2.m version to internal folder.
+Changed: Created new cat_stat_check_cov2.m that is based on mean z-score
+         instead of mean correlation, which is much faster for larger samples.
+Changed: Prepared cat_conf*.m for new cat_stat_check_cov2.m function.
+Changed: Added and updated icons for cat_stat_check_cov2.m.------------------------------------------------------------------------
 r2048 | gaser | 2022-07-22 18:09:55
 
 Changed paths:
