@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2050 | gaser | 2022-07-26 18:14:47
+
+Changed paths:
+ M CHANGES.txt
+A  html/icons/greenarrowicon.png
+A  html/icons/list_del.png
+A  html/icons/list_new.png
+A  html/icons/tool_pointer.png
+
+
+Changed: Added icons for cat_stat_check_cov2.m.------------------------------------------------------------------------
 r2049 | gaser | 2022-07-26 18:14:06
 
 Changed paths:
