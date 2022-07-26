@@ -2916,12 +2916,26 @@ function [check_cov, check_cov2] = conf_check_cov(data_xml,outdir,fname,save,exp
     'If you have loaded quality measures, you can also display the ratio between weighted overall image quality (IQR) and mean correlation. These two are the most important measures for assessing data quality.'
   };
 
+  data          = data_vol;
+  data.tag      = 'data';
+  sample.values = {data};
+  
+  globals        = cfg_menu;
+  globals.tag    = 'globals';
+  globals.name   = 'Global scaling with TIV';
+  globals.labels = {'Yes', 'No'};
+  globals.values = {1 0};
+  globals.val    = {0};
+  globals.help    = {
+    'This option is to correct mean z-scores for TIV by global scaling. It is only meaningful for VBM data.'
+    ''
+  };
 
   % --- main ---
   check_cov2        = check_cov; 
+  check_cov2.val    = {sample,data_xml,globals,nuisance};
   check_cov2.tag    = 'check_cov2';
-  check_cov2.name   = 'Check sample homogeneity of 3D data (new exp. version)';
-  check_cov2.val    = {sample,gap,nuisance};
+  check_cov2.name   = 'Check sample homogeity (new exp. version)';
   check_cov2.prog   = @cat_stat_check_cov2;
 
 %_______________________________________________________________________

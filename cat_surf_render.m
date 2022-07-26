@@ -748,11 +748,11 @@ switch lower(action)
         H = getHandles(varargin{1});
         if nargin < 3, varargin{2} = []; end
         updateTexture(H,varargin{2:end});
-        
-        tr1 = findobj(get(findobj('Label','Transparency'),'children'),'checked','on'); 
-        tr2 = findobj(get(findobj('Label','Transparency'),'children'),'checked','on','Label','TextureTransparency');
-        myTransparency([],[],H,get(setdiff(tr1,tr2) ,'Label'));
-        
+        try
+          tr1 = findobj(get(findobj('Label','Transparency'),'children'),'checked','on'); 
+          tr2 = findobj(get(findobj('Label','Transparency'),'children'),'checked','on','Label','TextureTransparency');
+          myTransparency([],[],H,get(setdiff(tr1,tr2) ,'Label'));
+        end
         
     %-Slices
     %======================================================================
