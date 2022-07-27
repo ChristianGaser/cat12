@@ -479,7 +479,8 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
               [pp,ff,ee] = spm_fileparts(jobs(i).data{max(1,catSID(i))}); 
 
               [mrifolder, reportfolder] = cat_io_subfolders(jobs(i).data{max(1,catSID(i))},job);
-              catlog = fullfile(pp,reportfolder,['catlog_' ff '.txt']); 
+              % sometimes we have to remove .nii from filename if files were zipped
+              catlog = fullfile(pp,reportfolder,['catlog_' strrep(ff,'.nii','') '.txt']); 
 
               
               switch caterr

@@ -49,12 +49,10 @@ function cat_run_job1639(job,tpm,subj)
     folders = {mrifolder,reportfolder};
     warning('off', 'MATLAB:MKDIR:DirectoryExists');
     for i=1:numel(folders)
-      if ~exist(fullfile(pth,folders{i}),'dir')
-        [stat, msg] = mkdir(fullfile(pth,folders{i}));
-        if ~stat
-          fprintf('%s: Error while creating directory %s\n\n\n',msg,fullfile(pth,folders{i}));
-          return
-        end
+      [stat, msg] = mkdir(fullfile(pth,folders{i}));
+      if ~stat
+        fprintf('%s: Error while creating directory %s\n\n\n',msg,fullfile(pth,folders{i}));
+        return
       end
     end
   
@@ -78,7 +76,8 @@ function cat_run_job1639(job,tpm,subj)
   
   % create subject-wise diary file with the command-line output
   [pp,ff,ee,ex] = spm_fileparts(job.data{subj});  %#ok<ASGLU>
-  catlog = fullfile(pth,reportfolder,['catlog_' ff '.txt']);
+  % sometimes we have to remove .nii from filename if files were zipped
+  catlog = fullfile(pth,reportfolder,['catlog_' strrep(ff,'.nii','') '.txt']);
   if exist(catlog,'file'), delete(catlog); end % write every time a new file, turn this off to have an additional log file
   
   % check if not another diary is already written that is not the default- or catlog-file. 
