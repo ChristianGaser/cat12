@@ -146,11 +146,23 @@ function tools = cat_conf_tools(expert)
     'Be more or less verbose. '
     ''
     };
+  
+  globals        = cfg_menu;
+  globals.tag    = 'globals';
+  globals.name   = 'Global scaling with TIV';
+  globals.labels = {'Yes', 'No'};
+  globals.values = {1 0};
+  globals.val    = {0};
+  globals.help    = {
+    'This option is to correct mean z-scores for TIV by global scaling. It is only meaningful for VBM data.'
+    ''
+  };
+
 % get subbatches
 % -------------------------------------------------------------------------
   [T2x,T2x_surf,F2x,F2x_surf] = conf_T2x;
-  [check_cov, check_cov2]     = conf_check_cov(data_xml,outdir,fname,save,expert);
-  quality_measures            = conf_quality_measures;
+  [check_cov, check_cov2]     = conf_check_cov(data_xml,outdir,fname,save,globals,expert);
+  quality_measures            = conf_quality_measures(globals);
   [defs,defs2]                = conf_vol_defs;
   nonlin_coreg                = cat_conf_nonlin_coreg;
   createTPM                   = conf_createTPM(data_vol,expert,suffix,outdir); 
@@ -2798,7 +2810,7 @@ function showslice = conf_stat_showslice_all(data_vol)
   showslice.help  = {'This function displays a selected slice for all images and indicates the respective filenames which is useful to check image quality for a large number of files in a circumscribed region (slice).'};
 
 %_______________________________________________________________________
-function quality_measures = conf_quality_measures
+function quality_measures = conf_quality_measures(globals)
   
   data          = cfg_files;
   data.name     = 'Sample data';
@@ -2806,17 +2818,6 @@ function quality_measures = conf_quality_measures
   data.filter   = {'image','mesh'};
   data.num      = [1 Inf];
   data.help     = {'These are the (spatially registered or resampled) data. They must all have the same data dimension, orientation, voxel or mesh size etc. Furthermore, it is recommended to use unsmoothed files.'};
-
-  globals        = cfg_menu;
-  globals.tag    = 'globals';
-  globals.name   = 'Global scaling with TIV';
-  globals.labels = {'Yes', 'No'};
-  globals.values = {1 0};
-  globals.val    = {0};
-  globals.help    = {
-    'This option is to correct mean z-scores for TIV by global scaling. It is only meaningful for VBM data.'
-    ''
-  };
 
   csv_name         = cfg_entry;
   csv_name.tag     = 'csv_name';
@@ -2851,7 +2852,7 @@ function quality_measures = conf_quality_measures
   };
 
 %_______________________________________________________________________
-function [check_cov, check_cov2] = conf_check_cov(data_xml,outdir,fname,save,expert) 
+function [check_cov, check_cov2] = conf_check_cov(data_xml,outdir,fname,save,globals,expert) 
  
   % --- update input data ---
   data_xml.name     = 'Quality measures (leave emtpy for autom. search)';
@@ -2920,22 +2921,33 @@ function [check_cov, check_cov2] = conf_check_cov(data_xml,outdir,fname,save,exp
   data.tag      = 'data';
   sample.values = {data};
   
-  globals        = cfg_menu;
-  globals.tag    = 'globals';
-  globals.name   = 'Global scaling with TIV';
-  globals.labels = {'Yes', 'No'};
-  globals.values = {1 0};
-  globals.val    = {0};
-  globals.help    = {
-    'This option is to correct mean z-scores for TIV by global scaling. It is only meaningful for VBM data.'
-    ''
-  };
+  data_xml.name     = 'Select quality measures (leave emtpy for autom. search)';
 
+  xmldir            = cfg_files;
+  xmldir.tag        = 'select_dir';
+  xmldir.filter     = 'dir';
+  xmldir.ufilter    = '.*';
+  xmldir.num        = [0 1];
+  xmldir.name       = 'Select report folder';
+  xmldir.val{1}     = {''};
+  xmldir.help       = {'Select the folder where xml-files are located. This is usally the report folder.'};
+
+  sel_xml           = cfg_choice;
+  sel_xml.name      = 'Method to find quality measures';
+  sel_xml.tag       = 'sel_xml';
+  sel_xml.values    = {xmldir data_xml};
+  sel_xml.val       = {data_xml};
+  sel_xml.help      = {
+    'Choose between two methods to find xml-files with quality measures:'
+    '(1) Selecting the xml-files manually or leave emtpy for automatically search in the standard report folder.'
+    '(2) Selecting the report folder for automatically search for these xml-files.'
+    };
+  
   % --- main ---
   check_cov2        = check_cov; 
-  check_cov2.val    = {sample,data_xml,globals,nuisance};
+  check_cov2.val    = {sample,sel_xml,globals,nuisance};
   check_cov2.tag    = 'check_cov2';
-  check_cov2.name   = 'Check sample homogeity (new exp. version)';
+  check_cov2.name   = 'Check sample homogeneity (new exp. version)';
   check_cov2.prog   = @cat_stat_check_cov2;
 
 %_______________________________________________________________________
@@ -2953,7 +2965,7 @@ function check_SPM = conf_stat_check_SPM(outdir,fname,save,expert)
   spmmat.num                  = [1 1];
   spmmat.help                 = {'Select the SPM.mat file that contains the design specification.'};
 
-  % check_SPM_cov
+  % check_SPM_zscore
   use_unsmoothed_data         = cfg_menu;
   use_unsmoothed_data.name    = 'Use unsmoothed data if found';
   use_unsmoothed_data.tag     = 'use_unsmoothed_data';
@@ -2970,11 +2982,11 @@ function check_SPM = conf_stat_check_SPM(outdir,fname,save,expert)
   adjust_data.val             = {1};
   adjust_data.help            = {'This option allows to use nuisance and group parameters from the design matrix to obtain adjusted data. In this case the variance explained by these parameters will be removed prior to the calculation of the correlation. Furthermore, global scaling (if defined) is also applied to the data.'};
 
-  do_check_cov                = cfg_branch;
-  do_check_cov.tag            = 'do_check_cov';
-  do_check_cov.name           = 'Yes';
-  do_check_cov.val            = {use_unsmoothed_data adjust_data ,outdir,fname,save};
-  do_check_cov.help           = {''};
+  do_check_zscore             = cfg_branch;
+  do_check_zscore.tag         = 'do_check_zscore';
+  do_check_zscore.name        = 'Yes';
+  do_check_zscore.val         = {use_unsmoothed_data adjust_data ,outdir,fname,save};
+  do_check_zscore.help        = {''};
 
   none                        = cfg_const;
   none.tag                    = 'none';
@@ -2982,12 +2994,12 @@ function check_SPM = conf_stat_check_SPM(outdir,fname,save,expert)
   none.val                    = {1};
   none.help                   = {''};
 
-  check_SPM_cov               = cfg_choice;
-  check_SPM_cov.name          = 'Check for sample homogeneity';
-  check_SPM_cov.tag           = 'check_SPM_cov';
-  check_SPM_cov.values        = {none do_check_cov};
-  check_SPM_cov.val           = {do_check_cov};
-  check_SPM_cov.help          = {
+  check_SPM_zscore            = cfg_choice;
+  check_SPM_zscore.name       = 'Check for sample homogeneity';
+  check_SPM_zscore.tag        = 'check_SPM_zscore';
+  check_SPM_zscore.values     = {none do_check_zscore};
+  check_SPM_zscore.val        = {do_check_zscore};
+  check_SPM_zscore.help       = {
     'In order to identify images with poor image quality or even artefacts you can use this function. The idea of this tool is to check the correlation of all files across the sample using the files that are already defined in SPM.mat.'
     ''
     'The correlation is calculated between all images and the mean for each image is plotted using a boxplot (or violin plot) and the indicated filenames. The smaller the mean correlation the more deviant is this image from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order'
@@ -3004,7 +3016,7 @@ function check_SPM = conf_stat_check_SPM(outdir,fname,save,expert)
   check_SPM                   = cfg_exbranch;
   check_SPM.tag               = 'check_SPM';
   check_SPM.name              = 'Check design orthogonality and homogeneity';
-  check_SPM.val               = {spmmat,check_SPM_cov,check_SPM_ortho};
+  check_SPM.val               = {spmmat,check_SPM_zscore,check_SPM_ortho};
   check_SPM.prog              = @cat_stat_check_SPM;
   check_SPM.help              = {'Use design matrix saved in SPM.mat to check for sample homogeneity of the used data and for orthogonality of parameters.'};
 
