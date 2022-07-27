@@ -6,7 +6,8 @@ Changed paths:
 A  html/icons/file_spm_view_p0.png
 
 
-Changed: Added new icons for cat_stat_check_cov2.m------------------------------------------------------------------------
+Changed: Added new icons for cat_stat_check_cov2.m
+------------------------------------------------------------------------
 r2051 | gaser | 2022-07-28 01:39:07
 
 Changed paths:
@@ -24,7 +25,8 @@ Changed paths:
 Fixed:   Corrected issue for zipped nii-files where name of log-file was
          not correct.
 Changed: Updated cat_stat_check_cov2.m and linked functions.
-Changed: Added new icons for cat_stat_check_cov2.m------------------------------------------------------------------------
+Changed: Added new icons for cat_stat_check_cov2.m
+------------------------------------------------------------------------
 r2050 | gaser | 2022-07-26 18:14:47
 
 Changed paths:
@@ -35,7 +37,8 @@ A  html/icons/list_new.png
 A  html/icons/tool_pointer.png
 
 
-Changed: Added icons for cat_stat_check_cov2.m.------------------------------------------------------------------------
+Changed: Added icons for cat_stat_check_cov2.m.
+------------------------------------------------------------------------
 r2049 | gaser | 2022-07-26 18:14:06
 
 Changed paths:
@@ -53,7 +56,8 @@ Changed: Moved old cat_stat_check_cov2.m version to internal folder.
 Changed: Created new cat_stat_check_cov2.m that is based on mean z-score
          instead of mean correlation, which is much faster for larger samples.
 Changed: Prepared cat_conf*.m for new cat_stat_check_cov2.m function.
-Changed: Added and updated icons for cat_stat_check_cov2.m.------------------------------------------------------------------------
+Changed: Added and updated icons for cat_stat_check_cov2.m.
+------------------------------------------------------------------------
 r2048 | gaser | 2022-07-22 18:09:55
 
 Changed paths:
@@ -67,7 +71,8 @@ Changed paths:
 
 Fixed:   Initializiation of isxml parameter in cat_stat_quality_measures.m.
 Changed: Added zoom options and changed layout in cat_stat_check_cov.m.
-Changed: Removed eval call from cat_update.m.------------------------------------------------------------------------
+Changed: Removed eval call from cat_update.m.
+------------------------------------------------------------------------
 r2046 | gaser | 2022-07-20 12:29:36
 
 Changed paths:
@@ -81,7 +86,8 @@ A  templates_MNI152NLin2009cAsym_1mm/Template_3_GS1mm.nii
 A  templates_MNI152NLin2009cAsym_1mm/Template_4_GS1mm.nii
 
 
-Added 1mm Geodesic Shooting templates.------------------------------------------------------------------------
+Added 1mm Geodesic Shooting templates.
+------------------------------------------------------------------------
 r2044 | gaser | 2022-07-20 12:24:32
 
 Changed paths:
@@ -92,7 +98,8 @@ Changed paths:
  M html/cat.html
 
 
-Added 1mm Geodesic Shooting templates.------------------------------------------------------------------------
+Added 1mm Geodesic Shooting templates.
+------------------------------------------------------------------------
 r2043 | gaser | 2022-07-20 11:49:22
 
 Changed paths:
@@ -108,7 +115,8 @@ Changed paths:
 1. Updated Makefile to consider new file structure
 2. Fixed two issues in spm_cat12.m for open interactive help for newer Matlab
    versions and for dealing with mac permissions.
-3. Some minor edits to cat_update.m and update_revision.sh------------------------------------------------------------------------
+3. Some minor edits to cat_update.m and update_revision.sh
+------------------------------------------------------------------------
 r2041 | gaser | 2022-07-19 12:05:50
 
 Changed paths:
