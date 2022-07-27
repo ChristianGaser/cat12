@@ -1,5 +1,5 @@
 function cat_stat_quality_measures(job)
-%To check z-score across sample and save quality 
+%To check Z-score across sample and save quality 
 % measures in csv file.
 %
 % Images have to be in the same orientation with same voxel size
@@ -84,8 +84,13 @@ if job.globals
     is_gSF = false;
     fprintf('Disabled global scaling with TIV, because this is not meaningful for surface data.\n');
   else
-    is_gSF = true;
-    gSF = zeros(n_subjects,1);
+    if isxml
+      is_gSF = true;
+      gSF = ones(n_subjects,1);
+    else
+      is_gSF = false;
+      fprintf('No xml-files found. Disable global scaling with TIV.\n');
+    end
   end
 else
   is_gSF = false;
@@ -251,17 +256,17 @@ for i = 1:n_subjects
   if is_gSF
     tmp = tmp*gSF(i)/mean(gSF);
   end
-  % calculate z-score  
+  % calculate Z-score  
   zscore = ((tmp(ind) - Ymean(ind)).^2)./Ystd(ind);
 
-  % calculate glassbrain with emphasized z-score
+  % calculate glassbrain with emphasized Z-score
   Ytmp(ind) = zscore.^5;
   Ytmp = reshape(Ytmp,size(tmp));
   d1 = d1 + squeeze(sum(Ytmp,1));
   d2 = d2 + squeeze(sum(Ytmp,2));
   d3 = d3 + squeeze(sum(Ytmp,3));
   
-  % and use mean of z-score as overall measure
+  % and use mean of Z-score as overall measure
   mean_zscore(i) = mean(zscore);
 end
 fprintf('\n');
@@ -287,7 +292,7 @@ if 0
 end
 
 if isxml
-  % estimate product between weighted overall quality (IQR) and mean z-score
+  % estimate product between weighted overall quality (IQR) and mean Z-score
   IQR = QM(:,3);
   IQRratio = (mean_zscore/std(mean_zscore)).*(IQR/std(IQR));
   if mesh_detected
@@ -305,9 +310,9 @@ if fid < 0
   error('No write access for %s: check file permissions or disk space.',job.csv_name);
 end
 
-fprintf(fid,'Path;Name;Mean z-score');
+fprintf(fid,'Path;Name;Mean Z-score');
 if isxml
-  fprintf(fid,';Weighted overall image quality (IQR);Normalized product of IQR and Mean z-score');
+  fprintf(fid,';Weighted overall image quality (IQR);Normalized product of IQR and Mean Z-score');
   if mesh_detected
     fprintf(fid,';Euler Number;Size of topology defects\n');
   else

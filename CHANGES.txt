@@ -1,4 +1,22 @@
 ------------------------------------------------------------------------
+r2051 | gaser | 2022-07-28 01:39:07
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_tools.m
+ M cat_run.m
+ M cat_run_job.m
+ M cat_run_job1639.m
+ M cat_stat_check_SPM.m
+ M cat_stat_check_cov2.m
+ M cat_stat_quality_measures.m
+ M html/icons/file_spm_view.png
+
+
+Fixed:   Corrected issue for zipped nii-files where name of log-file was
+         not correct.
+Changed: Updated cat_stat_check_cov2.m and linked functions.
+Changed: Added new icons for cat_stat_check_cov2.m------------------------------------------------------------------------
 r2050 | gaser | 2022-07-26 18:14:47
 
 Changed paths:
