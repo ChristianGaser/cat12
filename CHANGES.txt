@@ -1,4 +1,12 @@
 ------------------------------------------------------------------------
+r2052 | gaser | 2022-07-28 01:40:04
+
+Changed paths:
+ M CHANGES.txt
+A  html/icons/file_spm_view_p0.png
+
+
+Changed: Added new icons for cat_stat_check_cov2.m------------------------------------------------------------------------
 r2051 | gaser | 2022-07-28 01:39:07
 
 Changed paths:
