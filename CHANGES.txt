@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2054 | gaser | 2022-07-28 17:43:44
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_factorial.m
+A  cat_stat_check_SPM2.m
+ M cat_stat_check_cov2.m
+
+
+Changed: Prepared  factorial design to also allow check for sample homogeneity.
+Changed: Added multiple regression and 2-sample t-test again to factorial 
+         design.
+Added:   New tool for checking favtoial designs.------------------------------------------------------------------------
 r2052 | gaser | 2022-07-28 01:40:04
 
 Changed paths:

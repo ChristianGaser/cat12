@@ -16,7 +16,6 @@ function varargout = cat_stat_check_cov2(job)
 %  .data_xml         .. optional xml QC data
 %  .verb             .. print figures
 %  .new_fig          .. use new window instead of SPM Fgraph
-%  .SPM              .. SPM design matrix structure
 %
 % varargout          .. output structure 
 %  .zscore           .. absolute mean Z-score
@@ -60,10 +59,6 @@ if ~isfield(job,'verb')
   job.verb = true;
 end
 
-if isfield(job,'SPM')
-  H.SPM = job.SPM;
-end
-
 % use this window for Fgraph
 if isfield(job,'new_fig') && job.new_fig
   H.Fgraph = spm_figure('Create','Check','Check Z-score');
@@ -104,7 +99,7 @@ if H.mesh_detected
   sinfo = cat_surf_info(char(job.data{1}(1,:)));
   H.Pmesh = gifti(sinfo.Pmesh);
   for i=1:n_samples
-    [pp,ff,ee] = spm_fileparts(char(job.data{i}(1,:))); 
+    [pp,ff,ee] = spm_fileparts(char(deblank(job.data{i}(1,:)))); 
     if any( ~isempty( strfind({'lh.thickness' },[ff ee]) ) ) && ~strcmp(ee,'.gii')
       %% native longitudinal surface
       sdata = gifti(fullfile(pp,[strrep(ff,'lh.thickness','lh.central') ee '.gii'])); 
@@ -151,7 +146,7 @@ H.ind = true(1,n_subjects);
 
 % give error because this is not yet tested
 if isfield(job,'gSF') && numel(job.gSF) == n_subjects
-  fprintf('Use global scaling from design matrix.\n');
+  fprintf('Use global scaling from design matrix (i.e. with TIV).\n');
   gSF = job.gSF;
 end
 
@@ -815,13 +810,13 @@ H.dpui.text = uicontrol(H.mainfig,...
 % enable some buttons only if respective files are available
 if H.isxml, status_xml = 'on';
 else status_xml = 'off'; end
-if ~isempty(H.files.raw{numel(H.sample)}), status_raw = 'on';
+if ~isempty(H.files.raw{end}), status_raw = 'on';
 else status_raw = 'off'; end
-if ~isempty(H.files.p0{numel(H.sample)}) && ~isempty(H.files.raw{numel(H.sample)}), status_rawp0 = 'on';
+if ~isempty(H.files.p0{end}) && ~isempty(H.files.raw{numel(H.sample)}), status_rawp0 = 'on';
 else status_rawp0 = 'off'; end
-if ~isempty(H.files.log{numel(H.sample)}), status_log = 'on';
+if ~isempty(H.files.log{end}), status_log = 'on';
 else status_log = 'off'; end
-if ~isempty(H.files.jpg{numel(H.sample)}), status_report = 'on';
+if ~isempty(H.files.jpg{end}), status_report = 'on';
 else status_report = 'off'; end
 
 H.dpui.report = uicontrol(H.mainfig,...
@@ -986,7 +981,7 @@ end
 
 % because we use a splitted colormap we have to set the color
 % values explicitely
-if sel == 4 % IQR
+if sel == 4 && min(H.xml.QMzscore) > 1 % IQR and min > 1
   QMzscore_scaled = 63*(H.xml.QMzscore-1)/2; % scale 1..3
 else
   QMzscore_scaled = 63*(H.xml.QMzscore-min_QMzscore)/(max_QMzscore-min_QMzscore); % scale min..max
@@ -1379,15 +1374,8 @@ for i=1:numel(job.data)
     data_del = data_sel( del_list);
     data_new = data_sel(~del_list);
   end
-  data{i}(del_list) = [];
-  job.data{i} = data{i};
-end
-
-if isfield(H,'SPM')
-  H.SPM.nscan = sum(H.ind);
-  H.SPM.xY.P = H.SPM.xY.P(H.ind);
-  H.SPM.xY.VY = H.SPM.xY.VY(H.ind);
-  
+  data_sel(del_list) = [];
+  job.data{i} = data_sel;
 end
 
 switch option
@@ -1401,6 +1389,11 @@ switch option
     for i=1:numel(data_new)
       fprintf('%s\n',data_new{i});
     end
+    
+    if isfield(H.job,'factorial_design')
+      modify_factorial_design(job.data);
+    end
+
   case 1,
     do_rerun(obj,event_obj,false);
     set(H.delui.remove, 'BackGroundColor',[0.94 0.94 0.94]);
@@ -1409,6 +1402,57 @@ switch option
     H.isdel = false;
 end
 
+return
+
+%-----------------------------------------------------------------------
+function modify_factorial_design(data)
+%-----------------------------------------------------------------------
+global H
+
+job = H.job.factorial_design;
+
+% modify dir
+[pth,name,ext] = fileparts(job.dir);
+job.dir{1} = fullfile(pth,['modified_' name ext]);
+
+% modify globals
+if isfield(job,'globals') && isfield(job.globals,'g_user')
+  job.globals.g_user.global_uval = job.globals.g_user.global_uval(H.ind);
+end
+if isfield(job,'globalc') && isfield(job.globalc,'g_user')
+  job.globalc.g_user.global_uval = job.globalc.g_user.global_uval(H.ind);
+end
+if isfield(job,'globals') && isfield(job.globals,'g_ancova')
+  job.globals.g_ancova.global_uval = job.globals.g_ancova.global_uval(H.ind);
+end
+if isfield(job,'globalc') && isfield(job.globalc,'g_ancova')
+  job.globalc.g_ancova.global_uval = job.globalc.g_ancova.global_uval(H.ind);
+end
+
+% modify covariates
+if isfield(job,'cov') 
+  for i=1:numel(job.cov)
+    job.cov(i).c = job.cov(i).c(H.ind);
+  end
+end
+
+% modify files and factors
+if isfield(job.des,'fd') 
+  for i=1:numel(job.des.fd.icell)
+    job.des.fd.icell(i).scans = data{i};
+  end
+elseif isfield(job.des,'t2') 
+    job.des.t2.scans1 = data{1};
+    job.des.t2.scans2 = data{2};
+elseif isfield(job.des,'mreg') 
+    job.des.mreg.scans = data{1};
+else
+  fprintf('Other designs are not yet prepared.\n');
+  return
+end
+
+out = spm_run_factorial_design(job);
+  
 return
 
 %-----------------------------------------------------------------------

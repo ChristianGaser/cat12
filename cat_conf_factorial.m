@@ -259,13 +259,13 @@ iCC.values = {1 5};
 iCC.val    = {1};
 
 %--------------------------------------------------------------------------
-% mcov Covariate
+% mcov Covariate of Interest
 %--------------------------------------------------------------------------
 mcov       = cfg_branch;
 mcov.tag   = 'mcov';
 mcov.name  = 'Covariate';
 mcov.val   = {c cname iCC};
-mcov.help  = {'Add a new covariate to your experimental design.'};
+mcov.help  = {'Add a new covariate of interest to your experimental design.'};
 
 %--------------------------------------------------------------------------
 % generic Covariates
@@ -740,7 +740,12 @@ cov.help    = {'Add a new covariate to your experimental design.'};
 generic        = cfg_repeat;
 generic.tag    = 'generic';
 generic.name   = 'Covariates';
-generic.help   = {'This option allows for the specification of covariates and nuisance variables (note that SPM does not make any distinction between effects of interest (including covariates) and nuisance effects).'};
+generic.help   = {
+  'This option allows for the specification of covariates and nuisance variables. TIV correction should be rather defined in ''Correction of TIV''.'
+  ''
+  'Note that SPM does not make any distinction between effects of interest (including covariates) and nuisance effects.'
+  'Covariates and nuisance parameters are handled in the same way in the GLM and only differ by the used contrast.'
+};
 generic.values = {cov};
 generic.num    = [0 Inf];
 
@@ -785,7 +790,7 @@ generic2.hidden  = expert<1;
 %--------------------------------------------------------------------------
 tm_none         = cfg_const;
 tm_none.tag     = 'tm_none';
-tm_none.name    = 'None';
+tm_none.name    = 'None (i.e. for surface data)';
 tm_none.val     = {1};
 tm_none.help    = {'No threshold masking'};
 
@@ -795,17 +800,17 @@ tm_none.help    = {'No threshold masking'};
 athresh         = cfg_entry;
 athresh.tag     = 'athresh';
 athresh.name    = 'Threshold';
-athresh.help    = {'Enter the absolute value of the threshold.'};
+athresh.help    = {'Enter the absolute value of the threshold. The default value is a good starting point for VBM data to ensure that only the intended tissue map is analyzed.'};
 athresh.strtype = 'r';
 athresh.num     = [1 1];
-athresh.val     = {100};
+athresh.val     = {0.1};
 
 %--------------------------------------------------------------------------
 % tma Absolute
 %--------------------------------------------------------------------------
 tma         = cfg_branch;
 tma.tag     = 'tma';
-tma.name    = 'Absolute';
+tma.name    = 'Absolute (i.e. for VBM data)';
 tma.val     = {athresh };
 tma.help    = {
                'Images are thresholded at a given value and only voxels at which all images exceed the threshold are included. '
@@ -1084,6 +1089,63 @@ voxel_cov.help    = {
     'Please note that the saved vSPM.mat file can only be analyzed with the TFCE r221 or newer toolbox.'
     };
 
+  
+%--------------------------------------------------------------------------
+% check_SPM_zscore
+%--------------------------------------------------------------------------
+use_unsmoothed_data         = cfg_menu;
+use_unsmoothed_data.name    = 'Use unsmoothed data if found';
+use_unsmoothed_data.tag     = 'use_unsmoothed_data';
+use_unsmoothed_data.labels  = {'Yes','No'};
+use_unsmoothed_data.values  = {1,0};
+use_unsmoothed_data.val     = {1};
+use_unsmoothed_data.help    = {'Check for sample homogeneity results in more reliable values if unsmoothed data are used. Unsmoothed data contain more detailed information about differences and similarities between the data.'};
+
+adjust_data                 = cfg_menu;
+adjust_data.name            = 'Adjust data using nuisance parameters and global scaling';
+adjust_data.tag             = 'adjust_data';
+adjust_data.labels          = {'Yes','No'};
+adjust_data.values          = {1,0};
+adjust_data.val             = {1};
+adjust_data.help            = {'This option allows to use nuisance from the design matrix to obtain adjusted data. In this case the variance explained by these parameters will be removed prior to the calculation of the Z-scores. Furthermore, global scaling (if defined) is also applied to the data.'};
+
+do_check_zscore             = cfg_branch;
+do_check_zscore.tag         = 'do_check_zscore';
+do_check_zscore.name        = 'Yes';
+do_check_zscore.val         = {use_unsmoothed_data adjust_data};
+do_check_zscore.help        = {''};
+
+none                        = cfg_const;
+none.tag                    = 'none';
+none.name                   = 'No';
+none.val                    = {1};
+none.help                   = {''};
+
+check_SPM_zscore            = cfg_choice;
+check_SPM_zscore.name       = 'Check for sample homogeneity';
+check_SPM_zscore.tag        = 'check_SPM_zscore';
+check_SPM_zscore.values     = {none do_check_zscore};
+check_SPM_zscore.val        = {do_check_zscore};
+check_SPM_zscore.help       = {
+  'In order to identify images with poor image quality or even artefacts you can use this function. The idea of this tool is to check the correlation of all files across the sample using the files that are already defined in SPM.mat.'
+  ''
+  'The correlation is calculated between all images and the mean for each image is plotted using a boxplot (or violin plot) and the indicated filenames. The smaller the mean correlation the more deviant is this image from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order'
+};
+
+check_SPM_ortho             = cfg_menu;
+check_SPM_ortho.name        = 'Check for design orthogonality';
+check_SPM_ortho.tag         = 'check_SPM_ortho';
+check_SPM_ortho.labels      = {'Yes','No'};
+check_SPM_ortho.values      = {1,0};
+check_SPM_ortho.val         = {1};
+check_SPM_ortho.help        = {'Review Design Orthogonality.'};
+
+check_SPM                   = cfg_branch;
+check_SPM.tag               = 'check_SPM';
+check_SPM.name              = 'Check design orthogonality and homogeneity';
+check_SPM.val               = {check_SPM_zscore,check_SPM_ortho};
+check_SPM.help              = {'Use design matrix to check for sample homogeneity of the used data and for orthogonality of parameters.'};
+
 %--------------------------------------------------------------------------
 % des Design
 %--------------------------------------------------------------------------
@@ -1096,7 +1158,8 @@ des.tag     = 'des';
 des.name    = 'Design';
 des.val     = {fd };
 des.help    = {''};
-des.values  = {fd fblock };
+%des.values  = {t2 mreg fd fblock };
+des.values  = {t2 mreg fd fblock};
 
 %==========================================================================
 % factorial_design Factorial design specification
@@ -1104,7 +1167,7 @@ des.values  = {fd fblock };
 factorial_design      = cfg_exbranch;
 factorial_design.tag  = 'factorial_design';
 factorial_design.name = 'Factorial design specification';
-factorial_design.val  = {dir des generic generic2 masking globals};
+factorial_design.val  = {dir des generic generic2 masking globals check_SPM};
 factorial_design.help = {
     'Configuration of the design matrix, describing the general linear model, data specification, and other parameters necessary for the statistical analysis.'
     'These parameters are saved in a configuration file (SPM.mat), which can then be passed on to spm_spm.m which estimates the design. This is achieved by pressing the ''Estimate'' button. Inference on these estimated parameters is then handled by the SPM results section. '
@@ -1145,15 +1208,19 @@ job.globalc = job.globals;
 voxel_covariate = false;
 if isfield(job.des,'fd')
   fname = 'fd';
-else
+elseif isfield(job.des,'fblock')
   fname = 'fblock';
+elseif isfield(job.des,'t2')
+  fname = 't2';
+elseif isfield(job.des,'mreg')
+  fname = 'mreg';
 end
 
 % check for voxel-wise covariate
-if ~isempty(char(job.des.(fname).voxel_cov.files))
+if isfield(job.des.(fname),'voxel_cov.files') && ~isempty(char(job.des.(fname).voxel_cov.files))
   voxel_covariate = true;
   
-  % number of covriate scans
+  % number of covariate scans
   m = numel(job.des.(fname).voxel_cov.files);
   
   % get number of scans
@@ -1209,6 +1276,7 @@ end
 
 % call SPM factorial design
 out = spm_run_factorial_design(job);
+job = cat_stat_check_SPM2(job);
 
 if voxel_covariate
   cat_stat_spm(out.spmmat{1});
@@ -1253,7 +1321,7 @@ if voxel_covariate
   delete(fullfile(SPM.swd,sprintf('spm*_%04d.*',Ic0)));
   
   % print warning
-  spm('alert!',sprintf('SPM12 cannot handle such designs with voxel-wise covariate.\nYou must now call the TFCE r221 or newer for statistical analysis.'));
+  spm('alert!',sprintf('SPM12 cannot handle such designs with voxel-wise covariate.\nYou must now call the TFCE Toolbox (r221 or newer) for statistical analysis.'));
 else
   % remove old vSPM.mat if exist
   swd = fileparts(out.spmmat{1});
