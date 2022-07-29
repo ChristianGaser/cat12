@@ -429,7 +429,7 @@ con.val    = {1};
 %==========================================================================
 fd         = cfg_branch;
 fd.tag     = 'fd';
-fd.name    = 'Cross-sectional data (Full factorial)';
+fd.name    = 'Any cross-sectional data (Full factorial)';
 fd.val     = {genericf generic1f con};
 fd.help    = {
               'This option is best used when you wish to test for all main effects and interactions in one-way, two-way or three-way ANOVAs. Design specification proceeds in 2 stages. Firstly, by creating new factors and specifying the number of levels and name for each. Nonsphericity, ANOVA-by-factor and scaling options can also be specified at this stage. Secondly, scans are assigned separately to each cell. This accomodates unbalanced designs.'
@@ -914,8 +914,8 @@ g_omit.help    = {'Omit global scaling'};
 %--------------------------------------------------------------------------
 global_uval         = cfg_entry;
 global_uval.tag     = 'global_uval';
-global_uval.name    = 'Global values';
-global_uval.help    = {'Enter the vector of global values.'};
+global_uval.name    = 'Vector';
+global_uval.help    = {'Enter the vector of values.'};
 global_uval.strtype = 'r';
 global_uval.num     = [Inf 1];
 
@@ -1206,12 +1206,20 @@ function out = cat_run_factorial_design(job)
 job.globalc = job.globals;
 
 voxel_covariate = false;
+
+% get design and enable group-specific AnCova for TIV for some designs if defined
 if isfield(job.des,'fd')
   fname = 'fd';
+  if isfield(job.globals,'g_ancova')
+    job.des.fd.fact.ancova = 1;
+  end
 elseif isfield(job.des,'fblock')
   fname = 'fblock';
 elseif isfield(job.des,'t2')
   fname = 't2';
+  if isfield(job.globals,'g_ancova')
+    job.des.t2.ancova = 1;
+  end
 elseif isfield(job.des,'mreg')
   fname = 'mreg';
 end

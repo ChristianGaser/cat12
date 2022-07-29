@@ -54,14 +54,10 @@ G          = [];
 n_subjects = 0;
 H.ui.alphaval = 0.5;
 H.names_changed = false;
+H.cmap = [jet(64); gray(64)]; % create two colormaps
 
 if ~isfield(job,'verb')
   job.verb = true;
-end
-
-% use this window for Fgraph
-if isfield(job,'new_fig') && job.new_fig
-  H.Fgraph = spm_figure('Create','Check','Check Z-score');
 end
 
 if isfield(job,'show_violin')
@@ -144,7 +140,7 @@ end
 
 H.ind = true(1,n_subjects);
 
-% give error because this is not yet tested
+% use global scaling from design matrix
 if isfield(job,'gSF') && numel(job.gSF) == n_subjects
   fprintf('Use global scaling from design matrix (i.e. with TIV).\n');
   gSF = job.gSF;
@@ -163,10 +159,17 @@ else
   is_gSF = false;
 end
 
+% prepare design matrix for adjusting nuisance parameters
 if isfield(job,'c') && ~isempty(job.c)
   for i=1:numel(job.c)
     G = [G job.c{i}];
   end
+  if size(G,1) ~= n_subjects
+    G = G';
+  end
+  % mean correction
+  G = G - mean(G);
+  iG = pinv(G);
 end
 
 if isempty(char(job.data_xml))
@@ -368,7 +371,7 @@ if H.mesh_detected && all(isnan(H.xml.QM(:,4))) && all(isnan(H.xml.QM(:,5)))
 end
 
 H.data.Ymean = 0.0;
-Yss   = 0.0; % sum of squares
+Yss = 0.0; % sum of squares
 
 % preload surface data for later render view
 if H.mesh_detected
@@ -378,29 +381,46 @@ end
 
 spm_progress_bar('Init',n_subjects,'Load data','subjects completed')
 
+% prepare Beta
+if ~isempty(G) 
+  if H.mesh_detected
+    dim = (H.files.V(i).dim);
+  else
+    dim = H.files.V(i).dat.dim;
+  end
+  Beta = zeros(prod(dim),size(G,2));
+end
+
 fprintf('Load data ');
 for i = 1:n_subjects
   fprintf('.');
   if H.mesh_detected
-    tmp = spm_data_read(H.files.V(i));
+    Ytmp = spm_data_read(H.files.V(i));
   else
-    tmp(:,:,:) = H.files.V(i).dat(:,:,:);
+    Ytmp(:,:,:) = H.files.V(i).dat(:,:,:);
   end
-  tmp(isnan(tmp)) = 0;
+  Ytmp(isnan(Ytmp)) = 0;
   
   % either global scaling was externally defined using job or values were
   % used from xml-file
   if is_gSF || isfield(job,'gSF')
-    tmp = tmp*gSF(i)/mean(gSF);
+    Ytmp = Ytmp*gSF(i)/mean(gSF);
   end
   
-  if i>1 && numel(H.data.Ymean) ~= numel(tmp)
-    fprintf('\n\nERROR: File %s has different data size: %d vs. %d\n\n',job.data{i},numel(H.data.Ymean),numel(tmp));
+  if i>1 && numel(H.data.Ymean) ~= numel(Ytmp)
+    fprintf('\n\nERROR: File %s has different data size: %d vs. %d\n\n',job.data{i},numel(H.data.Ymean),numel(Ytmp));
     return
   end
+
+  % estimate Beta
+  if ~isempty(G) 
+    for j = 1:size(Beta,2)
+      Beta(:,j) = Beta(:,j) + iG(j,i)*Ytmp(:);
+    end
+  end
   
-  H.data.Ymean = H.data.Ymean + tmp(:);
-  Yss   = Yss + tmp(:).^2;
+  H.data.Ymean = H.data.Ymean + Ytmp(:);
+  Yss   = Yss + Ytmp(:).^2;
   spm_progress_bar('Set',i);  
 end
 spm_progress_bar('Clear');
@@ -429,18 +449,25 @@ for i = 1:n_subjects
   fprintf('.');
   
   if H.mesh_detected
-    tmp = spm_data_read(H.files.V(i));
+    Ytmp = spm_data_read(H.files.V(i));
   else
-    tmp(:,:,:) = H.files.V(i).dat(:,:,:);
+    Ytmp(:,:,:) = H.files.V(i).dat(:,:,:);
   end
-  tmp(isnan(tmp)) = 0;
+  Ytmp(isnan(Ytmp)) = 0;
   
   if is_gSF
-    tmp = tmp*gSF(i)/mean(gSF);
+    Ytmp = Ytmp*gSF(i)/mean(gSF);
   end
   
-  % calculate Z-score  
-  zscore = (tmp(ind) - H.data.Ymean(ind))./H.data.Ystd(ind);
+  % correct for nuisance
+  if ~isempty(G) 
+    for j = 1:size(Beta,2)
+      Ytmp(:) = Ytmp(:) - G(i,j)*Beta(:,j);
+    end
+  end
+  
+  % calculate Z-score
+  zscore = (Ytmp(ind) - H.data.Ymean(ind))./H.data.Ystd(ind);
   
   % and use mean of Z-score as overall measure
   H.data.avg_abs_zscore(i) = mean(abs(zscore));
@@ -453,14 +480,6 @@ spm_progress_bar('Clear');
 if ~H.mesh_detected
   H.data.vx =  sqrt(sum(H.files.V(1).mat(1:3,1:3).^2));
   H.data.Orig = H.files.V(1).mat\[0 0 0 1]';
-end
-
-% add constant to nuisance parameter
-if ~isempty(G)
-  if size(G,1) ~= n_subjects
-    G = G';
-  end
-  G = [ones(n_subjects,1) G];
 end
 
 % positions & font size
@@ -492,7 +511,7 @@ H.pos = struct(...
     'rmUndo',      [popm+popb(1)*1 0.775 popb],... % undo deletion
     'rmNew',       [popm+popb(1)*2 0.775 popb],... % calculate new
     'rmListNew',   [popm+popb(1)*3 0.775 popb],... % list remaining data
-    'rmListDel',   [popm+popb(1)*4 0.775 popb],... % list deleted data
+    'rmListDel',   [popm+popb(1)*4 0.775 popb],... % list removed data
     ...
     ... == display unit ==
     'dpReport',    [popm+popb(1)*0 0.715 popb],... % report 
@@ -509,6 +528,17 @@ H.pos = struct(...
     'aslider',[0.775 0.405 0.200 0.040],... % slider for alpha overlay
     'slice',  [0.775 0.030 0.200 0.400],... % slice images according to position of mouse pointer
     'sslider',[0.775 0.020 0.200 0.040]);   % slider for z-slice   
+
+% use this window for Fgraph
+if isfield(job,'new_fig') && job.new_fig
+  H.Fgraph = spm_figure('Create','Graphics','Check Z-score');
+else
+  H.Fgraph = spm_figure('GetWin','Graphics');
+end
+
+% correct position so to prevent overlapping windows
+pos =   get(H.Fgraph,'Position');
+set(H.Fgraph,'Position',[H.pos.fig(1)+H.pos.fig(3)+10 pos(2:4)]);
 
 if ~H.mesh_detected
   % correct filenames for 4D data
@@ -608,7 +638,7 @@ function show_menu
 global H
 
 % create figure
-H.mainfig = figure;
+H.mainfig = figure(22);
 clf(H.mainfig);
 
 set(H.mainfig,...
@@ -636,9 +666,8 @@ try, image(H.ui.cbar);end
 set(get(H.ui.cbar,'children'),'HitTest','off','Interruptible','off');
 set(H.ui.cbar,'Ytick',[],'YTickLabel',''); 
 
-% create two colormaps
-cmap = [jet(64); gray(64)];
-colormap(cmap)
+%colormap(H.cmap)
+colormap(jet)
 
 % display YTick with 5 values (limit accuracy for floating numbers)
 %  set(H.ui.cbar,'YTickLabel','','XTickLabel','','XTick',linspace(1,64,5), 'XTickLabel',...
@@ -791,15 +820,23 @@ H.delui.undo = uicontrol(H.mainfig,...
 
 H.delui.new = uicontrol(H.mainfig,...
   'Units','normalized','position',H.pos.rmNew,'callback',{@get_new_list,1},...
-  'Style','Pushbutton','enable','off','ToolTipString','Re-calculate without removed data','CData',load_icon('greenarrowicon.png')); 
+  'Style','Pushbutton','enable','off','ToolTipString','Refresh without removed data','CData',load_icon('refresh.png')); 
 
 H.delui.list_del = uicontrol(H.mainfig,...
   'Units','normalized','position',H.pos.rmListDel,'callback',{@get_new_list,-1},...
-  'Style','Pushbutton','enable','off','ToolTipString','List deleted file','CData',load_icon('list_del.png')); 
+  'Style','Pushbutton','enable','off','ToolTipString','List removed data','CData',load_icon('list_del.png')); 
 
-H.delui.list_new = uicontrol(H.mainfig,...
+if isfield(H.job,'factorial_design')
+  icon = load_icon('greenarrowicon.png');
+  str  = 'Create new analysis without removed data';
+else
+  icon = load_icon('list_new.png');
+  str  = ' List remaining data'; 
+end
+
+H.delui.analysis_new = uicontrol(H.mainfig,...
   'Units','normalized','position',H.pos.rmListNew,'callback',{@get_new_list,0},...
-  'Style','Pushbutton','enable','off','ToolTipString','List remaining files','CData',load_icon('list_new.png')); 
+  'Style','Pushbutton','enable','off','ToolTipString',str,'CData',icon); 
 
 %% == display unit ==
 H.dpui.text = uicontrol(H.mainfig,...
@@ -963,8 +1000,6 @@ set(H.ax,'Color',[0.8 0.8 0.8]);
 H.ax = axes('Position',H.pos.plot,'Parent',H.mainfig);
 axes(H.ax);
 
-cmap = [jet(64); gray(64)];
-
 % estimate product between QM-value and mean absolute Z-score
 if sel
   H.xml.QMzscore = X(:,1).*X(:,sel);
@@ -989,7 +1024,7 @@ end
 
 H.C = zeros(length(H.xml.QMzscore),3);
 for i=1:length(H.xml.QMzscore)
-  H.C(i,:) = cmap(round(QMzscore_scaled(i))+1,:);
+  H.C(i,:) = H.cmap(round(QMzscore_scaled(i))+1,:);
 end
 
 % create marker for different samples
@@ -1033,8 +1068,10 @@ else
 end
 title(xstr,'FontSize',H.FS+1,'FontWeight','Bold');
 
+colormap(H.cmap)
+
 % display YTick with 5 values (limit accuracy for floating numbers)
-if sel == 4 % IQR
+if sel == 4 && min(H.xml.QMzscore) > 1 % IQR
   set(H.ui.cbar,'YTickLabel','','YTick','', 'XTick',linspace(1,64,5),'XTickLabel',...
     round(100*linspace(1,3,5))/100,'TickLength',[0 0]);
 else
@@ -1044,8 +1081,6 @@ end
 
 % update index of worst files
 [tmp, H.ind_sorted_display] = sort(H.xml.QMzscore(H.ind),'ascend');
-
-colormap(cmap)
 
 return
 
@@ -1195,14 +1230,16 @@ function update_alpha(obj, event_obj)
 %-----------------------------------------------------------------------
 global H
 
-if isfield(H,'alpha')
+if isfield(H.ui,'alpha')
   H.ui.alphaval = get(H.ui.alpha,'Value');
 else
   H.ui.alphaval = 0.5;
 end
 
+if ~isfield(H,'ax_slice') H.ax_slice = axes('Position',H.pos.slice); end
+axes(H.ax_slice);
+
 % display image with 2nd colorbar (gray)
-axes('Position',H.pos.slice);
 image(65 + H.img);
 if ~H.mesh_detected, axis image; end
 set(gca,'XTickLabel','','YTickLabel','','TickLength',[0 0]);
@@ -1227,7 +1264,7 @@ function update_slices_array(obj, event_obj)
 %-----------------------------------------------------------------------
 global H
 
-if isfield(H,'mm')
+if isfield(H.ui,'mm')
   slice_mm = get(H.ui.mm,'Value');
 else
   slice_mm = 0;
@@ -1295,8 +1332,10 @@ if isfield(H,'mouse') && isfield(H.mouse,'x')
   H.img       = rot90(H.img,2);
   H.img_alpha = rot90(H.img_alpha,2);
   
+  if ~isfield(H,'ax_slice') H.ax_slice = axes('Position',H.pos.slice); end
+  axes(H.ax_slice);
+
   % use gray scale colormap for values > 64
-  axes('Position',H.pos.slice);
   image(65 + H.img);
   axis image
   set(gca,'XTickLabel','','YTickLabel','');
@@ -1357,7 +1396,7 @@ if ~isempty(job.data_xml{1})
   job.data_xml = data_xml;  
 end
 
-% create new list without deleted data in each sample
+% create new list without removed data in each sample
 data = job.data;
 for i=1:numel(job.data)
   data_sel = data{i};
@@ -1412,8 +1451,11 @@ global H
 job = H.job.factorial_design;
 
 % modify dir
-[pth,name,ext] = fileparts(job.dir);
-job.dir{1} = fullfile(pth,['modified_' name ext]);
+[pth,name,ext] = fileparts(char(job.dir));
+job.dir{1} = fullfile(pth,['wo_removed_data_' name ext]);
+fprintf('\n------------------------------------------------------------------------------------------\n');
+fprintf('Create new analysis without removed data in %s\n',job.dir{1});
+fprintf('------------------------------------------------------------------------------------------\n');
 
 % modify globals
 if isfield(job,'globals') && isfield(job.globals,'g_user')
@@ -1467,12 +1509,12 @@ set(H.dpui.report,  'BackGroundColor',[0.94 0.94 0.94]);
 set(H.delui.remove, 'BackGroundColor',[0.94 0.94 0.94]);
 set(H.naviui.select,'BackGroundColor',[0.95 0.95 0.95]);
 
-  if undo
+if undo
   H.ind = true(size(H.sample));
   set(H.delui.undo,    'enable','off');
   set(H.delui.new,     'enable','off');
   set(H.delui.list_del,'enable','off');
-  set(H.delui.list_new,'enable','off');
+  set(H.delui.analysis_new,'enable','off');
   H.del = [];
   H.isdel = false;
   datacursormode('on');
@@ -1508,17 +1550,18 @@ d1 = squeeze(sum(zscore,1));
 d2 = squeeze(sum(zscore,2));
 d3 = squeeze(sum(zscore,3));
 
+sz = spm('WinSize','0',1) - H.pos.fig; sz = sz*0.75; sz(3) = sz(4)*1.4;
+
 if ~isfield(H,'mipfig')
-  H.mipfig = figure;
+  H.mipfig = figure(23);
 end
 
 figure(H.mipfig);
 
 cm = hot(64);
-pos  = get(H.mipfig,'Position');
 set(H.mipfig,'Menubar','none','NumberTitle','off','Name',sprintf('Sample %d: Z-score %s',...
-    H.sample(H.mouse.x),H.filename.m{H.mouse.x}),'Position',[10 H.pos.fig(4)+pos(4) pos(3:4)]);
-colormap([1-(cm); cm])
+    H.sample(H.mouse.x),H.filename.m{H.mouse.x}),'Position',[10 H.pos.fig(4)+sz(4) sz(3:4)]);
+colormap([1-(cm); cm]);
 
 mx2 = 2*max(H.files.V(H.mouse.x).dat.dim);
 
@@ -1612,7 +1655,10 @@ if H.ui.alphaval > 0
   if ~H.mesh_detected, axis image; end
   hold off
 end
-  
+
+figure(H.mainfig);
+colormap(H.cmap)
+
 return
 
 %-----------------------------------------------------------------------
@@ -1639,7 +1685,7 @@ if ~isempty(jpg_file)
 
   ppos = [0 0 1 1];
   jpg  = imread(jpg_file); 
-  set(gca,'position',ppos(1,:));
+  set(gca,'Position',ppos(1,:));
   gpos = H.Fgraph.Position; 
   [Xq,Yq] = meshgrid(1:size(jpg,2)/gpos(3)/2:size(jpg,2),...
                      1:size(jpg,1)/gpos(4)/2:size(jpg,1));
@@ -1805,8 +1851,7 @@ if isfield(H,'isdel') && H.isdel
   set(H.delui.undo,'enable','on');
   set(H.delui.new, 'enable','on');
   set(H.delui.list_del,'enable','on');
-  set(H.delui.list_new,'enable','on');
-
+  set(H.delui.analysis_new,'enable','on');
   return
 end
 
@@ -1825,7 +1870,7 @@ end
 set(H.text,'String',txt2,'FontSize',H.FS-2);
 
 if ~H.mesh_detected
-  axes('Position',H.pos.slice);
+  H.ax_slice = axes('Position',H.pos.slice);
 end
 
 if H.mesh_detected 
