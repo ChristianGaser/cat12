@@ -72,7 +72,7 @@
 %   
 % Statistics
 %   cat_stat_calc_stc.m
-%   cat_stat_check_cov.m             - check sample homogeneity across sample
+%   cat_stat_homogeneity.m           - check sample homogeneity across sample
 %   cat_stat_marks.m
 %   cat_stat_nanmean.m
 %   cat_stat_nanmedian.m

@@ -1,4 +1,30 @@
 ------------------------------------------------------------------------
+r2059 | gaser | 2022-07-29 23:01:03
+
+Changed paths:
+ M CHANGES.txt
+ M Contents_info.txt
+ M cat12.m
+ M cat_conf_tools.m
+ M cat_long_report.m
+ M cat_stat_check_SPM.m
+RM cat_stat_check_cov.m -> cat_stat_homogeneity.m
+ D check_pipeline/IXI002-Guys-0828-T1.nii
+ M check_pipeline/batch_surface_pipeline.m
+ M check_pipeline/batch_volume_pipeline.m
+ D check_pipeline/surf/lh.pbt.IXI002-Guys-0828-T1
+ D check_pipeline/surf/lh.pbt.IXI016-Guys-0697-T1
+ D check_pipeline/surf/lh.pbt.IXI017-Guys-0698-T1
+ D check_pipeline/surf/lh.pbt.IXI019-Guys-0702-T1
+ D check_pipeline/surf/rh.pbt.IXI002-Guys-0828-T1
+ D check_pipeline/surf/rh.pbt.IXI016-Guys-0697-T1
+ D check_pipeline/surf/rh.pbt.IXI017-Guys-0698-T1
+ D check_pipeline/surf/rh.pbt.IXI019-Guys-0702-T1
+ M check_pipeline_homogeneity.m
+
+
+Changed: Renamed cat_stat_check_cov.m to cat_stat_homogeneity.m and changed all
+         linked functions.------------------------------------------------------------------------
 r2058 | gaser | 2022-07-29 22:27:11
 
 Changed paths:

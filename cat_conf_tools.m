@@ -2852,7 +2852,7 @@ function quality_measures = conf_quality_measures(globals)
   };
 
 %_______________________________________________________________________
-function [check_cov_old, check_cov] = conf_check_cov(data_xml,outdir,fname,save,globals,expert) 
+function [check_homogeneity, check_cov] = conf_check_cov(data_xml,outdir,fname,save,globals,expert) 
  
   % --- update input data ---
   data_xml.name     = 'Quality measures (leave emtpy for autom. search)';
@@ -2901,16 +2901,16 @@ function [check_cov_old, check_cov] = conf_check_cov(data_xml,outdir,fname,save,
   sample.help       = {'Specify data for each sample. If you specify different samples the mean correlation is displayed in separate boxplots (or violin plots) for each sample.'};
 
 
-  check_cov_old       = cfg_exbranch;
-  check_cov_old.tag   = 'check_cov_old';
-  check_cov_old.name  = 'Check Sample Homogeneity (old version)';
+  check_cov       = cfg_exbranch;
+  check_cov.tag   = 'check_cov';
+  check_cov.name  = 'Check Sample Homogeneity (old version)';
   if expert>1
-    check_cov_old.val = {sample,data_xml,gap,nuisance,outdir,fname,save};
+    check_cov.val = {sample,data_xml,gap,nuisance,outdir,fname,save};
   else
-    check_cov_old.val = {sample,data_xml,gap,nuisance};
+    check_cov.val = {sample,data_xml,gap,nuisance};
   end
-  check_cov_old.prog  = @cat_stat_check_cov_old;
-  check_cov_old.help  = {
+  check_cov.prog  = @cat_stat_check_cov_old;
+  check_cov.help  = {
     'In order to identify data with poor data quality or even artefacts you can use this function. 3D images have to be in the same orientation with same voxel size and dimension (e.g. normalized images without smoothing) while surfaces have to be resampled and smoothed using the same parameters. The idea of this tool is to check the correlation of all data across the sample.'
     ''
     'The correlation is calculated between all data and the mean for each data is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this data from the sample mean. In the plot, outliers from the sample are usually isolated from the majority of data which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the data order.'
@@ -2919,7 +2919,7 @@ function [check_cov_old, check_cov] = conf_check_cov(data_xml,outdir,fname,save,
 
   data          = data_vol;
   data.tag      = 'data';
-  sample.values = {data};
+  sample.values = {data data_vol};
   
   data_xml.name     = 'Select quality measures (leave emtpy for autom. search)';
 
@@ -2944,12 +2944,12 @@ function [check_cov_old, check_cov] = conf_check_cov(data_xml,outdir,fname,save,
     };
   
   % --- main ---
-  check_cov        = cfg_exbranch;
-  check_cov.val    = {sample,sel_xml,globals,nuisance};
-  check_cov.tag    = 'check_cov';
-  check_cov.name   = 'Check sample homogeneity using Z-score';
-  check_cov.prog   = @cat_stat_check_cov;
-  check_cov.help    = {
+  check_homogeneity        = cfg_exbranch;
+  check_homogeneity.val    = {sample,sel_xml,globals,nuisance};
+  check_homogeneity.tag    = 'check_homogeneity';
+  check_homogeneity.name   = 'Check sample homogeneity using Z-score';
+  check_homogeneity.prog   = @cat_stat_homogeneity;
+  check_homogeneity.help   = {
     'In order to identify data with poor data quality or even artefacts you can use this function. 3D images have to be in the same orientation with same voxel size and dimension (e.g. normalized images without smoothing) while surfaces have to be resampled and smoothed using the same parameters. The idea of this tool is to check the Z-score of all data across the sample.'
     ''
     'The Z-score is calculated for all data and the mean (absolute) for each data is plotted using a boxplot and the indicated filenames. The larger the mean absolute Z-score the more deviant is this data from the sample mean. In the plot, outliers from the sample are usually isolated from the majority of data which are clustered around the sample mean. The mean absolute Z-score is plotted at the y-axis and the x-axis reflects the data order.'

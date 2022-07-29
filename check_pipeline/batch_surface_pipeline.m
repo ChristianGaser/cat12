@@ -22,14 +22,14 @@ matlabbatch{2}.spm.tools.cat.stools.surfresamp.mesh32k = 1;
 matlabbatch{2}.spm.tools.cat.stools.surfresamp.fwhm_surf = 12;
 matlabbatch{2}.spm.tools.cat.stools.surfresamp.nproc = 0;
 %__________________________________________________________________________
-matlabbatch{3}.spm.tools.cat.tools.check_cov.data_vol{1}(1) = cfg_dep('Resample and Smooth Surface Data: Merged resampled MNIgyrification', substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','sample', '()',{1}, '.','Psdata'));
-matlabbatch{3}.spm.tools.cat.tools.check_cov.data_xml = {
+matlabbatch{3}.spm.tools.cat.tools.check_homogeneity.data{1}(1) = cfg_dep('Resample and Smooth Surface Data: Merged resampled MNIgyrification', substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','sample', '()',{1}, '.','Psdata'));
+matlabbatch{3}.spm.tools.cat.tools.check_homogeneity.data_xml = {
                                                                fullfile(pth,'report/cat_IXI002-Guys-0828-T1.xml')
                                                                fullfile(pth,'report/cat_IXI016-Guys-0697-T1.xml')
                                                                fullfile(pth,'report/cat_IXI017-Guys-0698-T1.xml')
                                                                fullfile(pth,'report/cat_IXI019-Guys-0702-T1.xml')
                                                                };
-matlabbatch{3}.spm.tools.cat.tools.check_cov.c = cell(1, 0);
+matlabbatch{3}.spm.tools.cat.tools.check_homogeneity.c = cell(1, 0);
 %__________________________________________________________________________
 matlabbatch{4}.spm.tools.cat.stools.surf2roi.cdata{1}(1) = cfg_dep('Extract additional surface parameters: Left MNI gyrification', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','lPGI', '()',{':'}));
 matlabbatch{4}.spm.tools.cat.stools.surf2roi.rdata = {fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces/lh.aparc_DK40.freesurfer.annot')};
