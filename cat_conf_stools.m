@@ -98,7 +98,6 @@ mesh32k.help    = {
 
 %% import GUIs
 %  ------------------------------------------------------------------------
-[check_mesh_cov,check_mesh_cov2] = cat_stat_check_cov_mesh_GUI;
 [surfresamp,surfresamp_fs]       = cat_surf_resamp_GUI(expert,nproc,merge_hemi,mesh32k,lazy);
 [vol2surf,vol2tempsurf]          = cat_surf_vol2surf_GUI(expert,merge_hemi,mesh32k);
 [surfcalc,surfcalcsub]           = cat_surf_calc_GUI(expert);
@@ -119,8 +118,6 @@ stools = cfg_choice;
 stools.name   = 'Surface Tools';
 stools.tag    = 'stools';
 stools.values = { ...
-...  check_mesh_cov, ...     .cat.stat
-  check_mesh_cov2, ...    .cat.stat
   surfextract, ...        .cat.stools
   surfresamp, ...         .cat.stools
   surfresamp_fs,...       .cat.stools
@@ -741,72 +738,6 @@ surf2roi.help = {
   ''
   'Please note that these values are extracted from data in native space without any smoothing. As default the mean inside a ROI is calculated and saved as XML file in the label folder.'
 };
-
-%==========================================================================
-function [check_mesh_cov,check_mesh_cov2] = cat_stat_check_cov_mesh_GUI
-
-%% Surface correlation and quality check
-%-----------------------------------------------------------------------
-data_surf_cov         = cfg_files;
-data_surf_cov.tag     = 'data_surf';
-data_surf_cov.name    = 'Sample';
-data_surf_cov.filter  = 'gifti';
-data_surf_cov.ufilter = 'resampled';
-data_surf_cov.num     = [3 Inf];
-data_surf_cov.help    = {'Select resampled surfaces parameter files.'};
-
-data_xml              = cfg_files;
-data_xml.name         = 'Quality measures (leave emtpy for autom. search)';
-data_xml.tag          = 'data_xml';
-data_xml.filter       = 'xml';
-data_xml.ufilter      = '^cat_.*\.xml$';
-data_xml.val          = {{''}};
-data_xml.num          = [0 Inf];
-data_xml.help         = {
-    'Select optional the quality measures that are saved during segmentation as xml-files in the report folder. This allows to additionally analyze image quality parameters such as noise, bias, weighted overall image quality, and Euler number or defect size.'
-    'Please note, that the order of the xml-files should be the same as the other data files.'
-    'Leave empty for automatically search for these xml-files.'
-    };
-
-sample_cov            = cfg_repeat;
-sample_cov.tag        = 'sample';
-sample_cov.name       = 'Data';
-sample_cov.values     = {data_surf_cov};
-sample_cov.num        = [1 Inf];
-sample_cov.help       = {...
-'Specify data for each sample. If you specify different samples the mean correlation is displayed in separate boxplots for each sample.'};
-
-c         = cfg_entry;
-c.tag     = 'c';
-c.name    = 'Vector/Matrix';
-c.help    = {'Vector or matrix of nuisance values'};
-c.strtype = 'r';
-c.num     = [Inf Inf];
-
-nuisance         = cfg_repeat;
-nuisance.tag     = 'nuisance';
-nuisance.name    = 'Nuisance variable';
-nuisance.values  = {c};
-nuisance.num     = [0 Inf];
-nuisance.help    = {...
-'This option allows for the specification of nuisance effects to be removed from the data. A potential nuisance parameter can be TIV if you check segmented data with the default modulation. In this case the variance explained by TIV will be removed prior to the calculation of the correlation. Another meaningful nuisance effect is age. This parameter should be defined for all samples as one variable and may also contain several columns.'};
-
-check_mesh_cov      = cfg_exbranch;
-check_mesh_cov.tag  = 'check_mesh_cov';
-check_mesh_cov.name = 'Check sample homogeneity of surfaces';
-check_mesh_cov.val  = {sample_cov,data_xml,nuisance};
-check_mesh_cov.prog = @cat_stat_check_cov;
-check_mesh_cov.help = {
-'In order to identify surfaces with poor image quality or even artefacts you can use this function. Surfaces measures have to be first resampled to the template space (e.g. resampled and smoothed data) and can be then check for each hemisphere separately. Please do not mix data from both hemisphere.'
-''
-'The idea of this tool is to check the correlation of all files across the sample. The correlation is calculated between all surfaces measures and the mean for each surface measure is plotted using a boxplot and optionally the indicated filenames. The smaller the mean correlation the more deviant is this surface measures from the sample mean. In the plot outliers from the sample are usually isolated from the majority of surface measures which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the order of your measures.'};
-
-%-----------------------------------------------------------------------  
-
-check_mesh_cov2      = check_mesh_cov; 
-check_mesh_cov2.tag  = 'check_mesh_cov2';
-check_mesh_cov2.name = 'Check sample homogeneity of surfaces (new exp. version)';
-check_mesh_cov2.prog = @cat_stat_check_cov2;
 
 %==========================================================================
 function [vol2surf,vol2tempsurf] = cat_surf_vol2surf_GUI(expert,merge_hemi,mesh32k)

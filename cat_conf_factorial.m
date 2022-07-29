@@ -633,7 +633,7 @@ fblock.help = {
                ''
                'Design specification then proceeds in 3 stages. Firstly, factors are created and names specified for each. Nonsphericity, ANOVA-by-factor and scaling options can also be specified at this stage.'
                ''
-               'Secondly, a list of scans is produced along with a factor matrix, I. This is an nscan x 4 matrix of factor level indicators (see xX.I below). The first factor must be ''replication'' but the other factors can be anything. Specification of I and the scan list can be achieved in one of two ways (a) the ''Specify All'' option allows I to be typed in at the user interface or (more likely) loaded in from the matlab workspace. All of the scans are then selected in one go. (b) the ''Subjects'' option allows you to enter scans a subject at a time. The corresponding experimental conditions (ie. levels of factors) are entered at the same time. SPM will then create the factor matrix I. This style of interface is similar to that available in SPM2.'
+               'Secondly, a list of scans is produced along with a factor matrix, I. This is an nscan x 4 matrix of factor level indicators (see xX.I below). The first factor must be ''replication'' but the other factors can be anything. Specification of I and the scan list can be achieved in one of two ways (a) the ''Specify All'' option allows I to be typed in at the user interface or (more likely) loaded in from the matlab workspace. All of the scans are then selected in one go. (b) the ''Subjects'' option allows you to enter scans a subject at a time. The corresponding experimental conditions (ie. levels of factors) are entered at the same time. SPM will then create the factor mat I.'
                ''
                'Thirdly, the design matrix is built up a block at a time. Each block can be a main effect or a (two-way) interaction. '
 }';
@@ -1284,7 +1284,7 @@ end
 
 % call SPM factorial design
 out = spm_run_factorial_design(job);
-job = cat_stat_check_SPM2(job);
+job = cat_stat_check_SPM(job);
 
 if voxel_covariate
   cat_stat_spm(out.spmmat{1});
