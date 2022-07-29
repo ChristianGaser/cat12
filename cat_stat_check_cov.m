@@ -476,6 +476,20 @@ end
 fprintf('\n');
 spm_progress_bar('Clear');
 
+% get data for each subject in longitudinal designs
+if isfield(H.job,'factorial_design') && isfield(H.job.factorial_design,'des') && isfield(H.job.factorial_design.des,'fblock')
+  fsubject = H.job.factorial_design.des.fblock.fsuball.fsubject;
+  n_subjects_long = numel(fsubject);
+  H.ind_subjects_long = cell(numel(fsubject),1);
+  n = 0;
+  for i = 1:n_subjects_long
+    n_scans = numel(fsubject(1).scans);
+    % find time points in all subjects
+    H.ind_subjects_long{i} = ismember(1:n_subjects,n + (1:n_scans));
+    n = n + n_scans;
+  end
+end
+
 % voxelsize and origin of volume data
 if ~H.mesh_detected
   H.data.vx =  sqrt(sum(H.files.V(1).mat(1:3,1:3).^2));
@@ -599,7 +613,7 @@ end
 
 if job.verb
   
-  show_menu;
+  create_menu;
   show_boxplot(H.data.avg_abs_zscore,'Mean absolute Z-score  ',-1);
 
   if isfield(job,'save') && job.save
@@ -633,7 +647,7 @@ end
 %-----------------------------------------------------------------------
 
 %-----------------------------------------------------------------------
-function show_menu
+function create_menu
 %-----------------------------------------------------------------------
 global H
 
@@ -1028,32 +1042,39 @@ for i=1:length(H.xml.QMzscore)
 end
 
 % create marker for different samples
-marker = char('o','s','d','^','v','<','>','+','*','-','|');
-marker = char('o','+','*','.','s','d','^','v','<','>','-','|');
+marker = char('o','+','*','s','d','^','v','<','>','-','|','.');
 while max(H.sample) > marker, marker = [marker; marker]; end
 
-if sel
-  for i=1:max(H.sample)
-    ind  = H.sample.*H.ind == i;
-    H.ui.scatter = scatter(X(ind,sel),X(ind,1),30,H.C(ind,:),marker(i),'Linewidth',2);
-    hold on
-  end
-  hold off
+if sel % show QM measure on x-axis
+  xx = X(:,sel);
+  yy = X(:,1);
   xstr = sprintf('<----- Best ---      %s      --- Worst ------>  ',deblank(H.xml.QM_names(sel-1,:)));
-else
-  % we have to consider removed points
-  x = 1:numel(X(:,1));
-  if isfield(H,'del'), x(H.del) = []; end
-  
-  for i=1:max(H.sample)
-    ind  = H.sample.*H.ind == i;
-    H.ui.scatter = scatter(x(ind),X(ind,1),30,H.C(ind,:),marker(i),'Linewidth',2);
-    hold on
-  end
-  hold off
+else % show file order on x-axis
+  xx = 1:numel(X(:,1));
+  yy = X(:,1);
   xstr = sprintf('<----- First ---      File      --- Last ------>  ');
+end
+
+% scatterplot
+for i = 1:max(H.sample)
+  ind = H.sample.*H.ind == i;
+  H.ui.scatter = scatter(xx(ind),yy(ind),30,H.C(ind,:),marker(i),'Linewidth',2);
+  hold on
+end
+
+% connect point of each subject for long. designs
+if isfield(H,'ind_subjects_long')
+  for i = 1:numel(H.ind_subjects_long)
+    ind = H.ind.*H.ind_subjects_long{i} > 0;
+    plot(xx(ind),yy(ind));
+  end
+end
+hold off
+
+if ~sel
   xlim([0 numel(H.sample)+1]);
 end
+
 xlabel(xstr,'FontSize',H.FS-1,'FontWeight','Bold');
 ylabel('<----- Best ---      Mean absolute Z-score      --- Worst ------>  ','FontSize',H.FS-1,'FontWeight','Bold');
 
@@ -1222,312 +1243,6 @@ else
 end
 
 H.ui.bp = struct('data',data_boxp,'name',name_boxp,'order',quality_order);
-
-return
-
-%-----------------------------------------------------------------------
-function update_alpha(obj, event_obj)
-%-----------------------------------------------------------------------
-global H
-
-if isfield(H.ui,'alpha')
-  H.ui.alphaval = get(H.ui.alpha,'Value');
-else
-  H.ui.alphaval = 0.5;
-end
-
-if ~isfield(H,'ax_slice') H.ax_slice = axes('Position',H.pos.slice); end
-axes(H.ax_slice);
-
-% display image with 2nd colorbar (gray)
-image(65 + H.img);
-if ~H.mesh_detected, axis image; end
-set(gca,'XTickLabel','','YTickLabel','','TickLength',[0 0]);
-
-% prepare alpha overlays for red and green colors
-if H.ui.alphaval > 0
-
-  hold on
-  alpha_b = cat(3, zeros(size(H.img_alpha)), zeros(size(H.img_alpha)), H.ui.alphaval*ones(size(H.img_alpha)));
-  alpha_r = cat(3, H.ui.alphaval*ones(size(H.img_alpha)), zeros(size(H.img_alpha)), zeros(size(H.img_alpha)));
-  hg = image(alpha_b); set(hg, 'AlphaData', 0.25*H.img_alpha.*(H.img_alpha>=0),'AlphaDataMapping','none')
-  if ~H.mesh_detected, axis image; end
-  hr = image(alpha_r); set(hr, 'AlphaData',-0.25*H.img_alpha.*(H.img_alpha<0),'AlphaDataMapping','none')
-  if ~H.mesh_detected, axis image; end
-  hold off
-end
-
-return
-
-%-----------------------------------------------------------------------
-function update_slices_array(obj, event_obj)
-%-----------------------------------------------------------------------
-global H
-
-if isfield(H.ui,'mm')
-  slice_mm = get(H.ui.mm,'Value');
-else
-  slice_mm = 0;
-end
-
-if H.names_changed
-  P = H.files.Vchanged;
-else
-  P = H.files.V;
-end
-
-H.data.vx   =  sqrt(sum(P(1).mat(1:3,1:3).^2));
-H.data.Orig = P(1).mat\[0 0 0 1]';
-sl   = round(slice_mm/H.data.vx(3)+H.data.Orig(3));
-
-% if slice is outside of image use middle slice
-if (sl>P(1).dat.dim(3)) || (sl<1)
-  sl = round(P(1).dat.dim(3)/2);
-end
-
-M  = spm_matrix([0 0 sl]);
-H.data.zscore = zeros([P(1).dat.dim(1:2) length(H.files.V)]);
-Ymean = reshape(H.data.Ymean,P(1).dat.dim(1:3));
-Ystd  = reshape(H.data.Ystd,P(1).dat.dim(1:3));
-Ymean = Ymean(:,:,sl);
-Ystd  = Ystd(:,:,sl);
-
-for i = 1:length(H.files.V)
-  img(:,:) = single(P(i).dat(:,:,sl));
-  img(isnan(img)) = 0;
-  
-  % rescue unscaled data
-  H.data.zscore(:,:,i) = img;
-
-  % scale image according to mean
-  H.data.vol(:,:,i) = img/mean(img(img ~= 0));
-end
-
-% calculate individual Z-score map
-for i=1:size(H.data.zscore,3)
-  img = H.data.zscore(:,:,i);
-  ind = Ystd > 0 & (Ymean > H.data.global | img > H.data.global);
-  img(ind) = (img(ind) - Ymean(ind))./Ystd(ind);
-  img(~ind) = 0;
-  H.data.zscore(:,:,i) = img;
-end
-
-% enhance contrast and scale image to 0..64
-mn = min(H.data.vol(:));
-mx = max(H.data.vol(:));
-H.data.vol = 64*((H.data.vol - mn)/(mx-mn));
-
-if isfield(H,'mouse') && isfield(H.mouse,'x')
-  if H.ui.sorted
-    x = H.ind_sorted(H.mouse.x);
-  else
-    x = H.mouse.x;
-  end
-  
-  % check whether mouse position is defined
-  H.img       = H.data.vol(:,:,x)';
-  H.img_alpha = H.data.zscore(:,:,x)';
-  
-  % correct orientation
-  H.img       = rot90(H.img,2);
-  H.img_alpha = rot90(H.img_alpha,2);
-  
-  if ~isfield(H,'ax_slice') H.ax_slice = axes('Position',H.pos.slice); end
-  axes(H.ax_slice);
-
-  % use gray scale colormap for values > 64
-  image(65 + H.img);
-  axis image
-  set(gca,'XTickLabel','','YTickLabel','');
-  title('Z-score')
-  
-  % prepare alpha overlays for red and green colors
-  if H.ui.alphaval > 0
-
-    hold on
-    alpha_b = cat(3, zeros(size(H.img_alpha)), zeros(size(H.img_alpha)), H.ui.alphaval*ones(size(H.img_alpha)));
-    alpha_r = cat(3, H.ui.alphaval*ones(size(H.img_alpha)), zeros(size(H.img_alpha)), zeros(size(H.img_alpha)));
-    hg = image(alpha_b); set(hg, 'AlphaData', 0.25*H.img_alpha.*(H.img_alpha>=0),'AlphaDataMapping','none')
-    axis image
-    hr = image(alpha_r); set(hr, 'AlphaData',-0.25*H.img_alpha.*(H.img_alpha<0),'AlphaDataMapping','none')
-    axis image
-    hold off
-  end
-  
-  txt = {sprintf('%s',spm_file(H.filename.m{x},'short25')),[],['Displayed slice: ',num2str(round(get(H.ui.mm,'Value'))),' mm']};
-
-  set(H.text,'String',txt,'FontSize',H.FS-2);
-  set(H.ui.mm_txt,'String',[num2str(round(get(H.ui.mm,'Value'))),' mm'],...
-      'FontSize',H.FS-2);
-end
-
-return
-
-%-----------------------------------------------------------------------
-function get_new_list(obj,event_obj, option)
-%-----------------------------------------------------------------------
-global H
-
-if ~nargin
-  option = false;
-end
-
-if isfield(H,'del')
-  if isempty(H.del)
-    fprintf('No data removed.\n');
-    return
-  end
-else
-  fprintf('No data removed.\n');
-  return
-end
-
-Hdel = H.del;
-job = H.job;
-
-% create new list of xmlf-files if necessary
-if ~isempty(job.data_xml{1})
-  n = 0;
-  for i=1:numel(job.data_xml)
-    if any(Hdel == i), continue; end
-    n = n + 1;
-    data_xml{n,1} = job.data_xml{i};
-  end
-  job.data_xml = data_xml;  
-end
-
-% create new list without removed data in each sample
-data = job.data;
-for i=1:numel(job.data)
-  data_sel = data{i};
-  if ~iscell(data_sel), data_sel = cellstr(data_sel); end
-  ind = find(H.sample==i);
-  n_subjects = numel(ind);
-  del_list = ismember(ind,Hdel);
-  Hdel(Hdel < n_subjects) = [];
-  
-  if exist('data_del','var')
-    data_del = [data_del;data_sel( del_list)];
-    data_new = [data_new;data_sel(~del_list)];
-  else
-    data_del = data_sel( del_list);
-    data_new = data_sel(~del_list);
-  end
-  data_sel(del_list) = [];
-  job.data{i} = data_sel;
-end
-
-switch option
-  case -1,
-    fprintf('Data that are removed from list:\n');
-    for i=1:numel(data_del)
-      fprintf('%s\n',data_del{i});
-    end
-  case 0,
-    fprintf('Data that remain in list:\n');
-    for i=1:numel(data_new)
-      fprintf('%s\n',data_new{i});
-    end
-    
-    if isfield(H.job,'factorial_design')
-      modify_factorial_design(job.data);
-    end
-
-  case 1,
-    do_rerun(obj,event_obj,false);
-    set(H.delui.remove, 'BackGroundColor',[0.94 0.94 0.94]);
-    set(H.naviui.select,'BackGroundColor',[0.95 0.95 0.95]);
-    datacursormode('on');
-    H.isdel = false;
-end
-
-return
-
-%-----------------------------------------------------------------------
-function modify_factorial_design(data)
-%-----------------------------------------------------------------------
-global H
-
-job = H.job.factorial_design;
-
-% modify dir
-[pth,name,ext] = fileparts(char(job.dir));
-job.dir{1} = fullfile(pth,['wo_removed_data_' name ext]);
-fprintf('\n------------------------------------------------------------------------------------------\n');
-fprintf('Create new analysis without removed data in %s\n',job.dir{1});
-fprintf('------------------------------------------------------------------------------------------\n');
-
-% modify globals
-if isfield(job,'globals') && isfield(job.globals,'g_user')
-  job.globals.g_user.global_uval = job.globals.g_user.global_uval(H.ind);
-end
-if isfield(job,'globalc') && isfield(job.globalc,'g_user')
-  job.globalc.g_user.global_uval = job.globalc.g_user.global_uval(H.ind);
-end
-if isfield(job,'globals') && isfield(job.globals,'g_ancova')
-  job.globals.g_ancova.global_uval = job.globals.g_ancova.global_uval(H.ind);
-end
-if isfield(job,'globalc') && isfield(job.globalc,'g_ancova')
-  job.globalc.g_ancova.global_uval = job.globalc.g_ancova.global_uval(H.ind);
-end
-
-% modify covariates
-if isfield(job,'cov') 
-  for i=1:numel(job.cov)
-    job.cov(i).c = job.cov(i).c(H.ind);
-  end
-end
-
-% modify files and factors
-if isfield(job.des,'fd') 
-  for i=1:numel(job.des.fd.icell)
-    job.des.fd.icell(i).scans = data{i};
-  end
-elseif isfield(job.des,'t2') 
-    job.des.t2.scans1 = data{1};
-    job.des.t2.scans2 = data{2};
-elseif isfield(job.des,'mreg') 
-    job.des.mreg.scans = data{1};
-else
-  fprintf('Other designs are not yet prepared.\n');
-  return
-end
-
-out = spm_run_factorial_design(job);
-  
-return
-
-%-----------------------------------------------------------------------
-function do_rerun(obj, event_obj, undo)
-%-----------------------------------------------------------------------
-global H
-
-set(H.dpui.rawp0,   'BackGroundColor',[0.94 0.94 0.94]);
-set(H.dpui.raw,     'BackGroundColor',[0.94 0.94 0.94]);
-set(H.dpui.log,     'BackGroundColor',[0.94 0.94 0.94]);
-set(H.dpui.report,  'BackGroundColor',[0.94 0.94 0.94]);
-set(H.delui.remove, 'BackGroundColor',[0.94 0.94 0.94]);
-set(H.naviui.select,'BackGroundColor',[0.95 0.95 0.95]);
-
-if undo
-  H.ind = true(size(H.sample));
-  set(H.delui.undo,    'enable','off');
-  set(H.delui.new,     'enable','off');
-  set(H.delui.list_del,'enable','off');
-  set(H.delui.analysis_new,'enable','off');
-  H.del = [];
-  H.isdel = false;
-  datacursormode('on');
-else
-  H.ind = ~ismember((1:numel(H.sample)),H.del);
-end
-
-show_boxplot(H.data.avg_abs_zscore(H.ind),'Mean absolute Z-score  ',-1);  
-if H.isxml
-  show_QMzscore(H.X,4);
-else
-  show_QMzscore(H.X,0);
-end
 
 return
 
@@ -1787,6 +1502,341 @@ if ~isempty(log_file)
   set(lbh,'Value',1);
   set(lbh,'Selected','on');
 
+end
+
+return
+
+%-----------------------------------------------------------------------
+function update_alpha(obj, event_obj)
+%-----------------------------------------------------------------------
+global H
+
+if isfield(H.ui,'alpha')
+  H.ui.alphaval = get(H.ui.alpha,'Value');
+else
+  H.ui.alphaval = 0.5;
+end
+
+if ~isfield(H,'ax_slice') H.ax_slice = axes('Position',H.pos.slice); end
+axes(H.ax_slice);
+
+% display image with 2nd colorbar (gray)
+image(65 + H.img);
+if ~H.mesh_detected, axis image; end
+set(gca,'XTickLabel','','YTickLabel','','TickLength',[0 0]);
+
+% prepare alpha overlays for red and green colors
+if H.ui.alphaval > 0
+
+  hold on
+  alpha_b = cat(3, zeros(size(H.img_alpha)), zeros(size(H.img_alpha)), H.ui.alphaval*ones(size(H.img_alpha)));
+  alpha_r = cat(3, H.ui.alphaval*ones(size(H.img_alpha)), zeros(size(H.img_alpha)), zeros(size(H.img_alpha)));
+  hg = image(alpha_b); set(hg, 'AlphaData', 0.25*H.img_alpha.*(H.img_alpha>=0),'AlphaDataMapping','none')
+  if ~H.mesh_detected, axis image; end
+  hr = image(alpha_r); set(hr, 'AlphaData',-0.25*H.img_alpha.*(H.img_alpha<0),'AlphaDataMapping','none')
+  if ~H.mesh_detected, axis image; end
+  hold off
+end
+
+return
+
+%-----------------------------------------------------------------------
+function update_slices_array(obj, event_obj)
+%-----------------------------------------------------------------------
+global H
+
+if isfield(H.ui,'mm')
+  slice_mm = get(H.ui.mm,'Value');
+else
+  slice_mm = 0;
+end
+
+if H.names_changed
+  P = H.files.Vchanged;
+else
+  P = H.files.V;
+end
+
+H.data.vx   =  sqrt(sum(P(1).mat(1:3,1:3).^2));
+H.data.Orig = P(1).mat\[0 0 0 1]';
+sl   = round(slice_mm/H.data.vx(3)+H.data.Orig(3));
+
+% if slice is outside of image use middle slice
+if (sl>P(1).dat.dim(3)) || (sl<1)
+  sl = round(P(1).dat.dim(3)/2);
+end
+
+M  = spm_matrix([0 0 sl]);
+H.data.zscore = zeros([P(1).dat.dim(1:2) length(H.files.V)]);
+Ymean = reshape(H.data.Ymean,P(1).dat.dim(1:3));
+Ystd  = reshape(H.data.Ystd,P(1).dat.dim(1:3));
+Ymean = Ymean(:,:,sl);
+Ystd  = Ystd(:,:,sl);
+
+for i = 1:length(H.files.V)
+  img(:,:) = single(P(i).dat(:,:,sl));
+  img(isnan(img)) = 0;
+  
+  % rescue unscaled data
+  H.data.zscore(:,:,i) = img;
+
+  % scale image according to mean
+  H.data.vol(:,:,i) = img/mean(img(img ~= 0));
+end
+
+% calculate individual Z-score map
+for i=1:size(H.data.zscore,3)
+  img = H.data.zscore(:,:,i);
+  ind = Ystd > 0 & (Ymean > H.data.global | img > H.data.global);
+  img(ind) = (img(ind) - Ymean(ind))./Ystd(ind);
+  img(~ind) = 0;
+  H.data.zscore(:,:,i) = img;
+end
+
+% enhance contrast and scale image to 0..64
+mn = min(H.data.vol(:));
+mx = max(H.data.vol(:));
+H.data.vol = 64*((H.data.vol - mn)/(mx-mn));
+
+if isfield(H,'mouse') && isfield(H.mouse,'x')
+  if H.ui.sorted
+    x = H.ind_sorted(H.mouse.x);
+  else
+    x = H.mouse.x;
+  end
+  
+  % check whether mouse position is defined
+  H.img       = H.data.vol(:,:,x)';
+  H.img_alpha = H.data.zscore(:,:,x)';
+  
+  % correct orientation
+  H.img       = rot90(H.img,2);
+  H.img_alpha = rot90(H.img_alpha,2);
+  
+  if ~isfield(H,'ax_slice') H.ax_slice = axes('Position',H.pos.slice); end
+  axes(H.ax_slice);
+
+  % use gray scale colormap for values > 64
+  image(65 + H.img);
+  axis image
+  set(gca,'XTickLabel','','YTickLabel','');
+  title('Z-score')
+  
+  % prepare alpha overlays for red and green colors
+  if H.ui.alphaval > 0
+
+    hold on
+    alpha_b = cat(3, zeros(size(H.img_alpha)), zeros(size(H.img_alpha)), H.ui.alphaval*ones(size(H.img_alpha)));
+    alpha_r = cat(3, H.ui.alphaval*ones(size(H.img_alpha)), zeros(size(H.img_alpha)), zeros(size(H.img_alpha)));
+    hg = image(alpha_b); set(hg, 'AlphaData', 0.25*H.img_alpha.*(H.img_alpha>=0),'AlphaDataMapping','none')
+    axis image
+    hr = image(alpha_r); set(hr, 'AlphaData',-0.25*H.img_alpha.*(H.img_alpha<0),'AlphaDataMapping','none')
+    axis image
+    hold off
+  end
+  
+  txt = {sprintf('%s',spm_file(H.filename.m{x},'short25')),[],['Displayed slice: ',num2str(round(get(H.ui.mm,'Value'))),' mm']};
+
+  set(H.text,'String',txt,'FontSize',H.FS-2);
+  set(H.ui.mm_txt,'String',[num2str(round(get(H.ui.mm,'Value'))),' mm'],...
+      'FontSize',H.FS-2);
+end
+
+return
+
+%-----------------------------------------------------------------------
+function get_new_list(obj,event_obj, option)
+%-----------------------------------------------------------------------
+global H
+
+if ~nargin
+  option = false;
+end
+
+if isfield(H,'del')
+  if isempty(H.del)
+    fprintf('No data removed.\n');
+    return
+  end
+else
+  fprintf('No data removed.\n');
+  return
+end
+
+Hdel = H.del;
+job = H.job;
+
+% create new list of xmlf-files if necessary
+if ~isempty(job.data_xml{1})
+  n = 0;
+  for i=1:numel(job.data_xml)
+    if any(Hdel == i), continue; end
+    n = n + 1;
+    data_xml{n,1} = job.data_xml{i};
+  end
+  job.data_xml = data_xml;  
+end
+
+% create new list without removed data in each sample
+data = job.data;
+for i=1:numel(job.data)
+  data_sel = data{i};
+  if ~iscell(data_sel), data_sel = cellstr(data_sel); end
+  ind = find(H.sample==i);
+  n_subjects = numel(ind);
+  del_list = ismember(ind,Hdel);
+  Hdel(Hdel < n_subjects) = [];
+  
+  if exist('data_del','var')
+    data_del = [data_del;data_sel( del_list)];
+    data_new = [data_new;data_sel(~del_list)];
+  else
+    data_del = data_sel( del_list);
+    data_new = data_sel(~del_list);
+  end
+  data_sel(del_list) = [];
+  job.data{i} = data_sel;
+end
+
+switch option
+  case -1,
+    fprintf('Data that are removed from list:\n');
+    for i=1:numel(data_del)
+      fprintf('%s\n',data_del{i});
+    end
+  case 0,
+    fprintf('Data that remain in list:\n');
+    for i=1:numel(data_new)
+      fprintf('%s\n',data_new{i});
+    end
+    
+    if isfield(H.job,'factorial_design')
+      modify_factorial_design(job.data);
+    end
+
+  case 1,
+    do_rerun(obj,event_obj,false);
+    set(H.delui.remove, 'BackGroundColor',[0.94 0.94 0.94]);
+    set(H.naviui.select,'BackGroundColor',[0.95 0.95 0.95]);
+    datacursormode('on');
+    H.isdel = false;
+end
+
+return
+
+%-----------------------------------------------------------------------
+function modify_factorial_design(data)
+%-----------------------------------------------------------------------
+global H
+
+job = H.job.factorial_design;
+
+% modify dir
+[pth,name,ext] = fileparts(char(job.dir));
+job.dir{1} = fullfile(pth,['wo_removed_data_' name ext]);
+fprintf('\n------------------------------------------------------------------------------------------\n');
+fprintf('Create new analysis without removed data in %s\n',job.dir{1});
+fprintf('------------------------------------------------------------------------------------------\n');
+
+% modify globals
+if isfield(job,'globals') && isfield(job.globals,'g_user')
+  job.globals.g_user.global_uval = job.globals.g_user.global_uval(H.ind);
+end
+if isfield(job,'globalc') && isfield(job.globalc,'g_user')
+  job.globalc.g_user.global_uval = job.globalc.g_user.global_uval(H.ind);
+end
+if isfield(job,'globals') && isfield(job.globals,'g_ancova')
+  job.globals.g_ancova.global_uval = job.globals.g_ancova.global_uval(H.ind);
+end
+if isfield(job,'globalc') && isfield(job.globalc,'g_ancova')
+  job.globalc.g_ancova.global_uval = job.globalc.g_ancova.global_uval(H.ind);
+end
+
+% modify covariates
+if isfield(job,'cov') 
+  for i=1:numel(job.cov)
+    job.cov(i).c = job.cov(i).c(H.ind);
+  end
+end
+
+% modify files and factors for different designs
+if isfield(job.des,'t2') % two-sample t-test
+    job.des.t2.scans1 = data{1};
+    job.des.t2.scans2 = data{2};
+elseif isfield(job.des,'mreg') % multiple regression
+    job.des.mreg.scans = data{1};
+elseif isfield(job.des,'fd') % full factorial
+  for i=1:numel(job.des.fd.icell)
+    job.des.fd.icell(i).scans = data{i};
+  end
+elseif isfield(job.des,'fblock') % flexible factorial
+  fsubject = job.des.fblock.fsuball.fsubject;
+  
+  % index of whole subjects is removed from list
+  ind_remove_subject = [];
+  
+  % go through all subjects
+  for i = 1:numel(H.ind_subjects_long)
+
+    % index where time points are defined for this subject
+    ind_subject = find(H.ind_subjects_long{i});
+    
+    % array where data are kept for this subject
+    ind = H.ind.*H.ind_subjects_long{i} > 0;
+    
+    % we can keep that subject if we have at least 2 time points
+    if sum(ind) > 1 % remove single time points and update scans and conditions
+      job.des.fblock.fsuball.fsubject(i).scans = fsubject(i).scans(ind(ind_subject));
+      job.des.fblock.fsuball.fsubject(i).conds = fsubject(i).conds(ind(ind_subject));
+    elseif sum(ind) == 0 % indicate to remove whole subject
+      ind_remove_subject = [ind_remove_subject i];
+      fprintf('Remove all time points of subject %d\n',i);
+    end
+  end  
+  
+  % remove whole subject from list
+  if ~isempty(ind_remove_subject)
+    job.des.fblock.fsuball.fsubject(ind_remove_subject) = [];
+  end
+else
+  fprintf('Other designs are not yet prepared.\n');
+  return
+end
+
+out = spm_run_factorial_design(job);
+  
+return
+
+%-----------------------------------------------------------------------
+function do_rerun(obj, event_obj, undo)
+%-----------------------------------------------------------------------
+global H
+
+set(H.dpui.rawp0,   'BackGroundColor',[0.94 0.94 0.94]);
+set(H.dpui.raw,     'BackGroundColor',[0.94 0.94 0.94]);
+set(H.dpui.log,     'BackGroundColor',[0.94 0.94 0.94]);
+set(H.dpui.report,  'BackGroundColor',[0.94 0.94 0.94]);
+set(H.delui.remove, 'BackGroundColor',[0.94 0.94 0.94]);
+set(H.naviui.select,'BackGroundColor',[0.95 0.95 0.95]);
+
+if undo
+  H.ind = true(size(H.sample));
+  set(H.delui.undo,    'enable','off');
+  set(H.delui.new,     'enable','off');
+  set(H.delui.list_del,'enable','off');
+  set(H.delui.analysis_new,'enable','off');
+  H.del = [];
+  H.isdel = false;
+  datacursormode('on');
+else
+  H.ind = ~ismember((1:numel(H.sample)),H.del);
+end
+
+show_boxplot(H.data.avg_abs_zscore(H.ind),'Mean absolute Z-score  ',-1);  
+if H.isxml
+  show_QMzscore(H.X,4);
+else
+  show_QMzscore(H.X,0);
 end
 
 return
