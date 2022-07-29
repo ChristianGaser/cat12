@@ -14,7 +14,7 @@ matlabbatch{1}.spm.tools.cat.tools.calcvol.calcvol_TIV = 1;
 matlabbatch{1}.spm.tools.cat.tools.calcvol.calcvol_name = 'TIV.txt';
 
 %__________________________________________________________________________
-matlabbatch{2}.spm.tools.cat.tools.check_cov.data_vol = {
+matlabbatch{2}.spm.tools.cat.tools.check_homogeneity.data = {
                                                          {
   fullfile(pth,'mri/mwp1IXI002-Guys-0828-T1.nii,1')
   fullfile(pth,'mri/mwp1IXI016-Guys-0697-T1.nii,1')
@@ -22,14 +22,13 @@ matlabbatch{2}.spm.tools.cat.tools.check_cov.data_vol = {
   fullfile(pth,'mri/mwp1IXI019-Guys-0702-T1.nii,1')
                                                          }
                                                          }';
-matlabbatch{2}.spm.tools.cat.tools.check_cov.data_xml = {
+matlabbatch{2}.spm.tools.cat.tools.check.data_xml = {
   fullfile(pth,'report/cat_IXI002-Guys-0828-T1.xml')
   fullfile(pth,'report/cat_IXI016-Guys-0697-T1.xml')
   fullfile(pth,'report/cat_IXI017-Guys-0698-T1.xml')
   fullfile(pth,'report/cat_IXI019-Guys-0702-T1.xml')
                                                          };
-matlabbatch{2}.spm.tools.cat.tools.check_cov.gap = 3;
-matlabbatch{2}.spm.tools.cat.tools.check_cov.c{1}(1) = cfg_dep('Estimate TIV and global tissue volumes: TIV', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','calcvol'));
+matlabbatch{2}.spm.tools.cat.tools.check_homogeneity.c{1}(1) = cfg_dep('Estimate TIV and global tissue volumes: TIV', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','calcvol'));
 
 %__________________________________________________________________________
 matlabbatch{3}.spm.tools.cat.tools.T2x.data_T2x = {fullfile(pth,'analysis/volume/spmT_0002.nii,1')};

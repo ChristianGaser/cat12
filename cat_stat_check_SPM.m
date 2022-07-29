@@ -2,7 +2,7 @@ function job = cat_stat_check_SPM(job)
 % cat_stat_check_SPM to check Z-score across sample using design matrix in SPM.mat
 % and check design matrix for orthogonality 
 %
-% Calls cat_stat_check_cov and splits data into different samples
+% Calls cat_stat_homogeneity and splits data into different samples
 % according to the defined block (for cross-sectional data) or 
 % subject effects (for longitudinal data).
 % Furthermore, the design matrix is used to adjust the data and
@@ -177,7 +177,7 @@ if check_zscore
   % also rescue fecatorial design
   job_check_zscore.factorial_design = job;
   
-  cat_stat_check_cov(job_check_zscore);
+  cat_stat_homogeneity(job_check_zscore);
 end
 
 if check_ortho
