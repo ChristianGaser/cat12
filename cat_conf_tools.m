@@ -2944,7 +2944,7 @@ function [check_cov_old, check_cov] = conf_check_cov(data_xml,outdir,fname,save,
     };
   
   % --- main ---
-  check_cov        = check_cov; 
+  check_cov        = cfg_exbranch;
   check_cov.val    = {sample,sel_xml,globals,nuisance};
   check_cov.tag    = 'check_cov';
   check_cov.name   = 'Check sample homogeneity using Z-score';
