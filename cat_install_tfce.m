@@ -31,10 +31,10 @@ if install
   catch
     le = lasterror;
     switch le.identifier
-        case 'MATLAB:checkfilename:urlwriteError'
-            fprintf('          Update failed: cannot download file.\n');
-        otherwise
-            fprintf('\n%s\n',le.message);
+      case 'MATLAB:checkfilename:urlwriteError'
+        fprintf('          Update failed: cannot download file.\n');
+      otherwise
+        fprintf('\n%s\n',le.message);
     end
   end
   
@@ -42,10 +42,10 @@ if install
   switch msgid
     case ''
     case 'MATLAB:extractArchive:unableToCreate'
-        fprintf('          Update failed: check folder permission.\n');
+      fprintf('          Update failed: check folder permission.\n');
     case 'MATLAB:extractArchive:unableToOverwrite'
-        fprintf('          Update failed: check file permissions.\n');
+      fprintf('          Update failed: check file permissions.\n');
     otherwise
-        fprintf('          Update failed: %s.\n',warnmsg);
+      fprintf('          Update failed: %s.\n',warnmsg);
   end
 end

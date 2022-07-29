@@ -1,4 +1,14 @@
 ------------------------------------------------------------------------
+r2058 | gaser | 2022-07-29 22:27:11
+
+Changed paths:
+ M CHANGES.txt
+ M cat_install_tfce.m
+ M cat_stat_check_cov.m
+
+
+Changed: Prepared cat_stat_check_cov.m to handle longitudinal data.
+         ------------------------------------------------------------------------
 r2057 | gaser | 2022-07-29 18:44:18
 
 Changed paths:
