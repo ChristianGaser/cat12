@@ -225,7 +225,7 @@ end
 
 % --- Executes on button press in pushBasicModels.
 function pushBasicModels_Callback(hObject, eventdata, handles)
-spm_jobman('interactive','cat_stat_factorial_design.m');
+spm_jobman('interactive','','spm.tools.cat.factorial_design');
 
 % --- Executes on button press in pushEstimateSurfaceModels.
 function pushEstimateSurfaceModels_Callback(hObject, eventdata, handles)

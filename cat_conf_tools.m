@@ -161,7 +161,7 @@ function tools = cat_conf_tools(expert)
 % get subbatches
 % -------------------------------------------------------------------------
   [T2x,T2x_surf,F2x,F2x_surf] = conf_T2x;
-  [check_cov, check_cov2]     = conf_check_cov(data_xml,outdir,fname,save,globals,expert);
+  [check_cov_old, check_cov]  = conf_check_cov(data_xml,outdir,fname,save,globals,expert);
   quality_measures            = conf_quality_measures(globals);
   [defs,defs2]                = conf_vol_defs;
   nonlin_coreg                = cat_conf_nonlin_coreg;
@@ -201,8 +201,8 @@ function tools = cat_conf_tools(expert)
     ... qa, ...                           cat.stat.pre
     qa, ...                               
     check_cov, ...                        cat.stat.pre
-    check_cov2, ...                       cat.stat.pre
-    quality_measures, ...                     cat.stat.pre
+    check_cov_old, ...                    cat.stat.pre
+    quality_measures, ...                 cat.stat.pre
     check_SPM, ...                        cat.stat.pre
     ...
     calcvol, ...                          cat.stat.pre
@@ -2852,7 +2852,7 @@ function quality_measures = conf_quality_measures(globals)
   };
 
 %_______________________________________________________________________
-function [check_cov, check_cov2] = conf_check_cov(data_xml,outdir,fname,save,globals,expert) 
+function [check_cov_old, check_cov] = conf_check_cov(data_xml,outdir,fname,save,globals,expert) 
  
   % --- update input data ---
   data_xml.name     = 'Quality measures (leave emtpy for autom. search)';
@@ -2901,16 +2901,16 @@ function [check_cov, check_cov2] = conf_check_cov(data_xml,outdir,fname,save,glo
   sample.help       = {'Specify data for each sample. If you specify different samples the mean correlation is displayed in separate boxplots (or violin plots) for each sample.'};
 
 
-  check_cov         = cfg_exbranch;
-  check_cov.tag     = 'check_cov';
-  check_cov.name    = 'Check Sample Homogeneity';
+  check_cov_old       = cfg_exbranch;
+  check_cov_old.tag   = 'check_cov_old';
+  check_cov_old.name  = 'Check Sample Homogeneity (old version)';
   if expert>1
-    check_cov.val     = {sample,data_xml,gap,nuisance,outdir,fname,save};
+    check_cov_old.val = {sample,data_xml,gap,nuisance,outdir,fname,save};
   else
-    check_cov.val     = {sample,data_xml,gap,nuisance};
+    check_cov_old.val = {sample,data_xml,gap,nuisance};
   end
-  check_cov.prog    = @cat_stat_check_cov;
-  check_cov.help    = {
+  check_cov_old.prog  = @cat_stat_check_cov_old;
+  check_cov_old.help  = {
     'In order to identify data with poor data quality or even artefacts you can use this function. 3D images have to be in the same orientation with same voxel size and dimension (e.g. normalized images without smoothing) while surfaces have to be resampled and smoothed using the same parameters. The idea of this tool is to check the correlation of all data across the sample.'
     ''
     'The correlation is calculated between all data and the mean for each data is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this data from the sample mean. In the plot, outliers from the sample are usually isolated from the majority of data which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the data order.'
@@ -2944,11 +2944,17 @@ function [check_cov, check_cov2] = conf_check_cov(data_xml,outdir,fname,save,glo
     };
   
   % --- main ---
-  check_cov2        = check_cov; 
-  check_cov2.val    = {sample,sel_xml,globals,nuisance};
-  check_cov2.tag    = 'check_cov2';
-  check_cov2.name   = 'Check sample homogeneity (new exp. version)';
-  check_cov2.prog   = @cat_stat_check_cov2;
+  check_cov        = check_cov; 
+  check_cov.val    = {sample,sel_xml,globals,nuisance};
+  check_cov.tag    = 'check_cov';
+  check_cov.name   = 'Check sample homogeneity using Z-score';
+  check_cov.prog   = @cat_stat_check_cov;
+  check_cov.help    = {
+    'In order to identify data with poor data quality or even artefacts you can use this function. 3D images have to be in the same orientation with same voxel size and dimension (e.g. normalized images without smoothing) while surfaces have to be resampled and smoothed using the same parameters. The idea of this tool is to check the Z-score of all data across the sample.'
+    ''
+    'The Z-score is calculated for all data and the mean (absolute) for each data is plotted using a boxplot and the indicated filenames. The larger the mean absolute Z-score the more deviant is this data from the sample mean. In the plot, outliers from the sample are usually isolated from the majority of data which are clustered around the sample mean. The mean absolute Z-score is plotted at the y-axis and the x-axis reflects the data order.'
+    'If you have loaded quality measures, you can also display the product between weighted overall image quality (IQR) and mean absolute Z-score. These two are the most important measures for assessing data quality.'
+  };
 
 %_______________________________________________________________________
 function check_SPM = conf_stat_check_SPM(outdir,fname,save,expert) 

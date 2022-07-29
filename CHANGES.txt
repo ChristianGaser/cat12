@@ -1,4 +1,24 @@
 ------------------------------------------------------------------------
+r2056 | gaser | 2022-07-29 18:26:41
+
+Changed paths:
+ M CHANGES.txt
+ M cat12.m
+ M cat_conf_factorial.m
+ M cat_conf_stools.m
+ M cat_conf_tools.m
+MM cat_stat_check_cov.m
+D  cat_stat_check_cov2.m
+AM cat_stat_check_cov_old.m
+D  internal/cat_stat_check_SPM.m
+R  cat_stat_factorial_design.m -> internal/cat_stat_factorial_design.m
+
+
+Changed: Renamed original cat_stat_check_cov2.m to cat_stat_check_cov.m.
+Changed: Updated all functions that call cat_stat_check_cov and removed this
+         option for surfaces because this is now located in tools for both 
+         volumes and surfaces.
+         ------------------------------------------------------------------------
 r2055 | gaser | 2022-07-29 18:07:41
 
 Changed paths:
