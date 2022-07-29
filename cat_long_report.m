@@ -196,7 +196,7 @@ function [cres,Vmn,Vidiff,Vrdiff,Vadiff] = cat_vol_longdiff(Pdata_vol,Pavg,s,wri
   cjob.gap       = 3; 
   cjob.c         = {}; 
   cjob.data_xml  = {};
-  cres           = cat_stat_check_cov(cjob);
+  cres           = cat_stat_homogeneity(cjob);
 
   % the average is created by a more complex function and not only the
   % mean/median so it is not clear what I can do if it is missed
@@ -324,7 +324,7 @@ function [cres,Psurf] = cat_surf_longdiff(Pdata_surf,s)
       % try to estimate covariance ... if it fails then asume that the
       % meshes are not equal and resmaple them 
       %warning('off',char(sprintf('[GIFTI] Parsing of XML file %s failed.', Pdata_surf{1})));
-      cres         = cat_stat_check_cov(cjob);
+      cres         = cat_stat_homogeneity(cjob);
     catch  
       % resample (& smooth)
       srjob.data_surf   = Pdata_surf;
@@ -337,7 +337,7 @@ function [cres,Psurf] = cat_surf_longdiff(Pdata_surf,s)
       Pdata_surf        = Psdata.sample.lPsdata; 
       
       cjob.data_vol     = Pdata_surf; 
-      cres              = cat_stat_check_cov(cjob);
+      cres              = cat_stat_homogeneity(cjob);
     end
     
     
