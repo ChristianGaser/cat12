@@ -1,5 +1,5 @@
 function cat_stat_showslice_all(vargin)
-%cat_stat_showslice_all	show 1 slice of all images
+%cat_stat_showslice_all show 1 slice of all images
 %
 % FORMAT cat_stat_showslice_all
 %
@@ -16,21 +16,17 @@ function cat_stat_showslice_all(vargin)
 rev = '$Rev$';
 
 if nargin == 1
-	P = char(vargin.data_vol);
-	scaling = vargin.scale;
-	slice_mm = vargin.slice;
-	orient = vargin.orient;
+  P = char(vargin.data_vol);
+  scaling = vargin.scale;
+  slice_mm = vargin.slice;
+  orient = vargin.orient;
 end
 
 if nargin < 1
-	if strcmp(spm('ver'),'SPM2')
-		P = spm_get(Inf,'IMAGE','Select normalized files');
-	else
-		P = spm_select(Inf,'image','Select images');
-	end
-	scaling = spm_input('Prop. scaling (e.g. for T1- or modulated images)?',1,'yes|no',[1 0],2);
-	slice_mm = spm_input('Slice [mm]?','+1','e',0,1);
-	orient = spm_input('Orientation',1,'axial|coronal|sagittal',[3 2 1],1);
+  P = spm_select(Inf,'image','Select images');
+  scaling = spm_input('Prop. scaling (e.g. for T1- or modulated images)?',1,'yes|no',[1 0],2);
+  slice_mm = spm_input('Slice [mm]?','+1','e',0,1);
+  orient = spm_input('Orientation',1,'axial|coronal|sagittal',[3 2 1],1);
 end
 
 V = spm_vol(deblank(P));
@@ -49,8 +45,8 @@ range = ([1 V(1).dim(orient)] - Orig(orient))*vx(orient);
 % calculate slice from mm to voxel
 sl = slice_mm/vx(orient)+Orig(orient);
 while (sl < 1) || (sl > V(1).dim(orient))
-	slice_mm = spm_input(['Slice (in mm) [' num2str(range(1)) '...' num2str(range(2)) ']'],1,'e',0);
-	sl = slice_mm/vx(orient)+Orig(orient);
+  slice_mm = spm_input(['Slice (in mm) [' num2str(range(1)) '...' num2str(range(2)) ']'],1,'e',0);
+  sl = slice_mm/vx(orient)+Orig(orient);
 end
 
 M = spm_matrix([0 0 0 0 0 0 1 1 1]);
@@ -64,13 +60,13 @@ M(orient,4) = sl;
 
 % global scaling
 if scaling
-	gm=zeros(size(V,1),1);
-	disp('Calculating globals...');
-	for i=1:size(V,1), gm(i) = spm_global(V(i)); end
-	gm_all = mean(gm);
-	for i=1:n
-		V(i).pinfo(1:2,:) = gm_all*V(i).pinfo(1:2,:)/gm(i);
-	end
+  gm=zeros(size(V,1),1);
+  disp('Calculating globals...');
+  for i=1:size(V,1), gm(i) = spm_global(V(i)); end
+  gm_all = mean(gm);
+  for i=1:n
+    V(i).pinfo(1:2,:) = gm_all*V(i).pinfo(1:2,:)/gm(i);
+  end
 end
 
 Y = zeros([dim_array,n]);
@@ -79,12 +75,12 @@ Y = zeros([dim_array,n]);
 %-----------------------------------------------------------------------
 spm_progress_bar('Init',n,'volumes completed');
 for i=1:n
-	d = spm_slice_vol(V(i),M,dim_array,[hold,NaN]);
+  d = spm_slice_vol(V(i),M,dim_array,[hold,NaN]);
     if orient == 2
       d = flipud(rot90(d));
     end
-	Y(:,:,i) = d;
-	spm_progress_bar('Set',i);
+  Y(:,:,i) = d;
+  spm_progress_bar('Set',i);
 end
 
 spm_progress_bar('Clear')
@@ -107,9 +103,9 @@ img = zeros(sizex*dim_array(1),sizey*dim_array(2));
 for i = 1:sizex
    for j = 1:sizey
         k = (sizex-i) + sizex*(j-1);
-	if k < n
+  if k < n
       img((i-1)*dim_array(1)+1:(i)*dim_array(1),(j-1)*dim_array(2)+1:(j)*dim_array(2)) = fliplr(Y(:,:,(k+1)));
-	end
+  end
   end
 end
 

@@ -1,4 +1,21 @@
 ------------------------------------------------------------------------
+r2055 | gaser | 2022-07-29 18:07:41
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_factorial.m
+MM cat_stat_check_SPM.m
+ M cat_stat_check_cov2.m
+ M cat_stat_showslice_all.m
+R  cat_stat_check_SPM2.m -> internal/cat_stat_check_SPM.m
+
+
+Changed: Set group-specific AnCova as default for TIV correction in 
+         cat_conf_factorial.m.
+Changed: Removed sone old options in cat_stat_showslice_all.m that are not 
+         needed anymore.
+Changed: Many smaller changes to cat_stat_check_cov2.m to remove inconsitencies.         
+Changed: Prepared cat_stat_check_SPM.m for new z-score check.------------------------------------------------------------------------
 r2054 | gaser | 2022-07-28 17:43:44
 
 Changed paths:
