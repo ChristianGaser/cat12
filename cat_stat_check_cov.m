@@ -24,7 +24,7 @@ function varargout = cat_stat_check_cov(job)
 %  .threshold_zsc    .. lower threshold for Z-score (mean - 4*std)
 %
 % Example: 
-%   cat_stat_check_cov(struct('data',{{ files }} ,'gap',3,'c',[],'data_xml',{{}}));
+%   cat_stat_check_cov(struct('data',{{ files }} ,'c',[],'data_xml',{{}}));
 %
 % See also cat_stat_check_cov
 % ______________________________________________________________________
