@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2057 | gaser | 2022-07-29 18:44:18
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_factorial.m
+ M cat_conf_tools.m
+ M cat_stat_check_cov.m
+
+
+Fixed:   Corrected wrong parameter name in cat_conf_tools.m.
+         ------------------------------------------------------------------------
 r2056 | gaser | 2022-07-29 18:26:41
 
 Changed paths:

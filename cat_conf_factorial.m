@@ -265,7 +265,7 @@ mcov       = cfg_branch;
 mcov.tag   = 'mcov';
 mcov.name  = 'Covariate';
 mcov.val   = {c cname iCC};
-mcov.help  = {'Add a new covariate of interest to your experimental design.'};
+mcov.help  = {'Add a new covariate to your experimental design.'};
 
 %--------------------------------------------------------------------------
 % generic Covariates
