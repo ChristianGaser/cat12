@@ -116,9 +116,15 @@ if check_zscore
   repeated_anova = ~isempty(xX.iB);
   
   if repeated_anova
-    % coding of group factor should be hopefully always 3rd column of xX.I
-    cl = 3;
+    % coding of subject factor should be hopefully always 2nd column of xX.I
+    cl = 2;
     n_samples = max(xX.I(:,cl));
+    
+    % if number of samples gets too large we just use one sample
+    if n_samples > 50
+      n_samples = 1;
+      cl = 1;
+    end
   else
     if ~isempty(xX.iH)
       n_samples = length(xX.iH);

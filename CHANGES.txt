@@ -1,4 +1,22 @@
 ------------------------------------------------------------------------
+r2060 | gaser | 2022-07-31 01:52:32
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_tools.m
+ M cat_long_report.m
+ M cat_main_reportfig.m
+ M cat_stat_check_SPM.m
+ M cat_stat_homogeneity.m
+
+
+Fixed:  Corrected incorrect entry for data_vol in cat_conf_tools.m.
+Fixed:  Changed parameters in cat_main_reportfig according to new homogeneity
+        function.
+Fixed:  Corrected wrong indication og group factor in cat_stat_check_SPM.m
+        for long. designs.
+Fixed:  Solced some smaller issues in cat_stat_homogeneity.m.
+ ------------------------------------------------------------------------
 r2059 | gaser | 2022-07-29 23:01:03
 
 Changed paths:
