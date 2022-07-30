@@ -257,6 +257,11 @@ for i=1:n_subjects
   data_name = strrep(data_name,'_affine','');
   data_name = strrep(data_name,'_rigid','');
   
+  if isfield(job,'sel_xml') && isfield(job.sel_xml,'select_dir')
+  else % use relative folder for autom. search
+    report_folder = fullfile(pth,'..','report');
+  end
+  
   % use xml-file if found by name
   if ~xml_defined
 
@@ -475,8 +480,15 @@ end
 fprintf('\n');
 spm_progress_bar('Clear');
 
-% get data for each subject in longitudinal designs
+% check for repeated anova design with long. data
 if isfield(H.job,'factorial_design') && isfield(H.job.factorial_design,'des') && isfield(H.job.factorial_design.des,'fblock')
+  H.repeated_anova = true;
+else
+  H.repeated_anova = true;
+end
+
+% get data for each subject in longitudinal designs
+if H.repeated_anova
   fsubject = H.job.factorial_design.des.fblock.fsuball.fsubject;
   n_subjects_long = numel(fsubject);
   H.ind_subjects_long = cell(numel(fsubject),1);
@@ -571,7 +583,14 @@ fname_tmp = cell(n_samples,1);
 fname_s   = cell(n_samples,1);
 fname_e   = cell(n_samples,1);
 for i=1:n_samples
-  [tmp, fname_tmp{i}] = spm_str_manip(char(H.files.fname{H.sample == i}),'C');
+  
+  % get common filename (for repeated Anova use all data otherwise data for
+  % that sample)
+  if H.repeated_anova
+    [tmp, fname_tmp{i}] = spm_str_manip(char(H.files.fname),'C');
+  else
+    [tmp, fname_tmp{i}] = spm_str_manip(char(H.files.fname{H.sample == i}),'C');
+  end
   if ~isempty(fname_tmp{i})
     fname_m    = [fname_m; fname_tmp{i}.m]; 
     fname_s{i} = fname_tmp{i}.s;
@@ -751,8 +770,9 @@ H.ui.boxp = uicontrol(H.mainfig,...
 % if QM values are available allow IQR and surface parameters, but skip
 % noise and bias as first 2 entries
 if H.isxml
-  str  = { 'Scatterplot',H.xml.QM_names_short(3:end,:)};
-  tmp  = {{@show_QMzscore, H.X,4}}; % IQR
+  str  = { 'Scatterplot','Mean absolute Z-score',H.xml.QM_names_short(3:end,:)};
+  tmp  = {{@show_QMzscore, H.X,0}, ... % file order
+          {@show_QMzscore, H.X,4}};    % IQR
   if size(H.xml.QM,2) == 5
   tmp  = {{@show_QMzscore, H.X,4}, ... % IQR
           {@show_QMzscore, H.X,5}, ... % Euler number
@@ -1062,7 +1082,7 @@ for i = 1:max(H.sample)
 end
 
 % connect point of each subject for long. designs
-if isfield(H,'ind_subjects_long')
+if H.repeated_anova
   for i = 1:numel(H.ind_subjects_long)
     ind = H.ind.*H.ind_subjects_long{i} > 0;
     plot(xx(ind),yy(ind));
@@ -1383,7 +1403,9 @@ global H
 % change button status and checkboxes if button was pressed
 if nargin
   H.show_sel = 2;
-  set(H.ui.plotbox, 'Visible', 'off');
+  if isfield(H.ui,'plotbox')
+    set(H.ui.plotbox, 'Visible', 'off');
+  end
   set(H.ui.fnambox, 'Visible', 'off');
   set(H.dpui.report, 'BackGroundColor',[0.95 0.95 0.95]);
   set(H.dpui.log,    'BackGroundColor',[0.94 0.94 0.94]);
@@ -1419,7 +1441,9 @@ global H
 
 % change button status and checkboxes if button was pressed
 if nargin
-  set(H.ui.plotbox, 'Visible', 'off');
+  if isfield(H.ui,'plotbox')
+    set(H.ui.plotbox, 'Visible', 'off');
+  end
   set(H.ui.fnambox, 'Visible', 'off');
   set(H.dpui.report,  'BackGroundColor',[0.94 0.94 0.94]);
   set(H.dpui.log,     'BackGroundColor',[0.94 0.94 0.94]);
@@ -1465,7 +1489,9 @@ global H
 % change button status and checkboxes if button was pressed
 if nargin
   H.show_sel = 5;
-  set(H.ui.plotbox, 'Visible', 'off');
+  if isfield(H.ui,'plotbox')
+    set(H.ui.plotbox, 'Visible', 'off');
+  end
   set(H.ui.fnambox, 'Visible', 'off');
   set(H.dpui.report,  'BackGroundColor',[0.94 0.94 0.94]);
   set(H.dpui.log,     'BackGroundColor',[0.95 0.95 0.95]);
@@ -1787,9 +1813,12 @@ elseif isfield(job.des,'fblock') % flexible factorial
     if sum(ind) > 1 % remove single time points and update scans and conditions
       job.des.fblock.fsuball.fsubject(i).scans = fsubject(i).scans(ind(ind_subject));
       job.des.fblock.fsuball.fsubject(i).conds = fsubject(i).conds(ind(ind_subject));
+    elseif sum(ind) == 1 % indicate to remove whole subject because only one time point remains
+      ind_remove_subject = [ind_remove_subject i];
+      fprintf('Remove all time points of subject %d because only one time point remains.\n\n',i);
     elseif sum(ind) == 0 % indicate to remove whole subject
       ind_remove_subject = [ind_remove_subject i];
-      fprintf('Remove all time points of subject %d\n',i);
+      fprintf('Remove all time points of subject %d\n\n',i);
     end
   end  
   
@@ -1848,7 +1877,7 @@ global H
 if H.sel
   sel = H.sel;
 else
-  sel = 2; % Z-score by default
+  sel = 0; % file order by default
 end
 
 pos_mouse = get(event_obj, 'Position');
@@ -1871,19 +1900,28 @@ end
 % build list of selected data points to remove and return
 if isfield(H,'isdel') && H.isdel
   
+  if sel % QM measure on x-axis
+    xx = H.X(x,sel);
+    yy = H.X(x,1);
+  else % file order on x-axis
+    xx = x;
+    yy = H.X(x,1);
+  end
+
   axes(H.ax)
   hold on
+  
   % reconsider this data point if already in the list
   if isfield(H,'del') && any(H.del == x)
-    plot(H.X(x,sel),H.X(x,1),'wx','MarkerSize',10,'Linewidth',2);
-    plot(H.X(x,sel),H.X(x,1),'wo','MarkerSize',10,'Linewidth',2,'MarkerFaceColor','w');
-    plot(H.X(x,sel),H.X(x,1),'ko','MarkerSize',5,'Linewidth',2);
+    plot(xx,yy,'wx','MarkerSize',10,'Linewidth',2);
+    plot(xx,yy,'wo','MarkerSize',10,'Linewidth',2,'MarkerFaceColor','w');
+    plot(xx,yy,'ko','MarkerSize',5,'Linewidth',2);
     txt = {'Reconsider this data point'};
     H.del(H.del==x) = [];
     return
   else
     txt = {'Remove this data point from list'};
-    plot(H.X(x,sel),H.X(x,1),'rx','MarkerSize',10,'Linewidth',2);
+    plot(xx,yy,'rx','MarkerSize',10,'Linewidth',2);
     
   end
   hold off

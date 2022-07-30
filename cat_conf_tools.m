@@ -2919,7 +2919,7 @@ function [check_homogeneity, check_cov] = conf_check_cov(data_xml,outdir,fname,s
 
   data          = data_vol;
   data.tag      = 'data';
-  sample.values = {data data_vol};
+  sample.values = {data};
   
   data_xml.name     = 'Select quality measures (leave emtpy for autom. search)';
 

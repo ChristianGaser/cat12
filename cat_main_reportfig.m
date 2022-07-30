@@ -346,7 +346,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     else
       IQR  = nan; 
     end
-    COV  = (res.long.vres.cov - max(res.long.vres.cov)); 
+    ZSCORE  = (res.long.vres.zscore - max(res.long.vres.zscore)); 
     RMSE = (min(res.long.vres.RMSEidiff) - res.long.vres.RMSEidiff )';
     
     % text to display (header + main measures)
@@ -365,18 +365,18 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       lstr{1}(1) = struct('name','','value','','value2','');
     end
     
-    % only plot COV and RMSE if more than two timepoints are available
-    if ~isnan(COV)
+    % only plot ZSCORE and RMSE if more than two timepoints are available
+    if ~isnan(ZSCORE)
       if numel(res.long.files) > 2
-        val  = min(res.long.vres.cov) - max(res.long.vres.cov); 
+        val  = min(res.long.vres.zscore) - max(res.long.vres.zscore); 
         val2 = marks2str(min(10.5,max(val * 100 + 0.5)),sprintf('%+0.3f',val)); 
-        cstr = '\bf\color[rgb]{0 0.6 0}COV:';
+        cstr = '\bf\color[rgb]{0 0.6 0}ZSCORE:';
       else
         val2 = ''; 
-        cstr = 'COV:';
+        cstr = 'ZSCORE:';
       end
       lstr{1}(2) = struct('name',cstr ,...
-        'value', marks2str( min(10.5,max(0.5,(0.98 - min(res.long.vres.cov))*100+0.5)) , sprintf('%0.3f',min(res.long.vres.cov)) ), ...
+        'value', marks2str( min(10.5,max(0.5,(0.98 - min(res.long.vres.zscore))*100+0.5)) , sprintf('%0.3f',min(res.long.vres.zscore)) ), ...
         'value2',val2); 
       if numel(res.long.files) > 2
         val  = max(res.long.vres.RMSEidiff) - min(res.long.vres.RMSEidiff);
@@ -401,7 +401,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     end
     
     % create figure
-    mdiff  = min([ COV; (mark2rps(IQRE) - 100)/100; RMSE]); 
+    mdiff  = min([ ZSCORE; (mark2rps(IQRE) - 100)/100; RMSE]); 
     mlim   = min(-0.05,-ceil(abs(mdiff)*20)/20); 
     tcmap  = [0.6 0 0; 0 .6 0; 0 0.3 0.7; 0.5 0.5 0.5]; 
     marker = {'^','s','>','o'}; 
@@ -421,16 +421,16 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         set(fb,'Facecolor',[1.0 0.8 0.8],'LineStyle','none','FaceAlpha',0.5); leg = [leg {':('}];
       end
     end
-    if ~any(isnan(COV)) && numel(res.long.files) > 2
-      leg    = [leg {'dIQR/100','dCOV','dRMSE'}];
+    if ~any(isnan(ZSCORE)) && numel(res.long.files) > 2
+      leg    = [leg {'dIQR/100','dZSCORE','dRMSE'}];
     else
       leg    = [leg {'dIQR/100'}]; 
     end
     % plot lines
     pt = plot( IQR/100 ); set(pt,'Color',tcmap(1,:),'Marker',marker{2}, ...
       'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
-    if ~any(isnan(COV)) && numel(res.long.files) > 2
-      pt = plot( COV ); set(pt,'Color',tcmap(2,:),'Marker',marker{1}, ...
+    if ~any(isnan(ZSCORE)) && numel(res.long.files) > 2
+      pt = plot( ZSCORE ); set(pt,'Color',tcmap(2,:),'Marker',marker{1}, ...
         'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
       pt = plot( RMSE); set(pt,'Color',tcmap(3,:),'Marker',marker{3}, ...
         'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
