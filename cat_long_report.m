@@ -191,9 +191,8 @@ function [cres,Vmn,Vidiff,Vrdiff,Vadiff] = cat_vol_longdiff(Pdata_vol,Pavg,s,wri
   end
   
   %% estimate covariance 
-  cjob.data_vol  = Pdata_vol; 
+  cjob.data      = Pdata_vol; 
   cjob.verb      = 0; 
-  cjob.gap       = 3; 
   cjob.c         = {}; 
   cjob.data_xml  = {};
   cres           = cat_stat_homogeneity(cjob);
@@ -316,7 +315,7 @@ function [cres,Psurf] = cat_surf_longdiff(Pdata_surf,s)
      Pdata_surfold     = Pdata_surf; 
       
     %% estimate covariance 
-    cjob.data_vol  = Pdata_surf; 
+    cjob.data      = Pdata_surf; 
     cjob.verb      = 0; 
     cjob.data_xml  = {};
     cjob.gap       = 3;
@@ -336,7 +335,7 @@ function [cres,Psurf] = cat_surf_longdiff(Pdata_surf,s)
       Psdata            = cat_surf_resamp(srjob);
       Pdata_surf        = Psdata.sample.lPsdata; 
       
-      cjob.data_vol     = Pdata_surf; 
+      cjob.data         = Pdata_surf; 
       cres              = cat_stat_homogeneity(cjob);
     end
     
