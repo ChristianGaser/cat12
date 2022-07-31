@@ -552,6 +552,21 @@ specall.help    = {
                    'So, for eg. a two-factor design the first column denotes the replication number and columns two and three have entries like 2 3 denoting the 2nd level of the first factor and 3rd level of the second factor. The 4th column in I would contain all 1s.'
 }';
 
+timepoint         = cfg_files;
+timepoint.tag     = 'timepoint';
+timepoint.name    = 'Timepoint';
+timepoint.filter  = {'image','.*\.(nii.gz)$'};
+timepoint.ufilter = '.*';
+timepoint.num     = [1 Inf];
+timepoint.help    = {'Select the same number and order of subjects for each time point. '};
+
+timepoints        = cfg_repeat;
+timepoints.tag    = 'timepoints';
+timepoints.name   = 'Timepoints (only for one group with same number of time points)';
+timepoints.values = {timepoint};
+timepoints.num    = [2 Inf];
+timepoints.help   = {'Specify time points. This only allows to use a design with only one group and the number of time points is the same for all subjects.'};
+
 %--------------------------------------------------------------------------
 % fsuball Specify Subjects or all Scans & Factors
 %--------------------------------------------------------------------------
@@ -559,8 +574,12 @@ fsuball         = cfg_choice;
 fsuball.tag     = 'fsuball';
 fsuball.name    = 'Specify Subjects or all Scans & Factors';
 fsuball.val     = {generic1 };
-fsuball.help    = {''};
-fsuball.values  = {generic1 specall};
+fsuball.help    = {...
+  'There are 3 different methods to define all subjects, time points and groups:'
+  '1. Subjects: quite flexible, but annoying to define for many subjects'
+  '2. Specify all: quite flexible, but you have to define a factor matrix'
+  '3. Timepoints: restricted to one group with the same number of scans per subject'};
+fsuball.values  = {generic1 specall timepoints};
 
 %--------------------------------------------------------------------------
 % fnum Factor number
@@ -1215,6 +1234,52 @@ if isfield(job.des,'fd')
   end
 elseif isfield(job.des,'fblock')
   fname = 'fblock';
+  
+  % if time points are defined we have to define fsubject.scans and
+  % fsubject.cond
+  if isfield(job.des.fblock.fsuball,'timepoint')
+    n_tpoints  = numel(job.des.fblock.fsuball.timepoint);
+    n_subjects = numel(job.des.fblock.fsuball.timepoint{1});
+    scans = cell(n_tpoints,1);
+    conds = 1:n_tpoints;
+    
+    for i = 1:n_subjects
+      for j = 1:n_tpoints
+        scans{j} = deblank(job.des.fblock.fsuball.timepoint{j}{i});
+        job.des.fblock.fsuball.fsubject(i).scans = scans; 
+        job.des.fblock.fsuball.fsubject(i).conds  = conds; 
+      end
+    end    
+  end
+  
+  if isfield(job.des.fblock.fsuball,'specall')
+    
+    % we can indicate column with time points (e.g. 1 2 3 1 2 3) by using
+    % diff and checking whether we have negative diff values
+    if min(diff(job.des.fblock.fsuball.specall.imatrix(:,3))) < 0
+      col_tpoints = 3;
+      col_groups  = 4;
+    else
+      col_tpoints = 4;
+      col_groups  = 3;
+    end
+    
+    n_subjects = max(job.des.fblock.fsuball.specall.imatrix(:,2));
+    n_groups   = max(job.des.fblock.fsuball.specall.imatrix(:,col_groups));
+    
+    for i = 1:n_subjects
+      ind = job.des.fblock.fsuball.specall.imatrix(:,2)==i;
+      scans = job.des.fblock.fsuball.specall.scans(ind);
+      job.des.fblock.fsuball.fsubject(i).scans = scans; 
+      if n_groups > 1
+        conds = job.des.fblock.fsuball.specall.imatrix(ind,[col_groups col_tpoints]);
+      else
+        conds = job.des.fblock.fsuball.specall.imatrix(ind,col_tpoints);
+      end
+      job.des.fblock.fsuball.fsubject(i).conds  = conds; 
+    end    
+  end
+  
 elseif isfield(job.des,'t2')
   fname = 't2';
   if isfield(job.globals,'g_ancova')
