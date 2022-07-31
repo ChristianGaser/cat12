@@ -49,6 +49,7 @@ end
 
 H.sample   = [];
 H.mouse.x  = 1;
+H.del      = [];
 G          = [];
 n_subjects = 0;
 H.ui.alphaval = 0.5;
@@ -210,6 +211,13 @@ if ~exist(report_folder,'dir')
   report_folder = pth;
 end
 
+% check for repeated anova design with long. data
+if isfield(H.job,'factorial_design') && isfield(H.job.factorial_design,'des') && isfield(H.job.factorial_design.des,'fblock')
+  H.repeated_anova = true;
+else
+  H.repeated_anova = false;
+end
+
 % search xml report files if not defined
 prep_str = '';
 if ~xml_defined
@@ -305,6 +313,10 @@ for i=1:n_subjects
     
     % find jpg/pdf/log files
     H.files.jpg{i} = fullfile(report_folder,['catreportj_' subjname '.jpg']);
+    if H.repeated_anova
+      H.files.jpg_long{i} = fullfile(report_folder,['catlongreportj_' data_name '.jpg']);
+      if ~exist(H.files.jpg_long{i},'file'), H.files.jpg_long{i} = ''; end
+    end
     H.files.pdf{i} = fullfile(report_folder,['catreport_' subjname '.pdf']);
     H.files.log{i} = fullfile(report_folder,['catlog_' subjname '.txt']);
     if ~exist(H.files.jpg{i},'file'), H.files.jpg{i} = ''; end
@@ -480,13 +492,6 @@ end
 fprintf('\n');
 spm_progress_bar('Clear');
 
-% check for repeated anova design with long. data
-if isfield(H.job,'factorial_design') && isfield(H.job.factorial_design,'des') && isfield(H.job.factorial_design.des,'fblock')
-  H.repeated_anova = true;
-else
-  H.repeated_anova = true;
-end
-
 % get data for each subject in longitudinal designs
 if H.repeated_anova
   fsubject = H.job.factorial_design.des.fblock.fsuball.fsubject;
@@ -540,9 +545,10 @@ H.pos = struct(...
     ...
     ... == display unit ==
     'dpReport',    [popm+popb(1)*0 0.715 popb],... % report 
-    'dpRaw',       [popm+popb(1)*1 0.715 popb],... % raw data
-    'dpRawP0',     [popm+popb(1)*2 0.715 popb],... % raw data + p0
-    'dpLog',       [popm+popb(1)*3 0.715 popb],... % log
+    'dpReportLong',[popm+popb(1)*1 0.715 popb],... % report 
+    'dpRaw',       [popm+popb(1)*2 0.715 popb],... % raw data
+    'dpRawP0',     [popm+popb(1)*3 0.715 popb],... % raw data + p0
+    'dpLog',       [popm+popb(1)*4 0.715 popb],... % log
     ...
     ... == check boxes ==
     'fnambox',[0.775 0.600 0.200 0.050],... % show filenames?
@@ -819,15 +825,15 @@ H.naviui.zoomReset = uicontrol(H.mainfig,...
 H.naviui.zoomIn = uicontrol(H.mainfig,...
   'Units','normalized','position',H.pos.scZoomIn,'callback',...
   ['global H; ' ...
-   'hz = zoom(H.ax); ' ...
-   'set(hz,''enable'',''on'',''direction'',''in''); set(H.naviui.select,''BackGroundColor'',[0.94 0.94 0.94]);'], ... 
+   'hz = zoom(H.ax); set(hz,''enable'',''on'',''direction'',''in'');' ...
+   'set(H.naviui.select,''BackGroundColor'',[0.94 0.94 0.94]);'], ... 
   'Style','Pushbutton','enable','on','ToolTipString','Zoom in','CData',load_icon('tool_zoom_in.png'));
 
 H.naviui.zoomOut = uicontrol(H.mainfig,...
   'Units','normalized','position',H.pos.scZoomOut,'callback',...
   ['global H; ' ...
-   'hz = zoom(H.ax); ' ...
-   'set(hz,''enable'',''on'',''direction'',''out''); set(H.naviui.select,''BackGroundColor'',[0.94 0.94 0.94]);'], ...
+   'hz = zoom(H.ax); set(hz,''enable'',''on'',''direction'',''out''); ' ...
+   'set(H.naviui.select,''BackGroundColor'',[0.94 0.94 0.94]);'], ...
   'Style','Pushbutton','enable','on','ToolTipString','Zoom out','CData',load_icon('tool_zoom_out.png'));
 
 H.naviui.pan = uicontrol(H.mainfig,...
@@ -880,18 +886,24 @@ H.dpui.text = uicontrol(H.mainfig,...
 % enable some buttons only if respective files are available
 if H.isxml, status_xml = 'on';
 else status_xml = 'off'; end
-if ~isempty(H.files.raw{end}), status_raw = 'on';
+if ~isempty(H.files.raw{1}), status_raw = 'on';
 else status_raw = 'off'; end
-if ~isempty(H.files.p0{end}) && ~isempty(H.files.raw{numel(H.sample)}), status_rawp0 = 'on';
+if ~isempty(H.files.p0{1}) && ~isempty(H.files.raw{numel(H.sample)}), status_rawp0 = 'on';
 else status_rawp0 = 'off'; end
-if ~isempty(H.files.log{end}), status_log = 'on';
+if ~isempty(H.files.log{1}), status_log = 'on';
 else status_log = 'off'; end
-if ~isempty(H.files.jpg{end}), status_report = 'on';
+if H.repeated_anova && ~isempty(H.files.jpg_long{1}), status_reportlong = 'on';
+else status_reportlong = 'off'; end
+if ~isempty(H.files.jpg{1}), status_report = 'on';
 else status_report = 'off'; end
 
 H.dpui.report = uicontrol(H.mainfig,...
-  'Units','normalized','position',H.pos.dpReport,'callback',{@show_report},...
+  'Units','normalized','position',H.pos.dpReport,'callback',{@show_report,false},...
   'Style','Pushbutton','enable',status_report,'ToolTipString','Show report file','CData',load_icon('file_cat_report.png'));
+
+H.dpui.reportlong = uicontrol(H.mainfig,...
+  'Units','normalized','position',H.pos.dpReportLong,'callback',{@show_report,true},...
+  'Style','Pushbutton','enable',status_reportlong,'ToolTipString','Show longitudinal report file','CData',load_icon('file_cat_reportlong.png'));
 
 H.dpui.raw = uicontrol(H.mainfig,...
   'Units','normalized','position',H.pos.dpRaw,'callback',{@show_raw,false},...
@@ -1136,18 +1148,20 @@ if nargin == 0
 end
 
 H.show_sel = 1;
-set(H.dpui.report,'BackGroundColor',[0.94 0.94 0.94]);
-set(H.dpui.log,   'BackGroundColor',[0.94 0.94 0.94]);
-set(H.dpui.raw,   'BackGroundColor',[0.94 0.94 0.94]);
+set(H.dpui.report,    'BackGroundColor',[0.94 0.94 0.94]);
+set(H.dpui.reportlong,'BackGroundColor',[0.94 0.94 0.94]);
+set(H.dpui.log,       'BackGroundColor',[0.94 0.94 0.94]);
+set(H.dpui.raw,       'BackGroundColor',[0.94 0.94 0.94]);
 
 % only use SPM window if not defined
 if ~isfield(H,'Fgraph')
   H.Fgraph = spm_figure('GetWin','Graphics');
 end
-spm_figure('Clear',H.Fgraph);
+
 set(H.Fgraph,'Renderer','OpenGL');
 figure(H.Fgraph);
 spm_figure('Select',H.Fgraph);
+clf
 
 n_samples = max(H.sample);
 
@@ -1396,28 +1410,42 @@ colormap(H.cmap)
 return
 
 %-----------------------------------------------------------------------
-function show_report(obj, event_obj)
+function show_report(obj, event_obj, long_report)
 %-----------------------------------------------------------------------
 global H
 
 % change button status and checkboxes if button was pressed
 if nargin
-  H.show_sel = 2;
   if isfield(H.ui,'plotbox')
     set(H.ui.plotbox, 'Visible', 'off');
   end
   set(H.ui.fnambox, 'Visible', 'off');
-  set(H.dpui.report, 'BackGroundColor',[0.95 0.95 0.95]);
-  set(H.dpui.log,    'BackGroundColor',[0.94 0.94 0.94]);
-  set(H.dpui.raw,    'BackGroundColor',[0.94 0.94 0.94]);
-  set(H.dpui.rawp0,  'BackGroundColor',[0.94 0.94 0.94]);
+  if long_report
+    set(H.dpui.reportlong,'BackGroundColor',[0.95 0.95 0.95]);
+    set(H.dpui.report,    'BackGroundColor',[0.94 0.94 0.94]);
+    H.show_sel = 3;
+  else
+    set(H.dpui.report,    'BackGroundColor',[0.95 0.95 0.95]);
+    set(H.dpui.reportlong,'BackGroundColor',[0.94 0.94 0.94]);
+    H.show_sel = 2;
+  end
+  set(H.dpui.log,  'BackGroundColor',[0.94 0.94 0.94]);
+  set(H.dpui.raw,  'BackGroundColor',[0.94 0.94 0.94]);
+  set(H.dpui.rawp0,'BackGroundColor',[0.94 0.94 0.94]);
 end
 
-jpg_file = H.files.jpg{H.mouse.x};
-if ~isempty(jpg_file)
+% select first time point for longitudinal report and selected data for
+% normal report
+if long_report
+  jpg_file = H.files.jpg_long{min(H.mouse.x)};
+else
+  jpg_file = H.files.jpg{H.mouse.x(1)};
+end
 
-  spm_figure('Clear',H.Fgraph);
+if ~isempty(jpg_file)
+  
   figure(H.Fgraph);
+  clf
 
   ppos = [0 0 1 1];
   jpg  = imread(jpg_file); 
@@ -1445,33 +1473,37 @@ if nargin
     set(H.ui.plotbox, 'Visible', 'off');
   end
   set(H.ui.fnambox, 'Visible', 'off');
-  set(H.dpui.report,  'BackGroundColor',[0.94 0.94 0.94]);
-  set(H.dpui.log,     'BackGroundColor',[0.94 0.94 0.94]);
+  set(H.dpui.report,    'BackGroundColor',[0.94 0.94 0.94]);
+  set(H.dpui.reportlong,'BackGroundColor',[0.94 0.94 0.94]);
+  set(H.dpui.log,      'BackGroundColor',[0.94 0.94 0.94]);
   if overlay
-    set(H.dpui.rawp0, 'BackGroundColor',[0.95 0.95 0.95]);
-    set(H.dpui.raw,   'BackGroundColor',[0.94 0.94 0.94]);
-    H.show_sel = 4;
+    set(H.dpui.rawp0,  'BackGroundColor',[0.95 0.95 0.95]);
+    set(H.dpui.raw,    'BackGroundColor',[0.94 0.94 0.94]);
+    H.show_sel = 5;
   else
-    set(H.dpui.rawp0, 'BackGroundColor',[0.94 0.94 0.94]);
-    set(H.dpui.raw,   'BackGroundColor',[0.95 0.95 0.95]);
-    H.show_sel = 3;
+    set(H.dpui.rawp0,  'BackGroundColor',[0.94 0.94 0.94]);
+    set(H.dpui.raw,    'BackGroundColor',[0.95 0.95 0.95]);
+    H.show_sel = 4;
   end
 end
 
-raw_file = H.files.raw{H.mouse.x};
-p0_file  = H.files.p0{H.mouse.x};
+raw_file = H.files.raw(H.mouse.x);
+p0_file  = H.files.p0(H.mouse.x);
 if ~isempty(raw_file)
-
-%  spm_orthviews('Reset')
 
   job.colormapc = flipud(cat_io_colormaps('BCGWHcheckcov'));
   job.prop  = 0.2; 
  
   spm_check_registration(char(raw_file));
 
-  if overlay && exist(p0_file,'file')
-    spm_orthviews('addtruecolourimage',1,p0_file,...
-      job.colormapc,job.prop,0,5);
+  % overlay p0image if available
+  if overlay
+    for i=1: numel(p0_file)
+      if exist(p0_file{i},'file')
+        spm_orthviews('addtruecolourimage',i,p0_file{i},...
+          job.colormapc,job.prop,0,5);
+      end
+    end
   end
 
   spm_orthviews('Reposition',[0 0 0]); 
@@ -1488,22 +1520,23 @@ global H
 
 % change button status and checkboxes if button was pressed
 if nargin
-  H.show_sel = 5;
+  H.show_sel = 6;
   if isfield(H.ui,'plotbox')
     set(H.ui.plotbox, 'Visible', 'off');
   end
   set(H.ui.fnambox, 'Visible', 'off');
-  set(H.dpui.report,  'BackGroundColor',[0.94 0.94 0.94]);
-  set(H.dpui.log,     'BackGroundColor',[0.95 0.95 0.95]);
-  set(H.dpui.raw,     'BackGroundColor',[0.94 0.94 0.94]);
-  set(H.dpui.rawp0,   'BackGroundColor',[0.94 0.94 0.94]);
+  set(H.dpui.report,    'BackGroundColor',[0.94 0.94 0.94]);
+  set(H.dpui.reportlong,'BackGroundColor',[0.94 0.94 0.94]);
+  set(H.dpui.log,       'BackGroundColor',[0.95 0.95 0.95]);
+  set(H.dpui.raw,       'BackGroundColor',[0.94 0.94 0.94]);
+  set(H.dpui.rawp0,     'BackGroundColor',[0.94 0.94 0.94]);
 end
 
 log_file = H.files.log{H.mouse.x};
 if ~isempty(log_file)
 
-  spm_figure('Clear',H.Fgraph);
   figure(H.Fgraph);
+  clf
   axis off
   
   textbox = [0 0 1 1];  
@@ -1625,9 +1658,9 @@ H.data.vol = 64*((H.data.vol - mn)/(mx-mn));
 
 if isfield(H,'mouse') && isfield(H.mouse,'x')
   if H.ui.sorted
-    x = H.ind_sorted(H.mouse.x);
+    x = H.ind_sorted(H.mouse.x(1));
   else
-    x = H.mouse.x;
+    x = H.mouse.x(1);
   end
   
   % check whether mouse position is defined
@@ -1638,8 +1671,11 @@ if isfield(H,'mouse') && isfield(H.mouse,'x')
   H.img       = rot90(H.img,2);
   H.img_alpha = rot90(H.img_alpha,2);
   
-  if ~isfield(H,'ax_slice') H.ax_slice = axes('Position',H.pos.slice); end
-  axes(H.ax_slice);
+  if ~isfield(H,'ax_slice')
+    H.ax_slice = axes('Position',H.pos.slice);
+  else
+    axes(H.ax_slice);
+  end
 
   % use gray scale colormap for values > 64
   image(65 + H.img);
@@ -1763,6 +1799,8 @@ fprintf('\n---------------------------------------------------------------------
 fprintf('Create new analysis without removed data in %s\n',job.dir{1});
 fprintf('------------------------------------------------------------------------------------------\n');
 
+spm('alert!', sprintf('Create new analysis without removed data in %s\n',job.dir{1}), 0);
+
 % modify globals
 if isfield(job,'globals') && isfield(job.globals,'g_user')
   job.globals.g_user.global_uval = job.globals.g_user.global_uval(H.ind);
@@ -1840,12 +1878,15 @@ function do_rerun(obj, event_obj, undo)
 %-----------------------------------------------------------------------
 global H
 
-set(H.dpui.rawp0,   'BackGroundColor',[0.94 0.94 0.94]);
-set(H.dpui.raw,     'BackGroundColor',[0.94 0.94 0.94]);
-set(H.dpui.log,     'BackGroundColor',[0.94 0.94 0.94]);
-set(H.dpui.report,  'BackGroundColor',[0.94 0.94 0.94]);
-set(H.delui.remove, 'BackGroundColor',[0.94 0.94 0.94]);
-set(H.naviui.select,'BackGroundColor',[0.95 0.95 0.95]);
+set(H.dpui.rawp0,     'BackGroundColor',[0.94 0.94 0.94]);
+set(H.dpui.raw,       'BackGroundColor',[0.94 0.94 0.94]);
+set(H.dpui.log,       'BackGroundColor',[0.94 0.94 0.94]);
+set(H.dpui.report,    'BackGroundColor',[0.94 0.94 0.94]);
+set(H.dpui.reportlong,'BackGroundColor',[0.94 0.94 0.94]);
+set(H.delui.remove,   'BackGroundColor',[0.94 0.94 0.94]);
+set(H.naviui.select,  'BackGroundColor',[0.95 0.95 0.95]);
+
+datacursormode('on');
 
 if undo
   H.ind = true(size(H.sample));
@@ -1855,7 +1896,6 @@ if undo
   set(H.delui.analysis_new,'enable','off');
   H.del = [];
   H.isdel = false;
-  datacursormode('on');
 else
   H.ind = ~ismember((1:numel(H.sample)),H.del);
 end
@@ -1866,6 +1906,9 @@ if H.isxml
 else
   show_QMzscore(H.X,0);
 end
+
+% delete old data tip
+delete(findall(H.mainfig,'Type','hggroup'))
 
 return
 
@@ -1887,13 +1930,25 @@ if isempty(x) || numel(x) > 1
   x = find(H.X(:,sel) == pos_mouse(1));
 end
 
+if isempty(x)
+  txt = '';
+  return
+end
+
 % text info for data cursor window
 txt = {sprintf('%s',H.filename.m{x})};
 
-% prevent that that function is called again if position has not changed
-if isfield(H,'mouse') && isfield(H.mouse,'x') && x == H.mouse.x
+% prevent that that function is called again if position has not changed or
+% subject for long. data has not changed for showing raw data
+if (H.repeated_anova && (H.show_sel == 4 || H.show_sel == 5))
+  if any(x == H.mouse.x) % && (H.repeated_anova && (H.show_sel == 4 || H.show_sel == 5))
+    return
+  else
+    H.mouse.x = x;
+  end
+elseif x == H.mouse.x(1) % && (H.repeated_anova && (H.show_sel == 4 || H.show_sel == 5))
   return
-else
+else 
   H.mouse.x = x;
 end
 
@@ -1912,7 +1967,7 @@ if isfield(H,'isdel') && H.isdel
   hold on
   
   % reconsider this data point if already in the list
-  if isfield(H,'del') && any(H.del == x)
+  if ~isempty(H.del) && any(H.del == x)
     plot(xx,yy,'wx','MarkerSize',10,'Linewidth',2);
     plot(xx,yy,'wo','MarkerSize',10,'Linewidth',2,'MarkerFaceColor','w');
     plot(xx,yy,'ko','MarkerSize',5,'Linewidth',2);
@@ -1927,11 +1982,7 @@ if isfield(H,'isdel') && H.isdel
   hold off
   
   % add point to the list
-  if isfield(H,'del')
-    H.del = unique([H.del x]);
-  else
-    H.del = x;
-  end
+  H.del = unique([H.del x]);
     
   % also update index of considered data and enable icons
   H.ind = ~ismember((1:numel(H.sample)),H.del);
@@ -1949,9 +2000,9 @@ end
 
 % text info for textbox
 if H.mesh_detected
-  txt2 = {[],sprintf('%s',spm_file(H.filename.m{H.mouse.x},'short25'))};
+  txt2 = {[],sprintf('%s',spm_file(H.filename.m{H.mouse.x(1)},'short25'))};
 else
-  txt2 = {[],sprintf('%s',spm_file(H.filename.m{H.mouse.x},'short25')),[],'Individual Z-score','(red: - blue: +)'};
+  txt2 = {[],sprintf('%s',spm_file(H.filename.m{H.mouse.x(1)},'short25')),[],'Individual Z-score','(red: - blue: +)'};
 end
 
 set(H.text,'String',txt2,'FontSize',H.FS-2);
@@ -1966,14 +2017,32 @@ if H.mesh_detected
 else
   % show image slice and glassbrain
   show_image_slice;
-  show_glassbrain;
+%  show_glassbrain;
 end
 
+% get list of time points for long. data
+if H.repeated_anova
+  for i = 1:numel(H.ind_subjects_long)
+    if H.ind_subjects_long{i}(x)
+      H.mouse.x = find(H.ind_subjects_long{i});
+      
+      % set actual position to 1st entry
+      H.mouse.x(H.mouse.x == x) = [];
+      H.mouse.x = [x H.mouse.x];
+      break
+    end
+  end
+end
+
+% only enable select
+datacursormode('on');
+
 switch(H.show_sel)
-  case 2, show_report;
-  case 3, show_raw(obj, event_obj, false);
-  case 4, show_raw(obj, event_obj, true);
-  case 5, show_log;
+  case 2, show_report(obj, event_obj, false); % report
+  case 3, show_report(obj, event_obj, true);  % report long
+  case 4, show_raw(obj, event_obj, false);    % raw
+  case 5, show_raw(obj, event_obj, true);     % raw + p0
+  case 6, show_log;                           % log file
 end
 
 return
