@@ -1,4 +1,19 @@
 ------------------------------------------------------------------------
+r2061 | gaser | 2022-08-01 00:46:30
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_factorial.m
+ M cat_stat_homogeneity.m
+A  html/icons/file_cat_reportlong.png
+
+
+Changed: Added handling of flexible factorial designs using 3 different 
+         definitions.
+Changed: Added option for long. reports to cat_stat_homogeneity.m.
+Fixed:   Corrected many smaller inconsistencies in cat_stat_homogeneity.m.
+Added:   New icon for cat_stat_homogeneity.m.
+------------------------------------------------------------------------
 r2060 | gaser | 2022-07-31 01:52:32
 
 Changed paths:
@@ -15,7 +30,7 @@ Fixed:  Changed parameters in cat_main_reportfig according to new homogeneity
         function.
 Fixed:  Corrected wrong indication og group factor in cat_stat_check_SPM.m
         for long. designs.
-Fixed:  Solced some smaller issues in cat_stat_homogeneity.m.
+Fixed:  Solved some smaller issues in cat_stat_homogeneity.m.
  ------------------------------------------------------------------------
 r2059 | gaser | 2022-07-29 23:01:03
 
