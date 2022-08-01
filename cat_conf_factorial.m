@@ -3,7 +3,7 @@ function factorial_design = cat_conf_factorial(expert)
 %__________________________________________________________________________
 % Copyright (C) 2005-2016 Wellcome Trust Centre for Neuroimaging
 
-% modified version of
+% largely modified version of
 % spm_cfg_factorial_design.m 6952 2016-11-25 16:03:13Z guillaume
 % ______________________________________________________________________
 %
@@ -41,15 +41,6 @@ scans.ufilter = '.*';
 scans.num     = [1 Inf];
 scans.preview = @(f) spm_check_registration(char(f));
 
-
-%==========================================================================
-% t1 One-sample t-test
-%==========================================================================
-t1      = cfg_branch;
-t1.tag  = 't1';
-t1.name = 'One-sample t-test';
-t1.val  = {scans};
-t1.help = {'One-sample t-test.'};
 
 %--------------------------------------------------------------------------
 % scans1 Group 1 scans
@@ -91,13 +82,6 @@ dept.help    = {
 dept.labels  = {'Yes', 'No'};
 dept.values  = {0 1};
 dept.val     = {0};
-
-%--------------------------------------------------------------------------
-% deptn Independence (default is 'No')
-%--------------------------------------------------------------------------
-deptn         = dept;
-deptn.help{1} = 'By default, the measurements are assumed to be dependent between levels. ';
-deptn.val     = {1};
 
 %--------------------------------------------------------------------------
 % variance Variance
@@ -171,35 +155,6 @@ scans.help    = {'Select the pair of images.'};
 scans.filter  = {'image','mesh'};
 scans.ufilter = '.*';
 scans.num     = [2 2];
-
-%--------------------------------------------------------------------------
-% pair Pair
-%--------------------------------------------------------------------------
-pair         = cfg_branch;
-pair.tag     = 'pair';
-pair.name    = 'Pair';
-pair.val     = {scans };
-pair.help    = {'Add a new pair of scans to your experimental design.'};
-
-%--------------------------------------------------------------------------
-% generic Pairs
-%--------------------------------------------------------------------------
-generic         = cfg_repeat;
-generic.tag     = 'generic';
-generic.name    = 'Pairs';
-generic.help    = {''};
-generic.values  = {pair};
-generic.val     = {pair};
-generic.num     = [1 Inf];
-
-%==========================================================================
-% pt Paired t-test
-%==========================================================================
-pt      = cfg_branch;
-pt.tag  = 'pt';
-pt.name = 'Paired t-test';
-pt.val  = {generic gmsca ancova};
-pt.help = {'Paired t-test.'};
 
 %--------------------------------------------------------------------------
 % scans Scans
@@ -552,6 +507,9 @@ specall.help    = {
                    'So, for eg. a two-factor design the first column denotes the replication number and columns two and three have entries like 2 3 denoting the 2nd level of the first factor and 3rd level of the second factor. The 4th column in I would contain all 1s.'
 }';
 
+%--------------------------------------------------------------------------
+% timepoint Timepoints
+%--------------------------------------------------------------------------
 timepoint         = cfg_files;
 timepoint.tag     = 'timepoint';
 timepoint.name    = 'Timepoint';
@@ -562,10 +520,24 @@ timepoint.help    = {'Select the same number and order of subjects for each time
 
 timepoints        = cfg_repeat;
 timepoints.tag    = 'timepoints';
-timepoints.name   = 'Timepoints (only for one group with same number of time points)';
+timepoints.name   = 'Timepoints (only for designs with same number of time points)';
 timepoints.values = {timepoint};
 timepoints.num    = [2 Inf];
 timepoints.help   = {'Specify time points. This only allows to use a design with only one group and the number of time points is the same for all subjects.'};
+
+group         = cfg_branch;
+group.tag     = 'group';
+group.name    = 'Group';
+group.val     = {timepoints};
+group.help    = {'Add a new group to your experimental design.'};
+
+groups        = cfg_repeat;
+groups.tag    = 'groups';
+groups.name   = 'Groups & Timepoints';
+groups.help   = {'Specify your groups and timepoints.'};
+groups.values = {group};
+groups.val    = {group};
+groups.num    = [1 Inf];
 
 %--------------------------------------------------------------------------
 % fsuball Specify Subjects or all Scans & Factors
@@ -577,9 +549,9 @@ fsuball.val     = {generic1 };
 fsuball.help    = {...
   'There are 3 different methods to define all subjects, time points and groups:'
   '1. Subjects: quite flexible, but annoying to define for many subjects'
-  '2. Specify all: quite flexible, but you have to define a factor matrix'
-  '3. Timepoints: restricted to one group with the same number of scans per subject'};
-fsuball.values  = {generic1 specall timepoints};
+  '2. Specify all: quite flexible, but you have to know how to define a factor matrix'
+  '3. Groups & Timepoints: easy to define, but restricted to designs with the same number of timepoints per subject'};
+fsuball.values  = {generic1 specall groups};
 
 %--------------------------------------------------------------------------
 % fnum Factor number
@@ -628,15 +600,6 @@ maininters.name    = 'Main effects & Interactions';
 maininters.help    = {''};
 maininters.values  = {fmain inter};
 maininters.num     = [0 Inf]; % 0 for factor-covariate interaction(s) only
-
-%==========================================================================
-% anovaw One-way ANOVA within subject
-%==========================================================================
-anovaw      = cfg_branch;
-anovaw.tag  = 'anovaw';
-anovaw.name = 'One-way ANOVA - within subject';
-anovaw.val  = {generic1 deptn variance gmsca ancova};
-anovaw.help = {'One-way Analysis of Variance (ANOVA) - within subject.'};
 
 %==========================================================================
 % fblock Flexible factorial
@@ -1177,7 +1140,6 @@ des.tag     = 'des';
 des.name    = 'Design';
 des.val     = {fd };
 des.help    = {''};
-%des.values  = {t2 mreg fd fblock };
 des.values  = {t2 mreg fd fblock};
 
 %==========================================================================
@@ -1235,21 +1197,43 @@ if isfield(job.des,'fd')
 elseif isfield(job.des,'fblock')
   fname = 'fblock';
   
-  % if time points are defined we have to define fsubject.scans and
+  % if groups are given we have to define fsubject.scans and
   % fsubject.cond
-  if isfield(job.des.fblock.fsuball,'timepoint')
-    n_tpoints  = numel(job.des.fblock.fsuball.timepoint);
-    n_subjects = numel(job.des.fblock.fsuball.timepoint{1});
-    scans = cell(n_tpoints,1);
-    conds = 1:n_tpoints;
+  if isfield(job.des.fblock.fsuball,'group')
     
-    for i = 1:n_subjects
-      for j = 1:n_tpoints
-        scans{j} = deblank(job.des.fblock.fsuball.timepoint{j}{i});
-        job.des.fblock.fsuball.fsubject(i).scans = scans; 
-        job.des.fblock.fsuball.fsubject(i).conds  = conds; 
+    n_groups   = numel(job.des.fblock.fsuball.group);
+    n_tpoints  = numel(job.des.fblock.fsuball.group(1).timepoint);
+    
+    for i = 1:n_groups
+      if numel(job.des.fblock.fsuball.group(i).timepoint) ~= n_tpoints
+        spm('alert*','Number of timepoints should be the same for all groups.');
+        out = [];
+        return
       end
-    end    
+      n_subjects{i} = numel(job.des.fblock.fsuball.group(i).timepoint{1});
+      for k = 1:n_tpoints
+        if numel(job.des.fblock.fsuball.group(i).timepoint{k}) ~= n_subjects{i}
+          spm('alert*','Number of subjects should be the same for all timepoints.');
+          out = [];
+          return
+        end
+      end
+    end
+    
+    scans = cell(n_tpoints,1);
+    conds = (1:n_tpoints)';
+    
+    subj = 0;
+    for i = 1:n_groups
+      for j = 1:n_subjects{i}
+        subj = subj + 1;
+        for k = 1:n_tpoints
+          scans{k} = deblank(job.des.fblock.fsuball.group(i).timepoint{k}{j});
+        end
+        job.des.fblock.fsuball.fsubject(subj).scans = scans; 
+        job.des.fblock.fsuball.fsubject(subj).conds = [i*ones(size(conds)), conds]; 
+      end  
+    end
   end
   
   if isfield(job.des.fblock.fsuball,'specall')
@@ -1309,7 +1293,9 @@ if isfield(job.des.(fname),'voxel_cov.files') && ~isempty(char(job.des.(fname).v
   end
   
   if m~=n
-    error('Number of covariate files (m=%d) differs from number of files (n=%d)',m,n);
+    spm('alert*','Number of covariate files (m=%d) differs from number of files (n=%d)',m,n);
+    out = [];
+    return
   end
   
   % get global means for covariate

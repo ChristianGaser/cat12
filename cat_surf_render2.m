@@ -1124,7 +1124,7 @@ switch lower(action)
         
         dcm_obj = datacursormode(H.figure);
         set(dcm_obj, 'Enable','off', 'SnapToDataVertex','on', ...
-            'DisplayStyle','Window', 'Updatefcn',{@myDataCursorUpdate, H});
+            'DisplayStyle','datatip', 'Updatefcn',{@myDataCursorUpdate, H});
     
     %-printresolution
     %======================================================================

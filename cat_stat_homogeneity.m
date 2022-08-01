@@ -707,10 +707,6 @@ set(H.ui.cbar,'Ytick',[],'YTickLabel','');
 %colormap(H.cmap)
 colormap(jet)
 
-% display YTick with 5 values (limit accuracy for floating numbers)
-%  set(H.ui.cbar,'YTickLabel','','XTickLabel','','XTick',linspace(1,64,5), 'XTickLabel',...
-%    round(100*linspace(min(H.data.avg_abs_zscore),max(H.data.avg_abs_zscore),5))/100,'TickLength',[0 0]);
-
 % add button for closing all windows
 H.ui.close = uicontrol(H.mainfig,...
         'String','Close','Units','normalized',...
@@ -1073,8 +1069,8 @@ for i=1:length(H.xml.QMzscore)
 end
 
 % create marker for different samples
-marker = char('o','+','*','s','d','^','v','<','>','-','|','.');
-while max(H.sample) > marker, marker = [marker; marker]; end
+marker = char('o','+','*','s','d','^','v','<','>','_','|','.');
+while max(H.sample) > numel(marker), marker = [marker; marker]; end
 
 if sel % show QM measure on x-axis
   xx = X(:,sel);
@@ -1333,7 +1329,7 @@ axis off image
 return
 
 %-----------------------------------------------------------------------
-function show_render_views
+function show_mesh
 %-----------------------------------------------------------------------
 global H
 
@@ -1344,8 +1340,13 @@ else
   H.hx = cat_surf_render2('Colourbar',H.hx);
 end
 H.hx = cat_surf_render2('clim',H.hx,H.data.range98);
-set(H.hx.figure,'Menubar','none','Toolbar','none','NumberTitle','off','Name',...
-  sprintf('Sample %d: %s %s',H.sample(H.mouse.x),H.info.texture,H.filename.m{H.mouse.x(1)}))
+
+sz = spm('WinSize','0',1) - H.pos.fig; sz = sz*0.75; sz(3) = sz(4)*1.4;
+pos_hx = [10 H.pos.fig(4)+sz(4) sz(3:4)];
+
+set(H.hx.figure,'Menubar','none','Toolbar','none','NumberTitle','off','Position',pos_hx,...
+  'Name',sprintf('Sample %d: %s %s',H.sample(H.mouse.x),H.info.texture,H.filename.m{H.mouse.x(1)}))
+
 figure(H.hx.figure)
 
 % get Z-score
@@ -1355,15 +1356,16 @@ zscore(H.data.Ystd == 0) = 0;
 if isfield(H,'hy') && isgraphics(H.hy.figure)
   H.hy = cat_surf_render2('Overlay',H.hy,zscore);
 else
-  pos_Hy = get(H.hx.figure,'Position');
-  pos_Hy = pos_Hy + [pos_Hy(3)+30 0 0 0];
+  pos_hy = pos_hx;
+  pos_hy = pos_hy + [pos_hx(3)+5 0 0 0];
   H.hy = cat_surf_render2(struct('vertices',H.Pmesh.vertices,'faces',H.Pmesh.faces,'cdata',zscore));
   H.hy = cat_surf_render2('Colourbar',H.hy);
   H.hy = cat_surf_render2('ColourMap',H.hy,cat_io_colormaps('BWR',64));
-  set(H.hy.figure,'Position',pos_Hy);  
+  set(H.hy.figure,'Position',pos_hy);  
 end
 H.hy = cat_surf_render2('clim',H.hy,[-3 3]);
 set(H.hy.figure,'Menubar','none','Toolbar','none','NumberTitle','off','Name',sprintf('Sample %d: Z-score %s',H.sample(H.mouse.x(1)),H.filename.m{H.mouse.x(1)}));  
+
 figure(H.hy.figure)
   
 return
@@ -1850,7 +1852,7 @@ elseif isfield(job.des,'fblock') % flexible factorial
     % we can keep that subject if we have at least 2 time points
     if sum(ind) > 1 % remove single time points and update scans and conditions
       job.des.fblock.fsuball.fsubject(i).scans = fsubject(i).scans(ind(ind_subject));
-      job.des.fblock.fsuball.fsubject(i).conds = fsubject(i).conds(ind(ind_subject));
+      job.des.fblock.fsuball.fsubject(i).conds = fsubject(i).conds(ind(ind_subject),:);
     elseif sum(ind) == 1 % indicate to remove whole subject because only one time point remains
       ind_remove_subject = [ind_remove_subject i];
       fprintf('Remove all time points of subject %d because only one time point remains.\n\n',i);
@@ -2013,7 +2015,7 @@ end
 
 if H.mesh_detected 
   % show two render views for meshes: texture and Z-score
-  show_render_views;
+  show_mesh;
 else
   % show image slice and glassbrain
   show_image_slice;

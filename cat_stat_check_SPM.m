@@ -263,7 +263,7 @@ bC  = kron(tmp',tmp);
 ws = spm('Winsize','Graphics');
 FS = cat_get_defaults('extopts.fontsize');
 
-h = figure;
+h = figure(20);
 clf(h);
 
 set(h,'MenuBar','none','Position',[10 10 0.85*ws(3) 0.85*ws(4)],'NumberTitle','off',...
