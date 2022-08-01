@@ -590,7 +590,9 @@ switch lower(action)
         if 1
           sel = 1;
           if isempty(H.S1.name)
-            error('Do not mix meshes with different resolutions (i.e. 164k vs. 32k)');
+            spm('alert*','Do not mix meshes with different resolutions (i.e. 164k vs. 32k)');
+            if nargout, varargout{1} = []; end
+            return
           end
           H.S{1}.name = H.S1.name(sel, :);
           H.S{2}.name = H.S2.name(sel, :);
@@ -837,7 +839,9 @@ switch lower(action)
       case 'cold-hot',  cmap = 4; 
       case 'customized',cmap = 5; 
       otherwise
-        error('Unknown colormap\n');
+        spm('alert*','Unknown colormap');
+        if nargout, varargout{1} = []; end
+        return
       end      
       if nargin==3
         select_cmap(cmap,varargin{2});
@@ -932,7 +936,7 @@ switch lower(action)
         mv = cat_stat_nanmean(c(:)); sv = cat_stat_nanstd(c(:)); 
         H.clim(2:3) = [ mv - H.datascaleval * sv ,  mv + H.datascaleval * sv];
         otherwise
-        error('unkown H.datascale %s.\n',H.datascale);
+          error('unkown H.datascale %s.\n',H.datascale);
       end
     end
     end
@@ -2728,7 +2732,9 @@ for i = 1:n
   end
   
   if strcmp(info(i).side, 'lh') || strcmp(info(i).side, 'rh')
-    error('Display of separate hemispheres is not supported anymore');
+    spm('alert*','Display of separate hemispheres is not supported anymore');
+    if nargout, varargout{1} = []; end
+    return
   end
 
 end
