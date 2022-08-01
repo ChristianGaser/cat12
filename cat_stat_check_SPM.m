@@ -158,7 +158,10 @@ if check_zscore
   job_check_zscore.data_xml = '';
   
   % adjust data using whole design matrix
-  if adjust_data
+  if adjust_data && repeated_anova % Don't adjust data for long. designs
+    fprintf('Disable adjustment for longitudinal data.\n');
+    job_check_zscore.c = [];
+  elseif adjust_data % adjust using design matrix
     job_check_zscore.c{1} = SPM.xX.X;
     fprintf('Data are adjusted using design matrix.\n');
   else % Don't adjust data

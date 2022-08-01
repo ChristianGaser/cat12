@@ -1,4 +1,20 @@
 ------------------------------------------------------------------------
+r2064 | gaser | 2022-08-02 00:55:59
+
+Changed paths:
+ M CHANGES.txt
+ M cat_stat_check_SPM.m
+ M cat_stat_homogeneity.m
+
+
+Changed: Disabled adjustment with design matrix for long. data in 
+         cat_stat_check_SPM.m
+Changed: many changes to cat_stat_homogeneity.m:
+         - Added colored connected lines to long. designs w.r.t. difference 
+           between time points.
+         - Corrected image intensity in slice display.
+         - Behaviour for removing data has changed.
+------------------------------------------------------------------------
 r2063 | gaser | 2022-08-01 12:01:11
 
 Changed paths:
