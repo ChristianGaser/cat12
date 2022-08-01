@@ -89,6 +89,13 @@ else
   H.mesh_detected = true;
 end
 
+% check for repeated anova design with long. data
+if isfield(H.job,'factorial_design') && isfield(H.job.factorial_design,'des') && isfield(H.job.factorial_design.des,'fblock')
+  H.repeated_anova = true;
+else
+  H.repeated_anova = false;
+end
+
 % read filenames for each sample and indicate sample parameter
 if H.mesh_detected
   n_samples = numel(job.data);
@@ -160,7 +167,7 @@ else
 end
 
 % prepare design matrix for adjusting nuisance parameters
-if isfield(job,'c') && ~isempty(job.c)
+if isfield(job,'c') && ~isempty(job.c) 
   for i=1:numel(job.c)
     G = [G job.c{i}];
   end
@@ -170,6 +177,7 @@ if isfield(job,'c') && ~isempty(job.c)
   % mean correction
   G = G - mean(G);
   iG = pinv(G);
+
 end
 
 if isempty(char(job.data_xml))
@@ -209,13 +217,6 @@ end
 % check whether report subfolder exists
 if ~exist(report_folder,'dir')
   report_folder = pth;
-end
-
-% check for repeated anova design with long. data
-if isfield(H.job,'factorial_design') && isfield(H.job.factorial_design,'des') && isfield(H.job.factorial_design.des,'fblock')
-  H.repeated_anova = true;
-else
-  H.repeated_anova = false;
 end
 
 % search xml report files if not defined
@@ -404,7 +405,7 @@ if ~isempty(G)
   else
     dim = H.files.V(i).dat.dim;
   end
-  Beta = zeros(prod(dim),size(G,2));
+  Beta = zeros(prod(dim),size(G,2),'single');
 end
 
 fprintf('Load data ');
@@ -431,7 +432,7 @@ for i = 1:n_subjects
   % estimate Beta
   if ~isempty(G) 
     for j = 1:size(Beta,2)
-      Beta(:,j) = Beta(:,j) + iG(j,i)*Ytmp(:);
+      Beta(:,j) = Beta(:,j) + single(iG(j,i)*Ytmp(:));
     end
   end
   
@@ -470,7 +471,7 @@ for i = 1:n_subjects
     Ytmp(:,:,:) = H.files.V(i).dat(:,:,:);
   end
   Ytmp(isnan(Ytmp)) = 0;
-  
+    
   if is_gSF
     Ytmp = Ytmp*gSF(i)/mean(gSF);
   end
@@ -478,7 +479,7 @@ for i = 1:n_subjects
   % correct for nuisance
   if ~isempty(G) 
     for j = 1:size(Beta,2)
-      Ytmp(:) = Ytmp(:) - G(i,j)*Beta(:,j);
+      Ytmp(:) = Ytmp(:) - double(G(i,j)*Beta(:,j));
     end
   end
   
@@ -558,7 +559,7 @@ H.pos = struct(...
     'text',   [0.775 0.450 0.200 0.150],... % textbox with info
     'aslider',[0.775 0.405 0.200 0.040],... % slider for alpha overlay
     'slice',  [0.775 0.030 0.200 0.400],... % slice images according to position of mouse pointer
-    'sslider',[0.775 0.020 0.200 0.040]);   % slider for z-slice   
+    'zslider',[0.775 0.020 0.200 0.040]);   % slider for z-slice   
 
 % use this window for Fgraph
 if isfield(job,'new_fig') && job.new_fig
@@ -808,13 +809,13 @@ H.naviui.text = uicontrol(H.mainfig,...
 
 H.naviui.select = uicontrol(H.mainfig,...
   'Units','normalized','position',H.pos.scSelect,'callback',...
-  ['datacursormode(''on''); global H; H.isdel = false; set(H.delui.remove,''BackGroundColor'',[0.94 0.94 0.94]);' ...
+  ['datacursormode(''on''); global H;' ...
   'set(H.naviui.select,''BackGroundColor'',[0.95 0.95 0.95]);'],...
   'Style','Pushbutton','enable','on','ToolTipString','Data selection','CData',load_icon('tool_pointer.png'),'BackGroundColor',[0.95 0.95 0.95]);
 
 H.naviui.zoomReset = uicontrol(H.mainfig,...
   'Units','normalized','position',H.pos.scZoomReset,'callback',...
-  ['zoom out; zoom reset; datacursormode(''on''); global H; H.isdel = false;' ...
+  ['zoom out; zoom reset; datacursormode(''on''); global H;' ...
   'set(H.naviui.select,''BackGroundColor'',[0.94 0.94 0.94]);'],...
   'Style','Pushbutton','enable','on','ToolTipString','Reset view','CData',load_icon('tool_fit.png')); 
 
@@ -844,14 +845,12 @@ H.delui.text = uicontrol(H.mainfig,...
   'String','Data remove options','FontSize',H.FS,'BackgroundColor',[0.8 0.8 0.8]);
 
 H.delui.remove = uicontrol(H.mainfig,...
-  'Units','normalized','position',H.pos.rmDel,'callback',...
-  ['datacursormode(''on''); global H; H.isdel = true; set(H.delui.remove,''BackGroundColor'',[0.95 0.95 0.95]);' ...
-  'set(H.naviui.select,''BackGroundColor'',[0.94 0.94 0.94]);'],...
-  'Style','Pushbutton','enable','on','ToolTipString','Remove data','CData',load_icon('file_delete.png'));
+  'Units','normalized','position',H.pos.rmDel,'callback',{@remove_point},...
+  'Style','Pushbutton','enable','off','ToolTipString','Remove this data point','CData',load_icon('file_delete.png'));
 
 H.delui.undo = uicontrol(H.mainfig,...
   'Units','normalized','position',H.pos.rmUndo,'callback',{@do_rerun,1},...
-  'Style','Pushbutton','enable','off','ToolTipString','Undo deletion','CData',load_icon('file_delete_restore.png')); 
+  'Style','Pushbutton','enable','off','ToolTipString','Undo all deletions','CData',load_icon('file_delete_restore.png')); 
 
 H.delui.new = uicontrol(H.mainfig,...
   'Units','normalized','position',H.pos.rmNew,'callback',{@get_new_list,1},...
@@ -886,11 +885,11 @@ if ~isempty(H.files.raw{1}), status_raw = 'on';
 else status_raw = 'off'; end
 if ~isempty(H.files.p0{1}) && ~isempty(H.files.raw{numel(H.sample)}), status_rawp0 = 'on';
 else status_rawp0 = 'off'; end
-if ~isempty(H.files.log{1}), status_log = 'on';
+if isfield(H.files,'log') && ~isempty(H.files.log{1}), status_log = 'on';
 else status_log = 'off'; end
-if H.repeated_anova && ~isempty(H.files.jpg_long{1}), status_reportlong = 'on';
+if H.repeated_anova && isfield(H.files,'jpg_long') && ~isempty(H.files.jpg_long{1}), status_reportlong = 'on';
 else status_reportlong = 'off'; end
-if ~isempty(H.files.jpg{1}), status_report = 'on';
+if isfield(H.files,'jpg') && ~isempty(H.files.jpg{1}), status_report = 'on';
 else status_report = 'off'; end
 
 H.dpui.report = uicontrol(H.mainfig,...
@@ -921,28 +920,28 @@ if ~H.mesh_detected
         'Style','slider','HorizontalAlignment','center',...
         'callback',@update_alpha,'Value',0.5,...
         'ToolTipString','Change Opacity of pos. (green colors) and neg. (red colors) Z-scores',...
-        'SliderStep',[0.01 0.1],'Visible','off');
+        'SliderStep',[0.01 0.1],'Visible','on');
 
   H.ui.alpha_txt = uicontrol(H.mainfig,...
         'Units','normalized','HorizontalAlignment','center',...
         'Style','text','BackgroundColor',[0.8 0.8 0.8],...
         'Position',[H.pos.aslider(1) H.pos.aslider(2)-0.005 0.2 0.02],...
         'String','Overlay Opacity of Z-score',...
-        'FontSize',H.FS-2,'Visible','off');
+        'FontSize',H.FS-2,'Visible','on');
 
   H.ui.mm = uicontrol(H.mainfig,...
-        'Units','normalized','position',H.pos.sslider,...
+        'Units','normalized','position',H.pos.zslider,...
         'Min',(1 - H.data.Orig(3))*H.data.vx(3),'Max',(H.files.V(1).dat.dim(3) - H.data.Orig(3))*H.data.vx(3),...
         'Style','slider','HorizontalAlignment','center',...
         'callback',@update_slices_array,...
         'ToolTipString','Select slice for display',...
-        'SliderStep',[0.005 0.05],'Visible','off');
+        'SliderStep',[0.005 0.05],'Visible','on');
 
   H.ui.mm_txt = uicontrol(H.mainfig,...
         'Units','normalized','HorizontalAlignment','center',...
         'Style','text','BackgroundColor',[0.8 0.8 0.8],...
-        'Position',[H.pos.sslider(1) H.pos.sslider(2)-0.005 0.2 0.02],...
-        'String','Slice [mm]','Visible','off','FontSize',H.FS-2);
+        'Position',[H.pos.zslider(1) H.pos.zslider(2)-0.005 0.2 0.02],...
+        'String','Slice [mm]','Visible','on','FontSize',H.FS-2);
 
   update_slices_array;
 end
@@ -1091,9 +1090,29 @@ end
 
 % connect point of each subject for long. designs
 if H.repeated_anova
+  
+  % use IQR*zscore if available
+  if sel == 4
+    measure = H.X(:,sel).*H.data.avg_abs_zscore;
+  else
+    measure = H.data.avg_abs_zscore;
+  end
+  
+  cm = jet(64);
+  ind = cell(numel(H.ind_subjects_long),1);
+  diff_measure = zeros(numel(H.ind_subjects_long),1);
+  
+  % get difference between extreme values for each subject
   for i = 1:numel(H.ind_subjects_long)
-    ind = H.ind.*H.ind_subjects_long{i} > 0;
-    plot(xx(ind),yy(ind));
+    ind{i} = H.ind.*H.ind_subjects_long{i} > 0;
+    diff_measure(i) = max(measure(ind{i}))-min(measure(ind{i}));
+  end
+  
+  % scale difference measure to a range 1..64 and use jet-colors for lines
+  diff_measure = 1 + round(63*(diff_measure - min(diff_measure))/(max(diff_measure)-min(diff_measure)));
+  for i = 1:numel(H.ind_subjects_long)
+    hp = plot(xx(ind{i}),yy(ind{i}));
+    set(hp, 'Color',cm(diff_measure(i),:));
   end
 end
 hold off
@@ -1378,19 +1397,25 @@ global H
 % add sliders for volume data
 set(H.ui.mm,'Visible','on');
 set(H.ui.mm_txt,'Visible','on');
-H.img = H.data.vol(:,:,H.mouse.x)';
+H.img = H.data.vol(:,:,H.mouse.x(1))';
 
 % alpha overlay
-H.img_alpha = H.data.zscore(:,:,H.mouse.x)';
+H.img_alpha = H.data.zscore(:,:,H.mouse.x(1))';
 
 % correct orientation
 H.img = rot90(H.img,2);
 H.img_alpha = rot90(H.img_alpha,2);
 
+if ~isfield(H,'ax_slice')
+  H.ax_slice = axes('Position',H.pos.slice);
+else
+  axes(H.ax_slice);
+end
+
 % display image with 2nd colorbar (gray)
 image(65 + H.img);
 if ~H.mesh_detected, axis image; end
-set(gca,'XTickLabel','','YTickLabel','','TickLength',[0 0]);
+set(H.ax_slice,'XTickLabel','','YTickLabel','','TickLength',[0 0]);
 title('Z-score')
 
 % prepare alpha overlays for red and green colors
@@ -1489,15 +1514,15 @@ if nargin
   end
 end
 
-raw_file = H.files.raw(H.mouse.x);
-p0_file  = H.files.p0(H.mouse.x);
+raw_file = H.files.raw(sort(H.mouse.x));
+p0_file  = H.files.p0(sort(H.mouse.x));
 if ~isempty(raw_file)
 
   job.colormapc = flipud(cat_io_colormaps('BCGWHcheckcov'));
   job.prop  = 0.2; 
  
   spm_check_registration(char(raw_file));
-
+    
   % overlay p0image if available
   if overlay
     for i=1: numel(p0_file)
@@ -1508,7 +1533,12 @@ if ~isempty(raw_file)
     end
   end
 
-  spm_orthviews('Reposition',[0 0 0]); 
+  % add short name to caption
+  for i=1:numel(raw_file)
+    spm_orthviews('caption',i,spm_str_manip(raw_file{i},'k30'));
+  end
+  
+  spm_orthviews('Reposition',[0 0 0]);
   spm_orthviews('redraw');  
   
 end
@@ -1626,27 +1656,25 @@ if (sl>P(1).dat.dim(3)) || (sl<1)
   sl = round(P(1).dat.dim(3)/2);
 end
 
-M  = spm_matrix([0 0 sl]);
+M = spm_matrix([0 0 sl]);
 H.data.zscore = zeros([P(1).dat.dim(1:2) length(H.files.V)]);
 Ymean = reshape(H.data.Ymean,P(1).dat.dim(1:3));
 Ystd  = reshape(H.data.Ystd,P(1).dat.dim(1:3));
 Ymean = Ymean(:,:,sl);
 Ystd  = Ystd(:,:,sl);
 
+scl = max(Ymean(:));
+
 for i = 1:length(H.files.V)
   img(:,:) = single(P(i).dat(:,:,sl));
   img(isnan(img)) = 0;
   
-  % rescue unscaled data
-  H.data.zscore(:,:,i) = img;
-
-  % scale image according to mean
-  H.data.vol(:,:,i) = img/mean(img(img ~= 0));
+  H.data.vol(:,:,i) = img;
 end
 
 % calculate individual Z-score map
 for i=1:size(H.data.zscore,3)
-  img = H.data.zscore(:,:,i);
+  img = H.data.vol(:,:,i);
   ind = Ystd > 0 & (Ymean > H.data.global | img > H.data.global);
   img(ind) = (img(ind) - Ymean(ind))./Ystd(ind);
   img(~ind) = 0;
@@ -1654,9 +1682,9 @@ for i=1:size(H.data.zscore,3)
 end
 
 % enhance contrast and scale image to 0..64
-mn = min(H.data.vol(:));
-mx = max(H.data.vol(:));
-H.data.vol = 64*((H.data.vol - mn)/(mx-mn));
+H.data.vol = 64*((H.data.vol - H.data.range98(1))/(H.data.range98(2)-H.data.range98(1)));
+H.data.vol(H.data.vol > 64) = 64;
+H.data.vol(H.data.vol < 0)  = 0;
 
 if isfield(H,'mouse') && isfield(H.mouse,'x')
   if H.ui.sorted
@@ -1678,7 +1706,7 @@ if isfield(H,'mouse') && isfield(H.mouse,'x')
   else
     axes(H.ax_slice);
   end
-
+  
   % use gray scale colormap for values > 64
   image(65 + H.img);
   axis image
@@ -1730,7 +1758,7 @@ Hdel = H.del;
 job = H.job;
 
 % create new list of xmlf-files if necessary
-if ~isempty(job.data_xml{1})
+if (iscell(job.data_xml) && ~isempty(job.data_xml{1})) || (~iscell(job.data_xml) && ~isempty(job.data_xml))
   n = 0;
   for i=1:numel(job.data_xml)
     if any(Hdel == i), continue; end
@@ -1779,10 +1807,8 @@ switch option
 
   case 1,
     do_rerun(obj,event_obj,false);
-    set(H.delui.remove, 'BackGroundColor',[0.94 0.94 0.94]);
     set(H.naviui.select,'BackGroundColor',[0.95 0.95 0.95]);
     datacursormode('on');
-    H.isdel = false;
 end
 
 return
@@ -1800,8 +1826,6 @@ job.dir{1} = fullfile(pth,['wo_removed_data_' name ext]);
 fprintf('\n------------------------------------------------------------------------------------------\n');
 fprintf('Create new analysis without removed data in %s\n',job.dir{1});
 fprintf('------------------------------------------------------------------------------------------\n');
-
-spm('alert!', sprintf('Create new analysis without removed data in %s\n',job.dir{1}), 0);
 
 % modify globals
 if isfield(job,'globals') && isfield(job.globals,'g_user')
@@ -1852,15 +1876,20 @@ elseif isfield(job.des,'fblock') % flexible factorial
     % we can keep that subject if we have at least 2 time points
     if sum(ind) > 1 % remove single time points and update scans and conditions
       job.des.fblock.fsuball.fsubject(i).scans = fsubject(i).scans(ind(ind_subject));
-      job.des.fblock.fsuball.fsubject(i).conds = fsubject(i).conds(ind(ind_subject),:);
+      if size(fsubject(i).conds,1) > 1
+        job.des.fblock.fsuball.fsubject(i).conds = fsubject(i).conds(ind(ind_subject),:);
+      else
+        job.des.fblock.fsuball.fsubject(i).conds = fsubject(i).conds(ind(ind_subject));
+      end
     elseif sum(ind) == 1 % indicate to remove whole subject because only one time point remains
       ind_remove_subject = [ind_remove_subject i];
-      fprintf('Remove all time points of subject %d because only one time point remains.\n\n',i);
+      fprintf('Remove all time points of subject %d because only one time point remains.\n',i);
     elseif sum(ind) == 0 % indicate to remove whole subject
       ind_remove_subject = [ind_remove_subject i];
-      fprintf('Remove all time points of subject %d\n\n',i);
+      fprintf('Remove all time points of subject %d\n',i);
     end
   end  
+  fprintf('\n');
   
   % remove whole subject from list
   if ~isempty(ind_remove_subject)
@@ -1872,7 +1901,8 @@ else
 end
 
 out = spm_run_factorial_design(job);
-  
+spm('alert!', sprintf('Create new analysis without removed data in %s\n',job.dir{1}), 0);
+
 return
 
 %-----------------------------------------------------------------------
@@ -1885,7 +1915,6 @@ set(H.dpui.raw,       'BackGroundColor',[0.94 0.94 0.94]);
 set(H.dpui.log,       'BackGroundColor',[0.94 0.94 0.94]);
 set(H.dpui.report,    'BackGroundColor',[0.94 0.94 0.94]);
 set(H.dpui.reportlong,'BackGroundColor',[0.94 0.94 0.94]);
-set(H.delui.remove,   'BackGroundColor',[0.94 0.94 0.94]);
 set(H.naviui.select,  'BackGroundColor',[0.95 0.95 0.95]);
 
 datacursormode('on');
@@ -1897,7 +1926,6 @@ if undo
   set(H.delui.list_del,'enable','off');
   set(H.delui.analysis_new,'enable','off');
   H.del = [];
-  H.isdel = false;
 else
   H.ind = ~ismember((1:numel(H.sample)),H.del);
 end
@@ -1911,6 +1939,62 @@ end
 
 % delete old data tip
 delete(findall(H.mainfig,'Type','hggroup'))
+set(H.delui.remove,'enable','off');
+
+return
+
+%-----------------------------------------------------------------------
+function remove_point(obj, event_obj)
+%-----------------------------------------------------------------------
+global H
+
+if H.sel
+  sel = H.sel;
+else
+  sel = 0; % file order by default
+end
+
+x = H.mouse.x(1);
+
+if sel % QM measure on x-axis
+  xx = H.X(x,sel);
+  yy = H.X(x,1);
+else % file order on x-axis
+  xx = x;
+  yy = H.X(x,1);
+end
+
+axes(H.ax)
+hold on
+
+% find data tip
+hdt = findall(H.mainfig,'Type','hggroup');
+
+% reconsider this data point if already in the list
+if ~isempty(H.del) && any(H.del == x)
+  plot(xx,yy,'wx','MarkerSize',10,'Linewidth',2);
+  plot(xx,yy,'wo','MarkerSize',10,'Linewidth',2,'MarkerFaceColor','w');
+  plot(xx,yy,'ko','MarkerSize',5,'Linewidth',2);
+  txt = {'Reconsider this data point'};
+  H.del(H.del==x) = [];
+  set(hdt,'String',txt);
+  return
+else
+  txt = {'Remove this data point from list'};
+  plot(xx,yy,'rx','MarkerSize',10,'Linewidth',2);
+  set(hdt,'String',txt);
+end
+hold off
+
+% add point to the list
+H.del = unique([H.del x]);
+
+% also update index of considered data and enable icons
+H.ind = ~ismember((1:numel(H.sample)),H.del);
+set(H.delui.undo,'enable','on');
+set(H.delui.new, 'enable','on');
+set(H.delui.list_del,'enable','on');
+set(H.delui.analysis_new,'enable','on');
 
 return
 
@@ -1937,6 +2021,15 @@ if isempty(x)
   return
 end
 
+if H.mesh_detected 
+  % show two render views for meshes: texture and Z-score
+  show_mesh;
+else
+  % show image slice
+  show_image_slice;
+%  show_glassbrain;
+end
+
 % text info for data cursor window
 txt = {sprintf('%s',H.filename.m{x})};
 
@@ -1954,47 +2047,6 @@ else
   H.mouse.x = x;
 end
 
-% build list of selected data points to remove and return
-if isfield(H,'isdel') && H.isdel
-  
-  if sel % QM measure on x-axis
-    xx = H.X(x,sel);
-    yy = H.X(x,1);
-  else % file order on x-axis
-    xx = x;
-    yy = H.X(x,1);
-  end
-
-  axes(H.ax)
-  hold on
-  
-  % reconsider this data point if already in the list
-  if ~isempty(H.del) && any(H.del == x)
-    plot(xx,yy,'wx','MarkerSize',10,'Linewidth',2);
-    plot(xx,yy,'wo','MarkerSize',10,'Linewidth',2,'MarkerFaceColor','w');
-    plot(xx,yy,'ko','MarkerSize',5,'Linewidth',2);
-    txt = {'Reconsider this data point'};
-    H.del(H.del==x) = [];
-    return
-  else
-    txt = {'Remove this data point from list'};
-    plot(xx,yy,'rx','MarkerSize',10,'Linewidth',2);
-    
-  end
-  hold off
-  
-  % add point to the list
-  H.del = unique([H.del x]);
-    
-  % also update index of considered data and enable icons
-  H.ind = ~ismember((1:numel(H.sample)),H.del);
-  set(H.delui.undo,'enable','on');
-  set(H.delui.new, 'enable','on');
-  set(H.delui.list_del,'enable','on');
-  set(H.delui.analysis_new,'enable','on');
-  return
-end
-
 if ~H.mesh_detected
   set(H.ui.alpha,'Visible','on');
   set(H.ui.alpha_txt,'Visible','on');
@@ -2008,19 +2060,6 @@ else
 end
 
 set(H.text,'String',txt2,'FontSize',H.FS-2);
-
-if ~H.mesh_detected
-  H.ax_slice = axes('Position',H.pos.slice);
-end
-
-if H.mesh_detected 
-  % show two render views for meshes: texture and Z-score
-  show_mesh;
-else
-  % show image slice and glassbrain
-  show_image_slice;
-%  show_glassbrain;
-end
 
 % get list of time points for long. data
 if H.repeated_anova
@@ -2038,6 +2077,7 @@ end
 
 % only enable select
 datacursormode('on');
+set(H.delui.remove,'enable','on');
 
 switch(H.show_sel)
   case 2, show_report(obj, event_obj, false); % report
