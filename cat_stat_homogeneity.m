@@ -1338,18 +1338,18 @@ function show_render_views
 global H
 
 if isfield(H,'hx') && isgraphics(H.hx.figure)
-  H.hx = cat_surf_render2('Overlay',H.hx,H.texture(:,H.mouse.x));
+  H.hx = cat_surf_render2('Overlay',H.hx,H.texture(:,H.mouse.x(1)));
 else
-  H.hx = cat_surf_render2(struct('vertices',H.Pmesh.vertices,'faces',H.Pmesh.faces,'cdata',H.texture(:,H.mouse.x)));
+  H.hx = cat_surf_render2(struct('vertices',H.Pmesh.vertices,'faces',H.Pmesh.faces,'cdata',H.texture(:,H.mouse.x(1))));
   H.hx = cat_surf_render2('Colourbar',H.hx);
 end
 H.hx = cat_surf_render2('clim',H.hx,H.data.range98);
 set(H.hx.figure,'Menubar','none','Toolbar','none','NumberTitle','off','Name',...
-  sprintf('Sample %d: %s %s',H.sample(H.mouse.x),H.info.texture,H.filename.m{H.mouse.x}))
+  sprintf('Sample %d: %s %s',H.sample(H.mouse.x),H.info.texture,H.filename.m{H.mouse.x(1)}))
 figure(H.hx.figure)
 
 % get Z-score
-zscore = (H.texture(:,H.mouse.x) - H.data.Ymean)./H.data.Ystd;
+zscore = (H.texture(:,H.mouse.x(1)) - H.data.Ymean)./H.data.Ystd;
 zscore(H.data.Ystd == 0) = 0;
 
 if isfield(H,'hy') && isgraphics(H.hy.figure)
@@ -1363,7 +1363,7 @@ else
   set(H.hy.figure,'Position',pos_Hy);  
 end
 H.hy = cat_surf_render2('clim',H.hy,[-3 3]);
-set(H.hy.figure,'Menubar','none','Toolbar','none','NumberTitle','off','Name',sprintf('Sample %d: Z-score %s',H.sample(H.mouse.x),H.filename.m{H.mouse.x}));  
+set(H.hy.figure,'Menubar','none','Toolbar','none','NumberTitle','off','Name',sprintf('Sample %d: Z-score %s',H.sample(H.mouse.x(1)),H.filename.m{H.mouse.x(1)}));  
 figure(H.hy.figure)
   
 return
