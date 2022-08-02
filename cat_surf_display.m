@@ -322,9 +322,9 @@ function varargout = cat_surf_display(varargin)
         switch sinfo(i).texture
           case {'longThicknessChanges'}
             if expert<2
-              h = cat_surf_render('ColourMap',h.axis,flip(cat_io_colormaps('BWR',128),1)); 
+              h = cat_surf_render('ColourMap',h.axis,flipud(cat_io_colormaps('BWR',128))); 
             else
-              h = cat_surf_render2('ColourMap',h.axis,flip(cat_io_colormaps('BWR',128),1)); 
+              h = cat_surf_render2('ColourMap',h.axis,flipud(cat_io_colormaps('BWR',128))); 
             end
         end
         if expert<2

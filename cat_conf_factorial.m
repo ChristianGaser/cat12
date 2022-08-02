@@ -1231,7 +1231,11 @@ elseif isfield(job.des,'fblock')
           scans{k} = deblank(job.des.fblock.fsuball.group(i).timepoint{k}{j});
         end
         job.des.fblock.fsuball.fsubject(subj).scans = scans; 
-        job.des.fblock.fsuball.fsubject(subj).conds = [i*ones(size(conds)), conds]; 
+        if n_groups > 1
+          job.des.fblock.fsuball.fsubject(subj).conds = [i*ones(size(conds)), conds]; 
+        else
+          job.des.fblock.fsuball.fsubject(subj).conds = conds'; 
+        end
       end  
     end
   end
