@@ -1120,23 +1120,23 @@ function vout = run_job(job)
   end
 
   % use an extended colormap that also include 
-% ######################################################################
-% RD202007: In case of multiple subjects ...
-%           It should work to use additional colors, but it would also 
-%           be possible to clear the figure and load the CAT help.
-%           Another solution would be to run checkreg as conclusion or
-%           to create a final report that may only use some of the 
-%           checkreg results (better). 
-%           It should include (i) the main parameter (cat_main_reportstr),
-%           (2) a table with the number of successful and failed cases, 
-%           (3) the number of problematic cases (> checkreg) and maybe 
-%           (4) also include a average volume with variance overlay and
-%           surface with thickness variance.
-%           Such a report should be saved at the same place as the major 
-%           log files. 
-% ######################################################################
+  % ######################################################################
+  % RD202007: In case of multiple subjects ...
+  %           It should work to use additional colors, but it would also 
+  %           be possible to clear the figure and load the CAT help.
+  %           Another solution would be to run checkreg as conclusion or
+  %           to create a final report that may only use some of the 
+  %           checkreg results (better). 
+  %           It should include (i) the main parameter (cat_main_reportstr),
+  %           (2) a table with the number of successful and failed cases, 
+  %           (3) the number of problematic cases (> checkreg) and maybe 
+  %           (4) also include a average volume with variance overlay and
+  %           surface with thickness variance.
+  %           Such a report should be saved at the same place as the major 
+  %           log files. 
+  % ######################################################################
   surfcolors = 128;
-  cmap(1:60,:) = gray(60); cmap(61:120,:) = flip(pink(60),1); cmap(121:120+surfcolors,:) = jet(surfcolors);  
+  cmap(1:60,:) = gray(60); cmap(61:120,:) = flipud(pink(60)); cmap(121:120+surfcolors,:) = jet(surfcolors);  
   colormap(cmap)
   
   if isfield(job,'nproc') && job.nproc>0 

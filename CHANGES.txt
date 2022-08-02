@@ -1,4 +1,23 @@
 ------------------------------------------------------------------------
+r2065 | gaser | 2022-08-02 18:01:50
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_factorial.m
+ M cat_main_reportfig.m
+ M cat_run.m
+ M cat_stat_check_SPM.m
+ M cat_stat_homogeneity.m
+ M cat_surf_display.m
+
+
+Fixed:   Corrected handling of long. designs with one group in 
+         cat_conf_factorial.m.
+Changed: Replaced flip command by flipud for compatibility reasons.
+Changed: For long. designs subjects are now always displayed as separate 
+         boxplot in cat_stat_homogeneity.m.
+Changed: Many changes to cat_stat_homogeneity.m to remove inconsistencies.
+------------------------------------------------------------------------
 r2064 | gaser | 2022-08-02 00:55:59
 
 Changed paths:
