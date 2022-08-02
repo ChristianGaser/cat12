@@ -195,7 +195,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   % In the longitudinal report we use another colormap without white rather
   % than green to make it clear that these are changes and not thickness values. 
   if isfield(res,'long')
-    cmap3 = flip(cat_io_colormaps('BWR',surfcolors));
+    cmap3 = flipud(cat_io_colormaps('BWR',surfcolors));
   else
     cmap3 = jet(surfcolors); 
   end
@@ -217,7 +217,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       end
       yticklabelo  = {' BG',' ','    ','    ','   ','    ',' ~WM  ',' ',' ',' ',' ',' ',' Vessels/Head '};
       yticklabeli  = {' BG',' ','    ','    ','   ','    ','         ',' ',' ',' ',' ',' ',' Vessels/Head '};
-      cmap         = [cat_io_colormaps([cm 'ov'],60);flip(cat_io_colormaps([cm 'ov'],60),1);cmap3]; 
+      cmap         = [cat_io_colormaps([cm 'ov'],60);flipud(cat_io_colormaps([cm 'ov'],60));cmap3]; 
       cmmax        = 2;
     case {'gray'} 
       % CAT colormap with larger range colorrange from 0 (BG) to 1 (WM) to 2 (HD).  
@@ -1384,7 +1384,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
                 axes('Position',[0.965 0.03 0.01 0.28],'Parent',fg); image(flip(121:1:120+surfcolors)','Parent',cc{4});
                 cc{4} = gca; 
               else
-                cc{4} = axes('Position',[0.965 0.03 0.01 0.28],'Parent',fg); image(flip(121:1:120+surfcolors)','Parent',cc{4});
+                cc{4} = axes('Position',[0.965 0.03 0.01 0.28],'Parent',fg); image(flipud(121:1:120+surfcolors)','Parent',cc{4});
               end
               set(cc{4},'YAxisLocation','right','YTick',1:(surfcolors-1)/6:surfcolors,'YTickLabel',{'6','5','4','3','2','1','0'},...
                 'XTickLabel','','XTick',[],'FontName',fontname,'FontSize',fontsize-2,'xcolor',fontcolor,'ycolor',fontcolor,'FontWeight','normal');

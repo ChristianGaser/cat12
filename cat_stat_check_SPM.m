@@ -120,11 +120,6 @@ if check_zscore
     cl = 2;
     n_samples = max(xX.I(:,cl));
     
-    % if number of samples gets too large we just use one sample
-    if n_samples > 50
-      n_samples = 1;
-      cl = 1;
-    end
   else
     if ~isempty(xX.iH)
       n_samples = length(xX.iH);
