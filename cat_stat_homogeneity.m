@@ -38,8 +38,6 @@ function varargout = cat_stat_homogeneity(job)
 clearvars -GLOBAL H;       % clear old
 global H
 
-H.job = job;
-
 if nargin == 0
   error('No argument given.');
 end
@@ -54,9 +52,14 @@ H.cmap          = [jet(64); gray(64)]; % create two colormaps
 G               = [];
 n_subjects      = 0;
 
+% always use new figure
+job.new_fig = true;
+
 if ~isfield(job,'verb')
   job.verb = true;
 end
+
+H.job = job;
 
 if isfield(job,'show_violin')
   H.ui.show_violin = job.show_violin;
@@ -88,7 +91,7 @@ else
 end
 
 % check for repeated anova design with long. data
-if isfield(H.job,'factorial_design') && isfield(H.job.factorial_design,'des') && isfield(H.job.factorial_design.des,'fblock')
+if isfield(job,'factorial_design') && isfield(job.factorial_design,'des') && isfield(job.factorial_design.des,'fblock')
   H.repeated_anova = true;
 else
   H.repeated_anova = false;
@@ -175,34 +178,36 @@ if isfield(job,'c') && ~isempty(job.c)
   % mean correction
   G = G - mean(G);
   iG = pinv(G);
-
 end
 
 if isempty(char(job.data_xml))
-  H.isxml = false;
-  xml_defined = false;
+  H.isxml        = false;
+  xml_defined    = false;
   H.xml.QM_names = '';
-  xml_files = [];
+  xml_files      = [];
 else
   xml_files = char(job.data_xml);
   if size(xml_files,1) ~= n_subjects
     fprintf('Only %d of %d report files were defined. Try to find xml-files for quality measures.\n',size(xml_files,1),n_subjects);
-    H.isxml = false;
+    H.isxml     = false;
     xml_defined = false;
   else
-    H.isxml = true;
+    H.isxml     = true;
     xml_defined = true;
   end
 end
 
+H.xml.QM = ones(n_subjects,3);
+H.xml.QM_names = char('Noise','Bias','Weighted overall image quality (IQR)');
+H.xml.QM_names_multi = char('Noise & Mean absolute Z-score','Bias & Mean absolute Z-score','Weighted IQR & Mean absolute Z-score');
+H.xml.QM_order = -ones(1,3);
+
+% add some more entries for surfaces
 if H.mesh_detected
   H.xml.QM = ones(n_subjects,5);
-  H.xml.QM_names = char('Noise','Bias','Weighted overall image quality (IQR)','Euler number','Size of topology defects');
-  H.xml.QM_names_short = char('Noise & Mean absolute Z-score','Bias & Mean absolute Z-score','Weighted IQR & Mean absolute Z-score','Euler number & Mean absolute Z-score','Size of topology defects & Mean absolute Z-score');
-else
-  H.xml.QM = ones(n_subjects,3);
-  H.xml.QM_names = char('Noise','Bias','Weighted overall image quality (IQR)');
-  H.xml.QM_names_short = char('Noise & Mean absolute Z-score','Bias & Mean absolute Z-score','Weighted IQR & Mean absolute Z-score');
+  H.xml.QM_names = char(H.xml.QM_names,'Euler number','Size of topology defects');
+  H.xml.QM_names_multi = char(H.xml.QM_names_multi,'Euler number & Mean absolute Z-score','Size of topology defects & Mean absolute Z-score');
+  H.xml.QM_order = -ones(1,5);
 end
 
 pth = spm_fileparts(H.files.fname{1});
@@ -379,10 +384,37 @@ if H.isxml
   end
 end
 
+% delete QM entries
+if ~H.isxml
+  H.xml.QM = [];
+  H.xml.QM_order = [];
+  H.xml.QM_names = '';
+  H.xml.QM_names_multi = '';
+end
+
 % remove last two columns if EC_abs and defect_size are not defined
 if H.mesh_detected && all(isnan(H.xml.QM(:,4))) && all(isnan(H.xml.QM(:,5)))
   H.xml.QM = H.xml.QM(:,1:3);
+  H.xml.QM_order = H.xml.QM_order(1:3);
   H.xml.QM_names = H.xml.QM_names(1:3,:);
+  H.xml.QM_names_multi = H.xml.QM_names_multi(1:3,:);
+end
+
+% add covariates to list
+if isfield(job,'c') && ~isempty(job.c) 
+  for i=1:numel(job.c)
+    if ~isempty(H.xml.QM)
+      H.xml.QM = [H.xml.QM job.c{i}];
+      H.xml.QM_order = [H.xml.QM_order 0];
+      H.xml.QM_names = char(H.xml.QM_names, sprintf('Covariate %d',i));
+      H.xml.QM_names_multi = char(H.xml.QM_names_multi, sprintf('Covariate %d & Mean absolute Z-score',i));
+    else
+      H.xml.QM = job.c{i};
+      H.xml.QM_order = 0;
+      H.xml.QM_names = sprintf('Covariate %d',i);
+      H.xml.QM_names_multi = sprintf('Covariate %d & Mean absolute Z-score',i);
+    end
+  end
 end
 
 H.data.Ymean = 0.0;
@@ -488,8 +520,8 @@ for i = 1:n_subjects
   H.data.avg_abs_zscore(i) = mean(abs(zscore));
   spm_progress_bar('Set',i);  
 end
-fprintf('\n');
 spm_progress_bar('Clear');
+fprintf('\n');
 
 % get data for each subject in longitudinal designs
 if H.repeated_anova
@@ -561,7 +593,7 @@ H.pos = struct(...
 
 % use this window for Fgraph
 if isfield(job,'new_fig') && job.new_fig
-  H.Fgraph = spm_figure('Create','Graphics','Check Z-score');
+  H.Fgraph = spm_figure('GetWin','Homogeneity');
 else
   H.Fgraph = spm_figure('GetWin','Graphics');
 end
@@ -666,9 +698,6 @@ if job.verb
   end
 end
 
-%-End
-%-----------------------------------------------------------------------
-
 %-----------------------------------------------------------------------
 function create_menu
 %-----------------------------------------------------------------------
@@ -724,40 +753,40 @@ H.ui.show = uicontrol(H.mainfig,...
         'ToolTipString','Display most deviating files',...
         'Interruptible','on','Enable','on');
 
-% create popoup menu 
-if H.isxml
+%% create popoup menu for boxplot
 
-  % estimate product between weighted overall quality (IQR) and mean absolute Z-score 
-  H.X = [H.data.avg_abs_zscore H.xml.QM];
-  H.xml.QMzscore = H.X(:,1).*H.X(:,2);
-
-  str  = { 'Boxplot','Mean absolute Z-score',H.xml.QM_names,'Weighted IQR x Mean absolute Z-score'};
-
-  if size(H.xml.QM,2) == 5
-    tmp  = { {@show_boxplot, H.data.avg_abs_zscore, 'Mean absolute Z-score  ', -1},...
-             {@show_boxplot, H.xml.QM(:,1), H.xml.QM_names(1,:), -1},...
-             {@show_boxplot, H.xml.QM(:,2), H.xml.QM_names(2,:), -1},...
-             {@show_boxplot, H.xml.QM(:,3), H.xml.QM_names(3,:), -1},...
-             {@show_boxplot, H.xml.QM(:,4), H.xml.QM_names(4,:), -1},...
-             {@show_boxplot, H.xml.QM(:,5), H.xml.QM_names(5,:), -1},...
-             {@show_boxplot, H.xml.QMzscore, 'Weighted IQR x Mean absolute Z-score  ', -1} };
-  else
-    tmp  = { {@show_boxplot, H.data.avg_abs_zscore, 'Mean absolute Z-score  ', -1},...
-             {@show_boxplot, H.xml.QM(:,1), H.xml.QM_names(1,:), -1},...
-             {@show_boxplot, H.xml.QM(:,2), H.xml.QM_names(2,:), -1},...
-             {@show_boxplot, H.xml.QM(:,3), H.xml.QM_names(3,:), -1},...
-             {@show_boxplot, H.xml.QMzscore, 'Weighted IQR x Mean absolute Z-score  ', -1} };
-  end
-
-  % show IQR x mean score as default
-  show_QMzscore(H.X,4);
-
-else
+% check whether we have to add entries from quality measures or covariates
+if isempty(H.xml.QM)
   str  = { 'Boxplot','Mean absolute Z-score'};
-  tmp  = { {@show_boxplot, H.data.avg_abs_zscore, 'Mean absolute Z-score  ', -1} };
-
+  % average absolute Z-score vs. file order
   H.X = [H.data.avg_abs_zscore (1:numel(H.data.avg_abs_zscore))'];
-  show_QMzscore(H.X,0);
+  show_QMzscore(H.X,0); % show file order on x-axis
+else
+  % average absolute Z-score vs. QM measures
+  H.X = [H.data.avg_abs_zscore H.xml.QM];
+  
+  str  = { 'Boxplot','Mean absolute Z-score'};
+  for i = 1:size(H.xml.QM,2)
+    str{i+2} = deblank(H.xml.QM_names(i,:));
+  end
+    
+  if H.isxml
+    % estimate product between weighted overall quality (IQR) and mean absolute Z-score 
+    H.xml.QMzscore = H.X(:,1).*H.X(:,2);
+    str{i+3} = 'Weighted IQR x Mean absolute Z-score';
+    show_QMzscore(H.X,4); % show IQR on x-axis
+  else
+    show_QMzscore(H.X,0); % show file order on x-axis
+  end
+end
+
+tmp  = { {@show_boxplot, H.data.avg_abs_zscore, 'Mean absolute Z-score', -1}};
+for i = 1:size(H.xml.QM,2)
+  tmp{i+1} = {@show_boxplot, H.xml.QM(:,i), deblank(H.xml.QM_names(i,:)), H.xml.QM_order(i)};
+end
+
+if H.isxml
+  tmp{i+2} = {@show_boxplot, H.xml.QMzscore, 'Weighted IQR x Mean absolute Z-score  ', -1};
 end
 
 H.ui.boxp = uicontrol(H.mainfig,...
@@ -768,20 +797,26 @@ H.ui.boxp = uicontrol(H.mainfig,...
         'ToolTipString','Display boxplot',...
         'Interruptible','on','Visible','on');
 
+%% create popoup menu for scatterplot
+
 % if QM values are available allow IQR and surface parameters, but skip
 % noise and bias as first 2 entries
-if H.isxml
-  str  = { 'Scatterplot','Mean absolute Z-score',H.xml.QM_names_short(3:end,:)};
-  tmp  = {{@show_QMzscore, H.X,0}, ... % file order
-          {@show_QMzscore, H.X,4}};    % IQR
-  if size(H.xml.QM,2) == 5
-  tmp  = {{@show_QMzscore, H.X,4}, ... % IQR
-          {@show_QMzscore, H.X,5}, ... % Euler number
-          {@show_QMzscore, H.X,6}};    % size of topology defect
-  end    
+str  = { 'Scatterplot','Mean absolute Z-score'};
+if isempty(H.xml.QM)
+  tmp  = {{@show_QMzscore, H.X, 0}}; % just mean absolute Z-score with file order
 else
-  str  = { 'Scatterplot','Mean absolute Z-score'};
-  tmp  = {{@show_QMzscore, H.X,0}}; % just mean absolute Z-score with file order
+  tmp  = {{@show_QMzscore, H.X, 0}}; % file order
+  if H.isxml
+    for i = 1:size(H.xml.QM,2)-2
+      str{i+2} = deblank(H.xml.QM_names_multi(i+2,:));
+      tmp{i+1} = {@show_QMzscore, H.X, i+3, H.xml.QM_order(i+2)};
+    end  
+  else
+    for i = 1:size(H.xml.QM,2)
+      str{i+2} = deblank(H.xml.QM_names_multi(i,:));
+      tmp{i+1} = {@show_QMzscore, H.X, i+1, H.xml.QM_order(i)};
+    end    
+  end
 end
 
 H.ui.scat = uicontrol(H.mainfig,...
@@ -917,7 +952,7 @@ if ~H.mesh_detected
         'Min',0,'Max',1,...
         'Style','slider','HorizontalAlignment','center',...
         'callback',@update_alpha,'Value',0.5,...
-        'ToolTipString','Change Opacity of pos. (green colors) and neg. (red colors) Z-scores',...
+        'ToolTipString','Change Opacity of pos. (blue colors) and neg. (red colors) Z-scores',...
         'SliderStep',[0.01 0.1],'Visible','off');
 
   H.ui.alpha_txt = uicontrol(H.mainfig,...
@@ -1038,12 +1073,17 @@ function checkbox_plot(obj, event_obj)
   
   H.ui.show_violin = get(H.ui.plotbox,'Value');
   show_boxplot;
+  
 return
 
 %-----------------------------------------------------------------------
-function show_QMzscore(X,sel)
+function show_QMzscore(X, sel, quality_order)
 %-----------------------------------------------------------------------
 global H
+
+if nargin < 3
+  quality_order = -1;
+end
 
 % delete old data tip
 delete(findall(H.mainfig,'Type','hggroup'))
@@ -1110,7 +1150,14 @@ while max(H.sample) > numel(marker), marker = [marker; marker]; end
 if sel % show QM measure on x-axis
   xx = X(:,sel);
   yy = X(:,1);
-  xstr = sprintf('<----- Best ---      %s      --- Worst ------>  ',deblank(H.xml.QM_names(sel-1,:)));
+  if quality_order < 0
+    xstr = sprintf('<----- Best ---      %s      --- Worst ------>  ',deblank(H.xml.QM_names(sel-1,:)));
+  elseif quality_order > 0
+    xstr = sprintf('<----- Worst ---      %s      --- Best ------>  ',deblank(H.xml.QM_names(sel-1,:)));
+  else
+    xstr = sprintf('%s',deblank(H.xml.QM_names(sel-1,:)));
+  end
+  
 else % show file order on x-axis
   xx = 1:numel(X(:,1));
   yy = X(:,1);
@@ -1168,7 +1215,11 @@ H.ui.cbar = axes('Position',H.pos.cbar+[0 0.9 0 0],'Parent',H.mainfig);
 image((1:64));
 
 if sel
-  xstr = sprintf('<----- Best ---      %s x mean absolute Z-score     --- Worst ------>  ',deblank(H.xml.QM_names(sel-1,:)));
+  if ~quality_order
+    xstr = sprintf('%s x mean absolute Z-score',deblank(H.xml.QM_names(sel-1,:)));
+  else
+    xstr = sprintf('<----- Best ---      %s x mean absolute Z-score     --- Worst ------>  ',deblank(H.xml.QM_names(sel-1,:)));
+  end
 else
   xstr = sprintf('<----- Best ---      mean absolute Z-score     --- Worst ------>  ');
 end
@@ -1310,7 +1361,7 @@ if (length(data_boxp) > 2)
         90,'HorizontalAlignment','left','FontSize',H.FS,'FontWeight','Bold')
     text(xpos, ylim_max,'High rating (good quality) ------>  ','Color','blue','Rotation',...
         90,'HorizontalAlignment','right','FontSize',H.FS,'FontWeight','Bold')
-  else
+  elseif quality_order < 0
       text(xpos, ylim_max,'Low rating (poor quality) ------>  ','Color','red','Rotation',...
           90,'HorizontalAlignment','right','FontSize',H.FS,'FontWeight','Bold')
       text(xpos, ylim_min,'<----- High rating (good quality) ','Color','blue','Rotation',...
@@ -1327,7 +1378,6 @@ if quality_order > 0
   [tmp, H.ind_sorted_display] = sort(data_boxp,'descend');
 else
   [tmp, H.ind_sorted_display] = sort(data_boxp,'ascend');
-  
 end
 
 H.ui.bp = struct('data',data_boxp,'name',name_boxp,'order',quality_order);
@@ -1823,8 +1873,8 @@ end
 Hdel = H.del;
 job = H.job;
 
-% create new list of xmlf-files if necessary
-if (iscell(job.data_xml) && ~isempty(job.data_xml{1})) || (~iscell(job.data_xml) && ~isempty(job.data_xml))
+% create new list of xml-files if necessary
+if H.isxml && ((iscell(job.data_xml) && ~isempty(job.data_xml{1})) || (~iscell(job.data_xml) && ~isempty(job.data_xml)))
   n = 0;
   for i=1:numel(job.data_xml)
     if any(Hdel == i), continue; end
@@ -2152,7 +2202,7 @@ end
 if H.mesh_detected
   txt2 = {[],sprintf('%s',spm_file(H.filename.m{H.mouse.x(1)},'short25'))};
 else
-  txt2 = {[],sprintf('%s',spm_file(H.filename.m{H.mouse.x(1)},'short25')),[],'Individual Z-score','(red: - blue: +)'};
+  txt2 = {[],sprintf('%s',spm_file(H.filename.m{H.mouse.x(1)},'short25')),[],'Individual Z-score','red: value < mean','blue: value > mean)'};
 end
 
 set(H.ui.text,'String',txt2,'FontSize',H.FS-2);
