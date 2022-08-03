@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2066 | gaser | 2022-08-03 16:41:23
+
+Changed paths:
+ M CHANGES.txt
+ M cat_stat_homogeneity.m
+
+
+Changed: Added option to show scatterplot and boxplot for additional covariates
+         in cat_stat_homogeneity.m.
+Changed: Many smaller changes to cat_stat_homogeneity.m to remove inconsistencies.
+------------------------------------------------------------------------
 r2065 | gaser | 2022-08-02 18:01:50
 
 Changed paths:
