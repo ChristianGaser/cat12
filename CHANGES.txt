@@ -1,4 +1,14 @@
 ------------------------------------------------------------------------
+r2067 | rdahnke | 2022-08-07 11:18:32
+
+Changed paths:
+ M CHANGES.txt
+ M cat_vol_resize.m
+
+
+1) Changed:   Improved matrix balance in cat_vol_resize of low resolution cases.
+
+------------------------------------------------------------------------
 r2066 | gaser | 2022-08-03 16:41:23
 
 Changed paths:
