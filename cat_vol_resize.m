@@ -697,10 +697,10 @@ function varargout=cat_vol_resize(T,operation,varargin)
       sizeO     = size(T);
       sizeO3    = sizeO(1:3);
       if nargin<6 && all(res>0)
-        %%
+        %% Updated 20220805 to avoid unbalance and boundary problems in low resolution cases (e.g., 16mm)
         vmat(7:9) = sign(vmat(7:9)) .* res; % this is the goal res
-        Vi.dim    = round(sizeO3 ./ (res./resV) / 2)*2 - mod(sizeO3,2); % here we add a voxel to keep a even or odd resolution
-        vmat(1:3) = vmat(1:3) + vmat(7:9) .* (sizeO3 ./ (res./resV) - Vi.dim)/2; % if we add something we have to adjust for it 
+        Vi.dim    = ceil(sizeO3 ./ (res./resV) / 2)*2 + mod(sizeO3,2); % here we _add_ a voxel to keep a even or odd resolution
+        vmat(1:3) = vmat(1:3) - vmat(7:9)/2 + vmat(7:9) .* (sizeO3 ./ (res./resV) - Vi.dim)/2; % if we add something we have to adjust for it 
         Vi.mat    = spm_matrix(vmat);
       end
       
