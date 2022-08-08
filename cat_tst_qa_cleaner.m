@@ -80,7 +80,7 @@ function varargout = cat_tst_qa_cleaner(data,opt)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
-% $Id$ 
+% $Id: 2042 2022-07-19 $ 
 
 
   clear th; 
@@ -115,7 +115,12 @@ function varargout = cat_tst_qa_cleaner(data,opt)
 
     return;
   end
-  if iscell(data) && ~strcmp(data{1},'test')
+  if iscell(data) && numel(data{1})>=4
+    runtest = strcmp(data{1}(1:4),'test');
+  else
+    runtest = 0; 
+  end
+  if iscell(data) && ~runtest
     fprintf('Load XML data');
     P = data; 
     xml = cat_io_xml(data,struct(),'read',1); clear data; 
@@ -169,7 +174,7 @@ function varargout = cat_tst_qa_cleaner(data,opt)
     %  Simulate data, if no data is given by several normal distributed
     %  random numbers.
     %  -----------------------------------------------------------------
-    if exist('data','var') && ~(iscell(data) && strcmp(data{1},'test'))
+    if exist('data','var') && ~runtest
       d = data; 
       if numel(d)==0 
         if nargout>=1, varargout{1} = nan; end
@@ -180,10 +185,14 @@ function varargout = cat_tst_qa_cleaner(data,opt)
         if nargout>=6, varargout{6} = nan(size(data)); end
         return;
       end
-    elseif iscell(data) && strcmp(data{1},'test')
+    elseif iscell(data) && runtest
       % Testcases with different quality ratings
       scans      = 100; % number of scans (per site) for simulation
-      testcase   = round(rand(1)*10);
+      if numel(data{1})>4
+        testcase = str2double(data{1}(5:end)); rng(33); 
+      else
+        testcase = round(rand(1)*10);
+      end
       randoffset = 0.5*randn(1,4);
 
       switch testcase
@@ -250,6 +259,11 @@ function varargout = cat_tst_qa_cleaner(data,opt)
       
       % set selftest figure
       opt.figure = 3; 
+    elseif isfield(opt,'train')
+      md = opt.train; 
+      if numel(data) ~= numel(md)
+        error('cat_tst_qa_cleaner:dataLabelSize','Number of values and labels must be equal'); 
+      end
     end
 
     
@@ -321,12 +335,72 @@ function varargout = cat_tst_qa_cleaner(data,opt)
         for i = 2:opt.grads-1
           th(i) = th(i-1) + 2*sd(1); % 2*2/3*
         end
-      
+      case {3,4}
+        % kernel function and parameters
+        kernel    = Kernel('type', 'gaussian', 'gamma', 0.2);
+        parameter = struct( 'display', 'on', 'type', 'RVC', 'kernelFunc', kernel);
+        rvm       = BaseRVM(parameter);
+       
+        pf = {'failed','passed'};
+        dd = d'; mdd = md'; clear data_ label_
+        data_ = dd; for mdi=1:numel(mdd), label_{mdi,1} = pf{mdd(mdi)+1}; end %#ok<NASGU>
+
+        if isfield(opt,'train')
+          rvm.train(dd, mdd);
+          testData = dd;
+        elseif isfield(opt.test)
+          results = opt.test.test(dd, mdd);
+          testData = dd; 
+        else
+          % both cases for simulated test
+          cvIndices  = false(size(dd,1),1); cvIndices(1:2:size(dd,1))=true; %crossvalind('HoldOut', length(data_), 0.3);
+          trainData  = dd(cvIndices, :);
+          trainLabel = label_(cvIndices, :);
+          testData   = dd(~cvIndices, :);
+          testLabel  = label_(~cvIndices, :);
+          
+          rvm.train(trainData, trainLabel);
+          results = rvm.test(testData, testLabel);
+          rvm.draw(results)
+
+          %%
+          fprintf('GT: IQR(passed): %4.2f  IQR(failed):%4.2f\n', ...
+            mean(dd(cellfun('isempty',strfind( label_,pf{2}))==0)), ...
+            mean(dd(cellfun('isempty',strfind( label_,pf{1}))==0)));
+
+          fprintf('ML: IQR(passed): %4.2f  IQR(failed):%4.2f\n', ...
+            mean(testData(cellfun('isempty',strfind( results.predictedLabel,pf{2}))==0)), ...
+            mean(testData(cellfun('isempty',strfind( results.predictedLabel,pf{1}))==0))); 
+        end
+        
+        if 1
+          % harder - closer to my model
+          th = ...
+            median(testData(cellfun('isempty',strfind( results.predictedLabel,pf{2}))==0)): ...
+          ((median(testData(cellfun('isempty',strfind( results.predictedLabel,pf{1}))==0)) - ...
+            median(testData(cellfun('isempty',strfind( results.predictedLabel,pf{2}))==0)) ) / 4 / 2) : ...
+            median(testData(cellfun('isempty',strfind( results.predictedLabel,pf{1}))==0)) - ...
+            ((median(testData(cellfun('isempty',strfind( results.predictedLabel,pf{1}))==0)) - ...
+            median(testData(cellfun('isempty',strfind( results.predictedLabel,pf{2}))==0)) ) / 2);
+        else
+          % original
+          th = ...
+            median(testData(cellfun('isempty',strfind( results.predictedLabel,pf{2}))==0)): ...
+          ((median(testData(cellfun('isempty',strfind( results.predictedLabel,pf{1}))==0)) - ...
+            median(testData(cellfun('isempty',strfind( results.predictedLabel,pf{2}))==0)) ) / 4 ) : ...
+            median(testData(cellfun('isempty',strfind( results.predictedLabel,pf{1}))==0));
+        end
     end
     
     markths  = repmat(mean(th(floor(opt.grads/2):ceil(opt.grads/2))),size(data));
     markths2 = markths;
     siteth   = repmat([thx(1) sd],numel(data),1); 
+%    passed   = data < markths; 
+    
+    % use prediction rather than treshold
+    if opt.model == 4
+      passed = testData(cellfun('isempty',strfind( results.predictedLabel,pf{2}))==0);
+    end
   end
   
   
@@ -518,6 +592,9 @@ function varargout = cat_tst_qa_cleaner(data,opt)
   if nargout>=4, varargout{4} = markths;  end
   if nargout>=5, varargout{5} = markths2; end
   if nargout>=6, varargout{6} = siteth; end
+  if nargout>=7, varargout{7} = passed; end
+  if isfield(opt,'rvmtrain'), varargout{1} = rvm; end
+  if isfield(opt,'rvmtest'),  varargout{2} = passed; end
   
   if 0
     %%
