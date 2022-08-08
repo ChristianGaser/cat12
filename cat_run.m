@@ -1108,7 +1108,14 @@ function vout = run_job(job)
     
     % uncompress nii.gz files and change file name for job
     if strcmp(ext,'.gz')
-      fname = gunzip(job.channel(1).vols{subj});
+      try 
+        fname = gunzip(job.channel(1).vols{subj});
+      catch 
+      % in case of datalad the alias exist without the file itself 
+        cat_io_cprintf('err','Cannot gunzip "%s" file. \nMaybe the alias (e.g. for Datalad) exist but not the file it is refering to? \n',job.channel(1).vols{subj}); 
+        continue 
+      end
+      
       job.channel(1).vols{subj} = char(fname);
       fprintf('Uncompress %s\n',job.channel(1).vols{subj});
       cat_run_newcatch(job,tpm,subj); 
