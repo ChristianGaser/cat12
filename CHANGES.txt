@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2070 | dahnke | 2022-08-08 12:25:59
+
+Changed paths:
+ M CHANGES.txt
+ M cat_plot_boxplot.m
+ M cat_tst_qa_cleaner.m
+ M cat_vol_qa.m
+A  cat_vol_qa202207b.m
+
+
+1) Fixed:    Corrected bug in cat_plot_boxplot in case of small input data. 
+2) Fixed:    Corrected small bug in cat_vol_qa in case of failed processing. 
+------------------------------------------------------------------------
 r2069 | rdahnke | 2022-08-08 11:20:36
 
 Changed paths:
