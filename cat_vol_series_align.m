@@ -28,7 +28,7 @@ end
 
 prec   = noise.^(-2);
 
-if isfield(job.reg,'nonlin')
+if isfield(job,'reg') && isfield(job.reg,'nonlin')
   cat_io_cprintf('blue','Non-linear Registration!\n');
   tim = job.reg.nonlin.times(:);
   if all(isfinite(tim))

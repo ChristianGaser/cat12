@@ -471,8 +471,12 @@ if ~isfield(res,'spmpp')
   %  RD202101: There are differences by using only the new brainmask
   %  -------------------------------------------------------------------
   job.extopts.AMAPframing   = 1;
-  [prob,indx,indy,indz,ath] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res);
-  %[prob,indx,indy,indz,ath] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res);
+  try
+    % there is a bug with empty images CG7T >> catch with old function
+    [prob,indx,indy,indz,ath] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res);
+  else
+    [prob,indx,indy,indz,ath] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res);
+  end
   
   % RD202101: Update image intensity normalization based on the the AMAP
   %           segmentation but not the AMAP thresholds

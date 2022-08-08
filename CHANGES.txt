@@ -1,4 +1,24 @@
 ------------------------------------------------------------------------
+r2068 | rdahnke | 2022-08-08 09:50:05
+
+Changed paths:
+ M CHANGES.txt
+ M cat_long_report.m
+ M cat_main.m
+ M cat_run.m
+ M cat_vol_groupwise_ls.m
+ M cat_vol_qa.m
+ M cat_vol_series_align.m
+
+
+1) Fixed:    Catching gunzip error in cat_run in case of alias (Datalad) files.
+2) Changed:  Added another resampling test case in cat_vol_groupwise_ls.
+3) Fixed:    Correred tiny bug in cat_vol_series_align. 
+4) Fixed:    Remove temporary resampled surface files in cat_long_report. 
+5) Fixed:    Added another try-catch-block in cat_main_reportfig.
+6) Fixed:    Corrected a bug in case cat_main_amap by calling the 1639 version.
+7) Fixed:    Corrected reprocessing in cat_vol_qa.
+------------------------------------------------------------------------
 r2067 | rdahnke | 2022-08-07 11:18:32
 
 Changed paths:
