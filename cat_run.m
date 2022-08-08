@@ -1188,6 +1188,12 @@ labelfolder  = cell(n,1);
 for j=1:n
     [parts{j,:}] = spm_fileparts(job.channel(1).vols{j});
     [mrifolder{j}, reportfolder{j}, surffolder{j}, labelfolder{j}] = cat_io_subfolders(job.channel(1).vols{j},job);
+    
+    % .gz correction
+    if strcmp(parts{j,3},'.gz')
+      parts{j,3} = parts{j,2}(end-3:end); % replace .gz by file type
+      parts{j,2}(end-3:end) = [];         % remove file type from filename
+    end
 end
 
 % CAT report XML file
@@ -1517,6 +1523,7 @@ function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
   lazy = 0;
 
   [pp,ff] = spm_fileparts(job.data{subj}); 
+  if strcmp(ff(end-3:end),'.nii'), ff(end-3:end) = []; end % .gz case
   catxml  = fullfile(pp,reportfolder,['cat_' ff '.xml']);
   
   FNok = 0;
@@ -1654,6 +1661,7 @@ function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
       
     %% volumes 
     FNO = fieldnames(job.vout);
+    FNO = setdiff(FNO,{'catlog'}); % RD202207: wrong directory in case of BIDS need to fix this later
     for fnoi = 1:numel(FNO)
       if isempty(job.vout.(FNO{fnoi}))
         continue
