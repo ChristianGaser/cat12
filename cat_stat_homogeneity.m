@@ -431,9 +431,9 @@ spm_progress_bar('Init',n_subjects,'Load data','subjects completed')
 % prepare Beta
 if ~isempty(G) 
   if H.mesh_detected
-    dim = (H.files.V(i).dim);
+    dim = (H.files.V(1).dim);
   else
-    dim = H.files.V(i).dat.dim;
+    dim = H.files.V(1).dat.dim;
   end
   Beta = zeros(prod(dim),size(G,2),'single');
 end
