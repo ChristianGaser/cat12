@@ -1334,21 +1334,21 @@ function res = cat_surf_evalCS(CS,Tpbt,Tfs,Ym,Ypp,Pcentral,mat,verb,estSI)
     % divide by 2 because of the CSF-GM (1-2) and the GM-WM area (2-3) 
     % and to obtain a similar scaling as for the Ypp (also two segments and
     % we do not dived)
-    II = II / 2; IO = IO / 2; if uL4, IC = IC / 2; end
+    II = II / 2; IO = IO / 2; if uL4 && exist('L4','var'), IC = IC / 2; end
     % output
     if verb
       fprintf('    Local intensity RMSE (lower=better): ')
-      if uL4
+      if uL4 && exist('L4','var')
         cat_io_cprintf( color( rate( mean( [rms(II),rms(IC),rms(IO)] ) , 0.05 , 0.30 )) , sprintf('%0.4f ',mean( [rms(II),rms(IC),rms(IO)] )) ); 
       else
         cat_io_cprintf( color( rate( mean( [rms(II),rms(IO)] ) , 0.05 , 0.30 )) , sprintf('%0.4f ',mean( [rms(II),rms(IO)] )) ); 
       end
       cat_io_cprintf( color( rate( rms(II) , 0.05 , 0.30 )) , sprintf('(IS=%0.4f,',rms(II)) ); 
-      if uL4, cat_io_cprintf( color( rate( rms(IC) , 0.05 , 0.30 )) , sprintf('L4=%0.4f,',rms(IC)) ); end
+      if uL4 && exist('L4','var'), cat_io_cprintf( color( rate( rms(IC) , 0.05 , 0.30 )) , sprintf('L4=%0.4f,',rms(IC)) ); end
       cat_io_cprintf( color( rate( rms(IO) , 0.05 , 0.30 )) , sprintf('OS=%0.4f)\n',rms(IO)) ); 
     end
     res.RMSE_Ym_white  = rms(II);
-    if uL4, res.RMSE_Ym_layer4 = rms(IC); end
+    if uL4 && exist('L4','var'), res.RMSE_Ym_layer4 = rms(IC); end
     res.RMSE_Ym_pial   = rms(IO);
     clear II IO; 
   end
