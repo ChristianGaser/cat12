@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------
-r2070 | gaser | 2022-08-08 17:32:54
+r2071 | gaser | 2022-08-08 17:32:54
 
 Changed paths:
  M CHANGES.txt
@@ -10,6 +10,19 @@ Changed paths:
 
 Fixed: Removed some smaller bugs in cat_surf_fun.m, cat_stat_homogeneity.m
        and cat_run_job1639.m.
+------------------------------------------------------------------------
+r2070 | dahnke | 2022-08-08 12:25:59
+
+Changed paths:
+ M CHANGES.txt
+ M cat_plot_boxplot.m
+ M cat_tst_qa_cleaner.m
+ M cat_vol_qa.m
+A  cat_vol_qa202207b.m
+
+
+1) Fixed:    Corrected bug in cat_plot_boxplot in case of small input data. 
+2) Fixed:    Corrected small bug in cat_vol_qa in case of failed processing. 
 ------------------------------------------------------------------------
 r2069 | rdahnke | 2022-08-08 11:20:36
 
@@ -18151,10 +18164,10 @@ Changed:    Small modifications in cat_tst_calc_kappa.
 Changed:    Small modifications in cat_vol_morph.
 Changed*:   Large modifications of the WMH detection in cat_part_vol.
             Tested for MICCAI2017 WMH data with/without FLAIR input:
-                CAT     (T1)     DSC 0.5824±0.1705  gtt1 
-                CAT     (T1+FL)  DSC 0.5235±0.2013  gtt1 
-                LST-LGA (T1+FL)  DSC 0.6186±0.1539  gtt1
-                LST-LPA (FL)     DSC 0.6172±0.2003  gto
+                CAT     (T1)     DSC 0.5824ï¿½0.1705  gtt1 
+                CAT     (T1+FL)  DSC 0.5235ï¿½0.2013  gtt1 
+                LST-LGA (T1+FL)  DSC 0.6186ï¿½0.1539  gtt1
+                LST-LPA (FL)     DSC 0.6172ï¿½0.2003  gto
             with gtt1 as T1-optimized ground truth with intensity limit
             and gto as original FLAIR-based ground truth. 
             
@@ -22515,7 +22528,7 @@ M       html/cat_methods_validation.html
 
 (1) Changed: Added option for initial morphological closing in the parahippocampal 
     area to minimize large cuts after topology correction.
-(2) Changed: Updated CAT_FixToüology to better deal with large topology aretefacts
+(2) Changed: Updated CAT_FixToï¿½ology to better deal with large topology aretefacts
 (2) Changed: Updated help text.
 
 ------------------------------------------------------------------------
@@ -22686,7 +22699,7 @@ M       internal/cat_vol_flipside.m
 (1) Fixed:     Corrected bugs in cat_run_APP_init.
 (2) Fixed:     Corrected Ym intensity scaling problem in cat_main_LAS.
 (3) Fixed:     Corrected index error in cat_surf_smooth.
-               Thanks to Björn Horing for pointing out this bug.
+               Thanks to Bjï¿½rn Horing for pointing out this bug.
 (4) Fixed:     Corrected WMH volume output in CAT report and XML file.
                Thanks to M.H.T. Zwartbol for pointing out this bug.
 (5) Fixed:     Corrected simultan output of modulated data in expert mode in 
@@ -22988,7 +23001,7 @@ M       cat_surf_surf2roi.m
  M      templates_1.50mm/Template_4_IXI555_MNI152_GS.nii
 
 Fixed: Surface ROI values for the right hemisphere in cat_surf_surf2ROIs.m
-were not correct. Thanks to René Seiger for pointing to that issue.
+were not correct. Thanks to Renï¿½ Seiger for pointing to that issue.
 
 
 ------------------------------------------------------------------------
