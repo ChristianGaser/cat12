@@ -8,6 +8,7 @@ INSTALL.txt
 .gitignore
 
 # ignore zip, pdf, doc*, and nifti
+*.asv
 *.zip
 *.pdf
 *.doc*
