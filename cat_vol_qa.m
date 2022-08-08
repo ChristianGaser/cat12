@@ -611,8 +611,9 @@ function varargout = cat_vol_qa(action,varargin)
     case 'cat12'
     % estimation of the measures for the single case    
  
-[pp,ff,ee] = spm_fileparts(Vo.fname);    
-if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '.xml']) ) 
+[pp,ff,ee] = spm_fileparts(Vo.fname); Pp0 = fullfile(pp,mrifolder,['p0' ff ee]);   
+if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '.xml']) ) || ...
+		cat_io_rerun(Pp0, fullfile(pp,reportfolder,[opt.prefix ff '.xml']) )
   
       % file information
       % ----------------------------------------------------------------
