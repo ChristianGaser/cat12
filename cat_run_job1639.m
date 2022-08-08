@@ -706,6 +706,7 @@ function cat_run_job1639(job,tpm,subj)
             spm_chi2_plot('Init','Affine registration','Mean squared difference','Iteration');
           end
           warning off
+          if ~exist('affscale','var'), affscale = 1.0; end
           [Affine1,affscale1] = spm_affreg(VG1, VF1, aflags, Affine, affscale);
           warning on
           if ~any(any(isnan(Affine1(1:3,:)))) && affscale1>0.5 && affscale1<3, Affine = Affine1; end
