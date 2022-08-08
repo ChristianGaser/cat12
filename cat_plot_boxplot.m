@@ -506,6 +506,8 @@ median_x = ones(2,1)*[1:nc] + [-a;+a]*box;
 median_y = s([3,3],:);
 
 % Chop all boxes which don't have enough stats
+opt.groupcolor2 = opt.groupcolor;
+opt.groupcolor2(chop,:) = [];
 quartile_x(:,chop)  = [];
 quartile_y(:,chop)  = [];
 quartile_xl(:,chop) = [];
@@ -637,15 +639,15 @@ for i=1:qn
   if opt.box
     if opt.fill
       if opt.trans, fill(quartile_x(:,i), quartile_y(:,i),'b-','FaceColor',[1 1 1],tdef); end
-      fill(quartile_x(:,i), quartile_y(:,i),'b-','FaceColor',opt.groupcolor(i,:),'FaceAlpha',opt.sat,'EdgeColor','none');
+      fill(quartile_x(:,i), quartile_y(:,i),'b-','FaceColor',opt.groupcolor2(i,:),'FaceAlpha',opt.sat,'EdgeColor','none');
       if i==1, hold on; end
       
       if opt.median == 2
-        fill(quartile_xl(:,i), quartile_yl(:,i),'b-','FaceColor',0.5*opt.groupcolor(i,:),fdef); 
+        fill(quartile_xl(:,i), quartile_yl(:,i),'b-','FaceColor',0.5*opt.groupcolor2(i,:),fdef); 
       end
     
     else
-      plot(quartile_x(:,i), quartile_y(:,i),'Color',opt.groupcolor(i,:)); 
+      plot(quartile_x(:,i), quartile_y(:,i),'Color',opt.groupcolor2(i,:)); 
       if i==1, hold on; end
     end
     
@@ -661,33 +663,40 @@ for i=1:qn
   if opt.showdata == 1
     if i==1, hold on; end
     if opt.vertical
-      plot((i-offset)*ones(1,length(data{i})),data{i}(:),opt.datasymbol,'Color',0.25*opt.groupcolor(i,:));
+      plot((i-offset)*ones(1,length(data{i})),data{i}(:),opt.datasymbol,'Color',0.25*opt.groupcolor2(i,:));
     else
-      plot(data{i}(:),(i-offset)*ones(1,length(data{i})),opt.datasymbol,'Color',0.25*opt.groupcolor(i,:));
+      plot(data{i}(:),(i-offset)*ones(1,length(data{i})),opt.datasymbol,'Color',0.25*opt.groupcolor2(i,:));
     end
   elseif opt.showdata == 2
     if i==1, hold on; end
-
+    ii = i + cumsum(i>=chop); % offset for chopped elements
+    
     % estimate kde
     n2 = 0;
     % Get the next data set from the array or cell array
-    if iscell(data), col = data{i}(:);
-    else col = data(:,i); end
+    if iscell(data), col = data{ii}(:);
+    else col = data(:,ii); end
     % estimate # of mesh points w.r.t. data size
     n2 = max(n2,ceil(log2(numel(col)))) - 2;
-    [tmp, f, u] = kde(data{i},2^n2);
-    f = (f/max(f)*opt.boxwidth*0.075)'; % width of violin plot is more narrow
-    
+    if numel(data{ii})>5
+      try
+        [tmp, f, u] = kde(data{ii},2^n2);
+        f = (f/max(f)*opt.boxwidth*0.075)'; % width of violin plot is more narrow
+      catch % kde don't like data without any variance 
+        [tmp, f, u] = kde(data{ii} + eps*randn(size(data{ii})),2^n2);
+        f = (f/max(f)*opt.boxwidth*0.075)'; % width of violin plot is more narrow
+      end
+    end
     % shift sections by step/2 and add one step
     u = u + gradient(u)/2;
     u = [u 1e15];
     
     % create jitter w.r.t. kde
-    jitter_kde = zeros(1,length(data{i}));
+    jitter_kde = zeros(1,length(data{ii}));
     for k=1:numel(f)
-      jitter_kde(data{i}>u(k) & data{i}<=u(k+1)) = f(k);
+      jitter_kde(data{ii}>u(k) & data{ii}<=u(k+1)) = f(k);
     end    
-    jitter_kde = jitter_kde.*randn(1,length(data{i}));
+    jitter_kde = jitter_kde.*randn(1,length(data{ii}));
     
     % make jitter smaller for violinplot
     if opt.violin, jitter_kde = 0.5*jitter_kde; end
@@ -696,9 +705,9 @@ for i=1:qn
     if ~opt.vertical, jitter_kde = 0.9*abs(jitter_kde)'; end
 
     if opt.vertical
-      plot((i-offset)*ones(1,length(data{i}))+jitter_kde,data{i}(:),opt.datasymbol,'Color',0.5*opt.groupcolor(i,:));
+      plot((ii-offset)*ones(1,length(data{ii}))+jitter_kde,data{ii}(:),opt.datasymbol,'Color',0.5*opt.groupcolor(ii,:));
     else
-      plot(data{i}(:),(i-offset)*ones(length(data{i}),1)+jitter_kde,opt.datasymbol,'Color',0.5*opt.groupcolor(i,:));
+      plot(data{ii}(:),(ii-offset)*ones(length(data{ii}),1)+jitter_kde,opt.datasymbol,'Color',0.5*opt.groupcolor(ii,:));
     end
   elseif opt.showdata == 3
     if i==1, hold on; end
@@ -710,7 +719,7 @@ for i=1:qn
   end
 
   if opt.median == 1
-    if opt.groupcolor(i,1)>0.2 && opt.groupcolor(i,2)<0.5 && opt.groupcolor(i,3)<0.5
+    if opt.groupcolor2(i,1)>0.2 && opt.groupcolor2(i,2)<0.5 && opt.groupcolor2(i,3)<0.5
       col = [0.5 0 0];
     else
       col = [1 0 0];
@@ -1196,7 +1205,7 @@ function fh = cat_stat_boxplot_batch(job)
         jobpara.names{gi} = sprintf('%d',gi);
       end
       if ~isempty( job.data(gi).setcolor )
-        jobpara.groupcolor(gi,:) = job.data(gi).setcolor; 
+        jobpara.groupcolor2(gi,:) = job.data(gi).setcolor; 
       end
     end
      

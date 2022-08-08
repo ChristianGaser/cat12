@@ -1,4 +1,4 @@
-function varargout = cat_vol_qa(action,varargin)
+function varargout = cat_vol_qa202207b(action,varargin)
 % CAT Preprocessing T1 Quality Control
 % ______________________________________________________________________
 % 
@@ -64,12 +64,12 @@ function varargout = cat_vol_qa(action,varargin)
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
-% Structural Brain Mapping Group (https://neuro-jena.github.io)
+% Structural Brain Mapping Group (http://www.neuro.uni-jena.de)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
 %
-% $Id$
+% $Id: cat_vol_qa.m 2001 2022-06-17 20:40:16Z dahnke $
 % ______________________________________________________________________
 
 %#ok<*ASGLU>
@@ -155,7 +155,7 @@ function varargout = cat_vol_qa(action,varargin)
             %  cat_vol_sanlm(Pmv{fi},'n');
             %end
 
-            if ~exist(Po{fi},'file'), Po{fi}=''; end
+           % if ~exist(Po{fi},'file'), Po{fi}=''; end
             if ~exist(Pm{fi},'file'), Pm{fi}=''; end
           end
         else
@@ -249,7 +249,7 @@ function varargout = cat_vol_qa(action,varargin)
           if isfield(varargin{6}.qa,'subjectmeasures'), QAS.subjectmeasures = cat_io_updateStruct(QAS,varargin{6}.qa.subjectmeasures); end
         end
         % opt = varargin{end} in line 96)
-        opt.verb = 0;
+%        opt.verb = 0;
         
         % reduce to original native space if it was interpolated
         sz = size(Yp0);
@@ -295,7 +295,8 @@ function varargout = cat_vol_qa(action,varargin)
   %
   % --------------------------------------------------------------------
   [QA,QMAfn]  = cat_stat_marks('init'); 
-  stime  = clock;
+  stime   = clock;
+  stime2  = clock;
   
   
   
@@ -324,10 +325,9 @@ function varargout = cat_vol_qa(action,varargin)
   Tavg    = sprintf('%s%%%d.%df',Tavg,opt.snspace(2),opt.snspace(3));
   Cheader = [Cheader 'SIQR']; 
   Theader = sprintf(sprintf('%%s%%%ds',opt.snspace(2)),Theader,'SIQR');
-  Tline   = sprintf('%s%%%d.%df\n',Tline,opt.snspace(2),opt.snspace(3));
+  Tline   = sprintf('%s%%%d.%df%%s\n',Tline,opt.snspace(2),opt.snspace(3));
   Tline2  = sprintf('%s%%%d.%df\n',Tline2,opt.snspace(2),opt.snspace(3));
   Tavg    = sprintf('%s%%%d.%df\n',Tavg,opt.snspace(2),opt.snspace(3));
-  
   
   
 
@@ -356,16 +356,24 @@ function varargout = cat_vol_qa(action,varargin)
       
       QAS = struct(); QAR = struct(); 
       QAR.mark2rps = @(mark) min(100,max(0,105 - mark*10)) + isnan(mark).*mark;
-      
+
       for fi=1:numel(Pp0)
+        
         try
+          stime = cat_io_cmd('  Any segmentation Input:','g5','',opt.verb>2); 
+
           [pp,ff,ee] = spm_fileparts(Po{fi});
           if exist(fullfile(pp,[ff ee]),'file')
             Vo  = spm_vol(Po{fi});
+          elseif exist(fullfile(pp,[ff ee '.gz']),'file')
+            gunzip(fullfile(pp,[ff ee '.gz']));
+            Vo  = spm_vol(Po{fi});
+            delete(fullfile(pp,[ff ee '.gz'])); 
           else
             error('cat_vol_qa:noYo','No original image.');
           end
-  
+          
+     if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '.xml']) , 0 )
           Vm  = spm_vol(Pm{fi});
           Vp0 = spm_vol(Pp0{fi});
           if any(Vp0.dim ~= Vm.dim)
@@ -374,37 +382,55 @@ function varargout = cat_vol_qa(action,varargin)
             Yp0 = single(spm_read_vols(Vp0));
           end
           Yp0(isnan(Yp0) | isinf(Yp0)) = 0; 
-          if 0 %~isempty(Pm{fi}) && exist(Pm{fi},'file')
+          if ~isempty(Pm{fi}) && exist(Pm{fi},'file')
             Ym  = single(spm_read_vols(spm_vol(Pm{fi})));
             Ym(isnan(Yp0) | isinf(Yp0)) = 0; 
           elseif 1 %end
+            stime = cat_io_cmd('  Optimize Segmentation:','g5','',opt.verb>3,stime); 
+                  
           %if ~exist(Ym,'var') || round( cat_stat_nanmean(Ym(round(Yp0)==3)) * 100) ~= 100 
             Ym  = single(spm_read_vols(spm_vol(Po{fi})));
-            Ym(isnan(Yp0) | isinf(Yp0)) = 0; 
-            Yw  = Yp0>2.95 | cat_vol_morph( Yp0>2.25 , 'e'); 
-            Yb  = cat_vol_approx( Ym .* Yw + Yw .* min(Ym(:)) ) - min(Ym(:)); 
+            Ym(isnan(Yp0) | isinf(Yp0)) = 0;
+            
+            vx_vol  = sqrt(sum(Vm.mat(1:3,1:3).^2));            
+            [Ymr,Yp0r,resR] = cat_vol_resize({Ym,Yp0} ,'reduceV' ,vx_vol,1.7,32,'meanm');   % CSF thr. (minimum to avoid PVE)
+            Yw  = Yp0r>2.95 | cat_vol_morph( Yp0r>2.25 , 'e'); 
+            Ywi = Ymr .* Yw + Yw .* min(Ymr(:)); 
+            % added the estimation of the local variance to 
+            Yws = cat_vol_localstat(Ywi,Ywi~=0,1,4);
+            Yws = cat_vol_localstat(Yws./Ywi,Yws~=0,1,1);
+            Yw  = (Yw & Yws<cat_stat_kmeans(Yws(Yw(:)>0))*2) | cat_vol_morph( Yp0r>2.25 , 'e' ,2);
+            Ywi = Ymr .* Yw + Yw .* min(Ymr(:)); 
+            Yb  = cat_vol_approx( Ywi ) - min(Ymr(:)); 
+            Yb  = cat_vol_resize(Yb ,'dereduceV' ,resR);   % CSF thr. (minimum to avoid PVE)
+            
             %Yb  = Yb / mean(Ym(Yw(:)));
-            Ym  = Ym ./ max(eps,Yb); 
+            Ym  = Ym ./ max(eps,Yb) .* (Ym~=0); 
             
           else
             error('cat_vol_qa:noYm','No corrected image.');
           end
           rmse = (mean(Ym(Yp0(:)>0) - Yp0(Yp0(:)>0)/3).^2).^0.5; 
           if rmse>0.2
-            cat_io_cprintf('warn','Segmentation is maybe not fitting to the image (RMSE(Ym,Yp0)=%0.2f)?:\n  %s\n  %s',rmse,Pm{fi},Pp0{fi}); 
+            cat_io_cprintf('warn',sprintf('  Segmentation is maybe not fitting to the image (RMSE(Ym,Yp0)=%0.2f)?:\n    %s\n    %s\n',rmse,Pm{fi},Pp0{fi})); 
           end
-          
+     else
+       Yp0 = false(Vo.dim); 
+       Ym  = Yp0; 
+     end          
           res.image = spm_vol(Pp0{fi}); 
-          [QASfi,QAMfi] = cat_vol_qa('cat12',Yp0,Vo,Ym,res,species,opt);
+          [QASfi,QAMfi] = cat_vol_qa202207b('cat12',Yp0,Vo,Ym,res,species,opt);
 
           if isnan(QASfi.qualitymeasures.NCR)
             fprintf('');
           end
           
-     
+     try
           QAS = cat_io_updateStruct(QAS,QASfi,0,fi);
           QAR = cat_io_updateStruct(QAR,QAMfi,0,fi);
-        
+     catch
+       fprintf('ERROR-Struct'); 
+     end
           
           % color for the differen mark cases (opt.process)
           for fni=1:numel(QMAfn)
@@ -413,22 +439,30 @@ function varargout = cat_vol_qa(action,varargin)
           end
           mqamatm(fi,1) = QAR(fi).qualityratings.IQR;
           mqamatm(fi,1) = max(0,min(10.5, mqamatm(fi,1)));
-          mqamatm(fi,2)   = QAR(fi).qualityratings.SIQR;
-          mqamatm(fi,2)   = max(0,min(10.5, mqamatm(fi,2)));
+          mqamatm(fi,2) = QAR(fi).qualityratings.SIQR;
+          mqamatm(fi,2) = max(0,min(10.5, mqamatm(fi,2)));
           
           
           %% print the results for each scan 
           if opt.verb>1 
+            if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '.xml']) , 0 )
+              rerun = ' updated';
+            elseif exist( fullfile(pp,reportfolder,[opt.prefix ff '.xml']) , 'file')
+              rerun = ' loaded';
+            else
+              rerun = ' '; % new
+            end
+
             if opt.orgval 
               cat_io_cprintf(opt.MarkColor(max(1,floor( mqamatm(fi,2)/9.5 * ...
                 size(opt.MarkColor,1))),:),sprintf(Tline,fi,...
                 QAS(fi).filedata.fnames, ... spm_str_manip(QAS(fi).filedata.file,['f' num2str(opt.snspace(1) - 14)]),...
-                qamat(fi,:),max(1,min(6,mqamatm(fi,:)))));
+                qamat(fi,:),max(1,min(9.5,mqamatm(fi,:))),rerun));
             else
               cat_io_cprintf(opt.MarkColor(max(1,floor( mqamatm(fi,2)/9.5 * ...
                 size(opt.MarkColor,1))),:),sprintf(Tline,fi,...
                 QAS(fi).filedata.fnames, ... spm_str_manip(QAS(fi).filedata.file,['f' num2str(opt.snspace(1) - 14)]),...
-                qamatm(fi,:),max(1,min(6,mqamatm(fi,:)))));
+                qamatm(fi,:),max(1,min(9.5,mqamatm(fi,:))),rerun));
             end
           end
         catch  %#ok<CTCH> ... normal "catch err" does not work for MATLAB 2007a
@@ -449,8 +483,7 @@ function varargout = cat_vol_qa(action,varargin)
             [pp,ff] = spm_fileparts(Po{fi});
             QAS(fi).filedata.fnames = [spm_str_manip(pp,sprintf('k%d',floor( (opt.snspace(1)-19) /3) - 1)),'/',...
                                  spm_str_manip(ff,sprintf('k%d',(opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
-            cat_io_cprintf(opt.MarkColor(end,:),sprintf(TlineE,fi,...
-               QAS(fi).filedata.fnames,[em '\n']));
+            cat_io_cprintf(opt.MarkColor(end,:),sprintf(TlineE,fi,Pp0{fi},[em '\n']));
 %            spm_str_manip(Po{fi},['f' num2str(opt.snspace(1) - 14)]),em));
           end
         end
@@ -471,13 +504,13 @@ function varargout = cat_vol_qa(action,varargin)
           fprintf('%s\n',repmat('-',size(Theader))); 
           for fi=1:numel(QAS)
             if opt.orgval 
-              cat_io_cprintf(opt.MarkColor(min(size(opt.MarkColor,1),...
+              cat_io_cprintf(opt.MarkColor(max(1,min(size(opt.MarkColor,1),...
                 round( mqamatm(smqamatmi(fi),2)/9.5 * ...
-                size(opt.MarkColor,1))),:),sprintf(...
+                size(opt.MarkColor,1)))),:),sprintf(...
                 Tline2,fi,sprintf('(%d)',smqamatmi(fi)),...
-                QAS(smqamatmi(fi)).filedata.fnames, ...
+                spm_str_manip(Pp0{fi},'l80'), ...QAS(smqamatmi(fi)).filedata.fnames, ...
                 ...spm_str_manip(QAS(smqamatmi(fi)).filedata.file,['f' num2str(opt.snspace(1) - 14)]),...
-                sqamat(fi,:),max(1,min(6,mqamatm(smqamatmi(fi),:)))));
+                sqamat(fi,:),max(1,min(10.5,mqamatm(smqamatmi(fi),:)))));
             else
               cat_io_cprintf(opt.MarkColor(max(1,min(size(opt.MarkColor,1),...
                 round( mqamatm(smqamatmi(fi),2)/9.5 * ...
@@ -545,7 +578,8 @@ function varargout = cat_vol_qa(action,varargin)
   
       
     case 'cat12err'
-      
+      stime = clock; 
+  
       % file information
       % ----------------------------------------------------------------
       [pp,ff,ee] = spm_fileparts(opt.job.channel.vols{opt.subj});
@@ -610,11 +644,11 @@ function varargout = cat_vol_qa(action,varargin)
       
     case 'cat12'
     % estimation of the measures for the single case    
- 
-[pp,ff,ee] = spm_fileparts(Vo.fname); Pp0 = fullfile(pp,mrifolder,['p0' ff ee]);   
-if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '.xml']) ) || ...
-		cat_io_rerun(Pp0, fullfile(pp,reportfolder,[opt.prefix ff '.xml']) )
-  
+
+[pp,ff,ee] = spm_fileparts(Vo.fname);    
+if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '.xml']) , 0 ) 
+      stime = cat_io_cmd('  Main:','g5','',opt.verb>3,stime); 
+      
       % file information
       % ----------------------------------------------------------------
       [pp,ff,ee] = spm_fileparts(Vo.fname);
@@ -735,6 +769,7 @@ if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '
       %   can even result a distorted cortex-like structure with normal
       %   thickness values.
       % * need some tests
+%{      
       Ybw   = cat_vbdist(single(Yp0<0.5),true(size(Yp0)),vx_vol) - ...
               cat_vbdist(single(Yp0>0.5),true(size(Yp0)),vx_vol);
       Ybb   = Ybw>0 & Ybw<2*mean(vx_vol); sumYbb = sum(Ybb(:)); % use the brain boundary for normalization
@@ -746,7 +781,7 @@ if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '
           2 * (floor( dmm(1) / cat_stat_nanmean(vx_vol) ) - bbth + 1) / floor( dmm(1) / cat_stat_nanmean(vx_vol) );
       end
       QAS.qualitymeasures.res_BB = sum( (1+Yp0(:)) .* Ybw(:) .* M(:)) / sumYbb * prod(abs(vx_vol)); 
-
+%}
       
       %% check segmentation
       spec = species; for ai=num2str(0:9); spec = strrep(spec,ai,''); end 
@@ -782,42 +817,113 @@ if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '
       %%  estimate QA
       %  ---------------------------------------------------------------
       % remove space arount the brain for speed-up
-      [Yo,Ym,Yp0]   = cat_vol_resize({Yo,Ym,Yp0},'reduceBrain',vx_vol,4,Yp0>1.5);
+      [Yo,Ym,Yp0] = cat_vol_resize({Yo,Ym,Yp0},'reduceBrain',vx_vol,4,Yp0>1.5);
+
+      %Yp0o = Yp0; 
+      stime = cat_io_cmd('  Optimize Segmentation:','g5','',opt.verb>3,stime); 
+      
+      % detection and correct for noisy segmentation problems (RD20220705)
+      Yp0r = cat_vol_resize( min(3,max(0,Yp0)) ,'reduceV',vx_vol,3,32,'mean');  
+      noisep0 = max(0,min(2,cat_stat_nanstd(Yp0r(cat_vol_morph(Yp0r>2.2,'e'))))); clear Yp0r 
+      if noisep0 > 0.1
+        if noisep0 > 0.5
+          Yp0 = Yp0*(1 - min(1,noisep0*2)) + min(1,noisep0*2) * smooth3(Yp0); 
+        end
+        Yp0  = cat_vol_median3( Yp0  ,Yp0>0.2 & Yp0~=round(Yp0));
+        Yp0  = min( 3 , max( 0 , Yp0 ) ); 
+        % update skull-stripping to avoid holes 
+        [Yp0r,Ymr,resV] = cat_vol_resize( { Yp0 , Ym } ,'reduceV',vx_vol,3,32,'meanm');  
+        Yp0r = smooth3(cat_vol_morph( Yp0r > 0.2 , 'lc',6) & Ymr<2/3 & Ymr>0); 
+        Yp0r = cat_vol_resize(Yp0r,'dereduceV',resV); 
+        Yp0  = min( 3 * (Ym>0 & Ym<1.5), max( Yp0r , Yp0 )) .* ...
+          ~((Yp0==0  | Yp0==1)  & (Ym==0 | Yo==0) ); % update Yp0 but be careful with masked voxels 
+        clear Yp0r Ymr; 
+      end
+
+% WMHs?      
+      % fast skull-stripping to remove possible head tissues
+      stime = cat_io_cmd('  Optimize Segmentation - Skull-Stripping:','g5','',opt.verb>3,stime); 
+      [Yp0r,Ymr,Yor,resV] = cat_vol_resize({Yp0,Ym,Yo},'reduceV',vx_vol,3,32,'meanm');   % CSF thr. (minimum to avoid PVE)
+      Ybr = cat_vol_morph( Yp0r > 2.5 , 'l',[0.3 3]);   % find biggest WM elements
+      Ybr = cat_vol_morph( Ybr , 'o',1);                % opening of WM tissue to seperate skull 
+      if ( sum(Ybr(:)) / sum(Yp0r(:)>2.5) ) < 0.5        % if the opening is to aggressive then undo it 
+        Ybr = Yp0r > 2.5; 
+      end
+      Ybr = cat_vol_morph( Ybr , 'l',[0.2 3]);          % find biggest WM elements
+      Ybr = Ybr | ( cat_vol_morph( Ybr , 'd',2) & Yp0r>1.5 & Yp0r<=2); % add GM  
+      Ybr = cat_vol_morph( Ybr , 'lc',5);               % final closing 
+      Yb  = cat_vol_resize(Ybr,'dereduceV',resV);       % go back to original resolution and apply masking
+      Yp0  = Yp0  .* (Yb  & ~( (Yp0==0  | Yp0==1)  & (Ym==0  | Yo==0) )); % update Yp0 but be careful with masked voxels 
+      Yp0r = Yp0r .* (Ybr & ~( (Yp0r==0 | Yp0r==1) & (Ymr==0 | Yor==0) )); 
+
       
       % rought contast and noise estimation to get a stable T1 map for threshold estimation
-      T1th = [cat_stat_nanmedian(Ym(Yp0toC(Yp0(:),1)>0.9)) ...
-              cat_stat_nanmedian(Ym(Yp0toC(Yp0(:),2)>0.9)) ...
-              cat_stat_nanmedian(Ym(Yp0toC(Yp0(:),3)>0.9))];
-      noise = max(0,min(1,cat_stat_nanstd(Ym(Yp0(:)>2.9)) / min(abs(diff(T1th)))));
+      T1th = [cat_stat_kmeans(Ymr(Yp0toC(Yp0r(:),1)>0.9)) ...
+              cat_stat_kmeans(Ymr(Yp0toC(Yp0r(:),2)>0.9)) ...
+              cat_stat_kmeans(Ymr(Yp0toC(Yp0r(:),3)>0.9))];
+      noise = max(0,min(1,cat_stat_nanstd(Ymr(cat_vol_morph(Yp0r>2.1,'e') | Yp0r>2.9)) / min(abs(diff(T1th)))));
+    
       
-      Yms = Ym+0; spm_smooth(Yms,Yms,repmat(double(noise)*4,1,3));      % smoothing to reduce high frequency noise
-            
-      % basic tissue classes - erosion to avoid PVE, std to avoid other tissues (like WMHs)
+      % smoothing to reduce high frequency noise
+      stime = cat_io_cmd('  Denoise & gradients:','g5','',opt.verb>3,stime); 
+      Yms = Ym+0; spm_smooth(Yms,Yms,repmat(double(noise)*4,1,3));       
+      Ygrad = cat_vol_grad(max(2/3,min(1,Yms) .* (Yp0>0)) , vx_vol );
+ 
+      
+if 1 
+  % general reduction of image size to avoid to high processing time in 
+  % case of high-resolution data.
+  res = 1.8;
+  Ymsk = cat_vol_resize( (Yp0==0 | Yp0==1) & (abs(Ym)<0.01 | abs(Yo)<0.01) & Ygrad == 0 ,'reduceV' ,vx_vol,res,32,'meanm')>0;
+  Ymsk = cat_vol_morph( cat_vol_morph( Ymsk ,'o') ,'d',1); 
+  [Ygrad,resI] = cat_vol_resize(Ygrad,'reduceV' ,vx_vol,res,32,'meanm');   % CSF thr. (minimum to avoid PVE)
+  Yo  = cat_vol_resize(Yo,'reduceV' ,vx_vol,res,32,'meanm');   % CSF thr. (minimum to avoid PVE)
+  Ym  = cat_vol_resize(Ym,'reduceV' ,vx_vol,res,32,'meanm'); % GM thr.
+  Yms = cat_vol_resize(Yms,'reduceV' ,vx_vol,res,32,'meanm'); % GM thr.
+  Yp0 = cat_vol_resize(Yp0,'reduceV',vx_vol,res,32,'meanm'); % WM thr. and bias correction (Ywme)
+  Ym(Ymsk)  = 0; 
+  Yp0(Ymsk) = 0; 
+  vx_vol = resI.vx_volr; 
+end       
+      
+      stime = cat_io_cmd('  Optimize Segmentation - Refine Segments:','g5','',opt.verb>3,stime); 
+      %% basic tissue classes - erosion to avoid PVE, std to avoid other tissues (like WMHs)
+      voli = @(v) (v ./ (pi * 4./3)).^(1/3); 
+      rad  = voli( QAS.subjectmeasures.vol_TIV) ./ cat_stat_nanmean(vx_vol);
+      Ysc  = 1-cat_vol_smooth3X(smooth3(Yp0)<0.1 | Ym==0,min(24,max(16,rad*2)));   % fast 'distance' map
       if T1th(1) < T1th(2) && T1th(2) < T1th(3)
-        voli = @(v) (v ./ (pi * 4./3)).^(1/3); 
-        rad  = voli( QAS.subjectmeasures.vol_TIV) ./ cat_stat_nanmean(vx_vol);
-        Ysc  = 1-cat_vol_smooth3X(Yp0<1 | Ym==0,min(24,max(16,rad*2)));   % fast 'distance' map
-        Ycm  = cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<cat_stat_nanmean(T1th(1:2)),'e') & ...
+        Ycm  = cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Ym~=0 & Yms<cat_stat_nanmean(T1th(1:2)),'e') & ...
                 Ysc>0.75 & Yp0<1.25;% avoid PVE & ventricle focus
         if sum(Ycm(:)>0)<10; Ycm=cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<cat_stat_nanmean(T1th(1:2)),'e') & Yp0<1.25; end
-        if sum(Ycm(:)>0)<10; Ycm=Yp0>0.5 & Yms<cat_stat_nanmean(T1th(1:2)) & Yp0<1.25; end
+        if sum(Ycm(:)>0)<10; Ycm=Yp0>0.5 & Ym~=0 & Yms<cat_stat_nanmean(T1th(1:2)) & Yp0<1.25; end
         if sum(Ycm(:)>0)<10; Ycm=Yp0>0.5 & Yp0<1.5; end
-        %Ycm  = Ycm | (Yp0==1 & Ysc>0.7 & Yms<cat_stat_nanmean(T1th(2:3))); % HEBEL      
-        Ygm1 = round(Yp0*10)/10==2;                                       % avoid PVE 1
-        Ygm2 = cat_vol_morph(Yp0>1.1,'e') & cat_vol_morph(Yp0<2.9,'e');   % avoid PVE 2
-        Ygm  = (Ygm1 | Ygm2) & Ysc<0.9;                                   % avoid PVE & no subcortex
-        Ywm  = cat_vol_morph(Yp0>2.1,'e') & Yp0>2.9 & ...                 % avoid PVE & subcortex
+        
+        Ygm  = round(Yp0)==2 & Ysc<0.9; %(Ygm1 | Ygm2) & Ysc<0.9;                                   % avoid PVE & no subcortex
+        Ywm  = cat_vol_morph(Yp0>2.1,'e') & Yp0>max(2.5,2.9-noise/2) & ...                 % avoid PVE & subcortex
           Yms>min(cat_stat_nanmean(T1th(2:3)),(T1th(2) + 2*noise*abs(diff(T1th(2:3)))));   % avoid WMHs2
       else
         Ycm = cat_vol_morph(Yp0>0 & Yp0<2,'e');
-        Ygm = cat_vol_morph(Yp0>1 & Yp0<3,'e');
+        Ygm = cat_vol_morph(Yp0>1 & Yp0<3,'e') & Ysc<0.9;
         Ywm = cat_vol_morph(Yp0>2 & Yp0<4,'e');
       end
-      clear Ygm1 Ygm2; % Ysc; 
+
+      %% Ygms  = cat_vol_localstat(Ym,smooth3(Ygm)>0.2,1,1,3); % dilate the GM segment by smoothing and remove noise
+      Ygms  = cat_vol_localstat(Ym,Ygm>0.5,1,1,3); % dilate the GM segment by smoothing and remove noise % SPEED
+      Ygmsr = cat_vol_resize( Ygms ,'reduceV',vx_vol,3,32,'meanm');  
+      [a,b] = cat_stat_kmeans(Ygmsr(Ygmsr(:)~=0)); % estimate peak and local variance
+      Ygm = abs(Ygms - a) < max(1/12,min(1/8,b*8)) & Ysc<0.9;
+
+      Ywi = Ym .* Ywm + Ywm .* min(Ym(:)); 
+      % added the estimation of the local varaiance to 
+      Yws = cat_vol_localstat(Ywi,Ywi~=0,1,4);
+      Yws = cat_vol_localstat(Yws./Ywi,Yws~=0,1,1);
+      Ywm  = (Ywm & Yws<cat_stat_kmeans(Yws(Yws(:)>0))*2) | cat_vol_morph( Yp0>2.25 , 'e' ,2);
+      clear Ygm1 Ygm2 Yws Ywi; % Ysc; 
       
-      %% further refinements of the tissue maps
+      % further refinements of the tissue maps
       if T1th(1) < T1th(2) && T1th(2) < T1th(3)
-        T2th = [median(Yms(Ycm)) median(Yms(Ygm)) median(Yms(Ywm))];
+        %%
+        T2th = [cat_stat_kmeans(Yms(Ycm)) cat_stat_kmeans(Yms(Ygm)) cat_stat_kmeans(Yms(Ywm))];
         Ycm  = Ycm & Yms>(T2th(1)-16*noise*diff(T2th(1:2))) & Ysc &...
                Yms<(T2th(1)+0.1*noise*diff(T2th(1:2)));
         if sum(Ycm(:)>0)<10; Ycm=cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<cat_stat_nanmean(T1th(1:2)),'e') & Yp0<1.25; end
@@ -828,7 +934,38 @@ if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '
       Ycm  = cat_vol_morph(Ycm,'lc'); % to avoid holes
       Ywm  = cat_vol_morph(Ywm,'lc'); % to avoid holes
       Ywe  = cat_vol_morph(Ywm,'e');  
-   
+      % test necessity of erosion (RD202207)
+      % if the PVE is very small than its not needed (eg. WM unterestimation by the given segmenation) 
+      % if it is huge than another erosion is required 
+      Ywd  = cat_vol_morph(Ywm,'d');
+      twe  = abs( cat_stat_kmeans(Ym(Ywm(:) & ~Ywe(:))) - cat_stat_kmeans(Ym(Ywd(:))) );
+      if twe < 0.008
+        Ywe = Ywm; Ywm = Ywd;
+      end
+      twe  = abs( cat_stat_kmeans(Ym(Ywm(:) & ~Ywe(:))) - cat_stat_kmeans(Ym(Ywe(:))) );
+      if twe < 0.008
+        Ywe = Ywm; 
+      elseif twe > 0.02
+        Ywe  = cat_vol_morph(Ywe,'e');  
+      end
+      if noisep0 > 0.1 % ########### this may also remove variance due to motion artifacts !!! ###############
+        %%
+        Ywms  = cat_vol_localstat(Ym,Ywm,1,1,3); % dilate the GM segment by smoothing and remove noise
+        [a,b] = cat_stat_kmeans(Ywms(Ywm(:))); % estimate peak and local variance
+        Ywm   = Ywm & abs(Ywms - a) < max(1/12,min(1/8,b*8));
+        
+        Ywms  = cat_vol_localstat(Ym,Ywe,1,1,3); % dilate the GM segment by smoothing and remove noise
+        [a,b] = cat_stat_kmeans(Ywms(Ywe(:))); % estimate peak and local variance
+        Ywe   = Ywe & abs(Ywms - a) < max(1/12,min(1/8,b*8));
+        clear Ywms
+      end
+      if sum(Ywe(:)) / sum(Yp0(:)>0) > 0.2
+        Ywe  = cat_vol_morph(Ywe,'e'); 
+      end
+      if sum(Ywm(:)) / sum(Yp0(:)>0) > 0.2
+        Ywm  = cat_vol_morph(Ywm,'e');  
+      end
+
       
 %% new resolution thing       
 % -------------------------------------------------------------------------
@@ -846,8 +983,8 @@ if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '
 % - sampling to a specific resolution:  0.4, 0.6, 0.8, 1.0, 1.2 mm
 % - smoothing in mm:                    0.2, 0.4, 0.6, 0.8, 1.0 mm
 % -------------------------------------------------------------------------
-
-
+%
+%
 %% A) by gradient (RD20220324)
 % -------------------------------------------------------------------------
 %     The basic idea is that edges in smoothed and interpolated images are 
@@ -855,64 +992,48 @@ if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '
 %     sharp data. There are also the cases of to sharp images, e.g.
 %     binarized data like the SPM segmention with very hard partial volume
 %     effect. 
+%
 %     Of course there are side effects from noise but as far as we have an
 %     independent noise estimation we can maybe include this. 
 %     In addition, edges beween WM and CSF are stronger and the CSF/GM  
 %     boundary is probably blurred. Hence, we quantify only voxels at the 
 %     WM/GM boudnary and limit also the normalized images with some GM-like
 %     value. 
-%     The first tests are promissing
+%
+%     The basic pour idea is to quantify the gradient close to the WM
+%     boundary in relation to its voxel size by using kmeans with two
+%     peaks (the first one for the background low intensity, the higher one
+%     for the edge) close to the possible GM/WM interface defined by Ymsk.
+%     Ymsk was original simple (Ymsk=Yp0>2.05 & Yp0<2.95) but instable for 
+%     faulty segmentations.
+%
+%       Ygrad = cat_vol_grad(max(2/3,min(1,Ym) .* (Yp0>0)) , vx_vol); 
+%       Ymsk  = ~cat_vol_morph(cat_vol_morph(Ygm | Ycm | Yp0<2,'dc',2),'e') & ...
+%                Ysc>0.45 & Ysc<0.97  & ~Ywe & ~cat_vol_morph(Yp0<=1.05,'d',1.9);
+%       [res_ECR,b,c] = cat_stat_kmeans(Ygrad(Ymsk(:)),2); res_ECR(1) = [];
+%
+%     The first tests are promissing. Although noise and contrast are
+%     affecting the measurements it is similar stable as the NCR rating.  
 % -------------------------------------------------------------------------
-for sm = 0 %-1:0.5:1
+stime = cat_io_cmd('  Measures - ECR:','g5','',opt.verb>3,stime); 
+for sm = 0%noise %-1:0.5:1
   %%
-  Yms = Ym + 0; %sm = -1;
-  if sm<0, Yms = round(Ym*3)/3*(0-sm) + Yms*(1+sm); end 
-  if sm>0, spm_smooth(Yms,Yms,repmat(max(0,sm),1,3)); end
-  Ygrad   = cat_vol_grad(max(2/3,min(1,Yms) .* (Yp0>0)) , vx_vol); 
-  [res_ECR,b,c] = cat_stat_kmeans(Ygrad(Yp0(:)>2.05 & Yp0(:)<2.95),1);
+  Yms2 = Ym + 0; %sm = -1;
+  if sm<0, Yms2 = round(Ym*3)/3*(0-sm) + Yms2*(1+sm); end 
+  if sm>0, spm_smooth(Yms2,Yms2,repmat(max(0,sm),1,3)); end
+%  Ygrad   = cat_vol_grad(max(2/3,min(1,Yms) .* (Yp0>0)) , vx_vol ); 
+
+  %Ymsk    = Yp0>1.95 & cat_vol_morph(Yp0>2.05,'dd',1.5) & Ysc<0.9 & Ysc>0.55 & ~Ywe & ~cat_vol_morph(Yp0<1.5,'d',3); 
+  %Ymsk    = Yp0>max(1.8,2-noise) & cat_vol_morph(Yp0>2.05,'dd',3) & Ysc<0.97 & Ysc>0.45 & ~Ywe; % & ~cat_vol_morph(Yp0<1.5,'d',1.9);
+  %Ymsk    = cat_vol_morph( Ywm ,'d',2) & ~cat_vol_morph(cat_vol_morph(Ygm | Ycm | Yp0<2,'dc',2),'e'); 
+  Ymsk    = ~cat_vol_morph(cat_vol_morph(Ygm | Ycm | Yp0<2,'dc',2),'e') & Ysc>0.45 & Ysc<0.97  & ~Ywe & ~cat_vol_morph(Yp0<=1.05,'d',1.9); % FINAL
+  [res_ECR,b,c] = cat_stat_kmeans(Ygrad(Ymsk(:)),2); res_ECR(1) = []; 
   %QAS.qualitymeasures.res_ECR = (abs(a-1/4) + abs(b - 0.025) ) / mean(vx_vol); 
-  %fprintf(' s=%+0.2f:  %0.4f + %0.4f ~ %0.4f , %0.4f \n', sm, a ,b , b-a, abs(a-1/4) + abs(b-0.02) );
+
   %ds('d2sm','',1,Yms,Ygrad,100)
 end  
 
-usekmeans = 1; 
   
-
-%%  B) by smoothing (RD20220324)
-% -------------------------------------------------------------------------
-%      The basic idea was that smoothing has low effects on smooth data and
-%      that the difference between original and smoothed image should be 
-%      neglidable. However, this is of course also effected by noise and
-%      anatomical features and seems to be not stable enough to been used.
-% -------------------------------------------------------------------------
-if 0
-  sm = 0.2:0.05:1; clear a b, dx = 1; 
-  smx = 0; Ym2 = Ym + 0; if smx<0, Ym2 = round(Ym2*3)/3*(0-smx) + Ym2*(1+smx); end 
-  if smx>0, spm_smooth(Ym2,Ym2,repmat(max(0,smx),1,3)); end
-  for smi = 1:numel(sm)
-    Yms    = Ym2 + 0; spm_smooth(Yms,Yms,repmat(sm(smi),3,1)); % #### RD20220617: this line caused an error in some cases ?! ...
-    Ygrad  = (Ym2 - Yms) .* (Yp0>0);
-    Ymsk   = Yp0(:)>2 & Yp0(:)<3; %smooth3( Yp0>2 & Yp0<3 )>0.5; 
-  % ################ KMEANS ################
-  if usekmeans
-    a(smi) = cat_stat_kmeans(Ygrad(Ymsk(:))); %,1);
-  else  
-    a(smi) = cat_stat_nanmean(Ygrad(Ymsk(:))); %,1);
-  end
-  end  
-  cx = diff(a,dx); cx = (cx - min(cx)) ./ ( max(cx) - min(cx)); 
-  %if cx(1)==1; cx=flip(cx); end
-  switch dx
-    case 1
-      % 0.55 to 0.45 to 0.35 
-    %  fprintf(' s=%+0.2f:  %0.4f %0.4f \n', smx, cx(1) , sm( find(diff([cx,inf])>0,1,'first')) ); %ds('d2sm','',1,Yms,Ygrad,100)
-    case 2
-    %  fprintf(' s=%+0.2f:  %0.4f %0.4f \n', smx, mean( diff(a,dx) ) , sm( find(cx>0.9,1,'first')) ); %ds('d2sm','',1,Yms,Ygrad,100)
-  end
-end
-%QAS.qualitymeasures.RESsmooth = 
-%figure(1000 + round(smx*10)); plot(sm(1:end-dx),cx)
-% -------------------------------------------------------------------------
 
 
 % Image/processing quality: Euler Number of Surface
@@ -927,6 +1048,7 @@ end
 % -------------------------------------------------------------------------
 
 
+stime = cat_io_cmd('  Measures - NCR/ICR/contrast:','g5','',opt.verb>3,stime);
       %% low resolution tissue intensity maps (smoothing)
       % High frequency noise is mostly uncritical as far as simple smoothing can reduce it. 
       % Although the very low frequency interferences (inhomogeneity) is unproblematic in most cases,  
@@ -960,21 +1082,12 @@ end
       resr.vx_volo = vx_vol; vx_vol=resr.vx_red .* resr.vx_volo;
 
       %% intensity scaling for normalized Ym maps like in CAT12
-
-% ################ KMEANS ################
-if usekmeans
       if  cat_stat_nanmean(Yo(Yp0(:)>2))<0
         Ywc = Ywc .* (cat_stat_kmeans(Yo(Yp0(:)>2))/cat_stat_nanmean(2 - Ym(Yp0(:)>2))); % RD202004: negative values in chimp data showed incorrect scalling
       else
         Ywc = Ywc .* (cat_stat_kmeans(Yo(Yp0(:)>2))/cat_stat_nanmean(Ym(Yp0(:)>2)));
       end
-else
-      if  cat_stat_nanmean(Yo(Yp0(:)>2))<0
-        Ywc = Ywc .* (cat_stat_nanmean(Yo(Yp0(:)>2))/cat_stat_nanmean(2 - Ym(Yp0(:)>2))); % RD202004: negative values in chimp data showed incorrect scalling
-      else
-        Ywc = Ywc .* (cat_stat_nanmean(Yo(Yp0(:)>2))/cat_stat_nanmean(Ym(Yp0(:)>2)));
-      end
-end
+      
       %% bias correction for original map, based on the 
       WI  = zeros(size(Yw),'single'); WI(Ywc(:)~=0) = Yw(Ywc(:)~=0)./Ywc(Ywc(:)~=0); WI(isnan(Ywe) | isinf(WI) | Ywe==0) = 0;
       WI  = cat_vol_approx(WI,2);
@@ -990,20 +1103,12 @@ end
       
      
       % tissue segments for contrast estimation etc. 
-
-% ################ KMEANS ################
-if usekmeans
       CSFth = cat_stat_kmeans(Yc(~isnan(Yc(:)) & Yc(:)~=0)); 
       GMth  = cat_stat_kmeans(Yg(~isnan(Yg(:)) & Yg(:)~=0));
       WMth  = cat_stat_kmeans(Yw(~isnan(Yw(:)) & Yw(:)~=0)); 
       T3th  = [CSFth GMth WMth];
-else
-      CSFth = cat_stat_nanmean(Yc(~isnan(Yc(:)) & Yc(:)~=0)); 
-      GMth  = cat_stat_nanmean(Yg(~isnan(Yg(:)) & Yg(:)~=0));
-      WMth  = cat_stat_nanmean(Yw(~isnan(Yw(:)) & Yw(:)~=0)); 
-      T3th  = [CSFth GMth WMth];
-end
 
+      
       % estimate background
       [Ymir,resYbg] = cat_vol_resize(Ymi,'reduceV',1,6,32,'meanm'); 
       try
@@ -1052,14 +1157,15 @@ end
       %   and anatomica variance, so its better to use GM-WM contrast 
       %   and take care of overoptimisation with values strongly >1/3
       %   of the relative contrast
-      contrast = min(abs(diff(QAS.qualitymeasures.tissue_mn(3:4)))) ./ abs(diff([min([CSFth,BGth]),max([WMth,GMth])])); % default contrast
+      signal_intensity = abs( diff( [min(BGth,CSFth) , max(GMth,WMth)] )); 
+      contrast = min(abs(diff(QAS.qualitymeasures.tissue_mn(2:4)))) ./ signal_intensity; % default contrast
       contrast = contrast + min(0,13/36 - contrast) * 1.2;                    % avoid overoptimsization
       QAS.qualitymeasures.contrast  = contrast * (max([WMth,GMth])); 
-      QAS.qualitymeasures.contrastr = contrast;
+      QAS.qualitymeasures.contrastr = contrast / (max([WMth,GMth]) / signal_intensity);
 
       
       
-      QAS.qualitymeasures.res_ECR =  1 - abs( res_ECR / contrast).^1 ; 
+      QAS.qualitymeasures.res_ECR =  1 - abs( res_ECR  / (contrast / (max([WMth,GMth]) / signal_intensity)) ).^1 ; 
       %fprintf(' ( %0.4f ) ', QAS.qualitymeasures.res_ECR); 
       
       %% noise estimation (original (bias corrected) image)
@@ -1076,7 +1182,7 @@ end
         Ywmn = cat_vol_morph(Ywm,'o');
         NCww = sum(Ywmn(:)) * prod(vx_vol);
         NCwc = sum(Ycm(:)) * prod(vx_vol);
-        signal_intensity = abs( diff( [min(BGth,CSFth) , max(GMth,WMth)] )); 
+        signal_intensity = abs( diff( [max(BGth,CSFth) , max(GMth,WMth)] )); 
         [Yos2,YM2,R] = cat_vol_resize({Ywn,Ywmn},'reduceV',vx_vol,max(3 * min(vx_vol) ,3),16,'meanm');
         YM2 = cat_vol_morph(YM2,'o'); % we have to be sure that there are neigbors otherwise the variance is underestimated 
         NCRw = estimateNoiseLevel(Yos2,YM2>0.5,nb,rms) / signal_intensity / contrast  ; 
@@ -1086,7 +1192,7 @@ end
       end
       NCRw = NCRw * (1 + log(28 - prod(R.vx_red)))/(1 + log(28 - 1)); % compensate voxel averageing 
       if BGth<-0.1 && WMth<3, NCRw=NCRw/3; end% MT weighting
-      clear Yos0 Yos1 Yos2 YM0 YM1 YM2;
+   %   clear Yos0 Yos1 Yos2 YM0 YM1 YM2;
         
       %% CSF variance of large ventricle
       % for typical T2 images we have too much signal in the CSF and can't use it for noise estimation!
@@ -1103,7 +1209,7 @@ end
             NCRc = estimateNoiseLevel(Ycn,Ycm,nb,rms) / signal_intensity / contrast ; 
           end
         end
-        clear Yos0 Yos1 Yos2 YM0 YM1 YM2;
+       % clear Yos0 Yos1 Yos2 YM0 YM1 YM2;
       else
         red = R;
         NCRc = 0;
@@ -1131,6 +1237,10 @@ end
 %      QAS.qualitymeasures.ICRk = cat_stat_kmeans( (Yosm2(Yosmm(:)) / signal_intensity  / contrast * 100 + 1).^4 ).^(1/4); 
 %  fprintf('ICR: %8.3f, ICRk: %8.6f\n',QAS.qualitymeasures.ICR,QAS.qualitymeasures.ICRk);    
   
+if isnan(QAS.qualitymeasures.ICR  )
+  disp(1)
+end
+
       %% marks
       QAR = cat_stat_marks('eval',1,QAS);
 
@@ -1142,19 +1252,32 @@ end
         
         cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write'); %struct('QAS',QAS,'QAM',QAM)
       end
+
+      cat_io_cmd(' ','g5','',opt.verb>3,stime);      
+      if opt.verb>3, fprintf('%5.0fs\n',etime(clock,stime2)); end
+
+      % be verbose to detect problems
+      if opt.verb>2 
+        fprintf('Intensity(CGW):%6.0f %6.0f %6.0f - Volume(CGW):%8.2f %8.2f %8.2f - Noise(m,p0):%5.3f %5.3f. %0.fs %s\n', T3th, ...
+          cat_stat_nansum(Yc(:)>0)/1000,cat_stat_nansum(Yg(:)>0)/1000,cat_stat_nansum(Yw(:)>0)/1000,noise,noisep0,etime(clock,stime2)); 
+      end
 else
   QAS = cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),'load'); %struct('QAS',QAS,'QAM',QAM)
   QAR = cat_stat_marks('eval',1,QAS);
 end
+
       
       clear Yi Ym Yo Yos Ybc
       clear Ywm Ygm Ycsf Ybg
 
   end
 
-  if (isempty(varargin) || isstruct(varargin{1})) && exist('Pp0','var')
-    varargout{1}.data = Pp0;
-    action = action2; 
+  if (isempty(varargin) || isstruct(varargin{1})) 
+    if exist('Pp0','var')
+      varargout{1}.data = Pp0;
+    else
+      varartout{1}.data = {}; 
+    end
   else
     if nargout>1, varargout{2} = QAR; end
     if nargout>0, varargout{1} = QAS; end 
@@ -1165,7 +1288,7 @@ end
 %=======================================================================
 function def=defaults
   % default parameter 
-  def.verb       = 2;         % verbose level    [ 0=nothing | 1=points | 2*=results ]
+  def.verb       = 2;         % verbose level    [ 0=nothing | 1=points | 2=results | 3=details]
   def.write_csv  = 2;         % final cms-file [ 0=dont write |1=write | 2=overwrite ]
   def.write_xml  = 1;         % images base xml-file
   def.sortQATm   = 1;         % sort QATm output
