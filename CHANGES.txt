@@ -1,4 +1,18 @@
 ------------------------------------------------------------------------
+r2069 | rdahnke | 2022-08-08 11:20:36
+
+Changed paths:
+ M .gitignore
+ M CHANGES.txt
+ M cat_io_cprintf.m
+ M cat_run.m
+
+
+1) Fixed:   Corrected lazy processing of gzip-niftis.
+2) Fixed:   Updated cat_io_cprintf by the current version of cprintf written by
+            Yair M. Altman (altmany(at)gmail.com) distributed on Matlab central.
+3) Changed: Added Matlab backup files *.asv to gitignore list.
+------------------------------------------------------------------------
 r2068 | rdahnke | 2022-08-08 09:50:05
 
 Changed paths:
