@@ -187,7 +187,9 @@ if isores ~= 0
       %   eg. 1.0x1.0x3.0 > 1.2, 0.5x0.5x1.0 > 0.7
       vx_vol  = floor( (prod(abs(vx_vol)).^(1/3) ).^0.5  * 10 ) / 10;
     case 4 % similar volume and between 1 and 2 mm
-      vx_vol  = min(2,max(1,min(vx_vol)));  
+      vx_vol  = min(2,max(1,min(vx_vol)));
+    case 5 % get higher resolution
+      vx_vol  = floor( (prod(abs(vx_vol)).^(1/3) ).^0.5  * 10 ) / 10;
     otherwise
       vx_vol  = repmat(-isores,1,3);
   end

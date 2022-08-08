@@ -146,6 +146,23 @@ function out = cat_long_report(job)
   if job.output.surfs
     out.Psurf = Psurf;
   end
+  if exist('sres','var') && isfield(sres,'resampled') && sres.resampled
+    %% remove resampled thickness files
+    FN = {'Pcentral','Pthick'};
+    for si = 1:numel(Psurf)
+      for fni = 1:numel(FN)
+        if iscell(Psurf(si).(FN{fni}))
+          for fi = 1:numel(Psurf(si).(FN{fni}))
+            if exist(Psurf(si).(FN{fni}){fi},'file'), delete(Psurf(si).(FN{fni}){fi}); end
+          end
+        else
+          for fi = 1:size(Psurf(si).(FN{fni}),1)
+            if exist(Psurf(si).(FN{fni})(fi,:),'file'), delete(Psurf(si).(FN{fni})(fi,:)); end
+          end
+        end
+      end
+    end
+  end
   if job.output.vols
     out.Pvm    = Vmn.fname; 
     out.Pidiff = Vidiff.fname; 
