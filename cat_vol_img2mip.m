@@ -2,25 +2,25 @@ function cat_vol_img2mip(OV)
 % Visualise up to 3 images as RGB colored MIP (glass brain)
 % ______________________________________________________________________
 %
-% OV         - either char array of 1..3 nifti filenames or structure with
+% OV - either char array of 1..3 nifti filenames or structure with
 %              the following fields:
-%               name - char array of 1..3 nifti filenames
-%               cmap - colormap for single MIP wth just one result (default
-%                      jet(64))
-%               func - function to apply to image before scaling to cmap
-%                      (and therefore before min/max thresholding. E.g. a func of
-%                      'i1(i1==0)=NaN' would convert zeros to NaNs
-%                      (default 'i1(i1==0)=NaN')
-%               range - 2x1 vector of values for image to distribute colormap across
-%                      the first row of the colormap applies to the first
-%                      value in 'range', and the last value to the second
-%                      value in 'range'
-%                      (default [-Inf Inf])
-%               gamma_scl  - gamma value to provide non-linear intensity
-%                            scaling (default 0.7)
-%               save_image - save mip as png image (default '')
-%               RGB_order  - array of RGB order (default [1 2 3])
-%               bkg_col    - color of background ([0 0 0] as default)
+%  name       - char array of 1..3 nifti filenames
+%  cmap       - colormap for single MIP wth just one result (default
+%               jet(64))
+%  func       - function to apply to image before scaling to cmap
+%               (and therefore before min/max thresholding. E.g. a func of
+%               'i1(i1==0)=NaN' would convert zeros to NaNs
+%               (default 'i1(i1==0)=NaN')
+%  range      - 2x1 vector of values for image to distribute colormap across
+%               the first row of the colormap applies to the first
+%               value in 'range', and the last value to the second
+%               value in 'range' (default [-Inf Inf])
+%  gamma_scl  - gamma value to provide non-linear intensity
+%               scaling (default 0.7)
+%  save_image - save mip as png image (default '')
+%  RGB_order  - array of RGB order (default [1 2 3])
+%  bkg_col    - color of background ([0 0 0] as default)
+%  cbar       - if empty skip showing colorbar
 %
 % If < 3 arguments are given, you can save the png-file by using the
 % context menu (right mouse click in the image)
@@ -39,13 +39,17 @@ if nargin < 1
   OV = spm_select([1 3],'image','Select images');
 end
 
-def = struct('name',OV,'func','i1(i1==0)=NaN;','cmap',jet(64),'range',[-Inf Inf],...
-      'gamma_scl',0.7,'save_image','','RGB_order',1:3,'Pos',[10 10], 'bkg_col',[0 0 0]);
+def = struct('name',OV,'func','i1(i1==0)=NaN;','cmap',jet(64),'range',...
+  [-Inf Inf],'gamma_scl',0.7,'save_image','','RGB_order',1:3,'Pos',...
+  [10 10], 'bkg_col',[0 0 0]);
     
 if ischar(OV)
   OV = def;
 else
   OV = cat_io_checkinopt(OV,def); 
+  if ~isfield(OV,'cbar')
+    OV.cbar = 1;
+  end
 end
 P = OV.name;
 
@@ -87,27 +91,26 @@ Origin = V(1).mat\[0 0 0 1]';
 vox = sqrt(sum(V(1).mat(1:3,1:3).^2));
 
 spm_progress_bar('Init',V(1).dim(3),'Mip',' ');
-
 for j = 1:V(1).dim(3)
-	B  = spm_matrix([0 0 -j 0 0 0 1 1 1]);
-	M1 = inv(B);
-	
+  B  = spm_matrix([0 0 -j 0 0 0 1 1 1]);
+  M1 = inv(B);
+  
   for i=1:n
     % read slice and flip for MIP
-	  i1  = spm_slice_vol(V(i),M1,V(i).dim(1:2),1);
+    i1  = spm_slice_vol(V(i),M1,V(i).dim(1:2),1);
     i1 = flipud(i1);
     
     % apply defined function
     eval(OV.func)
-    
+
     % find indices in defined range
-	  [Qc Qr] = find(i1 >= OV.range(1) & i1 <= OV.range(2));
+    [Qc Qr] = find(i1 >= OV.range(1) & i1 <= OV.range(2));
     Q = sub2ind(size(i1),Qc,Qr);
         
-	  if ~isempty(Q)
-		  Qc = (Qc - Origin(1))*vox(1);
-		  Qr = (Qr - Origin(2))*vox(2);
-		  XYZ{i} = [XYZ{i}; [Qc Qr ones(size(Qc,1),1)*(j - Origin(3))*vox(3)]];
+    if ~isempty(Q)
+      Qc = (Qc - Origin(1))*vox(1);
+      Qr = (Qr - Origin(2))*vox(2);
+      XYZ{i} = [XYZ{i}; [Qc Qr ones(size(Qc,1),1)*(j - Origin(3))*vox(3)]];
       
       % if finite lower range is defined this should be subtracted from
       % image
@@ -115,11 +118,11 @@ for j = 1:V(1).dim(3)
         i1(Q) = i1(Q) - OV.range(1);
       end
       
-		  Y{i} = [Y{i}; i1(Q)];
-	  end
+      Y{i} = [Y{i}; i1(Q)];
+    end
   end
   
-	spm_progress_bar('Set',j);
+  spm_progress_bar('Set',j);
 end
 
 spm_progress_bar('Clear');
@@ -137,7 +140,7 @@ for i=1:n
     rgb{i}   = rot90(spm_project(Y{i},round(XYZ{i}),dim));
   end
   if OV.gamma_scl ~= 1
-	rgb{i} = rgb{i}.^(1/OV.gamma_scl);
+  rgb{i} = rgb{i}.^(1/OV.gamma_scl);
   end
   mx = max([mx; rgb{i}(:)]);
 end
@@ -147,16 +150,16 @@ for i=1:n
 end
 
 % just draw colorbar for a single image
-if n == 1
+if n == 1 && ~isempty(OV.cbar)
   rgb{1}(230:329,305:315) = repmat((100:-1:1)'/100,1,11);
 end
 
 % use RGB color-spheres
-if n > 1
+if n > 1 && ~isempty(OV.cbar)
   rgb{1}(zx,zy-20) = rgb{1}(zx,zy-20) + yy;
   rgb{2}(zx,zy) = rgb{2}(zx,zy) + yy;
 end
-if n > 2
+if n > 2 && ~isempty(OV.cbar)
   rgb{3}(zx-14,zy-10) = rgb{3}(zx-14,zy-10) + yy;
 end
 
@@ -186,14 +189,16 @@ if n == 1
   OV.cmap(end+1,:) = 1 - OV.bkg_col;
   colormap(OV.cmap)
   
-  t = text(320,230,'max');
-  set(t,'Color',1 - OV.bkg_col);
-  if OV.range(1) > 1
-    t = text(320,329,'min');
-  else
-    t = text(320,329,'-max');
+  if ~isempty(OV.cbar)
+    t = text(320,230,'max');
+    set(t,'Color',1 - OV.bkg_col);
+    if OV.range(1) > 1
+      t = text(320,329,'min');
+    else
+      t = text(320,329,'-max');
+    end
+    set(t,'Color',1 - OV.bkg_col);
   end
-  set(t,'Color',1 - OV.bkg_col);
   
 else
   p = image(mip);
@@ -216,9 +221,9 @@ else
 end
            
 function save_png(mip,png_name)
-if size(mip,3) > 1
-  imwrite(mip,png_name,'png','BitDepth',8)
-else
-  saveas(gcf,png_name);
-end
+
+hh = getframe(gcf);
+img = frame2im(hh);
+imwrite(img,png_name,'png','BitDepth',8);
+
 fprintf('Image %s saved.\n',png_name);
