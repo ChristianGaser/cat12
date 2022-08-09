@@ -25,6 +25,7 @@ function cat_vol_slice_overlay(OV)
 %                 names to the filename (default 1)
 % OV.overview   - use empty brackets to not suppress slice overview (.e.g []);
 % OV.pos        - define first two numbers of image position
+% OV.bkg_col    - color of background ([0 0 0] as default)
 %
 % see cat_vol_slice_overlay_ui.m for an example
 % ______________________________________________________________________
@@ -39,7 +40,7 @@ function cat_vol_slice_overlay(OV)
 clear global SO
 global SO
 
-if nargin == 0
+if ~nargin
     
   imgs = spm_select(2, 'image', 'Select additional overlay image', cat_get_defaults('extopts.shootingT1'));
   if isempty(imgs)
@@ -55,7 +56,7 @@ if nargin == 0
   OV.cmap = OV.img(2).cmap;
   OV.range = OV.img(2).range;
   OV.slices_str = '';
-    
+  
 end
 
 spm_figure('GetWin','Graphics');
@@ -65,6 +66,18 @@ if isfield(OV,'FS')
   FS = OV.FS;
 else
   FS = 0.08;
+end
+
+% hot colormap by default
+if ~isfield(OV,'cmap')
+  OV.cmap = hot(256);
+end
+
+% black background by default
+if ~isfield(OV,'bkg_col')
+  SO.bkg_col = [0 0 0];
+else
+  SO.bkg_col = OV.bkg_col;
 end
 
 % check filename whether log. scaling was used
@@ -212,7 +225,8 @@ if range(1) >= 0
   SO.img(2).outofrange = {0, size(SO.img(2).cmap, 1)};
 else
   SO.img(2).outofrange = {1, 1};
-  SO.img(2).cmap = cmap_bivariate;
+  % use bivariate colormap if OV was not defined
+  if ~nargin, SO.img(2).cmap = cmap_bivariate; end
 end
 
 SO.transform = OV.transform;
@@ -374,22 +388,27 @@ slice_overlay
 % remove remaining gray colored border
 ax = get(SO.figure,'Children');
 for i = 1:numel(ax)
-  set(ax(i),'YColor',[0 0 0],'XColor',[0 0 0]);
+  set(ax(i),'YColor',SO.bkg_col,'XColor',SO.bkg_col);
 end
 
 % change labels of colorbar for log-scale
 H = gca;
-if (SO.cbar == 2) & logP
+
+if (SO.cbar == 2) && logP
 
   YTick = get(H, 'YTick');
 
-  % check whether lower threshold is P<0.05 and change values for YTick
-  if abs(OV.range(1)) >= 1.3 && abs(OV.range(1)) <= 1.32
-    YTick_step = ceil((OV.range(2) - OV.range(1)) / 5);
-    if OV.range(1) <= - 1.3 && OV.range(1) >= - 1.32
-      values = [(round(OV.range(1))+log10(0.05)+1):YTick_step:log10(0.05) 0 -log10(0.05):YTick_step:(round(OV.range(2))-log10(0.05)-1)];
+  % check whether lower threshold is P=0.05 and change values for YTick at
+  % threshold
+  if abs(OV.range(1)) >= 1.3 && abs(OV.range(1)) <= 1.4
+    YTick_step = ceil((OV.range(2) - OV.range(1)) / numel(YTick));
+    if OV.range(1) <= - 1.3 && OV.range(1) >= - 1.4
+      values = [round(OV.range(1)):YTick_step:round(OV.range(2))];
+      mid = (numel(YTick)+1)/2;
+      values(mid-1:mid+1) = [log10(0.05) 0 -log10(0.05)];
     else
-      values = [-log10(0.05):YTick_step:(round(OV.range(2)) - log10(0.05) - 1)];
+      values = [0:YTick_step:round(OV.range(2))];
+      values(2) = -log10(0.05);      
     end
   else
     mn = floor(min(YTick));
@@ -434,8 +453,8 @@ if (SO.cbar == 2) & logP
   
 end
 
-set(H, 'FontSize', FS, 'YColor', [1 1 1])
-set(get(H, 'YLabel'), 'FontUnits', 'normalized', 'FontSize', 1.5*FS, 'Color', [1 1 1])
+set(H, 'FontSize', FS, 'YColor', 1 - SO.bkg_col)
+set(get(H, 'YLabel'), 'FontUnits', 'normalized', 'FontSize', 1.5*FS, 'Color', 1 - SO.bkg_col)
 
 % we have to get rid off that annoying axis and simply draw a black box
 % with 1 pixel width
