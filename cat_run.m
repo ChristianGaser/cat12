@@ -383,9 +383,9 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
             end
           
             %% search WARNINGs and ERRORs
-            cati = find(cellfun('isempty',strfind(txt,'ALERT '))==0);
+            cati = find(cellfun('isempty',strfind(txt(catis:end),'ALERT '))==0);
             catalerts   = numel(cati); 
-            cati = find(cellfun('isempty',strfind(txt,'WARNING '))==0);
+            cati = find(cellfun('isempty',strfind(txt(catis:end),'WARNING '))==0);
             catwarnings = numel(cati); 
             
             

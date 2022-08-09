@@ -474,7 +474,7 @@ if ~isfield(res,'spmpp')
   try
     % there is a bug with empty images CG7T >> catch with old function
     [prob,indx,indy,indz,ath] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res);
-  else
+  catch
     [prob,indx,indy,indz,ath] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res);
   end
   
@@ -1102,7 +1102,7 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
 
 
   % definition of subfolders - add to res variable?
-  [res.mrifolder, res.reportfolder] = cat_io_subfolders(res.image(1).fname,job);
+  [res.mrifolder, res.reportfolder, res.surffolder, res.labelfolder] = cat_io_subfolders(res.image0(1).fname,job);
 
   % Sort out bounding box etc
   res.bb = spm_get_bbox(tpm.V(1)); 
