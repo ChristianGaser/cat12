@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2073 | rdahnke | 2022-08-09 10:36:06
+
+Changed paths:
+ M CHANGES.txt
+ M cat_main.m
+ M cat_main1639.m
+ M cat_run.m
+
+
+1) Fixed:   Corrected stupid try-else bug in cat_main. 
+2) Fixed:   Corrected wrong file output of some maps in case of BIDS in cat_main[1639].
+3) Fixed:   Corrected warning counter in parallel processing in cat_run. 
+------------------------------------------------------------------------
 r2071 | gaser | 2022-08-08 17:32:54
 
 Changed paths:
