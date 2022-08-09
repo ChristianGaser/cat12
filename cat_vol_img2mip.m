@@ -92,25 +92,29 @@ vox = sqrt(sum(V(1).mat(1:3,1:3).^2));
 
 spm_progress_bar('Init',V(1).dim(3),'Mip',' ');
 for j = 1:V(1).dim(3)
-  B  = spm_matrix([0 0 -j 0 0 0 1 1 1]);
-  M1 = inv(B);
-  
+	B  = spm_matrix([0 0 -j 0 0 0 1 1 1]);
+	M1 = inv(B);
+	
   for i=1:n
     % read slice and flip for MIP
-    i1  = spm_slice_vol(V(i),M1,V(i).dim(1:2),1);
+	  i1  = spm_slice_vol(V(i),M1,V(i).dim(1:2),1);
     i1 = flipud(i1);
     
     % apply defined function
     eval(OV.func)
-
+    
     % find indices in defined range
-    [Qc Qr] = find(i1 >= OV.range(1) & i1 <= OV.range(2));
+    if OV.range(2) > OV.range(1)
+  	  [Qc Qr] = find(i1 >= OV.range(1));
+    else
+  	  [Qc Qr] = find(i1 <= OV.range(2));
+    end
     Q = sub2ind(size(i1),Qc,Qr);
         
-    if ~isempty(Q)
-      Qc = (Qc - Origin(1))*vox(1);
-      Qr = (Qr - Origin(2))*vox(2);
-      XYZ{i} = [XYZ{i}; [Qc Qr ones(size(Qc,1),1)*(j - Origin(3))*vox(3)]];
+	  if ~isempty(Q)
+		  Qc = (Qc - Origin(1))*vox(1);
+		  Qr = (Qr - Origin(2))*vox(2);
+		  XYZ{i} = [XYZ{i}; [Qc Qr ones(size(Qc,1),1)*(j - Origin(3))*vox(3)]];
       
       % if finite lower range is defined this should be subtracted from
       % image
@@ -118,11 +122,11 @@ for j = 1:V(1).dim(3)
         i1(Q) = i1(Q) - OV.range(1);
       end
       
-      Y{i} = [Y{i}; i1(Q)];
-    end
+		  Y{i} = [Y{i}; i1(Q)];
+	  end
   end
   
-  spm_progress_bar('Set',j);
+	spm_progress_bar('Set',j);
 end
 
 spm_progress_bar('Clear');
@@ -140,7 +144,7 @@ for i=1:n
     rgb{i}   = rot90(spm_project(Y{i},round(XYZ{i}),dim));
   end
   if OV.gamma_scl ~= 1
-  rgb{i} = rgb{i}.^(1/OV.gamma_scl);
+	rgb{i} = rgb{i}.^(1/OV.gamma_scl);
   end
   mx = max([mx; rgb{i}(:)]);
 end
@@ -192,7 +196,7 @@ if n == 1
   if ~isempty(OV.cbar)
     t = text(320,230,'max');
     set(t,'Color',1 - OV.bkg_col);
-    if OV.range(1) > 1
+    if OV.range(1) > 0
       t = text(320,329,'min');
     else
       t = text(320,329,'-max');

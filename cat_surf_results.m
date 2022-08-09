@@ -1850,6 +1850,7 @@ uicontrol(H.panel(2),'Style', 'Text', 'Units', 'normalized','FontSize',H.FS,...
   'BackgroundColor',H.col(1,:),...
   'String', 'Slices', 'Position', H.pos{2}.str3);
 H.OV_slice = uicontrol(H.panel(2),'Style', 'edit', 'Units', 'normalized',...
+  'ToolTipString', 'Define slices. Use Inf, NaN or empty string for automatically estimating slices with local maxima', ...
   'String', OV.slices_str, 'Position', H.pos{2}.slice, 'Callback', @OV_slice);
 
 H.OV_labels = uicontrol(H.panel(2), ...
@@ -1949,11 +1950,14 @@ function OV_slice(hObject, event)
 global OV H
 
 slices_str = get(hObject, 'String');
-if ~isempty(str2num(slices_str))
+if ~isempty(str2num(slices_str)) || strcmp(slices_str,'') || isempty(slices_str)
   OV.slices_str = slices_str;
+  if ~isfinite(str2num(slices_str))
+    OV.slices_str = '';
+  end
   OV.xy_sel = get_xy(OV);
   set(H.OV_xy,'String', cellstr(num2str(OV.xy_sel)));
-cat_vol_slice_overlay(OV);
+  cat_vol_slice_overlay(OV);
 else
   fprintf('You have to define numbers\n');
 end
