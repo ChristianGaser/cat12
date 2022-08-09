@@ -394,7 +394,7 @@ end
 % change labels of colorbar for log-scale
 H = gca;
 
-if (SO.cbar == 2) && logP
+if ~isempty(SO.cbar) && SO.cbar == 2 && logP
 
   YTick = get(H, 'YTick');
 
