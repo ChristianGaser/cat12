@@ -18,8 +18,9 @@ function cat_vol_img2mip(OV)
 %                      (default [-Inf Inf])
 %               gamma_scl  - gamma value to provide non-linear intensity
 %                            scaling (default 0.7)
-%               save_image - save mip as png image (default 0)
+%               save_image - save mip as png image (default '')
 %               RGB_order  - array of RGB order (default [1 2 3])
+%               bkg_col    - color of background ([0 0 0] as default)
 %
 % If < 3 arguments are given, you can save the png-file by using the
 % context menu (right mouse click in the image)
@@ -39,7 +40,8 @@ if nargin < 1
 end
 
 def = struct('name',OV,'func','i1(i1==0)=NaN;','cmap',jet(64),'range',[-Inf Inf],...
-      'gamma_scl',0.7,'save_image',0,'RGB_order',1:3,'Pos',[10 10]);
+      'gamma_scl',0.7,'save_image','','RGB_order',1:3,'Pos',[10 10], 'bkg_col',[0 0 0]);
+    
 if ischar(OV)
   OV = def;
 else
@@ -98,7 +100,7 @@ for j = 1:V(1).dim(3)
     % apply defined function
     eval(OV.func)
     
-    % find indeices in defined range
+    % find indices in defined range
 	  [Qc Qr] = find(i1 >= OV.range(1) & i1 <= OV.range(2));
     Q = sub2ind(size(i1),Qc,Qr);
         
@@ -149,7 +151,7 @@ if n == 1
   rgb{1}(230:329,305:315) = repmat((100:-1:1)'/100,1,11);
 end
 
-% use REGB color-spheres
+% use RGB color-spheres
 if n > 1
   rgb{1}(zx,zy-20) = rgb{1}(zx,zy-20) + yy;
   rgb{2}(zx,zy) = rgb{2}(zx,zy) + yy;
@@ -179,10 +181,20 @@ if n == 1
   
   p = imagesc(mip);
   
-  % force black background and white MIP grid
-  OV.cmap(1,:)     = [0 0 0];
-  OV.cmap(end+1,:) = [1 1 1];
+  % force defined background and inverted MIP grid
+  OV.cmap(1,:)     = OV.bkg_col;
+  OV.cmap(end+1,:) = 1 - OV.bkg_col;
   colormap(OV.cmap)
+  
+  t = text(320,230,'max');
+  set(t,'Color',1 - OV.bkg_col);
+  if OV.range(1) > 1
+    t = text(320,329,'min');
+  else
+    t = text(320,329,'-max');
+  end
+  set(t,'Color',1 - OV.bkg_col);
+  
 else
   p = image(mip);
 end
@@ -195,11 +207,12 @@ set(gcf,'units','pixels'); y = get(gcf,'position');
 set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
 set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
 
-cmenu = uicontextmenu(fig);        
-m2 = uimenu(cmenu, 'Label','Save png image','Callback',@(src,event)save_png(mip,png_name));
-try, p.ContextMenu = cmenu; end
-if OV.save_image
-  save_png(mip,png_name);
+if isempty(OV.save_image)
+  cmenu = uicontextmenu(fig);
+  m2 = uimenu(cmenu, 'Label','Save png image','Callback',@(src,event)save_png(mip,OV.save_image));
+  try, p.ContextMenu = cmenu; end
+else
+  save_png(mip,OV.save_image);
 end
            
 function save_png(mip,png_name)
