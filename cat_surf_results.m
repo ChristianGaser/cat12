@@ -109,11 +109,15 @@ switch lower(action)
   %======================================================================
   case 'disp'
     
+    % close old figures
+    try,close(12);end;try,close(21);end;
+
     % remove any existing data
     if exist('H','var')
       if isfield(H,'S'), H = rmfield(H,'S'); end
       if isfield(H,'pos'), H = rmfield(H,'pos'); end
     end
+
 
     % set start values
     y              = [];
@@ -138,10 +142,7 @@ switch lower(action)
     H.col          = [.8 .8 .8; 1 .5 .5];
     H.cmap_col     = jet(256);
     H.FS           = cat_get_defaults('extopts.fontsize');
-    
-% colorbar addon histogram & values
-% 
-    
+        
     % positions
     WS = spm('Winsize', 'Graphics');
     H.SS = get(0, 'Screensize');
@@ -1766,6 +1767,8 @@ end
 % clipping if defined
 if ~isempty(H.clip) && ~isnan(H.clip(2)) && ~isnan(H.clip(3))
   OV.func = sprintf('i1(i1>%g & i1<%g)=NaN;',H.clip(2),H.clip(3));
+else
+  OV.func = 'i1(i1==0)=NaN;';
 end
 
 if isfield(H,'cmap_col')
@@ -1781,12 +1784,12 @@ OV.overview = []; % don't show slice overviev
 
 if ~isempty(H.clip)
   if isnan(H.clip(2))
-    OV.range   = H.clim(2:3);
+    OV.range = H.clim(2:3);
   else
-    OV.range   = H.clim(2:3);
+    OV.range = H.clim(2:3);
   end
 else
-  OV.range   = H.clim(2:3);
+  OV.range = H.clim(2:3);
 end
 
 OV.name = char(H.Pvol{H.results_sel});
@@ -1805,7 +1808,7 @@ else
 end
 
 % show MIP
-cat_vol_img2mip(OV)
+cat_vol_img2mip(OV);
 pos = get(gcf,'Position');
 set(gcf,'Position',[H.SS(3) - pos(3) 0 pos(3:4)]);
 
@@ -1859,9 +1862,9 @@ H.OV_labels = uicontrol(H.panel(2), ...
   'ToolTipString', 'Hide slice labels', ...
   'Interruptible', 'on', 'Enable', 'on');
     
-H.OV_trans = uicontrol(H.panel(2), ...
+H.OV_save = uicontrol(H.panel(2), ...
   'String', 'Save png', 'Units', 'normalized', ...
-  'Position', H.pos{2}.save, 'Callback', @save_overlay, ...
+  'Position', H.pos{2}.save, 'Callback', @save_image, ...
   'Style', 'PushButton', 'HorizontalAlignment', 'center', ...
   'FontSize',H.FS,...
   'ToolTipString', 'Save overlay as png files', ...
@@ -1877,17 +1880,6 @@ if hide_labels
 else
   OV.labels.size = H.FS;
 end
-cat_vol_slice_overlay(OV);
-
-%==========================================================================
-function save_overlay(hObject, event)
-global OV
-
-old_save = OV.save;
-OV.save = 'png';
-OV.name_subfolder = 2;
-cat_vol_slice_overlay(OV);
-OV.save = old_save;
 cat_vol_slice_overlay(OV);
 
 %==========================================================================
@@ -2242,7 +2234,7 @@ if H.n_surf == 1
     % to (-)log10(0.05)
     if ~isempty(clip) && abs(clip(3)) >= 1.3 && abs(clip(3)) <= 1.4
       XTick_step = ceil((clim(3) - clim(2)) / numel(XTick));
-      if clip(2) <= - 1.3 && clip(2) >= - 1.4
+      if clim(2) <= - 1.3 && clim(2) >= - 1.4
         XTick = [round(clim(2)):XTick_step:round(clim(3))];
         mid = (numel(XTick)+1)/2;
         XTick(mid-1:mid+1) = [log10(0.05) 0 -log10(0.05)];
@@ -2838,7 +2830,7 @@ end
 
 col = colormap;
 imwrite(img,col,fullfile(newpth,filename));
-fprintf('Image %s saved.\n',filename);
+fprintf('Image %s saved.\n',fullfile(newpth,filename));
 
 H = update_slice_overlay(H,fullfile(newpth,['slices_' filename]));
 
@@ -2852,7 +2844,7 @@ if isfield(H, 'dataplot') && strcmpi(get(H.dataplot,'Visible'),'on')
   hh = getframe(H.figure,pos);
   img_plot = frame2im(hh);
   imwrite(img_plot,col,fullfile(newpth,filename));
-  fprintf('Dataplot %s saved.\n',filename);
+  fprintf('Dataplot %s saved.\n',fullfile(newpth,filename));
 end
 
 %==========================================================================

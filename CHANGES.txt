@@ -1,4 +1,19 @@
 ------------------------------------------------------------------------
+r2075 | gaser | 2022-08-10 00:19:02
+
+Changed paths:
+ M CHANGES.txt
+ M cat_surf_results.m
+ M cat_vol_img2mip.m
+ M cat_vol_slice_overlay.m
+
+
+Changed: Added option to skip display of colorbar in cat_vol_img2mip.m.
+Changed: Changed function to save png-image in cat_vol_img2mip.m
+Changed: Many changes in cat_surf_results:
+           - close old windows if starting
+           - corrected handling of OV.func
+------------------------------------------------------------------------
 r2074 | gaser | 2022-08-09 18:30:20
 
 Changed paths:
