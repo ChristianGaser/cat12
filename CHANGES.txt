@@ -1,4 +1,27 @@
 ------------------------------------------------------------------------
+r2074 | gaser | 2022-08-09 18:30:20
+
+Changed paths:
+ M CHANGES.txt
+ M cat12.m
+ M cat_stat_homogeneity.m
+ M cat_surf_results.m
+ M cat_vol_img2mip.m
+ M cat_vol_slice_overlay.m
+ M slice_overlay.m
+
+
+Fixed:   Removed some smaller bugs in cat_stat_homogeneity.m.
+Fixed:   Removed issues with colorbar and range in cat_surf_results.m.
+Changed: Added option to control background color in cat_vol_slice_overlay.m
+         and slice_overlay.m
+Changed: Added option to control background color and added min/max text to 
+         single colorbar in cat_vol_img2mip.m.
+Changed: Many changes in cat_surf_results:
+           - added option to control background color
+           - moved additional figure with slice control to main panel
+           - corrected control of log-colorbar w.r.t. to cat_vol_slice_overlay.m
+------------------------------------------------------------------------
 r2073 | rdahnke | 2022-08-09 10:36:06
 
 Changed paths:

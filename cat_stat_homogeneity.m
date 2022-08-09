@@ -530,9 +530,9 @@ if H.repeated_anova
   H.ind_subjects_long = cell(numel(fsubject),1);
   n = 0;
   for i = 1:n_subjects_long
-    n_scans = numel(fsubject(1).scans);
+    n_scans = numel(fsubject(i).scans);
     % find time points in all subjects
-    H.ind_subjects_long{i} = ismember(1:n_subjects,n + (1:n_scans))
+    H.ind_subjects_long{i} = ismember(1:n_subjects,n + (1:n_scans));
     n = n + n_scans;
   end
 end

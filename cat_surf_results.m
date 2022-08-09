@@ -136,6 +136,7 @@ switch lower(action)
     H.isfsavg      = 1;
     H.fixscl       = 0;
     H.col          = [.8 .8 .8; 1 .5 .5];
+    H.cmap_col     = jet(256);
     H.FS           = cat_get_defaults('extopts.fontsize');
     
 % colorbar addon histogram & values
@@ -170,32 +171,22 @@ switch lower(action)
     
     % figure 2 with GUI
     H.pos{2} = struct(...
-      'fig',    [2*WS(3)+10 10 0.6*WS(3) WS(3)],... 
       'sel',    [0.050 0.935 0.900 0.050],...[0.290 0.930 0.425 0.050],...
       'nam',    [0.050 0.875 0.900 0.050],...
       'surf',   [0.050 0.800 0.425 0.050],'mview',   [0.525 0.800 0.425 0.050],... 
-      'text',   [0.050 0.725 0.425 0.050],'thresh',  [0.525 0.725 0.425 0.050],... 
-      'cmap',   [0.050 0.650 0.425 0.050],'atlas',   [0.525 0.650 0.425 0.050],...
-      'cursor', [0.050 0.575 0.425 0.050],'border',  [0.525 0.575 0.425 0.050],...
-      'nocbar', [0.050 0.500 0.425 0.050],'transp',  [0.525 0.500 0.425 0.050],... 
-      'info',   [0.050 0.425 0.425 0.050],'bkg',     [0.525 0.425 0.425 0.050],... 
-      'inv',    [0.050 0.350 0.425 0.050],'hide_neg',[0.525 0.350 0.425 0.050],...
-      'fixscl', [0.050 0.260 0.425 0.050],'scaling', [0.050 0.260 0.425 0.050],...
+      'text',   [0.050 0.750 0.425 0.050],'thresh',  [0.525 0.750 0.425 0.050],... 
+      'cmap',   [0.050 0.700 0.425 0.050],'atlas',   [0.525 0.700 0.425 0.050],...
+      'cursor', [0.050 0.650 0.425 0.050],'border',  [0.525 0.650 0.425 0.050],...
+      'nocbar', [0.050 0.600 0.425 0.050],'transp',  [0.525 0.600 0.425 0.050],... 
+      'info',   [0.050 0.550 0.425 0.050],'bkg',     [0.525 0.550 0.425 0.050],... 
+      'inv',    [0.050 0.500 0.425 0.050],'hide_neg',[0.525 0.500 0.425 0.050],...
+      'xy',     [0.050 0.325 0.425 0.100],'trans',   [0.525 0.325 0.425 0.100],...
+      'str3',   [0.050 0.275 0.425 0.100],...
+      'slice',  [0.050 0.320 0.425 0.030],'labels',  [0.525 0.285 0.425 0.100],...
+      'fixscl', [0.050 0.220 0.425 0.050],'scaling', [0.050 0.220 0.425 0.050],...
       'ovmin',  [0.050 0.125 0.425 0.100],'ovmax',   [0.525 0.125 0.425 0.100],... 
       'save',   [0.050 0.050 0.425 0.050],'close',   [0.525 0.050 0.425 0.050]);
-    
-    % figure for interactive use of slice overlay
-    H.pos{3} = struct(...
-      'fig',   [H.SS(3)-150 H.SS(4)-250 150 250],...
-      'str1',  [0.05 0.85 0.900 0.1],...
-      'xy',    [0.05 0.75 0.900 0.1],...
-      'str2',  [0.05 0.65 0.900 0.1],...
-      'trans', [0.05 0.55 0.900 0.1],...
-      'str3',  [0.05 0.45 0.900 0.1],...
-      'slice', [0.05 0.35 0.900 0.1],...
-      'labels',[0.05 0.25 0.900 0.1],...
-      'save',  [0.05 0.05 0.900 0.15]);
-    
+        
     H.figure = figure(22);
     clf(H.figure);
   
@@ -1399,6 +1390,8 @@ switch cmap
     end
 end
 
+H.cmap_col = col;
+
 for ind = 1:5
   setappdata(H.patch(ind), 'col', col);
   d = getappdata(H.patch(ind), 'data');
@@ -1408,6 +1401,11 @@ end
 if ~H.disable_cbar
   H = show_colorbar(H);
 end
+
+if isfield(H,'Pvol_sel')
+  H = update_slice_overlay(H);
+end
+
 H.cmap_col = col;
 if nargout, Ho = H; end
 
@@ -1755,6 +1753,7 @@ OV.pos = [10 H.SS(4)];
 OV.reference_image = char(cat_get_defaults('extopts.shootingT1'));
 
 OV.FS = 0.12;
+OV.bkg_col = H.bkg_col;
 
 if H.show_transp
   OV.opacity = 0.6;                                      
@@ -1795,6 +1794,8 @@ if nargin < 2
   OV.save = 'none';
 else
   OV.save = file_save;
+  [pth,name,ext] = fileparts(file_save);
+  OV.save_image = fullfile(pth,[strrep(name,'slices_','mip_') ext]);
 end
 
 if H.disable_cbar
@@ -1817,57 +1818,50 @@ if ~isfield(OV,'atlas')
 end
 
 cat_vol_slice_overlay(OV);
-     
-H.fig_OV = figure(23);
-set(H.fig_OV, 'MenuBar', 'none', 'Position', H.pos{3}.fig, 'Color',H.col(1,:),...
-  'Name', 'Slices', 'NumberTitle', 'off', 'Renderer', 'OpenGL');
-axis off
+
+% disable file saving now
+OV.save = 'none';
 
 % select numbers of columns/rows
-uicontrol('Style', 'Text', 'Units', 'normalized','FontSize',H.FS,...
-  'BackgroundColor',H.col(1,:),...
-  'String', 'Number of Columns/Rows', 'Position', H.pos{3}.str1);
 OV.xy_sel = get_xy(OV);
-H.OV_xy = uicontrol(H.fig_OV, ...
-  'String', cellstr(num2str(OV.xy_sel)), 'Units', 'normalized', ...
-  'Position', H.pos{3}.xy, 'Callback', @select_OV_xy, ...
+str = 'Slice Columns/Rows';
+H.OV_xy = uicontrol(H.panel(2), ...
+  'String', cellstr(char(str,num2str(OV.xy_sel))), 'Units', 'normalized', ...
+  'Position', H.pos{2}.xy, 'Callback', @select_OV_xy, ...
   'Style', 'PopUpMenu', 'HorizontalAlignment', 'center', ...
   'FontSize',H.FS,...
   'ToolTipString', 'Select columns and rows', ...
   'Interruptible', 'on', 'Enable', 'on');
 
 % select orientation
-uicontrol('Style', 'Text', 'Units', 'normalized','FontSize',H.FS,...
-  'BackgroundColor',H.col(1,:),...
-  'String', 'Orientation', 'Position', H.pos{3}.str2);
-H.OV_trans = uicontrol(H.fig_OV, ...
-  'String', {'axial','sagittal','coronal'}, 'Units', 'normalized', ...
-  'Position', H.pos{3}.trans, 'Callback', @select_OV_trans, ...
+H.OV_trans = uicontrol(H.panel(2), ...
+  'String', {'Slice Orientation','axial','sagittal','coronal'}, 'Units', 'normalized', ...
+  'Position', H.pos{2}.trans, 'Callback', @select_OV_trans, ...
   'Style', 'PopUpMenu', 'HorizontalAlignment', 'center', ...
   'FontSize',H.FS,...
   'ToolTipString', 'Select orientation', ...
   'Interruptible', 'on', 'Enable', 'on');
 
 % define slices
-uicontrol('Style', 'Text', 'Units', 'normalized','FontSize',H.FS,...
+uicontrol(H.panel(2),'Style', 'Text', 'Units', 'normalized','FontSize',H.FS,...
   'BackgroundColor',H.col(1,:),...
-  'String', 'Slices', 'Position', H.pos{3}.str3);
-H.OV_slice = uicontrol('Style', 'edit', 'Units', 'normalized',...
-  'String', OV.slices_str, 'Position', H.pos{3}.slice, 'Callback', @OV_slice);
+  'String', 'Slices', 'Position', H.pos{2}.str3);
+H.OV_slice = uicontrol(H.panel(2),'Style', 'edit', 'Units', 'normalized',...
+  'String', OV.slices_str, 'Position', H.pos{2}.slice, 'Callback', @OV_slice);
 
-H.OV_labels = uicontrol(H.fig_OV, ...
-  'String', 'Hide labels', 'Units', 'normalized', ...
+H.OV_labels = uicontrol(H.panel(2), ...
+  'String', 'Hide slice labels', 'Units', 'normalized', ...
   'BackgroundColor',H.col(1,:),...
-  'Position', H.pos{3}.labels, ...
+  'Position', H.pos{2}.labels, ...
   'Style', 'CheckBox', 'HorizontalAlignment', 'center', ...
   'Callback', {@checkbox_OV_labels}, ...
   'FontSize',H.FS,...
   'ToolTipString', 'Hide slice labels', ...
   'Interruptible', 'on', 'Enable', 'on');
     
-H.OV_trans = uicontrol(H.fig_OV, ...
+H.OV_trans = uicontrol(H.panel(2), ...
   'String', 'Save png', 'Units', 'normalized', ...
-  'Position', H.pos{3}.save, 'Callback', @save_overlay, ...
+  'Position', H.pos{2}.save, 'Callback', @save_overlay, ...
   'Style', 'PushButton', 'HorizontalAlignment', 'center', ...
   'FontSize',H.FS,...
   'ToolTipString', 'Save overlay as png files', ...
@@ -1930,17 +1924,21 @@ function select_OV_xy(hObject, event)
 global OV
 
 value = get(hObject, 'value');
-OV.xy = OV.xy_sel(value,:);
-cat_vol_slice_overlay(OV);
+if value > 1
+  OV.xy = OV.xy_sel(value-1,:);
+  cat_vol_slice_overlay(OV);
+end
 
 %==========================================================================
 function select_OV_trans(hObject, event)
 global OV
 
 value = get(hObject, 'value');
-str = get(hObject,'String');
-OV.transform = str{value};
-cat_vol_slice_overlay(OV);
+if value > 1
+  str = get(hObject,'String');
+  OV.transform = str{value};
+  cat_vol_slice_overlay(OV);
+end
 
 %==========================================================================
 function OV_xy(hObject, event)
@@ -2212,12 +2210,13 @@ if H.n_surf == 1
   clim = getappdata(H.patch(1), 'clim');
   axis(H.cbar, 'off');
   
+  col = H.cmap_col;
+  figure(H.figure)
+  colormap(col);
+
   if clim(3) > clim(2)
     caxis([clim(2) clim(3)]);
   end
-  
-  col = getappdata(H.patch(1), 'col');
-  colormap(col);
   
   % Update colorbar colors if clipping is used
   clip = getappdata(H.patch(1), 'clip');
@@ -2239,26 +2238,25 @@ if H.n_surf == 1
     % save original XTick values
     if isempty(H.XTick), H.XTick = XTick; end
 
-    % if threshold is between 1.3..1.4 (p<0.05) change XTick accordingly and correct by 0.3
-    if ~isempty(clip)
-      if clip(3) >= 1.3 && clip(3) <= 1.4
-        XTick_step = ceil((clim(3) - clim(2)) / 5);
-        if clip(2) <= - 1.3 && clip(2) >= - 1.4
-          XTick = [(round(clim(2))+log10(0.05)+1):XTick_step:log10(0.05) 0 -log10(0.05):XTick_step:(round(clim(3))-log10(0.05)-1)];
-        else
-          XTick = [0 -log10(0.05):XTick_step:(round(clim(3))-log10(0.05)-1)];
-        end
+    % if threshold is between 1.3..1.4 (p<0.05) change XTick at threshold
+    % to (-)log10(0.05)
+    if ~isempty(clip) && abs(clip(3)) >= 1.3 && abs(clip(3)) <= 1.4
+      XTick_step = ceil((clim(3) - clim(2)) / numel(XTick));
+      if clip(2) <= - 1.3 && clip(2) >= - 1.4
+        XTick = [round(clim(2)):XTick_step:round(clim(3))];
+        mid = (numel(XTick)+1)/2;
+        XTick(mid-1:mid+1) = [log10(0.05) 0 -log10(0.05)];
       else
-        mn = floor(min(XTick));
-        mx = ceil(max(XTick));
-  
-        % only allow integer values
-        XTick = floor(mn:mx);
-%        if ~isempty(H.XTick), XTick = H.XTick; end
+        XTick = [0:XTick_step:round(clim(3))];
+        XTick(2) = -log10(0.05);
       end
+      
     else
-      % rescue original XThick values if clipping is changed
-      if ~isempty(H.XTick), XTick = H.XTick; end
+      mn = floor(min(XTick));
+      mx = ceil(max(XTick));
+
+      % only allow integer values
+      XTick = floor(mn:mx);
     end
     
     % change XTickLabel
@@ -2284,11 +2282,12 @@ if H.n_surf == 1
         XTickLabel = char(XTickLabel, '');
       end
     end
-
+    
     set(H.colourbar, 'XTickLabel', XTickLabel(2:end, :), 'XTick', XTick);
   end % end H.logP
   
   set(H.colourbar, 'XColor', 1-H.bkg_col, 'YColor', 1-H.bkg_col);
+
   try, set(H.colourbar, 'TickDirection','out'); end
   try
     set(H.colourbar, 'TickLength', 0.01);
@@ -2333,6 +2332,8 @@ try
 catch
   col = [];
 end
+
+col = H.cmap_col;
 
 if ind < 5 % single hemisphere views
   M = H.S{round(ind / 2)}.M;
@@ -3058,6 +3059,10 @@ end
 
 if isfield(H, 'dataplot')
   try, set(H.dataplot, 'XColor', 1 - H.bkg_col, 'YColor', 1 - H.bkg_col, 'Color', H.bkg_col); end
+end
+
+if isfield(H,'Pvol_sel')
+  H = update_slice_overlay(H);
 end
 
 %==========================================================================

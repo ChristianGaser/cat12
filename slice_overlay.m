@@ -226,6 +226,11 @@ zmm = SO.slices;
 [y x] = meshgrid(ymm,xmm');
 vdims = [length(xmm),length(ymm),length(zmm)];
 
+% set default for background color
+if ~isfield(SO,'bkg_col')
+  SO.bkg_col = [0 0 0];
+end
+
 % no of slices, and panels (an extra for colorbars)
 nslices = vdims(Z);
 minnpanels = nslices;
@@ -424,6 +429,9 @@ for i = 1:nslices
   % threshold out of range values
   img(img>1) = 1;
   
+  % make white background if defined
+  if all(SO.bkg_col == [1 1 1]), img(img==0) = 1; end
+  
   image('Parent', axisd(i),...
     'ButtonDownFcn', SO.callback,...
     'CData',img);
@@ -440,7 +448,7 @@ for i = 1:nslices
   end
 end
 for i = (nslices+1):npanels
-   set(axisd(i),'Color',[0 0 0]);
+   set(axisd(i),'Color',SO.bkg_col);
 end
 % add colorbar(s) 
 for i = 1:cbars
@@ -460,7 +468,7 @@ for i = 1:cbars
       'YLim', axlims,...   
       'FontUnits', 'normalized',...
       'FontSize', 0.075,...
-      'YColor',[1 1 1],...
+      'YColor',1 - SO.bkg_col,...
       'Tag', 'cbar',...
       'Box', 'off',...
       'Position',[p(1)+pc(1)-cw/2,p(2)+pc(2)-ch/2,cw,ch]...
@@ -548,7 +556,7 @@ SO = set_def(SO, 'cbars', []);
 SO = set_def(SO, 'refreshf', 1);  
 
 % labels
-defstruct = struct('colour',[1 1 1],'size',0.075,'format', '%+3.0f');
+defstruct = struct('colour',1-SO.bkg_col,'size',0.075,'format', '%+3.0f');
 if ~isfield(SO, 'labels') % no field, -> default
   SO.labels = defstruct;
 elseif ~isempty(SO.labels) % empty -> no labels
