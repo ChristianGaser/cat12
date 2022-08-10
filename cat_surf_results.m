@@ -44,7 +44,7 @@ function varargout = cat_surf_results(action, varargin)
 %  * cat_surf_results('colormap','customized',cmap)
 %  use customized overlay colormap.
 %  cmap can be a nx3 variable with the colormap values
-% or a function that creates a colormap (e.g. jet)
+%  or a function that creates a colormap (e.g. jet)
 %
 %  * cat_surf_results('invcolormap',0..1)
 %  Default (0) or inverts colormap (1). Toggles without input.
@@ -109,8 +109,18 @@ switch lower(action)
   %======================================================================
   case 'disp'
     
+    % if nifti file is given use select_data function to prepare temporary
+    % mesh
+    if nargin
+      [pth,nam,ext] = fileparts(varargin{1});
+      if strcmp(ext,'.nii')
+        select_data([],[],varargin{1});
+        return
+      end
+    end
+    
     % close old figures
-    try,close(12);end;try,close(21);end;
+    if ishandle(12),close(12);end;if ishandle(21),close(21);end;
 
     % remove any existing data
     if exist('H','var')
@@ -228,7 +238,7 @@ switch lower(action)
       'String', 'Close', 'Units', 'normalized', ...
       'Position', H.pos{2}.close, ...
       'Style', 'Pushbutton', 'HorizontalAlignment', 'center', ...
-      'Callback', 'clear -globalvar H OV;try,close(11);end;try,close(12);end;try,close(21);end;close(22);close(23)', ...
+      'Callback', 'clear -globalvar H OV;for i=10:30, if ishandle(i); close(i); end; end', ...
       'FontSize',H.FS,'ForegroundColor','red',...
       'ToolTipString', 'Close windows', ...
       'Interruptible', 'on', 'Enable', 'on');
@@ -493,10 +503,9 @@ switch lower(action)
         G = gifti(H.S{1}.name);
         Y = zeros(size(G.vertices,1),1);
         all_zero = 1;
-%        return
       end
                   
-      [pth{1}, nm1, ext1] = spm_fileparts(H.S{1}.name(1,:));
+      [pth1, nm1, ext1] = spm_fileparts(H.S{1}.name(1,:));
                     
       % read meshes
       H.S{1}.info = cat_surf_info(H.S{1}.name, 1);
@@ -1279,11 +1288,23 @@ else
 %  set(H.hide_neg, 'Value', 0);
 end
 
+mn = min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:)));
+mx = max(max(H.S{1}.Y(:)), max(H.S{2}.Y(:)));
+if mn > H.clip(2) && mx < H.clip(3)
+  set(H.slider{1}, 'Visible', 'off');
+  set(H.slider{2}, 'Visible', 'off');
+else
+  set(H.slider{1}, 'Visible', 'on');
+  set(H.slider{2}, 'Visible', 'on');
+end
+
 H.no_neg = get(H.hide_neg, 'Value');
 
-% get min value for both hemispheres
-min_d = min(min(min(getappdata(H.patch(1), 'data'))), min(min(getappdata(H.patch(3), 'data'))));
 clim = getappdata(H.patch(1), 'clim');
+if H.logP(H.results_sel)
+  clim(2) = floor(clim(2));
+  clim(3) = ceil(clim(3));
+end
 
 % rather use NaN values for zero threshold
 if thresh == 0
@@ -1295,9 +1316,6 @@ if H.no_neg
   clim = [true 0 clim(3)];
   set(H.slider_min, 'Min', 0);
   set(H.slider_max, 'Min', 0);
-%elseif (thresh > 0)
-%  set(H.slider_min, 'Min', ceil(2*H.clim(2)))
-%  set(H.slider_max, 'Min', ceil(2*H.clim(2)))
 end
 
 if (thresh > 0)
@@ -1305,8 +1323,18 @@ if (thresh > 0)
   set(H.str_min, 'String', sprintf('%g',thresh));
 end
 
+if mn > -thresh
+  H.clim = [true thresh clim(3)];
+  set(H.slider_min, 'Value', thresh);
+  set(H.str_min, 'String', sprintf('%g',thresh));
+else
+  H.clim = [true -clim(3) clim(3)];
+  set(H.slider_min, 'Value', -clim(3));
+  set(H.str_min, 'String', sprintf('%g',-clim(3)));
+end
+  
 for ind = 1:5
-  if min_d > -thresh
+  if mn > -thresh
     setappdata(H.patch(ind), 'clim', [true thresh clim(3)]);
   elseif thresh == 0
     setappdata(H.patch(ind), 'clim', [true -clim(3) clim(3)]);
@@ -1315,7 +1343,6 @@ for ind = 1:5
   setappdata(H.patch(ind), 'clip', H.clip);
   col = getappdata(H.patch(ind), 'col');
   d = getappdata(H.patch(ind), 'data');
-  min_d = min(min_d, min(d(:)));
   H = updateTexture(H, ind, d, col, H.show_transp);
 end
 
@@ -1607,6 +1634,11 @@ else
   H.clim = [true H.S{1}.min H.S{1}.max];
 end
 
+if H.logP(H.results_sel)
+  H.clim(2) = floor(H.clim(2));
+  H.clim(3) = ceil(H.clim(3));
+end
+
 % only apply thresholds that are slightly larger than zero
 if H.S{1}.thresh > 0.00015 && H.thresh_value == 0
   H.clip = [true -H.S{1}.thresh H.S{1}.thresh];
@@ -1659,6 +1691,11 @@ end
 
 % update sliders for non-fixed scaling
 if ~H.fixscl
+  if H.logP(H.results_sel)
+    H.clim(2) = floor(H.clim(2));
+    H.clim(3) = ceil(H.clim(3));
+  end
+  
   set(H.slider_min, 'Value', H.clim(2));
   set(H.slider_max, 'Value', H.clim(3));
   if H.clim(2) > 0
@@ -1807,10 +1844,15 @@ else
   OV.cbar = 2;
 end
 
-% show MIP
-cat_vol_img2mip(OV);
-pos = get(gcf,'Position');
-set(gcf,'Position',[H.SS(3) - pos(3) 0 pos(3:4)]);
+% show MIP and keep position if window exists
+OV.fig_mip = 12;
+if ishandle(OV.fig_mip)
+  cat_vol_img2mip(OV);
+else
+  cat_vol_img2mip(OV);
+  pos = get(gcf,'Position');
+  set(gcf,'Position',[H.SS(3) - pos(3) 0 pos(3:4)]);
+end
 
 % don't update these fields if already existing because an interactive change is planned
 if ~isfield(OV,'atlas')
@@ -1820,10 +1862,19 @@ if ~isfield(OV,'atlas')
   OV.transform = char('axial');
 end
 
-cat_vol_slice_overlay(OV);
+% show MIP and keep position if window exists
+OV.fig = 21;
+if ishandle(OV.fig)
+  cat_vol_slice_overlay(OV);
+else
+  OV.pos(1:2) = [10 1200];
+  cat_vol_slice_overlay(OV);
+end
+
 
 % disable file saving now
 OV.save = 'none';
+OV.save_image = '';
 
 % select numbers of columns/rows
 OV.xy_sel = get_xy(OV);
@@ -2096,17 +2147,15 @@ if H.S{1}.min < 0
   H.S{1}.max = mnx;
 end
 
-% add 10% to min/max values
-if 0
-  H.S{1}.max = round(1100 * H.S{1}.max) / 1000;
-if H.S{1}.min < 0
-  H.S{1}.min = round(1100 * H.S{1}.min) / 1000;
+if H.logP(H.results_sel)
+  mnS = floor(H.S{1}.min);
+  mxS = ceil(H.S{1}.max);
 else
-  H.S{1}.min = round(900 * H.S{1}.min) / 1000;
-end
+  mnS = H.S{1}.min;
+  mxS = H.S{1}.max;
 end
 
-H.clim = [true H.S{1}.min H.S{1}.max];
+H.clim = [true mnS mxS];
 
 % only apply thresholds that are slightly larger than zero
 if H.S{1}.thresh > 0.00015
@@ -2117,7 +2166,7 @@ for ind = 1:5
   if H.S{1}.thresh > 0.00015
     setappdata(H.patch(ind), 'clip', H.clip);
   end
-  setappdata(H.patch(ind), 'clim', [true H.S{1}.min H.S{1}.max]);
+  setappdata(H.patch(ind), 'clim', [true mnS mxS]);
   col = getappdata(H.patch(ind), 'col');
   d = getappdata(H.patch(ind), 'data');
   H = updateTexture(H, ind, d, col, H.show_transp);
@@ -2158,29 +2207,29 @@ if H.n_surf == 1
   else
     mnx = [0 max_abs];
   end
-  
+
   try
-    [H.slider_min, tmp, H.str_min] = sliderPanel( ...
+    [H.slider_min, H.slider{1}, H.str_min] = sliderPanel( ...
       'Parent', H.panel(2), ...
       'Title', 'Overlay min', ...
       'Position', H.pos{2}.ovmin, ...
       'Backgroundcolor', H.col(1,:), ...
       'Min', mnx(1), ...
       'Max', mnx(2), ...
-      'Value', H.S{1}.min, ...
+      'Value', mnS, ...
       'FontName', 'Verdana', ...
       'FontSize', H.FS-1, ...
       'NumFormat', '%g', ...
       'Callback', @slider_clim_min);
 
-    [H.slider_max, tmp, H.str_max] = sliderPanel( ...
+    [H.slider_max, H.slider{2}, H.str_max] = sliderPanel( ...
       'Parent', H.panel(2), ...
       'Title', 'Overlay max', ...
       'Position', H.pos{2}.ovmax, ...
       'Backgroundcolor', H.col(1,:), ...
       'Min', mnx(1), ...
       'Max', mnx(2), ...
-      'Value', H.S{1}.max, ...
+      'Value', mxS, ...
       'FontName', 'Verdana', ...
       'FontSize', H.FS-1, ...
       'NumFormat', '%g', ...
@@ -2236,11 +2285,11 @@ if H.n_surf == 1
 
     % if threshold is between 1.3..1.4 (p<0.05) change XTick at threshold
     % to (-)log10(0.05)
-    if ~isempty(clip) && abs(clip(3)) >= 1.3 && abs(clip(3)) <= 1.4
+    if ~isempty(clip) && abs(clip(3)) >= 1.3 && abs(clip(3)) <= 1.4 && clim(3) > clim(2)
       XTick_step = ceil((clim(3) - clim(2)) / numel(XTick));
-      if clim(2) <= - 1.3 && clim(2) >= - 1.4
+      if clip(2) <= - 1.3 && clip(2) >= - 1.4 && clim(2) < 0
         XTick = [round(clim(2)):XTick_step:round(clim(3))];
-        mid = (numel(XTick)+1)/2;
+        mid = find(XTick==0);
         XTick(mid-1:mid+1) = [log10(0.05) 0 -log10(0.05)];
       else
         XTick = [0:XTick_step:round(clim(3))];
@@ -2951,7 +3000,7 @@ clip = getappdata(H.patch(1), 'clip');
 clim = getappdata(H.patch(1), 'clim');
 
 % get min value for both hemispheres
-min_d = min(min(min(getappdata(H.patch(1), 'data'))), min(min(getappdata(H.patch(3), 'data'))));
+mn = min(min(min(getappdata(H.patch(1), 'data'))), min(min(getappdata(H.patch(3), 'data'))));
 
 if H.no_neg
   H.clip = [true -Inf thresh];
@@ -2962,7 +3011,7 @@ if H.no_neg
   set(H.slider_max, 'Min', 0);
 else
   H.clip = [true -thresh thresh];
-  if min_d < -thresh
+  if mn < -thresh
     H.clim = [true -clim(3) clim(3)];
     set(H.slider_min, 'Value', -clim(3));
     set(H.str_min, 'String', sprintf('%g',-clim(3)));
@@ -2976,12 +3025,12 @@ for ind = 1:5
   setappdata(H.patch(ind), 'clim', H.clim);
   col = getappdata(H.patch(ind), 'col');
   d = getappdata(H.patch(ind), 'data');
-  min_d = min(min_d, min(d(:)));
+  mn = min(mn, min(d(:)));
   H = updateTexture(H, ind, d, col, H.show_transp);
 end
 
 % correct value of slider if no values are exceeding threshold
-if min_d > -thresh && H.n_surf == 1
+if mn > -thresh && H.n_surf == 1
   set(H.slider_min, 'Value', 0);
   set(H.str_min, 'String', 0);
   set(H.slider_min, 'Min', 0);

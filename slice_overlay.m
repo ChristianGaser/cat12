@@ -621,9 +621,9 @@ for i = 1:length(SO.img)
   if ~is_there(SO.img(i),'cmap')
     if SO.img(i).prop == Inf; % split map
       if SO.range(1)<SO.range(2)
-  SO.img(i).cmap = getcmap('hot');
+        SO.img(i).cmap = getcmap('hot');
       else
-  SO.img(i).cmap = getcmap('winter');
+        SO.img(i).cmap = getcmap('winter');
       end
     else                  % true colour
       SO.img(i).cmap = getcmap('actc');
@@ -661,7 +661,7 @@ if tf
 end
 return
 
-function [img, badvals]=scaletocmap(inpimg,mn,mx,cmap,lrn)
+function [img, badvals] = scaletocmap(inpimg,mn,mx,cmap,lrn)
 img = (inpimg-mn)/(mx-mn);  % img normalized to mn=0,mx=1
 cml = size(cmap,1);
 if cml==1 % values between 0 and 1 -> 1
@@ -670,7 +670,7 @@ else
   img = img*(cml-1)+1;
 end
 outvals = {img<1, img>cml, isnan(img)};
-img= round(img);
+img = round(img);
 badvals = zeros(size(img));
 for i = 1:length(lrn)
   if lrn(i)
