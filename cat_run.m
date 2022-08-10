@@ -314,7 +314,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
   job = update_job(job);
   varargout{1} = vout_job(job);
   
-  njobs = cellfun(@numel,{jobs.data});
+  %njobs = cellfun(@numel,{jobs.data}); % not used
   
   % command window output
   QMC       = cat_io_colormaps('marks+',17);
@@ -322,10 +322,11 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
   GMC       = GMC ./ repmat( max(1,sum(GMC,2)) , 1 , 3);  % make bright values darker 
   color     = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
   colorgmt  = @(GMC,m) GMC(max(1,min(size(GMC,1),round(((m-0.5)*10)+1))),:);
-  mark2rps  = @(mark) min(100,max(0,105 - mark*10)) + isnan(mark).*mark;
   rps2mark  = @(rps) min(10.5,max(0.5,10.5 - rps / 10)) + isnan(rps).*rps;
-  grades    = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
-  mark2grad = @(mark) grades{max(1,min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3))))};
+  % not used
+  %mark2rps  = @(mark) min(100,max(0,105 - mark*10)) + isnan(mark).*mark;
+  %grades    = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
+  %mark2grad = @(mark) grades{max(1,min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3))))};
   
   allcatalerts   = 0;
   allcatwarnings = 0; 
@@ -430,7 +431,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
               try
                 catrgmv = [cathd{1}(1) cathd{1}{2}(2:end) cathd{1}(4)]; 
               catch
-                catrgmv = [cathd{1}(1)]; 
+                catrgmv = cathd{1}(1); 
               end
             else 
               catrgmv = {'unknown'};
@@ -645,10 +646,11 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                   else
                     col = [0.6 0.6 0.6]; 
                   end
-                  cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('%d alerts\n',catalerts));  
+                  cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('%d alerts',catalerts));  
                 end
-                
-                fprintf('\n');
+
+                cat_io_cprintf('n',' '); % to avoid color bug?
+                fprintf(' \n');
               else
                 cat_io_cprintf(err.color,sprintf('%s\n',err.txt));  
               end
@@ -766,7 +768,7 @@ function job = update_job(job)
   if isfield(job.output,'ROImenu') % expert/developer GUI that allows control each atlas map 
     if isfield(job.output.ROImenu,'atlases')
       %% image output
-      try atlases = rmfield(job.output.ROImenu.atlases,'ownatlas'); end
+      try atlases = rmfield(job.output.ROImenu.atlases,'ownatlas'); end %#ok<TRYNC>
       def.output.atlases = atlases;
       def.output.ROI     = any(cell2mat(struct2cell(atlases))) || ~isempty( job.output.ROImenu.atlases.ownatlas ); 
       
@@ -788,7 +790,7 @@ function job = update_job(job)
           else
             % add new atlas  
             def.output.atlases.(ff) = 1; 
-            def.extopts.atlas = [ def.extopts.atlas; [ {job.output.ROImenu.atlases.ownatlas{i}} {def.extopts.expertgui} {{'gm','wm','csf'}} {0} ] ]; 
+            def.extopts.atlas = [ def.extopts.atlas; [ job.output.ROImenu.atlases.ownatlas(i) {def.extopts.expertgui} {{'gm','wm','csf'}} {0} ] ]; 
           end
         end
       end
@@ -902,7 +904,7 @@ function job = update_job(job)
     if ~isempty(strfind(ff,'suit')) && job.extopts.atlas{ai,4}
       disp('--------------------------------------------')
       disp('No commercial use of SUIT cerebellar atlas')
-      alert_str = ['Creative Commons Attribution-NonCommercial 3.0 Unported License does not allow commercial use.'];
+      alert_str = 'Creative Commons Attribution-NonCommercial 3.0 Unported License does not allow commercial use.';
       disp(alert_str);
       disp('--------------------------------------------')
     end
