@@ -86,6 +86,65 @@ if isfield(job.output,'BIDS')
   end
 end
 
+
+% If one of the input directories is a BIDS directory than use create a
+% subfolder derivatives/CAT12.#/log to save the log-files there and not
+% somewhere. A try catch block is used in case of untested input (e.g.,
+% structures). See also for a similar block in cat_parallelize.
+% .. the first BIDSdir block is a bit different ...
+if isfield(job.extopts,'BIDSfolder') 
+  BIDSdir = fullfile(name1,strrep(BIDSfolder,['..' filesep],''));
+else
+  BIDSdir = [];  
+end
+if ~isempty(BIDSdir)
+  logdir  = fullfile(BIDSdir,'log');
+  if ~exist(logdir,'dir'), mkdir(logdir); end
+else
+  logdir  = [];  
+end
+% Another thing that we want to avoid is to fill some of the SPM
+% directories and just write in a ../spm12/toolbox/cat12/log subdirectory.
+% Do not forget that this is only about the additional log files and 
+% not real data output. 
+% If there are no writing rights in the directory the same is probably true 
+% for other SPM dirs and the user has to change the working directory anyway. 
+% So we create an error so that the user can change this. 
+if isempty(logdir)
+  try 
+    SPMdir  = spm_str_manip(data,'h');
+    SPMdiri = find(~cellfun('isempty',SPMdir),1);
+    if ~isempty(SPMdiri)
+      logdir = fullfile(spm('dir'),'toolbox','cat12','logs'); % log already exist as file
+      if ~exist(logdir,'dir')
+        try
+          mkdir(logdir); 
+        catch
+          cat_io_cprintf('cat_parallelize:CATlogs',['Cannot create directory for logs within the CAT12 directory. \n' ...
+            'Please choose another working directory with writing rights to save the log-files. ']);
+        end 
+      end
+    else
+      logdir  = [];  
+    end
+  catch 
+    logdir  = [];  
+  end
+end
+if ~isempty(logdir)
+  if ~isempty(BIDSdir)
+    cat_io_cprintf('n', ['\nFound a CAT12 BIDS directory in the given ' ...
+      'pathnames and save the log file there:\n']); 
+    cat_io_cprintf('blue','%s\n\n', logdir);
+  else
+    cat_io_cprintf('n', ['\nYou working directory is in the SPM12/CAT12 ' ...
+      'path, where log files saved here:\n']); 
+    cat_io_cprintf('blue','%s\n\n', logdir);
+  end
+end
+
+
+
 if ( isfield(job.extopts,'lazy') && job.extopts.lazy && ~isfield(job,'process_index') ) || ...
    ( isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.extopts.admin.lazy && ~isfield(job,'process_index') )
   jobl      = update_job(job);
@@ -136,8 +195,8 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     tmp_name = [tempname '.mat'];
     tmp_array{i} = tmp_name; 
     %def = cat_get_defaults; job = cat_io_checkinopt(job,def); % further job update required here to get the latest cat defaults
-    spm12def = spm_get_defaults;  %#ok<NASGU>
-    cat12def = cat_get_defaults;  %#ok<NASGU>
+    spm12def = spm_get_defaults;  
+    cat12def = cat_get_defaults;  
     save(tmp_name,'job','spm12def','cat12def');
     clear spm12def cat12;
     
@@ -150,8 +209,12 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
         fullfile(spm('dir'),'toolbox','OldNorm'),fullfile(spm('dir'),'toolbox','DARTEL'), tmp_name);
 
     % log-file for output
-    log_name{i} = ['catlog_main_' logdate '_log' sprintf('%02d',i) '.txt'];
-
+    if isempty(logdir)
+      log_name{i} = ['catlog_main_' logdate '_log' sprintf('%02d',i) '.txt'];
+    else
+      log_name{i} = fullfile(logdir,['catlog_main_' logdate '_log' sprintf('%02d',i) '.txt']);
+    end
+    
     % call matlab with command in the background
     if ispc
       % check for spaces in filenames that will not work with windows systems and background jobs
