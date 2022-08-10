@@ -26,6 +26,7 @@ function cat_vol_slice_overlay(OV)
 % OV.overview   - use empty brackets to not suppress slice overview (.e.g []);
 % OV.pos        - define first two numbers of image position
 % OV.bkg_col    - color of background ([0 0 0] as default)
+% OV.fig        - figure number (default 22)
 %
 % see cat_vol_slice_overlay_ui.m for an example
 % ______________________________________________________________________
@@ -59,13 +60,15 @@ if ~nargin
   
 end
 
-spm_figure('GetWin','Graphics');
-
 % get fontsize
 if isfield(OV,'FS')
   FS = OV.FS;
 else
   FS = 0.08;
+end
+
+if ~isfield(OV,'fig')
+  OV.fig = 22;
 end
 
 % hot colormap by default
@@ -222,7 +225,8 @@ else
 end
 
 if range(1) >= 0
-  SO.img(2).outofrange = {0, size(SO.img(2).cmap, 1)};
+%  SO.img(2).outofrange = {0, size(SO.img(2).cmap, 1)};
+  SO.img(2).outofrange = {1, 1};
 else
   SO.img(2).outofrange = {1, 1};
   % use bivariate colormap if OV was not defined
@@ -281,7 +285,7 @@ end
 
 
 % get position of graphic figure
-pos1 = get(spm_figure('FindWin', 'Graphics'), 'Position');
+pos1 = spm('Winsize', 'Graphics');
 
 screensize = get(0, 'screensize');
 
@@ -363,14 +367,22 @@ end
 
 [pt, nm] = spm_fileparts(img);
 
-h = figure(21);
-if isfield(OV,'pos')
+if isfield(OV,'pos') && ishandle(OV.fig)
   pos0 = OV.pos(1:2);
 else
-  pos0 = pos1(1:2);
+  pos0 = [10 1200];
 end
+
+if ishandle(OV.fig)
+  h = figure(OV.fig);
+  pos = get(h, 'Position');
+  set(h, 'Position', [pos(1:2) fig_size]);
+else
+  h = figure(OV.fig);
+  set(h, 'Position', [pos0 fig_size]);
+end
+
 set(h, ...
-    'Position', [pos0 fig_size], ...
     'MenuBar', 'none', ...
     'Resize', 'off', ...
     'PaperType', 'A4', ...
@@ -383,7 +395,7 @@ set(h, ...
 SO.figure = h;
 SO.area.units = 'pixels';
 
-slice_overlay
+slice_overlay;
 
 % remove remaining gray colored border
 ax = get(SO.figure,'Children');
@@ -816,7 +828,6 @@ imgns = spm_str_manip(imgs, ['rck' num2str(nchars)]);
 SO.transform = deblank(spm_input('Image orientation', '+1', ['Axial|' ...
     ' Coronal|Sagittal'], strvcat('axial', 'coronal', 'sagittal'), 1));
 orientn = find(strcmpi(SO.transform, {'sagittal', 'coronal', 'axial'}));
-spm_figure('GetWin','Interactive');
 
 % identify image types
 SO.cbar = [];

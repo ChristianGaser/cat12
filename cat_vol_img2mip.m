@@ -21,6 +21,7 @@ function cat_vol_img2mip(OV)
 %  RGB_order  - array of RGB order (default [1 2 3])
 %  bkg_col    - color of background ([0 0 0] as default)
 %  cbar       - if empty skip showing colorbar
+%  fig_mip    - figure number (default 12)
 %
 % If < 3 arguments are given, you can save the png-file by using the
 % context menu (right mouse click in the image)
@@ -41,7 +42,7 @@ end
 
 def = struct('name',OV,'func','i1(i1==0)=NaN;','cmap',jet(64),'range',...
   [-Inf Inf],'gamma_scl',0.7,'save_image','','RGB_order',1:3,'Pos',...
-  [10 10], 'bkg_col',[0 0 0]);
+  [10 10], 'bkg_col',[0 0 0], 'fig_mip', 12);
     
 if ischar(OV)
   OV = def;
@@ -79,16 +80,17 @@ zy = coord(2)-s:coord(2)+s-1;
 
 col = {'R','G','B'};
 col = col(OV.RGB_order);
+
 for i=1:n
   if n > 1
     fprintf('%s color: %s\n',col{i},V(i).fname);
   end
   XYZ{i} = [];
-  Y{i} = [];
+  Y{i}   = [];
 end
 
 Origin = V(1).mat\[0 0 0 1]';
-vox = sqrt(sum(V(1).mat(1:3,1:3).^2));
+vox    = sqrt(sum(V(1).mat(1:3,1:3).^2));
 
 spm_progress_bar('Init',V(1).dim(3),'Mip',' ');
 for j = 1:V(1).dim(3)
@@ -103,12 +105,8 @@ for j = 1:V(1).dim(3)
     % apply defined function
     eval(OV.func)
     
-    % find indices in defined range
-    if OV.range(2) > OV.range(1)
-  	  [Qc Qr] = find(i1 >= OV.range(1));
-    else
-  	  [Qc Qr] = find(i1 <= OV.range(2));
-    end
+    % find indices
+  	[Qc Qr] = find(isfinite(i1) & i1 ~=0 );
     Q = sub2ind(size(i1),Qc,Qr);
         
 	  if ~isempty(Q)
@@ -119,7 +117,7 @@ for j = 1:V(1).dim(3)
       % if finite lower range is defined this should be subtracted from
       % image
       if isfinite(OV.range(1))
-        i1(Q) = i1(Q) - OV.range(1);
+%        i1(Q) = i1(Q) - OV.range(1);
       end
       
 		  Y{i} = [Y{i}; i1(Q)];
@@ -171,12 +169,17 @@ col = reshape([rgb{OV.RGB_order(1)},rgb{OV.RGB_order(2)},rgb{OV.RGB_order(3)}],s
 old_mip = mip;
 mip = max(cat(3,col),mip);
 
-% show mip image
-fig = figure(12);
 [pt,nm,xt] = fileparts(P(1,:));
 png_name = ['mip' num2str(n) '_' nm '.png'];
 sz = size(mip(:,:,1));
-set(fig, 'MenuBar', 'none','Name',nm,'Position',[10 10 sz([2 1])]);
+
+% show mip image
+if ishandle(OV.fig_mip)
+  fig = figure(OV.fig_mip);
+else
+  fig = figure(OV.fig_mip);
+  set(fig, 'MenuBar', 'none','Name',nm,'Position',[10 10 sz([2 1])],'NumberTitle','off');
+end
 
 % single MIP of one result supports colored MIP
 if n == 1
