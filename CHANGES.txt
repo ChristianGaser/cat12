@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2078 | rdahnke | 2022-08-10 15:27:07
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_tools.m
+ M cat_run.m
+
+
+1) Fixed:    Tiny corrections in cat_run.
+2) New:      Added imcalc batch to run the same operation on multiple subjects. 
+------------------------------------------------------------------------
 r2077 | rdahnke | 2022-08-10 11:38:50
 
 Changed paths:
