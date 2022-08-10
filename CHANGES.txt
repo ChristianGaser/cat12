@@ -1,4 +1,20 @@
 ------------------------------------------------------------------------
+r2077 | rdahnke | 2022-08-10 11:38:50
+
+Changed paths:
+ M .gitignore
+ M CHANGES.txt
+ M cat_parallelize.m
+ M cat_run.m
+
+
+1) New:    Added routine to keep some order with parallel processing log files. 
+           (i)  If BIDS is used then collect all parallel processing log files  
+                in a log subdirectory. 
+           (ii) If the current directory is located in the SPM path then try to 
+                the store parallel processing log files into a logs subdirectory  
+                in the cat12 main directory to avoid littering (also ignored by
+                GitHub). ------------------------------------------------------------------------
 r2076 | gaser | 2022-08-10 01:11:04
 
 Changed paths:
