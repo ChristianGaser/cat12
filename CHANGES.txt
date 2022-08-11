@@ -1,4 +1,18 @@
 ------------------------------------------------------------------------
+r2081 | gaser | 2022-08-11 12:11:50
+
+Changed paths:
+ M CHANGES.txt
+ M cat12.m
+ M cat_surf_results.m
+ M cat_vol_img2mip.m
+ M cat_vol_slice_overlay.m
+
+
+Changed: Many more changes to cat_surf_results.m, cat_vol_img2mip.m, 
+         cat_vol_slice_overlay.m to provide consistency 
+         between all displays.
+------------------------------------------------------------------------
 r2079 | gaser | 2022-08-10 15:15:09
 
 Changed paths:

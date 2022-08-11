@@ -983,10 +983,12 @@ set(h40,'cdata',I2);
 
 hsingleton = h0;
 
+%-------------------------------------------------------------------
 function I2 = cat_interp_menuimgs(I,sx)
-  [X2,Y2] = meshgrid(1:size(I,2)/sx(1):size(I,2),1:size(I,1)/sx(2):size(I,1)); clear I2;
-  I(end+1,:,:) = I(end,:,:); I(:,end+1,:) = I(:,end,:);
-  for i=1:3, I2(:,:,i) = cat_vol_ctype(interp2(double(I(:,:,i)),X2,Y2)); end %#ok<AGROW>
+
+[X2,Y2] = meshgrid(1:size(I,2)/sx(1):size(I,2),1:size(I,1)/sx(2):size(I,1)); clear I2;
+I(end+1,:,:) = I(end,:,:); I(:,end+1,:) = I(:,end,:);
+for i=1:3, I2(:,:,i) = cat_vol_ctype(interp2(double(I(:,:,i)),X2,Y2)); end %#ok<AGROW>
 
 
 %-------------------------------------------------------------------
