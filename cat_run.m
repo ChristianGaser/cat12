@@ -86,6 +86,65 @@ if isfield(job.output,'BIDS')
   end
 end
 
+
+% If one of the input directories is a BIDS directory than use create a
+% subfolder derivatives/CAT12.#/log to save the log-files there and not
+% somewhere. A try catch block is used in case of untested input (e.g.,
+% structures). See also for a similar block in cat_parallelize.
+% .. the first BIDSdir block is a bit different ...
+if isfield(job.extopts,'BIDSfolder') 
+  BIDSdir = fullfile(name1,strrep(BIDSfolder,['..' filesep],''));
+else
+  BIDSdir = [];  
+end
+if ~isempty(BIDSdir)
+  logdir  = fullfile(BIDSdir,'log');
+  if ~exist(logdir,'dir'), mkdir(logdir); end
+else
+  logdir  = [];  
+end
+% Another thing that we want to avoid is to fill some of the SPM
+% directories and just write in a ../spm12/toolbox/cat12/log subdirectory.
+% Do not forget that this is only about the additional log files and 
+% not real data output. 
+% If there are no writing rights in the directory the same is probably true 
+% for other SPM dirs and the user has to change the working directory anyway. 
+% So we create an error so that the user can change this. 
+if isempty(logdir)
+  try 
+    SPMdir  = spm_str_manip(data,'h');
+    SPMdiri = find(~cellfun('isempty',SPMdir),1);
+    if ~isempty(SPMdiri)
+      logdir = fullfile(spm('dir'),'toolbox','cat12','logs'); % log already exist as file
+      if ~exist(logdir,'dir')
+        try
+          mkdir(logdir); 
+        catch
+          cat_io_cprintf('cat_parallelize:CATlogs',['Cannot create directory for logs within the CAT12 directory. \n' ...
+            'Please choose another working directory with writing rights to save the log-files. ']);
+        end 
+      end
+    else
+      logdir  = [];  
+    end
+  catch 
+    logdir  = [];  
+  end
+end
+if ~isempty(logdir)
+  if ~isempty(BIDSdir)
+    cat_io_cprintf('n', ['\nFound a CAT12 BIDS directory in the given ' ...
+      'pathnames and save the log file there:\n']); 
+    cat_io_cprintf('blue','%s\n\n', logdir);
+  else
+    cat_io_cprintf('n', ['\nYou working directory is in the SPM12/CAT12 ' ...
+      'path, where log files saved here:\n']); 
+    cat_io_cprintf('blue','%s\n\n', logdir);
+  end
+end
+
+
+
 if ( isfield(job.extopts,'lazy') && job.extopts.lazy && ~isfield(job,'process_index') ) || ...
    ( isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.extopts.admin.lazy && ~isfield(job,'process_index') )
   jobl      = update_job(job);
@@ -136,8 +195,8 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     tmp_name = [tempname '.mat'];
     tmp_array{i} = tmp_name; 
     %def = cat_get_defaults; job = cat_io_checkinopt(job,def); % further job update required here to get the latest cat defaults
-    spm12def = spm_get_defaults;  %#ok<NASGU>
-    cat12def = cat_get_defaults;  %#ok<NASGU>
+    spm12def = spm_get_defaults;  
+    cat12def = cat_get_defaults;  
     save(tmp_name,'job','spm12def','cat12def');
     clear spm12def cat12;
     
@@ -150,8 +209,12 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
         fullfile(spm('dir'),'toolbox','OldNorm'),fullfile(spm('dir'),'toolbox','DARTEL'), tmp_name);
 
     % log-file for output
-    log_name{i} = ['catlog_main_' logdate '_log' sprintf('%02d',i) '.txt'];
-
+    if isempty(logdir)
+      log_name{i} = ['catlog_main_' logdate '_log' sprintf('%02d',i) '.txt'];
+    else
+      log_name{i} = fullfile(logdir,['catlog_main_' logdate '_log' sprintf('%02d',i) '.txt']);
+    end
+    
     % call matlab with command in the background
     if ispc
       % check for spaces in filenames that will not work with windows systems and background jobs
@@ -251,7 +314,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
   job = update_job(job);
   varargout{1} = vout_job(job);
   
-  njobs = cellfun(@numel,{jobs.data});
+  %njobs = cellfun(@numel,{jobs.data}); % not used
   
   % command window output
   QMC       = cat_io_colormaps('marks+',17);
@@ -259,10 +322,11 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
   GMC       = GMC ./ repmat( max(1,sum(GMC,2)) , 1 , 3);  % make bright values darker 
   color     = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
   colorgmt  = @(GMC,m) GMC(max(1,min(size(GMC,1),round(((m-0.5)*10)+1))),:);
-  mark2rps  = @(mark) min(100,max(0,105 - mark*10)) + isnan(mark).*mark;
   rps2mark  = @(rps) min(10.5,max(0.5,10.5 - rps / 10)) + isnan(rps).*rps;
-  grades    = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
-  mark2grad = @(mark) grades{max(1,min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3))))};
+  % not used
+  %mark2rps  = @(mark) min(100,max(0,105 - mark*10)) + isnan(mark).*mark;
+  %grades    = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
+  %mark2grad = @(mark) grades{max(1,min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3))))};
   
   allcatalerts   = 0;
   allcatwarnings = 0; 
@@ -367,7 +431,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
               try
                 catrgmv = [cathd{1}(1) cathd{1}{2}(2:end) cathd{1}(4)]; 
               catch
-                catrgmv = [cathd{1}(1)]; 
+                catrgmv = cathd{1}(1); 
               end
             else 
               catrgmv = {'unknown'};
@@ -582,10 +646,11 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                   else
                     col = [0.6 0.6 0.6]; 
                   end
-                  cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('%d alerts\n',catalerts));  
+                  cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('%d alerts',catalerts));  
                 end
-                
-                fprintf('\n');
+
+                cat_io_cprintf('n',' '); % to avoid color bug?
+                fprintf(' \n');
               else
                 cat_io_cprintf(err.color,sprintf('%s\n',err.txt));  
               end
@@ -703,7 +768,7 @@ function job = update_job(job)
   if isfield(job.output,'ROImenu') % expert/developer GUI that allows control each atlas map 
     if isfield(job.output.ROImenu,'atlases')
       %% image output
-      try atlases = rmfield(job.output.ROImenu.atlases,'ownatlas'); end
+      try atlases = rmfield(job.output.ROImenu.atlases,'ownatlas'); end %#ok<TRYNC>
       def.output.atlases = atlases;
       def.output.ROI     = any(cell2mat(struct2cell(atlases))) || ~isempty( job.output.ROImenu.atlases.ownatlas ); 
       
@@ -725,7 +790,7 @@ function job = update_job(job)
           else
             % add new atlas  
             def.output.atlases.(ff) = 1; 
-            def.extopts.atlas = [ def.extopts.atlas; [ {job.output.ROImenu.atlases.ownatlas{i}} {def.extopts.expertgui} {{'gm','wm','csf'}} {0} ] ]; 
+            def.extopts.atlas = [ def.extopts.atlas; [ job.output.ROImenu.atlases.ownatlas(i) {def.extopts.expertgui} {{'gm','wm','csf'}} {0} ] ]; 
           end
         end
       end
@@ -839,7 +904,7 @@ function job = update_job(job)
     if ~isempty(strfind(ff,'suit')) && job.extopts.atlas{ai,4}
       disp('--------------------------------------------')
       disp('No commercial use of SUIT cerebellar atlas')
-      alert_str = ['Creative Commons Attribution-NonCommercial 3.0 Unported License does not allow commercial use.'];
+      alert_str = 'Creative Commons Attribution-NonCommercial 3.0 Unported License does not allow commercial use.';
       disp(alert_str);
       disp('--------------------------------------------')
     end

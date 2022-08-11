@@ -58,16 +58,20 @@ function varargout = cat_parallelize(job,func,datafield)
   job_data = job.(datafield);
   if isstruct(job.(datafield))
     n_subjects = numel(job.(datafield));
+    data       = job.(datafield);
   elseif iscell(job.(datafield){1})
     n_subjects = numel(job.(datafield){1});
+    data       = job.(datafield){1};
   else
     n_subjects = numel(job.(datafield));
+    data       = job.(datafield);
   end
   if job.nproc > n_subjects
     job.nproc = n_subjects;
   end
   job.process_index = cell(job.nproc,1);
   job.verb = 1; 
+
 
   % initial splitting of data
   for i=1:job.nproc
@@ -79,6 +83,69 @@ function varargout = cat_parallelize(job,func,datafield)
   for i=1:rem(n_subjects,job.nproc)
     job.process_index{i} = [job.process_index{i} n_subjects-i+1];
   end
+
+
+  % If one of the input directories is a BIDS directory than use create a
+  % subfolder derivatives/CAT12.#/log to save the log-files there and not
+  % somewhere. A try catch block is used in case of untested input (e.g.,
+  % structures). See also for a similar block in cat_run.
+  try
+    BIDSdir  = spm_str_manip(data,'h');
+    BIDSdire = strfind(BIDSdir,fullfile('derivatives','CAT12.'));
+    BIDSdiri = find(~cellfun('isempty',BIDSdir),1);
+    if ~isempty(BIDSdiri)
+      dCATdir = strfind( BIDSdir{BIDSdiri}(BIDSdire{BIDSdiri} + numel(fullfile('derivatives','CAT12.')):end) ,filesep);
+      BIDSdir = BIDSdir{BIDSdiri}(1:BIDSdire{BIDSdiri} + numel(fullfile('derivatives','CAT12.')) + dCATdir - 2); 
+    end
+  catch
+    BIDSdir = [];  
+  end
+  if ~isempty(BIDSdir)
+    logdir  = fullfile(BIDSdir,'log');
+    if ~exist(logdir,'dir'), mkdir(logdir); end
+  else
+    logdir  = [];  
+  end
+  % Another thing that we want to avoid is to fill some of the SPM
+  % directories and just write in a ../spm12/toolbox/cat12/log subdirectory.
+  % Do not forget that this is only about the additional log files and 
+  % not real data output. If there are no writing rights in the directory 
+  % the same is probably true for other SPM dirs and the user has to change
+  % the working directory anyway. 
+  if isempty(logdir)
+    try 
+      SPMdir  = spm_str_manip(data,'h');
+      SPMdiri = find(~cellfun('isempty',SPMdir),1);
+      if ~isempty(SPMdiri)
+        logdir = fullfile(spm('dir'),'toolbox','cat12','logs'); % log already exist as file
+        if ~exist(logdir,'dir')
+          try
+            mkdir(logdir); 
+          catch
+            error('cat_parallelize:CATlogs',['Cannot create directory for logs within the CAT12 directory. \n' ...
+              'Please choose another working directory with writing rights to save the log-files. ']);
+          end 
+        end
+      else
+        logdir  = [];  
+      end
+    catch 
+      logdir  = [];  
+    end
+  end
+  if ~isempty(logdir) && job.verb 
+    if ~isempty(BIDSdir)
+      cat_io_cprintf('n', ['\nFound a CAT12 BIDS directory in the given ' ...
+        'pathnames and save the log file there:\n']); 
+      cat_io_cprintf('blue','%s\n\n', logdir);
+    else
+      cat_io_cprintf('n', ['\nYou working directory is in the SPM12/CAT12 ' ...
+        'path, where log files saved here:\n']); 
+      cat_io_cprintf('blue','%s\n\n', logdir);
+    end
+  end
+  
+
 
   tmp_array = cell(job.nproc,1);
   logdate   = datestr(now,'YYYYmmdd_HHMMSS');
@@ -112,8 +179,8 @@ function varargout = cat_parallelize(job,func,datafield)
     tmp_name = [tempname '.mat'];
     tmp_array{i} = tmp_name; 
     global defaults cat;  %#ok<TLEV>
-    spm12def = defaults;  %#ok<NASGU>
-    cat12def = cat;       %#ok<NASGU>
+    spm12def = defaults; 
+    cat12def = cat;      
     save(tmp_name,'job','spm12def','cat12def');
     clear spm12def cat12;
  
@@ -135,9 +202,15 @@ function varargout = cat_parallelize(job,func,datafield)
         spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),fileparts(which(func)),tmp_name,func);
     end
     
+
     % log-file for output
-    log_name{i} = ['log_' func '_' logdate '_' sprintf('%02d',i) '.txt']; %#ok<AGROW>
-    
+    if isempty(logdir)
+      log_name{i} = ['log_' func '_' logdate '_' sprintf('%02d',i) '.txt']; %#ok<AGROW>
+    else
+      log_name{i} = fullfile(logdir,['log_' func '_' logdate '_' sprintf('%02d',i) '.txt']); %#ok<AGROW> 
+    end
+
+
     % call matlab with command in the background
     if ispc
       % check for spaces in filenames that will not work with windows systems and background jobs
