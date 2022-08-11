@@ -69,17 +69,19 @@ c   = (M(1:3,1:3)*c0')';
 dim = [(max(c)-min(c)) size(mip96)];
 
 % compute colored spheres for colorbar
-s = 35;
-coord = [270 310];
-[x,y,z] = sphere(4*s);
-yy = y'*y;
-yy = yy(1:2*s,1:2*s);
-yy = yy/max(yy(:));
-zx = coord(1)-s:coord(1)+s-1;
-zy = coord(2)-s:coord(2)+s-1;
+if n > 1
+  s = 35;
+  coord = [270 310];
+  [x,y,z] = sphere(4*s);
+  yy = y'*y;
+  yy = yy(1:2*s,1:2*s);
+  yy = yy/max(yy(:));
+  zx = coord(1)-s:coord(1)+s-1;
+  zy = coord(2)-s:coord(2)+s-1;
 
-col = {'R','G','B'};
-col = col(OV.RGB_order);
+  col = {'R','G','B'};
+  col = col(OV.RGB_order);
+end
 
 for i=1:n
   if n > 1
@@ -92,6 +94,7 @@ end
 Origin = V(1).mat\[0 0 0 1]';
 vox    = sqrt(sum(V(1).mat(1:3,1:3).^2));
 
+mnI = 1e15; mxI = -1e15;
 spm_progress_bar('Init',V(1).dim(3),'Mip',' ');
 for j = 1:V(1).dim(3)
 	B  = spm_matrix([0 0 -j 0 0 0 1 1 1]);
@@ -101,10 +104,10 @@ for j = 1:V(1).dim(3)
     % read slice and flip for MIP
 	  i1  = spm_slice_vol(V(i),M1,V(i).dim(1:2),1);
     i1 = flipud(i1);
-    
+
     % apply defined function
     eval(OV.func)
-    
+        
     % find indices
   	[Qc Qr] = find(isfinite(i1) & i1 ~=0 );
     Q = sub2ind(size(i1),Qc,Qr);
@@ -114,11 +117,8 @@ for j = 1:V(1).dim(3)
 		  Qr = (Qr - Origin(2))*vox(2);
 		  XYZ{i} = [XYZ{i}; [Qc Qr ones(size(Qc,1),1)*(j - Origin(3))*vox(3)]];
       
-      % if finite lower range is defined this should be subtracted from
-      % image
-      if isfinite(OV.range(1))
-%        i1(Q) = i1(Q) - OV.range(1);
-      end
+      mnI = min(mnI, min(i1(Q)));
+      mxI = max(mxI, max(i1(Q)));
       
 		  Y{i} = [Y{i}; i1(Q)];
 	  end
@@ -126,8 +126,24 @@ for j = 1:V(1).dim(3)
   
 	spm_progress_bar('Set',j);
 end
-
 spm_progress_bar('Clear');
+
+for i=1:n
+   % apply range
+  if isfinite(OV.range(1))
+    Y{i}(Y{i}<OV.range(1)) = OV.range(1);
+  end
+
+  if isfinite(OV.range(2))
+    Y{i}(Y{i}>OV.range(2)) = OV.range(2);
+  end
+
+  % for some range min combinations we have to subtract the minimum
+  if isfinite(OV.range(1)) && ( (mnI < 0 && OV.range(1) <= 0) || mnI > 0)
+    Y{i} = Y{i} - mnI;
+  end
+
+end
 
 sz = size(mip);
 for i=1:3
@@ -194,17 +210,28 @@ if n == 1
   % force defined background and inverted MIP grid
   OV.cmap(1,:)     = OV.bkg_col;
   OV.cmap(end+1,:) = 1 - OV.bkg_col;
-  colormap(OV.cmap)
+  
+  if mxI < 0
+    colormap(OV.cmap(1:round(size(OV.cmap,1)/2)-1,:));
+  else
+    colormap(OV.cmap);
+  end
   
   if ~isempty(OV.cbar)
-    t = text(320,230,'max');
-    set(t,'Color',1 - OV.bkg_col);
-    if OV.range(1) > 0
-      t = text(320,329,'min');
+    
+    if mxI < 0
+      t1 = text(320,230,'0');
+      t2 = text(320,329,'-max');
+    elseif mnI > 0
+      t1 = text(320,230,'max');
+      t2 = text(320,329,'0');
     else
-      t = text(320,329,'-max');
+      t1 = text(320,230,'max');
+      t2 = text(320,329,'-max');
     end
-    set(t,'Color',1 - OV.bkg_col);
+  
+    set(t1,'Color',1 - OV.bkg_col);
+    set(t2,'Color',1 - OV.bkg_col);
   end
   
 else

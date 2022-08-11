@@ -159,11 +159,11 @@ img = OV.name;
 n_slice = size(OV.slices_str, 1);
 if n_slice > 0
   for i = 1:n_slice
-      try
-          slices{i} = eval(OV.slices_str(i, :));
-      catch
-          slices{i} = [];
-      end
+    try
+      slices{i} = eval(OV.slices_str(i, :));
+    catch
+      slices{i} = [];
+    end
   end
 else
   if isfield(OV,'slices')
@@ -225,8 +225,8 @@ else
 end
 
 if range(1) >= 0
-%  SO.img(2).outofrange = {0, size(SO.img(2).cmap, 1)};
-  SO.img(2).outofrange = {1, 1};
+  SO.img(2).outofrange = {1, size(SO.img(2).cmap, 1)};
+%  SO.img(2).outofrange = {1, 1};
 else
   SO.img(2).outofrange = {1, 1};
   % use bivariate colormap if OV was not defined
