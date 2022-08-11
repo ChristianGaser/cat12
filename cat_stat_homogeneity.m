@@ -1134,6 +1134,7 @@ end
 % values explicitely
 if sel == 4 && min(H.xml.QMzscore) > 1 % IQR and min > 1
   QMzscore_scaled = 63*(H.xml.QMzscore-1)/2; % scale 1..3
+  QMzscore_scaled(QMzscore_scaled > 63) = 63;
 else
   QMzscore_scaled = 63*(H.xml.QMzscore-min_QMzscore)/(max_QMzscore-min_QMzscore); % scale min..max
 end
