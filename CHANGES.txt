@@ -1,4 +1,13 @@
 ------------------------------------------------------------------------
+r2084 | gaser | 2022-08-11 17:28:09
+
+Changed paths:
+ M CHANGES.txt
+ M cat_stat_homogeneity.m
+
+
+Fixed:  Corrected scaling issues of QM-scores in cat_stat_homogeneity.m.
+------------------------------------------------------------------------
 r2083 | gaser | 2022-08-11 17:14:46
 
 Changed paths:
