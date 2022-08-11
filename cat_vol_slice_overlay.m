@@ -1,4 +1,4 @@
-function cat_vol_slice_overlay(OV)
+function OV = cat_vol_slice_overlay(OV)
 % Extension/wrapper to slice_overlay
 % Call help for slice_overlay for any additional help
 % 
@@ -226,7 +226,6 @@ end
 
 if range(1) >= 0
   SO.img(2).outofrange = {1, size(SO.img(2).cmap, 1)};
-%  SO.img(2).outofrange = {1, 1};
 else
   SO.img(2).outofrange = {1, 1};
   % use bivariate colormap if OV was not defined
@@ -250,6 +249,10 @@ if isempty(SO.slices)
   
   XYZ_unique = get_xyz_unique(XYZ, XYZmm, vol);
   SO.slices = XYZ_unique{orientn};
+  
+  % update OV.slices_str to for cat_surf_results to estimate available
+  % rows/columns
+  OV.slices_str = num2str(SO.slices);
 end
 
 n_images = length(SO.slices) + length(SO.cbar);
