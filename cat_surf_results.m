@@ -153,6 +153,7 @@ switch lower(action)
     H.cmap_col     = jet(256);
     H.FS           = cat_get_defaults('extopts.fontsize');
         
+    clearvars -global OV
     % positions
     WS = spm('Winsize', 'Graphics');
     H.SS = get(0, 'Screensize');
@@ -1270,7 +1271,7 @@ end
 
 %==========================================================================
 function Ho = select_thresh(thresh)
-global H
+global H OV
 
 H.thresh_value = thresh;
 H.clip = [true -thresh thresh];
@@ -1355,6 +1356,10 @@ end
 
 if isfield(H,'Pvol_sel')
   H = update_slice_overlay(H);
+  if (mn < 0 && mn > -thresh) || (mx >= 0 && mx < thresh)
+    if ishandle(OV.fig), close(OV.fig); end
+    if ishandle(OV.fig_mip), close(OV.fig_mip); end
+  end
 end
 
 if nargout, Ho = H; end
@@ -1846,9 +1851,9 @@ end
 % show MIP and keep position if window exists
 OV.fig_mip = 12;
 if ishandle(OV.fig_mip)
-  cat_vol_img2mip(OV);
+  cat_vol_img2mip(OV, true);
 else
-  cat_vol_img2mip(OV);
+  cat_vol_img2mip(OV, true);
   pos = get(gcf,'Position');
   set(gcf,'Position',[H.SS(3) - pos(3) 0 pos(3:4)]);
 end
@@ -2005,9 +2010,9 @@ if ~isempty(str2num(slices_str)) || strcmp(slices_str,'') || isempty(slices_str)
   if ~isfinite(str2num(slices_str))
     OV.slices_str = '';
   end
+  OV = cat_vol_slice_overlay(OV);
   OV.xy_sel = get_xy(OV);
   set(H.OV_xy,'String', cellstr(num2str(OV.xy_sel)));
-  cat_vol_slice_overlay(OV);
 else
   fprintf('You have to define numbers\n');
 end

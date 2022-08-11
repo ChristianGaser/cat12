@@ -1,4 +1,23 @@
 ------------------------------------------------------------------------
+r2082 | gaser | 2022-08-11 16:03:51
+
+Changed paths:
+ M CHANGES.txt
+ M Makefile
+ M cat_surf_results.m
+AM cat_vol_glass.m
+ M cat_vol_img2mip.m
+ M cat_vol_slice_overlay.m
+A  glass_brain.mat
+
+
+Added:   Added new function cat_vol_glass.m to visualize glassbrain using a 
+         modified version of spm_glass.
+Changed: Modified cat_vol_img2mip.m to support cat_vol_glass.m.
+Changed: Added OV to output argument in cat_vol_slice_overlay.m to allow
+         to update OV fields such as OV.slices_str.
+Changed: Some changes to cat_surf_results.m to consider new functionality.
+------------------------------------------------------------------------
 r2081 | gaser | 2022-08-11 12:11:50
 
 Changed paths:
