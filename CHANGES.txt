@@ -1,4 +1,14 @@
 ------------------------------------------------------------------------
+r2083 | gaser | 2022-08-11 17:14:46
+
+Changed paths:
+ M CHANGES.txt
+ M cat_surf_results.m
+
+
+Fixed:  Corrected selection of slice rows/columns after automatically estimation
+        of local maxima in cat_surf_results.m.
+------------------------------------------------------------------------
 r2082 | gaser | 2022-08-11 16:03:51
 
 Changed paths:
