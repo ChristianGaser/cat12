@@ -1,4 +1,4 @@
-function cat_vol_img2mip(OV)
+function cat_vol_img2mip(OV,new_style)
 % Visualise up to 3 images as RGB colored MIP (glass brain)
 % ______________________________________________________________________
 %
@@ -23,6 +23,9 @@ function cat_vol_img2mip(OV)
 %  cbar       - if empty skip showing colorbar
 %  fig_mip    - figure number (default 12)
 %
+% new_style - use new style from spm_glass (only available for a single
+%             filename)
+%
 % If < 3 arguments are given, you can save the png-file by using the
 % context menu (right mouse click in the image)
 %
@@ -33,11 +36,9 @@ function cat_vol_img2mip(OV)
 % ______________________________________________________________________
 % $Id$
 
-load MIP
-mip96 = double(mip96);
-
 if nargin < 1
   OV = spm_select([1 3],'image','Select images');
+  new_style = true;
 end
 
 def = struct('name',OV,'func','i1(i1==0)=NaN;','cmap',jet(64),'range',...
@@ -55,33 +56,18 @@ end
 P = OV.name;
 
 n = size(P,1);
+
+% new glassbrain does not yet support RGB MIP
+if n > 1
+  new_style = false;
+end
+
 if n > 3
   error('At maximum 3 images are allowed.');
 end
 
 V = spm_vol(P);
 M   = V(1).mat;
-
-mip  = repmat(full(rot90(mip96/max(mip96(:)))),[1 1 3]);
-c0   = [0 0 0 ; 0 0 1 ; 0 1 0 ; 0 1 1
-        1 0 0 ; 1 0 1 ; 1 1 0 ; 1 1 1] -0.5;
-c   = (M(1:3,1:3)*c0')';
-dim = [(max(c)-min(c)) size(mip96)];
-
-% compute colored spheres for colorbar
-if n > 1
-  s = 35;
-  coord = [270 310];
-  [x,y,z] = sphere(4*s);
-  yy = y'*y;
-  yy = yy(1:2*s,1:2*s);
-  yy = yy/max(yy(:));
-  zx = coord(1)-s:coord(1)+s-1;
-  zy = coord(2)-s:coord(2)+s-1;
-
-  col = {'R','G','B'};
-  col = col(OV.RGB_order);
-end
 
 for i=1:n
   if n > 1
@@ -128,6 +114,59 @@ for j = 1:V(1).dim(3)
 end
 spm_progress_bar('Clear');
 
+if new_style
+
+  % show new glassbrain
+  if ishandle(OV.fig_mip)
+    fig = figure(OV.fig_mip);
+  else
+    fig = figure(OV.fig_mip);
+    [pt,nm,xt] = fileparts(P(1,:));
+    png_name = ['mip' num2str(n) '_' nm '.png'];
+    set(fig, 'MenuBar', 'none','Position',[10 10 2*182 2*200],'Name',nm,'NumberTitle','off');
+  end
+  
+  cat_vol_glass(Y{1},XYZ{1},struct('dark',all(OV.bkg_col==0),'cmap',OV.cmap,'grid',false,'colourbar',~isempty(OV.cbar)));
+
+  set(gca,'units','pixels'); x = get(gca,'position');
+  set(gcf,'units','pixels'); y = get(gcf,'position');
+  set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
+  set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixels
+  
+  if isempty(OV.save_image)
+    cmenu = uicontextmenu(fig);
+    m2 = uimenu(cmenu, 'Label','Save png image','Callback',@(src,event)save_png(OV.save_image));
+    try, p.ContextMenu = cmenu; end
+  else
+    save_png(OV.save_image);
+  end
+  
+  return
+else
+  load MIP
+  mip96 = double(mip96);
+  mip  = repmat(full(rot90(mip96/max(mip96(:)))),[1 1 3]);
+  c0   = [0 0 0 ; 0 0 1 ; 0 1 0 ; 0 1 1
+          1 0 0 ; 1 0 1 ; 1 1 0 ; 1 1 1] -0.5;
+  c   = (M(1:3,1:3)*c0')';
+  dim = [(max(c)-min(c)) size(mip96)];
+  
+  % compute colored spheres for colorbar
+  if n > 1
+    s = 35;
+    coord = [270 310];
+    [x,y,z] = sphere(4*s);
+    yy = y'*y;
+    yy = yy(1:2*s,1:2*s);
+    yy = yy/max(yy(:));
+    zx = coord(1)-s:coord(1)+s-1;
+    zy = coord(2)-s:coord(2)+s-1;
+
+    col = {'R','G','B'};
+    col = col(OV.RGB_order);
+  end
+end
+
 for i=1:n
    % apply range
   if isfinite(OV.range(1))
@@ -140,7 +179,8 @@ for i=1:n
 
   % for some range min combinations we have to subtract the minimum
   if isfinite(OV.range(1)) && ( (mnI < 0 && OV.range(1) <= 0) || mnI > 0)
-    Y{i} = Y{i} - mnI;
+    Y{i} = Y{i} - OV.range(1);
+%    Y{i} = Y{i} - mnI;
   end
 
 end
@@ -185,8 +225,6 @@ col = reshape([rgb{OV.RGB_order(1)},rgb{OV.RGB_order(2)},rgb{OV.RGB_order(3)}],s
 old_mip = mip;
 mip = max(cat(3,col),mip);
 
-[pt,nm,xt] = fileparts(P(1,:));
-png_name = ['mip' num2str(n) '_' nm '.png'];
 sz = size(mip(:,:,1));
 
 % show mip image
@@ -248,13 +286,13 @@ set(gca,'units','normalized','position',[0 0 1 1]) % set the axes units to pixel
 
 if isempty(OV.save_image)
   cmenu = uicontextmenu(fig);
-  m2 = uimenu(cmenu, 'Label','Save png image','Callback',@(src,event)save_png(mip,OV.save_image));
+  m2 = uimenu(cmenu, 'Label','Save png image','Callback',@(src,event)save_png(OV.save_image));
   try, p.ContextMenu = cmenu; end
 else
   save_png(mip,OV.save_image);
 end
            
-function save_png(mip,png_name)
+function save_png(png_name)
 
 hh = getframe(gcf);
 img = frame2im(hh);
