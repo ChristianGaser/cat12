@@ -1969,10 +1969,12 @@ xy = unique(xy, 'rows');
 
 %==========================================================================
 function select_OV_xy(hObject, event)
-global OV
+global OV H
 
 value = get(hObject, 'value');
 if value > 1
+  OV.xy_sel = get_xy(OV);
+  set(H.OV_xy,'String', cellstr(char('Slice Columns/Rows',num2str(OV.xy_sel))));
   OV.xy = OV.xy_sel(value-1,:);
   cat_vol_slice_overlay(OV);
 end
@@ -1989,18 +1991,6 @@ if value > 1
 end
 
 %==========================================================================
-function OV_xy(hObject, event)
-global OV
-
-xy = str2num(get(hObject, 'String'));
-if numel(xy) == 2
-  OV.xy = xy;
-  cat_vol_slice_overlay(OV);
-else
-  fprintf('You have to define 2 numbers\n');
-end
-
-%==========================================================================
 function OV_slice(hObject, event)
 global OV H
 
@@ -2012,7 +2002,7 @@ if ~isempty(str2num(slices_str)) || strcmp(slices_str,'') || isempty(slices_str)
   end
   OV = cat_vol_slice_overlay(OV);
   OV.xy_sel = get_xy(OV);
-  set(H.OV_xy,'String', cellstr(num2str(OV.xy_sel)));
+  set(H.OV_xy,'String', cellstr(char('Slice Columns/Rows',num2str(OV.xy_sel))));
 else
   fprintf('You have to define numbers\n');
 end
@@ -3134,7 +3124,7 @@ end
 
 %==========================================================================
 function checkbox_nocbar(obj, event_obj)
-global H
+global H OV
 
 H.disable_cbar = get(H.nocbar, 'Value');
 
@@ -3157,6 +3147,9 @@ else
 end
 
 if isfield(H,'Pvol_sel')
+  if H.disable_cbar
+    OV.cbar = [];
+  end
   H = update_slice_overlay(H);
 end
 
