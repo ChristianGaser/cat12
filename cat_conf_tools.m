@@ -175,7 +175,7 @@ function tools = cat_conf_tools(expert)
   calcvol                     = conf_stat_TIV;
   spmtype                     = conf_io_volctype(data,intlim,spm_type,prefix,suffix,verb,expert,lazy);
   calcroi                     = conf_roi_fun(outdir);
-  [ROI,sROI,ROIsum]           = cat_conf_ROI(expert);
+  [~,~,ROIsum]           = cat_conf_ROI(expert);
   resize                      = conf_vol_resize(data,prefix,expert,outdir);
   avg_img                     = conf_vol_average(data,outdir);
   realign                     = conf_vol_series_align(data);
@@ -189,6 +189,7 @@ function tools = cat_conf_tools(expert)
   %urqio                       = conf_vol_urqio; % this cause problems
   iqr                         = conf_stat_IQR(data_xml);
   qa                          = conf_vol_qa(expert,outdir);
+  multi_subject_imcalc        = conf_vol_imcalc(prefix);
   
   
 % create main batch 
@@ -219,7 +220,8 @@ function tools = cat_conf_tools(expert)
     maskimg, ...                          cat.pre.vtools.
     spmtype, ...                          cat.pre.vtools.
     headtrimming, ...                     cat.pre.vtools.
-    resize, ...
+    resize, ...                           cat.pre.vtools. 
+    multi_subject_imcalc, ...             cat.pre.vtools. 
     ...
     realign, ...                          cat.pre.long.?          % hidden
     shootlong,...                         cat.pre.long.?          % hidden
@@ -244,6 +246,43 @@ function tools = cat_conf_tools(expert)
   %if expert 
   %  tools.values = [tools.values,{urqio}]; 
   %end
+return
+%_______________________________________________________________________
+function imcalc = conf_vol_imcalc(prefix)
+%conf_vol_imcalc. Like spm_imcalc but to run the same operation for many subjects. 
+
+  imcalc            = spm_cfg_imcalc;
+
+  data              = cfg_files;
+  data.tag          = 'subjects';
+  data.name         = 'Volumes';
+  data.filter       = {'image','.*\.(nii.gz)$'};
+  data.ufilter      = '.*';
+  data.num          = [1 Inf];
+  data.help         = {'Select the same number and order of subjects for one image class. '};
+
+  image             = data; 
+  image.tag         = 'images';
+  image.name        = 'Images';
+
+  images            = cfg_repeat;
+  images.tag        = 'imagetype';
+  images.name       = 'Image type';
+  images.values     = {image};
+  images.num        = [1 Inf];
+  images.help       = {'Specify input images class, e.g., the T1 image of a subject. '};
+  
+  % remove old image field
+  imcalc.val{1}     = images; 
+  imcalc.val{2}     = prefix;
+  imcalc.val{3}.help = {[...
+    'Files produced by this function will be written into this output directory. ' ...
+    'If no directory is given, images will be written to the home of the first input image i1. ' ...
+    'A relative path (e.g., "../output") can be used. ']};
+  imcalc.tag        = 'mimcalc';
+  imcalc.vout       = @vout_mimcalc;
+  imcalc.prog       = @cat_vol_mimcalc;
+  imcalc.name       = 'Multi-subject Image Calculator';
 return
 %_______________________________________________________________________
 function file_move = conf_io_file_move
@@ -4105,8 +4144,8 @@ PU = job.field1;
 PI = job.images;
 
 vf = cell(numel(PI),1);
-for i=1:numel(PU), % ########### RD202201: i is not used  
-    for m=1:numel(PI),
+for i=1:numel(PU) % ########### RD202201: i is not used  
+    for m=1:numel(PI)
         [pth,nam,ext,num] = spm_fileparts(PI{m});
         
         switch job.modulate
@@ -4118,7 +4157,7 @@ for i=1:numel(PU), % ########### RD202201: i is not used
             filename = fullfile(pth,['w' nam ext num]);
         otherwise 
             error('incorrect - DEP')
-        end;
+        end
         vf{m} = filename;
     end
 end
@@ -4131,8 +4170,8 @@ function vf = vout_defs2(job)
   PI = job.images;
 
   vf = cell(numel(PU),numel(PI));
-  for i=1:numel(PU),
-      for m=1:numel(PI),
+  for i=1:numel(PU)
+      for m=1:numel(PI)
           [pth,nam,ext,num] = spm_fileparts(PI{m}{i});
 
           switch job.modulate
@@ -4144,7 +4183,7 @@ function vf = vout_defs2(job)
               filename = fullfile(pth,['w' nam ext num]);
           otherwise 
             error('incorrect - DEP')
-          end;
+          end
           vf{i,m} = filename;
       end
   end
@@ -4289,6 +4328,14 @@ function dep = vout_volctype(varargin)
 return;
 
 %_______________________________________________________________________
+function dep = vout_mimcalc(varargin)
+  dep            = cfg_dep;
+  dep.sname      = 'Multi-subject Image Calculator';
+  dep.src_output = substruct('.','Pname');
+  dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+return
+
+%_______________________________________________________________________
 function dep = vout_createTPM(varargin)
   dep(1)              = cfg_dep;
   dep(1).sname        = 'TPM';
@@ -4430,7 +4477,7 @@ function cdep = vout_realign(job)
 return
  
 %------------------------------------------------------------------------
-function dep = vout_stat_spm2x(job)
+function dep = vout_stat_spm2x(varargin)
   dep            = cfg_dep;
   dep.sname      = 'Transform & Threshold spm volumes';
   dep.src_output = substruct('.','Pname');
@@ -4438,7 +4485,7 @@ function dep = vout_stat_spm2x(job)
 return
 
 %------------------------------------------------------------------------
-function dep = vout_stat_spm2x_surf(job)
+function dep = vout_stat_spm2x_surf(varargin)
   dep            = cfg_dep;
   dep.sname      = 'Transform & Threshold spm surfaces';
   dep.src_output = substruct('.','Pname');
