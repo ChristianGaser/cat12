@@ -26,6 +26,7 @@ INSTALL.txt
 !templates_volumes_not_distributed/*nii
 
 # exclude some folders
+/logs
 /data
 cat12-html/
 check_pipeline/
