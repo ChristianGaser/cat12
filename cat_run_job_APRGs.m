@@ -353,5 +353,5 @@ end
     ds('d2sm','a',1,Ymi2.*Yb,Ymi .* (0.3 + 0.7*(Ybb>0.5)),120)
     
   end
-  spm_progress_bar('Clear');
+  cat_progress_bar('Clear');
 end

@@ -24,7 +24,7 @@ function varargout=cat_io_img2nii(img,c,verb)
   if ~exist('verb','var'), verb=1; end
 
   n=numel(img);
-  if verb, spm_progress_bar('Init',n,'Filtering','Volumes Complete'); end
+  if verb, cat_progress_bar('Init',n,'Filtering','Volumes Complete'); end
   for i=1:n
     [pp,ff]=spm_fileparts(img{i}); niifile = fullfile(pp,sprintf('%s.nii',ff));
     if ~exist(niifile,'file')
@@ -39,7 +39,7 @@ function varargout=cat_io_img2nii(img,c,verb)
       if verb, fprintf('%60s: still exist! ',img{i}); end
       if nargout==1, varargout{1}{i}=niifile; end
     end
-    if verb, spm_progress_bar('Set',i); fprintf('%5.2fs\n',toc); end
+    if verb, cat_progress_bar('Set',i); fprintf('%5.2fs\n',toc); end
   end
-  if verb, spm_progress_bar('Clear'); end
+  if verb, cat_progress_bar('Clear'); end
 end

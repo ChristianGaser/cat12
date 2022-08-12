@@ -1,4 +1,4 @@
-function fig = cat_vol_glass(X,pos,varargin)
+function fig = cat_vol_glassbrain(X,pos,varargin)
 % Glass brain plot
 % FORMAT fig = cat_glass(X,pos,S)
 %   X               - (REQUIRED) values to be painted
@@ -162,12 +162,12 @@ end
 
 if S.colourbar
     if rmin < 0
-      text(175,170,'-max','color',~c(1,:),'fontsize',14,'horizontalalignment','center');
+      text(175,170,'-max','color',~c(1,:),'fontsize',12,'horizontalalignment','center');
     else
-      text(175,170,'min','color',~c(1,:),'fontsize',14,'horizontalalignment','center');
+      text(175,170,'min','color',~c(1,:),'fontsize',12,'horizontalalignment','center');
     end
       
-    text(175,105,'max','color',~c(1,:),'fontsize',14,'horizontalalignment','center');
+    text(175,105,'max','color',~c(1,:),'fontsize',12,'horizontalalignment','center');
 end
 
 if S.grid

@@ -145,7 +145,7 @@ function cat_vol_correct_slice_scaling(varargin)
 % start processing ...  
   V = spm_vol(char(job.data));
  
-  spm_progress_bar('Init',numel(job.data),'Slice-Filtering','Volumes Complete');
+  cat_progress_bar('Init',numel(job.data),'Slice-Filtering','Volumes Complete');
   if job.verb, fprintf('Correct Slice Scaling:\n'); stime0=clock; end
   for j = 1:length(V)
     if job.verb, fprintf('  %s:',V(j).fname); stime=clock; end
@@ -286,10 +286,10 @@ function cat_vol_correct_slice_scaling(varargin)
     Vc(j).descrip = sprintf('%s<%s',desc,Vc(j).descrip); 
     spm_write_vol(Vc(j),Y2); 
     
-    spm_progress_bar('Set',j);
+    cat_progress_bar('Set',j);
     if job.verb, fprintf('\t%6.2fs\n',etime(clock,stime)); end
   end
-  spm_progress_bar('Clear');
+  cat_progress_bar('Clear');
   if job.verb, fprintf('done (%3.2f Minute(s)).\n',etime(clock,stime0)/60); end
 end
 function [Ythi,Ythwi] = estimateWMth(Y,Yth,lb,ub)

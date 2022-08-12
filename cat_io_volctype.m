@@ -131,7 +131,7 @@ function out = cat_io_volctype(varargin)
     spm('FnBanner',mfilename); 
   end
   spm_clf('Interactive'); 
-  spm_progress_bar('Init',numel(job.data),'SANLM-Filtering','Volumes Complete');
+  cat_progress_bar('Init',numel(job.data),'SANLM-Filtering','Volumes Complete');
   for si=1:numel(job.data)
     if job.lazy==0 || cat_io_rerun( out.files{si} , job.data{si} )
       V  = spm_vol(strrep(job.data{si},',1',''));
@@ -369,8 +369,8 @@ function out = cat_io_volctype(varargin)
         if exist(Vo(1).fname,'file'), delete(Vo(1).fname); end % delete required in case of smaller file size!
         spm_write_vol(Vo,Y);
       end
-      spm_progress_bar('Set',si);
+      cat_progress_bar('Set',si);
     end
-    spm_progress_bar('Clear');
+    cat_progress_bar('Clear');
   end
 end

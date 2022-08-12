@@ -247,7 +247,7 @@ function out = cat_surf_vol2surf(varargin)
   
   %% display something
   spm_clf('Interactive'); 
-  spm_progress_bar('Init',numel(data_vol),'Mapped Volumes','Volumes Complete');
+  cat_progress_bar('Init',numel(data_vol),'Mapped Volumes','Volumes Complete');
   P.data = cell(numel(data_vol),2);
   P.relmap = cell(numel(data_vol),2);
   P.thick = cell(numel(data_vol),2);
@@ -356,7 +356,7 @@ function out = cat_surf_vol2surf(varargin)
         end
       end
 
-      spm_progress_bar('Set',vi);
+      cat_progress_bar('Set',vi);
     end
    
   else
@@ -451,7 +451,7 @@ function out = cat_surf_vol2surf(varargin)
       
       end
     
-      spm_progress_bar('Set',vi);
+      cat_progress_bar('Set',vi);
     end
   end
   
@@ -473,6 +473,6 @@ function out = cat_surf_vol2surf(varargin)
     end
   end
 
-  spm_progress_bar('Clear');
+  cat_progress_bar('Clear');
 
 end

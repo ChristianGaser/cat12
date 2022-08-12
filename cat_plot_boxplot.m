@@ -3,50 +3,53 @@ function [out,s] = cat_plot_boxplot(data,opt)
 %
 % usage: [out, s] = cat_plot_boxplot(data,opt);
 %
-%  opt.style       = 0;             % predefined styles: 
-%                                     0 - boxplot
-%                                     1 - violinplot
-%                                     2 - violinplot with integrated boxplot
-%                                     3 - densityplot
-%                                     4 - boxplot with jittered data points
-%  opt.notched     = 0;             % thinner at median [0 1] with 1=0.5
-%  opt.symbol      = '+o';          % outlier symbols
-%  opt.vertical    = 1;             % boxplot orientation 
-%  opt.maxwhisker  = 1.5;           % 
-%  opt.sort        = 0;             % no sorting
-%                  = 1;             % sort groups (ascending)
-%                  = 2;             % sort groups (descending)[inactive]
-%                  = [index];       % or by a index matrix
-%  opt.names       = [];            % array of group names
-%  opt.fill        = 1;             % filling of boxes: 0 - no filling; 0.5 - half-filled boxes; 1 - filled boxes
-%  opt.groupnum    = 1;             % add number of elements
-% [opt.groupmin    = 5;]            % minimum number of non-nan-elements
-%                                     in a group [inactive]
-%  opt.xlim        = [-inf inf];    % x-axis scaling
-%  opt.ylim        = [-inf inf];    % y-axis scaling
-%  opt.ygrid       = 1;             % activate y-grid-lines
-%  opt.gridline    = '-';           % grid line-style
-%  opt.box         = 1;             % plot box
-%  opt.outliers    = 1;             % plot outliers
-%  opt.violin      = 0;             % violin-plot: 0 - box plot; 1 - violin plot; 2 - violin + thin box plot
-%  opt.boxwidth    = 0.8;           % width of box
-%  opt.groupcolor  = [R G B];       % matrix with (group)-bar-color(s) 
-%                                     default is nejm(numel(data)) 
-%                                     or other color functions (see also cat_io_colormaps for categorical colormaps)
-%  opt.symbolcolor = 'r';           % color of symbols
-%  opt.fontsize    = [];            % axis fontsize 
-%                                     important for ygrid size!
-%  opt.showdata    = 0;             % show data points: 0 - no; 1 - as points; 2 - as short lines (barcode plot)
-%  opt.datasymbol  = '.';           % symbol for data points (only valid for showdata = 1)
-%  opt.median      = 2;             % show median: 0 - no; 1 - line; 2 - with different fill colors 
-%  opt.edgecolor   = 'none';        % edge color of box 
-%  opt.changecolor = 0;             % use brighter values for double color entries, e.g. 
-%                                   % [red red blue blue] becomes [red light-red blue light-blue] 
-%  opt.trans       = 0.25;          % transparency of the box
-%  opt.switch      = 0;             % switch between rows and column of data for numeric data (non-cell)
-%  opt.sat         = 0.50;          % saturation of the box
+%  opt.style       = 0;              predefined styles: 
+%                                      0 - boxplot
+%                                      1 - violinplot
+%                                      2 - violinplot with integrated boxplot
+%                                      3 - densityplot
+%                                      4 - boxplot with jittered data points
+%  opt.notched     = 0;              thinner at median [0 1] with 1=0.5
+%  opt.symbol      = '+o';           outlier symbols
+%  opt.vertical    = 1;              boxplot orientation 
+%  opt.maxwhisker  = 1.5;            
+%  opt.sort        = 0;              no sorting
+%                  = 1;              sort groups (ascending)
+%                  = 2;              sort groups (descending)[inactive]
+%                  = [index];        or by a index matrix
+%  opt.names       = [];             array of group names
+%  opt.fill        = 1;              filling of boxes: 0 - no filling; 0.5 - half-filled boxes; 1 - filled boxes
+%  opt.groupnum    = 1;              add number of elements
+% [opt.groupmin    = 5;]             minimum number of non-nan-elements
+%                                      in a group [inactive]
+%  opt.xlim        = [-inf inf];     x-axis scaling
+%  opt.ylim        = [-inf inf];     y-axis scaling
+%  opt.ygrid       = 1;              activate y-grid-lines
+%  opt.gridline    = '-';            grid line-style
+%  opt.box         = 1;              plot box
+%  opt.outliers    = 1;              plot outliers
+%  opt.violin      = 0;              violin-plot: 0 - box plot; 1 - violin plot; 2 - violin + thin box plot
+%  opt.boxwidth    = 0.8;            width of box
+%  opt.groupcolor  = [R G B];        matrix with (group)-bar-color(s) 
+%                                      default is nejm(numel(data)) 
+%                                      or other color functions (see also cat_io_colormaps for categorical colormaps)
+%  opt.symbolcolor = 'r';            color of symbols
+%  opt.fontsize    = [];             axis fontsize (important for ygrid size!)
+%  opt.showdata    = 0;              show data points:
+%                                      0 - no;
+%                                      1 - as black points; 
+%                                      2 - as short lines (barcode plot);
+%                                      3 - as colored points
+%  opt.datasymbol  = '.';            symbol for data points (only valid for showdata = 1)
+%  opt.median      = 2;              show median: 0 - no; 1 - line; 2 - with different fill colors 
+%  opt.edgecolor   = 'none';         edge color of box 
+%  opt.changecolor = 0;              use brighter values for double color entries, e.g. 
+%                                    [red red blue blue] becomes [red light-red blue light-blue] 
+%  opt.trans       = 0.25;           transparency of the box
+%  opt.switch      = 0;              switch between rows and column of data for numeric data (non-cell)
+%  opt.sat         = 0.50;           saturation of the box
 %  opt.subsets     = false(1,numel(data)); 
-%  opt.hflip       = 0;             % flip x-axis in case of horizontal bars
+%  opt.hflip       = 0;              flip x-axis in case of horizontal bars
 %
 %  The returned matrix s has one column for each dataset as follows:
 %

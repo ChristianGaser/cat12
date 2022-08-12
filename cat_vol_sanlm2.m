@@ -268,7 +268,7 @@ function varargout = cat_vol_sanlm_file(job)
     % new banner
     if isfield(job,'process_index') && job.verb, spm('FnBanner',mfilename); end
     spm_clf('Interactive'); 
-    spm_progress_bar('Init',numel(job.data),'SANLM-Filtering','Volumes Complete');
+    cat_progress_bar('Init',numel(job.data),'SANLM-Filtering','Volumes Complete');
 
     for i = 1:numel(job.data)
       if ~job.lazy || cat_io_rerun( job.data{1} , varargout{1}{i} )
@@ -277,7 +277,7 @@ function varargout = cat_vol_sanlm_file(job)
     end
 
     if isfield(job,'process_index') && job.verb, fprintf('Done\n'); end
-    spm_progress_bar('Clear');
+    cat_progress_bar('Clear');
 end
 
 %_______________________________________________________________________
@@ -624,7 +624,7 @@ function [src2,NCstr,NCrate] = cat_vol_sanlm_filter(job,V,i,src)
         Vo(i).dt(1)   = 16; % default - changes later if required 
         if exist(Vo(i).fname,'file'); delete(Vo(i).fname); end
         spm_write_vol(Vo(i), src2);
-        spm_progress_bar('Set',i);
+        cat_progress_bar('Set',i);
         
         
         

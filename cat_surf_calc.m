@@ -113,7 +113,7 @@ function varargout = cat_surf_calc(job)
     end 
     
     if job.nproc==0 
-      spm_progress_bar('Init',numel(job.cdata{1}),...
+      cat_progress_bar('Init',numel(job.cdata{1}),...
         sprintf('Surface Calculator\n%d',numel(job.cdata{1})),'Subjects Completed'); 
     end
     
@@ -139,12 +139,12 @@ function varargout = cat_surf_calc(job)
       end
         
       if job.nproc==0 
-        spm_progress_bar('Set',si);
+        cat_progress_bar('Set',si);
       end
     end
     
     if job.nproc==0 
-      spm_progress_bar('Clear');
+      cat_progress_bar('Clear');
     end
   else
     %%
@@ -177,7 +177,7 @@ function varargout = cat_surf_calc(job)
     end 
     
     if job.nproc==0 
-      spm_progress_bar('Init',numel(job.cdata{1}),...
+      cat_progress_bar('Init',numel(job.cdata{1}),...
         sprintf('Surface Calculator\n%d',numel(job.cdata{1})),'Subjects Completed'); 
     end
 
@@ -196,12 +196,12 @@ function varargout = cat_surf_calc(job)
       end
         
       if job.nproc==0 
-        spm_progress_bar('Set',di);
+        cat_progress_bar('Set',di);
       end
     end
     
     if job.nproc==0 
-      spm_progress_bar('Clear');
+      cat_progress_bar('Clear');
     end
     
   end
@@ -242,7 +242,7 @@ function surfcalc(job)
   
   if job.verb
     spm_clf('Interactive'); 
-    spm_progress_bar('Init',numel(job.cdata),...
+    cat_progress_bar('Init',numel(job.cdata),...
       sprintf('Surface Calculator\n%s',job.output),'Input Surfaces Completed'); 
   end
   sdata = struct('dsize',[],'fsize',[],'vsize',[]); 
@@ -323,7 +323,7 @@ function surfcalc(job)
       end
       
       if job.verb
-        spm_progress_bar('Set',(si-1)*numel(job.cdata)/subsetsize + i);
+        cat_progress_bar('Set',(si-1)*numel(job.cdata)/subsetsize + i);
       end      
     end
 
@@ -337,7 +337,7 @@ function surfcalc(job)
 
 
 
-    %spm_progress_bar('Set',si);
+    %cat_progress_bar('Set',si);
   end
   
 
@@ -357,7 +357,7 @@ function surfcalc(job)
   end
 
   if job.verb
-    spm_progress_bar('Clear');
+    cat_progress_bar('Clear');
   end
 end
 
