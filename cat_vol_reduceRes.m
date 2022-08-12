@@ -54,7 +54,7 @@ function varargout = cat_vol_reduceRes(varargin)
   
   spm_clf('Interactive'); 
   if job.verb, fprintf('cat_vol_reduceRes:\n'); end
-  spm_progress_bar('Init',numel(job.data) .* size(job.res,1),'Resolution Reduction','Volumes Complete');
+  cat_progress_bar('Init',numel(job.data) .* size(job.res,1),'Resolution Reduction','Volumes Complete');
   for pi=1:numel(job.data)
     % load image
     Yi = single(spm_read_vols(V(pi))); 
@@ -81,7 +81,7 @@ function varargout = cat_vol_reduceRes(varargin)
         if job.verb
           fprintf('Existing output %s\n',spm_file(Vr(pi,ri).fname,'link','spm_image(''%s'')'));
         end
-        spm_progress_bar('Set',(pi-1) .* size(job.res,1) + ri); 
+        cat_progress_bar('Set',(pi-1) .* size(job.res,1) + ri); 
         continue 
       end
       
@@ -112,11 +112,11 @@ function varargout = cat_vol_reduceRes(varargin)
       if job.verb
         fprintf('Output %s\n',spm_file(Vr(pi,ri).fname,'link','spm_image(''%s'')'));
       end
-      spm_progress_bar('Set',(pi-1) .* size(job.res,1) + ri); 
+      cat_progress_bar('Set',(pi-1) .* size(job.res,1) + ri); 
     end
   end
   if job.verb, fprintf('cat_vol_reduceRes done.\n'); end
-  spm_progress_bar('Clear');
+  cat_progress_bar('Clear');
   
   if nargout>0
     varargout{1} = Vr;

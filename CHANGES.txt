@@ -1,4 +1,67 @@
 ------------------------------------------------------------------------
+r2086 | gaser | 2022-08-12 17:10:33
+
+Changed paths:
+ M CHANGES.txt
+ M cat_io_cgw2seg.m
+ M cat_io_data2mat.m
+ M cat_io_img2nii.m
+ M cat_io_volctype.m
+ M cat_io_xml.m
+ M cat_long_createTPM.m
+ M cat_main_clean_gwc.m
+ M cat_main_clean_gwc1639.m
+ M cat_main_registration.m
+ M cat_main_reportcmd.m
+ M cat_main_updateSPM.m
+ M cat_main_updateSPM1639.m
+ M cat_parallelize.m
+ M cat_plot_boxplot.m
+A  cat_progress_bar.m
+ M cat_roi_roi2surf.m
+ M cat_run.m
+ M cat_run_job.m
+ M cat_run_job1639.m
+ M cat_run_job_APRGs.m
+ M cat_spm_preproc_write8.m
+ M cat_spm_shoot_template.m
+ M cat_stat_IQR.m
+ M cat_stat_TIV.m
+ M cat_stat_analyze_ROIs.m
+ M cat_stat_check_cov_old.m
+ M cat_stat_homogeneity.m
+ M cat_stat_quality_measures.m
+ M cat_stat_showslice_all.m
+ M cat_surf_avg.m
+ M cat_surf_calc.m
+ M cat_surf_parameters.m
+ M cat_surf_resamp.m
+ M cat_surf_smooth.m
+ M cat_surf_surf2roi.m
+ M cat_surf_vol2surf.m
+ M cat_surf_vx2surf.m
+ M cat_vol_correct_slice_scaling.m
+ M cat_vol_createTPM.m
+R  cat_vol_glass.m -> cat_vol_glassbrain.m
+ M cat_vol_headtrimming.m
+ M cat_vol_imcalc.m
+ M cat_vol_img2mip.m
+ M cat_vol_maskimage.m
+ M cat_vol_reduceRes.m
+ M cat_vol_sanlm.m
+ M cat_vol_sanlm2.m
+ M cg_create_MPM.m
+
+
+Added:   New function cat_progress_bar.m to replace spm_progress_bar.m.
+Changed: Replaced all spm_progress_bar calls by cat_progress_bar.
+Changed: Renamed cat_vol_glass.m to cat_vol_glassbrain.m.
+Changed: Updated help text for cat_plot_boxplot.m.
+Changed: Many changes to cat_stat_homogeneity.m
+           - use preloading of slice data to speed up data selection
+           - moved and changed ui-elements
+           - added more display of more parameters to slice data field
+------------------------------------------------------------------------
 r2085 | rdahnke | 2022-08-12 13:08:57
 
 Changed paths:

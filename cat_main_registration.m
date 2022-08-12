@@ -193,7 +193,7 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion,Yp0
     res.Affine = spm_maff8(obj.image,obj.samp,obj.fwhm,obj.tpm,res.Affine,job.opts.affreg,80);
     if wo, warning('ON','MATLAB:RandStream:ActivatingLegacyGenerators'); end
     Affine =  res.Affine;
-    spm_progress_bar('Clear');
+    cat_progress_bar('Clear');
   end
 %}
 % #########################################################################

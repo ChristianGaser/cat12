@@ -174,7 +174,7 @@ function varargout = cat_vol_headtrimming(job)
     spm('FnBanner',mfilename); 
   end
   spm_clf('Interactive'); 
-  spm_progress_bar('Init',numel(job.images{1}),'Head-Trimming','Volumes Complete');
+  cat_progress_bar('Init',numel(job.images{1}),'Head-Trimming','Volumes Complete');
   
   
   %% major processing
@@ -283,7 +283,7 @@ function varargout = cat_vol_headtrimming(job)
           end
           Pdi = job.images2{si}(di);
         end
-        spm_progress_bar('Set',si + di/numel(V));
+        cat_progress_bar('Set',si + di/numel(V));
 
         %% create ouput
         Vo(di) = spm_vol(Pdi{1}); 
@@ -310,7 +310,7 @@ function varargout = cat_vol_headtrimming(job)
     else
       if job.verb, fprintf('exist\n'); end
     end
-    spm_progress_bar('Set',si);
+    cat_progress_bar('Set',si);
   end
-  spm_progress_bar('Clear');
+  cat_progress_bar('Clear');
 end
