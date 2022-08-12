@@ -340,7 +340,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     else
       %% conclusion without filelist
       spm_clf('Interactive'); 
-      spm_progress_bar('Init', sum( numel(job_data) ) ,'CAT-Preprocessing','Volumes Complete');      
+      cat_progress_bar('Init', sum( numel(job_data) ) ,'CAT-Preprocessing','Volumes Complete');      
       
       fprintf('\nStarted %d jobs with the following PIDs:\n',job.nproc);
       for i=1:job.nproc
@@ -656,7 +656,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
               end
             end
           end
-          spm_progress_bar('Set', cid );
+          cat_progress_bar('Set', cid );
         end
       end
     end
@@ -700,7 +700,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
        '         subsequent modules if you split the job into separate processes.\n\n']);
   end
 
-  spm_progress_bar('Clear');
+  cat_progress_bar('Clear');
   return
 end
 

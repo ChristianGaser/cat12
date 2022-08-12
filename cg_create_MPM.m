@@ -29,15 +29,15 @@ end
 if ~smooth
     spm('Pointer','Watch');
     spm('FigName','Smooth: working');
-    spm_progress_bar('Init',nrParts,'Smoothing','Volumes Complete');
+    cat_progress_bar('Init',nrParts,'Smoothing','Volumes Complete');
     for i = 1:nrParts
         Q = deblank(MAP(i).ref);
         [pth,nm,xt,vr] = fileparts(deblank(Q));
         U = fullfile(pth,['s' nm xt vr]);
         spm_smooth(Q,U,kernel);
-        spm_progress_bar('Set',i);
+        cat_progress_bar('Set',i);
     end
-    spm_progress_bar('Clear');
+    cat_progress_bar('Clear');
     spm('Pointer');
 end
 
@@ -80,7 +80,7 @@ dat   = spm_read_vols(Vb);
 
 Yp = zeros(size(dat));
 
-spm_progress_bar('Init',Vo.dim(3),'MPM calculation');
+cat_progress_bar('Init',Vo.dim(3),'MPM calculation');
 save all
 for p = 1:Vo.dim(3),
     if any(any(dat(:,:,p)))
@@ -147,16 +147,16 @@ for p = 1:Vo.dim(3),
             end
         end
     end
-    spm_progress_bar('Set',p);
+    cat_progress_bar('Set',p);
 end
-spm_progress_bar('Clear')
+cat_progress_bar('Clear')
 
 
 out = Yp;
 clear X;
-spm_progress_bar('Init',Vo.dim(3),'Filter 1');
+cat_progress_bar('Init',Vo.dim(3),'Filter 1');
 for z=2:Vb.dim(3)-1,
-    spm_progress_bar('Set',z);
+    cat_progress_bar('Set',z);
     [h,j] = find(Yp(:,:,z)<100 & Yp(:,:,z)>0);
     for px = 1:size(h,1)
         x=h(px); y=j(px); p = z;
@@ -207,15 +207,15 @@ for z=2:Vb.dim(3)-1,
         end
     end
 end
-spm_progress_bar('Clear')
+cat_progress_bar('Clear')
 
 
 Yp = out;
 
 clear X;
-spm_progress_bar('Init',Vo.dim(3),'Filter 2');
+cat_progress_bar('Init',Vo.dim(3),'Filter 2');
 for z=2:Vb.dim(3)-1,
-    spm_progress_bar('Set',z);
+    cat_progress_bar('Set',z);
     [h,j] = find(Yp(:,:,z)>100);
     for px = 1:size(h,1)
         x=h(px); y=j(px); p = z;
@@ -228,7 +228,7 @@ for z=2:Vb.dim(3)-1,
         end
     end
 end
-spm_progress_bar('Clear')
+cat_progress_bar('Clear')
 
 
 hemi = spm_read_vols(AnatMask);
@@ -263,12 +263,12 @@ end
 
 MAP(1).orient = 1;
 
-spm_progress_bar('Init',size(MAP,2),'PMap');
+cat_progress_bar('Init',size(MAP,2),'PMap');
 for p = 1:size(MAP,2)
     MAP(p).Z = spm_sample_vol(spm_vol(MAP(p).ref),MAP(p).XYZ(1,:),MAP(p).XYZ(2,:),MAP(p).XYZ(3,:),0);
-    spm_progress_bar('Set',p);
+    cat_progress_bar('Set',p);
 end
-spm_progress_bar('clear');
+cat_progress_bar('clear');
 
 %AnatMask = spm_vol([spm('Dir','se_anatomy') filesep 'AnatMask.img']);
 for i=1:size(MAP,2)
@@ -284,7 +284,7 @@ end
 for i=1:size(MAP,2); MAP(i).PMap = spm_vol([spm('Dir','se_anatomy') filesep 'PMaps' filesep spm_str_manip(MAP(i).ref,'t')]); end
 
 spm_figure('GetWin','Interactive');
-spm_progress_bar('Init',size(MAP,2),'Preparing data');
+cat_progress_bar('Init',size(MAP,2),'Preparing data');
 for m=1:size(MAP,2)
     MAP(m).allXYZ  = [];
     MAP(m).allZ    = [];
@@ -295,7 +295,7 @@ for m=1:size(MAP,2)
     end
     MAP(m).allLR = spm_get_data(AnatMask,MAP(m).allXYZ);
     MAP(m).allLR(MAP(m).allLR  == 2) = -1;
-    spm_progress_bar('Set',m);
+    cat_progress_bar('Set',m);
 end
 spm_figure('Clear','Interactive');
 

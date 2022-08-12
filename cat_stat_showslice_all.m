@@ -73,17 +73,17 @@ Y = zeros([dim_array,n]);
 
 %-Start progress plot
 %-----------------------------------------------------------------------
-spm_progress_bar('Init',n,'volumes completed');
+cat_progress_bar('Init',n,'volumes completed');
 for i=1:n
   d = spm_slice_vol(V(i),M,dim_array,[hold,NaN]);
     if orient == 2
       d = flipud(rot90(d));
     end
   Y(:,:,i) = d;
-  spm_progress_bar('Set',i);
+  cat_progress_bar('Set',i);
 end
 
-spm_progress_bar('Clear')
+cat_progress_bar('Clear')
 
 Fgraph = spm_figure('GetWin','Graphics');
 FS      = spm('FontSizes');

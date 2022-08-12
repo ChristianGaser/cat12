@@ -105,7 +105,7 @@ function out = cat_surf_vx2surf(job)
   
   % display something
   spm_clf('Interactive'); 
-  spm_progress_bar('Init',numel(job.surf),'Processed subjects','Subjects completed');
+  cat_progress_bar('Init',numel(job.surf),'Processed subjects','Subjects completed');
   
   
   %% main loop
@@ -661,16 +661,16 @@ function out = cat_surf_vx2surf(job)
           fprintf(' %s\n', spm_file(fname,'link','cat_surf_display(struct(''data'',''%s'',''multisurf'',3))'));
         end
 
-        spm_progress_bar('Set',(fi-1)/numel(job.surf) + (si-1)/nsides + mi/numel(job.measures)/nsides );
+        cat_progress_bar('Set',(fi-1)/numel(job.surf) + (si-1)/nsides + mi/numel(job.measures)/nsides );
       end
-      spm_progress_bar('Set',(fi-1)/numel(job.surf) + si/nsides );
+      cat_progress_bar('Set',(fi-1)/numel(job.surf) + si/nsides );
     end
     
     if job.opts.verb
       fprintf('\n'); 
     end
     
-    spm_progress_bar('Set',fi/numel(job.surf));
+    cat_progress_bar('Set',fi/numel(job.surf));
   end
   
   % remove files from dep list if they were not processed
@@ -681,7 +681,7 @@ function out = cat_surf_vx2surf(job)
       end
     end
   end
-  spm_progress_bar('Clear');  
+  cat_progress_bar('Clear');  
 end
 function measures = cat_surf_vx2surf_setPredefinedMeasures(measures,surf)
 %setPredefinedMeasures. Load and udpate measure structure. 
@@ -763,7 +763,7 @@ function out = cat_surf_vx2surf_createDEPs(job)
       out.measures(mi).files{si} = fname;                  
     end
   end
-  spm_progress_bar('Clear');    
+  cat_progress_bar('Clear');    
 end
 function xmeasure = cat_surf_vx2surf_xmeasures(surf)
 %cat_surf_vx2surf_xmeasures. Predefined complex measures

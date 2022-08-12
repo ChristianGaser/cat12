@@ -257,9 +257,8 @@ if ~xml_defined
 end
 
 n_xml_files = 0;
-spm_progress_bar('Init',n_subjects,'Load xml-files','subjects completed')
+cat_progress_bar('Init',n_subjects,'Load xml-files')
 
-fprintf('Load xml-files ');
 for i=1:n_subjects
   % get basename for data files
   [pth, data_name ee] = fileparts(H.files.fname{i});
@@ -370,10 +369,9 @@ for i=1:n_subjects
       H.xml.QM(i,:) = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
     end
   end
-  spm_progress_bar('Set',i);  
+  cat_progress_bar('Set',i);  
 end
-spm_progress_bar('Clear');
-fprintf('\n');
+cat_progress_bar('Clear');
 
 if H.isxml
   if n_xml_files ~= n_subjects
@@ -426,7 +424,7 @@ if H.mesh_detected
   H.texture = single(spm_data_read(H.files.V));
 end
 
-spm_progress_bar('Init',n_subjects,'Load data','subjects completed')
+cat_progress_bar('Init',n_subjects,'Load data')
 
 % prepare Beta
 if ~isempty(G) 
@@ -438,9 +436,7 @@ if ~isempty(G)
   Beta = zeros(prod(dim),size(G,2),'single');
 end
 
-fprintf('Load data ');
 for i = 1:n_subjects
-  fprintf('.');
   if H.mesh_detected
     Ytmp = spm_data_read(H.files.V(i));
   else
@@ -468,9 +464,9 @@ for i = 1:n_subjects
   
   H.data.Ymean = H.data.Ymean + Ytmp(:);
   Yss   = Yss + Ytmp(:).^2;
-  spm_progress_bar('Set',i);  
+  cat_progress_bar('Set',i);  
 end
-spm_progress_bar('Clear');
+cat_progress_bar('Clear');
 
 % get mean and SD
 H.data.Ymean = H.data.Ymean/n_subjects;
@@ -489,11 +485,10 @@ H.data.Ystd   = sqrt(Yvar);
 % only consider non-zero areas for Ystd and threshold Ymean
 ind = H.data.Ystd ~= 0 & H.data.Ymean > H.data.global;
 
-spm_progress_bar('Init',n_subjects,'Calculate Z-score','subjects completed')
+cat_progress_bar('Init',n_subjects,'Calculate Z-score')
 
 H.data.avg_abs_zscore = zeros(n_subjects,1);
 for i = 1:n_subjects
-  fprintf('.');
   
   if H.mesh_detected
     Ytmp = spm_data_read(H.files.V(i));
@@ -518,10 +513,9 @@ for i = 1:n_subjects
   
   % and use mean of Z-score as overall measure
   H.data.avg_abs_zscore(i) = mean(abs(zscore));
-  spm_progress_bar('Set',i);  
+  cat_progress_bar('Set',i);  
 end
-spm_progress_bar('Clear');
-fprintf('\n');
+cat_progress_bar('Clear');
 
 % get data for each subject in longitudinal designs
 if H.repeated_anova
@@ -561,25 +555,25 @@ H.pos = struct(...
     'boxp',   [0.872 0.880 0.110 0.050],...  % button to display boxplot
     ...
     ... == navigation unit ==
-    'scSelect',    [popm+popb(1)*0 0.835 popb],... % select (default) 
-    'scZoomReset', [popm+popb(1)*1 0.835 popb],... % standard zoom
-    'scZoomIn',    [popm+popb(1)*2 0.835 popb],... % zoom in 
-    'scZoomOut',   [popm+popb(1)*3 0.835 popb],... % zoom out
-    'scPan',       [popm+popb(1)*4 0.835 popb],... % pan (moving hand)
+    'scSelect',    [popm+popb(1)*0 0.820 popb],... % select (default) 
+    'scZoomReset', [popm+popb(1)*1 0.820 popb],... % standard zoom
+    'scZoomIn',    [popm+popb(1)*2 0.820 popb],... % zoom in 
+    'scZoomOut',   [popm+popb(1)*3 0.820 popb],... % zoom out
+    'scPan',       [popm+popb(1)*4 0.820 popb],... % pan (moving hand)
     ...
     ... == remove unit ==
-    'rmDel',       [popm+popb(1)*0 0.775 popb],... % delete 
-    'rmUndo',      [popm+popb(1)*1 0.775 popb],... % undo deletion
-    'rmNew',       [popm+popb(1)*2 0.775 popb],... % calculate new
-    'rmListNew',   [popm+popb(1)*3 0.775 popb],... % list remaining data
-    'rmListDel',   [popm+popb(1)*4 0.775 popb],... % list removed data
+    'rmDel',       [popm+popb(1)*0 0.750 popb],... % delete 
+    'rmUndo',      [popm+popb(1)*1 0.750 popb],... % undo deletion
+    'rmNew',       [popm+popb(1)*2 0.750 popb],... % calculate new
+    'rmListNew',   [popm+popb(1)*3 0.750 popb],... % list remaining data
+    'rmListDel',   [popm+popb(1)*4 0.750 popb],... % list removed data
     ...
     ... == display unit ==
-    'dpReport',    [popm+popb(1)*0 0.715 popb],... % report 
-    'dpReportLong',[popm+popb(1)*1 0.715 popb],... % report 
-    'dpRaw',       [popm+popb(1)*2 0.715 popb],... % raw data
-    'dpRawP0',     [popm+popb(1)*3 0.715 popb],... % raw data + p0
-    'dpLog',       [popm+popb(1)*4 0.715 popb],... % log
+    'dpReport',    [popm+popb(1)*0 0.680 popb],... % report 
+    'dpReportLong',[popm+popb(1)*1 0.680 popb],... % report 
+    'dpRaw',       [popm+popb(1)*2 0.680 popb],... % raw data
+    'dpRawP0',     [popm+popb(1)*3 0.680 popb],... % raw data + p0
+    'dpLog',       [popm+popb(1)*4 0.680 popb],... % log
     ...
     ... == check boxes ==
     'fnambox',[0.775 0.600 0.200 0.050],... % show filenames?
@@ -695,6 +689,11 @@ if job.verb
       spm_figure('Clear','Graphics');
       for i=2:26, try, close(i); end; end
     end
+  end
+  
+  % we have to update slice array first if not defined
+  if ~isfield(H.data,'vol')
+    preload_slice_data;
   end
 end
 
@@ -832,12 +831,12 @@ H.ui.text = uicontrol(H.mainfig,...
         'String',{'','Click in image to display slices'},...
         'Style','text','HorizontalAlignment','center',...
         'ToolTipString','Select slice for display',...
-        'FontSize',H.FS-2,'Visible','off');
+        'FontSize',H.FS-2,'Visible','off','BackgroundColor',[0.8 0.8 0.8]);
 
 %% == zoom unit ==
 H.naviui.text = uicontrol(H.mainfig,...
   'Units','normalized','Style','text',...
-  'Position',[H.pos.scSelect(1) H.pos.scSelect(2)+0.035 0.2 0.02],...
+  'Position',[H.pos.scSelect(1) H.pos.scSelect(2)+0.042 0.2 0.02],...
   'String','Zoom options','FontSize',H.FS,'BackgroundColor',[0.8 0.8 0.8]);
 
 H.naviui.select = uicontrol(H.mainfig,...
@@ -874,7 +873,7 @@ H.naviui.pan = uicontrol(H.mainfig,...
 %% == remove unit ==
 H.delui.text = uicontrol(H.mainfig,...
   'Units','normalized','Style','text',...
-  'Position',[H.pos.rmDel(1) H.pos.rmDel(2)+0.035 0.2 0.02],...
+  'Position',[H.pos.rmDel(1) H.pos.rmDel(2)+0.042 0.2 0.02],...
   'String','Data remove options','FontSize',H.FS,'BackgroundColor',[0.8 0.8 0.8]);
 
 H.delui.remove = uicontrol(H.mainfig,...
@@ -908,7 +907,7 @@ H.delui.analysis_new = uicontrol(H.mainfig,...
 %% == display unit ==
 H.dpui.text = uicontrol(H.mainfig,...
   'Units','normalized','Style','text',...
-  'Position',[H.pos.dpReport(1) H.pos.dpReport(2)+0.035 0.2 0.02],...
+  'Position',[H.pos.dpReport(1) H.pos.dpReport(2)+0.042 0.2 0.02],...
   'String','Data display options','FontSize',H.FS,'BackgroundColor',[0.8 0.8 0.8]);
 
 % enable some buttons only if respective files are available
@@ -916,7 +915,9 @@ if H.isxml, H.status.xml = true;
 else H.status.xml = false; end
 if ~isempty(H.files.raw{1}), H.status.raw = true;
 else H.status.raw = false; end
-if ~isempty(H.files.p0{1}) && ~isempty(H.files.raw{1}) && ~isempty(H.files.raw{numel(H.sample)}), H.status.rawp0 = true;
+if ~isempty(H.files.p0{1}) && ~isempty(H.files.raw{numel(H.sample)}), H.status.rawp0 = true;
+else H.status.raw = false; end
+if ~isempty(H.files.p0{1}) && ~isempty(H.files.raw{1}) && ~isempty(H.files.raw{numel(H.sample)}), H.status.rawp0 = true; 
 else H.status.rawp0 = false; end
 if isfield(H.files,'log') && ~isempty(H.files.log{1}), H.status.log = true;
 else H.status.log = false; end
@@ -1113,8 +1114,9 @@ H.ax = axes('Position',[-.1 -.1 1.1 1.1],'Parent',H.mainfig);
 cla(H.ax);
 set(H.ax,'Color',[0.8 0.8 0.8]);
 
-H.ax = axes('Position',H.pos.plot,'Parent',H.mainfig,'Color',[.7 .7 .7]);
+H.ax = axes('Position',H.pos.plot,'Parent',H.mainfig,'Color',[.6 .6 .6]);
 axes(H.ax);
+grid on
 
 % estimate product between QM-value and mean absolute Z-score
 if sel
@@ -1170,9 +1172,8 @@ hold on
 for i = 1:max(H.sample)
   ind = H.sample.*H.ind == i;
   H.ui.scatter = scatter(H.ax,xx(ind),yy(ind),30,H.C(ind,:),marker(i),'Linewidth',1);
-  H.ui.scatter.MarkerFaceColor = H.ui.scatter.MarkerEdgeColor; 
-  H.ui.scatter.MarkerFaceAlpha = 0.4; 
-  H.ui.scatter.MarkerEdgeAlpha = 0.8; 
+  MarkerEdgeColor = get(H.ui.scatter,'MarkerEdgeColor');
+  set(H.ui.scatter,'MarkerFaceColor',MarkerEdgeColor,'MarkerFaceAlpha',0.4,'MarkerEdgeAlpha',0.5);
 end
 
 % connect point of each subject for long. designs
@@ -1323,6 +1324,7 @@ opt = struct('groupnum',0,'ygrid',0,'violin',2*H.ui.show_violin,'median',2,'grou
 ylim_add = 0.075;
 
 cat_plot_boxplot(data,opt);
+set(gcf,'Color',[0.94 0.94 0.94])
 
 hold on
 for i=1:n_samples
@@ -1332,7 +1334,8 @@ for i=1:n_samples
     if H.ui.show_name
       text(xpos{i}(j),data{i}(j),H.filename.m{ind(j)},'FontSize',H.FS-2,'HorizontalAlignment','center')
     else
-      plot(xpos{i}(j),data{i}(j),'k.');
+      p = plot(xpos{i}(j),data{i}(j),'.');
+      set(p,'Color',0.8*cm(i,:));
     end
   end
 end
@@ -1361,14 +1364,14 @@ xpos = -0.40 - n_samples*0.1;
 
 if (length(data_boxp) > 2)
   if quality_order > 0
-    text(xpos, ylim_min,'<----- Low rating (poor quality)  ','Color','red','Rotation',...
+    text(xpos, ylim_min,'<----- Low rating  ','Color','red','Rotation',...
         90,'HorizontalAlignment','left','FontSize',H.FS,'FontWeight','Bold')
-    text(xpos, ylim_max,'High rating (good quality) ------>  ','Color','blue','Rotation',...
+    text(xpos, ylim_max,'High rating ------>  ','Color','blue','Rotation',...
         90,'HorizontalAlignment','right','FontSize',H.FS,'FontWeight','Bold')
   elseif quality_order < 0
-      text(xpos, ylim_max,'Low rating (poor quality) ------>  ','Color','red','Rotation',...
+      text(xpos, ylim_max,'Low rating ------>  ','Color','red','Rotation',...
           90,'HorizontalAlignment','right','FontSize',H.FS,'FontWeight','Bold')
-      text(xpos, ylim_min,'<----- High rating (good quality) ','Color','blue','Rotation',...
+      text(xpos, ylim_min,'<----- High rating ','Color','blue','Rotation',...
           90,'HorizontalAlignment','left','FontSize',H.FS,'FontWeight','Bold')
   end
   text(xpos, (ylim_max+ylim_min)/2,sprintf('%s',name_boxp),'Color','black','Rotation',...
@@ -1497,7 +1500,7 @@ set(H.ui.mm_txt,'Visible','on');
 
 % we have to update slice array first if not defined
 if ~isfield(H.data,'vol')
-  update_slices_array;
+  preload_slice_data;
 end
 
 H.img = H.data.vol(:,:,H.mouse.x(1))';
@@ -1755,6 +1758,68 @@ end
 return
 
 %-----------------------------------------------------------------------
+function preload_slice_data
+%-----------------------------------------------------------------------
+global H
+
+if isfield(H.ui,'mm')
+  slice_mm = get(H.ui.mm,'Value');
+else
+  slice_mm = 0;
+end
+
+if H.names_changed
+  P = H.files.Vchanged;
+else
+  P = H.files.V;
+end
+
+H.data.vx   =  sqrt(sum(P(1).mat(1:3,1:3).^2));
+H.data.Orig = P(1).mat\[0 0 0 1]';
+sl   = round(slice_mm/H.data.vx(3)+H.data.Orig(3));
+
+% if slice is outside of image use middle slice
+if (sl>P(1).dat.dim(3)) || (sl<1)
+  sl = round(P(1).dat.dim(3)/2);
+end
+
+M = spm_matrix([0 0 sl]);
+H.data.zscore = zeros([P(1).dat.dim(1:2) length(H.files.V)]);
+Ymean = reshape(H.data.Ymean,P(1).dat.dim(1:3));
+Ystd  = reshape(H.data.Ystd,P(1).dat.dim(1:3));
+Ymean = Ymean(:,:,sl);
+Ystd  = Ystd(:,:,sl);
+
+scl = max(Ymean(:));
+
+% load slices and show progress bar only for large samples 
+if length(H.files.V) > 500, cat_progress_bar('Init',length(H.files.V),'Load slices'); end
+for i = 1:length(H.files.V)
+  img(:,:) = single(P(i).dat(:,:,sl));
+  img(isnan(img)) = 0;
+  
+  H.data.vol(:,:,i) = img;
+  if length(H.files.V) > 500, cat_progress_bar('Set',i); end
+end
+if length(H.files.V) > 500, cat_progress_bar('Clear'); end
+
+% calculate individual Z-score map
+for i=1:size(H.data.zscore,3)
+  img = H.data.vol(:,:,i);
+  ind = Ystd > 0 & (Ymean > H.data.global | img > H.data.global);
+  img(ind) = (img(ind) - Ymean(ind))./Ystd(ind);
+  img(~ind) = 0;
+  H.data.zscore(:,:,i) = img;
+end
+
+% enhance contrast and scale image to 0..64
+H.data.vol = 64*((H.data.vol - H.data.range98(1))/(H.data.range98(2)-H.data.range98(1)));
+H.data.vol(H.data.vol > 64) = 64;
+H.data.vol(H.data.vol < 0)  = 0;
+
+return
+
+%-----------------------------------------------------------------------
 function update_slices_array(obj, event_obj)
 %-----------------------------------------------------------------------
 global H
@@ -1789,12 +1854,16 @@ Ystd  = Ystd(:,:,sl);
 
 scl = max(Ymean(:));
 
+% load slices and show progress bar only for large samples 
+if length(H.files.V) > 500, cat_progress_bar('Init',length(H.files.V),'Load slices'); end
 for i = 1:length(H.files.V)
   img(:,:) = single(P(i).dat(:,:,sl));
   img(isnan(img)) = 0;
   
   H.data.vol(:,:,i) = img;
+  if length(H.files.V) > 500, cat_progress_bar('Set',i); end
 end
+if length(H.files.V) > 500, cat_progress_bar('Clear'); end
 
 % calculate individual Z-score map
 for i=1:size(H.data.zscore,3)
@@ -1848,7 +1917,7 @@ if isfield(H,'mouse') && isfield(H.mouse,'x')
   
   txt = {sprintf('%s',spm_file(H.filename.m{x},'short25')),[],['Displayed slice: ',num2str(round(get(H.ui.mm,'Value'))),' mm']};
 
-  set(H.ui.text,'String',txt,'FontSize',H.FS-2);
+  set(H.ui.text,'String',txt,'FontSize',H.FS);
   set(H.ui.mm_txt,'String',[num2str(round(get(H.ui.mm,'Value'))),' mm'],...
       'FontSize',H.FS-2);
 end
@@ -2203,13 +2272,19 @@ if ~H.mesh_detected
 end
 
 % text info for textbox
-if H.mesh_detected
-  txt2 = {[],sprintf('%s',spm_file(H.filename.m{H.mouse.x(1)},'short25'))};
-else
-  txt2 = {[],sprintf('%s',spm_file(H.filename.m{H.mouse.x(1)},'short25')),[],'Individual Z-score','red: value < mean','blue: value > mean)'};
+txt2 = {[],sprintf('%s',spm_file(H.filename.m{H.mouse.x(1)},'short25')),sprintf('Mean abs Z-score: %g',H.data.avg_abs_zscore(H.mouse.x(1)))};
+if H.isxml
+  txt2{end+1} = sprintf('IQR: %g',H.X(H.mouse.x(1),4));
 end
 
-set(H.ui.text,'String',txt2,'FontSize',H.FS-2);
+if ~H.mesh_detected
+  str = {[],'Individual Z-score','red: value < mean','blue: value > mean'};
+  for i=1:numel(str)
+    txt2{end+1} = str{i};
+  end
+end
+
+set(H.ui.text,'String',txt2,'FontSize',H.FS);
 
 % get list of time points for long. data
 if H.repeated_anova

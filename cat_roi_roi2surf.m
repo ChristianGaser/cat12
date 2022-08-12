@@ -55,7 +55,7 @@ function varargout = cat_roi_roi2surf(job)
     end
   end
   
-  spm_progress_bar('Init',numel(job.rdata{1}),...
+  cat_progress_bar('Init',numel(job.rdata{1}),...
     sprintf('ROI2Surface\n%s',numel(job.rdata{1})),'ROIs Completed'); 
 
   sname = cell(numel(job.rdata),1,1,numel(sides)); 
@@ -151,10 +151,10 @@ function varargout = cat_roi_roi2surf(job)
       end
 
     end
-    spm_progress_bar('Set',rfi);
+    cat_progress_bar('Set',rfi);
 
   end
-  spm_progress_bar('Clear');
+  cat_progress_bar('Clear');
   
   if nargout>0
     varargout{1} = sname; 

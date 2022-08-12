@@ -29,7 +29,7 @@ else
   calcvol = zeros(length(p.data_xml),5);
 end
 
-spm_progress_bar('Init',length(p.data_xml),'Load xml-files','subjects completed')
+cat_progress_bar('Init',length(p.data_xml),'Load xml-files','subjects completed')
 for i=1:length(p.data_xml)
   xml = cat_io_xml(deblank(p.data_xml{i})); 
   try
@@ -75,9 +75,9 @@ for i=1:length(p.data_xml)
     calcvol(i,:) = [sum(tmp),tmp(2),tmp(3),tmp(1),tmp(4)];
     fprintf('%60s\t%7.2f\t%7.2f\t%7.2f\t%7.2f\t%7.2f\n',filename,sum(tmp),tmp(2),tmp(3),tmp(1),tmp(4));
   end
-  spm_progress_bar('Set',i);  
+  cat_progress_bar('Set',i);  
 end
-spm_progress_bar('Clear');
+cat_progress_bar('Clear');
 
 if fclose(fid)==0
   fprintf('\nValues saved in %s.\n',p.calcvol_name);

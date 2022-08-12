@@ -147,7 +147,7 @@ function varargout=cat_io_cgw2seg(c,g,w,opt)
   end
   
   
-  spm_progress_bar('Init',n,'Filtering','Volumes Complete');
+  cat_progress_bar('Init',n,'Filtering','Volumes Complete');
   for i=1:n
     if opt.verb, fprintf('%s: ',c{i}); end
     tic
@@ -246,8 +246,8 @@ function varargout=cat_io_cgw2seg(c,g,w,opt)
       
       if nargout>0, varargout{1}{n} = hc.fname; end
     end
-    spm_progress_bar('Set',i); if opt.verb, fprintf('%4.0f\n',toc); end
+    cat_progress_bar('Set',i); if opt.verb, fprintf('%4.0f\n',toc); end
   end
-  spm_progress_bar('Clear');
+  cat_progress_bar('Clear');
   if opt.verb, fprintf('%-40s: %30s\n','Completed',spm('time')); end
 end
