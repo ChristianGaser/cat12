@@ -195,7 +195,7 @@ C = zeros(n_all_subjects);
 
 % 3D data
 if ~spm_mesh_detect(V{1}(1))
-  spm_progress_bar('Init',Vres.dim(3),'reading...','planes completed');
+  cat_progress_bar('Init',Vres.dim(3),'reading...','planes completed');
   ind = [];
   for sl=1:Vres.dim(3)
     % read mask
@@ -231,9 +231,9 @@ if ~spm_mesh_detect(V{1}(1))
       end
       Y = [Y yslice];
     end
-    spm_progress_bar('Set',sl)
+    cat_progress_bar('Set',sl)
   end
-  spm_progress_bar('Clear')
+  cat_progress_bar('Clear')
 else % meshes
   Y = zeros(n_all_subjects,numel(ind));
   count = 1;

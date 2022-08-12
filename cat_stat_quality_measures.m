@@ -105,7 +105,7 @@ if isxml
     QM_names = char('Noise','Bias','Weighted overall image quality (IQR)');
   end
   
-  spm_progress_bar('Init',n_subjects,'Load xml-files','subjects completed')
+  cat_progress_bar('Init',n_subjects,'Load xml-files','subjects completed')
   for i=1:n_subjects
     
     % get basename for data files
@@ -174,9 +174,9 @@ if isxml
         QM(i,:) = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
       end
     end
-    spm_progress_bar('Set',i);  
+    cat_progress_bar('Set',i);  
   end
-  spm_progress_bar('Clear');
+  cat_progress_bar('Clear');
   
   % remove last two columns if EC_abs and defect_size are not defined
   if mesh_detected && all(isnan(QM(:,4))) && all(isnan(QM(:,5)))

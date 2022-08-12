@@ -1227,7 +1227,7 @@ end
     res.tpm       = obj.tpm;
     res.tpm(1).fname = fname;
   end
-  spm_progress_bar('Clear');
+  cat_progress_bar('Clear');
           
   %% call main processing
   res.tpm     = obj.tpm.V;

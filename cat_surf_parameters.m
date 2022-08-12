@@ -100,7 +100,7 @@ function varargout = cat_surf_parameters(job)
   
   % display something
   spm_clf('Interactive'); 
-  spm_progress_bar('Init',size(P,1),'Processed surfaces','Surfaces Completed');
+  cat_progress_bar('Init',size(P,1),'Processed surfaces','Surfaces Completed');
   
   % just a counter for the progress bar
   if cat_get_defaults('extopts.expertgui')<2
@@ -256,7 +256,7 @@ function varargout = cat_surf_parameters(job)
           end
 
           if nargout==1, varargout{1}.([sides{si} 'Parea' ]){i} = Parea; end
-          measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
+          measuresi = measuresi + 1; cat_progress_bar('Set',i - 1  + measuresi/measuresn);
         end
 
         
@@ -282,7 +282,7 @@ function varargout = cat_surf_parameters(job)
             end
           end
           if nargout==1 && gmvi==1, varargout{1}.([sides{si} 'Pgmv' ]){i} = Pgmv{gmvi}; end  
-          measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
+          measuresi = measuresi + 1; cat_progress_bar('Set',i - 1  + measuresi/measuresn);
           if exist(Pspbt,'file'), delete(Pspbt); end
         end
   
@@ -308,7 +308,7 @@ function varargout = cat_surf_parameters(job)
             if nargout==1 && GIi==1, varargout{1}.([sides{si} 'PGI'  ]){i} = PGI{GIi}; end  
             if nargout==1 && GIi==2, varargout{1}.([sides{si} 'PGIx' ]){i} = PGI{GIi}; end  
           end
-          measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
+          measuresi = measuresi + 1; cat_progress_bar('Set',i - 1  + measuresi/measuresn);
         end
 
         
@@ -353,7 +353,7 @@ function varargout = cat_surf_parameters(job)
             if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(PSD{SDi},'link','cat_surf_display(''%s'')')); end
           end
           if nargout==1 && SDi==1, varargout{1}.([sides{si} 'PSD' ]){i} = PSD{SDi}; end
-          measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
+          measuresi = measuresi + 1; cat_progress_bar('Set',i - 1  + measuresi/measuresn);
         end
         
         
@@ -370,7 +370,7 @@ function varargout = cat_surf_parameters(job)
             if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(PFD,'link','cat_surf_display(''%s'')')); end
           end
           if nargout==1, varargout{1}.([sides{si} 'PFD']){i} = PFD; end  
-          measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
+          measuresi = measuresi + 1; cat_progress_bar('Set',i - 1  + measuresi/measuresn);
         end
 
         
@@ -392,7 +392,7 @@ function varargout = cat_surf_parameters(job)
             end
           end
           
-          measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
+          measuresi = measuresi + 1; cat_progress_bar('Set',i - 1  + measuresi/measuresn);
         end
         
         
@@ -514,7 +514,7 @@ function varargout = cat_surf_parameters(job)
               end
             end
 
-            measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
+            measuresi = measuresi + 1; cat_progress_bar('Set',i - 1  + measuresi/measuresn);
           end
         end
         
@@ -605,7 +605,7 @@ function varargout = cat_surf_parameters(job)
             end
           end
 
-          measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
+          measuresi = measuresi + 1; cat_progress_bar('Set',i - 1  + measuresi/measuresn);
         end
 
 
@@ -625,7 +625,7 @@ function varargout = cat_surf_parameters(job)
             if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(Ptfs,'link','cat_surf_display(''%s'')')); end
           end
           if nargout==1, varargout{1}.([sides{si} 'Tfs']){i} = Ptfs; end  
-          measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
+          measuresi = measuresi + 1; cat_progress_bar('Set',i - 1  + measuresi/measuresn);
         end
 
         if job.thickness.Tmin
@@ -637,7 +637,7 @@ function varargout = cat_surf_parameters(job)
             if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(Ptmin,'link','cat_surf_display(''%s'')')); end
           end
           if nargout==1, varargout{1}.([sides{si} 'Tmin']){i} = Ptmin; end  
-          measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
+          measuresi = measuresi + 1; cat_progress_bar('Set',i - 1  + measuresi/measuresn);
         end
 
         if job.thickness.Tmax
@@ -649,7 +649,7 @@ function varargout = cat_surf_parameters(job)
             if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(Ptmax,'link','cat_surf_display(''%s'')')); end
           end
           if nargout==1, varargout{1}.([sides{si} 'Tmax']){i} = Ptmax; end  
-          measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
+          measuresi = measuresi + 1; cat_progress_bar('Set',i - 1  + measuresi/measuresn);
         end
 
         % delete temporary surface files
@@ -671,7 +671,7 @@ function varargout = cat_surf_parameters(job)
             if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(PIS,'link','cat_surf_display(''%s'')')); end
           end
           if nargout==1, varargout{1}.([sides{si} 'PIS']){i} = PIS; end  
-          measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
+          measuresi = measuresi + 1; cat_progress_bar('Set',i - 1  + measuresi/measuresn);
         end
 
         if job.surfaces.OS
@@ -683,13 +683,13 @@ function varargout = cat_surf_parameters(job)
             if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(POS,'link','cat_surf_display(''%s'')')); end
           end
           if nargout==1, varargout{1}.([sides{si} 'POS']){i} = POS; end  
-          measuresi = measuresi + 1; spm_progress_bar('Set',i - 1  + measuresi/measuresn);
+          measuresi = measuresi + 1; cat_progress_bar('Set',i - 1  + measuresi/measuresn);
         end
 
         % do not delete it otherwise lazy will not work (new file > new processing)
         %if exist(Psname ,'file') && ~strcmp(Psname,Pname), delete(Psname);  end
       end
-      spm_progress_bar('Set',i);
+      cat_progress_bar('Set',i);
 
 
 
@@ -705,7 +705,7 @@ function varargout = cat_surf_parameters(job)
     fprintf('\nDone\n');
   end  
 
-  spm_progress_bar('Clear');  
+  cat_progress_bar('Clear');  
   
   if nargout && ~exist('varargout','var'),  varargout{1} = struct(''); end
   

@@ -81,7 +81,7 @@ Origin = V(1).mat\[0 0 0 1]';
 vox    = sqrt(sum(V(1).mat(1:3,1:3).^2));
 
 mnI = 1e15; mxI = -1e15;
-spm_progress_bar('Init',V(1).dim(3),'Mip',' ');
+cat_progress_bar('Init',V(1).dim(3),'Mip',' ');
 for j = 1:V(1).dim(3)
 	B  = spm_matrix([0 0 -j 0 0 0 1 1 1]);
 	M1 = inv(B);
@@ -110,9 +110,9 @@ for j = 1:V(1).dim(3)
 	  end
   end
   
-	spm_progress_bar('Set',j);
+	cat_progress_bar('Set',j);
 end
-spm_progress_bar('Clear');
+cat_progress_bar('Clear');
 
 if new_style
 
@@ -126,7 +126,7 @@ if new_style
     set(fig, 'MenuBar', 'none','Position',[10 10 2*182 2*200],'Name',nm,'NumberTitle','off');
   end
   
-  cat_vol_glass(Y{1},XYZ{1},struct('dark',all(OV.bkg_col==0),'cmap',OV.cmap,'grid',false,'colourbar',~isempty(OV.cbar)));
+  cat_vol_glassbrain(Y{1},XYZ{1},struct('dark',all(OV.bkg_col==0),'cmap',OV.cmap,'grid',false,'colourbar',~isempty(OV.cbar)));
 
   set(gca,'units','pixels'); x = get(gca,'position');
   set(gcf,'units','pixels'); y = get(gcf,'position');

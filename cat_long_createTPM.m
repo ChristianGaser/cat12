@@ -133,10 +133,10 @@ function out = cat_long_createTPM(job)
   
   % display something
   spm_clf('Interactive'); 
-  spm_progress_bar('Init',numel(job.files),'TPM creation','Volumes Completed');
+  cat_progress_bar('Init',numel(job.files),'TPM creation','Volumes Completed');
   
   for fi = 1:numel(job.files)
-    spm_progress_bar('Set',fi-0.9);
+    cat_progress_bar('Set',fi-0.9);
     
     %% first we need the paths to the other classes 
     [pp,ff,ee] = spm_fileparts( job.files{fi} );
@@ -170,8 +170,8 @@ function out = cat_long_createTPM(job)
       Ydtpm = cat_vol_load_priors(Vdtpm, Vtemp); for ci=1:6, Ydtpm{ci} = single(Ydtpm{ci}); end
       cat_io_cprintf('warn','\n  Image resolutions differs from SPM TPM resolution. Cannot mix the images.\n');
     end
-    spm_progress_bar('Init',numel(job.files),'TPM creation','Volumes Completed');% have to reset it
-    spm_progress_bar('Set',fi-0.2); 
+    cat_progress_bar('Init',numel(job.files),'TPM creation','Volumes Completed');% have to reset it
+    cat_progress_bar('Set',fi-0.2); 
 
     
     % complete background
@@ -193,7 +193,7 @@ function out = cat_long_createTPM(job)
     Ytpm{6}(isnan(Ytpm{ci})) = 0; Ytpm{6} = max(Ytpm{6},Ybgb);
     Ytpm  = clsnorm(Ytpm);
 
-    spm_progress_bar('Set',fi-0.8); 
+    cat_progress_bar('Set',fi-0.8); 
 
 
 
@@ -290,7 +290,7 @@ function out = cat_long_createTPM(job)
           Ytpms{ci} = Ytpms{ci} + Ytpmts; 
         end
       end
-      spm_progress_bar('Set',fi-0.8 + (0.7 * si / numel(job.ssize))); 
+      cat_progress_bar('Set',fi-0.8 + (0.7 * si / numel(job.ssize))); 
     end
     
     % final setting with minimal probability 
@@ -347,7 +347,7 @@ function out = cat_long_createTPM(job)
       fprintf('done > %s. \n',spm_file('Display','link',...
         sprintf('spm_image(''Display'',''%s'')',fullfile(pp,[job.prefixTPM ff ee ',1'])) )); 
     end
-    spm_progress_bar('Set',fi);
+    cat_progress_bar('Set',fi);
      
     %%
     clear Ytpms Yb
@@ -355,7 +355,7 @@ function out = cat_long_createTPM(job)
   if isfield(job,'process_index') && job.verb
     fprintf('\nDone\n');
   end  
-  spm_progress_bar('Clear');  
+  cat_progress_bar('Clear');  
   
 function b0 = cat_vol_load_priors(B,Vo)
 % Loads the tissue probability maps for segmentation
@@ -381,7 +381,7 @@ for k1=1:(Kb)
     b0{k1} = zeros(Vo.dim(1:3));
 end
 
-spm_progress_bar('Init',Vo.dim(3),'Loading priors','Planes loaded');
+cat_progress_bar('Init',Vo.dim(3),'Loading priors','Planes loaded');
 for i=1:Vo.dim(3)
     M0         = spm_matrix([0 0 -i 0 0 0 1 1 1]);
     s          = zeros(Vo.dim(1:2));
@@ -401,6 +401,6 @@ for i=1:Vo.dim(3)
     end
     s(t) = 1;
     b0{Kb+1}(:,:,i) = max(min(1-s,1),0);
-    spm_progress_bar('Set',i);
+    cat_progress_bar('Set',i);
 end
-spm_progress_bar('Clear');
+cat_progress_bar('Clear');

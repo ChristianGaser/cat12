@@ -889,7 +889,7 @@ function [ROInames, ROIids, ROIvalues, relROIvalues] = get_ROI_measure(roi_names
 n_data = length(roi_names);
 measure = measures{sel_measure};
 
-spm_progress_bar('Init',n_data,'Load xml-files','subjects completed')
+cat_progress_bar('Init',n_data,'Load xml-files','subjects completed')
 for i=1:n_data        
 
   xml = cat_io_xml(deblank(roi_names{i}));
@@ -935,6 +935,6 @@ for i=1:n_data
   end
   relROIvalues(i,:) = ROIvalues(i,:)./allROIvalues;
   
-  spm_progress_bar('Set',i);  
+  cat_progress_bar('Set',i);  
 end
-spm_progress_bar('Clear');
+cat_progress_bar('Clear');

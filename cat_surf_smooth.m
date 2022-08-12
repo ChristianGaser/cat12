@@ -65,7 +65,7 @@ function varargout = cat_surf_smooth(varargin)
   
   % display something
   spm_clf('Interactive'); 
-  spm_progress_bar('Init',numel(Pdata),'Smoothed Surfaces','Surfaces Completed');
+  cat_progress_bar('Init',numel(Pdata),'Smoothed Surfaces','Surfaces Completed');
   
   Psdata = Pdata;
   sinfo  = cat_surf_info(Pdata);
@@ -135,7 +135,7 @@ function varargout = cat_surf_smooth(varargin)
       end
     end
     
-    spm_progress_bar('Set',i);
+    cat_progress_bar('Set',i);
     
   end
 
@@ -147,5 +147,5 @@ function varargout = cat_surf_smooth(varargin)
     varargout{1} = Psdata; 
   end
   
-  spm_progress_bar('Clear');
+  cat_progress_bar('Clear');
 end

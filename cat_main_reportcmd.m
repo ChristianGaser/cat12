@@ -103,6 +103,6 @@ function cat_main_reportcmd(job,res,qa)
       'catlog',txt2),'write+'); % here we have to use the write+!
   end    
   
-  spm_progress_bar('Clear');
+  cat_progress_bar('Clear');
 
 end

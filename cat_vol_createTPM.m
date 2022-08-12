@@ -354,7 +354,7 @@
         Yclss{ci} = Yclss{ci} + Yclsts; 
       end
     end
-    spm_progress_bar('Set',fi-0.8 + (0.7 * si / numel(job.ssize))); 
+    cat_progress_bar('Set',fi-0.8 + (0.7 * si / numel(job.ssize))); 
   end
   for ci=1:3,  Yclss{ci} =  max( Yclss{ci} .* (1 - Ybgb) , job.minprob .* Yb ); end
   for ci=4:5,  Yclss{ci} =  max( Yclss{ci} .* (1 - Ybgb) , job.minprob .* (1-Yb) ); end

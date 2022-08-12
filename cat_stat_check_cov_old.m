@@ -202,7 +202,7 @@ if ~xml_defined
 end
 
 n_xml_files = 0;
-spm_progress_bar('Init',n_subjects,'Load xml-files','subjects completed')
+cat_progress_bar('Init',n_subjects,'Load xml-files','subjects completed')
 
 for i=1:n_subjects
   % get basename for data files
@@ -279,9 +279,9 @@ for i=1:n_subjects
       QM(i,:) = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
     end
   end
-  spm_progress_bar('Set',i);  
+  cat_progress_bar('Set',i);  
 end
-spm_progress_bar('Clear');
+cat_progress_bar('Clear');
 
 if H.isxml
   if n_xml_files ~= n_subjects
@@ -400,7 +400,7 @@ else
 
   %-Start progress plot
   %-----------------------------------------------------------------------
-  spm_progress_bar('Init',H.V(1).dat.dim(3),'Check correlation','planes completed')
+  cat_progress_bar('Init',H.V(1).dat.dim(3),'Check correlation','planes completed')
 
   for j=slices
 
@@ -433,7 +433,7 @@ else
     % calculate residual mean square of mean adjusted Y
     Y = Y - repmat(mean(Y,1), [n_subjects 1]);
     
-    spm_progress_bar('Set',j);  
+    cat_progress_bar('Set',j);  
 
   end
 
@@ -448,7 +448,7 @@ else
   end
   
   clear Y
-  spm_progress_bar('Clear');
+  cat_progress_bar('Clear');
 end
 
 % normalize YpY

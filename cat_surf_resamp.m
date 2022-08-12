@@ -124,7 +124,7 @@ function vout = cat_surf_resamp(varargin)
   
   % display something
   spm_clf('Interactive'); 
-  spm_progress_bar('Init',size(P,1),'Smoothed Resampled','Surfaces Completed');
+  cat_progress_bar('Init',size(P,1),'Smoothed Resampled','Surfaces Completed');
 
   Psdata  = cell(size(P,1),1);
   lPsdata = cell(size(P,1),1);
@@ -427,7 +427,7 @@ function vout = cat_surf_resamp(varargin)
       end  
     end
     
-    spm_progress_bar('Set',i);
+    cat_progress_bar('Set',i);
   end
   
   if isfield(job,'process_index') && job.verb
@@ -465,6 +465,6 @@ function vout = cat_surf_resamp(varargin)
     end
   end
   
-  spm_progress_bar('Clear');
+  cat_progress_bar('Clear');
 end
 

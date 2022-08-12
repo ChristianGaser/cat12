@@ -73,7 +73,7 @@ function varargout = cat_surf_avg(varargin)
   
   %% display something
   spm_clf('Interactive'); nfi = 0;
-  spm_progress_bar('Init',n,'Surface Averaging and Smoothing','Surfaces (and Smoothing Steps) Complete');
+  cat_progress_bar('Init',n,'Surface Averaging and Smoothing','Surfaces (and Smoothing Steps) Complete');
   for si=1:numel(side)
     if numel(job.(side{si}))>0
       %%
@@ -111,7 +111,7 @@ function varargout = cat_surf_avg(varargin)
 
           % add
           Savg.(side{si}).vertices = Savg.(side{si}).vertices + S.vertices;
-          nfi = nfi + 1; spm_progress_bar('Set',nfi);
+          nfi = nfi + 1; cat_progress_bar('Set',nfi);
         catch
           %NS=NS-1;
           S =gifti(Pcentral);
@@ -139,7 +139,7 @@ function varargout = cat_surf_avg(varargin)
           cmd = sprintf('CAT_BlurSurfHK "%s" "%s" %d',filename{si+1,smi},filename{si+1,smi},job.meshsmooth(smi));
           cat_system(cmd,0);
         end
-        nfi = nfi + 1; spm_progress_bar('Set',nfi);
+        nfi = nfi + 1; cat_progress_bar('Set',nfi);
       end
     end
   end
@@ -148,6 +148,6 @@ function varargout = cat_surf_avg(varargin)
     varargout{1} = filename{si,smi};
   end
   
-  spm_progress_bar('Clear');
+  cat_progress_bar('Clear');
 end
 
