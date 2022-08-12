@@ -2272,7 +2272,10 @@ if ~H.mesh_detected
 end
 
 % text info for textbox
-txt2 = {[],sprintf('%s',spm_file(H.filename.m{H.mouse.x(1)},'short25')),sprintf('Mean abs Z-score: %g',H.data.avg_abs_zscore(H.mouse.x(1)))};
+txt2 = {[],sprintf('%s',spm_file(H.filename.m{H.mouse.x(1)},'short25'))};
+if max(H.sample) > 1, txt2{end+1} = sprintf('Sample %d',H.sample(H.mouse.x(1))); end
+txt2{end+1} = sprintf('Mean abs Z-score: %g',H.data.avg_abs_zscore(H.mouse.x(1)));
+
 if H.isxml
   txt2{end+1} = sprintf('IQR: %g',H.X(H.mouse.x(1),4));
 end

@@ -1,4 +1,13 @@
 ------------------------------------------------------------------------
+r2087 | gaser | 2022-08-12 17:28:21
+
+Changed paths:
+ M CHANGES.txt
+ M cat_stat_homogeneity.m
+
+
+Changed: Added sample information to slice data field in cat_stat_homogeneity.m.
+------------------------------------------------------------------------
 r2086 | gaser | 2022-08-12 17:10:33
 
 Changed paths:
