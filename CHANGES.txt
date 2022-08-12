@@ -1,4 +1,13 @@
 ------------------------------------------------------------------------
+r2085 | rdahnke | 2022-08-12 13:08:57
+
+Changed paths:
+ M CHANGES.txt
+ M cat_stat_homogeneity.m
+
+
+Changed:    Some visual suggestions in cat_stat_homoeneity and a small bug fix. 
+------------------------------------------------------------------------
 r2084 | gaser | 2022-08-11 17:28:09
 
 Changed paths:

@@ -916,7 +916,7 @@ if H.isxml, H.status.xml = true;
 else H.status.xml = false; end
 if ~isempty(H.files.raw{1}), H.status.raw = true;
 else H.status.raw = false; end
-if ~isempty(H.files.p0{1}) && ~isempty(H.files.raw{numel(H.sample)}), H.status.rawp0 = true;
+if ~isempty(H.files.p0{1}) && ~isempty(H.files.raw{1}) && ~isempty(H.files.raw{numel(H.sample)}), H.status.rawp0 = true;
 else H.status.rawp0 = false; end
 if isfield(H.files,'log') && ~isempty(H.files.log{1}), H.status.log = true;
 else H.status.log = false; end
@@ -1113,7 +1113,7 @@ H.ax = axes('Position',[-.1 -.1 1.1 1.1],'Parent',H.mainfig);
 cla(H.ax);
 set(H.ax,'Color',[0.8 0.8 0.8]);
 
-H.ax = axes('Position',H.pos.plot,'Parent',H.mainfig);
+H.ax = axes('Position',H.pos.plot,'Parent',H.mainfig,'Color',[.7 .7 .7]);
 axes(H.ax);
 
 % estimate product between QM-value and mean absolute Z-score
@@ -1145,7 +1145,7 @@ for i=1:length(H.xml.QMzscore)
 end
 
 % create marker for different samples
-marker = char('o','+','*','s','d','^','v','<','>','_','|','.');
+marker = char('o','s','d','^','v','<','>','_','|','.','+','*');
 while max(H.sample) > numel(marker), marker = [marker; marker]; end
 
 if sel % show QM measure on x-axis
@@ -1166,10 +1166,13 @@ else % show file order on x-axis
 end
 
 % scatterplot
+hold on
 for i = 1:max(H.sample)
   ind = H.sample.*H.ind == i;
-  H.ui.scatter = scatter(xx(ind),yy(ind),30,H.C(ind,:),marker(i),'Linewidth',2);
-  hold on
+  H.ui.scatter = scatter(H.ax,xx(ind),yy(ind),30,H.C(ind,:),marker(i),'Linewidth',1);
+  H.ui.scatter.MarkerFaceColor = H.ui.scatter.MarkerEdgeColor; 
+  H.ui.scatter.MarkerFaceAlpha = 0.4; 
+  H.ui.scatter.MarkerEdgeAlpha = 0.8; 
 end
 
 % connect point of each subject for long. designs
