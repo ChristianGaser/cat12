@@ -66,7 +66,7 @@ function varargout = cat_surf_surf2roi(job)
     job.rdata = cat_vol_findfiles(fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces'),{'lh.aparc_*'});
   end
   
-  cat_progress_bar('Init',numel(job.rdata) * sum(cellfun('length',job.cdata)),'Atlases','Atlases Completed');
+  spm_progress_bar('Init',numel(job.rdata) * sum(cellfun('length',job.cdata)),'Atlases','Atlases Completed');
     
   %% ROI evaluation
   FN = fieldnames(job.avg);
@@ -218,13 +218,13 @@ function varargout = cat_surf_surf2roi(job)
             end
           end
           
-          cat_progress_bar('Set',counter); counter = counter + 1; 
+          spm_progress_bar('Set',counter); counter = counter + 1; 
         end
       end
     end
   end
 
-  cat_progress_bar('Clear');
+  spm_progress_bar('Clear');
 
   if nargout==1, varargout{1}.xmlname = xmlname; end
   

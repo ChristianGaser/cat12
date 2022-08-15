@@ -84,7 +84,7 @@ for i=1:n1
     end
 end
 
-cat_progress_bar('Init',n2,'Initial mean','Subjects done');
+spm_progress_bar('Init',n2,'Initial mean','Subjects done');
 dm = [size(NF(1,1).NI.dat) 1];
 dm = dm(1:3);
 M  = NF(1,1).NI.mat;
@@ -152,9 +152,9 @@ for i=1:n2, % Loop over subjects. Can replace FOR with PARFOR.
         if j==1, tmp(:,:,:,end) = msk; end
     end
     t = t + tmp;
-    cat_progress_bar('Set',i);
+    spm_progress_bar('Set',i);
 end
-cat_progress_bar('Clear');
+spm_progress_bar('Clear');
 
 % Make symmetric (if necessary)
 if issym, t = t + t(end:-1:1,:,:,:); end
@@ -221,7 +221,7 @@ for it=1:nits
     su  = zeros([dm 3]);
 
     % Update velocities
-    cat_progress_bar('Init',n2,sprintf('Update velocities (%d)',it),'Subjects done');
+    spm_progress_bar('Init',n2,sprintf('Update velocities (%d)',it),'Subjects done');
     for i=1:n2 % Loop over subjects. Can replace FOR with PARFOR.
 
         if ok(i)
@@ -244,11 +244,11 @@ for it=1:nits
             NU(i).dat(:,:,:,:,:) = reshape(u,[dm 1 3]);
             su = su + u;
             %clear u
-            cat_progress_bar('Set',i);
+            spm_progress_bar('Set',i);
         end
 
     end
-    cat_progress_bar('Clear');
+    spm_progress_bar('Clear');
 
     if issym
         su(:,:,:,1)   = (su(:,:,:,1)   - su(end:-1:1,:,:,1)  )/(sum(ok)*2);
@@ -261,7 +261,7 @@ for it=1:nits
     K = spm_shoot_greens('kernel',dm,prm);
  
     % Update template sufficient statistics
-    cat_progress_bar('Init',n2,sprintf('Update deformations and template (%d)',it),'Subjects done');
+    spm_progress_bar('Init',n2,sprintf('Update deformations and template (%d)',it),'Subjects done');
     for i=1:n2 % Loop over subjects. Can replace FOR with PARFOR.
 
         if ok(i)
@@ -302,13 +302,13 @@ for it=1:nits
             %clear tmp
 
             fprintf('.');
-            cat_progress_bar('Set',i);
+            spm_progress_bar('Set',i);
         end
 
     end
     clear su
     fprintf('\n');
-    cat_progress_bar('Clear');
+    spm_progress_bar('Clear');
 
     % Make left-right symmetric (if necessary)
     if issym, t = t + t(end:-1:1,:,:,:); end
