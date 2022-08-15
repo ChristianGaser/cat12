@@ -145,7 +145,7 @@ niter  = 32 * vxa;
 niter2 = 32 * vxa;
 if vxa < 2
   %%
-  cat_progress_bar('Init',niter+niter2,'Cleanup','Iterations completed');
+  spm_progress_bar('Init',niter+niter2,'Cleanup','Iterations completed');
   for j=1:niter
       if j>2*vxa, th=th1; else th=0.6; end  % Dilate after two its of erosion, i.e. th=0.6 creates a dilation filter
       if 1
@@ -163,7 +163,7 @@ if vxa < 2
         b = cat_vol_ctype(round(b));
       end
       spm_conv_vol(b,b,kx,ky,kz,-[1 1 1]);
-      cat_progress_bar('Set',j);
+      spm_progress_bar('Set',j);
   end
   
   % Also clean up the CSF.
@@ -181,14 +181,14 @@ if vxa < 2
               c(:,:,i) = cat_vol_ctype(round(bp));
           end
           spm_conv_vol(c,c,kx,ky,kz,-[1 1 1]);
-          cat_progress_bar('Set',j+niter);
+          spm_progress_bar('Set',j+niter);
       end
   end
 else
   % RD202108:  I try to replace the upper routine by a bit faster solution for high
   %            resolution data but the result is slighly different
   
-  cat_progress_bar('Init',4,'Fast cleanup','Steps completed');
+  spm_progress_bar('Init',4,'Fast cleanup','Steps completed');
   
   % erosion step (2 iterations at 1 mm)
   th= 0.6; 
@@ -197,7 +197,7 @@ else
   b = cat_vol_morph( b > th * 255 , 'de', 2 * vxa - 2); 
   b = b .* sum(P(:,:,:,1:2),4);
   spm_conv_vol(b,b,kx,ky,kz,-[1 1 1]);
-  cat_progress_bar('Set',1);
+  spm_progress_bar('Set',1);
   
   % dilation step (30 iterations at 1 mm) 
   b = (b > th1 * 255) .* sum(P(:,:,:,1:2),4);
@@ -205,7 +205,7 @@ else
   b = cat_vol_morph( b > th1 * 255, 'dd', 30 * vxa - 2); 
   b = b .* sum(P(:,:,:,1:2),4);
   spm_conv_vol(b,b,kx,ky,kz,-[1 1 1]);
-  cat_progress_bar('Set',2);
+  spm_progress_bar('Set',2);
 
   % Also clean up the CSF.
   c = (b > th * 255) .* sum(P(:,:,:,1:3),4);
@@ -213,7 +213,7 @@ else
   c = cat_vol_morph( c > th1 * 255, 'dd', 30 * vxa - 2); 
   c = c .* sum(P(:,:,:,1:3),4);
   spm_conv_vol(c,c,kx,ky,kz,-[1 1 1]);
-  cat_progress_bar('Set',3);
+  spm_progress_bar('Set',3);
 
 end
   
@@ -259,6 +259,6 @@ if write
   end
 end
 
-cat_progress_bar('Clear');
+spm_progress_bar('Clear');
 return;
 %==========================================================================

@@ -184,7 +184,7 @@ if do_defs
     end
 end
 
-cat_progress_bar('init',length(x3),['Working on ' nam],'Planes completed');
+spm_progress_bar('init',length(x3),['Working on ' nam],'Planes completed');
 M = M1\res.Affine*res.image(1).mat;
 
 if do_cls
@@ -281,9 +281,9 @@ for z=1:length(x3)
             Q(:,:,z,:) = reshape(q,[d(1:2),1,Kb]);
         end
     end
-    cat_progress_bar('set',z);
+    spm_progress_bar('set',z);
 end
-cat_progress_bar('clear');
+spm_progress_bar('clear');
 
 
 cls   = cell(1,Kb);
@@ -299,13 +299,13 @@ if do_cls
     else
         % Use a MRF cleanup procedure
         nmrf_its = 10;
-        cat_progress_bar('init',nmrf_its,['MRF: Working on ' nam],'Iterations completed');
+        spm_progress_bar('init',nmrf_its,['MRF: Working on ' nam],'Iterations completed');
         G   = ones([Kb,1],'single')*mrf;
         vx2 = 1./single(sum(res.image(1).mat(1:3,1:3).^2));
         %save PQG P Q G tiss Kb x3 ind
         for iter=1:nmrf_its
             spm_mrf(P,Q,G,vx2);
-            cat_progress_bar('set',iter);
+            spm_progress_bar('set',iter);
         end
     end
     clear Q
@@ -332,7 +332,7 @@ if do_cls
             end
         end
     end
-    cat_progress_bar('clear');
+    spm_progress_bar('clear');
 
     % Put tissue classes into a cell array...
     for k1=1:Kb
@@ -416,7 +416,7 @@ if any(tc(:,3)) || any(tc(:,4))
         C = zeros([d1,Kb],'single');
     end
 
-    cat_progress_bar('init',Kb,'Warped Tissue Classes','Classes completed');
+    spm_progress_bar('init',Kb,'Warped Tissue Classes','Classes completed');
     for k1 = 1:Kb
         if ~isempty(cls{k1})
             c = single(cls{k1})/255;
@@ -444,13 +444,13 @@ if any(tc(:,3)) || any(tc(:,4))
                 create(N);
                 N.dat(:,:,:) = c*abs(det(M0(1:3,1:3))/det(M1(1:3,1:3)));
             end
-            cat_progress_bar('set',k1);
+            spm_progress_bar('set',k1);
         end
     end
-    cat_progress_bar('Clear');
+    spm_progress_bar('Clear');
 
     if any(tc(:,3))
-        cat_progress_bar('init',Kb,'Writing Warped Tis Cls','Classes completed');
+        spm_progress_bar('init',Kb,'Writing Warped Tis Cls','Classes completed');
         C = max(C,eps);
         s = sum(C,4);
         for k1=1:Kb
@@ -464,9 +464,9 @@ if any(tc(:,3)) || any(tc(:,4))
                 create(N);
                 N.dat(:,:,:) = C(:,:,:,k1)./s;
             end
-            cat_progress_bar('set',k1);
+            spm_progress_bar('set',k1);
         end
-        cat_progress_bar('Clear');
+        spm_progress_bar('Clear');
         clear C s
     end
 end
@@ -605,7 +605,7 @@ if level==2, th1 = 0.2; end
 %--------------------------------------------------------------------------
 niter  = 32;
 niter2 = 32;
-cat_progress_bar('Init',niter+niter2,'Extracting Brain','Iterations completed');
+spm_progress_bar('Init',niter+niter2,'Extracting Brain','Iterations completed');
 for j=1:niter
     if j>2, th=th1; else th=0.6; end  % Dilate after two its of erosion
     for i=1:size(b,3)
@@ -616,7 +616,7 @@ for j=1:niter
         b(:,:,i) = uint8(round(bp));
     end
     spm_conv_vol(b,b,kx,ky,kz,-[1 1 1]);
-    cat_progress_bar('Set',j);
+    spm_progress_bar('Set',j);
 end
 
 % Also clean up the CSF.
@@ -632,7 +632,7 @@ if niter2 > 0
             c(:,:,i) = uint8(round(bp));
         end
         spm_conv_vol(c,c,kx,ky,kz,-[1 1 1]);
-        cat_progress_bar('Set',j+niter);
+        spm_progress_bar('Set',j+niter);
     end
 end
 
@@ -660,4 +660,4 @@ for i=1:size(b,3)
         P(:,:,i,k1) = uint8(round(slices{k1}./tot*255));
     end 
 end
-cat_progress_bar('Clear');
+spm_progress_bar('Clear');

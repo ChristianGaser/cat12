@@ -75,7 +75,7 @@ if level>1, th1 = 0.2; end
 %--------------------------------------------------------------------------
 niter  = 32;
 niter2 = 32;
-cat_progress_bar('Init',niter+niter2,'Extracting Brain','Iterations completed');
+spm_progress_bar('Init',niter+niter2,'Extracting Brain','Iterations completed');
 for j=1:niter
     if j>2, th=th1; else th=0.6; end  % Dilate after two its of erosion
     for i=1:size(b,3)
@@ -86,7 +86,7 @@ for j=1:niter
         b(:,:,i) = cat_vol_ctype(round(bp));
     end
     spm_conv_vol(b,b,kx,ky,kz,-[1 1 1]);
-    cat_progress_bar('Set',j);
+    spm_progress_bar('Set',j);
 end
 
 % Also clean up the CSF.
@@ -102,7 +102,7 @@ if niter2 > 0,
             c(:,:,i) = cat_vol_ctype(round(bp));
         end
         spm_conv_vol(c,c,kx,ky,kz,-[1 1 1]);
-        cat_progress_bar('Set',j+niter);
+        spm_progress_bar('Set',j+niter);
     end
 end
 
@@ -139,6 +139,6 @@ end
 for i=1:size(P,4), P2(:,:,:,i) = cat_vol_resize(P(:,:,:,i),'dereduceBrain',BB); end; 
 P = P2; clear P2; 
 
-cat_progress_bar('Clear');
+spm_progress_bar('Clear');
 return;
 %==========================================================================

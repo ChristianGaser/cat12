@@ -391,15 +391,16 @@ if ~H.isxml
 end
 
 % remove last two columns if EC_abs and defect_size are not defined
-if H.mesh_detected && all(isnan(H.xml.QM(:,4))) && all(isnan(H.xml.QM(:,5)))
+if H.isxml && H.mesh_detected && all(isnan(H.xml.QM(:,4))) && all(isnan(H.xml.QM(:,5)))
   H.xml.QM = H.xml.QM(:,1:3);
   H.xml.QM_order = H.xml.QM_order(1:3);
   H.xml.QM_names = H.xml.QM_names(1:3,:);
   H.xml.QM_names_multi = H.xml.QM_names_multi(1:3,:);
 end
 
-% add covariates to list
-if isfield(job,'c') && ~isempty(job.c) 
+% add covariates to list if it's not from a statistical analysis where the
+% covariates include all columns of the design matrix
+if isfield(job,'c') && ~isempty(job.c) && ~isfield(job,'factorial_design')
   for i=1:numel(job.c)
     if ~isempty(H.xml.QM)
       H.xml.QM = [H.xml.QM job.c{i}];
@@ -692,7 +693,7 @@ if job.verb
   end
   
   % we have to update slice array first if not defined
-  if ~isfield(H.data,'vol')
+  if ~isfield(H.data,'vol') && ~H.mesh_detected
     preload_slice_data;
   end
 end
@@ -1482,6 +1483,7 @@ else
   H.hy = cat_surf_render2('ColourMap',H.hy,cat_io_colormaps('BWR',64));
   set(H.hy.figure,'Position',pos_hy);  
 end
+
 H.hy = cat_surf_render2('clim',H.hy,[-3 3]);
 set(H.hy.figure,'Menubar','none','Toolbar','none','NumberTitle','off','Name',sprintf('Sample %d: Z-score %s',H.sample(H.mouse.x(1)),H.filename.m{H.mouse.x(1)}));  
 
@@ -2242,7 +2244,9 @@ end
 
 if H.mesh_detected 
   % show two render views for meshes: texture and Z-score
+  tic
   show_mesh;
+  toc
 else
   % show image slice
   show_image_slice;

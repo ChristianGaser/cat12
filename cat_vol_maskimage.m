@@ -36,7 +36,7 @@ function out = cat_vol_maskimage(job)
   % SPM processbar
   if isfield(job,'process_index') && job.verb, spm('FnBanner',mfilename); end
   spm_clf('Interactive'); 
-  cat_progress_bar('Init',numel(job.data),'Image masking','Volumes Complete');
+  spm_progress_bar('Init',numel(job.data),'Image masking','Volumes Complete');
   
   % set filenames and remove old files
   for di=1:numel(job.data)
@@ -109,11 +109,11 @@ function out = cat_vol_maskimage(job)
       cat_vol_imcalc([Vi,Vm,Vb],Vo,'i1 .* ( i2<0.5 | i3>0.5 )',imcalcopt); 
     end   
     
-    cat_progress_bar('Set',di);
+    spm_progress_bar('Set',di);
   end
   
   if isfield(job,'process_index') && job.verb, fprintf('Done\n'); end
-  cat_progress_bar('Clear');
+  spm_progress_bar('Clear');
   
   out.files = Po; 
 end
