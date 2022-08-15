@@ -203,7 +203,7 @@ Y = zeros(Vo.dim(1:3));
 %-Start progress plot
 %--------------------------------------------------------------------------
 if verb
-  cat_progress_bar('Init',Vo.dim(3),f,'planes completed');
+  spm_progress_bar('Init',Vo.dim(3),f,'planes completed');
 end
 
 %-Loop over planes computing result Y
@@ -238,7 +238,7 @@ for p = 1:Vo.dim(3)
     Y(:,:,p) = reshape(Yp,Vo.dim(1:2));
 
     if verb
-      cat_progress_bar('Set',p);
+      spm_progress_bar('Set',p);
     end
 end
 
@@ -266,5 +266,5 @@ end
 %-End
 %--------------------------------------------------------------------------
 if verb
-  cat_progress_bar('Clear')
+  spm_progress_bar('Clear')
 end

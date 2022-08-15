@@ -354,4 +354,5 @@ end
     
   end
   cat_progress_bar('Clear');
+  spm_progress_bar('Clear');
 end

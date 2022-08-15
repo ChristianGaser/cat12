@@ -1232,6 +1232,7 @@ function cat_run_job1639(job,tpm,subj)
     res.tpm       = obj.tpm;
     res.tpm(1).fname = fname;
   end
+  spm_progress_bar('Clear');
   cat_progress_bar('Clear');
           
   % call main processing

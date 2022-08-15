@@ -461,7 +461,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   %% MRF
   % Used spm_mrf help and tested the probability TPM map for Q without good results.         
   nmrf_its = 0; % 10 iterations better to get full probability in thin GM areas 
-  cat_progress_bar('init',nmrf_its,['MRF: Working on ' nam],'Iterations completed');
+  spm_progress_bar('init',nmrf_its,['MRF: Working on ' nam],'Iterations completed');
   if isfield(res,'mg'), Kb = max(res.lkp); else, Kb = size(res.intensity(1).lik,2); end
   G   = ones([Kb,1],'single');
   vx2 = single(sum(res.image(1).mat(1:3,1:3).^2));
@@ -478,7 +478,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   end
   for iter=1:nmrf_its
       P = spm_mrf(P,single(P),G,vx2); % spm_mrf(P,Q,G,vx2);
-      cat_progress_bar('set',iter);
+      spm_progress_bar('set',iter);
   end
 
   % update segmentation for error report
@@ -486,7 +486,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   [cat_err_res.init.Yp0,cat_err_res.init.BB] = cat_vol_resize(Yp0,'reduceBrain',vx_vol,2,Yp0>0.5); 
   cat_err_res.init.Yp0 = cat_vol_ctype(cat_err_res.init.Yp0/3*255);
  
-  cat_progress_bar('clear');
+  spm_progress_bar('clear');
   for k1=1:size(P,4)
       Ycls{k1} = P(:,:,:,k1); %#ok<AGROW>
   end
