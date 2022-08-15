@@ -154,7 +154,7 @@ function tools = cat_conf_tools(expert)
   globals.values = {1 0};
   globals.val    = {0};
   globals.help    = {
-    'This option is to correct mean z-scores for TIV by global scaling. It is only meaningful for VBM data.'
+    'This option is to correct mean Z-scores for TIV by global scaling. It is only meaningful for VBM data.'
     ''
   };
 
@@ -2866,9 +2866,9 @@ function quality_measures = conf_quality_measures(globals)
   csv_name.val     = {'Quality_measures.csv'};
   csv_name.help    = {
     'The output file is written to current working directory unless a valid full pathname is given. The following parameters are saved:'
-    '  Mean z-score - low values indicate more similarity/homogeneity to sample'
+    '  Mean Z-score - low values indicate more similarity/homogeneity to sample'
     '  Weighted overall image quality (IQR) - low values mean better image quality before preprocessing'
-    '  Normalized product of IQR and Mean z-score - low values point to good image quality before preprocessing and large homogeneity to sample after preprocessing'
+    '  Normalized product of IQR and Mean Z-score - low values point to good image quality before preprocessing and large homogeneity to sample after preprocessing'
     '  Euler Number (for surfaces only) - lower numbers point to better quality of surface extraction'
     '  Size of topology defects (for surfaces only) - smaller size points to better quality of surface extraction'
     ''
@@ -2876,15 +2876,15 @@ function quality_measures = conf_quality_measures(globals)
 
   quality_measures         = cfg_exbranch;
   quality_measures.tag     = 'quality_measures';
-  quality_measures.name    = 'Check sample homogeneity for very large samples using mean z-score';
+  quality_measures.name    = 'Check sample homogeneity for very large samples using mean Z-score';
   quality_measures.val     = {data,globals,csv_name};
   quality_measures.prog    = @cat_stat_quality_measures;
   quality_measures.help    = {
     'In order to identify data with poor image quality or even artefacts you can use this function. In contrast to the Check Homogeneity tool this function can be also applied to very large samples, but provides no graphical output.'
     'The saved quality parameters in the csv-file can be then used with external analysis tools. The following parameters are saved:'
-    '  Mean z-score - low values indicate more similarity/homogeneity to sample'
+    '  Mean Z-score - low values indicate more similarity/homogeneity to sample'
     '  Weighted overall image quality (IQR) - low values mean better image quality before preprocessing'
-    '  Normalized product of IQR and Mean z-score - low values point to good image quality before preprocessing and large homogeneity to sample after preprocessing'
+    '  Normalized product of IQR and Mean Z-score - low values point to good image quality before preprocessing and large homogeneity to sample after preprocessing'
     '  Euler Number (for surfaces only) - lower numbers point to better quality of surface extraction'
     '  Size of topology defects (for surfaces only) - smaller size points to better quality of surface extraction'
     ''
