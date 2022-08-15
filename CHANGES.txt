@@ -1,4 +1,38 @@
 ------------------------------------------------------------------------
+r2089 | gaser | 2022-08-15 23:53:25
+
+Changed paths:
+ M CHANGES.txt
+ M cat_long_createTPM.m
+ M cat_main_clean_gwc.m
+ M cat_main_clean_gwc1639.m
+ M cat_main_reportcmd.m
+ M cat_main_updateSPM.m
+ M cat_main_updateSPM1639.m
+ M cat_progress_bar.m
+ M cat_run_job.m
+ M cat_run_job1639.m
+ M cat_run_job_APRGs.m
+ M cat_spm_preproc_write8.m
+ M cat_spm_shoot_template.m
+ M cat_stat_homogeneity.m
+ M cat_surf_results.m
+ M cat_surf_surf2roi.m
+ M cat_vol_headtrimming.m
+ M cat_vol_imcalc.m
+ M cat_vol_maskimage.m
+ M cat_vol_sanlm.m
+ M cat_vol_sanlm2.m
+
+
+Changed: Supress output of cat_progress_bar for values close to 0%.
+Changed: Changed many cat_progress_bar calls back to spm_progress_bar because
+         during preprocessing multiple calls to cat_progress_bar are annoying.
+Fixed:   Corrected bug in cat_surf_results.m for drwaing log-scale for even 
+         number of XTick values.
+Fixed:   Corrected some smaller bugs in cat_stat_homogeneity.m for meshes.
+
+------------------------------------------------------------------------
 r2088 | gaser | 2022-08-15 12:25:36
 
 Changed paths:

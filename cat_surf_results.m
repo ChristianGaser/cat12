@@ -112,7 +112,7 @@ switch lower(action)
     % if nifti file is given use select_data function to prepare temporary
     % mesh
     if nargin
-      [pth,nam,ext] = fileparts(varargin{1});
+      [pth,nam,ext] = fileparts(varargin{1}(1,:));
       if strcmp(ext,'.nii')
         select_data([],[],varargin{1});
         return
@@ -2284,7 +2284,12 @@ if H.n_surf == 1
       if clip(2) <= - 1.3 && clip(2) >= - 1.4 && clim(2) < 0
         XTick = [round(clim(2)):XTick_step:round(clim(3))];
         mid = find(XTick==0);
-        XTick(mid-1:mid+1) = [log10(0.05) 0 -log10(0.05)];
+        if ~isempty(mid)
+          XTick(mid-1:mid+1) = [log10(0.05) 0 -log10(0.05)];
+        else
+          XTick(XTick == -1) =  log10(0.05);
+          XTick(XTick == 1)  = -log10(0.05);
+        end
       else
         XTick = [0:XTick_step:round(clim(3))];
         XTick(2) = -log10(0.05);

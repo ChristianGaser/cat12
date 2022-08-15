@@ -56,7 +56,11 @@ switch lower(action)
         
         % add 0.5s to remaining time to prevent that at the end 0s is
         % displayed for a longer time
-        str = sprintf('%.f%% (%s remaining)',iter/n_iterations*100,time2str(0.5+remain_time));
+        if iter/n_iterations*100 > 1
+          str = sprintf('%.f%% (%s remaining)',iter/n_iterations*100,time2str(0.5+remain_time));
+        else
+          str = sprintf('%.f%%',iter/n_iterations*100);
+        end
         waitbar(iter/n_iterations,Fwaitbar,str);
           
         % save old values
@@ -65,7 +69,7 @@ switch lower(action)
     % Clear
     %-------------------------------------------------------------------
     case 'clear'
-        delete(Fwaitbar);
+        try, delete(Fwaitbar); end
 
     % Error
     %-------------------------------------------------------------------
