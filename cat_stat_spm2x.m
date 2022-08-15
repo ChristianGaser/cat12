@@ -158,7 +158,7 @@ else
     stat = 'T';
     P = spm_select(Inf,'^(spmT|nullT).*(img|nii|gii)','Select T-images');
     sel = spm_input('Convert t value to?',1,'m',...
-      '1-p|-log(1-p)|correlation coefficient cc|effect size d|apply thresholds without conversion|standard Normal (z-score) distribution',1:6, 2);
+      '1-p|-log(1-p)|correlation coefficient cc|effect size d|apply thresholds without conversion|standard Normal (Z-score) distribution',1:6, 2);
   else
     stat = 'F';
     P = spm_select(Inf,'^spmF.*(img|nii|gii)','Select F-images');
