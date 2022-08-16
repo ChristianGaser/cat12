@@ -178,8 +178,13 @@ if check_zscore
   % use external defined window
   job_check_zscore.new_fig = true;
 
-  % also rescue fecatorial design
+  % also rescue facatorial design
   job_check_zscore.factorial_design = job;
+  
+  % rescue mask information
+  if isfield(SPM,'xM')
+    job_check_zscore.xM = SPM.xM;
+  end
   
   cat_stat_homogeneity(job_check_zscore);
 end
@@ -225,8 +230,7 @@ end
 
 %-Locate DesMtx (X), scaled DesMtx (nX) & get parameter names (Xnames)
 %--------------------------------------------------------------------------
-if isfield(xX,'xKXs') && ...
-    ~isempty(xX.xKXs) && isstruct(xX.xKXs)
+if isfield(xX,'xKXs') && ~isempty(xX.xKXs) && isstruct(xX.xKXs)
   X = xX.xKXs.X;
 elseif isfield(xX,'X') && ~isempty(xX.X)
   X = xX.X;
@@ -235,6 +239,12 @@ else
 end
 
 [nScan,nPar] = size(X);
+
+%-Add a scaled design matrix to the design data structure
+%--------------------------------------------------------------------------
+if ~isfield(xX,'nKX')
+    xX.nKX = spm_DesMtx('Sca',xX.X,xX.name);
+end
 
 if isfield(xX,'nKX') && ~isempty(xX.nKX)
   inX = 1; else inX = 0; end
@@ -286,9 +296,9 @@ line('Parent',hTax,...
 %--------------------------------------------------------------------------
 hDesMtx = axes('Position',[.07 .4 .6 .4]);
 if inX    %-Got a scaled DesMtx
-  hDesMtxIm = image((xX.nKX + 1)*32);
+  hDesMtxIm = imagesc((xX.nKX + 1));
 else
-  hDesMtxIm = image((spm_DesMtx('sca',X,     Xnames) + 1)*32);
+  hDesMtxIm = imagesc((spm_DesMtx('sca',X,     Xnames) + 1));
 end
 
 STick = spm_DesRep('ScanTick',nScan,32);
@@ -317,7 +327,7 @@ set(hDesMtxIm,'ButtonDownFcn','spm_DesRep(''SurfDesMtx_CB'')')
 %----------------------------------------------------------------------
 hDesO = axes('Position',[.07 .18 .6 .2]);
 tmp = 1-abs(O); tmp(logical(tril(ones(nPar),-1))) = 1;
-hDesOIm = image(tmp*64);
+hDesOIm = imagesc(tmp);
 
 % check for longitudinal designs (paired t-test, flexible factorial)
 repeated_anova = ~isempty(xX.iB);

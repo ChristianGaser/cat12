@@ -118,7 +118,7 @@ if n == 2
     fig = figure(11);
     set(fig,'MenuBar', 'none', 'Position',[100,0,500,500]);
 
-    cat_plot_scatter(cdata{1}(:), cdata{2}(:));
+    cat_plot_scatter(cdata{1}(:), cdata{2}(:), 'fig', fig);
 
     ax  = gca;
     set(ax,'PlotBoxAspectRatioMode','auto','XDir','normal','YDir','normal');
