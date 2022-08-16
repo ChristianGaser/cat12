@@ -1,4 +1,30 @@
 ------------------------------------------------------------------------
+r2090 | gaser | 2022-08-16 15:37:42
+
+Changed paths:
+ M CHANGES.txt
+ M cat_io_volctype.m
+ M cat_io_xml.m
+ M cat_plot_histogram.m
+ M cat_stat_check_SPM.m
+ M cat_stat_homogeneity.m
+ M cat_surf_results.m
+ M cat_vol_slice_overlay.m
+R  cg_create_MPM.m -> internal/cg_create_MPM.m
+R  cg_io_send_to_server.m -> internal/cg_io_send_to_server.m
+
+
+Changed: Changed some function back to use of spm_progress_bar where calls are 
+         made during preprocessing.
+Changed: Set cat_plot_scatter to defined figure in cat_plot_histogram to 
+         prevent opening of new windows.
+Changed: Added mask field SPM.xM to cat_stat_check_SPM to allow masking for
+         calls of cat_stat_homogeneity.m and changed scaling of design matrix.
+Changed: Suppressed call to spm_input in cat_vol_slice_overlay.m if not needed.   
+Changed: Moved some older tools to internal.      
+Fixed:   Solved display issues in cat_surf_results if no results survived.
+
+------------------------------------------------------------------------
 r2089 | gaser | 2022-08-15 23:53:25
 
 Changed paths:
