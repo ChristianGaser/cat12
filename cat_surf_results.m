@@ -1356,8 +1356,7 @@ if ~H.disable_cbar
 end
 
 if isfield(H,'Pvol_sel')
-  H = update_slice_overlay(H);
-  if (mn < 0 && mn > -thresh) || (mx >= 0 && mx < thresh)
+  if (mn < 0 && mn > -thresh) && (mx >= 0 && mx < thresh)
     try, close(OV.fig); end
     try, close(OV.fig_mip); end
   else
@@ -2798,6 +2797,12 @@ function save_image(obj, event_obj, filename)
 global H
 %% 
 
+try
+  dcm_obj = datacursormode(H.figure)
+  set(dcm_obj, 'Enable', 'off');
+  delete(findall(gcf,'Type','hggroup'));
+end
+
 %{
 % delete data cursor
 dcm_obj = datacursormode(H.figure);
@@ -2907,6 +2912,9 @@ if isfield(H, 'dataplot') && strcmpi(get(H.dataplot,'Visible'),'on')
   fprintf('Dataplot %s saved.\n',fullfile(newpth,filename));
 end
 
+dcm_obj = datacursormode(H.figure);
+set(dcm_obj, 'Enable', 'on');
+
 %==========================================================================
 function slider_clim_min(hObject, evt)
 global H
@@ -2981,8 +2989,9 @@ for ind = 1:5
   H = updateTexture(H, ind, d, flipud(col), H.show_transp);
 end
 
+H.cmap_col = flipud(col);
+
 if isfield(H,'Pvol_sel')
-  H.cmap_col = flipud(col);
   H = update_slice_overlay(H);
 end
 
@@ -3310,8 +3319,10 @@ switch H.cursor_mode
     end
 
     if SPM_found
-      set(dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', 'Interpreter', 'none', ...
+      set(dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', ...
         'DisplayStyle', 'datatip', 'Updatefcn', {@myDataCursorCluster});
+      % sometimes interpreter cannot be set for some Matlab versions
+      try, set(dcm_obj, 'Interpreter', 'none'); end
       if H.predicted > -2
         fprintf('The values are available at the MATLAB command line as variable ''y''\n');
       else
@@ -3746,13 +3757,20 @@ else
       end
 
       % get column where groups are coded and use last found column
-      if ~isempty(SPM.xX.iH)
+      if repeated_anova
+        n_groups = max(SPM.xX.I(:,3));
+      elseif ~isempty(SPM.xX.iH)
         n_groups = length(SPM.xX.iH);
       elseif ~isempty(SPM.xX.iC)
         n_groups = length(SPM.xX.iC);
       end
       [rw,cl] = find(SPM.xX.I == n_groups); 
-      group_col = max(cl);
+      
+      if repeated_anova
+        group_col = 3;
+      else
+        group_col = max(cl);
+      end
 
       if repeated_anova || ((n_groups > 1) && covariate)
         beta0  = spm_data_read(SPM.Vbeta,'xyz',XYZ);
