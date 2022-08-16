@@ -1,4 +1,13 @@
 ------------------------------------------------------------------------
+r2092 | gaser | 2022-08-16 23:25:04
+
+Changed paths:
+ M CHANGES.txt
+ M cat_surf_results.m
+
+
+Fixed: Corrected some issues with datatip and coorbar in cat_surf_results.m.
+------------------------------------------------------------------------
 r2091 | gaser | 2022-08-16 18:10:01
 
 Changed paths:
