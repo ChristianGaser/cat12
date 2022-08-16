@@ -25,7 +25,7 @@ function hAxes = cat_plot_scatter(X,Y, varargin)
 %
 % cat_plot_scatter(...,'fig',fig) defines figure handle
 %
-% cat_plot_scatter(...,'jitter',true) adds jitter on x-axsis for
+% cat_plot_scatter(...,'jitter',true) adds jitter on x-axis for
 % categorical x-variables
 %
 % cat_plot_scatter(...,'PLOTTYPE',TYPE) allows you to create other ways of

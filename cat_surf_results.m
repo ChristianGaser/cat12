@@ -1358,8 +1358,8 @@ end
 if isfield(H,'Pvol_sel')
   H = update_slice_overlay(H);
   if (mn < 0 && mn > -thresh) || (mx >= 0 && mx < thresh)
-    if ishandle(OV.fig), close(OV.fig); end
-    if ishandle(OV.fig_mip), close(OV.fig_mip); end
+    try, close(OV.fig); end
+    try, close(OV.fig_mip); end
   else
     H = update_slice_overlay(H);
   end
@@ -2872,8 +2872,13 @@ end
 % keep background color
 set(H.figure, 'InvertHardcopy', 'off', 'PaperPositionMode', 'auto');
 
-% RD20201224: posc to correct margin of the figure [r t l b]
-pos = round(getpixelposition(H.panel(1))); posc = [70 70 70 0]; pos = [pos(1) + posc(1), pos(2) + posc(4), pos(3) - posc(1) - posc(3), pos(4) - posc(2) - posc(4)];
+% posc to correct margin of the figure [r t l b] if no dataplot is present
+if isfield(H, 'dataplot') && strcmpi(get(H.dataplot,'Visible'),'on')
+  pos = round(getpixelposition(H.panel(1))); 
+else
+  pos = round(getpixelposition(H.panel(1))); 
+  posc = [70 70 70 0]; pos = [pos(1) + posc(1), pos(2) + posc(4), pos(3) - posc(1) - posc(3), pos(4) - posc(2) - posc(4)];
+end
 hh = getframe(H.figure,pos);
 
 img = frame2im(hh);
@@ -2895,7 +2900,7 @@ if isfield(H, 'dataplot') && strcmpi(get(H.dataplot,'Visible'),'on')
   pos = round(getpixelposition(H.dataplot)); 
   
   % increase position to also include labels
-  pos = round(pos.*[0.925 0.925 1.25 1.25]);
+  pos = round(pos.*[0.925 0.925 1.25 1.35]);
   hh = getframe(H.figure,pos);
   img_plot = frame2im(hh);
   imwrite(img_plot,col,fullfile(newpth,filename));
@@ -3276,14 +3281,6 @@ switch H.cursor_mode
     % SPM.mat exist?
     if exist(SPM_name, 'file')
     
-%{
-      % remove filename info to prevent overlapping
-      if H.show_info
-        set(H.info, 'Value', 0);
-        H.show_info = 0;
-        checkbox_info;
-      end
-%}
       load(SPM_name);
 
       % if analysis was moved we have to correct header structure
@@ -3307,7 +3304,7 @@ switch H.cursor_mode
       spm('alert!', 'No SPM.mat file found. Please check that you have not moved your files or your result file was moved from the folder where the SPM.mat is stored.', 1);
     end
     
-    if SPM_found && ~exist(SPM.xY.VY(1).fname)
+    if SPM_found && ~exist(SPM.xY.VY(1).fname,'file')
       SPM_found = 0;
       spm('alert!', 'No data found. Please check that you have not moved your files.', 1);
     end
@@ -3532,43 +3529,55 @@ else
   c0 = c0(ind_X,:);
 
   % show scatter plot and linear fit
-  if covariate && numel(ind_X)<=2
+  if (covariate && numel(ind_X)<=2) || (exist('x','var') && numel(x)==size(X,1))
     axes(H.dataplot);
     cla
     
     xx = cell(numel(ind_X),1);
+
+    % get column where groups are coded and use last found column
+    if ~isempty(H.SPM{1}.xX.iH)
+      n_groups = length(H.SPM{1}.xX.iH);
+    elseif ~isempty(H.SPM{1}.xX.iC)
+      n_groups = length(H.SPM{1}.xX.iC);
+    end
+    [rw,cl] = find(H.SPM{1}.xX.I == n_groups); 
+    group_col = max(cl);
     
     % use existing x-variable if available
     if exist('x','var') && numel(x)==size(X,1)
       xx_array = [min(x) max(x)]; 
       for i=1:numel(ind_X)
-        xx{i} = X(H.SPM{1}.xX.I(:,3)==i);
+        ind_data{i} = find(any(xX.X(:,xX.iH(i)),2));
+        xx{i} = x(ind_data{i});
       end
-      x0 = x;
     else
       xx_array = [min(X(X~=0)) max(X(X~=0))]; 
       for i=1:numel(ind_X)
-        xx{i} = X(H.SPM{1}.xX.I(:,3)==i,i);
+        xx{i} = X(H.SPM{1}.xX.I(:,group_col)==i,i);
       end
-      x0 = sum(X,2);
     end
 
     col = [1 0 0;0 0 1; 0 1 0];
     yy = cell(numel(iH),1);
     
     for i=1:numel(iH)
-      ind_data = find(any(xX.X(:,xX.iH(i)),2));
-      yy{i} = y(ind_data,:);
+      ind_data{i} = find(any(xX.X(:,xX.iH(i)),2));
+      yy{i} = y(ind_data{i},:);
     end
 
     hold on
     for i=1:numel(ind_X)
       x2 = xx{i};
       y2 = mean(yy{i},2);
-      plot(x2,y2,'.','MarkerSize',10,'Color',col(i,:));
-      P = polyfit(x2,y2,1);       
-      % plot trend line
-      plot(xx_array,polyval(P,xx_array),'Color',col(i,:),'LineWidth',2);
+      ind_finite = isfinite(x2);
+      x2 = x2(ind_finite); y2 = y2(ind_finite);
+      if ~isempty(x2)
+        plot(x2,y2,'.','MarkerSize',10,'Color',col(i,:));
+        P = polyfit(x2,y2,1);     
+        % plot trend line
+        plot(xx_array,polyval(P,xx_array),'Color',col(i,:),'LineWidth',2);
+      end
     end
     hold off
     
@@ -3584,14 +3593,15 @@ else
     yy = cell(numel(iH),1);
     
     for i=1:numel(iH)
-      ind_data = find(any(xX.X(:,xX.iH(i)),2));
-      yy{i} = y(ind_data,:);
+      ind_data{i} = find(any(xX.X(:,xX.iH(i)),2));
+      yy{i} = y(ind_data{i},:);
     end
     
-    vstruct = struct('showdata',0,'box',1,'outliers',1);
+    vstruct = struct('style',4,'darkmode',1,'datasymbol','.');
     axes(H.dataplot);
     cat_plot_boxplot(yy,vstruct);
-    
+    set(H.dataplot, 'XColor', 1 - H.bkg_col, 'YColor', 1 - H.bkg_col,...
+      'Color', H.bkg_col, 'YGrid','on','Visible','on');    
   else
     h = plot(H.dataplot, y);
     set(h, 'Color', H.col(2, :))
@@ -3735,14 +3745,22 @@ else
         y = y - G*(pinv(G)*y);
       end
 
-      n_groups = max(SPM.xX.I(:,3));
+      % get column where groups are coded and use last found column
+      if ~isempty(SPM.xX.iH)
+        n_groups = length(SPM.xX.iH);
+      elseif ~isempty(SPM.xX.iC)
+        n_groups = length(SPM.xX.iC);
+      end
+      [rw,cl] = find(SPM.xX.I == n_groups); 
+      group_col = max(cl);
+
       if repeated_anova || ((n_groups > 1) && covariate)
         beta0  = spm_data_read(SPM.Vbeta,'xyz',XYZ);
         beta   = mean(beta0,2);
         mean_group = zeros(n_groups,1);
         count_times = 1;
         for i=1:n_groups
-          ind_group = find(SPM.xX.I(:,3) == i);
+          ind_group = find(SPM.xX.I(:,group_col) == i);
           if repeated_anova
             % find subjects effects in that group
             ind_subj = unique(SPM.xX.I(ind_group,2));
