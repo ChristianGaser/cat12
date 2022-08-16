@@ -127,7 +127,7 @@ function varargout = cat_io_xml(file,varargin)
     varargout{1} = struct();
     if verbose, fprintf('% 6d/% 6d',0,numel(file)); end
     if iscell(file) && numel(file)>1 
-      cat_progress_bar('Init',numel(file),...
+      spm_progress_bar('Init',numel(file),...
         sprintf('read XML\n%d',numel(file)),'Files Completed'); 
       for fi=1:numel(file)
         try
@@ -139,15 +139,15 @@ function varargout = cat_io_xml(file,varargin)
           clear tmp;
         end
         if verbose, fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b% 6d/% 6d',fi,numel(file)); end
-        cat_progress_bar('Set',fi);
+        spm_progress_bar('Set',fi);
       end
 
-      cat_progress_bar('Clear');
+      spm_progress_bar('Clear');
       if verbose, fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b             \b\b\b\b\b\b\b\b\b\b\b\b\b'); end
       return
    
     elseif ischar(file) && size(file,1)>1
-      cat_progress_bar('Init',size(file,1),...
+      spm_progress_bar('Init',size(file,1),...
         sprintf('read XML\n%s',size(file,1)),'Files Completed'); 
       for fi=1:numel(file)
         try
@@ -159,10 +159,10 @@ function varargout = cat_io_xml(file,varargin)
           clear tmp;
         end
         if verbose, fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b% 6d/% 6d',fi,numel(file)); end
-        cat_progress_bar('Set',fi);
+        spm_progress_bar('Set',fi);
       end
 
-      cat_progress_bar('Clear');
+      spm_progress_bar('Clear');
       if verbose, fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b             \b\b\b\b\b\b\b\b\b\b\b\b\b'); end
       return
     end
