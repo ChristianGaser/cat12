@@ -40,7 +40,7 @@ function [out,s] = cat_plot_boxplot(data,opt)
 %                                      1 - as black points; 
 %                                      2 - as short lines (barcode plot);
 %                                      3 - as colored points
-%  opt.datasymbol  = '.';            symbol for data points (only valid for showdata = 1)
+%  opt.datasymbol  = '.';            symbol for data points (only valid for showdata = 1 or 3)
 %  opt.median      = 2;              show median: 0 - no; 1 - line; 2 - with different fill colors 
 %  opt.edgecolor   = 'none';         edge color of box 
 %  opt.changecolor = 0;              use brighter values for double color entries, e.g. 
@@ -50,6 +50,7 @@ function [out,s] = cat_plot_boxplot(data,opt)
 %  opt.sat         = 0.50;           saturation of the box
 %  opt.subsets     = false(1,numel(data)); 
 %  opt.hflip       = 0;              flip x-axis in case of horizontal bars
+%  opt.darkmode    = 0;              dark color mode with black background
 %
 %  The returned matrix s has one column for each dataset as follows:
 %
@@ -196,6 +197,7 @@ def.sat         = 0.50;       % saturation of boxes
 def.subsets     = false(1,numel(data)); 
 def.hflip       = 0;          % flip x-axis in case of horizontal bars
 def.switch      = 0;          % switch between columns and rows of data
+def.darkmode    = 0;          % switch to dark color mode
 
 % use predefined styles
 if isfield(opt,'style')
@@ -216,6 +218,12 @@ end
 opt             = cat_io_checkinopt(opt,def);
 opt.notched     = max(0,min(1,opt.notched));
 opt.trans       = max(0,min(1,opt.trans * (opt.sat*4) ));
+
+if opt.darkmode
+  bkg = [0 0 0];
+else
+  bkg = [1 1 1];
+end
 
 if max(opt.subsets)>1
   subsets = zeros(1,numel(data)); 
@@ -276,9 +284,6 @@ end
 
 % update colortable
 if size(opt.groupcolor,1)==1
-  %if size(opt.groupcolor,1)<nc 
-  %  warning('WARNING:cat_plot_boxplot:groupcolor','WARNING: To short colortable.'); 
-  %end
   opt.groupcolor = repmat(opt.groupcolor(1,:),numel(data),1);
 end
 
@@ -567,12 +572,12 @@ for i=1:qn
     fdef = struct('FaceAlpha',opt.sat,'EdgeColor',opt.edgecolor);
     fdefm = struct('FaceAlpha',0.25,'EdgeColor','none');
   else
-    tcol = struct('Color',[1 1 1]);
+    tcol = struct('Color',bkg);
     fcol = struct('Color',opt.groupcolor(i,:));
   end
 
   % offset for filling with 0.5 depending on boxwidth
-  if opt.fill == 0.5 & ~opt.vertical
+  if opt.fill == 0.5 && ~opt.vertical
     offset = max(0.25,sqrt(opt.boxwidth)/4);
   else
     offset = 0;
@@ -639,10 +644,14 @@ for i=1:qn
     
   end
 
+  % for dark mode we have to increase visibility
+  if opt.darkmode, scl = 2; else scl = 1; end
+
   if opt.box
     if opt.fill
-      if opt.trans, fill(quartile_x(:,i), quartile_y(:,i),'b-','FaceColor',[1 1 1],tdef); end
-      fill(quartile_x(:,i), quartile_y(:,i),'b-','FaceColor',opt.groupcolor2(i,:),'FaceAlpha',opt.sat,'EdgeColor','none');
+      if opt.trans, fill(quartile_x(:,i), quartile_y(:,i),'b-','FaceColor',bkg,tdef); end
+      
+      fill(quartile_x(:,i), quartile_y(:,i),'b-','FaceColor',opt.groupcolor2(i,:),'FaceAlpha',min([scl*opt.sat,1]),'EdgeColor','none');
       if i==1, hold on; end
       
       if opt.median == 2
@@ -666,13 +675,18 @@ for i=1:qn
   if opt.showdata == 1
     if i==1, hold on; end
     if opt.vertical
-      plot((i-offset)*ones(1,length(data{i})),data{i}(:),opt.datasymbol,'Color',0.25*opt.groupcolor2(i,:));
+      plot((i-offset)*ones(1,length(data{i})),data{i}(:),opt.datasymbol,'Color',scl*0.25*opt.groupcolor2(i,:));
     else
-      plot(data{i}(:),(i-offset)*ones(1,length(data{i})),opt.datasymbol,'Color',0.25*opt.groupcolor2(i,:));
+      plot(data{i}(:),(i-offset)*ones(1,length(data{i})),opt.datasymbol,'Color',scl*0.25*opt.groupcolor2(i,:));
     end
   elseif opt.showdata == 2
     if i==1, hold on; end
-    ii = i + cumsum(i>=chop); % offset for chopped elements
+    ii = i;
+    
+    % offset for chopped elements
+    if ~isempty(chop)
+      ii = ii + cumsum(i>=chop); 
+    end
     
     % estimate kde
     n2 = 0;
@@ -708,16 +722,16 @@ for i=1:qn
     if ~opt.vertical, jitter_kde = 0.9*abs(jitter_kde)'; end
 
     if opt.vertical
-      plot((ii-offset)*ones(1,length(data{ii}))+jitter_kde,data{ii}(:),opt.datasymbol,'Color',0.5*opt.groupcolor(ii,:));
+      plot((ii-offset)*ones(1,length(data{ii}))+jitter_kde,data{ii}(:),opt.datasymbol,'Color',scl*0.3*opt.groupcolor(ii,:));
     else
-      plot(data{ii}(:),(ii-offset)*ones(length(data{ii}),1)+jitter_kde,opt.datasymbol,'Color',0.5*opt.groupcolor(ii,:));
+      plot(data{ii}(:),(ii-offset)*ones(length(data{ii}),1)+jitter_kde,opt.datasymbol,'Color',scl*0.3*opt.groupcolor(ii,:));
     end
   elseif opt.showdata == 3
     if i==1, hold on; end
     if opt.vertical
-      line(([-.025*ones(length(data{i}),1) .025*ones(length(data{i}),1)]+i)',([data{i}(:) data{i}(:)])','Color',0.5*opt.groupcolor(i,:));
+      line(([-.025*ones(length(data{i}),1) .025*ones(length(data{i}),1)]+i)',([data{i}(:) data{i}(:)])','Color',scl*0.4*opt.groupcolor(i,:));
     else
-      line(([data{i}(:) data{i}(:)])',([-.025*ones(length(data{i}),1) .025*ones(length(data{i}),1)]+i-offset)','Color',0.5*opt.groupcolor(i,:));
+      line(([data{i}(:) data{i}(:)])',([-.025*ones(length(data{i}),1) .025*ones(length(data{i}),1)]+i-offset)','Color',scl*0.4*opt.groupcolor(i,:));
     end
   end
 
@@ -832,12 +846,12 @@ for i=1:qn
     if opt.vertical
       %%
       for i=find(opt.subsets)
-        f2=[f2 fill([i-0.5 i+0.5 i+0.5 i-0.5],sort([ylim ylim]),'b-','FaceColor',[0 0 0],'FaceAlpha',0.04,'EdgeColor','none')]; %#ok<AGROW>
+        f2=[f2 fill([i-0.5 i+0.5 i+0.5 i-0.5],sort([ylim ylim]),'b-','FaceColor',1-bkg,'FaceAlpha',0.04,'EdgeColor','none')]; %#ok<AGROW>
       end
     else
       %%
       for i=find(opt.subsets)
-        f2=[f2 fill(sort([xlim xlim]),[i-0.5 i+0.5 i+0.5 i-0.5],'b-','FaceColor',[0 0 0],'FaceAlpha',0.04,'EdgeColor','none')]; %#ok<AGROW>
+        f2=[f2 fill(sort([xlim xlim]),[i-0.5 i+0.5 i+0.5 i-0.5],'b-','FaceColor',1-bkg,'FaceAlpha',0.04,'EdgeColor','none')]; %#ok<AGROW>
       end
     end
     for i=1:numel(f2), uistack(f2(i),'bottom'); end
