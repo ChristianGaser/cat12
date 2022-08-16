@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2091 | gaser | 2022-08-16 18:10:01
+
+Changed paths:
+ M CHANGES.txt
+ M cat_plot_boxplot.m
+ M cat_plot_scatter.m
+ M cat_surf_results.m
+ M cat_vol_slice_overlay.m
+
+
+Changed: Added dark color mode to cat_plot_boxplot.m.
+Changed: Updated handling of different designs in cat_surf_results.m.
+------------------------------------------------------------------------
 r2090 | gaser | 2022-08-16 15:37:42
 
 Changed paths:

@@ -196,7 +196,7 @@ end
 
 str_select = deblank(sl_name(1, :));
 for i = 2:n_slice, str_select = [str_select '|' deblank(sl_name(i, :))]; end
-if n_slices
+if n_slice
   ind = spm_input('Select slices', '+1', 'm', str_select);
 else
   ind = 1;
