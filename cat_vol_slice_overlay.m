@@ -196,7 +196,11 @@ end
 
 str_select = deblank(sl_name(1, :));
 for i = 2:n_slice, str_select = [str_select '|' deblank(sl_name(i, :))]; end
-ind = spm_input('Select slices', '+1', 'm', str_select);
+if n_slices
+  ind = spm_input('Select slices', '+1', 'm', str_select);
+else
+  ind = 1;
+end
 OV.transform = deblank(OV.transform(ind, :));
 slices = slices{ind};
 
@@ -250,7 +254,7 @@ if isempty(SO.slices)
   XYZ_unique = get_xyz_unique(XYZ, XYZmm, vol);
   SO.slices = XYZ_unique{orientn};
   
-  % update OV.slices_str to for cat_surf_results to estimate available
+  % update OV.slices_str for cat_surf_results to estimate available
   % rows/columns
   OV.slices_str = num2str(SO.slices);
 end
@@ -640,7 +644,7 @@ if ~strcmp(image_ext, 'none')
   end
   
   if ~isfield(OV, 'save')
-      imaname = spm_input('Filename', '+1', 's', [pt1 nm '_' lower(OV.transform) '.' image_ext]);
+    imaname = spm_input('Filename', '+1', 's', [pt1 nm '_' lower(OV.transform) '.' image_ext]);
   else
     if auto_savename
     
@@ -715,6 +719,10 @@ end
 BB = spm_get_bbox(SO.img(2).vol);
 if sum(sum(BB-[-90 -126 -72;90 90 108])) == 0
   fprintf('WARNING: Check that %s is really compatible to new template in MNI152NLin2009cAsym template space. If not, you should use the old T1-template from CAT12.7 or older for overlay.\n',SO.img(2).vol.fname);
+end
+
+if ~nargin
+  clear OV
 end
 
 % --------------------------------------------------------------------------

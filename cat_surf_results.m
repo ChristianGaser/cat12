@@ -13,7 +13,7 @@ function varargout = cat_surf_results(action, varargin)
 %  Init display for selected file(s)
 %
 %  * cat_surf_results('batch',job) 
-%  See cat_conf_stools. 
+%  See cat_conf_stools.
 %
 %  * cat_surf_results('surface',1..4) 
 %  Select surface type.
@@ -1329,6 +1329,7 @@ if mn > -thresh
   set(H.str_min, 'String', sprintf('%g',thresh));
 else
   H.clim = [true -clim(3) clim(3)];
+  set(H.slider_min, 'Min', -clim(3));
   set(H.slider_min, 'Value', -clim(3));
   set(H.str_min, 'String', sprintf('%g',-clim(3)));
 end
@@ -1359,6 +1360,8 @@ if isfield(H,'Pvol_sel')
   if (mn < 0 && mn > -thresh) || (mx >= 0 && mx < thresh)
     if ishandle(OV.fig), close(OV.fig); end
     if ishandle(OV.fig_mip), close(OV.fig_mip); end
+  else
+    H = update_slice_overlay(H);
   end
 end
 

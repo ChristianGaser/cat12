@@ -16,6 +16,7 @@ function varargout = cat_stat_homogeneity(job)
 %  .data_xml         .. optional xml QC data
 %  .verb             .. print figures
 %  .new_fig          .. use new window instead of SPM Fgraph
+%  .xM               .. optional mask information from SPM.xM
 %
 % varargout          .. output structure 
 %  .zscore           .. absolute mean Z-score
@@ -257,7 +258,7 @@ if ~xml_defined
 end
 
 n_xml_files = 0;
-cat_progress_bar('Init',n_subjects,'Load xml-files')
+if job.verb, cat_progress_bar('Init',n_subjects,'Load xml-files'); end
 
 for i=1:n_subjects
   % get basename for data files
@@ -369,9 +370,9 @@ for i=1:n_subjects
       H.xml.QM(i,:) = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
     end
   end
-  cat_progress_bar('Set',i);  
+  if job.verb, cat_progress_bar('Set',i); end
 end
-cat_progress_bar('Clear');
+if job.verb, cat_progress_bar('Clear'); end
 
 if H.isxml
   if n_xml_files ~= n_subjects
@@ -425,7 +426,7 @@ if H.mesh_detected
   H.texture = single(spm_data_read(H.files.V));
 end
 
-cat_progress_bar('Init',n_subjects,'Load data')
+if job.verb, cat_progress_bar('Init',n_subjects,'Load data'); end
 
 % prepare Beta
 if ~isempty(G) 
@@ -437,12 +438,54 @@ if ~isempty(G)
   Beta = zeros(prod(dim),size(G,2),'single');
 end
 
+% make initial mask
+if H.mesh_detected
+  dim = (H.files.V(1).dim);
+else
+  dim = H.files.V(1).dat.dim;
+end
+mask = true(dim);
+
+%-Get explicit mask(s)
+%==========================================================================
+if isfield(job,'xM')
+  for i = 1:numel(job.xM.VM)
+    if ~H.mesh_detected
+      C = spm_bsplinc(job.xM.VM(i), [0 0 0 0 0 0]');
+      v = true(dim);
+      [x1,x2] = ndgrid(1:dim(1),1:dim(2));
+      for x3 = 1:dim(3)
+        M2  = inv(M\job.xM.VM(i).mat);
+        y1 = M2(1,1)*x1+M2(1,2)*x2+(M2(1,3)*x3+M2(1,4));
+        y2 = M2(2,1)*x1+M2(2,2)*x2+(M2(2,3)*x3+M2(2,4));
+        y3 = M2(3,1)*x1+M2(3,2)*x2+(M2(3,3)*x3+M2(3,4));
+        v(:,:,x3) = spm_bsplins(C, y1,y2,y3, [0 0 0 0 0 0]') > 0;
+      end
+      mask = mask & v;
+      clear C v x1 x2 x3 M2 y1 y2 y3
+    else
+      v = full(job.xM.VM(i).private.cdata) > 0;
+      mask = mask & v(:);
+      clear v
+    end
+  end
+end
+
 for i = 1:n_subjects
   if H.mesh_detected
     Ytmp = spm_data_read(H.files.V(i));
   else
     Ytmp(:,:,:) = H.files.V(i).dat(:,:,:);
   end
+  
+  % get mask
+  if isfield(job,'xM')
+    mask(mask) = Ytmp(mask) > job.xM.TH(i);      %-Threshold (& NaN) mask
+    if job.xM.I && job.xM.TH(i) < 0        %-Use implicit mask
+      mask(mask) = abs(Ytmp(mask)) > eps;
+    end
+  end
+  
   Ytmp(isnan(Ytmp)) = 0;
   
   % either global scaling was externally defined using job or values were
@@ -465,9 +508,9 @@ for i = 1:n_subjects
   
   H.data.Ymean = H.data.Ymean + Ytmp(:);
   Yss   = Yss + Ytmp(:).^2;
-  cat_progress_bar('Set',i);  
+  if job.verb, cat_progress_bar('Set',i); end
 end
-cat_progress_bar('Clear');
+if job.verb, cat_progress_bar('Clear'); end
 
 % get mean and SD
 H.data.Ymean = H.data.Ymean/n_subjects;
@@ -484,9 +527,9 @@ Yvar(Yvar<0) = 0;
 H.data.Ystd   = sqrt(Yvar);
 
 % only consider non-zero areas for Ystd and threshold Ymean
-ind = H.data.Ystd ~= 0 & H.data.Ymean > H.data.global;
+ind = H.data.Ystd ~= 0 & H.data.Ymean > H.data.global & mask(:);
 
-cat_progress_bar('Init',n_subjects,'Calculate Z-score')
+if job.verb, cat_progress_bar('Init',n_subjects,'Calculate Z-score'); end
 
 H.data.avg_abs_zscore = zeros(n_subjects,1);
 for i = 1:n_subjects
@@ -514,9 +557,9 @@ for i = 1:n_subjects
   
   % and use mean of Z-score as overall measure
   H.data.avg_abs_zscore(i) = mean(abs(zscore));
-  cat_progress_bar('Set',i);  
+  if job.verb, cat_progress_bar('Set',i); end
 end
-cat_progress_bar('Clear');
+if job.verb, cat_progress_bar('Clear'); end
 
 % get data for each subject in longitudinal designs
 if H.repeated_anova
