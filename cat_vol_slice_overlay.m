@@ -529,7 +529,7 @@ if ~isempty(xA)
   
   % apply func that is defined for "i1"
   i1 = vol;
-    eval(SO.img(2).func)
+  eval(SO.img(2).func)
   
   % remove NaN values
   Q = find(isfinite(i1));
