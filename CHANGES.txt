@@ -1,4 +1,16 @@
 ------------------------------------------------------------------------
+r2094 | gaser | 2022-08-18 15:05:37
+
+Changed paths:
+ M CHANGES.txt
+ M cat_stat_homogeneity.m
+
+
+Fixed:   Removed implicite mask from cat_stat_homogeneity, because it wasn't 
+         correctly working.
+Changed: Use new figure by default in cat_stat_homogeneity.m, but allow to
+         disable this.
+------------------------------------------------------------------------
 r2093 | gaser | 2022-08-18 11:53:37
 
 Changed paths:
