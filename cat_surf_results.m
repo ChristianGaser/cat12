@@ -3762,7 +3762,14 @@ else
 
       % get column where groups are coded and use last found column
       if repeated_anova
-        n_groups = max(SPM.xX.I(:,3));
+        [rw,cl] = find(SPM.xX.I == length(SPM.xX.iB)); % find column which codes subject factor (length(xX.iB) -> n_subj)
+        subj_col = cl(1);
+        if subj_col == 3
+          group_col = 2;
+        else
+          group_col = 3;
+        end           
+        n_groups = max(SPM.xX.I(:,group_col));
       elseif ~isempty(SPM.xX.iH)
         n_groups = length(SPM.xX.iH);
       elseif ~isempty(SPM.xX.iC)
@@ -3770,9 +3777,7 @@ else
       end
       [rw,cl] = find(SPM.xX.I == n_groups); 
       
-      if repeated_anova
-        group_col = 3;
-      else
+      if ~repeated_anova
         group_col = max(cl);
       end
 
@@ -3785,7 +3790,7 @@ else
           ind_group = find(SPM.xX.I(:,group_col) == i);
           if repeated_anova
             % find subjects effects in that group
-            ind_subj = unique(SPM.xX.I(ind_group,2));
+            ind_subj = unique(SPM.xX.I(ind_group,subj_col));
             n_subj_group = numel(ind_subj);
             n_times = max(SPM.xX.I(ind_group,4));
             mean_group(i) = sum(beta(SPM.xX.iH(count_times:(count_times+n_times-1))))/n_times + ...

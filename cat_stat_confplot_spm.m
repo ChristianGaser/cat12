@@ -260,8 +260,13 @@ if ~exist('repeated_anova','var')
   
   if repeated_anova
     [rw,cl] = find(SPM.xX.I == length(SPM.xX.iB)); % find column which codes subject factor (length(xX.iB) -> n_subj)
-    
-    n_groups = max(SPM.xX.I(:,3));
+    subj_col = cl(1);
+    if subj_col == 3
+      group_col = 2;
+    else
+      group_col = 3;
+    end           
+    n_groups = max(SPM.xX.I(:,group_col));
     
     % expect that subject factors are 2nd colum, group 3rd column, time 4th column
     if cl(1) == 2
