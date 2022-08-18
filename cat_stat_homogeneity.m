@@ -53,8 +53,10 @@ H.cmap          = [jet(64); gray(64)]; % create two colormaps
 G               = [];
 n_subjects      = 0;
 
-% always use new figure
-job.new_fig = true;
+% use new figure by default
+if ~isfield(job,'new_fig')
+  job.new_fig = true;
+end
 
 if ~isfield(job,'verb')
   job.verb = true;
@@ -445,6 +447,7 @@ else
   dim = H.files.V(1).dat.dim;
 end
 mask = true(dim);
+M = H.files.V(1).mat;
 
 %-Get explicit mask(s)
 %==========================================================================
@@ -481,9 +484,6 @@ for i = 1:n_subjects
   % get mask
   if isfield(job,'xM')
     mask(mask) = Ytmp(mask) > job.xM.TH(i);      %-Threshold (& NaN) mask
-    if job.xM.I && job.xM.TH(i) < 0        %-Use implicit mask
-      mask(mask) = abs(Ytmp(mask)) > eps;
-    end
   end
   
   Ytmp(isnan(Ytmp)) = 0;
