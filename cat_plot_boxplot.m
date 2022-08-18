@@ -37,10 +37,10 @@ function [out,s] = cat_plot_boxplot(data,opt)
 %  opt.fontsize    = [];             axis fontsize (important for ygrid size!)
 %  opt.showdata    = 0;              show data points:
 %                                      0 - no;
-%                                      1 - as black points; 
-%                                      2 - as short lines (barcode plot);
-%                                      3 - as colored points
-%  opt.datasymbol  = '.';            symbol for data points (only valid for showdata = 1 or 3)
+%                                      1 - as colored points; 
+%                                      2 - as jittered points according to density;
+%                                      3 - as short lines (barcode plot);
+%  opt.datasymbol  = '.';            symbol for data points (only valid for showdata = 1 or 2)
 %  opt.median      = 2;              show median: 0 - no; 1 - line; 2 - with different fill colors 
 %  opt.edgecolor   = 'none';         edge color of box 
 %  opt.changecolor = 0;              use brighter values for double color entries, e.g. 
@@ -51,6 +51,9 @@ function [out,s] = cat_plot_boxplot(data,opt)
 %  opt.subsets     = false(1,numel(data)); 
 %  opt.hflip       = 0;              flip x-axis in case of horizontal bars
 %  opt.darkmode    = 0;              dark color mode with black background
+%  opt.I          = [];              optional definition of repetitions, subjects, groups and time points to
+%                                    support plot of connected data 
+%                                    This matrix can be used from SPM.xX.I
 %
 %  The returned matrix s has one column for each dataset as follows:
 %
@@ -164,6 +167,61 @@ if isnumeric(data)
   end
 end
 
+% disable connected time points if you have defined more than one sample
+if isfield(opt,'I') && ~isempty(opt.I)
+  
+  % transpose if necessary
+  sz = size(opt.I);
+  if sz(2) > sz(1), I = I'; sz = size(I); end
+
+  % add repitition and group if not defined
+  if sz(2) == 3
+    opt.I = [ones(sz(1),1) opt.I];
+    sz = size(opt.I);
+  elseif sz(2) == 2
+    opt.I = [ones(sz(1),1) opt.I(:,1) ones(sz(1),1) opt.I(:,2)];
+  end
+  
+  if numel(data) > 1
+    fprintf('Disable flag for defining time points, because it can only be used for one sample.\n');
+    opt.I = [];
+  else
+    if numel(data{1}) ~= sz(1)
+      error('Size mismatch between data (n=%d) and time points (n=%d)',numel(data{1}),sz(1));
+    else
+      % otherwise rebuild data cells according to time points and groups
+      data0 = data{1};
+      I1 = opt.I;
+      offset = 0;
+      names = [];
+      
+      for i = 1:max(opt.I(:,3))
+        ind3 = opt.I(:,3) == i;
+        for j = 1:max(opt.I(ind3,4))
+          
+          % prepare names
+          names = char(names,sprintf('%d-%d',i,j));
+        
+          ind4 = opt.I(:,4) == j;
+          data1{j+offset} = data{1}(ind3 & ind4);
+          
+          % create new opt.I with new TP number
+          I1(ind3 & ind4,4) = j + offset;
+          I1(ind3 & ind4,3) = 1;
+        end
+        offset = offset + max(opt.I(ind3,4));
+      end
+      data = data1; clear data1
+      opt.I = I1; clear I1
+      
+      if ~isfield(opt,'names')
+        names(1,:) = [];
+        opt.names = names;
+      end
+    end
+  end
+end
+
 hold off
 
 def.notched     = 0;
@@ -198,6 +256,7 @@ def.subsets     = false(1,numel(data));
 def.hflip       = 0;          % flip x-axis in case of horizontal bars
 def.switch      = 0;          % switch between columns and rows of data
 def.darkmode    = 0;          % switch to dark color mode
+def.I           = [];
 
 % use predefined styles
 if isfield(opt,'style')
@@ -218,6 +277,12 @@ end
 opt             = cat_io_checkinopt(opt,def);
 opt.notched     = max(0,min(1,opt.notched));
 opt.trans       = max(0,min(1,opt.trans * (opt.sat*4) ));
+
+% always use connected time points together with plot of raw data as points
+if ~isempty(opt.I) && opt.showdata ~= 1
+  fprintf('Use connected time points together with plot of raw data as points\n');
+  opt.showdata = 1;
+end
 
 if opt.darkmode
   bkg = [0 0 0];
@@ -558,8 +623,6 @@ if ~opt.vertical
   tmp = quartile_xthin;  quartile_xthin = quartile_ythin;   quartile_ythin = tmp;
 end
 
-offset = 0;
-
 % optional add jitter in the range of 0.025..1
 add_jitter = max(0.025,min([1,log10(qn)/10]));
 
@@ -622,7 +685,7 @@ for i=1:qn
     
     if opt.fill
       if opt.trans, fill(x,y,tcol,tdef); end % just a white box as background
-      fill(x,y,fcol,fdef);
+      fill(x,y,fcol,tdef);
       if i==1, hold on; end
       
       if opt.median == 2
@@ -679,10 +742,15 @@ for i=1:qn
   if opt.showdata == 1
     if i==1, hold on; end
     if opt.vertical
-      plot((i-offset)*ones(1,length(data{i})),data{i}(:),opt.datasymbol,'Color',scl*0.25*opt.groupcolor2(i,:));
+      x = (i-offset)*ones(1,length(data{i})); y = data{i}(:);
     else
-      plot(data{i}(:),(i-offset)*ones(1,length(data{i})),opt.datasymbol,'Color',scl*0.25*opt.groupcolor2(i,:));
+      y = (i-offset)*ones(1,length(data{i})); x = data{i}(:);
     end
+    h = plot(x,y,opt.datasymbol,'Color',scl*0.25*opt.groupcolor2(i,:));
+    if opt.fill == 0.5
+      set(h, 'MarkerSize',12);
+    end
+      
   elseif opt.showdata == 2
     if i==1, hold on; end
     ii = i;
@@ -726,17 +794,19 @@ for i=1:qn
     if ~opt.vertical, jitter_kde = 0.9*abs(jitter_kde)'; end
 
     if opt.vertical
-      plot((ii-offset)*ones(1,length(data{ii}))+jitter_kde,data{ii}(:),opt.datasymbol,'Color',scl*0.3*opt.groupcolor(ii,:));
+      x = (ii-offset)*ones(1,length(data{ii}))+jitter_kde; y = data{ii}(:);
     else
-      plot(data{ii}(:),(ii-offset)*ones(length(data{ii}),1)+jitter_kde,opt.datasymbol,'Color',scl*0.3*opt.groupcolor(ii,:));
+      y = (ii-offset)*ones(length(data{ii}),1)+jitter_kde; x = data{ii}(:);
     end
+     plot(x,y,opt.datasymbol,'Color',scl*0.3*opt.groupcolor(ii,:));
   elseif opt.showdata == 3
     if i==1, hold on; end
     if opt.vertical
-      line(([-.025*ones(length(data{i}),1) .025*ones(length(data{i}),1)]+i)',([data{i}(:) data{i}(:)])','Color',scl*0.4*opt.groupcolor(i,:));
+      x = ([-.025*ones(length(data{i}),1) .025*ones(length(data{i}),1)]+i)'; y = ([data{i}(:) data{i}(:)])';
     else
-      line(([data{i}(:) data{i}(:)])',([-.025*ones(length(data{i}),1) .025*ones(length(data{i}),1)]+i-offset)','Color',scl*0.4*opt.groupcolor(i,:));
+      y = ([-.025*ones(length(data{i}),1) .025*ones(length(data{i}),1)]+i)'; x = ([data{i}(:) data{i}(:)])';
     end
+     line(x,y,'Color',scl*0.4*opt.groupcolor(i,:));
   end
 
   if opt.median == 1
@@ -822,10 +892,11 @@ for i=1:qn
     if ytick(1)<=opt.ylim(1)+eps,   ytick(1)=[];   end
     if ytick(end)>=opt.ylim(2)-eps, ytick(end)=[]; end
     if opt.vertical
-      h1=plot(repmat(xlim',1,numel(ytick)),[ytick;ytick],'Color',linecolor,'Linestyle',opt.gridline);
+      x = repmat(xlim',1,numel(ytick)); y = [ytick;ytick];
     else
-      h1=plot([ytick;ytick],repmat(ylim',1,numel(ytick)),'Color',linecolor,'Linestyle',opt.gridline);
+      y = repmat(ylim',1,numel(ytick)); x = [ytick;ytick];
     end
+    h1 = plot(x,y,'Color',linecolor,'Linestyle',opt.gridline);
     uistack(h1,'bottom')
 
     % subgrid (just a brighter line without value)
@@ -836,10 +907,11 @@ for i=1:qn
       ytick2 = setdiff(ytick2,ytick1);
 
       if opt.vertical
-        h2=plot(repmat([0;numel(opt.names)+1],1,numel(ytick2)),[ytick2;ytick2],'Color',linecolor*0.25+0.75*ones(1,3),'Linestyle',opt.gridline);
+        x = repmat([0;numel(opt.names)+1],1,numel(ytick2)); y = [ytick2;ytick2];
       else
-        h2=plot([ytick2;ytick2],repmat([0;numel(opt.names)+1],1,numel(ytick2)),'Color',linecolor*0.25+0.75*ones(1,3),'Linestyle',opt.gridline);
+        y = repmat([0;numel(opt.names)+1],1,numel(ytick2)); x = [ytick2;ytick2];
       end
+      h2 = plot(x,y,'Color',linecolor*0.25+0.75*ones(1,3),'Linestyle',opt.gridline);
       uistack(h2,'bottom')
     end
   end
@@ -849,13 +921,13 @@ for i=1:qn
     f2 = [];
     if opt.vertical
       %%
-      for i=find(opt.subsets)
-        f2=[f2 fill([i-0.5 i+0.5 i+0.5 i-0.5],sort([ylim ylim]),'b-','FaceColor',1-bkg,'FaceAlpha',0.04,'EdgeColor','none')]; %#ok<AGROW>
+      for i = find(opt.subsets)
+        f2 = [f2 fill([i-0.5 i+0.5 i+0.5 i-0.5],sort([ylim ylim]),'b-','FaceColor',1-bkg,'FaceAlpha',0.04,'EdgeColor','none')]; %#ok<AGROW>
       end
     else
       %%
-      for i=find(opt.subsets)
-        f2=[f2 fill(sort([xlim xlim]),[i-0.5 i+0.5 i+0.5 i-0.5],'b-','FaceColor',1-bkg,'FaceAlpha',0.04,'EdgeColor','none')]; %#ok<AGROW>
+      for i = find(opt.subsets)
+        f2 = [f2 fill(sort([xlim xlim]),[i-0.5 i+0.5 i+0.5 i-0.5],'b-','FaceColor',1-bkg,'FaceAlpha',0.04,'EdgeColor','none')]; %#ok<AGROW>
       end
     end
     for i=1:numel(f2), uistack(f2(i),'bottom'); end
@@ -864,6 +936,23 @@ for i=1:qn
   end
   
 %%
+
+if ~isempty(opt.I)
+  for j = 1:max(opt.I(:,2))
+    ind = find(opt.I(:,2) == j);
+    if opt.vertical
+      line(opt.I(ind,4) + offset, data0(ind), 'Color',[0 0 1])
+    else
+      if opt.fill == 0.5
+        line(data0(ind), 1 + max(opt.I(:,4)) - opt.I(ind,4) - offset, data0(ind), 'Color',[0 0 1])
+      else
+        line(data0(ind), opt.I(ind,4) + offset, data0(ind), 'Color',[0 0 1])
+      end
+    end
+  end
+  
+end
+
 hold off
 
 if ~nargout

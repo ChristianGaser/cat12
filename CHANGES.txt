@@ -1,4 +1,20 @@
 ------------------------------------------------------------------------
+r2096 | gaser | 2022-08-19 01:09:58
+
+Changed paths:
+ M CHANGES.txt
+ M cat_plot_boxplot.m
+ M cat_stat_check_SPM.m
+ M cat_stat_confplot_spm.m
+ M cat_stat_homogeneity.m
+ M cat_surf_results.m
+
+
+Changed: Extended cat_plot_boxplot to use a matrix xX.I from SPM.mat to draw 
+         connected lines between time points of each subject and group.
+Cahmged: Updated check for subject and group effects in matrix xX.I in
+         cat_stat_check_SPM.m, cat_stat_confplot_spm.m and cat_surf_results.m.
+------------------------------------------------------------------------
 r2095 | gaser | 2022-08-18 16:28:35
 
 Changed paths:
