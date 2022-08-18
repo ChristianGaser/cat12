@@ -1248,7 +1248,7 @@ if H.repeated_anova
     hp = plot(xx(ind{i}),yy(ind{i}));
     set(hp, 'Color',cm(diff_measure(i),:),'LineWidth',diff_measure(i)/20);
   end
-  title('Connecting lines indicate timepoints of subjects with color and thickness w.r.t. to strength of differences.');
+  title('The lines show the time points of each subject with color and thickness in relation to the magnitude of the differences');
 end
 hold off
 

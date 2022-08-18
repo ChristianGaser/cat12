@@ -116,9 +116,14 @@ if check_zscore
   repeated_anova = ~isempty(xX.iB);
   
   if repeated_anova
-    % coding of subject factor should be hopefully always 2nd column of xX.I
-    cl = 2;
-    n_samples = max(xX.I(:,cl));
+    [rw,cl] = find(xX.I == length(xX.iB)); % find column which codes subject factor (length(xX.iB) -> n_subj)
+    subj_col = cl(1);
+    if subj_col == 3
+      group_col = 2;
+    else
+      group_col = 3;
+    end           
+    n_samples = max(xX.I(:,subj_col));
     
   else
     if ~isempty(xX.iH)
