@@ -1,4 +1,21 @@
 ------------------------------------------------------------------------
+r2093 | gaser | 2022-08-18 11:53:37
+
+Changed paths:
+ M CHANGES.txt
+ M cat_plot_boxplot.m
+ M cat_plot_scatter.m
+
+
+Chamged: Many changed to cat_plot_scatter.m:
+           - added new options to set color and fontsize and to save plot as image
+           - changed default setting for 'filled' and also changed syntax to be 
+             more compatible to scatter function
+           - confodence interval is not plotted with transparency and some more 
+             space to corners
+Changed: Corrected order of colors for horizontal violin plot and corrected slight 
+         skew of density plot.
+------------------------------------------------------------------------
 r2092 | gaser | 2022-08-16 23:25:04
 
 Changed paths:

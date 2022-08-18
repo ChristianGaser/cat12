@@ -245,7 +245,7 @@ if ~opt.vertical
     end
     data = data2;
     opt.names      = flipud(opt.names);
-    opt.groupcolor = flipud(opt.groupcolor); 
+    opt.groupcolor(1:numel(data),:) = flipud(opt.groupcolor(1:numel(data),:)); 
     opt.subsets    = flipud(opt.subsets); 
   end
 end
@@ -259,7 +259,7 @@ if opt.median == 2
 end
 
 % always use filling for this median plot option
-if opt.fill == 0.5 & opt.vertical
+if opt.fill == 0.5 && opt.vertical
     fprintf('Filling with 0.5 will only works in horizontal view. Set filling to 1.\n');
     opt.fill = 1;
 end
@@ -269,7 +269,7 @@ if opt.violin, opt.box = 0; end
 if opt.box, opt.violin = 0; end
 
 % figure out how many data sets we have
-if iscell(data), 
+if iscell(data)
   nc = length(data);
   for nci=1:nc, data{nci}=data{nci}(:); end
 else
@@ -584,10 +584,10 @@ for i=1:qn
   end
 
   % violin plot
-  if opt.violin    
+  if opt.violin
     indn = max(find(U(:,i)<median_y(1,i)));
     
-    % correct thickness of median line
+    % correct length/thickness of median line
     median_x(:,i) = [F(indn,i)+i-offset;flipud(i-offset-F(indn,i))];
     
     if opt.vertical
@@ -597,8 +597,8 @@ for i=1:qn
       ym = [U(1:indn,i);flipud(U(1:indn,i))];
       % correct thickness of median line
       median_x(:,i) = [F(indn,i)+i;flipud(i-F(indn,i))];
-    else
-      % correct thickness of median line
+    else      
+      % correct length/thickness of median line
       if opt.fill == 0.5
         median_x(:,i) = [F(indn,i)+i-offset;i-offset];
       else
@@ -613,6 +613,10 @@ for i=1:qn
         y = [y;flipud(i-offset-F(:,i))];
         xm = [xm;flipud(U(1:indn,i))];
         ym = [ym;flipud(i-F(1:indn,i))];
+      elseif opt.fill == 0.5
+        mny = min(y); mxy = max(y);
+        median_x(:,i) = [mny mxy];
+        y(1) = mny; y(end) = mny;
       end
     end
     

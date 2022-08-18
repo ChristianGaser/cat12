@@ -11,8 +11,11 @@ function hAxes = cat_plot_scatter(X,Y, varargin)
 % cat_plot_scatter(...,'MSIZE',MS) allows you to set the marker size for the
 % scatter plot. Default is 10.
 %
-% cat_plot_scatter(...,'FILLED',false) sets the markers in the scatter plot to be
-% outline. The default is to use filled markers.
+% cat_plot_scatter(...,'FILLED') sets the markers in the scatter plot to be
+% outline. 
+%
+% cat_plot_scatter(...,'COLOR',COLOR) specifies the marker colors
+% Only works for plottype 'scatter'
 %
 % cat_plot_scatter(...,'FIT_POLY',N) fit polynomial with degree N
 % The default is 0.
@@ -23,9 +26,9 @@ function hAxes = cat_plot_scatter(X,Y, varargin)
 % cat_plot_scatter(...,'CMAP',cmap) defines colormap
 % The default is parula (if available) or jet.
 %
-% cat_plot_scatter(...,'fig',fig) defines figure handle
+% cat_plot_scatter(...,'FIG',FIG) defines figure handle
 %
-% cat_plot_scatter(...,'jitter',true) adds jitter on x-axis for
+% cat_plot_scatter(...,'JITTER',TRUE) adds jitter on x-axis for
 % categorical x-variables
 %
 % cat_plot_scatter(...,'PLOTTYPE',TYPE) allows you to create other ways of
@@ -42,6 +45,10 @@ function hAxes = cat_plot_scatter(X,Y, varargin)
 % means that the smoothing is over 20 bins around a given point.
 %
 % cat_plot_scatter(...,'LOGY',true) uses a log scale for the yaxis.
+%
+% cat_plot_scatter(...,'IMG',FILENAME) saves plot in desired graphic output format.
+%
+% cat_plot_scatter(...,'FONTSIZE',FONTSIZE) change font size.
 %
 % Examples:
 %
@@ -79,22 +86,30 @@ contourFlag = false;
 msize       = 10;
 marker      = 's';
 logy        = false;
-filled      = true;
+filled      = false;
 fit_poly    = 0;
 ci          = true;
 jitter      = false;
+img         = '';
+fontsize    = 20;
+color       = [];
 if exist('parula')
   cmap        = 'parula';
 else
   cmap        = 'jet';
 end
 
+% define plot of confidence band
+plot_variance = @(x,lower,upper,color) set(fill([x,x(end:-1:1)],[upper,lower(end:-1:1)],color),...
+   'EdgeColor',color,'FaceAlpha',0.25);
+
 if nargin > 2
   if rem(nargin,2) == 1
     error('IncorrectNumberOfArguments',...
       'Incorrect number of arguments to %s.',mfilename);
   end
-  okargs = {'smoothing','bins','plottype','logy','contourFlag','marker','msize','filled','fit_poly','ci','cmap','fig','jitter'};
+  okargs = {'smoothing','bins','plottype','logy','contourFlag','marker','msize',...
+     'filled','fit_poly','ci','cmap','fig','jitter','img','fontsize','color'};
   for j=1:2:nargin-2
     pname = varargin{j};
     pval = varargin{j+1};
@@ -131,7 +146,7 @@ if nargin > 2
         case 7
           msize = pval;
         case 8
-          filled = pval;
+          filled = true;
         case 9
           fit_poly = pval;
         case 10
@@ -142,6 +157,12 @@ if nargin > 2
           fig = pval;
         case 13
           jitter = pval;
+        case 14
+          img = pval;
+        case 15
+          fontsize = pval;
+        case 16
+          color = pval;
       end
     end
   end
@@ -150,6 +171,9 @@ end
 X0 = X; Y0 = Y;
 ind = ~isnan(X) & ~isnan(Y);
 X = X(ind); Y = Y(ind); 
+if ~isempty(color)
+  color = color(ind,:);
+end
 
 minx = min(X(:));
 maxx = max(X(:));
@@ -157,7 +181,7 @@ miny = min(Y(:));
 maxy = max(Y(:));
 
 if isempty(nbins)
-  nbins = [min(numel(unique(X)),200) ,min(numel(unique(Y)),200) ];
+  nbins = [min(numel(unique(X)),200), min(numel(unique(Y)),200) ];
 end
 
 if isempty(lambda)
@@ -212,13 +236,14 @@ if fit_poly
   if n_categories_X < 30 && jitter
     xfit = linspace(minx-2*add_range,maxx+2*add_range,100);
   else
+    if minx < 0, minx = 1.01*minx; else minx = 0.99*minx; end
+    if maxx > 0, maxx = 1.01*maxx; else maxx = 0.99*maxx; end
     xfit = linspace(minx,maxx,100);
   end
   yfit = polyval(p,xfit);
 
   if ci
     [Y2,DELTA] = cg_polyconf(p,xfit,S);
-    plot_variance = @(x,lower,upper,color) set(fill([x,x(end:-1:1)],[upper,lower(end:-1:1)],color),'EdgeColor',color);
     plot_variance(xfit,Y2+DELTA,Y2-DELTA,[0.75 0.75 0.75])
   end
 
@@ -249,13 +274,16 @@ elseif length(k)>1
 else
   switch(k)
     case 1 %'contour'
+      if ~isempty(color), fprintf('Color flag does not work with contour plottype.\n'); end
       [dummy, h] = contour(ctrs1,ctrs2,F);
     case 2 %'image'
+      if ~isempty(color), fprintf('Color flag does not work with image plottype.\n'); end
       nc = 256;
       F = F./max(F(:));
       colormap(repmat(linspace(1,0,nc)',1,3));
       h = image(ctrs1,ctrs2,floor(nc.*F) + 1);
     case 3 %'dscatter'
+      if ~isempty(color), fprintf('Color flag does not work with dscatter plottype.\n'); end
       F = F./max(F(:));
       ind = sub2ind(size(F),bin(:,1),bin(:,2));
       col = F(ind);
@@ -265,19 +293,28 @@ else
         h = scatter(X,Y,msize,col,marker);
       end
     case 4 %'scatter'
-      if filled
-        h = scatter(X,Y,msize,marker,'filled');
+      if ~isempty(color)
+        if filled
+          h = scatter(X,Y,msize,color,marker,'filled');
+        else
+          h = scatter(X,Y,msize,color,marker);
+        end
       else
-        h = scatter(X,Y,msize,marker);
+        if filled
+          h = scatter(X,Y,msize,marker,'filled');
+        else
+          h = scatter(X,Y,msize,marker);
+        end
       end
   end
 end
 
 colormap(cmap)
+set(gca,'FontSize',fontsize);
 
 if fit_poly
   pl = plot(xfit,yfit,'k');
-  set(pl,'LineWidth',2)
+  set(pl,'LineWidth',1)
   if minx > 0 && minx < 1e-4
     xl = xlim;
     xlim([0 xl(2)])
@@ -295,6 +332,10 @@ end
 
 if nargout > 0
   hAxes = get(h,'parent');
+end
+
+if ~isempty(img)
+  saveas(h,img);
 end
 
 %%%% This method is quicker for symmetric data.
