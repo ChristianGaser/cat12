@@ -713,8 +713,10 @@ switch lower(action)
       H.rcsv{3} = rcsv3;
       
       H.dcm_obj = datacursormode(H.figure);
-      set(H.dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', ...
+      set(H.dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', 'Interpreter','none',...
         'DisplayStyle', 'datatip', 'Updatefcn', {@myDataCursorAtlas, H});
+      % sometimes interpreter cannot be set for some Matlab versions
+      try, set(dcm_obj, 'Interpreter', 'none'); end
       
     end
     
@@ -3276,8 +3278,10 @@ switch H.cursor_mode
     clearDataCursorPlot(H);
   case {1, 2, 3, 4}
     clearDataCursorPlot(H);
-    set(dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', 'Interpreter', 'none', ...
+    set(dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', ...
       'DisplayStyle', 'datatip', 'Updatefcn', {@myDataCursorAtlas, H});
+    % sometimes interpreter cannot be set for some Matlab versions
+    try, set(dcm_obj, 'Interpreter', 'none'); end
   case {5, 6}
     
     try
