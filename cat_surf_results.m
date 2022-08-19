@@ -2800,20 +2800,10 @@ global H
 %% 
 
 try
-  dcm_obj = datacursormode(H.figure)
+  dcm_obj = datacursormode(H.figure);
   set(dcm_obj, 'Enable', 'off');
   delete(findall(gcf,'Type','hggroup'));
 end
-
-%{
-% delete data cursor
-dcm_obj = datacursormode(H.figure);
-set(dcm_obj, 'Enable', 'off');
-
-try
-  delete(findall(gcf,'Type','hggroup'));
-end
-%}
 
 if ~exist('filename', 'var')
   
@@ -2907,7 +2897,7 @@ if isfield(H, 'dataplot') && strcmpi(get(H.dataplot,'Visible'),'on')
   pos = round(getpixelposition(H.dataplot)); 
   
   % increase position to also include labels
-  pos = round(pos.*[0.925 0.925 1.25 1.35]);
+  pos = round(pos.*[0.9 0.925 1.25 1.3]);
   hh = getframe(H.figure,pos);
   img_plot = frame2im(hh);
   imwrite(img_plot,col,fullfile(newpth,filename));
@@ -3605,14 +3595,19 @@ else
     set(H.dataplot,'XTickMode','auto');
     
   elseif ~isempty(iH) && numel(iH)>1 && (H.predicted < 0)
-    yy = cell(numel(iH),1);
-    
-    for i=1:numel(iH)
-      ind_data{i} = find(any(xX.X(:,xX.iH(i)),2));
-      yy{i} = y(ind_data{i},:);
+    if ~isempty(xX.iB)
+      yy = y;
+      vstruct = struct('style',4,'darkmode',all(1 - H.bkg_col),'datasymbol','.','I',xX.I);
+    else
+      yy = cell(numel(iH),1);
+
+      for i=1:numel(iH)
+        ind_data{i} = find(any(xX.X(:,xX.iH(i)),2));
+        yy{i} = y(ind_data{i},:);
+      end
+      vstruct = struct('style',4,'darkmode',all(1 - H.bkg_col),'datasymbol','.');
     end
     
-    vstruct = struct('style',4,'darkmode',1,'datasymbol','.');
     axes(H.dataplot);
     cat_plot_boxplot(yy,vstruct);
     set(H.dataplot, 'XColor', 1 - H.bkg_col, 'YColor', 1 - H.bkg_col,...

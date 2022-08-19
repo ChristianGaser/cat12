@@ -1,4 +1,16 @@
 ------------------------------------------------------------------------
+r2097 | gaser | 2022-08-19 10:54:44
+
+Changed paths:
+ M CHANGES.txt
+ M cat_plot_boxplot.m
+ M cat_surf_results.m
+
+
+Changed: Updated line colors for connected time points in cat_plot_boxplot.m
+         and added transparency if available.
+Changed: Added connecting time points for long. designs in cat_surf_results.m.
+------------------------------------------------------------------------
 r2096 | gaser | 2022-08-19 01:09:58
 
 Changed paths:
@@ -12,7 +24,7 @@ Changed paths:
 
 Changed: Extended cat_plot_boxplot to use a matrix xX.I from SPM.mat to draw 
          connected lines between time points of each subject and group.
-Cahmged: Updated check for subject and group effects in matrix xX.I in
+Changed: Updated check for subject and group effects in matrix xX.I in
          cat_stat_check_SPM.m, cat_stat_confplot_spm.m and cat_surf_results.m.
 ------------------------------------------------------------------------
 r2095 | gaser | 2022-08-18 16:28:35
