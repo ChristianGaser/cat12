@@ -280,7 +280,6 @@ opt.trans       = max(0,min(1,opt.trans * (opt.sat*4) ));
 
 % always use connected time points together with plot of raw data as points
 if ~isempty(opt.I) && opt.showdata ~= 1
-  fprintf('Use connected time points together with plot of raw data as points\n');
   opt.showdata = 1;
 end
 
@@ -938,16 +937,31 @@ for i=1:qn
 %%
 
 if ~isempty(opt.I)
+  
+  % use different colors for dark mode and later try whether we can use
+  % transparency or not
+  if opt.darkmode
+    col  = [0.8 0.8 0.8 0.25];
+    col2 = [0.4 0.4 0.4];
+  else
+    col  = [0 0 0.5 0.25];
+    col2 = [0.8 0.8 0.8];
+  end
   for j = 1:max(opt.I(:,2))
     ind = find(opt.I(:,2) == j);
     if opt.vertical
-      line(opt.I(ind,4) + offset, data0(ind), 'Color',[0 0 1])
+      x = opt.I(ind,4) + offset; y = data0(ind);
     else
       if opt.fill == 0.5
-        line(data0(ind), 1 + max(opt.I(:,4)) - opt.I(ind,4) - offset, data0(ind), 'Color',[0 0 1])
+        x = data0(ind); y = 1 + max(opt.I(:,4)) - opt.I(ind,4) - offset;
       else
-        line(data0(ind), opt.I(ind,4) + offset, data0(ind), 'Color',[0 0 1])
+        x = data0(ind); y = opt.I(ind,4) + offset;
       end
+    end
+    try
+      line(x,y,'Color',col);
+    catch
+      line(x,y,'Color',col2);
     end
   end
   
