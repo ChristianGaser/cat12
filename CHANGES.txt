@@ -1,4 +1,12 @@
 ------------------------------------------------------------------------
+r2098 | rdahnke | 2022-08-19 11:43:55
+
+Changed paths:
+ M CHANGES.txt
+A  cat_vol_mimcalc.m
+
+
+New:    Added cat_vol_mimcalc to use the SPM imcalc batch for multiple subjects.------------------------------------------------------------------------
 r2097 | gaser | 2022-08-19 10:54:44
 
 Changed paths:
