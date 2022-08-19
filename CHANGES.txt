@@ -1,4 +1,12 @@
 ------------------------------------------------------------------------
+r2099 | gaser | 2022-08-19 16:32:54
+
+Changed paths:
+ M CHANGES.txt
+ M cat_surf_render.m
+
+
+Fixed: Corrected use of template if no vertices are found in cat_surf_render.m.------------------------------------------------------------------------
 r2098 | rdahnke | 2022-08-19 11:43:55
 
 Changed paths:

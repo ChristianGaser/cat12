@@ -135,24 +135,34 @@ switch lower(action)
         
         
         if ~isfield(M,'vertices')
-            try
-                MM = M;
-                try
-                  name = MM.private.metadata(1).value;
-                  
-                  % try to replace path to cat12 and correct template name to new template
-                  if ~exist(name,'File')
-                    [pt,nm,xt] = fileparts(name);
-                     nm = strrep(nm,'Template_T1_IXI555_MNI152_GS','Template_T1');                     
-                     [pt2,nm2,xt2] = fileparts(pt);
-                     MM.private.metadata(1).value = fullfile(spm('dir'),'toolbox','cat12',nm2,[nm xt]);
-                  end
+          try
+            MM = M;
+
+
+            if isempty(MM.private.metadata)
+              Tname = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','mesh.central.freesurfer.gii');
+              MM.private.metadata(1).value = Tname;
+              MM.private.metadata(1).name = 'SurfaceID';
+              M  = gifti(MM.private.metadata(1).value);
+              try, M.cdata = MM.cdata(); end
+            else
+              try
+                name = MM.private.metadata(1).value;
+
+                % try to replace path to cat12 and correct template name to new template
+                if ~exist(name,'File')
+                  [pt,nm,xt] = fileparts(name);
+                   nm = strrep(nm,'Template_T1_IXI555_MNI152_GS','Template_T1');                     
+                   [pt2,nm2,xt2] = fileparts(pt);
+                   MM.private.metadata(1).value = fullfile(spm('dir'),'toolbox','cat12',nm2,[nm xt]);
                 end
-                M  = gifti(MM.private.metadata(1).value);
-                try, M.cdata = MM.cdata(); end
-            catch
-                error('Cannot find a surface mesh to be displayed.');
+              end
+              M  = gifti(MM.private.metadata(1).value);
+              try, M.cdata = MM.cdata(); end
             end
+          catch
+            error('Cannot find a surface mesh to be displayed.');
+          end
         end
         O = getOptions(varargin{2:end});
         if isfield(O,'results')
