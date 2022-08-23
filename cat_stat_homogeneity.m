@@ -213,22 +213,36 @@ if H.mesh_detected
   H.xml.QM_order = -ones(1,5);
 end
 
-pth = spm_fileparts(H.files.fname{1});
+
+% To find other related files of each subject, we first have to figure out
+% what the general prefix of the data itself is (asuming that it is only
+% useful to anlyse on data class (defined by the prefix) at once. 
+% To find the prefix, we will try to find the XML file of the first subject
+% that thould be in the report directory (if exist) or otherwise in the
+% same directory in case of BIDS.
+% The test for BIDS has to be done later as far BIDS and non BIDS can be
+% mixed.
+
+% try to detect report folder and check if this fits for all
+pth = spm_fileparts( H.files.fname{1} );
 if isfield(job,'sel_xml') && isfield(job.sel_xml,'select_dir')
   report_folder = char(job.sel_xml.select_dir);
 else
-  report_folder = fullfile(spm_fileparts(pth),'report');
-end
-
-% check whether report subfolder exists
-if ~exist(report_folder,'dir')
-  report_folder = pth;
+  % if there is a report directory than use it
+  ppth = spm_fileparts(pth); 
+  if exist( fullfile( ppth, 'report' ), 'dir' )
+    report_folder = fullfile( ppth, 'report' );
+  else
+    report_folder = pth; 
+  end
 end
 
 % search xml report files if not defined
 prep_str = '';
 if ~xml_defined
   fprintf('Search xml-files ');
+
+  % we now try to find all XML files in the report folder 
   xml_files = spm_select('List',report_folder,'^cat_.*\.xml$');
   if ~isempty(xml_files)
 
@@ -252,10 +266,10 @@ if ~xml_defined
         else
           j = j + 1;
         end
+        i = i + 1;
       end
-      i = i + 1;
     end
-  end  
+  end 
   fprintf('\n');
 end
 
@@ -264,16 +278,24 @@ if job.verb, cat_progress_bar('Init',n_subjects,'Load xml-files'); end
 
 for i=1:n_subjects
   % get basename for data files
-  [pth, data_name ee] = fileparts(H.files.fname{i});
+  [pth, data_name, ee] = fileparts(H.files.fname{i});
   if ~strcmp(ee,'.nii') && ~strcmp(ee,'.gii'), data_name = [data_name ee]; end
   
   % remove ending for rigid or affine transformed files
   data_name = strrep(data_name,'_affine','');
   data_name = strrep(data_name,'_rigid','');
   
-  if isfield(job,'sel_xml') && isfield(job.sel_xml,'select_dir')
+  % detect if BIDS file structure is used
+  % (hope this is unique enought - would be possible to add CAT12. as subdirectory) 
+  BIDSdir   = [filesep 'derivatives' filesep]; 
+  isBIDS    = contains( pth , BIDSdir );
+
+  if ( isfield(job,'sel_xml') && isfield(job.sel_xml,'select_dir') ) 
+    % in case of BIDS CAT wrote all files into this directory 
+    report_folder = pth; 
   else % use relative folder for autom. search
     report_folder = fullfile(pth,'..','report');
+    if ~exist(report_folder,'dir'), report_folder = pth; end
   end
   
   % use xml-file if found by name
@@ -294,22 +316,43 @@ for i=1:n_subjects
 
     % check for filenames
     if isempty(strfind(data_name,subjname))
-      fprintf('\nSkip use of xml-files for quality measures because of deviating subject names:\n%s vs. %s\n',H.files.fname{i},xml_files(i,:));
+      cat_io_cprintf('warn','\nSkip use of xml-files for quality measures because of deviating subject names:\n%s vs. %s\n',H.files.fname{i},xml_files(i,:));
       H.isxml = false;
       break
     end
     xml_file = deblank(xml_files(i,:));
   end
   
-  % get mri folder
-  if strcmp(ee,'.gii'), mri_folder = fullfile(fileparts(pth),'mri');
-  else mri_folder = pth; end
+  %% get mri folder
+  [pth, data_name, ee] = fileparts(H.files.fname{i});
+  if strcmp(ee,'.gii') && ~isBIDSc, mri_folder = fullfile(fileparts(pth),'mri');
+  else, mri_folder = pth; end
   
   % find raw/p0 files
   H.files.raw{i} = fullfile(fileparts(pth),[subjname ee]);
   H.files.p0{i}  = fullfile(mri_folder,['p0' subjname '.nii']);
+  if isBIDS
+  % get BIDS raw diretory of this subject by looking for the derivatives
+  % directory. The parent path give us the BIDS main directory where the 
+  % original files should be located in sub path given behind the derivative 
+  % directory 
+    BIDSfst         = strfind( pth , BIDSdir ) - 1;
+    BIDSlst         = strfind( pth , BIDSdir ) + numel(BIDSdir); 
+    BIDSlst         = BIDSlst + find(pth(BIDSlst:end)==filesep,1,'first');
+    BIDSrawdir      = pth(1:BIDSfst);
+    BIDSsubdirs     = pth(BIDSlst:end); 
+
+    H.files.raw{i}  = fullfile(BIDSrawdir,BIDSsubdirs,[subjname ee]);
+  end
+  H.files.rawgz{i} = [H.files.raw{i} '.gz']; 
   if ~exist(H.files.raw{i},'file'), H.files.raw{i} = ''; end
+  if isempty(H.files.raw{i}) && exist(H.files.rawgz{i},'file') && ~exist('foundrawgz','var')
+    cat_io_cprintf('warn','Gzipped (original) files are not supported in SPM display yet.\n');
+    foundrawgz = true; %#ok<NASGU> 
+  end
   if ~exist(H.files.p0{i}, 'file'), H.files.p0{i}  = ''; end
+  
+  
 
   if exist(xml_file,'file')
     H.job.data_xml{i} = xml_file;
@@ -338,18 +381,19 @@ for i=1:n_subjects
     
   else
     if is_gSF
-      fprintf('\nFile %s not found. Skip use of xml-files for quality measures and TIV.\n',xml_file);
+      cat_io_cprintf('warn','\nFile "%s" not found. \nSkip use of xml-files for quality measures and TIV. ',xml_file);
     else
-      fprintf('\nFile %s not found. Skip use of xml-files for quality measures.\n',xml_file);
+      cat_io_cprintf('warn','\nFile "%s" not found. \nSkip use of xml-files for quality measures. ',xml_file);
     end
-    fprintf('Please select xml-files manually.\n\n');
+    cat_io_cprintf('warn','Please check if only one data type (e.g., mwp1) is used or select xml-files manually.\n\n');
     H.isxml = false;
     is_gSF  = false;
     break
   end
 
   if ~isfield(xml,'qualityratings') && ~isfield(xml,'QAM')
-    fprintf('\nQuality rating is not saved for %s. Report file %s is incomplete.\nPlease repeat preprocessing amd check for potential errors in the ''err'' folder.\n',H.files.fname{i},xml_files(i,:));  
+    cat_io_cprintf('warn',['\nQuality rating is not saved for %s. Report file %s is incomplete. ' ...
+      '\nPlease repeat preprocessing and check for potential errors in the "err" folder.\n'],H.files.fname{i},xml_files(i,:));  
     H.isxml = false;
     break
   end
@@ -378,7 +422,7 @@ if job.verb, cat_progress_bar('Clear'); end
 
 if H.isxml
   if n_xml_files ~= n_subjects
-    fprintf('Only %d of %d report files found. Skip use of xml-files for quality measures.\n',n_xml_files,n_subjects);
+    cat_io_cprintf('warn','Only %d of %d report files found. Skip use of xml-files for quality measures.\n',n_xml_files,n_subjects);
     H.isxml = false;
   else
     fprintf('%d report files with quality measures were found.\n',n_xml_files);
@@ -495,7 +539,7 @@ for i = 1:n_subjects
   end
   
   if i>1 && numel(H.data.Ymean) ~= numel(Ytmp)
-    fprintf('\n\nERROR: File %s has different data size: %d vs. %d\n\n',job.data{i},numel(H.data.Ymean),numel(Ytmp));
+    cat_io_cprintf('err','\n\nERROR: File %s has different data size: %d vs. %d\n\n',job.data{i},numel(H.data.Ymean),numel(Ytmp));
     return
   end
 
@@ -675,7 +719,32 @@ for i=1:n_samples
     fname_e{i} = '';
   end
   if job.verb
-    fprintf('Compressed filenames sample %d: %s  \n',i,tmp);
+    try
+      %% try some colorful output to make it easier to read
+      % suppress too long outputs
+      breaks(1) = find(tmp=='{',1,'first');
+      breaks(2) = find(tmp=='}',1,'last');
+
+      fprintf('Compressed filenames sample %d: ',i); 
+
+      cat_io_cprintf([0.0 0.2 .8], '%s', tmp(1:breaks(1)-1));
+      % to long cmd line output can cause java errors 
+      if numel(tmp(breaks(1):breaks(2))) < 1000 
+        cmdlinelim = 120; % 1.5 times as usual ?
+        tmptmp = [' ...\n  ' tmp(breaks(1):breaks(2))];
+        for tmpi = flip(cmdlinelim+8:cmdlinelim:numel(tmptmp))
+          closekomma = find(tmptmp(1:tmpi)==',',1,'last');
+          tmptmp = [tmptmp(1:closekomma) ' ...\n  ' tmptmp(closekomma+1:end)]; 
+        end
+        cat_io_cprintf([0.5 0.0 .5], sprintf('%s', tmptmp));
+      else
+        cat_io_cprintf([0.5 0.0 0], '%s', '{...TOO_LONG_SUPPRESSED...}');
+      end
+      cat_io_cprintf([0.0 0.2 .8], '%s', tmp(breaks(2)+1:end));
+      fprintf('\n');
+    catch
+      fprintf('Compressed filenames sample %d: %s  \n',i,tmp);
+    end
   end
 end
 
@@ -690,8 +759,11 @@ n_thresholded = min(find(H.data.avg_abs_zscore_sorted > threshold_zsc));
 if ~isempty(n_thresholded) && job.verb
   fprintf('\nThese data have a mean absolute Z-score above 2 standard deviations.\n');
   fprintf('This does not necessarily mean that you have to exclude these data. However, these data have to be carefully checked:\n');
-  for i=n_thresholded:n_subjects
-    fprintf('%s: %3.3f\n',H.files.fname{H.ind_sorted(i)},H.data.avg_abs_zscore_sorted(i));
+  for i=n_thresholded:n_subjects % just switch this improve readability in case of different fname length
+    if isfield(H.xml,'QM') && ~isempty(H.xml.QM)
+      cat_io_cprintf([0.5 0 0.5],'  %3.3f:', H.xml.QM(i,end) );
+    end
+    cat_io_cprintf([0.5 0 0.5],'  %3.3f: %s \n', H.data.avg_abs_zscore_sorted(i) ,H.files.fname{H.ind_sorted(i)});
   end
   fprintf('\n');
 end
@@ -784,7 +856,7 @@ H.ui.close = uicontrol(H.mainfig,...
         'Position',H.pos.close,...
         'Style','Pushbutton','HorizontalAlignment','center',...
         'Callback','for i=2:26, try close(i); end; end;',...
-        'ToolTipString','Close windows',...
+        'ToolTipString','Close windows',...d 
         'Interruptible','on','Enable','on');
 
 % check button
@@ -957,12 +1029,11 @@ H.dpui.text = uicontrol(H.mainfig,...
 % enable some buttons only if respective files are available
 if H.isxml, H.status.xml = true;
 else H.status.xml = false; end
-if ~isempty(H.files.raw{1}), H.status.raw = true;
+if isfield(H.status,'raw') && ~isempty(H.files.raw{1}), H.status.raw = true;
 else H.status.raw = false; end
-if ~isempty(H.files.p0{1}) && ~isempty(H.files.raw{numel(H.sample)}), H.status.rawp0 = true;
-else H.status.raw = false; end
-if ~isempty(H.files.p0{1}) && ~isempty(H.files.raw{1}) && ~isempty(H.files.raw{numel(H.sample)}), H.status.rawp0 = true; 
-else H.status.rawp0 = false; end
+if isfield(H.files,'p0') && ~isempty(H.files.p0{1}), H.status.p0 = true;
+else H.status.p0 = false; end %  && ~isempty(H.files.raw{numel(H.sample)})
+H.status.rawp0 = H.status.raw || H.status.p0;
 if isfield(H.files,'log') && ~isempty(H.files.log{1}), H.status.log = true;
 else H.status.log = false; end
 if H.repeated_anova && isfield(H.files,'jpg_long') && ~isempty(H.files.jpg_long{1}), H.status.reportlong = true;
@@ -1670,15 +1741,20 @@ end
 x_sort = sort(H.mouse.x);
 raw_file = H.files.raw(x_sort);
 p0_file  = H.files.p0(sort(H.mouse.x));
-if ~isempty(raw_file)
+if (~isempty(raw_file) && ~isempty(raw_file{1})) ||  ...
+   (~isempty(p0_file)  && ~isempty(p0_file{1}))
 
   job.colormapc = flipud(cat_io_colormaps('BCGWHcheckcov'));
   job.prop  = 0.2; 
  
-  spm_check_registration(char(raw_file));
-    
+  if isempty(char(raw_file)) && ~isempty(char(p0_file))
+    spm_check_registration(char(p0_file));
+  else
+    spm_check_registration(char(raw_file));
+  end
+
   % overlay p0image if available
-  if overlay
+  if ~isempty(char(raw_file)) && overlay
     for i = 1:numel(p0_file)
       if exist(p0_file{i},'file')
         spm_orthviews('addtruecolourimage',i,p0_file{i},...
@@ -1697,10 +1773,13 @@ if ~isempty(raw_file)
   end
   
   spm_orthviews('Reposition',[0 0 0]);
+  if isempty(char(raw_file)) && ~isempty(char(p0_file))
+    spm_orthviews('Zoom',0);
+  end
   spm_orthviews('redraw');  
-
+  
   % make annoying colorbars smaller
-  if overlay
+  if ~isempty(char(raw_file)) && overlay
     % find last axes that are the colorbars
     ax = findall(gcf,'type','Axes');
     for i = 1:numel(p0_file)
@@ -2360,6 +2439,7 @@ if strcmp(get(H.delui.remove,'enable'),'off')
   if H.status.report,     set(H.dpui.report,    'enable','on'); end
   if H.status.raw,        set(H.dpui.raw,       'enable','on'); end
   if H.status.rawp0,      set(H.dpui.rawp0,     'enable','on'); end
+  if H.status.p0,         set(H.dpui.p0,        'enable','on'); end
   if H.status.log,        set(H.dpui.log,       'enable','on'); end
   if H.status.reportlong, set(H.dpui.reportlong,'enable','on'); end
   
