@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2100 | rdahnke | 2022-08-23 13:59:53
+
+Changed paths:
+ M CHANGES.txt
+ M cat_stat_homogeneity.m
+
+
+Fixed:   Extended file search to suport BIDS in cat_stat_homogeneity.
+         Display segmentation also if no raw images were available.  
+         Added colorful output, warnings and errors to improve readability. 
+         ------------------------------------------------------------------------
 r2099 | gaser | 2022-08-19 16:32:54
 
 Changed paths:
