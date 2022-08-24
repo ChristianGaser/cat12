@@ -1,4 +1,4 @@
-function cat_vol_img2mip(OV,new_style)
+function cat_vol_img2mip(OV,style)
 % Visualise up to 3 images as RGB colored MIP (glass brain)
 % ______________________________________________________________________
 %
@@ -23,8 +23,10 @@ function cat_vol_img2mip(OV,new_style)
 %  cbar       - if empty skip showing colorbar
 %  fig_mip    - figure number (default 12)
 %
-% new_style - use new style from spm_glass (only available for a single
-%             filename)
+%  style      - MIP style:
+%               0 - use old glassbrain
+%               1 - use cat_vol_glassbrain
+%               options 1 is only available for a single filename
 %
 % If < 3 arguments are given, you can save the png-file by using the
 % context menu (right mouse click in the image)
@@ -38,20 +40,17 @@ function cat_vol_img2mip(OV,new_style)
 
 if nargin < 1
   OV = spm_select([1 3],'image','Select images');
-  new_style = true;
+  style = 1;
 end
 
 def = struct('name',OV,'func','i1(i1==0)=NaN;','cmap',jet(64),'range',...
   [-Inf Inf],'gamma_scl',0.7,'save_image','','RGB_order',1:3,'Pos',...
-  [10 10], 'bkg_col',[0 0 0], 'fig_mip', 12);
+  [10 10], 'bkg_col',[0 0 0], 'fig_mip', 12, 'cbar', 1);
     
 if ischar(OV)
   OV = def;
 else
   OV = cat_io_checkinopt(OV,def); 
-  if ~isfield(OV,'cbar')
-    OV.cbar = 1;
-  end
 end
 P = OV.name;
 
@@ -59,7 +58,7 @@ n = size(P,1);
 
 % new glassbrain does not yet support RGB MIP
 if n > 1
-  new_style = false;
+  style = 0;
 end
 
 if n > 3
@@ -83,38 +82,38 @@ vox    = sqrt(sum(V(1).mat(1:3,1:3).^2));
 mnI = 1e15; mxI = -1e15;
 cat_progress_bar('Init',V(1).dim(3),'Mip',' ');
 for j = 1:V(1).dim(3)
-	B  = spm_matrix([0 0 -j 0 0 0 1 1 1]);
-	M1 = inv(B);
-	
+  B  = spm_matrix([0 0 -j 0 0 0 1 1 1]);
+  M1 = inv(B);
+  
   for i=1:n
     % read slice and flip for MIP
-	  i1  = spm_slice_vol(V(i),M1,V(i).dim(1:2),1);
+    i1  = spm_slice_vol(V(i),M1,V(i).dim(1:2),1);
     i1 = flipud(i1);
 
     % apply defined function
     eval(OV.func)
         
     % find indices
-  	[Qc Qr] = find(isfinite(i1) & i1 ~=0 );
+    [Qc Qr] = find(isfinite(i1) & i1 ~=0 );
     Q = sub2ind(size(i1),Qc,Qr);
         
-	  if ~isempty(Q)
-		  Qc = (Qc - Origin(1))*vox(1);
-		  Qr = (Qr - Origin(2))*vox(2);
-		  XYZ{i} = [XYZ{i}; [Qc Qr ones(size(Qc,1),1)*(j - Origin(3))*vox(3)]];
+    if ~isempty(Q)
+      Qc = (Qc - Origin(1))*vox(1);
+      Qr = (Qr - Origin(2))*vox(2);
+      XYZ{i} = [XYZ{i}; [Qc Qr ones(size(Qc,1),1)*(j - Origin(3))*vox(3)]];
       
       mnI = min(mnI, min(i1(Q)));
       mxI = max(mxI, max(i1(Q)));
       
-		  Y{i} = [Y{i}; i1(Q)];
-	  end
+      Y{i} = [Y{i}; i1(Q)];
+    end
   end
   
-	cat_progress_bar('Set',j);
+  cat_progress_bar('Set',j);
 end
 cat_progress_bar('Clear');
 
-if new_style
+if style
 
   % show new glassbrain
   if ishandle(OV.fig_mip)
@@ -126,7 +125,8 @@ if new_style
     set(fig, 'MenuBar', 'none','Position',[10 10 2*182 2*200],'Name',nm,'NumberTitle','off');
   end
   
-  cat_vol_glassbrain(Y{1},XYZ{1},struct('dark',all(OV.bkg_col==0),'cmap',OV.cmap,'grid',false,'colourbar',~isempty(OV.cbar)));
+  S = struct('dark',all(OV.bkg_col==0),'cmap',OV.cmap,'grid',false,'colourbar',~isempty(OV.cbar),'order',style);
+  cat_vol_glassbrain(Y{1},XYZ{1},S);
 
   set(gca,'units','pixels'); x = get(gca,'position');
   set(gcf,'units','pixels'); y = get(gcf,'position');
@@ -198,7 +198,7 @@ for i=1:n
     rgb{i}   = rot90(spm_project(Y{i},round(XYZ{i}),dim));
   end
   if OV.gamma_scl ~= 1
-	rgb{i} = rgb{i}.^(1/OV.gamma_scl);
+  rgb{i} = rgb{i}.^(1/OV.gamma_scl);
   end
   mx = max([mx; rgb{i}(:)]);
 end

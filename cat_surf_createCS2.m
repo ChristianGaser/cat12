@@ -292,6 +292,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
     % surface filenames
     Pm         = fullfile(pp0,mrifolder, sprintf('m%s',ff));    % raw
     Praw       = fullfile(pp0_surffolder,sprintf('%s.central.nofix.%s.gii',opt.surf{si},ff));    % raw
+    Praw2      = fullfile(pp0_surffolder,sprintf('%s.central.nofix_sep.%s.gii',opt.surf{si},ff));    % raw
     Psphere0   = fullfile(pp0_surffolder,sprintf('%s.sphere.nofix.%s.gii',opt.surf{si},ff));     % sphere.nofix
     Pcentral   = fullfile(pp0_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff));          % central
     Pcentralr  = fullfile(pp0_surffolder,sprintf('%s.central.resampled.%s.gii',opt.surf{si},ff));%#ok<NASGU> % central .. used in inactive path
@@ -1022,10 +1023,18 @@ fullfile(pp1_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff1))
       
       % remove unconnected meshes
       saveSurf(CS,Praw);
-      cmd = sprintf('CAT_SeparatePolygon "%s" "%s" -1',Praw,Praw); 
+      cmd = sprintf('CAT_SeparatePolygon "%s" "%s" -1',Praw,Praw2); 
       cat_system(cmd,opt.verb-3);
 
-      CS = loadSurf(Praw);
+      % sometimes CAT_SeparatePolygon fails and we have to use the raw file
+      try
+        CS = loadSurf(Praw2);
+        movefile(Praw2,Praw);
+      catch
+        CS = loadSurf(Praw);
+        spm_unlink(Praw2);
+      end
+      
       facevertexcdata = cat_surf_fun('isocolors',Yth1i,CS,Smat.matlabIBB_mm); 
       cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
 
@@ -1243,7 +1252,7 @@ fullfile(pp1_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff1))
       cat_system(cmd,opt.verb-3);
     end
 
-    % surface defomation for relaxation after reduction and refinement
+    % surface deformation for relaxation after reduction and refinement
     cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none  0  1  -1  .1 ' ...           
                     'avg  -0.1  0.1 .2  .1  5  0 "0.5"  "0.5"  n 0  0  0 %d  %g  0.0 0'], ...    
                      Vpp1.fname,Pcentral,Pcentral,100,0.01);
