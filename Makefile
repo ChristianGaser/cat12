@@ -70,12 +70,12 @@ help:
 #make html documentation
 doc:
 	-@cat html/cat.txt | sed -e 's/VERSION/'${NEWVERSION}'/g' -e 's/RELNUMBER/r'${REVISION}'/g' -e 's/DATE/'${DATE}'/g' > html/cat.html
-	-@cp -R html/* ../cat12-html/
-	-@perl -p -i -e "s/\','-browser'\);//g" ../cat12-html/*.html
-	-@perl -p -i -e "s/\','-browser'\)//g" ../cat12-html/*.html
-	-@perl -p -i -e "s/matlab:web\(\'//g" ../cat12-html/*.html
-	-@perl -p -i -e "s/matlab:try,open\(fullfile\(spm\(\'dir\'\)\,\'toolbox\'\,\'cat12\'\,\'CAT12-Manual.pdf\'\)\)\;end/http\:\/\/www\.neuro\.uni-jena\.de\/cat12\/CAT12-Manual\.pdf/g" ../cat12-html/*.html
-	-@cp ../cat12-html/cat.html ../cat12-html/index.html
+	-@cp -R html/* ../cat12-help/
+	-@perl -p -i -e "s/\','-browser'\);//g" ../cat12-help/*.html
+	-@perl -p -i -e "s/\','-browser'\)//g" ../cat12-help/*.html
+	-@perl -p -i -e "s/matlab:web\(\'//g" ../cat12-help/*.html
+	-@perl -p -i -e "s/matlab:try,open\(fullfile\(spm\(\'dir\'\)\,\'toolbox\'\,\'cat12\'\,\'CAT12-Manual.pdf\'\)\)\;end/http\:\/\/www\.neuro\.uni-jena\.de\/cat12\/CAT12-Manual\.pdf/g" ../cat12-help/*.html
+	-@cp ../cat12-help/cat.html ../cat12-help/index.html
 
 # update version numbers
 update: doc copy_longmode
