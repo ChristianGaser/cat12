@@ -291,3 +291,5 @@ cat_io_cprintf([0.0 0.0 0.5],' CAT default file:\n\t%s\n\n',deffile);
 % call GUI
 cat12('fig'); 
 
+% force use of PET modality in SPM12 to avoid problems of very low variance in spm_spm.m
+spm('chmod','PET');

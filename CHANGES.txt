@@ -1,4 +1,24 @@
 ------------------------------------------------------------------------
+r2101 | gaser | 2022-08-24 15:19:35
+
+Changed paths:
+ M CHANGES.txt
+ M Makefile
+ M cat_surf_createCS2.m
+ M cat_vol_glassbrain.m
+ M cat_vol_img2mip.m
+ M spm_cat12.m
+
+
+Changed: Force to use PET modality in CAT12 to avoid problems of very low 
+         variance in spm_spm.m.
+Changed: Renamed cat12-html to cat12-help.
+Changed: Mimimized loading of mat-file in cat_vol_galssbrain.m.
+Changed: Added check for result of CAT_SeparatePolygon in cat_surf_createCS2.m
+         because sometimes CAT_SeparatePolygon fails and we have to use the 
+         original raw file.
+Fixed:   Added cbar-flag to defaults in cat_vol_img2mip.m.
+------------------------------------------------------------------------
 r2100 | rdahnke | 2022-08-23 13:59:53
 
 Changed paths:
@@ -9,7 +29,7 @@ Changed paths:
 Fixed:   Extended file search to suport BIDS in cat_stat_homogeneity.
          Display segmentation also if no raw images were available.  
          Added colorful output, warnings and errors to improve readability. 
-         ------------------------------------------------------------------------
+------------------------------------------------------------------------
 r2099 | gaser | 2022-08-19 16:32:54
 
 Changed paths:
@@ -17,7 +37,8 @@ Changed paths:
  M cat_surf_render.m
 
 
-Fixed: Corrected use of template if no vertices are found in cat_surf_render.m.------------------------------------------------------------------------
+Fixed: Corrected use of template if no vertices are found in cat_surf_render.m.
+------------------------------------------------------------------------
 r2098 | rdahnke | 2022-08-19 11:43:55
 
 Changed paths:
@@ -25,7 +46,8 @@ Changed paths:
 A  cat_vol_mimcalc.m
 
 
-New:    Added cat_vol_mimcalc to use the SPM imcalc batch for multiple subjects.------------------------------------------------------------------------
+New:    Added cat_vol_mimcalc to use the SPM imcalc batch for multiple subjects.
+------------------------------------------------------------------------
 r2097 | gaser | 2022-08-19 10:54:44
 
 Changed paths:
