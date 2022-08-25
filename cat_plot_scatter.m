@@ -28,13 +28,21 @@ function hAxes = cat_plot_scatter(X,Y, varargin)
 %
 % cat_plot_scatter(...,'FIG',FIG) defines figure handle
 %
+% cat_plot_scatter(...,'GROUP',GROUP) defines different groups for which
+% separate plots are displayed. Use 1..n for coding the groups.
+% For more than one group the parameter 'plottype' is set to 'scatter'.
+%
+% cat_plot_scatter(...,'NAMES',NAMES) char-array of names for different groups
+%
+% cat_plot_scatter(...,'SHOWLEGEND',SHOWLEGEND) show legend with names
+%
 % cat_plot_scatter(...,'JITTER',TRUE) adds jitter on x-axis for
 % categorical x-variables
 %
 % cat_plot_scatter(...,'PLOTTYPE',TYPE) allows you to create other ways of
-% plotting the scatter data. Options are 'image','contour','dscatter', and 'scatter'.
-% These create surf, mesh and contour plots colored by density of the
-% scatter data. The default is 'dscatter'.
+% plotting the scatter data. Options are 'dscatter' and 'scatter'.
+% 'dscatter' creates plots colored by density of the scatter data, which is 
+% the default.
 %
 % cat_plot_scatter(...,'BINS',[NX,NY]) allows you to set the number of bins used
 % for the 2D histogram used to estimate the density. The default is to
@@ -93,15 +101,18 @@ jitter      = false;
 img         = '';
 fontsize    = 20;
 color       = [];
+group       = [];
+names       = [];
+showlegend  = 0;
 if exist('parula')
-  cmap        = 'parula';
+  cmap      = 'parula';
 else
-  cmap        = 'jet';
+  cmap      = 'jet';
 end
 
 % define plot of confidence band
-plot_variance = @(x,lower,upper,color) set(fill([x,x(end:-1:1)],[upper,lower(end:-1:1)],color),...
-   'EdgeColor',color,'FaceAlpha',0.25);
+plot_variance = @(x,lower,upper,color,alpha) set(fill([x,x(end:-1:1)],[upper,lower(end:-1:1)],color),...
+   'EdgeColor',color,'FaceAlpha',alpha);
 
 if nargin > 2
   if rem(nargin,2) == 1
@@ -109,7 +120,8 @@ if nargin > 2
       'Incorrect number of arguments to %s.',mfilename);
   end
   okargs = {'smoothing','bins','plottype','logy','contourFlag','marker','msize',...
-     'filled','fit_poly','ci','cmap','fig','jitter','img','fontsize','color'};
+     'filled','fit_poly','ci','cmap','fig','jitter','img','fontsize','color',...
+     'group','names','showlegend'};
   for j=1:2:nargin-2
     pname = varargin{j};
     pval = varargin{j+1};
@@ -163,16 +175,46 @@ if nargin > 2
           fontsize = pval;
         case 16
           color = pval;
+        case 17
+          group = pval;
+        case 18
+          names = pval;
+        case 19
+          showlegend = pval;
       end
     end
   end
 end
 
-X0 = X; Y0 = Y;
+% For more than one group the parameter 'plottype' is set to 'scatter'.
+if ~isempty(group) && max(group) > 1
+  plottype = 'scatter';
+  n_groups = max(group);
+  if isempty(color)
+    color = nejm;
+  end
+  color = color(1:n_groups,:);
+else
+  n_groups = 1;
+  group = ones(size(X));
+end
+
+if isempty(names)
+  names = num2str((1:n_groups)');
+end
+lnames = cell(2*n_groups,1);
+for i = 1:n_groups
+  lnames{i} = deblank(names(i,:));
+end
+for j = 1:n_groups
+  lnames{i+j} = ['Fit ' deblank(names(j,:))];
+end
+
+  
 ind = ~isnan(X) & ~isnan(Y);
-X = X(ind); Y = Y(ind); 
+X = X(ind); Y = Y(ind);
 if ~isempty(color)
-  color = color(ind,:);
+%  color = color(ind,:);
 end
 
 minx = min(X(:));
@@ -181,39 +223,14 @@ miny = min(Y(:));
 maxy = max(Y(:));
 
 if isempty(nbins)
-  nbins = [min(numel(unique(X)),200), min(numel(unique(Y)),200) ];
+  nbins = [min(numel(unique(X)),200), min(numel(unique(Y)),200)];
 end
 
 if isempty(lambda)
   lambda = 20;
 end
 
-edges1 = linspace(minx, maxx, nbins(1)+1);
-ctrs1 = edges1(1:end-1) + .5*diff(edges1);
-edges1 = [-Inf edges1(2:end-1) Inf];
-edges2 = linspace(miny, maxy, nbins(2)+1);
-ctrs2 = edges2(1:end-1) + .5*diff(edges2);
-edges2 = [-Inf edges2(2:end-1) Inf];
-[n,p] = size(X);
-bin = zeros(n,2);
-
-% Reverse the columns to put the first column of X along the horizontal
-% axis, the second along the vertical.
-[dum,bin(:,2)] = histc(X,edges1);
-[dum,bin(:,1)] = histc(Y,edges2);
-
-% remove zero histogram entries that can't be used
-ind = find(bin(:,1)==0 | bin(:,2)==0);
-bin(ind,:) = [];
-X(ind) = [];
-Y(ind) = [];
-
-H = accumarray(bin,1,nbins([2 1])) ./ n;
-G = smooth1D(H,nbins(2)/lambda);
-F = smooth1D(G',nbins(1)/lambda)';
-
 if logy
-  ctrs2 = 10.^ctrs2;
   Y = 10.^Y;
 end
 
@@ -229,9 +246,7 @@ add_range = min([1,log10(n_categories_X)/10]);
 
 % polynomial fit and confidence interval
 if fit_poly
-  clf
-  [p,S] = polyfit(X,Y,fit_poly);
-  
+
   % add some more range because of jittered data
   if n_categories_X < 30 && jitter
     xfit = linspace(minx-2*add_range,maxx+2*add_range,100);
@@ -240,20 +255,34 @@ if fit_poly
     if maxx > 0, maxx = 1.01*maxx; else maxx = 0.99*maxx; end
     xfit = linspace(minx,maxx,100);
   end
-  yfit = polyval(p,xfit);
+  
+  for i = 1:n_groups
+    ind2 = group == i;
+    ind2 = ind2(ind);
+    [p,S] = polyfit(X(ind2),Y(ind2),fit_poly);
 
-  if ci
-    [Y2,DELTA] = cg_polyconf(p,xfit,S);
-    plot_variance(xfit,Y2+DELTA,Y2-DELTA,[0.75 0.75 0.75])
+    yfit{i} = polyval(p,xfit);
+
+    if ci
+      [Y2,DELTA] = cat_stat_polyconf(p,xfit,S);
+      if isempty(color)
+        plot_variance(xfit,Y2+DELTA,Y2-DELTA,[0.75 0.75 0.75],0.1)
+      else
+        plot_variance(xfit,Y2+DELTA,Y2-DELTA,color(i,:),0.05)
+      end
+    end
+
+    % estimate R^2
+    R2 = 1 - (S.normr/norm(Y(ind2) - mean(Y(ind2))))^2;
+    [cc,pp] = corrcoef(X(ind2),Y(ind2));
+    if n_groups > 1
+      fprintf('Group %d: R^2 = %g\tr = %g\tp = %g\n',i,R2,cc(1,2),pp(1,2))
+    else
+      fprintf('R^2 = %g\tr = %g\tp = %g\n',R2,cc(1,2),pp(1,2))
+    end
+    fprintf('Coefficients = %g\n',p)
+    if i == 1, hold on; end
   end
-
-  % estimate R^2
-  R2 = 1 - (S.normr/norm(Y - mean(Y)))^2;
-  [cc,pp] = corrcoef(X,Y);
-  fprintf('R^2 = %g\tr = %g\tp = %g\n',R2,cc(1,2),pp(1,2))
-  fprintf('Coefficients = %g\n',p)
-
-  hold on
 end
 
 % check whether X has limited number of entries (and is rather categorical)
@@ -262,50 +291,60 @@ if n_categories_X < 30 && jitter
   X = X + add_range*randn(size(X));
 end
 
-okTypes = {'contour','image','dscatter','scatter'};
-k = strmatch(lower(plottype), okTypes); %#ok
+lh = [];
+if strmatch(lower(plottype), 'dscatter')
+  edges1 = linspace(minx, maxx, nbins(1)+1);
+  edges1 = [-Inf edges1(2:end-1) Inf];
+  edges2 = linspace(miny, maxy, nbins(2)+1);
+  edges2 = [-Inf edges2(2:end-1) Inf];
+  [n,p] = size(X);
+  bin = zeros(n,2);
 
-if isempty(k)
-  error('cat_plot_scatter:UnknownPlotType',...
-    'Unknown plot type: %s.',plottype);
-elseif length(k)>1
-  error('cat_plot_scatter:AmbiguousPlotType',...
-    'Ambiguous plot type: %s.',plottype);
+  % Reverse the columns to put the first column of X along the horizontal
+  % axis, the second along the vertical.
+  [dum,bin(:,2)] = histc(X,edges1);
+  [dum,bin(:,1)] = histc(Y,edges2);
+
+  % remove zero histogram entries that can't be used
+  ind = find(bin(:,1)==0 | bin(:,2)==0);
+  bin(ind,:) = [];
+  X(ind) = [];
+  Y(ind) = [];
+
+  H = accumarray(bin,1,nbins([2 1])) ./ n;
+  G = smooth1D(H,nbins(2)/lambda);
+  F = smooth1D(G',nbins(1)/lambda)';
+
+  if ~isempty(color), fprintf('Color flag does not work with dscatter plottype.\n'); end
+  F = F./max(F(:));
+  ind = sub2ind(size(F),bin(:,1),bin(:,2));
+  col = F(ind);
+  if filled
+    h{1} = scatter(X,Y,msize,col,marker,'filled');
+  else
+    h{1} = scatter(X,Y,msize,col,marker);
+  end
+  lh = [lh h{i}];
 else
-  switch(k)
-    case 1 %'contour'
-      if ~isempty(color), fprintf('Color flag does not work with contour plottype.\n'); end
-      [dummy, h] = contour(ctrs1,ctrs2,F);
-    case 2 %'image'
-      if ~isempty(color), fprintf('Color flag does not work with image plottype.\n'); end
-      nc = 256;
-      F = F./max(F(:));
-      colormap(repmat(linspace(1,0,nc)',1,3));
-      h = image(ctrs1,ctrs2,floor(nc.*F) + 1);
-    case 3 %'dscatter'
-      if ~isempty(color), fprintf('Color flag does not work with dscatter plottype.\n'); end
-      F = F./max(F(:));
-      ind = sub2ind(size(F),bin(:,1),bin(:,2));
-      col = F(ind);
+  if ~isempty(color)
+    for i = 1:n_groups
+      ind2 = group == i;
+      ind2 = ind2(ind);
       if filled
-        h = scatter(X,Y,msize,col,marker,'filled');
+        h{i} = scatter(X(ind2),Y(ind2),msize,color(i,:),marker,'filled');
       else
-        h = scatter(X,Y,msize,col,marker);
+        h{i} = scatter(X(ind2),Y(ind2),msize,color(i,:),marker);
       end
-    case 4 %'scatter'
-      if ~isempty(color)
-        if filled
-          h = scatter(X,Y,msize,color,marker,'filled');
-        else
-          h = scatter(X,Y,msize,color,marker);
-        end
-      else
-        if filled
-          h = scatter(X,Y,msize,marker,'filled');
-        else
-          h = scatter(X,Y,msize,marker);
-        end
-      end
+      lh = [lh h{i}];
+      if i==1, hold on; end
+    end
+  else
+    if filled
+      h{1} = scatter(X,Y,msize,marker,'filled');
+    else
+      h{1} = scatter(X,Y,msize,marker);
+    end
+    lh = h{1};
   end
 end
 
@@ -313,17 +352,40 @@ colormap(cmap)
 set(gca,'FontSize',fontsize);
 
 if fit_poly
-  pl = plot(xfit,yfit,'k');
-  set(pl,'LineWidth',1)
-  if minx > 0 && minx < 1e-4
-    xl = xlim;
-    xlim([0 xl(2)])
+  for i = 1:n_groups
+    if isempty(color)
+      pl{i} = plot(xfit,yfit{i},'k');
+    else
+      pl{i} = plot(xfit,yfit{i},'Color',color(i,:));
+    end
+    lh = [lh pl{i}];
+    set(pl{i},'LineWidth',1)
+    if minx > 0 && minx < 1e-4
+      xl = xlim;
+      xlim([0 xl(2)])
+    end
+    if miny > 0 && miny < 1e-4
+      yl = ylim;
+      ylim([0 yl(2)])
+    end
   end
-  if miny > 0 && miny < 1e-4
-    yl = ylim;
-    ylim([0 yl(2)])
+  hold off
+end
+
+if showlegend
+  if n_groups > 1
+    if fit_poly
+      legend(lh,lnames);
+    else
+      legend(lnames(1:2:end));
+    end
+  else
+    if fit_poly
+      legend(lh,lnames);
+    else
+      legend(lnames(1:2:end));
+    end
   end
-    hold off
 end
 
 if logy
@@ -352,7 +414,7 @@ D2 = diff(D1,1);
 P = lambda.^2 .* D2'*D2 + 2.*lambda .* D1'*D1;
 Z = (E + P) \ Y;
 
-function [y, delta] = cg_polyconf(p,x,S,varargin)
+function [y, delta] = cat_stat_polyconf(p,x,S,varargin)
 %POLYCONF Polynomial evaluation and confidence interval estimation.
 %   Y = POLYCONF(P,X) returns the value of a polynomial P evaluated at X. P
 %   is a vector of length N+1 whose elements are the coefficients of the
@@ -779,3 +841,29 @@ end
 % Make sure that round-off errors never make P greater than 1.
 k = find(p > 1);
 p(k) = ones(size(k));
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION nejm
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function C = nejm
+  C = [
+    '#BC3C29'
+    '#0072B5'
+    '#E18727'
+    '#20854E'
+    '#7876B1'
+    '#6F99AD'
+    '#FFDC91'
+    '#EE4C97'
+    '#8C564B'
+    '#BCBD22'
+    '#00A1D5'
+    '#374E55'
+    '#003C67'
+    '#8F7700'
+    '#7F7F7F'    
+    '#353535'    
+  ];
+  C = reshape(sscanf(C(:,2:end)','%2x'),3,[]).'/255;
+
