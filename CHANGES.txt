@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2102 | gaser | 2022-08-25 23:34:52
+
+Changed paths:
+ M CHANGES.txt
+ M cat_plot_scatter.m
+
+
+Changed: Added new options to cat_plot_scatter.m:
+          - option to distinct between different groups
+          - option to define names          
+          - option to show legend 
+Changed: Removed image and contour plot from cat_plot_scatter.m.
+------------------------------------------------------------------------
 r2101 | gaser | 2022-08-24 15:19:35
 
 Changed paths:
