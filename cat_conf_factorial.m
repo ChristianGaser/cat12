@@ -726,7 +726,7 @@ generic.help   = {
   'This option allows for the specification of covariates and nuisance variables. TIV correction should be rather defined in ''Correction of TIV''.'
   ''
   'Note that SPM does not make any distinction between effects of interest (including covariates) and nuisance effects.'
-  'Covariates and nuisance parameters are handled in the same way in the GLM and only differ by the used contrast.'
+  'Covariates and confounding parameters are treated in the same way in the GLM and differ only in the contrast used.'
 };
 generic.values = {cov};
 generic.num    = [0 Inf];
@@ -908,7 +908,7 @@ g_user         = cfg_branch;
 g_user.tag     = 'g_user';
 g_user.name    = 'Global scaling';
 g_user.val     = {global_uval};
-g_user.help    = {'User defined  global effects (enter your own vector of global values).'};
+g_user.help    = {'If TIV correlates with your parameter of interest, you should use global scaling with TIV.'};
 
 %--------------------------------------------------------------------------
 % g_ancova Ancova
@@ -917,7 +917,11 @@ g_ancova         = cfg_branch;
 g_ancova.tag     = 'g_ancova';
 g_ancova.name    = 'ANCOVA';
 g_ancova.val     = {global_uval};
-g_ancova.help    = {'ANCOVA'};
+g_ancova.help    = {'ANCOVA: Here, any variance that can be explained by TIV is removed from your data (i.e. in every voxel or vertex). This is the preferred option when there is no correlation between TIV and your parameter of interest. For example, a parameter of interest may be a variable in a multiple regression design that you want to relate to your structural data. If TIV is correlated with this parameter, not only will the variance explained by TIV be removed from your data, but also parts of the variance of your parameter of interest, which should be avoided.'
+''
+'Note that for two-sample T-tests and Anova with more than 2 groups, an interaction is modeled between TIV and group that prevents any group differences from being removed from your data, even if TIV differs between your groups.'
+''
+'Use the orthogonality check option to test for any correlations between your parameters.'};
 
 %--------------------------------------------------------------------------
 % globals TIV correction
@@ -1109,9 +1113,11 @@ check_SPM_zscore.tag        = 'check_SPM_zscore';
 check_SPM_zscore.values     = {none do_check_zscore};
 check_SPM_zscore.val        = {do_check_zscore};
 check_SPM_zscore.help       = {
-  'In order to identify images with poor image quality or even artefacts you can use this function. The idea of this tool is to check the correlation of all files across the sample using the files that are already defined in SPM.mat.'
+  'In order to identify images with poor image quality or even artefacts you can use this function. The idea of this tool is to check the Z-score of all files across the sample using the files that are already defined in SPM.mat.'
   ''
-  'The correlation is calculated between all images and the mean for each image is plotted using a boxplot (or violin plot) and the indicated filenames. The smaller the mean correlation the more deviant is this image from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order'
+  'The Z-score is calculated for all images and the mean for each image is plotted using a boxplot (or violin plot) and the indicated filenames. The larger the mean A8absolute) Z-score the more deviant is this image from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean Z-score is plotted at the y-axis and the x-axis reflects the image order.'
+  ''
+  'The advantage of rechecking sample homogeneity at this point is that the given statistical model (design) is used and potential nuisance parameters are taken into account. If you have longitudinal data, the time points of each data set are linked in the graph to indicate intra-subject data. Unsmoothed data (if available and in the same folder) are automatically detected and used. Finally, report files are used if present (i.e., if data has not been moved or the folders renamed) and quality parameters are loaded and displayed.'
 };
 
 check_SPM_ortho             = cfg_menu;
@@ -1143,11 +1149,11 @@ des.help    = {''};
 des.values  = {t2 mreg fd fblock};
 
 %==========================================================================
-% factorial_design Factorial design specification
+% factorial_design Basic models
 %==========================================================================
 factorial_design      = cfg_exbranch;
 factorial_design.tag  = 'factorial_design';
-factorial_design.name = 'Factorial design specification';
+factorial_design.name = 'Basic models';
 factorial_design.val  = {dir des generic generic2 masking globals check_SPM};
 factorial_design.help = {
     'Configuration of the design matrix, describing the general linear model, data specification, and other parameters necessary for the statistical analysis.'
