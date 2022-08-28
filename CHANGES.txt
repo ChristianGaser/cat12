@@ -1,4 +1,16 @@
 ------------------------------------------------------------------------
+r2103 | gaser | 2022-08-28 11:11:25
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_factorial.m
+ M cat_plot_scatter.m
+
+
+Changed: Updated help text for cat_conf_factorial.m.
+Changed: Slightly changed lower xlim in cat_plot_scatter to give more space if
+         data min is 0.
+------------------------------------------------------------------------
 r2102 | gaser | 2022-08-25 23:34:52
 
 Changed paths:
