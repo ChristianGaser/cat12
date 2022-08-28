@@ -236,8 +236,6 @@ end
 
 if exist('fig','var')
   figure(fig)
-else
-  figure
 end
 
 % check whether X has limited number of entries (and is rather categorical)
@@ -364,6 +362,11 @@ if fit_poly
       xl = xlim;
       xlim([0 xl(2)])
     end
+    % prevent that all values are on y-axis if min=0
+    if minx == 0
+      xl = xlim;
+      xlim([-0.05*maxx xl(2)])
+    end
     if miny > 0 && miny < 1e-4
       yl = ylim;
       ylim([0 yl(2)])
@@ -397,7 +400,7 @@ if nargout > 0
 end
 
 if ~isempty(img)
-  saveas(h,img);
+  saveas(h{1},img);
 end
 
 %%%% This method is quicker for symmetric data.
