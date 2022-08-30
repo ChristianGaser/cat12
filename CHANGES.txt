@@ -1,4 +1,23 @@
 ------------------------------------------------------------------------
+r2104 | gaser | 2022-08-30 16:24:26
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_tools.m
+ M cat_plot_boxplot.m
+ M cat_plot_scatter.m
+ M cat_stat_spm2x.m
+ M cat_surf_results.m
+ M cat_vol_slice_overlay.m
+
+
+Changed: Removed SPM12 neuromorphometrics atlas from lists to avoid confusion.
+Changed: Added display of p-values in cat_vol_slice_overlay.m and 
+         cat_stat_spm2x.m if available.
+Changed: Added check for upadating slices whether values exceed threshold.
+Changed: Updated use of color in cat_plot_scatter.m.
+Changed: Disable KDE estimation for less than 5 data points.
+------------------------------------------------------------------------
 r2103 | gaser | 2022-08-28 11:11:25
 
 Changed paths:

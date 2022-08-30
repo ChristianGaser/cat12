@@ -2643,11 +2643,17 @@ function [T2x,T2x_surf,F2x,F2x_surf] = conf_T2x
   atlas.tag         = 'atlas';
   atlas.labels{1}   = 'None';
   atlas.values{1}   = 'None';
+  
   list              = spm_atlas('List','installed');
+  j = 1;
   for i=1:numel(list)
-    atlas.labels{i+1} = list(i).name;
-    atlas.values{i+1} = list(i).name;
+    if ~strcmp(list(i).name,'Neuromorphometrics')
+      atlas.labels{j+1} = list(i).name;
+      atlas.values{j+1} = list(i).name;
+      j = j + 1;
+    end
   end
+  
   atlas.val         = {'None'};
   atlas.help        = {
     'Select atlas for labeling. The prepending atlas name ''dartel_'' indicates that this atlas was created using Dartel spatial normalization with the Dartel IXI template as default.'
