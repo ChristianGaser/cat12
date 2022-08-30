@@ -766,6 +766,11 @@ for i=1:qn
     else col = data(:,ii); end
     % estimate # of mesh points w.r.t. data size
     n2 = max(n2,ceil(log2(numel(col)))) - 2;
+
+    % create jitter w.r.t. kde
+    jitter_kde = zeros(1,length(data{ii}));
+
+    % only allow kde estimation if enough data are available
     if numel(data{ii})>5
       try
         [tmp, f, u] = kde(data{ii},2^n2);
@@ -774,16 +779,15 @@ for i=1:qn
         [tmp, f, u] = kde(data{ii} + eps*randn(size(data{ii})),2^n2);
         f = (f/max(f)*opt.boxwidth*0.075)'; % width of violin plot is more narrow
       end
+      % shift sections by step/2 and add one step
+      u = u + gradient(u)/2;
+      u = [u 1e15];
+      
+      for k=1:numel(f)
+        jitter_kde(data{ii}>u(k) & data{ii}<=u(k+1)) = f(k);
+      end
     end
-    % shift sections by step/2 and add one step
-    u = u + gradient(u)/2;
-    u = [u 1e15];
     
-    % create jitter w.r.t. kde
-    jitter_kde = zeros(1,length(data{ii}));
-    for k=1:numel(f)
-      jitter_kde(data{ii}>u(k) & data{ii}<=u(k+1)) = f(k);
-    end    
     jitter_kde = jitter_kde.*randn(1,length(data{ii}));
     
     % make jitter smaller for violinplot

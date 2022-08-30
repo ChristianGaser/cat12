@@ -588,20 +588,22 @@ for i=1:size(P,1)
           if maxZ(j) < 0, found_neg = 1; end
           if maxZ(j) > 0, found_pos = 1; end
           
+          if sel == 2, valname = 'p-value'; else valname = 'Value'; end
+
           % print header if the first pos./neg. result was found
           if found_pos && ~print_header_pos
 
             fprintf('\n______________________________________________________');
             fprintf('\n%s: Positive effects\n%s',name,atlas_name);
             fprintf('\n______________________________________________________\n\n');
-            fprintf('%1s-%5s\t%12s\t%15s\t%s\n\n',STAT,'Value','Cluster-Size','  xyz [mm] ','Overlap of atlas region');
+            fprintf('%1s-%5s\t%12s\t%15s\t%s\n\n',STAT,valname,'Cluster-Size','  xyz [mm] ','Overlap of atlas region');
             print_header_pos = 1;
           end
           if found_neg && ~print_header_neg
             fprintf('\n______________________________________________________');
             fprintf('\n%s: Negative effects\n%s',name,atlas_name);
             fprintf('\n______________________________________________________\n\n');
-            fprintf('%1s-%5s\t%12s\t%15s\t%s\n\n',STAT,'Value','Cluster-Size','  xyz [mm] ','Overlap of atlas region');
+            fprintf('%1s-%5s\t%12s\t%15s\t%s\n\n',STAT,valname,'Cluster-Size','  xyz [mm] ','Overlap of atlas region');
             print_header_neg = 1;
           end
           if ~found_pos && ~found_neg
@@ -610,7 +612,8 @@ for i=1:size(P,1)
             fprintf('\n______________________________________________________\n\n');
           else
 
-            fprintf('%7.2f\t%12d\t%4.0f %4.0f %4.0f',maxZ(j),length(Zj{j}),XYZmmj{j}(:,indZ));
+            if sel == 2, val = 10^(-maxZ(j)); else val = maxZ(j); end
+            fprintf('%7.2g\t%12d\t%4.0f %4.0f %4.0f',val,length(Zj{j}),XYZmmj{j}(:,indZ));
             for m=1:numel(labk{j})
               if Pl{j}(m) >= 1
                 if m==1, fprintf('\t%3.0f%%\t%s\n',Pl{j}(m),labk{j}{m});
