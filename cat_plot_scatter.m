@@ -213,8 +213,8 @@ end
   
 ind = ~isnan(X) & ~isnan(Y);
 X = X(ind); Y = Y(ind);
-if ~isempty(color)
-%  color = color(ind,:);
+if ~isempty(color) && size(color,1) == numel(ind)
+  color = color(ind,:);
 end
 
 minx = min(X(:));
@@ -263,10 +263,10 @@ if fit_poly
 
     if ci
       [Y2,DELTA] = cat_stat_polyconf(p,xfit,S);
-      if isempty(color)
-        plot_variance(xfit,Y2+DELTA,Y2-DELTA,[0.75 0.75 0.75],0.1)
-      else
+      if isempty(color) && n_groups > 1
         plot_variance(xfit,Y2+DELTA,Y2-DELTA,color(i,:),0.05)
+      else
+        plot_variance(xfit,Y2+DELTA,Y2-DELTA,[0.75 0.75 0.75],0.1)
       end
     end
 
@@ -328,10 +328,17 @@ else
     for i = 1:n_groups
       ind2 = group == i;
       ind2 = ind2(ind);
-      if filled
-        h{i} = scatter(X(ind2),Y(ind2),msize,color(i,:),marker,'filled');
+      
+      if numel(X(ind2)) == size(color,1)
+        col = color;
       else
-        h{i} = scatter(X(ind2),Y(ind2),msize,color(i,:),marker);
+        col = color(i,:);
+      end
+      
+      if filled
+        h{i} = scatter(X(ind2),Y(ind2),msize,col,marker,'filled');
+      else
+        h{i} = scatter(X(ind2),Y(ind2),msize,col,marker);
       end
       lh = [lh h{i}];
       if i==1, hold on; end

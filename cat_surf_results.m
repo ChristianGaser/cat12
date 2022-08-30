@@ -1792,6 +1792,15 @@ global OV
 
 if ~isfield(H,'Pvol_sel') || isempty(H.Pvol{1}), return; end
 
+% check whether values are above threshold and close windows and return if not
+mn = min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:)));
+mx = max(max(H.S{1}.Y(:)), max(H.S{2}.Y(:)));
+if (mn < 0 && mn > -H.thresh_value) && (mx >= 0 && mx < H.thresh_value)
+  try, close(OV.fig); end
+  try, close(OV.fig_mip); end
+  return
+end
+
 % correct position of overlay window
 OV.pos = [10 H.SS(4)];
 
