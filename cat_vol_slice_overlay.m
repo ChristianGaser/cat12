@@ -502,8 +502,12 @@ if isfield(OV, 'atlas')
 else
   list = spm_atlas('List','installed');
   atlas_labels{1} = 'None';
+  j = 1;
   for i=1:numel(list)
-    atlas_labels{i+1} = list(i).name;
+    if ~strcmp(list(i).name,'Neuromorphometrics')
+      atlas_labels{j+1} = list(i).name;
+      j = j + 1;
+    end
   end
     atlas = spm_input('Select atlas?', '1', 'm', atlas_labels);
     atlas_name = atlas_labels{atlas};
@@ -574,21 +578,24 @@ if ~isempty(xA)
         if maxZ(j) < 0,  found_neg = found_neg + 1; end
         if maxZ(j) >= 0, found_pos = found_pos + 1; end
         
+        if logP, valname = 'p-value'; else valname = 'Value'; end
+        
         % print header if the first pos./neg. result was found
         if found_pos == 1
           fprintf('\n______________________________________________________');
           fprintf('\n%s: Positive effects\n%s',SO.img(2).vol.fname,atlas_name);
           fprintf('\n______________________________________________________\n\n');
-          fprintf('%7s\t%12s\t%15s\t%s\n\n','Value','Cluster-Size','    xyz [mm]   ','Overlap of atlas region');
+          fprintf('%7s\t%12s\t%15s\t%s\n\n',valname,'Cluster-Size','    xyz [mm]   ','Overlap of atlas region');
         end
         if found_neg == 1
           fprintf('\n______________________________________________________');
           fprintf('\n%s: Negative effects\n%s',SO.img(2).vol.fname,atlas_name);
           fprintf('\n______________________________________________________\n\n');
-          fprintf('%7s\t%12s\t%15s\t%s\n\n','Value','Cluster-Size','    xyz [mm]   ','Overlap of atlas region');
+          fprintf('%7s\t%12s\t%15s\t%s\n\n',valname,'Cluster-Size','    xyz [mm]   ','Overlap of atlas region');
         end
         
-        fprintf('%7.2f\t%12d\t%4.0f %4.0f %4.0f',maxZ(j),length(Zj{j}),XYZmmj{j}(:,indZ));
+        if logP, val = 10^(-maxZ(j)); else val = maxZ(j); end
+        fprintf('%7.2g\t%12d\t%4.0f %4.0f %4.0f',val,length(Zj{j}),XYZmmj{j}(:,indZ));
         for m=1:numel(labk{j})
           if Pl{j}(m) >= 1,
             if m==1, fprintf('\t%3.0f%%\t%s\n',Pl{j}(m),labk{j}{m});
