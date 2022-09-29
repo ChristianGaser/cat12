@@ -1,4 +1,5 @@
 #! /bin/bash
+# Check CAt12 pipleine
 # ______________________________________________________________________
 #
 # Christian Gaser, Robert Dahnke
