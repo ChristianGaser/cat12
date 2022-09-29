@@ -1,4 +1,5 @@
 #! /bin/bash
+# Call CAT12 standard pipeline from shell
 # ______________________________________________________________________
 #
 # Christian Gaser, Robert Dahnke
@@ -545,7 +546,7 @@ USAGE:
   -c  <STRING>| --command <STRING>      alternative matlab function that can be called such as the SANLM-filter
   -t          | --test                  do not call command, but print files to be processed
   -fg         | --fg                    do not run matlab process in background
-  -b          | --bids                  use defaults BIDS path (i.e. '../derivatives/CAT12.x_rxxxx')
+  -b          | --bids                  use default BIDS path (i.e. '../derivatives/CAT12.x_rxxxx')
   -bf <STRING>| --bids_folder <STRING>  define BIDS path
   -nj         | --nojvm                 supress call of jvm using the -nojvm flag
  

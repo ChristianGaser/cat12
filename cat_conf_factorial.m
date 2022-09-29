@@ -1284,7 +1284,7 @@ elseif isfield(job.des,'mreg')
 end
 
 % check for voxel-wise covariate
-if isfield(job.des.(fname),'voxel_cov.files') && ~isempty(char(job.des.(fname).voxel_cov.files))
+if isfield(job.des.(fname),'voxel_cov') && isfield(job.des.(fname).voxel_cov,'files') && ~isempty(char(job.des.(fname).voxel_cov.files))
   voxel_covariate = true;
   
   % number of covariate scans

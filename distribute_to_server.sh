@@ -1,4 +1,5 @@
 #! /bin/bash
+# Distribute jobs to server
 # ______________________________________________________________________
 #
 # Christian Gaser, Robert Dahnke
