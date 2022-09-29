@@ -1,4 +1,5 @@
 #! /bin/bash
+# Call SPM12 batch jobs from shell
 # ______________________________________________________________________
 #
 # Christian Gaser, Robert Dahnke
