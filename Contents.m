@@ -1,5 +1,5 @@
 % Computational Anatomy Toolbox
-% Version 2043 (CAT12.8.1) 2022-07-20
+% Version 2104 (CAT12.8.1) 2022-08-30
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -74,7 +74,7 @@
 %   
 % Statistics
 %   cat_stat_calc_stc.m
-%   cat_stat_check_cov.m             - check sample homogeneity across sample
+%   cat_stat_homogeneity.m           - check sample homogeneity across sample
 %   cat_stat_marks.m
 %   cat_stat_nanmean.m
 %   cat_stat_nanmedian.m

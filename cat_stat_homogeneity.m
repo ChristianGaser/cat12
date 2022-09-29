@@ -266,8 +266,8 @@ if ~xml_defined
         else
           j = j + 1;
         end
-        i = i + 1;
       end
+      i = i + 1;
     end
   end 
   fprintf('\n');
@@ -325,7 +325,7 @@ for i=1:n_subjects
   
   %% get mri folder
   [pth, data_name, ee] = fileparts(H.files.fname{i});
-  if strcmp(ee,'.gii') && ~isBIDSc, mri_folder = fullfile(fileparts(pth),'mri');
+  if strcmp(ee,'.gii') && ~isBIDS, mri_folder = fullfile(fileparts(pth),'mri');
   else, mri_folder = pth; end
   
   % find raw/p0 files
@@ -639,8 +639,8 @@ H.pos = struct(...
     ...
     'close',  [0.775 0.935 0.100 0.040],...  % close button
     'show',   [0.875 0.935 0.100 0.040],...  % button to show worst cases
-    'scat',   [0.772 0.880 0.110 0.050],...  % button to enable ordered matrix
-    'boxp',   [0.872 0.880 0.110 0.050],...  % button to display boxplot
+    'scat',   [0.775 0.880 0.100 0.050],...  % button to enable ordered matrix
+    'boxp',   [0.875 0.880 0.100 0.050],...  % button to display boxplot
     ...
     ... == navigation unit ==
     'scSelect',    [popm+popb(1)*0 0.820 popb],... % select (default) 
@@ -2366,9 +2366,7 @@ end
 
 if H.mesh_detected 
   % show two render views for meshes: texture and Z-score
-  tic
   show_mesh;
-  toc
 else
   % show image slice
   show_image_slice;

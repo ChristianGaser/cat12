@@ -1,4 +1,5 @@
 #! /bin/bash
+# Call CAT12 longitudinal pipeline from shell
 # ______________________________________________________________________
 #
 # Christian Gaser, Robert Dahnke
@@ -316,7 +317,7 @@ USAGE:
                       [-log logdir] [-ns] [-large] [-model longmodel] [-e] [-nj] 
   
   -m <FILE>   | --matlab  <FILE>        matlab command (default $matlab)
-  -d <FILE>   | --default <FILE>        optional default file (default ${cat12_dir}/cat_defaults.m)
+  -d <FILE>   | --defaults <FILE>       optional default file (default ${cat12_dir}/cat_defaults.m)
   -log <FILE> | --logdir                directory for log-file (default $LOGDIR)
   -fg         | --fg                    do not run matlab process in background
   -ns         | --no-surf               disable surface and thickness estimation
@@ -329,7 +330,7 @@ USAGE:
                                           1 - detect small changes (i.e. due to plasticity)
                                           2 - detect large changes (i.e. ageing or development)
                                           3 - save results for both models 1 and 2
-  -b          | --bids                  use defaults BIDS path (i.e. '../derivatives/CAT12.x_rxxxx')
+  -b          | --bids                  use default BIDS path (i.e. '../derivatives/CAT12.x_rxxxx')
   -bf <STRING>| --bids_folder <STRING>  define BIDS path
 
   Processing is only supported for one subject.
