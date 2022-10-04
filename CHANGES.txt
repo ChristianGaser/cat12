@@ -1,4 +1,16 @@
 ------------------------------------------------------------------------
+r2109 | gaser | 2022-10-05 00:47:51
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M cat12.m
+ M cat_spm_results_ui.m
+ M html/cat.html
+
+
+Changed: Updated remaining hardcoded toolbox paths for TFCE.
+------------------------------------------------------------------------
 r2108 | gaser | 2022-10-05 00:29:40
 
 Changed paths:
