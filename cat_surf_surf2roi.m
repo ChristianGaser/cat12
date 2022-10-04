@@ -63,7 +63,7 @@ function varargout = cat_surf_surf2roi(job)
   
   % if rdata is not defined use default atlases
   if ~isfield(job,'rdata')
-    job.rdata = cat_vol_findfiles(fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces'),{'lh.aparc_*'});
+    job.rdata = cat_vol_findfiles(fullfile(fileparts(mfilename('fullpath')),'atlases_surfaces'),{'lh.aparc_*'});
   end
   
   spm_progress_bar('Init',numel(job.rdata) * sum(cellfun('length',job.cdata)),'Atlases','Atlases Completed');
@@ -233,8 +233,8 @@ end
 function resamp = get_resampled_values(P,debug,type)
   if ~exist('type','var'), type = '164k'; end
   switch type
-    case '164k', fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
-    case '32k',  fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k');
+    case '164k', fsavgDir = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces');
+    case '32k',  fsavgDir = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k');
   end   
   P = deblank(char(P));
  

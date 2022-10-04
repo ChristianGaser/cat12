@@ -48,15 +48,15 @@ function varargout = cat_surf_calc(job)
   
   if strfind(sinfo.side,'mesh')
     if sinfo.resampled_32k
-      job.fsaverage = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','mesh.central.freesurfer.gii');  
+      job.fsaverage = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k','mesh.central.freesurfer.gii');  
     else
-      job.fsaverage = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','mesh.central.freesurfer.gii');  
+      job.fsaverage = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces','mesh.central.freesurfer.gii');  
     end
   else
     if sinfo.resampled_32k
-      job.fsaverage = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','lh.central.freesurfer.gii');  
+      job.fsaverage = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k','lh.central.freesurfer.gii');  
     else
-      job.fsaverage = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii');  
+      job.fsaverage = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces','lh.central.freesurfer.gii');  
     end
   end
   
@@ -220,7 +220,7 @@ end
 function surfcalc(job)
     
   def.debug     = cat_get_defaults('extopts.verb')>2;
-  def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
+  def.fsavgDir  = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces'); 
   def.pbar      = 0;
   job = cat_io_checkinopt(job,def);
 

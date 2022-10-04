@@ -472,7 +472,7 @@ for i=sort(unique(hemi_code))'
       str32k = '';
     end
     
-    atlas_name = fullfile(spm('dir'),'toolbox','cat12',['atlases_surfaces' str32k],...
+    atlas_name = fullfile(fileparts(mfilename('fullpath')),['atlases_surfaces' str32k],...
         [hemiabbr{i} '.' atlas '.freesurfer.annot']);
     [vertices, rdata0, colortable, rcsv0] = cat_io_FreeSurfer('read_annotation',atlas_name);
     data0 = round(rdata0);

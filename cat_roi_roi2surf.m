@@ -22,9 +22,9 @@ function varargout = cat_roi_roi2surf(job)
     def.verb = 1;
     def.usefsaverage  = 1; 
     def.assuregifti   = 1;
-    def.fsaverage     = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii');  
-    def.inflated      = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.inflated.freesurfer.gii');  
-    def.dartelaverage = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',['lh.central.' cat_get_defaults('extopts.shootingsurf') '.gii']);    
+    def.fsaverage     = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces','lh.central.freesurfer.gii');  
+    def.inflated      = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces','lh.inflated.freesurfer.gii');  
+    def.dartelaverage = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces',['lh.central.' cat_get_defaults('extopts.shootingsurf') '.gii']);    
     
     job = cat_io_checkinopt(job,def);
   else
@@ -107,7 +107,7 @@ function varargout = cat_roi_roi2surf(job)
     for ai = 1:numel(atlas)
       
       % load ROI data
-      Proi = cat_vol_findfiles(fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces'),['*' atlas{ai} '*']);
+      Proi = cat_vol_findfiles(fullfile(fileparts(mfilename('fullpath')),'atlases_surfaces'),['*' atlas{ai} '*']);
       for si=1:2
         [ppr,ffr,eer] = spm_fileparts(Proi{si});
         switch eer

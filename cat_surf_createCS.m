@@ -105,9 +105,9 @@ cstime = clock;
   
   if opt.fast==2, opt.reduceCS = 40000; end
   if opt.fast
-    opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k'); 
+    opt.fsavgDir  = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k'); 
   else
-    opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
+    opt.fsavgDir  = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces'); 
   end
 
   Psurf = struct(); 

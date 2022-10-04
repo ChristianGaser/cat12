@@ -62,7 +62,7 @@ function stoolsexp = cat_conf_stoolsexp
   avg.outdir.ufilter = '.*';
   avg.outdir.num     = [0 1];
   avg.outdir.val{1}  = {''};
-  avg.outdir.dir     = fullfile(spm('dir'),'toolbox','cat12');
+  avg.outdir.dir     = fullfile(fileparts(mfilename('fullpath')));
   avg.outdir.help    = {'Select a directory where files are written.'};
 
   avg.main          = cfg_exbranch;

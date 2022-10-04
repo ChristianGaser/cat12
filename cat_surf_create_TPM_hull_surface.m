@@ -68,9 +68,9 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull)
   if human
     if strcmp(pp,fullfile(spm('dir'),'tpm')) && strcmp(Pname,TPM) % default 
       if skull > 0
-        Phull = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',sprintf('bh.headbrain%s.%s.gii',species,Pname));
+        Phull = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces',sprintf('bh.headbrain%s.%s.gii',species,Pname));
       else
-        Phull = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',sprintf('bh.brain%s.%s.gii',species,Pname));
+        Phull = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces',sprintf('bh.brain%s.%s.gii',species,Pname));
       end    
     else
       if skull > 0
@@ -81,9 +81,9 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull)
     end
   else
     if skull > 0
-      Phull = fullfile(spm('dir'),'toolbox','cat12','templates_animals_surfaces',sprintf('bh.headbrain%s.%s.gii',species,Pname));
+      Phull = fullfile(fileparts(mfilename('fullpath')),'templates_animals_surfaces',sprintf('bh.headbrain%s.%s.gii',species,Pname));
     else
-      Phull = fullfile(spm('dir'),'toolbox','cat12','templates_animals_surfaces',sprintf('bh.brain%s.%s.gii',species,Pname));
+      Phull = fullfile(fileparts(mfilename('fullpath')),'templates_animals_surfaces',sprintf('bh.brain%s.%s.gii',species,Pname));
     end
   end
   

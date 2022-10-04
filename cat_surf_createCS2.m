@@ -84,7 +84,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   def.surf_measures       = 1;                                % 0 - none, 1 - only thickness, 2 - expert maps (myelin,defects), 3 - developer (WMT,CSFT, ...),
                                                               % 4 - debug output, 5 - debug extended (more substeps and mex output)
   %def.WMT                 = 0;                                % pbt-based WM/CSF width/depth/thickness estimation 
-  def.fsavgDir            = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
+  def.fsavgDir            = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces'); 
   def.add_parahipp        = cat_get_defaults('extopts.add_parahipp');
   def.scale_cortex        = cat_get_defaults('extopts.scale_cortex');
   def.close_parahipp      = cat_get_defaults('extopts.close_parahipp');

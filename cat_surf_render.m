@@ -140,7 +140,7 @@ switch lower(action)
 
 
             if isempty(MM.private.metadata)
-              Tname = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','mesh.central.freesurfer.gii');
+              Tname = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k','mesh.central.freesurfer.gii');
               MM.private.metadata(1).value = Tname;
               MM.private.metadata(1).name = 'SurfaceID';
               M  = gifti(MM.private.metadata(1).value);
@@ -154,7 +154,7 @@ switch lower(action)
                   [pt,nm,xt] = fileparts(name);
                    nm = strrep(nm,'Template_T1_IXI555_MNI152_GS','Template_T1');                     
                    [pt2,nm2,xt2] = fileparts(pt);
-                   MM.private.metadata(1).value = fullfile(spm('dir'),'toolbox','cat12',nm2,[nm xt]);
+                   MM.private.metadata(1).value = fullfile(fileparts(mfilename('fullpath')),nm2,[nm xt]);
                 end
               end
               M  = gifti(MM.private.metadata(1).value);
@@ -1917,7 +1917,7 @@ cat_surf_render('Overlay',H,P);
 
 %==========================================================================
 function myUnderlay(obj,evt,H)
-[P, sts] = spm_select(1,'any','Select texture file to underlay',{},fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'),'[lr]h.mc.*');
+[P, sts] = spm_select(1,'any','Select texture file to underlay',{},fullfile(fileparts(mfilename('fullpath')),'templates_surfaces'),'[lr]h.mc.*');
 if ~sts, return; end
 cat_surf_render('Underlay',H,P);
 

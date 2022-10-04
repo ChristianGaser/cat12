@@ -629,7 +629,7 @@ ROIs.tag     = 'rdata';
 ROIs.name    = '(Left) ROI atlas files';
 ROIs.filter  = 'any';
 ROIs.ufilter = '^lh.*\.annot$';
-ROIs.dir     = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces'); 
+ROIs.dir     = fullfile(fileparts(mfilename('fullpath')),'atlases_surfaces'); 
 ROIs.num     = [1 Inf];
 %ROIs.hidden  = expert<2;
 ROIs.help    = {'These are the ROI atlas files. Both sides will be processed.'};
@@ -988,8 +988,8 @@ data_surf_avg_lh.name    = '(Left) Template Hemisphere';
 data_surf_avg_lh.filter  = 'gifti';
 data_surf_avg_lh.ufilter = '^lh.*';
 data_surf_avg_lh.num     = [1 1];
-data_surf_avg_lh.val{1}  = {fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',['lh.central.' cat_get_defaults('extopts.shootingsurf') '.gii'])};
-data_surf_avg_lh.dir     = fullfile(spm('dir'),'toolbox','cat12');
+data_surf_avg_lh.val{1}  = {fullfile(fileparts(mfilename('fullpath')),'templates_surfaces',['lh.central.' cat_get_defaults('extopts.shootingsurf') '.gii'])};
+data_surf_avg_lh.dir     = fullfile(fileparts(mfilename('fullpath')));
 data_surf_avg_lh.help    = {
   'Select left template surface file. '
   'Right hemisphere will be automatically processed.'

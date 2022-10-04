@@ -311,9 +311,9 @@ switch lower(Action), case 'setup'                         %-Set up results
             [pp2,ff2,xx2] = spm_fileparts(SPM.xVol.G);
             if ~isempty(strfind(ff2,'.central.freesurfer')) | ~isempty(strfind(ff2,['.central.' cat_get_defaults('extopts.shootingsurf')]))
               if strfind(pp2,'templates_surfaces_32k')
-                SPM.xVol.G = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k',[ff2 xx2])
+                SPM.xVol.G = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k',[ff2 xx2])
               else
-                SPM.xVol.G = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[ff2 xx2]);
+                SPM.xVol.G = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces',[ff2 xx2]);
               end
             end
             % modified SPM.mat hast to be saved

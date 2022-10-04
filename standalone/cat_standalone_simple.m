@@ -9,7 +9,7 @@ matlabbatch{1}.spm.tools.cat.cat_simple.data = '<UNDEFINED>';
 % template for initial affine registration/segmentation; 'adult','children'
 matlabbatch{1}.spm.tools.cat.cat_simple.tpm = 'adults';               
 
-matlabbatch{1}.spm.tools.cat.cat_simple.registration.regmethod.shooting.shootingtpm = {fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_0_GS.nii')};
+matlabbatch{1}.spm.tools.cat.cat_simple.registration.regmethod.shooting.shootingtpm = {fullfile(fileparts(mfilename('fullpath')),'templates_MNI152NLin2009cAsym','Template_0_GS.nii')};
 
 % voxel size and bounding box
 matlabbatch{1}.spm.tools.cat.cat_simple.registration.vox = 1.5;
