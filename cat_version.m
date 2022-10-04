@@ -25,9 +25,9 @@ if isempty(CAT_VER)
     % try Contents.txt and then Contents.m
     try
         %% v1 based on the Content file
-        vfile = fullfile(spm('Dir'),'toolbox','cat12','Contents.txt');
+        vfile = fullfile(fileparts(mfilename('fullpath')),'Contents.txt');
         if ~exist(vfile,'file')
-          vfile = fullfile(spm('Dir'),'toolbox','cat12','Contents.m');
+          vfile = fullfile(fileparts(mfilename('fullpath')),'Contents.m');
         end
         fid = fopen(vfile,'rt');
         if fid == -1, error('Can''t open %s.',vfile); end
@@ -43,7 +43,7 @@ if isempty(CAT_VER)
     end
     try 
         %% v2 based on the CHANGES.txt
-        vfile = fullfile(spm('Dir'),'toolbox','cat12','CHANGES.txt');
+        vfile = fullfile(fileparts(mfilename('fullpath')),'CHANGES.txt');
         if exist(vfile,'file')
           fid = fopen(vfile,'rt'); ct = textscan(fid,'%s','delimiter','\n'); fclose(fid);
           t  = textscan(ct{1}{2},'%s','delimiter',' '); t = t{1};
