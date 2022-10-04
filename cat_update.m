@@ -93,56 +93,55 @@ end
 if update
   overwrite = spm_input(sprintf('Update to r%d',rnew),1,'yes|no',[1 0],1);
   d0 = spm('Dir');
-  d = fullfile(spm('Dir'),'toolbox'); 
   
   if overwrite
     try
       % list mex-files and delete these files to prevent that old
       % compiled files are used
-      mexfiles = dir(fullfile(d,'cat12','*.mex*'));
+      mexfiles = dir(fullfile(fileparts(mfilename('fullpath')),'*.mex*'));
       for i=1:length(mexfiles)
-        name = fullfile(d,'cat12',mexfiles(i).name);
+        name = fullfile(fileparts(mfilename('fullpath')),mexfiles(i).name);
         spm_unlink(name);
       end
       
       % delete old atlas files
-      atlasfiles = dir(fullfile(d,'cat12','atlases_surfaces','*.*'));
+      atlasfiles = dir(fullfile(fileparts(mfilename('fullpath')),'atlases_surfaces','*.*'));
       for i=1:length(atlasfiles)
-        name = fullfile(d,'cat12','atlases_surfaces',atlasfiles(i).name);
+        name = fullfile(fileparts(mfilename('fullpath')),'atlases_surfaces',atlasfiles(i).name);
         spm_unlink(name);
       end
 
       % delete old atlas files with 32k meshes
-      atlasfiles = dir(fullfile(d,'cat12','atlases_surfaces_32k','*.*'));
+      atlasfiles = dir(fullfile(fileparts(mfilename('fullpath')),'atlases_surfaces_32k','*.*'));
       for i=1:length(atlasfiles)
-        name = fullfile(d,'cat12','atlases_surfaces_32k',atlasfiles(i).name);
+        name = fullfile(fileparts(mfilename('fullpath')),'atlases_surfaces_32k',atlasfiles(i).name);
         spm_unlink(name);
       end
 
       % delete old surface template files
-      templatefiles = dir(fullfile(d,'cat12','templates_surfaces','*.*'));
+      templatefiles = dir(fullfile(fileparts(mfilename('fullpath')),'templates_surfaces','*.*'));
       for i=1:length(templatefiles)
-        name = fullfile(d,'cat12','templates_surfaces',templatefiles(i).name);
+        name = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces',templatefiles(i).name);
         spm_unlink(name);
       end
 
       % delete old surface template files with 32k meshes
-      templatefiles = dir(fullfile(d,'cat12','templates_surfaces_32k','*.*'));
+      templatefiles = dir(fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k','*.*'));
       for i=1:length(templatefiles)
-        name = fullfile(d,'cat12','templates_surfaces_32k',templatefiles(i).name);
+        name = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k',templatefiles(i).name);
         spm_unlink(name);
       end
 
       % delete old volume template files 
-      templatefiles = dir(fullfile(d,'cat12','templates_MNI152NLin2009cAsym','*.*'));
+      templatefiles = dir(fullfile(fileparts(mfilename('fullpath')),'templates_MNI152NLin2009cAsym','*.*'));
       for i=1:length(templatefiles)
-        name = fullfile(d,'cat12','templates_volumes',templatefiles(i).name);
+        name = fullfile(fileparts(mfilename('fullpath')),'templates_volumes',templatefiles(i).name);
         spm_unlink(name);
       end
 
       templatefiles = dir(fullfile(cat_get_defaults('extopts.pth_templates'),'*.*'));
       for i=1:length(templatefiles)
-        name = fullfile(d,'cat12','templates_volumes',templatefiles(i).name);
+        name = fullfile(fileparts(mfilename('fullpath')),'templates_volumes',templatefiles(i).name);
         spm_unlink(name);
       end
 
@@ -176,7 +175,7 @@ if update
         % open version information if difference between release numbers 
         % is large enough
         if rnew > r+20
-          web(fullfile(spm('Dir'),'toolbox','cat12','html','cat_versions.html'));
+          web(fullfile(fileparts(mfilename('fullpath')),'html','cat_versions.html'));
         end
       case 'MATLAB:extractArchive:unableToCreate'
         fprintf('          Update failed: check folder permission.\n');

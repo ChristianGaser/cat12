@@ -211,7 +211,7 @@ cat_surf_display;
 
 % --- Executes on button press in pushQuickStartGuide.
 function pushQuickStartGuide_Callback(hObject, eventdata, handles)
-web(fullfile(spm('Dir'),'toolbox','cat12','html','cat_starting.html'));
+web(fullfile(fileparts(mfilename('fullpath')),'html','cat_starting.html'));
 
 % --- Executes on button press in pushMode.
 function pushMode_Callback(hObject, eventdata, handles)
