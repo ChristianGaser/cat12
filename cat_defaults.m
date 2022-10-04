@@ -18,6 +18,8 @@ function cat_defaults
 clear global cat; 
 global cat
 
+% CAT12 installation folder
+catdir = fileparts(which('cat12'));
 
 % Options for inital SPM12 segmentation that is used as starting point for CAT12. 
 %=======================================================================
@@ -242,7 +244,7 @@ cat.extopts.setCOM        = 1;     % 0 - none; 1 - use center-of-mass to estimat
 cat.extopts.vox           = 1.5;   % voxel size for normalized data (EXPERIMENTAL:  inf - use Tempate values)
 cat.extopts.bb            = 12;    % boundary box: 12 - [-84 -120 -72;84 84 96]; 16 - [-90 -126 -72;90 90 108]
 cat.extopts.shootingsurf  = 'Template_T1';                                                            % Shooting surface name 
-cat.extopts.pth_templates = fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym');   % Templates and atlases folder for volumes
+cat.extopts.pth_templates = fullfile(catdir,'templates_MNI152NLin2009cAsym');                         % Templates and atlases folder for volumes
 cat.extopts.darteltpm     = {fullfile(cat.extopts.pth_templates,'Template_1_Dartel.nii')};            % Indicate first Dartel template (Template_1)
 cat.extopts.shootingtpm   = {fullfile(cat.extopts.pth_templates,'Template_0_GS.nii')};                % Indicate first Shooting template (Template 0) - not working
 cat.extopts.shootingT1    = {fullfile(cat.extopts.pth_templates,'Template_T1_masked.nii')};           % T1 for result overlay, choose Template_T1.nii for non-masked T1
@@ -318,14 +320,14 @@ cat.extopts.atlas       = { ...
 
 % { name fileid GUIlevel use } - in development
 cat.extopts.satlas      = { ... 
-  'Desikan'                fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_a2009s.freesurfer.annot')                        0   1;  
-  'Destrieux'              fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_DK40.freesurfer.annot')                          0   1;  
-  'HCP'                    fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_HCP_MMP1.freesurfer.annot')                      0   0; 
+  'Desikan'                fullfile(catdir,'atlases_surfaces','lh.aparc_a2009s.freesurfer.annot')                        0   1;  
+  'Destrieux'              fullfile(catdir,'atlases_surfaces','lh.aparc_DK40.freesurfer.annot')                          0   1;  
+  'HCP'                    fullfile(catdir,'atlases_surfaces','lh.aparc_HCP_MMP1.freesurfer.annot')                      0   0; 
   ... Schaefer atlases ...
-  'Schaefer2018_100P_17N'  fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.Schaefer2018_100Parcels_17Networks_order.annot')       1   0; 
-  'Schaefer2018_200P_17N'  fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.Schaefer2018_200Parcels_17Networks_order.annot')       0   0;
-  'Schaefer2018_400P_17N'  fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.Schaefer2018_400Parcels_17Networks_order.annot')       1   0; 
-  'Schaefer2018_600P_17N'  fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.Schaefer2018_600Parcels_17Networks_order.annot')       1   0; 
+  'Schaefer2018_100P_17N'  fullfile(catdir,'atlases_surfaces','lh.Schaefer2018_100Parcels_17Networks_order.annot')       1   0; 
+  'Schaefer2018_200P_17N'  fullfile(catdir,'atlases_surfaces','lh.Schaefer2018_200Parcels_17Networks_order.annot')       0   0;
+  'Schaefer2018_400P_17N'  fullfile(catdir,'atlases_surfaces','lh.Schaefer2018_400Parcels_17Networks_order.annot')       1   0; 
+  'Schaefer2018_600P_17N'  fullfile(catdir,'atlases_surfaces','lh.Schaefer2018_600Parcels_17Networks_order.annot')       1   0; 
 }; 
 
 

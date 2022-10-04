@@ -42,7 +42,7 @@ function varargout = cat_surf_parameters(job)
   if exist('rng','file') == 2, rng('default'); rng(0); else, rand('state',0); randn('state',0); end
   
   % default structure
-  def.fsavgDir    = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
+  def.fsavgDir    = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces'); 
   def.trerr       = 0;  % display errors
   def.nproc       = 0;  % parallel processing
   def.verb        = cat_get_defaults('extopts.verb'); 

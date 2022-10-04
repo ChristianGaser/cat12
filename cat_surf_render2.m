@@ -2880,7 +2880,7 @@ end
 
 %==========================================================================
 function myUnderlay(obj,evt,H)
-[P, sts] = spm_select(1,'any','Select texture file to underlay',{},fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'),'[lr]h.mc.*');
+[P, sts] = spm_select(1,'any','Select texture file to underlay',{},fullfile(fileparts(mfilename('fullpath')),'templates_surfaces'),'[lr]h.mc.*');
 if ~sts, return; end
 cat_surf_render2('Underlay',H,P);
 

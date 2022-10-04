@@ -13,8 +13,8 @@ function cat_surf_map_atlas(central_files, atlas_files)
 % ______________________________________________________________________
 % $Id$
 
-fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
-atlasDir  = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces');
+fsavgDir  = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces'); 
+atlasDir  = fullfile(fileparts(mfilename('fullpath')),'atlases_surfaces');
 
 if nargin < 1
   central_files = spm_select([1 Inf],'^lh.central.(?!nofix).*','Select left central surfaces. Right side will be automatically processed.');
