@@ -1,4 +1,60 @@
 ------------------------------------------------------------------------
+r2107 | gaser | 2022-10-05 00:12:40
+
+Changed paths:
+ M CHANGES.txt
+ M cat12.m
+ M cat_conf_stools.m
+ M cat_conf_stoolsexp.m
+ M cat_defaults.m
+ M cat_io_FreeSurfer.m
+ M cat_io_checkdepfiles.m
+ M cat_io_xml.m
+ M cat_long_main.m
+ M cat_long_multi_run.m
+ M cat_parallelize.m
+ M cat_plot_histogram.m
+ M cat_roi_roi2surf.m
+ M cat_roi_values2surf.m
+ M cat_run.m
+ M cat_simple.m
+ M cat_spm_results_ui.m
+ M cat_stat_analyze_ROIs.m
+ M cat_stat_check_cov_old.m
+ M cat_stat_cva_ui.m
+ M cat_stat_homogeneity.m
+ M cat_stat_spm.m
+ M cat_stat_spm2x.m
+ M cat_surf_avg.m
+ M cat_surf_calc.m
+ M cat_surf_createCS.m
+ M cat_surf_createCS2.m
+ M cat_surf_create_TPM_hull_surface.m
+ M cat_surf_display.m
+ M cat_surf_flipsides.m
+ M cat_surf_fun.m
+ M cat_surf_gyrification.m
+ M cat_surf_info.m
+ M cat_surf_map_atlas.m
+ M cat_surf_parameters.m
+ M cat_surf_render.m
+ M cat_surf_render2.m
+ M cat_surf_resamp.m
+ M cat_surf_resamp_freesurfer.m
+ M cat_surf_results.m
+ M cat_surf_smooth.m
+ M cat_surf_surf2roi.m
+ M cat_surf_vol2surf.m
+ M cat_system.m
+ M cat_tst_cattest.m
+ M cat_vol_slice_overlay_ui.m
+ M spm_cat12.m
+ M standalone/cat_standalone_segment_long.m
+ M standalone/cat_standalone_simple.m
+
+
+Changed: Updated hardcoded toolbox path for CAT12.
+------------------------------------------------------------------------
 r2106 | rdahnke | 2022-10-04 16:27:55
 
 Changed paths:
@@ -15,7 +71,7 @@ New:   Added an option in the longitudinal processing (cat_conf_long) and the
        report using default print setting of the cross-sectional report.  
        Although the changes in cat_long_report looks huge it is only an
        additional if-block.
-       ------------------------------------------------------------------------
+------------------------------------------------------------------------
 r2105 | gaser | 2022-09-29 15:17:42
 
 Changed paths:

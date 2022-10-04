@@ -114,8 +114,8 @@ function [mainbatch,perror] = cat_tst_cattest(job)
   
   % defaults
   def.computer  = computer; 
-  def.resdir    = fullfile(spm('dir'),'toolbox','cat12','cattest',[cv 'R' rv]);
-  def.batchdir  = fullfile(spm('dir'),'toolbox','cat12','batches','cattest');
+  def.resdir    = fullfile(fileparts(mfilename('fullpath')),'cattest',[cv 'R' rv]);
+  def.batchdir  = fullfile(fileparts(mfilename('fullpath')),'batches','cattest');
   def.expert    = cat_get_defaults('extopts.expertgui');
 
   % testdata definition
@@ -123,11 +123,11 @@ function [mainbatch,perror] = cat_tst_cattest(job)
   % single run human test data
   def.data_human = {
     fullfile(spm('dir'),'canonical','single_subj_T1.nii'); 
-    fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x2_4397-tfl.nii'); 
-    fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x2_BUSS_2002_1YO_t1.nii'); 
-    fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x2_OAS1_0031_MR1_mpr_n4_anon_sbj_111.nii'); 
-    fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x1_human_tumor_tb09.nii'); 
-    fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x1_human_tumor_tp01.nii'); 
+    fullfile(fileparts(mfilename('fullpath')),'data','uint8_lowresR2x2x2_4397-tfl.nii'); 
+    fullfile(fileparts(mfilename('fullpath')),'data','uint8_lowresR2x2x2_BUSS_2002_1YO_t1.nii'); 
+    fullfile(fileparts(mfilename('fullpath')),'data','uint8_lowresR2x2x2_OAS1_0031_MR1_mpr_n4_anon_sbj_111.nii'); 
+    fullfile(fileparts(mfilename('fullpath')),'data','uint8_lowresR2x2x1_human_tumor_tb09.nii'); 
+    fullfile(fileparts(mfilename('fullpath')),'data','uint8_lowresR2x2x1_human_tumor_tp01.nii'); 
     };
   % longitudinal test data 
   def.data_human_long = {
@@ -137,18 +137,18 @@ function [mainbatch,perror] = cat_tst_cattest(job)
   };
   % primate test data
   def.data_greaterapes = {
-    fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x2_primate_chimpanzee_kenge.nii'); 
-    fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x2_primate_chimpanzee_laz.nii'); 
-    fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x2_primate_orangutan_minyak.nii');
-    fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x2_primate_gorilla_kekla.nii');
+    fullfile(fileparts(mfilename('fullpath')),'data','uint8_lowresR2x2x2_primate_chimpanzee_kenge.nii'); 
+    fullfile(fileparts(mfilename('fullpath')),'data','uint8_lowresR2x2x2_primate_chimpanzee_laz.nii'); 
+    fullfile(fileparts(mfilename('fullpath')),'data','uint8_lowresR2x2x2_primate_orangutan_minyak.nii');
+    fullfile(fileparts(mfilename('fullpath')),'data','uint8_lowresR2x2x2_primate_gorilla_kekla.nii');
     };
   def.data_oldworldmonkeys = {
-    fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x2_primate_baboon_F3S12s20130924_120712.nii'); 
-    fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x2_primate_gibbon_cleo.nii'); 
-    fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x2_primate_gibbon_gibbon4.nii');
-    fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x2_primate_mangabey_fso.nii'); 
-    fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x2_primate_rhesus_caretF99.nii');
-    fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x2_primate_rhesus_research.nii');
+    fullfile(fileparts(mfilename('fullpath')),'data','uint8_lowresR2x2x2_primate_baboon_F3S12s20130924_120712.nii'); 
+    fullfile(fileparts(mfilename('fullpath')),'data','uint8_lowresR2x2x2_primate_gibbon_cleo.nii'); 
+    fullfile(fileparts(mfilename('fullpath')),'data','uint8_lowresR2x2x2_primate_gibbon_gibbon4.nii');
+    fullfile(fileparts(mfilename('fullpath')),'data','uint8_lowresR2x2x2_primate_mangabey_fso.nii'); 
+    fullfile(fileparts(mfilename('fullpath')),'data','uint8_lowresR2x2x2_primate_rhesus_caretF99.nii');
+    fullfile(fileparts(mfilename('fullpath')),'data','uint8_lowresR2x2x2_primate_rhesus_research.nii');
     };
   % test parameter (especially for CAT preprocessing)
   def.para = {

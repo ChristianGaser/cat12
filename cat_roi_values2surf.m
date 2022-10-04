@@ -11,7 +11,7 @@ function cat_roi_values2surf(atlas_name, values, surfname);
 % $Id$
 
 if nargin == 0
-  atlas_name = spm_select(1,'^lh.*\.annot$','Select left atlas file for value mapping',{},fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces_32k'));
+  atlas_name = spm_select(1,'^lh.*\.annot$','Select left atlas file for value mapping',{},fullfile(fileparts(mfilename('fullpath')),'atlases_surfaces_32k'));
 end
 
 [vertices, lrdata, colortable, lrcsv] = cat_io_FreeSurfer('read_annotation',atlas_name);
@@ -28,7 +28,7 @@ if nargin == 0
   surfname = spm_input('Name of surface', '+1', 's', ['mesh.val2surf_' atlas '.gii'], n_rois);
 end
 
-fsaverage = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','mesh.central.freesurfer.gii');
+fsaverage = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k','mesh.central.freesurfer.gii');
 M = gifti(fsaverage);
 
 lvalues = values(1:2:n_rois);

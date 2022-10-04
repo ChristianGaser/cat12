@@ -177,7 +177,7 @@ if isfield(job,'datalong')
   
 end
 
-job_name = fullfile(spm('dir'),'toolbox','cat12','cat_long_main.txt');
+job_name = fullfile(fileparts(mfilename('fullpath'))'cat_long_main.txt');
 
 % we have to copy the original txt-file to a matlab file because for deployed versions
 % matlab files will be always pre-compiled, but we need the original matlab file untouched

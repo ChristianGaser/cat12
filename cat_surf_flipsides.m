@@ -93,18 +93,18 @@ function Prdata = cat_surf_flipsides(job)
 
   
   %% fsavg sphere and central
-  Psphere{1}   = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.sphere.freesurfer.gii');
-  Psphere{2}   = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.sphere.freesurfer.gii');
-  Pcentral{1}  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii');
-  Pcentral{2}  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.central.freesurfer.gii');
+  Psphere{1}   = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces','lh.sphere.freesurfer.gii');
+  Psphere{2}   = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces','rh.sphere.freesurfer.gii');
+  Pcentral{1}  = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces','lh.central.freesurfer.gii');
+  Pcentral{2}  = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces','rh.central.freesurfer.gii');
   % fsavg flipping spherical mapping
-  Preg{1}      = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.sphere.rhreg.freesurfer.gii');
-  Preg{2}      = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.sphere.lhreg.freesurfer.gii');
+  Preg{1}      = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces','lh.sphere.rhreg.freesurfer.gii');
+  Preg{2}      = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces','rh.sphere.lhreg.freesurfer.gii');
   % fsavg flipping 
-  Pflipsphere{1}  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.sphere.lhflip.freesurfer.gii');
-  Pflipsphere{2}  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.sphere.rhflip.freesurfer.gii');
-  Pflipcentral{1} = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.central.lhflip.freesurfer.gii');
-  Pflipcentral{2} = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.rhflip.freesurfer.gii');
+  Pflipsphere{1}  = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces','rh.sphere.lhflip.freesurfer.gii');
+  Pflipsphere{2}  = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces','lh.sphere.rhflip.freesurfer.gii');
+  Pflipcentral{1} = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces','rh.central.lhflip.freesurfer.gii');
+  Pflipcentral{2} = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces','lh.central.rhflip.freesurfer.gii');
 
   
   

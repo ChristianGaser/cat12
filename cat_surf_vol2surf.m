@@ -106,10 +106,10 @@ function out = cat_surf_vol2surf(varargin)
   % Dartel template surface
   if ~isfield(job,'data_mesh_lh')
     if job.mesh32k
-      fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k'); 
+      fsavgDir  = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k'); 
       str_resamp = '.resampled_32k';
     else
-      fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
+      fsavgDir  = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces'); 
       str_resamp = '.resampled';
     end
     job.data_mesh_lh = {fullfile(fsavgDir, ['lh.central.' cat_get_defaults('extopts.shootingsurf') '.gii'])};

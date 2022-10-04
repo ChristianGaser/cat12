@@ -33,9 +33,9 @@ function cat_vol_slice_overlay_ui
 % $Id$
 
 % use default T1 from Shooting
-%OV.reference_image = fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii');
+%OV.reference_image = fullfile(fileparts(mfilename('fullpath')),'templates_MNI152NLin2009cAsym','Template_T1.nii');
 % or its masked version
-OV.reference_image = fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1_masked.nii');
+OV.reference_image = fullfile(fileparts(mfilename('fullpath')),'templates_MNI152NLin2009cAsym','Template_T1_masked.nii');
 
 OV.reference_range = [0.2 1.0];                        % intensity range for reference image
 OV.opacity = Inf;                                      % transparency value for overlay (<1)

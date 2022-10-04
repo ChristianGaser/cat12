@@ -520,10 +520,10 @@ switch lower(action)
       end
 
       H.S{1}.info(1).side = 'lh';
-      H.S{1}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ...
+      H.S{1}.info(1).Pmesh = fullfile(fileparts(mfilename('fullpath')), ...
           ['templates_surfaces' H.str32k], 'lh.central.freesurfer.gii');
       H.S{2}.info(1).side = 'rh';
-      H.S{2}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ....
+      H.S{2}.info(1).Pmesh = fullfile(fileparts(mfilename('fullpath')), ....
           ['templates_surfaces' H.str32k], 'rh.central.freesurfer.gii');
 
       for ind = 1:2
@@ -695,15 +695,15 @@ switch lower(action)
       H.rdata{2} = [];
       H.rdata{3} = [];
       for ind = 1:2
-        atlas_name = fullfile(spm('dir'), 'toolbox', 'cat12', ['atlases_surfaces' H.str32k], ...
+        atlas_name = fullfile(fileparts(mfilename('fullpath')), ['atlases_surfaces' H.str32k], ...
         [H.S{ind}.info(1).side '.aparc_DK40.freesurfer.annot']);
         [vertices, rdata0, colortable, rcsv1] = cat_io_FreeSurfer('read_annotation', atlas_name);
         H.rdata{1} = [H.rdata{1} rdata0];
-        atlas_name = fullfile(spm('dir'), 'toolbox', 'cat12', ['atlases_surfaces' H.str32k], ...
+        atlas_name = fullfile(fileparts(mfilename('fullpath')), ['atlases_surfaces' H.str32k], ...
         [H.S{ind}.info(1).side '.aparc_a2009s.freesurfer.annot']);
         [vertices, rdata0, colortable, rcsv2] = cat_io_FreeSurfer('read_annotation', atlas_name);
         H.rdata{2} = [H.rdata{2} rdata0];
-        atlas_name = fullfile(spm('dir'), 'toolbox', 'cat12', ['atlases_surfaces' H.str32k], ...
+        atlas_name = fullfile(fileparts(mfilename('fullpath')), ['atlases_surfaces' H.str32k], ...
         [H.S{ind}.info(1).side '.aparc_HCP_MMP1.freesurfer.annot']);
         [vertices, rdata0, colortable, rcsv3] = cat_io_FreeSurfer('read_annotation', atlas_name);
         H.rdata{3} = [H.rdata{3} rdata0];
@@ -2029,16 +2029,16 @@ H.surf_sel = surf;
 for ind = 1:2
   switch surf
     case 1
-      H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], ...
+      H.S{ind}.info(1).Pmesh = fullfile(fileparts(mfilename('fullpath')), ['templates_surfaces' H.str32k], ...
       [H.S{ind}.info(1).side '.central.freesurfer.gii']);
     case 2
-      H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], ...
+      H.S{ind}.info(1).Pmesh = fullfile(fileparts(mfilename('fullpath')), ['templates_surfaces' H.str32k], ...
       [H.S{ind}.info(1).side '.inflated.freesurfer.gii']);
     case 3
-      H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], ...
+      H.S{ind}.info(1).Pmesh = fullfile(fileparts(mfilename('fullpath')), ['templates_surfaces' H.str32k], ...
       [H.S{ind}.info(1).side '.central.' cat_get_defaults('extopts.shootingsurf') '.gii']);
     case 4
-      H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], ...
+      H.S{ind}.info(1).Pmesh = fullfile(fileparts(mfilename('fullpath')), ['templates_surfaces' H.str32k], ...
       [H.S{ind}.info(1).side '.patch.freesurfer.gii']);
   end
   H.S{ind}.M = gifti(H.S{ind}.info(1).Pmesh);
@@ -2103,8 +2103,8 @@ set(H.figure, 'Renderer', 'OpenGL');
 %-Get mesh curvature and sulcal depth
 %------------------------------------------------------------------
 for i = 1:2
-  g1 = gifti(fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], [H.S{i}.info(1).side '.mc.freesurfer.gii']));
-  g2 = gifti(fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], [H.S{i}.info(1).side '.sqrtsulc.freesurfer.gii']));
+  g1 = gifti(fullfile(fileparts(mfilename('fullpath')), ['templates_surfaces' H.str32k], [H.S{i}.info(1).side '.mc.freesurfer.gii']));
+  g2 = gifti(fullfile(fileparts(mfilename('fullpath')), ['templates_surfaces' H.str32k], [H.S{i}.info(1).side '.sqrtsulc.freesurfer.gii']));
   H.S{i}.curv = cell(3, 1);
   H.S{i}.curv{1} = g1.cdata;
   H.S{i}.curv{2} = g2.cdata;
@@ -2739,11 +2739,11 @@ for i = 1:n
     % names for template and thickness file and output 
     Pvol = deblank(P(i,:));
     [pp,ff,ee] = spm_fileparts(Pvol);
-    Pmesh_lh  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k',['lh.central.' cat_get_defaults('extopts.shootingsurf') '.gii']);
-    Pthick_lh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k',['lh.thickness.' cat_get_defaults('extopts.shootingsurf')]);
+    Pmesh_lh  = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k',['lh.central.' cat_get_defaults('extopts.shootingsurf') '.gii']);
+    Pthick_lh = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k',['lh.thickness.' cat_get_defaults('extopts.shootingsurf')]);
     Pout_lh   = fullfile(pp,['lh.',ff '.gii']);
-    Pmesh_rh  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k',['rh.central.' cat_get_defaults('extopts.shootingsurf') '.gii']);
-    Pthick_rh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k',['rh.thickness.' cat_get_defaults('extopts.shootingsurf')]);
+    Pmesh_rh  = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k',['rh.central.' cat_get_defaults('extopts.shootingsurf') '.gii']);
+    Pthick_rh = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k',['rh.thickness.' cat_get_defaults('extopts.shootingsurf')]);
     Pout_rh   = fullfile(pp,['rh.',ff '.gii']);
     Pout      = fullfile(pp,['mesh.',ff '.resampled_32k.gii']);
         

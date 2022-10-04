@@ -417,7 +417,7 @@ function S = cat_surf_reduce(S,red)
       '"try, %s; catch, disp(''Error''); end; exit; "'],...
       sprintf(['addpath(''%s''); S = gifti(''%s''); '...
         'S = reducepatch( struct(''vertices'',S.vertices,''faces'',S.faces) , %g); ' ...
-        'save(gifti(S),''%s'',''Base64Binary''); '],fullfile(spm('dir'),'toolbox','cat12'),Ptmpo,red,Ptmpn));
+        'save(gifti(S),''%s'',''Base64Binary''); '],fullfile(fileparts(mfilename('fullpath'))),Ptmpo,red,Ptmpn));
     evalc('[ST, RS] = system([cmds,cmd]); cat_check_system_output(ST,RS,1);');
     
     if exist(Ptmpn,'file'); break; end
@@ -728,9 +728,9 @@ function cat_surf_cdatamappingtst
    Psubtmp      = strrep(Psubcentral,'central','tmp'); 
    Pavgtmp      = strrep(strrep(Psubcentral,'central','tmp.resampled'),'lh.','s15mm.lh.'); 
  
-   %Pavgcentral  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii'));
-   PavgsphereA  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.sphere.freesurfer.gii'); 
-   PavgDKT40    = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_DKT40JT.freesurfer.annot');
+   %Pavgcentral  = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces','lh.central.freesurfer.gii'));
+   PavgsphereA  = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces','lh.sphere.freesurfer.gii'); 
+   PavgDKT40    = fullfile(fileparts(mfilename('fullpath')),'atlases_surfaces','lh.aparc_DKT40JT.freesurfer.annot');
    
 %% Test 1 - avg2sub - ok
    Ssub = gifti(PsubsphereA);

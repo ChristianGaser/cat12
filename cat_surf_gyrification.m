@@ -107,7 +107,7 @@ function PSgi = cat_surf_gyrification(PS,opt)
   
   % set default options
   if ~exist('opt','var'), opt = struct(); end 
-  def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
+  def.fsavgDir  = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces'); 
   opt = cat_io_checkinopt(opt,def); clear def; 
   
   def.verb      = 1;  % be verbose

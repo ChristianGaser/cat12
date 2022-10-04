@@ -47,8 +47,8 @@ function varargout = cat_parallelize(job,func,datafield)
   def.lazy      = 0; % reprocess exist results
   def.debug     = cat_get_defaults('extopts.verb')>2;
   def.getPID    = 2;
-  job.CATDir    = fullfile(spm('dir'),'toolbox','cat12','CAT');   
-  job.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
+  job.CATDir    = fullfile(fileparts(mfilename('fullpath')),'CAT');   
+  job.fsavgDir  = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces'); 
  
   job = cat_io_checkinopt(job,def);
 
@@ -117,7 +117,7 @@ function varargout = cat_parallelize(job,func,datafield)
       SPMdir  = spm_str_manip(data,'h');
       SPMdiri = find(~cellfun('isempty',SPMdir),1);
       if ~isempty(SPMdiri)
-        logdir = fullfile(spm('dir'),'toolbox','cat12','logs'); % log already exist as file
+        logdir = fullfile(fileparts(mfilename('fullpath')),'logs'); % log already exist as file
         if ~exist(logdir,'dir')
           try
             mkdir(logdir); 
@@ -192,14 +192,14 @@ function varargout = cat_parallelize(job,func,datafield)
         'global defaults; defaults=spm12def; clear defaults; '...
         'global cat; cat=cat12def; clear cat; cat_display_matlab_PID; ' ...
         'output = %s(job); try, save(''%s'',''output''); end; warning off;exit"'],... 
-        spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),fileparts(which(func)),tmp_name,func,tmp_name);
+        spm('dir'),fullfile(fileparts(mfilename('fullpath'))),fileparts(which(func)),tmp_name,func,tmp_name);
     else
       matlab_cmd = sprintf(['" ' ...
         'warning off;global cprintferror; cprintferror=1; addpath %s %s %s; load %s; ' ...
         'global defaults; defaults=spm12def; clear defaults; '...
         'global cat; cat=cat12def; clear cat; cat_display_matlab_PID; ' ...
         '%s(job); warning off; exit"'],... 
-        spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),fileparts(which(func)),tmp_name,func);
+        spm('dir'),fullfile(fileparts(mfilename('fullpath'))),fileparts(which(func)),tmp_name,func);
     end
     
 

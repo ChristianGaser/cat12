@@ -60,8 +60,8 @@ function varargout = cat_io_xml(file,varargin)
     pkg load io
     try 
       % add java files
-      xmljava{1} = fullfile(spm('dir'),'toolbox','cat12','Octave','xercesImpl.jar'); 
-      xmljava{2} = fullfile(spm('dir'),'toolbox','cat12','Octave','xml-apis.jar'); 
+      xmljava{1} = fullfile(fileparts(mfilename('fullpath')),'Octave','xercesImpl.jar'); 
+      xmljava{2} = fullfile(fileparts(mfilename('fullpath')),'Octave','xml-apis.jar'); 
       % call them
       for xi=1:numel(xmljava), eval(sprintf('javaaddpath("%s");',xmljava{xi})); end
       % test function 

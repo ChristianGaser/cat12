@@ -36,9 +36,9 @@ matlabbatch{1}.spm.tools.cat.long.enablepriors = 1;
 % Remove comments and edit entry if you would like to change the Dartel/Shooting approach
 % Otherwise the default value from cat_defaults.m is used.
 % entry for choosing shooting approach
-%matlabbatch{1}.spm.tools.cat.long.extopts.registration.regmethod.shooting.shootingtpm = {fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_0_GS.nii')};
+%matlabbatch{1}.spm.tools.cat.long.extopts.registration.regmethod.shooting.shootingtpm = {fullfile(fileparts(mfilename('fullpath')),'templates_MNI152NLin2009cAsym','Template_0_GS.nii')};
 % entry for choosing dartel approach
-%matlabbatch{1}.spm.tools.cat.long.extopts.registration.regmethod.dartel.darteltpm = {fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_1_Dartel.nii')};
+%matlabbatch{1}.spm.tools.cat.long.extopts.registration.regmethod.dartel.darteltpm = {fullfile(fileparts(mfilename('fullpath')),'templates_MNI152NLin2009cAsym','Template_1_Dartel.nii')};
 % Strength of Shooting registration: 0 - Dartel, eps (fast), 0.5 (default) to 1 (accurate) optimized Shooting, 4 - default Shooting; default 0.5
 %matlabbatch{1}.spm.tools.cat.long.extopts.registration.regmethod.shooting.regstr = 0.5;
 

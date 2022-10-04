@@ -55,7 +55,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb,useavg)
   if ~exist('useavg','var'), useavg=1; end
   if strcmp(P,'selftest')
     pps = {
-      fullfile(spm('dir'),'toolbox','cat12','templates_surfaces')
+      fullfile(fileparts(mfilename('fullpath')),'templates_surfaces')
       fullfile('User','08.15','T1 T2','subs','mri')
       };
     ffs = {
@@ -420,9 +420,9 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb,useavg)
             ff2 = strrep(ff2,'Template_T1_IXI555_MNI152_GS',cat_get_defaults('extopts.shootingsurf'));
             if ~isempty(strfind(ff2,'.central.freesurfer')) || ~isempty(strfind(ff2,['.central.' cat_get_defaults('extopts.shootingsurf')]))
               if strfind(pp2,'templates_surfaces_32k')
-                SPM.xVol.G = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k',[ff2 xx2]);
+                SPM.xVol.G = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k',[ff2 xx2]);
               else
-                SPM.xVol.G = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[ff2 xx2]);
+                SPM.xVol.G = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces',[ff2 xx2]);
               end
             end
           end
@@ -431,10 +431,10 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb,useavg)
         else
           % 32k mesh?
           if SPM.xY.VY(1).dim(1) == 32492 || SPM.xY.VY(1).dim(1) == 64984
-            sinfo(i).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k',...
+            sinfo(i).Pmesh = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k',...
               [sinfo(i).side '.central.freesurfer.gii']);
           else
-            sinfo(i).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',...
+            sinfo(i).Pmesh = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces',...
               [sinfo(i).side '.central.freesurfer.gii']);
           end
         end
@@ -455,10 +455,10 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb,useavg)
         end
         
         if exist('S','var') && isfield(S,'cdata') && (length(S.cdata) == 32492 || length(S.cdata) == 64984)
-          sinfo(i).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k',...
+          sinfo(i).Pmesh = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k',...
             [sinfo(i).side '.central.freesurfer.gii']);
         elseif exist('S','var') && isfloat(S) && (length(S) == 32492 || length(S) == 64984)
-          sinfo(i).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k',...
+          sinfo(i).Pmesh = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k',...
             [sinfo(i).side '.central.freesurfer.gii']);
         else
           if sinfo(1).resampled_32k
@@ -466,7 +466,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb,useavg)
           else
             str_32k = '';
           end
-          sinfo(i).Pmesh = fullfile(spm('dir'),'toolbox','cat12',['templates_surfaces' str_32k],...
+          sinfo(i).Pmesh = fullfile(fileparts(mfilename('fullpath')),['templates_surfaces' str_32k],...
             [sinfo(i).side '.central.freesurfer.gii']);
         end
       end
@@ -497,9 +497,9 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb,useavg)
       else
         str_32k = '';
       end
-      sinfo(i).Psphere = fullfile(spm('dir'),'toolbox','cat12',['templates_surfaces' str_32k],...
+      sinfo(i).Psphere = fullfile(fileparts(mfilename('fullpath')),['templates_surfaces' str_32k],...
             [sinfo(i).side '.sphere.freesurfer.gii']);
-      sinfo(i).Pspherereg = fullfile(spm('dir'),'toolbox','cat12',['templates_surfaces' str_32k],...
+      sinfo(i).Pspherereg = fullfile(fileparts(mfilename('fullpath')),['templates_surfaces' str_32k],...
             [sinfo(i).side '.sphere.reg.freesurfer.gii']);          
     end
     %}

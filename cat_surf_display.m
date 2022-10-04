@@ -116,9 +116,9 @@ function varargout = cat_surf_display(varargin)
       end
     
       job.fsaverage    = {
-        fullfile(spm('dir'),'toolbox','cat12',templates_surfaces,'lh.central.freesurfer.gii');  
-        fullfile(spm('dir'),'toolbox','cat12',templates_surfaces,'lh.inflated.freesurfer.gii');  
-        fullfile(spm('dir'),'toolbox','cat12',templates_surfaces,['lh.central.' cat_get_defaults('extopts.shootingsurf') '.gii']);  
+        fullfile(fileparts(mfilename('fullpath')),templates_surfaces,'lh.central.freesurfer.gii');  
+        fullfile(fileparts(mfilename('fullpath')),templates_surfaces,'lh.inflated.freesurfer.gii');  
+        fullfile(fileparts(mfilename('fullpath')),templates_surfaces,['lh.central.' cat_get_defaults('extopts.shootingsurf') '.gii']);  
         };
       sinfo(i).Pmesh = cat_surf_rename(job.fsaverage{job.usefsaverage},'side',sinfo(i).side); 
     end
