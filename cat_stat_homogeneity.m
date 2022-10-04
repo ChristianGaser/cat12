@@ -1100,7 +1100,7 @@ return
 function icon = load_icon(name)
 %-----------------------------------------------------------------------
 
-icon = imread(fullfile(spm('dir'),'toolbox','cat12','html','icons',name)); 
+icon = imread(fullfile(fileparts(mfilename('fullpath')),'html','icons',name)); 
 icon = double(icon)./double(max(icon(:))); icon(icon==0) = 0.94; 
 
 return

@@ -186,7 +186,7 @@ if n == 2
         else
           templates_surfaces = 'templates_surfaces';
         end
-        Pmesh = fullfile(spm('dir'),'toolbox','cat12',templates_surfaces,[sinfo.side '.central.freesurfer.gii']);
+        Pmesh = fullfile(fileparts(mfilename('fullpath')),templates_surfaces,[sinfo.side '.central.freesurfer.gii']);
       end
       if exist(Pmesh,'file')
         % scale in 2..98% range

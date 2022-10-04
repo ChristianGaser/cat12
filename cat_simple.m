@@ -380,7 +380,7 @@ function output = cat_simple(job)
         if exist(rdata{ri,2},'file')
           rfiles{ri} = rdata{ri,2};
         else
-          rfiles{ri} = cat_vol_findfiles(fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces_32k'),['lh.' rdata{ri,2} '*annot']); 
+          rfiles{ri} = cat_vol_findfiles(fullfile(fileparts(mfilename('fullpath')),'atlases_surfaces_32k'),['lh.' rdata{ri,2} '*annot']); 
         end
       end
       for mi = 1:size(measures,1)

@@ -25,10 +25,10 @@ function cat_surf_resamp_freesurfer(vargin)
   opt.debug     = cat_get_defaults('extopts.verb') > 2;
       
   if mesh32k
-    opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k');
+    opt.fsavgDir  = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k');
     str_resamp = '.resampled_32k';
   else
-    opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
+    opt.fsavgDir  = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces');
     str_resamp = '.resampled';
   end
 

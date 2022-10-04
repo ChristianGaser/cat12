@@ -42,9 +42,9 @@ spm_get_defaults('mat.format','-v7.3');
 
 % check for 32k meshes
 if SPM.xY.VY(1).dim(1) == 32492 || SPM.xY.VY(1).dim(1) == 64984
-  fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k');
+  fsavgDir = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k');
 else
-  fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
+  fsavgDir = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces');
 end
 
 % select underlying surface and prefer shooting template

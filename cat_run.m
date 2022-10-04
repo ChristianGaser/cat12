@@ -115,7 +115,7 @@ if isempty(logdir)
     SPMdir  = spm_str_manip(data,'h');
     SPMdiri = find(~cellfun('isempty',SPMdir),1);
     if ~isempty(SPMdiri)
-      logdir = fullfile(spm('dir'),'toolbox','cat12','logs'); % log already exist as file
+      logdir = fullfile(fileparts(mfilename('fullpath')),'logs'); % log already exist as file
       if ~exist(logdir,'dir')
         try
           mkdir(logdir); 
@@ -205,7 +205,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
         ['"global cprintferror; cprintferror=1; addpath(''%s'', ''%s'', ''%s'', ''%s'');load(''%s''); ' ...
          'global defaults; defaults=spm12def; clear defaults; '...
          'global cat; cat=cat12def; clear cat; cat_run(job); "'],...
-      spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),...
+      spm('dir'),fullfile(fileparts(mfilename('fullpath'))),...
         fullfile(spm('dir'),'toolbox','OldNorm'),fullfile(spm('dir'),'toolbox','DARTEL'), tmp_name);
 
     % log-file for output

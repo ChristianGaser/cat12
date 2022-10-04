@@ -87,17 +87,17 @@ function vout = cat_surf_resamp(varargin)
   def.lazy       = 0; 
   def.verb       = cat_get_defaults('extopts.verb'); 
   def.debug      = cat_get_defaults('extopts.verb')>2;
-  def.fsavgDir   = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
+  def.fsavgDir   = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces'); 
   
   listpp = struct('new',0,'exist',0,'note',0,'error',0);
   
   job = cat_io_checkinopt(job,def);
 
   if job.mesh32k
-    job.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k');
+    job.fsavgDir  = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k');
     str_resamp = '.resampled_32k';
   else
-    job.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
+    job.fsavgDir  = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces');
     str_resamp = '.resampled';
   end
 

@@ -766,7 +766,7 @@ if longmodel > 1
     matlabbatch{mbi}.spm.tools.cat.tools.warp.images{2}(1)    = cfg_dep('Resize images: Resized',...
       substruct('.','val', '{}',{mb_lr(2)}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
       substruct('.','res', '()',{':'}));
-    matlabbatch{mbi}.spm.tools.cat.tools.warp.dfile           = {fullfile(spm('dir'),'toolbox','cat12','cat_long_shoot_defaults.m')};
+    matlabbatch{mbi}.spm.tools.cat.tools.warp.dfile           = {fullfile(fileparts(mfilename('fullpath'))'cat_long_shoot_defaults.m')};
 
     % reinterpolate original resolution 
     mbi = mbi + 1; mb_GSI = mbi; % have to do this for all shooting tissues to get the dependencies
@@ -793,7 +793,7 @@ if longmodel > 1
     matlabbatch{mbi}.spm.tools.cat.tools.warp.images{2}(1)    = cfg_dep('CAT12: Segmentation (current release): p2 Image',...
       substruct('.','val', '{}',{mb_cat}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}),...
       substruct('.','tiss', '()',{2}, '.','p', '()',{':'}));
-    matlabbatch{mbi}.spm.tools.cat.tools.warp.dfile           = {fullfile(spm('dir'),'toolbox','cat12','cat_long_shoot_defaults.m')};
+    matlabbatch{mbi}.spm.tools.cat.tools.warp.dfile           = {fullfile(fileparts(mfilename('fullpath'))'cat_long_shoot_defaults.m')};
   end
 
 

@@ -29,10 +29,10 @@ global cprintferror;  % temporary, because of JAVA errors in cat_io_cprintf ... 
 %try clearvars -global deffile;  end %#ok<TRYNC>
 
 % check that CAT12 is installed in the correct folder
-pth = fileparts(which(mfilename));
+pth = fileparts(mfilename('fullpath'));
 [pth2, nam]=fileparts(pth);
 if ~strcmp(nam,'cat12')
-  spm('alert!',sprintf('Please check that you do not have multiple CAT12 installations in your path!\nYour current CAT12 version is installed in %s but should be installed in %s',pth,fullfile(spm('dir'),'toolbox','cat12')),'WARNING');
+  spm('alert!',sprintf('Please check that you do not have multiple CAT12 installations in your path!\nYour current CAT12 version is installed in %s but should be installed in %s',pth,fullfile(catdir)),'WARNING');
 end
 
 % check that mex-files on MAC are not blocked
@@ -40,7 +40,7 @@ try
   feval(@cat_sanlm,single(rand(6,6,6)),1,3);
 catch
   if ismac 
-    CATDir = fullfile(spm('dir'),'toolbox','cat12');
+    CATDir = fullfile(catdir);
     web('https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)#Troubleshooting');
     cat_io_cmd(sprintf('\nThe following commands will be executed as administrator to allow execution of CAT12 binaries and mex-files.\n Please now type admin password to call sudo\n'),'warning');
     cat_io_cmd(sprintf('You can also break that command here and run the commands that are listed on the open website under Troubleshooting manually.\n'),'warning');
@@ -59,7 +59,7 @@ end
 expert   = cat_get_defaults('extopts.expertgui'); 
 
 % start cat with different default file
-catdir = fullfile(spm('dir'),'toolbox','cat12'); 
+catdir = fileparts(mfilename('fullpath')); 
 catdef = fullfile(catdir,'cat_defaults.m');
 
 if nargin==0 && (isempty(deffile) || strcmp(deffile,catdef))
@@ -140,7 +140,7 @@ switch lower(deffile)
     
     mycat                      = cat_get_defaults;
     % change TPM and user higher resolution and expect stronger bias
-    mycat.opts.tpm             = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_TPM.nii'])};
+    mycat.opts.tpm             = {fullfile(catdir,'templates_animals',[species '_TPM.nii'])};
     mycat.opts.biasreg         = 0.001;                                  % less regularisation 
     mycat.opts.biasfwhm        = 30;                                     % stronger fields 
     mycat.opts.samp            = 1;                                      % smaller resampling
@@ -148,11 +148,11 @@ switch lower(deffile)
     % use species specific templates, higher resolution, stronger corrections and less affine registration (by SPM) 
     mycat.extopts.species      = species;  
     %mycat.extopts.brainscale   = 200; % non-human brain volume in cm3 (from literature) or scaling in mm (check your data)
-    mycat.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_Template_1.nii'])}; % Indicate first Dartel template
-    mycat.extopts.shootingtpm  = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_Template_0_GS.nii'])}; % Indicate first Shooting template
-    mycat.extopts.cat12atlas   = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_cat.nii'])};        % VBM atlas with major regions for VBM, SBM & ROIs
-    mycat.extopts.brainmask    = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_brainmask.nii'])};  % brainmask for affine registration
-    mycat.extopts.T1           = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_T1.nii'])};         % T1 for affine registration
+    mycat.extopts.darteltpm    = {fullfile(catdir,'templates_animals',[species '_Template_1.nii'])}; % Indicate first Dartel template
+    mycat.extopts.shootingtpm  = {fullfile(catdir,'templates_animals',[species '_Template_0_GS.nii'])}; % Indicate first Shooting template
+    mycat.extopts.cat12atlas   = {fullfile(catdir,'templates_animals',[species '_cat.nii'])};        % VBM atlas with major regions for VBM, SBM & ROIs
+    mycat.extopts.brainmask    = {fullfile(catdir,'templates_animals',[species '_brainmask.nii'])};  % brainmask for affine registration
+    mycat.extopts.T1           = {fullfile(catdir,'templates_animals',[species '_T1.nii'])};         % T1 for affine registration
     mycat.extopts.sanlm        = 3;                                     % ISARNLM for stronger corrections
     mycat.extopts.restype      = 'best';        
     mycat.extopts.resval       = [0.50 0.30];                           % higher internal resolution 
@@ -165,11 +165,11 @@ switch lower(deffile)
     switch species
       case 'monkey_oldworld'
         mycat.extopts.atlas = { ... 
-          fullfile(spm('dir'),'toolbox','cat12','templates_animals','monkey_oldworld_atlas_inia19NeuroMaps.nii') 1 {'csf','gm','wm'} 1; 
+          fullfile(catdir,'templates_animals','monkey_oldworld_atlas_inia19NeuroMaps.nii') 1 {'csf','gm','wm'} 1; 
           };
       case 'chimpanzee'
         mycat.extopts.atlas = { ... 
-          fullfile(spm('dir'),'toolbox','cat12','templates_animals','chimpanzee_atlas_davi.nii') 1 {'csf','gm','wm'} 1; 
+          fullfile(catdir,'templates_animals','chimpanzee_atlas_davi.nii') 1 {'csf','gm','wm'} 1; 
           };
       otherwise
         mycat.extopts.atlas = {}; 
@@ -189,7 +189,7 @@ switch lower(deffile)
       if exist(fullfile(pwd,deffile_ff,deffile_ee),'file') 
         deffile_pp = pwd; 
       else
-        deffile_pp = fullfile(spm('dir'),'toolbox','cat12'); 
+        deffile_pp = fullfile(catdir); 
       end
     end
     deffile = fullfile(deffile_pp,[deffile_ff,deffile_ee]); 
@@ -264,14 +264,14 @@ spm_help('!Disp',url,'',Fgraph,'Computational Anatomy Toolbox for SPM12');
 
 % open interactive help for newer version because display of html pages does not work anymore
 if cat_io_matlabversion > 20212
-  web(fullfile(spm('dir'),'toolbox','cat12','html','cat.html'));
+  web(fullfile(catdir,'html','cat.html'));
 end
 
 % check that binaries for surface tools are running 
 cat_system('CAT_3dVol2Surf');
 
 %% add some directories 
-spm_select('PrevDirs',{fullfile(spm('dir'),'toolbox','cat12')});
+spm_select('PrevDirs',{fullfile(catdir)});
 
 %% command line output
 cat_io_cprintf('silentreset');

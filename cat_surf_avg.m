@@ -20,7 +20,7 @@ function varargout = cat_surf_avg(varargin)
  % add system dependent extension to CAT folder
   opt.debug     = 0;
   opt.delete    = 0;
-  opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
+  opt.fsavgDir  = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces'); 
 
   if nargin == 0, job = struct(); else job = varargin{1}; end
 
