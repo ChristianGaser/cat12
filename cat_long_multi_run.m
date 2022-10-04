@@ -29,6 +29,7 @@ modulate    = job.modulate;
 dartel      = job.dartel;
 ROImenu     = job.ROImenu;
 longmodel   = job.longmodel;
+printlong   = job.printlong; 
 useprior    = job.enablepriors;
 surfaces    = job.output.surface;
 longTPM     = job.longTPM;

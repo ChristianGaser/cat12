@@ -1,4 +1,21 @@
 ------------------------------------------------------------------------
+r2106 | rdahnke | 2022-10-04 16:27:55
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_long.m
+ M cat_conf_tools.m
+ M cat_long_main.m
+ M cat_long_multi_run.m
+ M cat_long_report.m
+
+
+New:   Added an option in the longitudinal processing (cat_conf_long) and the
+       longitudinal report batch (cat_conf_tools) to print a longitudinal  
+       report using default print setting of the cross-sectional report.  
+       Although the changes in cat_long_report looks huge it is only an
+       additional if-block.
+       ------------------------------------------------------------------------
 r2105 | gaser | 2022-09-29 15:17:42
 
 Changed paths:

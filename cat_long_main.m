@@ -148,7 +148,11 @@ try
   else
     prepavg   = 2; 
   end
-  longreport  = 1; % [GM WM (CSF)] 
+  if isfield(job,'printlong') 
+    printlong  = job.printlong; 
+  else
+    printlong  = cat_get_defaults('extopts.print');
+  end
   if isfield(job,'delete_temp')  
     delete_temp = job.delete_temp;
   else
@@ -169,7 +173,7 @@ catch
   avgLASWMHC  = 0; % 0-classical approach with LAS (0.5) and WMHC=2 (too WM) in both the avg as well as each timepoint
                    % (>> overcorrection)
                    % 1-new approach with 
-  longreport  = 1; % create longitudinal subject report                  
+  printlong  = cat_get_defaults('extopts.print'); % create longitudinal subject report                  
 end
 
 if ~useprior && longTPM && ~( ~longmodel && longTPM )
@@ -888,7 +892,7 @@ if longmodel
 end
 
 % 10) final report
-if any(longreport) %&& spm_get_defaults('job.extopts.expertgui')>1  
+if printlong % write at least long XML ... printlong %&& spm_get_defaults('job.extopts.expertgui')>1  
   % cross-case
   if ~longmodel
     % resample & smooth surface by side ... delete later
@@ -896,7 +900,7 @@ if any(longreport) %&& spm_get_defaults('job.extopts.expertgui')>1
   end
   
   for modi = 1:2
-    if longreport && (~longmodel || mbfdef(modi,1)>0) 
+    if ~longmodel || mbfdef(modi,1)>0
       if ( modi == 1 ) ||  ( modi == 2 && (longmodel==2 || longmodel==3) ) % allways print in modi 1 ! ... && (longmodel==1 || longmodel==3) )
         mbi = mbi + 1; 
         if longmodel
@@ -924,6 +928,7 @@ if any(longreport) %&& spm_get_defaults('job.extopts.expertgui')>1
           matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.smoothvol   = 3;
           matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.smoothsurf  = 12;
           matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.plotGMWM    = 1; 
+          matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.printlong   = printlong; 
           matlabbatch{mbi}.spm.tools.cat.tools.long_report.output.vols      = ~delete_temp;
           matlabbatch{mbi}.spm.tools.cat.tools.long_report.output.surfs     = ~delete_temp;
           matlabbatch{mbi}.spm.tools.cat.tools.long_report.output.xml       = ~delete_temp;

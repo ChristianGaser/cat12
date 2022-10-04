@@ -634,20 +634,31 @@ function long_report = conf_long_report(data_vol,data_xml,expert)
   xml.values            = {0,1};
   xml.val               = {1};
   xml.help              = {'Write combined XML file.' ''};
-  
+
   output                = cfg_exbranch;
   output.tag            = 'output';
   output.name           = 'Write Output Data';
   output.val            = {vols surfs xml}; 
   output.help           = {'Specify output data.' ''};
   output.hidden         = expert<1;
+
+  printlong         = cfg_menu;
+  printlong.tag     = 'printlong';
+  printlong.name    = 'Create CAT long report';
+  printlong.labels  = {'No','Yes (volume only)','Yes (volume and surfaces)'};
+  printlong.values  = {0 1 2};
+  printlong.def     = @(val)cat_get_defaults('extopts.print', val{:});
+  printlong.help    = {
+    'Create final longitudinal CAT report that requires Java.'
+  };
+
   
   % == main ==
   long_report           = cfg_exbranch;
   long_report.tag       = 'long_report';
   long_report.name      = 'Longitudinal Report';
   if expert
-    long_report.val     = {data_vol avg_vol data_surf avg_surf xmls timepoints opts output};
+    long_report.val     = {data_vol avg_vol data_surf avg_surf xmls timepoints opts output printlong};
   else
     long_report.val     = {data_vol data_surf};
   end  

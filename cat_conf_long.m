@@ -217,6 +217,17 @@ longTPM.help = {
 'Use longitudinal TPM from average image.'
 };
 
+printlong         = cfg_menu;
+printlong.tag     = 'printlong';
+printlong.name    = 'Create CAT long report';
+printlong.labels  = {'No','Yes (volume only)','Yes (volume and surfaces)'};
+printlong.values  = {0 1 2};
+printlong.def     = @(val)cat_get_defaults('extopts.print', val{:});
+printlong.help    = {
+  'Create final longitudinal CAT report that requires Java.'
+};
+
+
 %------------------------------------------------------------------------
 
 % boundary box
@@ -337,7 +348,7 @@ else
   
   delete_temp.hidden = expert<1;
   
-  long.val  = {datalong,longmodel,enablepriors,prepavg,bstr,avgLASWMHC,nproc,opts,extopts,output,ROI,longTPM,modulate,dartel,delete_temp};
+  long.val  = {datalong,longmodel,enablepriors,prepavg,bstr,avgLASWMHC,nproc,opts,extopts,output,ROI,longTPM,modulate,dartel,printlong,delete_temp};
   
 % does not yet work! 
 % long.vout = @vout_long;
