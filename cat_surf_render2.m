@@ -638,11 +638,11 @@ switch lower(action)
           
           vafiles = vatlas(:,1); safiles = satlas(:,1); 
           for ai = 1:size(vatlas,1)
-            vafiles{ai} = fullfile(spm('Dir'),'toolbox','cat12',['atlases_surfaces' str32k],...
+            vafiles{ai} = fullfile(fileparts(mfilename('fullpath')),['atlases_surfaces' str32k],...
               sprintf('%s.%s.%s',sinfo1(1).side,vatlas{ai,2},cat_get_defaults('extopts.shootingsurf')));
           end
           for ai = 1:size(satlas,1)
-            safiles{ai} = fullfile(spm('Dir'),'toolbox','cat12',['atlases_surfaces' str32k],...
+            safiles{ai} = fullfile(fileparts(mfilename('fullpath')),['atlases_surfaces' str32k],...
               sprintf('%s.%s.freesurfer.annot',sinfo1(1).side,satlas{ai,2}));
           end
           ntextures = size(H.textures,1);
@@ -784,10 +784,10 @@ switch lower(action)
                   fullfile(sinfo1(i).pp,[sinfo1(1).side '.white.resampled.' sinfo1(i).name '.gii']);
                   fullfile(sinfo1(i).pp,[sinfo1(1).side '.layer4.resampled.' sinfo1(i).name '.gii']);
                   fullfile(sinfo1(i).pp,[sinfo1(1).side '.hull.resampled.' sinfo1(i).name '.gii']);
-                  fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1(i).side '.central.freesurfer.gii']);
-                  fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1(i).side '.inflated.freesurfer.gii']);
-                  fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1(i).side '.central.' cat_get_defaults('extopts.shootingsurf') '.gii']);
-                  fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1(i).side '.sphere.freesurfer.gii']); 
+                  fullfile(fileparts(mfilename('fullpath')),['templates_surfaces' str32k],[sinfo1(i).side '.central.freesurfer.gii']);
+                  fullfile(fileparts(mfilename('fullpath')),['templates_surfaces' str32k],[sinfo1(i).side '.inflated.freesurfer.gii']);
+                  fullfile(fileparts(mfilename('fullpath')),['templates_surfaces' str32k],[sinfo1(i).side '.central.' cat_get_defaults('extopts.shootingsurf') '.gii']);
+                  fullfile(fileparts(mfilename('fullpath')),['templates_surfaces' str32k],[sinfo1(i).side '.sphere.freesurfer.gii']); 
                   '';
                 }];
             end
@@ -808,7 +808,7 @@ switch lower(action)
             for i=1:numel(H.patch)
               H.meshs = [ H.meshs , {
                   H.patch(i).Vertices; 
-                  ...'Inflated'  , fullfile(spm('Dir'),'toolbox','cat12','templates_surfaces',[sinfo1(1).side '.inflated.freesurfer.gii']);  
+                  ...'Inflated'  , fullfile(fileparts(mfilename('fullpath')),'templates_surfaces',[sinfo1(1).side '.inflated.freesurfer.gii']);  
                   sinfo1(i).Ppial;  
                   sinfo1(i).Pwhite;  
                   sinfo1(i).Player4

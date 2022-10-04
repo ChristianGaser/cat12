@@ -259,7 +259,7 @@ end
 
 spm('FnBanner',mfilename,cat_version);
 [Finter,Fgraph] = spm('FnUIsetup','CAT12.8.1');
-url = fullfile(spm('Dir'),'toolbox','cat12','html','cat.html');
+url = fullfile(fileparts(mfilename('fullpath')),'html','cat.html');
 spm_help('!Disp',url,'',Fgraph,'Computational Anatomy Toolbox for SPM12');
 
 % open interactive help for newer version because display of html pages does not work anymore

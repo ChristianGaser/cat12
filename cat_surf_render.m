@@ -477,9 +477,9 @@ switch lower(action)
               H.meshs = {'Average' ; 'Inflated' ; 'Shooting' ;  'Custom...' };
               for i=1:numel(H.patch)
                 H.meshs = [ H.meshs , { 
-                    fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1(i).side '.central.freesurfer.gii']);
-                    fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1(i).side '.inflated.freesurfer.gii']);
-                    fullfile(spm('Dir'),'toolbox','cat12',['templates_surfaces' str32k],[sinfo1(i).side '.central.' cat_get_defaults('extopts.shootingsurf') '.gii']);
+                    fullfile(fileparts(mfilename('fullpath')),['templates_surfaces' str32k],[sinfo1(i).side '.central.freesurfer.gii']);
+                    fullfile(fileparts(mfilename('fullpath')),['templates_surfaces' str32k],[sinfo1(i).side '.inflated.freesurfer.gii']);
+                    fullfile(fileparts(mfilename('fullpath')),['templates_surfaces' str32k],[sinfo1(i).side '.central.' cat_get_defaults('extopts.shootingsurf') '.gii']);
                     '';
                   }];
               end
@@ -671,7 +671,7 @@ switch lower(action)
             %%
             for ai = 1:size(satlas,1)
               % define file
-              safiles = fullfile(spm('Dir'),'toolbox','cat12',['atlases_surfaces' str32k],...
+              safiles = fullfile(fileparts(mfilename('fullpath')),['atlases_surfaces' str32k],...
                 sprintf('%s.%s.freesurfer.annot',sinfo1(1).side,satlas{ai,2}));
                 
               % loading
