@@ -262,7 +262,7 @@ useCAT = 2; % 0-like SPM, 1-surface handling, 2-cat_surf_renderer
 global result_ui_varargout use_tfce mesh_detect
 
 % prevent that TFCE is called if not yet installed
-if ~exist(fullfile(spm('dir'),'toolbox','TFCE'),'dir')
+if ~exist(fullfile(fileparts(fileparts(mfilename('fullpath'))),'TFCE'),'dir')
   use_tfce = 0;
 end
  
@@ -291,7 +291,7 @@ switch lower(Action), case 'setup'                         %-Set up results
         [SPM,xSPM] = spm_getSPM(varargin{2});
       end
     else
-      if exist(fullfile(spm('dir'),'toolbox','TFCE'),'dir')
+      if exist(fullfile(fileparts(fileparts(mfilename('fullpath'))),'TFCE'),'dir')
         [spmmatfile, sts] = spm_select(1,'^SPM\.mat$','Select SPM.mat');
         swd = spm_file(spmmatfile,'fpath');
         warning off
