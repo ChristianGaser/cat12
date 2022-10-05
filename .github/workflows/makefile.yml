@@ -13,15 +13,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    
-    - name: Run clean
-      run: make clean
-      
+          
     - name: Run zip
       run: make zip
-      
-    - name: Run doc
-      run: make doc
-      
-    - name: Run scp
-      run: make scp
