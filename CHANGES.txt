@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2113 | gaser | 2022-10-10 11:47:33
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M cat12.m
+ M cat_long_main.m
+ M cat_long_multi_run.m
+ M html/cat.html
+
+
+Fixed: Corrected typos in cat_long_main.m and cat_long_multi_run.m.
+------------------------------------------------------------------------
 r2109 | gaser | 2022-10-05 00:47:51
 
 Changed paths:
