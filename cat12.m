@@ -136,7 +136,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % enable/disable different menus if TFCE is installed or not
-if exist(spm_TFCE)
+if exist('spm_TFCE')
     set(handles.popupTFCEToolbox,'String',{center('TFCE'),'Call TFCE Toolbox'});
 else
     set(handles.popupTFCEToolbox,'String',{center('TFCE'),'Install TFCE Toolbox'});
@@ -244,7 +244,7 @@ function popupTFCEToolbox_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns popupTFCEToolbox contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from popupTFCEToolbox
 if get(hObject,'Value') == 2
-    if exist(spm_TFCE)
+    if exist('spm_TFCE')
         % call TFCE toolbox 
         spm_jobman('interactive','','spm.tools.tfce_estimate');
         spm_TFCE;
