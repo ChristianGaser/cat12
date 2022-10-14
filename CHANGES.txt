@@ -1,4 +1,13 @@
 ------------------------------------------------------------------------
+r2115 | gaser | 2022-10-14 17:12:37
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_extopts.m
+
+
+Changed: Moved some rarely used CAT12 options to expert mode.
+------------------------------------------------------------------------
 r2114 | gaser | 2022-10-14 15:50:10
 
 Changed paths:
