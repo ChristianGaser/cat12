@@ -1,4 +1,68 @@
 ------------------------------------------------------------------------
+r2114 | gaser | 2022-10-14 15:50:10
+
+Changed paths:
+ M CHANGES.txt
+R  templates_volumes/Schaefer2018_100Parcels_17Networks_order.csv -> templates_volumes_old/Schaefer2018_100Parcels_17Networks_order.csv
+R  templates_volumes/Schaefer2018_100Parcels_17Networks_order.nii -> templates_volumes_old/Schaefer2018_100Parcels_17Networks_order.nii
+R  templates_volumes/Schaefer2018_200Parcels_17Networks_order.csv -> templates_volumes_old/Schaefer2018_200Parcels_17Networks_order.csv
+R  templates_volumes/Schaefer2018_200Parcels_17Networks_order.nii -> templates_volumes_old/Schaefer2018_200Parcels_17Networks_order.nii
+R  templates_volumes/Schaefer2018_400Parcels_17Networks_order.csv -> templates_volumes_old/Schaefer2018_400Parcels_17Networks_order.csv
+R  templates_volumes/Schaefer2018_400Parcels_17Networks_order.nii -> templates_volumes_old/Schaefer2018_400Parcels_17Networks_order.nii
+R  templates_volumes/Schaefer2018_600Parcels_17Networks_order.csv -> templates_volumes_old/Schaefer2018_600Parcels_17Networks_order.csv
+R  templates_volumes/Schaefer2018_600Parcels_17Networks_order.nii -> templates_volumes_old/Schaefer2018_600Parcels_17Networks_order.nii
+R  templates_volumes/TPM_Age11.5.nii -> templates_volumes_old/TPM_Age11.5.nii
+R  templates_volumes/Template_0_IXI555_MNI152_GS.nii -> templates_volumes_old/Template_0_IXI555_MNI152_GS.nii
+R  templates_volumes/Template_1_IXI555_MNI152.nii -> templates_volumes_old/Template_1_IXI555_MNI152.nii
+R  templates_volumes/Template_1_IXI555_MNI152_GS.nii -> templates_volumes_old/Template_1_IXI555_MNI152_GS.nii
+R  templates_volumes/Template_2_IXI555_MNI152.nii -> templates_volumes_old/Template_2_IXI555_MNI152.nii
+R  templates_volumes/Template_2_IXI555_MNI152_GS.nii -> templates_volumes_old/Template_2_IXI555_MNI152_GS.nii
+R  templates_volumes/Template_3_IXI555_MNI152.nii -> templates_volumes_old/Template_3_IXI555_MNI152.nii
+R  templates_volumes/Template_3_IXI555_MNI152_GS.nii -> templates_volumes_old/Template_3_IXI555_MNI152_GS.nii
+R  templates_volumes/Template_4_IXI555_MNI152.nii -> templates_volumes_old/Template_4_IXI555_MNI152.nii
+R  templates_volumes/Template_4_IXI555_MNI152_GS.nii -> templates_volumes_old/Template_4_IXI555_MNI152_GS.nii
+R  templates_volumes/Template_5_IXI555_MNI152.nii -> templates_volumes_old/Template_5_IXI555_MNI152.nii
+R  templates_volumes/Template_6_IXI555_MNI152.nii -> templates_volumes_old/Template_6_IXI555_MNI152.nii
+R  templates_volumes/Template_T1_IXI555_MNI152_GS.nii -> templates_volumes_old/Template_T1_IXI555_MNI152_GS.nii
+R  templates_volumes/aal3.csv -> templates_volumes_old/aal3.csv
+R  templates_volumes/aal3.nii -> templates_volumes_old/aal3.nii
+R  templates_volumes/aal3.txt -> templates_volumes_old/aal3.txt
+R  templates_volumes/anatomy3.csv -> templates_volumes_old/anatomy3.csv
+R  templates_volumes/anatomy3.nii -> templates_volumes_old/anatomy3.nii
+R  templates_volumes/anatomy3.txt -> templates_volumes_old/anatomy3.txt
+R  templates_volumes/brainmask.nii -> templates_volumes_old/brainmask.nii
+R  templates_volumes/cat.nii -> templates_volumes_old/cat.nii
+R  templates_volumes/cat_strokelesions_ATLAS303.nii -> templates_volumes_old/cat_strokelesions_ATLAS303.nii
+R  templates_volumes/cat_wmh.nii -> templates_volumes_old/cat_wmh.nii
+R  templates_volumes/cat_wmh_miccai2017.nii -> templates_volumes_old/cat_wmh_miccai2017.nii
+R  templates_volumes/cobra.csv -> templates_volumes_old/cobra.csv
+R  templates_volumes/cobra.nii -> templates_volumes_old/cobra.nii
+R  templates_volumes/cobra.txt -> templates_volumes_old/cobra.txt
+R  templates_volumes/hammers.csv -> templates_volumes_old/hammers.csv
+R  templates_volumes/hammers.nii -> templates_volumes_old/hammers.nii
+R  templates_volumes/hammers.txt -> templates_volumes_old/hammers.txt
+R  templates_volumes/ibsr.csv -> templates_volumes_old/ibsr.csv
+R  templates_volumes/ibsr.nii -> templates_volumes_old/ibsr.nii
+R  templates_volumes/ibsr.txt -> templates_volumes_old/ibsr.txt
+R  templates_volumes/julichbrain.csv -> templates_volumes_old/julichbrain.csv
+R  templates_volumes/julichbrain.nii -> templates_volumes_old/julichbrain.nii
+R  templates_volumes/julichbrain.txt -> templates_volumes_old/julichbrain.txt
+R  templates_volumes/lpba40.csv -> templates_volumes_old/lpba40.csv
+R  templates_volumes/lpba40.nii -> templates_volumes_old/lpba40.nii
+R  templates_volumes/lpba40.txt -> templates_volumes_old/lpba40.txt
+R  templates_volumes/mori.csv -> templates_volumes_old/mori.csv
+R  templates_volumes/mori.nii -> templates_volumes_old/mori.nii
+R  templates_volumes/mori.txt -> templates_volumes_old/mori.txt
+R  templates_volumes/neuromorphometrics.csv -> templates_volumes_old/neuromorphometrics.csv
+R  templates_volumes/neuromorphometrics.nii -> templates_volumes_old/neuromorphometrics.nii
+R  templates_volumes/neuromorphometrics.txt -> templates_volumes_old/neuromorphometrics.txt
+R  templates_volumes/schaefer.txt -> templates_volumes_old/schaefer.txt
+R  templates_volumes/templates.man -> templates_volumes_old/templates.man
+
+
+Changed: Renamed templates_volumes to templates_volumes-old because it#s not 
+         used anymore.
+------------------------------------------------------------------------
 r2113 | gaser | 2022-10-10 11:47:33
 
 Changed paths:
