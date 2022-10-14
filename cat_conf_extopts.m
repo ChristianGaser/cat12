@@ -289,6 +289,7 @@ registration.help   = {
   'The registration time is typically about 3, 10, and 5 minutes for Dartel, Shooting, and optimized Shooting for the default registration resolution. '
   ''
 }; 
+registration.hidden = expert<1;
 
 %---------------------------------------------------------------------
 
@@ -750,6 +751,7 @@ else
     'APRG approach V2 (2.5)','APRG approach V2 wider (2.1)','APRG approach V2 tighter (2.9)'};
   gcutstr.values  = {-2 -1 0 0.50 2 2.5 2.1 2.9};
 end
+gcutstr.hidden  = expert<1;
 
 
 %------------------------------------------------------------------------
@@ -880,6 +882,7 @@ else
     ... 'set WMH as own class' ...
   };
 end
+wmhc.hidden = expert<1;
 
 % deactivated 20180714 because the WMHC in cat_vol_partvol did not support 
 % user modification yet
@@ -1121,7 +1124,7 @@ if 0 %expert
     spm_kamap.values = [{-1}     spm_kamap.values {}];
   end
 end
-%spm_kamap.hidden = expert<1; % RD202005: activated also for default and expert users to support error handling! 
+spm_kamap.hidden = expert<1; 
 
 %------------------------------------------------------------------------
 
