@@ -1,4 +1,12 @@
 ------------------------------------------------------------------------
+r2117 | rdahnke | 2022-10-17 17:05:15
+
+Changed paths:
+ M CHANGES.txt
+ M cat_io_cmd.m
+
+
+Fixed:  Corrected output style setting in cat_io_cmd. ------------------------------------------------------------------------
 r2116 | gaser | 2022-10-17 14:25:56
 
 Changed paths:
