@@ -8,7 +8,7 @@ If you use this atlas, please cite the references below.
 
 Websites:
 A) https://wp.unil.ch/mial/probabilistic-atlas-of-thalamic-nuclei/
-B) https://zenodo.org/record/1405484#.YLC-VpMzYZ8
+B) https://zenodo.org/record/1405484
 
 References:
 1) Najdenovska E, Alemán-Gómez Y, Battistella G, Descoteaux M, Hagmann P,

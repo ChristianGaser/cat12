@@ -1,4 +1,153 @@
 ------------------------------------------------------------------------
+r2116 | gaser | 2022-10-17 14:25:56
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_ROI.m
+ M cat_defaults.m
+A  doc/cat.html
+A  doc/css/fontawesome-all.min.css
+A  doc/css/main.css
+A  doc/disclaimer.html
+A  doc/images/CAT.png
+A  doc/images/CAT_Error_Report.jpg
+A  doc/images/CAT_PBT_for_SPM.png
+A  doc/images/CAT_Report.jpg
+A  doc/images/CAT_surf_atlas_DKT40.png
+A  doc/images/CAT_surf_atlas_Desikan-Killiany.png
+A  doc/images/CAT_surf_atlas_Destrieux.png
+A  doc/images/CAT_surf_atlas_PALS-B12-Brodmann.png
+A  doc/images/CAT_surf_atlas_PALS-B12-Lobes.png
+A  doc/images/CAT_surf_atlas_aal.png
+A  doc/images/CAT_surf_atlas_hammers.png
+A  doc/images/CAT_surf_atlas_lpba40.png
+A  doc/images/CAT_surf_atlas_mori.png
+A  doc/images/CAT_surf_atlas_neuromorphometrics.png
+A  doc/images/Gyral_blurring.png
+A  doc/images/Problems_in_7_Tesla.png
+A  doc/images/Sulcal_blurring.png
+A  doc/images/analyse_methods.png
+A  doc/images/background_biasreal.png
+A  doc/images/background_morphops.png
+A  doc/images/background_noise.png
+A  doc/images/batch_gui.jpg
+A  doc/images/cat_SLC_msk_c0009s0010t01A.png
+A  doc/images/cat_bg.jpg
+A  doc/images/cat_extract_addition_surface_parameter.png
+A  doc/images/cat_gui.png
+A  doc/images/cat_hd02.png
+A  doc/images/cat_hd02blue.png
+A  doc/images/cat_hd02blue2.png
+A  doc/images/cat_hd02cyan.png
+A  doc/images/cat_hd02green.png
+A  doc/images/cat_hd02orange.png
+A  doc/images/cat_hd02purple.png
+A  doc/images/cat_hd02red.png
+A  doc/images/cat_hd02yellow.png
+A  doc/images/cat_logo.png
+A  doc/images/cat_long_pipeline.png
+A  doc/images/cat_long_pipelines.png
+A  doc/images/cat_long_report_plasticity-aging_ADNI011S0003.jpg
+A  doc/images/cat_long_report_scannerdifferences_ADNI002S0559.jpg
+A  doc/images/cat_methods_catsimple.png
+A  doc/images/cat_methods_downsampling.jpg
+A  doc/images/cat_methods_postmortem.jpg
+A  doc/images/cat_processing_pipeline.png
+A  doc/images/cat_processing_steps.png
+A  doc/images/cat_qa_expert.png
+A  doc/images/cat_qa_rating-distribution.png
+A  doc/images/cat_qa_rating-table.jpg
+A  doc/images/cat_stat_checkcov_00_overview.png
+A  doc/images/cat_stat_checkcov_01_batch.png
+A  doc/images/cat_stat_checkcov_02_command.png
+A  doc/images/cat_stat_checkcov_03_checkcov.png
+A  doc/images/cat_stat_checkcov_04_boxplot01_MNC.png
+A  doc/images/cat_stat_checkcov_04_boxplot02_IQR.png
+A  doc/images/cat_stat_checkcov_05_check_01_original.png
+A  doc/images/cat_stat_checkcov_07_exclusion.png
+A  doc/images/cat_surf_vx2surf_evalGM.png
+A  doc/images/cat_surf_vx2surf_smoothing.png
+A  doc/images/cat_surf_vx2surf_vol-int-dist.png
+A  doc/images/cat_tst_reg_boxplot.png
+A  doc/images/cat_tst_seg_BWP_boxplot.png
+A  doc/images/cat_tst_seg_BWP_detail.png
+A  doc/images/cat_tst_seg_bwp_ana.png
+A  doc/images/cat_tst_seg_bwp_boxplot_para.png
+A  doc/images/cat_tst_seg_bwp_boxplot_para_CAT.png
+A  doc/images/cat_tst_seg_bwp_boxplot_para_SPM.png
+A  doc/images/cat_tst_seg_bwp_detail_para.png
+A  doc/images/cat_tst_seg_exp_boxplot.png
+A  doc/images/cat_tst_seg_exp_boxplot_para_CAT.png
+A  doc/images/cat_tst_seg_exp_boxplot_para_SPM.png
+A  doc/images/cat_tst_seg_exp_boxplot_para_WMH.png
+A  doc/images/cat_tst_seg_exp_detail.png
+A  doc/images/cat_tst_seg_exp_detail_para.png
+A  doc/images/cat_tst_seg_ibsr_boxplot.png
+A  doc/images/cat_tst_seg_ibsr_detail.png
+A  doc/images/cat_tst_seg_sve_boxplot.png
+A  doc/images/cat_tst_seg_sve_detail.png
+A  doc/images/cat_vol_correct_slice_scaling_768.png
+A  doc/images/catlongreportj_mwp1r.jpg
+A  doc/images/catreport_Collins.jpg
+A  doc/images/catreportj_OAS1_0031_MR1_mpr_n4_anon_sbj_111_WMHC0.jpg
+A  doc/images/catreportj_OAS1_0031_MR1_mpr_n4_anon_sbj_111_WMHC1.jpg
+A  doc/images/catreportj_OAS1_0031_MR1_mpr_n4_anon_sbj_111_WMHC2.jpg
+A  doc/images/catreportj_OAS1_0031_MR1_mpr_n4_anon_sbj_111_WMHC3.jpg
+A  doc/images/contact.jpg
+A  doc/images/contact_small.jpg
+A  doc/images/cortical_measures.png
+A  doc/images/gyrification_index.png
+A  doc/images/home.jpg
+A  doc/images/human_brain.png
+A  doc/images/images.jpg
+A  doc/images/model_2sample.png
+A  doc/images/model_anova2x2.png
+A  doc/images/model_interact.png
+A  doc/images/model_interact_poly.png
+A  doc/images/model_long1.png
+A  doc/images/model_long2.png
+A  doc/images/model_long_cov.png
+A  doc/images/model_mult_reg.png
+A  doc/images/model_mult_reg2.png
+A  doc/images/neonates.png
+A  doc/images/non_orthogonal.png
+A  doc/images/ortho.png
+A  doc/images/people.jpg
+A  doc/images/preprocessing.png
+A  doc/images/research.jpg
+A  doc/images/spm_gui.png
+A  doc/images/vbm.jpg
+A  doc/index.html
+A  doc/js/breakpoints.min.js
+A  doc/js/browser.min.js
+A  doc/js/jquery.min.js
+A  doc/js/main.js
+A  doc/js/util.js
+A  doc/webfonts/fa-brands-400.eot
+A  doc/webfonts/fa-brands-400.svg
+A  doc/webfonts/fa-brands-400.ttf
+A  doc/webfonts/fa-brands-400.woff
+A  doc/webfonts/fa-brands-400.woff2
+A  doc/webfonts/fa-regular-400.eot
+A  doc/webfonts/fa-regular-400.svg
+A  doc/webfonts/fa-regular-400.ttf
+A  doc/webfonts/fa-regular-400.woff
+A  doc/webfonts/fa-regular-400.woff2
+A  doc/webfonts/fa-solid-900.eot
+A  doc/webfonts/fa-solid-900.svg
+A  doc/webfonts/fa-solid-900.ttf
+A  doc/webfonts/fa-solid-900.woff
+A  doc/webfonts/fa-solid-900.woff2
+A  templates_MNI152NLin2009cAsym/thalamic_nuclei.csv
+A  templates_MNI152NLin2009cAsym/thalamic_nuclei.nii
+A  templates_MNI152NLin2009cAsym/thalamic_nuclei.txt
+ M templates_MNI152NLin2009cAsym/thalamus.txt
+
+
+Added: Added new atlas for thalamic nuclei using hi-res T2.
+Added: Added new html documentation.
+
+------------------------------------------------------------------------
 r2115 | gaser | 2022-10-14 17:12:37
 
 Changed paths:
