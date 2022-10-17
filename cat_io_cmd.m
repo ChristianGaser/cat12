@@ -49,6 +49,9 @@ function varargout = cat_io_cmd(str,style,strlength,verb,stime)
   ti    = 0; 
   varargout{1} = clock; 
   
+  % set default style for updated version of cat_io_cprintf
+  if ~exist('style','var') || isempty(style), style = 'n'; end
+  
   while ti<timax
   ti = ti + 1;
     try
