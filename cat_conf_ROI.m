@@ -195,8 +195,14 @@ for ali=1:numel(atlaslist)
   end
   if any(~cellfun('isempty',strfind(atlaslist(ali),'thalamus')))
     ROI.help = [ROI.help; strrep({
-        '(MAI) Atlas of human thalamic nuclei:'
+        '(MAI) Atlas of human thalamic nuclei (based on DTI from 70 subjects with 14 regions):'
         '    Najdenovska E, Alemán-Gómez Y, Battistella G, Descoteaux M, Hagmann P, Jacquemont S, Maeder P, Thiran JP, Fornari E, Bach Cuadra M. In-vivo probabilistic atlas of human thalamic nuclei based on diffusion- weighted magnetic resonance imaging. Sci Data. 2018 Nov 27;5:180270.'
+        ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
+  end
+  if any(~cellfun('isempty',strfind(atlaslist(ali),'thalamic_nuclei')))
+    ROI.help = [ROI.help; strrep({
+        '(MAI) Atlas of human thalamic nuclei (based on hi-res T2 from 9 subjects with 11 regions):'
+        '    Saranathan M, Iglehart C, Monti M, Tourdias T, Rutt B. In vivo high-resolution structural MRI-based atlas of human thalamic nuclei. Sci Data. 2021 Oct 28;8(1):275.'
         ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
   end
   if any(~cellfun('isempty',strfind(atlaslist(ali),'suit')))
