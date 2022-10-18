@@ -81,6 +81,7 @@ merge_hemi.help    = {
 % default mesh
 % ____________________________________________________________________
 mesh32k         = cfg_menu;
+mesh32k.hidden  = expert<1;
 mesh32k.tag     = 'mesh32k';
 mesh32k.name    = 'Resample Size';
 mesh32k.labels  = {

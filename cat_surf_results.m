@@ -12,6 +12,9 @@ function varargout = cat_surf_results(action, varargin)
 %  * cat_surf_results('disp',filename(s)) 
 %  Init display for selected file(s)
 %
+%  * cat_surf_results('rgb',filename(s)) 
+%  Init display for RGB overlay of up to 3 selected file(s)
+
 %  * cat_surf_results('batch',job) 
 %  See cat_conf_stools.
 %
@@ -105,15 +108,19 @@ end
 %--------------------------------------------------------------------------
 switch lower(action)
   
-  %-Display
+  %-Display or display as RGB overlay
   %======================================================================
-  case 'disp'
+  case {'disp','rgb'}
     
     % if nifti file is given use select_data function to prepare temporary
     % mesh
     if nargin
       [pth,nam,ext] = fileparts(varargin{1}(1,:));
       if strcmp(ext,'.nii')
+        if strcmp(lower(action),'rgb')
+          fprintf('RGB overlay is not supported for volumes.\n');
+          return
+        end
         select_data([],[],varargin{1});
         return
       end
@@ -519,6 +526,11 @@ switch lower(action)
         H.str32k = '';
       end
 
+      if H.n_surf > 3 && strcmp(lower(action),'rgb')
+        fprintf('For RGB overlay a maximum of 3 surfaces is allowed.\n');
+        return
+      end
+      
       H.S{1}.info(1).side = 'lh';
       H.S{1}.info(1).Pmesh = fullfile(fileparts(mfilename('fullpath')), ...
           ['templates_surfaces' H.str32k], 'lh.central.freesurfer.gii');
@@ -544,6 +556,12 @@ switch lower(action)
       H.S{1}.Y = Y(1:H.nY2, :);
       H.S{2}.Y = Y((H.nY2+1):end, :);
 
+      % correct H.isvol if more than one surface was given
+      if isfield(H,'isvol') && H.n_surf ~= numel(H.isvol)
+        for i=2:H.n_surf
+          H.isvol(i) = H.isvol(1);
+        end
+      end
       
       % delete temporary files that were created for volume mapping
       for i=1:H.n_surf
@@ -587,8 +605,7 @@ switch lower(action)
       % result selection or RGB overlay if more than one result was loaded
       if H.n_surf > 1
         % pre-select 1st mesh if we cannot use RGB overlay
-        %if H.n_surf > 3
-        if 1
+        if ~strcmp(lower(action),'rgb')
           sel = 1;
           if isempty(H.S1.name)
             spm('alert*','Do not mix meshes with different resolutions (i.e. 164k vs. 32k)');
@@ -622,9 +639,8 @@ switch lower(action)
           'FontSize', H.FS, 'HorizontalAlignment', 'center');
         
         % set # of surfaces back to "1" if we cannot use RGB overlay
-        if 1, H.n_surf = 1; end
-        %if H.n_surf > 3, H.n_surf = 1; end
-        
+        if ~strcmp(lower(action),'rgb'), H.n_surf = 1; end
+ 
         % new selection ui
         str{s + 2} = 'Select new data';
         tmp{s + 1} = {@select_data};
@@ -651,8 +667,8 @@ switch lower(action)
         H.SPM_found = 0;
       end
 
-      % Don't allow plot functions for RGB maps or if SPM.mat was not found
-      if (H.n_surf > 1 && H.SPM_found) || H.isvol(1)
+      % Don't allow plot functions for RGB or volume maps or if SPM.mat was not found
+      if (H.n_surf > 1 && H.SPM_found) || H.isvol(1) || strcmp(lower(action),'rgb')
         str = {'Data Cursor', 'Disable data cursor', 'Atlas regions: All atlases',...
           'Atlas regions: Desikan-Killiany DK40', 'Atlas regions: Destrieux 2009',...
           'Atlas region: HCP Multi-Modal Parcellation', 'Enable/Disable rotate3d'};
@@ -2135,16 +2151,16 @@ ind2 = H.S{2}.Y(:) ~= 0;
 if any(ind1) && any(ind2)
   H.S{1}.thresh = min(abs(H.S{1}.Y(abs(H.S{1}.Y(:)) > 0)));
   H.S{1}.thresh = min(H.S{1}.thresh, min(abs(H.S{2}.Y(abs(H.S{2}.Y(:)) > 0))));
-  H.S{1}.min = min(min(H.S{1}.Y(~isinf(H.S{1}.Y) & ind1)), min(H.S{2}.Y(~isinf(H.S{2}.Y) & ind2)));
-  H.S{1}.max = max(max(H.S{1}.Y(~isinf(H.S{1}.Y) & ind1)), max(H.S{2}.Y(~isinf(H.S{2}.Y) & ind2)));
+  H.S{1}.min = min(min(H.S{1}.Y(~isinf(H.S{1}.Y(:)) & ind1)), min(H.S{2}.Y(~isinf(H.S{2}.Y(:)) & ind2)));
+  H.S{1}.max = max(max(H.S{1}.Y(~isinf(H.S{1}.Y(:)) & ind1)), max(H.S{2}.Y(~isinf(H.S{2}.Y(:)) & ind2)));
 elseif all(ind1==0)
   H.S{1}.thresh = min(abs(H.S{2}.Y(abs(H.S{2}.Y(:)) > 0)));
-  H.S{1}.min = min(H.S{2}.Y(~isinf(H.S{2}.Y) & ind2));
-  H.S{1}.max = max(H.S{2}.Y(~isinf(H.S{2}.Y) & ind2));
+  H.S{1}.min = min(H.S{2}.Y(~isinf(H.S{2}.Y(:)) & ind2));
+  H.S{1}.max = max(H.S{2}.Y(~isinf(H.S{2}.Y(:)) & ind2));
 elseif all(ind2==0)
   H.S{1}.thresh = min(abs(H.S{1}.Y(abs(H.S{1}.Y(:)) > 0)));
-  H.S{1}.min = min(H.S{1}.Y(~isinf(H.S{1}.Y) & ind1));
-  H.S{1}.max = max(H.S{1}.Y(~isinf(H.S{1}.Y) & ind1));
+  H.S{1}.min = min(H.S{1}.Y(~isinf(H.S{1}.Y(:)) & ind1));
+  H.S{1}.max = max(H.S{1}.Y(~isinf(H.S{1}.Y(:)) & ind1));
 end
 
 % deal with neg. values
@@ -2362,7 +2378,10 @@ else
   delete(findobj('tag','cat_surf_results_hist'));
   
   if ~isfield(H, 'cbar') || ~ishandle(H.cbar)
-    H.cbar = axes('Parent', H.panel(1), 'Position', H.pos{1}.cbar(2, :), 'Color', H.bkg_col, 'Enable', 'off');
+    H.cbar = axes('Parent', H.panel(1), 'Position', H.pos{1}.cbar(2, :), 'Color', H.bkg_col);
+    try
+      set(H.cbar, 'Enable', 'off');
+    end
   end
   
   % RGB colorbar
@@ -2529,14 +2548,11 @@ end
 if size(curv,2) == 1
   
   % emphasize mean curvature values by using sqrt
-  %  if H.texture_mode==1
-  if 1
-    indneg = find(curv < 0);
-    curv(indneg) = - ((-curv(indneg)).^0.5);
-    indpos = find(curv > 0);
-    curv(indpos) = (curv(indpos).^0.5);
-    curv = curv - min(curv);
-  end
+  indneg = find(curv < 0);
+  curv(indneg) = - ((-curv(indneg)).^0.5);
+  indpos = find(curv > 0);
+  curv(indpos) = (curv(indpos).^0.5);
+  curv = curv - min(curv);
   
   curv = 0.5 + repmat(curv, 1, 3);
   curv = curv / max(curv(:));
@@ -2555,6 +2571,14 @@ if isempty(clim) || numel(clim)==1, clim = [false NaN NaN]; end
 mi = clim(2); ma = clim(3);
 
 if any(v(:))
+  if size(v, 1) > 1 && size(col,3) == 1
+    % use RGB colormap
+    col = zeros(256, 3, size(v, 1));
+    for i = 1:3
+      col(:, i, i) = 1;
+    end
+  end
+  
   if ~clim(1), mi = min(v(:)); ma = max(v(:)); end
   % don't allow negative values for multiple maps
   if size(v, 1) > 1 && mi < 0
