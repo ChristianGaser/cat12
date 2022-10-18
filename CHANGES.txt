@@ -1,4 +1,24 @@
 ------------------------------------------------------------------------
+r2117 | gaser | 2022-10-18 11:04:54
+
+Changed paths:
+ M .gitattributes
+ M CHANGES.txt
+ M cat_conf_ROI.m
+ M cat_conf_stools.m
+ M cat_defaults.m
+ M cat_surf_results.m
+ M doc/css/main.css
+ M doc/index.html
+ M templates_MNI152NLin2009cAsym/thalamic_nuclei.nii
+
+
+Changed: Added support for RGB overlay to cat_surf_results.m using 'rgb' option.
+Changed: Moved option for surface resample size to expert mode.
+Changed: Updated information about new thalamic nuclei atlas.
+Changed: Updated CAT12 HTML documentation.
+
+------------------------------------------------------------------------
 r2116 | gaser | 2022-10-17 14:25:56
 
 Changed paths:
