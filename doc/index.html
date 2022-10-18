@@ -318,7 +318,7 @@
             <ul>
               <li>The CAT12 Toolbox runs within SPM12. That is, SPM12 must be installed and added to your Matlab search path before the CAT12 Toolbox can be installed (see the <a href="matlab:web('http://www.fil.ion.ucl.ac.uk/spm/','-browser')">SPM site</a> and <a href="matlab:web('http://en.wikibooks.org/wiki/SPM','-browser')">SPM Wiki</a> for more help).
               </li>
-              <li><a href="matlab:web('https://neuro-jena.github.io/cat/','-browser')">Download</a> and unzip the CAT12 Toolbox. You will get a folder named &quot;cat12&quot;, which contains various Matlab files and compiled scripts. Copy the folder &quot;cat12&quot; into the SPM12 &quot;toolbox&quot; folder.
+              <li><a href="matlab:web('https://neuro-jena.github.io/cat/index.html#DOWNLOAD','-browser')">Download</a> and unzip the CAT12 Toolbox. You will get a folder named &quot;cat12&quot;, which contains various Matlab files and compiled scripts. Copy the folder &quot;cat12&quot; into the SPM12 &quot;toolbox&quot; folder.
               </li>
               <li>On newer MAC OS systems (10.15 or higher: Catalina, Big Sur, Monterey, Ventura) you may need to follow the <a href="matlab:web('https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)#macOS_Catalina','-browser')">SPM12 installation</a> instructions to prevent issues with MEX files.
               </li>
@@ -397,7 +397,7 @@
 
             <p>As shown in <a href="#figure4">Figure 4</a>, CAT's processing workflow comprises two main steps: voxel-based processing and surface-based processing. The former is a prerequisite for the latter, but not the other way round. That is, while voxel-based processing is always required for surface-based analyses, users not interested in surface-based analyses can simply omit this second step to save processing time. The &quot;Voxel-based processing&quot; step (<a href="#figure4">Figure 4</a>, left) can be thought of as one module for tissue segmentation and another one for spatial registration. An optional third module allows for the generation of ROIs and the calculation of ROI-based measures. The &quot;Surface-based processing&quot; step (<a href="#figure4">Figure 4</a>, right) can be thought of as one module for surface creation and another one for surface registration. An optional third module allows for the generation of surfaced-based ROIs and the calculation of ROI-based measures. As shown in <a href="#figure4">Figure 4</a>, the different modules utilize different priors, templates, and atlases. Those are briefly explained in the next paragraph.</p>
 
-            <p><u>Voxel-based processing:</u> While the final tissue segmentation in CAT is independent of tissue priors, the segmentation procedure is initialized using Tissue Probability Maps (TPMs). The standard TPMs (as provided in SPM) suffice for the vast majority of applications, and customized TPMs are only recommended for data obtained in young children. Please note that these TPMs should contain 6 classes: GM/WM/CSF and 3 background classes. For spatial registration, CAT uses Geodesic Shooting (Ashburner and Friston, 2011) or the older DARTEL approach (Ashburner, 2007) with predefined templates. Those templates are an appropriate choice for most studies and, again, sample-specific Shooting templates may only be advantageous for young children. For the voxel-based ROI analyses, CAT offers a selection of volume-based atlases in the predefined template space. Thus, any atlas-based ROI analysis requires a normalization of the individual scans to CAT's default Shooting template. On that note, the aforementioned creation and selection of a customized (rather than the predefined) DARTEL or Geodesic Shooting template will disable the third module for the voxel-based ROI analysis. </p>
+            <p><u>Voxel-based processing:</u> While the final tissue segmentation in CAT is independent of tissue priors, the segmentation procedure is initialized using Tissue Probability Maps (TPMs). The standard TPMs (as provided in SPM) suffice for the vast majority of applications, and customized TPMs are only recommended for data obtained in young children. Please note that these TPMs should contain 6 classes: GM/WM/CSF and 3 background classes. For spatial registration, CAT uses Geodesic Shooting (<a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2010.12.049','-browser')">Ashburner and Friston, 2011</a>) or the older DARTEL approach (<a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2007.07.007','-browser')">Ashburner, 2007</a>) with predefined templates. Those templates are an appropriate choice for most studies and, again, sample-specific Shooting templates may only be advantageous for young children. For the voxel-based ROI analyses, CAT offers a selection of volume-based atlases in the predefined template space. Thus, any atlas-based ROI analysis requires a normalization of the individual scans to CAT's default Shooting template. On that note, the aforementioned creation and selection of a customized (rather than the predefined) DARTEL or Geodesic Shooting template will disable the third module for the voxel-based ROI analysis. </p>
 
             <p><u>Surface-based processing:</u> During the surface registration, the cortical surfaces of the two hemispheres are registered to the Freesurfer <a href="matlab:web('https://surfer.nmr.mgh.harvard.edu/fswiki/FsAverage','-browser')">&quot;FsAverage&quot; template</a> (as provided with CAT). For surface-based ROI analyses, CAT provides a selection of surface-based atlases. As the surface registration module uses the Freesurfer &quot;FsAverage&quot; template, surface-based ROI analyses are not impacted by any template modification during voxel-based processing. In contrast to voxel-based ROI analyses, surface-based ROI analyses can, therefore, be applied regardless of whether the predefined or customized versions of the DARTEL or Geodesic Shooting template have been used.</p>
 
@@ -409,13 +409,13 @@
 
             <p>The modules described in the previous section help understand the CAT's overall processing workflow, including its priors, templates, and atlases. Also, data processing in CAT can be separated into three main processes: (1) the initial voxel-based processing, (2) the main voxel-based processing, and (3) the surface-based processing (optional), as further detailed below and visualized in <a href="#figure5">Figure 5</a>.</p>
 
-            <p>The <em>&quot;initial voxel-based processing&quot;</em> begins with a spatial adaptive non-local means (SANLM) denoising filter (Manjon et al., 2010), which is followed by internal resampling to properly accommodate low-resolution images and anisotropic spatial resolutions. The data are then bias-corrected and affine-registered (to further improve the outcomes of the following steps) followed by the standard SPM &quot;unified segmentation&quot; (Ashburner and Friston, 2005). The outcomes of the latter step will provide the starting estimates for the subsequent refined voxel-based processing.</p>
+            <p>The <em>&quot;initial voxel-based processing&quot;</em> begins with a spatial adaptive non-local means (SANLM) denoising filter (<a href="matlab:web('https://doi.org/10.1002/jmri.22003','-browser')">Manjon et al., 2010</a>), which is followed by internal resampling to properly accommodate low-resolution images and anisotropic spatial resolutions. The data are then bias-corrected and affine-registered (to further improve the outcomes of the following steps) followed by the standard SPM &quot;unified segmentation&quot; (<a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2005.02.018','-browser')">Ashburner and Friston, 2005</a>). The outcomes of the latter step will provide the starting estimates for the subsequent refined voxel-based processing.</p>
 
-            <p>The <em>&quot;refined voxel-based processing&quot;</em> uses the output from the unified segmentation and proceeds with skull-stripping of the brain. The brain is then parcellated into the left and right hemisphere, subcortical areas, and the cerebellum. Furthermore, local white matter hyperintensities are detected (to be later accounted for during the spatial normalization and cortical thickness estimation). Subsequently, a local intensity transformation of all tissue classes is performed, which is particularly helpful to reduce the effects of higher gray matter intensities in the motor cortex, basal ganglia, or occipital lobe before the final adaptive maximum a posteriori (AMAP) segmentation. This final AMAP segmentation step (Rajapakse et al., 1997), which does not rely on a priori information of the tissue probabilities, is then refined by applying a partial volume estimation (Tohka et al., 2004), which effectively estimates the fractional content for each tissue type per voxel. As a last default step, the tissue segments are spatially normalized to a common reference space using Geodesic Shooting (Ashburner and Friston, 2011) registrations.</p>
+            <p>The <em>&quot;refined voxel-based processing&quot;</em> uses the output from the unified segmentation and proceeds with skull-stripping of the brain. The brain is then parcellated into the left and right hemisphere, subcortical areas, and the cerebellum. Furthermore, local white matter hyperintensities are detected (to be later accounted for during the spatial normalization and cortical thickness estimation). Subsequently, a local intensity transformation of all tissue classes is performed, which is particularly helpful to reduce the effects of higher gray matter intensities in the motor cortex, basal ganglia, or occipital lobe before the final adaptive maximum a posteriori (AMAP) segmentation. This final AMAP segmentation step (<a href="matlab:web('https://doi.org/10.1109/42.563663','-browser')">Rajapakse et al., 1997</a>), which does not rely on a priori information of the tissue probabilities, is then refined by applying a partial volume estimation (<a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2004.05.007','-browser')">Tohka et al., 2004</a>), which effectively estimates the fractional content for each tissue type per voxel. As a last default step, the tissue segments are spatially normalized to a common reference space using Geodesic Shooting (<a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2010.12.049','-browser')">Ashburner and Friston, 2011</a>) registrations.</p>
 
             <div class="box right"><sup>*</sup> Topology defects are holes and handles that prevent the surface from being homeomorphic with a sphere.</div>
 
-            <p>Optionally, the <em>&quot;surface-based processing&quot;</em> will be run following the completion of the voxel-based processing steps. Here, the cortical thickness estimation and reconstruction of the central surface occur in one step using a projection-based thickness (PBT) method (Dahnke et al., 2013). Importantly, this PBT allows the appropriate handling of partial volume information, sulcal blurring, and sulcal asymmetries without explicit sulcus reconstruction (Dahnke et al., 2013). After the initial surface reconstruction, topological defects<b><sup>*</sup></b> are repaired using spherical harmonics (Yotter et al., 2011). The topological correction is followed by a surface refinement, which results in the final central surface mesh. This mesh provides the basis to extract folding patterns (i.e., based on the position of mesh nodes relative to each other), where the resulting local values (e.g., absolute mean curvature) are projected onto each node. Subsequently, the individual central surfaces are spatially registered to the Freesurfer &quot;FsAverage&quot; template using a spherical mapping with minimal distortions (Yotter et al., 2011b). In the last step, the local thickness values are transferred onto the Freesurfer &quot;FsAverage&quot; template. While this last step is performed by default during the surface-based processing, it can be repeated to also transfer measurements of cortical folding (e.g., gyrification) as well as other measurements or data (e.g., functional or quantitative MRI) to the Freesurfer &quot;FsAverage&quot; template. Note that the spatial registration of cortical measurements is combined with a spatial smoothing step in CAT to prepare the data for statistical analysis.</p>
+            <p>Optionally, the <em>&quot;surface-based processing&quot;</em> will be run following the completion of the voxel-based processing steps. Here, the cortical thickness estimation and reconstruction of the central surface occur in one step using a projection-based thickness (PBT) method (<a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2012.09.050','-browser')">Dahnke et al., 2013</a>). Importantly, this PBT allows the appropriate handling of partial volume information, sulcal blurring, and sulcal asymmetries without explicit sulcus reconstruction (<a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2012.09.050','-browser')">Dahnke et al., 2013</a>). After the initial surface reconstruction, topological defects<b><sup>*</sup></b> are repaired using spherical harmonics (<a href="matlab:web('https://doi.org/10.1002/hbm.21095','-browser')">Yotter et al., 2011a</a>). The topological correction is followed by a surface refinement, which results in the final central surface mesh. This mesh provides the basis to extract folding patterns (i.e., based on the position of mesh nodes relative to each other), where the resulting local values (e.g., absolute mean curvature) are projected onto each node. Subsequently, the individual central surfaces are spatially registered to the Freesurfer &quot;FsAverage&quot; template using a spherical mapping with minimal distortions (<a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2011.02.007','-browser')">Yotter et al., 2011b</a>). In the last step, the local thickness values are transferred onto the Freesurfer &quot;FsAverage&quot; template. While this last step is performed by default during the surface-based processing, it can be repeated to also transfer measurements of cortical folding (e.g., gyrification) as well as other measurements or data (e.g., functional or quantitative MRI) to the Freesurfer &quot;FsAverage&quot; template. Note that the spatial registration of cortical measurements is combined with a spatial smoothing step in CAT to prepare the data for statistical analysis.</p>
             
             <p><img id="figure5" width=80% height=auto alt="cat_processing_pipeline" src="images/cat_processing_pipeline.png"</p>
             <p><b>Figure 5:</b> Schematic flowchart of CAT's processing pipeline.</p>
@@ -1679,8 +1679,8 @@
             <!-- ############################# -->
             <h4>Background</h4>
 
-            <p>The majority of morphometric studies are based on cross-sectional data in which one image is acquired for each subject. However, to map structural changes over time (e.g., in the framework of use-dependent plasticity, neurodevelopment, or aging), longitudinal designs that consider additional time points for each subject are necessary. The handling of these longitudinal data requires a customized processing, as a voxel- or point-wise comparability needs to be assured not only across subjects, but also across time points within subjects. This requires an inverse-consistent (or &quot;symmetric&quot;) realignment as well as an intra-subject bias field correction (Ashburner and Ridgway, 2012; Reuter et al., 2010; Reuter and Fischl, 2011). Thus, CAT first realigns the images from all time points using inverse-consistent rigid-body registrations and applies intra-subject bias-field corrections. Subsequently, the resulting images are processed individually (see Figure <a href="#figure4">4</a>, <a href="#figure5">5</a>) using the standard pipeline.</p>
-            <p>That is, images are tissue-classified and the necessary deformations for spatial registration to the standard template are estimated. However, instead of applying the individual spatial transformations (as done in a cross-sectional analysis), a mean transformation for all time points is calculated and applied to all individual images (<a href="#figure7">Figure 7</a>). The resulting normalized tissue segments can then be used for voxel-based analyses. Optionally, the processed images for all time points can be used to additionally extract the cortical surfaces and to calculate surface parameters, such as cortical thickness or diverse folding measures using the surface-based processing pipeline. Furthermore, the processing of the individual time points is initialized by the processed results from the (unbiased) average image. This reduces random variations in the processing procedure and improves the robustness and sensitivity of the overall longitudinal analysis. This latter processing stream of surface data is similar to the longitudinal approach employed in Freesurfer (Reuter et al., 2010; Reuter and Fischl, 2011).</p>
+            <p>The majority of morphometric studies are based on cross-sectional data in which one image is acquired for each subject. However, to map structural changes over time (e.g., in the framework of use-dependent plasticity, neurodevelopment, or aging), longitudinal designs that consider additional time points for each subject are necessary. The handling of these longitudinal data requires a customized processing, as a voxel- or point-wise comparability needs to be assured not only across subjects, but also across time points within subjects. This requires an inverse-consistent (or &quot;symmetric&quot;) realignment as well as an intra-subject bias field correction (<a href="matlab:web('https://doi.org/10.3389/fnins.2012.00197','-browser')">Ashburner and Ridgway, 2012</a>; <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2010.07.020','-browser')">Reuter et al., 2010</a>; <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2011.02.076','-browser')">Reuter and Fischl, 2011</a>). Thus, CAT first realigns the images from all time points using inverse-consistent rigid-body registrations and applies intra-subject bias-field corrections. Subsequently, the resulting images are processed individually (see Figure <a href="#figure4">4</a>, <a href="#figure5">5</a>) using the standard pipeline.</p>
+            <p>That is, images are tissue-classified and the necessary deformations for spatial registration to the standard template are estimated. However, instead of applying the individual spatial transformations (as done in a cross-sectional analysis), a mean transformation for all time points is calculated and applied to all individual images (<a href="#figure7">Figure 7</a>). The resulting normalized tissue segments can then be used for voxel-based analyses. Optionally, the processed images for all time points can be used to additionally extract the cortical surfaces and to calculate surface parameters, such as cortical thickness or diverse folding measures using the surface-based processing pipeline. Furthermore, the processing of the individual time points is initialized by the processed results from the (unbiased) average image. This reduces random variations in the processing procedure and improves the robustness and sensitivity of the overall longitudinal analysis. This latter processing stream of surface data is similar to the longitudinal approach employed in Freesurfer (<a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2010.07.020','-browser')">Reuter et al., 2010</a>; <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2011.02.076','-browser')">Reuter and Fischl, 2011</a>).</p>
             <p>Please note that three different longitudinal models are offered. The first longitudinal model is optimized for processing and capturing smaller changes over time in response to short-term plasticity effects (e.g. from learning and training). This model will probably not be as sensitive for larger longitudinal changes where large parts of the brain change over time (e.g. atrophy due to Alzheimer&quot;s disease or aging). This is due to the effect of estimating the parameters of spatial registration from the deformations of all time points and then applying them to all time points. If a large atrophy occurs between the time points, this can lead to a displacement of tissue boundaries and might result in areas with reduced volumes over time, which are surrounded by areas with increased volume due to these displacement problems. For data with larger volume changes over time, you should choose the longitudinal model, which is optimized to detect larger changes (e.g. due to ageing). This model also takes into account the deformations between time points and prevents the problems mentioned above. Finally, there also exists a longitudinal processing pipeline for neurodeveopmental data where we can also see changes in head size which should be taken into account.</p>
             <p>Additional attention is then required for the setup of the statistical model. The following section therefore describes the data preprocessing and model setup for longitudinal data.</p>
             <p><img id="figure7" width=100% height=auto alt="cat_long_pipeline" src="images/cat_long_pipelines.png"></p>
@@ -2050,15 +2050,13 @@
                   <li>Conditions &rarr; &quot; [1 1 1 1; 1 1 1 1]' &quot; [first group with four time points]</li>
                 </ul>
     
-                <div class="box right">Do not forget the additional single quote! Otherwise you have to define the conditions as “ [1 1; 1 2; 1 3; 1 4] “ for the first group.</div>
-      
                 Subject
                 <ul>
                   <li>Scans &rarr; <em>[select files (the smoothed GM data of the 2nd Subject of first group)]</em></li>
                   <li>Conditions &rarr; &quot; [1 1 1 1; 1 1 1 1]' &quot; [first group with four time points]</li>
                 </ul>
     
-                <div class="box right">Please note that, in contrast to the previous model, all time points are coded here with only one value. The differentiation between the time points is now made by the covariate.</div>
+                <div class="box right">Do not forget the additional single quote! Otherwise you have to define the conditions as “ [1 1; 1 2; 1 3; 1 4] “ for the first group.</div>
       
                 Subject
                 <ul>
@@ -2066,20 +2064,22 @@
                   <li>Conditions &rarr; &quot; [1 1 1 1; 1 1 1 1]' &quot; [first group with four time points]</li>
                 </ul>
     
+                <div class="box right">Please note that, in contrast to the previous model, all time points are coded here with only one value. The differentiation between the time points is now made by the covariate.</div>
+      
                 Subject
                 <ul>
                   <li>Scans &rarr; <em>[select files (the smoothed GM data of the 4th Subject of first group)]</em></li>
                   <li>Conditions &rarr; &quot; [1 1 1 1; 1 1 1 1]' &quot; [first group with four time points]</li>
                 </ul>
     
-                <div class="box right">It is also possible to deal with missing values for the data. For example, if you normally have three time points, but for some data only two time points for the baseline and the last scan are available, this can be defined by "1 3".</div>
-      
                 Subject
                 <ul>
                   <li>Scans &rarr; <em>[select files (the smoothed GM data of the 1st Subject of second group)]</em></li>
                   <li>Conditions &rarr; &quot; [2 2 2 2; 1 1 1 1]' &quot; [second group with four time points]</li>
                 </ul>
     
+                <div class="box right">It is also possible to deal with missing values for the data. For example, if you normally have three time points, but for some data only two time points for the baseline and the last scan are available, this can be defined by "1 3".</div>
+      
                 Subject
                 <ul>
                   <li>Scans &rarr; <em>[select files (the smoothed GM data of the 2nd Subject of second group)]</em></li>
@@ -2579,8 +2579,8 @@
 
             <u>Background</u>
             <p>DBM is based on the application of non-linear registration procedures to spatially normalize one brain to another one. The simplest case of spatial normalization is to correct the orientation and size of the brain. In addition to these global changes, a non-linear normalization is necessary to minimize the remaining regional differences due to local deformations. If this local adaptation is possible, the deformations now provide information about the type and localization of the structural differences between the brains and can then be analyzed.</p>
-            <p>Differences between the two images are minimized and are now coded in the deformations. Finally, a map of local volume changes can be quantified by a mathematical property of these deformations - the Jacobian determinant. This parameter is well known from continuum mechanics and is usually used for the analysis of volume changes in flowing liquids or gases. The Jacobian determinant allows a direct estimation of the percentage change in volume in each voxel and can be analyzed statistically (<a href="#h.28h4qwu">Gaser et al., 2001</a>). This approach is also known as tensor-based morphometry since the Jacobian determinant represents such a tensor.</p>
-            <p>A deformation-based analysis can be performed not only on the local volume changes, but also on the entire information of the deformations, which also includes the direction and strength of the local deformations (<a href="#h.nmf14n">Gaser et al., 1999</a>; 2001). Since each voxel contains three-dimensional information, a multivariate statistical test is required for analysis. For this type of analysis, a multivariate general linear model or Hotelling&quot;s T2 test is often used (<a href="#h.nmf14n">Gaser et al., 1999</a>; <a href="#h.37m2jsg">Thompson et al., 1997</a>).</p>
+            <p>Differences between the two images are minimized and are now coded in the deformations. Finally, a map of local volume changes can be quantified by a mathematical property of these deformations - the Jacobian determinant. This parameter is well known from continuum mechanics and is usually used for the analysis of volume changes in flowing liquids or gases. The Jacobian determinant allows a direct estimation of the percentage change in volume in each voxel and can be analyzed statistically (<a href="matlab:web('https://doi.org/10.1006/nimg.2001.0771','-browser')">Gaser et al., 2001</a>). This approach is also known as tensor-based morphometry since the Jacobian determinant represents such a tensor.</p>
+            <p>A deformation-based analysis can be performed not only on the local volume changes, but also on the entire information of the deformations, which also includes the direction and strength of the local deformations (<a href="matlab:web('https://doi.org/10.1006/nimg.1999.0458','-browser')">Gaser et al., 1999</a>; <a href="matlab:web('https://doi.org/10.1006/nimg.2001.0771','-browser')">Gaser et al., 2001</a>). Since each voxel contains three-dimensional information, a multivariate statistical test is required for analysis. For this type of analysis, a multivariate general linear model or Hotelling&quot;s T2 test is often used (<a href="matlab:web('https://doi.org/10.1006/nimg.1999.0458','-browser')">Gaser et al., 1999</a>).</p>
             
             <u>Additional Steps in CAT12</u>
             <p>CAT12 &rarr; Segment Data</p>
@@ -2614,22 +2614,22 @@
             <h3 id="sbm">Surface-based morphometry (SBM)</h3>
 
             <u>Background</u>
-            <p>Surface-based morphometry has several advantages over the sole use of volumetric data. For example, it has been shown that using brain surface meshes for spatial registration increases the accuracy of brain registration compared to volume-based registration (Desai et al., 2005). Brain surface meshes also permit new forms of analyses, such as gyrification which measure surface complexity in 3D (Yotter et al., 2011b) or cortical thickness (Dahnke et al., 2013; Gaser et al., 2020). In addition, inflation or spherical mapping of the cortical surface mesh raises the buried sulci to the surface so that mapped functional activity in these regions can be made easily visible.</p>
+            <p>Surface-based morphometry has several advantages over the sole use of volumetric data. For example, it has been shown that using brain surface meshes for spatial registration increases the accuracy of brain registration compared to volume-based registration (<a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2005.03.024','-browser')">Desai et al., 2005</a>). Brain surface meshes also permit new forms of analyses, such as gyrification which measure surface complexity in 3D (<a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2011.02.007','-browser')">Yotter et al., 2011b</a>) or cortical thickness (<a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2012.09.050','-browser')">Dahnke et al., 2013</a>). In addition, inflation or spherical mapping of the cortical surface mesh raises the buried sulci to the surface so that mapped functional activity in these regions can be made easily visible.</p>
             
             <i>Local adaptive segmentation</i>
-            <p>Gray matter regions with high iron concentration, such as the motor cortex and occipital regions, often have an increased intensity leading to misclassifications. In addition to our adaptive MAP approach for partial volume segmentation, we use an approach that allows us to adapt local intensity changes to deal with varying tissue contrasts (Dahnke et al., 2012a).</p>
+            <p>Gray matter regions with high iron concentration, such as the motor cortex and occipital regions, often have an increased intensity leading to misclassifications. In addition to our adaptive MAP approach for partial volume segmentation, we use an approach that allows us to adapt local intensity changes to deal with varying tissue contrasts (<a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2012.09.050','-browser')">Dahnke et al., 2012a</a>).</p>
             
             <i>Cortical thickness and central surface estimation</i>
-            <p>We use a fully automated method that allows the measurement of cortical thickness and reconstruction of the central surface in one step. It uses a tissue segmentation to estimate the white matter (WM) distance and then projects the local maxima (which is equal to the cortical thickness) onto other gray matter voxels using a neighboring relationship described by the WM distance. This projection-based thickness (PBT) allows the handling of partial volume information, sulcal blurring, and sulcal asymmetries without explicit sulcus reconstruction (Dahnke et al., 2012b).</p>
+            <p>We use a fully automated method that allows the measurement of cortical thickness and reconstruction of the central surface in one step. It uses a tissue segmentation to estimate the white matter (WM) distance and then projects the local maxima (which is equal to the cortical thickness) onto other gray matter voxels using a neighboring relationship described by the WM distance. This projection-based thickness (PBT) allows the handling of partial volume information, sulcal blurring, and sulcal asymmetries without explicit sulcus reconstruction (<a href="matlab:web('http://www.neuro.uni-jena.de/hbm2012/HBM2012-Dahnke02.pdf','-browser')">Dahnke et al., 2012b</a>).</p>
             
             <i>Topological correction</i>
-            <p>To repair topological defects, we use a novel method based on spherical harmonics (Yotter et al., 2011a). First of all, the original MRI intensity values are used to select either a &quot;ï¬ll&quot; or &quot;cut&quot; operation for each topological defect. We modify the spherical map of the uncorrected brain surface mesh in such a way that certain triangles are preferred when searching for the bounding triangle during reparameterization. Subsequently, a low-pass filtered alternative reconstruction based on spherical harmonics is patched into the reconstructed surface in areas where defects were previously present. </p>
+            <p>To repair topological defects, we use a novel method based on spherical harmonics (<a href="matlab:web('https://doi.org/10.1002/hbm.21095','-browser')">Yotter et al., 2011a</a>). First of all, the original MRI intensity values are used to select either a &quot;ï¬ll&quot; or &quot;cut&quot; operation for each topological defect. We modify the spherical map of the uncorrected brain surface mesh in such a way that certain triangles are preferred when searching for the bounding triangle during reparameterization. Subsequently, a low-pass filtered alternative reconstruction based on spherical harmonics is patched into the reconstructed surface in areas where defects were previously present. </p>
             
             <i>Spherical mapping</i>
-            <p>A spherical map of a cortical surface is usually necessary to reparameterize the surface mesh into a common coordinate system to enable inter-subject analysis. We use a fast algorithm to reduce area distortion, which leads to an improved reparameterization of the cortical surface mesh (Yotter et al., 2011c).</p>
+            <p>A spherical map of a cortical surface is usually necessary to reparameterize the surface mesh into a common coordinate system to enable inter-subject analysis. We use a fast algorithm to reduce area distortion, which leads to an improved reparameterization of the cortical surface mesh (<a href="matlab:web('https://doi.org/10.1111/j.1552-6569.2010.00484.x','-browser')">Yotter et al., 2011c</a>).</p>
             
             <i>Spherical registration</i>
-            <p>We have adapted the volume-based diffeomorphic DARTEL algorithm to the surface (Ashburner, 2007) to work with spherical maps (Yotter et al., 2011d). We apply a multi-grid approach that uses reparameterized values of sulcal depth and shape index defined on the sphere to estimate a flow field that allows the deformation of a spherical grid.</p>
+            <p>We have adapted the volume-based diffeomorphic DARTEL algorithm to the surface (<a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2007.07.007','-browser')">Ashburner, 2007</a>) to work with spherical maps (<a href="matlab:web('http://www.neuro.uni-jena.de/hbm2011/Yotter02.pdf','-browser')">Yotter et al., 2011d</a>). We apply a multi-grid approach that uses reparameterized values of sulcal depth and shape index defined on the sphere to estimate a flow field that allows the deformation of a spherical grid.</p>
             
             <u>Additional Steps in CAT12</u>
             <p>CAT12 &rarr; Segment Data</p>
@@ -2665,9 +2665,9 @@
             <ul>
               <li>Central Surfaces &lt;-X &rarr; Select the central surface data (e.g. [lr]h.central.*)</li>
               <li>Gyrification</li>
-              <em>Extract gyrification based on absolute mean curvature. The method is described in Luders et al., NeuroImage, 29: 1224-1230, 2006.</em>
+              <em>Extract gyrification based on absolute mean curvature. The method is described in <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2005.08.049','-browser')">Luders et al., 2006</a>.</em>
               <li>Cortical complexity (fractal dimension)</li>
-              <em>Extract Cortical complexity (fractal dimension) which is described in Yotter et al., Neuroimage, 56(3): 961-973, 2011.<br/>
+              <em>Extract Cortical complexity (fractal dimension) which is described in <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2011.02.007','-browser')">Yotter et al., 2011.</a><br/>
               Warning: Estimation of cortical complexity is very slow!</em>
               <li>Sulcus depth</li>
               <em>Extract sulcus depth based on the Euclidean distance between the central surface and its convex hull. In addition, sulcal depth can be transformed with sqrt-function to render the data more normally distributed, which is the recommended option for further statistical analysis.</em>
@@ -2761,10 +2761,11 @@
             
             <p>&quot;Native space&quot; creates tissue class images in spatial correspondence to the original data. Although this may be useful for estimating global tissue volumes (e.g. GM+WM+CSF=TIV) it is not suitable for performing VBM analyses due to the lack of voxel-wise correspondence in the brain). If one is interested in these global tissue volumes in the native space (&quot;raw values&quot;), it is not necessary to actually output the tissue class images in native space. The &quot;Segment Data&quot;-function automatically generates an xml file for each subject (cat_*.xml), which contains the raw values for GM, WM, and CSF. The subject-specific values can be calculated (i.e., integrated into a single text file) using the function: CAT12 &rarr; Statistical Analysis &rarr; Estimate TIV.</p>
             
-            <p>&quot;Normalized&quot; creates tissue class images in spatial correspondence to the template. This is useful for VBM analyses (e.g. &quot;concentration&quot; of gray matter; Good et al., 2001; Neuroimage).</p>
+            <p>&quot;Normalized&quot; creates tissue class images in spatial correspondence to the template in MNI152NLin2009cAsym space. This is useful for VBM analyses (e.g. &quot;concentration&quot; of gray matter; <a href="matlab:web('https://doi.org/10.1006/nimg.2001.0786','-browser')">Good et al., 2001</a>).<br/>
+            An excellent overview about the <a href="matlab:web('https://www.lead-dbs.org/about-the-mni-spaces/','-browser');">different MNI spaces</a> can be found on the DBS site from Andreas Horn.</p>
             
-            <p>&quot;Modulated normalized&quot; creates tissue class images in alignment with the template, but multiplies (&quot;modulates&quot;) the voxel values with the Jacobian determinant (i.e., linear and non-linear components) derived from the spatial normalization. This is useful for VBM analyses and allows the comparison of the absolute amount of tissue (e.g. &quot;volume&quot; of gray matter; Good et al., 2001; Neuroimage). Please note that in this type of modulation you must use TIV as covariate to correct different brain sizes. An alternative approach is to use global scaling with TIV if TIV is too strongly correlated with your covariates of interest. For more information, see the section &quot;Checking for Design Orthogonality&quot;.</p>
-            <p>If you use the expert mode, you can optionally choose whether you want to modulate your data for non-linear terms only, which was the default for previous VBM-toolbox versions. This produces tissue class images in alignment with the template, but the voxel values are only multiplied by the non-linear components. This is useful for VBM analyses and allows comparison of the absolute amount of tissue corrected for individual brain sizes. This option is similar to using &quot;Affine+non-linear&quot; (see above) in combination with &quot;global normalization&quot; (when building the statistical model with the traditional PET design late one). Although this type of modulation was used in as default previous VBM-toolbox versions it is no longer recommended as the use of standard modulation in combination with TIV as covariate provides more reliable results (Malone et al., 2015; Neuroimage).</p>
+            <p>&quot;Modulated normalized&quot; creates tissue class images in alignment with the template, but multiplies (&quot;modulates&quot;) the voxel values with the Jacobian determinant (i.e., linear and non-linear components) derived from the spatial normalization. This is useful for VBM analyses and allows the comparison of the absolute amount of tissue (e.g. &quot;volume&quot; of gray matter; <a href="matlab:web('https://doi.org/10.1006/nimg.2001.0786','-browser')">Good et al., 2001</a>). Please note that in this type of modulation you must use TIV as covariate to correct different brain sizes. An alternative approach is to use global scaling with TIV if TIV is too strongly correlated with your covariates of interest. For more information, see the section &quot;Checking for Design Orthogonality&quot;.</p>
+            <p>If you use the expert mode, you can optionally choose whether you want to modulate your data for non-linear terms only, which was the default for previous VBM-toolbox versions. This produces tissue class images in alignment with the template, but the voxel values are only multiplied by the non-linear components. This is useful for VBM analyses and allows comparison of the absolute amount of tissue corrected for individual brain sizes. This option is similar to using &quot;Affine+non-linear&quot; (see above) in combination with &quot;global normalization&quot; (when building the statistical model with the traditional PET design late one). Although this type of modulation was used in as default previous VBM-toolbox versions it is no longer recommended as the use of standard modulation in combination with TIV as covariate provides more reliable results (<a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2014.09.034','-browser')">Malone et al., 2015</a>).</p>
             
             <!-- ###################################### -->
             <h3 id="naming">Naming convention of output files</h3>
@@ -3093,7 +3094,7 @@
             See also the section <a href="#process_details">CAT12 Processing Steps in Detail</a> for a detailed overview about the processing steps.</p>
             
             <i>Denoising</i>
-            <p>We also use two noise reduction methods to make data processing, and the tissue segmentation in particular, more robust against noise. The first method is a spatial-adaptive Non-Local Means (SANLM) denoising filter and removes noise while maintaining edges (Manjon et al., 2010) and is implemented as a pre-processing step. The second method is a classical Markov Random Field (MRF) approach, which includes spatial information from adjacent voxels in the segmentation estimation (Rajapakse et al., 1997) and is part of the AMAP segmentation. The strength of the filters is automatically determined by estimating the residual noise in the image or can be set manually.</p>
+            <p>We also use two noise reduction methods to make data processing, and the tissue segmentation in particular, more robust against noise. The first method is a spatial-adaptive Non-Local Means (SANLM) denoising filter and removes noise while maintaining edges (<a href="matlab:web('https://doi.org/10.1002/jmri.22003','-browser')">Manjon et al., 2010</a>) and is implemented as a pre-processing step. The second method is a classical Markov Random Field (MRF) approach, which includes spatial information from adjacent voxels in the segmentation estimation (<a href="matlab:web('https://doi.org/10.1109/42.563663','-browser')">Rajapakse et al., 1997</a>) and is part of the AMAP segmentation. The strength of the filters is automatically determined by estimating the residual noise in the image or can be set manually.</p>
             
             <i>Interpolation</i>
             <p>CAT12 uses an internal interpolation to provide more reliable results even with low resolution images and anisotropic spatial resolutions. Although interpolation cannot add more details to the images, some of the functions used benefit from the higher number of voxels and the usual strip artefacts in modulated images are greatly reduced.</p>
@@ -3105,10 +3106,10 @@
             <p>GM intensity can vary for different regions such as the motor cortex, the basal ganglia, or the occipital lobe. These changes have an anatomical background (e.g. iron content, myelenization), but are dependent on the MR-protocol and often lead to GM-underestimations at higher intensities and CSF-overestimations at lower intensities. Therefore, a local intensity transformation of all tissue classes is used to reduce these effects in the image before the final AMAP segmentation. The strength of the changes is controlled by the LASstr parameter, with 0 for no LAS, small values (0.01-0.5) for small adjustments, 0.5 for medium adjustments (default), and higher values (0.5-1) for strong adjustments.</p>
             
             <i>AMAP Segmentation</i>
-            <p>The segmentation approach is based on an Adaptive Maximum A Posterior (AMAP) technique without the need for a priori information on the tissue probabilities. This means that the Tissue Probability Maps (TPM) are not constantly used in the sense of the classical Unified Segmentation approach (Ashburner and Friston 2005), but only for spatial normalization, initial skull-stripping, and as initial segmentation estimate. The subsequent AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modelled as slowly varying spatial functions (Rajapakse et al., 1997). This accounts not only for intensity inhomogeneities, but also for other local intensity variations.</p>
+            <p>The segmentation approach is based on an Adaptive Maximum A Posterior (AMAP) technique without the need for a priori information on the tissue probabilities. This means that the Tissue Probability Maps (TPM) are not constantly used in the sense of the classical Unified Segmentation approach (<a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2005.02.018','-browser')">Ashburner and Friston, 2005</a>), but only for spatial normalization, initial skull-stripping, and as initial segmentation estimate. The subsequent AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modelled as slowly varying spatial functions (<a href="matlab:web('https://doi.org/10.1109/42.563663','-browser')">Rajapakse et al., 1997</a>). This accounts not only for intensity inhomogeneities, but also for other local intensity variations.</p>
             
             <i>Partial Volume Segmentation</i>
-            <p>In addition, the segmentation approach uses a Partial Volume Estimation (PVE) with a simplified mixed model of a maximum of two tissue types (Tohka et al., 2004). We begin with an initial segmentation into three pure classes: gray matter (GM), white matter (WM), and cerebrospinal fluid (CSF) based on the AMAP estimation described above. The initial segmentation is followed by a PVE consisting of two additional mixed classes: GM-WM and GM-CSF. This results in an estimate of the amount (or fraction) of each pure tissue type that is present in each voxel (since single voxels - given their size - probably contain more than one tissue type) and thus allows for more precise segmentation.</p>
+            <p>In addition, the segmentation approach uses a Partial Volume Estimation (PVE) with a simplified mixed model of a maximum of two tissue types (<a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2004.05.007','-browser')">Tohka et al., 2004</a>). We begin with an initial segmentation into three pure classes: gray matter (GM), white matter (WM), and cerebrospinal fluid (CSF) based on the AMAP estimation described above. The initial segmentation is followed by a PVE consisting of two additional mixed classes: GM-WM and GM-CSF. This results in an estimate of the amount (or fraction) of each pure tissue type that is present in each voxel (since single voxels - given their size - probably contain more than one tissue type) and thus allows for more precise segmentation.</p>
             
             <i>Skull-Stripping</i>
             <p>CAT12 provides different approaches for skull-stripping. Currently, the method with the most accurate and reliable results is an adaptive probability region-growing (APRG) method. It refines the probability maps of the SPM approach by region-growing techniques of the GCUT approach with a final surface-based optimization strategy.</p>
@@ -3122,7 +3123,10 @@
             <div class="box right"><sup>*</sup> Therefore, no additional MNI normalization is necessary.<br/>
             <sup>**</sup> For studies investigating children data, I still recommend creating a customized DARTEL or Geodesic Shooting template. However, it should be noted that this option requires a representative sample with a sufficient number of subjects.</div>
 
-            <p>Another important extension of the SPM12 segmentation is the integration of the Geodesic Shooting (Ashburner and Friston, 2011) or the older DARTEL (Ashburner, 2007) normalization into the toolbox by already existing DARTEL and Geodesic Shooting templates in MNI space. These templates were derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org) and are available in the MNI space<b><sup>*</sup></b> for six different iteration steps of the DARTEL and Geodesic Shooting normalization. Therefore, the creation of sample-specific DARTEL and Geodesic Shooting templates is no longer necessary for most studies<b><sup>**</sup>.</b></p>
+            <p>Another important extension of the SPM12 segmentation is the integration of the Geodesic Shooting (<a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2010.12.049','-browser')">Ashburner and Friston, 2011</a>) or the older DARTEL (<a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2007.07.007','-browser')">Ashburner, 2007</a>) normalization into the toolbox by already existing DARTEL and Geodesic Shooting templates in MNI space. 
+              These templates were derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org) and are available in the MNI space<b><sup>*</sup></b> for six different iteration steps of the DARTEL and Geodesic Shooting normalization. 
+              Therefore, the creation of sample-specific DARTEL and Geodesic Shooting templates is no longer necessary for most studies<b><sup>**</sup>.</b><br/>
+              An excellent overview about the <a href="matlab:web('https://www.lead-dbs.org/about-the-mni-spaces/','-browser');">different MNI spaces</a> can be found on the DBS site from Andreas Horn.</p>
             
 
             <!-- ################################################################################# -->
@@ -3205,20 +3209,21 @@
             <!-- ###################################### -->
             <h3 id="volrois">List of volume-based atlas maps in CAT12</h3>
             <p>
-              We prepared different atlas maps for the CAT12 IXI555 space that are stored in the <em>templates_MNI152NLin2009cAsym</em> directory. 
+              We prepared different atlas maps for the MNI152NLin2009cAsym space that are stored in the <em>templates_MNI152NLin2009cAsym</em> directory. 
               For each atlas you can find a CSV file with the ROI IDs, short and full names. 
               The txt-file contains further information, terms of use, and the name of the original publications and websites. 
               If original T1 maps and subject label maps were available we used CAT to preprocess the data and map them to common space. 
-              The subject dependent labels were translated to the CAT name system.            
+              The subject dependent labels were translated to the CAT name system.<br/>
+              An excellent overview about the <a href="matlab:web('https://www.lead-dbs.org/about-the-mni-spaces/','-browser');">different MNI spaces</a> can be found on the DBS site from Andreas Horn.
             </p>
             <p>
             </p>
             
             <a class="function" href="matlab:cat_vol_display_label(struct('data',{{
-                fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); 
-                fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','neuromorphometrics.nii');
-                fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','lpba40.nii');
-                fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','hammers.nii');}} ) )">Display all three volumetric atlas maps.</a> 
+                fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); 
+                fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','neuromorphometrics.nii');
+                fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','lpba40.nii');
+                fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','hammers.nii');}} ) )">Display all three volumetric atlas maps.</a> 
             </p>
        
             <h5 id="Neuromorphometrics">Neuromorphometrics</h5>
@@ -3230,9 +3235,9 @@
               <!--These references should be included in all workshop and final publications.-->
             </p><p>
               Display Neuromorphometrics atlas as 
-              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','neuromorphometrics.nii')}}))">volume map</a>.
+              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','neuromorphometrics.nii')}}))">volume map</a>.
             </p>
-            You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','neuromorphometrics.txt'));">here</a>.
+            You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','neuromorphometrics.txt'));">here</a>.
             <p style="text-align:center;"><img src="images/CAT_surf_atlas_neuromorphometrics.png" width=90% height=auto alt="Neuromorphometrics (2012)" ><p>
 
             <h5 id="LPBA">LPBA40</h5>
@@ -3243,9 +3248,9 @@
               These delineations were then transformed into a common atlas space to produce a set of coregistered anatomical labels. 
               The original MRI data were also transformed into the atlas space.
             </p><p>
-              Display LPBA40 atlas as <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','lpba40.nii')}}))">volume map</a>.
+              Display LPBA40 atlas as <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','lpba40.nii')}}))">volume map</a>.
             </p>
-            You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','lpba40.txt'));">here</a>.
+            You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','lpba40.txt'));">here</a>.
             <p style="text-align:center;"><img src="images/CAT_surf_atlas_lpba40.png" width=90% height=auto alt="LPBA40 (Shattuck et al. 2008)" ><p>
 
             <h5 id="Hammers">Hammers</h5>
@@ -3253,9 +3258,9 @@
               This atlas, based on Alexander Hammers' brain atlas based on 20 subjects, made available for the Euripides project, Nov 2009 <a href="#Hammers2003">(Hammers et al. 2003</a>,<a href="#Gousias2008">Gousias et al. 2008)</a>. 
             </p><p>
               Display Hammers atlas as 
-              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','hammers.nii')}}))">volume map</a>.
+              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','hammers.nii')}}))">volume map</a>.
             </p>
-            You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','hammers.txt'));">here</a>.
+            You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','hammers.txt'));">here</a>.
             <p style="text-align:center;"><img src="images/CAT_surf_atlas_hammers.png" width=90% height=auto alt="Hammers (Hammers et al. 2003)" ><p>
 
             <h5 id="Cobra">Cobra</h5>
@@ -3265,9 +3270,9 @@
             </p>
             <p>
               Display the Cobra atlas as 
-              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','cobra.nii')}}))">volume map</a>. 
+              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','cobra.nii')}}))">volume map</a>. 
             </p>
-            You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','cobra.txt'));">here</a>.
+            You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','cobra.txt'));">here</a>.
 
             <h5 id="IBSR">IBSR</h5>
             <p>
@@ -3275,9 +3280,9 @@
             </p>
             <p>
               Display IBSR atlas as 
-              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','ibsr.nii')}}))">volume map</a>. 
+              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','ibsr.nii')}}))">volume map</a>. 
             </p>
-            You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','ibsr.txt'));">here</a>.
+            You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','ibsr.txt'));">here</a>.
 
             <h5 id="Mori">Mori</h5>
             <p>
@@ -3285,17 +3290,17 @@
             </p>
             <p>
               Display Mori atlas as
-              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','mori.nii')}}))">volume map</a>.
-            You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','mori.txt'));">here</a>.
+              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','mori.nii')}}))">volume map</a>.
+            You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','mori.txt'));">here</a>.
 
             <h5 id="Thalamus">Thalamus</h5>
             <p>
-              This atlas is based on the <a href="matlab:web('https://wp.unil.ch/mial/probabilistic-atlas-of-thalamic-nuclei/','-browser');">atlas of human thalamic nuclei</a> <a href="#Najdenovska">by Najdenovska et al. 2018</a>. 
+              This atlas is based on the <a href="matlab:web('https://wp.unil.ch/mial/probabilistic-atlas-of-thalamic_nuclei/','-browser');">atlas of human thalamic nuclei</a> <a href="#Najdenovska">by Najdenovska et al. 2018</a>. 
             </p>
             <p>
               Display Thalamus atlas as
-              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','thalamus.nii')}}))">volume map</a>.
-            You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','thalamus.txt'));">here</a>.
+              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','thalamus.nii')}}))">volume map</a>.
+            You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','thalamus.txt'));">here</a>.
 
             <h5 id="ThalamicNuclei">Thalamic Nuclei</h5>
             <p>
@@ -3303,8 +3308,8 @@
             </p>
             <p>
               Display Thalamic nuclei atlas as
-              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','thalamic-nuclei.nii')}}))">volume map</a>.
-            You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','thalamic-nuclei.txt'));">here</a>.
+              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','thalamic_nuclei.nii')}}))">volume map</a>.
+            You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','thalamic_nuclei.txt'));">here</a>.
 
 
             <h5 id="AAL3">AAL (Automated Anatomical Labeling) version 3</h5>
@@ -3312,9 +3317,9 @@
               Parcellation aligned on Collins brain <a href="#Collins1998">(Collins et al. 1998,</a><a href="#Tzourio2002">Tzourio-Mazoyer et al. 2002)</a>.
             </p>
             <p>            
-              Display AAL3 atlas as <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','aal3.nii')}}))">volume map</a>
+              Display AAL3 atlas as <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','aal3.nii')}}))">volume map</a>
             </p>
-            You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','aal3.txt'));">here</a>.
+            You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','aal3.txt'));">here</a>.
 
             <h5 id="Anatomy">Anatomy version 3</h5>
             <p>
@@ -3324,8 +3329,8 @@
             </p>
             <p>
               Display Anatomy atlas as
-              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','anatomy3.nii')}}))">volume map</a>.
-            You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','anatomy3.txt'));">here</a>.
+              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','anatomy3.nii')}}))">volume map</a>.
+            You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','anatomy3.txt'));">here</a>.
 
             <h5 id="JulichBrain">JulichBrain</h5>
             <p>
@@ -3334,8 +3339,8 @@
             </p>
             <p>
               Display Anatomy atlas as
-              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','julichbrain.nii')}}))">volume map</a>.
-            You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','julichbrain.txt'));">here</a>.
+              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','julichbrain.nii')}}))">volume map</a>.
+            You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','julichbrain.txt'));">here</a>.
 
             <h5 id="Schaefer">Local-Global Intrinsic Functional Connectivity Parcellation</h5>
             <p>
@@ -3343,9 +3348,9 @@
             </p>
             <p>
               Display the Schaefer atlas with 200 parcellations and 17 networks as 
-              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Schaefer2018_200Parcels_17Networks_order.nii')}}))">volume map</a>. 
+              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Schaefer2018_200Parcels_17Networks_order.nii')}}))">volume map</a>. 
             </p>
-            You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','schaefer.txt'));">here</a>.
+            You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','schaefer.txt'));">here</a>.
 
             <h5 id="SUIT">Atlas of the human cerebellum</h5>
             <p>
@@ -3353,16 +3358,16 @@
             </p>
             <p>
               Display the SUIT atlas as 
-              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','suit.nii')}}))">volume map</a>. 
+              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','suit.nii')}}))">volume map</a>. 
             </p>
-            You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','suit.txt'));">here</a>.
+            You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','suit.txt'));">here</a>.
             <br/>
             
             <!-- ###################################### -->
             <h3 id="surfrois">List of surface-based atlas maps (FreeSurfer)</h3>
             <p>
               We also prepared different surface atlas maps for the Freesurfer and HCP (32k) space that are stored in the <em>atlases_surfaces(_32k)</em> directories. 
-              You can find more information about the atlases in <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','atlases_surfaces.man'));">atlases_surfaces.man</a>.
+              You can find more information about the atlases in <a href="matlab:edit(fullfile(fileparts(which('cat12')),'atlases_surfaces','atlases_surfaces.man'));">atlases_surfaces.man</a>.
             </p>
             <p>
               See <a href="matlab:web('https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation','-browser');">Freesurfer WIKI</a> for further information.
@@ -3375,13 +3380,13 @@
               That is, a gyrus includes the part visible on the Pial view + adjacent banks of the sulci limiting this gyrus. 
             </p><p>
               Display DK40 atlas on FreeSurfer average surface (
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_DK40.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.aparc_DK40.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_DK40.freesurfer.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','lh.aparc_DK40.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','rh.aparc_DK40.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','lh.aparc_DK40.freesurfer.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
               ), or Shooting average surface (
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_DK40.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">left</a>,  
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.aparc_DK40.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">right</a>,
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_DK40.freesurfer.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','lh.aparc_DK40.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">left</a>,  
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','rh.aparc_DK40.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">right</a>,
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','lh.aparc_DK40.freesurfer.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
               ). 
             </p>
             <p style="text-align:center;"><img src="images/CAT_surf_atlas_DKT40.png" width=90% height=auto alt="Desikan Killiany Tourville et al. 2010" ><p>
@@ -3393,13 +3398,13 @@
               A gyrus only includes the cortex visible on the Pial view, the hidden cortex (banks of sulci) are marked sulcus.
             </p><p>
               Display Destrieux atlas on FreeSurfer average surface (
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_a2009s.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.aparc_a2009s.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_a2009s.freesurfer.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','lh.aparc_a2009s.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','rh.aparc_a2009s.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','lh.aparc_a2009s.freesurfer.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
               ), or Shooting average surface (
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_a2009s.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">left</a>,  
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.aparc_a2009s.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">right</a>,
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_a2009s.freesurfer.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','lh.aparc_a2009s.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">left</a>,  
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','rh.aparc_a2009s.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">right</a>,
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','lh.aparc_a2009s.freesurfer.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
               ). 
             </p>
             <p style="text-align:center;"><img src="images/CAT_surf_atlas_Destrieux.png" width=90% height=auto alt="Destrieux 2009" ><p>
@@ -3409,13 +3414,13 @@
               This atlas is based on delineations based on cortical architecture, function, connectivity, and/or topography in a group of 210 healthy young adults by <a href="#Glasser2016">Glasser et al. 2016.</a>.
             </p><p>
               Display HCP atlas on FreeSurfer average surface (
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_HCP_MMP1.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.aparc_HCP_MMP1.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_HCP_MMP1.freesurfer.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','lh.aparc_HCP_MMP1.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','rh.aparc_HCP_MMP1.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','lh.aparc_HCP_MMP1.freesurfer.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
               ), or Shooting average surface (
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_HCP_MMP1.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">left</a>,  
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.aparc_HCP_MMP1.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">right</a>,
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_HCP_MMP1.freesurfer.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','lh.aparc_HCP_MMP1.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">left</a>,  
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','rh.aparc_HCP_MMP1.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">right</a>,
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','lh.aparc_HCP_MMP1.freesurfer.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
               ). 
             </p>
 
@@ -3425,13 +3430,13 @@
             </p>
             <p>
               Display the Schaefer atlas with 200 parcellations and 17 networks on FreeSurfer average surface (
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.Schaefer2018_200Parcels_17Networks_order.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.Schaefer2018_200Parcels_17Networks_order.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.Schaefer2018_200Parcels_17Networks_order.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','lh.Schaefer2018_200Parcels_17Networks_order.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','rh.Schaefer2018_200Parcels_17Networks_order.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','lh.Schaefer2018_200Parcels_17Networks_order.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
               ), or Shooting average surface (
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.Schaefer2018_200Parcels_17Networks_order.annot')}},'multisurf',0,'usefsaverage',3))">left</a>,  
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.Schaefer2018_200Parcels_17Networks_order.annot')}},'multisurf',0,'usefsaverage',3))">right</a>,
-              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.Schaefer2018_200Parcels_17Networks_order.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','lh.Schaefer2018_200Parcels_17Networks_order.annot')}},'multisurf',0,'usefsaverage',3))">left</a>,  
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','rh.Schaefer2018_200Parcels_17Networks_order.annot')}},'multisurf',0,'usefsaverage',3))">right</a>,
+              <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','lh.Schaefer2018_200Parcels_17Networks_order.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
               ). 
             </p>
 
@@ -3441,88 +3446,101 @@
             <b id="Collins1998">Collins et al. 1998</b>
             <p>
               Collins DL, Zijdenbos AP, Kollokian V, Sled JG, Kabani NJ, Holmes CJ, et al. </br>
-              Design and construction of a realistic digital brain phantom. </br>
-              <a href="matlab:web('https://doi.org/10.1109/42.712135','-browser')">IEEE Transactions on Medical Imaging 1998; 17: 463-68.</a>.
+              <a href="matlab:web('https://doi.org/10.1109/42.712135','-browser')">Design and construction of a realistic digital brain phantom.</a> </br>
+              IEEE Transactions on Medical Imaging 1998; 17: 463-68.</a>
             </p>
 
             <b id="Amunts2020">Amunts et al. 2020</b>
             <p>
               Amunts K, Mohlberg H, Bludau S, Zilles K. </br>
-              Julich-Brain - A 3D probabilistic atlas of human brain's cytoarchitecture. </br>
-              <a href="matlab:web('https://doi.org/10.1126/science.abb4588','-browser')">Science 2020, 369, 988-99.</a>.
+              <a href="matlab:web('https://doi.org/10.1126/science.abb4588','-browser')">Julich-Brain - A 3D probabilistic atlas of human brain's cytoarchitecture.</a> </br>
+              Science 2020, 369, 988-99.
             </p>
 
             <b id="DK2006">Desikan-Killiany et al. 2006</b>
             <p>
               Desikan RS, Ségonne F, Fischl B, Quinn BT, Dickerson BC, Blacker D, et al. </br>
-              An automated labeling system for subdividing the human cerebral cortex on MRI scans into gyral based regions of interest. </br>
-              <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2006.01.021','-browser')">NeuroImage 2006, 31(3):968-80.</a>
+              <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2006.01.021','-browser')">An automated labeling system for subdividing the human cerebral cortex on MRI scans into gyral based regions of interest.</a> </br>
+              NeuroImage 2006, 31(3):968-80.
            </p>
 
             <b id="Eickhoff2005">Eickhoff et al. 2005</b>
             <p>
               Eickhoff SB, Stephan KE, Mohlberg H, Grefkes C, Fink GR, Amunts K, Zilles K.</br>
-              A new SPM toolbox for combining probabilistic cytoarchitectonic maps and functional imaging data. </br>
-              <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2004.12.034','-browser')">NeuroImage 2005, 25(4), 1325-1335.</a>
+              <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2004.12.034','-browser')">A new SPM toolbox for combining probabilistic cytoarchitectonic maps and functional imaging data.</a> </br>
+              NeuroImage 2005, 25(4), 1325-1335.
            </p>
 
             <b id="Hammers2003">Hammers et al. 2003</b>
             <p>
               Hammers A, Allom R, Koepp MJ, Free SL, Myers R, Lemieux L, Mitchell TN, Brooks DJ, Duncan JS. </br>
-              Three-dimensional maximum probability atlas of the human brain, with particular reference to the temporal lobe. </br>
-              <a href="matlab:web('https://doi.org/10.1002/hbm.10123','-browser')">Human Brain Mapping, 19(4), 224-247.</a>
+              <a href="matlab:web('https://doi.org/10.1002/hbm.10123','-browser')">Three-dimensional maximum probability atlas of the human brain, with particular reference to the temporal lobe.</a> </br>
+              Human Brain Mapping, 19(4), 224-247.
             </p>
 
             <b id="Glasser2016">Glasser et al. 2016</b>
             <p>
               Glasser MF, Coalson TS, Robinson EC, Hacker CD, Harwell J, Yacoub E, Ugurbil K, Andersson J, Beckmann CF, Jenkinson M, Smith SM, Van Essen DC. </br>
-              A multi-modal parcellation of human cerebral cortex. </br>
-              <a href="matlab:web('https://doi.org/10.1038/nature18933','-browser')">Nature. 2016 Aug 11;536(7615):171-178.</a>
+              <a href="matlab:web('https://doi.org/10.1038/nature18933','-browser')">A multi-modal parcellation of human cerebral cortex.</a> </br>
+              Nature. 2016 Aug 11;536(7615):171-178.
             </p>
 
             <b id="Gousias2008">Gousias et al. 2008</b>
             <p>
               Gousias IS, Rueckert D, Heckemann RA, Dyet LE, Boardman JP, Edwards AD, Hammers A. </br>
-              Automatic segmentation of brain MRIs of 2-year-olds into 83 regions of interest. </br>
-              <a href="matlab:web('https://dx.doi.org/10.1016/j.neuroimage.2007.11.034','-browser')">Neuroimage 2008 Apr 1;40(2):672-684.</a>
+              <a href="matlab:web('https://dx.doi.org/10.1016/j.neuroimage.2007.11.034','-browser')">Automatic segmentation of brain MRIs of 2-year-olds into 83 regions of interest.</a> </br>
+              Neuroimage 2008 Apr 1;40(2):672-684.
             </p>
 
             <b id="Oishi">Oishi et al. 2009</b>
             <p>
               Oishi K, Faria A, Jiang H, Li X, Akhter K, Zhang J, Hsu JT, Miller MI, van Zijl PC, Albert M, Lyketsos CG, Woods R, Toga AW, Pike GB, Rosa-Neto P, Evans A, Mazziotta J, Mori S. </br>
-              Atlas-based whole brain white matter analysis using large deformation diffeomorphic metric mapping: application to normal elderly and Alzheimer's disease participants. </br>
-              <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2009.01.002','-browser')">Neuroimage. 2009 46(2):486-99.</a>
+              <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2009.01.002','-browser')">Atlas-based whole brain white matter analysis using large deformation diffeomorphic metric mapping: application to normal elderly and Alzheimer's disease participants.</a> </br>
+              Neuroimage. 2009 46(2):486-99.
             </p>
 
             <b id="Najdenovska">Najdenovska et al. 2018</b>
             <p>
               Najdenovska E, Alemán-Gómez Y, Battistella G, Descoteaux M, Hagmann P, Jacquemont S, Maeder P, Thiran JP, Fornari E, Bach Cuadra M. </br>
-              In-vivo probabilistic atlas of human thalamic nuclei based on diffusion- weighted magnetic resonance imaging. </br>
-              <a href="matlab:web('https://doi.org/10.1038/sdata.2018.270','-browser')">Sci Data. 2018 Nov 27;5:180270.</a>
+              <a href="matlab:web('https://doi.org/10.1038/sdata.2018.270','-browser')">In-vivo probabilistic atlas of human thalamic nuclei based on diffusion- weighted magnetic resonance imaging.</a> </br>
+              Sci Data. 2018 Nov 27;5:180270.
             </p>
 
             <b id="Saranathan">Saranathan et al. 2021</b>
             <p>
               Saranathan M, Iglehart C, Monti M, Tourdias T, Rutt B.</br>
-              In vivo high-resolution structural MRI-based atlas of human thalamic nuclei. </br>
-              <a href="matlab:web('https://doi.org/10.1038/s41597-021-01062-y','-browser')">Sci Data. 2021 Oct 28;8(1):275.</a>
+              <a href="matlab:web('https://doi.org/10.1038/s41597-021-01062-y','-browser')">In vivo high-resolution structural MRI-based atlas of human thalamic nuclei.</a> </br>
+              Sci Data. 2021 Oct 28;8(1):275.
             </p>
 
             <b id="Schaefer2018">Schaefer et al. 2018</b>
             <p>
               Schaefer A, Kong R, Gordon EM, Laumann TO, Zuo XN, Holmes AJ, Eickhoff SB, Yeo BTT. </br>
-              Local-Global Parcellation of the Human Cerebral Cortex from Intrinsic Functional Connectivity MRI. </br>
-              <a href="matlab:web('https://doi.org/10.1093/cercor/bhx179','-browser')">Cereb Cortex. 2018 Sep 1;28(9):3095-3114.</a>
+              <a href="matlab:web('https://doi.org/10.1093/cercor/bhx179','-browser')">Local-Global Parcellation of the Human Cerebral Cortex from Intrinsic Functional Connectivity MRI.</a> </br>
+              Cereb Cortex. 2018 Sep 1;28(9):3095-3114.
             </p>
 
             <b id="Shattuck2008">Shattuck et al. 2008</b>
             <p>
               Shattuck DW, Mirza M, Adisetiyo V, Hojatkashani C, Salamon G, Narr KL, Poldrack RA, Bilder RM, Toga AW.  </br>
-              Construction of a 3D Probabilistic Atlas of Human Cortical Structures. </br>
-              <a href="matlab:web('<https://doi.org/10.1016/j.neuroimage.2007.09.031','-browser')">NeuroImage 39 (3): 1064-1070.</a> </br>
+              <a href="matlab:web('<https://doi.org/10.1016/j.neuroimage.2007.09.031','-browser')">Construction of a 3D Probabilistic Atlas of Human Cortical Structures.</a> </br>
+              NeuroImage 39 (3): 1064-1070.</br>
             </p>
 
 
+            <!-- ################################################################################# -->
+<!--
+            <h2 id="faq">FAQ</h2>
+
+            <details>            
+              <summary><u>Can I overlay more than one result on the surface?</u></summary>
+              Use the following command to allow RGB overlay of up to 3 results: <a class="function" href="matlab:y=cat_surf_results('rgb',spm_select([1 3],'mesh'));">cat_surf_results('rgb',spm_select([1 3],'mesh'));</a><br/>
+              Please note that the surface maps should be thresholded (i.e. using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x');">Transform and Threshold SPM-maps</a>)
+              
+            </details>            
+            
+
+-->
             <!-- ################################################################################# -->
             <h2 id="cite">Citing CAT12</h2>
 
@@ -3618,6 +3636,7 @@
             <p><u>Local-Global Intrinsic Functional Connectivity Parcellation</u><br/>
             Schaefer A, Kong R, Gordon EM, Laumann TO, Zuo XN, Holmes AJ, Eickhoff SB, Yeo BTT. <a href="matlab:web('https://doi.org/10.1093/cercor/bhx179','-browser')">
             Local-Global Parcellation of the Human Cerebral Cortex from Intrinsic Functional Connectivity MRI.</a> Cereb Cortex. 2018 Sep 1;28(9):3095-3114.</p>
+            
             
             <!-- ################################################################################# -->
             <h2 id="refs">References</h2>
@@ -3792,15 +3811,7 @@
                     <li><a href="#reg_info">Spaces after registration</a></li>
                     <li><a href="#naming">Naming convention of output files</a></li>
                     <li><a href="#unix">Calling CAT from the UNIX command line</a></li>
-                  </ul>
-                </li>
-
-                <li>
-                  <span class="opener">Additional tools</span>
-                  <ul>
-                    <li><a href="#vbm_tool">VBM tools</a></li>
-                    <li><a href="#sbm_tool">Surface tools</a></li>
-                    <li><a href="#roi_tool">ROI tools</a></li>
+                    <li><a href="#user_stat">CAT user statistics</a></li>
                   </ul>
                 </li>
 
@@ -3814,8 +3825,29 @@
                   </ul>
                 </li>
 
-                <li><a href="#cite">Citing CAT12</a></li>
+                <li>
+                  <span class="opener">Additional tools</span>
+                  <ul>
+                    <li><a href="#vbm_tool">VBM tools</a></li>
+                    <li><a href="#sbm_tool">Surface tools</a></li>
+                    <li><a href="#roi_tool">ROI tools</a></li>
+                  </ul>
+                </li>
+
+<!--
+                <li><a href="#faq">FAQ</a></li>
+-->
+                <li><a href="#cite">Citing CAT</a></li>
                 <li><a href="#refs">References</a></li>
+<!--
+                <li>
+                  <span class="opener"><a href="supplement.html">Supplement</a></span>
+                  <ul>
+                    <li><a href="supplement.html#error">Error management</a></li>
+                    <li><a href="supplement.html#validation">CAT validation</a></li>
+                  </ul>
+                </li>
+-->
               </ul>
             </nav>
 
