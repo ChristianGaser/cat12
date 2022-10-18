@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2121 | gaser | 2022-10-18 15:34:39
+
+Changed paths:
+ M CHANGES.txt
+ M Makefile
+ M doc/index.html
+
+
+Changed: Updated CAT12 HTML documentation.
+
+------------------------------------------------------------------------
 r2120 | gaser | 2022-10-18 12:44:04
 
 Changed paths:
